@@ -1,0 +1,25 @@
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Local tooling and dependencies
+node_modules/
+vendor/
+.phpunit.result.cache
+.phpcs-cache
+coverage/
+
+# Build and QA artifacts
+*.zip
+*.log
+qa-evidence/
+reports/
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+wp-config.php

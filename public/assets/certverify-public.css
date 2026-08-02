@@ -1,0 +1,1294 @@
+
+/*
+ * Elementor Professional widget: structural width is automatic. These rules
+ * deliberately override stale generated CSS from the removed Max width control.
+ */
+.elementor-widget-certverify,
+.elementor-widget-certverify > .elementor-widget-container{
+	width: 100%;
+	min-width: 0;
+	max-width: none;
+}
+
+.elementor-widget-certverify .ecapla-certverify-widget.cv-widget{
+	width: 100% !important;
+	min-width: 0 !important;
+	max-width: 680px !important;
+	margin-inline: auto !important;
+}
+
+.elementor-widget-certverify .ecapla-certverify-widget.cv-widget .cv-search-card,
+.elementor-widget-certverify .ecapla-certverify-widget.cv-widget .cv-search-form{
+	width: 100%;
+	min-width: 0;
+	max-width: 100%;
+}
+
+.elementor-widget-certverify .ecapla-certverify-widget.cv-widget input.cv-search-input[type="text"]{
+	flex: 1 1 220px !important;
+	width: auto !important;
+	min-width: 0 !important;
+	max-width: 100% !important;
+	box-sizing: border-box !important;
+}
+
+.elementor-widget-certverify .ecapla-certverify-widget.cv-widget button.cv-search-btn{
+	flex: 0 0 auto;
+	width: auto !important;
+	min-width: 0 !important;
+	max-width: 100% !important;
+	box-sizing: border-box !important;
+}
+
+.ecapla-certverify-widget.cv-widget{
+	--cv-accent: #0f6e56;
+	--cv-heading: #14181f;
+	--cv-muted: #5f6368;
+	--cv-border: #e2e0d8;
+	--cv-radius: 10px;
+	--cv-valid-bg: #e3f5ec;
+	--cv-valid-text: #0f6e42;
+	--cv-suspended-bg: #fdf3d8;
+	--cv-suspended-text: #8a5c00;
+	--cv-withdrawn-bg: #fbe4e4;
+	--cv-withdrawn-text: #9a2b2b;
+	--cv-expired-bg: #eceae5;
+	--cv-expired-text: #57564f;
+	--cv-guide-cols: 3;
+	container-name: certverify-legacy;
+	container-type: inline-size;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	max-width: 680px;
+}
+
+.ecapla-certverify-widget.cv-widget *,
+.ecapla-certverify-widget.cv-widget *::before,
+.ecapla-certverify-widget.cv-widget *::after{
+	box-sizing: border-box;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-search-card{
+	background: #fff;
+	border: 1px solid var(--cv-border);
+	border-radius: var(--cv-radius);
+	padding: 32px;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-eyebrow{
+	color: var(--cv-accent);
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	margin: 0 0 8px;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-heading{
+	color: var(--cv-heading);
+	font-size: 28px;
+	font-weight: 700;
+	margin: 0 0 12px;
+	line-height: 1.25;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-description{
+	color: var(--cv-muted);
+	font-size: 14px;
+	line-height: 1.6;
+	margin: 0 0 24px;
+}
+
+
+.ecapla-certverify-widget.cv-widget.cv-align-center .cv-eyebrow,
+.ecapla-certverify-widget.cv-widget.cv-align-center .cv-heading,
+.ecapla-certverify-widget.cv-widget.cv-align-center .cv-description,
+.ecapla-certverify-widget.cv-widget.cv-align-center .cv-guide-header{
+	text-align: center;
+}
+
+.ecapla-certverify-widget.cv-widget.cv-align-right .cv-eyebrow,
+.ecapla-certverify-widget.cv-widget.cv-align-right .cv-heading,
+.ecapla-certverify-widget.cv-widget.cv-align-right .cv-description,
+.ecapla-certverify-widget.cv-widget.cv-align-right .cv-guide-header{
+	text-align: right;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-heading,
+.ecapla-certverify-widget.cv-widget .cv-description,
+.ecapla-certverify-widget.cv-widget .cv-result-row dd{
+	overflow-wrap: anywhere;
+	word-break: normal;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-search-form{
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-search-input{
+	flex: 1 1 220px;
+	min-width: 0;
+	padding: 12px 16px;
+	border: 1px solid var(--cv-border);
+	border-radius: 8px;
+	font-size: 14px;
+	color: var(--cv-heading);
+}
+
+.ecapla-certverify-widget.cv-widget .cv-search-input:focus{
+	outline: 2px solid var(--cv-accent);
+	outline-offset: 1px;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-search-btn{
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	background: var(--cv-accent);
+	color: #fff;
+	border: none;
+	border-radius: 8px;
+	padding: 12px 22px;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-search-btn:hover{
+	filter: brightness(0.92);
+}
+
+.ecapla-certverify-widget.cv-widget .cv-search-btn:disabled{
+	opacity: 0.7;
+	cursor: default;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-search-btn.cv-loading .cv-arrow{
+	display: inline-block;
+	animation: ecapla-certverify-legacy-spin 0.8s linear infinite;
+}
+
+@keyframes ecapla-certverify-legacy-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.ecapla-certverify-widget.cv-widget .cv-result:empty{
+	margin-top: 0;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-result{
+	margin-top: 20px;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-result-card,
+.ecapla-certverify-widget.cv-widget .cv-result-notfound{
+	border: 1px solid var(--cv-border);
+	border-radius: 8px;
+	background: #fafaf8;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-result-card{
+	padding: 20px 24px;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-result-success{
+	margin: 0 0 12px;
+	color: var(--cv-valid-text);
+	font-size: 14px;
+	font-weight: 700;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-result-success:last-child{
+	margin-bottom: 0;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-result-notfound{
+	padding: 18px 20px;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-result-notfound p{
+	margin: 0;
+	color: var(--cv-muted);
+	font-size: 14px;
+	line-height: 1.6;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-result-list{
+	margin: 0;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-result-row{
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 16px;
+	padding: 10px 0;
+	border-bottom: 1px solid var(--cv-border);
+}
+
+.ecapla-certverify-widget.cv-widget .cv-result-row:last-child{
+	border-bottom: none;
+	padding-bottom: 0;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-result-row:first-child{
+	padding-top: 0;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-result-row dt{
+	color: var(--cv-muted);
+	font-size: 13px;
+	flex-shrink: 0;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-result-row dd{
+	margin: 0;
+	color: var(--cv-heading);
+	font-size: 14px;
+	font-weight: 600;
+	text-align: right;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-badge{
+	display: inline-block;
+	padding: 3px 12px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 700;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-badge-valid{
+	background: var(--cv-valid-bg);
+	color: var(--cv-valid-text);
+}
+
+.ecapla-certverify-widget.cv-widget .cv-badge-suspended{
+	background: var(--cv-suspended-bg);
+	color: var(--cv-suspended-text);
+}
+
+.ecapla-certverify-widget.cv-widget .cv-badge-withdrawn{
+	background: var(--cv-withdrawn-bg);
+	color: var(--cv-withdrawn-text);
+}
+
+.ecapla-certverify-widget.cv-widget .cv-badge-expired{
+	background: var(--cv-expired-bg);
+	color: var(--cv-expired-text);
+}
+
+.ecapla-certverify-widget.cv-widget .cv-guide{
+	margin-top: 32px;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-guide-grid{
+	display: grid;
+	grid-template-columns: repeat(var(--cv-guide-cols, 3), 1fr);
+	gap: 14px;
+	margin-top: 12px;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-guide-card{
+	border-radius: 8px;
+	padding: 16px 18px;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-guide-title{
+	font-size: 14px;
+	font-weight: 700;
+	margin: 0 0 6px;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-guide-desc{
+	font-size: 13px;
+	line-height: 1.5;
+	margin: 0;
+	opacity: 0.85;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-guide-valid{
+	background: var(--cv-valid-bg);
+	color: var(--cv-valid-text);
+}
+
+.ecapla-certverify-widget.cv-widget .cv-guide-suspended{
+	background: var(--cv-suspended-bg);
+	color: var(--cv-suspended-text);
+}
+
+.ecapla-certverify-widget.cv-widget .cv-guide-withdrawn{
+	background: var(--cv-withdrawn-bg);
+	color: var(--cv-withdrawn-text);
+}
+
+.ecapla-certverify-widget.cv-widget .cv-guide-expired{
+	background: var(--cv-expired-bg);
+	color: var(--cv-expired-text);
+}
+
+.ecapla-certverify-widget.cv-widget .cv-credit{
+	margin: 14px 0 0;
+	text-align: var(--cv-credit-align, center);
+	font-size: var(--cv-credit-size, 13px);
+	color: var(--cv-credit-color, var(--cv-muted));
+}
+
+@container certverify-legacy (max-width: 520px) {
+	.ecapla-certverify-widget.cv-widget .cv-search-form{
+		flex-direction: column;
+	}
+
+	.ecapla-certverify-widget.cv-widget .cv-search-input{
+		flex: 0 0 auto !important;
+		width: 100% !important;
+		height: 52px !important;
+		min-height: 52px !important;
+		max-height: 52px !important;
+	}
+
+	.ecapla-certverify-widget.cv-widget .cv-search-btn{
+		flex: 0 0 auto !important;
+		width: 100% !important;
+		min-height: 52px;
+		justify-content: center;
+	}
+
+	.ecapla-certverify-widget.cv-widget .cv-guide-grid{
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@container certverify-legacy (max-width: 420px) {
+	.ecapla-certverify-widget.cv-widget .cv-search-card{
+		padding: 24px 20px;
+	}
+
+	.ecapla-certverify-widget.cv-widget .cv-heading{
+		font-size: 22px;
+	}
+
+	.ecapla-certverify-widget.cv-widget .cv-guide-grid{
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.ecapla-certverify-widget.cv-widget .cv-result-row{
+		flex-direction: column;
+		gap: 2px;
+		align-items: flex-start;
+	}
+
+	.ecapla-certverify-widget.cv-widget .cv-result-row dd{
+		text-align: left;
+	}
+}
+
+/* Viewport fallbacks for browsers without container-query support. */
+@media (max-width: 520px) {
+	.ecapla-certverify-widget.cv-widget .cv-search-form{
+		flex-direction: column;
+	}
+
+	.ecapla-certverify-widget.cv-widget .cv-search-input{
+		flex: 0 0 auto !important;
+		width: 100% !important;
+		height: 52px !important;
+		min-height: 52px !important;
+		max-height: 52px !important;
+	}
+
+	.ecapla-certverify-widget.cv-widget .cv-search-btn{
+		flex: 0 0 auto !important;
+		width: 100% !important;
+		min-height: 52px;
+		justify-content: center;
+	}
+}
+
+@media (max-width: 420px) {
+	.ecapla-certverify-widget.cv-widget .cv-search-card{
+		padding: 24px 20px;
+	}
+
+	.ecapla-certverify-widget.cv-widget .cv-heading{
+		font-size: 22px;
+	}
+
+	.ecapla-certverify-widget.cv-widget .cv-guide-grid{
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.ecapla-certverify-widget.cv-widget .cv-result-row{
+		flex-direction: column;
+		gap: 2px;
+		align-items: flex-start;
+	}
+
+	.ecapla-certverify-widget.cv-widget .cv-result-row dd{
+		text-align: left;
+	}
+}
+
+/* Legacy layout safety: retain the original visual system without allowing overflow. */
+.ecapla-certverify-widget.cv-widget{
+	width: 100%;
+	min-width: 0;
+}
+
+/* -------------------------------------------------------------------------
+ * Standalone premium Elementor widgets.
+ * Each template is isolated under .cvx-widget and never changes .cv-widget.
+ * ---------------------------------------------------------------------- */
+.ecapla-certverify-template.cvx-widget{
+	--cvx-accent: #116a55;
+	--cvx-accent-strong: #0b5543;
+	--cvx-heading: #17201d;
+	--cvx-muted: #65716d;
+	--cvx-border: #dce4e0;
+	--cvx-surface: #ffffff;
+	--cvx-surface-soft: #f5f8f6;
+	--cvx-radius: 22px;
+	--cvx-credit-color: var(--cvx-muted);
+	--cvx-credit-size: 13px;
+	--cvx-credit-align: center;
+	--cvx-valid-bg: #e8f7ef;
+	--cvx-valid-text: #12633e;
+	--cvx-suspended-bg: #fff4d6;
+	--cvx-suspended-text: #815800;
+	--cvx-withdrawn-bg: #fce9e9;
+	--cvx-withdrawn-text: #982e2e;
+	--cvx-expired-bg: #edf0ee;
+	--cvx-expired-text: #56605c;
+	container-name: certverify-modern;
+	container-type: inline-size;
+	display: block;
+	width: 100% !important;
+	min-width: 0 !important;
+	max-width: none !important;
+	margin-inline: 0;
+	color: var(--cvx-heading);
+	font-family: inherit;
+	line-height: 1.5;
+}
+
+.ecapla-certverify-template.cvx-widget *,
+.ecapla-certverify-template.cvx-widget *::before,
+.ecapla-certverify-template.cvx-widget *::after{
+	box-sizing: border-box;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-shell{
+	position: relative;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr));
+	align-items: center;
+	width: 100%;
+	gap: 38px;
+	min-width: 0;
+	padding: 38px;
+	background: var(--cvx-surface);
+	border: 1px solid var(--cvx-border);
+	border-radius: var(--cvx-radius);
+	box-shadow: 0 22px 54px rgba(23, 42, 35, 0.09);
+	overflow: hidden;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-copy,
+.ecapla-certverify-template.cvx-widget .cvx-action{
+	position: relative;
+	z-index: 1;
+	width: 100%;
+	min-width: 0;
+	max-width: 100%;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-copy{
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-copy > *,
+.ecapla-certverify-template.cvx-widget .cvx-guide-header > *{
+	margin: 0;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-eyebrow,
+.ecapla-certverify-template.cvx-widget .cvx-guide-eyebrow{
+	color: var(--cvx-accent);
+	font-size: 11px;
+	font-weight: 760;
+	letter-spacing: 0.12em;
+	line-height: 1.35;
+	text-transform: uppercase;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-heading{
+	max-width: 18ch;
+	color: var(--cvx-heading);
+	font-size: clamp(30px, 4.2cqi, 48px);
+	font-weight: 740;
+	letter-spacing: -0.04em;
+	line-height: 1.05;
+	text-wrap: balance;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-description{
+	max-width: 58ch;
+	color: var(--cvx-muted);
+	font-size: 15px;
+	line-height: 1.7;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-heading,
+.ecapla-certverify-template.cvx-widget .cvx-description,
+.ecapla-certverify-template.cvx-widget .cvx-result-row dd,
+.ecapla-certverify-template.cvx-widget .cvx-guide-title,
+.ecapla-certverify-template.cvx-widget .cvx-guide-desc{
+	overflow-wrap: anywhere;
+	word-break: normal;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-align-center .cvx-copy,
+.ecapla-certverify-template.cvx-widget.cvx-align-center .cvx-guide-header{
+	text-align: center;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-align-center .cvx-heading,
+.ecapla-certverify-template.cvx-widget.cvx-align-center .cvx-description{
+	margin-inline: auto;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-align-right .cvx-copy,
+.ecapla-certverify-template.cvx-widget.cvx-align-right .cvx-guide-header{
+	text-align: right;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-align-right .cvx-heading,
+.ecapla-certverify-template.cvx-widget.cvx-align-right .cvx-description{
+	margin-left: auto;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-search-form{
+	display: flex;
+	flex-wrap: wrap;
+	align-items: stretch;
+	gap: 10px;
+	width: 100%;
+	min-width: 0;
+	max-width: 100%;
+	margin: 0;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-input-wrap{
+	position: relative;
+	flex: 1 1 260px;
+	display: grid;
+	grid-template-columns: var(--cvx-icon-size, 18px) minmax(0, 1fr);
+	align-items: center;
+	column-gap: 12px;
+	width: 100%;
+	min-width: 0;
+	min-height: 56px;
+	padding: 0 17px;
+	background: #fff;
+	border: 1px solid var(--cvx-border);
+	border-radius: 14px;
+	overflow: hidden;
+	transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-input-wrap:focus-within{
+	border-color: var(--cvx-accent);
+	box-shadow: 0 0 0 4px color-mix(in srgb, var(--cvx-accent) 16%, transparent);
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-input-icon{
+	position: relative;
+	flex: 0 0 var(--cvx-icon-size, 18px);
+	width: var(--cvx-icon-size, 18px);
+	height: var(--cvx-icon-size, 18px);
+	margin: 0;
+	border: 1.8px solid var(--cvx-muted);
+	border-radius: 50%;
+	opacity: 0.82;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-input-icon::after{
+	content: "";
+	position: absolute;
+	right: -4px;
+	bottom: -3px;
+	width: 7px;
+	height: 1.8px;
+	background: var(--cvx-muted);
+	border-radius: 999px;
+	transform: rotate(45deg);
+	transform-origin: center;
+}
+
+.ecapla-certverify-template.cvx-widget input.cvx-search-input[type="text"]{
+	-webkit-appearance: none !important;
+	appearance: none !important;
+	display: block !important;
+	min-width: 0 !important;
+	width: 100% !important;
+	max-width: none !important;
+	height: auto !important;
+	min-height: 0 !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	background: transparent !important;
+	background-image: none !important;
+	border: 0 !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	outline: 0 !important;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-search-input{
+	color: var(--cvx-heading);
+	font: inherit;
+	font-size: 15px;
+	line-height: 1.35;
+}
+
+.ecapla-certverify-template.cvx-widget input.cvx-search-input[type="text"]::placeholder{
+	color: color-mix(in srgb, var(--cvx-muted) 76%, transparent);
+}
+
+.ecapla-certverify-template.cvx-widget button.cvx-search-btn{
+	-webkit-appearance: none;
+	appearance: none;
+	margin: 0;
+	border: 1px solid transparent;
+	box-shadow: none;
+	font-family: inherit;
+	text-decoration: none;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-search-btn{
+	-webkit-appearance: none;
+	appearance: none;
+	display: inline-flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	width: auto !important;
+	max-width: 100%;
+	min-height: 56px;
+	padding: 14px 22px;
+	color: #fff;
+	background: var(--cvx-accent);
+	border: 1px solid transparent;
+	border-radius: 14px;
+	font: inherit;
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 1.2;
+	white-space: nowrap;
+	cursor: pointer;
+	transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-search-btn:hover,
+.ecapla-certverify-template.cvx-widget .cvx-search-btn:focus-visible{
+	color: #fff;
+	background: var(--cvx-accent-strong);
+	box-shadow: 0 12px 26px color-mix(in srgb, var(--cvx-accent) 24%, transparent);
+	transform: translateY(-1px);
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-search-btn:focus-visible{
+	outline: 3px solid color-mix(in srgb, var(--cvx-accent) 30%, transparent);
+	outline-offset: 2px;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-search-btn:disabled{
+	cursor: wait;
+	opacity: 0.7;
+	transform: none;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-arrow{
+	font-size: 1.1em;
+	transition: transform 160ms ease;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-search-btn:hover .cvx-arrow{
+	transform: translateX(3px);
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-loading .cvx-arrow{
+	width: 16px;
+	height: 16px;
+	font-size: 0;
+	border: 2px solid rgba(255, 255, 255, 0.42);
+	border-top-color: #fff;
+	border-radius: 50%;
+	animation: ecapla-certverify-template-spin 700ms linear infinite;
+}
+
+@keyframes ecapla-certverify-template-spin {
+	to { transform: rotate(360deg); }
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-result:empty{
+	display: none;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-result{
+	margin-top: 14px;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-result-card,
+.ecapla-certverify-template.cvx-widget .cvx-result-notfound{
+	padding: 18px;
+	background: var(--cvx-surface-soft);
+	border: 1px solid var(--cvx-border);
+	border-radius: 14px;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-result-notfound p{
+	margin: 0;
+	color: var(--cvx-muted);
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-result-success{
+	margin: 0 0 14px;
+	color: var(--cvx-valid-text);
+	font-size: 14px;
+	font-weight: 750;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-result-success:last-child{
+	margin-bottom: 0;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-result-list{
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)) !important;
+	gap: 0;
+	margin: 0;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-result-row{
+	display: grid;
+	gap: 4px;
+	align-content: start;
+	min-width: 0;
+	padding: 12px;
+	border-bottom: 1px solid var(--cvx-border);
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-result-row dt,
+.ecapla-certverify-template.cvx-widget .cvx-result-row dd{
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-result-row dt{
+	color: var(--cvx-muted);
+	font-size: 11px;
+	font-weight: 720;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-result-row dd{
+	color: var(--cvx-heading);
+	font-size: 14px;
+	font-weight: 650;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-badge{
+	display: inline-flex;
+	align-items: center;
+	width: fit-content;
+	padding: 4px 10px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 740;
+	line-height: 1.35;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-badge-valid{ color: var(--cvx-valid-text); background: var(--cvx-valid-bg); }
+.ecapla-certverify-template.cvx-widget .cvx-badge-suspended{ color: var(--cvx-suspended-text); background: var(--cvx-suspended-bg); }
+.ecapla-certverify-template.cvx-widget .cvx-badge-withdrawn{ color: var(--cvx-withdrawn-text); background: var(--cvx-withdrawn-bg); }
+.ecapla-certverify-template.cvx-widget .cvx-badge-expired{ color: var(--cvx-expired-text); background: var(--cvx-expired-bg); }
+
+.ecapla-certverify-template.cvx-widget .cvx-guide{
+	margin-top: 24px;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-guide-header{
+	display: grid;
+	gap: 6px;
+	margin-bottom: 13px;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-guide-heading{
+	color: var(--cvx-heading);
+	font-size: clamp(20px, 2.5cqi, 27px);
+	font-weight: 710;
+	letter-spacing: -0.025em;
+	line-height: 1.2;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-guide-grid{
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)) !important;
+	gap: 12px;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-guide-card{
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	min-width: 0;
+	padding: 15px;
+	background: #fff;
+	border: 1px solid var(--cvx-border);
+	border-radius: 14px;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-guide-mark{
+	display: inline-grid;
+	place-items: center;
+	flex: 0 0 24px;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	font-size: 12px;
+	font-weight: 800;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-guide-title,
+.ecapla-certverify-template.cvx-widget .cvx-guide-desc{
+	margin: 0;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-guide-title{
+	color: var(--cvx-heading);
+	font-size: 13px;
+	font-weight: 720;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-guide-desc{
+	margin-top: 4px;
+	color: var(--cvx-muted);
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-guide-valid .cvx-guide-mark{ color: var(--cvx-valid-text); background: var(--cvx-valid-bg); }
+.ecapla-certverify-template.cvx-widget .cvx-guide-suspended .cvx-guide-mark{ color: var(--cvx-suspended-text); background: var(--cvx-suspended-bg); }
+.ecapla-certverify-template.cvx-widget .cvx-guide-withdrawn .cvx-guide-mark{ color: var(--cvx-withdrawn-text); background: var(--cvx-withdrawn-bg); }
+.ecapla-certverify-template.cvx-widget .cvx-guide-expired .cvx-guide-mark{ color: var(--cvx-expired-text); background: var(--cvx-expired-bg); }
+
+.ecapla-certverify-template.cvx-widget .cvx-credit{
+	margin: 12px 0 0;
+	color: var(--cvx-credit-color);
+	font-size: var(--cvx-credit-size);
+	text-align: var(--cvx-credit-align);
+}
+
+/* Meridian: balanced executive split panel. */
+.ecapla-certverify-template.cvx-widget.cvx-template-meridian{
+	--cvx-accent: #146b58;
+	--cvx-accent-strong: #0c5444;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-meridian .cvx-shell::before{
+	content: "";
+	position: absolute;
+	inset: 0 auto 0 0;
+	width: 5px;
+	background: var(--cvx-accent);
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-meridian .cvx-action{
+	padding: 22px;
+	background: #f6f9f7;
+	border: 1px solid color-mix(in srgb, var(--cvx-border) 76%, transparent);
+	border-radius: 17px;
+}
+
+/* Halo: restrained centered presentation with a focused action surface. */
+.ecapla-certverify-template.cvx-widget.cvx-template-halo{
+	--cvx-accent: #2856b6;
+	--cvx-accent-strong: #1d438f;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-halo .cvx-shell{
+	grid-template-columns: 1fr;
+	text-align: center;
+	padding-block: 48px;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-halo .cvx-copy{
+	align-items: center;
+	width: min(100%, 680px);
+	margin-inline: auto;
+	text-align: center;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-halo .cvx-copy > *{
+	width: 100%;
+	max-width: none;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-halo.cvx-align-left .cvx-copy{
+	align-items: flex-start;
+	text-align: left;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-halo.cvx-align-center .cvx-copy{
+	align-items: center;
+	text-align: center;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-halo.cvx-align-right .cvx-copy{
+	align-items: flex-end;
+	text-align: right;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-halo .cvx-action{
+	width: min(100%, 680px);
+	margin-inline: auto;
+	padding: 10px;
+	background: #f5f7fb;
+	border: 1px solid #e1e7f2;
+	border-radius: 19px;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-halo .cvx-result{
+	text-align: left;
+}
+
+/* Axis: compact, precise and horizontally efficient. */
+.ecapla-certverify-template.cvx-widget.cvx-template-axis{
+	--cvx-accent: #2c5f68;
+	--cvx-accent-strong: #1d474e;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-axis .cvx-shell{
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+	padding: 28px 30px;
+	border-radius: 14px;
+	box-shadow: 0 12px 34px rgba(28, 47, 43, 0.07);
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-axis .cvx-heading{
+	font-size: clamp(26px, 3.2cqi, 38px);
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-axis .cvx-description{
+	font-size: 14px;
+	line-height: 1.55;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-axis .cvx-guide{
+	padding-top: 18px;
+	border-top: 1px solid var(--cvx-border);
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-axis .cvx-guide-card{
+	padding: 12px;
+	border-radius: 10px;
+}
+
+/* Nova: creative soft-tech surface, kept readable and restrained. */
+.ecapla-certverify-template.cvx-widget.cvx-template-nova{
+	--cvx-accent: #7550a5;
+	--cvx-accent-strong: #5a3d81;
+	--cvx-border: #e6deef;
+	--cvx-surface-soft: #f8f5fb;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-nova .cvx-shell{
+	background:
+		radial-gradient(circle at 12% 12%, rgba(117, 80, 165, 0.12), transparent 34%),
+		radial-gradient(circle at 92% 90%, rgba(48, 151, 140, 0.10), transparent 36%),
+		#fff;
+	border-color: #e4dced;
+	box-shadow: 0 24px 70px rgba(75, 54, 97, 0.11);
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-nova .cvx-action{
+	padding: 22px;
+	background: rgba(255, 255, 255, 0.76);
+	border: 1px solid rgba(255, 255, 255, 0.9);
+	border-radius: 18px;
+	box-shadow: 0 10px 32px rgba(75, 54, 97, 0.08);
+	backdrop-filter: blur(12px);
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-nova .cvx-guide-card{
+	background: linear-gradient(180deg, #fff, #fbf9fd);
+}
+
+/* Forge: authoritative dark panel with a high-contrast verification surface. */
+.ecapla-certverify-template.cvx-widget.cvx-template-forge{
+	--cvx-accent: #d6b260;
+	--cvx-accent-strong: #b89443;
+	--cvx-heading: #f6f7f4;
+	--cvx-muted: #b7c1bd;
+	--cvx-border: #344640;
+	--cvx-surface-soft: #16231f;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-shell{
+	background: linear-gradient(135deg, #10201b 0%, #1a2d27 100%);
+	border-color: #31463f;
+	box-shadow: 0 24px 70px rgba(4, 13, 10, 0.24);
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-shell::after{
+	content: "";
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 34%;
+	height: 4px;
+	background: var(--cvx-accent);
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-action{
+	padding: 22px;
+	background: #f7f8f6;
+	border-radius: 17px;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-input-wrap{
+	border-color: #d7dedb;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-result-card,
+.ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-result-notfound{
+	background: #fff;
+	border-color: #d7dedb;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-result-row dt{
+	color: #66736e;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-result-row dd{
+	color: #17201d;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-guide-heading{
+	color: #17201d;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-guide-title{
+	color: #f6f7f4;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-guide-card{
+	background: #172722;
+	border-color: #344640;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-guide-desc{
+	color: #b7c1bd;
+}
+
+@container certverify-modern (max-width: 980px) {
+	.ecapla-certverify-template.cvx-widget .cvx-shell,
+.ecapla-certverify-template.cvx-widget.cvx-template-axis .cvx-shell{
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.ecapla-certverify-template.cvx-widget .cvx-heading{
+		max-width: 24ch;
+	}
+}
+
+@container certverify-modern (max-width: 560px) {
+	.ecapla-certverify-template.cvx-widget .cvx-search-form{
+		flex-direction: column;
+	}
+
+	.ecapla-certverify-template.cvx-widget .cvx-input-wrap{
+		flex: 0 0 auto !important;
+		width: 100% !important;
+		height: auto !important;
+		min-height: 56px;
+		max-height: 96px !important;
+	}
+
+	.ecapla-certverify-template.cvx-widget .cvx-search-btn{
+		flex: 0 0 auto !important;
+		width: 100% !important;
+		max-height: 96px !important;
+	}
+}
+
+@container certverify-modern (max-width: 520px) {
+	.ecapla-certverify-template.cvx-widget .cvx-shell,
+.ecapla-certverify-template.cvx-widget.cvx-template-axis .cvx-shell,
+.ecapla-certverify-template.cvx-widget.cvx-template-halo .cvx-shell{
+		padding: 22px 20px;
+		border-radius: 18px;
+	}
+
+	.ecapla-certverify-template.cvx-widget.cvx-template-meridian .cvx-action,
+.ecapla-certverify-template.cvx-widget.cvx-template-nova .cvx-action,
+.ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-action{
+		padding: 16px;
+	}
+
+	.ecapla-certverify-template.cvx-widget .cvx-heading{
+		font-size: clamp(27px, 9cqi, 38px);
+	}
+
+}
+
+.ecapla-certverify-template.cvx-widget .screen-reader-text{
+	position: absolute !important;
+	width: 1px !important;
+	height: 1px !important;
+	padding: 0 !important;
+	margin: -1px !important;
+	overflow: hidden !important;
+	clip: rect(0, 0, 0, 0) !important;
+	clip-path: inset(50%) !important;
+	white-space: nowrap !important;
+	border: 0 !important;
+}
+
+/* Elementor container safety and legacy generated-CSS migration. */
+.elementor-widget-certverify-meridian,
+.elementor-widget-certverify-halo,
+.elementor-widget-certverify-axis,
+.elementor-widget-certverify-nova,
+.elementor-widget-certverify-forge,
+.elementor-widget-certverify-meridian > .elementor-widget-container,
+.elementor-widget-certverify-halo > .elementor-widget-container,
+.elementor-widget-certverify-axis > .elementor-widget-container,
+.elementor-widget-certverify-nova > .elementor-widget-container,
+.elementor-widget-certverify-forge > .elementor-widget-container{
+	width: 100%;
+	min-width: 0;
+	max-width: none;
+	align-self: stretch;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-eyebrow,
+.ecapla-certverify-template.cvx-widget .cvx-heading,
+.ecapla-certverify-template.cvx-widget .cvx-description{
+	display: block !important;
+	order: initial !important;
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-guide{
+	display: block !important;
+}
+
+/* Media fallbacks for layouts where container queries are unavailable. */
+@media (max-width: 980px) {
+	.ecapla-certverify-template.cvx-widget .cvx-shell,
+.ecapla-certverify-template.cvx-widget.cvx-template-axis .cvx-shell{
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+@media (max-width: 560px) {
+	.ecapla-certverify-template.cvx-widget .cvx-search-form{
+		flex-direction: column;
+	}
+
+	.ecapla-certverify-template.cvx-widget .cvx-input-wrap{
+		flex: 0 0 auto !important;
+		width: 100% !important;
+		height: auto !important;
+		min-height: 56px;
+		max-height: 96px !important;
+	}
+
+	.ecapla-certverify-template.cvx-widget .cvx-search-btn{
+		flex: 0 0 auto !important;
+		width: 100% !important;
+		max-height: 96px !important;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.ecapla-certverify-template.cvx-widget .cvx-search-btn,
+.ecapla-certverify-template.cvx-widget .cvx-arrow,
+.ecapla-certverify-template.cvx-widget .cvx-input-wrap{
+		transition: none;
+	}
+
+	.ecapla-certverify-template.cvx-widget .cvx-loading .cvx-arrow{
+		animation-duration: 1.4s;
+	}
+}
+
+/* Compatibility fallbacks for browsers that do not yet evaluate color-mix(). */
+.ecapla-certverify-template.cvx-widget .cvx-input-wrap:focus-within{
+	box-shadow: 0 0 0 4px rgba(17, 106, 85, 0.16);
+	box-shadow: 0 0 0 4px color-mix(in srgb, var(--cvx-accent) 16%, transparent);
+}
+
+.ecapla-certverify-template.cvx-widget input.cvx-search-input[type="text"]::placeholder{
+	color: #7a8581;
+	color: color-mix(in srgb, var(--cvx-muted) 76%, transparent);
+}
+
+.ecapla-certverify-template.cvx-widget .cvx-search-btn:hover,
+.ecapla-certverify-template.cvx-widget .cvx-search-btn:focus-visible{
+	box-shadow: 0 12px 26px rgba(17, 106, 85, 0.24);
+	box-shadow: 0 12px 26px color-mix(in srgb, var(--cvx-accent) 24%, transparent);
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-action{
+	--cvx-heading: #17201d;
+	--cvx-muted: #66736e;
+	--cvx-border: #d7dedb;
+}
+
+.ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-search-btn,
+.ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-search-btn:hover,
+.ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-search-btn:focus-visible{
+	color: #17201d;
+}
+
+
+.ecapla-certverify-widget.cv-widget .cv-guide-header {
+	display: grid;
+	gap: 4px;
+}
+
+.ecapla-certverify-widget.cv-widget .cv-guide-heading {
+	margin: 0;
+	color: var(--cv-heading);
+	font-size: 20px;
+	font-weight: 700;
+	line-height: 1.3;
+}
+
+/* 1.4.7: mobile form geometry must not inherit horizontal flex-basis as height. */
+@media (max-width: 520px) {
+	.elementor-widget-certverify .ecapla-certverify-widget.cv-widget .cv-search-form {
+		flex-direction: column !important;
+	}
+	.elementor-widget-certverify .ecapla-certverify-widget.cv-widget input.cv-search-input[type="text"] {
+		flex: 0 0 auto !important;
+		width: 100% !important;
+		height: 52px !important;
+		min-height: 52px !important;
+		max-height: 52px !important;
+	}
+	.elementor-widget-certverify .ecapla-certverify-widget.cv-widget button.cv-search-btn {
+		flex: 0 0 auto !important;
+		width: 100% !important;
+		min-height: 52px !important;
+	}
+}

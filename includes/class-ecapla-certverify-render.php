@@ -1,0 +1,561 @@
+<?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Shared frontend renderer for the legacy widget, shortcode, and new templates.
+ */
+class Ecapla_CertVerify_Render {
+
+	/** @var array<string,array> Per-request direct lookup cache shared by all widgets. */
+	private static $direct_result_cache = array();
+
+	/**
+	 * Legacy defaults retained so existing Elementor pages render exactly as before.
+	 *
+	 * @return array
+	 */
+	public static function default_atts() {
+		return self::legacy_default_atts();
+	}
+
+	/**
+	 * Defaults for the original CertVerify widget and shortcode.
+	 *
+	 * @return array
+	 */
+	public static function legacy_default_atts() {
+		return array(
+			'eyebrow'          => __( 'Certificate search', 'certverify' ),
+			'heading'          => __( 'Verify a Certificate', 'certverify' ),
+			'description'      => __( 'Enter the certificate number exactly as it appears on the face of the certificate. No login required.', 'certverify' ),
+			'placeholder'      => __( 'e.g. CERT-9001-2026-00142', 'certverify' ),
+			'button_text'      => __( 'Search', 'certverify' ),
+			'notfound_text'    => __( 'We couldn\'t find a certificate with that number. Double check it matches exactly what\'s printed on the certificate.', 'certverify' ),
+			'show_eyebrow'     => true,
+			'show_heading'     => true,
+			'show_description' => true,
+			'content_order'    => 'eyebrow-heading-description',
+			'heading_tag'      => 'h2',
+			'text_align'       => 'left',
+			'show_guide'       => true,
+			'guide_eyebrow'    => __( 'Certificate status guide', 'certverify' ),
+			'guide_heading'    => '',
+			'show_credit'      => (bool) Ecapla_CertVerify_Settings::get( 'show_credit', false ),
+			'credit_text'      => Ecapla_CertVerify_Settings::get( 'credit_text', __( 'Verification powered by CertVerify.', 'certverify' ) ),
+			'accent'           => Ecapla_CertVerify_Settings::get( 'accent_color', '#0f6e56' ),
+			'credit_color'     => Ecapla_CertVerify_Settings::get( 'credit_color', '' ),
+			'credit_size'      => Ecapla_CertVerify_Settings::get( 'credit_size', '' ),
+			'credit_align'     => Ecapla_CertVerify_Settings::get( 'credit_align', 'center' ),
+		);
+	}
+
+	/**
+	 * Defaults shared by the five standalone premium widgets.
+	 *
+	 * @return array
+	 */
+	public static function template_default_atts() {
+		return array(
+			'eyebrow'          => __( 'Certificate verification', 'certverify' ),
+			'heading'          => __( 'Verify a certificate with confidence', 'certverify' ),
+			'description'      => __( 'Enter the certificate number exactly as printed to view its current status and published certification details.', 'certverify' ),
+			'placeholder'      => __( 'Enter certificate number', 'certverify' ),
+			'button_text'      => __( 'Verify certificate', 'certverify' ),
+			'notfound_text'    => __( 'No certificate matched that number. Check the characters, spacing, and hyphens, then try again.', 'certverify' ),
+			'show_eyebrow'     => true,
+			'show_heading'     => true,
+			'show_description' => true,
+			'content_order'    => 'eyebrow-heading-description',
+			'heading_tag'      => 'h2',
+			'text_align'       => 'left',
+			'show_guide'       => true,
+			'guide_eyebrow'    => __( 'Status guide', 'certverify' ),
+			'guide_heading'    => __( 'Understand each certificate status', 'certverify' ),
+			'show_credit'      => (bool) Ecapla_CertVerify_Settings::get( 'show_credit', false ),
+			'credit_text'      => Ecapla_CertVerify_Settings::get( 'credit_text', __( 'Verification powered by CertVerify.', 'certverify' ) ),
+			'accent'           => Ecapla_CertVerify_Settings::get( 'accent_color', '#0f6e56' ),
+			'credit_color'     => Ecapla_CertVerify_Settings::get( 'credit_color', '' ),
+			'credit_size'      => Ecapla_CertVerify_Settings::get( 'credit_size', '' ),
+			'credit_align'     => Ecapla_CertVerify_Settings::get( 'credit_align', 'center' ),
+		);
+	}
+
+	/**
+	 * Backward-compatible public renderer used by [certverify].
+	 *
+	 * @param array $atts Rendering attributes.
+	 * @return string
+	 */
+	public static function widget( $atts = array() ) {
+		return self::legacy_widget( $atts );
+	}
+
+	/**
+	 * Renders the original CertVerify markup and CSS hooks.
+	 *
+	 * @param array $atts Rendering attributes.
+	 * @return string
+	 */
+	public static function legacy_widget( $atts = array() ) {
+		$atts = self::sanitize_common_atts( wp_parse_args( $atts, self::legacy_default_atts() ), false );
+		Ecapla_CertVerify_Shortcode::enqueue_assets();
+
+		$instance_id = wp_unique_id( 'certverify-' );
+		$endpoint    = esc_url_raw( rest_url( 'certverify/v1/verify' ) );
+		$direct      = self::direct_number();
+		$result_id   = $instance_id . '-result';
+		$server_html = self::server_result_html( $direct, 'cv', $atts['notfound_text'], __( 'Something went wrong, please try again.', 'certverify' ) );
+
+		ob_start();
+		?>
+		<div
+			id="<?php echo esc_attr( $instance_id ); ?>"
+			class="<?php echo esc_attr( 'ecapla-certverify-widget cv-widget cv-align-' . $atts['text_align'] ); ?>"
+			style="<?php echo esc_attr( self::legacy_style_vars( $atts ) ); ?>"
+			data-endpoint="<?php echo esc_attr( $endpoint ); ?>"
+			<?php echo $direct ? 'data-direct-number="' . esc_attr( $direct ) . '" data-server-rendered="1"' : ''; ?>
+			data-notfound-text="<?php echo esc_attr( $atts['notfound_text'] ); ?>"
+			data-found-text="<?php echo esc_attr__( 'Certificate found.', 'certverify' ); ?>"
+			data-error-text="<?php echo esc_attr__( 'Something went wrong, please try again.', 'certverify' ); ?>"
+			data-loading-text="<?php echo esc_attr__( 'Checking…', 'certverify' ); ?>"
+			data-required-text="<?php echo esc_attr__( 'Enter a certificate number before searching.', 'certverify' ); ?>"
+		>
+			<div class="cv-search-card">
+				<?php echo self::header_content( $atts, 'cv' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+
+				<form class="cv-search-form" method="get" action="">
+					<?php echo self::routing_hidden_inputs(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Values are escaped by the helper. ?>
+					<label class="screen-reader-text" for="<?php echo esc_attr( $instance_id . '-number' ); ?>"><?php esc_html_e( 'Certificate number', 'certverify' ); ?></label>
+					<input type="text" id="<?php echo esc_attr( $instance_id . '-number' ); ?>" name="certverify_number" class="cv-search-input" value="<?php echo esc_attr( $direct ); ?>" placeholder="<?php echo esc_attr( $atts['placeholder'] ); ?>" autocomplete="off" maxlength="100" aria-controls="<?php echo esc_attr( $result_id ); ?>" required />
+					<button type="submit" class="cv-search-btn">
+						<span class="cv-btn-text"><?php echo esc_html( $atts['button_text'] ); ?></span>
+						<span class="cv-arrow" aria-hidden="true">&rarr;</span>
+					</button>
+				</form>
+
+				<div id="<?php echo esc_attr( $result_id ); ?>" class="cv-result" role="status" aria-live="polite" aria-atomic="true"><?php echo $server_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built from escaped values. ?></div>
+				<noscript><p class="cv-noscript"><?php esc_html_e( 'JavaScript is unavailable. Submit the form to reload this page with the verification result.', 'certverify' ); ?></p></noscript>
+			</div>
+
+			<?php if ( $atts['show_guide'] ) : ?>
+				<div class="cv-guide">
+					<div class="cv-guide-header">
+						<?php if ( '' !== $atts['guide_eyebrow'] ) : ?>
+							<p class="cv-eyebrow"><?php echo esc_html( $atts['guide_eyebrow'] ); ?></p>
+						<?php endif; ?>
+						<?php if ( '' !== $atts['guide_heading'] ) : ?>
+							<h3 class="cv-guide-heading"><?php echo esc_html( $atts['guide_heading'] ); ?></h3>
+						<?php endif; ?>
+					</div>
+					<div class="cv-guide-grid">
+						<?php foreach ( Ecapla_CertVerify_Fields::get_statuses() as $key => $status ) : ?>
+							<div class="cv-guide-card cv-guide-<?php echo esc_attr( $key ); ?>">
+								<p class="cv-guide-title"><?php echo wp_kses( self::status_icon_entity( $key ), array() ) . ' ' . esc_html( $status['label'] ); ?></p>
+								<p class="cv-guide-desc"><?php echo esc_html( $status['desc'] ); ?></p>
+							</div>
+						<?php endforeach; ?>
+					</div>
+				</div>
+			<?php endif; ?>
+
+			<?php if ( $atts['show_credit'] && '' !== $atts['credit_text'] ) : ?>
+				<p class="cv-credit"><?php echo esc_html( $atts['credit_text'] ); ?></p>
+			<?php endif; ?>
+		</div>
+		<?php
+		return ob_get_clean();
+	}
+
+	/**
+	 * Renders one of the five isolated premium templates.
+	 *
+	 * @param string $template Template slug.
+	 * @param array  $atts     Rendering attributes.
+	 * @return string
+	 */
+	public static function template_widget( $template, $atts = array() ) {
+		$templates = array( 'meridian', 'halo', 'axis', 'nova', 'forge' );
+		$template  = in_array( $template, $templates, true ) ? $template : 'meridian';
+		$atts      = self::sanitize_common_atts( wp_parse_args( $atts, self::template_default_atts() ), true );
+		Ecapla_CertVerify_Shortcode::enqueue_assets();
+
+		$instance_id = wp_unique_id( 'certverify-' . $template . '-' );
+		$endpoint    = esc_url_raw( rest_url( 'certverify/v1/verify' ) );
+		$direct      = self::direct_number();
+		$result_id   = $instance_id . '-result';
+		$server_html = self::server_result_html( $direct, 'cvx', $atts['notfound_text'], __( 'The verification service could not complete the request. Please try again.', 'certverify' ) );
+		$classes     = array(
+			'ecapla-certverify-template',
+			'cvx-widget',
+			'cvx-template-' . $template,
+			'cvx-align-' . $atts['text_align'],
+		);
+
+		ob_start();
+		?>
+		<div
+			id="<?php echo esc_attr( $instance_id ); ?>"
+			class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>"
+			style="<?php echo esc_attr( self::template_style_vars( $atts ) ); ?>"
+			data-endpoint="<?php echo esc_attr( $endpoint ); ?>"
+			<?php echo $direct ? 'data-direct-number="' . esc_attr( $direct ) . '" data-server-rendered="1"' : ''; ?>
+			data-notfound-text="<?php echo esc_attr( $atts['notfound_text'] ); ?>"
+			data-found-text="<?php echo esc_attr__( 'Certificate found.', 'certverify' ); ?>"
+			data-error-text="<?php echo esc_attr__( 'The verification service could not complete the request. Please try again.', 'certverify' ); ?>"
+			data-loading-text="<?php echo esc_attr__( 'Checking certificate…', 'certverify' ); ?>"
+			data-required-text="<?php echo esc_attr__( 'Enter a certificate number before searching.', 'certverify' ); ?>"
+		>
+			<section class="cvx-shell" aria-label="<?php esc_attr_e( 'Certificate verification search', 'certverify' ); ?>">
+				<div class="cvx-copy">
+					<?php echo self::header_content( $atts, 'cvx' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				</div>
+				<div class="cvx-action">
+					<form class="cvx-search-form" method="get" action="">
+						<?php echo self::routing_hidden_inputs(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Values are escaped by the helper. ?>
+						<label class="screen-reader-text" for="<?php echo esc_attr( $instance_id . '-number' ); ?>"><?php esc_html_e( 'Certificate number', 'certverify' ); ?></label>
+						<div class="cvx-input-wrap">
+							<span class="cvx-input-icon" aria-hidden="true"></span>
+							<input type="text" id="<?php echo esc_attr( $instance_id . '-number' ); ?>" name="certverify_number" class="cvx-search-input" value="<?php echo esc_attr( $direct ); ?>" placeholder="<?php echo esc_attr( $atts['placeholder'] ); ?>" autocomplete="off" maxlength="100" aria-controls="<?php echo esc_attr( $result_id ); ?>" required />
+						</div>
+						<button type="submit" class="cvx-search-btn">
+							<span class="cvx-btn-text"><?php echo esc_html( $atts['button_text'] ); ?></span>
+							<span class="cvx-arrow" aria-hidden="true">&rarr;</span>
+						</button>
+					</form>
+					<div id="<?php echo esc_attr( $result_id ); ?>" class="cvx-result" role="status" aria-live="polite" aria-atomic="true"><?php echo $server_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built from escaped values. ?></div>
+					<noscript><p class="cvx-noscript"><?php esc_html_e( 'JavaScript is unavailable. Submit the form to reload this page with the verification result.', 'certverify' ); ?></p></noscript>
+				</div>
+			</section>
+
+			<?php if ( $atts['show_guide'] ) : ?>
+				<section class="cvx-guide" aria-label="<?php esc_attr_e( 'Certificate status guide', 'certverify' ); ?>">
+					<div class="cvx-guide-header">
+						<?php if ( '' !== $atts['guide_eyebrow'] ) : ?>
+							<p class="cvx-guide-eyebrow"><?php echo esc_html( $atts['guide_eyebrow'] ); ?></p>
+						<?php endif; ?>
+						<?php if ( '' !== $atts['guide_heading'] ) : ?>
+							<h3 class="cvx-guide-heading"><?php echo esc_html( $atts['guide_heading'] ); ?></h3>
+						<?php endif; ?>
+					</div>
+					<div class="cvx-guide-grid">
+						<?php foreach ( Ecapla_CertVerify_Fields::get_statuses() as $key => $status ) : ?>
+							<article class="cvx-guide-card cvx-guide-<?php echo esc_attr( $key ); ?>">
+								<span class="cvx-guide-mark" aria-hidden="true"><?php echo esc_html( self::status_icon( $key ) ); ?></span>
+								<div>
+									<p class="cvx-guide-title"><?php echo esc_html( $status['label'] ); ?></p>
+									<p class="cvx-guide-desc"><?php echo esc_html( $status['desc'] ); ?></p>
+								</div>
+							</article>
+						<?php endforeach; ?>
+					</div>
+				</section>
+			<?php endif; ?>
+
+			<?php if ( $atts['show_credit'] && '' !== $atts['credit_text'] ) : ?>
+				<p class="cvx-credit"><?php echo esc_html( $atts['credit_text'] ); ?></p>
+			<?php endif; ?>
+		</div>
+		<?php
+		return ob_get_clean();
+	}
+
+	/**
+	 * Server-renders direct-link results so verification remains functional without JavaScript.
+	 *
+	 * @param string $number    Certificate number.
+	 * @param string $prefix    CSS class prefix.
+	 * @param string $not_found Not-found message.
+	 * @param string $error     Temporary error message.
+	 * @return string
+	 */
+	private static function server_result_html( $number, $prefix, $not_found, $error ) {
+		if ( '' === $number ) {
+			return '';
+		}
+		$cache_key = Ecapla_CertVerify_Database::normalize_certificate_number( $number );
+		if ( function_exists( 'ecapla_certverify_verification_is_available' ) && ! ecapla_certverify_verification_is_available() ) {
+			return self::message_html( $prefix, $error, true );
+		}
+		if ( ! array_key_exists( $cache_key, self::$direct_result_cache ) ) {
+			self::$direct_result_cache[ $cache_key ] = Ecapla_CertVerify_REST::is_rate_limited()
+				? new WP_Error( 'ecapla_certverify_rate_limited', __( 'Too many verification requests. Please wait a minute and try again.', 'certverify' ) )
+				: Ecapla_CertVerify_Database::get_by_cert_number( $number );
+		}
+		$certificate = self::$direct_result_cache[ $cache_key ];
+		if ( is_wp_error( $certificate ) ) {
+			return '<div class="' . esc_attr( $prefix ) . '-result-notfound"><p>' . esc_html( 'ecapla_certverify_rate_limited' === $certificate->get_error_code() ? $certificate->get_error_message() : $error ) . '</p></div>';
+		}
+		if ( ! $certificate ) {
+			return '<div class="' . esc_attr( $prefix ) . '-result-notfound"><p>' . esc_html( $not_found ) . '</p></div>';
+		}
+
+		$rows = '';
+		foreach ( self::fields_for_output( $certificate ) as $field ) {
+			$value = '' === (string) $field['value'] ? '—' : (string) $field['value'];
+			if ( ! empty( $field['is_status'] ) ) {
+				$status     = sanitize_key( (string) $field['status_key'] );
+				$value_html = '<span class="' . esc_attr( $prefix . '-badge ' . $prefix . '-badge-' . $status ) . '">' . esc_html( $value ) . '</span>';
+			} else {
+				$value_html = esc_html( $value );
+			}
+			$rows .= '<div class="' . esc_attr( $prefix ) . '-result-row"><dt>' . esc_html( $field['label'] ) . '</dt><dd>' . $value_html . '</dd></div>';
+		}
+		$list = '' !== $rows ? '<dl class="' . esc_attr( $prefix ) . '-result-list">' . $rows . '</dl>' : '';
+		return '<div class="' . esc_attr( $prefix ) . '-result-card"><p class="' . esc_attr( $prefix ) . '-result-success">' . esc_html__( 'Certificate found.', 'certverify' ) . '</p>' . $list . '</div>';
+	}
+
+	/**
+	 * Shapes a certificate record into public result rows.
+	 *
+	 * @param array $certificate Certificate record.
+	 * @return array
+	 */
+	public static function fields_for_output( $certificate ) {
+		$output = array();
+		foreach ( Ecapla_CertVerify_Fields::get_visible_fields() as $field ) {
+			$raw = ! empty( $field['column'] )
+				? ( isset( $certificate[ $field['key'] ] ) ? $certificate[ $field['key'] ] : '' )
+				: ( isset( $certificate['custom_fields'][ $field['key'] ] ) ? $certificate['custom_fields'][ $field['key'] ] : '' );
+
+			if ( 'status' === $field['type'] ) {
+				$effective = Ecapla_CertVerify_Database::effective_status( $certificate );
+				$statuses  = Ecapla_CertVerify_Fields::get_statuses();
+				$output[]  = array(
+					'label'      => $field['label'],
+					'value'      => isset( $statuses[ $effective ] ) ? $statuses[ $effective ]['label'] : ucfirst( $effective ),
+					'is_status'  => true,
+					'status_key' => $effective,
+				);
+				continue;
+			}
+
+			if ( 'date' === $field['type'] && $raw ) {
+				$raw = Ecapla_CertVerify_Validator::format_date( $raw );
+			}
+
+			$output[] = array(
+				'label'     => $field['label'],
+				'value'     => (string) $raw,
+				'is_status' => false,
+			);
+		}
+		return $output;
+	}
+
+	/**
+	 * Builds ordered heading content for either class family.
+	 *
+	 * @param array  $atts   Sanitized attributes.
+	 * @param string $prefix CSS prefix.
+	 * @return string
+	 */
+	private static function header_content( $atts, $prefix ) {
+		$parts = array(
+			'eyebrow' => $atts['show_eyebrow'] && '' !== $atts['eyebrow']
+				? '<p class="' . esc_attr( $prefix ) . '-eyebrow">' . esc_html( $atts['eyebrow'] ) . '</p>'
+				: '',
+			'heading' => $atts['show_heading'] && '' !== $atts['heading']
+				? '<' . $atts['heading_tag'] . ' class="' . esc_attr( $prefix ) . '-heading">' . esc_html( $atts['heading'] ) . '</' . $atts['heading_tag'] . '>'
+				: '',
+			'description' => $atts['show_description'] && '' !== $atts['description']
+				? '<p class="' . esc_attr( $prefix ) . '-description">' . esc_html( $atts['description'] ) . '</p>'
+				: '',
+		);
+
+		$html = '';
+		foreach ( explode( '-', $atts['content_order'] ) as $part ) {
+			if ( isset( $parts[ $part ] ) ) {
+				$html .= $parts[ $part ];
+			}
+		}
+		return $html;
+	}
+
+	/**
+	 * Sanitizes content and layout attributes.
+	 *
+	 * @param array $atts      Attributes.
+	 * @param bool  $is_modern Whether modern-only values are accepted.
+	 * @return array
+	 */
+	private static function sanitize_common_atts( $atts, $is_modern ) {
+		$orders = array(
+			'eyebrow-heading-description',
+			'eyebrow-description-heading',
+			'heading-eyebrow-description',
+			'heading-description-eyebrow',
+			'description-eyebrow-heading',
+			'description-heading-eyebrow',
+		);
+		$tags = array( 'h1', 'h2', 'h3', 'h4', 'div', 'p' );
+
+		foreach ( array( 'eyebrow', 'heading', 'placeholder', 'button_text', 'guide_eyebrow', 'guide_heading', 'credit_text' ) as $key ) {
+			if ( isset( $atts[ $key ] ) ) {
+				$atts[ $key ] = sanitize_text_field( (string) $atts[ $key ] );
+			}
+		}
+		$atts['description']   = sanitize_textarea_field( (string) $atts['description'] );
+		$atts['notfound_text'] = sanitize_textarea_field( (string) $atts['notfound_text'] );
+
+		$limits = array(
+			'eyebrow'       => 120,
+			'heading'       => 200,
+			'description'   => 2000,
+			'placeholder'   => 150,
+			'button_text'   => 100,
+			'notfound_text' => 500,
+			'guide_eyebrow' => 120,
+			'guide_heading' => 200,
+			'credit_text'   => 200,
+		);
+		foreach ( $limits as $key => $length ) {
+			if ( isset( $atts[ $key ] ) ) {
+				$atts[ $key ] = self::limit_text( $atts[ $key ], $length );
+			}
+		}
+
+		$atts['content_order'] = in_array( $atts['content_order'], $orders, true ) ? $atts['content_order'] : $orders[0];
+		$atts['heading_tag']   = in_array( $atts['heading_tag'], $tags, true ) ? $atts['heading_tag'] : 'h2';
+		$atts['text_align']    = in_array( $atts['text_align'], array( 'left', 'center', 'right' ), true ) ? $atts['text_align'] : 'left';
+		foreach ( array( 'show_eyebrow', 'show_heading', 'show_description', 'show_guide', 'show_credit' ) as $key ) {
+			$atts[ $key ] = filter_var( $atts[ $key ], FILTER_VALIDATE_BOOLEAN );
+		}
+		return $atts;
+	}
+
+	/**
+	 * Darkens a validated hexadecimal color for a consistent hover/focus accent.
+	 *
+	 * @param string $hex     Hex color.
+	 * @param int    $percent Darkening percentage.
+	 * @return string
+	 */
+	private static function darken_hex_color( $hex, $percent ) {
+		$hex = ltrim( (string) $hex, '#' );
+		if ( 3 === strlen( $hex ) ) {
+			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+		}
+		if ( 6 !== strlen( $hex ) || ! ctype_xdigit( $hex ) ) {
+			return '#0b5543';
+		}
+		$factor = max( 0, min( 100, 100 - absint( $percent ) ) ) / 100;
+		$red    = (int) round( hexdec( substr( $hex, 0, 2 ) ) * $factor );
+		$green  = (int) round( hexdec( substr( $hex, 2, 2 ) ) * $factor );
+		$blue   = (int) round( hexdec( substr( $hex, 4, 2 ) ) * $factor );
+		return sprintf( '#%02x%02x%02x', $red, $green, $blue );
+	}
+
+	/** Preserves only WordPress routing parameters needed by plain permalinks. */
+	private static function routing_hidden_inputs() {
+		$html = '';
+		foreach ( array( 'p', 'page_id', 'name', 'post_type', 'lang' ) as $key ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public routing state.
+			if ( ! isset( $_GET[ $key ] ) || is_array( $_GET[ $key ] ) ) {
+				continue;
+			}
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only public routing state.
+			$value = sanitize_text_field( wp_unslash( $_GET[ $key ] ) );
+			$html .= '<input type="hidden" name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" />';
+		}
+		return $html;
+	}
+
+	/**
+	 * Gets a bounded direct-search number from supported query aliases.
+	 *
+	 * @return string
+	 */
+	private static function direct_number() {
+		$keys = array( 'cv_number', 'certverify_number', 'ecapla_certverify_number' );
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Public direct-link lookup is read-only and intentionally unauthenticated.
+		foreach ( $keys as $key ) {
+			if ( isset( $_GET[ $key ] ) ) {
+				$number = self::limit_text( sanitize_text_field( wp_unslash( $_GET[ $key ] ) ), 100 );
+				// phpcs:enable WordPress.Security.NonceVerification.Recommended
+				return $number;
+			}
+		}
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		return '';
+	}
+
+	/**
+	 * Legacy inline CSS variables.
+	 *
+	 * @param array $atts Attributes.
+	 * @return string
+	 */
+	private static function legacy_style_vars( $atts ) {
+		$css    = '';
+		$accent = sanitize_hex_color( (string) $atts['accent'] );
+		if ( $accent ) {
+			$css .= '--cv-accent:' . $accent . ';';
+		}
+		$credit_color = sanitize_hex_color( (string) $atts['credit_color'] );
+		if ( $credit_color ) {
+			$css .= '--cv-credit-color:' . $credit_color . ';';
+		}
+		if ( is_numeric( $atts['credit_size'] ) ) {
+			$css .= '--cv-credit-size:' . min( 24, max( 8, absint( $atts['credit_size'] ) ) ) . 'px;';
+		}
+		if ( in_array( $atts['credit_align'], array( 'left', 'center', 'right' ), true ) ) {
+			$css .= '--cv-credit-align:' . $atts['credit_align'] . ';';
+		}
+		return $css;
+	}
+
+	/**
+	 * Modern inline CSS variables.
+	 *
+	 * @param array $atts Attributes.
+	 * @return string
+	 */
+	private static function template_style_vars( $atts ) {
+		$css    = '';
+		$accent = sanitize_hex_color( (string) $atts['accent'] );
+		if ( $accent ) {
+			$css .= '--cvx-accent:' . $accent . ';';
+			$css .= '--cvx-accent-strong:' . self::darken_hex_color( $accent, 18 ) . ';';
+		}
+		$credit_color = sanitize_hex_color( (string) $atts['credit_color'] );
+		if ( $credit_color ) {
+			$css .= '--cvx-credit-color:' . $credit_color . ';';
+		}
+		if ( is_numeric( $atts['credit_size'] ) ) {
+			$css .= '--cvx-credit-size:' . min( 24, max( 8, absint( $atts['credit_size'] ) ) ) . 'px;';
+		}
+		if ( in_array( $atts['credit_align'], array( 'left', 'center', 'right' ), true ) ) {
+			$css .= '--cvx-credit-align:' . $atts['credit_align'] . ';';
+		}
+		return $css;
+	}
+
+	private static function limit_text( $value, $length ) {
+		if ( function_exists( 'mb_substr' ) ) {
+			return mb_substr( (string) $value, 0, $length );
+		}
+		return substr( (string) $value, 0, $length );
+	}
+
+	private static function status_icon( $key ) {
+		$icons = array(
+			'valid'     => '✓',
+			'suspended' => '!',
+			'withdrawn' => '×',
+			'expired'   => '○',
+		);
+		return isset( $icons[ $key ] ) ? $icons[ $key ] : '';
+	}
+
+	private static function status_icon_entity( $key ) {
+		$icons = array(
+			'valid'     => '&#10003;',
+			'suspended' => '&#9888;',
+			'withdrawn' => '&#10005;',
+			'expired'   => '&#9675;',
+		);
+		return isset( $icons[ $key ] ) ? $icons[ $key ] : '';
+	}
+}

@@ -1,0 +1,142 @@
+CertVerify changelog
+====================
+
+1.4.9 — Restore integrity and exact snapshot semantics
+---------------------------------------------------------
+- Add an expiring global restore-maintenance lock that pauses certificate,
+  field, settings, import, purge, and deletion writes while a resumable complete
+  restore is active, while keeping public certificate verification readable.
+- Split complete restoration into Replace mode, which recreates the uploaded
+  registry and configuration snapshot exactly, and Merge mode, which retains
+  current-only certificates and current configuration.
+- Show backup, current, new, conflicting, current-only, and backup-only-field
+  counts before confirmation, then report retained or removed records afterward.
+- Track registry and configuration generations and verify a database fingerprint
+  before atomic commit so unexpected changes abort without replacing live data.
+- Verify point-in-time consistency across complete-backup generation and refuse
+  to download a mixed-state backup when records or configuration change mid-run.
+- Clean restore-maintenance and generation state during uninstall and harden
+  restore-table discovery and completed-file download preflight handling.
+
+1.4.8 — WordPress.org scan compliance repair
+----------------------------------------------
+- Add translator context for formatted import and backup messages.
+- Centralize the justified streaming-handle close operation used by atomic backup
+  generation and restore analysis.
+- Prefix and escape backup-progress view values.
+- Rework certificate list query preparation so values are prepared independently
+  and dynamic fragments remain strictly allow-listed.
+- Document unavoidable atomic lock, restore-table, rate-limit, and schema operations
+  for coding-standard analysis.
+- Preserve option-cache coherence after direct atomic internal-state updates.
+
+1.4.7 — Consolidated launch hardening and responsive repair
+---------------------------------------------------------------
+- Fix mobile verification form geometry across all six designs and constrain the
+  Professional Elementor widget to a centered 680px maximum without overflow.
+- Remove horizontal scrolling from Import & Export and Appearance & Embed, rename
+  the frontend submenu, and add Ecapla website and Report an issue actions.
+- Make certificate-hash and orphan discovery migrations resumable, token-owned,
+  and safe for public verification throughout interrupted upgrades.
+- Process CSV imports and complete-backup restores one bounded chunk per request
+  with progress, locks, safe retry state, and no live-table changes before commit.
+- Upgrade the complete backup stream to integrity-check its manifest and records,
+  while retaining compatibility with version 2 streaming and version 1 JSON files.
+- Add atomic staging-table backup restoration, durable rollback recovery, and
+  cleanup of expired restore workspaces and process locks.
+- Fail public verification closed whenever database or interrupted-restore health
+  is uncertain, and apply one canonical Unicode-aware certificate normalization.
+- Add frontend request timeouts, non-JavaScript verification, cached role health,
+  complete lifecycle cleanup, and additional WordPress.org static hardening.
+
+1.4.6 — Lifecycle, scalability, and complete backup
+-----------------------------------------------------
+- Add cached, definition-aware schema verification, an atomic migration lock,
+  indexed certificate hashes, and durable migration markers.
+- Self-heal mandatory administrator access and restore a preserved Certificate
+  Manager role safely after uninstall and reinstall.
+- Reduce large-import query amplification with chunked sessions, indexed
+  existing-record prefetching, and one deferred review-count refresh per batch.
+- Add a versioned complete JSON backup with dry-run restore for certificates,
+  timestamps, settings, active fields, retired fields, and historical values.
+- Keep public verification functional without JavaScript through normal GET
+  forms and server-rendered direct-link results.
+- Add atomic database-backed rate limiting when no persistent object cache is
+  available, bounded purge batches, keyset CSV export, and scalable search modes.
+- Add explicit field-schema recovery and a tool to reset core labels for the
+  current site language.
+
+1.4.5 — Schema recovery and Professional widget repair
+----------------------------------------------------------
+- Make the Professional Elementor widget fill its parent automatically and
+  override stale generated Max width rules from older releases.
+- Verify required database columns and indexes independently of stored version
+  markers, and retry legacy-status migrations after query failures.
+- Add administrator-only Historical restore mode for trusted CertVerify exports
+  containing protected legacy Expired records.
+- Render an explicit Certificate found state even when every public field is
+  hidden, while keeping hidden certificate data private.
+- Use the unique certificate-number index for the ordinary exact lookup before
+  a case-insensitive compatibility fallback.
+- Retry failed legacy-review-count refreshes and resolve the supplied Plugin
+  Check SQL-preparation and dynamic-input sanitization findings.
+
+1.4.4 — Response integrity and lifecycle recovery
+---------------------------------------------------
+- Treat malformed, empty, HTML, and schema-invalid successful HTTP responses as
+  verification-unavailable errors rather than missing certificates.
+- Stop activation when mandatory database, administrator-access, or legacy-cron
+  setup cannot be persisted, and report failed multisite provisioning.
+- Submit bulk certificate deletion through POST while keeping read-only list
+  search, filters, sorting, and pagination in GET parameters.
+- Roll back incomplete retired-field transitions and save resumable purge
+  progress so a database interruption can be retried safely.
+- Retain explicit historical Expired restoration as a supported legacy-data path.
+
+1.4.3 — Fail-closed verification and durable access control
+--------------------------------------------------------------
+- Return a private HTTP 503 response when certificate data cannot be read, so a
+  database outage is never represented as a missing or invalid certificate.
+- Propagate database-read failures through administration, imports, exports,
+  and legacy-status review counts without storing false zero values.
+- Verify role capabilities against WordPress's persisted roles option and retry
+  migrations until every required role change is durably stored.
+- Reject new imports with a mapped-but-empty Status while preserving existing
+  workflow state during partial updates and retaining the no-mapping default.
+- Apply noindex, private-cache, and referrer-protection headers to supported
+  direct-verification page URLs.
+- Share identical in-flight verification requests between widgets on one page
+  while retaining stale-response protection and safe cancellation.
+
+1.4.2 — Data integrity and reliability hardening
+-------------------------------------------------
+- Prevented blank mapped Status cells from silently changing workflow state.
+- Rejected imported Expired states for new or active certificates while retaining
+  the deliberate legacy-review path.
+- Propagated transient, schema, settings, role, and deletion failures accurately.
+- Added rollback protection for partially applied role-access changes.
+- Applied global accent and credit styling consistently to premium widgets.
+- Moved native-block text defaults into translated runtime fallbacks.
+
+1.4.1 — First public release candidate
+--------------------------------------
+- Added the dynamic block wrapper required for wide, full-width, anchor, and
+  other WordPress block-support attributes on the published frontend.
+- Made left, center, and right text alignment functional in the Professional
+  native-block and shortcode design while retaining left alignment by default.
+- Replaced direct PHP stream functions in CSV parsing and generated downloads
+  with bounded SplTempFileObject streams.
+- Hardened nested request sanitization, read-only request documentation,
+  output escaping, table-identifier preparation, and uninstall cleanup.
+- Removed the no-longer-needed manual text-domain loader and completed
+  translator context for version placeholders.
+- Shortened the WordPress.org short description to remain within the directory
+  parser limit.
+- Retained container-aware layouts, privacy-first public fields, retired-field
+  protection, dynamic expiry, CSV mapping, roles, the native block, shortcode,
+  direct links, REST verification, and six optional Elementor widgets.
+
+Earlier 1.x builds
+------------------
+Earlier versions were private development, migration, and staging builds and
+were not public WordPress.org releases.

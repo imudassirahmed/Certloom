@@ -1,0 +1,89 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "certverify/verification",
+  "version": "1.4.9",
+  "title": "CertVerify – Certificate Verification",
+  "category": "widgets",
+  "icon": "shield-alt",
+  "description": "Add a certificate verification interface without requiring Elementor.",
+  "keywords": [
+    "certificate",
+    "verification",
+    "credentials",
+    "elementor"
+  ],
+  "textdomain": "certverify",
+  "attributes": {
+    "design": {
+      "type": "string",
+      "default": "professional"
+    },
+    "showGuide": {
+      "type": "boolean",
+      "default": true
+    },
+    "showEyebrow": {
+      "type": "boolean",
+      "default": true
+    },
+    "showHeading": {
+      "type": "boolean",
+      "default": true
+    },
+    "showDescription": {
+      "type": "boolean",
+      "default": true
+    },
+    "showCredit": {
+      "type": "boolean",
+      "default": false
+    },
+    "headingTag": {
+      "type": "string",
+      "default": "h2"
+    },
+    "textAlign": {
+      "type": "string",
+      "default": "left"
+    },
+    "eyebrow": {
+      "type": "string"
+    },
+    "heading": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "placeholder": {
+      "type": "string"
+    },
+    "buttonText": {
+      "type": "string"
+    },
+    "notFoundText": {
+      "type": "string"
+    },
+    "guideEyebrow": {
+      "type": "string"
+    },
+    "guideHeading": {
+      "type": "string"
+    },
+    "creditText": {
+      "type": "string"
+    }
+  },
+  "supports": {
+    "align": [
+      "wide",
+      "full"
+    ],
+    "html": false,
+    "anchor": true
+  },
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./editor.css",
+  "style": "ecapla-certverify-public"
+}

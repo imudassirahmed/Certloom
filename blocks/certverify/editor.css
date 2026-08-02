@@ -1,0 +1,11 @@
+.wp-block-certverify-verification,
+.ecapla-certverify-block-editor,
+.ecapla-certverify-block-editor .components-disabled,
+.ecapla-certverify-block-editor .components-server-side-render {
+	min-width: 0;
+	max-width: 100%;
+}
+
+.ecapla-certverify-block-note {
+	margin-bottom: 12px;
+}
