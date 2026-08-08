@@ -1,6 +1,6 @@
-# Contributing to CertVerify
+# Contributing to Certloom
 
-CertVerify is maintained by Ecapla. Please open an issue before proposing substantial changes.
+Certloom is maintained by Ecapla. Please open an issue before proposing substantial changes.
 
 ## Development rules
 

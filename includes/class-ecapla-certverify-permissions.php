@@ -125,7 +125,7 @@ class Ecapla_CertVerify_Permissions {
 		if ( ! self::stored_role_exists( self::MANAGER_ROLE ) ) {
 			add_role(
 				self::MANAGER_ROLE,
-				__( 'Certificate Manager', 'certverify' ),
+				__( 'Certificate Manager', 'certloom' ),
 				array(
 					'read'                 => true,
 					ECAPLA_CERTVERIFY_CAP => true,

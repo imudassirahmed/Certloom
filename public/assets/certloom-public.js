@@ -82,7 +82,7 @@
 					try {
 						data = JSON.parse( body );
 					} catch ( error ) {
-						throw new Error( 'CertVerify received an invalid verification response.' );
+						throw new Error( 'Certloom received an invalid verification response.' );
 					}
 					return { ok: response.ok, data: data };
 				} );
@@ -106,7 +106,7 @@
 						delete inFlightRequests[ key ];
 					}
 					if ( entry.timedOut ) {
-						throw new Error( 'CertVerify verification request timed out.' );
+						throw new Error( 'Certloom verification request timed out.' );
 					}
 					throw error;
 				}
@@ -211,11 +211,11 @@
 						return;
 					}
 					if ( ! result.data || 'object' !== typeof result.data || 'boolean' !== typeof result.data.found ) {
-						throw new Error( 'CertVerify received an unexpected verification response.' );
+						throw new Error( 'Certloom received an unexpected verification response.' );
 					}
 					if ( result.data.found ) {
 						if ( ! Array.isArray( result.data.fields ) ) {
-							throw new Error( 'CertVerify received an incomplete verification response.' );
+							throw new Error( 'Certloom received an incomplete verification response.' );
 						}
 						showResult( result.data.fields );
 					} else {
@@ -280,19 +280,19 @@
 		boot();
 	}
 
-	window.CertVerifyInit = scan;
+	window.CertloomInit = scan;
 
 	window.addEventListener( 'elementor/frontend/init', function () {
 		if ( ! window.elementorFrontend || ! window.elementorFrontend.hooks ) {
 			return;
 		}
 		[
-			'certverify',
-			'certverify-meridian',
-			'certverify-halo',
-			'certverify-axis',
-			'certverify-nova',
-			'certverify-forge'
+			'certloom',
+			'certloom-meridian',
+			'certloom-halo',
+			'certloom-axis',
+			'certloom-nova',
+			'certloom-forge'
 		].forEach( function ( widgetName ) {
 			window.elementorFrontend.hooks.addAction( 'frontend/element_ready/' + widgetName + '.default', function ( scope ) {
 				scan( scope && scope[ 0 ] ? scope[ 0 ] : scope );

@@ -4,11 +4,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 ?>
 <div class="ecapla-certverify-admin-brand-bar">
-	<span class="ecapla-certverify-admin-brand-name"><?php esc_html_e( 'CertVerify', 'certverify' ); ?></span>
+	<span class="ecapla-certverify-admin-brand-name"><?php esc_html_e( 'Certloom', 'certloom' ); ?></span>
 	<span class="ecapla-certverify-admin-brand-credit">
-		<?php esc_html_e( 'Secure certificate verification for WordPress', 'certverify' ); ?>
+		<?php esc_html_e( 'Secure certificate verification for WordPress', 'certloom' ); ?>
 		&middot;
 		<a href="https://ecapla.com" target="_blank" rel="noopener noreferrer">ecapla.com</a>
-		<a class="button button-secondary ecapla-certverify-report-issue" href="https://ecapla.com" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Report an issue', 'certverify' ); ?></a>
+		<a class="button button-secondary ecapla-certverify-report-issue" href="mailto:support@ecapla.com?subject=Certloom%20%E2%80%93%20Report%20an%20Issue"><?php esc_html_e( 'Report an issue', 'certloom' ); ?></a>
 	</span>
 </div>

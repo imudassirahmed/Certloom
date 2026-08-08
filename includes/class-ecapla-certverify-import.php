@@ -22,15 +22,15 @@ class Ecapla_CertVerify_Import {
 	 */
 	public static function parse_csv_string( $content ) {
 		if ( ! is_string( $content ) || '' === $content ) {
-			return new WP_Error( 'ecapla_certverify_empty_csv', __( 'The CSV file is empty or could not be read.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_empty_csv', __( 'The CSV file is empty or could not be read.', 'certloom' ) );
 		}
 
 		$content = preg_replace( '/^\xEF\xBB\xBF/', '', $content );
 		if ( false !== strpos( $content, "\0" ) ) {
-			return new WP_Error( 'ecapla_certverify_binary_csv', __( 'The uploaded file contains binary data and cannot be imported as CSV.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_binary_csv', __( 'The uploaded file contains binary data and cannot be imported as CSV.', 'certloom' ) );
 		}
 		if ( function_exists( 'mb_check_encoding' ) && ! mb_check_encoding( $content, 'UTF-8' ) ) {
-			return new WP_Error( 'ecapla_certverify_csv_encoding', __( 'The CSV must use UTF-8 character encoding.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_csv_encoding', __( 'The CSV must use UTF-8 character encoding.', 'certloom' ) );
 		}
 
 		try {
@@ -38,7 +38,7 @@ class Ecapla_CertVerify_Import {
 			$stream->fwrite( $content );
 			$stream->rewind();
 		} catch ( RuntimeException $exception ) {
-			return new WP_Error( 'ecapla_certverify_csv_stream', __( 'The CSV file could not be opened for analysis.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_csv_stream', __( 'The CSV file could not be opened for analysis.', 'certloom' ) );
 		}
 
 		$rows         = array();
@@ -57,7 +57,7 @@ class Ecapla_CertVerify_Import {
 					'ecapla_certverify_too_many_columns',
 					sprintf(
 						/* translators: 1: CSV row number, 2: maximum allowed column count. */
-						__( 'Row %1$d contains more than %2$d columns.', 'certverify' ),
+						__( 'Row %1$d contains more than %2$d columns.', 'certloom' ),
 						$line,
 						self::MAX_COLUMNS
 					)
@@ -70,7 +70,7 @@ class Ecapla_CertVerify_Import {
 					'ecapla_certverify_column_mismatch',
 					sprintf(
 						/* translators: %d: CSV row number. */
-						__( 'Row %d does not contain the same number of columns as the header row.', 'certverify' ),
+						__( 'Row %d does not contain the same number of columns as the header row.', 'certloom' ),
 						$line
 					)
 				);
@@ -81,7 +81,7 @@ class Ecapla_CertVerify_Import {
 						'ecapla_certverify_cell_too_large',
 						sprintf(
 							/* translators: %d: CSV row number. */
-							__( 'Row %d contains a cell that is too large to import safely.', 'certverify' ),
+							__( 'Row %d contains a cell that is too large to import safely.', 'certloom' ),
 							$line
 						)
 					);
@@ -93,7 +93,7 @@ class Ecapla_CertVerify_Import {
 					'ecapla_certverify_too_many_rows',
 					sprintf(
 						/* translators: %d: maximum number of certificate rows per import. */
-						__( 'A single import can contain no more than %d certificate rows.', 'certverify' ),
+						__( 'A single import can contain no more than %d certificate rows.', 'certloom' ),
 						self::MAX_ROWS
 					)
 				);
@@ -112,7 +112,7 @@ class Ecapla_CertVerify_Import {
 	public static function store_rows( $rows ) {
 		$rows = array_values( (array) $rows );
 		if ( count( $rows ) < 2 ) {
-			return new WP_Error( 'ecapla_certverify_empty_csv', __( 'The CSV needs a header row plus at least one certificate row.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_empty_csv', __( 'The CSV needs a header row plus at least one certificate row.', 'certloom' ) );
 		}
 		$header = array_shift( $rows );
 		return self::store_chunked_session( $header, $rows );
@@ -128,7 +128,7 @@ class Ecapla_CertVerify_Import {
 		try {
 			$stream = new SplFileObject( $path, 'rb' );
 		} catch ( RuntimeException $exception ) {
-			return new WP_Error( 'ecapla_certverify_csv_stream', __( 'The CSV file could not be opened for analysis.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_csv_stream', __( 'The CSV file could not be opened for analysis.', 'certloom' ) );
 		}
 
 		$token        = self::ROW_PREFIX . wp_generate_password( 24, false, false );
@@ -155,7 +155,7 @@ class Ecapla_CertVerify_Import {
 					'ecapla_certverify_too_many_columns',
 					sprintf(
 						/* translators: 1: CSV row number, 2: maximum permitted number of columns. */
-						__( 'Row %1$d contains more than %2$d columns.', 'certverify' ),
+						__( 'Row %1$d contains more than %2$d columns.', 'certloom' ),
 						$line,
 						self::MAX_COLUMNS
 					)
@@ -169,7 +169,7 @@ class Ecapla_CertVerify_Import {
 					'ecapla_certverify_column_mismatch',
 					sprintf(
 						/* translators: %d: CSV row number. */
-						__( 'Row %d does not contain the same number of columns as the header row.', 'certverify' ),
+						__( 'Row %d does not contain the same number of columns as the header row.', 'certloom' ),
 						$line
 					)
 				);
@@ -178,7 +178,7 @@ class Ecapla_CertVerify_Import {
 				$cell = (string) $cell;
 				if ( false !== strpos( $cell, "\0" ) ) {
 					self::delete_chunked_session( $token, $chunk_count );
-					return new WP_Error( 'ecapla_certverify_binary_csv', __( 'The uploaded file contains binary data and cannot be imported as CSV.', 'certverify' ) );
+					return new WP_Error( 'ecapla_certverify_binary_csv', __( 'The uploaded file contains binary data and cannot be imported as CSV.', 'certloom' ) );
 				}
 				if ( strlen( $cell ) > self::MAX_CELL_BYTES ) {
 					self::delete_chunked_session( $token, $chunk_count );
@@ -186,14 +186,14 @@ class Ecapla_CertVerify_Import {
 						'ecapla_certverify_cell_too_large',
 						sprintf(
 							/* translators: %d: CSV row number. */
-							__( 'Row %d contains a cell that is too large to import safely.', 'certverify' ),
+							__( 'Row %d contains a cell that is too large to import safely.', 'certloom' ),
 							$line
 						)
 					);
 				}
 				if ( function_exists( 'mb_check_encoding' ) && ! mb_check_encoding( $cell, 'UTF-8' ) ) {
 					self::delete_chunked_session( $token, $chunk_count );
-					return new WP_Error( 'ecapla_certverify_csv_encoding', __( 'The CSV must use UTF-8 character encoding.', 'certverify' ) );
+					return new WP_Error( 'ecapla_certverify_csv_encoding', __( 'The CSV must use UTF-8 character encoding.', 'certloom' ) );
 				}
 			}
 
@@ -208,7 +208,7 @@ class Ecapla_CertVerify_Import {
 					'ecapla_certverify_too_many_rows',
 					sprintf(
 						/* translators: %d: maximum number of certificate rows allowed in one import. */
-						__( 'A single import can contain no more than %d certificate rows.', 'certverify' ),
+						__( 'A single import can contain no more than %d certificate rows.', 'certloom' ),
 						self::MAX_ROWS
 					)
 				);
@@ -220,7 +220,7 @@ class Ecapla_CertVerify_Import {
 			if ( count( $chunk ) >= self::CHUNK_ROWS ) {
 				if ( ! self::store_chunk( $token, $chunk_count, $chunk ) ) {
 					self::delete_chunked_session( $token, $chunk_count );
-					return new WP_Error( 'ecapla_certverify_import_storage_failed', __( 'The CSV was read, but its temporary import session could not be stored. Check the database or object cache and try again.', 'certverify' ) );
+					return new WP_Error( 'ecapla_certverify_import_storage_failed', __( 'The CSV was read, but its temporary import session could not be stored. Check the database or object cache and try again.', 'certloom' ) );
 				}
 				$chunk_count++;
 				$chunk = array();
@@ -229,12 +229,12 @@ class Ecapla_CertVerify_Import {
 
 		if ( null === $header || 0 === $row_count ) {
 			self::delete_chunked_session( $token, $chunk_count );
-			return new WP_Error( 'ecapla_certverify_empty_csv', __( 'The CSV needs a header row plus at least one certificate row.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_empty_csv', __( 'The CSV needs a header row plus at least one certificate row.', 'certloom' ) );
 		}
 		if ( $chunk ) {
 			if ( ! self::store_chunk( $token, $chunk_count, $chunk ) ) {
 				self::delete_chunked_session( $token, $chunk_count );
-				return new WP_Error( 'ecapla_certverify_import_storage_failed', __( 'The CSV was read, but its temporary import session could not be stored. Check the database or object cache and try again.', 'certverify' ) );
+				return new WP_Error( 'ecapla_certverify_import_storage_failed', __( 'The CSV was read, but its temporary import session could not be stored. Check the database or object cache and try again.', 'certloom' ) );
 			}
 			$chunk_count++;
 		}
@@ -242,7 +242,7 @@ class Ecapla_CertVerify_Import {
 		$manifest = array( 'user_id' => get_current_user_id(), 'header' => $header, 'preview' => $preview, 'chunks' => $chunk_count, 'rows' => $row_count );
 		if ( ! set_transient( $token, $manifest, 30 * MINUTE_IN_SECONDS ) ) {
 			self::delete_chunked_session( $token, $chunk_count );
-			return new WP_Error( 'ecapla_certverify_import_storage_failed', __( 'The CSV was read, but its temporary import session could not be stored. Check the database or object cache and try again.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_import_storage_failed', __( 'The CSV was read, but its temporary import session could not be stored. Check the database or object cache and try again.', 'certloom' ) );
 		}
 		return $token;
 	}
@@ -254,14 +254,14 @@ class Ecapla_CertVerify_Import {
 		foreach ( $chunks as $chunk ) {
 			if ( ! self::store_chunk( $token, $chunk_count, $chunk ) ) {
 				self::delete_chunked_session( $token, $chunk_count );
-				return new WP_Error( 'ecapla_certverify_import_storage_failed', __( 'The CSV was read, but its temporary import session could not be stored. Check the database or object cache and try again.', 'certverify' ) );
+				return new WP_Error( 'ecapla_certverify_import_storage_failed', __( 'The CSV was read, but its temporary import session could not be stored. Check the database or object cache and try again.', 'certloom' ) );
 			}
 			$chunk_count++;
 		}
 		$manifest = array( 'user_id' => get_current_user_id(), 'header' => $header, 'preview' => array_slice( $rows, 0, 5 ), 'chunks' => $chunk_count, 'rows' => count( $rows ) );
 		if ( ! set_transient( $token, $manifest, 30 * MINUTE_IN_SECONDS ) ) {
 			self::delete_chunked_session( $token, $chunk_count );
-			return new WP_Error( 'ecapla_certverify_import_storage_failed', __( 'The CSV was read, but its temporary import session could not be stored. Check the database or object cache and try again.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_import_storage_failed', __( 'The CSV was read, but its temporary import session could not be stored. Check the database or object cache and try again.', 'certloom' ) );
 		}
 		return $token;
 	}
@@ -372,7 +372,7 @@ class Ecapla_CertVerify_Import {
 			}
 			if ( isset( $mapped_fields[ $field_key ] ) ) {
 				$results['skipped'] = count( $rows );
-				$results['errors'][] = __( 'Each certificate field can be mapped to only one CSV column.', 'certverify' );
+				$results['errors'][] = __( 'Each certificate field can be mapped to only one CSV column.', 'certloom' );
 				return $results;
 			}
 			$mapped_fields[ $field_key ] = true;
@@ -381,7 +381,7 @@ class Ecapla_CertVerify_Import {
 
 		if ( ! isset( $mapped_fields['cert_number'] ) ) {
 			$results['skipped'] = count( $rows );
-			$results['errors'][] = __( 'Map one CSV column to Certificate number before running the import.', 'certverify' );
+			$results['errors'][] = __( 'Map one CSV column to Certificate number before running the import.', 'certloom' );
 			return $results;
 		}
 		$status_is_mapped = isset( $mapped_fields['status'] );
@@ -425,7 +425,7 @@ class Ecapla_CertVerify_Import {
 					if ( 'status' === $field_key ) {
 						$status_was_blank = true;
 						if ( $clear_empty ) {
-							$row_error = __( 'Status cannot be cleared. Enter Valid, Suspended, or Withdrawn, or turn off blank-cell clearing.', 'certverify' );
+							$row_error = __( 'Status cannot be cleared. Enter Valid, Suspended, or Withdrawn, or turn off blank-cell clearing.', 'certloom' );
 							break;
 						}
 						continue;
@@ -449,7 +449,7 @@ class Ecapla_CertVerify_Import {
 				$results['skipped']++;
 				$results['errors'][] = sprintf(
 					/* translators: 1: CSV row number, 2: validation error message. */
-					__( 'Row %1$d: %2$s', 'certverify' ),
+					__( 'Row %1$d: %2$s', 'certloom' ),
 					$line,
 					$row_error
 				);
@@ -460,7 +460,7 @@ class Ecapla_CertVerify_Import {
 				$results['skipped']++;
 				$results['errors'][] = sprintf(
 					/* translators: %d: CSV row number. */
-					__( 'Row %d: certificate number is missing or was not mapped.', 'certverify' ),
+					__( 'Row %d: certificate number is missing or was not mapped.', 'certloom' ),
 					$line
 				);
 				continue;
@@ -472,7 +472,7 @@ class Ecapla_CertVerify_Import {
 				$results['skipped']++;
 				$results['errors'][] = sprintf(
 					/* translators: %d: CSV row number. */
-					__( 'Row %d: Status is mapped but blank. Enter Valid, Suspended, or Withdrawn, or remove the Status mapping to use the default Valid state.', 'certverify' ),
+					__( 'Row %d: Status is mapped but blank. Enter Valid, Suspended, or Withdrawn, or remove the Status mapping to use the default Valid state.', 'certloom' ),
 					$line
 				);
 				continue;
@@ -485,7 +485,7 @@ class Ecapla_CertVerify_Import {
 					$results['skipped']++;
 					$results['errors'][] = sprintf(
 						/* translators: %d: CSV row number. */
-						__( 'Row %d: Expired is calculated from the expiry date. Enable Historical restore mode only when restoring protected legacy data.', 'certverify' ),
+						__( 'Row %d: Expired is calculated from the expiry date. Enable Historical restore mode only when restoring protected legacy data.', 'certloom' ),
 						$line
 					);
 					continue;
@@ -510,7 +510,7 @@ class Ecapla_CertVerify_Import {
 				$results['skipped']++;
 				$results['errors'][] = sprintf(
 					/* translators: 1: CSV row number, 2: validation error message. */
-					__( 'Row %1$d: %2$s', 'certverify' ),
+					__( 'Row %1$d: %2$s', 'certloom' ),
 					$line,
 					$result->get_error_message()
 				);
@@ -565,7 +565,7 @@ class Ecapla_CertVerify_Import {
 			'started_at'         => time(),
 		);
 		if ( ! set_transient( sanitize_text_field( $token ), $manifest, self::PROCESS_TTL ) ) {
-			return new WP_Error( 'ecapla_certverify_import_progress_failed', __( 'CertVerify could not save the import progress state.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_import_progress_failed', __( 'Certloom could not save the import progress state.', 'certloom' ) );
 		}
 		return self::continue_stored_process( $token );
 	}
@@ -597,7 +597,7 @@ class Ecapla_CertVerify_Import {
 			if ( ! is_array( $result ) ) {
 				$chunk = get_transient( $token . '_chunk_' . $cursor );
 				if ( ! is_array( $chunk ) || (int) ( $chunk['user_id'] ?? 0 ) !== get_current_user_id() || ! isset( $chunk['rows'] ) ) {
-					return new WP_Error( 'ecapla_certverify_import_chunk_expired', __( 'One temporary import chunk expired. Upload the CSV again.', 'certverify' ) );
+					return new WP_Error( 'ecapla_certverify_import_chunk_expired', __( 'One temporary import chunk expired. Upload the CSV again.', 'certloom' ) );
 				}
 				$result = self::process(
 					array_merge( array( $manifest['header'] ), $chunk['rows'] ),
@@ -609,7 +609,7 @@ class Ecapla_CertVerify_Import {
 					$cursor * self::CHUNK_ROWS
 				);
 				if ( ! set_transient( $receipt_key, $result, self::PROCESS_TTL ) ) {
-					return new WP_Error( 'ecapla_certverify_import_receipt_failed', __( 'The import chunk finished, but CertVerify could not save its completion receipt. Review the certificate list before retrying.', 'certverify' ) );
+					return new WP_Error( 'ecapla_certverify_import_receipt_failed', __( 'The import chunk finished, but Certloom could not save its completion receipt. Review the certificate list before retrying.', 'certloom' ) );
 				}
 			}
 			foreach ( array( 'created', 'updated', 'restored', 'skipped' ) as $key ) {
@@ -619,7 +619,7 @@ class Ecapla_CertVerify_Import {
 			$process['cursor']             = $cursor + 1;
 			$manifest['process']           = $process;
 			if ( ! set_transient( $token, $manifest, self::PROCESS_TTL ) ) {
-				return new WP_Error( 'ecapla_certverify_import_progress_failed', __( 'The import chunk finished, but CertVerify could not save its progress. Review the certificate list before retrying.', 'certverify' ) );
+				return new WP_Error( 'ecapla_certverify_import_progress_failed', __( 'The import chunk finished, but Certloom could not save its progress. Review the certificate list before retrying.', 'certloom' ) );
 			}
 			delete_transient( $receipt_key );
 			return self::progress_response( $manifest, $process['cursor'] >= $total );
@@ -647,12 +647,12 @@ class Ecapla_CertVerify_Import {
 		$stored = (string) get_option( $key, '' );
 		$parts  = explode( '|', $stored, 2 );
 		if ( isset( $parts[1] ) && ( time() - absint( $parts[1] ) ) < self::PROCESS_LOCK_TTL ) {
-			return new WP_Error( 'ecapla_certverify_import_busy', __( 'This import batch is already being processed. Wait a moment and continue again.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_import_busy', __( 'This import batch is already being processed. Wait a moment and continue again.', 'certloom' ) );
 		}
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Atomic compare-and-swap is required so only one request can take over an expired import lock.
 		$updated = $wpdb->query( $wpdb->prepare( 'UPDATE %i SET option_value = %s WHERE option_name = %s AND option_value = %s', $wpdb->options, $value, $key, $stored ) );
 		wp_cache_delete( $key, 'options' );
-		return 1 === (int) $updated ? $owner : new WP_Error( 'ecapla_certverify_import_busy', __( 'This import batch is already being processed. Wait a moment and continue again.', 'certverify' ) );
+		return 1 === (int) $updated ? $owner : new WP_Error( 'ecapla_certverify_import_busy', __( 'This import batch is already being processed. Wait a moment and continue again.', 'certloom' ) );
 	}
 
 	private static function release_process_lock( $token, $owner ) {
@@ -702,7 +702,7 @@ class Ecapla_CertVerify_Import {
 			10 * MINUTE_IN_SECONDS
 		);
 		if ( ! $stored ) {
-			return new WP_Error( 'ecapla_certverify_import_result_storage_failed', __( 'The import finished, but its result summary could not be stored. Review the certificate list before running the file again.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_import_result_storage_failed', __( 'The import finished, but its result summary could not be stored. Review the certificate list before running the file again.', 'certloom' ) );
 		}
 		return $token;
 	}
@@ -732,7 +732,7 @@ class Ecapla_CertVerify_Import {
 		do {
 			$items = Ecapla_CertVerify_Database::get_export_batch( $last_id, $limit );
 			if ( is_wp_error( $items ) ) {
-				wp_die( esc_html( $items->get_error_message() ), esc_html__( 'CertVerify export unavailable', 'certverify' ), array( 'response' => 503 ) );
+				wp_die( esc_html( $items->get_error_message() ), esc_html__( 'Certloom export unavailable', 'certloom' ), array( 'response' => 503 ) );
 			}
 			foreach ( $items as $certificate ) {
 				$last_id = max( $last_id, absint( $certificate['id'] ) );
@@ -778,7 +778,7 @@ class Ecapla_CertVerify_Import {
 				$sample[] = '';
 			}
 		}
-		self::send_csv_headers( 'certverify-import-template.csv' );
+		self::send_csv_headers( 'certloom-import-template.csv' );
 		self::output_csv_rows( array( $header, $sample ), true );
 	}
 

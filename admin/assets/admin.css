@@ -63,7 +63,7 @@
 	margin-top: 0;
 }
 
-.ecapla-certverify-fields-list {
+.ecapla-certloom-fields-list {
 	display: grid;
 	gap: 10px;
 	width: 100%;
@@ -155,7 +155,7 @@
 	min-width: 760px;
 }
 
-.ecapla-certverify-import-options {
+.ecapla-certloom-import-options {
 	display: grid;
 	gap: 6px;
 	width: 100%;
@@ -304,7 +304,7 @@
 	border-radius: 8px;
 }
 
-.ecapla-certverify-frontend-grid {
+.ecapla-certloom-frontend-grid {
 	margin-top: 22px;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -355,7 +355,7 @@
 }
 
 @media (max-width: 1100px) {
-	.ecapla-certverify-frontend-grid {
+	.ecapla-certloom-frontend-grid {
 		grid-template-columns: 1fr;
 	}
 }
@@ -411,7 +411,7 @@
 
 .ecapla-certverify-admin-grid,
 .ecapla-certverify-admin-card,
-.ecapla-certverify-frontend-grid,
+.ecapla-certloom-frontend-grid,
 .ecapla-certverify-embed-reference,
 .ecapla-certverify-backup-review,
 .ecapla-certverify-admin-wrap form,
@@ -471,7 +471,7 @@
 	}
 
 	.ecapla-certverify-admin-grid,
-	.ecapla-certverify-frontend-grid {
+	.ecapla-certloom-frontend-grid {
 		grid-template-columns: minmax(0, 1fr);
 	}
 
@@ -486,7 +486,7 @@
 	}
 }
 
-.ecapla-certverify-import-progress-card {
+.ecapla-certloom-import-progress-card {
 	max-width: 760px;
 }
 .ecapla-certverify-progress {

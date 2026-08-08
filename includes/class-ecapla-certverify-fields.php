@@ -247,7 +247,7 @@ class Ecapla_CertVerify_Fields {
 		$retired = self::get_retired_fields();
 		if ( ! self::save_fields( $fields ) || ! self::save_retired_fields( $retired ) ) {
 			update_option( self::NORMALIZATION_RETRY_OPTION, 1, false );
-			return new WP_Error( 'ecapla_certverify_field_schema_repair_failed', __( 'The certificate field schema could not be repaired. Review database write access before editing certificates.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_field_schema_repair_failed', __( 'The certificate field schema could not be repaired. Review database write access before editing certificates.', 'certloom' ) );
 		}
 		delete_option( self::NORMALIZATION_RETRY_OPTION );
 		return true;
@@ -304,13 +304,13 @@ class Ecapla_CertVerify_Fields {
 
 	public static function get_default_fields() {
 		return array(
-			self::field( 'cert_number', __( 'Certificate number', 'certverify' ), 'text', 'cert_number', true, true, 0, true ),
-			self::field( 'status', __( 'Current status', 'certverify' ), 'status', 'status', true, true, 1, true ),
-			self::field( 'holder_name', __( 'Certificate holder', 'certverify' ), 'text', 'holder_name', true, false, 2, false ),
-			self::field( 'standard', __( 'Standard', 'certverify' ), 'text', null, false, false, 3, false ),
-			self::field( 'scope', __( 'Scope', 'certverify' ), 'textarea', null, false, false, 4, false ),
-			self::field( 'issue_date', __( 'Issue date', 'certverify' ), 'date', 'issue_date', true, false, 5, false ),
-			self::field( 'expiry_date', __( 'Expiry date', 'certverify' ), 'date', 'expiry_date', true, false, 6, false ),
+			self::field( 'cert_number', __( 'Certificate number', 'certloom' ), 'text', 'cert_number', true, true, 0, true ),
+			self::field( 'status', __( 'Current status', 'certloom' ), 'status', 'status', true, true, 1, true ),
+			self::field( 'holder_name', __( 'Certificate holder', 'certloom' ), 'text', 'holder_name', true, false, 2, false ),
+			self::field( 'standard', __( 'Standard', 'certloom' ), 'text', null, false, false, 3, false ),
+			self::field( 'scope', __( 'Scope', 'certloom' ), 'textarea', null, false, false, 4, false ),
+			self::field( 'issue_date', __( 'Issue date', 'certloom' ), 'date', 'issue_date', true, false, 5, false ),
+			self::field( 'expiry_date', __( 'Expiry date', 'certloom' ), 'date', 'expiry_date', true, false, 6, false ),
 		);
 	}
 
@@ -330,24 +330,24 @@ class Ecapla_CertVerify_Fields {
 	public static function get_statuses() {
 		$statuses = array(
 			'valid'     => array(
-				'label' => __( 'Valid', 'certverify' ),
+				'label' => __( 'Valid', 'certloom' ),
 				'color' => 'green',
-				'desc'  => __( 'The certificate is current and may be accepted as evidence of active certification.', 'certverify' ),
+				'desc'  => __( 'The certificate is current and may be accepted as evidence of active certification.', 'certloom' ),
 			),
 			'suspended' => array(
-				'label' => __( 'Suspended', 'certverify' ),
+				'label' => __( 'Suspended', 'certloom' ),
 				'color' => 'amber',
-				'desc'  => __( 'Certification is temporarily suspended and should not be treated as current evidence.', 'certverify' ),
+				'desc'  => __( 'Certification is temporarily suspended and should not be treated as current evidence.', 'certloom' ),
 			),
 			'withdrawn' => array(
-				'label' => __( 'Withdrawn', 'certverify' ),
+				'label' => __( 'Withdrawn', 'certloom' ),
 				'color' => 'red',
-				'desc'  => __( 'The certificate has been withdrawn and is no longer valid.', 'certverify' ),
+				'desc'  => __( 'The certificate has been withdrawn and is no longer valid.', 'certloom' ),
 			),
 			'expired'   => array(
-				'label' => __( 'Expired', 'certverify' ),
+				'label' => __( 'Expired', 'certloom' ),
 				'color' => 'gray',
-				'desc'  => __( 'The certificate has passed its expiry date and does not represent current certification.', 'certverify' ),
+				'desc'  => __( 'The certificate has passed its expiry date and does not represent current certification.', 'certloom' ),
 			),
 		);
 

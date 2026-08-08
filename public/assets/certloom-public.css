@@ -1,15 +1,120 @@
+/*
+ * Certloom Elementor flex-item contract.
+ *
+ * Elementor Flexbox Containers size widgets with custom properties such as
+ * --container-widget-width. The widget itself must therefore claim the parent
+ * container width; sizing only the inner Certloom markup is not sufficient.
+ * Keep every Certloom widget on a full-width row and center its panel.
+ */
+:is(
+	.elementor-widget-certloom,
+	.elementor-widget-certloom-meridian,
+	.elementor-widget-certloom-halo,
+	.elementor-widget-certloom-axis,
+	.elementor-widget-certloom-nova,
+	.elementor-widget-certloom-forge,
+	[data-widget_type="certloom.default"],
+	[data-widget_type="certloom-meridian.default"],
+	[data-widget_type="certloom-halo.default"],
+	[data-widget_type="certloom-axis.default"],
+	[data-widget_type="certloom-nova.default"],
+	[data-widget_type="certloom-forge.default"]
+) {
+	--container-widget-width: 100% !important;
+	--container-widget-flex-grow: 0 !important;
+	--container-widget-align-self: stretch !important;
+	--width: 100% !important;
+	box-sizing: border-box !important;
+	width: 100% !important;
+	inline-size: 100% !important;
+	min-width: 0 !important;
+	min-inline-size: 0 !important;
+	max-width: 100% !important;
+	max-inline-size: 100% !important;
+	flex: 0 0 100% !important;
+	flex-basis: 100% !important;
+	align-self: stretch !important;
+	margin-inline: auto !important;
+}
+
+:is(
+	.elementor-widget-certloom,
+	.elementor-widget-certloom-meridian,
+	.elementor-widget-certloom-halo,
+	.elementor-widget-certloom-axis,
+	.elementor-widget-certloom-nova,
+	.elementor-widget-certloom-forge,
+	[data-widget_type^="certloom"]
+) > .elementor-widget-container {
+	box-sizing: border-box !important;
+	width: 100% !important;
+	inline-size: 100% !important;
+	min-width: 0 !important;
+	min-inline-size: 0 !important;
+	max-width: 100% !important;
+	max-inline-size: 100% !important;
+	margin-inline: auto !important;
+}
+
+/* Professional stays centered and intentionally capped at 680px. */
+:is(.elementor-widget-certloom, [data-widget_type="certloom.default"])
+	.ecapla-certverify-widget.cv-widget {
+	box-sizing: border-box !important;
+	width: min(100%, 680px) !important;
+	inline-size: min(100%, 680px) !important;
+	min-width: 0 !important;
+	max-width: 680px !important;
+	margin-inline: auto !important;
+}
+
+/* Premium designs use the available width, with their panel centered. */
+:is(
+	.elementor-widget-certloom-meridian,
+	.elementor-widget-certloom-halo,
+	.elementor-widget-certloom-axis,
+	.elementor-widget-certloom-nova,
+	.elementor-widget-certloom-forge,
+	[data-widget_type="certloom-meridian.default"],
+	[data-widget_type="certloom-halo.default"],
+	[data-widget_type="certloom-axis.default"],
+	[data-widget_type="certloom-nova.default"],
+	[data-widget_type="certloom-forge.default"]
+) .ecapla-certverify-template.cvx-widget,
+:is(
+	.elementor-widget-certloom-meridian,
+	.elementor-widget-certloom-halo,
+	.elementor-widget-certloom-axis,
+	.elementor-widget-certloom-nova,
+	.elementor-widget-certloom-forge,
+	[data-widget_type="certloom-meridian.default"],
+	[data-widget_type="certloom-halo.default"],
+	[data-widget_type="certloom-axis.default"],
+	[data-widget_type="certloom-nova.default"],
+	[data-widget_type="certloom-forge.default"]
+) .ecapla-certverify-template.cvx-widget .cvx-shell {
+	box-sizing: border-box !important;
+	width: 100% !important;
+	min-width: 0 !important;
+	max-width: 100% !important;
+	margin-inline: auto !important;
+}
+
 
 /*
  * Elementor Professional widget: structural width is automatic. These rules
  * deliberately override stale generated CSS from the removed Max width control.
  */
+.elementor-widget-certloom,
 .elementor-widget-certverify,
+.elementor-widget-certloom > .elementor-widget-container,
 .elementor-widget-certverify > .elementor-widget-container{
-	width: 100%;
-	min-width: 0;
-	max-width: none;
+	width: 100% !important;
+	min-width: 0 !important;
+	max-width: none !important;
+	align-self: stretch !important;
 }
 
+.elementor-widget-certloom .ecapla-certverify-widget.cv-widget,
 .elementor-widget-certverify .ecapla-certverify-widget.cv-widget{
 	width: 100% !important;
 	min-width: 0 !important;
@@ -17,6 +122,8 @@
 	margin-inline: auto !important;
 }
 
+.elementor-widget-certloom .ecapla-certverify-widget.cv-widget .cv-search-card,
+.elementor-widget-certloom .ecapla-certverify-widget.cv-widget .cv-search-form,
 .elementor-widget-certverify .ecapla-certverify-widget.cv-widget .cv-search-card,
 .elementor-widget-certverify .ecapla-certverify-widget.cv-widget .cv-search-form{
 	width: 100%;
@@ -24,6 +131,7 @@
 	max-width: 100%;
 }
 
+.elementor-widget-certloom .ecapla-certverify-widget.cv-widget input.cv-search-input[type="text"],
 .elementor-widget-certverify .ecapla-certverify-widget.cv-widget input.cv-search-input[type="text"]{
 	flex: 1 1 220px !important;
 	width: auto !important;
@@ -32,6 +140,7 @@
 	box-sizing: border-box !important;
 }
 
+.elementor-widget-certloom .ecapla-certverify-widget.cv-widget button.cv-search-btn,
 .elementor-widget-certverify .ecapla-certverify-widget.cv-widget button.cv-search-btn{
 	flex: 0 0 auto;
 	width: auto !important;
@@ -1164,6 +1273,16 @@
 }
 
 /* Elementor container safety and legacy generated-CSS migration. */
+.elementor-widget-certloom-meridian,
+.elementor-widget-certloom-halo,
+.elementor-widget-certloom-axis,
+.elementor-widget-certloom-nova,
+.elementor-widget-certloom-forge,
+.elementor-widget-certloom-meridian > .elementor-widget-container,
+.elementor-widget-certloom-halo > .elementor-widget-container,
+.elementor-widget-certloom-axis > .elementor-widget-container,
+.elementor-widget-certloom-nova > .elementor-widget-container,
+.elementor-widget-certloom-forge > .elementor-widget-container,
 .elementor-widget-certverify-meridian,
 .elementor-widget-certverify-halo,
 .elementor-widget-certverify-axis,
@@ -1174,10 +1293,10 @@
 .elementor-widget-certverify-axis > .elementor-widget-container,
 .elementor-widget-certverify-nova > .elementor-widget-container,
 .elementor-widget-certverify-forge > .elementor-widget-container{
-	width: 100%;
-	min-width: 0;
-	max-width: none;
-	align-self: stretch;
+	width: 100% !important;
+	min-width: 0 !important;
+	max-width: none !important;
+	align-self: stretch !important;
 }
 
 .ecapla-certverify-template.cvx-widget .cvx-eyebrow,
@@ -1276,9 +1395,11 @@
 
 /* 1.4.7: mobile form geometry must not inherit horizontal flex-basis as height. */
 @media (max-width: 520px) {
+	.elementor-widget-certloom .ecapla-certverify-widget.cv-widget .cv-search-form,
 	.elementor-widget-certverify .ecapla-certverify-widget.cv-widget .cv-search-form {
 		flex-direction: column !important;
 	}
+	.elementor-widget-certloom .ecapla-certverify-widget.cv-widget input.cv-search-input[type="text"],
 	.elementor-widget-certverify .ecapla-certverify-widget.cv-widget input.cv-search-input[type="text"] {
 		flex: 0 0 auto !important;
 		width: 100% !important;
@@ -1286,6 +1407,7 @@
 		min-height: 52px !important;
 		max-height: 52px !important;
 	}
+	.elementor-widget-certloom .ecapla-certverify-widget.cv-widget button.cv-search-btn,
 	.elementor-widget-certverify .ecapla-certverify-widget.cv-widget button.cv-search-btn {
 		flex: 0 0 auto !important;
 		width: 100% !important;

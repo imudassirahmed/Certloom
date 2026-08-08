@@ -1,5 +1,23 @@
-CertVerify changelog
+= 1.5.0 =
+* Report an issue actions now open a pre-addressed email to support@ecapla.com with the subject “Certloom – Report an Issue”.
+* Fixed Elementor Flexbox Container sizing so all Certloom widgets occupy the available row and remain centered; Professional stays capped at 680px.
+
+Certloom changelog
 ====================
+
+1.5.0 — Certloom identity, activation repair, and review resubmission
+- Restored Elementor wrapper-width selectors for the Certloom widget IDs; Professional is capped/centered at 680px and the five premium templates stretch to their container width.
+---------------------------------------------------------------
+- Finalize the public plugin identity as Certloom – Certificate Verification.
+- Align the WordPress.org package folder, main plugin file, text domain, native block
+  namespace, primary shortcode, primary direct-link parameter, REST namespace, and
+  admin page slugs with the requested permanent slug `certloom`.
+- Fix the activation fatal introduced during the pre-release rename by restoring
+  the correct settings, fields, and import include paths.
+- Align Elementor widget identifiers and visible embed examples with `certloom`.
+- Keep the existing certificate database table and schema version unchanged while
+  aligning public WordPress identifiers with the new `certloom` slug.
+- Prepare WordPress.org icon and banner assets separately from the plugin ZIP.
 
 1.4.9 — Restore integrity and exact snapshot semantics
 ---------------------------------------------------------
@@ -72,7 +90,7 @@ CertVerify changelog
   override stale generated Max width rules from older releases.
 - Verify required database columns and indexes independently of stored version
   markers, and retry legacy-status migrations after query failures.
-- Add administrator-only Historical restore mode for trusted CertVerify exports
+- Add administrator-only Historical restore mode for trusted Certloom exports
   containing protected legacy Expired records.
 - Render an explicit Certificate found state even when every public field is
   hidden, while keeping hidden certificate data private.
@@ -115,7 +133,7 @@ CertVerify changelog
   the deliberate legacy-review path.
 - Propagated transient, schema, settings, role, and deletion failures accurately.
 - Added rollback protection for partially applied role-access changes.
-- Applied global accent and credit styling consistently to premium widgets.
+- Applied global accent and credit styling consistently to template widgets.
 - Moved native-block text defaults into translated runtime fallbacks.
 
 1.4.1 — First public release candidate

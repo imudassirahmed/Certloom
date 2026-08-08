@@ -23,7 +23,7 @@
 	}
 
 	function initFields() {
-		var list = document.getElementById( 'ecapla-certverify-fields-list' );
+		var list = document.getElementById( 'ecapla-certloom-fields-list' );
 		if ( ! list ) {
 			return;
 		}

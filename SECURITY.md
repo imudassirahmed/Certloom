@@ -4,7 +4,7 @@ Please do not report security issues publicly.
 
 Report suspected vulnerabilities through Ecapla's contact page at https://ecapla.com/ and include:
 
-- Affected CertVerify version
+- Affected Certloom version
 - Reproduction steps
 - Impact assessment
 - Any proof-of-concept material

@@ -41,11 +41,11 @@ class Ecapla_CertVerify_Cron {
 	private static function retire_schedule() {
 		$cleared = wp_clear_scheduled_hook( self::HOOK, array(), true );
 		if ( is_wp_error( $cleared ) || false === $cleared ) {
-			return new WP_Error( 'ecapla_certverify_cron_cleanup_failed', __( 'CertVerify could not retire its legacy scheduled task.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_cron_cleanup_failed', __( 'Certloom could not retire its legacy scheduled task.', 'certloom' ) );
 		}
 		$saved = update_option( self::RETIRED_OPTION, true, false );
 		if ( ! $saved && true !== (bool) get_option( self::RETIRED_OPTION, false ) ) {
-			return new WP_Error( 'ecapla_certverify_cron_marker_failed', __( 'CertVerify could not save its scheduled-task migration state.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_cron_marker_failed', __( 'Certloom could not save its scheduled-task migration state.', 'certloom' ) );
 		}
 		return true;
 	}

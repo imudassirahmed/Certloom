@@ -1,17 +1,27 @@
-# CertVerify
+# Certloom – Certificate Verification
 
-CertVerify is a WordPress certificate-verification plugin by Ecapla. It provides certificate management, public verification, shortcodes, a native WordPress block, Elementor widgets, CSV workflows, configurable fields, and safe backup and restore tools.
+Self-hosted certificate management and verification for WordPress.
 
-The WordPress.org-facing plugin documentation is maintained in [`readme.txt`](readme.txt).
+Certloom allows organizations to manage certificate records and publish secure exact-number certificate verification experiences through WordPress.
 
-## Release
+## Features
 
-Current release candidate: **1.4.9**
+- Native WordPress block
+- `[certloom]` shortcode
+- Optional Elementor widgets
+- Certificate management and status workflows
+- CSV import and export
+- Complete backup and restore
+- Configurable public fields
+- Self-hosted verification
+- No external certificate-processing service required
 
-Publisher: **Ecapla**  
-WordPress.org username: **Ecapla**  
-Website: **https://ecapla.com**
+## Publisher
 
-## Repository policy
+Certloom is developed by Ecapla.
 
-This development repository should remain private until Ecapla deliberately chooses to publish it. WordPress.org distribution will use the repository assigned by WordPress.org after approval.
+https://ecapla.com
+
+## License
+
+GPLv2 or later

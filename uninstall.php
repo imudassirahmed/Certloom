@@ -1,18 +1,18 @@
 <?php
 /**
- * CertVerify uninstall routine.
+ * Certloom uninstall routine.
  *
  * Data is removed only when an administrator explicitly enabled
  * "Delete all plugin data on uninstall" before deleting the plugin.
  *
- * @package EcaplaCertVerify
+ * @package EcaplaCertloom
  */
 
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
 
-// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Uninstall must remove CertVerify's custom table and bounded plugin-owned transient rows.
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Uninstall must remove Certloom's custom table and bounded plugin-owned transient rows.
 
 /**
  * Removes executable state and, when opted in, stored data for the current site.

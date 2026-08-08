@@ -3,7 +3,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- CertVerify owns a dedicated custom table; WordPress has no higher-level CRUD API for these records.
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Certloom owns a dedicated custom table; WordPress has no higher-level CRUD API for these records.
 
 /**
  * Certificate table creation, migrations, and database access.
@@ -35,7 +35,7 @@ class Ecapla_CertVerify_Database {
 	}
 
 	/**
-	 * Creates or upgrades the CertVerify table and persists the schema marker.
+	 * Creates or upgrades the Certloom table and persists the schema marker.
 	 *
 	 * @return true|WP_Error
 	 */
@@ -66,12 +66,12 @@ class Ecapla_CertVerify_Database {
 			}
 
 			if ( ! self::persist_schema_versions() ) {
-				return new WP_Error( 'ecapla_certverify_schema_marker_failed', __( 'CertVerify completed its database setup but could not save the schema version.', 'certverify' ) );
+				return new WP_Error( 'ecapla_certverify_schema_marker_failed', __( 'Certloom completed its database setup but could not save the schema version.', 'certloom' ) );
 			}
 
 			if ( self::migrations_are_complete() ) {
 				if ( ! self::save_health_marker() ) {
-					return new WP_Error( 'ecapla_certverify_schema_health_marker_failed', __( 'CertVerify verified its database structure but could not save the health marker.', 'certverify' ) );
+					return new WP_Error( 'ecapla_certverify_schema_health_marker_failed', __( 'Certloom verified its database structure but could not save the health marker.', 'certloom' ) );
 				}
 			} else {
 				delete_option( self::HEALTH_OPTION );
@@ -123,7 +123,7 @@ class Ecapla_CertVerify_Database {
 
 		if ( $healthy ) {
 			if ( ECAPLA_CERTVERIFY_SCHEMA_VERSION !== (string) get_option( 'certverify_db_version', '0' ) && ! self::persist_schema_versions() ) {
-				return new WP_Error( 'ecapla_certverify_schema_marker_failed', __( 'CertVerify could not synchronize its database schema markers.', 'certverify' ) );
+				return new WP_Error( 'ecapla_certverify_schema_marker_failed', __( 'Certloom could not synchronize its database schema markers.', 'certloom' ) );
 			}
 			if ( null === get_option( self::LEGACY_REVIEW_OPTION, null ) || get_option( self::LEGACY_REVIEW_RETRY_OPTION, false ) ) {
 				$review_count = self::refresh_legacy_expired_review_count();
@@ -151,7 +151,7 @@ class Ecapla_CertVerify_Database {
 			if ( '1.3.0' === (string) $installed ) {
 				$saved = update_option( self::V130_REVIEW_NOTICE_OPTION, true, false );
 				if ( ! $saved && true !== (bool) get_option( self::V130_REVIEW_NOTICE_OPTION, false ) ) {
-					return new WP_Error( 'ecapla_certverify_review_notice_save_failed', __( 'CertVerify could not save the required historical-status review notice.', 'certverify' ) );
+					return new WP_Error( 'ecapla_certverify_review_notice_save_failed', __( 'Certloom could not save the required historical-status review notice.', 'certloom' ) );
 				}
 			}
 		}
@@ -159,7 +159,7 @@ class Ecapla_CertVerify_Database {
 		if ( ! get_option( self::ORPHAN_COMPLETE_OPTION, false ) ) {
 			$discovered = self::discover_orphaned_custom_field_keys();
 			if ( false === $discovered ) {
-				return new WP_Error( 'ecapla_certverify_field_discovery_failed', __( 'CertVerify could not complete the retired-field migration.', 'certverify' ) );
+				return new WP_Error( 'ecapla_certverify_field_discovery_failed', __( 'Certloom could not complete the retired-field migration.', 'certloom' ) );
 			}
 		}
 
@@ -223,7 +223,7 @@ class Ecapla_CertVerify_Database {
 		$wpdb->last_error = '';
 		dbDelta( $sql );
 		if ( '' !== (string) $wpdb->last_error ) {
-			return new WP_Error( 'ecapla_certverify_table_setup_failed', __( 'CertVerify could not create or update its certificate database table.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_table_setup_failed', __( 'Certloom could not create or update its certificate database table.', 'certloom' ) );
 		}
 
 		delete_option( self::HEALTH_OPTION );
@@ -245,7 +245,7 @@ class Ecapla_CertVerify_Database {
 			ARRAY_A
 		);
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $columns ) || empty( $columns ) ) {
-			return new WP_Error( 'ecapla_certverify_table_setup_failed', __( 'CertVerify could not create or verify its certificate database table.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_table_setup_failed', __( 'Certloom could not create or verify its certificate database table.', 'certloom' ) );
 		}
 
 		$found = array();
@@ -271,25 +271,25 @@ class Ecapla_CertVerify_Database {
 
 		foreach ( $definitions as $name => $expected ) {
 			if ( ! isset( $found[ $name ] ) ) {
-				return new WP_Error( 'ecapla_certverify_table_columns_missing', __( 'CertVerify could not verify all required certificate database columns.', 'certverify' ) );
+				return new WP_Error( 'ecapla_certverify_table_columns_missing', __( 'Certloom could not verify all required certificate database columns.', 'certloom' ) );
 			}
 			$column = $found[ $name ];
 			$type   = strtolower( isset( $column['Type'] ) ? (string) $column['Type'] : '' );
 			if ( ! preg_match( $expected['type'], $type ) || $expected['null'] !== strtoupper( isset( $column['Null'] ) ? (string) $column['Null'] : '' ) ) {
-				return new WP_Error( 'ecapla_certverify_table_definition_mismatch', __( 'CertVerify detected an incompatible certificate database column definition.', 'certverify' ) );
+				return new WP_Error( 'ecapla_certverify_table_definition_mismatch', __( 'Certloom detected an incompatible certificate database column definition.', 'certloom' ) );
 			}
 			if ( array_key_exists( 'default', $expected ) && (string) $expected['default'] !== (string) ( $column['Default'] ?? '' ) ) {
-				return new WP_Error( 'ecapla_certverify_table_definition_mismatch', __( 'CertVerify detected an incompatible certificate database column default.', 'certverify' ) );
+				return new WP_Error( 'ecapla_certverify_table_definition_mismatch', __( 'Certloom detected an incompatible certificate database column default.', 'certloom' ) );
 			}
 			if ( isset( $expected['extra'] ) && false === strpos( strtolower( (string) ( $column['Extra'] ?? '' ) ), $expected['extra'] ) ) {
-				return new WP_Error( 'ecapla_certverify_table_definition_mismatch', __( 'CertVerify detected an incompatible certificate database identity column.', 'certverify' ) );
+				return new WP_Error( 'ecapla_certverify_table_definition_mismatch', __( 'Certloom detected an incompatible certificate database identity column.', 'certloom' ) );
 			}
 		}
 
 		$wpdb->last_error = '';
 		$indexes = $wpdb->get_results( $wpdb->prepare( 'SHOW INDEX FROM %i', $table ), ARRAY_A );
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $indexes ) || empty( $indexes ) ) {
-			return new WP_Error( 'ecapla_certverify_table_indexes_missing', __( 'CertVerify could not verify its certificate database indexes.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_table_indexes_missing', __( 'Certloom could not verify its certificate database indexes.', 'certloom' ) );
 		}
 
 		$found_indexes = array();
@@ -315,11 +315,11 @@ class Ecapla_CertVerify_Database {
 
 		foreach ( $required_indexes as $name => $expected ) {
 			if ( ! isset( $found_indexes[ $name ] ) || $expected['columns'] !== ( $found_indexes[ $name ]['columns'] ?? array() ) || (bool) $expected['unique'] !== (bool) ( $found_indexes[ $name ]['unique'] ?? false ) ) {
-				return new WP_Error( 'ecapla_certverify_table_indexes_missing', __( 'CertVerify could not verify all required certificate database indexes.', 'certverify' ) );
+				return new WP_Error( 'ecapla_certverify_table_indexes_missing', __( 'Certloom could not verify all required certificate database indexes.', 'certloom' ) );
 			}
 		}
 		if ( ! empty( $found_indexes['cert_number']['sub_part'][1] ) || ! empty( $found_indexes['cert_number_hash']['sub_part'][1] ) ) {
-			return new WP_Error( 'ecapla_certverify_certificate_index_incomplete', __( 'CertVerify detected an incomplete certificate-number index.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_certificate_index_incomplete', __( 'Certloom detected an incomplete certificate-number index.', 'certloom' ) );
 		}
 
 		return true;
@@ -342,7 +342,7 @@ class Ecapla_CertVerify_Database {
 		$parts     = explode( '|', $stored, 2 );
 		$locked_at = isset( $parts[1] ) ? absint( $parts[1] ) : 0;
 		if ( $locked_at && ( $now - $locked_at ) < self::MIGRATION_LOCK_TTL ) {
-			return new WP_Error( 'ecapla_certverify_schema_locked', __( 'CertVerify database maintenance is already running. Try again shortly.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_schema_locked', __( 'Certloom database maintenance is already running. Try again shortly.', 'certloom' ) );
 		}
 		$updated = $wpdb->query(
 			$wpdb->prepare(
@@ -354,7 +354,7 @@ class Ecapla_CertVerify_Database {
 			)
 		);
 		wp_cache_delete( self::MIGRATION_LOCK_OPTION, 'options' );
-		return 1 === (int) $updated ? $token : new WP_Error( 'ecapla_certverify_schema_locked', __( 'CertVerify could not obtain its database maintenance lock.', 'certverify' ) );
+		return 1 === (int) $updated ? $token : new WP_Error( 'ecapla_certverify_schema_locked', __( 'Certloom could not obtain its database maintenance lock.', 'certloom' ) );
 	}
 
 	private static function release_migration_lock( $token ) {
@@ -418,7 +418,7 @@ class Ecapla_CertVerify_Database {
 			$result  = $wpdb->update( $table, array( 'cert_number_hash' => self::certificate_hash( $row['cert_number'] ) ), array( 'id' => $last_id ) );
 			if ( false === $result ) {
 				if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
-					return new WP_Error( 'ecapla_certverify_case_duplicate_numbers', __( 'CertVerify found certificate numbers that differ only by letter case. Resolve those duplicates before the update can finish.', 'certverify' ) );
+					return new WP_Error( 'ecapla_certverify_case_duplicate_numbers', __( 'Certloom found certificate numbers that differ only by letter case. Resolve those duplicates before the update can finish.', 'certloom' ) );
 				}
 				return self::database_error( 'update' );
 			}
@@ -426,7 +426,7 @@ class Ecapla_CertVerify_Database {
 		}
 		$saved = update_option( self::HASH_CURSOR_OPTION, $last_id, false );
 		if ( ! $saved && $last_id !== absint( get_option( self::HASH_CURSOR_OPTION, 0 ) ) ) {
-			return new WP_Error( 'ecapla_certverify_hash_cursor_failed', __( 'CertVerify could not save certificate migration progress.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_hash_cursor_failed', __( 'Certloom could not save certificate migration progress.', 'certloom' ) );
 		}
 		if ( count( $rows ) < 250 ) {
 			$remaining = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE cert_number_hash IS NULL OR cert_number_hash = %s', $table, '' ) );
@@ -436,7 +436,7 @@ class Ecapla_CertVerify_Database {
 			if ( 0 === (int) $remaining ) {
 				$done = update_option( self::HASH_COMPLETE_OPTION, true, false );
 				if ( ! $done && true !== (bool) get_option( self::HASH_COMPLETE_OPTION, false ) ) {
-					return new WP_Error( 'ecapla_certverify_hash_completion_failed', __( 'CertVerify completed certificate migration but could not save its completion state.', 'certverify' ) );
+					return new WP_Error( 'ecapla_certverify_hash_completion_failed', __( 'Certloom completed certificate migration but could not save its completion state.', 'certloom' ) );
 				}
 				delete_option( self::HASH_CURSOR_OPTION );
 			} else {
@@ -491,7 +491,7 @@ class Ecapla_CertVerify_Database {
 			)
 		);
 		if ( false === $marked ) {
-			return new WP_Error( 'ecapla_certverify_legacy_status_migration_failed', __( 'CertVerify could not preserve historical Expired certificate states.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_legacy_status_migration_failed', __( 'Certloom could not preserve historical Expired certificate states.', 'certloom' ) );
 		}
 
 		$normalized = $wpdb->query(
@@ -504,7 +504,7 @@ class Ecapla_CertVerify_Database {
 			)
 		);
 		if ( false === $normalized ) {
-			return new WP_Error( 'ecapla_certverify_legacy_status_migration_failed', __( 'CertVerify could not normalize certificate status-source data.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_legacy_status_migration_failed', __( 'Certloom could not normalize certificate status-source data.', 'certloom' ) );
 		}
 
 		return self::refresh_legacy_expired_review_count();
@@ -545,7 +545,7 @@ class Ecapla_CertVerify_Database {
 		$inserted = $wpdb->insert( self::table_name(), $row );
 		if ( false === $inserted ) {
 			if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
-				return new WP_Error( 'ecapla_certverify_duplicate_number', __( 'That certificate number is already in use. Letter case is ignored.', 'certverify' ) );
+				return new WP_Error( 'ecapla_certverify_duplicate_number', __( 'That certificate number is already in use. Letter case is ignored.', 'certloom' ) );
 			}
 			return self::database_error( 'insert' );
 		}
@@ -574,7 +574,7 @@ class Ecapla_CertVerify_Database {
 			return $existing;
 		}
 		if ( ! $existing ) {
-			return new WP_Error( 'ecapla_certverify_not_found', __( 'The certificate could not be found.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_not_found', __( 'The certificate could not be found.', 'certloom' ) );
 		}
 
 		$clean = Ecapla_CertVerify_Validator::certificate_data( $data, true );
@@ -607,7 +607,7 @@ class Ecapla_CertVerify_Database {
 
 		if ( false === $updated ) {
 			if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
-				return new WP_Error( 'ecapla_certverify_duplicate_number', __( 'That certificate number is already in use. Letter case is ignored.', 'certverify' ) );
+				return new WP_Error( 'ecapla_certverify_duplicate_number', __( 'That certificate number is already in use. Letter case is ignored.', 'certloom' ) );
 			}
 			return self::database_error( 'update' );
 		}
@@ -688,7 +688,7 @@ class Ecapla_CertVerify_Database {
 
 		$field_key = sanitize_key( $field_key );
 		if ( '' === $field_key ) {
-			return new WP_Error( 'ecapla_certverify_invalid_field', __( 'The retired field key is invalid.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_invalid_field', __( 'The retired field key is invalid.', 'certloom' ) );
 		}
 
 		$state_key  = self::purge_state_option_key( $field_key );
@@ -706,7 +706,7 @@ class Ecapla_CertVerify_Database {
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) {
 			return self::purge_error(
 				'ecapla_certverify_purge_read_failed',
-				__( 'Stored certificate values could not be read. Run Purge again to continue from the last saved batch.', 'certverify' ),
+				__( 'Stored certificate values could not be read. Run Purge again to continue from the last saved batch.', 'certloom' ),
 				$field_key,
 				$last_id,
 				$changed
@@ -724,7 +724,7 @@ class Ecapla_CertVerify_Database {
 					array( 'id' => $row_id )
 				);
 				if ( false === $result ) {
-					return self::purge_error( 'ecapla_certverify_purge_write_failed', __( 'Some stored values were deleted before a database error. Run Purge again to continue safely.', 'certverify' ), $field_key, $last_id, $changed );
+					return self::purge_error( 'ecapla_certverify_purge_write_failed', __( 'Some stored values were deleted before a database error. Run Purge again to continue safely.', 'certloom' ), $field_key, $last_id, $changed );
 				}
 				$changed += (int) ( $result > 0 );
 			}
@@ -735,7 +735,7 @@ class Ecapla_CertVerify_Database {
 		if ( $complete ) {
 			delete_option( $state_key );
 		} elseif ( ! self::save_purge_state( $state_key, $field_key, $last_id, $changed ) ) {
-			return new WP_Error( 'ecapla_certverify_purge_progress_failed', __( 'Stored values were processed, but CertVerify could not save purge progress.', 'certverify' ), array( 'changed' => $changed, 'last_id' => $last_id ) );
+			return new WP_Error( 'ecapla_certverify_purge_progress_failed', __( 'Stored values were processed, but Certloom could not save purge progress.', 'certloom' ), array( 'changed' => $changed, 'last_id' => $last_id ) );
 		}
 
 		if ( $changed > 0 ) {
@@ -793,14 +793,14 @@ class Ecapla_CertVerify_Database {
 		}
 		$id = absint( $id );
 		if ( ! $id ) {
-			return new WP_Error( 'ecapla_certverify_invalid_id', __( 'The certificate deletion request was invalid.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_invalid_id', __( 'The certificate deletion request was invalid.', 'certloom' ) );
 		}
 		$deleted = $wpdb->delete( self::table_name(), array( 'id' => $id ) );
 		if ( false === $deleted ) {
-			return new WP_Error( 'ecapla_certverify_delete_failed', __( 'The certificate could not be deleted because of a database error.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_delete_failed', __( 'The certificate could not be deleted because of a database error.', 'certloom' ) );
 		}
 		if ( 0 === $deleted ) {
-			return new WP_Error( 'ecapla_certverify_not_found', __( 'The certificate could not be deleted because it no longer exists.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_not_found', __( 'The certificate could not be deleted because it no longer exists.', 'certloom' ) );
 		}
 		self::refresh_legacy_expired_review_count_after_write();
 		Ecapla_CertVerify_Backup::mark_mutation();
@@ -831,7 +831,7 @@ class Ecapla_CertVerify_Database {
 		);
 		$result       = $wpdb->query( $delete_sql ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared immediately above with an identifier placeholder and integer placeholders.
 		if ( false === $result ) {
-			return new WP_Error( 'ecapla_certverify_bulk_delete_failed', __( 'The selected certificates could not be deleted because of a database error.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_bulk_delete_failed', __( 'The selected certificates could not be deleted because of a database error.', 'certloom' ) );
 		}
 		self::refresh_legacy_expired_review_count_after_write();
 		if ( $result > 0 ) {
@@ -994,7 +994,7 @@ class Ecapla_CertVerify_Database {
 		}
 		if ( false === $result ) {
 			if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
-				return new WP_Error( 'ecapla_certverify_duplicate_number', __( 'That certificate number is already in use. Letter case is ignored.', 'certverify' ) );
+				return new WP_Error( 'ecapla_certverify_duplicate_number', __( 'That certificate number is already in use. Letter case is ignored.', 'certloom' ) );
 			}
 			return self::database_error( $existing_id ? 'update' : 'insert' );
 		}
@@ -1047,7 +1047,7 @@ class Ecapla_CertVerify_Database {
 		if ( false === $created || false === $copied ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Removes an incomplete private staging table after preparation failure.
 			$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $staging ) );
-			return new WP_Error( 'ecapla_certverify_restore_stage_failed', __( 'CertVerify could not prepare a safe restore workspace.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_restore_stage_failed', __( 'Certloom could not prepare a safe restore workspace.', 'certloom' ) );
 		}
 		return $staging;
 	}
@@ -1057,14 +1057,14 @@ class Ecapla_CertVerify_Database {
 		if ( 0 !== strpos( (string) $table, $wpdb->prefix . 'certverify_' ) ) {
 			return false;
 		}
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Deletes only a validated CertVerify staging, rollback, or failed-restore table.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Deletes only a validated Certloom staging, rollback, or failed-restore table.
 		return false !== $wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $table ) );
 	}
 
 	public static function get_records_by_numbers_from_table( $table, $numbers ) {
 		global $wpdb;
 		if ( 0 !== strpos( (string) $table, $wpdb->prefix . 'certverify_' ) ) {
-			return new WP_Error( 'ecapla_certverify_restore_table_invalid', __( 'The temporary restore table is invalid.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_restore_table_invalid', __( 'The temporary restore table is invalid.', 'certloom' ) );
 		}
 		$clean = array();
 		foreach ( (array) $numbers as $number ) {
@@ -1124,7 +1124,7 @@ class Ecapla_CertVerify_Database {
 	public static function restore_record_to_table( $table, $data, $existing_id, $definitions ) {
 		global $wpdb;
 		if ( 0 !== strpos( (string) $table, $wpdb->prefix . 'certverify_' ) ) {
-			return new WP_Error( 'ecapla_certverify_restore_table_invalid', __( 'The temporary restore table is invalid.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_restore_table_invalid', __( 'The temporary restore table is invalid.', 'certloom' ) );
 		}
 		$core = is_array( $data ) ? $data : array();
 		unset( $core['custom_fields'], $core['id'], $core['cert_number_hash'] );
@@ -1156,11 +1156,11 @@ class Ecapla_CertVerify_Database {
 		global $wpdb;
 		$active   = self::table_name();
 		$rollback = $wpdb->prefix . 'certverify_rollback_' . substr( preg_replace( '/[^a-z0-9]/i', '', (string) $suffix ), 0, 12 );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Clears only the generated CertVerify rollback table name before an atomic restore swap.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Clears only the generated Certloom rollback table name before an atomic restore swap.
 		$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $rollback ) );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- MySQL's atomic RENAME TABLE operation activates the fully prepared registry and preserves rollback data.
 		$result = $wpdb->query( $wpdb->prepare( 'RENAME TABLE %i TO %i, %i TO %i', $active, $rollback, $staging, $active ) );
-		return false === $result ? new WP_Error( 'ecapla_certverify_restore_swap_failed', __( 'CertVerify could not activate the prepared backup safely.', 'certverify' ) ) : $rollback;
+		return false === $result ? new WP_Error( 'ecapla_certverify_restore_swap_failed', __( 'Certloom could not activate the prepared backup safely.', 'certloom' ) ) : $rollback;
 	}
 
 	public static function rollback_restore_table( $rollback, $suffix ) {
@@ -1408,7 +1408,7 @@ class Ecapla_CertVerify_Database {
 		}
 		$saved = update_option( self::LEGACY_REVIEW_OPTION, $count, false );
 		if ( ! $saved && $count !== (int) get_option( self::LEGACY_REVIEW_OPTION, -1 ) ) {
-			return new WP_Error( 'ecapla_certverify_review_count_save_failed', __( 'CertVerify could not save the legacy Expired review count.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_review_count_save_failed', __( 'Certloom could not save the legacy Expired review count.', 'certloom' ) );
 		}
 		return $count;
 	}
@@ -1473,7 +1473,7 @@ class Ecapla_CertVerify_Database {
 	private static function read_error() {
 		return new WP_Error(
 			'ecapla_certverify_database_read_failed',
-			__( 'Certificate data is temporarily unavailable because the database could not be read.', 'certverify' )
+			__( 'Certificate data is temporarily unavailable because the database could not be read.', 'certloom' )
 		);
 	}
 
@@ -1481,11 +1481,11 @@ class Ecapla_CertVerify_Database {
 		global $wpdb;
 		$duplicate = false !== stripos( (string) $wpdb->last_error, 'duplicate' );
 		if ( $duplicate ) {
-			return new WP_Error( 'ecapla_certverify_duplicate_number', __( 'That certificate number is already in use. Letter case is ignored.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_duplicate_number', __( 'That certificate number is already in use. Letter case is ignored.', 'certloom' ) );
 		}
 		return new WP_Error(
 			'ecapla_certverify_database_error',
-			'insert' === $operation ? __( 'The certificate could not be saved because of a database error.', 'certverify' ) : __( 'The certificate could not be updated because of a database error.', 'certverify' )
+			'insert' === $operation ? __( 'The certificate could not be saved because of a database error.', 'certloom' ) : __( 'The certificate could not be updated because of a database error.', 'certloom' )
 		);
 	}
 }

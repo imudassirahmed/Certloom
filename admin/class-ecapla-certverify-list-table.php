@@ -28,11 +28,11 @@ class Ecapla_CertVerify_List_Table extends WP_List_Table {
 	public function get_columns() {
 		return array(
 			'cb'          => '<input type="checkbox" />',
-			'cert_number' => __( 'Certificate number', 'certverify' ),
-			'holder_name' => __( 'Holder', 'certverify' ),
-			'status'      => __( 'Status', 'certverify' ),
-			'issue_date'  => __( 'Issue date', 'certverify' ),
-			'expiry_date' => __( 'Expiry date', 'certverify' ),
+			'cert_number' => __( 'Certificate number', 'certloom' ),
+			'holder_name' => __( 'Holder', 'certloom' ),
+			'status'      => __( 'Status', 'certloom' ),
+			'issue_date'  => __( 'Issue date', 'certloom' ),
+			'expiry_date' => __( 'Expiry date', 'certloom' ),
 		);
 	}
 
@@ -53,7 +53,7 @@ class Ecapla_CertVerify_List_Table extends WP_List_Table {
 			esc_html(
 				sprintf(
 					/* translators: %s: certificate number. */
-					__( 'Select certificate %s', 'certverify' ),
+					__( 'Select certificate %s', 'certloom' ),
 					$item['cert_number']
 				)
 			)
@@ -61,15 +61,15 @@ class Ecapla_CertVerify_List_Table extends WP_List_Table {
 	}
 
 	protected function column_cert_number( $item ) {
-		$edit_url = add_query_arg( array( 'page' => 'certverify-add', 'id' => $item['id'] ), admin_url( 'admin.php' ) );
+		$edit_url = add_query_arg( array( 'page' => 'certloom-add', 'id' => $item['id'] ), admin_url( 'admin.php' ) );
 		$delete_form = sprintf(
 			'<button type="submit" form="ecapla-certverify-delete-certificate-form" name="certificate_id" value="%1$d" class="button-link-delete ecapla-certverify-link-button" data-ecapla-confirm="%2$s">%3$s</button>',
 			(int) $item['id'],
-			esc_attr__( 'Delete this certificate? This action cannot be undone.', 'certverify' ),
-			esc_html__( 'Delete', 'certverify' )
+			esc_attr__( 'Delete this certificate? This action cannot be undone.', 'certloom' ),
+			esc_html__( 'Delete', 'certloom' )
 		);
 		$actions = array(
-			'edit'   => sprintf( '<a href="%s">%s</a>', esc_url( $edit_url ), esc_html__( 'Edit', 'certverify' ) ),
+			'edit'   => sprintf( '<a href="%s">%s</a>', esc_url( $edit_url ), esc_html__( 'Edit', 'certloom' ) ),
 			'delete' => $delete_form,
 		);
 		return sprintf(
@@ -86,7 +86,7 @@ class Ecapla_CertVerify_List_Table extends WP_List_Table {
 		$label    = isset( $statuses[ $status ] ) ? $statuses[ $status ]['label'] : ucfirst( $status );
 		$output   = sprintf( '<span class="ecapla-certverify-badge ecapla-certverify-badge-%1$s">%2$s</span>', esc_attr( $status ), esc_html( $label ) );
 		if ( Ecapla_CertVerify_Database::is_legacy_expired( $item ) ) {
-			$output .= '<br><span class="description">' . esc_html__( 'Legacy review required', 'certverify' ) . '</span>';
+			$output .= '<br><span class="description">' . esc_html__( 'Legacy review required', 'certloom' ) . '</span>';
 		}
 		return $output;
 	}
@@ -99,7 +99,7 @@ class Ecapla_CertVerify_List_Table extends WP_List_Table {
 	}
 
 	public function get_bulk_actions() {
-		return array( 'delete' => __( 'Delete', 'certverify' ) );
+		return array( 'delete' => __( 'Delete', 'certloom' ) );
 	}
 
 	protected function extra_tablenav( $which ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found

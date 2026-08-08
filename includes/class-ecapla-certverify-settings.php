@@ -4,7 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Site-wide CertVerify settings.
+ * Site-wide Certloom settings.
  */
 class Ecapla_CertVerify_Settings {
 
@@ -14,7 +14,7 @@ class Ecapla_CertVerify_Settings {
 		return array(
 			'accent_color'            => '#0f6e56',
 			'show_credit'             => false,
-			'credit_text'             => __( 'Verification powered by CertVerify.', 'certverify' ),
+			'credit_text'             => __( 'Verification powered by Certloom.', 'certloom' ),
 			'status_desc'             => array(),
 			'credit_color'            => '',
 			'credit_size'             => '',

@@ -22,20 +22,20 @@ class Ecapla_CertVerify_Validator {
 		if ( array_key_exists( 'cert_number', $data ) ) {
 			$cert_number = trim( sanitize_text_field( (string) $data['cert_number'] ) );
 			if ( '' === $cert_number ) {
-				return new WP_Error( 'ecapla_certverify_missing_number', __( 'Certificate number is required.', 'certverify' ) );
+				return new WP_Error( 'ecapla_certverify_missing_number', __( 'Certificate number is required.', 'certloom' ) );
 			}
 			if ( self::string_length( $cert_number ) > 100 ) {
-				return new WP_Error( 'ecapla_certverify_number_too_long', __( 'Certificate number must be 100 characters or fewer.', 'certverify' ) );
+				return new WP_Error( 'ecapla_certverify_number_too_long', __( 'Certificate number must be 100 characters or fewer.', 'certloom' ) );
 			}
 			$clean['cert_number'] = $cert_number;
 		} elseif ( ! $is_partial ) {
-			return new WP_Error( 'ecapla_certverify_missing_number', __( 'Certificate number is required.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_missing_number', __( 'Certificate number is required.', 'certloom' ) );
 		}
 
 		if ( array_key_exists( 'status', $data ) ) {
 			$status = sanitize_key( (string) $data['status'] );
 			if ( ! in_array( $status, array( 'valid', 'suspended', 'withdrawn', 'expired' ), true ) ) {
-				return new WP_Error( 'ecapla_certverify_invalid_status', __( 'Choose Valid, Suspended, Withdrawn, or preserve a legacy Expired record for review.', 'certverify' ) );
+				return new WP_Error( 'ecapla_certverify_invalid_status', __( 'Choose Valid, Suspended, Withdrawn, or preserve a legacy Expired record for review.', 'certloom' ) );
 			}
 			$clean['status']        = $status;
 			$clean['status_source'] = 'expired' === $status ? 'legacy' : 'manual';
@@ -47,7 +47,7 @@ class Ecapla_CertVerify_Validator {
 		if ( array_key_exists( 'holder_name', $data ) ) {
 			$holder = sanitize_text_field( (string) $data['holder_name'] );
 			if ( self::string_length( $holder ) > 255 ) {
-				return new WP_Error( 'ecapla_certverify_holder_too_long', __( 'Certificate holder must be 255 characters or fewer.', 'certverify' ) );
+				return new WP_Error( 'ecapla_certverify_holder_too_long', __( 'Certificate holder must be 255 characters or fewer.', 'certloom' ) );
 			}
 			$clean['holder_name'] = $holder;
 		} elseif ( ! $is_partial ) {
@@ -115,7 +115,7 @@ class Ecapla_CertVerify_Validator {
 		}
 
 		if ( ! $valid ) {
-			return new WP_Error( 'ecapla_certverify_invalid_date', __( 'Dates must use the YYYY-MM-DD format and represent a real calendar date.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_invalid_date', __( 'Dates must use the YYYY-MM-DD format and represent a real calendar date.', 'certloom' ) );
 		}
 
 		return $value;
@@ -129,7 +129,7 @@ class Ecapla_CertVerify_Validator {
 	 */
 	public static function date_range( $issue_date, $expiry_date ) {
 		if ( $issue_date && $expiry_date && $expiry_date < $issue_date ) {
-			return new WP_Error( 'ecapla_certverify_invalid_date_range', __( 'Expiry date cannot be earlier than issue date.', 'certverify' ) );
+			return new WP_Error( 'ecapla_certverify_invalid_date_range', __( 'Expiry date cannot be earlier than issue date.', 'certloom' ) );
 		}
 		return true;
 	}
@@ -180,8 +180,8 @@ class Ecapla_CertVerify_Validator {
 					'ecapla_certverify_invalid_number',
 					sprintf(
 						/* translators: %s: field label. */
-						__( '%s must contain a valid number.', 'certverify' ),
-						isset( $field['label'] ) ? $field['label'] : __( 'This field', 'certverify' )
+						__( '%s must contain a valid number.', 'certloom' ),
+						isset( $field['label'] ) ? $field['label'] : __( 'This field', 'certloom' )
 					)
 				);
 			}
@@ -203,8 +203,8 @@ class Ecapla_CertVerify_Validator {
 				'ecapla_certverify_custom_value_too_long',
 				sprintf(
 					/* translators: 1: field label, 2: maximum character count. */
-					__( '%1$s must be %2$d characters or fewer.', 'certverify' ),
-					isset( $field['label'] ) ? $field['label'] : __( 'This field', 'certverify' ),
+					__( '%1$s must be %2$d characters or fewer.', 'certloom' ),
+					isset( $field['label'] ) ? $field['label'] : __( 'This field', 'certloom' ),
 					$maximum
 				)
 			);

@@ -13,26 +13,27 @@ class Ecapla_CertVerify_Shortcode {
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'register_assets' ), 5 );
 		add_action( 'elementor/frontend/after_register_styles', array( __CLASS__, 'register_assets' ) );
 		add_action( 'elementor/frontend/after_register_scripts', array( __CLASS__, 'register_assets' ) );
+		add_action( 'elementor/preview/enqueue_styles', array( __CLASS__, 'enqueue_assets' ) );
+		add_action( 'elementor/preview/enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
 		add_filter( 'wp_robots', array( __CLASS__, 'protect_direct_verification_robots' ) );
 		add_action( 'send_headers', array( __CLASS__, 'protect_direct_verification_headers' ) );
 	}
 
 	public static function register() {
-		add_shortcode( 'certverify', array( __CLASS__, 'render' ) );
-		add_shortcode( 'ecapla_certverify', array( __CLASS__, 'render' ) ); // Compatibility alias introduced during the Ecapla launch refactor.
+		add_shortcode( 'certloom', array( __CLASS__, 'render' ) );
 	}
 
 	public static function register_assets() {
-		wp_register_style( 'ecapla-certverify-public', ECAPLA_CERTVERIFY_URL . 'public/assets/certverify-public.css', array(), ECAPLA_CERTVERIFY_VERSION );
-		wp_register_script( 'ecapla-certverify-public', ECAPLA_CERTVERIFY_URL . 'public/assets/certverify-public.js', array(), ECAPLA_CERTVERIFY_VERSION, true );
+		wp_register_style( 'ecapla-certloom-public', ECAPLA_CERTVERIFY_URL . 'public/assets/certloom-public.css', array(), ECAPLA_CERTVERIFY_VERSION );
+		wp_register_script( 'ecapla-certloom-public', ECAPLA_CERTVERIFY_URL . 'public/assets/certloom-public.js', array(), ECAPLA_CERTVERIFY_VERSION, true );
 	}
 
 	public static function enqueue_assets() {
-		if ( ! wp_style_is( 'ecapla-certverify-public', 'registered' ) ) {
+		if ( ! wp_style_is( 'ecapla-certloom-public', 'registered' ) ) {
 			self::register_assets();
 		}
-		wp_enqueue_style( 'ecapla-certverify-public' );
-		wp_enqueue_script( 'ecapla-certverify-public' );
+		wp_enqueue_style( 'ecapla-certloom-public' );
+		wp_enqueue_script( 'ecapla-certloom-public' );
 	}
 
 	/**
@@ -70,7 +71,7 @@ class Ecapla_CertVerify_Shortcode {
 	 */
 	private static function has_direct_verification_request() {
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Public read-only direct-link routing.
-		foreach ( array( 'cv_number', 'certverify_number', 'ecapla_certverify_number' ) as $key ) {
+		foreach ( array( 'certloom_number', 'cv_number' ) as $key ) {
 			if ( isset( $_GET[ $key ] ) ) {
 				return true;
 			}
@@ -104,7 +105,7 @@ class Ecapla_CertVerify_Shortcode {
 				'credit_text'      => $defaults['credit_text'],
 			),
 			$atts,
-			'certverify'
+			'certloom'
 		);
 
 		$render_atts = array(

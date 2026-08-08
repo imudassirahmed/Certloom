@@ -8,12 +8,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Ecapla_CertVerify_REST {
 
-	const NAMESPACE_        = 'certverify/v1';
-	const LEGACY_NAMESPACE = 'ecapla-certverify/v1';
+	const NAMESPACE_        = 'certloom/v1';
 	const RATE_LIMIT       = 30;
 
 	public static function register_routes() {
-		foreach ( array( self::NAMESPACE_, self::LEGACY_NAMESPACE ) as $namespace ) {
+		foreach ( array( self::NAMESPACE_ ) as $namespace ) {
 			register_rest_route(
 				$namespace,
 				'/verify',
@@ -48,7 +47,7 @@ class Ecapla_CertVerify_REST {
 			$response = new WP_REST_Response(
 				array(
 					'code'    => 'ecapla_certverify_temporarily_unavailable',
-					'message' => __( 'Certificate verification is temporarily unavailable. Please try again later.', 'certverify' ),
+					'message' => __( 'Certificate verification is temporarily unavailable. Please try again later.', 'certloom' ),
 				),
 				503
 			);
@@ -60,7 +59,7 @@ class Ecapla_CertVerify_REST {
 			$response = new WP_REST_Response(
 				array(
 					'code'    => 'ecapla_certverify_rate_limited',
-					'message' => __( 'Too many verification requests. Please wait a minute and try again.', 'certverify' ),
+					'message' => __( 'Too many verification requests. Please wait a minute and try again.', 'certloom' ),
 				),
 				429
 			);
@@ -74,7 +73,7 @@ class Ecapla_CertVerify_REST {
 			$response = new WP_REST_Response(
 				array(
 					'code'    => 'ecapla_certverify_temporarily_unavailable',
-					'message' => __( 'Certificate verification is temporarily unavailable. Please try again later.', 'certverify' ),
+					'message' => __( 'Certificate verification is temporarily unavailable. Please try again later.', 'certloom' ),
 				),
 				503
 			);
@@ -102,7 +101,7 @@ class Ecapla_CertVerify_REST {
 		$key        = 'ecapla_certverify_rl_' . hash_hmac( 'sha256', $identifier . '|' . $bucket, wp_salt( 'nonce' ) );
 
 		if ( wp_using_ext_object_cache() ) {
-			$group = 'certverify';
+			$group = 'certloom';
 			if ( wp_cache_add( $key, 1, $group, 70 ) ) {
 				return false;
 			}

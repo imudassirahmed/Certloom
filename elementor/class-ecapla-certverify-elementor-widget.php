@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Elementor widget for the certificate verification search. Content is
- * produced by the exact same Ecapla_CertVerify_Render::widget() call the [certverify]
+ * produced by the exact same Ecapla_CertVerify_Render::widget() call the [certloom]
  * shortcode uses, so results can never differ between the two, only the
  * controls surrounding them do.
  *
@@ -19,11 +19,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 
 	public function get_name() {
-		return 'certverify';
+		return 'certloom';
 	}
 
 	public function get_title() {
-		return __( 'CertVerify', 'certverify' );
+		return __( 'Certloom', 'certloom' );
 	}
 
 	public function get_icon() {
@@ -39,11 +39,11 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 	}
 
 	public function get_style_depends() {
-		return array( 'ecapla-certverify-public' );
+		return array( 'ecapla-certloom-public' );
 	}
 
 	public function get_script_depends() {
-		return array( 'ecapla-certverify-public' );
+		return array( 'ecapla-certloom-public' );
 	}
 
 	protected function register_controls() {
@@ -65,14 +65,14 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'content_search',
 			array(
-				'label' => __( 'Search box', 'certverify' ),
+				'label' => __( 'Search box', 'certloom' ),
 			)
 		);
 
 		$this->add_control(
 			'eyebrow',
 			array(
-				'label'   => __( 'Eyebrow label', 'certverify' ),
+				'label'   => __( 'Eyebrow label', 'certloom' ),
 				'type'    => \Elementor\Controls_Manager::TEXT,
 				'default' => $defaults['eyebrow'],
 			)
@@ -81,7 +81,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'heading',
 			array(
-				'label'   => __( 'Heading', 'certverify' ),
+				'label'   => __( 'Heading', 'certloom' ),
 				'type'    => \Elementor\Controls_Manager::TEXT,
 				'default' => $defaults['heading'],
 			)
@@ -90,7 +90,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'description',
 			array(
-				'label'   => __( 'Description', 'certverify' ),
+				'label'   => __( 'Description', 'certloom' ),
 				'type'    => \Elementor\Controls_Manager::TEXTAREA,
 				'default' => $defaults['description'],
 			)
@@ -99,7 +99,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'placeholder',
 			array(
-				'label'   => __( 'Input placeholder', 'certverify' ),
+				'label'   => __( 'Input placeholder', 'certloom' ),
 				'type'    => \Elementor\Controls_Manager::TEXT,
 				'default' => $defaults['placeholder'],
 			)
@@ -108,7 +108,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'button_text',
 			array(
-				'label'   => __( 'Button text', 'certverify' ),
+				'label'   => __( 'Button text', 'certloom' ),
 				'type'    => \Elementor\Controls_Manager::TEXT,
 				'default' => $defaults['button_text'],
 			)
@@ -119,14 +119,14 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'content_result',
 			array(
-				'label' => __( 'Result', 'certverify' ),
+				'label' => __( 'Result', 'certloom' ),
 			)
 		);
 
 		$this->add_control(
 			'notfound_text',
 			array(
-				'label'   => __( 'Not found message', 'certverify' ),
+				'label'   => __( 'Not found message', 'certloom' ),
 				'type'    => \Elementor\Controls_Manager::TEXTAREA,
 				'default' => $defaults['notfound_text'],
 			)
@@ -137,17 +137,17 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'content_guide',
 			array(
-				'label' => __( 'Status guide', 'certverify' ),
+				'label' => __( 'Status guide', 'certloom' ),
 			)
 		);
 
 		$this->add_control(
 			'show_guide',
 			array(
-				'label'        => __( 'Show status guide', 'certverify' ),
+				'label'        => __( 'Show status guide', 'certloom' ),
 				'type'         => \Elementor\Controls_Manager::SWITCHER,
-				'label_on'     => __( 'Show', 'certverify' ),
-				'label_off'    => __( 'Hide', 'certverify' ),
+				'label_on'     => __( 'Show', 'certloom' ),
+				'label_off'    => __( 'Hide', 'certloom' ),
 				'return_value' => 'yes',
 				'default'      => 'yes',
 			)
@@ -158,17 +158,17 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'content_credit',
 			array(
-				'label' => __( 'Credit line', 'certverify' ),
+				'label' => __( 'Credit line', 'certloom' ),
 			)
 		);
 
 		$this->add_control(
 			'show_credit',
 			array(
-				'label'        => __( 'Show credit line', 'certverify' ),
+				'label'        => __( 'Show credit line', 'certloom' ),
 				'type'         => \Elementor\Controls_Manager::SWITCHER,
-				'label_on'     => __( 'Show', 'certverify' ),
-				'label_off'    => __( 'Hide', 'certverify' ),
+				'label_on'     => __( 'Show', 'certloom' ),
+				'label_off'    => __( 'Hide', 'certloom' ),
 				'return_value' => 'yes',
 				'default'      => $defaults['show_credit'] ? 'yes' : '',
 			)
@@ -177,7 +177,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'credit_text',
 			array(
-				'label'     => __( 'Credit text', 'certverify' ),
+				'label'     => __( 'Credit text', 'certloom' ),
 				'type'      => \Elementor\Controls_Manager::TEXT,
 				'default'   => $defaults['credit_text'],
 				'condition' => array(
@@ -193,7 +193,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'style_colors',
 			array(
-				'label' => __( 'Colors', 'certverify' ),
+				'label' => __( 'Colors', 'certloom' ),
 				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
 			)
 		);
@@ -201,7 +201,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'accent_color',
 			array(
-				'label'     => __( 'Accent color', 'certverify' ),
+				'label'     => __( 'Accent color', 'certloom' ),
 				'type'      => \Elementor\Controls_Manager::COLOR,
 				'default'   => $this->get_default( 'accent' ),
 				'selectors' => array(
@@ -213,7 +213,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'heading_color',
 			array(
-				'label'     => __( 'Heading color', 'certverify' ),
+				'label'     => __( 'Heading color', 'certloom' ),
 				'type'      => \Elementor\Controls_Manager::COLOR,
 				'selectors' => array(
 					'{{WRAPPER}} .cv-widget' => '--cv-heading: {{VALUE}};',
@@ -224,7 +224,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'muted_color',
 			array(
-				'label'     => __( 'Muted text color', 'certverify' ),
+				'label'     => __( 'Muted text color', 'certloom' ),
 				'type'      => \Elementor\Controls_Manager::COLOR,
 				'selectors' => array(
 					'{{WRAPPER}} .cv-widget' => '--cv-muted: {{VALUE}};',
@@ -235,7 +235,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'border_color',
 			array(
-				'label'     => __( 'Border color', 'certverify' ),
+				'label'     => __( 'Border color', 'certloom' ),
 				'type'      => \Elementor\Controls_Manager::COLOR,
 				'selectors' => array(
 					'{{WRAPPER}} .cv-widget' => '--cv-border: {{VALUE}};',
@@ -250,7 +250,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'style_typography',
 			array(
-				'label' => __( 'Typography', 'certverify' ),
+				'label' => __( 'Typography', 'certloom' ),
 				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
 			)
 		);
@@ -259,7 +259,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 			\Elementor\Group_Control_Typography::get_type(),
 			array(
 				'name'     => 'eyebrow_typography',
-				'label'    => __( 'Eyebrow', 'certverify' ),
+				'label'    => __( 'Eyebrow', 'certloom' ),
 				'selector' => '{{WRAPPER}} .cv-eyebrow',
 			)
 		);
@@ -268,7 +268,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 			\Elementor\Group_Control_Typography::get_type(),
 			array(
 				'name'     => 'heading_typography',
-				'label'    => __( 'Heading', 'certverify' ),
+				'label'    => __( 'Heading', 'certloom' ),
 				'selector' => '{{WRAPPER}} .cv-heading',
 			)
 		);
@@ -277,7 +277,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 			\Elementor\Group_Control_Typography::get_type(),
 			array(
 				'name'     => 'description_typography',
-				'label'    => __( 'Description', 'certverify' ),
+				'label'    => __( 'Description', 'certloom' ),
 				'selector' => '{{WRAPPER}} .cv-description',
 			)
 		);
@@ -289,7 +289,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'style_input',
 			array(
-				'label' => __( 'Search input', 'certverify' ),
+				'label' => __( 'Search input', 'certloom' ),
 				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
 			)
 		);
@@ -297,7 +297,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'input_border_color',
 			array(
-				'label'     => __( 'Border color', 'certverify' ),
+				'label'     => __( 'Border color', 'certloom' ),
 				'type'      => \Elementor\Controls_Manager::COLOR,
 				'selectors' => array(
 					'{{WRAPPER}} .cv-search-input' => 'border-color: {{VALUE}};',
@@ -308,7 +308,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'input_border_width',
 			array(
-				'label'      => __( 'Border width', 'certverify' ),
+				'label'      => __( 'Border width', 'certloom' ),
 				'type'       => \Elementor\Controls_Manager::SLIDER,
 				'size_units' => array( 'px' ),
 				'range'      => array(
@@ -330,7 +330,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'input_border_radius',
 			array(
-				'label'      => __( 'Corner radius', 'certverify' ),
+				'label'      => __( 'Corner radius', 'certloom' ),
 				'type'       => \Elementor\Controls_Manager::SLIDER,
 				'size_units' => array( 'px' ),
 				'range'      => array(
@@ -352,7 +352,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'input_padding',
 			array(
-				'label'      => __( 'Padding', 'certverify' ),
+				'label'      => __( 'Padding', 'certloom' ),
 				'type'       => \Elementor\Controls_Manager::DIMENSIONS,
 				'size_units' => array( 'px', 'em', '%' ),
 				'default'    => array(
@@ -373,7 +373,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 			\Elementor\Group_Control_Typography::get_type(),
 			array(
 				'name'     => 'input_typography',
-				'label'    => __( 'Typography', 'certverify' ),
+				'label'    => __( 'Typography', 'certloom' ),
 				'selector' => '{{WRAPPER}} .cv-search-input',
 			)
 		);
@@ -385,7 +385,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'style_button',
 			array(
-				'label' => __( 'Search button', 'certverify' ),
+				'label' => __( 'Search button', 'certloom' ),
 				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
 			)
 		);
@@ -393,7 +393,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'button_bg_color',
 			array(
-				'label'     => __( 'Background color', 'certverify' ),
+				'label'     => __( 'Background color', 'certloom' ),
 				'type'      => \Elementor\Controls_Manager::COLOR,
 				'selectors' => array(
 					'{{WRAPPER}} .cv-search-btn' => 'background: {{VALUE}};',
@@ -404,7 +404,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'button_text_color',
 			array(
-				'label'     => __( 'Text color', 'certverify' ),
+				'label'     => __( 'Text color', 'certloom' ),
 				'type'      => \Elementor\Controls_Manager::COLOR,
 				'selectors' => array(
 					'{{WRAPPER}} .cv-search-btn' => 'color: {{VALUE}};',
@@ -415,7 +415,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'button_border_radius',
 			array(
-				'label'      => __( 'Corner radius', 'certverify' ),
+				'label'      => __( 'Corner radius', 'certloom' ),
 				'type'       => \Elementor\Controls_Manager::SLIDER,
 				'size_units' => array( 'px' ),
 				'range'      => array(
@@ -437,7 +437,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'button_padding',
 			array(
-				'label'      => __( 'Padding', 'certverify' ),
+				'label'      => __( 'Padding', 'certloom' ),
 				'type'       => \Elementor\Controls_Manager::DIMENSIONS,
 				'size_units' => array( 'px', 'em', '%' ),
 				'default'    => array(
@@ -458,7 +458,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 			\Elementor\Group_Control_Typography::get_type(),
 			array(
 				'name'     => 'button_typography',
-				'label'    => __( 'Typography', 'certverify' ),
+				'label'    => __( 'Typography', 'certloom' ),
 				'selector' => '{{WRAPPER}} .cv-search-btn',
 			)
 		);
@@ -470,7 +470,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'style_result',
 			array(
-				'label' => __( 'Result card', 'certverify' ),
+				'label' => __( 'Result card', 'certloom' ),
 				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
 			)
 		);
@@ -478,7 +478,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'result_bg_color',
 			array(
-				'label'     => __( 'Background color', 'certverify' ),
+				'label'     => __( 'Background color', 'certloom' ),
 				'type'      => \Elementor\Controls_Manager::COLOR,
 				'default'   => '#fafaf8',
 				'selectors' => array(
@@ -490,7 +490,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'result_border_radius',
 			array(
-				'label'      => __( 'Corner radius', 'certverify' ),
+				'label'      => __( 'Corner radius', 'certloom' ),
 				'type'       => \Elementor\Controls_Manager::SLIDER,
 				'size_units' => array( 'px' ),
 				'range'      => array(
@@ -512,7 +512,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'result_padding',
 			array(
-				'label'      => __( 'Padding', 'certverify' ),
+				'label'      => __( 'Padding', 'certloom' ),
 				'type'       => \Elementor\Controls_Manager::DIMENSIONS,
 				'size_units' => array( 'px', 'em', '%' ),
 				'default'    => array(
@@ -532,7 +532,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'row_spacing',
 			array(
-				'label'      => __( 'Row spacing', 'certverify' ),
+				'label'      => __( 'Row spacing', 'certloom' ),
 				'type'       => \Elementor\Controls_Manager::SLIDER,
 				'size_units' => array( 'px' ),
 				'range'      => array(
@@ -555,7 +555,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 			\Elementor\Group_Control_Typography::get_type(),
 			array(
 				'name'     => 'result_label_typography',
-				'label'    => __( 'Label typography', 'certverify' ),
+				'label'    => __( 'Label typography', 'certloom' ),
 				'selector' => '{{WRAPPER}} .cv-result-row dt',
 			)
 		);
@@ -564,7 +564,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 			\Elementor\Group_Control_Typography::get_type(),
 			array(
 				'name'     => 'result_value_typography',
-				'label'    => __( 'Value typography', 'certverify' ),
+				'label'    => __( 'Value typography', 'certloom' ),
 				'selector' => '{{WRAPPER}} .cv-result-row dd',
 			)
 		);
@@ -576,7 +576,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'style_badges',
 			array(
-				'label' => __( 'Status badges', 'certverify' ),
+				'label' => __( 'Status badges', 'certloom' ),
 				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
 			)
 		);
@@ -584,7 +584,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'badge_padding',
 			array(
-				'label'      => __( 'Padding', 'certverify' ),
+				'label'      => __( 'Padding', 'certloom' ),
 				'type'       => \Elementor\Controls_Manager::DIMENSIONS,
 				'size_units' => array( 'px', 'em' ),
 				'default'    => array(
@@ -604,7 +604,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'badge_border_radius',
 			array(
-				'label'      => __( 'Corner radius', 'certverify' ),
+				'label'      => __( 'Corner radius', 'certloom' ),
 				'type'       => \Elementor\Controls_Manager::SLIDER,
 				'size_units' => array( 'px' ),
 				'range'      => array(
@@ -627,16 +627,16 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 			\Elementor\Group_Control_Typography::get_type(),
 			array(
 				'name'     => 'badge_typography',
-				'label'    => __( 'Typography', 'certverify' ),
+				'label'    => __( 'Typography', 'certloom' ),
 				'selector' => '{{WRAPPER}} .cv-badge',
 			)
 		);
 
 		$statuses = array(
-			'valid'     => __( 'Valid', 'certverify' ),
-			'suspended' => __( 'Suspended', 'certverify' ),
-			'withdrawn' => __( 'Withdrawn', 'certverify' ),
-			'expired'   => __( 'Expired', 'certverify' ),
+			'valid'     => __( 'Valid', 'certloom' ),
+			'suspended' => __( 'Suspended', 'certloom' ),
+			'withdrawn' => __( 'Withdrawn', 'certloom' ),
+			'expired'   => __( 'Expired', 'certloom' ),
 		);
 
 		foreach ( $statuses as $key => $label ) {
@@ -652,7 +652,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 			$this->add_control(
 				$key . '_bg_color',
 				array(
-					'label'     => __( 'Background', 'certverify' ),
+					'label'     => __( 'Background', 'certloom' ),
 					'type'      => \Elementor\Controls_Manager::COLOR,
 					'selectors' => array(
 						'{{WRAPPER}} .cv-widget' => '--cv-' . $key . '-bg: {{VALUE}};',
@@ -663,7 +663,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 			$this->add_control(
 				$key . '_text_color',
 				array(
-					'label'     => __( 'Text', 'certverify' ),
+					'label'     => __( 'Text', 'certloom' ),
 					'type'      => \Elementor\Controls_Manager::COLOR,
 					'selectors' => array(
 						'{{WRAPPER}} .cv-widget' => '--cv-' . $key . '-text: {{VALUE}};',
@@ -679,7 +679,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'style_guide',
 			array(
-				'label'     => __( 'Status guide cards', 'certverify' ),
+				'label'     => __( 'Status guide cards', 'certloom' ),
 				'tab'       => \Elementor\Controls_Manager::TAB_STYLE,
 				'condition' => array(
 					'show_guide' => 'yes',
@@ -690,7 +690,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'guide_columns',
 			array(
-				'label'          => __( 'Columns', 'certverify' ),
+				'label'          => __( 'Columns', 'certloom' ),
 				'type'           => \Elementor\Controls_Manager::SELECT,
 				'options'        => array(
 					'1' => '1',
@@ -710,7 +710,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'guide_gap',
 			array(
-				'label'      => __( 'Gap between cards', 'certverify' ),
+				'label'      => __( 'Gap between cards', 'certloom' ),
 				'type'       => \Elementor\Controls_Manager::SLIDER,
 				'size_units' => array( 'px' ),
 				'range'      => array(
@@ -732,7 +732,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'guide_padding',
 			array(
-				'label'      => __( 'Card padding', 'certverify' ),
+				'label'      => __( 'Card padding', 'certloom' ),
 				'type'       => \Elementor\Controls_Manager::DIMENSIONS,
 				'size_units' => array( 'px', 'em' ),
 				'default'    => array(
@@ -752,7 +752,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'guide_border_radius',
 			array(
-				'label'      => __( 'Corner radius', 'certverify' ),
+				'label'      => __( 'Corner radius', 'certloom' ),
 				'type'       => \Elementor\Controls_Manager::SLIDER,
 				'size_units' => array( 'px' ),
 				'range'      => array(
@@ -775,7 +775,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 			\Elementor\Group_Control_Typography::get_type(),
 			array(
 				'name'     => 'guide_title_typography',
-				'label'    => __( 'Title typography', 'certverify' ),
+				'label'    => __( 'Title typography', 'certloom' ),
 				'selector' => '{{WRAPPER}} .cv-guide-title',
 			)
 		);
@@ -784,7 +784,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 			\Elementor\Group_Control_Typography::get_type(),
 			array(
 				'name'     => 'guide_desc_typography',
-				'label'    => __( 'Description typography', 'certverify' ),
+				'label'    => __( 'Description typography', 'certloom' ),
 				'selector' => '{{WRAPPER}} .cv-guide-desc',
 			)
 		);
@@ -796,7 +796,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'style_credit',
 			array(
-				'label'     => __( 'Credit line', 'certverify' ),
+				'label'     => __( 'Credit line', 'certloom' ),
 				'tab'       => \Elementor\Controls_Manager::TAB_STYLE,
 				'condition' => array(
 					'show_credit' => 'yes',
@@ -807,7 +807,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'credit_color',
 			array(
-				'label'     => __( 'Text color', 'certverify' ),
+				'label'     => __( 'Text color', 'certloom' ),
 				'type'      => \Elementor\Controls_Manager::COLOR,
 				'selectors' => array(
 					'{{WRAPPER}} .cv-widget' => '--cv-credit-color: {{VALUE}};',
@@ -818,7 +818,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'credit_size',
 			array(
-				'label'      => __( 'Font size', 'certverify' ),
+				'label'      => __( 'Font size', 'certloom' ),
 				'type'       => \Elementor\Controls_Manager::SLIDER,
 				'size_units' => array( 'px' ),
 				'range'      => array(
@@ -840,19 +840,19 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'credit_align',
 			array(
-				'label'     => __( 'Alignment', 'certverify' ),
+				'label'     => __( 'Alignment', 'certloom' ),
 				'type'      => \Elementor\Controls_Manager::CHOOSE,
 				'options'   => array(
 					'left'   => array(
-						'title' => __( 'Left', 'certverify' ),
+						'title' => __( 'Left', 'certloom' ),
 						'icon'  => 'eicon-text-align-left',
 					),
 					'center' => array(
-						'title' => __( 'Center', 'certverify' ),
+						'title' => __( 'Center', 'certloom' ),
 						'icon'  => 'eicon-text-align-center',
 					),
 					'right'  => array(
-						'title' => __( 'Right', 'certverify' ),
+						'title' => __( 'Right', 'certloom' ),
 						'icon'  => 'eicon-text-align-right',
 					),
 				),
@@ -870,7 +870,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'style_layout',
 			array(
-				'label' => __( 'Layout', 'certverify' ),
+				'label' => __( 'Layout', 'certloom' ),
 				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
 			)
 		);
@@ -879,7 +879,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'card_padding',
 			array(
-				'label'      => __( 'Search card padding', 'certverify' ),
+				'label'      => __( 'Search card padding', 'certloom' ),
 				'type'       => \Elementor\Controls_Manager::DIMENSIONS,
 				'size_units' => array( 'px', 'em', '%' ),
 				'selectors'  => array(
@@ -891,7 +891,7 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'border_radius',
 			array(
-				'label'      => __( 'Search card corner radius', 'certverify' ),
+				'label'      => __( 'Search card corner radius', 'certloom' ),
 				'type'       => \Elementor\Controls_Manager::SLIDER,
 				'size_units' => array( 'px' ),
 				'range'      => array(

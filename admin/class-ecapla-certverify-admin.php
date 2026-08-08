@@ -4,7 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * CertVerify administrative screens and form handlers.
+ * Certloom administrative screens and form handlers.
  */
 class Ecapla_CertVerify_Admin {
 
@@ -38,24 +38,24 @@ class Ecapla_CertVerify_Admin {
 
 	public function add_menu() {
 		add_menu_page(
-			__( 'CertVerify', 'certverify' ),
-			__( 'CertVerify', 'certverify' ),
+			__( 'Certloom', 'certloom' ),
+			__( 'Certloom', 'certloom' ),
 			ECAPLA_CERTVERIFY_CAP,
-			'certverify',
+			'certloom',
 			array( $this, 'render_list_screen' ),
 			'dashicons-shield-alt',
 			30
 		);
-		add_submenu_page( 'certverify', __( 'All Certificates', 'certverify' ), __( 'All Certificates', 'certverify' ), ECAPLA_CERTVERIFY_CAP, 'certverify', array( $this, 'render_list_screen' ) );
-		add_submenu_page( 'certverify', __( 'Add New', 'certverify' ), __( 'Add New', 'certverify' ), ECAPLA_CERTVERIFY_CAP, 'certverify-add', array( $this, 'render_edit_screen' ) );
-		add_submenu_page( 'certverify', __( 'Field Manager', 'certverify' ), __( 'Field Manager', 'certverify' ), ECAPLA_CERTVERIFY_CAP, 'certverify-fields', array( $this, 'render_fields_screen' ) );
-		add_submenu_page( 'certverify', __( 'Import & Export', 'certverify' ), __( 'Import & Export', 'certverify' ), ECAPLA_CERTVERIFY_CAP, 'certverify-import', array( $this, 'render_import_screen' ) );
-		add_submenu_page( 'certverify', __( 'Appearance & Embed', 'certverify' ), __( 'Appearance & Embed', 'certverify' ), ECAPLA_CERTVERIFY_CAP, 'certverify-frontend', array( $this, 'render_frontend_screen' ) );
-		add_submenu_page( 'certverify', __( 'Access & Settings', 'certverify' ), __( 'Access & Settings', 'certverify' ), 'manage_options', 'certverify-settings', array( $this, 'render_settings_screen' ) );
+		add_submenu_page( 'certloom', __( 'All Certificates', 'certloom' ), __( 'All Certificates', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom', array( $this, 'render_list_screen' ) );
+		add_submenu_page( 'certloom', __( 'Add New', 'certloom' ), __( 'Add New', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-add', array( $this, 'render_edit_screen' ) );
+		add_submenu_page( 'certloom', __( 'Field Manager', 'certloom' ), __( 'Field Manager', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-fields', array( $this, 'render_fields_screen' ) );
+		add_submenu_page( 'certloom', __( 'Import & Export', 'certloom' ), __( 'Import & Export', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-import', array( $this, 'render_import_screen' ) );
+		add_submenu_page( 'certloom', __( 'Appearance & Embed', 'certloom' ), __( 'Appearance & Embed', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-frontend', array( $this, 'render_frontend_screen' ) );
+		add_submenu_page( 'certloom', __( 'Access & Settings', 'certloom' ), __( 'Access & Settings', 'certloom' ), 'manage_options', 'certloom-settings', array( $this, 'render_settings_screen' ) );
 	}
 
 	public function enqueue_assets( $hook ) {
-		if ( false === strpos( (string) $hook, 'certverify' ) ) {
+		if ( false === strpos( (string) $hook, 'certloom' ) ) {
 			return;
 		}
 		wp_enqueue_style( 'ecapla-certverify-admin', ECAPLA_CERTVERIFY_URL . 'admin/assets/admin.css', array(), ECAPLA_CERTVERIFY_VERSION );
@@ -70,14 +70,14 @@ class Ecapla_CertVerify_Admin {
 		check_admin_referer( 'certverify_save_certificate' );
 
 		$id       = isset( $_POST['cert_id'] ) ? absint( $_POST['cert_id'] ) : 0;
-		$back_url = $id ? admin_url( 'admin.php?page=certverify-add&id=' . $id ) : admin_url( 'admin.php?page=certverify-add' );
+		$back_url = $id ? admin_url( 'admin.php?page=certloom-add&id=' . $id ) : admin_url( 'admin.php?page=certloom-add' );
 		if ( $id ) {
 			$existing = Ecapla_CertVerify_Database::get_by_id( $id );
 			if ( is_wp_error( $existing ) ) {
 				$this->redirect_error( $existing->get_error_message(), $back_url );
 			}
 			if ( ! $existing ) {
-				$this->redirect_error( __( 'The certificate you tried to update no longer exists.', 'certverify' ), admin_url( 'admin.php?page=certverify' ) );
+				$this->redirect_error( __( 'The certificate you tried to update no longer exists.', 'certloom' ), admin_url( 'admin.php?page=certloom' ) );
 			}
 		}
 
@@ -106,7 +106,7 @@ class Ecapla_CertVerify_Admin {
 			$this->redirect_error( $result->get_error_message(), $back_url );
 		}
 
-		wp_safe_redirect( add_query_arg( 'ecapla_certverify_saved', '1', admin_url( 'admin.php?page=certverify' ) ) );
+		wp_safe_redirect( add_query_arg( 'ecapla_certverify_saved', '1', admin_url( 'admin.php?page=certloom' ) ) );
 		exit;
 	}
 
@@ -135,7 +135,7 @@ class Ecapla_CertVerify_Admin {
 		if ( 'POST' !== strtoupper( isset( $_SERVER['REQUEST_METHOD'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) : '' ) ) {
 			return;
 		}
-		if ( ! isset( $_POST['page'] ) || 'certverify' !== sanitize_key( wp_unslash( $_POST['page'] ) ) ) {
+		if ( ! isset( $_POST['page'] ) || 'certloom' !== sanitize_key( wp_unslash( $_POST['page'] ) ) ) {
 			return;
 		}
 		$action = isset( $_POST['action'] ) ? sanitize_key( wp_unslash( $_POST['action'] ) ) : '';
@@ -164,7 +164,7 @@ class Ecapla_CertVerify_Admin {
 		}
 		$this->require_manage_permission();
 		check_admin_referer( 'certverify_save_fields' );
-		$this->require_writes_available( admin_url( 'admin.php?page=certverify-fields' ) );
+		$this->require_writes_available( admin_url( 'admin.php?page=certloom-fields' ) );
 
 		$existing = Ecapla_CertVerify_Fields::get_field_map();
 		$submitted = isset( $_POST['fields'] ) && is_array( $_POST['fields'] ) ? wp_unslash( $_POST['fields'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Each nested field key and value is allow-listed and sanitized below.
@@ -188,9 +188,9 @@ class Ecapla_CertVerify_Admin {
 			$new_fields[]   = $field;
 		}
 		if ( ! Ecapla_CertVerify_Fields::save_fields( $new_fields ) ) {
-			$this->redirect_error( __( 'The field order, labels, and visibility could not be saved.', 'certverify' ), admin_url( 'admin.php?page=certverify-fields' ) );
+			$this->redirect_error( __( 'The field order, labels, and visibility could not be saved.', 'certloom' ), admin_url( 'admin.php?page=certloom-fields' ) );
 		}
-		wp_safe_redirect( add_query_arg( 'ecapla_certverify_fields_saved', '1', admin_url( 'admin.php?page=certverify-fields' ) ) );
+		wp_safe_redirect( add_query_arg( 'ecapla_certverify_fields_saved', '1', admin_url( 'admin.php?page=certloom-fields' ) ) );
 		exit;
 	}
 
@@ -203,7 +203,7 @@ class Ecapla_CertVerify_Admin {
 		$label = isset( $_POST['new_field_label'] ) ? sanitize_text_field( wp_unslash( $_POST['new_field_label'] ) ) : '';
 		$label = function_exists( 'mb_substr' ) ? mb_substr( $label, 0, 100 ) : substr( $label, 0, 100 );
 		if ( '' === $label ) {
-			$this->redirect_error( __( 'Give the new field a label.', 'certverify' ), admin_url( 'admin.php?page=certverify-fields' ) );
+			$this->redirect_error( __( 'Give the new field a label.', 'certloom' ), admin_url( 'admin.php?page=certloom-fields' ) );
 		}
 		$allowed_types = array( 'text', 'textarea', 'date', 'number' );
 		$type = isset( $_POST['new_field_type'] ) ? sanitize_key( wp_unslash( $_POST['new_field_type'] ) ) : 'text';
@@ -236,9 +236,9 @@ class Ecapla_CertVerify_Admin {
 			'order'             => absint( $max_order ) + 1,
 		);
 		if ( ! Ecapla_CertVerify_Fields::save_fields( $fields ) ) {
-			$this->redirect_error( __( 'The custom field could not be added because the field schema was not saved.', 'certverify' ), admin_url( 'admin.php?page=certverify-fields' ) );
+			$this->redirect_error( __( 'The custom field could not be added because the field schema was not saved.', 'certloom' ), admin_url( 'admin.php?page=certloom-fields' ) );
 		}
-		wp_safe_redirect( add_query_arg( 'ecapla_certverify_field_added', '1', admin_url( 'admin.php?page=certverify-fields' ) ) );
+		wp_safe_redirect( add_query_arg( 'ecapla_certverify_field_added', '1', admin_url( 'admin.php?page=certloom-fields' ) ) );
 		exit;
 	}
 
@@ -248,10 +248,10 @@ class Ecapla_CertVerify_Admin {
 		$key   = isset( $_POST['field_key'] ) ? sanitize_key( wp_unslash( $_POST['field_key'] ) ) : '';
 		$field = Ecapla_CertVerify_Fields::get_field( $key );
 		if ( ! $field || ! empty( $field['core'] ) || ! empty( $field['protected'] ) ) {
-			$this->redirect_error( __( 'Core certificate fields cannot be removed. You can relabel, reorder, or hide them from public results.', 'certverify' ), admin_url( 'admin.php?page=certverify-fields' ) );
+			$this->redirect_error( __( 'Core certificate fields cannot be removed. You can relabel, reorder, or hide them from public results.', 'certloom' ), admin_url( 'admin.php?page=certloom-fields' ) );
 		}
 		if ( ! Ecapla_CertVerify_Fields::retire_field( $field ) ) {
-			$this->redirect_error( __( 'The field could not be retired safely. No field was removed.', 'certverify' ), admin_url( 'admin.php?page=certverify-fields' ) );
+			$this->redirect_error( __( 'The field could not be retired safely. No field was removed.', 'certloom' ), admin_url( 'admin.php?page=certloom-fields' ) );
 		}
 		$fields = array_values(
 			array_filter(
@@ -263,11 +263,11 @@ class Ecapla_CertVerify_Admin {
 		);
 		if ( ! Ecapla_CertVerify_Fields::save_fields( $fields ) ) {
 			if ( ! Ecapla_CertVerify_Fields::remove_retired_field( $key ) ) {
-				$this->redirect_error( __( 'The active field layout could not be updated, and the temporary retired marker could not be rolled back. Review the field registry before continuing.', 'certverify' ), admin_url( 'admin.php?page=certverify-fields' ) );
+				$this->redirect_error( __( 'The active field layout could not be updated, and the temporary retired marker could not be rolled back. Review the field registry before continuing.', 'certloom' ), admin_url( 'admin.php?page=certloom-fields' ) );
 			}
-			$this->redirect_error( __( 'The active field layout could not be updated. No field was removed.', 'certverify' ), admin_url( 'admin.php?page=certverify-fields' ) );
+			$this->redirect_error( __( 'The active field layout could not be updated. No field was removed.', 'certloom' ), admin_url( 'admin.php?page=certloom-fields' ) );
 		}
-		wp_safe_redirect( add_query_arg( 'ecapla_certverify_field_deleted', '1', admin_url( 'admin.php?page=certverify-fields' ) ) );
+		wp_safe_redirect( add_query_arg( 'ecapla_certverify_field_deleted', '1', admin_url( 'admin.php?page=certloom-fields' ) ) );
 		exit;
 	}
 
@@ -280,7 +280,7 @@ class Ecapla_CertVerify_Admin {
 		$key     = isset( $_POST['field_key'] ) ? sanitize_key( wp_unslash( $_POST['field_key'] ) ) : '';
 		$retired = Ecapla_CertVerify_Fields::get_retired_fields();
 		if ( '' === $key || ! isset( $retired[ $key ] ) || Ecapla_CertVerify_Fields::get_field( $key ) ) {
-			$this->redirect_error( __( 'That retired field cannot be restored.', 'certverify' ), admin_url( 'admin.php?page=certverify-fields' ) );
+			$this->redirect_error( __( 'That retired field cannot be restored.', 'certloom' ), admin_url( 'admin.php?page=certloom-fields' ) );
 		}
 
 		$original_fields = Ecapla_CertVerify_Fields::get_fields();
@@ -298,16 +298,16 @@ class Ecapla_CertVerify_Admin {
 			'order'             => absint( $max_order ) + 1,
 		);
 		if ( ! Ecapla_CertVerify_Fields::save_fields( $fields ) ) {
-			$this->redirect_error( __( 'The retired field could not be restored.', 'certverify' ), admin_url( 'admin.php?page=certverify-fields' ) );
+			$this->redirect_error( __( 'The retired field could not be restored.', 'certloom' ), admin_url( 'admin.php?page=certloom-fields' ) );
 		}
 		if ( ! Ecapla_CertVerify_Fields::remove_retired_field( $key ) ) {
 			if ( ! Ecapla_CertVerify_Fields::save_fields( $original_fields ) ) {
-				$this->redirect_error( __( 'The retired marker could not be cleared, and the restored field could not be rolled back. Review the active and retired field registries before continuing.', 'certverify' ), admin_url( 'admin.php?page=certverify-fields' ) );
+				$this->redirect_error( __( 'The retired marker could not be cleared, and the restored field could not be rolled back. Review the active and retired field registries before continuing.', 'certloom' ), admin_url( 'admin.php?page=certloom-fields' ) );
 			}
-			$this->redirect_error( __( 'The retired field could not be restored safely. The active field layout was rolled back.', 'certverify' ), admin_url( 'admin.php?page=certverify-fields' ) );
+			$this->redirect_error( __( 'The retired field could not be restored safely. The active field layout was rolled back.', 'certloom' ), admin_url( 'admin.php?page=certloom-fields' ) );
 		}
 		Ecapla_CertVerify_Database::clear_custom_field_purge_state( $key );
-		wp_safe_redirect( add_query_arg( 'ecapla_certverify_field_restored', '1', admin_url( 'admin.php?page=certverify-fields' ) ) );
+		wp_safe_redirect( add_query_arg( 'ecapla_certverify_field_restored', '1', admin_url( 'admin.php?page=certloom-fields' ) ) );
 		exit;
 	}
 
@@ -316,9 +316,9 @@ class Ecapla_CertVerify_Admin {
 		$this->require_options_permission();
 		check_admin_referer( 'ecapla_certverify_retranslate_fields' );
 		if ( ! Ecapla_CertVerify_Fields::retranslate_core_labels() ) {
-			$this->redirect_error( __( 'Core field labels could not be reset for the current site language.', 'certverify' ), admin_url( 'admin.php?page=certverify-fields' ) );
+			$this->redirect_error( __( 'Core field labels could not be reset for the current site language.', 'certloom' ), admin_url( 'admin.php?page=certloom-fields' ) );
 		}
-		wp_safe_redirect( add_query_arg( 'ecapla_certverify_fields_retranslated', '1', admin_url( 'admin.php?page=certverify-fields' ) ) );
+		wp_safe_redirect( add_query_arg( 'ecapla_certverify_fields_retranslated', '1', admin_url( 'admin.php?page=certloom-fields' ) ) );
 		exit;
 	}
 
@@ -329,24 +329,24 @@ class Ecapla_CertVerify_Admin {
 		$key     = isset( $_POST['field_key'] ) ? sanitize_key( wp_unslash( $_POST['field_key'] ) ) : '';
 		$retired = Ecapla_CertVerify_Fields::get_retired_fields();
 		if ( '' === $key || ! isset( $retired[ $key ] ) || Ecapla_CertVerify_Fields::get_field( $key ) ) {
-			$this->redirect_error( __( 'That retired field cannot be purged.', 'certverify' ), admin_url( 'admin.php?page=certverify-fields' ) );
+			$this->redirect_error( __( 'That retired field cannot be purged.', 'certloom' ), admin_url( 'admin.php?page=certloom-fields' ) );
 		}
 
 		$result = Ecapla_CertVerify_Database::purge_custom_field_values( $key );
 		if ( is_wp_error( $result ) ) {
-			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certverify-fields' ) );
+			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-fields' ) );
 		}
 		$changed  = absint( $result['changed'] ?? 0 );
 		$complete = ! empty( $result['complete'] );
 		if ( ! $complete ) {
-			wp_safe_redirect( add_query_arg( array( 'ecapla_certverify_purge_progress' => '1', 'rows' => $changed ), admin_url( 'admin.php?page=certverify-fields' ) ) );
+			wp_safe_redirect( add_query_arg( array( 'ecapla_certverify_purge_progress' => '1', 'rows' => $changed ), admin_url( 'admin.php?page=certloom-fields' ) ) );
 			exit;
 		}
 		if ( ! Ecapla_CertVerify_Fields::remove_retired_field( $key ) ) {
-			$this->redirect_error( __( 'Stored values were purged, but the retired registry could not be updated. The reserved key remains safe; run Purge again to retry the final registry cleanup.', 'certverify' ), admin_url( 'admin.php?page=certverify-fields' ) );
+			$this->redirect_error( __( 'Stored values were purged, but the retired registry could not be updated. The reserved key remains safe; run Purge again to retry the final registry cleanup.', 'certloom' ), admin_url( 'admin.php?page=certloom-fields' ) );
 		}
 		Ecapla_CertVerify_Database::clear_custom_field_purge_state( $key );
-		wp_safe_redirect( add_query_arg( array( 'ecapla_certverify_field_purged' => '1', 'rows' => $changed ), admin_url( 'admin.php?page=certverify-fields' ) ) );
+		wp_safe_redirect( add_query_arg( array( 'ecapla_certverify_field_purged' => '1', 'rows' => $changed ), admin_url( 'admin.php?page=certloom-fields' ) ) );
 		exit;
 	}
 
@@ -357,23 +357,23 @@ class Ecapla_CertVerify_Admin {
 		$this->require_manage_permission();
 		check_admin_referer( 'certverify_import_analyze' );
 		if ( empty( $_FILES['import_file']['tmp_name'] ) || ! isset( $_FILES['import_file']['error'] ) || UPLOAD_ERR_OK !== (int) $_FILES['import_file']['error'] ) {
-			$this->redirect_error( __( 'Choose a CSV file to upload.', 'certverify' ), admin_url( 'admin.php?page=certverify-import' ) );
+			$this->redirect_error( __( 'Choose a CSV file to upload.', 'certloom' ), admin_url( 'admin.php?page=certloom-import' ) );
 		}
 		$tmp_name = wp_unslash( $_FILES['import_file']['tmp_name'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$file_name = isset( $_FILES['import_file']['name'] ) ? sanitize_file_name( wp_unslash( $_FILES['import_file']['name'] ) ) : '';
 		$file_type = wp_check_filetype( $file_name, array( 'csv' => 'text/csv' ) );
 		if ( ! is_uploaded_file( $tmp_name ) || 'csv' !== $file_type['ext'] ) {
-			$this->redirect_error( __( 'Upload a valid .csv file.', 'certverify' ), admin_url( 'admin.php?page=certverify-import' ) );
+			$this->redirect_error( __( 'Upload a valid .csv file.', 'certloom' ), admin_url( 'admin.php?page=certloom-import' ) );
 		}
 		$file_size = filesize( $tmp_name );
 		if ( false === $file_size || $file_size > 5 * MB_IN_BYTES ) {
-			$this->redirect_error( __( 'The CSV file is larger than the 5 MB import limit.', 'certverify' ), admin_url( 'admin.php?page=certverify-import' ) );
+			$this->redirect_error( __( 'The CSV file is larger than the 5 MB import limit.', 'certloom' ), admin_url( 'admin.php?page=certloom-import' ) );
 		}
 		$token = Ecapla_CertVerify_Import::store_uploaded_csv( $tmp_name );
 		if ( is_wp_error( $token ) ) {
-			$this->redirect_error( $token->get_error_message(), admin_url( 'admin.php?page=certverify-import' ) );
+			$this->redirect_error( $token->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
 		}
-		wp_safe_redirect( add_query_arg( array( 'page' => 'certverify-import', 'step' => 'map', 'token' => $token ), admin_url( 'admin.php' ) ) );
+		wp_safe_redirect( add_query_arg( array( 'page' => 'certloom-import', 'step' => 'map', 'token' => $token ), admin_url( 'admin.php' ) ) );
 		exit;
 	}
 
@@ -383,11 +383,11 @@ class Ecapla_CertVerify_Admin {
 		}
 		$this->require_manage_permission();
 		check_admin_referer( 'certverify_import_process' );
-		$this->require_writes_available( admin_url( 'admin.php?page=certverify-import' ) );
+		$this->require_writes_available( admin_url( 'admin.php?page=certloom-import' ) );
 		$token   = isset( $_POST['import_token'] ) ? sanitize_text_field( wp_unslash( $_POST['import_token'] ) ) : '';
 		$preview = $token ? Ecapla_CertVerify_Import::get_preview( $token ) : false;
 		if ( ! $preview ) {
-			$this->redirect_error( __( 'That import session expired. Upload the file again.', 'certverify' ), admin_url( 'admin.php?page=certverify-import' ) );
+			$this->redirect_error( __( 'That import session expired. Upload the file again.', 'certloom' ), admin_url( 'admin.php?page=certloom-import' ) );
 		}
 		$mapping = array();
 		if ( isset( $_POST['map'] ) && is_array( $_POST['map'] ) ) {
@@ -398,7 +398,7 @@ class Ecapla_CertVerify_Admin {
 		}
 		$historical_restore = ! empty( $_POST['historical_restore'] );
 		if ( $historical_restore && ! current_user_can( 'manage_options' ) ) {
-			$this->redirect_error( __( 'Only an administrator can enable Historical restore mode.', 'certverify' ), admin_url( 'admin.php?page=certverify-import' ) );
+			$this->redirect_error( __( 'Only an administrator can enable Historical restore mode.', 'certloom' ), admin_url( 'admin.php?page=certloom-import' ) );
 		}
 		$progress = Ecapla_CertVerify_Import::start_stored_process( $token, $mapping, ! empty( $_POST['update_existing'] ), ! empty( $_POST['clear_empty'] ), $historical_restore );
 		$this->redirect_import_progress( $token, $progress );
@@ -411,7 +411,7 @@ class Ecapla_CertVerify_Admin {
 		}
 		$this->require_manage_permission();
 		check_admin_referer( 'certverify_import_continue' );
-		$this->require_writes_available( admin_url( 'admin.php?page=certverify-import' ) );
+		$this->require_writes_available( admin_url( 'admin.php?page=certloom-import' ) );
 		$token    = isset( $_POST['import_token'] ) ? sanitize_text_field( wp_unslash( $_POST['import_token'] ) ) : '';
 		$progress = Ecapla_CertVerify_Import::continue_stored_process( $token );
 		$this->redirect_import_progress( $token, $progress );
@@ -419,22 +419,22 @@ class Ecapla_CertVerify_Admin {
 
 	private function redirect_import_progress( $token, $progress ) {
 		if ( false === $progress ) {
-			$this->redirect_error( __( 'That import session expired during processing. Upload the file again.', 'certverify' ), admin_url( 'admin.php?page=certverify-import' ) );
+			$this->redirect_error( __( 'That import session expired during processing. Upload the file again.', 'certloom' ), admin_url( 'admin.php?page=certloom-import' ) );
 		}
 		if ( is_wp_error( $progress ) ) {
-			$this->redirect_error( $progress->get_error_message(), admin_url( 'admin.php?page=certverify-import' ) );
+			$this->redirect_error( $progress->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
 		}
 		if ( ! empty( $progress['complete'] ) ) {
 			$results = (array) ( $progress['results'] ?? array() );
 			Ecapla_CertVerify_Import::delete_rows( $token );
 			$result_token = Ecapla_CertVerify_Import::store_results( $results );
 			if ( is_wp_error( $result_token ) ) {
-				$this->redirect_error( $result_token->get_error_message(), admin_url( 'admin.php?page=certverify-import' ) );
+				$this->redirect_error( $result_token->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
 			}
-			wp_safe_redirect( add_query_arg( array( 'page' => 'certverify-import', 'result' => $result_token ), admin_url( 'admin.php' ) ) );
+			wp_safe_redirect( add_query_arg( array( 'page' => 'certloom-import', 'result' => $result_token ), admin_url( 'admin.php' ) ) );
 			exit;
 		}
-		wp_safe_redirect( add_query_arg( array( 'page' => 'certverify-import', 'step' => 'process', 'token' => sanitize_text_field( $token ) ), admin_url( 'admin.php' ) ) );
+		wp_safe_redirect( add_query_arg( array( 'page' => 'certloom-import', 'step' => 'process', 'token' => sanitize_text_field( $token ) ), admin_url( 'admin.php' ) ) );
 		exit;
 	}
 
@@ -444,7 +444,7 @@ class Ecapla_CertVerify_Admin {
 		}
 		$this->require_options_permission();
 		check_admin_referer( 'certverify_save_settings' );
-		$this->require_writes_available( admin_url( 'admin.php?page=certverify-settings' ) );
+		$this->require_writes_available( admin_url( 'admin.php?page=certloom-settings' ) );
 		$accent       = isset( $_POST['accent_color'] ) ? sanitize_hex_color( wp_unslash( $_POST['accent_color'] ) ) : '';
 		$credit_color = isset( $_POST['credit_color'] ) ? sanitize_hex_color( wp_unslash( $_POST['credit_color'] ) ) : '';
 		$credit_size_raw = isset( $_POST['credit_size'] ) ? sanitize_text_field( wp_unslash( $_POST['credit_size'] ) ) : '';
@@ -474,7 +474,7 @@ class Ecapla_CertVerify_Admin {
 			}
 		}
 		if ( ! Ecapla_CertVerify_Settings::save( $data ) ) {
-			$this->redirect_error( __( 'The settings could not be saved. Role access was not changed.', 'certverify' ), admin_url( 'admin.php?page=certverify-settings' ) );
+			$this->redirect_error( __( 'The settings could not be saved. Role access was not changed.', 'certloom' ), admin_url( 'admin.php?page=certloom-settings' ) );
 		}
 
 		$role_access     = isset( $_POST['role_access'] ) && is_array( $_POST['role_access'] ) ? array_map( 'sanitize_key', array_keys( wp_unslash( $_POST['role_access'] ) ) ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Only sanitized array keys are used as role identifiers.
@@ -508,11 +508,11 @@ class Ecapla_CertVerify_Admin {
 				}
 			}
 			$message = $rollback_failed
-				? __( 'The general settings were saved, but one or more role changes failed and could not be fully rolled back. Review role access before continuing.', 'certverify' )
-				: __( 'The general settings were saved, but role access could not be updated. The previous role access was restored.', 'certverify' );
-			$this->redirect_error( $message, admin_url( 'admin.php?page=certverify-settings' ) );
+				? __( 'The general settings were saved, but one or more role changes failed and could not be fully rolled back. Review role access before continuing.', 'certloom' )
+				: __( 'The general settings were saved, but role access could not be updated. The previous role access was restored.', 'certloom' );
+			$this->redirect_error( $message, admin_url( 'admin.php?page=certloom-settings' ) );
 		}
-		wp_safe_redirect( add_query_arg( 'ecapla_certverify_settings_saved', '1', admin_url( 'admin.php?page=certverify-settings' ) ) );
+		wp_safe_redirect( add_query_arg( 'ecapla_certverify_settings_saved', '1', admin_url( 'admin.php?page=certloom-settings' ) ) );
 		exit;
 	}
 
@@ -524,9 +524,9 @@ class Ecapla_CertVerify_Admin {
 		check_admin_referer( 'certverify_create_manager_role' );
 		$role = Ecapla_CertVerify_Permissions::create_manager_role();
 		if ( ! $role || ! $role->has_cap( 'read' ) || ! Ecapla_CertVerify_Permissions::role_has_capability( Ecapla_CertVerify_Permissions::MANAGER_ROLE ) ) {
-			$this->redirect_error( __( 'The Certificate Manager role could not be created or updated.', 'certverify' ), admin_url( 'admin.php?page=certverify-settings' ) );
+			$this->redirect_error( __( 'The Certificate Manager role could not be created or updated.', 'certloom' ), admin_url( 'admin.php?page=certloom-settings' ) );
 		}
-		wp_safe_redirect( add_query_arg( 'ecapla_certverify_role_created', '1', admin_url( 'admin.php?page=certverify-settings' ) ) );
+		wp_safe_redirect( add_query_arg( 'ecapla_certverify_role_created', '1', admin_url( 'admin.php?page=certloom-settings' ) ) );
 		exit;
 	}
 
@@ -542,19 +542,19 @@ class Ecapla_CertVerify_Admin {
 		$this->require_options_permission();
 		check_admin_referer( 'ecapla_certverify_backup_analyze' );
 		if ( empty( $_FILES['backup_file']['tmp_name'] ) || ! isset( $_FILES['backup_file']['error'] ) || UPLOAD_ERR_OK !== (int) $_FILES['backup_file']['error'] ) {
-			$this->redirect_error( __( 'Choose a CertVerify backup file.', 'certverify' ), admin_url( 'admin.php?page=certverify-import' ) );
+			$this->redirect_error( __( 'Choose a Certloom backup file.', 'certloom' ), admin_url( 'admin.php?page=certloom-import' ) );
 		}
 		$tmp_name  = wp_unslash( $_FILES['backup_file']['tmp_name'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Validated as an uploaded temporary file below.
 		$file_name = isset( $_FILES['backup_file']['name'] ) ? sanitize_file_name( wp_unslash( $_FILES['backup_file']['name'] ) ) : '';
 		$extension = strtolower( pathinfo( $file_name, PATHINFO_EXTENSION ) );
 		if ( ! is_uploaded_file( $tmp_name ) || ! in_array( $extension, array( 'cvbackup', 'json' ), true ) ) {
-			$this->redirect_error( __( 'Upload a valid .cvbackup or legacy .json CertVerify backup.', 'certverify' ), admin_url( 'admin.php?page=certverify-import' ) );
+			$this->redirect_error( __( 'Upload a valid .cvbackup or legacy .json Certloom backup.', 'certloom' ), admin_url( 'admin.php?page=certloom-import' ) );
 		}
 		$token = Ecapla_CertVerify_Backup::analyze_file( $tmp_name );
 		if ( is_wp_error( $token ) ) {
-			$this->redirect_error( $token->get_error_message(), admin_url( 'admin.php?page=certverify-import' ) );
+			$this->redirect_error( $token->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
 		}
-		wp_safe_redirect( add_query_arg( array( 'page' => 'certverify-import', 'backup_token' => $token ), admin_url( 'admin.php' ) ) );
+		wp_safe_redirect( add_query_arg( array( 'page' => 'certloom-import', 'backup_token' => $token ), admin_url( 'admin.php' ) ) );
 		exit;
 	}
 
@@ -562,16 +562,16 @@ class Ecapla_CertVerify_Admin {
 		$this->require_options_permission();
 		check_admin_referer( 'ecapla_certverify_backup_apply' );
 		if ( empty( $_POST['confirm_restore'] ) ) {
-			$this->redirect_error( __( 'Confirm that you understand the selected restore mode can replace or merge CertVerify data and that CertVerify writes will be paused until the restore finishes.', 'certverify' ), admin_url( 'admin.php?page=certverify-import' ) );
+			$this->redirect_error( __( 'Confirm that you understand the selected restore mode can replace or merge Certloom data and that Certloom writes will be paused until the restore finishes.', 'certloom' ), admin_url( 'admin.php?page=certloom-import' ) );
 		}
 		$token  = isset( $_POST['backup_token'] ) ? sanitize_text_field( wp_unslash( $_POST['backup_token'] ) ) : '';
 		$policy = isset( $_POST['conflict_policy'] ) ? sanitize_key( wp_unslash( $_POST['conflict_policy'] ) ) : 'skip';
 		$mode   = isset( $_POST['restore_mode'] ) ? sanitize_key( wp_unslash( $_POST['restore_mode'] ) ) : 'replace';
 		$result = Ecapla_CertVerify_Backup::start_restore( $token, $policy, $mode );
 		if ( is_wp_error( $result ) ) {
-			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certverify-import' ) );
+			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
 		}
-		wp_safe_redirect( add_query_arg( array( 'page' => 'certverify-import', 'step' => 'backup-process', 'backup_token' => $token ), admin_url( 'admin.php' ) ) );
+		wp_safe_redirect( add_query_arg( array( 'page' => 'certloom-import', 'step' => 'backup-process', 'backup_token' => $token ), admin_url( 'admin.php' ) ) );
 		exit;
 	}
 
@@ -581,22 +581,22 @@ class Ecapla_CertVerify_Admin {
 		$token  = isset( $_POST['backup_token'] ) ? sanitize_text_field( wp_unslash( $_POST['backup_token'] ) ) : '';
 		$result = Ecapla_CertVerify_Backup::continue_restore( $token );
 		if ( is_wp_error( $result ) ) {
-			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certverify-import' ) );
+			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
 		}
 		if ( ! empty( $result['complete'] ) ) {
 			$result_token = Ecapla_CertVerify_Import::store_results( (array) ( $result['results'] ?? array() ) );
 			if ( is_wp_error( $result_token ) ) {
-				$this->redirect_error( $result_token->get_error_message(), admin_url( 'admin.php?page=certverify-import' ) );
+				$this->redirect_error( $result_token->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
 			}
-			wp_safe_redirect( add_query_arg( array( 'page' => 'certverify-import', 'result' => $result_token, 'backup_restored' => '1' ), admin_url( 'admin.php' ) ) );
+			wp_safe_redirect( add_query_arg( array( 'page' => 'certloom-import', 'result' => $result_token, 'backup_restored' => '1' ), admin_url( 'admin.php' ) ) );
 			exit;
 		}
-		wp_safe_redirect( add_query_arg( array( 'page' => 'certverify-import', 'step' => 'backup-process', 'backup_token' => $token ), admin_url( 'admin.php' ) ) );
+		wp_safe_redirect( add_query_arg( array( 'page' => 'certloom-import', 'step' => 'backup-process', 'backup_token' => $token ), admin_url( 'admin.php' ) ) );
 		exit;
 	}
 
 	public function handle_export() {
-		if ( ! isset( $_GET['page'], $_GET['action'] ) || 'certverify-import' !== sanitize_key( wp_unslash( $_GET['page'] ) ) || 'export' !== sanitize_key( wp_unslash( $_GET['action'] ) ) ) {
+		if ( ! isset( $_GET['page'], $_GET['action'] ) || 'certloom-import' !== sanitize_key( wp_unslash( $_GET['page'] ) ) || 'export' !== sanitize_key( wp_unslash( $_GET['action'] ) ) ) {
 			return;
 		}
 		$this->require_manage_permission();
@@ -606,7 +606,7 @@ class Ecapla_CertVerify_Admin {
 	}
 
 	public function handle_template_download() {
-		if ( ! isset( $_GET['page'], $_GET['action'] ) || 'certverify-import' !== sanitize_key( wp_unslash( $_GET['page'] ) ) || 'template' !== sanitize_key( wp_unslash( $_GET['action'] ) ) ) {
+		if ( ! isset( $_GET['page'], $_GET['action'] ) || 'certloom-import' !== sanitize_key( wp_unslash( $_GET['page'] ) ) || 'template' !== sanitize_key( wp_unslash( $_GET['action'] ) ) ) {
 			return;
 		}
 		$this->require_manage_permission();
@@ -630,10 +630,10 @@ class Ecapla_CertVerify_Admin {
 		$certificate = $id ? Ecapla_CertVerify_Database::get_by_id( $id ) : null;
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		if ( is_wp_error( $certificate ) ) {
-			$this->redirect_error( $certificate->get_error_message(), admin_url( 'admin.php?page=certverify' ) );
+			$this->redirect_error( $certificate->get_error_message(), admin_url( 'admin.php?page=certloom' ) );
 		}
 		if ( $id && ! $certificate ) {
-			$this->redirect_error( __( 'That certificate does not exist.', 'certverify' ), admin_url( 'admin.php?page=certverify' ) );
+			$this->redirect_error( __( 'That certificate does not exist.', 'certloom' ), admin_url( 'admin.php?page=certloom' ) );
 		}
 		$fields = Ecapla_CertVerify_Fields::get_fields();
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/edit-certificate.php';
@@ -650,7 +650,7 @@ class Ecapla_CertVerify_Admin {
 		if ( isset( $_GET['result'] ) ) {
 			$results = Ecapla_CertVerify_Import::get_results( sanitize_text_field( wp_unslash( $_GET['result'] ) ) );
 			if ( false === $results ) {
-				$this->redirect_error( __( 'Those import results expired. Run the import again to generate a new report.', 'certverify' ), admin_url( 'admin.php?page=certverify-import' ) );
+				$this->redirect_error( __( 'Those import results expired. Run the import again to generate a new report.', 'certloom' ), admin_url( 'admin.php?page=certloom-import' ) );
 			}
 			include ECAPLA_CERTVERIFY_PATH . 'admin/views/import-results.php';
 			return;
@@ -659,7 +659,7 @@ class Ecapla_CertVerify_Admin {
 			$backup_token    = sanitize_text_field( wp_unslash( $_GET['backup_token'] ) );
 			$backup_progress = Ecapla_CertVerify_Backup::get_restore_progress( $backup_token );
 			if ( ! $backup_progress ) {
-				$this->redirect_error( __( 'That backup restore process expired. Upload the backup again.', 'certverify' ), admin_url( 'admin.php?page=certverify-import' ) );
+				$this->redirect_error( __( 'That backup restore process expired. Upload the backup again.', 'certloom' ), admin_url( 'admin.php?page=certloom-import' ) );
 			}
 			include ECAPLA_CERTVERIFY_PATH . 'admin/views/backup-progress.php';
 			return;
@@ -668,7 +668,7 @@ class Ecapla_CertVerify_Admin {
 			$token    = sanitize_text_field( wp_unslash( $_GET['token'] ) );
 			$progress = Ecapla_CertVerify_Import::get_process_progress( $token );
 			if ( ! $progress ) {
-				$this->redirect_error( __( 'That import session expired. Upload the CSV again.', 'certverify' ), admin_url( 'admin.php?page=certverify-import' ) );
+				$this->redirect_error( __( 'That import session expired. Upload the CSV again.', 'certloom' ), admin_url( 'admin.php?page=certloom-import' ) );
 			}
 			include ECAPLA_CERTVERIFY_PATH . 'admin/views/import-progress.php';
 			return;
@@ -677,7 +677,7 @@ class Ecapla_CertVerify_Admin {
 			$token = sanitize_text_field( wp_unslash( $_GET['token'] ) );
 			$session = Ecapla_CertVerify_Import::get_preview( $token );
 			if ( ! $session ) {
-				$this->redirect_error( __( 'That import session expired. Upload the CSV again.', 'certverify' ), admin_url( 'admin.php?page=certverify-import' ) );
+				$this->redirect_error( __( 'That import session expired. Upload the CSV again.', 'certloom' ), admin_url( 'admin.php?page=certloom-import' ) );
 			}
 			$header          = $session['header'];
 			$preview         = $session['preview'];
@@ -692,7 +692,7 @@ class Ecapla_CertVerify_Admin {
 			$backup_token   = sanitize_text_field( wp_unslash( $_GET['backup_token'] ) );
 			$backup_preview = Ecapla_CertVerify_Backup::get_preview( $backup_token );
 			if ( false === $backup_preview ) {
-				$this->redirect_error( __( 'That backup review session expired. Upload the backup again.', 'certverify' ), admin_url( 'admin.php?page=certverify-import' ) );
+				$this->redirect_error( __( 'That backup review session expired. Upload the backup again.', 'certloom' ), admin_url( 'admin.php?page=certloom-import' ) );
 			}
 		}
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/import-upload.php';
@@ -722,25 +722,25 @@ class Ecapla_CertVerify_Admin {
 		check_admin_referer( 'certverify_ack_130_status_review' );
 		$saved = update_option( Ecapla_CertVerify_Database::V130_REVIEW_NOTICE_OPTION, false, false );
 		if ( ! $saved && false !== (bool) get_option( Ecapla_CertVerify_Database::V130_REVIEW_NOTICE_OPTION, true ) ) {
-			$this->redirect_error( __( 'The review acknowledgement could not be saved.', 'certverify' ), admin_url( 'admin.php?page=certverify' ) );
+			$this->redirect_error( __( 'The review acknowledgement could not be saved.', 'certloom' ), admin_url( 'admin.php?page=certloom' ) );
 		}
-		wp_safe_redirect( admin_url( 'admin.php?page=certverify' ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=certloom' ) );
 		exit;
 	}
 
 	/**
-	 * Displays transparent status-migration notices only on CertVerify screens.
+	 * Displays transparent status-migration notices only on Certloom screens.
 	 */
 	public function status_review_notices() {
 		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
-		if ( ! $screen || false === strpos( (string) $screen->id, 'certverify' ) || ! Ecapla_CertVerify_Permissions::current_user_can_manage() ) {
+		if ( ! $screen || false === strpos( (string) $screen->id, 'certloom' ) || ! Ecapla_CertVerify_Permissions::current_user_can_manage() ) {
 			return;
 		}
 
 		if ( Ecapla_CertVerify_Backup::is_restore_in_progress() ) {
 			?>
 			<div class="notice notice-info"><p>
-				<?php esc_html_e( 'A complete CertVerify restore is in progress. Certificate and configuration changes are temporarily paused; public verification remains available.', 'certverify' ); ?>
+				<?php esc_html_e( 'A complete Certloom restore is in progress. Certificate and configuration changes are temporarily paused; public verification remains available.', 'certloom' ); ?>
 			</p></div>
 			<?php
 		}
@@ -749,7 +749,7 @@ class Ecapla_CertVerify_Admin {
 		if ( $legacy_count > 0 ) {
 			$url = add_query_arg(
 				array(
-					'page'           => 'certverify',
+					'page'           => 'certloom',
 					'legacy_expired' => '1',
 				),
 				admin_url( 'admin.php' )
@@ -760,7 +760,7 @@ class Ecapla_CertVerify_Admin {
 				echo wp_kses_post(
 					sprintf(
 						/* translators: 1: number of legacy records, 2: review URL. */
-						_n( '%1$d legacy Expired certificate needs review. <a href="%2$s">Review it now</a>. It will remain Expired until an administrator deliberately chooses a workflow status.', '%1$d legacy Expired certificates need review. <a href="%2$s">Review them now</a>. They will remain Expired until an administrator deliberately chooses a workflow status.', $legacy_count, 'certverify' ),
+						_n( '%1$d legacy Expired certificate needs review. <a href="%2$s">Review it now</a>. It will remain Expired until an administrator deliberately chooses a workflow status.', '%1$d legacy Expired certificates need review. <a href="%2$s">Review them now</a>. They will remain Expired until an administrator deliberately chooses a workflow status.', $legacy_count, 'certloom' ),
 						absint( $legacy_count ),
 						esc_url( $url )
 					)
@@ -773,10 +773,10 @@ class Ecapla_CertVerify_Admin {
 		if ( current_user_can( 'manage_options' ) && get_option( Ecapla_CertVerify_Database::V130_REVIEW_NOTICE_OPTION, false ) ) {
 			?>
 			<div class="notice notice-error"><p>
-				<?php esc_html_e( 'CertVerify 1.3.0 briefly contained an unsafe legacy-status migration. If that version ran on this site, compare certificate statuses with a pre-1.3.0 backup before launch. The current release does not guess or silently rewrite those records.', 'certverify' ); ?>
+				<?php esc_html_e( 'Certloom 1.3.0 briefly contained an unsafe legacy-status migration. If that version ran on this site, compare certificate statuses with a pre-1.3.0 backup before launch. The current release does not guess or silently rewrite those records.', 'certloom' ); ?>
 			</p><form method="post" action="" style="margin:0 0 12px 12px;">
 				<?php wp_nonce_field( 'certverify_ack_130_status_review' ); ?>
-				<button type="submit" class="button" name="certverify_ack_130_status_review" value="1"><?php esc_html_e( 'I have reviewed this', 'certverify' ); ?></button>
+				<button type="submit" class="button" name="certverify_ack_130_status_review" value="1"><?php esc_html_e( 'I have reviewed this', 'certloom' ); ?></button>
 			</form></div>
 			<?php
 		}
@@ -784,12 +784,12 @@ class Ecapla_CertVerify_Admin {
 
 	public function admin_footer_text( $text ) {
 		$screen = get_current_screen();
-		if ( $screen && false !== strpos( $screen->id, 'certverify' ) ) {
+		if ( $screen && false !== strpos( $screen->id, 'certloom' ) ) {
 			return wp_kses_post(
 				sprintf(
 					/* translators: %s: Ecapla website link. */
-					__( 'CertVerify is developed and maintained by %s.', 'certverify' ),
-					'<a href="https://ecapla.com" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Ecapla', 'certverify' ) . '</a>'
+					__( 'Certloom is developed and maintained by %s.', 'certloom' ),
+					'<a href="https://ecapla.com" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Ecapla', 'certloom' ) . '</a>'
 				)
 			);
 		}
@@ -798,13 +798,13 @@ class Ecapla_CertVerify_Admin {
 
 	private function require_manage_permission() {
 		if ( ! Ecapla_CertVerify_Permissions::current_user_can_manage() ) {
-			wp_die( esc_html__( 'You do not have permission to manage certificates.', 'certverify' ) );
+			wp_die( esc_html__( 'You do not have permission to manage certificates.', 'certloom' ) );
 		}
 	}
 
 	private function require_options_permission() {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to manage these settings.', 'certverify' ) );
+			wp_die( esc_html__( 'You do not have permission to manage these settings.', 'certloom' ) );
 		}
 	}
 
@@ -827,7 +827,7 @@ class Ecapla_CertVerify_Admin {
 	 * @return string
 	 */
 	private function list_return_url() {
-		$args = array( 'page' => 'certverify' );
+		$args = array( 'page' => 'certloom' );
 
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only list state; the calling handler verifies its own nonce before this runs.
 		if ( ! empty( $_REQUEST['legacy_expired'] ) ) {

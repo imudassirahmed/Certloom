@@ -1,11 +1,11 @@
 <?php
 /**
- * Plugin Name: CertVerify – Certificate Verification
+ * Plugin Name: Certloom – Certificate Verification
  * Description: Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
- * Version: 1.4.9
+ * Version: 1.5.0
  * Author: Ecapla
  * Author URI: https://ecapla.com
- * Text Domain: certverify
+ * Text Domain: certloom
  * Domain Path: /languages
  * Requires at least: 6.3
  * Requires PHP: 7.4
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.4.9' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.5.0' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
@@ -27,8 +27,8 @@ define( 'ECAPLA_CERTVERIFY_MINIMUM_ELEMENTOR_VERSION', '3.10.0' );
 
 
 /*
- * Backward-compatible constants retained for installations upgraded from
- * CertVerify 1.1.x. New code should use the ECAPLA_CERTVERIFY_* constants.
+ * Backward-compatible constants retained from earlier pre-release builds.
+ * New code should use the ECAPLA_CERTVERIFY_* constants.
  */
 if ( ! defined( 'CERTVERIFY_VERSION' ) ) {
 	define( 'CERTVERIFY_VERSION', ECAPLA_CERTVERIFY_VERSION );
@@ -118,12 +118,12 @@ function ecapla_certverify_activate( $network_wide = false ) {
 		$errors = ecapla_certverify_for_each_site( 'ecapla_certverify_activate_site' );
 		if ( ! empty( $errors ) ) {
 			if ( ! ecapla_certverify_store_provisioning_failures( $errors ) ) {
-				$errors[0] = new WP_Error( 'ecapla_certverify_network_failure_store_failed', __( 'CertVerify could not save the multisite provisioning failure report.', 'certverify' ) );
+				$errors[0] = new WP_Error( 'ecapla_certverify_network_failure_store_failed', __( 'Certloom could not save the multisite provisioning failure report.', 'certloom' ) );
 			}
 			ecapla_certverify_fail_activation( $errors );
 		}
 		if ( ! delete_site_option( 'certverify_provisioning_failures' ) && false !== get_site_option( 'certverify_provisioning_failures', false ) ) {
-			ecapla_certverify_fail_activation( array( 0 => new WP_Error( 'ecapla_certverify_network_failure_clear_failed', __( 'CertVerify completed network setup but could not clear an old provisioning failure report.', 'certverify' ) ) ) );
+			ecapla_certverify_fail_activation( array( 0 => new WP_Error( 'ecapla_certverify_network_failure_clear_failed', __( 'Certloom completed network setup but could not clear an old provisioning failure report.', 'certloom' ) ) ) );
 		}
 		return true;
 	}
@@ -151,7 +151,7 @@ function ecapla_certverify_activate_site() {
 	}
 
 	if ( ! Ecapla_CertVerify_Permissions::activate() ) {
-		return new WP_Error( 'ecapla_certverify_permissions_setup_failed', __( 'CertVerify could not save its required administrator access.', 'certverify' ) );
+		return new WP_Error( 'ecapla_certverify_permissions_setup_failed', __( 'Certloom could not save its required administrator access.', 'certloom' ) );
 	}
 
 	$cron = Ecapla_CertVerify_Cron::activate();
@@ -175,16 +175,16 @@ function ecapla_certverify_fail_activation( $errors ) {
 		}
 		$items[] = sprintf(
 			/* translators: 1: site ID, 2: setup error. */
-			__( 'Site %1$d: %2$s', 'certverify' ),
+			__( 'Site %1$d: %2$s', 'certloom' ),
 			absint( $site_id ),
 			$error->get_error_message()
 		);
 	}
-	$message = __( 'CertVerify activation stopped because required setup could not be completed.', 'certverify' );
+	$message = __( 'Certloom activation stopped because required setup could not be completed.', 'certloom' );
 	if ( ! empty( $items ) ) {
 		$message .= '<ul><li>' . implode( '</li><li>', array_map( 'esc_html', $items ) ) . '</li></ul>';
 	}
-	wp_die( wp_kses_post( $message ), esc_html__( 'CertVerify activation failed', 'certverify' ), array( 'back_link' => true ) );
+	wp_die( wp_kses_post( $message ), esc_html__( 'Certloom activation failed', 'certloom' ), array( 'back_link' => true ) );
 }
 
 /**
@@ -290,7 +290,7 @@ function ecapla_certverify_update_provisioning_failure( $blog_id, $result ) {
 }
 
 /**
- * Shows network administrators which sites still need CertVerify provisioning.
+ * Shows network administrators which sites still need Certloom provisioning.
  */
 function ecapla_certverify_multisite_provisioning_notice() {
 	if ( ! is_multisite() || ! current_user_can( 'manage_network_plugins' ) ) {
@@ -306,7 +306,7 @@ function ecapla_certverify_multisite_provisioning_notice() {
 		<?php
 		printf(
 			/* translators: %s: comma-separated multisite site IDs. */
-			esc_html__( 'CertVerify could not finish provisioning on site IDs: %s. Visit each affected site administration area to retry database and access setup.', 'certverify' ),
+			esc_html__( 'Certloom could not finish provisioning on site IDs: %s. Visit each affected site administration area to retry database and access setup.', 'certloom' ),
 			esc_html( implode( ', ', $site_ids ) )
 		);
 		?>
@@ -315,7 +315,7 @@ function ecapla_certverify_multisite_provisioning_notice() {
 }
 
 /**
- * Boots CertVerify after plugins have loaded.
+ * Boots Certloom after plugins have loaded.
  */
 function ecapla_certverify_init() {
 	$restore_recovery   = Ecapla_CertVerify_Backup::recover_interrupted_restore();
@@ -332,7 +332,7 @@ function ecapla_certverify_init() {
 		$provisioning_error = $database_upgrade;
 		ecapla_certverify_add_runtime_error( $database_upgrade->get_error_message() );
 	} elseif ( ! $permission_upgrade ) {
-		$provisioning_error = new WP_Error( 'ecapla_certverify_permissions_setup_failed', __( 'CertVerify could not persist its required administrator access. The migration will be retried automatically.', 'certverify' ) );
+		$provisioning_error = new WP_Error( 'ecapla_certverify_permissions_setup_failed', __( 'Certloom could not persist its required administrator access. The migration will be retried automatically.', 'certloom' ) );
 		ecapla_certverify_add_runtime_error( $provisioning_error->get_error_message() );
 	} elseif ( is_wp_error( $cron_upgrade ) ) {
 		$provisioning_error = $cron_upgrade;
@@ -349,7 +349,7 @@ function ecapla_certverify_init() {
 		$current_blog_id   = get_current_blog_id();
 		if ( $maintenance_context && ( $provisioning_error || isset( $existing_failures[ $current_blog_id ] ) )
 			&& ! ecapla_certverify_update_provisioning_failure( $current_blog_id, $provisioning_error ? $provisioning_error : true ) ) {
-			ecapla_certverify_add_runtime_error( __( 'CertVerify could not persist the multisite provisioning status.', 'certverify' ) );
+			ecapla_certverify_add_runtime_error( __( 'Certloom could not persist the multisite provisioning status.', 'certloom' ) );
 		}
 	}
 
@@ -400,6 +400,11 @@ function ecapla_certverify_runtime_error_notice() {
 	if ( ! current_user_can( 'activate_plugins' ) || empty( $GLOBALS['ecapla_certverify_runtime_errors'] ) ) {
 		return;
 	}
+	$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+	$screen_id = $screen && isset( $screen->id ) ? (string) $screen->id : '';
+	if ( false === strpos( $screen_id, 'certloom' ) && ! in_array( $screen_id, array( 'plugins', 'plugins-network' ), true ) ) {
+		return;
+	}
 	$messages = array_unique( array_filter( array_map( 'sanitize_text_field', $GLOBALS['ecapla_certverify_runtime_errors'] ) ) );
 	foreach ( $messages as $message ) {
 		echo '<div class="notice notice-error"><p>' . esc_html( $message ) . '</p></div>';
@@ -408,7 +413,7 @@ function ecapla_certverify_runtime_error_notice() {
 
 /**
  * Initializes the optional Elementor integration only when a supported
- * Elementor installation is available. CertVerify remains fully usable via
+ * Elementor installation is available. Certloom remains fully usable via
  * shortcode and REST when Elementor is absent.
  */
 function ecapla_certverify_elementor_loaded() {
@@ -420,9 +425,6 @@ function ecapla_certverify_elementor_loaded() {
 	$initialized = true;
 
 	if ( ! defined( 'ELEMENTOR_VERSION' ) || version_compare( ELEMENTOR_VERSION, ECAPLA_CERTVERIFY_MINIMUM_ELEMENTOR_VERSION, '<' ) ) {
-		if ( is_admin() ) {
-			add_action( 'admin_notices', 'ecapla_certverify_elementor_version_notice' );
-		}
 		return;
 	}
 
@@ -430,7 +432,7 @@ function ecapla_certverify_elementor_loaded() {
 }
 
 /**
- * Registers CertVerify widgets with Elementor.
+ * Registers Certloom widgets with Elementor.
  *
  * @param object $widgets_manager Elementor widgets manager.
  */
@@ -451,28 +453,6 @@ function ecapla_certverify_register_elementor_widgets( $widgets_manager ) {
 }
 
 /**
- * Displays a compatibility notice only when Elementor is present but too old.
- */
-function ecapla_certverify_elementor_version_notice() {
-	if ( ! current_user_can( 'activate_plugins' ) || ! defined( 'ELEMENTOR_VERSION' ) ) {
-		return;
-	}
-	?>
-	<div class="notice notice-warning"><p>
-		<?php
-		printf(
-			/* translators: 1: minimum supported Elementor version, 2: installed Elementor version. */
-			esc_html__( 'CertVerify widgets require Elementor %1$s or later. Your current Elementor version is %2$s. Certificate management and shortcode verification remain available.', 'certverify' ),
-			esc_html( ECAPLA_CERTVERIFY_MINIMUM_ELEMENTOR_VERSION ),
-			esc_html( ELEMENTOR_VERSION )
-		);
-		?>
-	</p></div>
-	<?php
-}
-
-
-/**
  * Adds suggested privacy-policy wording to WordPress's privacy guide.
  */
 function ecapla_certverify_add_privacy_policy_content() {
@@ -480,9 +460,9 @@ function ecapla_certverify_add_privacy_policy_content() {
 		return;
 	}
 
-	$content = '<p class="privacy-policy-tutorial">' . esc_html__( 'CertVerify publishes only the certificate fields that a site administrator marks as visible. Those fields may include names or other personal information, so administrators should publish only information they are authorised to disclose.', 'certverify' ) . '</p>';
-	$content .= '<p>' . esc_html__( 'Certificate verification is performed on this WordPress site. CertVerify does not send certificate records to Ecapla or another external service. Verification requests may still appear in normal web-server, security, analytics, browser-history, and cache logs. Direct verification links can include the certificate number in the URL.', 'certverify' ) . '</p>';
-	$content .= '<p>' . esc_html__( 'Site administrators determine how long certificate records are retained and can configure whether CertVerify data is removed when the plugin is uninstalled.', 'certverify' ) . '</p>';
+	$content = '<p class="privacy-policy-tutorial">' . esc_html__( 'Certloom publishes only the certificate fields that a site administrator marks as visible. Those fields may include names or other personal information, so administrators should publish only information they are authorised to disclose.', 'certloom' ) . '</p>';
+	$content .= '<p>' . esc_html__( 'Certificate verification is performed on this WordPress site. Certloom does not send certificate records to Ecapla or another external service. Verification requests may still appear in normal web-server, security, analytics, browser-history, and cache logs. Direct verification links can include the certificate number in the URL.', 'certloom' ) . '</p>';
+	$content .= '<p>' . esc_html__( 'Site administrators determine how long certificate records are retained and can configure whether Certloom data is removed when the plugin is uninstalled.', 'certloom' ) . '</p>';
 
-	wp_add_privacy_policy_content( 'CertVerify', wp_kses_post( $content ) );
+	wp_add_privacy_policy_content( 'Certloom', wp_kses_post( $content ) );
 }

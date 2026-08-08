@@ -21,18 +21,18 @@ class Ecapla_CertVerify_Render {
 	}
 
 	/**
-	 * Defaults for the original CertVerify widget and shortcode.
+	 * Defaults for the original Certloom widget and shortcode.
 	 *
 	 * @return array
 	 */
 	public static function legacy_default_atts() {
 		return array(
-			'eyebrow'          => __( 'Certificate search', 'certverify' ),
-			'heading'          => __( 'Verify a Certificate', 'certverify' ),
-			'description'      => __( 'Enter the certificate number exactly as it appears on the face of the certificate. No login required.', 'certverify' ),
-			'placeholder'      => __( 'e.g. CERT-9001-2026-00142', 'certverify' ),
-			'button_text'      => __( 'Search', 'certverify' ),
-			'notfound_text'    => __( 'We couldn\'t find a certificate with that number. Double check it matches exactly what\'s printed on the certificate.', 'certverify' ),
+			'eyebrow'          => __( 'Certificate search', 'certloom' ),
+			'heading'          => __( 'Verify a Certificate', 'certloom' ),
+			'description'      => __( 'Enter the certificate number exactly as it appears on the face of the certificate. No login required.', 'certloom' ),
+			'placeholder'      => __( 'e.g. CERT-9001-2026-00142', 'certloom' ),
+			'button_text'      => __( 'Search', 'certloom' ),
+			'notfound_text'    => __( 'We couldn\'t find a certificate with that number. Double check it matches exactly what\'s printed on the certificate.', 'certloom' ),
 			'show_eyebrow'     => true,
 			'show_heading'     => true,
 			'show_description' => true,
@@ -40,10 +40,10 @@ class Ecapla_CertVerify_Render {
 			'heading_tag'      => 'h2',
 			'text_align'       => 'left',
 			'show_guide'       => true,
-			'guide_eyebrow'    => __( 'Certificate status guide', 'certverify' ),
+			'guide_eyebrow'    => __( 'Certificate status guide', 'certloom' ),
 			'guide_heading'    => '',
 			'show_credit'      => (bool) Ecapla_CertVerify_Settings::get( 'show_credit', false ),
-			'credit_text'      => Ecapla_CertVerify_Settings::get( 'credit_text', __( 'Verification powered by CertVerify.', 'certverify' ) ),
+			'credit_text'      => Ecapla_CertVerify_Settings::get( 'credit_text', __( 'Verification powered by Certloom.', 'certloom' ) ),
 			'accent'           => Ecapla_CertVerify_Settings::get( 'accent_color', '#0f6e56' ),
 			'credit_color'     => Ecapla_CertVerify_Settings::get( 'credit_color', '' ),
 			'credit_size'      => Ecapla_CertVerify_Settings::get( 'credit_size', '' ),
@@ -52,18 +52,18 @@ class Ecapla_CertVerify_Render {
 	}
 
 	/**
-	 * Defaults shared by the five standalone premium widgets.
+	 * Defaults shared by the five standalone template widgets.
 	 *
 	 * @return array
 	 */
 	public static function template_default_atts() {
 		return array(
-			'eyebrow'          => __( 'Certificate verification', 'certverify' ),
-			'heading'          => __( 'Verify a certificate with confidence', 'certverify' ),
-			'description'      => __( 'Enter the certificate number exactly as printed to view its current status and published certification details.', 'certverify' ),
-			'placeholder'      => __( 'Enter certificate number', 'certverify' ),
-			'button_text'      => __( 'Verify certificate', 'certverify' ),
-			'notfound_text'    => __( 'No certificate matched that number. Check the characters, spacing, and hyphens, then try again.', 'certverify' ),
+			'eyebrow'          => __( 'Certificate verification', 'certloom' ),
+			'heading'          => __( 'Verify a certificate with confidence', 'certloom' ),
+			'description'      => __( 'Enter the certificate number exactly as printed to view its current status and published certification details.', 'certloom' ),
+			'placeholder'      => __( 'Enter certificate number', 'certloom' ),
+			'button_text'      => __( 'Verify certificate', 'certloom' ),
+			'notfound_text'    => __( 'No certificate matched that number. Check the characters, spacing, and hyphens, then try again.', 'certloom' ),
 			'show_eyebrow'     => true,
 			'show_heading'     => true,
 			'show_description' => true,
@@ -71,10 +71,10 @@ class Ecapla_CertVerify_Render {
 			'heading_tag'      => 'h2',
 			'text_align'       => 'left',
 			'show_guide'       => true,
-			'guide_eyebrow'    => __( 'Status guide', 'certverify' ),
-			'guide_heading'    => __( 'Understand each certificate status', 'certverify' ),
+			'guide_eyebrow'    => __( 'Status guide', 'certloom' ),
+			'guide_heading'    => __( 'Understand each certificate status', 'certloom' ),
 			'show_credit'      => (bool) Ecapla_CertVerify_Settings::get( 'show_credit', false ),
-			'credit_text'      => Ecapla_CertVerify_Settings::get( 'credit_text', __( 'Verification powered by CertVerify.', 'certverify' ) ),
+			'credit_text'      => Ecapla_CertVerify_Settings::get( 'credit_text', __( 'Verification powered by Certloom.', 'certloom' ) ),
 			'accent'           => Ecapla_CertVerify_Settings::get( 'accent_color', '#0f6e56' ),
 			'credit_color'     => Ecapla_CertVerify_Settings::get( 'credit_color', '' ),
 			'credit_size'      => Ecapla_CertVerify_Settings::get( 'credit_size', '' ),
@@ -83,7 +83,7 @@ class Ecapla_CertVerify_Render {
 	}
 
 	/**
-	 * Backward-compatible public renderer used by [certverify].
+	 * Backward-compatible public renderer used by [certloom].
 	 *
 	 * @param array $atts Rendering attributes.
 	 * @return string
@@ -93,7 +93,7 @@ class Ecapla_CertVerify_Render {
 	}
 
 	/**
-	 * Renders the original CertVerify markup and CSS hooks.
+	 * Renders the original Certloom markup and CSS hooks.
 	 *
 	 * @param array $atts Rendering attributes.
 	 * @return string
@@ -103,10 +103,10 @@ class Ecapla_CertVerify_Render {
 		Ecapla_CertVerify_Shortcode::enqueue_assets();
 
 		$instance_id = wp_unique_id( 'certverify-' );
-		$endpoint    = esc_url_raw( rest_url( 'certverify/v1/verify' ) );
+		$endpoint    = esc_url_raw( rest_url( 'certloom/v1/verify' ) );
 		$direct      = self::direct_number();
 		$result_id   = $instance_id . '-result';
-		$server_html = self::server_result_html( $direct, 'cv', $atts['notfound_text'], __( 'Something went wrong, please try again.', 'certverify' ) );
+		$server_html = self::server_result_html( $direct, 'cv', $atts['notfound_text'], __( 'Something went wrong, please try again.', 'certloom' ) );
 
 		ob_start();
 		?>
@@ -117,18 +117,18 @@ class Ecapla_CertVerify_Render {
 			data-endpoint="<?php echo esc_attr( $endpoint ); ?>"
 			<?php echo $direct ? 'data-direct-number="' . esc_attr( $direct ) . '" data-server-rendered="1"' : ''; ?>
 			data-notfound-text="<?php echo esc_attr( $atts['notfound_text'] ); ?>"
-			data-found-text="<?php echo esc_attr__( 'Certificate found.', 'certverify' ); ?>"
-			data-error-text="<?php echo esc_attr__( 'Something went wrong, please try again.', 'certverify' ); ?>"
-			data-loading-text="<?php echo esc_attr__( 'Checking…', 'certverify' ); ?>"
-			data-required-text="<?php echo esc_attr__( 'Enter a certificate number before searching.', 'certverify' ); ?>"
+			data-found-text="<?php echo esc_attr__( 'Certificate found.', 'certloom' ); ?>"
+			data-error-text="<?php echo esc_attr__( 'Something went wrong, please try again.', 'certloom' ); ?>"
+			data-loading-text="<?php echo esc_attr__( 'Checking…', 'certloom' ); ?>"
+			data-required-text="<?php echo esc_attr__( 'Enter a certificate number before searching.', 'certloom' ); ?>"
 		>
 			<div class="cv-search-card">
 				<?php echo self::header_content( $atts, 'cv' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 
 				<form class="cv-search-form" method="get" action="">
 					<?php echo self::routing_hidden_inputs(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Values are escaped by the helper. ?>
-					<label class="screen-reader-text" for="<?php echo esc_attr( $instance_id . '-number' ); ?>"><?php esc_html_e( 'Certificate number', 'certverify' ); ?></label>
-					<input type="text" id="<?php echo esc_attr( $instance_id . '-number' ); ?>" name="certverify_number" class="cv-search-input" value="<?php echo esc_attr( $direct ); ?>" placeholder="<?php echo esc_attr( $atts['placeholder'] ); ?>" autocomplete="off" maxlength="100" aria-controls="<?php echo esc_attr( $result_id ); ?>" required />
+					<label class="screen-reader-text" for="<?php echo esc_attr( $instance_id . '-number' ); ?>"><?php esc_html_e( 'Certificate number', 'certloom' ); ?></label>
+					<input type="text" id="<?php echo esc_attr( $instance_id . '-number' ); ?>" name="certloom_number" class="cv-search-input" value="<?php echo esc_attr( $direct ); ?>" placeholder="<?php echo esc_attr( $atts['placeholder'] ); ?>" autocomplete="off" maxlength="100" aria-controls="<?php echo esc_attr( $result_id ); ?>" required />
 					<button type="submit" class="cv-search-btn">
 						<span class="cv-btn-text"><?php echo esc_html( $atts['button_text'] ); ?></span>
 						<span class="cv-arrow" aria-hidden="true">&rarr;</span>
@@ -136,7 +136,7 @@ class Ecapla_CertVerify_Render {
 				</form>
 
 				<div id="<?php echo esc_attr( $result_id ); ?>" class="cv-result" role="status" aria-live="polite" aria-atomic="true"><?php echo $server_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built from escaped values. ?></div>
-				<noscript><p class="cv-noscript"><?php esc_html_e( 'JavaScript is unavailable. Submit the form to reload this page with the verification result.', 'certverify' ); ?></p></noscript>
+				<noscript><p class="cv-noscript"><?php esc_html_e( 'JavaScript is unavailable. Submit the form to reload this page with the verification result.', 'certloom' ); ?></p></noscript>
 			</div>
 
 			<?php if ( $atts['show_guide'] ) : ?>
@@ -169,7 +169,7 @@ class Ecapla_CertVerify_Render {
 	}
 
 	/**
-	 * Renders one of the five isolated premium templates.
+	 * Renders one of the five isolated templates.
 	 *
 	 * @param string $template Template slug.
 	 * @param array  $atts     Rendering attributes.
@@ -182,10 +182,10 @@ class Ecapla_CertVerify_Render {
 		Ecapla_CertVerify_Shortcode::enqueue_assets();
 
 		$instance_id = wp_unique_id( 'certverify-' . $template . '-' );
-		$endpoint    = esc_url_raw( rest_url( 'certverify/v1/verify' ) );
+		$endpoint    = esc_url_raw( rest_url( 'certloom/v1/verify' ) );
 		$direct      = self::direct_number();
 		$result_id   = $instance_id . '-result';
-		$server_html = self::server_result_html( $direct, 'cvx', $atts['notfound_text'], __( 'The verification service could not complete the request. Please try again.', 'certverify' ) );
+		$server_html = self::server_result_html( $direct, 'cvx', $atts['notfound_text'], __( 'The verification service could not complete the request. Please try again.', 'certloom' ) );
 		$classes     = array(
 			'ecapla-certverify-template',
 			'cvx-widget',
@@ -202,22 +202,22 @@ class Ecapla_CertVerify_Render {
 			data-endpoint="<?php echo esc_attr( $endpoint ); ?>"
 			<?php echo $direct ? 'data-direct-number="' . esc_attr( $direct ) . '" data-server-rendered="1"' : ''; ?>
 			data-notfound-text="<?php echo esc_attr( $atts['notfound_text'] ); ?>"
-			data-found-text="<?php echo esc_attr__( 'Certificate found.', 'certverify' ); ?>"
-			data-error-text="<?php echo esc_attr__( 'The verification service could not complete the request. Please try again.', 'certverify' ); ?>"
-			data-loading-text="<?php echo esc_attr__( 'Checking certificate…', 'certverify' ); ?>"
-			data-required-text="<?php echo esc_attr__( 'Enter a certificate number before searching.', 'certverify' ); ?>"
+			data-found-text="<?php echo esc_attr__( 'Certificate found.', 'certloom' ); ?>"
+			data-error-text="<?php echo esc_attr__( 'The verification service could not complete the request. Please try again.', 'certloom' ); ?>"
+			data-loading-text="<?php echo esc_attr__( 'Checking certificate…', 'certloom' ); ?>"
+			data-required-text="<?php echo esc_attr__( 'Enter a certificate number before searching.', 'certloom' ); ?>"
 		>
-			<section class="cvx-shell" aria-label="<?php esc_attr_e( 'Certificate verification search', 'certverify' ); ?>">
+			<section class="cvx-shell" aria-label="<?php esc_attr_e( 'Certificate verification search', 'certloom' ); ?>">
 				<div class="cvx-copy">
 					<?php echo self::header_content( $atts, 'cvx' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				</div>
 				<div class="cvx-action">
 					<form class="cvx-search-form" method="get" action="">
 						<?php echo self::routing_hidden_inputs(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Values are escaped by the helper. ?>
-						<label class="screen-reader-text" for="<?php echo esc_attr( $instance_id . '-number' ); ?>"><?php esc_html_e( 'Certificate number', 'certverify' ); ?></label>
+						<label class="screen-reader-text" for="<?php echo esc_attr( $instance_id . '-number' ); ?>"><?php esc_html_e( 'Certificate number', 'certloom' ); ?></label>
 						<div class="cvx-input-wrap">
 							<span class="cvx-input-icon" aria-hidden="true"></span>
-							<input type="text" id="<?php echo esc_attr( $instance_id . '-number' ); ?>" name="certverify_number" class="cvx-search-input" value="<?php echo esc_attr( $direct ); ?>" placeholder="<?php echo esc_attr( $atts['placeholder'] ); ?>" autocomplete="off" maxlength="100" aria-controls="<?php echo esc_attr( $result_id ); ?>" required />
+							<input type="text" id="<?php echo esc_attr( $instance_id . '-number' ); ?>" name="certloom_number" class="cvx-search-input" value="<?php echo esc_attr( $direct ); ?>" placeholder="<?php echo esc_attr( $atts['placeholder'] ); ?>" autocomplete="off" maxlength="100" aria-controls="<?php echo esc_attr( $result_id ); ?>" required />
 						</div>
 						<button type="submit" class="cvx-search-btn">
 							<span class="cvx-btn-text"><?php echo esc_html( $atts['button_text'] ); ?></span>
@@ -225,12 +225,12 @@ class Ecapla_CertVerify_Render {
 						</button>
 					</form>
 					<div id="<?php echo esc_attr( $result_id ); ?>" class="cvx-result" role="status" aria-live="polite" aria-atomic="true"><?php echo $server_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built from escaped values. ?></div>
-					<noscript><p class="cvx-noscript"><?php esc_html_e( 'JavaScript is unavailable. Submit the form to reload this page with the verification result.', 'certverify' ); ?></p></noscript>
+					<noscript><p class="cvx-noscript"><?php esc_html_e( 'JavaScript is unavailable. Submit the form to reload this page with the verification result.', 'certloom' ); ?></p></noscript>
 				</div>
 			</section>
 
 			<?php if ( $atts['show_guide'] ) : ?>
-				<section class="cvx-guide" aria-label="<?php esc_attr_e( 'Certificate status guide', 'certverify' ); ?>">
+				<section class="cvx-guide" aria-label="<?php esc_attr_e( 'Certificate status guide', 'certloom' ); ?>">
 					<div class="cvx-guide-header">
 						<?php if ( '' !== $atts['guide_eyebrow'] ) : ?>
 							<p class="cvx-guide-eyebrow"><?php echo esc_html( $atts['guide_eyebrow'] ); ?></p>
@@ -280,7 +280,7 @@ class Ecapla_CertVerify_Render {
 		}
 		if ( ! array_key_exists( $cache_key, self::$direct_result_cache ) ) {
 			self::$direct_result_cache[ $cache_key ] = Ecapla_CertVerify_REST::is_rate_limited()
-				? new WP_Error( 'ecapla_certverify_rate_limited', __( 'Too many verification requests. Please wait a minute and try again.', 'certverify' ) )
+				? new WP_Error( 'ecapla_certverify_rate_limited', __( 'Too many verification requests. Please wait a minute and try again.', 'certloom' ) )
 				: Ecapla_CertVerify_Database::get_by_cert_number( $number );
 		}
 		$certificate = self::$direct_result_cache[ $cache_key ];
@@ -303,7 +303,7 @@ class Ecapla_CertVerify_Render {
 			$rows .= '<div class="' . esc_attr( $prefix ) . '-result-row"><dt>' . esc_html( $field['label'] ) . '</dt><dd>' . $value_html . '</dd></div>';
 		}
 		$list = '' !== $rows ? '<dl class="' . esc_attr( $prefix ) . '-result-list">' . $rows . '</dl>' : '';
-		return '<div class="' . esc_attr( $prefix ) . '-result-card"><p class="' . esc_attr( $prefix ) . '-result-success">' . esc_html__( 'Certificate found.', 'certverify' ) . '</p>' . $list . '</div>';
+		return '<div class="' . esc_attr( $prefix ) . '-result-card"><p class="' . esc_attr( $prefix ) . '-result-success">' . esc_html__( 'Certificate found.', 'certloom' ) . '</p>' . $list . '</div>';
 	}
 
 	/**
@@ -468,7 +468,7 @@ class Ecapla_CertVerify_Render {
 	 * @return string
 	 */
 	private static function direct_number() {
-		$keys = array( 'cv_number', 'certverify_number', 'ecapla_certverify_number' );
+		$keys = array( 'certloom_number', 'cv_number' );
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Public direct-link lookup is read-only and intentionally unauthenticated.
 		foreach ( $keys as $key ) {
 			if ( isset( $_GET[ $key ] ) ) {

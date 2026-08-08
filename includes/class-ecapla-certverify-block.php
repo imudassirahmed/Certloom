@@ -20,7 +20,7 @@ class Ecapla_CertVerify_Block {
 	 * Registers block metadata and its server-side renderer.
 	 */
 	public static function register() {
-		$path = ECAPLA_CERTVERIFY_PATH . 'blocks/certverify';
+		$path = ECAPLA_CERTVERIFY_PATH . 'blocks/certloom';
 		if ( ! function_exists( 'register_block_type' ) || ! file_exists( $path . '/block.json' ) ) {
 			return;
 		}
@@ -51,7 +51,7 @@ class Ecapla_CertVerify_Block {
 		}
 
 		foreach ( $handles as $handle ) {
-			wp_set_script_translations( $handle, 'certverify', ECAPLA_CERTVERIFY_PATH . 'languages' );
+			wp_set_script_translations( $handle, 'certloom', ECAPLA_CERTVERIFY_PATH . 'languages' );
 		}
 	}
 

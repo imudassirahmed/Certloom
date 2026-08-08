@@ -1,9 +1,9 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "certverify/verification",
-  "version": "1.4.9",
-  "title": "CertVerify – Certificate Verification",
+  "name": "certloom/verification",
+  "version": "1.5.0",
+  "title": "Certloom – Certificate Verification",
   "category": "widgets",
   "icon": "shield-alt",
   "description": "Add a certificate verification interface without requiring Elementor.",
@@ -13,7 +13,7 @@
     "credentials",
     "elementor"
   ],
-  "textdomain": "certverify",
+  "textdomain": "certloom",
   "attributes": {
     "design": {
       "type": "string",
@@ -85,5 +85,5 @@
   },
   "editorScript": "file:./index.js",
   "editorStyle": "file:./editor.css",
-  "style": "ecapla-certverify-public"
+  "style": "ecapla-certloom-public"
 }
