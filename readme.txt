@@ -1,5 +1,5 @@
 === Certloom – Certificate Verification ===
-Contributors: Ecapla
+Contributors: ecapla
 Tags: certificate verification, certificate, credentials, certificate registry, shortcode
 Requires at least: 6.3
 Tested up to: 7.0
