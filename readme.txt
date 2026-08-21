@@ -1,16 +1,18 @@
 === Certloom – Certificate Verification ===
-Contributors: ecapla
+Contributors: Ecapla
 Tags: certificate verification, certificate, credentials, certificate registry, shortcode
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.5.0
+Stable tag: 1.5.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
 
 == Description ==
+
+> Development note for 1.5.1: Certloom is being upgraded in place from 1.5.0. The next-generation domain infrastructure is introduced additively inside the same plugin; the proven legacy registry remains authoritative until the dedicated migration/verification cutover gates pass.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -116,6 +118,21 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.5.1 =
+* Begin the next-generation Certloom architecture as an in-place 1.5.0 → 1.5.1 plugin update without destructively migrating the proven registry.
+* Add a Certloom namespace/autoloader and additive domain-schema manager with migration locking and schema-health checks.
+* Add recipients, programs, issuers, credential-series, credential-version, and credential-event tables as the additive next-generation domain foundation.
+* Add pure Core lifecycle states, four-layer Status Service, lifecycle transition rules, and checksummed non-enumerable public credential IDs.
+* Add initial repository boundaries for recipients, programs, issuers, credentials, versions, and append-only lifecycle events.
+* Add transaction-backed lifecycle commands for issue, suspend, revoke, reinstate, and void so state and audit events change together.
+* Extend explicit opt-in uninstall cleanup to the additive next-generation domain storage while retaining data by default.
+* Add lightweight domain/bootstrap tests. The legacy verification table remains authoritative until the dedicated migration/verification milestones.
+* Add the internal golden-path Credential Series verification service with direct public-ID binding, checksum-before-DB rejection, read-time status evaluation, and fail-closed handling for missing/current-Version or database errors. The legacy public verification route remains authoritative until real WordPress/MySQL and migration parity gates pass.
+* Add a guarded source-only WordPress/MySQL integration-gate harness for real schema/index, repository, lifecycle transaction, verification, and legacy-registry non-mutation checks on disposable/staging installs.
+* Add a pure legacy-row migration mapper and compatibility flag so stored/ambiguous legacy Expired records cannot become Valid when moved to Credential Series/Versions; preserve date-derived expiry, Suspended, Withdrawn→Revoked semantics, custom fields and deterministic source idempotency.
+* Add a non-writing legacy migration parity preflight that independently compares the expected 1.5 public verdict with the new Core Status Service verdict, summarizes status/error counts, and caps detailed errors before any future migration commit.
+* Minimize the internal Series verification query to identity/lifecycle fields only and keep raw credential/snapshot/source data out of the generic verification transport shape.
 
 = 1.5.0 =
 * Fixed Elementor Flexbox Container sizing so all Certloom widgets occupy the available row and remain centered; Professional stays capped at 680px.

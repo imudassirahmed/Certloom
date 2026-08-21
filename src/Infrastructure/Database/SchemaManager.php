@@ -1,0 +1,562 @@
+<?php
+namespace Certloom\Infrastructure\Database;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Additive next-generation Certloom domain schema manager.
+ *
+ * The existing certificate table remains untouched until the dedicated
+ * migration milestone. New tables can therefore be created, verified and
+ * exercised without changing public verification truth for an existing site.
+ */
+final class SchemaManager {
+	const SCHEMA_VERSION         = '2';
+	const SCHEMA_OPTION          = 'certloom_domain_schema_version';
+	const HEALTH_OPTION          = 'certloom_domain_schema_health';
+	const LOCK_OPTION            = 'certloom_domain_schema_lock';
+	const HEALTH_TTL             = DAY_IN_SECONDS;
+	const LOCK_TTL               = 5 * MINUTE_IN_SECONDS;
+
+	/** @var array<string,string> */
+	private static $tables = array(
+		'recipients'          => 'certloom_recipients',
+		'programs'            => 'certloom_programs',
+		'issuers'             => 'certloom_issuers',
+		'credential_series'   => 'certloom_credential_series',
+		'credential_versions' => 'certloom_credential_versions',
+		'credential_events'   => 'certloom_credential_events',
+	);
+
+	/**
+	 * @param string $name Logical table name.
+	 * @return string
+	 */
+	public static function table( $name ) {
+		global $wpdb;
+		if ( ! isset( self::$tables[ $name ] ) ) {
+			throw new \InvalidArgumentException( 'Unknown Certloom table: ' . $name );
+		}
+		return $wpdb->prefix . self::$tables[ $name ];
+	}
+
+	/**
+	 * Creates/upgrades and verifies the additive domain tables.
+	 *
+	 * @return true|\WP_Error
+	 */
+	public static function activate() {
+		$lock = self::acquire_lock();
+		if ( is_wp_error( $lock ) ) {
+			return $lock;
+		}
+
+		try {
+			$created = self::create_or_update_tables();
+			if ( is_wp_error( $created ) ) {
+				return $created;
+			}
+
+			$migrated = self::run_migrations( (string) get_option( self::SCHEMA_OPTION, '0' ) );
+			if ( is_wp_error( $migrated ) ) {
+				return $migrated;
+			}
+
+			$health = self::schema_health();
+			if ( is_wp_error( $health ) ) {
+				return $health;
+			}
+
+			$saved = update_option( self::SCHEMA_OPTION, self::SCHEMA_VERSION, false );
+			if ( ! $saved && self::SCHEMA_VERSION !== (string) get_option( self::SCHEMA_OPTION, '0' ) ) {
+				return new \WP_Error( 'certloom_domain_schema_marker_failed', __( 'Certloom created its new domain tables but could not save the schema marker.', 'certloom' ) );
+			}
+
+			if ( ! self::save_health_marker() ) {
+				return new \WP_Error( 'certloom_domain_schema_health_marker_failed', __( 'Certloom verified its new domain tables but could not save the health marker.', 'certloom' ) );
+			}
+
+			return true;
+		} finally {
+			self::release_lock( $lock );
+		}
+	}
+
+	/**
+	 * Runs schema work only in maintenance-capable requests.
+	 *
+	 * @return true|\WP_Error
+	 */
+	public static function maybe_upgrade() {
+		if ( ! self::can_run_schema_work() ) {
+			return true;
+		}
+
+		$current = self::SCHEMA_VERSION === (string) get_option( self::SCHEMA_OPTION, '0' );
+		if ( $current && self::health_marker_is_fresh() ) {
+			return true;
+		}
+
+		return self::activate();
+	}
+
+	/** @return bool */
+	private static function can_run_schema_work() {
+		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+			return true;
+		}
+		if ( function_exists( 'wp_doing_cron' ) && wp_doing_cron() ) {
+			return true;
+		}
+		return is_admin();
+	}
+
+	/**
+	 * Migration runner intentionally contains no data rewrite yet. Schema version 2
+	 * adds the legacy-expired compatibility column/index through the explicit
+	 * table contract/dbDelta path. Future semantic/data migrations must be
+	 * ordered and idempotent here rather than hidden in generic repair loops.
+	 *
+	 * @param string $installed Installed domain schema version.
+	 * @return true|\WP_Error
+	 */
+	private static function run_migrations( $installed ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+		return true;
+	}
+
+	/** @return true|\WP_Error */
+	private static function create_or_update_tables() {
+		global $wpdb;
+		$charset_collate = $wpdb->get_charset_collate();
+		$tables          = array();
+
+		$recipients = self::table( 'recipients' );
+		$tables[] = "CREATE TABLE $recipients (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			display_name VARCHAR(255) NOT NULL,
+			first_name VARCHAR(191) NULL,
+			middle_name VARCHAR(191) NULL,
+			last_name VARCHAR(191) NULL,
+			email VARCHAR(320) NULL,
+			wp_user_id BIGINT UNSIGNED NULL,
+			external_id VARCHAR(191) NULL,
+			custom_fields LONGTEXT NULL,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY wp_user_id (wp_user_id),
+			KEY email (email(191)),
+			KEY external_id (external_id)
+		) $charset_collate;";
+
+		$issuers = self::table( 'issuers' );
+		$tables[] = "CREATE TABLE $issuers (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			name VARCHAR(255) NOT NULL,
+			slug VARCHAR(191) NOT NULL,
+			logo_attachment_id BIGINT UNSIGNED NULL,
+			seal_attachment_id BIGINT UNSIGNED NULL,
+			settings_json LONGTEXT NULL,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY slug (slug),
+			KEY name (name(191))
+		) $charset_collate;";
+
+		$programs = self::table( 'programs' );
+		$tables[] = "CREATE TABLE $programs (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			issuer_id BIGINT UNSIGNED NULL,
+			code VARCHAR(100) NULL,
+			title VARCHAR(255) NOT NULL,
+			description LONGTEXT NULL,
+			validity_days INT UNSIGNED NULL,
+			active TINYINT(1) NOT NULL DEFAULT 1,
+			metadata_json LONGTEXT NULL,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY code (code),
+			KEY issuer_id (issuer_id),
+			KEY active (active),
+			KEY title (title(191))
+		) $charset_collate;";
+
+		$series = self::table( 'credential_series' );
+		$tables[] = "CREATE TABLE $series (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			public_id CHAR(12) NOT NULL,
+			recipient_id BIGINT UNSIGNED NOT NULL,
+			program_id BIGINT UNSIGNED NULL,
+			issuer_id BIGINT UNSIGNED NULL,
+			current_version_id BIGINT UNSIGNED NULL,
+			administrative_state VARCHAR(20) NOT NULL DEFAULT 'active',
+			visibility VARCHAR(32) NOT NULL DEFAULT 'verification_summary',
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			closed_at DATETIME NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY public_id (public_id),
+			KEY recipient_id (recipient_id),
+			KEY program_id (program_id),
+			KEY issuer_id (issuer_id),
+			KEY current_version_id (current_version_id),
+			KEY administrative_state (administrative_state),
+			KEY visibility (visibility)
+		) $charset_collate;";
+
+		$versions = self::table( 'credential_versions' );
+		$tables[] = "CREATE TABLE $versions (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			series_id BIGINT UNSIGNED NOT NULL,
+			version_number INT UNSIGNED NOT NULL,
+			display_number VARCHAR(100) NOT NULL,
+			issuance_state VARCHAR(20) NOT NULL DEFAULT 'draft',
+			legacy_expired TINYINT(1) NOT NULL DEFAULT 0,
+			valid_from DATE NULL,
+			issued_at DATETIME NULL,
+			expires_at DATE NULL,
+			grade VARCHAR(100) NULL,
+			source_type VARCHAR(64) NULL,
+			source_ref VARCHAR(191) NULL,
+			source_idempotency_key CHAR(64) NULL,
+			snapshot_json LONGTEXT NULL,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY series_version (series_id,version_number),
+			UNIQUE KEY display_number (display_number),
+			UNIQUE KEY source_idempotency (source_type,source_idempotency_key),
+			KEY issuance_state (issuance_state),
+			KEY legacy_expired (legacy_expired),
+			KEY expires_at (expires_at),
+			KEY issued_at (issued_at)
+		) $charset_collate;";
+
+		$events = self::table( 'credential_events' );
+		$tables[] = "CREATE TABLE $events (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			series_id BIGINT UNSIGNED NOT NULL,
+			version_id BIGINT UNSIGNED NULL,
+			event_type VARCHAR(64) NOT NULL,
+			actor_user_id BIGINT UNSIGNED NULL,
+			old_state_json LONGTEXT NULL,
+			new_state_json LONGTEXT NULL,
+			reason_code VARCHAR(64) NULL,
+			public_reason TEXT NULL,
+			internal_note TEXT NULL,
+			meta_json LONGTEXT NULL,
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY  (id),
+			KEY series_created (series_id,created_at),
+			KEY version_id (version_id),
+			KEY event_type (event_type),
+			KEY actor_user_id (actor_user_id)
+		) $charset_collate;";
+
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		foreach ( $tables as $sql ) {
+			$wpdb->last_error = '';
+			dbDelta( $sql );
+			if ( '' !== (string) $wpdb->last_error ) {
+				delete_option( self::HEALTH_OPTION );
+				return new \WP_Error( 'certloom_domain_table_setup_failed', __( 'Certloom could not create or update its new domain tables.', 'certloom' ) );
+			}
+		}
+
+		delete_option( self::HEALTH_OPTION );
+		return true;
+	}
+
+	/**
+	 * Verifies required columns and indexes independently of the saved version.
+	 *
+	 * @return true|\WP_Error
+	 */
+	private static function schema_health() {
+		global $wpdb;
+		foreach ( self::contracts() as $logical_name => $contract ) {
+			$table = self::table( $logical_name );
+			$wpdb->last_error = '';
+			$columns = $wpdb->get_results( $wpdb->prepare( 'SHOW FULL COLUMNS FROM %i', $table ), ARRAY_A );
+			if ( '' !== (string) $wpdb->last_error || ! is_array( $columns ) || empty( $columns ) ) {
+				return new \WP_Error( 'certloom_domain_table_missing', __( 'Certloom could not verify one of its required domain tables.', 'certloom' ) );
+			}
+
+			$found_columns = array();
+			foreach ( $columns as $column ) {
+				if ( isset( $column['Field'] ) ) {
+					$found_columns[ strtolower( (string) $column['Field'] ) ] = $column;
+				}
+			}
+
+			foreach ( $contract['columns'] as $name => $expected ) {
+				if ( ! isset( $found_columns[ $name ] ) ) {
+					return new \WP_Error( 'certloom_domain_columns_missing', __( 'Certloom detected a missing domain-table column.', 'certloom' ) );
+				}
+				$column = $found_columns[ $name ];
+				$type   = strtolower( (string) ( $column['Type'] ?? '' ) );
+				$null   = strtoupper( (string) ( $column['Null'] ?? '' ) );
+				if ( ! preg_match( $expected['type'], $type ) || $expected['null'] !== $null ) {
+					return new \WP_Error( 'certloom_domain_column_mismatch', __( 'Certloom detected an incompatible domain-table column definition.', 'certloom' ) );
+				}
+				if ( array_key_exists( 'default', $expected ) && (string) $expected['default'] !== (string) ( $column['Default'] ?? '' ) ) {
+					return new \WP_Error( 'certloom_domain_column_mismatch', __( 'Certloom detected an incompatible domain-table column default.', 'certloom' ) );
+				}
+				if ( isset( $expected['extra'] ) && false === strpos( strtolower( (string) ( $column['Extra'] ?? '' ) ), $expected['extra'] ) ) {
+					return new \WP_Error( 'certloom_domain_column_mismatch', __( 'Certloom detected an incompatible domain-table identity column.', 'certloom' ) );
+				}
+			}
+
+			$wpdb->last_error = '';
+			$indexes = $wpdb->get_results( $wpdb->prepare( 'SHOW INDEX FROM %i', $table ), ARRAY_A );
+			if ( '' !== (string) $wpdb->last_error || ! is_array( $indexes ) || empty( $indexes ) ) {
+				return new \WP_Error( 'certloom_domain_indexes_missing', __( 'Certloom could not verify its required domain-table indexes.', 'certloom' ) );
+			}
+
+			$found_indexes = array();
+			foreach ( $indexes as $index ) {
+				if ( ! isset( $index['Key_name'], $index['Column_name'] ) ) {
+					continue;
+				}
+				$key = strtolower( (string) $index['Key_name'] );
+				$seq = max( 1, absint( $index['Seq_in_index'] ?? 1 ) );
+				$found_indexes[ $key ]['columns'][ $seq ] = strtolower( (string) $index['Column_name'] );
+				$found_indexes[ $key ]['unique'] = isset( $index['Non_unique'] ) && 0 === (int) $index['Non_unique'];
+			}
+
+			foreach ( $contract['indexes'] as $name => $expected ) {
+				$name = strtolower( $name );
+				if ( ! isset( $found_indexes[ $name ] ) ) {
+					return new \WP_Error( 'certloom_domain_indexes_missing', __( 'Certloom detected a missing required domain-table index.', 'certloom' ) );
+				}
+				ksort( $found_indexes[ $name ]['columns'] );
+				if ( array_values( $expected['columns'] ) !== array_values( $found_indexes[ $name ]['columns'] ) || (bool) $expected['unique'] !== (bool) $found_indexes[ $name ]['unique'] ) {
+					return new \WP_Error( 'certloom_domain_index_mismatch', __( 'Certloom detected an incompatible required domain-table index.', 'certloom' ) );
+				}
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * @return array<string,array<string,mixed>>
+	 */
+	private static function contracts() {
+		$bigu = '/^bigint(?:\(20\))? unsigned$/';
+		$dt   = '/^datetime$/';
+		$date = '/^date$/';
+		$lt   = '/^(?:longtext|text)$/';
+		return array(
+			'recipients' => array(
+				'columns' => array(
+					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
+					'display_name' => array( 'type' => '/^varchar\(255\)$/', 'null' => 'NO' ),
+					'first_name' => array( 'type' => '/^varchar\(191\)$/', 'null' => 'YES' ),
+					'middle_name' => array( 'type' => '/^varchar\(191\)$/', 'null' => 'YES' ),
+					'last_name' => array( 'type' => '/^varchar\(191\)$/', 'null' => 'YES' ),
+					'email' => array( 'type' => '/^varchar\(320\)$/', 'null' => 'YES' ),
+					'wp_user_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'external_id' => array( 'type' => '/^varchar\(191\)$/', 'null' => 'YES' ),
+					'custom_fields' => array( 'type' => $lt, 'null' => 'YES' ),
+					'created_at' => array( 'type' => $dt, 'null' => 'NO' ),
+					'updated_at' => array( 'type' => $dt, 'null' => 'NO' ),
+				),
+				'indexes' => array(
+					'PRIMARY' => array( 'columns' => array( 'id' ), 'unique' => true ),
+					'wp_user_id' => array( 'columns' => array( 'wp_user_id' ), 'unique' => true ),
+					'email' => array( 'columns' => array( 'email' ), 'unique' => false ),
+					'external_id' => array( 'columns' => array( 'external_id' ), 'unique' => false ),
+				),
+			),
+			'programs' => array(
+				'columns' => array(
+					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
+					'issuer_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'code' => array( 'type' => '/^varchar\(100\)$/', 'null' => 'YES' ),
+					'title' => array( 'type' => '/^varchar\(255\)$/', 'null' => 'NO' ),
+					'description' => array( 'type' => $lt, 'null' => 'YES' ),
+					'validity_days' => array( 'type' => '/^int(?:\(10\))? unsigned$/', 'null' => 'YES' ),
+					'active' => array( 'type' => '/^tinyint(?:\(1\))?$/', 'null' => 'NO', 'default' => '1' ),
+					'metadata_json' => array( 'type' => $lt, 'null' => 'YES' ),
+					'created_at' => array( 'type' => $dt, 'null' => 'NO' ),
+					'updated_at' => array( 'type' => $dt, 'null' => 'NO' ),
+				),
+				'indexes' => array(
+					'PRIMARY' => array( 'columns' => array( 'id' ), 'unique' => true ),
+					'code' => array( 'columns' => array( 'code' ), 'unique' => true ),
+					'issuer_id' => array( 'columns' => array( 'issuer_id' ), 'unique' => false ),
+					'active' => array( 'columns' => array( 'active' ), 'unique' => false ),
+					'title' => array( 'columns' => array( 'title' ), 'unique' => false ),
+				),
+			),
+			'issuers' => array(
+				'columns' => array(
+					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
+					'name' => array( 'type' => '/^varchar\(255\)$/', 'null' => 'NO' ),
+					'slug' => array( 'type' => '/^varchar\(191\)$/', 'null' => 'NO' ),
+					'logo_attachment_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'seal_attachment_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'settings_json' => array( 'type' => $lt, 'null' => 'YES' ),
+					'created_at' => array( 'type' => $dt, 'null' => 'NO' ),
+					'updated_at' => array( 'type' => $dt, 'null' => 'NO' ),
+				),
+				'indexes' => array(
+					'PRIMARY' => array( 'columns' => array( 'id' ), 'unique' => true ),
+					'slug' => array( 'columns' => array( 'slug' ), 'unique' => true ),
+					'name' => array( 'columns' => array( 'name' ), 'unique' => false ),
+				),
+			),
+			'credential_series' => array(
+				'columns' => array(
+					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
+					'public_id' => array( 'type' => '/^char\(12\)$/', 'null' => 'NO' ),
+					'recipient_id' => array( 'type' => $bigu, 'null' => 'NO' ),
+					'program_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'issuer_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'current_version_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'administrative_state' => array( 'type' => '/^varchar\(20\)$/', 'null' => 'NO', 'default' => 'active' ),
+					'visibility' => array( 'type' => '/^varchar\(32\)$/', 'null' => 'NO', 'default' => 'verification_summary' ),
+					'created_at' => array( 'type' => $dt, 'null' => 'NO' ),
+					'updated_at' => array( 'type' => $dt, 'null' => 'NO' ),
+					'closed_at' => array( 'type' => $dt, 'null' => 'YES' ),
+				),
+				'indexes' => array(
+					'PRIMARY' => array( 'columns' => array( 'id' ), 'unique' => true ),
+					'public_id' => array( 'columns' => array( 'public_id' ), 'unique' => true ),
+					'recipient_id' => array( 'columns' => array( 'recipient_id' ), 'unique' => false ),
+					'program_id' => array( 'columns' => array( 'program_id' ), 'unique' => false ),
+					'issuer_id' => array( 'columns' => array( 'issuer_id' ), 'unique' => false ),
+					'current_version_id' => array( 'columns' => array( 'current_version_id' ), 'unique' => false ),
+					'administrative_state' => array( 'columns' => array( 'administrative_state' ), 'unique' => false ),
+					'visibility' => array( 'columns' => array( 'visibility' ), 'unique' => false ),
+				),
+			),
+			'credential_versions' => array(
+				'columns' => array(
+					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
+					'series_id' => array( 'type' => $bigu, 'null' => 'NO' ),
+					'version_number' => array( 'type' => '/^int(?:\(10\))? unsigned$/', 'null' => 'NO' ),
+					'display_number' => array( 'type' => '/^varchar\(100\)$/', 'null' => 'NO' ),
+					'issuance_state' => array( 'type' => '/^varchar\(20\)$/', 'null' => 'NO', 'default' => 'draft' ),
+					'legacy_expired' => array( 'type' => '/^tinyint(?:\(1\))?$/', 'null' => 'NO', 'default' => '0' ),
+					'valid_from' => array( 'type' => $date, 'null' => 'YES' ),
+					'issued_at' => array( 'type' => $dt, 'null' => 'YES' ),
+					'expires_at' => array( 'type' => $date, 'null' => 'YES' ),
+					'grade' => array( 'type' => '/^varchar\(100\)$/', 'null' => 'YES' ),
+					'source_type' => array( 'type' => '/^varchar\(64\)$/', 'null' => 'YES' ),
+					'source_ref' => array( 'type' => '/^varchar\(191\)$/', 'null' => 'YES' ),
+					'source_idempotency_key' => array( 'type' => '/^char\(64\)$/', 'null' => 'YES' ),
+					'snapshot_json' => array( 'type' => $lt, 'null' => 'YES' ),
+					'created_at' => array( 'type' => $dt, 'null' => 'NO' ),
+					'updated_at' => array( 'type' => $dt, 'null' => 'NO' ),
+				),
+				'indexes' => array(
+					'PRIMARY' => array( 'columns' => array( 'id' ), 'unique' => true ),
+					'series_version' => array( 'columns' => array( 'series_id', 'version_number' ), 'unique' => true ),
+					'display_number' => array( 'columns' => array( 'display_number' ), 'unique' => true ),
+					'source_idempotency' => array( 'columns' => array( 'source_type', 'source_idempotency_key' ), 'unique' => true ),
+					'issuance_state' => array( 'columns' => array( 'issuance_state' ), 'unique' => false ),
+					'legacy_expired' => array( 'columns' => array( 'legacy_expired' ), 'unique' => false ),
+					'expires_at' => array( 'columns' => array( 'expires_at' ), 'unique' => false ),
+					'issued_at' => array( 'columns' => array( 'issued_at' ), 'unique' => false ),
+				),
+			),
+			'credential_events' => array(
+				'columns' => array(
+					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
+					'series_id' => array( 'type' => $bigu, 'null' => 'NO' ),
+					'version_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'event_type' => array( 'type' => '/^varchar\(64\)$/', 'null' => 'NO' ),
+					'actor_user_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'old_state_json' => array( 'type' => $lt, 'null' => 'YES' ),
+					'new_state_json' => array( 'type' => $lt, 'null' => 'YES' ),
+					'reason_code' => array( 'type' => '/^varchar\(64\)$/', 'null' => 'YES' ),
+					'public_reason' => array( 'type' => $lt, 'null' => 'YES' ),
+					'internal_note' => array( 'type' => $lt, 'null' => 'YES' ),
+					'meta_json' => array( 'type' => $lt, 'null' => 'YES' ),
+					'created_at' => array( 'type' => $dt, 'null' => 'NO' ),
+				),
+				'indexes' => array(
+					'PRIMARY' => array( 'columns' => array( 'id' ), 'unique' => true ),
+					'series_created' => array( 'columns' => array( 'series_id', 'created_at' ), 'unique' => false ),
+					'version_id' => array( 'columns' => array( 'version_id' ), 'unique' => false ),
+					'event_type' => array( 'columns' => array( 'event_type' ), 'unique' => false ),
+					'actor_user_id' => array( 'columns' => array( 'actor_user_id' ), 'unique' => false ),
+				),
+			),
+		);
+	}
+
+	/** @return bool */
+	private static function health_marker_is_fresh() {
+		$marker = get_option( self::HEALTH_OPTION, array() );
+		if ( ! is_array( $marker ) || self::SCHEMA_VERSION !== (string) ( $marker['version'] ?? '' ) ) {
+			return false;
+		}
+		$checked_at = absint( $marker['checked_at'] ?? 0 );
+		return $checked_at > 0 && ( time() - $checked_at ) < self::HEALTH_TTL;
+	}
+
+	/** @return bool */
+	private static function save_health_marker() {
+		$value = array( 'version' => self::SCHEMA_VERSION, 'checked_at' => time() );
+		$saved = update_option( self::HEALTH_OPTION, $value, false );
+		return $saved || $value === get_option( self::HEALTH_OPTION, array() );
+	}
+
+	/** @return string|\WP_Error */
+	private static function acquire_lock() {
+		global $wpdb;
+		$token = wp_generate_password( 32, false, false );
+		$now   = time();
+		$value = $token . '|' . $now;
+		if ( add_option( self::LOCK_OPTION, $value, '', false ) ) {
+			return $token;
+		}
+
+		$stored = (string) get_option( self::LOCK_OPTION, '' );
+		$parts = explode( '|', $stored, 2 );
+		$locked_at = isset( $parts[1] ) ? absint( $parts[1] ) : 0;
+		if ( $locked_at && ( $now - $locked_at ) < self::LOCK_TTL ) {
+			return new \WP_Error( 'certloom_domain_schema_locked', __( 'Certloom domain maintenance is already running. Try again shortly.', 'certloom' ) );
+		}
+
+		$updated = $wpdb->query(
+			$wpdb->prepare(
+				'UPDATE %i SET option_value = %s WHERE option_name = %s AND option_value = %s',
+				$wpdb->options,
+				$value,
+				self::LOCK_OPTION,
+				$stored
+			)
+		);
+		wp_cache_delete( self::LOCK_OPTION, 'options' );
+		return 1 === (int) $updated ? $token : new \WP_Error( 'certloom_domain_schema_locked', __( 'Certloom could not obtain its domain-maintenance lock.', 'certloom' ) );
+	}
+
+	/** @return void */
+	private static function release_lock( $token ) {
+		global $wpdb;
+		if ( ! is_string( $token ) || '' === $token ) {
+			return;
+		}
+		$stored = (string) get_option( self::LOCK_OPTION, '' );
+		if ( 0 !== strpos( $stored, $token . '|' ) ) {
+			return;
+		}
+		$wpdb->query(
+			$wpdb->prepare(
+				'DELETE FROM %i WHERE option_name = %s AND option_value = %s',
+				$wpdb->options,
+				self::LOCK_OPTION,
+				$stored
+			)
+		);
+		wp_cache_delete( self::LOCK_OPTION, 'options' );
+	}
+}

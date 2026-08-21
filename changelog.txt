@@ -1,9 +1,50 @@
+1.5.1 — In-place credential-domain foundation
+--------------------------------------------------------------------
+- Continue the existing Certloom plugin from 1.5.0 to 1.5.1 while retaining the proven
+  public registry as the live source of truth until explicit migration testing.
+- Add an internal Certloom namespace/autoloader and additive domain schema with
+  token-owned migration locking, cached schema-health verification, and no
+  destructive changes to the legacy certificate table.
+- Add dedicated recipients, programs, issuers, credential-series,
+  credential-version, and credential-event tables.
+- Add the Core four-layer lifecycle model: issuance, administrative, temporal,
+  and compliance state, with a structured fail-closed Status Service.
+- Add explicit lifecycle transition rules and a Crockford-style 12-character
+  public Credential Series ID with normalization, checksum validation, and
+  database uniqueness/collision retry.
+- Add initial repository boundaries for recipients, programs, issuers,
+  Credential Series/Versions, and append-only events.
+- Add a transaction-backed lifecycle command service with row locking,
+  compare-and-swap state updates, and atomic issue/suspend/revoke/reinstate/void
+  event recording.
+- Add pure-PHP lifecycle/public-ID and application-command tests plus a plugin
+  bootstrap/autoload smoke test so core logic can be exercised independently
+  from WordPress UI code.
+- Add the internal golden-path Credential Series verification service with direct
+  public-ID binding, checksum-before-DB rejection, read-time Status Service
+  evaluation, and fail-closed handling for incomplete/current-Version or DB reads.
+- Add a guarded WordPress/MySQL integration-gate harness for real dbDelta/index,
+  repository, transaction, lifecycle-event, verification, and legacy-registry
+  non-mutation testing on disposable/staging installations.
+- Add a pure 1.5 legacy-row migration mapper and narrow `legacy_expired`
+  compatibility flag so ambiguous stored Expired rows cannot become Valid after
+  migration; retain date-derived expiry, Suspended, Withdrawn→Revoked mapping,
+  custom fields, original snapshot provenance, and deterministic idempotency.
+- Add a non-writing migration parity preflight that maps legacy rows, independently
+  compares old expected public verdicts against the new Status Service, summarizes
+  ready/error/status counts, and caps error details before any database migration.
+- Minimize the new Series verification read model to required identity/lifecycle fields
+  and keep raw snapshot/source data out of generic verification serialization.
+- Extend opt-in uninstall cleanup to the additive next-generation domain tables/options while
+  continuing to preserve all credential data by default.
+
 = 1.5.0 =
 * Report an issue actions now open a pre-addressed email to support@ecapla.com with the subject “Certloom – Report an Issue”.
 * Fixed Elementor Flexbox Container sizing so all Certloom widgets occupy the available row and remain centered; Professional stays capped at 680px.
 
 Certloom changelog
 ====================
+
 
 1.5.0 — Certloom identity, activation repair, and review resubmission
 - Restored Elementor wrapper-width selectors for the Certloom widget IDs; Professional is capped/centered at 680px and the five premium templates stretch to their container width.

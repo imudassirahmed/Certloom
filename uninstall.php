@@ -89,6 +89,8 @@ function ecapla_certverify_uninstall_site() {
 	delete_option( 'certverify_restore_builds' );
 	delete_option( 'certverify_restore_maintenance_lock' );
 	delete_option( 'certverify_data_generation' );
+	delete_option( 'certloom_domain_schema_health' );
+	delete_option( 'certloom_domain_schema_lock' );
 
 	$transient_prefixes = array(
 		'_transient_ecapla_certverify_import_',
@@ -163,6 +165,19 @@ function ecapla_certverify_uninstall_site() {
 	$table = $wpdb->prefix . 'certverify_certificates';
 	$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $table ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.SchemaChange -- Explicit opt-in uninstall cleanup of the plugin-owned table.
 
+	$domain_tables = array(
+		$wpdb->prefix . 'certloom_credential_events',
+		$wpdb->prefix . 'certloom_credential_versions',
+		$wpdb->prefix . 'certloom_credential_series',
+		$wpdb->prefix . 'certloom_programs',
+		$wpdb->prefix . 'certloom_issuers',
+		$wpdb->prefix . 'certloom_recipients',
+	);
+	foreach ( $domain_tables as $domain_table ) {
+		$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $domain_table ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.SchemaChange -- Explicit opt-in cleanup of Certloom-owned next-generation domain data.
+	}
+
+	delete_option( 'certloom_domain_schema_version' );
 	delete_option( 'certverify_fields' );
 	delete_option( 'certverify_retired_fields' );
 	delete_option( 'certverify_settings' );

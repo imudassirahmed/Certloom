@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Certloom – Certificate Verification
  * Description: Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
- * Version: 1.5.0
+ * Version: 1.5.1
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,13 +17,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.5.0' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.5.1' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_TABLE', 'certverify_certificates' );
 define( 'ECAPLA_CERTVERIFY_CAP', 'manage_certverify' );
 define( 'ECAPLA_CERTVERIFY_MINIMUM_ELEMENTOR_VERSION', '3.10.0' );
+
+/*
+ * Canonical Certloom constants. Legacy ECAPLA_CERTVERIFY_* constants remain
+ * available while the proven 1.5 registry is migrated through explicit later
+ * milestones inside the same plugin upgrade line.
+ */
+define( 'CERTLOOM_VERSION', ECAPLA_CERTVERIFY_VERSION );
+define( 'CERTLOOM_PATH', ECAPLA_CERTVERIFY_PATH );
+define( 'CERTLOOM_URL', ECAPLA_CERTVERIFY_URL );
+
+require_once CERTLOOM_PATH . 'src/Autoloader.php';
+\Certloom\Autoloader::register();
 
 
 /*
@@ -103,6 +115,7 @@ function ecapla_certverify_after_plugin_upgrade( $upgrader, $options ) { // phpc
 	}
 	delete_option( Ecapla_CertVerify_Database::HEALTH_OPTION );
 	delete_option( Ecapla_CertVerify_Permissions::HEALTH_OPTION );
+	delete_option( \Certloom\Infrastructure\Database\SchemaManager::HEALTH_OPTION );
 	if ( ! wp_next_scheduled( 'ecapla_certverify_continue_migrations' ) ) {
 		wp_schedule_single_event( time() + 5, 'ecapla_certverify_continue_migrations' );
 	}
@@ -148,6 +161,11 @@ function ecapla_certverify_activate_site() {
 	$database = Ecapla_CertVerify_Database::activate();
 	if ( is_wp_error( $database ) ) {
 		return $database;
+	}
+
+	$domain = \Certloom\Plugin::activate();
+	if ( is_wp_error( $domain ) ) {
+		return $domain;
 	}
 
 	if ( ! Ecapla_CertVerify_Permissions::activate() ) {
@@ -324,6 +342,7 @@ function ecapla_certverify_init() {
 	$GLOBALS['ecapla_certverify_verification_unavailable'] = is_wp_error( $restore_recovery ) || is_wp_error( $database_upgrade );
 	$cron_upgrade       = Ecapla_CertVerify_Cron::init();
 	$field_upgrade      = Ecapla_CertVerify_Fields::maybe_repair_schema();
+	\Certloom\Plugin::boot();
 	$provisioning_error = null;
 	if ( is_wp_error( $restore_recovery ) ) {
 		$provisioning_error = $restore_recovery;
