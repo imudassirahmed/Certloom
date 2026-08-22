@@ -2,6 +2,7 @@
 namespace Certloom\Infrastructure\Repository;
 
 use Certloom\Infrastructure\Data\DomainGeneration;
+use Certloom\Application\Data\SafeJson;
 use Certloom\Infrastructure\Database\SchemaManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -17,6 +18,11 @@ final class ProgramRepository {
 		if ( '' === $title ) {
 			return new \WP_Error( 'certloom_program_title_required', __( 'A program title is required.', 'certloom' ) );
 		}
+		$metadata_json = null;
+		if ( array_key_exists( 'metadata', $data ) ) {
+			$metadata_json = ( new SafeJson() )->encode_array( $data['metadata'], 'certloom_program_metadata_invalid', __( 'Program metadata could not be encoded safely.', 'certloom' ) );
+			if ( is_wp_error( $metadata_json ) ) { return $metadata_json; }
+		}
 		$now = current_time( 'mysql', true );
 		$row = array(
 			'issuer_id' => ! empty( $data['issuer_id'] ) ? absint( $data['issuer_id'] ) : null,
@@ -25,7 +31,7 @@ final class ProgramRepository {
 			'description' => self::nullable_string( $data['description'] ?? null ),
 			'validity_days' => isset( $data['validity_days'] ) && '' !== (string) $data['validity_days'] ? max( 0, absint( $data['validity_days'] ) ) : null,
 			'active' => isset( $data['active'] ) ? (int) (bool) $data['active'] : 1,
-			'metadata_json' => isset( $data['metadata'] ) ? wp_json_encode( $data['metadata'] ) : null,
+			'metadata_json' => $metadata_json,
 			'created_at' => $now,
 			'updated_at' => $now,
 		);
@@ -75,7 +81,9 @@ final class ProgramRepository {
 			$row['active'] = (int) (bool) $data['active'];
 		}
 		if ( array_key_exists( 'metadata', $data ) ) {
-			$row['metadata_json'] = wp_json_encode( is_array( $data['metadata'] ) ? $data['metadata'] : array() );
+			$encoded = ( new SafeJson() )->encode_array( $data['metadata'], 'certloom_program_metadata_invalid', __( 'Program metadata could not be encoded safely.', 'certloom' ) );
+			if ( is_wp_error( $encoded ) ) { return $encoded; }
+			$row['metadata_json'] = $encoded;
 		}
 		if ( empty( $row ) ) {
 			return true;
@@ -140,9 +148,9 @@ final class ProgramRepository {
 		$row['issuer_id'] = ! empty( $row['issuer_id'] ) ? absint( $row['issuer_id'] ) : null;
 		$row['validity_days'] = null !== $row['validity_days'] ? absint( $row['validity_days'] ) : null;
 		$row['active'] = ! empty( $row['active'] );
-		$row['metadata'] = ! empty( $row['metadata_json'] ) ? json_decode( (string) $row['metadata_json'], true ) : array();
+		$row['metadata'] = ( new SafeJson() )->decode_array( $row['metadata_json'] ?? null, 'certloom_program_metadata_corrupt', __( 'Stored program metadata is invalid JSON.', 'certloom' ) );
 		unset( $row['metadata_json'] );
-		return $row;
+		return is_wp_error( $row['metadata'] ) ? $row['metadata'] : $row;
 	}
 
 	/** @return string|null */

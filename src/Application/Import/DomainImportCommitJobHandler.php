@@ -91,8 +91,7 @@ final class DomainImportCommitJobHandler implements JobHandlerInterface {
 			: (string) ( $preflight_result['baseline_configuration_hash'] ?? '' );
 		$consistent = $this->consistency->validate( $baseline_generation, $baseline_config );
 		if ( is_wp_error( $consistent ) && ! $continued_lease ) {
-			$this->maintenance->release( $job_key );
-			return $consistent;
+			return $this->release_after_error( $job_key, $consistent );
 		}
 		if ( is_wp_error( $consistent ) && $continued_lease ) {
 			// The same unexpired maintenance lease proves no normal credential or
@@ -101,8 +100,7 @@ final class DomainImportCommitJobHandler implements JobHandlerInterface {
 			// after its row writes but before JobRunner saved the new cursor.
 			$recovered_baseline = $this->consistency->snapshot();
 			if ( is_wp_error( $recovered_baseline ) ) {
-				$this->maintenance->release( $job_key );
-				return $recovered_baseline;
+				return $this->release_after_error( $job_key, $recovered_baseline );
 			}
 		}
 
@@ -115,31 +113,50 @@ final class DomainImportCommitJobHandler implements JobHandlerInterface {
 			);
 		} );
 		if ( ! is_array( $batch ) ) {
-			$this->maintenance->release( $job_key );
-			return new \WP_Error( 'certloom_import_commit_result_invalid', __( 'The Certloom import writer returned an invalid commit result.', 'certloom' ) );
+			return $this->release_after_error(
+				$job_key,
+				new \WP_Error( 'certloom_import_commit_result_invalid', __( 'The Certloom import writer returned an invalid commit result.', 'certloom' ) )
+			);
 		}
 		if ( ! empty( $batch['failed'] ) ) {
-			$this->maintenance->release( $job_key );
 			$error = isset( $batch['errors'][0] ) && is_array( $batch['errors'][0] ) ? $batch['errors'][0] : array();
-			return new \WP_Error(
-				(string) ( $error['code'] ?? 'certloom_import_commit_failed' ),
-				(string) ( $error['message'] ?? __( 'Certloom stopped the import at the first unsafe write failure.', 'certloom' ) )
+			return $this->release_after_error(
+				$job_key,
+				new \WP_Error(
+					(string) ( $error['code'] ?? 'certloom_import_commit_failed' ),
+					(string) ( $error['message'] ?? __( 'Certloom stopped the import at the first unsafe write failure.', 'certloom' ) )
+				)
 			);
 		}
 
 		$receipt = $this->stage->commit_summary( $preflight_key );
 		if ( is_wp_error( $receipt ) ) {
-			$this->maintenance->release( $job_key );
-			return $receipt;
+			return $this->release_after_error( $job_key, $receipt );
 		}
 		$preflight_summary = isset( $preflight_result['summary'] ) && is_array( $preflight_result['summary'] ) ? $preflight_result['summary'] : array();
 		$state['after_row'] = absint( $batch['last_row'] ?? $state['after_row'] ?? 0 );
 
 		if ( ! empty( $batch['complete'] ) ) {
 			$release = $this->maintenance->release( $job_key );
-			$warnings = array();
-			if ( is_wp_error( $release ) || false === $release ) {
-				$warnings[] = __( 'The import completed, but its maintenance lock could not be released immediately. It will expire automatically.', 'certloom' );
+			if ( is_wp_error( $release ) ) {
+				/*
+				 * The rows are already durable, but a succeeded job must never leave
+				 * normal credential writes blocked. Persist the completed cursor and
+				 * yield a cleanup slice; row receipts make the replay idempotent.
+				 */
+				$state['cleanup_pending'] = true;
+				return JobSliceResult::progress(
+					absint( $state['after_row'] ),
+					'import_cleanup',
+					array(
+						'commit_state'   => $state,
+						'commit_summary' => $receipt,
+						'cleanup_error'  => array(
+							'code'    => $release->get_error_code(),
+							'message' => $release->get_error_message(),
+						),
+					)
+				);
 			}
 			return JobSliceResult::succeeded(
 				array(
@@ -150,7 +167,7 @@ final class DomainImportCommitJobHandler implements JobHandlerInterface {
 					'committed'         => absint( $receipt['committed'] ?? 0 ),
 					'skipped_duplicates'=> 'skip' === $duplicate_policy ? absint( $preflight_summary['duplicates'] ?? 0 ) : 0,
 					'invalid_rows'      => absint( $preflight_summary['errors'] ?? 0 ),
-					'warnings'          => $warnings,
+					'warnings'          => array(),
 				),
 				absint( $state['after_row'] )
 			);
@@ -158,8 +175,7 @@ final class DomainImportCommitJobHandler implements JobHandlerInterface {
 
 		$next_baseline = $this->consistency->snapshot();
 		if ( is_wp_error( $next_baseline ) ) {
-			$this->maintenance->release( $job_key );
-			return $next_baseline;
+			return $this->release_after_error( $job_key, $next_baseline );
 		}
 		$state['expected_generation'] = (string) $next_baseline['generation'];
 		$state['expected_configuration_hash'] = (string) $next_baseline['configuration_hash'];
@@ -171,5 +187,11 @@ final class DomainImportCommitJobHandler implements JobHandlerInterface {
 				'commit_summary' => $receipt,
 			)
 		);
+	}
+
+	/** Returns the original failure only when the maintenance boundary was safely released. */
+	private function release_after_error( $job_key, \WP_Error $error ) {
+		$released = $this->maintenance->release( $job_key );
+		return is_wp_error( $released ) ? $released : $error;
 	}
 }

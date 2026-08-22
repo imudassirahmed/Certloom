@@ -4,19 +4,22 @@ namespace Certloom\Application\Rendering;
 use InvalidArgumentException;
 
 /**
- * Content-addressed font manifest shared by every artifact renderer.
+ * Content-addressed, coverage-aware font manifest shared by every artifact renderer.
  *
- * The layout stores stable family keys. A production renderer must bind those
- * keys to exact font-byte hashes so PDF/image output cannot silently use
- * different fonts or synthesize missing weight/style variants.
+ * A family/weight/style variant is an ordered stack of exact font faces. Each
+ * face is bound by SHA-256 and declares the Unicode scalar ranges it is allowed
+ * to satisfy. Production adapters may use only these declared faces; silent
+ * system-font fallback or synthetic weight/style substitution is forbidden.
  */
 final class FontManifest {
 	const SCHEMA = 'certloom-font-manifest';
-	const VERSION = 1;
+	const VERSION = 2;
 	private $canonical;
+	private $unicode;
 
-	public function __construct( CanonicalJson $canonical = null ) {
+	public function __construct( CanonicalJson $canonical = null, UnicodeCoverage $unicode = null ) {
 		$this->canonical = $canonical ?: new CanonicalJson();
+		$this->unicode = $unicode ?: new UnicodeCoverage();
 	}
 
 	/** @return array<string,mixed> */
@@ -41,16 +44,31 @@ final class FontManifest {
 				if ( ! preg_match( '/^(?:[1-9]00)-(?:normal|italic)$/', $variant ) || ! is_array( $descriptor ) ) {
 					throw new InvalidArgumentException( 'Font manifest contains an invalid weight/style variant.' );
 				}
-				$keys = array_keys( $descriptor );
-				if ( array_diff( $keys, array( 'sha256', 'format' ) ) || ! isset( $descriptor['sha256'], $descriptor['format'] ) ) {
-					throw new InvalidArgumentException( 'Font variant descriptor is incomplete.' );
+				if ( array_diff( array_keys( $descriptor ), array( 'faces' ) ) || ! isset( $descriptor['faces'] ) || ! is_array( $descriptor['faces'] ) || empty( $descriptor['faces'] ) ) {
+					throw new InvalidArgumentException( 'Font variant must contain a non-empty ordered face stack.' );
 				}
-				$sha256 = strtolower( trim( (string) $descriptor['sha256'] ) );
-				$format = strtolower( trim( (string) $descriptor['format'] ) );
-				if ( ! preg_match( '/^[0-9a-f]{64}$/', $sha256 ) || ! in_array( $format, array( 'ttf', 'otf' ), true ) ) {
-					throw new InvalidArgumentException( 'Font variant must identify TTF/OTF bytes by SHA-256.' );
+				$faces = array();
+				$seen_hashes = array();
+				foreach ( array_values( $descriptor['faces'] ) as $face ) {
+					if ( ! is_array( $face ) || array_diff( array_keys( $face ), array( 'sha256', 'format', 'coverage' ) ) || ! isset( $face['sha256'], $face['format'], $face['coverage'] ) || ! is_array( $face['coverage'] ) ) {
+						throw new InvalidArgumentException( 'Font face descriptor is incomplete.' );
+					}
+					$sha256 = strtolower( trim( (string) $face['sha256'] ) );
+					$format = strtolower( trim( (string) $face['format'] ) );
+					if ( ! preg_match( '/^[0-9a-f]{64}$/', $sha256 ) || ! in_array( $format, array( 'ttf', 'otf' ), true ) ) {
+						throw new InvalidArgumentException( 'Font face must identify TTF/OTF bytes by SHA-256.' );
+					}
+					if ( isset( $seen_hashes[ $sha256 ] ) ) {
+						throw new InvalidArgumentException( 'A font face may appear only once in a variant fallback stack.' );
+					}
+					$seen_hashes[ $sha256 ] = true;
+					$faces[] = array(
+						'sha256' => $sha256,
+						'format' => $format,
+						'coverage' => $this->unicode->normalize_ranges( $face['coverage'] ),
+					);
 				}
-				$normalized_variants[ $variant ] = array( 'sha256' => $sha256, 'format' => $format );
+				$normalized_variants[ $variant ] = array( 'faces' => $faces );
 			}
 			ksort( $normalized_variants, SORT_STRING );
 			$families[ $family ] = $normalized_variants;
@@ -73,9 +91,10 @@ final class FontManifest {
 			$family = strtolower( trim( (string) ( $style['font_family'] ?? '' ) ) );
 			$weight = (int) ( $style['font_weight'] ?? 400 );
 			$variant = $weight . '-' . ( ! empty( $style['italic'] ) ? 'italic' : 'normal' );
-			if ( '' === $family || empty( $manifest['families'][ $family ][ $variant ] ) ) {
+			if ( '' === $family || empty( $manifest['families'][ $family ][ $variant ]['faces'] ) ) {
 				throw new InvalidArgumentException( 'Renderer font manifest does not provide the exact family/weight/style required by the resolved document.' );
 			}
+			$this->unicode->assert_text_covered( (string) ( $element['text'] ?? '' ), $manifest['families'][ $family ][ $variant ]['faces'] );
 		}
 	}
 

@@ -1,6 +1,7 @@
 <?php
 namespace Certloom\Infrastructure\Rendering;
 
+use Certloom\Application\Rendering\ArtifactInspector;
 use Certloom\Application\Rendering\ArtifactReceipt;
 use Certloom\Application\Rendering\FontManifest;
 use Certloom\Application\Rendering\RenderRequestFingerprint;
@@ -18,13 +19,15 @@ final class ArtifactRenderCoordinator {
 	private $fingerprints;
 	private $receipts;
 	private $fonts;
+	private $artifacts;
 
-	public function __construct( RendererRegistry $registry, RendererCapabilityDetector $capabilities = null, RenderRequestFingerprint $fingerprints = null, ArtifactReceipt $receipts = null, FontManifest $fonts = null ) {
+	public function __construct( RendererRegistry $registry, RendererCapabilityDetector $capabilities = null, RenderRequestFingerprint $fingerprints = null, ArtifactReceipt $receipts = null, FontManifest $fonts = null, ArtifactInspector $artifacts = null ) {
 		$this->registry = $registry;
 		$this->capabilities = $capabilities ?: new RendererCapabilityDetector();
 		$this->fingerprints = $fingerprints ?: new RenderRequestFingerprint();
 		$this->receipts = $receipts ?: new ArtifactReceipt();
 		$this->fonts = $fonts ?: new FontManifest();
+		$this->artifacts = $artifacts ?: new ArtifactInspector();
 	}
 
 	/** @return array<string,mixed> */
@@ -54,7 +57,12 @@ final class ArtifactRenderCoordinator {
 		if ( ! is_string( $bytes ) || '' === $bytes || strlen( $bytes ) > self::MAX_ARTIFACT_BYTES ) {
 			throw new RuntimeException( 'Certloom renderer returned an invalid or oversized artifact.' );
 		}
+		try {
+			$artifact = $this->artifacts->inspect( $format, $bytes );
+		} catch ( \Throwable $error ) {
+			throw new RuntimeException( 'Certloom renderer returned bytes that do not match the requested artifact format.', 0, $error );
+		}
 		$receipt = $this->receipts->create( $format, $bytes, $layout_hash, $request_hash, $renderer );
-		return array( 'bytes' => $bytes, 'request_hash' => $request_hash, 'receipt' => $receipt );
+		return array( 'bytes' => $bytes, 'artifact' => $artifact, 'request_hash' => $request_hash, 'receipt' => $receipt );
 	}
 }

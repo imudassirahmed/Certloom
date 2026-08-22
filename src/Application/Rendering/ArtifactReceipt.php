@@ -7,9 +7,14 @@ use InvalidArgumentException;
 /** Deterministic integrity receipt for generated credential artifacts. */
 final class ArtifactReceipt {
 	const SCHEMA = 'certloom-artifact-receipt';
-	const VERSION = 2;
+	const VERSION = 3;
 	private $canonical;
-	public function __construct( CanonicalJson $canonical = null ) { $this->canonical = $canonical ?: new CanonicalJson(); }
+	private $artifacts;
+
+	public function __construct( CanonicalJson $canonical = null, ArtifactInspector $artifacts = null ) {
+		$this->canonical = $canonical ?: new CanonicalJson();
+		$this->artifacts = $artifacts ?: new ArtifactInspector();
+	}
 
 	/** @return array<string,mixed> */
 	public function create( $format, $bytes, $layout_hash, $request_hash, RendererInterface $renderer ) {
@@ -21,6 +26,7 @@ final class ArtifactReceipt {
 		if ( ! in_array( $format, $formats, true ) ) {
 			throw new InvalidArgumentException( 'Renderer does not advertise the requested artifact format.' );
 		}
+		$artifact = $this->artifacts->inspect( $format, $bytes );
 		$layout_hash = strtolower( trim( (string) $layout_hash ) );
 		$request_hash = strtolower( trim( (string) $request_hash ) );
 		if ( ! $this->is_sha256( $layout_hash ) || ! $this->is_sha256( $request_hash ) ) {
@@ -33,6 +39,7 @@ final class ArtifactReceipt {
 			'schema' => self::SCHEMA,
 			'version' => self::VERSION,
 			'format' => $format,
+			'artifact' => $artifact,
 			'bytes' => strlen( $bytes ),
 			'sha256' => hash( 'sha256', $bytes ),
 			'layout_hash' => $layout_hash,
@@ -47,12 +54,13 @@ final class ArtifactReceipt {
 
 	/** @return bool */
 	public function verify( array $receipt, $bytes, RendererInterface $renderer = null ) {
-		$required = array( 'schema', 'version', 'format', 'bytes', 'sha256', 'layout_hash', 'request_hash', 'renderer_id', 'renderer_version', 'renderer_context_hash', 'receipt_hash' );
+		$required = array( 'schema', 'version', 'format', 'artifact', 'bytes', 'sha256', 'layout_hash', 'request_hash', 'renderer_id', 'renderer_version', 'renderer_context_hash', 'receipt_hash' );
 		foreach ( $required as $key ) {
 			if ( ! array_key_exists( $key, $receipt ) ) { return false; }
 		}
 		if ( self::SCHEMA !== (string) $receipt['schema'] || ! is_int( $receipt['version'] ) || self::VERSION !== $receipt['version'] ) { return false; }
-		if ( ! in_array( strtolower( (string) $receipt['format'] ), array( 'pdf', 'png', 'jpeg' ), true ) ) { return false; }
+		$format = strtolower( (string) $receipt['format'] );
+		if ( ! in_array( $format, array( 'pdf', 'png', 'jpeg' ), true ) || ! is_array( $receipt['artifact'] ) ) { return false; }
 		foreach ( array( 'sha256', 'layout_hash', 'request_hash', 'renderer_context_hash', 'receipt_hash' ) as $hash_key ) {
 			if ( ! $this->is_sha256( strtolower( (string) $receipt[ $hash_key ] ) ) ) { return false; }
 		}
@@ -61,13 +69,19 @@ final class ArtifactReceipt {
 		unset( $metadata['receipt_hash'] );
 		if ( ! hash_equals( $receipt_hash, $this->canonical->hash( $metadata ) ) ) { return false; }
 		if ( ! is_int( $receipt['bytes'] ) || $receipt['bytes'] < 1 || ! is_string( $bytes ) || $receipt['bytes'] !== strlen( $bytes ) || ! hash_equals( strtolower( (string) $receipt['sha256'] ), hash( 'sha256', $bytes ) ) ) { return false; }
+		try {
+			$artifact = $this->artifacts->inspect( $format, $bytes );
+		} catch ( \Throwable $error ) {
+			return false;
+		}
+		if ( $artifact !== $receipt['artifact'] ) { return false; }
 
 		if ( null !== $renderer ) {
 			$renderer_id = trim( (string) $renderer->id() );
 			$renderer_version = trim( (string) $renderer->version() );
 			if ( ! hash_equals( (string) $receipt['renderer_id'], $renderer_id ) || ! hash_equals( (string) $receipt['renderer_version'], $renderer_version ) ) { return false; }
 			$formats = array_map( function ( $value ) { return strtolower( trim( (string) $value ) ); }, (array) $renderer->formats() );
-			if ( ! in_array( strtolower( (string) $receipt['format'] ), $formats, true ) ) { return false; }
+			if ( ! in_array( $format, $formats, true ) ) { return false; }
 			$context = array( 'renderer_id' => $renderer_id, 'renderer_version' => $renderer_version, 'context' => (array) $renderer->context() );
 			$expected = $this->canonical->hash( $context );
 			if ( ! hash_equals( strtolower( (string) $receipt['renderer_context_hash'] ), $expected ) ) { return false; }

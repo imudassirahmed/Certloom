@@ -1,39 +1,86 @@
+1.5.8 — Transaction, storage-engine and maintenance-recovery hardening; no authority cutover
+-------------------------------------------------------------------------------------------
+- Keep the proven 1.5 registry and public verifier authoritative; all next-domain cutover
+  flags remain false by default.
+- Require `ENGINE=InnoDB` explicitly for every next-domain table and include storage-engine
+  verification in schema health. Bump the additive domain schema contract so a prior fresh
+  health marker cannot bypass the new transaction/row-lock requirement.
+- Harden the shared short-command Transaction boundary: START/COMMIT/ROLLBACK failures are
+  checked, unexpected callback exceptions become controlled `WP_Error` results after safe
+  rollback, and commit/rollback uncertainty is surfaced distinctly for administrator review.
+- Route Merge restore row reconciliation through that shared checked transaction boundary
+  instead of hand-written unchecked transaction-control SQL.
+- Make malformed non-empty maintenance-lock state fail closed for ordinary credential writes
+  while still allowing a new maintenance owner to repair the corrupt lock atomically.
+- Make maintenance-lock release failure explicit. A fully committed import now yields a
+  retryable cleanup slice rather than reporting success while credential writes remain blocked;
+  durable row receipts prevent committed rows from being replayed.
+- Strengthen Replace/Merge restore recovery: committed and rolled-back recovery state remains
+  durable until owner-matched maintenance cleanup succeeds, so transient release failure can be
+  repaired by replay without re-promoting or corrupting credential data.
+- Surface restore-abandon/cleanup failures instead of hiding them behind the original staging
+  error, and clean up a failed Merge-target build conservatively.
+- Verified checkpoint: 46/46 standalone regression suites, 69/69 focused rendering assertions,
+  188/188 PHP syntax checks, 3/3 JavaScript syntax checks, and 6/6 deterministic rendering
+  reference fixture families.
+- Real WordPress/MySQL authority cutover and the production PHP PDF/image renderer remain
+  deliberately gated until their external runtime acceptance suites pass.
+
+1.5.7 — Data-integrity and renderer-proof hardening; no authority cutover
+--------------------------------------------------------------------
+- Continue upgrading the same Certloom plugin in place. The legacy 1.5 registry
+  and public verifier remain authoritative; all next-domain cutover flags remain
+  false by default.
+- Make immutable Version creation safer: snapshot serialization completes before
+  domain-generation or certificate-number reservation side effects. Post-reservation
+  failure paths verify compensation and fail conservatively if cleanup cannot be
+  proven, preferring a repairable reserved number over ambiguous duplicate ownership.
+- Add `SafeJson` as a shared fail-closed structured-data boundary for recipients,
+  issuers, programs, credential snapshots, lifecycle events, durable job state and
+  Merge-restore metadata. Corrupt stored JSON is surfaced as an integrity error
+  instead of being normalized into apparently valid empty state.
+- Harden restore scalar validation so syntactically valid JSON strings/numbers/bools
+  cannot enter columns whose repositories require structured arrays.
+- Strengthen the renderer contract with independent output-format inspection and
+  exact Unicode coverage checks across ordered content-addressed font faces, closing
+  silent glyph-fallback and renderer-format-mislabeling gaps.
+- Add development-only deterministic golden SVG/PNG/PDF references for English,
+  Urdu RTL, mixed script, long-name shrink, arbitrary 17.5-degree rotation and QR.
+  Regeneration is byte-stable in the reference toolchain, and the QR is decoded from
+  the actual generated page raster back to the exact verification URL.
+- Add a real WordPress/MySQL premium integration gate for InnoDB/index contracts,
+  transaction rollback, global certificate-number ownership, immutable snapshot
+  side-effect safety, idempotency cleanup, and a two-process `SELECT ... FOR UPDATE`
+  blocking proof. These tests remain development-only and do not replace the pure
+  PHP suite.
+- Verified checkpoint: 45/45 standalone regression suites, 69/69 focused rendering
+  assertions, 187/187 PHP syntax checks, 3/3 JavaScript syntax checks, and 6/6
+  deterministic reference-fixture families.
+- The public PDF/image engine and Credential Series authority cutover remain gated
+  until the real runtime acceptance tests pass.
+
 1.5.6 — Premium rendering-contract hardening; no authority cutover
 --------------------------------------------------------------------
-- Continue upgrading the same Certloom plugin in place; the legacy 1.5 registry
-  and public verifier remain authoritative and all domain cutover flags remain
-  false by default.
-- Make element z-order unique and canonical, normalize equivalent rotations, and
-  reject any rotated element whose actual bounding box would leave the page.
-  This removes adapter-dependent clipping/stacking ambiguity before a renderer is
-  selected.
-- Add independent local-asset inspection: actual PNG/JPEG content, MIME, SHA-256,
-  byte size, dimensions and pixel counts are re-derived and bounded rather than
-  trusted from a resolver or UI payload.
-- Centralize QR encoding before renderer dispatch. PDF/PNG/JPEG adapters receive
-  one validated binary module matrix plus the chosen error-correction/quiet-zone
-  policy and are not permitted to invent their own QR representation.
-- Add a content-addressed font manifest. Text rendering requires the exact
-  registered family/weight/style and declared font-file SHA-256; silent fallback
-  or synthetic historical-font substitution is rejected. No font binaries are
-  bundled by this contract checkpoint.
-- Add ArtifactRenderCoordinator as the single production execution boundary for
-  renderer capability checks, exact font-manifest enforcement, controlled engine
-  exceptions, bounded output size and artifact-receipt creation.
-- Upgrade artifact receipts to schema v2 with a canonical receipt-integrity hash
-  so layout/request/renderer metadata tampering is detected in addition to output
-  byte changes.
-- Harden portable canonicalization and scalar types: reject objects/resources and
-  non-finite floats, normalize negative zero, reject malformed integer/boolean
-  schema values instead of PHP-coercing them, and reject verification URLs with
-  embedded credentials or fragments.
-- Expand focused rendering assertions from 36 to 61. The source checkpoint passes
-  43/43 standalone regression scripts and 180/180 PHP lint checks.
-- Correct the prior 1.5.5 checkpoint metadata: that source contained 176 PHP files,
-  not 175.
-- Keep the PDF/image engine and public artifact actions gated until real output
-  fixtures prove Unicode/RTL, arbitrary rotation, overflow, QR and PDF/image parity.
-- Keep the real WordPress + MySQL/MariaDB authority-cutover gate deliberately open.
+- Make element z-order unique/canonical and reject rotated elements whose actual
+  post-rotation bounding boxes leave the physical page.
+- Independently verify local PNG/JPEG bytes, MIME, SHA-256, dimensions and pixel
+  bounds rather than trusting resolver/UI metadata.
+- Centralize QR encoding into one exact validated Model 2 module matrix plus stable
+  encoder identity/version so all future output adapters draw the same symbol.
+- Bind historical text output to exact TTF/OTF family/weight/style font bytes and
+  prevent silent synthetic/substitute fonts.
+- Add `ArtifactRenderCoordinator` as the single production rendering boundary for
+  capability checks, exact-font enforcement, controlled exceptions, output limits
+  and artifact receipt generation.
+- Upgrade receipts to schema v2 with canonical metadata-integrity hashing. The hash
+  is documented as an unkeyed consistency/tamper-evidence mechanism, not an
+  authenticity signature against an attacker who can recompute it.
+- Tighten canonical scalar and verification-URL validation, including strict
+  integer/boolean types and rejection of embedded credentials/fragments.
+- Verified checkpoint: 43/43 standalone regression suites, 61/61 focused rendering
+  assertions and 180/180 PHP syntax checks.
+- Keep real WordPress/MySQL authority cutover and real PDF/image output benchmarks
+  deliberately open.
 
 1.5.5 — Canonical rendering and artifact-integrity foundation; no authority cutover
 --------------------------------------------------------------------

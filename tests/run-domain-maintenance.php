@@ -17,6 +17,7 @@ function get_option( $k, $d = false ) { return array_key_exists( $k, $GLOBALS['d
 function add_option( $k, $v, $deprecated = '', $autoload = false ) { if ( array_key_exists( $k, $GLOBALS['dm_options'] ) ) return false; $GLOBALS['dm_options'][ $k ] = $v; return true; }
 final class DMWpdb {
 	public $options = 'wp_options';
+	public $fail_delete_once = false;
 	public function prepare( $q, ...$a ) { return array( 'q' => $q, 'a' => $a ); }
 	public function query( $p ) {
 		$a = $p['a'];
@@ -28,6 +29,7 @@ final class DMWpdb {
 		}
 		if ( 0 === strpos( $p['q'], 'DELETE' ) ) {
 			$name = $a[1]; $old = $a[2];
+			if ( $this->fail_delete_once ) { $this->fail_delete_once = false; return 0; }
 			if ( ( $GLOBALS['dm_options'][ $name ] ?? null ) !== $old ) return 0;
 			unset( $GLOBALS['dm_options'][ $name ] );
 			return 1;
@@ -84,4 +86,22 @@ dm_same( true, isset( $after[2] ) && ( (int) $after[2] - (int) $after[1] ) === 3
 dm_same( true, (int) $after[2] >= (int) $before[2], 'expiry extended' );
 echo "PASS  touch persists the requested TTL and active() reads that persisted expiry\n";
 
-echo "\n5 tests, 0 failures\n";
+// A non-empty corrupt lock must fail closed for ordinary writes, but a fresh
+// maintenance owner may atomically replace it rather than requiring DB surgery.
+$GLOBALS['dm_options'][ DomainMaintenanceLock::OPTION ] = 'corrupt-lock-payload';
+dm_same( true, $l->active(), 'corrupt lock fail closed' );
+dm_same( 'certloom_domain_maintenance_write_locked', $l->assert_writes_allowed()->get_error_code(), 'corrupt lock blocks ordinary write' );
+dm_same( true, $l->acquire( $b, 'repair', 60 ), 'maintenance CAS replaces corrupt lock' );
+dm_same( true, 0 === strpos( $GLOBALS['dm_options'][ DomainMaintenanceLock::OPTION ], $b . '|' ), 'repair owner persisted' );
+echo "PASS  corrupt maintenance state blocks normal writes while a new maintenance owner can repair it atomically\n";
+
+// A failed owner-matched release must be an explicit error rather than a false
+// value that callers could accidentally interpret as success.
+$GLOBALS['wpdb']->fail_delete_once = true;
+$release_failed = $l->release( $b );
+dm_same( 'certloom_domain_maintenance_release_failed', $release_failed->get_error_code(), 'release failure is explicit' );
+dm_same( true, $l->active(), 'failed release keeps write lock active' );
+dm_same( true, $l->release( $b ), 'release retry succeeds' );
+echo "PASS  maintenance release failure is explicit and safely retryable\n";
+
+echo "\n7 tests, 0 failures\n";

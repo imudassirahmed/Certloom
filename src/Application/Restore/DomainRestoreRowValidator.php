@@ -92,9 +92,9 @@ final class DomainRestoreRowValidator {
 			if ( null === $row[ $field ] || '' === (string) $row[ $field ] ) {
 				continue;
 			}
-			json_decode( (string) $row[ $field ], true );
-			if ( JSON_ERROR_NONE !== json_last_error() ) {
-				return new \WP_Error( 'certloom_domain_restore_json_field_invalid', __( 'A backup record contains malformed JSON data.', 'certloom' ), array( 'entity' => $entity, 'field' => $field ) );
+			$decoded = json_decode( (string) $row[ $field ], true );
+			if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $decoded ) ) {
+				return new \WP_Error( 'certloom_domain_restore_json_field_invalid', __( 'A backup record contains malformed or structurally invalid JSON data.', 'certloom' ), array( 'entity' => $entity, 'field' => $field ) );
 			}
 		}
 		foreach ( $dates as $field => $kind ) {

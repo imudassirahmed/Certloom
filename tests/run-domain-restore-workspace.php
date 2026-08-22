@@ -33,7 +33,7 @@ function delete_option($key){ if(!array_key_exists($key,$GLOBALS['restore_option
 function add_option($key,$value,$deprecated='',$autoload=false){ if(array_key_exists($key,$GLOBALS['restore_options']))return false;$GLOBALS['restore_options'][$key]=$value;return true; }
 
 final class RestoreWpdb {
-	public $prefix='wp_'; public $options='wp_options'; public $last_error=''; public $tables=array(); public $insert_id=0;
+	public $prefix='wp_'; public $options='wp_options'; public $last_error=''; public $tables=array(); public $insert_id=0; public $fail_maintenance_delete_once=false;
 	public function prepare($query,...$args){ if(count($args)===1&&is_array($args[0]))$args=$args[0];return array('query'=>$query,'args'=>$args); }
 	public function esc_like($v){ return (string)$v; }
 	public function query($prepared){
@@ -49,7 +49,7 @@ final class RestoreWpdb {
 			$copies=array();foreach($ops as $op){$copies[$op[1]]=$this->tables[$op[0]];}foreach($ops as $op){unset($this->tables[$op[0]]);}foreach($copies as $name=>$rows){$this->tables[$name]=$rows;}return 1;
 		}
 		if(strpos($q,'UPDATE %i SET option_value')===0){ $name=(string)$a[2];$new=$a[1];$old=$a[3];if(!array_key_exists($name,$GLOBALS['restore_options'])||(string)$GLOBALS['restore_options'][$name]!== (string)$old)return 0;$GLOBALS['restore_options'][$name]=$new;return 1; }
-		if(strpos($q,'DELETE FROM %i WHERE option_name')===0){ $name=(string)$a[1];$old=$a[2];if(!array_key_exists($name,$GLOBALS['restore_options'])||(string)$GLOBALS['restore_options'][$name]!== (string)$old)return 0;unset($GLOBALS['restore_options'][$name]);return 1; }
+		if(strpos($q,'DELETE FROM %i WHERE option_name')===0){ $name=(string)$a[1];$old=$a[2];if($this->fail_maintenance_delete_once && 'certloom_domain_maintenance_lock'===$name){$this->fail_maintenance_delete_once=false;return 0;}if(!array_key_exists($name,$GLOBALS['restore_options'])||(string)$GLOBALS['restore_options'][$name]!== (string)$old)return 0;unset($GLOBALS['restore_options'][$name]);return 1; }
 		return 1;
 	}
 	public function get_var($prepared){
@@ -87,11 +87,16 @@ $new_config=array(
 	'certverify_retired_fields'=>array('exists'=>true,'value'=>array('new-retired')),
 	'certverify_settings'=>array('exists'=>true,'value'=>array('verification_page'=>10)),
 );
-$result=$ws->commit_replace($workspace,$new_config,array('mode'=>'replace','records'=>7,'counts'=>array('recipients'=>1)));rw_same(true,$result,'commit');
+$GLOBALS['wpdb']->fail_maintenance_delete_once=true;
+$result=$ws->commit_replace($workspace,$new_config,array('mode'=>'replace','records'=>7,'counts'=>array('recipients'=>1)));
+rw_same('certloom_domain_maintenance_release_failed',$result->get_error_code(),'committed restore surfaces transient lock-release failure');
 foreach(DomainBackupRepository::entity_types() as $entity){$live=SchemaManager::table($entity);rw_true(isset($GLOBALS['wpdb']->tables[$live][1]),'new live '.$entity);rw_same(false,isset($GLOBALS['wpdb']->tables[$live][99]),'old removed '.$entity);rw_same(false,array_key_exists(rw_stage_name($owner,$entity,'rollback'),$GLOBALS['wpdb']->tables),'rollback cleaned');}
-rw_same(array('new-field'),get_option('certverify_fields'),'configuration committed');rw_same(false,array_key_exists(DomainRestoreWorkspace::JOURNAL_OPTION,$GLOBALS['restore_options']),'journal cleared');rw_same(false,array_key_exists('certloom_domain_maintenance_lock',$GLOBALS['restore_options']),'lock released');
-$receipt=$ws->completion_receipt($owner);rw_same(false,is_wp_error($receipt),'receipt readable');rw_same(7,$receipt['records'],'receipt record count');rw_same(true,$ws->commit_replace($workspace,$new_config),'committed workspace replay is idempotent through durable receipt');
-echo "PASS  complete domain Replace uses one staged graph, durable completion receipt and clean rollback teardown\n";
+rw_same(array('new-field'),get_option('certverify_fields'),'configuration committed');rw_same(true,array_key_exists(DomainRestoreWorkspace::JOURNAL_OPTION,$GLOBALS['restore_options']),'committed recovery journal retained until lock release is confirmed');rw_same(true,array_key_exists('certloom_domain_maintenance_lock',$GLOBALS['restore_options']),'failed release leaves lock active');
+$receipt=$ws->completion_receipt($owner);rw_same(false,is_wp_error($receipt),'receipt readable');rw_same(7,$receipt['records'],'receipt record count');
+rw_same(true,$ws->commit_replace($workspace,$new_config),'committed workspace replay retries post-commit cleanup without re-promoting data');
+rw_same(false,array_key_exists('certloom_domain_maintenance_lock',$GLOBALS['restore_options']),'replay releases previously stuck lock');
+rw_same(false,array_key_exists(DomainRestoreWorkspace::JOURNAL_OPTION,$GLOBALS['restore_options']),'replay clears journal only after release succeeds');
+echo "PASS  complete domain Replace is durable and a committed replay repairs transient post-commit lock cleanup\n";
 
 // Simulate the narrow crash window: atomic table rename succeeded, but journal still says prepared.
 $owner2=str_repeat('b',32);$workspace2=$ws->create($owner2);rw_same(false,is_wp_error($workspace2),'second workspace');
@@ -101,9 +106,10 @@ $GLOBALS['restore_options'][DomainRestoreWorkspace::JOURNAL_OPTION]=array('state
 	'certverify_retired_fields'=>array('exists'=>true,'value'=>array('new-retired')),
 	'certverify_settings'=>array('exists'=>true,'value'=>array('verification_page'=>10)),
 ),'old_generation'=>get_option('certloom_domain_data_generation'),'created_at'=>time());
-$recovered=$ws->recover_interrupted_commit();rw_same(true,$recovered,'recover prepared swap');
+$GLOBALS['wpdb']->fail_maintenance_delete_once=true;$recovered=$ws->recover_interrupted_commit();rw_same('certloom_domain_maintenance_release_failed',$recovered->get_error_code(),'prepared recovery surfaces transient release failure');rw_same(true,array_key_exists(DomainRestoreWorkspace::JOURNAL_OPTION,$GLOBALS['restore_options']),'rollback journal remains retryable until cleanup release succeeds');
 foreach(DomainBackupRepository::entity_types() as $entity){$live=SchemaManager::table($entity);rw_true(isset($GLOBALS['wpdb']->tables[$live][1]),'old graph restored '.$entity);rw_same(false,isset($GLOBALS['wpdb']->tables[$live][2]),'replacement rolled back '.$entity);}
-echo "PASS  recovery detects rollback tables and closes the prepared-journal crash window after atomic rename\n";
+rw_same(true,$ws->recover_interrupted_commit(),'prepared recovery replay finishes cleanup');rw_same(false,array_key_exists(DomainRestoreWorkspace::JOURNAL_OPTION,$GLOBALS['restore_options']),'rollback journal cleared after release succeeds');
+echo "PASS  recovery detects rollback tables and retains recovery state until maintenance cleanup succeeds\n";
 
 // Merge uses a second complete private graph; the raw backup staging graph is never promoted.
 $owner3=str_repeat('c',32);$workspace3=$ws->create($owner3);rw_same(false,is_wp_error($workspace3),'merge workspace');

@@ -1,6 +1,7 @@
 <?php
 namespace Certloom\Infrastructure\Restore;
 
+use Certloom\Application\Data\SafeJson;
 use Certloom\Infrastructure\Database\SchemaManager;
 
 /** Durable source-ID -> merged-target-ID mapping for resumable Merge restore. */
@@ -121,8 +122,9 @@ final class DomainRestoreMapRepository {
 		foreach ( $rows as &$row ) {
 			$row['source_id'] = absint( $row['source_id'] ?? 0 );
 			$row['target_id'] = absint( $row['target_id'] ?? 0 ) ?: null;
-			$decoded = ! empty( $row['meta_json'] ) ? json_decode( (string) $row['meta_json'], true ) : array();
-			$row['meta'] = is_array( $decoded ) ? $decoded : array();
+			$decoded = ( new SafeJson() )->decode_array( $row['meta_json'] ?? null, 'certloom_restore_map_corrupt', __( 'Certloom found corrupt Merge restore mapping metadata.', 'certloom' ) );
+			if ( is_wp_error( $decoded ) ) { return $decoded; }
+			$row['meta'] = $decoded;
 			unset( $row['meta_json'] );
 		}
 		unset( $row );

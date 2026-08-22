@@ -165,4 +165,23 @@ rs_same('certloom_domain_restore_credential_series_invalid',$semantic->get_error
 rs_true($semantic_ws->abandoned,'semantic stage abandoned');
 echo "PASS  a hash-consistent but semantically invalid credential row is rejected before promotion\n";
 
-echo "\n3 tests, 0 failures\n";
+
+// A hash-consistent JSON scalar must be rejected for fields whose repositories require structured arrays.
+$scalar_json_path = rs_make_backup( str_repeat( '4', 32 ) );
+$lines = file( $scalar_json_path );
+$format = new DomainBackupFormat();
+for ( $i=1; $i<count($lines)-1; $i++ ) {
+	$item=json_decode(trim($lines[$i]),true);
+	if ( 'entity'===($item['type']??'') && 'credential_versions'===($item['entity']??'') ) { $item['data']['snapshot_json']='"scalar-not-structured"'; $lines[$i]=$format->encode_line($item); break; }
+}
+$hash=$format->next_hash('', $lines[0]);$records=0;
+for($i=1;$i<count($lines)-1;$i++){ $hash=$format->next_hash($hash,$lines[$i]);$records++; }
+$lines[count($lines)-1]=$format->encode_line(array('type'=>'integrity','records'=>$records,'chain_sha256'=>$hash));
+file_put_contents($scalar_json_path,implode('',$lines));
+$scalar_ws=new RestoreStageFakeWorkspace();$scalar_service=new DomainRestoreStagingService($scalar_ws);$scalar=$scalar_service->start($scalar_json_path,str_repeat('d',32));
+while(!is_wp_error($scalar)&&empty($scalar['complete'])){$scalar=$scalar_service->continue_stage($scalar,50);}
+rs_same('certloom_domain_restore_json_field_invalid',$scalar->get_error_code(),'structured JSON scalar rejected');
+rs_true($scalar_ws->abandoned,'structured JSON scalar stage abandoned');
+echo "PASS  hash-consistent JSON scalars cannot enter structured domain columns\n";
+
+echo "\n4 tests, 0 failures\n";

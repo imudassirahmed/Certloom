@@ -2,6 +2,7 @@
 namespace Certloom\Infrastructure\Repository;
 
 use Certloom\Infrastructure\Data\DomainGeneration;
+use Certloom\Application\Data\SafeJson;
 use Certloom\Infrastructure\Database\SchemaManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -21,13 +22,18 @@ final class IssuerRepository {
 		if ( '' === $slug ) {
 			return new \WP_Error( 'certloom_issuer_slug_required', __( 'A valid issuer slug is required.', 'certloom' ) );
 		}
+		$settings_json = null;
+		if ( array_key_exists( 'settings', $data ) ) {
+			$settings_json = ( new SafeJson() )->encode_array( $data['settings'], 'certloom_issuer_settings_invalid', __( 'Issuer settings could not be encoded safely.', 'certloom' ) );
+			if ( is_wp_error( $settings_json ) ) { return $settings_json; }
+		}
 		$now = current_time( 'mysql', true );
 		$row = array(
 			'name' => $name,
 			'slug' => $slug,
 			'logo_attachment_id' => ! empty( $data['logo_attachment_id'] ) ? absint( $data['logo_attachment_id'] ) : null,
 			'seal_attachment_id' => ! empty( $data['seal_attachment_id'] ) ? absint( $data['seal_attachment_id'] ) : null,
-			'settings_json' => isset( $data['settings'] ) ? wp_json_encode( $data['settings'] ) : null,
+			'settings_json' => $settings_json,
 			'created_at' => $now,
 			'updated_at' => $now,
 		);
@@ -75,7 +81,9 @@ final class IssuerRepository {
 			}
 		}
 		if ( array_key_exists( 'settings', $data ) ) {
-			$row['settings_json'] = wp_json_encode( is_array( $data['settings'] ) ? $data['settings'] : array() );
+			$encoded = ( new SafeJson() )->encode_array( $data['settings'], 'certloom_issuer_settings_invalid', __( 'Issuer settings could not be encoded safely.', 'certloom' ) );
+			if ( is_wp_error( $encoded ) ) { return $encoded; }
+			$row['settings_json'] = $encoded;
 		}
 		if ( empty( $row ) ) {
 			return true;
@@ -138,8 +146,8 @@ final class IssuerRepository {
 		$row['id'] = absint( $row['id'] );
 		$row['logo_attachment_id'] = ! empty( $row['logo_attachment_id'] ) ? absint( $row['logo_attachment_id'] ) : null;
 		$row['seal_attachment_id'] = ! empty( $row['seal_attachment_id'] ) ? absint( $row['seal_attachment_id'] ) : null;
-		$row['settings'] = ! empty( $row['settings_json'] ) ? json_decode( (string) $row['settings_json'], true ) : array();
+		$row['settings'] = ( new SafeJson() )->decode_array( $row['settings_json'] ?? null, 'certloom_issuer_settings_corrupt', __( 'Stored issuer settings are invalid JSON.', 'certloom' ) );
 		unset( $row['settings_json'] );
-		return $row;
+		return is_wp_error( $row['settings'] ) ? $row['settings'] : $row;
 	}
 }

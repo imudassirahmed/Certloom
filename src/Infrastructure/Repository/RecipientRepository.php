@@ -2,6 +2,7 @@
 namespace Certloom\Infrastructure\Repository;
 
 use Certloom\Infrastructure\Data\DomainGeneration;
+use Certloom\Application\Data\SafeJson;
 use Certloom\Infrastructure\Database\SchemaManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -21,6 +22,12 @@ final class RecipientRepository {
 			return new \WP_Error( 'certloom_recipient_name_required', __( 'A recipient display name is required.', 'certloom' ) );
 		}
 
+		$custom_fields_json = null;
+		if ( array_key_exists( 'custom_fields', $data ) ) {
+			$custom_fields_json = ( new SafeJson() )->encode_array( $data['custom_fields'], 'certloom_recipient_custom_fields_invalid', __( 'Recipient custom fields could not be encoded safely.', 'certloom' ) );
+			if ( is_wp_error( $custom_fields_json ) ) { return $custom_fields_json; }
+		}
+
 		$now = current_time( 'mysql', true );
 		$row = array(
 			'display_name' => $display_name,
@@ -30,7 +37,7 @@ final class RecipientRepository {
 			'email' => self::nullable_string( $data['email'] ?? null ),
 			'wp_user_id' => ! empty( $data['wp_user_id'] ) ? absint( $data['wp_user_id'] ) : null,
 			'external_id' => self::nullable_string( $data['external_id'] ?? null ),
-			'custom_fields' => isset( $data['custom_fields'] ) ? wp_json_encode( $data['custom_fields'] ) : null,
+			'custom_fields' => $custom_fields_json,
 			'created_at' => $now,
 			'updated_at' => $now,
 		);
@@ -76,7 +83,9 @@ final class RecipientRepository {
 			$row['wp_user_id'] = ! empty( $data['wp_user_id'] ) ? absint( $data['wp_user_id'] ) : null;
 		}
 		if ( array_key_exists( 'custom_fields', $data ) ) {
-			$row['custom_fields'] = wp_json_encode( is_array( $data['custom_fields'] ) ? $data['custom_fields'] : array() );
+			$encoded = ( new SafeJson() )->encode_array( $data['custom_fields'], 'certloom_recipient_custom_fields_invalid', __( 'Recipient custom fields could not be encoded safely.', 'certloom' ) );
+			if ( is_wp_error( $encoded ) ) { return $encoded; }
+			$row['custom_fields'] = $encoded;
 		}
 		if ( empty( $row ) ) {
 			return true;
@@ -134,14 +143,12 @@ final class RecipientRepository {
 		return is_array( $row ) ? $this->decode( $row ) : null;
 	}
 
-	/** @return array<string,mixed> */
+	/** @return array<string,mixed>|\WP_Error */
 	private function decode( array $row ) {
 		$row['id'] = absint( $row['id'] ?? 0 );
 		$row['wp_user_id'] = ! empty( $row['wp_user_id'] ) ? absint( $row['wp_user_id'] ) : null;
-		$row['custom_fields'] = ! empty( $row['custom_fields'] ) ? json_decode( (string) $row['custom_fields'], true ) : array();
-		if ( ! is_array( $row['custom_fields'] ) ) {
-			$row['custom_fields'] = array();
-		}
+		$row['custom_fields'] = ( new SafeJson() )->decode_array( $row['custom_fields'] ?? null, 'certloom_recipient_custom_fields_corrupt', __( 'Stored recipient custom fields are invalid JSON.', 'certloom' ) );
+		if ( is_wp_error( $row['custom_fields'] ) ) { return $row['custom_fields']; }
 		return $row;
 	}
 

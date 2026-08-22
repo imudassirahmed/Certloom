@@ -2,6 +2,7 @@
 namespace Certloom\Infrastructure\Job;
 
 use Certloom\Application\Contract\JobRepositoryInterface;
+use Certloom\Application\Data\SafeJson;
 use Certloom\Domain\Job\JobStates;
 use Certloom\Infrastructure\Database\SchemaManager;
 
@@ -112,7 +113,13 @@ final class JobRepository implements JobRepositoryInterface {
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) {
 			return new \WP_Error( 'certloom_job_due_read_failed', __( 'Certloom could not inspect its queued background jobs.', 'certloom' ) );
 		}
-		return array_map( array( __CLASS__, 'decode' ), $rows );
+		$out = array();
+		foreach ( $rows as $row ) {
+			$decoded = self::decode( $row );
+			if ( is_wp_error( $decoded ) ) { return $decoded; }
+			$out[] = $decoded;
+		}
+		return $out;
 	}
 
 	/**
@@ -293,7 +300,13 @@ final class JobRepository implements JobRepositoryInterface {
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) {
 			return new \WP_Error( 'certloom_job_recent_read_failed', __( 'Certloom could not read recent background jobs.', 'certloom' ) );
 		}
-		return array_map( array( __CLASS__, 'decode' ), $rows );
+		$out = array();
+		foreach ( $rows as $row ) {
+			$decoded = self::decode( $row );
+			if ( is_wp_error( $decoded ) ) { return $decoded; }
+			$out[] = $decoded;
+		}
+		return $out;
 	}
 
 	/**
@@ -327,7 +340,13 @@ final class JobRepository implements JobRepositoryInterface {
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) {
 			return new \WP_Error( 'certloom_job_retention_read_failed', __( 'Certloom could not inspect finished background jobs for cleanup.', 'certloom' ) );
 		}
-		return array_map( array( __CLASS__, 'decode' ), $rows );
+		$out = array();
+		foreach ( $rows as $row ) {
+			$decoded = self::decode( $row );
+			if ( is_wp_error( $decoded ) ) { return $decoded; }
+			$out[] = $decoded;
+		}
+		return $out;
 	}
 
 	/** @return bool|\WP_Error */
@@ -407,14 +426,15 @@ final class JobRepository implements JobRepositoryInterface {
 			: $json;
 	}
 
-	/** @return array<string,mixed> */
+	/** @return array<string,mixed>|\WP_Error */
 	private static function decode( array $row ) {
 		foreach ( array( 'id', 'owner_user_id', 'cursor', 'total', 'selection_max_id', 'attempts', 'recovery_count' ) as $key ) {
 			$row[ $key ] = null === ( $row[ $key ] ?? null ) ? null : absint( $row[ $key ] );
 		}
 		foreach ( array( 'payload_json' => 'payload', 'result_json' => 'result', 'error_json' => 'error' ) as $source => $target ) {
-			$decoded = ! empty( $row[ $source ] ) ? json_decode( (string) $row[ $source ], true ) : array();
-			$row[ $target ] = is_array( $decoded ) ? $decoded : array();
+			$decoded = ( new SafeJson() )->decode_array( $row[ $source ] ?? null, 'certloom_job_json_corrupt', __( 'Stored background job state is invalid JSON.', 'certloom' ) );
+			if ( is_wp_error( $decoded ) ) { return $decoded; }
+			$row[ $target ] = $decoded;
 			unset( $row[ $source ] );
 		}
 		return $row;

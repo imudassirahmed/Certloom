@@ -310,6 +310,8 @@ final class DomainAdmin {
 		}
 		$recipient = ( new RecipientRepository() )->find( $series['recipient_id'] );
 		$program = ! empty( $series['program_id'] ) ? ( new ProgramRepository() )->find( $series['program_id'] ) : null;
+		if ( is_wp_error( $recipient ) ) { $this->error( $recipient->get_error_message() ); $recipient = null; }
+		if ( is_wp_error( $program ) ) { $this->error( $program->get_error_message() ); $program = null; }
 		$status = is_array( $version ) ? $this->status_from_row( new StatusService(), array_merge( $version, array( 'administrative_state' => $series['administrative_state'] ) ) ) : null;
 
 		echo '<table class="widefat striped" style="max-width:900px"><tbody>';

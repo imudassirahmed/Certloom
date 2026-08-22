@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.5.6
+Stable tag: 1.5.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.5.6: Certloom continues as the same in-place plugin. The proven 1.5 registry remains authoritative while the next-generation domain and data tools stay behind development gates. This checkpoint hardens the renderer contract with independently verified assets, centralized QR modules, exact content-addressed font manifests, deterministic z/rotation rules, a single render coordinator, and canonical receipt-integrity hashes. It still does not ship a public PDF/PNG/JPG generator or switch the credential source of truth.
+> Development note for 1.5.8: Certloom continues as the same in-place plugin. The proven 1.5 registry remains authoritative while the next-generation domain and data tools stay behind development gates. This checkpoint hardens the real transaction/storage-engine contract, maintenance-lock corruption behavior, import cleanup replay, and restore recovery-marker ordering so cleanup uncertainty can never be mistaken for success. It still does not ship a public PDF/PNG/JPG generator or switch the credential source of truth.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -119,16 +119,25 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 
 == Changelog ==
 
+= 1.5.7 =
+* Harden immutable Version creation so structured snapshots are encoded before generation/reservation side effects; failed post-reservation paths verify compensation and conservatively preserve ownership if cleanup itself fails.
+* Add a shared fail-closed structured-JSON boundary across recipients, issuers, programs, credential snapshots, lifecycle events, jobs, and Merge-restore state so corrupt or unsupported nested data cannot silently become empty state.
+* Reject syntactically valid JSON scalars during restore preflight for columns that require structured arrays, preventing corrupt state from reaching staging/promotion.
+* Strengthen artifact output inspection, exact Unicode font-coverage enforcement, central QR parity, and the single Artifact Render Coordinator execution boundary.
+* Add deterministic development-only SVG/PNG/PDF golden references for English, Urdu RTL, mixed script, long-name shrink, arbitrary 17.5-degree rotation, and QR; the raster QR reference independently decodes to the exact verification URL.
+* Add a real WordPress/MySQL premium integration gate covering InnoDB/index requirements, rollback behavior, global certificate-number ownership, immutable-snapshot side-effect safety, idempotency cleanup, and a two-process `SELECT ... FOR UPDATE` row-lock proof.
+* Expand the verified checkpoint to 45/45 standalone regression suites, 69/69 focused rendering assertions, 187/187 PHP syntax checks, 3/3 JavaScript syntax checks, and 6/6 deterministic rendering-reference fixture families.
+* Keep all next-domain authority/admin/data-tool flags disabled; this release still does not expose public PDF/PNG/JPG generation or switch verification authority.
+
 = 1.5.6 =
-* Harden the renderer contract before selecting a PDF/image engine: z-order is now unique and deterministic, arbitrary rotation is normalized and its rotated bounding box must remain on-page, and canonical JSON rejects unsupported runtime values/non-finite floats.
-* Add independent local-asset inspection that verifies actual PNG/JPEG bytes, MIME, SHA-256, size, dimensions and bounded pixel counts instead of trusting resolver metadata.
-* Centralize QR encoding before renderer dispatch so PDF/PNG/JPEG receive the exact same validated module matrix, error-correction choice and quiet-zone policy.
-* Add a content-addressed font manifest requiring the exact declared family/weight/style font bytes; renderers may not silently synthesize or substitute a historical certificate font.
-* Add the Artifact Render Coordinator as the single production rendering choke point for capability checks, exact font binding, output-size limits, controlled failures and integrity receipts.
-* Upgrade artifact receipts to a v2 schema with a canonical receipt-integrity hash so request/layout/renderer metadata tampering is detectable in addition to output-byte tampering.
-* Strengthen verification-URL validation by rejecting embedded credentials and URL fragments before QR/render preparation.
-* Expand focused rendering-contract coverage from 36 to 61 assertions while preserving 43/43 standalone regression suites and 180/180 PHP lint checks.
-* Keep the real WordPress/MySQL authority-cutover gate and real PDF/image output benchmark deliberately open; this release does not expose artifact generation publicly.
+* Make z-order unique and deterministic, normalize equivalent rotations, and reject rotated elements whose actual bounding boxes leave the page.
+* Independently inspect local PNG/JPEG bytes, MIME, SHA-256, dimensions and pixel limits instead of trusting resolver metadata.
+* Centralize QR encoding into one validated QR Model 2 module matrix shared by every future output adapter.
+* Bind text rendering to exact content-addressed TTF/OTF family/weight/style variants and reject silent font substitution.
+* Add Artifact Render Coordinator as the single rendering execution boundary with fail-soft capability checks and bounded outputs.
+* Upgrade artifact receipts to schema v2 with canonical metadata-integrity hashing, documented correctly as consistency/tamper evidence rather than an authenticity signature.
+* Reject malformed integer/boolean canonical values and verification URLs containing credentials or fragments.
+* Verify 43/43 standalone suites, 61/61 focused rendering assertions and 180/180 PHP syntax checks while keeping authority cutover and real artifact output gated.
 
 = 1.5.5 =
 * Add the renderer-independent canonical certificate layout schema with strict A4/Letter physical geometry, stable UUIDv4 element IDs, bounded positioning/rotation/opacity, typed elements, local-only asset references, and fail-closed unknown-property handling.
@@ -208,8 +217,8 @@ For the complete release history, see `changelog.txt` included with the plugin.
 
 == Upgrade Notice ==
 
-= 1.5.6 =
-Premium renderer-contract hardening: centralizes QR/font/asset truth, enforces deterministic z/rotation behavior, adds one render coordinator and receipt-integrity hashes, while keeping the live legacy registry/verifier authoritative and artifact output unexposed until real engine proof passes.
+= 1.5.7 =
+Premium integrity checkpoint: hardens immutable Version side-effect safety, structured JSON/restore validation, deterministic rendering references, exact font/output checks, and the real WordPress/MySQL proof harness while keeping the live legacy registry/verifier authoritative until external gates pass.
 
 = 1.5.4 =
 In-place development checkpoint adding premium-grade new-domain jobs/import/backup/restore infrastructure while keeping the proven legacy registry and public verifier authoritative until the real WordPress/MySQL cutover gate passes.

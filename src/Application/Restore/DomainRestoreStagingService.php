@@ -233,7 +233,10 @@ final class DomainRestoreStagingService implements DomainRestoreStagingInterface
 	/** @return \WP_Error */
 	private function abort( array $state, \WP_Error $error ) {
 		if ( ! empty( $state['workspace'] ) && is_array( $state['workspace'] ) ) {
-			$this->workspace->abandon( $state['workspace'] );
+			$abandoned = $this->workspace->abandon( $state['workspace'] );
+			if ( is_wp_error( $abandoned ) ) {
+				return $abandoned;
+			}
 		}
 		return $error;
 	}

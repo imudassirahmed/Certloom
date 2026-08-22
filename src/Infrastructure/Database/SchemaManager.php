@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * exercised without changing public verification truth for an existing site.
  */
 final class SchemaManager {
-	const SCHEMA_VERSION         = '11';
+	const SCHEMA_VERSION         = '12';
 	const SCHEMA_OPTION          = 'certloom_domain_schema_version';
 	const HEALTH_OPTION          = 'certloom_domain_schema_health';
 	const LOCK_OPTION            = 'certloom_domain_schema_lock';
@@ -223,7 +223,7 @@ final class SchemaManager {
 			UNIQUE KEY wp_user_id (wp_user_id),
 			KEY email (email(191)),
 			KEY external_id (external_id)
-		) $charset_collate;";
+		) ENGINE=InnoDB $charset_collate;";
 
 		$issuers = self::table( 'issuers' );
 		$tables[] = "CREATE TABLE $issuers (
@@ -238,7 +238,7 @@ final class SchemaManager {
 			PRIMARY KEY  (id),
 			UNIQUE KEY slug (slug),
 			KEY name (name(191))
-		) $charset_collate;";
+		) ENGINE=InnoDB $charset_collate;";
 
 		$programs = self::table( 'programs' );
 		$tables[] = "CREATE TABLE $programs (
@@ -257,7 +257,7 @@ final class SchemaManager {
 			KEY issuer_id (issuer_id),
 			KEY active (active),
 			KEY title (title(191))
-		) $charset_collate;";
+		) ENGINE=InnoDB $charset_collate;";
 
 		$series = self::table( 'credential_series' );
 		$tables[] = "CREATE TABLE $series (
@@ -282,7 +282,7 @@ final class SchemaManager {
 			KEY administrative_state (administrative_state),
 			KEY compliance_state (compliance_state),
 			KEY visibility (visibility)
-		) $charset_collate;";
+		) ENGINE=InnoDB $charset_collate;";
 
 		$versions = self::table( 'credential_versions' );
 		$tables[] = "CREATE TABLE $versions (
@@ -312,7 +312,7 @@ final class SchemaManager {
 			KEY legacy_expired (legacy_expired),
 			KEY expires_at (expires_at),
 			KEY issued_at (issued_at)
-		) $charset_collate;";
+		) ENGINE=InnoDB $charset_collate;";
 
 		$numbers = self::table( 'credential_numbers' );
 		$tables[] = "CREATE TABLE $numbers (
@@ -327,7 +327,7 @@ final class SchemaManager {
 			KEY series_id (series_id),
 			KEY first_version_id (first_version_id),
 			KEY retired_at (retired_at)
-		) $charset_collate;";
+		) ENGINE=InnoDB $charset_collate;";
 
 		$events = self::table( 'credential_events' );
 		$tables[] = "CREATE TABLE $events (
@@ -348,7 +348,7 @@ final class SchemaManager {
 			KEY version_id (version_id),
 			KEY event_type (event_type),
 			KEY actor_user_id (actor_user_id)
-		) $charset_collate;";
+		) ENGINE=InnoDB $charset_collate;";
 
 
 		$jobs = self::table( 'jobs' );
@@ -381,7 +381,7 @@ final class SchemaManager {
 			KEY type_status (job_type,status),
 			KEY parent_job_key (parent_job_key),
 			KEY locked_until (locked_until)
-		) $charset_collate;";
+		) ENGINE=InnoDB $charset_collate;";
 
 		$import_rows = self::table( 'import_rows' );
 		$tables[] = "CREATE TABLE $import_rows (
@@ -404,7 +404,7 @@ final class SchemaManager {
 			KEY job_outcome (job_key,outcome),
 			KEY job_commit (job_key,commit_outcome),
 			KEY existing_series_id (existing_series_id)
-		) $charset_collate;";
+		) ENGINE=InnoDB $charset_collate;";
 
 		$restore_map = self::table( 'restore_map' );
 		$tables[] = "CREATE TABLE $restore_map (
@@ -421,7 +421,7 @@ final class SchemaManager {
 			UNIQUE KEY owner_entity_source (owner_token,entity,source_id),
 			KEY owner_entity_action (owner_token,entity,action),
 			KEY owner_target (owner_token,entity,target_id)
-		) $charset_collate;";
+		) ENGINE=InnoDB $charset_collate;";
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		foreach ( $tables as $sql ) {
 			$wpdb->last_error = '';
@@ -445,6 +445,14 @@ final class SchemaManager {
 		global $wpdb;
 		foreach ( self::contracts() as $logical_name => $contract ) {
 			$table = self::table( $logical_name );
+
+			/* Transactions, row locks, and atomic lifecycle commands require InnoDB. */
+			$wpdb->last_error = '';
+			$status = $wpdb->get_row( $wpdb->prepare( 'SHOW TABLE STATUS LIKE %s', $wpdb->esc_like( $table ) ), ARRAY_A );
+			if ( '' !== (string) $wpdb->last_error || ! is_array( $status ) || 'innodb' !== strtolower( (string) ( $status['Engine'] ?? '' ) ) ) {
+				return new \WP_Error( 'certloom_domain_engine_unsupported', __( 'Certloom requires InnoDB for its credential-domain transaction and row-lock guarantees.', 'certloom' ) );
+			}
+
 			$wpdb->last_error = '';
 			$columns = $wpdb->get_results( $wpdb->prepare( 'SHOW FULL COLUMNS FROM %i', $table ), ARRAY_A );
 			if ( '' !== (string) $wpdb->last_error || ! is_array( $columns ) || empty( $columns ) ) {

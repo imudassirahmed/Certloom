@@ -2,6 +2,7 @@
 namespace Certloom\Infrastructure\Repository;
 
 use Certloom\Infrastructure\Data\DomainGeneration;
+use Certloom\Application\Data\SafeJson;
 use Certloom\Application\Contract\CredentialQueryRepositoryInterface;
 use Certloom\Application\Contract\CredentialRepositoryInterface;
 use Certloom\Domain\Credential\PublicCredentialId;
@@ -138,18 +139,21 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		}
 		$idempotency_key = null === $idempotency_key ? null : strtolower( $idempotency_key );
 
+		/*
+		 * Encode every immutable payload before mutating generation state or reserving
+		 * the globally unique human certificate number. A serialization failure is
+		 * therefore side-effect free and cannot strand an unused number reservation.
+		 */
+		$snapshot_json = null;
+		if ( array_key_exists( 'snapshot', $data ) ) {
+			$snapshot_json = ( new SafeJson() )->encode_array( $data['snapshot'], 'certloom_version_snapshot_invalid', __( 'Certloom could not encode the credential snapshot.', 'certloom' ) );
+			if ( is_wp_error( $snapshot_json ) ) { return $snapshot_json; }
+		}
+
 		$generation = ( new DomainGeneration() )->mark_before_mutation();
 		if ( is_wp_error( $generation ) ) { return $generation; }
 		$reservation = $this->reserve_display_number( $series_id, $display_number );
 		if ( is_wp_error( $reservation ) ) { return $reservation; }
-
-		$snapshot_json = null;
-		if ( isset( $data['snapshot'] ) ) {
-			$snapshot_json = wp_json_encode( $data['snapshot'] );
-			if ( false === $snapshot_json ) {
-				return new \WP_Error( 'certloom_version_snapshot_invalid', __( 'Certloom could not encode the credential snapshot.', 'certloom' ) );
-			}
-		}
 
 		$now = current_time( 'mysql', true );
 		$row = array(
@@ -173,14 +177,22 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		$wpdb->last_error = '';
 		$inserted = $wpdb->insert( SchemaManager::table( 'credential_versions' ), $row );
 		if ( false === $inserted || '' !== (string) $wpdb->last_error ) {
-			$this->release_new_number_reservation( $reservation );
+			$cleanup = $this->release_new_number_reservation( $reservation );
+			if ( is_wp_error( $cleanup ) ) {
+				return new \WP_Error( 'certloom_version_create_cleanup_failed', __( 'Certloom could not create the credential version and could not safely release its new certificate-number reservation. The number remains reserved to prevent duplicate ownership.', 'certloom' ) );
+			}
 			return new \WP_Error( 'certloom_version_create_failed', __( 'Certloom could not create the credential version.', 'certloom' ) );
 		}
 		$version_id = (int) $wpdb->insert_id;
 		$linked = $this->link_number_first_version( $reservation, $version_id );
 		if ( is_wp_error( $linked ) ) {
-			$wpdb->delete( SchemaManager::table( 'credential_versions' ), array( 'id' => $version_id ) );
-			$this->release_new_number_reservation( $reservation );
+			$wpdb->last_error = '';
+			$deleted = $wpdb->delete( SchemaManager::table( 'credential_versions' ), array( 'id' => $version_id ) );
+			if ( 1 !== (int) $deleted || '' !== (string) $wpdb->last_error ) {
+				return new \WP_Error( 'certloom_version_link_rollback_failed', __( 'Certloom could not finish linking the certificate number and could not safely remove the partially created Version. Its number remains reserved to prevent duplicate ownership.', 'certloom' ) );
+			}
+			$cleanup = $this->release_new_number_reservation( $reservation );
+			if ( is_wp_error( $cleanup ) ) { return $cleanup; }
 			return $linked;
 		}
 		return $version_id;
@@ -529,17 +541,21 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 			: true;
 	}
 
-	/** @return void */
+	/** @return true|\WP_Error */
 	private function release_new_number_reservation( array $reservation ) {
-		if ( empty( $reservation['new'] ) || empty( $reservation['id'] ) ) { return; }
+		if ( empty( $reservation['new'] ) || empty( $reservation['id'] ) ) { return true; }
 		global $wpdb;
-		$wpdb->query(
+		$wpdb->last_error = '';
+		$deleted = $wpdb->query(
 			$wpdb->prepare(
 				'DELETE FROM %i WHERE id = %d AND first_version_id IS NULL',
 				SchemaManager::table( 'credential_numbers' ),
 				absint( $reservation['id'] )
 			)
 		);
+		return 1 === (int) $deleted && '' === (string) $wpdb->last_error
+			? true
+			: new \WP_Error( 'certloom_display_number_release_failed', __( 'Certloom could not safely release a failed certificate-number reservation. The number remains reserved to prevent duplicate ownership.', 'certloom' ) );
 	}
 
 	/** @return int|\WP_Error */
@@ -561,18 +577,15 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		return $row;
 	}
 
-	/** @return array<string,mixed> */
+	/** @return array<string,mixed>|\WP_Error */
 	private static function decode_version( array $row ) {
 		$row['id'] = absint( $row['id'] ?? 0 );
 		$row['series_id'] = absint( $row['series_id'] ?? 0 );
 		$row['version_number'] = absint( $row['version_number'] ?? 0 );
 		$row['legacy_expired'] = ! empty( $row['legacy_expired'] );
-		$row['snapshot'] = ! empty( $row['snapshot_json'] ) ? json_decode( (string) $row['snapshot_json'], true ) : array();
-		if ( ! is_array( $row['snapshot'] ) ) {
-			$row['snapshot'] = array();
-		}
+		$row['snapshot'] = ( new SafeJson() )->decode_array( $row['snapshot_json'] ?? null, 'certloom_version_snapshot_corrupt', __( 'Stored credential snapshot is invalid JSON.', 'certloom' ) );
 		unset( $row['snapshot_json'] );
-		return $row;
+		return is_wp_error( $row['snapshot'] ) ? $row['snapshot'] : $row;
 	}
 
 	/** @return string */

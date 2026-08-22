@@ -2,7 +2,9 @@
 namespace Certloom\Infrastructure\Restore;
 
 use Certloom\Application\Restore\DomainRestoreConfigurationMerger;
+use Certloom\Application\Contract\TransactionInterface;
 use Certloom\Infrastructure\Backup\DomainBackupRepository;
+use Certloom\Infrastructure\Database\Transaction;
 
 /**
  * Conservative, resumable Merge restore into a second private target graph.
@@ -21,17 +23,21 @@ final class DomainRestoreMergeService {
 	private $backup;
 	/** @var DomainRestoreConfigurationMerger */
 	private $configuration_merger;
+	/** @var TransactionInterface */
+	private $transaction;
 
 	public function __construct(
 		DomainRestoreWorkspace $workspace = null,
 		DomainRestoreMapRepository $maps = null,
 		DomainBackupRepository $backup = null,
-		DomainRestoreConfigurationMerger $configuration_merger = null
+		DomainRestoreConfigurationMerger $configuration_merger = null,
+		TransactionInterface $transaction = null
 	) {
 		$this->workspace            = $workspace ?: new DomainRestoreWorkspace();
 		$this->maps                 = $maps ?: new DomainRestoreMapRepository();
 		$this->backup               = $backup ?: new DomainBackupRepository();
 		$this->configuration_merger = $configuration_merger ?: new DomainRestoreConfigurationMerger();
+		$this->transaction          = $transaction ?: new Transaction();
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
@@ -41,7 +47,8 @@ final class DomainRestoreMergeService {
 		}
 		$created = $this->workspace->create_merge_target( $restore_state['workspace'] );
 		if ( is_wp_error( $created ) ) {
-			return $created;
+			$abandoned = $this->workspace->abandon( $restore_state['workspace'] );
+			return is_wp_error( $abandoned ) ? $abandoned : $created;
 		}
 		return array(
 			'workspace'            => $restore_state['workspace'],
@@ -215,19 +222,14 @@ final class DomainRestoreMergeService {
 				: new \WP_Error( 'certloom_domain_restore_merge_source_changed', __( 'A Merge restore source record changed after it was already mapped.', 'certloom' ) );
 		}
 
-		$wpdb->query( 'START TRANSACTION' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Per-record private staging transaction keeps insert + durable mapping atomic.
-		try {
-			$mapped = $this->merge_row_in_transaction( $workspace, $entity, $row, $hash );
-			if ( is_wp_error( $mapped ) ) {
-				$wpdb->query( 'ROLLBACK' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-				return $mapped;
-			}
-			$wpdb->query( 'COMMIT' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-			return $mapped;
-		} catch ( \Throwable $error ) {
-			$wpdb->query( 'ROLLBACK' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-			return new \WP_Error( 'certloom_domain_restore_merge_failed', __( 'Certloom could not safely merge a validated backup record.', 'certloom' ) );
-		}
+		/*
+		 * A mapped row and its durable source-ID map entry must commit together. Use
+		 * Certloom's checked transaction boundary rather than issuing unchecked SQL
+		 * transaction-control statements locally.
+		 */
+		return $this->transaction->run( function () use ( $workspace, $entity, $row, $hash ) {
+			return $this->merge_row_in_transaction( $workspace, $entity, $row, $hash );
+		} );
 	}
 
 	/** @return array<string,mixed>|\WP_Error */

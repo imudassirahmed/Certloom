@@ -125,7 +125,7 @@ final class DomainMaintenanceLock {
 			);
 	}
 
-	/** @return bool|\WP_Error */
+	/** @return true|\WP_Error */
 	public function release( $owner_token ) {
 		global $wpdb;
 
@@ -157,7 +157,12 @@ final class DomainMaintenanceLock {
 		);
 		$this->clear_option_cache();
 
-		return 1 === (int) $deleted || '' === (string) get_option( self::OPTION, '' );
+		return 1 === (int) $deleted || '' === (string) get_option( self::OPTION, '' )
+			? true
+			: new \WP_Error(
+				'certloom_domain_maintenance_release_failed',
+				__( 'Certloom could not release its maintenance lock safely. Credential writes remain paused until the lock expires or a maintenance worker repairs it.', 'certloom' )
+			);
 	}
 
 	/** Returns whether this exact owner still holds a non-expired maintenance lease. */
@@ -168,7 +173,13 @@ final class DomainMaintenanceLock {
 		return $lock && $lock['expires_at'] > time() && hash_equals( $lock['owner'], $owner_token );
 	}
 
-	/** @return bool */
+	/**
+	 * Returns true for an unexpired valid lock and also for a non-empty corrupt
+	 * payload. Normal writes must fail closed on lock corruption; a subsequent
+	 * maintenance acquire may still replace the corrupt value atomically by CAS.
+	 *
+	 * @return bool
+	 */
 	public function active() {
 		$stored = (string) get_option( self::OPTION, '' );
 		if ( '' === $stored ) {
@@ -176,7 +187,7 @@ final class DomainMaintenanceLock {
 		}
 
 		$lock = $this->parse_payload( $stored );
-		return $lock && $lock['expires_at'] > time();
+		return ! $lock || $lock['expires_at'] > time();
 	}
 
 	/** Runs only the maintenance worker's own protected option/data writes under the lock. */

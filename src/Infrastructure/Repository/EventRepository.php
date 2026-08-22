@@ -2,6 +2,7 @@
 namespace Certloom\Infrastructure\Repository;
 
 use Certloom\Infrastructure\Data\DomainGeneration;
+use Certloom\Application\Data\SafeJson;
 use Certloom\Application\Contract\EventRepositoryInterface;
 use Certloom\Infrastructure\Database\SchemaManager;
 
@@ -24,17 +25,22 @@ final class EventRepository implements EventRepositoryInterface {
 		if ( ! $series_id || '' === $event_type ) {
 			return new \WP_Error( 'certloom_event_required_fields', __( 'A credential and event type are required.', 'certloom' ) );
 		}
+		$json = new SafeJson();
+		$old_state_json = isset( $event['old_state'] ) ? $json->encode_array( $event['old_state'], 'certloom_event_old_state_invalid', __( 'Credential event old state could not be encoded safely.', 'certloom' ) ) : null;
+		$new_state_json = isset( $event['new_state'] ) ? $json->encode_array( $event['new_state'], 'certloom_event_new_state_invalid', __( 'Credential event new state could not be encoded safely.', 'certloom' ) ) : null;
+		$meta_json = isset( $event['meta'] ) ? $json->encode_array( $event['meta'], 'certloom_event_meta_invalid', __( 'Credential event metadata could not be encoded safely.', 'certloom' ) ) : null;
+		foreach ( array( $old_state_json, $new_state_json, $meta_json ) as $encoded ) { if ( is_wp_error( $encoded ) ) { return $encoded; } }
 		$row = array(
 			'series_id' => $series_id,
 			'version_id' => ! empty( $event['version_id'] ) ? absint( $event['version_id'] ) : null,
 			'event_type' => $event_type,
 			'actor_user_id' => ! empty( $event['actor_user_id'] ) ? absint( $event['actor_user_id'] ) : null,
-			'old_state_json' => isset( $event['old_state'] ) ? wp_json_encode( $event['old_state'] ) : null,
-			'new_state_json' => isset( $event['new_state'] ) ? wp_json_encode( $event['new_state'] ) : null,
+			'old_state_json' => $old_state_json,
+			'new_state_json' => $new_state_json,
 			'reason_code' => self::nullable_string( $event['reason_code'] ?? null ),
 			'public_reason' => self::nullable_string( $event['public_reason'] ?? null ),
 			'internal_note' => self::nullable_string( $event['internal_note'] ?? null ),
-			'meta_json' => isset( $event['meta'] ) ? wp_json_encode( $event['meta'] ) : null,
+			'meta_json' => $meta_json,
 			'created_at' => current_time( 'mysql', true ),
 		);
 		$generation = ( new DomainGeneration() )->mark_before_mutation();
@@ -79,8 +85,9 @@ final class EventRepository implements EventRepositoryInterface {
 				$row[ $key ] = ! empty( $row[ $key ] ) ? absint( $row[ $key ] ) : null;
 			}
 			foreach ( array( 'old_state_json' => 'old_state', 'new_state_json' => 'new_state', 'meta_json' => 'meta' ) as $json_key => $target ) {
-				$decoded = ! empty( $row[ $json_key ] ) ? json_decode( (string) $row[ $json_key ], true ) : array();
-				$row[ $target ] = is_array( $decoded ) ? $decoded : array();
+				$decoded = ( new SafeJson() )->decode_array( $row[ $json_key ] ?? null, 'certloom_event_json_corrupt', __( 'Stored credential event data is invalid JSON.', 'certloom' ) );
+				if ( is_wp_error( $decoded ) ) { return $decoded; }
+				$row[ $target ] = $decoded;
 				unset( $row[ $json_key ] );
 			}
 		}
