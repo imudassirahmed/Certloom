@@ -1,3 +1,30 @@
+1.5.10 — Live restore cleanup completion + privacy-safe System Status; no authority cutover
+----------------------------------------------------------------------------------------------
+- Keep the proven 1.5 registry and public verifier authoritative; every next-domain feature
+  and authority cutover flag remains false by default.
+- Complete the live complete-restore cleanup audit: early preview/state/staging failures now
+  report maintenance-release uncertainty instead of hiding it behind the original safe-stop
+  error; abandoned uncommitted restores preserve cleanup state until staging and maintenance
+  cleanup are actually confirmed.
+- Keep prepared/swapped recovery journals until rollback cleanup, restore-workspace tracking,
+  owner-matched maintenance release, and journal deletion are all confirmed. Interrupted
+  rollback recovery now also checks removal of its staging table instead of discarding that
+  cleanup result.
+- Make expired restore-workspace cleanup preserve its tracking record when owner-matched
+  maintenance release fails, so the cleanup can be retried instead of silently orphaning a
+  write lock.
+- Add a read-only System Status section under Access & Settings. It reports non-sensitive
+  Certloom/WordPress/PHP/database/runtime readiness, live registry availability, authority and
+  feature-gate state, maintenance state, renderer-extension readiness, Cron, permalinks, HTTPS,
+  multisite and memory limit. The copyable support report excludes certificate values, site
+  URLs, filesystem paths, database names, users, and installed-plugin inventories.
+- Ensure viewing System Status is genuinely read-only: it inspects raw maintenance state and
+  never deletes, repairs, provisions, migrates, or takes over an expired/corrupt lock.
+- Add regression coverage for uncommitted restore-abandon cleanup, expired workspace cleanup,
+  recovery workspace tracking, and the privacy/read-only System Status contract.
+- Real WordPress/MySQL authority proof and the production PHP PDF/image renderer remain
+  deliberate external acceptance gates; this release does not pretend either has passed.
+
 1.5.9 — Cutover, private-storage and live-authority cleanup hardening; no authority cutover
 -----------------------------------------------------------------------------------------
 - Keep the proven 1.5 registry and public verifier authoritative; all next-domain cutover

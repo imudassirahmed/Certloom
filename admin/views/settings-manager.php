@@ -55,10 +55,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<p class="description"><?php esc_html_e( 'Fields marked “Show on public result” are returned through a public exact-match REST endpoint. Avoid publishing sensitive personal data. Certificate numbers entered in a browser may also appear in server logs, browser history, analytics, and cache layers.', 'certloom' ); ?></p>
 
 	<hr />
+	<h2><?php esc_html_e( 'System status', 'certloom' ); ?></h2>
+	<p class="description"><?php esc_html_e( 'Read-only local diagnostics for Certloom. Nothing in this report is sent to Ecapla, and it intentionally excludes certificate data, site URLs, filesystem paths, database names, user data, and plugin inventories.', 'certloom' ); ?></p>
+	<?php $certloom_system_checks = Ecapla_CertVerify_System_Status::get_checks(); ?>
+	<table class="widefat striped" role="table">
+		<thead><tr><th scope="col"><?php esc_html_e( 'Check', 'certloom' ); ?></th><th scope="col"><?php esc_html_e( 'Status', 'certloom' ); ?></th><th scope="col"><?php esc_html_e( 'Value', 'certloom' ); ?></th><th scope="col"><?php esc_html_e( 'Notes', 'certloom' ); ?></th></tr></thead>
+		<tbody>
+		<?php foreach ( $certloom_system_checks as $certloom_check ) : ?>
+			<tr>
+				<th scope="row"><?php echo esc_html( $certloom_check['label'] ); ?></th>
+				<td><strong><?php echo esc_html( 'good' === $certloom_check['status'] ? __( 'Ready', 'certloom' ) : ( 'bad' === $certloom_check['status'] ? __( 'Action needed', 'certloom' ) : __( 'Review', 'certloom' ) ) ); ?></strong></td>
+				<td><?php echo esc_html( $certloom_check['value'] ); ?></td>
+				<td><?php echo esc_html( $certloom_check['note'] ); ?></td>
+			</tr>
+		<?php endforeach; ?>
+		</tbody>
+	</table>
+	<p><label for="certloom_system_report"><strong><?php esc_html_e( 'Copyable support report', 'certloom' ); ?></strong></label></p>
+	<textarea id="certloom_system_report" class="large-text code" rows="12" readonly><?php echo esc_textarea( Ecapla_CertVerify_System_Status::get_text_report() ); ?></textarea>
+
+	<hr />
 	<h2><?php esc_html_e( 'Ecapla support', 'certloom' ); ?></h2>
 	<p class="ecapla-certverify-support-actions">
 		<a class="button button-secondary" href="https://ecapla.com" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Visit ecapla.com', 'certloom' ); ?></a>
 		<a class="button button-primary" href="mailto:support@ecapla.com?subject=Certloom%20%E2%80%93%20Report%20an%20Issue"><?php esc_html_e( 'Report an issue', 'certloom' ); ?></a>
 	</p>
-	<p class="description"><?php esc_html_e( 'The issue-report link currently opens Ecapla’s website. It can be pointed to a dedicated support page after that page is published.', 'certloom' ); ?></p>
+	<p class="description"><?php esc_html_e( 'Report an issue opens your email application with a Certloom support subject. The website button opens ecapla.com in a new tab.', 'certloom' ); ?></p>
 </div>

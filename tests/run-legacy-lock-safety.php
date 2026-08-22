@@ -7,6 +7,7 @@ define( 'DAY_IN_SECONDS', 86400 );
 define( 'MB_IN_BYTES', 1024 * 1024 );
 $GLOBALS['legacy_lock_options'] = array();
 $GLOBALS['legacy_lock_delete_fail'] = false;
+$GLOBALS['legacy_lock_transients'] = array();
 
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {
@@ -28,6 +29,8 @@ function get_option( $k, $d = false ) { return array_key_exists( $k, $GLOBALS['l
 function add_option( $k, $v, $deprecated = '', $autoload = false ) { if ( array_key_exists( $k, $GLOBALS['legacy_lock_options'] ) ) return false; $GLOBALS['legacy_lock_options'][ $k ] = $v; return true; }
 function update_option( $k, $v, $autoload = null ) { $GLOBALS['legacy_lock_options'][ $k ] = $v; return true; }
 function delete_option( $k ) { if ( array_key_exists( $k, $GLOBALS['legacy_lock_options'] ) ) { unset( $GLOBALS['legacy_lock_options'][ $k ] ); return true; } return false; }
+function set_transient( $k, $v, $ttl = 0 ) { $GLOBALS['legacy_lock_transients'][ $k ] = $v; return true; }
+function get_transient( $k ) { return $GLOBALS['legacy_lock_transients'][ $k ] ?? false; }
 function wp_cache_delete() { return true; }
 function wp_generate_password( $len = 12 ) { return str_repeat( 'g', $len ); }
 function maybe_serialize( $v ) { return serialize( $v ); }
@@ -124,6 +127,9 @@ $GLOBALS['legacy_lock_options'][ Ecapla_CertVerify_Backup::JOURNAL_OPTION ] = ar
 $GLOBALS['legacy_lock_options'][ Ecapla_CertVerify_Backup::MAINTENANCE_LOCK_OPTION ] = array(
 	'token_hash' => $lock_hash, 'expires_at' => time() + 600,
 );
+$GLOBALS['legacy_lock_options']['certverify_restore_builds'] = array(
+	substr( $lock_hash, 0, 32 ) => array( 'table' => '', 'token_hash' => $lock_hash, 'updated_at' => time() ),
+);
 $GLOBALS['legacy_lock_delete_fail'] = true;
 $first = Ecapla_CertVerify_Backup::recover_interrupted_restore();
 ll_same( 'ecapla_certverify_restore_cleanup_failed', $first->get_error_code(), 'committed cleanup failure explicit' );
@@ -132,6 +138,47 @@ $second = Ecapla_CertVerify_Backup::recover_interrupted_restore();
 ll_same( true, $second, 'committed cleanup replay succeeds' );
 ll_same( false, isset( $GLOBALS['legacy_lock_options'][ Ecapla_CertVerify_Backup::JOURNAL_OPTION ] ), 'journal removed only after cleanup' );
 ll_same( false, isset( $GLOBALS['legacy_lock_options'][ Ecapla_CertVerify_Backup::MAINTENANCE_LOCK_OPTION ] ), 'maintenance lock released on replay' );
+ll_same( false, isset( $GLOBALS['legacy_lock_options']['certverify_restore_builds'] ), 'workspace tracking removed with committed recovery' );
 echo "PASS  committed live restore cleanup remains durably replayable\n";
 
-echo "\n5 tests, 0 failures\n";
+// Abandoning an uncommitted restore must surface maintenance-release failure
+// instead of returning only the original validation/storage error.
+$abandon = new ReflectionMethod( Ecapla_CertVerify_Backup::class, 'abandon_restore_process' );
+$abandon->setAccessible( true );
+$abandon_token = 'abandon-session';
+$abandon_hash = substr( hash( 'sha256', $abandon_token ), 0, 40 );
+$GLOBALS['legacy_lock_options'][ Ecapla_CertVerify_Backup::MAINTENANCE_LOCK_OPTION ] = array(
+    'token_hash' => $abandon_hash, 'expires_at' => time() + 600,
+);
+$abandon_manifest = array( 'restore_process' => array( 'staging' => '' ) );
+$GLOBALS['legacy_lock_delete_fail'] = true;
+$abandon_first = $abandon->invoke( null, $abandon_token, $abandon_manifest );
+ll_same( 'ecapla_certverify_restore_cleanup_failed', $abandon_first->get_error_code(), 'abandon cleanup failure explicit' );
+ll_same( true, isset( $GLOBALS['legacy_lock_options'][ Ecapla_CertVerify_Backup::MAINTENANCE_LOCK_OPTION ] ), 'abandon keeps lock for retry' );
+$abandon_second = $abandon->invoke( null, $abandon_token, $abandon_manifest );
+ll_same( true, $abandon_second, 'abandon cleanup replay succeeds' );
+ll_same( false, isset( $GLOBALS['legacy_lock_options'][ Ecapla_CertVerify_Backup::MAINTENANCE_LOCK_OPTION ] ), 'abandon lock released on retry' );
+echo "PASS  uncommitted restore abandon cannot hide cleanup uncertainty\n";
+
+// Expired restore-build cleanup must not forget its tracking record when the
+// owner-matched maintenance lock cannot be released yet.
+$cleanup_stale = new ReflectionMethod( Ecapla_CertVerify_Backup::class, 'cleanup_stale_restore_builds' );
+$cleanup_stale->setAccessible( true );
+$stale_hash = str_repeat( 'b', 40 );
+$stale_key = substr( $stale_hash, 0, 32 );
+$GLOBALS['legacy_lock_options']['certverify_restore_builds'] = array(
+    $stale_key => array( 'table' => '', 'token_hash' => $stale_hash, 'updated_at' => time() - 7200 ),
+);
+$GLOBALS['legacy_lock_options'][ Ecapla_CertVerify_Backup::MAINTENANCE_LOCK_OPTION ] = array(
+    'token_hash' => $stale_hash, 'expires_at' => time() + 600,
+);
+$GLOBALS['legacy_lock_delete_fail'] = true;
+$stale_first = $cleanup_stale->invoke( null );
+ll_same( 'ecapla_certverify_restore_cleanup_failed', $stale_first->get_error_code(), 'stale cleanup release failure explicit' );
+ll_same( true, isset( $GLOBALS['legacy_lock_options']['certverify_restore_builds'][ $stale_key ] ), 'stale cleanup tracking preserved' );
+$stale_second = $cleanup_stale->invoke( null );
+ll_same( true, $stale_second, 'stale cleanup replay succeeds' );
+ll_same( false, isset( $GLOBALS['legacy_lock_options']['certverify_restore_builds'] ), 'stale tracking cleared after successful retry' );
+echo "PASS  expired restore workspace cleanup remains retryable\n";
+
+echo "\n7 tests, 0 failures\n";
