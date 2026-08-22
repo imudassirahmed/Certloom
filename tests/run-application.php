@@ -15,13 +15,7 @@ function is_wp_error( $value ) { return $value instanceof WP_Error; }
 function __( $text ) { return $text; }
 function absint( $value ) { return abs( (int) $value ); }
 
-require_once dirname( __DIR__ ) . '/src/Application/Contract/CredentialRepositoryInterface.php';
-require_once dirname( __DIR__ ) . '/src/Application/Contract/EventRepositoryInterface.php';
-require_once dirname( __DIR__ ) . '/src/Application/Contract/TransactionInterface.php';
-require_once dirname( __DIR__ ) . '/src/Domain/Credential/States.php';
-require_once dirname( __DIR__ ) . '/src/Domain/Credential/StateMachine.php';
-require_once dirname( __DIR__ ) . '/src/Application/CredentialLifecycleService.php';
-
+require_once __DIR__ . '/bootstrap-autoload.php';
 use Certloom\Application\Contract\CredentialRepositoryInterface;
 use Certloom\Application\Contract\EventRepositoryInterface;
 use Certloom\Application\Contract\TransactionInterface;

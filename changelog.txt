@@ -1,3 +1,95 @@
+1.5.4 — Premium data-tools/job foundation; no authority cutover
+--------------------------------------------------------------------
+- Continue upgrading the same Certloom plugin in place. The legacy 1.5 registry
+  and public verifier remain authoritative; domain write/data-tool/admin cutover
+  flags remain false by default.
+- Add the shared durable job engine: explicit states, bounded worker slices, one-shot
+  WP-Cron continuation, watchdog recovery, separate stale-worker recovery budget,
+  parent/child retention ordering, manual Retry/Pause/Resume/Cancel operations, and
+  protected failure summaries.
+- Add randomized protected job-file storage, purpose-aware retention, and short-lived
+  cleanup for abandoned CSV mapping sessions.
+- Add resumable CSV mapping/preflight/commit using real fgetcsv parsing with multiline
+  records, 10 MB/100k-row/column/cell bounds, UTF-8/NUL checks, durable cross-request
+  staging, exact omitted-vs-explicit-blank PATCH semantics, and durable row receipts.
+- Add immutable correction imports and move global human certificate-number ownership
+  to Credential Series through a dedicated assignment table; Versions snapshot the
+  rendered number and may preserve it across corrections.
+- Add complete resumable domain backup with keyset batches, domain-generation and
+  configuration consistency checks, chained integrity, crash-tail truncation, private
+  streaming download, and semantic relationship validation.
+- Add staging-first Replace restore and conservative Merge restore foundations with
+  review-before-commit, private merged graphs, conflict-safe ID remapping, atomic
+  multi-table promotion/rollback journal, boot recovery, and durable completion receipts.
+- Add a shared owner/expiry maintenance lock covering both legacy and new-domain writes
+  during restore/cutover while public verification remains readable.
+- Add the hidden Data Tools (New) preview, protected by a dedicated capability/nonces,
+  real-upload validation, private paths, explicit review/commit confirmations, safe
+  job diagnostics, and protected backup downloads.
+- Preserve all six existing Elementor verification widgets (default/Professional,
+  Meridian, Halo, Axis, Nova, Forge) and add an automated registration/shared-renderer
+  regression gate so the new domain cannot remove them.
+- Define the future artifact-action compatibility contract: PDF and PNG/JPG certificate
+  downloads will extend the existing shared verification widgets/renderer rather than
+  creating duplicate image-specific Elementor widgets; new widgets are reserved for
+  distinct Credential Profile, My Credentials, Directory, and Claim semantics.
+- Harden uninstall ownership for jobs/import/restore staging, Merge temporary tables,
+  transients, generation state, and private operational files while preserving permanent
+  credential data by default.
+- Keep the final domain authority switch blocked until a real disposable WordPress +
+  MySQL/MariaDB integration run proves dbDelta schema/indexes, transactions, atomic table
+  rename/promotion, restore recovery, and fresh legacy migration parity.
+
+1.5.3 — Granular permissions and guarded new-domain admin foundation
+--------------------------------------------------------------------
+- Continue upgrading the same Certloom plugin in place; no new plugin/slug.
+- Add granular credential, issuance, recipient, program, template, analytics,
+  issuer, integration, and settings capabilities while automatically preserving access
+  for roles that already held the legacy `manage_certverify` capability.
+- Extend uninstall/reinstall capability cleanup/recovery for the granular roles.
+- Add a hidden-by-default new-domain admin preview for server-paged Recipients,
+  Programs, Issuers, and Credentials. The preview cannot become authoritative by itself.
+- Add Recipient and Program field-level PATCH repositories so omitted/hidden data
+  is preserved instead of being cleared by reduced forms.
+- Add Credential detail/history views and route suspend/revoke/reinstate/void
+  actions through the transaction-backed lifecycle command service.
+- Add a bounded Credential Event history reader for the new admin detail view.
+- Strengthen the final source-of-truth cutover gate: migration completion is not
+  enough. The current legacy row count, max ID, and existing 1.5 data-generation
+  marker must exactly match the completed migration snapshot.
+- Add a separate data-tools readiness gate so authority cannot switch while old
+  import/backup/restore paths can still mutate the legacy registry.
+- Add a dormant legacy-registry write guard: after future domain authority, old
+  certificate CRUD/purge paths fail closed instead of becoming a second source
+  of truth.
+- Keep `CERTLOOM_DOMAIN_WRITE_PATHS_READY`, `CERTLOOM_DOMAIN_DATA_TOOLS_READY`,
+  and `CERTLOOM_DOMAIN_ADMIN_PREVIEW` false by default. No public cutover occurs
+  in 1.5.3.
+- Add pure tests for capability migration, PATCH preservation, source-snapshot
+  cutover safety, data-tool cutover safety, and legacy write guarding.
+
+1.5.2 — Gated migration writer and public-verification bridge
+--------------------------------------------------------------------
+- Continue the existing Certloom plugin in place; no separate plugin or slug.
+- Add public VisibilityPolicy and a minimal public Credential presenter so private
+  Series are indistinguishable from not-found results to guest verification.
+- Add a hard-gated Credential Series REST verification adapter while preserving
+  the legacy 1.5 `/verify` route as the live source of truth.
+- Add operation-scoped rate-limit buckets and fail-closed counter behavior for the
+  new public-ID verification path.
+- Add durable resumable migration state and bounded preflight/commit coordination.
+- Snapshot the existing 1.5 data-generation marker and block migration if legacy
+  certificate/configuration data changes between preflight and commit.
+- Add an atomic idempotent legacy migration writer that creates Recipient, Series,
+  immutable Version, current-Version pointer, preserved administrative state, and
+  a `credential.migrated` event in one short transaction.
+- Stop at the first unsafe migration write and require a fresh preflight after a
+  blocked source/write condition.
+- Add a separate domain write-authority marker so public Series verification cannot
+  become authoritative until the new registry/admin write paths are ready. The
+  actual authority switch is deliberately deferred to the 1.5.3 admin milestone.
+- Add pure presentation/privacy, migration commit/state, and cutover-gate tests.
+
 1.5.1 — In-place credential-domain foundation
 --------------------------------------------------------------------
 - Continue the existing Certloom plugin from 1.5.0 to 1.5.1 while retaining the proven

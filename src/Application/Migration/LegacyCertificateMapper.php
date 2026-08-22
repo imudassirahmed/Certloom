@@ -64,6 +64,7 @@ final class LegacyCertificateMapper {
 			),
 			'series' => array(
 				'administrative_state' => $administrative_state,
+				'compliance_state'     => States::COMPLIANCE_NOT_APPLICABLE,
 				'visibility'           => 'verification_summary',
 			),
 			'version' => array(

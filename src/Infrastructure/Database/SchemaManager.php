@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * exercised without changing public verification truth for an existing site.
  */
 final class SchemaManager {
-	const SCHEMA_VERSION         = '2';
+	const SCHEMA_VERSION         = '11';
 	const SCHEMA_OPTION          = 'certloom_domain_schema_version';
 	const HEALTH_OPTION          = 'certloom_domain_schema_health';
 	const LOCK_OPTION            = 'certloom_domain_schema_lock';
@@ -27,7 +27,11 @@ final class SchemaManager {
 		'issuers'             => 'certloom_issuers',
 		'credential_series'   => 'certloom_credential_series',
 		'credential_versions' => 'certloom_credential_versions',
+		'credential_numbers'  => 'certloom_credential_numbers',
 		'credential_events'   => 'certloom_credential_events',
+		'jobs'                => 'certloom_jobs',
+		'import_rows'         => 'certloom_import_rows',
+		'restore_map'         => 'certloom_restore_map',
 	);
 
 	/**
@@ -40,6 +44,22 @@ final class SchemaManager {
 			throw new \InvalidArgumentException( 'Unknown Certloom table: ' . $name );
 		}
 		return $wpdb->prefix . self::$tables[ $name ];
+	}
+
+	/**
+	 * Returns the exact persisted columns for a Certloom-owned table contract.
+	 * Restore/import infrastructure uses this whitelist instead of trusting keys
+	 * from an uploaded backup payload.
+	 *
+	 * @param string $name Logical table name.
+	 * @return string[]
+	 */
+	public static function column_names( $name ) {
+		$contracts = self::contracts();
+		if ( ! isset( $contracts[ $name ]['columns'] ) ) {
+			throw new \InvalidArgumentException( 'Unknown Certloom table contract: ' . $name );
+		}
+		return array_keys( $contracts[ $name ]['columns'] );
 	}
 
 	/**
@@ -122,8 +142,62 @@ final class SchemaManager {
 	 * @param string $installed Installed domain schema version.
 	 * @return true|\WP_Error
 	 */
-	private static function run_migrations( $installed ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+	private static function run_migrations( $installed ) {
+		if ( version_compare( (string) $installed, '4', '<' ) ) {
+			$backfilled = self::backfill_credential_numbers();
+			if ( is_wp_error( $backfilled ) ) { return $backfilled; }
+			$changed = self::migrate_version_display_number_index();
+			if ( is_wp_error( $changed ) ) { return $changed; }
+		}
 		return true;
+	}
+
+	/** Backfills the number-assignment registry before the old Version-unique index is relaxed. @return true|\WP_Error */
+	private static function backfill_credential_numbers() {
+		global $wpdb;
+		$numbers = self::table( 'credential_numbers' );
+		$versions = self::table( 'credential_versions' );
+		$wpdb->last_error = '';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- One-time versioned migration between Certloom-owned tables.
+		$result = $wpdb->query(
+			$wpdb->prepare(
+				'INSERT IGNORE INTO %i (display_number, series_id, first_version_id, created_at, retired_at) SELECT display_number, series_id, id, created_at, NULL FROM %i WHERE display_number <> %s',
+				$numbers,
+				$versions,
+				''
+			)
+		);
+		return false === $result || '' !== (string) $wpdb->last_error
+			? new \WP_Error( 'certloom_domain_number_backfill_failed', __( 'Certloom could not backfill its credential-number assignments.', 'certloom' ) )
+			: true;
+	}
+
+	/**
+	 * Version 4 moves global certificate-number uniqueness out of immutable
+	 * Versions and into credential_numbers so one Series may reuse its human
+	 * number across correction Versions without permitting another Series to
+	 * claim the same number.
+	 *
+	 * @return true|\WP_Error
+	 */
+	private static function migrate_version_display_number_index() {
+		global $wpdb;
+		$table = self::table( 'credential_versions' );
+		$wpdb->last_error = '';
+		$indexes = $wpdb->get_results( $wpdb->prepare( 'SHOW INDEX FROM %i WHERE Key_name = %s', $table, 'display_number' ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error ) {
+			return new \WP_Error( 'certloom_domain_number_index_read_failed', __( 'Certloom could not inspect its credential-number index.', 'certloom' ) );
+		}
+		$needs_change = false;
+		foreach ( (array) $indexes as $index ) {
+			if ( isset( $index['Non_unique'] ) && 0 === (int) $index['Non_unique'] ) { $needs_change = true; break; }
+		}
+		if ( ! $needs_change ) { return true; }
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Explicit versioned Certloom-owned index migration.
+		$changed = $wpdb->query( $wpdb->prepare( 'ALTER TABLE %i DROP INDEX display_number, ADD KEY display_number (display_number)', $table ) );
+		return false === $changed || '' !== (string) $wpdb->last_error
+			? new \WP_Error( 'certloom_domain_number_index_migration_failed', __( 'Certloom could not migrate its credential-number index safely.', 'certloom' ) )
+			: true;
 	}
 
 	/** @return true|\WP_Error */
@@ -194,6 +268,7 @@ final class SchemaManager {
 			issuer_id BIGINT UNSIGNED NULL,
 			current_version_id BIGINT UNSIGNED NULL,
 			administrative_state VARCHAR(20) NOT NULL DEFAULT 'active',
+			compliance_state VARCHAR(20) NOT NULL DEFAULT 'not_applicable',
 			visibility VARCHAR(32) NOT NULL DEFAULT 'verification_summary',
 			created_at DATETIME NOT NULL,
 			updated_at DATETIME NOT NULL,
@@ -205,6 +280,7 @@ final class SchemaManager {
 			KEY issuer_id (issuer_id),
 			KEY current_version_id (current_version_id),
 			KEY administrative_state (administrative_state),
+			KEY compliance_state (compliance_state),
 			KEY visibility (visibility)
 		) $charset_collate;";
 
@@ -213,6 +289,7 @@ final class SchemaManager {
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			series_id BIGINT UNSIGNED NOT NULL,
 			version_number INT UNSIGNED NOT NULL,
+			previous_version_id BIGINT UNSIGNED NULL,
 			display_number VARCHAR(100) NOT NULL,
 			issuance_state VARCHAR(20) NOT NULL DEFAULT 'draft',
 			legacy_expired TINYINT(1) NOT NULL DEFAULT 0,
@@ -228,12 +305,28 @@ final class SchemaManager {
 			updated_at DATETIME NOT NULL,
 			PRIMARY KEY  (id),
 			UNIQUE KEY series_version (series_id,version_number),
-			UNIQUE KEY display_number (display_number),
+			KEY previous_version_id (previous_version_id),
+			KEY display_number (display_number),
 			UNIQUE KEY source_idempotency (source_type,source_idempotency_key),
 			KEY issuance_state (issuance_state),
 			KEY legacy_expired (legacy_expired),
 			KEY expires_at (expires_at),
 			KEY issued_at (issued_at)
+		) $charset_collate;";
+
+		$numbers = self::table( 'credential_numbers' );
+		$tables[] = "CREATE TABLE $numbers (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			display_number VARCHAR(100) NOT NULL,
+			series_id BIGINT UNSIGNED NOT NULL,
+			first_version_id BIGINT UNSIGNED NULL,
+			created_at DATETIME NOT NULL,
+			retired_at DATETIME NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY display_number (display_number),
+			KEY series_id (series_id),
+			KEY first_version_id (first_version_id),
+			KEY retired_at (retired_at)
 		) $charset_collate;";
 
 		$events = self::table( 'credential_events' );
@@ -257,6 +350,78 @@ final class SchemaManager {
 			KEY actor_user_id (actor_user_id)
 		) $charset_collate;";
 
+
+		$jobs = self::table( 'jobs' );
+		$tables[] = "CREATE TABLE $jobs (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			job_key CHAR(32) NOT NULL,
+			job_type VARCHAR(64) NOT NULL,
+			status VARCHAR(32) NOT NULL DEFAULT 'queued',
+			owner_user_id BIGINT UNSIGNED NULL,
+			parent_job_key CHAR(32) NULL,
+			phase VARCHAR(64) NULL,
+			cursor BIGINT UNSIGNED NOT NULL DEFAULT 0,
+			total BIGINT UNSIGNED NULL,
+			selection_max_id BIGINT UNSIGNED NULL,
+			payload_json LONGTEXT NULL,
+			result_json LONGTEXT NULL,
+			error_json LONGTEXT NULL,
+			attempts INT UNSIGNED NOT NULL DEFAULT 0,
+			recovery_count INT UNSIGNED NOT NULL DEFAULT 0,
+			available_at DATETIME NULL,
+			locked_by CHAR(32) NULL,
+			locked_until DATETIME NULL,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			finished_at DATETIME NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY job_key (job_key),
+			KEY status_available (status,available_at),
+			KEY owner_status (owner_user_id,status),
+			KEY type_status (job_type,status),
+			KEY parent_job_key (parent_job_key),
+			KEY locked_until (locked_until)
+		) $charset_collate;";
+
+		$import_rows = self::table( 'import_rows' );
+		$tables[] = "CREATE TABLE $import_rows (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			job_key CHAR(32) NOT NULL,
+			row_number BIGINT UNSIGNED NOT NULL,
+			display_number VARCHAR(100) NOT NULL,
+			plan_hash CHAR(64) NOT NULL,
+			plan_json LONGTEXT NOT NULL,
+			existing_series_id BIGINT UNSIGNED NULL,
+			outcome VARCHAR(20) NOT NULL DEFAULT 'ready',
+			commit_outcome VARCHAR(20) NULL,
+			target_series_id BIGINT UNSIGNED NULL,
+			target_version_id BIGINT UNSIGNED NULL,
+			committed_at DATETIME NULL,
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY job_row (job_key,row_number),
+			UNIQUE KEY job_display (job_key,display_number),
+			KEY job_outcome (job_key,outcome),
+			KEY job_commit (job_key,commit_outcome),
+			KEY existing_series_id (existing_series_id)
+		) $charset_collate;";
+
+		$restore_map = self::table( 'restore_map' );
+		$tables[] = "CREATE TABLE $restore_map (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			owner_token CHAR(32) NOT NULL,
+			entity VARCHAR(32) NOT NULL,
+			source_id BIGINT UNSIGNED NOT NULL,
+			source_hash CHAR(64) NOT NULL,
+			target_id BIGINT UNSIGNED NULL,
+			action VARCHAR(20) NOT NULL,
+			meta_json LONGTEXT NULL,
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY owner_entity_source (owner_token,entity,source_id),
+			KEY owner_entity_action (owner_token,entity,action),
+			KEY owner_target (owner_token,entity,target_id)
+		) $charset_collate;";
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		foreach ( $tables as $sql ) {
 			$wpdb->last_error = '';
@@ -420,6 +585,7 @@ final class SchemaManager {
 					'issuer_id' => array( 'type' => $bigu, 'null' => 'YES' ),
 					'current_version_id' => array( 'type' => $bigu, 'null' => 'YES' ),
 					'administrative_state' => array( 'type' => '/^varchar\(20\)$/', 'null' => 'NO', 'default' => 'active' ),
+					'compliance_state' => array( 'type' => '/^varchar\(20\)$/', 'null' => 'NO', 'default' => 'not_applicable' ),
 					'visibility' => array( 'type' => '/^varchar\(32\)$/', 'null' => 'NO', 'default' => 'verification_summary' ),
 					'created_at' => array( 'type' => $dt, 'null' => 'NO' ),
 					'updated_at' => array( 'type' => $dt, 'null' => 'NO' ),
@@ -433,6 +599,7 @@ final class SchemaManager {
 					'issuer_id' => array( 'columns' => array( 'issuer_id' ), 'unique' => false ),
 					'current_version_id' => array( 'columns' => array( 'current_version_id' ), 'unique' => false ),
 					'administrative_state' => array( 'columns' => array( 'administrative_state' ), 'unique' => false ),
+					'compliance_state' => array( 'columns' => array( 'compliance_state' ), 'unique' => false ),
 					'visibility' => array( 'columns' => array( 'visibility' ), 'unique' => false ),
 				),
 			),
@@ -441,6 +608,7 @@ final class SchemaManager {
 					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
 					'series_id' => array( 'type' => $bigu, 'null' => 'NO' ),
 					'version_number' => array( 'type' => '/^int(?:\(10\))? unsigned$/', 'null' => 'NO' ),
+					'previous_version_id' => array( 'type' => $bigu, 'null' => 'YES' ),
 					'display_number' => array( 'type' => '/^varchar\(100\)$/', 'null' => 'NO' ),
 					'issuance_state' => array( 'type' => '/^varchar\(20\)$/', 'null' => 'NO', 'default' => 'draft' ),
 					'legacy_expired' => array( 'type' => '/^tinyint(?:\(1\))?$/', 'null' => 'NO', 'default' => '0' ),
@@ -458,12 +626,30 @@ final class SchemaManager {
 				'indexes' => array(
 					'PRIMARY' => array( 'columns' => array( 'id' ), 'unique' => true ),
 					'series_version' => array( 'columns' => array( 'series_id', 'version_number' ), 'unique' => true ),
-					'display_number' => array( 'columns' => array( 'display_number' ), 'unique' => true ),
+					'previous_version_id' => array( 'columns' => array( 'previous_version_id' ), 'unique' => false ),
+					'display_number' => array( 'columns' => array( 'display_number' ), 'unique' => false ),
 					'source_idempotency' => array( 'columns' => array( 'source_type', 'source_idempotency_key' ), 'unique' => true ),
 					'issuance_state' => array( 'columns' => array( 'issuance_state' ), 'unique' => false ),
 					'legacy_expired' => array( 'columns' => array( 'legacy_expired' ), 'unique' => false ),
 					'expires_at' => array( 'columns' => array( 'expires_at' ), 'unique' => false ),
 					'issued_at' => array( 'columns' => array( 'issued_at' ), 'unique' => false ),
+				),
+			),
+			'credential_numbers' => array(
+				'columns' => array(
+					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
+					'display_number' => array( 'type' => '/^varchar\(100\)$/', 'null' => 'NO' ),
+					'series_id' => array( 'type' => $bigu, 'null' => 'NO' ),
+					'first_version_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'created_at' => array( 'type' => $dt, 'null' => 'NO' ),
+					'retired_at' => array( 'type' => $dt, 'null' => 'YES' ),
+				),
+				'indexes' => array(
+					'PRIMARY' => array( 'columns' => array( 'id' ), 'unique' => true ),
+					'display_number' => array( 'columns' => array( 'display_number' ), 'unique' => true ),
+					'series_id' => array( 'columns' => array( 'series_id' ), 'unique' => false ),
+					'first_version_id' => array( 'columns' => array( 'first_version_id' ), 'unique' => false ),
+					'retired_at' => array( 'columns' => array( 'retired_at' ), 'unique' => false ),
 				),
 			),
 			'credential_events' => array(
@@ -489,6 +675,88 @@ final class SchemaManager {
 					'actor_user_id' => array( 'columns' => array( 'actor_user_id' ), 'unique' => false ),
 				),
 			),
+			'jobs' => array(
+				'columns' => array(
+					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
+					'job_key' => array( 'type' => '/^char\(32\)$/', 'null' => 'NO' ),
+					'job_type' => array( 'type' => '/^varchar\(64\)$/', 'null' => 'NO' ),
+					'status' => array( 'type' => '/^varchar\(32\)$/', 'null' => 'NO', 'default' => 'queued' ),
+					'owner_user_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'parent_job_key' => array( 'type' => '/^char\(32\)$/', 'null' => 'YES' ),
+					'phase' => array( 'type' => '/^varchar\(64\)$/', 'null' => 'YES' ),
+					'cursor' => array( 'type' => $bigu, 'null' => 'NO', 'default' => '0' ),
+					'total' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'selection_max_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'payload_json' => array( 'type' => $lt, 'null' => 'YES' ),
+					'result_json' => array( 'type' => $lt, 'null' => 'YES' ),
+					'error_json' => array( 'type' => $lt, 'null' => 'YES' ),
+					'attempts' => array( 'type' => '/^int(?:\(10\))? unsigned$/', 'null' => 'NO', 'default' => '0' ),
+					'recovery_count' => array( 'type' => '/^int(?:\(10\))? unsigned$/', 'null' => 'NO', 'default' => '0' ),
+					'available_at' => array( 'type' => $dt, 'null' => 'YES' ),
+					'locked_by' => array( 'type' => '/^char\(32\)$/', 'null' => 'YES' ),
+					'locked_until' => array( 'type' => $dt, 'null' => 'YES' ),
+					'created_at' => array( 'type' => $dt, 'null' => 'NO' ),
+					'updated_at' => array( 'type' => $dt, 'null' => 'NO' ),
+					'finished_at' => array( 'type' => $dt, 'null' => 'YES' ),
+				),
+				'indexes' => array(
+					'PRIMARY' => array( 'columns' => array( 'id' ), 'unique' => true ),
+					'job_key' => array( 'columns' => array( 'job_key' ), 'unique' => true ),
+					'status_available' => array( 'columns' => array( 'status', 'available_at' ), 'unique' => false ),
+					'owner_status' => array( 'columns' => array( 'owner_user_id', 'status' ), 'unique' => false ),
+					'type_status' => array( 'columns' => array( 'job_type', 'status' ), 'unique' => false ),
+					'parent_job_key' => array( 'columns' => array( 'parent_job_key' ), 'unique' => false ),
+					'locked_until' => array( 'columns' => array( 'locked_until' ), 'unique' => false ),
+				),
+			),
+
+			'import_rows' => array(
+				'columns' => array(
+					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
+					'job_key' => array( 'type' => '/^char\(32\)$/', 'null' => 'NO' ),
+					'row_number' => array( 'type' => $bigu, 'null' => 'NO' ),
+					'display_number' => array( 'type' => '/^varchar\(100\)$/', 'null' => 'NO' ),
+					'plan_hash' => array( 'type' => '/^char\(64\)$/', 'null' => 'NO' ),
+					'plan_json' => array( 'type' => $lt, 'null' => 'NO' ),
+					'existing_series_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'outcome' => array( 'type' => '/^varchar\(20\)$/', 'null' => 'NO', 'default' => 'ready' ),
+					'commit_outcome' => array( 'type' => '/^varchar\(20\)$/', 'null' => 'YES' ),
+					'target_series_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'target_version_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'committed_at' => array( 'type' => $dt, 'null' => 'YES' ),
+					'created_at' => array( 'type' => $dt, 'null' => 'NO' ),
+				),
+				'indexes' => array(
+					'PRIMARY' => array( 'columns' => array( 'id' ), 'unique' => true ),
+					'job_row' => array( 'columns' => array( 'job_key', 'row_number' ), 'unique' => true ),
+					'job_display' => array( 'columns' => array( 'job_key', 'display_number' ), 'unique' => true ),
+					'job_outcome' => array( 'columns' => array( 'job_key', 'outcome' ), 'unique' => false ),
+					'job_commit' => array( 'columns' => array( 'job_key', 'commit_outcome' ), 'unique' => false ),
+					'existing_series_id' => array( 'columns' => array( 'existing_series_id' ), 'unique' => false ),
+				),
+			),
+
+			'restore_map' => array(
+				'columns' => array(
+					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
+					'owner_token' => array( 'type' => '/^char\(32\)$/', 'null' => 'NO' ),
+					'entity' => array( 'type' => '/^varchar\(32\)$/', 'null' => 'NO' ),
+					'source_id' => array( 'type' => $bigu, 'null' => 'NO' ),
+					'source_hash' => array( 'type' => '/^char\(64\)$/', 'null' => 'NO' ),
+					'target_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'action' => array( 'type' => '/^varchar\(20\)$/', 'null' => 'NO' ),
+					'meta_json' => array( 'type' => $lt, 'null' => 'YES' ),
+					'created_at' => array( 'type' => $dt, 'null' => 'NO' ),
+				),
+				'indexes' => array(
+					'PRIMARY' => array( 'columns' => array( 'id' ), 'unique' => true ),
+					'owner_entity_source' => array( 'columns' => array( 'owner_token', 'entity', 'source_id' ), 'unique' => true ),
+					'owner_entity_action' => array( 'columns' => array( 'owner_token', 'entity', 'action' ), 'unique' => false ),
+					'owner_target' => array( 'columns' => array( 'owner_token', 'entity', 'target_id' ), 'unique' => false ),
+				),
+			),
+
+
 		);
 	}
 

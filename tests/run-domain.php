@@ -7,12 +7,7 @@
  * will be added when the database/public-route milestones are wired.
  */
 
-require_once dirname( __DIR__ ) . '/src/Domain/Credential/States.php';
-require_once dirname( __DIR__ ) . '/src/Domain/Credential/StatusResult.php';
-require_once dirname( __DIR__ ) . '/src/Domain/Credential/StatusService.php';
-require_once dirname( __DIR__ ) . '/src/Domain/Credential/StateMachine.php';
-require_once dirname( __DIR__ ) . '/src/Domain/Credential/PublicCredentialId.php';
-
+require_once __DIR__ . '/bootstrap-autoload.php';
 use Certloom\Domain\Credential\PublicCredentialId;
 use Certloom\Domain\Credential\StateMachine;
 use Certloom\Domain\Credential\States;

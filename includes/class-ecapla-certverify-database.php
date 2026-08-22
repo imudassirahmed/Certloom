@@ -531,6 +531,11 @@ class Ecapla_CertVerify_Database {
 			return $allowed;
 		}
 
+		$legacy_write = ( new \Certloom\Application\Migration\LegacyRegistryWriteGuard() )->assert_allowed();
+		if ( is_wp_error( $legacy_write ) ) {
+			return $legacy_write;
+		}
+
 		$clean = Ecapla_CertVerify_Validator::certificate_data( $data, false );
 		if ( is_wp_error( $clean ) ) {
 			return $clean;
@@ -566,6 +571,11 @@ class Ecapla_CertVerify_Database {
 		$allowed = Ecapla_CertVerify_Backup::assert_writes_allowed();
 		if ( is_wp_error( $allowed ) ) {
 			return $allowed;
+		}
+
+		$legacy_write = ( new \Certloom\Application\Migration\LegacyRegistryWriteGuard() )->assert_allowed();
+		if ( is_wp_error( $legacy_write ) ) {
+			return $legacy_write;
 		}
 
 		$id       = absint( $id );
@@ -686,6 +696,11 @@ class Ecapla_CertVerify_Database {
 			return $allowed;
 		}
 
+		$legacy_write = ( new \Certloom\Application\Migration\LegacyRegistryWriteGuard() )->assert_allowed();
+		if ( is_wp_error( $legacy_write ) ) {
+			return $legacy_write;
+		}
+
 		$field_key = sanitize_key( $field_key );
 		if ( '' === $field_key ) {
 			return new WP_Error( 'ecapla_certverify_invalid_field', __( 'The retired field key is invalid.', 'certloom' ) );
@@ -791,6 +806,11 @@ class Ecapla_CertVerify_Database {
 		if ( is_wp_error( $allowed ) ) {
 			return $allowed;
 		}
+
+		$legacy_write = ( new \Certloom\Application\Migration\LegacyRegistryWriteGuard() )->assert_allowed();
+		if ( is_wp_error( $legacy_write ) ) {
+			return $legacy_write;
+		}
 		$id = absint( $id );
 		if ( ! $id ) {
 			return new WP_Error( 'ecapla_certverify_invalid_id', __( 'The certificate deletion request was invalid.', 'certloom' ) );
@@ -816,6 +836,11 @@ class Ecapla_CertVerify_Database {
 		$allowed = Ecapla_CertVerify_Backup::assert_writes_allowed();
 		if ( is_wp_error( $allowed ) ) {
 			return $allowed;
+		}
+
+		$legacy_write = ( new \Certloom\Application\Migration\LegacyRegistryWriteGuard() )->assert_allowed();
+		if ( is_wp_error( $legacy_write ) ) {
+			return $legacy_write;
 		}
 
 		$ids = array_values( array_filter( array_unique( array_map( 'absint', (array) $ids ) ) ) );

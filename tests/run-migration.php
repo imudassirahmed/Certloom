@@ -1,11 +1,6 @@
 <?php
 /** Pure tests for legacy 1.5 row -> new Credential Series/Version mapping. */
-require_once dirname( __DIR__ ) . '/src/Domain/Credential/States.php';
-require_once dirname( __DIR__ ) . '/src/Domain/Credential/StatusResult.php';
-require_once dirname( __DIR__ ) . '/src/Domain/Credential/StatusService.php';
-require_once dirname( __DIR__ ) . '/src/Application/Migration/LegacyCertificateMapper.php';
-require_once dirname( __DIR__ ) . '/src/Application/Migration/LegacyMigrationPreflightService.php';
-
+require_once __DIR__ . '/bootstrap-autoload.php';
 use Certloom\Application\Migration\LegacyCertificateMapper;
 use Certloom\Application\Migration\LegacyMigrationPreflightService;
 use Certloom\Domain\Credential\States;

@@ -25,6 +25,8 @@ function ecapla_certverify_uninstall_site() {
 
 	wp_clear_scheduled_hook( 'certverify_daily_expiry_check' );
 	wp_clear_scheduled_hook( 'ecapla_certverify_continue_migrations' );
+	wp_clear_scheduled_hook( 'certloom_run_job' );
+	wp_clear_scheduled_hook( 'certloom_job_watchdog' );
 
 	$wp_roles        = wp_roles();
 	$roles_option    = $wp_roles ? $wp_roles->role_key : '';
@@ -42,6 +44,13 @@ function ecapla_certverify_uninstall_site() {
 		foreach ( $stored_roles as &$stored_role ) {
 			if ( isset( $stored_role['capabilities'] ) && is_array( $stored_role['capabilities'] ) ) {
 				unset( $stored_role['capabilities']['manage_certverify'] );
+				foreach ( array(
+					'certloom_view_credentials', 'certloom_manage_credentials', 'certloom_issue_credentials',
+					'certloom_manage_recipients', 'certloom_manage_programs', 'certloom_manage_issuers', 'certloom_manage_templates',
+					'certloom_view_analytics', 'certloom_manage_integrations', 'certloom_manage_settings', 'certloom_manage_data_tools',
+				) as $certloom_capability ) {
+					unset( $stored_role['capabilities'][ $certloom_capability ] );
+				}
 			}
 		}
 		unset( $stored_role );
@@ -91,6 +100,16 @@ function ecapla_certverify_uninstall_site() {
 	delete_option( 'certverify_data_generation' );
 	delete_option( 'certloom_domain_schema_health' );
 	delete_option( 'certloom_domain_schema_lock' );
+	delete_option( 'certloom_legacy_domain_migration_state' );
+	delete_option( 'certloom_domain_write_authority' );
+	delete_option( 'certloom_series_public_verification_ready' );
+	delete_option( 'certloom_domain_generation' ); // Pre-1.5.4 development alias.
+	delete_option( 'certloom_domain_data_generation' );
+	delete_option( 'certloom_domain_maintenance_lock' );
+	delete_option( 'certloom_domain_restore_build' );
+	delete_option( 'certloom_domain_restore_journal' );
+	delete_option( 'certloom_domain_restore_receipts' );
+	delete_option( 'certloom_job_retention_last_run' );
 
 	$transient_prefixes = array(
 		'_transient_ecapla_certverify_import_',
@@ -99,6 +118,10 @@ function ecapla_certverify_uninstall_site() {
 		'_transient_timeout_ecapla_certverify_rl_',
 		'_transient_ecapla_certverify_backup_',
 		'_transient_timeout_ecapla_certverify_backup_',
+		'_transient_certloom_import_map_',
+		'_transient_timeout_certloom_import_map_',
+		'_transient_certloom_domain_data_tools_notice_',
+		'_transient_timeout_certloom_domain_data_tools_notice_',
 	);
 
 	foreach ( $transient_prefixes as $prefix ) {
@@ -158,6 +181,54 @@ function ecapla_certverify_uninstall_site() {
 		}
 	}
 
+	/*
+	 * New-domain job/import/restore state is executable and may contain private
+	 * registry material. It must not survive uninstall even when the customer
+	 * chooses to retain durable credential data for a later reinstall.
+	 */
+	$ephemeral_domain_tables = array(
+		$wpdb->prefix . 'certloom_jobs',
+		$wpdb->prefix . 'certloom_import_rows',
+		$wpdb->prefix . 'certloom_restore_map',
+	);
+	foreach ( $ephemeral_domain_tables as $ephemeral_domain_table ) {
+		$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $ephemeral_domain_table ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.SchemaChange -- Removes only Certloom-owned resumable operational state.
+	}
+
+	$domain_temporary_tables = $wpdb->get_col(
+		$wpdb->prepare(
+			'SHOW TABLES LIKE %s',
+			$wpdb->esc_like( $wpdb->prefix . 'certloom_' ) . '%'
+		)
+	);
+	foreach ( (array) $domain_temporary_tables as $domain_temporary_table ) {
+		if ( preg_match( '/^' . preg_quote( $wpdb->prefix, '/' ) . 'certloom_(?:rs|rm|rb)_[a-f0-9]{12}_[iprsnve]$/i', (string) $domain_temporary_table ) ) {
+			$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $domain_temporary_table ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.SchemaChange -- Removes abandoned Certloom restore stage/rollback tables only.
+		}
+	}
+
+	/* Best-effort cleanup of the two built-in private job directory locations. */
+	$private_directories = array();
+	if ( function_exists( 'get_temp_dir' ) ) {
+		$private_directories[] = trailingslashit( wp_normalize_path( get_temp_dir() ) ) . 'certloom-private';
+	}
+	if ( defined( 'WP_CONTENT_DIR' ) ) {
+		$private_directories[] = trailingslashit( wp_normalize_path( WP_CONTENT_DIR ) ) . 'certloom-private';
+	}
+	foreach ( array_unique( $private_directories ) as $private_directory ) {
+		if ( ! is_dir( $private_directory ) ) {
+			continue;
+		}
+		$files = glob( trailingslashit( $private_directory ) . '*' );
+		foreach ( (array) $files as $private_file ) {
+			$base = basename( (string) $private_file );
+			if ( is_file( $private_file ) && ( preg_match( '/^[a-f0-9]{32}-[a-z0-9_-]+-[a-f0-9]{48}\.data$/i', $base ) || in_array( $base, array( 'index.php', '.htaccess', 'web.config' ), true ) ) ) {
+				@unlink( $private_file );
+			}
+		}
+		@rmdir( $private_directory );
+	}
+
 	if ( ! $delete_data ) {
 		return;
 	}
@@ -167,6 +238,7 @@ function ecapla_certverify_uninstall_site() {
 
 	$domain_tables = array(
 		$wpdb->prefix . 'certloom_credential_events',
+		$wpdb->prefix . 'certloom_credential_numbers',
 		$wpdb->prefix . 'certloom_credential_versions',
 		$wpdb->prefix . 'certloom_credential_series',
 		$wpdb->prefix . 'certloom_programs',

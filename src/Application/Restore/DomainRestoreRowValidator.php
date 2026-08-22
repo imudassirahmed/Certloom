@@ -1,0 +1,129 @@
+<?php
+namespace Certloom\Application\Restore;
+
+use Certloom\Application\VisibilityPolicy;
+use Certloom\Domain\Credential\PublicCredentialId;
+use Certloom\Domain\Credential\States;
+use Certloom\Infrastructure\Backup\DomainBackupRepository;
+use Certloom\Infrastructure\Database\SchemaManager;
+
+/** Validates one backup row's scalar/schema semantics before it enters staging. */
+final class DomainRestoreRowValidator {
+	/** @var PublicCredentialId */
+	private $public_ids;
+
+	public function __construct( PublicCredentialId $public_ids = null ) {
+		$this->public_ids = $public_ids ?: new PublicCredentialId();
+	}
+
+	/** @return true|\WP_Error */
+	public function validate( $entity, array $row ) {
+		$entity = sanitize_key( (string) $entity );
+		if ( ! in_array( $entity, DomainBackupRepository::entity_types(), true ) ) {
+			return new \WP_Error( 'certloom_domain_restore_entity_invalid', __( 'The backup contains an unsupported Certloom entity.', 'certloom' ) );
+		}
+		$expected = SchemaManager::column_names( $entity );
+		$actual   = array_keys( $row );
+		sort( $expected );
+		sort( $actual );
+		if ( $expected !== $actual || absint( $row['id'] ?? 0 ) < 1 ) {
+			return new \WP_Error( 'certloom_domain_restore_row_schema_invalid', __( 'A backup record does not match the expected Certloom table schema.', 'certloom' ) );
+		}
+
+		$dates = array();
+		$json  = array();
+		switch ( $entity ) {
+			case 'issuers':
+				if ( '' === trim( (string) $row['name'] ) || '' === sanitize_key( (string) $row['slug'] ) ) {
+					return $this->invalid( 'issuer' );
+				}
+				$json  = array( 'settings_json' );
+				$dates = array( 'created_at' => 'datetime', 'updated_at' => 'datetime' );
+				break;
+			case 'programs':
+				if ( '' === trim( (string) $row['title'] ) || ! in_array( (string) $row['active'], array( '0', '1' ), true ) ) {
+					return $this->invalid( 'program' );
+				}
+				$json  = array( 'metadata_json' );
+				$dates = array( 'created_at' => 'datetime', 'updated_at' => 'datetime' );
+				break;
+			case 'recipients':
+				if ( '' === trim( (string) $row['display_name'] ) ) {
+					return $this->invalid( 'recipient' );
+				}
+				if ( null !== $row['email'] && '' !== (string) $row['email'] && false === filter_var( (string) $row['email'], FILTER_VALIDATE_EMAIL ) ) {
+					return new \WP_Error( 'certloom_domain_restore_recipient_email_invalid', __( 'A recipient in the backup contains an invalid email address.', 'certloom' ) );
+				}
+				$json  = array( 'custom_fields' );
+				$dates = array( 'created_at' => 'datetime', 'updated_at' => 'datetime' );
+				break;
+			case 'credential_series':
+				if ( ! $this->public_ids->is_valid( (string) $row['public_id'] ) || ! in_array( (string) $row['administrative_state'], States::administrative_values(), true ) || ! in_array( (string) $row['compliance_state'], States::compliance_values(), true ) || ! in_array( (string) $row['visibility'], VisibilityPolicy::persisted_values(), true ) ) {
+					return $this->invalid( 'credential_series' );
+				}
+				$dates = array( 'created_at' => 'datetime', 'updated_at' => 'datetime', 'closed_at' => 'datetime' );
+				break;
+			case 'credential_numbers':
+				if ( '' === trim( (string) $row['display_number'] ) ) {
+					return $this->invalid( 'credential_number' );
+				}
+				$dates = array( 'created_at' => 'datetime', 'retired_at' => 'datetime' );
+				break;
+			case 'credential_versions':
+				if ( absint( $row['version_number'] ) < 1 || '' === trim( (string) $row['display_number'] ) || ! in_array( (string) $row['issuance_state'], States::issuance_values(), true ) || ! in_array( (string) $row['legacy_expired'], array( '0', '1' ), true ) ) {
+					return $this->invalid( 'credential_version' );
+				}
+				if ( null !== $row['source_idempotency_key'] && '' !== (string) $row['source_idempotency_key'] && ! preg_match( '/^[a-f0-9]{64}$/', strtolower( (string) $row['source_idempotency_key'] ) ) ) {
+					return new \WP_Error( 'certloom_domain_restore_idempotency_invalid', __( 'A credential Version contains an invalid source idempotency key.', 'certloom' ) );
+				}
+				$json  = array( 'snapshot_json' );
+				$dates = array( 'valid_from' => 'date', 'issued_at' => 'datetime', 'expires_at' => 'date', 'created_at' => 'datetime', 'updated_at' => 'datetime' );
+				break;
+			case 'credential_events':
+				if ( '' === sanitize_key( (string) $row['event_type'] ) ) {
+					return $this->invalid( 'credential_event' );
+				}
+				$json  = array( 'old_state_json', 'new_state_json', 'meta_json' );
+				$dates = array( 'created_at' => 'datetime' );
+				break;
+		}
+
+		foreach ( $json as $field ) {
+			if ( null === $row[ $field ] || '' === (string) $row[ $field ] ) {
+				continue;
+			}
+			json_decode( (string) $row[ $field ], true );
+			if ( JSON_ERROR_NONE !== json_last_error() ) {
+				return new \WP_Error( 'certloom_domain_restore_json_field_invalid', __( 'A backup record contains malformed JSON data.', 'certloom' ), array( 'entity' => $entity, 'field' => $field ) );
+			}
+		}
+		foreach ( $dates as $field => $kind ) {
+			if ( null === $row[ $field ] || '' === (string) $row[ $field ] ) {
+				continue;
+			}
+			if ( ! $this->valid_date( (string) $row[ $field ], $kind ) ) {
+				return new \WP_Error( 'certloom_domain_restore_date_invalid', __( 'A backup record contains an invalid canonical date or timestamp.', 'certloom' ), array( 'entity' => $entity, 'field' => $field ) );
+			}
+		}
+		return true;
+	}
+
+	/** @return \WP_Error */
+	private function invalid( $type ) {
+		return new \WP_Error( 'certloom_domain_restore_' . sanitize_key( $type ) . '_invalid', __( 'A backup record contains invalid Certloom domain data.', 'certloom' ) );
+	}
+
+	/** @return bool */
+	private function valid_date( $value, $kind ) {
+		$format = 'date' === $kind ? '!Y-m-d' : '!Y-m-d H:i:s';
+		$date = \DateTimeImmutable::createFromFormat( $format, $value, new \DateTimeZone( 'UTC' ) );
+		$errors = \DateTimeImmutable::getLastErrors();
+		if ( false === $date ) {
+			return false;
+		}
+		if ( is_array( $errors ) && ( ! empty( $errors['warning_count'] ) || ! empty( $errors['error_count'] ) ) ) {
+			return false;
+		}
+		return $date->format( 'date' === $kind ? 'Y-m-d' : 'Y-m-d H:i:s' ) === $value;
+	}
+}

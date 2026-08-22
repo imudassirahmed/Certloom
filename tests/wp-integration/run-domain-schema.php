@@ -1,6 +1,6 @@
 <?php
 /**
- * Real WordPress/MySQL integration gate for Certloom 1.5.1.
+ * Real WordPress/MySQL integration gate for Certloom 1.5.2.
  *
  * Run only on a disposable/staging WordPress install, for example:
  *   wp eval-file wp-content/plugins/certloom/tests/wp-integration/run-domain-schema.php

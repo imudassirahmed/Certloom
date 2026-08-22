@@ -39,6 +39,10 @@ class Ecapla_CertVerify_Backup {
 		if ( self::$internal_restore_write ) {
 			return true;
 		}
+		if ( class_exists( '\Certloom\Infrastructure\Data\DomainMaintenanceLock' ) ) {
+			$domain_allowed = ( new \Certloom\Infrastructure\Data\DomainMaintenanceLock() )->assert_writes_allowed();
+			if ( is_wp_error( $domain_allowed ) ) { return $domain_allowed; }
+		}
 		$lock = self::get_active_maintenance_lock();
 		if ( $lock ) {
 			return new WP_Error(

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Certloom – Certificate Verification
  * Description: Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
- * Version: 1.5.1
+ * Version: 1.5.4
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.5.1' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.5.4' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
@@ -33,6 +33,15 @@ define( 'ECAPLA_CERTVERIFY_MINIMUM_ELEMENTOR_VERSION', '3.10.0' );
 define( 'CERTLOOM_VERSION', ECAPLA_CERTVERIFY_VERSION );
 define( 'CERTLOOM_PATH', ECAPLA_CERTVERIFY_PATH );
 define( 'CERTLOOM_URL', ECAPLA_CERTVERIFY_URL );
+if ( ! defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) ) {
+	define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false );
+}
+if ( ! defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) ) {
+	define( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW', false );
+}
+if ( ! defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) ) {
+	define( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY', false );
+}
 
 require_once CERTLOOM_PATH . 'src/Autoloader.php';
 \Certloom\Autoloader::register();
@@ -212,10 +221,17 @@ function ecapla_certverify_fail_activation( $errors ) {
  */
 function ecapla_certverify_deactivate( $network_wide = false ) {
 	if ( is_multisite() && $network_wide ) {
-		ecapla_certverify_for_each_site( array( 'Ecapla_CertVerify_Cron', 'deactivate' ) );
+		ecapla_certverify_for_each_site( 'ecapla_certverify_deactivate_site' );
 		return;
 	}
+	ecapla_certverify_deactivate_site();
+}
+
+/** Clears all legacy and new-domain scheduled work for the current site. */
+function ecapla_certverify_deactivate_site() {
 	Ecapla_CertVerify_Cron::deactivate();
+	\Certloom\Plugin::deactivate();
+	return true;
 }
 
 /**

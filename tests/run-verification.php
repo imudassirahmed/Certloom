@@ -14,14 +14,7 @@ if ( ! class_exists( 'WP_Error' ) ) {
 function is_wp_error( $value ) { return $value instanceof WP_Error; }
 function __( $text ) { return $text; }
 
-require_once dirname( __DIR__ ) . '/src/Application/Contract/CredentialQueryRepositoryInterface.php';
-require_once dirname( __DIR__ ) . '/src/Domain/Credential/States.php';
-require_once dirname( __DIR__ ) . '/src/Domain/Credential/StatusResult.php';
-require_once dirname( __DIR__ ) . '/src/Domain/Credential/StatusService.php';
-require_once dirname( __DIR__ ) . '/src/Domain/Credential/PublicCredentialId.php';
-require_once dirname( __DIR__ ) . '/src/Application/VerificationResult.php';
-require_once dirname( __DIR__ ) . '/src/Application/CredentialVerificationService.php';
-
+require_once __DIR__ . '/bootstrap-autoload.php';
 use Certloom\Application\Contract\CredentialQueryRepositoryInterface;
 use Certloom\Application\CredentialVerificationService;
 use Certloom\Domain\Credential\PublicCredentialId;

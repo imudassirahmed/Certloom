@@ -1,6 +1,7 @@
 <?php
 namespace Certloom\Infrastructure\Repository;
 
+use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Application\Contract\CredentialQueryRepositoryInterface;
 use Certloom\Application\Contract\CredentialRepositoryInterface;
 use Certloom\Domain\Credential\PublicCredentialId;
@@ -39,6 +40,16 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 			return new \WP_Error( 'certloom_series_recipient_required', __( 'A credential recipient is required.', 'certloom' ) );
 		}
 
+		$administrative_state = isset( $data['administrative_state'] ) ? (string) $data['administrative_state'] : States::ADMIN_ACTIVE;
+		if ( ! in_array( $administrative_state, States::administrative_values(), true ) ) {
+			return new \WP_Error( 'certloom_series_administrative_state_invalid', __( 'The credential administrative state is invalid.', 'certloom' ) );
+		}
+
+		$compliance_state = isset( $data['compliance_state'] ) ? (string) $data['compliance_state'] : States::COMPLIANCE_NOT_APPLICABLE;
+		if ( ! in_array( $compliance_state, States::compliance_values(), true ) ) {
+			return new \WP_Error( 'certloom_series_compliance_state_invalid', __( 'The credential compliance state is invalid.', 'certloom' ) );
+		}
+
 		$requested_public_id = isset( $data['public_id'] ) ? $this->public_ids->normalize( $data['public_id'] ) : '';
 		if ( '' !== $requested_public_id && ! $this->public_ids->is_valid( $requested_public_id ) ) {
 			return new \WP_Error( 'certloom_series_public_id_invalid', __( 'The public credential ID is invalid.', 'certloom' ) );
@@ -57,12 +68,15 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 				'program_id' => ! empty( $data['program_id'] ) ? absint( $data['program_id'] ) : null,
 				'issuer_id' => ! empty( $data['issuer_id'] ) ? absint( $data['issuer_id'] ) : null,
 				'current_version_id' => null,
-				'administrative_state' => States::ADMIN_ACTIVE,
+				'administrative_state' => $administrative_state,
+				'compliance_state' => $compliance_state,
 				'visibility' => self::visibility( $data['visibility'] ?? 'verification_summary' ),
 				'created_at' => $now,
 				'updated_at' => $now,
 				'closed_at' => null,
 			);
+			$generation = ( new DomainGeneration() )->mark_before_mutation();
+			if ( is_wp_error( $generation ) ) { return $generation; }
 			$wpdb->last_error = '';
 			$inserted = $wpdb->insert( SchemaManager::table( 'credential_series' ), $row );
 			if ( false !== $inserted && '' === (string) $wpdb->last_error ) {
@@ -94,6 +108,17 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		if ( is_wp_error( $version_number ) ) {
 			return $version_number;
 		}
+		$previous_version_id = ! empty( $data['previous_version_id'] ) ? absint( $data['previous_version_id'] ) : null;
+		if ( $previous_version_id ) {
+			$wpdb->last_error = '';
+			$previous_belongs = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM %i WHERE id = %d AND series_id = %d', SchemaManager::table( 'credential_versions' ), $previous_version_id, $series_id ) );
+			if ( '' !== (string) $wpdb->last_error ) {
+				return new \WP_Error( 'certloom_previous_version_read_failed', __( 'Certloom could not verify the previous credential Version.', 'certloom' ) );
+			}
+			if ( ! $previous_belongs ) {
+				return new \WP_Error( 'certloom_previous_version_wrong_series', __( 'The previous credential Version does not belong to this Credential Series.', 'certloom' ) );
+			}
+		}
 		$issuance_state = (string) ( $data['issuance_state'] ?? States::ISSUANCE_DRAFT );
 		if ( ! in_array( $issuance_state, States::issuance_values(), true ) ) {
 			return new \WP_Error( 'certloom_version_state_invalid', __( 'The credential issuance state is invalid.', 'certloom' ) );
@@ -113,6 +138,11 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		}
 		$idempotency_key = null === $idempotency_key ? null : strtolower( $idempotency_key );
 
+		$generation = ( new DomainGeneration() )->mark_before_mutation();
+		if ( is_wp_error( $generation ) ) { return $generation; }
+		$reservation = $this->reserve_display_number( $series_id, $display_number );
+		if ( is_wp_error( $reservation ) ) { return $reservation; }
+
 		$snapshot_json = null;
 		if ( isset( $data['snapshot'] ) ) {
 			$snapshot_json = wp_json_encode( $data['snapshot'] );
@@ -125,6 +155,7 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		$row = array(
 			'series_id' => $series_id,
 			'version_number' => $version_number,
+			'previous_version_id' => $previous_version_id,
 			'display_number' => $display_number,
 			'issuance_state' => $issuance_state,
 			'legacy_expired' => ! empty( $data['legacy_expired'] ) ? 1 : 0,
@@ -142,9 +173,17 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		$wpdb->last_error = '';
 		$inserted = $wpdb->insert( SchemaManager::table( 'credential_versions' ), $row );
 		if ( false === $inserted || '' !== (string) $wpdb->last_error ) {
+			$this->release_new_number_reservation( $reservation );
 			return new \WP_Error( 'certloom_version_create_failed', __( 'Certloom could not create the credential version.', 'certloom' ) );
 		}
-		return (int) $wpdb->insert_id;
+		$version_id = (int) $wpdb->insert_id;
+		$linked = $this->link_number_first_version( $reservation, $version_id );
+		if ( is_wp_error( $linked ) ) {
+			$wpdb->delete( SchemaManager::table( 'credential_versions' ), array( 'id' => $version_id ) );
+			$this->release_new_number_reservation( $reservation );
+			return $linked;
+		}
+		return $version_id;
 	}
 
 	/** @return true|\WP_Error */
@@ -163,6 +202,8 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		if ( ! $belongs ) {
 			return new \WP_Error( 'certloom_current_version_wrong_series', __( 'The credential version does not belong to this credential series.', 'certloom' ) );
 		}
+		$generation = ( new DomainGeneration() )->mark_before_mutation();
+		if ( is_wp_error( $generation ) ) { return $generation; }
 		$updated = $wpdb->update(
 			SchemaManager::table( 'credential_series' ),
 			array( 'current_version_id' => $version_id, 'updated_at' => current_time( 'mysql', true ) ),
@@ -208,6 +249,8 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		if ( ! in_array( $expected_state, States::administrative_values(), true ) || ! in_array( $new_state, States::administrative_values(), true ) ) {
 			return new \WP_Error( 'certloom_series_state_invalid', __( 'The credential administrative state is invalid.', 'certloom' ) );
 		}
+		$generation = ( new DomainGeneration() )->mark_before_mutation();
+		if ( is_wp_error( $generation ) ) { return $generation; }
 		$wpdb->last_error = '';
 		$updated = $wpdb->query(
 			$wpdb->prepare(
@@ -236,6 +279,8 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		if ( ! in_array( $expected_state, States::issuance_values(), true ) || ! in_array( $new_state, States::issuance_values(), true ) ) {
 			return new \WP_Error( 'certloom_version_state_invalid', __( 'The credential issuance state is invalid.', 'certloom' ) );
 		}
+		$generation = ( new DomainGeneration() )->mark_before_mutation();
+		if ( is_wp_error( $generation ) ) { return $generation; }
 		$now = current_time( 'mysql', true );
 		$wpdb->last_error = '';
 		if ( States::ISSUANCE_ISSUED === $new_state ) {
@@ -283,7 +328,7 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		$wpdb->last_error = '';
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				'SELECT s.id AS series_id, s.public_id, s.recipient_id, s.program_id, s.issuer_id, s.current_version_id, s.administrative_state, s.visibility, v.id AS version_id, v.version_number, v.display_number, v.issuance_state, v.legacy_expired, v.valid_from, v.issued_at, v.expires_at FROM %i s LEFT JOIN %i v ON v.id = s.current_version_id AND v.series_id = s.id WHERE s.public_id = %s LIMIT 1',
+				'SELECT s.id AS series_id, s.public_id, s.recipient_id, s.program_id, s.issuer_id, s.current_version_id, s.administrative_state, s.compliance_state, s.visibility, v.id AS version_id, v.version_number, v.display_number, v.issuance_state, v.legacy_expired, v.valid_from, v.issued_at, v.expires_at FROM %i s LEFT JOIN %i v ON v.id = s.current_version_id AND v.series_id = s.id WHERE s.public_id = %s LIMIT 1',
 				SchemaManager::table( 'credential_series' ),
 				SchemaManager::table( 'credential_versions' ),
 				$public_id
@@ -301,6 +346,64 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 			$row[ $key ] = ! empty( $row[ $key ] ) ? absint( $row[ $key ] ) : null;
 		}
 		return $row;
+	}
+
+	/** @return array<string,mixed>|null|\WP_Error */
+	public function find_version_by_source_idempotency( $source_type, $idempotency_key ) {
+		global $wpdb;
+		$source_type = trim( (string) $source_type );
+		$idempotency_key = strtolower( trim( (string) $idempotency_key ) );
+		if ( '' === $source_type || ! preg_match( '/^[a-f0-9]{64}$/', $idempotency_key ) ) {
+			return null;
+		}
+		$wpdb->last_error = '';
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				'SELECT * FROM %i WHERE source_type = %s AND source_idempotency_key = %s LIMIT 1',
+				SchemaManager::table( 'credential_versions' ),
+				$source_type,
+				$idempotency_key
+			),
+			ARRAY_A
+		);
+		if ( '' !== (string) $wpdb->last_error ) {
+			return new \WP_Error( 'certloom_version_idempotency_read_failed', __( 'Certloom could not check whether the legacy certificate was already migrated.', 'certloom' ) );
+		}
+		return is_array( $row ) ? self::decode_version( $row ) : null;
+	}
+
+	/** @return array{items:array<int,array<string,mixed>>,total:int}|\WP_Error */
+	public function list_page( $search = '', $page = 1, $per_page = 20 ) {
+		global $wpdb;
+		$page = max( 1, absint( $page ) );
+		$per_page = max( 1, min( 100, absint( $per_page ) ) );
+		$offset = ( $page - 1 ) * $per_page;
+		$search = trim( (string) $search );
+		$where = '';
+		$args = array();
+		if ( '' !== $search ) {
+			$like = '%' . $wpdb->esc_like( $search ) . '%';
+			$where = ' WHERE s.public_id LIKE %s OR v.display_number LIKE %s OR r.display_name LIKE %s OR p.title LIKE %s';
+			$args = array( $like, $like, $like, $like );
+		}
+		$series = SchemaManager::table( 'credential_series' );
+		$versions = SchemaManager::table( 'credential_versions' );
+		$recipients = SchemaManager::table( 'recipients' );
+		$programs = SchemaManager::table( 'programs' );
+		$joins = ' FROM %i s LEFT JOIN %i v ON v.id = s.current_version_id AND v.series_id = s.id LEFT JOIN %i r ON r.id = s.recipient_id LEFT JOIN %i p ON p.id = s.program_id';
+		$wpdb->last_error = '';
+		$total = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*)' . $joins . $where, array_merge( array( $series, $versions, $recipients, $programs ), $args ) ) );
+		$sql = 'SELECT s.id AS series_id, s.public_id, s.administrative_state, s.compliance_state, s.visibility, r.display_name, p.title AS program_title, v.id AS version_id, v.display_number, v.issuance_state, v.legacy_expired, v.valid_from, v.issued_at, v.expires_at' . $joins . $where . ' ORDER BY s.id DESC LIMIT %d OFFSET %d';
+		$items = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( array( $series, $versions, $recipients, $programs ), $args, array( $per_page, $offset ) ) ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $items ) ) {
+			return new \WP_Error( 'certloom_credential_list_failed', __( 'Certloom could not load the credential registry.', 'certloom' ) );
+		}
+		foreach ( $items as &$item ) {
+			$item['series_id'] = absint( $item['series_id'] ?? 0 );
+			$item['version_id'] = ! empty( $item['version_id'] ) ? absint( $item['version_id'] ) : null;
+		}
+		unset( $item );
+		return array( 'items' => $items, 'total' => $total );
 	}
 
 	/** @return array<string,mixed>|null|\WP_Error */
@@ -338,6 +441,105 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 			return new \WP_Error( 'certloom_version_read_failed', __( 'Certloom could not read the credential version.', 'certloom' ) );
 		}
 		return is_array( $row ) ? self::decode_version( $row ) : null;
+	}
+
+	/** @return array<string,mixed>|null|\WP_Error */
+	public function find_series_by_display_number( $display_number ) {
+		global $wpdb;
+		$display_number = trim( (string) $display_number );
+		if ( '' === $display_number ) { return null; }
+		$wpdb->last_error = '';
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				'SELECT n.display_number, n.series_id, n.first_version_id, s.public_id, s.current_version_id, s.administrative_state, s.compliance_state, s.visibility FROM %i n INNER JOIN %i s ON s.id = n.series_id WHERE n.display_number = %s LIMIT 1',
+				SchemaManager::table( 'credential_numbers' ),
+				SchemaManager::table( 'credential_series' ),
+				$display_number
+			),
+			ARRAY_A
+		);
+		if ( '' !== (string) $wpdb->last_error ) {
+			return new \WP_Error( 'certloom_display_number_read_failed', __( 'Certloom could not read the certificate-number assignment.', 'certloom' ) );
+		}
+		if ( ! is_array( $row ) ) { return null; }
+		foreach ( array( 'series_id', 'first_version_id', 'current_version_id' ) as $key ) {
+			$row[ $key ] = ! empty( $row[ $key ] ) ? absint( $row[ $key ] ) : null;
+		}
+		return $row;
+	}
+
+	/**
+	 * Reserves a globally unique human certificate number for one Credential Series.
+	 * Existing assignment to the same Series is reusable by immutable correction Versions.
+	 *
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	private function reserve_display_number( $series_id, $display_number ) {
+		global $wpdb;
+		$table = SchemaManager::table( 'credential_numbers' );
+		$wpdb->last_error = '';
+		$existing = $wpdb->get_row( $wpdb->prepare( 'SELECT id, series_id, first_version_id FROM %i WHERE display_number = %s LIMIT 1', $table, $display_number ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error ) {
+			return new \WP_Error( 'certloom_display_number_read_failed', __( 'Certloom could not check the certificate-number assignment.', 'certloom' ) );
+		}
+		if ( is_array( $existing ) ) {
+			if ( absint( $existing['series_id'] ?? 0 ) !== absint( $series_id ) ) {
+				return new \WP_Error( 'certloom_display_number_duplicate', __( 'That certificate number is already assigned to another credential.', 'certloom' ) );
+			}
+			return array( 'id' => absint( $existing['id'] ), 'new' => false, 'first_version_id' => ! empty( $existing['first_version_id'] ) ? absint( $existing['first_version_id'] ) : null );
+		}
+		$wpdb->last_error = '';
+		$inserted = $wpdb->insert(
+			$table,
+			array(
+				'display_number' => $display_number,
+				'series_id' => absint( $series_id ),
+				'first_version_id' => null,
+				'created_at' => current_time( 'mysql', true ),
+				'retired_at' => null,
+			)
+		);
+		if ( false === $inserted || '' !== (string) $wpdb->last_error ) {
+			/* A concurrent Series may have won the unique insert; re-read for a precise result. */
+			$wpdb->last_error = '';
+			$existing = $wpdb->get_row( $wpdb->prepare( 'SELECT id, series_id, first_version_id FROM %i WHERE display_number = %s LIMIT 1', $table, $display_number ), ARRAY_A );
+			if ( is_array( $existing ) && absint( $existing['series_id'] ?? 0 ) === absint( $series_id ) ) {
+				return array( 'id' => absint( $existing['id'] ), 'new' => false, 'first_version_id' => ! empty( $existing['first_version_id'] ) ? absint( $existing['first_version_id'] ) : null );
+			}
+			return new \WP_Error( 'certloom_display_number_duplicate', __( 'That certificate number is already assigned to another credential.', 'certloom' ) );
+		}
+		return array( 'id' => (int) $wpdb->insert_id, 'new' => true, 'first_version_id' => null );
+	}
+
+	/** @return true|\WP_Error */
+	private function link_number_first_version( array $reservation, $version_id ) {
+		if ( ! empty( $reservation['first_version_id'] ) ) { return true; }
+		global $wpdb;
+		$wpdb->last_error = '';
+		$updated = $wpdb->query(
+			$wpdb->prepare(
+				'UPDATE %i SET first_version_id = %d WHERE id = %d AND first_version_id IS NULL',
+				SchemaManager::table( 'credential_numbers' ),
+				absint( $version_id ),
+				absint( $reservation['id'] ?? 0 )
+			)
+		);
+		return false === $updated || '' !== (string) $wpdb->last_error
+			? new \WP_Error( 'certloom_display_number_link_failed', __( 'Certloom could not link the certificate number to its first issuance version.', 'certloom' ) )
+			: true;
+	}
+
+	/** @return void */
+	private function release_new_number_reservation( array $reservation ) {
+		if ( empty( $reservation['new'] ) || empty( $reservation['id'] ) ) { return; }
+		global $wpdb;
+		$wpdb->query(
+			$wpdb->prepare(
+				'DELETE FROM %i WHERE id = %d AND first_version_id IS NULL',
+				SchemaManager::table( 'credential_numbers' ),
+				absint( $reservation['id'] )
+			)
+		);
 	}
 
 	/** @return int|\WP_Error */

@@ -1,6 +1,7 @@
 <?php
 namespace Certloom\Infrastructure\Repository;
 
+use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Infrastructure\Database\SchemaManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -34,12 +35,92 @@ final class RecipientRepository {
 			'updated_at' => $now,
 		);
 
+		$generation = ( new DomainGeneration() )->mark_before_mutation();
+		if ( is_wp_error( $generation ) ) { return $generation; }
 		$wpdb->last_error = '';
 		$inserted = $wpdb->insert( SchemaManager::table( 'recipients' ), $row );
 		if ( false === $inserted || '' !== (string) $wpdb->last_error ) {
 			return new \WP_Error( 'certloom_recipient_create_failed', __( 'Certloom could not create the recipient.', 'certloom' ) );
 		}
 		return (int) $wpdb->insert_id;
+	}
+
+	/**
+	 * Updates only explicitly supplied recipient fields. Missing keys are never
+	 * interpreted as clears, which is the repository-level basis for LOCKDATA-01.
+	 *
+	 * @param int $id Recipient ID.
+	 * @param array<string,mixed> $data Submitted patch.
+	 * @return true|\WP_Error
+	 */
+	public function update( $id, array $data ) {
+		global $wpdb;
+		$id = absint( $id );
+		if ( ! $id ) {
+			return new \WP_Error( 'certloom_recipient_id_required', __( 'A valid recipient is required.', 'certloom' ) );
+		}
+		$row = array();
+		if ( array_key_exists( 'display_name', $data ) ) {
+			$name = trim( (string) $data['display_name'] );
+			if ( '' === $name ) {
+				return new \WP_Error( 'certloom_recipient_name_required', __( 'A recipient display name is required.', 'certloom' ) );
+			}
+			$row['display_name'] = $name;
+		}
+		foreach ( array( 'first_name', 'middle_name', 'last_name', 'email', 'external_id' ) as $key ) {
+			if ( array_key_exists( $key, $data ) ) {
+				$row[ $key ] = self::nullable_string( $data[ $key ] );
+			}
+		}
+		if ( array_key_exists( 'wp_user_id', $data ) ) {
+			$row['wp_user_id'] = ! empty( $data['wp_user_id'] ) ? absint( $data['wp_user_id'] ) : null;
+		}
+		if ( array_key_exists( 'custom_fields', $data ) ) {
+			$row['custom_fields'] = wp_json_encode( is_array( $data['custom_fields'] ) ? $data['custom_fields'] : array() );
+		}
+		if ( empty( $row ) ) {
+			return true;
+		}
+		$row['updated_at'] = current_time( 'mysql', true );
+		$generation = ( new DomainGeneration() )->mark_before_mutation();
+		if ( is_wp_error( $generation ) ) { return $generation; }
+		$wpdb->last_error = '';
+		$updated = $wpdb->update( SchemaManager::table( 'recipients' ), $row, array( 'id' => $id ) );
+		if ( false === $updated || '' !== (string) $wpdb->last_error ) {
+			return new \WP_Error( 'certloom_recipient_update_failed', __( 'Certloom could not update the recipient.', 'certloom' ) );
+		}
+		return true;
+	}
+
+	/** @return array{items:array<int,array<string,mixed>>,total:int}|\WP_Error */
+	public function list_page( $search = '', $page = 1, $per_page = 20 ) {
+		global $wpdb;
+		$page = max( 1, absint( $page ) );
+		$per_page = max( 1, min( 100, absint( $per_page ) ) );
+		$offset = ( $page - 1 ) * $per_page;
+		$search = trim( (string) $search );
+		$where = '';
+		$args = array();
+		if ( '' !== $search ) {
+			$like = '%' . $wpdb->esc_like( $search ) . '%';
+			$where = ' WHERE display_name LIKE %s OR email LIKE %s OR external_id LIKE %s';
+			$args = array( $like, $like, $like );
+		}
+		$table = SchemaManager::table( 'recipients' );
+		$count_sql = 'SELECT COUNT(*) FROM %i' . $where;
+		$list_sql = 'SELECT id, display_name, email, external_id, wp_user_id, created_at FROM %i' . $where . ' ORDER BY id DESC LIMIT %d OFFSET %d';
+		$wpdb->last_error = '';
+		$total = (int) $wpdb->get_var( $wpdb->prepare( $count_sql, array_merge( array( $table ), $args ) ) );
+		$items = $wpdb->get_results( $wpdb->prepare( $list_sql, array_merge( array( $table ), $args, array( $per_page, $offset ) ) ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $items ) ) {
+			return new \WP_Error( 'certloom_recipient_list_failed', __( 'Certloom could not load recipients.', 'certloom' ) );
+		}
+		foreach ( $items as &$item ) {
+			$item['id'] = absint( $item['id'] ?? 0 );
+			$item['wp_user_id'] = ! empty( $item['wp_user_id'] ) ? absint( $item['wp_user_id'] ) : null;
+		}
+		unset( $item );
+		return array( 'items' => $items, 'total' => $total );
 	}
 
 	/** @return array<string,mixed>|null|\WP_Error */

@@ -1,6 +1,7 @@
 <?php
 namespace Certloom\Infrastructure\Repository;
 
+use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Application\Contract\EventRepositoryInterface;
 use Certloom\Infrastructure\Database\SchemaManager;
 
@@ -36,12 +37,55 @@ final class EventRepository implements EventRepositoryInterface {
 			'meta_json' => isset( $event['meta'] ) ? wp_json_encode( $event['meta'] ) : null,
 			'created_at' => current_time( 'mysql', true ),
 		);
+		$generation = ( new DomainGeneration() )->mark_before_mutation();
+		if ( is_wp_error( $generation ) ) { return $generation; }
 		$wpdb->last_error = '';
 		$inserted = $wpdb->insert( SchemaManager::table( 'credential_events' ), $row );
 		if ( false === $inserted || '' !== (string) $wpdb->last_error ) {
 			return new \WP_Error( 'certloom_event_create_failed', __( 'Certloom could not record the credential event.', 'certloom' ) );
 		}
 		return (int) $wpdb->insert_id;
+	}
+
+	/**
+	 * Loads a bounded newest-first lifecycle history for one Credential Series.
+	 *
+	 * @param int $series_id Credential Series ID.
+	 * @param int $limit Maximum events.
+	 * @return array<int,array<string,mixed>>|\WP_Error
+	 */
+	public function list_for_series( $series_id, $limit = 100 ) {
+		global $wpdb;
+		$series_id = absint( $series_id );
+		$limit = max( 1, min( 250, absint( $limit ) ) );
+		if ( ! $series_id ) {
+			return array();
+		}
+		$wpdb->last_error = '';
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				'SELECT id, series_id, version_id, event_type, actor_user_id, old_state_json, new_state_json, reason_code, public_reason, internal_note, meta_json, created_at FROM %i WHERE series_id = %d ORDER BY id DESC LIMIT %d',
+				SchemaManager::table( 'credential_events' ),
+				$series_id,
+				$limit
+			),
+			ARRAY_A
+		);
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) {
+			return new \WP_Error( 'certloom_event_list_failed', __( 'Certloom could not load credential history.', 'certloom' ) );
+		}
+		foreach ( $rows as &$row ) {
+			foreach ( array( 'id', 'series_id', 'version_id', 'actor_user_id' ) as $key ) {
+				$row[ $key ] = ! empty( $row[ $key ] ) ? absint( $row[ $key ] ) : null;
+			}
+			foreach ( array( 'old_state_json' => 'old_state', 'new_state_json' => 'new_state', 'meta_json' => 'meta' ) as $json_key => $target ) {
+				$decoded = ! empty( $row[ $json_key ] ) ? json_decode( (string) $row[ $json_key ], true ) : array();
+				$row[ $target ] = is_array( $decoded ) ? $decoded : array();
+				unset( $row[ $json_key ] );
+			}
+		}
+		unset( $row );
+		return $rows;
 	}
 
 	/** @return string|null */

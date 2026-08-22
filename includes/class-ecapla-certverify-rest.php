@@ -30,6 +30,24 @@ class Ecapla_CertVerify_REST {
 					),
 				)
 			);
+
+			register_rest_route(
+				$namespace,
+				'/credential',
+				array(
+					'methods'             => WP_REST_Server::READABLE,
+					'callback'            => array( __CLASS__, 'verify_credential' ),
+					'permission_callback' => '__return_true',
+					'args'                => array(
+						'id' => array(
+							'type'              => 'string',
+							'required'          => true,
+							'sanitize_callback' => array( __CLASS__, 'sanitize_number' ),
+							'validate_callback' => array( __CLASS__, 'validate_number' ),
+						),
+					),
+				)
+			);
 		}
 	}
 
@@ -55,7 +73,7 @@ class Ecapla_CertVerify_REST {
 			return self::add_private_headers( $response );
 		}
 
-		if ( self::is_rate_limited() ) {
+		if ( self::is_rate_limited( 'legacy_verify' ) ) {
 			$response = new WP_REST_Response(
 				array(
 					'code'    => 'ecapla_certverify_rate_limited',
@@ -93,58 +111,61 @@ class Ecapla_CertVerify_REST {
 		return self::add_private_headers( $response );
 	}
 
-	public static function is_rate_limited() {
-		$limit      = max( 1, absint( apply_filters( 'ecapla_certverify_rate_limit', self::RATE_LIMIT ) ) );
-		$identifier = self::get_ip() . '|' . self::get_user_agent();
-		$identifier = (string) apply_filters( 'ecapla_certverify_rate_limit_identifier', $identifier );
-		$bucket     = (string) floor( time() / MINUTE_IN_SECONDS );
-		$key        = 'ecapla_certverify_rl_' . hash_hmac( 'sha256', $identifier . '|' . $bucket, wp_salt( 'nonce' ) );
-
-		if ( wp_using_ext_object_cache() ) {
-			$group = 'certloom';
-			if ( wp_cache_add( $key, 1, $group, 70 ) ) {
-				return false;
-			}
-			$count = wp_cache_incr( $key, 1, $group );
-			if ( false === $count ) {
-				wp_cache_set( $key, 1, $group, 70 );
-				return false;
-			}
-			return (int) $count > $limit;
-		}
-
-		global $wpdb;
-		$option_key = 'certverify_rl_' . $bucket . '_' . substr( hash_hmac( 'sha256', $identifier, wp_salt( 'nonce' ) ), 0, 40 );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- A single atomic INSERT ... ON DUPLICATE KEY UPDATE prevents race-prone transient counters.
-		$increment  = $wpdb->query(
-			$wpdb->prepare(
-				"INSERT INTO %i (option_name, option_value, autoload) VALUES (%s, '1', 'no') ON DUPLICATE KEY UPDATE option_value = CAST(option_value AS UNSIGNED) + 1",
-				$wpdb->options,
-				$option_key
-			)
-		);
-		wp_cache_delete( $option_key, 'options' );
-		if ( false === $increment ) {
-			return false; // Availability takes priority if the protective counter cannot be written.
-		}
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Reads the just-updated atomic counter directly so the rate-limit decision cannot use stale option-cache data.
-		$count = (int) $wpdb->get_var(
-			$wpdb->prepare( 'SELECT option_value FROM %i WHERE option_name = %s', $wpdb->options, $option_key )
-		);
-
-		if ( 1 === wp_rand( 1, 100 ) ) {
-			$current_prefix = $wpdb->esc_like( 'certverify_rl_' . $bucket . '_' ) . '%';
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Probabilistic cleanup removes expired internal rate-limit buckets; caching these ephemeral rows would be counterproductive.
-			$wpdb->query(
-				$wpdb->prepare(
-					'DELETE FROM %i WHERE option_name LIKE %s AND option_name NOT LIKE %s',
-					$wpdb->options,
-					$wpdb->esc_like( 'certverify_rl_' ) . '%',
-					$current_prefix
-				)
+	/**
+	 * Gated public verification adapter for the new Credential Series model.
+	 *
+	 * The endpoint exists in 1.5.2 code but stays unavailable until the explicit
+	 * schema + complete legacy-migration cutover gate has been enabled.
+	 */
+	public static function verify_credential( $request ) {
+		$gate = new \Certloom\Infrastructure\Verification\PublicVerificationGate();
+		if ( ! $gate->is_ready() ) {
+			$response = new WP_REST_Response(
+				array(
+					'code'    => 'certloom_series_verification_not_ready',
+					'message' => __( 'Credential verification is temporarily unavailable while Certloom completes its in-place data upgrade.', 'certloom' ),
+				),
+				503
 			);
+			$response->header( 'Retry-After', '60' );
+			return self::add_private_headers( $response );
 		}
-		return $count > $limit;
+
+		if ( self::is_rate_limited( 'credential_verify', true ) ) {
+			$response = new WP_REST_Response(
+				array( 'code' => 'certloom_rate_limited', 'message' => __( 'Too many verification requests. Please wait a minute and try again.', 'certloom' ) ),
+				429
+			);
+			$response->header( 'Retry-After', '60' );
+			return self::add_private_headers( $response );
+		}
+
+		$repo = new \Certloom\Infrastructure\Repository\CredentialRepository();
+		$result = ( new \Certloom\Application\CredentialVerificationService( $repo ) )->verify_public_id( self::sanitize_number( $request->get_param( 'id' ) ) );
+		if ( is_wp_error( $result ) ) {
+			$response = new WP_REST_Response(
+				array( 'code' => 'certloom_verification_temporarily_unavailable', 'message' => __( 'Credential verification is temporarily unavailable. Please try again later.', 'certloom' ) ),
+				503
+			);
+			$response->header( 'Retry-After', '60' );
+			return self::add_private_headers( $response );
+		}
+
+		$payload = ( new \Certloom\Application\PublicCredentialPresenter() )->present( $result );
+		$filtered = apply_filters( 'certloom_public_verification_response', $payload, $result );
+		if ( ! is_array( $filtered ) ) {
+			$filtered = $payload;
+		}
+		/* Generic extensions may add fields, but cannot weaken/replace Core truth. */
+		foreach ( $payload as $key => $value ) {
+			$filtered[ $key ] = $value;
+		}
+		return self::add_private_headers( new WP_REST_Response( $filtered, 200 ) );
+	}
+
+	public static function is_rate_limited( $scope = 'verify', $fail_closed = false ) {
+		$legacy_limit = max( 1, absint( apply_filters( 'ecapla_certverify_rate_limit', self::RATE_LIMIT, sanitize_key( (string) $scope ) ) ) );
+		return ( new \Certloom\Infrastructure\Security\RateLimiter() )->is_limited( $scope, $fail_closed, $legacy_limit );
 	}
 
 	private static function add_private_headers( $response ) {

@@ -1,6 +1,7 @@
 <?php
 namespace Certloom\Infrastructure\Repository;
 
+use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Infrastructure\Database\SchemaManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -30,12 +31,97 @@ final class IssuerRepository {
 			'created_at' => $now,
 			'updated_at' => $now,
 		);
+		$generation = ( new DomainGeneration() )->mark_before_mutation();
+		if ( is_wp_error( $generation ) ) { return $generation; }
 		$wpdb->last_error = '';
 		$inserted = $wpdb->insert( SchemaManager::table( 'issuers' ), $row );
 		if ( false === $inserted || '' !== (string) $wpdb->last_error ) {
 			return new \WP_Error( 'certloom_issuer_create_failed', __( 'Certloom could not create the issuer.', 'certloom' ) );
 		}
 		return (int) $wpdb->insert_id;
+	}
+
+	/**
+	 * Applies a whitelisted issuer patch without clearing omitted branding/settings.
+	 *
+	 * @param int $id Issuer ID.
+	 * @param array<string,mixed> $data Submitted patch.
+	 * @return true|\WP_Error
+	 */
+	public function update( $id, array $data ) {
+		global $wpdb;
+		$id = absint( $id );
+		if ( ! $id ) {
+			return new \WP_Error( 'certloom_issuer_id_required', __( 'A valid issuer is required.', 'certloom' ) );
+		}
+		$row = array();
+		if ( array_key_exists( 'name', $data ) ) {
+			$name = trim( (string) $data['name'] );
+			if ( '' === $name ) {
+				return new \WP_Error( 'certloom_issuer_name_required', __( 'An issuer name is required.', 'certloom' ) );
+			}
+			$row['name'] = $name;
+		}
+		if ( array_key_exists( 'slug', $data ) ) {
+			$slug = sanitize_title( (string) $data['slug'] );
+			if ( '' === $slug ) {
+				return new \WP_Error( 'certloom_issuer_slug_required', __( 'A valid issuer slug is required.', 'certloom' ) );
+			}
+			$row['slug'] = $slug;
+		}
+		foreach ( array( 'logo_attachment_id', 'seal_attachment_id' ) as $key ) {
+			if ( array_key_exists( $key, $data ) ) {
+				$row[ $key ] = ! empty( $data[ $key ] ) ? absint( $data[ $key ] ) : null;
+			}
+		}
+		if ( array_key_exists( 'settings', $data ) ) {
+			$row['settings_json'] = wp_json_encode( is_array( $data['settings'] ) ? $data['settings'] : array() );
+		}
+		if ( empty( $row ) ) {
+			return true;
+		}
+		$row['updated_at'] = current_time( 'mysql', true );
+		$generation = ( new DomainGeneration() )->mark_before_mutation();
+		if ( is_wp_error( $generation ) ) { return $generation; }
+		$wpdb->last_error = '';
+		$updated = $wpdb->update( SchemaManager::table( 'issuers' ), $row, array( 'id' => $id ) );
+		if ( false === $updated || '' !== (string) $wpdb->last_error ) {
+			if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
+				return new \WP_Error( 'certloom_issuer_slug_duplicate', __( 'That issuer slug is already in use.', 'certloom' ) );
+			}
+			return new \WP_Error( 'certloom_issuer_update_failed', __( 'Certloom could not update the issuer.', 'certloom' ) );
+		}
+		return true;
+	}
+
+	/** @return array{items:array<int,array<string,mixed>>,total:int}|\WP_Error */
+	public function list_page( $search = '', $page = 1, $per_page = 20 ) {
+		global $wpdb;
+		$page = max( 1, absint( $page ) );
+		$per_page = max( 1, min( 100, absint( $per_page ) ) );
+		$offset = ( $page - 1 ) * $per_page;
+		$search = trim( (string) $search );
+		$where = '';
+		$args = array();
+		if ( '' !== $search ) {
+			$like = '%' . $wpdb->esc_like( $search ) . '%';
+			$where = ' WHERE name LIKE %s OR slug LIKE %s';
+			$args = array( $like, $like );
+		}
+		$table = SchemaManager::table( 'issuers' );
+		$wpdb->last_error = '';
+		$total = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i' . $where, array_merge( array( $table ), $args ) ) );
+		$items = $wpdb->get_results( $wpdb->prepare( 'SELECT id, name, slug, logo_attachment_id, seal_attachment_id, created_at FROM %i' . $where . ' ORDER BY id DESC LIMIT %d OFFSET %d', array_merge( array( $table ), $args, array( $per_page, $offset ) ) ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $items ) ) {
+			return new \WP_Error( 'certloom_issuer_list_failed', __( 'Certloom could not load issuers.', 'certloom' ) );
+		}
+		foreach ( $items as &$item ) {
+			$item['id'] = absint( $item['id'] ?? 0 );
+			$item['logo_attachment_id'] = ! empty( $item['logo_attachment_id'] ) ? absint( $item['logo_attachment_id'] ) : null;
+			$item['seal_attachment_id'] = ! empty( $item['seal_attachment_id'] ) ? absint( $item['seal_attachment_id'] ) : null;
+		}
+		unset( $item );
+		return array( 'items' => $items, 'total' => $total );
 	}
 
 	/** @return array<string,mixed>|null|\WP_Error */
