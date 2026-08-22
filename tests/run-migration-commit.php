@@ -57,10 +57,14 @@ mc_same( array(1,2), $target->calls, 'stops after first unsafe row' );
 echo "PASS  commit service stops at first failed row\n";
 
 $state = new LegacyMigrationState();
+$fingerprint = str_repeat( 'a', 64 );
 mc_same( true, $state->begin_preflight( array('count'=>2,'max_id'=>3,'generation'=>'gen-a'), '2026-08-22' ) );
 mc_same( LegacyMigrationState::PREFLIGHTING, $state->status() );
-mc_same( true, $state->record_preflight_batch( 3, array('total'=>2,'ready'=>2,'errors'=>0,'status_counts'=>array('valid'=>2,'suspended'=>0,'revoked'=>0,'expired'=>0),'error_details'=>array()) ) );
+mc_same( true, $state->record_preflight_batch( 3, array('total'=>2,'ready'=>2,'errors'=>0,'status_counts'=>array('valid'=>2,'suspended'=>0,'revoked'=>0,'expired'=>0),'error_details'=>array()), $fingerprint ) );
 mc_same( true, $state->finish_preflight() );
+mc_same( LegacyMigrationState::PREFLIGHT_VERIFYING, $state->status() );
+mc_same( true, $state->record_preflight_verification_batch( 3, 2, $fingerprint ) );
+mc_same( true, $state->finish_preflight_verification() );
 mc_same( LegacyMigrationState::PREFLIGHT_READY, $state->status() );
 mc_same( true, $state->begin_commit() );
 mc_same( true, $state->record_progress( 3, 2, 0, 0 ) );

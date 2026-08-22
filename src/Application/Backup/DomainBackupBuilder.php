@@ -4,6 +4,7 @@ namespace Certloom\Application\Backup;
 use Certloom\Application\Contract\DomainBackupBuilderInterface;
 use Certloom\Infrastructure\Backup\DomainBackupRepository;
 use Certloom\Infrastructure\Data\DomainGeneration;
+use Certloom\Infrastructure\Data\DomainMaintenanceLock;
 use Certloom\Infrastructure\Files\PrivateJobFileStore;
 
 /** Incremental complete-domain backup builder suitable for one bounded job slice per request. */
@@ -12,17 +13,32 @@ final class DomainBackupBuilder implements DomainBackupBuilderInterface {
 	private $files;
 	private $format;
 	private $generation;
+	private $maintenance;
 
-	public function __construct( DomainBackupRepository $repository = null, PrivateJobFileStore $files = null, DomainBackupFormat $format = null, DomainGeneration $generation = null ) {
+	public function __construct( DomainBackupRepository $repository = null, PrivateJobFileStore $files = null, DomainBackupFormat $format = null, DomainGeneration $generation = null, DomainMaintenanceLock $maintenance = null ) {
 		$this->repository = $repository ?: new DomainBackupRepository();
 		$this->files = $files ?: new PrivateJobFileStore();
 		$this->format = $format ?: new DomainBackupFormat();
 		$this->generation = $generation ?: new DomainGeneration();
+		$this->maintenance = $maintenance ?: new DomainMaintenanceLock();
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
 	public function start( $job_key, $plugin_version ) {
+		$job_key = strtolower( trim( (string) $job_key ) );
+		$locked = $this->maintenance->acquire( $job_key, 'domain_backup_snapshot', 120 );
+		if ( is_wp_error( $locked ) ) { return $locked; }
 		$snapshot = $this->repository->snapshot();
+		$released = $this->maintenance->release( $job_key );
+		if ( is_wp_error( $released ) ) {
+			return new \WP_Error(
+				'certloom_domain_backup_snapshot_cleanup_failed',
+				sprintf(
+					__( 'Certloom could not release its backup snapshot lock safely (%s). Credential writes remain paused until maintenance cleanup succeeds.', 'certloom' ),
+					$released->get_error_message()
+				)
+			);
+		}
 		if ( is_wp_error( $snapshot ) ) { return $snapshot; }
 		$path = $this->files->create_path( $job_key, 'backup' );
 		if ( is_wp_error( $path ) ) { return $path; }
@@ -35,14 +51,12 @@ final class DomainBackupBuilder implements DomainBackupBuilderInterface {
 		$flushed = fflush( $handle );
 		fclose( $handle );
 		if ( strlen( $line ) !== (int) $written || ! $flushed ) {
-			$this->files->delete( $path );
-			return new \WP_Error( 'certloom_domain_backup_write_failed', __( 'Certloom could not write the domain backup manifest.', 'certloom' ) );
+			return $this->discard_invalid_backup( $path, 'certloom_domain_backup_write_failed', __( 'Certloom could not write the domain backup manifest.', 'certloom' ) );
 		}
 		@chmod( $path, 0600 );
 		$file_size = @filesize( $path );
 		if ( false === $file_size ) {
-			$this->files->delete( $path );
-			return new \WP_Error( 'certloom_domain_backup_stat_failed', __( 'Certloom could not record the private backup file position.', 'certloom' ) );
+			return $this->discard_invalid_backup( $path, 'certloom_domain_backup_stat_failed', __( 'Certloom could not record the private backup file position.', 'certloom' ) );
 		}
 		return array(
 			'path' => $path,
@@ -101,13 +115,11 @@ final class DomainBackupBuilder implements DomainBackupBuilderInterface {
 	/** @return array<string,mixed>|\WP_Error */
 	private function finish( array $state ) {
 		if ( ! hash_equals( (string) $state['generation'], $this->generation->current() ) ) {
-			$this->files->delete( $state['path'] );
-			return new \WP_Error( 'certloom_domain_backup_concurrent_change', __( 'Certloom data changed while the complete backup was being built. No mixed-state backup was kept.', 'certloom' ) );
+			return $this->discard_invalid_backup( $state['path'], 'certloom_domain_backup_concurrent_change', __( 'Certloom data changed while the complete backup was being built. No mixed-state backup was kept.', 'certloom' ) );
 		}
 		$config = $this->repository->configuration_snapshot();
 		if ( is_wp_error( $config ) || ! hash_equals( (string) ( $state['configuration_hash'] ?? '' ), is_wp_error( $config ) ? '' : (string) $config['hash'] ) ) {
-			$this->files->delete( $state['path'] );
-			return new \WP_Error( 'certloom_domain_backup_configuration_changed', __( 'Certloom configuration changed while the complete backup was being built. No mixed-state backup was kept.', 'certloom' ) );
+			return $this->discard_invalid_backup( $state['path'], 'certloom_domain_backup_configuration_changed', __( 'Certloom configuration changed while the complete backup was being built. No mixed-state backup was kept.', 'certloom' ) );
 		}
 		$integrity = array( 'type' => 'integrity', 'records' => absint( $state['records'] ), 'chain_sha256' => (string) $state['hash'] );
 		$line = $this->format->encode_line( $integrity );
@@ -163,6 +175,24 @@ final class DomainBackupBuilder implements DomainBackupBuilderInterface {
 			return new \WP_Error( 'certloom_domain_backup_resume_failed', __( 'Certloom could not position its private backup stream safely.', 'certloom' ) );
 		}
 		return $handle;
+	}
+
+	/** @return \WP_Error */
+	private function discard_invalid_backup( $path, $error_code, $message ) {
+		$deleted = $this->files->delete( $path );
+		if ( is_wp_error( $deleted ) || false === $deleted ) {
+			$cleanup_message = is_wp_error( $deleted ) ? $deleted->get_error_message() : __( 'The private backup file could not be removed.', 'certloom' );
+			return new \WP_Error(
+				'certloom_domain_backup_cleanup_failed',
+				sprintf(
+					__( '%1$s Certloom also could not remove the invalid private backup file safely (%2$s).', 'certloom' ),
+					(string) $message,
+					$cleanup_message
+				),
+				array( 'original_error' => (string) $error_code )
+			);
+		}
+		return new \WP_Error( (string) $error_code, (string) $message );
 	}
 
 	/** @return true|\WP_Error */

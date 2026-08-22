@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.5.13
+Stable tag: 1.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.5.13: Certloom continues as the same in-place plugin and the proven 1.5 registry remains authoritative. After the isolated database proof and gated Credential Series acceptance proof pass, administrators can now run a bounded, resumable, read-only preflight of the actual populated legacy registry through the production migration mapper and Status Service. A second full fingerprint pass must match before the evidence can pass. No Credential Series rows are written, official migration is not started, and authority does not change. Live populated migration commit, future-domain restore promotion/rollback, final cutover, and production PHP artifact rendering remain separate mandatory gates.
+> Development note for 1.6.0: Certloom begins the visible Phase 1 administration redesign from the original master roadmap. The top-level Certloom screen is now a read-only operations dashboard with live registry totals, lifecycle status counts, 30-day expiry visibility, monthly issuance, recent certificates, quick actions, and current-production system health. The proven legacy registry remains authoritative and all future-domain write/admin/data-tool flags remain disabled.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -118,6 +118,43 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.0 =
+* Phase 1 Part A: premium Certloom operations Dashboard from the original master roadmap.
+* Added bounded live totals/status/expiry/monthly issuance metrics, recent certificates, quick actions, and current-production system health.
+* Moved the existing registry to a dedicated Certificates submenu while preserving its proven authority and behavior.
+* Added responsive/accessibility-focused premium admin styling without external assets or telemetry.
+* Future Credential Series authority/admin/data-tool gates remain disabled.
+
+= 1.5.16 =
+* Add an explicitly opted-in local/development/staging-only final authority-cutover rehearsal after fresh passing populated migration and restore rehearsals.
+* Exercise the production cutover coordinator, require the committed receipt to match the exact completed migration count/max-ID/generation boundary, prove the legacy write guard becomes read-only, enable the real Series verification gate, then return to a clean legacy baseline.
+* Introduce fail-closed authority semantics: missing/clean state means legacy, exact `domain` means next-domain authority, and any other non-empty value is corrupt protected state that blocks both legacy writes and public Series verification.
+* Treat prepared, malformed and committed cutover receipts as protected state rather than normalizing them to a clean pre-cutover baseline.
+* Require exact read-back after prepared receipt, authority, committed receipt and public-verification marker writes; filter-altered option persistence cannot silently complete cutover.
+* Make boot/recovery and all migration/restore rehearsal prerequisites recognize partial/corrupt cutover evidence, and preserve that lineage across retain-data uninstall/reinstall instead of reopening a false clean-legacy state.
+* Keep all production future-domain write/admin/data-tool flags disabled; the staging rehearsal never constitutes production cutover approval.
+
+= 1.5.15 =
+* Add an explicitly opted-in local/development/staging-only populated future-domain backup/restore rehearsal after the populated migration rehearsal; it uses the production backup, Replace, Merge and rollback code and never changes credential authority.
+* Add a deterministic whole-domain fingerprint over the populated credential graph and configuration so Replace, identical Merge and forced rollback must return to the exact same semantic state even when the internal generation marker advances.
+* Require exact crash-replay Replace entity counts and Merge action counts, require identical Merge to insert zero records, and force a real post-swap configuration mismatch to exercise the production rollback path.
+* Make restore semantic review independently bounded and integrity-bound, require the canonical entity manifest, and verify exact option values after persistence so WordPress filters cannot silently alter restored configuration.
+* Hold domain backup snapshots behind the shared maintenance boundary and make private backup/source/staging cleanup failures explicit and retryable.
+* Harden both future-domain and currently authoritative legacy restore private-table creation/rollback so failed pre/post DROP cleanup is never reported as clean success.
+* Harden import upload/preflight private-file/transient cleanup and staging rehearsal execution-lock cleanup on abnormal failure paths.
+* Keep all future-domain write/admin/data-tool flags disabled; real staging execution, final cutover rehearsal and production PHP certificate rendering remain separate gates.
+
+= 1.5.14 =
+* Harden the official legacy migration coordinator itself with mandatory two-pass semantic fingerprint verification before populated target writes can begin.
+* Run every official migration commit slice behind the shared maintenance boundary so legacy writes cannot race the source check, source read, and target write inside one slice; a change between slices is detected by the frozen source boundary and blocks the next slice.
+* Treat any started official migration as durable future-domain state that makes the additive schema mandatory on every subsequent boot/reactivation even while all public/admin/data-tool feature gates remain off.
+* Preserve migration/cutover lineage across uninstall/reinstall whenever credential data is retained, including the legacy source-generation marker needed to validate the frozen migration boundary; operational locks/jobs/proof sessions are still removed.
+* Add an explicitly opt-in, local/development/staging-only populated migration commit rehearsal that uses the production migration coordinator/writer, verifies row/status/event parity and a second idempotent writer replay, and never changes credential authority.
+* Require a fresh isolated database proof, gated-domain acceptance proof, populated migration preflight, empty future-domain tables, healthy schema, no restore/cutover state, and all future-domain feature gates off before the staging rehearsal can begin.
+* Bind a multi-request staging rehearsal to one Certloom version and one legacy/target generation; an upgrade or source/target change makes the rehearsal stale/fail closed rather than mixing migration semantics.
+* Keep the rehearsal deliberately non-resettable: after a failed or completed populated rehearsal, reclone/restore the staging database before rerunning it.
+* Keep all live source-of-truth authority and future-domain write/admin/data-tool flags unchanged.
 
 = 1.5.13 =
 * Add an administrator-only, nonce-protected populated legacy migration preflight after a fresh passing gated Credential Series acceptance proof.
@@ -260,6 +297,15 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 For the complete release history, see `changelog.txt` included with the plugin.
 
 == Upgrade Notice ==
+
+= 1.5.16 =
+Adds the staging-only final authority-cutover rehearsal and fail-closed cutover authority/receipt persistence safeguards while keeping the proven 1.5 verifier authoritative in production.
+
+= 1.5.15 =
+Adds a staging-only populated backup/Replace/Merge/rollback rehearsal and hardens restore/import cleanup while keeping the proven 1.5 verifier authoritative.
+
+= 1.5.14 =
+Hardens the real migration coordinator and adds an explicitly opted-in staging-only populated migration commit/parity rehearsal while keeping the proven 1.5 verifier authoritative.
 
 = 1.5.13 =
 Adds a read-only, resumable preflight of the actual populated legacy registry plus stricter pre-mutation generation-boundary safety, while keeping the proven 1.5 verifier authoritative.

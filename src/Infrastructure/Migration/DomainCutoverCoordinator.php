@@ -34,26 +34,36 @@ final class DomainCutoverCoordinator {
 	private $state;
 	/** @var callable */
 	private $schema_verifier;
+	/** @var callable */
+	private $readiness_verifier;
 
 	public function __construct(
 		LegacySourceSnapshotInterface $source = null,
 		DomainMaintenanceLock $maintenance = null,
 		LegacyMigrationState $migration = null,
 		DomainCutoverState $state = null,
-		callable $schema_verifier = null
+		callable $schema_verifier = null,
+		callable $readiness_verifier = null
 	) {
 		$this->source          = $source ?: new LegacyCertificateRepository();
 		$this->maintenance     = $maintenance ?: new DomainMaintenanceLock();
 		$this->migration       = $migration ?: new LegacyMigrationState();
 		$this->state           = $state ?: new DomainCutoverState();
-		$this->schema_verifier = $schema_verifier ?: array( SchemaManager::class, 'verify_health_now' );
+		$this->schema_verifier    = $schema_verifier ?: array( SchemaManager::class, 'verify_health_now' );
+		$this->readiness_verifier = $readiness_verifier ?: array( $this, 'assert_feature_flags' );
 	}
 
 	/** @return true|\WP_Error */
 	public function promote() {
-		$flags = $this->assert_feature_flags();
+		if ( $this->state->is_corrupt() ) {
+			return new \WP_Error( 'certloom_domain_cutover_authority_corrupt', __( 'Certloom found invalid credential-authority state. Cutover is blocked until the protected authority option is repaired from known-good recovery evidence.', 'certloom' ) );
+		}
+		$flags = call_user_func( $this->readiness_verifier );
 		if ( is_wp_error( $flags ) ) {
 			return $flags;
+		}
+		if ( true !== $flags ) {
+			return new \WP_Error( 'certloom_domain_cutover_readiness_invalid', __( 'Certloom could not confirm the credential-domain cutover readiness policy exactly.', 'certloom' ) );
 		}
 
 		$owner = $this->owner_token();
@@ -121,29 +131,33 @@ final class DomainCutoverCoordinator {
 		if ( '' === $receipt['source_generation'] ) {
 			return new \WP_Error( 'certloom_domain_cutover_snapshot_invalid', __( 'Certloom refused cutover because the final legacy source generation is missing.', 'certloom' ) );
 		}
-		$saved_receipt = update_option( DomainCutoverState::RECEIPT_OPTION, $receipt, false );
-		if ( ! $saved_receipt && $receipt !== get_option( DomainCutoverState::RECEIPT_OPTION, array() ) ) {
-			return new \WP_Error( 'certloom_domain_cutover_receipt_prepare_failed', __( 'Certloom could not save the prepared cutover receipt, so write authority was not changed.', 'certloom' ) );
+		update_option( DomainCutoverState::RECEIPT_OPTION, $receipt, false );
+		if ( $receipt !== get_option( DomainCutoverState::RECEIPT_OPTION, null ) ) {
+			delete_option( DomainCutoverState::RECEIPT_OPTION );
+			if ( false !== get_option( DomainCutoverState::RECEIPT_OPTION, false ) ) {
+				return new \WP_Error( 'certloom_domain_cutover_receipt_prepare_cleanup_failed', __( 'Certloom could not save the prepared cutover receipt exactly and could not remove the invalid prepared state.', 'certloom' ) );
+			}
+			return new \WP_Error( 'certloom_domain_cutover_receipt_prepare_failed', __( 'Certloom could not save the prepared cutover receipt exactly, so write authority was not changed.', 'certloom' ) );
 		}
 
-		$saved_authority = update_option( DomainCutoverState::OPTION, DomainCutoverState::DOMAIN, false );
-		if ( ! $saved_authority && DomainCutoverState::DOMAIN !== (string) get_option( DomainCutoverState::OPTION, DomainCutoverState::LEGACY ) ) {
-			$receipt_cleared = delete_option( DomainCutoverState::RECEIPT_OPTION );
-			if ( ! $receipt_cleared && false !== get_option( DomainCutoverState::RECEIPT_OPTION, false ) ) {
-				return new \WP_Error( 'certloom_domain_cutover_save_cleanup_failed', __( 'Certloom could not save domain write authority and could not clear its prepared cutover receipt. Legacy write authority remains active; clean the prepared receipt before retrying.', 'certloom' ) );
+		update_option( DomainCutoverState::OPTION, DomainCutoverState::DOMAIN, false );
+		if ( DomainCutoverState::DOMAIN !== get_option( DomainCutoverState::OPTION, null ) ) {
+			$rolled_back = $this->state->keep_legacy_authoritative();
+			if ( is_wp_error( $rolled_back ) ) {
+				return new \WP_Error( 'certloom_domain_cutover_save_cleanup_failed', __( 'Certloom could not persist domain write authority exactly and could not confirm rollback to legacy authority. Keep public Series verification disabled and recover from known-good site state before continuing.', 'certloom' ) );
 			}
-			return new \WP_Error( 'certloom_domain_cutover_save_failed', __( 'Certloom could not save the credential write-authority cutover.', 'certloom' ) );
+			return new \WP_Error( 'certloom_domain_cutover_save_failed', __( 'Certloom could not save the credential write-authority cutover exactly. Legacy write authority was restored safely.', 'certloom' ) );
 		}
 
 		$receipt['state']        = 'committed';
 		$receipt['completed_at'] = time();
-		$committed = update_option( DomainCutoverState::RECEIPT_OPTION, $receipt, false );
-		if ( ! $committed && $receipt !== get_option( DomainCutoverState::RECEIPT_OPTION, array() ) ) {
+		update_option( DomainCutoverState::RECEIPT_OPTION, $receipt, false );
+		if ( $receipt !== get_option( DomainCutoverState::RECEIPT_OPTION, null ) ) {
 			$rolled_back = $this->state->keep_legacy_authoritative();
 			if ( is_wp_error( $rolled_back ) ) {
-				return new \WP_Error( 'certloom_domain_cutover_receipt_commit_rollback_failed', __( 'Certloom changed write authority but could not commit its cutover receipt or confirm rollback. Keep public Series verification disabled and restore from the site database backup before continuing.', 'certloom' ) );
+				return new \WP_Error( 'certloom_domain_cutover_receipt_commit_rollback_failed', __( 'Certloom changed write authority but could not commit its cutover receipt exactly or confirm rollback. Keep public Series verification disabled and restore from the site database backup before continuing.', 'certloom' ) );
 			}
-			return new \WP_Error( 'certloom_domain_cutover_receipt_commit_failed', __( 'Certloom could not commit the cutover receipt. Legacy write authority was restored safely.', 'certloom' ) );
+			return new \WP_Error( 'certloom_domain_cutover_receipt_commit_failed', __( 'Certloom could not commit the cutover receipt exactly. Legacy write authority was restored safely.', 'certloom' ) );
 		}
 
 		return true;

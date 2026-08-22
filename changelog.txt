@@ -1,3 +1,59 @@
+1.6.0 — Phase 1 Part A: premium admin shell + operational dashboard; authority unchanged
+------------------------------------------------------------------------------------------------
+- Begin the original master-roadmap Phase 1 visible administration redesign without replacing the roadmap or switching credential authority.
+- Make the top-level Certloom menu open a premium read-only Dashboard and move the proven registry to a dedicated Certificates submenu route.
+- Complete ADM-01: live totals, effective Valid/Suspended/Withdrawn/Expired counts, credentials expiring within 30 days, issued-this-month count, recent certificates, quick actions, and current-production system health.
+- Add one bounded aggregate database query for dashboard totals and request only five recent rows; do not materialize the full registry.
+- Keep dashboard health focused on current live operations so staging/development acceptance-proof warnings remain on System Status instead of making a healthy everyday dashboard look degraded.
+- Preserve existing certificate CRUD/import/restore behavior and keep old bulk-action submissions backward-safe while the registry route changes.
+- Add a dedicated Phase 1 dashboard regression contract proving bounded recent queries, current-health filtering, read-only rendering, and the new dashboard/certificate route split.
+- Apply the first premium visual administration foundation with responsive metric cards, accessible focus treatment, operational panels, quick links, health state, and improved existing-screen surfaces using only local WordPress/CSS assets.
+- Keep the proven legacy registry/public verifier authoritative and every future-domain write/admin/data-tool readiness flag false.
+- ARC-01 remains partial because the complete backpanel redesign continues in later Phase 1 parts; REG-01/02/03 redesign/extension is next.
+
+1.5.16 — Final staging cutover rehearsal + fail-closed authority/receipt hardening; production authority unchanged
+------------------------------------------------------------------------------------------------------------------
+- Keep the proven 1.5 registry/public verifier authoritative and every future-domain write/admin/data-tool flag false.
+- Add an explicitly opted-in local/development/staging-only final authority-cutover rehearsal after fresh passing populated migration and restore rehearsals.
+- Exercise the real production cutover coordinator, legacy registry write guard and Series public-verification gate; then require verified rollback to a clean legacy baseline and an unchanged whole-domain semantic fingerprint.
+- Require a committed cutover receipt to match the exact completed migration source count, max ID and generation before Series public verification can become ready.
+- Treat non-empty invalid authority values as corrupt protected state: legacy writes and Series public verification both fail closed instead of silently falling back to legacy.
+- Treat prepared/malformed receipt state as protected recovery evidence and prevent diagnostics, rehearsals, boot and uninstall/reinstall from mistaking it for a pristine pre-cutover baseline.
+- Require exact read-back for prepared receipt, domain authority, committed receipt and public-verification marker option writes so WordPress option filters/tampering cannot silently complete cutover with different stored values.
+- Preserve partial/corrupt migration/authority/receipt lineage whenever uninstall retains credential data, while continuing to clear disposable locks/jobs/rehearsal evidence.
+- Keep the cutover rehearsal staging-only, version-bound and explicitly opted in; it does not change the three production readiness constants or approve production cutover.
+- Production PHP artifact rendering and visual Designer remain separate mandatory gates.
+
+1.5.15 — Populated staging backup/restore rehearsal + restore/import cleanup hardening; authority unchanged
+----------------------------------------------------------------------------------------------------------------
+- Keep the proven 1.5 registry/public verifier authoritative and every future-domain write/admin/data-tool flag false.
+- Add an explicitly opted-in local/development/staging-only populated future-domain backup/restore rehearsal after a fresh passing populated migration rehearsal.
+- Use Certloom's production domain backup builder, Replace restore, Merge restore and rollback machinery against the real populated staging graph; never invoke cutover or change authority.
+- Add a deterministic whole-domain state fingerprint over issuers, programs, recipients, Series, certificate numbers, immutable Versions, events and configuration so data-equivalent Replace/Merge/rollback results can be proven even when the internal generation marker legitimately changes.
+- Require Replace completion receipts to preserve exact record/entity counts across crash-replay windows and Merge receipts to preserve exact action counts.
+- Rehearse an identical Merge and require zero inserted records plus complete action accounting, then force a real post-swap configuration mismatch and require production rollback to return to the exact baseline fingerprint with no completion receipt.
+- Make restore semantic review independently bounded and integrity-bound rather than relying on a prior integrity pass; reject changed/oversized second-pass content and require the canonical backup entity manifest.
+- Verify exact restored option values after persistence so WordPress option filters cannot silently alter restored configuration; mismatch triggers rollback.
+- Hold domain backup snapshots behind the shared maintenance boundary and surface sensitive private-backup cleanup failure explicitly.
+- Harden future-domain and live legacy private restore-table preparation/rollback so failed DROP cleanup is never silently treated as success.
+- Harden import/upload/preflight private source and staging cleanup so failure to remove protected operational data or transient ownership state is explicit instead of hidden behind the primary error.
+- Make staging restore/migration rehearsal execution locks release on unexpected PHP exceptions instead of relying on TTL expiry.
+- Keep populated restore execution, final cutover rehearsal, production PHP artifact rendering and the visual Designer as separate later acceptance gates.
+
+1.5.14 — Official migration hardening + staging-only populated commit rehearsal; authority unchanged
+------------------------------------------------------------------------------------------------------
+- Keep the proven 1.5 registry/public verifier authoritative and every next-domain write/admin/data-tool flag false.
+- Upgrade the official migration coordinator to two complete semantic-fingerprint preflight reads; populated target writes cannot begin until both full source reads match.
+- Acquire Certloom's shared domain maintenance boundary for every official commit slice so legacy writes cannot race the source-boundary check, bounded legacy read, and target write inside that slice. Changes between slices are detected by the frozen source boundary and block the next slice.
+- Persist/recover a migration maintenance owner so a transient lock-release failure remains explicit and mechanically retryable rather than being reported as clean success.
+- Treat any started official migration as durable future-domain state: subsequent boot/reactivation requires the additive domain schema even while all user-facing future-domain feature gates remain disabled.
+- Preserve durable migration/cutover lineage when uninstall retains credential data, including official migration state, authority/receipt state, domain generation/schema lineage, public-verification readiness, and the legacy source-generation marker that frozen source evidence depends on. Operational locks, jobs, proof sessions, and temporary workspaces are still removed.
+- Add an explicit local/development/staging-only populated migration commit rehearsal guarded by CERTLOOM_ALLOW_STAGING_MIGRATION_REHEARSAL. It requires fresh database/domain/populated-preflight evidence, empty future-domain tables, healthy schema, no restore/cutover state, and all future-domain feature gates off.
+- Exercise the production migration coordinator/writer against the real populated legacy registry on a disposable clone, then verify migrated Recipient/Series/Version parity, public status parity, migration events, target coverage, semantic source fingerprint, and a second idempotent writer replay.
+- Never switch credential authority from the staging rehearsal. It intentionally leaves migrated future-domain rows in staging for later restore/cutover rehearsals and provides no destructive reset button; reclone/restore the staging database to rerun.
+- Bind a running rehearsal to one Certloom version so an upgrade cannot mix migration semantics across resumable requests.
+- Keep production populated migration, real populated restore promotion/rollback, final cutover, production PHP certificate rendering, and the visual Designer as separate later gates.
+
 1.5.13 — Populated legacy migration preflight + source-generation boundary hardening; authority unchanged
 ---------------------------------------------------------------------------------------------------------
 - Keep the proven 1.5 registry/public verifier authoritative and all next-domain write/admin/data-tool flags false.

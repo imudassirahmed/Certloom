@@ -42,12 +42,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<?php if ( ! empty( $_GET['legacy_expired'] ) ) : ?>
 		<div class="notice notice-info"><p>
 			<?php esc_html_e( 'Showing ambiguous legacy Expired records that require an explicit workflow-status review.', 'certloom' ); ?>
-			<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom' ) ); ?>"><?php esc_html_e( 'Show all certificates', 'certloom' ); ?></a>
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-certificates' ) ); ?>"><?php esc_html_e( 'Show all certificates', 'certloom' ); ?></a>
 		</p></div>
 	<?php endif; ?>
 
 	<form method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>" class="ecapla-certverify-list-filters">
-		<input type="hidden" name="page" value="certloom" />
+		<input type="hidden" name="page" value="certloom-certificates" />
 		<?php if ( ! empty( $_GET['legacy_expired'] ) ) : ?>
 			<input type="hidden" name="legacy_expired" value="1" />
 		<?php endif; ?>
@@ -73,7 +73,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	</form>
 
 	<form method="post" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>">
-		<input type="hidden" name="page" value="certloom" />
+		<input type="hidden" name="page" value="certloom-certificates" />
 		<?php // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only list state is carried through only for the post-delete redirect. ?>
 		<?php if ( ! empty( $_GET['legacy_expired'] ) ) : ?><input type="hidden" name="legacy_expired" value="1" /><?php endif; ?>
 		<?php if ( isset( $_GET['status'] ) && '' !== $_GET['status'] ) : ?><input type="hidden" name="status" value="<?php echo esc_attr( sanitize_key( wp_unslash( $_GET['status'] ) ) ); ?>" /><?php endif; ?>

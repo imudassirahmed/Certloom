@@ -4,7 +4,7 @@ define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'ARRAY_A', 'ARRAY_A' );
 define( 'MINUTE_IN_SECONDS', 60 );
 define( 'DAY_IN_SECONDS', 86400 );
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.5.13-test' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.5.14-test' );
 define( 'DB_USER', 'secret_user_9384' );
 define( 'DB_PASSWORD', 'secret_pass_9384' );
 define( 'DB_NAME', 'secret_db_9384' );
@@ -113,7 +113,7 @@ dp_assert( 'pass' === dp_find( $result, 'row_lock' )['status'], 'Independent con
 dp_assert( false === wpdb::$created, 'Scratch table must be removed before returning.' );
 dp_assert( false === get_option( Ecapla_CertVerify_Database_Proof::LOCK_OPTION, false ), 'Execution lock must be removed.' );
 dp_assert( is_array( Ecapla_CertVerify_Database_Proof::get_last_result() ), 'Non-sensitive result should be stored.' );
-dp_assert( '1.5.13-test' === $result['plugin_version'], 'Stored proof evidence must bind to the Certloom version that produced it.' );
+dp_assert( '1.5.14-test' === $result['plugin_version'], 'Stored proof evidence must bind to the Certloom version that produced it.' );
 dp_assert( 'passed' === Ecapla_CertVerify_Database_Proof::evidence_state(), 'Fresh passing proof evidence should be current.' );
 dp_assert( Ecapla_CertVerify_Database_Proof::is_current_passed(), 'Current passing proof helper should return true.' );
 $report = Ecapla_CertVerify_Database_Proof::get_text_report();

@@ -3,6 +3,7 @@ namespace Certloom\Infrastructure\Diagnostics;
 
 use Certloom\Application\Migration\DomainCutoverState;
 use Certloom\Application\Migration\LegacyMigrationPreflightService;
+use Certloom\Application\Migration\LegacySourceFingerprint;
 use Certloom\Application\Migration\LegacyMigrationState;
 use Certloom\Infrastructure\Database\SchemaManager;
 use Certloom\Infrastructure\Repository\LegacyCertificateRepository;
@@ -95,14 +96,14 @@ final class LegacyMigrationPreflightProof {
 					$state['phase'] = 'verify';
 					$state['verify_cursor'] = 0;
 					$state['verify_total'] = 0;
-					$state['verify_fingerprint'] = self::fingerprint_seed();
+					$state['verify_fingerprint'] = ( new LegacySourceFingerprint() )->seed();
 					$state['updated_at'] = time();
 					$saved = self::save_result( $state );
 					if ( is_wp_error( $saved ) ) { return $saved; }
 					continue;
 				}
 
-				$fingerprint = self::advance_fingerprint( (string) $state['map_fingerprint'], $rows );
+				$fingerprint = ( new LegacySourceFingerprint() )->advance( (string) $state['map_fingerprint'], $rows );
 				if ( is_wp_error( $fingerprint ) ) { return $fingerprint; }
 				$summary = $preflight->preflight( $rows, (string) $state['preflight_date'] );
 				$state = self::merge_summary( $state, $summary, $rows );
@@ -139,7 +140,7 @@ final class LegacyMigrationPreflightProof {
 					return is_wp_error( $saved ) ? $saved : $state;
 				}
 
-				$fingerprint = self::advance_fingerprint( (string) $state['verify_fingerprint'], $rows );
+				$fingerprint = ( new LegacySourceFingerprint() )->advance( (string) $state['verify_fingerprint'], $rows );
 				if ( is_wp_error( $fingerprint ) ) { return $fingerprint; }
 				$last = end( $rows );
 				$state['verify_cursor'] = absint( is_array( $last ) ? ( $last['id'] ?? $state['verify_cursor'] ) : $state['verify_cursor'] );
@@ -249,7 +250,7 @@ final class LegacyMigrationPreflightProof {
 		$migration = new LegacyMigrationState();
 		if ( LegacyMigrationState::NOT_STARTED !== $migration->status() ) { return new \WP_Error( 'certloom_legacy_preflight_migration_started', __( 'The populated migration preflight requires the official legacy migration to be completely not started.', 'certloom' ) ); }
 		$cutover = new DomainCutoverState();
-		if ( $cutover->is_domain_authoritative() || $cutover->has_committed_receipt() ) { return new \WP_Error( 'certloom_legacy_preflight_cutover_active', __( 'The populated migration preflight is not available after credential authority has been cut over.', 'certloom' ) ); }
+		if ( ! $cutover->is_clean_legacy_state() ) { return new \WP_Error( 'certloom_legacy_preflight_cutover_active', __( 'The populated migration preflight is not available after credential authority has been cut over.', 'certloom' ) ); }
 		if ( false !== get_option( 'certloom_domain_restore_journal', false ) || false !== get_option( 'certloom_domain_restore_build', false ) ) { return new \WP_Error( 'certloom_legacy_preflight_restore_state', __( 'The populated migration preflight will not run while domain restore/recovery state exists.', 'certloom' ) ); }
 		$empty = self::assert_domain_empty();
 		return is_wp_error( $empty ) ? $empty : true;
@@ -269,7 +270,7 @@ final class LegacyMigrationPreflightProof {
 			'cursor' => 0, 'total' => 0, 'ready' => 0, 'errors' => 0,
 			'status_counts' => array( 'valid' => 0, 'suspended' => 0, 'revoked' => 0, 'expired' => 0 ),
 			'error_examples' => array(),
-			'map_fingerprint' => self::fingerprint_seed(), 'verify_cursor' => 0, 'verify_total' => 0, 'verify_fingerprint' => self::fingerprint_seed(),
+			'map_fingerprint' => ( new LegacySourceFingerprint() )->seed(), 'verify_cursor' => 0, 'verify_total' => 0, 'verify_fingerprint' => ( new LegacySourceFingerprint() )->seed(),
 		);
 	}
 
@@ -303,26 +304,6 @@ final class LegacyMigrationPreflightProof {
 
 	private static function same_source_boundary( array $state, array $snapshot ) {
 		return absint( $state['source_count'] ?? -1 ) === absint( $snapshot['count'] ?? -2 ) && absint( $state['source_max_id'] ?? -1 ) === absint( $snapshot['max_id'] ?? -2 ) && '' !== (string) ( $state['source_generation'] ?? '' ) && hash_equals( (string) $state['source_generation'], (string) ( $snapshot['generation'] ?? '' ) );
-	}
-
-	private static function fingerprint_seed() { return hash( 'sha256', 'certloom-legacy-migration-preflight-v1' ); }
-
-	/** @return string|\WP_Error */
-	private static function advance_fingerprint( $current, array $rows ) {
-		$current = (string) $current;
-		if ( ! preg_match( '/^[a-f0-9]{64}$/', $current ) ) { return new \WP_Error( 'certloom_legacy_preflight_fingerprint_invalid', __( 'Certloom refused invalid migration-preflight fingerprint state.', 'certloom' ) ); }
-		foreach ( $rows as $row ) {
-			if ( ! is_array( $row ) ) { return new \WP_Error( 'certloom_legacy_preflight_row_invalid', __( 'Certloom encountered an invalid legacy row while fingerprinting the migration source.', 'certloom' ) ); }
-			$payload = array(
-				'id' => absint( $row['id'] ?? 0 ), 'cert_number' => (string) ( $row['cert_number'] ?? '' ), 'status' => (string) ( $row['status'] ?? '' ), 'status_source' => (string) ( $row['status_source'] ?? '' ),
-				'holder_name' => (string) ( $row['holder_name'] ?? '' ), 'issue_date' => $row['issue_date'] ?? null, 'expiry_date' => $row['expiry_date'] ?? null,
-				'custom_fields' => $row['custom_fields'] ?? null, 'created_at' => $row['created_at'] ?? null, 'updated_at' => $row['updated_at'] ?? null,
-			);
-			$json = wp_json_encode( $payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
-			if ( false === $json ) { return new \WP_Error( 'certloom_legacy_preflight_fingerprint_encode_failed', __( 'A legacy migration row could not be encoded deterministically for the preflight fingerprint.', 'certloom' ) ); }
-			$current = hash( 'sha256', $current . "\n" . $json );
-		}
-		return $current;
 	}
 
 	/** @return array<string,mixed>|\WP_Error */

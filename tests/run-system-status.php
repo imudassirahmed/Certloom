@@ -62,6 +62,10 @@ ss_assert( is_array( $checks ) && count( $checks ) >= 10, 'Expected a useful sta
 ss_assert( 'good' === ss_find( $checks, 'legacy_registry' )['status'], 'Live registry should be reported healthy.' );
 ss_assert( false !== strpos( ss_find( $checks, 'legacy_registry' )['value'], 'InnoDB' ), 'Storage engine should be visible without exposing table/database names.' );
 ss_assert( 'good' === ss_find( $checks, 'authority' )['status'], 'Legacy authority should be the expected healthy state before cutover.' );
+$GLOBALS['system_status_options']['certloom_domain_write_authority']='truncated';
+$authority_corrupt=Ecapla_CertVerify_System_Status::get_checks();
+ss_assert( 'bad' === ss_find( $authority_corrupt, 'authority' )['status'], 'Corrupt non-empty authority state should be visible as fail-closed.' );
+$GLOBALS['system_status_options']['certloom_domain_write_authority']='legacy';
 ss_assert( 'good' === ss_find( $checks, 'domain_feature_gates' )['status'], 'All future-domain gates off should be healthy.' );
 ss_assert( 'warning' === ss_find( $checks, 'database_proof' )['status'], 'Database proof should request a run when no stored evidence exists.' );
 ss_assert( 'warning' === ss_find( $checks, 'domain_acceptance_proof' )['status'], 'Gated-domain proof should remain unavailable/not-run without its diagnostic class in this isolated status test.' );
@@ -113,4 +117,4 @@ ss_assert( false !== strpos( $report, 'Proven 1.5 registry' ), 'Support report s
 ss_assert( 0 === $GLOBALS['system_status_db_writes'], 'Generating the text report must remain read-only.' );
 
 echo "PASS  System Status is read-only, privacy-conscious and authority-aware\n";
-echo "\n19 checks, 0 failures\n";
+echo "\n20 checks, 0 failures\n";

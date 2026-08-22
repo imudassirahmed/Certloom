@@ -16,7 +16,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class LegacyRegistryWriteGuard {
 	/** @return true|\WP_Error */
 	public function assert_allowed() {
-		if ( ( new DomainCutoverState() )->is_domain_authoritative() ) {
+		$state = new DomainCutoverState();
+		if ( $state->is_corrupt() ) {
+			return new \WP_Error(
+				'certloom_credential_authority_corrupt',
+				__( 'Certloom found invalid credential-authority state. Legacy credential writes are blocked until the protected cutover state is repaired safely.', 'certloom' )
+			);
+		}
+		if ( $state->is_domain_authoritative() ) {
 			return new \WP_Error(
 				'certloom_legacy_registry_read_only',
 				__( 'The legacy Certloom 1.5 certificate registry is read-only after the new credential domain becomes authoritative.', 'certloom' )

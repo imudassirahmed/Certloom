@@ -64,9 +64,22 @@ namespace Certloom\Application\Migration {
 		const OPTION = 'certloom_domain_write_authority';
 		const RECEIPT_OPTION = 'certloom_domain_cutover_receipt';
 		public function is_domain_authoritative() { return 'domain' === (string) \get_option( self::OPTION, 'legacy' ); }
+		public function is_corrupt() { $value = \get_option( self::OPTION, 'legacy' ); return ! in_array( $value, array( false, '', 'legacy', 'domain' ), true ); }
 		public function has_committed_receipt() {
 			$receipt = \get_option( self::RECEIPT_OPTION, array() );
 			return is_array( $receipt ) && 'committed' === (string) ( $receipt['state'] ?? '' );
+		}
+		public function has_any_receipt_state() {
+			$receipt = \get_option( self::RECEIPT_OPTION, false );
+			return false !== $receipt && '' !== $receipt && array() !== $receipt;
+		}
+	}
+	final class LegacyMigrationState {
+		const OPTION = 'certloom_legacy_domain_migration_state';
+		const NOT_STARTED = 'not_started';
+		public function status() {
+			$state = \get_option( self::OPTION, array() );
+			return is_array( $state ) && isset( $state['status'] ) ? (string) $state['status'] : self::NOT_STARTED;
 		}
 	}
 }
@@ -80,6 +93,7 @@ namespace {
 	use Certloom\Infrastructure\Job\JobRuntime;
 	use Certloom\Infrastructure\Restore\DomainRestoreWorkspace;
 	use Certloom\Application\Migration\DomainCutoverState;
+	use Certloom\Application\Migration\LegacyMigrationState;
 	use Certloom\Infrastructure\Data\DomainMaintenanceLock;
 
 	/* Fresh/live 1.5 site: future domain must not be an activation dependency. */
@@ -102,12 +116,28 @@ namespace {
 	dbg_same( 2, DomainRestoreWorkspace::$recover_calls, 'mandatory domain boot performs recovery check' );
 	dbg_same( 1, JobRuntime::$register_calls, 'runtime registers after mandatory domain schema check' );
 
+	/* Corrupt non-empty authority is fail-closed and requires domain recovery/bootstrap rather than reopening legacy-only mode. */
+	$GLOBALS['dbg_options'][ DomainCutoverState::OPTION ] = 'truncated';
+	Plugin::boot();
+	dbg_same( 2, SchemaManager::$upgrade_calls, 'corrupt authority forces mandatory domain schema/recovery boot' );
+	dbg_same( 3, DomainRestoreWorkspace::$recover_calls, 'corrupt authority runs recovery before any write model can be trusted' );
+	dbg_same( 2, JobRuntime::$register_calls, 'corrupt authority keeps domain runtime available for recovery' );
+
+	/* A started official migration has durable future-domain rows/state even before cutover. */
+	unset( $GLOBALS['dbg_options'][ DomainMaintenanceLock::OPTION ] );
+	$GLOBALS['dbg_options'][ LegacyMigrationState::OPTION ] = array( 'status' => 'migrating' );
+	Plugin::boot();
+	dbg_same( 3, SchemaManager::$upgrade_calls, 'started migration forces mandatory domain schema check' );
+	dbg_same( 4, DomainRestoreWorkspace::$recover_calls, 'started migration also performs domain recovery check' );
+	dbg_same( 3, JobRuntime::$register_calls, 'started migration registers the domain runtime' );
+
 	/* Durable maintenance/recovery evidence also makes storage mandatory on legacy authority. */
+	$GLOBALS['dbg_options'][ LegacyMigrationState::OPTION ] = array( 'status' => LegacyMigrationState::NOT_STARTED );
 	$GLOBALS['dbg_options'][ DomainCutoverState::OPTION ] = 'legacy';
 	unset( $GLOBALS['dbg_options'][ DomainCutoverState::RECEIPT_OPTION ] );
 	$GLOBALS['dbg_options'][ DomainMaintenanceLock::OPTION ] = 'owner|purpose|expiry';
 	Plugin::boot();
-	dbg_same( 2, SchemaManager::$upgrade_calls, 'durable maintenance evidence forces recovery-capable domain boot' );
+	dbg_same( 4, SchemaManager::$upgrade_calls, 'durable maintenance evidence forces recovery-capable domain boot' );
 
 	echo "PASS  gated future-domain storage no longer blocks the live Certloom activation path\n\n1 test, 0 failures\n";
 }

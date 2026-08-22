@@ -5,6 +5,7 @@ define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', true );
 define( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY', true );
 $GLOBALS['cutover_options'] = array();
 $GLOBALS['cutover_fail_delete_once'] = false;
+$GLOBALS['cutover_mutate_option_once'] = '';
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {
 		private $code;
@@ -19,7 +20,7 @@ function __( $text ) { return $text; }
 function absint( $value ) { return abs( (int) $value ); }
 function sanitize_key( $key ) { return strtolower( preg_replace( '/[^a-z0-9_\-]/', '', (string) $key ) ); }
 function get_option( $key, $default = false ) { return array_key_exists( $key, $GLOBALS['cutover_options'] ) ? $GLOBALS['cutover_options'][ $key ] : $default; }
-function update_option( $key, $value ) { $GLOBALS['cutover_options'][ $key ] = $value; return true; }
+function update_option( $key, $value ) { if ( $key === $GLOBALS['cutover_mutate_option_once'] ) { $GLOBALS['cutover_mutate_option_once'] = ''; $value = is_array( $value ) ? array( 'tampered' => true ) : 'tampered'; } $GLOBALS['cutover_options'][ $key ] = $value; return true; }
 function add_option( $key, $value ) { if ( array_key_exists( $key, $GLOBALS['cutover_options'] ) ) { return false; } $GLOBALS['cutover_options'][ $key ] = $value; return true; }
 function delete_option( $key ) { if ( array_key_exists( $key, $GLOBALS['cutover_options'] ) ) { unset( $GLOBALS['cutover_options'][ $key ] ); return true; } return false; }
 function wp_cache_delete() { return true; }
@@ -36,6 +37,7 @@ class CutoverWpdb {
 			$expected = $args[2] ?? '';
 			if ( ! empty( $GLOBALS['cutover_fail_delete_once'] ) ) {
 				$GLOBALS['cutover_fail_delete_once'] = false;
+$GLOBALS['cutover_mutate_option_once'] = '';
 				return 0;
 			}
 			if ( isset( $GLOBALS['cutover_options'][ $key ] ) && $GLOBALS['cutover_options'][ $key ] === $expected ) {
@@ -84,6 +86,20 @@ class CutoverSource implements LegacySourceSnapshotInterface {
 }
 
 $state = new LegacyMigrationState();
+$cutover = new DomainCutoverState();
+$GLOBALS['cutover_options'][ DomainCutoverState::OPTION ] = 'truncated-authority';
+cut_same( DomainCutoverState::CORRUPT, $cutover->authority(), 'non-empty invalid authority fails closed as corrupt' );
+$corrupt_guard = ( new LegacyRegistryWriteGuard() )->assert_allowed();
+cut_same( 'certloom_credential_authority_corrupt', $corrupt_guard->get_error_code(), 'corrupt authority blocks legacy writes' );
+$corrupt_cutover = ( new DomainCutoverCoordinator( new CutoverSource( array( 'count' => 0, 'max_id' => 0, 'generation' => 'x' ) ), null, $state, null, function(){ return true; }, function(){ return true; } ) )->promote();
+cut_same( 'certloom_domain_cutover_authority_corrupt', $corrupt_cutover->get_error_code(), 'corrupt authority blocks cutover' );
+$GLOBALS['cutover_options'][ DomainCutoverState::OPTION ] = DomainCutoverState::LEGACY;
+$GLOBALS['cutover_options'][ DomainCutoverState::RECEIPT_OPTION ] = 'truncated-receipt';
+cut_same( true, $cutover->has_any_receipt_state(), 'malformed receipt remains protected recovery evidence' );
+cut_same( false, $cutover->is_clean_legacy_state(), 'malformed receipt cannot masquerade as pristine legacy state' );
+unset( $GLOBALS['cutover_options'][ DomainCutoverState::RECEIPT_OPTION ] );
+cut_same( false, $cutover->has_any_receipt_state(), 'absent receipt is clean baseline' );
+cut_same( true, $cutover->is_clean_legacy_state(), 'legacy authority without receipt is pristine baseline' );
 $GLOBALS['cutover_options'][ LegacyMigrationState::OPTION ] = array(
 	'status' => LegacyMigrationState::COMPLETE,
 	'source_count' => 7,
@@ -99,8 +115,19 @@ $coordinator = new DomainCutoverCoordinator( $stale_source, null, $state, null, 
 $result = $coordinator->promote();
 cut_same( 'certloom_domain_cutover_source_changed', $result->get_error_code(), 'stale migration cannot cut over' );
 cut_same( true, $stale_source->saw_lock, 'final source snapshot is taken while maintenance lock is active' );
-$cutover = new DomainCutoverState();
 cut_same( DomainCutoverState::LEGACY, $cutover->authority(), 'authority remains legacy on stale source' );
+
+/* Successful update_option return is not trusted when the persisted receipt/authority is filter-altered. */
+$GLOBALS['cutover_mutate_option_once'] = DomainCutoverState::RECEIPT_OPTION;
+$tampered_receipt = ( new DomainCutoverCoordinator( new CutoverSource( array( 'count' => 7, 'max_id' => 11, 'generation' => 'generation-A' ) ), null, $state, null, function(){ return true; } ) )->promote();
+cut_same( 'certloom_domain_cutover_receipt_prepare_failed', $tampered_receipt->get_error_code(), 'prepared receipt requires exact readback' );
+cut_same( DomainCutoverState::LEGACY, $cutover->authority(), 'prepared receipt tamper never changes authority' );
+cut_same( false, get_option( DomainCutoverState::RECEIPT_OPTION, false ), 'invalid prepared receipt is removed' );
+$GLOBALS['cutover_mutate_option_once'] = DomainCutoverState::OPTION;
+$tampered_authority = ( new DomainCutoverCoordinator( new CutoverSource( array( 'count' => 7, 'max_id' => 11, 'generation' => 'generation-A' ) ), null, $state, null, function(){ return true; } ) )->promote();
+cut_same( 'certloom_domain_cutover_save_failed', $tampered_authority->get_error_code(), 'authority requires exact readback' );
+cut_same( DomainCutoverState::LEGACY, $cutover->authority(), 'filter-altered authority is rolled back to legacy' );
+cut_same( false, get_option( DomainCutoverState::RECEIPT_OPTION, false ), 'authority tamper cleanup removes prepared receipt' );
 
 $fresh_source = new CutoverSource( array( 'count' => 7, 'max_id' => 11, 'generation' => 'generation-A' ) );
 $coordinator = new DomainCutoverCoordinator( $fresh_source, null, $state, null, function(){ return true; } );
@@ -108,6 +135,14 @@ cut_same( true, $coordinator->promote(), 'fresh migration can cut over' );
 cut_same( true, $fresh_source->saw_lock, 'successful cutover final snapshot is maintenance protected' );
 cut_same( DomainCutoverState::DOMAIN, $cutover->authority(), 'authority promoted after exact source match' );
 cut_same( true, $cutover->has_committed_receipt(), 'official cutover commits durable receipt' );
+cut_same( true, $cutover->receipt_matches_completed_migration( $state ), 'committed receipt matches completed migration boundary' );
+$receipt_exact = $GLOBALS['cutover_options'][ DomainCutoverState::RECEIPT_OPTION ];
+$GLOBALS['cutover_options'][ DomainCutoverState::RECEIPT_OPTION ]['source_count'] = 8;
+cut_same( false, $cutover->receipt_matches_completed_migration( $state ), 'receipt source count mismatch fails closed' );
+$GLOBALS['cutover_options'][ DomainCutoverState::RECEIPT_OPTION ] = $receipt_exact;
+$GLOBALS['cutover_options'][ DomainCutoverState::RECEIPT_OPTION ]['source_max_id'] = 12;
+cut_same( false, $cutover->receipt_matches_completed_migration( $state ), 'receipt source max ID mismatch fails closed' );
+$GLOBALS['cutover_options'][ DomainCutoverState::RECEIPT_OPTION ] = $receipt_exact;
 cut_same( false, ( new DomainMaintenanceLock() )->active(), 'cutover maintenance lock released' );
 cut_same( false, get_option( DomainCutoverCoordinator::OWNER_OPTION, false ), 'cutover recovery owner cleared' );
 

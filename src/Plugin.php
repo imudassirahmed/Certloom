@@ -7,6 +7,7 @@ use Certloom\Infrastructure\Job\JobRuntime;
 use Certloom\Infrastructure\Restore\DomainRestoreWorkspace;
 use Certloom\Infrastructure\Data\DomainMaintenanceLock;
 use Certloom\Application\Migration\DomainCutoverState;
+use Certloom\Application\Migration\LegacyMigrationState;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -103,7 +104,12 @@ final class Plugin {
 		}
 
 		$cutover = new DomainCutoverState();
-		if ( $cutover->is_domain_authoritative() || $cutover->has_committed_receipt() ) {
+		if ( $cutover->is_domain_authoritative() || $cutover->is_corrupt() || $cutover->has_any_receipt_state() ) {
+			return true;
+		}
+
+		/* Any started official migration has durable rows/state that require the additive domain on every request. */
+		if ( LegacyMigrationState::NOT_STARTED !== ( new LegacyMigrationState() )->status() ) {
 			return true;
 		}
 

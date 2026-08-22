@@ -67,8 +67,10 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 				}
 				return $workspace;
 			}
-			$this->drop_workspace_tables( $workspace, 'stage' );
-			$this->drop_workspace_tables( $workspace, 'merge' );
+			$cleaned = $this->drop_workspace_kinds( $workspace, array( 'stage', 'merge' ) );
+			if ( is_wp_error( $cleaned ) ) {
+				return $this->release_after_error( $owner_token, $cleaned );
+			}
 			$maps = $this->restore_maps->clear( $owner_token );
 			if ( is_wp_error( $maps ) ) {
 				return $this->release_after_error( $owner_token, $maps );
@@ -79,20 +81,20 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 			$live  = SchemaManager::table( $entity );
 			$stage = $this->table_name( $workspace, 'stage', $entity );
 			if ( ! $this->create_like( $stage, $live ) ) {
-				$this->drop_workspace_tables( $workspace, 'stage' );
-				return $this->release_after_error(
-					$owner_token,
-					new \WP_Error( 'certloom_domain_restore_stage_create_failed', __( 'Certloom could not prepare all private restore tables safely.', 'certloom' ) )
-				);
+				$cleanup = $this->drop_workspace_tables( $workspace, 'stage' );
+				$error = is_wp_error( $cleanup )
+					? $cleanup
+					: new \WP_Error( 'certloom_domain_restore_stage_create_failed', __( 'Certloom could not prepare all private restore tables safely.', 'certloom' ) );
+				return $this->release_after_error( $owner_token, $error );
 			}
 		}
 
 		if ( ! $this->save_build_marker( $workspace ) ) {
-			$this->drop_workspace_tables( $workspace, 'stage' );
-			return $this->release_after_error(
-				$owner_token,
-				new \WP_Error( 'certloom_domain_restore_build_marker_failed', __( 'Certloom could not save the restore workspace marker. No live data was changed.', 'certloom' ) )
-			);
+			$cleanup = $this->drop_workspace_tables( $workspace, 'stage' );
+			$error = is_wp_error( $cleanup )
+				? $cleanup
+				: new \WP_Error( 'certloom_domain_restore_build_marker_failed', __( 'Certloom could not save the restore workspace marker. No live data was changed.', 'certloom' ) );
+			return $this->release_after_error( $owner_token, $error );
 		}
 
 		return $workspace;
@@ -205,8 +207,10 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		if ( is_wp_error( $valid ) ) {
 			return $valid;
 		}
-		$this->drop_workspace_tables( $workspace, 'stage' );
-		$this->drop_workspace_tables( $workspace, 'merge' );
+		$cleaned = $this->drop_workspace_kinds( $workspace, array( 'stage', 'merge' ) );
+		if ( is_wp_error( $cleaned ) ) {
+			return $cleaned;
+		}
 		$maps = $this->restore_maps->clear( $workspace['owner_token'] );
 		if ( is_wp_error( $maps ) ) {
 			return $maps;
@@ -215,8 +219,8 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		if ( is_wp_error( $released ) ) {
 			return $released;
 		}
-		$this->delete_build_marker( $workspace['owner_token'] );
-		return true;
+		$marker_deleted = $this->delete_build_marker( $workspace['owner_token'] );
+		return is_wp_error( $marker_deleted ) ? $marker_deleted : true;
 	}
 
 	/** @return true|\WP_Error */
@@ -247,8 +251,10 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 			$target = $this->table_name( $workspace, 'merge', $entity );
 			$live   = SchemaManager::table( $entity );
 			if ( ! $this->create_like( $target, $live ) ) {
-				$this->drop_workspace_tables( $workspace, 'merge' );
-				return new \WP_Error( 'certloom_domain_restore_merge_create_failed', __( 'Certloom could not prepare the private Merge restore target tables.', 'certloom' ) );
+				$cleanup = $this->drop_workspace_tables( $workspace, 'merge' );
+				return is_wp_error( $cleanup )
+					? $cleanup
+					: new \WP_Error( 'certloom_domain_restore_merge_create_failed', __( 'Certloom could not prepare the private Merge restore target tables.', 'certloom' ) );
 			}
 		}
 		return true;
@@ -364,6 +370,10 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 			return $touched;
 		}
 
+		$normalized_receipt = $this->normalize_receipt( $receipt );
+		if ( is_wp_error( $normalized_receipt ) ) {
+			return $normalized_receipt;
+		}
 		$old_configuration = $this->configuration_snapshot();
 		$old_generation    = $this->generation->current();
 		$journal = array(
@@ -372,7 +382,7 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 			'suffix'            => $workspace['suffix'],
 			'old_configuration' => $old_configuration,
 			'old_generation'    => $old_generation,
-			'receipt'           => $this->normalize_receipt( $receipt ),
+			'receipt'           => $normalized_receipt,
 			'source_kind'       => $source_kind,
 			'created_at'        => time(),
 		);
@@ -382,7 +392,17 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 
 		$swapped = $this->swap_workspace( $workspace, $source_kind );
 		if ( is_wp_error( $swapped ) ) {
-			delete_option( self::JOURNAL_OPTION );
+			$journal_deleted = $this->delete_journal_if_owned( $workspace['owner_token'] );
+			if ( is_wp_error( $journal_deleted ) ) {
+				return new \WP_Error(
+					'certloom_domain_restore_swap_cleanup_failed',
+					sprintf(
+						__( 'Certloom could not swap the restore workspace (%1$s), and it also could not clear the owner-matched rollback journal safely (%2$s). No authority was switched; review restore recovery state before retrying.', 'certloom' ),
+						$swapped->get_error_message(),
+						$journal_deleted->get_error_message()
+					)
+				);
+			}
 			return $swapped;
 		}
 		$journal['state'] = 'swapped';
@@ -456,15 +476,20 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		if ( is_wp_error( $restored ) ) {
 			return $restored;
 		}
-		$this->drop_workspace_tables( $workspace, 'stage' );
-		$this->drop_workspace_tables( $workspace, 'merge' );
+		$cleaned = $this->drop_workspace_kinds( $workspace, array( 'stage', 'merge' ) );
+		if ( is_wp_error( $cleaned ) ) {
+			/* Keep the journal/build marker and maintenance lock so cleanup can retry safely. */
+			return $cleaned;
+		}
 		$released = $this->maintenance->release( $workspace['owner_token'] );
 		if ( is_wp_error( $released ) ) {
 			/* Keep the journal/build marker so recovery can retry cleanup idempotently. */
 			return $released;
 		}
-		delete_option( self::JOURNAL_OPTION );
-		$this->delete_build_marker( $workspace['owner_token'] );
+		$journal_deleted = $this->delete_journal_if_owned( $workspace['owner_token'] );
+		if ( is_wp_error( $journal_deleted ) ) { return $journal_deleted; }
+		$marker_deleted = $this->delete_build_marker( $workspace['owner_token'] );
+		if ( is_wp_error( $marker_deleted ) ) { return $marker_deleted; }
 		return true;
 	}
 
@@ -480,10 +505,22 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 			return null;
 		}
 		$receipt = $receipts[ $owner_token ];
-		if ( ( time() - absint( $receipt['committed_at'] ?? 0 ) ) > self::RECEIPT_TTL ) {
+		$committed_at = absint( $receipt['committed_at'] ?? 0 );
+		if ( ! $committed_at || $committed_at > time() + 300 ) {
+			return new \WP_Error( 'certloom_domain_restore_receipt_corrupt', __( 'Certloom found an invalid restore completion receipt and refused to trust it.', 'certloom' ) );
+		}
+		if ( ( time() - $committed_at ) > self::RECEIPT_TTL ) {
 			return null;
 		}
-		return $receipt;
+		$validated = $this->normalize_receipt( $receipt );
+		if ( is_wp_error( $validated ) || '' === (string) ( $receipt['generation'] ?? '' ) ) {
+			return is_wp_error( $validated )
+				? new \WP_Error( 'certloom_domain_restore_receipt_corrupt', __( 'Certloom found an inconsistent restore completion receipt and refused to trust it.', 'certloom' ) )
+				: new \WP_Error( 'certloom_domain_restore_receipt_corrupt', __( 'Certloom found an incomplete restore completion receipt and refused to trust it.', 'certloom' ) );
+		}
+		$validated['committed_at'] = $committed_at;
+		$validated['generation'] = (string) $receipt['generation'];
+		return $validated;
 	}
 
 	/** @return array<string,mixed> */
@@ -527,7 +564,11 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 	private function create_like( $target, $source ) {
 		global $wpdb;
 		$wpdb->last_error = '';
-		$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $target ) );
+		$dropped = $wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $target ) );
+		if ( false === $dropped || '' !== (string) $wpdb->last_error ) {
+			return false;
+		}
+		$wpdb->last_error = '';
 		$created = $wpdb->query( $wpdb->prepare( 'CREATE TABLE %i LIKE %i', $target, $source ) );
 		return false !== $created && '' === (string) $wpdb->last_error;
 	}
@@ -560,24 +601,47 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		return true;
 	}
 
+	/** @return true|\WP_Error */
 	private function drop_workspace_tables( array $workspace, $kind ) {
 		global $wpdb;
+		if ( ! in_array( $kind, array( 'stage', 'merge', 'rollback' ), true ) ) {
+			return new \WP_Error( 'certloom_domain_restore_cleanup_kind_invalid', __( 'Certloom refused an invalid restore-workspace cleanup request.', 'certloom' ) );
+		}
 		foreach ( DomainBackupRepository::entity_types() as $entity ) {
 			$table = $this->table_name( $workspace, $kind, $entity );
-			$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $table ) );
+			$wpdb->last_error = '';
+			$dropped = $wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $table ) );
+			if ( false === $dropped || '' !== (string) $wpdb->last_error ) {
+				return new \WP_Error( 'certloom_domain_restore_workspace_cleanup_failed', __( 'Certloom could not remove a private restore workspace table safely.', 'certloom' ) );
+			}
 		}
+		return true;
+	}
+
+	/** @return true|\WP_Error */
+	private function drop_workspace_kinds( array $workspace, array $kinds ) {
+		foreach ( $kinds as $kind ) {
+			$dropped = $this->drop_workspace_tables( $workspace, $kind );
+			if ( is_wp_error( $dropped ) ) {
+				return $dropped;
+			}
+		}
+		return true;
 	}
 
 	/** @return true|\WP_Error */
 	private function swap_workspace( array $workspace, $source_kind = 'stage' ) {
 		global $wpdb;
+		$cleared = $this->drop_workspace_tables( $workspace, 'rollback' );
+		if ( is_wp_error( $cleared ) ) {
+			return $cleared;
+		}
 		$parts = array();
 		$args  = array();
 		foreach ( DomainBackupRepository::entity_types() as $entity ) {
 			$live     = SchemaManager::table( $entity );
 			$stage    = $this->table_name( $workspace, $source_kind, $entity );
 			$rollback = $this->table_name( $workspace, 'rollback', $entity );
-			$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $rollback ) );
 			$parts[] = '%i TO %i, %i TO %i';
 			array_push( $args, $live, $rollback, $stage, $live );
 		}
@@ -592,6 +656,10 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 	/** @return true|\WP_Error */
 	private function rollback_swap( array $workspace, $source_kind = 'stage' ) {
 		global $wpdb;
+		$cleared = $this->drop_workspace_tables( $workspace, $source_kind );
+		if ( is_wp_error( $cleared ) ) {
+			return $cleared;
+		}
 		$parts = array();
 		$args  = array();
 		foreach ( DomainBackupRepository::entity_types() as $entity ) {
@@ -601,7 +669,6 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 			if ( ! $this->table_exists( $rollback ) ) {
 				return new \WP_Error( 'certloom_domain_restore_rollback_missing', __( 'Certloom cannot find all rollback tables required to recover the previous credential data.', 'certloom' ) );
 			}
-			$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $failed ) );
 			$parts[] = '%i TO %i, %i TO %i';
 			array_push( $args, $live, $failed, $rollback, $live );
 		}
@@ -610,7 +677,6 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		if ( false === $result || '' !== (string) $wpdb->last_error ) {
 			return new \WP_Error( 'certloom_domain_restore_rollback_failed', __( 'Certloom could not automatically restore the previous credential tables. Restore the site database backup before continuing.', 'certloom' ) );
 		}
-		$this->drop_workspace_tables( $workspace, 'stage' );
 		return true;
 	}
 
@@ -630,6 +696,11 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		if ( is_wp_error( $restored ) ) {
 			return new \WP_Error( 'certloom_domain_restore_rollback_incomplete', __( 'Certloom restored the previous credential tables but could not fully restore configuration metadata. Restore the site database backup before continuing.', 'certloom' ) );
 		}
+		$cleaned = $this->drop_workspace_kinds( $workspace, array( 'stage', 'merge' ) );
+		if ( is_wp_error( $cleaned ) ) {
+			/* Preserve journal/build/maintenance ownership so cleanup can be retried. */
+			return new \WP_Error( 'certloom_domain_restore_rollback_workspace_cleanup_failed', __( 'Certloom restored the previous credential data, but could not remove its private failed-restore workspace. Credential writes remain paused until recovery cleanup succeeds.', 'certloom' ) );
+		}
 		$released = $this->maintenance->release( $workspace['owner_token'] );
 		if ( is_wp_error( $released ) ) {
 			/* Preserve the journal/build marker so a later recovery can retry cleanup. */
@@ -638,9 +709,12 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 				__( 'Certloom restored the previous credential data, but could not release the maintenance lock safely. Credential writes remain paused until recovery cleanup succeeds.', 'certloom' )
 			);
 		}
-		delete_option( self::JOURNAL_OPTION );
-		$this->delete_completion_receipt( $workspace['owner_token'] );
-		$this->delete_build_marker( $workspace['owner_token'] );
+		$journal_deleted = $this->delete_journal_if_owned( $workspace['owner_token'] );
+		$receipt_deleted = $this->delete_completion_receipt( $workspace['owner_token'] );
+		$marker_deleted = $this->delete_build_marker( $workspace['owner_token'] );
+		if ( is_wp_error( $journal_deleted ) || is_wp_error( $receipt_deleted ) || is_wp_error( $marker_deleted ) ) {
+			return new \WP_Error( 'certloom_domain_restore_rollback_tracking_cleanup_failed', __( 'Certloom restored the previous credential data, but could not clear all restore tracking evidence safely. Review recovery status before continuing.', 'certloom' ) );
+		}
 		return new \WP_Error( $error_code, __( 'Certloom could not safely commit the restore, so the previous credential data and configuration were restored.', 'certloom' ) );
 	}
 
@@ -653,9 +727,11 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 	 * @return true|\WP_Error
 	 */
 	private function cleanup_committed_workspace( array $workspace ) {
-		$this->drop_workspace_tables( $workspace, 'rollback' );
-		$this->drop_workspace_tables( $workspace, 'stage' );
-		$this->drop_workspace_tables( $workspace, 'merge' );
+		$cleaned = $this->drop_workspace_kinds( $workspace, array( 'rollback', 'stage', 'merge' ) );
+		if ( is_wp_error( $cleaned ) ) {
+			/* Keep journal/build/maintenance evidence until private-table cleanup is confirmed. */
+			return $cleaned;
+		}
 
 		/* Never release a newer maintenance operation owned by somebody else. */
 		if ( $this->maintenance->owned_active( $workspace['owner_token'] ) ) {
@@ -665,16 +741,24 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 				return $released;
 			}
 		}
-		$this->delete_journal_if_owned( $workspace['owner_token'] );
-		$this->delete_build_marker( $workspace['owner_token'] );
-		return true;
+		$journal_deleted = $this->delete_journal_if_owned( $workspace['owner_token'] );
+		if ( is_wp_error( $journal_deleted ) ) { return $journal_deleted; }
+		$marker_deleted = $this->delete_build_marker( $workspace['owner_token'] );
+		return is_wp_error( $marker_deleted ) ? $marker_deleted : true;
 	}
 
+	/** @return true|\WP_Error */
 	private function delete_journal_if_owned( $owner_token ) {
 		$journal = get_option( self::JOURNAL_OPTION, array() );
-		if ( is_array( $journal ) && isset( $journal['owner_token'] ) && hash_equals( (string) $owner_token, (string) $journal['owner_token'] ) ) {
-			delete_option( self::JOURNAL_OPTION );
+		if ( ! is_array( $journal ) || ! isset( $journal['owner_token'] ) || ! hash_equals( (string) $owner_token, (string) $journal['owner_token'] ) ) {
+			return true;
 		}
+		delete_option( self::JOURNAL_OPTION );
+		$after = get_option( self::JOURNAL_OPTION, null );
+		if ( null === $after || ! is_array( $after ) || ! isset( $after['owner_token'] ) || ! hash_equals( (string) $owner_token, (string) $after['owner_token'] ) ) {
+			return true;
+		}
+		return new \WP_Error( 'certloom_domain_restore_journal_cleanup_failed', __( 'Certloom could not remove its restore recovery journal safely.', 'certloom' ) );
 	}
 
 	/** Returns the original failure only when the restore maintenance lock was safely released. */
@@ -711,10 +795,12 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 				return new \WP_Error( 'certloom_domain_restore_configuration_invalid', __( 'The restore configuration is incomplete.', 'certloom' ) );
 			}
 			if ( ! empty( $configuration[ $key ]['exists'] ) ) {
-				$result = update_option( $key, $configuration[ $key ]['value'], false ) || $configuration[ $key ]['value'] === get_option( $key, null );
+				update_option( $key, $configuration[ $key ]['value'], false );
+				$result = $configuration[ $key ]['value'] === get_option( $key, null );
 			} else {
 				$sentinel = array( '__certloom_restore_missing__' => $key );
-				$result = delete_option( $key ) || $sentinel === get_option( $key, $sentinel );
+				delete_option( $key );
+				$result = $sentinel === get_option( $key, $sentinel );
 			}
 			if ( ! $result ) {
 				return new \WP_Error( 'certloom_domain_restore_configuration_save_failed', __( 'Certloom could not save restored configuration.', 'certloom' ) );
@@ -730,8 +816,8 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 
 	/** @return true|\WP_Error */
 	private function restore_generation( $value ) {
-		$saved = update_option( DomainGeneration::OPTION, (string) $value, false );
-		return $saved || hash_equals( (string) $value, (string) get_option( DomainGeneration::OPTION, '' ) )
+		update_option( DomainGeneration::OPTION, (string) $value, false );
+		return hash_equals( (string) $value, (string) get_option( DomainGeneration::OPTION, '' ) )
 			? true
 			: new \WP_Error( 'certloom_domain_restore_generation_restore_failed', __( 'Certloom could not restore its previous data-generation marker.', 'certloom' ) );
 	}
@@ -756,17 +842,27 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 	}
 
 
-	/** @return array<string,mixed> */
+	/** @return array<string,mixed>|\WP_Error */
 	private function normalize_receipt( array $receipt ) {
-		$counts = array();
-		foreach ( DomainBackupRepository::entity_types() as $entity ) {
-			$counts[ $entity ] = absint( $receipt['counts'][ $entity ] ?? 0 );
+		$mode = sanitize_key( (string) ( $receipt['mode'] ?? '' ) );
+		if ( ! in_array( $mode, array( 'replace', 'merge' ), true ) ) {
+			return new \WP_Error( 'certloom_domain_restore_receipt_invalid', __( 'The restore completion receipt has an invalid mode.', 'certloom' ) );
 		}
-		return array(
-			'mode'    => in_array( (string) ( $receipt['mode'] ?? 'replace' ), array( 'replace', 'merge' ), true ) ? (string) $receipt['mode'] : 'replace',
-			'records' => absint( $receipt['records'] ?? 0 ),
-			'counts'  => $counts,
-		);
+		$count_keys = 'merge' === $mode
+			? array( 'inserted', 'existing', 'skipped' )
+			: DomainBackupRepository::entity_types();
+		$counts = array();
+		foreach ( $count_keys as $key ) {
+			if ( ! isset( $receipt['counts'] ) || ! is_array( $receipt['counts'] ) || ! array_key_exists( $key, $receipt['counts'] ) ) {
+				return new \WP_Error( 'certloom_domain_restore_receipt_invalid', __( 'The restore completion receipt is missing required count evidence.', 'certloom' ) );
+			}
+			$counts[ $key ] = absint( $receipt['counts'][ $key ] );
+		}
+		$records = absint( $receipt['records'] ?? 0 );
+		if ( array_sum( $counts ) !== $records ) {
+			return new \WP_Error( 'certloom_domain_restore_receipt_invalid', __( 'The restore completion receipt record total does not match its count evidence.', 'certloom' ) );
+		}
+		return array( 'mode' => $mode, 'records' => $records, 'counts' => $counts );
 	}
 
 	/** @return true|\WP_Error */
@@ -784,7 +880,8 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 				unset( $receipts[ $key ] );
 			}
 		}
-		$receipt                 = $this->normalize_receipt( $receipt );
+		$receipt = $this->normalize_receipt( $receipt );
+		if ( is_wp_error( $receipt ) ) { return $receipt; }
 		$receipt['committed_at'] = $now;
 		$receipt['generation']   = $this->generation->current();
 		$receipts[ $owner_token ] = $receipt;
@@ -798,37 +895,51 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 			}
 		}
 
-		$saved = update_option( self::RECEIPTS_OPTION, $receipts, false );
-		return $saved || $receipts === get_option( self::RECEIPTS_OPTION, array() )
+		update_option( self::RECEIPTS_OPTION, $receipts, false );
+		return $receipts === get_option( self::RECEIPTS_OPTION, array() )
 			? true
-			: new \WP_Error( 'certloom_domain_restore_receipt_failed', __( 'Certloom could not save the durable restore completion receipt.', 'certloom' ) );
+			: new \WP_Error( 'certloom_domain_restore_receipt_failed', __( 'Certloom could not save the durable restore completion receipt exactly as committed.', 'certloom' ) );
 	}
 
+	/** @return true|\WP_Error */
 	private function delete_completion_receipt( $owner_token ) {
 		$receipts = get_option( self::RECEIPTS_OPTION, array() );
 		if ( ! is_array( $receipts ) || ! isset( $receipts[ $owner_token ] ) ) {
-			return;
+			return true;
 		}
 		unset( $receipts[ $owner_token ] );
 		if ( empty( $receipts ) ) {
 			delete_option( self::RECEIPTS_OPTION );
-		} else {
-			update_option( self::RECEIPTS_OPTION, $receipts, false );
+			$stored = get_option( self::RECEIPTS_OPTION, null );
+			return null === $stored
+				? true
+				: new \WP_Error( 'certloom_domain_restore_receipt_cleanup_failed', __( 'Certloom could not remove a rolled-back restore completion receipt safely.', 'certloom' ) );
 		}
+		update_option( self::RECEIPTS_OPTION, $receipts, false );
+		return $receipts === get_option( self::RECEIPTS_OPTION, array() )
+			? true
+			: new \WP_Error( 'certloom_domain_restore_receipt_cleanup_failed', __( 'Certloom could not update restore completion receipts after rollback.', 'certloom' ) );
 	}
 
 	/** @return bool */
 	private function save_build_marker( array $workspace ) {
 		$value = array( 'owner_token' => $workspace['owner_token'], 'suffix' => $workspace['suffix'], 'updated_at' => time() );
-		$saved = update_option( self::BUILD_OPTION, $value, false );
-		return $saved || $value === get_option( self::BUILD_OPTION, array() );
+		update_option( self::BUILD_OPTION, $value, false );
+		return $value === get_option( self::BUILD_OPTION, array() );
 	}
 
+	/** @return true|\WP_Error */
 	private function delete_build_marker( $owner_token ) {
 		$current = get_option( self::BUILD_OPTION, array() );
-		if ( is_array( $current ) && isset( $current['owner_token'] ) && hash_equals( (string) $owner_token, (string) $current['owner_token'] ) ) {
-			delete_option( self::BUILD_OPTION );
+		if ( ! is_array( $current ) || ! isset( $current['owner_token'] ) || ! hash_equals( (string) $owner_token, (string) $current['owner_token'] ) ) {
+			return true;
 		}
+		delete_option( self::BUILD_OPTION );
+		$after = get_option( self::BUILD_OPTION, null );
+		if ( null === $after || ! is_array( $after ) || ! isset( $after['owner_token'] ) || ! hash_equals( (string) $owner_token, (string) $after['owner_token'] ) ) {
+			return true;
+		}
+		return new \WP_Error( 'certloom_domain_restore_build_marker_cleanup_failed', __( 'Certloom could not remove its restore workspace marker safely.', 'certloom' ) );
 	}
 
 	/** @return true|\WP_Error */
@@ -845,8 +956,10 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		if ( is_wp_error( $valid ) ) {
 			return $valid;
 		}
-		$this->drop_workspace_tables( $workspace, 'stage' );
-		$this->drop_workspace_tables( $workspace, 'merge' );
+		$cleaned = $this->drop_workspace_kinds( $workspace, array( 'stage', 'merge' ) );
+		if ( is_wp_error( $cleaned ) ) {
+			return $cleaned;
+		}
 		$maps = $this->restore_maps->clear( $workspace['owner_token'] );
 		if ( is_wp_error( $maps ) ) {
 			return $maps;
@@ -855,13 +968,13 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		if ( is_wp_error( $released ) ) {
 			return $released;
 		}
-		delete_option( self::BUILD_OPTION );
-		return true;
+		$marker_deleted = $this->delete_build_marker( $workspace['owner_token'] );
+		return is_wp_error( $marker_deleted ) ? $marker_deleted : true;
 	}
 
 	/** @return bool */
 	private function save_journal( array $journal ) {
-		$saved = update_option( self::JOURNAL_OPTION, $journal, false );
-		return $saved || $journal === get_option( self::JOURNAL_OPTION, array() );
+		update_option( self::JOURNAL_OPTION, $journal, false );
+		return $journal === get_option( self::JOURNAL_OPTION, array() );
 	}
 }

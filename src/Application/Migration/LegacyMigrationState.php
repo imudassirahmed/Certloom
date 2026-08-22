@@ -10,12 +10,13 @@ namespace Certloom\Application\Migration;
 final class LegacyMigrationState {
 	const OPTION = 'certloom_legacy_domain_migration_state';
 
-	const NOT_STARTED      = 'not_started';
-	const PREFLIGHTING     = 'preflighting';
-	const PREFLIGHT_READY  = 'preflight_ready';
-	const MIGRATING        = 'migrating';
-	const COMPLETE         = 'complete';
-	const BLOCKED          = 'blocked';
+	const NOT_STARTED          = 'not_started';
+	const PREFLIGHTING         = 'preflighting';
+	const PREFLIGHT_VERIFYING  = 'preflight_verifying';
+	const PREFLIGHT_READY      = 'preflight_ready';
+	const MIGRATING            = 'migrating';
+	const COMPLETE             = 'complete';
+	const BLOCKED              = 'blocked';
 
 	/** @return array<string,mixed> */
 	public function get() {
@@ -54,38 +55,47 @@ final class LegacyMigrationState {
 			&& hash_equals( (string) $state['source_generation'], (string) ( $snapshot['generation'] ?? '' ) );
 	}
 
-	/**
-	 * Starts a resumable preflight against an immutable legacy source boundary.
-	 *
-	 * @return true|\WP_Error
-	 */
+	/** Starts a resumable two-pass preflight against an immutable legacy source boundary. @return true|\WP_Error */
 	public function begin_preflight( array $snapshot, $today ) {
+		$fingerprint = ( new LegacySourceFingerprint() )->seed();
 		$value = array(
-			'status'            => self::PREFLIGHTING,
-			'source_count'      => absint( $snapshot['count'] ?? 0 ),
-			'source_max_id'     => absint( $snapshot['max_id'] ?? 0 ),
-			'source_generation' => (string) ( $snapshot['generation'] ?? '' ),
-			'preflight_date'    => (string) $today,
-			'preflight_cursor'  => 0,
-			'preflight_total'   => 0,
-			'preflight_ready'   => 0,
-			'preflight_errors'  => 0,
-			'status_counts'     => array( 'valid' => 0, 'suspended' => 0, 'revoked' => 0, 'expired' => 0 ),
-			'error_details'     => array(),
-			'cursor'            => 0,
-			'migrated'          => 0,
-			'skipped'           => 0,
-			'failed'            => 0,
-			'updated_at'        => time(),
+			'status'                 => self::PREFLIGHTING,
+			'source_count'           => absint( $snapshot['count'] ?? 0 ),
+			'source_max_id'          => absint( $snapshot['max_id'] ?? 0 ),
+			'source_generation'      => (string) ( $snapshot['generation'] ?? '' ),
+			'preflight_date'         => (string) $today,
+			'preflight_cursor'       => 0,
+			'preflight_total'        => 0,
+			'preflight_ready'        => 0,
+			'preflight_errors'       => 0,
+			'preflight_fingerprint'  => $fingerprint,
+			'verify_cursor'          => 0,
+			'verify_total'           => 0,
+			'verify_fingerprint'     => $fingerprint,
+			'source_fingerprint'     => '',
+			'status_counts'          => array( 'valid' => 0, 'suspended' => 0, 'revoked' => 0, 'expired' => 0 ),
+			'error_details'          => array(),
+			'cursor'                 => 0,
+			'migrated'               => 0,
+			'skipped'                => 0,
+			'failed'                 => 0,
+			'updated_at'             => time(),
 		);
 		return $this->save( $value );
 	}
 
 	/** @return true|\WP_Error */
-	public function record_preflight_batch( $cursor, array $summary, $error_limit = 100 ) {
+	public function record_preflight_batch( $cursor, array $summary, $fingerprint = null, $error_limit = 100 ) {
 		$value = $this->get();
 		if ( self::PREFLIGHTING !== (string) ( $value['status'] ?? '' ) ) {
 			return new \WP_Error( 'certloom_legacy_preflight_not_running', __( 'Legacy migration preflight is not running.', 'certloom' ) );
+		}
+		if ( null !== $fingerprint ) {
+			$fingerprint = strtolower( trim( (string) $fingerprint ) );
+			if ( ! preg_match( '/^[a-f0-9]{64}$/', $fingerprint ) ) {
+				return new \WP_Error( 'certloom_legacy_preflight_fingerprint_invalid', __( 'Certloom refused invalid official migration-preflight fingerprint state.', 'certloom' ) );
+			}
+			$value['preflight_fingerprint'] = $fingerprint;
 		}
 		$value['preflight_cursor'] = absint( $cursor );
 		$value['preflight_total'] = absint( $value['preflight_total'] ?? 0 ) + absint( $summary['total'] ?? 0 );
@@ -106,8 +116,8 @@ final class LegacyMigrationState {
 		return $this->save( $value );
 	}
 
-	/** @return true|\WP_Error */
-	public function finish_preflight() {
+	/** Moves a successful first preflight pass into the mandatory fingerprint-verification pass. @return true|\WP_Error */
+	public function begin_preflight_verification() {
 		$value = $this->get();
 		if ( self::PREFLIGHTING !== (string) ( $value['status'] ?? '' ) ) {
 			return new \WP_Error( 'certloom_legacy_preflight_not_running', __( 'Legacy migration preflight is not running.', 'certloom' ) );
@@ -115,19 +125,72 @@ final class LegacyMigrationState {
 		$complete_count = absint( $value['preflight_total'] ?? 0 ) === absint( $value['source_count'] ?? -1 );
 		$no_errors = 0 === absint( $value['preflight_errors'] ?? 0 );
 		$at_boundary = absint( $value['preflight_cursor'] ?? 0 ) >= absint( $value['source_max_id'] ?? 0 ) || 0 === absint( $value['source_count'] ?? 0 );
-		$value['status'] = $complete_count && $no_errors && $at_boundary ? self::PREFLIGHT_READY : self::BLOCKED;
-		if ( self::BLOCKED === $value['status'] && empty( $value['reason_code'] ) ) {
+		if ( ! $complete_count || ! $no_errors || ! $at_boundary || ! preg_match( '/^[a-f0-9]{64}$/', (string) ( $value['preflight_fingerprint'] ?? '' ) ) ) {
+			$value['status'] = self::BLOCKED;
 			$value['reason_code'] = $no_errors ? 'source_boundary_changed' : 'preflight_errors';
+			$value['updated_at'] = time();
+			return $this->save( $value );
 		}
+		$value['status'] = self::PREFLIGHT_VERIFYING;
+		$value['verify_cursor'] = 0;
+		$value['verify_total'] = 0;
+		$value['verify_fingerprint'] = ( new LegacySourceFingerprint() )->seed();
 		$value['updated_at'] = time();
 		return $this->save( $value );
+	}
+
+	/** @return true|\WP_Error */
+	public function record_preflight_verification_batch( $cursor, $row_count, $fingerprint ) {
+		$value = $this->get();
+		if ( self::PREFLIGHT_VERIFYING !== (string) ( $value['status'] ?? '' ) ) {
+			return new \WP_Error( 'certloom_legacy_preflight_verify_not_running', __( 'Legacy migration preflight verification is not running.', 'certloom' ) );
+		}
+		$fingerprint = strtolower( trim( (string) $fingerprint ) );
+		if ( ! preg_match( '/^[a-f0-9]{64}$/', $fingerprint ) ) {
+			return new \WP_Error( 'certloom_legacy_preflight_verify_fingerprint_invalid', __( 'Certloom refused invalid official preflight verification fingerprint state.', 'certloom' ) );
+		}
+		$value['verify_cursor'] = absint( $cursor );
+		$value['verify_total'] = absint( $value['verify_total'] ?? 0 ) + absint( $row_count );
+		$value['verify_fingerprint'] = $fingerprint;
+		$value['updated_at'] = time();
+		return $this->save( $value );
+	}
+
+	/** Finalizes official preflight only after both complete source reads fingerprint identically. @return true|\WP_Error */
+	public function finish_preflight_verification() {
+		$value = $this->get();
+		if ( self::PREFLIGHT_VERIFYING !== (string) ( $value['status'] ?? '' ) ) {
+			return new \WP_Error( 'certloom_legacy_preflight_verify_not_running', __( 'Legacy migration preflight verification is not running.', 'certloom' ) );
+		}
+		$complete = absint( $value['verify_total'] ?? 0 ) === absint( $value['source_count'] ?? -1 )
+			&& ( absint( $value['verify_cursor'] ?? 0 ) >= absint( $value['source_max_id'] ?? 0 ) || 0 === absint( $value['source_count'] ?? 0 ) );
+		$map = strtolower( (string) ( $value['preflight_fingerprint'] ?? '' ) );
+		$verify = strtolower( (string) ( $value['verify_fingerprint'] ?? '' ) );
+		if ( ! $complete || ! preg_match( '/^[a-f0-9]{64}$/', $map ) || ! preg_match( '/^[a-f0-9]{64}$/', $verify ) || ! hash_equals( $map, $verify ) ) {
+			$value['status'] = self::BLOCKED;
+			$value['reason_code'] = $complete ? 'semantic_fingerprint_changed' : 'verification_count_mismatch';
+			$value['updated_at'] = time();
+			return $this->save( $value );
+		}
+		$value['status'] = self::PREFLIGHT_READY;
+		$value['source_fingerprint'] = $map;
+		$value['updated_at'] = time();
+		return $this->save( $value );
+	}
+
+	/** Backward-compatible alias: first pass now proceeds to a required second verification pass. @return true|\WP_Error */
+	public function finish_preflight() {
+		return $this->begin_preflight_verification();
 	}
 
 	/** @return true|\WP_Error */
 	public function begin_commit() {
 		$value = $this->get();
 		if ( self::PREFLIGHT_READY !== (string) ( $value['status'] ?? '' ) && self::MIGRATING !== (string) ( $value['status'] ?? '' ) ) {
-			return new \WP_Error( 'certloom_legacy_migration_not_ready', __( 'Legacy migration has not passed its complete preflight gate.', 'certloom' ) );
+			return new \WP_Error( 'certloom_legacy_migration_not_ready', __( 'Legacy migration has not passed both complete preflight source reads.', 'certloom' ) );
+		}
+		if ( ! preg_match( '/^[a-f0-9]{64}$/', (string) ( $value['source_fingerprint'] ?? '' ) ) ) {
+			return new \WP_Error( 'certloom_legacy_migration_fingerprint_missing', __( 'Legacy migration cannot begin without a verified source fingerprint.', 'certloom' ) );
 		}
 		$value['status'] = self::MIGRATING;
 		$value['updated_at'] = time();
@@ -154,6 +217,9 @@ final class LegacyMigrationState {
 		if ( self::MIGRATING !== (string) ( $value['status'] ?? '' ) || ! empty( $value['failed'] ) ) {
 			return new \WP_Error( 'certloom_legacy_migration_incomplete', __( 'Legacy migration cannot be completed while failures remain.', 'certloom' ) );
 		}
+		if ( absint( $value['migrated'] ?? 0 ) + absint( $value['skipped'] ?? 0 ) !== absint( $value['source_count'] ?? -1 ) ) {
+			return new \WP_Error( 'certloom_legacy_migration_count_mismatch', __( 'Legacy migration cannot be completed because its target coverage does not match the frozen source boundary.', 'certloom' ) );
+		}
 		$value['status'] = self::COMPLETE;
 		$value['completed_at'] = time();
 		$value['updated_at'] = time();
@@ -171,7 +237,7 @@ final class LegacyMigrationState {
 
 	/** @return array<int,string> */
 	private static function statuses() {
-		return array( self::NOT_STARTED, self::PREFLIGHTING, self::PREFLIGHT_READY, self::MIGRATING, self::COMPLETE, self::BLOCKED );
+		return array( self::NOT_STARTED, self::PREFLIGHTING, self::PREFLIGHT_VERIFYING, self::PREFLIGHT_READY, self::MIGRATING, self::COMPLETE, self::BLOCKED );
 	}
 
 	/** @return true|\WP_Error */

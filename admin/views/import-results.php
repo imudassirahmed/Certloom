@@ -38,5 +38,5 @@ $ecapla_certverify_backup_restored = ! empty( $_GET['backup_restored'] );
 		<div class="ecapla-certverify-error-list"><ul><?php foreach ( array_slice( $results['errors'], 0, 100 ) as $error ) : ?><li><?php echo esc_html( $error ); ?></li><?php endforeach; ?></ul></div>
 		<?php if ( count( $results['errors'] ) > 100 ) : ?><p class="description"><?php esc_html_e( 'Only the first 100 row messages are shown.', 'certloom' ); ?></p><?php endif; ?>
 	<?php endif; ?>
-	<p><a class="button button-primary" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom' ) ); ?>"><?php esc_html_e( 'View certificates', 'certloom' ); ?></a> <a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-import' ) ); ?>"><?php esc_html_e( 'Run another import', 'certloom' ); ?></a></p>
+	<p><a class="button button-primary" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-certificates' ) ); ?>"><?php esc_html_e( 'View certificates', 'certloom' ); ?></a> <a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-import' ) ); ?>"><?php esc_html_e( 'Run another import', 'certloom' ); ?></a></p>
 </div>

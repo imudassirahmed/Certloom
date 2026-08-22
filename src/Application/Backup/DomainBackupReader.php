@@ -29,6 +29,11 @@ final class DomainBackupReader {
 			$type = (string) ( $item['type'] ?? '' );
 			if ( 1 === $line_no ) {
 				if ( 'manifest' !== $type || DomainBackupFormat::FORMAT !== ( $item['format'] ?? '' ) || DomainBackupFormat::VERSION !== absint( $item['format_version'] ?? 0 ) ) { fclose($handle); return new \WP_Error( 'certloom_domain_backup_manifest_invalid', __( 'This is not a supported Certloom domain backup.', 'certloom' ) ); }
+				$declared_entities = isset( $item['entities'] ) && is_array( $item['entities'] ) ? $item['entities'] : array();
+				if ( array_keys( $declared_entities ) !== $allowed_entities ) { fclose($handle); return new \WP_Error( 'certloom_domain_backup_manifest_invalid', __( 'The Certloom backup manifest does not declare the exact supported entity set in canonical order.', 'certloom' ) ); }
+				foreach ( $allowed_entities as $entity_name ) {
+					if ( ! is_array( $declared_entities[ $entity_name ] ) || ! array_key_exists( 'count', $declared_entities[ $entity_name ] ) || ! array_key_exists( 'max_id', $declared_entities[ $entity_name ] ) ) { fclose($handle); return new \WP_Error( 'certloom_domain_backup_manifest_invalid', __( 'The Certloom backup manifest contains an incomplete entity declaration.', 'certloom' ) ); }
+				}
 				$manifest = $item; $hash = $this->format->next_hash( '', $line ); continue;
 			}
 			if ( 'integrity' === $type ) { $integrity = $item; $after_integrity = true; continue; }
@@ -50,11 +55,12 @@ final class DomainBackupReader {
 			return new \WP_Error( 'certloom_domain_backup_configuration_hash_invalid', __( 'The Certloom domain backup configuration metadata is inconsistent.', 'certloom' ) );
 		}
 
-		foreach ( (array) ( $manifest['entities'] ?? array() ) as $entity => $bound ) {
-			if ( absint( $bound['count'] ?? 0 ) !== absint( $counts[ sanitize_key( $entity ) ] ?? 0 ) ) {
+		foreach ( $allowed_entities as $entity ) {
+			$bound = $manifest['entities'][ $entity ];
+			if ( absint( $bound['count'] ?? 0 ) !== absint( $counts[ $entity ] ?? 0 ) ) {
 				return new \WP_Error( 'certloom_domain_backup_count_mismatch', __( 'The Certloom domain backup record counts do not match its manifest.', 'certloom' ) );
 			}
 		}
-		return array( 'manifest' => $manifest, 'records' => $records, 'counts' => $counts );
+		return array( 'manifest' => $manifest, 'records' => $records, 'counts' => $counts, 'chain_sha256' => $hash );
 	}
 }

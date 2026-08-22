@@ -264,7 +264,7 @@ final class DomainAcceptanceProof {
 			return new \WP_Error( 'certloom_domain_acceptance_feature_gate_active', __( 'The synthetic gated-domain proof is only available before next-domain development features are enabled.', 'certloom' ) );
 		}
 		$cutover = new DomainCutoverState();
-		if ( $cutover->is_domain_authoritative() || $cutover->has_committed_receipt() ) {
+		if ( ! $cutover->is_clean_legacy_state() ) {
 			return new \WP_Error( 'certloom_domain_acceptance_cutover_active', __( 'The synthetic gated-domain proof is not available after credential authority has been cut over.', 'certloom' ) );
 		}
 		$migration = new LegacyMigrationState();

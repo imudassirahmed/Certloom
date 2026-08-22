@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<div class="notice notice-warning"><p><?php esc_html_e( 'This certificate is Expired because its expiry date has passed. Extend the expiry date to renew it; Suspended and Withdrawn remain manual statuses.', 'certloom' ); ?></p></div>
 	<?php endif; ?>
 
-	<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=certloom' ) ); ?>" class="ecapla-certverify-admin-form">
+	<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=certloom-add' ) ); ?>" class="ecapla-certverify-admin-form">
 		<?php wp_nonce_field( 'certverify_save_certificate' ); ?>
 		<input type="hidden" name="cert_id" value="<?php echo esc_attr( $certificate['id'] ?? '' ); ?>" />
 		<table class="form-table" role="presentation">

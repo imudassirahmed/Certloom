@@ -27,14 +27,37 @@ function wp_mkdir_p( $path ) { return is_dir( $path ) || mkdir( $path, 0700, tru
 function apply_filters( $hook, $value ) { global $root; return 'certloom_private_job_directory' === $hook ? $root . '/private' : $value; }
 $GLOBALS['db_options'] = array( 'certloom_domain_data_generation' => 'generation-1' );
 function get_option( $key, $default = false ) { return array_key_exists( $key, $GLOBALS['db_options'] ) ? $GLOBALS['db_options'][ $key ] : $default; }
-function update_option( $key, $value, $autoload = false ) { $GLOBALS['db_options'][ $key ] = $value; return true; }
+function update_option( $key, $value, $autoload = false ) { $changed = ! array_key_exists( $key, $GLOBALS['db_options'] ) || $GLOBALS['db_options'][ $key ] !== $value; $GLOBALS['db_options'][ $key ] = $value; return $changed; }
+function add_option( $key, $value, $deprecated = '', $autoload = false ) { if ( array_key_exists( $key, $GLOBALS['db_options'] ) ) { return false; } $GLOBALS['db_options'][ $key ] = $value; return true; }
+function delete_option( $key ) { if ( ! array_key_exists( $key, $GLOBALS['db_options'] ) ) { return false; } unset( $GLOBALS['db_options'][ $key ] ); return true; }
+function wp_cache_delete() { return true; }
 
 final class BackupFakeWpdb {
 	public $prefix = 'wp_';
+	public $options = 'wp_options';
 	public $last_error = '';
 	public $tables = array();
+	public $saw_backup_lock = false;
 	public function prepare( $query, ...$args ) { return array( 'query' => $query, 'args' => $args ); }
+	public function query( $prepared ) {
+		$this->last_error = '';
+		if ( ! is_array( $prepared ) ) { return 1; }
+		$query = (string) ( $prepared['query'] ?? '' );
+		$args = (array) ( $prepared['args'] ?? array() );
+		if ( 0 === strpos( $query, 'UPDATE %i SET option_value' ) ) {
+			$new = (string) ( $args[1] ?? '' ); $name = (string) ( $args[2] ?? '' ); $old = (string) ( $args[3] ?? '' );
+			if ( ! array_key_exists( $name, $GLOBALS['db_options'] ) || (string) $GLOBALS['db_options'][ $name ] !== $old ) { return 0; }
+			$GLOBALS['db_options'][ $name ] = $new; return 1;
+		}
+		if ( 0 === strpos( $query, 'DELETE FROM %i WHERE option_name' ) ) {
+			$name = (string) ( $args[1] ?? '' ); $old = (string) ( $args[2] ?? '' );
+			if ( ! array_key_exists( $name, $GLOBALS['db_options'] ) || (string) $GLOBALS['db_options'][ $name ] !== $old ) { return 0; }
+			unset( $GLOBALS['db_options'][ $name ] ); return 1;
+		}
+		return 1;
+	}
 	public function get_row( $prepared, $format ) {
+		if ( isset( $GLOBALS['db_options']['certloom_domain_maintenance_lock'] ) && false !== strpos( (string) $GLOBALS['db_options']['certloom_domain_maintenance_lock'], 'domain_backup_snapshot' ) ) { $this->saw_backup_lock = true; }
 		$table = $prepared['args'][0] ?? '';
 		$rows = array_values( $this->tables[ $table ] ?? array() );
 		$max = 0;
@@ -64,6 +87,7 @@ use Certloom\Application\Backup\DomainBackupBuilder;
 use Certloom\Application\Backup\DomainBackupReader;
 use Certloom\Infrastructure\Backup\DomainBackupRepository;
 use Certloom\Infrastructure\Database\SchemaManager;
+use Certloom\Infrastructure\Diagnostics\DomainStateFingerprint;
 
 function db_same( $expected, $actual, $message = '' ) {
 	if ( $expected !== $actual ) { throw new RuntimeException( ( $message ? $message . ': ' : '' ) . 'Expected ' . var_export( $expected, true ) . ', got ' . var_export( $actual, true ) ); }
@@ -86,6 +110,8 @@ $builder = new DomainBackupBuilder();
 $state = $builder->start( str_repeat( 'a', 32 ), '1.5.4' );
 db_same( false, is_wp_error( $state ), 'backup start' );
 db_same( false, $state['complete'], 'not complete after manifest' );
+db_true( $GLOBALS['wpdb']->saw_backup_lock, 'snapshot reads occur inside shared maintenance boundary' );
+db_same( false, array_key_exists( 'certloom_domain_maintenance_lock', $GLOBALS['db_options'] ), 'snapshot lock released before long streaming build' );
 $iterations = 0;
 while ( ! $state['complete'] && $iterations++ < 100 ) {
 	$state = $builder->continue_build( $state, 1 );
@@ -97,7 +123,7 @@ $analysis = ( new DomainBackupReader() )->analyze( $state['path'] );
 db_same( false, is_wp_error( $analysis ), 'reader accepts backup' );
 db_same( (int) $state['records'], (int) $analysis['records'], 'record count' );
 db_same( 'certloom-domain-backup', $analysis['manifest']['format'], 'format' );
-echo "PASS  resumable backup completes and validates through streaming reader\n";
+echo "PASS  resumable backup snapshots under maintenance lock, then completes and validates through streaming reader\n";
 
 // Simulate a PHP crash after file append but before the new job state was saved.
 // The retry must truncate the uncommitted tail to the persisted byte offset.
@@ -207,9 +233,39 @@ $unsupported_result = ( new DomainBackupReader() )->analyze( $unsupported );
 db_same( 'certloom_domain_backup_entity_unsupported', $unsupported_result->get_error_code(), 'unknown entity rejected' );
 echo "PASS  unsupported backup entity types are rejected\n";
 
+// The staging restore oracle must fingerprint the complete graph deterministically while holding the shared maintenance boundary.
+$fingerprinter = new DomainStateFingerprint();
+$fp = $fingerprinter->start( str_repeat( 'e', 32 ) );
+db_same( false, is_wp_error( $fp ), 'fingerprint start' );
+db_true( array_key_exists( 'certloom_domain_maintenance_lock', $GLOBALS['db_options'] ), 'fingerprint keeps maintenance boundary across slices' );
+$fp_loops=0;while(empty($fp['complete'])&&$fp_loops++<100){$fp=$fingerprinter->continue_fingerprint($fp,1);if(is_wp_error($fp))throw new RuntimeException('Fingerprint failed: '.$fp->get_error_code());}
+db_true( $fp['complete'], 'fingerprint completes' );
+db_same( false, array_key_exists( 'certloom_domain_maintenance_lock', $GLOBALS['db_options'] ), 'fingerprint releases maintenance boundary only after final verification' );
+$fp2 = $fingerprinter->start( str_repeat( 'f', 32 ) );$guard=0;while(!is_wp_error($fp2)&&empty($fp2['complete'])&&$guard++<100){$fp2=$fingerprinter->continue_fingerprint($fp2,500);}
+db_same(false,is_wp_error($fp2),'second fingerprint');db_same($fp['hash'],$fp2['hash'],'deterministic graph fingerprint');db_same($fp['records'],$fp2['records'],'deterministic graph count');
+echo "PASS  domain-state fingerprint is deterministic and holds the maintenance boundary across its full scan\n";
+
+// Malformed initial boundary evidence must not strand the shared maintenance lease.
+$generation_saved = $GLOBALS['db_options']['certloom_domain_data_generation'];
+$GLOBALS['db_options']['certloom_domain_data_generation'] = '';
+$fp_bad_start = $fingerprinter->start( str_repeat( '1', 32 ) );
+db_same( 'certloom_domain_fingerprint_snapshot_invalid', $fp_bad_start->get_error_code(), 'invalid fingerprint boundary rejected' );
+db_same( false, array_key_exists( 'certloom_domain_maintenance_lock', $GLOBALS['db_options'] ), 'invalid fingerprint boundary releases maintenance lease' );
+$GLOBALS['db_options']['certloom_domain_data_generation'] = $generation_saved;
+echo "PASS  invalid fingerprint start boundary releases its maintenance lease\n";
+
+// Corrupt resumable state with a valid owner must also abandon its owned lease safely.
+$fp_corrupt = $fingerprinter->start( str_repeat( '2', 32 ) );
+db_same( false, is_wp_error( $fp_corrupt ), 'corrupt-state setup start' );
+$fp_corrupt['schema'] = 'tampered-schema';
+$fp_corrupt_result = $fingerprinter->continue_fingerprint( $fp_corrupt, 1 );
+db_same( 'certloom_domain_fingerprint_state_invalid', $fp_corrupt_result->get_error_code(), 'corrupt fingerprint state rejected' );
+db_same( false, array_key_exists( 'certloom_domain_maintenance_lock', $GLOBALS['db_options'] ), 'corrupt fingerprint state releases owned maintenance lease' );
+echo "PASS  invalid resumable fingerprint state releases its owner-matched maintenance lease\n";
+
 db_rm( $root );
 @unlink( $tampered );
 @unlink( $count_bad );
 @unlink( $trailing );
 @unlink( $unsupported );
-echo "\n8 tests, 0 failures\n";
+echo "\n11 tests, 0 failures\n";

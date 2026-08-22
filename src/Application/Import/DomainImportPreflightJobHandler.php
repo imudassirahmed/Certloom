@@ -55,8 +55,8 @@ final class DomainImportPreflightJobHandler implements JobHandlerInterface {
 			(string) ( $payload['baseline_configuration_hash'] ?? '' )
 		);
 		if ( is_wp_error( $consistent ) ) {
-			$this->cleanup( $job_key, $path );
-			return $consistent;
+			$cleanup = $this->cleanup( $job_key, $path );
+			return is_wp_error( $cleanup ) ? $cleanup : $consistent;
 		}
 
 		$state = isset( $job['result']['import_state'] ) && is_array( $job['result']['import_state'] )
@@ -74,15 +74,15 @@ final class DomainImportPreflightJobHandler implements JobHandlerInterface {
 				absint( $payload['max_rows'] ?? DomainImportCsvReader::MAX_ROWS )
 			);
 			if ( is_wp_error( $state ) ) {
-				$this->cleanup( $job_key, $path );
-				return $state;
+				$cleanup = $this->cleanup( $job_key, $path );
+				return is_wp_error( $cleanup ) ? $cleanup : $state;
 			}
 		}
 
 		$slice = $this->reader->continue_read( $state, $this->batch_size );
 		if ( is_wp_error( $slice ) ) {
-			$this->cleanup( $job_key, $path );
-			return $slice;
+			$cleanup = $this->cleanup( $job_key, $path );
+			return is_wp_error( $cleanup ) ? $cleanup : $slice;
 		}
 		$state = $slice['state'];
 		foreach ( (array) $slice['records'] as $record ) {
@@ -124,8 +124,8 @@ final class DomainImportPreflightJobHandler implements JobHandlerInterface {
 
 		$stage_summary = $this->stage->summary( $job_key );
 		if ( is_wp_error( $stage_summary ) ) {
-			$this->cleanup( $job_key, $path );
-			return $stage_summary;
+			$cleanup = $this->cleanup( $job_key, $path );
+			return is_wp_error( $cleanup ) ? $cleanup : $stage_summary;
 		}
 		// Durable staging is the authority for ready/duplicate counts after retries.
 		$aggregate['ready']      = absint( $stage_summary['ready'] ?? 0 );
@@ -188,8 +188,14 @@ final class DomainImportPreflightJobHandler implements JobHandlerInterface {
 		}
 	}
 
+	/** @return true|\WP_Error */
 	private function cleanup( $job_key, $path ) {
-		$this->stage->clear( $job_key );
-		if ( '' !== (string) $path && $this->files->owns( $path ) ) { $this->files->delete( $path ); }
+		$stage = $this->stage->clear( $job_key );
+		$file = true;
+		if ( '' !== (string) $path && $this->files->owns( $path ) ) { $file = $this->files->delete( $path ); }
+		if ( is_wp_error( $stage ) || is_wp_error( $file ) || false === $file ) {
+			return new \WP_Error( 'certloom_import_preflight_cleanup_failed', __( 'Certloom stopped the import preflight, but could not prove that all private staging/source data was removed. Cleanup must be retried before treating the failure as fully resolved.', 'certloom' ) );
+		}
+		return true;
 	}
 }

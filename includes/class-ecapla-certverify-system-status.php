@@ -24,16 +24,14 @@ class Ecapla_CertVerify_System_Status {
 		$checks[] = self::database_proof_check();
 		$checks[] = self::domain_acceptance_proof_check();
 		$checks[] = self::legacy_migration_preflight_check();
+		$staging_rehearsal = self::staging_migration_rehearsal_check();
+		if ( null !== $staging_rehearsal ) { $checks[] = $staging_rehearsal; }
+		$staging_restore = self::staging_restore_rehearsal_check();
+		if ( null !== $staging_restore ) { $checks[] = $staging_restore; }
+		$staging_cutover = self::staging_cutover_rehearsal_check();
+		if ( null !== $staging_cutover ) { $checks[] = $staging_cutover; }
 		$checks[] = self::legacy_table_check( $wpdb );
-		$checks[] = self::check(
-			'authority',
-			__( 'Credential authority', 'certloom' ),
-			self::domain_authority_active() ? 'warning' : 'good',
-			self::domain_authority_active() ? __( 'Next domain', 'certloom' ) : __( 'Proven 1.5 registry (expected)', 'certloom' ),
-			self::domain_authority_active()
-				? __( 'The next domain is marked authoritative. Its committed cutover receipt and runtime gates must also be valid.', 'certloom' )
-				: __( 'The live 1.5 registry remains authoritative while the next domain is still gated.', 'certloom' )
-		);
+		$checks[] = self::authority_check();
 		$checks[] = self::check(
 			'domain_feature_gates',
 			__( 'Next-domain feature gates', 'certloom' ),
@@ -164,6 +162,93 @@ class Ecapla_CertVerify_System_Status {
 		return self::check( 'legacy_migration_preflight', __( 'Populated migration preflight', 'certloom' ), $status, $value, $note );
 	}
 
+
+	private static function staging_migration_rehearsal_check() {
+		$class = '\\Certloom\\Infrastructure\\Diagnostics\\StagingMigrationRehearsal';
+		if ( ! class_exists( $class ) || ! $class::environment_allowed() ) {
+			return null;
+		}
+		if ( ! $class::explicitly_enabled() ) {
+			return self::check( 'staging_migration_rehearsal', __( 'Staging migration commit rehearsal', 'certloom' ), 'warning', __( 'Opt-in required', 'certloom' ), __( 'This non-production environment can run the real populated migration rehearsal after the explicit wp-config opt-in is enabled.', 'certloom' ) );
+		}
+		$result = $class::get_last_result();
+		if ( ! is_array( $result ) ) {
+			return self::check( 'staging_migration_rehearsal', __( 'Staging migration commit rehearsal', 'certloom' ), 'warning', __( 'Not run', 'certloom' ), __( 'After fresh prerequisite proofs pass, this staging/local-only action can exercise the production migration coordinator without switching credential authority.', 'certloom' ) );
+		}
+		$state = $class::evidence_state();
+		$status = 'passed' === $state ? 'good' : ( 'failed' === $state ? 'bad' : 'warning' );
+		$value = 'passed' === $state ? __( 'Passed', 'certloom' ) : ( 'failed' === $state ? __( 'Failed', 'certloom' ) : ( 'stale' === $state ? __( 'Stale — review staging copy', 'certloom' ) : __( 'In progress', 'certloom' ) ) );
+		$note = sprintf(
+			/* translators: 1: frozen legacy rows, 2: target parity rows, 3: idempotency rows. */
+			__( '%1$d frozen legacy rows; %2$d target rows parity-verified; %3$d rows replayed idempotently. Credential authority remains unchanged.', 'certloom' ),
+			absint( $result['source_count'] ?? 0 ),
+			absint( $result['verified'] ?? 0 ),
+			absint( $result['idempotency_checked'] ?? 0 )
+		);
+		return self::check( 'staging_migration_rehearsal', __( 'Staging migration commit rehearsal', 'certloom' ), $status, $value, $note );
+	}
+
+
+	private static function staging_restore_rehearsal_check() {
+		$class = '\\Certloom\\Infrastructure\\Diagnostics\\StagingRestoreRehearsal';
+		if ( ! class_exists( $class ) || ! $class::environment_allowed() ) {
+			return null;
+		}
+		if ( ! $class::explicitly_enabled() ) {
+			return self::check( 'staging_restore_rehearsal', __( 'Staging backup/restore rehearsal', 'certloom' ), 'warning', __( 'Opt-in required', 'certloom' ), __( 'This non-production environment can exercise populated Replace, Merge and forced rollback only after the explicit wp-config opt-in is enabled.', 'certloom' ) );
+		}
+		$result = $class::get_last_result();
+		if ( ! is_array( $result ) ) {
+			return self::check( 'staging_restore_rehearsal', __( 'Staging backup/restore rehearsal', 'certloom' ), 'warning', __( 'Not run', 'certloom' ), __( 'After the populated staging migration rehearsal passes, this staging/local-only action can exercise real domain backup, Replace, Merge and rollback without changing credential authority.', 'certloom' ) );
+		}
+		$state = $class::evidence_state();
+		$status = 'passed' === $state ? 'good' : ( 'failed' === $state ? 'bad' : 'warning' );
+		$value = 'passed' === $state ? __( 'Passed', 'certloom' ) : ( 'failed' === $state ? __( 'Failed', 'certloom' ) : ( 'stale' === $state ? __( 'Stale — review staging copy', 'certloom' ) : __( 'In progress', 'certloom' ) ) );
+		$note = sprintf(
+			/* translators: 1: baseline records, 2: backup records. */
+			__( '%1$d baseline future-domain records; %2$d backup records. Replace, identical Merge and forced rollback must all reproduce the same complete graph. Credential authority remains unchanged.', 'certloom' ),
+			absint( $result['baseline_records'] ?? 0 ),
+			absint( $result['backup_records'] ?? 0 )
+		);
+		return self::check( 'staging_restore_rehearsal', __( 'Staging backup/restore rehearsal', 'certloom' ), $status, $value, $note );
+	}
+
+
+	private static function staging_cutover_rehearsal_check() {
+		$class = '\Certloom\Infrastructure\Diagnostics\StagingCutoverRehearsal';
+		if ( ! class_exists( $class ) || ! $class::environment_allowed() ) {
+			return null;
+		}
+		if ( ! $class::explicitly_enabled() ) {
+			return self::check( 'staging_cutover_rehearsal', __( 'Staging final cutover rehearsal', 'certloom' ), 'warning', __( 'Opt-in required', 'certloom' ), __( 'This non-production environment can temporarily exercise and roll back the real authority cutover after the explicit wp-config opt-in is enabled.', 'certloom' ) );
+		}
+		$result = $class::get_last_result();
+		if ( ! is_array( $result ) ) {
+			return self::check( 'staging_cutover_rehearsal', __( 'Staging final cutover rehearsal', 'certloom' ), 'warning', __( 'Not run', 'certloom' ), __( 'After populated migration and restore rehearsals pass, this staging/local-only action can exercise the production cutover coordinator, public verification gate and rollback-to-legacy baseline.', 'certloom' ) );
+		}
+		$state = $class::evidence_state();
+		$status = 'passed' === $state ? 'good' : ( 'failed' === $state ? 'bad' : 'warning' );
+		$value = 'passed' === $state ? __( 'Passed', 'certloom' ) : ( 'failed' === $state ? __( 'Failed', 'certloom' ) : ( 'stale' === $state ? __( 'Stale — review staging copy', 'certloom' ) : __( 'In progress', 'certloom' ) ) );
+		$note = sprintf(
+			/* translators: 1: frozen legacy rows, 2: future-domain records fingerprinted. */
+			__( '%1$d frozen legacy rows; %2$d future-domain records fingerprinted. Cutover receipt, legacy read-only guard, Series verification readiness, rollback to legacy, and graph parity must all pass.', 'certloom' ),
+			absint( $result['source_count'] ?? 0 ),
+			absint( $result['baseline_records'] ?? 0 )
+		);
+		return self::check( 'staging_cutover_rehearsal', __( 'Staging final cutover rehearsal', 'certloom' ), $status, $value, $note );
+	}
+
+	private static function authority_check() {
+		$value = get_option( 'certloom_domain_write_authority', null );
+		if ( null === $value || false === $value || '' === $value || 'legacy' === $value ) {
+			return self::check( 'authority', __( 'Credential authority', 'certloom' ), 'good', __( 'Proven 1.5 registry (expected)', 'certloom' ), __( 'The live 1.5 registry remains authoritative while the next domain is still gated.', 'certloom' ) );
+		}
+		if ( 'domain' === $value ) {
+			return self::check( 'authority', __( 'Credential authority', 'certloom' ), 'warning', __( 'Next domain', 'certloom' ), __( 'The next domain is marked authoritative. Its committed cutover receipt and runtime gates must also be valid.', 'certloom' ) );
+		}
+		return self::check( 'authority', __( 'Credential authority', 'certloom' ), 'bad', __( 'Corrupt protected state', 'certloom' ), __( 'Certloom intentionally blocks legacy writes and Series public verification when the authority option is non-empty but invalid. Repair it only from known-good migration/cutover recovery evidence.', 'certloom' ) );
+	}
+
 	private static function maintenance_check() {
 		$missing = new stdClass();
 		$lock    = get_option( Ecapla_CertVerify_Backup::MAINTENANCE_LOCK_OPTION, $missing );
@@ -258,10 +343,6 @@ class Ecapla_CertVerify_System_Status {
 		}
 		$engine = sanitize_text_field( (string) ( $row['Engine'] ?? '' ) );
 		return self::check( 'legacy_registry', __( 'Live certificate table', 'certloom' ), 'good', $engine ? sprintf( /* translators: %s: database storage engine. */ __( 'Available (%s)', 'certloom' ), $engine ) : __( 'Available', 'certloom' ) );
-	}
-
-	private static function domain_authority_active() {
-		return 'domain' === sanitize_key( (string) get_option( 'certloom_domain_write_authority', 'legacy' ) );
 	}
 
 	private static function all_domain_gates_off() {

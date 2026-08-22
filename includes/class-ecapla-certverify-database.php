@@ -1115,7 +1115,10 @@ class Ecapla_CertVerify_Database {
 		$source  = self::table_name();
 		$staging = $wpdb->prefix . 'certverify_stage_' . substr( preg_replace( '/[^a-z0-9]/i', '', (string) $suffix ), 0, 12 );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- A private staging table is required for atomic complete-backup restoration.
-		$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $staging ) );
+		$dropped = $wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $staging ) );
+		if ( false === $dropped ) {
+			return new WP_Error( 'ecapla_certverify_restore_cleanup_failed', __( 'Certloom could not clear an earlier private restore workspace. No live certificate data was changed.', 'certloom' ) );
+		}
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Creates a same-schema private staging table for an administrator-confirmed restore.
 		$created = $wpdb->query( $wpdb->prepare( 'CREATE TABLE %i LIKE %i', $staging, $source ) );
 		$copied  = false !== $created && ! $copy_current;
@@ -1125,7 +1128,10 @@ class Ecapla_CertVerify_Database {
 		}
 		if ( false === $created || false === $copied ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Removes an incomplete private staging table after preparation failure.
-			$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $staging ) );
+			$cleanup = $wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $staging ) );
+			if ( false === $cleanup ) {
+				return new WP_Error( 'ecapla_certverify_restore_cleanup_failed', __( 'Certloom could not prepare the restore workspace and could not confirm that the incomplete private staging table was removed. Live certificate data was not changed.', 'certloom' ) );
+			}
 			return new WP_Error( 'ecapla_certverify_restore_stage_failed', __( 'Certloom could not prepare a safe restore workspace.', 'certloom' ) );
 		}
 		return $staging;
@@ -1236,7 +1242,10 @@ class Ecapla_CertVerify_Database {
 		$active   = self::table_name();
 		$rollback = $wpdb->prefix . 'certverify_rollback_' . substr( preg_replace( '/[^a-z0-9]/i', '', (string) $suffix ), 0, 12 );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Clears only the generated Certloom rollback table name before an atomic restore swap.
-		$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $rollback ) );
+		$dropped = $wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $rollback ) );
+		if ( false === $dropped ) {
+			return new WP_Error( 'ecapla_certverify_restore_cleanup_failed', __( 'Certloom could not clear the private rollback workspace, so the live registry was not swapped.', 'certloom' ) );
+		}
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- MySQL's atomic RENAME TABLE operation activates the fully prepared registry and preserves rollback data.
 		$result = $wpdb->query( $wpdb->prepare( 'RENAME TABLE %i TO %i, %i TO %i', $active, $rollback, $staging, $active ) );
 		return false === $result ? new WP_Error( 'ecapla_certverify_restore_swap_failed', __( 'Certloom could not activate the prepared backup safely.', 'certloom' ) ) : $rollback;
@@ -1247,19 +1256,80 @@ class Ecapla_CertVerify_Database {
 		$active = self::table_name();
 		$failed = $wpdb->prefix . 'certverify_failed_' . substr( preg_replace( '/[^a-z0-9]/i', '', (string) $suffix ), 0, 12 );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Clears only the generated failed-restore table name before rollback.
-		$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $failed ) );
+		$dropped = $wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $failed ) );
+		if ( false === $dropped ) {
+			return false;
+		}
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Atomically restores the prior registry after a failed configuration commit.
 		$result = $wpdb->query( $wpdb->prepare( 'RENAME TABLE %i TO %i, %i TO %i', $active, $failed, $rollback, $active ) );
-		if ( false !== $result ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Removes the failed replacement only after the prior registry has been restored.
-			$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $failed ) );
+		if ( false === $result ) {
+			return false;
 		}
-		return false !== $result;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Removes the failed replacement only after the prior registry has been restored.
+		$cleanup = $wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $failed ) );
+		return false !== $cleanup;
 	}
 
 	/**
 	 * @return array{items: array, total: int}|WP_Error List result or a database error.
 	 */
+	/**
+	 * Returns one bounded aggregate snapshot for the administrator dashboard.
+	 *
+	 * Effective status is calculated with the same precedence as
+	 * effective_status(): manual Suspended/Withdrawn first, then preserved
+	 * legacy Expired state, then the current expiry date. No credential rows are
+	 * materialized for the totals.
+	 *
+	 * @return array<string,int>|WP_Error
+	 */
+	public static function get_dashboard_metrics() {
+		global $wpdb;
+		$table = self::table_name();
+		$today = current_time( 'Y-m-d' );
+		$month = current_time( 'Y-m-01' );
+
+		try {
+			$zone = function_exists( 'wp_timezone' ) ? wp_timezone() : new DateTimeZone( 'UTC' );
+			$soon = ( new DateTimeImmutable( $today, $zone ) )->modify( '+30 days' )->format( 'Y-m-d' );
+		} catch ( Exception $exception ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- UTC fallback is deterministic if the configured timezone is invalid.
+			$soon = gmdate( 'Y-m-d', strtotime( '+30 days' ) );
+		}
+
+		$sql = $wpdb->prepare(
+			"SELECT
+				COUNT(*) AS total,
+				SUM(CASE WHEN status = 'suspended' THEN 1 ELSE 0 END) AS suspended,
+				SUM(CASE WHEN status = 'withdrawn' THEN 1 ELSE 0 END) AS withdrawn,
+				SUM(CASE WHEN status NOT IN ('suspended','withdrawn') AND (status = 'expired' OR status_source = 'legacy' OR (expiry_date IS NOT NULL AND expiry_date < %s)) THEN 1 ELSE 0 END) AS expired,
+				SUM(CASE WHEN status NOT IN ('suspended','withdrawn') AND status <> 'expired' AND status_source <> 'legacy' AND (expiry_date IS NULL OR expiry_date >= %s) THEN 1 ELSE 0 END) AS valid,
+				SUM(CASE WHEN status NOT IN ('suspended','withdrawn') AND status <> 'expired' AND status_source <> 'legacy' AND expiry_date IS NOT NULL AND expiry_date >= %s AND expiry_date <= %s THEN 1 ELSE 0 END) AS expiring_soon,
+				SUM(CASE WHEN issue_date IS NOT NULL AND issue_date >= %s AND issue_date <= %s THEN 1 ELSE 0 END) AS issued_this_month
+			FROM %i",
+			$today,
+			$today,
+			$today,
+			$soon,
+			$month,
+			$today,
+			$table
+		);
+		$row = $wpdb->get_row( $sql, ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $row ) ) {
+			return self::read_error();
+		}
+
+		return array(
+			'total'             => max( 0, (int) ( $row['total'] ?? 0 ) ),
+			'valid'             => max( 0, (int) ( $row['valid'] ?? 0 ) ),
+			'suspended'         => max( 0, (int) ( $row['suspended'] ?? 0 ) ),
+			'withdrawn'         => max( 0, (int) ( $row['withdrawn'] ?? 0 ) ),
+			'expired'           => max( 0, (int) ( $row['expired'] ?? 0 ) ),
+			'expiring_soon'     => max( 0, (int) ( $row['expiring_soon'] ?? 0 ) ),
+			'issued_this_month' => max( 0, (int) ( $row['issued_this_month'] ?? 0 ) ),
+		);
+	}
+
 	public static function get_list( $args = array() ) {
 		global $wpdb;
 		$table = self::table_name();

@@ -79,8 +79,7 @@ final class DomainImportJobCoordinator {
 		}
 		$original_name = trim( (string) ( $options['original_name'] ?? '' ) );
 		if ( '' !== $original_name && 'csv' !== strtolower( pathinfo( $original_name, PATHINFO_EXTENSION ) ) ) {
-			$this->files->delete( $private_path );
-			return new \WP_Error( 'certloom_import_upload_type_invalid', __( 'Certloom accepts CSV files for this import workflow.', 'certloom' ) );
+			return $this->cleanup_private_after_error( $private_path, new \WP_Error( 'certloom_import_upload_type_invalid', __( 'Certloom accepts CSV files for this import workflow.', 'certloom' ) ) );
 		}
 
 		$probe = $this->reader->start(
@@ -90,13 +89,11 @@ final class DomainImportJobCoordinator {
 			absint( $options['max_rows'] ?? DomainImportCsvReader::MAX_ROWS )
 		);
 		if ( is_wp_error( $probe ) ) {
-			$this->files->delete( $private_path );
-			return $probe;
+			return $this->cleanup_private_after_error( $private_path, $probe );
 		}
 		$baseline = $this->consistency->snapshot();
 		if ( is_wp_error( $baseline ) ) {
-			$this->files->delete( $private_path );
-			return $baseline;
+			return $this->cleanup_private_after_error( $private_path, $baseline );
 		}
 
 		$payload = array(
@@ -112,10 +109,20 @@ final class DomainImportJobCoordinator {
 		);
 		$job_key = $this->queue->enqueue( JobTypes::DOMAIN_IMPORT_PREFLIGHT, absint( $owner_user_id ), $payload );
 		if ( is_wp_error( $job_key ) ) {
-			$this->files->delete( $private_path );
-			return $job_key;
+			return $this->cleanup_private_after_error( $private_path, $job_key );
 		}
 		return $job_key;
+	}
+
+
+	/** Preserve the primary failure unless protected-file cleanup itself becomes uncertain. @return \WP_Error */
+	private function cleanup_private_after_error( $path, \WP_Error $primary ) {
+		$deleted = $this->files->delete( (string) $path );
+		if ( ! is_wp_error( $deleted ) && false !== $deleted ) { return $primary; }
+		return new \WP_Error(
+			'certloom_import_private_cleanup_failed',
+			sprintf( __( 'Certloom stopped the import safely (%1$s), but could not remove its protected source copy (%2$s).', 'certloom' ), $primary->get_error_message(), is_wp_error( $deleted ) ? $deleted->get_error_message() : __( 'file deletion failed', 'certloom' ) )
+		);
 	}
 
 	/** @return string|\WP_Error Commit job key. */

@@ -37,10 +37,11 @@ final class PublicVerificationGate {
 		if ( ! is_array( $health ) || SchemaManager::SCHEMA_VERSION !== (string) ( $health['version'] ?? '' ) || empty( $health['checked_at'] ) ) {
 			return false;
 		}
+		$migration = new LegacyMigrationState();
 		$cutover = new DomainCutoverState();
-		return ( new LegacyMigrationState() )->is_complete()
+		return $migration->is_complete()
 			&& $cutover->is_domain_authoritative()
-			&& $cutover->has_committed_receipt();
+			&& $cutover->receipt_matches_completed_migration( $migration );
 	}
 
 	/**
@@ -54,15 +55,19 @@ final class PublicVerificationGate {
 		if ( ( new DomainMaintenanceLock() )->active() ) {
 			return new \WP_Error( 'certloom_series_verification_maintenance_active', __( 'Certloom cannot enable Series verification while credential maintenance is active or its maintenance lock requires recovery.', 'certloom' ) );
 		}
-		if ( ! ( new LegacyMigrationState() )->is_complete() ) {
+		$migration = new LegacyMigrationState();
+		if ( ! $migration->is_complete() ) {
 			return new \WP_Error( 'certloom_series_verification_migration_incomplete', __( 'Certloom cannot enable Series verification before legacy migration is complete.', 'certloom' ) );
 		}
 		$cutover = new DomainCutoverState();
+		if ( $cutover->is_corrupt() ) {
+			return new \WP_Error( 'certloom_series_verification_authority_corrupt', __( 'Certloom cannot enable Series verification while credential-authority state is invalid.', 'certloom' ) );
+		}
 		if ( ! $cutover->is_domain_authoritative() ) {
 			return new \WP_Error( 'certloom_series_verification_write_authority_legacy', __( 'Certloom cannot enable Series verification while the legacy registry is still the authoritative write model.', 'certloom' ) );
 		}
-		if ( ! $cutover->has_committed_receipt() ) {
-			return new \WP_Error( 'certloom_series_verification_cutover_receipt_missing', __( 'Certloom cannot enable Series verification until the locked domain-cutover coordinator has committed its cutover receipt.', 'certloom' ) );
+		if ( ! $cutover->receipt_matches_completed_migration( $migration ) ) {
+			return new \WP_Error( 'certloom_series_verification_cutover_receipt_missing', __( 'Certloom cannot enable Series verification until the locked domain-cutover coordinator has committed a receipt matching the completed migration boundary.', 'certloom' ) );
 		}
 		if ( SchemaManager::SCHEMA_VERSION !== (string) get_option( SchemaManager::SCHEMA_OPTION, '0' ) ) {
 			return new \WP_Error( 'certloom_series_verification_schema_incomplete', __( 'Certloom cannot enable Series verification before the domain schema is current.', 'certloom' ) );
@@ -74,10 +79,10 @@ final class PublicVerificationGate {
 		if ( true !== $health ) {
 			return new \WP_Error( 'certloom_series_verification_schema_unconfirmed', __( 'Certloom could not confirm the live domain schema health result, so Series verification remains disabled.', 'certloom' ) );
 		}
-		$saved = update_option( self::OPTION, 1, false );
-		return $saved || 1 === (int) get_option( self::OPTION, 0 )
+		update_option( self::OPTION, 1, false );
+		return 1 === (int) get_option( self::OPTION, 0 )
 			? true
-			: new \WP_Error( 'certloom_series_verification_gate_save_failed', __( 'Certloom could not save the public verification cutover marker.', 'certloom' ) );
+			: new \WP_Error( 'certloom_series_verification_gate_save_failed', __( 'Certloom could not save the public verification cutover marker exactly.', 'certloom' ) );
 	}
 
 	/** @return bool */

@@ -509,3 +509,576 @@
 	gap: 8px;
 	align-items: center;
 }
+
+/* -------------------------------------------------------------------------
+ * Certloom premium administration foundation (1.6.x)
+ * ---------------------------------------------------------------------- */
+.ecapla-certverify-admin-wrap {
+	--certloom-ink: #17221f;
+	--certloom-muted: #5f6f69;
+	--certloom-border: #dfe7e3;
+	--certloom-surface: #ffffff;
+	--certloom-surface-soft: #f5f8f7;
+	--certloom-accent: #126b55;
+	--certloom-accent-strong: #0b5643;
+	--certloom-accent-soft: #e9f5f1;
+	--certloom-warning: #9a6500;
+	--certloom-warning-soft: #fff7df;
+	--certloom-danger: #a52a2a;
+	--certloom-danger-soft: #fff0ef;
+	color: var(--certloom-ink);
+}
+
+.ecapla-certverify-admin-wrap .button-primary {
+	background: var(--certloom-accent);
+	border-color: var(--certloom-accent);
+}
+
+.ecapla-certverify-admin-wrap .button-primary:hover,
+.ecapla-certverify-admin-wrap .button-primary:focus {
+	background: var(--certloom-accent-strong);
+	border-color: var(--certloom-accent-strong);
+}
+
+.ecapla-certverify-admin-wrap a:focus-visible,
+.ecapla-certverify-admin-wrap button:focus-visible,
+.ecapla-certverify-admin-wrap input:focus-visible,
+.ecapla-certverify-admin-wrap select:focus-visible,
+.ecapla-certverify-admin-wrap textarea:focus-visible {
+	outline: 2px solid #2271b1;
+	outline-offset: 2px;
+	box-shadow: none;
+}
+
+.ecapla-certverify-admin-brand-bar {
+	border: 0;
+	border-bottom: 1px solid var(--certloom-border, #dfe7e3);
+	border-left: 0;
+	border-radius: 0;
+	box-shadow: 0 1px 0 rgba(23, 34, 31, 0.03);
+}
+
+.ecapla-certverify-admin-brand-name {
+	color: var(--certloom-ink, #17221f);
+	font-size: 16px;
+	letter-spacing: -0.01em;
+}
+
+.certloom-dashboard {
+	max-width: 1540px;
+	padding-bottom: 48px;
+}
+
+.certloom-dashboard-hero {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 28px;
+	margin: 20px 0 24px;
+	padding: 30px 32px;
+	background:
+		linear-gradient(120deg, rgba(18, 107, 85, 0.98), rgba(10, 72, 58, 0.96)),
+		var(--certloom-accent);
+	border-radius: 14px;
+	box-shadow: 0 12px 32px rgba(12, 67, 53, 0.12);
+	color: #fff;
+}
+
+.certloom-dashboard-hero h1 {
+	margin: 4px 0 8px;
+	color: #fff;
+	font-size: clamp(30px, 3vw, 42px);
+	font-weight: 700;
+	line-height: 1.08;
+	letter-spacing: -0.035em;
+}
+
+.certloom-dashboard-hero p {
+	max-width: 720px;
+	margin: 0;
+	color: rgba(255,255,255,.82);
+	font-size: 15px;
+}
+
+.certloom-eyebrow {
+	display: block;
+	margin-bottom: 3px;
+	color: var(--certloom-accent);
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: .09em;
+	text-transform: uppercase;
+}
+
+.certloom-dashboard-hero .certloom-eyebrow {
+	color: rgba(255,255,255,.68);
+}
+
+.certloom-dashboard-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.certloom-dashboard-actions .button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 7px;
+	min-height: 42px;
+	padding-inline: 16px;
+	border-radius: 7px;
+	font-weight: 600;
+}
+
+.certloom-dashboard-actions .button-primary {
+	background: #fff;
+	border-color: #fff;
+	color: var(--certloom-accent-strong);
+}
+
+.certloom-dashboard-actions .button-primary:hover,
+.certloom-dashboard-actions .button-primary:focus {
+	background: #f5fbf9;
+	border-color: #f5fbf9;
+	color: var(--certloom-accent-strong);
+}
+
+.certloom-dashboard-actions .button-secondary {
+	background: rgba(255,255,255,.1);
+	border-color: rgba(255,255,255,.35);
+	color: #fff;
+}
+
+.certloom-dashboard-actions .button-secondary:hover,
+.certloom-dashboard-actions .button-secondary:focus {
+	background: rgba(255,255,255,.16);
+	border-color: rgba(255,255,255,.6);
+	color: #fff;
+}
+
+.certloom-dashboard-actions .dashicons {
+	width: 18px;
+	height: 18px;
+	font-size: 18px;
+}
+
+.certloom-dashboard-notice {
+	margin: 0 0 20px;
+}
+
+.certloom-callout {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 14px;
+	margin: 0 0 18px;
+	padding: 14px 16px;
+	border: 1px solid var(--certloom-border);
+	border-radius: 10px;
+	background: var(--certloom-surface);
+}
+
+.certloom-callout-warning {
+	border-color: #efd79a;
+	background: var(--certloom-warning-soft);
+}
+
+.certloom-callout > .dashicons {
+	color: var(--certloom-warning);
+}
+
+.certloom-callout strong,
+.certloom-callout p {
+	display: block;
+	margin: 0;
+}
+
+.certloom-callout p {
+	margin-top: 3px;
+	color: #6b5731;
+}
+
+.certloom-metric-grid {
+	display: grid;
+	grid-template-columns: repeat(7, minmax(145px, 1fr));
+	gap: 12px;
+	margin-bottom: 22px;
+}
+
+.certloom-metric-card {
+	position: relative;
+	display: flex;
+	min-height: 146px;
+	flex-direction: column;
+	padding: 17px;
+	border: 1px solid var(--certloom-border);
+	border-radius: 11px;
+	background: var(--certloom-surface);
+	box-shadow: 0 4px 15px rgba(23, 34, 31, 0.035);
+	color: var(--certloom-ink);
+	text-decoration: none;
+	transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+.certloom-metric-card:not(.is-static):hover {
+	border-color: #b6cbc4;
+	box-shadow: 0 7px 22px rgba(23, 34, 31, 0.08);
+	color: var(--certloom-ink);
+	transform: translateY(-1px);
+}
+
+.certloom-metric-card strong {
+	margin-top: 17px;
+	font-size: 30px;
+	line-height: 1;
+	letter-spacing: -0.035em;
+}
+
+.certloom-metric-icon {
+	display: inline-grid;
+	width: 34px;
+	height: 34px;
+	place-items: center;
+	border-radius: 9px;
+	background: var(--certloom-accent-soft);
+	color: var(--certloom-accent);
+}
+
+.certloom-metric-icon .dashicons {
+	width: 18px;
+	height: 18px;
+	font-size: 18px;
+}
+
+.certloom-metric-icon.is-valid { background: #e9f8f0; color: #17643f; }
+.certloom-metric-icon.is-suspended { background: #fff5d8; color: #855f00; }
+.certloom-metric-icon.is-withdrawn { background: #fdecec; color: #a22b2b; }
+.certloom-metric-icon.is-expired { background: #eef1f0; color: #59635f; }
+.certloom-metric-icon.is-expiring { background: #eef2ff; color: #4255a4; }
+.certloom-metric-icon.is-issued { background: #f3ecff; color: #6941a5; }
+
+.certloom-metric-label {
+	margin-top: 12px;
+	color: var(--certloom-muted);
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.certloom-metric-meta {
+	margin-top: auto;
+	padding-top: 8px;
+	color: #78847f;
+	font-size: 11px;
+}
+
+.certloom-dashboard-layout {
+	display: grid;
+	grid-template-columns: minmax(0, 2fr) minmax(310px, .82fr);
+	align-items: start;
+	gap: 18px;
+}
+
+.certloom-dashboard-sidebar {
+	display: grid;
+	gap: 18px;
+}
+
+.certloom-panel {
+	padding: 22px;
+	border: 1px solid var(--certloom-border);
+	border-radius: 12px;
+	background: var(--certloom-surface);
+	box-shadow: 0 4px 15px rgba(23, 34, 31, 0.03);
+}
+
+.certloom-panel-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 18px;
+}
+
+.certloom-panel-header h2 {
+	margin: 2px 0 0;
+	color: var(--certloom-ink);
+	font-size: 17px;
+	line-height: 1.25;
+	letter-spacing: -.015em;
+}
+
+.certloom-panel-header > a {
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.certloom-recent-table-wrap {
+	overflow-x: auto;
+	margin: 0 -22px -22px;
+}
+
+.certloom-recent-table {
+	min-width: 680px;
+	border: 0;
+	border-top: 1px solid var(--certloom-border);
+	box-shadow: none;
+}
+
+.certloom-recent-table th,
+.certloom-recent-table td {
+	padding: 13px 18px;
+	vertical-align: middle;
+}
+
+.certloom-recent-table thead th {
+	background: #f8faf9;
+	color: var(--certloom-muted);
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: .035em;
+	text-transform: uppercase;
+}
+
+.certloom-recent-table tbody tr:last-child td {
+	border-bottom: 0;
+}
+
+.certloom-table-action {
+	width: 58px;
+	text-align: right;
+}
+
+.certloom-premium-empty-state {
+	display: grid;
+	justify-items: center;
+	padding: 42px 24px 48px;
+	text-align: center;
+}
+
+.certloom-premium-empty-state > .dashicons {
+	width: 42px;
+	height: 42px;
+	margin-bottom: 10px;
+	color: #91aaa1;
+	font-size: 42px;
+}
+
+.certloom-premium-empty-state h3 {
+	margin: 0 0 4px;
+	font-size: 18px;
+}
+
+.certloom-premium-empty-state p {
+	max-width: 460px;
+	margin: 0 0 16px;
+	color: var(--certloom-muted);
+}
+
+.certloom-quick-links {
+	display: grid;
+	gap: 7px;
+}
+
+.certloom-quick-links a {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 11px;
+	padding: 11px 10px;
+	border-radius: 8px;
+	color: var(--certloom-ink);
+	text-decoration: none;
+}
+
+.certloom-quick-links a:hover {
+	background: var(--certloom-surface-soft);
+	color: var(--certloom-ink);
+}
+
+.certloom-quick-links > a > .dashicons {
+	color: var(--certloom-accent);
+}
+
+.certloom-quick-links strong,
+.certloom-quick-links small {
+	display: block;
+}
+
+.certloom-quick-links small {
+	margin-top: 2px;
+	color: var(--certloom-muted);
+}
+
+.certloom-health-panel {
+	border-top: 3px solid var(--certloom-accent);
+}
+
+.certloom-health-panel.is-warning { border-top-color: #c98b16; }
+.certloom-health-panel.is-bad { border-top-color: #cc3d3d; }
+
+.certloom-health-dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 999px;
+	background: var(--certloom-accent);
+	box-shadow: 0 0 0 5px var(--certloom-accent-soft);
+}
+
+.certloom-health-panel.is-warning .certloom-health-dot {
+	background: #c98b16;
+	box-shadow: 0 0 0 5px #fff4dc;
+}
+
+.certloom-health-panel.is-bad .certloom-health-dot {
+	background: #cc3d3d;
+	box-shadow: 0 0 0 5px #fde9e8;
+}
+
+.certloom-health-panel > p,
+.certloom-engine-panel > p {
+	margin: -4px 0 16px;
+	color: var(--certloom-muted);
+}
+
+.certloom-health-list {
+	display: grid;
+	gap: 9px;
+	margin: -4px 0 16px;
+}
+
+.certloom-health-list li {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	gap: 8px;
+	margin: 0;
+	padding: 8px;
+	border-radius: 7px;
+	background: var(--certloom-surface-soft);
+}
+
+.certloom-health-list .dashicons-warning { color: var(--certloom-warning); }
+.certloom-health-list .dashicons-dismiss { color: var(--certloom-danger); }
+.certloom-health-list strong,
+.certloom-health-list small { display: block; }
+.certloom-health-list small { margin-top: 1px; color: var(--certloom-muted); }
+
+.certloom-engine-status {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	padding: 7px 10px;
+	border-radius: 999px;
+	background: var(--certloom-accent-soft);
+	color: var(--certloom-accent-strong);
+	font-size: 12px;
+	font-weight: 700;
+}
+
+.certloom-engine-status .dashicons {
+	width: 15px;
+	height: 15px;
+	font-size: 15px;
+}
+
+/* Give legacy phase-1 screens a cleaner shell while preserving native WP UI. */
+.ecapla-certverify-admin-wrap:not(.certloom-dashboard) > h1.wp-heading-inline,
+.ecapla-certverify-admin-wrap:not(.certloom-dashboard) > h1:first-of-type {
+	color: var(--certloom-ink);
+	font-size: 27px;
+	font-weight: 650;
+	letter-spacing: -.025em;
+}
+
+.ecapla-certverify-admin-wrap .wp-list-table,
+.ecapla-certverify-admin-wrap .ecapla-certverify-admin-card,
+.ecapla-certverify-admin-wrap .ecapla-certloom-import-options,
+.ecapla-certverify-admin-wrap .ecapla-certverify-stat {
+	border-color: var(--certloom-border);
+	box-shadow: 0 3px 12px rgba(23,34,31,.025);
+}
+
+@media (max-width: 1380px) {
+	.certloom-metric-grid {
+		grid-template-columns: repeat(4, minmax(155px, 1fr));
+	}
+}
+
+@media (max-width: 1080px) {
+	.certloom-dashboard-hero {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.certloom-dashboard-layout {
+		grid-template-columns: 1fr;
+	}
+
+	.certloom-dashboard-sidebar {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.certloom-engine-panel {
+		grid-column: 1 / -1;
+	}
+}
+
+@media (max-width: 782px) {
+	.certloom-dashboard {
+		margin-right: 10px;
+	}
+
+	.certloom-dashboard-hero {
+		padding: 24px;
+		border-radius: 10px;
+	}
+
+	.certloom-dashboard-actions {
+		width: 100%;
+	}
+
+	.certloom-dashboard-actions .button {
+		flex: 1 1 180px;
+	}
+
+	.certloom-metric-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.certloom-metric-card {
+		min-height: 135px;
+	}
+
+	.certloom-dashboard-sidebar {
+		grid-template-columns: 1fr;
+	}
+
+	.certloom-engine-panel {
+		grid-column: auto;
+	}
+
+	.certloom-callout {
+		grid-template-columns: auto minmax(0, 1fr);
+	}
+
+	.certloom-callout .button {
+		grid-column: 2;
+		justify-self: start;
+	}
+}
+
+@media (max-width: 480px) {
+	.certloom-metric-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.certloom-dashboard-hero {
+		padding: 20px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.certloom-metric-card {
+		transition: none;
+	}
+}

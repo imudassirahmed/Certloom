@@ -8,6 +8,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Ecapla_CertVerify_Admin {
 
+	const DASHBOARD_PAGE    = 'certloom';
+	const CERTIFICATES_PAGE = 'certloom-certificates';
+
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'add_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
@@ -22,6 +25,9 @@ class Ecapla_CertVerify_Admin {
 		add_action( 'admin_init', array( $this, 'handle_database_proof' ) );
 		add_action( 'admin_init', array( $this, 'handle_domain_acceptance_proof' ) );
 		add_action( 'admin_init', array( $this, 'handle_legacy_migration_preflight_proof' ) );
+		add_action( 'admin_init', array( $this, 'handle_staging_migration_rehearsal' ) );
+		add_action( 'admin_init', array( $this, 'handle_staging_restore_rehearsal' ) );
+		add_action( 'admin_init', array( $this, 'handle_staging_cutover_rehearsal' ) );
 		add_action( 'admin_init', array( $this, 'handle_create_manager_role' ) );
 		add_action( 'admin_init', array( $this, 'handle_export' ) );
 		add_action( 'admin_init', array( $this, 'handle_template_download' ) );
@@ -44,17 +50,18 @@ class Ecapla_CertVerify_Admin {
 			__( 'Certloom', 'certloom' ),
 			__( 'Certloom', 'certloom' ),
 			ECAPLA_CERTVERIFY_CAP,
-			'certloom',
-			array( $this, 'render_list_screen' ),
-			'dashicons-shield-alt',
+			self::DASHBOARD_PAGE,
+			array( $this, 'render_dashboard_screen' ),
+			'dashicons-awards',
 			30
 		);
-		add_submenu_page( 'certloom', __( 'All Certificates', 'certloom' ), __( 'All Certificates', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom', array( $this, 'render_list_screen' ) );
-		add_submenu_page( 'certloom', __( 'Add New', 'certloom' ), __( 'Add New', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-add', array( $this, 'render_edit_screen' ) );
-		add_submenu_page( 'certloom', __( 'Field Manager', 'certloom' ), __( 'Field Manager', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-fields', array( $this, 'render_fields_screen' ) );
-		add_submenu_page( 'certloom', __( 'Import & Export', 'certloom' ), __( 'Import & Export', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-import', array( $this, 'render_import_screen' ) );
-		add_submenu_page( 'certloom', __( 'Appearance & Embed', 'certloom' ), __( 'Appearance & Embed', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-frontend', array( $this, 'render_frontend_screen' ) );
-		add_submenu_page( 'certloom', __( 'Access & Settings', 'certloom' ), __( 'Access & Settings', 'certloom' ), 'manage_options', 'certloom-settings', array( $this, 'render_settings_screen' ) );
+		add_submenu_page( self::DASHBOARD_PAGE, __( 'Dashboard', 'certloom' ), __( 'Dashboard', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::DASHBOARD_PAGE, array( $this, 'render_dashboard_screen' ) );
+		add_submenu_page( self::DASHBOARD_PAGE, __( 'Certificates', 'certloom' ), __( 'Certificates', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::CERTIFICATES_PAGE, array( $this, 'render_list_screen' ) );
+		add_submenu_page( self::DASHBOARD_PAGE, __( 'Add Certificate', 'certloom' ), __( 'Add Certificate', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-add', array( $this, 'render_edit_screen' ) );
+		add_submenu_page( self::DASHBOARD_PAGE, __( 'Field Manager', 'certloom' ), __( 'Field Manager', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-fields', array( $this, 'render_fields_screen' ) );
+		add_submenu_page( self::DASHBOARD_PAGE, __( 'Import & Export', 'certloom' ), __( 'Import & Export', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-import', array( $this, 'render_import_screen' ) );
+		add_submenu_page( self::DASHBOARD_PAGE, __( 'Appearance & Embed', 'certloom' ), __( 'Appearance & Embed', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-frontend', array( $this, 'render_frontend_screen' ) );
+		add_submenu_page( self::DASHBOARD_PAGE, __( 'Access & Settings', 'certloom' ), __( 'Access & Settings', 'certloom' ), 'manage_options', 'certloom-settings', array( $this, 'render_settings_screen' ) );
 	}
 
 	public function enqueue_assets( $hook ) {
@@ -80,7 +87,7 @@ class Ecapla_CertVerify_Admin {
 				$this->redirect_error( $existing->get_error_message(), $back_url );
 			}
 			if ( ! $existing ) {
-				$this->redirect_error( __( 'The certificate you tried to update no longer exists.', 'certloom' ), admin_url( 'admin.php?page=certloom' ) );
+				$this->redirect_error( __( 'The certificate you tried to update no longer exists.', 'certloom' ), admin_url( 'admin.php?page=' . self::CERTIFICATES_PAGE ) );
 			}
 		}
 
@@ -109,7 +116,7 @@ class Ecapla_CertVerify_Admin {
 			$this->redirect_error( $result->get_error_message(), $back_url );
 		}
 
-		wp_safe_redirect( add_query_arg( 'ecapla_certverify_saved', '1', admin_url( 'admin.php?page=certloom' ) ) );
+		wp_safe_redirect( add_query_arg( 'ecapla_certverify_saved', '1', admin_url( 'admin.php?page=' . self::CERTIFICATES_PAGE ) ) );
 		exit;
 	}
 
@@ -138,7 +145,7 @@ class Ecapla_CertVerify_Admin {
 		if ( 'POST' !== strtoupper( isset( $_SERVER['REQUEST_METHOD'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) : '' ) ) {
 			return;
 		}
-		if ( ! isset( $_POST['page'] ) || 'certloom' !== sanitize_key( wp_unslash( $_POST['page'] ) ) ) {
+		if ( ! isset( $_POST['page'] ) || ! in_array( sanitize_key( wp_unslash( $_POST['page'] ) ), array( self::DASHBOARD_PAGE, self::CERTIFICATES_PAGE ), true ) ) {
 			return;
 		}
 		$action = isset( $_POST['action'] ) ? sanitize_key( wp_unslash( $_POST['action'] ) ) : '';
@@ -574,6 +581,62 @@ class Ecapla_CertVerify_Admin {
 		exit;
 	}
 
+
+	public function handle_staging_migration_rehearsal() {
+		if ( ! isset( $_POST['certverify_run_staging_migration_rehearsal'] ) ) {
+			return;
+		}
+		$this->require_options_permission();
+		check_admin_referer( 'certverify_run_staging_migration_rehearsal' );
+		$result = \Certloom\Infrastructure\Diagnostics\StagingMigrationRehearsal::run_slice();
+		if ( is_wp_error( $result ) ) {
+			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-settings' ) );
+		}
+		$state = \Certloom\Infrastructure\Diagnostics\StagingMigrationRehearsal::evidence_state();
+		if ( ! in_array( $state, array( 'passed', 'failed', 'running', 'stale', 'unavailable' ), true ) ) {
+			$state = 'running';
+		}
+		wp_safe_redirect( add_query_arg( array( 'page' => 'certloom-settings', 'certloom_staging_migration_rehearsal' => $state ), admin_url( 'admin.php' ) ) );
+		exit;
+	}
+
+	public function handle_staging_restore_rehearsal() {
+		if ( ! isset( $_POST['certverify_run_staging_restore_rehearsal'] ) ) {
+			return;
+		}
+		$this->require_options_permission();
+		check_admin_referer( 'certverify_run_staging_restore_rehearsal' );
+		$result = \Certloom\Infrastructure\Diagnostics\StagingRestoreRehearsal::run_slice();
+		if ( is_wp_error( $result ) ) {
+			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-settings' ) );
+		}
+		$state = \Certloom\Infrastructure\Diagnostics\StagingRestoreRehearsal::evidence_state();
+		if ( ! in_array( $state, array( 'passed', 'failed', 'running', 'stale', 'unavailable' ), true ) ) {
+			$state = 'running';
+		}
+		wp_safe_redirect( add_query_arg( array( 'page' => 'certloom-settings', 'certloom_staging_restore_rehearsal' => $state ), admin_url( 'admin.php' ) ) );
+		exit;
+	}
+
+
+	public function handle_staging_cutover_rehearsal() {
+		if ( ! isset( $_POST['certverify_run_staging_cutover_rehearsal'] ) ) {
+			return;
+		}
+		$this->require_options_permission();
+		check_admin_referer( 'certverify_run_staging_cutover_rehearsal' );
+		$result = \Certloom\Infrastructure\Diagnostics\StagingCutoverRehearsal::run_slice();
+		if ( is_wp_error( $result ) ) {
+			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-settings' ) );
+		}
+		$state = \Certloom\Infrastructure\Diagnostics\StagingCutoverRehearsal::evidence_state();
+		if ( ! in_array( $state, array( 'passed', 'failed', 'running', 'stale', 'unavailable' ), true ) ) {
+			$state = 'running';
+		}
+		wp_safe_redirect( add_query_arg( array( 'page' => 'certloom-settings', 'certloom_staging_cutover_rehearsal' => $state ), admin_url( 'admin.php' ) ) );
+		exit;
+	}
+
 	public function handle_create_manager_role() {
 		if ( ! isset( $_POST['certverify_create_manager_role'] ) ) {
 			return;
@@ -673,6 +736,21 @@ class Ecapla_CertVerify_Admin {
 		exit;
 	}
 
+	public function render_dashboard_screen() {
+		$this->require_manage_permission();
+		$dashboard       = Ecapla_CertVerify_Dashboard::get_data();
+		$dashboard_error = is_wp_error( $dashboard ) ? $dashboard : null;
+		if ( is_wp_error( $dashboard ) ) {
+			$dashboard = array(
+				'metrics'             => Ecapla_CertVerify_Dashboard::normalize_metrics( array() ),
+				'recent'              => array(),
+				'health'              => Ecapla_CertVerify_Dashboard::health_summary( array() ),
+				'legacy_review_count' => max( 0, (int) get_option( Ecapla_CertVerify_Database::LEGACY_REVIEW_OPTION, 0 ) ),
+			);
+		}
+		include ECAPLA_CERTVERIFY_PATH . 'admin/views/dashboard.php';
+	}
+
 	public function render_list_screen() {
 		$this->require_manage_permission();
 		$table = new Ecapla_CertVerify_List_Table();
@@ -688,10 +766,10 @@ class Ecapla_CertVerify_Admin {
 		$certificate = $id ? Ecapla_CertVerify_Database::get_by_id( $id ) : null;
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		if ( is_wp_error( $certificate ) ) {
-			$this->redirect_error( $certificate->get_error_message(), admin_url( 'admin.php?page=certloom' ) );
+			$this->redirect_error( $certificate->get_error_message(), admin_url( 'admin.php?page=' . self::CERTIFICATES_PAGE ) );
 		}
 		if ( $id && ! $certificate ) {
-			$this->redirect_error( __( 'That certificate does not exist.', 'certloom' ), admin_url( 'admin.php?page=certloom' ) );
+			$this->redirect_error( __( 'That certificate does not exist.', 'certloom' ), admin_url( 'admin.php?page=' . self::CERTIFICATES_PAGE ) );
 		}
 		$fields = Ecapla_CertVerify_Fields::get_fields();
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/edit-certificate.php';
@@ -780,9 +858,9 @@ class Ecapla_CertVerify_Admin {
 		check_admin_referer( 'certverify_ack_130_status_review' );
 		$saved = update_option( Ecapla_CertVerify_Database::V130_REVIEW_NOTICE_OPTION, false, false );
 		if ( ! $saved && false !== (bool) get_option( Ecapla_CertVerify_Database::V130_REVIEW_NOTICE_OPTION, true ) ) {
-			$this->redirect_error( __( 'The review acknowledgement could not be saved.', 'certloom' ), admin_url( 'admin.php?page=certloom' ) );
+			$this->redirect_error( __( 'The review acknowledgement could not be saved.', 'certloom' ), admin_url( 'admin.php?page=' . self::CERTIFICATES_PAGE ) );
 		}
-		wp_safe_redirect( admin_url( 'admin.php?page=certloom' ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::CERTIFICATES_PAGE ) );
 		exit;
 	}
 
@@ -807,7 +885,7 @@ class Ecapla_CertVerify_Admin {
 		if ( $legacy_count > 0 ) {
 			$url = add_query_arg(
 				array(
-					'page'           => 'certloom',
+					'page'           => self::CERTIFICATES_PAGE,
 					'legacy_expired' => '1',
 				),
 				admin_url( 'admin.php' )
@@ -885,7 +963,7 @@ class Ecapla_CertVerify_Admin {
 	 * @return string
 	 */
 	private function list_return_url() {
-		$args = array( 'page' => 'certloom' );
+		$args = array( 'page' => self::CERTIFICATES_PAGE );
 
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only list state; the calling handler verifies its own nonce before this runs.
 		if ( ! empty( $_REQUEST['legacy_expired'] ) ) {

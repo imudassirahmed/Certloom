@@ -141,7 +141,16 @@ final class DomainRestoreMergeService {
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
-		$this->maps->clear( (string) $state['workspace']['owner_token'] );
+		$cleared = $this->maps->clear( (string) $state['workspace']['owner_token'] );
+		if ( is_wp_error( $cleared ) ) {
+			return new \WP_Error(
+				'certloom_domain_restore_merge_map_cleanup_failed',
+				sprintf(
+					__( 'The Merge restore was committed, but Certloom could not clear its private mapping state safely (%s). Retry the completed restore cleanup; credential data will not be promoted again.', 'certloom' ),
+					$cleared->get_error_message()
+				)
+			);
+		}
 		return true;
 	}
 

@@ -38,8 +38,7 @@ final class DomainImportUploadSession {
 		}
 		$header = $this->reader->inspect_header( $path );
 		if ( is_wp_error( $header ) ) {
-			$this->files->delete( $path );
-			return $header;
+			return $this->cleanup_after_error( $path, $header );
 		}
 		$payload = array(
 			'token'         => $token,
@@ -50,8 +49,7 @@ final class DomainImportUploadSession {
 			'created_at'    => time(),
 		);
 		if ( ! set_transient( self::TRANSIENT_PREFIX . $token, $payload, self::TTL ) ) {
-			$this->files->delete( $path );
-			return new \WP_Error( 'certloom_import_mapping_session_failed', __( 'Certloom could not save the temporary CSV mapping session.', 'certloom' ) );
+			return $this->cleanup_after_error( $path, new \WP_Error( 'certloom_import_mapping_session_failed', __( 'Certloom could not save the temporary CSV mapping session.', 'certloom' ) ) );
 		}
 		return $token;
 	}
@@ -72,7 +70,11 @@ final class DomainImportUploadSession {
 		}
 		$path = (string) ( $payload['path'] ?? '' );
 		if ( ! $this->files->owns( $path ) || ! is_file( $path ) || ! is_readable( $path ) ) {
-			delete_transient( self::TRANSIENT_PREFIX . $token );
+			$transient_key = self::TRANSIENT_PREFIX . $token;
+			$deleted = delete_transient( $transient_key );
+			if ( ! $deleted && false !== get_transient( $transient_key ) ) {
+				return new \WP_Error( 'certloom_import_mapping_cleanup_failed', __( 'The protected CSV mapping source is missing and Certloom could not clear its stale mapping session safely.', 'certloom' ) );
+			}
 			return new \WP_Error( 'certloom_import_mapping_source_missing', __( 'The protected CSV mapping source is no longer available. Upload the file again.', 'certloom' ) );
 		}
 		return $payload;
@@ -109,7 +111,11 @@ final class DomainImportUploadSession {
 		if ( is_wp_error( $payload ) ) {
 			return $payload;
 		}
-		delete_transient( self::TRANSIENT_PREFIX . (string) $payload['token'] );
+		$key = self::TRANSIENT_PREFIX . (string) $payload['token'];
+		$deleted = delete_transient( $key );
+		if ( ! $deleted && false !== get_transient( $key ) ) {
+			return new \WP_Error( 'certloom_import_mapping_consume_failed', __( 'Certloom could not close the CSV mapping session after transferring its protected source to the import job.', 'certloom' ) );
+		}
 		return true;
 	}
 
@@ -120,11 +126,23 @@ final class DomainImportUploadSession {
 			return $payload;
 		}
 		$deleted = $this->files->delete( (string) $payload['path'] );
-		if ( is_wp_error( $deleted ) ) {
-			return $deleted;
+		if ( is_wp_error( $deleted ) || false === $deleted ) {
+			return is_wp_error( $deleted ) ? $deleted : new \WP_Error( 'certloom_import_mapping_file_cleanup_failed', __( 'Certloom could not remove the protected CSV mapping source safely.', 'certloom' ) );
 		}
-		delete_transient( self::TRANSIENT_PREFIX . (string) $payload['token'] );
+		$key = self::TRANSIENT_PREFIX . (string) $payload['token'];
+		$transient_deleted = delete_transient( $key );
+		if ( ! $transient_deleted && false !== get_transient( $key ) ) {
+			return new \WP_Error( 'certloom_import_mapping_session_cleanup_failed', __( 'The protected CSV file was removed, but Certloom could not clear its temporary mapping-session record.', 'certloom' ) );
+		}
 		return true;
+	}
+
+
+	/** @return \WP_Error */
+	private function cleanup_after_error( $path, \WP_Error $primary ) {
+		$deleted = $this->files->delete( (string) $path );
+		if ( ! is_wp_error( $deleted ) && false !== $deleted ) { return $primary; }
+		return new \WP_Error( 'certloom_import_mapping_cleanup_failed', sprintf( __( 'Certloom stopped the CSV mapping session safely (%1$s), but could not remove its protected upload copy (%2$s).', 'certloom' ), $primary->get_error_message(), is_wp_error( $deleted ) ? $deleted->get_error_message() : __( 'file deletion failed', 'certloom' ) ) );
 	}
 
 	/** @return string|\WP_Error */

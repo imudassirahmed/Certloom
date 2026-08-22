@@ -9,7 +9,7 @@ namespace {
 	define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 	define( 'DAY_IN_SECONDS', 86400 );
 	define( 'MINUTE_IN_SECONDS', 60 );
-	define( 'ECAPLA_CERTVERIFY_VERSION', '1.5.13-test' );
+	define( 'ECAPLA_CERTVERIFY_VERSION', '1.5.14-test' );
 	$GLOBALS['lmp_options'] = array();
 	class WP_Error { private $c; private $m; public function __construct($c='',$m=''){ $this->c=$c; $this->m=$m; } public function get_error_code(){return $this->c;} public function get_error_message(){return $this->m;} }
 	function is_wp_error($v){return $v instanceof WP_Error;}

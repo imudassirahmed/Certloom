@@ -21,6 +21,22 @@ function ecapla_certverify_uninstall_site() {
 	$settings    = get_option( 'certverify_settings', array() );
 	$delete_data = ! empty( $settings['delete_data_on_uninstall'] );
 
+	/*
+	 * Migration/cutover metadata becomes part of durable credential lineage once
+	 * official migration starts. If the administrator retains credential data,
+	 * reinstall must not forget which source was authoritative or that migrated
+	 * Series/Versions already exist. Runtime locks/jobs/proof evidence are still
+	 * disposable and are cleared below.
+	 */
+	$migration_state = get_option( 'certloom_legacy_domain_migration_state', false );
+	$migration_state_present = false !== $migration_state && '' !== $migration_state && array() !== $migration_state;
+	$migration_status = is_array( $migration_state ) ? sanitize_key( (string) ( $migration_state['status'] ?? 'not_started' ) ) : ( $migration_state_present ? 'corrupt' : 'not_started' );
+	$cutover_authority = get_option( 'certloom_domain_write_authority', null );
+	$protected_authority_state = ! in_array( $cutover_authority, array( null, false, '', 'legacy' ), true );
+	$cutover_receipt = get_option( 'certloom_domain_cutover_receipt', false );
+	$protected_receipt_state = false !== $cutover_receipt && '' !== $cutover_receipt && array() !== $cutover_receipt;
+	$preserve_domain_lineage = ! $delete_data && ( 'not_started' !== $migration_status || $protected_authority_state || $protected_receipt_state );
+
 	global $wpdb;
 
 	wp_clear_scheduled_hook( 'certverify_daily_expiry_check' );
@@ -97,14 +113,20 @@ function ecapla_certverify_uninstall_site() {
 	delete_option( 'certverify_restore_journal' );
 	delete_option( 'certverify_restore_builds' );
 	delete_option( 'certverify_restore_maintenance_lock' );
-	delete_option( 'certverify_data_generation' );
+	if ( ! $preserve_domain_lineage ) {
+		delete_option( 'certverify_data_generation' );
+	}
 	delete_option( 'certloom_domain_schema_health' );
 	delete_option( 'certloom_domain_schema_lock' );
-	delete_option( 'certloom_legacy_domain_migration_state' );
-	delete_option( 'certloom_domain_write_authority' );
-	delete_option( 'certloom_series_public_verification_ready' );
-	delete_option( 'certloom_domain_generation' ); // Pre-1.5.4 development alias.
-	delete_option( 'certloom_domain_data_generation' );
+	if ( ! $preserve_domain_lineage ) {
+		delete_option( 'certloom_legacy_domain_migration_state' );
+		delete_option( 'certloom_domain_write_authority' );
+		delete_option( 'certloom_domain_cutover_receipt' );
+		delete_option( 'certloom_series_public_verification_ready' );
+		delete_option( 'certloom_domain_schema_version' );
+		delete_option( 'certloom_domain_generation' ); // Pre-1.5.4 development alias.
+		delete_option( 'certloom_domain_data_generation' );
+	}
 	delete_option( 'certloom_domain_maintenance_lock' );
 	delete_option( 'certloom_domain_restore_build' );
 	delete_option( 'certloom_domain_restore_journal' );
@@ -115,6 +137,14 @@ function ecapla_certverify_uninstall_site() {
 	delete_option( 'certloom_domain_acceptance_proof_last' );
 	delete_option( 'certloom_legacy_migration_preflight_proof' );
 	delete_option( 'certloom_legacy_migration_preflight_proof_lock' );
+	delete_option( 'certloom_legacy_migration_maintenance_owner' );
+	delete_option( 'certloom_domain_cutover_owner' );
+	delete_option( 'certloom_staging_migration_rehearsal' );
+	delete_option( 'certloom_staging_migration_rehearsal_lock' );
+	delete_option( 'certloom_staging_restore_rehearsal' );
+	delete_option( 'certloom_staging_restore_rehearsal_lock' );
+	delete_option( 'certloom_staging_cutover_rehearsal' );
+	delete_option( 'certloom_staging_cutover_rehearsal_lock' );
 
 	$transient_prefixes = array(
 		'_transient_ecapla_certverify_import_',
@@ -239,6 +269,14 @@ function ecapla_certverify_uninstall_site() {
 
 	if ( ! $delete_data ) {
 		return;
+	}
+
+	/* Explicit delete-data choice removes durable migration/cutover lineage too. */
+	foreach ( array(
+		'certloom_legacy_domain_migration_state', 'certloom_domain_write_authority', 'certloom_domain_cutover_receipt',
+		'certloom_series_public_verification_ready', 'certloom_domain_schema_version', 'certloom_domain_generation', 'certloom_domain_data_generation'
+	) as $certloom_domain_lineage_option ) {
+		delete_option( $certloom_domain_lineage_option );
 	}
 
 	$table = $wpdb->prefix . 'certverify_certificates';

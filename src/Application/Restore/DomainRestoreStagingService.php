@@ -216,7 +216,15 @@ final class DomainRestoreStagingService implements DomainRestoreStagingInterface
 		if ( empty( $state['complete'] ) || 'ready' !== (string) ( $state['phase'] ?? '' ) ) {
 			return new \WP_Error( 'certloom_domain_restore_not_ready', __( 'The Certloom restore workspace has not completed validation.', 'certloom' ) );
 		}
-		return $this->workspace->commit_replace( (array) $state['workspace'], (array) $state['configuration'] );
+		return $this->workspace->commit_replace(
+			(array) $state['workspace'],
+			(array) $state['configuration'],
+			array(
+				'mode'    => 'replace',
+				'records' => absint( $state['records'] ?? 0 ),
+				'counts'  => (array) ( $state['counts'] ?? array() ),
+			)
+		);
 	}
 
 	/** @return array<string,mixed>|\WP_Error */

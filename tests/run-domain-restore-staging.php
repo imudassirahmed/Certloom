@@ -41,6 +41,7 @@ final class RestoreStageFakeWorkspace implements DomainRestoreWorkspaceInterface
 	public $abandoned = false;
 	public $committed = false;
 	public $relationship_checks = 0;
+	public $receipt = array();
 	public function create( $owner_token ) { return array( 'owner_token' => $owner_token, 'suffix' => substr( $owner_token, 0, 12 ) ); }
 	public function insert_row( array $workspace, $entity, array $row ) {
 		$key = $entity . ':' . (string) $row['id'];
@@ -53,7 +54,7 @@ final class RestoreStageFakeWorkspace implements DomainRestoreWorkspaceInterface
 	public function validate_relationships( array $workspace ) { $this->relationship_checks++; return true; }
 	public function touch( array $workspace ) { return true; }
 	public function abandon( array $workspace ) { $this->abandoned = true; return true; }
-	public function commit_replace( array $workspace, array $configuration, array $receipt = array() ) { $this->committed = true; return true; }
+	public function commit_replace( array $workspace, array $configuration, array $receipt = array() ) { $this->committed = true; $this->receipt = $receipt; return true; }
 	public function commit_merge( array $workspace, array $configuration, array $receipt = array() ) { $this->committed = true; return true; }
 	public function completion_receipt( $owner_token ) { return null; }
 	public function recover_interrupted_commit() { return true; }
@@ -136,7 +137,10 @@ rs_same( 7, count( $workspace->rows ), 'all rows staged' );
 rs_same( 1, $workspace->relationship_checks, 'relationship validation once' );
 rs_same( true, $service->commit_replace( $state ), 'commit delegated only after ready' );
 rs_true( $workspace->committed, 'commit reached workspace' );
-echo "PASS  restore staging is bounded, retry-idempotent, integrity-checked and commit-gated\n";
+rs_same( 'replace', $workspace->receipt['mode'] ?? '', 'replace receipt mode' );
+rs_same( 7, $workspace->receipt['records'] ?? 0, 'replace receipt records' );
+rs_same( array_fill_keys( DomainBackupRepository::entity_types(), 1 ), $workspace->receipt['counts'] ?? array(), 'replace receipt entity counts' );
+echo "PASS  restore staging is bounded, retry-idempotent, integrity-checked and carries crash-replay receipt counts\n";
 
 $bad_path = rs_make_backup( str_repeat( '2', 32 ), "{\"unexpected\":true}\n" );
 $bad_ws = new RestoreStageFakeWorkspace();

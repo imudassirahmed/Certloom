@@ -34,6 +34,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</p></div>
 	<?php endif; ?>
 
+
+	<?php if ( isset( $_GET['certloom_staging_migration_rehearsal'] ) ) : ?>
+		<?php $certloom_staging_rehearsal_state = sanitize_key( wp_unslash( $_GET['certloom_staging_migration_rehearsal'] ) ); ?>
+		<div class="notice <?php echo 'passed' === $certloom_staging_rehearsal_state ? 'notice-success' : ( 'failed' === $certloom_staging_rehearsal_state ? 'notice-error' : 'notice-warning' ); ?> is-dismissible"><p>
+			<?php echo esc_html( 'passed' === $certloom_staging_rehearsal_state ? __( 'The staging populated-migration commit rehearsal passed.', 'certloom' ) : ( 'failed' === $certloom_staging_rehearsal_state ? __( 'The staging populated-migration commit rehearsal stopped safely and requires review.', 'certloom' ) : __( 'The staging populated-migration commit rehearsal is still running. Continue the next bounded slice below.', 'certloom' ) ) ); ?>
+		</p></div>
+	<?php endif; ?>
+
 	<h2><?php esc_html_e( 'Who can manage certificates', 'certloom' ); ?></h2>
 	<p class="description"><?php esc_html_e( 'Administrators always retain access. Grant the dedicated Certloom capability only to roles that genuinely need certificate-management access.', 'certloom' ); ?></p>
 	<?php if ( ! get_role( Ecapla_CertVerify_Permissions::MANAGER_ROLE ) ) : ?>
@@ -76,7 +84,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<p class="description"><?php esc_html_e( 'Fields marked “Show on public result” are returned through a public exact-match REST endpoint. Avoid publishing sensitive personal data. Certificate numbers entered in a browser may also appear in server logs, browser history, analytics, and cache layers.', 'certloom' ); ?></p>
 
 	<hr />
-	<h2><?php esc_html_e( 'System status', 'certloom' ); ?></h2>
+	<h2 id="certloom-system-status"><?php esc_html_e( 'System status', 'certloom' ); ?></h2>
 	<p class="description"><?php esc_html_e( 'Read-only local diagnostics for Certloom. Nothing in this report is sent to Ecapla, and it intentionally excludes certificate data, site URLs, filesystem paths, database names, user data, and plugin inventories.', 'certloom' ); ?></p>
 	<?php $certloom_system_checks = Ecapla_CertVerify_System_Status::get_checks(); ?>
 	<table class="widefat striped" role="table">
@@ -182,6 +190,120 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<?php endif; ?>
 		<p><label for="certloom_legacy_preflight_report"><strong><?php esc_html_e( 'Copyable migration-preflight report', 'certloom' ); ?></strong></label></p>
 		<textarea id="certloom_legacy_preflight_report" class="large-text code" rows="12" readonly><?php echo esc_textarea( \Certloom\Infrastructure\Diagnostics\LegacyMigrationPreflightProof::get_text_report( $certloom_legacy_preflight_proof ) ); ?></textarea>
+	<?php endif; ?>
+
+
+	<?php if ( \Certloom\Infrastructure\Diagnostics\StagingMigrationRehearsal::environment_allowed() ) : ?>
+		<h3><?php esc_html_e( 'Staging populated-migration commit rehearsal', 'certloom' ); ?></h3>
+		<p class="description"><strong><?php esc_html_e( 'Staging/local only — this intentionally writes the real future-domain tables.', 'certloom' ); ?></strong> <?php esc_html_e( 'Use this only on a disposable or restorable staging/local copy. It drives Certloom’s production migration coordinator against the real populated legacy registry, verifies every migrated credential, then replays every source row through the real writer to prove idempotency. It never changes credential authority, but it deliberately leaves the migrated future-domain rows in place for later restore/cutover rehearsal. Reclone or restore the staging database if you need to start over.', 'certloom' ); ?></p>
+		<?php $certloom_staging_rehearsal_enabled = \Certloom\Infrastructure\Diagnostics\StagingMigrationRehearsal::explicitly_enabled(); ?>
+		<?php $certloom_staging_rehearsal = \Certloom\Infrastructure\Diagnostics\StagingMigrationRehearsal::get_last_result(); ?>
+		<?php $certloom_staging_rehearsal_evidence = \Certloom\Infrastructure\Diagnostics\StagingMigrationRehearsal::evidence_state(); ?>
+		<?php if ( ! $certloom_staging_rehearsal_enabled ) : ?>
+			<p class="description"><?php esc_html_e( 'To opt in on this non-production copy, add this line to wp-config.php before WordPress loads Certloom:', 'certloom' ); ?></p>
+			<p><code>define( 'CERTLOOM_ALLOW_STAGING_MIGRATION_REHEARSAL', true );</code></p>
+		<?php else : ?>
+			<?php $certloom_staging_rehearsal_can_run = 'passed' !== $certloom_staging_rehearsal_evidence && 'failed' !== $certloom_staging_rehearsal_evidence && ( 'running' === $certloom_staging_rehearsal_evidence || \Certloom\Infrastructure\Diagnostics\LegacyMigrationPreflightProof::is_current_passed() ); ?>
+			<form method="post" action="" class="ecapla-certverify-inline-form">
+				<?php wp_nonce_field( 'certverify_run_staging_migration_rehearsal' ); ?>
+				<?php submit_button( 'running' === $certloom_staging_rehearsal_evidence ? __( 'Continue staging migration rehearsal', 'certloom' ) : __( 'Run staging migration commit rehearsal', 'certloom' ), 'secondary', 'certverify_run_staging_migration_rehearsal', false, $certloom_staging_rehearsal_can_run ? array() : array( 'disabled' => 'disabled' ) ); ?>
+			</form>
+			<?php if ( 'not_run' === $certloom_staging_rehearsal_evidence && ! \Certloom\Infrastructure\Diagnostics\LegacyMigrationPreflightProof::is_current_passed() ) : ?><p class="description"><strong><?php esc_html_e( 'Run fresh passing database, gated-domain, and populated migration-preflight proofs first.', 'certloom' ); ?></strong></p><?php endif; ?>
+			<?php if ( 'failed' === $certloom_staging_rehearsal_evidence ) : ?><p class="description"><strong><?php esc_html_e( 'This rehearsal intentionally has no destructive reset button. Review the failure and reclone/restore the staging database before trying a new rehearsal.', 'certloom' ); ?></strong></p><?php endif; ?>
+		<?php endif; ?>
+		<?php if ( is_array( $certloom_staging_rehearsal ) ) : ?>
+			<table class="widefat striped" role="table"><tbody>
+				<tr><th scope="row"><?php esc_html_e( 'State', 'certloom' ); ?></th><td><?php echo esc_html( ucfirst( str_replace( '_', ' ', $certloom_staging_rehearsal_evidence ) ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Phase', 'certloom' ); ?></th><td><?php echo esc_html( ucfirst( str_replace( '_', ' ', sanitize_key( (string) ( $certloom_staging_rehearsal['phase'] ?? '' ) ) ) ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Frozen legacy rows', 'certloom' ); ?></th><td><?php echo esc_html( absint( $certloom_staging_rehearsal['source_count'] ?? 0 ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Official preflight mapped', 'certloom' ); ?></th><td><?php echo esc_html( absint( $certloom_staging_rehearsal['official_preflight_total'] ?? 0 ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Official preflight fingerprint-verified', 'certloom' ); ?></th><td><?php echo esc_html( absint( $certloom_staging_rehearsal['official_verify_total'] ?? 0 ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Migration writes', 'certloom' ); ?></th><td><?php echo esc_html( sprintf( /* translators: 1: migrated rows, 2: idempotently skipped rows. */ __( '%1$d migrated, %2$d skipped', 'certloom' ), absint( $certloom_staging_rehearsal['migrated'] ?? 0 ), absint( $certloom_staging_rehearsal['skipped'] ?? 0 ) ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Target parity verified', 'certloom' ); ?></th><td><?php echo esc_html( absint( $certloom_staging_rehearsal['verified'] ?? 0 ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Idempotency replay checked', 'certloom' ); ?></th><td><?php echo esc_html( absint( $certloom_staging_rehearsal['idempotency_checked'] ?? 0 ) ); ?></td></tr>
+			</tbody></table>
+			<?php if ( ! empty( $certloom_staging_rehearsal['error_examples'] ) ) : ?>
+				<p><strong><?php esc_html_e( 'Local bounded rehearsal errors', 'certloom' ); ?></strong></p>
+				<table class="widefat striped" role="table"><thead><tr><th><?php esc_html_e( 'Legacy row ID', 'certloom' ); ?></th><th><?php esc_html_e( 'Review message', 'certloom' ); ?></th></tr></thead><tbody>
+				<?php foreach ( (array) $certloom_staging_rehearsal['error_examples'] as $certloom_staging_error ) : if ( ! is_array( $certloom_staging_error ) ) { continue; } ?>
+					<tr><td><?php echo esc_html( absint( $certloom_staging_error['legacy_id'] ?? 0 ) ); ?></td><td><?php echo esc_html( (string) ( $certloom_staging_error['message'] ?? '' ) ); ?></td></tr>
+				<?php endforeach; ?>
+				</tbody></table>
+			<?php endif; ?>
+			<p><label for="certloom_staging_migration_report"><strong><?php esc_html_e( 'Copyable staging-migration rehearsal report', 'certloom' ); ?></strong></label></p>
+			<textarea id="certloom_staging_migration_report" class="large-text code" rows="14" readonly><?php echo esc_textarea( \Certloom\Infrastructure\Diagnostics\StagingMigrationRehearsal::get_text_report( $certloom_staging_rehearsal ) ); ?></textarea>
+		<?php endif; ?>
+	<?php endif; ?>
+
+
+	<?php if ( \Certloom\Infrastructure\Diagnostics\StagingRestoreRehearsal::environment_allowed() ) : ?>
+		<h3><?php esc_html_e( 'Staging populated backup/restore rehearsal', 'certloom' ); ?></h3>
+		<p class="description"><strong><?php esc_html_e( 'Staging/local only — this intentionally exercises real future-domain backup and restore promotion.', 'certloom' ); ?></strong> <?php esc_html_e( 'Use only on a disposable or restorable non-production copy after the populated migration rehearsal passes. Certloom fingerprints the complete migrated graph, builds a real private domain backup, proves Replace parity, proves an identical Merge inserts zero new records, and forces a post-swap configuration mismatch to exercise the production rollback path. Credential authority never changes. A successful rehearsal leaves the populated domain graph intact for the later cutover rehearsal.', 'certloom' ); ?></p>
+		<?php $certloom_staging_restore_enabled = \Certloom\Infrastructure\Diagnostics\StagingRestoreRehearsal::explicitly_enabled(); ?>
+		<?php $certloom_staging_restore = \Certloom\Infrastructure\Diagnostics\StagingRestoreRehearsal::get_last_result(); ?>
+		<?php $certloom_staging_restore_evidence = \Certloom\Infrastructure\Diagnostics\StagingRestoreRehearsal::evidence_state(); ?>
+		<?php if ( ! $certloom_staging_restore_enabled ) : ?>
+			<p class="description"><?php esc_html_e( 'To opt in on this disposable non-production copy, add this line to wp-config.php before WordPress loads Certloom:', 'certloom' ); ?></p>
+			<p><code>define( 'CERTLOOM_ALLOW_STAGING_RESTORE_REHEARSAL', true );</code></p>
+		<?php else : ?>
+			<?php $certloom_staging_restore_can_run = 'passed' !== $certloom_staging_restore_evidence && 'failed' !== $certloom_staging_restore_evidence && ( 'running' === $certloom_staging_restore_evidence || \Certloom\Infrastructure\Diagnostics\StagingMigrationRehearsal::is_current_passed() ); ?>
+			<form method="post" action="" class="ecapla-certverify-inline-form">
+				<?php wp_nonce_field( 'certverify_run_staging_restore_rehearsal' ); ?>
+				<?php submit_button( 'running' === $certloom_staging_restore_evidence ? __( 'Continue staging restore rehearsal', 'certloom' ) : __( 'Run staging backup/restore rehearsal', 'certloom' ), 'secondary', 'certverify_run_staging_restore_rehearsal', false, $certloom_staging_restore_can_run ? array() : array( 'disabled' => 'disabled' ) ); ?>
+			</form>
+			<?php if ( 'not_run' === $certloom_staging_restore_evidence && ! \Certloom\Infrastructure\Diagnostics\StagingMigrationRehearsal::is_current_passed() ) : ?><p class="description"><strong><?php esc_html_e( 'Run a fresh passing populated staging migration rehearsal first.', 'certloom' ); ?></strong></p><?php endif; ?>
+			<?php if ( 'failed' === $certloom_staging_restore_evidence ) : ?><p class="description"><strong><?php esc_html_e( 'This destructive staging proof intentionally has no reset button. Preserve the failure evidence and reclone/restore staging before another rehearsal.', 'certloom' ); ?></strong></p><?php endif; ?>
+		<?php endif; ?>
+		<?php if ( is_array( $certloom_staging_restore ) ) : ?>
+			<table class="widefat striped" role="table"><tbody>
+				<tr><th scope="row"><?php esc_html_e( 'State', 'certloom' ); ?></th><td><?php echo esc_html( ucfirst( str_replace( '_', ' ', $certloom_staging_restore_evidence ) ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Phase', 'certloom' ); ?></th><td><?php echo esc_html( ucfirst( str_replace( '_', ' ', sanitize_key( (string) ( $certloom_staging_restore['phase'] ?? '' ) ) ) ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Migrated legacy rows', 'certloom' ); ?></th><td><?php echo esc_html( absint( $certloom_staging_restore['source_count'] ?? 0 ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Baseline future-domain records', 'certloom' ); ?></th><td><?php echo esc_html( absint( $certloom_staging_restore['baseline_records'] ?? 0 ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Generated backup records', 'certloom' ); ?></th><td><?php echo esc_html( absint( $certloom_staging_restore['backup_records'] ?? 0 ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Replace parity', 'certloom' ); ?></th><td><?php echo esc_html( ! empty( $certloom_staging_restore['replace_verified'] ) ? __( 'Passed', 'certloom' ) : __( 'Not yet', 'certloom' ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Merge parity', 'certloom' ); ?></th><td><?php echo esc_html( ! empty( $certloom_staging_restore['merge_verified'] ) ? __( 'Passed', 'certloom' ) : __( 'Not yet', 'certloom' ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Forced rollback parity', 'certloom' ); ?></th><td><?php echo esc_html( ! empty( $certloom_staging_restore['rollback_verified'] ) ? __( 'Passed', 'certloom' ) : __( 'Not yet', 'certloom' ) ); ?></td></tr>
+			</tbody></table>
+			<p><label for="certloom_staging_restore_report"><strong><?php esc_html_e( 'Copyable staging-restore rehearsal report', 'certloom' ); ?></strong></label></p>
+			<textarea id="certloom_staging_restore_report" class="large-text code" rows="14" readonly><?php echo esc_textarea( \Certloom\Infrastructure\Diagnostics\StagingRestoreRehearsal::get_text_report( $certloom_staging_restore ) ); ?></textarea>
+		<?php endif; ?>
+	<?php endif; ?>
+
+
+	<?php if ( \Certloom\Infrastructure\Diagnostics\StagingCutoverRehearsal::environment_allowed() ) : ?>
+		<h3><?php esc_html_e( 'Staging final authority-cutover rehearsal', 'certloom' ); ?></h3>
+		<p class="description"><strong><?php esc_html_e( 'Staging/local only — this temporarily exercises the real authority switch and then rolls it back.', 'certloom' ); ?></strong> <?php esc_html_e( 'Use only on a disposable/restorable non-production copy after the populated migration and backup/restore rehearsals pass. Certloom fingerprints the complete future-domain graph, runs the production cutover coordinator with a staging-only readiness policy, proves the legacy registry becomes read-only, proves Series public verification can become ready, then disables Series verification, restores legacy authority, and fingerprints the graph again. The three shipped production readiness constants remain off throughout.', 'certloom' ); ?></p>
+		<?php $certloom_staging_cutover_enabled = \Certloom\Infrastructure\Diagnostics\StagingCutoverRehearsal::explicitly_enabled(); ?>
+		<?php $certloom_staging_cutover = \Certloom\Infrastructure\Diagnostics\StagingCutoverRehearsal::get_last_result(); ?>
+		<?php $certloom_staging_cutover_evidence = \Certloom\Infrastructure\Diagnostics\StagingCutoverRehearsal::evidence_state(); ?>
+		<?php if ( ! $certloom_staging_cutover_enabled ) : ?>
+			<p class="description"><?php esc_html_e( 'To opt in on this disposable non-production copy, add this line to wp-config.php before WordPress loads Certloom:', 'certloom' ); ?></p>
+			<p><code>define( 'CERTLOOM_ALLOW_STAGING_CUTOVER_REHEARSAL', true );</code></p>
+		<?php else : ?>
+			<?php $certloom_staging_cutover_can_run = 'passed' !== $certloom_staging_cutover_evidence && 'failed' !== $certloom_staging_cutover_evidence && ( 'running' === $certloom_staging_cutover_evidence || \Certloom\Infrastructure\Diagnostics\StagingRestoreRehearsal::is_current_passed() ); ?>
+			<form method="post" action="" class="ecapla-certverify-inline-form">
+				<?php wp_nonce_field( 'certverify_run_staging_cutover_rehearsal' ); ?>
+				<?php submit_button( 'running' === $certloom_staging_cutover_evidence ? __( 'Continue staging cutover rehearsal', 'certloom' ) : __( 'Run final cutover rehearsal', 'certloom' ), 'secondary', 'certverify_run_staging_cutover_rehearsal', false, $certloom_staging_cutover_can_run ? array() : array( 'disabled' => 'disabled' ) ); ?>
+			</form>
+			<?php if ( 'not_run' === $certloom_staging_cutover_evidence && ! \Certloom\Infrastructure\Diagnostics\StagingRestoreRehearsal::is_current_passed() ) : ?><p class="description"><strong><?php esc_html_e( 'Run a fresh passing populated staging backup/restore rehearsal first.', 'certloom' ); ?></strong></p><?php endif; ?>
+			<?php if ( 'failed' === $certloom_staging_cutover_evidence ) : ?><p class="description"><strong><?php esc_html_e( 'Preserve the failure evidence and reclone/restore staging before attempting another final authority rehearsal.', 'certloom' ); ?></strong></p><?php endif; ?>
+		<?php endif; ?>
+		<?php if ( is_array( $certloom_staging_cutover ) ) : ?>
+			<table class="widefat striped" role="table"><tbody>
+				<tr><th scope="row"><?php esc_html_e( 'State', 'certloom' ); ?></th><td><?php echo esc_html( ucfirst( str_replace( '_', ' ', $certloom_staging_cutover_evidence ) ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Phase', 'certloom' ); ?></th><td><?php echo esc_html( ucfirst( str_replace( '_', ' ', sanitize_key( (string) ( $certloom_staging_cutover['phase'] ?? '' ) ) ) ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Frozen legacy rows', 'certloom' ); ?></th><td><?php echo esc_html( absint( $certloom_staging_cutover['source_count'] ?? 0 ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Future-domain records fingerprinted', 'certloom' ); ?></th><td><?php echo esc_html( absint( $certloom_staging_cutover['baseline_records'] ?? 0 ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Committed receipt parity', 'certloom' ); ?></th><td><?php echo esc_html( ! empty( $certloom_staging_cutover['receipt_verified'] ) ? __( 'Passed', 'certloom' ) : __( 'Not yet', 'certloom' ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Legacy write guard', 'certloom' ); ?></th><td><?php echo esc_html( ! empty( $certloom_staging_cutover['legacy_guard_blocked'] ) ? __( 'Passed', 'certloom' ) : __( 'Not yet', 'certloom' ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Series verification gate', 'certloom' ); ?></th><td><?php echo esc_html( ! empty( $certloom_staging_cutover['public_gate_verified'] ) ? __( 'Passed', 'certloom' ) : __( 'Not yet', 'certloom' ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Legacy authority restored', 'certloom' ); ?></th><td><?php echo esc_html( ! empty( $certloom_staging_cutover['rollback_verified'] ) ? __( 'Passed', 'certloom' ) : __( 'Not yet', 'certloom' ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Graph unchanged', 'certloom' ); ?></th><td><?php echo esc_html( ! empty( $certloom_staging_cutover['final_verified'] ) ? __( 'Passed', 'certloom' ) : __( 'Not yet', 'certloom' ) ); ?></td></tr>
+			</tbody></table>
+			<p><label for="certloom_staging_cutover_report"><strong><?php esc_html_e( 'Copyable staging-cutover rehearsal report', 'certloom' ); ?></strong></label></p>
+			<textarea id="certloom_staging_cutover_report" class="large-text code" rows="14" readonly><?php echo esc_textarea( \Certloom\Infrastructure\Diagnostics\StagingCutoverRehearsal::get_text_report( $certloom_staging_cutover ) ); ?></textarea>
+		<?php endif; ?>
 	<?php endif; ?>
 
 	<hr />
