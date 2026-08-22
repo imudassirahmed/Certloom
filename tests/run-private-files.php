@@ -9,7 +9,13 @@ function is_wp_error( $v ){ return $v instanceof WP_Error; }
 function __( $t ){ return $t; }
 function absint( $v ){ return abs( (int) $v ); }
 function sanitize_key( $key ){ return strtolower( preg_replace( '/[^a-z0-9_\-]/', '', (string) $key ) ); }
-function apply_filters( $hook, $value ){ global $root; return 'certloom_private_job_directory' === $hook ? $root . '/private' : $value; }
+$GLOBALS['pf_private_dir'] = $root . '/private';
+$GLOBALS['pf_allow_webroot_private'] = false;
+function apply_filters( $hook, $value ){
+	if ( 'certloom_private_job_directory' === $hook ) { return $GLOBALS['pf_private_dir']; }
+	if ( 'certloom_allow_private_job_directory_inside_webroot' === $hook ) { return $GLOBALS['pf_allow_webroot_private']; }
+	return $value;
+}
 function wp_normalize_path( $path ){ return str_replace( '\\', '/', (string) $path ); }
 function trailingslashit( $path ){ return rtrim( (string) $path, '/\\' ) . '/'; }
 function untrailingslashit( $path ){ return rtrim( (string) $path, '/\\' ); }
@@ -27,6 +33,18 @@ pf_same( true, is_file($dir . '/.htaccess'), 'apache protection' );
 pf_same( true, is_file($dir . '/web.config'), 'iis protection' );
 echo "PASS  private directory creates deny/sentinel files\n";
 
+$GLOBALS['pf_private_dir'] = $root . '/web/wp-content/certloom-private';
+$web_exposed = $store->directory();
+pf_same( 'certloom_private_directory_web_exposed', $web_exposed->get_error_code(), 'webroot private storage rejected by default' );
+$GLOBALS['pf_allow_webroot_private'] = true;
+pf_same( $root . '/web/wp-content/certloom-private', $store->directory(), 'explicit compatibility override accepted' );
+$GLOBALS['pf_allow_webroot_private'] = false;
+$GLOBALS['pf_private_dir'] = 'relative/private';
+$relative = $store->directory();
+pf_same( 'certloom_private_directory_not_absolute', $relative->get_error_code(), 'relative private directory rejected' );
+$GLOBALS['pf_private_dir'] = $root . '/private';
+echo "PASS  persistent private job storage refuses public-webroot and relative paths by default\n";
+
 $source = $root . '/source.csv';
 file_put_contents( $source, "number,name\nC-1,Alice\n" );
 $key = str_repeat('a',32);
@@ -41,8 +59,11 @@ $outside = $root . '/outside.data';
 file_put_contents($outside,'x');
 $rejected = $store->delete($outside);
 pf_same( 'certloom_private_file_path_invalid', $rejected->get_error_code(), 'outside deletion rejected' );
+$sentinel_delete = $store->delete( $dir . '/.htaccess' );
+pf_same( 'certloom_private_file_path_invalid', $sentinel_delete->get_error_code(), 'protection sentinel is not a deletable job file' );
+pf_same( true, is_file( $dir . '/.htaccess' ), 'protection sentinel retained' );
 pf_same( true, $store->delete($stored), 'owned delete' );
-echo "PASS  deletion is constrained to owned private files\n";
+echo "PASS  deletion is constrained to randomized job-data files and cannot remove protection sentinels\n";
 
 $old = $store->create_path( str_repeat('b',32), 'backup' );
 file_put_contents( $old, 'old' );
@@ -74,4 +95,4 @@ echo "PASS  short-lived mapping cleanup cannot delete unrelated retained backup 
 
 function pf_rm($path){ if(!file_exists($path))return; if(is_dir($path)){ foreach(scandir($path) as $n){ if($n==='.'||$n==='..')continue; pf_rm($path.'/'.$n);} rmdir($path);} else unlink($path); }
 pf_rm($root);
-echo "\n5 tests, 0 failures\n";
+echo "\n6 tests, 0 failures\n";

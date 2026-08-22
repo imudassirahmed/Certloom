@@ -1,12 +1,14 @@
 <?php
 namespace Certloom\Infrastructure\Repository;
 
+use Certloom\Application\Contract\LegacySourceSnapshotInterface;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /** Read-only bounded access to the existing Certloom 1.5 certificate registry. */
-final class LegacyCertificateRepository {
+final class LegacyCertificateRepository implements LegacySourceSnapshotInterface {
 	/** @return array<string,int>|\WP_Error */
 	public function snapshot() {
 		global $wpdb;

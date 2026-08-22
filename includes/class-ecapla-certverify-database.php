@@ -48,39 +48,52 @@ class Ecapla_CertVerify_Database {
 			return $lock;
 		}
 
-		try {
-			$installed   = (string) get_option( self::SCHEMA_OPTION, get_option( 'certverify_db_version', '0' ) );
-			$table_setup = self::create_or_update_table();
-			if ( is_wp_error( $table_setup ) ) {
-				return $table_setup;
+		$result   = self::activate_under_lock();
+		$released = self::release_migration_lock( $lock );
+		if ( is_wp_error( $released ) ) {
+			if ( is_wp_error( $result ) ) {
+				return new WP_Error(
+					'ecapla_certverify_schema_failure_cleanup_failed',
+					__( 'Certloom database maintenance failed and its migration lock could not be released safely. Retry after the lock lease expires or is repaired.', 'certloom' ),
+					array( 'operation_error' => $result->get_error_code(), 'cleanup_error' => $released->get_error_code() )
+				);
 			}
-
-			$migrated = self::run_migrations( $installed );
-			if ( is_wp_error( $migrated ) ) {
-				return $migrated;
-			}
-
-			$health = self::schema_health();
-			if ( is_wp_error( $health ) ) {
-				return $health;
-			}
-
-			if ( ! self::persist_schema_versions() ) {
-				return new WP_Error( 'ecapla_certverify_schema_marker_failed', __( 'Certloom completed its database setup but could not save the schema version.', 'certloom' ) );
-			}
-
-			if ( self::migrations_are_complete() ) {
-				if ( ! self::save_health_marker() ) {
-					return new WP_Error( 'ecapla_certverify_schema_health_marker_failed', __( 'Certloom verified its database structure but could not save the health marker.', 'certloom' ) );
-				}
-			} else {
-				delete_option( self::HEALTH_OPTION );
-				self::schedule_migration_continuation();
-			}
-			return true;
-		} finally {
-			self::release_migration_lock( $lock );
+			return $released;
 		}
+		return $result;
+	}
+
+	/** Runs the legacy schema/migration operation while the caller owns the migration lock. */
+	private static function activate_under_lock() {
+		$installed   = (string) get_option( self::SCHEMA_OPTION, get_option( 'certverify_db_version', '0' ) );
+		$table_setup = self::create_or_update_table();
+		if ( is_wp_error( $table_setup ) ) {
+			return $table_setup;
+		}
+
+		$migrated = self::run_migrations( $installed );
+		if ( is_wp_error( $migrated ) ) {
+			return $migrated;
+		}
+
+		$health = self::schema_health();
+		if ( is_wp_error( $health ) ) {
+			return $health;
+		}
+
+		if ( ! self::persist_schema_versions() ) {
+			return new WP_Error( 'ecapla_certverify_schema_marker_failed', __( 'Certloom completed its database setup but could not save the schema version.', 'certloom' ) );
+		}
+
+		if ( self::migrations_are_complete() ) {
+			if ( ! self::save_health_marker() ) {
+				return new WP_Error( 'ecapla_certverify_schema_health_marker_failed', __( 'Certloom verified its database structure but could not save the health marker.', 'certloom' ) );
+			}
+		} else {
+			delete_option( self::HEALTH_OPTION );
+			self::schedule_migration_continuation();
+		}
+		return true;
 	}
 
 	/**
@@ -361,9 +374,16 @@ class Ecapla_CertVerify_Database {
 		global $wpdb;
 		$token  = sanitize_text_field( (string) $token );
 		$stored = (string) get_option( self::MIGRATION_LOCK_OPTION, '' );
-		if ( '' === $token || 0 !== strpos( $stored, $token . '|' ) ) {
-			return false;
+		if ( '' === $token ) {
+			return new WP_Error( 'ecapla_certverify_schema_lock_token_invalid', __( 'Certloom refused to release an invalid database-maintenance lock token.', 'certloom' ) );
 		}
+		if ( '' === $stored ) {
+			return true;
+		}
+		if ( 0 !== strpos( $stored, $token . '|' ) ) {
+			return new WP_Error( 'ecapla_certverify_schema_lock_owner_changed', __( 'Certloom refused to release a database-maintenance lock that is no longer owned by this request.', 'certloom' ) );
+		}
+		$wpdb->last_error = '';
 		$deleted = $wpdb->query(
 			$wpdb->prepare(
 				'DELETE FROM %i WHERE option_name = %s AND option_value = %s',
@@ -373,7 +393,10 @@ class Ecapla_CertVerify_Database {
 			)
 		);
 		wp_cache_delete( self::MIGRATION_LOCK_OPTION, 'options' );
-		return 1 === (int) $deleted;
+		if ( 1 === (int) $deleted || '' === (string) get_option( self::MIGRATION_LOCK_OPTION, '' ) ) {
+			return true;
+		}
+		return new WP_Error( 'ecapla_certverify_schema_lock_release_failed', __( 'Certloom completed database maintenance but could not release its migration lock safely. Retry after the lease expires or is repaired.', 'certloom' ) );
 	}
 
 	private static function health_marker_is_fresh() {

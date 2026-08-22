@@ -289,16 +289,19 @@ class Ecapla_CertVerify_Backup {
 		$state    = sanitize_key( (string) ( $journal['state'] ?? 'staging' ) );
 
 		if ( 'committed' === $state ) {
+			if ( ! self::mark_mutation() ) {
+				return new WP_Error( 'ecapla_certverify_restore_generation_marker_failed', __( 'Certloom recovered the committed registry but could not refresh its mutation marker. Writes remain paused until recovery succeeds.', 'certloom' ) );
+			}
 			if ( $rollback && self::table_exists( $rollback ) && ! Ecapla_CertVerify_Database::drop_restore_table( $rollback ) ) {
 				return new WP_Error( 'ecapla_certverify_restore_cleanup_failed', __( 'Certloom could not remove a completed restore rollback table.', 'certloom' ) );
 			}
-			if ( $staging && self::table_exists( $staging ) ) {
-				Ecapla_CertVerify_Database::drop_restore_table( $staging );
+			if ( $staging && self::table_exists( $staging ) && ! Ecapla_CertVerify_Database::drop_restore_table( $staging ) ) {
+				return new WP_Error( 'ecapla_certverify_restore_cleanup_failed', __( 'Certloom could not remove a completed restore staging table.', 'certloom' ) );
+			}
+			if ( ! empty( $journal['lock_hash'] ) && ! self::delete_maintenance_lock_if_owner( sanitize_text_field( (string) $journal['lock_hash'] ) ) ) {
+				return new WP_Error( 'ecapla_certverify_restore_cleanup_failed', __( 'Certloom recovered the committed restore but could not release its maintenance lock safely. The recovery journal was preserved for retry.', 'certloom' ) );
 			}
 			delete_option( self::JOURNAL_OPTION );
-			if ( ! empty( $journal['lock_hash'] ) ) {
-				self::delete_maintenance_lock_if_owner( sanitize_text_field( (string) $journal['lock_hash'] ) );
-			}
 			return true;
 		}
 
@@ -317,10 +320,10 @@ class Ecapla_CertVerify_Backup {
 			Ecapla_CertVerify_Database::drop_restore_table( $staging );
 		}
 		Ecapla_CertVerify_Fields::reset_runtime_cache();
-		delete_option( self::JOURNAL_OPTION );
-		if ( ! empty( $journal['lock_hash'] ) ) {
-			self::delete_maintenance_lock_if_owner( sanitize_text_field( (string) $journal['lock_hash'] ) );
+		if ( ! empty( $journal['lock_hash'] ) && ! self::delete_maintenance_lock_if_owner( sanitize_text_field( (string) $journal['lock_hash'] ) ) ) {
+			return new WP_Error( 'ecapla_certverify_restore_cleanup_failed', __( 'Certloom restored the original registry but could not release its maintenance lock safely. The recovery journal was preserved for retry.', 'certloom' ) );
 		}
+		delete_option( self::JOURNAL_OPTION );
 		return true;
 	}
 
@@ -428,8 +431,10 @@ class Ecapla_CertVerify_Backup {
 	public static function continue_restore( $token ) {
 		$manifest = self::get_manifest( $token );
 		if ( ! $manifest || empty( $manifest['restore_process'] ) || ! is_array( $manifest['restore_process'] ) ) {
-			self::release_restore_maintenance_lock( $token );
-			return new WP_Error( 'ecapla_certverify_restore_process_expired', __( 'That restore process expired. Upload the backup again.', 'certloom' ) );
+			$released = self::release_restore_maintenance_lock( $token );
+			return $released
+				? new WP_Error( 'ecapla_certverify_restore_process_expired', __( 'That restore process expired. Upload the backup again.', 'certloom' ) )
+				: new WP_Error( 'ecapla_certverify_restore_cleanup_failed', __( 'That restore process expired and Certloom could not release its maintenance lock safely. Retry recovery after the lease expires.', 'certloom' ) );
 		}
 		$maintenance = self::acquire_restore_maintenance_lock( $token );
 		if ( is_wp_error( $maintenance ) ) {
@@ -440,80 +445,90 @@ class Ecapla_CertVerify_Backup {
 		if ( is_wp_error( $lock ) ) {
 			return $lock;
 		}
-		try {
-			$manifest = self::get_manifest( $token );
-			if ( ! $manifest || empty( $manifest['restore_process'] ) || ! is_array( $manifest['restore_process'] ) ) {
-				self::release_restore_maintenance_lock( $token );
-				return new WP_Error( 'ecapla_certverify_restore_process_expired', __( 'That restore process expired. Upload the backup again.', 'certloom' ) );
-			}
-			$process = $manifest['restore_process'];
-			$cursor  = absint( $process['cursor'] ?? 0 );
-			$total   = absint( $process['total_chunks'] ?? 0 );
-			$staging = (string) ( $process['staging'] ?? '' );
-			if ( ! $staging || ! self::table_exists( $staging ) ) {
-				self::abandon_restore_process( $token, $manifest );
-				return new WP_Error( 'ecapla_certverify_restore_stage_missing', __( 'The temporary restore workspace is no longer available. Upload the backup again.', 'certloom' ) );
-			}
-
-			if ( $cursor < $total ) {
-				$records = self::load_record_chunk( $token, $cursor );
-				if ( is_wp_error( $records ) ) {
-					self::abandon_restore_process( $token, $manifest );
-					return $records;
-				}
-				$definitions = self::definitions_from_manifest( $manifest );
-				if ( is_wp_error( $definitions ) ) {
-					self::abandon_restore_process( $token, $manifest );
-					return $definitions;
-				}
-				$existing = Ecapla_CertVerify_Database::get_records_by_numbers_from_table( $staging, wp_list_pluck( $records, 'cert_number' ) );
-				if ( is_wp_error( $existing ) ) {
-					self::abandon_restore_process( $token, $manifest );
-					return $existing;
-				}
-				$results = isset( $process['results'] ) && is_array( $process['results'] ) ? $process['results'] : array( 'created' => 0, 'updated' => 0, 'restored' => 0, 'skipped' => 0, 'removed' => 0, 'retained' => 0, 'errors' => array() );
-				foreach ( $records as $record_index => $record ) {
-					$key         = Ecapla_CertVerify_Database::normalize_certificate_number( $record['cert_number'] );
-					$existing_id = isset( $existing[ $key ] ) ? absint( $existing[ $key ]['id'] ) : 0;
-					if ( $existing_id && 'skip' === ( $process['conflict_policy'] ?? 'skip' ) ) {
-						$results['skipped']++;
-						continue;
-					}
-					$result = Ecapla_CertVerify_Database::restore_record_to_table( $staging, $record, $existing_id, $definitions );
-					if ( is_wp_error( $result ) ) {
-						self::abandon_restore_process( $token, $manifest );
-						return new WP_Error(
-							'ecapla_certverify_backup_record_restore_failed',
-							sprintf(
-								/* translators: 1: backup record number, 2: error. */
-								__( 'Backup record %1$d could not be prepared: %2$s No live data was changed.', 'certloom' ),
-								( $cursor * self::RECORD_CHUNK_SIZE ) + $record_index + 1,
-								$result->get_error_message()
-							)
-						);
-					}
-					$existing_id ? $results['updated']++ : $results['created']++;
-					if ( 'expired' === sanitize_key( (string) $record['status'] ) ) {
-						$results['restored']++;
-					}
-				}
-				$process['cursor']     = $cursor + 1;
-				$process['results']    = $results;
-				$process['updated_at'] = time();
-				$manifest['restore_process'] = $process;
-				if ( ! self::save_manifest( $token, $manifest ) || ! self::touch_restore_build( $token ) || ! self::touch_restore_maintenance_lock( $token ) ) {
-					self::abandon_restore_process( $token, $manifest );
-					return new WP_Error( 'ecapla_certverify_restore_process_storage', __( 'Certloom could not save restore progress. No live data was changed.', 'certloom' ) );
-				}
-				if ( $process['cursor'] < $total ) {
-					return self::restore_progress_response( $process );
-				}
-			}
-
-			return self::commit_restore( $token, $manifest );
-		} finally {
-			self::release_restore_lock( $token, $lock );
+		$result   = self::continue_restore_under_lock( $token );
+		$released = self::release_restore_lock( $token, $lock );
+		if ( is_wp_error( $released ) ) {
+			return new WP_Error(
+				'ecapla_certverify_restore_request_lock_release_failed',
+				__( 'The restore request finished its bounded work, but Certloom could not release the per-request restore lock safely. Wait for the short lease or repair cleanup before continuing.', 'certloom' ),
+				array( 'operation_error' => is_wp_error( $result ) ? $result->get_error_code() : '', 'cleanup_error' => $released->get_error_code() )
+			);
 		}
+		return $result;
+	}
+
+	/** Processes one restore slice while the caller owns the short per-request restore lock. */
+	private static function continue_restore_under_lock( $token ) {
+		$manifest = self::get_manifest( $token );
+		if ( ! $manifest || empty( $manifest['restore_process'] ) || ! is_array( $manifest['restore_process'] ) ) {
+			self::release_restore_maintenance_lock( $token );
+			return new WP_Error( 'ecapla_certverify_restore_process_expired', __( 'That restore process expired. Upload the backup again.', 'certloom' ) );
+		}
+		$process = $manifest['restore_process'];
+		$cursor  = absint( $process['cursor'] ?? 0 );
+		$total   = absint( $process['total_chunks'] ?? 0 );
+		$staging = (string) ( $process['staging'] ?? '' );
+		if ( ! $staging || ! self::table_exists( $staging ) ) {
+			self::abandon_restore_process( $token, $manifest );
+			return new WP_Error( 'ecapla_certverify_restore_stage_missing', __( 'The temporary restore workspace is no longer available. Upload the backup again.', 'certloom' ) );
+		}
+
+		if ( $cursor < $total ) {
+			$records = self::load_record_chunk( $token, $cursor );
+			if ( is_wp_error( $records ) ) {
+				self::abandon_restore_process( $token, $manifest );
+				return $records;
+			}
+			$definitions = self::definitions_from_manifest( $manifest );
+			if ( is_wp_error( $definitions ) ) {
+				self::abandon_restore_process( $token, $manifest );
+				return $definitions;
+			}
+			$existing = Ecapla_CertVerify_Database::get_records_by_numbers_from_table( $staging, wp_list_pluck( $records, 'cert_number' ) );
+			if ( is_wp_error( $existing ) ) {
+				self::abandon_restore_process( $token, $manifest );
+				return $existing;
+			}
+			$results = isset( $process['results'] ) && is_array( $process['results'] ) ? $process['results'] : array( 'created' => 0, 'updated' => 0, 'restored' => 0, 'skipped' => 0, 'removed' => 0, 'retained' => 0, 'errors' => array() );
+			foreach ( $records as $record_index => $record ) {
+				$key         = Ecapla_CertVerify_Database::normalize_certificate_number( $record['cert_number'] );
+				$existing_id = isset( $existing[ $key ] ) ? absint( $existing[ $key ]['id'] ) : 0;
+				if ( $existing_id && 'skip' === ( $process['conflict_policy'] ?? 'skip' ) ) {
+					$results['skipped']++;
+					continue;
+				}
+				$result = Ecapla_CertVerify_Database::restore_record_to_table( $staging, $record, $existing_id, $definitions );
+				if ( is_wp_error( $result ) ) {
+					self::abandon_restore_process( $token, $manifest );
+					return new WP_Error(
+						'ecapla_certverify_backup_record_restore_failed',
+						sprintf(
+							/* translators: 1: backup record number, 2: error. */
+							__( 'Backup record %1$d could not be prepared: %2$s No live data was changed.', 'certloom' ),
+							( $cursor * self::RECORD_CHUNK_SIZE ) + $record_index + 1,
+							$result->get_error_message()
+						)
+					);
+				}
+				$existing_id ? $results['updated']++ : $results['created']++;
+				if ( 'expired' === sanitize_key( (string) $record['status'] ) ) {
+					$results['restored']++;
+				}
+			}
+			$process['cursor']     = $cursor + 1;
+			$process['results']    = $results;
+			$process['updated_at'] = time();
+			$manifest['restore_process'] = $process;
+			if ( ! self::save_manifest( $token, $manifest ) || ! self::touch_restore_build( $token ) || ! self::touch_restore_maintenance_lock( $token ) ) {
+				self::abandon_restore_process( $token, $manifest );
+				return new WP_Error( 'ecapla_certverify_restore_process_storage', __( 'Certloom could not save restore progress. No live data was changed.', 'certloom' ) );
+			}
+			if ( $process['cursor'] < $total ) {
+				return self::restore_progress_response( $process );
+			}
+		}
+
+		return self::commit_restore( $token, $manifest );
 	}
 
 	public static function get_restore_progress( $token ) {
@@ -630,19 +645,23 @@ class Ecapla_CertVerify_Backup {
 					: __( 'Certloom could not commit the restore journal and automatic rollback was incomplete. Restore the site database backup before continuing.', 'certloom' )
 			);
 		}
+		if ( ! self::mark_mutation() ) {
+			return new WP_Error( 'ecapla_certverify_restore_generation_marker_failed', __( 'The registry restore was committed, but Certloom could not refresh its mutation marker. Writes remain paused and the recovery journal was preserved.', 'certloom' ) );
+		}
 		if ( ! Ecapla_CertVerify_Database::drop_restore_table( $rollback ) ) {
 			update_option( 'certverify_restore_cleanup_needed', $rollback, false );
-		} else {
-			delete_option( 'certverify_restore_cleanup_needed' );
+			return new WP_Error( 'ecapla_certverify_restore_cleanup_failed', __( 'The registry restore was committed, but Certloom could not remove its rollback table. Writes remain paused and recovery can retry cleanup safely.', 'certloom' ) );
 		}
-		delete_option( self::JOURNAL_OPTION );
-		self::unregister_restore_build( $token );
-		self::mark_mutation();
+		delete_option( 'certverify_restore_cleanup_needed' );
 		$review_count = Ecapla_CertVerify_Database::refresh_legacy_expired_review_count();
 		if ( is_wp_error( $review_count ) ) {
 			update_option( 'certverify_legacy_review_refresh_needed', 1, false );
 		}
-		self::release_restore_maintenance_lock( $token );
+		if ( ! self::release_restore_maintenance_lock( $token ) ) {
+			return new WP_Error( 'ecapla_certverify_restore_cleanup_failed', __( 'The registry restore was committed, but Certloom could not release its maintenance lock safely. The recovery journal was preserved and normal writes remain paused until cleanup succeeds.', 'certloom' ) );
+		}
+		delete_option( self::JOURNAL_OPTION );
+		self::unregister_restore_build( $token );
 		self::delete_session( $token );
 		return array( 'complete' => true, 'results' => $results );
 	}
@@ -681,14 +700,23 @@ class Ecapla_CertVerify_Backup {
 	}
 
 	private static function get_active_maintenance_lock() {
-		$lock = get_option( self::MAINTENANCE_LOCK_OPTION, array() );
-		if ( ! is_array( $lock ) || empty( $lock['token_hash'] ) ) {
+		$missing = new stdClass();
+		$lock    = get_option( self::MAINTENANCE_LOCK_OPTION, $missing );
+		if ( $missing === $lock || false === $lock || '' === $lock || array() === $lock ) {
 			return false;
 		}
-		if ( absint( $lock['expires_at'] ?? 0 ) > time() ) {
+		if ( ! is_array( $lock ) || empty( $lock['token_hash'] ) || empty( $lock['expires_at'] ) ) {
+			// A non-empty/corrupt maintenance option must fail closed for normal
+			// writes. acquire_restore_maintenance_lock() can repair it later with
+			// an atomic compare-and-swap owned by a real maintenance request.
+			return array( 'corrupt' => true );
+		}
+		if ( absint( $lock['expires_at'] ) > time() ) {
 			return $lock;
 		}
-		self::delete_maintenance_lock_if_owner( sanitize_text_field( (string) $lock['token_hash'] ) );
+		if ( ! self::delete_maintenance_lock_if_owner( sanitize_text_field( (string) $lock['token_hash'] ) ) ) {
+			return array( 'corrupt' => true );
+		}
 		return false;
 	}
 
@@ -841,16 +869,28 @@ class Ecapla_CertVerify_Backup {
 
 	private static function release_restore_lock( $token, $payload ) {
 		global $wpdb;
+		$name    = self::restore_lock_name( $token );
+		$current = (string) get_option( $name, '' );
+		if ( '' === $current ) {
+			return true;
+		}
+		if ( ! hash_equals( $current, (string) $payload ) ) {
+			return new WP_Error( 'ecapla_certverify_restore_lock_owner_changed', __( 'Certloom refused to release a restore request lock that is no longer owned by this request.', 'certloom' ) );
+		}
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Owner-matched deletion prevents one request from releasing another request's restore lock.
-		$wpdb->query(
+		$deleted = $wpdb->query(
 			$wpdb->prepare(
 				'DELETE FROM %i WHERE option_name = %s AND option_value = %s',
 				$wpdb->options,
-				self::restore_lock_name( $token ),
-				$payload
+				$name,
+				$current
 			)
 		);
-		wp_cache_delete( self::restore_lock_name( $token ), 'options' );
+		wp_cache_delete( $name, 'options' );
+		if ( 1 === (int) $deleted || '' === (string) get_option( $name, '' ) ) {
+			return true;
+		}
+		return new WP_Error( 'ecapla_certverify_restore_lock_release_failed', __( 'Certloom could not release the restore request lock safely. Wait for the short lease before continuing.', 'certloom' ) );
 	}
 
 

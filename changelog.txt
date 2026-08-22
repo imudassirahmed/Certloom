@@ -1,3 +1,41 @@
+1.5.9 — Cutover, private-storage and live-authority cleanup hardening; no authority cutover
+-----------------------------------------------------------------------------------------
+- Keep the proven 1.5 registry and public verifier authoritative; all next-domain cutover
+  flags remain false by default.
+- Do not make the still-gated future Credential Series tables a hard dependency of ordinary
+  plugin activation. Fresh/live 1.5 sites skip next-domain schema/job provisioning until a
+  domain feature, official cutover or durable domain recovery state actually requires it;
+  mandatory domain states continue to fail closed. This prevents host-specific future-schema
+  `dbDelta()` issues from deactivating the proven live verifier.
+- Replace the direct domain-authority switch with `DomainCutoverCoordinator`: acquire the
+  shared maintenance lease first, perform a live schema/engine check, take the final legacy
+  source snapshot while legacy writes are blocked, require migration parity, and persist a
+  prepared then committed cutover receipt around the authority transition.
+- Require a committed cutover receipt, current schema health, completed migration and no
+  active/corrupt maintenance state before public Credential Series verification can be
+  enabled or considered ready. A manually flipped authority option is no longer sufficient.
+- Persist a cutover recovery-owner token so a transient maintenance-lock release failure can
+  be retried idempotently without reopening verification during uncertain cleanup.
+- Harden next-domain persistent job files: require an absolute private location outside the
+  public WordPress webroot by default, re-check the real path after directory creation,
+  reject symlink/path escapes, and allow deletion only for correctly shaped randomized
+  Certloom job-data files. Apache/IIS deny files remain defense in depth, not the primary
+  confidentiality boundary.
+- Bring the live 1.5 authority paths to the same cleanup standard: legacy schema-migration,
+  resumable-import and restore-request locks are owner-checked and failed release is explicit;
+  malformed non-empty complete-restore maintenance state fails closed for ordinary writes.
+- Keep the live complete-restore recovery journal until committed/rolled-back data cleanup
+  and owner-matched maintenance-lock release are actually confirmed. A committed restore also
+  requires the data-generation marker to refresh before the recovery journal can disappear.
+- Add regression coverage for race-proof cutover, cutover cleanup replay, verification-gate
+  receipt enforcement, private-file webroot rejection, schema-lock cleanup and live legacy
+  lock/recovery behavior.
+- Verified checkpoint: 49/49 standalone regression suites, 69/69 focused rendering
+  assertions, 193/193 source PHP syntax checks, 3/3 JavaScript syntax checks and 6/6
+  deterministic rendering-reference fixture families.
+- Real WordPress/MySQL authority proof and the production PHP PDF/image renderer remain
+  deliberately external acceptance gates; this release does not pretend either has passed.
+
 1.5.8 — Transaction, storage-engine and maintenance-recovery hardening; no authority cutover
 -------------------------------------------------------------------------------------------
 - Keep the proven 1.5 registry and public verifier authoritative; all next-domain cutover

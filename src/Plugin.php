@@ -5,6 +5,8 @@ use Certloom\Infrastructure\Database\SchemaManager;
 use Certloom\Infrastructure\Job\JobDispatcher;
 use Certloom\Infrastructure\Job\JobRuntime;
 use Certloom\Infrastructure\Restore\DomainRestoreWorkspace;
+use Certloom\Infrastructure\Data\DomainMaintenanceLock;
+use Certloom\Application\Migration\DomainCutoverState;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -27,6 +29,18 @@ final class Plugin {
 	 * @return true|\WP_Error
 	 */
 	public static function activate() {
+		/*
+		 * The additive Series/Version domain is intentionally gated while the
+		 * proven 1.5 registry remains authoritative. Do not make unused future
+		 * tables a hard dependency of normal plugin activation: hosts that cannot
+		 * provision the gated schema must still be able to use the live verifier.
+		 * Once a domain feature, cutover, or interrupted domain operation actually
+		 * requires the storage, setup becomes mandatory and remains fail-closed.
+		 */
+		if ( ! self::domain_storage_required() ) {
+			return true;
+		}
+
 		$recovery = ( new DomainRestoreWorkspace() )->recover_interrupted_commit();
 		if ( is_wp_error( $recovery ) ) {
 			return $recovery;
@@ -45,6 +59,10 @@ final class Plugin {
 	 * @return void
 	 */
 	public static function boot() {
+		if ( ! self::domain_storage_required() ) {
+			return;
+		}
+
 		$recovery = ( new DomainRestoreWorkspace() )->recover_interrupted_commit();
 		if ( is_wp_error( $recovery ) && function_exists( 'ecapla_certverify_add_runtime_error' ) ) {
 			ecapla_certverify_add_runtime_error( $recovery->get_error_message() );
@@ -64,6 +82,39 @@ final class Plugin {
 				( new \Certloom\Infrastructure\Admin\DomainDataToolsAdmin( self::$job_runtime ) )->register();
 			}
 		}
+	}
+
+	/**
+	 * Whether the additive domain must be available for this site right now.
+	 *
+	 * A fresh/live 1.5 site with every next-domain feature gate disabled must
+	 * not create ten unused tables merely to activate Certloom. Conversely, a
+	 * site that has switched authority or has durable maintenance/restore state
+	 * must not bypass domain recovery just because the compile-time gates are
+	 * disabled.
+	 *
+	 * @return bool
+	 */
+	private static function domain_storage_required() {
+		if ( ( defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) && CERTLOOM_DOMAIN_WRITE_PATHS_READY )
+			|| ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW )
+			|| ( defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) && CERTLOOM_DOMAIN_DATA_TOOLS_READY ) ) {
+			return true;
+		}
+
+		$cutover = new DomainCutoverState();
+		if ( $cutover->is_domain_authoritative() || $cutover->has_committed_receipt() ) {
+			return true;
+		}
+
+		/* Durable recovery evidence makes domain setup/recovery mandatory. */
+		if ( false !== get_option( DomainMaintenanceLock::OPTION, false )
+			|| false !== get_option( DomainRestoreWorkspace::JOURNAL_OPTION, false )
+			|| false !== get_option( DomainRestoreWorkspace::BUILD_OPTION, false ) ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/** Clears WordPress-local domain job events for the current site. */

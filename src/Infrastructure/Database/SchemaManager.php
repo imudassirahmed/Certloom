@@ -73,35 +73,52 @@ final class SchemaManager {
 			return $lock;
 		}
 
-		try {
-			$created = self::create_or_update_tables();
-			if ( is_wp_error( $created ) ) {
-				return $created;
+		$result = self::activate_under_lock();
+		$released = self::release_lock( $lock );
+		if ( is_wp_error( $released ) ) {
+			if ( is_wp_error( $result ) ) {
+				return new \WP_Error(
+					'certloom_domain_schema_failure_cleanup_failed',
+					sprintf(
+						/* translators: 1: schema error, 2: lock cleanup error. */
+						__( 'Certloom domain schema work failed (%1$s) and its schema-maintenance lock could not be released safely (%2$s). Retry maintenance after the lease expires or is repaired.', 'certloom' ),
+						$result->get_error_message(),
+						$released->get_error_message()
+					)
+				);
 			}
-
-			$migrated = self::run_migrations( (string) get_option( self::SCHEMA_OPTION, '0' ) );
-			if ( is_wp_error( $migrated ) ) {
-				return $migrated;
-			}
-
-			$health = self::schema_health();
-			if ( is_wp_error( $health ) ) {
-				return $health;
-			}
-
-			$saved = update_option( self::SCHEMA_OPTION, self::SCHEMA_VERSION, false );
-			if ( ! $saved && self::SCHEMA_VERSION !== (string) get_option( self::SCHEMA_OPTION, '0' ) ) {
-				return new \WP_Error( 'certloom_domain_schema_marker_failed', __( 'Certloom created its new domain tables but could not save the schema marker.', 'certloom' ) );
-			}
-
-			if ( ! self::save_health_marker() ) {
-				return new \WP_Error( 'certloom_domain_schema_health_marker_failed', __( 'Certloom verified its new domain tables but could not save the health marker.', 'certloom' ) );
-			}
-
-			return true;
-		} finally {
-			self::release_lock( $lock );
+			return $released;
 		}
+		return $result;
+	}
+
+	/** @return true|\WP_Error */
+	private static function activate_under_lock() {
+		$created = self::create_or_update_tables();
+		if ( is_wp_error( $created ) ) {
+			return $created;
+		}
+
+		$migrated = self::run_migrations( (string) get_option( self::SCHEMA_OPTION, '0' ) );
+		if ( is_wp_error( $migrated ) ) {
+			return $migrated;
+		}
+
+		$health = self::schema_health();
+		if ( is_wp_error( $health ) ) {
+			return $health;
+		}
+
+		$saved = update_option( self::SCHEMA_OPTION, self::SCHEMA_VERSION, false );
+		if ( ! $saved && self::SCHEMA_VERSION !== (string) get_option( self::SCHEMA_OPTION, '0' ) ) {
+			return new \WP_Error( 'certloom_domain_schema_marker_failed', __( 'Certloom created its new domain tables but could not save the schema marker.', 'certloom' ) );
+		}
+
+		if ( ! self::save_health_marker() ) {
+			return new \WP_Error( 'certloom_domain_schema_health_marker_failed', __( 'Certloom verified its new domain tables but could not save the health marker.', 'certloom' ) );
+		}
+
+		return true;
 	}
 
 	/**
@@ -768,8 +785,27 @@ final class SchemaManager {
 		);
 	}
 
+	/**
+	 * Performs an immediate structural/engine verification instead of trusting
+	 * the cached health marker. Cutover and other one-way authority changes use
+	 * this method so a stale option can never stand in for current database truth.
+	 *
+	 * @param bool $refresh_marker Whether to refresh the successful health marker.
+	 * @return true|\WP_Error
+	 */
+	public static function verify_health_now( $refresh_marker = true ) {
+		$health = self::schema_health();
+		if ( is_wp_error( $health ) ) {
+			return $health;
+		}
+		if ( $refresh_marker && ! self::save_health_marker() ) {
+			return new \WP_Error( 'certloom_domain_schema_health_marker_failed', __( 'Certloom verified its new domain tables but could not save the health marker.', 'certloom' ) );
+		}
+		return true;
+	}
+
 	/** @return bool */
-	private static function health_marker_is_fresh() {
+	public static function health_marker_is_fresh() {
 		$marker = get_option( self::HEALTH_OPTION, array() );
 		if ( ! is_array( $marker ) || self::SCHEMA_VERSION !== (string) ( $marker['version'] ?? '' ) ) {
 			return false;
@@ -815,17 +851,21 @@ final class SchemaManager {
 		return 1 === (int) $updated ? $token : new \WP_Error( 'certloom_domain_schema_locked', __( 'Certloom could not obtain its domain-maintenance lock.', 'certloom' ) );
 	}
 
-	/** @return void */
+	/** @return true|\WP_Error */
 	private static function release_lock( $token ) {
 		global $wpdb;
 		if ( ! is_string( $token ) || '' === $token ) {
-			return;
+			return new \WP_Error( 'certloom_domain_schema_lock_token_invalid', __( 'Certloom could not verify its schema-maintenance lock owner during cleanup.', 'certloom' ) );
 		}
 		$stored = (string) get_option( self::LOCK_OPTION, '' );
-		if ( 0 !== strpos( $stored, $token . '|' ) ) {
-			return;
+		if ( '' === $stored ) {
+			return true;
 		}
-		$wpdb->query(
+		if ( 0 !== strpos( $stored, $token . '|' ) ) {
+			return new \WP_Error( 'certloom_domain_schema_lock_owner_changed', __( 'Certloom refused to release a schema-maintenance lock that is no longer owned by this worker.', 'certloom' ) );
+		}
+		$wpdb->last_error = '';
+		$deleted = $wpdb->query(
 			$wpdb->prepare(
 				'DELETE FROM %i WHERE option_name = %s AND option_value = %s',
 				$wpdb->options,
@@ -834,5 +874,8 @@ final class SchemaManager {
 			)
 		);
 		wp_cache_delete( self::LOCK_OPTION, 'options' );
+		return ( 1 === (int) $deleted || '' === (string) get_option( self::LOCK_OPTION, '' ) ) && '' === (string) $wpdb->last_error
+			? true
+			: new \WP_Error( 'certloom_domain_schema_lock_release_failed', __( 'Certloom completed schema maintenance but could not release its schema lock safely. Retry after the lease expires or is repaired.', 'certloom' ) );
 	}
 }

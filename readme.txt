@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.5.8
+Stable tag: 1.5.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.5.8: Certloom continues as the same in-place plugin. The proven 1.5 registry remains authoritative while the next-generation domain and data tools stay behind development gates. This checkpoint hardens the real transaction/storage-engine contract, maintenance-lock corruption behavior, import cleanup replay, and restore recovery-marker ordering so cleanup uncertainty can never be mistaken for success. It still does not ship a public PDF/PNG/JPG generator or switch the credential source of truth.
+> Development note for 1.5.9: Certloom continues as the same in-place plugin. The proven 1.5 registry remains authoritative while the next-generation domain and data tools stay behind development gates. Ordinary activation no longer provisions those unused future-domain tables while every domain feature gate is off; an official cutover or durable domain recovery state still makes that storage mandatory and fail-closed. This checkpoint also makes final domain cutover race-proof under the shared maintenance boundary, requires a durable committed cutover receipt before public Series verification can ever become ready, moves persistent next-domain job data outside the public WordPress webroot by default, and brings the live 1.5 migration/import/restore lock cleanup paths up to the same fail-closed standard. It still does not ship a public PDF/PNG/JPG generator or switch the credential source of truth.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 

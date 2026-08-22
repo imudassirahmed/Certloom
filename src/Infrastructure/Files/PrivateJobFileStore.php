@@ -62,7 +62,12 @@ final class PrivateJobFileStore {
 		$dir = $this->directory();
 		if ( is_wp_error( $dir ) || '' === $path ) { return false; }
 		$dir = trailingslashit( wp_normalize_path( $dir ) );
-		return 0 === strpos( $path, $dir ) && false === strpos( substr( $path, strlen( $dir ) ), '/' );
+		if ( 0 !== strpos( $path, $dir ) ) { return false; }
+		$name = substr( $path, strlen( $dir ) );
+		if ( false !== strpos( $name, '/' ) || ! preg_match( '/^[a-f0-9]{32}-[a-z0-9_-]+-[a-f0-9]{48}\.data$/', $name ) ) {
+			return false;
+		}
+		return ! is_link( $path );
 	}
 
 	/** @return string|\WP_Error */
@@ -72,10 +77,21 @@ final class PrivateJobFileStore {
 		if ( ! is_dir( $dir ) && ! wp_mkdir_p( $dir ) ) {
 			return new \WP_Error( 'certloom_private_directory_failed', __( 'Certloom could not create its private job directory.', 'certloom' ) );
 		}
+
+		/* Re-check the created real path so symlinks cannot move persistent job data back under the public webroot unnoticed. */
+		$private = $this->assert_private_location( $dir );
+		if ( is_wp_error( $private ) ) { return $private; }
+
 		$files = array(
-			'index.php' => "<?php\n// Silence is golden.\n",
-			'.htaccess' => "Require all denied\nDeny from all\n",
-			'web.config' => "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration><system.webServer><security><authorization><remove users=\"*\" roles=\"\" verbs=\"\"/><add accessType=\"Deny\" users=\"*\"/></authorization></security></system.webServer></configuration>\n",
+			'index.php' => "<?php
+// Silence is golden.
+",
+			'.htaccess' => "Require all denied
+Deny from all
+",
+			'web.config' => "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<configuration><system.webServer><security><authorization><remove users=\"*\" roles=\"\" verbs=\"\"/><add accessType=\"Deny\" users=\"*\"/></authorization></security></system.webServer></configuration>
+",
 		);
 		foreach ( $files as $name => $contents ) {
 			$path = trailingslashit( $dir ) . $name;
@@ -131,18 +147,93 @@ final class PrivateJobFileStore {
 
 	/** @return string|\WP_Error */
 	public function directory() {
-		$configured = (string) apply_filters( 'certloom_private_job_directory', '' );
-		if ( '' !== trim( $configured ) ) {
-			return untrailingslashit( wp_normalize_path( $configured ) );
+		$configured = trim( (string) apply_filters( 'certloom_private_job_directory', '' ) );
+		if ( '' !== $configured ) {
+			$configured = untrailingslashit( wp_normalize_path( $configured ) );
+			if ( ! $this->is_absolute_path( $configured ) ) {
+				return new \WP_Error( 'certloom_private_directory_not_absolute', __( 'The configured Certloom private job directory must use an absolute filesystem path.', 'certloom' ) );
+			}
+			$private = $this->assert_private_location( $configured );
+			return is_wp_error( $private ) ? $private : $configured;
 		}
+
 		$temp = function_exists( 'get_temp_dir' ) ? wp_normalize_path( get_temp_dir() ) : '';
-		$webroot = defined( 'ABSPATH' ) ? trailingslashit( wp_normalize_path( ABSPATH ) ) : '';
-		if ( '' !== $temp && ( '' === $webroot || 0 !== strpos( trailingslashit( $temp ), $webroot ) ) ) {
-			return untrailingslashit( trailingslashit( $temp ) . 'certloom-private' );
+		if ( '' !== $temp && $this->is_absolute_path( $temp ) ) {
+			$candidate = untrailingslashit( trailingslashit( $temp ) . 'certloom-private' );
+			$private   = $this->assert_private_location( $candidate );
+			if ( ! is_wp_error( $private ) ) {
+				return $candidate;
+			}
 		}
+
 		if ( defined( 'WP_CONTENT_DIR' ) ) {
-			return untrailingslashit( trailingslashit( wp_normalize_path( WP_CONTENT_DIR ) ) . 'certloom-private' );
+			$candidate = untrailingslashit( trailingslashit( wp_normalize_path( WP_CONTENT_DIR ) ) . 'certloom-private' );
+			$private   = $this->assert_private_location( $candidate );
+			if ( ! is_wp_error( $private ) ) {
+				return $candidate;
+			}
 		}
-		return new \WP_Error( 'certloom_private_directory_unavailable', __( 'Certloom could not determine a private job directory.', 'certloom' ) );
+
+		return new \WP_Error(
+			'certloom_private_directory_unavailable',
+			__( 'Certloom could not find a persistent private job directory outside the public WordPress webroot. Configure certloom_private_job_directory to an absolute non-public path before using new-domain import, backup, or restore jobs.', 'certloom' )
+		);
+	}
+
+	/** @return true|\WP_Error */
+	private function assert_private_location( $path ) {
+		$path = $this->canonical_path( $path );
+		if ( '' === $path || ! $this->is_absolute_path( $path ) ) {
+			return new \WP_Error( 'certloom_private_directory_not_absolute', __( 'Certloom private job storage requires an absolute filesystem path.', 'certloom' ) );
+		}
+		if ( ! defined( 'ABSPATH' ) ) {
+			return true;
+		}
+		$webroot = $this->canonical_path( ABSPATH );
+		if ( '' === $webroot ) {
+			return true;
+		}
+		$inside = $path === $webroot || 0 === strpos( trailingslashit( $path ), trailingslashit( $webroot ) );
+		if ( ! $inside ) {
+			return true;
+		}
+		$explicit_override = (bool) apply_filters( 'certloom_allow_private_job_directory_inside_webroot', false );
+		return $explicit_override
+			? true
+			: new \WP_Error( 'certloom_private_directory_web_exposed', __( 'Certloom refused persistent private job storage inside the public WordPress webroot. Apache/IIS deny files are defense in depth, not a portable confidentiality boundary on every web server.', 'certloom' ) );
+	}
+
+	/** @return string */
+	private function canonical_path( $path ) {
+		$path = wp_normalize_path( (string) $path );
+		if ( '' === $path ) { return ''; }
+		$real = @realpath( $path );
+		if ( false !== $real ) {
+			return untrailingslashit( wp_normalize_path( $real ) );
+		}
+
+		$prefix = '';
+		if ( preg_match( '#^[A-Za-z]:/#', $path ) ) {
+			$prefix = strtoupper( substr( $path, 0, 2 ) );
+			$path   = substr( $path, 2 );
+		} elseif ( 0 === strpos( $path, '/' ) ) {
+			$prefix = '/';
+		}
+		$parts = array();
+		foreach ( explode( '/', trim( $path, '/' ) ) as $part ) {
+			if ( '' === $part || '.' === $part ) { continue; }
+			if ( '..' === $part ) { array_pop( $parts ); continue; }
+			$parts[] = $part;
+		}
+		$body = implode( '/', $parts );
+		if ( '/' === $prefix ) { return '/' . $body; }
+		if ( '' !== $prefix ) { return $prefix . '/' . $body; }
+		return $body;
+	}
+
+	/** @return bool */
+	private function is_absolute_path( $path ) {
+		$path = wp_normalize_path( (string) $path );
+		return '' !== $path && ( '/' === $path[0] || 1 === preg_match( '#^[A-Za-z]:/#', $path ) );
 	}
 }

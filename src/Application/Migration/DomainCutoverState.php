@@ -2,15 +2,18 @@
 namespace Certloom\Application\Migration;
 
 /**
- * Identifies which storage model is allowed to receive authoritative credential writes.
+ * Durable authority/receipt state for the legacy -> Series/Version cutover.
  *
- * Until the new registry/admin milestone is ready, the proven 1.5 registry remains
- * authoritative even if the additive Series/Version migration code has been tested.
+ * The actual promotion is performed only by the infrastructure cutover
+ * coordinator while it owns the shared maintenance boundary. Keeping state
+ * storage separate prevents callers from accidentally performing the final
+ * authority switch from an unlocked/stale legacy snapshot.
  */
 final class DomainCutoverState {
-	const OPTION = 'certloom_domain_write_authority';
-	const LEGACY = 'legacy';
-	const DOMAIN = 'domain';
+	const OPTION         = 'certloom_domain_write_authority';
+	const RECEIPT_OPTION = 'certloom_domain_cutover_receipt';
+	const LEGACY         = 'legacy';
+	const DOMAIN         = 'domain';
 
 	/** @return string */
 	public function authority() {
@@ -23,36 +26,46 @@ final class DomainCutoverState {
 		return self::DOMAIN === $this->authority();
 	}
 
+	/** @return array<string,mixed> */
+	public function receipt() {
+		$value = get_option( self::RECEIPT_OPTION, array() );
+		return is_array( $value ) ? $value : array();
+	}
+
 	/**
-	 * Step 3 calls this only after new registry/admin mutation paths are ready and
-	 * the final migration parity gate has completed. There is deliberately no
-	 * automatic call from activation or 1.5.2 migration code.
+	 * A committed receipt proves the official locked coordinator completed the
+	 * authority switch. Merely editing the authority option must never be enough
+	 * to enable public Series verification.
+	 *
+	 * @return bool
+	 */
+	public function has_committed_receipt() {
+		$receipt = $this->receipt();
+		return 'committed' === (string) ( $receipt['state'] ?? '' )
+			&& self::DOMAIN === (string) ( $receipt['authority'] ?? '' )
+			&& ! empty( $receipt['completed_at'] )
+			&& isset( $receipt['source_generation'] )
+			&& '' !== (string) $receipt['source_generation']
+			&& isset( $receipt['schema_version'] )
+			&& '' !== (string) $receipt['schema_version'];
+	}
+
+	/**
+	 * Returns authority to legacy and removes any committed cutover receipt.
+	 * This is deliberately a controlled rollback helper used before public
+	 * Series cutover is considered permanent.
 	 *
 	 * @return true|\WP_Error
 	 */
-	public function promote_to_domain( array $current_source_snapshot = array() ) {
-		if ( ! defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) || true !== CERTLOOM_DOMAIN_WRITE_PATHS_READY ) {
-			return new \WP_Error( 'certloom_domain_cutover_write_paths_not_ready', __( 'Certloom cannot switch write authority until the new registry/admin write paths are ready.', 'certloom' ) );
-		}
-		if ( ! defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) || true !== CERTLOOM_DOMAIN_DATA_TOOLS_READY ) {
-			return new \WP_Error( 'certloom_domain_cutover_data_tools_not_ready', __( 'Certloom cannot switch write authority until import, backup, restore, and other registry data tools write the new credential domain safely.', 'certloom' ) );
-		}
-		$migration = new LegacyMigrationState();
-		if ( ! $migration->is_complete() ) {
-			return new \WP_Error( 'certloom_domain_cutover_migration_incomplete', __( 'Certloom cannot make the new credential domain authoritative before legacy migration is complete.', 'certloom' ) );
-		}
-		if ( empty( $current_source_snapshot ) || ! $migration->source_snapshot_matches( $current_source_snapshot ) ) {
-			return new \WP_Error( 'certloom_domain_cutover_source_changed', __( 'The legacy registry changed after migration. Run a fresh migration preflight and commit before switching write authority.', 'certloom' ) );
-		}
-		$saved = update_option( self::OPTION, self::DOMAIN, false );
-		return $saved || self::DOMAIN === (string) get_option( self::OPTION, self::LEGACY )
-			? true
-			: new \WP_Error( 'certloom_domain_cutover_save_failed', __( 'Certloom could not save the credential write-authority cutover.', 'certloom' ) );
-	}
-
-	/** @return bool */
 	public function keep_legacy_authoritative() {
 		$saved = update_option( self::OPTION, self::LEGACY, false );
-		return $saved || self::LEGACY === (string) get_option( self::OPTION, self::LEGACY );
+		if ( ! $saved && self::LEGACY !== (string) get_option( self::OPTION, self::LEGACY ) ) {
+			return new \WP_Error( 'certloom_domain_cutover_rollback_save_failed', __( 'Certloom could not restore legacy credential write authority.', 'certloom' ) );
+		}
+		$deleted = delete_option( self::RECEIPT_OPTION );
+		if ( ! $deleted && false !== get_option( self::RECEIPT_OPTION, false ) ) {
+			return new \WP_Error( 'certloom_domain_cutover_receipt_clear_failed', __( 'Certloom restored legacy write authority but could not clear the old domain cutover receipt.', 'certloom' ) );
+		}
+		return true;
 	}
 }
