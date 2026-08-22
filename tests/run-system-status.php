@@ -2,6 +2,7 @@
 /** Regression tests for privacy-conscious, read-only Certloom system diagnostics. */
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'MB_IN_BYTES', 1024 * 1024 );
+define( 'MINUTE_IN_SECONDS', 60 );
 define( 'ARRAY_A', 'ARRAY_A' );
 define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.0-test' );
 define( 'ECAPLA_CERTVERIFY_TABLE', 'certverify_certificates' );
@@ -37,6 +38,20 @@ $GLOBALS['wpdb'] = new SystemStatusWpdb();
 
 class Ecapla_CertVerify_Database { public static function table_name() { return 'wp_certverify_certificates'; } }
 class Ecapla_CertVerify_Backup { const MAINTENANCE_LOCK_OPTION = 'certverify_restore_maintenance_lock'; }
+class Ecapla_CertVerify_Database_Proof {
+    public static $result = null;
+    public static function get_last_result() { return self::$result; }
+    public static function evidence_state() {
+        if ( ! is_array( self::$result ) ) return 'not_run';
+        $overall = sanitize_key( (string) ( self::$result['overall'] ?? 'incomplete' ) );
+        if ( 'passed' !== $overall ) return in_array( $overall, array( 'failed', 'incomplete' ), true ) ? $overall : 'incomplete';
+        $version = sanitize_text_field( (string) ( self::$result['plugin_version'] ?? '' ) );
+        $checked = absint( self::$result['checked_at'] ?? 0 );
+        if ( ! hash_equals( ECAPLA_CERTVERIFY_VERSION, $version ) || ! $checked || $checked > time() + 300 || time() - $checked > 7 * 24 * 60 * 60 ) return 'stale';
+        return 'passed';
+    }
+    public static function is_current_passed() { return 'passed' === self::evidence_state(); }
+}
 require_once dirname( __DIR__ ) . '/includes/class-ecapla-certverify-system-status.php';
 
 function ss_assert( $condition, $message ) { if ( ! $condition ) throw new RuntimeException( $message ); }
@@ -48,6 +63,8 @@ ss_assert( 'good' === ss_find( $checks, 'legacy_registry' )['status'], 'Live reg
 ss_assert( false !== strpos( ss_find( $checks, 'legacy_registry' )['value'], 'InnoDB' ), 'Storage engine should be visible without exposing table/database names.' );
 ss_assert( 'good' === ss_find( $checks, 'authority' )['status'], 'Legacy authority should be the expected healthy state before cutover.' );
 ss_assert( 'good' === ss_find( $checks, 'domain_feature_gates' )['status'], 'All future-domain gates off should be healthy.' );
+ss_assert( 'warning' === ss_find( $checks, 'database_proof' )['status'], 'Database proof should request a run when no stored evidence exists.' );
+ss_assert( 'warning' === ss_find( $checks, 'domain_acceptance_proof' )['status'], 'Gated-domain proof should remain unavailable/not-run without its diagnostic class in this isolated status test.' );
 ss_assert( 0 === $GLOBALS['system_status_db_writes'], 'System diagnostics must be read-only.' );
 
 $GLOBALS['system_status_options'][ Ecapla_CertVerify_Backup::MAINTENANCE_LOCK_OPTION ] = 'corrupt-lock';
@@ -56,6 +73,39 @@ ss_assert( 'bad' === ss_find( $corrupt_checks, 'maintenance' )['status'], 'Corru
 ss_assert( 'corrupt-lock' === $GLOBALS['system_status_options'][ Ecapla_CertVerify_Backup::MAINTENANCE_LOCK_OPTION ], 'Viewing diagnostics must not repair/delete maintenance state.' );
 unset( $GLOBALS['system_status_options'][ Ecapla_CertVerify_Backup::MAINTENANCE_LOCK_OPTION ] );
 
+$GLOBALS['system_status_options']['certloom_domain_maintenance_lock'] = str_repeat( 'a', 32 ) . '|' . time() . '|' . ( time() + 60 ) . '|restore';
+$domain_active = Ecapla_CertVerify_System_Status::get_checks();
+ss_assert( 'warning' === ss_find( $domain_active, 'domain_maintenance' )['status'], 'Active gated-domain maintenance should be visible without mutation.' );
+$GLOBALS['system_status_options']['certloom_domain_maintenance_lock'] = 'corrupt';
+$domain_corrupt = Ecapla_CertVerify_System_Status::get_checks();
+ss_assert( 'bad' === ss_find( $domain_corrupt, 'domain_maintenance' )['status'], 'Corrupt gated-domain maintenance should fail closed in diagnostics.' );
+unset( $GLOBALS['system_status_options']['certloom_domain_maintenance_lock'] );
+
+$GLOBALS['system_status_options']['certloom_domain_schema_lock'] = str_repeat( 'b', 32 ) . '|' . ( time() - 600 );
+$schema_stale = Ecapla_CertVerify_System_Status::get_checks();
+ss_assert( 'warning' === ss_find( $schema_stale, 'domain_schema_lock' )['status'], 'Stale gated-domain schema lock should be reported without cleanup side effects.' );
+unset( $GLOBALS['system_status_options']['certloom_domain_schema_lock'] );
+
+Ecapla_CertVerify_Database_Proof::$result = array(
+    'schema' => 'certloom-database-proof', 'version' => 1, 'plugin_version' => ECAPLA_CERTVERIFY_VERSION,
+    'overall' => 'passed', 'checked_at' => time(),
+    'checks' => array( array( 'status' => 'pass' ), array( 'status' => 'pass' ) ),
+);
+$fresh_proof = Ecapla_CertVerify_System_Status::get_checks();
+ss_assert( 'good' === ss_find( $fresh_proof, 'database_proof' )['status'], 'Fresh proof evidence from this Certloom version should be Ready.' );
+Ecapla_CertVerify_Database_Proof::$result['checked_at'] = time() - ( 8 * 24 * 60 * 60 );
+$stale_proof = Ecapla_CertVerify_System_Status::get_checks();
+ss_assert( 'warning' === ss_find( $stale_proof, 'database_proof' )['status'], 'Proof evidence older than seven days should require a rerun.' );
+Ecapla_CertVerify_Database_Proof::$result['checked_at'] = time();
+Ecapla_CertVerify_Database_Proof::$result['plugin_version'] = 'older-version';
+$old_version_proof = Ecapla_CertVerify_System_Status::get_checks();
+ss_assert( 'warning' === ss_find( $old_version_proof, 'database_proof' )['status'], 'Proof evidence from another Certloom version should require a rerun.' );
+Ecapla_CertVerify_Database_Proof::$result['plugin_version'] = ECAPLA_CERTVERIFY_VERSION;
+Ecapla_CertVerify_Database_Proof::$result['checked_at'] = time() + 3600;
+$future_proof = Ecapla_CertVerify_System_Status::get_checks();
+ss_assert( 'warning' === ss_find( $future_proof, 'database_proof' )['status'], 'Future-dated proof evidence beyond clock-skew tolerance should require a rerun.' );
+Ecapla_CertVerify_Database_Proof::$result = null;
+
 $report = Ecapla_CertVerify_System_Status::get_text_report();
 ss_assert( false === strpos( $report, 'wp_certverify_certificates' ), 'Support report must not disclose table names.' );
 ss_assert( false === strpos( $report, '/var/' ) && false === strpos( $report, 'http://' ) && false === strpos( $report, 'https://' ), 'Support report must not disclose paths or URLs.' );
@@ -63,4 +113,4 @@ ss_assert( false !== strpos( $report, 'Proven 1.5 registry' ), 'Support report s
 ss_assert( 0 === $GLOBALS['system_status_db_writes'], 'Generating the text report must remain read-only.' );
 
 echo "PASS  System Status is read-only, privacy-conscious and authority-aware\n";
-echo "\n10 checks, 0 failures\n";
+echo "\n19 checks, 0 failures\n";

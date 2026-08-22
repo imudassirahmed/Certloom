@@ -13,6 +13,27 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<?php if ( isset( $_GET['ecapla_certverify_settings_saved'] ) ) : ?><div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Settings saved.', 'certloom' ); ?></p></div><?php endif; ?>
 	<?php if ( isset( $_GET['ecapla_certverify_role_created'] ) ) : ?><div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Certificate Manager role created with least-privilege access.', 'certloom' ); ?></p></div><?php endif; ?>
 
+	<?php if ( isset( $_GET['certloom_database_proof'] ) ) : ?>
+		<?php $certloom_database_proof_state = sanitize_key( wp_unslash( $_GET['certloom_database_proof'] ) ); ?>
+		<div class="notice <?php echo 'passed' === $certloom_database_proof_state ? 'notice-success' : ( 'failed' === $certloom_database_proof_state ? 'notice-error' : 'notice-warning' ); ?> is-dismissible"><p>
+			<?php echo esc_html( 'passed' === $certloom_database_proof_state ? __( 'The isolated database proof passed.', 'certloom' ) : ( 'failed' === $certloom_database_proof_state ? __( 'The isolated database proof found one or more requirements that are not ready.', 'certloom' ) : __( 'The isolated database proof completed with one or more checks that still require external confirmation.', 'certloom' ) ) ); ?>
+		</p></div>
+	<?php endif; ?>
+
+	<?php if ( isset( $_GET['certloom_domain_acceptance_proof'] ) ) : ?>
+		<?php $certloom_domain_acceptance_state = sanitize_key( wp_unslash( $_GET['certloom_domain_acceptance_proof'] ) ); ?>
+		<div class="notice <?php echo 'passed' === $certloom_domain_acceptance_state ? 'notice-success' : ( 'failed' === $certloom_domain_acceptance_state ? 'notice-error' : 'notice-warning' ); ?> is-dismissible"><p>
+			<?php echo esc_html( 'passed' === $certloom_domain_acceptance_state ? __( 'The gated Credential Series acceptance proof passed.', 'certloom' ) : ( 'failed' === $certloom_domain_acceptance_state ? __( 'The gated Credential Series acceptance proof found one or more requirements that are not ready.', 'certloom' ) : __( 'The gated Credential Series acceptance proof completed with one or more checks that still require review.', 'certloom' ) ) ); ?>
+		</p></div>
+	<?php endif; ?>
+
+	<?php if ( isset( $_GET['certloom_legacy_migration_preflight'] ) ) : ?>
+		<?php $certloom_legacy_preflight_state = sanitize_key( wp_unslash( $_GET['certloom_legacy_migration_preflight'] ) ); ?>
+		<div class="notice <?php echo 'passed' === $certloom_legacy_preflight_state ? 'notice-success' : ( 'failed' === $certloom_legacy_preflight_state ? 'notice-error' : 'notice-warning' ); ?> is-dismissible"><p>
+			<?php echo esc_html( 'passed' === $certloom_legacy_preflight_state ? __( 'The populated legacy migration preflight passed.', 'certloom' ) : ( 'failed' === $certloom_legacy_preflight_state ? __( 'The populated legacy migration preflight found rows or source conditions that require review.', 'certloom' ) : ( 'stale' === $certloom_legacy_preflight_state ? __( 'The populated legacy migration preflight became stale because its frozen source boundary changed. Run it again from a fresh boundary.', 'certloom' ) : __( 'The populated legacy migration preflight is still running. Continue the next bounded slice below.', 'certloom' ) ) ) ); ?>
+		</p></div>
+	<?php endif; ?>
+
 	<h2><?php esc_html_e( 'Who can manage certificates', 'certloom' ); ?></h2>
 	<p class="description"><?php esc_html_e( 'Administrators always retain access. Grant the dedicated Certloom capability only to roles that genuinely need certificate-management access.', 'certloom' ); ?></p>
 	<?php if ( ! get_role( Ecapla_CertVerify_Permissions::MANAGER_ROLE ) ) : ?>
@@ -73,6 +94,95 @@ if ( ! defined( 'ABSPATH' ) ) {
 	</table>
 	<p><label for="certloom_system_report"><strong><?php esc_html_e( 'Copyable support report', 'certloom' ); ?></strong></label></p>
 	<textarea id="certloom_system_report" class="large-text code" rows="12" readonly><?php echo esc_textarea( Ecapla_CertVerify_System_Status::get_text_report() ); ?></textarea>
+
+
+	<h3><?php esc_html_e( 'Isolated database proof', 'certloom' ); ?></h3>
+	<p class="description"><?php esc_html_e( 'This administrator-triggered proof creates one empty Certloom scratch table, exercises WordPress dbDelta(), InnoDB, indexes, uniqueness, transaction rollback/commit, and—when the host permits a second connection—row-lock contention. It never reads certificate records, never creates the gated credential-domain tables, never changes credential authority, and removes the scratch table before returning.', 'certloom' ); ?></p>
+	<form method="post" action="" class="ecapla-certverify-inline-form">
+		<?php wp_nonce_field( 'certverify_run_database_proof' ); ?>
+		<?php submit_button( __( 'Run isolated database proof', 'certloom' ), 'secondary', 'certverify_run_database_proof', false ); ?>
+	</form>
+	<?php $certloom_database_proof = Ecapla_CertVerify_Database_Proof::get_last_result(); ?>
+	<?php if ( is_array( $certloom_database_proof ) ) : ?>
+		<table class="widefat striped" role="table">
+			<thead><tr><th scope="col"><?php esc_html_e( 'Database proof check', 'certloom' ); ?></th><th scope="col"><?php esc_html_e( 'Result', 'certloom' ); ?></th><th scope="col"><?php esc_html_e( 'Details', 'certloom' ); ?></th></tr></thead>
+			<tbody>
+			<?php foreach ( (array) $certloom_database_proof['checks'] as $certloom_proof_check ) : ?>
+				<?php if ( ! is_array( $certloom_proof_check ) ) { continue; } ?>
+				<tr>
+					<th scope="row"><?php echo esc_html( $certloom_proof_check['label'] ?? '' ); ?></th>
+					<td><strong><?php echo esc_html( 'pass' === ( $certloom_proof_check['status'] ?? '' ) ? __( 'Passed', 'certloom' ) : ( 'fail' === ( $certloom_proof_check['status'] ?? '' ) ? __( 'Failed', 'certloom' ) : __( 'Review', 'certloom' ) ) ); ?></strong></td>
+					<td><?php echo esc_html( $certloom_proof_check['message'] ?? '' ); ?></td>
+				</tr>
+			<?php endforeach; ?>
+			</tbody>
+		</table>
+		<p><label for="certloom_database_proof_report"><strong><?php esc_html_e( 'Copyable database-proof report', 'certloom' ); ?></strong></label></p>
+		<textarea id="certloom_database_proof_report" class="large-text code" rows="12" readonly><?php echo esc_textarea( Ecapla_CertVerify_Database_Proof::get_text_report( $certloom_database_proof ) ); ?></textarea>
+	<?php endif; ?>
+
+	<h3><?php esc_html_e( 'Gated Credential Series acceptance proof', 'certloom' ); ?></h3>
+	<p class="description"><?php esc_html_e( 'This stronger proof is available only after a fresh passing isolated database proof. It deliberately provisions/validates Certloom’s additive future Credential Series tables, then exercises the real repositories, immutable Version constraints, lifecycle events, Status Service/verification, and synthetic legacy-status parity inside one rollback-only transaction. It does not read individual live certificate rows, does not migrate the live registry, does not change credential authority, and leaves no synthetic credential rows behind.', 'certloom' ); ?></p>
+	<?php $certloom_domain_acceptance_ready = Ecapla_CertVerify_Database_Proof::is_current_passed(); ?>
+	<form method="post" action="" class="ecapla-certverify-inline-form">
+		<?php wp_nonce_field( 'certverify_run_domain_acceptance_proof' ); ?>
+		<?php submit_button( __( 'Run gated-domain acceptance proof', 'certloom' ), 'secondary', 'certverify_run_domain_acceptance_proof', false, $certloom_domain_acceptance_ready ? array() : array( 'disabled' => 'disabled' ) ); ?>
+	</form>
+	<?php if ( ! $certloom_domain_acceptance_ready ) : ?><p class="description"><strong><?php esc_html_e( 'Run a fresh passing isolated database proof first.', 'certloom' ); ?></strong></p><?php endif; ?>
+	<?php $certloom_domain_acceptance_proof = \Certloom\Infrastructure\Diagnostics\DomainAcceptanceProof::get_last_result(); ?>
+	<?php if ( is_array( $certloom_domain_acceptance_proof ) ) : ?>
+		<table class="widefat striped" role="table">
+			<thead><tr><th scope="col"><?php esc_html_e( 'Domain acceptance check', 'certloom' ); ?></th><th scope="col"><?php esc_html_e( 'Result', 'certloom' ); ?></th><th scope="col"><?php esc_html_e( 'Details', 'certloom' ); ?></th></tr></thead>
+			<tbody>
+			<?php foreach ( (array) $certloom_domain_acceptance_proof['checks'] as $certloom_domain_check ) : ?>
+				<?php if ( ! is_array( $certloom_domain_check ) ) { continue; } ?>
+				<tr>
+					<th scope="row"><?php echo esc_html( $certloom_domain_check['label'] ?? '' ); ?></th>
+					<td><strong><?php echo esc_html( 'pass' === ( $certloom_domain_check['status'] ?? '' ) ? __( 'Passed', 'certloom' ) : ( 'fail' === ( $certloom_domain_check['status'] ?? '' ) ? __( 'Failed', 'certloom' ) : __( 'Review', 'certloom' ) ) ); ?></strong></td>
+					<td><?php echo esc_html( $certloom_domain_check['message'] ?? '' ); ?></td>
+				</tr>
+			<?php endforeach; ?>
+			</tbody>
+		</table>
+		<p><label for="certloom_domain_acceptance_report"><strong><?php esc_html_e( 'Copyable gated-domain proof report', 'certloom' ); ?></strong></label></p>
+		<textarea id="certloom_domain_acceptance_report" class="large-text code" rows="14" readonly><?php echo esc_textarea( \Certloom\Infrastructure\Diagnostics\DomainAcceptanceProof::get_text_report( $certloom_domain_acceptance_proof ) ); ?></textarea>
+	<?php endif; ?>
+
+	<h3><?php esc_html_e( 'Populated legacy migration preflight', 'certloom' ); ?></h3>
+	<p class="description"><?php esc_html_e( 'After the real gated-domain proof passes, this read-only rehearsal scans the actual populated Certloom 1.5 registry through the final migration mapper and Status Service. It runs in bounded resumable slices, performs a second fingerprint-verification pass, never writes Credential Series rows, never starts official migration, and never changes credential authority. The local error table contains only numeric legacy row IDs plus migration-review messages; the copyable report excludes certificate numbers, names and custom-field values.', 'certloom' ); ?></p>
+	<?php $certloom_legacy_preflight_ready = \Certloom\Infrastructure\Diagnostics\DomainAcceptanceProof::is_current_passed(); ?>
+	<?php $certloom_legacy_preflight_proof = \Certloom\Infrastructure\Diagnostics\LegacyMigrationPreflightProof::get_last_result(); ?>
+	<?php $certloom_legacy_preflight_evidence = \Certloom\Infrastructure\Diagnostics\LegacyMigrationPreflightProof::evidence_state(); ?>
+	<form method="post" action="" class="ecapla-certverify-inline-form">
+		<?php wp_nonce_field( 'certverify_run_legacy_migration_preflight_proof' ); ?>
+		<?php submit_button( 'running' === $certloom_legacy_preflight_evidence ? __( 'Continue migration preflight', 'certloom' ) : __( 'Run populated migration preflight', 'certloom' ), 'secondary', 'certverify_run_legacy_migration_preflight_proof', false, $certloom_legacy_preflight_ready ? array() : array( 'disabled' => 'disabled' ) ); ?>
+	</form>
+	<?php if ( ! $certloom_legacy_preflight_ready ) : ?><p class="description"><strong><?php esc_html_e( 'Run a fresh passing gated Credential Series acceptance proof first.', 'certloom' ); ?></strong></p><?php endif; ?>
+	<?php if ( is_array( $certloom_legacy_preflight_proof ) ) : ?>
+		<?php $certloom_legacy_total = absint( $certloom_legacy_preflight_proof['source_count'] ?? 0 ); ?>
+		<?php $certloom_legacy_mapped = absint( $certloom_legacy_preflight_proof['total'] ?? 0 ); ?>
+		<?php $certloom_legacy_verified = absint( $certloom_legacy_preflight_proof['verify_total'] ?? 0 ); ?>
+		<table class="widefat striped" role="table">
+			<tbody>
+				<tr><th scope="row"><?php esc_html_e( 'State', 'certloom' ); ?></th><td><?php echo esc_html( ucfirst( str_replace( '_', ' ', $certloom_legacy_preflight_evidence ) ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Phase', 'certloom' ); ?></th><td><?php echo esc_html( ucfirst( sanitize_key( (string) ( $certloom_legacy_preflight_proof['phase'] ?? '' ) ) ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Rows mapped', 'certloom' ); ?></th><td><?php echo esc_html( sprintf( '%1$d / %2$d', $certloom_legacy_mapped, $certloom_legacy_total ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Rows fingerprint-verified', 'certloom' ); ?></th><td><?php echo esc_html( sprintf( '%1$d / %2$d', $certloom_legacy_verified, $certloom_legacy_total ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Rows ready', 'certloom' ); ?></th><td><?php echo esc_html( absint( $certloom_legacy_preflight_proof['ready'] ?? 0 ) ); ?></td></tr>
+				<tr><th scope="row"><?php esc_html_e( 'Rows requiring review', 'certloom' ); ?></th><td><?php echo esc_html( absint( $certloom_legacy_preflight_proof['errors'] ?? 0 ) ); ?></td></tr>
+			</tbody>
+		</table>
+		<?php if ( ! empty( $certloom_legacy_preflight_proof['error_examples'] ) ) : ?>
+			<p><strong><?php esc_html_e( 'Local bounded error examples', 'certloom' ); ?></strong></p>
+			<table class="widefat striped" role="table"><thead><tr><th><?php esc_html_e( 'Legacy row ID', 'certloom' ); ?></th><th><?php esc_html_e( 'Migration review message', 'certloom' ); ?></th></tr></thead><tbody>
+			<?php foreach ( (array) $certloom_legacy_preflight_proof['error_examples'] as $certloom_legacy_error ) : if ( ! is_array( $certloom_legacy_error ) ) { continue; } ?>
+				<tr><td><?php echo esc_html( absint( $certloom_legacy_error['legacy_id'] ?? 0 ) ); ?></td><td><?php echo esc_html( (string) ( $certloom_legacy_error['message'] ?? '' ) ); ?></td></tr>
+			<?php endforeach; ?>
+			</tbody></table>
+		<?php endif; ?>
+		<p><label for="certloom_legacy_preflight_report"><strong><?php esc_html_e( 'Copyable migration-preflight report', 'certloom' ); ?></strong></label></p>
+		<textarea id="certloom_legacy_preflight_report" class="large-text code" rows="12" readonly><?php echo esc_textarea( \Certloom\Infrastructure\Diagnostics\LegacyMigrationPreflightProof::get_text_report( $certloom_legacy_preflight_proof ) ); ?></textarea>
+	<?php endif; ?>
 
 	<hr />
 	<h2><?php esc_html_e( 'Ecapla support', 'certloom' ); ?></h2>

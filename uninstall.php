@@ -110,6 +110,11 @@ function ecapla_certverify_uninstall_site() {
 	delete_option( 'certloom_domain_restore_journal' );
 	delete_option( 'certloom_domain_restore_receipts' );
 	delete_option( 'certloom_job_retention_last_run' );
+	delete_option( 'certloom_database_proof_lock' );
+	delete_option( 'certloom_database_proof_last' );
+	delete_option( 'certloom_domain_acceptance_proof_last' );
+	delete_option( 'certloom_legacy_migration_preflight_proof' );
+	delete_option( 'certloom_legacy_migration_preflight_proof_lock' );
 
 	$transient_prefixes = array(
 		'_transient_ecapla_certverify_import_',
@@ -186,6 +191,9 @@ function ecapla_certverify_uninstall_site() {
 	 * registry material. It must not survive uninstall even when the customer
 	 * chooses to retain durable credential data for a later reinstall.
 	 */
+	$database_proof_table = $wpdb->prefix . 'certloom_db_proof';
+	$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $database_proof_table ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.SchemaChange -- Removes only Certloom's isolated database-proof scratch table.
+
 	$ephemeral_domain_tables = array(
 		$wpdb->prefix . 'certloom_jobs',
 		$wpdb->prefix . 'certloom_import_rows',

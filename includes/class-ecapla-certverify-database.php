@@ -569,6 +569,11 @@ class Ecapla_CertVerify_Database {
 		$row['created_at'] = isset( $data['created_at'] ) && self::valid_mysql_datetime( $data['created_at'] ) ? $data['created_at'] : $now;
 		$row['updated_at'] = isset( $data['updated_at'] ) && self::valid_mysql_datetime( $data['updated_at'] ) ? $data['updated_at'] : $now;
 
+		$generation = self::reserve_live_mutation_generation();
+		if ( is_wp_error( $generation ) ) {
+			return $generation;
+		}
+
 		$wpdb->last_error = '';
 		$inserted = $wpdb->insert( self::table_name(), $row );
 		if ( false === $inserted ) {
@@ -579,7 +584,6 @@ class Ecapla_CertVerify_Database {
 		}
 
 		self::refresh_legacy_expired_review_count_after_write();
-		Ecapla_CertVerify_Backup::mark_mutation();
 		return (int) $wpdb->insert_id;
 	}
 
@@ -635,6 +639,10 @@ class Ecapla_CertVerify_Database {
 
 		$row               = self::prepare_row( $merged );
 		$row['updated_at'] = isset( $data['updated_at'] ) && self::valid_mysql_datetime( $data['updated_at'] ) ? $data['updated_at'] : current_time( 'mysql' );
+		$generation        = self::reserve_live_mutation_generation();
+		if ( is_wp_error( $generation ) ) {
+			return $generation;
+		}
 		$wpdb->last_error  = '';
 		$updated           = $wpdb->update( self::table_name(), $row, array( 'id' => $id ) );
 
@@ -646,7 +654,6 @@ class Ecapla_CertVerify_Database {
 		}
 
 		self::refresh_legacy_expired_review_count_after_write();
-		Ecapla_CertVerify_Backup::mark_mutation();
 		return true;
 	}
 
@@ -670,6 +677,7 @@ class Ecapla_CertVerify_Database {
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) {
 			return false;
 		}
+		$generation_reserved = false;
 		foreach ( $rows as $row ) {
 			$last_id = max( $last_id, absint( $row['id'] ) );
 			$custom  = ! empty( $row['custom_fields'] ) ? json_decode( $row['custom_fields'], true ) : array();
@@ -755,6 +763,13 @@ class Ecapla_CertVerify_Database {
 			$row_id = absint( $row['id'] );
 			$custom = ! empty( $row['custom_fields'] ) ? json_decode( $row['custom_fields'], true ) : array();
 			if ( is_array( $custom ) && array_key_exists( $field_key, $custom ) ) {
+				if ( ! $generation_reserved ) {
+					$generation = self::reserve_live_mutation_generation();
+					if ( is_wp_error( $generation ) ) {
+						return $generation;
+					}
+					$generation_reserved = true;
+				}
 				unset( $custom[ $field_key ] );
 				$result = $wpdb->update(
 					$table,
@@ -776,9 +791,6 @@ class Ecapla_CertVerify_Database {
 			return new WP_Error( 'ecapla_certverify_purge_progress_failed', __( 'Stored values were processed, but Certloom could not save purge progress.', 'certloom' ), array( 'changed' => $changed, 'last_id' => $last_id ) );
 		}
 
-		if ( $changed > 0 ) {
-			Ecapla_CertVerify_Backup::mark_mutation();
-		}
 		return array( 'changed' => $changed, 'complete' => $complete, 'last_id' => $last_id );
 	}
 
@@ -838,6 +850,10 @@ class Ecapla_CertVerify_Database {
 		if ( ! $id ) {
 			return new WP_Error( 'ecapla_certverify_invalid_id', __( 'The certificate deletion request was invalid.', 'certloom' ) );
 		}
+		$generation = self::reserve_live_mutation_generation();
+		if ( is_wp_error( $generation ) ) {
+			return $generation;
+		}
 		$deleted = $wpdb->delete( self::table_name(), array( 'id' => $id ) );
 		if ( false === $deleted ) {
 			return new WP_Error( 'ecapla_certverify_delete_failed', __( 'The certificate could not be deleted because of a database error.', 'certloom' ) );
@@ -846,7 +862,6 @@ class Ecapla_CertVerify_Database {
 			return new WP_Error( 'ecapla_certverify_not_found', __( 'The certificate could not be deleted because it no longer exists.', 'certloom' ) );
 		}
 		self::refresh_legacy_expired_review_count_after_write();
-		Ecapla_CertVerify_Backup::mark_mutation();
 		return true;
 	}
 
@@ -870,6 +885,10 @@ class Ecapla_CertVerify_Database {
 		if ( empty( $ids ) ) {
 			return 0;
 		}
+		$generation = self::reserve_live_mutation_generation();
+		if ( is_wp_error( $generation ) ) {
+			return $generation;
+		}
 
 		$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
 		$query_args   = array_merge( array( self::table_name() ), $ids );
@@ -882,10 +901,22 @@ class Ecapla_CertVerify_Database {
 			return new WP_Error( 'ecapla_certverify_bulk_delete_failed', __( 'The selected certificates could not be deleted because of a database error.', 'certloom' ) );
 		}
 		self::refresh_legacy_expired_review_count_after_write();
-		if ( $result > 0 ) {
-			Ecapla_CertVerify_Backup::mark_mutation();
-		}
 		return (int) $result;
+	}
+
+	/**
+	 * Reserves a new live-registry generation before a customer-visible mutation.
+	 *
+	 * Advancing the marker first is intentionally conservative: a later database
+	 * write may still fail, but a real registry change can never succeed while the
+	 * migration/cutover generation marker silently remains at its old boundary.
+	 * Internal complete-restore writes manage one generation transition at their
+	 * own atomic completion boundary and therefore skip this per-row reservation.
+	 *
+	 * @return true|WP_Error
+	 */
+	private static function reserve_live_mutation_generation() {
+		return Ecapla_CertVerify_Backup::reserve_mutation_generation();
 	}
 
 	/**

@@ -64,12 +64,12 @@ class Ecapla_CertVerify_Fields {
 		$normalized = self::normalize_fields( $source );
 
 		if ( ( $missing || $normalized !== array_values( (array) $source ) ) && self::can_persist_schema() ) {
-			$result = update_option( self::OPTION_KEY, $normalized );
-			if ( ! $result && $normalized !== get_option( self::OPTION_KEY, array() ) ) {
+			$generation = Ecapla_CertVerify_Backup::reserve_mutation_generation();
+			$result = is_wp_error( $generation ) ? false : update_option( self::OPTION_KEY, $normalized );
+			if ( is_wp_error( $generation ) || ( ! $result && $normalized !== get_option( self::OPTION_KEY, array() ) ) ) {
 				update_option( self::NORMALIZATION_RETRY_OPTION, 1, false );
 			} else {
 				delete_option( self::NORMALIZATION_RETRY_OPTION );
-				Ecapla_CertVerify_Backup::mark_mutation();
 			}
 		}
 
@@ -82,6 +82,15 @@ class Ecapla_CertVerify_Fields {
 			return false;
 		}
 		$fields  = array_values( self::normalize_fields( is_array( $fields ) ? $fields : array() ) );
+		$before  = get_option( self::OPTION_KEY, array() );
+		if ( $fields === $before ) {
+			self::$fields_cache = $fields;
+			return true;
+		}
+		$generation = Ecapla_CertVerify_Backup::reserve_mutation_generation();
+		if ( is_wp_error( $generation ) ) {
+			return false;
+		}
 		$result  = update_option( self::OPTION_KEY, $fields );
 		$stored  = get_option( self::OPTION_KEY, array() );
 		$success = $result || $fields === $stored;
@@ -90,9 +99,6 @@ class Ecapla_CertVerify_Fields {
 			? $fields
 			: self::normalize_fields( is_array( $stored ) && ! empty( $stored ) ? $stored : self::get_default_fields() );
 
-		if ( $success && ! Ecapla_CertVerify_Backup::is_internal_restore_write() ) {
-			Ecapla_CertVerify_Backup::mark_mutation();
-		}
 		return $success;
 	}
 
@@ -131,12 +137,12 @@ class Ecapla_CertVerify_Fields {
 		}
 
 		if ( $clean !== $stored && self::can_persist_schema() ) {
-			$result = update_option( self::RETIRED_OPTION_KEY, $clean, false );
-			if ( ! $result && $clean !== get_option( self::RETIRED_OPTION_KEY, array() ) ) {
+			$generation = Ecapla_CertVerify_Backup::reserve_mutation_generation();
+			$result = is_wp_error( $generation ) ? false : update_option( self::RETIRED_OPTION_KEY, $clean, false );
+			if ( is_wp_error( $generation ) || ( ! $result && $clean !== get_option( self::RETIRED_OPTION_KEY, array() ) ) ) {
 				update_option( self::NORMALIZATION_RETRY_OPTION, 1, false );
 			} else {
 				delete_option( self::NORMALIZATION_RETRY_OPTION );
-				Ecapla_CertVerify_Backup::mark_mutation();
 			}
 		}
 
@@ -171,15 +177,22 @@ class Ecapla_CertVerify_Fields {
 				'retired_at' => isset( $field['retired_at'] ) ? sanitize_text_field( $field['retired_at'] ) : current_time( 'mysql' ),
 			);
 		}
+		$before = get_option( self::RETIRED_OPTION_KEY, array() );
+		$before = is_array( $before ) ? $before : array();
+		if ( $clean === $before ) {
+			self::$retired_cache = $clean;
+			return true;
+		}
+		$generation = Ecapla_CertVerify_Backup::reserve_mutation_generation();
+		if ( is_wp_error( $generation ) ) {
+			return false;
+		}
 		$result  = update_option( self::RETIRED_OPTION_KEY, $clean, false );
 		$stored  = get_option( self::RETIRED_OPTION_KEY, array() );
 		$stored  = is_array( $stored ) ? $stored : array();
 		$success = $result || $clean === $stored;
 
 		self::$retired_cache = $success ? $clean : $stored;
-		if ( $success && ! Ecapla_CertVerify_Backup::is_internal_restore_write() ) {
-			Ecapla_CertVerify_Backup::mark_mutation();
-		}
 		return $success;
 	}
 

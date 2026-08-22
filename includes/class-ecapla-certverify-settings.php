@@ -71,11 +71,16 @@ class Ecapla_CertVerify_Settings {
 			}
 		}
 
+		$stored = get_option( self::OPTION_KEY, array() );
+		if ( $clean === $stored ) {
+			return true;
+		}
+		$generation = Ecapla_CertVerify_Backup::reserve_mutation_generation();
+		if ( is_wp_error( $generation ) ) {
+			return false;
+		}
 		$result  = update_option( self::OPTION_KEY, $clean );
 		$success = $result || $clean === get_option( self::OPTION_KEY, array() );
-		if ( $success && ! Ecapla_CertVerify_Backup::is_internal_restore_write() ) {
-			Ecapla_CertVerify_Backup::mark_mutation();
-		}
 		return $success;
 	}
 }

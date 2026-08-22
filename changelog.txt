@@ -1,3 +1,52 @@
+1.5.13 — Populated legacy migration preflight + source-generation boundary hardening; authority unchanged
+---------------------------------------------------------------------------------------------------------
+- Keep the proven 1.5 registry/public verifier authoritative and all next-domain write/admin/data-tool flags false.
+- Add an explicit administrator-only, nonce-protected populated migration preflight under Access & Settings after a fresh gated-domain acceptance proof.
+- Read every actual legacy certificate row in bounded resumable batches through the production migration mapper and new Core Status Service parity rules without writing a future-domain credential row.
+- Freeze source count, max ID and the live generation marker throughout the proof; changed source evidence invalidates progress instead of being silently accepted.
+- Add a second complete source pass that recomputes a deterministic privacy-safe semantic fingerprint and requires it to match the mapping pass before stored evidence can pass.
+- Store only bounded local numeric legacy row IDs plus review messages; the copyable report contains counts/status only and excludes certificate numbers, holder names and custom-field values.
+- Harden the live 1.5 mutation boundary: reserve the source-generation marker before external certificate, settings and field-definition changes; if that marker cannot be persisted, the requested durable mutation is not attempted.
+- Keep internal complete-restore writes on their separate atomic completion generation boundary.
+- Preserve official migration, populated migration commit, restore promotion/rollback, final cutover and production PHP rendering as separate later gates.
+
+1.5.12 — Real gated Credential Series acceptance proof; live authority unchanged
+- Add an explicit administrator-triggered proof that provisions/validates the actual additive future-domain schema only after the isolated database capability proof is fresh and passing.
+- Exercise real domain repositories, immutable Version constraints, lifecycle/status/verification, event history, human-number uniqueness and invalid-snapshot side-effect safety with synthetic data inside one rollback-only transaction.
+- Require no existing future-domain rows, no started migration, no committed cutover, no domain restore/recovery state and all future-domain feature gates off before synthetic proof data is allowed.
+- Restore the domain-generation marker, prove all synthetic domain rows rolled back, and compare the legacy registry aggregate boundary before/after the proof.
+- Exercise synthetic legacy Valid, Suspended, Withdrawn→Revoked and date-expired parity without reading or migrating individual live certificate rows.
+- Bind stored acceptance evidence to Certloom version/time and reject malformed or internally inconsistent stored results.
+- Preserve the proven 1.5 registry/verifier as authority; real legacy-row migration, restore promotion/rollback, final cutover and production PHP renderer proofs remain mandatory later gates.
+
+1.5.11 — Isolated real-host database proof + diagnostic hardening; no authority cutover
+------------------------------------------------------------------------------------------
+- Keep the proven 1.5 registry/public verifier authoritative and all next-domain authority,
+  admin-preview, and data-tool flags false by default.
+- Add an administrator-only, nonce-protected isolated database proof under Access & Settings.
+  It creates only a reserved Certloom scratch table, never reads certificate records, never
+  provisions the gated Credential Series tables, and never changes credential authority.
+- Exercise real WordPress `dbDelta()`, explicit InnoDB creation, primary/unique/lookup indexes,
+  duplicate-key enforcement, transaction rollback and commit. Where the host permits a second
+  independent database connection, also prove bounded `SELECT ... FOR UPDATE` contention with
+  a one-second lock-wait timeout.
+- Treat test failure and cleanup as separate proof obligations: scratch-row setup, secondary
+  and primary transaction rollback, scratch-table removal, and the short-lived proof execution
+  lock are all verified instead of assumed.
+- Store only a privacy-safe proof result. Reports contain pass/warning/fail messages but no
+  certificate data, database credentials/names, raw table names, site URLs, or filesystem paths.
+- Bind proof evidence to the Certloom version and checked time. System Status requires a rerun
+  when a proof is older than seven days, from another Certloom version, or implausibly future-
+  dated; inconsistent stored overall/check states are rejected rather than shown as passed.
+- Expand read-only System Status with gated-domain maintenance and schema-maintenance checks.
+  Active, stale, and corrupt states are visible without being repaired/deleted merely by viewing
+  diagnostics.
+- Allow the isolated proof to run when a maintenance lease is valid but already expired; active
+  or corrupt protected state remains fail-closed.
+- Restore WordPress.org-facing readme changelog continuity for audited 1.5.8–1.5.10 releases.
+- Real full-domain WordPress/MySQL acceptance and the production PHP PDF/image renderer remain
+  deliberate external gates; this release does not pretend either gate is complete.
+
 1.5.10 — Live restore cleanup completion + privacy-safe System Status; no authority cutover
 ----------------------------------------------------------------------------------------------
 - Keep the proven 1.5 registry and public verifier authoritative; every next-domain feature

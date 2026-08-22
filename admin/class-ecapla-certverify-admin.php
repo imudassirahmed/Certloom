@@ -19,6 +19,9 @@ class Ecapla_CertVerify_Admin {
 		add_action( 'admin_init', array( $this, 'handle_import_process' ) );
 		add_action( 'admin_init', array( $this, 'handle_import_continue' ) );
 		add_action( 'admin_init', array( $this, 'handle_settings_save' ) );
+		add_action( 'admin_init', array( $this, 'handle_database_proof' ) );
+		add_action( 'admin_init', array( $this, 'handle_domain_acceptance_proof' ) );
+		add_action( 'admin_init', array( $this, 'handle_legacy_migration_preflight_proof' ) );
 		add_action( 'admin_init', array( $this, 'handle_create_manager_role' ) );
 		add_action( 'admin_init', array( $this, 'handle_export' ) );
 		add_action( 'admin_init', array( $this, 'handle_template_download' ) );
@@ -513,6 +516,61 @@ class Ecapla_CertVerify_Admin {
 			$this->redirect_error( $message, admin_url( 'admin.php?page=certloom-settings' ) );
 		}
 		wp_safe_redirect( add_query_arg( 'ecapla_certverify_settings_saved', '1', admin_url( 'admin.php?page=certloom-settings' ) ) );
+		exit;
+	}
+
+
+	public function handle_database_proof() {
+		if ( ! isset( $_POST['certverify_run_database_proof'] ) ) {
+			return;
+		}
+		$this->require_options_permission();
+		check_admin_referer( 'certverify_run_database_proof' );
+		$result = Ecapla_CertVerify_Database_Proof::run();
+		if ( is_wp_error( $result ) ) {
+			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-settings' ) );
+		}
+		$overall = sanitize_key( (string) ( $result['overall'] ?? 'incomplete' ) );
+		if ( ! in_array( $overall, array( 'passed', 'incomplete', 'failed' ), true ) ) {
+			$overall = 'incomplete';
+		}
+		wp_safe_redirect( add_query_arg( array( 'page' => 'certloom-settings', 'certloom_database_proof' => $overall ), admin_url( 'admin.php' ) ) );
+		exit;
+	}
+
+	public function handle_domain_acceptance_proof() {
+		if ( ! isset( $_POST['certverify_run_domain_acceptance_proof'] ) ) {
+			return;
+		}
+		$this->require_options_permission();
+		check_admin_referer( 'certverify_run_domain_acceptance_proof' );
+		$result = \Certloom\Infrastructure\Diagnostics\DomainAcceptanceProof::run();
+		if ( is_wp_error( $result ) ) {
+			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-settings' ) );
+		}
+		$overall = sanitize_key( (string) ( $result['overall'] ?? 'incomplete' ) );
+		if ( ! in_array( $overall, array( 'passed', 'incomplete', 'failed' ), true ) ) {
+			$overall = 'incomplete';
+		}
+		wp_safe_redirect( add_query_arg( array( 'page' => 'certloom-settings', 'certloom_domain_acceptance_proof' => $overall ), admin_url( 'admin.php' ) ) );
+		exit;
+	}
+
+	public function handle_legacy_migration_preflight_proof() {
+		if ( ! isset( $_POST['certverify_run_legacy_migration_preflight_proof'] ) ) {
+			return;
+		}
+		$this->require_options_permission();
+		check_admin_referer( 'certverify_run_legacy_migration_preflight_proof' );
+		$result = \Certloom\Infrastructure\Diagnostics\LegacyMigrationPreflightProof::run_slice();
+		if ( is_wp_error( $result ) ) {
+			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-settings' ) );
+		}
+		$state = \Certloom\Infrastructure\Diagnostics\LegacyMigrationPreflightProof::evidence_state();
+		if ( ! in_array( $state, array( 'passed', 'failed', 'running', 'stale' ), true ) ) {
+			$state = 'running';
+		}
+		wp_safe_redirect( add_query_arg( array( 'page' => 'certloom-settings', 'certloom_legacy_migration_preflight' => $state ), admin_url( 'admin.php' ) ) );
 		exit;
 	}
 

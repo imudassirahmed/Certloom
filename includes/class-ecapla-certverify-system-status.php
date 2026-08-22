@@ -21,6 +21,9 @@ class Ecapla_CertVerify_System_Status {
 		$checks[] = self::check( 'wordpress_version', __( 'WordPress version', 'certloom' ), 'good', self::wordpress_version() );
 		$checks[] = self::check( 'php_version', __( 'PHP version', 'certloom' ), version_compare( PHP_VERSION, '7.4', '>=' ) ? 'good' : 'bad', PHP_VERSION );
 		$checks[] = self::check( 'database_server', __( 'Database server', 'certloom' ), 'good', self::database_server_version( $wpdb ) );
+		$checks[] = self::database_proof_check();
+		$checks[] = self::domain_acceptance_proof_check();
+		$checks[] = self::legacy_migration_preflight_check();
 		$checks[] = self::legacy_table_check( $wpdb );
 		$checks[] = self::check(
 			'authority',
@@ -41,6 +44,8 @@ class Ecapla_CertVerify_System_Status {
 				: __( 'One or more development gates are enabled. The next-domain schema becomes a required dependency.', 'certloom' )
 		);
 		$checks[] = self::maintenance_check();
+		$checks[] = self::domain_maintenance_check();
+		$checks[] = self::domain_schema_lock_check();
 		$checks[] = self::extension_check( 'mbstring', __( 'PHP mbstring', 'certloom' ), __( 'Required by the planned production Unicode certificate renderer; not required by the current verifier.', 'certloom' ) );
 		$checks[] = self::extension_check( 'gd', __( 'PHP GD', 'certloom' ), __( 'Expected by the planned raster/PDF rendering stack; not required by the current verifier.', 'certloom' ) );
 		$checks[] = self::check(
@@ -91,6 +96,74 @@ class Ecapla_CertVerify_System_Status {
 		);
 	}
 
+
+	private static function database_proof_check() {
+		if ( ! class_exists( 'Ecapla_CertVerify_Database_Proof' ) ) {
+			return self::check( 'database_proof', __( 'Isolated database proof', 'certloom' ), 'warning', __( 'Not available', 'certloom' ), __( 'The administrator-triggered database acceptance probe is unavailable.', 'certloom' ) );
+		}
+		$result = Ecapla_CertVerify_Database_Proof::get_last_result();
+		if ( ! is_array( $result ) ) {
+			return self::check( 'database_proof', __( 'Isolated database proof', 'certloom' ), 'warning', __( 'Not run', 'certloom' ), __( 'An administrator can run the isolated proof below. It uses a temporary Certloom scratch table and never reads certificate data.', 'certloom' ) );
+		}
+		$state = Ecapla_CertVerify_Database_Proof::evidence_state();
+		$overall = sanitize_key( (string) ( $result['overall'] ?? 'incomplete' ) );
+		$counts  = array( 'pass' => 0, 'warning' => 0, 'fail' => 0 );
+		foreach ( (array) ( $result['checks'] ?? array() ) as $proof_check ) {
+			$status = is_array( $proof_check ) ? sanitize_key( (string) ( $proof_check['status'] ?? '' ) ) : '';
+			if ( isset( $counts[ $status ] ) ) { $counts[ $status ]++; }
+		}
+		$status = 'passed' === $state ? 'good' : ( 'failed' === $state ? 'bad' : 'warning' );
+		$value  = 'passed' === $state ? __( 'Passed', 'certloom' ) : ( 'failed' === $state ? __( 'Failed', 'certloom' ) : ( 'stale' === $state ? __( 'Passed previously — run again', 'certloom' ) : __( 'Incomplete', 'certloom' ) ) );
+		$note = 'stale' === $state
+			? sprintf( __( '%1$d passed, %2$d warnings, %3$d failed in the stored proof, but the evidence is stale for this Certloom version or older than seven days. Run it again before relying on it.', 'certloom' ), (int) $counts['pass'], (int) $counts['warning'], (int) $counts['fail'] )
+			: sprintf( __( '%1$d passed, %2$d warnings, %3$d failed. This proof uses only an isolated scratch table; the full future-domain acceptance suite is still required before cutover.', 'certloom' ), (int) $counts['pass'], (int) $counts['warning'], (int) $counts['fail'] );
+		if ( 'failed' !== $overall && 'passed' !== $overall && 'stale' !== $state ) { $status = 'warning'; }
+		return self::check( 'database_proof', __( 'Isolated database proof', 'certloom' ), $status, $value, $note );
+	}
+
+	private static function domain_acceptance_proof_check() {
+		$class = '\\Certloom\\Infrastructure\\Diagnostics\\DomainAcceptanceProof';
+		if ( ! class_exists( $class ) ) {
+			return self::check( 'domain_acceptance_proof', __( 'Gated-domain acceptance proof', 'certloom' ), 'warning', __( 'Not available', 'certloom' ) );
+		}
+		$result = $class::get_last_result();
+		if ( ! is_array( $result ) ) {
+			return self::check( 'domain_acceptance_proof', __( 'Gated-domain acceptance proof', 'certloom' ), 'warning', __( 'Not run', 'certloom' ), __( 'After a fresh passing isolated database proof, an administrator can exercise the real additive Credential Series schema/repositories with rollback-only synthetic data.', 'certloom' ) );
+		}
+		$state = $class::evidence_state();
+		$counts = array( 'pass' => 0, 'warning' => 0, 'fail' => 0 );
+		foreach ( (array) ( $result['checks'] ?? array() ) as $proof_check ) {
+			$status = is_array( $proof_check ) ? sanitize_key( (string) ( $proof_check['status'] ?? '' ) ) : '';
+			if ( isset( $counts[ $status ] ) ) { $counts[ $status ]++; }
+		}
+		$status = 'passed' === $state ? 'good' : ( 'failed' === $state ? 'bad' : 'warning' );
+		$value = 'passed' === $state ? __( 'Passed', 'certloom' ) : ( 'failed' === $state ? __( 'Failed', 'certloom' ) : ( 'stale' === $state ? __( 'Passed previously — run again', 'certloom' ) : __( 'Incomplete', 'certloom' ) ) );
+		$note = sprintf( __( '%1$d passed, %2$d warnings, %3$d failed. This proof provisions the additive future-domain tables but rolls back all synthetic credential rows; live legacy migration/restore/cutover remain separate gates.', 'certloom' ), (int) $counts['pass'], (int) $counts['warning'], (int) $counts['fail'] );
+		return self::check( 'domain_acceptance_proof', __( 'Gated-domain acceptance proof', 'certloom' ), $status, $value, $note );
+	}
+
+	private static function legacy_migration_preflight_check() {
+		$class = '\\Certloom\\Infrastructure\\Diagnostics\\LegacyMigrationPreflightProof';
+		if ( ! class_exists( $class ) ) {
+			return self::check( 'legacy_migration_preflight', __( 'Populated migration preflight', 'certloom' ), 'warning', __( 'Not available', 'certloom' ) );
+		}
+		$result = $class::get_last_result();
+		if ( ! is_array( $result ) ) {
+			return self::check( 'legacy_migration_preflight', __( 'Populated migration preflight', 'certloom' ), 'warning', __( 'Not run', 'certloom' ), __( 'After the gated-domain proof passes, Certloom can read-only scan every live 1.5 row through the final migration mapper before any official migration begins.', 'certloom' ) );
+		}
+		$state = $class::evidence_state();
+		$status = 'passed' === $state ? 'good' : ( 'failed' === $state ? 'bad' : 'warning' );
+		$value = 'passed' === $state ? __( 'Passed', 'certloom' ) : ( 'failed' === $state ? __( 'Failed', 'certloom' ) : ( 'stale' === $state ? __( 'Stale — run again', 'certloom' ) : __( 'In progress', 'certloom' ) ) );
+		$note = sprintf(
+			/* translators: 1: mapped rows, 2: source rows, 3: rows requiring review. */
+			__( '%1$d of %2$d live rows mapped; %3$d require review. The proof is read-only and official migration/cutover remain separate gates.', 'certloom' ),
+			absint( $result['total'] ?? 0 ),
+			absint( $result['source_count'] ?? 0 ),
+			absint( $result['errors'] ?? 0 )
+		);
+		return self::check( 'legacy_migration_preflight', __( 'Populated migration preflight', 'certloom' ), $status, $value, $note );
+	}
+
 	private static function maintenance_check() {
 		$missing = new stdClass();
 		$lock    = get_option( Ecapla_CertVerify_Backup::MAINTENANCE_LOCK_OPTION, $missing );
@@ -104,6 +177,50 @@ class Ecapla_CertVerify_System_Status {
 			return self::check( 'maintenance', __( 'Certificate writes', 'certloom' ), 'warning', __( 'Paused by restore/maintenance', 'certloom' ), __( 'A Certloom restore or maintenance operation currently owns the live write boundary.', 'certloom' ) );
 		}
 		return self::check( 'maintenance', __( 'Certificate writes', 'certloom' ), 'warning', __( 'Stale maintenance lease detected', 'certloom' ), __( 'This read-only report does not delete stale state. The next legitimate Certloom maintenance/write check will handle owner-safe expiry cleanup.', 'certloom' ) );
+	}
+
+
+	private static function domain_maintenance_check() {
+		$stored = (string) get_option( 'certloom_domain_maintenance_lock', '' );
+		if ( '' === $stored ) {
+			return self::check( 'domain_maintenance', __( 'Next-domain maintenance', 'certloom' ), 'good', __( 'Inactive', 'certloom' ), __( 'No gated credential-domain restore/cutover maintenance lease is present.', 'certloom' ) );
+		}
+		$parts = explode( '|', $stored, 4 );
+		if ( count( $parts ) >= 4 ) {
+			$owner = (string) $parts[0];
+			$locked_at = absint( $parts[1] );
+			$expires_at = absint( $parts[2] );
+		} elseif ( 3 === count( $parts ) ) {
+			$owner = (string) $parts[0];
+			$locked_at = absint( $parts[1] );
+			$expires_at = $locked_at ? $locked_at + 2100 : 0;
+		} else {
+			$owner = '';
+			$locked_at = 0;
+			$expires_at = 0;
+		}
+		if ( ! preg_match( '/^[a-f0-9]{32}$/i', $owner ) || ! $locked_at || ! $expires_at || $expires_at < $locked_at ) {
+			return self::check( 'domain_maintenance', __( 'Next-domain maintenance', 'certloom' ), 'bad', __( 'Corrupt protected state', 'certloom' ), __( 'A non-empty next-domain maintenance value could not be validated. Future-domain writes/cutover must remain fail-closed until a legitimate maintenance worker repairs it.', 'certloom' ) );
+		}
+		return $expires_at > time()
+			? self::check( 'domain_maintenance', __( 'Next-domain maintenance', 'certloom' ), 'warning', __( 'Active protected lease', 'certloom' ), __( 'A gated credential-domain maintenance operation currently owns its write boundary.', 'certloom' ) )
+			: self::check( 'domain_maintenance', __( 'Next-domain maintenance', 'certloom' ), 'warning', __( 'Stale protected lease', 'certloom' ), __( 'The lease has expired. This read-only status screen does not repair or delete it.', 'certloom' ) );
+	}
+
+	private static function domain_schema_lock_check() {
+		$stored = (string) get_option( 'certloom_domain_schema_lock', '' );
+		if ( '' === $stored ) {
+			return self::check( 'domain_schema_lock', __( 'Next-domain schema maintenance', 'certloom' ), 'good', __( 'Inactive', 'certloom' ), __( 'No gated credential-domain schema-maintenance lock is present.', 'certloom' ) );
+		}
+		$parts = explode( '|', $stored, 2 );
+		$token = isset( $parts[0] ) ? (string) $parts[0] : '';
+		$locked_at = isset( $parts[1] ) ? absint( $parts[1] ) : 0;
+		if ( ! preg_match( '/^[a-z0-9]{32}$/i', $token ) || ! $locked_at ) {
+			return self::check( 'domain_schema_lock', __( 'Next-domain schema maintenance', 'certloom' ), 'bad', __( 'Corrupt protected state', 'certloom' ), __( 'A non-empty schema-maintenance lock could not be validated. Future-domain schema work must remain fail-closed until repaired by its owner-safe maintenance path.', 'certloom' ) );
+		}
+		return ( time() - $locked_at ) < ( 5 * MINUTE_IN_SECONDS )
+			? self::check( 'domain_schema_lock', __( 'Next-domain schema maintenance', 'certloom' ), 'warning', __( 'Active protected lock', 'certloom' ), __( 'Gated credential-domain schema maintenance is currently marked in progress.', 'certloom' ) )
+			: self::check( 'domain_schema_lock', __( 'Next-domain schema maintenance', 'certloom' ), 'warning', __( 'Stale protected lock', 'certloom' ), __( 'The schema-maintenance lock is stale. This read-only status screen does not repair or delete it.', 'certloom' ) );
 	}
 
 	private static function extension_check( $extension, $label, $note ) {

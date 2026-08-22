@@ -74,6 +74,30 @@ class Ecapla_CertVerify_Backup {
 	}
 
 	/**
+	 * Reserves a fresh legacy source-generation marker before an external mutation.
+	 *
+	 * A false-positive generation change is safe: it merely makes migration/preflight
+	 * evidence stale. The unsafe direction is the opposite—a real certificate or
+	 * configuration change succeeding while the migration boundary silently remains
+	 * unchanged. Internal complete-restore writes own one generation transition at
+	 * their atomic completion boundary and therefore bypass this per-write reservation.
+	 *
+	 * @return true|WP_Error
+	 */
+	public static function reserve_mutation_generation() {
+		if ( self::is_internal_restore_write() ) {
+			return true;
+		}
+		if ( self::mark_mutation() ) {
+			return true;
+		}
+		return new WP_Error(
+			'ecapla_certverify_generation_marker_failed',
+			__( 'Certloom could not reserve its registry change marker, so the requested change was not attempted. Retry after WordPress database/options storage is healthy.', 'certloom' )
+		);
+	}
+
+	/**
 	 * Builds the entire backup in a temporary file before sending headers.
 	 * Any read, encoding, or write failure aborts without delivering a partial
 	 * file that could be mistaken for a complete backup.

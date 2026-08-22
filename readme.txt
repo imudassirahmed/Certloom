@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.5.10
+Stable tag: 1.5.13
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.5.10: Certloom continues as the same in-place plugin. The proven 1.5 registry remains authoritative while the next-generation domain and data tools stay behind development gates. This checkpoint completes another live-restore cleanup audit so early-abort, rollback, stale-workspace, maintenance-lock, tracking-state, and recovery-journal failures remain explicit and retryable instead of being hidden behind an earlier restore error. It also adds a read-only, privacy-conscious System Status panel under Access & Settings so administrators can report WordPress/PHP/database/runtime readiness without exposing certificate data, site URLs, filesystem paths, database names, users, or plugin inventories. It still does not ship a public PDF/PNG/JPG generator or switch the credential source of truth.
+> Development note for 1.5.13: Certloom continues as the same in-place plugin and the proven 1.5 registry remains authoritative. After the isolated database proof and gated Credential Series acceptance proof pass, administrators can now run a bounded, resumable, read-only preflight of the actual populated legacy registry through the production migration mapper and Status Service. A second full fingerprint pass must match before the evidence can pass. No Credential Series rows are written, official migration is not started, and authority does not change. Live populated migration commit, future-domain restore promotion/rollback, final cutover, and production PHP artifact rendering remain separate mandatory gates.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -119,6 +119,50 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 
 == Changelog ==
 
+= 1.5.13 =
+* Add an administrator-only, nonce-protected populated legacy migration preflight after a fresh passing gated Credential Series acceptance proof.
+* Scan the real 1.5 registry in bounded resumable slices through the production legacy migration mapper and Core Status Service while keeping the future Credential Series tables untouched.
+* Freeze source count, max ID, and the Certloom generation marker; invalidate the proof if that live boundary changes.
+* Perform a second complete read/fingerprint pass and require the semantic fingerprint to match the mapping pass before the proof can pass.
+* Keep copyable migration reports privacy-safe: no certificate numbers, holder names, or custom-field values; only bounded numeric legacy row IDs plus review messages are shown locally to administrators.
+* Reserve the live legacy generation marker before external certificate/settings/field mutations, so a durable source change cannot succeed while migration-boundary evidence silently remains old.
+* Keep official migration state, source-of-truth authority, and all future-domain write/admin/data-tool flags unchanged.
+* Keep populated migration commit, domain restore promotion/rollback, final cutover, and production PHP certificate rendering as separate mandatory acceptance gates.
+
+= 1.5.12 =
+* Add an administrator-only, nonce-protected gated Credential Series acceptance proof after a fresh passing isolated database proof.
+* Deliberately provision and verify Certloom’s real additive future-domain schema on the host, then exercise real Recipient/Issuer/Program/Credential repositories, immutable Version constraints, lifecycle events, Status Service and public-ID verification using synthetic data only.
+* Run every synthetic domain write inside one rollback-only real database transaction, restore the domain-generation marker, and require all future-domain tables to be empty again before the proof can pass.
+* Refuse the proof when any future-domain feature gate is enabled, migration has started, cutover is committed, domain restore/recovery state exists, or pre-existing future-domain rows are present.
+* Compare the proven legacy registry aggregate boundary before/after the proof and exercise synthetic Valid, Suspended, Withdrawn→Revoked and date-expired migration semantics without reading individual live certificate rows.
+* Store only privacy-safe, internally consistent, version/time-bound proof evidence; stale or tampered results cannot remain a current Ready signal.
+* Keep live legacy migration, restore promotion/rollback, final source-of-truth cutover, and production PHP certificate rendering as separate mandatory acceptance gates.
+* Keep all next-domain authority/admin/data-tool flags disabled.
+
+= 1.5.11 =
+* Add an administrator-only, nonce-protected isolated database proof under Access & Settings. It uses a Certloom scratch table only and never reads certificate records, provisions the gated Credential Series domain, or changes credential authority.
+* Exercise WordPress dbDelta(), explicit InnoDB creation, primary/unique/lookup indexes, duplicate-key enforcement, transactional rollback/commit, and a bounded independent-connection row-lock contention probe where the host permits it.
+* Verify scratch-table removal, transaction cleanup and short-lived proof-lock cleanup explicitly; the proof result is privacy-safe and contains no database credentials, database/table names, certificate values, URLs, or filesystem paths.
+* Bind stored proof evidence to the Certloom version and proof time; results from another version, older than seven days, or implausibly future-dated are shown as stale and must be rerun. Corrupt/internally inconsistent stored proof results fail closed instead of displaying a false pass.
+* Expand read-only System Status to report gated-domain maintenance and schema-maintenance state, including active, stale, and corrupt protected state without repairing it as a side effect.
+* Keep valid expired maintenance leases visible as warnings without permanently blocking the isolated proof; active or corrupt protected state still fails closed.
+* Restore WordPress.org-facing changelog continuity for the audited 1.5.8, 1.5.9, and 1.5.10 checkpoints.
+* Keep all next-domain authority/admin/data-tool flags disabled; this release still does not switch verification authority or ship public certificate artifact generation.
+
+= 1.5.10 =
+* Complete more live complete-restore abort/rollback cleanup so maintenance, staging, workspace tracking, and recovery-journal uncertainty remains explicit and retryable.
+* Add privacy-safe read-only System Status under Access & Settings; viewing diagnostics never provisions schema, repairs locks, or exposes certificate/site/database/path/user/plugin-inventory data.
+* Keep real WordPress/MySQL and production PHP renderer acceptance as deliberate external gates.
+
+= 1.5.9 =
+* Make ordinary legacy activation independent from still-gated future-domain tables while retaining fail-closed behavior when future-domain storage is genuinely required.
+* Add race-proof final cutover coordination with shared maintenance locking, fresh source snapshot parity, committed cutover receipts, and protected recovery ownership.
+* Harden private operational storage and live legacy migration/import/restore lock cleanup.
+
+= 1.5.8 =
+* Require and verify InnoDB for every next-domain table, harden checked transaction-control semantics, and make maintenance/restore/import cleanup failures durable and retryable.
+* Strengthen committed and rolled-back restore replay so recovery evidence remains until owner-matched maintenance cleanup is proven.
+
 = 1.5.7 =
 * Harden immutable Version creation so structured snapshots are encoded before generation/reservation side effects; failed post-reservation paths verify compensation and conservatively preserve ownership if cleanup itself fails.
 * Add a shared fail-closed structured-JSON boundary across recipients, issuers, programs, credential snapshots, lifecycle events, jobs, and Merge-restore state so corrupt or unsupported nested data cannot silently become empty state.
@@ -216,6 +260,12 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 For the complete release history, see `changelog.txt` included with the plugin.
 
 == Upgrade Notice ==
+
+= 1.5.13 =
+Adds a read-only, resumable preflight of the actual populated legacy registry plus stricter pre-mutation generation-boundary safety, while keeping the proven 1.5 verifier authoritative.
+
+= 1.5.11 =
+Adds a safe, administrator-triggered real-host database capability proof and expands read-only maintenance diagnostics while keeping the proven 1.5 registry/verifier authoritative.
 
 = 1.5.7 =
 Premium integrity checkpoint: hardens immutable Version side-effect safety, structured JSON/restore validation, deterministic rendering references, exact font/output checks, and the real WordPress/MySQL proof harness while keeping the live legacy registry/verifier authoritative until external gates pass.
