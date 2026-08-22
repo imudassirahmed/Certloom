@@ -1,3 +1,74 @@
+1.5.6 — Premium rendering-contract hardening; no authority cutover
+--------------------------------------------------------------------
+- Continue upgrading the same Certloom plugin in place; the legacy 1.5 registry
+  and public verifier remain authoritative and all domain cutover flags remain
+  false by default.
+- Make element z-order unique and canonical, normalize equivalent rotations, and
+  reject any rotated element whose actual bounding box would leave the page.
+  This removes adapter-dependent clipping/stacking ambiguity before a renderer is
+  selected.
+- Add independent local-asset inspection: actual PNG/JPEG content, MIME, SHA-256,
+  byte size, dimensions and pixel counts are re-derived and bounded rather than
+  trusted from a resolver or UI payload.
+- Centralize QR encoding before renderer dispatch. PDF/PNG/JPEG adapters receive
+  one validated binary module matrix plus the chosen error-correction/quiet-zone
+  policy and are not permitted to invent their own QR representation.
+- Add a content-addressed font manifest. Text rendering requires the exact
+  registered family/weight/style and declared font-file SHA-256; silent fallback
+  or synthetic historical-font substitution is rejected. No font binaries are
+  bundled by this contract checkpoint.
+- Add ArtifactRenderCoordinator as the single production execution boundary for
+  renderer capability checks, exact font-manifest enforcement, controlled engine
+  exceptions, bounded output size and artifact-receipt creation.
+- Upgrade artifact receipts to schema v2 with a canonical receipt-integrity hash
+  so layout/request/renderer metadata tampering is detected in addition to output
+  byte changes.
+- Harden portable canonicalization and scalar types: reject objects/resources and
+  non-finite floats, normalize negative zero, reject malformed integer/boolean
+  schema values instead of PHP-coercing them, and reject verification URLs with
+  embedded credentials or fragments.
+- Expand focused rendering assertions from 36 to 61. The source checkpoint passes
+  43/43 standalone regression scripts and 180/180 PHP lint checks.
+- Correct the prior 1.5.5 checkpoint metadata: that source contained 176 PHP files,
+  not 175.
+- Keep the PDF/image engine and public artifact actions gated until real output
+  fixtures prove Unicode/RTL, arbitrary rotation, overflow, QR and PDF/image parity.
+- Keep the real WordPress + MySQL/MariaDB authority-cutover gate deliberately open.
+
+1.5.5 — Canonical rendering and artifact-integrity foundation; no authority cutover
+--------------------------------------------------------------------
+- Continue upgrading the same Certloom plugin in place; the legacy 1.5 registry
+  and public verifier remain authoritative and all domain cutover flags remain
+  false by default.
+- Add a strict renderer-independent `certloom-layout` v1 contract for A4/Letter
+  physical geometry, UUIDv4 element identities, z-order, arbitrary canonical
+  rotation, opacity, typed elements, deterministic text overflow and strict
+  fail-closed schema validation.
+- Reject arbitrary template HTML/CSS, unknown schema properties and remote asset
+  URLs. Schema v1 layout assets must be local references and resolve to verified
+  local PNG/JPEG bytes before a renderer sees them.
+- Add registered font machine keys and shared first-strong Unicode direction
+  resolution so English, Urdu/Arabic RTL and mixed-script text use one common
+  interpretation across PDF and image engines.
+- Add resolve-once immutable merge-field, verification-QR and local-asset
+  preparation. Renderer adapters receive a primitive resolved document rather
+  than independently reading live WordPress/LMS data.
+- Add canonical JSON/layout hashing, portable render-request fingerprints that
+  bind resolved values plus asset content hashes, renderer-environment context
+  hashes, and final artifact SHA-256/byte-size receipts.
+- Add an explicit renderer registry for PDF/PNG/JPEG and a fail-soft capability
+  detector for optional PHP/library requirements; renderer unavailability must
+  never fatal the registry or verification path.
+- Add permanent acceptance fixtures for English, Urdu RTL, mixed-script text,
+  long-name shrink behavior, 17.5-degree rotation and verification QR output.
+- Add 36 focused renderer-foundation assertions. The complete source checkpoint
+  now passes 43/43 standalone regression scripts and 176/176 PHP lint checks in
+  the supplied development environment.
+- Keep the actual PDF-engine choice open until a real output benchmark passes.
+  Current TCPDF/tc-lib-pdf releases require PHP 8.2; mPDF remains a leading
+  compatibility candidate but must still prove Certloom's Urdu/RTL, arbitrary
+  rotation and deterministic output requirements.
+
 1.5.4 — Premium data-tools/job foundation; no authority cutover
 --------------------------------------------------------------------
 - Continue upgrading the same Certloom plugin in place. The legacy 1.5 registry

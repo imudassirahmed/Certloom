@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.5.4
+Stable tag: 1.5.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.5.3: Certloom continues as the same in-place plugin. Granular capabilities plus hidden new-domain Recipient/Program/Credential admin write paths are now being built behind development gates. The proven 1.5 registry remains authoritative. Final cutover is additionally blocked until import/backup/restore data tools are domain-aware and a fresh legacy-generation snapshot exactly matches the completed migration.
+> Development note for 1.5.6: Certloom continues as the same in-place plugin. The proven 1.5 registry remains authoritative while the next-generation domain and data tools stay behind development gates. This checkpoint hardens the renderer contract with independently verified assets, centralized QR modules, exact content-addressed font manifests, deterministic z/rotation rules, a single render coordinator, and canonical receipt-integrity hashes. It still does not ship a public PDF/PNG/JPG generator or switch the credential source of truth.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -119,6 +119,28 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 
 == Changelog ==
 
+= 1.5.6 =
+* Harden the renderer contract before selecting a PDF/image engine: z-order is now unique and deterministic, arbitrary rotation is normalized and its rotated bounding box must remain on-page, and canonical JSON rejects unsupported runtime values/non-finite floats.
+* Add independent local-asset inspection that verifies actual PNG/JPEG bytes, MIME, SHA-256, size, dimensions and bounded pixel counts instead of trusting resolver metadata.
+* Centralize QR encoding before renderer dispatch so PDF/PNG/JPEG receive the exact same validated module matrix, error-correction choice and quiet-zone policy.
+* Add a content-addressed font manifest requiring the exact declared family/weight/style font bytes; renderers may not silently synthesize or substitute a historical certificate font.
+* Add the Artifact Render Coordinator as the single production rendering choke point for capability checks, exact font binding, output-size limits, controlled failures and integrity receipts.
+* Upgrade artifact receipts to a v2 schema with a canonical receipt-integrity hash so request/layout/renderer metadata tampering is detectable in addition to output-byte tampering.
+* Strengthen verification-URL validation by rejecting embedded credentials and URL fragments before QR/render preparation.
+* Expand focused rendering-contract coverage from 36 to 61 assertions while preserving 43/43 standalone regression suites and 180/180 PHP lint checks.
+* Keep the real WordPress/MySQL authority-cutover gate and real PDF/image output benchmark deliberately open; this release does not expose artifact generation publicly.
+
+= 1.5.5 =
+* Add the renderer-independent canonical certificate layout schema with strict A4/Letter physical geometry, stable UUIDv4 element IDs, bounded positioning/rotation/opacity, typed elements, local-only asset references, and fail-closed unknown-property handling.
+* Add shared Unicode first-strong text direction resolution, including Urdu/Arabic RTL handling, explicit direction overrides, deterministic overflow policy, and registered-font machine keys rather than raw CSS/font injection.
+* Add resolve-once merge/QR/local-asset preparation so PDF and image renderers receive the same primitive immutable document instead of independently resolving certificate data.
+* Add deterministic layout, render-request, renderer-environment, and final artifact SHA-256 receipts so historical outputs can be audited against their exact values/assets/renderer context.
+* Add an explicit PDF/PNG/JPEG renderer registry and fail-soft runtime capability detector so missing optional renderer requirements cannot take down the registry or public verifier.
+* Add permanent rendering acceptance fixtures for English, Urdu RTL, mixed-script text, long-name shrink behavior, non-quarter rotation, and verification QR placement.
+* Keep arbitrary HTML/CSS and remote layout assets out of canonical templates; schema v1 accepts local PNG/JPEG assets only.
+* Keep all new-domain authority/data-tool cutover flags disabled and preserve the legacy 1.5 registry/verifier until the real disposable WordPress + MySQL/MariaDB gate passes.
+* Record the current PDF-engine decision as deliberately open: current TCPDF/tc-lib-pdf releases require PHP 8.2, while mPDF remains compatible with the plugin's PHP range but still must pass Certloom's real Urdu/RTL/rotation/output-parity benchmark before adoption.
+
 = 1.5.4 =
 * Continue the same Certloom plugin in place; legacy 1.5 registry/verification remains authoritative and all new-domain cutover flags remain disabled by default.
 * Add a durable WordPress-local job engine with bounded slices, queued/running/paused/succeeded/partial/failed/cancelled states, one-shot cron continuation, watchdog recovery, worker leases, crash recovery, explicit Retry/Pause/Resume/Cancel controls, and bounded retention.
@@ -185,6 +207,9 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 For the complete release history, see `changelog.txt` included with the plugin.
 
 == Upgrade Notice ==
+
+= 1.5.6 =
+Premium renderer-contract hardening: centralizes QR/font/asset truth, enforces deterministic z/rotation behavior, adds one render coordinator and receipt-integrity hashes, while keeping the live legacy registry/verifier authoritative and artifact output unexposed until real engine proof passes.
 
 = 1.5.4 =
 In-place development checkpoint adding premium-grade new-domain jobs/import/backup/restore infrastructure while keeping the proven legacy registry and public verifier authoritative until the real WordPress/MySQL cutover gate passes.
