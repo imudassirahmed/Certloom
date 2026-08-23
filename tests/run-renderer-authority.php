@@ -1,5 +1,5 @@
 <?php
-/** 1.6.22 release-bound PDF-04 runtime authority regression. */
+/** 1.6.23 release-bound PDF-04 runtime authority regression. */
 require_once __DIR__ . '/bootstrap-autoload.php';
 
 use Certloom\Application\Contract\RendererInterface;
@@ -26,7 +26,7 @@ final class RagRenderer implements RendererInterface {
 $fixtures = array(); foreach ( RendererAcceptanceContract::required_fixtures() as $name ) { $fixtures[$name]=array( 'render_plan_sha256'=>hash('sha256','plan-'.$name), 'pdf_sha256'=>hash('sha256','pdf-'.$name), 'png_sha256'=>hash('sha256','png-'.$name) ); }
 $required_checks = array(); foreach ( RendererAcceptanceContract::required_checks() as $key ) { $required_checks[$key]=true; }
 $evidence = array(
-	'schema'=>RendererAcceptanceContract::SCHEMA, 'version'=>RendererAcceptanceContract::VERSION, 'qualification'=>'production-candidate', 'plugin_version'=>'1.6.22',
+	'schema'=>RendererAcceptanceContract::SCHEMA, 'version'=>RendererAcceptanceContract::VERSION, 'qualification'=>'production-candidate', 'plugin_version'=>'1.6.23',
 	'fixture_manifest_sha256'=>str_repeat('a',64), 'render_plan_manifest_sha256'=>str_repeat('b',64), 'bundle_manifest_sha256'=>str_repeat('c',64), 'verification_report_sha256'=>str_repeat('d',64), 'verifier_environment_sha256'=>str_repeat('e',64),
 	'renderers'=>array(
 		'pdf'=>array('id'=>'mpdf-pdf','version'=>'8.3.1+certloom.1','context_hash'=>str_repeat('1',64),'candidate_manifest_sha256'=>str_repeat('2',64)),
@@ -47,14 +47,14 @@ rag_check( rag_throws(function() use($release_contract,$bad){$release_contract->
 
 $tmp = sys_get_temp_dir() . '/certloom-renderer-authority-' . bin2hex(random_bytes(6));
 mkdir($tmp . '/resources/renderer', 0777, true);
-$missing_gate = new RendererAuthorityGate(null, $tmp, '1.6.22');
+$missing_gate = new RendererAuthorityGate(null, $tmp, '1.6.23');
 $status=$missing_gate->manifest_status();
 rag_check( false === $status['accepted'] && 'manifest_missing' === $status['reason'], 'No bundled acceptance manifest must fail closed.' );
 file_put_contents($tmp . '/resources/renderer/accepted.json', json_encode($manifest, JSON_UNESCAPED_SLASHES));
-$gate = new RendererAuthorityGate(null, $tmp, '1.6.22');
+$gate = new RendererAuthorityGate(null, $tmp, '1.6.23');
 $status=$gate->manifest_status();
 rag_check( true === $status['accepted'] && 'manifest_valid' === $status['reason'], 'Exact release-bound manifest must validate.' );
-$wrong_version = new RendererAuthorityGate(null, $tmp, '1.6.23');
+$wrong_version = new RendererAuthorityGate(null, $tmp, '1.6.24');
 $status=$wrong_version->manifest_status();
 rag_check( false === $status['accepted'] && 'plugin_version_mismatch' === $status['reason'], 'Acceptance authority must not survive a plugin-version change.' );
 
@@ -63,8 +63,11 @@ $registry->register(new RagRenderer('mpdf-pdf','8.3.1+certloom.1',array('pdf'),s
 $registry->register(new RagRenderer('certloom-raster','1.0.0',array('png'),str_repeat('4',64)));
 $status=$gate->runtime_status($registry);
 rag_check( true === $status['accepted'] && 'runtime_authorized' === $status['reason'], 'Exact accepted renderer identities with available requirements must authorize runtime.' );
-rag_check( $gate->can_publish_templates($registry), 'Template publication gate must open only from release manifest + exact accepted runtime.' );
+rag_check( $gate->can_publish_templates(), 'Template publication gate must open from exact release acceptance without depending on this host runtime.' );
 rag_check( $gate->can_render('pdf',$registry) && $gate->can_render('png',$registry) && ! $gate->can_render('jpeg',$registry), 'Artifact authority must be restricted to formats actually accepted.' );
+$pdf_only=new RendererRegistry(); $pdf_only->register(new RagRenderer('mpdf-pdf','8.3.1+certloom.1',array('pdf'),str_repeat('2',64)));
+rag_check( $gate->can_render('pdf',$pdf_only), 'PDF artifact authority must inspect the requested accepted renderer without requiring the PNG runtime on the same host path.' );
+rag_check( false === $gate->can_render('png',$pdf_only), 'PNG authority must fail closed when its accepted renderer is not registered.' );
 
 $wrong=new RendererRegistry();
 $wrong->register(new RagRenderer('mpdf-pdf','8.3.1+certloom.2',array('pdf'),str_repeat('2',64)));
@@ -79,6 +82,8 @@ $missing_runtime=new RendererRegistry();
 $missing_runtime->register(new RagRenderer('mpdf-pdf','8.3.1+certloom.1',array('pdf'),str_repeat('2',64),true));
 $missing_runtime->register(new RagRenderer('certloom-raster','1.0.0',array('png'),str_repeat('4',64)));
 rag_check( 'renderer_runtime_unavailable' === $gate->runtime_status($missing_runtime)['reason'], 'Accepted candidate must still fail closed when host runtime requirements are missing.' );
+rag_check( $gate->can_publish_templates(), 'Release-accepted Template publication must remain distinct from per-host artifact runtime availability.' );
+rag_check( false === $gate->can_render('pdf',$missing_runtime), 'Artifact execution must remain closed when the selected accepted renderer runtime is unavailable.' );
 
 file_put_contents($tmp . '/resources/renderer/accepted.json', '{broken');
 rag_check( 'manifest_invalid' === $gate->manifest_status()['reason'], 'Malformed bundled authority JSON must fail closed.' );
@@ -87,13 +92,15 @@ unlink($tmp . '/resources/renderer/accepted.json'); rmdir($tmp . '/resources/ren
 $repo_source=file_get_contents(dirname(__DIR__) . '/src/Infrastructure/Repository/TemplateRepository.php');
 $admin_source=file_get_contents(dirname(__DIR__) . '/src/Infrastructure/Admin/TemplateAdmin.php');
 $status_source=file_get_contents(dirname(__DIR__) . '/includes/class-ecapla-certverify-system-status.php');
-rag_check( false !== strpos($repo_source,'RendererAuthorityGate') && false !== strpos($repo_source,'manifest_status()'), 'Template publication must consult release-bound renderer authority instead of a mutable option.' );
+$coordinator_source=file_get_contents(dirname(__DIR__) . '/src/Infrastructure/Rendering/ArtifactRenderCoordinator.php');
+rag_check( false !== strpos($repo_source,'RendererAuthorityGate') && false !== strpos($repo_source,'publication_status()'), 'Template publication must consult release-bound renderer authority instead of a mutable option.' );
 rag_check( false !== strpos($repo_source,'published_revision_id') && false !== strpos($repo_source,'certloom_template_stale_revision'), 'Accepted publication path must advance only the reviewed immutable current revision.' );
 rag_check( false !== strpos($admin_source,'admin_post_certloom_template_publish') && false !== strpos($admin_source,'expected_revision_id'), 'Gated Template admin must carry nonce/capability/revision proof into future publication.' );
 rag_check( false !== strpos($status_source,'renderer_authority_check') && false !== strpos($status_source,'no WordPress option can bypass'), 'System Status must expose renderer authority without suggesting an admin toggle can enable it.' );
+rag_check( false !== strpos($coordinator_source,'ArtifactAuthorityGateInterface') && false !== strpos($coordinator_source,'artifact_status( $format, $this->registry )'), 'Artifact coordinator must enforce release/runtime authority before any renderer execution.' );
 rag_check( is_file(dirname(__DIR__) . '/resources/renderer/README.txt'), 'Production package must document that no mutable runtime toggle can substitute for accepted release authority.' );
 $readme=file_get_contents(dirname(__DIR__) . '/resources/renderer/README.txt');
-rag_check( false !== strpos($readme,'no accepted.json in 1.6.22') && false !== strpos($readme,'never stored as a mutable'), 'Current release must explicitly remain renderer-authority closed.' );
+rag_check( false !== strpos($readme,'no accepted.json in 1.6.23') && false !== strpos($readme,'never stored as a mutable'), 'Current release must explicitly remain renderer-authority closed.' );
 
 echo "PASS  Renderer authority is release-bound, version-bound, runtime-matched and fail-closed\n";
 echo "\n{$checks} checks, 0 failures\n";

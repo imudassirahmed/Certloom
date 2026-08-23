@@ -2,6 +2,7 @@
 namespace Certloom\Infrastructure\Rendering;
 
 use Certloom\Application\Rendering\RendererRegistry;
+use Certloom\Application\Contract\ArtifactAuthorityGateInterface;
 use Certloom\Application\Rendering\RendererReleaseManifest;
 
 /**
@@ -10,7 +11,7 @@ use Certloom\Application\Rendering\RendererReleaseManifest;
  * registered renderer identities; no WordPress option or request parameter can
  * enable it.
  */
-final class RendererAuthorityGate {
+final class RendererAuthorityGate implements ArtifactAuthorityGateInterface {
 	const DEFAULT_RELATIVE_PATH = 'resources/renderer/accepted.json';
 	const MAX_MANIFEST_BYTES = 65536;
 
@@ -45,50 +46,86 @@ final class RendererAuthorityGate {
 	}
 
 	/** @return array<string,mixed> */
+	public function publication_status() {
+		$status = $this->manifest_status();
+		if ( empty( $status['accepted'] ) || ! is_array( $status['manifest'] ) ) { return $status; }
+		if ( true !== ( $status['manifest']['authority']['template_publication'] ?? false ) ) {
+			return $this->failed_runtime( $status, 'template_publication_not_authorized', 'This Certloom release does not authorize Template publication.' );
+		}
+		$status['reason'] = 'publication_authorized';
+		$status['message'] = 'This Certloom release contains accepted production-renderer authority for Template publication.';
+		return $status;
+	}
+
+	/** @return array<string,mixed> */
+	public function artifact_status( $format, RendererRegistry $registry ) {
+		$format = strtolower( trim( (string) $format ) );
+		$status = $this->manifest_status();
+		if ( empty( $status['accepted'] ) || ! is_array( $status['manifest'] ) ) { return $status; }
+		$allowed = array_values( (array) ( $status['manifest']['authority']['artifact_formats'] ?? array() ) );
+		if ( ! in_array( $format, $allowed, true ) || ! in_array( $format, array( 'pdf', 'png', 'jpeg' ), true ) ) {
+			return $this->failed_runtime( $status, 'artifact_format_not_authorized', 'This Certloom release does not authorize the requested artifact format.' );
+		}
+		if ( ! isset( $status['manifest']['renderers'][ $format ] ) || ! is_array( $status['manifest']['renderers'][ $format ] ) ) {
+			return $this->failed_runtime( $status, 'renderer_authority_missing', 'This Certloom release does not bind an accepted renderer for ' . strtoupper( $format ) . '.' );
+		}
+		return $this->inspect_authorized_renderer( $format, $registry, $status );
+	}
+
+	/** @return array<string,mixed> */
 	public function runtime_status( RendererRegistry $registry ) {
 		$status = $this->manifest_status();
 		if ( empty( $status['accepted'] ) || ! is_array( $status['manifest'] ) ) { return $status; }
-		$manifest = $status['manifest'];
-		foreach ( array( 'pdf', 'png' ) as $format ) {
-			try {
-				$renderer = $registry->for_format( $format );
-			} catch ( \Throwable $error ) {
-				return $this->failed_runtime( $status, 'renderer_missing', 'Accepted renderer is not registered for ' . strtoupper( $format ) . '.' );
-			}
-			$expected = $manifest['renderers'][ $format ];
-			try {
-				$id = (string) $renderer->id();
-				$version = (string) $renderer->version();
-				$context = (array) $renderer->context();
-			} catch ( \Throwable $error ) {
-				return $this->failed_runtime( $status, 'renderer_identity_error', 'Accepted renderer identity/context could not be inspected.' );
-			}
-			$candidate_hash = isset( $context['candidate_manifest_sha256'] ) ? strtolower( trim( (string) $context['candidate_manifest_sha256'] ) ) : '';
-			if ( ! hash_equals( (string) $expected['id'], strtolower( trim( $id ) ) ) || ! hash_equals( (string) $expected['version'], trim( $version ) ) || ! hash_equals( (string) $expected['candidate_manifest_sha256'], $candidate_hash ) ) {
-				return $this->failed_runtime( $status, 'renderer_identity_mismatch', 'Registered renderer does not match the exact PDF-04 accepted candidate.' );
-			}
-			$runtime = $this->capabilities->inspect( $renderer );
-			if ( empty( $runtime['available'] ) ) {
-				return $this->failed_runtime( $status, 'renderer_runtime_unavailable', 'Accepted renderer runtime requirements are unavailable: ' . implode( ', ', (array) $runtime['missing'] ) );
-			}
+		foreach ( array_values( (array) ( $status['manifest']['authority']['artifact_formats'] ?? array() ) ) as $format ) {
+			$checked = $this->inspect_authorized_renderer( $format, $registry, $status );
+			if ( empty( $checked['accepted'] ) ) { return $checked; }
 		}
 		$status['accepted'] = true;
 		$status['reason'] = 'runtime_authorized';
-		$status['message'] = 'This Certloom release contains matching accepted PDF/PNG renderer candidates and their runtime requirements are available.';
+		$status['message'] = 'This Certloom release contains matching accepted renderer candidates and all authorized runtime requirements are available.';
 		return $status;
 	}
 
 	/** @return bool */
-	public function can_publish_templates( RendererRegistry $registry ) {
-		$status = $this->runtime_status( $registry );
-		return ! empty( $status['accepted'] ) && 'runtime_authorized' === (string) $status['reason'] && true === ( $status['manifest']['authority']['template_publication'] ?? false );
+	public function can_publish_templates() {
+		$status = $this->publication_status();
+		return ! empty( $status['accepted'] ) && 'publication_authorized' === (string) $status['reason'];
 	}
 
 	/** @return bool */
 	public function can_render( $format, RendererRegistry $registry ) {
-		$format = strtolower( trim( (string) $format ) );
-		$status = $this->runtime_status( $registry );
-		return ! empty( $status['accepted'] ) && 'runtime_authorized' === (string) $status['reason'] && in_array( $format, (array) ( $status['manifest']['authority']['artifact_formats'] ?? array() ), true );
+		$status = $this->artifact_status( $format, $registry );
+		return ! empty( $status['accepted'] ) && 'artifact_authorized' === (string) $status['reason'];
+	}
+
+	/** @return array<string,mixed> */
+	private function inspect_authorized_renderer( $format, RendererRegistry $registry, array $status ) {
+		try {
+			$renderer = $registry->for_format( $format );
+		} catch ( \Throwable $error ) {
+			return $this->failed_runtime( $status, 'renderer_missing', 'Accepted renderer is not registered for ' . strtoupper( $format ) . '.' );
+		}
+		$expected = $status['manifest']['renderers'][ $format ];
+		try {
+			$id = (string) $renderer->id();
+			$version = (string) $renderer->version();
+			$context = (array) $renderer->context();
+		} catch ( \Throwable $error ) {
+			return $this->failed_runtime( $status, 'renderer_identity_error', 'Accepted renderer identity/context could not be inspected.' );
+		}
+		$candidate_hash = isset( $context['candidate_manifest_sha256'] ) ? strtolower( trim( (string) $context['candidate_manifest_sha256'] ) ) : '';
+		if ( ! hash_equals( (string) $expected['id'], strtolower( trim( $id ) ) ) || ! hash_equals( (string) $expected['version'], trim( $version ) ) || ! hash_equals( (string) $expected['candidate_manifest_sha256'], $candidate_hash ) ) {
+			return $this->failed_runtime( $status, 'renderer_identity_mismatch', 'Registered renderer does not match the exact PDF-04 accepted candidate.' );
+		}
+		$runtime = $this->capabilities->inspect( $renderer );
+		if ( empty( $runtime['available'] ) ) {
+			return $this->failed_runtime( $status, 'renderer_runtime_unavailable', 'Accepted renderer runtime requirements are unavailable: ' . implode( ', ', (array) $runtime['missing'] ) );
+		}
+		$status['accepted'] = true;
+		$status['reason'] = 'artifact_authorized';
+		$status['message'] = 'The exact accepted ' . strtoupper( $format ) . ' renderer is available on this host.';
+		$status['format'] = $format;
+		return $status;
 	}
 
 	/** @return array<string,mixed>|null */

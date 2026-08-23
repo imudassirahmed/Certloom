@@ -1,3 +1,9 @@
+1.6.23
+- Enforce release/runtime renderer authority inside ArtifactRenderCoordinator before any production renderer can execute.
+- Separate release-accepted Template publication from host-specific artifact runtime availability.
+- Make artifact runtime authorization format-specific while preserving exact renderer ID/version/candidate-manifest matching and fail-closed host requirements.
+- Add explicit artifact-authority contract coverage and keep the release closed because no accepted renderer manifest ships.
+
 1.6.22
 - Added release-bound renderer authority: only a bundled manifest derived from accepted PDF-04 evidence can authorize downstream Template/artifact authority.
 - Added strict renderer release manifest validation bound to Certloom version, acceptance-v4 evidence, verifier/report hashes, frozen fixture/plan manifests, and exact PDF/PNG candidate identities.

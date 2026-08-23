@@ -156,7 +156,7 @@ final class TemplateRepository {
 	public function publish( $template_id, $expected_revision_id = 0 ) {
 		$template_id = absint( $template_id );
 		if ( ! $template_id ) { return new \WP_Error( 'certloom_template_id_required', __( 'A valid template is required.', 'certloom' ) ); }
-		$authority = $this->renderer_authority->manifest_status();
+		$authority = $this->renderer_authority->publication_status();
 		if ( empty( $authority['accepted'] ) ) {
 			return new \WP_Error( 'certloom_template_publish_renderer_gate', __( 'Template publishing remains disabled until this Certloom release ships with accepted production-renderer authority.', 'certloom' ), array( 'template_id' => $template_id, 'renderer_authority_reason' => (string) ( $authority['reason'] ?? 'unknown' ) ) );
 		}

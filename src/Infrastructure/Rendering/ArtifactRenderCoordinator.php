@@ -4,6 +4,7 @@ namespace Certloom\Infrastructure\Rendering;
 use Certloom\Application\Rendering\ArtifactInspector;
 use Certloom\Application\Rendering\ArtifactReceipt;
 use Certloom\Application\Contract\LocalFontResolverInterface;
+use Certloom\Application\Contract\ArtifactAuthorityGateInterface;
 use Certloom\Application\Rendering\FontAssetInspector;
 use Certloom\Application\Rendering\FontManifest;
 use Certloom\Application\Rendering\RenderRequestFingerprint;
@@ -26,8 +27,9 @@ final class ArtifactRenderCoordinator {
 	private $font_resolver;
 	private $font_assets;
 	private $plans;
+	private $authority;
 
-	public function __construct( RendererRegistry $registry, RendererCapabilityDetector $capabilities = null, RenderRequestFingerprint $fingerprints = null, ArtifactReceipt $receipts = null, FontManifest $fonts = null, ArtifactInspector $artifacts = null, LocalFontResolverInterface $font_resolver = null, FontAssetInspector $font_assets = null, RenderPlanBuilder $plans = null ) {
+	public function __construct( RendererRegistry $registry, RendererCapabilityDetector $capabilities = null, RenderRequestFingerprint $fingerprints = null, ArtifactReceipt $receipts = null, FontManifest $fonts = null, ArtifactInspector $artifacts = null, LocalFontResolverInterface $font_resolver = null, FontAssetInspector $font_assets = null, RenderPlanBuilder $plans = null, ArtifactAuthorityGateInterface $authority = null ) {
 		$this->registry = $registry;
 		$this->capabilities = $capabilities ?: new RendererCapabilityDetector();
 		$this->fingerprints = $fingerprints ?: new RenderRequestFingerprint();
@@ -37,10 +39,16 @@ final class ArtifactRenderCoordinator {
 		$this->font_resolver = $font_resolver;
 		$this->font_assets = $font_assets ?: new FontAssetInspector();
 		$this->plans = $plans ?: new RenderPlanBuilder();
+		$this->authority = $authority ?: new RendererAuthorityGate();
 	}
 
 	/** @return array<string,mixed> */
 	public function render( $format, $layout_hash, array $resolved_document ) {
+		$format = strtolower( trim( (string) $format ) );
+		$authority = $this->authority->artifact_status( $format, $this->registry );
+		if ( empty( $authority['accepted'] ) || 'artifact_authorized' !== (string) ( $authority['reason'] ?? '' ) ) {
+			throw new RuntimeException( 'Certloom artifact rendering is not authorized for this release/runtime: ' . (string) ( $authority['reason'] ?? 'unknown' ) );
+		}
 		$renderer = $this->registry->for_format( $format );
 		$report = $this->capabilities->inspect( $renderer );
 		if ( empty( $report['available'] ) ) {
@@ -82,7 +90,7 @@ final class ArtifactRenderCoordinator {
 			throw new RuntimeException( 'Certloom render plan preparation failed without changing credential state.', 0, $error );
 		}
 		try {
-			$bytes = $renderer->render( $render_plan, strtolower( trim( (string) $format ) ) );
+			$bytes = $renderer->render( $render_plan, $format );
 		} catch ( \Throwable $error ) {
 			throw new RuntimeException( 'Certloom renderer failed without changing credential state.', 0, $error );
 		}

@@ -3,6 +3,7 @@
 require_once __DIR__ . '/bootstrap-autoload.php';
 
 use Certloom\Application\Contract\RendererInterface;
+use Certloom\Application\Contract\ArtifactAuthorityGateInterface;
 use Certloom\Application\Rendering\RenderPlanBuilder;
 use Certloom\Application\Rendering\RendererAcceptanceContract;
 use Certloom\Application\Rendering\RendererRegistry;
@@ -158,6 +159,10 @@ rpcheck(is_string($reference_manifest) && 1===preg_match('/^[0-9a-f]{64}$/',hash
 rpsame( '3070631a405c471fd663373b7440243cfa915d65eb38c8ddb4746ed35f2e1279', hash( 'sha256', $reference_manifest ), 'Stored shared render-plan manifest must remain frozen for the six permanent fixtures.' );
 
 // The coordinator must hand adapters the shared plan and return its portable hash.
+final class RPAllowArtifactAuthority implements ArtifactAuthorityGateInterface {
+	public function artifact_status( $format, RendererRegistry $registry ) { return array( 'accepted'=>true, 'reason'=>'artifact_authorized', 'format'=>strtolower(trim((string)$format)) ); }
+	public function can_render( $format, RendererRegistry $registry ) { return true; }
+}
 final class RPTestRenderer implements RendererInterface {
 	public $received;
 	public function id(){return 'rp-test';}
@@ -167,7 +172,7 @@ final class RPTestRenderer implements RendererInterface {
 	public function context(){return array();}
 	public function render(array $render_plan,$format){$this->received=$render_plan;return "%PDF-1.4\n1 0 obj<<>>endobj\n%%EOF\n";}
 }
-$renderer=new RPTestRenderer(); $registry=new RendererRegistry(); $registry->register($renderer); $coordinator=new ArtifactRenderCoordinator($registry);
+$renderer=new RPTestRenderer(); $registry=new RendererRegistry(); $registry->register($renderer); $coordinator=new ArtifactRenderCoordinator($registry,null,null,null,null,null,null,null,null,new RPAllowArtifactAuthority());
 $shape_only=array('_meta'=>array('schema'=>'certloom-layout','schema_version'=>1),'page'=>rppage(),'elements'=>array($shape));
 $out=$coordinator->render('pdf',str_repeat('9',64),$shape_only);
 rpsame('certloom-render-plan',$renderer->received['_meta']['schema'],'Coordinator must pass render-plan schema to adapters.');

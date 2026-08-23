@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.22
+Stable tag: 1.6.23
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.22: Certloom adds a release-bound renderer authority manifest/gate between accepted `PDF-04` evidence and downstream Template/artifact authority. No mutable WordPress option can unlock it. This release intentionally ships no accepted renderer manifest because the current runtime still cannot execute the dependency-prefixed production candidate, so production artifacts, Template publication, authoritative Preview, and Designer output remain disabled.
+> Development note for 1.6.23: Certloom now enforces release/runtime renderer authority at the ArtifactRenderCoordinator itself. Template publication depends only on release acceptance, while each artifact format additionally requires its exact accepted renderer candidate and live host requirements. This release intentionally ships no accepted renderer manifest, so production artifacts, Template publication, authoritative Preview, and Designer output remain disabled.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -129,6 +129,13 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.23 =
+* Enforce release-bound renderer authority inside the single ArtifactRenderCoordinator choke point before any renderer can execute.
+* Separate release acceptance for Template publication from per-host artifact runtime checks; publication no longer depends on whether this particular host can currently load PDF/PNG engines.
+* Authorize artifact formats independently, so PDF execution checks the accepted PDF candidate/runtime and PNG checks the accepted PNG candidate/runtime without accidental cross-format coupling.
+* Add an application-level artifact-authority contract for explicit testability while the production default remains the fail-closed RendererAuthorityGate.
+* Keep `PDF-04`, production artifacts, authoritative Preview, Designer authority, and normalized-domain readiness flags gated; 1.6.23 intentionally ships no accepted renderer manifest.
 
 = 1.6.22 =
 * Add `RendererReleaseManifest` v1: a release-bundled, version-bound authority record derived only from production-candidate `RendererAcceptanceContract` v4 evidence.
