@@ -45,6 +45,7 @@ class Ecapla_CertVerify_System_Status {
 		$checks[] = self::domain_maintenance_check();
 		$checks[] = self::domain_schema_lock_check();
 		$checks[] = self::local_qr_check();
+		$checks[] = self::local_barcode_check();
 		$checks[] = self::extension_check( 'mbstring', __( 'PHP mbstring', 'certloom' ), __( 'Required by the planned production Unicode certificate renderer; not required by the current verifier.', 'certloom' ) );
 		$checks[] = self::extension_check( 'gd', __( 'PHP GD', 'certloom' ), __( 'Expected by the planned raster/PDF rendering stack; not required by the current verifier.', 'certloom' ) );
 		$checks[] = self::check(
@@ -104,8 +105,10 @@ class Ecapla_CertVerify_System_Status {
 		$health = Ecapla_CertVerify_QR::health();
 		$enabled = Ecapla_CertVerify_QR::enabled();
 		if ( empty( $health['available'] ) ) {
-			return self::check( 'local_qr', __( 'Local verification QR', 'certloom' ), 'bad', __( 'Encoder failed self-check', 'certloom' ), __( 'Certloom cannot safely present QR codes until the bundled local encoder passes its matrix self-check.', 'certloom' ) );
+			return self::check( 'local_qr', __( 'Local verification QR', 'certloom' ), 'bad', __( 'Encoder failed self-check', 'certloom' ), __( 'Certloom cannot safely present QR codes until the bundled local encoder passes both standard and high-error-correction matrix self-checks.', 'certloom' ) );
 		}
+		$logo_state = isset( $health['logo_state'] ) ? (string) $health['logo_state'] : 'disabled';
+		$status = 'unavailable' === $logo_state ? 'warning' : 'good';
 		$value = $enabled ? __( 'Enabled', 'certloom' ) : __( 'Available — hidden by setting', 'certloom' );
 		$note = sprintf(
 			/* translators: 1: encoder ID, 2: encoder version. */
@@ -113,7 +116,30 @@ class Ecapla_CertVerify_System_Status {
 			(string) $health['id'],
 			(string) $health['version']
 		);
-		return self::check( 'local_qr', __( 'Local verification QR', 'certloom' ), 'good', $value, $note );
+		if ( 'ready' === $logo_state ) {
+			$note .= ' ' . __( 'The local Site Icon passed the bounded QR-logo asset check and logo QR uses high error correction.', 'certloom' );
+		} elseif ( 'unavailable' === $logo_state ) {
+			$note .= ' ' . __( 'QR center-logo mode is enabled, but the Site Icon is missing or not a safe local PNG/JPEG; Certloom will fall back to the plain QR.', 'certloom' );
+		}
+		return self::check( 'local_qr', __( 'Local verification QR', 'certloom' ), $status, $value, $note );
+	}
+
+	private static function local_barcode_check() {
+		if ( ! class_exists( 'Ecapla_CertVerify_Barcode' ) ) {
+			return self::check( 'local_code128', __( 'Local Code 128 barcode', 'certloom' ), 'bad', __( 'Unavailable', 'certloom' ), __( 'The local Code 128 presentation service is not loaded.', 'certloom' ) );
+		}
+		$health = Ecapla_CertVerify_Barcode::health();
+		if ( empty( $health['available'] ) ) {
+			return self::check( 'local_code128', __( 'Local Code 128 barcode', 'certloom' ), 'bad', __( 'Encoder failed self-check', 'certloom' ), __( 'Certloom cannot present Code 128 until the bundled local encoder passes its structural self-check.', 'certloom' ) );
+		}
+		$value = Ecapla_CertVerify_Barcode::enabled() ? __( 'Enabled', 'certloom' ) : __( 'Available — hidden by setting', 'certloom' );
+		$note = sprintf(
+			/* translators: 1: encoder ID, 2: encoder version. */
+			__( 'Encoder %1$s v%2$s runs locally and represents the existing human certificate number only; it adds no barcode lookup endpoint or alternate credential identity.', 'certloom' ),
+			(string) $health['id'],
+			(string) $health['version']
+		);
+		return self::check( 'local_code128', __( 'Local Code 128 barcode', 'certloom' ), 'good', $value, $note );
 	}
 
 	private static function database_proof_check() {

@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.13
+Stable tag: 1.6.14
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.13: Certloom begins Original Phase 4 with fully local verification QR generation on the authoritative legacy verifier/profile surface. Successful public results can show a scan-safe QR that encodes only the canonical verification URL, uses Certloom's bundled Model 2 encoder, requires no remote service, and never embeds secondary proof or private credential data. The same renderer-independent QR matrix contract is reserved for future server-authoritative artifacts; normalized-domain and production PDF/image authority remain gated.
+> Development note for 1.6.14: Certloom completes the dependency-safe `QR-02` public symbol surface on the authoritative legacy verifier/profile path. Administrators may opt into a bounded local Site Icon center mark for verification QR and a locally generated Code 128 representation of the existing human certificate number. Neither feature creates a new credential identity, lookup route, or remote dependency; normalized-domain and production PDF/image authority remain gated.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -129,6 +129,14 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.14 =
+* Add opt-in center-logo verification QR using only a byte-validated local WordPress Site Icon, high error correction, bounded center geometry, and safe fallback to the established plain QR when the logo is unavailable.
+* Add opt-in local Code 128 rendering of the already-authoritative human certificate number, with printable-ASCII fail-soft behavior, quiet zones, human-readable caption, AJAX/no-JS parity, and no new barcode lookup namespace.
+* Add independent raster decode acceptance for 18 logo-QR combinations and 9 Code 128 certificate-number patterns, plus expanded mobile/RTL/forced-colors browser resilience.
+* Add local barcode health reporting and QR-logo readiness to System Status while keeping both enhancements disabled by default for existing sites.
+* Tighten QR-logo asset safety to local uploads PNG/JPEG only, 48–1024px, at most 256 KiB, with realpath confinement and byte-level image/MIME revalidation.
+* Reconcile roadmap terminology: the canonical Growth Plan places QR/Templates/Designer in Phase 3 Pro commercial core; later engineering docs called the dependency slice Phase 4. Feature IDs remain authoritative and the original QR-01 artifact/bulk derivatives remain renderer-gated rather than silently marked complete.
 
 = 1.6.13 =
 * Add WordPress-local QR Code Model 2 generation for successful public verification and Credential Profile results, with no remote QR service or new credential identifier.

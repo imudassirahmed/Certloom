@@ -1,3 +1,12 @@
+1.6.14 — QR-02 local center-logo QR and Code 128 representation
+- Add an opt-in center-logo QR treatment using only a bounded, byte-validated local WordPress Site Icon; switch branded symbols to error correction H and fall back to the established plain QR if the icon is unsafe/unavailable.
+- Add an opt-in local Code 128 representation of the existing human certificate number with Code Set B/C optimization, standard checksum/stop, quiet zones, accessible human-readable caption, and no alternate lookup endpoint or identifier.
+- Add REST/AJAX and server/no-JS parity, System Status health/readiness, responsive horizontal containment, RTL, print and forced-colors behavior.
+- Add independent raster scan gates for 18 logo-QR combinations and 9 Code 128 values while preserving the existing 4-vector plain-QR decoder gate.
+- Tighten local Site Icon handling to uploads-confined PNG/JPEG bytes, 48–1024px and at most 256 KiB with byte-level reinspection.
+- Reconcile canonical phase terminology and preserve the original QR-01 PNG/SVG/PDF/bulk-sheet remainder as renderer/artifact-gated work rather than overstating completion.
+- Keep normalized-domain write/admin/data-tool flags false and do not enable production PDF/PNG/JPEG authority.
+
 1.6.13 — Phase 4 local verification QR and shared QR-encoder foundation
 - Add a bundled WordPress-local QR Code Model 2 encoder behind the renderer-independent QrEncoderInterface; no remote generation service is used.
 - Add optional public verification/profile QR that encodes only the canonical verification URL with fixed 4-module quiet zone and scan-safe black/white modules.

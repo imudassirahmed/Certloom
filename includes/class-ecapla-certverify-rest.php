@@ -101,6 +101,12 @@ class Ecapla_CertVerify_REST {
 			if ( ! is_wp_error( $qr_candidate ) ) { $qr = $qr_candidate; }
 		}
 
+		$barcode = null;
+		if ( class_exists( 'Ecapla_CertVerify_Barcode' ) && ! empty( $presentation['certificate_number'] ) ) {
+			$barcode_candidate = Ecapla_CertVerify_Barcode::public_payload( (string) $presentation['certificate_number'] );
+			if ( ! is_wp_error( $barcode_candidate ) ) { $barcode = $barcode_candidate; }
+		}
+
 		/* Keep the established fields contract while adding one shared presentation model. */
 		$payload = array(
 			'found'        => true,
@@ -117,6 +123,7 @@ class Ecapla_CertVerify_REST {
 				'labels'             => $presentation['labels'],
 				'secondary_proof'    => isset( $presentation['secondary_proof'] ) ? $presentation['secondary_proof'] : 'not_required',
 				'qr'                 => $qr,
+				'barcode'            => $barcode,
 			),
 		);
 		return self::add_private_headers( new WP_REST_Response( $payload, 200 ) );

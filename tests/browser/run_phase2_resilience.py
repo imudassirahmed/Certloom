@@ -53,7 +53,8 @@ async def run():
                 legacyAnimationStopped: getComputedStyle(document.querySelector('.cv-arrow')).animationName === 'none',
                 modernAnimationStopped: getComputedStyle(document.querySelector('.cvx-arrow')).animationName === 'none',
                 forcedColorActionBorder: parseFloat(getComputedStyle(document.querySelector('.certloom-result-action')).borderWidth) >= 1,
-                qrForcedColorsPreserved: getComputedStyle(document.querySelector('.certloom-qr-svg')).forcedColorAdjust === 'none'
+                qrForcedColorsPreserved: getComputedStyle(document.querySelector('.certloom-qr-svg')).forcedColorAdjust === 'none',
+                barcodeForcedColorsPreserved: getComputedStyle(document.querySelector('.certloom-barcode-svg')).forcedColorAdjust === 'none'
             };
         }""")
         media_bad = [name for name, ok in media_checks.items() if not ok]

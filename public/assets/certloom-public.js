@@ -208,7 +208,34 @@
 				if ( qrView >= 29 && qrView <= 185 ) {
 					var qrLabel = 'string' === typeof qr.label ? qr.label : 'Verification QR code';
 					var qrCaption = 'string' === typeof qr.caption ? qr.caption : 'Scan to open this credential verification page.';
-					qrHtml = '<figure class="' + config.prefix + '-verification-qr certloom-verification-qr"><div class="certloom-verification-qr-code" role="img" aria-label="' + escapeHtml( qrLabel ) + '"><svg class="certloom-qr-svg" xmlns="http://www.w3.org/2000/svg" width="176" height="176" viewBox="0 0 ' + qrView + ' ' + qrView + '" aria-hidden="true" focusable="false" shape-rendering="crispEdges"><rect width="' + qrView + '" height="' + qrView + '" fill="#fff"/><path d="' + qr.path + '" fill="#111"/></svg></div><figcaption>' + escapeHtml( qrCaption ) + '</figcaption></figure>';
+					var qrLogoHtml = '';
+					var qrLogo = qr.logo && 'object' === typeof qr.logo ? qr.logo : null;
+					if ( qrLogo && 'string' === typeof qrLogo.data_uri && qrLogo.data_uri.length <= 800000 && /^data:image\/(?:png|jpeg);base64,[A-Za-z0-9+/=]+$/.test( qrLogo.data_uri ) ) {
+						var logoX = parseInt( qrLogo.x, 10 );
+						var logoY = parseInt( qrLogo.y, 10 );
+						var logoSize = parseInt( qrLogo.size, 10 );
+						var imageX = parseInt( qrLogo.image_x, 10 );
+						var imageY = parseInt( qrLogo.image_y, 10 );
+						var imageSize = parseInt( qrLogo.image_size, 10 );
+						if ( logoX >= 0 && logoY >= 0 && logoSize >= 5 && imageSize >= 1 && logoX + logoSize <= qrView && logoY + logoSize <= qrView ) {
+							qrLogoHtml = '<rect class="certloom-qr-logo-background" x="' + logoX + '" y="' + logoY + '" width="' + logoSize + '" height="' + logoSize + '" rx="1" fill="#fff"/><image class="certloom-qr-logo-image" href="' + escapeHtml( qrLogo.data_uri ) + '" x="' + imageX + '" y="' + imageY + '" width="' + imageSize + '" height="' + imageSize + '" preserveAspectRatio="xMidYMid meet"/>';
+						}
+					}
+					qrHtml = '<figure class="' + config.prefix + '-verification-qr certloom-verification-qr"><div class="certloom-verification-qr-code" role="img" aria-label="' + escapeHtml( qrLabel ) + '"><svg class="certloom-qr-svg" xmlns="http://www.w3.org/2000/svg" width="176" height="176" viewBox="0 0 ' + qrView + ' ' + qrView + '" aria-hidden="true" focusable="false" shape-rendering="crispEdges"><rect width="' + qrView + '" height="' + qrView + '" fill="#fff"/><path d="' + qr.path + '" fill="#111"/>' + qrLogoHtml + '</svg></div><figcaption>' + escapeHtml( qrCaption ) + '</figcaption></figure>';
+				}
+			}
+			var barcodeHtml = '';
+			var barcode = presentation.barcode && 'object' === typeof presentation.barcode ? presentation.barcode : null;
+			if ( barcode && 'string' === typeof barcode.path && /^[M0-9 hvz-]+$/.test( barcode.path ) ) {
+				var barcodeWidth = parseInt( barcode.view_width, 10 );
+				var barcodeHeight = parseInt( barcode.view_height, 10 );
+				if ( barcodeWidth >= 66 && barcodeWidth <= 780 && barcodeHeight === 40 ) {
+					var barcodeLabel = 'string' === typeof barcode.label ? barcode.label : 'Code 128 certificate barcode';
+					var barcodeCaption = 'string' === typeof barcode.caption ? barcode.caption : 'Code 128 representation of the certificate number.';
+					var barcodeValue = 'string' === typeof barcode.value ? barcode.value : '';
+					var barcodeDisplayWidth = parseInt( barcode.display_width, 10 );
+					if ( barcodeDisplayWidth < 440 || barcodeDisplayWidth > 1600 ) { barcodeDisplayWidth = Math.min( 1600, Math.max( 440, barcodeWidth * 2 ) ); }
+					barcodeHtml = '<figure class="' + config.prefix + '-verification-barcode certloom-verification-barcode"><div class="certloom-verification-barcode-code" role="img" aria-label="' + escapeHtml( barcodeLabel ) + '"><svg class="certloom-barcode-svg" xmlns="http://www.w3.org/2000/svg" width="' + barcodeDisplayWidth + '" height="88" viewBox="0 0 ' + barcodeWidth + ' ' + barcodeHeight + '" preserveAspectRatio="none" aria-hidden="true" focusable="false" shape-rendering="crispEdges"><rect width="' + barcodeWidth + '" height="' + barcodeHeight + '" fill="#fff"/><path d="' + barcode.path + '" fill="#111"/></svg></div><figcaption>' + escapeHtml( barcodeCaption ) + ( barcodeValue ? ' <code>' + escapeHtml( barcodeValue ) + '</code>' : '' ) + '</figcaption></figure>';
 				}
 			}
 			var summary = '<div class="' + config.prefix + '-result-summary"><span class="' + config.prefix + '-status-mark" aria-hidden="true">' + escapeHtml( statusIcon( statusKey ) ) + '</span><div><p class="' + config.prefix + '-result-success">' + escapeHtml( statusLabel ) + '</p>' +
@@ -235,7 +262,7 @@
 				}
 			} );
 			var actionBar = actionHtml ? '<div class="' + config.prefix + '-result-actions">' + actionHtml + '<span class="certloom-action-feedback" aria-live="polite"></span></div>' : '';
-			resultEl.innerHTML = '<div class="' + config.prefix + '-result-card ' + config.prefix + '-status-' + statusKey + '">' + summary + list + qrHtml + verified + actionBar + '</div>';
+			resultEl.innerHTML = '<div class="' + config.prefix + '-result-card ' + config.prefix + '-status-' + statusKey + '">' + summary + list + qrHtml + barcodeHtml + verified + actionBar + '</div>';
 			announce( statusDescription ? statusLabel + '. ' + statusDescription : statusLabel );
 		}
 

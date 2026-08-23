@@ -1695,3 +1695,48 @@
 	.certloom-verification-qr{break-inside:avoid;box-shadow:none;border-color:#bbb;}
 }
 
+
+/* 1.6.14 QR-02: bounded local center mark + local Code 128 presentation. */
+.certloom-qr-logo-background{fill:#fff;forced-color-adjust:none;}
+.certloom-qr-logo-image{image-rendering:auto;forced-color-adjust:none;}
+.certloom-verification-barcode{
+	display:grid;
+	gap:10px;
+	margin:16px 0 0;
+	padding:16px;
+	max-width:680px;
+	box-sizing:border-box;
+	border:1px solid rgba(120,120,120,.20);
+	border-radius:12px;
+	background:#fff;
+	color:#20242a;
+}
+.certloom-verification-barcode-code{
+	display:block;
+	max-width:100%;
+	overflow-x:auto;
+	overflow-y:hidden;
+	padding:6px;
+	box-sizing:border-box;
+	background:#fff;
+	line-height:0;
+	-webkit-overflow-scrolling:touch;
+}
+.certloom-barcode-svg{
+	display:block;
+	width:auto;
+	max-width:none;
+	height:72px;
+	background:#fff;
+	forced-color-adjust:none;
+}
+.certloom-verification-barcode figcaption{margin:0;font-size:13px;line-height:1.55;color:#5f6368;overflow-wrap:anywhere;}
+.certloom-verification-barcode code{font:600 .95em/1.5 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;overflow-wrap:anywhere;}
+@media (forced-colors: active){
+	.certloom-verification-barcode{border-color:CanvasText;background:Canvas;color:CanvasText;}
+	.certloom-verification-barcode figcaption{color:CanvasText;}
+}
+@media print{
+	.certloom-verification-barcode{break-inside:avoid;box-shadow:none;border-color:#bbb;}
+	.certloom-verification-barcode-code{overflow:visible;}
+}
