@@ -1,3 +1,11 @@
+1.6.19 — shared renderer composition plan and artifact identity hardening
+- Add `certloom-render-plan` v1 so future PDF/PNG/JPEG adapters consume one Certloom-owned physical composition plan instead of independently interpreting resolved layout geometry.
+- Centralize canonical page geometry, center-pivot arbitrary rotation, physical text alignment/unit conversion, image contain/cover/fill placement, shape/line primitives, and exact QR module placement before adapter execution.
+- Add a deterministic six-fixture shared render-plan manifest and require `RendererAcceptanceContract` v2 evidence to bind the exact manifest plus every fixture's plan hash.
+- Advance `ArtifactReceipt` to v4 so every future artifact binds layout hash, resolved request hash, shared render-plan hash, renderer context, and output-byte integrity.
+- Distinguish shared-plan preparation failures from renderer execution failures and re-prove critical page/identity/z-order/text/QR/raster invariants at the adapter boundary.
+- Preserve the unchanged six golden renderer families and 24 factory-template visual references; `PDF-04`, Template publication, authoritative Preview, Designer authority, and normalized-domain flags remain gated.
+
 1.6.18 — production renderer readiness and exact local-font boundary
 - Add a content-addressed local font resolver and SFNT byte inspector so text-capable renderers must receive the exact manifest-identified TTF/OTF bytes before execution.
 - Reserve runtime font paths as coordinator-owned state outside portable render fingerprints and reject caller-supplied runtime paths.

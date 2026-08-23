@@ -12,7 +12,7 @@ use InvalidArgumentException;
  */
 final class RendererAcceptanceContract {
 	const SCHEMA = 'certloom-renderer-acceptance';
-	const VERSION = 1;
+	const VERSION = 2;
 
 	/** @return string[] */
 	public static function required_fixtures() {
@@ -37,12 +37,13 @@ final class RendererAcceptanceContract {
 			'no_remote_fetch',
 			'missing_dependencies_fail_soft',
 			'deterministic_regeneration',
+			'shared_render_plan',
 		);
 	}
 
 	/** @return array<string,mixed> */
 	public function normalize( array $evidence ) {
-		$allowed = array( 'schema', 'version', 'plugin_version', 'fixture_manifest_sha256', 'renderers', 'checks', 'fixtures' );
+		$allowed = array( 'schema', 'version', 'plugin_version', 'fixture_manifest_sha256', 'render_plan_manifest_sha256', 'renderers', 'checks', 'fixtures' );
 		$this->assert_shape( $evidence, $allowed, $allowed, 'renderer acceptance evidence' );
 		if ( self::SCHEMA !== (string) $evidence['schema'] || ! is_int( $evidence['version'] ) || self::VERSION !== $evidence['version'] ) {
 			throw new InvalidArgumentException( 'Renderer acceptance evidence schema/version is unsupported.' );
@@ -56,6 +57,11 @@ final class RendererAcceptanceContract {
 			throw new InvalidArgumentException( 'Renderer acceptance evidence must bind the golden fixture manifest by SHA-256.' );
 		}
 
+		$render_plan_manifest_hash = strtolower( trim( (string) $evidence['render_plan_manifest_sha256'] ) );
+		if ( ! $this->is_sha256( $render_plan_manifest_hash ) ) {
+			throw new InvalidArgumentException( 'Renderer acceptance evidence must bind the shared render-plan manifest by SHA-256.' );
+		}
+
 		$renderers = $this->normalize_renderers( $evidence['renderers'] );
 		$checks = $this->normalize_checks( $evidence['checks'] );
 		$fixtures = $this->normalize_fixtures( $evidence['fixtures'] );
@@ -65,6 +71,7 @@ final class RendererAcceptanceContract {
 			'version' => self::VERSION,
 			'plugin_version' => $plugin_version,
 			'fixture_manifest_sha256' => $fixture_hash,
+			'render_plan_manifest_sha256' => $render_plan_manifest_hash,
 			'renderers' => $renderers,
 			'checks' => $checks,
 			'fixtures' => $fixtures,
@@ -130,13 +137,14 @@ final class RendererAcceptanceContract {
 			if ( ! is_array( $item ) ) {
 				throw new InvalidArgumentException( 'Renderer acceptance fixture result is malformed.' );
 			}
-			$this->assert_shape( $item, array( 'pdf_sha256', 'png_sha256' ), array( 'pdf_sha256', 'png_sha256' ), 'renderer fixture result' );
+			$this->assert_shape( $item, array( 'render_plan_sha256', 'pdf_sha256', 'png_sha256' ), array( 'render_plan_sha256', 'pdf_sha256', 'png_sha256' ), 'renderer fixture result' );
+			$plan = strtolower( trim( (string) $item['render_plan_sha256'] ) );
 			$pdf = strtolower( trim( (string) $item['pdf_sha256'] ) );
 			$png = strtolower( trim( (string) $item['png_sha256'] ) );
-			if ( ! $this->is_sha256( $pdf ) || ! $this->is_sha256( $png ) ) {
-				throw new InvalidArgumentException( 'Renderer acceptance fixture artifacts must be bound by SHA-256.' );
+			if ( ! $this->is_sha256( $plan ) || ! $this->is_sha256( $pdf ) || ! $this->is_sha256( $png ) ) {
+				throw new InvalidArgumentException( 'Renderer acceptance fixture plans/artifacts must be bound by SHA-256.' );
 			}
-			$out[ $name ] = array( 'pdf_sha256' => $pdf, 'png_sha256' => $png );
+			$out[ $name ] = array( 'render_plan_sha256' => $plan, 'pdf_sha256' => $pdf, 'png_sha256' => $png );
 		}
 		return $out;
 	}

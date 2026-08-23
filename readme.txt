@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.18
+Stable tag: 1.6.19
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.18: Certloom hardens the `PDF-04` renderer-readiness boundary without falsely declaring production rendering accepted. Text-capable artifact execution now requires exact local SHA-256-addressed TTF/OTF bytes, renderer acceptance evidence has a strict six-fixture/no-network/parity checklist, and stale renderer/setup documentation is corrected. The current benchmark runtime still lacks the required local PHP rendering dependencies, so Template publication, authoritative rendered Preview, and Designer output remain disabled.
+> Development note for 1.6.19: Certloom advances `PDF-04` through a renderer-independent `certloom-render-plan` v1. Future PDF/PNG/JPEG adapters must consume one shared physical composition plan, external acceptance evidence must bind the frozen six-fixture plan manifest, and ArtifactReceipt v4 now binds the exact plan hash. The current benchmark runtime still lacks the required local PHP rendering dependencies, so production artifact authority, Template publication, authoritative rendered Preview, and Designer output remain disabled.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -129,6 +129,13 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.19 =
+* Add renderer-independent `certloom-render-plan` v1 so future PDF/image adapters consume one shared Certloom-owned physical composition plan.
+* Centralize cross-adapter geometry, rotation, physical text alignment/unit conversion, image fit/crop, shape/line primitives, and QR module placement before adapter execution.
+* Freeze a deterministic six-fixture render-plan manifest and advance renderer acceptance evidence to v2 with exact plan-hash binding.
+* Advance ArtifactReceipt to v4 so future artifact receipts bind the exact shared render-plan hash.
+* Keep `PDF-04`, artifact authority, Template publication, authoritative Preview, Designer output, and normalized-domain authority gated until real external acceptance passes.
 
 = 1.6.18 =
 * Add an exact local-font delivery boundary for artifact rendering: the content-addressed FontManifest must resolve to byte-verified local TTF/OTF assets before a text renderer executes.

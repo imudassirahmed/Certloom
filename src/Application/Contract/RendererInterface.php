@@ -12,6 +12,6 @@ interface RendererInterface {
 	public function requirements();
 	/** @return array<string,mixed> Deterministic context: font manifest/configuration/library details. */
 	public function context();
-	/** @return string Binary artifact bytes. */
-	public function render( array $resolved_document, $format );
+	/** @return string Binary artifact bytes from a certloom-render-plan v1 array. */
+	public function render( array $render_plan, $format );
 }

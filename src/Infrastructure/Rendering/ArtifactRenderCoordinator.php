@@ -8,6 +8,7 @@ use Certloom\Application\Rendering\FontAssetInspector;
 use Certloom\Application\Rendering\FontManifest;
 use Certloom\Application\Rendering\RenderRequestFingerprint;
 use Certloom\Application\Rendering\RendererRegistry;
+use Certloom\Application\Rendering\RenderPlanBuilder;
 use RuntimeException;
 
 /**
@@ -24,8 +25,9 @@ final class ArtifactRenderCoordinator {
 	private $artifacts;
 	private $font_resolver;
 	private $font_assets;
+	private $plans;
 
-	public function __construct( RendererRegistry $registry, RendererCapabilityDetector $capabilities = null, RenderRequestFingerprint $fingerprints = null, ArtifactReceipt $receipts = null, FontManifest $fonts = null, ArtifactInspector $artifacts = null, LocalFontResolverInterface $font_resolver = null, FontAssetInspector $font_assets = null ) {
+	public function __construct( RendererRegistry $registry, RendererCapabilityDetector $capabilities = null, RenderRequestFingerprint $fingerprints = null, ArtifactReceipt $receipts = null, FontManifest $fonts = null, ArtifactInspector $artifacts = null, LocalFontResolverInterface $font_resolver = null, FontAssetInspector $font_assets = null, RenderPlanBuilder $plans = null ) {
 		$this->registry = $registry;
 		$this->capabilities = $capabilities ?: new RendererCapabilityDetector();
 		$this->fingerprints = $fingerprints ?: new RenderRequestFingerprint();
@@ -34,6 +36,7 @@ final class ArtifactRenderCoordinator {
 		$this->artifacts = $artifacts ?: new ArtifactInspector();
 		$this->font_resolver = $font_resolver;
 		$this->font_assets = $font_assets ?: new FontAssetInspector();
+		$this->plans = $plans ?: new RenderPlanBuilder();
 	}
 
 	/** @return array<string,mixed> */
@@ -73,7 +76,13 @@ final class ArtifactRenderCoordinator {
 		}
 		$request_hash = $this->fingerprints->hash( $layout_hash, $resolved_document );
 		try {
-			$bytes = $renderer->render( $runtime_document, strtolower( trim( (string) $format ) ) );
+			$render_plan = $this->plans->build( $runtime_document, (array) $renderer->context() );
+			$render_plan_hash = $this->plans->hash( $render_plan );
+		} catch ( \Throwable $error ) {
+			throw new RuntimeException( 'Certloom render plan preparation failed without changing credential state.', 0, $error );
+		}
+		try {
+			$bytes = $renderer->render( $render_plan, strtolower( trim( (string) $format ) ) );
 		} catch ( \Throwable $error ) {
 			throw new RuntimeException( 'Certloom renderer failed without changing credential state.', 0, $error );
 		}
@@ -85,7 +94,7 @@ final class ArtifactRenderCoordinator {
 		} catch ( \Throwable $error ) {
 			throw new RuntimeException( 'Certloom renderer returned bytes that do not match the requested artifact format.', 0, $error );
 		}
-		$receipt = $this->receipts->create( $format, $bytes, $layout_hash, $request_hash, $renderer );
-		return array( 'bytes' => $bytes, 'artifact' => $artifact, 'request_hash' => $request_hash, 'receipt' => $receipt );
+		$receipt = $this->receipts->create( $format, $bytes, $layout_hash, $request_hash, $render_plan_hash, $renderer );
+		return array( 'bytes' => $bytes, 'artifact' => $artifact, 'request_hash' => $request_hash, 'render_plan_hash' => $render_plan_hash, 'receipt' => $receipt );
 	}
 }
