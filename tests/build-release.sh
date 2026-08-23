@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="${CERTLOOM_BUILD_VERSION:-1.6.21}"
+VERSION="${CERTLOOM_BUILD_VERSION:-1.6.22}"
 OUT="${1:-$ROOT/../build-$VERSION}"
 EPOCH="${SOURCE_DATE_EPOCH:-1787356800}"
 STAGE="$OUT/.stage"

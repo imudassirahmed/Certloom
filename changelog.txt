@@ -1,3 +1,11 @@
+1.6.22
+- Added release-bound renderer authority: only a bundled manifest derived from accepted PDF-04 evidence can authorize downstream Template/artifact authority.
+- Added strict renderer release manifest validation bound to Certloom version, acceptance-v4 evidence, verifier/report hashes, frozen fixture/plan manifests, and exact PDF/PNG candidate identities.
+- Added fail-closed runtime matching of renderer ID/version/candidate-manifest hash and host requirements; no WordPress option or administrator checkbox can enable renderer authority.
+- Replaced the permanently hard-coded Template publish stub with a transaction-safe publication path that remains closed in 1.6.22 because no accepted renderer manifest ships. Publication locks the Template and exact immutable current revision, rejects stale review, and is idempotent.
+- Added System Status visibility for renderer authority and a production README documenting the intentional absence of accepted.json while PDF-04 is open.
+- Added a dedicated renderer-authority regression suite; all existing authority flags remain false.
+
 1.6.21
 - Bind the independent PDF-04 verifier toolchain itself: PHP/Python runtime, Poppler, OpenCV/NumPy/Pillow and exact verifier-script SHA-256 values.
 - Advance renderer acceptance to v4 and add RendererVerificationReport v2 plus a fail-closed cross-linked acceptance importer.

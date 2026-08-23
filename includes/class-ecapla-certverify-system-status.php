@@ -46,6 +46,7 @@ class Ecapla_CertVerify_System_Status {
 		$checks[] = self::domain_schema_lock_check();
 		$checks[] = self::local_qr_check();
 		$checks[] = self::local_barcode_check();
+		$checks[] = self::renderer_authority_check();
 		$checks[] = self::extension_check( 'mbstring', __( 'PHP mbstring', 'certloom' ), __( 'Required by the current mPDF production-renderer benchmark candidate; not required by the current verifier or QR/barcode presentation.', 'certloom' ) );
 		$checks[] = self::extension_check( 'gd', __( 'PHP GD', 'certloom' ), __( 'Required by the current mPDF production-renderer benchmark candidate and expected by future raster output; not required by the current verifier or QR/barcode presentation.', 'certloom' ) );
 		$checks[] = self::check(
@@ -140,6 +141,22 @@ class Ecapla_CertVerify_System_Status {
 			(string) $health['version']
 		);
 		return self::check( 'local_code128', __( 'Local Code 128 barcode', 'certloom' ), 'good', $value, $note );
+	}
+
+	private static function renderer_authority_check() {
+		$class = '\\Certloom\Infrastructure\Rendering\RendererAuthorityGate';
+		if ( ! class_exists( $class ) ) {
+			return self::check( 'renderer_authority', __( 'Production renderer authority', 'certloom' ), 'bad', __( 'Authority gate unavailable', 'certloom' ), __( 'Certloom cannot unlock renderer-backed product authority without its release-bound authority gate.', 'certloom' ) );
+		}
+		$status = ( new $class() )->manifest_status();
+		if ( ! empty( $status['accepted'] ) ) {
+			return self::check( 'renderer_authority', __( 'Production renderer authority', 'certloom' ), 'good', __( 'Accepted for this release', 'certloom' ), __( 'This Certloom release contains a valid release-bound PDF-04 authority manifest. Per-host artifact execution still requires the exact accepted renderer candidates and their runtime dependencies.', 'certloom' ) );
+		}
+		$reason = sanitize_key( (string) ( $status['reason'] ?? 'unknown' ) );
+		if ( 'manifest_missing' === $reason ) {
+			return self::check( 'renderer_authority', __( 'Production renderer authority', 'certloom' ), 'warning', __( 'Not accepted in this release', 'certloom' ), __( 'Expected while PDF-04 is open. Template publication and production artifact actions remain fail-closed; no WordPress option can bypass this release-bound gate.', 'certloom' ) );
+		}
+		return self::check( 'renderer_authority', __( 'Production renderer authority', 'certloom' ), 'bad', __( 'Invalid / mismatched authority', 'certloom' ), __( 'A bundled renderer authority record exists but could not be validated for this Certloom release. Renderer-backed product authority must remain disabled.', 'certloom' ) );
 	}
 
 	private static function database_proof_check() {

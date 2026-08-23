@@ -11,6 +11,7 @@ use Certloom\Infrastructure\Repository\TemplateRepository;
 use Certloom\Infrastructure\Repository\IssuerRepository;
 use Certloom\Infrastructure\Repository\ProgramRepository;
 use Certloom\Infrastructure\Repository\BatchRepository;
+use Certloom\Infrastructure\Rendering\RendererAuthorityGate;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -26,6 +27,7 @@ final class TemplateAdmin {
 		add_action( 'admin_post_certloom_template_create', array( $this, 'create' ) );
 		add_action( 'admin_post_certloom_template_metadata', array( $this, 'metadata' ) );
 		add_action( 'admin_post_certloom_template_revision', array( $this, 'revision' ) );
+		add_action( 'admin_post_certloom_template_publish', array( $this, 'publish' ) );
 		add_action( 'admin_post_certloom_template_import', array( $this, 'import' ) );
 		add_action( 'admin_post_certloom_template_export', array( $this, 'export' ) );
 		add_action( 'admin_post_certloom_template_presets_sync', array( $this, 'sync_presets' ) );
@@ -86,6 +88,15 @@ final class TemplateAdmin {
 			$result = ( new TemplateRepository() )->save_revision( $id, $layout, get_current_user_id(), isset( $_POST['expected_revision_id'] ) ? absint( $_POST['expected_revision_id'] ) : 0 );
 		}
 		$this->redirect( $result, 'revision_saved', array( 'template_id' => $id ) );
+	}
+
+	/** @return void */
+	public function publish() {
+		$this->require_capability();
+		$id = isset( $_POST['template_id'] ) ? absint( $_POST['template_id'] ) : 0;
+		check_admin_referer( 'certloom_template_publish_' . $id );
+		$result = ( new TemplateRepository() )->publish( $id, isset( $_POST['expected_revision_id'] ) ? absint( $_POST['expected_revision_id'] ) : 0 );
+		$this->redirect( $result, 'published', array( 'template_id' => $id ) );
 	}
 
 	/** @return void */
@@ -384,7 +395,16 @@ final class TemplateAdmin {
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_revision"><input type="hidden" name="template_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="expected_revision_id" value="' . esc_attr( (string) absint( $editing['current_revision_id'] ) ) . '">'; wp_nonce_field( 'certloom_template_revision_' . $id );
 		echo '<h3>' . esc_html__( 'Canonical layout JSON', 'certloom' ) . '</h3><p class="description">' . esc_html__( 'Each successful save creates a new immutable revision. A stale browser tab is rejected instead of overwriting newer work.', 'certloom' ) . '</p><textarea name="layout_json" rows="18" class="large-text code" spellcheck="false">' . esc_textarea( $layout_json ) . '</textarea>'; submit_button( __( 'Save new revision', 'certloom' ) ); echo '</form>';
 		$export = wp_nonce_url( add_query_arg( array( 'action' => 'certloom_template_export', 'template_id' => $id ), admin_url( 'admin-post.php' ) ), 'certloom_template_export_' . $id );
-		echo '<p><a class="button" href="' . esc_url( $export ) . '">' . esc_html__( 'Export template JSON', 'certloom' ) . '</a> <button class="button" disabled aria-disabled="true">' . esc_html__( 'Publish (renderer gate)', 'certloom' ) . '</button></p>';
+		$renderer_authority = ( new RendererAuthorityGate() )->manifest_status();
+		echo '<p><a class="button" href="' . esc_url( $export ) . '">' . esc_html__( 'Export template JSON', 'certloom' ) . '</a> ';
+		if ( ! empty( $renderer_authority['accepted'] ) ) {
+			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="display:inline"><input type="hidden" name="action" value="certloom_template_publish"><input type="hidden" name="template_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="expected_revision_id" value="' . esc_attr( (string) absint( $editing['current_revision_id'] ) ) . '">';
+			wp_nonce_field( 'certloom_template_publish_' . $id );
+			echo '<button class="button button-primary">' . esc_html__( 'Publish current revision', 'certloom' ) . '</button></form>';
+		} else {
+			echo '<button class="button" disabled aria-disabled="true">' . esc_html__( 'Publish (renderer gate)', 'certloom' ) . '</button>';
+		}
+		echo '</p>';
 		if ( 0 === strpos( (string) ( $editing['machine_key'] ?? '' ), 'certloom-preset-' ) ) {
 			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_preset_reset"><input type="hidden" name="template_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="expected_revision_id" value="' . esc_attr( (string) absint( $editing['current_revision_id'] ) ) . '">';
 			wp_nonce_field( 'certloom_template_preset_reset_' . $id );

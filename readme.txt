@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.21
+Stable tag: 1.6.22
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.21: Certloom hardens the still-open `PDF-04` gate by binding the independent verifier toolchain itself and cross-linking acceptance evidence to the normalized verifier report/environment. Renderer acceptance v4 still requires an actual dependency-prefixed production candidate; the current runtime lacks `mbstring`, `gd`, and the prefixed renderer candidate, so production artifacts, Template publication, authoritative Preview, and Designer output remain disabled.
+> Development note for 1.6.22: Certloom adds a release-bound renderer authority manifest/gate between accepted `PDF-04` evidence and downstream Template/artifact authority. No mutable WordPress option can unlock it. This release intentionally ships no accepted renderer manifest because the current runtime still cannot execute the dependency-prefixed production candidate, so production artifacts, Template publication, authoritative Preview, and Designer output remain disabled.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -129,6 +129,14 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.22 =
+* Add `RendererReleaseManifest` v1: a release-bundled, version-bound authority record derived only from production-candidate `RendererAcceptanceContract` v4 evidence.
+* Add a fail-closed `RendererAuthorityGate`; renderer authority is never a mutable option/admin toggle and automatically becomes stale across a Certloom version change.
+* Bind future runtime authority to exact accepted PDF/PNG renderer ID, version and candidate-manifest SHA-256, plus live host requirement checks before artifact execution.
+* Wire Template publication to the release-bound authority gate with transaction locking, immutable current-revision ownership checks, optimistic revision proof and idempotent publication. Current 1.6.22 intentionally has no `accepted.json`, so publication remains disabled.
+* Add a read-only System Status renderer-authority row and production `resources/renderer/README.txt` documenting the closed gate.
+* Add a dedicated renderer-authority regression suite and preserve all existing renderer/Template/verification/data-safety gates.
 
 = 1.6.21 =
 

@@ -9,6 +9,7 @@ use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Infrastructure\Database\SchemaManager;
 use Certloom\Infrastructure\Database\Transaction;
 use Certloom\Application\Contract\TransactionInterface;
+use Certloom\Infrastructure\Rendering\RendererAuthorityGate;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -23,11 +24,13 @@ final class TemplateRepository {
 	/** @var LayoutValidator */ private $layouts;
 	/** @var CanonicalJson */ private $json;
 	/** @var TransactionInterface */ private $transaction;
+	/** @var RendererAuthorityGate */ private $renderer_authority;
 
-	public function __construct( LayoutValidator $layouts = null, CanonicalJson $json = null, TransactionInterface $transaction = null ) {
-		$this->layouts      = $layouts ?: new LayoutValidator();
-		$this->json         = $json ?: new CanonicalJson();
-		$this->transaction  = $transaction ?: new Transaction();
+	public function __construct( LayoutValidator $layouts = null, CanonicalJson $json = null, TransactionInterface $transaction = null, RendererAuthorityGate $renderer_authority = null ) {
+		$this->layouts             = $layouts ?: new LayoutValidator();
+		$this->json                = $json ?: new CanonicalJson();
+		$this->transaction         = $transaction ?: new Transaction();
+		$this->renderer_authority  = $renderer_authority ?: new RendererAuthorityGate();
 	}
 
 	/** @param array<string,mixed> $data @return int|\WP_Error */
@@ -149,9 +152,35 @@ final class TemplateRepository {
 		} );
 	}
 
-	/** Publish is intentionally blocked until the production renderer/template-authority gate passes. @return \WP_Error */
-	public function publish( $template_id ) {
-		return new \WP_Error( 'certloom_template_publish_renderer_gate', __( 'Template publishing remains disabled until Certloom’s production renderer acceptance gate passes.', 'certloom' ), array( 'template_id' => absint( $template_id ) ) );
+	/** @return true|\WP_Error */
+	public function publish( $template_id, $expected_revision_id = 0 ) {
+		$template_id = absint( $template_id );
+		if ( ! $template_id ) { return new \WP_Error( 'certloom_template_id_required', __( 'A valid template is required.', 'certloom' ) ); }
+		$authority = $this->renderer_authority->manifest_status();
+		if ( empty( $authority['accepted'] ) ) {
+			return new \WP_Error( 'certloom_template_publish_renderer_gate', __( 'Template publishing remains disabled until this Certloom release ships with accepted production-renderer authority.', 'certloom' ), array( 'template_id' => $template_id, 'renderer_authority_reason' => (string) ( $authority['reason'] ?? 'unknown' ) ) );
+		}
+		$generation = ( new DomainGeneration() )->mark_before_mutation();
+		if ( is_wp_error( $generation ) ) { return $generation; }
+		return $this->transaction->run( function () use ( $template_id, $expected_revision_id ) {
+			global $wpdb;
+			$template = $this->lock_template( $template_id );
+			if ( is_wp_error( $template ) ) { return $template; }
+			if ( ! is_array( $template ) || ! empty( $template['archived_at'] ) ) { return new \WP_Error( 'certloom_template_unavailable', __( 'The template is unavailable for publishing.', 'certloom' ) ); }
+			$current_id = absint( $template['current_revision_id'] ?? 0 );
+			if ( ! $current_id ) { return new \WP_Error( 'certloom_template_revision_required', __( 'The template has no current revision to publish.', 'certloom' ) ); }
+			if ( $expected_revision_id && $current_id !== absint( $expected_revision_id ) ) { return new \WP_Error( 'certloom_template_stale_revision', __( 'This template draft changed after you reviewed it. Reload before publishing.', 'certloom' ) ); }
+			$current = $this->find_revision_row( $current_id, true );
+			if ( is_wp_error( $current ) ) { return $current; }
+			if ( ! is_array( $current ) || absint( $current['template_id'] ?? 0 ) !== $template_id ) { return new \WP_Error( 'certloom_template_revision_pointer_corrupt', __( 'The template draft points to an invalid revision.', 'certloom' ) ); }
+			if ( absint( $template['published_revision_id'] ?? 0 ) === $current_id ) { return true; }
+			$now = current_time( 'mysql', true );
+			$wpdb->last_error = '';
+			$updated = $wpdb->update( SchemaManager::table( 'templates' ), array( 'published_revision_id' => $current_id, 'updated_at' => $now ), array( 'id' => $template_id ) );
+			return false === $updated || '' !== (string) $wpdb->last_error
+				? new \WP_Error( 'certloom_template_publish_failed', __( 'Certloom could not publish the template revision safely.', 'certloom' ) )
+				: true;
+		} );
 	}
 
 	/** @return true|\WP_Error */

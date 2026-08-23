@@ -52,6 +52,7 @@ class Ecapla_CertVerify_Database_Proof {
     }
     public static function is_current_passed() { return 'passed' === self::evidence_state(); }
 }
+require_once __DIR__ . '/bootstrap-autoload.php';
 require_once dirname( __DIR__ ) . '/includes/class-ecapla-certverify-system-status.php';
 
 function ss_assert( $condition, $message ) { if ( ! $condition ) throw new RuntimeException( $message ); }
@@ -67,6 +68,7 @@ $authority_corrupt=Ecapla_CertVerify_System_Status::get_checks();
 ss_assert( 'bad' === ss_find( $authority_corrupt, 'authority' )['status'], 'Corrupt non-empty authority state should be visible as fail-closed.' );
 $GLOBALS['system_status_options']['certloom_domain_write_authority']='legacy';
 ss_assert( 'good' === ss_find( $checks, 'domain_feature_gates' )['status'], 'All future-domain gates off should be healthy.' );
+ss_assert( 'warning' === ss_find( $checks, 'renderer_authority' )['status'] && false !== strpos( ss_find( $checks, 'renderer_authority' )['value'], 'Not accepted' ), 'Current release must report renderer authority as intentionally unopened while PDF-04 remains open.' );
 ss_assert( 'warning' === ss_find( $checks, 'database_proof' )['status'], 'Database proof should request a run when no stored evidence exists.' );
 ss_assert( 'warning' === ss_find( $checks, 'domain_acceptance_proof' )['status'], 'Gated-domain proof should remain unavailable/not-run without its diagnostic class in this isolated status test.' );
 ss_assert( 0 === $GLOBALS['system_status_db_writes'], 'System diagnostics must be read-only.' );
@@ -117,4 +119,4 @@ ss_assert( false !== strpos( $report, 'Proven 1.5 registry' ), 'Support report s
 ss_assert( 0 === $GLOBALS['system_status_db_writes'], 'Generating the text report must remain read-only.' );
 
 echo "PASS  System Status is read-only, privacy-conscious and authority-aware\n";
-echo "\n20 checks, 0 failures\n";
+echo "\n21 checks, 0 failures\n";
