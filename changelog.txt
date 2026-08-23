@@ -1,3 +1,8 @@
+1.6.20
+- Harden PDF-04 acceptance with exact renderer candidate provenance and independent artifact-bundle verification.
+- Require production evidence v3 to bind candidate source/dependency lock plus ArtifactReceipt v4 for every PDF/PNG.
+- Verify real artifact bytes, deterministic runs, geometry, QR decode and PDF/PNG parity while keeping development references non-qualifying.
+
 1.6.19 — shared renderer composition plan and artifact identity hardening
 - Add `certloom-render-plan` v1 so future PDF/PNG/JPEG adapters consume one Certloom-owned physical composition plan instead of independently interpreting resolved layout geometry.
 - Centralize canonical page geometry, center-pivot arbitrary rotation, physical text alignment/unit conversion, image contain/cover/fill placement, shape/line primitives, and exact QR module placement before adapter execution.

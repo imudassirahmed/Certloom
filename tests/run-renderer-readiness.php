@@ -4,6 +4,7 @@ require_once __DIR__ . '/bootstrap-autoload.php';
 
 use Certloom\Application\Rendering\ArtifactReceipt;
 use Certloom\Application\Rendering\RendererAcceptanceContract;
+use Certloom\Application\Rendering\RendererCandidateManifest;
 use Certloom\Application\Rendering\RenderPlanBuilder;
 use Certloom\Application\Rendering\FontAssetInspector;
 use Certloom\Infrastructure\Rendering\ContentAddressedFontResolver;
@@ -21,13 +22,14 @@ rrcheck( interface_exists( 'Certloom\\Application\\Contract\\LocalFontResolverIn
 rrcheck( class_exists( FontAssetInspector::class ), 'Font byte inspector must autoload.' );
 rrcheck( class_exists( ContentAddressedFontResolver::class ), 'Content-addressed local font resolver must autoload.' );
 rrcheck( class_exists( RenderPlanBuilder::class ), 'Shared renderer-independent RenderPlanBuilder must autoload.' );
-rrcheck( 2 === RendererAcceptanceContract::VERSION, 'Renderer acceptance evidence must be schema v2 after shared-plan introduction.' );
+rrcheck( 3 === RendererAcceptanceContract::VERSION, 'Renderer acceptance evidence must be schema v3 after independent bundle/candidate provenance binding.' );
+rrcheck( class_exists( RendererCandidateManifest::class ), 'Renderer candidate provenance manifest contract must autoload.' );
 rrcheck( in_array( 'shared_render_plan', RendererAcceptanceContract::required_checks(), true ), 'Renderer acceptance must prove the shared render-plan path.' );
 $plan_manifest_path = __DIR__ . '/fixtures/rendering/render-plan-manifest.json';
 $plan_manifest = file_get_contents( $plan_manifest_path );
 rrcheck( is_string( $plan_manifest ) && '3070631a405c471fd663373b7440243cfa915d65eb38c8ddb4746ed35f2e1279' === hash( 'sha256', $plan_manifest ), 'Six-fixture shared render-plan manifest must remain frozen by exact SHA-256.' );
 rrcheck( false !== strpos( $rendering, 'certloom-render-plan' ) && false !== strpos( $architecture, 'certloom-render-plan' ), 'Rendering/architecture documents must describe the shared render-plan boundary.' );
-rrcheck( false !== strpos( $rendering, 'RendererAcceptanceContract` (`certloom-renderer-acceptance` v2)' ), 'Rendering contract must document renderer acceptance schema v2.' );
+rrcheck( false !== strpos( $rendering, 'RendererAcceptanceContract` (`certloom-renderer-acceptance` v3)' ), 'Rendering contract must document renderer acceptance schema v3.' );
 rrcheck( 6 === count( RendererAcceptanceContract::required_fixtures() ), 'Renderer acceptance must retain all six permanent fixtures.' );
 rrcheck( in_array( 'urdu-rtl', RendererAcceptanceContract::required_fixtures(), true ), 'Urdu RTL fixture must remain mandatory.' );
 rrcheck( in_array( 'rotation', RendererAcceptanceContract::required_fixtures(), true ), 'Arbitrary rotation fixture must remain mandatory.' );

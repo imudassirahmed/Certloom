@@ -12,7 +12,7 @@ use InvalidArgumentException;
  */
 final class RendererAcceptanceContract {
 	const SCHEMA = 'certloom-renderer-acceptance';
-	const VERSION = 2;
+	const VERSION = 3;
 
 	/** @return string[] */
 	public static function required_fixtures() {
@@ -43,10 +43,13 @@ final class RendererAcceptanceContract {
 
 	/** @return array<string,mixed> */
 	public function normalize( array $evidence ) {
-		$allowed = array( 'schema', 'version', 'plugin_version', 'fixture_manifest_sha256', 'render_plan_manifest_sha256', 'renderers', 'checks', 'fixtures' );
+		$allowed = array( 'schema', 'version', 'qualification', 'plugin_version', 'fixture_manifest_sha256', 'render_plan_manifest_sha256', 'bundle_manifest_sha256', 'renderers', 'checks', 'fixtures' );
 		$this->assert_shape( $evidence, $allowed, $allowed, 'renderer acceptance evidence' );
 		if ( self::SCHEMA !== (string) $evidence['schema'] || ! is_int( $evidence['version'] ) || self::VERSION !== $evidence['version'] ) {
 			throw new InvalidArgumentException( 'Renderer acceptance evidence schema/version is unsupported.' );
+		}
+		if ( 'production-candidate' !== (string) $evidence['qualification'] ) {
+			throw new InvalidArgumentException( 'Renderer acceptance evidence must come from a production-candidate artifact bundle.' );
 		}
 		$plugin_version = trim( (string) $evidence['plugin_version'] );
 		if ( ! preg_match( '/^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][A-Za-z0-9.-]+)?$/', $plugin_version ) ) {
@@ -62,6 +65,11 @@ final class RendererAcceptanceContract {
 			throw new InvalidArgumentException( 'Renderer acceptance evidence must bind the shared render-plan manifest by SHA-256.' );
 		}
 
+		$bundle_manifest_hash = strtolower( trim( (string) $evidence['bundle_manifest_sha256'] ) );
+		if ( ! $this->is_sha256( $bundle_manifest_hash ) ) {
+			throw new InvalidArgumentException( 'Renderer acceptance evidence must bind an independently verified artifact bundle manifest by SHA-256.' );
+		}
+
 		$renderers = $this->normalize_renderers( $evidence['renderers'] );
 		$checks = $this->normalize_checks( $evidence['checks'] );
 		$fixtures = $this->normalize_fixtures( $evidence['fixtures'] );
@@ -69,9 +77,11 @@ final class RendererAcceptanceContract {
 		return array(
 			'schema' => self::SCHEMA,
 			'version' => self::VERSION,
+			'qualification' => 'production-candidate',
 			'plugin_version' => $plugin_version,
 			'fixture_manifest_sha256' => $fixture_hash,
 			'render_plan_manifest_sha256' => $render_plan_manifest_hash,
+			'bundle_manifest_sha256' => $bundle_manifest_hash,
 			'renderers' => $renderers,
 			'checks' => $checks,
 			'fixtures' => $fixtures,
@@ -95,14 +105,15 @@ final class RendererAcceptanceContract {
 			if ( ! is_array( $item ) ) {
 				throw new InvalidArgumentException( 'Renderer acceptance renderer identity is malformed.' );
 			}
-			$this->assert_shape( $item, array( 'id', 'version', 'context_hash' ), array( 'id', 'version', 'context_hash' ), 'renderer identity' );
+			$this->assert_shape( $item, array( 'id', 'version', 'context_hash', 'candidate_manifest_sha256' ), array( 'id', 'version', 'context_hash', 'candidate_manifest_sha256' ), 'renderer identity' );
 			$id = strtolower( trim( (string) $item['id'] ) );
 			$version = trim( (string) $item['version'] );
 			$context_hash = strtolower( trim( (string) $item['context_hash'] ) );
-			if ( ! preg_match( '/^[a-z][a-z0-9._-]{0,63}$/', $id ) || '' === $version || strlen( $version ) > 64 || ! $this->is_sha256( $context_hash ) ) {
+			$candidate_manifest_hash = strtolower( trim( (string) $item['candidate_manifest_sha256'] ) );
+			if ( ! preg_match( '/^[a-z][a-z0-9._-]{0,63}$/', $id ) || '' === $version || strlen( $version ) > 64 || ! $this->is_sha256( $context_hash ) || ! $this->is_sha256( $candidate_manifest_hash ) ) {
 				throw new InvalidArgumentException( 'Renderer acceptance renderer identity does not satisfy the stable renderer contract.' );
 			}
-			$out[ $format ] = array( 'id' => $id, 'version' => $version, 'context_hash' => $context_hash );
+			$out[ $format ] = array( 'id' => $id, 'version' => $version, 'context_hash' => $context_hash, 'candidate_manifest_sha256' => $candidate_manifest_hash );
 		}
 		return $out;
 	}

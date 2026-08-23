@@ -151,7 +151,7 @@ $text_plan_b = $builder->build( $text_runtime_b, array( 'font_manifest' => $mani
 rpsame( $builder->hash( $text_plan_a ), $builder->hash( $text_plan_b ), 'Render-plan hash must be portable across local font paths.' );
 
 // Acceptance evidence is versioned so old proof cannot certify the shared-plan architecture.
-rpsame(2,RendererAcceptanceContract::VERSION,'Renderer acceptance evidence must advance to v2.');
+rpsame(3,RendererAcceptanceContract::VERSION,'Renderer acceptance evidence must advance to v3 after independent artifact-bundle/provenance binding.');
 rpcheck(in_array('shared_render_plan',RendererAcceptanceContract::required_checks(),true),'PDF-04 must require proof that both backends use the shared render plan.');
 $reference_manifest = file_get_contents(__DIR__.'/fixtures/rendering/render-plan-manifest.json');
 rpcheck(is_string($reference_manifest) && 1===preg_match('/^[0-9a-f]{64}$/',hash('sha256',$reference_manifest)),'Stored shared render-plan manifest must itself be content-addressed.');
