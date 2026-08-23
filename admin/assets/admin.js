@@ -80,9 +80,41 @@
 		} );
 	}
 
+	function initDomainKeyValueLists() {
+		document.addEventListener( 'click', function ( event ) {
+			var add = event.target.closest( '[data-certloom-add-kv]' );
+			if ( add ) {
+				var type = add.getAttribute( 'data-certloom-add-kv' );
+				var list = document.querySelector( '[data-certloom-kv-list="' + type + '"]' );
+				var source = list ? list.querySelector( '.certloom-domain-kv-row' ) : null;
+				if ( source ) {
+					var clone = source.cloneNode( true );
+					var inputs = clone.querySelectorAll( 'input' );
+					for ( var i = 0; i < inputs.length; i++ ) { inputs[ i ].value = ''; }
+					list.appendChild( clone );
+					inputs[ 0 ].focus();
+				}
+				return;
+			}
+			var remove = event.target.closest( '.certloom-domain-remove-kv' );
+			if ( ! remove ) { return; }
+			var row = remove.closest( '.certloom-domain-kv-row' );
+			var parent = row ? row.parentNode : null;
+			if ( ! row || ! parent ) { return; }
+			if ( parent.querySelectorAll( '.certloom-domain-kv-row' ).length <= 1 ) {
+				var rowInputs = row.querySelectorAll( 'input' );
+				for ( var j = 0; j < rowInputs.length; j++ ) { rowInputs[ j ].value = ''; }
+				rowInputs[ 0 ].focus();
+				return;
+			}
+			row.remove();
+		} );
+	}
+
 	document.addEventListener( 'DOMContentLoaded', function () {
 		initFields();
 		initConfirmations();
+		initDomainKeyValueLists();
 	} );
 } )();
 

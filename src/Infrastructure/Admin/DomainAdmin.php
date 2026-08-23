@@ -41,8 +41,8 @@ final class DomainAdmin {
 
 	/** @return void */
 	public function menu() {
-		add_submenu_page( 'certloom', __( 'Recipients (New Domain)', 'certloom' ), __( 'Recipients (New)', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_RECIPIENTS, self::RECIPIENTS_PAGE, array( $this, 'render_recipients' ) );
-		add_submenu_page( 'certloom', __( 'Programs (New Domain)', 'certloom' ), __( 'Programs (New)', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS, self::PROGRAMS_PAGE, array( $this, 'render_programs' ) );
+		add_submenu_page( 'certloom', __( 'Recipients', 'certloom' ), __( 'Recipients', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_RECIPIENTS, self::RECIPIENTS_PAGE, array( $this, 'render_recipients' ) );
+		add_submenu_page( 'certloom', __( 'Programs', 'certloom' ), __( 'Programs', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS, self::PROGRAMS_PAGE, array( $this, 'render_programs' ) );
 		add_submenu_page( 'certloom', __( 'Issuers (New Domain)', 'certloom' ), __( 'Issuers (New)', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_ISSUERS, self::ISSUERS_PAGE, array( $this, 'render_issuers' ) );
 		add_submenu_page( 'certloom', __( 'Credentials (New Domain)', 'certloom' ), __( 'Credentials (New)', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS, self::CREDENTIALS_PAGE, array( $this, 'render_credentials' ) );
 	}
@@ -64,11 +64,17 @@ final class DomainAdmin {
 		$this->require_capability( \Ecapla_CertVerify_Permissions::CAP_MANAGE_RECIPIENTS );
 		$id = isset( $_POST['recipient_id'] ) ? absint( $_POST['recipient_id'] ) : 0;
 		check_admin_referer( 'certloom_domain_update_recipient_' . $id );
-		$data = $this->recipient_request();
+		$repo = new RecipientRepository();
+		$existing = $repo->find( $id );
+		if ( is_wp_error( $existing ) || ! is_array( $existing ) ) {
+			$result = is_wp_error( $existing ) ? $existing : new \WP_Error( 'certloom_recipient_missing', __( 'The recipient no longer exists.', 'certloom' ) );
+			$this->redirect_result( self::RECIPIENTS_PAGE, $result, 'recipient_updated' );
+		}
+		$data = $this->recipient_request( $existing );
 		if ( is_wp_error( $data ) ) {
 			$this->redirect_result( self::RECIPIENTS_PAGE, $data, 'recipient_updated', array( 'recipient_id' => $id ) );
 		}
-		$result = ( new RecipientRepository() )->update( $id, $data );
+		$result = $repo->update( $id, $data );
 		$this->redirect_result( self::RECIPIENTS_PAGE, $result, 'recipient_updated', array( 'recipient_id' => $id ) );
 	}
 
@@ -76,7 +82,11 @@ final class DomainAdmin {
 	public function create_program() {
 		$this->require_capability( \Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS );
 		check_admin_referer( 'certloom_domain_create_program' );
-		$result = ( new ProgramRepository() )->create( $this->program_request() );
+		$data = $this->program_request();
+		if ( is_wp_error( $data ) ) {
+			$this->redirect_result( self::PROGRAMS_PAGE, $data, 'program_created' );
+		}
+		$result = ( new ProgramRepository() )->create( $data );
 		$this->redirect_result( self::PROGRAMS_PAGE, $result, 'program_created' );
 	}
 
@@ -85,7 +95,17 @@ final class DomainAdmin {
 		$this->require_capability( \Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS );
 		$id = isset( $_POST['program_id'] ) ? absint( $_POST['program_id'] ) : 0;
 		check_admin_referer( 'certloom_domain_update_program_' . $id );
-		$result = ( new ProgramRepository() )->update( $id, $this->program_request() );
+		$repo = new ProgramRepository();
+		$existing = $repo->find( $id );
+		if ( is_wp_error( $existing ) || ! is_array( $existing ) ) {
+			$result = is_wp_error( $existing ) ? $existing : new \WP_Error( 'certloom_program_missing', __( 'The program no longer exists.', 'certloom' ) );
+			$this->redirect_result( self::PROGRAMS_PAGE, $result, 'program_updated' );
+		}
+		$data = $this->program_request( $existing );
+		if ( is_wp_error( $data ) ) {
+			$this->redirect_result( self::PROGRAMS_PAGE, $data, 'program_updated', array( 'program_id' => $id ) );
+		}
+		$result = $repo->update( $id, $data );
 		$this->redirect_result( self::PROGRAMS_PAGE, $result, 'program_updated', array( 'program_id' => $id ) );
 	}
 
@@ -155,28 +175,46 @@ final class DomainAdmin {
 		$page   = $this->page_value();
 		$repo   = new RecipientRepository();
 		$result = $repo->list_page( $search, $page, 20 );
+		$summary = $repo->summary();
 		$edit_id = isset( $_GET['recipient_id'] ) ? absint( $_GET['recipient_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin navigation.
 		$editing = $edit_id ? $repo->find( $edit_id ) : null;
 
-		$this->header( __( 'Recipients — New Domain Preview', 'certloom' ) );
+		$this->header( __( 'Recipients', 'certloom' ), __( 'Normalized people and organizations who receive Certloom credentials.', 'certloom' ) );
 		$this->notice();
-		$this->render_search( self::RECIPIENTS_PAGE, $search );
+		if ( ! is_wp_error( $summary ) ) {
+			$this->metric_grid(
+				array(
+					array( 'value' => $summary['total'], 'label' => __( 'Recipients', 'certloom' ) ),
+					array( 'value' => $summary['with_credentials'], 'label' => __( 'With credentials', 'certloom' ) ),
+					array( 'value' => $summary['linked_users'], 'label' => __( 'Linked WordPress users', 'certloom' ) ),
+					array( 'value' => $summary['with_email'], 'label' => __( 'With email', 'certloom' ) ),
+				)
+			);
+		}
+		$this->render_search( self::RECIPIENTS_PAGE, $search, __( 'Search name, email, or external ID', 'certloom' ) );
 		if ( is_wp_error( $result ) ) {
 			$this->error( $result->get_error_message() );
 		} else {
-			echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Name', 'certloom' ) . '</th><th>' . esc_html__( 'Email', 'certloom' ) . '</th><th>' . esc_html__( 'External ID', 'certloom' ) . '</th><th>' . esc_html__( 'Created', 'certloom' ) . '</th><th>' . esc_html__( 'Actions', 'certloom' ) . '</th></tr></thead><tbody>';
+			$this->prime_wp_users( $result['items'] );
+			echo '<div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-table"><thead><tr><th>' . esc_html__( 'Recipient', 'certloom' ) . '</th><th>' . esc_html__( 'Email', 'certloom' ) . '</th><th>' . esc_html__( 'WordPress user', 'certloom' ) . '</th><th>' . esc_html__( 'External ID', 'certloom' ) . '</th><th>' . esc_html__( 'Credentials', 'certloom' ) . '</th><th>' . esc_html__( 'Latest issuance', 'certloom' ) . '</th><th>' . esc_html__( 'Actions', 'certloom' ) . '</th></tr></thead><tbody>';
 			foreach ( $result['items'] as $item ) {
 				$edit_url = add_query_arg( array( 'page' => self::RECIPIENTS_PAGE, 'recipient_id' => absint( $item['id'] ) ), admin_url( 'admin.php' ) );
-				echo '<tr><td>' . esc_html( $item['display_name'] ) . '</td><td>' . esc_html( (string) $item['email'] ) . '</td><td>' . esc_html( (string) $item['external_id'] ) . '</td><td>' . esc_html( (string) $item['created_at'] ) . '</td><td><a href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Edit', 'certloom' ) . '</a></td></tr>';
+				$user_label = $this->wp_user_label( $item['wp_user_id'] ?? null );
+				echo '<tr><td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( (string) $item['display_name'] ) . '</a></strong>';
+				if ( ! empty( $item['first_name'] ) || ! empty( $item['last_name'] ) ) {
+					echo '<div class="certloom-domain-muted">' . esc_html( trim( (string) $item['first_name'] . ' ' . (string) $item['last_name'] ) ) . '</div>';
+				}
+				echo '</td><td>' . esc_html( (string) ( $item['email'] ?: '—' ) ) . '</td><td>' . esc_html( $user_label ) . '</td><td>' . ( $item['external_id'] ? '<code>' . esc_html( (string) $item['external_id'] ) . '</code>' : '—' ) . '</td><td><span class="certloom-domain-count">' . esc_html( (string) absint( $item['credential_count'] ) ) . '</span></td><td>' . esc_html( (string) ( $item['latest_issued_at'] ?: '—' ) ) . '</td><td><a class="button button-small" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Open', 'certloom' ) . '</a></td></tr>';
 			}
-			if ( empty( $result['items'] ) ) { echo '<tr><td colspan="5">' . esc_html__( 'No recipients found.', 'certloom' ) . '</td></tr>'; }
-			echo '</tbody></table>';
+			if ( empty( $result['items'] ) ) { echo '<tr><td colspan="7"><div class="certloom-domain-empty"><strong>' . esc_html__( 'No recipients found.', 'certloom' ) . '</strong><span>' . esc_html__( 'Add a recipient or adjust the search.', 'certloom' ) . '</span></div></td></tr>'; }
+			echo '</tbody></table></div>';
 			$this->pagination( self::RECIPIENTS_PAGE, $page, (int) $result['total'], 20, $search );
 		}
 		if ( is_wp_error( $editing ) ) {
 			$this->error( $editing->get_error_message() );
 		} elseif ( is_array( $editing ) ) {
 			$this->recipient_form( $editing );
+			$this->recipient_history( $repo, $editing );
 		} else {
 			$this->recipient_form();
 		}
@@ -188,30 +226,46 @@ final class DomainAdmin {
 		$this->require_capability( \Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS );
 		$search = $this->search_value();
 		$page   = $this->page_value();
+		$status = isset( $_GET['program_status'] ) ? sanitize_key( wp_unslash( $_GET['program_status'] ) ) : 'all'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter.
+		$status = in_array( $status, array( 'all', 'active', 'inactive' ), true ) ? $status : 'all';
 		$repo   = new ProgramRepository();
-		$result = $repo->list_page( $search, $page, 20 );
+		$result = $repo->list_page( $search, $page, 20, $status );
+		$summary = $repo->summary();
 		$edit_id = isset( $_GET['program_id'] ) ? absint( $_GET['program_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin navigation.
 		$editing = $edit_id ? $repo->find( $edit_id ) : null;
 
-		$this->header( __( 'Programs — New Domain Preview', 'certloom' ) );
+		$this->header( __( 'Programs', 'certloom' ), __( 'Standalone credential programs that work with or without an LMS.', 'certloom' ) );
 		$this->notice();
-		$this->render_search( self::PROGRAMS_PAGE, $search );
+		if ( ! is_wp_error( $summary ) ) {
+			$this->metric_grid(
+				array(
+					array( 'value' => $summary['total'], 'label' => __( 'Programs', 'certloom' ) ),
+					array( 'value' => $summary['active'], 'label' => __( 'Active', 'certloom' ) ),
+					array( 'value' => $summary['inactive'], 'label' => __( 'Inactive', 'certloom' ) ),
+					array( 'value' => $summary['with_credentials'], 'label' => __( 'With credentials', 'certloom' ) ),
+				)
+			);
+		}
+		$this->program_views( $status, $search );
+		$this->render_search( self::PROGRAMS_PAGE, $search, __( 'Search title, code, or description', 'certloom' ), array( 'program_status' => $status ) );
 		if ( is_wp_error( $result ) ) {
 			$this->error( $result->get_error_message() );
 		} else {
-			echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Code', 'certloom' ) . '</th><th>' . esc_html__( 'Program', 'certloom' ) . '</th><th>' . esc_html__( 'Validity days', 'certloom' ) . '</th><th>' . esc_html__( 'Active', 'certloom' ) . '</th><th>' . esc_html__( 'Actions', 'certloom' ) . '</th></tr></thead><tbody>';
+			echo '<div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-table"><thead><tr><th>' . esc_html__( 'Program', 'certloom' ) . '</th><th>' . esc_html__( 'Code', 'certloom' ) . '</th><th>' . esc_html__( 'Issuer', 'certloom' ) . '</th><th>' . esc_html__( 'Default validity', 'certloom' ) . '</th><th>' . esc_html__( 'Credentials', 'certloom' ) . '</th><th>' . esc_html__( 'Status', 'certloom' ) . '</th><th>' . esc_html__( 'Actions', 'certloom' ) . '</th></tr></thead><tbody>';
 			foreach ( $result['items'] as $item ) {
 				$edit_url = add_query_arg( array( 'page' => self::PROGRAMS_PAGE, 'program_id' => absint( $item['id'] ) ), admin_url( 'admin.php' ) );
-				echo '<tr><td>' . esc_html( (string) $item['code'] ) . '</td><td>' . esc_html( $item['title'] ) . '</td><td>' . esc_html( null === $item['validity_days'] ? '—' : (string) $item['validity_days'] ) . '</td><td>' . esc_html( $item['active'] ? __( 'Yes', 'certloom' ) : __( 'No', 'certloom' ) ) . '</td><td><a href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Edit', 'certloom' ) . '</a></td></tr>';
+				$validity = null === $item['validity_days'] ? __( 'No default', 'certloom' ) : sprintf( /* translators: %d: days. */ _n( '%d day', '%d days', absint( $item['validity_days'] ), 'certloom' ), absint( $item['validity_days'] ) );
+				echo '<tr><td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( (string) $item['title'] ) . '</a></strong></td><td>' . ( $item['code'] ? '<code>' . esc_html( (string) $item['code'] ) . '</code>' : '—' ) . '</td><td>' . esc_html( (string) ( $item['issuer_name'] ?: '—' ) ) . '</td><td>' . esc_html( $validity ) . '</td><td><span class="certloom-domain-count">' . esc_html( (string) absint( $item['credential_count'] ) ) . '</span></td><td><span class="certloom-domain-status ' . ( $item['active'] ? 'is-active' : 'is-inactive' ) . '">' . esc_html( $item['active'] ? __( 'Active', 'certloom' ) : __( 'Inactive', 'certloom' ) ) . '</span></td><td><a class="button button-small" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Open', 'certloom' ) . '</a></td></tr>';
 			}
-			if ( empty( $result['items'] ) ) { echo '<tr><td colspan="5">' . esc_html__( 'No programs found.', 'certloom' ) . '</td></tr>'; }
-			echo '</tbody></table>';
-			$this->pagination( self::PROGRAMS_PAGE, $page, (int) $result['total'], 20, $search );
+			if ( empty( $result['items'] ) ) { echo '<tr><td colspan="7"><div class="certloom-domain-empty"><strong>' . esc_html__( 'No programs found.', 'certloom' ) . '</strong><span>' . esc_html__( 'Add a program or adjust the filters.', 'certloom' ) . '</span></div></td></tr>'; }
+			echo '</tbody></table></div>';
+			$this->pagination( self::PROGRAMS_PAGE, $page, (int) $result['total'], 20, $search, array( 'program_status' => $status ) );
 		}
 		if ( is_wp_error( $editing ) ) {
 			$this->error( $editing->get_error_message() );
 		} elseif ( is_array( $editing ) ) {
 			$this->program_form( $editing );
+			$this->program_history( $repo, $editing );
 		} else {
 			$this->program_form();
 		}
@@ -337,29 +391,67 @@ final class DomainAdmin {
 	private function recipient_form( array $editing = null ) {
 		$is_edit = null !== $editing;
 		$id = $is_edit ? absint( $editing['id'] ) : 0;
-		echo '<hr><h2>' . esc_html( $is_edit ? __( 'Edit recipient', 'certloom' ) : __( 'Add recipient', 'certloom' ) ) . '</h2><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		$custom_fields = $is_edit && isset( $editing['custom_fields'] ) && is_array( $editing['custom_fields'] ) ? $editing['custom_fields'] : array();
+		$custom_editable = $this->is_scalar_map( $custom_fields );
+		echo '<section class="ecapla-certverify-admin-card certloom-domain-editor"><div class="certloom-domain-editor-head"><div><h2>' . esc_html( $is_edit ? __( 'Recipient profile', 'certloom' ) : __( 'Add recipient', 'certloom' ) ) . '</h2><p>' . esc_html__( 'Keep recipient identity separate from credential history so renewals and future credentials share one stable recipient record.', 'certloom' ) . '</p></div>';
+		if ( $is_edit ) { echo '<span class="certloom-domain-id">#' . esc_html( (string) $id ) . '</span>'; }
+		echo '</div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		echo '<input type="hidden" name="action" value="' . esc_attr( $is_edit ? 'certloom_domain_update_recipient' : 'certloom_domain_create_recipient' ) . '">';
 		if ( $is_edit ) { echo '<input type="hidden" name="recipient_id" value="' . esc_attr( $id ) . '">'; wp_nonce_field( 'certloom_domain_update_recipient_' . $id ); } else { wp_nonce_field( 'certloom_domain_create_recipient' ); }
-		echo '<p><label>' . esc_html__( 'Display name', 'certloom' ) . '<br><input class="regular-text" name="display_name" required value="' . esc_attr( $is_edit ? (string) $editing['display_name'] : '' ) . '"></label></p>';
-		echo '<p><label>' . esc_html__( 'Email', 'certloom' ) . '<br><input class="regular-text" type="email" name="email" value="' . esc_attr( $is_edit ? (string) $editing['email'] : '' ) . '"></label></p>';
-		echo '<p><label>' . esc_html__( 'External ID', 'certloom' ) . '<br><input class="regular-text" name="external_id" value="' . esc_attr( $is_edit ? (string) $editing['external_id'] : '' ) . '"></label></p>';
-		submit_button( $is_edit ? __( 'Update recipient', 'certloom' ) : __( 'Add recipient', 'certloom' ) );
-		echo '</form>';
+		echo '<div class="certloom-domain-form-grid">';
+		$this->text_field( 'display_name', __( 'Display name', 'certloom' ), $is_edit ? (string) $editing['display_name'] : '', true, __( 'The canonical name shown in administrator workflows and credential presentation.', 'certloom' ) );
+		$this->text_field( 'email', __( 'Email', 'certloom' ), $is_edit ? (string) $editing['email'] : '', false, __( 'Optional. Used by later issuance and email workflows.', 'certloom' ), 'email' );
+		$this->text_field( 'first_name', __( 'First name', 'certloom' ), $is_edit ? (string) $editing['first_name'] : '' );
+		$this->text_field( 'middle_name', __( 'Middle name', 'certloom' ), $is_edit ? (string) $editing['middle_name'] : '' );
+		$this->text_field( 'last_name', __( 'Last name', 'certloom' ), $is_edit ? (string) $editing['last_name'] : '' );
+		$this->text_field( 'external_id', __( 'External ID', 'certloom' ), $is_edit ? (string) $editing['external_id'] : '', false, __( 'Optional identifier from an LMS, CRM, SIS, or other source.', 'certloom' ) );
+		$this->text_field( 'wp_user_id', __( 'WordPress user ID', 'certloom' ), $is_edit && ! empty( $editing['wp_user_id'] ) ? (string) $editing['wp_user_id'] : '', false, __( 'Optional numeric WordPress user association. Leave blank for recipients without a site account.', 'certloom' ), 'number', 'min="1" step="1"' );
+		echo '</div>';
+		echo '<div class="certloom-domain-subsection"><div class="certloom-domain-subsection-head"><div><h3>' . esc_html__( 'Recipient custom fields', 'certloom' ) . '</h3><p>' . esc_html__( 'Structured recipient attributes remain local to WordPress and can later feed merge fields and integrations.', 'certloom' ) . '</p></div></div>';
+		if ( $custom_editable ) {
+			echo '<input type="hidden" name="recipient_custom_fields_present" value="1"><div class="certloom-domain-kv-list" data-certloom-kv-list="recipient">';
+			$rows = $custom_fields ?: array( '' => '' );
+			foreach ( $rows as $key => $value ) { $this->key_value_row( 'recipient_custom_key[]', 'recipient_custom_value[]', (string) $key, (string) $value ); }
+			echo '</div><button type="button" class="button certloom-domain-add-kv" data-certloom-add-kv="recipient">' . esc_html__( 'Add custom field', 'certloom' ) . '</button>';
+		} else {
+			echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'This recipient contains advanced structured custom data. Certloom will preserve it unchanged until a dedicated editor can represent it safely.', 'certloom' ) . '</p></div>';
+		}
+		echo '</div>';
+		submit_button( $is_edit ? __( 'Update recipient', 'certloom' ) : __( 'Add recipient', 'certloom' ), 'primary' );
+		echo '</form></section>';
 	}
 
 	/** @param array<string,mixed>|null $editing @return void */
 	private function program_form( array $editing = null ) {
 		$is_edit = null !== $editing;
 		$id = $is_edit ? absint( $editing['id'] ) : 0;
-		echo '<hr><h2>' . esc_html( $is_edit ? __( 'Edit program', 'certloom' ) : __( 'Add program', 'certloom' ) ) . '</h2><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		$metadata = $is_edit && isset( $editing['metadata'] ) && is_array( $editing['metadata'] ) ? $editing['metadata'] : array();
+		$metadata_editable = $this->is_scalar_map( $metadata );
+		echo '<section class="ecapla-certverify-admin-card certloom-domain-editor"><div class="certloom-domain-editor-head"><div><h2>' . esc_html( $is_edit ? __( 'Program profile', 'certloom' ) : __( 'Add program', 'certloom' ) ) . '</h2><p>' . esc_html__( 'Programs are credential definitions independent of LMS products. LMS integrations will map into these records later.', 'certloom' ) . '</p></div>';
+		if ( $is_edit ) { echo '<span class="certloom-domain-id">#' . esc_html( (string) $id ) . '</span>'; }
+		echo '</div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		echo '<input type="hidden" name="action" value="' . esc_attr( $is_edit ? 'certloom_domain_update_program' : 'certloom_domain_create_program' ) . '">';
 		if ( $is_edit ) { echo '<input type="hidden" name="program_id" value="' . esc_attr( $id ) . '">'; wp_nonce_field( 'certloom_domain_update_program_' . $id ); } else { wp_nonce_field( 'certloom_domain_create_program' ); }
-		echo '<p><label>' . esc_html__( 'Program title', 'certloom' ) . '<br><input class="regular-text" name="title" required value="' . esc_attr( $is_edit ? (string) $editing['title'] : '' ) . '"></label></p>';
-		echo '<p><label>' . esc_html__( 'Code', 'certloom' ) . '<br><input class="regular-text" name="code" value="' . esc_attr( $is_edit ? (string) $editing['code'] : '' ) . '"></label></p>';
-		echo '<p><label>' . esc_html__( 'Validity days', 'certloom' ) . '<br><input type="number" min="0" name="validity_days" value="' . esc_attr( $is_edit && null !== $editing['validity_days'] ? (string) $editing['validity_days'] : '' ) . '"></label></p>';
-		echo '<p><label><input type="checkbox" name="active" value="1" ' . checked( $is_edit ? ! empty( $editing['active'] ) : true, true, false ) . '> ' . esc_html__( 'Active program', 'certloom' ) . '</label></p>';
-		submit_button( $is_edit ? __( 'Update program', 'certloom' ) : __( 'Add program', 'certloom' ) );
-		echo '</form>';
+		echo '<div class="certloom-domain-form-grid">';
+		$this->text_field( 'title', __( 'Program title', 'certloom' ), $is_edit ? (string) $editing['title'] : '', true, __( 'The human-readable credential program or course name.', 'certloom' ) );
+		$this->text_field( 'code', __( 'Program code', 'certloom' ), $is_edit ? (string) $editing['code'] : '', false, __( 'Optional unique machine-friendly code used in imports and future automation.', 'certloom' ) );
+		$this->text_field( 'validity_days', __( 'Default validity (days)', 'certloom' ), $is_edit && null !== $editing['validity_days'] ? (string) $editing['validity_days'] : '', false, __( 'Leave blank when the program has no default expiry. Issuance may override this later.', 'certloom' ), 'number', 'min="0" step="1"' );
+		$this->issuer_field( $is_edit ? ( $editing['issuer_id'] ?? null ) : null );
+		echo '<div class="certloom-domain-field certloom-domain-field-wide"><label for="certloom-program-description"><strong>' . esc_html__( 'Description', 'certloom' ) . '</strong></label><textarea id="certloom-program-description" class="large-text" rows="5" name="description">' . esc_textarea( $is_edit ? (string) $editing['description'] : '' ) . '</textarea><p class="description">' . esc_html__( 'Internal program context. Public credential copy will use explicit presentation fields rather than exposing this automatically.', 'certloom' ) . '</p></div>';
+		echo '<div class="certloom-domain-field"><label><input type="checkbox" name="active" value="1" ' . checked( $is_edit ? ! empty( $editing['active'] ) : true, true, false ) . '> <strong>' . esc_html__( 'Active program', 'certloom' ) . '</strong></label><p class="description">' . esc_html__( 'Inactive programs remain in historical credentials but should not be offered for new issuance.', 'certloom' ) . '</p></div>';
+		echo '</div>';
+		echo '<div class="certloom-domain-subsection"><div class="certloom-domain-subsection-head"><div><h3>' . esc_html__( 'Program metadata', 'certloom' ) . '</h3><p>' . esc_html__( 'Optional local key/value metadata for future automation and integrations. Template and signer assignment remain their dedicated roadmap features.', 'certloom' ) . '</p></div></div>';
+		if ( $metadata_editable ) {
+			echo '<input type="hidden" name="program_metadata_present" value="1"><div class="certloom-domain-kv-list" data-certloom-kv-list="program">';
+			$rows = $metadata ?: array( '' => '' );
+			foreach ( $rows as $key => $value ) { $this->key_value_row( 'program_meta_key[]', 'program_meta_value[]', (string) $key, (string) $value ); }
+			echo '</div><button type="button" class="button certloom-domain-add-kv" data-certloom-add-kv="program">' . esc_html__( 'Add metadata field', 'certloom' ) . '</button>';
+		} else {
+			echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'This program contains advanced structured metadata. Certloom will preserve it unchanged until a dedicated editor can represent it safely.', 'certloom' ) . '</p></div>';
+		}
+		echo '</div>';
+		submit_button( $is_edit ? __( 'Update program', 'certloom' ) : __( 'Add program', 'certloom' ), 'primary' );
+		echo '</form></section>';
 	}
 
 
@@ -413,28 +505,91 @@ final class DomainAdmin {
 		echo '</tbody></table>';
 	}
 
-	/** @return array<string,mixed>|\WP_Error */
-	private function recipient_request() {
-		$raw_email = isset( $_POST['email'] ) ? trim( (string) wp_unslash( $_POST['email'] ) ) : '';
-		$email = '' !== $raw_email ? sanitize_email( $raw_email ) : '';
-		if ( '' !== $raw_email && '' === $email ) {
-			return new \WP_Error( 'certloom_recipient_email_invalid', __( 'Enter a valid recipient email address or leave it blank.', 'certloom' ) );
-		}
-		return array(
-			'display_name' => isset( $_POST['display_name'] ) ? sanitize_text_field( wp_unslash( $_POST['display_name'] ) ) : '',
-			'email'        => $email,
-			'external_id'  => isset( $_POST['external_id'] ) ? sanitize_text_field( wp_unslash( $_POST['external_id'] ) ) : '',
-		);
+	/** @param RecipientRepository $repo @param array<string,mixed> $recipient @return void */
+	private function recipient_history( RecipientRepository $repo, array $recipient ) {
+		$rows = $repo->credential_history( absint( $recipient['id'] ), 25 );
+		echo '<section class="ecapla-certverify-admin-card certloom-domain-history"><div class="certloom-domain-subsection-head"><div><h2>' . esc_html__( 'Credential history', 'certloom' ) . '</h2><p>' . esc_html__( 'Current credential identities linked to this recipient. Historical Version lineage remains immutable inside each Credential Series.', 'certloom' ) . '</p></div></div>';
+		if ( is_wp_error( $rows ) ) { $this->error( $rows->get_error_message() ); echo '</section>'; return; }
+		$this->history_table( $rows, 'program_title' );
+		echo '</section>';
 	}
 
-	/** @return array<string,mixed> */
-	private function program_request() {
-		return array(
+	/** @param ProgramRepository $repo @param array<string,mixed> $program @return void */
+	private function program_history( ProgramRepository $repo, array $program ) {
+		$rows = $repo->credential_history( absint( $program['id'] ), 25 );
+		echo '<section class="ecapla-certverify-admin-card certloom-domain-history"><div class="certloom-domain-subsection-head"><div><h2>' . esc_html__( 'Program credential activity', 'certloom' ) . '</h2><p>' . esc_html__( 'Recent current credential identities issued under this program.', 'certloom' ) . '</p></div></div>';
+		if ( is_wp_error( $rows ) ) { $this->error( $rows->get_error_message() ); echo '</section>'; return; }
+		$this->history_table( $rows, 'display_name' );
+		echo '</section>';
+	}
+
+	/** @param array<int,array<string,mixed>> $rows @param string $subject_key @return void */
+	private function history_table( array $rows, $subject_key ) {
+		$status_service = new StatusService();
+		echo '<div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-table"><thead><tr><th>' . esc_html__( 'Certificate', 'certloom' ) . '</th><th>' . esc_html( 'program_title' === $subject_key ? __( 'Program', 'certloom' ) : __( 'Recipient', 'certloom' ) ) . '</th><th>' . esc_html__( 'Public ID', 'certloom' ) . '</th><th>' . esc_html__( 'Issued', 'certloom' ) . '</th><th>' . esc_html__( 'Expires', 'certloom' ) . '</th><th>' . esc_html__( 'Status', 'certloom' ) . '</th></tr></thead><tbody>';
+		foreach ( $rows as $row ) {
+			$status = $this->status_from_row( $status_service, $row );
+			$credential_url = add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'series_id' => absint( $row['series_id'] ) ), admin_url( 'admin.php' ) );
+			echo '<tr><td><a href="' . esc_url( $credential_url ) . '">' . esc_html( (string) ( $row['display_number'] ?: '—' ) ) . '</a></td><td>' . esc_html( (string) ( $row[ $subject_key ] ?: '—' ) ) . '</td><td><code>' . esc_html( (string) $row['public_id'] ) . '</code></td><td>' . esc_html( (string) ( $row['issued_at'] ?: '—' ) ) . '</td><td>' . esc_html( (string) ( $row['expires_at'] ?: '—' ) ) . '</td><td><span class="certloom-domain-status">' . esc_html( $status ? $status->code() : __( 'Unavailable', 'certloom' ) ) . '</span></td></tr>';
+		}
+		if ( empty( $rows ) ) { echo '<tr><td colspan="6"><div class="certloom-domain-empty"><strong>' . esc_html__( 'No linked credentials yet.', 'certloom' ) . '</strong></div></td></tr>'; }
+		echo '</tbody></table></div>';
+	}
+
+	/** @param array<string,mixed>|null $existing @return array<string,mixed>|\WP_Error */
+	private function recipient_request( array $existing = null ) {
+		$raw_email = isset( $_POST['email'] ) ? trim( (string) wp_unslash( $_POST['email'] ) ) : '';
+		$email = '' !== $raw_email ? sanitize_email( $raw_email ) : '';
+		if ( '' !== $raw_email && ( '' === $email || ( function_exists( 'is_email' ) && ! is_email( $email ) ) ) ) {
+			return new \WP_Error( 'certloom_recipient_email_invalid', __( 'Enter a valid recipient email address or leave it blank.', 'certloom' ) );
+		}
+		$wp_user_id = isset( $_POST['wp_user_id'] ) && '' !== trim( (string) $_POST['wp_user_id'] ) ? absint( $_POST['wp_user_id'] ) : null;
+		if ( $wp_user_id && function_exists( 'get_userdata' ) && ! get_userdata( $wp_user_id ) ) {
+			return new \WP_Error( 'certloom_recipient_wp_user_missing', __( 'The selected WordPress user does not exist.', 'certloom' ) );
+		}
+		$data = array(
+			'display_name' => isset( $_POST['display_name'] ) ? sanitize_text_field( wp_unslash( $_POST['display_name'] ) ) : '',
+			'first_name'   => isset( $_POST['first_name'] ) ? sanitize_text_field( wp_unslash( $_POST['first_name'] ) ) : '',
+			'middle_name'  => isset( $_POST['middle_name'] ) ? sanitize_text_field( wp_unslash( $_POST['middle_name'] ) ) : '',
+			'last_name'    => isset( $_POST['last_name'] ) ? sanitize_text_field( wp_unslash( $_POST['last_name'] ) ) : '',
+			'email'        => $email,
+			'wp_user_id'   => $wp_user_id,
+			'external_id'  => isset( $_POST['external_id'] ) ? sanitize_text_field( wp_unslash( $_POST['external_id'] ) ) : '',
+		);
+		if ( isset( $_POST['recipient_custom_fields_present'] ) ) {
+			$parsed = $this->parse_key_value_request( 'recipient_custom_key', 'recipient_custom_value', 30 );
+			if ( is_wp_error( $parsed ) ) { return $parsed; }
+			$data['custom_fields'] = $parsed;
+		} elseif ( null === $existing ) {
+			$data['custom_fields'] = array();
+		}
+		return $data;
+	}
+
+	/** @param array<string,mixed>|null $existing @return array<string,mixed>|\WP_Error */
+	private function program_request( array $existing = null ) {
+		$issuer_id = isset( $_POST['issuer_id'] ) && '' !== trim( (string) $_POST['issuer_id'] ) ? absint( $_POST['issuer_id'] ) : null;
+		if ( $issuer_id ) {
+			$issuer = ( new IssuerRepository() )->find( $issuer_id );
+			if ( is_wp_error( $issuer ) ) { return $issuer; }
+			if ( ! is_array( $issuer ) ) { return new \WP_Error( 'certloom_program_issuer_missing', __( 'The selected issuer does not exist.', 'certloom' ) ); }
+		}
+		$data = array(
 			'code'          => isset( $_POST['code'] ) ? sanitize_text_field( wp_unslash( $_POST['code'] ) ) : '',
 			'title'         => isset( $_POST['title'] ) ? sanitize_text_field( wp_unslash( $_POST['title'] ) ) : '',
-			'validity_days' => isset( $_POST['validity_days'] ) && '' !== (string) $_POST['validity_days'] ? absint( $_POST['validity_days'] ) : null,
+			'description'   => isset( $_POST['description'] ) ? sanitize_textarea_field( wp_unslash( $_POST['description'] ) ) : '',
+			'issuer_id'     => $issuer_id,
+			'validity_days' => isset( $_POST['validity_days'] ) && '' !== trim( (string) $_POST['validity_days'] ) ? absint( $_POST['validity_days'] ) : null,
 			'active'        => isset( $_POST['active'] ),
 		);
+		if ( isset( $_POST['program_metadata_present'] ) ) {
+			$parsed = $this->parse_key_value_request( 'program_meta_key', 'program_meta_value', 30 );
+			if ( is_wp_error( $parsed ) ) { return $parsed; }
+			$data['metadata'] = $parsed;
+		} elseif ( null === $existing ) {
+			$data['metadata'] = array();
+		}
+		return $data;
 	}
 
 
@@ -475,8 +630,10 @@ final class DomainAdmin {
 	}
 
 	/** @return void */
-	private function header( $title ) {
-		echo '<div class="wrap"><h1>' . esc_html( $title ) . '</h1>';
+	private function header( $title, $subtitle = '' ) {
+		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-domain-screen"><div class="certloom-domain-title-row"><div><h1>' . esc_html( $title ) . '</h1>';
+		if ( '' !== (string) $subtitle ) { echo '<p class="certloom-domain-lead">' . esc_html( $subtitle ) . '</p>'; }
+		echo '</div><span class="certloom-domain-preview-badge">' . esc_html__( 'Acceptance preview', 'certloom' ) . '</span></div>';
 	}
 
 	/** @return void */
@@ -484,7 +641,7 @@ final class DomainAdmin {
 
 	/** @return void */
 	private function notice() {
-		echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'Development preview only. The legacy 1.5 registry remains authoritative until migration, new-admin, data-tool, and database gates pass.', 'certloom' ) . '</p></div>';
+		echo '<div class="notice notice-warning inline certloom-domain-gate-notice"><p><strong>' . esc_html__( 'Safety gate active.', 'certloom' ) . '</strong> ' . esc_html__( 'These normalized-domain screens are available only when the explicit admin-preview gate is enabled. The proven legacy registry remains production authority until real migration, restore, cutover, and database acceptance pass.', 'certloom' ) . '</p></div>';
 		if ( isset( $_GET['certloom_error'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Redirected admin notice only.
 			$this->error( sanitize_text_field( wp_unslash( $_GET['certloom_error'] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		}
@@ -511,18 +668,115 @@ final class DomainAdmin {
 		echo '<tr><th style="width:220px">' . esc_html( $label ) . '</th><td>' . wp_kses_post( $value_html ) . '</td></tr>';
 	}
 
-	/** @return void */
-	private function render_search( $page_slug, $search ) {
-		echo '<form method="get"><input type="hidden" name="page" value="' . esc_attr( $page_slug ) . '"><p class="search-box"><label class="screen-reader-text" for="certloom-domain-search">' . esc_html__( 'Search', 'certloom' ) . '</label><input id="certloom-domain-search" type="search" name="s" value="' . esc_attr( $search ) . '"><button class="button">' . esc_html__( 'Search', 'certloom' ) . '</button></p></form><div class="clear"></div>';
+	/** @param array<int,array{value:mixed,label:string}> $items @return void */
+	private function metric_grid( array $items ) {
+		echo '<div class="certloom-domain-metrics">';
+		foreach ( $items as $item ) {
+			echo '<div class="certloom-domain-metric"><strong>' . esc_html( (string) $item['value'] ) . '</strong><span>' . esc_html( $item['label'] ) . '</span></div>';
+		}
+		echo '</div>';
 	}
 
 	/** @return void */
-	private function pagination( $page_slug, $page, $total, $per_page, $search ) {
+	private function program_views( $current, $search ) {
+		echo '<nav class="certloom-domain-views" aria-label="' . esc_attr__( 'Program status filters', 'certloom' ) . '">';
+		foreach ( array( 'all' => __( 'All', 'certloom' ), 'active' => __( 'Active', 'certloom' ), 'inactive' => __( 'Inactive', 'certloom' ) ) as $key => $label ) {
+			$url = add_query_arg( array_filter( array( 'page' => self::PROGRAMS_PAGE, 'program_status' => $key, 's' => $search ) ), admin_url( 'admin.php' ) );
+			echo '<a class="' . esc_attr( $current === $key ? 'is-current' : '' ) . '" href="' . esc_url( $url ) . '"' . ( $current === $key ? ' aria-current="page"' : '' ) . '>' . esc_html( $label ) . '</a>';
+		}
+		echo '</nav>';
+	}
+
+	/** @return void */
+	private function render_search( $page_slug, $search, $placeholder = '', array $hidden = array() ) {
+		$id = 'certloom-domain-search-' . sanitize_html_class( $page_slug );
+		echo '<form method="get" class="certloom-domain-search"><input type="hidden" name="page" value="' . esc_attr( $page_slug ) . '">';
+		foreach ( $hidden as $key => $value ) { echo '<input type="hidden" name="' . esc_attr( sanitize_key( $key ) ) . '" value="' . esc_attr( (string) $value ) . '">'; }
+		echo '<label class="screen-reader-text" for="' . esc_attr( $id ) . '">' . esc_html__( 'Search', 'certloom' ) . '</label><input id="' . esc_attr( $id ) . '" type="search" name="s" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr( $placeholder ) . '"><button class="button">' . esc_html__( 'Search', 'certloom' ) . '</button>';
+		if ( '' !== $search ) { echo '<a class="button button-link" href="' . esc_url( add_query_arg( array_merge( array( 'page' => $page_slug ), $hidden ), admin_url( 'admin.php' ) ) ) . '">' . esc_html__( 'Clear', 'certloom' ) . '</a>'; }
+		echo '</form>';
+	}
+
+	/** @return void */
+	private function pagination( $page_slug, $page, $total, $per_page, $search, array $extra = array() ) {
 		$total_pages = max( 1, (int) ceil( $total / $per_page ) );
 		if ( $total_pages <= 1 ) { return; }
-		$base = add_query_arg( array( 'page' => $page_slug, 's' => $search, 'paged' => '%#%' ), admin_url( 'admin.php' ) );
+		$args = array_merge( array( 'page' => $page_slug, 's' => $search, 'paged' => '%#%' ), $extra );
+		$base = add_query_arg( $args, admin_url( 'admin.php' ) );
 		echo '<div class="tablenav"><div class="tablenav-pages">' . wp_kses_post( paginate_links( array( 'base' => $base, 'format' => '', 'current' => $page, 'total' => $total_pages ) ) ) . '</div></div>';
 	}
+
+	/** @return void */
+	private function text_field( $name, $label, $value, $required = false, $description = '', $type = 'text', $attributes = '' ) {
+		$id = 'certloom-domain-' . sanitize_html_class( $name );
+		echo '<div class="certloom-domain-field"><label for="' . esc_attr( $id ) . '"><strong>' . esc_html( $label ) . '</strong></label><input id="' . esc_attr( $id ) . '" class="regular-text" type="' . esc_attr( $type ) . '" name="' . esc_attr( $name ) . '" value="' . esc_attr( $value ) . '" ' . ( $required ? 'required ' : '' ) . wp_kses_post( $attributes ) . '>';
+		if ( '' !== $description ) { echo '<p class="description">' . esc_html( $description ) . '</p>'; }
+		echo '</div>';
+	}
+
+	/** @return void */
+	private function issuer_field( $selected ) {
+		$result = ( new IssuerRepository() )->list_page( '', 1, 100 );
+		echo '<div class="certloom-domain-field"><label for="certloom-domain-issuer-id"><strong>' . esc_html__( 'Default issuer', 'certloom' ) . '</strong></label><select id="certloom-domain-issuer-id" name="issuer_id"><option value="">' . esc_html__( 'No default issuer', 'certloom' ) . '</option>';
+		if ( ! is_wp_error( $result ) ) {
+			foreach ( $result['items'] as $issuer ) { echo '<option value="' . esc_attr( (string) absint( $issuer['id'] ) ) . '" ' . selected( absint( $selected ), absint( $issuer['id'] ), false ) . '>' . esc_html( (string) $issuer['name'] ) . '</option>'; }
+		}
+		echo '</select><p class="description">' . esc_html__( 'Optional. Full multi-brand policy remains ORG-01; this stores only the normalized issuer relationship already present in the domain.', 'certloom' ) . '</p></div>';
+	}
+
+	/** @return void */
+	private function key_value_row( $key_name, $value_name, $key, $value ) {
+		echo '<div class="certloom-domain-kv-row"><label><span class="screen-reader-text">' . esc_html__( 'Field key', 'certloom' ) . '</span><input type="text" name="' . esc_attr( $key_name ) . '" value="' . esc_attr( $key ) . '" placeholder="' . esc_attr__( 'field_key', 'certloom' ) . '"></label><label><span class="screen-reader-text">' . esc_html__( 'Field value', 'certloom' ) . '</span><input type="text" name="' . esc_attr( $value_name ) . '" value="' . esc_attr( $value ) . '" placeholder="' . esc_attr__( 'Value', 'certloom' ) . '"></label><button type="button" class="button-link-delete certloom-domain-remove-kv">' . esc_html__( 'Remove', 'certloom' ) . '</button></div>';
+	}
+
+	/** @return array<string,string>|\WP_Error */
+	private function parse_key_value_request( $key_name, $value_name, $max_rows ) {
+		$keys = isset( $_POST[ $key_name ] ) && is_array( $_POST[ $key_name ] ) ? wp_unslash( $_POST[ $key_name ] ) : array();
+		$values = isset( $_POST[ $value_name ] ) && is_array( $_POST[ $value_name ] ) ? wp_unslash( $_POST[ $value_name ] ) : array();
+		if ( count( $keys ) > $max_rows || count( $values ) > $max_rows ) { return new \WP_Error( 'certloom_domain_metadata_limit', __( 'Too many custom metadata rows were submitted.', 'certloom' ) ); }
+		$result = array();
+		$count = max( count( $keys ), count( $values ) );
+		for ( $i = 0; $i < $count; $i++ ) {
+			$raw_key = isset( $keys[ $i ] ) ? trim( (string) $keys[ $i ] ) : '';
+			$value = isset( $values[ $i ] ) ? sanitize_text_field( (string) $values[ $i ] ) : '';
+			if ( '' === $raw_key && '' === $value ) { continue; }
+			$key = sanitize_key( $raw_key );
+			if ( '' === $key ) { return new \WP_Error( 'certloom_domain_metadata_key_invalid', __( 'Every custom metadata value needs a valid machine key.', 'certloom' ) ); }
+			if ( isset( $result[ $key ] ) ) { return new \WP_Error( 'certloom_domain_metadata_key_duplicate', __( 'Custom metadata keys must be unique.', 'certloom' ) ); }
+			$result[ $key ] = $value;
+		}
+		return $result;
+	}
+
+	/** @return bool */
+	private function is_scalar_map( array $value ) {
+		foreach ( $value as $key => $item ) {
+			$key = (string) $key;
+			if ( '' === $key || sanitize_key( $key ) !== $key || ! is_string( $item ) ) { return false; }
+		}
+		return true;
+	}
+
+	/** @param array<int,array<string,mixed>> $items @return void */
+	private function prime_wp_users( array $items ) {
+		if ( ! function_exists( 'cache_users' ) ) { return; }
+		$ids = array();
+		foreach ( $items as $item ) { if ( ! empty( $item['wp_user_id'] ) ) { $ids[] = absint( $item['wp_user_id'] ); } }
+		$ids = array_values( array_unique( array_filter( $ids ) ) );
+		if ( $ids ) { cache_users( $ids ); }
+	}
+
+	/** @return string */
+	private function wp_user_label( $user_id ) {
+		$user_id = absint( $user_id );
+		if ( ! $user_id ) { return '—'; }
+		if ( function_exists( 'get_userdata' ) ) {
+			$user = get_userdata( $user_id );
+			if ( $user ) { return sprintf( '%1$s (#%2$d)', (string) $user->display_name, $user_id ); }
+		}
+		return sprintf( /* translators: %d: WordPress user ID. */ __( '#%d (missing)', 'certloom' ), $user_id );
+	}
+
 
 	/** @return void */
 	private function require_capability( $capability ) {

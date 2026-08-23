@@ -1,4 +1,24 @@
+1.6.2 — Phase 1 Part C: premium Recipient + Program implementation behind acceptance gate; authority unchanged
+-------------------------------------------------------------------------------------------------------------------
+- Complete the planned REC-01 administrator implementation behind the existing future-domain acceptance gate: full recipient names, email, WordPress-user association, external ID, safe custom fields, credential counts/latest issuance, and bounded credential history.
+- Complete the planned PRG-01 administrator implementation behind the same gate: standalone Program title/code/description, active state, default validity, normalized issuer relationship, safe metadata, operational status views, credential counts, and credential activity.
+- Preserve advanced nested/typed Recipient custom data and Program metadata when the simple key/value editor cannot round-trip it exactly; reduced forms omit those fields rather than flattening or coercing them.
+- Validate WordPress-user and issuer references before admin mutations and provide actionable duplicate WordPress-user/Program-code errors.
+- Validate persisted Recipient/Program VARCHAR lengths before domain mutation bookkeeping/database writes.
+- Prime linked WordPress user objects once per bounded Recipient page to avoid row-by-row user database lookups.
+- Keep REC-01/PRG-01 production exposure gated because this runtime still cannot run the real WordPress/MySQL populated migration/restore/cutover acceptance sequence.
+- Keep CERTLOOM_DOMAIN_WRITE_PATHS_READY, CERTLOOM_DOMAIN_ADMIN_PREVIEW, and CERTLOOM_DOMAIN_DATA_TOOLS_READY false in the shipped production plugin.
+- Do not pull REG-04, ONB-01, full ORG-01, batches, issuance, Designer, or renderer-engine claims into this release.
+
 1.6.1 — Phase 1 Part B: premium registry + lifecycle reason/private-note field integration; authority unchanged
+----------------------------------------------------------------------------------------------------------------
+- Complete the current-authority premium Registry redesign with operational status views, bounded Expiring-soon filtering, preserved list state, shared schema labels, and clearer empty/status/date presentation.
+- Add first-class administrator status reasons and explain workflow/date/legacy status provenance without changing authoritative validity semantics.
+- Add locked-private internal administrator notes through the existing custom-field contract and enforce privacy at normalization, save, and public-read boundaries.
+- Rebuild the Certificate Editor and Field Manager into the premium admin shell while retaining retired-field restoration/purge safety.
+- Make the Dashboard Expiring-soon metric open the exact actionable Registry subset.
+- Keep advanced REG-04 bulk mutations and the gated future Recipient/Program authority out of this release.
+- Keep all three future-domain production readiness flags false.
 
 1.6.0 — Phase 1 Part A: premium admin shell + operational dashboard; authority unchanged
 ------------------------------------------------------------------------------------------------

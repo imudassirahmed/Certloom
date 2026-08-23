@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.1
+Stable tag: 1.6.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.1: Certloom continues original Phase 1 with the premium registry/lifecycle/field redesign. Certificates now have operational status views, an actionable 30-day expiry filter, clearer status provenance, schema-driven labels, status reasons, and locked-private internal administrator notes. The certificate editor and Field Manager have been rebuilt into the premium admin shell. The proven legacy registry remains authoritative and all future-domain write/admin/data-tool flags remain disabled.
+> Development note for 1.6.2: Certloom continues original Phase 1 Part C by completing premium Recipient and standalone Program administration behind the existing future-domain acceptance gate. The normalized screens now cover recipient identity, WordPress-user association, safe custom fields, credential history, program descriptions, issuer relationships, default validity, status, metadata, and credential activity. The proven legacy registry remains production authority and all future-domain write/admin/data-tool flags remain disabled until real staging acceptance passes.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
