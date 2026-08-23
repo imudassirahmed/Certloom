@@ -793,6 +793,8 @@ class Ecapla_CertVerify_Import {
 				$sample[] = gmdate( 'Y-m-d' );
 			} elseif ( 'holder_name' === $field['key'] ) {
 				$sample[] = 'Example Organization Ltd';
+			} elseif ( '__certloom_profile_visibility' === $field['key'] ) {
+				$sample[] = 'public';
 			} else {
 				$sample[] = '';
 			}

@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<div>
 			<span class="certloom-eyebrow"><?php esc_html_e( 'Data schema', 'certloom' ); ?></span>
 			<h1 id="certloom-fields-title"><?php esc_html_e( 'Field manager', 'certloom' ); ?></h1>
-			<p><?php esc_html_e( 'Control labels, ordering, public visibility, and protected historical fields from one certificate schema.', 'certloom' ); ?></p>
+			<p><?php esc_html_e( 'Control labels, ordering, data sensitivity, public exposure, and protected historical fields from one certificate schema.', 'certloom' ); ?></p>
 		</div>
 		<div class="certloom-page-actions">
 			<a class="button button-secondary button-hero" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-certificates' ) ); ?>"><span class="dashicons dashicons-awards" aria-hidden="true"></span><?php esc_html_e( 'Open registry', 'certloom' ); ?></a>
@@ -44,7 +44,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<span class="dashicons dashicons-shield" aria-hidden="true"></span>
 		<div>
 			<strong><?php esc_html_e( 'Privacy-first field schema', 'certloom' ); ?></strong>
-			<p><?php esc_html_e( 'Fresh installations publish only certificate number and status. Enable other public fields deliberately. Internal notes are permanently locked to administrators and can never appear in public verification output.', 'certloom' ); ?></p>
+			<p><?php esc_html_e( 'Fresh installations publish only certificate number and status. Classify data before exposing it, then choose whether a field may appear in verification, the richer credential profile, both, or neither. Internal fields are forced private server-side.', 'certloom' ); ?></p>
 		</div>
 	</div>
 
@@ -74,11 +74,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 							<code><?php echo esc_html( $field['key'] ); ?></code>
 						</div>
 						<span class="ecapla-certverify-field-type"><?php echo esc_html( $field['type'] ); ?></span>
-						<?php if ( ! empty( $field['locked_visibility'] ) ) : ?>
-							<span class="ecapla-certverify-field-visibility certloom-visibility-pill is-internal"><span class="dashicons dashicons-lock" aria-hidden="true"></span><?php esc_html_e( 'Internal only', 'certloom' ); ?></span>
-						<?php else : ?>
-							<label class="ecapla-certverify-field-visibility"><input type="checkbox" name="fields[<?php echo esc_attr( $index ); ?>][show_on_frontend]" value="1" <?php checked( ! empty( $field['show_on_frontend'] ) ); ?> /> <?php esc_html_e( 'Show on public result', 'certloom' ); ?></label>
-						<?php endif; ?>
+						<div class="certloom-field-policy-cell">
+							<?php if ( ! empty( $field['locked_visibility'] ) ) : ?>
+								<span class="ecapla-certverify-field-visibility certloom-visibility-pill is-internal"><span class="dashicons dashicons-lock" aria-hidden="true"></span><?php esc_html_e( 'Internal / private', 'certloom' ); ?></span>
+								<input type="hidden" name="fields[<?php echo esc_attr( $index ); ?>][sensitivity]" value="internal" /><input type="hidden" name="fields[<?php echo esc_attr( $index ); ?>][public_exposure]" value="private" />
+							<?php else : ?>
+								<?php if ( Ecapla_CertVerify_Fields::is_required_core_field( $field['key'] ) ) : ?>
+									<label><span><?php esc_html_e( 'Sensitivity', 'certloom' ); ?></span><input type="hidden" name="fields[<?php echo esc_attr( $index ); ?>][sensitivity]" value="public_safe" /><span class="certloom-visibility-pill is-public"><?php esc_html_e( 'Public-safe (required)', 'certloom' ); ?></span></label>
+								<?php else : ?>
+									<label><span><?php esc_html_e( 'Sensitivity', 'certloom' ); ?></span><select name="fields[<?php echo esc_attr( $index ); ?>][sensitivity]">
+										<?php foreach ( Ecapla_CertVerify_Fields::get_sensitivity_options() as $value => $label ) : ?><option value="<?php echo esc_attr( $value ); ?>" <?php selected( $field['sensitivity'] ?? 'personal', $value ); ?>><?php echo esc_html( $label ); ?></option><?php endforeach; ?>
+									</select></label>
+								<?php endif; ?>
+								<label><span><?php esc_html_e( 'Public exposure', 'certloom' ); ?></span><select name="fields[<?php echo esc_attr( $index ); ?>][public_exposure]">
+									<?php foreach ( Ecapla_CertVerify_Fields::get_public_exposure_options() as $value => $label ) : ?><option value="<?php echo esc_attr( $value ); ?>" <?php selected( $field['public_exposure'] ?? ( ! empty( $field['show_on_frontend'] ) ? 'both' : 'private' ), $value ); ?>><?php echo esc_html( $label ); ?></option><?php endforeach; ?>
+								</select></label>
+							<?php endif; ?>
+						</div>
 						<div class="ecapla-certverify-field-move-actions">
 							<button type="button" class="button-link ecapla-certverify-move-up"><?php esc_html_e( 'Move up', 'certloom' ); ?></button>
 							<button type="button" class="button-link ecapla-certverify-move-down"><?php esc_html_e( 'Move down', 'certloom' ); ?></button>
@@ -105,7 +117,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<div class="certloom-fields-lower-grid">
 		<section class="certloom-panel certloom-fields-panel" aria-labelledby="certloom-add-field-title">
 			<div class="certloom-panel-header"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Extend the schema', 'certloom' ); ?></span><h2 id="certloom-add-field-title"><?php esc_html_e( 'Add a custom field', 'certloom' ); ?></h2></div></div>
-			<p class="certloom-section-intro"><?php esc_html_e( 'New custom fields are private by default. Review their data before enabling public visibility.', 'certloom' ); ?></p>
+			<p class="certloom-section-intro"><?php esc_html_e( 'New custom fields are personal and private by default. Classify them deliberately before exposing them in verification or Credential Profile output.', 'certloom' ); ?></p>
 			<form method="post" action="">
 				<?php wp_nonce_field( 'certverify_add_field' ); ?>
 				<div class="certloom-form-stack">

@@ -17,7 +17,7 @@ $ecapla_certverify_custom_fields = array_values(
 	array_filter(
 		$fields,
 		static function ( $field ) {
-			return ! in_array( $field['key'], array( 'cert_number', 'holder_name', 'issue_date', 'expiry_date', 'status', 'status_reason', 'internal_notes' ), true );
+			return ! in_array( $field['key'], array( 'cert_number', 'holder_name', 'issue_date', 'expiry_date', 'status', 'status_reason', 'internal_notes', '__certloom_profile_visibility' ), true );
 		}
 	)
 );
@@ -28,13 +28,15 @@ foreach ( array( 'status', 'status_reason' ) as $ecapla_certverify_key ) {
 	}
 }
 $ecapla_certverify_internal_field = $ecapla_certverify_field_map['internal_notes'] ?? null;
+$ecapla_certverify_visibility_field = $ecapla_certverify_field_map['__certloom_profile_visibility'] ?? null;
 $ecapla_certverify_effective_status = $certificate ? Ecapla_CertVerify_Database::effective_status( $certificate ) : 'valid';
 $ecapla_certverify_statuses = Ecapla_CertVerify_Fields::get_statuses();
 $ecapla_certverify_effective_label = isset( $ecapla_certverify_statuses[ $ecapla_certverify_effective_status ] ) ? $ecapla_certverify_statuses[ $ecapla_certverify_effective_status ]['label'] : ucfirst( $ecapla_certverify_effective_status );
 $ecapla_certverify_setup_state = Ecapla_CertVerify_Onboarding::get_state();
 $ecapla_certverify_verification_url = $certificate ? Ecapla_CertVerify_Public_Router::verification_url( (string) ( $certificate['cert_number'] ?? '' ) ) : '';
-$ecapla_certverify_profile_url = $certificate ? Ecapla_CertVerify_Public_Router::profile_url( (string) ( $certificate['cert_number'] ?? '' ) ) : '';
-$ecapla_certverify_public_field_count = count( Ecapla_CertVerify_Fields::get_visible_fields() );
+$ecapla_certverify_profile_url = $certificate && Ecapla_CertVerify_Public_Policy::MODE_PROFILE === Ecapla_CertVerify_Public_Policy::guest_mode( $certificate ) ? Ecapla_CertVerify_Public_Router::profile_url( (string) ( $certificate['cert_number'] ?? '' ) ) : '';
+$ecapla_certverify_public_field_count = count( Ecapla_CertVerify_Fields::get_visible_fields( 'verification' ) );
+$ecapla_certverify_profile_field_count = count( Ecapla_CertVerify_Fields::get_visible_fields( 'profile' ) );
 $ecapla_certverify_datetime_format = trim( (string) get_option( 'date_format', 'F j, Y' ) . ' ' . (string) get_option( 'time_format', 'g:i a' ) );
 $ecapla_certverify_created_label = $certificate && ! empty( $certificate['created_at'] ) ? mysql2date( $ecapla_certverify_datetime_format, (string) $certificate['created_at'], true ) : '';
 $ecapla_certverify_updated_label = $certificate && ! empty( $certificate['updated_at'] ) ? mysql2date( $ecapla_certverify_datetime_format, (string) $certificate['updated_at'], true ) : '';
@@ -109,6 +111,8 @@ $ecapla_certverify_updated_label = $certificate && ! empty( $certificate['update
 				<section id="certloom-workspace-verification" class="certloom-panel certloom-editor-section" aria-labelledby="certloom-verification-title">
 					<div class="certloom-panel-header"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Verification', 'certloom' ); ?></span><h2 id="certloom-verification-title"><?php esc_html_e( 'Public verification', 'certloom' ); ?></h2></div></div>
 					<p><?php echo esc_html( sprintf( _n( '%d field is currently approved for public verification output.', '%d fields are currently approved for public verification output.', $ecapla_certverify_public_field_count, 'certloom' ), $ecapla_certverify_public_field_count ) ); ?></p>
+					<?php if ( $ecapla_certverify_visibility_field ) : $field = $ecapla_certverify_visibility_field; ?><div class="certloom-verification-policy"><?php include ECAPLA_CERTVERIFY_PATH . 'admin/views/partials/certificate-field.php'; ?></div><?php endif; ?>
+					<p><?php echo esc_html( sprintf( _n( '%d field is approved for Credential Profile output.', '%d fields are approved for Credential Profile output.', $ecapla_certverify_profile_field_count, 'certloom' ), $ecapla_certverify_profile_field_count ) ); ?></p>
 					<div class="certloom-page-actions">
 						<?php if ( $ecapla_certverify_verification_url ) : ?><a class="button button-secondary" href="<?php echo esc_url( $ecapla_certverify_verification_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open verification result', 'certloom' ); ?><span class="screen-reader-text"> <?php esc_html_e( '(opens in a new tab)', 'certloom' ); ?></span></a><?php else : ?><a class="button button-secondary" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-setup' ) ); ?>"><?php esc_html_e( 'Configure verification page', 'certloom' ); ?></a><?php endif; ?>
 						<?php if ( $ecapla_certverify_profile_url ) : ?><a class="button button-secondary" href="<?php echo esc_url( $ecapla_certverify_profile_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open credential profile', 'certloom' ); ?><span class="screen-reader-text"> <?php esc_html_e( '(opens in a new tab)', 'certloom' ); ?></span></a><?php endif; ?>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Certloom Phase 2 Browser Resilience</title>
+<link rel="stylesheet" href="../../public/assets/certloom-public.css">
+<style>
+/* Deliberately common hostile theme rules loaded after Certloom. */
+html,body{margin:0;padding:0}
+#primary{float:left;width:42%;max-width:360px;margin-left:30px}
+button{width:100%;font-size:28px;line-height:2;text-transform:uppercase;letter-spacing:.2em;box-shadow:0 0 0 8px red}
+input{width:32px!important;font-size:10px;line-height:1;background:#ffc!important}
+a{font-size:24px;text-decoration:underline;color:purple}
+dl,dd,dt,p,h1,h2,h3{margin:28px;padding:4px}
+*{box-sizing:content-box}
+.browser-fixture{padding:12px}
+#certloom-browser-result{display:none}
+</style>
+</head>
+<body>
+<a class="certloom-skip-link screen-reader-text" href="#certloom-route-content">Skip to credential content</a>
+<main id="primary" class="certloom-route-main certloom-route-credential">
+<div id="certloom-route-content" class="certloom-route-shell" tabindex="-1">
+<div class="browser-fixture">
+<div class="ecapla-certverify-widget cv-widget" data-endpoint="about:blank">
+  <div class="cv-search-card">
+    <form class="cv-search-form"><label class="screen-reader-text" for="cv-test">Certificate number</label><input id="cv-test" class="cv-search-input" type="text" value="Urdu / Batch ۱" dir="auto" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="cv-search-btn" type="button"><span class="cv-btn-text">Verify</span><span class="cv-arrow" aria-hidden="true">→</span></button></form>
+    <div class="cv-result" role="region" aria-label="Verification result"><div class="cv-result-card cv-status-suspended"><div class="cv-result-summary"><span class="cv-status-mark" aria-hidden="true">!</span><div><p class="cv-result-success">Suspended</p></div></div><dl class="cv-result-list"><div class="cv-result-row"><dt>Certificate holder</dt><dd dir="auto">محمد علی VeryLongUnbrokenCredentialValueThatMustNeverOverflowTheContainer1234567890</dd></div></dl><div class="cv-result-actions"><button type="button" class="certloom-result-action certloom-copy-link">Copy verification link</button><a class="certloom-result-action" href="#profile">View credential profile</a><button type="button" class="certloom-result-action certloom-print">Print</button><span class="certloom-action-feedback" aria-live="polite"></span></div></div></div>
+    <div class="certloom-live-status" role="status" aria-live="polite" aria-atomic="true"></div>
+  </div>
+</div>
+<div class="ecapla-certverify-template cvx-widget cvx-template-meridian"><section class="cvx-shell" aria-label="Certificate verification search"><div class="cvx-copy"><h2 class="cvx-heading">Verify a credential</h2></div><div class="cvx-action"><form class="cvx-search-form"><div class="cvx-input-wrap"><span class="cvx-input-icon" aria-hidden="true"></span><input class="cvx-search-input" type="text" value="CERT-2026-0001" dir="auto"></div><button class="cvx-search-btn" type="button"><span class="cvx-btn-text">Verify</span><span class="cvx-arrow" aria-hidden="true">→</span></button></form><div class="cvx-result" role="region" aria-label="Verification result"><div class="cvx-result-card cvx-status-expired"><div class="cvx-result-summary"><span class="cvx-status-mark" aria-hidden="true">○</span><div><p class="cvx-result-success">Expired</p></div></div><dl class="cvx-result-list"><div class="cvx-result-row"><dt>Holder</dt><dd dir="auto">Ada Lovelace</dd></div></dl></div></div><div class="certloom-live-status" role="status" aria-live="polite"></div></div></section></div>
+<section id="profile" class="certloom-credential-profile cvp-widget" aria-labelledby="profile-heading"><header class="cvp-header"><p class="cvp-eyebrow">Verified credential</p><h2 id="profile-heading" class="cvp-heading">Credential profile</h2></header><div class="cvp-result" role="region" aria-labelledby="profile-heading"><div class="cvp-result-card cvp-status-valid"><div class="cvp-result-summary"><span class="cvp-status-mark" aria-hidden="true">✓</span><div><p class="cvp-result-success">Valid</p></div></div><dl class="cvp-result-list"><div class="cvp-result-row"><dt>Certificate number</dt><dd dir="auto">CERT-2026-0001</dd></div></dl></div></div><div class="certloom-live-status" role="status" aria-live="polite"></div></section>
+</div>
+</div>
+</main>
+<pre id="certloom-browser-result"></pre>
+<script>
+(function(){
+ function all(sel){return Array.prototype.slice.call(document.querySelectorAll(sel));}
+ function minHeight(sel,n){return all(sel).length>0 && all(sel).every(function(el){return el.getBoundingClientRect().height>=n;});}
+ var main=document.querySelector('.certloom-route-main#primary');
+ var route=document.querySelector('.certloom-route-shell');
+ var skip=document.querySelector('.certloom-skip-link');
+ skip.focus();
+ var skipBox=skip.getBoundingClientRect();
+ var checks={
+   noHorizontalOverflow: document.documentElement.scrollWidth <= window.innerWidth + 1,
+   routeNeutralizesThemeColumn: main && main.getBoundingClientRect().width >= window.innerWidth - 1 && getComputedStyle(main).float === 'none',
+   searchTargetsAtLeast44: minHeight('.cv-search-input,.cv-search-btn,.cvx-input-wrap,.cvx-search-btn',44),
+   resultActionsAtLeast44: minHeight('.certloom-result-action',44),
+   noInteractiveInsideStatusRole: document.querySelectorAll('[role="status"] a,[role="status"] button,[role="status"] input').length===0,
+   embeddedProfileUsesH2: !!document.querySelector('.cvp-widget > .cvp-header > h2.cvp-heading'),
+   bidiValuesUsePlaintext: all('.cv-result-row dd,.cvx-result-row dd,.cvp-result-row dd').every(function(el){return getComputedStyle(el).unicodeBidi==='plaintext';}),
+   skipLinkVisibleOnFocus: skipBox.width>10 && skipBox.height>10,
+   routeTargetIsFocusable: route && route.getAttribute('tabindex')==='-1',
+   actionThemeReset: all('.certloom-result-action').every(function(el){var c=getComputedStyle(el);return c.textTransform==='none' && c.letterSpacing==='normal' && c.boxShadow==='none';})
+ };
+ var passed=Object.keys(checks).every(function(k){return checks[k];});
+ var out=document.getElementById('certloom-browser-result');
+ out.setAttribute('data-pass',passed?'1':'0');
+ out.textContent=JSON.stringify({viewport:[window.innerWidth,window.innerHeight],checks:checks});
+})();
+</script>
+</body>
+</html>

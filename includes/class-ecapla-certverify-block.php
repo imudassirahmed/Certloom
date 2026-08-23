@@ -138,9 +138,11 @@ class Ecapla_CertVerify_Block {
 	}
 	/** Renders the dynamic Credential Profile block. */
 	public static function render_credential( $attributes ) {
-		$attributes = wp_parse_args( is_array( $attributes ) ? $attributes : array(), array( 'number' => '', 'heading' => __( 'Credential profile', 'certloom' ), 'notFoundText' => __( 'This credential could not be found or is not available.', 'certloom' ) ) );
+		$attributes = wp_parse_args( is_array( $attributes ) ? $attributes : array(), array( 'number' => '', 'heading' => __( 'Credential profile', 'certloom' ), 'headingTag' => 'h2', 'notFoundText' => __( 'This credential could not be found or is not available.', 'certloom' ) ) );
 		$number = trim( sanitize_text_field( (string) $attributes['number'] ) );
-		$html = Ecapla_CertVerify_Render::credential_profile( $number, array( 'heading' => $attributes['heading'], 'notfound_text' => $attributes['notFoundText'] ) );
+		$heading_tag = sanitize_key( (string) $attributes['headingTag'] );
+		if ( ! in_array( $heading_tag, array( 'h2', 'h3', 'h4', 'h5', 'h6' ), true ) ) { $heading_tag = 'h2'; }
+		$html = Ecapla_CertVerify_Render::credential_profile( $number, array( 'heading' => $attributes['heading'], 'heading_tag' => $heading_tag, 'notfound_text' => $attributes['notFoundText'] ) );
 		$wrapper = function_exists( 'get_block_wrapper_attributes' ) ? get_block_wrapper_attributes( array( 'class' => 'certloom-credential-block' ) ) : 'class="certloom-credential-block"';
 		return '<div ' . $wrapper . '>' . $html . '</div>';
 	}

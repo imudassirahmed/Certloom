@@ -1,3 +1,20 @@
+1.6.9 — Phase 2 frontend accessibility and theme-resilience hardening
+- Separate interactive result regions from the dedicated screen-reader live-status announcer.
+- Add clean-route skip navigation, stronger keyboard focus, 44px action targets, RTL/bidi protection, reduced-motion, prefers-contrast, and forced-colors rules.
+- Default embedded Credential Profile headings to H2 with bounded H2-H6 controls while the dedicated clean profile route owns H1.
+- Fix AJAX status-icon parity and semantic verification time markup.
+- Add a reproducible real-browser hostile-theme/reflow/RTL/accessibility-media acceptance fixture.
+
+1.6.8 — Phase 2 visibility, sensitivity and server action-policy hardening
+- Add context-aware public field exposure: Private, Verification only, Profile only, or Verification + profile.
+- Add field sensitivity classes: Public-safe, Personal, Sensitive, and Internal, with internal data forced private server-side.
+- Add per-credential Public profile / Verification only / Private guest visibility using a reserved __certloom_ policy namespace.
+- Preserve existing records as Public by default while malformed stored visibility fails closed to Private.
+- Centralize current guest action authorization; unknown/future PDF, image, share, and claim actions fail closed.
+- Prevent clean-route document titles from leaking credential identifiers before visibility policy runs.
+- Preserve sensitivity when retiring/restoring custom fields while restoring them privately.
+- Keep CSV template compatibility with an explicit public visibility sample.
+
 1.6.7 — Phase 2 verification/frontend foundation and shared public presentation
 ----------------------------------------------------------------------------------
 - Keep the current legacy certificate registry/public verifier authoritative; do not enable normalized-domain write/admin/data-tool flags.

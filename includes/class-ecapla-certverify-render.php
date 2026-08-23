@@ -106,6 +106,7 @@ class Ecapla_CertVerify_Render {
 		$endpoint    = esc_url_raw( rest_url( 'certloom/v1/verify' ) );
 		$direct      = self::direct_number();
 		$result_id   = $instance_id . '-result';
+		$live_id     = $instance_id . '-live';
 		$server_html = self::server_result_html( $direct, 'cv', $atts['notfound_text'], __( 'Something went wrong, please try again.', 'certloom' ) );
 
 		ob_start();
@@ -130,14 +131,15 @@ class Ecapla_CertVerify_Render {
 				<form class="cv-search-form" method="get" action="">
 					<?php echo self::routing_hidden_inputs(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Values are escaped by the helper. ?>
 					<label class="screen-reader-text" for="<?php echo esc_attr( $instance_id . '-number' ); ?>"><?php esc_html_e( 'Certificate number', 'certloom' ); ?></label>
-					<input type="text" id="<?php echo esc_attr( $instance_id . '-number' ); ?>" name="certloom_number" class="cv-search-input" value="<?php echo esc_attr( $direct ); ?>" placeholder="<?php echo esc_attr( $atts['placeholder'] ); ?>" autocomplete="off" maxlength="100" aria-controls="<?php echo esc_attr( $result_id ); ?>" required />
+					<input type="text" id="<?php echo esc_attr( $instance_id . '-number' ); ?>" name="certloom_number" class="cv-search-input" value="<?php echo esc_attr( $direct ); ?>" placeholder="<?php echo esc_attr( $atts['placeholder'] ); ?>" autocomplete="off" autocapitalize="off" spellcheck="false" dir="auto" maxlength="100" aria-controls="<?php echo esc_attr( $result_id ); ?>" required />
 					<button type="submit" class="cv-search-btn">
 						<span class="cv-btn-text"><?php echo esc_html( $atts['button_text'] ); ?></span>
 						<span class="cv-arrow" aria-hidden="true">&rarr;</span>
 					</button>
 				</form>
 
-				<div id="<?php echo esc_attr( $result_id ); ?>" class="cv-result" role="status" aria-live="polite" aria-atomic="true"><?php echo $server_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built from escaped values. ?></div>
+				<div id="<?php echo esc_attr( $result_id ); ?>" class="cv-result" role="region" aria-label="<?php esc_attr_e( 'Verification result', 'certloom' ); ?>"><?php echo $server_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built from escaped values. ?></div>
+				<div id="<?php echo esc_attr( $live_id ); ?>" class="screen-reader-text certloom-live-status" role="status" aria-live="polite" aria-atomic="true"></div>
 				<noscript><p class="cv-noscript"><?php esc_html_e( 'JavaScript is unavailable. Submit the form to reload this page with the verification result.', 'certloom' ); ?></p></noscript>
 			</div>
 
@@ -187,6 +189,7 @@ class Ecapla_CertVerify_Render {
 		$endpoint    = esc_url_raw( rest_url( 'certloom/v1/verify' ) );
 		$direct      = self::direct_number();
 		$result_id   = $instance_id . '-result';
+		$live_id     = $instance_id . '-live';
 		$server_html = self::server_result_html( $direct, 'cvx', $atts['notfound_text'], __( 'The verification service could not complete the request. Please try again.', 'certloom' ) );
 		$classes     = array(
 			'ecapla-certverify-template',
@@ -221,14 +224,15 @@ class Ecapla_CertVerify_Render {
 						<label class="screen-reader-text" for="<?php echo esc_attr( $instance_id . '-number' ); ?>"><?php esc_html_e( 'Certificate number', 'certloom' ); ?></label>
 						<div class="cvx-input-wrap">
 							<span class="cvx-input-icon" aria-hidden="true"></span>
-							<input type="text" id="<?php echo esc_attr( $instance_id . '-number' ); ?>" name="certloom_number" class="cvx-search-input" value="<?php echo esc_attr( $direct ); ?>" placeholder="<?php echo esc_attr( $atts['placeholder'] ); ?>" autocomplete="off" maxlength="100" aria-controls="<?php echo esc_attr( $result_id ); ?>" required />
+							<input type="text" id="<?php echo esc_attr( $instance_id . '-number' ); ?>" name="certloom_number" class="cvx-search-input" value="<?php echo esc_attr( $direct ); ?>" placeholder="<?php echo esc_attr( $atts['placeholder'] ); ?>" autocomplete="off" autocapitalize="off" spellcheck="false" dir="auto" maxlength="100" aria-controls="<?php echo esc_attr( $result_id ); ?>" required />
 						</div>
 						<button type="submit" class="cvx-search-btn">
 							<span class="cvx-btn-text"><?php echo esc_html( $atts['button_text'] ); ?></span>
 							<span class="cvx-arrow" aria-hidden="true">&rarr;</span>
 						</button>
 					</form>
-					<div id="<?php echo esc_attr( $result_id ); ?>" class="cvx-result" role="status" aria-live="polite" aria-atomic="true"><?php echo $server_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built from escaped values. ?></div>
+					<div id="<?php echo esc_attr( $result_id ); ?>" class="cvx-result" role="region" aria-label="<?php esc_attr_e( 'Verification result', 'certloom' ); ?>"><?php echo $server_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built from escaped values. ?></div>
+					<div id="<?php echo esc_attr( $live_id ); ?>" class="screen-reader-text certloom-live-status" role="status" aria-live="polite" aria-atomic="true"></div>
 					<noscript><p class="cvx-noscript"><?php esc_html_e( 'JavaScript is unavailable. Submit the form to reload this page with the verification result.', 'certloom' ); ?></p></noscript>
 				</div>
 			</section>
@@ -316,8 +320,14 @@ class Ecapla_CertVerify_Render {
 			)
 		);
 		$heading = self::limit_text( sanitize_text_field( (string) $atts['heading'] ), 200 );
+		$heading_tag = isset( $atts['heading_tag'] ) ? sanitize_key( (string) $atts['heading_tag'] ) : 'h2';
+		if ( ! in_array( $heading_tag, array( 'h1', 'h2', 'h3', 'h4', 'h5', 'h6' ), true ) ) {
+			$heading_tag = 'h2';
+		}
 		$notfound = self::limit_text( sanitize_textarea_field( (string) $atts['notfound_text'] ), 500 );
-		$presentation = Ecapla_CertVerify_Public_Presentation::verify( $number, true );
+		$instance_id = wp_unique_id( 'certloom-credential-' );
+		$heading_id  = $instance_id . '-heading';
+		$presentation = Ecapla_CertVerify_Public_Presentation::verify( $number, true, 'profile' );
 		if ( is_wp_error( $presentation ) ) {
 			$message = 'ecapla_certverify_rate_limited' === $presentation->get_error_code()
 				? $presentation->get_error_message()
@@ -328,7 +338,7 @@ class Ecapla_CertVerify_Render {
 		} else {
 			$content = self::result_card_html( $presentation, 'cvp' );
 		}
-		return '<section class="certloom-credential-profile cvp-widget" data-copy-success-text="' . esc_attr__( 'Verification link copied.', 'certloom' ) . '" data-copy-error-text="' . esc_attr__( 'Copy the verification link from your browser.', 'certloom' ) . '"><header class="cvp-header"><p class="cvp-eyebrow">' . esc_html__( 'Verified credential', 'certloom' ) . '</p><h1 class="cvp-heading">' . esc_html( $heading ) . '</h1></header><div class="cvp-result" role="status" aria-live="polite">' . $content . '</div></section>';
+		return '<section id="' . esc_attr( $instance_id ) . '" class="certloom-credential-profile cvp-widget" aria-labelledby="' . esc_attr( $heading_id ) . '" data-copy-success-text="' . esc_attr__( 'Verification link copied.', 'certloom' ) . '" data-copy-error-text="' . esc_attr__( 'Copy the verification link from your browser.', 'certloom' ) . '"><header class="cvp-header"><p class="cvp-eyebrow">' . esc_html__( 'Verified credential', 'certloom' ) . '</p><' . $heading_tag . ' id="' . esc_attr( $heading_id ) . '" class="cvp-heading">' . esc_html( $heading ) . '</' . $heading_tag . '></header><div class="cvp-result" role="region" aria-labelledby="' . esc_attr( $heading_id ) . '">' . $content . '</div><div class="screen-reader-text certloom-live-status" role="status" aria-live="polite" aria-atomic="true"></div></section>';
 	}
 
 	/** @return string */
@@ -346,7 +356,7 @@ class Ecapla_CertVerify_Render {
 			} else {
 				$value_html = esc_html( $value );
 			}
-			$rows .= '<div class="' . esc_attr( $prefix ) . '-result-row"><dt>' . esc_html( (string) ( $field['label'] ?? '' ) ) . '</dt><dd>' . $value_html . '</dd></div>';
+			$rows .= '<div class="' . esc_attr( $prefix ) . '-result-row"><dt>' . esc_html( (string) ( $field['label'] ?? '' ) ) . '</dt><dd dir="auto">' . $value_html . '</dd></div>';
 		}
 		$list = '' !== $rows ? '<dl class="' . esc_attr( $prefix ) . '-result-list">' . $rows . '</dl>' : '';
 		$issuer = ! empty( $presentation['issuer'] ) ? '<p class="' . esc_attr( $prefix ) . '-result-issuer"><span>' . esc_html__( 'Issued by', 'certloom' ) . '</span> ' . esc_html( (string) $presentation['issuer'] ) . '</p>' : '';

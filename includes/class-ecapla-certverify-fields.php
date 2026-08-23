@@ -128,10 +128,13 @@ class Ecapla_CertVerify_Fields {
 				$type = 'text';
 			}
 			$label = isset( $field['label'] ) ? sanitize_text_field( $field['label'] ) : $key;
+			$sensitivity = isset( $field['sensitivity'] ) ? sanitize_key( (string) $field['sensitivity'] ) : 'personal';
+			if ( ! array_key_exists( $sensitivity, self::get_sensitivity_options() ) ) { $sensitivity = 'personal'; }
 			$clean[ $key ] = array(
 				'key'        => $key,
 				'label'      => $label,
 				'type'       => $type,
+				'sensitivity'=> $sensitivity,
 				'retired_at' => isset( $field['retired_at'] ) ? sanitize_text_field( $field['retired_at'] ) : '',
 			);
 		}
@@ -170,10 +173,13 @@ class Ecapla_CertVerify_Fields {
 			if ( ! in_array( $type, array( 'text', 'textarea', 'date', 'number' ), true ) ) {
 				$type = 'text';
 			}
+			$sensitivity = isset( $field['sensitivity'] ) ? sanitize_key( (string) $field['sensitivity'] ) : 'personal';
+			if ( ! array_key_exists( $sensitivity, self::get_sensitivity_options() ) ) { $sensitivity = 'personal'; }
 			$clean[ $key ] = array(
 				'key'        => $key,
 				'label'      => isset( $field['label'] ) ? sanitize_text_field( $field['label'] ) : ucwords( str_replace( array( '-', '_' ), ' ', $key ) ),
 				'type'       => $type,
+				'sensitivity'=> $sensitivity,
 				'retired_at' => isset( $field['retired_at'] ) ? sanitize_text_field( $field['retired_at'] ) : current_time( 'mysql' ),
 			);
 		}
@@ -212,6 +218,7 @@ class Ecapla_CertVerify_Fields {
 			'key'        => $key,
 			'label'      => isset( $field['label'] ) ? sanitize_text_field( $field['label'] ) : $key,
 			'type'       => isset( $field['type'] ) ? sanitize_key( $field['type'] ) : 'text',
+			'sensitivity'=> isset( $field['sensitivity'] ) ? sanitize_key( (string) $field['sensitivity'] ) : 'personal',
 			'retired_at' => current_time( 'mysql' ),
 		);
 		return self::save_retired_fields( $retired );
@@ -294,14 +301,39 @@ class Ecapla_CertVerify_Fields {
 	 *
 	 * @return array
 	 */
-	public static function get_visible_fields() {
+	public static function get_visible_fields( $context = 'verification' ) {
+		$context = 'profile' === sanitize_key( (string) $context ) ? 'profile' : 'verification';
 		return array_values(
 			array_filter(
 				self::get_fields(),
-				function ( $field ) {
-					return empty( $field['locked_visibility'] ) && ! empty( $field['show_on_frontend'] );
+				function ( $field ) use ( $context ) {
+					if ( ! empty( $field['locked_visibility'] ) || 'internal' === ( $field['sensitivity'] ?? '' ) ) {
+						return false;
+					}
+					$exposure = isset( $field['public_exposure'] ) ? sanitize_key( (string) $field['public_exposure'] ) : ( ! empty( $field['show_on_frontend'] ) ? 'both' : 'private' );
+					return 'both' === $exposure || $context === $exposure;
 				}
 			)
+		);
+	}
+
+	/** @return array<string,string> */
+	public static function get_sensitivity_options() {
+		return array(
+			'public_safe' => __( 'Public-safe', 'certloom' ),
+			'personal'    => __( 'Personal', 'certloom' ),
+			'sensitive'   => __( 'Sensitive', 'certloom' ),
+			'internal'    => __( 'Internal', 'certloom' ),
+		);
+	}
+
+	/** @return array<string,string> */
+	public static function get_public_exposure_options() {
+		return array(
+			'private'      => __( 'Private', 'certloom' ),
+			'verification' => __( 'Verification only', 'certloom' ),
+			'profile'      => __( 'Profile only', 'certloom' ),
+			'both'         => __( 'Verification + profile', 'certloom' ),
 		);
 	}
 
@@ -324,16 +356,17 @@ class Ecapla_CertVerify_Fields {
 
 	public static function get_default_fields() {
 		return array(
-			self::field( 'cert_number', __( 'Certificate number', 'certloom' ), 'text', 'cert_number', true, true, 0, true ),
-			self::field( 'status', __( 'Current status', 'certloom' ), 'status', 'status', true, true, 1, true ),
-			self::field( 'holder_name', __( 'Certificate holder', 'certloom' ), 'text', 'holder_name', true, false, 2, false ),
-			self::field( 'standard', __( 'Standard', 'certloom' ), 'text', null, false, false, 3, false ),
-			self::field( 'scope', __( 'Scope', 'certloom' ), 'textarea', null, false, false, 4, false ),
-			self::field( 'issue_date', __( 'Issue date', 'certloom' ), 'date', 'issue_date', true, false, 5, false ),
-			self::field( 'expiry_date', __( 'Expiry date', 'certloom' ), 'date', 'expiry_date', true, false, 6, false ),
+			self::field( 'cert_number', __( 'Certificate number', 'certloom' ), 'text', 'cert_number', true, true, 0, true, false, 'public_safe', 'both' ),
+			self::field( 'status', __( 'Current status', 'certloom' ), 'status', 'status', true, true, 1, true, false, 'public_safe', 'both' ),
+			self::field( 'holder_name', __( 'Certificate holder', 'certloom' ), 'text', 'holder_name', true, false, 2, false, false, 'personal', 'private' ),
+			self::field( 'standard', __( 'Standard', 'certloom' ), 'text', null, false, false, 3, false, false, 'public_safe', 'private' ),
+			self::field( 'scope', __( 'Scope', 'certloom' ), 'textarea', null, false, false, 4, false, false, 'sensitive', 'private' ),
+			self::field( 'issue_date', __( 'Issue date', 'certloom' ), 'date', 'issue_date', true, false, 5, false, false, 'public_safe', 'private' ),
+			self::field( 'expiry_date', __( 'Expiry date', 'certloom' ), 'date', 'expiry_date', true, false, 6, false, false, 'public_safe', 'private' ),
 			// Appended at high default orders so existing installations keep their established field order.
-			self::field( 'status_reason', __( 'Status reason', 'certloom' ), 'textarea', null, true, true, 100, false ),
-			self::field( 'internal_notes', __( 'Internal notes', 'certloom' ), 'textarea', null, true, true, 101, false, true ),
+			self::field( 'status_reason', __( 'Status reason', 'certloom' ), 'textarea', null, true, true, 100, false, false, 'sensitive', 'private' ),
+			self::field( 'internal_notes', __( 'Internal notes', 'certloom' ), 'textarea', null, true, true, 101, false, true, 'internal', 'private' ),
+			self::field( '__certloom_profile_visibility', __( 'Public credential visibility', 'certloom' ), 'visibility', null, true, true, 102, false, true, 'internal', 'private' ),
 		);
 	}
 
@@ -385,7 +418,11 @@ class Ecapla_CertVerify_Fields {
 		return $statuses;
 	}
 
-	private static function field( $key, $label, $type, $column, $core, $protected, $order, $show_on_frontend = false, $locked_visibility = false ) {
+	private static function field( $key, $label, $type, $column, $core, $protected, $order, $show_on_frontend = false, $locked_visibility = false, $sensitivity = 'personal', $public_exposure = null ) {
+		$exposure = null === $public_exposure ? ( $show_on_frontend ? 'both' : 'private' ) : sanitize_key( (string) $public_exposure );
+		if ( $locked_visibility || 'internal' === $sensitivity ) {
+			$exposure = 'private';
+		}
 		return array(
 			'key'               => $key,
 			'label'             => $label,
@@ -394,7 +431,9 @@ class Ecapla_CertVerify_Fields {
 			'core'              => $core,
 			'protected'         => $protected,
 			'locked_visibility' => (bool) $locked_visibility,
-			'show_on_frontend'  => $locked_visibility ? false : (bool) $show_on_frontend,
+			'sensitivity'       => sanitize_key( (string) $sensitivity ),
+			'public_exposure'   => $exposure,
+			'show_on_frontend'  => 'private' !== $exposure,
 			'order'             => $order,
 		);
 	}
@@ -407,6 +446,8 @@ class Ecapla_CertVerify_Fields {
 		}
 
 		$allowed_types = array( 'text', 'textarea', 'date', 'number' );
+		$sensitivity_options = array_keys( self::get_sensitivity_options() );
+		$exposure_options    = array_keys( self::get_public_exposure_options() );
 		$normalized    = array();
 		$seen          = array();
 
@@ -415,7 +456,7 @@ class Ecapla_CertVerify_Fields {
 				continue;
 			}
 			$key = isset( $field['key'] ) ? sanitize_key( $field['key'] ) : '';
-			if ( '' === $key || isset( $seen[ $key ] ) ) {
+			if ( '' === $key || isset( $seen[ $key ] ) || ( 0 === strpos( $key, '__certloom_' ) && ! isset( $default_map[ $key ] ) ) ) {
 				continue;
 			}
 
@@ -423,7 +464,15 @@ class Ecapla_CertVerify_Fields {
 				$clean                     = $default_map[ $key ];
 				$label                     = isset( $field['label'] ) && '' !== trim( (string) $field['label'] ) ? sanitize_text_field( $field['label'] ) : $clean['label'];
 				$clean['label']            = function_exists( 'mb_substr' ) ? mb_substr( $label, 0, 100 ) : substr( $label, 0, 100 );
-				$clean['show_on_frontend'] = ! empty( $clean['locked_visibility'] ) ? false : ! empty( $field['show_on_frontend'] );
+				$sensitivity = isset( $field['sensitivity'] ) ? sanitize_key( (string) $field['sensitivity'] ) : $clean['sensitivity'];
+				$clean['sensitivity'] = in_array( $sensitivity, $sensitivity_options, true ) ? $sensitivity : $clean['sensitivity'];
+				if ( self::is_required_core_field( $key ) ) { $clean['sensitivity'] = 'public_safe'; }
+				$legacy_public = ! empty( $field['show_on_frontend'] );
+				$exposure = isset( $field['public_exposure'] ) ? sanitize_key( (string) $field['public_exposure'] ) : ( $legacy_public ? 'both' : 'private' );
+				if ( ! in_array( $exposure, $exposure_options, true ) ) { $exposure = $legacy_public ? 'both' : 'private'; }
+				if ( ! empty( $clean['locked_visibility'] ) || 'internal' === $clean['sensitivity'] ) { $exposure = 'private'; }
+				$clean['public_exposure'] = $exposure;
+				$clean['show_on_frontend'] = 'private' !== $exposure;
 				$clean['order']            = isset( $field['order'] ) ? absint( $field['order'] ) : $index;
 			} else {
 				$type  = isset( $field['type'] ) ? sanitize_key( $field['type'] ) : 'text';
@@ -433,6 +482,12 @@ class Ecapla_CertVerify_Fields {
 					$label = ucwords( str_replace( array( '-', '_' ), ' ', $key ) );
 				}
 				$label = function_exists( 'mb_substr' ) ? mb_substr( $label, 0, 100 ) : substr( $label, 0, 100 );
+				$sensitivity = isset( $field['sensitivity'] ) ? sanitize_key( (string) $field['sensitivity'] ) : 'personal';
+				$sensitivity = in_array( $sensitivity, $sensitivity_options, true ) ? $sensitivity : 'personal';
+				$legacy_public = ! empty( $field['show_on_frontend'] );
+				$exposure = isset( $field['public_exposure'] ) ? sanitize_key( (string) $field['public_exposure'] ) : ( $legacy_public ? 'both' : 'private' );
+				$exposure = in_array( $exposure, $exposure_options, true ) ? $exposure : ( $legacy_public ? 'both' : 'private' );
+				if ( 'internal' === $sensitivity ) { $exposure = 'private'; }
 				$clean = array(
 					'key'               => $key,
 					'label'             => $label,
@@ -441,8 +496,10 @@ class Ecapla_CertVerify_Fields {
 					'core'              => false,
 					'protected'         => false,
 					'locked_visibility' => false,
-					'show_on_frontend'  => ! empty( $field['show_on_frontend'] ),
-					'order'             => isset( $field['order'] ) ? absint( $field['order'] ) : $index,
+					'sensitivity'       => $sensitivity,
+					'public_exposure'   => $exposure,
+					'show_on_frontend'  => 'private' !== $exposure,
+					'order'              => isset( $field['order'] ) ? absint( $field['order'] ) : $index,
 				);
 			}
 

@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.7
+Stable tag: 1.6.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.7: Certloom begins the planned Phase 2 verification/frontend redesign on the currently authoritative legacy verifier. It adds clean verification and credential-profile routes, one shared public presentation model, copy/print/profile actions, and Credential Profile parity across shortcode, Gutenberg, and Elementor while preserving all six existing verifier widgets and the established REST `found + fields` contract. The normalized domain remains gated and all future-domain write/admin/data-tool flags remain disabled until real WordPress/MySQL acceptance passes.
+> Development note for 1.6.9: Certloom continues Phase 2 on the authoritative legacy verifier with frontend accessibility/theme-resilience hardening, clean live-region semantics, embedded heading-level control, RTL/bidi protection, and real-browser resilience fixtures. The normalized domain remains gated and all future-domain write/admin/data-tool flags remain disabled until real WordPress/MySQL acceptance passes.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -126,7 +126,19 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 
 == Changelog ==
 
-= 1.6.7 =
+= 1.6.9 =
+* Separate interactive verification results from the dedicated screen-reader live-status announcer.
+* Add route skip-link/focus target, stronger keyboard focus, 44px action targets, reduced-motion, higher-contrast, and forced-colors resilience.
+* Make embedded Credential Profile headings default to H2 with bounded H2-H6 controls; the dedicated clean profile route intentionally owns the H1.
+* Add `dir="auto"`/plaintext bidi handling for certificate input and public values, plus mobile input spellcheck/autocapitalize hardening.
+* Fix AJAX status icons so Suspended/Withdrawn/Expired results match server-rendered status vocabulary and keep semantic verification time markup.
+* Add a real-browser hostile-theme/reflow/RTL/accessibility-media fixture while keeping all six existing verification widgets compatible.
+
+= 1.6.8 =
+* Added Public profile / Verification only / Private per-credential guest visibility.
+* Added Public-safe / Personal / Sensitive / Internal field classifications and verification/profile exposure contexts.
+* Added strict server action authorization for current copy/profile/print actions; future artifact/share/claim actions remain denied until implemented.
+* Prevented clean-route titles from revealing identifiers before visibility checks and reserved `__certloom_*` for Certloom-owned policy state.
 * Began the Phase 2 verification/frontend redesign without changing data authority: the legacy registry remains the authoritative public verifier until normalized-domain acceptance passes.
 * Added clean privacy-safe verification and credential-profile routes with readable safe identifiers, URL-safe transport tokens for complex certificate numbers, plain-permalink fallback, no-store/noindex/referrer protections, and no new credential identity.
 * Added a shared legacy public presentation model for exact lookup, effective status, issuer context, verification timestamp, visible fields, and non-mutating actions; server/no-JS, REST/AJAX, shortcode, block, Elementor, and clean routes now consume the same presentation decisions.

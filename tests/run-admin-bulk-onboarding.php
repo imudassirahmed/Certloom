@@ -145,7 +145,9 @@ p1d_check( false !== strpos( $editor_view, 'Open verification result' ) && false
 p1d_check( false !== strpos( $editor_view, 'Created' ) && false !== strpos( $editor_view, 'Last updated' ) && false !== strpos( $editor_view, 'Immutable lifecycle Event history' ), 'Activity workspace must show only truthful legacy timestamps and label immutable event history as gated.' );
 p1d_check( false !== strpos( file_get_contents( $root . '/includes/class-ecapla-certverify-bulk-manager.php' ), 'Certificate changed after bulk review' ), 'Bulk commit must include optimistic-concurrency protection.' );
 p1d_check( false === strpos( $admin, 'wp_safe_redirect( admin_url( \'admin.php?page=certloom-setup\' ) ); // activation' ), 'Onboarding must not hijack activation with a forced redirect.' );
-p1d_check( false !== strpos( $bootstrap, "Version: 1.6.7" ) && false !== strpos( $bootstrap, "ECAPLA_CERTVERIFY_VERSION', '1.6.7'" ), 'Current incremental release must use 1.6.7 patch versioning.' );
+preg_match( '/Version:\s+(1\.6\.\d+)/', $bootstrap, $header_version );
+preg_match( "/ECAPLA_CERTVERIFY_VERSION',\s*'(1\.6\.\d+)'/", $bootstrap, $constant_version );
+p1d_check( ! empty( $header_version[1] ) && ! empty( $constant_version[1] ) && $header_version[1] === $constant_version[1], 'Current incremental release must use matching 1.6.x patch versioning.' );
 p1d_check( false !== strpos( $bootstrap, "CERTLOOM_DOMAIN_WRITE_PATHS_READY', false" ) && false !== strpos( $bootstrap, "CERTLOOM_DOMAIN_ADMIN_PREVIEW', false" ) && false !== strpos( $bootstrap, "CERTLOOM_DOMAIN_DATA_TOOLS_READY', false" ), 'Phase 1D must leave all future-domain production gates disabled.' );
 
 echo "PASS  Phase 1D reviewed bulk management and non-blocking onboarding are authority-safe\n";

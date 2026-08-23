@@ -148,12 +148,15 @@ class Ecapla_CertVerify_Shortcode {
 			array(
 				'number' => '',
 				'heading' => __( 'Credential profile', 'certloom' ),
+				'heading_tag' => 'h2',
 				'notfound_text' => __( 'This credential could not be found or is not available.', 'certloom' ),
 			),
 			is_array( $atts ) ? $atts : array(),
 			'certloom_credential'
 		);
 		$number = trim( sanitize_text_field( (string) $atts['number'] ) );
+		$heading_tag = sanitize_key( (string) $atts['heading_tag'] );
+		if ( ! in_array( $heading_tag, array( 'h2', 'h3', 'h4', 'h5', 'h6' ), true ) ) { $heading_tag = 'h2'; }
 		if ( '' === $number && class_exists( 'Ecapla_CertVerify_Public_Router' ) ) {
 			$number = Ecapla_CertVerify_Public_Router::requested_number();
 		}
@@ -161,6 +164,7 @@ class Ecapla_CertVerify_Shortcode {
 			$number,
 			array(
 				'heading' => $atts['heading'],
+				'heading_tag' => $heading_tag,
 				'notfound_text' => $atts['notfound_text'],
 			)
 		);

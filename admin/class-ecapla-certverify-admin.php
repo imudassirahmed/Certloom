@@ -334,7 +334,15 @@ class Ecapla_CertVerify_Admin {
 			$field                     = $existing[ $key ];
 			$label                     = isset( $row['label'] ) && '' !== trim( (string) $row['label'] ) ? sanitize_text_field( $row['label'] ) : $field['label'];
 			$field['label']            = function_exists( 'mb_substr' ) ? mb_substr( $label, 0, 100 ) : substr( $label, 0, 100 );
-			$field['show_on_frontend'] = ! empty( $field['locked_visibility'] ) ? false : ! empty( $row['show_on_frontend'] );
+			$sensitivity_options = array_keys( Ecapla_CertVerify_Fields::get_sensitivity_options() );
+			$exposure_options = array_keys( Ecapla_CertVerify_Fields::get_public_exposure_options() );
+			$sensitivity = isset( $row['sensitivity'] ) ? sanitize_key( (string) $row['sensitivity'] ) : ( $field['sensitivity'] ?? 'personal' );
+			$exposure = isset( $row['public_exposure'] ) ? sanitize_key( (string) $row['public_exposure'] ) : ( ! empty( $row['show_on_frontend'] ) ? 'both' : 'private' );
+			$field['sensitivity'] = in_array( $sensitivity, $sensitivity_options, true ) ? $sensitivity : ( $field['sensitivity'] ?? 'personal' );
+			if ( Ecapla_CertVerify_Fields::is_required_core_field( $key ) ) { $field['sensitivity'] = 'public_safe'; }
+			$field['public_exposure'] = in_array( $exposure, $exposure_options, true ) ? $exposure : 'private';
+			if ( ! empty( $field['locked_visibility'] ) || 'internal' === $field['sensitivity'] ) { $field['public_exposure'] = 'private'; }
+			$field['show_on_frontend'] = ! empty( $field['locked_visibility'] ) ? false : 'private' !== $field['public_exposure'];
 			$field['order']            = $order++;
 			$new_fields[]              = $field;
 			unset( $existing[ $key ] );
@@ -388,6 +396,8 @@ class Ecapla_CertVerify_Admin {
 			'core'              => false,
 			'protected'         => false,
 			'locked_visibility' => false,
+			'sensitivity'       => isset( $retired[ $key ]['sensitivity'] ) ? $retired[ $key ]['sensitivity'] : 'personal',
+			'public_exposure'   => 'private',
 			'show_on_frontend'  => false,
 			'order'             => absint( $max_order ) + 1,
 		);
@@ -450,6 +460,8 @@ class Ecapla_CertVerify_Admin {
 			'core'              => false,
 			'protected'         => false,
 			'locked_visibility' => false,
+			'sensitivity'       => 'personal',
+			'public_exposure'   => 'private',
 			'show_on_frontend'  => false,
 			'order'             => absint( $max_order ) + 1,
 		);

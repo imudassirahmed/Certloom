@@ -91,6 +91,7 @@ class Ecapla_CertVerify_REST {
 				'verified_at'        => $presentation['verified_at'],
 				'verification_url'   => $presentation['verification_url'],
 				'profile_url'        => $presentation['profile_url'],
+				'visibility'         => $presentation['visibility'],
 				'actions'            => $presentation['actions'],
 				'labels'             => $presentation['labels'],
 			),

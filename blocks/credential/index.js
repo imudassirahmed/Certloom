@@ -7,6 +7,7 @@
 	var PanelBody = components.PanelBody;
 	var TextControl = components.TextControl;
 	var TextareaControl = components.TextareaControl;
+	var SelectControl = components.SelectControl;
 	var Notice = components.Notice;
 	var ServerSideRender = serverSideRender && serverSideRender.default ? serverSideRender.default : serverSideRender;
 	var __ = i18n.__;
@@ -18,6 +19,7 @@
 		attributes: {
 			number: { type: 'string', default: '' },
 			heading: { type: 'string', default: 'Credential profile' },
+			headingTag: { type: 'string', default: 'h2' },
 			notFoundText: { type: 'string', default: 'This credential could not be found or is not available.' }
 		},
 		edit: function ( props ) {
@@ -29,6 +31,7 @@
 					el( PanelBody, { title: __( 'Credential', 'certloom' ), initialOpen: true },
 						el( TextControl, { label: __( 'Certificate number', 'certloom' ), value: a.number || '', onChange: function ( value ) { set( { number: value } ); } } ),
 						el( TextControl, { label: __( 'Heading', 'certloom' ), value: a.heading || '', onChange: function ( value ) { set( { heading: value } ); } } ),
+						el( SelectControl, { label: __( 'Heading level', 'certloom' ), value: a.headingTag || 'h2', options: [ { label: 'H2', value: 'h2' }, { label: 'H3', value: 'h3' }, { label: 'H4', value: 'h4' }, { label: 'H5', value: 'h5' }, { label: 'H6', value: 'h6' } ], onChange: function ( value ) { set( { headingTag: value } ); } } ),
 						el( TextareaControl, { label: __( 'Not found message', 'certloom' ), value: a.notFoundText || '', onChange: function ( value ) { set( { notFoundText: value } ); } } )
 					)
 				),

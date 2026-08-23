@@ -53,7 +53,7 @@
 			var value = field.is_status
 				? '<span class="' + prefix + '-badge ' + prefix + '-badge-' + statusModifier( field.status_key ) + '">' + escapeHtml( rawValue ) + '</span>'
 				: escapeHtml( rawValue );
-			return '<div class="' + prefix + '-result-row"><dt>' + escapeHtml( field.label ) + '</dt><dd>' + value + '</dd></div>';
+			return '<div class="' + prefix + '-result-row"><dt>' + escapeHtml( field.label ) + '</dt><dd dir="auto">' + value + '</dd></div>';
 		} ).join( '' );
 	}
 
@@ -146,6 +146,7 @@
 		var button = root.querySelector( config.button );
 		var buttonText = root.querySelector( config.buttonText );
 		var resultEl = root.querySelector( config.result );
+		var liveEl = root.querySelector( '.certloom-live-status' );
 		var endpoint = root.getAttribute( 'data-endpoint' );
 		var notFound = root.getAttribute( 'data-notfound-text' ) || 'No certificate found with that number.';
 		var foundText = root.getAttribute( 'data-found-text' ) || 'Certificate found.';
@@ -163,6 +164,13 @@
 			initialized.add( root );
 		}
 
+		function announce( message ) {
+			if ( ! liveEl ) { return; }
+			/* Clear first so repeating the same result can be announced again. */
+			liveEl.textContent = '';
+			window.setTimeout( function () { liveEl.textContent = message || ''; }, 20 );
+		}
+
 		function setLoading( isLoading ) {
 			button.disabled = isLoading;
 			button.classList.toggle( config.prefix + '-loading', isLoading );
@@ -174,6 +182,7 @@
 
 		function showMessage( message ) {
 			resultEl.innerHTML = '<div class="' + config.prefix + '-result-notfound"><p>' + escapeHtml( message ) + '</p></div>';
+			announce( message );
 		}
 
 		function showResult( fields, presentation ) {
@@ -188,13 +197,13 @@
 			var verifiedLabel = 'string' === typeof labels.verified && labels.verified ? labels.verified : 'Verified';
 			var rows = renderRows( fields || [], config.prefix );
 			var list = rows ? '<dl class="' + config.prefix + '-result-list">' + rows + '</dl>' : '';
-			var summary = '<div class="' + config.prefix + '-result-summary"><span class="' + config.prefix + '-status-mark" aria-hidden="true">✓</span><div><p class="' + config.prefix + '-result-success">' + escapeHtml( statusLabel ) + '</p>' +
+			var summary = '<div class="' + config.prefix + '-result-summary"><span class="' + config.prefix + '-status-mark" aria-hidden="true">' + escapeHtml( statusIcon( statusKey ) ) + '</span><div><p class="' + config.prefix + '-result-success">' + escapeHtml( statusLabel ) + '</p>' +
 				( statusDescription ? '<p class="' + config.prefix + '-status-description">' + escapeHtml( statusDescription ) + '</p>' : '' ) +
 				( issuer ? '<p class="' + config.prefix + '-result-issuer"><span>' + escapeHtml( issuedByLabel ) + '</span> ' + escapeHtml( issuer ) + '</p>' : '' ) + '</div></div>';
 			var verified = '';
 			if ( 'string' === typeof presentation.verified_at && presentation.verified_at ) {
 				var date = new Date( presentation.verified_at );
-				verified = '<p class="' + config.prefix + '-verified-at">' + escapeHtml( verifiedLabel ) + ' ' + escapeHtml( isNaN( date.getTime() ) ? presentation.verified_at : date.toLocaleString() ) + '</p>';
+				verified = '<p class="' + config.prefix + '-verified-at">' + escapeHtml( verifiedLabel ) + ' <time datetime="' + escapeHtml( presentation.verified_at ) + '">' + escapeHtml( isNaN( date.getTime() ) ? presentation.verified_at : date.toLocaleString() ) + '</time></p>';
 			}
 			var actionHtml = '';
 			var actions = Array.isArray( presentation.actions ) ? presentation.actions : [];
@@ -213,6 +222,7 @@
 			} );
 			var actionBar = actionHtml ? '<div class="' + config.prefix + '-result-actions">' + actionHtml + '<span class="certloom-action-feedback" aria-live="polite"></span></div>' : '';
 			resultEl.innerHTML = '<div class="' + config.prefix + '-result-card ' + config.prefix + '-status-' + statusKey + '">' + summary + list + verified + actionBar + '</div>';
+			announce( statusDescription ? statusLabel + '. ' + statusDescription : statusLabel );
 		}
 
 		function search( number ) {

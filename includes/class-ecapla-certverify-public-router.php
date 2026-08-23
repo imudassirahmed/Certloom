@@ -142,10 +142,8 @@ class Ecapla_CertVerify_Public_Router {
 	public static function document_title( $title ) {
 		$route = self::current_route();
 		if ( 'credential' === $route ) {
-			$number = self::requested_number();
-			return '' !== $number
-				? sprintf( __( 'Credential %s', 'certloom' ), $number )
-				: __( 'Credential', 'certloom' );
+			/* Never leak a requested identifier through <title> before visibility policy runs. */
+			return __( 'Credential profile', 'certloom' );
 		}
 		if ( 'verify' === $route ) {
 			return __( 'Verify a Certificate', 'certloom' );

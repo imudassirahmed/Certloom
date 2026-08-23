@@ -165,6 +165,15 @@ class Ecapla_CertVerify_Validator {
 	public static function custom_field_value( $value, $field ) {
 		$type = isset( $field['type'] ) ? $field['type'] : 'text';
 
+		if ( 'visibility' === $type ) {
+			$value = sanitize_key( (string) $value );
+			$allowed = class_exists( 'Ecapla_CertVerify_Public_Policy' ) ? array_keys( Ecapla_CertVerify_Public_Policy::visibility_options() ) : array( 'public', 'verification_summary', 'private' );
+			if ( ! in_array( $value, $allowed, true ) ) {
+				return new WP_Error( 'ecapla_certverify_invalid_profile_visibility', __( 'Choose a valid public credential visibility mode.', 'certloom' ) );
+			}
+			return $value;
+		}
+
 		if ( 'date' === $type ) {
 			$date = self::date( $value );
 			return is_null( $date ) ? '' : $date;

@@ -15,6 +15,7 @@ class Ecapla_CertVerify_Elementor_Credential_Widget extends \Elementor\Widget_Ba
 		$this->start_controls_section( 'credential_content', array( 'label' => __( 'Credential', 'certloom' ) ) );
 		$this->add_control( 'certificate_number', array( 'label' => __( 'Certificate number', 'certloom' ), 'type' => \Elementor\Controls_Manager::TEXT, 'placeholder' => 'CERT-2026-0001' ) );
 		$this->add_control( 'heading', array( 'label' => __( 'Heading', 'certloom' ), 'type' => \Elementor\Controls_Manager::TEXT, 'default' => __( 'Credential profile', 'certloom' ) ) );
+		$this->add_control( 'heading_tag', array( 'label' => __( 'Heading level', 'certloom' ), 'type' => \Elementor\Controls_Manager::SELECT, 'default' => 'h2', 'options' => array( 'h2' => 'H2', 'h3' => 'H3', 'h4' => 'H4', 'h5' => 'H5', 'h6' => 'H6' ) ) );
 		$this->add_control( 'notfound_text', array( 'label' => __( 'Not found message', 'certloom' ), 'type' => \Elementor\Controls_Manager::TEXTAREA, 'default' => __( 'This credential could not be found or is not available.', 'certloom' ) ) );
 		$this->end_controls_section();
 	}
@@ -26,6 +27,8 @@ class Ecapla_CertVerify_Elementor_Credential_Widget extends \Elementor\Widget_Ba
 			echo '<div class="certloom-credential-profile cvp-widget"><div class="cvp-result-notfound"><p>' . esc_html__( 'Enter a certificate number in the widget settings to preview the credential profile.', 'certloom' ) . '</p></div></div>';
 			return;
 		}
-		echo Ecapla_CertVerify_Render::credential_profile( $number, array( 'heading' => $settings['heading'] ?? '', 'notfound_text' => $settings['notfound_text'] ?? '' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		$heading_tag = isset( $settings['heading_tag'] ) ? sanitize_key( (string) $settings['heading_tag'] ) : 'h2';
+		if ( ! in_array( $heading_tag, array( 'h2', 'h3', 'h4', 'h5', 'h6' ), true ) ) { $heading_tag = 'h2'; }
+		echo Ecapla_CertVerify_Render::credential_profile( $number, array( 'heading' => $settings['heading'] ?? '', 'heading_tag' => $heading_tag, 'notfound_text' => $settings['notfound_text'] ?? '' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 }
