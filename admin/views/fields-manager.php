@@ -64,7 +64,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<form method="post" action="">
 			<?php wp_nonce_field( 'certverify_save_fields' ); ?>
 			<div id="ecapla-certloom-fields-list" class="ecapla-certloom-fields-list">
-				<?php foreach ( Ecapla_CertVerify_Fields::get_fields() as $index => $field ) : ?>
+				<?php foreach ( Ecapla_CertVerify_Fields::get_manageable_fields() as $index => $field ) : ?>
 					<div class="ecapla-certverify-field-row<?php echo ! empty( $field['locked_visibility'] ) ? ' is-internal-field' : ''; ?>">
 						<span class="dashicons dashicons-menu ecapla-certverify-drag-handle" draggable="true" aria-hidden="true" title="<?php esc_attr_e( 'Drag to reorder', 'certloom' ); ?>"></span>
 						<input type="hidden" name="fields[<?php echo esc_attr( $index ); ?>][key]" value="<?php echo esc_attr( $field['key'] ); ?>" />

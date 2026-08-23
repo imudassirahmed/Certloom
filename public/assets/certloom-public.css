@@ -1589,3 +1589,70 @@
 }
 
 @media print{.certloom-route-main{padding:0}.certloom-route-shell{width:100%}.cv-result-actions,.cvx-result-actions,.cvp-result-actions,.cv-search-form,.cvx-search-form,.cv-guide,.cvx-guide{display:none!important}.cvp-result-card{box-shadow:none;border-color:#bbb}}
+
+
+/* 1.6.10 secondary-proof input: remains optional globally but becomes mandatory server-side per credential when configured. */
+.ecapla-certverify-widget.cv-widget .certloom-secondary-code-input,
+.ecapla-certverify-template.cvx-widget .certloom-secondary-code-input{
+	font-variant-numeric: tabular-nums;
+	letter-spacing: .04em;
+}
+.ecapla-certverify-widget.cv-widget .certloom-secondary-code-input{
+	flex-basis: 190px;
+}
+.ecapla-certverify-template.cvx-widget .certloom-secondary-code-wrap{
+	flex-basis: 245px;
+}
+.ecapla-certverify-template.cvx-widget .certloom-code-icon{
+	border-radius: 4px;
+	width: 16px;
+	height: 12px;
+	border-width: 1.8px;
+}
+.ecapla-certverify-template.cvx-widget .certloom-code-icon::before{
+	content:"";
+	position:absolute;
+	width:8px;
+	height:7px;
+	left:2px;
+	top:-7px;
+	border:1.8px solid currentColor;
+	border-bottom:0;
+	border-radius:7px 7px 0 0;
+}
+@media (max-width: 620px){
+	.ecapla-certverify-widget.cv-widget .certloom-secondary-code-input{width:100%!important;flex:1 1 100%!important;}
+}
+
+/* 1.6.10 clean-route branding: deliberately scoped away from shortcode and Elementor widget designs. */
+.certloom-route-main.is-certloom-branded{background:var(--certloom-brand-surface,#fff);color:var(--certloom-brand-text,#17201d);}
+.certloom-route-brand{
+	display:flex;
+	align-items:center;
+	gap:12px;
+	margin:0 0 18px;
+	padding:14px 16px;
+	box-sizing:border-box;
+	background:var(--certloom-brand-surface,#fff);
+	color:var(--certloom-brand-text,#17201d);
+	border:1px solid var(--certloom-brand-accent,#0f6e56);
+	border-inline-start:4px solid var(--certloom-brand-accent,#0f6e56);
+	border-radius:12px;
+	box-shadow:0 8px 30px rgba(19,34,29,.06);
+	text-align:start;
+}
+.certloom-route-brand-icon{
+	flex:0 0 48px;
+	width:48px;
+	height:48px;
+	margin:0;
+	object-fit:cover;
+	border-radius:10px;
+}
+.certloom-route-brand-copy{display:flex;min-width:0;flex-direction:column;gap:2px;}
+.certloom-route-brand-name{display:block;color:inherit;font:700 clamp(16px,2.2vw,19px)/1.3 inherit;overflow-wrap:anywhere;}
+.certloom-route-brand-tagline{display:block;color:inherit;font:400 14px/1.45 inherit;opacity:.78;overflow-wrap:anywhere;}
+@media (forced-colors: active){
+	.certloom-route-brand{background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none;}
+}
+@media print{.certloom-route-brand{box-shadow:none;}}

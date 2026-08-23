@@ -57,8 +57,9 @@
 		} ).join( '' );
 	}
 
-	function acquireCertificateRequest( endpoint, number ) {
-		var key = endpoint + '\n' + number;
+	function acquireCertificateRequest( endpoint, number, code ) {
+		code = ( code || '' ).trim();
+		var key = endpoint + '\n' + number + '\n' + code;
 		var entry = inFlightRequests[ key ];
 
 		if ( ! entry ) {
@@ -77,8 +78,10 @@
 					entry.controller.abort();
 				}, REQUEST_TIMEOUT_MS );
 			}
-			entry.promise = fetch( endpoint + '?number=' + encodeURIComponent( number ), {
-				headers: { Accept: 'application/json' },
+			entry.promise = fetch( endpoint, {
+				method: 'POST',
+				headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+				body: JSON.stringify( { number: number, code: code } ),
 				credentials: 'same-origin',
 				signal: entry.controller ? entry.controller.signal : undefined
 			} ).then( function ( response ) {
@@ -146,6 +149,7 @@
 		var button = root.querySelector( config.button );
 		var buttonText = root.querySelector( config.buttonText );
 		var resultEl = root.querySelector( config.result );
+		var codeInput = root.querySelector( '.certloom-secondary-code-input' );
 		var liveEl = root.querySelector( '.certloom-live-status' );
 		var endpoint = root.getAttribute( 'data-endpoint' );
 		var notFound = root.getAttribute( 'data-notfound-text' ) || 'No certificate found with that number.';
@@ -225,7 +229,7 @@
 			announce( statusDescription ? statusLabel + '. ' + statusDescription : statusLabel );
 		}
 
-		function search( number ) {
+		function search( number, code ) {
 			requestSequence++;
 			var thisRequest = requestSequence;
 
@@ -244,7 +248,7 @@
 			}
 			input.removeAttribute( 'aria-invalid' );
 
-			activeRequest = acquireCertificateRequest( endpoint, number );
+			activeRequest = acquireCertificateRequest( endpoint, number, code );
 			var thisRequestHandle = activeRequest;
 			setLoading( true );
 			resultEl.innerHTML = '';
@@ -289,7 +293,7 @@
 
 		form.addEventListener( 'submit', function ( event ) {
 			event.preventDefault();
-			search( input.value );
+			search( input.value, codeInput ? codeInput.value : '' );
 		} );
 
 		input.addEventListener( 'input', function () {
@@ -302,7 +306,7 @@
 		if ( direct ) {
 			input.value = direct;
 			if ( '1' !== root.getAttribute( 'data-server-rendered' ) ) {
-				search( direct );
+				search( direct, codeInput ? codeInput.value : '' );
 			}
 		}
 	}

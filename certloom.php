@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Certloom – Certificate Verification
  * Description: Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
- * Version: 1.6.9
+ * Version: 1.6.11
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.9' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.11' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
@@ -83,6 +83,7 @@ require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-database
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-permissions.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-public-router.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-public-policy.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-secondary-code.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-public-presentation.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-render.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-shortcode.php';
@@ -90,6 +91,7 @@ require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-block.ph
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-rest.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-import.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-backup.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-numbering.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-database-proof.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-cron.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-system-status.php';

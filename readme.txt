@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.9
+Stable tag: 1.6.11
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.9: Certloom continues Phase 2 on the authoritative legacy verifier with frontend accessibility/theme-resilience hardening, clean live-region semantics, embedded heading-level control, RTL/bidi protection, and real-browser resilience fixtures. The normalized domain remains gated and all future-domain write/admin/data-tool flags remain disabled until real WordPress/MySQL acceptance passes.
+> Development note for 1.6.11: Certloom continues Phase 2 on the authoritative legacy registry with an opt-in sequential certificate-number policy for new administrator-created credentials. Existing sites remain Manual by default; explicit numbers remain valid manual overrides; generated numbers use a durable atomic sequence cursor with prefix/suffix, padding, collision skipping, and non-mutating preview. Existing issued numbers are never renumbered. Program/template-scoped sequences and the normalized domain remain gated pending authoritative relationship/database acceptance.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -41,6 +41,8 @@ Each Elementor widget has isolated content and style controls. Structural respon
 * Locked-private internal administrator notes that cannot be exposed through public verification output.
 * Valid, Suspended, and Withdrawn workflow statuses; Expired is normally calculated from the expiry date.
 * Protected review handling for explicitly restored historical Expired records.
+* Optional secondary verification proof per credential, with dedicated generate/rotate/clear controls and no plaintext proof storage.
+* Optional sequential numbering for new administrator-created credentials with prefix, suffix, start/floor, minimum digits, atomic collision-safe allocation, manual override, and a non-reserving preview. Existing issued numbers are never renumbered.
 * Configurable core and custom fields with ordering and public-visibility controls.
 * Fresh installations publish only certificate number and status by default.
 * Removed custom fields are retired so their keys and stored values remain protected.
@@ -53,7 +55,7 @@ Each Elementor widget has isolated content and style controls. Structural respon
 * Blank mapped cells preserve existing values unless clearing is explicitly enabled. Status cannot be cleared, and a new row with a mapped-but-blank Status is rejected.
 * Per-row validation, formula neutralization, and bounded file, row, column, and cell limits.
 * Administrator-only Historical restore mode for trusted Certloom exports containing protected legacy Expired records.
-* Versioned streaming JSON backup for lossless restoration of certificates, settings, fields, retired values, workflow sources, and timestamps.
+* Versioned streaming JSON backup for lossless restoration of certificates, settings, fields, retired values, workflow sources, timestamps, and durable sequential-numbering state.
 * Restore preview before choosing exact snapshot replacement or a non-destructive certificate merge.
 * Restore locking pauses Certloom writes during commit while public verification remains available.
 * Chunked imports, indexed prefetching, deferred counts, and keyset exports reduce memory and query pressure on large registries.
@@ -61,6 +63,7 @@ Each Elementor widget has isolated content and style controls. Structural respon
 = Security and privacy =
 
 * Whole-number exact lookup; partial matches are never returned.
+* Optional secondary proof is checked only after the exact certificate-number match; it is never searchable, routable, or accepted as a credential identifier.
 * Public output includes only fields explicitly enabled by the site owner.
 * Private-cache and noindex headers for REST verification and supported direct-link requests.
 * Bounded input, basic rate limiting, accessible announcements, and safe no-JavaScript verification.
@@ -102,7 +105,7 @@ CSV is intended for spreadsheet interchange. Complete backup is a versioned stre
 
 = Does verification work without JavaScript? =
 
-Yes. The form can submit a normal GET request and render the result on the server. JavaScript provides the faster in-page experience.
+Yes. The form can submit a normal same-page verification request and render the result on the server. When a secondary proof is configured, that proof is submitted only in the POST body and is never added to the shareable verification URL. JavaScript provides the faster in-page experience.
 
 = Is certificate data sent to Ecapla? =
 
@@ -125,6 +128,22 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.11 =
+* Add opt-in sequential numbering for new administrator-created credentials while keeping Manual as the upgrade/default mode and preserving explicit manual-number overrides.
+* Add validated prefix/suffix, sequence start/floor, minimum digit padding, and a non-mutating next-number preview; existing issued certificate numbers are never renumbered.
+* Reserve sequence values atomically in WordPress-owned option state, skip existing manual/generated collisions, and leave database uniqueness as the final concurrency gate.
+* Persist the next-sequence cursor in complete backup v4, retain valid v1/v2/v3 restore compatibility, restore the cursor for Replace, and preserve the current site's cursor during Merge.
+* Make allocation fail closed on corrupt state/database probes and require manual certificate entry when automatic numbering health/preview is unavailable.
+* Keep Program/Template scoped sequences gated until their authoritative relationships are accepted; no legacy custom-field simulation is introduced.
+
+= 1.6.10 =
+* Add optional secondary verification proof bound to exact certificate-number lookup; proof is never a second identifier, route, or search key.
+* Store only validated cost-10 bcrypt proof hashes; reserve proof state from Field Manager, CSV, public output, generic admin writes, and personal-data export while preserving complete administrative backup/restore.
+* Submit optional proof through POST bodies only, with generic not-found behavior plus fixed bcrypt work for valid-shaped public misses to reduce existence timing leakage.
+* Add advanced brand name/tagline/surface/text/Site Icon controls for Certloom-owned clean verification/profile routes without overriding shortcode or Elementor design settings.
+* Enforce readable branded text contrast and harden legacy certificate JSON reads/maintenance so corrupt structured state fails closed instead of being treated as empty.
+* Fix retired custom-field sensitivity restoration so restored fields keep their prior classification while remaining private.
 
 = 1.6.9 =
 * Separate interactive verification results from the dedicated screen-reader live-status announcer.

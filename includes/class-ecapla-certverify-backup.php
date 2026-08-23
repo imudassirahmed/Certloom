@@ -6,14 +6,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Complete, versioned Certloom backup and restore workflow.
  *
- * Version 2 uses newline-delimited JSON so backups can be built, validated,
+ * The current v4 stream uses newline-delimited JSON so backups can be built, validated,
  * reviewed, and restored without loading the complete registry into memory.
  */
 class Ecapla_CertVerify_Backup {
 
 	const FORMAT              = 'certverify-backup';
-	const FORMAT_VERSION        = 3;
-	const LEGACY_STREAM_VERSION = 2;
+	const FORMAT_VERSION          = 4;
+	const LEGACY_STREAM_VERSION   = 2;
+	const PREVIOUS_STREAM_VERSION = 3;
 	const LEGACY_FORMAT_VERSION = 1;
 	const SESSION_PREFIX      = 'ecapla_certverify_backup_';
 	const SESSION_TTL         = 30 * MINUTE_IN_SECONDS;
@@ -117,6 +118,12 @@ class Ecapla_CertVerify_Backup {
 		$fields         = Ecapla_CertVerify_Fields::get_fields();
 		$retired_fields = Ecapla_CertVerify_Fields::get_retired_fields();
 		$settings       = Ecapla_CertVerify_Settings::get_all();
+		$numbering_state = Ecapla_CertVerify_Numbering::export_state();
+		if ( is_wp_error( $numbering_state ) ) {
+			self::close_handle( $handle );
+			@unlink( $temp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.unlink_unlink
+			self::download_error( $numbering_state->get_error_message() );
+		}
 		$state_marker   = self::capture_state_marker();
 		if ( is_wp_error( $state_marker ) ) {
 			self::close_handle( $handle );
@@ -134,6 +141,7 @@ class Ecapla_CertVerify_Backup {
 			'fields'         => $fields,
 			'retired_fields' => $retired_fields,
 			'settings'       => $settings,
+			'numbering_state' => $numbering_state,
 		);
 
 		$manifest_json = wp_json_encode( $manifest );
@@ -276,8 +284,8 @@ class Ecapla_CertVerify_Backup {
 		self::close_handle( $handle );
 		$first_item = is_string( $first ) ? json_decode( trim( $first ), true ) : null;
 		$stream_version = is_array( $first_item ) && 'manifest' === ( $first_item['type'] ?? '' ) ? absint( $first_item['format_version'] ?? 0 ) : 0;
-		if ( in_array( $stream_version, array( self::LEGACY_STREAM_VERSION, self::FORMAT_VERSION ), true ) ) {
-			return self::analyze_stream( $path, self::FORMAT_VERSION === $stream_version );
+		if ( in_array( $stream_version, array( self::LEGACY_STREAM_VERSION, self::PREVIOUS_STREAM_VERSION, self::FORMAT_VERSION ), true ) ) {
+			return self::analyze_stream( $path, self::LEGACY_STREAM_VERSION !== $stream_version );
 		}
 		if ( $size > self::MAX_LEGACY_BYTES ) {
 			return new WP_Error( 'ecapla_certverify_backup_legacy_size', __( 'Legacy JSON backups larger than 5 MB must first be restored with Certloom 1.4.6 and exported again in the current streaming format.', 'certloom' ) );
@@ -344,7 +352,8 @@ class Ecapla_CertVerify_Backup {
 		}
 		$options_ok = self::restore_option( Ecapla_CertVerify_Fields::OPTION_KEY, $journal['old_fields'] ?? null )
 			&& self::restore_option( Ecapla_CertVerify_Fields::RETIRED_OPTION_KEY, $journal['old_retired'] ?? null )
-			&& self::restore_option( Ecapla_CertVerify_Settings::OPTION_KEY, $journal['old_settings'] ?? null );
+			&& self::restore_option( Ecapla_CertVerify_Settings::OPTION_KEY, $journal['old_settings'] ?? null )
+			&& self::restore_option( Ecapla_CertVerify_Numbering::STATE_OPTION, $journal['old_numbering_state'] ?? null );
 		if ( ! $options_ok ) {
 			return new WP_Error( 'ecapla_certverify_restore_recovery_failed', __( 'Certloom reactivated the original registry but could not restore all previous configuration.', 'certloom' ) );
 		}
@@ -598,6 +607,7 @@ class Ecapla_CertVerify_Backup {
 		$old_fields   = get_option( Ecapla_CertVerify_Fields::OPTION_KEY, null );
 		$old_retired  = get_option( Ecapla_CertVerify_Fields::RETIRED_OPTION_KEY, null );
 		$old_settings = get_option( Ecapla_CertVerify_Settings::OPTION_KEY, null );
+		$old_numbering_state = get_option( Ecapla_CertVerify_Numbering::STATE_OPTION, null );
 		$journal      = array(
 			'state'        => 'prepared',
 			'suffix'       => $suffix,
@@ -608,6 +618,7 @@ class Ecapla_CertVerify_Backup {
 			'old_fields'   => $old_fields,
 			'old_retired'  => $old_retired,
 			'old_settings' => $old_settings,
+			'old_numbering_state' => $old_numbering_state,
 		);
 		if ( ! self::save_journal( $journal ) ) {
 			$operation_error = new WP_Error( 'ecapla_certverify_restore_journal_failed', __( 'Certloom could not save the rollback journal, so no live data was changed.', 'certloom' ) );
@@ -652,7 +663,8 @@ class Ecapla_CertVerify_Backup {
 			if ( 'replace' === $mode ) {
 				$config_saved = Ecapla_CertVerify_Fields::save_fields( $manifest['fields'] )
 					&& Ecapla_CertVerify_Fields::save_retired_fields( $manifest['retired_fields'] )
-					&& Ecapla_CertVerify_Settings::save( $manifest['settings'] );
+					&& Ecapla_CertVerify_Settings::save( $manifest['settings'] )
+					&& self::save_numbering_state( $manifest['numbering_state'] ?? null );
 			} else {
 				$config_saved = Ecapla_CertVerify_Fields::save_retired_fields( self::merge_backup_only_fields_as_retired( $manifest ) );
 			}
@@ -662,7 +674,8 @@ class Ecapla_CertVerify_Backup {
 		if ( ! $config_saved ) {
 			$option_rollback = self::restore_option( Ecapla_CertVerify_Fields::OPTION_KEY, $old_fields )
 				&& self::restore_option( Ecapla_CertVerify_Fields::RETIRED_OPTION_KEY, $old_retired )
-				&& self::restore_option( Ecapla_CertVerify_Settings::OPTION_KEY, $old_settings );
+				&& self::restore_option( Ecapla_CertVerify_Settings::OPTION_KEY, $old_settings )
+				&& self::restore_option( Ecapla_CertVerify_Numbering::STATE_OPTION, $old_numbering_state );
 			$table_rollback = Ecapla_CertVerify_Database::rollback_restore_table( $rollback, $suffix );
 			Ecapla_CertVerify_Fields::reset_runtime_cache();
 			$operation_error = new WP_Error(
@@ -682,7 +695,8 @@ class Ecapla_CertVerify_Backup {
 		if ( ! self::save_journal( $journal ) ) {
 			$option_rollback = self::restore_option( Ecapla_CertVerify_Fields::OPTION_KEY, $old_fields )
 				&& self::restore_option( Ecapla_CertVerify_Fields::RETIRED_OPTION_KEY, $old_retired )
-				&& self::restore_option( Ecapla_CertVerify_Settings::OPTION_KEY, $old_settings );
+				&& self::restore_option( Ecapla_CertVerify_Settings::OPTION_KEY, $old_settings )
+				&& self::restore_option( Ecapla_CertVerify_Numbering::STATE_OPTION, $old_numbering_state );
 			$table_rollback = Ecapla_CertVerify_Database::rollback_restore_table( $rollback, $suffix );
 			$operation_error = new WP_Error(
 				'ecapla_certverify_restore_commit_failed',
@@ -923,9 +937,10 @@ class Ecapla_CertVerify_Backup {
 			return $registry;
 		}
 		$config = array(
-			'fields'         => get_option( Ecapla_CertVerify_Fields::OPTION_KEY, null ),
-			'retired_fields' => get_option( Ecapla_CertVerify_Fields::RETIRED_OPTION_KEY, null ),
-			'settings'       => get_option( Ecapla_CertVerify_Settings::OPTION_KEY, null ),
+			'fields'          => get_option( Ecapla_CertVerify_Fields::OPTION_KEY, null ),
+			'retired_fields'  => get_option( Ecapla_CertVerify_Fields::RETIRED_OPTION_KEY, null ),
+			'settings'        => get_option( Ecapla_CertVerify_Settings::OPTION_KEY, null ),
+			'numbering_state' => get_option( Ecapla_CertVerify_Numbering::STATE_OPTION, null ),
 		);
 		return array(
 			'generation'  => self::current_generation(),
@@ -1242,7 +1257,8 @@ class Ecapla_CertVerify_Backup {
 			'preview_marker' => $review_complete,
 			'fields'         => array_values( (array) $manifest['fields'] ),
 			'retired_fields' => (array) $manifest['retired_fields'],
-			'settings'       => (array) $manifest['settings'],
+			'settings'        => (array) $manifest['settings'],
+			'numbering_state' => $manifest['numbering_state'] ?? null,
 		);
 		if ( ! set_transient( $token, $session, self::SESSION_TTL ) ) {
 			self::delete_chunks( $token, $chunk_count );
@@ -1271,6 +1287,7 @@ class Ecapla_CertVerify_Backup {
 			'fields'         => $payload['fields'] ?? array(),
 			'retired_fields' => $payload['retired_fields'] ?? array(),
 			'settings'       => $payload['settings'] ?? array(),
+			'numbering_state' => null,
 		);
 		$valid = self::validate_manifest( $manifest );
 		if ( is_wp_error( $valid ) || ! isset( $payload['records'] ) || ! is_array( $payload['records'] ) ) {
@@ -1319,7 +1336,7 @@ class Ecapla_CertVerify_Backup {
 
 	private static function validate_manifest( $manifest ) {
 		$format_version = absint( $manifest['format_version'] ?? 0 );
-		if ( ! is_array( $manifest ) || self::FORMAT !== ( $manifest['format'] ?? '' ) || ! in_array( $format_version, array( self::LEGACY_STREAM_VERSION, self::FORMAT_VERSION ), true ) ) {
+		if ( ! is_array( $manifest ) || self::FORMAT !== ( $manifest['format'] ?? '' ) || ! in_array( $format_version, array( self::LEGACY_STREAM_VERSION, self::PREVIOUS_STREAM_VERSION, self::FORMAT_VERSION ), true ) ) {
 			return new WP_Error( 'ecapla_certverify_backup_format', __( 'This is not a supported Certloom backup file.', 'certloom' ) );
 		}
 		foreach ( array( 'generated_at', 'plugin_version', 'schema_version' ) as $key ) {
@@ -1330,6 +1347,15 @@ class Ecapla_CertVerify_Backup {
 		foreach ( array( 'fields', 'retired_fields', 'settings' ) as $key ) {
 			if ( ! isset( $manifest[ $key ] ) || ! is_array( $manifest[ $key ] ) ) {
 				return new WP_Error( 'ecapla_certverify_backup_structure', __( 'The backup manifest is incomplete or damaged.', 'certloom' ) );
+			}
+		}
+		if ( self::FORMAT_VERSION === $format_version && ! array_key_exists( 'numbering_state', $manifest ) ) {
+			return new WP_Error( 'ecapla_certverify_backup_structure', __( 'The backup manifest is missing certificate-number sequence state.', 'certloom' ) );
+		}
+		if ( array_key_exists( 'numbering_state', $manifest ) ) {
+			$numbering_state = Ecapla_CertVerify_Numbering::validate_backup_state( $manifest['numbering_state'] );
+			if ( is_wp_error( $numbering_state ) ) {
+				return $numbering_state;
 			}
 		}
 		if ( count( $manifest['fields'] ) > 500 || count( $manifest['retired_fields'] ) > 500 ) {
@@ -1463,7 +1489,8 @@ class Ecapla_CertVerify_Backup {
 			'preview_marker' => $preview_marker,
 			'fields'         => array_values( (array) $source_manifest['fields'] ),
 			'retired_fields' => (array) $source_manifest['retired_fields'],
-			'settings'       => (array) $source_manifest['settings'],
+			'settings'        => (array) $source_manifest['settings'],
+			'numbering_state' => $source_manifest['numbering_state'] ?? null,
 		);
 		if ( ! set_transient( $token, $manifest, self::SESSION_TTL ) ) {
 			self::delete_chunks( $token, count( $chunks ) );
@@ -1499,6 +1526,14 @@ class Ecapla_CertVerify_Backup {
 			delete_transient( $token . '_records_' . $i );
 		}
 		delete_transient( $token );
+	}
+
+	private static function save_numbering_state( $state ) {
+		$state = Ecapla_CertVerify_Numbering::validate_backup_state( $state );
+		if ( is_wp_error( $state ) ) {
+			return false;
+		}
+		return self::restore_option( Ecapla_CertVerify_Numbering::STATE_OPTION, null === $state ? null : (string) $state );
 	}
 
 	private static function restore_option( $key, $value ) {

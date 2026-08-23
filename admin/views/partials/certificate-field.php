@@ -50,11 +50,18 @@ $ecapla_certverify_sensitivity = isset( $field['sensitivity'] ) ? sanitize_key( 
 	<?php elseif ( 'number' === $field['type'] ) : ?>
 		<input type="number" step="any" name="<?php echo esc_attr( $ecapla_certverify_name ); ?>" id="<?php echo esc_attr( $ecapla_certverify_name ); ?>" value="<?php echo esc_attr( $ecapla_certverify_value ); ?>" class="regular-text" />
 	<?php else : ?>
-		<input type="text" name="<?php echo esc_attr( $ecapla_certverify_name ); ?>" id="<?php echo esc_attr( $ecapla_certverify_name ); ?>" value="<?php echo esc_attr( $ecapla_certverify_value ); ?>" class="regular-text"<?php if ( 'cert_number' === $field['key'] ) : ?> maxlength="100" required<?php endif; ?><?php if ( 'holder_name' === $field['key'] ) : ?> maxlength="255"<?php endif; ?> />
+		<input type="text" name="<?php echo esc_attr( $ecapla_certverify_name ); ?>" id="<?php echo esc_attr( $ecapla_certverify_name ); ?>" value="<?php echo esc_attr( $ecapla_certverify_value ); ?>" class="regular-text"<?php if ( 'cert_number' === $field['key'] ) : ?> maxlength="100"<?php if ( empty( $ecapla_certverify_auto_numbering_available ) ) : ?> required<?php endif; ?><?php endif; ?><?php if ( 'holder_name' === $field['key'] ) : ?> maxlength="255"<?php endif; ?> />
 	<?php endif; ?>
 
 	<?php if ( 'cert_number' === $field['key'] ) : ?>
-		<p class="description"><?php esc_html_e( 'Visitors must enter the complete certificate number. Letter case is ignored; spaces, punctuation, and hyphens must match. The value is unique and limited to 100 characters.', 'certloom' ); ?></p>
+		<?php if ( ! empty( $ecapla_certverify_auto_numbering_available ) ) : ?>
+			<p class="description"><?php esc_html_e( 'Enter a certificate number for a deliberate manual override, or leave this blank to atomically reserve the next number from Settings → Certificate numbering. Automatic numbering applies only to new credentials and never renumbers saved records.', 'certloom' ); ?></p>
+			<p class="description"><strong><?php esc_html_e( 'Current preview:', 'certloom' ); ?></strong> <code><?php echo esc_html( (string) $ecapla_certverify_numbering_preview['certificate_number'] ); ?></code> <?php esc_html_e( '(not reserved until save)', 'certloom' ); ?></p>
+		<?php elseif ( ! empty( $ecapla_certverify_numbering_enabled ) && isset( $ecapla_certverify_numbering_preview ) && is_wp_error( $ecapla_certverify_numbering_preview ) ) : ?>
+			<p class="description ecapla-certverify-warning-text"><strong><?php esc_html_e( 'Automatic numbering is unavailable:', 'certloom' ); ?></strong> <?php echo esc_html( $ecapla_certverify_numbering_preview->get_error_message() ); ?> <?php esc_html_e( 'Enter a certificate number manually or repair the numbering state in Settings before saving.', 'certloom' ); ?></p>
+		<?php else : ?>
+			<p class="description"><?php esc_html_e( 'Visitors must enter the complete certificate number. Letter case is ignored; spaces, punctuation, and hyphens must match. The value is unique and limited to 100 characters.', 'certloom' ); ?></p>
+		<?php endif; ?>
 	<?php elseif ( 'status' === $field['type'] ) : ?>
 		<p class="description"><?php esc_html_e( 'Valid records automatically display as Expired after their expiry date. Suspended and Withdrawn remain manual workflow decisions.', 'certloom' ); ?></p>
 	<?php elseif ( 'status_reason' === $field['key'] ) : ?>

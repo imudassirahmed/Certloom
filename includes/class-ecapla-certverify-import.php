@@ -740,7 +740,7 @@ class Ecapla_CertVerify_Import {
 	}
 
 	public static function stream_export() {
-		$fields  = Ecapla_CertVerify_Fields::get_fields();
+		$fields  = Ecapla_CertVerify_Fields::get_exchange_fields();
 		$stream  = new SplTempFileObject( 2 * MB_IN_BYTES );
 		$last_id = 0;
 		$limit   = 500;
@@ -781,7 +781,7 @@ class Ecapla_CertVerify_Import {
 	}
 
 	public static function stream_template() {
-		$fields = Ecapla_CertVerify_Fields::get_fields();
+		$fields = Ecapla_CertVerify_Fields::get_exchange_fields();
 		$header = array_map( array( __CLASS__, 'escape_spreadsheet_cell' ), wp_list_pluck( $fields, 'label' ) );
 		$sample = array();
 		foreach ( $fields as $field ) {

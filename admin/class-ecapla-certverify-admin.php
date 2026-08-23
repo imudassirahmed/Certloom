@@ -113,6 +113,9 @@ class Ecapla_CertVerify_Admin {
 		$data   = array();
 		$custom = array();
 		foreach ( Ecapla_CertVerify_Fields::get_fields() as $field ) {
+			if ( ! empty( $field['system_only'] ) ) {
+				continue;
+			}
 			if ( ! empty( $field['column'] ) ) {
 				if ( isset( $_POST[ $field['key'] ] ) ) {
 					$data[ $field['key'] ] = sanitize_text_field( wp_unslash( $_POST[ $field['key'] ] ) );
@@ -126,11 +129,30 @@ class Ecapla_CertVerify_Admin {
 				}
 			}
 		}
+		$secondary_code = isset( $_POST['certloom_secondary_code'] ) ? wp_unslash( $_POST['certloom_secondary_code'] ) : '';
+		$clear_secondary = ! empty( $_POST['certloom_secondary_code_clear'] );
+		if ( $clear_secondary ) {
+			$custom[ Ecapla_CertVerify_Secondary_Code::FIELD_KEY ] = '';
+		} elseif ( '' !== trim( (string) $secondary_code ) ) {
+			$hash = Ecapla_CertVerify_Secondary_Code::hash_from_input( $secondary_code );
+			if ( is_wp_error( $hash ) ) {
+				$this->redirect_error( $hash->get_error_message(), $back_url );
+			}
+			$custom[ Ecapla_CertVerify_Secondary_Code::FIELD_KEY ] = $hash;
+		}
 		if ( $custom ) {
 			$data['custom_fields'] = $custom;
 		}
 
-		$result = $id ? Ecapla_CertVerify_Database::update( $id, $data ) : Ecapla_CertVerify_Database::insert( $data );
+		$use_generated_number = ! $id
+			&& Ecapla_CertVerify_Numbering::is_enabled()
+			&& ( ! array_key_exists( 'cert_number', $data ) || '' === trim( (string) $data['cert_number'] ) );
+		if ( $use_generated_number ) {
+			unset( $data['cert_number'] );
+			$result = Ecapla_CertVerify_Numbering::insert_generated( $data );
+		} else {
+			$result = $id ? Ecapla_CertVerify_Database::update( $id, $data ) : Ecapla_CertVerify_Database::insert( $data );
+		}
 		if ( is_wp_error( $result ) ) {
 			$this->redirect_error( $result->get_error_message(), $back_url );
 		}
@@ -396,7 +418,7 @@ class Ecapla_CertVerify_Admin {
 			'core'              => false,
 			'protected'         => false,
 			'locked_visibility' => false,
-			'sensitivity'       => isset( $retired[ $key ]['sensitivity'] ) ? $retired[ $key ]['sensitivity'] : 'personal',
+			'sensitivity'       => 'personal',
 			'public_exposure'   => 'private',
 			'show_on_frontend'  => false,
 			'order'             => absint( $max_order ) + 1,
@@ -460,7 +482,7 @@ class Ecapla_CertVerify_Admin {
 			'core'              => false,
 			'protected'         => false,
 			'locked_visibility' => false,
-			'sensitivity'       => 'personal',
+			'sensitivity'       => isset( $retired[ $key ]['sensitivity'] ) ? $retired[ $key ]['sensitivity'] : 'personal',
 			'public_exposure'   => 'private',
 			'show_on_frontend'  => false,
 			'order'             => absint( $max_order ) + 1,
@@ -630,6 +652,17 @@ class Ecapla_CertVerify_Admin {
 			'credit_align'             => $credit_align,
 			'delete_data_on_uninstall' => ! empty( $_POST['delete_data_on_uninstall'] ),
 			'privacy_erasure_policy'   => isset( $_POST['privacy_erasure_policy'] ) && 'anonymize_mutable_recipient' === sanitize_key( wp_unslash( $_POST['privacy_erasure_policy'] ) ) ? 'anonymize_mutable_recipient' : 'retain',
+			'verification_branding_enabled' => ! empty( $_POST['verification_branding_enabled'] ),
+			'verification_brand_name'    => isset( $_POST['verification_brand_name'] ) ? sanitize_text_field( wp_unslash( $_POST['verification_brand_name'] ) ) : '',
+			'verification_brand_tagline' => isset( $_POST['verification_brand_tagline'] ) ? sanitize_text_field( wp_unslash( $_POST['verification_brand_tagline'] ) ) : '',
+			'verification_surface_color' => isset( $_POST['verification_surface_color'] ) ? sanitize_hex_color( wp_unslash( $_POST['verification_surface_color'] ) ) : '#ffffff',
+			'verification_text_color'    => isset( $_POST['verification_text_color'] ) ? sanitize_hex_color( wp_unslash( $_POST['verification_text_color'] ) ) : '#17201d',
+			'verification_use_site_icon' => ! empty( $_POST['verification_use_site_icon'] ),
+			'numbering_mode'             => isset( $_POST['numbering_mode'] ) ? sanitize_key( wp_unslash( $_POST['numbering_mode'] ) ) : 'manual',
+			'numbering_prefix'           => isset( $_POST['numbering_prefix'] ) ? sanitize_text_field( wp_unslash( $_POST['numbering_prefix'] ) ) : 'CERT-',
+			'numbering_suffix'           => isset( $_POST['numbering_suffix'] ) ? sanitize_text_field( wp_unslash( $_POST['numbering_suffix'] ) ) : '',
+			'numbering_start'            => isset( $_POST['numbering_start'] ) ? sanitize_text_field( wp_unslash( $_POST['numbering_start'] ) ) : '1',
+			'numbering_padding'          => isset( $_POST['numbering_padding'] ) ? sanitize_text_field( wp_unslash( $_POST['numbering_padding'] ) ) : '6',
 			'status_desc'              => array(),
 		);
 		if ( isset( $_POST['status_desc'] ) && is_array( $_POST['status_desc'] ) ) {
@@ -642,6 +675,12 @@ class Ecapla_CertVerify_Admin {
 				}
 			}
 		}
+		$numbering_policy = Ecapla_CertVerify_Numbering::normalize_policy( $data );
+		if ( is_wp_error( $numbering_policy ) ) {
+			$this->redirect_error( $numbering_policy->get_error_message(), admin_url( 'admin.php?page=certloom-settings' ) );
+		}
+		$data = array_merge( $data, $numbering_policy );
+
 		if ( ! Ecapla_CertVerify_Settings::save( $data ) ) {
 			$this->redirect_error( __( 'The settings could not be saved. Role access was not changed.', 'certloom' ), admin_url( 'admin.php?page=certloom-settings' ) );
 		}
@@ -1054,7 +1093,7 @@ class Ecapla_CertVerify_Admin {
 			}
 			$header          = $session['header'];
 			$preview         = $session['preview'];
-			$fields          = Ecapla_CertVerify_Fields::get_fields();
+			$fields          = Ecapla_CertVerify_Fields::get_exchange_fields();
 			$guessed_mapping = Ecapla_CertVerify_Import::guess_mapping( $header, $fields );
 			include ECAPLA_CERTVERIFY_PATH . 'admin/views/import-mapping.php';
 			return;

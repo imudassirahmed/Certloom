@@ -116,7 +116,7 @@ class Ecapla_CertVerify_Onboarding {
 		if ( is_wp_error( $count ) ) {
 			return $count;
 		}
-		$fields = Ecapla_CertVerify_Fields::get_fields();
+		$fields = Ecapla_CertVerify_Fields::get_manageable_fields();
 		$page   = $state['verification_page_id'] ? get_post( $state['verification_page_id'] ) : null;
 		$sample_cert_number = '';
 		if ( absint( $count ) > 0 ) {

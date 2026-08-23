@@ -5,6 +5,7 @@ These tests are deliberately **not** replaced by the pure-PHP suite. They must b
 Run, in order:
 
 ```bash
+wp eval-file wp-content/plugins/certloom/tests/wp-integration/run-numbering-policy.php
 wp eval-file wp-content/plugins/certloom/tests/wp-integration/run-domain-schema.php
 wp eval-file wp-content/plugins/certloom/tests/wp-integration/run-domain-premium-gate.php
 wp eval-file wp-content/plugins/certloom/tests/wp-integration/run-domain-row-lock-gate.php
@@ -17,6 +18,7 @@ Required pass evidence includes:
 - critical unique and query indexes match the schema contract;
 - real transaction rollback works;
 - a second process blocks on the same `SELECT ... FOR UPDATE` Credential Series row until the owning transaction commits;
+- current-authority sequential numbering uses real atomic `wp_options` allocation, skips collisions, and never rewinds;
 - global human certificate-number ownership is enforced;
 - cross-Series Version lineage is rejected without side effects;
 - invalid immutable snapshots do not advance domain generation or strand number reservations;

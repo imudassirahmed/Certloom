@@ -306,6 +306,7 @@ function ecapla_certverify_uninstall_site() {
 	delete_option( 'certverify_fields' );
 	delete_option( 'certverify_retired_fields' );
 	delete_option( 'certverify_settings' );
+	delete_option( 'certverify_number_sequence_next' );
 	delete_option( 'certverify_onboarding' );
 	delete_option( 'certverify_schema_version' );
 	delete_option( 'certverify_db_version' );

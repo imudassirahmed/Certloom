@@ -26,7 +26,7 @@ class Ecapla_CertVerify_Public_Presentation {
 	 * @param bool   $rate_limit Whether public rate limiting should be applied.
 	 * @return array|WP_Error Presentation array, not-found result, or fail-closed error.
 	 */
-	public static function verify( $number, $rate_limit = true, $context = 'verification' ) {
+	public static function verify( $number, $rate_limit = true, $context = 'verification', $secondary_code = '' ) {
 		$number = trim( sanitize_text_field( (string) $number ) );
 		$length = function_exists( 'mb_strlen' ) ? mb_strlen( $number ) : strlen( $number );
 		if ( '' === $number || $length > 100 ) {
@@ -50,9 +50,34 @@ class Ecapla_CertVerify_Public_Presentation {
 			return $certificate;
 		}
 		if ( ! is_array( $certificate ) ) {
+			if ( class_exists( 'Ecapla_CertVerify_Secondary_Code' ) ) {
+				Ecapla_CertVerify_Secondary_Code::equalize_public_miss( $secondary_code );
+			}
 			return array( 'found' => false );
 		}
-		return self::present_certificate( $certificate, $context );
+
+		$custom = isset( $certificate['custom_fields'] ) && is_array( $certificate['custom_fields'] ) ? $certificate['custom_fields'] : array();
+		$stored_proof = isset( $custom['__certloom_verification_code_hash'] ) ? trim( (string) $custom['__certloom_verification_code_hash'] ) : '';
+		if ( '' !== $stored_proof && ! class_exists( 'Ecapla_CertVerify_Secondary_Code' ) ) {
+			return new WP_Error( 'ecapla_certverify_secondary_proof_unavailable', __( 'Certificate verification is temporarily unavailable. Please try again later.', 'certloom' ) );
+		}
+
+		/* A configured secondary code is only an additional proof for this exact row. */
+		$has_secondary = class_exists( 'Ecapla_CertVerify_Secondary_Code' ) && Ecapla_CertVerify_Secondary_Code::has_code( $certificate );
+		if ( $has_secondary ) {
+			if ( ! Ecapla_CertVerify_Secondary_Code::matches( $certificate, $secondary_code ) ) {
+				return array( 'found' => false );
+			}
+		} elseif ( class_exists( 'Ecapla_CertVerify_Secondary_Code' ) && '' !== trim( (string) $secondary_code ) ) {
+			/* Match bcrypt work for private/unprotected rows when callers supplied a valid-shaped proof. */
+			Ecapla_CertVerify_Secondary_Code::equalize_public_miss( $secondary_code );
+		}
+
+		$presented = self::present_certificate( $certificate, $context );
+		if ( ! empty( $presented['found'] ) ) {
+			$presented['secondary_proof'] = $has_secondary ? 'verified' : 'not_required';
+		}
+		return $presented;
 	}
 
 	/**

@@ -1,3 +1,19 @@
+1.6.11 — Phase 2 current-authority certificate numbering policy
+- Add opt-in sequential numbering for new administrator-created credentials while preserving Manual as the upgrade default and explicit-number override behavior.
+- Add prefix/suffix, sequence start/floor, minimum digit padding, non-reserving preview, bounded collision skipping, and durable atomic wp_options allocation.
+- Never infer the cursor from max certificate number, never rewind it when settings are lowered, and never renumber an existing issued credential.
+- Advance complete backup to v4 with numbering-state ownership while preserving valid v1/v2/v3 restore compatibility; Replace restores policy/state and Merge preserves the current site's numbering state.
+- Fail closed on corrupt sequence state/database probes and require manual entry when automatic numbering is unhealthy.
+- Keep Program/Template scoped sequences explicitly gated until their normalized relationships become accepted authority.
+
+1.6.10 — Phase 2 secondary verification proof and advanced clean-route branding
+- Adds optional per-credential secondary proof checked only after exact certificate-number lookup.
+- Stores only validated cost-10 bcrypt proof hashes; proof never enters URLs, Field Manager, CSV, generic admin writes, public output, or personal-data export.
+- Adds POST-only verifier proof transport and fixed-work timing equalization for valid-shaped public misses.
+- Adds clean-route organization branding with contrast-safe surface/text colors and optional WordPress Site Icon.
+- Makes legacy structured certificate reads/maintenance fail closed on corrupt JSON instead of silently treating state as empty.
+- Restores retired custom-field sensitivity correctly while keeping restored exposure private.
+
 1.6.9 — Phase 2 frontend accessibility and theme-resilience hardening
 - Separate interactive result regions from the dedicated screen-reader live-status announcer.
 - Add clean-route skip navigation, stronger keyboard focus, 44px action targets, RTL/bidi protection, reduced-motion, prefers-contrast, and forced-colors rules.

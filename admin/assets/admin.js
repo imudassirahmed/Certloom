@@ -97,6 +97,23 @@
 		update();
 	}
 
+	function initSecondaryCodeGenerator() {
+		var button = document.querySelector( '[data-certloom-generate-secondary-code]' );
+		var input = document.getElementById( 'certloom-secondary-code' );
+		if ( ! button || ! input ) { return; }
+		button.addEventListener( 'click', function () {
+			if ( ! window.crypto || typeof window.crypto.getRandomValues !== 'function' ) { input.focus(); return; }
+			var alphabet = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+			var bytes = new Uint8Array( 16 );
+			window.crypto.getRandomValues( bytes );
+			var raw = '';
+			for ( var i = 0; i < bytes.length; i++ ) { raw += alphabet.charAt( bytes[ i ] % 32 ); }
+			input.value = raw.match( /.{1,4}/g ).join( '-' );
+			input.focus();
+			input.select();
+		} );
+	}
+
 	function initDomainKeyValueLists() {
 		document.addEventListener( 'click', function ( event ) {
 			var add = event.target.closest( '[data-certloom-add-kv]' );
@@ -132,6 +149,7 @@
 		initFields();
 		initConfirmations();
 		initBulkOperationFields();
+		initSecondaryCodeGenerator();
 		initDomainKeyValueLists();
 	} );
 } )();

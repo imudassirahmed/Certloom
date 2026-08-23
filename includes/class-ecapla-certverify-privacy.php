@@ -180,6 +180,9 @@ final class Ecapla_CertVerify_Privacy {
 			}
 		}
 		foreach ( (array) ( $row['custom_fields'] ?? array() ) as $key => $value ) {
+			if ( isset( $fields[ $key ] ) && ! empty( $fields[ $key ]['system_only'] ) ) {
+				continue;
+			}
 			$label = isset( $fields[ $key ]['label'] ) ? $fields[ $key ]['label'] : (string) $key;
 			$data[] = array( 'name' => $label, 'value' => self::export_value( $value ) );
 		}

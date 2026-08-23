@@ -681,8 +681,8 @@ class Ecapla_CertVerify_Database {
 		foreach ( $rows as $row ) {
 			$last_id = max( $last_id, absint( $row['id'] ) );
 			$custom  = ! empty( $row['custom_fields'] ) ? json_decode( $row['custom_fields'], true ) : array();
-			if ( ! is_array( $custom ) ) {
-				continue;
+			if ( ! is_array( $custom ) || JSON_ERROR_NONE !== json_last_error() ) {
+				return false;
 			}
 			foreach ( array_keys( $custom ) as $raw_key ) {
 				$key = sanitize_key( $raw_key );
@@ -762,7 +762,10 @@ class Ecapla_CertVerify_Database {
 		foreach ( $rows as $row ) {
 			$row_id = absint( $row['id'] );
 			$custom = ! empty( $row['custom_fields'] ) ? json_decode( $row['custom_fields'], true ) : array();
-			if ( is_array( $custom ) && array_key_exists( $field_key, $custom ) ) {
+			if ( ! is_array( $custom ) || JSON_ERROR_NONE !== json_last_error() ) {
+				return self::purge_error( 'ecapla_certverify_purge_corrupt_custom_fields', __( 'A certificate contains invalid custom-field data. Certloom stopped the purge before skipping that record. Repair the record data, then run Purge again from the saved position.', 'certloom' ), $field_key, $last_id, $changed );
+			}
+			if ( array_key_exists( $field_key, $custom ) ) {
 				if ( ! $generation_reserved ) {
 					$generation = self::reserve_live_mutation_generation();
 					if ( is_wp_error( $generation ) ) {
@@ -978,6 +981,64 @@ class Ecapla_CertVerify_Database {
 	}
 
 	/**
+	 * Checks exact certificate-number ownership without decoding record payloads.
+	 *
+	 * Number allocation uses this as a cheap collision probe. The unique database
+	 * constraints remain the final concurrency gate during insertion.
+	 *
+	 * @param string $cert_number Candidate certificate number.
+	 * @return bool|WP_Error
+	 */
+	public static function certificate_number_exists( $cert_number ) {
+		global $wpdb;
+		$cert_number = trim( sanitize_text_field( (string) $cert_number ) );
+		$length = function_exists( 'mb_strlen' ) ? mb_strlen( $cert_number, 'UTF-8' ) : strlen( $cert_number );
+		if ( '' === $cert_number || $length > 100 ) {
+			return false;
+		}
+		$table = self::table_name();
+		if ( get_option( self::HASH_COMPLETE_OPTION, false ) ) {
+			$wpdb->last_error = '';
+			$found = $wpdb->get_var(
+				$wpdb->prepare( 'SELECT id FROM %i WHERE cert_number_hash = %s LIMIT 1', $table, self::certificate_hash( $cert_number ) )
+			);
+			if ( '' !== (string) $wpdb->last_error ) {
+				// A failed indexed probe means the saved migration/health markers are no longer trustworthy.
+				delete_option( self::HASH_COMPLETE_OPTION );
+				delete_option( self::HEALTH_OPTION );
+			} elseif ( ! empty( $found ) ) {
+				return true;
+			}
+			/*
+			 * Even a healthy marker does not excuse external/manual database damage.
+			 * Fall through to the indexed human-number key before declaring the
+			 * candidate free, so previews remain accurate for a row whose hash was
+			 * unexpectedly removed outside Certloom.
+			 */
+		}
+
+		$wpdb->last_error = '';
+		$found = $wpdb->get_var(
+			$wpdb->prepare( 'SELECT id FROM %i WHERE cert_number = %s LIMIT 1', $table, $cert_number )
+		);
+		if ( '' !== (string) $wpdb->last_error ) {
+			return self::read_error();
+		}
+		if ( ! empty( $found ) ) {
+			return true;
+		}
+
+		$wpdb->last_error = '';
+		$found = $wpdb->get_var(
+			$wpdb->prepare( 'SELECT id FROM %i WHERE LOWER(cert_number) = LOWER(%s) LIMIT 1', $table, $cert_number )
+		);
+		if ( '' !== (string) $wpdb->last_error ) {
+			return self::read_error();
+		}
+		return ! empty( $found );
+	}
+
+	/**
 	 * Reads bounded legacy certificate rows whose stored custom-field JSON may
 	 * contain the requested email. Callers must still perform an exact decoded
 	 * value match because LIKE is only an indexed-free candidate reduction step.
@@ -1011,7 +1072,9 @@ class Ecapla_CertVerify_Database {
 					return new WP_Error( 'ecapla_certverify_privacy_custom_fields_corrupt', __( 'Stored certificate custom-field data is invalid and could not be inspected safely for this privacy request.', 'certloom' ) );
 				}
 			}
-			$decoded_rows[] = self::decode_row( $row );
+			$decoded = self::decode_row( $row );
+			if ( is_wp_error( $decoded ) ) { return $decoded; }
+			$decoded_rows[] = $decoded;
 		}
 		return $decoded_rows;
 	}
@@ -1032,7 +1095,7 @@ class Ecapla_CertVerify_Database {
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) {
 			return self::read_error();
 		}
-		return array_map( array( __CLASS__, 'decode_row' ), $rows );
+		return self::decode_rows( $rows );
 	}
 
 	/**
@@ -1208,7 +1271,11 @@ class Ecapla_CertVerify_Database {
 				return self::read_error();
 			}
 			foreach ( $rows as $row ) {
-				$found[ self::normalize_certificate_number( $row['cert_number'] ) ] = self::decode_row( $row );
+				$decoded = self::decode_row( $row );
+				if ( is_wp_error( $decoded ) ) {
+					return $decoded;
+				}
+				$found[ self::normalize_certificate_number( $row['cert_number'] ) ] = $decoded;
 			}
 
 			$missing = array_values( array_diff( $normalized_chunk, array_keys( $found ) ) );
@@ -1224,7 +1291,11 @@ class Ecapla_CertVerify_Database {
 				return self::read_error();
 			}
 			foreach ( $rows as $row ) {
-				$found[ self::normalize_certificate_number( $row['cert_number'] ) ] = self::decode_row( $row );
+				$decoded = self::decode_row( $row );
+				if ( is_wp_error( $decoded ) ) {
+					return $decoded;
+				}
+				$found[ self::normalize_certificate_number( $row['cert_number'] ) ] = $decoded;
 			}
 
 			$still_missing = array_values( array_diff( $normalized_chunk, array_keys( $found ) ) );
@@ -1239,7 +1310,11 @@ class Ecapla_CertVerify_Database {
 				return self::read_error();
 			}
 			foreach ( $rows as $row ) {
-				$found[ self::normalize_certificate_number( $row['cert_number'] ) ] = self::decode_row( $row );
+				$decoded = self::decode_row( $row );
+				if ( is_wp_error( $decoded ) ) {
+					return $decoded;
+				}
+				$found[ self::normalize_certificate_number( $row['cert_number'] ) ] = $decoded;
 			}
 		}
 		return $found;
@@ -1517,8 +1592,12 @@ class Ecapla_CertVerify_Database {
 			return self::read_error();
 		}
 
+		$decoded_rows = self::decode_rows( $rows );
+		if ( is_wp_error( $decoded_rows ) ) {
+			return $decoded_rows;
+		}
 		return array(
-			'items' => array_map( array( __CLASS__, 'decode_row' ), $rows ),
+			'items' => $decoded_rows,
 			'total' => (int) $total_raw,
 		);
 	}
@@ -1689,12 +1768,34 @@ class Ecapla_CertVerify_Database {
 		if ( ! $row ) {
 			return null;
 		}
-		$decoded              = ! empty( $row['custom_fields'] ) ? json_decode( $row['custom_fields'], true ) : array();
-		$row['custom_fields'] = is_array( $decoded ) ? $decoded : array();
+		$decoded = array();
+		if ( ! empty( $row['custom_fields'] ) ) {
+			$decoded = json_decode( (string) $row['custom_fields'], true );
+			if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $decoded ) ) {
+				return new WP_Error(
+					'ecapla_certverify_custom_fields_corrupt',
+					__( 'Stored certificate custom-field data is invalid. Certloom stopped this read to avoid exposing or overwriting incomplete credential state.', 'certloom' )
+				);
+			}
+		}
+		$row['custom_fields'] = $decoded;
 		if ( empty( $row['status_source'] ) ) {
 			$row['status_source'] = isset( $row['status'] ) && 'expired' === $row['status'] ? 'legacy' : 'manual';
 		}
 		return $row;
+	}
+
+	/** @return array|WP_Error */
+	private static function decode_rows( $rows ) {
+		$decoded_rows = array();
+		foreach ( (array) $rows as $row ) {
+			$decoded = self::decode_row( $row );
+			if ( is_wp_error( $decoded ) ) {
+				return $decoded;
+			}
+			$decoded_rows[] = $decoded;
+		}
+		return $decoded_rows;
 	}
 
 	/**

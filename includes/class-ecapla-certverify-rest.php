@@ -13,19 +13,33 @@ class Ecapla_CertVerify_REST {
 
 	public static function register_routes() {
 		foreach ( array( self::NAMESPACE_ ) as $namespace ) {
+			$number_arg = array(
+				'type'              => 'string',
+				'required'          => true,
+				'sanitize_callback' => array( __CLASS__, 'sanitize_number' ),
+				'validate_callback' => array( __CLASS__, 'validate_number' ),
+			);
 			register_rest_route(
 				$namespace,
 				'/verify',
 				array(
-					'methods'             => WP_REST_Server::READABLE,
-					'callback'            => array( __CLASS__, 'verify' ),
-					'permission_callback' => '__return_true',
-					'args'                => array(
-						'number' => array(
-							'type'              => 'string',
-							'required'          => true,
-							'sanitize_callback' => array( __CLASS__, 'sanitize_number' ),
-							'validate_callback' => array( __CLASS__, 'validate_number' ),
+					array(
+						'methods'             => WP_REST_Server::READABLE,
+						'callback'            => array( __CLASS__, 'verify' ),
+						'permission_callback' => '__return_true',
+						'args'                => array( 'number' => $number_arg ),
+					),
+					array(
+						'methods'             => WP_REST_Server::CREATABLE,
+						'callback'            => array( __CLASS__, 'verify' ),
+						'permission_callback' => '__return_true',
+						'args'                => array(
+							'number' => $number_arg,
+							'code'   => array(
+								'type'              => 'string',
+								'required'          => false,
+								'sanitize_callback' => 'sanitize_text_field',
+							),
 						),
 					),
 				)
@@ -62,7 +76,8 @@ class Ecapla_CertVerify_REST {
 
 	public static function verify( $request ) {
 		$number = self::sanitize_number( $request->get_param( 'number' ) );
-		$presentation = Ecapla_CertVerify_Public_Presentation::verify( $number, true );
+		$code = self::secondary_code_from_request( $request );
+		$presentation = Ecapla_CertVerify_Public_Presentation::verify( $number, true, 'verification', $code );
 		if ( is_wp_error( $presentation ) ) {
 			$rate_limited = 'ecapla_certverify_rate_limited' === $presentation->get_error_code();
 			$response = new WP_REST_Response(
@@ -94,6 +109,7 @@ class Ecapla_CertVerify_REST {
 				'visibility'         => $presentation['visibility'],
 				'actions'            => $presentation['actions'],
 				'labels'             => $presentation['labels'],
+				'secondary_proof'    => isset( $presentation['secondary_proof'] ) ? $presentation['secondary_proof'] : 'not_required',
 			),
 		);
 		return self::add_private_headers( new WP_REST_Response( $payload, 200 ) );
@@ -105,6 +121,19 @@ class Ecapla_CertVerify_REST {
 	 * The endpoint exists in 1.5.2 code but stays unavailable until the explicit
 	 * schema + complete legacy-migration cutover gate has been enabled.
 	 */
+
+	/** Secondary proof is accepted from POST bodies only, never query strings/URLs. */
+	private static function secondary_code_from_request( $request ) {
+		if ( ! is_object( $request ) || ! method_exists( $request, 'get_method' ) || 'POST' !== strtoupper( (string) $request->get_method() ) ) {
+			return '';
+		}
+		$params = method_exists( $request, 'get_json_params' ) ? $request->get_json_params() : array();
+		if ( ! is_array( $params ) || ! array_key_exists( 'code', $params ) ) {
+			$params = method_exists( $request, 'get_body_params' ) ? $request->get_body_params() : array();
+		}
+		return is_array( $params ) && isset( $params['code'] ) ? sanitize_text_field( (string) $params['code'] ) : '';
+	}
+
 	public static function verify_credential( $request ) {
 		$gate = new \Certloom\Infrastructure\Verification\PublicVerificationGate();
 		if ( ! $gate->is_ready() ) {

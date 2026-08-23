@@ -337,6 +337,18 @@ class Ecapla_CertVerify_Fields {
 		);
 	}
 
+
+
+	/** Fields safe to expose through normal schema management and CSV exchange. */
+	public static function get_manageable_fields() {
+		return array_values( array_filter( self::get_fields(), static function ( $field ) { return empty( $field['system_only'] ); } ) );
+	}
+
+	/** Alias documenting that system-only proof material never enters CSV import/export. */
+	public static function get_exchange_fields() {
+		return self::get_manageable_fields();
+	}
+
 	public static function get_field( $key ) {
 		$map = self::get_field_map();
 		return isset( $map[ $key ] ) ? $map[ $key ] : null;
@@ -367,6 +379,7 @@ class Ecapla_CertVerify_Fields {
 			self::field( 'status_reason', __( 'Status reason', 'certloom' ), 'textarea', null, true, true, 100, false, false, 'sensitive', 'private' ),
 			self::field( 'internal_notes', __( 'Internal notes', 'certloom' ), 'textarea', null, true, true, 101, false, true, 'internal', 'private' ),
 			self::field( '__certloom_profile_visibility', __( 'Public credential visibility', 'certloom' ), 'visibility', null, true, true, 102, false, true, 'internal', 'private' ),
+			self::field( '__certloom_verification_code_hash', __( 'Secondary verification proof', 'certloom' ), 'text', null, true, true, 103, false, true, 'internal', 'private', true ),
 		);
 	}
 
@@ -418,7 +431,7 @@ class Ecapla_CertVerify_Fields {
 		return $statuses;
 	}
 
-	private static function field( $key, $label, $type, $column, $core, $protected, $order, $show_on_frontend = false, $locked_visibility = false, $sensitivity = 'personal', $public_exposure = null ) {
+	private static function field( $key, $label, $type, $column, $core, $protected, $order, $show_on_frontend = false, $locked_visibility = false, $sensitivity = 'personal', $public_exposure = null, $system_only = false ) {
 		$exposure = null === $public_exposure ? ( $show_on_frontend ? 'both' : 'private' ) : sanitize_key( (string) $public_exposure );
 		if ( $locked_visibility || 'internal' === $sensitivity ) {
 			$exposure = 'private';
@@ -435,6 +448,7 @@ class Ecapla_CertVerify_Fields {
 			'public_exposure'   => $exposure,
 			'show_on_frontend'  => 'private' !== $exposure,
 			'order'             => $order,
+			'system_only'       => (bool) $system_only,
 		);
 	}
 
@@ -500,6 +514,7 @@ class Ecapla_CertVerify_Fields {
 					'public_exposure'   => $exposure,
 					'show_on_frontend'  => 'private' !== $exposure,
 					'order'              => isset( $field['order'] ) ? absint( $field['order'] ) : $index,
+					'system_only'        => false,
 				);
 			}
 

@@ -128,10 +128,12 @@ class Ecapla_CertVerify_Render {
 			<div class="cv-search-card">
 				<?php echo self::header_content( $atts, 'cv' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 
-				<form class="cv-search-form" method="get" action="">
+				<form class="cv-search-form" method="post" action="">
 					<?php echo self::routing_hidden_inputs(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Values are escaped by the helper. ?>
 					<label class="screen-reader-text" for="<?php echo esc_attr( $instance_id . '-number' ); ?>"><?php esc_html_e( 'Certificate number', 'certloom' ); ?></label>
 					<input type="text" id="<?php echo esc_attr( $instance_id . '-number' ); ?>" name="certloom_number" class="cv-search-input" value="<?php echo esc_attr( $direct ); ?>" placeholder="<?php echo esc_attr( $atts['placeholder'] ); ?>" autocomplete="off" autocapitalize="off" spellcheck="false" dir="auto" maxlength="100" aria-controls="<?php echo esc_attr( $result_id ); ?>" required />
+					<label class="screen-reader-text" for="<?php echo esc_attr( $instance_id . '-code' ); ?>"><?php esc_html_e( 'Secondary verification code, if printed', 'certloom' ); ?></label>
+					<input type="text" id="<?php echo esc_attr( $instance_id . '-code' ); ?>" name="certloom_code" class="cv-search-input certloom-secondary-code-input" value="" placeholder="<?php echo esc_attr__( 'Verification code (optional)', 'certloom' ); ?>" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" maxlength="19" aria-controls="<?php echo esc_attr( $result_id ); ?>" />
 					<button type="submit" class="cv-search-btn">
 						<span class="cv-btn-text"><?php echo esc_html( $atts['button_text'] ); ?></span>
 						<span class="cv-arrow" aria-hidden="true">&rarr;</span>
@@ -219,12 +221,17 @@ class Ecapla_CertVerify_Render {
 					<?php echo self::header_content( $atts, 'cvx' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				</div>
 				<div class="cvx-action">
-					<form class="cvx-search-form" method="get" action="">
+					<form class="cvx-search-form" method="post" action="">
 						<?php echo self::routing_hidden_inputs(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Values are escaped by the helper. ?>
 						<label class="screen-reader-text" for="<?php echo esc_attr( $instance_id . '-number' ); ?>"><?php esc_html_e( 'Certificate number', 'certloom' ); ?></label>
 						<div class="cvx-input-wrap">
 							<span class="cvx-input-icon" aria-hidden="true"></span>
 							<input type="text" id="<?php echo esc_attr( $instance_id . '-number' ); ?>" name="certloom_number" class="cvx-search-input" value="<?php echo esc_attr( $direct ); ?>" placeholder="<?php echo esc_attr( $atts['placeholder'] ); ?>" autocomplete="off" autocapitalize="off" spellcheck="false" dir="auto" maxlength="100" aria-controls="<?php echo esc_attr( $result_id ); ?>" required />
+						</div>
+						<div class="cvx-input-wrap certloom-secondary-code-wrap">
+							<span class="cvx-input-icon certloom-code-icon" aria-hidden="true"></span>
+							<label class="screen-reader-text" for="<?php echo esc_attr( $instance_id . '-code' ); ?>"><?php esc_html_e( 'Secondary verification code, if printed', 'certloom' ); ?></label>
+							<input type="text" id="<?php echo esc_attr( $instance_id . '-code' ); ?>" name="certloom_code" class="cvx-search-input certloom-secondary-code-input" value="" placeholder="<?php echo esc_attr__( 'Verification code (optional)', 'certloom' ); ?>" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" maxlength="19" aria-controls="<?php echo esc_attr( $result_id ); ?>" />
 						</div>
 						<button type="submit" class="cvx-search-btn">
 							<span class="cvx-btn-text"><?php echo esc_html( $atts['button_text'] ); ?></span>
@@ -282,7 +289,7 @@ class Ecapla_CertVerify_Render {
 		if ( '' === $number ) {
 			return '';
 		}
-		$presentation = Ecapla_CertVerify_Public_Presentation::verify( $number, true );
+		$presentation = Ecapla_CertVerify_Public_Presentation::verify( $number, true, 'verification', self::direct_code() );
 		if ( is_wp_error( $presentation ) ) {
 			$message = 'ecapla_certverify_rate_limited' === $presentation->get_error_code() ? $presentation->get_error_message() : $error;
 			return self::message_html( $prefix, $message );
@@ -525,6 +532,11 @@ class Ecapla_CertVerify_Render {
 	 * @return string
 	 */
 	private static function direct_number() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Public read-only verification submission.
+		if ( isset( $_POST['certloom_number'] ) && ! is_array( $_POST['certloom_number'] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Public read-only verification submission.
+			return self::limit_text( sanitize_text_field( wp_unslash( $_POST['certloom_number'] ) ), 100 );
+		}
 		$keys = array( 'certloom_number', 'cv_number' );
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Public direct-link lookup is read-only and intentionally unauthenticated.
 		foreach ( $keys as $key ) {
@@ -539,6 +551,15 @@ class Ecapla_CertVerify_Render {
 			return self::limit_text( Ecapla_CertVerify_Public_Router::requested_number(), 100 );
 		}
 		return '';
+	}
+
+
+	/** Secondary proof comes only from POST so it never becomes part of a shareable URL. */
+	private static function direct_code() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Public read-only proof submission.
+		if ( ! isset( $_POST['certloom_code'] ) || is_array( $_POST['certloom_code'] ) ) { return ''; }
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Public read-only proof submission.
+		return self::limit_text( sanitize_text_field( wp_unslash( $_POST['certloom_code'] ) ), 32 );
 	}
 
 	/**
