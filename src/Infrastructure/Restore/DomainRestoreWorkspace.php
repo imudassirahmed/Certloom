@@ -161,8 +161,17 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		}
 		$checks = array(
 			'program_issuer_missing' => array( "SELECT COUNT(*) FROM %i p LEFT JOIN %i i ON i.id=p.issuer_id WHERE p.issuer_id IS NOT NULL AND i.id IS NULL", array( $t['programs'], $t['issuers'] ) ),
+			'batch_program_missing' => array( "SELECT COUNT(*) FROM %i b LEFT JOIN %i p ON p.id=b.program_id WHERE p.id IS NULL", array( $t['batches'], $t['programs'] ) ),
+			'batch_signer_missing' => array( "SELECT COUNT(*) FROM %i b LEFT JOIN %i s ON s.id=b.instructor_signer_id WHERE b.instructor_signer_id IS NOT NULL AND s.id IS NULL", array( $t['batches'], $t['signers'] ) ),
+			'batch_member_batch_missing' => array( "SELECT COUNT(*) FROM %i m LEFT JOIN %i b ON b.id=m.batch_id WHERE b.id IS NULL", array( $t['batch_recipients'], $t['batches'] ) ),
+			'batch_member_recipient_missing' => array( "SELECT COUNT(*) FROM %i m LEFT JOIN %i r ON r.id=m.recipient_id WHERE r.id IS NULL", array( $t['batch_recipients'], $t['recipients'] ) ),
+			'signer_assignment_signer_missing' => array( "SELECT COUNT(*) FROM %i a LEFT JOIN %i s ON s.id=a.signer_id WHERE s.id IS NULL", array( $t['signer_assignments'], $t['signers'] ) ),
+			'signer_assignment_issuer_missing' => array( "SELECT COUNT(*) FROM %i a LEFT JOIN %i i ON i.id=a.scope_id WHERE a.scope_type='issuer' AND i.id IS NULL", array( $t['signer_assignments'], $t['issuers'] ) ),
+			'signer_assignment_program_missing' => array( "SELECT COUNT(*) FROM %i a LEFT JOIN %i p ON p.id=a.scope_id WHERE a.scope_type='program' AND p.id IS NULL", array( $t['signer_assignments'], $t['programs'] ) ),
+			'signer_assignment_batch_missing' => array( "SELECT COUNT(*) FROM %i a LEFT JOIN %i b ON b.id=a.scope_id WHERE a.scope_type='batch' AND b.id IS NULL", array( $t['signer_assignments'], $t['batches'] ) ),
 			'series_recipient_missing' => array( "SELECT COUNT(*) FROM %i s LEFT JOIN %i r ON r.id=s.recipient_id WHERE r.id IS NULL", array( $t['credential_series'], $t['recipients'] ) ),
 			'series_program_missing' => array( "SELECT COUNT(*) FROM %i s LEFT JOIN %i p ON p.id=s.program_id WHERE s.program_id IS NOT NULL AND p.id IS NULL", array( $t['credential_series'], $t['programs'] ) ),
+			'series_batch_missing' => array( "SELECT COUNT(*) FROM %i s LEFT JOIN %i b ON b.id=s.batch_id WHERE s.batch_id IS NOT NULL AND b.id IS NULL", array( $t['credential_series'], $t['batches'] ) ),
 			'series_issuer_missing' => array( "SELECT COUNT(*) FROM %i s LEFT JOIN %i i ON i.id=s.issuer_id WHERE s.issuer_id IS NOT NULL AND i.id IS NULL", array( $t['credential_series'], $t['issuers'] ) ),
 			'number_series_missing' => array( "SELECT COUNT(*) FROM %i n LEFT JOIN %i s ON s.id=n.series_id WHERE s.id IS NULL", array( $t['credential_numbers'], $t['credential_series'] ) ),
 			'version_series_missing' => array( "SELECT COUNT(*) FROM %i v LEFT JOIN %i s ON s.id=v.series_id WHERE s.id IS NULL", array( $t['credential_versions'], $t['credential_series'] ) ),
@@ -553,6 +562,7 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		global $wpdb;
 		$codes = array(
 			'issuers' => 'i', 'programs' => 'p', 'recipients' => 'r',
+			'signers' => 'g', 'batches' => 'b', 'batch_recipients' => 'm', 'signer_assignments' => 'a',
 			'credential_series' => 's', 'credential_numbers' => 'n',
 			'credential_versions' => 'v', 'credential_events' => 'e',
 		);

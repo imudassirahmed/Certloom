@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Certloom – Certificate Verification
  * Description: Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
- * Version: 1.6.3
+ * Version: 1.6.5
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.3' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.5' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
@@ -510,6 +510,7 @@ function ecapla_certverify_add_privacy_policy_content() {
 	}
 
 	$content = '<p class="privacy-policy-tutorial">' . esc_html__( 'Certloom publishes only the certificate fields that a site administrator marks as visible. Those fields may include names or other personal information, so administrators should publish only information they are authorised to disclose.', 'certloom' ) . '</p>';
+	$content .= '<p>' . esc_html__( 'Depending on the Certloom features enabled by the site, local WordPress storage may also contain recipient identity/contact data and administrator-managed issuer or signer contact details. These records remain on the site unless the administrator exports, changes, or removes them according to the organization’s retention obligations.', 'certloom' ) . '</p>';
 	$content .= '<p>' . esc_html__( 'Certificate verification is performed on this WordPress site. Certloom does not send certificate records to Ecapla or another external service. Verification requests may still appear in normal web-server, security, analytics, browser-history, and cache logs. Direct verification links can include the certificate number in the URL.', 'certloom' ) . '</p>';
 	$content .= '<p>' . esc_html__( 'Site administrators determine how long certificate records are retained and can configure whether Certloom data is removed when the plugin is uninstalled.', 'certloom' ) . '</p>';
 

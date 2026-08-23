@@ -5,6 +5,7 @@ use Certloom\Application\CredentialLifecycleService;
 use Certloom\Domain\Credential\States;
 use Certloom\Domain\Credential\StatusService;
 use Certloom\Infrastructure\Repository\CredentialRepository;
+use Certloom\Infrastructure\Repository\BatchRepository;
 use Certloom\Infrastructure\Repository\EventRepository;
 use Certloom\Infrastructure\Repository\IssuerRepository;
 use Certloom\Infrastructure\Repository\ProgramRepository;
@@ -114,7 +115,8 @@ final class DomainAdmin {
 	public function create_issuer() {
 		$this->require_capability( \Ecapla_CertVerify_Permissions::CAP_MANAGE_ISSUERS );
 		check_admin_referer( 'certloom_domain_create_issuer' );
-		$result = ( new IssuerRepository() )->create( $this->issuer_request() );
+		$data = $this->issuer_request();
+		$result = is_wp_error( $data ) ? $data : ( new IssuerRepository() )->create( $data );
 		$this->redirect_result( self::ISSUERS_PAGE, $result, 'issuer_created' );
 	}
 
@@ -123,7 +125,11 @@ final class DomainAdmin {
 		$this->require_capability( \Ecapla_CertVerify_Permissions::CAP_MANAGE_ISSUERS );
 		$id = isset( $_POST['issuer_id'] ) ? absint( $_POST['issuer_id'] ) : 0;
 		check_admin_referer( 'certloom_domain_update_issuer_' . $id );
-		$result = ( new IssuerRepository() )->update( $id, $this->issuer_request() );
+		$repo = new IssuerRepository();
+		$existing = $repo->find( $id );
+		if ( is_wp_error( $existing ) || ! is_array( $existing ) ) { $this->redirect_result( self::ISSUERS_PAGE, is_wp_error( $existing ) ? $existing : new \WP_Error( 'certloom_issuer_missing', __( 'The issuer no longer exists.', 'certloom' ) ), 'issuer_updated' ); }
+		$data = $this->issuer_request( $existing );
+		$result = is_wp_error( $data ) ? $data : $repo->update( $id, $data );
 		$this->redirect_result( self::ISSUERS_PAGE, $result, 'issuer_updated', array( 'issuer_id' => $id ) );
 	}
 
@@ -283,18 +289,18 @@ final class DomainAdmin {
 		$edit_id = isset( $_GET['issuer_id'] ) ? absint( $_GET['issuer_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin navigation.
 		$editing = $edit_id ? $repo->find( $edit_id ) : null;
 
-		$this->header( __( 'Issuers — New Domain Preview', 'certloom' ) );
+		$this->header( __( 'Issuers & brands', 'certloom' ), __( 'Manage stable issuing identities and local brand defaults without changing historical credential snapshots.', 'certloom' ) );
 		$this->notice();
 		$this->render_search( self::ISSUERS_PAGE, $search );
 		if ( is_wp_error( $result ) ) {
 			$this->error( $result->get_error_message() );
 		} else {
-			echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Issuer', 'certloom' ) . '</th><th>' . esc_html__( 'Slug', 'certloom' ) . '</th><th>' . esc_html__( 'Created', 'certloom' ) . '</th><th>' . esc_html__( 'Actions', 'certloom' ) . '</th></tr></thead><tbody>';
+			echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Issuer', 'certloom' ) . '</th><th>' . esc_html__( 'Slug', 'certloom' ) . '</th><th>' . esc_html__( 'Programs', 'certloom' ) . '</th><th>' . esc_html__( 'Signers', 'certloom' ) . '</th><th>' . esc_html__( 'Created', 'certloom' ) . '</th><th>' . esc_html__( 'Actions', 'certloom' ) . '</th></tr></thead><tbody>';
 			foreach ( $result['items'] as $item ) {
 				$edit_url = add_query_arg( array( 'page' => self::ISSUERS_PAGE, 'issuer_id' => absint( $item['id'] ) ), admin_url( 'admin.php' ) );
-				echo '<tr><td>' . esc_html( (string) $item['name'] ) . '</td><td><code>' . esc_html( (string) $item['slug'] ) . '</code></td><td>' . esc_html( (string) $item['created_at'] ) . '</td><td><a href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Edit', 'certloom' ) . '</a></td></tr>';
+				echo '<tr><td><strong>' . esc_html( (string) $item['name'] ) . '</strong></td><td><code>' . esc_html( (string) $item['slug'] ) . '</code></td><td>' . esc_html( (string) absint( $item['program_count'] ?? 0 ) ) . '</td><td>' . esc_html( (string) absint( $item['signer_count'] ?? 0 ) ) . '</td><td>' . esc_html( (string) $item['created_at'] ) . '</td><td><a class="button button-small" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Open', 'certloom' ) . '</a></td></tr>';
 			}
-			if ( empty( $result['items'] ) ) { echo '<tr><td colspan="4">' . esc_html__( 'No issuers found.', 'certloom' ) . '</td></tr>'; }
+			if ( empty( $result['items'] ) ) { echo '<tr><td colspan="6">' . esc_html__( 'No issuers found.', 'certloom' ) . '</td></tr>'; }
 			echo '</tbody></table>';
 			$this->pagination( self::ISSUERS_PAGE, $page, (int) $result['total'], 20, $search );
 		}
@@ -364,8 +370,12 @@ final class DomainAdmin {
 		}
 		$recipient = ( new RecipientRepository() )->find( $series['recipient_id'] );
 		$program = ! empty( $series['program_id'] ) ? ( new ProgramRepository() )->find( $series['program_id'] ) : null;
+		$batch = ! empty( $series['batch_id'] ) ? ( new BatchRepository() )->find( $series['batch_id'] ) : null;
+		$issuer = ! empty( $series['issuer_id'] ) ? ( new IssuerRepository() )->find( $series['issuer_id'] ) : null;
 		if ( is_wp_error( $recipient ) ) { $this->error( $recipient->get_error_message() ); $recipient = null; }
 		if ( is_wp_error( $program ) ) { $this->error( $program->get_error_message() ); $program = null; }
+		if ( is_wp_error( $batch ) ) { $this->error( $batch->get_error_message() ); $batch = null; }
+		if ( is_wp_error( $issuer ) ) { $this->error( $issuer->get_error_message() ); $issuer = null; }
 		$status = is_array( $version ) ? $this->status_from_row( new StatusService(), array_merge( $version, array( 'administrative_state' => $series['administrative_state'] ) ) ) : null;
 
 		echo '<table class="widefat striped" style="max-width:900px"><tbody>';
@@ -373,6 +383,8 @@ final class DomainAdmin {
 		$this->detail_row( __( 'Certificate number', 'certloom' ), esc_html( is_array( $version ) ? (string) $version['display_number'] : '—' ) );
 		$this->detail_row( __( 'Recipient', 'certloom' ), esc_html( is_array( $recipient ) ? (string) $recipient['display_name'] : '—' ) );
 		$this->detail_row( __( 'Program', 'certloom' ), esc_html( is_array( $program ) ? (string) $program['title'] : '—' ) );
+		$this->detail_row( __( 'Batch', 'certloom' ), esc_html( is_array( $batch ) ? (string) $batch['name'] . ' (' . (string) $batch['code'] . ')' : '—' ) );
+		$this->detail_row( __( 'Issuer', 'certloom' ), esc_html( is_array( $issuer ) ? (string) $issuer['name'] : '—' ) );
 		$this->detail_row( __( 'Administrative state', 'certloom' ), esc_html( (string) $series['administrative_state'] ) );
 		$this->detail_row( __( 'Issuance state', 'certloom' ), esc_html( is_array( $version ) ? (string) $version['issuance_state'] : '—' ) );
 		$this->detail_row( __( 'Effective status', 'certloom' ), esc_html( $status ? $status->code() : __( 'Unavailable', 'certloom' ) ) );
@@ -383,6 +395,7 @@ final class DomainAdmin {
 		if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) && is_array( $version ) ) {
 			$this->lifecycle_form( $series, $version );
 		}
+		$this->version_history( $credentials, $series_id, absint( $series['current_version_id'] ?? 0 ) );
 		$this->event_history( $series_id );
 		$this->footer();
 	}
@@ -457,16 +470,25 @@ final class DomainAdmin {
 
 	/** @param array<string,mixed>|null $editing @return void */
 	private function issuer_form( array $editing = null ) {
-		$is_edit = null !== $editing;
-		$id = $is_edit ? absint( $editing['id'] ) : 0;
-		echo '<hr><h2>' . esc_html( $is_edit ? __( 'Edit issuer', 'certloom' ) : __( 'Add issuer', 'certloom' ) ) . '</h2><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		$is_edit = null !== $editing; $id = $is_edit ? absint( $editing['id'] ) : 0;
+		$settings = $is_edit && isset( $editing['settings'] ) && is_array( $editing['settings'] ) ? $editing['settings'] : array();
+		echo '<section class="ecapla-certverify-admin-card certloom-domain-editor"><div class="certloom-domain-editor-head"><div><h2>' . esc_html( $is_edit ? __( 'Issuer brand profile', 'certloom' ) : __( 'Add issuer / brand', 'certloom' ) ) . '</h2><p>' . esc_html__( 'Brand defaults are local configuration. Issued credential Versions preserve their own immutable snapshot.', 'certloom' ) . '</p></div></div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		echo '<input type="hidden" name="action" value="' . esc_attr( $is_edit ? 'certloom_domain_update_issuer' : 'certloom_domain_create_issuer' ) . '">';
 		if ( $is_edit ) { echo '<input type="hidden" name="issuer_id" value="' . esc_attr( $id ) . '">'; wp_nonce_field( 'certloom_domain_update_issuer_' . $id ); } else { wp_nonce_field( 'certloom_domain_create_issuer' ); }
-		echo '<p><label>' . esc_html__( 'Issuer name', 'certloom' ) . '<br><input class="regular-text" name="name" required value="' . esc_attr( $is_edit ? (string) $editing['name'] : '' ) . '"></label></p>';
-		echo '<p><label>' . esc_html__( 'Slug', 'certloom' ) . '<br><input class="regular-text" name="slug" value="' . esc_attr( $is_edit ? (string) $editing['slug'] : '' ) . '"></label></p>';
-		echo '<p class="description">' . esc_html__( 'Brand assets, signer profiles, colors, and multi-brand policy remain later issuer-management work. This preview establishes safe identity/PATCH behavior first.', 'certloom' ) . '</p>';
-		submit_button( $is_edit ? __( 'Update issuer', 'certloom' ) : __( 'Add issuer', 'certloom' ) );
-		echo '</form>';
+		echo '<div class="certloom-domain-form-grid">';
+		$this->text_field( 'name', __( 'Organization / issuer name', 'certloom' ), $is_edit ? (string) $editing['name'] : '', true );
+		$this->text_field( 'slug', __( 'Machine slug', 'certloom' ), $is_edit ? (string) $editing['slug'] : '', true, __( 'Stable identity used by restores, assignments, integrations, and future APIs.', 'certloom' ) );
+		$this->text_field( 'website', __( 'Website', 'certloom' ), (string) ( $settings['website'] ?? '' ), false, '', 'url' );
+		$this->text_field( 'contact_name', __( 'Contact name', 'certloom' ), (string) ( $settings['contact_name'] ?? '' ) );
+		$this->text_field( 'contact_email', __( 'Contact email', 'certloom' ), (string) ( $settings['contact_email'] ?? '' ), false, '', 'email' );
+		$this->text_field( 'certificate_prefix', __( 'Certificate prefix', 'certloom' ), (string) ( $settings['certificate_prefix'] ?? '' ), false, __( 'A future numbering policy may use this as an issuer default; it does not rewrite existing numbers.', 'certloom' ) );
+		$this->text_field( 'primary_color', __( 'Primary color', 'certloom' ), (string) ( $settings['primary_color'] ?? '' ), false, __( 'Hex color such as #183153.', 'certloom' ) );
+		$this->text_field( 'accent_color', __( 'Accent color', 'certloom' ), (string) ( $settings['accent_color'] ?? '' ), false, __( 'Hex color such as #C89B3C.', 'certloom' ) );
+		$this->text_field( 'logo_attachment_id', __( 'Logo media ID', 'certloom' ), $is_edit ? (string) ( $editing['logo_attachment_id'] ?: '' ) : '', false, __( 'WordPress Media attachment ID. The renderer will validate actual asset bytes when artifacts are generated.', 'certloom' ), 'number', 'min="1"' );
+		$this->text_field( 'seal_attachment_id', __( 'Seal media ID', 'certloom' ), $is_edit ? (string) ( $editing['seal_attachment_id'] ?: '' ) : '', false, '', 'number', 'min="1"' );
+		echo '<div class="certloom-domain-field certloom-domain-field-wide"><label for="certloom-domain-address"><strong>' . esc_html__( 'Address', 'certloom' ) . '</strong></label><textarea id="certloom-domain-address" class="large-text" rows="3" name="address">' . esc_textarea( (string) ( $settings['address'] ?? '' ) ) . '</textarea></div>';
+		echo '</div><p class="description">' . esc_html__( 'Signer profiles are assigned separately so the same person can serve at global, issuer, program, or batch scope without duplicating identity data.', 'certloom' ) . '</p>';
+		submit_button( $is_edit ? __( 'Update issuer', 'certloom' ) : __( 'Add issuer', 'certloom' ), 'primary' ); echo '</form></section>';
 	}
 
 	/** @param array<string,mixed> $series @param array<string,mixed> $version @return void */
@@ -490,19 +512,23 @@ final class DomainAdmin {
 	}
 
 	/** @return void */
+	private function version_history( CredentialRepository $repo, $series_id, $current_version_id ) {
+		$versions = $repo->list_versions_for_series( $series_id, 100 );
+		echo '<hr><h2>' . esc_html__( 'Immutable Version lineage', 'certloom' ) . '</h2><p class="description">' . esc_html__( 'Every issued correction or renewal remains a separate immutable Version. The current pointer does not erase earlier artifacts.', 'certloom' ) . '</p>';
+		if ( is_wp_error( $versions ) ) { $this->error( $versions->get_error_message() ); return; }
+		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Version', 'certloom' ) . '</th><th>' . esc_html__( 'Certificate number', 'certloom' ) . '</th><th>' . esc_html__( 'Issuance state', 'certloom' ) . '</th><th>' . esc_html__( 'Issued', 'certloom' ) . '</th><th>' . esc_html__( 'Expires', 'certloom' ) . '</th><th>' . esc_html__( 'Lineage', 'certloom' ) . '</th></tr></thead><tbody>';
+		foreach ( $versions as $v ) { $lineage = ! empty( $v['previous_version_id'] ) ? sprintf( __( 'Previous #%d', 'certloom' ), absint( $v['previous_version_id'] ) ) : __( 'Origin', 'certloom' ); if ( absint( $v['id'] ) === absint( $current_version_id ) ) { $lineage .= ' · ' . __( 'Current', 'certloom' ); } echo '<tr><td><strong>#' . esc_html( (string) absint( $v['version_number'] ) ) . '</strong></td><td>' . esc_html( (string) $v['display_number'] ) . '</td><td>' . esc_html( (string) $v['issuance_state'] ) . '</td><td>' . esc_html( (string) ( $v['issued_at'] ?: '—' ) ) . '</td><td>' . esc_html( (string) ( $v['expires_at'] ?: '—' ) ) . '</td><td>' . esc_html( $lineage ) . '</td></tr>'; }
+		if ( empty( $versions ) ) { echo '<tr><td colspan="6">' . esc_html__( 'No credential Versions recorded.', 'certloom' ) . '</td></tr>'; } echo '</tbody></table>';
+	}
+
+	/** @return void */
 	private function event_history( $series_id ) {
 		$events = ( new EventRepository() )->list_for_series( $series_id, 100 );
-		echo '<hr><h2>' . esc_html__( 'Credential history', 'certloom' ) . '</h2>';
-		if ( is_wp_error( $events ) ) {
-			$this->error( $events->get_error_message() );
-			return;
-		}
-		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Time (UTC)', 'certloom' ) . '</th><th>' . esc_html__( 'Event', 'certloom' ) . '</th><th>' . esc_html__( 'Reason', 'certloom' ) . '</th><th>' . esc_html__( 'Actor', 'certloom' ) . '</th></tr></thead><tbody>';
-		foreach ( $events as $event ) {
-			echo '<tr><td>' . esc_html( (string) $event['created_at'] ) . '</td><td><code>' . esc_html( (string) $event['event_type'] ) . '</code></td><td>' . esc_html( (string) ( $event['public_reason'] ?: $event['reason_code'] ) ) . '</td><td>' . esc_html( $event['actor_user_id'] ? '#' . (string) $event['actor_user_id'] : '—' ) . '</td></tr>';
-		}
-		if ( empty( $events ) ) { echo '<tr><td colspan="4">' . esc_html__( 'No lifecycle events recorded.', 'certloom' ) . '</td></tr>'; }
-		echo '</tbody></table>';
+		echo '<hr><h2>' . esc_html__( 'Append-only activity history', 'certloom' ) . '</h2><p class="description">' . esc_html__( 'Lifecycle and domain events are shown newest first. Internal notes remain administrator-only.', 'certloom' ) . '</p>';
+		if ( is_wp_error( $events ) ) { $this->error( $events->get_error_message() ); return; }
+		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Time (UTC)', 'certloom' ) . '</th><th>' . esc_html__( 'Event', 'certloom' ) . '</th><th>' . esc_html__( 'Version', 'certloom' ) . '</th><th>' . esc_html__( 'Reason', 'certloom' ) . '</th><th>' . esc_html__( 'Actor', 'certloom' ) . '</th><th>' . esc_html__( 'Details', 'certloom' ) . '</th></tr></thead><tbody>';
+		foreach ( $events as $event ) { $details = array(); if ( ! empty( $event['old_state'] ) ) { $details[] = __( 'Old state recorded', 'certloom' ); } if ( ! empty( $event['new_state'] ) ) { $details[] = __( 'New state recorded', 'certloom' ); } if ( ! empty( $event['internal_note'] ) ) { $details[] = __( 'Internal note:', 'certloom' ) . ' ' . (string) $event['internal_note']; } if ( ! empty( $event['meta'] ) ) { $details[] = __( 'Metadata recorded', 'certloom' ); } echo '<tr><td>' . esc_html( (string) $event['created_at'] ) . '</td><td><code>' . esc_html( (string) $event['event_type'] ) . '</code></td><td>' . esc_html( $event['version_id'] ? '#' . (string) $event['version_id'] : '—' ) . '</td><td>' . esc_html( (string) ( $event['public_reason'] ?: $event['reason_code'] ?: '—' ) ) . '</td><td>' . esc_html( $event['actor_user_id'] ? '#' . (string) $event['actor_user_id'] : '—' ) . '</td><td>' . esc_html( $details ? implode( ' · ', $details ) : '—' ) . '</td></tr>'; }
+		if ( empty( $events ) ) { echo '<tr><td colspan="6">' . esc_html__( 'No domain events recorded.', 'certloom' ) . '</td></tr>'; } echo '</tbody></table>';
 	}
 
 	/** @param RecipientRepository $repo @param array<string,mixed> $recipient @return void */
@@ -593,12 +619,65 @@ final class DomainAdmin {
 	}
 
 
-	/** @return array<string,mixed> */
-	private function issuer_request() {
+	/** @return array<string,mixed>|\WP_Error */
+	private function issuer_request( array $existing = null ) {
+		$raw_website = isset( $_POST['website'] ) ? trim( (string) wp_unslash( $_POST['website'] ) ) : '';
+		$website = '' !== $raw_website ? esc_url_raw( $raw_website, array( 'http', 'https' ) ) : '';
+		if ( '' !== $raw_website && '' === $website ) {
+			return new \WP_Error( 'certloom_issuer_website_invalid', __( 'Enter a valid HTTP or HTTPS issuer website or leave it blank.', 'certloom' ) );
+		}
+
+		$raw_email = isset( $_POST['contact_email'] ) ? trim( (string) wp_unslash( $_POST['contact_email'] ) ) : '';
+		$email = '' !== $raw_email ? sanitize_email( $raw_email ) : '';
+		if ( '' !== $raw_email && ( '' === $email || ! is_email( $email ) ) ) {
+			return new \WP_Error( 'certloom_issuer_contact_email_invalid', __( 'Enter a valid issuer contact email or leave it blank.', 'certloom' ) );
+		}
+
+		$primary = isset( $_POST['primary_color'] ) ? strtoupper( trim( (string) wp_unslash( $_POST['primary_color'] ) ) ) : '';
+		$accent = isset( $_POST['accent_color'] ) ? strtoupper( trim( (string) wp_unslash( $_POST['accent_color'] ) ) ) : '';
+		foreach ( array( $primary, $accent ) as $color ) {
+			if ( '' !== $color && ! preg_match( '/^#[A-F0-9]{6}$/', $color ) ) {
+				return new \WP_Error( 'certloom_issuer_color_invalid', __( 'Issuer colors must use six-digit hexadecimal notation such as #183153.', 'certloom' ) );
+			}
+		}
+
+		$address = isset( $_POST['address'] ) ? sanitize_textarea_field( wp_unslash( $_POST['address'] ) ) : '';
+		$contact_name = isset( $_POST['contact_name'] ) ? sanitize_text_field( wp_unslash( $_POST['contact_name'] ) ) : '';
+		$certificate_prefix = isset( $_POST['certificate_prefix'] ) ? sanitize_text_field( wp_unslash( $_POST['certificate_prefix'] ) ) : '';
+		if ( $this->string_length( $address ) > 2000 ) {
+			return new \WP_Error( 'certloom_issuer_address_too_long', __( 'Issuer address must be 2,000 characters or fewer.', 'certloom' ) );
+		}
+		if ( $this->string_length( $contact_name ) > 255 ) {
+			return new \WP_Error( 'certloom_issuer_contact_name_too_long', __( 'Issuer contact name must be 255 characters or fewer.', 'certloom' ) );
+		}
+		if ( $this->string_length( $certificate_prefix ) > 100 ) {
+			return new \WP_Error( 'certloom_issuer_prefix_too_long', __( 'Issuer certificate prefix must be 100 characters or fewer.', 'certloom' ) );
+		}
+
+		$known = array(
+			'address' => $address,
+			'website' => $website,
+			'contact_name' => $contact_name,
+			'contact_email' => $email,
+			'primary_color' => $primary,
+			'accent_color' => $accent,
+			'certificate_prefix' => $certificate_prefix,
+		);
+		$settings = null !== $existing && isset( $existing['settings'] ) && is_array( $existing['settings'] ) ? $existing['settings'] : array();
+		foreach ( $known as $key => $value ) { if ( '' === $value ) { unset( $settings[ $key ] ); } else { $settings[ $key ] = $value; } }
 		return array(
 			'name' => isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '',
 			'slug' => isset( $_POST['slug'] ) ? sanitize_title( wp_unslash( $_POST['slug'] ) ) : '',
+			'logo_attachment_id' => isset( $_POST['logo_attachment_id'] ) && '' !== trim( (string) $_POST['logo_attachment_id'] ) ? absint( $_POST['logo_attachment_id'] ) : null,
+			'seal_attachment_id' => isset( $_POST['seal_attachment_id'] ) && '' !== trim( (string) $_POST['seal_attachment_id'] ) ? absint( $_POST['seal_attachment_id'] ) : null,
+			'settings' => $settings,
 		);
+	}
+
+
+	/** @return int */
+	private function string_length( $value ) {
+		return function_exists( 'mb_strlen' ) ? mb_strlen( (string) $value, 'UTF-8' ) : strlen( (string) $value );
 	}
 
 	/** @return \Certloom\Domain\Credential\StatusResult|null */

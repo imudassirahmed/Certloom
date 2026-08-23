@@ -21,7 +21,7 @@ use Certloom\Infrastructure\Diagnostics\DomainAcceptanceProof;
 function dap_assert($c,$m){if(!$c)throw new RuntimeException($m);}
 
 $valid=array(
- 'schema'=>'certloom-domain-acceptance-proof','version'=>1,'plugin_version'=>ECAPLA_CERTVERIFY_VERSION,
+ 'schema'=>'certloom-domain-acceptance-proof','version'=>DomainAcceptanceProof::RESULT_VERSION,'plugin_version'=>ECAPLA_CERTVERIFY_VERSION,
  'overall'=>'passed','checked_at'=>time(),
  'checks'=>array(array('id'=>'domain_schema','status'=>'pass','label'=>'Credential-domain schema','message'=>'Synthetic acceptance passed.')),
 );
@@ -49,6 +49,7 @@ dap_assert(false!==strpos($source,'SchemaManager::activate()'),'Proof must exerc
 dap_assert(false!==strpos($source,'new Transaction()'),'Proof must use the real transaction boundary.');
 dap_assert(false!==strpos($source,'DomainMaintenanceLock::run_internal'),'Proof must use the domain maintenance boundary.');
 dap_assert(false!==strpos($source,'new RecipientRepository()')&&false!==strpos($source,'new CredentialRepository()')&&false!==strpos($source,'new CredentialLifecycleService'),'Proof must exercise real domain repositories and lifecycle services.');
+dap_assert(false!==strpos($source,'new BatchRepository()')&&false!==strpos($source,'new SignerRepository()')&&false!==strpos($source,'resolve_hierarchy'),'Proof must exercise Batch membership and deterministic signer hierarchy.');
 dap_assert(false!==strpos($source,'LegacyMigrationPreflightService'),'Proof must exercise synthetic legacy migration semantics.');
 dap_assert(false!==strpos($source,'ROLLBACK_CODE'),'Proof must intentionally roll back synthetic writes.');
 dap_assert(false!==strpos($source,'assert_existing_domain_empty'),'Proof must refuse to mix synthetic rows with existing future-domain data.');
@@ -57,4 +58,4 @@ dap_assert(false===strpos($source,'LegacyMigrationCoordinator'),'Acceptance proo
 dap_assert(false===strpos($source,'read_batch('),'Acceptance proof must not read individual live legacy certificate rows.');
 dap_assert(false===strpos($source,'wp_remote_')&&false===strpos($source,'curl_'),'Acceptance proof must not make outbound HTTP calls.');
 
-echo "PASS  Gated-domain acceptance evidence and architecture fail closed without touching live credential authority\n\n17 checks, 0 failures\n";
+echo "PASS  Gated-domain acceptance evidence and architecture fail closed without touching live credential authority\n\n18 checks, 0 failures\n";

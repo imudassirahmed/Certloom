@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.3
+Stable tag: 1.6.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.3: Certloom completes Phase 1 Part D current-authority admin work with reviewed bulk changes, non-blocking onboarding, date filters, per-user registry columns, the planned application shell, and a complete credential workspace. Recipient/Program normalized-domain administration remains acceptance-gated; Program/Batch bulk assignment is not simulated in legacy data, and all future-domain write/admin/data-tool flags remain disabled until real staging acceptance passes.
+> Development note for 1.6.5: Certloom continues Original Phase 1 with transaction-backed immutable Program/Batch relationship corrections, reviewed bulk correction orchestration, an expanded real-DB acceptance harness, and a formal personal-data retention/erasure contract. The legacy registry remains authoritative and all future-domain write/admin/data-tool flags remain disabled until real WordPress/MySQL acceptance passes.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -121,6 +121,21 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.5 =
+* Added transaction-backed Program/Batch relationship correction that locks the Credential Series, re-proves relationships, creates a successor immutable Version, preserves the human certificate number, advances the current Version pointer, and appends a dedicated audit Event atomically.
+* Added bounded reviewed bulk Program/Batch correction orchestration that delegates to the single-record command, uses WordPress-secret HMAC review authenticity, 15-minute expiry, optional administrator binding, and stale `updated_at` rejection.
+* Expanded the disposable real WordPress/MySQL integration harness to prove relationship correction, immutable Version advancement, Batch assignment, and stale-review failure.
+* Defined the `PRV-02` personal-data lifecycle contract: mutable profile data and immutable issued/audit evidence are distinct; generic erasure must never silently rewrite historical Versions, and retained evidence must be reported truthfully.
+* Kept normalized-domain authority and all three future-domain production readiness flags disabled pending real acceptance.
+
+= 1.6.4 =
+* Phase 1 continuation: added acceptance-gated Batches/Cohorts, full local issuer/brand administration, signer profiles and Batch → Program → Issuer → Global signer hierarchy.
+* Added Batch membership search/pagination, stable Batch codes and Signer machine keys, Credential Series Batch relationships, immutable Version lineage, and append-only event-history presentation.
+* Expanded complete-domain backup/Replace/Merge restore to Batches and Signers using format v2 while preserving valid v1 backup compatibility, including legacy Series rows without `batch_id`.
+* Hardened issuer/recipient/program repository read failures, Program→Issuer validation, restore DB-bound validation, multilingual issuer-slug round trips, uninstall ownership, and capability cleanup.
+* Kept relationship-changing Program/Batch bulk actions gated until they can use immutable correction semantics rather than raw historical rewrites.
+* Kept all three future-domain production readiness flags disabled.
 
 = 1.6.3 =
 * Phase 1 Part D: reviewed advanced bulk management, non-blocking onboarding, and the formal Phase 1 exit audit.

@@ -37,15 +37,15 @@ final class DomainRestorePreflightService {
 		$handle = @fopen( $path, 'rb' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- Read-only bounded streaming restore preflight.
 		if ( false === $handle ) { return new \WP_Error( 'certloom_domain_restore_read_failed', __( 'Certloom could not reopen the validated backup for restore review.', 'certloom' ) ); }
 
-		$order = array( 'issuers', 'programs', 'recipients', 'credential_series', 'credential_numbers', 'credential_versions', 'credential_events' );
+		$order = array( 'issuers', 'programs', 'recipients', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'credential_series', 'credential_numbers', 'credential_versions', 'credential_events' );
 		$order_map = array_flip( $order );
 		$current_order = -1;
 		$ids = array_fill_keys( $order, array() );
-		$issuer_slugs = array(); $program_codes = array(); $recipient_wp_users = array();
+		$issuer_slugs = array(); $program_codes = array(); $recipient_wp_users = array(); $signer_slugs = array(); $batch_codes = array(); $batch_members = array(); $signer_assignments = array();
 		$public_ids = array(); $display_numbers = array(); $series_versions = array(); $source_keys = array();
 		$version_series = array(); $series_current = array(); $number_first_versions = array(); $version_previous = array();
 		$counts = array_fill_keys( $order, 0 ); $stream_counts = array_fill_keys( $order, 0 ); $errors = array(); $line_no = 0;
-		$manifest = null; $config = null; $hash = ''; $records = 0; $after_integrity = false;
+		$manifest = null; $config = null; $hash = ''; $records = 0; $after_integrity = false; $format_version = 0;
 
 		while ( true ) {
 			$line_no++;
@@ -62,17 +62,16 @@ final class DomainRestorePreflightService {
 			if ( ! is_array( $item ) ) { fclose( $handle ); return new \WP_Error( 'certloom_domain_backup_json_invalid', sprintf( __( 'The Certloom domain backup contains invalid JSON on line %d.', 'certloom' ), $line_no ) ); }
 			$item_type = (string) ( $item['type'] ?? '' );
 			if ( 1 === $line_no ) {
-				if ( 'manifest' !== $item_type || DomainBackupFormat::FORMAT !== (string) ( $item['format'] ?? '' ) || DomainBackupFormat::VERSION !== absint( $item['format_version'] ?? 0 ) ) { fclose( $handle ); return new \WP_Error( 'certloom_domain_backup_manifest_invalid', __( 'This is not a supported Certloom domain backup.', 'certloom' ) ); }
-				$declared = isset( $item['entities'] ) && is_array( $item['entities'] ) ? $item['entities'] : array();
-				if ( array_keys( $declared ) !== $order ) { fclose( $handle ); return new \WP_Error( 'certloom_domain_backup_manifest_invalid', __( 'The Certloom backup manifest does not declare the exact supported entity set in canonical order.', 'certloom' ) ); }
-				foreach ( $order as $entity_name ) { if ( ! is_array( $declared[ $entity_name ] ) || ! array_key_exists( 'count', $declared[ $entity_name ] ) || ! array_key_exists( 'max_id', $declared[ $entity_name ] ) ) { fclose( $handle ); return new \WP_Error( 'certloom_domain_backup_manifest_invalid', __( 'The Certloom backup manifest contains an incomplete entity declaration.', 'certloom' ) ); } }
+				$normalized = $this->format->normalize_manifest( $item );
+				if ( is_wp_error( $normalized ) ) { fclose( $handle ); return $normalized; }
+				$format_version = absint( $item['format_version'] ?? 0 );
 				$config = $this->validate_configuration( (array) ( $item['configuration'] ?? array() ) );
 				if ( is_wp_error( $config ) ) { fclose( $handle ); return $config; }
 				$config_json = wp_json_encode( $config, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 				$config_hash = strtolower( (string) ( $item['configuration_hash'] ?? '' ) );
 				if ( false === $config_json || ! preg_match( '/^[a-f0-9]{64}$/', $config_hash ) || ! hash_equals( $config_hash, hash( 'sha256', $config_json ) ) ) { fclose( $handle ); return new \WP_Error( 'certloom_domain_backup_configuration_hash_invalid', __( 'The Certloom domain backup configuration metadata is inconsistent.', 'certloom' ) ); }
-				$manifest = $item;
-				$hash = $this->format->next_hash( '', $line );
+				$manifest = $normalized;
+				$hash = $this->format->next_hash( '', $line, $format_version );
 				continue;
 			}
 			if ( 'integrity' === $item_type ) {
@@ -85,8 +84,8 @@ final class DomainRestorePreflightService {
 			if ( $records > max( 1, absint( $max_records ) ) ) { fclose( $handle ); return new \WP_Error( 'certloom_domain_backup_limit', __( 'The Certloom domain backup exceeds the configured record safety limit.', 'certloom' ) ); }
 			$type = sanitize_key( (string) ( $item['entity'] ?? '' ) );
 			if ( isset( $stream_counts[ $type ] ) ) { $stream_counts[ $type ]++; }
-			$hash = $this->format->next_hash( $hash, $line );
-			$row = is_array( $item['data'] ?? null ) ? $item['data'] : array();
+			$hash = $this->format->next_hash( $hash, $line, $format_version );
+			$row = $this->format->normalize_entity_row( $format_version, $type, is_array( $item['data'] ?? null ) ? $item['data'] : array() );
 			if ( ! isset( $order_map[ $type ] ) ) { $this->error( $errors, $line_no, 'unsupported_entity', 'Unsupported restore entity.' ); continue; }
 			if ( $order_map[ $type ] < $current_order ) { $this->error( $errors, $line_no, 'entity_order', 'Backup entities are not in the canonical dependency order.' ); continue; }
 			$current_order = $order_map[ $type ];
@@ -112,12 +111,37 @@ final class DomainRestorePreflightService {
 					if ( '' === trim( (string) ( $row['display_name'] ?? '' ) ) ) { $this->error( $errors, $line_no, 'recipient_invalid', 'Recipient display name is required.' ); }
 					$wp_user_id = absint( $row['wp_user_id'] ?? 0 ); if ( $wp_user_id ) { if ( isset( $recipient_wp_users[ $wp_user_id ] ) ) { $this->error( $errors, $line_no, 'recipient_wp_user_duplicate', 'Multiple recipients refer to the same WordPress user.' ); } else { $recipient_wp_users[ $wp_user_id ] = $id; } }
 					break;
+				case 'signers':
+					if ( '' === trim( (string) ( $row['display_name'] ?? '' ) ) ) { $this->error( $errors, $line_no, 'signer_invalid', 'Signer display name is required.' ); }
+					$slug = sanitize_key( (string) ( $row['slug'] ?? '' ) ); if ( '' === $slug ) { $this->error( $errors, $line_no, 'signer_slug_invalid', 'Signer key is required.' ); } elseif ( isset( $signer_slugs[ $slug ] ) ) { $this->error( $errors, $line_no, 'signer_slug_duplicate', 'Duplicate signer key inside backup.' ); } else { $signer_slugs[ $slug ] = $id; }
+					break;
+				case 'batches':
+					if ( '' === trim( (string) ( $row['name'] ?? '' ) ) ) { $this->error( $errors, $line_no, 'batch_invalid', 'Batch name is required.' ); }
+					$program_id = absint( $row['program_id'] ?? 0 ); if ( ! isset( $ids['programs'][ $program_id ] ) ) { $this->error( $errors, $line_no, 'batch_program_missing', 'Batch refers to a missing program.' ); }
+					$instructor_signer_id = absint( $row['instructor_signer_id'] ?? 0 ); if ( $instructor_signer_id && ! isset( $ids['signers'][ $instructor_signer_id ] ) ) { $this->error( $errors, $line_no, 'batch_signer_missing', 'Batch refers to a missing instructor signer.' ); }
+					$code = trim( (string) ( $row['code'] ?? '' ) ); if ( '' === $code ) { $this->error( $errors, $line_no, 'batch_code_invalid', 'Batch code is required.' ); } elseif ( isset( $batch_codes[ $code ] ) ) { $this->error( $errors, $line_no, 'batch_code_duplicate', 'Duplicate batch code inside backup.' ); } else { $batch_codes[ $code ] = $id; }
+					break;
+				case 'batch_recipients':
+					$batch_id = absint( $row['batch_id'] ?? 0 ); $recipient_id = absint( $row['recipient_id'] ?? 0 );
+					if ( ! isset( $ids['batches'][ $batch_id ] ) ) { $this->error( $errors, $line_no, 'batch_member_batch_missing', 'Batch membership refers to a missing batch.' ); }
+					if ( ! isset( $ids['recipients'][ $recipient_id ] ) ) { $this->error( $errors, $line_no, 'batch_member_recipient_missing', 'Batch membership refers to a missing recipient.' ); }
+					$member_key = $batch_id . ':' . $recipient_id; if ( isset( $batch_members[ $member_key ] ) ) { $this->error( $errors, $line_no, 'batch_member_duplicate', 'Duplicate batch membership inside backup.' ); } else { $batch_members[ $member_key ] = true; }
+					break;
+				case 'signer_assignments':
+					$signer_id = absint( $row['signer_id'] ?? 0 ); $scope_type = sanitize_key( (string) ( $row['scope_type'] ?? '' ) ); $scope_id = absint( $row['scope_id'] ?? 0 ); $role_type = sanitize_key( (string) ( $row['role_type'] ?? '' ) );
+					if ( ! isset( $ids['signers'][ $signer_id ] ) ) { $this->error( $errors, $line_no, 'signer_assignment_signer_missing', 'Signer assignment refers to a missing signer.' ); }
+					$scope_entity = array( 'issuer' => 'issuers', 'program' => 'programs', 'batch' => 'batches' );
+					if ( 'global' === $scope_type ) { if ( 0 !== $scope_id ) { $this->error( $errors, $line_no, 'signer_assignment_global_scope_invalid', 'Global signer assignments must use scope ID zero.' ); } }
+					elseif ( ! isset( $scope_entity[ $scope_type ] ) || ! isset( $ids[ $scope_entity[ $scope_type ] ][ $scope_id ] ) ) { $this->error( $errors, $line_no, 'signer_assignment_scope_missing', 'Signer assignment refers to a missing scope.' ); }
+					$assignment_key = $signer_id . ':' . $scope_type . ':' . $scope_id . ':' . $role_type; if ( isset( $signer_assignments[ $assignment_key ] ) ) { $this->error( $errors, $line_no, 'signer_assignment_duplicate', 'Duplicate signer assignment inside backup.' ); } else { $signer_assignments[ $assignment_key ] = true; }
+					break;
 				case 'credential_series':
 					$public_id = (string) ( $row['public_id'] ?? '' );
 					if ( ! $this->public_ids->is_valid( $public_id ) ) { $this->error( $errors, $line_no, 'public_id_invalid', 'Credential Series contains an invalid public credential ID.' ); }
 					elseif ( isset( $public_ids[ $public_id ] ) ) { $this->error( $errors, $line_no, 'public_id_duplicate', 'Duplicate public credential ID inside backup.' ); } else { $public_ids[ $public_id ] = $id; }
 					$recipient_id = absint( $row['recipient_id'] ?? 0 ); if ( ! isset( $ids['recipients'][ $recipient_id ] ) ) { $this->error( $errors, $line_no, 'series_recipient_missing', 'Credential Series refers to a missing recipient.' ); }
 					$program_id = absint( $row['program_id'] ?? 0 ); if ( $program_id && ! isset( $ids['programs'][ $program_id ] ) ) { $this->error( $errors, $line_no, 'series_program_missing', 'Credential Series refers to a missing program.' ); }
+					$batch_id = absint( $row['batch_id'] ?? 0 ); if ( $batch_id && ! isset( $ids['batches'][ $batch_id ] ) ) { $this->error( $errors, $line_no, 'series_batch_missing', 'Credential Series refers to a missing batch.' ); }
 					$issuer_id = absint( $row['issuer_id'] ?? 0 ); if ( $issuer_id && ! isset( $ids['issuers'][ $issuer_id ] ) ) { $this->error( $errors, $line_no, 'series_issuer_missing', 'Credential Series refers to a missing issuer.' ); }
 					$admin = (string) ( $row['administrative_state'] ?? '' ); if ( ! in_array( $admin, States::administrative_values(), true ) ) { $this->error( $errors, $line_no, 'series_state_invalid', 'Credential Series contains an unsupported administrative state.' ); }
 					$compliance = (string) ( $row['compliance_state'] ?? '' ); if ( ! in_array( $compliance, States::compliance_values(), true ) ) { $this->error( $errors, $line_no, 'series_compliance_state_invalid', 'Credential Series contains an unsupported compliance state.' ); }

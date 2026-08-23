@@ -79,6 +79,7 @@ final class Plugin {
 		}
 		if ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW && is_admin() ) {
 			( new \Certloom\Infrastructure\Admin\DomainAdmin() )->register();
+			( new \Certloom\Infrastructure\Admin\DomainStructureAdmin() )->register();
 			if ( self::$job_runtime ) {
 				( new \Certloom\Infrastructure\Admin\DomainDataToolsAdmin( self::$job_runtime ) )->register();
 			}

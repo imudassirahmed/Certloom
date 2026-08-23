@@ -12,6 +12,8 @@ use Certloom\Infrastructure\Data\DomainMaintenanceLock;
 use Certloom\Infrastructure\Database\SchemaManager;
 use Certloom\Infrastructure\Database\Transaction;
 use Certloom\Infrastructure\Repository\CredentialRepository;
+use Certloom\Infrastructure\Repository\BatchRepository;
+use Certloom\Infrastructure\Repository\SignerRepository;
 use Certloom\Infrastructure\Repository\EventRepository;
 use Certloom\Infrastructure\Repository\IssuerRepository;
 use Certloom\Infrastructure\Repository\LegacyCertificateRepository;
@@ -33,13 +35,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class DomainAcceptanceProof {
 	const RESULT_OPTION  = 'certloom_domain_acceptance_proof_last';
 	const RESULT_SCHEMA  = 'certloom-domain-acceptance-proof';
-	const RESULT_VERSION = 1;
+	const RESULT_VERSION = 2;
 	const MAX_AGE         = 7 * DAY_IN_SECONDS;
 	const ROLLBACK_CODE   = 'certloom_domain_acceptance_intentional_rollback';
 
 	/** @var string[] */
 	private static $tables = array(
-		'recipients', 'issuers', 'programs', 'credential_series', 'credential_versions',
+		'recipients', 'issuers', 'programs', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'credential_series', 'credential_versions',
 		'credential_numbers', 'credential_events', 'jobs', 'import_rows', 'restore_map',
 	);
 
@@ -306,6 +308,8 @@ final class DomainAcceptanceProof {
 		$issuer_repo = new IssuerRepository();
 		$recipient_repo = new RecipientRepository();
 		$program_repo = new ProgramRepository();
+		$batch_repo = new BatchRepository();
+		$signer_repo = new SignerRepository();
 		$credential_repo = new CredentialRepository();
 		$event_repo = new EventRepository();
 		$lifecycle = new CredentialLifecycleService( $credential_repo, $event_repo, null, new DirectTransaction() );
@@ -317,7 +321,17 @@ final class DomainAcceptanceProof {
 		if ( is_wp_error( $recipient ) ) { return self::operation_error( $result, 'repositories', __( 'Repository persistence', 'certloom' ), $recipient ); }
 		$program = $program_repo->create( array( 'issuer_id' => $issuer, 'code' => 'CAP-' . strtoupper( $token ), 'title' => 'Certloom Acceptance Proof Program', 'metadata' => array( 'proof' => true ) ) );
 		if ( is_wp_error( $program ) ) { return self::operation_error( $result, 'repositories', __( 'Repository persistence', 'certloom' ), $program ); }
-		$series = $credential_repo->create_series( array( 'recipient_id' => $recipient, 'issuer_id' => $issuer, 'program_id' => $program ) );
+		$signer = $signer_repo->create( array( 'display_name' => 'Acceptance Signer ' . $token, 'slug' => 'acceptance-signer-' . $token, 'title' => 'Director', 'active' => true, 'metadata' => array( 'proof' => true ) ) );
+		if ( is_wp_error( $signer ) ) { return self::operation_error( $result, 'repositories', __( 'Repository persistence', 'certloom' ), $signer ); }
+		$batch = $batch_repo->create( array( 'program_id' => $program, 'code' => 'BATCH-' . strtoupper( $token ), 'name' => 'Acceptance Cohort', 'instructor_signer_id' => $signer, 'active' => true, 'metadata' => array( 'proof' => true ) ) );
+		if ( is_wp_error( $batch ) ) { return self::operation_error( $result, 'repositories', __( 'Repository persistence', 'certloom' ), $batch ); }
+		$member = $batch_repo->add_recipient( $batch, $recipient );
+		if ( is_wp_error( $member ) ) { return self::operation_error( $result, 'repositories', __( 'Repository persistence', 'certloom' ), $member ); }
+		$assignment = $signer_repo->add_assignment( $signer, 'batch', $batch, 'signer', 10 );
+		if ( is_wp_error( $assignment ) ) { return self::operation_error( $result, 'repositories', __( 'Repository persistence', 'certloom' ), $assignment ); }
+		$resolved = $signer_repo->resolve_hierarchy( $issuer, $program, $batch, 'signer' );
+		if ( is_wp_error( $resolved ) || empty( $resolved ) || absint( $resolved[0]['signer_id'] ?? 0 ) !== absint( $signer ) ) { return self::operation_error( $result, 'repositories', __( 'Repository persistence', 'certloom' ), is_wp_error( $resolved ) ? $resolved : new \WP_Error( 'certloom_domain_acceptance_signer_hierarchy', __( 'The signer hierarchy did not resolve the most-specific batch signer.', 'certloom' ) ) ); }
+		$series = $credential_repo->create_series( array( 'recipient_id' => $recipient, 'issuer_id' => $issuer, 'program_id' => $program, 'batch_id' => $batch ) );
 		if ( is_wp_error( $series ) ) { return self::operation_error( $result, 'repositories', __( 'Repository persistence', 'certloom' ), $series ); }
 		$series_row = $credential_repo->find_series( $series );
 		if ( is_wp_error( $series_row ) || ! is_array( $series_row ) || empty( $series_row['public_id'] ) || ! ( new PublicCredentialId() )->is_valid( $series_row['public_id'] ) ) {
@@ -326,7 +340,7 @@ final class DomainAcceptanceProof {
 		$display_number = 'CAP-' . strtoupper( $token ) . '-001';
 		$version = $credential_repo->create_version( $series, array( 'display_number' => $display_number, 'source_type' => 'certloom_acceptance_proof', 'source_ref' => $token, 'source_idempotency_key' => hash( 'sha256', 'certloom-acceptance-proof:' . $token ), 'snapshot' => array( 'proof' => true, 'holder' => 'Acceptance Probe' ) ) );
 		if ( is_wp_error( $version ) ) { return self::operation_error( $result, 'repositories', __( 'Repository persistence', 'certloom' ), $version ); }
-		self::add_check( $result, 'repositories', 'pass', __( 'Repository persistence', 'certloom' ), __( 'Recipient, issuer, program, Credential Series and immutable Version persisted through the real repositories.', 'certloom' ) );
+		self::add_check( $result, 'repositories', 'pass', __( 'Repository persistence', 'certloom' ), __( 'Recipient, issuer, program, batch, signer hierarchy, Credential Series and immutable Version persisted through the real repositories.', 'certloom' ) );
 
 		$issued = $lifecycle->issue( $series, $version, array( 'reason_code' => 'acceptance_proof' ) );
 		if ( is_wp_error( $issued ) ) { return self::operation_error( $result, 'lifecycle', __( 'Lifecycle and event history', 'certloom' ), $issued ); }

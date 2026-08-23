@@ -77,7 +77,7 @@ function rw_row($entity,$id=1){
 	foreach($base as $k=>$v){ if(strpos($k,'created_at')!==false||strpos($k,'updated_at')!==false)$base[$k]='2026-08-22 00:00:00'; }
 	return $base;
 }
-function rw_stage_name($owner,$entity,$kind='stage'){global $wpdb;$codes=array('issuers'=>'i','programs'=>'p','recipients'=>'r','credential_series'=>'s','credential_numbers'=>'n','credential_versions'=>'v','credential_events'=>'e');$prefix='rollback'===$kind?'certloom_rb_':('merge'===$kind?'certloom_rm_':'certloom_rs_');return $wpdb->prefix.$prefix.substr($owner,0,12).'_'.$codes[$entity];}
+function rw_stage_name($owner,$entity,$kind='stage'){global $wpdb;$codes=array('issuers'=>'i','programs'=>'p','recipients'=>'r','signers'=>'g','batches'=>'b','batch_recipients'=>'m','signer_assignments'=>'a','credential_series'=>'s','credential_numbers'=>'n','credential_versions'=>'v','credential_events'=>'e');$prefix='rollback'===$kind?'certloom_rb_':('merge'===$kind?'certloom_rm_':'certloom_rs_');return $wpdb->prefix.$prefix.substr($owner,0,12).'_'.$codes[$entity];}
 
 // Seed every live table and commit a complete replacement.
 foreach(DomainBackupRepository::entity_types() as $entity){$live=SchemaManager::table($entity);$GLOBALS['wpdb']->tables[$live]=array(99=>array('id'=>'99','marker'=>'old-'.$entity));}
@@ -88,12 +88,13 @@ $new_config=array(
 	'certverify_retired_fields'=>array('exists'=>true,'value'=>array('new-retired')),
 	'certverify_settings'=>array('exists'=>true,'value'=>array('verification_page'=>10)),
 );
+$entity_count=count(DomainBackupRepository::entity_types());
 $GLOBALS['wpdb']->fail_maintenance_delete_once=true;
-$result=$ws->commit_replace($workspace,$new_config,array('mode'=>'replace','records'=>7,'counts'=>array_fill_keys(DomainBackupRepository::entity_types(),1)));
+$result=$ws->commit_replace($workspace,$new_config,array('mode'=>'replace','records'=>$entity_count,'counts'=>array_fill_keys(DomainBackupRepository::entity_types(),1)));
 rw_same('certloom_domain_maintenance_release_failed',$result->get_error_code(),'committed restore surfaces transient lock-release failure');
 foreach(DomainBackupRepository::entity_types() as $entity){$live=SchemaManager::table($entity);rw_true(isset($GLOBALS['wpdb']->tables[$live][1]),'new live '.$entity);rw_same(false,isset($GLOBALS['wpdb']->tables[$live][99]),'old removed '.$entity);rw_same(false,array_key_exists(rw_stage_name($owner,$entity,'rollback'),$GLOBALS['wpdb']->tables),'rollback cleaned');}
 rw_same(array('new-field'),get_option('certverify_fields'),'configuration committed');rw_same(true,array_key_exists(DomainRestoreWorkspace::JOURNAL_OPTION,$GLOBALS['restore_options']),'committed recovery journal retained until lock release is confirmed');rw_same(true,array_key_exists('certloom_domain_maintenance_lock',$GLOBALS['restore_options']),'failed release leaves lock active');
-$receipt=$ws->completion_receipt($owner);rw_same(false,is_wp_error($receipt),'receipt readable');rw_same(7,$receipt['records'],'receipt record count');
+$receipt=$ws->completion_receipt($owner);rw_same(false,is_wp_error($receipt),'receipt readable');rw_same($entity_count,$receipt['records'],'receipt record count');
 rw_same(true,$ws->commit_replace($workspace,$new_config),'committed workspace replay retries post-commit cleanup without re-promoting data');
 rw_same(false,array_key_exists('certloom_domain_maintenance_lock',$GLOBALS['restore_options']),'replay releases previously stuck lock');
 rw_same(false,array_key_exists(DomainRestoreWorkspace::JOURNAL_OPTION,$GLOBALS['restore_options']),'replay clears journal only after release succeeds');
@@ -119,16 +120,16 @@ foreach(DomainBackupRepository::entity_types() as $entity){
 	$GLOBALS['wpdb']->tables[rw_stage_name($owner3,$entity)] = array(7=>array('id'=>'7','marker'=>'raw-backup-'.$entity));
 	$GLOBALS['wpdb']->tables[rw_stage_name($owner3,$entity,'merge')] = array(8=>rw_row($entity,8));
 }
-$merged=$ws->commit_merge($workspace3,$new_config,array('mode'=>'merge','records'=>7,'counts'=>array('inserted'=>7,'existing'=>0,'skipped'=>0)));rw_same(true,$merged,'merge commit');
+$merged=$ws->commit_merge($workspace3,$new_config,array('mode'=>'merge','records'=>$entity_count,'counts'=>array('inserted'=>$entity_count,'existing'=>0,'skipped'=>0)));rw_same(true,$merged,'merge commit');
 foreach(DomainBackupRepository::entity_types() as $entity){$live=SchemaManager::table($entity);rw_true(isset($GLOBALS['wpdb']->tables[$live][8]),'merged graph promoted '.$entity);rw_same(false,isset($GLOBALS['wpdb']->tables[$live][7]),'raw backup stage never promoted '.$entity);rw_same(false,array_key_exists(rw_stage_name($owner3,$entity),$GLOBALS['wpdb']->tables),'raw stage cleaned '.$entity);rw_same(false,array_key_exists(rw_stage_name($owner3,$entity,'merge'),$GLOBALS['wpdb']->tables),'merge source cleaned '.$entity);}
-$merge_receipt=$ws->completion_receipt($owner3);rw_same('merge',$merge_receipt['mode'],'merge receipt mode');rw_same(7,$merge_receipt['records'],'merge receipt record count');rw_same(array('inserted'=>7,'existing'=>0,'skipped'=>0),$merge_receipt['counts'],'merge receipt action counts');
+$merge_receipt=$ws->completion_receipt($owner3);rw_same('merge',$merge_receipt['mode'],'merge receipt mode');rw_same($entity_count,$merge_receipt['records'],'merge receipt record count');rw_same(array('inserted'=>$entity_count,'existing'=>0,'skipped'=>0),$merge_receipt['counts'],'merge receipt action counts');
 echo "PASS  Merge promotes only the reconciled private graph, cleans raw staging data and preserves replay counts\n";
 
 // A post-swap configuration write that is altered by a WordPress option filter must be detected and rolled back.
 $owner4=str_repeat('d',32);$workspace4=$ws->create($owner4);rw_same(false,is_wp_error($workspace4),'tamper workspace');
 foreach(DomainBackupRepository::entity_types() as $entity){$GLOBALS['wpdb']->tables[rw_stage_name($owner4,$entity)]=array(11=>rw_row($entity,11));}
 $before_config=get_option('certverify_fields');$GLOBALS['restore_tamper_once_key']='certverify_fields';
-$tampered=$ws->commit_replace($workspace4,$new_config,array('mode'=>'replace','records'=>7,'counts'=>array_fill_keys(DomainBackupRepository::entity_types(),1)));
+$tampered=$ws->commit_replace($workspace4,$new_config,array('mode'=>'replace','records'=>$entity_count,'counts'=>array_fill_keys(DomainBackupRepository::entity_types(),1)));
 rw_same('certloom_domain_restore_configuration_failed',$tampered->get_error_code(),'altered configuration is detected after swap');
 rw_same($before_config,get_option('certverify_fields'),'old configuration restored after altered option save');
 foreach(DomainBackupRepository::entity_types() as $entity){$live=SchemaManager::table($entity);rw_true(isset($GLOBALS['wpdb']->tables[$live][8]),'pre-restore graph restored '.$entity);rw_same(false,isset($GLOBALS['wpdb']->tables[$live][11]),'tampered replacement rolled back '.$entity);rw_same(false,array_key_exists(rw_stage_name($owner4,$entity),$GLOBALS['wpdb']->tables),'failed replacement stage cleaned '.$entity);}
@@ -139,11 +140,11 @@ echo "PASS  exact option verification detects post-swap configuration tampering 
 $owner5=str_repeat('e',32);$workspace5=$ws->create($owner5);rw_same(false,is_wp_error($workspace5),'cleanup workspace');
 foreach(DomainBackupRepository::entity_types() as $entity){$GLOBALS['wpdb']->tables[rw_stage_name($owner5,$entity)]=array(12=>rw_row($entity,12));}
 $GLOBALS['wpdb']->fail_drop_contains_once='certloom_rb_';$GLOBALS['wpdb']->fail_drop_skip=count(DomainBackupRepository::entity_types());
-$cleanup_fail=$ws->commit_replace($workspace5,$new_config,array('mode'=>'replace','records'=>7,'counts'=>array_fill_keys(DomainBackupRepository::entity_types(),1)));
+$cleanup_fail=$ws->commit_replace($workspace5,$new_config,array('mode'=>'replace','records'=>$entity_count,'counts'=>array_fill_keys(DomainBackupRepository::entity_types(),1)));
 rw_same('certloom_domain_restore_workspace_cleanup_failed',$cleanup_fail->get_error_code(),'private rollback cleanup failure surfaced');
 rw_same(true,array_key_exists(DomainRestoreWorkspace::JOURNAL_OPTION,$GLOBALS['restore_options']),'cleanup failure keeps durable recovery journal');
 rw_same(true,array_key_exists('certloom_domain_maintenance_lock',$GLOBALS['restore_options']),'cleanup failure keeps maintenance boundary');
-rw_same(true,$ws->commit_replace($workspace5,$new_config,array('mode'=>'replace','records'=>7,'counts'=>array_fill_keys(DomainBackupRepository::entity_types(),1))),'committed cleanup replay succeeds');
+rw_same(true,$ws->commit_replace($workspace5,$new_config,array('mode'=>'replace','records'=>$entity_count,'counts'=>array_fill_keys(DomainBackupRepository::entity_types(),1))),'committed cleanup replay succeeds');
 rw_same(false,array_key_exists(DomainRestoreWorkspace::JOURNAL_OPTION,$GLOBALS['restore_options']),'cleanup replay clears journal');
 rw_same(false,array_key_exists('certloom_domain_maintenance_lock',$GLOBALS['restore_options']),'cleanup replay releases maintenance');
 echo "PASS  committed restore cleanup failures remain durable and retryable until private tables are removed\n";
@@ -153,7 +154,7 @@ $owner6=str_repeat('f',32);$workspace6=$ws->create($owner6);rw_same(false,is_wp_
 rw_same(true,$ws->create_merge_target($workspace6),'merge rollback target');
 foreach(DomainBackupRepository::entity_types() as $entity){$GLOBALS['wpdb']->tables[rw_stage_name($owner6,$entity)]=array(13=>rw_row($entity,13));$GLOBALS['wpdb']->tables[rw_stage_name($owner6,$entity,'merge')]=array(14=>rw_row($entity,14));}
 $GLOBALS['restore_tamper_once_key']='certverify_fields';
-$merge_rollback=$ws->commit_merge($workspace6,$new_config,array('mode'=>'merge','records'=>7,'counts'=>array('inserted'=>7,'existing'=>0,'skipped'=>0)));
+$merge_rollback=$ws->commit_merge($workspace6,$new_config,array('mode'=>'merge','records'=>$entity_count,'counts'=>array('inserted'=>$entity_count,'existing'=>0,'skipped'=>0)));
 rw_same('certloom_domain_restore_configuration_failed',$merge_rollback->get_error_code(),'merge configuration failure rolled back');
 foreach(DomainBackupRepository::entity_types() as $entity){$live=SchemaManager::table($entity);rw_true(isset($GLOBALS['wpdb']->tables[$live][12]),'pre-merge graph restored '.$entity);rw_same(false,isset($GLOBALS['wpdb']->tables[$live][14]),'failed merge graph not live '.$entity);rw_same(false,array_key_exists(rw_stage_name($owner6,$entity),$GLOBALS['wpdb']->tables),'merge raw stage cleaned '.$entity);rw_same(false,array_key_exists(rw_stage_name($owner6,$entity,'merge'),$GLOBALS['wpdb']->tables),'failed promoted merge graph cleaned '.$entity);}
 echo "PASS  Merge rollback restores the previous graph and removes both private source graphs\n";

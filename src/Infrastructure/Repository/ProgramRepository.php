@@ -77,7 +77,11 @@ final class ProgramRepository {
 		$series = SchemaManager::table( 'credential_series' );
 		$wpdb->last_error = '';
 		$total = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i p' . $where, array_merge( array( $programs ), $args ) ) );
+		if ( '' !== (string) $wpdb->last_error ) {
+			return new \WP_Error( 'certloom_program_list_failed', __( 'Certloom could not load programs.', 'certloom' ) );
+		}
 		$sql = 'SELECT p.id, p.issuer_id, p.code, p.title, p.validity_days, p.active, p.created_at, p.updated_at, i.name AS issuer_name, (SELECT COUNT(*) FROM %i s WHERE s.program_id = p.id) AS credential_count FROM %i p LEFT JOIN %i i ON i.id = p.issuer_id' . $where . ' ORDER BY p.active DESC, p.title ASC, p.id DESC LIMIT %d OFFSET %d';
+		$wpdb->last_error = '';
 		$items = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( array( $series, $programs, $issuers ), $args, array( $per_page, $offset ) ) ), ARRAY_A );
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $items ) ) { return new \WP_Error( 'certloom_program_list_failed', __( 'Certloom could not load programs.', 'certloom' ) ); }
 		foreach ( $items as &$item ) {
@@ -150,7 +154,21 @@ final class ProgramRepository {
 			$row['code'] = $code;
 		}
 		if ( $creating || array_key_exists( 'description', $data ) ) { $row['description'] = self::nullable_string( $data['description'] ?? null ); }
-		if ( $creating || array_key_exists( 'issuer_id', $data ) ) { $row['issuer_id'] = ! empty( $data['issuer_id'] ) ? absint( $data['issuer_id'] ) : null; }
+		if ( $creating || array_key_exists( 'issuer_id', $data ) ) {
+			$issuer_id = ! empty( $data['issuer_id'] ) ? absint( $data['issuer_id'] ) : null;
+			if ( $issuer_id ) {
+				global $wpdb;
+				$wpdb->last_error = '';
+				$found = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM %i WHERE id=%d LIMIT 1', SchemaManager::table( 'issuers' ), $issuer_id ) );
+				if ( '' !== (string) $wpdb->last_error ) {
+					return new \WP_Error( 'certloom_program_issuer_check_failed', __( 'Certloom could not verify the selected issuer.', 'certloom' ) );
+				}
+				if ( absint( $found ) !== $issuer_id ) {
+					return new \WP_Error( 'certloom_program_issuer_missing', __( 'Choose an issuer that still exists.', 'certloom' ) );
+				}
+			}
+			$row['issuer_id'] = $issuer_id;
+		}
 		if ( $creating || array_key_exists( 'validity_days', $data ) ) { $row['validity_days'] = null === ( $data['validity_days'] ?? null ) || '' === (string) ( $data['validity_days'] ?? '' ) ? null : max( 0, absint( $data['validity_days'] ) ); }
 		if ( $creating || array_key_exists( 'active', $data ) ) { $row['active'] = isset( $data['active'] ) ? (int) (bool) $data['active'] : 1; }
 		if ( array_key_exists( 'metadata', $data ) ) {

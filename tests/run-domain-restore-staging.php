@@ -71,14 +71,18 @@ function rs_rows() {
 		'issuers' => array( array( 'id'=>'1','name'=>'Certloom Test','slug'=>'certloom-test','logo_attachment_id'=>null,'seal_attachment_id'=>null,'settings_json'=>'{}','created_at'=>'2026-08-22 00:00:00','updated_at'=>'2026-08-22 00:00:00' ) ),
 		'programs' => array( array( 'id'=>'1','issuer_id'=>'1','code'=>'COURSE-1','title'=>'Course 1','description'=>null,'validity_days'=>null,'active'=>'1','metadata_json'=>'{}','created_at'=>'2026-08-22 00:00:00','updated_at'=>'2026-08-22 00:00:00' ) ),
 		'recipients' => array( array( 'id'=>'1','display_name'=>'Learner','first_name'=>null,'middle_name'=>null,'last_name'=>null,'email'=>'learner@example.test','wp_user_id'=>null,'external_id'=>null,'custom_fields'=>'{}','created_at'=>'2026-08-22 00:00:00','updated_at'=>'2026-08-22 00:00:00' ) ),
-		'credential_series' => array( array( 'id'=>'1','public_id'=>$public,'recipient_id'=>'1','program_id'=>'1','issuer_id'=>'1','current_version_id'=>'1','administrative_state'=>'active','compliance_state'=>'not_applicable','visibility'=>'verification_summary','created_at'=>'2026-08-22 00:00:00','updated_at'=>'2026-08-22 00:00:00','closed_at'=>null ) ),
+		'signers' => array(),
+		'batches' => array(),
+		'batch_recipients' => array(),
+		'signer_assignments' => array(),
+		'credential_series' => array( array( 'id'=>'1','public_id'=>$public,'recipient_id'=>'1','program_id'=>'1','batch_id'=>null,'issuer_id'=>'1','current_version_id'=>'1','administrative_state'=>'active','compliance_state'=>'not_applicable','visibility'=>'verification_summary','created_at'=>'2026-08-22 00:00:00','updated_at'=>'2026-08-22 00:00:00','closed_at'=>null ) ),
 		'credential_numbers' => array( array( 'id'=>'1','display_number'=>'CERT-0001','series_id'=>'1','first_version_id'=>'1','created_at'=>'2026-08-22 00:00:00','retired_at'=>null ) ),
 		'credential_versions' => array( array( 'id'=>'1','series_id'=>'1','version_number'=>'1','previous_version_id'=>null,'display_number'=>'CERT-0001','issuance_state'=>'issued','legacy_expired'=>'0','valid_from'=>'2026-08-22','issued_at'=>'2026-08-22 00:00:00','expires_at'=>null,'grade'=>null,'source_type'=>'manual','source_ref'=>null,'source_idempotency_key'=>null,'snapshot_json'=>'{}','created_at'=>'2026-08-22 00:00:00','updated_at'=>'2026-08-22 00:00:00' ) ),
 		'credential_events' => array( array( 'id'=>'1','series_id'=>'1','version_id'=>'1','event_type'=>'credential.issued','actor_user_id'=>null,'old_state_json'=>null,'new_state_json'=>'{}','reason_code'=>null,'public_reason'=>null,'internal_note'=>null,'meta_json'=>'{}','created_at'=>'2026-08-22 00:00:00' ) ),
 	);
 }
 
-function rs_make_backup( $job_key, $trailing = '' ) {
+function rs_make_backup( $job_key, $trailing = '', $version = DomainBackupFormat::VERSION ) {
 	$format = new DomainBackupFormat();
 	$files  = new PrivateJobFileStore();
 	$path   = $files->create_path( $job_key, 'restore-test' );
@@ -90,19 +94,23 @@ function rs_make_backup( $job_key, $trailing = '' ) {
 		'certverify_settings' => array( 'exists'=>true, 'value'=>array( 'verification_page'=>10 ) ),
 	);
 	$config_json = wp_json_encode( $config, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
-	$entities = array();
-	foreach ( DomainBackupRepository::entity_types() as $entity ) {
-		$entities[$entity] = array( 'count'=>count($rows[$entity]), 'max_id'=>1 );
+	$source_entities = DomainBackupFormat::entity_types_for_version( $version );
+	if ( DomainBackupFormat::LEGACY_VERSION === absint( $version ) ) {
+		foreach ( $rows['credential_series'] as &$legacy_series ) { unset( $legacy_series['batch_id'] ); } unset( $legacy_series );
 	}
-	$manifest = array( 'type'=>'manifest','format'=>DomainBackupFormat::FORMAT,'format_version'=>DomainBackupFormat::VERSION,'plugin_version'=>'1.5.4','generated_at'=>'2026-08-22T00:00:00+00:00','generation'=>'g1','entities'=>$entities,'configuration'=>$config,'configuration_hash'=>hash('sha256',$config_json) );
+	$entities = array();
+	foreach ( $source_entities as $entity ) {
+		$entities[$entity] = array( 'count'=>count($rows[$entity]), 'max_id'=>empty($rows[$entity])?0:1 );
+	}
+	$manifest = array( 'type'=>'manifest','format'=>DomainBackupFormat::FORMAT,'format_version'=>$version,'plugin_version'=>'1.5.4','generated_at'=>'2026-08-22T00:00:00+00:00','generation'=>'g1','entities'=>$entities,'configuration'=>$config,'configuration_hash'=>hash('sha256',$config_json) );
 	$contents = $format->encode_line( $manifest );
-	$hash = $format->next_hash( '', $contents );
+	$hash = $format->next_hash( '', $contents, $version );
 	$records = 0;
-	foreach ( DomainBackupRepository::entity_types() as $entity ) {
+	foreach ( $source_entities as $entity ) {
 		foreach ( $rows[$entity] as $row ) {
 			$line = $format->encode_line( array( 'type'=>'entity','entity'=>$entity,'data'=>$row ) );
 			$contents .= $line;
-			$hash = $format->next_hash( $hash, $line );
+			$hash = $format->next_hash( $hash, $line, $version );
 			$records++;
 		}
 	}
@@ -139,7 +147,7 @@ rs_same( true, $service->commit_replace( $state ), 'commit delegated only after 
 rs_true( $workspace->committed, 'commit reached workspace' );
 rs_same( 'replace', $workspace->receipt['mode'] ?? '', 'replace receipt mode' );
 rs_same( 7, $workspace->receipt['records'] ?? 0, 'replace receipt records' );
-rs_same( array_fill_keys( DomainBackupRepository::entity_types(), 1 ), $workspace->receipt['counts'] ?? array(), 'replace receipt entity counts' );
+$expected_counts=array_fill_keys(DomainBackupRepository::entity_types(),0);foreach(rs_rows() as $entity=>$rows){$expected_counts[$entity]=count($rows);}rs_same( $expected_counts, $workspace->receipt['counts'] ?? array(), 'replace receipt entity counts' );
 echo "PASS  restore staging is bounded, retry-idempotent, integrity-checked and carries crash-replay receipt counts\n";
 
 $bad_path = rs_make_backup( str_repeat( '2', 32 ), "{\"unexpected\":true}\n" );
@@ -188,4 +196,18 @@ rs_same('certloom_domain_restore_json_field_invalid',$scalar->get_error_code(),'
 rs_true($scalar_ws->abandoned,'structured JSON scalar stage abandoned');
 echo "PASS  hash-consistent JSON scalars cannot enter structured domain columns\n";
 
-echo "\n4 tests, 0 failures\n";
+// A genuine pre-1.6.4 v1 stream lacks batch_id in credential_series and the new entity families entirely.
+$legacy_path = rs_make_backup( str_repeat( '5', 32 ), '', DomainBackupFormat::LEGACY_VERSION );
+$legacy_ws = new RestoreStageFakeWorkspace();
+$legacy_service = new DomainRestoreStagingService( $legacy_ws );
+$legacy = $legacy_service->start( $legacy_path, str_repeat( 'e', 32 ) );
+while ( ! is_wp_error( $legacy ) && empty( $legacy['complete'] ) ) { $legacy = $legacy_service->continue_stage( $legacy, 50 ); }
+rs_same( false, is_wp_error( $legacy ), 'legacy v1 staging' );
+rs_true( $legacy['complete'], 'legacy v1 ready' );
+rs_true( array_key_exists( 'batch_id', $legacy_ws->rows['credential_series:1'] ), 'legacy batch_id key synthesized' );
+rs_same( null, $legacy_ws->rows['credential_series:1']['batch_id'], 'legacy batch_id synthesized null' );
+rs_same( 0, $legacy['counts']['signers'], 'legacy signers empty' );
+rs_same( 0, $legacy['counts']['batches'], 'legacy batches empty' );
+echo "PASS  genuine v1 backups are normalized into the current staging contract without inventing relationships\n";
+
+echo "\n5 tests, 0 failures\n";

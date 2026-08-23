@@ -48,7 +48,7 @@ namespace {
         'schema'=>StagingCutoverRehearsal::RESULT_SCHEMA,'version'=>StagingCutoverRehearsal::RESULT_VERSION,'plugin_version'=>ECAPLA_CERTVERIFY_VERSION,'environment'=>'staging',
         'status'=>'passed','phase'=>'complete','reason_code'=>'','started_at'=>$now-20,'updated_at'=>$now,'checked_at'=>$now,
         'source_count'=>2,'source_max_id'=>9,'source_generation'=>'legacy-gen-a','restore_checked_at'=>$now-30,
-        'baseline_hash'=>str_repeat('a',64),'baseline_config_hash'=>str_repeat('b',64),'baseline_records'=>13,'baseline_counts'=>array('issuers'=>1,'programs'=>1,'recipients'=>2,'credential_series'=>2,'credential_numbers'=>2,'credential_versions'=>2,'credential_events'=>3),
+        'baseline_hash'=>str_repeat('a',64),'baseline_config_hash'=>str_repeat('b',64),'baseline_records'=>16,'baseline_counts'=>array('issuers'=>1,'programs'=>1,'recipients'=>2,'signers'=>1,'batches'=>1,'batch_recipients'=>2,'signer_assignments'=>1,'credential_series'=>2,'credential_numbers'=>2,'credential_versions'=>2,'credential_events'=>3),
         'receipt_verified'=>true,'legacy_guard_blocked'=>true,'public_gate_verified'=>true,'rollback_verified'=>true,'final_verified'=>true,'fingerprint_state'=>null,'error_message'=>'',
     );
     scr_same('passed',StagingCutoverRehearsal::evidence_state(),'fresh coherent cutover rehearsal evidence is green');

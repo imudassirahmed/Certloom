@@ -58,11 +58,11 @@ final class DomainRestoreStagingService implements DomainRestoreStagingInterface
 			fclose( $handle );
 			return is_wp_error( $line ) ? $line : new \WP_Error( 'certloom_domain_backup_manifest_invalid', __( 'The Certloom backup is missing its manifest.', 'certloom' ) );
 		}
-		$manifest = json_decode( trim( $line ), true );
-		if ( ! is_array( $manifest ) || 'manifest' !== (string) ( $manifest['type'] ?? '' ) || DomainBackupFormat::FORMAT !== (string) ( $manifest['format'] ?? '' ) || DomainBackupFormat::VERSION !== absint( $manifest['format_version'] ?? 0 ) ) {
-			fclose( $handle );
-			return new \WP_Error( 'certloom_domain_backup_manifest_invalid', __( 'This is not a supported Certloom domain backup.', 'certloom' ) );
-		}
+		$raw_manifest = json_decode( trim( $line ), true );
+		if ( ! is_array( $raw_manifest ) ) { fclose( $handle ); return new \WP_Error( 'certloom_domain_backup_manifest_invalid', __( 'This is not a supported Certloom domain backup.', 'certloom' ) ); }
+		$manifest = $this->format->normalize_manifest( $raw_manifest );
+		if ( is_wp_error( $manifest ) ) { fclose( $handle ); return $manifest; }
+		$format_version = absint( $raw_manifest['format_version'] ?? 0 );
 		$config = $this->validate_configuration( (array) ( $manifest['configuration'] ?? array() ), (string) ( $manifest['configuration_hash'] ?? '' ) );
 		if ( is_wp_error( $config ) ) {
 			fclose( $handle );
@@ -103,7 +103,8 @@ final class DomainRestoreStagingService implements DomainRestoreStagingInterface
 			'entity_order'  => -1,
 			'records'       => 0,
 			'counts'        => array_fill_keys( DomainBackupRepository::entity_types(), 0 ),
-			'hash'          => $this->format->next_hash( '', $line ),
+			'format_version'=> $format_version,
+			'hash'          => $this->format->next_hash( '', $line, $format_version ),
 			'phase'         => 'load',
 			'complete'      => false,
 			'max_records'   => $max_records,
@@ -187,12 +188,13 @@ final class DomainRestoreStagingService implements DomainRestoreStagingInterface
 				fclose( $handle );
 				return $this->abort( $state, new \WP_Error( 'certloom_domain_restore_entity_order_invalid', __( 'The Certloom backup entities are not in the required dependency order.', 'certloom' ) ) );
 			}
-			$scalar = $this->row_validator->validate( $entity, $item['data'] );
+			$row = $this->format->normalize_entity_row( absint( $state['format_version'] ), $entity, $item['data'] );
+			$scalar = $this->row_validator->validate( $entity, $row );
 			if ( is_wp_error( $scalar ) ) {
 				fclose( $handle );
 				return $this->abort( $state, $scalar );
 			}
-			$inserted = $this->workspace->insert_row( $state['workspace'], $entity, $item['data'] );
+			$inserted = $this->workspace->insert_row( $state['workspace'], $entity, $row );
 			if ( is_wp_error( $inserted ) ) {
 				fclose( $handle );
 				return $this->abort( $state, $inserted );
@@ -204,7 +206,7 @@ final class DomainRestoreStagingService implements DomainRestoreStagingInterface
 				return $this->abort( $state, new \WP_Error( 'certloom_domain_backup_limit', __( 'The Certloom backup exceeds the configured record safety limit.', 'certloom' ) ) );
 			}
 			$state['counts'][ $entity ] = absint( $state['counts'][ $entity ] ?? 0 ) + 1;
-			$state['hash'] = $this->format->next_hash( (string) $state['hash'], $line );
+			$state['hash'] = $this->format->next_hash( (string) $state['hash'], $line, absint( $state['format_version'] ) );
 			$processed++;
 		}
 		fclose( $handle );
@@ -283,7 +285,7 @@ final class DomainRestoreStagingService implements DomainRestoreStagingInterface
 
 	/** @return true|\WP_Error */
 	private function validate_state( array $state ) {
-		foreach ( array( 'path', 'owner_token', 'workspace', 'manifest', 'configuration', 'offset', 'line_no', 'entity_order', 'records', 'counts', 'hash', 'phase', 'max_records' ) as $key ) {
+		foreach ( array( 'path', 'owner_token', 'workspace', 'manifest', 'configuration', 'offset', 'line_no', 'entity_order', 'records', 'counts', 'format_version', 'hash', 'phase', 'max_records' ) as $key ) {
 			if ( ! array_key_exists( $key, $state ) ) {
 				return new \WP_Error( 'certloom_domain_restore_state_invalid', __( 'The resumable Certloom restore state is incomplete.', 'certloom' ) );
 			}

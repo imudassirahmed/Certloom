@@ -316,7 +316,7 @@ final class LegacyMigrationPreflightProof {
 	/** @return true|\WP_Error */
 	private static function assert_domain_empty() {
 		global $wpdb;
-		$tables = array( 'recipients', 'issuers', 'programs', 'credential_series', 'credential_versions', 'credential_numbers', 'credential_events', 'jobs', 'import_rows', 'restore_map' );
+		$tables = array( 'recipients', 'issuers', 'programs', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'credential_series', 'credential_versions', 'credential_numbers', 'credential_events', 'jobs', 'import_rows', 'restore_map' );
 		foreach ( $tables as $logical ) {
 			$table = SchemaManager::table( $logical ); $wpdb->last_error = '';
 			$exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) );

@@ -82,7 +82,11 @@ final class RecipientRepository {
 			. 'FROM %i r' . $where . ' ORDER BY r.id DESC LIMIT %d OFFSET %d';
 		$wpdb->last_error = '';
 		$total = (int) $wpdb->get_var( $wpdb->prepare( $count_sql, array_merge( array( $table ), $args ) ) );
+		if ( '' !== (string) $wpdb->last_error ) {
+			return new \WP_Error( 'certloom_recipient_list_failed', __( 'Certloom could not load recipients.', 'certloom' ) );
+		}
 		$list_args = array_merge( array( $series, $series, $versions, $table ), $args, array( $per_page, $offset ) );
+		$wpdb->last_error = '';
 		$items = $wpdb->get_results( $wpdb->prepare( $list_sql, $list_args ), ARRAY_A );
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $items ) ) {
 			return new \WP_Error( 'certloom_recipient_list_failed', __( 'Certloom could not load recipients.', 'certloom' ) );

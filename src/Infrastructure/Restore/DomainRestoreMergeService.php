@@ -274,21 +274,60 @@ final class DomainRestoreMergeService {
 				}
 				return $target_id ? $this->record_map( $owner, $entity, $source_id, $hash, $target_id, 'existing' ) : $this->insert_and_map( $owner, $entity, $source_id, $hash, $target_table, $row );
 
+			case 'signers':
+				$target_id = $this->lookup_id( $target_table, 'slug', (string) $row['slug'] );
+				return $target_id ? $this->record_map( $owner, $entity, $source_id, $hash, $target_id, 'existing' ) : $this->insert_and_map( $owner, $entity, $source_id, $hash, $target_table, $row );
+
+			case 'batches':
+				$program_id = $this->mapped_required( $owner, 'programs', $row['program_id'] ?? 0 );
+				$signer_id = $this->mapped_nullable( $owner, 'signers', $row['instructor_signer_id'] ?? null );
+				if ( is_wp_error( $program_id ) || is_wp_error( $signer_id ) ) { return is_wp_error( $program_id ) ? $program_id : $signer_id; }
+				$target_id = $this->lookup_id( $target_table, 'code', (string) $row['code'] );
+				if ( $target_id ) { return $this->record_map( $owner, $entity, $source_id, $hash, $target_id, 'existing' ); }
+				$row['program_id'] = $program_id;
+				$row['instructor_signer_id'] = $signer_id;
+				return $this->insert_and_map( $owner, $entity, $source_id, $hash, $target_table, $row );
+
+			case 'batch_recipients':
+				$batch_id = $this->mapped_required( $owner, 'batches', $row['batch_id'] ?? 0 );
+				$recipient_id = $this->mapped_required( $owner, 'recipients', $row['recipient_id'] ?? 0 );
+				if ( is_wp_error( $batch_id ) || is_wp_error( $recipient_id ) ) { return is_wp_error( $batch_id ) ? $batch_id : $recipient_id; }
+				$target_id = $this->lookup_composite_id( $target_table, array( 'batch_id' => $batch_id, 'recipient_id' => $recipient_id ) );
+				if ( is_wp_error( $target_id ) ) { return $target_id; }
+				if ( $target_id ) { return $this->record_map( $owner, $entity, $source_id, $hash, $target_id, 'existing' ); }
+				$row['batch_id'] = $batch_id; $row['recipient_id'] = $recipient_id;
+				return $this->insert_and_map( $owner, $entity, $source_id, $hash, $target_table, $row );
+
+			case 'signer_assignments':
+				$signer_id = $this->mapped_required( $owner, 'signers', $row['signer_id'] ?? 0 );
+				if ( is_wp_error( $signer_id ) ) { return $signer_id; }
+				$scope_type = (string) $row['scope_type'];
+				$scope_entity = array( 'issuer' => 'issuers', 'program' => 'programs', 'batch' => 'batches' );
+				$scope_id = 'global' === $scope_type ? 0 : $this->mapped_required( $owner, $scope_entity[ $scope_type ] ?? '', $row['scope_id'] ?? 0 );
+				if ( is_wp_error( $scope_id ) ) { return $scope_id; }
+				$target_id = $this->lookup_composite_id( $target_table, array( 'signer_id' => $signer_id, 'scope_type' => $scope_type, 'scope_id' => $scope_id, 'role_type' => (string) $row['role_type'] ) );
+				if ( is_wp_error( $target_id ) ) { return $target_id; }
+				if ( $target_id ) { return $this->record_map( $owner, $entity, $source_id, $hash, $target_id, 'existing' ); }
+				$row['signer_id'] = $signer_id; $row['scope_id'] = $scope_id;
+				return $this->insert_and_map( $owner, $entity, $source_id, $hash, $target_table, $row );
+
 			case 'credential_series':
 				$recipient_id = $this->mapped_required( $owner, 'recipients', $row['recipient_id'] ?? 0 );
 				$program_id   = $this->mapped_nullable( $owner, 'programs', $row['program_id'] ?? null );
+				$batch_id     = $this->mapped_nullable( $owner, 'batches', $row['batch_id'] ?? null );
 				$issuer_id    = $this->mapped_nullable( $owner, 'issuers', $row['issuer_id'] ?? null );
-				foreach ( array( $recipient_id, $program_id, $issuer_id ) as $mapped ) { if ( is_wp_error( $mapped ) ) { return $mapped; } }
+				foreach ( array( $recipient_id, $program_id, $batch_id, $issuer_id ) as $mapped ) { if ( is_wp_error( $mapped ) ) { return $mapped; } }
 				$existing = $this->lookup_row( $target_table, 'public_id', (string) $row['public_id'] );
 				if ( is_wp_error( $existing ) ) { return $existing; }
 				if ( is_array( $existing ) ) {
-					if ( absint( $existing['recipient_id'] ?? 0 ) !== absint( $recipient_id ) || absint( $existing['program_id'] ?? 0 ) !== absint( $program_id ) || absint( $existing['issuer_id'] ?? 0 ) !== absint( $issuer_id ) ) {
-						return new \WP_Error( 'certloom_domain_restore_merge_series_conflict', __( 'A backup credential public ID already belongs to a different recipient/program/issuer relationship.', 'certloom' ) );
+					if ( absint( $existing['recipient_id'] ?? 0 ) !== absint( $recipient_id ) || absint( $existing['program_id'] ?? 0 ) !== absint( $program_id ) || absint( $existing['batch_id'] ?? 0 ) !== absint( $batch_id ) || absint( $existing['issuer_id'] ?? 0 ) !== absint( $issuer_id ) ) {
+						return new \WP_Error( 'certloom_domain_restore_merge_series_conflict', __( 'A backup credential public ID already belongs to a different recipient/program/batch/issuer relationship.', 'certloom' ) );
 					}
 					return $this->record_map( $owner, $entity, $source_id, $hash, absint( $existing['id'] ), 'existing', array( 'preserve_current_history' => true ) );
 				}
 				$row['recipient_id'] = $recipient_id;
 				$row['program_id'] = $program_id;
+				$row['batch_id'] = $batch_id;
 				$row['issuer_id'] = $issuer_id;
 				$source_current = absint( $row['current_version_id'] ?? 0 );
 				$row['current_version_id'] = null;
@@ -416,6 +455,20 @@ final class DomainRestoreMergeService {
 			return new \WP_Error( 'certloom_domain_restore_merge_dependency_conflict', __( 'Existing credentials disagree about the identity of a backup dependency, so Merge restore was stopped.', 'certloom' ) );
 		}
 		return empty( $values ) ? 0 : $values[0];
+	}
+
+	/** @return int|\WP_Error */
+	private function lookup_composite_id( $table, array $pairs ) {
+		global $wpdb;
+		$allowed = array( 'batch_id', 'recipient_id', 'signer_id', 'scope_type', 'scope_id', 'role_type' );
+		$where = array(); $args = array( $table );
+		foreach ( $pairs as $column => $value ) {
+			if ( ! in_array( $column, $allowed, true ) ) { return new \WP_Error( 'certloom_domain_restore_merge_lookup_invalid', __( 'Certloom refused an unsafe Merge restore identity lookup.', 'certloom' ) ); }
+			if ( is_int( $value ) ) { $where[] = "$column = %d"; $args[] = $value; } else { $where[] = "$column = %s"; $args[] = (string) $value; }
+		}
+		$wpdb->last_error = '';
+		$id = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM %i WHERE ' . implode( ' AND ', $where ) . ' LIMIT 1', $args ) );
+		return '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_domain_restore_merge_lookup_failed', __( 'Certloom could not inspect current relationship identities while preparing Merge restore.', 'certloom' ) ) : absint( $id );
 	}
 
 	/** @return int */

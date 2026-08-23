@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * exercised without changing public verification truth for an existing site.
  */
 final class SchemaManager {
-	const SCHEMA_VERSION         = '12';
+	const SCHEMA_VERSION         = '13';
 	const SCHEMA_OPTION          = 'certloom_domain_schema_version';
 	const HEALTH_OPTION          = 'certloom_domain_schema_health';
 	const LOCK_OPTION            = 'certloom_domain_schema_lock';
@@ -25,6 +25,10 @@ final class SchemaManager {
 		'recipients'          => 'certloom_recipients',
 		'programs'            => 'certloom_programs',
 		'issuers'             => 'certloom_issuers',
+		'signers'             => 'certloom_signers',
+		'batches'             => 'certloom_batches',
+		'batch_recipients'    => 'certloom_batch_recipients',
+		'signer_assignments'  => 'certloom_signer_assignments',
 		'credential_series'   => 'certloom_credential_series',
 		'credential_versions' => 'certloom_credential_versions',
 		'credential_numbers'  => 'certloom_credential_numbers',
@@ -276,12 +280,85 @@ final class SchemaManager {
 			KEY title (title(191))
 		) ENGINE=InnoDB $charset_collate;";
 
+		$signers = self::table( 'signers' );
+		$tables[] = "CREATE TABLE $signers (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			display_name VARCHAR(255) NOT NULL,
+			slug VARCHAR(191) NOT NULL,
+			title VARCHAR(191) NULL,
+			email VARCHAR(320) NULL,
+			signature_attachment_id BIGINT UNSIGNED NULL,
+			active TINYINT(1) NOT NULL DEFAULT 1,
+			metadata_json LONGTEXT NULL,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY slug (slug),
+			KEY active (active),
+			KEY display_name (display_name(191)),
+			KEY email (email(191))
+		) ENGINE=InnoDB $charset_collate;";
+
+		$batches = self::table( 'batches' );
+		$tables[] = "CREATE TABLE $batches (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			program_id BIGINT UNSIGNED NOT NULL,
+			code VARCHAR(100) NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			start_date DATE NULL,
+			end_date DATE NULL,
+			instructor_name VARCHAR(255) NULL,
+			instructor_signer_id BIGINT UNSIGNED NULL,
+			active TINYINT(1) NOT NULL DEFAULT 1,
+			metadata_json LONGTEXT NULL,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY code (code),
+			KEY program_id (program_id),
+			KEY instructor_signer_id (instructor_signer_id),
+			KEY active (active),
+			KEY start_date (start_date),
+			KEY end_date (end_date),
+			KEY name (name(191))
+		) ENGINE=InnoDB $charset_collate;";
+
+		$batch_recipients = self::table( 'batch_recipients' );
+		$tables[] = "CREATE TABLE $batch_recipients (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			batch_id BIGINT UNSIGNED NOT NULL,
+			recipient_id BIGINT UNSIGNED NOT NULL,
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY batch_recipient (batch_id,recipient_id),
+			KEY recipient_id (recipient_id)
+		) ENGINE=InnoDB $charset_collate;";
+
+		$signer_assignments = self::table( 'signer_assignments' );
+		$tables[] = "CREATE TABLE $signer_assignments (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			signer_id BIGINT UNSIGNED NOT NULL,
+			scope_type VARCHAR(20) NOT NULL,
+			scope_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+			role_type VARCHAR(20) NOT NULL DEFAULT 'signer',
+			priority INT UNSIGNED NOT NULL DEFAULT 100,
+			active TINYINT(1) NOT NULL DEFAULT 1,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY signer_scope (signer_id,scope_type,scope_id,role_type),
+			KEY scope_lookup (scope_type,scope_id,active,priority),
+			KEY signer_id (signer_id),
+			KEY role_type (role_type)
+		) ENGINE=InnoDB $charset_collate;";
+
 		$series = self::table( 'credential_series' );
 		$tables[] = "CREATE TABLE $series (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			public_id CHAR(12) NOT NULL,
 			recipient_id BIGINT UNSIGNED NOT NULL,
 			program_id BIGINT UNSIGNED NULL,
+			batch_id BIGINT UNSIGNED NULL,
 			issuer_id BIGINT UNSIGNED NULL,
 			current_version_id BIGINT UNSIGNED NULL,
 			administrative_state VARCHAR(20) NOT NULL DEFAULT 'active',
@@ -294,6 +371,7 @@ final class SchemaManager {
 			UNIQUE KEY public_id (public_id),
 			KEY recipient_id (recipient_id),
 			KEY program_id (program_id),
+			KEY batch_id (batch_id),
 			KEY issuer_id (issuer_id),
 			KEY current_version_id (current_version_id),
 			KEY administrative_state (administrative_state),
@@ -601,12 +679,93 @@ final class SchemaManager {
 					'name' => array( 'columns' => array( 'name' ), 'unique' => false ),
 				),
 			),
+			'signers' => array(
+				'columns' => array(
+					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
+					'display_name' => array( 'type' => '/^varchar\(255\)$/', 'null' => 'NO' ),
+					'slug' => array( 'type' => '/^varchar\(191\)$/', 'null' => 'NO' ),
+					'title' => array( 'type' => '/^varchar\(191\)$/', 'null' => 'YES' ),
+					'email' => array( 'type' => '/^varchar\(320\)$/', 'null' => 'YES' ),
+					'signature_attachment_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'active' => array( 'type' => '/^tinyint(?:\(1\))?$/', 'null' => 'NO', 'default' => '1' ),
+					'metadata_json' => array( 'type' => $lt, 'null' => 'YES' ),
+					'created_at' => array( 'type' => $dt, 'null' => 'NO' ),
+					'updated_at' => array( 'type' => $dt, 'null' => 'NO' ),
+				),
+				'indexes' => array(
+					'PRIMARY' => array( 'columns' => array( 'id' ), 'unique' => true ),
+					'slug' => array( 'columns' => array( 'slug' ), 'unique' => true ),
+					'active' => array( 'columns' => array( 'active' ), 'unique' => false ),
+					'display_name' => array( 'columns' => array( 'display_name' ), 'unique' => false ),
+					'email' => array( 'columns' => array( 'email' ), 'unique' => false ),
+				),
+			),
+			'batches' => array(
+				'columns' => array(
+					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
+					'program_id' => array( 'type' => $bigu, 'null' => 'NO' ),
+					'code' => array( 'type' => '/^varchar\(100\)$/', 'null' => 'NO' ),
+					'name' => array( 'type' => '/^varchar\(255\)$/', 'null' => 'NO' ),
+					'start_date' => array( 'type' => $date, 'null' => 'YES' ),
+					'end_date' => array( 'type' => $date, 'null' => 'YES' ),
+					'instructor_name' => array( 'type' => '/^varchar\(255\)$/', 'null' => 'YES' ),
+					'instructor_signer_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'active' => array( 'type' => '/^tinyint(?:\(1\))?$/', 'null' => 'NO', 'default' => '1' ),
+					'metadata_json' => array( 'type' => $lt, 'null' => 'YES' ),
+					'created_at' => array( 'type' => $dt, 'null' => 'NO' ),
+					'updated_at' => array( 'type' => $dt, 'null' => 'NO' ),
+				),
+				'indexes' => array(
+					'PRIMARY' => array( 'columns' => array( 'id' ), 'unique' => true ),
+					'code' => array( 'columns' => array( 'code' ), 'unique' => true ),
+					'program_id' => array( 'columns' => array( 'program_id' ), 'unique' => false ),
+					'instructor_signer_id' => array( 'columns' => array( 'instructor_signer_id' ), 'unique' => false ),
+					'active' => array( 'columns' => array( 'active' ), 'unique' => false ),
+					'start_date' => array( 'columns' => array( 'start_date' ), 'unique' => false ),
+					'end_date' => array( 'columns' => array( 'end_date' ), 'unique' => false ),
+					'name' => array( 'columns' => array( 'name' ), 'unique' => false ),
+				),
+			),
+			'batch_recipients' => array(
+				'columns' => array(
+					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
+					'batch_id' => array( 'type' => $bigu, 'null' => 'NO' ),
+					'recipient_id' => array( 'type' => $bigu, 'null' => 'NO' ),
+					'created_at' => array( 'type' => $dt, 'null' => 'NO' ),
+				),
+				'indexes' => array(
+					'PRIMARY' => array( 'columns' => array( 'id' ), 'unique' => true ),
+					'batch_recipient' => array( 'columns' => array( 'batch_id', 'recipient_id' ), 'unique' => true ),
+					'recipient_id' => array( 'columns' => array( 'recipient_id' ), 'unique' => false ),
+				),
+			),
+			'signer_assignments' => array(
+				'columns' => array(
+					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
+					'signer_id' => array( 'type' => $bigu, 'null' => 'NO' ),
+					'scope_type' => array( 'type' => '/^varchar\(20\)$/', 'null' => 'NO' ),
+					'scope_id' => array( 'type' => $bigu, 'null' => 'NO', 'default' => '0' ),
+					'role_type' => array( 'type' => '/^varchar\(20\)$/', 'null' => 'NO', 'default' => 'signer' ),
+					'priority' => array( 'type' => '/^int(?:\(10\))? unsigned$/', 'null' => 'NO', 'default' => '100' ),
+					'active' => array( 'type' => '/^tinyint(?:\(1\))?$/', 'null' => 'NO', 'default' => '1' ),
+					'created_at' => array( 'type' => $dt, 'null' => 'NO' ),
+					'updated_at' => array( 'type' => $dt, 'null' => 'NO' ),
+				),
+				'indexes' => array(
+					'PRIMARY' => array( 'columns' => array( 'id' ), 'unique' => true ),
+					'signer_scope' => array( 'columns' => array( 'signer_id', 'scope_type', 'scope_id', 'role_type' ), 'unique' => true ),
+					'scope_lookup' => array( 'columns' => array( 'scope_type', 'scope_id', 'active', 'priority' ), 'unique' => false ),
+					'signer_id' => array( 'columns' => array( 'signer_id' ), 'unique' => false ),
+					'role_type' => array( 'columns' => array( 'role_type' ), 'unique' => false ),
+				),
+			),
 			'credential_series' => array(
 				'columns' => array(
 					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
 					'public_id' => array( 'type' => '/^char\(12\)$/', 'null' => 'NO' ),
 					'recipient_id' => array( 'type' => $bigu, 'null' => 'NO' ),
 					'program_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'batch_id' => array( 'type' => $bigu, 'null' => 'YES' ),
 					'issuer_id' => array( 'type' => $bigu, 'null' => 'YES' ),
 					'current_version_id' => array( 'type' => $bigu, 'null' => 'YES' ),
 					'administrative_state' => array( 'type' => '/^varchar\(20\)$/', 'null' => 'NO', 'default' => 'active' ),
@@ -621,6 +780,7 @@ final class SchemaManager {
 					'public_id' => array( 'columns' => array( 'public_id' ), 'unique' => true ),
 					'recipient_id' => array( 'columns' => array( 'recipient_id' ), 'unique' => false ),
 					'program_id' => array( 'columns' => array( 'program_id' ), 'unique' => false ),
+					'batch_id' => array( 'columns' => array( 'batch_id' ), 'unique' => false ),
 					'issuer_id' => array( 'columns' => array( 'issuer_id' ), 'unique' => false ),
 					'current_version_id' => array( 'columns' => array( 'current_version_id' ), 'unique' => false ),
 					'administrative_state' => array( 'columns' => array( 'administrative_state' ), 'unique' => false ),

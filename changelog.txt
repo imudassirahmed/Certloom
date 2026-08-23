@@ -1,3 +1,18 @@
+1.6.5 — Phase 1 continuation: immutable relationship correction, reviewed bulk orchestration, privacy contract
+----------------------------------------------------------------------------------------------------------------------
+- Add a transaction-backed Program/Batch correction command that locks the Series, re-proves the target, creates a successor immutable Version, preserves the human certificate number, atomically updates the continuing Series/current pointer, and appends a dedicated audit Event.
+- Add bounded reviewed bulk relationship correction that delegates to the single-record command and protects review payloads with WordPress-secret HMAC authentication, expiry, optional administrator binding, and stale-row concurrency checks.
+- Expand the real WordPress/MySQL integration gate to exercise Batch creation, relationship correction, immutable Version advancement, and stale-review rejection.
+- Define the PRV-02 personal-data lifecycle/retention contract so generic erasure cannot silently rewrite immutable issued evidence; dedicated exporter/anonymization implementation remains explicitly open.
+- Keep the proven legacy registry authoritative and every future-domain write/admin/data-tool flag false.
+
+1.6.4 — Phase 1 continuation: Batches, issuer brands, signer hierarchy, immutable history, backup v2 compatibility
+- Adds acceptance-gated Batch/Cohort administration, membership, full issuer brand settings, signer profiles/assignments, and Batch → Program → Issuer → Global signer resolution.
+- Adds Credential Series Batch relationships plus immutable Version lineage and append-only Event history presentation.
+- Expands backup/Replace/Merge restore to new entities using format v2 while remaining compatible with valid v1 backups and old Series rows without batch_id.
+- Hardens related repositories, restore bounds, multilingual issuer slug round trips, uninstall ownership, and capability cleanup.
+- Leaves normalized-domain authority and Program/Batch relationship bulk corrections gated pending real acceptance and immutable correction semantics.
+
 1.6.3 — Phase 1 Part D: reviewed bulk management, onboarding, complete admin shell/workspace, authority unchanged
 ------------------------------------------------------------------------------------------------------------------------
 - Implement REG-04 for the operations the current authoritative registry can safely own: reviewed bulk workflow-status changes, expiry set/clear, and eligible custom-field set/clear.

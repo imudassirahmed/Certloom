@@ -62,7 +62,7 @@ function ecapla_certverify_uninstall_site() {
 				unset( $stored_role['capabilities']['manage_certverify'] );
 				foreach ( array(
 					'certloom_view_credentials', 'certloom_manage_credentials', 'certloom_issue_credentials',
-					'certloom_manage_recipients', 'certloom_manage_programs', 'certloom_manage_issuers', 'certloom_manage_templates',
+					'certloom_manage_recipients', 'certloom_manage_programs', 'certloom_manage_issuers', 'certloom_manage_batches', 'certloom_manage_signers', 'certloom_manage_templates',
 					'certloom_view_analytics', 'certloom_manage_integrations', 'certloom_manage_settings', 'certloom_manage_data_tools',
 				) as $certloom_capability ) {
 					unset( $stored_role['capabilities'][ $certloom_capability ] );
@@ -289,6 +289,10 @@ function ecapla_certverify_uninstall_site() {
 		$wpdb->prefix . 'certloom_credential_numbers',
 		$wpdb->prefix . 'certloom_credential_versions',
 		$wpdb->prefix . 'certloom_credential_series',
+		$wpdb->prefix . 'certloom_signer_assignments',
+		$wpdb->prefix . 'certloom_batch_recipients',
+		$wpdb->prefix . 'certloom_batches',
+		$wpdb->prefix . 'certloom_signers',
 		$wpdb->prefix . 'certloom_programs',
 		$wpdb->prefix . 'certloom_issuers',
 		$wpdb->prefix . 'certloom_recipients',

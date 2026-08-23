@@ -34,27 +34,70 @@ final class DomainRestoreRowValidator {
 		$json  = array();
 		switch ( $entity ) {
 			case 'issuers':
-				if ( '' === trim( (string) $row['name'] ) || '' === sanitize_key( (string) $row['slug'] ) ) {
+				$issuer_name = trim( (string) $row['name'] );
+				$issuer_slug = (string) $row['slug'];
+				if ( '' === $issuer_name || $this->length( $issuer_name ) > 255 || '' === $issuer_slug || ! $this->valid_issuer_slug( $issuer_slug ) || $this->length( $issuer_slug ) > 191 ) {
 					return $this->invalid( 'issuer' );
 				}
 				$json  = array( 'settings_json' );
 				$dates = array( 'created_at' => 'datetime', 'updated_at' => 'datetime' );
 				break;
 			case 'programs':
-				if ( '' === trim( (string) $row['title'] ) || ! in_array( (string) $row['active'], array( '0', '1' ), true ) ) {
+				$program_title = trim( (string) $row['title'] );
+				$program_code  = null === $row['code'] ? null : trim( (string) $row['code'] );
+				if ( '' === $program_title || $this->length( $program_title ) > 255 || ( null !== $program_code && $this->length( $program_code ) > 100 ) || ! in_array( (string) $row['active'], array( '0', '1' ), true ) ) {
 					return $this->invalid( 'program' );
 				}
 				$json  = array( 'metadata_json' );
 				$dates = array( 'created_at' => 'datetime', 'updated_at' => 'datetime' );
 				break;
 			case 'recipients':
-				if ( '' === trim( (string) $row['display_name'] ) ) {
+				$recipient_name = trim( (string) $row['display_name'] );
+				if ( '' === $recipient_name || $this->length( $recipient_name ) > 255 ) {
 					return $this->invalid( 'recipient' );
 				}
-				if ( null !== $row['email'] && '' !== (string) $row['email'] && false === filter_var( (string) $row['email'], FILTER_VALIDATE_EMAIL ) ) {
+				foreach ( array( 'first_name', 'middle_name', 'last_name', 'external_id' ) as $bounded_recipient_field ) {
+					if ( null !== $row[ $bounded_recipient_field ] && $this->length( (string) $row[ $bounded_recipient_field ] ) > 191 ) {
+						return $this->invalid( 'recipient' );
+					}
+				}
+				if ( null !== $row['email'] && '' !== (string) $row['email'] && ( $this->length( (string) $row['email'] ) > 320 || false === filter_var( (string) $row['email'], FILTER_VALIDATE_EMAIL ) ) ) {
 					return new \WP_Error( 'certloom_domain_restore_recipient_email_invalid', __( 'A recipient in the backup contains an invalid email address.', 'certloom' ) );
 				}
 				$json  = array( 'custom_fields' );
+				$dates = array( 'created_at' => 'datetime', 'updated_at' => 'datetime' );
+				break;
+			case 'signers':
+				$signer_name = trim( (string) $row['display_name'] );
+				$signer_slug = (string) $row['slug'];
+				if ( '' === $signer_name || $this->length( $signer_name ) > 255 || '' === $signer_slug || sanitize_key( $signer_slug ) !== $signer_slug || $this->length( $signer_slug ) > 191 || ( null !== $row['title'] && $this->length( (string) $row['title'] ) > 191 ) || ! in_array( (string) $row['active'], array( '0', '1' ), true ) ) {
+					return $this->invalid( 'signer' );
+				}
+				if ( null !== $row['email'] && '' !== (string) $row['email'] && ( $this->length( (string) $row['email'] ) > 320 || false === filter_var( (string) $row['email'], FILTER_VALIDATE_EMAIL ) ) ) {
+					return new \WP_Error( 'certloom_domain_restore_signer_email_invalid', __( 'A signer in the backup contains an invalid email address.', 'certloom' ) );
+				}
+				$json = array( 'metadata_json' );
+				$dates = array( 'created_at' => 'datetime', 'updated_at' => 'datetime' );
+				break;
+			case 'batches':
+				$batch_name = trim( (string) $row['name'] );
+				$batch_code = trim( (string) $row['code'] );
+				if ( '' === $batch_name || $this->length( $batch_name ) > 255 || '' === $batch_code || $this->length( $batch_code ) > 100 || absint( $row['program_id'] ) < 1 || ( null !== $row['instructor_name'] && $this->length( (string) $row['instructor_name'] ) > 255 ) || ! in_array( (string) $row['active'], array( '0', '1' ), true ) ) {
+					return $this->invalid( 'batch' );
+				}
+				$json = array( 'metadata_json' );
+				$dates = array( 'start_date' => 'date', 'end_date' => 'date', 'created_at' => 'datetime', 'updated_at' => 'datetime' );
+				break;
+			case 'batch_recipients':
+				if ( absint( $row['batch_id'] ) < 1 || absint( $row['recipient_id'] ) < 1 ) { return $this->invalid( 'batch_recipient' ); }
+				$dates = array( 'created_at' => 'datetime' );
+				break;
+			case 'signer_assignments':
+				if ( absint( $row['signer_id'] ) < 1 || ! in_array( (string) $row['scope_type'], array( 'global', 'issuer', 'program', 'batch' ), true ) || ! in_array( (string) $row['role_type'], array( 'signer', 'instructor' ), true ) || absint( $row['priority'] ) > 1000 || ! in_array( (string) $row['active'], array( '0', '1' ), true ) ) {
+					return $this->invalid( 'signer_assignment' );
+				}
+				if ( 'global' === (string) $row['scope_type'] && 0 !== absint( $row['scope_id'] ) ) { return $this->invalid( 'signer_assignment' ); }
+				if ( 'global' !== (string) $row['scope_type'] && absint( $row['scope_id'] ) < 1 ) { return $this->invalid( 'signer_assignment' ); }
 				$dates = array( 'created_at' => 'datetime', 'updated_at' => 'datetime' );
 				break;
 			case 'credential_series':
@@ -111,6 +154,13 @@ final class DomainRestoreRowValidator {
 	/** @return \WP_Error */
 	private function invalid( $type ) {
 		return new \WP_Error( 'certloom_domain_restore_' . sanitize_key( $type ) . '_invalid', __( 'A backup record contains invalid Certloom domain data.', 'certloom' ) );
+	}
+
+	private function length( $value ) { return function_exists( 'mb_strlen' ) ? mb_strlen( (string) $value, 'UTF-8' ) : strlen( (string) $value ); }
+
+	/** Accepts canonical WordPress slug bytes, including percent-encoded UTF-8 produced by sanitize_title(). */
+	private function valid_issuer_slug( $value ) {
+		return 1 === preg_match( '/^(?:[a-z0-9_-]|%[a-f0-9]{2})+$/', (string) $value );
 	}
 
 	/** @return bool */

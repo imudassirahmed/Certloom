@@ -5,6 +5,7 @@ use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Application\Data\SafeJson;
 use Certloom\Application\Contract\CredentialQueryRepositoryInterface;
 use Certloom\Application\Contract\CredentialRepositoryInterface;
+use Certloom\Application\Contract\CredentialRelationshipRepositoryInterface;
 use Certloom\Domain\Credential\PublicCredentialId;
 use Certloom\Domain\Credential\States;
 use Certloom\Infrastructure\Database\SchemaManager;
@@ -20,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * services may update the narrowly controlled issuance disposition/state while
  * immutable snapshot/content fields remain write-once after issue.
  */
-final class CredentialRepository implements CredentialRepositoryInterface, CredentialQueryRepositoryInterface {
+final class CredentialRepository implements CredentialRepositoryInterface, CredentialRelationshipRepositoryInterface, CredentialQueryRepositoryInterface {
 	/** @var PublicCredentialId */
 	private $public_ids;
 
@@ -39,6 +40,30 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		$recipient_id = absint( $data['recipient_id'] ?? 0 );
 		if ( ! $recipient_id ) {
 			return new \WP_Error( 'certloom_series_recipient_required', __( 'A credential recipient is required.', 'certloom' ) );
+		}
+		$recipient_exists = $this->reference_exists( 'recipients', $recipient_id );
+		if ( is_wp_error( $recipient_exists ) ) { return $recipient_exists; }
+		if ( ! $recipient_exists ) { return new \WP_Error( 'certloom_series_recipient_missing', __( 'The selected credential recipient does not exist.', 'certloom' ) ); }
+
+		$program_id = ! empty( $data['program_id'] ) ? absint( $data['program_id'] ) : null;
+		$batch_id   = ! empty( $data['batch_id'] ) ? absint( $data['batch_id'] ) : null;
+		$issuer_id  = ! empty( $data['issuer_id'] ) ? absint( $data['issuer_id'] ) : null;
+		if ( $program_id ) {
+			$program_exists = $this->reference_exists( 'programs', $program_id );
+			if ( is_wp_error( $program_exists ) ) { return $program_exists; }
+			if ( ! $program_exists ) { return new \WP_Error( 'certloom_series_program_missing', __( 'The selected credential program does not exist.', 'certloom' ) ); }
+		}
+		if ( $batch_id ) {
+			$batch_program_id = $this->batch_program_id( $batch_id );
+			if ( is_wp_error( $batch_program_id ) ) { return $batch_program_id; }
+			if ( ! $batch_program_id ) { return new \WP_Error( 'certloom_series_batch_missing', __( 'The selected credential batch does not exist.', 'certloom' ) ); }
+			if ( $program_id && $program_id !== $batch_program_id ) { return new \WP_Error( 'certloom_series_batch_program_mismatch', __( 'The selected batch belongs to a different credential program.', 'certloom' ) ); }
+			$program_id = $batch_program_id;
+		}
+		if ( $issuer_id ) {
+			$issuer_exists = $this->reference_exists( 'issuers', $issuer_id );
+			if ( is_wp_error( $issuer_exists ) ) { return $issuer_exists; }
+			if ( ! $issuer_exists ) { return new \WP_Error( 'certloom_series_issuer_missing', __( 'The selected credential issuer does not exist.', 'certloom' ) ); }
 		}
 
 		$administrative_state = isset( $data['administrative_state'] ) ? (string) $data['administrative_state'] : States::ADMIN_ACTIVE;
@@ -66,8 +91,9 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 			$row = array(
 				'public_id' => $public_id,
 				'recipient_id' => $recipient_id,
-				'program_id' => ! empty( $data['program_id'] ) ? absint( $data['program_id'] ) : null,
-				'issuer_id' => ! empty( $data['issuer_id'] ) ? absint( $data['issuer_id'] ) : null,
+				'program_id' => $program_id,
+				'batch_id' => $batch_id,
+				'issuer_id' => $issuer_id,
 				'current_version_id' => null,
 				'administrative_state' => $administrative_state,
 				'compliance_state' => $compliance_state,
@@ -196,6 +222,70 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 			return $linked;
 		}
 		return $version_id;
+	}
+
+	/**
+	 * Validates a Program/Batch correction target without mutating credential state.
+	 * A selected Batch is authoritative for its Program.
+	 *
+	 * @return array<string,mixed>|null|\WP_Error
+	 */
+	public function validate_relationship_target( $program_id, $batch_id ) {
+		$program_id = ! empty( $program_id ) ? absint( $program_id ) : null;
+		$batch_id   = ! empty( $batch_id ) ? absint( $batch_id ) : null;
+		if ( $batch_id ) {
+			$batch_program_id = $this->batch_program_id( $batch_id );
+			if ( is_wp_error( $batch_program_id ) ) { return $batch_program_id; }
+			if ( ! $batch_program_id ) { return new \WP_Error( 'certloom_relationship_batch_missing', __( 'The selected credential batch does not exist.', 'certloom' ) ); }
+			if ( $program_id && $program_id !== $batch_program_id ) { return new \WP_Error( 'certloom_relationship_batch_program_mismatch', __( 'The selected batch belongs to a different credential program.', 'certloom' ) ); }
+			$program_id = $batch_program_id;
+		}
+		if ( $program_id ) {
+			$exists = $this->reference_exists( 'programs', $program_id );
+			if ( is_wp_error( $exists ) ) { return $exists; }
+			if ( ! $exists ) { return new \WP_Error( 'certloom_relationship_program_missing', __( 'The selected credential program does not exist.', 'certloom' ) ); }
+		}
+		return array( 'program_id' => $program_id, 'batch_id' => $batch_id );
+	}
+
+	/**
+	 * Compare-and-swap the continuing Series relationship after immutable correction evidence exists.
+	 * This narrow method intentionally cannot alter Recipient, Issuer, lifecycle state, or snapshots.
+	 *
+	 * @return true|\WP_Error
+	 */
+	public function set_relationships( $series_id, $expected_program_id, $expected_batch_id, $program_id, $batch_id, $expected_updated_at = null ) {
+		global $wpdb;
+		$series_id           = absint( $series_id );
+		$expected_program_id = ! empty( $expected_program_id ) ? absint( $expected_program_id ) : null;
+		$expected_batch_id   = ! empty( $expected_batch_id ) ? absint( $expected_batch_id ) : null;
+		$target              = $this->validate_relationship_target( $program_id, $batch_id );
+		if ( is_wp_error( $target ) ) { return $target; }
+		if ( ! $series_id ) { return new \WP_Error( 'certloom_relationship_series_required', __( 'A valid credential series is required.', 'certloom' ) ); }
+
+		$generation = ( new DomainGeneration() )->mark_before_mutation();
+		if ( is_wp_error( $generation ) ) { return $generation; }
+		$now = current_time( 'mysql', true );
+		$set_program = null === $target['program_id'] ? 'program_id=NULL' : 'program_id=%d';
+		$set_batch   = null === $target['batch_id'] ? 'batch_id=NULL' : 'batch_id=%d';
+		$where_program = null === $expected_program_id ? 'program_id IS NULL' : 'program_id=%d';
+		$where_batch   = null === $expected_batch_id ? 'batch_id IS NULL' : 'batch_id=%d';
+		$sql  = 'UPDATE %i SET ' . $set_program . ', ' . $set_batch . ', updated_at=%s WHERE id=%d AND ' . $where_program . ' AND ' . $where_batch;
+		$args = array( SchemaManager::table( 'credential_series' ) );
+		if ( null !== $target['program_id'] ) { $args[] = $target['program_id']; }
+		if ( null !== $target['batch_id'] ) { $args[] = $target['batch_id']; }
+		$args[] = $now;
+		$args[] = $series_id;
+		if ( null !== $expected_program_id ) { $args[] = $expected_program_id; }
+		if ( null !== $expected_batch_id ) { $args[] = $expected_batch_id; }
+		if ( null !== $expected_updated_at ) {
+			$sql .= ' AND updated_at=%s';
+			$args[] = (string) $expected_updated_at;
+		}
+		$wpdb->last_error = '';
+		$updated = $wpdb->query( $wpdb->prepare( $sql, ...$args ) );
+		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_relationship_update_failed', __( 'Certloom could not update the credential relationship.', 'certloom' ) ); }
+		return 1 === (int) $updated ? true : new \WP_Error( 'certloom_relationship_conflict', __( 'The credential relationship changed while this correction was running. Reload and review it again.', 'certloom' ) );
 	}
 
 	/** @return true|\WP_Error */
@@ -340,7 +430,7 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		$wpdb->last_error = '';
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				'SELECT s.id AS series_id, s.public_id, s.recipient_id, s.program_id, s.issuer_id, s.current_version_id, s.administrative_state, s.compliance_state, s.visibility, v.id AS version_id, v.version_number, v.display_number, v.issuance_state, v.legacy_expired, v.valid_from, v.issued_at, v.expires_at FROM %i s LEFT JOIN %i v ON v.id = s.current_version_id AND v.series_id = s.id WHERE s.public_id = %s LIMIT 1',
+				'SELECT s.id AS series_id, s.public_id, s.recipient_id, s.program_id, s.batch_id, s.issuer_id, s.current_version_id, s.administrative_state, s.compliance_state, s.visibility, v.id AS version_id, v.version_number, v.display_number, v.issuance_state, v.legacy_expired, v.valid_from, v.issued_at, v.expires_at FROM %i s LEFT JOIN %i v ON v.id = s.current_version_id AND v.series_id = s.id WHERE s.public_id = %s LIMIT 1',
 				SchemaManager::table( 'credential_series' ),
 				SchemaManager::table( 'credential_versions' ),
 				$public_id
@@ -354,7 +444,7 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 			return null;
 		}
 
-		foreach ( array( 'series_id', 'recipient_id', 'program_id', 'issuer_id', 'current_version_id', 'version_id', 'version_number' ) as $key ) {
+		foreach ( array( 'series_id', 'recipient_id', 'program_id', 'batch_id', 'issuer_id', 'current_version_id', 'version_id', 'version_number' ) as $key ) {
 			$row[ $key ] = ! empty( $row[ $key ] ) ? absint( $row[ $key ] ) : null;
 		}
 		return $row;
@@ -395,23 +485,25 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		$args = array();
 		if ( '' !== $search ) {
 			$like = '%' . $wpdb->esc_like( $search ) . '%';
-			$where = ' WHERE s.public_id LIKE %s OR v.display_number LIKE %s OR r.display_name LIKE %s OR p.title LIKE %s';
-			$args = array( $like, $like, $like, $like );
+			$where = ' WHERE s.public_id LIKE %s OR v.display_number LIKE %s OR r.display_name LIKE %s OR p.title LIKE %s OR b.name LIKE %s OR b.code LIKE %s';
+			$args = array( $like, $like, $like, $like, $like, $like );
 		}
 		$series = SchemaManager::table( 'credential_series' );
 		$versions = SchemaManager::table( 'credential_versions' );
 		$recipients = SchemaManager::table( 'recipients' );
 		$programs = SchemaManager::table( 'programs' );
-		$joins = ' FROM %i s LEFT JOIN %i v ON v.id = s.current_version_id AND v.series_id = s.id LEFT JOIN %i r ON r.id = s.recipient_id LEFT JOIN %i p ON p.id = s.program_id';
+		$batches = SchemaManager::table( 'batches' );
+		$joins = ' FROM %i s LEFT JOIN %i v ON v.id = s.current_version_id AND v.series_id = s.id LEFT JOIN %i r ON r.id = s.recipient_id LEFT JOIN %i p ON p.id = s.program_id LEFT JOIN %i b ON b.id = s.batch_id';
 		$wpdb->last_error = '';
-		$total = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*)' . $joins . $where, array_merge( array( $series, $versions, $recipients, $programs ), $args ) ) );
-		$sql = 'SELECT s.id AS series_id, s.public_id, s.administrative_state, s.compliance_state, s.visibility, r.display_name, p.title AS program_title, v.id AS version_id, v.display_number, v.issuance_state, v.legacy_expired, v.valid_from, v.issued_at, v.expires_at' . $joins . $where . ' ORDER BY s.id DESC LIMIT %d OFFSET %d';
-		$items = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( array( $series, $versions, $recipients, $programs ), $args, array( $per_page, $offset ) ) ), ARRAY_A );
+		$total = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*)' . $joins . $where, array_merge( array( $series, $versions, $recipients, $programs, $batches ), $args ) ) );
+		$sql = 'SELECT s.id AS series_id, s.public_id, s.batch_id, s.administrative_state, s.compliance_state, s.visibility, r.display_name, p.title AS program_title, b.name AS batch_name, v.id AS version_id, v.display_number, v.issuance_state, v.legacy_expired, v.valid_from, v.issued_at, v.expires_at' . $joins . $where . ' ORDER BY s.id DESC LIMIT %d OFFSET %d';
+		$items = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( array( $series, $versions, $recipients, $programs, $batches ), $args, array( $per_page, $offset ) ) ), ARRAY_A );
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $items ) ) {
 			return new \WP_Error( 'certloom_credential_list_failed', __( 'Certloom could not load the credential registry.', 'certloom' ) );
 		}
 		foreach ( $items as &$item ) {
 			$item['series_id'] = absint( $item['series_id'] ?? 0 );
+			$item['batch_id'] = ! empty( $item['batch_id'] ) ? absint( $item['batch_id'] ) : null;
 			$item['version_id'] = ! empty( $item['version_id'] ) ? absint( $item['version_id'] ) : null;
 		}
 		unset( $item );
@@ -442,6 +534,18 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 			return new \WP_Error( 'certloom_version_read_failed', __( 'Certloom could not read the credential version.', 'certloom' ) );
 		}
 		return is_array( $row ) ? self::decode_version( $row ) : null;
+	}
+
+	/** @return array<int,array<string,mixed>>|\WP_Error */
+	public function list_versions_for_series( $series_id, $limit = 100 ) {
+		global $wpdb;
+		$series_id = absint( $series_id ); $limit = max( 1, min( 250, absint( $limit ) ) );
+		if ( ! $series_id ) { return array(); }
+		$wpdb->last_error = '';
+		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i WHERE series_id = %d ORDER BY version_number DESC, id DESC LIMIT %d', SchemaManager::table( 'credential_versions' ), $series_id, $limit ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) { return new \WP_Error( 'certloom_version_list_failed', __( 'Certloom could not load credential Version history.', 'certloom' ) ); }
+		foreach ( $rows as &$row ) { $row = self::decode_version( $row ); if ( is_wp_error( $row ) ) { return $row; } } unset( $row );
+		return $rows;
 	}
 
 	/** @return array<string,mixed>|null|\WP_Error */
@@ -571,7 +675,7 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 
 	/** @return array<string,mixed> */
 	private static function decode_series( array $row ) {
-		foreach ( array( 'id', 'recipient_id', 'program_id', 'issuer_id', 'current_version_id' ) as $key ) {
+		foreach ( array( 'id', 'recipient_id', 'program_id', 'batch_id', 'issuer_id', 'current_version_id' ) as $key ) {
 			$row[ $key ] = ! empty( $row[ $key ] ) ? absint( $row[ $key ] ) : null;
 		}
 		return $row;
@@ -586,6 +690,24 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		$row['snapshot'] = ( new SafeJson() )->decode_array( $row['snapshot_json'] ?? null, 'certloom_version_snapshot_corrupt', __( 'Stored credential snapshot is invalid JSON.', 'certloom' ) );
 		unset( $row['snapshot_json'] );
 		return is_wp_error( $row['snapshot'] ) ? $row['snapshot'] : $row;
+	}
+
+	/** @return bool|\WP_Error */
+	private function reference_exists( $entity, $id ) {
+		global $wpdb;
+		$wpdb->last_error = '';
+		$found = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM %i WHERE id=%d LIMIT 1', SchemaManager::table( $entity ), absint( $id ) ) );
+		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_series_reference_read_failed', __( 'Certloom could not validate a related credential record.', 'certloom' ) ); }
+		return ! empty( $found );
+	}
+
+	/** @return int|\WP_Error */
+	private function batch_program_id( $batch_id ) {
+		global $wpdb;
+		$wpdb->last_error = '';
+		$program_id = $wpdb->get_var( $wpdb->prepare( 'SELECT program_id FROM %i WHERE id=%d LIMIT 1', SchemaManager::table( 'batches' ), absint( $batch_id ) ) );
+		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_series_batch_read_failed', __( 'Certloom could not validate the credential batch.', 'certloom' ) ); }
+		return absint( $program_id );
 	}
 
 	/** @return string */

@@ -20,10 +20,12 @@ if ( ! ( defined( 'WP_CLI' ) && WP_CLI ) && ! defined( 'CERTLOOM_RUN_INTEGRATION
 }
 
 use Certloom\Application\CredentialLifecycleService;
+use Certloom\Application\CredentialRelationshipCorrectionService;
 use Certloom\Application\CredentialVerificationService;
 use Certloom\Domain\Credential\PublicCredentialId;
 use Certloom\Infrastructure\Database\SchemaManager;
 use Certloom\Infrastructure\Repository\CredentialRepository;
+use Certloom\Infrastructure\Repository\BatchRepository;
 use Certloom\Infrastructure\Repository\IssuerRepository;
 use Certloom\Infrastructure\Repository\ProgramRepository;
 use Certloom\Infrastructure\Repository\RecipientRepository;
@@ -103,6 +105,19 @@ try {
 	$result = certloom_it_ok( $verify->verify_public_id( $series['public_id'] ), 'Reinstated verification failed' );
 	certloom_it_assert( $result->status()->is_valid(), 'Reinstated credential should verify valid.' );
 
+	$batch_repo = new BatchRepository();
+	$batch_id = certloom_it_ok( $batch_repo->create( array( 'program_id' => $program_id, 'name' => 'Integration Batch ' . $suffix, 'code' => 'IT-B-' . strtoupper( $suffix ) ) ), 'Batch create failed' );
+	$cleanup['batch'] = $batch_id;
+	$before_correction = certloom_it_ok( $credential_repo->find_series( $series_id ), 'Series read before correction failed' );
+	$correction = new CredentialRelationshipCorrectionService();
+	$corrected = certloom_it_ok( $correction->correct( $series_id, $program_id, $batch_id, array( 'actor_user_id' => get_current_user_id(), 'expected_updated_at' => $before_correction['updated_at'], 'reason_code' => 'integration_relationship_correction' ) ), 'Relationship correction failed' );
+	certloom_it_assert( ! empty( $corrected['changed'] ) && ! empty( $corrected['version_id'] ), 'Relationship correction did not create immutable evidence.' );
+	$after_correction = certloom_it_ok( $credential_repo->find_series( $series_id ), 'Series read after correction failed' );
+	certloom_it_assert( absint( $after_correction['batch_id'] ) === absint( $batch_id ), 'Relationship correction did not update the continuing Series Batch.' );
+	certloom_it_assert( absint( $after_correction['current_version_id'] ) === absint( $corrected['version_id'] ), 'Relationship correction did not advance the current Version pointer.' );
+	$stale = $correction->correct( $series_id, $program_id, null, array( 'expected_updated_at' => $before_correction['updated_at'] ) );
+	certloom_it_assert( is_wp_error( $stale ) && 'certloom_relationship_review_stale' === $stale->get_error_code(), 'Stale relationship review did not fail closed.' );
+
 	certloom_it_ok( $lifecycle->revoke( $series_id, array( 'reason_code' => 'integration_test' ) ), 'Revoke command failed' );
 	$result = certloom_it_ok( $verify->verify_public_id( $series['public_id'] ), 'Revoked verification failed' );
 	certloom_it_assert( 'revoked' === $result->status()->code(), 'Revoked credential did not verify revoked.' );
@@ -116,6 +131,7 @@ try {
 	echo "PASS  schema activation and exact health verification\n";
 	echo "PASS  recipient/program/issuer/Series/Version persistence\n";
 	echo "PASS  transaction-backed issue/suspend/reinstate/revoke events\n";
+	echo "PASS  immutable Program/Batch relationship correction and stale-review rejection\n";
 	echo "PASS  direct public-ID verification and read-time Status Service\n";
 	echo "PASS  legacy registry remained untouched\n";
 } catch ( Throwable $error ) {
@@ -126,11 +142,16 @@ try {
 	if ( ! empty( $cleanup['series'] ) ) {
 		$wpdb->delete( SchemaManager::table( 'credential_events' ), array( 'series_id' => (int) $cleanup['series'] ), array( '%d' ) );
 	}
-	if ( ! empty( $cleanup['version'] ) ) {
-		$wpdb->delete( SchemaManager::table( 'credential_versions' ), array( 'id' => (int) $cleanup['version'] ), array( '%d' ) );
+	if ( ! empty( $cleanup['series'] ) ) {
+		$wpdb->delete( SchemaManager::table( 'credential_numbers' ), array( 'series_id' => (int) $cleanup['series'] ), array( '%d' ) );
+		$wpdb->delete( SchemaManager::table( 'credential_versions' ), array( 'series_id' => (int) $cleanup['series'] ), array( '%d' ) );
 	}
 	if ( ! empty( $cleanup['series'] ) ) {
 		$wpdb->delete( SchemaManager::table( 'credential_series' ), array( 'id' => (int) $cleanup['series'] ), array( '%d' ) );
+	}
+	if ( ! empty( $cleanup['batch'] ) ) {
+		$wpdb->delete( SchemaManager::table( 'batch_recipients' ), array( 'batch_id' => (int) $cleanup['batch'] ), array( '%d' ) );
+		$wpdb->delete( SchemaManager::table( 'batches' ), array( 'id' => (int) $cleanup['batch'] ), array( '%d' ) );
 	}
 	if ( ! empty( $cleanup['program'] ) ) {
 		$wpdb->delete( SchemaManager::table( 'programs' ), array( 'id' => (int) $cleanup['program'] ), array( '%d' ) );

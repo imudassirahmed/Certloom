@@ -10,7 +10,7 @@ class Ecapla_CertVerify_Permissions {
 
 	const MANAGER_ROLE              = 'certverify_manager';
 	const CAPABILITY_SCHEMA_OPTION  = 'certverify_capability_schema_version';
-	const CAPABILITY_SCHEMA_VERSION = '1.5.4';
+	const CAPABILITY_SCHEMA_VERSION = '1.6.4';
 	const MANAGER_PRESERVED_OPTION  = 'certverify_manager_role_preserved';
 	const UNINSTALL_CLEANUP_OPTION  = 'certverify_uninstall_role_cleanup_failed';
 	const HEALTH_OPTION             = 'certverify_capability_health';
@@ -22,6 +22,8 @@ class Ecapla_CertVerify_Permissions {
 	const CAP_MANAGE_RECIPIENTS    = 'certloom_manage_recipients';
 	const CAP_MANAGE_PROGRAMS      = 'certloom_manage_programs';
 	const CAP_MANAGE_ISSUERS       = 'certloom_manage_issuers';
+	const CAP_MANAGE_BATCHES       = 'certloom_manage_batches';
+	const CAP_MANAGE_SIGNERS       = 'certloom_manage_signers';
 	const CAP_MANAGE_TEMPLATES     = 'certloom_manage_templates';
 	const CAP_VIEW_ANALYTICS       = 'certloom_view_analytics';
 	const CAP_MANAGE_INTEGRATIONS  = 'certloom_manage_integrations';
@@ -37,6 +39,8 @@ class Ecapla_CertVerify_Permissions {
 			self::CAP_MANAGE_RECIPIENTS,
 			self::CAP_MANAGE_PROGRAMS,
 			self::CAP_MANAGE_ISSUERS,
+			self::CAP_MANAGE_BATCHES,
+			self::CAP_MANAGE_SIGNERS,
 			self::CAP_MANAGE_TEMPLATES,
 			self::CAP_VIEW_ANALYTICS,
 			self::CAP_MANAGE_INTEGRATIONS,

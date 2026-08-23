@@ -29,7 +29,7 @@ namespace {
 }
 
 namespace Certloom\Infrastructure\Backup {
-    final class DomainBackupRepository { public static function entity_types(){ return array('issuers','programs','recipients','credential_series','credential_numbers','credential_versions','credential_events'); } }
+    final class DomainBackupRepository { public static function entity_types(){ return array('issuers','programs','recipients','signers','batches','batch_recipients','signer_assignments','credential_series','credential_numbers','credential_versions','credential_events'); } }
 }
 namespace Certloom\Infrastructure\Repository {
     final class LegacyCertificateRepository { public function snapshot(){ return $GLOBALS['srr_source']; } }
@@ -52,7 +52,7 @@ namespace {
     srr_same( true, StagingRestoreRehearsal::available(), 'restore rehearsal requires non-production environment plus explicit opt-in' );
     $now=time();
     $entities=Certloom\Infrastructure\Backup\DomainBackupRepository::entity_types();
-    $baseline=array('issuers'=>1,'programs'=>1,'recipients'=>2,'credential_series'=>2,'credential_numbers'=>2,'credential_versions'=>2,'credential_events'=>3);
+    $baseline=array('issuers'=>1,'programs'=>1,'recipients'=>2,'signers'=>1,'batches'=>1,'batch_recipients'=>2,'signer_assignments'=>1,'credential_series'=>2,'credential_numbers'=>2,'credential_versions'=>2,'credential_events'=>3);
     $records=array_sum($baseline);
     $GLOBALS['srr_options'][StagingRestoreRehearsal::RESULT_OPTION]=array(
         'schema'=>StagingRestoreRehearsal::RESULT_SCHEMA,'version'=>StagingRestoreRehearsal::RESULT_VERSION,
