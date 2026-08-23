@@ -80,6 +80,23 @@
 		} );
 	}
 
+	function initBulkOperationFields() {
+		var select = document.querySelector( '[data-certloom-bulk-operation]' );
+		if ( ! select ) { return; }
+		function update() {
+			var value = select.value;
+			var groups = document.querySelectorAll( '[data-certloom-bulk-fields]' );
+			for ( var i = 0; i < groups.length; i++ ) {
+				var allowed = groups[ i ].getAttribute( 'data-certloom-bulk-fields' ).split( ',' );
+				groups[ i ].classList.toggle( 'is-active', allowed.indexOf( value ) !== -1 );
+			}
+			var valueField = document.querySelector( '[data-certloom-bulk-value]' );
+			if ( valueField ) { valueField.hidden = 'clear_custom_field' === value; }
+		}
+		select.addEventListener( 'change', update );
+		update();
+	}
+
 	function initDomainKeyValueLists() {
 		document.addEventListener( 'click', function ( event ) {
 			var add = event.target.closest( '[data-certloom-add-kv]' );
@@ -114,6 +131,7 @@
 	document.addEventListener( 'DOMContentLoaded', function () {
 		initFields();
 		initConfirmations();
+		initBulkOperationFields();
 		initDomainKeyValueLists();
 	} );
 } )();

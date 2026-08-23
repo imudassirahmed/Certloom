@@ -169,7 +169,10 @@ class Ecapla_CertVerify_List_Table extends WP_List_Table {
 	}
 
 	public function get_bulk_actions() {
-		return array( 'delete' => __( 'Delete', 'certloom' ) );
+		return array(
+			'bulk_edit' => __( 'Change selected…', 'certloom' ),
+			'delete'    => __( 'Delete', 'certloom' ),
+		);
 	}
 
 	protected function extra_tablenav( $which ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
@@ -178,7 +181,7 @@ class Ecapla_CertVerify_List_Table extends WP_List_Table {
 	}
 
 	public function prepare_items() {
-		$this->_column_headers = array( $this->get_columns(), array(), $this->get_sortable_columns() );
+		$this->_column_headers = array( $this->get_columns(), $this->get_hidden_columns(), $this->get_sortable_columns() );
 		$per_page     = 20;
 		$current_page = $this->get_pagenum();
 
@@ -191,6 +194,10 @@ class Ecapla_CertVerify_List_Table extends WP_List_Table {
 				'status'         => isset( $_REQUEST['status'] ) ? sanitize_key( wp_unslash( $_REQUEST['status'] ) ) : '',
 				'legacy_expired' => $legacy_expired,
 				'attention'      => isset( $_REQUEST['attention'] ) ? sanitize_key( wp_unslash( $_REQUEST['attention'] ) ) : '',
+				'issue_from'     => isset( $_REQUEST['issue_from'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['issue_from'] ) ) : '',
+				'issue_to'       => isset( $_REQUEST['issue_to'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['issue_to'] ) ) : '',
+				'expiry_from'    => isset( $_REQUEST['expiry_from'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['expiry_from'] ) ) : '',
+				'expiry_to'      => isset( $_REQUEST['expiry_to'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['expiry_to'] ) ) : '',
 				'orderby'        => isset( $_REQUEST['orderby'] ) ? sanitize_key( wp_unslash( $_REQUEST['orderby'] ) ) : 'created_at',
 				'order'          => isset( $_REQUEST['order'] ) ? sanitize_key( wp_unslash( $_REQUEST['order'] ) ) : 'DESC',
 				'per_page'       => $per_page,
@@ -220,6 +227,12 @@ class Ecapla_CertVerify_List_Table extends WP_List_Table {
 				'total_pages' => (int) ceil( $result['total'] / $per_page ),
 			)
 		);
+	}
+
+	private function get_hidden_columns() {
+		$saved = get_user_meta( get_current_user_id(), 'certloom_registry_hidden_columns', true );
+		$allowed = array( 'holder_name', 'status', 'issue_date', 'expiry_date' );
+		return is_array( $saved ) ? array_values( array_intersect( $allowed, array_map( 'sanitize_key', $saved ) ) ) : array();
 	}
 
 	/**

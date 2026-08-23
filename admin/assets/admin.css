@@ -1953,3 +1953,150 @@
 		align-self: flex-start;
 	}
 }
+
+/* Phase 1D: reviewed bulk management + non-blocking setup. */
+.certloom-bulk-layout,
+.certloom-setup-grid {
+	display: grid;
+	grid-template-columns: minmax(0, 1.6fr) minmax(280px, .9fr);
+	gap: 20px;
+	margin-top: 20px;
+}
+.certloom-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
+.certloom-form-field { display: flex; flex-direction: column; gap: 6px; }
+.certloom-form-field-wide { grid-column: 1 / -1; }
+.certloom-bulk-operation-fields { display: none; grid-column: 1 / -1; gap: 16px; }
+.certloom-bulk-operation-fields.is-active { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+.certloom-bulk-selection-list { margin: 0; }
+.certloom-bulk-selection-list li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid #e2e8f0; }
+.certloom-bulk-selection-list li span { color: #646970; text-align: right; }
+.certloom-bulk-commit-panel { margin-top: 20px; }
+.certloom-bulk-summary-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin: 16px 0; }
+.certloom-bulk-summary-grid > div { padding: 16px; border: 1px solid #dcdcde; border-radius: 8px; background: #f8fafc; }
+.certloom-bulk-summary-grid span { display: block; color: #646970; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.certloom-bulk-summary-grid strong { display: block; margin-top: 4px; font-size: 24px; }
+.certloom-bulk-skipped { margin: 16px 0; }
+.certloom-setup-complete-badge { align-self: center; display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 999px; background: #edfaef; color: #1e6a2f; font-weight: 600; }
+.certloom-setup-checklist { margin: 0; display: grid; gap: 14px; }
+.certloom-setup-checklist li { display: flex; gap: 12px; padding: 14px; margin: 0; border: 1px solid #dcdcde; border-radius: 10px; background: #fff; }
+.certloom-setup-checklist li.is-done { border-color: #b8dfc2; background: #f6fff8; }
+.certloom-setup-checklist li .dashicons { color: #646970; }
+.certloom-setup-checklist li.is-done .dashicons { color: #1e6a2f; }
+.certloom-setup-checklist p { margin: 4px 0 0; }
+.certloom-setup-create-page { margin-top: 18px; padding-top: 18px; border-top: 1px solid #dcdcde; }
+.certloom-setup-finish { margin-top: 20px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+@media (max-width: 960px) {
+	.certloom-bulk-layout,
+	.certloom-setup-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+	.certloom-form-grid,
+	.certloom-bulk-operation-fields.is-active,
+	.certloom-bulk-summary-grid { grid-template-columns: 1fr; }
+	.certloom-setup-finish { align-items: stretch; flex-direction: column; }
+}
+.certloom-reviewed-operation { margin: 12px 0 4px; padding: 14px 16px; border-left: 4px solid #2271b1; background: #f0f6fc; }
+.certloom-reviewed-operation span { display:block; color:#646970; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+.certloom-reviewed-operation strong { display:block; margin-top:4px; }
+.certloom-column-preferences { margin: 12px 0 0; width: fit-content; }
+.certloom-column-preferences > summary { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.certloom-column-preferences-form { margin-top: 10px; padding: 14px 16px; border: 1px solid #dcdcde; border-radius: 8px; background: #fff; min-width: 320px; }
+.certloom-column-options { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px 16px; margin: 12px 0; }
+.certloom-date-filter-grid { display: grid; grid-template-columns: repeat(4,minmax(150px,1fr)); gap: 12px; margin-top: 12px; }
+@media (max-width: 900px) { .certloom-date-filter-grid { grid-template-columns: repeat(2,minmax(150px,1fr)); } }
+@media (max-width: 540px) { .certloom-date-filter-grid, .certloom-column-options { grid-template-columns: 1fr; } .certloom-column-preferences-form { min-width: 0; } }
+
+/* 1.6.3 premium application-shell and credential-workspace refinements. */
+.certloom-workspace-nav {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0 0 18px;
+	padding: 10px;
+	border: 1px solid #dcdcde;
+	border-radius: 10px;
+	background: #fff;
+}
+
+.certloom-workspace-nav a {
+	display: inline-flex;
+	align-items: center;
+	min-height: 36px;
+	padding: 0 10px;
+	border-radius: 6px;
+	text-decoration: none;
+	font-weight: 600;
+}
+
+.certloom-workspace-nav a:focus-visible,
+.certloom-workspace-nav a:hover {
+	box-shadow: 0 0 0 2px currentColor;
+	outline: 0;
+}
+
+.certloom-editor-section {
+	scroll-margin-top: 48px;
+}
+
+.certloom-gated-note {
+	display: flex;
+	gap: 8px;
+	align-items: flex-start;
+	margin-top: 14px;
+}
+
+.certloom-gated-note .dashicons {
+	flex: 0 0 auto;
+	margin-top: 1px;
+}
+
+.certloom-record-facts {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+	margin: 0;
+}
+
+.certloom-record-facts > div {
+	padding: 12px;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	background: #f6f7f7;
+}
+
+.certloom-record-facts dt {
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: .03em;
+}
+
+.certloom-record-facts dd {
+	margin: 5px 0 0;
+	font-weight: 600;
+}
+
+.certloom-roadmap-state {
+	max-width: 900px;
+}
+
+@media (max-width: 782px) {
+	.certloom-workspace-nav {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.certloom-workspace-nav a {
+		justify-content: center;
+	}
+
+	.certloom-record-facts {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.certloom-editor-section {
+		scroll-behavior: auto;
+	}
+}

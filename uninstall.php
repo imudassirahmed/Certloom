@@ -153,6 +153,8 @@ function ecapla_certverify_uninstall_site() {
 		'_transient_timeout_ecapla_certverify_rl_',
 		'_transient_ecapla_certverify_backup_',
 		'_transient_timeout_ecapla_certverify_backup_',
+		'_transient_ecapla_certverify_bulk_',
+		'_transient_timeout_ecapla_certverify_bulk_',
 		'_transient_certloom_import_map_',
 		'_transient_timeout_certloom_import_map_',
 		'_transient_certloom_domain_data_tools_notice_',
@@ -299,6 +301,7 @@ function ecapla_certverify_uninstall_site() {
 	delete_option( 'certverify_fields' );
 	delete_option( 'certverify_retired_fields' );
 	delete_option( 'certverify_settings' );
+	delete_option( 'certverify_onboarding' );
 	delete_option( 'certverify_schema_version' );
 	delete_option( 'certverify_db_version' );
 	delete_option( 'certverify_legacy_expired_review_count' );

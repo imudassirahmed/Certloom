@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.2
+Stable tag: 1.6.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.2: Certloom continues original Phase 1 Part C by completing premium Recipient and standalone Program administration behind the existing future-domain acceptance gate. The normalized screens now cover recipient identity, WordPress-user association, safe custom fields, credential history, program descriptions, issuer relationships, default validity, status, metadata, and credential activity. The proven legacy registry remains production authority and all future-domain write/admin/data-tool flags remain disabled until real staging acceptance passes.
+> Development note for 1.6.3: Certloom completes Phase 1 Part D current-authority admin work with reviewed bulk changes, non-blocking onboarding, date filters, per-user registry columns, the planned application shell, and a complete credential workspace. Recipient/Program normalized-domain administration remains acceptance-gated; Program/Batch bulk assignment is not simulated in legacy data, and all future-domain write/admin/data-tool flags remain disabled until real staging acceptance passes.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -121,6 +121,20 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.3 =
+* Phase 1 Part D: reviewed advanced bulk management, non-blocking onboarding, and the formal Phase 1 exit audit.
+* Added frozen-selection bulk review/commit for workflow status, expiry dates, and eligible custom fields, with optimistic concurrency so stale reviews cannot overwrite later edits.
+* Added date-range registry filters, per-user column preferences, preserved list state, onboarding progress, and a real public verification test step.
+* Completed the planned premium application shell and credential workspace while showing future/gated modules as honest informational states rather than fake active controls.
+* Program/Batch bulk assignment, normalized Recipient/Program production exposure, and immutable activity history remain gated by their real domain dependencies.
+* Kept all three future-domain production readiness flags disabled.
+
+= 1.6.2 =
+* Phase 1 Part C: completed premium Recipient and standalone Program administration behind the existing normalized-domain acceptance gate.
+* Added full recipient identity, WordPress-user association, external ID, safe custom fields, bounded credential history, Program description/issuer/default-validity/metadata, and credential activity.
+* Preserved unsupported nested/typed metadata rather than coercing it through reduced editors and validated relational references before mutation.
+* Kept the proven legacy registry authoritative and all future-domain production readiness flags disabled.
 
 = 1.6.1 =
 * Phase 1 Part B: premium certificate registry, lifecycle presentation, and integrated field UX.

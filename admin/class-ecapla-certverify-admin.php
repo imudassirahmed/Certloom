@@ -16,6 +16,12 @@ class Ecapla_CertVerify_Admin {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'admin_init', array( $this, 'handle_form_submission' ) );
 		add_action( 'admin_init', array( $this, 'handle_bulk_delete' ) );
+		add_action( 'admin_init', array( $this, 'handle_bulk_preview' ) );
+		add_action( 'admin_init', array( $this, 'handle_bulk_commit' ) );
+		add_action( 'admin_init', array( $this, 'handle_onboarding_save' ) );
+		add_action( 'admin_init', array( $this, 'handle_onboarding_create_page' ) );
+		add_action( 'admin_init', array( $this, 'handle_onboarding_complete' ) );
+		add_action( 'admin_init', array( $this, 'handle_registry_columns_save' ) );
 		add_action( 'admin_init', array( $this, 'handle_fields_save' ) );
 		add_action( 'admin_init', array( $this, 'handle_field_add' ) );
 		add_action( 'admin_init', array( $this, 'handle_import_analyze' ) );
@@ -56,12 +62,25 @@ class Ecapla_CertVerify_Admin {
 			30
 		);
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Dashboard', 'certloom' ), __( 'Dashboard', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::DASHBOARD_PAGE, array( $this, 'render_dashboard_screen' ) );
-		add_submenu_page( self::DASHBOARD_PAGE, __( 'Certificates', 'certloom' ), __( 'Certificates', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::CERTIFICATES_PAGE, array( $this, 'render_list_screen' ) );
-		add_submenu_page( self::DASHBOARD_PAGE, __( 'Add Certificate', 'certloom' ), __( 'Add Certificate', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-add', array( $this, 'render_edit_screen' ) );
-		add_submenu_page( self::DASHBOARD_PAGE, __( 'Field Manager', 'certloom' ), __( 'Field Manager', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-fields', array( $this, 'render_fields_screen' ) );
-		add_submenu_page( self::DASHBOARD_PAGE, __( 'Import & Export', 'certloom' ), __( 'Import & Export', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-import', array( $this, 'render_import_screen' ) );
-		add_submenu_page( self::DASHBOARD_PAGE, __( 'Appearance & Embed', 'certloom' ), __( 'Appearance & Embed', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-frontend', array( $this, 'render_frontend_screen' ) );
-		add_submenu_page( self::DASHBOARD_PAGE, __( 'Access & Settings', 'certloom' ), __( 'Access & Settings', 'certloom' ), 'manage_options', 'certloom-settings', array( $this, 'render_settings_screen' ) );
+		add_submenu_page( self::DASHBOARD_PAGE, __( 'Credentials', 'certloom' ), __( 'Credentials', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::CERTIFICATES_PAGE, array( $this, 'render_list_screen' ) );
+
+		// Keep the planned application architecture visible without exposing gated domain data.
+		if ( ! ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) ) {
+			add_submenu_page( self::DASHBOARD_PAGE, __( 'Recipients', 'certloom' ), __( 'Recipients', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-domain-recipients', array( $this, 'render_roadmap_placeholder_screen' ) );
+			add_submenu_page( self::DASHBOARD_PAGE, __( 'Programs', 'certloom' ), __( 'Programs', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-domain-programs', array( $this, 'render_roadmap_placeholder_screen' ) );
+		}
+		add_submenu_page( self::DASHBOARD_PAGE, __( 'Templates', 'certloom' ), __( 'Templates', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-templates', array( $this, 'render_roadmap_placeholder_screen' ) );
+		add_submenu_page( self::DASHBOARD_PAGE, __( 'Issuance', 'certloom' ), __( 'Issuance', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-issuance', array( $this, 'render_roadmap_placeholder_screen' ) );
+		add_submenu_page( self::DASHBOARD_PAGE, __( 'Data Tools', 'certloom' ), __( 'Data Tools', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-import', array( $this, 'render_import_screen' ) );
+		add_submenu_page( self::DASHBOARD_PAGE, __( 'Integrations', 'certloom' ), __( 'Integrations', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-integrations', array( $this, 'render_roadmap_placeholder_screen' ) );
+		add_submenu_page( self::DASHBOARD_PAGE, __( 'Settings', 'certloom' ), __( 'Settings', 'certloom' ), 'manage_options', 'certloom-settings', array( $this, 'render_settings_screen' ) );
+
+		// Contextual utility screens stay reachable from the application but do not clutter the primary shell.
+		add_submenu_page( null, __( 'Add Certificate', 'certloom' ), __( 'Add Certificate', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-add', array( $this, 'render_edit_screen' ) );
+		add_submenu_page( null, __( 'Field Manager', 'certloom' ), __( 'Field Manager', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-fields', array( $this, 'render_fields_screen' ) );
+		add_submenu_page( null, __( 'Appearance & Embed', 'certloom' ), __( 'Appearance & Embed', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-frontend', array( $this, 'render_frontend_screen' ) );
+		add_submenu_page( null, __( 'Setup', 'certloom' ), __( 'Setup', 'certloom' ), 'manage_options', 'certloom-setup', array( $this, 'render_onboarding_screen' ) );
+		add_submenu_page( null, __( 'Review bulk change', 'certloom' ), __( 'Review bulk change', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-bulk-review', array( $this, 'render_bulk_review_screen' ) );
 	}
 
 	public function enqueue_assets( $hook ) {
@@ -152,19 +171,146 @@ class Ecapla_CertVerify_Admin {
 		if ( '-1' === $action || '' === $action ) {
 			$action = isset( $_POST['action2'] ) ? sanitize_key( wp_unslash( $_POST['action2'] ) ) : '';
 		}
-		if ( 'delete' !== $action ) {
+		if ( ! in_array( $action, array( 'delete', 'bulk_edit' ), true ) ) {
 			return;
 		}
 		$this->require_manage_permission();
 		check_admin_referer( 'bulk-certificates' );
 
-		$ids   = isset( $_POST['cert_ids'] ) && is_array( $_POST['cert_ids'] ) ? array_map( 'absint', wp_unslash( $_POST['cert_ids'] ) ) : array();
+		$ids = isset( $_POST['cert_ids'] ) && is_array( $_POST['cert_ids'] ) ? array_map( 'absint', wp_unslash( $_POST['cert_ids'] ) ) : array();
+		if ( 'bulk_edit' === $action ) {
+			$token = Ecapla_CertVerify_Bulk_Manager::create_session( $ids, $this->bulk_return_state_from_request( $_POST ) );
+			if ( is_wp_error( $token ) ) {
+				$this->redirect_error( $token->get_error_message(), $this->list_return_url() );
+			}
+			wp_safe_redirect( add_query_arg( array( 'page' => 'certloom-bulk-review', 'token' => $token ), admin_url( 'admin.php' ) ) );
+			exit;
+		}
+
 		$count = Ecapla_CertVerify_Database::delete_many( $ids );
 		if ( is_wp_error( $count ) ) {
 			$this->redirect_error( $count->get_error_message(), $this->list_return_url() );
 		}
-
 		wp_safe_redirect( add_query_arg( 'ecapla_certverify_bulk_deleted', $count, $this->list_return_url() ) );
+		exit;
+	}
+
+	/** Validates and freezes the exact bulk operation before any mutation. */
+	public function handle_bulk_preview() {
+		if ( empty( $_POST['certverify_bulk_preview'] ) ) {
+			return;
+		}
+		$this->require_manage_permission();
+		check_admin_referer( 'certverify_bulk_preview' );
+		$token = isset( $_POST['bulk_token'] ) ? sanitize_text_field( wp_unslash( $_POST['bulk_token'] ) ) : '';
+		$input = array(
+			'bulk_operation'         => isset( $_POST['bulk_operation'] ) ? wp_unslash( $_POST['bulk_operation'] ) : '',
+			'bulk_status'            => isset( $_POST['bulk_status'] ) ? wp_unslash( $_POST['bulk_status'] ) : '',
+			'bulk_status_reason_set' => ! empty( $_POST['bulk_status_reason_set'] ),
+			'bulk_status_reason'     => isset( $_POST['bulk_status_reason'] ) ? wp_unslash( $_POST['bulk_status_reason'] ) : '',
+			'bulk_expiry_date'       => isset( $_POST['bulk_expiry_date'] ) ? wp_unslash( $_POST['bulk_expiry_date'] ) : '',
+			'bulk_field_key'         => isset( $_POST['bulk_field_key'] ) ? wp_unslash( $_POST['bulk_field_key'] ) : '',
+			'bulk_field_value'       => isset( $_POST['bulk_field_value'] ) ? wp_unslash( $_POST['bulk_field_value'] ) : '',
+		);
+		$preview = Ecapla_CertVerify_Bulk_Manager::prepare_preview( $token, $input );
+		if ( is_wp_error( $preview ) ) {
+			$this->redirect_error( $preview->get_error_message(), add_query_arg( array( 'page' => 'certloom-bulk-review', 'token' => $token ), admin_url( 'admin.php' ) ) );
+		}
+		wp_safe_redirect( add_query_arg( array( 'page' => 'certloom-bulk-review', 'token' => $token, 'reviewed' => '1' ), admin_url( 'admin.php' ) ) );
+		exit;
+	}
+
+	/** Commits only the already-reviewed frozen bulk operation. */
+	public function handle_bulk_commit() {
+		if ( empty( $_POST['certverify_bulk_commit'] ) ) {
+			return;
+		}
+		$this->require_manage_permission();
+		check_admin_referer( 'certverify_bulk_commit' );
+		$this->require_writes_available( admin_url( 'admin.php?page=' . self::CERTIFICATES_PAGE ) );
+		$token   = isset( $_POST['bulk_token'] ) ? sanitize_text_field( wp_unslash( $_POST['bulk_token'] ) ) : '';
+		$session = Ecapla_CertVerify_Bulk_Manager::get_session( $token );
+		if ( is_wp_error( $session ) ) {
+			$this->redirect_error( $session->get_error_message(), admin_url( 'admin.php?page=' . self::CERTIFICATES_PAGE ) );
+		}
+		$result = Ecapla_CertVerify_Bulk_Manager::commit( $token );
+		if ( is_wp_error( $result ) ) {
+			$this->redirect_error( $result->get_error_message(), add_query_arg( array( 'page' => 'certloom-bulk-review', 'token' => $token ), admin_url( 'admin.php' ) ) );
+		}
+		$args = array_merge(
+			array( 'page' => self::CERTIFICATES_PAGE ),
+			(array) ( $session['return_state'] ?? array() ),
+			array(
+				'ecapla_certverify_bulk_changed' => absint( $result['changed'] ?? 0 ),
+				'ecapla_certverify_bulk_failed'  => count( (array) ( $result['failed'] ?? array() ) ),
+				'ecapla_certverify_bulk_skipped' => count( (array) ( $result['skipped'] ?? array() ) ),
+			)
+		);
+		wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );
+		exit;
+	}
+
+	public function handle_onboarding_save() {
+		if ( empty( $_POST['certverify_onboarding_save'] ) ) {
+			return;
+		}
+		$this->require_options_permission();
+		check_admin_referer( 'certverify_onboarding_save' );
+		$this->require_writes_available( admin_url( 'admin.php?page=certloom-setup' ) );
+		$name    = isset( $_POST['organization_name'] ) ? sanitize_text_field( wp_unslash( $_POST['organization_name'] ) ) : '';
+		$page_id = isset( $_POST['verification_page_id'] ) ? absint( $_POST['verification_page_id'] ) : 0;
+		$result  = Ecapla_CertVerify_Onboarding::save_profile( $name, $page_id, ! empty( $_POST['appearance_reviewed'] ), ! empty( $_POST['verification_tested'] ) );
+		if ( is_wp_error( $result ) ) {
+			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-setup' ) );
+		}
+		wp_safe_redirect( add_query_arg( 'ecapla_certverify_setup_saved', '1', admin_url( 'admin.php?page=certloom-setup' ) ) );
+		exit;
+	}
+
+	public function handle_onboarding_create_page() {
+		if ( empty( $_POST['certverify_onboarding_create_page'] ) ) {
+			return;
+		}
+		$this->require_options_permission();
+		check_admin_referer( 'certverify_onboarding_create_page' );
+		$this->require_writes_available( admin_url( 'admin.php?page=certloom-setup' ) );
+		$result = Ecapla_CertVerify_Onboarding::create_verification_page();
+		if ( is_wp_error( $result ) ) {
+			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-setup' ) );
+		}
+		wp_safe_redirect( add_query_arg( 'ecapla_certverify_setup_page_created', '1', admin_url( 'admin.php?page=certloom-setup' ) ) );
+		exit;
+	}
+
+	public function handle_onboarding_complete() {
+		if ( empty( $_POST['certverify_onboarding_complete'] ) ) {
+			return;
+		}
+		$this->require_options_permission();
+		check_admin_referer( 'certverify_onboarding_complete' );
+		$this->require_writes_available( admin_url( 'admin.php?page=certloom-setup' ) );
+		$result = Ecapla_CertVerify_Onboarding::complete();
+		if ( is_wp_error( $result ) ) {
+			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-setup' ) );
+		}
+		wp_safe_redirect( add_query_arg( 'ecapla_certverify_setup_complete', '1', admin_url( 'admin.php?page=certloom-setup' ) ) );
+		exit;
+	}
+
+	public function handle_registry_columns_save() {
+		if ( empty( $_POST['certverify_registry_columns_save'] ) ) {
+			return;
+		}
+		$this->require_manage_permission();
+		check_admin_referer( 'certverify_registry_columns_save' );
+		$allowed = array( 'holder_name', 'status', 'issue_date', 'expiry_date' );
+		$visible = isset( $_POST['visible_columns'] ) && is_array( $_POST['visible_columns'] ) ? array_map( 'sanitize_key', array_keys( wp_unslash( $_POST['visible_columns'] ) ) ) : array();
+		$hidden  = array_values( array_diff( $allowed, array_intersect( $allowed, $visible ) ) );
+		$stored  = update_user_meta( get_current_user_id(), 'certloom_registry_hidden_columns', $hidden );
+		if ( false === $stored && $hidden !== get_user_meta( get_current_user_id(), 'certloom_registry_hidden_columns', true ) ) {
+			$this->redirect_error( __( 'Registry column preferences could not be saved.', 'certloom' ), $this->list_return_url() );
+		}
+		wp_safe_redirect( add_query_arg( 'ecapla_certverify_columns_saved', '1', $this->list_return_url() ) );
 		exit;
 	}
 
@@ -748,6 +894,7 @@ class Ecapla_CertVerify_Admin {
 				'legacy_review_count' => max( 0, (int) get_option( Ecapla_CertVerify_Database::LEGACY_REVIEW_OPTION, 0 ) ),
 			);
 		}
+		$onboarding_summary = current_user_can( 'manage_options' ) ? Ecapla_CertVerify_Onboarding::get_summary() : null;
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/dashboard.php';
 	}
 
@@ -757,6 +904,83 @@ class Ecapla_CertVerify_Admin {
 		$table->prepare_items();
 		$database_error = $table->get_database_error();
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/list-certificates.php';
+	}
+
+	public function render_bulk_review_screen() {
+		$this->require_manage_permission();
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only token selects a user-bound transient; mutations use separate POST nonces.
+		$token   = isset( $_GET['token'] ) ? sanitize_text_field( wp_unslash( $_GET['token'] ) ) : '';
+		$session = Ecapla_CertVerify_Bulk_Manager::get_session( $token );
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		if ( is_wp_error( $session ) ) {
+			$this->redirect_error( $session->get_error_message(), admin_url( 'admin.php?page=' . self::CERTIFICATES_PAGE ) );
+		}
+		$selected_records = array();
+		foreach ( $session['ids'] as $id ) {
+			$record = Ecapla_CertVerify_Database::get_by_id( $id );
+			if ( is_wp_error( $record ) ) {
+				$this->redirect_error( $record->get_error_message(), admin_url( 'admin.php?page=' . self::CERTIFICATES_PAGE ) );
+			}
+			if ( $record ) {
+				$selected_records[] = $record;
+			}
+		}
+		$bulk_preview = isset( $session['preview'] ) && is_array( $session['preview'] ) ? $session['preview'] : null;
+		$bulk_fields  = Ecapla_CertVerify_Bulk_Manager::get_editable_custom_fields();
+		include ECAPLA_CERTVERIFY_PATH . 'admin/views/bulk-review.php';
+	}
+
+	public function render_onboarding_screen() {
+		$this->require_options_permission();
+		$setup_summary = Ecapla_CertVerify_Onboarding::get_summary();
+		if ( is_wp_error( $setup_summary ) ) {
+			$this->redirect_error( $setup_summary->get_error_message(), admin_url( 'admin.php?page=' . self::DASHBOARD_PAGE ) );
+		}
+		include ECAPLA_CERTVERIFY_PATH . 'admin/views/setup-wizard.php';
+	}
+
+	public function render_roadmap_placeholder_screen() {
+		$this->require_manage_permission();
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only admin route used only to choose the planned feature explanation.
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		$planned_features = array(
+			'certloom-domain-recipients' => array(
+				'title' => __( 'Recipients', 'certloom' ),
+				'eyebrow' => __( 'Phase 1 data model', 'certloom' ),
+				'description' => __( 'First-class Recipient administration is implemented in the normalized domain and remains acceptance-gated until the real WordPress/MySQL migration and cutover proof passes.', 'certloom' ),
+				'status' => __( 'Implementation complete · production acceptance gated', 'certloom' ),
+			),
+			'certloom-domain-programs' => array(
+				'title' => __( 'Programs', 'certloom' ),
+				'eyebrow' => __( 'Phase 1 data model', 'certloom' ),
+				'description' => __( 'Standalone Program administration is implemented in the normalized domain and remains acceptance-gated. Certloom will not emulate Program relationships inside legacy custom fields.', 'certloom' ),
+				'status' => __( 'Implementation complete · production acceptance gated', 'certloom' ),
+			),
+			'certloom-templates' => array(
+				'title' => __( 'Templates', 'certloom' ),
+				'eyebrow' => __( 'Planned Pro commercial core', 'certloom' ),
+				'description' => __( 'Versioned certificate templates, starter designs, assignments and the visual designer arrive after the production renderer acceptance track. No placeholder control here writes template data.', 'certloom' ),
+				'status' => __( 'Planned · renderer-dependent', 'certloom' ),
+			),
+			'certloom-issuance' => array(
+				'title' => __( 'Issuance', 'certloom' ),
+				'eyebrow' => __( 'Planned issuance workflow', 'certloom' ),
+				'description' => __( 'Manual and bulk issuance will use immutable Credential Versions, server-authoritative artifacts, reviewed eligibility and durable jobs. The current registry editor remains the safe live write path until those dependencies are accepted.', 'certloom' ),
+				'status' => __( 'Planned · domain and renderer dependencies', 'certloom' ),
+			),
+			'certloom-integrations' => array(
+				'title' => __( 'Integrations', 'certloom' ),
+				'eyebrow' => __( 'Planned automation layer', 'certloom' ),
+				'description' => __( 'Tutor LMS and LearnDash are the first planned LMS adapters, followed by additional LMS, commerce, API and webhook integrations. No integration is presented as active before its acceptance tests exist.', 'certloom' ),
+				'status' => __( 'Planned', 'certloom' ),
+			),
+		);
+		$planned_feature = isset( $planned_features[ $page ] ) ? $planned_features[ $page ] : null;
+		if ( ! $planned_feature ) {
+			$this->redirect_error( __( 'That Certloom workspace is not available.', 'certloom' ), admin_url( 'admin.php?page=' . self::DASHBOARD_PAGE ) );
+		}
+		include ECAPLA_CERTVERIFY_PATH . 'admin/views/roadmap-placeholder.php';
 	}
 
 	public function render_edit_screen() {
@@ -962,6 +1186,11 @@ class Ecapla_CertVerify_Admin {
 	 *
 	 * @return string
 	 */
+	private function bulk_return_state_from_request( $request ) {
+		$request = is_array( $request ) ? $request : array();
+		return Ecapla_CertVerify_Bulk_Manager::sanitize_return_state( $request );
+	}
+
 	private function list_return_url() {
 		$args = array( 'page' => self::CERTIFICATES_PAGE );
 
@@ -983,6 +1212,11 @@ class Ecapla_CertVerify_Admin {
 		}
 		if ( isset( $_REQUEST['s'] ) && '' !== $_REQUEST['s'] ) {
 			$args['s'] = $this->limit_text( sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ), 100 );
+		}
+		foreach ( array( 'issue_from', 'issue_to', 'expiry_from', 'expiry_to' ) as $date_filter_key ) {
+			if ( isset( $_REQUEST[ $date_filter_key ] ) && '' !== $_REQUEST[ $date_filter_key ] ) {
+				$args[ $date_filter_key ] = $this->limit_text( sanitize_text_field( wp_unslash( $_REQUEST[ $date_filter_key ] ) ), 10 );
+			}
 		}
 		if ( ! empty( $_REQUEST['paged'] ) ) {
 			$args['paged'] = absint( $_REQUEST['paged'] );

@@ -34,6 +34,14 @@ $health_label = 'good' === $health_overall ? __( 'Ready for current operations',
 		<div class="notice notice-error inline certloom-dashboard-notice"><p><?php echo esc_html( $dashboard_error->get_error_message() ); ?></p></div>
 	<?php endif; ?>
 
+	<?php if ( isset( $onboarding_summary ) && is_array( $onboarding_summary ) && empty( $onboarding_summary['completed'] ) ) : ?>
+		<div class="certloom-callout certloom-callout-info certloom-setup-callout" role="status">
+			<span class="dashicons dashicons-admin-generic" aria-hidden="true"></span>
+			<div><strong><?php esc_html_e( 'Finish first-run setup', 'certloom' ); ?></strong><p><?php echo esc_html( sprintf( __( '%1$d of %2$d recommended setup steps are complete. Confirm your organization, public verification flow and display choices when convenient; Certloom never forces an activation redirect.', 'certloom' ), absint( $onboarding_summary['progress_completed'] ?? 0 ), absint( $onboarding_summary['progress_total'] ?? 6 ) ) ); ?></p></div>
+			<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-setup' ) ); ?>"><?php esc_html_e( 'Open setup', 'certloom' ); ?></a>
+		</div>
+	<?php endif; ?>
+
 	<?php if ( $review > 0 ) : ?>
 		<div class="certloom-callout certloom-callout-warning" role="status">
 			<span class="dashicons dashicons-warning" aria-hidden="true"></span>

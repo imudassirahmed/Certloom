@@ -1,3 +1,15 @@
+1.6.3 — Phase 1 Part D: reviewed bulk management, onboarding, complete admin shell/workspace, authority unchanged
+------------------------------------------------------------------------------------------------------------------------
+- Implement REG-04 for the operations the current authoritative registry can safely own: reviewed bulk workflow-status changes, expiry set/clear, and eligible custom-field set/clear.
+- Freeze bulk selections in user-bound expiring sessions, preview eligible/skipped rows before mutation, and use optimistic updated_at checks so a stale reviewed batch cannot overwrite a later manual edit.
+- Keep protected/core/internal fields out of generic bulk custom-field operations and preserve Program/Batch assignment for the normalized-domain/BAT-01 path instead of emulating relationships in legacy JSON.
+- Implement ONB-01 as a non-blocking Setup workspace: organization profile, verification-page selection/local creation, field review, first-credential guidance, public verification testing, display review, and real progress reporting without activation redirects.
+- Add validated issue/expiry date-range filters and per-WordPress-user registry column preferences while preserving active search/filter/sort/pagination state across actions.
+- Complete the planned Premium Admin application shell: Dashboard, Credentials, Recipients, Programs, Templates, Issuance, Data Tools, Integrations, and Settings. Gated/future modules use explicit informational states and never create fake data.
+- Rebuild the certificate editor into the planned credential workspace: Overview, Recipient, Program, Status, Custom Fields, Verification, Activity, and Actions. Gated Recipient/Program/Event relationships are labeled honestly while current-authority values remain editable.
+- Restore WordPress.org readme changelog continuity by adding the previously omitted 1.6.2 entry.
+- Keep the real external WordPress/MySQL acceptance gate open and keep CERTLOOM_DOMAIN_WRITE_PATHS_READY, CERTLOOM_DOMAIN_ADMIN_PREVIEW, and CERTLOOM_DOMAIN_DATA_TOOLS_READY false.
+
 1.6.2 — Phase 1 Part C: premium Recipient + Program implementation behind acceptance gate; authority unchanged
 -------------------------------------------------------------------------------------------------------------------
 - Complete the planned REC-01 administrator implementation behind the existing future-domain acceptance gate: full recipient names, email, WordPress-user association, external ID, safe custom fields, credential counts/latest issuance, and bounded credential history.

@@ -9,9 +9,15 @@ $ecapla_certverify_search_mode    = isset( $_GET['search_mode'] ) ? sanitize_key
 $ecapla_certverify_current_status = isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : '';
 $ecapla_certverify_attention      = isset( $_GET['attention'] ) ? sanitize_key( wp_unslash( $_GET['attention'] ) ) : '';
 $ecapla_certverify_search         = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
-$ecapla_certverify_filters_active = '' !== $ecapla_certverify_search || '' !== $ecapla_certverify_current_status || '' !== $ecapla_certverify_attention || ! empty( $_GET['legacy_expired'] );
+$ecapla_certverify_issue_from     = isset( $_GET['issue_from'] ) ? sanitize_text_field( wp_unslash( $_GET['issue_from'] ) ) : '';
+$ecapla_certverify_issue_to       = isset( $_GET['issue_to'] ) ? sanitize_text_field( wp_unslash( $_GET['issue_to'] ) ) : '';
+$ecapla_certverify_expiry_from    = isset( $_GET['expiry_from'] ) ? sanitize_text_field( wp_unslash( $_GET['expiry_from'] ) ) : '';
+$ecapla_certverify_expiry_to      = isset( $_GET['expiry_to'] ) ? sanitize_text_field( wp_unslash( $_GET['expiry_to'] ) ) : '';
+$ecapla_certverify_filters_active = '' !== $ecapla_certverify_search || '' !== $ecapla_certverify_current_status || '' !== $ecapla_certverify_attention || '' !== $ecapla_certverify_issue_from || '' !== $ecapla_certverify_issue_to || '' !== $ecapla_certverify_expiry_from || '' !== $ecapla_certverify_expiry_to || ! empty( $_GET['legacy_expired'] );
 $ecapla_certverify_status_map      = Ecapla_CertVerify_Fields::get_statuses();
 $ecapla_certverify_status_label    = isset( $ecapla_certverify_status_map[ $ecapla_certverify_current_status ]['label'] ) ? $ecapla_certverify_status_map[ $ecapla_certverify_current_status ]['label'] : $ecapla_certverify_current_status;
+$ecapla_certverify_hidden_columns  = get_user_meta( get_current_user_id(), 'certloom_registry_hidden_columns', true );
+$ecapla_certverify_hidden_columns  = is_array( $ecapla_certverify_hidden_columns ) ? $ecapla_certverify_hidden_columns : array();
 ?>
 <div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-registry-screen">
 	<section class="certloom-page-hero" aria-labelledby="certloom-registry-title">
@@ -50,6 +56,13 @@ $ecapla_certverify_status_label    = isset( $ecapla_certverify_status_map[ $ecap
 			?>
 		</p></div>
 	<?php endif; ?>
+	<?php if ( isset( $_GET['ecapla_certverify_columns_saved'] ) ) : ?><div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Registry column preferences saved.', 'certloom' ); ?></p></div><?php endif; ?>
+	<?php if ( isset( $_GET['ecapla_certverify_bulk_changed'] ) ) : ?>
+		<?php $ecapla_certverify_bulk_changed = absint( $_GET['ecapla_certverify_bulk_changed'] ); $ecapla_certverify_bulk_failed = isset( $_GET['ecapla_certverify_bulk_failed'] ) ? absint( $_GET['ecapla_certverify_bulk_failed'] ) : 0; $ecapla_certverify_bulk_skipped = isset( $_GET['ecapla_certverify_bulk_skipped'] ) ? absint( $_GET['ecapla_certverify_bulk_skipped'] ) : 0; ?>
+		<div class="notice <?php echo $ecapla_certverify_bulk_failed ? 'notice-warning' : 'notice-success'; ?> is-dismissible"><p>
+			<?php echo esc_html( sprintf( __( 'Bulk change complete: %1$d changed, %2$d skipped during review, %3$d failed during commit.', 'certloom' ), $ecapla_certverify_bulk_changed, $ecapla_certverify_bulk_skipped, $ecapla_certverify_bulk_failed ) ); ?>
+		</p></div>
+	<?php endif; ?>
 	<?php if ( isset( $_GET['ecapla_certverify_error'] ) ) : ?>
 		<div class="notice notice-error"><p><?php echo esc_html( sanitize_text_field( wp_unslash( $_GET['ecapla_certverify_error'] ) ) ); ?></p></div>
 	<?php endif; ?>
@@ -77,6 +90,33 @@ $ecapla_certverify_status_label    = isset( $ecapla_certverify_status_map[ $ecap
 		<nav class="certloom-registry-views" aria-label="<?php esc_attr_e( 'Certificate status views', 'certloom' ); ?>">
 			<?php $table->views(); ?>
 		</nav>
+
+		<details class="certloom-column-preferences">
+			<summary><span class="dashicons dashicons-columns" aria-hidden="true"></span><?php esc_html_e( 'Columns', 'certloom' ); ?></summary>
+			<form method="post" action="" class="certloom-column-preferences-form">
+				<?php wp_nonce_field( 'certverify_registry_columns_save' ); ?>
+				<input type="hidden" name="page" value="certloom-certificates" />
+				<?php if ( ! empty( $_GET['legacy_expired'] ) ) : ?><input type="hidden" name="legacy_expired" value="1" /><?php endif; ?>
+				<?php if ( '' !== $ecapla_certverify_current_status ) : ?><input type="hidden" name="status" value="<?php echo esc_attr( $ecapla_certverify_current_status ); ?>" /><?php endif; ?>
+				<?php if ( '' !== $ecapla_certverify_attention ) : ?><input type="hidden" name="attention" value="<?php echo esc_attr( $ecapla_certverify_attention ); ?>" /><?php endif; ?>
+				<?php if ( '' !== $ecapla_certverify_search_mode ) : ?><input type="hidden" name="search_mode" value="<?php echo esc_attr( $ecapla_certverify_search_mode ); ?>" /><?php endif; ?>
+				<?php if ( '' !== $ecapla_certverify_search ) : ?><input type="hidden" name="s" value="<?php echo esc_attr( $ecapla_certverify_search ); ?>" /><?php endif; ?>
+				<?php if ( '' !== $ecapla_certverify_issue_from ) : ?><input type="hidden" name="issue_from" value="<?php echo esc_attr( $ecapla_certverify_issue_from ); ?>" /><?php endif; ?>
+				<?php if ( '' !== $ecapla_certverify_issue_to ) : ?><input type="hidden" name="issue_to" value="<?php echo esc_attr( $ecapla_certverify_issue_to ); ?>" /><?php endif; ?>
+				<?php if ( '' !== $ecapla_certverify_expiry_from ) : ?><input type="hidden" name="expiry_from" value="<?php echo esc_attr( $ecapla_certverify_expiry_from ); ?>" /><?php endif; ?>
+				<?php if ( '' !== $ecapla_certverify_expiry_to ) : ?><input type="hidden" name="expiry_to" value="<?php echo esc_attr( $ecapla_certverify_expiry_to ); ?>" /><?php endif; ?>
+				<?php if ( ! empty( $_GET['paged'] ) ) : ?><input type="hidden" name="paged" value="<?php echo absint( $_GET['paged'] ); ?>" /><?php endif; ?>
+				<?php if ( isset( $_GET['orderby'] ) ) : ?><input type="hidden" name="orderby" value="<?php echo esc_attr( sanitize_key( wp_unslash( $_GET['orderby'] ) ) ); ?>" /><?php endif; ?>
+				<?php if ( isset( $_GET['order'] ) ) : ?><input type="hidden" name="order" value="<?php echo esc_attr( strtoupper( sanitize_key( wp_unslash( $_GET['order'] ) ) ) ); ?>" /><?php endif; ?>
+				<p class="description"><?php esc_html_e( 'Certificate number always remains visible. These preferences apply only to your WordPress user.', 'certloom' ); ?></p>
+				<div class="certloom-column-options">
+				<?php foreach ( array( 'holder_name' => __( 'Holder', 'certloom' ), 'status' => __( 'Status', 'certloom' ), 'issue_date' => __( 'Issue date', 'certloom' ), 'expiry_date' => __( 'Expiry date', 'certloom' ) ) as $column_key => $column_label ) : ?>
+					<label><input type="checkbox" name="visible_columns[<?php echo esc_attr( $column_key ); ?>]" value="1" <?php checked( ! in_array( $column_key, $ecapla_certverify_hidden_columns, true ) ); ?> /> <?php echo esc_html( $column_label ); ?></label>
+				<?php endforeach; ?>
+				</div>
+				<?php submit_button( __( 'Save columns', 'certloom' ), 'secondary', 'certverify_registry_columns_save', false ); ?>
+			</form>
+		</details>
 
 		<form method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>" class="ecapla-certverify-list-filters certloom-filter-bar">
 			<input type="hidden" name="page" value="certloom-certificates" />
@@ -113,6 +153,12 @@ $ecapla_certverify_status_label    = isset( $ecapla_certverify_status_map[ $ecap
 					</select>
 				</div>
 			</div>
+			<div class="certloom-date-filter-grid" aria-label="<?php esc_attr_e( 'Date filters', 'certloom' ); ?>">
+				<div class="certloom-filter-field"><label for="certloom-issue-from"><?php esc_html_e( 'Issued from', 'certloom' ); ?></label><input id="certloom-issue-from" type="date" name="issue_from" value="<?php echo esc_attr( $ecapla_certverify_issue_from ); ?>" /></div>
+				<div class="certloom-filter-field"><label for="certloom-issue-to"><?php esc_html_e( 'Issued to', 'certloom' ); ?></label><input id="certloom-issue-to" type="date" name="issue_to" value="<?php echo esc_attr( $ecapla_certverify_issue_to ); ?>" /></div>
+				<div class="certloom-filter-field"><label for="certloom-expiry-from"><?php esc_html_e( 'Expires from', 'certloom' ); ?></label><input id="certloom-expiry-from" type="date" name="expiry_from" value="<?php echo esc_attr( $ecapla_certverify_expiry_from ); ?>" /></div>
+				<div class="certloom-filter-field"><label for="certloom-expiry-to"><?php esc_html_e( 'Expires to', 'certloom' ); ?></label><input id="certloom-expiry-to" type="date" name="expiry_to" value="<?php echo esc_attr( $ecapla_certverify_expiry_to ); ?>" /></div>
+			</div>
 			<div class="certloom-filter-actions">
 				<?php submit_button( __( 'Apply filters', 'certloom' ), 'secondary', 'filter_action', false ); ?>
 				<?php if ( $ecapla_certverify_filters_active ) : ?>
@@ -128,6 +174,8 @@ $ecapla_certverify_status_label    = isset( $ecapla_certverify_status_map[ $ecap
 				<?php if ( '' !== $ecapla_certverify_search ) : ?><span><?php echo esc_html( sprintf( __( 'Search: %s', 'certloom' ), $ecapla_certverify_search ) ); ?></span><?php endif; ?>
 				<?php if ( '' !== $ecapla_certverify_current_status ) : ?><span><?php echo esc_html( sprintf( __( 'Status: %s', 'certloom' ), $ecapla_certverify_status_label ) ); ?></span><?php endif; ?>
 				<?php if ( 'expiring_soon' === $ecapla_certverify_attention ) : ?><span><?php esc_html_e( 'Expiring in 30 days', 'certloom' ); ?></span><?php endif; ?>
+				<?php if ( '' !== $ecapla_certverify_issue_from || '' !== $ecapla_certverify_issue_to ) : ?><span><?php echo esc_html( sprintf( __( 'Issued: %1$s → %2$s', 'certloom' ), $ecapla_certverify_issue_from ?: '…', $ecapla_certverify_issue_to ?: '…' ) ); ?></span><?php endif; ?>
+				<?php if ( '' !== $ecapla_certverify_expiry_from || '' !== $ecapla_certverify_expiry_to ) : ?><span><?php echo esc_html( sprintf( __( 'Expires: %1$s → %2$s', 'certloom' ), $ecapla_certverify_expiry_from ?: '…', $ecapla_certverify_expiry_to ?: '…' ) ); ?></span><?php endif; ?>
 			</div>
 		<?php endif; ?>
 
@@ -140,6 +188,10 @@ $ecapla_certverify_status_label    = isset( $ecapla_certverify_status_map[ $ecap
 				<?php if ( '' !== $ecapla_certverify_attention ) : ?><input type="hidden" name="attention" value="<?php echo esc_attr( $ecapla_certverify_attention ); ?>" /><?php endif; ?>
 				<?php if ( '' !== $ecapla_certverify_search_mode ) : ?><input type="hidden" name="search_mode" value="<?php echo esc_attr( $ecapla_certverify_search_mode ); ?>" /><?php endif; ?>
 				<?php if ( '' !== $ecapla_certverify_search ) : ?><input type="hidden" name="s" value="<?php echo esc_attr( $ecapla_certverify_search ); ?>" /><?php endif; ?>
+				<?php if ( '' !== $ecapla_certverify_issue_from ) : ?><input type="hidden" name="issue_from" value="<?php echo esc_attr( $ecapla_certverify_issue_from ); ?>" /><?php endif; ?>
+				<?php if ( '' !== $ecapla_certverify_issue_to ) : ?><input type="hidden" name="issue_to" value="<?php echo esc_attr( $ecapla_certverify_issue_to ); ?>" /><?php endif; ?>
+				<?php if ( '' !== $ecapla_certverify_expiry_from ) : ?><input type="hidden" name="expiry_from" value="<?php echo esc_attr( $ecapla_certverify_expiry_from ); ?>" /><?php endif; ?>
+				<?php if ( '' !== $ecapla_certverify_expiry_to ) : ?><input type="hidden" name="expiry_to" value="<?php echo esc_attr( $ecapla_certverify_expiry_to ); ?>" /><?php endif; ?>
 				<?php if ( ! empty( $_GET['paged'] ) ) : ?><input type="hidden" name="paged" value="<?php echo absint( $_GET['paged'] ); ?>" /><?php endif; ?>
 				<?php if ( isset( $_GET['orderby'] ) ) : ?><input type="hidden" name="orderby" value="<?php echo esc_attr( sanitize_key( wp_unslash( $_GET['orderby'] ) ) ); ?>" /><?php endif; ?>
 				<?php if ( isset( $_GET['order'] ) ) : ?><input type="hidden" name="order" value="<?php echo esc_attr( strtoupper( sanitize_key( wp_unslash( $_GET['order'] ) ) ) ); ?>" /><?php endif; ?>
@@ -155,6 +207,10 @@ $ecapla_certverify_status_label    = isset( $ecapla_certverify_status_map[ $ecap
 		<?php if ( '' !== $ecapla_certverify_attention ) : ?><input type="hidden" name="attention" value="<?php echo esc_attr( $ecapla_certverify_attention ); ?>" /><?php endif; ?>
 		<?php if ( '' !== $ecapla_certverify_search_mode ) : ?><input type="hidden" name="search_mode" value="<?php echo esc_attr( $ecapla_certverify_search_mode ); ?>" /><?php endif; ?>
 		<?php if ( '' !== $ecapla_certverify_search ) : ?><input type="hidden" name="s" value="<?php echo esc_attr( $ecapla_certverify_search ); ?>" /><?php endif; ?>
+		<?php if ( '' !== $ecapla_certverify_issue_from ) : ?><input type="hidden" name="issue_from" value="<?php echo esc_attr( $ecapla_certverify_issue_from ); ?>" /><?php endif; ?>
+		<?php if ( '' !== $ecapla_certverify_issue_to ) : ?><input type="hidden" name="issue_to" value="<?php echo esc_attr( $ecapla_certverify_issue_to ); ?>" /><?php endif; ?>
+		<?php if ( '' !== $ecapla_certverify_expiry_from ) : ?><input type="hidden" name="expiry_from" value="<?php echo esc_attr( $ecapla_certverify_expiry_from ); ?>" /><?php endif; ?>
+		<?php if ( '' !== $ecapla_certverify_expiry_to ) : ?><input type="hidden" name="expiry_to" value="<?php echo esc_attr( $ecapla_certverify_expiry_to ); ?>" /><?php endif; ?>
 		<?php if ( ! empty( $_GET['paged'] ) ) : ?><input type="hidden" name="paged" value="<?php echo absint( $_GET['paged'] ); ?>" /><?php endif; ?>
 		<?php if ( isset( $_GET['orderby'] ) ) : ?><input type="hidden" name="orderby" value="<?php echo esc_attr( sanitize_key( wp_unslash( $_GET['orderby'] ) ) ); ?>" /><?php endif; ?>
 		<?php if ( isset( $_GET['order'] ) ) : ?><input type="hidden" name="order" value="<?php echo esc_attr( strtoupper( sanitize_key( wp_unslash( $_GET['order'] ) ) ) ); ?>" /><?php endif; ?>

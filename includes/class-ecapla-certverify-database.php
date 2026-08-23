@@ -1341,6 +1341,10 @@ class Ecapla_CertVerify_Database {
 				'status'         => '',
 				'legacy_expired' => false,
 				'attention'      => '',
+				'issue_from'     => '',
+				'issue_to'       => '',
+				'expiry_from'    => '',
+				'expiry_to'      => '',
 				'orderby'        => 'created_at',
 				'order'          => 'DESC',
 				'per_page'       => 20,
@@ -1394,6 +1398,24 @@ class Ecapla_CertVerify_Database {
 			}
 		}
 
+
+		$date_filters = array();
+		foreach ( array( 'issue_from', 'issue_to', 'expiry_from', 'expiry_to' ) as $date_filter_key ) {
+			$date_filters[ $date_filter_key ] = Ecapla_CertVerify_Validator::date( $args[ $date_filter_key ] ?? '' );
+			if ( is_wp_error( $date_filters[ $date_filter_key ] ) ) {
+				return new WP_Error( 'ecapla_certverify_invalid_registry_date_filter', __( 'Registry date filters must use valid YYYY-MM-DD dates.', 'certloom' ) );
+			}
+		}
+		if ( $date_filters['issue_from'] && $date_filters['issue_to'] && $date_filters['issue_from'] > $date_filters['issue_to'] ) {
+			return new WP_Error( 'ecapla_certverify_invalid_registry_date_range', __( 'Issue date “from” cannot be later than issue date “to”.', 'certloom' ) );
+		}
+		if ( $date_filters['expiry_from'] && $date_filters['expiry_to'] && $date_filters['expiry_from'] > $date_filters['expiry_to'] ) {
+			return new WP_Error( 'ecapla_certverify_invalid_registry_date_range', __( 'Expiry date “from” cannot be later than expiry date “to”.', 'certloom' ) );
+		}
+		if ( $date_filters['issue_from'] ) { $where[] = $wpdb->prepare( 'issue_date >= %s', $date_filters['issue_from'] ); }
+		if ( $date_filters['issue_to'] ) { $where[] = $wpdb->prepare( 'issue_date <= %s', $date_filters['issue_to'] ); }
+		if ( $date_filters['expiry_from'] ) { $where[] = $wpdb->prepare( 'expiry_date >= %s', $date_filters['expiry_from'] ); }
+		if ( $date_filters['expiry_to'] ) { $where[] = $wpdb->prepare( 'expiry_date <= %s', $date_filters['expiry_to'] ); }
 
 		$attention = sanitize_key( (string) $args['attention'] );
 		if ( 'expiring_soon' === $attention ) {
