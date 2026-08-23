@@ -6,6 +6,7 @@ use Certloom\Application\CredentialVerificationService;
 use Certloom\Application\Migration\DomainCutoverState;
 use Certloom\Application\Migration\LegacyMigrationPreflightService;
 use Certloom\Application\Migration\LegacyMigrationState;
+use Certloom\Application\Templates\TemplateDefaults;
 use Certloom\Domain\Credential\PublicCredentialId;
 use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Infrastructure\Data\DomainMaintenanceLock;
@@ -19,6 +20,7 @@ use Certloom\Infrastructure\Repository\IssuerRepository;
 use Certloom\Infrastructure\Repository\LegacyCertificateRepository;
 use Certloom\Infrastructure\Repository\ProgramRepository;
 use Certloom\Infrastructure\Repository\RecipientRepository;
+use Certloom\Infrastructure\Repository\TemplateRepository;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -35,7 +37,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class DomainAcceptanceProof {
 	const RESULT_OPTION  = 'certloom_domain_acceptance_proof_last';
 	const RESULT_SCHEMA  = 'certloom-domain-acceptance-proof';
-	const RESULT_VERSION = 3;
+	const RESULT_VERSION = 4;
 	const MAX_AGE         = 7 * DAY_IN_SECONDS;
 	const ROLLBACK_CODE   = 'certloom_domain_acceptance_intentional_rollback';
 
@@ -314,6 +316,7 @@ final class DomainAcceptanceProof {
 		$event_repo = new EventRepository();
 		$lifecycle = new CredentialLifecycleService( $credential_repo, $event_repo, null, new DirectTransaction() );
 		$verify = new CredentialVerificationService( $credential_repo );
+		$template_repo = new TemplateRepository( null, null, new DirectTransaction() );
 
 		$issuer = $issuer_repo->create( array( 'name' => 'Certloom Acceptance Proof ' . $token, 'slug' => 'certloom-acceptance-proof-' . $token, 'settings' => array( 'proof' => true ) ) );
 		if ( is_wp_error( $issuer ) ) { return self::operation_error( $result, 'repositories', __( 'Repository persistence', 'certloom' ), $issuer ); }
@@ -331,6 +334,27 @@ final class DomainAcceptanceProof {
 		if ( is_wp_error( $assignment ) ) { return self::operation_error( $result, 'repositories', __( 'Repository persistence', 'certloom' ), $assignment ); }
 		$resolved = $signer_repo->resolve_hierarchy( $issuer, $program, $batch, 'signer' );
 		if ( is_wp_error( $resolved ) || empty( $resolved ) || absint( $resolved[0]['signer_id'] ?? 0 ) !== absint( $signer ) ) { return self::operation_error( $result, 'repositories', __( 'Repository persistence', 'certloom' ), is_wp_error( $resolved ) ? $resolved : new \WP_Error( 'certloom_domain_acceptance_signer_hierarchy', __( 'The signer hierarchy did not resolve the most-specific batch signer.', 'certloom' ) ) ); }
+		$template_global = $template_repo->create( array( 'machine_key' => 'acceptance-global-' . $token, 'name' => 'Acceptance Global Template ' . $token, 'description' => 'Rollback-only global assignment proof', 'layout' => TemplateDefaults::blank_a4_landscape() ), get_current_user_id() );
+		if ( is_wp_error( $template_global ) ) { return self::operation_error( $result, 'template_assignments', __( 'Template assignment hierarchy', 'certloom' ), $template_global ); }
+		$template_specific = $template_repo->create( array( 'machine_key' => 'acceptance-specific-' . $token, 'name' => 'Acceptance Specific Template ' . $token, 'description' => 'Rollback-only specific assignment proof', 'layout' => TemplateDefaults::blank_a4_landscape() ), get_current_user_id() );
+		if ( is_wp_error( $template_specific ) ) { return self::operation_error( $result, 'template_assignments', __( 'Template assignment hierarchy', 'certloom' ), $template_specific ); }
+		$global_assignment = $template_repo->assign( $template_global, 'global', 0 );
+		if ( is_wp_error( $global_assignment ) ) { return self::operation_error( $result, 'template_assignments', __( 'Template assignment hierarchy', 'certloom' ), $global_assignment ); }
+		$program_assignment = $template_repo->assign( $template_specific, 'program', $program );
+		if ( is_wp_error( $program_assignment ) ) { return self::operation_error( $result, 'template_assignments', __( 'Template assignment hierarchy', 'certloom' ), $program_assignment ); }
+		$template_resolved = $template_repo->resolve_assignment_details( array( 'issuer_id' => $issuer, 'program_id' => $program, 'batch_id' => $batch ) );
+		if ( is_wp_error( $template_resolved ) || ! is_array( $template_resolved ) || absint( $template_resolved['template_id'] ?? 0 ) !== absint( $template_specific ) || 'program' !== (string) ( $template_resolved['scope_type'] ?? '' ) ) { return self::operation_error( $result, 'template_assignments', __( 'Template assignment hierarchy', 'certloom' ), is_wp_error( $template_resolved ) ? $template_resolved : new \WP_Error( 'certloom_domain_acceptance_template_program_fallback', __( 'The Template hierarchy did not resolve the Program assignment before Global fallback.', 'certloom' ) ) ); }
+		$direct_program = $template_repo->get_assignment( 'program', $program );
+		if ( is_wp_error( $direct_program ) || ! is_array( $direct_program ) ) { return self::operation_error( $result, 'template_assignments', __( 'Template assignment hierarchy', 'certloom' ), is_wp_error( $direct_program ) ? $direct_program : new \WP_Error( 'certloom_domain_acceptance_template_direct_missing', __( 'The direct Program Template assignment could not be read.', 'certloom' ) ) ); }
+		$stale_assignment = $template_repo->assign( $template_global, 'program', $program, 100, absint( $direct_program['id'] ), 'stale-proof' );
+		if ( ! is_wp_error( $stale_assignment ) || 'certloom_template_assignment_stale' !== $stale_assignment->get_error_code() ) { return self::operation_error( $result, 'template_assignments', __( 'Template assignment hierarchy', 'certloom' ), new \WP_Error( 'certloom_domain_acceptance_template_stale', __( 'A stale Template assignment review was not rejected.', 'certloom' ) ) ); }
+		$cleared_program = $template_repo->clear_assignment( 'program', $program, absint( $direct_program['id'] ), (string) $direct_program['updated_at'] );
+		if ( is_wp_error( $cleared_program ) ) { return self::operation_error( $result, 'template_assignments', __( 'Template assignment hierarchy', 'certloom' ), $cleared_program ); }
+		$template_fallback = $template_repo->resolve_assignment_details( array( 'issuer_id' => $issuer, 'program_id' => $program, 'batch_id' => $batch ) );
+		if ( is_wp_error( $template_fallback ) || ! is_array( $template_fallback ) || absint( $template_fallback['template_id'] ?? 0 ) !== absint( $template_global ) || 'global' !== (string) ( $template_fallback['scope_type'] ?? '' ) ) { return self::operation_error( $result, 'template_assignments', __( 'Template assignment hierarchy', 'certloom' ), is_wp_error( $template_fallback ) ? $template_fallback : new \WP_Error( 'certloom_domain_acceptance_template_global_fallback', __( 'Clearing the Program Template assignment did not fall back to Global.', 'certloom' ) ) ); }
+		$archive_assigned = $template_repo->archive( $template_global );
+		if ( ! is_wp_error( $archive_assigned ) || 'certloom_template_archive_assigned' !== $archive_assigned->get_error_code() ) { return self::operation_error( $result, 'template_assignments', __( 'Template assignment hierarchy', 'certloom' ), new \WP_Error( 'certloom_domain_acceptance_template_archive_guard', __( 'An actively assigned Template was allowed to archive.', 'certloom' ) ) ); }
+		self::add_check( $result, 'template_assignments', 'pass', __( 'Template assignment hierarchy', 'certloom' ), __( 'Real repository writes proved Program-over-Global resolution, explicit None/inherit fallback, stale-review rejection and assigned-Template archive protection.', 'certloom' ) );
 		$series = $credential_repo->create_series( array( 'recipient_id' => $recipient, 'issuer_id' => $issuer, 'program_id' => $program, 'batch_id' => $batch ) );
 		if ( is_wp_error( $series ) ) { return self::operation_error( $result, 'repositories', __( 'Repository persistence', 'certloom' ), $series ); }
 		$series_row = $credential_repo->find_series( $series );

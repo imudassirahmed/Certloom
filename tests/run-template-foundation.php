@@ -42,6 +42,7 @@ $root=dirname(__DIR__);
 $files=array(
  'schema'=>file_get_contents($root.'/src/Infrastructure/Database/SchemaManager.php'),
  'repo'=>file_get_contents($root.'/src/Infrastructure/Repository/TemplateRepository.php'),
+ 'assignment_policy'=>file_get_contents($root.'/src/Application/Templates/TemplateAssignmentPolicy.php'),
  'admin'=>file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'),
  'plugin'=>file_get_contents($root.'/src/Plugin.php'),
  'backup'=>file_get_contents($root.'/src/Application/Backup/DomainBackupFormat.php'),
@@ -61,7 +62,8 @@ tpl_has($files['schema'],'UNIQUE KEY scope_assignment (scope_type,scope_id)','on
 tpl_has($files['repo'],'FOR UPDATE','template draft updates use row locking');
 tpl_has($files['repo'],'certloom_template_stale_revision','stale revision saves fail closed');
 tpl_has($files['repo'],'certloom_template_publish_renderer_gate','publishing remains renderer-gated');
-tpl_has($files['repo'],"array( 'batch', 'program', 'issuer' )",'assignment precedence starts batch/program/issuer');
+tpl_has($files['repo'],'TemplateAssignmentPolicy','template repository delegates assignment hierarchy to the shared policy');
+tpl_has($files['assignment_policy'],"array( self::SCOPE_BATCH, self::SCOPE_PROGRAM, self::SCOPE_ISSUER )",'shared assignment policy preserves batch/program/issuer precedence');
 tpl_has($files['admin'],'expected_revision_id','admin carries optimistic revision proof');
 tpl_has($files['admin'],'Publish (renderer gate)','admin does not fake publication');
 tpl_has($files['plugin'],'TemplateAdmin','gated template admin is wired');
@@ -71,7 +73,7 @@ tpl_has($files['preflight'],'template_parent_revision_invalid','semantic preflig
 tpl_has($files['workspace'],'template_published_revision_invalid','staged restore re-proves published pointer');
 tpl_has($files['workspace'],"'templates' => 't', 'template_revisions' => 'u', 'template_assignments' => 'y'",'restore workspace gives every template entity a unique private-table code');
 tpl_has($files['restore_map'],"'templates', 'template_revisions', 'template_assignments'",'durable Merge mapping accepts template entities');
-tpl_has($files['acceptance'],'const RESULT_VERSION = 3','expanded template schema invalidates older acceptance evidence');
+tpl_has($files['acceptance'],'const RESULT_VERSION = 4','assignment-aware template schema invalidates older acceptance evidence');
 tpl_has($files['uninstall'],'certloom_template_assignments','uninstall owns template assignments');
 tpl_has($files['uninstall'],'certloom_template_revisions','uninstall owns revisions');
 tpl_has($files['uninstall'],'certloom_templates','uninstall owns templates');

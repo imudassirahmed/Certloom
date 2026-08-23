@@ -1,3 +1,13 @@
+1.6.17 — TPL-03 premium Template assignment UX and acceptance hardening
+- Add searchable/paginated Global, Issuer, Program, and Batch Template assignment administration with searchable/paginated Template candidates.
+- Add explicit None/inherit handling, effective assignment source, fallback depth, and a centralized Batch → Program → Issuer → Global precedence policy.
+- Add optimistic assignment concurrency tokens plus in-transaction Template locking/revalidation to serialize assignment against archive.
+- Prevent archiving actively assigned Templates and fail closed if an active assignment points at an archived/unavailable Template.
+- Re-validate candidate canonical layout JSON/hash before presenting non-authoritative metadata; rendered Preview remains renderer-gated.
+- Fix missing pagination controls in the main Templates list and correct the live normal-authority Templates placeholder to reflect the implemented/gated Template foundation.
+- Extend rollback-only and disposable real-DB acceptance proofs for assignment set/stale/clear/fallback/archive semantics; bump acceptance evidence to v4.
+- Keep normalized-domain write/admin/data-tool flags false and do not advance publishing or Designer authority.
+
 1.6.16 — TPL-02 premium starter templates + PRESET-01 factory preset system
 - Adds six distinct premium template families: Classic, Modern, Corporate, Academic, Elegant, and Minimal.
 - Ships A4 and Letter, portrait and landscape canonical candidates for every family (24 layouts total).

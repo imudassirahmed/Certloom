@@ -4,9 +4,11 @@ namespace Certloom\Infrastructure\Repository;
 use Certloom\Application\Rendering\CanonicalJson;
 use Certloom\Application\Rendering\LayoutValidator;
 use Certloom\Application\Templates\TemplatePackage;
+use Certloom\Application\Templates\TemplateAssignmentPolicy;
 use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Infrastructure\Database\SchemaManager;
 use Certloom\Infrastructure\Database\Transaction;
+use Certloom\Application\Contract\TransactionInterface;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -20,9 +22,9 @@ final class TemplateRepository {
 
 	/** @var LayoutValidator */ private $layouts;
 	/** @var CanonicalJson */ private $json;
-	/** @var Transaction */ private $transaction;
+	/** @var TransactionInterface */ private $transaction;
 
-	public function __construct( LayoutValidator $layouts = null, CanonicalJson $json = null, Transaction $transaction = null ) {
+	public function __construct( LayoutValidator $layouts = null, CanonicalJson $json = null, TransactionInterface $transaction = null ) {
 		$this->layouts      = $layouts ?: new LayoutValidator();
 		$this->json         = $json ?: new CanonicalJson();
 		$this->transaction  = $transaction ?: new Transaction();
@@ -166,6 +168,10 @@ final class TemplateRepository {
 			if ( '' !== (string) $expected_updated_at && ! hash_equals( (string) $template['updated_at'], (string) $expected_updated_at ) ) { return new \WP_Error( 'certloom_template_stale_edit', __( 'This template changed after you opened it. Reload before archiving.', 'certloom' ) ); }
 			if ( ! empty( $template['published_revision_id'] ) ) { return new \WP_Error( 'certloom_template_archive_published', __( 'A published template cannot be archived by the draft-only template foundation.', 'certloom' ) ); }
 			if ( ! empty( $template['archived_at'] ) ) { return true; }
+			$wpdb->last_error = '';
+			$assignment_count = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE template_id=%d AND active=1', SchemaManager::table( 'template_assignments' ), $template_id ) );
+			if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_template_assignment_read_failed', __( 'Certloom could not verify whether this template is still assigned.', 'certloom' ) ); }
+			if ( $assignment_count > 0 ) { return new \WP_Error( 'certloom_template_archive_assigned', __( 'Remove this template from every active assignment before archiving it.', 'certloom' ) ); }
 			$now = current_time( 'mysql', true );
 			$wpdb->last_error = '';
 			$updated = $wpdb->update( SchemaManager::table( 'templates' ), array( 'archived_at' => $now, 'updated_at' => $now ), array( 'id' => $template_id ) );
@@ -252,38 +258,153 @@ final class TemplateRepository {
 		return $this->create( $decoded, $actor_user_id, self::SOURCE_IMPORT );
 	}
 
+	/**
+	 * Sets one direct assignment with optimistic-concurrency proof.
+	 *
+	 * @return true|\WP_Error
+	 */
+	public function assign( $template_id, $scope_type, $scope_id = 0, $priority = 100, $expected_assignment_id = 0, $expected_updated_at = '' ) {
+		$template_id = absint( $template_id );
+		$priority = absint( $priority );
+		$scope = ( new TemplateAssignmentPolicy() )->normalize_scope( $scope_type, $scope_id );
+		if ( is_wp_error( $scope ) || ! $template_id || $priority > 1000 ) { return is_wp_error( $scope ) ? $scope : new \WP_Error( 'certloom_template_assignment_invalid', __( 'Choose a valid template assignment.', 'certloom' ) ); }
+		$scope_type = $scope['scope_type']; $scope_id = $scope['scope_id'];
+		$template = $this->find( $template_id );
+		if ( is_wp_error( $template ) ) { return $template; }
+		if ( ! is_array( $template ) || ! empty( $template['archived_at'] ) || empty( $template['current_revision_id'] ) ) { return new \WP_Error( 'certloom_template_unavailable', __( 'The template is unavailable for assignment.', 'certloom' ) ); }
+		$exists = $this->scope_exists( $scope_type, $scope_id );
+		if ( is_wp_error( $exists ) ) { return $exists; }
+		if ( ! $exists ) { return new \WP_Error( 'certloom_template_assignment_scope_missing', __( 'The template assignment target no longer exists.', 'certloom' ) ); }
+		$generation = ( new DomainGeneration() )->mark_before_mutation();
+		if ( is_wp_error( $generation ) ) { return $generation; }
+		return $this->transaction->run( function () use ( $template_id, $scope_type, $scope_id, $priority, $expected_assignment_id, $expected_updated_at ) {
+			global $wpdb;
+			$locked_template = $this->lock_template( $template_id );
+			if ( is_wp_error( $locked_template ) ) { return $locked_template; }
+			if ( ! is_array( $locked_template ) || ! empty( $locked_template['archived_at'] ) || empty( $locked_template['current_revision_id'] ) ) { return new \WP_Error( 'certloom_template_unavailable', __( 'The template became unavailable before the assignment could be saved.', 'certloom' ) ); }
+			$existing = $this->lock_assignment( $scope_type, $scope_id );
+			if ( is_wp_error( $existing ) ) { return $existing; }
+			$expected_assignment_id = absint( $expected_assignment_id );
+			if ( $expected_assignment_id ) {
+				if ( ! is_array( $existing ) || absint( $existing['id'] ?? 0 ) !== $expected_assignment_id || '' === (string) $expected_updated_at || ! hash_equals( (string) ( $existing['updated_at'] ?? '' ), (string) $expected_updated_at ) ) {
+					return new \WP_Error( 'certloom_template_assignment_stale', __( 'This template assignment changed after you opened it. Reload before saving.', 'certloom' ) );
+				}
+			} elseif ( is_array( $existing ) ) {
+				return new \WP_Error( 'certloom_template_assignment_stale', __( 'This template assignment changed after you opened it. Reload before saving.', 'certloom' ) );
+			}
+			$now = current_time( 'mysql', true );
+			$table = SchemaManager::table( 'template_assignments' );
+			$wpdb->last_error = '';
+			if ( is_array( $existing ) ) {
+				$updated = $wpdb->update( $table, array( 'template_id' => $template_id, 'priority' => $priority, 'active' => 1, 'updated_at' => $now ), array( 'id' => absint( $existing['id'] ) ) );
+				return false === $updated || '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_assignment_save_failed', __( 'Certloom could not save the template assignment.', 'certloom' ) ) : true;
+			}
+			$inserted = $wpdb->insert( $table, array( 'template_id' => $template_id, 'scope_type' => $scope_type, 'scope_id' => $scope_id, 'priority' => $priority, 'active' => 1, 'created_at' => $now, 'updated_at' => $now ) );
+			if ( false === $inserted || '' !== (string) $wpdb->last_error ) {
+				if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) { return new \WP_Error( 'certloom_template_assignment_stale', __( 'This template assignment changed while you were saving it. Reload before trying again.', 'certloom' ) ); }
+				return new \WP_Error( 'certloom_template_assignment_save_failed', __( 'Certloom could not save the template assignment.', 'certloom' ) );
+			}
+			return true;
+		} );
+	}
+
 	/** @return true|\WP_Error */
-	public function assign( $template_id, $scope_type, $scope_id = 0, $priority = 100 ) {
-		$template_id = absint( $template_id ); $scope_type = sanitize_key( (string) $scope_type ); $scope_id = absint( $scope_id ); $priority = absint( $priority );
-		if ( ! $template_id || ! in_array( $scope_type, array( 'global', 'issuer', 'program', 'batch' ), true ) || $priority > 1000 || ( 'global' === $scope_type ? 0 !== $scope_id : $scope_id < 1 ) ) { return new \WP_Error( 'certloom_template_assignment_invalid', __( 'Choose a valid template assignment scope.', 'certloom' ) ); }
-		$template = $this->find( $template_id ); if ( is_wp_error( $template ) ) { return $template; } if ( ! is_array( $template ) || ! empty( $template['archived_at'] ) ) { return new \WP_Error( 'certloom_template_unavailable', __( 'The template is unavailable for assignment.', 'certloom' ) ); }
-		$exists = $this->scope_exists( $scope_type, $scope_id ); if ( is_wp_error( $exists ) ) { return $exists; } if ( ! $exists ) { return new \WP_Error( 'certloom_template_assignment_scope_missing', __( 'The template assignment target no longer exists.', 'certloom' ) ); }
-		$generation = ( new DomainGeneration() )->mark_before_mutation(); if ( is_wp_error( $generation ) ) { return $generation; }
-		global $wpdb; $now = current_time( 'mysql', true ); $table = SchemaManager::table( 'template_assignments' );
+	public function clear_assignment( $scope_type, $scope_id = 0, $expected_assignment_id = 0, $expected_updated_at = '' ) {
+		$scope = ( new TemplateAssignmentPolicy() )->normalize_scope( $scope_type, $scope_id );
+		if ( is_wp_error( $scope ) ) { return $scope; }
+		$scope_type = $scope['scope_type']; $scope_id = $scope['scope_id'];
+		$exists = $this->scope_exists( $scope_type, $scope_id );
+		if ( is_wp_error( $exists ) ) { return $exists; }
+		if ( ! $exists ) { return new \WP_Error( 'certloom_template_assignment_scope_missing', __( 'The template assignment target no longer exists.', 'certloom' ) ); }
+		$generation = ( new DomainGeneration() )->mark_before_mutation();
+		if ( is_wp_error( $generation ) ) { return $generation; }
+		return $this->transaction->run( function () use ( $scope_type, $scope_id, $expected_assignment_id, $expected_updated_at ) {
+			global $wpdb;
+			$existing = $this->lock_assignment( $scope_type, $scope_id );
+			if ( is_wp_error( $existing ) ) { return $existing; }
+			$expected_assignment_id = absint( $expected_assignment_id );
+			if ( ! is_array( $existing ) ) {
+				return $expected_assignment_id ? new \WP_Error( 'certloom_template_assignment_stale', __( 'This template assignment changed after you opened it. Reload before saving.', 'certloom' ) ) : true;
+			}
+			if ( $expected_assignment_id !== absint( $existing['id'] ?? 0 ) || '' === (string) $expected_updated_at || ! hash_equals( (string) ( $existing['updated_at'] ?? '' ), (string) $expected_updated_at ) ) {
+				return new \WP_Error( 'certloom_template_assignment_stale', __( 'This template assignment changed after you opened it. Reload before saving.', 'certloom' ) );
+			}
+			if ( empty( $existing['active'] ) ) { return true; }
+			$wpdb->last_error = '';
+			$updated = $wpdb->update( SchemaManager::table( 'template_assignments' ), array( 'active' => 0, 'updated_at' => current_time( 'mysql', true ) ), array( 'id' => absint( $existing['id'] ) ) );
+			return false === $updated || '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_assignment_clear_failed', __( 'Certloom could not clear the direct template assignment.', 'certloom' ) ) : true;
+		} );
+	}
+
+	/** @return array<string,mixed>|null|\WP_Error */
+	public function get_assignment( $scope_type, $scope_id = 0 ) {
+		$scope = ( new TemplateAssignmentPolicy() )->normalize_scope( $scope_type, $scope_id );
+		if ( is_wp_error( $scope ) ) { return $scope; }
+		global $wpdb;
 		$wpdb->last_error = '';
-		$existing_id = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM %i WHERE scope_type=%s AND scope_id=%d', $table, $scope_type, $scope_id ) );
+		$row = $wpdb->get_row( $wpdb->prepare(
+			'SELECT a.*, t.name AS template_name, t.machine_key, t.archived_at AS template_archived_at, t.current_revision_id, r.revision_number AS current_revision_number, r.source_type AS current_revision_source, r.layout_sha256 FROM %i a LEFT JOIN %i t ON t.id=a.template_id LEFT JOIN %i r ON r.id=t.current_revision_id WHERE a.scope_type=%s AND a.scope_id=%d LIMIT 1',
+			SchemaManager::table( 'template_assignments' ), SchemaManager::table( 'templates' ), SchemaManager::table( 'template_revisions' ), $scope['scope_type'], $scope['scope_id']
+		), ARRAY_A );
 		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_template_assignment_read_failed', __( 'Certloom could not inspect the template assignment.', 'certloom' ) ); }
-		if ( $existing_id ) {
-			$updated = $wpdb->update( $table, array( 'template_id' => $template_id, 'priority' => $priority, 'active' => 1, 'updated_at' => $now ), array( 'id' => absint( $existing_id ) ) );
-			return false === $updated || '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_assignment_save_failed', __( 'Certloom could not save the template assignment.', 'certloom' ) ) : true;
+		if ( ! is_array( $row ) ) { return null; }
+		if ( empty( $row['template_name'] ) || empty( $row['current_revision_id'] ) || empty( $row['current_revision_number'] ) ) { return new \WP_Error( 'certloom_template_assignment_corrupt', __( 'A stored template assignment points to an invalid Template or Revision.', 'certloom' ) ); }
+		$row['id'] = absint( $row['id'] ?? 0 ); $row['template_id'] = absint( $row['template_id'] ?? 0 ); $row['scope_id'] = absint( $row['scope_id'] ?? 0 ); $row['priority'] = absint( $row['priority'] ?? 0 ); $row['active'] = ! empty( $row['active'] ); $row['current_revision_id'] = absint( $row['current_revision_id'] ?? 0 ); $row['current_revision_number'] = absint( $row['current_revision_number'] ?? 0 ); $row['template_archived'] = ! empty( $row['template_archived_at'] );
+		return $row;
+	}
+
+	/** @return array{items:array<int,array<string,mixed>>,total:int}|\WP_Error */
+	public function list_candidates( $search = '', $page = 1, $per_page = 12, $kind = 'all' ) {
+		global $wpdb;
+		$page = max( 1, absint( $page ) ); $per_page = max( 1, min( 48, absint( $per_page ) ) ); $offset = ( $page - 1 ) * $per_page;
+		$kind = in_array( $kind, array( 'all', 'factory', 'custom' ), true ) ? $kind : 'all';
+		$where = array( 't.archived_at IS NULL' ); $args = array(); $search = trim( (string) $search );
+		if ( '' !== $search ) { $like = '%' . $wpdb->esc_like( $search ) . '%'; $where[] = '(t.name LIKE %s OR t.machine_key LIKE %s OR t.description LIKE %s)'; $args = array_merge( $args, array( $like, $like, $like ) ); }
+		if ( 'factory' === $kind ) { $where[] = "t.machine_key LIKE 'certloom-preset-%'"; }
+		if ( 'custom' === $kind ) { $where[] = "t.machine_key NOT LIKE 'certloom-preset-%'"; }
+		$where_sql = ' WHERE ' . implode( ' AND ', $where ); $templates = SchemaManager::table( 'templates' ); $revisions = SchemaManager::table( 'template_revisions' );
+		$wpdb->last_error = '';
+		$total = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i t' . $where_sql, array_merge( array( $templates ), $args ) ) );
+		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_template_list_failed', __( 'Certloom could not load assignable templates.', 'certloom' ) ); }
+		$wpdb->last_error = '';
+		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT t.id,t.machine_key,t.name,t.description,t.current_revision_id,r.revision_number,r.source_type,r.layout_json,r.layout_sha256 FROM %i t INNER JOIN %i r ON r.id=t.current_revision_id' . $where_sql . ' ORDER BY t.name ASC,t.id ASC LIMIT %d OFFSET %d', array_merge( array( $templates, $revisions ), $args, array( $per_page, $offset ) ) ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) { return new \WP_Error( 'certloom_template_list_failed', __( 'Certloom could not load assignable templates.', 'certloom' ) ); }
+		foreach ( $rows as &$row ) {
+			$decoded = json_decode( (string) ( $row['layout_json'] ?? '' ), true );
+			if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $decoded ) ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'An assignable template contains invalid canonical layout data.', 'certloom' ) ); }
+			try { $layout = $this->layouts->normalize( $decoded ); $hash = $this->json->hash( $layout ); } catch ( \Throwable $error ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'An assignable template does not satisfy Certloom’s canonical layout contract.', 'certloom' ) ); }
+			if ( ! hash_equals( strtolower( (string) ( $row['layout_sha256'] ?? '' ) ), $hash ) ) { return new \WP_Error( 'certloom_template_revision_hash_mismatch', __( 'An assignable template failed its layout integrity check.', 'certloom' ) ); }
+			$row['id'] = absint( $row['id'] ?? 0 ); $row['current_revision_id'] = absint( $row['current_revision_id'] ?? 0 ); $row['revision_number'] = absint( $row['revision_number'] ?? 0 ); $row['factory'] = 0 === strpos( (string) $row['machine_key'], 'certloom-preset-' ); $row['page_size'] = (string) ( $layout['page']['size'] ?? '' ); $row['orientation'] = (string) ( $layout['page']['orientation'] ?? '' ); $row['element_count'] = count( $layout['elements'] ?? array() ); unset( $row['layout_json'] );
 		}
-		$inserted = $wpdb->insert( $table, array( 'template_id' => $template_id, 'scope_type' => $scope_type, 'scope_id' => $scope_id, 'priority' => $priority, 'active' => 1, 'created_at' => $now, 'updated_at' => $now ) );
-		return false === $inserted || '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_assignment_save_failed', __( 'Certloom could not save the template assignment.', 'certloom' ) ) : true;
+		unset( $row );
+		return array( 'items' => $rows, 'total' => $total );
+	}
+
+	/** @return array<string,mixed>|null|\WP_Error */
+	public function resolve_assignment_details( array $context ) {
+		$policy = new TemplateAssignmentPolicy();
+		foreach ( $policy->candidates( $context ) as $candidate ) {
+			$assignment = $this->get_assignment( $candidate['scope_type'], $candidate['scope_id'] );
+			if ( is_wp_error( $assignment ) ) { return $assignment; }
+			if ( ! is_array( $assignment ) || empty( $assignment['active'] ) ) { continue; }
+			if ( ! empty( $assignment['template_archived'] ) ) { return new \WP_Error( 'certloom_template_assignment_corrupt', __( 'An active template assignment points to an archived Template.', 'certloom' ) ); }
+			$template = $this->find( absint( $assignment['template_id'] ) );
+			if ( is_wp_error( $template ) ) { return $template; }
+			if ( ! is_array( $template ) || ! empty( $template['archived_at'] ) || empty( $template['current_revision'] ) ) { return new \WP_Error( 'certloom_template_assignment_corrupt', __( 'An active template assignment points to an unavailable Template.', 'certloom' ) ); }
+			$layout = $template['current_revision']['layout'];
+			$assignment['fallback_depth'] = absint( $candidate['depth'] );
+			$assignment['page_size'] = (string) ( $layout['page']['size'] ?? '' );
+			$assignment['orientation'] = (string) ( $layout['page']['orientation'] ?? '' );
+			$assignment['element_count'] = count( $layout['elements'] ?? array() );
+			return $assignment;
+		}
+		return null;
 	}
 
 	/** @return int|null|\WP_Error */
 	public function resolve_assignment( array $context ) {
-		global $wpdb; $table = SchemaManager::table( 'template_assignments' );
-		$candidates = array();
-		foreach ( array( 'batch', 'program', 'issuer' ) as $scope ) { $id = absint( $context[ $scope . '_id' ] ?? 0 ); if ( $id ) { $candidates[] = array( $scope, $id ); } }
-		$candidates[] = array( 'global', 0 );
-		foreach ( $candidates as $candidate ) {
-			$wpdb->last_error = '';
-			$id = $wpdb->get_var( $wpdb->prepare( 'SELECT template_id FROM %i WHERE scope_type=%s AND scope_id=%d AND active=1 ORDER BY priority ASC,id ASC LIMIT 1', $table, $candidate[0], $candidate[1] ) );
-			if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_template_assignment_read_failed', __( 'Certloom could not resolve the template assignment.', 'certloom' ) ); }
-			if ( $id ) { return absint( $id ); }
-		}
-		return null;
+		$resolved = $this->resolve_assignment_details( $context );
+		return is_wp_error( $resolved ) || ! is_array( $resolved ) ? $resolved : absint( $resolved['template_id'] ?? 0 );
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
@@ -345,6 +466,13 @@ final class TemplateRepository {
 		global $wpdb; $wpdb->last_error = '';
 		$id = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM %i WHERE template_id=%d AND source_type=%s LIMIT 1', SchemaManager::table( 'template_revisions' ), absint( $template_id ), self::SOURCE_PRESET ) );
 		return '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_revision_read_failed', __( 'Certloom could not inspect factory-template revision provenance.', 'certloom' ) ) : (bool) $id;
+	}
+
+	/** @return array<string,mixed>|null|\WP_Error */
+	private function lock_assignment( $scope_type, $scope_id ) {
+		global $wpdb; $wpdb->last_error = '';
+		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE scope_type=%s AND scope_id=%d FOR UPDATE', SchemaManager::table( 'template_assignments' ), (string) $scope_type, absint( $scope_id ) ), ARRAY_A );
+		return '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_assignment_lock_failed', __( 'Certloom could not lock the template assignment for a safe update.', 'certloom' ) ) : ( is_array( $row ) ? $row : null );
 	}
 
 	/** @return bool|\WP_Error */

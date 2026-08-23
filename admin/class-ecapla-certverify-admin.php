@@ -1014,9 +1014,9 @@ class Ecapla_CertVerify_Admin {
 			),
 			'certloom-templates' => array(
 				'title' => __( 'Templates', 'certloom' ),
-				'eyebrow' => __( 'Planned Pro commercial core', 'certloom' ),
-				'description' => __( 'Versioned certificate templates, starter designs, assignments and the visual designer arrive after the production renderer acceptance track. No placeholder control here writes template data.', 'certloom' ),
-				'status' => __( 'Planned · renderer-dependent', 'certloom' ),
+				'eyebrow' => __( 'Pro commercial core · implementation gated', 'certloom' ),
+				'description' => __( 'Versioned Templates, immutable revisions, six factory design families and deterministic assignment/fallback administration are implemented in the normalized domain. They remain acceptance-gated; authoritative publishing, rendered Preview and the visual Designer still require the production renderer gate.', 'certloom' ),
+				'status' => __( 'Template implementation advanced · publication/Designer renderer-gated', 'certloom' ),
 			),
 			'certloom-issuance' => array(
 				'title' => __( 'Issuance', 'certloom' ),

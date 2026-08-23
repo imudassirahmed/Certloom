@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.16
+Stable tag: 1.6.17
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.16: Certloom adds `TPL-02 + PRESET-01` behind the existing normalized-domain gate: six premium factory template families (Classic, Modern, Corporate, Academic, Elegant, Minimal) across A4/Letter portrait/landscape variants, immutable preset revisions, deterministic visual references, safe factory synchronization, and non-destructive customer customization/reset semantics. Publishing and authoritative rendered preview remain disabled until the production renderer acceptance gate passes.
+> Development note for 1.6.17: Certloom adds `TPL-03` behind the existing normalized-domain gate: premium Template assignment administration with searchable/paginated targets and candidates, explicit None/inherit behavior, deterministic Batch → Program → Issuer → Global fallback, effective-source visibility, optimistic concurrency, archive/assignment safety, and renderer-honest candidate metadata. Publishing, authoritative rendered Preview, and Designer output remain disabled until the production renderer acceptance gate passes.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -129,6 +129,16 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.17 =
+* Add premium Template assignment administration across Global, Issuer, Program, and Batch scopes with searchable/paginated targets and Template candidates.
+* Add explicit None/inherit semantics, effective assignment source and fallback-depth visibility, and one shared Batch → Program → Issuer → Global policy used by repository and admin workflows.
+* Add optimistic assignment concurrency checks and in-transaction Template re-locking so archive/assign races fail closed rather than leaving live assignments on archived Templates.
+* Prevent archiving actively assigned Templates and fail closed when a stored active assignment references an unavailable/archived Template.
+* Add integrity-checked candidate metadata without pretending it is authoritative rendered Preview; publishing/Preview/Designer remain production-renderer gated.
+* Fix the main Templates list pagination omission and update the normal-authority Templates placeholder so it accurately reflects the implemented-but-gated Template system.
+* Expand rollback-only and disposable WordPress/MySQL acceptance proofs to exercise Template set/stale/clear/fallback/archive semantics, and advance acceptance evidence to v4 so older receipts cannot certify TPL-03.
+* Keep normalized-domain write/admin/data-tool flags false.
 
 = 1.6.16 =
 * Add six premium factory template families across A4/Letter portrait/landscape variants (24 canonical layouts) as versioned, immutable preset drafts.
