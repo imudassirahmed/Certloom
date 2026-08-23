@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.11
+Stable tag: 1.6.13
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.11: Certloom continues Phase 2 on the authoritative legacy registry with an opt-in sequential certificate-number policy for new administrator-created credentials. Existing sites remain Manual by default; explicit numbers remain valid manual overrides; generated numbers use a durable atomic sequence cursor with prefix/suffix, padding, collision skipping, and non-mutating preview. Existing issued numbers are never renumbered. Program/template-scoped sequences and the normalized domain remain gated pending authoritative relationship/database acceptance.
+> Development note for 1.6.13: Certloom begins Original Phase 4 with fully local verification QR generation on the authoritative legacy verifier/profile surface. Successful public results can show a scan-safe QR that encodes only the canonical verification URL, uses Certloom's bundled Model 2 encoder, requires no remote service, and never embeds secondary proof or private credential data. The same renderer-independent QR matrix contract is reserved for future server-authoritative artifacts; normalized-domain and production PDF/image authority remain gated.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -28,6 +28,7 @@ Certloom provides a practical certificate registry without requiring a separate 
 * **Shortcode** using `[certloom]` in the Classic Editor, a Shortcode block, templates, or other page builders.
 * **Clean verification links** using `/certloom/verify/{token}/` when pretty permalinks are enabled, with a query-string fallback on plain permalinks. Existing `?certloom_number=YOUR-NUMBER` links remain compatible. Direct verification requests receive noindex and private-cache protections, although the identifier may still appear in browser history, infrastructure logs, or site analytics.
 * **Credential Profile** using `/certloom/credential/{token}/`, `[certloom_credential number="..."]`, the native Credential Profile block, or the semantic Elementor Credential Profile widget.
+* **Local verification QR** on successful verification/profile results, encoding only the canonical Certloom verification URL with no remote QR service.
 * **Optional Elementor verification widgets** when Elementor 3.10 or later is active: Professional, Meridian, Halo, Axis, Nova, and Forge. Their identities and saved settings remain preserved.
 
 Each Elementor widget has isolated content and style controls. Structural responsiveness is automatic and container-aware. Certloom is independent and is not affiliated with or endorsed by Elementor.
@@ -128,6 +129,22 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.13 =
+* Add WordPress-local QR Code Model 2 generation for successful public verification and Credential Profile results, with no remote QR service or new credential identifier.
+* Encode only the canonical verification URL; secondary proof codes and private/internal credential fields never enter the QR payload.
+* Reuse one renderer-independent QR encoder contract for public presentation and future artifact adapters, with fixed four-module quiet zone and scan-safe black/white modules.
+* Add administrator QR visibility control, local QR System Status health reporting, AJAX/no-JS parity, and mobile/RTL/forced-colors browser coverage.
+* Add independent PHP-SVG → raster → OpenCV scan acceptance for pretty, long-token, and query/Unicode fallback verification URLs.
+* Suppress proof-less standalone Credential Profile links for credentials protected by secondary verification proof while keeping copy/print/canonical verification QR safe.
+
+= 1.6.12 =
+* Add Random non-guessable (100-bit Crockford-style) and RFC-4122 UUID v4 human certificate-number strategies alongside Manual and Sequential.
+* Preserve Manual as the upgrade default, explicit-number override behavior, immutable issued numbers, exact verification, and the separate normalized checksummed public credential ID.
+* Keep Random/UUID stateless so switching strategies never resets or advances the durable Sequential cursor; generated previews are explicitly non-reserving samples.
+* Validate numbering strategy before complete-backup creation and during restore preflight, accepting Manual/Sequential/Random/UUID and rejecting unknown/tampered strategies before mutation.
+* Extend the real WordPress/MySQL numbering gate to prove Random/UUID generation and sequential-cursor independence.
+* Keep Program/Template-scoped numbering, normalized-domain authority, identity-gated portals, and protected artifacts dependency-gated.
 
 = 1.6.11 =
 * Add opt-in sequential numbering for new administrator-created credentials while keeping Manual as the upgrade/default mode and preserving explicit manual-number overrides.

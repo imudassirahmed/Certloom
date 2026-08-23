@@ -8,6 +8,11 @@ function sanitize_key($v){return preg_replace('/[^a-z0-9_\-]/','',strtolower((st
 function sanitize_text_field($v){return trim(strip_tags((string)$v));}
 function current_time($type,$gmt=false){return $type==='timestamp'?1700000000:'2023-11-14 22:13:20';}
 class Ecapla_CertVerify_REST { public static function is_rate_limited($scope='verify'){return false;} }
+class Ecapla_CertVerify_Secondary_Code {
+ public static function has_code($certificate){return !empty($certificate['custom_fields']['__certloom_verification_code_hash']);}
+ public static function matches($certificate,$code){return self::has_code($certificate) && $code==='GOOD-CODE';}
+ public static function equalize_public_miss($code){return null;}
+}
 class Ecapla_CertVerify_Database {
  public static $row=null;
  public static function normalize_certificate_number($n){return strtolower(trim($n));}
@@ -44,6 +49,12 @@ $p=Ecapla_CertVerify_Public_Presentation::verify('CERT-168',false,'profile');
 vc(!empty($p['found']),'public credential profile allowed');
 vc(array_column($p['fields'],'label')===array('Certificate number','Profile only','Both'),'profile context exposes only profile/both fields');
 vc(array_column($p['actions'],'type')===array('copy','print'),'profile does not offer a self-referential profile action');
+
+$protected=$base;$protected['custom_fields']['__certloom_verification_code_hash']='$2y$10$012345678901234567890uA012345678901234567890123456789012';Ecapla_CertVerify_Database::$row=$protected;
+$v=Ecapla_CertVerify_Public_Presentation::verify('CERT-PROTECTED',false,'verification','GOOD-CODE');
+vc(!empty($v['found'])&&$v['profile_url']==='','secondary-proof credential never advertises a proof-less standalone profile URL');
+vc(array_column($v['actions'],'type')===array('copy','print'),'secondary-proof credential keeps safe copy/print actions but suppresses profile action');
+vc(empty(Ecapla_CertVerify_Public_Presentation::verify('CERT-PROTECTED',false,'profile')['found']),'proof-less standalone profile request remains non-enumerating for a protected credential');
 
 $summary=$base;$summary['custom_fields']['__certloom_profile_visibility']='verification_summary';Ecapla_CertVerify_Database::$row=$summary;
 $v=Ecapla_CertVerify_Public_Presentation::verify('CERT-SUMMARY',false,'verification');

@@ -1,3 +1,20 @@
+1.6.13 — Phase 4 local verification QR and shared QR-encoder foundation
+- Add a bundled WordPress-local QR Code Model 2 encoder behind the renderer-independent QrEncoderInterface; no remote generation service is used.
+- Add optional public verification/profile QR that encodes only the canonical verification URL with fixed 4-module quiet zone and scan-safe black/white modules.
+- Add server/no-JS, REST/AJAX, mobile/RTL/forced-colors and System Status integration without adding a standalone QR endpoint or another credential identity.
+- Add independent raster scan acceptance for canonical pretty, long-token and percent-encoded query fallback verification URLs.
+- Keep secondary proof/private data out of QR payloads and suppress unusable standalone profile links for proof-protected credentials.
+- Ship the BSD attribution for the adapted local QR algorithm and keep normalized-domain/artifact authority gates disabled.
+
+1.6.12 — Phase 2 human-number strategy completion and identity-boundary hardening
+- Add Manual/Sequential/Random/UUID v4 human-number strategy selection for new administrator-created credentials while preserving Manual as the default and explicit manual override behavior.
+- Generate Random values with 100 bits of local cryptographic entropy and UUID values as local RFC-4122 v4 identifiers; apply the existing prefix/suffix and final 100-character bound.
+- Keep Random/UUID stateless and collision-bounded without mutating the durable Sequential cursor; previews are samples only and existing issued numbers are never renumbered.
+- Keep the human certificate number separate from the normalized checksummed PublicCredentialId and add no alternate public-ID route or lookup method.
+- Validate numbering settings before complete backup creation and during restore preflight so unsupported/tampered strategies fail before restore mutation while valid v1-v4 backups remain compatible.
+- Extend the disposable real WordPress/MySQL numbering gate to cover Random/UUID generation and sequential-state preservation.
+- Keep Program/Template-scoped numbering and normalized-domain authority gated pending accepted relationships/database proof.
+
 1.6.11 — Phase 2 current-authority certificate numbering policy
 - Add opt-in sequential numbering for new administrator-created credentials while preserving Manual as the upgrade default and explicit-number override behavior.
 - Add prefix/suffix, sequence start/floor, minimum digit padding, non-reserving preview, bounded collision skipping, and durable atomic wp_options allocation.

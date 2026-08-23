@@ -8,8 +8,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * The live legacy registry keeps the authoritative certificate number. This
  * service only allocates a candidate for a NEW manual-admin credential when the
- * site explicitly enables sequential numbering. Existing identifiers are never
- * rewritten by a policy change.
+ * site explicitly enables a generated-number strategy. Existing identifiers are
+ * never rewritten by a policy change, and generated human numbers never replace
+ * the separate normalized-domain public credential ID.
  */
 class Ecapla_CertVerify_Numbering {
 
@@ -18,6 +19,8 @@ class Ecapla_CertVerify_Numbering {
 	const EXHAUSTED_STATE = 1000000000000;
 	const MAX_COLLISIONS  = 1000;
 	const MAX_AFFIX_CHARS = 32;
+	const RANDOM_DATA_CHARS = 20;
+	const RANDOM_ALPHABET   = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 
 	/** @return array<string,mixed> */
 	public static function defaults() {
@@ -48,8 +51,8 @@ class Ecapla_CertVerify_Numbering {
 		$data = wp_parse_args( $data, $base );
 
 		$mode = sanitize_key( (string) $data['numbering_mode'] );
-		if ( ! in_array( $mode, array( 'manual', 'sequential' ), true ) ) {
-			return new WP_Error( 'ecapla_certverify_numbering_mode_invalid', __( 'Choose Manual or Sequential certificate numbering.', 'certloom' ) );
+		if ( ! in_array( $mode, array( 'manual', 'sequential', 'random', 'uuid' ), true ) ) {
+			return new WP_Error( 'ecapla_certverify_numbering_mode_invalid', __( 'Choose Manual, Sequential, Random, or UUID certificate numbering.', 'certloom' ) );
 		}
 
 		$prefix = self::normalize_affix( $data['numbering_prefix'], __( 'Certificate-number prefix', 'certloom' ) );
@@ -78,7 +81,15 @@ class Ecapla_CertVerify_Numbering {
 			'numbering_padding' => $padding,
 		);
 
-		$probe = self::format_normalized_sequence( $start, $clean );
+		if ( 'sequential' === $mode ) {
+			$probe = self::format_normalized_sequence( $start, $clean );
+		} elseif ( 'random' === $mode ) {
+			$probe = self::format_generated_core( '0000-0000-0000-0000-0000', $clean );
+		} elseif ( 'uuid' === $mode ) {
+			$probe = self::format_generated_core( '00000000-0000-4000-8000-000000000000', $clean );
+		} else {
+			$probe = '';
+		}
 		if ( is_wp_error( $probe ) ) {
 			return $probe;
 		}
@@ -87,6 +98,11 @@ class Ecapla_CertVerify_Numbering {
 
 	/** @return bool */
 	public static function is_enabled() {
+		return 'manual' !== (string) ( self::policy()['numbering_mode'] ?? 'manual' );
+	}
+
+	/** @return bool */
+	public static function is_sequential() {
 		return 'sequential' === (string) ( self::policy()['numbering_mode'] ?? 'manual' );
 	}
 
@@ -137,16 +153,42 @@ class Ecapla_CertVerify_Numbering {
 	 */
 	public static function preview() {
 		$policy = self::policy();
-		$next   = self::current_next_sequence();
-		if ( is_wp_error( $next ) ) {
-			return $next;
+		$mode   = (string) $policy['numbering_mode'];
+		if ( 'manual' === $mode ) {
+			return new WP_Error( 'ecapla_certverify_numbering_disabled', __( 'Automatic certificate numbering is not enabled.', 'certloom' ) );
 		}
-		for ( $offset = 0; $offset < self::MAX_COLLISIONS; $offset++ ) {
-			$sequence = $next + $offset;
-			if ( $sequence > self::MAX_SEQUENCE ) {
-				break;
+		if ( 'sequential' === $mode ) {
+			$next = self::current_next_sequence();
+			if ( is_wp_error( $next ) ) {
+				return $next;
 			}
-			$candidate = self::format_sequence( $sequence, $policy );
+			for ( $offset = 0; $offset < self::MAX_COLLISIONS; $offset++ ) {
+				$sequence = $next + $offset;
+				if ( $sequence > self::MAX_SEQUENCE ) {
+					break;
+				}
+				$candidate = self::format_sequence( $sequence, $policy );
+				if ( is_wp_error( $candidate ) ) {
+					return $candidate;
+				}
+				$exists = Ecapla_CertVerify_Database::certificate_number_exists( $candidate );
+				if ( is_wp_error( $exists ) ) {
+					return $exists;
+				}
+				if ( ! $exists ) {
+					return array(
+						'certificate_number' => $candidate,
+						'mode'               => $mode,
+						'sequence'           => $sequence,
+						'skipped_collisions' => $offset,
+					);
+				}
+			}
+			return new WP_Error( 'ecapla_certverify_number_preview_exhausted', __( 'Certloom found too many existing numbers in the next sequence range. Increase the sequence start before enabling automatic numbering.', 'certloom' ) );
+		}
+
+		for ( $attempt = 0; $attempt < self::MAX_COLLISIONS; $attempt++ ) {
+			$candidate = self::generate_candidate( $mode, $policy );
 			if ( is_wp_error( $candidate ) ) {
 				return $candidate;
 			}
@@ -157,12 +199,13 @@ class Ecapla_CertVerify_Numbering {
 			if ( ! $exists ) {
 				return array(
 					'certificate_number' => $candidate,
-					'sequence'           => $sequence,
-					'skipped_collisions' => $offset,
+					'mode'               => $mode,
+					'sample'             => true,
+					'skipped_collisions' => $attempt,
 				);
 			}
 		}
-		return new WP_Error( 'ecapla_certverify_number_preview_exhausted', __( 'Certloom found too many existing numbers in the next sequence range. Increase the sequence start before enabling automatic numbering.', 'certloom' ) );
+		return new WP_Error( 'ecapla_certverify_number_preview_exhausted', __( 'Certloom could not produce a collision-free certificate-number sample. Review the numbering policy before enabling automatic numbering.', 'certloom' ) );
 	}
 
 	/**
@@ -173,7 +216,7 @@ class Ecapla_CertVerify_Numbering {
 	 */
 	public static function insert_generated( $data ) {
 		if ( ! self::is_enabled() ) {
-			return new WP_Error( 'ecapla_certverify_numbering_disabled', __( 'Sequential certificate numbering is not enabled.', 'certloom' ) );
+			return new WP_Error( 'ecapla_certverify_numbering_disabled', __( 'Automatic certificate numbering is not enabled.', 'certloom' ) );
 		}
 		$clean = Ecapla_CertVerify_Validator::certificate_data_for_generated_number( $data );
 		if ( is_wp_error( $clean ) ) {
@@ -181,12 +224,18 @@ class Ecapla_CertVerify_Numbering {
 		}
 
 		$policy = self::policy();
+		$mode   = (string) $policy['numbering_mode'];
 		for ( $attempt = 0; $attempt < self::MAX_COLLISIONS; $attempt++ ) {
-			$sequence = self::allocate_sequence();
-			if ( is_wp_error( $sequence ) ) {
-				return $sequence;
+			$sequence = null;
+			if ( 'sequential' === $mode ) {
+				$sequence = self::allocate_sequence();
+				if ( is_wp_error( $sequence ) ) {
+					return $sequence;
+				}
+				$candidate = self::format_sequence( $sequence, $policy );
+			} else {
+				$candidate = self::generate_candidate( $mode, $policy );
 			}
-			$candidate = self::format_sequence( $sequence, $policy );
 			if ( is_wp_error( $candidate ) ) {
 				return $candidate;
 			}
@@ -207,13 +256,17 @@ class Ecapla_CertVerify_Numbering {
 				}
 				return $created;
 			}
-			return array(
+			$result = array(
 				'id'                 => absint( $created ),
 				'certificate_number' => $candidate,
-				'sequence'           => $sequence,
+				'mode'               => $mode,
 			);
+			if ( null !== $sequence ) {
+				$result['sequence'] = $sequence;
+			}
+			return $result;
 		}
-		return new WP_Error( 'ecapla_certverify_number_collision_exhausted', __( 'Certloom could not reserve a unique certificate number after 1000 sequence attempts. Increase the sequence start and try again.', 'certloom' ) );
+		return new WP_Error( 'ecapla_certverify_number_collision_exhausted', __( 'Certloom could not create a unique certificate number after 1000 attempts. Review the numbering policy and try again.', 'certloom' ) );
 	}
 
 	/**
@@ -320,6 +373,58 @@ class Ecapla_CertVerify_Numbering {
 		$number = (string) $policy['numbering_prefix'] . $digits . (string) $policy['numbering_suffix'];
 		if ( self::string_length( $number ) > 100 ) {
 			return new WP_Error( 'ecapla_certverify_numbering_format_too_long', __( 'The numbering prefix, sequence length, and suffix would create certificate numbers longer than 100 characters.', 'certloom' ) );
+		}
+		return $number;
+	}
+
+
+	/** @return string|WP_Error */
+	private static function generate_candidate( $mode, $policy ) {
+		if ( 'random' === $mode ) {
+			$core = self::generate_random_core();
+		} elseif ( 'uuid' === $mode ) {
+			$core = self::generate_uuid_v4();
+		} else {
+			return new WP_Error( 'ecapla_certverify_numbering_mode_invalid', __( 'The configured certificate-number strategy cannot generate a number.', 'certloom' ) );
+		}
+		if ( is_wp_error( $core ) ) {
+			return $core;
+		}
+		return self::format_generated_core( $core, $policy );
+	}
+
+	/** 100-bit Crockford-style random core, grouped for transcription. */
+	private static function generate_random_core() {
+		$data = '';
+		try {
+			$max = strlen( self::RANDOM_ALPHABET ) - 1;
+			for ( $i = 0; $i < self::RANDOM_DATA_CHARS; $i++ ) {
+				$data .= self::RANDOM_ALPHABET[ random_int( 0, $max ) ];
+			}
+		} catch ( Exception $exception ) {
+			return new WP_Error( 'ecapla_certverify_number_random_failed', __( 'Secure random certificate-number generation is unavailable on this server.', 'certloom' ) );
+		}
+		return implode( '-', str_split( $data, 4 ) );
+	}
+
+	/** RFC-4122 version-4 UUID generated locally with cryptographic randomness. */
+	private static function generate_uuid_v4() {
+		try {
+			$bytes = random_bytes( 16 );
+		} catch ( Exception $exception ) {
+			return new WP_Error( 'ecapla_certverify_number_uuid_failed', __( 'Secure UUID certificate-number generation is unavailable on this server.', 'certloom' ) );
+		}
+		$bytes[6] = chr( ( ord( $bytes[6] ) & 0x0f ) | 0x40 );
+		$bytes[8] = chr( ( ord( $bytes[8] ) & 0x3f ) | 0x80 );
+		$hex = bin2hex( $bytes );
+		return substr( $hex, 0, 8 ) . '-' . substr( $hex, 8, 4 ) . '-' . substr( $hex, 12, 4 ) . '-' . substr( $hex, 16, 4 ) . '-' . substr( $hex, 20, 12 );
+	}
+
+	/** @return string|WP_Error */
+	private static function format_generated_core( $core, $policy ) {
+		$number = (string) $policy['numbering_prefix'] . (string) $core . (string) $policy['numbering_suffix'];
+		if ( self::string_length( $number ) > 100 ) {
+			return new WP_Error( 'ecapla_certverify_numbering_format_too_long', __( 'The numbering prefix, generated identifier, and suffix would create certificate numbers longer than 100 characters.', 'certloom' ) );
 		}
 		return $number;
 	}

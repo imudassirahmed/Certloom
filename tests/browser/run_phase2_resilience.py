@@ -52,7 +52,8 @@ async def run():
                 forcedColorsQuery: matchMedia('(forced-colors: active)').matches,
                 legacyAnimationStopped: getComputedStyle(document.querySelector('.cv-arrow')).animationName === 'none',
                 modernAnimationStopped: getComputedStyle(document.querySelector('.cvx-arrow')).animationName === 'none',
-                forcedColorActionBorder: parseFloat(getComputedStyle(document.querySelector('.certloom-result-action')).borderWidth) >= 1
+                forcedColorActionBorder: parseFloat(getComputedStyle(document.querySelector('.certloom-result-action')).borderWidth) >= 1,
+                qrForcedColorsPreserved: getComputedStyle(document.querySelector('.certloom-qr-svg')).forcedColorAdjust === 'none'
             };
         }""")
         media_bad = [name for name, ok in media_checks.items() if not ok]

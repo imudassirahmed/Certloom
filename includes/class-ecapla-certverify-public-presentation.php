@@ -99,7 +99,16 @@ class Ecapla_CertVerify_Public_Presentation {
 		$state     = class_exists( 'Ecapla_CertVerify_Onboarding' ) ? Ecapla_CertVerify_Onboarding::get_state() : array();
 		$issuer    = isset( $state['organization_name'] ) ? trim( (string) $state['organization_name'] ) : '';
 		$verify    = class_exists( 'Ecapla_CertVerify_Public_Router' ) ? Ecapla_CertVerify_Public_Router::verification_url( $number ) : '';
-		$profile   = Ecapla_CertVerify_Public_Policy::MODE_PROFILE === Ecapla_CertVerify_Public_Policy::guest_mode( $certificate ) && class_exists( 'Ecapla_CertVerify_Public_Router' ) ? Ecapla_CertVerify_Public_Router::profile_url( $number ) : '';
+		$requires_secondary = false;
+		if ( method_exists( 'Ecapla_CertVerify_Public_Policy', 'requires_secondary_proof' ) ) {
+			$requires_secondary = Ecapla_CertVerify_Public_Policy::requires_secondary_proof( $certificate );
+		} else {
+			/* Compatibility for independently loaded/minimal policy adapters. */
+			$requires_secondary = ! empty( $custom['__certloom_verification_code_hash'] );
+		}
+		$profile = Ecapla_CertVerify_Public_Policy::MODE_PROFILE === Ecapla_CertVerify_Public_Policy::guest_mode( $certificate )
+			&& ! $requires_secondary
+			&& class_exists( 'Ecapla_CertVerify_Public_Router' ) ? Ecapla_CertVerify_Public_Router::profile_url( $number ) : '';
 
 		return array(
 			'found'              => true,

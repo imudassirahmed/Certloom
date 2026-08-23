@@ -27,6 +27,7 @@ class Ecapla_CertVerify_Settings {
 			'verification_surface_color' => '#ffffff',
 			'verification_text_color'    => '#17201d',
 			'verification_use_site_icon' => false,
+			'verification_qr_enabled'     => true,
 			'numbering_mode'             => 'manual',
 			'numbering_prefix'           => 'CERT-',
 			'numbering_suffix'           => '',
@@ -81,6 +82,7 @@ class Ecapla_CertVerify_Settings {
 		$clean['verification_surface_color'] = $surface ? $surface : '#ffffff';
 		$clean['verification_text_color'] = self::accessible_text_color( $clean['verification_surface_color'], $text ? $text : '#17201d' );
 		$clean['verification_use_site_icon'] = ! empty( $data['verification_use_site_icon'] );
+		$clean['verification_qr_enabled'] = ! empty( $data['verification_qr_enabled'] );
 
 		if ( ! class_exists( 'Ecapla_CertVerify_Numbering' ) ) {
 			return false;

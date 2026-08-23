@@ -201,6 +201,16 @@
 			var verifiedLabel = 'string' === typeof labels.verified && labels.verified ? labels.verified : 'Verified';
 			var rows = renderRows( fields || [], config.prefix );
 			var list = rows ? '<dl class="' + config.prefix + '-result-list">' + rows + '</dl>' : '';
+			var qrHtml = '';
+			var qr = presentation.qr && 'object' === typeof presentation.qr ? presentation.qr : null;
+			if ( qr && 'string' === typeof qr.path && /^[M0-9 hvz-]+$/.test( qr.path ) ) {
+				var qrView = parseInt( qr.view_size, 10 );
+				if ( qrView >= 29 && qrView <= 185 ) {
+					var qrLabel = 'string' === typeof qr.label ? qr.label : 'Verification QR code';
+					var qrCaption = 'string' === typeof qr.caption ? qr.caption : 'Scan to open this credential verification page.';
+					qrHtml = '<figure class="' + config.prefix + '-verification-qr certloom-verification-qr"><div class="certloom-verification-qr-code" role="img" aria-label="' + escapeHtml( qrLabel ) + '"><svg class="certloom-qr-svg" xmlns="http://www.w3.org/2000/svg" width="176" height="176" viewBox="0 0 ' + qrView + ' ' + qrView + '" aria-hidden="true" focusable="false" shape-rendering="crispEdges"><rect width="' + qrView + '" height="' + qrView + '" fill="#fff"/><path d="' + qr.path + '" fill="#111"/></svg></div><figcaption>' + escapeHtml( qrCaption ) + '</figcaption></figure>';
+				}
+			}
 			var summary = '<div class="' + config.prefix + '-result-summary"><span class="' + config.prefix + '-status-mark" aria-hidden="true">' + escapeHtml( statusIcon( statusKey ) ) + '</span><div><p class="' + config.prefix + '-result-success">' + escapeHtml( statusLabel ) + '</p>' +
 				( statusDescription ? '<p class="' + config.prefix + '-status-description">' + escapeHtml( statusDescription ) + '</p>' : '' ) +
 				( issuer ? '<p class="' + config.prefix + '-result-issuer"><span>' + escapeHtml( issuedByLabel ) + '</span> ' + escapeHtml( issuer ) + '</p>' : '' ) + '</div></div>';
@@ -225,7 +235,7 @@
 				}
 			} );
 			var actionBar = actionHtml ? '<div class="' + config.prefix + '-result-actions">' + actionHtml + '<span class="certloom-action-feedback" aria-live="polite"></span></div>' : '';
-			resultEl.innerHTML = '<div class="' + config.prefix + '-result-card ' + config.prefix + '-status-' + statusKey + '">' + summary + list + verified + actionBar + '</div>';
+			resultEl.innerHTML = '<div class="' + config.prefix + '-result-card ' + config.prefix + '-status-' + statusKey + '">' + summary + list + qrHtml + verified + actionBar + '</div>';
 			announce( statusDescription ? statusLabel + '. ' + statusDescription : statusLabel );
 		}
 

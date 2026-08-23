@@ -60,6 +60,19 @@ final class Ecapla_CertVerify_Public_Policy {
 	}
 
 	/**
+	 * A credential protected by the optional secondary proof cannot expose a
+	 * standalone profile link because proof material is deliberately POST-only.
+	 * The canonical verification URL remains safe to copy/encode in QR and will
+	 * ask for the proof again.
+	 *
+	 * @return bool
+	 */
+	public static function requires_secondary_proof( array $certificate ) {
+		$custom = isset( $certificate['custom_fields'] ) && is_array( $certificate['custom_fields'] ) ? $certificate['custom_fields'] : array();
+		return ! empty( $custom['__certloom_verification_code_hash'] );
+	}
+
+	/**
 	 * Returns only currently implemented, non-mutating actions that are permitted
 	 * for this credential/context. Future artifact/share/claim endpoints must add
 	 * their own server authorization before adding a browser action.
@@ -70,7 +83,11 @@ final class Ecapla_CertVerify_Public_Policy {
 		$action = sanitize_key( (string) $action );
 		if ( ! self::allows_context( $certificate, $context ) ) { return false; }
 		if ( 'copy' === $action || 'print' === $action ) { return true; }
-		if ( 'profile' === $action ) { return self::MODE_PROFILE === self::guest_mode( $certificate ) && 'profile' !== sanitize_key( (string) $context ); }
+		if ( 'profile' === $action ) {
+			return ! self::requires_secondary_proof( $certificate )
+				&& self::MODE_PROFILE === self::guest_mode( $certificate )
+				&& 'profile' !== sanitize_key( (string) $context );
+		}
 		/* PDF/image/share/claim and unknown actions fail closed until dedicated server authorization ships. */
 		return false;
 	}

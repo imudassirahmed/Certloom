@@ -366,11 +366,12 @@ class Ecapla_CertVerify_Render {
 			$rows .= '<div class="' . esc_attr( $prefix ) . '-result-row"><dt>' . esc_html( (string) ( $field['label'] ?? '' ) ) . '</dt><dd dir="auto">' . $value_html . '</dd></div>';
 		}
 		$list = '' !== $rows ? '<dl class="' . esc_attr( $prefix ) . '-result-list">' . $rows . '</dl>' : '';
+		$qr = class_exists( 'Ecapla_CertVerify_QR' ) && ! empty( $presentation['verification_url'] ) ? Ecapla_CertVerify_QR::figure_html( (string) $presentation['verification_url'], $prefix ) : '';
 		$issuer = ! empty( $presentation['issuer'] ) ? '<p class="' . esc_attr( $prefix ) . '-result-issuer"><span>' . esc_html__( 'Issued by', 'certloom' ) . '</span> ' . esc_html( (string) $presentation['issuer'] ) . '</p>' : '';
 		$verified = ! empty( $presentation['verified_at'] ) ? '<p class="' . esc_attr( $prefix ) . '-verified-at">' . esc_html__( 'Verified', 'certloom' ) . ' <time datetime="' . esc_attr( (string) $presentation['verified_at'] ) . '">' . esc_html( self::format_verified_at( $presentation['verified_at'] ) ) . '</time></p>' : '';
 		$desc = '' !== $status_desc ? '<p class="' . esc_attr( $prefix ) . '-status-description">' . esc_html( $status_desc ) . '</p>' : '';
 		$actions = self::actions_html( (array) ( $presentation['actions'] ?? array() ), $prefix );
-		return '<div class="' . esc_attr( $prefix ) . '-result-card ' . esc_attr( $prefix . '-status-' . $status_key ) . '"><div class="' . esc_attr( $prefix ) . '-result-summary"><span class="' . esc_attr( $prefix . '-status-mark' ) . '" aria-hidden="true">' . esc_html( self::status_icon( $status_key ) ) . '</span><div><p class="' . esc_attr( $prefix ) . '-result-success">' . esc_html( $status_label ) . '</p>' . $desc . $issuer . '</div></div>' . $list . $verified . $actions . '</div>';
+		return '<div class="' . esc_attr( $prefix ) . '-result-card ' . esc_attr( $prefix . '-status-' . $status_key ) . '"><div class="' . esc_attr( $prefix ) . '-result-summary"><span class="' . esc_attr( $prefix . '-status-mark' ) . '" aria-hidden="true">' . esc_html( self::status_icon( $status_key ) ) . '</span><div><p class="' . esc_attr( $prefix ) . '-result-success">' . esc_html( $status_label ) . '</p>' . $desc . $issuer . '</div></div>' . $list . $qr . $verified . $actions . '</div>';
 	}
 
 	/** @return string */

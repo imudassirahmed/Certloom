@@ -95,6 +95,12 @@ class Ecapla_CertVerify_REST {
 			return self::add_private_headers( new WP_REST_Response( array( 'found' => false ), 200 ) );
 		}
 
+		$qr = null;
+		if ( class_exists( 'Ecapla_CertVerify_QR' ) && ! empty( $presentation['verification_url'] ) ) {
+			$qr_candidate = Ecapla_CertVerify_QR::public_payload( (string) $presentation['verification_url'] );
+			if ( ! is_wp_error( $qr_candidate ) ) { $qr = $qr_candidate; }
+		}
+
 		/* Keep the established fields contract while adding one shared presentation model. */
 		$payload = array(
 			'found'        => true,
@@ -110,6 +116,7 @@ class Ecapla_CertVerify_REST {
 				'actions'            => $presentation['actions'],
 				'labels'             => $presentation['labels'],
 				'secondary_proof'    => isset( $presentation['secondary_proof'] ) ? $presentation['secondary_proof'] : 'not_required',
+				'qr'                 => $qr,
 			),
 		);
 		return self::add_private_headers( new WP_REST_Response( $payload, 200 ) );

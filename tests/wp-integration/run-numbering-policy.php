@@ -74,11 +74,31 @@ try {
 	certloom_numbering_it_assert( $manual_number === (string) certloom_numbering_it_ok( Ecapla_CertVerify_Database::get_by_id( $manual_id ), 'Manual record read failed' )['cert_number'], 'Explicit manual identifier was rewritten.' );
 	certloom_numbering_it_assert( (int) certloom_numbering_it_ok( Ecapla_CertVerify_Numbering::current_next_sequence(), 'Could not read cursor after manual insert' ) === $raised_start + 1, 'Manual identifier unexpectedly advanced automatic sequence state.' );
 
+	$cursor_before_random = get_option( Ecapla_CertVerify_Numbering::STATE_OPTION, null );
+	$settings['numbering_mode'] = 'random';
+	$settings['numbering_prefix'] = 'ITR-' . $token . '-';
+	certloom_numbering_it_assert( Ecapla_CertVerify_Settings::save( $settings ), 'Could not enable Random numbering strategy.' );
+	$random = certloom_numbering_it_ok( Ecapla_CertVerify_Numbering::insert_generated( array( 'holder_name' => 'Generated Random' ) ), 'Random human-number generation failed' );
+	$created_ids[] = (int) $random['id'];
+	certloom_numbering_it_assert( 'random' === (string) $random['mode'], 'Random insert did not report its strategy.' );
+	certloom_numbering_it_assert( 1 === preg_match( '/^ITR-' . preg_quote( $token, '/' ) . '-(?:[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{4}-){4}[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{4}$/', (string) $random['certificate_number'] ), 'Random human number does not match the 100-bit Crockford contract.' );
+	certloom_numbering_it_assert( $cursor_before_random === get_option( Ecapla_CertVerify_Numbering::STATE_OPTION, null ), 'Random strategy mutated sequential cursor state.' );
+
+	$settings['numbering_mode'] = 'uuid';
+	$settings['numbering_prefix'] = 'ITU-' . $token . '-';
+	certloom_numbering_it_assert( Ecapla_CertVerify_Settings::save( $settings ), 'Could not enable UUID numbering strategy.' );
+	$uuid = certloom_numbering_it_ok( Ecapla_CertVerify_Numbering::insert_generated( array( 'holder_name' => 'Generated UUID' ) ), 'UUID human-number generation failed' );
+	$created_ids[] = (int) $uuid['id'];
+	certloom_numbering_it_assert( 'uuid' === (string) $uuid['mode'], 'UUID insert did not report its strategy.' );
+	certloom_numbering_it_assert( 1 === preg_match( '/^ITU-' . preg_quote( $token, '/' ) . '-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/', (string) $uuid['certificate_number'] ), 'UUID human number is not RFC-4122 v4.' );
+	certloom_numbering_it_assert( $cursor_before_random === get_option( Ecapla_CertVerify_Numbering::STATE_OPTION, null ), 'UUID strategy mutated sequential cursor state.' );
+
 	echo "PASS  real wp_options sequence allocation\n";
 	echo "PASS  manual collision skip + unique legacy-table inserts\n";
 	echo "PASS  preview is non-reserving\n";
 	echo "PASS  raised sequence floor advances and lowering never rewinds\n";
 	echo "PASS  explicit manual identifier remains independent and immutable\n";
+	echo "PASS  Random 100-bit and UUID v4 human-number strategies preserve sequential state\n";
 } catch ( Throwable $error ) {
 	fwrite( STDERR, 'FAIL  ' . $error->getMessage() . "\n" );
 	$exit_code = 1;

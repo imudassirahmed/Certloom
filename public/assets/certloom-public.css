@@ -1656,3 +1656,42 @@
 	.certloom-route-brand{background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none;}
 }
 @media print{.certloom-route-brand{box-shadow:none;}}
+
+/* 1.6.13 local verification QR: fixed black/white symbol for scan reliability. */
+.certloom-verification-qr{
+	display:grid;
+	grid-template-columns:minmax(0,176px) minmax(0,1fr);
+	align-items:center;
+	gap:16px;
+	margin:20px 0 0;
+	padding:16px;
+	max-width:520px;
+	box-sizing:border-box;
+	border:1px solid rgba(120,120,120,.20);
+	border-radius:12px;
+	background:#fff;
+	color:#20242a;
+}
+.certloom-verification-qr-code{
+	display:block;
+	width:176px;
+	max-width:100%;
+	aspect-ratio:1;
+	line-height:0;
+	background:#fff;
+	border-radius:6px;
+	overflow:hidden;
+}
+.certloom-qr-svg{display:block;width:100%;height:auto;max-width:100%;background:#fff;forced-color-adjust:none;}
+.certloom-verification-qr figcaption{margin:0;font-size:13px;line-height:1.55;color:#5f6368;overflow-wrap:anywhere;}
+@media (max-width:520px){
+	.certloom-verification-qr{grid-template-columns:1fr;justify-items:center;text-align:center;}
+}
+@media (forced-colors: active){
+	.certloom-verification-qr{border-color:CanvasText;background:Canvas;color:CanvasText;}
+	.certloom-verification-qr figcaption{color:CanvasText;}
+}
+@media print{
+	.certloom-verification-qr{break-inside:avoid;box-shadow:none;border-color:#bbb;}
+}
+

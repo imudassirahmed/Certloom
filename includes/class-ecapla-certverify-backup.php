@@ -118,6 +118,13 @@ class Ecapla_CertVerify_Backup {
 		$fields         = Ecapla_CertVerify_Fields::get_fields();
 		$retired_fields = Ecapla_CertVerify_Fields::get_retired_fields();
 		$settings       = Ecapla_CertVerify_Settings::get_all();
+		$numbering_policy = Ecapla_CertVerify_Numbering::normalize_policy( $settings );
+		if ( is_wp_error( $numbering_policy ) ) {
+			self::close_handle( $handle );
+			@unlink( $temp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.unlink_unlink
+			self::download_error( __( 'Certloom cannot create a complete backup while the certificate-numbering policy is invalid. Repair Settings → Certificate numbering and try again.', 'certloom' ) );
+		}
+		$settings = array_merge( $settings, $numbering_policy );
 		$numbering_state = Ecapla_CertVerify_Numbering::export_state();
 		if ( is_wp_error( $numbering_state ) ) {
 			self::close_handle( $handle );
@@ -1357,6 +1364,10 @@ class Ecapla_CertVerify_Backup {
 			if ( is_wp_error( $numbering_state ) ) {
 				return $numbering_state;
 			}
+		}
+		$numbering_policy = Ecapla_CertVerify_Numbering::normalize_policy( $manifest['settings'] );
+		if ( is_wp_error( $numbering_policy ) ) {
+			return new WP_Error( 'ecapla_certverify_backup_numbering_policy', __( 'The backup contains an invalid certificate-numbering policy.', 'certloom' ) );
 		}
 		if ( count( $manifest['fields'] ) > 500 || count( $manifest['retired_fields'] ) > 500 ) {
 			return new WP_Error( 'ecapla_certverify_backup_limits', __( 'The backup exceeds Certloom field-definition limits.', 'certloom' ) );
