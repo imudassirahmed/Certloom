@@ -157,6 +157,21 @@ final class DomainRestoreMergeService {
 	/** @return array<string,mixed>|\WP_Error */
 	private function finalize( array $state ) {
 		$owner = (string) $state['workspace']['owner_token'];
+		$templates = $this->maps->by_action( $owner, 'templates', 'inserted' );
+		if ( is_wp_error( $templates ) ) { return $templates; }
+		foreach ( $templates as $mapping ) {
+			foreach ( array( 'source_current_revision_id' => 'current_revision_id', 'source_published_revision_id' => 'published_revision_id' ) as $meta_key => $column ) {
+				$source_revision = absint( $mapping['meta'][ $meta_key ] ?? 0 );
+				if ( $source_revision < 1 ) { continue; }
+				$revision = $this->maps->get( $owner, 'template_revisions', $source_revision );
+				if ( is_wp_error( $revision ) || ! is_array( $revision ) || empty( $revision['target_id'] ) ) {
+					return is_wp_error( $revision ) ? $revision : new \WP_Error( 'certloom_domain_restore_merge_template_revision_missing', __( 'Merge restore could not map a template revision pointer safely.', 'certloom' ) );
+				}
+				$updated = $this->update_target_pointer( $state['workspace'], 'templates', absint( $mapping['target_id'] ), $column, absint( $revision['target_id'] ) );
+				if ( is_wp_error( $updated ) ) { return $updated; }
+			}
+		}
+
 		$series = $this->maps->by_action( $owner, 'credential_series', 'inserted' );
 		if ( is_wp_error( $series ) ) {
 			return $series;
@@ -309,6 +324,41 @@ final class DomainRestoreMergeService {
 				if ( is_wp_error( $target_id ) ) { return $target_id; }
 				if ( $target_id ) { return $this->record_map( $owner, $entity, $source_id, $hash, $target_id, 'existing' ); }
 				$row['signer_id'] = $signer_id; $row['scope_id'] = $scope_id;
+				return $this->insert_and_map( $owner, $entity, $source_id, $hash, $target_table, $row );
+
+			case 'templates':
+				$target_id = $this->lookup_id( $target_table, 'machine_key', (string) $row['machine_key'] );
+				if ( $target_id ) { return $this->record_map( $owner, $entity, $source_id, $hash, $target_id, 'existing', array( 'preserve_current_history' => true ) ); }
+				$source_current = absint( $row['current_revision_id'] ?? 0 );
+				$source_published = absint( $row['published_revision_id'] ?? 0 );
+				$row['current_revision_id'] = null; $row['published_revision_id'] = null;
+				return $this->insert_and_map( $owner, $entity, $source_id, $hash, $target_table, $row, array( 'source_current_revision_id' => $source_current, 'source_published_revision_id' => $source_published ) );
+
+			case 'template_revisions':
+				$template = $this->maps->get( $owner, 'templates', absint( $row['template_id'] ?? 0 ) );
+				if ( is_wp_error( $template ) || ! is_array( $template ) || empty( $template['target_id'] ) ) {
+					return is_wp_error( $template ) ? $template : new \WP_Error( 'certloom_domain_restore_merge_template_mapping_missing', __( 'Merge restore could not map a template revision to its template.', 'certloom' ) );
+				}
+				if ( 'existing' === (string) $template['action'] ) { return $this->record_map( $owner, $entity, $source_id, $hash, null, 'skipped', array( 'reason' => 'existing_template_history_preserved' ) ); }
+				$row['template_id'] = absint( $template['target_id'] );
+				if ( ! empty( $row['parent_revision_id'] ) ) {
+					$parent = $this->maps->get( $owner, 'template_revisions', absint( $row['parent_revision_id'] ) );
+					if ( is_wp_error( $parent ) || ! is_array( $parent ) || empty( $parent['target_id'] ) ) { return is_wp_error( $parent ) ? $parent : new \WP_Error( 'certloom_domain_restore_merge_template_parent_missing', __( 'Merge restore could not map a template parent revision safely.', 'certloom' ) ); }
+					$row['parent_revision_id'] = absint( $parent['target_id'] );
+				}
+				return $this->insert_and_map( $owner, $entity, $source_id, $hash, $target_table, $row );
+
+			case 'template_assignments':
+				$template_id = $this->mapped_required( $owner, 'templates', $row['template_id'] ?? 0 );
+				if ( is_wp_error( $template_id ) ) { return $template_id; }
+				$scope_type = (string) $row['scope_type'];
+				$scope_entity = array( 'issuer' => 'issuers', 'program' => 'programs', 'batch' => 'batches' );
+				$scope_id = 'global' === $scope_type ? 0 : $this->mapped_required( $owner, $scope_entity[ $scope_type ] ?? '', $row['scope_id'] ?? 0 );
+				if ( is_wp_error( $scope_id ) ) { return $scope_id; }
+				$target_id = $this->lookup_composite_id( $target_table, array( 'scope_type' => $scope_type, 'scope_id' => $scope_id ) );
+				if ( is_wp_error( $target_id ) ) { return $target_id; }
+				if ( $target_id ) { return $this->record_map( $owner, $entity, $source_id, $hash, $target_id, 'existing' ); }
+				$row['template_id'] = $template_id; $row['scope_id'] = $scope_id;
 				return $this->insert_and_map( $owner, $entity, $source_id, $hash, $target_table, $row );
 
 			case 'credential_series':
@@ -499,6 +549,14 @@ final class DomainRestoreMergeService {
 	/** @return true|\WP_Error */
 	private function update_target_pointer( array $workspace, $entity, $target_id, $column, $value ) {
 		global $wpdb;
+		$allowed = array(
+			'credential_series' => array( 'current_version_id' ),
+			'credential_numbers' => array( 'first_version_id' ),
+			'templates' => array( 'current_revision_id', 'published_revision_id' ),
+		);
+		if ( ! isset( $allowed[ $entity ] ) || ! in_array( $column, $allowed[ $entity ], true ) ) {
+			return new \WP_Error( 'certloom_domain_restore_merge_pointer_invalid', __( 'Certloom refused an unsupported Merge restore pointer update.', 'certloom' ) );
+		}
 		$table = $this->workspace->workspace_table( $workspace, 'merge', $entity );
 		if ( is_wp_error( $table ) ) {
 			return $table;

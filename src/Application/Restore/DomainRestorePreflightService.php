@@ -37,11 +37,12 @@ final class DomainRestorePreflightService {
 		$handle = @fopen( $path, 'rb' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- Read-only bounded streaming restore preflight.
 		if ( false === $handle ) { return new \WP_Error( 'certloom_domain_restore_read_failed', __( 'Certloom could not reopen the validated backup for restore review.', 'certloom' ) ); }
 
-		$order = array( 'issuers', 'programs', 'recipients', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'credential_series', 'credential_numbers', 'credential_versions', 'credential_events' );
+		$order = array( 'issuers', 'programs', 'recipients', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'templates', 'template_revisions', 'template_assignments', 'credential_series', 'credential_numbers', 'credential_versions', 'credential_events' );
 		$order_map = array_flip( $order );
 		$current_order = -1;
 		$ids = array_fill_keys( $order, array() );
 		$issuer_slugs = array(); $program_codes = array(); $recipient_wp_users = array(); $signer_slugs = array(); $batch_codes = array(); $batch_members = array(); $signer_assignments = array();
+		$template_keys = array(); $template_revision_keys = array(); $template_assignment_keys = array(); $template_revision_owner = array(); $template_current = array(); $template_published = array(); $template_revision_parent = array();
 		$public_ids = array(); $display_numbers = array(); $series_versions = array(); $source_keys = array();
 		$version_series = array(); $series_current = array(); $number_first_versions = array(); $version_previous = array();
 		$counts = array_fill_keys( $order, 0 ); $stream_counts = array_fill_keys( $order, 0 ); $errors = array(); $line_no = 0;
@@ -135,6 +136,27 @@ final class DomainRestorePreflightService {
 					elseif ( ! isset( $scope_entity[ $scope_type ] ) || ! isset( $ids[ $scope_entity[ $scope_type ] ][ $scope_id ] ) ) { $this->error( $errors, $line_no, 'signer_assignment_scope_missing', 'Signer assignment refers to a missing scope.' ); }
 					$assignment_key = $signer_id . ':' . $scope_type . ':' . $scope_id . ':' . $role_type; if ( isset( $signer_assignments[ $assignment_key ] ) ) { $this->error( $errors, $line_no, 'signer_assignment_duplicate', 'Duplicate signer assignment inside backup.' ); } else { $signer_assignments[ $assignment_key ] = true; }
 					break;
+				case 'templates':
+					$template_key = (string) ( $row['machine_key'] ?? '' );
+					if ( isset( $template_keys[ $template_key ] ) ) { $this->error( $errors, $line_no, 'template_key_duplicate', 'Duplicate template machine key inside backup.' ); } else { $template_keys[ $template_key ] = $id; }
+					$current_revision = absint( $row['current_revision_id'] ?? 0 ); if ( $current_revision ) { $template_current[ $id ] = array( 'revision_id' => $current_revision, 'line' => $line_no ); }
+					$published_revision = absint( $row['published_revision_id'] ?? 0 ); if ( $published_revision ) { $template_published[ $id ] = array( 'revision_id' => $published_revision, 'line' => $line_no ); }
+					break;
+				case 'template_revisions':
+					$template_id = absint( $row['template_id'] ?? 0 ); $revision_number = absint( $row['revision_number'] ?? 0 );
+					if ( ! isset( $ids['templates'][ $template_id ] ) ) { $this->error( $errors, $line_no, 'template_revision_template_missing', 'Template revision refers to a missing template.' ); }
+					$revision_key = $template_id . ':' . $revision_number; if ( isset( $template_revision_keys[ $revision_key ] ) ) { $this->error( $errors, $line_no, 'template_revision_duplicate', 'Duplicate revision number within one template.' ); } else { $template_revision_keys[ $revision_key ] = $id; }
+					$template_revision_owner[ $id ] = $template_id;
+					$parent_revision_id = absint( $row['parent_revision_id'] ?? 0 ); if ( $parent_revision_id ) { $template_revision_parent[] = array( 'template_id' => $template_id, 'revision_id' => $id, 'parent_revision_id' => $parent_revision_id, 'line' => $line_no ); }
+					break;
+				case 'template_assignments':
+					$template_id = absint( $row['template_id'] ?? 0 ); $scope_type = sanitize_key( (string) ( $row['scope_type'] ?? '' ) ); $scope_id = absint( $row['scope_id'] ?? 0 );
+					if ( ! isset( $ids['templates'][ $template_id ] ) ) { $this->error( $errors, $line_no, 'template_assignment_template_missing', 'Template assignment refers to a missing template.' ); }
+					$scope_entity = array( 'issuer' => 'issuers', 'program' => 'programs', 'batch' => 'batches' );
+					if ( 'global' === $scope_type ) { if ( 0 !== $scope_id ) { $this->error( $errors, $line_no, 'template_assignment_global_scope_invalid', 'Global template assignments must use scope ID zero.' ); } }
+					elseif ( ! isset( $scope_entity[ $scope_type ] ) || ! isset( $ids[ $scope_entity[ $scope_type ] ][ $scope_id ] ) ) { $this->error( $errors, $line_no, 'template_assignment_scope_missing', 'Template assignment refers to a missing scope.' ); }
+					$assignment_key = $scope_type . ':' . $scope_id; if ( isset( $template_assignment_keys[ $assignment_key ] ) ) { $this->error( $errors, $line_no, 'template_assignment_duplicate', 'Duplicate template assignment scope inside backup.' ); } else { $template_assignment_keys[ $assignment_key ] = $id; }
+					break;
 				case 'credential_series':
 					$public_id = (string) ( $row['public_id'] ?? '' );
 					if ( ! $this->public_ids->is_valid( $public_id ) ) { $this->error( $errors, $line_no, 'public_id_invalid', 'Credential Series contains an invalid public credential ID.' ); }
@@ -185,6 +207,17 @@ final class DomainRestorePreflightService {
 		}
 
 		if ( count( $errors ) < self::MAX_ERRORS ) {
+			foreach ( $template_current as $template_id => $ref ) {
+				$revision_id = absint( $ref['revision_id'] );
+				if ( ! isset( $template_revision_owner[ $revision_id ] ) || (int) $template_revision_owner[ $revision_id ] !== (int) $template_id ) { $this->error( $errors, $ref['line'], 'template_current_revision_invalid', 'Template current revision is missing or belongs to another template.' ); }
+			}
+			foreach ( $template_published as $template_id => $ref ) {
+				$revision_id = absint( $ref['revision_id'] );
+				if ( ! isset( $template_revision_owner[ $revision_id ] ) || (int) $template_revision_owner[ $revision_id ] !== (int) $template_id ) { $this->error( $errors, $ref['line'], 'template_published_revision_invalid', 'Template published revision is missing or belongs to another template.' ); }
+			}
+			foreach ( $template_revision_parent as $ref ) {
+				if ( ! isset( $template_revision_owner[ $ref['parent_revision_id'] ] ) || (int) $template_revision_owner[ $ref['parent_revision_id'] ] !== (int) $ref['template_id'] || (int) $ref['parent_revision_id'] >= (int) $ref['revision_id'] ) { $this->error( $errors, $ref['line'], 'template_parent_revision_invalid', 'Template revision parent link is missing, not older than the child, or belongs to another template.' ); }
+			}
 			foreach ( $series_current as $series_id => $version_id ) {
 				if ( ! isset( $version_series[ $version_id ] ) || (int) $version_series[ $version_id ] !== (int) $series_id ) { $this->error( $errors, 0, 'current_version_invalid', 'Credential Series current Version is missing or belongs to another Series.' ); }
 			}

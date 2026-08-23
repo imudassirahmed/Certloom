@@ -2,6 +2,8 @@
 namespace Certloom\Application\Restore;
 
 use Certloom\Application\VisibilityPolicy;
+use Certloom\Application\Rendering\CanonicalJson;
+use Certloom\Application\Rendering\LayoutValidator;
 use Certloom\Domain\Credential\PublicCredentialId;
 use Certloom\Domain\Credential\States;
 use Certloom\Infrastructure\Backup\DomainBackupRepository;
@@ -103,6 +105,41 @@ final class DomainRestoreRowValidator {
 				}
 				if ( 'global' === (string) $row['scope_type'] && 0 !== absint( $row['scope_id'] ) ) { return $this->invalid( 'signer_assignment' ); }
 				if ( 'global' !== (string) $row['scope_type'] && absint( $row['scope_id'] ) < 1 ) { return $this->invalid( 'signer_assignment' ); }
+				$dates = array( 'created_at' => 'datetime', 'updated_at' => 'datetime' );
+				break;
+			case 'templates':
+				$template_key  = (string) $row['machine_key'];
+				$template_name = trim( (string) $row['name'] );
+				if ( '' === $template_key || sanitize_key( $template_key ) !== $template_key || $this->length( $template_key ) > 191 || '' === $template_name || $this->length( $template_name ) > 255 || ( null !== $row['description'] && $this->length( (string) $row['description'] ) > 20000 ) ) {
+					return $this->invalid( 'template' );
+				}
+				$dates = array( 'created_at' => 'datetime', 'updated_at' => 'datetime', 'archived_at' => 'datetime' );
+				break;
+			case 'template_revisions':
+				if ( absint( $row['template_id'] ) < 1 || absint( $row['revision_number'] ) < 1 || 'certloom-layout' !== (string) $row['layout_schema'] || 1 !== absint( $row['layout_schema_version'] ) || ! preg_match( '/^[a-f0-9]{64}$/', strtolower( (string) $row['layout_sha256'] ) ) || ! in_array( (string) $row['source_type'], array( 'manual', 'import', 'preset' ), true ) ) {
+					return $this->invalid( 'template_revision' );
+				}
+				$decoded_layout = json_decode( (string) $row['layout_json'], true );
+				if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $decoded_layout ) ) {
+					return new \WP_Error( 'certloom_domain_restore_template_layout_invalid', __( 'A template revision in the backup contains invalid layout JSON.', 'certloom' ) );
+				}
+				try {
+					$layout = ( new LayoutValidator() )->normalize( $decoded_layout );
+					$layout_hash = ( new CanonicalJson() )->hash( $layout );
+				} catch ( \Throwable $error ) {
+					return new \WP_Error( 'certloom_domain_restore_template_layout_invalid', __( 'A template revision in the backup does not satisfy Certloom’s canonical layout contract.', 'certloom' ) );
+				}
+				if ( ! hash_equals( strtolower( (string) $row['layout_sha256'] ), $layout_hash ) ) {
+					return new \WP_Error( 'certloom_domain_restore_template_layout_hash_invalid', __( 'A template revision in the backup failed its layout integrity check.', 'certloom' ) );
+				}
+				$dates = array( 'created_at' => 'datetime' );
+				break;
+			case 'template_assignments':
+				if ( absint( $row['template_id'] ) < 1 || ! in_array( (string) $row['scope_type'], array( 'global', 'issuer', 'program', 'batch' ), true ) || absint( $row['priority'] ) > 1000 || ! in_array( (string) $row['active'], array( '0', '1' ), true ) ) {
+					return $this->invalid( 'template_assignment' );
+				}
+				if ( 'global' === (string) $row['scope_type'] && 0 !== absint( $row['scope_id'] ) ) { return $this->invalid( 'template_assignment' ); }
+				if ( 'global' !== (string) $row['scope_type'] && absint( $row['scope_id'] ) < 1 ) { return $this->invalid( 'template_assignment' ); }
 				$dates = array( 'created_at' => 'datetime', 'updated_at' => 'datetime' );
 				break;
 			case 'credential_series':

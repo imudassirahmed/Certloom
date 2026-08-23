@@ -40,7 +40,7 @@ function p1e_check( $condition, $message ) {
 }
 function p1e_has( $source, $needle, $message ) { p1e_check( false !== strpos( $source, $needle ), $message ); }
 
-p1e_has( $src['schema'], "const SCHEMA_VERSION         = '14'", 'Expanded normalized domain must use schema contract v14.' );
+p1e_has( $src['schema'], "const SCHEMA_VERSION         = '15'", 'Expanded normalized domain must use schema contract v15.' );
 foreach ( array( 'signers', 'batches', 'batch_recipients', 'signer_assignments' ) as $table ) {
 	p1e_has( $src['schema'], "'$table'", 'Schema table map missing ' . $table . '.' );
 }
@@ -111,12 +111,12 @@ p1e_has( $src['domain_admin'], 'Immutable Version lineage', 'Credential detail m
 p1e_has( $src['domain_admin'], 'Append-only activity history', 'Credential detail must present append-only activity history.' );
 p1e_has( $src['domain_admin'], "__( 'Batch', 'certloom' )", 'Normalized credential detail must surface Batch relationship.' );
 
-p1e_has( $src['backup_fmt'], 'const VERSION = 3', 'Privacy-aware domain backup must use format v3.' );
+p1e_has( $src['backup_fmt'], 'const VERSION = 4', 'Template-aware domain backup must use format v4.' );
 p1e_has( $src['backup_fmt'], 'const STRUCTURE_VERSION = 2', 'Valid 1.6.4/1.6.5 v2 backups must remain supported.' );
 p1e_has( $src['backup_fmt'], 'const LEGACY_VERSION = 1', 'Valid pre-1.6.4 domain backups must remain supported.' );
 p1e_has( $src['backup_fmt'], "HASH_SEED_V1 = 'certloom-domain-backup-v1'", 'Legacy backup hash chain must preserve v1 seed.' );
 p1e_has( $src['backup_fmt'], "HASH_SEED_V2 = 'certloom-domain-backup-v2'", 'v2 backup hash chain must remain stable.' );
-p1e_has( $src['backup_fmt'], "HASH_SEED_V3 = 'certloom-domain-backup-v3'", 'Privacy-aware v3 backup hash chain needs a distinct seed.' );
+p1e_has( $src['backup_fmt'], "HASH_SEED_V3 = 'certloom-domain-backup-v3'", 'Privacy-aware v3 backup hash chain must remain stable.' );
 p1e_has( $src['schema'], 'privacy_identity_hashes LONGTEXT NULL', 'Recipient schema must privately retain portable privacy identity digests.' );
 p1e_has( $src['schema'], 'privacy_anonymized_at DATETIME NULL', 'Recipient schema must persist portable privacy-anonymization lifecycle state.' );
 p1e_has( $src['backup_fmt'], "'privacy_identity_hashes'", 'Older backups must synthesize the new private recipient identity field in memory.' );
@@ -139,7 +139,7 @@ p1e_has( $src['merge'], "case 'signers'", 'Merge restore must deterministically 
 p1e_has( $src['merge'], "case 'batches'", 'Merge restore must deterministically map Batches.' );
 p1e_has( $src['merge'], "array( 'batch_id', 'recipient_id', 'signer_id', 'scope_type', 'scope_id', 'role_type' )", 'Merge identity/composite columns must include new relationships.' );
 
-p1e_has( $src['proof'], 'const RESULT_VERSION = 2', 'Old acceptance proof receipts must not approve the expanded schema.' );
+p1e_has( $src['proof'], 'const RESULT_VERSION = 3', 'Older acceptance proof receipts must not approve the template-expanded schema.' );
 foreach ( array( "'signers'", "'batches'", "'batch_recipients'", "'signer_assignments'" ) as $entity ) {
 	p1e_has( $src['proof'], $entity, 'Acceptance proof must exercise ' . $entity . '.' );
 }

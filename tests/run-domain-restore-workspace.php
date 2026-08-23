@@ -77,7 +77,7 @@ function rw_row($entity,$id=1){
 	foreach($base as $k=>$v){ if(strpos($k,'created_at')!==false||strpos($k,'updated_at')!==false)$base[$k]='2026-08-22 00:00:00'; }
 	return $base;
 }
-function rw_stage_name($owner,$entity,$kind='stage'){global $wpdb;$codes=array('issuers'=>'i','programs'=>'p','recipients'=>'r','signers'=>'g','batches'=>'b','batch_recipients'=>'m','signer_assignments'=>'a','credential_series'=>'s','credential_numbers'=>'n','credential_versions'=>'v','credential_events'=>'e');$prefix='rollback'===$kind?'certloom_rb_':('merge'===$kind?'certloom_rm_':'certloom_rs_');return $wpdb->prefix.$prefix.substr($owner,0,12).'_'.$codes[$entity];}
+function rw_stage_name($owner,$entity,$kind='stage'){global $wpdb;$codes=array('issuers'=>'i','programs'=>'p','recipients'=>'r','signers'=>'g','batches'=>'b','batch_recipients'=>'m','signer_assignments'=>'a','templates'=>'t','template_revisions'=>'u','template_assignments'=>'y','credential_series'=>'s','credential_numbers'=>'n','credential_versions'=>'v','credential_events'=>'e');$prefix='rollback'===$kind?'certloom_rb_':('merge'===$kind?'certloom_rm_':'certloom_rs_');return $wpdb->prefix.$prefix.substr($owner,0,12).'_'.$codes[$entity];}
 
 // Seed every live table and commit a complete replacement.
 foreach(DomainBackupRepository::entity_types() as $entity){$live=SchemaManager::table($entity);$GLOBALS['wpdb']->tables[$live]=array(99=>array('id'=>'99','marker'=>'old-'.$entity));}

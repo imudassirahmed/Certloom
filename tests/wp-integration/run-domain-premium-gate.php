@@ -20,6 +20,8 @@ use Certloom\Infrastructure\Repository\CredentialRepository;
 use Certloom\Infrastructure\Repository\IssuerRepository;
 use Certloom\Infrastructure\Repository\ProgramRepository;
 use Certloom\Infrastructure\Repository\RecipientRepository;
+use Certloom\Infrastructure\Repository\TemplateRepository;
+use Certloom\Application\Templates\TemplateDefaults;
 
 function cl_pg_assert( $condition, $message ) { if ( ! $condition ) { throw new RuntimeException( $message ); } }
 function cl_pg_ok( $value, $message ) { if ( is_wp_error( $value ) ) { throw new RuntimeException( $message . ': ' . $value->get_error_code() . ' — ' . $value->get_error_message() ); } return $value; }
@@ -37,7 +39,7 @@ try {
 	cl_pg_ok( SchemaManager::activate(), 'Schema activation failed' );
 	global $wpdb;
 
-	$tables=array('recipients','issuers','programs','signers','batches','batch_recipients','signer_assignments','credential_series','credential_versions','credential_numbers','credential_events','jobs','import_rows','restore_map');
+	$tables=array('recipients','issuers','programs','signers','batches','batch_recipients','signer_assignments','templates','template_revisions','template_assignments','credential_series','credential_versions','credential_numbers','credential_events','jobs','import_rows','restore_map');
 	foreach($tables as $entity){
 		$table=SchemaManager::table($entity);
 		$status=$wpdb->get_row($wpdb->prepare('SHOW TABLE STATUS LIKE %s',$wpdb->esc_like($table)),ARRAY_A);
@@ -51,6 +53,9 @@ try {
 	cl_pg_index(SchemaManager::table('batches'),'code',true);
 	cl_pg_index(SchemaManager::table('batch_recipients'),'batch_recipient',true);
 	cl_pg_index(SchemaManager::table('signer_assignments'),'signer_scope',true);
+	cl_pg_index(SchemaManager::table('templates'),'machine_key',true);
+	cl_pg_index(SchemaManager::table('template_revisions'),'template_revision',true);
+	cl_pg_index(SchemaManager::table('template_assignments'),'scope_assignment',true);
 	cl_pg_index(SchemaManager::table('credential_series'),'public_id',true);
 	cl_pg_index(SchemaManager::table('credential_versions'),'series_version',true);
 	cl_pg_index(SchemaManager::table('credential_versions'),'source_idempotency',true);
@@ -73,6 +78,15 @@ try {
 
 	$suffix=strtolower(wp_generate_password(10,false,false));
 	$recipient_repo=new RecipientRepository(); $issuer_repo=new IssuerRepository(); $program_repo=new ProgramRepository(); $credentials=new CredentialRepository();
+	$template_repo=new TemplateRepository();
+	$template=cl_pg_ok($template_repo->create(array('machine_key'=>'premium-gate-'.$suffix,'name'=>'Premium Gate Template '.$suffix,'description'=>'Disposable integration template','layout'=>TemplateDefaults::blank_a4_landscape()),get_current_user_id()),'Template create failed'); $cleanup['template']=$template;
+	$template_row=cl_pg_ok($template_repo->find($template),'Template read failed');
+	$first_revision=(int)$template_row['current_revision_id'];
+	$second_revision=cl_pg_ok($template_repo->save_revision($template,TemplateDefaults::blank_a4_landscape(),get_current_user_id(),$first_revision),'Template idempotent revision save failed');
+	cl_pg_assert($first_revision===$second_revision,'Unchanged template draft created an unnecessary immutable revision.');
+	$stale=$template_repo->save_revision($template,TemplateDefaults::blank_a4_landscape(),get_current_user_id(),$first_revision+999);
+	cl_pg_assert(is_wp_error($stale) && 'certloom_template_stale_revision'===$stale->get_error_code(),'Stale template revision proof was not rejected.');
+	$publish=$template_repo->publish($template); cl_pg_assert(is_wp_error($publish) && 'certloom_template_publish_renderer_gate'===$publish->get_error_code(),'Template publishing bypassed the renderer gate.');
 	$issuer=cl_pg_ok($issuer_repo->create(array('name'=>'Premium Gate '.$suffix,'slug'=>'premium-gate-'.$suffix)),'Issuer create failed'); $cleanup['issuer']=$issuer;
 	$recipient=cl_pg_ok($recipient_repo->create(array('display_name'=>'Premium Gate Recipient '.$suffix)),'Recipient create failed'); $cleanup['recipient']=$recipient;
 	$program=cl_pg_ok($program_repo->create(array('issuer_id'=>$issuer,'code'=>'PG-'.strtoupper($suffix),'title'=>'Premium Gate Program')),'Program create failed'); $cleanup['program']=$program;
@@ -110,6 +124,7 @@ try {
 	echo "PASS  all next-generation tables use InnoDB\n";
 	echo "PASS  recipient privacy identity storage is present and private to normalized storage\n";
 	echo "PASS  critical unique/non-unique indexes match the domain contract\n";
+	echo "PASS  template identity/revision storage and renderer publication gate\n";
 	echo "PASS  Transaction wrapper performs a real database rollback\n";
 	echo "PASS  certificate-number ownership and Version lineage constraints\n";
 	echo "PASS  invalid immutable snapshot is side-effect free\n";
@@ -120,6 +135,7 @@ finally {
 	foreach(array_reverse($cleanup['series']??array()) as $sid){$wpdb->delete(SchemaManager::table('credential_events'),array('series_id'=>(int)$sid),array('%d'));}
 	foreach(array_reverse($cleanup['versions']??array()) as $vid){$wpdb->delete(SchemaManager::table('credential_versions'),array('id'=>(int)$vid),array('%d'));}
 	foreach(array_reverse($cleanup['series']??array()) as $sid){$wpdb->delete(SchemaManager::table('credential_numbers'),array('series_id'=>(int)$sid),array('%d'));$wpdb->delete(SchemaManager::table('credential_series'),array('id'=>(int)$sid),array('%d'));}
+	if(!empty($cleanup['template'])){$wpdb->delete(SchemaManager::table('template_assignments'),array('template_id'=>(int)$cleanup['template']),array('%d'));$wpdb->delete(SchemaManager::table('template_revisions'),array('template_id'=>(int)$cleanup['template']),array('%d'));$wpdb->delete(SchemaManager::table('templates'),array('id'=>(int)$cleanup['template']),array('%d'));}
 	if(!empty($cleanup['program'])){$wpdb->delete(SchemaManager::table('programs'),array('id'=>(int)$cleanup['program']),array('%d'));}
 	if(!empty($cleanup['issuer'])){$wpdb->delete(SchemaManager::table('issuers'),array('id'=>(int)$cleanup['issuer']),array('%d'));}
 	if(!empty($cleanup['recipient'])){$wpdb->delete(SchemaManager::table('recipients'),array('id'=>(int)$cleanup['recipient']),array('%d'));}

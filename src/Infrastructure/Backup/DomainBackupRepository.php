@@ -11,7 +11,7 @@ final class DomainBackupRepository {
 
 	/** @return array<int,string> */
 	public static function entity_types() {
-		return array( 'issuers', 'programs', 'recipients', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'credential_series', 'credential_numbers', 'credential_versions', 'credential_events' );
+		return array( 'issuers', 'programs', 'recipients', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'templates', 'template_revisions', 'template_assignments', 'credential_series', 'credential_numbers', 'credential_versions', 'credential_events' );
 	}
 
 	/** @return array<string,mixed>|\WP_Error */

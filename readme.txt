@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.14
+Stable tag: 1.6.16
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.14: Certloom completes the dependency-safe `QR-02` public symbol surface on the authoritative legacy verifier/profile path. Administrators may opt into a bounded local Site Icon center mark for verification QR and a locally generated Code 128 representation of the existing human certificate number. Neither feature creates a new credential identity, lookup route, or remote dependency; normalized-domain and production PDF/image authority remain gated.
+> Development note for 1.6.16: Certloom adds `TPL-02 + PRESET-01` behind the existing normalized-domain gate: six premium factory template families (Classic, Modern, Corporate, Academic, Elegant, Minimal) across A4/Letter portrait/landscape variants, immutable preset revisions, deterministic visual references, safe factory synchronization, and non-destructive customer customization/reset semantics. Publishing and authoritative rendered preview remain disabled until the production renderer acceptance gate passes.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -129,6 +129,22 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.16 =
+* Add six premium factory template families across A4/Letter portrait/landscape variants (24 canonical layouts) as versioned, immutable preset drafts.
+* Add safe preset synchronization that advances only untouched known factory revisions and never overwrites customer-edited drafts; explicit factory restore creates another immutable revision.
+* Add deterministic SVG/PNG visual-reference acceptance for every starter layout and retain the production renderer publication gate.
+* Reserve the `certloom-preset-` machine-key namespace, keep installed factory identities immutable, and correct the Template list Draft Revision display alias.
+
+= 1.6.15 =
+* Add first-class versioned Template storage with stable machine identity, immutable revisions, canonical `certloom-layout` v1 hashes, optimistic concurrency, and fail-closed corruption checks.
+* Add a gated premium Template administration surface for draft creation, metadata edits, immutable revision saves, strict JSON import/export, and explicit renderer-gated publishing.
+* Add deterministic assignment foundations for Batch → Program → Issuer → Global fallback without creating a second credential source of truth.
+* Expand complete-domain backup/restore to format v4 with Template/Revision/Assignment ownership while preserving valid v1/v2/v3 backup compatibility.
+* Expand Replace/Merge restore relationship validation, durable mapping, private workspace table identities, uninstall ownership, and real-DB acceptance inventories for the new Template entities.
+* Recover and fix a restore-workspace collision risk discovered during the backward audit by assigning unique private-table codes to every Template entity.
+* Advance normalized schema contract to v15 and acceptance-proof evidence contract to v3 so older evidence cannot falsely approve the expanded schema.
+* Keep all normalized-domain authority flags false and keep Template publishing/authoritative preview behind the production renderer acceptance gate.
 
 = 1.6.14 =
 * Add opt-in center-logo verification QR using only a byte-validated local WordPress Site Icon, high error correction, bounded center geometry, and safe fallback to the established plain QR when the logo is unavailable.

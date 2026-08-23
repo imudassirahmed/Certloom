@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * exercised without changing public verification truth for an existing site.
  */
 final class SchemaManager {
-	const SCHEMA_VERSION         = '14';
+	const SCHEMA_VERSION         = '15';
 	const SCHEMA_OPTION          = 'certloom_domain_schema_version';
 	const HEALTH_OPTION          = 'certloom_domain_schema_health';
 	const LOCK_OPTION            = 'certloom_domain_schema_lock';
@@ -29,6 +29,9 @@ final class SchemaManager {
 		'batches'             => 'certloom_batches',
 		'batch_recipients'    => 'certloom_batch_recipients',
 		'signer_assignments'  => 'certloom_signer_assignments',
+		'templates'           => 'certloom_templates',
+		'template_revisions'  => 'certloom_template_revisions',
+		'template_assignments'=> 'certloom_template_assignments',
 		'credential_series'   => 'certloom_credential_series',
 		'credential_versions' => 'certloom_credential_versions',
 		'credential_numbers'  => 'certloom_credential_numbers',
@@ -352,6 +355,62 @@ final class SchemaManager {
 			KEY scope_lookup (scope_type,scope_id,active,priority),
 			KEY signer_id (signer_id),
 			KEY role_type (role_type)
+		) ENGINE=InnoDB $charset_collate;";
+
+		$templates = self::table( 'templates' );
+		$tables[] = "CREATE TABLE $templates (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			machine_key VARCHAR(191) NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			description LONGTEXT NULL,
+			current_revision_id BIGINT UNSIGNED NULL,
+			published_revision_id BIGINT UNSIGNED NULL,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			archived_at DATETIME NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY machine_key (machine_key),
+			KEY current_revision_id (current_revision_id),
+			KEY published_revision_id (published_revision_id),
+			KEY archived_at (archived_at),
+			KEY name (name(191))
+		) ENGINE=InnoDB $charset_collate;";
+
+		$template_revisions = self::table( 'template_revisions' );
+		$tables[] = "CREATE TABLE $template_revisions (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			template_id BIGINT UNSIGNED NOT NULL,
+			revision_number INT UNSIGNED NOT NULL,
+			parent_revision_id BIGINT UNSIGNED NULL,
+			layout_schema VARCHAR(64) NOT NULL,
+			layout_schema_version INT UNSIGNED NOT NULL,
+			layout_json LONGTEXT NOT NULL,
+			layout_sha256 CHAR(64) NOT NULL,
+			source_type VARCHAR(20) NOT NULL DEFAULT 'manual',
+			created_by_user_id BIGINT UNSIGNED NULL,
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY template_revision (template_id,revision_number),
+			KEY parent_revision_id (parent_revision_id),
+			KEY layout_sha256 (layout_sha256),
+			KEY source_type (source_type),
+			KEY created_by_user_id (created_by_user_id)
+		) ENGINE=InnoDB $charset_collate;";
+
+		$template_assignments = self::table( 'template_assignments' );
+		$tables[] = "CREATE TABLE $template_assignments (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			template_id BIGINT UNSIGNED NOT NULL,
+			scope_type VARCHAR(20) NOT NULL,
+			scope_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+			priority INT UNSIGNED NOT NULL DEFAULT 100,
+			active TINYINT(1) NOT NULL DEFAULT 1,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY scope_assignment (scope_type,scope_id),
+			KEY template_id (template_id),
+			KEY scope_lookup (scope_type,scope_id,active,priority)
 		) ENGINE=InnoDB $charset_collate;";
 
 		$series = self::table( 'credential_series' );
@@ -761,6 +820,68 @@ final class SchemaManager {
 					'scope_lookup' => array( 'columns' => array( 'scope_type', 'scope_id', 'active', 'priority' ), 'unique' => false ),
 					'signer_id' => array( 'columns' => array( 'signer_id' ), 'unique' => false ),
 					'role_type' => array( 'columns' => array( 'role_type' ), 'unique' => false ),
+				),
+			),
+			'templates' => array(
+				'columns' => array(
+					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
+					'machine_key' => array( 'type' => '/^varchar\(191\)$/', 'null' => 'NO' ),
+					'name' => array( 'type' => '/^varchar\(255\)$/', 'null' => 'NO' ),
+					'description' => array( 'type' => $lt, 'null' => 'YES' ),
+					'current_revision_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'published_revision_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'created_at' => array( 'type' => $dt, 'null' => 'NO' ),
+					'updated_at' => array( 'type' => $dt, 'null' => 'NO' ),
+					'archived_at' => array( 'type' => $dt, 'null' => 'YES' ),
+				),
+				'indexes' => array(
+					'PRIMARY' => array( 'columns' => array( 'id' ), 'unique' => true ),
+					'machine_key' => array( 'columns' => array( 'machine_key' ), 'unique' => true ),
+					'current_revision_id' => array( 'columns' => array( 'current_revision_id' ), 'unique' => false ),
+					'published_revision_id' => array( 'columns' => array( 'published_revision_id' ), 'unique' => false ),
+					'archived_at' => array( 'columns' => array( 'archived_at' ), 'unique' => false ),
+					'name' => array( 'columns' => array( 'name' ), 'unique' => false ),
+				),
+			),
+			'template_revisions' => array(
+				'columns' => array(
+					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
+					'template_id' => array( 'type' => $bigu, 'null' => 'NO' ),
+					'revision_number' => array( 'type' => '/^int(?:\(10\))? unsigned$/', 'null' => 'NO' ),
+					'parent_revision_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'layout_schema' => array( 'type' => '/^varchar\(64\)$/', 'null' => 'NO' ),
+					'layout_schema_version' => array( 'type' => '/^int(?:\(10\))? unsigned$/', 'null' => 'NO' ),
+					'layout_json' => array( 'type' => $lt, 'null' => 'NO' ),
+					'layout_sha256' => array( 'type' => '/^char\(64\)$/', 'null' => 'NO' ),
+					'source_type' => array( 'type' => '/^varchar\(20\)$/', 'null' => 'NO', 'default' => 'manual' ),
+					'created_by_user_id' => array( 'type' => $bigu, 'null' => 'YES' ),
+					'created_at' => array( 'type' => $dt, 'null' => 'NO' ),
+				),
+				'indexes' => array(
+					'PRIMARY' => array( 'columns' => array( 'id' ), 'unique' => true ),
+					'template_revision' => array( 'columns' => array( 'template_id', 'revision_number' ), 'unique' => true ),
+					'parent_revision_id' => array( 'columns' => array( 'parent_revision_id' ), 'unique' => false ),
+					'layout_sha256' => array( 'columns' => array( 'layout_sha256' ), 'unique' => false ),
+					'source_type' => array( 'columns' => array( 'source_type' ), 'unique' => false ),
+					'created_by_user_id' => array( 'columns' => array( 'created_by_user_id' ), 'unique' => false ),
+				),
+			),
+			'template_assignments' => array(
+				'columns' => array(
+					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
+					'template_id' => array( 'type' => $bigu, 'null' => 'NO' ),
+					'scope_type' => array( 'type' => '/^varchar\(20\)$/', 'null' => 'NO' ),
+					'scope_id' => array( 'type' => $bigu, 'null' => 'NO', 'default' => '0' ),
+					'priority' => array( 'type' => '/^int(?:\(10\))? unsigned$/', 'null' => 'NO', 'default' => '100' ),
+					'active' => array( 'type' => '/^tinyint(?:\(1\))?$/', 'null' => 'NO', 'default' => '1' ),
+					'created_at' => array( 'type' => $dt, 'null' => 'NO' ),
+					'updated_at' => array( 'type' => $dt, 'null' => 'NO' ),
+				),
+				'indexes' => array(
+					'PRIMARY' => array( 'columns' => array( 'id' ), 'unique' => true ),
+					'scope_assignment' => array( 'columns' => array( 'scope_type', 'scope_id' ), 'unique' => true ),
+					'template_id' => array( 'columns' => array( 'template_id' ), 'unique' => false ),
+					'scope_lookup' => array( 'columns' => array( 'scope_type', 'scope_id', 'active', 'priority' ), 'unique' => false ),
 				),
 			),
 			'credential_series' => array(

@@ -169,6 +169,14 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 			'signer_assignment_issuer_missing' => array( "SELECT COUNT(*) FROM %i a LEFT JOIN %i i ON i.id=a.scope_id WHERE a.scope_type='issuer' AND i.id IS NULL", array( $t['signer_assignments'], $t['issuers'] ) ),
 			'signer_assignment_program_missing' => array( "SELECT COUNT(*) FROM %i a LEFT JOIN %i p ON p.id=a.scope_id WHERE a.scope_type='program' AND p.id IS NULL", array( $t['signer_assignments'], $t['programs'] ) ),
 			'signer_assignment_batch_missing' => array( "SELECT COUNT(*) FROM %i a LEFT JOIN %i b ON b.id=a.scope_id WHERE a.scope_type='batch' AND b.id IS NULL", array( $t['signer_assignments'], $t['batches'] ) ),
+			'template_current_revision_invalid' => array( "SELECT COUNT(*) FROM %i t LEFT JOIN %i r ON r.id=t.current_revision_id AND r.template_id=t.id WHERE t.current_revision_id IS NOT NULL AND r.id IS NULL", array( $t['templates'], $t['template_revisions'] ) ),
+			'template_published_revision_invalid' => array( "SELECT COUNT(*) FROM %i t LEFT JOIN %i r ON r.id=t.published_revision_id AND r.template_id=t.id WHERE t.published_revision_id IS NOT NULL AND r.id IS NULL", array( $t['templates'], $t['template_revisions'] ) ),
+			'template_revision_template_missing' => array( "SELECT COUNT(*) FROM %i r LEFT JOIN %i t ON t.id=r.template_id WHERE t.id IS NULL", array( $t['template_revisions'], $t['templates'] ) ),
+			'template_revision_parent_invalid' => array( "SELECT COUNT(*) FROM %i r LEFT JOIN %i p ON p.id=r.parent_revision_id AND p.template_id=r.template_id WHERE r.parent_revision_id IS NOT NULL AND (p.id IS NULL OR p.id=r.id)", array( $t['template_revisions'], $t['template_revisions'] ) ),
+			'template_assignment_template_missing' => array( "SELECT COUNT(*) FROM %i a LEFT JOIN %i t ON t.id=a.template_id WHERE t.id IS NULL", array( $t['template_assignments'], $t['templates'] ) ),
+			'template_assignment_issuer_missing' => array( "SELECT COUNT(*) FROM %i a LEFT JOIN %i i ON i.id=a.scope_id WHERE a.scope_type='issuer' AND i.id IS NULL", array( $t['template_assignments'], $t['issuers'] ) ),
+			'template_assignment_program_missing' => array( "SELECT COUNT(*) FROM %i a LEFT JOIN %i p ON p.id=a.scope_id WHERE a.scope_type='program' AND p.id IS NULL", array( $t['template_assignments'], $t['programs'] ) ),
+			'template_assignment_batch_missing' => array( "SELECT COUNT(*) FROM %i a LEFT JOIN %i b ON b.id=a.scope_id WHERE a.scope_type='batch' AND b.id IS NULL", array( $t['template_assignments'], $t['batches'] ) ),
 			'series_recipient_missing' => array( "SELECT COUNT(*) FROM %i s LEFT JOIN %i r ON r.id=s.recipient_id WHERE r.id IS NULL", array( $t['credential_series'], $t['recipients'] ) ),
 			'series_program_missing' => array( "SELECT COUNT(*) FROM %i s LEFT JOIN %i p ON p.id=s.program_id WHERE s.program_id IS NOT NULL AND p.id IS NULL", array( $t['credential_series'], $t['programs'] ) ),
 			'series_batch_missing' => array( "SELECT COUNT(*) FROM %i s LEFT JOIN %i b ON b.id=s.batch_id WHERE s.batch_id IS NOT NULL AND b.id IS NULL", array( $t['credential_series'], $t['batches'] ) ),
@@ -563,6 +571,7 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		$codes = array(
 			'issuers' => 'i', 'programs' => 'p', 'recipients' => 'r',
 			'signers' => 'g', 'batches' => 'b', 'batch_recipients' => 'm', 'signer_assignments' => 'a',
+			'templates' => 't', 'template_revisions' => 'u', 'template_assignments' => 'y',
 			'credential_series' => 's', 'credential_numbers' => 'n',
 			'credential_versions' => 'v', 'credential_events' => 'e',
 		);

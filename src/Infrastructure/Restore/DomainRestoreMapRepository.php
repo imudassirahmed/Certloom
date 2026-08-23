@@ -140,7 +140,7 @@ final class DomainRestoreMapRepository {
 	/** @return string|\WP_Error */
 	private function entity( $entity ) {
 		$entity = sanitize_key( (string) $entity );
-		$allowed = array( 'issuers', 'programs', 'recipients', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'credential_series', 'credential_numbers', 'credential_versions', 'credential_events' );
+		$allowed = array( 'issuers', 'programs', 'recipients', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'templates', 'template_revisions', 'template_assignments', 'credential_series', 'credential_numbers', 'credential_versions', 'credential_events' );
 		return in_array( $entity, $allowed, true ) ? $entity : new \WP_Error( 'certloom_restore_map_entity_invalid', __( 'The Merge restore entity type is invalid.', 'certloom' ) );
 	}
 }

@@ -1,3 +1,20 @@
+1.6.16 — TPL-02 premium starter templates + PRESET-01 factory preset system
+- Adds six distinct premium template families: Classic, Modern, Corporate, Academic, Elegant, and Minimal.
+- Ships A4 and Letter, portrait and landscape canonical candidates for every family (24 layouts total).
+- Adds stable factory preset keys, immutable preset revisions, safe synchronization, customer-customization preservation, and explicit non-destructive factory restore.
+- Adds deterministic development-only SVG/PNG visual references and contact-sheet review; publication remains production-renderer gated.
+- Reserves the certloom-preset machine-key namespace and fixes the Template list Draft Revision alias.
+
+1.6.15 — TPL-01 versioned template foundation
+- Add stable Template identity plus immutable Template Revisions rather than storing certificate designs as one mutable JSON blob.
+- Add canonical layout validation/hashing, stale-edit rejection, local JSON import/export, deterministic scope assignment foundations, and a gated draft administration surface.
+- Keep publish and authoritative rendered preview blocked until the production renderer acceptance gate passes.
+- Advance schema to v15 and backup format to v4, preserving valid v1/v2/v3 backups by synthesizing template entity families empty for older archives.
+- Integrate Templates into Replace/Merge restore relationship proof, durable restore mapping, staging/private table identity, real-DB acceptance inventories, and explicit uninstall ownership.
+- Fix a backward-audit defect where newly added Template restore workspace tables had no unique private-table code and could collide during staging.
+- Invalidate older gated-domain acceptance evidence with result contract v3 so it cannot falsely approve the expanded schema.
+- Keep normalized-domain write/admin/data-tool flags false; no live credential authority or PDF/PNG/JPEG renderer gate is bypassed.
+
 1.6.14 — QR-02 local center-logo QR and Code 128 representation
 - Add an opt-in center-logo QR treatment using only a bounded, byte-validated local WordPress Site Icon; switch branded symbols to error correction H and fall back to the established plain QR if the icon is unsafe/unavailable.
 - Add an opt-in local Code 128 representation of the existing human certificate number with Code Set B/C optimization, standard checksum/stop, quiet zones, accessible human-readable caption, and no alternate lookup endpoint or identifier.

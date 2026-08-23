@@ -75,6 +75,9 @@ function rs_rows() {
 		'batches' => array(),
 		'batch_recipients' => array(),
 		'signer_assignments' => array(),
+		'templates' => array(),
+		'template_revisions' => array(),
+		'template_assignments' => array(),
 		'credential_series' => array( array( 'id'=>'1','public_id'=>$public,'recipient_id'=>'1','program_id'=>'1','batch_id'=>null,'issuer_id'=>'1','current_version_id'=>'1','administrative_state'=>'active','compliance_state'=>'not_applicable','visibility'=>'verification_summary','created_at'=>'2026-08-22 00:00:00','updated_at'=>'2026-08-22 00:00:00','closed_at'=>null ) ),
 		'credential_numbers' => array( array( 'id'=>'1','display_number'=>'CERT-0001','series_id'=>'1','first_version_id'=>'1','created_at'=>'2026-08-22 00:00:00','retired_at'=>null ) ),
 		'credential_versions' => array( array( 'id'=>'1','series_id'=>'1','version_number'=>'1','previous_version_id'=>null,'display_number'=>'CERT-0001','issuance_state'=>'issued','legacy_expired'=>'0','valid_from'=>'2026-08-22','issued_at'=>'2026-08-22 00:00:00','expires_at'=>null,'grade'=>null,'source_type'=>'manual','source_ref'=>null,'source_idempotency_key'=>null,'snapshot_json'=>'{}','created_at'=>'2026-08-22 00:00:00','updated_at'=>'2026-08-22 00:00:00' ) ),
@@ -226,4 +229,17 @@ rs_same( null, $v2_ws->rows['recipients:1']['privacy_identity_hashes'], 'v2 priv
 rs_same( null, $v2_ws->rows['recipients:1']['privacy_anonymized_at'], 'v2 privacy lifecycle marker synthesized null' );
 echo "PASS  genuine v2 backups are normalized into the current recipient privacy contract\n";
 
-echo "\n6 tests, 0 failures\n";
+// A genuine 1.6.6+ v3 stream already has privacy identity fields but predates template entities.
+$v3_path = rs_make_backup( str_repeat( '7', 32 ), '', DomainBackupFormat::PRIVACY_VERSION );
+$v3_ws = new RestoreStageFakeWorkspace();
+$v3_service = new DomainRestoreStagingService( $v3_ws );
+$v3 = $v3_service->start( $v3_path, str_repeat( '1', 32 ) );
+while ( ! is_wp_error( $v3 ) && empty( $v3['complete'] ) ) { $v3 = $v3_service->continue_stage( $v3, 50 ); }
+rs_same( false, is_wp_error( $v3 ), 'v3 staging' );
+rs_true( $v3['complete'], 'v3 ready' );
+rs_same( 0, $v3['counts']['templates'], 'v3 templates synthesized empty' );
+rs_same( 0, $v3['counts']['template_revisions'], 'v3 revisions synthesized empty' );
+rs_same( 0, $v3['counts']['template_assignments'], 'v3 assignments synthesized empty' );
+echo "PASS  genuine v3 backups remain restorable with template families synthesized empty\n";
+
+echo "\n7 tests, 0 failures\n";

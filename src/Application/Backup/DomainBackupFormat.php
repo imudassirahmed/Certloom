@@ -4,24 +4,30 @@ namespace Certloom\Application\Backup;
 /** Versioned line-oriented backup format whose chained hash can resume across requests. */
 final class DomainBackupFormat {
 	const FORMAT = 'certloom-domain-backup';
-	const VERSION = 3;
+	const VERSION = 4;
 	const LEGACY_VERSION = 1;
 	const STRUCTURE_VERSION = 2;
+	const PRIVACY_VERSION = 3;
 	const HASH_SEED_V1 = 'certloom-domain-backup-v1';
 	const HASH_SEED_V2 = 'certloom-domain-backup-v2';
 	const HASH_SEED_V3 = 'certloom-domain-backup-v3';
+	const HASH_SEED_V4 = 'certloom-domain-backup-v4';
 	const MAX_LINE_BYTES = 4 * 1024 * 1024;
 	const MAX_FILE_BYTES = 1024 * 1024 * 1024;
 
 	/** @return array<int,int> */
-	public static function supported_versions() { return array( self::LEGACY_VERSION, self::STRUCTURE_VERSION, self::VERSION ); }
+	public static function supported_versions() { return array( self::LEGACY_VERSION, self::STRUCTURE_VERSION, self::PRIVACY_VERSION, self::VERSION ); }
 
 	/** @return array<int,string> */
 	public static function entity_types_for_version( $version ) {
-		if ( self::LEGACY_VERSION === absint( $version ) ) {
+		$version = absint( $version );
+		if ( self::LEGACY_VERSION === $version ) {
 			return array( 'issuers', 'programs', 'recipients', 'credential_series', 'credential_numbers', 'credential_versions', 'credential_events' );
 		}
-		return array( 'issuers', 'programs', 'recipients', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'credential_series', 'credential_numbers', 'credential_versions', 'credential_events' );
+		if ( $version < self::VERSION ) {
+			return array( 'issuers', 'programs', 'recipients', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'credential_series', 'credential_numbers', 'credential_versions', 'credential_events' );
+		}
+		return array( 'issuers', 'programs', 'recipients', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'templates', 'template_revisions', 'template_assignments', 'credential_series', 'credential_numbers', 'credential_versions', 'credential_events' );
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
@@ -108,7 +114,11 @@ final class DomainBackupFormat {
 	/** @return string */
 	public function next_hash( $previous, $line, $version = self::VERSION ) {
 		$version = absint( $version );
-		$seed = self::LEGACY_VERSION === $version ? self::HASH_SEED_V1 : ( self::STRUCTURE_VERSION === $version ? self::HASH_SEED_V2 : self::HASH_SEED_V3 );
+		$seed = self::LEGACY_VERSION === $version
+			? self::HASH_SEED_V1
+			: ( self::STRUCTURE_VERSION === $version
+				? self::HASH_SEED_V2
+				: ( self::PRIVACY_VERSION === $version ? self::HASH_SEED_V3 : self::HASH_SEED_V4 ) );
 		$previous = '' === (string) $previous ? $seed : (string) $previous;
 		return hash( 'sha256', $previous . "\n" . (string) $line );
 	}
