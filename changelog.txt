@@ -1,3 +1,10 @@
+1.6.25
+- Add a source-only PDF-04 production-candidate producer that runs exact PDF/PNG/JPEG candidates through the real coordinator against all six frozen fixtures for two deterministic runs.
+- Bind actual candidate source/dependency bytes, identity/version/formats/requirements/context, exact local fonts, frozen request/render-plan hashes, and ArtifactReceipt v4 evidence into the produced bundle.
+- Keep the evaluation-only authority gate entirely under source tests so no production bypass enters the installable plugin.
+- Add a standard external bootstrap/producer workflow and negative coverage for stale requirements, host-local/URL context, wrong formats, and mixed output directories.
+- Keep PDF-04 open because this runtime still cannot execute the preferred dependency-prefixed production renderer.
+
 1.6.24
 - Expand renderer acceptance from PDF+PNG to PDF+PNG+JPEG across evidence, verifier reports, release authority, runtime authorization, deterministic bundles, and fixture hashes.
 - Add deterministic JPEG golden references for all six permanent renderer fixtures and independently decode QR from both PNG and JPEG.

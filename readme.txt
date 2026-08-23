@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.24
+Stable tag: 1.6.25
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.24: Certloom now requires complete PDF + PNG + JPEG renderer evidence and independently compares every candidate fixture back to the frozen golden artwork, not only across output formats. The release still contains no accepted renderer manifest, so production artifacts, Template publication, authoritative Preview, and Designer output remain disabled until actual PDF-04 execution passes.
+> Development note for 1.6.25: Certloom now includes a source-only production-candidate bundle producer that executes exact PDF + PNG + JPEG candidates through the real shared coordinator, frozen six-fixture Render Plan, exact content-addressed fonts, deterministic A/B runs, and ArtifactReceipt v4 generation. The installable still contains no evaluation bypass or accepted renderer manifest, so production artifacts, Template publication, authoritative Preview, and Designer output remain disabled until actual PDF-04 execution passes.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -129,6 +129,14 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.25 =
+* Add a canonical source-only PDF-04 production-candidate producer that executes the six frozen fixtures through the real `ArtifactRenderCoordinator` for PDF + PNG + JPEG, twice, using exact content-addressed fonts.
+* Bind candidate manifests to actual source archives, dependency locks, renderer identity/version/formats/requirements/context, and reject host-local paths/URLs from portable renderer context.
+* Emit ArtifactReceipt v4 for every production-candidate artifact and require byte-identical A/B output before a bundle can be verified.
+* Keep the candidate-evaluation authority gate source-only under `tests/`; no evaluation bypass or `accepted.json` is shipped in the installable plugin.
+* Add a standard external bootstrap/producer workflow so the next renderer-capable disposable host can generate the exact bundle consumed by Certloom's independent v3 verifier/v5 acceptance chain.
+* Preserve PDF-04 as open and keep Template publication, production artifacts, authoritative Preview, Designer authority and normalized-domain readiness gated.
 
 = 1.6.24 =
 * Expand `PDF-04` acceptance end-to-end from PDF+PNG to **PDF+PNG+JPEG**, matching the roadmap and existing artifact-format contract.
