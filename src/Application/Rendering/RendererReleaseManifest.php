@@ -10,7 +10,7 @@ use InvalidArgumentException;
  */
 final class RendererReleaseManifest {
 	const SCHEMA = 'certloom-renderer-release-authority';
-	const VERSION = 1;
+	const VERSION = 2;
 
 	/** @return array<string,mixed> */
 	public function from_acceptance( array $evidence ) {
@@ -34,10 +34,11 @@ final class RendererReleaseManifest {
 			'renderers' => array(
 				'pdf' => $this->renderer_identity( $accepted['renderers']['pdf'] ),
 				'png' => $this->renderer_identity( $accepted['renderers']['png'] ),
+				'jpeg' => $this->renderer_identity( $accepted['renderers']['jpeg'] ),
 			),
 			'authority' => array(
 				'template_publication' => true,
-				'artifact_formats' => array( 'pdf', 'png' ),
+				'artifact_formats' => array( 'pdf', 'png', 'jpeg' ),
 			),
 		) );
 	}
@@ -90,8 +91,9 @@ final class RendererReleaseManifest {
 	/** @return array<string,mixed> */
 	private function normalize_renderers( $value ) {
 		if ( ! is_array( $value ) ) { throw new InvalidArgumentException( 'Renderer release identities are required.' ); }
-		$this->assert_shape( $value, array( 'pdf', 'png' ), array( 'pdf', 'png' ), 'renderer release identities' );
-		return array( 'pdf' => $this->normalize_renderer( $value['pdf'] ), 'png' => $this->normalize_renderer( $value['png'] ) );
+		$formats = RendererAcceptanceContract::required_formats();
+		$this->assert_shape( $value, $formats, $formats, 'renderer release identities' );
+		return array( 'pdf' => $this->normalize_renderer( $value['pdf'] ), 'png' => $this->normalize_renderer( $value['png'] ), 'jpeg' => $this->normalize_renderer( $value['jpeg'] ) );
 	}
 
 	/** @return array<string,string> */
@@ -117,8 +119,8 @@ final class RendererReleaseManifest {
 		}
 		$formats = array_values( array_unique( array_map( function ( $format ) { return strtolower( trim( (string) $format ) ); }, $value['artifact_formats'] ) ) );
 		sort( $formats, SORT_STRING );
-		if ( array( 'pdf', 'png' ) !== $formats ) {
-			throw new InvalidArgumentException( 'Renderer release authority must prove both PDF and PNG before Template publication.' );
+		if ( array( 'jpeg', 'pdf', 'png' ) !== $formats ) {
+			throw new InvalidArgumentException( 'Renderer release authority must prove PDF, PNG and JPEG before Template publication.' );
 		}
 		return array( 'template_publication' => true, 'artifact_formats' => $formats );
 	}

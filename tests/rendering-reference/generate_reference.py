@@ -8,6 +8,7 @@ reference artifacts that future PHP renderer adapters must be compared against.
 from __future__ import annotations
 import base64, hashlib, json, math, os, re, shutil, subprocess, sys
 from pathlib import Path
+import PIL
 from PIL import Image, ImageFont, features
 import qrcode
 from qrcode.constants import ERROR_CORRECT_L, ERROR_CORRECT_M, ERROR_CORRECT_Q, ERROR_CORRECT_H
@@ -122,25 +123,31 @@ def main():
     if not features.check('raqm'): raise SystemExit('Pillow RAQM/HarfBuzz support is required for reference text measurement')
     OUT.mkdir(parents=True,exist_ok=True)
     inkscape=run(['inkscape','--version']).splitlines()[0]
-    manifest={'schema':'certloom-development-reference','version':2,'renderer':inkscape,'raster_dpi':DPI,'source_date_epoch':SOURCE_DATE_EPOCH,
+    manifest={'schema':'certloom-development-reference','version':3,'renderer':inkscape,'raster_dpi':DPI,'source_date_epoch':SOURCE_DATE_EPOCH,
+              'jpeg_reference':{'encoder':'Pillow '+PIL.__version__,'quality':95,'subsampling':0,'progressive':False,'optimize':False},
               'font':{'family':'DejaVu Sans','sha256':sha256(FONT)},'verification_url':VERIFY_URL,'fixtures':{}}
     names=['english','urdu-rtl','mixed-script','long-name-shrink','rotation','qr']
     for name in names:
         layout=json.loads((FIXTURES/f'{name}.json').read_text())
         svg,facts=build_svg(name,layout)
         d=OUT/name; d.mkdir(parents=True,exist_ok=True)
-        svg_path=d/'reference.svg'; png=d/'reference.png'; pdf=d/'reference.pdf'
+        svg_path=d/'reference.svg'; png=d/'reference.png'; jpeg=d/'reference.jpeg'; pdf=d/'reference.pdf'
         svg_path.write_text(svg,encoding='utf-8')
         run(['inkscape',str(svg_path),'--export-type=png',f'--export-dpi={DPI:g}',f'--export-filename={png}'])
         run(['inkscape',str(svg_path),'--export-type=pdf',f'--export-filename={pdf}'])
         with Image.open(png) as im:
             expected=(round(px_from_mm(facts['page_width_mm'])),round(px_from_mm(facts['page_height_mm'])))
             if im.size != expected: raise RuntimeError(f'{name}: PNG geometry {im.size} != {expected}')
+            rgb=im.convert('RGB')
+            rgb.save(jpeg,'JPEG',quality=95,subsampling=0,optimize=False,progressive=False,dpi=(int(DPI),int(DPI)))
             png_size=list(im.size)
+        with Image.open(jpeg) as im:
+            if im.size != expected: raise RuntimeError(f'{name}: JPEG geometry {im.size} != {expected}')
+            jpeg_size=list(im.size)
         info=run(['pdfinfo',str(pdf)])
         page_line=next((line for line in info.splitlines() if line.startswith('Page size:')), '')
         manifest['fixtures'][name]={**facts,'png_px':png_size,'pdf_page':page_line,
-                                    'svg_sha256':sha256(svg_path),'png_sha256':sha256(png),'pdf_sha256':sha256(pdf)}
+                                    'svg_sha256':sha256(svg_path),'png_sha256':sha256(png),'jpeg_px':jpeg_size,'jpeg_sha256':sha256(jpeg),'pdf_sha256':sha256(pdf)}
     (OUT/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,sort_keys=True,indent=2)+'\n',encoding='utf-8')
     print(json.dumps({'renderer':inkscape,'font_sha256':manifest['font']['sha256'],'fixtures':len(names)},indent=2))
 

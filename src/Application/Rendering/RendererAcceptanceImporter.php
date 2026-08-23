@@ -36,13 +36,13 @@ final class RendererAcceptanceImporter {
 		foreach ( array( 'bundle_manifest_sha256', 'fixture_manifest_sha256', 'render_plan_manifest_sha256' ) as $key ) {
 			if ( ! hash_equals( $accepted[ $key ], $verified[ $key ] ) ) { throw new InvalidArgumentException( 'Renderer verifier report does not match the accepted frozen bundle/manifest identity.' ); }
 		}
-		foreach ( array( 'pdf', 'png' ) as $format ) {
+		foreach ( RendererAcceptanceContract::required_formats() as $format ) {
 			if ( $accepted['renderers'][ $format ]['id'] !== $verified['renderers'][ $format ]['id'] || $accepted['renderers'][ $format ]['version'] !== $verified['renderers'][ $format ]['version'] || ! hash_equals( $accepted['renderers'][ $format ]['candidate_manifest_sha256'], $verified['renderers'][ $format ]['candidate_manifest_sha256'] ) ) {
 				throw new InvalidArgumentException( 'Renderer verifier report does not match accepted candidate identity/provenance.' );
 			}
 		}
 		foreach ( RendererAcceptanceContract::required_fixtures() as $name ) {
-			foreach ( array( 'render_plan_sha256', 'pdf_sha256', 'png_sha256' ) as $key ) {
+			foreach ( array( 'render_plan_sha256', 'pdf_sha256', 'png_sha256', 'jpeg_sha256' ) as $key ) {
 				if ( ! hash_equals( $accepted['fixtures'][ $name ][ $key ], $verified['fixtures'][ $name ][ $key ] ) ) { throw new InvalidArgumentException( 'Renderer verifier fixture result does not match acceptance evidence.' ); }
 			}
 		}

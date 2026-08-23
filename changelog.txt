@@ -1,3 +1,10 @@
+1.6.24
+- Expand renderer acceptance from PDF+PNG to PDF+PNG+JPEG across evidence, verifier reports, release authority, runtime authorization, deterministic bundles, and fixture hashes.
+- Add deterministic JPEG golden references for all six permanent renderer fixtures and independently decode QR from both PNG and JPEG.
+- Add direct candidate-to-frozen-golden structural comparison for PDF/PNG/JPEG so internally consistent but visually wrong renderer output cannot qualify.
+- Advance renderer acceptance to v5, verification report to v3, release authority manifest to v2, and acceptance bundle to v2.
+- Keep PDF-04 open and all renderer-backed product authority closed because no accepted production renderer manifest ships.
+
 1.6.23
 - Enforce release/runtime renderer authority inside ArtifactRenderCoordinator before any production renderer can execute.
 - Separate release-accepted Template publication from host-specific artifact runtime availability.

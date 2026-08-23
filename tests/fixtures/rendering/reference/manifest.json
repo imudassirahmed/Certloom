@@ -10,6 +10,11 @@
           "type": "merge"
         }
       ],
+      "jpeg_px": [
+        1123,
+        794
+      ],
+      "jpeg_sha256": "72da2fd5f6cea4e56c64e2a456c09dcac45a7828db9f7724f253d12719e04109",
       "page_height_mm": 210.0,
       "page_width_mm": 297.0,
       "pdf_page": "Page size:       841.89 x 595.276 pts (A4)",
@@ -31,6 +36,11 @@
           "type": "merge"
         }
       ],
+      "jpeg_px": [
+        1056,
+        816
+      ],
+      "jpeg_sha256": "493d725d9245294996e5413a7a39330db191e15f512874d6a2c73679312efbdb",
       "page_height_mm": 215.9,
       "page_width_mm": 279.4,
       "pdf_page": "Page size:       792 x 612 pts (letter)",
@@ -52,6 +62,11 @@
           "type": "text"
         }
       ],
+      "jpeg_px": [
+        1123,
+        794
+      ],
+      "jpeg_sha256": "e39e0c4c051b3b26dbaa0d77b976805a7fad6426a03e66b35024a32471178bcd",
       "page_height_mm": 210.0,
       "page_width_mm": 297.0,
       "pdf_page": "Page size:       841.89 x 595.276 pts (A4)",
@@ -74,6 +89,11 @@
           "url": "https://example.test/credential/7M4K-2Q8D-F3XP"
         }
       ],
+      "jpeg_px": [
+        794,
+        1123
+      ],
+      "jpeg_sha256": "9c35ea7f267ac5095e3ae7a2802d638e2f35f0ea5952eaef06570c77f55c4cba",
       "page_height_mm": 297.0,
       "page_width_mm": 210.0,
       "pdf_page": "Page size:       595.276 x 841.89 pts (A4)",
@@ -95,6 +115,11 @@
           "type": "text"
         }
       ],
+      "jpeg_px": [
+        794,
+        1123
+      ],
+      "jpeg_sha256": "bf52debece53b1d02deac3b6c9630b6bbdbd0afe2acdea184f66db7c3e15f710",
       "page_height_mm": 297.0,
       "page_width_mm": 210.0,
       "pdf_page": "Page size:       595.276 x 841.89 pts (A4)",
@@ -116,6 +141,11 @@
           "type": "merge"
         }
       ],
+      "jpeg_px": [
+        1123,
+        794
+      ],
+      "jpeg_sha256": "f07e21259accd9ca084a0773c81a2e6384c0e65a2cf71b7042fa6934e949eda7",
       "page_height_mm": 210.0,
       "page_width_mm": 297.0,
       "pdf_page": "Page size:       841.89 x 595.276 pts (A4)",
@@ -132,10 +162,17 @@
     "family": "DejaVu Sans",
     "sha256": "57f73e11f51999432bf7ab22ce55b6f945d5eca1bf824404cfa9ec2e3718c84e"
   },
+  "jpeg_reference": {
+    "encoder": "Pillow 12.3.0",
+    "optimize": false,
+    "progressive": false,
+    "quality": 95,
+    "subsampling": 0
+  },
   "raster_dpi": 96.0,
   "renderer": "Inkscape 1.4 (e7c3feb100, 2024-10-09)",
   "schema": "certloom-development-reference",
   "source_date_epoch": "1700000000",
   "verification_url": "https://example.test/credential/7M4K-2Q8D-F3XP",
-  "version": 2
+  "version": 3
 }

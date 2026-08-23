@@ -73,10 +73,9 @@ function certloom_render_plan_reference_manifest() {
 
 	return array(
 		'schema' => 'certloom-render-plan-reference',
-		'version' => 1,
+		'version' => 2,
 		'layout_schema' => array( 'name' => 'certloom-layout', 'version' => 1 ),
 		'render_plan_schema' => array( 'name' => RenderPlanBuilder::SCHEMA, 'version' => RenderPlanBuilder::VERSION ),
-		'golden_fixture_manifest_sha256' => hash_file( 'sha256', $golden_manifest_path ),
 		'font_face_sha256' => $font_sha,
 		'verification_url' => $verification_url,
 		'fixtures' => $results,

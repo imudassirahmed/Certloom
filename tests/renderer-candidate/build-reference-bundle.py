@@ -14,6 +14,7 @@ FIX = ROOT / 'tests' / 'fixtures' / 'rendering'
 REF = FIX / 'reference'
 PLAN = FIX / 'render-plan-manifest.json'
 FIXTURES = ('english','urdu-rtl','mixed-script','long-name-shrink','rotation','qr')
+FORMATS = ('pdf','png','jpeg')
 
 
 def sha(path: Path) -> str:
@@ -44,31 +45,25 @@ def main() -> int:
     shutil.copy2(PLAN, out / 'manifests' / 'render-plan.json')
     plan = json.loads(PLAN.read_text(encoding='utf-8'))
 
-    # Deliberately non-production candidate descriptions. The independent verifier
-    # can exercise artifact checking, but --require-production must reject them.
-    dev_pdf = {
-        'schema':'certloom-development-renderer-reference','version':1,
-        'renderer_id':'development-reference-pdf','renderer_version':'1',
-        'note':'Development oracle only; uses source-side reference tooling and is not a WordPress production adapter.'
+    candidate_facts = {
+        'pdf': ('development-reference-pdf', 'Development oracle only; uses source-side reference tooling and is not a WordPress production PDF adapter.'),
+        'png': ('development-reference-png', 'Development oracle only; uses source-side reference tooling and is not a WordPress production PNG adapter.'),
+        'jpeg': ('development-reference-jpeg', 'Development oracle only; uses source-side reference tooling and is not a WordPress production JPEG adapter.'),
     }
-    dev_png = {
-        'schema':'certloom-development-renderer-reference','version':1,
-        'renderer_id':'development-reference-png','renderer_version':'1',
-        'note':'Development oracle only; uses source-side reference tooling and is not a WordPress production adapter.'
-    }
-    write_json(out / 'candidates' / 'pdf.json', dev_pdf)
-    write_json(out / 'candidates' / 'png.json', dev_png)
-    (out / 'candidates' / 'pdf-source.txt').write_text('development reference PDF oracle; not a production renderer\n', encoding='utf-8')
-    (out / 'candidates' / 'png-source.txt').write_text('development reference PNG oracle; not a production renderer\n', encoding='utf-8')
-    (out / 'candidates' / 'pdf-lock.txt').write_text('development-reference\n', encoding='utf-8')
-    (out / 'candidates' / 'png-lock.txt').write_text('development-reference\n', encoding='utf-8')
+    for fmt,(renderer_id,note) in candidate_facts.items():
+        write_json(out / 'candidates' / f'{fmt}.json', {
+            'schema':'certloom-development-renderer-reference','version':1,
+            'renderer_id':renderer_id,'renderer_version':'1','note':note
+        })
+        (out / 'candidates' / f'{fmt}-source.txt').write_text(f'development reference {fmt.upper()} oracle; not a production renderer\n', encoding='utf-8')
+        (out / 'candidates' / f'{fmt}-lock.txt').write_text('development-reference\n', encoding='utf-8')
 
     runs = {}
     for run in ('a','b'):
         fixtures = {}
         for name in FIXTURES:
             fixtures[name] = {'render_plan_sha256': plan['fixtures'][name]['render_plan_sha256']}
-            for fmt in ('pdf','png'):
+            for fmt in FORMATS:
                 src = REF / name / f'reference.{fmt}'
                 rel = Path('artifacts') / run / f'{name}.{fmt}'
                 dst = out / rel
@@ -82,17 +77,24 @@ def main() -> int:
     if not version_match:
         raise RuntimeError('Certloom plugin version is unavailable')
 
+    renderers = {}
+    for index,fmt in enumerate(FORMATS):
+        renderer_id = candidate_facts[fmt][0]
+        renderers[fmt] = {
+            'id':renderer_id,'version':'1','context_hash':str(index)*64,
+            'candidate_manifest':{'path':f'candidates/{fmt}.json','sha256':sha(out/'candidates'/f'{fmt}.json')},
+            'source_archive':{'path':f'candidates/{fmt}-source.txt','sha256':sha(out/'candidates'/f'{fmt}-source.txt')},
+            'dependency_lock':{'path':f'candidates/{fmt}-lock.txt','sha256':sha(out/'candidates'/f'{fmt}-lock.txt')},
+        }
+
     manifest = {
-        'schema':'certloom-renderer-acceptance-bundle','version':1,
+        'schema':'certloom-renderer-acceptance-bundle','version':2,
         'qualification':'development-reference',
         'plugin_version':version_match.group(1),
         'fixture_manifest': {'path':'manifests/golden.json','sha256':sha(out/'manifests'/'golden.json')},
         'render_plan_manifest': {'path':'manifests/render-plan.json','sha256':sha(out/'manifests'/'render-plan.json')},
         'raster_dpi':96,
-        'renderers': {
-            'pdf': {'id':'development-reference-pdf','version':'1','context_hash':'0'*64,'candidate_manifest':{'path':'candidates/pdf.json','sha256':sha(out/'candidates'/'pdf.json')},'source_archive':{'path':'candidates/pdf-source.txt','sha256':sha(out/'candidates'/'pdf-source.txt')},'dependency_lock':{'path':'candidates/pdf-lock.txt','sha256':sha(out/'candidates'/'pdf-lock.txt')}},
-            'png': {'id':'development-reference-png','version':'1','context_hash':'1'*64,'candidate_manifest':{'path':'candidates/png.json','sha256':sha(out/'candidates'/'png.json')},'source_archive':{'path':'candidates/png-source.txt','sha256':sha(out/'candidates'/'png-source.txt')},'dependency_lock':{'path':'candidates/png-lock.txt','sha256':sha(out/'candidates'/'png-lock.txt')}},
-        },
+        'renderers': renderers,
         'runs': runs,
     }
     write_json(out / 'bundle.json', manifest)

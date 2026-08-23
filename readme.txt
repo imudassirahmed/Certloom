@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.23
+Stable tag: 1.6.24
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.23: Certloom now enforces release/runtime renderer authority at the ArtifactRenderCoordinator itself. Template publication depends only on release acceptance, while each artifact format additionally requires its exact accepted renderer candidate and live host requirements. This release intentionally ships no accepted renderer manifest, so production artifacts, Template publication, authoritative Preview, and Designer output remain disabled.
+> Development note for 1.6.24: Certloom now requires complete PDF + PNG + JPEG renderer evidence and independently compares every candidate fixture back to the frozen golden artwork, not only across output formats. The release still contains no accepted renderer manifest, so production artifacts, Template publication, authoritative Preview, and Designer output remain disabled until actual PDF-04 execution passes.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -129,6 +129,13 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.24 =
+* Expand `PDF-04` acceptance end-to-end from PDF+PNG to **PDF+PNG+JPEG**, matching the roadmap and existing artifact-format contract.
+* Advance `RendererAcceptanceContract` to v5, `RendererVerificationReport` to v3, `RendererReleaseManifest` to v2, and the acceptance bundle to v2 with exact JPEG renderer/artifact bindings.
+* Add deterministic JPEG golden references for all six permanent fixtures and independently decode the verification QR from both PNG and JPEG outputs.
+* Add candidate-to-frozen-golden structural comparison for PDF, PNG, and JPEG so mutually consistent but visually wrong output cannot satisfy production acceptance.
+* Preserve the shared Render Plan, exact-font, receipt-v4, no-network, deterministic, release-authority, and runtime-authority boundaries; 1.6.24 intentionally ships no accepted renderer manifest.
 
 = 1.6.23 =
 * Enforce release-bound renderer authority inside the single ArtifactRenderCoordinator choke point before any renderer can execute.

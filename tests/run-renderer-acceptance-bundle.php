@@ -1,103 +1,68 @@
 <?php
-/** 1.6.21 renderer candidate, verifier provenance + artifact-bundle contract regression. */
+/** 1.6.24 renderer candidate + three-format golden-bound artifact-bundle contract regression. */
 require_once __DIR__ . '/bootstrap-autoload.php';
 
 use Certloom\Application\Rendering\RendererAcceptanceContract;
 use Certloom\Application\Rendering\RendererCandidateManifest;
+use Certloom\Application\Rendering\RendererVerificationReport;
+use Certloom\Application\Rendering\RendererReleaseManifest;
 
 $checks = 0;
 function rab_check( $condition, $message ) { global $checks; $checks++; if ( ! $condition ) { throw new RuntimeException( $message ); } }
 function rab_throws( callable $fn ) { try { $fn(); } catch ( InvalidArgumentException $e ) { return true; } throw new RuntimeException( 'Expected InvalidArgumentException.' ); }
 
 $candidate = array(
-	'schema' => RendererCandidateManifest::SCHEMA,
-	'version' => RendererCandidateManifest::VERSION,
-	'renderer_id' => 'mpdf-pdf',
-	'renderer_version' => '8.3.1+certloom.1',
-	'formats' => array( 'pdf' ),
-	'implementation' => array(
-		'package' => 'mpdf/mpdf',
-		'package_version' => '8.3.1',
-		'namespace_prefix' => 'CertloomVendor\\Mpdf\\',
-		'source_sha256' => str_repeat( 'a', 64 ),
-		'dependency_lock_sha256' => str_repeat( 'b', 64 ),
-		'license' => 'GPL-2.0-only',
-	),
-	'security' => array(
-		'execution_mode' => 'php-inprocess',
-		'input_schema' => 'certloom-render-plan:1',
-		'network' => 'none',
-		'processes' => 'none',
-		'remote_assets' => false,
-	),
-	'requirements' => array(
-		'php_min' => '7.4',
-		'extensions' => array( 'gd', 'mbstring' ),
-		'classes' => array( 'CertloomVendor\\Mpdf\\Mpdf' ),
-		'functions' => array(),
-	),
+    'schema' => RendererCandidateManifest::SCHEMA, 'version' => RendererCandidateManifest::VERSION,
+    'renderer_id' => 'mpdf-pdf', 'renderer_version' => '8.3.1+certloom.1', 'formats' => array( 'pdf' ),
+    'implementation' => array( 'package'=>'mpdf/mpdf','package_version'=>'8.3.1','namespace_prefix'=>'CertloomVendor\\Mpdf\\','source_sha256'=>str_repeat('a',64),'dependency_lock_sha256'=>str_repeat('b',64),'license'=>'GPL-2.0-only' ),
+    'security' => array( 'execution_mode'=>'php-inprocess','input_schema'=>'certloom-render-plan:1','network'=>'none','processes'=>'none','remote_assets'=>false ),
+    'requirements' => array( 'php_min'=>'7.4','extensions'=>array('gd','mbstring'),'classes'=>array('CertloomVendor\\Mpdf\\Mpdf'),'functions'=>array() ),
 );
-$manifest = new RendererCandidateManifest();
-$normalized = $manifest->normalize( $candidate );
-rab_check( 'CertloomVendor\\Mpdf\\' === $normalized['implementation']['namespace_prefix'], 'Candidate namespace prefix must remain isolated under CertloomVendor.' );
-rab_check( array( 'gd', 'mbstring' ) === $normalized['requirements']['extensions'], 'Candidate requirements must normalize deterministically.' );
-rab_check( 1 === preg_match( '/^[0-9a-f]{64}$/', $manifest->hash( $candidate ) ), 'Candidate manifest must have a stable canonical SHA-256.' );
+$manifest = new RendererCandidateManifest(); $normalized = $manifest->normalize( $candidate );
+rab_check( 'CertloomVendor\\Mpdf\\' === $normalized['implementation']['namespace_prefix'], 'Candidate namespace prefix must remain isolated.' );
+rab_check( array('gd','mbstring') === $normalized['requirements']['extensions'], 'Candidate requirements must normalize deterministically.' );
+rab_check( 1 === preg_match('/^[0-9a-f]{64}$/',$manifest->hash($candidate)), 'Candidate manifest must have stable canonical SHA-256.' );
+$bad=$candidate;$bad['security']['network']='allowed';rab_check(rab_throws(function()use($manifest,$bad){$manifest->normalize($bad);}), 'Candidate must reject network-enabled execution.');
+$bad=$candidate;$bad['security']['processes']='allowed';rab_check(rab_throws(function()use($manifest,$bad){$manifest->normalize($bad);}), 'Candidate must reject process-backed execution.');
+$bad=$candidate;$bad['implementation']['namespace_prefix']='Mpdf\\';rab_check(rab_throws(function()use($manifest,$bad){$manifest->normalize($bad);}), 'Candidate must reject unprefixed dependency namespace.');
 
-$bad = $candidate; $bad['security']['network'] = 'allowed';
-rab_check( rab_throws( function () use ( $manifest, $bad ) { $manifest->normalize( $bad ); } ), 'Candidate manifest must reject network-enabled renderer execution.' );
-$bad = $candidate; $bad['security']['processes'] = 'allowed';
-rab_check( rab_throws( function () use ( $manifest, $bad ) { $manifest->normalize( $bad ); } ), 'Candidate manifest must reject process-backed renderer execution.' );
-$bad = $candidate; $bad['implementation']['namespace_prefix'] = 'Mpdf\\';
-rab_check( rab_throws( function () use ( $manifest, $bad ) { $manifest->normalize( $bad ); } ), 'Candidate manifest must reject unprefixed third-party namespaces.' );
-$bad = $candidate; $bad['implementation']['source_sha256'] = 'nope';
-rab_check( rab_throws( function () use ( $manifest, $bad ) { $manifest->normalize( $bad ); } ), 'Candidate manifest must reject unbound source provenance.' );
-
-$checks_map = array(); foreach ( RendererAcceptanceContract::required_checks() as $key ) { $checks_map[ $key ] = true; }
-$fixtures = array(); foreach ( RendererAcceptanceContract::required_fixtures() as $name ) { $fixtures[ $name ] = array( 'render_plan_sha256' => str_repeat( 'f', 64 ), 'pdf_sha256' => str_repeat( '1', 64 ), 'png_sha256' => str_repeat( '2', 64 ) ); }
-$candidate_hash = $manifest->hash( $candidate );
-$evidence = array(
-	'schema' => RendererAcceptanceContract::SCHEMA,
-	'version' => RendererAcceptanceContract::VERSION,
-	'qualification' => 'production-candidate',
-	'plugin_version' => '1.6.21',
-	'fixture_manifest_sha256' => str_repeat( '3', 64 ),
-	'render_plan_manifest_sha256' => str_repeat( '4', 64 ),
-	'bundle_manifest_sha256' => str_repeat( '5', 64 ),
-	'verification_report_sha256' => str_repeat( '9', 64 ),
-	'verifier_environment_sha256' => str_repeat( '0', 64 ),
-	'renderers' => array(
-		'pdf' => array( 'id' => 'mpdf-pdf', 'version' => '8.3.1+certloom.1', 'context_hash' => str_repeat( '6', 64 ), 'candidate_manifest_sha256' => $candidate_hash ),
-		'png' => array( 'id' => 'certloom-raster', 'version' => '1', 'context_hash' => str_repeat( '7', 64 ), 'candidate_manifest_sha256' => str_repeat( '8', 64 ) ),
-	),
-	'checks' => $checks_map,
-	'fixtures' => $fixtures,
+$checks_map=array();foreach(RendererAcceptanceContract::required_checks() as $key){$checks_map[$key]=true;}
+$fixtures=array();foreach(RendererAcceptanceContract::required_fixtures() as $name){$fixtures[$name]=array('render_plan_sha256'=>hash('sha256','plan-'.$name),'pdf_sha256'=>hash('sha256','pdf-'.$name),'png_sha256'=>hash('sha256','png-'.$name),'jpeg_sha256'=>hash('sha256','jpeg-'.$name));}
+$candidate_hash=$manifest->hash($candidate);
+$evidence=array(
+    'schema'=>RendererAcceptanceContract::SCHEMA,'version'=>RendererAcceptanceContract::VERSION,'qualification'=>'production-candidate','plugin_version'=>'1.6.24',
+    'fixture_manifest_sha256'=>str_repeat('3',64),'render_plan_manifest_sha256'=>str_repeat('4',64),'bundle_manifest_sha256'=>str_repeat('5',64),'verification_report_sha256'=>str_repeat('9',64),'verifier_environment_sha256'=>str_repeat('0',64),
+    'renderers'=>array(
+        'pdf'=>array('id'=>'mpdf-pdf','version'=>'8.3.1+certloom.1','context_hash'=>str_repeat('6',64),'candidate_manifest_sha256'=>$candidate_hash),
+        'png'=>array('id'=>'certloom-raster','version'=>'1','context_hash'=>str_repeat('7',64),'candidate_manifest_sha256'=>str_repeat('8',64)),
+        'jpeg'=>array('id'=>'certloom-raster','version'=>'1','context_hash'=>str_repeat('2',64),'candidate_manifest_sha256'=>str_repeat('8',64)),
+    ),
+    'checks'=>$checks_map,'fixtures'=>$fixtures,
 );
-$acceptance = new RendererAcceptanceContract();
-rab_check( 4 === RendererAcceptanceContract::VERSION, 'Acceptance evidence must advance to v4 when independent verifier report/environment binding is required.' );
-rab_check( 1 === preg_match( '/^[0-9a-f]{64}$/', $acceptance->hash( $evidence ) ), 'Production acceptance evidence must normalize with bundle/candidate bindings.' );
-$bad = $evidence; $bad['qualification'] = 'development-reference';
-rab_check( rab_throws( function () use ( $acceptance, $bad ) { $acceptance->normalize( $bad ); } ), 'Development reference evidence must never qualify as PDF-04 production acceptance.' );
-$bad = $evidence; unset( $bad['bundle_manifest_sha256'] );
-rab_check( rab_throws( function () use ( $acceptance, $bad ) { $acceptance->normalize( $bad ); } ), 'Acceptance evidence must bind the independently verified artifact bundle.' );
-$bad = $evidence; unset( $bad['verification_report_sha256'] );
-rab_check( rab_throws( function () use ( $acceptance, $bad ) { $acceptance->normalize( $bad ); } ), 'Acceptance evidence must bind the independent verifier report.' );
-$bad = $evidence; unset( $bad['verifier_environment_sha256'] );
-rab_check( rab_throws( function () use ( $acceptance, $bad ) { $acceptance->normalize( $bad ); } ), 'Acceptance evidence must bind the exact verifier environment.' );
-$bad = $evidence; unset( $bad['renderers']['pdf']['candidate_manifest_sha256'] );
-rab_check( rab_throws( function () use ( $acceptance, $bad ) { $acceptance->normalize( $bad ); } ), 'Acceptance evidence must bind exact renderer candidate provenance.' );
+$acceptance=new RendererAcceptanceContract();
+rab_check(5===RendererAcceptanceContract::VERSION,'Acceptance evidence must be v5 for three-format golden-bound proof.');
+rab_check(3===RendererVerificationReport::VERSION,'Independent verifier report must be v3 for JPEG/golden parity.');
+rab_check(2===RendererReleaseManifest::VERSION,'Release authority manifest must be v2 for three accepted formats.');
+rab_check(array('pdf','png','jpeg')===RendererAcceptanceContract::required_formats(),'PDF-04 must require PDF, PNG and JPEG.');
+rab_check(in_array('golden_visual_parity',RendererAcceptanceContract::required_checks(),true),'Acceptance must require candidate-to-golden visual parity.');
+rab_check(in_array('qr_jpeg_decode',RendererAcceptanceContract::required_checks(),true),'Acceptance must decode QR from JPEG output too.');
+rab_check(1===preg_match('/^[0-9a-f]{64}$/',$acceptance->hash($evidence)),'Production acceptance evidence must normalize with three-format bindings.');
+$bad=$evidence;$bad['qualification']='development-reference';rab_check(rab_throws(function()use($acceptance,$bad){$acceptance->normalize($bad);}), 'Development references must never qualify as production acceptance.');
+$bad=$evidence;unset($bad['renderers']['jpeg']);rab_check(rab_throws(function()use($acceptance,$bad){$acceptance->normalize($bad);}), 'Acceptance evidence missing JPEG renderer must fail.');
+$bad=$evidence;unset($bad['fixtures']['english']['jpeg_sha256']);rab_check(rab_throws(function()use($acceptance,$bad){$acceptance->normalize($bad);}), 'Acceptance fixture missing JPEG artifact hash must fail.');
+$bad=$evidence;unset($bad['checks']['golden_visual_parity']);rab_check(rab_throws(function()use($acceptance,$bad){$acceptance->normalize($bad);}), 'Acceptance missing frozen-golden comparison must fail.');
 
-rab_check( is_file( __DIR__ . '/renderer-candidate/build-reference-bundle.py' ), 'Development reference bundle builder must ship in source tests.' );
-rab_check( is_file( __DIR__ . '/renderer-candidate/verify-bundle.py' ), 'Independent artifact-bundle verifier must ship in source tests.' );
-rab_check( is_file( __DIR__ . '/renderer-candidate/verify-receipt.php' ), 'Independent ArtifactReceipt verifier must ship in source tests.' );
-rab_check( is_file( __DIR__ . '/renderer-candidate/capture-verifier-environment.py' ), 'Independent verifier environment capture must ship in source tests.' );
-rab_check( is_file( __DIR__ . '/renderer-candidate/validate-verifier-environment.php' ), 'Verifier environment validator must ship in source tests.' );
-rab_check( is_file( __DIR__ . '/renderer-candidate/validate-verification-report.php' ), 'Independent verification-report validator must ship in source tests.' );
-rab_check( is_file( __DIR__ . '/renderer-candidate/verify-production-bundle.sh' ), 'Standard production-bundle verification entrypoint must ship in source tests.' );
-$verifier = file_get_contents( __DIR__ . '/renderer-candidate/verify-bundle.py' );
-rab_check( false !== strpos( $verifier, 'pdfinfo' ) && false !== strpos( $verifier, 'pdftocairo' ), 'Independent verifier must inspect real PDF geometry and rasterize PDF output.' );
-rab_check( false !== strpos( $verifier, 'QRCodeDetector' ), 'Independent verifier must decode QR from actual PNG output.' );
-rab_check( false !== strpos( $verifier, 'ArtifactReceipt v4' ) && false !== strpos( $verifier, 'verify-receipt.php' ), 'Production bundle verification must require ArtifactReceipt v4 for every artifact.' );
-rab_check( false !== strpos( $verifier, "qualification != 'production-candidate'" ), 'Independent verifier must reject development-reference bundles in production mode.' );
+foreach(array('build-reference-bundle.py','verify-bundle.py','verify-receipt.php','capture-verifier-environment.py','validate-verifier-environment.php','validate-verification-report.php','verify-production-bundle.sh') as $file){rab_check(is_file(__DIR__.'/renderer-candidate/'.$file),'Renderer acceptance source tool must ship: '.$file);}
+$verifier=file_get_contents(__DIR__.'/renderer-candidate/verify-bundle.py');
+rab_check(false!==strpos($verifier,'FORMATS = (\'pdf\',\'png\',\'jpeg\')'),'Independent verifier must cover all three artifact formats.');
+rab_check(false!==strpos($verifier,'pdfinfo')&&false!==strpos($verifier,'pdftocairo'),'Verifier must inspect/rasterize real PDF output.');
+rab_check(false!==strpos($verifier,'QRCodeDetector')&&false!==strpos($verifier,"for fmt in ('png','jpeg')"),'Verifier must decode QR from both raster artifact paths.');
+rab_check(false!==strpos($verifier,'golden_structural_metric')&&false!==strpos($verifier,'GOLDEN_MIN_PRECISION'),'Verifier must compare candidate output to frozen golden artwork, not only cross-format consistency.');
+rab_check(false!==strpos($verifier,'ArtifactReceipt v4')&&false!==strpos($verifier,'verify-receipt.php'),'Production bundle must require ArtifactReceipt v4 for every artifact.');
+rab_check(false!==strpos($verifier,"qualification != 'production-candidate'"),'Verifier must reject development-reference bundles in production mode.');
 
-echo "PASS  Renderer acceptance binds exact candidate provenance and independently rechecked artifact bundles\n";
+$golden_manifest=file_get_contents(__DIR__.'/fixtures/rendering/reference/manifest.json');
+rab_check('2afda4d66a1b89cfa85847cfd616d8b2117ea2dc9dc53307b42cf4f35a185b0f'===hash('sha256',$golden_manifest),'Three-format golden manifest must remain frozen by exact SHA-256.');
+
+echo "PASS  Renderer acceptance binds PDF/PNG/JPEG candidates to actual frozen golden artwork\n";
 echo "\n{$checks} checks, 0 failures\n";

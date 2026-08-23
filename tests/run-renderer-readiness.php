@@ -1,5 +1,5 @@
 <?php
-/** 1.6.21 PDF-04 readiness / verifier provenance boundary regression. */
+/** 1.6.24 PDF-04 readiness / three-format golden-bound verifier provenance regression. */
 require_once __DIR__ . '/bootstrap-autoload.php';
 
 use Certloom\Application\Rendering\ArtifactReceipt;
@@ -8,51 +8,40 @@ use Certloom\Application\Rendering\RendererCandidateManifest;
 use Certloom\Application\Rendering\RendererVerifierEnvironment;
 use Certloom\Application\Rendering\RendererVerificationReport;
 use Certloom\Application\Rendering\RendererAcceptanceImporter;
+use Certloom\Application\Rendering\RendererReleaseManifest;
 use Certloom\Application\Rendering\RenderPlanBuilder;
 use Certloom\Application\Rendering\FontAssetInspector;
 use Certloom\Infrastructure\Rendering\ContentAddressedFontResolver;
 
-$checks = 0;
-function rrcheck( $condition, $message ) { global $checks; $checks++; if ( ! $condition ) { throw new RuntimeException( $message ); } }
+$checks=0; function rrcheck($c,$m){global $checks;$checks++;if(!$c){throw new RuntimeException($m);}}
+rrcheck(4===ArtifactReceipt::VERSION,'ArtifactReceipt must remain v4 after shared-plan binding.');
+$rendering=file_get_contents(dirname(__DIR__).'/docs/rendering-contract.md');$architecture=file_get_contents(dirname(__DIR__).'/docs/architecture.md');
+rrcheck(false!==strpos($rendering,'ArtifactReceipt v4'),'Rendering contract must document ArtifactReceipt v4.');
+rrcheck(false===strpos($rendering,'ArtifactReceipt v2')&&false===strpos($rendering,'Artifact receipt v2'),'Stale receipt-v2 wording must stay absent.');
+rrcheck(false!==strpos($architecture,'ArtifactReceipt v4'),'Architecture must document current receipt v4.');
+rrcheck(interface_exists('Certloom\\Application\\Contract\\LocalFontResolverInterface'),'Exact local font resolver must autoload.');
+rrcheck(class_exists(FontAssetInspector::class)&&class_exists(ContentAddressedFontResolver::class)&&class_exists(RenderPlanBuilder::class),'Font and shared-plan readiness classes must autoload.');
+rrcheck(5===RendererAcceptanceContract::VERSION,'Renderer acceptance must be v5 after JPEG/golden parity expansion.');
+rrcheck(3===RendererVerificationReport::VERSION,'Independent verification report must be v3.');
+rrcheck(2===RendererReleaseManifest::VERSION,'Release authority manifest must be v2.');
+rrcheck(class_exists(RendererCandidateManifest::class)&&class_exists(RendererVerifierEnvironment::class)&&class_exists(RendererAcceptanceImporter::class),'Candidate/verifier/import contracts must autoload.');
+foreach(array('independent_verifier_environment_bound','candidate_provenance_rechecked','artifact_receipts_rechecked','shared_render_plan','golden_visual_parity','qr_jpeg_decode','png_jpeg_visual_parity') as $check){rrcheck(in_array($check,RendererAcceptanceContract::required_checks(),true),'Acceptance must require '.$check.'.');}
+rrcheck(array('pdf','png','jpeg')===RendererAcceptanceContract::required_formats(),'PDF-04 must retain all three product artifact formats.');
+rrcheck(6===count(RendererAcceptanceContract::required_fixtures())&&in_array('urdu-rtl',RendererAcceptanceContract::required_fixtures(),true)&&in_array('rotation',RendererAcceptanceContract::required_fixtures(),true),'All six permanent Unicode/rotation fixtures must remain mandatory.');
+$plan_manifest=file_get_contents(__DIR__.'/fixtures/rendering/render-plan-manifest.json');
+rrcheck('bdcbfba5c61632a86cdf881131bd12496bd260b21992d53129e79c4070df519b'===hash('sha256',$plan_manifest),'Six-fixture shared Render Plan manifest must remain frozen.');
+$golden_manifest=file_get_contents(__DIR__.'/fixtures/rendering/reference/manifest.json');
+rrcheck('2afda4d66a1b89cfa85847cfd616d8b2117ea2dc9dc53307b42cf4f35a185b0f'===hash('sha256',$golden_manifest),'PDF/PNG/JPEG golden fixture manifest must remain frozen.');
+rrcheck(false!==strpos($rendering,'certloom-render-plan')&&false!==strpos($architecture,'certloom-render-plan'),'Docs must retain shared render-plan boundary.');
+rrcheck(false!==strpos($rendering,'certloom-renderer-acceptance` v5'),'Rendering contract must document acceptance v5.');
+rrcheck(false!==strpos($rendering,'JPEG')&&false!==strpos($rendering,'golden'),'Rendering contract must document JPEG and frozen-golden comparison.');
+$coordinator=file_get_contents(dirname(__DIR__).'/src/Infrastructure/Rendering/ArtifactRenderCoordinator.php');
+rrcheck(false!==strpos($coordinator,"array_key_exists( '_runtime'")&&false!==strpos($coordinator,'LocalFontResolverInterface'),'Coordinator must own reserved runtime font resolution.');
+rrcheck(false!==strpos($coordinator,'RenderPlanBuilder')&&false!==strpos($coordinator,'$renderer->render( $render_plan'),'Coordinator must build shared plan before adapter execution.');
+rrcheck(false!==strpos($coordinator,'$render_plan_hash, $renderer'),'Coordinator must bind plan hash into ArtifactReceipt v4.');
+$probe=file_get_contents(__DIR__.'/renderer-candidate/check-runtime.php');
+rrcheck(false!==strpos($probe,'CertloomVendor\\\\Mpdf\\\\Mpdf'),'Development probe must target dependency-prefixed mPDF.');
+rrcheck(0===preg_match('/\b(?:curl_exec|wp_remote_|shell_exec|exec\s*\(|passthru\s*\(|proc_open\s*\()/i',$probe),'Readiness probe must not fetch/install/execute external processes.');
 
-rrcheck( 4 === ArtifactReceipt::VERSION, 'ArtifactReceipt production schema must be v4 after shared-plan binding.' );
-$rendering = file_get_contents( dirname( __DIR__ ) . '/docs/rendering-contract.md' );
-$architecture = file_get_contents( dirname( __DIR__ ) . '/docs/architecture.md' );
-rrcheck( false !== strpos( $rendering, 'ArtifactReceipt v4' ), 'Rendering contract must document ArtifactReceipt v4.' );
-rrcheck( false === strpos( $rendering, 'ArtifactReceipt v2' ) && false === strpos( $rendering, 'Artifact receipt v2' ), 'Rendering contract must not regress to stale receipt-v2 wording.' );
-rrcheck( false !== strpos( $architecture, 'ArtifactReceipt v4' ), 'Architecture must document current ArtifactReceipt v4.' );
-rrcheck( interface_exists( 'Certloom\\Application\\Contract\\LocalFontResolverInterface' ), 'Exact local font resolver contract must autoload.' );
-rrcheck( class_exists( FontAssetInspector::class ), 'Font byte inspector must autoload.' );
-rrcheck( class_exists( ContentAddressedFontResolver::class ), 'Content-addressed local font resolver must autoload.' );
-rrcheck( class_exists( RenderPlanBuilder::class ), 'Shared renderer-independent RenderPlanBuilder must autoload.' );
-rrcheck( 4 === RendererAcceptanceContract::VERSION, 'Renderer acceptance evidence must be schema v4 after verifier report/environment cross-linking.' );
-rrcheck( class_exists( RendererCandidateManifest::class ), 'Renderer candidate provenance manifest contract must autoload.' );
-rrcheck( class_exists( RendererVerifierEnvironment::class ), 'Independent verifier environment contract must autoload.' );
-rrcheck( class_exists( RendererVerificationReport::class ), 'Independent verifier report contract must autoload.' );
-rrcheck( class_exists( RendererAcceptanceImporter::class ), 'Cross-linked renderer acceptance importer must autoload.' );
-rrcheck( in_array( 'independent_verifier_environment_bound', RendererAcceptanceContract::required_checks(), true ), 'Renderer acceptance must bind the independent verifier environment.' );
-rrcheck( in_array( 'candidate_provenance_rechecked', RendererAcceptanceContract::required_checks(), true ), 'Renderer acceptance must require independently rechecked candidate provenance.' );
-rrcheck( in_array( 'artifact_receipts_rechecked', RendererAcceptanceContract::required_checks(), true ), 'Renderer acceptance must require independently rechecked ArtifactReceipt v4 evidence.' );
-rrcheck( in_array( 'shared_render_plan', RendererAcceptanceContract::required_checks(), true ), 'Renderer acceptance must prove the shared render-plan path.' );
-$plan_manifest_path = __DIR__ . '/fixtures/rendering/render-plan-manifest.json';
-$plan_manifest = file_get_contents( $plan_manifest_path );
-rrcheck( is_string( $plan_manifest ) && '3070631a405c471fd663373b7440243cfa915d65eb38c8ddb4746ed35f2e1279' === hash( 'sha256', $plan_manifest ), 'Six-fixture shared render-plan manifest must remain frozen by exact SHA-256.' );
-rrcheck( false !== strpos( $rendering, 'certloom-render-plan' ) && false !== strpos( $architecture, 'certloom-render-plan' ), 'Rendering/architecture documents must describe the shared render-plan boundary.' );
-rrcheck( false !== strpos( $rendering, 'RendererAcceptanceContract` (`certloom-renderer-acceptance` v4)' ), 'Rendering contract must document renderer acceptance schema v4.' );
-rrcheck( 6 === count( RendererAcceptanceContract::required_fixtures() ), 'Renderer acceptance must retain all six permanent fixtures.' );
-rrcheck( in_array( 'urdu-rtl', RendererAcceptanceContract::required_fixtures(), true ), 'Urdu RTL fixture must remain mandatory.' );
-rrcheck( in_array( 'rotation', RendererAcceptanceContract::required_fixtures(), true ), 'Arbitrary rotation fixture must remain mandatory.' );
-rrcheck( in_array( 'qr_raster_decode', RendererAcceptanceContract::required_checks(), true ), 'Raster QR decode must remain mandatory.' );
-rrcheck( in_array( 'no_remote_fetch', RendererAcceptanceContract::required_checks(), true ), 'No-remote-fetch proof must remain mandatory.' );
-rrcheck( in_array( 'pdf_png_visual_parity', RendererAcceptanceContract::required_checks(), true ), 'PDF/PNG visual parity must remain mandatory.' );
-$coordinator = file_get_contents( dirname( __DIR__ ) . '/src/Infrastructure/Rendering/ArtifactRenderCoordinator.php' );
-rrcheck( false !== strpos( $coordinator, "array_key_exists( '_runtime'" ) && false !== strpos( $coordinator, 'LocalFontResolverInterface' ), 'Coordinator must own reserved runtime font resolution.' );
-rrcheck( false !== strpos( $coordinator, 'RenderPlanBuilder' ) && false !== strpos( $coordinator, '$renderer->render( $render_plan' ), 'Coordinator must build the shared plan before adapter execution.' );
-rrcheck( false !== strpos( $coordinator, '$render_plan_hash, $renderer' ), 'Coordinator must bind the exact shared plan hash into ArtifactReceipt v4.' );
-rrcheck( false !== strpos( $coordinator, 'Certloom render plan preparation failed' ), 'Coordinator must report plan preparation failures distinctly from adapter execution failures.' );
-$probe = file_get_contents( __DIR__ . '/renderer-candidate/check-runtime.php' );
-rrcheck( false !== strpos( $probe, 'CertloomVendor\\\\Mpdf\\\\Mpdf' ), 'Development probe must target a dependency-prefixed mPDF candidate.' );
-rrcheck( 0 === preg_match( '/\b(?:curl_exec|wp_remote_|shell_exec|exec\s*\(|passthru\s*\(|proc_open\s*\()/i', $probe ), 'Renderer readiness probe must not fetch/install/execute external processes.' );
-
-echo "PASS  Renderer readiness, exact-font, shared composition, and acceptance evidence are fail-closed\n";
+echo "PASS  Renderer readiness is three-format, golden-bound, exact-font and fail-closed\n";
 echo "\n{$checks} checks, 0 failures\n";

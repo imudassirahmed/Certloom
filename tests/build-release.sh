@@ -2,7 +2,12 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="${CERTLOOM_BUILD_VERSION:-1.6.23}"
+PLUGIN_VERSION="$(sed -n 's/^[[:space:]]*\* Version:[[:space:]]*//p' "$ROOT/certloom.php" | head -n 1 | tr -d '\r')"
+VERSION="${CERTLOOM_BUILD_VERSION:-$PLUGIN_VERSION}"
+if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+][A-Za-z0-9.-]+)?$ ]]; then
+  echo "Invalid Certloom build version: $VERSION" >&2
+  exit 2
+fi
 OUT="${1:-$ROOT/../build-$VERSION}"
 EPOCH="${SOURCE_DATE_EPOCH:-1787356800}"
 STAGE="$OUT/.stage"

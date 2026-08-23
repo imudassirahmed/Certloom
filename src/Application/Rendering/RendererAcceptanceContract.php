@@ -12,7 +12,7 @@ use InvalidArgumentException;
  */
 final class RendererAcceptanceContract {
 	const SCHEMA = 'certloom-renderer-acceptance';
-	const VERSION = 4;
+	const VERSION = 5;
 
 	/** @return string[] */
 	public static function required_fixtures() {
@@ -20,19 +20,29 @@ final class RendererAcceptanceContract {
 	}
 
 	/** @return string[] */
+	public static function required_formats() {
+		return array( 'pdf', 'png', 'jpeg' );
+	}
+
+	/** @return string[] */
 	public static function required_checks() {
 		return array(
 			'pdf_format',
 			'png_format',
+			'jpeg_format',
 			'pdf_page_geometry',
 			'png_page_geometry',
+			'jpeg_page_geometry',
 			'exact_font_bytes',
 			'unicode_rtl',
 			'mixed_bidi',
 			'long_name_overflow',
 			'arbitrary_rotation_17_5',
-			'qr_raster_decode',
+			'qr_png_decode',
+			'qr_jpeg_decode',
 			'pdf_png_visual_parity',
+			'png_jpeg_visual_parity',
+			'golden_visual_parity',
 			'local_assets_only',
 			'no_remote_fetch',
 			'missing_dependencies_fail_soft',
@@ -111,11 +121,12 @@ final class RendererAcceptanceContract {
 	/** @return array<string,array<string,string>> */
 	private function normalize_renderers( $renderers ) {
 		if ( ! is_array( $renderers ) ) {
-			throw new InvalidArgumentException( 'Renderer acceptance evidence must identify PDF and PNG renderers.' );
+			throw new InvalidArgumentException( 'Renderer acceptance evidence must identify PDF, PNG and JPEG renderers.' );
 		}
-		$this->assert_shape( $renderers, array( 'pdf', 'png' ), array( 'pdf', 'png' ), 'renderer acceptance renderers' );
+		$formats = self::required_formats();
+		$this->assert_shape( $renderers, $formats, $formats, 'renderer acceptance renderers' );
 		$out = array();
-		foreach ( array( 'pdf', 'png' ) as $format ) {
+		foreach ( $formats as $format ) {
 			$item = $renderers[ $format ];
 			if ( ! is_array( $item ) ) {
 				throw new InvalidArgumentException( 'Renderer acceptance renderer identity is malformed.' );
@@ -163,14 +174,17 @@ final class RendererAcceptanceContract {
 			if ( ! is_array( $item ) ) {
 				throw new InvalidArgumentException( 'Renderer acceptance fixture result is malformed.' );
 			}
-			$this->assert_shape( $item, array( 'render_plan_sha256', 'pdf_sha256', 'png_sha256' ), array( 'render_plan_sha256', 'pdf_sha256', 'png_sha256' ), 'renderer fixture result' );
-			$plan = strtolower( trim( (string) $item['render_plan_sha256'] ) );
-			$pdf = strtolower( trim( (string) $item['pdf_sha256'] ) );
-			$png = strtolower( trim( (string) $item['png_sha256'] ) );
-			if ( ! $this->is_sha256( $plan ) || ! $this->is_sha256( $pdf ) || ! $this->is_sha256( $png ) ) {
-				throw new InvalidArgumentException( 'Renderer acceptance fixture plans/artifacts must be bound by SHA-256.' );
+			$keys = array( 'render_plan_sha256', 'pdf_sha256', 'png_sha256', 'jpeg_sha256' );
+			$this->assert_shape( $item, $keys, $keys, 'renderer fixture result' );
+			$row = array();
+			foreach ( $keys as $key ) {
+				$value = strtolower( trim( (string) $item[ $key ] ) );
+				if ( ! $this->is_sha256( $value ) ) {
+					throw new InvalidArgumentException( 'Renderer acceptance fixture plans/artifacts must be bound by SHA-256.' );
+				}
+				$row[ $key ] = $value;
 			}
-			$out[ $name ] = array( 'render_plan_sha256' => $plan, 'pdf_sha256' => $pdf, 'png_sha256' => $png );
+			$out[ $name ] = $row;
 		}
 		return $out;
 	}
