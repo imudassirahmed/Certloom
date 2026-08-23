@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.0
+Stable tag: 1.6.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.0: Certloom begins the visible Phase 1 administration redesign from the original master roadmap. The top-level Certloom screen is now a read-only operations dashboard with live registry totals, lifecycle status counts, 30-day expiry visibility, monthly issuance, recent certificates, quick actions, and current-production system health. The proven legacy registry remains authoritative and all future-domain write/admin/data-tool flags remain disabled.
+> Development note for 1.6.1: Certloom continues original Phase 1 with the premium registry/lifecycle/field redesign. Certificates now have operational status views, an actionable 30-day expiry filter, clearer status provenance, schema-driven labels, status reasons, and locked-private internal administrator notes. The certificate editor and Field Manager have been rebuilt into the premium admin shell. The proven legacy registry remains authoritative and all future-domain write/admin/data-tool flags remain disabled.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -35,6 +35,9 @@ Each Elementor widget has isolated content and style controls. Structural respon
 
 * Dedicated indexed database table.
 * Add, edit, search, filter, sort, paginate, delete, and bulk-delete records.
+* Premium registry status views for All, Valid, Suspended, Withdrawn, Expired, and credentials expiring within 30 days.
+* Status reasons for administrator lifecycle context, with optional public visibility controlled by Field Manager.
+* Locked-private internal administrator notes that cannot be exposed through public verification output.
 * Valid, Suspended, and Withdrawn workflow statuses; Expired is normally calculated from the expiry date.
 * Protected review handling for explicitly restored historical Expired records.
 * Configurable core and custom fields with ordering and public-visibility controls.
@@ -118,6 +121,15 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.1 =
+* Phase 1 Part B: premium certificate registry, lifecycle presentation, and integrated field UX.
+* Added status-count registry views and an indexed 30-day Expiring soon filter, including a direct Dashboard deep link.
+* Registry columns now honor the shared Field Manager labels and explain whether status is workflow-controlled, date-derived, or legacy-review protected.
+* Added protected Status reason and locked-private Internal notes fields without a database-table migration.
+* Rebuilt the certificate editor and Field Manager inside the premium admin shell with responsive/accessibility-focused layouts.
+* Enforced locked-private field visibility in schema normalization, field-save handling, and public-field selection.
+* Bulk lifecycle changes remain intentionally deferred to REG-04; future Credential Series authority/admin/data-tool gates remain disabled.
 
 = 1.6.0 =
 * Phase 1 Part A: premium Certloom operations Dashboard from the original master roadmap.

@@ -188,7 +188,7 @@ class Ecapla_CertVerify_Admin {
 			$field                     = $existing[ $key ];
 			$label                     = isset( $row['label'] ) && '' !== trim( (string) $row['label'] ) ? sanitize_text_field( $row['label'] ) : $field['label'];
 			$field['label']            = function_exists( 'mb_substr' ) ? mb_substr( $label, 0, 100 ) : substr( $label, 0, 100 );
-			$field['show_on_frontend'] = ! empty( $row['show_on_frontend'] );
+			$field['show_on_frontend'] = ! empty( $field['locked_visibility'] ) ? false : ! empty( $row['show_on_frontend'] );
 			$field['order']            = $order++;
 			$new_fields[]              = $field;
 			unset( $existing[ $key ] );
@@ -957,7 +957,7 @@ class Ecapla_CertVerify_Admin {
 
 	/**
 	 * Rebuilds the certificate list URL with the visitor's active search term,
-	 * status filter, legacy view, page number, and sorting so a redirect after an action
+	 * status/attention filters, legacy view, page number, and sorting so a redirect after an action
 	 * returns to the same view instead of an unfiltered first page.
 	 *
 	 * @return string
@@ -971,6 +971,9 @@ class Ecapla_CertVerify_Admin {
 		}
 		if ( isset( $_REQUEST['status'] ) && '' !== $_REQUEST['status'] ) {
 			$args['status'] = sanitize_key( wp_unslash( $_REQUEST['status'] ) );
+		}
+		if ( isset( $_REQUEST['attention'] ) && 'expiring_soon' === sanitize_key( wp_unslash( $_REQUEST['attention'] ) ) ) {
+			$args['attention'] = 'expiring_soon';
 		}
 		if ( isset( $_REQUEST['search_mode'] ) ) {
 			$search_mode = sanitize_key( wp_unslash( $_REQUEST['search_mode'] ) );

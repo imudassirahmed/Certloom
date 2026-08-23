@@ -76,12 +76,12 @@ $health_label = 'good' === $health_overall ? __( 'Ready for current operations',
 			<strong><?php echo esc_html( number_format_i18n( $metrics['expired'] ) ); ?></strong>
 			<span class="certloom-metric-meta"><?php esc_html_e( 'Past validity date', 'certloom' ); ?></span>
 		</a>
-		<div class="certloom-metric-card is-static">
+		<a class="certloom-metric-card" href="<?php echo esc_url( add_query_arg( array( 'page' => Ecapla_CertVerify_Admin::CERTIFICATES_PAGE, 'attention' => 'expiring_soon' ), admin_url( 'admin.php' ) ) ); ?>">
 			<span class="certloom-metric-icon is-expiring"><span class="dashicons dashicons-calendar-alt" aria-hidden="true"></span></span>
 			<span class="certloom-metric-label"><?php esc_html_e( 'Expiring in 30 days', 'certloom' ); ?></span>
 			<strong><?php echo esc_html( number_format_i18n( $metrics['expiring_soon'] ) ); ?></strong>
-			<span class="certloom-metric-meta"><?php esc_html_e( 'Planning window', 'certloom' ); ?></span>
-		</div>
+			<span class="certloom-metric-meta"><?php esc_html_e( 'Review upcoming expiries', 'certloom' ); ?></span>
+		</a>
 		<div class="certloom-metric-card is-static">
 			<span class="certloom-metric-icon is-issued"><span class="dashicons dashicons-chart-line" aria-hidden="true"></span></span>
 			<span class="certloom-metric-label"><?php esc_html_e( 'Issued this month', 'certloom' ); ?></span>

@@ -1,3 +1,5 @@
+1.6.1 — Phase 1 Part B: premium registry + lifecycle reason/private-note field integration; authority unchanged
+
 1.6.0 — Phase 1 Part A: premium admin shell + operational dashboard; authority unchanged
 ------------------------------------------------------------------------------------------------
 - Begin the original master-roadmap Phase 1 visible administration redesign without replacing the roadmap or switching credential authority.

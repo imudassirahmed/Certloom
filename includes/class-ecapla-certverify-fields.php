@@ -287,12 +287,19 @@ class Ecapla_CertVerify_Fields {
 		return self::save_fields( $fields );
 	}
 
+	/**
+	 * Returns field definitions safe for public verification output.
+	 * Locked-private fields are excluded even if a stale/corrupt stored option
+	 * attempts to enable them.
+	 *
+	 * @return array
+	 */
 	public static function get_visible_fields() {
 		return array_values(
 			array_filter(
 				self::get_fields(),
 				function ( $field ) {
-					return ! empty( $field['show_on_frontend'] );
+					return empty( $field['locked_visibility'] ) && ! empty( $field['show_on_frontend'] );
 				}
 			)
 		);
@@ -324,6 +331,9 @@ class Ecapla_CertVerify_Fields {
 			self::field( 'scope', __( 'Scope', 'certloom' ), 'textarea', null, false, false, 4, false ),
 			self::field( 'issue_date', __( 'Issue date', 'certloom' ), 'date', 'issue_date', true, false, 5, false ),
 			self::field( 'expiry_date', __( 'Expiry date', 'certloom' ), 'date', 'expiry_date', true, false, 6, false ),
+			// Appended at high default orders so existing installations keep their established field order.
+			self::field( 'status_reason', __( 'Status reason', 'certloom' ), 'textarea', null, true, true, 100, false ),
+			self::field( 'internal_notes', __( 'Internal notes', 'certloom' ), 'textarea', null, true, true, 101, false, true ),
 		);
 	}
 
@@ -375,7 +385,7 @@ class Ecapla_CertVerify_Fields {
 		return $statuses;
 	}
 
-	private static function field( $key, $label, $type, $column, $core, $protected, $order, $show_on_frontend = false ) {
+	private static function field( $key, $label, $type, $column, $core, $protected, $order, $show_on_frontend = false, $locked_visibility = false ) {
 		return array(
 			'key'               => $key,
 			'label'             => $label,
@@ -383,8 +393,8 @@ class Ecapla_CertVerify_Fields {
 			'column'            => $column,
 			'core'              => $core,
 			'protected'         => $protected,
-			'locked_visibility' => false,
-			'show_on_frontend'  => (bool) $show_on_frontend,
+			'locked_visibility' => (bool) $locked_visibility,
+			'show_on_frontend'  => $locked_visibility ? false : (bool) $show_on_frontend,
 			'order'             => $order,
 		);
 	}
@@ -413,7 +423,7 @@ class Ecapla_CertVerify_Fields {
 				$clean                     = $default_map[ $key ];
 				$label                     = isset( $field['label'] ) && '' !== trim( (string) $field['label'] ) ? sanitize_text_field( $field['label'] ) : $clean['label'];
 				$clean['label']            = function_exists( 'mb_substr' ) ? mb_substr( $label, 0, 100 ) : substr( $label, 0, 100 );
-				$clean['show_on_frontend'] = ! empty( $field['show_on_frontend'] );
+				$clean['show_on_frontend'] = ! empty( $clean['locked_visibility'] ) ? false : ! empty( $field['show_on_frontend'] );
 				$clean['order']            = isset( $field['order'] ) ? absint( $field['order'] ) : $index;
 			} else {
 				$type  = isset( $field['type'] ) ? sanitize_key( $field['type'] ) : 'text';

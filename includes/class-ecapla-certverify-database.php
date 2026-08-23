@@ -1340,6 +1340,7 @@ class Ecapla_CertVerify_Database {
 				'search_mode'    => 'prefix',
 				'status'         => '',
 				'legacy_expired' => false,
+				'attention'      => '',
 				'orderby'        => 'created_at',
 				'order'          => 'DESC',
 				'per_page'       => 20,
@@ -1391,6 +1392,27 @@ class Ecapla_CertVerify_Database {
 			} elseif ( in_array( $status, array( 'suspended', 'withdrawn' ), true ) ) {
 				$where[] = $wpdb->prepare( 'status = %s', $status );
 			}
+		}
+
+
+		$attention = sanitize_key( (string) $args['attention'] );
+		if ( 'expiring_soon' === $attention ) {
+			$today = current_time( 'Y-m-d' );
+			try {
+				$zone = function_exists( 'wp_timezone' ) ? wp_timezone() : new DateTimeZone( 'UTC' );
+				$soon = ( new DateTimeImmutable( $today, $zone ) )->modify( '+30 days' )->format( 'Y-m-d' );
+			} catch ( Exception $exception ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- UTC fallback is deterministic if the configured timezone is invalid.
+				$soon = gmdate( 'Y-m-d', strtotime( '+30 days' ) );
+			}
+			$where[] = $wpdb->prepare(
+				'(status <> %s AND status_source <> %s AND status NOT IN (%s, %s) AND expiry_date IS NOT NULL AND expiry_date BETWEEN %s AND %s)',
+				'expired',
+				'legacy',
+				'suspended',
+				'withdrawn',
+				$today,
+				$soon
+			);
 		}
 
 		$allowed_orderby = array( 'cert_number', 'holder_name', 'status', 'issue_date', 'expiry_date', 'created_at' );
