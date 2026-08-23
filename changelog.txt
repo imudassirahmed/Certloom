@@ -1,3 +1,10 @@
+1.6.21
+- Bind the independent PDF-04 verifier toolchain itself: PHP/Python runtime, Poppler, OpenCV/NumPy/Pillow and exact verifier-script SHA-256 values.
+- Advance renderer acceptance to v4 and add RendererVerificationReport v2 plus a fail-closed cross-linked acceptance importer.
+- Require acceptance evidence, verifier report, verifier environment, candidate identities, bundle/frozen manifests and all six fixture hashes to agree before production acceptance can import.
+- Add a standard source-only production-bundle verification entrypoint and remove the hardcoded plugin version from the development reference-bundle builder.
+- Keep PDF-04, Template publication, authoritative Preview, Designer authority and normalized-domain readiness flags gated.
+
 1.6.20
 - Harden PDF-04 acceptance with exact renderer candidate provenance and independent artifact-bundle verification.
 - Require production evidence v3 to bind candidate source/dependency lock plus ArtifactReceipt v4 for every PDF/PNG.

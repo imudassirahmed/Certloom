@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.20
+Stable tag: 1.6.21
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.20: Certloom hardens the still-open `PDF-04` gate with exact renderer-candidate provenance and an independent artifact-bundle verifier. Production acceptance evidence v3 must bind the frozen fixtures/render plans, exact candidate source + dependency lock, and ArtifactReceipt v4 for every PDF/PNG. The current PHP runtime still lacks `mbstring`, `gd`, and the prefixed renderer candidate, so production artifact authority, Template publication, authoritative rendered Preview, and Designer output remain disabled.
+> Development note for 1.6.21: Certloom hardens the still-open `PDF-04` gate by binding the independent verifier toolchain itself and cross-linking acceptance evidence to the normalized verifier report/environment. Renderer acceptance v4 still requires an actual dependency-prefixed production candidate; the current runtime lacks `mbstring`, `gd`, and the prefixed renderer candidate, so production artifacts, Template publication, authoritative Preview, and Designer output remain disabled.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -130,7 +130,16 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 
 == Changelog ==
 
+= 1.6.21 =
+
+* Bind exact independent-verifier runtime/tool/package/script provenance for PDF-04.
+* Add RendererVerificationReport v2 and fail-closed cross-linked acceptance import.
+* Advance RendererAcceptanceContract to v4; development references still cannot qualify.
+* Add the standard source-only production-bundle verification entrypoint.
+* Keep production PDF/image, Template publication, authoritative Preview and Designer authority gated.
+
 = 1.6.20 =
+
 * Add `RendererCandidateManifest` v1 for exact package/source/dependency-lock provenance and the CertloomVendor in-process/no-network/no-process policy.
 * Advance `RendererAcceptanceContract` to v3 so production evidence must bind an independently verified artifact bundle and exact candidate-manifest hashes.
 * Add a source-only acceptance-bundle verifier that rechecks actual PDF/PNG hashes, deterministic A/B bytes, page/raster geometry, QR decode, PDF-to-PNG parity, frozen manifests, candidate source/lock bytes, and ArtifactReceipt v4 identity.

@@ -57,8 +57,39 @@ def check_shape(obj, keys, label):
         raise RuntimeError(f'{label} has an invalid shape')
 
 
-def verify(bundle_dir: Path, require_production: bool):
+def capture_verifier_environment(output_path: Path | None = None):
+    script = Path(__file__).with_name('capture-verifier-environment.py')
+    proc = subprocess.run([sys.executable, str(script)], text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if proc.returncode != 0:
+        raise RuntimeError('verifier environment capture failed: ' + proc.stderr.strip())
+    try:
+        env = json.loads(proc.stdout)
+    except Exception as error:
+        raise RuntimeError('verifier environment capture returned invalid JSON') from error
+    with tempfile.TemporaryDirectory(prefix='certloom-verifier-env-') as td:
+        temp = Path(td) / 'environment.json'
+        text = json.dumps(env, ensure_ascii=False, sort_keys=True, separators=(',', ':')) + '\n'
+        temp.write_text(text, encoding='utf-8')
+        validator = Path(__file__).with_name('validate-verifier-environment.php')
+        checked = subprocess.run(['php', str(validator), str(temp)], text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if checked.returncode != 0:
+            raise RuntimeError('verifier environment failed Certloom policy validation: ' + checked.stderr.strip())
+        try:
+            normalized = json.loads(checked.stdout)
+            digest = normalized['verifier_environment_sha256']
+        except Exception as error:
+            raise RuntimeError('verifier environment validator returned invalid output') from error
+        if not re.match(r'^[0-9a-f]{64}$', str(digest)):
+            raise RuntimeError('verifier environment canonical hash is invalid')
+        if output_path is not None:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(text, encoding='utf-8')
+    return env, digest
+
+
+def verify(bundle_dir: Path, require_production: bool, environment_report: Path | None = None):
     root = bundle_dir.resolve()
+    verifier_environment, verifier_environment_hash = capture_verifier_environment(environment_report)
     bundle_path = safe_file(root, 'bundle.json')
     manifest = json.loads(bundle_path.read_text(encoding='utf-8'))
     check_shape(manifest, ('schema','version','qualification','plugin_version','fixture_manifest','render_plan_manifest','raster_dpi','renderers','runs'), 'bundle manifest')
@@ -213,17 +244,23 @@ def verify(bundle_dir: Path, require_production: bool):
         raise RuntimeError('QR fixture does not decode from the actual PNG artifact to the frozen verification URL')
 
     report = {
-        'schema':'certloom-renderer-bundle-verification','version':1,
+        'schema':'certloom-renderer-bundle-verification','version':2,
+        'verified':True,
         'qualification':qualification,
         'qualifies_pdf04': qualification == 'production-candidate',
         'bundle_manifest_sha256':sha(bundle_path),
         'fixture_manifest_sha256':sha(golden_path),
         'render_plan_manifest_sha256':sha(plan_path),
+        'verifier_environment_sha256':verifier_environment_hash,
+        'candidate_provenance_rechecked': qualification == 'production-candidate',
+        'artifact_receipts_rechecked': qualification == 'production-candidate',
         'deterministic_runs':True,
         'pdf_geometry':True,
         'png_geometry':True,
         'qr_raster_decode':True,
         'pdf_png_visual_parity':True,
+        'renderers': {fmt: {'id': renderers[fmt]['id'], 'version': renderers[fmt]['version'], 'candidate_manifest_sha256': renderers[fmt]['candidate_manifest']['sha256']} for fmt in ('pdf','png')},
+        'fixtures': {name: {'render_plan_sha256': plan['fixtures'][name]['render_plan_sha256'], 'pdf_sha256': facts['a'][name]['pdf'][1], 'png_sha256': facts['a'][name]['png'][1]} for name in FIXTURES},
         'parity':parity,
     }
     return manifest, report
@@ -234,11 +271,12 @@ def main() -> int:
     ap.add_argument('bundle_dir')
     ap.add_argument('--require-production', action='store_true')
     ap.add_argument('--report')
+    ap.add_argument('--environment-report')
     args = ap.parse_args()
     try:
-        manifest, report = verify(Path(args.bundle_dir), args.require_production)
+        manifest, report = verify(Path(args.bundle_dir), args.require_production, Path(args.environment_report) if args.environment_report else None)
     except Exception as error:
-        print(json.dumps({'schema':'certloom-renderer-bundle-verification','version':1,'verified':False,'error':str(error)}, sort_keys=True, separators=(',', ':')), file=sys.stderr)
+        print(json.dumps({'schema':'certloom-renderer-bundle-verification','version':2,'verified':False,'error':str(error)}, sort_keys=True, separators=(',', ':')), file=sys.stderr)
         return 1
     text = json.dumps(report, ensure_ascii=False, sort_keys=True, separators=(',', ':')) + '\n'
     if args.report:

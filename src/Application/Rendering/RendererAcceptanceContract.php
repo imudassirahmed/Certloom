@@ -12,7 +12,7 @@ use InvalidArgumentException;
  */
 final class RendererAcceptanceContract {
 	const SCHEMA = 'certloom-renderer-acceptance';
-	const VERSION = 3;
+	const VERSION = 4;
 
 	/** @return string[] */
 	public static function required_fixtures() {
@@ -38,12 +38,15 @@ final class RendererAcceptanceContract {
 			'missing_dependencies_fail_soft',
 			'deterministic_regeneration',
 			'shared_render_plan',
+			'independent_verifier_environment_bound',
+			'candidate_provenance_rechecked',
+			'artifact_receipts_rechecked',
 		);
 	}
 
 	/** @return array<string,mixed> */
 	public function normalize( array $evidence ) {
-		$allowed = array( 'schema', 'version', 'qualification', 'plugin_version', 'fixture_manifest_sha256', 'render_plan_manifest_sha256', 'bundle_manifest_sha256', 'renderers', 'checks', 'fixtures' );
+		$allowed = array( 'schema', 'version', 'qualification', 'plugin_version', 'fixture_manifest_sha256', 'render_plan_manifest_sha256', 'bundle_manifest_sha256', 'verification_report_sha256', 'verifier_environment_sha256', 'renderers', 'checks', 'fixtures' );
 		$this->assert_shape( $evidence, $allowed, $allowed, 'renderer acceptance evidence' );
 		if ( self::SCHEMA !== (string) $evidence['schema'] || ! is_int( $evidence['version'] ) || self::VERSION !== $evidence['version'] ) {
 			throw new InvalidArgumentException( 'Renderer acceptance evidence schema/version is unsupported.' );
@@ -70,6 +73,16 @@ final class RendererAcceptanceContract {
 			throw new InvalidArgumentException( 'Renderer acceptance evidence must bind an independently verified artifact bundle manifest by SHA-256.' );
 		}
 
+		$verification_report_hash = strtolower( trim( (string) $evidence['verification_report_sha256'] ) );
+		if ( ! $this->is_sha256( $verification_report_hash ) ) {
+			throw new InvalidArgumentException( 'Renderer acceptance evidence must bind the independent verifier report by SHA-256.' );
+		}
+
+		$verifier_environment_hash = strtolower( trim( (string) $evidence['verifier_environment_sha256'] ) );
+		if ( ! $this->is_sha256( $verifier_environment_hash ) ) {
+			throw new InvalidArgumentException( 'Renderer acceptance evidence must bind the independent verifier environment by SHA-256.' );
+		}
+
 		$renderers = $this->normalize_renderers( $evidence['renderers'] );
 		$checks = $this->normalize_checks( $evidence['checks'] );
 		$fixtures = $this->normalize_fixtures( $evidence['fixtures'] );
@@ -82,6 +95,8 @@ final class RendererAcceptanceContract {
 			'fixture_manifest_sha256' => $fixture_hash,
 			'render_plan_manifest_sha256' => $render_plan_manifest_hash,
 			'bundle_manifest_sha256' => $bundle_manifest_hash,
+			'verification_report_sha256' => $verification_report_hash,
+			'verifier_environment_sha256' => $verifier_environment_hash,
 			'renderers' => $renderers,
 			'checks' => $checks,
 			'fixtures' => $fixtures,

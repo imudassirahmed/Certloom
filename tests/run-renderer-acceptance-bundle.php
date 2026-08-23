@@ -1,5 +1,5 @@
 <?php
-/** 1.6.20 renderer candidate provenance + artifact-bundle contract regression. */
+/** 1.6.21 renderer candidate, verifier provenance + artifact-bundle contract regression. */
 require_once __DIR__ . '/bootstrap-autoload.php';
 
 use Certloom\Application\Rendering\RendererAcceptanceContract;
@@ -59,10 +59,12 @@ $evidence = array(
 	'schema' => RendererAcceptanceContract::SCHEMA,
 	'version' => RendererAcceptanceContract::VERSION,
 	'qualification' => 'production-candidate',
-	'plugin_version' => '1.6.20',
+	'plugin_version' => '1.6.21',
 	'fixture_manifest_sha256' => str_repeat( '3', 64 ),
 	'render_plan_manifest_sha256' => str_repeat( '4', 64 ),
 	'bundle_manifest_sha256' => str_repeat( '5', 64 ),
+	'verification_report_sha256' => str_repeat( '9', 64 ),
+	'verifier_environment_sha256' => str_repeat( '0', 64 ),
 	'renderers' => array(
 		'pdf' => array( 'id' => 'mpdf-pdf', 'version' => '8.3.1+certloom.1', 'context_hash' => str_repeat( '6', 64 ), 'candidate_manifest_sha256' => $candidate_hash ),
 		'png' => array( 'id' => 'certloom-raster', 'version' => '1', 'context_hash' => str_repeat( '7', 64 ), 'candidate_manifest_sha256' => str_repeat( '8', 64 ) ),
@@ -71,18 +73,26 @@ $evidence = array(
 	'fixtures' => $fixtures,
 );
 $acceptance = new RendererAcceptanceContract();
-rab_check( 3 === RendererAcceptanceContract::VERSION, 'Acceptance evidence must advance to v3 when artifact bundle/provenance binding is required.' );
+rab_check( 4 === RendererAcceptanceContract::VERSION, 'Acceptance evidence must advance to v4 when independent verifier report/environment binding is required.' );
 rab_check( 1 === preg_match( '/^[0-9a-f]{64}$/', $acceptance->hash( $evidence ) ), 'Production acceptance evidence must normalize with bundle/candidate bindings.' );
 $bad = $evidence; $bad['qualification'] = 'development-reference';
 rab_check( rab_throws( function () use ( $acceptance, $bad ) { $acceptance->normalize( $bad ); } ), 'Development reference evidence must never qualify as PDF-04 production acceptance.' );
 $bad = $evidence; unset( $bad['bundle_manifest_sha256'] );
 rab_check( rab_throws( function () use ( $acceptance, $bad ) { $acceptance->normalize( $bad ); } ), 'Acceptance evidence must bind the independently verified artifact bundle.' );
+$bad = $evidence; unset( $bad['verification_report_sha256'] );
+rab_check( rab_throws( function () use ( $acceptance, $bad ) { $acceptance->normalize( $bad ); } ), 'Acceptance evidence must bind the independent verifier report.' );
+$bad = $evidence; unset( $bad['verifier_environment_sha256'] );
+rab_check( rab_throws( function () use ( $acceptance, $bad ) { $acceptance->normalize( $bad ); } ), 'Acceptance evidence must bind the exact verifier environment.' );
 $bad = $evidence; unset( $bad['renderers']['pdf']['candidate_manifest_sha256'] );
 rab_check( rab_throws( function () use ( $acceptance, $bad ) { $acceptance->normalize( $bad ); } ), 'Acceptance evidence must bind exact renderer candidate provenance.' );
 
 rab_check( is_file( __DIR__ . '/renderer-candidate/build-reference-bundle.py' ), 'Development reference bundle builder must ship in source tests.' );
 rab_check( is_file( __DIR__ . '/renderer-candidate/verify-bundle.py' ), 'Independent artifact-bundle verifier must ship in source tests.' );
 rab_check( is_file( __DIR__ . '/renderer-candidate/verify-receipt.php' ), 'Independent ArtifactReceipt verifier must ship in source tests.' );
+rab_check( is_file( __DIR__ . '/renderer-candidate/capture-verifier-environment.py' ), 'Independent verifier environment capture must ship in source tests.' );
+rab_check( is_file( __DIR__ . '/renderer-candidate/validate-verifier-environment.php' ), 'Verifier environment validator must ship in source tests.' );
+rab_check( is_file( __DIR__ . '/renderer-candidate/validate-verification-report.php' ), 'Independent verification-report validator must ship in source tests.' );
+rab_check( is_file( __DIR__ . '/renderer-candidate/verify-production-bundle.sh' ), 'Standard production-bundle verification entrypoint must ship in source tests.' );
 $verifier = file_get_contents( __DIR__ . '/renderer-candidate/verify-bundle.py' );
 rab_check( false !== strpos( $verifier, 'pdfinfo' ) && false !== strpos( $verifier, 'pdftocairo' ), 'Independent verifier must inspect real PDF geometry and rasterize PDF output.' );
 rab_check( false !== strpos( $verifier, 'QRCodeDetector' ), 'Independent verifier must decode QR from actual PNG output.' );

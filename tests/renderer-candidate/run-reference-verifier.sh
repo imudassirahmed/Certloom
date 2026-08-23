@@ -5,14 +5,28 @@ TMP="${TMPDIR:-/tmp}/certloom-renderer-bundle-$RANDOM-$$"
 trap 'rm -rf "$TMP"' EXIT
 
 python3 "$ROOT/tests/renderer-candidate/build-reference-bundle.py" "$TMP" >/dev/null
-python3 "$ROOT/tests/renderer-candidate/verify-bundle.py" "$TMP" >"$TMP/report.json"
+python3 "$ROOT/tests/renderer-candidate/verify-bundle.py" "$TMP" --report "$TMP/report.json" --environment-report "$TMP/verifier-environment.json" >/dev/null
+php "$ROOT/tests/renderer-candidate/validate-verification-report.php" "$TMP/report.json" >"$TMP/report-validation.json"
+php "$ROOT/tests/renderer-candidate/validate-verifier-environment.php" "$TMP/verifier-environment.json" >"$TMP/environment-validation.json"
 python3 - "$TMP/report.json" <<'PY'
 import json,sys
 r=json.load(open(sys.argv[1]))
+assert r['version']==2 and r['verified'] is True
 assert r['qualification']=='development-reference'
 assert r['qualifies_pdf04'] is False
 assert r['deterministic_runs'] and r['pdf_geometry'] and r['png_geometry'] and r['qr_raster_decode'] and r['pdf_png_visual_parity']
+assert len(r['verifier_environment_sha256'])==64 and len(r['fixtures'])==6
 PY
+python3 - "$TMP/report-validation.json" "$TMP/environment-validation.json" <<'PY'
+import json,sys
+r=json.load(open(sys.argv[1])); e=json.load(open(sys.argv[2]))
+assert r['qualification']=='development-reference' and r['qualifies_pdf04'] is False
+assert r['verifier_environment_sha256']==e['verifier_environment_sha256']
+PY
+
+if bash "$ROOT/tests/renderer-candidate/verify-production-bundle.sh" "$TMP" "$TMP/production-proof" >/dev/null 2>&1; then
+  echo "development reference unexpectedly passed the production verification entrypoint" >&2; exit 5
+fi
 
 if python3 "$ROOT/tests/renderer-candidate/verify-bundle.py" "$TMP" --require-production >/dev/null 2>&1; then
   echo "development reference unexpectedly qualified as production" >&2; exit 2
@@ -39,4 +53,4 @@ fi
 
 echo "PASS  independent renderer-bundle verifier accepts the frozen oracle but rejects production escalation, manifest tampering, and run drift"
 echo
-printf '4 scenarios, 0 failures\n'
+printf '5 scenarios, 0 failures\n'

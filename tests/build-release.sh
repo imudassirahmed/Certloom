@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="${CERTLOOM_BUILD_VERSION:-1.6.20}"
+VERSION="${CERTLOOM_BUILD_VERSION:-1.6.21}"
 OUT="${1:-$ROOT/../build-$VERSION}"
 EPOCH="${SOURCE_DATE_EPOCH:-1787356800}"
 STAGE="$OUT/.stage"
@@ -15,6 +15,12 @@ rm -rf "$OUT"
 mkdir -p "$STAGE/source/certloom" "$STAGE/release/certloom"
 cp -a "$ROOT"/. "$STAGE/source/certloom/"
 cp -a "$ROOT"/. "$STAGE/release/certloom/"
+
+# Generated/interpreter/VCS metadata is never part of a Certloom source or
+# production artifact, even if local development tools created it in-tree.
+find "$STAGE/source/certloom" "$STAGE/release/certloom" -type d \( -name __pycache__ -o -name .git -o -name .svn \) -prune -exec rm -rf {} +
+find "$STAGE/source/certloom" "$STAGE/release/certloom" -type f \( -name '*.pyc' -o -name '*.pyo' -o -name '.DS_Store' \) -delete
+
 rm -rf "$STAGE/release/certloom/docs" "$STAGE/release/certloom/tests"
 
 # Development-only reproducibility: archive metadata must not depend on the

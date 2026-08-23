@@ -76,10 +76,16 @@ def main() -> int:
                 fixtures[name][fmt] = {'path': rel.as_posix(), 'sha256': sha(dst), 'receipt': None}
         runs[run] = {'fixtures': fixtures}
 
+    plugin_text = (ROOT / 'certloom.php').read_text(encoding='utf-8', errors='replace')
+    import re
+    version_match = re.search(r'^\s*\*\s*Version:\s*([^\s]+)', plugin_text, re.M)
+    if not version_match:
+        raise RuntimeError('Certloom plugin version is unavailable')
+
     manifest = {
         'schema':'certloom-renderer-acceptance-bundle','version':1,
         'qualification':'development-reference',
-        'plugin_version':'1.6.20',
+        'plugin_version':version_match.group(1),
         'fixture_manifest': {'path':'manifests/golden.json','sha256':sha(out/'manifests'/'golden.json')},
         'render_plan_manifest': {'path':'manifests/render-plan.json','sha256':sha(out/'manifests'/'render-plan.json')},
         'raster_dpi':96,
