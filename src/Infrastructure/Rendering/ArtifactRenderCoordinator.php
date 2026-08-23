@@ -3,6 +3,8 @@ namespace Certloom\Infrastructure\Rendering;
 
 use Certloom\Application\Rendering\ArtifactInspector;
 use Certloom\Application\Rendering\ArtifactReceipt;
+use Certloom\Application\Contract\LocalFontResolverInterface;
+use Certloom\Application\Rendering\FontAssetInspector;
 use Certloom\Application\Rendering\FontManifest;
 use Certloom\Application\Rendering\RenderRequestFingerprint;
 use Certloom\Application\Rendering\RendererRegistry;
@@ -20,14 +22,18 @@ final class ArtifactRenderCoordinator {
 	private $receipts;
 	private $fonts;
 	private $artifacts;
+	private $font_resolver;
+	private $font_assets;
 
-	public function __construct( RendererRegistry $registry, RendererCapabilityDetector $capabilities = null, RenderRequestFingerprint $fingerprints = null, ArtifactReceipt $receipts = null, FontManifest $fonts = null, ArtifactInspector $artifacts = null ) {
+	public function __construct( RendererRegistry $registry, RendererCapabilityDetector $capabilities = null, RenderRequestFingerprint $fingerprints = null, ArtifactReceipt $receipts = null, FontManifest $fonts = null, ArtifactInspector $artifacts = null, LocalFontResolverInterface $font_resolver = null, FontAssetInspector $font_assets = null ) {
 		$this->registry = $registry;
 		$this->capabilities = $capabilities ?: new RendererCapabilityDetector();
 		$this->fingerprints = $fingerprints ?: new RenderRequestFingerprint();
 		$this->receipts = $receipts ?: new ArtifactReceipt();
 		$this->fonts = $fonts ?: new FontManifest();
 		$this->artifacts = $artifacts ?: new ArtifactInspector();
+		$this->font_resolver = $font_resolver;
+		$this->font_assets = $font_assets ?: new FontAssetInspector();
 	}
 
 	/** @return array<string,mixed> */
@@ -37,20 +43,37 @@ final class ArtifactRenderCoordinator {
 		if ( empty( $report['available'] ) ) {
 			throw new RuntimeException( 'Certloom renderer requirements are unavailable: ' . implode( ', ', (array) $report['missing'] ) );
 		}
+		$runtime_document = $resolved_document;
+		if ( array_key_exists( '_runtime', $runtime_document ) ) {
+			throw new RuntimeException( 'Resolved render documents may not supply Certloom runtime-only state.' );
+		}
 		if ( $this->fonts->document_uses_text( $resolved_document ) ) {
 			$context = (array) $renderer->context();
 			if ( empty( $context['font_manifest'] ) || ! is_array( $context['font_manifest'] ) ) {
 				throw new RuntimeException( 'Certloom renderer does not declare a content-addressed font manifest.' );
 			}
+			if ( null === $this->font_resolver ) {
+				throw new RuntimeException( 'Certloom text rendering requires an exact local font resolver.' );
+			}
 			try {
-				$this->fonts->assert_document_supported( $resolved_document, $context['font_manifest'] );
+				$faces = $this->fonts->required_faces( $resolved_document, $context['font_manifest'] );
+				$resolved_fonts = array();
+				foreach ( $faces as $face ) {
+					$asset = $this->font_resolver->resolve( $face['sha256'], $face['format'] );
+					$verified = $this->font_assets->inspect( $asset );
+					if ( ! hash_equals( (string) $face['sha256'], (string) $verified['sha256'] ) || (string) $face['format'] !== (string) $verified['format'] ) {
+						throw new RuntimeException( 'Resolved local font does not match the exact manifest face identity.' );
+					}
+					$resolved_fonts[ $verified['sha256'] ] = $verified;
+				}
+				$runtime_document['_runtime'] = array( 'fonts' => $resolved_fonts );
 			} catch ( \Throwable $error ) {
-				throw new RuntimeException( 'Certloom renderer font manifest cannot satisfy the resolved document.', 0, $error );
+				throw new RuntimeException( 'Certloom renderer font manifest/local font storage cannot satisfy the resolved document.', 0, $error );
 			}
 		}
 		$request_hash = $this->fingerprints->hash( $layout_hash, $resolved_document );
 		try {
-			$bytes = $renderer->render( $resolved_document, strtolower( trim( (string) $format ) ) );
+			$bytes = $renderer->render( $runtime_document, strtolower( trim( (string) $format ) ) );
 		} catch ( \Throwable $error ) {
 			throw new RuntimeException( 'Certloom renderer failed without changing credential state.', 0, $error );
 		}

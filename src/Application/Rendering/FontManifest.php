@@ -98,6 +98,34 @@ final class FontManifest {
 		}
 	}
 
+	/**
+	 * Returns the exact font faces a resolved document can require.
+	 *
+	 * Paths are deliberately absent: SHA-256 + format are portable identity.
+	 * The ArtifactRenderCoordinator resolves these identities to verified local
+	 * files only after the render-request fingerprint has been computed.
+	 *
+	 * @return array<int,array{sha256:string,format:string}>
+	 */
+	public function required_faces( array $resolved_document, array $manifest ) {
+		$manifest = $this->normalize( $manifest );
+		$this->assert_document_supported( $resolved_document, $manifest );
+		$required = array();
+		foreach ( isset( $resolved_document['elements'] ) && is_array( $resolved_document['elements'] ) ? $resolved_document['elements'] : array() as $element ) {
+			if ( ! is_array( $element ) || 'text' !== (string) ( $element['type'] ?? '' ) ) { continue; }
+			$style = isset( $element['style'] ) && is_array( $element['style'] ) ? $element['style'] : array();
+			$family = strtolower( trim( (string) ( $style['font_family'] ?? '' ) ) );
+			$weight = (int) ( $style['font_weight'] ?? 400 );
+			$variant = $weight . '-' . ( ! empty( $style['italic'] ) ? 'italic' : 'normal' );
+			foreach ( (array) $manifest['families'][ $family ][ $variant ]['faces'] as $face ) {
+				$key = (string) $face['sha256'];
+				$required[ $key ] = array( 'sha256' => $key, 'format' => (string) $face['format'] );
+			}
+		}
+		ksort( $required, SORT_STRING );
+		return array_values( $required );
+	}
+
 	/** @return bool */
 	public function document_uses_text( array $resolved_document ) {
 		foreach ( isset( $resolved_document['elements'] ) && is_array( $resolved_document['elements'] ) ? $resolved_document['elements'] : array() as $element ) {

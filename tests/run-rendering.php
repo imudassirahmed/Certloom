@@ -3,13 +3,16 @@
 require_once __DIR__ . '/bootstrap-autoload.php';
 
 use Certloom\Application\Contract\LocalAssetResolverInterface;
+use Certloom\Application\Contract\LocalFontResolverInterface;
 use Certloom\Application\Contract\RendererInterface;
 use Certloom\Application\Contract\QrEncoderInterface;
 use Certloom\Application\Rendering\ArtifactInspector;
 use Certloom\Application\Rendering\ArtifactReceipt;
 use Certloom\Application\Rendering\UnicodeCoverage;
 use Certloom\Application\Rendering\CanonicalJson;
+use Certloom\Application\Rendering\FontAssetInspector;
 use Certloom\Application\Rendering\FontManifest;
+use Certloom\Application\Rendering\RendererAcceptanceContract;
 use Certloom\Application\Rendering\LayoutResolver;
 use Certloom\Application\Rendering\LayoutValidator;
 use Certloom\Application\Rendering\RendererRegistry;
@@ -17,6 +20,7 @@ use Certloom\Application\Rendering\RenderRequestFingerprint;
 use Certloom\Application\Rendering\TextDirectionResolver;
 use Certloom\Infrastructure\Rendering\RendererCapabilityDetector;
 use Certloom\Infrastructure\Rendering\ArtifactRenderCoordinator;
+use Certloom\Infrastructure\Rendering\ContentAddressedFontResolver;
 use Certloom\Domain\Rendering\ElementId;
 
 $tests = array();
@@ -36,6 +40,10 @@ function certloom_test_font_manifest( $variant = '600-normal', array $faces = nu
 	if ( null === $faces ) { $faces = array( array( 'sha256' => str_repeat( 'a', 64 ), 'format' => 'ttf', 'coverage' => array( 'U+0000-024F' ) ) ); }
 	return array( 'schema' => 'certloom-font-manifest', 'version' => 2, 'families' => array( 'sans-serif' => array( $variant => array( 'faces' => $faces ) ) ) );
 }
+function certloom_test_font_bytes( $format = 'ttf' ) {
+	$signature = 'otf' === $format ? 'OTTO' : "\x00\x01\x00\x00";
+	return $signature . pack( 'nnnn', 1, 16, 0, 0 ) . 'name' . pack( 'NNN', 0, 28, 4 ) . 'TEST';
+}
 
 final class CertloomTestAssetResolver implements LocalAssetResolverInterface {
 	private $map;
@@ -44,6 +52,17 @@ final class CertloomTestAssetResolver implements LocalAssetResolverInterface {
 		if ( ! isset( $this->map[ $reference ] ) ) { throw new InvalidArgumentException( 'Unknown test asset.' ); }
 		$path = $this->map[ $reference ];
 		return array( 'path' => $path, 'sha256' => hash_file( 'sha256', $path ), 'mime' => 'image/png', 'size' => filesize( $path ) );
+	}
+}
+
+final class CertloomTestFontResolver implements LocalFontResolverInterface {
+	private $map;
+	public function __construct( array $map ) { $this->map = $map; }
+	public function resolve( $sha256, $format ) {
+		$key = strtolower( (string) $sha256 ) . '.' . strtolower( (string) $format );
+		if ( ! isset( $this->map[ $key ] ) ) { throw new InvalidArgumentException( 'Unknown test font.' ); }
+		$path = $this->map[ $key ];
+		return array( 'path' => $path, 'sha256' => strtolower( (string) $sha256 ), 'format' => strtolower( (string) $format ), 'size' => filesize( $path ) );
 	}
 }
 
@@ -149,7 +168,16 @@ certloom_render_test( 'artifact receipt rejects type-coerced metadata', function
 certloom_render_test( 'artifact coordinator blocks unavailable renderer before execution', function () { $r=new RendererRegistry(); $r->register(new CertloomTestRenderer('missing-ext','1',array('pdf'),array('extensions'=>array('certloom_missing_extension')))); $c=new ArtifactRenderCoordinator($r); certloom_render_throws(function()use($c){$c->render('pdf',str_repeat('a',64),array('page'=>array()));},RuntimeException::class); } );
 certloom_render_test( 'artifact coordinator refuses text rendering without exact font manifest', function () { $r=new RendererRegistry(); $r->register(new CertloomTestRenderer('pdf-test','1',array('pdf'))); $c=new ArtifactRenderCoordinator($r); $doc=array('elements'=>array(array('type'=>'text','text'=>'Hello','style'=>array('font_family'=>'sans-serif','font_weight'=>600,'italic'=>false)))); certloom_render_throws(function()use($c,$doc){$c->render('pdf',str_repeat('a',64),$doc);},RuntimeException::class); } );
 certloom_render_test( 'artifact coordinator refuses a manifest with missing text coverage', function () { $manifest=certloom_test_font_manifest('400-normal'); $r=new RendererRegistry(); $renderer=new CertloomTestRenderer('pdf-test','1',array('pdf'),array(),array('font_manifest'=>$manifest)); $r->register($renderer); $c=new ArtifactRenderCoordinator($r); $doc=array('elements'=>array(array('type'=>'text','text'=>'محمد علی','style'=>array('font_family'=>'sans-serif','font_weight'=>400,'italic'=>false)))); certloom_render_throws(function()use($c,$doc){$c->render('pdf',str_repeat('a',64),$doc);},RuntimeException::class); } );
-certloom_render_test( 'artifact coordinator accepts text only when exact bytes and Unicode coverage are declared', function () { $manifest=certloom_test_font_manifest('600-normal'); $r=new RendererRegistry(); $renderer=new CertloomTestRenderer('pdf-test','1',array('pdf'),array(),array('font_manifest'=>$manifest)); $r->register($renderer); $c=new ArtifactRenderCoordinator($r); $doc=array('elements'=>array(array('type'=>'text','text'=>'Hello','style'=>array('font_family'=>'sans-serif','font_weight'=>600,'italic'=>false)))); $out=$c->render('pdf',str_repeat('a',64),$doc); certloom_render_same('application/pdf',$out['artifact']['mime']); certloom_render_true((new ArtifactReceipt())->verify($out['receipt'],$out['bytes'],$renderer)); } );
+certloom_render_test( 'artifact coordinator accepts text only when exact font bytes and Unicode coverage are declared', function () { $path=tempnam(sys_get_temp_dir(),'certloom-font-'); file_put_contents($path,certloom_test_font_bytes('ttf')); $hash=hash_file('sha256',$path); $manifest=certloom_test_font_manifest('600-normal',array(array('sha256'=>$hash,'format'=>'ttf','coverage'=>array('U+0000-024F')))); $r=new RendererRegistry(); $renderer=new CertloomTestRenderer('pdf-test','1',array('pdf'),array(),array('font_manifest'=>$manifest)); $r->register($renderer); $fonts=new CertloomTestFontResolver(array($hash.'.ttf'=>$path)); $c=new ArtifactRenderCoordinator($r,null,null,null,null,null,$fonts); $doc=array('elements'=>array(array('type'=>'text','text'=>'Hello','style'=>array('font_family'=>'sans-serif','font_weight'=>600,'italic'=>false)))); $out=$c->render('pdf',str_repeat('a',64),$doc); @unlink($path); certloom_render_same('application/pdf',$out['artifact']['mime']); certloom_render_true((new ArtifactReceipt())->verify($out['receipt'],$out['bytes'],$renderer)); } );
+certloom_render_test( 'font asset inspector binds SHA-256, SFNT format and size to local bytes', function () { $path=tempnam(sys_get_temp_dir(),'certloom-font-'); file_put_contents($path,certloom_test_font_bytes('ttf')); $asset=array('path'=>$path,'sha256'=>hash_file('sha256',$path),'format'=>'ttf','size'=>filesize($path)); $out=(new FontAssetInspector())->inspect($asset); @unlink($path); certloom_render_same('ttf',$out['format']); certloom_render_same($asset['sha256'],$out['sha256']); } );
+certloom_render_test( 'font asset inspector rejects web-font and collection containers', function () { foreach(array('wOFF','wOF2','ttcf') as $sig){ $path=tempnam(sys_get_temp_dir(),'certloom-font-'); file_put_contents($path,$sig.pack('nnnn',1,16,0,0).str_repeat("\0",16)); $asset=array('path'=>$path,'sha256'=>hash_file('sha256',$path),'format'=>'ttf','size'=>filesize($path)); certloom_render_throws(function()use($asset){(new FontAssetInspector())->inspect($asset);}); @unlink($path); } } );
+certloom_render_test( 'font asset inspector rejects out-of-bounds SFNT table records', function () { $path=tempnam(sys_get_temp_dir(),'certloom-font-'); $bytes="\x00\x01\x00\x00".pack('nnnn',1,16,0,0).'name'.pack('NNN',0,9999,10).'TEST'; file_put_contents($path,$bytes); $asset=array('path'=>$path,'sha256'=>hash_file('sha256',$path),'format'=>'ttf','size'=>filesize($path)); certloom_render_throws(function()use($asset){(new FontAssetInspector())->inspect($asset);}); @unlink($path); } );
+certloom_render_test( 'content-addressed font resolver confines lookup to exact hash filenames', function () { $root=sys_get_temp_dir().'/certloom-font-root-'.bin2hex(random_bytes(4)); mkdir($root); $bytes=certloom_test_font_bytes('ttf'); $hash=hash('sha256',$bytes); file_put_contents($root.'/'.$hash.'.ttf',$bytes); $out=(new ContentAddressedFontResolver($root))->resolve($hash,'ttf'); certloom_render_same(realpath($root.'/'.$hash.'.ttf'),$out['path']); certloom_render_throws(function()use($root){(new ContentAddressedFontResolver($root))->resolve('../bad','ttf');}); @unlink($root.'/'.$hash.'.ttf'); @rmdir($root); } );
+certloom_render_test( 'font manifest reports deterministic exact faces required by a resolved document', function () { $faces=array(array('sha256'=>str_repeat('b',64),'format'=>'ttf','coverage'=>array('U+0000-024F')),array('sha256'=>str_repeat('a',64),'format'=>'otf','coverage'=>array('U+0600-06FF'))); $manifest=certloom_test_font_manifest('400-normal',$faces); $doc=array('elements'=>array(array('type'=>'text','text'=>'A','style'=>array('font_family'=>'sans-serif','font_weight'=>400,'italic'=>false)))); $required=(new FontManifest())->required_faces($doc,$manifest); certloom_render_same(str_repeat('a',64),$required[0]['sha256']); certloom_render_same(str_repeat('b',64),$required[1]['sha256']); } );
+certloom_render_test( 'artifact coordinator refuses text rendering without a local exact-font resolver', function () { $manifest=certloom_test_font_manifest('600-normal'); $r=new RendererRegistry(); $renderer=new CertloomTestRenderer('pdf-test','1',array('pdf'),array(),array('font_manifest'=>$manifest)); $r->register($renderer); $c=new ArtifactRenderCoordinator($r); $doc=array('elements'=>array(array('type'=>'text','text'=>'Hello','style'=>array('font_family'=>'sans-serif','font_weight'=>600,'italic'=>false)))); certloom_render_throws(function()use($c,$doc){$c->render('pdf',str_repeat('a',64),$doc);},RuntimeException::class); } );
+certloom_render_test( 'artifact coordinator rejects caller supplied runtime-only font paths', function () { $r=new RendererRegistry(); $renderer=new CertloomTestRenderer('image-test','1',array('png')); $r->register($renderer); $c=new ArtifactRenderCoordinator($r); certloom_render_throws(function()use($c){$c->render('png',str_repeat('a',64),array('_runtime'=>array('fonts'=>array())));},RuntimeException::class); } );
+certloom_render_test( 'renderer acceptance evidence requires the complete PDF-04 checklist and all permanent fixtures', function () { $checks=array(); foreach(RendererAcceptanceContract::required_checks() as $key){$checks[$key]=true;} $fixtures=array(); foreach(RendererAcceptanceContract::required_fixtures() as $name){$fixtures[$name]=array('pdf_sha256'=>str_repeat('a',64),'png_sha256'=>str_repeat('b',64));} $e=array('schema'=>'certloom-renderer-acceptance','version'=>1,'plugin_version'=>'1.6.18','fixture_manifest_sha256'=>str_repeat('c',64),'renderers'=>array('pdf'=>array('id'=>'pdf-test','version'=>'1','context_hash'=>str_repeat('d',64)),'png'=>array('id'=>'png-test','version'=>'1','context_hash'=>str_repeat('e',64))),'checks'=>$checks,'fixtures'=>$fixtures); $contract=new RendererAcceptanceContract(); certloom_render_same($contract->hash($e),$contract->hash($e)); unset($e['checks']['no_remote_fetch']); certloom_render_throws(function()use($contract,$e){$contract->normalize($e);}); } );
+
 certloom_render_test( 'artifact coordinator rejects a renderer that returns the wrong byte format', function () { $bad=new class implements RendererInterface { public function id(){return 'bad-pdf';} public function version(){return '1';} public function formats(){return array('pdf');} public function requirements(){return array();} public function context(){return array();} public function render(array $d,$f){return certloom_test_artifact_bytes('png');} }; $r=new RendererRegistry(); $r->register($bad); $c=new ArtifactRenderCoordinator($r); certloom_render_throws(function()use($c){$c->render('pdf',str_repeat('a',64),array());},RuntimeException::class); } );
 certloom_render_test( 'artifact coordinator returns verified bytes, facts, request hash and receipt', function () { $r=new RendererRegistry(); $renderer=new CertloomTestRenderer('image-test','1',array('png')); $r->register($renderer); $c=new ArtifactRenderCoordinator($r); $out=$c->render('png',str_repeat('a',64),array('page'=>array('width_mm'=>297.0))); certloom_render_true(isset($out['bytes'],$out['artifact'],$out['request_hash'],$out['receipt'])); certloom_render_same('image/png',$out['artifact']['mime']); certloom_render_same(2,$out['artifact']['width_px']); certloom_render_true((new ArtifactReceipt())->verify($out['receipt'],$out['bytes'],$renderer)); } );
 

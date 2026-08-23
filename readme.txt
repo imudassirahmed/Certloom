@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.17
+Stable tag: 1.6.18
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.17: Certloom adds `TPL-03` behind the existing normalized-domain gate: premium Template assignment administration with searchable/paginated targets and candidates, explicit None/inherit behavior, deterministic Batch → Program → Issuer → Global fallback, effective-source visibility, optimistic concurrency, archive/assignment safety, and renderer-honest candidate metadata. Publishing, authoritative rendered Preview, and Designer output remain disabled until the production renderer acceptance gate passes.
+> Development note for 1.6.18: Certloom hardens the `PDF-04` renderer-readiness boundary without falsely declaring production rendering accepted. Text-capable artifact execution now requires exact local SHA-256-addressed TTF/OTF bytes, renderer acceptance evidence has a strict six-fixture/no-network/parity checklist, and stale renderer/setup documentation is corrected. The current benchmark runtime still lacks the required local PHP rendering dependencies, so Template publication, authoritative rendered Preview, and Designer output remain disabled.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -129,6 +129,14 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.18 =
+* Add an exact local-font delivery boundary for artifact rendering: the content-addressed FontManifest must resolve to byte-verified local TTF/OTF assets before a text renderer executes.
+* Reserve coordinator-owned runtime font state so caller-supplied filesystem paths cannot enter the portable render-request identity or renderer boundary.
+* Add strict `PDF-04` renderer-acceptance evidence requiring all six permanent fixtures, PDF+PNG hashes, exact-font/RTL/17.5° rotation/QR decode/visual-parity/local-only/no-network/fail-soft/determinism checks.
+* Add a development-only renderer runtime probe for the future dependency-prefixed mPDF benchmark candidate; it performs no network or process execution and currently reports missing mbstring, gd, and the bundled prefixed renderer.
+* Correct stale ArtifactReceipt documentation from schema v2 to the actual production schema v3 and update Setup Wizard/System Status wording to reflect current QR/Template truth.
+* Keep `PDF-04`, Template publication, authoritative rendered Preview, Designer authority, and all normalized-domain readiness flags gated until their external acceptance environments genuinely pass.
 
 = 1.6.17 =
 * Add premium Template assignment administration across Global, Issuer, Program, and Batch scopes with searchable/paginated targets and Template candidates.

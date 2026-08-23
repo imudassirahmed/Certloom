@@ -46,8 +46,8 @@ class Ecapla_CertVerify_System_Status {
 		$checks[] = self::domain_schema_lock_check();
 		$checks[] = self::local_qr_check();
 		$checks[] = self::local_barcode_check();
-		$checks[] = self::extension_check( 'mbstring', __( 'PHP mbstring', 'certloom' ), __( 'Required by the planned production Unicode certificate renderer; not required by the current verifier.', 'certloom' ) );
-		$checks[] = self::extension_check( 'gd', __( 'PHP GD', 'certloom' ), __( 'Expected by the planned raster/PDF rendering stack; not required by the current verifier.', 'certloom' ) );
+		$checks[] = self::extension_check( 'mbstring', __( 'PHP mbstring', 'certloom' ), __( 'Required by the current mPDF production-renderer benchmark candidate; not required by the current verifier or QR/barcode presentation.', 'certloom' ) );
+		$checks[] = self::extension_check( 'gd', __( 'PHP GD', 'certloom' ), __( 'Required by the current mPDF production-renderer benchmark candidate and expected by future raster output; not required by the current verifier or QR/barcode presentation.', 'certloom' ) );
 		$checks[] = self::check(
 			'cron',
 			__( 'WordPress Cron', 'certloom' ),
