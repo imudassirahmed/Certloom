@@ -4,15 +4,17 @@ namespace Certloom\Application\Backup;
 /** Versioned line-oriented backup format whose chained hash can resume across requests. */
 final class DomainBackupFormat {
 	const FORMAT = 'certloom-domain-backup';
-	const VERSION = 2;
+	const VERSION = 3;
 	const LEGACY_VERSION = 1;
+	const STRUCTURE_VERSION = 2;
 	const HASH_SEED_V1 = 'certloom-domain-backup-v1';
 	const HASH_SEED_V2 = 'certloom-domain-backup-v2';
+	const HASH_SEED_V3 = 'certloom-domain-backup-v3';
 	const MAX_LINE_BYTES = 4 * 1024 * 1024;
 	const MAX_FILE_BYTES = 1024 * 1024 * 1024;
 
 	/** @return array<int,int> */
-	public static function supported_versions() { return array( self::LEGACY_VERSION, self::VERSION ); }
+	public static function supported_versions() { return array( self::LEGACY_VERSION, self::STRUCTURE_VERSION, self::VERSION ); }
 
 	/** @return array<int,string> */
 	public static function entity_types_for_version( $version ) {
@@ -57,21 +59,30 @@ final class DomainBackupFormat {
 	public function normalize_entity_row( $version, $entity, array $row ) {
 		$version = absint( $version );
 		$entity  = sanitize_key( (string) $entity );
-		if ( self::LEGACY_VERSION === $version && 'credential_series' === $entity && ! array_key_exists( 'batch_id', $row ) ) {
-			$normalized = array();
-			foreach ( $row as $key => $value ) {
-				$normalized[ $key ] = $value;
-				if ( 'program_id' === (string) $key ) {
-					$normalized['batch_id'] = null;
+		$normalized = $row;
+		if ( self::LEGACY_VERSION === $version && 'credential_series' === $entity && ! array_key_exists( 'batch_id', $normalized ) ) {
+			$rebuilt = array();
+			foreach ( $normalized as $key => $value ) {
+				$rebuilt[ $key ] = $value;
+				if ( 'program_id' === (string) $key ) { $rebuilt['batch_id'] = null; }
+			}
+			if ( ! array_key_exists( 'batch_id', $rebuilt ) ) { $rebuilt['batch_id'] = null; }
+			$normalized = $rebuilt;
+		}
+		if ( $version < self::VERSION && 'recipients' === $entity ) {
+			$rebuilt = array();
+			foreach ( $normalized as $key => $value ) {
+				$rebuilt[ $key ] = $value;
+				if ( 'email' === (string) $key ) {
+					if ( ! array_key_exists( 'privacy_identity_hashes', $normalized ) ) { $rebuilt['privacy_identity_hashes'] = null; }
+					if ( ! array_key_exists( 'privacy_anonymized_at', $normalized ) ) { $rebuilt['privacy_anonymized_at'] = null; }
 				}
 			}
-			// Defensive fallback for malformed/non-canonical legacy key order.
-			if ( ! array_key_exists( 'batch_id', $normalized ) ) {
-				$normalized['batch_id'] = null;
-			}
-			return $normalized;
+			if ( ! array_key_exists( 'privacy_identity_hashes', $rebuilt ) ) { $rebuilt['privacy_identity_hashes'] = null; }
+			if ( ! array_key_exists( 'privacy_anonymized_at', $rebuilt ) ) { $rebuilt['privacy_anonymized_at'] = null; }
+			$normalized = $rebuilt;
 		}
-		return $row;
+		return $normalized;
 	}
 
 	/** @return string|\WP_Error */
@@ -96,7 +107,8 @@ final class DomainBackupFormat {
 
 	/** @return string */
 	public function next_hash( $previous, $line, $version = self::VERSION ) {
-		$seed = self::LEGACY_VERSION === absint( $version ) ? self::HASH_SEED_V1 : self::HASH_SEED_V2;
+		$version = absint( $version );
+		$seed = self::LEGACY_VERSION === $version ? self::HASH_SEED_V1 : ( self::STRUCTURE_VERSION === $version ? self::HASH_SEED_V2 : self::HASH_SEED_V3 );
 		$previous = '' === (string) $previous ? $seed : (string) $previous;
 		return hash( 'sha256', $previous . "\n" . (string) $line );
 	}

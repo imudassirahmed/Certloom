@@ -32,13 +32,8 @@ $ecapla_certverify_effective_status = $certificate ? Ecapla_CertVerify_Database:
 $ecapla_certverify_statuses = Ecapla_CertVerify_Fields::get_statuses();
 $ecapla_certverify_effective_label = isset( $ecapla_certverify_statuses[ $ecapla_certverify_effective_status ] ) ? $ecapla_certverify_statuses[ $ecapla_certverify_effective_status ]['label'] : ucfirst( $ecapla_certverify_effective_status );
 $ecapla_certverify_setup_state = Ecapla_CertVerify_Onboarding::get_state();
-$ecapla_certverify_verification_url = '';
-if ( $certificate && ! empty( $ecapla_certverify_setup_state['verification_page_id'] ) ) {
-	$ecapla_certverify_verification_page = get_permalink( absint( $ecapla_certverify_setup_state['verification_page_id'] ) );
-	if ( $ecapla_certverify_verification_page ) {
-		$ecapla_certverify_verification_url = add_query_arg( 'certloom_number', (string) ( $certificate['cert_number'] ?? '' ), $ecapla_certverify_verification_page );
-	}
-}
+$ecapla_certverify_verification_url = $certificate ? Ecapla_CertVerify_Public_Router::verification_url( (string) ( $certificate['cert_number'] ?? '' ) ) : '';
+$ecapla_certverify_profile_url = $certificate ? Ecapla_CertVerify_Public_Router::profile_url( (string) ( $certificate['cert_number'] ?? '' ) ) : '';
 $ecapla_certverify_public_field_count = count( Ecapla_CertVerify_Fields::get_visible_fields() );
 $ecapla_certverify_datetime_format = trim( (string) get_option( 'date_format', 'F j, Y' ) . ' ' . (string) get_option( 'time_format', 'g:i a' ) );
 $ecapla_certverify_created_label = $certificate && ! empty( $certificate['created_at'] ) ? mysql2date( $ecapla_certverify_datetime_format, (string) $certificate['created_at'], true ) : '';
@@ -116,6 +111,7 @@ $ecapla_certverify_updated_label = $certificate && ! empty( $certificate['update
 					<p><?php echo esc_html( sprintf( _n( '%d field is currently approved for public verification output.', '%d fields are currently approved for public verification output.', $ecapla_certverify_public_field_count, 'certloom' ), $ecapla_certverify_public_field_count ) ); ?></p>
 					<div class="certloom-page-actions">
 						<?php if ( $ecapla_certverify_verification_url ) : ?><a class="button button-secondary" href="<?php echo esc_url( $ecapla_certverify_verification_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open verification result', 'certloom' ); ?><span class="screen-reader-text"> <?php esc_html_e( '(opens in a new tab)', 'certloom' ); ?></span></a><?php else : ?><a class="button button-secondary" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-setup' ) ); ?>"><?php esc_html_e( 'Configure verification page', 'certloom' ); ?></a><?php endif; ?>
+						<?php if ( $ecapla_certverify_profile_url ) : ?><a class="button button-secondary" href="<?php echo esc_url( $ecapla_certverify_profile_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open credential profile', 'certloom' ); ?><span class="screen-reader-text"> <?php esc_html_e( '(opens in a new tab)', 'certloom' ); ?></span></a><?php endif; ?>
 						<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-fields' ) ); ?>"><?php esc_html_e( 'Review public fields', 'certloom' ); ?></a>
 					</div>
 				</section>

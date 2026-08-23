@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Certloom – Certificate Verification
  * Description: Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
- * Version: 1.6.5
+ * Version: 1.6.7
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.5' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.7' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
@@ -81,6 +81,8 @@ require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-fields.p
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-validator.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-database.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-permissions.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-public-router.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-public-presentation.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-render.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-shortcode.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-block.php';
@@ -93,6 +95,7 @@ require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-system-s
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-dashboard.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-bulk-manager.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-onboarding.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-privacy.php';
 
 register_activation_hook( __FILE__, 'ecapla_certverify_activate' );
 register_deactivation_hook( __FILE__, 'ecapla_certverify_deactivate' );
@@ -190,6 +193,8 @@ function ecapla_certverify_activate_site() {
 	if ( is_wp_error( $domain ) ) {
 		return $domain;
 	}
+
+	Ecapla_CertVerify_Public_Router::activate();
 
 	if ( ! Ecapla_CertVerify_Permissions::activate() ) {
 		return new WP_Error( 'ecapla_certverify_permissions_setup_failed', __( 'Certloom could not save its required administrator access.', 'certloom' ) );
@@ -402,8 +407,10 @@ function ecapla_certverify_init() {
 		}
 	}
 
+	Ecapla_CertVerify_Public_Router::init();
 	Ecapla_CertVerify_Shortcode::init();
 	Ecapla_CertVerify_Block::init();
+	Ecapla_CertVerify_Privacy::init();
 	add_action( 'rest_api_init', array( 'Ecapla_CertVerify_REST', 'register_routes' ) );
 
 	if ( is_admin() ) {
@@ -492,6 +499,7 @@ function ecapla_certverify_register_elementor_widgets( $widgets_manager ) {
 
 	require_once ECAPLA_CERTVERIFY_PATH . 'elementor/class-ecapla-certverify-elementor-widget.php';
 	require_once ECAPLA_CERTVERIFY_PATH . 'elementor/class-ecapla-certverify-template-widgets.php';
+	require_once ECAPLA_CERTVERIFY_PATH . 'elementor/class-ecapla-certverify-credential-widget.php';
 
 	$widgets_manager->register( new Ecapla_CertVerify_Elementor_Widget() );
 	$widgets_manager->register( new Ecapla_CertVerify_Elementor_Meridian_Widget() );
@@ -499,6 +507,7 @@ function ecapla_certverify_register_elementor_widgets( $widgets_manager ) {
 	$widgets_manager->register( new Ecapla_CertVerify_Elementor_Axis_Widget() );
 	$widgets_manager->register( new Ecapla_CertVerify_Elementor_Nova_Widget() );
 	$widgets_manager->register( new Ecapla_CertVerify_Elementor_Forge_Widget() );
+	$widgets_manager->register( new Ecapla_CertVerify_Elementor_Credential_Widget() );
 }
 
 /**

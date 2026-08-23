@@ -3,6 +3,7 @@ namespace Certloom\Infrastructure\Repository;
 
 use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Application\Data\SafeJson;
+use Certloom\Application\Privacy\IdentityDigest;
 use Certloom\Infrastructure\Database\SchemaManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -41,8 +42,17 @@ final class RecipientRepository {
 		if ( ! $id ) {
 			return new \WP_Error( 'certloom_recipient_id_required', __( 'A valid recipient is required.', 'certloom' ) );
 		}
+		if ( array_key_exists( 'email', $data ) ) {
+			$identity = $this->identity_hashes_for_update( $id );
+			if ( is_wp_error( $identity ) ) { return $identity; }
+			$data['privacy_identity_hashes'] = ( new IdentityDigest() )->merge_email( $identity, $data['email'] ?? null );
+			if ( ! ( new IdentityDigest() )->is_valid_history( $data['privacy_identity_hashes'] ) ) { return new \WP_Error( 'certloom_recipient_privacy_identity_limit', __( 'Recipient privacy identity history reached its safe bounded limit. No email change was saved.', 'certloom' ) ); }
+		}
 		$row = $this->normalize_patch( $data, false );
 		if ( is_wp_error( $row ) ) { return $row; }
+		if ( array_intersect( array_keys( $data ), array( 'display_name', 'first_name', 'middle_name', 'last_name', 'email', 'wp_user_id', 'external_id', 'custom_fields' ) ) ) {
+			$row['privacy_anonymized_at'] = null;
+		}
 		if ( empty( $row ) ) { return true; }
 		$row['updated_at'] = current_time( 'mysql', true );
 		$generation = ( new DomainGeneration() )->mark_before_mutation();
@@ -184,6 +194,14 @@ final class RecipientRepository {
 			if ( null !== $email && self::text_length( $email ) > 320 ) { return new \WP_Error( 'certloom_recipient_email_too_long', __( 'Recipient email must be 320 characters or fewer.', 'certloom' ) ); }
 			$row['email'] = $email;
 		}
+		if ( $creating || array_key_exists( 'privacy_identity_hashes', $data ) ) {
+			$hashes = isset( $data['privacy_identity_hashes'] ) && is_array( $data['privacy_identity_hashes'] ) ? $data['privacy_identity_hashes'] : array();
+			if ( $creating ) { $hashes = ( new IdentityDigest() )->merge_email( $hashes, $data['email'] ?? null ); }
+			if ( ! ( new IdentityDigest() )->is_valid_history( $hashes ) ) { return new \WP_Error( 'certloom_recipient_privacy_identity_invalid', __( 'Recipient privacy identity history is invalid or exceeds its safe bounded limit.', 'certloom' ) ); }
+			$encoded_hashes = ( new SafeJson() )->encode_array( ( new IdentityDigest() )->merge_email( $hashes, null ), 'certloom_recipient_privacy_identity_invalid', __( 'Recipient privacy identity data could not be encoded safely.', 'certloom' ) );
+			if ( is_wp_error( $encoded_hashes ) ) { return $encoded_hashes; }
+			$row['privacy_identity_hashes'] = $encoded_hashes;
+		}
 		if ( $creating || array_key_exists( 'wp_user_id', $data ) ) {
 			$row['wp_user_id'] = ! empty( $data['wp_user_id'] ) ? absint( $data['wp_user_id'] ) : null;
 		}
@@ -201,9 +219,26 @@ final class RecipientRepository {
 	private function decode( array $row ) {
 		$row['id'] = absint( $row['id'] ?? 0 );
 		$row['wp_user_id'] = ! empty( $row['wp_user_id'] ) ? absint( $row['wp_user_id'] ) : null;
+		$row['privacy_identity_hashes'] = ( new SafeJson() )->decode_array( $row['privacy_identity_hashes'] ?? null, 'certloom_recipient_privacy_identity_corrupt', __( 'Stored recipient privacy identity data is invalid JSON.', 'certloom' ) );
+		if ( is_wp_error( $row['privacy_identity_hashes'] ) ) { return $row['privacy_identity_hashes']; }
+		if ( ! ( new IdentityDigest() )->is_valid_history( $row['privacy_identity_hashes'] ) ) { return new \WP_Error( 'certloom_recipient_privacy_identity_corrupt', __( 'Stored recipient privacy identity history is invalid or exceeds its safe bounded limit.', 'certloom' ) ); }
 		$row['custom_fields'] = ( new SafeJson() )->decode_array( $row['custom_fields'] ?? null, 'certloom_recipient_custom_fields_corrupt', __( 'Stored recipient custom fields are invalid JSON.', 'certloom' ) );
 		if ( is_wp_error( $row['custom_fields'] ) ) { return $row['custom_fields']; }
 		return $row;
+	}
+
+	/** @return array<int,string>|\WP_Error */
+	private function identity_hashes_for_update( $id ) {
+		global $wpdb;
+		$wpdb->last_error = '';
+		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT email, privacy_identity_hashes FROM %i WHERE id = %d', SchemaManager::table( 'recipients' ), absint( $id ) ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $row ) ) {
+			return new \WP_Error( 'certloom_recipient_identity_read_failed', __( 'Certloom could not preserve the recipient privacy identity history safely.', 'certloom' ) );
+		}
+		$decoded = ( new SafeJson() )->decode_array( $row['privacy_identity_hashes'] ?? null, 'certloom_recipient_privacy_identity_corrupt', __( 'Stored recipient privacy identity data is invalid JSON.', 'certloom' ) );
+		if ( is_wp_error( $decoded ) ) { return $decoded; }
+		if ( ! ( new IdentityDigest() )->is_valid_history( $decoded ) ) { return new \WP_Error( 'certloom_recipient_privacy_identity_corrupt', __( 'Stored recipient privacy identity history is invalid or exceeds its safe bounded limit.', 'certloom' ) ); }
+		return ( new IdentityDigest() )->merge_email( $decoded, $row['email'] ?? null );
 	}
 
 	/** @return string|null */

@@ -21,6 +21,7 @@ class Ecapla_CertVerify_Shortcode {
 
 	public static function register() {
 		add_shortcode( 'certloom', array( __CLASS__, 'render' ) );
+		add_shortcode( 'certloom_credential', array( __CLASS__, 'render_credential' ) );
 	}
 
 	public static function register_assets() {
@@ -141,4 +142,28 @@ class Ecapla_CertVerify_Shortcode {
 
 		return Ecapla_CertVerify_Render::legacy_widget( $render_atts );
 	}
+	/** Renders a known credential profile with the same public presenter used by REST/routes/widgets. */
+	public static function render_credential( $atts ) {
+		$atts = shortcode_atts(
+			array(
+				'number' => '',
+				'heading' => __( 'Credential profile', 'certloom' ),
+				'notfound_text' => __( 'This credential could not be found or is not available.', 'certloom' ),
+			),
+			is_array( $atts ) ? $atts : array(),
+			'certloom_credential'
+		);
+		$number = trim( sanitize_text_field( (string) $atts['number'] ) );
+		if ( '' === $number && class_exists( 'Ecapla_CertVerify_Public_Router' ) ) {
+			$number = Ecapla_CertVerify_Public_Router::requested_number();
+		}
+		return Ecapla_CertVerify_Render::credential_profile(
+			$number,
+			array(
+				'heading' => $atts['heading'],
+				'notfound_text' => $atts['notfound_text'],
+			)
+		);
+	}
+
 }

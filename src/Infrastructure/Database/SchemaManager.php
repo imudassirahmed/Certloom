@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * exercised without changing public verification truth for an existing site.
  */
 final class SchemaManager {
-	const SCHEMA_VERSION         = '13';
+	const SCHEMA_VERSION         = '14';
 	const SCHEMA_OPTION          = 'certloom_domain_schema_version';
 	const HEALTH_OPTION          = 'certloom_domain_schema_health';
 	const LOCK_OPTION            = 'certloom_domain_schema_lock';
@@ -235,6 +235,8 @@ final class SchemaManager {
 			middle_name VARCHAR(191) NULL,
 			last_name VARCHAR(191) NULL,
 			email VARCHAR(320) NULL,
+			privacy_identity_hashes LONGTEXT NULL,
+			privacy_anonymized_at DATETIME NULL,
 			wp_user_id BIGINT UNSIGNED NULL,
 			external_id VARCHAR(191) NULL,
 			custom_fields LONGTEXT NULL,
@@ -628,6 +630,8 @@ final class SchemaManager {
 					'middle_name' => array( 'type' => '/^varchar\(191\)$/', 'null' => 'YES' ),
 					'last_name' => array( 'type' => '/^varchar\(191\)$/', 'null' => 'YES' ),
 					'email' => array( 'type' => '/^varchar\(320\)$/', 'null' => 'YES' ),
+					'privacy_identity_hashes' => array( 'type' => $lt, 'null' => 'YES' ),
+					'privacy_anonymized_at' => array( 'type' => $dt, 'null' => 'YES' ),
 					'wp_user_id' => array( 'type' => $bigu, 'null' => 'YES' ),
 					'external_id' => array( 'type' => '/^varchar\(191\)$/', 'null' => 'YES' ),
 					'custom_fields' => array( 'type' => $lt, 'null' => 'YES' ),

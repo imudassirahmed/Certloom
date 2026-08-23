@@ -40,7 +40,7 @@ function p1e_check( $condition, $message ) {
 }
 function p1e_has( $source, $needle, $message ) { p1e_check( false !== strpos( $source, $needle ), $message ); }
 
-p1e_has( $src['schema'], "const SCHEMA_VERSION         = '13'", 'Expanded normalized domain must use schema contract v13.' );
+p1e_has( $src['schema'], "const SCHEMA_VERSION         = '14'", 'Expanded normalized domain must use schema contract v14.' );
 foreach ( array( 'signers', 'batches', 'batch_recipients', 'signer_assignments' ) as $table ) {
 	p1e_has( $src['schema'], "'$table'", 'Schema table map missing ' . $table . '.' );
 }
@@ -111,10 +111,15 @@ p1e_has( $src['domain_admin'], 'Immutable Version lineage', 'Credential detail m
 p1e_has( $src['domain_admin'], 'Append-only activity history', 'Credential detail must present append-only activity history.' );
 p1e_has( $src['domain_admin'], "__( 'Batch', 'certloom' )", 'Normalized credential detail must surface Batch relationship.' );
 
-p1e_has( $src['backup_fmt'], 'const VERSION = 2', 'Expanded entity backup must use format v2.' );
+p1e_has( $src['backup_fmt'], 'const VERSION = 3', 'Privacy-aware domain backup must use format v3.' );
+p1e_has( $src['backup_fmt'], 'const STRUCTURE_VERSION = 2', 'Valid 1.6.4/1.6.5 v2 backups must remain supported.' );
 p1e_has( $src['backup_fmt'], 'const LEGACY_VERSION = 1', 'Valid pre-1.6.4 domain backups must remain supported.' );
 p1e_has( $src['backup_fmt'], "HASH_SEED_V1 = 'certloom-domain-backup-v1'", 'Legacy backup hash chain must preserve v1 seed.' );
-p1e_has( $src['backup_fmt'], "HASH_SEED_V2 = 'certloom-domain-backup-v2'", 'New backup hash chain needs versioned seed.' );
+p1e_has( $src['backup_fmt'], "HASH_SEED_V2 = 'certloom-domain-backup-v2'", 'v2 backup hash chain must remain stable.' );
+p1e_has( $src['backup_fmt'], "HASH_SEED_V3 = 'certloom-domain-backup-v3'", 'Privacy-aware v3 backup hash chain needs a distinct seed.' );
+p1e_has( $src['schema'], 'privacy_identity_hashes LONGTEXT NULL', 'Recipient schema must privately retain portable privacy identity digests.' );
+p1e_has( $src['schema'], 'privacy_anonymized_at DATETIME NULL', 'Recipient schema must persist portable privacy-anonymization lifecycle state.' );
+p1e_has( $src['backup_fmt'], "'privacy_identity_hashes'", 'Older backups must synthesize the new private recipient identity field in memory.' );
 p1e_has( $src['backup_fmt'], 'normalize_manifest(', 'Backup compatibility must normalize older manifests explicitly.' );
 p1e_has( $src['backup_fmt'], 'normalize_entity_row(', 'Backup compatibility must normalize older entity rows explicitly.' );
 p1e_has( $src['backup_fmt'], "'batch_id'", 'Legacy Credential Series rows must gain a null Batch relationship in memory.' );

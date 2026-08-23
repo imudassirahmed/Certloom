@@ -11,7 +11,7 @@ if ( ! empty( $setup_summary['page_ready'] ) ) {
 	$certloom_setup_page_url = get_permalink( absint( $certloom_setup_state['verification_page_id'] ) );
 	if ( $certloom_setup_page_url ) {
 		$certloom_setup_test_url = ! empty( $setup_summary['sample_cert_number'] )
-			? add_query_arg( 'certloom_number', (string) $setup_summary['sample_cert_number'], $certloom_setup_page_url )
+			? Ecapla_CertVerify_Public_Router::verification_url( (string) $setup_summary['sample_cert_number'] )
 			: $certloom_setup_page_url;
 	}
 }

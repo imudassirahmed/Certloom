@@ -49,6 +49,7 @@ function certloom_it_assert( $condition, $message ) {
 
 global $wpdb;
 $cleanup = array();
+$privacy_settings_before = get_option( Ecapla_CertVerify_Settings::OPTION_KEY, null );
 $legacy_table = $wpdb->prefix . ECAPLA_CERTVERIFY_TABLE;
 $legacy_exists = $legacy_table === $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $legacy_table ) );
 $legacy_before = $legacy_exists ? (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i', $legacy_table ) ) : null;
@@ -82,7 +83,7 @@ try {
 				'display_number' => 'IT-' . strtoupper( $suffix ) . '-001',
 				'valid_from' => gmdate( 'Y-m-d', time() - DAY_IN_SECONDS ),
 				'expires_at' => gmdate( 'Y-m-d', time() + 30 * DAY_IN_SECONDS ),
-				'snapshot' => array( 'integration_test' => true, 'suffix' => $suffix ),
+				'snapshot' => array( 'integration_test' => true, 'suffix' => $suffix, 'recipient_name' => 'Integration Recipient ' . $suffix, 'recipient_email' => 'integration-' . $suffix . '@example.test' ),
 			)
 		),
 		'Version create failed'
@@ -118,6 +119,30 @@ try {
 	$stale = $correction->correct( $series_id, $program_id, null, array( 'expected_updated_at' => $before_correction['updated_at'] ) );
 	certloom_it_assert( is_wp_error( $stale ) && 'certloom_relationship_review_stale' === $stale->get_error_code(), 'Stale relationship review did not fail closed.' );
 
+	$privacy_email = 'integration-' . $suffix . '@example.test';
+	$export = Ecapla_CertVerify_Privacy::export_personal_data( $privacy_email, 1 );
+	certloom_it_assert( is_array( $export ) && ! empty( $export['data'] ), 'WordPress privacy exporter returned no normalized recipient/credential data.' );
+	$privacy_groups = array_values( array_unique( array_map( function( $item ){ return (string) ( $item['group_id'] ?? '' ); }, $export['data'] ) ) );
+	certloom_it_assert( in_array( 'certloom-recipients', $privacy_groups, true ), 'Privacy exporter omitted the Recipient profile.' );
+	certloom_it_assert( in_array( 'certloom-credential-versions', $privacy_groups, true ), 'Privacy exporter omitted immutable Version evidence.' );
+
+	$privacy_settings = Ecapla_CertVerify_Settings::get_all();
+	$privacy_settings['privacy_erasure_policy'] = 'anonymize_mutable_recipient';
+	certloom_it_assert( Ecapla_CertVerify_Settings::save( $privacy_settings ), 'Could not enable the integration-test privacy anonymization policy.' );
+	$erase = Ecapla_CertVerify_Privacy::erase_personal_data( $privacy_email, 1 );
+	certloom_it_assert( ! empty( $erase['items_removed'] ), 'WordPress privacy eraser did not anonymize the mutable Recipient profile.' );
+	certloom_it_assert( ! empty( $erase['items_retained'] ), 'WordPress privacy eraser did not report retained immutable credential evidence.' );
+	$recipient_after_privacy = certloom_it_ok( $recipient_repo->find( $recipient_id ), 'Recipient read after privacy anonymization failed' );
+	certloom_it_assert( null === $recipient_after_privacy['email'] && 0 === strpos( $recipient_after_privacy['display_name'], 'Recipient-ANON-' ), 'Mutable Recipient identity was not anonymized correctly.' );
+	$current_after_privacy = certloom_it_ok( $credential_repo->find_series( $series_id ), 'Series read after privacy anonymization failed' );
+	$version_after_privacy = certloom_it_ok( $credential_repo->find_version( $current_after_privacy['current_version_id'] ), 'Current Version read after privacy anonymization failed' );
+	certloom_it_assert( $privacy_email === (string) ( $version_after_privacy['snapshot']['recipient_email'] ?? '' ), 'Privacy anonymization rewrote immutable Version evidence.' );
+	$export_after_privacy = Ecapla_CertVerify_Privacy::export_personal_data( $privacy_email, 1 );
+	certloom_it_assert( is_array( $export_after_privacy ) && ! empty( $export_after_privacy['data'] ), 'Privacy identity history could not re-associate the requester after mutable email anonymization.' );
+	$privacy_groups_after = array_values( array_unique( array_map( function( $item ){ return (string) ( $item['group_id'] ?? '' ); }, $export_after_privacy['data'] ) ) );
+	certloom_it_assert( in_array( 'certloom-credential-versions', $privacy_groups_after, true ), 'Post-erasure privacy export lost retained immutable Version evidence.' );
+	certloom_it_assert( ! empty( $recipient_after_privacy['privacy_identity_hashes'] ), 'Privacy anonymization did not retain a private one-way identity digest for future data-subject access.' );
+
 	certloom_it_ok( $lifecycle->revoke( $series_id, array( 'reason_code' => 'integration_test' ) ), 'Revoke command failed' );
 	$result = certloom_it_ok( $verify->verify_public_id( $series['public_id'] ), 'Revoked verification failed' );
 	certloom_it_assert( 'revoked' === $result->status()->code(), 'Revoked credential did not verify revoked.' );
@@ -132,12 +157,18 @@ try {
 	echo "PASS  recipient/program/issuer/Series/Version persistence\n";
 	echo "PASS  transaction-backed issue/suspend/reinstate/revoke events\n";
 	echo "PASS  immutable Program/Batch relationship correction and stale-review rejection\n";
+	echo "PASS  WordPress privacy export + mutable Recipient anonymization with immutable evidence retained\n";
 	echo "PASS  direct public-ID verification and read-time Status Service\n";
 	echo "PASS  legacy registry remained untouched\n";
 } catch ( Throwable $error ) {
 	fwrite( STDERR, 'FAIL  ' . $error->getMessage() . "\n" );
 	$exit_code = 1;
 } finally {
+	if ( null === $privacy_settings_before ) {
+		delete_option( Ecapla_CertVerify_Settings::OPTION_KEY );
+	} else {
+		update_option( Ecapla_CertVerify_Settings::OPTION_KEY, $privacy_settings_before );
+	}
 	/* Delete only rows created by this integration test, in dependency order. */
 	if ( ! empty( $cleanup['series'] ) ) {
 		$wpdb->delete( SchemaManager::table( 'credential_events' ), array( 'series_id' => (int) $cleanup['series'] ), array( '%d' ) );

@@ -113,6 +113,7 @@ function ecapla_certverify_uninstall_site() {
 	delete_option( 'certverify_restore_journal' );
 	delete_option( 'certverify_restore_builds' );
 	delete_option( 'certverify_restore_maintenance_lock' );
+	delete_option( 'certverify_public_rewrite_version' );
 	if ( ! $preserve_domain_lineage ) {
 		delete_option( 'certverify_data_generation' );
 	}

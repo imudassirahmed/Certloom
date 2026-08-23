@@ -1,3 +1,22 @@
+1.6.7 — Phase 2 verification/frontend foundation and shared public presentation
+----------------------------------------------------------------------------------
+- Keep the current legacy certificate registry/public verifier authoritative; do not enable normalized-domain write/admin/data-tool flags.
+- Add clean `/certloom/verify/{token}/` and `/certloom/credential/{token}/` routes with query fallback, no-store/noindex/referrer protections, and reversible transport encoding for complex certificate numbers without creating a second credential identity.
+- Centralize guest-safe legacy presentation for effective status, issuer context, verification timestamp, visible fields, and non-mutating copy/profile/print actions.
+- Route server/no-JS verification and REST/AJAX through the shared presentation while preserving the historical REST `found + fields` response and adding only an optional `presentation` envelope.
+- Add Credential Profile parity through shortcode, native Gutenberg block, and one semantic Elementor Credential Profile widget; preserve all six existing verification widget identities/settings.
+- Fix the historical server-rendered verification-unavailable fatal path and isolate new result-action styles from the established `.cvx-action` search-container namespace.
+- Add the Phase 2 `SURF-01` public-surface inventory as an explicit release-maintained security/privacy ownership record.
+
+1.6.6 — Phase 1 privacy/data-lifecycle implementation and acceptance hardening
+--------------------------------------------------------------------------------
+- Adds WordPress personal-data exporter/eraser registration for legacy current-authority certificate evidence and normalized domain data when available.
+- Adds opt-in transaction-backed Recipient profile anonymization that never rewrites immutable credential Versions and appends audit evidence per linked Series.
+- Adds portable private SHA-256 email identity history plus explicit privacy_anonymized_at lifecycle state so later requests can re-associate retained evidence after erasure or site restore; identity history is bounded to 64 entries and never silently truncated.
+- Advances normalized schema to v14 and complete-domain backup format to v3, preserving valid v1/v2 compatibility by explicitly normalizing missing privacy fields.
+- Hardens privacy storage-probe failures, legacy custom-field corruption, issuer settings corruption, WordPress paging, repeat-erasure idempotency, and strict settings persistence.
+- Expands the real WordPress/MySQL premium gate for the full current normalized table/index set and privacy identity column while keeping all future-domain authority flags disabled.
+
 1.6.5 — Phase 1 continuation: immutable relationship correction, reviewed bulk orchestration, privacy contract
 ----------------------------------------------------------------------------------------------------------------------
 - Add a transaction-backed Program/Batch correction command that locks the Series, re-proves the target, creates a successor immutable Version, preserves the human certificate number, atomically updates the continuing Series/current pointer, and appends a dedicated audit Event.

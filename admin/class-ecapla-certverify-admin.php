@@ -617,6 +617,7 @@ class Ecapla_CertVerify_Admin {
 			'credit_size'              => $credit_size,
 			'credit_align'             => $credit_align,
 			'delete_data_on_uninstall' => ! empty( $_POST['delete_data_on_uninstall'] ),
+			'privacy_erasure_policy'   => isset( $_POST['privacy_erasure_policy'] ) && 'anonymize_mutable_recipient' === sanitize_key( wp_unslash( $_POST['privacy_erasure_policy'] ) ) ? 'anonymize_mutable_recipient' : 'retain',
 			'status_desc'              => array(),
 		);
 		if ( isset( $_POST['status_desc'] ) && is_array( $_POST['status_desc'] ) ) {

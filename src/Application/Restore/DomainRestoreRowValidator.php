@@ -64,8 +64,13 @@ final class DomainRestoreRowValidator {
 				if ( null !== $row['email'] && '' !== (string) $row['email'] && ( $this->length( (string) $row['email'] ) > 320 || false === filter_var( (string) $row['email'], FILTER_VALIDATE_EMAIL ) ) ) {
 					return new \WP_Error( 'certloom_domain_restore_recipient_email_invalid', __( 'A recipient in the backup contains an invalid email address.', 'certloom' ) );
 				}
-				$json  = array( 'custom_fields' );
-				$dates = array( 'created_at' => 'datetime', 'updated_at' => 'datetime' );
+				$json  = array( 'custom_fields', 'privacy_identity_hashes' );
+				if ( null !== $row['privacy_identity_hashes'] && '' !== (string) $row['privacy_identity_hashes'] ) {
+					$privacy_hashes = json_decode( (string) $row['privacy_identity_hashes'], true );
+					if ( ! is_array( $privacy_hashes ) || count( $privacy_hashes ) > 64 || count( array_unique( array_map( 'strtolower', $privacy_hashes ) ) ) !== count( $privacy_hashes ) ) { return $this->invalid( 'recipient' ); }
+					foreach ( $privacy_hashes as $privacy_hash ) { if ( ! is_string( $privacy_hash ) || ! preg_match( '/^[a-f0-9]{64}$/', strtolower( $privacy_hash ) ) ) { return $this->invalid( 'recipient' ); } }
+				}
+				$dates = array( 'privacy_anonymized_at' => 'datetime', 'created_at' => 'datetime', 'updated_at' => 'datetime' );
 				break;
 			case 'signers':
 				$signer_name = trim( (string) $row['display_name'] );

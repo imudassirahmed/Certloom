@@ -121,6 +121,8 @@ class Ecapla_CertVerify_Render {
 			data-error-text="<?php echo esc_attr__( 'Something went wrong, please try again.', 'certloom' ); ?>"
 			data-loading-text="<?php echo esc_attr__( 'Checking…', 'certloom' ); ?>"
 			data-required-text="<?php echo esc_attr__( 'Enter a certificate number before searching.', 'certloom' ); ?>"
+			data-copy-success-text="<?php echo esc_attr__( 'Verification link copied.', 'certloom' ); ?>"
+			data-copy-error-text="<?php echo esc_attr__( 'Copy the verification link from your browser.', 'certloom' ); ?>"
 		>
 			<div class="cv-search-card">
 				<?php echo self::header_content( $atts, 'cv' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
@@ -206,6 +208,8 @@ class Ecapla_CertVerify_Render {
 			data-error-text="<?php echo esc_attr__( 'The verification service could not complete the request. Please try again.', 'certloom' ); ?>"
 			data-loading-text="<?php echo esc_attr__( 'Checking certificate…', 'certloom' ); ?>"
 			data-required-text="<?php echo esc_attr__( 'Enter a certificate number before searching.', 'certloom' ); ?>"
+			data-copy-success-text="<?php echo esc_attr__( 'Verification link copied.', 'certloom' ); ?>"
+			data-copy-error-text="<?php echo esc_attr__( 'Copy the verification link from your browser.', 'certloom' ); ?>"
 		>
 			<section class="cvx-shell" aria-label="<?php esc_attr_e( 'Certificate verification search', 'certloom' ); ?>">
 				<div class="cvx-copy">
@@ -274,36 +278,15 @@ class Ecapla_CertVerify_Render {
 		if ( '' === $number ) {
 			return '';
 		}
-		$cache_key = Ecapla_CertVerify_Database::normalize_certificate_number( $number );
-		if ( function_exists( 'ecapla_certverify_verification_is_available' ) && ! ecapla_certverify_verification_is_available() ) {
-			return self::message_html( $prefix, $error, true );
+		$presentation = Ecapla_CertVerify_Public_Presentation::verify( $number, true );
+		if ( is_wp_error( $presentation ) ) {
+			$message = 'ecapla_certverify_rate_limited' === $presentation->get_error_code() ? $presentation->get_error_message() : $error;
+			return self::message_html( $prefix, $message );
 		}
-		if ( ! array_key_exists( $cache_key, self::$direct_result_cache ) ) {
-			self::$direct_result_cache[ $cache_key ] = Ecapla_CertVerify_REST::is_rate_limited()
-				? new WP_Error( 'ecapla_certverify_rate_limited', __( 'Too many verification requests. Please wait a minute and try again.', 'certloom' ) )
-				: Ecapla_CertVerify_Database::get_by_cert_number( $number );
+		if ( empty( $presentation['found'] ) ) {
+			return self::message_html( $prefix, $not_found );
 		}
-		$certificate = self::$direct_result_cache[ $cache_key ];
-		if ( is_wp_error( $certificate ) ) {
-			return '<div class="' . esc_attr( $prefix ) . '-result-notfound"><p>' . esc_html( 'ecapla_certverify_rate_limited' === $certificate->get_error_code() ? $certificate->get_error_message() : $error ) . '</p></div>';
-		}
-		if ( ! $certificate ) {
-			return '<div class="' . esc_attr( $prefix ) . '-result-notfound"><p>' . esc_html( $not_found ) . '</p></div>';
-		}
-
-		$rows = '';
-		foreach ( self::fields_for_output( $certificate ) as $field ) {
-			$value = '' === (string) $field['value'] ? '—' : (string) $field['value'];
-			if ( ! empty( $field['is_status'] ) ) {
-				$status     = sanitize_key( (string) $field['status_key'] );
-				$value_html = '<span class="' . esc_attr( $prefix . '-badge ' . $prefix . '-badge-' . $status ) . '">' . esc_html( $value ) . '</span>';
-			} else {
-				$value_html = esc_html( $value );
-			}
-			$rows .= '<div class="' . esc_attr( $prefix ) . '-result-row"><dt>' . esc_html( $field['label'] ) . '</dt><dd>' . $value_html . '</dd></div>';
-		}
-		$list = '' !== $rows ? '<dl class="' . esc_attr( $prefix ) . '-result-list">' . $rows . '</dl>' : '';
-		return '<div class="' . esc_attr( $prefix ) . '-result-card"><p class="' . esc_attr( $prefix ) . '-result-success">' . esc_html__( 'Certificate found.', 'certloom' ) . '</p>' . $list . '</div>';
+		return self::result_card_html( $presentation, $prefix );
 	}
 
 	/**
@@ -313,35 +296,99 @@ class Ecapla_CertVerify_Render {
 	 * @return array
 	 */
 	public static function fields_for_output( $certificate ) {
-		$output = array();
-		foreach ( Ecapla_CertVerify_Fields::get_visible_fields() as $field ) {
-			$raw = ! empty( $field['column'] )
-				? ( isset( $certificate[ $field['key'] ] ) ? $certificate[ $field['key'] ] : '' )
-				: ( isset( $certificate['custom_fields'][ $field['key'] ] ) ? $certificate['custom_fields'][ $field['key'] ] : '' );
+		return is_array( $certificate ) ? Ecapla_CertVerify_Public_Presentation::fields_for_output( $certificate ) : array();
+	}
 
-			if ( 'status' === $field['type'] ) {
-				$effective = Ecapla_CertVerify_Database::effective_status( $certificate );
-				$statuses  = Ecapla_CertVerify_Fields::get_statuses();
-				$output[]  = array(
-					'label'      => $field['label'],
-					'value'      => isset( $statuses[ $effective ] ) ? $statuses[ $effective ]['label'] : ucfirst( $effective ),
-					'is_status'  => true,
-					'status_key' => $effective,
-				);
-				continue;
-			}
-
-			if ( 'date' === $field['type'] && $raw ) {
-				$raw = Ecapla_CertVerify_Validator::format_date( $raw );
-			}
-
-			$output[] = array(
-				'label'     => $field['label'],
-				'value'     => (string) $raw,
-				'is_status' => false,
-			);
+	/**
+	 * Renders a known legacy certificate as a profile without a search form.
+	 *
+	 * @param string $number Certificate number.
+	 * @param array  $atts   Optional presentation attributes.
+	 * @return string
+	 */
+	public static function credential_profile( $number, $atts = array() ) {
+		Ecapla_CertVerify_Shortcode::enqueue_assets();
+		$atts = wp_parse_args(
+			is_array( $atts ) ? $atts : array(),
+			array(
+				'heading'       => __( 'Credential profile', 'certloom' ),
+				'notfound_text' => __( 'This credential could not be found or is not available.', 'certloom' ),
+			)
+		);
+		$heading = self::limit_text( sanitize_text_field( (string) $atts['heading'] ), 200 );
+		$notfound = self::limit_text( sanitize_textarea_field( (string) $atts['notfound_text'] ), 500 );
+		$presentation = Ecapla_CertVerify_Public_Presentation::verify( $number, true );
+		if ( is_wp_error( $presentation ) ) {
+			$message = 'ecapla_certverify_rate_limited' === $presentation->get_error_code()
+				? $presentation->get_error_message()
+				: __( 'Credential verification is temporarily unavailable. Please try again later.', 'certloom' );
+			$content = self::message_html( 'cvp', $message );
+		} elseif ( empty( $presentation['found'] ) ) {
+			$content = self::message_html( 'cvp', $notfound );
+		} else {
+			$content = self::result_card_html( $presentation, 'cvp' );
 		}
-		return $output;
+		return '<section class="certloom-credential-profile cvp-widget" data-copy-success-text="' . esc_attr__( 'Verification link copied.', 'certloom' ) . '" data-copy-error-text="' . esc_attr__( 'Copy the verification link from your browser.', 'certloom' ) . '"><header class="cvp-header"><p class="cvp-eyebrow">' . esc_html__( 'Verified credential', 'certloom' ) . '</p><h1 class="cvp-heading">' . esc_html( $heading ) . '</h1></header><div class="cvp-result" role="status" aria-live="polite">' . $content . '</div></section>';
+	}
+
+	/** @return string */
+	private static function result_card_html( $presentation, $prefix ) {
+		$status = isset( $presentation['status'] ) && is_array( $presentation['status'] ) ? $presentation['status'] : array();
+		$status_key = isset( $status['key'] ) ? sanitize_key( (string) $status['key'] ) : 'unknown';
+		$status_label = isset( $status['label'] ) ? (string) $status['label'] : __( 'Certificate found', 'certloom' );
+		$status_desc = isset( $status['description'] ) ? (string) $status['description'] : '';
+		$rows = '';
+		foreach ( (array) ( $presentation['fields'] ?? array() ) as $field ) {
+			$value = '' === (string) ( $field['value'] ?? '' ) ? '—' : (string) $field['value'];
+			if ( ! empty( $field['is_status'] ) ) {
+				$field_status = sanitize_key( (string) ( $field['status_key'] ?? $status_key ) );
+				$value_html = '<span class="' . esc_attr( $prefix . '-badge ' . $prefix . '-badge-' . $field_status ) . '">' . esc_html( $value ) . '</span>';
+			} else {
+				$value_html = esc_html( $value );
+			}
+			$rows .= '<div class="' . esc_attr( $prefix ) . '-result-row"><dt>' . esc_html( (string) ( $field['label'] ?? '' ) ) . '</dt><dd>' . $value_html . '</dd></div>';
+		}
+		$list = '' !== $rows ? '<dl class="' . esc_attr( $prefix ) . '-result-list">' . $rows . '</dl>' : '';
+		$issuer = ! empty( $presentation['issuer'] ) ? '<p class="' . esc_attr( $prefix ) . '-result-issuer"><span>' . esc_html__( 'Issued by', 'certloom' ) . '</span> ' . esc_html( (string) $presentation['issuer'] ) . '</p>' : '';
+		$verified = ! empty( $presentation['verified_at'] ) ? '<p class="' . esc_attr( $prefix ) . '-verified-at">' . esc_html__( 'Verified', 'certloom' ) . ' <time datetime="' . esc_attr( (string) $presentation['verified_at'] ) . '">' . esc_html( self::format_verified_at( $presentation['verified_at'] ) ) . '</time></p>' : '';
+		$desc = '' !== $status_desc ? '<p class="' . esc_attr( $prefix ) . '-status-description">' . esc_html( $status_desc ) . '</p>' : '';
+		$actions = self::actions_html( (array) ( $presentation['actions'] ?? array() ), $prefix );
+		return '<div class="' . esc_attr( $prefix ) . '-result-card ' . esc_attr( $prefix . '-status-' . $status_key ) . '"><div class="' . esc_attr( $prefix ) . '-result-summary"><span class="' . esc_attr( $prefix . '-status-mark' ) . '" aria-hidden="true">' . esc_html( self::status_icon( $status_key ) ) . '</span><div><p class="' . esc_attr( $prefix ) . '-result-success">' . esc_html( $status_label ) . '</p>' . $desc . $issuer . '</div></div>' . $list . $verified . $actions . '</div>';
+	}
+
+	/** @return string */
+	private static function actions_html( $actions, $prefix ) {
+		$html = '';
+		foreach ( $actions as $action ) {
+			if ( ! is_array( $action ) ) { continue; }
+			$type = sanitize_key( (string) ( $action['type'] ?? '' ) );
+			$label = sanitize_text_field( (string) ( $action['label'] ?? '' ) );
+			$url = isset( $action['url'] ) ? esc_url( (string) $action['url'] ) : '';
+			if ( '' === $label || ! in_array( $type, array( 'copy', 'profile', 'print' ), true ) ) { continue; }
+			if ( 'copy' === $type && '' !== $url ) {
+				$html .= '<button type="button" class="certloom-result-action ' . esc_attr( $prefix ) . '-result-action certloom-copy-link" data-copy-url="' . esc_attr( $url ) . '">' . esc_html( $label ) . '</button>';
+			} elseif ( 'print' === $type ) {
+				$html .= '<button type="button" class="certloom-result-action ' . esc_attr( $prefix ) . '-result-action certloom-print">' . esc_html( $label ) . '</button>';
+			} elseif ( '' !== $url ) {
+				$html .= '<a class="certloom-result-action ' . esc_attr( $prefix ) . '-result-action" href="' . $url . '">' . esc_html( $label ) . '</a>';
+			}
+		}
+		return '' !== $html ? '<div class="' . esc_attr( $prefix ) . '-result-actions">' . $html . '<span class="certloom-action-feedback" aria-live="polite"></span></div>' : '';
+	}
+
+	/** @return string */
+	private static function message_html( $prefix, $message ) {
+		return '<div class="' . esc_attr( $prefix ) . '-result-notfound"><p>' . esc_html( (string) $message ) . '</p></div>';
+	}
+
+	/** @return string */
+	private static function format_verified_at( $value ) {
+		$timestamp = strtotime( (string) $value );
+		if ( false === $timestamp ) { return (string) $value; }
+		if ( function_exists( 'wp_date' ) ) {
+			return wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $timestamp );
+		}
+		return gmdate( 'Y-m-d H:i', $timestamp );
 	}
 
 	/**
@@ -478,6 +525,9 @@ class Ecapla_CertVerify_Render {
 			}
 		}
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		if ( class_exists( 'Ecapla_CertVerify_Public_Router' ) ) {
+			return self::limit_text( Ecapla_CertVerify_Public_Router::requested_number(), 100 );
+		}
 		return '';
 	}
 

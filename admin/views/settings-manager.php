@@ -71,6 +71,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<h2><?php esc_html_e( 'Data retention', 'certloom' ); ?></h2>
 		<label><input type="checkbox" name="delete_data_on_uninstall" value="1" <?php checked( Ecapla_CertVerify_Settings::get( 'delete_data_on_uninstall', false ) ); ?> /> <?php esc_html_e( 'Permanently delete certificates, settings, and field definitions when the plugin is uninstalled', 'certloom' ); ?></label>
 		<p class="description ecapla-certverify-warning-text"><?php esc_html_e( 'Leave this disabled to preserve certificate data and settings. Scheduled tasks, temporary data, and plugin capabilities are cleaned up during uninstall in either mode.', 'certloom' ); ?></p>
+		<p><label for="privacy_erasure_policy"><strong><?php esc_html_e( 'WordPress personal-data erasure policy', 'certloom' ); ?></strong></label><br />
+		<select name="privacy_erasure_policy" id="privacy_erasure_policy">
+			<option value="retain" <?php selected( Ecapla_CertVerify_Settings::get( 'privacy_erasure_policy', 'retain' ), 'retain' ); ?>><?php esc_html_e( 'Retain and require administrator review (safest default)', 'certloom' ); ?></option>
+			<option value="anonymize_mutable_recipient" <?php selected( Ecapla_CertVerify_Settings::get( 'privacy_erasure_policy', 'retain' ), 'anonymize_mutable_recipient' ); ?>><?php esc_html_e( 'Anonymize mutable Recipient profiles; retain immutable credential history', 'certloom' ); ?></option>
+		</select></p>
+		<p class="description"><?php esc_html_e( 'This setting affects WordPress Tools → Erase Personal Data. It never rewrites issued certificate Versions or audit Events. Legacy certificate records and issuer/signer identities are retained for explicit administrator review.', 'certloom' ); ?></p>
 
 		<?php submit_button( __( 'Save settings', 'certloom' ), 'primary', 'certverify_save_settings' ); ?>
 	</form>

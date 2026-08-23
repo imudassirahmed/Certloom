@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.5
+Stable tag: 1.6.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.5: Certloom continues Original Phase 1 with transaction-backed immutable Program/Batch relationship corrections, reviewed bulk correction orchestration, an expanded real-DB acceptance harness, and a formal personal-data retention/erasure contract. The legacy registry remains authoritative and all future-domain write/admin/data-tool flags remain disabled until real WordPress/MySQL acceptance passes.
+> Development note for 1.6.7: Certloom begins the planned Phase 2 verification/frontend redesign on the currently authoritative legacy verifier. It adds clean verification and credential-profile routes, one shared public presentation model, copy/print/profile actions, and Credential Profile parity across shortcode, Gutenberg, and Elementor while preserving all six existing verifier widgets and the established REST `found + fields` contract. The normalized domain remains gated and all future-domain write/admin/data-tool flags remain disabled until real WordPress/MySQL acceptance passes.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -26,8 +26,9 @@ Certloom provides a practical certificate registry without requiring a separate 
 
 * **Native WordPress block** with six designs.
 * **Shortcode** using `[certloom]` in the Classic Editor, a Shortcode block, templates, or other page builders.
-* **Direct links** using `?certloom_number=YOUR-NUMBER` for QR-code destinations. These requests receive noindex and private-cache headers, although the number may still appear in browser history, infrastructure logs, or site analytics.
-* **Optional Elementor widgets** when Elementor 3.10 or later is active: Professional, Meridian, Halo, Axis, Nova, and Forge.
+* **Clean verification links** using `/certloom/verify/{token}/` when pretty permalinks are enabled, with a query-string fallback on plain permalinks. Existing `?certloom_number=YOUR-NUMBER` links remain compatible. Direct verification requests receive noindex and private-cache protections, although the identifier may still appear in browser history, infrastructure logs, or site analytics.
+* **Credential Profile** using `/certloom/credential/{token}/`, `[certloom_credential number="..."]`, the native Credential Profile block, or the semantic Elementor Credential Profile widget.
+* **Optional Elementor verification widgets** when Elementor 3.10 or later is active: Professional, Meridian, Halo, Axis, Nova, and Forge. Their identities and saved settings remain preserved.
 
 Each Elementor widget has isolated content and style controls. Structural responsiveness is automatic and container-aware. Certloom is independent and is not affiliated with or endorsed by Elementor.
 
@@ -66,6 +67,9 @@ Each Elementor widget has isolated content and style controls. Structural respon
 * Identical same-page lookups share one in-flight request and stale responses cannot overwrite newer searches.
 * No analytics, telemetry, remote scripts, remote fonts, or external certificate processing.
 * Suggested privacy-policy wording is added to WordPress's Privacy Policy Guide.
+* WordPress Privacy Tools can export Certloom certificate/recipient data associated with a requested email without exposing internal administrator event fields.
+* Personal-data erasure is conservative by default: issued certificate evidence is retained and reported; sites may opt into transaction-backed anonymization of mutable normalized Recipient profiles without rewriting immutable issued Versions.
+* Private one-way identity history allows later access requests to find retained evidence after mutable email anonymization; it is never part of public verification output.
 * Certificate data and settings are retained on uninstall by default; administrators may opt into complete removal.
 
 == Installation ==
@@ -121,6 +125,23 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.7 =
+* Began the Phase 2 verification/frontend redesign without changing data authority: the legacy registry remains the authoritative public verifier until normalized-domain acceptance passes.
+* Added clean privacy-safe verification and credential-profile routes with readable safe identifiers, URL-safe transport tokens for complex certificate numbers, plain-permalink fallback, no-store/noindex/referrer protections, and no new credential identity.
+* Added a shared legacy public presentation model for exact lookup, effective status, issuer context, verification timestamp, visible fields, and non-mutating actions; server/no-JS, REST/AJAX, shortcode, block, Elementor, and clean routes now consume the same presentation decisions.
+* Added Credential Profile parity through `[certloom_credential]`, a native `certloom/credential` block, and one semantic Elementor `certloom-credential` widget while preserving all six existing verification widgets.
+* Preserved the established REST `found + fields` response and added a backward-compatible `presentation` envelope for richer clients.
+* Fixed the no-JavaScript verification-unavailable path so it fails gracefully instead of calling a missing helper, and isolated the new result-action CSS namespace from the existing `.cvx-action` verifier container.
+* Added a maintained public-surface inventory covering identifiers, authority, caching/robots, privacy, rate-limit ownership, and compatibility.
+
+= 1.6.6 =
+* Added WordPress Privacy API exporter/eraser integration across current-authority legacy certificate evidence and normalized Recipient/credential data when normalized storage exists.
+* Added opt-in transaction-backed mutable Recipient anonymization that preserves immutable Versions/Events, appends audit evidence, and is idempotent across restored sites through an explicit private lifecycle marker.
+* Added private portable one-way email identity history so later data-subject export requests can still find retained credential evidence after mutable email removal; history is pseudonymous, never public, unique, and hard-bounded to 64 entries without silent trimming.
+* Advanced normalized schema to v14 and complete-domain backup format to v3 while preserving valid v1 and v2 restore compatibility, including in-memory synthesis of new privacy fields.
+* Hardened privacy failure semantics for schema probes, corrupt legacy custom fields, corrupt issuer settings, pagination, settings persistence, and immutable-evidence retention reporting.
+* Expanded the disposable WordPress/MySQL premium gate to include the complete Batch/Signer table/index set and privacy identity storage; future-domain authority remains disabled until that external gate actually passes.
 
 = 1.6.5 =
 * Added transaction-backed Program/Batch relationship correction that locks the Credential Series, re-proves relationships, creates a successor immutable Version, preserves the human certificate number, advances the current Version pointer, and appends a dedicated audit Event atomically.

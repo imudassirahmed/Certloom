@@ -20,6 +20,7 @@ class Ecapla_CertVerify_Settings {
 			'credit_size'             => '',
 			'credit_align'            => 'center',
 			'delete_data_on_uninstall' => false,
+			'privacy_erasure_policy'   => 'retain',
 		);
 	}
 
@@ -58,6 +59,7 @@ class Ecapla_CertVerify_Settings {
 		$clean['credit_size']   = is_numeric( $data['credit_size'] ) ? min( 24, max( 8, absint( $data['credit_size'] ) ) ) : '';
 		$clean['credit_align']  = in_array( $data['credit_align'], array( 'left', 'center', 'right' ), true ) ? $data['credit_align'] : 'center';
 		$clean['delete_data_on_uninstall'] = ! empty( $data['delete_data_on_uninstall'] );
+		$clean['privacy_erasure_policy'] = isset( $data['privacy_erasure_policy'] ) && 'anonymize_mutable_recipient' === sanitize_key( (string) $data['privacy_erasure_policy'] ) ? 'anonymize_mutable_recipient' : 'retain';
 
 		$clean['status_desc'] = array();
 		if ( isset( $data['status_desc'] ) && is_array( $data['status_desc'] ) ) {

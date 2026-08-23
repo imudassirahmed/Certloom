@@ -37,7 +37,7 @@ try {
 	cl_pg_ok( SchemaManager::activate(), 'Schema activation failed' );
 	global $wpdb;
 
-	$tables=array('recipients','issuers','programs','credential_series','credential_versions','credential_numbers','credential_events','jobs','import_rows','restore_map');
+	$tables=array('recipients','issuers','programs','signers','batches','batch_recipients','signer_assignments','credential_series','credential_versions','credential_numbers','credential_events','jobs','import_rows','restore_map');
 	foreach($tables as $entity){
 		$table=SchemaManager::table($entity);
 		$status=$wpdb->get_row($wpdb->prepare('SHOW TABLE STATUS LIKE %s',$wpdb->esc_like($table)),ARRAY_A);
@@ -47,12 +47,18 @@ try {
 	cl_pg_index(SchemaManager::table('recipients'),'wp_user_id',true);
 	cl_pg_index(SchemaManager::table('issuers'),'slug',true);
 	cl_pg_index(SchemaManager::table('programs'),'code',true);
+	cl_pg_index(SchemaManager::table('signers'),'slug',true);
+	cl_pg_index(SchemaManager::table('batches'),'code',true);
+	cl_pg_index(SchemaManager::table('batch_recipients'),'batch_recipient',true);
+	cl_pg_index(SchemaManager::table('signer_assignments'),'signer_scope',true);
 	cl_pg_index(SchemaManager::table('credential_series'),'public_id',true);
 	cl_pg_index(SchemaManager::table('credential_versions'),'series_version',true);
 	cl_pg_index(SchemaManager::table('credential_versions'),'source_idempotency',true);
 	cl_pg_index(SchemaManager::table('credential_versions'),'display_number',false);
 	cl_pg_index(SchemaManager::table('credential_numbers'),'display_number',true);
 	cl_pg_index(SchemaManager::table('jobs'),'job_key',true);
+	$privacy_column=$wpdb->get_row($wpdb->prepare('SHOW COLUMNS FROM %i LIKE %s',SchemaManager::table('recipients'),'privacy_identity_hashes'),ARRAY_A);
+	cl_pg_assert(is_array($privacy_column) && 'YES'===($privacy_column['Null']??''),'Recipient privacy identity digest column is missing or not nullable.');
 
 	$transaction=new Transaction();
 	$result=$transaction->run(function()use($wpdb,$rollback_slug){
@@ -102,6 +108,7 @@ try {
 	cl_pg_assert(0===$idem2_reserved,'Failed idempotent Version insert stranded its new certificate-number reservation.');
 
 	echo "PASS  all next-generation tables use InnoDB\n";
+	echo "PASS  recipient privacy identity storage is present and private to normalized storage\n";
 	echo "PASS  critical unique/non-unique indexes match the domain contract\n";
 	echo "PASS  Transaction wrapper performs a real database rollback\n";
 	echo "PASS  certificate-number ownership and Version lineage constraints\n";

@@ -70,7 +70,7 @@ function rs_rows() {
 	return array(
 		'issuers' => array( array( 'id'=>'1','name'=>'Certloom Test','slug'=>'certloom-test','logo_attachment_id'=>null,'seal_attachment_id'=>null,'settings_json'=>'{}','created_at'=>'2026-08-22 00:00:00','updated_at'=>'2026-08-22 00:00:00' ) ),
 		'programs' => array( array( 'id'=>'1','issuer_id'=>'1','code'=>'COURSE-1','title'=>'Course 1','description'=>null,'validity_days'=>null,'active'=>'1','metadata_json'=>'{}','created_at'=>'2026-08-22 00:00:00','updated_at'=>'2026-08-22 00:00:00' ) ),
-		'recipients' => array( array( 'id'=>'1','display_name'=>'Learner','first_name'=>null,'middle_name'=>null,'last_name'=>null,'email'=>'learner@example.test','wp_user_id'=>null,'external_id'=>null,'custom_fields'=>'{}','created_at'=>'2026-08-22 00:00:00','updated_at'=>'2026-08-22 00:00:00' ) ),
+		'recipients' => array( array( 'id'=>'1','display_name'=>'Learner','first_name'=>null,'middle_name'=>null,'last_name'=>null,'email'=>'learner@example.test','privacy_identity_hashes'=>'[]','privacy_anonymized_at'=>null,'wp_user_id'=>null,'external_id'=>null,'custom_fields'=>'{}','created_at'=>'2026-08-22 00:00:00','updated_at'=>'2026-08-22 00:00:00' ) ),
 		'signers' => array(),
 		'batches' => array(),
 		'batch_recipients' => array(),
@@ -97,6 +97,9 @@ function rs_make_backup( $job_key, $trailing = '', $version = DomainBackupFormat
 	$source_entities = DomainBackupFormat::entity_types_for_version( $version );
 	if ( DomainBackupFormat::LEGACY_VERSION === absint( $version ) ) {
 		foreach ( $rows['credential_series'] as &$legacy_series ) { unset( $legacy_series['batch_id'] ); } unset( $legacy_series );
+	}
+	if ( absint( $version ) < DomainBackupFormat::VERSION ) {
+		foreach ( $rows['recipients'] as &$old_recipient ) { unset( $old_recipient['privacy_identity_hashes'], $old_recipient['privacy_anonymized_at'] ); } unset( $old_recipient );
 	}
 	$entities = array();
 	foreach ( $source_entities as $entity ) {
@@ -210,4 +213,17 @@ rs_same( 0, $legacy['counts']['signers'], 'legacy signers empty' );
 rs_same( 0, $legacy['counts']['batches'], 'legacy batches empty' );
 echo "PASS  genuine v1 backups are normalized into the current staging contract without inventing relationships\n";
 
-echo "\n5 tests, 0 failures\n";
+// A genuine 1.6.4/1.6.5 v2 stream has Batch/Signer families but predates recipient privacy identity digests.
+$v2_path = rs_make_backup( str_repeat( '6', 32 ), '', DomainBackupFormat::STRUCTURE_VERSION );
+$v2_ws = new RestoreStageFakeWorkspace();
+$v2_service = new DomainRestoreStagingService( $v2_ws );
+$v2 = $v2_service->start( $v2_path, str_repeat( 'f', 32 ) );
+while ( ! is_wp_error( $v2 ) && empty( $v2['complete'] ) ) { $v2 = $v2_service->continue_stage( $v2, 50 ); }
+rs_same( false, is_wp_error( $v2 ), 'v2 staging' );
+rs_true( $v2['complete'], 'v2 ready' );
+rs_true( array_key_exists( 'privacy_identity_hashes', $v2_ws->rows['recipients:1'] ), 'v2 privacy identity key synthesized' );
+rs_same( null, $v2_ws->rows['recipients:1']['privacy_identity_hashes'], 'v2 privacy identity synthesized null' );
+rs_same( null, $v2_ws->rows['recipients:1']['privacy_anonymized_at'], 'v2 privacy lifecycle marker synthesized null' );
+echo "PASS  genuine v2 backups are normalized into the current recipient privacy contract\n";
+
+echo "\n6 tests, 0 failures\n";

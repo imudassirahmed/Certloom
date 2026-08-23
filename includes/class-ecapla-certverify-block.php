@@ -53,6 +53,19 @@ class Ecapla_CertVerify_Block {
 		foreach ( $handles as $handle ) {
 			wp_set_script_translations( $handle, 'certloom', ECAPLA_CERTVERIFY_PATH . 'languages' );
 		}
+		$credential_path = ECAPLA_CERTVERIFY_PATH . 'blocks/credential';
+		if ( file_exists( $credential_path . '/block.json' ) ) {
+			$credential = register_block_type(
+				$credential_path,
+				array( 'render_callback' => array( __CLASS__, 'render_credential' ) )
+			);
+			if ( $credential && function_exists( 'wp_set_script_translations' ) ) {
+				$credential_handles = ! empty( $credential->editor_script_handles ) ? (array) $credential->editor_script_handles : ( ! empty( $credential->editor_script ) ? array( $credential->editor_script ) : array() );
+				foreach ( $credential_handles as $handle ) {
+					wp_set_script_translations( $handle, 'certloom', ECAPLA_CERTVERIFY_PATH . 'languages' );
+				}
+			}
+		}
 	}
 
 	/**
@@ -123,4 +136,13 @@ class Ecapla_CertVerify_Block {
 			$widget_html
 		);
 	}
+	/** Renders the dynamic Credential Profile block. */
+	public static function render_credential( $attributes ) {
+		$attributes = wp_parse_args( is_array( $attributes ) ? $attributes : array(), array( 'number' => '', 'heading' => __( 'Credential profile', 'certloom' ), 'notFoundText' => __( 'This credential could not be found or is not available.', 'certloom' ) ) );
+		$number = trim( sanitize_text_field( (string) $attributes['number'] ) );
+		$html = Ecapla_CertVerify_Render::credential_profile( $number, array( 'heading' => $attributes['heading'], 'notfound_text' => $attributes['notFoundText'] ) );
+		$wrapper = function_exists( 'get_block_wrapper_attributes' ) ? get_block_wrapper_attributes( array( 'class' => 'certloom-credential-block' ) ) : 'class="certloom-credential-block"';
+		return '<div ' . $wrapper . '>' . $html . '</div>';
+	}
+
 }

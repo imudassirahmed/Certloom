@@ -56,6 +56,15 @@ $designs          = array(
 	</div>
 
 	<section class="ecapla-certverify-admin-card ecapla-certverify-embed-reference">
+		<h2><?php esc_html_e( 'Credential profile & clean links', 'certloom' ); ?></h2>
+		<p><?php esc_html_e( 'Phase 2 adds a shared read-only credential profile that uses the same public field and status rules as verification.', 'certloom' ); ?></p>
+		<p><strong><?php esc_html_e( 'Profile shortcode:', 'certloom' ); ?></strong> <code>[certloom_credential number=&quot;CERT-2026-0001&quot;]</code></p>
+		<p><strong><?php esc_html_e( 'Native block:', 'certloom' ); ?></strong> <?php esc_html_e( 'Certloom – Credential Profile', 'certloom' ); ?></p>
+		<p><strong><?php esc_html_e( 'Elementor:', 'certloom' ); ?></strong> <?php esc_html_e( 'Certloom — Credential Profile', 'certloom' ); ?></p>
+		<p class="description"><?php esc_html_e( 'Canonical clean links use /certloom/verify/{certificate}/ and /certloom/credential/{certificate}/ when pretty permalinks are enabled. Complex certificate numbers are transported in one URL-safe token without changing exact-number verification identity.', 'certloom' ); ?></p>
+	</section>
+
+	<section class="ecapla-certverify-admin-card ecapla-certverify-embed-reference">
 		<h2><?php esc_html_e( 'Shortcode design reference', 'certloom' ); ?></h2>
 		<table class="widefat striped">
 			<thead><tr><th><?php esc_html_e( 'Design', 'certloom' ); ?></th><th><?php esc_html_e( 'Shortcode', 'certloom' ); ?></th></tr></thead>

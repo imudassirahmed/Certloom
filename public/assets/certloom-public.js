@@ -19,6 +19,11 @@
 		return /^[a-z0-9_-]{1,32}$/.test( String( value || '' ) ) ? String( value ) : 'unknown';
 	}
 
+	function statusIcon( value ) {
+		var icons = { valid: '✓', suspended: '!', withdrawn: '×', expired: '○' };
+		return icons[ statusModifier( value ) ] || '•';
+	}
+
 	function getConfig( root ) {
 		if ( root.classList.contains( 'cv-widget' ) ) {
 			return {
@@ -171,10 +176,43 @@
 			resultEl.innerHTML = '<div class="' + config.prefix + '-result-notfound"><p>' + escapeHtml( message ) + '</p></div>';
 		}
 
-		function showResult( fields ) {
+		function showResult( fields, presentation ) {
+			presentation = presentation && 'object' === typeof presentation ? presentation : {};
+			var status = presentation.status && 'object' === typeof presentation.status ? presentation.status : {};
+			var statusKey = statusModifier( status.key );
+			var statusLabel = 'string' === typeof status.label && status.label ? status.label : foundText;
+			var statusDescription = 'string' === typeof status.description ? status.description : '';
+			var issuer = 'string' === typeof presentation.issuer ? presentation.issuer : '';
+			var labels = presentation.labels && 'object' === typeof presentation.labels ? presentation.labels : {};
+			var issuedByLabel = 'string' === typeof labels.issued_by && labels.issued_by ? labels.issued_by : 'Issued by';
+			var verifiedLabel = 'string' === typeof labels.verified && labels.verified ? labels.verified : 'Verified';
 			var rows = renderRows( fields || [], config.prefix );
 			var list = rows ? '<dl class="' + config.prefix + '-result-list">' + rows + '</dl>' : '';
-			resultEl.innerHTML = '<div class="' + config.prefix + '-result-card"><p class="' + config.prefix + '-result-success">' + escapeHtml( foundText ) + '</p>' + list + '</div>';
+			var summary = '<div class="' + config.prefix + '-result-summary"><span class="' + config.prefix + '-status-mark" aria-hidden="true">✓</span><div><p class="' + config.prefix + '-result-success">' + escapeHtml( statusLabel ) + '</p>' +
+				( statusDescription ? '<p class="' + config.prefix + '-status-description">' + escapeHtml( statusDescription ) + '</p>' : '' ) +
+				( issuer ? '<p class="' + config.prefix + '-result-issuer"><span>' + escapeHtml( issuedByLabel ) + '</span> ' + escapeHtml( issuer ) + '</p>' : '' ) + '</div></div>';
+			var verified = '';
+			if ( 'string' === typeof presentation.verified_at && presentation.verified_at ) {
+				var date = new Date( presentation.verified_at );
+				verified = '<p class="' + config.prefix + '-verified-at">' + escapeHtml( verifiedLabel ) + ' ' + escapeHtml( isNaN( date.getTime() ) ? presentation.verified_at : date.toLocaleString() ) + '</p>';
+			}
+			var actionHtml = '';
+			var actions = Array.isArray( presentation.actions ) ? presentation.actions : [];
+			actions.forEach( function ( action ) {
+				var type = statusModifier( action && action.type );
+				var label = action && 'string' === typeof action.label ? action.label : '';
+				var url = action && 'string' === typeof action.url ? action.url : '';
+				if ( ! label ) { return; }
+				if ( 'copy' === type && url ) {
+					actionHtml += '<button type="button" class="certloom-result-action ' + config.prefix + '-result-action certloom-copy-link" data-copy-url="' + escapeHtml( url ) + '">' + escapeHtml( label ) + '</button>';
+				} else if ( 'print' === type ) {
+					actionHtml += '<button type="button" class="certloom-result-action ' + config.prefix + '-result-action certloom-print">' + escapeHtml( label ) + '</button>';
+				} else if ( url ) {
+					actionHtml += '<a class="certloom-result-action ' + config.prefix + '-result-action" href="' + escapeHtml( url ) + '">' + escapeHtml( label ) + '</a>';
+				}
+			} );
+			var actionBar = actionHtml ? '<div class="' + config.prefix + '-result-actions">' + actionHtml + '<span class="certloom-action-feedback" aria-live="polite"></span></div>' : '';
+			resultEl.innerHTML = '<div class="' + config.prefix + '-result-card ' + config.prefix + '-status-' + statusKey + '">' + summary + list + verified + actionBar + '</div>';
 		}
 
 		function search( number ) {
@@ -217,7 +255,7 @@
 						if ( ! Array.isArray( result.data.fields ) ) {
 							throw new Error( 'Certloom received an incomplete verification response.' );
 						}
-						showResult( result.data.fields );
+						showResult( result.data.fields, result.data.presentation );
 					} else {
 						showMessage( notFound );
 					}
@@ -258,6 +296,52 @@
 			}
 		}
 	}
+
+	function actionRoot( element ) {
+		return element && element.closest ? element.closest( '.cv-widget, .cvx-widget, .cvp-widget' ) : null;
+	}
+
+	function actionFeedback( button, message ) {
+		var root = actionRoot( button );
+		var target = root ? root.querySelector( '.certloom-action-feedback' ) : null;
+		if ( target ) { target.textContent = message || ''; }
+	}
+
+	function fallbackCopy( text ) {
+		var area = document.createElement( 'textarea' );
+		area.value = text;
+		area.setAttribute( 'readonly', '' );
+		area.style.position = 'fixed';
+		area.style.opacity = '0';
+		document.body.appendChild( area );
+		area.select();
+		var copied = false;
+		try { copied = document.execCommand( 'copy' ); } catch ( error ) { copied = false; }
+		document.body.removeChild( area );
+		return copied;
+	}
+
+	document.addEventListener( 'click', function ( event ) {
+		var target = event.target && event.target.closest ? event.target.closest( '.certloom-copy-link, .certloom-print' ) : null;
+		if ( ! target ) { return; }
+		if ( target.classList.contains( 'certloom-print' ) ) {
+			event.preventDefault();
+			window.print();
+			return;
+		}
+		var url = target.getAttribute( 'data-copy-url' ) || '';
+		if ( ! url ) { return; }
+		event.preventDefault();
+		var root = actionRoot( target );
+		var successText = root ? root.getAttribute( 'data-copy-success-text' ) : '';
+		var errorText = root ? root.getAttribute( 'data-copy-error-text' ) : '';
+		var done = function ( ok ) { actionFeedback( target, ok ? ( successText || 'Verification link copied.' ) : ( errorText || 'Copy the verification link from your browser.' ) ); };
+		if ( navigator.clipboard && navigator.clipboard.writeText ) {
+			navigator.clipboard.writeText( url ).then( function () { done( true ); }, function () { done( fallbackCopy( url ) ); } );
+		} else {
+			done( fallbackCopy( url ) );
+		}
+	} );
 
 	function scan( scope ) {
 		var root = scope || document;

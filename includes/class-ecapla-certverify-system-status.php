@@ -60,7 +60,7 @@ class Ecapla_CertVerify_System_Status {
 			__( 'Pretty permalinks', 'certloom' ),
 			'' !== (string) get_option( 'permalink_structure', '' ) ? 'good' : 'warning',
 			'' !== (string) get_option( 'permalink_structure', '' ) ? __( 'Enabled', 'certloom' ) : __( 'Plain permalinks', 'certloom' ),
-			__( 'Current exact verification works either way; future clean credential routes are best with pretty permalinks.', 'certloom' )
+			__( 'Exact verification works either way. Phase 2 clean verification/profile routes use readable paths when pretty permalinks are enabled and query-var fallbacks otherwise.', 'certloom' )
 		);
 		$checks[] = self::check(
 			'https',

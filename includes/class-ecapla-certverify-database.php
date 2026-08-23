@@ -978,6 +978,45 @@ class Ecapla_CertVerify_Database {
 	}
 
 	/**
+	 * Reads bounded legacy certificate rows whose stored custom-field JSON may
+	 * contain the requested email. Callers must still perform an exact decoded
+	 * value match because LIKE is only an indexed-free candidate reduction step.
+	 *
+	 * @param string $email Requested email.
+	 * @param int    $offset Candidate offset.
+	 * @param int    $limit Maximum candidate rows.
+	 * @return array|WP_Error
+	 */
+	public static function get_privacy_email_candidates( $email, $offset = 0, $limit = 50 ) {
+		global $wpdb;
+		$email = sanitize_email( (string) $email );
+		if ( '' === $email ) {
+			return array();
+		}
+		$limit = min( 100, max( 1, absint( $limit ) ) );
+		$like  = '%' . $wpdb->esc_like( $email ) . '%';
+		$wpdb->last_error = '';
+		$rows = $wpdb->get_results(
+			$wpdb->prepare( 'SELECT * FROM %i WHERE custom_fields LIKE %s ORDER BY id ASC LIMIT %d OFFSET %d', self::table_name(), $like, $limit, absint( $offset ) ),
+			ARRAY_A
+		);
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) {
+			return self::read_error();
+		}
+		$decoded_rows = array();
+		foreach ( $rows as $row ) {
+			if ( ! empty( $row['custom_fields'] ) ) {
+				$decoded = json_decode( (string) $row['custom_fields'], true );
+				if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $decoded ) ) {
+					return new WP_Error( 'ecapla_certverify_privacy_custom_fields_corrupt', __( 'Stored certificate custom-field data is invalid and could not be inspected safely for this privacy request.', 'certloom' ) );
+				}
+			}
+			$decoded_rows[] = self::decode_row( $row );
+		}
+		return $decoded_rows;
+	}
+
+	/**
 	 * Reads a bounded export/backup batch without OFFSET or a count query.
 	 *
 	 * @param int $after_id Last exported ID.

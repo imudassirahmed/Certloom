@@ -61,54 +61,41 @@ class Ecapla_CertVerify_REST {
 	}
 
 	public static function verify( $request ) {
-		if ( function_exists( 'ecapla_certverify_verification_is_available' ) && ! ecapla_certverify_verification_is_available() ) {
+		$number = self::sanitize_number( $request->get_param( 'number' ) );
+		$presentation = Ecapla_CertVerify_Public_Presentation::verify( $number, true );
+		if ( is_wp_error( $presentation ) ) {
+			$rate_limited = 'ecapla_certverify_rate_limited' === $presentation->get_error_code();
 			$response = new WP_REST_Response(
 				array(
-					'code'    => 'ecapla_certverify_temporarily_unavailable',
-					'message' => __( 'Certificate verification is temporarily unavailable. Please try again later.', 'certloom' ),
+					'code'    => $rate_limited ? 'ecapla_certverify_rate_limited' : 'ecapla_certverify_temporarily_unavailable',
+					'message' => $rate_limited ? $presentation->get_error_message() : __( 'Certificate verification is temporarily unavailable. Please try again later.', 'certloom' ),
 				),
-				503
+				$rate_limited ? 429 : 503
 			);
 			$response->header( 'Retry-After', '60' );
 			return self::add_private_headers( $response );
 		}
 
-		if ( self::is_rate_limited( 'legacy_verify' ) ) {
-			$response = new WP_REST_Response(
-				array(
-					'code'    => 'ecapla_certverify_rate_limited',
-					'message' => __( 'Too many verification requests. Please wait a minute and try again.', 'certloom' ),
-				),
-				429
-			);
-			$response->header( 'Retry-After', '60' );
-			return self::add_private_headers( $response );
+		if ( empty( $presentation['found'] ) ) {
+			return self::add_private_headers( new WP_REST_Response( array( 'found' => false ), 200 ) );
 		}
 
-		$number      = self::sanitize_number( $request->get_param( 'number' ) );
-		$certificate = Ecapla_CertVerify_Database::get_by_cert_number( $number );
-		if ( is_wp_error( $certificate ) ) {
-			$response = new WP_REST_Response(
-				array(
-					'code'    => 'ecapla_certverify_temporarily_unavailable',
-					'message' => __( 'Certificate verification is temporarily unavailable. Please try again later.', 'certloom' ),
-				),
-				503
-			);
-			$response->header( 'Retry-After', '60' );
-			return self::add_private_headers( $response );
-		}
-
-		$response = new WP_REST_Response(
-			$certificate
-				? array(
-					'found'  => true,
-					'fields' => Ecapla_CertVerify_Render::fields_for_output( $certificate ),
-				)
-				: array( 'found' => false ),
-			200
+		/* Keep the established fields contract while adding one shared presentation model. */
+		$payload = array(
+			'found'        => true,
+			'fields'       => $presentation['fields'],
+			'presentation' => array(
+				'certificate_number' => $presentation['certificate_number'],
+				'status'             => $presentation['status'],
+				'issuer'             => $presentation['issuer'],
+				'verified_at'        => $presentation['verified_at'],
+				'verification_url'   => $presentation['verification_url'],
+				'profile_url'        => $presentation['profile_url'],
+				'actions'            => $presentation['actions'],
+				'labels'             => $presentation['labels'],
+			),
 		);
-		return self::add_private_headers( $response );
+		return self::add_private_headers( new WP_REST_Response( $payload, 200 ) );
 	}
 
 	/**
