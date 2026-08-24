@@ -152,11 +152,12 @@ $text_plan_b = $builder->build( $text_runtime_b, array( 'font_manifest' => $mani
 rpsame( $builder->hash( $text_plan_a ), $builder->hash( $text_plan_b ), 'Render-plan hash must be portable across local font paths.' );
 
 // Acceptance evidence is versioned so old proof cannot certify the shared-plan architecture.
-rpsame(5,RendererAcceptanceContract::VERSION,'Renderer acceptance evidence must advance to v5 for three-format golden-bound proof.');
+rpsame(6,RendererAcceptanceContract::VERSION,'Renderer acceptance evidence must advance to v6 for primitive-capability coverage.');
 rpcheck(in_array('shared_render_plan',RendererAcceptanceContract::required_checks(),true),'PDF-04 must require proof that both backends use the shared render plan.');
+rpcheck(in_array('primitive_capability_coverage',RendererAcceptanceContract::required_checks(),true),'PDF-04 must require coverage of the current non-text Render Plan primitive surface.');
 $reference_manifest = file_get_contents(__DIR__.'/fixtures/rendering/render-plan-manifest.json');
 rpcheck(is_string($reference_manifest) && 1===preg_match('/^[0-9a-f]{64}$/',hash('sha256',$reference_manifest)),'Stored shared render-plan manifest must itself be content-addressed.');
-rpsame( 'bdcbfba5c61632a86cdf881131bd12496bd260b21992d53129e79c4070df519b', hash( 'sha256', $reference_manifest ), 'Stored shared render-plan manifest must remain frozen for the six permanent fixtures.' );
+rpsame( '99a1e13fc48bf877699f22a76645be3e31f3762c8436ab6c57b6bb8a2e9da98a', hash( 'sha256', $reference_manifest ), 'Stored shared render-plan manifest must remain frozen for the seven permanent fixtures.' );
 
 // The coordinator must hand adapters the shared plan and return its portable hash.
 final class RPAllowArtifactAuthority implements ArtifactAuthorityGateInterface {

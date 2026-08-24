@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.27
+Stable tag: 1.6.29
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.27: Certloom now includes concrete, unaccepted PDF/PNG/JPEG renderer candidates over dependency-prefixed mPDF and GD. They consume the frozen shared Render Plan and exact local fonts/assets, but are not registered for live WordPress artifact output. This host still lacks the required native/vendor runtime, `accepted.json` remains absent, and production artifacts, Template publication, authoritative Preview, and Designer output stay disabled until the real six-fixture PDF-04 run passes.
+> Development note for 1.6.29: `PDF-04` still requires the seven permanent PDF/PNG/JPEG fixtures, but candidate provenance is now deterministic before execution. RendererCandidateManifest v2 distinguishes dependency-prefixed third-party packages from Certloom-native adapters, and source-only tooling freezes the exact candidate source/dependency/runtime tree before the external benchmark. Concrete mPDF/GD candidates remain unaccepted and unregistered; this host still lacks the required native/vendor runtime, `accepted.json` remains absent, and production artifacts, Template publication, authoritative Preview, and Designer output stay disabled until the real seven-fixture run passes.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -129,6 +129,13 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.28 =
+* Add a seventh permanent `PDF-04` fixture covering rectangle, ellipse, line, local image contain, logo cover, signature fill, opacity, and non-text arbitrary rotation.
+* Advance renderer acceptance to v6, independent verification report to v4, and candidate bundle to v3 with explicit primitive-capability coverage; six-fixture evidence is now stale.
+* Harden the concrete mPDF candidate for non-text SVG rotation and verified local raster cover placement, and re-prove raster asset identity immediately before both mPDF and GD consumption.
+* Freeze all six legacy 1.6.27 golden artifact hashes and Render Plan hashes unchanged while adding the seventh capability case.
+* Keep `PDF-04`, production PDF/PNG/JPEG, Template publication, authoritative Preview, Designer authority and normalized-domain authority closed until a real renderer-capable host passes the seven-fixture suite.
 
 = 1.6.27 =
 * Add concrete, authority-closed `MpdfPdfRenderer` and `GdRasterRenderer` candidates so PDF-04 no longer depends on external one-off RendererInterface implementations.
@@ -536,3 +543,6 @@ Review-resubmission release finalizing the Certloom identity, fixing activation 
 
 = 1.4.9 =
 Restore-integrity update with exact snapshot replacement, optional certificate merge, global write locking, and concurrent-change detection.
+
+== 1.6.29 development checkpoint ==
+Renderer candidate provenance is now deterministic and truthful before PDF-04 execution. Candidate manifest v2 distinguishes dependency-prefixed third-party packages from Certloom-native adapters. Source-only tooling freezes exact candidate source/dependency bytes and revalidates the frozen runtime tree before execution. PDF-04 remains open and no accepted renderer manifest or third-party candidate vendor tree ships in the installable plugin.

@@ -10,9 +10,20 @@ use Certloom\Application\Rendering\RenderPlanBuilder;
 use Certloom\Application\Rendering\RenderRequestFingerprint;
 use Certloom\Infrastructure\Rendering\LocalQrEncoder;
 
-final class CertloomRenderPlanNullAssetResolver implements LocalAssetResolverInterface {
+final class CertloomRenderPlanFixtureAssetResolver implements LocalAssetResolverInterface {
+	private $asset_path;
+	public function __construct( $asset_path ) { $this->asset_path = (string) $asset_path; }
 	public function resolve( $reference ) {
-		throw new InvalidArgumentException( 'Permanent render-plan fixtures do not use raster assets: ' . (string) $reference );
+		if ( 'asset:primitives' !== (string) $reference || ! is_file( $this->asset_path ) ) {
+			throw new InvalidArgumentException( 'Permanent render-plan fixture references an unknown local raster asset: ' . (string) $reference );
+		}
+		$size = filesize( $this->asset_path );
+		return array(
+			'path' => $this->asset_path,
+			'sha256' => hash_file( 'sha256', $this->asset_path ),
+			'mime' => 'image/png',
+			'size' => (int) $size,
+		);
 	}
 }
 
@@ -50,12 +61,13 @@ function certloom_render_plan_reference_setup() {
 			'long-name-shrink' => array( 'recipient.name' => 'Alexandria Noor Fatima Montgomery-Washington' ),
 		),
 		'verification_url' => 'https://example.test/credential/7M4K-2Q8D-F3XP',
-		'names' => array( 'english', 'urdu-rtl', 'mixed-script', 'long-name-shrink', 'rotation', 'qr' ),
+		'primitive_asset_path' => $fixtures_root . '/assets/primitives.png',
+		'names' => array( 'english', 'urdu-rtl', 'mixed-script', 'long-name-shrink', 'rotation', 'qr', 'primitives' ),
 	);
 }
 
 /**
- * Return the six permanent fixture inputs and independently frozen hashes.
+ * Return the seven permanent fixture inputs and independently frozen hashes.
  *
  * Production-candidate tooling consumes these resolved documents through the
  * normal ArtifactRenderCoordinator. The returned render plan omits runtime-only
@@ -69,7 +81,7 @@ function certloom_render_plan_reference_cases() {
 	$resolver = new LayoutResolver( null, null, null, new LocalQrEncoder() );
 	$plans = new RenderPlanBuilder();
 	$fingerprints = new RenderRequestFingerprint();
-	$assets = new CertloomRenderPlanNullAssetResolver();
+	$assets = new CertloomRenderPlanFixtureAssetResolver( $setup['primitive_asset_path'] );
 	$cases = array();
 
 	foreach ( $setup['names'] as $name ) {

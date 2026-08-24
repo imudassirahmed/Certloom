@@ -46,7 +46,7 @@ try {
         $candidate=array(
             'schema'=>RendererCandidateManifest::SCHEMA,'version'=>RendererCandidateManifest::VERSION,
             'renderer_id'=>$id,'renderer_version'=>$version,'formats'=>$formats,
-            'implementation'=>array('package'=>'certloom-tests/'.$key,'package_version'=>'1.0.0','namespace_prefix'=>'CertloomVendor\\Fixture\\'.('reference-pdf'===$key?'ReferencePdf':'ReferenceRaster').'\\','source_sha256'=>hash_file('sha256',$source),'dependency_lock_sha256'=>hash_file('sha256',$lock),'license'=>'MIT'),
+            'implementation'=>array('package'=>'certloom-tests/'.$key,'package_version'=>'1.0.0','provenance_mode'=>'prefixed-package','namespace_prefix'=>'CertloomVendor\\Fixture\\'.('reference-pdf'===$key?'ReferencePdf':'ReferenceRaster').'\\','source_sha256'=>hash_file('sha256',$source),'dependency_lock_sha256'=>hash_file('sha256',$lock),'license'=>'MIT'),
             'security'=>array('execution_mode'=>'php-inprocess','input_schema'=>'certloom-render-plan:1','network'=>'none','processes'=>'none','remote_assets'=>false),
             'requirements'=>array('php_min'=>'7.4','extensions'=>array(),'classes'=>array(),'functions'=>array()),
         );

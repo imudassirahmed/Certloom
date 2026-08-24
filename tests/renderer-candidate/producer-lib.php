@@ -57,7 +57,7 @@ final class CertloomCandidateEvaluationAuthorityGate implements ArtifactAuthorit
 
 final class CertloomProductionCandidateBundleProducer {
 	const BUNDLE_SCHEMA = 'certloom-renderer-acceptance-bundle';
-	const BUNDLE_VERSION = 2;
+	const BUNDLE_VERSION = 3;
 	const MAX_PROVENANCE_BYTES = 104857600; // 100 MiB per source/lock evidence file.
 	const PRODUCTION_ACK = 'CERTLOOM_PDF04_PRODUCTION_CANDIDATE';
 

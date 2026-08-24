@@ -1,3 +1,18 @@
+1.6.29
+- Advance RendererCandidateManifest to v2 with truthful prefixed-package versus Certloom-native provenance modes.
+- Add deterministic source-only candidate freezing for exact source ZIP, dependency lock, canonical candidate manifest, recipe, runtime-tree hash, and freeze index.
+- Pin the first mPDF freeze recipe to stable mpdf/mpdf 8.3.1 and reject wrong versions, development dependencies, Composer plugins, unprefixed mPDF namespaces, symlinks, stale destinations, and output inside the Certloom tree.
+- Add a native GD freeze recipe that binds the actual Certloom renderer source set and real Certloom namespace rather than inventing a CertloomVendor prefix.
+- Revalidate the read-only frozen runtime tree immediately before external candidate execution so the bytes described by provenance are the bytes loaded by the benchmark bootstrap.
+- Keep PDF-04, renderer authority, Template publication, Preview and Designer closed; no third-party vendor tree or accepted renderer manifest ships in the installable plugin.
+
+1.6.28
+- Add a seventh permanent renderer-acceptance fixture covering shape, line, local image/logo/signature fit semantics, opacity, and arbitrary non-text rotation.
+- Advance RendererAcceptanceContract to v6, RendererVerificationReport to v4, and the production-candidate bundle to v3 with mandatory primitive-capability evidence.
+- Harden MpdfPdfRenderer for rotated non-text SVG primitives and verified local cover-image placement; make both production candidates re-prove exact local raster identity immediately before use.
+- Preserve every 1.6.27 legacy golden artifact and Render Plan hash byte-for-byte; the seventh capability fixture is additive.
+- Keep PDF-04 and all renderer-backed product authority open because the real dependency-prefixed seven-fixture production run has not executed on this host.
+
 1.6.27
 - Add concrete, unaccepted mPDF PDF and GD PNG/JPEG RendererInterface candidates against the frozen shared Render Plan.
 - Add bounded Arabic/Perso-Arabic shaping for GD and fix mixed-script Arabic phrase visual ordering discovered by the permanent acceptance fixture.

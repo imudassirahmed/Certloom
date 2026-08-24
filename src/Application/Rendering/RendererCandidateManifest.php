@@ -12,7 +12,7 @@ use InvalidArgumentException;
  */
 final class RendererCandidateManifest {
 	const SCHEMA = 'certloom-renderer-candidate';
-	const VERSION = 1;
+	const VERSION = 2;
 
 	/** @return array<string,mixed> */
 	public function normalize( array $manifest ) {
@@ -70,10 +70,11 @@ final class RendererCandidateManifest {
 		if ( ! is_array( $value ) ) {
 			throw new InvalidArgumentException( 'Renderer candidate implementation provenance is required.' );
 		}
-		$keys = array( 'package', 'package_version', 'namespace_prefix', 'source_sha256', 'dependency_lock_sha256', 'license' );
+		$keys = array( 'package', 'package_version', 'provenance_mode', 'namespace_prefix', 'source_sha256', 'dependency_lock_sha256', 'license' );
 		$this->assert_shape( $value, $keys, $keys, 'renderer candidate implementation' );
 		$package = strtolower( trim( (string) $value['package'] ) );
 		$package_version = trim( (string) $value['package_version'] );
+		$mode = strtolower( trim( (string) $value['provenance_mode'] ) );
 		$prefix = trim( (string) $value['namespace_prefix'] );
 		$source = strtolower( trim( (string) $value['source_sha256'] ) );
 		$lock = strtolower( trim( (string) $value['dependency_lock_sha256'] ) );
@@ -81,8 +82,17 @@ final class RendererCandidateManifest {
 		if ( ! preg_match( '/^[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._-]*$/', $package ) || '' === $package_version || strlen( $package_version ) > 64 ) {
 			throw new InvalidArgumentException( 'Renderer candidate package identity is invalid.' );
 		}
-		if ( 0 !== strpos( $prefix, 'CertloomVendor\\' ) || ! preg_match( '/^[A-Za-z_][A-Za-z0-9_]*(?:\\\\[A-Za-z_][A-Za-z0-9_]*)*\\\\?$/', $prefix ) ) {
-			throw new InvalidArgumentException( 'Renderer candidate must use an isolated CertloomVendor namespace prefix.' );
+		if ( ! in_array( $mode, array( 'prefixed-package', 'certloom-native' ), true ) ) {
+			throw new InvalidArgumentException( 'Renderer candidate provenance mode is unsupported.' );
+		}
+		if ( ! preg_match( '/^[A-Za-z_][A-Za-z0-9_]*(?:\\\\[A-Za-z_][A-Za-z0-9_]*)*\\\\?$/', $prefix ) ) {
+			throw new InvalidArgumentException( 'Renderer candidate namespace prefix is invalid.' );
+		}
+		if ( 'prefixed-package' === $mode && 0 !== strpos( $prefix, 'CertloomVendor\\' ) ) {
+			throw new InvalidArgumentException( 'Prefixed renderer candidates must use an isolated CertloomVendor namespace prefix.' );
+		}
+		if ( 'certloom-native' === $mode && 0 !== strpos( $prefix, 'Certloom\\' ) ) {
+			throw new InvalidArgumentException( 'Certloom-native renderer candidates must identify their real Certloom namespace.' );
 		}
 		if ( ! $this->is_sha256( $source ) || ! $this->is_sha256( $lock ) || ! preg_match( '/^[A-Za-z0-9.+-]{1,64}$/', $license ) ) {
 			throw new InvalidArgumentException( 'Renderer candidate provenance hashes/license are invalid.' );
@@ -90,6 +100,7 @@ final class RendererCandidateManifest {
 		return array(
 			'package' => $package,
 			'package_version' => $package_version,
+			'provenance_mode' => $mode,
 			'namespace_prefix' => rtrim( $prefix, '\\' ) . '\\',
 			'source_sha256' => $source,
 			'dependency_lock_sha256' => $lock,

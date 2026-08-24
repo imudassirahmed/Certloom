@@ -1,6 +1,7 @@
 <?php
 /** Concrete PDF-04 candidate adapter tests without requiring mPDF/ext-gd. */
 require_once __DIR__ . '/bootstrap-autoload.php';
+require_once __DIR__ . '/render-plan-reference/reference_lib.php';
 
 use Certloom\Application\Contract\GdDriverInterface;
 use Certloom\Application\Rendering\ArabicPresentationShaper;
@@ -17,11 +18,12 @@ if ( ! class_exists( 'CertloomVendor\\Mpdf\\Mpdf', false ) ) {
 namespace CertloomVendor\Mpdf;
 class Mpdf {
 	public static $lastConfig = array();
+	public static $lastInstance;
 	public $autoScriptToLang = true;
 	public $autoLangToFont = true;
 	public $useSubstitutions = true;
 	public $calls = array();
-	public function __construct(array $config=array()){self::$lastConfig=$config;}
+	public function __construct(array $config=array()){self::$lastConfig=$config;self::$lastInstance=$this;}
 	public function SetCreator($v){$this->calls[]=array('creator',$v);}
 	public function SetAlpha($v){$this->calls[]=array('alpha',$v);}
 	public function WriteFixedPosHTML($html,$x,$y,$w,$h,$overflow='visible'){$this->calls[]=array('html',$html,$x,$y,$w,$h,$overflow);}
@@ -107,10 +109,27 @@ prc_check(prc_throws(function()use($mpdf,$font){$mpdf->render(prc_plan($font),'p
 $multi=prc_plan($font);$multi['operations'][0]['text']['font']['faces'][]=$multi['operations'][0]['text']['font']['faces'][0];
 prc_check(prc_throws(function()use($mpdf,$multi){$mpdf->render($multi,'pdf');}),'mPDF candidate must fail closed for unresolved multi-face fallback.');
 
+$primitive_case=certloom_render_plan_reference_cases()['primitives'];
+$primitive_plan=$primitive_case['render_plan'];
+$primitive_pdf=$mpdf->render($primitive_plan,'pdf');
+prc_check(0===strpos($primitive_pdf,'%PDF-'),'mPDF candidate must accept the permanent primitive-coverage Render Plan.');
+$html_calls=array();foreach(CertloomVendor\Mpdf\Mpdf::$lastInstance->calls as $call){if('html'===$call[0]){$html_calls[]=$call[1];}}
+$svg_html=implode("
+",$html_calls);
+prc_check(false!==strpos($svg_html,'<rect')&&false!==strpos($svg_html,'<ellipse')&&false!==strpos($svg_html,'<line'),'mPDF candidate must emit SVG-backed rectangle, ellipse and line primitives.');
+prc_check(false!==strpos($svg_html,'xMidYMid slice')&&false!==strpos($svg_html,'data:image/png;base64,'),'mPDF candidate must render verified local cover images without remote asset lookup.');
+prc_check(false!==strpos($svg_html,'rotate(8 ')&&false!==strpos($svg_html,'rotate(-6 ')&&false!==strpos($svg_html,'rotate(5 ')&&false!==strpos($svg_html,'rotate(-4 '),'mPDF candidate must preserve non-text primitive rotation in its SVG operation boundary.');
+$tampered=tempnam(sys_get_temp_dir(),'certloom-asset-tamper-');file_put_contents($tampered,'not-the-frozen-image');$bad_primitive=$primitive_plan;$asset_hash=$bad_primitive['operations'][3]['image']['asset']['sha256'];$bad_primitive['_runtime']['assets'][$asset_hash]['path']=$tampered;
+prc_check(prc_throws(function()use($mpdf,$bad_primitive){$mpdf->render($bad_primitive,'pdf');}),'mPDF candidate must re-prove local raster asset bytes at adapter execution time.');@unlink($tampered);
+
 $driver=new PrcFakeGdDriver();$gd=new GdRasterRenderer('1.0.0',$candidate_hash,$manifest,$driver);
 prc_check(GdRasterRenderer::ID===$gd->id()&&array('png','jpeg')===$gd->formats(),'GD candidate identity/formats must be stable.');
 prc_check(array('gd')===$gd->requirements()['extensions']&&in_array('imagettftext',$gd->requirements()['functions'],true),'GD candidate must declare exact raster/FreeType runtime requirements.');
 $png=$gd->render(prc_plan($font),'png');$jpg=$gd->render(prc_plan($font,'محمد علی','rtl'),'jpeg');
+$primitive_png=$gd->render($primitive_plan,'png');
+prc_check(0===strpos($primitive_png,"\x89PNG"),'GD candidate must accept the permanent primitive-coverage Render Plan.');
+$seen_resample=false;$seen_primitive_rotate=false;foreach($driver->calls as $call){if('resample'===$call[0]){$seen_resample=true;}if('rotate'===$call[0]&&(abs($call[1]-8.0)<0.001||abs($call[1]-5.0)<0.001||abs($call[1]+4.0)<0.001)){$seen_primitive_rotate=true;}}
+prc_check($seen_resample&&$seen_primitive_rotate,'GD candidate must exercise local image placement and rotated non-text primitive composition.');
 prc_check(0===strpos($png,"\x89PNG")&&0===strpos($jpg,"\xFF\xD8"),'GD candidate must produce requested raster formats through its driver.');
 $seen_text=false;$seen_qr=false;foreach($driver->calls as $call){if('text'===$call[0]){$seen_text=true;}if('filled-rect'===$call[0]){$seen_qr=true;}}
 prc_check($seen_text&&$seen_qr,'GD candidate must consume text and exact QR dark-run operations.');

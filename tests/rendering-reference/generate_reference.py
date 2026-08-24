@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = ROOT / 'tests' / 'fixtures' / 'rendering'
 OUT = FIXTURES / 'reference'
 FONT = Path('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf')
+PRIMITIVE_ASSET = FIXTURES / 'assets' / 'primitives.png'
 DPI = 96.0
 SOURCE_DATE_EPOCH = '1700000000'  # Fixed development-oracle timestamp for byte-stable PDF output.
 MERGES = {
@@ -79,6 +80,48 @@ def text_svg(e: dict, text: str) -> tuple[str, dict]:
           f'fill="{color}" opacity="{opacity:g}" direction="{direction}" unicode-bidi="plaintext"{transform}>{esc(text)}</text>')
     return node, {'font_size_pt':pt,'direction':direction,'overflow':overflow}
 
+
+def color_value(value: str, fallback: str = '#000000') -> tuple[str,float]:
+    value=str(value or fallback).strip()
+    m=re.match(r'^#([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})?$',value)
+    if not m: return fallback,1.0
+    return '#'+m.group(1).upper(), (int(m.group(2),16)/255.0 if m.group(2) else 1.0)
+
+def rotation_attr(e: dict) -> str:
+    rot=float(e.get('rotation_deg',0.0))
+    if abs(rot)<=1e-9: return ''
+    x=float(e['x_mm']); y=float(e['y_mm']); w=float(e['width_mm']); h=float(e['height_mm'])
+    return f' transform="rotate({rot:g} {x+w/2:g} {y+h/2:g})"'
+
+def shape_svg(e: dict) -> tuple[str,dict]:
+    x=float(e['x_mm']); y=float(e['y_mm']); w=float(e['width_mm']); h=float(e['height_mm'])
+    fill,fill_alpha=color_value(e.get('fill','#00000000'),'#000000')
+    stroke,stroke_alpha=color_value(e.get('stroke','#000000'),'#000000')
+    opacity=float(e.get('opacity',1.0)); sw=float(e.get('stroke_width_mm',0.0)); transform=rotation_attr(e)
+    common=f' fill="{fill}" fill-opacity="{fill_alpha:g}" stroke="{stroke}" stroke-opacity="{stroke_alpha:g}" stroke-width="{sw:g}" opacity="{opacity:g}"{transform}'
+    if e.get('shape')=='ellipse':
+        node=f'<ellipse cx="{x+w/2:g}" cy="{y+h/2:g}" rx="{w/2:g}" ry="{h/2:g}"{common}/>'
+    else:
+        node=f'<rect x="{x:g}" y="{y:g}" width="{w:g}" height="{h:g}"{common}/>'
+    return node,{'shape':e.get('shape'),'rotation_deg':float(e.get('rotation_deg',0.0))}
+
+def line_svg(e: dict) -> tuple[str,dict]:
+    x=float(e['x_mm']); y=float(e['y_mm']); w=float(e['width_mm']); h=float(e['height_mm'])
+    stroke,stroke_alpha=color_value(e.get('stroke','#000000'),'#000000')
+    opacity=float(e.get('opacity',1.0)); sw=float(e.get('stroke_width_mm',0.3)); transform=rotation_attr(e)
+    return (f'<line x1="{x:g}" y1="{y:g}" x2="{x+w:g}" y2="{y+h:g}" stroke="{stroke}" stroke-opacity="{stroke_alpha:g}" stroke-width="{sw:g}" opacity="{opacity:g}"{transform}/>',{'rotation_deg':float(e.get('rotation_deg',0.0))})
+
+def image_svg(e: dict) -> tuple[str,dict]:
+    if e.get('asset')!='asset:primitives' or not PRIMITIVE_ASSET.is_file():
+        raise RuntimeError('primitive fixture references an unavailable deterministic local asset')
+    x=float(e['x_mm']); y=float(e['y_mm']); w=float(e['width_mm']); h=float(e['height_mm'])
+    fit=str(e.get('fit','contain')); preserve={'contain':'xMidYMid meet','cover':'xMidYMid slice','fill':'none'}[fit]
+    mime='image/png'; data=base64.b64encode(PRIMITIVE_ASSET.read_bytes()).decode('ascii')
+    opacity=float(e.get('opacity',1.0)); transform=rotation_attr(e)
+    node=(f'<image x="{x:g}" y="{y:g}" width="{w:g}" height="{h:g}" preserveAspectRatio="{preserve}" '
+          f'href="data:{mime};base64,{data}" opacity="{opacity:g}"{transform}/>')
+    return node,{'fit':fit,'asset_sha256':sha256(PRIMITIVE_ASSET),'rotation_deg':float(e.get('rotation_deg',0.0))}
+
 def qr_svg(e: dict) -> tuple[str, dict]:
     ec=str(e.get('error_correction','M')).upper()
     qr=qrcode.QRCode(version=None,error_correction=QR_EC[ec],box_size=1,border=0)
@@ -102,9 +145,10 @@ def build_svg(name: str, layout: dict) -> tuple[str, dict]:
         if typ=='merge': text=MERGES.get(name,{}).get(e['token'],''); node,fact=text_svg(e,text)
         elif typ=='text': node,fact=text_svg(e,str(e.get('text','')))
         elif typ=='qr': node,fact=qr_svg(e)
-        else:
-            # Current golden fixtures intentionally exercise text + QR only.
-            continue
+        elif typ=='shape': node,fact=shape_svg(e)
+        elif typ=='line': node,fact=line_svg(e)
+        elif typ in ('image','logo','signature'): node,fact=image_svg(e)
+        else: raise RuntimeError(f'unsupported golden fixture primitive: {typ}')
         nodes.append(node); facts.append({'id':e['id'],'type':typ,**fact})
     svg=(f'<svg xmlns="http://www.w3.org/2000/svg" width="{w:g}mm" height="{h:g}mm" viewBox="0 0 {w:g} {h:g}">'
          +''.join(nodes)+'</svg>')
@@ -119,14 +163,15 @@ def run(cmd):
 
 def main():
     if not FONT.is_file(): raise SystemExit(f'missing reference font: {FONT}')
+    if not PRIMITIVE_ASSET.is_file(): raise SystemExit(f'missing primitive reference asset: {PRIMITIVE_ASSET}')
     if not shutil.which('inkscape'): raise SystemExit('inkscape is required for development reference generation')
     if not features.check('raqm'): raise SystemExit('Pillow RAQM/HarfBuzz support is required for reference text measurement')
     OUT.mkdir(parents=True,exist_ok=True)
     inkscape=run(['inkscape','--version']).splitlines()[0]
-    manifest={'schema':'certloom-development-reference','version':3,'renderer':inkscape,'raster_dpi':DPI,'source_date_epoch':SOURCE_DATE_EPOCH,
+    manifest={'schema':'certloom-development-reference','version':4,'renderer':inkscape,'raster_dpi':DPI,'source_date_epoch':SOURCE_DATE_EPOCH,
               'jpeg_reference':{'encoder':'Pillow '+PIL.__version__,'quality':95,'subsampling':0,'progressive':False,'optimize':False},
-              'font':{'family':'DejaVu Sans','sha256':sha256(FONT)},'verification_url':VERIFY_URL,'fixtures':{}}
-    names=['english','urdu-rtl','mixed-script','long-name-shrink','rotation','qr']
+              'font':{'family':'DejaVu Sans','sha256':sha256(FONT)},'assets':{'primitives':{'sha256':sha256(PRIMITIVE_ASSET),'mime':'image/png'}},'verification_url':VERIFY_URL,'fixtures':{}}
+    names=['english','urdu-rtl','mixed-script','long-name-shrink','rotation','qr','primitives']
     for name in names:
         layout=json.loads((FIXTURES/f'{name}.json').read_text())
         svg,facts=build_svg(name,layout)

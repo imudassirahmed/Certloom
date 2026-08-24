@@ -44,7 +44,7 @@ def decode_qr(path:Path, element:dict):
 
 def main():
     manifest=json.loads((REF/'manifest.json').read_text(encoding='utf-8'))
-    check(manifest.get('version')==3,'reference manifest uses deterministic v3 PDF/PNG/JPEG contract')
+    check(manifest.get('version')==4,'reference manifest uses deterministic v4 seven-fixture PDF/PNG/JPEG contract')
     jpeg_meta=manifest.get('jpeg_reference') or {}
     check(jpeg_meta.get('quality')==95 and jpeg_meta.get('subsampling')==0 and jpeg_meta.get('progressive') is False and jpeg_meta.get('optimize') is False,'JPEG reference encoder settings are frozen')
     for name,facts in sorted(manifest['fixtures'].items()):
@@ -72,6 +72,9 @@ def main():
     for fmt in ('png','jpeg'):
         value,points=decode_qr(REF/'qr'/f'reference.{fmt}',e)
         check(points is not None and value==manifest['verification_url'],f'QR {fmt.upper()} raster oracle decodes to the exact verification URL')
-    print(f"\n{len(manifest['fixtures'])}/6 reference fixtures validated across PDF/PNG/JPEG.")
+    primitive_types={x['type'] for x in manifest['fixtures']['primitives']['elements']}
+    check({'shape','line','image','logo','signature'}.issubset(primitive_types),'primitive oracle exercises shapes, line, and all local image semantic types')
+    check(manifest.get('assets',{}).get('primitives',{}).get('sha256')==sha256(FIX/'assets'/'primitives.png'),'primitive oracle binds exact local raster asset bytes')
+    print(f"\n{len(manifest['fixtures'])}/7 reference fixtures validated across PDF/PNG/JPEG.")
 
 if __name__=='__main__': main()

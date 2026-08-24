@@ -193,8 +193,14 @@ final class GdRasterRenderer implements RendererInterface {
 	}
 	private function draw_line( $canvas, array $op, $ox, $oy ) { $l=$op['line'];$c=$this->driver->allocate_color($canvas,$l['stroke'],(float)$op['opacity']);$th=max(1,(int)round($this->mm_px_float($l['stroke_width_mm'])));$this->driver->line($canvas,$this->mm_px_float($l['from']['x_mm']+$ox),$this->mm_px_float($l['from']['y_mm']+$oy),$this->mm_px_float($l['to']['x_mm']+$ox),$this->mm_px_float($l['to']['y_mm']+$oy),$c,$th); }
 	private function draw_image( $canvas, array $plan, array $op, $ox, $oy ) {
-		$hash=(string)$op['image']['asset']['sha256'];$path=$plan['_runtime']['assets'][$hash]['path']??'';if(''===$path||!is_file($path)){throw new RuntimeException('GD candidate local image path is unavailable.');}$src=$this->driver->load_image($path,$op['image']['asset']['mime']);
+		$asset=$op['image']['asset'];$hash=(string)$asset['sha256'];$path=$plan['_runtime']['assets'][$hash]['path']??'';$this->assert_exact_image_file($path,$asset);$src=$this->driver->load_image($path,$asset['mime']);
 		try{list($sw,$sh)=$this->driver->image_size($src);$p=$op['image']['placement'];$d=$p['destination'];$crop=$p['source_crop'];$dx=$this->mm_px_float($d['x_mm']+$ox);$dy=$this->mm_px_float($d['y_mm']+$oy);$dw=$this->mm_px_float($d['width_mm']);$dh=$this->mm_px_float($d['height_mm']);$sx=$crop['x']*$sw;$sy=$crop['y']*$sh;$cw=$crop['width']*$sw;$ch=$crop['height']*$sh;$this->driver->copy_resampled($canvas,$src,$dx,$dy,$dw,$dh,$sx,$sy,$cw,$ch);}finally{$this->driver->destroy($src);}
+	}
+
+	private function assert_exact_image_file( $path, array $asset ) {
+		if ( '' === (string) $path || ! is_file( $path ) || ! is_readable( $path ) ) { throw new RuntimeException( 'GD candidate local image path is unavailable.' ); }
+		$size=filesize($path);$hash=hash_file('sha256',$path);$image=@getimagesize($path);
+		if(false===$size||!is_string($hash)||!hash_equals((string)$asset['sha256'],$hash)||(int)$size!==(int)$asset['size']||!is_array($image)||(int)$image[0]!==(int)$asset['width_px']||(int)$image[1]!==(int)$asset['height_px']||strtolower((string)($image['mime']??''))!==strtolower((string)$asset['mime'])){throw new RuntimeException('GD candidate local image changed after coordinator verification.');}
 	}
 
 	private function assert_supported_text( $text ) {

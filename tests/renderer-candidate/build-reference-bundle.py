@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 FIX = ROOT / 'tests' / 'fixtures' / 'rendering'
 REF = FIX / 'reference'
 PLAN = FIX / 'render-plan-manifest.json'
-FIXTURES = ('english','urdu-rtl','mixed-script','long-name-shrink','rotation','qr')
+FIXTURES = ('english','urdu-rtl','mixed-script','long-name-shrink','rotation','qr','primitives')
 FORMATS = ('pdf','png','jpeg')
 
 
@@ -88,7 +88,7 @@ def main() -> int:
         }
 
     manifest = {
-        'schema':'certloom-renderer-acceptance-bundle','version':2,
+        'schema':'certloom-renderer-acceptance-bundle','version':3,
         'qualification':'development-reference',
         'plugin_version':version_match.group(1),
         'fixture_manifest': {'path':'manifests/golden.json','sha256':sha(out/'manifests'/'golden.json')},

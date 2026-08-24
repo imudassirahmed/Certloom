@@ -165,18 +165,50 @@ final class MpdfPdfRenderer implements RendererInterface {
 		foreach ( (array) $op['qr']['dark_runs'] as $run ) { $mpdf->Rect( $run['x_mm'], $run['y_mm'], $run['width_mm'], $run['height_mm'], 'F' ); }
 	}
 	private function draw_shape( $mpdf, array $op ) {
-		$box=$op['geometry']['box']; $shape=$op['shape']; $fill=$shape['fill']; $stroke=$shape['stroke'];
-		if ( method_exists($mpdf,'SetFillColor') ){$mpdf->SetFillColor((int)$fill['r'],(int)$fill['g'],(int)$fill['b']);}
-		if ( method_exists($mpdf,'SetDrawColor') ){$mpdf->SetDrawColor((int)$stroke['r'],(int)$stroke['g'],(int)$stroke['b']);}
-		if ( method_exists($mpdf,'SetLineWidth') ){$mpdf->SetLineWidth((float)$shape['stroke_width_mm']);}
-		$style=(int)$fill['alpha']>0&&$shape['stroke_width_mm']>0?'DF':((int)$fill['alpha']>0?'F':'D');
-		if('rectangle'===$shape['kind']){$mpdf->Rect($box['x_mm'],$box['y_mm'],$box['width_mm'],$box['height_mm'],$style);}else{$mpdf->Ellipse($box['x_mm']+$box['width_mm']/2,$box['y_mm']+$box['height_mm']/2,$box['width_mm'],$box['height_mm'],$style);}
+		$box = $op['geometry']['box']; $shape = $op['shape']; $bounds = $op['geometry']['rotated_bounds'];
+		$x = (float) $box['x_mm'] - (float) $bounds['x_mm']; $y = (float) $box['y_mm'] - (float) $bounds['y_mm'];
+		$fill = $shape['fill']; $stroke = $shape['stroke']; $transform = $this->svg_rotation( $op, $bounds );
+		$common = ' fill="rgb(' . (int) $fill['r'] . ',' . (int) $fill['g'] . ',' . (int) $fill['b'] . ')" fill-opacity="' . $this->num( $fill['alpha_unit'] ) . '" stroke="rgb(' . (int) $stroke['r'] . ',' . (int) $stroke['g'] . ',' . (int) $stroke['b'] . ')" stroke-opacity="' . $this->num( $stroke['alpha_unit'] ) . '" stroke-width="' . $this->num( $shape['stroke_width_mm'] ) . '"' . $transform;
+		if ( 'rectangle' === $shape['kind'] ) {
+			$body = '<rect x="' . $this->num( $x ) . '" y="' . $this->num( $y ) . '" width="' . $this->num( $box['width_mm'] ) . '" height="' . $this->num( $box['height_mm'] ) . '"' . $common . '/>';
+		} else {
+			$body = '<ellipse cx="' . $this->num( $x + $box['width_mm'] / 2 ) . '" cy="' . $this->num( $y + $box['height_mm'] / 2 ) . '" rx="' . $this->num( $box['width_mm'] / 2 ) . '" ry="' . $this->num( $box['height_mm'] / 2 ) . '"' . $common . '/>';
+		}
+		$this->write_svg_operation( $mpdf, $op, $body );
 	}
-	private function draw_line( $mpdf, array $op ) { $l=$op['line']; $c=$l['stroke']; if(method_exists($mpdf,'SetDrawColor')){$mpdf->SetDrawColor((int)$c['r'],(int)$c['g'],(int)$c['b']);} if(method_exists($mpdf,'SetLineWidth')){$mpdf->SetLineWidth((float)$l['stroke_width_mm']);} $mpdf->Line($l['from']['x_mm'],$l['from']['y_mm'],$l['to']['x_mm'],$l['to']['y_mm']); }
+	private function draw_line( $mpdf, array $op ) {
+		$l = $op['line']; $bounds = $op['geometry']['rotated_bounds']; $c = $l['stroke']; $transform = $this->svg_rotation( $op, $bounds );
+		$body = '<line x1="' . $this->num( $l['from']['x_mm'] - $bounds['x_mm'] ) . '" y1="' . $this->num( $l['from']['y_mm'] - $bounds['y_mm'] ) . '" x2="' . $this->num( $l['to']['x_mm'] - $bounds['x_mm'] ) . '" y2="' . $this->num( $l['to']['y_mm'] - $bounds['y_mm'] ) . '" stroke="rgb(' . (int) $c['r'] . ',' . (int) $c['g'] . ',' . (int) $c['b'] . ')" stroke-opacity="' . $this->num( $c['alpha_unit'] ) . '" stroke-width="' . $this->num( $l['stroke_width_mm'] ) . '"' . $transform . '/>';
+		$this->write_svg_operation( $mpdf, $op, $body );
+	}
 	private function draw_image( $mpdf, array $plan, array $op ) {
-		$hash=(string)$op['image']['asset']['sha256']; $path=$plan['_runtime']['assets'][$hash]['path']??''; if(''===$path||!is_file($path)){throw new RuntimeException('mPDF candidate local image path is unavailable.');}
-		$p=$op['image']['placement']; if('cover'===$p['mode']){throw new RuntimeException('Initial mPDF candidate fails closed for image cover/crop until production acceptance includes that primitive.');}
-		$d=$p['destination']; $mpdf->Image($path,$d['x_mm'],$d['y_mm'],$d['width_mm'],$d['height_mm'],'','',true,false);
+		$asset = $op['image']['asset']; $hash = (string) $asset['sha256']; $path = $plan['_runtime']['assets'][ $hash ]['path'] ?? '';
+		$this->assert_exact_image_file( $path, $asset );
+		$bytes = @file_get_contents( $path );
+		if ( ! is_string( $bytes ) || '' === $bytes ) { throw new RuntimeException( 'mPDF candidate local image bytes became unavailable.' ); }
+		$p = $op['image']['placement']; $d = $p['destination']; $bounds = $op['geometry']['rotated_bounds'];
+		$preserve = 'cover' === $p['mode'] ? 'xMidYMid slice' : 'none';
+		$mime = (string) $asset['mime']; $transform = $this->svg_rotation( $op, $bounds );
+		$body = '<image x="' . $this->num( $d['x_mm'] - $bounds['x_mm'] ) . '" y="' . $this->num( $d['y_mm'] - $bounds['y_mm'] ) . '" width="' . $this->num( $d['width_mm'] ) . '" height="' . $this->num( $d['height_mm'] ) . '" preserveAspectRatio="' . $preserve . '" xlink:href="data:' . $mime . ';base64,' . base64_encode( $bytes ) . '"' . $transform . '/>';
+		$this->write_svg_operation( $mpdf, $op, $body );
+	}
+	private function write_svg_operation( $mpdf, array $op, $body ) {
+		$bounds = $op['geometry']['rotated_bounds'];
+		$svg = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="' . $this->num( $bounds['width_mm'] ) . 'mm" height="' . $this->num( $bounds['height_mm'] ) . 'mm" viewBox="0 0 ' . $this->num( $bounds['width_mm'] ) . ' ' . $this->num( $bounds['height_mm'] ) . '">' . $body . '</svg>';
+		$mpdf->WriteFixedPosHTML( $svg, $bounds['x_mm'], $bounds['y_mm'], $bounds['width_mm'], $bounds['height_mm'], 'hidden' );
+	}
+	private function svg_rotation( array $op, array $bounds ) {
+		$rotation = (float) $op['geometry']['rotation_deg'];
+		if ( abs( $rotation ) < 0.0001 ) { return ''; }
+		$center = $op['geometry']['center'];
+		return ' transform="rotate(' . $this->num( $rotation ) . ' ' . $this->num( $center['x_mm'] - $bounds['x_mm'] ) . ' ' . $this->num( $center['y_mm'] - $bounds['y_mm'] ) . ')"';
+	}
+	private function assert_exact_image_file( $path, array $asset ) {
+		if ( '' === (string) $path || ! is_file( $path ) || ! is_readable( $path ) ) { throw new RuntimeException( 'Renderer candidate local image path is unavailable.' ); }
+		$size = filesize( $path ); $hash = hash_file( 'sha256', $path ); $image = @getimagesize( $path );
+		if ( false === $size || ! is_string( $hash ) || ! hash_equals( (string) $asset['sha256'], $hash ) || (int) $size !== (int) $asset['size'] || ! is_array( $image ) || (int) $image[0] !== (int) $asset['width_px'] || (int) $image[1] !== (int) $asset['height_px'] || strtolower( (string) ( $image['mime'] ?? '' ) ) !== strtolower( (string) $asset['mime'] ) ) {
+			throw new RuntimeException( 'Renderer candidate local image changed after coordinator verification.' );
+		}
 	}
 	private function num( $value ) { return rtrim( rtrim( sprintf( '%.6F', (float) $value ), '0' ), '.' ); }
 }

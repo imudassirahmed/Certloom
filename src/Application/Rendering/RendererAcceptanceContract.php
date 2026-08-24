@@ -12,11 +12,11 @@ use InvalidArgumentException;
  */
 final class RendererAcceptanceContract {
 	const SCHEMA = 'certloom-renderer-acceptance';
-	const VERSION = 5;
+	const VERSION = 6;
 
 	/** @return string[] */
 	public static function required_fixtures() {
-		return array( 'english', 'urdu-rtl', 'mixed-script', 'long-name-shrink', 'rotation', 'qr' );
+		return array( 'english', 'urdu-rtl', 'mixed-script', 'long-name-shrink', 'rotation', 'qr', 'primitives' );
 	}
 
 	/** @return string[] */
@@ -43,6 +43,7 @@ final class RendererAcceptanceContract {
 			'pdf_png_visual_parity',
 			'png_jpeg_visual_parity',
 			'golden_visual_parity',
+			'primitive_capability_coverage',
 			'local_assets_only',
 			'no_remote_fetch',
 			'missing_dependencies_fail_soft',

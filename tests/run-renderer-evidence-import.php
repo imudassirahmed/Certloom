@@ -55,7 +55,7 @@ $report = array(
     'candidate_provenance_rechecked' => true, 'artifact_receipts_rechecked' => true, 'deterministic_runs' => true,
     'pdf_geometry' => true, 'png_geometry' => true, 'jpeg_geometry' => true,
     'qr_png_decode' => true, 'qr_jpeg_decode' => true,
-    'pdf_png_visual_parity' => true, 'png_jpeg_visual_parity' => true, 'golden_visual_parity' => true,
+    'pdf_png_visual_parity' => true, 'png_jpeg_visual_parity' => true, 'golden_visual_parity' => true, 'primitive_capability_coverage' => true,
     'renderers' => $renderers, 'fixtures' => $fixtures, 'parity' => $parity, 'golden_parity' => $golden,
 );
 $report_contract = new RendererVerificationReport();
@@ -88,8 +88,8 @@ $evidence = array(
 $importer = new RendererAcceptanceImporter();
 $accepted = $importer->import( $evidence, $report, $environment );
 rei_check( RendererAcceptanceContract::VERSION === $accepted['version'], 'Cross-linked evidence set must import successfully when every three-format identity agrees.' );
-rei_check( 5 === RendererAcceptanceContract::VERSION, 'Renderer acceptance must be schema v5.' );
-rei_check( 3 === RendererVerificationReport::VERSION, 'Independent verification report must be schema v3.' );
+rei_check( 6 === RendererAcceptanceContract::VERSION, 'Renderer acceptance must be schema v6.' );
+rei_check( 4 === RendererVerificationReport::VERSION, 'Independent verification report must be schema v4.' );
 rei_check( 1 === RendererVerifierEnvironment::VERSION, 'Verifier environment must be schema v1.' );
 rei_check( array( 'pdf', 'png', 'jpeg' ) === RendererAcceptanceContract::required_formats(), 'PDF-04 acceptance must require all three product artifact formats.' );
 
