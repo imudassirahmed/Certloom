@@ -1,3 +1,17 @@
+1.6.31
+- Freeze renderer candidate files and the dependency lock once into a private snapshot before namespace inspection, source-archive creation, or executable runtime publication, closing a prepared-tree TOCTOU provenance gap.
+- Reject symbolic candidate-root, dependency-lock, and recipe arguments before path canonicalization so resolve() cannot erase symlink evidence.
+- Prove the published candidate source archive and executable runtime tree are exact per-file byte peers and never publish private snapshot material.
+- Expand candidate-freeze regression from 26 to 31 focused checks while preserving 105/105 full regression and all renderer/visual/scanner/browser baselines.
+- Keep PDF-04, production PDF/PNG/JPEG, Template publication, authoritative Preview and Designer closed until the genuine seven-fixture renderer run passes.
+
+1.6.30
+- Harden the PDF-04 candidate freezer so an unprefixed root `namespace Mpdf;` declaration cannot bypass namespace-isolation checks.
+- Require a real prefixed PHP namespace declaration; comments or ordinary strings can no longer satisfy the candidate prefix proof.
+- Reject Composer autoload PSR-4/classmap/static namespace exposure that still publishes an unprefixed `Mpdf\\` namespace from the prepared candidate tree.
+- Expand candidate-freeze regression from 23 to 26 focused checks while preserving deterministic source/lock/runtime provenance and all production authority gates.
+- Keep PDF-04, production PDF/PNG/JPEG, Template publication, authoritative Preview and Designer closed until the genuine seven-fixture renderer run passes.
+
 1.6.29
 - Advance RendererCandidateManifest to v2 with truthful prefixed-package versus Certloom-native provenance modes.
 - Add deterministic source-only candidate freezing for exact source ZIP, dependency lock, canonical candidate manifest, recipe, runtime-tree hash, and freeze index.

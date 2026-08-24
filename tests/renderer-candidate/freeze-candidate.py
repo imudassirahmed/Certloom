@@ -19,6 +19,19 @@ MAX_TOTAL_BYTES = 150 * 1024 * 1024
 FORBIDDEN_PARTS = {'.git', '.svn', '__pycache__', '.DS_Store'}
 
 
+def remove_tree(path: Path) -> None:
+    """Best-effort cleanup for private freeze workspaces, including read-only trees."""
+    if not path.exists() and not path.is_symlink():
+        return
+    def onerror(func, value, _exc):
+        try:
+            os.chmod(value, 0o700 if Path(value).is_dir() else 0o600)
+            func(value)
+        except OSError:
+            pass
+    shutil.rmtree(path, onerror=onerror)
+
+
 def sha256_file(path: Path) -> str:
     h = hashlib.sha256()
     with path.open('rb') as f:
@@ -131,17 +144,69 @@ def collect_files(root: Path, include_paths: list[str]) -> list[tuple[Path,str]]
     return [(out[k], k) for k in sorted(out)]
 
 
+def snapshot_files(files: list[tuple[Path,str]], snapshot_root: Path) -> list[tuple[Path,str]]:
+    """Copy candidate bytes once into a private snapshot used by every later freeze step.
+
+    The prepared tree is operator-controlled input and may still be changing while a
+    freeze begins. Namespace inspection, deterministic ZIP creation and the executable
+    runtime tree must therefore all consume the same captured bytes rather than
+    independently re-reading the prepared directory.
+    """
+    snapshot_root.mkdir(mode=0o700, parents=True, exist_ok=False)
+    out: list[tuple[Path,str]] = []
+    for src, rel in files:
+        dst = snapshot_root.joinpath(*PurePosixPath(rel).parts)
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, dst)
+        if dst.is_symlink() or not dst.is_file():
+            raise ValueError(f'candidate snapshot contains an invalid file: {rel}')
+        os.chmod(dst, 0o400)
+        out.append((dst, rel))
+    return out
+
+
+def _namespace_declared(text: str, namespace: str) -> bool:
+    ns = re.escape(namespace.rstrip('\\'))
+    # Namespace declarations may target the namespace root itself (for example
+    # `namespace Mpdf;`) or a child namespace. Anchor at line start so comments
+    # and ordinary strings cannot satisfy the provenance check.
+    return re.search(r'(?m)^[ \t]*(?:<\?php[ \t]+)?namespace[ \t]+' + ns + r'(?=[ \t]*(?:[;{]|\\))', text) is not None
+
+
+def _unprefixed_use_declared(text: str, namespace: str) -> bool:
+    ns = re.escape(namespace.rstrip('\\'))
+    return re.search(r'(?m)^[ \t]*(?:<\?php[ \t]+)?use[ \t]+(?:(?:function|const)[ \t]+)?' + ns + r'(?=[ \t]*(?:[;{]|\\))', text) is not None
+
+
+def _composer_autoload_exposes_namespace(text: str, namespace: str) -> bool:
+    # Composer-generated maps encode namespace backslashes inside PHP strings.
+    # Normalize doubled backslashes before checking for a quoted root prefix.
+    normalized = text.replace('\\\\', '\\')
+    root = namespace.rstrip('\\') + '\\'
+    return ("'" + root) in normalized or ('"' + root) in normalized
+
+
 def inspect_php_namespaces(files: list[tuple[Path,str]], required: str, forbid_unprefixed: str) -> None:
-    joined = ''
+    php_files: list[tuple[str,str]] = []
     for path, rel in files:
         if rel.lower().endswith('.php'):
-            joined += '\n' + path.read_text(encoding='utf-8', errors='replace')
-    if required and required not in joined:
-        raise ValueError('prepared candidate tree does not contain the required namespace prefix')
-    if forbid_unprefixed:
-        ns = re.escape(forbid_unprefixed.rstrip('\\'))
-        if re.search(r'\b(?:namespace|use)\s+' + ns + r'\\', joined):
-            raise ValueError('prepared candidate tree still contains an unprefixed renderer namespace')
+            php_files.append((rel, path.read_text(encoding='utf-8', errors='replace')))
+
+    if required and not any(_namespace_declared(text, required) for _, text in php_files):
+        raise ValueError('prepared candidate tree does not declare the required namespace prefix')
+
+    if not forbid_unprefixed:
+        return
+
+    for rel, text in php_files:
+        if _namespace_declared(text, forbid_unprefixed) or _unprefixed_use_declared(text, forbid_unprefixed):
+            raise ValueError(f'prepared candidate tree still contains an unprefixed renderer namespace: {rel}')
+
+        name = PurePosixPath(rel).name
+        if rel.startswith('vendor/composer/') and name in {
+            'autoload_psr4.php', 'autoload_namespaces.php', 'autoload_classmap.php', 'autoload_static.php'
+        } and _composer_autoload_exposes_namespace(text, forbid_unprefixed):
+            raise ValueError(f'prepared candidate Composer autoload map still exposes an unprefixed renderer namespace: {rel}')
 
 
 def validate_lock(path: Path, recipe: dict) -> dict:
@@ -187,15 +252,27 @@ def main() -> int:
     ap.add_argument('--output', required=True)
     args = ap.parse_args()
 
-    recipe_path = Path(args.recipe).resolve()
-    candidate_root = Path(args.candidate_root).resolve()
-    lock_path = Path(args.dependency_lock).resolve()
+    # Check the user-supplied leaf paths before resolve(); resolving first would
+    # erase the evidence that the argument itself was a symbolic link.
+    recipe_input = Path(args.recipe).absolute()
+    candidate_input = Path(args.candidate_root).absolute()
+    lock_input = Path(args.dependency_lock).absolute()
+    if recipe_input.is_symlink():
+        raise ValueError('candidate freeze recipe may not be symbolic')
+    if candidate_input.is_symlink():
+        raise ValueError('candidate root may not be symbolic')
+    if lock_input.is_symlink():
+        raise ValueError('candidate dependency lock may not be symbolic')
+
+    recipe_path = recipe_input.resolve()
+    candidate_root = candidate_input.resolve()
+    lock_path = lock_input.resolve()
     output = Path(args.output).absolute()
     if inside(output, ROOT):
         raise ValueError('candidate freeze output may not be written inside the Certloom source tree')
     if output.exists() or output.is_symlink():
         raise ValueError('candidate freeze output must not already exist')
-    if not candidate_root.is_dir() or candidate_root.is_symlink():
+    if not candidate_root.is_dir():
         raise ValueError('candidate root must be a real readable directory')
 
     recipe = validate_recipe(load_json(recipe_path, 'candidate freeze recipe'))
@@ -205,21 +282,32 @@ def main() -> int:
         rel = relative_clean(str(item)).as_posix()
         if rel not in present:
             raise ValueError(f'candidate archive is missing required file: {rel}')
-    inspect_php_namespaces(files, str(recipe['archive']['required_php_namespace']), str(recipe['archive']['forbid_unprefixed_namespace']))
-    lock_inventory = validate_lock(lock_path, recipe)
 
     parent = output.parent
     parent.mkdir(parents=True, exist_ok=True)
     temp = Path(tempfile.mkdtemp(prefix='.' + output.name + '.tmp-', dir=str(parent)))
+    snapshot_root = temp / '.candidate-snapshot'
     try:
         os.chmod(temp, 0o700)
+
+        # Capture every candidate byte and the dependency lock once. Everything
+        # after this point validates and publishes from the private snapshot.
+        # This closes the prepared-tree TOCTOU gap between namespace inspection,
+        # source evidence creation and executable runtime publication.
+        snapshot = snapshot_files(files, snapshot_root)
+        snapshot_lock = temp / '.dependency-lock.snapshot'
+        shutil.copyfile(lock_path, snapshot_lock)
+        os.chmod(snapshot_lock, 0o400)
+        inspect_php_namespaces(snapshot, str(recipe['archive']['required_php_namespace']), str(recipe['archive']['forbid_unprefixed_namespace']))
+        lock_inventory = validate_lock(snapshot_lock, recipe)
+
         source_zip = temp / 'candidate-source.zip'
-        write_zip(source_zip, files)
-        shutil.copyfile(lock_path, temp / 'dependency.lock')
+        write_zip(source_zip, snapshot)
+        shutil.copyfile(snapshot_lock, temp / 'dependency.lock')
         os.chmod(source_zip, 0o600); os.chmod(temp / 'dependency.lock', 0o600)
         runtime_root = temp / 'runtime'
         runtime_rows = []
-        for src, rel in files:
+        for src, rel in snapshot:
             dst = runtime_root.joinpath(*PurePosixPath(rel).parts)
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(src, dst)
@@ -255,11 +343,19 @@ def main() -> int:
         (temp / 'freeze-index.json').write_bytes(canonical(index) + b'\n')
         (temp / 'recipe.json').write_bytes(canonical(recipe) + b'\n')
         os.chmod(temp / 'freeze-index.json', 0o600); os.chmod(temp / 'recipe.json', 0o600)
+
+        # Private capture material is an implementation detail and must never be
+        # published as a second, unaudited copy of candidate bytes.
+        os.chmod(snapshot_lock, 0o600)
+        snapshot_lock.unlink()
+        for snap_file, _ in snapshot:
+            os.chmod(snap_file, 0o600)
+        remove_tree(snapshot_root)
         os.replace(temp, output)
         print(json.dumps(index, sort_keys=True, separators=(',', ':')))
         return 0
     except Exception:
-        shutil.rmtree(temp, ignore_errors=True)
+        remove_tree(temp)
         raise
 
 if __name__ == '__main__':
