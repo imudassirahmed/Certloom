@@ -4,7 +4,7 @@ require_once __DIR__ . '/producer-lib.php';
 
 if ( 3 !== $argc ) {
 	fwrite( STDERR, "usage: php produce-production-bundle.php BOOTSTRAP.php OUTPUT_DIR\n" );
-	fwrite( STDERR, "BOOTSTRAP.php must return the source-only candidate config documented in docs/renderer-production-candidate-execution-contract-1.6.25.md\n" );
+	fwrite( STDERR, "BOOTSTRAP.php must return the source-only candidate config documented in the current renderer production-candidate execution contract\n" );
 	exit( 2 );
 }
 $bootstrap = realpath( $argv[1] );

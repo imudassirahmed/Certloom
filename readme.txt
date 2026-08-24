@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.26
+Stable tag: 1.6.27
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.26: Certloom now includes a source-only PDF-04 acceptance finalizer that cross-links accepted evidence with the independent verification report, verifier environment, and verification index, imports them through production contracts, and atomically stages the exact release-bound `accepted.json` candidate plus its normalized audit set. The installable still ships no accepted renderer manifest, so production artifacts, Template publication, authoritative Preview, and Designer output remain disabled until actual PDF-04 candidate execution passes and the staged authority is explicitly reviewed for packaging.
+> Development note for 1.6.27: Certloom now includes concrete, unaccepted PDF/PNG/JPEG renderer candidates over dependency-prefixed mPDF and GD. They consume the frozen shared Render Plan and exact local fonts/assets, but are not registered for live WordPress artifact output. This host still lacks the required native/vendor runtime, `accepted.json` remains absent, and production artifacts, Template publication, authoritative Preview, and Designer output stay disabled until the real six-fixture PDF-04 run passes.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -129,6 +129,14 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.27 =
+* Add concrete, authority-closed `MpdfPdfRenderer` and `GdRasterRenderer` candidates so PDF-04 no longer depends on external one-off RendererInterface implementations.
+* Add a narrow native-GD driver, deterministic 96-DPI PNG/JPEG execution, exact QR/shape/line/image placement, and bounded Arabic/Perso-Arabic shaping for the permanent Urdu/mixed-script fixtures.
+* Add length-preserving deterministic normalization of volatile mPDF timestamp/UUID/file-ID metadata before strict A/B evidence comparison.
+* Keep shared Render Plan v1 and all frozen plan hashes unchanged; fail closed for unresolved multi-face fallback and typography/image cases that have not yet earned production acceptance.
+* Wire the canonical source-only production bootstrap/runtime probe to the concrete candidates while keeping them unregistered and `accepted.json` absent.
+* Keep PDF-04 and all renderer-backed product authority open/gated until the real dependency-prefixed candidates pass the six-fixture PDF/PNG/JPEG acceptance suite.
 
 = 1.6.25 =
 * Add a canonical source-only PDF-04 production-candidate producer that executes the six frozen fixtures through the real `ArtifactRenderCoordinator` for PDF + PNG + JPEG, twice, using exact content-addressed fonts.

@@ -1,3 +1,10 @@
+1.6.27
+- Add concrete, unaccepted mPDF PDF and GD PNG/JPEG RendererInterface candidates against the frozen shared Render Plan.
+- Add bounded Arabic/Perso-Arabic shaping for GD and fix mixed-script Arabic phrase visual ordering discovered by the permanent acceptance fixture.
+- Add length-preserving deterministic mPDF metadata normalization for strict two-run evidence generation.
+- Wire the canonical production-candidate bootstrap/runtime probe to the real adapters while keeping them unregistered, no-network, exact-font and release-authority closed.
+- Keep PDF-04 open because this host still lacks ext-mbstring, ext-gd and the dependency-prefixed mPDF package; no accepted renderer manifest ships.
+
 1.6.26
 - Add a source-only PDF-04 acceptance finalizer that cross-links v5 acceptance evidence, v3 independent verification report, verifier-environment record, and verification index before deriving release-bound renderer authority v2.
 - Atomically stage a self-contained owner-only authority handoff containing normalized acceptance evidence, verification report/environment/index, accepted.json, and an authority index; reject reused destinations and any output inside the plugin source tree.

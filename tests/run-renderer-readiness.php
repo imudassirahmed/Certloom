@@ -1,5 +1,5 @@
 <?php
-/** 1.6.26 PDF-04 readiness / three-format golden-bound authority finalization regression. */
+/** Current PDF-04 readiness / three-format golden-bound authority regression. */
 require_once __DIR__ . '/bootstrap-autoload.php';
 
 use Certloom\Application\Rendering\ArtifactReceipt;
@@ -12,6 +12,10 @@ use Certloom\Application\Rendering\RendererReleaseManifest;
 use Certloom\Application\Rendering\RenderPlanBuilder;
 use Certloom\Application\Rendering\FontAssetInspector;
 use Certloom\Infrastructure\Rendering\ContentAddressedFontResolver;
+use Certloom\Infrastructure\Rendering\MpdfPdfRenderer;
+use Certloom\Infrastructure\Rendering\GdRasterRenderer;
+use Certloom\Application\Rendering\ArabicPresentationShaper;
+use Certloom\Application\Rendering\DeterministicPdfNormalizer;
 
 $checks=0; function rrcheck($c,$m){global $checks;$checks++;if(!$c){throw new RuntimeException($m);}}
 rrcheck(4===ArtifactReceipt::VERSION,'ArtifactReceipt must remain v4 after shared-plan binding.');
@@ -21,6 +25,8 @@ rrcheck(false===strpos($rendering,'ArtifactReceipt v2')&&false===strpos($renderi
 rrcheck(false!==strpos($architecture,'ArtifactReceipt v4'),'Architecture must document current receipt v4.');
 rrcheck(interface_exists('Certloom\\Application\\Contract\\LocalFontResolverInterface'),'Exact local font resolver must autoload.');
 rrcheck(class_exists(FontAssetInspector::class)&&class_exists(ContentAddressedFontResolver::class)&&class_exists(RenderPlanBuilder::class),'Font and shared-plan readiness classes must autoload.');
+rrcheck(class_exists(MpdfPdfRenderer::class)&&class_exists(GdRasterRenderer::class),'Concrete mPDF/GD PDF-04 candidate adapters must autoload.');
+rrcheck(class_exists(ArabicPresentationShaper::class)&&class_exists(DeterministicPdfNormalizer::class),'Candidate shaping/deterministic-PDF helpers must autoload.');
 rrcheck(5===RendererAcceptanceContract::VERSION,'Renderer acceptance must be v5 after JPEG/golden parity expansion.');
 rrcheck(3===RendererVerificationReport::VERSION,'Independent verification report must be v3.');
 rrcheck(2===RendererReleaseManifest::VERSION,'Release authority manifest must be v2.');
