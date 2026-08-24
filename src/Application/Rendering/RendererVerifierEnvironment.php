@@ -13,7 +13,7 @@ use InvalidArgumentException;
  */
 final class RendererVerifierEnvironment {
 	const SCHEMA = 'certloom-renderer-verifier-environment';
-	const VERSION = 1;
+	const VERSION = 2;
 
 	/** @return array<string,mixed> */
 	public function normalize( array $manifest ) {
@@ -42,7 +42,7 @@ final class RendererVerifierEnvironment {
 		$packages = array();
 		foreach ( $package_keys as $key ) { $packages[ $key ] = $this->bounded_text( $manifest['packages'][ $key ], 128, 'Renderer verifier package version is invalid.' ); }
 
-		$script_keys = array( 'verify_bundle_sha256', 'capture_environment_sha256', 'validate_candidate_sha256', 'verify_receipt_sha256', 'validate_environment_sha256', 'validate_report_sha256' );
+		$script_keys = array( 'verify_bundle_sha256', 'capture_environment_sha256', 'validate_candidate_sha256', 'verify_receipt_sha256', 'validate_environment_sha256', 'validate_report_sha256', 'verify_entrypoint_sha256' );
 		$this->assert_shape( $manifest['scripts'], $script_keys, $script_keys, 'renderer verifier scripts' );
 		$scripts = array();
 		foreach ( $script_keys as $key ) {

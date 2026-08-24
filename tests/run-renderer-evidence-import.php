@@ -21,7 +21,7 @@ $environment = array(
     'scripts' => array(
         'verify_bundle_sha256' => str_repeat( '1', 64 ), 'capture_environment_sha256' => str_repeat( '2', 64 ),
         'validate_candidate_sha256' => str_repeat( '3', 64 ), 'verify_receipt_sha256' => str_repeat( '4', 64 ),
-        'validate_environment_sha256' => str_repeat( '5', 64 ), 'validate_report_sha256' => str_repeat( '6', 64 ),
+        'validate_environment_sha256' => str_repeat( '5', 64 ), 'validate_report_sha256' => str_repeat( '6', 64 ), 'verify_entrypoint_sha256' => str_repeat( '7', 64 ),
     ),
 );
 $env_contract = new RendererVerifierEnvironment();
@@ -92,7 +92,7 @@ $accepted = $importer->import( $evidence, $report, $environment );
 rei_check( RendererAcceptanceContract::VERSION === $accepted['version'], 'Cross-linked evidence set must import successfully when every three-format identity agrees.' );
 rei_check( 7 === RendererAcceptanceContract::VERSION, 'Renderer acceptance must be schema v7.' );
 rei_check( 5 === RendererVerificationReport::VERSION, 'Independent verification report must be schema v5.' );
-rei_check( 1 === RendererVerifierEnvironment::VERSION, 'Verifier environment must be schema v1.' );
+rei_check( 2 === RendererVerifierEnvironment::VERSION, 'Verifier environment must be schema v2 with the production verification entrypoint bound.' );
 rei_check( array( 'pdf', 'png', 'jpeg' ) === RendererAcceptanceContract::required_formats(), 'PDF-04 acceptance must require all three product artifact formats.' );
 
 $bad = $evidence; $bad['bundle_manifest_sha256'] = str_repeat( 'f', 64 );

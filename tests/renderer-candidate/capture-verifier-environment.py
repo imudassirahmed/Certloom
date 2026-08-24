@@ -39,7 +39,7 @@ def capture() -> dict:
         raise RuntimeError('Certloom plugin version is unavailable')
     return {
         'schema': 'certloom-renderer-verifier-environment',
-        'version': 1,
+        'version': 2,
         'plugin_version': match.group(1),
         'runtime': {
             'python_implementation': platform.python_implementation(),
@@ -63,6 +63,7 @@ def capture() -> dict:
             'verify_receipt_sha256': sha(HERE / 'verify-receipt.php'),
             'validate_environment_sha256': sha(HERE / 'validate-verifier-environment.php'),
             'validate_report_sha256': sha(HERE / 'validate-verification-report.php'),
+            'verify_entrypoint_sha256': sha(HERE / 'verify-production-bundle.sh'),
         },
     }
 

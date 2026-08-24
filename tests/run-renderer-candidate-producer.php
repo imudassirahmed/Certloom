@@ -97,6 +97,35 @@ try {
     $receipt_data=json_decode(file_get_contents($prod_out.'/'.$receipt['path']),true); rcp_check(4===$receipt_data['version']&&hash_equals($prod['runs']['a']['fixtures']['english']['render_plan_sha256'],$receipt_data['render_plan_hash']),'Production receipt must bind the exact frozen render-plan hash.');
     rcp_check($prod['runs']['a']['fixtures']['english']['pdf']['sha256']===$prod['runs']['b']['fixtures']['english']['pdf']['sha256'],'Producer must enforce byte-identical A/B runs before writing the final bundle manifest.');
 
+    $verify_entry=__DIR__.'/renderer-candidate/verify-production-bundle.sh';
+    $verify_out=$tmp.'/production-verification';
+    $verify_lines=array(); $verify_rc=0;
+    exec('bash '.escapeshellarg($verify_entry).' '.escapeshellarg($prod_out).' '.escapeshellarg($verify_out).' 2>&1',$verify_lines,$verify_rc);
+    rcp_check(0===$verify_rc&&is_dir($verify_out),'Standard production verifier must atomically publish a complete verification directory for a qualifying bundle.');
+    $verification_files=array_values(array_diff(scandir($verify_out),array('.','..'))); sort($verification_files);
+    rcp_check(array('verification-index.json','verification-report.json','verifier-environment.json')===$verification_files,'Published production verification must contain exactly the normalized three-file evidence set.');
+    rcp_check(empty(glob($tmp.'/.certloom-verification-*')?:array()),'Successful production verification must not leak private staging directories.');
+    $verified_environment=json_decode(file_get_contents($verify_out.'/verifier-environment.json'),true);
+    rcp_check(is_array($verified_environment)&&2===$verified_environment['version']&&hash_equals(hash_file('sha256',$verify_entry),$verified_environment['scripts']['verify_entrypoint_sha256']),'Verifier environment v2 must bind the exact standard production-verification entrypoint bytes.');
+
+    $verify_existing=$tmp.'/existing-verification'; mkdir($verify_existing,0700);
+    $lines=array(); $rc_existing=0; exec('bash '.escapeshellarg($verify_entry).' '.escapeshellarg($prod_out).' '.escapeshellarg($verify_existing).' 2>&1',$lines,$rc_existing);
+    rcp_check(0!==$rc_existing&&array()==array_values(array_diff(scandir($verify_existing),array('.','..'))),'Production verification must reject even an empty existing output directory rather than merge or replace evidence.');
+
+    $verify_inside=$root.'/tests/renderer-candidate/.forbidden-production-verification'; rcp_rm($verify_inside);
+    $lines=array(); $rc_inside=0; exec('bash '.escapeshellarg($verify_entry).' '.escapeshellarg($prod_out).' '.escapeshellarg($verify_inside).' 2>&1',$lines,$rc_inside);
+    rcp_check(0!==$rc_inside&&!file_exists($verify_inside)&&!is_link($verify_inside),'Independent verification evidence must never be written inside the Certloom source tree.');
+
+    $verify_dot=$tmp.'/verify-dot-parent/../verification-dot-output';
+    $lines=array(); $rc_dot=0; exec('bash '.escapeshellarg($verify_entry).' '.escapeshellarg($prod_out).' '.escapeshellarg($verify_dot).' 2>&1',$lines,$rc_dot);
+    rcp_check(0!==$rc_dot&&!file_exists($tmp.'/verification-dot-output'),'Independent verification must reject ambiguous dot-segment output paths before creating evidence.');
+
+    file_put_contents($prod_out.'/artifacts/a/english.png','tamper',FILE_APPEND);
+    $verify_failed=$tmp.'/failed-verification';
+    $lines=array(); $rc_failed=0; exec('bash '.escapeshellarg($verify_entry).' '.escapeshellarg($prod_out).' '.escapeshellarg($verify_failed).' 2>&1',$lines,$rc_failed);
+    rcp_check(0!==$rc_failed&&!file_exists($verify_failed)&&!is_link($verify_failed),'Failed independent verification must never publish a partial final verification directory.');
+    rcp_check(empty(glob($tmp.'/.certloom-verification-*')?:array()),'Failed independent verification must remove its private staging directory completely.');
+
     $failure_out=$tmp.'/injected-failure';
     $failing_pdf=new RcpFailAfterRenderer($pdf_renderer,3);
     $failing_formats=$formats; $failing_formats['pdf']['renderer']=$failing_pdf;

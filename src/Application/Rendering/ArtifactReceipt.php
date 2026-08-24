@@ -76,7 +76,7 @@ final class ArtifactReceipt {
 		} catch ( \Throwable $error ) {
 			return false;
 		}
-		if ( $artifact !== $receipt['artifact'] ) { return false; }
+		if ( ! hash_equals( $this->canonical->hash( $artifact ), $this->canonical->hash( $receipt['artifact'] ) ) ) { return false; }
 
 		if ( null !== $renderer ) {
 			$renderer_id = trim( (string) $renderer->id() );

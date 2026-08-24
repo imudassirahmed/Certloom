@@ -29,6 +29,7 @@ rrcheck(class_exists(MpdfPdfRenderer::class)&&class_exists(GdRasterRenderer::cla
 rrcheck(class_exists(ArabicPresentationShaper::class)&&class_exists(DeterministicPdfNormalizer::class),'Candidate shaping/deterministic-PDF helpers must autoload.');
 rrcheck(7===RendererAcceptanceContract::VERSION,'Renderer acceptance must be v7 after independent PDF QR decoding.');
 rrcheck(5===RendererVerificationReport::VERSION,'Independent verification report must be v5 after PDF QR proof.');
+rrcheck(2===RendererVerifierEnvironment::VERSION,'Verifier environment must be v2 so the standard production-verification entrypoint is provenance-bound.');
 rrcheck(2===RendererReleaseManifest::VERSION,'Release authority manifest must be v2.');
 rrcheck(class_exists(RendererCandidateManifest::class)&&class_exists(RendererVerifierEnvironment::class)&&class_exists(RendererAcceptanceImporter::class),'Candidate/verifier/import contracts must autoload.');
 foreach(array('independent_verifier_environment_bound','candidate_provenance_rechecked','artifact_receipts_rechecked','shared_render_plan','golden_visual_parity','primitive_capability_coverage','qr_pdf_decode','qr_jpeg_decode','png_jpeg_visual_parity') as $check){rrcheck(in_array($check,RendererAcceptanceContract::required_checks(),true),'Acceptance must require '.$check.'.');}
@@ -39,8 +40,9 @@ rrcheck('99a1e13fc48bf877699f22a76645be3e31f3762c8436ab6c57b6bb8a2e9da98a'===has
 $golden_manifest=file_get_contents(__DIR__.'/fixtures/rendering/reference/manifest.json');
 rrcheck('fb5a3db32dbf24b1f7554bfab6f12a3a274f314226f5bb6501733f51adc4cb6f'===hash('sha256',$golden_manifest),'PDF/PNG/JPEG golden fixture manifest must remain frozen.');
 rrcheck(false!==strpos($rendering,'certloom-render-plan')&&false!==strpos($architecture,'certloom-render-plan'),'Docs must retain shared render-plan boundary.');
-rrcheck(false!==strpos($rendering,'certloom-renderer-acceptance` v7'),'Rendering contract must document acceptance v6.');
+rrcheck(false!==strpos($rendering,'certloom-renderer-acceptance` v7'),'Rendering contract must document acceptance v7.');
 rrcheck(false!==strpos($rendering,'JPEG')&&false!==strpos($rendering,'golden'),'Rendering contract must document JPEG and frozen-golden comparison.');
+rrcheck(false!==strpos($rendering,'RendererVerifierEnvironment` v2')||false!==strpos($rendering,'RendererVerifierEnvironment v2'),'Rendering contract must document verifier-environment v2 entrypoint provenance.');
 $coordinator=file_get_contents(dirname(__DIR__).'/src/Infrastructure/Rendering/ArtifactRenderCoordinator.php');
 rrcheck(false!==strpos($coordinator,"array_key_exists( '_runtime'")&&false!==strpos($coordinator,'LocalFontResolverInterface'),'Coordinator must own reserved runtime font resolution.');
 rrcheck(false!==strpos($coordinator,'RenderPlanBuilder')&&false!==strpos($coordinator,'$renderer->render( $render_plan'),'Coordinator must build shared plan before adapter execution.');

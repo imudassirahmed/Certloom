@@ -19,7 +19,7 @@ $environment = array(
 	'runtime'=>array('python_implementation'=>'CPython','python_version'=>'3.13.1','php_version'=>'8.4.23','platform'=>'Linux x86_64'),
 	'tools'=>array('pdfinfo'=>'25.03.0','pdftocairo'=>'25.03.0'),
 	'packages'=>array('numpy'=>'2.2.0','opencv'=>'4.11.0','pillow'=>'11.1.0'),
-	'scripts'=>array_fill_keys(array('verify_bundle_sha256','capture_environment_sha256','validate_candidate_sha256','verify_receipt_sha256','validate_environment_sha256','validate_report_sha256'),str_repeat('a',64)),
+	'scripts'=>array_fill_keys(array('verify_bundle_sha256','capture_environment_sha256','validate_candidate_sha256','verify_receipt_sha256','validate_environment_sha256','validate_report_sha256','verify_entrypoint_sha256'),str_repeat('a',64)),
 );
 $env_contract = new RendererVerifierEnvironment();
 $env_hash = $env_contract->hash($environment);

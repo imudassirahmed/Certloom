@@ -1,3 +1,11 @@
+1.6.37
+- Fix ArtifactReceipt v4 verification after canonical JSON persistence: associative artifact metadata is now compared by canonical identity instead of PHP insertion-order-sensitive strict array equality.
+- Make the standard source-only production verification entrypoint stage report/environment/index evidence in a private sibling directory, clean it completely on failure, keep output outside the Certloom source tree, and publish only a complete new three-file verification set.
+- Advance RendererVerifierEnvironment to v2 and bind the exact `verify-production-bundle.sh` entrypoint SHA-256 alongside the verifier/validator scripts.
+- Fix the production verification entrypoint so `verification-index.json` is constructed from the actual validated report file plus validator summaries; the previous wrapper incorrectly expected the compact validator summary to contain `bundle_manifest_sha256`.
+- Expand the production-candidate producer regression to prove a generated production bundle can pass the standard independent verifier, successful/failed verification publication semantics, source isolation, dot-path rejection, and exact verification-entrypoint provenance.
+- Keep `PDF-04`, renderer authority, Template publication, authoritative Preview, and Designer closed until the genuine dependency-prefixed mPDF/GD seven-fixture execution passes.
+
 1.6.36
 - Make the source-only PDF-04 production-candidate producer publish evidence atomically from a private sibling staging directory instead of writing directly into the final path.
 - Require the final candidate output path to be absent, preventing stale/partial evidence from being merged with a new run.
