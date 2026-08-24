@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.25
+Stable tag: 1.6.26
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.25: Certloom now includes a source-only production-candidate bundle producer that executes exact PDF + PNG + JPEG candidates through the real shared coordinator, frozen six-fixture Render Plan, exact content-addressed fonts, deterministic A/B runs, and ArtifactReceipt v4 generation. The installable still contains no evaluation bypass or accepted renderer manifest, so production artifacts, Template publication, authoritative Preview, and Designer output remain disabled until actual PDF-04 execution passes.
+> Development note for 1.6.26: Certloom now includes a source-only PDF-04 acceptance finalizer that cross-links accepted evidence with the independent verification report, verifier environment, and verification index, imports them through production contracts, and atomically stages the exact release-bound `accepted.json` candidate plus its normalized audit set. The installable still ships no accepted renderer manifest, so production artifacts, Template publication, authoritative Preview, and Designer output remain disabled until actual PDF-04 candidate execution passes and the staged authority is explicitly reviewed for packaging.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 

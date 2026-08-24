@@ -67,7 +67,8 @@ try {
     $producer=new CertloomProductionCandidateBundleProducer($root);
     $dev_out=$tmp.'/dev-bundle';
     $manifest=$producer->produce($dev_out,array('font_root'=>$font_root,'formats'=>$formats),'development-reference');
-    rcp_check('development-reference'===$manifest['qualification']&&'1.6.25'===$manifest['plugin_version'],'Producer must derive current plugin version and support source-only development verification.');
+    $plugin_bytes=file_get_contents($root.'/certloom.php'); preg_match('/^\s*\*\s*Version:\s*([^\s]+)/m',$plugin_bytes,$plugin_match); $current_version=trim($plugin_match[1]);
+    rcp_check('development-reference'===$manifest['qualification']&&$current_version===$manifest['plugin_version'],'Producer must derive current plugin version and support source-only development verification.');
     rcp_check(isset($manifest['runs']['a']['fixtures']['qr']['jpeg'])&&null===$manifest['runs']['a']['fixtures']['qr']['jpeg']['receipt'],'Development producer run must include all three formats without production receipts.');
     rcp_check($manifest['renderers']['png']['source_archive']['path']===$manifest['renderers']['jpeg']['source_archive']['path'],'Content-addressed producer must deduplicate shared raster candidate source evidence.');
     rcp_check(hash_equals($raster['hash'],$manifest['renderers']['png']['candidate_manifest']['sha256'])&&hash_equals($raster['hash'],hash_file('sha256',$dev_out.'/'.$manifest['renderers']['png']['candidate_manifest']['path'])),'Bundled candidate manifest bytes must equal their canonical candidate SHA-256.');

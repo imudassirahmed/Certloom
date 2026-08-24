@@ -1,3 +1,10 @@
+1.6.26
+- Add a source-only PDF-04 acceptance finalizer that cross-links v5 acceptance evidence, v3 independent verification report, verifier-environment record, and verification index before deriving release-bound renderer authority v2.
+- Atomically stage a self-contained owner-only authority handoff containing normalized acceptance evidence, verification report/environment/index, accepted.json, and an authority index; reject reused destinations and any output inside the plugin source tree.
+- Keep release authority an explicit reviewed packaging decision: the finalizer never writes resources/renderer/accepted.json and no evaluation/finalization bypass enters the installable plugin.
+- Reconcile live renderer architecture documentation to the current PDF/PNG/JPEG acceptance v5 and release-authority v2 contracts while preserving historical release notes.
+- Keep PDF-04 open because no real production renderer candidate has executed successfully on this host.
+
 1.6.25
 - Add a source-only PDF-04 production-candidate producer that runs exact PDF/PNG/JPEG candidates through the real coordinator against all six frozen fixtures for two deterministic runs.
 - Bind actual candidate source/dependency bytes, identity/version/formats/requirements/context, exact local fonts, frozen request/render-plan hashes, and ArtifactReceipt v4 evidence into the produced bundle.

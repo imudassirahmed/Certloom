@@ -46,7 +46,7 @@ rag_check(false===$status['accepted']&&'manifest_missing'===$status['reason'],'N
 file_put_contents($tmp.'/resources/renderer/accepted.json',json_encode($manifest,JSON_UNESCAPED_SLASHES));
 $gate=new RendererAuthorityGate(null,$tmp,'1.6.24'); $status=$gate->manifest_status();
 rag_check(true===$status['accepted']&&'manifest_valid'===$status['reason'],'Exact release-bound manifest must validate.');
-$wrong_version=new RendererAuthorityGate(null,$tmp,'1.6.25'); rag_check('plugin_version_mismatch'===$wrong_version->manifest_status()['reason'],'Acceptance authority must not survive a plugin-version change.');
+$wrong_version=new RendererAuthorityGate(null,$tmp,'9.9.9'); rag_check('plugin_version_mismatch'===$wrong_version->manifest_status()['reason'],'Acceptance authority must not survive a plugin-version change.');
 
 $registry=new RendererRegistry();
 $registry->register(new RagRenderer('mpdf-pdf','8.3.1+certloom.1',array('pdf'),str_repeat('2',64)));

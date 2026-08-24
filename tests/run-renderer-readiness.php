@@ -1,5 +1,5 @@
 <?php
-/** 1.6.24 PDF-04 readiness / three-format golden-bound verifier provenance regression. */
+/** 1.6.26 PDF-04 readiness / three-format golden-bound authority finalization regression. */
 require_once __DIR__ . '/bootstrap-autoload.php';
 
 use Certloom\Application\Rendering\ArtifactReceipt;
@@ -42,6 +42,14 @@ rrcheck(false!==strpos($coordinator,'$render_plan_hash, $renderer'),'Coordinator
 $probe=file_get_contents(__DIR__.'/renderer-candidate/check-runtime.php');
 rrcheck(false!==strpos($probe,'CertloomVendor\\\\Mpdf\\\\Mpdf'),'Development probe must target dependency-prefixed mPDF.');
 rrcheck(0===preg_match('/\b(?:curl_exec|wp_remote_|shell_exec|exec\s*\(|passthru\s*\(|proc_open\s*\()/i',$probe),'Readiness probe must not fetch/install/execute external processes.');
+
+$finalizer=file_get_contents(__DIR__.'/renderer-candidate/finalize-lib.php');
+$finalizer_cli=file_get_contents(__DIR__.'/renderer-candidate/finalize-production-acceptance.php');
+rrcheck(is_string($finalizer)&&false!==strpos($finalizer,'RendererAcceptanceImporter')&&false!==strpos($finalizer,'RendererReleaseManifest'),'Source finalizer must import verified evidence through production contracts before deriving release authority.');
+rrcheck(is_string($finalizer)&&false!==strpos($finalizer,'verification-report.json')&&false!==strpos($finalizer,'verifier-environment.json')&&false!==strpos($finalizer,'verification-index.json'),'Authority staging must preserve the independently normalized verifier evidence set.');
+rrcheck(is_string($finalizer)&&false!==strpos($finalizer,'rename( $temp, $path )'),'Authority staging must publish a complete directory atomically.');
+rrcheck(is_string($finalizer_cli)&&false!==strpos($finalizer_cli,'CertloomProductionAcceptanceFinalizer'),'Canonical source-only finalization CLI must use the strict finalizer.');
+rrcheck(false===is_file(dirname(__DIR__).'/resources/renderer/accepted.json'),'Current source must remain renderer-authority closed until a real PDF-04 pass is reviewed and packaged.');
 
 echo "PASS  Renderer readiness is three-format, golden-bound, exact-font and fail-closed\n";
 echo "\n{$checks} checks, 0 failures\n";
