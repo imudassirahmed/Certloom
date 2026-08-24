@@ -11,10 +11,10 @@ php "$ROOT/tests/renderer-candidate/validate-verifier-environment.php" "$TMP/ver
 python3 - "$TMP/report.json" <<'PY'
 import json,sys
 r=json.load(open(sys.argv[1]))
-assert r['version']==4 and r['verified'] is True
+assert r['version']==5 and r['verified'] is True
 assert r['qualification']=='development-reference'
 assert r['qualifies_pdf04'] is False
-assert r['deterministic_runs'] and r['pdf_geometry'] and r['png_geometry'] and r['jpeg_geometry'] and r['qr_png_decode'] and r['qr_jpeg_decode'] and r['pdf_png_visual_parity'] and r['png_jpeg_visual_parity'] and r['golden_visual_parity'] and r['primitive_capability_coverage']
+assert r['deterministic_runs'] and r['pdf_geometry'] and r['png_geometry'] and r['jpeg_geometry'] and r['qr_pdf_decode'] and r['qr_png_decode'] and r['qr_jpeg_decode'] and r['pdf_png_visual_parity'] and r['png_jpeg_visual_parity'] and r['golden_visual_parity'] and r['primitive_capability_coverage']
 assert len(r['verifier_environment_sha256'])==64 and len(r['fixtures'])==7
 PY
 python3 - "$TMP/report-validation.json" "$TMP/environment-validation.json" <<'PY'

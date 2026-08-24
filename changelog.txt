@@ -1,3 +1,31 @@
+1.6.35
+- Harden the source-only PDF-04 bundle producer so unaccepted renderer evidence can never be written inside the Certloom source tree.
+- Reject ambiguous `.`/`..` candidate-output segments before recursive directory creation, and re-check the resolved output boundary before writing manifests, provenance, artifacts, or receipts.
+- Add focused producer regression proving in-source output fails closed, leaves no evidence residue, and dot-segment output is rejected.
+- Align producer isolation with the existing candidate-freezer and authority-finalizer source-tree protections while preserving all renderer, scanner, browser, package-parity, and authority gates.
+- Keep PDF-04, production PDF/PNG/JPEG, Template publication, authoritative Preview, and Designer closed until the genuine two-run seven-fixture renderer execution passes.
+
+1.6.34
+- Fix the documented PDF-04 production bootstrap so a copy outside the Certloom source tree loads source-only helpers from the explicitly configured source root instead of external `__DIR__`.
+- Replace the broken inline bootstrap assembly (undefined candidate/hash JSON helpers and a divergent hard-coded font family) with a tested `CertloomProductionCandidateBootstrapFactory`.
+- Validate exact frozen mPDF/GD candidate identity, prefixed runtime autoload, canonical seven-fixture font manifest, content-addressed fixture font, and non-symbolic font/temp directories before producer execution.
+- Add a 13-check source-only production-bootstrap regression while preserving every existing renderer, scanner, browser, packaging, and authority gate.
+- Keep PDF-04, production PDF/PNG/JPEG, Template publication, authoritative Preview and Designer closed until the genuine two-run seven-fixture renderer execution passes.
+
+1.6.33
+- Require direct QR decode from the actual rasterized PDF during independent PDF-04 verification; global PDF/PNG parity can no longer substitute for PDF scanability.
+- Advance RendererAcceptanceContract to v7 and RendererVerificationReport to v5 with mandatory `qr_pdf_decode` proof alongside PNG/JPEG QR decoding.
+- Make production acceptance fail closed when direct PDF QR evidence is missing or false, and re-prove the path against the frozen development-reference PDF through Poppler rasterization and OpenCV decoding.
+- Preserve all existing seven-fixture, golden, parity, provenance, receipt, resource-boundary, authority and deterministic-build gates.
+- Keep PDF-04, production PDF/PNG/JPEG, Template publication, authoritative Preview and Designer closed until the genuine renderer-capable production candidate run passes.
+
+1.6.32
+- Harden the independent PDF-04 verifier so every bundle/evidence path must remain non-symbolic and inside the verified bundle root before hashing or opening.
+- Add explicit byte ceilings for bundle manifests, candidate manifests, provenance archives/locks, ArtifactReceipt files, and PDF/PNG/JPEG artifacts before independent processing.
+- Bind bundle raster DPI to the frozen golden acceptance DPI, verify exact raster geometry before pixel conversion, cap raster pixels, and require production PDFs to contain exactly one page.
+- Add fail-closed timeouts around verifier environment capture, PHP candidate/receipt validators, `pdfinfo`, and `pdftocairo` so malformed candidate evidence cannot hang acceptance indefinitely.
+- Add 11 focused low-level resource-boundary cases and a dedicated standalone regression suite while keeping PDF-04, Template publication, authoritative Preview and Designer closed until the genuine seven-fixture renderer run passes.
+
 1.6.31
 - Freeze renderer candidate files and the dependency lock once into a private snapshot before namespace inspection, source-archive creation, or executable runtime publication, closing a prepared-tree TOCTOU provenance gap.
 - Reject symbolic candidate-root, dependency-lock, and recipe arguments before path canonicalization so resolve() cannot erase symlink evidence.

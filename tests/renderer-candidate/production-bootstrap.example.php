@@ -1,73 +1,29 @@
 <?php
 /**
- * COPY this file outside the Certloom source tree and configure exact frozen
- * candidate evidence. Never turn this example into live WordPress bootstrap.
+ * PDF-04 production-candidate bootstrap template.
+ *
+ * COPY this file outside the Certloom source tree. Then:
+ * 1. replace the five /absolute/... placeholders below;
+ * 2. remove the guard;
+ * 3. run produce-production-bundle.php against the copied bootstrap.
+ *
+ * The copied file deliberately loads its helper library from the configured
+ * Certloom source root rather than from __DIR__, because __DIR__ is the external
+ * operator workspace after the copy.
  */
-use Certloom\Application\Rendering\CanonicalJson;
-use Certloom\Application\Rendering\FontManifest;
-use Certloom\Application\Rendering\RendererCandidateManifest;
-use Certloom\Infrastructure\Rendering\GdRasterRenderer;
-use Certloom\Infrastructure\Rendering\MpdfPdfRenderer;
-require_once __DIR__ . '/frozen-candidate-lib.php';
-
 throw new RuntimeException(
-	'Example only. Copy outside the Certloom tree, remove this guard, load the dependency-prefixed candidate autoloader, and configure exact candidate evidence before production evaluation.'
+	'Example only. Copy outside the Certloom tree, configure absolute paths, remove this guard, and then use it only for source-side PDF-04 evaluation.'
 );
 
 /*
-$freezer = new CertloomFrozenCandidateEvidence( CERTLOOM_PATH );
-$pdf_frozen = $freezer->validate( '/absolute/frozen/pdf-candidate' );
-$raster_frozen = $freezer->validate( '/absolute/frozen/gd-candidate' );
-$prefixed_autoload = $pdf_frozen['runtime_root'] . '/vendor/autoload.php';
-if ( ! is_file( $prefixed_autoload ) ) { throw new RuntimeException( 'Frozen prefixed candidate autoloader is unavailable.' ); }
-require_once $prefixed_autoload;
+$certloom_source_root = '/absolute/path/to/certloom-source/certloom';
+require_once $certloom_source_root . '/tests/renderer-candidate/production-bootstrap-lib.php';
 
-$pdf_manifest_path = $pdf_frozen['manifest_path'];
-$raster_manifest_path = $raster_frozen['manifest_path'];
-$pdf_manifest = $pdf_frozen['manifest'];
-$raster_manifest = $raster_frozen['manifest'];
-$pdf_hash = $candidate_contract->hash( $pdf_manifest );
-$raster_hash = $candidate_contract->hash( $raster_manifest );
-
-$golden = $read_json( CERTLOOM_PATH . 'tests/fixtures/rendering/reference/manifest.json' );
-$font_hash = strtolower( (string) $golden['font']['sha256'] );
-$font_manifest = array(
-	'schema' => 'certloom-font-manifest',
-	'version' => 2,
-	'families' => array(
-		'dejavu' => array(
-			'400-normal' => array( 'faces' => array( array( 'sha256' => $font_hash, 'format' => 'ttf', 'coverage' => array( 'U+0000-D7FF', 'U+E000-10FFFF' ) ) ) ),
-			'600-normal' => array( 'faces' => array( array( 'sha256' => $font_hash, 'format' => 'ttf', 'coverage' => array( 'U+0000-D7FF', 'U+E000-10FFFF' ) ) ) ),
-		),
-	),
-);
-$font_manifest = ( new FontManifest() )->normalize( $font_manifest );
-
-$pdf_renderer = new MpdfPdfRenderer( $pdf_manifest['renderer_version'], $pdf_hash, $font_manifest, '/absolute/local/mpdf-temp' );
-$raster_renderer = new GdRasterRenderer( $raster_manifest['renderer_version'], $raster_hash, $font_manifest );
-
-return array(
-	'production_candidate_ack' => 'CERTLOOM_PDF04_PRODUCTION_CANDIDATE',
+$factory = new CertloomProductionCandidateBootstrapFactory( $certloom_source_root );
+return $factory->build( array(
+	'pdf_freeze_dir' => '/absolute/frozen/pdf-candidate',
+	'raster_freeze_dir' => '/absolute/frozen/gd-candidate',
 	'font_root' => '/absolute/local/content-addressed-font-root',
-	'formats' => array(
-		'pdf' => array(
-			'renderer' => $pdf_renderer,
-			'candidate_manifest' => $pdf_manifest_path,
-			'source_archive' => $pdf_frozen['source_archive'],
-			'dependency_lock' => $pdf_frozen['dependency_lock'],
-		),
-		'png' => array(
-			'renderer' => $raster_renderer,
-			'candidate_manifest' => $raster_manifest_path,
-			'source_archive' => $raster_frozen['source_archive'],
-			'dependency_lock' => $raster_frozen['dependency_lock'],
-		),
-		'jpeg' => array(
-			'renderer' => $raster_renderer,
-			'candidate_manifest' => $raster_manifest_path,
-			'source_archive' => $raster_frozen['source_archive'],
-			'dependency_lock' => $raster_frozen['dependency_lock'],
-		),
-	),
-);
+	'mpdf_temp_dir' => '/absolute/local/mpdf-temp',
+) );
 */

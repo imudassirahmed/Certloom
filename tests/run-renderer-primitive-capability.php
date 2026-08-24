@@ -21,8 +21,8 @@ $golden = json_decode( $golden_bytes, true );
 $plans = json_decode( $plan_bytes, true );
 $fixture = json_decode( file_get_contents( $fixture_path ), true );
 
-rpc_check( 6 === RendererAcceptanceContract::VERSION, 'Primitive-capability acceptance must require RendererAcceptanceContract v6.' );
-rpc_check( 4 === RendererVerificationReport::VERSION, 'Primitive-capability acceptance must require verification-report v4.' );
+rpc_check( 7 === RendererAcceptanceContract::VERSION, 'Primitive-capability acceptance must require RendererAcceptanceContract v7.' );
+rpc_check( 5 === RendererVerificationReport::VERSION, 'Primitive-capability acceptance must require verification-report v5.' );
 rpc_check( in_array( 'primitives', RendererAcceptanceContract::required_fixtures(), true ), 'Permanent acceptance fixtures must include primitives.' );
 rpc_check( in_array( 'primitive_capability_coverage', RendererAcceptanceContract::required_checks(), true ), 'Acceptance checks must include primitive-capability coverage.' );
 rpc_check( 4 === (int) $golden['version'], 'Golden reference manifest must be v4.' );

@@ -54,7 +54,7 @@ $report = array(
     'bundle_manifest_sha256' => str_repeat( 'a', 64 ), 'fixture_manifest_sha256' => str_repeat( 'b', 64 ), 'render_plan_manifest_sha256' => str_repeat( 'c', 64 ), 'verifier_environment_sha256' => $env_hash,
     'candidate_provenance_rechecked' => true, 'artifact_receipts_rechecked' => true, 'deterministic_runs' => true,
     'pdf_geometry' => true, 'png_geometry' => true, 'jpeg_geometry' => true,
-    'qr_png_decode' => true, 'qr_jpeg_decode' => true,
+    'qr_pdf_decode' => true, 'qr_png_decode' => true, 'qr_jpeg_decode' => true,
     'pdf_png_visual_parity' => true, 'png_jpeg_visual_parity' => true, 'golden_visual_parity' => true, 'primitive_capability_coverage' => true,
     'renderers' => $renderers, 'fixtures' => $fixtures, 'parity' => $parity, 'golden_parity' => $golden,
 );
@@ -65,6 +65,8 @@ $bad_report = $report; $bad_report['qualifies_pdf04'] = false;
 rei_check( rei_throws( function () use ( $report_contract, $bad_report ) { $report_contract->normalize( $bad_report ); } ), 'Production report must reject inconsistent qualification.' );
 $bad_report = $report; $bad_report['candidate_provenance_rechecked'] = false;
 rei_check( rei_throws( function () use ( $report_contract, $bad_report ) { $report_contract->normalize( $bad_report ); } ), 'Production report must require candidate provenance recheck.' );
+$bad_report = $report; $bad_report['qr_pdf_decode'] = false;
+rei_check( rei_throws( function () use ( $report_contract, $bad_report ) { $report_contract->normalize( $bad_report ); } ), 'Production report must reject an undecodable PDF QR even when other parity evidence is present.' );
 $bad_report = $report; $bad_report['parity']['english']['pdf_png']['mean_abs_error'] = 1.1;
 rei_check( rei_throws( function () use ( $report_contract, $bad_report ) { $report_contract->normalize( $bad_report ); } ), 'Verification report must reject cross-format parity outside the accepted threshold.' );
 $bad_report = $report; $bad_report['golden_parity']['english']['jpeg']['foreground_recall'] = 0.90;
@@ -88,8 +90,8 @@ $evidence = array(
 $importer = new RendererAcceptanceImporter();
 $accepted = $importer->import( $evidence, $report, $environment );
 rei_check( RendererAcceptanceContract::VERSION === $accepted['version'], 'Cross-linked evidence set must import successfully when every three-format identity agrees.' );
-rei_check( 6 === RendererAcceptanceContract::VERSION, 'Renderer acceptance must be schema v6.' );
-rei_check( 4 === RendererVerificationReport::VERSION, 'Independent verification report must be schema v4.' );
+rei_check( 7 === RendererAcceptanceContract::VERSION, 'Renderer acceptance must be schema v7.' );
+rei_check( 5 === RendererVerificationReport::VERSION, 'Independent verification report must be schema v5.' );
 rei_check( 1 === RendererVerifierEnvironment::VERSION, 'Verifier environment must be schema v1.' );
 rei_check( array( 'pdf', 'png', 'jpeg' ) === RendererAcceptanceContract::required_formats(), 'PDF-04 acceptance must require all three product artifact formats.' );
 

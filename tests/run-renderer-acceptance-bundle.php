@@ -40,12 +40,13 @@ $evidence=array(
     'checks'=>$checks_map,'fixtures'=>$fixtures,
 );
 $acceptance=new RendererAcceptanceContract();
-rab_check(6===RendererAcceptanceContract::VERSION,'Acceptance evidence must be v6 for three-format golden-bound proof.');
-rab_check(4===RendererVerificationReport::VERSION,'Independent verifier report must be v4 for JPEG/golden parity.');
+rab_check(7===RendererAcceptanceContract::VERSION,'Acceptance evidence must be v7 for direct PDF/PNG/JPEG QR proof.');
+rab_check(5===RendererVerificationReport::VERSION,'Independent verifier report must be v5 for direct PDF QR proof.');
 rab_check(2===RendererReleaseManifest::VERSION,'Release authority manifest must be v2 for three accepted formats.');
 rab_check(array('pdf','png','jpeg')===RendererAcceptanceContract::required_formats(),'PDF-04 must require PDF, PNG and JPEG.');
 rab_check(in_array('golden_visual_parity',RendererAcceptanceContract::required_checks(),true),'Acceptance must require candidate-to-golden visual parity.');
 rab_check(in_array('primitive_capability_coverage',RendererAcceptanceContract::required_checks(),true)&&in_array('primitives',RendererAcceptanceContract::required_fixtures(),true),'Acceptance must require the permanent non-text primitive capability fixture.');
+rab_check(in_array('qr_pdf_decode',RendererAcceptanceContract::required_checks(),true),'Acceptance must decode QR from the actual PDF raster too.');
 rab_check(in_array('qr_jpeg_decode',RendererAcceptanceContract::required_checks(),true),'Acceptance must decode QR from JPEG output too.');
 rab_check(1===preg_match('/^[0-9a-f]{64}$/',$acceptance->hash($evidence)),'Production acceptance evidence must normalize with three-format bindings.');
 $bad=$evidence;$bad['qualification']='development-reference';rab_check(rab_throws(function()use($acceptance,$bad){$acceptance->normalize($bad);}), 'Development references must never qualify as production acceptance.');
@@ -53,12 +54,13 @@ $bad=$evidence;unset($bad['renderers']['jpeg']);rab_check(rab_throws(function()u
 $bad=$evidence;unset($bad['fixtures']['english']['jpeg_sha256']);rab_check(rab_throws(function()use($acceptance,$bad){$acceptance->normalize($bad);}), 'Acceptance fixture missing JPEG artifact hash must fail.');
 $bad=$evidence;unset($bad['checks']['golden_visual_parity']);rab_check(rab_throws(function()use($acceptance,$bad){$acceptance->normalize($bad);}), 'Acceptance missing frozen-golden comparison must fail.');
 $bad=$evidence;unset($bad['checks']['primitive_capability_coverage']);rab_check(rab_throws(function()use($acceptance,$bad){$acceptance->normalize($bad);}), 'Acceptance missing non-text primitive coverage must fail.');
+$bad=$evidence;unset($bad['checks']['qr_pdf_decode']);rab_check(rab_throws(function()use($acceptance,$bad){$acceptance->normalize($bad);}), 'Acceptance missing direct PDF QR decode proof must fail.');
 
 foreach(array('build-reference-bundle.py','verify-bundle.py','verify-receipt.php','capture-verifier-environment.py','validate-verifier-environment.php','validate-verification-report.php','verify-production-bundle.sh') as $file){rab_check(is_file(__DIR__.'/renderer-candidate/'.$file),'Renderer acceptance source tool must ship: '.$file);}
 $verifier=file_get_contents(__DIR__.'/renderer-candidate/verify-bundle.py');
 rab_check(false!==strpos($verifier,'FORMATS = (\'pdf\',\'png\',\'jpeg\')'),'Independent verifier must cover all three artifact formats.');
 rab_check(false!==strpos($verifier,'pdfinfo')&&false!==strpos($verifier,'pdftocairo'),'Verifier must inspect/rasterize real PDF output.');
-rab_check(false!==strpos($verifier,'QRCodeDetector')&&false!==strpos($verifier,"for fmt in ('png','jpeg')"),'Verifier must decode QR from both raster artifact paths.');
+rab_check(false!==strpos($verifier,'QRCodeDetector')&&false!==strpos($verifier,'for fmt in FORMATS'),'Verifier must decode QR from PDF, PNG and JPEG artifact paths.');
 rab_check(false!==strpos($verifier,'golden_structural_metric')&&false!==strpos($verifier,'GOLDEN_MIN_PRECISION'),'Verifier must compare candidate output to frozen golden artwork, not only cross-format consistency.');
 rab_check(false!==strpos($verifier,'ArtifactReceipt v4')&&false!==strpos($verifier,'verify-receipt.php'),'Production bundle must require ArtifactReceipt v4 for every artifact.');
 rab_check(false!==strpos($verifier,"qualification != 'production-candidate'"),'Verifier must reject development-reference bundles in production mode.');

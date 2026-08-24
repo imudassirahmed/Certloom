@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.31
+Stable tag: 1.6.35
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.31: `PDF-04` still requires the real seven-fixture PDF/PNG/JPEG execution. Candidate freezing now captures the prepared renderer tree and dependency lock once into a private snapshot, then performs namespace validation, deterministic source-archive creation, and executable-runtime publication from those exact captured bytes. Symbolic recipe/root/lock arguments are rejected before canonicalization. Concrete mPDF/GD candidates remain unaccepted and unregistered; `accepted.json` remains absent, and production artifacts, Template publication, authoritative Preview, and Designer output stay disabled until the genuine renderer-capable run passes.
+> Development note for 1.6.35: `PDF-04` still requires the real seven-fixture PDF/PNG/JPEG execution. The source-only candidate producer now refuses to create unaccepted evidence inside the Certloom source tree and rejects ambiguous dot-segment output paths before recursive directory creation, matching the existing freezer/finalizer isolation boundary. Concrete mPDF/GD candidates remain unaccepted and unregistered; `accepted.json` remains absent, and production artifacts, Template publication, authoritative Preview, and Designer output stay disabled until the genuine renderer-capable run passes.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -544,6 +544,19 @@ Review-resubmission release finalizing the Certloom identity, fixing activation 
 = 1.4.9 =
 Restore-integrity update with exact snapshot replacement, optional certificate merge, global write locking, and concurrent-change detection.
 
+
+
+== 1.6.35 development checkpoint ==
+The PDF-04 production-candidate producer now refuses any output that resolves inside the Certloom source tree and rejects `.`/`..` output segments before recursive directory creation. This prevents unaccepted PDF/PNG/JPEG evidence from contaminating source/build handoffs and aligns producer isolation with the existing candidate-freezer and authority-finalizer boundaries. The focused producer regression is 20/20. PDF-04 remains open and no accepted renderer manifest or third-party candidate vendor tree ships in the installable plugin.
+
+== 1.6.34 development checkpoint ==
+The documented PDF-04 operator bootstrap is now executable as written after copying outside the source tree. A source-only bootstrap factory validates the exact frozen PDF/GD evidence, loads the prefixed mPDF autoloader from the frozen runtime, reuses the canonical seven-fixture font manifest instead of reconstructing a divergent family, verifies the exact content-addressed fixture font, and creates the strict PDF/PNG/JPEG producer config. A new 13-check bootstrap regression prevents external-__DIR__, undefined-helper, font-manifest drift, candidate identity, and symbolic font/temp path regressions. PDF-04 remains open and no accepted renderer manifest or third-party candidate vendor tree ships in the installable plugin.
+
+== 1.6.33 development checkpoint ==
+PDF-04 now requires direct QR scanability from the actual rasterized PDF as well as the PNG and JPEG artifacts. The acceptance contract advances to v7 and the independent verification report to v5; missing or false `qr_pdf_decode` evidence fails closed. The frozen development oracle directly proves the PDF path through Poppler rasterization + OpenCV QR decode. PDF-04 remains open and no accepted renderer manifest or third-party candidate vendor tree ships in the installable plugin.
+
+== 1.6.32 development checkpoint ==
+The independent PDF-04 verifier now has explicit fail-closed resource boundaries before it opens candidate evidence: non-symbolic in-bundle paths, bounded evidence/artifact sizes, exact frozen raster DPI/geometry, a five-million-pixel raster ceiling, single-page PDF metadata, and bounded PHP/Poppler subprocess execution. Focused resource-boundary regression adds 11 low-level cases plus a dedicated source suite. PDF-04 remains open and no accepted renderer manifest or third-party candidate vendor tree ships in the installable plugin.
 
 == 1.6.31 development checkpoint ==
 Renderer candidate freezing now uses a single private byte snapshot for namespace validation, deterministic source evidence, dependency-lock validation, and the executable runtime tree, closing the prepared-tree TOCTOU gap. Symbolic candidate-root, dependency-lock, and recipe arguments are rejected before path resolution. Focused freeze regression is 31/31. PDF-04 remains open and no accepted renderer manifest or third-party candidate vendor tree ships in the installable plugin.

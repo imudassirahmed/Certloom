@@ -107,6 +107,13 @@ try {
     $nonempty=$tmp.'/nonempty-output'; mkdir($nonempty,0700); file_put_contents($nonempty.'/sentinel','x');
     rcp_check(rcp_throws(function()use($producer,$nonempty,$font_root,$formats){$producer->produce($nonempty,array('font_root'=>$font_root,'formats'=>$formats),'development-reference');}),'Producer must reject a non-empty output directory instead of mixing evidence from multiple runs.');
 
+    $inside=$root.'/tests/renderer-candidate/.forbidden-production-bundle'; rcp_rm($inside);
+    rcp_check(rcp_throws(function()use($producer,$inside,$font_root,$formats){$producer->produce($inside,array('font_root'=>$font_root,'formats'=>$formats),'development-reference');}),'Producer must never write unaccepted renderer evidence inside the Certloom source tree.');
+    rcp_check(!file_exists($inside)&&!is_link($inside),'Rejected in-source producer output must leave no candidate evidence behind.');
+
+    $dot_output=$tmp.'/dot-parent/../dot-bundle';
+    rcp_check(rcp_throws(function()use($producer,$dot_output,$font_root,$formats){$producer->produce($dot_output,array('font_root'=>$font_root,'formats'=>$formats),'development-reference');}),'Producer must reject ambiguous dot-segment output paths before recursive directory creation.');
+
     echo "PASS  PDF-04 production-candidate producer executes frozen fixtures through the real coordinator\n";
     echo "\n{$checks} checks, 0 failures\n";
 } finally { rcp_rm($tmp); }

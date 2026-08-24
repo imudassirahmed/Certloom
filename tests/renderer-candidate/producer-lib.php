@@ -296,17 +296,44 @@ final class CertloomProductionCandidateBundleProducer {
 	private function prepare_output_dir( $path ) {
 		$path = rtrim( (string) $path, '/\\' );
 		if ( '' === $path || false !== strpos( $path, "\0" ) || is_link( $path ) ) { throw new InvalidArgumentException( 'Candidate output directory is invalid.' ); }
+		foreach ( preg_split( '#[\\/]+#', $path ) ?: array() as $segment ) {
+			if ( '.' === $segment || '..' === $segment ) { throw new InvalidArgumentException( 'Candidate output directory may not contain dot path segments.' ); }
+		}
+
 		if ( file_exists( $path ) ) {
 			if ( ! is_dir( $path ) ) { throw new InvalidArgumentException( 'Candidate output path already exists and is not a directory.' ); }
+			$real_existing = realpath( $path );
+			if ( false === $real_existing ) { throw new InvalidArgumentException( 'Candidate output directory could not be resolved.' ); }
+			$this->assert_outside_source_tree( $real_existing );
 			$items = array_diff( scandir( $path ), array( '.', '..' ) );
 			if ( ! empty( $items ) ) { throw new InvalidArgumentException( 'Candidate output directory must be absent or empty.' ); }
-		} elseif ( ! mkdir( $path, 0700, true ) ) { throw new RuntimeException( 'Candidate output directory could not be created.' ); }
+		} else {
+			$ancestor = dirname( $path );
+			while ( ! file_exists( $ancestor ) && ! is_link( $ancestor ) ) {
+				$next = dirname( $ancestor );
+				if ( $next === $ancestor ) { break; }
+				$ancestor = $next;
+			}
+			$real_ancestor = realpath( $ancestor );
+			if ( false === $real_ancestor ) { throw new InvalidArgumentException( 'Candidate output parent path could not be resolved safely.' ); }
+			$this->assert_outside_source_tree( $real_ancestor );
+			if ( ! mkdir( $path, 0700, true ) ) { throw new RuntimeException( 'Candidate output directory could not be created.' ); }
+		}
 		$real = realpath( $path );
 		if ( false === $real ) { throw new RuntimeException( 'Candidate output directory could not be resolved.' ); }
+		$this->assert_outside_source_tree( $real );
 		foreach ( array( 'manifests', 'candidates/manifests', 'candidates/source', 'candidates/locks', 'artifacts/a', 'artifacts/b', 'receipts/a', 'receipts/b' ) as $sub ) {
 			if ( ! is_dir( $real . '/' . $sub ) && ! mkdir( $real . '/' . $sub, 0700, true ) ) { throw new RuntimeException( 'Candidate output subdirectory could not be created.' ); }
 		}
 		return $real;
+	}
+
+	private function assert_outside_source_tree( $real_path ) {
+		$real_path = rtrim( (string) $real_path, DIRECTORY_SEPARATOR );
+		$source_prefix = $this->root . DIRECTORY_SEPARATOR;
+		if ( $real_path === $this->root || 0 === strpos( $real_path . DIRECTORY_SEPARATOR, $source_prefix ) ) {
+			throw new InvalidArgumentException( 'Candidate production bundle must never be written inside the Certloom source tree.' );
+		}
 	}
 
 	private function plugin_version() {

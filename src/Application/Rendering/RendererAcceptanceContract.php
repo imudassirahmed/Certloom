@@ -12,7 +12,7 @@ use InvalidArgumentException;
  */
 final class RendererAcceptanceContract {
 	const SCHEMA = 'certloom-renderer-acceptance';
-	const VERSION = 6;
+	const VERSION = 7;
 
 	/** @return string[] */
 	public static function required_fixtures() {
@@ -38,6 +38,7 @@ final class RendererAcceptanceContract {
 			'mixed_bidi',
 			'long_name_overflow',
 			'arbitrary_rotation_17_5',
+			'qr_pdf_decode',
 			'qr_png_decode',
 			'qr_jpeg_decode',
 			'pdf_png_visual_parity',
