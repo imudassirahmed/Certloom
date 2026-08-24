@@ -28,6 +28,18 @@ final class RcpGoldenReplayRenderer implements RendererInterface {
     }
 }
 
+
+final class RcpFailAfterRenderer implements RendererInterface {
+    private $inner; private $limit; private $calls=0;
+    public function __construct(RendererInterface $inner,$limit){$this->inner=$inner;$this->limit=(int)$limit;}
+    public function id(){return $this->inner->id();}
+    public function version(){return $this->inner->version();}
+    public function formats(){return $this->inner->formats();}
+    public function requirements(){return $this->inner->requirements();}
+    public function context(){return $this->inner->context();}
+    public function render(array $plan,$format){$this->calls++;if($this->calls>$this->limit){throw new RuntimeException('Injected renderer failure after partial candidate output.');}return $this->inner->render($plan,$format);}
+}
+
 $root=dirname(__DIR__);
 $tmp=sys_get_temp_dir().'/certloom-candidate-producer-'.bin2hex(random_bytes(6));
 mkdir($tmp,0700,true);
@@ -67,6 +79,8 @@ try {
     $producer=new CertloomProductionCandidateBundleProducer($root);
     $dev_out=$tmp.'/dev-bundle';
     $manifest=$producer->produce($dev_out,array('font_root'=>$font_root,'formats'=>$formats),'development-reference');
+    rcp_check(is_dir($dev_out)&&is_file($dev_out.'/bundle.json'),'Successful producer run must publish a complete final directory.');
+    rcp_check(empty(glob($tmp.'/.certloom-candidate-*')?:array()),'Successful producer run must not leak private staging directories.');
     $plugin_bytes=file_get_contents($root.'/certloom.php'); preg_match('/^\s*\*\s*Version:\s*([^\s]+)/m',$plugin_bytes,$plugin_match); $current_version=trim($plugin_match[1]);
     rcp_check('development-reference'===$manifest['qualification']&&$current_version===$manifest['plugin_version'],'Producer must derive current plugin version and support source-only development verification.');
     rcp_check(isset($manifest['runs']['a']['fixtures']['qr']['jpeg'])&&null===$manifest['runs']['a']['fixtures']['qr']['jpeg']['receipt'],'Development producer run must include all three formats without production receipts.');
@@ -82,6 +96,16 @@ try {
     rcp_check(is_array($receipt)&&is_file($prod_out.'/'.$receipt['path']),'Production candidate producer must emit ArtifactReceipt v4 files for every artifact.');
     $receipt_data=json_decode(file_get_contents($prod_out.'/'.$receipt['path']),true); rcp_check(4===$receipt_data['version']&&hash_equals($prod['runs']['a']['fixtures']['english']['render_plan_sha256'],$receipt_data['render_plan_hash']),'Production receipt must bind the exact frozen render-plan hash.');
     rcp_check($prod['runs']['a']['fixtures']['english']['pdf']['sha256']===$prod['runs']['b']['fixtures']['english']['pdf']['sha256'],'Producer must enforce byte-identical A/B runs before writing the final bundle manifest.');
+
+    $failure_out=$tmp.'/injected-failure';
+    $failing_pdf=new RcpFailAfterRenderer($pdf_renderer,3);
+    $failing_formats=$formats; $failing_formats['pdf']['renderer']=$failing_pdf;
+    rcp_check(rcp_throws(function()use($producer,$failure_out,$font_root,$failing_formats){$producer->produce($failure_out,array('font_root'=>$font_root,'formats'=>$failing_formats),'development-reference');}),'Producer must surface renderer failure during a staged candidate run.');
+    rcp_check(!file_exists($failure_out)&&!is_link($failure_out),'Failed producer run must never publish a partial final evidence directory.');
+    rcp_check(empty(glob($tmp.'/.certloom-candidate-*')?:array()),'Failed producer run must remove its private staging directory completely.');
+
+    $empty_output=$tmp.'/empty-existing-output'; mkdir($empty_output,0700);
+    rcp_check(rcp_throws(function()use($producer,$empty_output,$font_root,$formats){$producer->produce($empty_output,array('font_root'=>$font_root,'formats'=>$formats),'development-reference');}),'Producer must reject even an empty existing output directory so final publication is an atomic rename to a new path.');
 
     $bad=$formats; $bad['jpeg']['renderer']=$pdf_renderer;
     rcp_check(rcp_throws(function()use($producer,$tmp,$font_root,$bad){$producer->produce($tmp.'/bad-format',array('font_root'=>$font_root,'formats'=>$bad),'development-reference');}),'Producer must reject a renderer whose exact candidate manifest does not own the configured format.');

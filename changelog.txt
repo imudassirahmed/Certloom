@@ -1,3 +1,10 @@
+1.6.36
+- Make the source-only PDF-04 production-candidate producer publish evidence atomically from a private sibling staging directory instead of writing directly into the final path.
+- Require the final candidate output path to be absent, preventing stale/partial evidence from being merged with a new run.
+- Remove private staging completely when renderer execution, receipt creation, determinism checks, or final bundle creation fails; publish only after the complete two-run seven-fixture bundle exists.
+- Expand producer regression from 20 to 26 focused checks, including injected mid-run failure, no final partial bundle, no staging residue, and rejection of an existing empty destination.
+- Reconcile the living rendering contract to the current v3 seven-fixture production bundle while keeping PDF-04, Template publication, authoritative Preview, Designer, and renderer authority closed.
+
 1.6.35
 - Harden the source-only PDF-04 bundle producer so unaccepted renderer evidence can never be written inside the Certloom source tree.
 - Reject ambiguous `.`/`..` candidate-output segments before recursive directory creation, and re-check the resolved output boundary before writing manifests, provenance, artifacts, or receipts.

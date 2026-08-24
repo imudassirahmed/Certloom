@@ -89,8 +89,9 @@ final class CertloomProductionCandidateBundleProducer {
 			throw new InvalidArgumentException( 'Production candidate generation requires the explicit source-only PDF-04 acknowledgement.' );
 		}
 		$this->assert_config_shape( $config );
-		$output = $this->prepare_output_dir( $output_dir );
-		$setup = certloom_render_plan_reference_setup();
+		list( $target_output, $output ) = $this->prepare_staging_output( $output_dir );
+		try {
+			$setup = certloom_render_plan_reference_setup();
 		$cases = certloom_render_plan_reference_cases();
 		$plan_manifest_path = $this->root . '/tests/fixtures/rendering/render-plan-manifest.json';
 		$golden_manifest_path = $this->root . '/tests/fixtures/rendering/reference/manifest.json';
@@ -149,8 +150,13 @@ final class CertloomProductionCandidateBundleProducer {
 			'renderers' => $renderer_rows,
 			'runs' => $runs,
 		);
-		$this->write_json( $output . '/bundle.json', $manifest, true );
-		return $manifest;
+			$this->write_json( $output . '/bundle.json', $manifest, true );
+			$this->publish_staging_output( $output, $target_output );
+			return $manifest;
+		} catch ( Throwable $error ) {
+			$this->remove_tree( $output );
+			throw $error;
+		}
 	}
 
 	private function assert_config_shape( array $config ) {
@@ -293,39 +299,97 @@ final class CertloomProductionCandidateBundleProducer {
 		return $relative;
 	}
 
-	private function prepare_output_dir( $path ) {
+	/**
+	 * Prepare a private sibling staging directory for atomic bundle publication.
+	 * The final path must be absent so stale/partial evidence can never be merged.
+	 *
+	 * @return array{0:string,1:string} canonical target path, staging path
+	 */
+	private function prepare_staging_output( $path ) {
 		$path = rtrim( (string) $path, '/\\' );
-		if ( '' === $path || false !== strpos( $path, "\0" ) || is_link( $path ) ) { throw new InvalidArgumentException( 'Candidate output directory is invalid.' ); }
+		if ( '' === $path || false !== strpos( $path, "\0" ) || is_link( $path ) ) {
+			throw new InvalidArgumentException( 'Candidate output directory is invalid.' );
+		}
 		foreach ( preg_split( '#[\\/]+#', $path ) ?: array() as $segment ) {
-			if ( '.' === $segment || '..' === $segment ) { throw new InvalidArgumentException( 'Candidate output directory may not contain dot path segments.' ); }
+			if ( '.' === $segment || '..' === $segment ) {
+				throw new InvalidArgumentException( 'Candidate output directory may not contain dot path segments.' );
+			}
+		}
+		if ( file_exists( $path ) || is_link( $path ) ) {
+			throw new InvalidArgumentException( 'Candidate output directory must not already exist; completed evidence is published atomically to a new path.' );
 		}
 
-		if ( file_exists( $path ) ) {
-			if ( ! is_dir( $path ) ) { throw new InvalidArgumentException( 'Candidate output path already exists and is not a directory.' ); }
-			$real_existing = realpath( $path );
-			if ( false === $real_existing ) { throw new InvalidArgumentException( 'Candidate output directory could not be resolved.' ); }
-			$this->assert_outside_source_tree( $real_existing );
-			$items = array_diff( scandir( $path ), array( '.', '..' ) );
-			if ( ! empty( $items ) ) { throw new InvalidArgumentException( 'Candidate output directory must be absent or empty.' ); }
-		} else {
-			$ancestor = dirname( $path );
-			while ( ! file_exists( $ancestor ) && ! is_link( $ancestor ) ) {
-				$next = dirname( $ancestor );
-				if ( $next === $ancestor ) { break; }
-				$ancestor = $next;
+		$parent_path = dirname( $path );
+		$ancestor = $parent_path;
+		while ( ! file_exists( $ancestor ) && ! is_link( $ancestor ) ) {
+			$next = dirname( $ancestor );
+			if ( $next === $ancestor ) { break; }
+			$ancestor = $next;
+		}
+		$real_ancestor = realpath( $ancestor );
+		if ( false === $real_ancestor || ! is_dir( $real_ancestor ) ) {
+			throw new InvalidArgumentException( 'Candidate output parent path could not be resolved safely.' );
+		}
+		$this->assert_outside_source_tree( $real_ancestor );
+		if ( ! is_dir( $parent_path ) && ! mkdir( $parent_path, 0700, true ) ) {
+			throw new RuntimeException( 'Candidate output parent directory could not be created.' );
+		}
+		$real_parent = realpath( $parent_path );
+		if ( false === $real_parent || ! is_dir( $real_parent ) || ! is_writable( $real_parent ) ) {
+			throw new InvalidArgumentException( 'Candidate output parent directory is invalid or not writable.' );
+		}
+		$this->assert_outside_source_tree( $real_parent );
+
+		$target = $real_parent . DIRECTORY_SEPARATOR . basename( $path );
+		if ( file_exists( $target ) || is_link( $target ) ) {
+			throw new InvalidArgumentException( 'Candidate output directory appeared before staging could begin.' );
+		}
+		$staging = $real_parent . DIRECTORY_SEPARATOR . '.certloom-candidate-' . bin2hex( random_bytes( 12 ) );
+		if ( ! mkdir( $staging, 0700 ) ) {
+			throw new RuntimeException( 'Candidate output staging directory could not be created.' );
+		}
+		@chmod( $staging, 0700 );
+		try {
+			foreach ( array( 'manifests', 'candidates/manifests', 'candidates/source', 'candidates/locks', 'artifacts/a', 'artifacts/b', 'receipts/a', 'receipts/b' ) as $sub ) {
+				if ( ! mkdir( $staging . '/' . $sub, 0700, true ) && ! is_dir( $staging . '/' . $sub ) ) {
+					throw new RuntimeException( 'Candidate output staging subdirectory could not be created.' );
+				}
 			}
-			$real_ancestor = realpath( $ancestor );
-			if ( false === $real_ancestor ) { throw new InvalidArgumentException( 'Candidate output parent path could not be resolved safely.' ); }
-			$this->assert_outside_source_tree( $real_ancestor );
-			if ( ! mkdir( $path, 0700, true ) ) { throw new RuntimeException( 'Candidate output directory could not be created.' ); }
+		} catch ( Throwable $error ) {
+			$this->remove_tree( $staging );
+			throw $error;
 		}
-		$real = realpath( $path );
-		if ( false === $real ) { throw new RuntimeException( 'Candidate output directory could not be resolved.' ); }
+		return array( $target, $staging );
+	}
+
+	private function publish_staging_output( $staging, $target ) {
+		if ( ! is_dir( $staging ) || is_link( $staging ) || file_exists( $target ) || is_link( $target ) ) {
+			throw new RuntimeException( 'Candidate evidence cannot be published because staging/target state changed unexpectedly.' );
+		}
+		if ( ! is_file( $staging . '/bundle.json' ) ) {
+			throw new RuntimeException( 'Candidate evidence cannot be published without the final bundle manifest.' );
+		}
+		if ( ! rename( $staging, $target ) ) {
+			throw new RuntimeException( 'Candidate evidence staging directory could not be published atomically.' );
+		}
+		$real = realpath( $target );
+		if ( false === $real || ! is_dir( $real ) ) {
+			throw new RuntimeException( 'Published candidate evidence directory could not be resolved.' );
+		}
 		$this->assert_outside_source_tree( $real );
-		foreach ( array( 'manifests', 'candidates/manifests', 'candidates/source', 'candidates/locks', 'artifacts/a', 'artifacts/b', 'receipts/a', 'receipts/b' ) as $sub ) {
-			if ( ! is_dir( $real . '/' . $sub ) && ! mkdir( $real . '/' . $sub, 0700, true ) ) { throw new RuntimeException( 'Candidate output subdirectory could not be created.' ); }
-		}
 		return $real;
+	}
+
+	private function remove_tree( $path ) {
+		if ( ! file_exists( $path ) && ! is_link( $path ) ) { return; }
+		if ( is_dir( $path ) && ! is_link( $path ) ) {
+			foreach ( array_diff( scandir( $path ), array( '.', '..' ) ) as $name ) {
+				$this->remove_tree( $path . DIRECTORY_SEPARATOR . $name );
+			}
+			@rmdir( $path );
+			return;
+		}
+		@unlink( $path );
 	}
 
 	private function assert_outside_source_tree( $real_path ) {
