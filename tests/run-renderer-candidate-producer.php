@@ -108,6 +108,31 @@ try {
     $verified_environment=json_decode(file_get_contents($verify_out.'/verifier-environment.json'),true);
     rcp_check(is_array($verified_environment)&&2===$verified_environment['version']&&hash_equals(hash_file('sha256',$verify_entry),$verified_environment['scripts']['verify_entrypoint_sha256']),'Verifier environment v2 must bind the exact standard production-verification entrypoint bytes.');
 
+    $acceptance_builder=__DIR__.'/renderer-candidate/build-production-acceptance.php';
+    $acceptance_path=$tmp.'/acceptance.json';
+    $build_lines=array(); $build_rc=0;
+    exec('php '.escapeshellarg($acceptance_builder).' '.escapeshellarg($prod_out).' '.escapeshellarg($verify_out.'/verification-report.json').' '.escapeshellarg($verify_out.'/verifier-environment.json').' '.escapeshellarg($verify_out.'/verification-index.json').' '.escapeshellarg($acceptance_path).' 2>&1',$build_lines,$build_rc);
+    rcp_check(0===$build_rc&&is_file($acceptance_path),'Canonical acceptance-evidence builder must derive acceptance-v7 directly from the verified production bundle.');
+    $acceptance_data=json_decode(file_get_contents($acceptance_path),true);
+    rcp_check(is_array($acceptance_data)&&7===$acceptance_data['version']&&hash_equals(hash_file('sha256',$prod_out.'/bundle.json'),$acceptance_data['bundle_manifest_sha256']),'Derived acceptance evidence must bind the exact independently verified production bundle.');
+    rcp_check(0600===(fileperms($acceptance_path)&0777)&&empty(glob($tmp.'/.certloom-acceptance-*.json')?:array()),'Acceptance evidence must be owner-only and atomically published without staging residue.');
+
+    $finalize_entry=__DIR__.'/renderer-candidate/finalize-production-acceptance.php';
+    $authority_out=$tmp.'/authority';
+    $finalize_lines=array(); $finalize_rc=0;
+    exec('php '.escapeshellarg($finalize_entry).' '.escapeshellarg($acceptance_path).' '.escapeshellarg($verify_out.'/verification-report.json').' '.escapeshellarg($verify_out.'/verifier-environment.json').' '.escapeshellarg($verify_out.'/verification-index.json').' '.escapeshellarg($authority_out).' 2>&1',$finalize_lines,$finalize_rc);
+    rcp_check(0===$finalize_rc&&is_file($authority_out.'/accepted.json')&&is_file($authority_out.'/authority-index.json'),'Standard production candidate -> verifier -> acceptance builder -> finalizer chain must execute end to end.');
+
+    $existing_acceptance=$tmp.'/existing-acceptance.json'; file_put_contents($existing_acceptance,"{}\n");
+    $lines=array(); $rc_existing_acceptance=0;
+    exec('php '.escapeshellarg($acceptance_builder).' '.escapeshellarg($prod_out).' '.escapeshellarg($verify_out.'/verification-report.json').' '.escapeshellarg($verify_out.'/verifier-environment.json').' '.escapeshellarg($verify_out.'/verification-index.json').' '.escapeshellarg($existing_acceptance).' 2>&1',$lines,$rc_existing_acceptance);
+    rcp_check(0!==$rc_existing_acceptance&&"{}\n"===file_get_contents($existing_acceptance),'Acceptance builder must never overwrite or merge an existing evidence file.');
+
+    $acceptance_inside=$root.'/tests/renderer-candidate/.forbidden-acceptance.json'; rcp_rm($acceptance_inside);
+    $lines=array(); $rc_acceptance_inside=0;
+    exec('php '.escapeshellarg($acceptance_builder).' '.escapeshellarg($prod_out).' '.escapeshellarg($verify_out.'/verification-report.json').' '.escapeshellarg($verify_out.'/verifier-environment.json').' '.escapeshellarg($verify_out.'/verification-index.json').' '.escapeshellarg($acceptance_inside).' 2>&1',$lines,$rc_acceptance_inside);
+    rcp_check(0!==$rc_acceptance_inside&&!file_exists($acceptance_inside),'Acceptance evidence must never be published inside the Certloom source tree.');
+
     $verify_existing=$tmp.'/existing-verification'; mkdir($verify_existing,0700);
     $lines=array(); $rc_existing=0; exec('bash '.escapeshellarg($verify_entry).' '.escapeshellarg($prod_out).' '.escapeshellarg($verify_existing).' 2>&1',$lines,$rc_existing);
     rcp_check(0!==$rc_existing&&array()==array_values(array_diff(scandir($verify_existing),array('.','..'))),'Production verification must reject even an empty existing output directory rather than merge or replace evidence.');

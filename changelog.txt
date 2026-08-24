@@ -1,3 +1,11 @@
+1.6.38
+- Add a canonical source-only PDF-04 acceptance-evidence builder that derives RendererAcceptanceContract v7 directly from the exact production bundle plus normalized independent report/environment/index instead of requiring operators to copy hashes and mandatory checks by hand.
+- Cross-check plugin version, bundle/manifests, renderer/context/candidate identities, deterministic A/B fixture hashes, verification report/environment hashes, and verification-index identities before acceptance evidence can be emitted.
+- Re-import the derived evidence through RendererAcceptanceImporter before atomic publication, and require a new owner-only output file outside the Certloom source tree.
+- Extend the production-candidate regression through the complete standard chain: producer -> independent verifier -> acceptance builder -> finalizer -> staged release authority.
+- Harden the source-only finalizer to reject report/environment/index inputs and output parents containing symbolic path components.
+- Reconcile the living renderer contract to RendererVerifierEnvironment v2 and the canonical builder step while keeping PDF-04, renderer authority, Template publication, authoritative Preview, and Designer closed until the genuine mPDF/GD execution passes.
+
 1.6.37
 - Fix ArtifactReceipt v4 verification after canonical JSON persistence: associative artifact metadata is now compared by canonical identity instead of PHP insertion-order-sensitive strict array equality.
 - Make the standard source-only production verification entrypoint stage report/environment/index evidence in a private sibling directory, clean it completely on failure, keep output outside the Certloom source tree, and publish only a complete new three-file verification set.

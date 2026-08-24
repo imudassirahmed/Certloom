@@ -137,9 +137,10 @@ final class CertloomProductionAcceptanceFinalizer {
 
 	/** @return array<string,mixed> */
 	private function decode_json_file( $path, $label ) {
-		if ( ! is_string( $path ) || '' === trim( $path ) || false !== strpos( $path, "\0" ) || is_link( $path ) ) {
+		if ( ! is_string( $path ) || '' === trim( $path ) || false !== strpos( $path, "\0" ) ) {
 			throw new InvalidArgumentException( $label . ' path is invalid or symbolic.' );
 		}
+		$this->assert_non_symbolic_path_components( $path, $label );
 		$real = realpath( $path );
 		if ( false === $real || ! is_file( $real ) || ! is_readable( $real ) ) {
 			throw new InvalidArgumentException( $label . ' must be a readable regular file.' );
@@ -156,11 +157,26 @@ final class CertloomProductionAcceptanceFinalizer {
 		return $data;
 	}
 
+
+	private function assert_non_symbolic_path_components( $path, $label ) {
+		$path = (string) $path;
+		$absolute = '/' === substr( $path, 0, 1 );
+		$parts = preg_split( '#[\\/]#', $path );
+		$current = $absolute ? DIRECTORY_SEPARATOR : '';
+		foreach ( $parts as $part ) {
+			if ( '' === $part ) { continue; }
+			if ( '.' === $part || '..' === $part ) { throw new InvalidArgumentException( $label . ' path contains an ambiguous dot segment.' ); }
+			$current = ( '' === $current || DIRECTORY_SEPARATOR === $current ) ? $current . $part : $current . DIRECTORY_SEPARATOR . $part;
+			if ( is_link( $current ) ) { throw new InvalidArgumentException( $label . ' path contains a symbolic component.' ); }
+		}
+	}
+
 	private function publish_staging_directory( $path, array $files ) {
 		$path = rtrim( (string) $path, '/\\' );
 		if ( '' === $path || false !== strpos( $path, "\0" ) || is_link( $path ) || file_exists( $path ) ) {
 			throw new InvalidArgumentException( 'Renderer authority output directory must be a new, non-symbolic path.' );
 		}
+		$this->assert_non_symbolic_path_components( dirname( $path ), 'renderer authority output parent' );
 		$parent = realpath( dirname( $path ) );
 		if ( false === $parent || ! is_dir( $parent ) || ! is_writable( $parent ) ) {
 			throw new InvalidArgumentException( 'Renderer authority output parent directory is invalid or not writable.' );
