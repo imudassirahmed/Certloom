@@ -11,6 +11,11 @@ wp eval-file wp-content/plugins/certloom/tests/wp-integration/run-domain-premium
 wp eval-file wp-content/plugins/certloom/tests/wp-integration/run-domain-row-lock-gate.php
 ```
 
+
+## Exact-byte evidence boundary
+
+Every real-host gate emits an `EVIDENCE` header before its assertions. Preserve that header with the gate output. It binds the transcript to the exact Certloom semantic version, exact production-intended runtime-payload SHA-256/file-count/byte-count, exact gate-script SHA-256, and exact shared evidence-helper SHA-256. A production-byte change makes previously stored/admin evidence stale even when the semantic version is unchanged; rerun the full applicable proof/rehearsal sequence after any such change.
+
 Required pass evidence includes:
 
 - `dbDelta()` creates/updates every domain table successfully;

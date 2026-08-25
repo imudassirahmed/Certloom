@@ -25,13 +25,18 @@ namespace {
 	function wp_json_encode($v,$flags=0){return json_encode($v,$flags);}
 	function lmp_assert($c,$m){if(!$c)throw new \RuntimeException($m);}
 
+	require_once dirname(__DIR__) . '/src/Application/Rendering/CanonicalJson.php';
+	require_once dirname(__DIR__) . '/src/Application/Rendering/RuntimePayloadFingerprint.php';
+	require_once dirname(__DIR__) . '/src/Infrastructure/Diagnostics/RuntimePayloadEvidence.php';
 	require_once dirname(__DIR__) . '/src/Infrastructure/Diagnostics/LegacyMigrationPreflightProof.php';
 	use Certloom\Infrastructure\Diagnostics\LegacyMigrationPreflightProof;
+	use Certloom\Infrastructure\Diagnostics\RuntimePayloadEvidence;
 	use Certloom\Infrastructure\Repository\LegacyCertificateRepository;
 
 	$seed = hash('sha256','certloom-legacy-migration-preflight-v1');
+	$payload=RuntimePayloadEvidence::current(); lmp_assert(is_array($payload),'Current Certloom payload identity must be available.');
 	$valid=array(
-		'schema'=>'certloom-legacy-migration-preflight-proof','version'=>1,'plugin_version'=>ECAPLA_CERTVERIFY_VERSION,
+		'schema'=>'certloom-legacy-migration-preflight-proof','version'=>LegacyMigrationPreflightProof::RESULT_VERSION,'plugin_version'=>ECAPLA_CERTVERIFY_VERSION,'runtime_payload'=>$payload,
 		'status'=>'passed','phase'=>'complete','reason_code'=>'','started_at'=>time()-10,'updated_at'=>time(),'checked_at'=>time(),'preflight_date'=>'2026-08-22',
 		'source_count'=>3,'source_max_id'=>7,'source_generation'=>'generation-1','cursor'=>7,'total'=>3,'ready'=>3,'errors'=>0,
 		'status_counts'=>array('valid'=>1,'suspended'=>1,'revoked'=>1,'expired'=>0),'error_examples'=>array(),
@@ -45,6 +50,9 @@ namespace {
 	LegacyCertificateRepository::$snapshot['generation']='generation-1';
 	$GLOBALS['lmp_options'][LegacyMigrationPreflightProof::RESULT_OPTION]['plugin_version']='older';
 	lmp_assert('stale'===LegacyMigrationPreflightProof::evidence_state(),'Another Certloom version must stale evidence.');
+	$GLOBALS['lmp_options'][LegacyMigrationPreflightProof::RESULT_OPTION]=$valid;
+	$GLOBALS['lmp_options'][LegacyMigrationPreflightProof::RESULT_OPTION]['runtime_payload']['sha256']=str_repeat('e',64);
+	lmp_assert('stale'===LegacyMigrationPreflightProof::evidence_state(),'Same-version production-byte change must stale preflight evidence.');
 	$GLOBALS['lmp_options'][LegacyMigrationPreflightProof::RESULT_OPTION]=$valid;
 	$GLOBALS['lmp_options'][LegacyMigrationPreflightProof::RESULT_OPTION]['checked_at']=time()-(8*DAY_IN_SECONDS);
 	lmp_assert('stale'===LegacyMigrationPreflightProof::evidence_state(),'Evidence older than seven days must be stale.');
@@ -64,5 +72,5 @@ namespace {
 	lmp_assert(false===strpos($source,'LegacyMigrationWriter')&&false===strpos($source,'LegacyMigrationCoordinator'),'Read-only preflight must not invoke migration writes/coordinator state.');
 	lmp_assert(false===strpos($source,'DomainCutoverCoordinator'),'Read-only preflight must not invoke cutover.');
 	lmp_assert(false===strpos($source,'wp_remote_')&&false===strpos($source,'curl_'),'Preflight must not make outbound HTTP calls.');
-	echo "PASS  Populated legacy migration preflight evidence is resumable, read-only and source-bound\n\n14 checks, 0 failures\n";
+	echo "PASS  Populated legacy migration preflight evidence is resumable, read-only and source-bound\n\n16 checks, 0 failures\n";
 }

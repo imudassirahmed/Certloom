@@ -12,6 +12,9 @@ if ( ! function_exists( 'pcntl_fork' ) || ! function_exists( 'pcntl_waitpid' ) )
 	exit( 1 );
 }
 
+require_once __DIR__ . '/gate-evidence.php';
+certloom_wp_integration_evidence( 'domain-row-lock', __FILE__ );
+
 use Certloom\Infrastructure\Database\SchemaManager;
 use Certloom\Infrastructure\Database\Transaction;
 use Certloom\Infrastructure\Repository\CredentialRepository;

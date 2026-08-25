@@ -37,7 +37,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class DomainAcceptanceProof {
 	const RESULT_OPTION  = 'certloom_domain_acceptance_proof_last';
 	const RESULT_SCHEMA  = 'certloom-domain-acceptance-proof';
-	const RESULT_VERSION = 4;
+	const RESULT_VERSION = 5;
 	const MAX_AGE         = 7 * DAY_IN_SECONDS;
 	const ROLLBACK_CODE   = 'certloom_domain_acceptance_intentional_rollback';
 
@@ -59,6 +59,11 @@ final class DomainAcceptanceProof {
 			return new \WP_Error( 'certloom_domain_acceptance_database_unavailable', __( 'Certloom could not access the WordPress database connection for the gated-domain proof.', 'certloom' ) );
 		}
 
+		$runtime_payload = RuntimePayloadEvidence::current();
+		if ( ! is_array( $runtime_payload ) ) {
+			return new \WP_Error( 'certloom_domain_acceptance_runtime_payload_unavailable', __( 'Certloom could not fingerprint the exact installed plugin payload for gated-domain acceptance evidence.', 'certloom' ) );
+		}
+
 		$empty = self::assert_existing_domain_empty();
 		if ( is_wp_error( $empty ) ) {
 			return $empty;
@@ -76,7 +81,7 @@ final class DomainAcceptanceProof {
 			return $locked;
 		}
 
-		$result = self::new_result();
+		$result = self::new_result( $runtime_payload );
 		$legacy_before = null;
 		$generation_before_exists = false;
 		$generation_before = null;
@@ -208,6 +213,9 @@ final class DomainAcceptanceProof {
 		if ( ! is_array( $result ) || self::RESULT_SCHEMA !== (string) ( $result['schema'] ?? '' ) || self::RESULT_VERSION !== (int) ( $result['version'] ?? 0 ) || ! isset( $result['checks'] ) || ! is_array( $result['checks'] ) ) {
 			return null;
 		}
+		if ( ! is_array( RuntimePayloadEvidence::normalize( $result['runtime_payload'] ?? null ) ) ) {
+			return null;
+		}
 		$overall = sanitize_key( (string) ( $result['overall'] ?? '' ) );
 		$version = sanitize_text_field( (string) ( $result['plugin_version'] ?? '' ) );
 		$checked_at = absint( $result['checked_at'] ?? 0 );
@@ -231,7 +239,7 @@ final class DomainAcceptanceProof {
 		$current = defined( 'ECAPLA_CERTVERIFY_VERSION' ) ? (string) ECAPLA_CERTVERIFY_VERSION : '';
 		$version = sanitize_text_field( (string) ( $result['plugin_version'] ?? '' ) );
 		$checked_at = absint( $result['checked_at'] ?? 0 );
-		if ( '' === $current || '' === $version || ! hash_equals( $current, $version ) || ! $checked_at || $checked_at > time() + 300 || time() - $checked_at > self::MAX_AGE ) {
+		if ( '' === $current || '' === $version || ! hash_equals( $current, $version ) || ! RuntimePayloadEvidence::matches_current( $result['runtime_payload'] ?? null ) || ! $checked_at || $checked_at > time() + 300 || time() - $checked_at > self::MAX_AGE ) {
 			return 'stale';
 		}
 		return 'passed';
@@ -248,6 +256,9 @@ final class DomainAcceptanceProof {
 		if ( ! is_array( $result ) ) { return __( 'Certloom gated-domain acceptance proof: not run.', 'certloom' ); }
 		$lines = array( sprintf( 'Certloom gated-domain acceptance proof: %s', strtoupper( sanitize_key( (string) ( $result['overall'] ?? 'incomplete' ) ) ) ) );
 		$lines[] = sprintf( 'Certloom version: %s', sanitize_text_field( (string) ( $result['plugin_version'] ?? '' ) ) );
+		if ( is_array( $result['runtime_payload'] ?? null ) && ! empty( $result['runtime_payload']['sha256'] ) ) {
+			$lines[] = sprintf( 'Certloom payload SHA-256: %s', sanitize_text_field( (string) $result['runtime_payload']['sha256'] ) );
+		}
 		$lines[] = sprintf( 'Checked UTC: %s', gmdate( 'Y-m-d H:i:s', absint( $result['checked_at'] ?? 0 ) ) );
 		foreach ( (array) ( $result['checks'] ?? array() ) as $check ) {
 			if ( is_array( $check ) ) {
@@ -460,11 +471,12 @@ final class DomainAcceptanceProof {
 	}
 
 	/** @return array<string,mixed> */
-	private static function new_result() {
+	private static function new_result( array $runtime_payload ) {
 		return array(
 			'schema' => self::RESULT_SCHEMA,
 			'version' => self::RESULT_VERSION,
 			'plugin_version' => defined( 'ECAPLA_CERTVERIFY_VERSION' ) ? (string) ECAPLA_CERTVERIFY_VERSION : '',
+			'runtime_payload' => $runtime_payload,
 			'overall' => 'incomplete',
 			'checked_at' => 0,
 			'checks' => array(),

@@ -26,7 +26,7 @@ final class StagingCutoverRehearsal {
 	const RESULT_OPTION  = 'certloom_staging_cutover_rehearsal';
 	const LOCK_OPTION    = 'certloom_staging_cutover_rehearsal_lock';
 	const RESULT_SCHEMA  = 'certloom-staging-cutover-rehearsal';
-	const RESULT_VERSION = 1;
+	const RESULT_VERSION = 2;
 	const MAX_AGE        = 7 * DAY_IN_SECONDS;
 	const LOCK_TTL       = 2 * MINUTE_IN_SECONDS;
 	const MAX_SECONDS    = 4.0;
@@ -114,6 +114,8 @@ final class StagingCutoverRehearsal {
 	private static function start_state() {
 		$initial = self::assert_initial_preconditions();
 		if ( is_wp_error( $initial ) ) { return $initial; }
+		$runtime_payload = RuntimePayloadEvidence::current();
+		if ( ! is_array( $runtime_payload ) ) { return new \WP_Error( 'certloom_staging_cutover_runtime_payload_unavailable', __( 'Certloom could not fingerprint the exact installed plugin payload for staging cutover evidence.', 'certloom' ) ); }
 		$restore = StagingRestoreRehearsal::get_last_result();
 		$source = ( new LegacyCertificateRepository() )->snapshot();
 		if ( ! is_array( $restore ) || is_wp_error( $source ) ) {
@@ -123,6 +125,7 @@ final class StagingCutoverRehearsal {
 			'schema'                 => self::RESULT_SCHEMA,
 			'version'                => self::RESULT_VERSION,
 			'plugin_version'         => defined( 'ECAPLA_CERTVERIFY_VERSION' ) ? (string) ECAPLA_CERTVERIFY_VERSION : '',
+			'runtime_payload'        => $runtime_payload,
 			'environment'            => sanitize_key( (string) wp_get_environment_type() ),
 			'status'                 => 'running',
 			'phase'                  => 'baseline_fingerprint',
@@ -316,6 +319,9 @@ final class StagingCutoverRehearsal {
 			if ( '' === $current_version || '' === $started_version || ! hash_equals( $started_version, $current_version ) ) {
 				return new \WP_Error( 'certloom_staging_cutover_version_changed', __( 'Certloom changed version after the staging cutover rehearsal started. Reclone/restore staging and run the rehearsal with one fixed Certloom version.', 'certloom' ) );
 			}
+			if ( ! RuntimePayloadEvidence::matches_current( $state['runtime_payload'] ?? null ) ) {
+				return new \WP_Error( 'certloom_staging_cutover_runtime_payload_changed', __( 'Certloom production bytes changed after the staging cutover rehearsal started. Reclone/restore staging and rerun the rehearsal with one exact plugin payload.', 'certloom' ) );
+			}
 		}
 		if ( ( defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) && CERTLOOM_DOMAIN_WRITE_PATHS_READY ) || ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) || ( defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) && CERTLOOM_DOMAIN_DATA_TOOLS_READY ) ) {
 			return new \WP_Error( 'certloom_staging_cutover_feature_gate_active', __( 'The staging cutover rehearsal is available only while all production future-domain feature constants remain disabled.', 'certloom' ) );
@@ -347,6 +353,7 @@ final class StagingCutoverRehearsal {
 	public static function get_last_result() {
 		$result = self::get_raw_result();
 		if ( ! is_array( $result ) || self::RESULT_SCHEMA !== (string) ( $result['schema'] ?? '' ) || self::RESULT_VERSION !== (int) ( $result['version'] ?? 0 ) ) { return null; }
+		if ( ! is_array( RuntimePayloadEvidence::normalize( $result['runtime_payload'] ?? null ) ) ) { return null; }
 		$status = sanitize_key( (string) ( $result['status'] ?? '' ) );
 		$phase = sanitize_key( (string) ( $result['phase'] ?? '' ) );
 		if ( ! in_array( $status, array( 'running', 'passed', 'failed' ), true ) || ! in_array( $phase, array( 'baseline_fingerprint', 'cutover_cycle', 'final_fingerprint', 'complete' ), true ) ) { return null; }
@@ -370,7 +377,7 @@ final class StagingCutoverRehearsal {
 		$current = ( new LegacyCertificateRepository() )->snapshot();
 		$cutover = new DomainCutoverState();
 		$gates_off = ! ( defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) && CERTLOOM_DOMAIN_WRITE_PATHS_READY ) && ! ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) && ! ( defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) && CERTLOOM_DOMAIN_DATA_TOOLS_READY );
-		if ( '' === $current_version || ! hash_equals( $current_version, (string) $result['plugin_version'] ) || ! $checked_at || $checked_at > time() + 300 || time() - $checked_at > self::MAX_AGE || ! is_array( $current ) || ! self::same_source_boundary( $result, $current ) || LegacyMigrationState::COMPLETE !== ( new LegacyMigrationState() )->status() || ! StagingRestoreRehearsal::is_current_passed() || ! $gates_off || ! $cutover->is_clean_legacy_state() || false !== get_option( PublicVerificationGate::OPTION, false ) || false !== get_option( DomainCutoverCoordinator::OWNER_OPTION, false ) || ( new DomainMaintenanceLock() )->active() ) { return 'stale'; }
+		if ( '' === $current_version || ! hash_equals( $current_version, (string) $result['plugin_version'] ) || ! RuntimePayloadEvidence::matches_current( $result['runtime_payload'] ?? null ) || ! $checked_at || $checked_at > time() + 300 || time() - $checked_at > self::MAX_AGE || ! is_array( $current ) || ! self::same_source_boundary( $result, $current ) || LegacyMigrationState::COMPLETE !== ( new LegacyMigrationState() )->status() || ! StagingRestoreRehearsal::is_current_passed() || ! $gates_off || ! $cutover->is_clean_legacy_state() || false !== get_option( PublicVerificationGate::OPTION, false ) || false !== get_option( DomainCutoverCoordinator::OWNER_OPTION, false ) || ( new DomainMaintenanceLock() )->active() ) { return 'stale'; }
 		return 'passed';
 	}
 
@@ -384,6 +391,7 @@ final class StagingCutoverRehearsal {
 			sprintf( 'Certloom staging cutover rehearsal: %s', strtoupper( sanitize_key( (string) ( $result['status'] ?? 'unknown' ) ) ) ),
 			sprintf( 'Phase: %s', strtoupper( sanitize_key( (string) ( $result['phase'] ?? 'unknown' ) ) ) ),
 			sprintf( 'Certloom version: %s', sanitize_text_field( (string) ( $result['plugin_version'] ?? '' ) ) ),
+			sprintf( 'Certloom payload SHA-256: %s', sanitize_text_field( (string) ( $result['runtime_payload']['sha256'] ?? '' ) ) ),
 			sprintf( 'WordPress environment type: %s', sanitize_key( (string) ( $result['environment'] ?? '' ) ) ),
 			sprintf( 'Frozen legacy rows: %d', absint( $result['source_count'] ?? 0 ) ),
 			sprintf( 'Future-domain records fingerprinted: %d', absint( $result['baseline_records'] ?? 0 ) ),

@@ -1,3 +1,10 @@
+1.6.41
+- Bind isolated database proof, gated-domain acceptance, populated migration preflight, and staging migration/restore/cutover rehearsal evidence to Certloom's exact deterministic production-payload fingerprint in addition to the semantic version.
+- Fail stored database evidence stale after any same-version production-byte drift, and stop active multi-slice migration/restore/cutover rehearsals if the plugin payload changes after the rehearsal begins.
+- Advance the affected evidence schemas (database proof v2, domain acceptance v5, preflight v2, staging migration/restore/cutover v2) and include the non-sensitive Certloom payload SHA-256 in copyable reports.
+- Bind every real WordPress/MySQL WP-CLI integration-gate transcript to the exact Certloom runtime payload plus the exact gate-script and shared evidence-helper SHA-256 values.
+- Add a cross-cutting exact-payload database-evidence regression and reconcile stale template/domain structural assertions while keeping real MySQL/MariaDB acceptance external and all normalized-domain authority flags false.
+
 1.6.40
 - Add a canonical authorized-release packaging path so reviewed PDF-04 authority is no longer copied manually from the external finalizer output into `resources/renderer/accepted.json`.
 - Make `build-release.sh` snapshot and fully revalidate the six-file finalized authority set, exact Certloom version, imported acceptance/report/environment/index cross-links, RendererReleaseManifest v3 hash, and exact runtime-payload fingerprint before injecting canonical authority into staging.

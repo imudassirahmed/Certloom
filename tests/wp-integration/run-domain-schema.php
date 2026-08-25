@@ -19,6 +19,9 @@ if ( ! ( defined( 'WP_CLI' ) && WP_CLI ) && ! defined( 'CERTLOOM_RUN_INTEGRATION
 	wp_die( 'Certloom integration tests require WP-CLI or CERTLOOM_RUN_INTEGRATION_TESTS.' );
 }
 
+require_once __DIR__ . '/gate-evidence.php';
+certloom_wp_integration_evidence( 'domain-schema', __FILE__ );
+
 use Certloom\Application\CredentialLifecycleService;
 use Certloom\Application\CredentialRelationshipCorrectionService;
 use Certloom\Application\CredentialVerificationService;

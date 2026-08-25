@@ -13,6 +13,9 @@ if ( ! ( defined( 'WP_CLI' ) && WP_CLI ) && ! defined( 'CERTLOOM_RUN_INTEGRATION
 	wp_die( 'Certloom integration tests require WP-CLI or CERTLOOM_RUN_INTEGRATION_TESTS.' );
 }
 
+require_once __DIR__ . '/gate-evidence.php';
+certloom_wp_integration_evidence( 'numbering-policy', __FILE__ );
+
 function certloom_numbering_it_fail( $message ) { throw new RuntimeException( $message ); }
 function certloom_numbering_it_ok( $value, $message ) {
 	if ( is_wp_error( $value ) ) { certloom_numbering_it_fail( $message . ': ' . $value->get_error_code() . ' — ' . $value->get_error_message() ); }

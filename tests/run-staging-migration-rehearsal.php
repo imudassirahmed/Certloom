@@ -48,15 +48,21 @@ namespace Certloom\Infrastructure\Diagnostics {
 }
 
 namespace {
+    require dirname( __DIR__ ) . '/src/Application/Rendering/CanonicalJson.php';
+    require dirname( __DIR__ ) . '/src/Application/Rendering/RuntimePayloadFingerprint.php';
+    require dirname( __DIR__ ) . '/src/Infrastructure/Diagnostics/RuntimePayloadEvidence.php';
     require dirname( __DIR__ ) . '/src/Infrastructure/Diagnostics/StagingMigrationRehearsal.php';
     use Certloom\Infrastructure\Diagnostics\StagingMigrationRehearsal;
+    use Certloom\Infrastructure\Diagnostics\RuntimePayloadEvidence;
 
     smr_same( true, StagingMigrationRehearsal::available(), 'staging rehearsal requires allowed environment plus explicit opt-in' );
     $now = time();
+    $payload=RuntimePayloadEvidence::current(); smr_same(true,is_array($payload),'current payload identity available');
     $GLOBALS['smr_options'][ StagingMigrationRehearsal::RESULT_OPTION ] = array(
         'schema' => StagingMigrationRehearsal::RESULT_SCHEMA,
         'version' => StagingMigrationRehearsal::RESULT_VERSION,
         'plugin_version' => ECAPLA_CERTVERIFY_VERSION,
+        'runtime_payload' => $payload,
         'environment' => 'staging',
         'status' => 'passed',
         'phase' => 'complete',
@@ -83,6 +89,10 @@ namespace {
         'error_examples' => array(),
     );
     smr_same( 'passed', StagingMigrationRehearsal::evidence_state(), 'fresh coherent staging evidence is green' );
+    $valid_state=$GLOBALS['smr_options'][ StagingMigrationRehearsal::RESULT_OPTION ];
+    $GLOBALS['smr_options'][ StagingMigrationRehearsal::RESULT_OPTION ]['runtime_payload']['sha256']=str_repeat('e',64);
+    smr_same( 'stale', StagingMigrationRehearsal::evidence_state(), 'same-version production-byte change stales migration rehearsal evidence' );
+    $GLOBALS['smr_options'][ StagingMigrationRehearsal::RESULT_OPTION ]=$valid_state;
     $report = StagingMigrationRehearsal::get_text_report();
     if ( false !== strpos( $report, 'CERT-SECRET' ) || false !== strpos( $report, '/var/www' ) ) { throw new \RuntimeException( 'Staging report leaked sensitive fixture data.' ); }
     if ( false === strpos( $report, 'Credential authority changed: NO' ) ) { throw new \RuntimeException( 'Staging report lost explicit no-cutover statement.' ); }
@@ -95,5 +105,5 @@ namespace {
     $GLOBALS['smr_migration_status'] = 'blocked';
     smr_same( 'stale', StagingMigrationRehearsal::evidence_state(), 'migration state regression stales rehearsal evidence' );
 
-    echo "PASS  staging migration rehearsal evidence is privacy-safe, source-bound and target-bound\n\n1 test, 0 failures\n";
+    echo "PASS  staging migration rehearsal evidence is privacy-safe, source-bound and target-bound\n\n3 checks, 0 failures\n";
 }

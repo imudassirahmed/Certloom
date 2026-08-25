@@ -16,7 +16,7 @@ class Ecapla_CertVerify_Database_Proof {
 	const LOCK_OPTION   = 'certloom_database_proof_lock';
 	const LAST_OPTION   = 'certloom_database_proof_last';
 	const RESULT_SCHEMA = 'certloom-database-proof';
-	const RESULT_VERSION = 1;
+	const RESULT_VERSION = 2;
 	const LOCK_TTL      = 2 * MINUTE_IN_SECONDS;
 
 	/**
@@ -36,12 +36,17 @@ class Ecapla_CertVerify_Database_Proof {
 			return $maintenance;
 		}
 
+		$runtime_payload = \Certloom\Infrastructure\Diagnostics\RuntimePayloadEvidence::current();
+		if ( ! is_array( $runtime_payload ) ) {
+			return new WP_Error( 'certloom_database_proof_runtime_payload_unavailable', __( 'Certloom could not fingerprint the exact installed plugin payload for database-proof evidence.', 'certloom' ) );
+		}
+
 		$owner = self::acquire_lock();
 		if ( is_wp_error( $owner ) ) {
 			return $owner;
 		}
 
-		$result = self::new_result();
+		$result = self::new_result( $runtime_payload );
 		$table  = self::table_name();
 		$old_suppress = method_exists( $wpdb, 'suppress_errors' ) ? $wpdb->suppress_errors( true ) : null;
 
@@ -103,7 +108,7 @@ class Ecapla_CertVerify_Database_Proof {
 		$overall = sanitize_key( (string) ( $result['overall'] ?? '' ) );
 		$version = sanitize_text_field( (string) ( $result['plugin_version'] ?? '' ) );
 		$checked_at = absint( $result['checked_at'] ?? 0 );
-		if ( ! in_array( $overall, array( 'passed', 'incomplete', 'failed' ), true ) || '' === $version || ! $checked_at || empty( $result['checks'] ) ) {
+		if ( ! in_array( $overall, array( 'passed', 'incomplete', 'failed' ), true ) || '' === $version || ! $checked_at || empty( $result['checks'] ) || ! is_array( \Certloom\Infrastructure\Diagnostics\RuntimePayloadEvidence::normalize( $result['runtime_payload'] ?? null ) ) ) {
 			return null;
 		}
 		foreach ( $result['checks'] as $check ) {
@@ -139,7 +144,7 @@ class Ecapla_CertVerify_Database_Proof {
 		$proof_version   = sanitize_text_field( (string) ( $result['plugin_version'] ?? '' ) );
 		$current_version = defined( 'ECAPLA_CERTVERIFY_VERSION' ) ? (string) ECAPLA_CERTVERIFY_VERSION : '';
 		$checked_at      = absint( $result['checked_at'] ?? 0 );
-		if ( '' === $proof_version || '' === $current_version || ! hash_equals( $current_version, $proof_version ) ) {
+		if ( '' === $proof_version || '' === $current_version || ! hash_equals( $current_version, $proof_version ) || ! \Certloom\Infrastructure\Diagnostics\RuntimePayloadEvidence::matches_current( $result['runtime_payload'] ?? null ) ) {
 			return 'stale';
 		}
 		if ( ! $checked_at || $checked_at > ( time() + 300 ) || ( time() - $checked_at ) > ( 7 * DAY_IN_SECONDS ) ) {
@@ -163,6 +168,9 @@ class Ecapla_CertVerify_Database_Proof {
 		if ( ! empty( $result['plugin_version'] ) ) {
 			$lines[] = sprintf( 'Certloom version: %s', sanitize_text_field( (string) $result['plugin_version'] ) );
 		}
+		if ( is_array( $result['runtime_payload'] ?? null ) && ! empty( $result['runtime_payload']['sha256'] ) ) {
+			$lines[] = sprintf( 'Certloom payload SHA-256: %s', sanitize_text_field( (string) $result['runtime_payload']['sha256'] ) );
+		}
 		if ( ! empty( $result['checked_at'] ) ) {
 			$lines[] = sprintf( 'Checked UTC: %s', gmdate( 'Y-m-d H:i:s', absint( $result['checked_at'] ) ) );
 		}
@@ -176,11 +184,12 @@ class Ecapla_CertVerify_Database_Proof {
 	}
 
 	/** @return array<string,mixed> */
-	private static function new_result() {
+	private static function new_result( array $runtime_payload ) {
 		return array(
 			'schema'          => self::RESULT_SCHEMA,
 			'version'         => self::RESULT_VERSION,
 			'plugin_version'  => defined( 'ECAPLA_CERTVERIFY_VERSION' ) ? (string) ECAPLA_CERTVERIFY_VERSION : '',
+			'runtime_payload' => $runtime_payload,
 			'overall'         => 'incomplete',
 			'checked_at'      => 0,
 			'checks'          => array(),

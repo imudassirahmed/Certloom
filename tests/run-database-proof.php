@@ -96,6 +96,9 @@ class wpdb {
 
 $GLOBALS['wpdb'] = new wpdb();
 class Ecapla_CertVerify_Backup { const MAINTENANCE_LOCK_OPTION = 'certverify_restore_maintenance_lock'; }
+require_once dirname( __DIR__ ) . '/src/Application/Rendering/CanonicalJson.php';
+require_once dirname( __DIR__ ) . '/src/Application/Rendering/RuntimePayloadFingerprint.php';
+require_once dirname( __DIR__ ) . '/src/Infrastructure/Diagnostics/RuntimePayloadEvidence.php';
 require_once dirname( __DIR__ ) . '/includes/class-ecapla-certverify-database-proof.php';
 
 function dp_assert( $condition, $message ) { if ( ! $condition ) throw new RuntimeException( $message ); }
@@ -114,6 +117,7 @@ dp_assert( false === wpdb::$created, 'Scratch table must be removed before retur
 dp_assert( false === get_option( Ecapla_CertVerify_Database_Proof::LOCK_OPTION, false ), 'Execution lock must be removed.' );
 dp_assert( is_array( Ecapla_CertVerify_Database_Proof::get_last_result() ), 'Non-sensitive result should be stored.' );
 dp_assert( '1.5.14-test' === $result['plugin_version'], 'Stored proof evidence must bind to the Certloom version that produced it.' );
+dp_assert( is_array( $result['runtime_payload'] ?? null ) && Certloom\Infrastructure\Diagnostics\RuntimePayloadEvidence::matches_current( $result['runtime_payload'] ), 'Stored proof evidence must bind to the exact Certloom production payload.' );
 dp_assert( 'passed' === Ecapla_CertVerify_Database_Proof::evidence_state(), 'Fresh passing proof evidence should be current.' );
 dp_assert( Ecapla_CertVerify_Database_Proof::is_current_passed(), 'Current passing proof helper should return true.' );
 $report = Ecapla_CertVerify_Database_Proof::get_text_report();
@@ -127,6 +131,11 @@ $tampered['overall'] = 'passed';
 $tampered['checks'][0]['status'] = 'fail';
 $GLOBALS['dbproof_options'][ Ecapla_CertVerify_Database_Proof::LAST_OPTION ] = $tampered;
 dp_assert( null === Ecapla_CertVerify_Database_Proof::get_last_result(), 'Stored proof evidence with inconsistent overall/check status must fail closed.' );
+$GLOBALS['dbproof_options'][ Ecapla_CertVerify_Database_Proof::LAST_OPTION ] = $saved_result;
+$tampered_payload = $saved_result;
+$tampered_payload['runtime_payload']['sha256'] = str_repeat( 'e', 64 );
+$GLOBALS['dbproof_options'][ Ecapla_CertVerify_Database_Proof::LAST_OPTION ] = $tampered_payload;
+dp_assert( 'stale' === Ecapla_CertVerify_Database_Proof::evidence_state(), 'Same-version production-byte change must stale isolated database proof evidence.' );
 $GLOBALS['dbproof_options'][ Ecapla_CertVerify_Database_Proof::LAST_OPTION ] = $saved_result;
 
 $GLOBALS['dbproof_options'][ Ecapla_CertVerify_Backup::MAINTENANCE_LOCK_OPTION ] = array( 'token_hash' => 'x', 'expires_at' => time() + 60 );
@@ -147,4 +156,4 @@ dp_assert( is_wp_error( $corrupt ) && 'certloom_database_proof_domain_maintenanc
 dp_assert( $before_calls === $GLOBALS['dbproof_dbdelta_calls'], 'Corrupt protected state must block before scratch schema is touched.' );
 unset( $GLOBALS['dbproof_options']['certloom_domain_maintenance_lock'] );
 
-printf( "PASS  Isolated database proof is private, cleanup-safe and exercises real database guarantees\n\n20 checks, 0 failures\n" );
+printf( "PASS  Isolated database proof is private, cleanup-safe and exercises real database guarantees\n\n22 checks, 0 failures\n" );

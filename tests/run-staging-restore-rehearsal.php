@@ -46,17 +46,22 @@ namespace Certloom\Infrastructure\Files { final class PrivateJobFileStore {} }
 namespace Certloom\Infrastructure\Restore { final class DomainRestoreMergeService {} }
 
 namespace {
+    require dirname( __DIR__ ) . '/src/Application/Rendering/CanonicalJson.php';
+    require dirname( __DIR__ ) . '/src/Application/Rendering/RuntimePayloadFingerprint.php';
+    require dirname( __DIR__ ) . '/src/Infrastructure/Diagnostics/RuntimePayloadEvidence.php';
     require dirname( __DIR__ ) . '/src/Infrastructure/Diagnostics/StagingRestoreRehearsal.php';
     use Certloom\Infrastructure\Diagnostics\StagingRestoreRehearsal;
+    use Certloom\Infrastructure\Diagnostics\RuntimePayloadEvidence;
 
     srr_same( true, StagingRestoreRehearsal::available(), 'restore rehearsal requires non-production environment plus explicit opt-in' );
     $now=time();
+    $payload=RuntimePayloadEvidence::current(); srr_same(true,is_array($payload),'current payload identity available');
     $entities=Certloom\Infrastructure\Backup\DomainBackupRepository::entity_types();
     $baseline=array('issuers'=>1,'programs'=>1,'recipients'=>2,'signers'=>1,'batches'=>1,'batch_recipients'=>2,'signer_assignments'=>1,'templates'=>0,'template_revisions'=>0,'template_assignments'=>0,'credential_series'=>2,'credential_numbers'=>2,'credential_versions'=>2,'credential_events'=>3);
     $records=array_sum($baseline);
     $GLOBALS['srr_options'][StagingRestoreRehearsal::RESULT_OPTION]=array(
         'schema'=>StagingRestoreRehearsal::RESULT_SCHEMA,'version'=>StagingRestoreRehearsal::RESULT_VERSION,
-        'plugin_version'=>ECAPLA_CERTVERIFY_VERSION,'environment'=>'staging','status'=>'passed','phase'=>'complete','reason_code'=>'',
+        'plugin_version'=>ECAPLA_CERTVERIFY_VERSION,'runtime_payload'=>$payload,'environment'=>'staging','status'=>'passed','phase'=>'complete','reason_code'=>'',
         'started_at'=>$now-20,'updated_at'=>$now,'checked_at'=>$now,'source_count'=>2,'source_max_id'=>9,'source_generation'=>'legacy-gen-a','migration_checked_at'=>$now-30,
         'baseline_hash'=>str_repeat('a',64),'baseline_records'=>$records,'baseline_config_hash'=>str_repeat('b',64),'baseline_counts'=>$baseline,
         'backup_records'=>$records,'backup_counts'=>$baseline,'backup_chain'=>str_repeat('c',64),'replace_verified'=>true,'merge_verified'=>true,'rollback_verified'=>true,
@@ -64,6 +69,10 @@ namespace {
         'replace_state'=>null,'merge_restore_state'=>null,'merge_state'=>null,'rollback_state'=>null,'error_message'=>'',
     );
     srr_same('passed',StagingRestoreRehearsal::evidence_state(),'fresh internally coherent restore evidence is green');
+    $valid_state=$GLOBALS['srr_options'][StagingRestoreRehearsal::RESULT_OPTION];
+    $GLOBALS['srr_options'][StagingRestoreRehearsal::RESULT_OPTION]['runtime_payload']['sha256']=str_repeat('e',64);
+    srr_same('stale',StagingRestoreRehearsal::evidence_state(),'same-version production-byte change stales restore rehearsal evidence');
+    $GLOBALS['srr_options'][StagingRestoreRehearsal::RESULT_OPTION]=$valid_state;
     $report=StagingRestoreRehearsal::get_text_report();
     if(false!==strpos($report,'/var/www/private.cvbackup')||false!==strpos($report,'CERT-SECRET'))throw new \RuntimeException('Restore report leaked sensitive fixture data.');
     if(false===strpos($report,'Credential authority changed: NO'))throw new \RuntimeException('Restore report lost explicit no-cutover statement.');
@@ -81,5 +90,5 @@ namespace {
     $GLOBALS['srr_migration_status']='blocked';
     srr_same('stale',StagingRestoreRehearsal::evidence_state(),'migration-state regression stales restore evidence');
 
-    echo "PASS  staging restore rehearsal evidence is privacy-safe, internally consistent, source-bound and pre-cutover-bound\n\n5 checks, 0 failures\n";
+    echo "PASS  staging restore rehearsal evidence is privacy-safe, internally consistent, source-bound and pre-cutover-bound\n\n7 checks, 0 failures\n";
 }

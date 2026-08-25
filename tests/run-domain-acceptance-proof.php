@@ -16,12 +16,19 @@ function get_option($k,$d=false){return array_key_exists($k,$GLOBALS['dap_option
 function update_option($k,$v,$autoload=false){$changed=!array_key_exists($k,$GLOBALS['dap_options'])||$GLOBALS['dap_options'][$k]!==$v;$GLOBALS['dap_options'][$k]=$v;return $changed;}
 function delete_option($k){if(!array_key_exists($k,$GLOBALS['dap_options']))return false;unset($GLOBALS['dap_options'][$k]);return true;}
 
+
+require_once dirname( __DIR__ ) . '/src/Application/Rendering/CanonicalJson.php';
+require_once dirname( __DIR__ ) . '/src/Application/Rendering/RuntimePayloadFingerprint.php';
+require_once dirname( __DIR__ ) . '/src/Infrastructure/Diagnostics/RuntimePayloadEvidence.php';
 require_once dirname(__DIR__) . '/src/Infrastructure/Diagnostics/DomainAcceptanceProof.php';
 use Certloom\Infrastructure\Diagnostics\DomainAcceptanceProof;
+use Certloom\Infrastructure\Diagnostics\RuntimePayloadEvidence;
 function dap_assert($c,$m){if(!$c)throw new RuntimeException($m);}
 
+$payload=RuntimePayloadEvidence::current();
+dap_assert(is_array($payload),'Current Certloom payload identity must be available.');
 $valid=array(
- 'schema'=>'certloom-domain-acceptance-proof','version'=>DomainAcceptanceProof::RESULT_VERSION,'plugin_version'=>ECAPLA_CERTVERIFY_VERSION,
+ 'schema'=>'certloom-domain-acceptance-proof','version'=>DomainAcceptanceProof::RESULT_VERSION,'plugin_version'=>ECAPLA_CERTVERIFY_VERSION,'runtime_payload'=>$payload,
  'overall'=>'passed','checked_at'=>time(),
  'checks'=>array(array('id'=>'domain_schema','status'=>'pass','label'=>'Credential-domain schema','message'=>'Synthetic acceptance passed.')),
 );
@@ -34,6 +41,9 @@ dap_assert('stale'===DomainAcceptanceProof::evidence_state(),'Evidence older tha
 $GLOBALS['dap_options'][DomainAcceptanceProof::RESULT_OPTION]=$valid;
 $GLOBALS['dap_options'][DomainAcceptanceProof::RESULT_OPTION]['plugin_version']='older';
 dap_assert('stale'===DomainAcceptanceProof::evidence_state(),'Another Certloom version must make proof evidence stale.');
+$GLOBALS['dap_options'][DomainAcceptanceProof::RESULT_OPTION]=$valid;
+$GLOBALS['dap_options'][DomainAcceptanceProof::RESULT_OPTION]['runtime_payload']['sha256']=str_repeat('f',64);
+dap_assert('stale'===DomainAcceptanceProof::evidence_state(),'Same-version production-byte change must stale gated-domain evidence.');
 $GLOBALS['dap_options'][DomainAcceptanceProof::RESULT_OPTION]=$valid;
 $GLOBALS['dap_options'][DomainAcceptanceProof::RESULT_OPTION]['checked_at']=time()+3600;
 dap_assert('stale'===DomainAcceptanceProof::evidence_state(),'Implausibly future-dated evidence must be stale.');
@@ -58,4 +68,4 @@ dap_assert(false===strpos($source,'LegacyMigrationCoordinator'),'Acceptance proo
 dap_assert(false===strpos($source,'read_batch('),'Acceptance proof must not read individual live legacy certificate rows.');
 dap_assert(false===strpos($source,'wp_remote_')&&false===strpos($source,'curl_'),'Acceptance proof must not make outbound HTTP calls.');
 
-echo "PASS  Gated-domain acceptance evidence and architecture fail closed without touching live credential authority\n\n18 checks, 0 failures\n";
+echo "PASS  Gated-domain acceptance evidence and architecture fail closed without touching live credential authority\n\n20 checks, 0 failures\n";

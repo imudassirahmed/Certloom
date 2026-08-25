@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.40
+Stable tag: 1.6.41
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.40: `PDF-04` still requires the genuine seven-fixture PDF/PNG/JPEG execution. Finalized renderer authority now has a canonical deterministic packaging path: `build-release.sh` can consume only a complete external finalizer authority set, revalidate its acceptance/report/environment/index cross-links and exact runtime-payload identity, snapshot it outside the source tree, and inject the canonical `accepted.json` into both source and installable staging. Accepted source archives are revalidated before rebuild. Concrete mPDF/GD candidates remain unaccepted and unregistered; `accepted.json` remains absent from this release, and production artifacts, Template publication, authoritative Preview, and Designer output stay disabled until the genuine renderer-capable run passes.
+> Development note for 1.6.41: `PDF-04` still requires the genuine seven-fixture PDF/PNG/JPEG execution. In parallel, every stored normalized-domain database proof/preflight/rehearsal and every real WP-CLI/MySQL gate transcript is now bound to the exact Certloom production payload rather than the semantic version alone. Same-version production-byte changes therefore stale or stop database acceptance evidence. The real WordPress/MySQL migration/restore/cutover sequence remains externally unproven in this release; all three normalized-domain authority flags stay false. Concrete mPDF/GD candidates remain unaccepted and `accepted.json` remains absent, so production artifacts, Template publication, authoritative Preview, and Designer output stay disabled until the genuine renderer-capable run passes.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
