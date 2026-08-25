@@ -1,3 +1,11 @@
+1.6.51
+- Replace the inconsistent primary admin Dashicons with shared 20px inline SVG plus/upload icons so Dashboard and registry actions align consistently across WordPress/browser/font environments.
+- Replace the registry hero's database-import glyph with the same upload action icon used by the Dashboard while preserving existing labels and destinations.
+- Preserve accessibility by keeping decorative action icons aria-hidden/focusable=false and color-inheriting from the button state.
+- Add privacy-safe gated-domain schema diagnostics: failed proofs now report the stable Certloom error code plus safe stage/logical object/field/index identifiers when available, without exposing physical table/database names, SQL, paths or raw server errors.
+- Record the first genuine 1.6.50 database-host attempt: isolated database proof passed on WordPress 7.1 / PHP 8.5.9 / MariaDB 10.11.18, while gated-domain schema provisioning failed; rerun both on exact 1.6.51 bytes because the payload changed.
+- Keep renderer/domain authority, Template publication, Preview and Designer closed until genuine acceptance passes.
+
 1.6.50
 - Avoid PHP 8.5-deprecated Fileinfo object closing by calling `finfo_close()` only for legacy resource handles in QR-logo and renderer asset inspection paths.
 - Avoid PHP 8.5-deprecated GD object destruction by calling `imagedestroy()` only for legacy GD resources; modern `GdImage` objects use normal object lifetime management.

@@ -20,11 +20,11 @@ $health_label = 'good' === $health_overall ? __( 'Ready for current operations',
 		</div>
 		<div class="certloom-dashboard-actions" aria-label="<?php esc_attr_e( 'Quick actions', 'certloom' ); ?>">
 			<a class="button button-primary button-hero" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-add' ) ); ?>">
-				<span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span>
+				<svg class="certloom-button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" /></svg>
 				<?php esc_html_e( 'Add certificate', 'certloom' ); ?>
 			</a>
 			<a class="button button-secondary button-hero" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-import' ) ); ?>">
-				<span class="dashicons dashicons-upload" aria-hidden="true"></span>
+				<svg class="certloom-button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 15V5m0 0L8 9m4-4 4 4M5 14v5h14v-5" /></svg>
 				<?php esc_html_e( 'Import certificates', 'certloom' ); ?>
 			</a>
 		</div>

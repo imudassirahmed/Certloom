@@ -102,7 +102,17 @@ final class DomainAcceptanceProof {
 			if ( ! self::has_failures( $result ) ) {
 				$schema = SchemaManager::activate();
 				if ( is_wp_error( $schema ) ) {
-					self::add_check( $result, 'domain_schema', 'fail', __( 'Credential-domain schema', 'certloom' ), __( 'Certloom could not provision or verify its additive gated-domain tables on this host.', 'certloom' ) );
+					self::add_check(
+						$result,
+						'domain_schema',
+						'fail',
+						__( 'Credential-domain schema', 'certloom' ),
+						sprintf(
+							/* translators: %s: privacy-safe internal schema diagnostic code and logical object. */
+							__( 'Certloom could not provision or verify its additive gated-domain tables on this host. Diagnostic: %s.', 'certloom' ),
+							self::safe_schema_diagnostic( $schema )
+						)
+					);
 				} else {
 					$health = SchemaManager::verify_health_now( false );
 					self::add_check(
@@ -110,7 +120,13 @@ final class DomainAcceptanceProof {
 						'domain_schema',
 						is_wp_error( $health ) ? 'fail' : 'pass',
 						__( 'Credential-domain schema', 'certloom' ),
-						is_wp_error( $health ) ? __( 'The gated-domain tables exist but failed Certloom’s exact schema/engine health contract.', 'certloom' ) : __( 'All additive Credential Series tables match the current Certloom schema and storage-engine contract.', 'certloom' )
+						is_wp_error( $health )
+							? sprintf(
+								/* translators: %s: privacy-safe internal schema diagnostic code and logical object. */
+								__( 'The gated-domain tables exist but failed Certloom’s exact schema/engine health contract. Diagnostic: %s.', 'certloom' ),
+								self::safe_schema_diagnostic( $health )
+							)
+							: __( 'All additive Credential Series tables match the current Certloom schema and storage-engine contract.', 'certloom' )
 					);
 				}
 			}
@@ -272,6 +288,27 @@ final class DomainAcceptanceProof {
 			}
 		}
 		return implode( "\n", $lines );
+	}
+
+	/**
+	 * Returns a privacy-safe schema diagnostic without database names, prefixes, SQL or raw server errors.
+	 *
+	 * @param \WP_Error $error Schema error.
+	 * @return string
+	 */
+	private static function safe_schema_diagnostic( $error ) {
+		$code = is_wp_error( $error ) ? sanitize_key( (string) $error->get_error_code() ) : '';
+		$parts = array( '' !== $code ? $code : 'certloom_domain_schema_unknown' );
+		$data = is_object( $error ) && method_exists( $error, 'get_error_data' ) ? $error->get_error_data() : null;
+		if ( is_array( $data ) ) {
+			foreach ( array( 'stage', 'object', 'field', 'index' ) as $key ) {
+				$value = sanitize_key( (string) ( $data[ $key ] ?? '' ) );
+				if ( '' !== $value ) {
+					$parts[] = $key . '=' . $value;
+				}
+			}
+		}
+		return implode( '; ', $parts );
 	}
 
 	/** @return true|\WP_Error */

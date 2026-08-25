@@ -657,6 +657,20 @@
 	color: #fff;
 }
 
+.certloom-button-icon {
+	display: block;
+	flex: 0 0 20px;
+	width: 20px;
+	height: 20px;
+	overflow: visible;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	pointer-events: none;
+}
+
 .certloom-dashboard-actions .dashicons {
 	width: 18px;
 	height: 18px;

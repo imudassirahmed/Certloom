@@ -231,7 +231,7 @@ final class SchemaManager {
 		$tables          = array();
 
 		$recipients = self::table( 'recipients' );
-		$tables[] = "CREATE TABLE $recipients (
+		$tables['recipients'] = "CREATE TABLE $recipients (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			display_name VARCHAR(255) NOT NULL,
 			first_name VARCHAR(191) NULL,
@@ -252,7 +252,7 @@ final class SchemaManager {
 		) ENGINE=InnoDB $charset_collate;";
 
 		$issuers = self::table( 'issuers' );
-		$tables[] = "CREATE TABLE $issuers (
+		$tables['issuers'] = "CREATE TABLE $issuers (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			name VARCHAR(255) NOT NULL,
 			slug VARCHAR(191) NOT NULL,
@@ -267,7 +267,7 @@ final class SchemaManager {
 		) ENGINE=InnoDB $charset_collate;";
 
 		$programs = self::table( 'programs' );
-		$tables[] = "CREATE TABLE $programs (
+		$tables['programs'] = "CREATE TABLE $programs (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			issuer_id BIGINT UNSIGNED NULL,
 			code VARCHAR(100) NULL,
@@ -286,7 +286,7 @@ final class SchemaManager {
 		) ENGINE=InnoDB $charset_collate;";
 
 		$signers = self::table( 'signers' );
-		$tables[] = "CREATE TABLE $signers (
+		$tables['signers'] = "CREATE TABLE $signers (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			display_name VARCHAR(255) NOT NULL,
 			slug VARCHAR(191) NOT NULL,
@@ -305,7 +305,7 @@ final class SchemaManager {
 		) ENGINE=InnoDB $charset_collate;";
 
 		$batches = self::table( 'batches' );
-		$tables[] = "CREATE TABLE $batches (
+		$tables['batches'] = "CREATE TABLE $batches (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			program_id BIGINT UNSIGNED NOT NULL,
 			code VARCHAR(100) NOT NULL,
@@ -329,7 +329,7 @@ final class SchemaManager {
 		) ENGINE=InnoDB $charset_collate;";
 
 		$batch_recipients = self::table( 'batch_recipients' );
-		$tables[] = "CREATE TABLE $batch_recipients (
+		$tables['batch_recipients'] = "CREATE TABLE $batch_recipients (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			batch_id BIGINT UNSIGNED NOT NULL,
 			recipient_id BIGINT UNSIGNED NOT NULL,
@@ -340,7 +340,7 @@ final class SchemaManager {
 		) ENGINE=InnoDB $charset_collate;";
 
 		$signer_assignments = self::table( 'signer_assignments' );
-		$tables[] = "CREATE TABLE $signer_assignments (
+		$tables['signer_assignments'] = "CREATE TABLE $signer_assignments (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			signer_id BIGINT UNSIGNED NOT NULL,
 			scope_type VARCHAR(20) NOT NULL,
@@ -358,7 +358,7 @@ final class SchemaManager {
 		) ENGINE=InnoDB $charset_collate;";
 
 		$templates = self::table( 'templates' );
-		$tables[] = "CREATE TABLE $templates (
+		$tables['templates'] = "CREATE TABLE $templates (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			machine_key VARCHAR(191) NOT NULL,
 			name VARCHAR(255) NOT NULL,
@@ -377,7 +377,7 @@ final class SchemaManager {
 		) ENGINE=InnoDB $charset_collate;";
 
 		$template_revisions = self::table( 'template_revisions' );
-		$tables[] = "CREATE TABLE $template_revisions (
+		$tables['template_revisions'] = "CREATE TABLE $template_revisions (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			template_id BIGINT UNSIGNED NOT NULL,
 			revision_number INT UNSIGNED NOT NULL,
@@ -398,7 +398,7 @@ final class SchemaManager {
 		) ENGINE=InnoDB $charset_collate;";
 
 		$template_assignments = self::table( 'template_assignments' );
-		$tables[] = "CREATE TABLE $template_assignments (
+		$tables['template_assignments'] = "CREATE TABLE $template_assignments (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			template_id BIGINT UNSIGNED NOT NULL,
 			scope_type VARCHAR(20) NOT NULL,
@@ -414,7 +414,7 @@ final class SchemaManager {
 		) ENGINE=InnoDB $charset_collate;";
 
 		$series = self::table( 'credential_series' );
-		$tables[] = "CREATE TABLE $series (
+		$tables['credential_series'] = "CREATE TABLE $series (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			public_id CHAR(12) NOT NULL,
 			recipient_id BIGINT UNSIGNED NOT NULL,
@@ -441,7 +441,7 @@ final class SchemaManager {
 		) ENGINE=InnoDB $charset_collate;";
 
 		$versions = self::table( 'credential_versions' );
-		$tables[] = "CREATE TABLE $versions (
+		$tables['credential_versions'] = "CREATE TABLE $versions (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			series_id BIGINT UNSIGNED NOT NULL,
 			version_number INT UNSIGNED NOT NULL,
@@ -471,7 +471,7 @@ final class SchemaManager {
 		) ENGINE=InnoDB $charset_collate;";
 
 		$numbers = self::table( 'credential_numbers' );
-		$tables[] = "CREATE TABLE $numbers (
+		$tables['credential_numbers'] = "CREATE TABLE $numbers (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			display_number VARCHAR(100) NOT NULL,
 			series_id BIGINT UNSIGNED NOT NULL,
@@ -486,7 +486,7 @@ final class SchemaManager {
 		) ENGINE=InnoDB $charset_collate;";
 
 		$events = self::table( 'credential_events' );
-		$tables[] = "CREATE TABLE $events (
+		$tables['credential_events'] = "CREATE TABLE $events (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			series_id BIGINT UNSIGNED NOT NULL,
 			version_id BIGINT UNSIGNED NULL,
@@ -508,7 +508,7 @@ final class SchemaManager {
 
 
 		$jobs = self::table( 'jobs' );
-		$tables[] = "CREATE TABLE $jobs (
+		$tables['jobs'] = "CREATE TABLE $jobs (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			job_key CHAR(32) NOT NULL,
 			job_type VARCHAR(64) NOT NULL,
@@ -540,7 +540,7 @@ final class SchemaManager {
 		) ENGINE=InnoDB $charset_collate;";
 
 		$import_rows = self::table( 'import_rows' );
-		$tables[] = "CREATE TABLE $import_rows (
+		$tables['import_rows'] = "CREATE TABLE $import_rows (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			job_key CHAR(32) NOT NULL,
 			row_number BIGINT UNSIGNED NOT NULL,
@@ -563,7 +563,7 @@ final class SchemaManager {
 		) ENGINE=InnoDB $charset_collate;";
 
 		$restore_map = self::table( 'restore_map' );
-		$tables[] = "CREATE TABLE $restore_map (
+		$tables['restore_map'] = "CREATE TABLE $restore_map (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			owner_token CHAR(32) NOT NULL,
 			entity VARCHAR(32) NOT NULL,
@@ -579,12 +579,16 @@ final class SchemaManager {
 			KEY owner_target (owner_token,entity,target_id)
 		) ENGINE=InnoDB $charset_collate;";
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		foreach ( $tables as $sql ) {
+		foreach ( $tables as $logical_name => $sql ) {
 			$wpdb->last_error = '';
 			dbDelta( $sql );
 			if ( '' !== (string) $wpdb->last_error ) {
 				delete_option( self::HEALTH_OPTION );
-				return new \WP_Error( 'certloom_domain_table_setup_failed', __( 'Certloom could not create or update its new domain tables.', 'certloom' ) );
+				return new \WP_Error(
+					'certloom_domain_table_setup_failed',
+					__( 'Certloom could not create or update one of its new domain tables.', 'certloom' ),
+					array( 'stage' => 'dbdelta', 'object' => sanitize_key( (string) $logical_name ) )
+				);
 			}
 		}
 
@@ -606,13 +610,13 @@ final class SchemaManager {
 			$wpdb->last_error = '';
 			$status = $wpdb->get_row( $wpdb->prepare( 'SHOW TABLE STATUS LIKE %s', $wpdb->esc_like( $table ) ), ARRAY_A );
 			if ( '' !== (string) $wpdb->last_error || ! is_array( $status ) || 'innodb' !== strtolower( (string) ( $status['Engine'] ?? '' ) ) ) {
-				return new \WP_Error( 'certloom_domain_engine_unsupported', __( 'Certloom requires InnoDB for its credential-domain transaction and row-lock guarantees.', 'certloom' ) );
+				return new \WP_Error( 'certloom_domain_engine_unsupported', __( 'Certloom requires InnoDB for its credential-domain transaction and row-lock guarantees.', 'certloom' ), array( 'stage' => 'engine', 'object' => sanitize_key( (string) $logical_name ) ) );
 			}
 
 			$wpdb->last_error = '';
 			$columns = $wpdb->get_results( $wpdb->prepare( 'SHOW FULL COLUMNS FROM %i', $table ), ARRAY_A );
 			if ( '' !== (string) $wpdb->last_error || ! is_array( $columns ) || empty( $columns ) ) {
-				return new \WP_Error( 'certloom_domain_table_missing', __( 'Certloom could not verify one of its required domain tables.', 'certloom' ) );
+				return new \WP_Error( 'certloom_domain_table_missing', __( 'Certloom could not verify one of its required domain tables.', 'certloom' ), array( 'stage' => 'columns', 'object' => sanitize_key( (string) $logical_name ) ) );
 			}
 
 			$found_columns = array();
@@ -624,26 +628,26 @@ final class SchemaManager {
 
 			foreach ( $contract['columns'] as $name => $expected ) {
 				if ( ! isset( $found_columns[ $name ] ) ) {
-					return new \WP_Error( 'certloom_domain_columns_missing', __( 'Certloom detected a missing domain-table column.', 'certloom' ) );
+					return new \WP_Error( 'certloom_domain_columns_missing', __( 'Certloom detected a missing domain-table column.', 'certloom' ), array( 'stage' => 'columns', 'object' => sanitize_key( (string) $logical_name ), 'field' => sanitize_key( (string) $name ) ) );
 				}
 				$column = $found_columns[ $name ];
 				$type   = strtolower( (string) ( $column['Type'] ?? '' ) );
 				$null   = strtoupper( (string) ( $column['Null'] ?? '' ) );
 				if ( ! preg_match( $expected['type'], $type ) || $expected['null'] !== $null ) {
-					return new \WP_Error( 'certloom_domain_column_mismatch', __( 'Certloom detected an incompatible domain-table column definition.', 'certloom' ) );
+					return new \WP_Error( 'certloom_domain_column_mismatch', __( 'Certloom detected an incompatible domain-table column definition.', 'certloom' ), array( 'stage' => 'columns', 'object' => sanitize_key( (string) $logical_name ), 'field' => sanitize_key( (string) $name ) ) );
 				}
 				if ( array_key_exists( 'default', $expected ) && (string) $expected['default'] !== (string) ( $column['Default'] ?? '' ) ) {
-					return new \WP_Error( 'certloom_domain_column_mismatch', __( 'Certloom detected an incompatible domain-table column default.', 'certloom' ) );
+					return new \WP_Error( 'certloom_domain_column_mismatch', __( 'Certloom detected an incompatible domain-table column default.', 'certloom' ), array( 'stage' => 'columns', 'object' => sanitize_key( (string) $logical_name ), 'field' => sanitize_key( (string) $name ) ) );
 				}
 				if ( isset( $expected['extra'] ) && false === strpos( strtolower( (string) ( $column['Extra'] ?? '' ) ), $expected['extra'] ) ) {
-					return new \WP_Error( 'certloom_domain_column_mismatch', __( 'Certloom detected an incompatible domain-table identity column.', 'certloom' ) );
+					return new \WP_Error( 'certloom_domain_column_mismatch', __( 'Certloom detected an incompatible domain-table identity column.', 'certloom' ), array( 'stage' => 'columns', 'object' => sanitize_key( (string) $logical_name ), 'field' => sanitize_key( (string) $name ) ) );
 				}
 			}
 
 			$wpdb->last_error = '';
 			$indexes = $wpdb->get_results( $wpdb->prepare( 'SHOW INDEX FROM %i', $table ), ARRAY_A );
 			if ( '' !== (string) $wpdb->last_error || ! is_array( $indexes ) || empty( $indexes ) ) {
-				return new \WP_Error( 'certloom_domain_indexes_missing', __( 'Certloom could not verify its required domain-table indexes.', 'certloom' ) );
+				return new \WP_Error( 'certloom_domain_indexes_missing', __( 'Certloom could not verify its required domain-table indexes.', 'certloom' ), array( 'stage' => 'indexes', 'object' => sanitize_key( (string) $logical_name ) ) );
 			}
 
 			$found_indexes = array();
@@ -660,11 +664,11 @@ final class SchemaManager {
 			foreach ( $contract['indexes'] as $name => $expected ) {
 				$name = strtolower( $name );
 				if ( ! isset( $found_indexes[ $name ] ) ) {
-					return new \WP_Error( 'certloom_domain_indexes_missing', __( 'Certloom detected a missing required domain-table index.', 'certloom' ) );
+					return new \WP_Error( 'certloom_domain_indexes_missing', __( 'Certloom detected a missing required domain-table index.', 'certloom' ), array( 'stage' => 'indexes', 'object' => sanitize_key( (string) $logical_name ), 'index' => sanitize_key( (string) $name ) ) );
 				}
 				ksort( $found_indexes[ $name ]['columns'] );
 				if ( array_values( $expected['columns'] ) !== array_values( $found_indexes[ $name ]['columns'] ) || (bool) $expected['unique'] !== (bool) $found_indexes[ $name ]['unique'] ) {
-					return new \WP_Error( 'certloom_domain_index_mismatch', __( 'Certloom detected an incompatible required domain-table index.', 'certloom' ) );
+					return new \WP_Error( 'certloom_domain_index_mismatch', __( 'Certloom detected an incompatible required domain-table index.', 'certloom' ), array( 'stage' => 'indexes', 'object' => sanitize_key( (string) $logical_name ), 'index' => sanitize_key( (string) $name ) ) );
 				}
 			}
 		}

@@ -27,8 +27,8 @@ $ecapla_certverify_hidden_columns  = is_array( $ecapla_certverify_hidden_columns
 			<p><?php esc_html_e( 'Search, review and maintain the authoritative certificate registry without changing verification truth.', 'certloom' ); ?></p>
 		</div>
 		<div class="certloom-page-actions">
-			<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-add' ) ); ?>" class="button button-primary button-hero"><span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span><?php esc_html_e( 'Add certificate', 'certloom' ); ?></a>
-			<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-import' ) ); ?>" class="button button-secondary button-hero"><span class="dashicons dashicons-database-import" aria-hidden="true"></span><?php esc_html_e( 'Import / export', 'certloom' ); ?></a>
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-add' ) ); ?>" class="button button-primary button-hero"><svg class="certloom-button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" /></svg><?php esc_html_e( 'Add certificate', 'certloom' ); ?></a>
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-import' ) ); ?>" class="button button-secondary button-hero"><svg class="certloom-button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 15V5m0 0L8 9m4-4 4 4M5 14v5h14v-5" /></svg><?php esc_html_e( 'Import / export', 'certloom' ); ?></a>
 		</div>
 	</section>
 

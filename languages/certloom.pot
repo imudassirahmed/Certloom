@@ -8482,23 +8482,23 @@ msgstr ""
 msgid "Another Certloom maintenance operation acquired the lock first."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:1123
+#: src/Infrastructure/Database/SchemaManager.php:1127
 msgid "Certloom domain maintenance is already running. Try again shortly."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:1136
+#: src/Infrastructure/Database/SchemaManager.php:1140
 msgid "Certloom could not obtain its domain-maintenance lock."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:1143
+#: src/Infrastructure/Database/SchemaManager.php:1147
 msgid "Certloom could not verify its schema-maintenance lock owner during cleanup."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:1150
+#: src/Infrastructure/Database/SchemaManager.php:1154
 msgid "Certloom refused to release a schema-maintenance lock that is no longer owned by this worker."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:1164
+#: src/Infrastructure/Database/SchemaManager.php:1168
 msgid "Certloom completed schema maintenance but could not release its schema lock safely. Retry after the lease expires or is repaired."
 msgstr ""
 
@@ -8507,7 +8507,7 @@ msgid "Certloom created its new domain tables but could not save the schema mark
 msgstr ""
 
 #: src/Infrastructure/Database/SchemaManager.php:125
-#: src/Infrastructure/Database/SchemaManager.php:1087
+#: src/Infrastructure/Database/SchemaManager.php:1091
 msgid "Certloom verified its new domain tables but could not save the health marker."
 msgstr ""
 
@@ -8523,43 +8523,43 @@ msgstr ""
 msgid "Certloom could not migrate its credential-number index safely."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:587
-msgid "Certloom could not create or update its new domain tables."
+#: src/Infrastructure/Database/SchemaManager.php:589
+msgid "Certloom could not create or update one of its new domain tables."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:609
+#: src/Infrastructure/Database/SchemaManager.php:613
 msgid "Certloom requires InnoDB for its credential-domain transaction and row-lock guarantees."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:615
+#: src/Infrastructure/Database/SchemaManager.php:619
 msgid "Certloom could not verify one of its required domain tables."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:627
+#: src/Infrastructure/Database/SchemaManager.php:631
 msgid "Certloom detected a missing domain-table column."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:633
+#: src/Infrastructure/Database/SchemaManager.php:637
 msgid "Certloom detected an incompatible domain-table column definition."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:636
+#: src/Infrastructure/Database/SchemaManager.php:640
 msgid "Certloom detected an incompatible domain-table column default."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:639
+#: src/Infrastructure/Database/SchemaManager.php:643
 msgid "Certloom detected an incompatible domain-table identity column."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:646
+#: src/Infrastructure/Database/SchemaManager.php:650
 msgid "Certloom could not verify its required domain-table indexes."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:663
+#: src/Infrastructure/Database/SchemaManager.php:667
 msgid "Certloom detected a missing required domain-table index."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:667
+#: src/Infrastructure/Database/SchemaManager.php:671
 msgid "Certloom detected an incompatible required domain-table index."
 msgstr ""
 
@@ -8596,313 +8596,315 @@ msgstr ""
 msgid "The gated-domain acceptance proof encountered an unexpected lifecycle error."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:105
-msgid "Certloom could not provision or verify its additive gated-domain tables on this host."
-msgstr ""
-
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:105
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:112
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:109
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:122
 msgid "Credential-domain schema"
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:113
+#. translators: %s: privacy-safe internal schema diagnostic code and logical object.
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:112
+msgid "Certloom could not provision or verify its additive gated-domain tables on this host. Diagnostic: %s."
+msgstr ""
+
+#. translators: %s: privacy-safe internal schema diagnostic code and logical object.
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:126
+msgid "The gated-domain tables exist but failed Certloom’s exact schema/engine health contract. Diagnostic: %s."
+msgstr ""
+
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:129
 msgid "All additive Credential Series tables match the current Certloom schema and storage-engine contract."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:113
-msgid "The gated-domain tables exist but failed Certloom’s exact schema/engine health contract."
-msgstr ""
-
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:121
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:123
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:137
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:139
 msgid "Gated-domain isolation"
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:121
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:137
 msgid "The gated domain contains data, so the synthetic acceptance proof stopped before writing anything."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:123
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:139
 msgid "The additive domain is empty and safe for rollback-only synthetic acceptance data."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:144
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:160
 msgid "Intentional rollback-only acceptance proof."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:151
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:167
 msgid "Every synthetic Credential Series write was rolled back together after the proof."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:151
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:167
 msgid "Synthetic transaction rollback"
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:154
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:170
 msgid "Credential-domain execution"
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:154
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:170
 msgid "The real domain acceptance transaction did not complete its expected rollback-only path."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:164
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:180
 msgid "Domain-generation cleanup"
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:165
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:181
 msgid "The domain-generation marker matches its pre-proof state."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:165
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:181
 msgid "The synthetic proof rolled back its rows but could not restore the pre-proof domain-generation marker."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:173
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:189
 msgid "Synthetic data cleanup"
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:174
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:190
 msgid "No synthetic acceptance rows remain in the gated domain."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:174
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:190
 msgid "One or more synthetic acceptance rows remained after rollback. The gated domain must be reviewed before migration."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:186
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:202
 msgid "Live registry unchanged"
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:187
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:203
 msgid "The live registry boundary changed while the proof was running, so this acceptance evidence cannot be trusted."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:187
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:203
 msgid "The proven 1.5 registry boundary did not change during the gated-domain proof."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:190
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:206
 msgid "Gated-domain proof execution"
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:190
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:206
 msgid "The gated-domain acceptance proof encountered an unexpected error and stopped safely."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:196
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:198
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:212
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:214
 msgid "Acceptance maintenance cleanup"
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:196
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:212
 msgid "The proof completed but could not release its gated-domain maintenance lease safely."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:198
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:214
 msgid "The gated-domain maintenance lease was released."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:206
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:222
 msgid "The gated-domain proof ran, but WordPress could not save its non-sensitive result."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:260
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:276
 msgid "Certloom gated-domain acceptance proof: not run."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:280
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:317
 msgid "Run a fresh passing isolated database proof before the gated Credential Series acceptance proof."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:285
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:322
 msgid "The synthetic gated-domain proof is only available before next-domain development features are enabled."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:289
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:326
 msgid "The synthetic gated-domain proof is not available after credential authority has been cut over."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:293
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:330
 msgid "The synthetic gated-domain proof requires legacy migration to be completely not started."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:296
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:333
 msgid "The gated-domain proof will not run while domain restore/recovery state exists."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:309
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:346
 msgid "Certloom could not inspect the gated-domain tables safely."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:315
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:352
 msgid "Certloom could not confirm that the gated domain is empty."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:318
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:355
 msgid "The gated Credential Series tables already contain data. Certloom refused to mix synthetic proof rows with existing domain data."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:339
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:341
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:343
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:345
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:347
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:349
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:351
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:353
 #: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:376
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:379
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:383
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:378
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:380
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:382
 #: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:384
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:386
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:388
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:390
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:413
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:416
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:420
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:421
 msgid "Repository persistence"
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:353
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:390
 msgid "The signer hierarchy did not resolve the most-specific batch signer."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:355
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:357
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:359
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:361
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:363
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:365
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:367
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:369
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:371
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:373
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:374
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:392
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:394
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:396
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:398
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:400
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:402
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:404
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:406
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:408
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:410
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:411
 msgid "Template assignment hierarchy"
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:363
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:400
 msgid "The Template hierarchy did not resolve the Program assignment before Global fallback."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:365
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:402
 msgid "The direct Program Template assignment could not be read."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:367
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:404
 msgid "A stale Template assignment review was not rejected."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:371
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:408
 msgid "Clearing the Program Template assignment did not fall back to Global."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:373
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:410
 msgid "An actively assigned Template was allowed to archive."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:374
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:411
 msgid "Real repository writes proved Program-over-Global resolution, explicit None/inherit fallback, stale-review rejection and assigned-Template archive protection."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:379
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:416
 msgid "The proof could not read a valid public credential ID from the real repository."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:384
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:421
 msgid "Recipient, issuer, program, batch, signer hierarchy, Credential Series and immutable Version persisted through the real repositories."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:387
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:393
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:399
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:401
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:408
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:410
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:424
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:430
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:436
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:438
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:445
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:447
 msgid "Lifecycle and event history"
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:390
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:396
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:404
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:411
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:427
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:433
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:441
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:448
 msgid "Status/verification truth"
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:390
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:427
 msgid "The issued synthetic credential did not verify Valid."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:396
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:433
 msgid "The suspended synthetic credential did not verify Suspended."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:404
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:441
 msgid "The revoked synthetic credential did not verify Revoked."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:408
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:445
 msgid "The synthetic lifecycle did not produce the expected append-only event history."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:410
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:447
 msgid "Issue, suspend, reinstate and revoke transitions persisted atomically with append-only events."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:411
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:448
 msgid "The real repository and Status Service returned Valid, Suspended and Revoked at the expected transitions."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:414
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:417
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:423
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:431
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:436
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:438
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:451
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:454
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:460
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:468
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:473
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:475
 msgid "Credential constraints"
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:417
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:454
 msgid "The real domain did not enforce global human certificate-number ownership."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:423
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:460
 msgid "The global certificate-number registry did not retain exactly one owner after the duplicate attempt."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:431
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:468
 msgid "The real repository did not reject an unserializable immutable snapshot through the safe path."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:436
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:473
 msgid "The rejected immutable snapshot changed generation state or stranded a certificate-number reservation."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:438
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:475
 msgid "The real database/repository path enforced one global display-number owner and rejected invalid immutable snapshots without side effects."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:451
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:453
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:488
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:490
 msgid "Legacy migration semantics"
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:451
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:488
 msgid "The synthetic legacy status set did not pass the migration parity mapper/Status Service."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:453
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:490
 msgid "Synthetic Valid, Suspended, Withdrawn→Revoked and date-expired legacy rows all preserve public-status parity."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:460
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:497
 msgid "The real gated-domain acceptance path failed and the outer transaction will roll back all synthetic writes."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:461
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:498
 msgid "The gated-domain acceptance proof failed."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:472
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:509
 msgid "Certloom could not restore the domain-generation marker after its rollback-only proof."
 msgstr ""
 
-#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:476
+#: src/Infrastructure/Diagnostics/DomainAcceptanceProof.php:513
 msgid "Certloom could not remove the synthetic domain-generation marker after its rollback-only proof."
 msgstr ""
 
