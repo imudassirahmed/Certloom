@@ -24,7 +24,7 @@ final class RendererAuthorityGate implements ArtifactAuthorityGateInterface {
 	private $runtime_payloads;
 	private $runtime_payload_cache;
 
-	public function __construct( RendererReleaseManifest $manifest_contract = null, $plugin_root = null, $plugin_version = null, $relative_path = null, RendererCapabilityDetector $capabilities = null, RuntimePayloadFingerprint $runtime_payloads = null ) {
+	public function __construct( ?RendererReleaseManifest $manifest_contract = null, $plugin_root = null, $plugin_version = null, $relative_path = null, ?RendererCapabilityDetector $capabilities = null, ?RuntimePayloadFingerprint $runtime_payloads = null ) {
 		$this->manifest_contract = $manifest_contract ?: new RendererReleaseManifest();
 		$this->plugin_root = rtrim( (string) ( null === $plugin_root && defined( 'CERTLOOM_PATH' ) ? CERTLOOM_PATH : $plugin_root ), '/\\' );
 		$this->plugin_version = (string) ( null === $plugin_version && defined( 'CERTLOOM_VERSION' ) ? CERTLOOM_VERSION : $plugin_version );

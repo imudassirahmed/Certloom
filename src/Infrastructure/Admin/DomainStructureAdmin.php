@@ -162,7 +162,7 @@ final class DomainStructureAdmin {
 			$this->metric_grid(
 				array(
 					array( 'value' => $summary['total'], 'label' => __( 'Batches', 'certloom' ) ),
-					array( 'value' => $summary['active'], 'label' => __( 'Active', 'certloom' ) ),
+					array( 'value' => $summary['active'], 'label' => _x( 'Active', 'entity status', 'certloom' ) ),
 					array( 'value' => $summary['members'], 'label' => __( 'Memberships', 'certloom' ) ),
 					array( 'value' => $summary['with_credentials'], 'label' => __( 'With credentials', 'certloom' ) ),
 				)
@@ -178,7 +178,7 @@ final class DomainStructureAdmin {
 				$url        = add_query_arg( array( 'page' => self::BATCHES_PAGE, 'batch_id' => absint( $item['id'] ) ), admin_url( 'admin.php' ) );
 				$dates      = trim( (string) ( $item['start_date'] ?: '—' ) . ' → ' . (string) ( $item['end_date'] ?: '—' ) );
 				$instructor = (string) ( $item['instructor_signer_name'] ?: $item['instructor_name'] ?: '—' );
-				echo '<tr><td><strong><a href="' . esc_url( $url ) . '">' . esc_html( (string) $item['name'] ) . '</a></strong><div><code>' . esc_html( (string) $item['code'] ) . '</code></div></td><td>' . esc_html( (string) $item['program_title'] ) . '</td><td>' . esc_html( $dates ) . '</td><td>' . esc_html( $instructor ) . '</td><td>' . esc_html( (string) absint( $item['recipient_count'] ) ) . '</td><td>' . esc_html( (string) absint( $item['credential_count'] ) ) . '</td><td><span class="certloom-domain-status ' . ( ! empty( $item['active'] ) ? 'is-active' : 'is-inactive' ) . '">' . esc_html( ! empty( $item['active'] ) ? __( 'Active', 'certloom' ) : __( 'Inactive', 'certloom' ) ) . '</span></td></tr>';
+				echo '<tr><td><strong><a href="' . esc_url( $url ) . '">' . esc_html( (string) $item['name'] ) . '</a></strong><div><code>' . esc_html( (string) $item['code'] ) . '</code></div></td><td>' . esc_html( (string) $item['program_title'] ) . '</td><td>' . esc_html( $dates ) . '</td><td>' . esc_html( $instructor ) . '</td><td>' . esc_html( (string) absint( $item['recipient_count'] ) ) . '</td><td>' . esc_html( (string) absint( $item['credential_count'] ) ) . '</td><td><span class="certloom-domain-status ' . ( ! empty( $item['active'] ) ? 'is-active' : 'is-inactive' ) . '">' . esc_html( ! empty( $item['active'] ) ? _x( 'Active', 'entity status', 'certloom' ) : _x( 'Inactive', 'entity status', 'certloom' ) ) . '</span></td></tr>';
 			}
 			if ( empty( $result['items'] ) ) {
 				echo '<tr><td colspan="7">' . esc_html__( 'No batches found.', 'certloom' ) . '</td></tr>';
@@ -216,7 +216,7 @@ final class DomainStructureAdmin {
 			$this->metric_grid(
 				array(
 					array( 'value' => $summary['total'], 'label' => __( 'Signers', 'certloom' ) ),
-					array( 'value' => $summary['active'], 'label' => __( 'Active', 'certloom' ) ),
+					array( 'value' => $summary['active'], 'label' => _x( 'Active', 'entity status', 'certloom' ) ),
 					array( 'value' => $summary['assignments'], 'label' => __( 'Active assignments', 'certloom' ) ),
 				)
 			);
@@ -229,7 +229,7 @@ final class DomainStructureAdmin {
 			echo '<div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-table"><thead><tr><th>' . esc_html__( 'Signer', 'certloom' ) . '</th><th>' . esc_html__( 'Machine key', 'certloom' ) . '</th><th>' . esc_html__( 'Title', 'certloom' ) . '</th><th>' . esc_html__( 'Email', 'certloom' ) . '</th><th>' . esc_html__( 'Assignments', 'certloom' ) . '</th><th>' . esc_html__( 'Status', 'certloom' ) . '</th></tr></thead><tbody>';
 			foreach ( $result['items'] as $item ) {
 				$url = add_query_arg( array( 'page' => self::SIGNERS_PAGE, 'signer_id' => absint( $item['id'] ) ), admin_url( 'admin.php' ) );
-				echo '<tr><td><strong><a href="' . esc_url( $url ) . '">' . esc_html( (string) $item['display_name'] ) . '</a></strong></td><td><code>' . esc_html( (string) $item['slug'] ) . '</code></td><td>' . esc_html( (string) ( $item['title'] ?: '—' ) ) . '</td><td>' . esc_html( (string) ( $item['email'] ?: '—' ) ) . '</td><td>' . esc_html( (string) absint( $item['assignment_count'] ) ) . '</td><td><span class="certloom-domain-status ' . ( ! empty( $item['active'] ) ? 'is-active' : 'is-inactive' ) . '">' . esc_html( ! empty( $item['active'] ) ? __( 'Active', 'certloom' ) : __( 'Inactive', 'certloom' ) ) . '</span></td></tr>';
+				echo '<tr><td><strong><a href="' . esc_url( $url ) . '">' . esc_html( (string) $item['display_name'] ) . '</a></strong></td><td><code>' . esc_html( (string) $item['slug'] ) . '</code></td><td>' . esc_html( (string) ( $item['title'] ?: '—' ) ) . '</td><td>' . esc_html( (string) ( $item['email'] ?: '—' ) ) . '</td><td>' . esc_html( (string) absint( $item['assignment_count'] ) ) . '</td><td><span class="certloom-domain-status ' . ( ! empty( $item['active'] ) ? 'is-active' : 'is-inactive' ) . '">' . esc_html( ! empty( $item['active'] ) ? _x( 'Active', 'entity status', 'certloom' ) : _x( 'Inactive', 'entity status', 'certloom' ) ) . '</span></td></tr>';
 			}
 			if ( empty( $result['items'] ) ) {
 				echo '<tr><td colspan="6">' . esc_html__( 'No signer profiles found.', 'certloom' ) . '</td></tr>';
@@ -250,7 +250,7 @@ final class DomainStructureAdmin {
 	}
 
 	/** @param array<string,mixed>|null $editing @return void */
-	private function batch_form( array $editing = null ) {
+	private function batch_form( ?array $editing = null ) {
 		$is_edit  = is_array( $editing );
 		$id       = $is_edit ? absint( $editing['id'] ) : 0;
 		$metadata = $is_edit && is_array( $editing['metadata'] ?? null ) ? $editing['metadata'] : array();
@@ -332,7 +332,7 @@ final class DomainStructureAdmin {
 	}
 
 	/** @param array<string,mixed>|null $editing @return void */
-	private function signer_form( array $editing = null ) {
+	private function signer_form( ?array $editing = null ) {
 		$is_edit  = is_array( $editing );
 		$id       = $is_edit ? absint( $editing['id'] ) : 0;
 		$metadata = $is_edit && is_array( $editing['metadata'] ?? null ) ? $editing['metadata'] : array();
@@ -389,7 +389,7 @@ final class DomainStructureAdmin {
 	}
 
 	/** @param array<string,mixed>|null $existing @return array<string,mixed>|\WP_Error */
-	private function batch_request( array $existing = null ) {
+	private function batch_request( ?array $existing = null ) {
 		$program_id = isset( $_POST['program_id'] ) ? absint( $_POST['program_id'] ) : 0;
 		if ( ! $program_id ) {
 			return new \WP_Error( 'certloom_batch_program_required', __( 'Choose a Program for the Batch.', 'certloom' ) );
@@ -430,7 +430,7 @@ final class DomainStructureAdmin {
 	}
 
 	/** @param array<string,mixed>|null $existing @return array<string,mixed>|\WP_Error */
-	private function signer_request( array $existing = null ) {
+	private function signer_request( ?array $existing = null ) {
 		$email = isset( $_POST['email'] ) ? trim( (string) wp_unslash( $_POST['email'] ) ) : '';
 		if ( '' !== $email && ! is_email( $email ) ) {
 			return new \WP_Error( 'certloom_signer_email_invalid', __( 'Enter a valid signer email address or leave it blank.', 'certloom' ) );
@@ -609,7 +609,7 @@ final class DomainStructureAdmin {
 	/** @return void */
 	private function filters( $page_slug, $search, $status, $placeholder ) {
 		$id = 'certloom-domain-search-' . sanitize_html_class( $page_slug );
-		echo '<form method="get" class="certloom-domain-search"><input type="hidden" name="page" value="' . esc_attr( $page_slug ) . '"><label class="screen-reader-text" for="' . esc_attr( $id ) . '">' . esc_html__( 'Search', 'certloom' ) . '</label><input id="' . esc_attr( $id ) . '" type="search" name="s" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr( $placeholder ) . '"><label class="screen-reader-text" for="' . esc_attr( $id . '-status' ) . '">' . esc_html__( 'Status', 'certloom' ) . '</label><select id="' . esc_attr( $id . '-status' ) . '" name="status"><option value="all" ' . selected( $status, 'all', false ) . '>' . esc_html__( 'All statuses', 'certloom' ) . '</option><option value="active" ' . selected( $status, 'active', false ) . '>' . esc_html__( 'Active', 'certloom' ) . '</option><option value="inactive" ' . selected( $status, 'inactive', false ) . '>' . esc_html__( 'Inactive', 'certloom' ) . '</option></select><button class="button">' . esc_html__( 'Filter', 'certloom' ) . '</button></form>';
+		echo '<form method="get" class="certloom-domain-search"><input type="hidden" name="page" value="' . esc_attr( $page_slug ) . '"><label class="screen-reader-text" for="' . esc_attr( $id ) . '">' . esc_html_x( 'Search', 'search field label', 'certloom' ) . '</label><input id="' . esc_attr( $id ) . '" type="search" name="s" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr( $placeholder ) . '"><label class="screen-reader-text" for="' . esc_attr( $id . '-status' ) . '">' . esc_html__( 'Status', 'certloom' ) . '</label><select id="' . esc_attr( $id . '-status' ) . '" name="status"><option value="all" ' . selected( $status, 'all', false ) . '>' . esc_html__( 'All statuses', 'certloom' ) . '</option><option value="active" ' . selected( $status, 'active', false ) . '>' . esc_html_x( 'Active', 'entity status', 'certloom' ) . '</option><option value="inactive" ' . selected( $status, 'inactive', false ) . '>' . esc_html_x( 'Inactive', 'entity status', 'certloom' ) . '</option></select><button class="button">' . esc_html__( 'Filter', 'certloom' ) . '</button></form>';
 	}
 
 	/** @param array<int,array{value:mixed,label:string}> $items @return void */

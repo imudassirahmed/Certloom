@@ -26,7 +26,7 @@ final class TemplateRepository {
 	/** @var TransactionInterface */ private $transaction;
 	/** @var RendererAuthorityGate */ private $renderer_authority;
 
-	public function __construct( LayoutValidator $layouts = null, CanonicalJson $json = null, TransactionInterface $transaction = null, RendererAuthorityGate $renderer_authority = null ) {
+	public function __construct( ?LayoutValidator $layouts = null, ?CanonicalJson $json = null, ?TransactionInterface $transaction = null, ?RendererAuthorityGate $renderer_authority = null ) {
 		$this->layouts             = $layouts ?: new LayoutValidator();
 		$this->json                = $json ?: new CanonicalJson();
 		$this->transaction         = $transaction ?: new Transaction();

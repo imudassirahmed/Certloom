@@ -12,7 +12,7 @@ final class LayoutResolver {
 	private $assets;
 	private $qr_encoder;
 
-	public function __construct( LayoutValidator $validator = null, TextDirectionResolver $directions = null, AssetInspector $assets = null, QrEncoderInterface $qr_encoder = null ) {
+	public function __construct( ?LayoutValidator $validator = null, ?TextDirectionResolver $directions = null, ?AssetInspector $assets = null, ?QrEncoderInterface $qr_encoder = null ) {
 		$this->validator = $validator ?: new LayoutValidator();
 		$this->directions = $directions ?: new TextDirectionResolver();
 		$this->assets = $assets ?: new AssetInspector();

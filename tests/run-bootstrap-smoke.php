@@ -32,10 +32,54 @@ if ( 1 !== count( $main_init ) || 'init' !== $main_init[0][0] || 1 !== $main_ini
 	exit( 1 );
 }
 
+/* PHP 8.4 deprecates typed parameters that default to null without an explicit nullable type. */
+$production_root = dirname( __DIR__ );
+$implicit_nullable = array();
+$iterator = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $production_root, FilesystemIterator::SKIP_DOTS ) );
+foreach ( $iterator as $file ) {
+	if ( ! $file->isFile() || 'php' !== strtolower( $file->getExtension() ) ) { continue; }
+	$path = str_replace( '\\', '/', $file->getPathname() );
+	if ( false !== strpos( $path, '/tests/' ) || false !== strpos( $path, '/docs/' ) ) { continue; }
+	$tokens = token_get_all( (string) file_get_contents( $file->getPathname() ) );
+	$count = count( $tokens );
+	for ( $i = 0; $i < $count; $i++ ) {
+		if ( ! is_array( $tokens[ $i ] ) || T_FUNCTION !== $tokens[ $i ][0] ) { continue; }
+		while ( $i < $count && '(' !== $tokens[ $i ] ) { $i++; }
+		if ( $i >= $count ) { break; }
+		$depth = 0;
+		$signature = '';
+		for ( ; $i < $count; $i++ ) {
+			$text = is_array( $tokens[ $i ] ) ? $tokens[ $i ][1] : $tokens[ $i ];
+			$signature .= $text;
+			if ( '(' === $text ) { $depth++; }
+			if ( ')' === $text && 0 === --$depth ) { break; }
+		}
+		if ( preg_match( '/(?<![?\\\\\w])(?:\\\\?[A-Za-z_][A-Za-z0-9_\\\\]*|array|callable|string|int|float|bool|iterable|object)\s+\$[A-Za-z_][A-Za-z0-9_]*\s*=\s*null\b/', $signature ) ) {
+			$implicit_nullable[] = $path;
+		}
+	}
+}
+if ( $implicit_nullable ) {
+	fwrite( STDERR, "Certloom production code must not use PHP 8.4-deprecated implicit-nullable typed parameters: " . implode( ', ', array_unique( $implicit_nullable ) ) . "\n" );
+	exit( 1 );
+}
+
 $pot = file_get_contents( dirname( __DIR__ ) . '/languages/certloom.pot' );
 if ( false === $pot || false === strpos( $pot, 'msgid "This is the native WordPress block. Elementor is not required."' ) || false === strpos( $pot, 'msgid "Certloom could not persist its required administrator access. The migration will be retried automatically."' ) ) {
 	fwrite( STDERR, "Certloom POT must cover both native-block JavaScript and PHP runtime strings.\n" );
 	exit( 1 );
 }
+foreach ( array(
+	"msgctxt \"search action button\"\nmsgid \"Search\"",
+	"msgctxt \"search field label\"\nmsgid \"Search\"",
+	"msgctxt \"entity status\"\nmsgid \"Active\"",
+	"msgctxt \"entity status\"\nmsgid \"Inactive\"",
+	"msgctxt \"maintenance status\"\nmsgid \"Inactive\"",
+) as $required_context_entry ) {
+	if ( false === strpos( $pot, $required_context_entry ) ) {
+		fwrite( STDERR, "Certloom POT must preserve planned translator contexts across PHP and native-block JavaScript.\n" );
+		exit( 1 );
+	}
+}
 
-echo "PASS  plugin bootstrap, namespace autoload, init-safe provisioning hook and complete PHP/block translation source\n";
+echo "PASS  plugin bootstrap, namespace autoload, init-safe provisioning hook and complete contextual PHP/block translation source\n";

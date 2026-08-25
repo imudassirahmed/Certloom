@@ -8,7 +8,7 @@ final class DomainImportCommitService {
 	private $mapper;
 	private $target;
 
-	public function __construct( DomainImportTargetInterface $target, DomainImportRowMapper $mapper = null ) {
+	public function __construct( DomainImportTargetInterface $target, ?DomainImportRowMapper $mapper = null ) {
 		$this->target = $target;
 		$this->mapper = $mapper ?: new DomainImportRowMapper();
 	}

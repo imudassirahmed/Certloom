@@ -4,7 +4,7 @@ namespace Certloom\Application\Backup;
 /** Streaming validator/preflight reader for the versioned domain backup format. */
 final class DomainBackupReader {
 	private $format;
-	public function __construct( DomainBackupFormat $format = null ) { $this->format = $format ?: new DomainBackupFormat(); }
+	public function __construct( ?DomainBackupFormat $format = null ) { $this->format = $format ?: new DomainBackupFormat(); }
 
 	/** @return array<string,mixed>|\WP_Error */
 	public function analyze( $path, $max_records = 500000 ) {

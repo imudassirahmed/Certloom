@@ -13,7 +13,7 @@ function rcp_rm( $path ) { if ( ! file_exists( $path ) && ! is_link( $path ) ) {
 
 final class RcpGoldenReplayRenderer implements RendererInterface {
     private $id; private $version; private $formats; private $context; private $root; private $plans; private $requirements;
-    public function __construct( $id, $version, array $formats, array $context, $root, array $requirements = null ) { $this->id=$id; $this->version=$version; $this->formats=$formats; $this->context=$context; $this->root=$root; $this->plans=new RenderPlanBuilder(); $this->requirements=$requirements ?: array( 'php_min'=>'7.4', 'extensions'=>array(), 'classes'=>array(), 'functions'=>array() ); }
+    public function __construct( $id, $version, array $formats, array $context, $root, ?array $requirements = null ) { $this->id=$id; $this->version=$version; $this->formats=$formats; $this->context=$context; $this->root=$root; $this->plans=new RenderPlanBuilder(); $this->requirements=$requirements ?: array( 'php_min'=>'7.4', 'extensions'=>array(), 'classes'=>array(), 'functions'=>array() ); }
     public function id(){ return $this->id; }
     public function version(){ return $this->version; }
     public function formats(){ return $this->formats; }

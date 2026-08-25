@@ -29,7 +29,7 @@ final class ArtifactRenderCoordinator {
 	private $plans;
 	private $authority;
 
-	public function __construct( RendererRegistry $registry, RendererCapabilityDetector $capabilities = null, RenderRequestFingerprint $fingerprints = null, ArtifactReceipt $receipts = null, FontManifest $fonts = null, ArtifactInspector $artifacts = null, LocalFontResolverInterface $font_resolver = null, FontAssetInspector $font_assets = null, RenderPlanBuilder $plans = null, ArtifactAuthorityGateInterface $authority = null ) {
+	public function __construct( RendererRegistry $registry, ?RendererCapabilityDetector $capabilities = null, ?RenderRequestFingerprint $fingerprints = null, ?ArtifactReceipt $receipts = null, ?FontManifest $fonts = null, ?ArtifactInspector $artifacts = null, ?LocalFontResolverInterface $font_resolver = null, ?FontAssetInspector $font_assets = null, ?RenderPlanBuilder $plans = null, ?ArtifactAuthorityGateInterface $authority = null ) {
 		$this->registry = $registry;
 		$this->capabilities = $capabilities ?: new RendererCapabilityDetector();
 		$this->fingerprints = $fingerprints ?: new RenderRequestFingerprint();

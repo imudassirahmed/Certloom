@@ -19,7 +19,7 @@ final class RenderPlanBuilder {
 	private $canonical;
 	private $fonts;
 
-	public function __construct( CanonicalJson $canonical = null, FontManifest $fonts = null ) {
+	public function __construct( ?CanonicalJson $canonical = null, ?FontManifest $fonts = null ) {
 		$this->canonical = $canonical ?: new CanonicalJson();
 		$this->fonts = $fonts ?: new FontManifest();
 	}

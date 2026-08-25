@@ -11,7 +11,7 @@ final class DomainImportStagingService {
 	private $mapper;
 	private $status;
 
-	public function __construct( DomainImportStageInterface $stage, DomainImportRowMapper $mapper = null, StatusService $status = null ) {
+	public function __construct( DomainImportStageInterface $stage, ?DomainImportRowMapper $mapper = null, ?StatusService $status = null ) {
 		$this->stage = $stage;
 		$this->mapper = $mapper ?: new DomainImportRowMapper();
 		$this->status = $status ?: new StatusService();

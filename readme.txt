@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.48
+Stable tag: 1.6.49
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.48: harden public rate limiting against User-Agent and IPv6-address rotation, prefer durable private job storage before system temp, move runtime provisioning to `init` so translated error paths do not execute during `plugins_loaded`, fail safe on malformed UTF-8 spreadsheet cells, introduce a backward-compatible GF(2^5) v2 public-ID checksum for newly generated normalized IDs, and ship a translation template. Legacy v1 public IDs remain accepted so existing data/backups are not invalidated. `PDF-04`, normalized-domain acceptance-v4, WordPress 7.1 runtime certification, and `PERF-01` database index benchmarks remain genuine external gates; all authority flags stay closed.
+> Development note for 1.6.49: close PHP 8.4 implicit-nullable deprecations across the production codebase using PHP-7.4-compatible explicit nullable types, and refine translator context for genuinely ambiguous short UI labels before translation packs mature. Search actions are distinct from search-field labels, entity status is distinct from maintenance state, and the deterministic POT generator now preserves JavaScript contextual/plural i18n calls as well as PHP. `PDF-04`, normalized-domain acceptance-v4, WordPress 7.1 runtime certification, and `PERF-01` database index benchmarks remain genuine external gates; all authority flags stay closed.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -129,6 +129,13 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.49 =
+* Eliminate PHP 8.4 implicit-nullable parameter deprecations with explicit nullable declarations that remain PHP 7.4 compatible.
+* Add translator context to ambiguous Search action/field labels and entity/maintenance status labels before formal translation packs mature.
+* Keep the native Verification block editor and server-rendered Search default on the same contextual translation key.
+* Extend deterministic translation-source extraction to preserve Gutenberg JavaScript `_x()`/plural contexts and cache-bust the changed Verification block editor asset.
+* Keep external renderer/database/WordPress 7.1/PERF-01 gates unchanged and fail closed.
 
 = 1.6.48 =
 * Harden public rate limiting with a strict network ceiling so User-Agent and IPv6 interface-address rotation cannot create unlimited fresh capacity; use integer minute buckets and fail-closed persistent-counter reads.

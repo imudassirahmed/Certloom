@@ -103,7 +103,7 @@ final class DomainCutoverState {
 	 * @param LegacyMigrationState|null $migration Completed migration state reader.
 	 * @return bool
 	 */
-	public function receipt_matches_completed_migration( LegacyMigrationState $migration = null ) {
+	public function receipt_matches_completed_migration( ?LegacyMigrationState $migration = null ) {
 		$migration = $migration ?: new LegacyMigrationState();
 		if ( ! $this->has_committed_receipt() || ! $migration->is_complete() ) {
 			return false;

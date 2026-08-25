@@ -29,10 +29,10 @@ final class DomainRestoreStagingService implements DomainRestoreStagingInterface
 	private $row_validator;
 
 	public function __construct(
-		DomainRestoreWorkspaceInterface $workspace = null,
-		PrivateJobFileStore $files = null,
-		DomainBackupFormat $format = null,
-		DomainRestoreRowValidator $row_validator = null
+		?DomainRestoreWorkspaceInterface $workspace = null,
+		?PrivateJobFileStore $files = null,
+		?DomainBackupFormat $format = null,
+		?DomainRestoreRowValidator $row_validator = null
 	) {
 		$this->workspace     = $workspace ?: new DomainRestoreWorkspace();
 		$this->files         = $files ?: new PrivateJobFileStore();

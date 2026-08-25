@@ -29,7 +29,7 @@ final class JobDispatcher implements JobSchedulerInterface {
 	/** @var JobRetentionService|null */
 	private $retention;
 
-	public function __construct( JobRunner $runner, JobRepositoryInterface $jobs, JobRetentionService $retention = null ) {
+	public function __construct( JobRunner $runner, JobRepositoryInterface $jobs, ?JobRetentionService $retention = null ) {
 		$this->runner    = $runner;
 		$this->jobs      = $jobs;
 		$this->retention = $retention;

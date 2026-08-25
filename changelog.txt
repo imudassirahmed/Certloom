@@ -1,3 +1,11 @@
+1.6.49
+- Eliminate PHP 8.4 implicit-nullable parameter deprecations across the production codebase with explicit `?Type` declarations that remain compatible with the declared PHP 7.4 minimum.
+- Add translator context to genuinely ambiguous Search action/field labels and entity/maintenance status wording before formal translation packs mature.
+- Keep the native Verification block editor and server-rendered Search default on the same contextual translation key.
+- Extend deterministic translation-source extraction so Gutenberg JavaScript `__()`, `_x()`, `_n()`, and `_nx()` calls preserve singular/plural/context semantics in the shipped POT.
+- Cache-bust only the changed native Verification block editor asset to 1.6.49; Credential Profile block bytes/version remain unchanged.
+- Keep renderer/database authority, WordPress 7.1 certification, `PERF-01` database changes, Template publication, Preview and Designer proof-gated.
+
 1.6.48
 - Harden public abuse limiting with a strict network ceiling plus the existing client fingerprint, normalize IPv6 to /64 and IPv4-mapped IPv6, use integer minute buckets, fail closed on missing counter reads when requested, and bound stale-option cleanup.
 - Prefer durable private job storage outside the public webroot before falling back to WordPress/system temporary storage; add fallback-order regression ownership.

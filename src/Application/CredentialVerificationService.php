@@ -21,7 +21,7 @@ final class CredentialVerificationService {
 	/** @var StatusService */
 	private $status;
 
-	public function __construct( CredentialQueryRepositoryInterface $credentials, PublicCredentialId $public_ids = null, StatusService $status = null ) {
+	public function __construct( CredentialQueryRepositoryInterface $credentials, ?PublicCredentialId $public_ids = null, ?StatusService $status = null ) {
 		$this->credentials = $credentials;
 		$this->public_ids  = $public_ids ?: new PublicCredentialId();
 		$this->status      = $status ?: new StatusService();

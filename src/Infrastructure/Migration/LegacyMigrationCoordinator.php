@@ -32,12 +32,12 @@ final class LegacyMigrationCoordinator {
 	private $fingerprint;
 
 	public function __construct(
-		LegacyCertificateRepository $source = null,
-		LegacyMigrationPreflightService $preflight = null,
-		LegacyMigrationCommitService $commit = null,
-		LegacyMigrationState $state = null,
-		DomainMaintenanceLock $maintenance = null,
-		LegacySourceFingerprint $fingerprint = null
+		?LegacyCertificateRepository $source = null,
+		?LegacyMigrationPreflightService $preflight = null,
+		?LegacyMigrationCommitService $commit = null,
+		?LegacyMigrationState $state = null,
+		?DomainMaintenanceLock $maintenance = null,
+		?LegacySourceFingerprint $fingerprint = null
 	) {
 		$this->source      = $source ?: new LegacyCertificateRepository();
 		$this->preflight   = $preflight ?: new LegacyMigrationPreflightService();

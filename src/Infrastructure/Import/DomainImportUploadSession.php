@@ -16,7 +16,7 @@ final class DomainImportUploadSession {
 	/** @var DomainImportCsvReader */
 	private $reader;
 
-	public function __construct( PrivateJobFileStore $files = null, DomainImportCsvReader $reader = null ) {
+	public function __construct( ?PrivateJobFileStore $files = null, ?DomainImportCsvReader $reader = null ) {
 		$this->files  = $files ?: new PrivateJobFileStore();
 		$this->reader = $reader ?: new DomainImportCsvReader( $this->files );
 	}

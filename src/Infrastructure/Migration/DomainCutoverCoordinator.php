@@ -38,12 +38,12 @@ final class DomainCutoverCoordinator {
 	private $readiness_verifier;
 
 	public function __construct(
-		LegacySourceSnapshotInterface $source = null,
-		DomainMaintenanceLock $maintenance = null,
-		LegacyMigrationState $migration = null,
-		DomainCutoverState $state = null,
-		callable $schema_verifier = null,
-		callable $readiness_verifier = null
+		?LegacySourceSnapshotInterface $source = null,
+		?DomainMaintenanceLock $maintenance = null,
+		?LegacyMigrationState $migration = null,
+		?DomainCutoverState $state = null,
+		?callable $schema_verifier = null,
+		?callable $readiness_verifier = null
 	) {
 		$this->source          = $source ?: new LegacyCertificateRepository();
 		$this->maintenance     = $maintenance ?: new DomainMaintenanceLock();

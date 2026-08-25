@@ -15,7 +15,7 @@ final class DomainBackupBuilder implements DomainBackupBuilderInterface {
 	private $generation;
 	private $maintenance;
 
-	public function __construct( DomainBackupRepository $repository = null, PrivateJobFileStore $files = null, DomainBackupFormat $format = null, DomainGeneration $generation = null, DomainMaintenanceLock $maintenance = null ) {
+	public function __construct( ?DomainBackupRepository $repository = null, ?PrivateJobFileStore $files = null, ?DomainBackupFormat $format = null, ?DomainGeneration $generation = null, ?DomainMaintenanceLock $maintenance = null ) {
 		$this->repository = $repository ?: new DomainBackupRepository();
 		$this->files = $files ?: new PrivateJobFileStore();
 		$this->format = $format ?: new DomainBackupFormat();

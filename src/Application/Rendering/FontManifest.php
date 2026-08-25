@@ -17,7 +17,7 @@ final class FontManifest {
 	private $canonical;
 	private $unicode;
 
-	public function __construct( CanonicalJson $canonical = null, UnicodeCoverage $unicode = null ) {
+	public function __construct( ?CanonicalJson $canonical = null, ?UnicodeCoverage $unicode = null ) {
 		$this->canonical = $canonical ?: new CanonicalJson();
 		$this->unicode = $unicode ?: new UnicodeCoverage();
 	}

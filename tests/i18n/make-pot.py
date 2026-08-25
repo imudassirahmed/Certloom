@@ -234,22 +234,48 @@ def main() -> int:
                 if note:
                     entry["comments"].add(note)
 
-    # Native block editor strings live in JavaScript rather than PHP. Extract
-    # literal __( 'text', 'certloom' ) calls and standard translatable block
-    # metadata so the shipped POT is a complete source template.
-    js_call = re.compile(r"__\(\s*(['\"])((?:\\.|(?!\1).)*)\1\s*,\s*['\"]certloom['\"]\s*\)")
+    # Native block editor strings live in JavaScript rather than PHP. Preserve
+    # the same singular/plural/context semantics for the WordPress i18n helpers
+    # that Certloom permits in shipped block code. This stays aligned with the
+    # PHP extractor so `_x()` / `_nx()` context cannot silently disappear from
+    # the deterministic POT.
+    js_functions = {
+        "__":  (0, None, None, 1),
+        "_x":  (0, None, 1, 2),
+        "_n":  (0, 1, None, 3),
+        "_nx": (0, 1, 2, 3),
+    }
+    js_call_re = re.compile(r"(?<![\w$.:])(" + "|".join(sorted(js_functions, key=len, reverse=True)) + r")\s*\(")
     for path in sorted((root / "blocks").glob("*/index.js")):
         rel = path.relative_to(root).as_posix()
         src = path.read_text(encoding="utf-8")
-        for match in js_call.finditer(src):
-            quote, raw = match.group(1), match.group(2)
-            try:
-                value, _ = read_php_string(quote + raw + quote, 0)
-            except Skipped:
-                skipped.append(f"{rel}:{line_of(src, match.start())} JS __() invalid literal")
+        for match in js_call_re.finditer(src):
+            func = match.group(1)
+            sing_i, plur_i, ctx_i, dom_i = js_functions[func]
+            raw_args, _ = split_call(src, match.end() - 1)
+            if raw_args is None or len(raw_args) <= dom_i:
+                skipped.append(f"{rel}:{line_of(src, match.start())} JS {func}() malformed call")
                 continue
-            key = (None, value, None)
-            entry = entries.setdefault(key, {"context": None, "singular": value, "plural": None, "refs": [], "comments": set()})
+            try:
+                domain, _ = read_argument(raw_args[dom_i], 0)
+            except Skipped:
+                skipped.append(f"{rel}:{line_of(src, match.start())} JS {func}() non-literal domain")
+                continue
+            if domain != DOMAIN:
+                wrong_domain.append(f"{rel}:{line_of(src, match.start())} JS {func}() uses domain {domain!r}")
+                continue
+            try:
+                singular, _ = read_argument(raw_args[sing_i], 0)
+                plural = read_argument(raw_args[plur_i], 0)[0] if plur_i is not None else None
+                context = read_argument(raw_args[ctx_i], 0)[0] if ctx_i is not None else None
+            except Skipped as error:
+                skipped.append(f"{rel}:{line_of(src, match.start())} JS {func}() {error}")
+                continue
+            key = (context, singular, plural)
+            entry = entries.setdefault(
+                key,
+                {"context": context, "singular": singular, "plural": plural, "refs": [], "comments": set()},
+            )
             entry["refs"].append(f"{rel}:{line_of(src, match.start())}")
 
     for path in sorted((root / "blocks").glob("*/block.json")):

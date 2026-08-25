@@ -13,7 +13,7 @@ final class RendererAcceptanceImporter {
 	private $reports;
 	private $environments;
 
-	public function __construct( RendererAcceptanceContract $acceptance = null, RendererVerificationReport $reports = null, RendererVerifierEnvironment $environments = null ) {
+	public function __construct( ?RendererAcceptanceContract $acceptance = null, ?RendererVerificationReport $reports = null, ?RendererVerifierEnvironment $environments = null ) {
 		$this->acceptance = $acceptance ?: new RendererAcceptanceContract();
 		$this->reports = $reports ?: new RendererVerificationReport();
 		$this->environments = $environments ?: new RendererVerifierEnvironment();

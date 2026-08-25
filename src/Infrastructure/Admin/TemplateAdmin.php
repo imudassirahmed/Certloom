@@ -199,7 +199,7 @@ final class TemplateAdmin {
 		$this->assignment_workspace( $repo );
 		if ( is_wp_error( $result ) ) { echo '<div class="notice notice-error"><p>' . esc_html( $result->get_error_message() ) . '</p></div>'; }
 		else {
-			echo '<form method="get"><input type="hidden" name="page" value="' . esc_attr( self::PAGE ) . '"><p class="search-box"><label class="screen-reader-text" for="certloom-template-search">' . esc_html__( 'Search templates', 'certloom' ) . '</label><input id="certloom-template-search" type="search" name="s" value="' . esc_attr( $search ) . '"><button class="button">' . esc_html__( 'Search', 'certloom' ) . '</button></p></form>';
+			echo '<form method="get"><input type="hidden" name="page" value="' . esc_attr( self::PAGE ) . '"><p class="search-box"><label class="screen-reader-text" for="certloom-template-search">' . esc_html__( 'Search templates', 'certloom' ) . '</label><input id="certloom-template-search" type="search" name="s" value="' . esc_attr( $search ) . '"><button class="button">' . esc_html_x( 'Search', 'search action button', 'certloom' ) . '</button></p></form>';
 			echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Template', 'certloom' ) . '</th><th>' . esc_html__( 'Machine key', 'certloom' ) . '</th><th>' . esc_html__( 'Draft revision', 'certloom' ) . '</th><th>' . esc_html__( 'Published', 'certloom' ) . '</th><th>' . esc_html__( 'Status', 'certloom' ) . '</th></tr></thead><tbody>';
 			foreach ( $result['items'] as $item ) {
 				$url = add_query_arg( array( 'page' => self::PAGE, 'template_id' => absint( $item['id'] ) ), admin_url( 'admin.php' ) );
@@ -255,7 +255,7 @@ final class TemplateAdmin {
 	private function assignment_target_picker( $scope_type, $selected_id, $search, $page ) {
 		$result = $this->assignment_target_page( $scope_type, $search, $page, 12 );
 		echo '<div class="certloom-template-target-picker"><h3>' . esc_html( sprintf( __( 'Choose %s', 'certloom' ), TemplateAssignmentPolicy::scope_label( $scope_type ) ) ) . '</h3>';
-		echo '<form method="get" class="certloom-domain-search"><input type="hidden" name="page" value="' . esc_attr( self::PAGE ) . '"><input type="hidden" name="assignment_scope" value="' . esc_attr( $scope_type ) . '"><label class="screen-reader-text" for="certloom-template-scope-search">' . esc_html__( 'Search assignment targets', 'certloom' ) . '</label><input id="certloom-template-scope-search" type="search" name="scope_s" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr__( 'Search name or code', 'certloom' ) . '"><button class="button">' . esc_html__( 'Search', 'certloom' ) . '</button></form>';
+		echo '<form method="get" class="certloom-domain-search"><input type="hidden" name="page" value="' . esc_attr( self::PAGE ) . '"><input type="hidden" name="assignment_scope" value="' . esc_attr( $scope_type ) . '"><label class="screen-reader-text" for="certloom-template-scope-search">' . esc_html__( 'Search assignment targets', 'certloom' ) . '</label><input id="certloom-template-scope-search" type="search" name="scope_s" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr__( 'Search name or code', 'certloom' ) . '"><button class="button">' . esc_html_x( 'Search', 'search action button', 'certloom' ) . '</button></form>';
 		if ( is_wp_error( $result ) ) { echo '<div class="notice notice-error inline"><p>' . esc_html( $result->get_error_message() ) . '</p></div></div>'; return; }
 		echo '<div class="certloom-template-target-list">';
 		foreach ( $result['items'] as $item ) {

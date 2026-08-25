@@ -246,8 +246,8 @@ final class DomainAdmin {
 			$this->metric_grid(
 				array(
 					array( 'value' => $summary['total'], 'label' => __( 'Programs', 'certloom' ) ),
-					array( 'value' => $summary['active'], 'label' => __( 'Active', 'certloom' ) ),
-					array( 'value' => $summary['inactive'], 'label' => __( 'Inactive', 'certloom' ) ),
+					array( 'value' => $summary['active'], 'label' => _x( 'Active', 'entity status', 'certloom' ) ),
+					array( 'value' => $summary['inactive'], 'label' => _x( 'Inactive', 'entity status', 'certloom' ) ),
 					array( 'value' => $summary['with_credentials'], 'label' => __( 'With credentials', 'certloom' ) ),
 				)
 			);
@@ -261,7 +261,7 @@ final class DomainAdmin {
 			foreach ( $result['items'] as $item ) {
 				$edit_url = add_query_arg( array( 'page' => self::PROGRAMS_PAGE, 'program_id' => absint( $item['id'] ) ), admin_url( 'admin.php' ) );
 				$validity = null === $item['validity_days'] ? __( 'No default', 'certloom' ) : sprintf( /* translators: %d: days. */ _n( '%d day', '%d days', absint( $item['validity_days'] ), 'certloom' ), absint( $item['validity_days'] ) );
-				echo '<tr><td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( (string) $item['title'] ) . '</a></strong></td><td>' . ( $item['code'] ? '<code>' . esc_html( (string) $item['code'] ) . '</code>' : '—' ) . '</td><td>' . esc_html( (string) ( $item['issuer_name'] ?: '—' ) ) . '</td><td>' . esc_html( $validity ) . '</td><td><span class="certloom-domain-count">' . esc_html( (string) absint( $item['credential_count'] ) ) . '</span></td><td><span class="certloom-domain-status ' . ( $item['active'] ? 'is-active' : 'is-inactive' ) . '">' . esc_html( $item['active'] ? __( 'Active', 'certloom' ) : __( 'Inactive', 'certloom' ) ) . '</span></td><td><a class="button button-small" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Open', 'certloom' ) . '</a></td></tr>';
+				echo '<tr><td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( (string) $item['title'] ) . '</a></strong></td><td>' . ( $item['code'] ? '<code>' . esc_html( (string) $item['code'] ) . '</code>' : '—' ) . '</td><td>' . esc_html( (string) ( $item['issuer_name'] ?: '—' ) ) . '</td><td>' . esc_html( $validity ) . '</td><td><span class="certloom-domain-count">' . esc_html( (string) absint( $item['credential_count'] ) ) . '</span></td><td><span class="certloom-domain-status ' . ( $item['active'] ? 'is-active' : 'is-inactive' ) . '">' . esc_html( $item['active'] ? _x( 'Active', 'entity status', 'certloom' ) : _x( 'Inactive', 'entity status', 'certloom' ) ) . '</span></td><td><a class="button button-small" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Open', 'certloom' ) . '</a></td></tr>';
 			}
 			if ( empty( $result['items'] ) ) { echo '<tr><td colspan="7"><div class="certloom-domain-empty"><strong>' . esc_html__( 'No programs found.', 'certloom' ) . '</strong><span>' . esc_html__( 'Add a program or adjust the filters.', 'certloom' ) . '</span></div></td></tr>'; }
 			echo '</tbody></table></div>';
@@ -401,7 +401,7 @@ final class DomainAdmin {
 	}
 
 	/** @param array<string,mixed>|null $editing @return void */
-	private function recipient_form( array $editing = null ) {
+	private function recipient_form( ?array $editing = null ) {
 		$is_edit = null !== $editing;
 		$id = $is_edit ? absint( $editing['id'] ) : 0;
 		$custom_fields = $is_edit && isset( $editing['custom_fields'] ) && is_array( $editing['custom_fields'] ) ? $editing['custom_fields'] : array();
@@ -435,7 +435,7 @@ final class DomainAdmin {
 	}
 
 	/** @param array<string,mixed>|null $editing @return void */
-	private function program_form( array $editing = null ) {
+	private function program_form( ?array $editing = null ) {
 		$is_edit = null !== $editing;
 		$id = $is_edit ? absint( $editing['id'] ) : 0;
 		$metadata = $is_edit && isset( $editing['metadata'] ) && is_array( $editing['metadata'] ) ? $editing['metadata'] : array();
@@ -469,7 +469,7 @@ final class DomainAdmin {
 
 
 	/** @param array<string,mixed>|null $editing @return void */
-	private function issuer_form( array $editing = null ) {
+	private function issuer_form( ?array $editing = null ) {
 		$is_edit = null !== $editing; $id = $is_edit ? absint( $editing['id'] ) : 0;
 		$settings = $is_edit && isset( $editing['settings'] ) && is_array( $editing['settings'] ) ? $editing['settings'] : array();
 		echo '<section class="ecapla-certverify-admin-card certloom-domain-editor"><div class="certloom-domain-editor-head"><div><h2>' . esc_html( $is_edit ? __( 'Issuer brand profile', 'certloom' ) : __( 'Add issuer / brand', 'certloom' ) ) . '</h2><p>' . esc_html__( 'Brand defaults are local configuration. Issued credential Versions preserve their own immutable snapshot.', 'certloom' ) . '</p></div></div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
@@ -563,7 +563,7 @@ final class DomainAdmin {
 	}
 
 	/** @param array<string,mixed>|null $existing @return array<string,mixed>|\WP_Error */
-	private function recipient_request( array $existing = null ) {
+	private function recipient_request( ?array $existing = null ) {
 		$raw_email = isset( $_POST['email'] ) ? trim( (string) wp_unslash( $_POST['email'] ) ) : '';
 		$email = '' !== $raw_email ? sanitize_email( $raw_email ) : '';
 		if ( '' !== $raw_email && ( '' === $email || ( function_exists( 'is_email' ) && ! is_email( $email ) ) ) ) {
@@ -593,7 +593,7 @@ final class DomainAdmin {
 	}
 
 	/** @param array<string,mixed>|null $existing @return array<string,mixed>|\WP_Error */
-	private function program_request( array $existing = null ) {
+	private function program_request( ?array $existing = null ) {
 		$issuer_id = isset( $_POST['issuer_id'] ) && '' !== trim( (string) $_POST['issuer_id'] ) ? absint( $_POST['issuer_id'] ) : null;
 		if ( $issuer_id ) {
 			$issuer = ( new IssuerRepository() )->find( $issuer_id );
@@ -620,7 +620,7 @@ final class DomainAdmin {
 
 
 	/** @return array<string,mixed>|\WP_Error */
-	private function issuer_request( array $existing = null ) {
+	private function issuer_request( ?array $existing = null ) {
 		$raw_website = isset( $_POST['website'] ) ? trim( (string) wp_unslash( $_POST['website'] ) ) : '';
 		$website = '' !== $raw_website ? esc_url_raw( $raw_website, array( 'http', 'https' ) ) : '';
 		if ( '' !== $raw_website && '' === $website ) {
@@ -759,7 +759,7 @@ final class DomainAdmin {
 	/** @return void */
 	private function program_views( $current, $search ) {
 		echo '<nav class="certloom-domain-views" aria-label="' . esc_attr__( 'Program status filters', 'certloom' ) . '">';
-		foreach ( array( 'all' => __( 'All', 'certloom' ), 'active' => __( 'Active', 'certloom' ), 'inactive' => __( 'Inactive', 'certloom' ) ) as $key => $label ) {
+		foreach ( array( 'all' => __( 'All', 'certloom' ), 'active' => _x( 'Active', 'entity status', 'certloom' ), 'inactive' => _x( 'Inactive', 'entity status', 'certloom' ) ) as $key => $label ) {
 			$url = add_query_arg( array_filter( array( 'page' => self::PROGRAMS_PAGE, 'program_status' => $key, 's' => $search ) ), admin_url( 'admin.php' ) );
 			echo '<a class="' . esc_attr( $current === $key ? 'is-current' : '' ) . '" href="' . esc_url( $url ) . '"' . ( $current === $key ? ' aria-current="page"' : '' ) . '>' . esc_html( $label ) . '</a>';
 		}
@@ -771,7 +771,7 @@ final class DomainAdmin {
 		$id = 'certloom-domain-search-' . sanitize_html_class( $page_slug );
 		echo '<form method="get" class="certloom-domain-search"><input type="hidden" name="page" value="' . esc_attr( $page_slug ) . '">';
 		foreach ( $hidden as $key => $value ) { echo '<input type="hidden" name="' . esc_attr( sanitize_key( $key ) ) . '" value="' . esc_attr( (string) $value ) . '">'; }
-		echo '<label class="screen-reader-text" for="' . esc_attr( $id ) . '">' . esc_html__( 'Search', 'certloom' ) . '</label><input id="' . esc_attr( $id ) . '" type="search" name="s" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr( $placeholder ) . '"><button class="button">' . esc_html__( 'Search', 'certloom' ) . '</button>';
+		echo '<label class="screen-reader-text" for="' . esc_attr( $id ) . '">' . esc_html_x( 'Search', 'search field label', 'certloom' ) . '</label><input id="' . esc_attr( $id ) . '" type="search" name="s" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr( $placeholder ) . '"><button class="button">' . esc_html_x( 'Search', 'search action button', 'certloom' ) . '</button>';
 		if ( '' !== $search ) { echo '<a class="button button-link" href="' . esc_url( add_query_arg( array_merge( array( 'page' => $page_slug ), $hidden ), admin_url( 'admin.php' ) ) ) . '">' . esc_html__( 'Clear', 'certloom' ) . '</a>'; }
 		echo '</form>';
 	}

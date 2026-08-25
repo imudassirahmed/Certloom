@@ -31,7 +31,7 @@ class Ecapla_CertVerify_Render {
 			'heading'          => __( 'Verify a Certificate', 'certloom' ),
 			'description'      => __( 'Enter the certificate number exactly as it appears on the face of the certificate. No login required.', 'certloom' ),
 			'placeholder'      => __( 'e.g. CERT-9001-2026-00142', 'certloom' ),
-			'button_text'      => __( 'Search', 'certloom' ),
+			'button_text'      => _x( 'Search', 'search action button', 'certloom' ),
 			'notfound_text'    => __( 'We couldn\'t find a certificate with that number. Double check it matches exactly what\'s printed on the certificate.', 'certloom' ),
 			'show_eyebrow'     => true,
 			'show_heading'     => true,

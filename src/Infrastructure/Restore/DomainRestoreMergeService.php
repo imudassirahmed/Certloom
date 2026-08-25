@@ -27,11 +27,11 @@ final class DomainRestoreMergeService {
 	private $transaction;
 
 	public function __construct(
-		DomainRestoreWorkspace $workspace = null,
-		DomainRestoreMapRepository $maps = null,
-		DomainBackupRepository $backup = null,
-		DomainRestoreConfigurationMerger $configuration_merger = null,
-		TransactionInterface $transaction = null
+		?DomainRestoreWorkspace $workspace = null,
+		?DomainRestoreMapRepository $maps = null,
+		?DomainBackupRepository $backup = null,
+		?DomainRestoreConfigurationMerger $configuration_merger = null,
+		?TransactionInterface $transaction = null
 	) {
 		$this->workspace            = $workspace ?: new DomainRestoreWorkspace();
 		$this->maps                 = $maps ?: new DomainRestoreMapRepository();

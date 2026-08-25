@@ -25,7 +25,7 @@ final class VerificationResult {
 	 * @param array<string,mixed>|null $credential Joined Series/current-Version read model.
 	 * @param StatusResult|null        $status      Authoritative Core status result.
 	 */
-	public function __construct( $found, $public_id, $reason_code, array $credential = null, StatusResult $status = null ) {
+	public function __construct( $found, $public_id, $reason_code, ?array $credential = null, ?StatusResult $status = null ) {
 		$this->found       = (bool) $found;
 		$this->public_id   = (string) $public_id;
 		$this->reason_code = (string) $reason_code;

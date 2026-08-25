@@ -11,7 +11,7 @@ final class DomainRestoreConfirmationValidator {
 	/** @var DomainBackupRepository */
 	private $backup_repository;
 
-	public function __construct( DomainGeneration $generation = null, DomainBackupRepository $backup_repository = null ) {
+	public function __construct( ?DomainGeneration $generation = null, ?DomainBackupRepository $backup_repository = null ) {
 		$this->generation        = $generation ?: new DomainGeneration();
 		$this->backup_repository = $backup_repository ?: new DomainBackupRepository();
 	}

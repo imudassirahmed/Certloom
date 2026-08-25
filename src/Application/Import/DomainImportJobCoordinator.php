@@ -31,9 +31,9 @@ final class DomainImportJobCoordinator {
 	public function __construct(
 		JobQueue $queue,
 		JobRepositoryInterface $jobs,
-		PrivateJobFileStore $files = null,
-		DomainImportCsvReader $reader = null,
-		DomainImportConsistencyGuard $consistency = null
+		?PrivateJobFileStore $files = null,
+		?DomainImportCsvReader $reader = null,
+		?DomainImportConsistencyGuard $consistency = null
 	) {
 		$this->queue       = $queue;
 		$this->jobs        = $jobs;

@@ -11,7 +11,7 @@ final class ArtifactReceipt {
 	private $canonical;
 	private $artifacts;
 
-	public function __construct( CanonicalJson $canonical = null, ArtifactInspector $artifacts = null ) {
+	public function __construct( ?CanonicalJson $canonical = null, ?ArtifactInspector $artifacts = null ) {
 		$this->canonical = $canonical ?: new CanonicalJson();
 		$this->artifacts = $artifacts ?: new ArtifactInspector();
 	}
@@ -55,7 +55,7 @@ final class ArtifactReceipt {
 	}
 
 	/** @return bool */
-	public function verify( array $receipt, $bytes, RendererInterface $renderer = null ) {
+	public function verify( array $receipt, $bytes, ?RendererInterface $renderer = null ) {
 		$required = array( 'schema', 'version', 'format', 'artifact', 'bytes', 'sha256', 'layout_hash', 'request_hash', 'render_plan_hash', 'renderer_id', 'renderer_version', 'renderer_context_hash', 'receipt_hash' );
 		foreach ( $required as $key ) {
 			if ( ! array_key_exists( $key, $receipt ) ) { return false; }

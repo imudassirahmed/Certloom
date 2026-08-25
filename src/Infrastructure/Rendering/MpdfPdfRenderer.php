@@ -23,7 +23,7 @@ final class MpdfPdfRenderer implements RendererInterface {
 	private $normalizer;
 	private $canonical;
 
-	public function __construct( $version, $candidate_manifest_sha256, array $font_manifest, $temp_dir = '', DeterministicPdfNormalizer $normalizer = null, CanonicalJson $canonical = null ) {
+	public function __construct( $version, $candidate_manifest_sha256, array $font_manifest, $temp_dir = '', ?DeterministicPdfNormalizer $normalizer = null, ?CanonicalJson $canonical = null ) {
 		$version = trim( (string) $version );
 		$candidate_manifest_sha256 = strtolower( trim( (string) $candidate_manifest_sha256 ) );
 		if ( '' === $version || strlen( $version ) > 64 || ! preg_match( '/^[0-9a-f]{64}$/', $candidate_manifest_sha256 ) ) {

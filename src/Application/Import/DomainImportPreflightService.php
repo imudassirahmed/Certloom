@@ -9,7 +9,7 @@ final class DomainImportPreflightService {
 	private $mapper;
 	private $status;
 
-	public function __construct( DomainImportRowMapper $mapper = null, StatusService $status = null ) {
+	public function __construct( ?DomainImportRowMapper $mapper = null, ?StatusService $status = null ) {
 		$this->mapper = $mapper ?: new DomainImportRowMapper();
 		$this->status = $status ?: new StatusService();
 	}

@@ -22,7 +22,7 @@ final class CredentialRelationshipCorrectionService {
 	/** @var EventRepositoryInterface */ private $events;
 	/** @var TransactionInterface */ private $transaction;
 
-	public function __construct( CredentialRelationshipRepositoryInterface $credentials = null, EventRepositoryInterface $events = null, TransactionInterface $transaction = null ) {
+	public function __construct( ?CredentialRelationshipRepositoryInterface $credentials = null, ?EventRepositoryInterface $events = null, ?TransactionInterface $transaction = null ) {
 		$this->credentials = $credentials ?: new CredentialRepository();
 		$this->events      = $events ?: new EventRepository();
 		$this->transaction = $transaction ?: new Transaction();

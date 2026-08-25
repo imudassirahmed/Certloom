@@ -14,6 +14,7 @@ $GLOBALS['system_status_options'] = array( 'permalink_structure' => '/%postname%
 $GLOBALS['system_status_db_writes'] = 0;
 
 function __( $t ) { return $t; }
+function _x( $value, $context = '', $domain = '' ) { return $value; }
 function sanitize_key( $v ) { return strtolower( preg_replace( '/[^a-z0-9_\-]/', '', (string) $v ) ); }
 function sanitize_text_field( $v ) { return trim( strip_tags( (string) $v ) ); }
 function absint( $v ) { return abs( (int) $v ); }

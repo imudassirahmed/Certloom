@@ -22,7 +22,7 @@ final class LegacyMigrationPreflightService {
 	/** @var int */
 	private $error_detail_limit;
 
-	public function __construct( LegacyCertificateMapper $mapper = null, StatusService $status_service = null, $error_detail_limit = 100 ) {
+	public function __construct( ?LegacyCertificateMapper $mapper = null, ?StatusService $status_service = null, $error_detail_limit = 100 ) {
 		$this->mapper              = $mapper ?: new LegacyCertificateMapper();
 		$this->status_service      = $status_service ?: new StatusService();
 		$this->error_detail_limit  = max( 1, (int) $error_detail_limit );

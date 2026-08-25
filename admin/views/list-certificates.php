@@ -125,7 +125,7 @@ $ecapla_certverify_hidden_columns  = is_array( $ecapla_certverify_hidden_columns
 			<?php endif; ?>
 			<div class="certloom-filter-fields">
 				<div class="certloom-filter-field certloom-filter-search">
-					<label for="certloom-registry-search"><?php esc_html_e( 'Search', 'certloom' ); ?></label>
+					<label for="certloom-registry-search"><?php echo esc_html_x( 'Search', 'search field label', 'certloom' ); ?></label>
 					<input type="search" id="certloom-registry-search" name="s" value="<?php echo esc_attr( $ecapla_certverify_search ); ?>" placeholder="<?php esc_attr_e( 'Certificate number or holder', 'certloom' ); ?>" />
 				</div>
 				<div class="certloom-filter-field">

@@ -11,7 +11,7 @@ final class DomainImportConsistencyGuard {
 	/** @var DomainBackupRepository */
 	private $backup;
 
-	public function __construct( DomainGeneration $generation = null, DomainBackupRepository $backup = null ) {
+	public function __construct( ?DomainGeneration $generation = null, ?DomainBackupRepository $backup = null ) {
 		$this->generation = $generation ?: new DomainGeneration();
 		$this->backup     = $backup ?: new DomainBackupRepository();
 	}

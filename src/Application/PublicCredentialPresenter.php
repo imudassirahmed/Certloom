@@ -16,7 +16,7 @@ final class PublicCredentialPresenter {
 	/** @var PublicCredentialId */
 	private $public_ids;
 
-	public function __construct( VisibilityPolicy $visibility = null, PublicCredentialId $public_ids = null ) {
+	public function __construct( ?VisibilityPolicy $visibility = null, ?PublicCredentialId $public_ids = null ) {
 		$this->visibility = $visibility ?: new VisibilityPolicy();
 		$this->public_ids = $public_ids ?: new PublicCredentialId();
 	}

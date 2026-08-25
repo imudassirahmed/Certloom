@@ -24,7 +24,7 @@ final class DomainImportCsvReader {
 	private $field_map;
 
 	/** @param array<string,array<string,mixed>>|null $field_map */
-	public function __construct( PrivateJobFileStore $files = null, array $field_map = null ) {
+	public function __construct( ?PrivateJobFileStore $files = null, ?array $field_map = null ) {
 		$this->files     = $files ?: new PrivateJobFileStore();
 		$this->field_map = null === $field_map ? $this->discover_field_map() : $field_map;
 	}

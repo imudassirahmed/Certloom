@@ -20,7 +20,7 @@ final class FactoryPresetService {
 	/** @var PresetCatalog */
 	private $catalog;
 
-	public function __construct( TemplateRepository $templates = null, PresetCatalog $catalog = null ) {
+	public function __construct( ?TemplateRepository $templates = null, ?PresetCatalog $catalog = null ) {
 		$this->templates = $templates ?: new TemplateRepository();
 		$this->catalog   = $catalog ?: new PresetCatalog();
 	}

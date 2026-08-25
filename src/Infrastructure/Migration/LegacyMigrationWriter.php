@@ -19,7 +19,7 @@ final class LegacyMigrationWriter implements LegacyMigrationTargetInterface {
 	private $events;
 	private $transaction;
 
-	public function __construct( RecipientRepository $recipients = null, CredentialRepository $credentials = null, EventRepository $events = null, Transaction $transaction = null ) {
+	public function __construct( ?RecipientRepository $recipients = null, ?CredentialRepository $credentials = null, ?EventRepository $events = null, ?Transaction $transaction = null ) {
 		$this->recipients = $recipients ?: new RecipientRepository();
 		$this->credentials = $credentials ?: new CredentialRepository();
 		$this->events = $events ?: new EventRepository();

@@ -332,7 +332,7 @@ class Ecapla_CertVerify_System_Status {
 	private static function domain_maintenance_check() {
 		$stored = (string) get_option( 'certloom_domain_maintenance_lock', '' );
 		if ( '' === $stored ) {
-			return self::check( 'domain_maintenance', __( 'Next-domain maintenance', 'certloom' ), 'good', __( 'Inactive', 'certloom' ), __( 'No gated credential-domain restore/cutover maintenance lease is present.', 'certloom' ) );
+			return self::check( 'domain_maintenance', __( 'Next-domain maintenance', 'certloom' ), 'good', _x( 'Inactive', 'maintenance status', 'certloom' ), __( 'No gated credential-domain restore/cutover maintenance lease is present.', 'certloom' ) );
 		}
 		$parts = explode( '|', $stored, 4 );
 		if ( count( $parts ) >= 4 ) {
@@ -359,7 +359,7 @@ class Ecapla_CertVerify_System_Status {
 	private static function domain_schema_lock_check() {
 		$stored = (string) get_option( 'certloom_domain_schema_lock', '' );
 		if ( '' === $stored ) {
-			return self::check( 'domain_schema_lock', __( 'Next-domain schema maintenance', 'certloom' ), 'good', __( 'Inactive', 'certloom' ), __( 'No gated credential-domain schema-maintenance lock is present.', 'certloom' ) );
+			return self::check( 'domain_schema_lock', __( 'Next-domain schema maintenance', 'certloom' ), 'good', _x( 'Inactive', 'maintenance status', 'certloom' ), __( 'No gated credential-domain schema-maintenance lock is present.', 'certloom' ) );
 		}
 		$parts = explode( '|', $stored, 2 );
 		$token = isset( $parts[0] ) ? (string) $parts[0] : '';

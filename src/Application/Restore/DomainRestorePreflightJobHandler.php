@@ -36,8 +36,8 @@ final class DomainRestorePreflightJobHandler implements JobHandlerInterface {
 		DomainRestoreStagingInterface $restore,
 		DomainRestoreMergeService $merge,
 		DomainRestoreWorkspace $workspace,
-		DomainGeneration $generation = null,
-		DomainBackupRepository $backup_repository = null,
+		?DomainGeneration $generation = null,
+		?DomainBackupRepository $backup_repository = null,
 		$batch_size = 200
 	) {
 		$this->restore           = $restore;

@@ -10,7 +10,7 @@ final class JobService {
 	private $jobs;
 	private $states;
 
-	public function __construct( JobRepositoryInterface $jobs, JobStateMachine $states = null ) {
+	public function __construct( JobRepositoryInterface $jobs, ?JobStateMachine $states = null ) {
 		$this->jobs   = $jobs;
 		$this->states = $states ?: new JobStateMachine();
 	}

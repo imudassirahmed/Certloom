@@ -26,7 +26,7 @@ final class DomainStateFingerprint {
 	/** @var DomainMaintenanceLock */
 	private $maintenance;
 
-	public function __construct( DomainBackupRepository $repository = null, DomainMaintenanceLock $maintenance = null ) {
+	public function __construct( ?DomainBackupRepository $repository = null, ?DomainMaintenanceLock $maintenance = null ) {
 		$this->repository  = $repository ?: new DomainBackupRepository();
 		$this->maintenance = $maintenance ?: new DomainMaintenanceLock();
 	}

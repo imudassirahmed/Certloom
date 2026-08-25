@@ -18,7 +18,7 @@ final class DomainRestorePreflightService {
 	private $row_validator;
 	private $format;
 
-	public function __construct( DomainBackupReader $reader = null, PublicCredentialId $public_ids = null, DomainRestoreRowValidator $row_validator = null, DomainBackupFormat $format = null ) {
+	public function __construct( ?DomainBackupReader $reader = null, ?PublicCredentialId $public_ids = null, ?DomainRestoreRowValidator $row_validator = null, ?DomainBackupFormat $format = null ) {
 		$this->reader = $reader ?: new DomainBackupReader();
 		$this->public_ids = $public_ids ?: new PublicCredentialId();
 		$this->row_validator = $row_validator ?: new DomainRestoreRowValidator( $this->public_ids );

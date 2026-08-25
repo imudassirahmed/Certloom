@@ -4,7 +4,7 @@ namespace Certloom\Application\Rendering;
 /** Hashes the canonical layout plus resolved immutable values and asset bytes. */
 final class RenderRequestFingerprint {
 	private $canonical;
-	public function __construct( CanonicalJson $canonical = null ) { $this->canonical = $canonical ?: new CanonicalJson(); }
+	public function __construct( ?CanonicalJson $canonical = null ) { $this->canonical = $canonical ?: new CanonicalJson(); }
 
 	/** @return string */
 	public function hash( $layout_hash, array $resolved_document ) {

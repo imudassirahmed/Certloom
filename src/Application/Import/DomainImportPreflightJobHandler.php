@@ -32,8 +32,8 @@ final class DomainImportPreflightJobHandler implements JobHandlerInterface {
 		DomainImportCsvReader $reader,
 		DomainImportStagingService $staging,
 		DomainImportStageInterface $stage,
-		DomainImportConsistencyGuard $consistency = null,
-		PrivateJobFileStore $files = null,
+		?DomainImportConsistencyGuard $consistency = null,
+		?PrivateJobFileStore $files = null,
 		$batch_size = 250
 	) {
 		$this->reader      = $reader;

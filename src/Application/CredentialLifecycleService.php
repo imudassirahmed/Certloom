@@ -29,7 +29,7 @@ final class CredentialLifecycleService {
 	/** @var TransactionInterface */
 	private $transaction;
 
-	public function __construct( CredentialRepositoryInterface $credentials = null, EventRepositoryInterface $events = null, StateMachine $machine = null, TransactionInterface $transaction = null ) {
+	public function __construct( ?CredentialRepositoryInterface $credentials = null, ?EventRepositoryInterface $events = null, ?StateMachine $machine = null, ?TransactionInterface $transaction = null ) {
 		$this->credentials = $credentials ?: new CredentialRepository();
 		$this->events      = $events ?: new EventRepository();
 		$this->machine     = $machine ?: new StateMachine();

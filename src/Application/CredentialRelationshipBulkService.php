@@ -13,7 +13,7 @@ final class CredentialRelationshipBulkService {
 	/** @var CredentialRelationshipRepositoryInterface */ private $credentials;
 	/** @var CredentialRelationshipCorrectionService */ private $corrections;
 
-	public function __construct( CredentialRelationshipRepositoryInterface $credentials = null, CredentialRelationshipCorrectionService $corrections = null ) {
+	public function __construct( ?CredentialRelationshipRepositoryInterface $credentials = null, ?CredentialRelationshipCorrectionService $corrections = null ) {
 		$this->credentials = $credentials ?: new CredentialRepository();
 		$this->corrections = $corrections ?: new CredentialRelationshipCorrectionService( $this->credentials );
 	}

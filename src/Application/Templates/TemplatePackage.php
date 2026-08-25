@@ -19,7 +19,7 @@ final class TemplatePackage {
 	/** @var CanonicalJson */
 	private $json;
 
-	public function __construct( LayoutValidator $layouts = null, CanonicalJson $json = null ) {
+	public function __construct( ?LayoutValidator $layouts = null, ?CanonicalJson $json = null ) {
 		$this->layouts = $layouts ?: new LayoutValidator();
 		$this->json    = $json ?: new CanonicalJson();
 	}

@@ -25,7 +25,7 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 	/** @var PublicCredentialId */
 	private $public_ids;
 
-	public function __construct( PublicCredentialId $public_ids = null ) {
+	public function __construct( ?PublicCredentialId $public_ids = null ) {
 		$this->public_ids = $public_ids ?: new PublicCredentialId();
 	}
 

@@ -33,9 +33,9 @@ final class DomainDataToolsCoordinator {
 	public function __construct(
 		JobQueue $queue,
 		JobRepositoryInterface $jobs,
-		PrivateJobFileStore $files = null,
-		DomainGeneration $generation = null,
-		DomainBackupRepository $backup_repository = null
+		?PrivateJobFileStore $files = null,
+		?DomainGeneration $generation = null,
+		?DomainBackupRepository $backup_repository = null
 	) {
 		$this->queue             = $queue;
 		$this->jobs              = $jobs;

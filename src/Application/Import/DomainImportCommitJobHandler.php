@@ -34,8 +34,8 @@ final class DomainImportCommitJobHandler implements JobHandlerInterface {
 		JobRepositoryInterface $jobs,
 		DomainImportStagedCommitService $commit,
 		DomainImportStageInterface $stage,
-		DomainImportConsistencyGuard $consistency = null,
-		DomainMaintenanceLock $maintenance = null,
+		?DomainImportConsistencyGuard $consistency = null,
+		?DomainMaintenanceLock $maintenance = null,
 		$batch_size = 200
 	) {
 		$this->jobs        = $jobs;

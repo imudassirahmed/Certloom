@@ -1297,32 +1297,32 @@ msgid "Move down"
 msgstr ""
 
 #: admin/views/frontend-manager.php:12
-#: blocks/certloom/index.js:67
+#: blocks/certloom/index.js:68
 msgid "Professional"
 msgstr ""
 
 #: admin/views/frontend-manager.php:13
-#: blocks/certloom/index.js:68
+#: blocks/certloom/index.js:69
 msgid "Meridian"
 msgstr ""
 
 #: admin/views/frontend-manager.php:14
-#: blocks/certloom/index.js:69
+#: blocks/certloom/index.js:70
 msgid "Halo"
 msgstr ""
 
 #: admin/views/frontend-manager.php:15
-#: blocks/certloom/index.js:70
+#: blocks/certloom/index.js:71
 msgid "Axis"
 msgstr ""
 
 #: admin/views/frontend-manager.php:16
-#: blocks/certloom/index.js:71
+#: blocks/certloom/index.js:72
 msgid "Nova"
 msgstr ""
 
 #: admin/views/frontend-manager.php:17
-#: blocks/certloom/index.js:72
+#: blocks/certloom/index.js:73
 msgid "Forge"
 msgstr ""
 
@@ -1343,7 +1343,7 @@ msgid "Block name:"
 msgstr ""
 
 #: admin/views/frontend-manager.php:30
-#: blocks/certloom/index.js:18
+#: blocks/certloom/index.js:19
 #: blocks/certloom/block.json:1
 msgid "Certloom – Certificate Verification"
 msgstr ""
@@ -1414,7 +1414,7 @@ msgid "Shortcode design reference"
 msgstr ""
 
 #: admin/views/frontend-manager.php:70
-#: blocks/certloom/index.js:64
+#: blocks/certloom/index.js:65
 msgid "Design"
 msgstr ""
 
@@ -1713,6 +1713,13 @@ msgstr ""
 
 #: admin/views/list-certificates.php:117
 msgid "Save columns"
+msgstr ""
+
+#: admin/views/list-certificates.php:128
+#: src/Infrastructure/Admin/DomainAdmin.php:774
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:612
+msgctxt "search field label"
+msgid "Search"
 msgstr ""
 
 #: admin/views/list-certificates.php:129
@@ -2848,44 +2855,44 @@ msgstr ""
 msgid "elementor"
 msgstr ""
 
-#: blocks/certloom/index.js:100
+#: blocks/certloom/index.js:101
 msgid "Search placeholder"
 msgstr ""
 
-#: blocks/certloom/index.js:102
+#: blocks/certloom/index.js:103
 msgid "Not-found message"
 msgstr ""
 
-#: blocks/certloom/index.js:113
+#: blocks/certloom/index.js:114
 msgid "This is the native WordPress block. Elementor is not required."
 msgstr ""
 
-#: blocks/certloom/index.js:19
+#: blocks/certloom/index.js:20
 msgid "Add certificate verification without requiring Elementor."
 msgstr ""
 
-#: blocks/certloom/index.js:22
+#: blocks/certloom/index.js:23
 #: blocks/certloom/block.json:1
 #: blocks/credential/block.json:1
 msgid "certificate"
 msgstr ""
 
-#: blocks/certloom/index.js:22
+#: blocks/certloom/index.js:23
 #: blocks/certloom/block.json:1
 msgid "credentials"
 msgstr ""
 
-#: blocks/certloom/index.js:22
+#: blocks/certloom/index.js:23
 #: blocks/certloom/block.json:1
 #: blocks/credential/block.json:1
 msgid "verification"
 msgstr ""
 
-#: blocks/certloom/index.js:87
+#: blocks/certloom/index.js:88
 msgid "Heading tag"
 msgstr ""
 
-#: blocks/certloom/index.js:98
+#: blocks/certloom/index.js:99
 msgid "Show description"
 msgstr ""
 
@@ -2973,7 +2980,7 @@ msgstr ""
 #: elementor/class-ecapla-certverify-elementor-widget.php:271
 #: elementor/class-ecapla-certverify-template-widgets.php:107
 #: elementor/class-ecapla-certverify-template-widgets.php:285
-#: blocks/certloom/index.js:97
+#: blocks/certloom/index.js:98
 #: blocks/credential/index.js:40
 msgid "Heading"
 msgstr ""
@@ -3006,7 +3013,7 @@ msgstr ""
 
 #: elementor/class-ecapla-certverify-elementor-widget.php:111
 #: elementor/class-ecapla-certverify-template-widgets.php:169
-#: blocks/certloom/index.js:101
+#: blocks/certloom/index.js:102
 msgid "Button text"
 msgstr ""
 
@@ -3018,7 +3025,7 @@ msgstr ""
 
 #: elementor/class-ecapla-certverify-elementor-widget.php:147
 #: elementor/class-ecapla-certverify-template-widgets.php:179
-#: blocks/certloom/index.js:105
+#: blocks/certloom/index.js:106
 msgid "Show status guide"
 msgstr ""
 
@@ -3055,7 +3062,7 @@ msgstr ""
 #: elementor/class-ecapla-certverify-elementor-widget.php:180
 #: elementor/class-ecapla-certverify-template-widgets.php:201
 #: admin/views/settings-manager.php:91
-#: blocks/certloom/index.js:109
+#: blocks/certloom/index.js:110
 msgid "Credit text"
 msgstr ""
 
@@ -3215,26 +3222,26 @@ msgstr ""
 #: elementor/class-ecapla-certverify-elementor-widget.php:847
 #: elementor/class-ecapla-certverify-template-widgets.php:220
 #: admin/views/settings-manager.php:94
-#: blocks/certloom/index.js:80
+#: blocks/certloom/index.js:81
 msgid "Left"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-elementor-widget.php:851
 #: elementor/class-ecapla-certverify-template-widgets.php:221
 #: admin/views/settings-manager.php:94
-#: blocks/certloom/index.js:81
+#: blocks/certloom/index.js:82
 msgid "Center"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-elementor-widget.php:855
 #: elementor/class-ecapla-certverify-template-widgets.php:222
 #: admin/views/settings-manager.php:94
-#: blocks/certloom/index.js:82
+#: blocks/certloom/index.js:83
 msgid "Right"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-elementor-widget.php:873
-#: blocks/certloom/index.js:62
+#: blocks/certloom/index.js:63
 msgid "Layout"
 msgstr ""
 
@@ -3250,7 +3257,7 @@ msgstr ""
 #: elementor/class-ecapla-certverify-elementor-widget.php:280
 #: src/Infrastructure/Admin/DomainAdmin.php:453
 #: src/Infrastructure/Admin/TemplateAdmin.php:433
-#: blocks/certloom/index.js:99
+#: blocks/certloom/index.js:100
 msgid "Description"
 msgstr ""
 
@@ -3295,22 +3302,22 @@ msgid "Search and messages"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-template-widgets.php:175
-#: blocks/certloom/index.js:104
+#: blocks/certloom/index.js:105
 msgid "Status guide and credit"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-template-widgets.php:187
-#: blocks/certloom/index.js:106
+#: blocks/certloom/index.js:107
 msgid "Guide subheading"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-template-widgets.php:188
-#: blocks/certloom/index.js:107
+#: blocks/certloom/index.js:108
 msgid "Guide heading"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-template-widgets.php:192
-#: blocks/certloom/index.js:108
+#: blocks/certloom/index.js:109
 msgid "Show credit"
 msgstr ""
 
@@ -3319,7 +3326,7 @@ msgid "Responsive styling"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-template-widgets.php:217
-#: blocks/certloom/index.js:77
+#: blocks/certloom/index.js:78
 msgid "Text alignment"
 msgstr ""
 
@@ -3506,23 +3513,23 @@ msgstr ""
 #: elementor/class-ecapla-certverify-template-widgets.php:70
 #: elementor/class-ecapla-certverify-template-widgets.php:138
 #: elementor/class-ecapla-certverify-template-widgets.php:286
-#: blocks/certloom/index.js:93
+#: blocks/certloom/index.js:94
 msgid "Content"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-template-widgets.php:75
-#: blocks/certloom/index.js:94
+#: blocks/certloom/index.js:95
 msgid "Show subheading"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-template-widgets.php:86
 #: elementor/class-ecapla-certverify-template-widgets.php:284
-#: blocks/certloom/index.js:95
+#: blocks/certloom/index.js:96
 msgid "Subheading"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-template-widgets.php:96
-#: blocks/certloom/index.js:96
+#: blocks/certloom/index.js:97
 msgid "Show heading"
 msgstr ""
 
@@ -5037,7 +5044,7 @@ msgstr ""
 #: includes/class-ecapla-certverify-onboarding.php:75
 #: includes/class-ecapla-certverify-public-router.php:149
 #: includes/class-ecapla-certverify-render.php:31
-#: blocks/certloom/index.js:47
+#: blocks/certloom/index.js:48
 msgid "Verify a Certificate"
 msgstr ""
 
@@ -5311,28 +5318,26 @@ msgid "Certificate verification search"
 msgstr ""
 
 #: includes/class-ecapla-certverify-render.php:30
-#: blocks/certloom/index.js:46
+#: blocks/certloom/index.js:47
 msgid "Certificate search"
 msgstr ""
 
 #: includes/class-ecapla-certverify-render.php:32
-#: blocks/certloom/index.js:48
+#: blocks/certloom/index.js:49
 msgid "Enter the certificate number exactly as it appears on the face of the certificate. No login required."
 msgstr ""
 
 #: includes/class-ecapla-certverify-render.php:33
-#: blocks/certloom/index.js:49
+#: blocks/certloom/index.js:50
 msgid "e.g. CERT-9001-2026-00142"
 msgstr ""
 
 #: includes/class-ecapla-certverify-render.php:34
-#: admin/views/list-certificates.php:128
 #: src/Infrastructure/Admin/DomainAdmin.php:774
-#: src/Infrastructure/Admin/DomainAdmin.php:774
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:612
 #: src/Infrastructure/Admin/TemplateAdmin.php:202
 #: src/Infrastructure/Admin/TemplateAdmin.php:258
-#: blocks/certloom/index.js:50
+#: blocks/certloom/index.js:51
+msgctxt "search action button"
 msgid "Search"
 msgstr ""
 
@@ -5346,7 +5351,7 @@ msgid "Verified credential"
 msgstr ""
 
 #: includes/class-ecapla-certverify-render.php:35
-#: blocks/certloom/index.js:51
+#: blocks/certloom/index.js:52
 msgid "We couldn't find a certificate with that number. Double check it matches exactly what's printed on the certificate."
 msgstr ""
 
@@ -5356,7 +5361,7 @@ msgstr ""
 
 #: includes/class-ecapla-certverify-render.php:43
 #: includes/class-ecapla-certverify-render.php:248
-#: blocks/certloom/index.js:52
+#: blocks/certloom/index.js:53
 msgid "Certificate status guide"
 msgstr ""
 
@@ -5364,7 +5369,7 @@ msgstr ""
 #: includes/class-ecapla-certverify-render.php:77
 #: includes/class-ecapla-certverify-settings.php:17
 #: admin/views/settings-manager.php:91
-#: blocks/certloom/index.js:54
+#: blocks/certloom/index.js:55
 msgid "Verification powered by Certloom."
 msgstr ""
 
@@ -5798,12 +5803,7 @@ msgstr ""
 
 #: includes/class-ecapla-certverify-system-status.php:335
 #: includes/class-ecapla-certverify-system-status.php:362
-#: src/Infrastructure/Admin/DomainAdmin.php:250
-#: src/Infrastructure/Admin/DomainAdmin.php:264
-#: src/Infrastructure/Admin/DomainAdmin.php:762
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:181
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:232
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:612
+msgctxt "maintenance status"
 msgid "Inactive"
 msgstr ""
 
@@ -6870,7 +6870,18 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:219
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:232
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:612
+msgctxt "entity status"
 msgid "Active"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:250
+#: src/Infrastructure/Admin/DomainAdmin.php:264
+#: src/Infrastructure/Admin/DomainAdmin.php:762
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:181
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:232
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:612
+msgctxt "entity status"
+msgid "Inactive"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:256

@@ -18,7 +18,7 @@ final class LegacyMigrationCommitService {
 	/** @var int */
 	private $error_detail_limit;
 
-	public function __construct( LegacyMigrationTargetInterface $target, LegacyCertificateMapper $mapper = null, $error_detail_limit = 100 ) {
+	public function __construct( LegacyMigrationTargetInterface $target, ?LegacyCertificateMapper $mapper = null, $error_detail_limit = 100 ) {
 		$this->target = $target;
 		$this->mapper = $mapper ?: new LegacyCertificateMapper();
 		$this->error_detail_limit = max( 1, (int) $error_detail_limit );

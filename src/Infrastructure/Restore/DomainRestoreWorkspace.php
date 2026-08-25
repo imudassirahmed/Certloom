@@ -32,7 +32,7 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 	/** @var DomainRestoreMapRepository */
 	private $restore_maps;
 
-	public function __construct( DomainMaintenanceLock $maintenance = null, DomainGeneration $generation = null, DomainRestoreMapRepository $restore_maps = null ) {
+	public function __construct( ?DomainMaintenanceLock $maintenance = null, ?DomainGeneration $generation = null, ?DomainRestoreMapRepository $restore_maps = null ) {
 		$this->maintenance  = $maintenance ?: new DomainMaintenanceLock();
 		$this->generation   = $generation ?: new DomainGeneration();
 		$this->restore_maps = $restore_maps ?: new DomainRestoreMapRepository();

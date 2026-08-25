@@ -17,7 +17,7 @@ final class PublicVerificationGate {
 	/** @var callable */
 	private $schema_verifier;
 
-	public function __construct( callable $schema_verifier = null ) {
+	public function __construct( ?callable $schema_verifier = null ) {
 		$this->schema_verifier = $schema_verifier ?: array( SchemaManager::class, 'verify_health_now' );
 	}
 

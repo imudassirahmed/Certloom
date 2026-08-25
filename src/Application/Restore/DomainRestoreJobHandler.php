@@ -23,7 +23,7 @@ final class DomainRestoreJobHandler implements JobHandlerInterface {
 
 	public function __construct(
 		DomainRestoreStagingInterface $restore,
-		DomainRestoreConfirmationValidator $confirmation = null,
+		?DomainRestoreConfirmationValidator $confirmation = null,
 		$batch_size = 200
 	) {
 		$this->restore      = $restore;

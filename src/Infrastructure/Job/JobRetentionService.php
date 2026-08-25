@@ -30,10 +30,10 @@ final class JobRetentionService {
 	private $files;
 
 	public function __construct(
-		JobRepository $jobs = null,
-		DomainImportStageRepository $imports = null,
-		DomainRestoreMapRepository $restore_maps = null,
-		PrivateJobFileStore $files = null
+		?JobRepository $jobs = null,
+		?DomainImportStageRepository $imports = null,
+		?DomainRestoreMapRepository $restore_maps = null,
+		?PrivateJobFileStore $files = null
 	) {
 		$this->jobs         = $jobs ?: new JobRepository();
 		$this->imports      = $imports ?: new DomainImportStageRepository();
