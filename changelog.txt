@@ -1,3 +1,10 @@
+1.6.47
+- Fix Credential Profile Gutenberg localization by removing literal English defaults for translatable heading/not-found attributes from block metadata.
+- Resolve editor defaults through `wp.i18n` and retain translated PHP render defaults, while preserving explicitly saved custom block copy.
+- Cache-bust only the changed Credential Profile block metadata/editor asset to 1.6.47.
+- Record the current-authority legacy registry's missing `created_at`/`issue_date` indexes as a `PERF-01` real-database EXPLAIN/migration follow-up instead of shipping an unproven schema alteration.
+- Keep renderer/database authority boundaries closed; `PDF-04`, normalized-domain acceptance-v4, Template publication, authoritative Preview and Designer remain unchanged.
+
 1.6.46
 - Close the final normalized-domain acceptance publication TOCTOU gap by retaining one owner-matched maintenance lease from the complete graph fingerprint through atomic publication.
 - Revalidate the exact base-gate bundle, Certloom runtime payload, WordPress/PHP/database environment, and all six stored proof/report bytes while the publication boundary is retained.

@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.46
+Stable tag: 1.6.47
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.46: `PDF-04` still requires the genuine seven-fixture PDF/PNG/JPEG execution. In parallel, the final normalized-domain acceptance collector now keeps one owner-matched `DomainMaintenanceLock` active from the final full graph fingerprint through atomic evidence publication, revalidates the base-gate bundle, exact runtime payload/environment and all six stored proof bytes while that boundary is retained, and withdraws any newly published acceptance directory if lock cleanup cannot be confirmed. Acceptance bundle/index v4 makes older publication-unlocked evidence stale. No real MySQL/MariaDB run is claimed by this release; all three normalized-domain authority flags stay false. Concrete mPDF/GD candidates remain unaccepted and `accepted.json` remains absent, so production artifacts, Template publication, authoritative Preview and Designer output stay disabled until the genuine renderer-capable run passes.
+> Development note for 1.6.47: the Credential Profile Gutenberg block no longer stores translatable default copy as literal English schema defaults. Editor defaults now come from `wp.i18n`, server defaults remain translated at render time, and the changed editor asset is cache-busted to 1.6.47. `PDF-04` and the real normalized-domain WordPress/MySQL-or-MariaDB acceptance-v4 ceremony remain genuine external gates; all three normalized-domain authority flags stay false, concrete mPDF/GD candidates remain unaccepted, and `accepted.json` remains absent.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -129,6 +129,13 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.47 =
+* Fix Credential Profile block localization so translatable default heading/not-found copy is resolved at runtime instead of being pinned as literal English `block.json` attribute defaults.
+* Keep editor and server defaults aligned through `wp.i18n` and PHP translation functions while preserving user-saved custom block text unchanged.
+* Bump only the changed Credential Profile block metadata/editor asset version to 1.6.47 so WordPress/browser caches cannot retain the old editor script.
+* Record the legacy-registry `created_at`/`issue_date` index gap as a `PERF-01` real-database EXPLAIN/migration follow-up; do not ship an unproven schema change without MySQL/MariaDB execution.
+* Keep `PDF-04`, normalized-domain acceptance-v4, Template publication, authoritative Preview and Designer authority unchanged and fail-closed.
 
 = 1.6.46 =
 * Close the final normalized-domain acceptance publication TOCTOU gap by retaining one owner-matched maintenance lease from the complete graph fingerprint through atomic publication.

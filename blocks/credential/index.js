@@ -18,21 +18,28 @@
 		category: 'widgets',
 		attributes: {
 			number: { type: 'string', default: '' },
-			heading: { type: 'string', default: 'Credential profile' },
+			heading: { type: 'string' },
 			headingTag: { type: 'string', default: 'h2' },
-			notFoundText: { type: 'string', default: 'This credential could not be found or is not available.' }
+			notFoundText: { type: 'string' }
 		},
 		edit: function ( props ) {
 			var a = props.attributes;
 			var set = props.setAttributes;
+			var textDefaults = {
+				heading: __( 'Credential profile', 'certloom' ),
+				notFoundText: __( 'This credential could not be found or is not available.', 'certloom' )
+			};
+			var textValue = function ( key ) {
+				return typeof a[ key ] === 'string' ? a[ key ] : textDefaults[ key ];
+			};
 			var blockProps = useBlockProps ? useBlockProps( { className: 'wp-block-certloom-credential' } ) : { className: 'wp-block-certloom-credential' };
 			return el( Fragment, {},
 				el( InspectorControls, {},
 					el( PanelBody, { title: __( 'Credential', 'certloom' ), initialOpen: true },
 						el( TextControl, { label: __( 'Certificate number', 'certloom' ), value: a.number || '', onChange: function ( value ) { set( { number: value } ); } } ),
-						el( TextControl, { label: __( 'Heading', 'certloom' ), value: a.heading || '', onChange: function ( value ) { set( { heading: value } ); } } ),
+						el( TextControl, { label: __( 'Heading', 'certloom' ), value: textValue( 'heading' ), onChange: function ( value ) { set( { heading: value } ); } } ),
 						el( SelectControl, { label: __( 'Heading level', 'certloom' ), value: a.headingTag || 'h2', options: [ { label: 'H2', value: 'h2' }, { label: 'H3', value: 'h3' }, { label: 'H4', value: 'h4' }, { label: 'H5', value: 'h5' }, { label: 'H6', value: 'h6' } ], onChange: function ( value ) { set( { headingTag: value } ); } } ),
-						el( TextareaControl, { label: __( 'Not found message', 'certloom' ), value: a.notFoundText || '', onChange: function ( value ) { set( { notFoundText: value } ); } } )
+						el( TextareaControl, { label: __( 'Not found message', 'certloom' ), value: textValue( 'notFoundText' ), onChange: function ( value ) { set( { notFoundText: value } ); } } )
 					)
 				),
 				el( 'div', blockProps,
