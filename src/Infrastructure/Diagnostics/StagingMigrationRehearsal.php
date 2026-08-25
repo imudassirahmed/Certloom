@@ -33,7 +33,7 @@ final class StagingMigrationRehearsal {
 	const RESULT_OPTION  = 'certloom_staging_migration_rehearsal';
 	const LOCK_OPTION    = 'certloom_staging_migration_rehearsal_lock';
 	const RESULT_SCHEMA  = 'certloom-staging-migration-rehearsal';
-	const RESULT_VERSION = 2;
+	const RESULT_VERSION = 3;
 	const MAX_AGE        = 7 * DAY_IN_SECONDS;
 	const LOCK_TTL       = 2 * MINUTE_IN_SECONDS;
 	const MAX_SECONDS    = 4.0;
@@ -126,6 +126,8 @@ final class StagingMigrationRehearsal {
 		$source = new LegacyCertificateRepository();
 		$snapshot = $source->snapshot();
 		if ( is_wp_error( $snapshot ) ) { return $snapshot; }
+		$runtime_environment = RuntimeEnvironmentEvidence::current();
+		if ( ! is_array( $runtime_environment ) ) { return new \WP_Error( 'certloom_staging_rehearsal_runtime_environment_unavailable', __( 'Certloom could not identify the exact WordPress/PHP/database environment for this staging rehearsal evidence.', 'certloom' ) ); }
 		$preflight = LegacyMigrationPreflightProof::get_last_result();
 		if ( ! is_array( $preflight ) ) {
 			return new \WP_Error( 'certloom_staging_rehearsal_preflight_missing', __( 'Run a fresh passing populated migration preflight before starting the staging commit rehearsal.', 'certloom' ) );
@@ -136,6 +138,7 @@ final class StagingMigrationRehearsal {
 			'version'                   => self::RESULT_VERSION,
 			'plugin_version'            => defined( 'ECAPLA_CERTVERIFY_VERSION' ) ? (string) ECAPLA_CERTVERIFY_VERSION : '',
 			'runtime_payload'           => $runtime_payload,
+			'runtime_environment'       => $runtime_environment,
 			'environment'               => $environment,
 			'status'                    => 'running',
 			'phase'                     => 'official_preflight',
@@ -454,6 +457,9 @@ final class StagingMigrationRehearsal {
 			if ( ! RuntimePayloadEvidence::matches_current( $state['runtime_payload'] ?? null ) ) {
 				return new \WP_Error( 'certloom_staging_rehearsal_runtime_payload_changed', __( 'Certloom production bytes changed after the staging migration rehearsal started. Reclone or restore staging and rerun the rehearsal with one exact plugin payload.', 'certloom' ) );
 			}
+			if ( ! RuntimeEnvironmentEvidence::matches_current( $state['runtime_environment'] ?? null ) ) {
+				return new \WP_Error( 'certloom_staging_rehearsal_runtime_environment_changed', __( 'The WordPress/PHP/database environment changed after this rehearsal started. Reclone or restore staging and rerun the rehearsal on one fixed runtime environment.', 'certloom' ) );
+			}
 		}
 		if ( ( defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) && CERTLOOM_DOMAIN_WRITE_PATHS_READY ) || ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) || ( defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) && CERTLOOM_DOMAIN_DATA_TOOLS_READY ) ) {
 			return new \WP_Error( 'certloom_staging_rehearsal_feature_gate_active', __( 'Staging migration rehearsal is available only before future-domain feature gates are enabled.', 'certloom' ) );
@@ -497,7 +503,7 @@ final class StagingMigrationRehearsal {
 	public static function get_last_result() {
 		$result = self::get_raw_result();
 		if ( ! is_array( $result ) || self::RESULT_SCHEMA !== (string) ( $result['schema'] ?? '' ) || self::RESULT_VERSION !== (int) ( $result['version'] ?? 0 ) ) { return null; }
-		if ( ! is_array( RuntimePayloadEvidence::normalize( $result['runtime_payload'] ?? null ) ) ) { return null; }
+		if ( ! is_array( RuntimePayloadEvidence::normalize( $result['runtime_payload'] ?? null ) ) || ! is_array( RuntimeEnvironmentEvidence::normalize( $result['runtime_environment'] ?? null ) ) ) { return null; }
 		$status = sanitize_key( (string) ( $result['status'] ?? '' ) );
 		$phase = sanitize_key( (string) ( $result['phase'] ?? '' ) );
 		if ( ! in_array( $status, array( 'running', 'passed', 'failed' ), true ) || ! in_array( $phase, array( 'official_preflight', 'commit', 'verify', 'idempotency', 'complete' ), true ) ) { return null; }
@@ -524,7 +530,7 @@ final class StagingMigrationRehearsal {
 		if ( 'failed' === $status ) { return 'failed'; }
 		$current_version = defined( 'ECAPLA_CERTVERIFY_VERSION' ) ? (string) ECAPLA_CERTVERIFY_VERSION : '';
 		$checked_at = absint( $result['checked_at'] ?? 0 );
-		if ( '' === $current_version || ! hash_equals( $current_version, (string) $result['plugin_version'] ) || ! RuntimePayloadEvidence::matches_current( $result['runtime_payload'] ?? null ) || ! $checked_at || $checked_at > time() + 300 || time() - $checked_at > self::MAX_AGE || ! hash_equals( (string) $result['target_generation'], ( new DomainGeneration() )->current() ) || LegacyMigrationState::COMPLETE !== ( new LegacyMigrationState() )->status() ) { return 'stale'; }
+		if ( '' === $current_version || ! hash_equals( $current_version, (string) $result['plugin_version'] ) || ! RuntimePayloadEvidence::matches_current( $result['runtime_payload'] ?? null ) || ! RuntimeEnvironmentEvidence::matches_current( $result['runtime_environment'] ?? null ) || ! $checked_at || $checked_at > time() + 300 || time() - $checked_at > self::MAX_AGE || ! hash_equals( (string) $result['target_generation'], ( new DomainGeneration() )->current() ) || LegacyMigrationState::COMPLETE !== ( new LegacyMigrationState() )->status() ) { return 'stale'; }
 		return 'passed';
 	}
 
@@ -539,6 +545,7 @@ final class StagingMigrationRehearsal {
 			sprintf( 'Phase: %s', strtoupper( sanitize_key( (string) ( $result['phase'] ?? 'unknown' ) ) ) ),
 			sprintf( 'Certloom version: %s', sanitize_text_field( (string) ( $result['plugin_version'] ?? '' ) ) ),
 			sprintf( 'Certloom payload SHA-256: %s', sanitize_text_field( (string) ( $result['runtime_payload']['sha256'] ?? '' ) ) ),
+			sprintf( 'Runtime environment SHA-256: %s', RuntimeEnvironmentEvidence::sha256( $result['runtime_environment'] ?? null ) ),
 			sprintf( 'WordPress environment type: %s', sanitize_key( (string) ( $result['environment'] ?? '' ) ) ),
 			sprintf( 'Frozen legacy rows: %d', absint( $result['source_count'] ?? 0 ) ),
 			sprintf( 'Official preflight mapped: %d', absint( $result['official_preflight_total'] ?? 0 ) ),

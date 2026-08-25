@@ -5,6 +5,7 @@ namespace {
     define( 'DAY_IN_SECONDS', 86400 );
     define( 'MINUTE_IN_SECONDS', 60 );
     define( 'ECAPLA_CERTVERIFY_VERSION', '1.5.14-test' );
+$GLOBALS['wp_version'] = '6.6-test';
     define( 'CERTLOOM_ALLOW_STAGING_MIGRATION_REHEARSAL', true );
     $GLOBALS['smr_options'] = array();
     $GLOBALS['smr_source'] = array( 'count' => 2, 'max_id' => 9, 'generation' => 'legacy-gen-a' );
@@ -48,21 +49,27 @@ namespace Certloom\Infrastructure\Diagnostics {
 }
 
 namespace {
-    require dirname( __DIR__ ) . '/src/Application/Rendering/CanonicalJson.php';
+    
+function is_multisite(){ return false; }
+$GLOBALS['wpdb'] = new class { public function db_server_info(){ return 'MySQL test-server'; } public function db_version(){ return '8.0.36'; } };
+require dirname( __DIR__ ) . '/src/Application/Rendering/CanonicalJson.php';
     require dirname( __DIR__ ) . '/src/Application/Rendering/RuntimePayloadFingerprint.php';
     require dirname( __DIR__ ) . '/src/Infrastructure/Diagnostics/RuntimePayloadEvidence.php';
+	require dirname( __DIR__ ) . '/src/Infrastructure/Diagnostics/RuntimeEnvironmentEvidence.php';
     require dirname( __DIR__ ) . '/src/Infrastructure/Diagnostics/StagingMigrationRehearsal.php';
     use Certloom\Infrastructure\Diagnostics\StagingMigrationRehearsal;
     use Certloom\Infrastructure\Diagnostics\RuntimePayloadEvidence;
+    use Certloom\Infrastructure\Diagnostics\RuntimeEnvironmentEvidence;
 
     smr_same( true, StagingMigrationRehearsal::available(), 'staging rehearsal requires allowed environment plus explicit opt-in' );
     $now = time();
     $payload=RuntimePayloadEvidence::current(); smr_same(true,is_array($payload),'current payload identity available');
+    $runtime_environment=RuntimeEnvironmentEvidence::current(); smr_same(true,is_array($runtime_environment),'current runtime environment identity available');
     $GLOBALS['smr_options'][ StagingMigrationRehearsal::RESULT_OPTION ] = array(
         'schema' => StagingMigrationRehearsal::RESULT_SCHEMA,
         'version' => StagingMigrationRehearsal::RESULT_VERSION,
         'plugin_version' => ECAPLA_CERTVERIFY_VERSION,
-        'runtime_payload' => $payload,
+        'runtime_payload' => $payload, 'runtime_environment' => $runtime_environment,
         'environment' => 'staging',
         'status' => 'passed',
         'phase' => 'complete',
@@ -92,6 +99,9 @@ namespace {
     $valid_state=$GLOBALS['smr_options'][ StagingMigrationRehearsal::RESULT_OPTION ];
     $GLOBALS['smr_options'][ StagingMigrationRehearsal::RESULT_OPTION ]['runtime_payload']['sha256']=str_repeat('e',64);
     smr_same( 'stale', StagingMigrationRehearsal::evidence_state(), 'same-version production-byte change stales migration rehearsal evidence' );
+    $GLOBALS['smr_options'][ StagingMigrationRehearsal::RESULT_OPTION ]=$valid_state;
+    $GLOBALS['smr_options'][ StagingMigrationRehearsal::RESULT_OPTION ]['runtime_environment']['db_version']='8.0.99';
+    smr_same( 'stale', StagingMigrationRehearsal::evidence_state(), 'same payload on a different runtime environment stales migration rehearsal evidence' );
     $GLOBALS['smr_options'][ StagingMigrationRehearsal::RESULT_OPTION ]=$valid_state;
     $report = StagingMigrationRehearsal::get_text_report();
     if ( false !== strpos( $report, 'CERT-SECRET' ) || false !== strpos( $report, '/var/www' ) ) { throw new \RuntimeException( 'Staging report leaked sensitive fixture data.' ); }

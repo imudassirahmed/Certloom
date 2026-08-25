@@ -5,6 +5,7 @@ define( 'ARRAY_A', 'ARRAY_A' );
 define( 'MINUTE_IN_SECONDS', 60 );
 define( 'DAY_IN_SECONDS', 86400 );
 define( 'ECAPLA_CERTVERIFY_VERSION', '1.5.14-test' );
+$GLOBALS['wp_version'] = '6.6-test';
 define( 'DB_USER', 'secret_user_9384' );
 define( 'DB_PASSWORD', 'secret_pass_9384' );
 define( 'DB_NAME', 'secret_db_9384' );
@@ -45,6 +46,8 @@ class wpdb {
 
 	public function __construct( $user = null, $pass = null, $name = null, $host = null ) { $this->secondary = isset( $GLOBALS['wpdb'] ) && $GLOBALS['wpdb'] !== $this; }
 	public function suppress_errors( $value = true ) { $old = $this->suppressed; $this->suppressed = (bool) $value; return $old; }
+	public function db_server_info() { return 'MySQL test-server'; }
+	public function db_version() { return '8.0.36'; }
 	public function get_charset_collate() { return 'DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'; }
 	public function esc_like( $v ) { return (string) $v; }
 	public function prepare( $sql, ...$args ) { return array( 'sql' => $sql, 'args' => $args ); }
@@ -96,9 +99,13 @@ class wpdb {
 
 $GLOBALS['wpdb'] = new wpdb();
 class Ecapla_CertVerify_Backup { const MAINTENANCE_LOCK_OPTION = 'certverify_restore_maintenance_lock'; }
+
+function is_multisite(){ return false; }
+function wp_get_environment_type(){ return 'staging'; }
 require_once dirname( __DIR__ ) . '/src/Application/Rendering/CanonicalJson.php';
 require_once dirname( __DIR__ ) . '/src/Application/Rendering/RuntimePayloadFingerprint.php';
 require_once dirname( __DIR__ ) . '/src/Infrastructure/Diagnostics/RuntimePayloadEvidence.php';
+require_once dirname( __DIR__ ) . '/src/Infrastructure/Diagnostics/RuntimeEnvironmentEvidence.php';
 require_once dirname( __DIR__ ) . '/includes/class-ecapla-certverify-database-proof.php';
 
 function dp_assert( $condition, $message ) { if ( ! $condition ) throw new RuntimeException( $message ); }

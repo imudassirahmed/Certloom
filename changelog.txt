@@ -1,3 +1,10 @@
+1.6.43
+- Add canonical RuntimeEnvironmentEvidence for exact WordPress/PHP/database environment binding across normalized-domain database proof, preflight, migration, restore, cutover, and real-host acceptance evidence.
+- Advance database proof to v3, gated-domain acceptance to v6, and preflight/staging migration/restore/cutover evidence to v3 so historical environment-unbound results fail closed.
+- Stop active multi-slice normalized-domain rehearsals if WordPress/PHP/database environment identity changes while the run is in progress.
+- Make the real-host acceptance collector reject stored evidence from a different runtime/database environment even when semantic version and production payload are identical.
+- Add dedicated runtime-environment and cross-environment regressions; keep all normalized-domain authority flags and renderer authority closed until genuine external gates pass.
+
 1.6.42
 - Add a canonical source-only real WordPress/MySQL acceptance ceremony so four gate transcripts are captured under one exact run identity instead of being manually stitched together.
 - Advance real-host gate evidence to v2 with exact Certloom payload, exact gate/helper hashes, non-sensitive WordPress/PHP/database environment, and a machine-readable EVIDENCE_JSON record.

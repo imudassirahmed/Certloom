@@ -15,6 +15,14 @@ function certloom_db_canonical_json( $value ) {
 	return $json;
 }
 function certloom_db_environment_snapshot() {
+	if ( class_exists( '\\Certloom\\Infrastructure\\Diagnostics\\RuntimeEnvironmentEvidence' ) ) {
+		$current = \Certloom\Infrastructure\Diagnostics\RuntimeEnvironmentEvidence::current();
+		if ( is_array( $current ) ) {
+			unset( $current['schema'], $current['version'] );
+			return $current;
+		}
+		throw new RuntimeException( 'Could not establish canonical Certloom runtime-environment evidence.' );
+	}
 	global $wpdb, $wp_version;
 	$db_server = ''; $db_version = '';
 	if ( is_object( $wpdb ) ) {
@@ -116,6 +124,9 @@ function certloom_db_build_final_acceptance( array $base, $plugin_version, array
 	foreach($required as $name=>$schema){ $item=$stored[$name]; $result=$item['result']??null;
 		if(!is_array($item)||'passed'!==(string)($item['state']??'')||!is_array($result)){throw new RuntimeException('Stored normalized-domain evidence is not currently passed: '.$name);}
 		if($schema!==(string)($result['schema']??'')||!hash_equals((string)$plugin_version,(string)($result['plugin_version']??''))||!certloom_db_payload_equals($payload,$result['runtime_payload']??null)){throw new RuntimeException('Stored normalized-domain evidence identity mismatch: '.$name);}
+		$stored_environment=$result['runtime_environment']??null;if(!is_array($stored_environment)){throw new RuntimeException('Stored normalized-domain runtime-environment evidence is missing: '.$name);}
+		$normalized_stored_environment=$stored_environment;if(isset($normalized_stored_environment['schema'],$normalized_stored_environment['version'])){unset($normalized_stored_environment['schema'],$normalized_stored_environment['version']);}
+		if(certloom_db_canonical_json($normalized_stored_environment)!==certloom_db_canonical_json($environment)){throw new RuntimeException('Stored normalized-domain evidence was produced on a different WordPress/PHP/database environment: '.$name);}
 		$report = isset($item['report']) && is_string($item['report']) ? trim($item['report']) : '';
 		if(''===$report || strlen($report)>65536){throw new RuntimeException('Privacy-safe normalized-domain evidence report is unavailable: '.$name);}
 		$out[$name]=array('schema'=>$schema,'version'=>(int)($result['version']??0),'checked_at'=>(int)($result['checked_at']??$result['updated_at']??0),'result_sha256'=>hash('sha256',certloom_db_canonical_json($result)),'report_sha256'=>hash('sha256',$report."\n"),'report'=>$report);

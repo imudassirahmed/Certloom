@@ -29,7 +29,7 @@ final class StagingRestoreRehearsal {
 	const RESULT_OPTION  = 'certloom_staging_restore_rehearsal';
 	const LOCK_OPTION    = 'certloom_staging_restore_rehearsal_lock';
 	const RESULT_SCHEMA  = 'certloom-staging-restore-rehearsal';
-	const RESULT_VERSION = 2;
+	const RESULT_VERSION = 3;
 	const MAX_AGE        = 7 * DAY_IN_SECONDS;
 	const LOCK_TTL       = 2 * MINUTE_IN_SECONDS;
 	const MAX_SECONDS    = 4.0;
@@ -116,6 +116,8 @@ final class StagingRestoreRehearsal {
 		if ( is_wp_error( $initial ) ) { return $initial; }
 		$runtime_payload = RuntimePayloadEvidence::current();
 		if ( ! is_array( $runtime_payload ) ) { return new \WP_Error( 'certloom_staging_restore_runtime_payload_unavailable', __( 'Certloom could not fingerprint the exact installed plugin payload for staging restore evidence.', 'certloom' ) ); }
+		$runtime_environment = RuntimeEnvironmentEvidence::current();
+		if ( ! is_array( $runtime_environment ) ) { return new \WP_Error( 'certloom_staging_restore_runtime_environment_unavailable', __( 'Certloom could not identify the exact WordPress/PHP/database environment for this staging rehearsal evidence.', 'certloom' ) ); }
 		$migration = StagingMigrationRehearsal::get_last_result();
 		$source = ( new LegacyCertificateRepository() )->snapshot();
 		if ( ! is_array( $migration ) || is_wp_error( $source ) ) {
@@ -130,6 +132,7 @@ final class StagingRestoreRehearsal {
 			'version'                => self::RESULT_VERSION,
 			'plugin_version'         => defined( 'ECAPLA_CERTVERIFY_VERSION' ) ? (string) ECAPLA_CERTVERIFY_VERSION : '',
 			'runtime_payload'        => $runtime_payload,
+			'runtime_environment'       => $runtime_environment,
 			'environment'            => sanitize_key( (string) wp_get_environment_type() ),
 			'status'                 => 'running',
 			'phase'                  => 'baseline_fingerprint',
@@ -411,6 +414,9 @@ final class StagingRestoreRehearsal {
 			if ( ! RuntimePayloadEvidence::matches_current( $state['runtime_payload'] ?? null ) ) {
 				return new \WP_Error( 'certloom_staging_restore_runtime_payload_changed', __( 'Certloom production bytes changed after the staging restore rehearsal started. Reclone or restore staging and rerun the rehearsal with one exact plugin payload.', 'certloom' ) );
 			}
+			if ( ! RuntimeEnvironmentEvidence::matches_current( $state['runtime_environment'] ?? null ) ) {
+				return new \WP_Error( 'certloom_staging_restore_runtime_environment_changed', __( 'The WordPress/PHP/database environment changed after this rehearsal started. Reclone or restore staging and rerun the rehearsal on one fixed runtime environment.', 'certloom' ) );
+			}
 		}
 		if ( ( defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) && CERTLOOM_DOMAIN_WRITE_PATHS_READY ) || ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) || ( defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) && CERTLOOM_DOMAIN_DATA_TOOLS_READY ) ) {
 			return new \WP_Error( 'certloom_staging_restore_feature_gate_active', __( 'The staging restore rehearsal is available only before future-domain feature gates are enabled.', 'certloom' ) );
@@ -446,7 +452,7 @@ final class StagingRestoreRehearsal {
 	public static function get_last_result() {
 		$result = self::get_raw_result();
 		if ( ! is_array( $result ) || self::RESULT_SCHEMA !== (string) ( $result['schema'] ?? '' ) || self::RESULT_VERSION !== (int) ( $result['version'] ?? 0 ) ) { return null; }
-		if ( ! is_array( RuntimePayloadEvidence::normalize( $result['runtime_payload'] ?? null ) ) ) { return null; }
+		if ( ! is_array( RuntimePayloadEvidence::normalize( $result['runtime_payload'] ?? null ) ) || ! is_array( RuntimeEnvironmentEvidence::normalize( $result['runtime_environment'] ?? null ) ) ) { return null; }
 		$status = sanitize_key( (string) ( $result['status'] ?? '' ) );
 		$phase = sanitize_key( (string) ( $result['phase'] ?? '' ) );
 		$phases = array( 'baseline_fingerprint', 'backup', 'replace_stage', 'replace_commit', 'replace_fingerprint', 'merge_stage', 'merge_build', 'merge_commit', 'merge_fingerprint', 'rollback_stage', 'rollback_fault_commit', 'rollback_fingerprint', 'cleanup', 'complete' );
@@ -477,7 +483,7 @@ final class StagingRestoreRehearsal {
 		$current = ( new LegacyCertificateRepository() )->snapshot();
 		$cutover = new DomainCutoverState();
 		$gates_off = ! ( defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) && CERTLOOM_DOMAIN_WRITE_PATHS_READY ) && ! ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) && ! ( defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) && CERTLOOM_DOMAIN_DATA_TOOLS_READY );
-		if ( '' === $current_version || ! hash_equals( $current_version, (string) $result['plugin_version'] ) || ! RuntimePayloadEvidence::matches_current( $result['runtime_payload'] ?? null ) || ! $checked_at || $checked_at > time() + 300 || time() - $checked_at > self::MAX_AGE || ! is_array( $current ) || absint( $result['source_count'] ) !== absint( $current['count'] ?? -1 ) || absint( $result['source_max_id'] ) !== absint( $current['max_id'] ?? -1 ) || ! hash_equals( (string) $result['source_generation'], (string) ( $current['generation'] ?? '' ) ) || LegacyMigrationState::COMPLETE !== ( new LegacyMigrationState() )->status() || ! $gates_off || ! $cutover->is_clean_legacy_state() ) { return 'stale'; }
+		if ( '' === $current_version || ! hash_equals( $current_version, (string) $result['plugin_version'] ) || ! RuntimePayloadEvidence::matches_current( $result['runtime_payload'] ?? null ) || ! RuntimeEnvironmentEvidence::matches_current( $result['runtime_environment'] ?? null ) || ! $checked_at || $checked_at > time() + 300 || time() - $checked_at > self::MAX_AGE || ! is_array( $current ) || absint( $result['source_count'] ) !== absint( $current['count'] ?? -1 ) || absint( $result['source_max_id'] ) !== absint( $current['max_id'] ?? -1 ) || ! hash_equals( (string) $result['source_generation'], (string) ( $current['generation'] ?? '' ) ) || LegacyMigrationState::COMPLETE !== ( new LegacyMigrationState() )->status() || ! $gates_off || ! $cutover->is_clean_legacy_state() ) { return 'stale'; }
 		return 'passed';
 	}
 
@@ -493,6 +499,7 @@ final class StagingRestoreRehearsal {
 			sprintf( 'Phase: %s', strtoupper( sanitize_key( (string) ( $result['phase'] ?? 'unknown' ) ) ) ),
 			sprintf( 'Certloom version: %s', sanitize_text_field( (string) ( $result['plugin_version'] ?? '' ) ) ),
 			sprintf( 'Certloom payload SHA-256: %s', sanitize_text_field( (string) ( $result['runtime_payload']['sha256'] ?? '' ) ) ),
+			sprintf( 'Runtime environment SHA-256: %s', RuntimeEnvironmentEvidence::sha256( $result['runtime_environment'] ?? null ) ),
 			sprintf( 'WordPress environment type: %s', sanitize_key( (string) ( $result['environment'] ?? '' ) ) ),
 			sprintf( 'Populated migrated legacy rows: %d', absint( $result['source_count'] ?? 0 ) ),
 			sprintf( 'Baseline future-domain records: %d', absint( $result['baseline_records'] ?? 0 ) ),

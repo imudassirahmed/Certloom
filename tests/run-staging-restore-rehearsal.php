@@ -5,6 +5,7 @@ namespace {
     define( 'DAY_IN_SECONDS', 86400 );
     define( 'MINUTE_IN_SECONDS', 60 );
     define( 'ECAPLA_CERTVERIFY_VERSION', '1.5.15-test' );
+$GLOBALS['wp_version'] = '6.6-test';
     define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false );
     define( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW', false );
     define( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY', false );
@@ -46,22 +47,28 @@ namespace Certloom\Infrastructure\Files { final class PrivateJobFileStore {} }
 namespace Certloom\Infrastructure\Restore { final class DomainRestoreMergeService {} }
 
 namespace {
-    require dirname( __DIR__ ) . '/src/Application/Rendering/CanonicalJson.php';
+    
+function is_multisite(){ return false; }
+$GLOBALS['wpdb'] = new class { public function db_server_info(){ return 'MySQL test-server'; } public function db_version(){ return '8.0.36'; } };
+require dirname( __DIR__ ) . '/src/Application/Rendering/CanonicalJson.php';
     require dirname( __DIR__ ) . '/src/Application/Rendering/RuntimePayloadFingerprint.php';
     require dirname( __DIR__ ) . '/src/Infrastructure/Diagnostics/RuntimePayloadEvidence.php';
+	require dirname( __DIR__ ) . '/src/Infrastructure/Diagnostics/RuntimeEnvironmentEvidence.php';
     require dirname( __DIR__ ) . '/src/Infrastructure/Diagnostics/StagingRestoreRehearsal.php';
     use Certloom\Infrastructure\Diagnostics\StagingRestoreRehearsal;
     use Certloom\Infrastructure\Diagnostics\RuntimePayloadEvidence;
+    use Certloom\Infrastructure\Diagnostics\RuntimeEnvironmentEvidence;
 
     srr_same( true, StagingRestoreRehearsal::available(), 'restore rehearsal requires non-production environment plus explicit opt-in' );
     $now=time();
     $payload=RuntimePayloadEvidence::current(); srr_same(true,is_array($payload),'current payload identity available');
+    $runtime_environment=RuntimeEnvironmentEvidence::current(); srr_same(true,is_array($runtime_environment),'current runtime environment identity available');
     $entities=Certloom\Infrastructure\Backup\DomainBackupRepository::entity_types();
     $baseline=array('issuers'=>1,'programs'=>1,'recipients'=>2,'signers'=>1,'batches'=>1,'batch_recipients'=>2,'signer_assignments'=>1,'templates'=>0,'template_revisions'=>0,'template_assignments'=>0,'credential_series'=>2,'credential_numbers'=>2,'credential_versions'=>2,'credential_events'=>3);
     $records=array_sum($baseline);
     $GLOBALS['srr_options'][StagingRestoreRehearsal::RESULT_OPTION]=array(
         'schema'=>StagingRestoreRehearsal::RESULT_SCHEMA,'version'=>StagingRestoreRehearsal::RESULT_VERSION,
-        'plugin_version'=>ECAPLA_CERTVERIFY_VERSION,'runtime_payload'=>$payload,'environment'=>'staging','status'=>'passed','phase'=>'complete','reason_code'=>'',
+        'plugin_version'=>ECAPLA_CERTVERIFY_VERSION,'runtime_payload'=>$payload,'runtime_environment'=>$runtime_environment,'environment'=>'staging','status'=>'passed','phase'=>'complete','reason_code'=>'',
         'started_at'=>$now-20,'updated_at'=>$now,'checked_at'=>$now,'source_count'=>2,'source_max_id'=>9,'source_generation'=>'legacy-gen-a','migration_checked_at'=>$now-30,
         'baseline_hash'=>str_repeat('a',64),'baseline_records'=>$records,'baseline_config_hash'=>str_repeat('b',64),'baseline_counts'=>$baseline,
         'backup_records'=>$records,'backup_counts'=>$baseline,'backup_chain'=>str_repeat('c',64),'replace_verified'=>true,'merge_verified'=>true,'rollback_verified'=>true,
@@ -72,6 +79,9 @@ namespace {
     $valid_state=$GLOBALS['srr_options'][StagingRestoreRehearsal::RESULT_OPTION];
     $GLOBALS['srr_options'][StagingRestoreRehearsal::RESULT_OPTION]['runtime_payload']['sha256']=str_repeat('e',64);
     srr_same('stale',StagingRestoreRehearsal::evidence_state(),'same-version production-byte change stales restore rehearsal evidence');
+    $GLOBALS['srr_options'][StagingRestoreRehearsal::RESULT_OPTION]=$valid_state;
+    $GLOBALS['srr_options'][StagingRestoreRehearsal::RESULT_OPTION]['runtime_environment']['db_version']='8.0.99';
+    srr_same('stale',StagingRestoreRehearsal::evidence_state(),'same payload on a different runtime environment stales restore rehearsal evidence');
     $GLOBALS['srr_options'][StagingRestoreRehearsal::RESULT_OPTION]=$valid_state;
     $report=StagingRestoreRehearsal::get_text_report();
     if(false!==strpos($report,'/var/www/private.cvbackup')||false!==strpos($report,'CERT-SECRET'))throw new \RuntimeException('Restore report leaked sensitive fixture data.');

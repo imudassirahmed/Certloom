@@ -4,6 +4,7 @@ define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'DAY_IN_SECONDS', 86400 );
 define( 'MINUTE_IN_SECONDS', 60 );
 define( 'ECAPLA_CERTVERIFY_VERSION', '1.5.14-test' );
+$GLOBALS['wp_version'] = '6.6-test';
 $GLOBALS['dap_options'] = array();
 
 class WP_Error { private $c; private $m; public function __construct($c='',$m=''){ $this->c=$c; $this->m=$m; } public function get_error_code(){return $this->c;} public function get_error_message(){return $this->m;} }
@@ -17,18 +18,25 @@ function update_option($k,$v,$autoload=false){$changed=!array_key_exists($k,$GLO
 function delete_option($k){if(!array_key_exists($k,$GLOBALS['dap_options']))return false;unset($GLOBALS['dap_options'][$k]);return true;}
 
 
+
+function is_multisite(){ return false; }
+function wp_get_environment_type(){ return 'staging'; }
+$GLOBALS['wpdb'] = new class { public function db_server_info(){ return 'MySQL test-server'; } public function db_version(){ return '8.0.36'; } };
 require_once dirname( __DIR__ ) . '/src/Application/Rendering/CanonicalJson.php';
 require_once dirname( __DIR__ ) . '/src/Application/Rendering/RuntimePayloadFingerprint.php';
 require_once dirname( __DIR__ ) . '/src/Infrastructure/Diagnostics/RuntimePayloadEvidence.php';
+require_once dirname( __DIR__ ) . '/src/Infrastructure/Diagnostics/RuntimeEnvironmentEvidence.php';
 require_once dirname(__DIR__) . '/src/Infrastructure/Diagnostics/DomainAcceptanceProof.php';
 use Certloom\Infrastructure\Diagnostics\DomainAcceptanceProof;
 use Certloom\Infrastructure\Diagnostics\RuntimePayloadEvidence;
+    use Certloom\Infrastructure\Diagnostics\RuntimeEnvironmentEvidence;
 function dap_assert($c,$m){if(!$c)throw new RuntimeException($m);}
 
 $payload=RuntimePayloadEvidence::current();
+$runtime_environment=RuntimeEnvironmentEvidence::current(); dap_assert(is_array($runtime_environment),'Current runtime environment identity must be available.');
 dap_assert(is_array($payload),'Current Certloom payload identity must be available.');
 $valid=array(
- 'schema'=>'certloom-domain-acceptance-proof','version'=>DomainAcceptanceProof::RESULT_VERSION,'plugin_version'=>ECAPLA_CERTVERIFY_VERSION,'runtime_payload'=>$payload,
+ 'schema'=>'certloom-domain-acceptance-proof','version'=>DomainAcceptanceProof::RESULT_VERSION,'plugin_version'=>ECAPLA_CERTVERIFY_VERSION,'runtime_payload'=>$payload,'runtime_environment'=>$runtime_environment,
  'overall'=>'passed','checked_at'=>time(),
  'checks'=>array(array('id'=>'domain_schema','status'=>'pass','label'=>'Credential-domain schema','message'=>'Synthetic acceptance passed.')),
 );
@@ -44,6 +52,9 @@ dap_assert('stale'===DomainAcceptanceProof::evidence_state(),'Another Certloom v
 $GLOBALS['dap_options'][DomainAcceptanceProof::RESULT_OPTION]=$valid;
 $GLOBALS['dap_options'][DomainAcceptanceProof::RESULT_OPTION]['runtime_payload']['sha256']=str_repeat('f',64);
 dap_assert('stale'===DomainAcceptanceProof::evidence_state(),'Same-version production-byte change must stale gated-domain evidence.');
+$GLOBALS['dap_options'][DomainAcceptanceProof::RESULT_OPTION]=$valid;
+$GLOBALS['dap_options'][DomainAcceptanceProof::RESULT_OPTION]['runtime_environment']['php_version']='8.4.99';
+dap_assert('stale'===DomainAcceptanceProof::evidence_state(),'Same payload on a different runtime environment must stale gated-domain evidence.');
 $GLOBALS['dap_options'][DomainAcceptanceProof::RESULT_OPTION]=$valid;
 $GLOBALS['dap_options'][DomainAcceptanceProof::RESULT_OPTION]['checked_at']=time()+3600;
 dap_assert('stale'===DomainAcceptanceProof::evidence_state(),'Implausibly future-dated evidence must be stale.');

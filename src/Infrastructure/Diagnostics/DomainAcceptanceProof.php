@@ -37,7 +37,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class DomainAcceptanceProof {
 	const RESULT_OPTION  = 'certloom_domain_acceptance_proof_last';
 	const RESULT_SCHEMA  = 'certloom-domain-acceptance-proof';
-	const RESULT_VERSION = 5;
+	const RESULT_VERSION = 6;
 	const MAX_AGE         = 7 * DAY_IN_SECONDS;
 	const ROLLBACK_CODE   = 'certloom_domain_acceptance_intentional_rollback';
 
@@ -63,6 +63,10 @@ final class DomainAcceptanceProof {
 		if ( ! is_array( $runtime_payload ) ) {
 			return new \WP_Error( 'certloom_domain_acceptance_runtime_payload_unavailable', __( 'Certloom could not fingerprint the exact installed plugin payload for gated-domain acceptance evidence.', 'certloom' ) );
 		}
+		$runtime_environment = RuntimeEnvironmentEvidence::current();
+		if ( ! is_array( $runtime_environment ) ) {
+			return new \WP_Error( 'certloom_domain_acceptance_runtime_environment_unavailable', __( 'Certloom could not identify the exact WordPress/PHP/database environment for gated-domain acceptance evidence.', 'certloom' ) );
+		}
 
 		$empty = self::assert_existing_domain_empty();
 		if ( is_wp_error( $empty ) ) {
@@ -81,7 +85,7 @@ final class DomainAcceptanceProof {
 			return $locked;
 		}
 
-		$result = self::new_result( $runtime_payload );
+		$result = self::new_result( $runtime_payload, $runtime_environment );
 		$legacy_before = null;
 		$generation_before_exists = false;
 		$generation_before = null;
@@ -213,7 +217,7 @@ final class DomainAcceptanceProof {
 		if ( ! is_array( $result ) || self::RESULT_SCHEMA !== (string) ( $result['schema'] ?? '' ) || self::RESULT_VERSION !== (int) ( $result['version'] ?? 0 ) || ! isset( $result['checks'] ) || ! is_array( $result['checks'] ) ) {
 			return null;
 		}
-		if ( ! is_array( RuntimePayloadEvidence::normalize( $result['runtime_payload'] ?? null ) ) ) {
+		if ( ! is_array( RuntimePayloadEvidence::normalize( $result['runtime_payload'] ?? null ) ) || ! is_array( RuntimeEnvironmentEvidence::normalize( $result['runtime_environment'] ?? null ) ) ) {
 			return null;
 		}
 		$overall = sanitize_key( (string) ( $result['overall'] ?? '' ) );
@@ -239,7 +243,7 @@ final class DomainAcceptanceProof {
 		$current = defined( 'ECAPLA_CERTVERIFY_VERSION' ) ? (string) ECAPLA_CERTVERIFY_VERSION : '';
 		$version = sanitize_text_field( (string) ( $result['plugin_version'] ?? '' ) );
 		$checked_at = absint( $result['checked_at'] ?? 0 );
-		if ( '' === $current || '' === $version || ! hash_equals( $current, $version ) || ! RuntimePayloadEvidence::matches_current( $result['runtime_payload'] ?? null ) || ! $checked_at || $checked_at > time() + 300 || time() - $checked_at > self::MAX_AGE ) {
+		if ( '' === $current || '' === $version || ! hash_equals( $current, $version ) || ! RuntimePayloadEvidence::matches_current( $result['runtime_payload'] ?? null ) || ! RuntimeEnvironmentEvidence::matches_current( $result['runtime_environment'] ?? null ) || ! $checked_at || $checked_at > time() + 300 || time() - $checked_at > self::MAX_AGE ) {
 			return 'stale';
 		}
 		return 'passed';
@@ -259,6 +263,8 @@ final class DomainAcceptanceProof {
 		if ( is_array( $result['runtime_payload'] ?? null ) && ! empty( $result['runtime_payload']['sha256'] ) ) {
 			$lines[] = sprintf( 'Certloom payload SHA-256: %s', sanitize_text_field( (string) $result['runtime_payload']['sha256'] ) );
 		}
+		$environment_hash = RuntimeEnvironmentEvidence::sha256( $result['runtime_environment'] ?? null );
+		if ( '' !== $environment_hash ) { $lines[] = sprintf( 'Runtime environment SHA-256: %s', $environment_hash ); }
 		$lines[] = sprintf( 'Checked UTC: %s', gmdate( 'Y-m-d H:i:s', absint( $result['checked_at'] ?? 0 ) ) );
 		foreach ( (array) ( $result['checks'] ?? array() ) as $check ) {
 			if ( is_array( $check ) ) {
@@ -471,12 +477,13 @@ final class DomainAcceptanceProof {
 	}
 
 	/** @return array<string,mixed> */
-	private static function new_result( array $runtime_payload ) {
+	private static function new_result( array $runtime_payload, array $runtime_environment ) {
 		return array(
 			'schema' => self::RESULT_SCHEMA,
 			'version' => self::RESULT_VERSION,
 			'plugin_version' => defined( 'ECAPLA_CERTVERIFY_VERSION' ) ? (string) ECAPLA_CERTVERIFY_VERSION : '',
 			'runtime_payload' => $runtime_payload,
+			'runtime_environment' => $runtime_environment,
 			'overall' => 'incomplete',
 			'checked_at' => 0,
 			'checks' => array(),

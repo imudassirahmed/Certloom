@@ -5,6 +5,7 @@ namespace {
     define( 'DAY_IN_SECONDS', 86400 );
     define( 'MINUTE_IN_SECONDS', 60 );
     define( 'ECAPLA_CERTVERIFY_VERSION', '1.5.16-test' );
+$GLOBALS['wp_version'] = '6.6-test';
     define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false );
     define( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW', false );
     define( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY', false );
@@ -40,17 +41,23 @@ namespace Certloom\Infrastructure\Migration { final class DomainCutoverCoordinat
 namespace Certloom\Infrastructure\Verification { final class PublicVerificationGate { const OPTION='certloom_series_public_verification_ready'; public function disable(){unset($GLOBALS['scr_options'][self::OPTION]);return true;} public function is_ready(){return false;} } }
 namespace Certloom\Infrastructure\Diagnostics { final class StagingRestoreRehearsal { public static function is_current_passed(){return (bool)$GLOBALS['scr_restore_passed'];} } final class DomainStateFingerprint {} }
 namespace {
-    require dirname(__DIR__).'/src/Application/Rendering/CanonicalJson.php';
+    
+function is_multisite(){ return false; }
+$GLOBALS['wpdb'] = new class { public function db_server_info(){ return 'MySQL test-server'; } public function db_version(){ return '8.0.36'; } };
+require dirname(__DIR__).'/src/Application/Rendering/CanonicalJson.php';
     require dirname(__DIR__).'/src/Application/Rendering/RuntimePayloadFingerprint.php';
     require dirname(__DIR__).'/src/Infrastructure/Diagnostics/RuntimePayloadEvidence.php';
+require dirname(__DIR__).'/src/Infrastructure/Diagnostics/RuntimeEnvironmentEvidence.php';
     require dirname(__DIR__).'/src/Infrastructure/Diagnostics/StagingCutoverRehearsal.php';
     use Certloom\Infrastructure\Diagnostics\StagingCutoverRehearsal;
     use Certloom\Infrastructure\Diagnostics\RuntimePayloadEvidence;
+    use Certloom\Infrastructure\Diagnostics\RuntimeEnvironmentEvidence;
     scr_same(true,StagingCutoverRehearsal::available(),'cutover rehearsal requires staging plus explicit opt-in');
     $now=time();
     $payload=RuntimePayloadEvidence::current(); scr_same(true,is_array($payload),'current payload identity available');
+    $runtime_environment=RuntimeEnvironmentEvidence::current(); scr_same(true,is_array($runtime_environment),'current runtime environment identity available');
     $GLOBALS['scr_options'][StagingCutoverRehearsal::RESULT_OPTION]=array(
-        'schema'=>StagingCutoverRehearsal::RESULT_SCHEMA,'version'=>StagingCutoverRehearsal::RESULT_VERSION,'plugin_version'=>ECAPLA_CERTVERIFY_VERSION,'runtime_payload'=>$payload,'environment'=>'staging',
+        'schema'=>StagingCutoverRehearsal::RESULT_SCHEMA,'version'=>StagingCutoverRehearsal::RESULT_VERSION,'plugin_version'=>ECAPLA_CERTVERIFY_VERSION,'runtime_payload'=>$payload,'runtime_environment'=>$runtime_environment,'environment'=>'staging',
         'status'=>'passed','phase'=>'complete','reason_code'=>'','started_at'=>$now-20,'updated_at'=>$now,'checked_at'=>$now,
         'source_count'=>2,'source_max_id'=>9,'source_generation'=>'legacy-gen-a','restore_checked_at'=>$now-30,
         'baseline_hash'=>str_repeat('a',64),'baseline_config_hash'=>str_repeat('b',64),'baseline_records'=>16,'baseline_counts'=>array('issuers'=>1,'programs'=>1,'recipients'=>2,'signers'=>1,'batches'=>1,'batch_recipients'=>2,'signer_assignments'=>1,'credential_series'=>2,'credential_numbers'=>2,'credential_versions'=>2,'credential_events'=>3),
@@ -60,6 +67,9 @@ namespace {
     $valid_state=$GLOBALS['scr_options'][StagingCutoverRehearsal::RESULT_OPTION];
     $GLOBALS['scr_options'][StagingCutoverRehearsal::RESULT_OPTION]['runtime_payload']['sha256']=str_repeat('e',64);
     scr_same('stale',StagingCutoverRehearsal::evidence_state(),'same-version production-byte change stales cutover rehearsal evidence');
+    $GLOBALS['scr_options'][StagingCutoverRehearsal::RESULT_OPTION]=$valid_state;
+    $GLOBALS['scr_options'][StagingCutoverRehearsal::RESULT_OPTION]['runtime_environment']['db_version']='8.0.99';
+    scr_same('stale',StagingCutoverRehearsal::evidence_state(),'same payload on a different runtime environment stales cutover rehearsal evidence');
     $GLOBALS['scr_options'][StagingCutoverRehearsal::RESULT_OPTION]=$valid_state;
     $report=StagingCutoverRehearsal::get_text_report();
     if(false===strpos($report,'Final credential authority after rehearsal: LEGACY')||false!==strpos($report,'CERT-SECRET')||false!==strpos($report,'/var/www'))throw new \RuntimeException('Cutover report lost privacy/final-authority contract.');

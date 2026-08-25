@@ -43,15 +43,18 @@ $sources = array(
 );
 foreach ( $sources as $name => $source ) {
 	drpe_check( is_string( $source ) && false !== strpos( $source, "'runtime_payload'" ) && false !== strpos( $source, 'RuntimePayloadEvidence::matches_current' ), ucfirst( $name ) . ' evidence must persist and revalidate exact runtime payload identity.' );
+	drpe_check( false !== strpos( $source, "'runtime_environment'" ) && false !== strpos( $source, 'RuntimeEnvironmentEvidence::matches_current' ), ucfirst( $name ) . ' evidence must persist and revalidate exact runtime environment identity.' );
 }
 drpe_check( false !== strpos( $sources['preflight'], "'runtime_payload_changed'" ), 'Migration preflight must stop if production bytes change mid-run.' );
+drpe_check( false !== strpos( $sources['preflight'], "'runtime_environment_changed'" ), 'Migration preflight must stop if the WordPress/PHP/database environment changes mid-run.' );
 drpe_check( false !== strpos( $sources['migration'], 'certloom_staging_rehearsal_runtime_payload_changed' ), 'Staging migration must stop if production bytes change mid-run.' );
 drpe_check( false !== strpos( $sources['restore'], 'certloom_staging_restore_runtime_payload_changed' ), 'Staging restore must stop if production bytes change mid-run.' );
 drpe_check( false !== strpos( $sources['cutover'], 'certloom_staging_cutover_runtime_payload_changed' ), 'Staging cutover must stop if production bytes change mid-run.' );
-drpe_check( false !== strpos( $sources['database'], 'const RESULT_VERSION = 2' ), 'Isolated database-proof evidence schema must advance for payload binding.' );
-drpe_check( false !== strpos( $sources['domain'], 'const RESULT_VERSION = 5' ), 'Gated-domain acceptance evidence schema must advance for payload binding.' );
-drpe_check( false !== strpos( $sources['preflight'], 'const RESULT_VERSION = 2' ), 'Migration-preflight evidence schema must advance for payload binding.' );
-drpe_check( false !== strpos( $sources['migration'], 'const RESULT_VERSION = 2' ) && false !== strpos( $sources['restore'], 'const RESULT_VERSION = 2' ) && false !== strpos( $sources['cutover'], 'const RESULT_VERSION = 2' ), 'All staging rehearsal evidence schemas must advance for payload binding.' );
+drpe_check( false !== strpos( $sources['migration'], 'runtime_environment_changed' ) && false !== strpos( $sources['restore'], 'runtime_environment_changed' ) && false !== strpos( $sources['cutover'], 'runtime_environment_changed' ), 'All multi-slice staging rehearsals must stop if the runtime/database environment changes mid-run.' );
+drpe_check( false !== strpos( $sources['database'], 'const RESULT_VERSION = 3' ), 'Isolated database-proof evidence schema must advance for payload binding.' );
+drpe_check( false !== strpos( $sources['domain'], 'const RESULT_VERSION = 6' ), 'Gated-domain acceptance evidence schema must advance for payload binding.' );
+drpe_check( false !== strpos( $sources['preflight'], 'const RESULT_VERSION = 3' ), 'Migration-preflight evidence schema must advance for payload binding.' );
+drpe_check( false !== strpos( $sources['migration'], 'const RESULT_VERSION = 3' ) && false !== strpos( $sources['restore'], 'const RESULT_VERSION = 3' ) && false !== strpos( $sources['cutover'], 'const RESULT_VERSION = 3' ), 'All staging rehearsal evidence schemas must advance for payload binding.' );
 $gate_helper = file_get_contents( $root . '/tests/wp-integration/gate-evidence.php' );
 drpe_check( is_string( $gate_helper ) && false !== strpos( $gate_helper, 'RuntimePayloadEvidence::current()' ) && false !== strpos( $gate_helper, "'certloom-wp-integration-gate-evidence'" ), 'Real WordPress/MySQL gate transcripts must bind the exact Certloom payload.' );
 foreach ( array( 'run-numbering-policy.php', 'run-domain-schema.php', 'run-domain-premium-gate.php', 'run-domain-row-lock-gate.php' ) as $gate_file ) {

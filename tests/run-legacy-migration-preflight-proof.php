@@ -10,6 +10,7 @@ namespace {
 	define( 'DAY_IN_SECONDS', 86400 );
 	define( 'MINUTE_IN_SECONDS', 60 );
 	define( 'ECAPLA_CERTVERIFY_VERSION', '1.5.14-test' );
+$GLOBALS['wp_version'] = '6.6-test';
 	$GLOBALS['lmp_options'] = array();
 	class WP_Error { private $c; private $m; public function __construct($c='',$m=''){ $this->c=$c; $this->m=$m; } public function get_error_code(){return $this->c;} public function get_error_message(){return $this->m;} }
 	function is_wp_error($v){return $v instanceof WP_Error;}
@@ -25,18 +26,25 @@ namespace {
 	function wp_json_encode($v,$flags=0){return json_encode($v,$flags);}
 	function lmp_assert($c,$m){if(!$c)throw new \RuntimeException($m);}
 
-	require_once dirname(__DIR__) . '/src/Application/Rendering/CanonicalJson.php';
+	
+function is_multisite(){ return false; }
+function wp_get_environment_type(){ return 'staging'; }
+$GLOBALS['wpdb'] = new class { public function db_server_info(){ return 'MySQL test-server'; } public function db_version(){ return '8.0.36'; } };
+require_once dirname(__DIR__) . '/src/Application/Rendering/CanonicalJson.php';
 	require_once dirname(__DIR__) . '/src/Application/Rendering/RuntimePayloadFingerprint.php';
 	require_once dirname(__DIR__) . '/src/Infrastructure/Diagnostics/RuntimePayloadEvidence.php';
+require_once dirname(__DIR__) . '/src/Infrastructure/Diagnostics/RuntimeEnvironmentEvidence.php';
 	require_once dirname(__DIR__) . '/src/Infrastructure/Diagnostics/LegacyMigrationPreflightProof.php';
 	use Certloom\Infrastructure\Diagnostics\LegacyMigrationPreflightProof;
 	use Certloom\Infrastructure\Diagnostics\RuntimePayloadEvidence;
+    use Certloom\Infrastructure\Diagnostics\RuntimeEnvironmentEvidence;
 	use Certloom\Infrastructure\Repository\LegacyCertificateRepository;
 
 	$seed = hash('sha256','certloom-legacy-migration-preflight-v1');
 	$payload=RuntimePayloadEvidence::current(); lmp_assert(is_array($payload),'Current Certloom payload identity must be available.');
+	$runtime_environment=RuntimeEnvironmentEvidence::current(); lmp_assert(is_array($runtime_environment),'Current runtime environment identity must be available.');
 	$valid=array(
-		'schema'=>'certloom-legacy-migration-preflight-proof','version'=>LegacyMigrationPreflightProof::RESULT_VERSION,'plugin_version'=>ECAPLA_CERTVERIFY_VERSION,'runtime_payload'=>$payload,
+		'schema'=>'certloom-legacy-migration-preflight-proof','version'=>LegacyMigrationPreflightProof::RESULT_VERSION,'plugin_version'=>ECAPLA_CERTVERIFY_VERSION,'runtime_payload'=>$payload,'runtime_environment'=>$runtime_environment,'runtime_environment'=>$runtime_environment,
 		'status'=>'passed','phase'=>'complete','reason_code'=>'','started_at'=>time()-10,'updated_at'=>time(),'checked_at'=>time(),'preflight_date'=>'2026-08-22',
 		'source_count'=>3,'source_max_id'=>7,'source_generation'=>'generation-1','cursor'=>7,'total'=>3,'ready'=>3,'errors'=>0,
 		'status_counts'=>array('valid'=>1,'suspended'=>1,'revoked'=>1,'expired'=>0),'error_examples'=>array(),
@@ -53,6 +61,9 @@ namespace {
 	$GLOBALS['lmp_options'][LegacyMigrationPreflightProof::RESULT_OPTION]=$valid;
 	$GLOBALS['lmp_options'][LegacyMigrationPreflightProof::RESULT_OPTION]['runtime_payload']['sha256']=str_repeat('e',64);
 	lmp_assert('stale'===LegacyMigrationPreflightProof::evidence_state(),'Same-version production-byte change must stale preflight evidence.');
+	$GLOBALS['lmp_options'][LegacyMigrationPreflightProof::RESULT_OPTION]=$valid;
+	$GLOBALS['lmp_options'][LegacyMigrationPreflightProof::RESULT_OPTION]['runtime_environment']['php_version']='8.4.99';
+	lmp_assert('stale'===LegacyMigrationPreflightProof::evidence_state(),'Same payload on a different runtime environment must stale migration-preflight evidence.');
 	$GLOBALS['lmp_options'][LegacyMigrationPreflightProof::RESULT_OPTION]=$valid;
 	$GLOBALS['lmp_options'][LegacyMigrationPreflightProof::RESULT_OPTION]['checked_at']=time()-(8*DAY_IN_SECONDS);
 	lmp_assert('stale'===LegacyMigrationPreflightProof::evidence_state(),'Evidence older than seven days must be stale.');

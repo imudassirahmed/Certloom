@@ -25,7 +25,7 @@ final class LegacyMigrationPreflightProof {
 	const RESULT_OPTION  = 'certloom_legacy_migration_preflight_proof';
 	const LOCK_OPTION    = 'certloom_legacy_migration_preflight_proof_lock';
 	const RESULT_SCHEMA  = 'certloom-legacy-migration-preflight-proof';
-	const RESULT_VERSION = 2;
+	const RESULT_VERSION = 3;
 	const MAX_AGE         = 7 * DAY_IN_SECONDS;
 	const LOCK_TTL        = 2 * MINUTE_IN_SECONDS;
 	const BATCH_SIZE      = 250;
@@ -67,6 +67,9 @@ final class LegacyMigrationPreflightProof {
 
 		if ( ! RuntimePayloadEvidence::matches_current( $state['runtime_payload'] ?? null ) ) {
 			return self::fail_state( $state, 'runtime_payload_changed' );
+		}
+		if ( ! RuntimeEnvironmentEvidence::matches_current( $state['runtime_environment'] ?? null ) ) {
+			return self::fail_state( $state, 'runtime_environment_changed' );
 		}
 
 		$source = new LegacyCertificateRepository();
@@ -174,7 +177,7 @@ final class LegacyMigrationPreflightProof {
 		if ( ! is_array( $result ) || self::RESULT_SCHEMA !== (string) ( $result['schema'] ?? '' ) || self::RESULT_VERSION !== (int) ( $result['version'] ?? 0 ) ) {
 			return null;
 		}
-		if ( ! is_array( RuntimePayloadEvidence::normalize( $result['runtime_payload'] ?? null ) ) ) { return null; }
+		if ( ! is_array( RuntimePayloadEvidence::normalize( $result['runtime_payload'] ?? null ) ) || ! is_array( RuntimeEnvironmentEvidence::normalize( $result['runtime_environment'] ?? null ) ) ) { return null; }
 		$status = sanitize_key( (string) ( $result['status'] ?? '' ) );
 		$phase = sanitize_key( (string) ( $result['phase'] ?? '' ) );
 		if ( ! in_array( $status, array( 'running', 'passed', 'failed' ), true ) || ! in_array( $phase, array( 'map', 'verify', 'complete' ), true ) ) {
@@ -216,7 +219,7 @@ final class LegacyMigrationPreflightProof {
 		if ( 'failed' === $status ) { return 'failed'; }
 		$current_version = defined( 'ECAPLA_CERTVERIFY_VERSION' ) ? (string) ECAPLA_CERTVERIFY_VERSION : '';
 		$checked_at = absint( $result['checked_at'] ?? 0 );
-		if ( '' === $current_version || ! hash_equals( $current_version, (string) $result['plugin_version'] ) || ! RuntimePayloadEvidence::matches_current( $result['runtime_payload'] ?? null ) || ! $checked_at || $checked_at > time() + 300 || time() - $checked_at > self::MAX_AGE ) {
+		if ( '' === $current_version || ! hash_equals( $current_version, (string) $result['plugin_version'] ) || ! RuntimePayloadEvidence::matches_current( $result['runtime_payload'] ?? null ) || ! RuntimeEnvironmentEvidence::matches_current( $result['runtime_environment'] ?? null ) || ! $checked_at || $checked_at > time() + 300 || time() - $checked_at > self::MAX_AGE ) {
 			return 'stale';
 		}
 		return 'passed';
@@ -233,6 +236,7 @@ final class LegacyMigrationPreflightProof {
 			sprintf( 'Phase: %s', strtoupper( sanitize_key( (string) ( $result['phase'] ?? 'unknown' ) ) ) ),
 			sprintf( 'Certloom version: %s', sanitize_text_field( (string) ( $result['plugin_version'] ?? '' ) ) ),
 			sprintf( 'Certloom payload SHA-256: %s', sanitize_text_field( (string) ( $result['runtime_payload']['sha256'] ?? '' ) ) ),
+			sprintf( 'Runtime environment SHA-256: %s', RuntimeEnvironmentEvidence::sha256( $result['runtime_environment'] ?? null ) ),
 			sprintf( 'Rows in frozen source boundary: %d', absint( $result['source_count'] ?? 0 ) ),
 			sprintf( 'Rows mapped: %d', absint( $result['total'] ?? 0 ) ),
 			sprintf( 'Rows ready: %d', absint( $result['ready'] ?? 0 ) ),
@@ -268,12 +272,17 @@ final class LegacyMigrationPreflightProof {
 		if ( ! is_array( $runtime_payload ) ) {
 			return new \WP_Error( 'certloom_legacy_preflight_runtime_payload_unavailable', __( 'Certloom could not fingerprint the exact installed plugin payload for migration-preflight evidence.', 'certloom' ) );
 		}
+		$runtime_environment = RuntimeEnvironmentEvidence::current();
+		if ( ! is_array( $runtime_environment ) ) {
+			return new \WP_Error( 'certloom_legacy_preflight_runtime_environment_unavailable', __( 'Certloom could not identify the exact WordPress/PHP/database environment for migration-preflight evidence.', 'certloom' ) );
+		}
 		$snapshot = ( new LegacyCertificateRepository() )->snapshot();
 		if ( is_wp_error( $snapshot ) ) { return $snapshot; }
 		return array(
 			'schema' => self::RESULT_SCHEMA, 'version' => self::RESULT_VERSION,
 			'plugin_version' => defined( 'ECAPLA_CERTVERIFY_VERSION' ) ? (string) ECAPLA_CERTVERIFY_VERSION : '',
 			'runtime_payload' => $runtime_payload,
+			'runtime_environment' => $runtime_environment,
 			'status' => 'running', 'phase' => 'map', 'reason_code' => '',
 			'started_at' => time(), 'updated_at' => time(), 'checked_at' => 0,
 			'preflight_date' => current_time( 'Y-m-d' ),
