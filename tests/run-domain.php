@@ -219,12 +219,37 @@ certloom_test( 'public credential ID round trip and normalization', function () 
 	}
 } );
 
-certloom_test( 'public credential checksum rejects corruption', function () {
+certloom_test( 'public credential checksum v2 detects substitutions/transpositions while legacy v1 stays compatible', function () {
 	$ids = new PublicCredentialId();
+	certloom_assert_same( 2, PublicCredentialId::CHECKSUM_VERSION );
+	certloom_assert_true( $ids->is_valid_v1( 'ABCDEFGHJKMC' ) );
+	certloom_assert_false( $ids->is_valid_v2( 'ABCDEFGHJKMC' ) );
+	certloom_assert_true( $ids->is_valid( 'ABCDEFGHJKMC' ) );
+	certloom_assert_same( 1, $ids->checksum_version( 'ABCDEFGHJKMC' ) );
+
+	$alphabet = PublicCredentialId::ALPHABET;
 	$id = $ids->generate();
-	$replacement = '0' === $id[2] ? '1' : '0';
-	$bad = substr( $id, 0, 2 ) . $replacement . substr( $id, 3 );
-	certloom_assert_false( $ids->is_valid( $bad ) );
+	certloom_assert_true( $ids->is_valid_v2( $id ) );
+	certloom_assert_same( 2, $ids->checksum_version( $id ) );
+	$data = substr( $id, 0, PublicCredentialId::DATA_LENGTH );
+	$check = substr( $id, -1 );
+	for ( $position = 0; $position < PublicCredentialId::DATA_LENGTH; $position++ ) {
+		for ( $i = 0; $i < strlen( $alphabet ); $i++ ) {
+			if ( $alphabet[ $i ] === $data[ $position ] ) { continue; }
+			$mutated = $data;
+			$mutated[ $position ] = $alphabet[ $i ];
+			certloom_assert_false( $ids->is_valid_v2( $mutated . $check ) );
+		}
+	}
+	for ( $left = 0; $left < PublicCredentialId::DATA_LENGTH; $left++ ) {
+		for ( $right = $left + 1; $right < PublicCredentialId::DATA_LENGTH; $right++ ) {
+			if ( $data[ $left ] === $data[ $right ] ) { continue; }
+			$swapped = $data;
+			$swapped[ $left ] = $data[ $right ];
+			$swapped[ $right ] = $data[ $left ];
+			certloom_assert_false( $ids->is_valid_v2( $swapped . $check ) );
+		}
+	}
 } );
 
 $failed = 0;

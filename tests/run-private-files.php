@@ -11,6 +11,7 @@ function absint( $v ){ return abs( (int) $v ); }
 function sanitize_key( $key ){ return strtolower( preg_replace( '/[^a-z0-9_\-]/', '', (string) $key ) ); }
 $GLOBALS['pf_private_dir'] = $root . '/private';
 $GLOBALS['pf_allow_webroot_private'] = false;
+$GLOBALS['pf_temp_dir'] = $root . '/volatile-temp';
 function apply_filters( $hook, $value ){
 	if ( 'certloom_private_job_directory' === $hook ) { return $GLOBALS['pf_private_dir']; }
 	if ( 'certloom_allow_private_job_directory_inside_webroot' === $hook ) { return $GLOBALS['pf_allow_webroot_private']; }
@@ -20,6 +21,7 @@ function wp_normalize_path( $path ){ return str_replace( '\\', '/', (string) $pa
 function trailingslashit( $path ){ return rtrim( (string) $path, '/\\' ) . '/'; }
 function untrailingslashit( $path ){ return rtrim( (string) $path, '/\\' ); }
 function wp_mkdir_p( $path ){ return is_dir( $path ) || mkdir( $path, 0700, true ); }
+function get_temp_dir(){ return $GLOBALS['pf_temp_dir']; }
 
 require_once __DIR__ . '/bootstrap-autoload.php';
 use Certloom\Infrastructure\Files\PrivateJobFileStore;
@@ -42,8 +44,10 @@ $GLOBALS['pf_allow_webroot_private'] = false;
 $GLOBALS['pf_private_dir'] = 'relative/private';
 $relative = $store->directory();
 pf_same( 'certloom_private_directory_not_absolute', $relative->get_error_code(), 'relative private directory rejected' );
+$GLOBALS['pf_private_dir'] = '';
+pf_same( $root . '/certloom-private', $store->directory(), 'durable ABSPATH sibling is preferred ahead of volatile temp when wp-content is public' );
 $GLOBALS['pf_private_dir'] = $root . '/private';
-echo "PASS  persistent private job storage refuses public-webroot and relative paths by default\n";
+echo "PASS  persistent private job storage refuses public-webroot and relative paths and prefers durable fallback storage\n";
 
 $source = $root . '/source.csv';
 file_put_contents( $source, "number,name\nC-1,Alice\n" );

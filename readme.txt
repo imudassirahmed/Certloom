@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.47
+Stable tag: 1.6.48
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.47: the Credential Profile Gutenberg block no longer stores translatable default copy as literal English schema defaults. Editor defaults now come from `wp.i18n`, server defaults remain translated at render time, and the changed editor asset is cache-busted to 1.6.47. `PDF-04` and the real normalized-domain WordPress/MySQL-or-MariaDB acceptance-v4 ceremony remain genuine external gates; all three normalized-domain authority flags stay false, concrete mPDF/GD candidates remain unaccepted, and `accepted.json` remains absent.
+> Development note for 1.6.48: harden public rate limiting against User-Agent and IPv6-address rotation, prefer durable private job storage before system temp, move runtime provisioning to `init` so translated error paths do not execute during `plugins_loaded`, fail safe on malformed UTF-8 spreadsheet cells, introduce a backward-compatible GF(2^5) v2 public-ID checksum for newly generated normalized IDs, and ship a translation template. Legacy v1 public IDs remain accepted so existing data/backups are not invalidated. `PDF-04`, normalized-domain acceptance-v4, WordPress 7.1 runtime certification, and `PERF-01` database index benchmarks remain genuine external gates; all authority flags stay closed.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -129,6 +129,15 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.48 =
+* Harden public rate limiting with a strict network ceiling so User-Agent and IPv6 interface-address rotation cannot create unlimited fresh capacity; use integer minute buckets and fail-closed persistent-counter reads.
+* Prefer durable private job storage outside the public webroot before WordPress/system temp, while preserving explicit configuration and path/symlink protections.
+* Move translated runtime/provisioning bootstrap work to `init` priority 1 for WordPress 6.7+ translation timing correctness.
+* Ship a reproducible `languages/certloom.pot` covering PHP, native-block JavaScript, and translatable block metadata.
+* Generate new normalized PublicCredentialIds with the GF(2^5) v2 checksum while retaining legacy v1 compatibility; final normalized-domain acceptance requires v2.
+* Make spreadsheet formula neutralization fail safe on malformed UTF-8.
+* Keep WordPress 7.1 metadata, `PERF-01` database index changes, renderer authority, normalized-domain authority, Template publication, Preview, and Designer proof-gated.
 
 = 1.6.47 =
 * Fix Credential Profile block localization so translatable default heading/not-found copy is resolved at runtime instead of being pinned as literal English `block.json` attribute defaults.

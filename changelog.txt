@@ -1,3 +1,13 @@
+1.6.48
+- Harden public abuse limiting with a strict network ceiling plus the existing client fingerprint, normalize IPv6 to /64 and IPv4-mapped IPv6, use integer minute buckets, fail closed on missing counter reads when requested, and bound stale-option cleanup.
+- Prefer durable private job storage outside the public webroot before falling back to WordPress/system temporary storage; add fallback-order regression ownership.
+- Move the main runtime/provisioning bootstrap to `init` priority 1 so translated error paths do not trigger WordPress 6.7+ just-in-time translation warnings during `plugins_loaded`.
+- Make spreadsheet-formula neutralization fail safe when malformed UTF-8 makes the Unicode prefix matcher indeterminate.
+- Generate new normalized public IDs with a GF(2^5) v2 check symbol while continuing to accept legacy v1 checksums for restore/database compatibility; add exhaustive substitution/transposition coverage.
+- Ship `languages/certloom.pot` as the translation-source template and retain WordPress language-pack fallback behavior; WordPress 7.1 remains unclaimed until a real runtime matrix passes.
+- Keep `PERF-01` registry index/deep-pagination changes proof-gated to a real MySQL/MariaDB EXPLAIN and dbDelta migration run; no speculative schema change is included.
+- Keep renderer/database authority, Template publication, authoritative Preview and Designer closed until their genuine external acceptance gates pass.
+
 1.6.47
 - Fix Credential Profile Gutenberg localization by removing literal English defaults for translatable heading/not-found attributes from block metadata.
 - Resolve editor defaults through `wp.i18n` and retain translated PHP render defaults, while preserving explicitly saved custom block copy.

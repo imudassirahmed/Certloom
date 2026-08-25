@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Certloom – Certificate Verification
  * Description: Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
- * Version: 1.6.47
+ * Version: 1.6.48
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.47' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.48' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
@@ -106,7 +106,7 @@ require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-privacy.
 register_activation_hook( __FILE__, 'ecapla_certverify_activate' );
 register_deactivation_hook( __FILE__, 'ecapla_certverify_deactivate' );
 
-add_action( 'plugins_loaded', 'ecapla_certverify_init', 20 );
+add_action( 'init', 'ecapla_certverify_init', 1 );
 add_action( 'elementor/loaded', 'ecapla_certverify_elementor_loaded' );
 add_action( 'wp_initialize_site', 'ecapla_certverify_initialize_site', 200, 2 );
 add_action( 'admin_init', 'ecapla_certverify_add_privacy_policy_content' );
@@ -374,7 +374,7 @@ function ecapla_certverify_multisite_provisioning_notice() {
 }
 
 /**
- * Boots Certloom after plugins have loaded.
+ * Boots Certloom on init after WordPress translation timing is safe.
  */
 function ecapla_certverify_init() {
 	$restore_recovery   = Ecapla_CertVerify_Backup::recover_interrupted_restore();

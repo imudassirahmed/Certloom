@@ -375,7 +375,7 @@ final class DomainAcceptanceProof {
 		$series = $credential_repo->create_series( array( 'recipient_id' => $recipient, 'issuer_id' => $issuer, 'program_id' => $program, 'batch_id' => $batch ) );
 		if ( is_wp_error( $series ) ) { return self::operation_error( $result, 'repositories', __( 'Repository persistence', 'certloom' ), $series ); }
 		$series_row = $credential_repo->find_series( $series );
-		if ( is_wp_error( $series_row ) || ! is_array( $series_row ) || empty( $series_row['public_id'] ) || ! ( new PublicCredentialId() )->is_valid( $series_row['public_id'] ) ) {
+		if ( is_wp_error( $series_row ) || ! is_array( $series_row ) || empty( $series_row['public_id'] ) || ! ( new PublicCredentialId() )->is_valid_v2( $series_row['public_id'] ) ) {
 			return self::operation_error( $result, 'repositories', __( 'Repository persistence', 'certloom' ), is_wp_error( $series_row ) ? $series_row : new \WP_Error( 'certloom_domain_acceptance_public_id', __( 'The proof could not read a valid public credential ID from the real repository.', 'certloom' ) ) );
 		}
 		$display_number = 'CAP-' . strtoupper( $token ) . '-001';

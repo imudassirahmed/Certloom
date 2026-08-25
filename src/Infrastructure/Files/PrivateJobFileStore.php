@@ -157,19 +157,32 @@ Deny from all
 			return is_wp_error( $private ) ? $private : $configured;
 		}
 
-		$temp = function_exists( 'get_temp_dir' ) ? wp_normalize_path( get_temp_dir() ) : '';
-		if ( '' !== $temp && $this->is_absolute_path( $temp ) ) {
-			$candidate = untrailingslashit( trailingslashit( $temp ) . 'certloom-private' );
+		/* Prefer durable application-adjacent storage. System temp is a last-resort fallback. */
+		if ( defined( 'WP_CONTENT_DIR' ) ) {
+			$candidate = untrailingslashit( trailingslashit( wp_normalize_path( WP_CONTENT_DIR ) ) . 'certloom-private' );
 			$private   = $this->assert_private_location( $candidate );
-			if ( ! is_wp_error( $private ) ) {
+			if ( ! is_wp_error( $private ) && $this->candidate_is_writable( $candidate ) ) {
 				return $candidate;
 			}
 		}
 
-		if ( defined( 'WP_CONTENT_DIR' ) ) {
-			$candidate = untrailingslashit( trailingslashit( wp_normalize_path( WP_CONTENT_DIR ) ) . 'certloom-private' );
+		if ( defined( 'ABSPATH' ) ) {
+			$webroot = untrailingslashit( wp_normalize_path( ABSPATH ) );
+			$parent  = wp_normalize_path( dirname( $webroot ) );
+			if ( '' !== $parent && $parent !== $webroot && $this->is_absolute_path( $parent ) ) {
+				$candidate = untrailingslashit( trailingslashit( $parent ) . 'certloom-private' );
+				$private   = $this->assert_private_location( $candidate );
+				if ( ! is_wp_error( $private ) && $this->candidate_is_writable( $candidate ) ) {
+					return $candidate;
+				}
+			}
+		}
+
+		$temp = function_exists( 'get_temp_dir' ) ? wp_normalize_path( get_temp_dir() ) : '';
+		if ( '' !== $temp && $this->is_absolute_path( $temp ) ) {
+			$candidate = untrailingslashit( trailingslashit( $temp ) . 'certloom-private' );
 			$private   = $this->assert_private_location( $candidate );
-			if ( ! is_wp_error( $private ) ) {
+			if ( ! is_wp_error( $private ) && $this->candidate_is_writable( $candidate ) ) {
 				return $candidate;
 			}
 		}
@@ -178,6 +191,21 @@ Deny from all
 			'certloom_private_directory_unavailable',
 			__( 'Certloom could not find a persistent private job directory outside the public WordPress webroot. Configure certloom_private_job_directory to an absolute non-public path before using new-domain import, backup, or restore jobs.', 'certloom' )
 		);
+	}
+
+
+	/** @return bool Whether an existing directory or its nearest existing parent can accept job storage. */
+	private function candidate_is_writable( $path ) {
+		$probe = wp_normalize_path( (string) $path );
+		if ( is_dir( $probe ) ) {
+			return is_writable( $probe );
+		}
+		while ( '' !== $probe && ! file_exists( $probe ) ) {
+			$parent = wp_normalize_path( dirname( $probe ) );
+			if ( $parent === $probe ) { break; }
+			$probe = $parent;
+		}
+		return is_dir( $probe ) && is_writable( $probe );
 	}
 
 	/** @return true|\WP_Error */

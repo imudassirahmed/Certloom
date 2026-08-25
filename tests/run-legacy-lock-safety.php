@@ -63,6 +63,12 @@ function ll_same( $expected, $actual, $message = '' ) {
 	}
 }
 
+// Spreadsheet exports must neutralize dangerous prefixes even when malformed UTF-8 makes the Unicode matcher fail.
+ll_same( "'=SUM(A1:A2)", Ecapla_CertVerify_Import::escape_spreadsheet_cell( '=SUM(A1:A2)' ), 'ordinary formula prefix neutralized' );
+$invalid_utf8 = "\xFF=SUM(A1:A2)";
+ll_same( "'" . $invalid_utf8, Ecapla_CertVerify_Import::escape_spreadsheet_cell( $invalid_utf8 ), 'malformed UTF-8 fails safe' );
+echo "PASS  CSV formula neutralization fails safe on malformed UTF-8\n";
+
 // Legacy schema migration lock.
 $migration = new ReflectionMethod( Ecapla_CertVerify_Database::class, 'release_migration_lock' );
 $migration->setAccessible( true );

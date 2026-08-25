@@ -51,4 +51,53 @@ rl_same( true, $limiter->is_limited( 'credential_verify', true, 2, $identifier )
 rl_same( false, $limiter->is_limited( 'legacy_verify', false, 2, $identifier ), 'legacy-compatible fail-open mode explicit' );
 echo "PASS  fail-closed behavior is explicit per operation\n";
 
-echo "\n3 tests, 0 failures\n";
+$GLOBALS['rl_cache'] = array();
+$GLOBALS['rl_fail_incr'] = false;
+$_SERVER['REMOTE_ADDR'] = '203.0.113.9';
+for ( $i = 1; $i <= 8; $i++ ) {
+	$_SERVER['HTTP_USER_AGENT'] = 'rotating-agent-' . $i;
+	rl_same( false, $limiter->is_limited( 'verify', true, 2 ), 'network ceiling allows bounded UA rotation request ' . $i );
+}
+$_SERVER['HTTP_USER_AGENT'] = 'rotating-agent-9';
+rl_same( true, $limiter->is_limited( 'verify', true, 2 ), 'network ceiling blocks User-Agent rotation after four-times headroom' );
+echo "PASS  attacker-controlled User-Agent rotation cannot create unlimited public capacity
+";
+
+$GLOBALS['rl_cache'] = array();
+for ( $i = 1; $i <= 8; $i++ ) {
+	$_SERVER['REMOTE_ADDR'] = '2001:db8:1234:5678::' . dechex( $i );
+	$_SERVER['HTTP_USER_AGENT'] = 'ipv6-agent-' . $i;
+	rl_same( false, $limiter->is_limited( 'verify', true, 2 ), 'IPv6 /64 network ceiling allows bounded request ' . $i );
+}
+$_SERVER['REMOTE_ADDR'] = '2001:db8:1234:5678::ffff';
+$_SERVER['HTTP_USER_AGENT'] = 'ipv6-agent-9';
+rl_same( true, $limiter->is_limited( 'verify', true, 2 ), 'IPv6 /64 address rotation shares one network ceiling' );
+echo "PASS  IPv6 interface-address rotation cannot bypass the /64 network bucket
+";
+
+$GLOBALS['rl_cache'] = array();
+$_SERVER['REMOTE_ADDR'] = '192.0.2.44';
+$_SERVER['HTTP_USER_AGENT'] = 'mapped-a';
+rl_same( false, $limiter->is_limited( 'mapped', true, 1 ), 'native IPv4 first request allowed' );
+$_SERVER['REMOTE_ADDR'] = '::ffff:192.0.2.44';
+for ( $i = 0; $i < 3; $i++ ) {
+	$_SERVER['HTTP_USER_AGENT'] = 'mapped-' . $i;
+	$mapped_result = $limiter->is_limited( 'mapped', true, 1 );
+}
+rl_same( false, $mapped_result, 'mapped IPv4 shares network bucket before ceiling' );
+$_SERVER['HTTP_USER_AGENT'] = 'mapped-final';
+rl_same( true, $limiter->is_limited( 'mapped', true, 1 ), 'mapped IPv4 representation reaches the same network ceiling' );
+echo "PASS  IPv4-mapped IPv6 normalizes to the IPv4 network identity
+";
+
+$precision = ini_get( 'precision' );
+@ini_set( 'precision', '6' );
+$bucket_method = new ReflectionMethod( RateLimiter::class, 'bucket' );
+$bucket_method->setAccessible( true );
+$bucket_value = $bucket_method->invoke( $limiter );
+rl_same( 1, preg_match( '/^[0-9]+$/', $bucket_value ), 'minute bucket remains decimal under low precision ini' );
+if ( false !== $precision ) { @ini_set( 'precision', (string) $precision ); }
+echo "PASS  limiter minute identity is integer and precision-independent
+";
+
+echo "\n7 tests, 0 failures\n";

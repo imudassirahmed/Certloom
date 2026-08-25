@@ -83,7 +83,7 @@ icheck(false!==strpos($settings,'Random non-guessable when blank')&&false!==strp
 icheck(false!==strpos($admin,'Ecapla_CertVerify_Numbering::insert_generated')&&false!==strpos($admin,"array_key_exists( 'cert_number', \$data )"),'all generated strategies use the existing blank-new-number insertion boundary');
 icheck(false===strpos($numbering,'Ecapla_CertVerify_Database::update'),'ID strategy service cannot renumber an issued credential');
 icheck(false===strpos($numbering,'public_id')&&false===strpos($numbering,'PublicCredentialId'),'human-number strategy service does not create or replace normalized public credential IDs');
-icheck(false!==strpos($public_id,'DATA_LENGTH = 11')&&false!==strpos($public_id,'checksum_character'),'normalized-domain public credential ID remains a separate checksummed identity type');
+icheck(false!==strpos($public_id,'DATA_LENGTH')&&false!==strpos($public_id,'CHECKSUM_VERSION = 2')&&false!==strpos($public_id,'checksum_character_v2'),'normalized-domain public credential ID remains a separate versioned checksummed identity type');
 icheck(false!==strpos($rest,'verify_public_id'),'normalized public-ID verification path remains separate from legacy certificate-number verification');
 icheck(false===strpos($numbering,'program_id')&&false===strpos($numbering,'template_id'),'Program/Template scoped ID strategies remain dependency-gated');
 icheck(false!==strpos($backup,'Ecapla_CertVerify_Numbering::normalize_policy( $settings )'),'complete backup validates and normalizes numbering strategy before writing manifest');

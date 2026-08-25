@@ -835,7 +835,9 @@ class Ecapla_CertVerify_Import {
 
 	public static function escape_spreadsheet_cell( $value ) {
 		$value = (string) $value;
-		if ( preg_match( '/^[\x00-\x20\x{FEFF}]*[=+\-@]/u', $value ) ) {
+		$matched = preg_match( '/^[\x00-\x20\x{FEFF}]*[=+\-@]/u', $value );
+		if ( false === $matched || 1 === $matched ) {
+			/* Malformed UTF-8 must fail safe instead of bypassing formula neutralization. */
 			return "'" . $value;
 		}
 		return $value;
