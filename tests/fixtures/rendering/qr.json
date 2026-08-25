@@ -1,1 +1,0 @@
-{"_meta":{"schema":"certloom-layout","schema_version":1},"page":{"size":"A4","orientation":"portrait","width_mm":210,"height_mm":297},"elements":[{"id":"66666666-6666-4666-8666-666666666666","type":"qr","x_mm":160,"y_mm":240,"width_mm":30,"height_mm":30,"source":"verification_url","error_correction":"H","quiet_zone_modules":4}]}

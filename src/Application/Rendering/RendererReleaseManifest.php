@@ -10,19 +10,21 @@ use InvalidArgumentException;
  */
 final class RendererReleaseManifest {
 	const SCHEMA = 'certloom-renderer-release-authority';
-	const VERSION = 2;
+	const VERSION = 3;
 
 	/** @return array<string,mixed> */
-	public function from_acceptance( array $evidence ) {
+	public function from_acceptance( array $evidence, array $runtime_payload ) {
 		$contract = new RendererAcceptanceContract();
 		$accepted = $contract->normalize( $evidence );
 		if ( 'production-candidate' !== (string) $accepted['qualification'] ) {
 			throw new InvalidArgumentException( 'Renderer release authority requires production-candidate acceptance evidence.' );
 		}
+		$payload = ( new RuntimePayloadFingerprint() )->normalize( $runtime_payload );
 		return $this->normalize( array(
 			'schema' => self::SCHEMA,
 			'version' => self::VERSION,
 			'plugin_version' => (string) $accepted['plugin_version'],
+			'runtime_payload' => $payload,
 			'acceptance' => array(
 				'contract_version' => RendererAcceptanceContract::VERSION,
 				'acceptance_sha256' => $contract->hash( $accepted ),
@@ -45,7 +47,7 @@ final class RendererReleaseManifest {
 
 	/** @return array<string,mixed> */
 	public function normalize( array $manifest ) {
-		$this->assert_shape( $manifest, array( 'schema', 'version', 'plugin_version', 'acceptance', 'renderers', 'authority' ), array( 'schema', 'version', 'plugin_version', 'acceptance', 'renderers', 'authority' ), 'renderer release manifest' );
+		$this->assert_shape( $manifest, array( 'schema', 'version', 'plugin_version', 'runtime_payload', 'acceptance', 'renderers', 'authority' ), array( 'schema', 'version', 'plugin_version', 'runtime_payload', 'acceptance', 'renderers', 'authority' ), 'renderer release manifest' );
 		if ( self::SCHEMA !== (string) $manifest['schema'] || ! is_int( $manifest['version'] ) || self::VERSION !== $manifest['version'] ) {
 			throw new InvalidArgumentException( 'Renderer release manifest schema/version is unsupported.' );
 		}
@@ -53,6 +55,7 @@ final class RendererReleaseManifest {
 		if ( ! preg_match( '/^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][A-Za-z0-9.-]+)?$/', $plugin_version ) || strlen( $plugin_version ) > 64 ) {
 			throw new InvalidArgumentException( 'Renderer release manifest plugin version is invalid.' );
 		}
+		$runtime_payload = ( new RuntimePayloadFingerprint() )->normalize( $manifest['runtime_payload'] );
 		$acceptance = $this->normalize_acceptance( $manifest['acceptance'] );
 		$renderers = $this->normalize_renderers( $manifest['renderers'] );
 		$authority = $this->normalize_authority( $manifest['authority'] );
@@ -60,6 +63,7 @@ final class RendererReleaseManifest {
 			'schema' => self::SCHEMA,
 			'version' => self::VERSION,
 			'plugin_version' => $plugin_version,
+			'runtime_payload' => $runtime_payload,
 			'acceptance' => $acceptance,
 			'renderers' => $renderers,
 			'authority' => $authority,

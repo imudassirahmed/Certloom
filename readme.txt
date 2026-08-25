@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.38
+Stable tag: 1.6.39
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.38: `PDF-04` still requires the genuine seven-fixture PDF/PNG/JPEG execution. This checkpoint adds a canonical source-only acceptance-evidence builder so operators no longer hand-assemble acceptance-v7 hashes/checks, proves the production candidate -> standard verifier -> acceptance builder -> finalizer chain end to end, and rejects symbolic parent components at the finalization trust boundary. Concrete mPDF/GD candidates remain unaccepted and unregistered; `accepted.json` remains absent, and production artifacts, Template publication, authoritative Preview, and Designer output stay disabled until the genuine renderer-capable run passes.
+> Development note for 1.6.39: `PDF-04` still requires the genuine seven-fixture PDF/PNG/JPEG execution. Renderer release authority is now bound to the exact deterministic production payload bytes, not only the semantic plugin version: the finalizer fingerprints the production-intended tree and `RendererAuthorityGate` recomputes that identity at runtime, failing closed on any added, removed, or changed production file. Concrete mPDF/GD candidates remain unaccepted and unregistered; `accepted.json` remains absent, and production artifacts, Template publication, authoritative Preview, and Designer output stay disabled until the genuine renderer-capable run passes.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 

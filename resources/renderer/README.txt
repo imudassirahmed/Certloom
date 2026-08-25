@@ -1,8 +1,6 @@
-Certloom renderer authority boundary
+Certloom renderer authority
 
-This directory intentionally contains no accepted.json in 1.6.25.
-A future release may bundle accepted.json only after exact dependency-prefixed
-production PDF, PNG and JPEG renderer candidates pass the complete PDF-04
-three-format acceptance/import chain, including independent candidate-to-golden
-comparison. Runtime authority is release-bound and is never stored as a mutable
-WordPress option or enabled by an administrator checkbox.
+This directory intentionally contains no accepted.json in the current unaccepted renderer release.
+A future release may bundle accepted.json only after exact dependency-prefixed renderer candidates pass the complete PDF-04 production acceptance ceremony and human review.
+
+Renderer authority is immutable and release-bound. A valid manifest must match the exact Certloom plugin version, exact reviewed production-payload fingerprint, acceptance/report/verifier provenance, and exact PDF/PNG/JPEG candidate identities. No WordPress option or request parameter may bypass this gate.

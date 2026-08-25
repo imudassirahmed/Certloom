@@ -1,3 +1,10 @@
+1.6.39
+- Advance `RendererReleaseManifest` to v3 and bind renderer authority to a deterministic fingerprint of the exact Certloom production payload, not only the semantic plugin version.
+- Add `RuntimePayloadFingerprint`, shared by the source-only finalizer and production `RendererAuthorityGate`, with deterministic build-exclusion parity and fail-closed symbolic-entry/file-count/byte ceilings.
+- Make runtime renderer authority fail closed when any production file is changed, added, removed, or replaced while an accepted renderer manifest remains present; `accepted.json` itself is excluded from the fingerprint to avoid self-reference.
+- Prove the full source-tree fingerprint equals the deterministic production-package fingerprint, and add focused mutation/addition/persistence regressions.
+- Advance the authority-finalization index to v2 with the exact runtime-payload fingerprint and correct the stale production renderer README while keeping `PDF-04`, Template publication, authoritative Preview, Designer, and live artifact authority closed.
+
 1.6.38
 - Add a canonical source-only PDF-04 acceptance-evidence builder that derives RendererAcceptanceContract v7 directly from the exact production bundle plus normalized independent report/environment/index instead of requiring operators to copy hashes and mandatory checks by hand.
 - Cross-check plugin version, bundle/manifests, renderer/context/candidate identities, deterministic A/B fixture hashes, verification report/environment hashes, and verification-index identities before acceptance evidence can be emitted.

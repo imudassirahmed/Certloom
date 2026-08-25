@@ -4,6 +4,7 @@ namespace Certloom\Infrastructure\Rendering;
 use Certloom\Application\Rendering\RendererRegistry;
 use Certloom\Application\Contract\ArtifactAuthorityGateInterface;
 use Certloom\Application\Rendering\RendererReleaseManifest;
+use Certloom\Application\Rendering\RuntimePayloadFingerprint;
 
 /**
  * Fail-closed runtime gate between external PDF-04 proof and product authority.
@@ -20,13 +21,17 @@ final class RendererAuthorityGate implements ArtifactAuthorityGateInterface {
 	private $plugin_version;
 	private $relative_path;
 	private $capabilities;
+	private $runtime_payloads;
+	private $runtime_payload_cache;
 
-	public function __construct( RendererReleaseManifest $manifest_contract = null, $plugin_root = null, $plugin_version = null, $relative_path = null, RendererCapabilityDetector $capabilities = null ) {
+	public function __construct( RendererReleaseManifest $manifest_contract = null, $plugin_root = null, $plugin_version = null, $relative_path = null, RendererCapabilityDetector $capabilities = null, RuntimePayloadFingerprint $runtime_payloads = null ) {
 		$this->manifest_contract = $manifest_contract ?: new RendererReleaseManifest();
 		$this->plugin_root = rtrim( (string) ( null === $plugin_root && defined( 'CERTLOOM_PATH' ) ? CERTLOOM_PATH : $plugin_root ), '/\\' );
 		$this->plugin_version = (string) ( null === $plugin_version && defined( 'CERTLOOM_VERSION' ) ? CERTLOOM_VERSION : $plugin_version );
 		$this->relative_path = ltrim( (string) ( null === $relative_path ? self::DEFAULT_RELATIVE_PATH : $relative_path ), '/\\' );
 		$this->capabilities = $capabilities ?: new RendererCapabilityDetector();
+		$this->runtime_payloads = $runtime_payloads ?: new RuntimePayloadFingerprint();
+		$this->runtime_payload_cache = null;
 	}
 
 	/** @return array<string,mixed> */
@@ -42,7 +47,15 @@ final class RendererAuthorityGate implements ArtifactAuthorityGateInterface {
 		if ( '' === $this->plugin_version || ! hash_equals( (string) $manifest['plugin_version'], $this->plugin_version ) ) {
 			return array( 'accepted' => false, 'reason' => 'plugin_version_mismatch', 'message' => 'Renderer release authority belongs to a different Certloom version.', 'manifest' => $manifest, 'manifest_sha256' => $this->manifest_contract->hash( $manifest ) );
 		}
-		return array( 'accepted' => true, 'reason' => 'manifest_valid', 'message' => 'Accepted renderer release manifest is valid for this Certloom version.', 'manifest' => $manifest, 'manifest_sha256' => $this->manifest_contract->hash( $manifest ) );
+		try {
+			$runtime_payload = $this->runtime_payload();
+		} catch ( \Throwable $error ) {
+			return array( 'accepted' => false, 'reason' => 'runtime_payload_invalid', 'message' => $error->getMessage(), 'manifest' => $manifest, 'manifest_sha256' => $this->manifest_contract->hash( $manifest ) );
+		}
+		if ( $runtime_payload !== $manifest['runtime_payload'] ) {
+			return array( 'accepted' => false, 'reason' => 'runtime_payload_mismatch', 'message' => 'Renderer release authority belongs to different Certloom production bytes.', 'manifest' => $manifest, 'manifest_sha256' => $this->manifest_contract->hash( $manifest ), 'runtime_payload' => $runtime_payload );
+		}
+		return array( 'accepted' => true, 'reason' => 'manifest_valid', 'message' => 'Accepted renderer release manifest is valid for this exact Certloom production payload.', 'manifest' => $manifest, 'manifest_sha256' => $this->manifest_contract->hash( $manifest ), 'runtime_payload' => $runtime_payload );
 	}
 
 	/** @return array<string,mixed> */
@@ -126,6 +139,14 @@ final class RendererAuthorityGate implements ArtifactAuthorityGateInterface {
 		$status['message'] = 'The exact accepted ' . strtoupper( $format ) . ' renderer is available on this host.';
 		$status['format'] = $format;
 		return $status;
+	}
+
+
+	/** @return array<string,mixed> */
+	private function runtime_payload() {
+		if ( is_array( $this->runtime_payload_cache ) ) { return $this->runtime_payload_cache; }
+		$this->runtime_payload_cache = $this->runtime_payloads->fingerprint( $this->plugin_root );
+		return $this->runtime_payload_cache;
 	}
 
 	/** @return array<string,mixed>|null */
