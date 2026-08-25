@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.45
+Stable tag: 1.6.46
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.45: `PDF-04` still requires the genuine seven-fixture PDF/PNG/JPEG execution. In parallel, normalized-domain acceptance is now bound through publication to the exact current normalized credential graph: completed restore/cutover evidence stales after a later Certloom domain-generation change, and the final real-host collector performs a fresh full graph fingerprint and requires exact parity with the cutover rehearsal hash, configuration, record counts, entity counts, and generation. This catches both normal post-rehearsal mutations and direct SQL drift that bypasses Certloom mutation markers. No real MySQL/MariaDB run is claimed by this release; all three normalized-domain authority flags stay false. Concrete mPDF/GD candidates remain unaccepted and `accepted.json` remains absent, so production artifacts, Template publication, authoritative Preview, and Designer output stay disabled until the genuine renderer-capable run passes.
+> Development note for 1.6.46: `PDF-04` still requires the genuine seven-fixture PDF/PNG/JPEG execution. In parallel, the final normalized-domain acceptance collector now keeps one owner-matched `DomainMaintenanceLock` active from the final full graph fingerprint through atomic evidence publication, revalidates the base-gate bundle, exact runtime payload/environment and all six stored proof bytes while that boundary is retained, and withdraws any newly published acceptance directory if lock cleanup cannot be confirmed. Acceptance bundle/index v4 makes older publication-unlocked evidence stale. No real MySQL/MariaDB run is claimed by this release; all three normalized-domain authority flags stay false. Concrete mPDF/GD candidates remain unaccepted and `accepted.json` remains absent, so production artifacts, Template publication, authoritative Preview and Designer output stay disabled until the genuine renderer-capable run passes.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -129,6 +129,13 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.46 =
+* Close the final normalized-domain acceptance publication TOCTOU gap by retaining one owner-matched maintenance lease from the complete graph fingerprint through atomic publication.
+* Revalidate the exact base-gate bundle, Certloom runtime payload, WordPress/PHP/database environment, and all six stored proof/report bytes while the publication boundary is retained.
+* Recheck the frozen normalized graph/configuration boundary immediately before rename, require explicit owner-active lock continuity, and fail closed if the boundary is lost.
+* Withdraw newly published acceptance evidence if maintenance-lock cleanup cannot be confirmed, so an uncertain cleanup cannot leave a successful-looking canonical acceptance directory.
+* Advance normalized-domain acceptance bundle/index to v4; keep normalized-domain authority and renderer authority closed until the genuine external database and PDF-04 gates pass.
 
 = 1.6.45 =
 * Bind completed staging restore and cutover evidence to the normalized-domain generation that existed when each rehearsal passed, so later official domain mutations immediately stale those proofs.

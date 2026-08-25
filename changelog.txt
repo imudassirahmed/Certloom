@@ -1,3 +1,10 @@
+1.6.46
+- Close the final normalized-domain acceptance publication TOCTOU gap by retaining one owner-matched maintenance lease from the complete graph fingerprint through atomic publication.
+- Revalidate the exact base-gate bundle, Certloom runtime payload, WordPress/PHP/database environment, and all six stored proof/report bytes while the publication boundary is retained.
+- Recheck the frozen normalized graph/configuration boundary immediately before rename, require explicit owner-active lock continuity, and fail closed if the boundary is lost.
+- Withdraw newly published acceptance evidence if maintenance-lock cleanup cannot be confirmed, so an uncertain cleanup cannot leave a successful-looking canonical acceptance directory.
+- Advance normalized-domain acceptance bundle/index to v4; keep normalized-domain authority and renderer authority closed until the genuine external database and PDF-04 gates pass.
+
 1.6.45
 - Bind completed staging restore and cutover evidence to the normalized-domain generation present when each rehearsal passed, so later official domain mutations stale those proofs immediately.
 - Advance staging restore/cutover evidence to v5 and normalized-domain acceptance bundle/index to v3 so older post-rehearsal-state-unbound evidence fails closed.

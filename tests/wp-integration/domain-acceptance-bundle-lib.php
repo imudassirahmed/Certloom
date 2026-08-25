@@ -130,24 +130,93 @@ function certloom_db_validate_base_gate_bundle( $gate_dir, $source_dir ) {
 	return $rebuilt;
 }
 
-function certloom_db_current_domain_fingerprint() {
-	if ( ! class_exists( '\Certloom\Infrastructure\Diagnostics\DomainStateFingerprint' ) ) { throw new RuntimeException( 'Canonical normalized-domain fingerprint implementation is unavailable.' ); }
-	try { $owner = bin2hex( random_bytes( 16 ) ); } catch ( Throwable $e ) { throw new RuntimeException( 'Could not create normalized-domain fingerprint owner.' ); }
-	$fingerprint = new \Certloom\Infrastructure\Diagnostics\DomainStateFingerprint();
-	$state = $fingerprint->start( $owner );
-	if ( is_wp_error( $state ) ) { throw new RuntimeException( 'Could not start the final normalized-domain fingerprint: ' . $state->get_error_message() ); }
-	for ( $i = 0; $i < 100000 && is_array( $state ) && empty( $state['complete'] ); ++$i ) {
-		$state = $fingerprint->continue_fingerprint( $state, 500 );
-		if ( is_wp_error( $state ) ) { throw new RuntimeException( 'Could not complete the final normalized-domain fingerprint: ' . $state->get_error_message() ); }
-	}
-	if ( ! is_array( $state ) || empty( $state['complete'] ) ) { throw new RuntimeException( 'Final normalized-domain fingerprint exceeded its bounded scan limit.' ); }
+function certloom_db_domain_state_summary( array $state ) {
 	$hash = strtolower( trim( (string) ( $state['hash'] ?? '' ) ) );
 	$config = strtolower( trim( (string) ( $state['configuration_hash'] ?? '' ) ) );
 	$generation = (string) ( $state['generation'] ?? '' );
 	$records = filter_var( $state['records'] ?? null, FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 1 ) ) );
 	$counts = isset( $state['entity_counts'] ) && is_array( $state['entity_counts'] ) ? $state['entity_counts'] : null;
-	if ( 1 !== preg_match( '/^[a-f0-9]{64}$/', $hash ) || 1 !== preg_match( '/^[a-f0-9]{64}$/', $config ) || '' === $generation || false === $records || ! is_array( $counts ) ) { throw new RuntimeException( 'Final normalized-domain fingerprint is incomplete.' ); }
+	if ( 1 !== preg_match( '/^[a-f0-9]{64}$/', $hash ) || 1 !== preg_match( '/^[a-f0-9]{64}$/', $config ) || '' === $generation || false === $records || ! is_array( $counts ) ) {
+		throw new RuntimeException( 'Final normalized-domain fingerprint is incomplete.' );
+	}
 	return array( 'hash'=>$hash, 'configuration_hash'=>$config, 'generation'=>$generation, 'records'=>(int)$records, 'entity_counts'=>$counts );
+}
+function certloom_db_complete_domain_fingerprint( $retain_lock = false ) {
+	if ( ! class_exists( '\Certloom\Infrastructure\Diagnostics\DomainStateFingerprint' ) || ! class_exists( '\Certloom\Infrastructure\Data\DomainMaintenanceLock' ) ) {
+		throw new RuntimeException( 'Canonical normalized-domain fingerprint/maintenance implementation is unavailable.' );
+	}
+	try { $owner = bin2hex( random_bytes( 16 ) ); } catch ( Throwable $e ) { throw new RuntimeException( 'Could not create normalized-domain fingerprint owner.' ); }
+	$fingerprint = new \Certloom\Infrastructure\Diagnostics\DomainStateFingerprint();
+	$state = $fingerprint->start( $owner, (bool) $retain_lock );
+	if ( is_wp_error( $state ) ) { throw new RuntimeException( 'Could not start the final normalized-domain fingerprint: ' . $state->get_error_message() ); }
+	for ( $i = 0; $i < 100000 && is_array( $state ) && empty( $state['complete'] ); ++$i ) {
+		$state = $fingerprint->continue_fingerprint( $state, 500 );
+		if ( is_wp_error( $state ) ) { throw new RuntimeException( 'Could not complete the final normalized-domain fingerprint: ' . $state->get_error_message() ); }
+	}
+	if ( ! is_array( $state ) || empty( $state['complete'] ) ) {
+		$released = ( new \Certloom\Infrastructure\Data\DomainMaintenanceLock() )->release( $owner );
+		if ( is_wp_error( $released ) ) { throw new RuntimeException( 'Final normalized-domain fingerprint exceeded its bounded scan limit and its maintenance boundary could not be released safely.' ); }
+		throw new RuntimeException( 'Final normalized-domain fingerprint exceeded its bounded scan limit.' );
+	}
+	try {
+		$summary = certloom_db_domain_state_summary( $state );
+	} catch ( Throwable $error ) {
+		if ( $retain_lock ) {
+			$released = ( new \Certloom\Infrastructure\Data\DomainMaintenanceLock() )->release( $owner );
+			if ( is_wp_error( $released ) ) {
+				throw new RuntimeException( $error->getMessage() . ' Retained fingerprint cleanup also failed: ' . $released->get_error_message() );
+			}
+		}
+		throw $error;
+	}
+	if ( ! $retain_lock ) { return $summary; }
+	$maintenance = new \Certloom\Infrastructure\Data\DomainMaintenanceLock();
+	if ( ! $maintenance->owned_active( $owner ) ) { throw new RuntimeException( 'Final normalized-domain fingerprint did not retain its maintenance boundary.' ); }
+	return array(
+		'owner_token' => $owner,
+		'domain_state' => $summary,
+		'boundary' => array(
+			'generation' => (string) ( $state['generation'] ?? '' ),
+			'configuration_hash' => (string) ( $state['configuration_hash'] ?? '' ),
+			'entities' => (array) ( $state['entities'] ?? array() ),
+		),
+	);
+}
+function certloom_db_current_domain_fingerprint() {
+	return certloom_db_complete_domain_fingerprint( false );
+}
+function certloom_db_current_domain_fingerprint_retained() {
+	return certloom_db_complete_domain_fingerprint( true );
+}
+function certloom_db_revalidate_retained_domain_boundary( array $retained ) {
+	if ( ! class_exists( '\Certloom\Infrastructure\Backup\DomainBackupRepository' ) || ! class_exists( '\Certloom\Infrastructure\Data\DomainMaintenanceLock' ) ) {
+		throw new RuntimeException( 'Canonical normalized-domain boundary implementation is unavailable.' );
+	}
+	$owner = strtolower( trim( (string) ( $retained['owner_token'] ?? '' ) ) );
+	$boundary = isset( $retained['boundary'] ) && is_array( $retained['boundary'] ) ? $retained['boundary'] : null;
+	if ( 1 !== preg_match( '/^[a-f0-9]{32}$/', $owner ) || ! is_array( $boundary ) ) { throw new RuntimeException( 'Retained normalized-domain publication boundary is invalid.' ); }
+	$maintenance = new \Certloom\Infrastructure\Data\DomainMaintenanceLock();
+	$touched = $maintenance->touch( $owner, 'domain_acceptance_publication', \Certloom\Infrastructure\Data\DomainMaintenanceLock::DEFAULT_TTL );
+	if ( is_wp_error( $touched ) || ! $maintenance->owned_active( $owner ) ) { throw new RuntimeException( 'Normalized-domain publication no longer owns its maintenance boundary.' ); }
+	$current = ( new \Certloom\Infrastructure\Backup\DomainBackupRepository() )->snapshot();
+	if ( is_wp_error( $current ) ) { throw new RuntimeException( 'Could not recheck the normalized-domain publication boundary: ' . $current->get_error_message() ); }
+	if (
+		! hash_equals( (string) ( $boundary['generation'] ?? '' ), (string) ( $current['generation'] ?? '' ) )
+		|| ! hash_equals( (string) ( $boundary['configuration_hash'] ?? '' ), (string) ( $current['configuration_hash'] ?? '' ) )
+		|| (array) ( $boundary['entities'] ?? array() ) !== (array) ( $current['entities'] ?? array() )
+	) {
+		throw new RuntimeException( 'Normalized-domain graph/configuration boundary changed after the final full fingerprint.' );
+	}
+	return true;
+}
+function certloom_db_release_retained_domain_boundary( $owner ) {
+	$owner = strtolower( trim( (string) $owner ) );
+	if ( 1 !== preg_match( '/^[a-f0-9]{32}$/', $owner ) || ! class_exists( '\Certloom\Infrastructure\Data\DomainMaintenanceLock' ) ) {
+		throw new RuntimeException( 'Normalized-domain publication maintenance owner is invalid.' );
+	}
+	$released = ( new \Certloom\Infrastructure\Data\DomainMaintenanceLock() )->release( $owner );
+	if ( is_wp_error( $released ) ) { throw new RuntimeException( 'Could not release normalized-domain publication maintenance boundary: ' . $released->get_error_message() ); }
+	return true;
 }
 
 function certloom_db_build_final_acceptance( array $base, $plugin_version, array $payload, array $environment, array $stored, array $domain_state, $generated_at ) {
@@ -177,5 +246,5 @@ function certloom_db_build_final_acceptance( array $base, $plugin_version, array
 	if ( 1 !== preg_match('/^[a-f0-9]{64}$/',$domain_hash) || 1 !== preg_match('/^[a-f0-9]{64}$/',$config_hash) || '' === $generation || false === $records || ! is_array($counts) ) { throw new RuntimeException('Current normalized-domain graph fingerprint is invalid.'); }
 	if ( ! hash_equals((string)($cutover['baseline_hash']??''),$domain_hash) || ! hash_equals((string)($cutover['baseline_config_hash']??''),$config_hash) || (int)($cutover['baseline_records']??0)!==(int)$records || (array)($cutover['baseline_counts']??array())!==$counts || ! hash_equals((string)($cutover['domain_generation']??''),$generation) ) { throw new RuntimeException('Current normalized-domain graph no longer matches the final cutover rehearsal boundary.'); }
 	$exported_domain_state=array('hash'=>$domain_hash,'configuration_hash'=>$config_hash,'records'=>(int)$records,'entity_counts'=>$counts,'generation_sha256'=>hash('sha256',$generation));
-	return array('schema'=>'certloom-normalized-domain-acceptance-bundle','version'=>3,'status'=>'qualified','generated_at'=>(int)$generated_at,'plugin_version'=>(string)$plugin_version,'runtime_payload'=>$payload,'environment'=>$environment,'environment_sha256'=>hash('sha256',certloom_db_canonical_json($environment)),'domain_state'=>$exported_domain_state,'domain_state_sha256'=>hash('sha256',certloom_db_canonical_json($exported_domain_state)),'base_gates'=>$base,'stored_evidence'=>$out);
+	return array('schema'=>'certloom-normalized-domain-acceptance-bundle','version'=>4,'status'=>'qualified','generated_at'=>(int)$generated_at,'plugin_version'=>(string)$plugin_version,'runtime_payload'=>$payload,'environment'=>$environment,'environment_sha256'=>hash('sha256',certloom_db_canonical_json($environment)),'domain_state'=>$exported_domain_state,'domain_state_sha256'=>hash('sha256',certloom_db_canonical_json($exported_domain_state)),'base_gates'=>$base,'stored_evidence'=>$out);
 }

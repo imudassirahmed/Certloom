@@ -245,6 +245,22 @@ $fp2 = $fingerprinter->start( str_repeat( 'f', 32 ) );$guard=0;while(!is_wp_erro
 db_same(false,is_wp_error($fp2),'second fingerprint');db_same($fp['hash'],$fp2['hash'],'deterministic graph fingerprint');db_same($fp['records'],$fp2['records'],'deterministic graph count');
 echo "PASS  domain-state fingerprint is deterministic and holds the maintenance boundary across its full scan\n";
 
+// Final acceptance may retain the exact same owner-matched maintenance lease through publication.
+$fp_retained = $fingerprinter->start( str_repeat( '3', 32 ), true );
+db_same( false, is_wp_error( $fp_retained ), 'retained fingerprint start' );
+$guard = 0;
+while ( ! is_wp_error( $fp_retained ) && empty( $fp_retained['complete'] ) && $guard++ < 100 ) {
+	$fp_retained = $fingerprinter->continue_fingerprint( $fp_retained, 500 );
+}
+db_same( false, is_wp_error( $fp_retained ), 'retained fingerprint completes' );
+db_true( $fp_retained['complete'], 'retained fingerprint complete flag' );
+db_same( true, array_key_exists( 'certloom_domain_maintenance_lock', $GLOBALS['db_options'] ), 'retained fingerprint preserves maintenance boundary after verification' );
+$retained_lock = new Certloom\Infrastructure\Data\DomainMaintenanceLock();
+db_same( true, $retained_lock->owned_active( str_repeat( '3', 32 ) ), 'retained fingerprint owner still holds active lease' );
+db_same( true, $retained_lock->release( str_repeat( '3', 32 ) ), 'retained fingerprint lease releases explicitly' );
+db_same( false, array_key_exists( 'certloom_domain_maintenance_lock', $GLOBALS['db_options'] ), 'retained fingerprint explicit release clears maintenance boundary' );
+echo "PASS  domain-state fingerprint can retain one owner-matched maintenance boundary through an external publication step\n";
+
 // Malformed initial boundary evidence must not strand the shared maintenance lease.
 $generation_saved = $GLOBALS['db_options']['certloom_domain_data_generation'];
 $GLOBALS['db_options']['certloom_domain_data_generation'] = '';
@@ -268,4 +284,4 @@ db_rm( $root );
 @unlink( $count_bad );
 @unlink( $trailing );
 @unlink( $unsupported );
-echo "\n11 tests, 0 failures\n";
+echo "\n12 tests, 0 failures\n";

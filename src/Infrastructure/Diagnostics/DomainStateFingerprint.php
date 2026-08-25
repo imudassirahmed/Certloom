@@ -32,7 +32,7 @@ final class DomainStateFingerprint {
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
-	public function start( $owner_token ) {
+	public function start( $owner_token, $retain_lock = false ) {
 		$owner = $this->owner_token( $owner_token );
 		if ( is_wp_error( $owner ) ) { return $owner; }
 		$locked = $this->maintenance->acquire( $owner, 'domain_state_fingerprint', self::LOCK_TTL );
@@ -64,6 +64,7 @@ final class DomainStateFingerprint {
 			'records'            => 0,
 			'expected_records'   => $expected_records,
 			'hash'               => $hash,
+			'retain_lock'        => (bool) $retain_lock,
 			'complete'           => false,
 		);
 	}
@@ -114,15 +115,19 @@ final class DomainStateFingerprint {
 		if ( is_wp_error( $touched ) ) { return $touched; }
 		$current = $this->repository->snapshot();
 		if ( is_wp_error( $current ) ) { return $this->release_after_error( $owner, $current ); }
-		$released = $this->maintenance->release( $owner );
-		if ( is_wp_error( $released ) ) {
-			return new \WP_Error( 'certloom_domain_fingerprint_verify_cleanup_failed', __( 'Certloom could not release its domain-fingerprint verification lock safely.', 'certloom' ) );
-		}
 		if ( ! hash_equals( (string) $state['generation'], (string) ( $current['generation'] ?? '' ) ) || ! hash_equals( (string) $state['configuration_hash'], (string) ( $current['configuration_hash'] ?? '' ) ) || (array) $state['entities'] !== (array) ( $current['entities'] ?? array() ) ) {
-			return new \WP_Error( 'certloom_domain_fingerprint_concurrent_change', __( 'The credential graph or configuration changed while Certloom was fingerprinting it.', 'certloom' ) );
+			return $this->release_after_error( $owner, new \WP_Error( 'certloom_domain_fingerprint_concurrent_change', __( 'The credential graph or configuration changed while Certloom was fingerprinting it.', 'certloom' ) ) );
 		}
 		if ( absint( $state['records'] ) !== absint( $state['expected_records'] ) ) {
-			return new \WP_Error( 'certloom_domain_fingerprint_count_mismatch', __( 'The credential graph fingerprint did not cover every frozen record.', 'certloom' ) );
+			return $this->release_after_error( $owner, new \WP_Error( 'certloom_domain_fingerprint_count_mismatch', __( 'The credential graph fingerprint did not cover every frozen record.', 'certloom' ) ) );
+		}
+		if ( empty( $state['retain_lock'] ) ) {
+			$released = $this->maintenance->release( $owner );
+			if ( is_wp_error( $released ) ) {
+				return new \WP_Error( 'certloom_domain_fingerprint_verify_cleanup_failed', __( 'Certloom could not release its domain-fingerprint verification lock safely.', 'certloom' ) );
+			}
+		} elseif ( ! $this->maintenance->owned_active( $owner ) ) {
+			return new \WP_Error( 'certloom_domain_fingerprint_lock_lost', __( 'Certloom lost the retained domain-fingerprint maintenance boundary before publication.', 'certloom' ) );
 		}
 		$state['complete'] = true;
 		return $state;
@@ -156,11 +161,11 @@ final class DomainStateFingerprint {
 
 	/** @return true|\WP_Error */
 	private function validate_state( array $state ) {
-		foreach ( array( 'schema', 'version', 'owner_token', 'generation', 'configuration_hash', 'entities', 'entity_index', 'cursor', 'entity_counts', 'records', 'expected_records', 'hash' ) as $key ) {
+		foreach ( array( 'schema', 'version', 'owner_token', 'generation', 'configuration_hash', 'entities', 'entity_index', 'cursor', 'entity_counts', 'records', 'expected_records', 'hash', 'retain_lock' ) as $key ) {
 			if ( ! array_key_exists( $key, $state ) ) { return new \WP_Error( 'certloom_domain_fingerprint_state_invalid', __( 'The resumable domain-fingerprint state is incomplete.', 'certloom' ) ); }
 		}
 		$owner = $this->owner_token( $state['owner_token'] );
-		if ( is_wp_error( $owner ) || self::STATE_SCHEMA !== (string) $state['schema'] || self::STATE_VERSION !== (int) $state['version'] || ! preg_match( '/^[a-f0-9]{64}$/', (string) $state['configuration_hash'] ) || ! preg_match( '/^[a-f0-9]{64}$/', (string) $state['hash'] ) || array_keys( (array) $state['entities'] ) !== DomainBackupRepository::entity_types() ) {
+		if ( is_wp_error( $owner ) || self::STATE_SCHEMA !== (string) $state['schema'] || self::STATE_VERSION !== (int) $state['version'] || ! preg_match( '/^[a-f0-9]{64}$/', (string) $state['configuration_hash'] ) || ! preg_match( '/^[a-f0-9]{64}$/', (string) $state['hash'] ) || array_keys( (array) $state['entities'] ) !== DomainBackupRepository::entity_types() || ! is_bool( $state['retain_lock'] ) ) {
 			return new \WP_Error( 'certloom_domain_fingerprint_state_invalid', __( 'The resumable domain-fingerprint state is invalid.', 'certloom' ) );
 		}
 		return true;
