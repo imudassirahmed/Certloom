@@ -73,7 +73,7 @@ tpl_has($files['preflight'],'template_parent_revision_invalid','semantic preflig
 tpl_has($files['workspace'],'template_published_revision_invalid','staged restore re-proves published pointer');
 tpl_has($files['workspace'],"'templates' => 't', 'template_revisions' => 'u', 'template_assignments' => 'y'",'restore workspace gives every template entity a unique private-table code');
 tpl_has($files['restore_map'],"'templates', 'template_revisions', 'template_assignments'",'durable Merge mapping accepts template entities');
-tpl_has($files['acceptance'],'const RESULT_VERSION = 6','exact-payload-bound domain acceptance invalidates older template-era evidence');
+tpl_has($files['acceptance'],'const RESULT_VERSION = 7','exact-payload-bound domain acceptance invalidates older template-era evidence');
 tpl_has($files['uninstall'],'certloom_template_assignments','uninstall owns template assignments');
 tpl_has($files['uninstall'],'certloom_template_revisions','uninstall owns revisions');
 tpl_has($files['uninstall'],'certloom_templates','uninstall owns templates');

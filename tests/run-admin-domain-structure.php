@@ -139,7 +139,7 @@ p1e_has( $src['merge'], "case 'signers'", 'Merge restore must deterministically 
 p1e_has( $src['merge'], "case 'batches'", 'Merge restore must deterministically map Batches.' );
 p1e_has( $src['merge'], "array( 'batch_id', 'recipient_id', 'signer_id', 'scope_type', 'scope_id', 'role_type' )", 'Merge identity/composite columns must include new relationships.' );
 
-p1e_has( $src['proof'], 'const RESULT_VERSION = 6', 'Older acceptance proof receipts must not approve current exact-payload-bound acceptance evidence.' );
+p1e_has( $src['proof'], 'const RESULT_VERSION = 7', 'Older acceptance proof receipts must not approve current exact-payload-bound acceptance evidence.' );
 foreach ( array( "'signers'", "'batches'", "'batch_recipients'", "'signer_assignments'" ) as $entity ) {
 	p1e_has( $src['proof'], $entity, 'Acceptance proof must exercise ' . $entity . '.' );
 }

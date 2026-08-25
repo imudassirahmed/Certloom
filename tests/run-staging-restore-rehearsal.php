@@ -2,6 +2,9 @@
 /** Evidence/privacy regression tests for staging populated backup/restore rehearsal. */
 namespace {
     define( 'ABSPATH', __DIR__ . '/fake-wp/' );
+define( 'DB_NAME', 'certloom_test_db' );
+define( 'DB_HOST', 'db.test.local' );
+define( 'DB_USER', 'certloom_test_user' );
     define( 'DAY_IN_SECONDS', 86400 );
     define( 'MINUTE_IN_SECONDS', 60 );
     define( 'ECAPLA_CERTVERIFY_VERSION', '1.5.15-test' );
@@ -49,7 +52,7 @@ namespace Certloom\Infrastructure\Restore { final class DomainRestoreMergeServic
 namespace {
     
 function is_multisite(){ return false; }
-$GLOBALS['wpdb'] = new class { public function db_server_info(){ return 'MySQL test-server'; } public function db_version(){ return '8.0.36'; } };
+$GLOBALS['wpdb'] = new class { public $prefix = 'wp_'; public function db_server_info(){ return 'MySQL test-server'; } public function db_version(){ return '8.0.36'; } };
 require dirname( __DIR__ ) . '/src/Application/Rendering/CanonicalJson.php';
     require dirname( __DIR__ ) . '/src/Application/Rendering/RuntimePayloadFingerprint.php';
     require dirname( __DIR__ ) . '/src/Infrastructure/Diagnostics/RuntimePayloadEvidence.php';

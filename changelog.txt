@@ -1,3 +1,11 @@
+1.6.44
+- Advance RuntimeEnvironmentEvidence to v2 with a privacy-safe configured database/table-instance SHA-256 derived from DB host/name/user plus the active WordPress table prefix.
+- Advance database proof to v4, gated-domain acceptance to v7, and preflight/staging migration/restore/cutover evidence to v4 so historical database-instance-unbound results fail closed.
+- Advance real-host gate evidence to v3, base-gate index to v2, normalized-domain acceptance bundle/index to v2, and reject same-software evidence from a different configured database instance.
+- Make final acceptance independently pin all six current stored-evidence schema versions, rather than relying only on provider-level validation.
+- Prevent the real-host base-gate runner from creating output-parent residue before source-isolation validation; require an existing non-symbolic external parent.
+- Keep all normalized-domain authority flags and renderer authority closed until genuine external gates pass.
+
 1.6.43
 - Add canonical RuntimeEnvironmentEvidence for exact WordPress/PHP/database environment binding across normalized-domain database proof, preflight, migration, restore, cutover, and real-host acceptance evidence.
 - Advance database proof to v3, gated-domain acceptance to v6, and preflight/staging migration/restore/cutover evidence to v3 so historical environment-unbound results fail closed.

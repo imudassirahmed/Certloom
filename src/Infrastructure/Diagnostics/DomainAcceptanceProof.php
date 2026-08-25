@@ -37,7 +37,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class DomainAcceptanceProof {
 	const RESULT_OPTION  = 'certloom_domain_acceptance_proof_last';
 	const RESULT_SCHEMA  = 'certloom-domain-acceptance-proof';
-	const RESULT_VERSION = 6;
+	const RESULT_VERSION = 7;
 	const MAX_AGE         = 7 * DAY_IN_SECONDS;
 	const ROLLBACK_CODE   = 'certloom_domain_acceptance_intentional_rollback';
 

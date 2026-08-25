@@ -1,6 +1,9 @@
 <?php
 /** Behavioral regression for exact WordPress/PHP/database environment evidence. */
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
+define( 'DB_NAME', 'certloom_test_db' );
+define( 'DB_HOST', 'db.test.local' );
+define( 'DB_USER', 'certloom_test_user' );
 $GLOBALS['wp_version'] = '6.8.2-test';
 $GLOBALS['dre_env_type'] = 'staging';
 $GLOBALS['dre_multisite'] = false;
@@ -10,6 +13,7 @@ $GLOBALS['dre_db_version'] = '8.0.42';
 function wp_get_environment_type() { return (string) $GLOBALS['dre_env_type']; }
 function is_multisite() { return (bool) $GLOBALS['dre_multisite']; }
 $GLOBALS['wpdb'] = new class {
+	public $prefix = 'secret_prefix_9384_';
 	public function db_server_info() { return (string) $GLOBALS['dre_db_info']; }
 	public function db_version() { return (string) $GLOBALS['dre_db_version']; }
 };
@@ -33,6 +37,7 @@ dre_check( PHP_VERSION === $current['php_version'], 'PHP version must be capture
 dre_check( 'staging' === $current['wp_environment_type'], 'WordPress environment type must be captured.' );
 dre_check( 'MySQL 8.0.42 test-server' === $current['db_server_info'], 'Database server identity must be captured.' );
 dre_check( '8.0.42' === $current['db_version'], 'Database version must be captured.' );
+dre_check( 1 === preg_match( '/^[a-f0-9]{64}$/', $current['database_instance_sha256'] ), 'Configured database/site instance must be bound through a privacy-safe SHA-256 identity.' );
 dre_check( false === $current['multisite'], 'Multisite state must be captured.' );
 dre_check( $current === RuntimeEnvironmentEvidence::normalize( $current ), 'Environment evidence must normalize idempotently.' );
 dre_check( RuntimeEnvironmentEvidence::matches_current( $current ), 'Fresh environment evidence must match the current host.' );
@@ -53,10 +58,15 @@ $bad = $current; $bad['wp_version'] = '6.9.0';
 dre_check( ! RuntimeEnvironmentEvidence::matches_current( $bad ), 'WordPress version change must stale evidence.' );
 $bad = $current; $bad['multisite'] = true;
 dre_check( ! RuntimeEnvironmentEvidence::matches_current( $bad ), 'Multisite-state change must stale evidence.' );
+$original_prefix = $GLOBALS['wpdb']->prefix;
+$GLOBALS['wpdb']->prefix = 'different_prefix_';
+dre_check( ! RuntimeEnvironmentEvidence::matches_current( $current ), 'Different WordPress table/database instance must stale evidence even when software versions are identical.' );
+$GLOBALS['wpdb']->prefix = $original_prefix;
 $GLOBALS['dre_db_info'] = "MySQL 8.0.42\n test-server";
 $clean = RuntimeEnvironmentEvidence::current();
 dre_check( is_array( $clean ) && false === strpos( $clean['db_server_info'], "\n" ), 'Control characters must be removed from portable environment evidence.' );
 $GLOBALS['dre_db_info'] = 'MySQL 8.0.42 test-server';
+dre_check( false === strpos( json_encode( $current ), DB_NAME ) && false === strpos( json_encode( $current ), DB_HOST ) && false === strpos( json_encode( $current ), DB_USER ) && false === strpos( json_encode( $current ), 'secret_prefix_9384_' ), 'Portable environment evidence must not expose raw database connection or table-prefix identifiers.' );
 
 $root = dirname( __DIR__ );
 foreach ( array(

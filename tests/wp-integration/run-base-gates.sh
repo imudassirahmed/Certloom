@@ -4,7 +4,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 RAW_OUT="${1:-}"; WP_BIN="${CERTLOOM_WP_BIN:-wp}"
 if [[ -z "$RAW_OUT" ]]; then echo "Usage: run-base-gates.sh <external-output-dir>" >&2; exit 2; fi
 if [[ "$RAW_OUT" =~ (^|/)\.\.?(/|$) ]]; then echo "Base-gate output path must not contain . or .. components." >&2; exit 2; fi
-parent_raw="$(dirname "$RAW_OUT")"; mkdir -p "$parent_raw"; parent="$(realpath -e -- "$parent_raw")"; OUT="$parent/$(basename "$RAW_OUT")"
+parent_raw="$(dirname "$RAW_OUT")"; if [[ ! -d "$parent_raw" || -L "$parent_raw" ]]; then echo "Base-gate output parent must already exist and must not be symbolic." >&2; exit 2; fi; parent="$(realpath -e -- "$parent_raw")"; OUT="$parent/$(basename "$RAW_OUT")"
 case "$OUT" in "$ROOT"|"$ROOT"/*) echo "Base-gate evidence must remain outside the Certloom source tree." >&2; exit 2;; esac
 if [[ -e "$OUT" || -L "$OUT" ]]; then echo "Base-gate output path must be new." >&2; exit 2; fi
 if ! command -v "$WP_BIN" >/dev/null 2>&1; then echo "WP-CLI is required for the real database gate." >&2; exit 2; fi

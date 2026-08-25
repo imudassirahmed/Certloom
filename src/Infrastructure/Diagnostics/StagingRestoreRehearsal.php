@@ -29,7 +29,7 @@ final class StagingRestoreRehearsal {
 	const RESULT_OPTION  = 'certloom_staging_restore_rehearsal';
 	const LOCK_OPTION    = 'certloom_staging_restore_rehearsal_lock';
 	const RESULT_SCHEMA  = 'certloom-staging-restore-rehearsal';
-	const RESULT_VERSION = 3;
+	const RESULT_VERSION = 4;
 	const MAX_AGE        = 7 * DAY_IN_SECONDS;
 	const LOCK_TTL       = 2 * MINUTE_IN_SECONDS;
 	const MAX_SECONDS    = 4.0;

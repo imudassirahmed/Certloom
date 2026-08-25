@@ -16,7 +16,7 @@ class Ecapla_CertVerify_Database_Proof {
 	const LOCK_OPTION   = 'certloom_database_proof_lock';
 	const LAST_OPTION   = 'certloom_database_proof_last';
 	const RESULT_SCHEMA = 'certloom-database-proof';
-	const RESULT_VERSION = 3;
+	const RESULT_VERSION = 4;
 	const LOCK_TTL      = 2 * MINUTE_IN_SECONDS;
 
 	/**

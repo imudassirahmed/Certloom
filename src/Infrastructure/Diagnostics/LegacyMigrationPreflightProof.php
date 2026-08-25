@@ -25,7 +25,7 @@ final class LegacyMigrationPreflightProof {
 	const RESULT_OPTION  = 'certloom_legacy_migration_preflight_proof';
 	const LOCK_OPTION    = 'certloom_legacy_migration_preflight_proof_lock';
 	const RESULT_SCHEMA  = 'certloom-legacy-migration-preflight-proof';
-	const RESULT_VERSION = 3;
+	const RESULT_VERSION = 4;
 	const MAX_AGE         = 7 * DAY_IN_SECONDS;
 	const LOCK_TTL        = 2 * MINUTE_IN_SECONDS;
 	const BATCH_SIZE      = 250;
