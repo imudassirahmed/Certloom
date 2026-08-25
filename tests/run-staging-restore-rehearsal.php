@@ -18,6 +18,7 @@ $GLOBALS['wp_version'] = '6.6-test';
     $GLOBALS['srr_migration_status'] = 'complete';
     $GLOBALS['srr_cutover_authority'] = false;
     $GLOBALS['srr_cutover_receipt'] = false;
+    $GLOBALS['srr_domain_generation'] = 'domain-gen-a';
     if ( ! class_exists( 'WP_Error' ) ) {
         class WP_Error { private $c; private $m; public function __construct($c='',$m=''){ $this->c=$c; $this->m=$m; } public function get_error_code(){return $this->c;} public function get_error_message(){return $this->m;} }
     }
@@ -43,6 +44,7 @@ namespace Certloom\Application\Migration {
     final class DomainCutoverState { public function is_domain_authoritative(){ return (bool)$GLOBALS['srr_cutover_authority']; } public function has_committed_receipt(){ return (bool)$GLOBALS['srr_cutover_receipt']; } public function is_clean_legacy_state(){ return ! $GLOBALS['srr_cutover_authority'] && ! $GLOBALS['srr_cutover_receipt']; } }
 }
 namespace Certloom\Infrastructure\Diagnostics { final class StagingMigrationRehearsal {} final class DomainStateFingerprint {} }
+namespace Certloom\Infrastructure\Data { final class DomainGeneration { public function current(){ return (string)$GLOBALS['srr_domain_generation']; } } }
 namespace Certloom\Application\Backup { final class DomainBackupBuilder {} final class DomainBackupReader {} }
 namespace Certloom\Application\Restore { final class DomainRestoreStagingService {} }
 namespace Certloom\Infrastructure\Database { final class SchemaManager {} }
@@ -75,7 +77,7 @@ require dirname( __DIR__ ) . '/src/Application/Rendering/CanonicalJson.php';
         'started_at'=>$now-20,'updated_at'=>$now,'checked_at'=>$now,'source_count'=>2,'source_max_id'=>9,'source_generation'=>'legacy-gen-a','migration_checked_at'=>$now-30,
         'baseline_hash'=>str_repeat('a',64),'baseline_records'=>$records,'baseline_config_hash'=>str_repeat('b',64),'baseline_counts'=>$baseline,
         'backup_records'=>$records,'backup_counts'=>$baseline,'backup_chain'=>str_repeat('c',64),'replace_verified'=>true,'merge_verified'=>true,'rollback_verified'=>true,
-        'merge_counts'=>array('inserted'=>0,'existing'=>$records,'skipped'=>0),'fingerprint_state'=>null,'backup_state'=>null,'backup_path'=>'',
+        'merge_counts'=>array('inserted'=>0,'existing'=>$records,'skipped'=>0),'domain_generation'=>'domain-gen-a','fingerprint_state'=>null,'backup_state'=>null,'backup_path'=>'',
         'replace_state'=>null,'merge_restore_state'=>null,'merge_state'=>null,'rollback_state'=>null,'error_message'=>'',
     );
     srr_same('passed',StagingRestoreRehearsal::evidence_state(),'fresh internally coherent restore evidence is green');
@@ -94,6 +96,9 @@ require dirname( __DIR__ ) . '/src/Application/Rendering/CanonicalJson.php';
     srr_same(null,StagingRestoreRehearsal::get_last_result(),'impossible passed merge counts are rejected as tampered/incoherent evidence');
     $GLOBALS['srr_options'][StagingRestoreRehearsal::RESULT_OPTION]['merge_counts']=array('inserted'=>0,'existing'=>$records,'skipped'=>0);
 
+    $GLOBALS['srr_domain_generation']='domain-gen-b';
+    srr_same('stale',StagingRestoreRehearsal::evidence_state(),'normalized-domain mutation after restore stales restore rehearsal evidence');
+    $GLOBALS['srr_domain_generation']='domain-gen-a';
     $GLOBALS['srr_source']['generation']='legacy-gen-b';
     srr_same('stale',StagingRestoreRehearsal::evidence_state(),'legacy source change stales restore rehearsal evidence');
     $GLOBALS['srr_source']['generation']='legacy-gen-a';
@@ -103,5 +108,5 @@ require dirname( __DIR__ ) . '/src/Application/Rendering/CanonicalJson.php';
     $GLOBALS['srr_migration_status']='blocked';
     srr_same('stale',StagingRestoreRehearsal::evidence_state(),'migration-state regression stales restore evidence');
 
-    echo "PASS  staging restore rehearsal evidence is privacy-safe, internally consistent, source-bound and pre-cutover-bound\n\n7 checks, 0 failures\n";
+    echo "PASS  staging restore rehearsal evidence is privacy-safe, internally consistent, source-bound and pre-cutover-bound\n\n8 checks, 0 failures\n";
 }

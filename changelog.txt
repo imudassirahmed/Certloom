@@ -1,3 +1,10 @@
+1.6.45
+- Bind completed staging restore and cutover evidence to the normalized-domain generation present when each rehearsal passed, so later official domain mutations stale those proofs immediately.
+- Advance staging restore/cutover evidence to v5 and normalized-domain acceptance bundle/index to v3 so older post-rehearsal-state-unbound evidence fails closed.
+- Make the final real-host acceptance collector perform a fresh full normalized-domain graph fingerprint and require exact parity with the cutover rehearsal hash, configuration hash, record/entity counts, and generation.
+- Detect direct SQL/data drift that bypasses Certloom generation markers while exporting only privacy-safe graph hashes/counts and a hashed generation identity.
+- Keep all normalized-domain authority flags and renderer authority closed until genuine external gates pass.
+
 1.6.44
 - Advance RuntimeEnvironmentEvidence to v2 with a privacy-safe configured database/table-instance SHA-256 derived from DB host/name/user plus the active WordPress table prefix.
 - Advance database proof to v4, gated-domain acceptance to v7, and preflight/staging migration/restore/cutover evidence to v4 so historical database-instance-unbound results fail closed.

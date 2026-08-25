@@ -20,6 +20,7 @@ $GLOBALS['wp_version'] = '6.6-test';
     $GLOBALS['scr_authority']='legacy';
     $GLOBALS['scr_receipt']=array();
     $GLOBALS['scr_maintenance']=false;
+    $GLOBALS['scr_domain_generation']='domain-gen-a';
     if(!class_exists('WP_Error')){class WP_Error{private $c;private $m;public function __construct($c='',$m=''){$this->c=$c;$this->m=$m;}public function get_error_code(){return $this->c;}public function get_error_message(){return $this->m;}}}
     function is_wp_error($v){return $v instanceof WP_Error;}
     function __($t){return $t;}
@@ -39,7 +40,7 @@ namespace Certloom\Application\Migration {
     final class DomainCutoverState { const LEGACY='legacy'; const DOMAIN='domain'; public function authority(){return (string)$GLOBALS['scr_authority'];} public function is_domain_authoritative(){return self::DOMAIN===$this->authority();} public function is_corrupt(){return !in_array($this->authority(),array(self::LEGACY,self::DOMAIN),true);} public function receipt(){return is_array($GLOBALS['scr_receipt'])?$GLOBALS['scr_receipt']:array();} public function has_any_receipt_state(){return false!==$GLOBALS['scr_receipt']&&''!==$GLOBALS['scr_receipt']&&array()!==$GLOBALS['scr_receipt'];} public function is_clean_legacy_state(){return self::LEGACY===$this->authority()&&!$this->has_any_receipt_state();} public function has_committed_receipt(){return !empty($GLOBALS['scr_receipt']);} public function receipt_matches_completed_migration($m=null){return !empty($GLOBALS['scr_receipt']);} public function keep_legacy_authoritative(){$GLOBALS['scr_authority']=self::LEGACY;$GLOBALS['scr_receipt']=array();return true;} }
     final class LegacyRegistryWriteGuard { public function assert_allowed(){return true;} }
 }
-namespace Certloom\Infrastructure\Data { final class DomainMaintenanceLock { public function active(){return (bool)$GLOBALS['scr_maintenance'];} } }
+namespace Certloom\Infrastructure\Data { final class DomainMaintenanceLock { public function active(){return (bool)$GLOBALS['scr_maintenance'];} } final class DomainGeneration { public function current(){return (string)$GLOBALS['scr_domain_generation'];} } }
 namespace Certloom\Infrastructure\Migration { final class DomainCutoverCoordinator { const OWNER_OPTION='certloom_domain_cutover_owner'; public function __construct(...$args){} public function promote(){return true;} } }
 namespace Certloom\Infrastructure\Verification { final class PublicVerificationGate { const OPTION='certloom_series_public_verification_ready'; public function disable(){unset($GLOBALS['scr_options'][self::OPTION]);return true;} public function is_ready(){return false;} } }
 namespace Certloom\Infrastructure\Diagnostics { final class StagingRestoreRehearsal { public static function is_current_passed(){return (bool)$GLOBALS['scr_restore_passed'];} } final class DomainStateFingerprint {} }
@@ -64,7 +65,7 @@ require dirname(__DIR__).'/src/Infrastructure/Diagnostics/RuntimeEnvironmentEvid
         'status'=>'passed','phase'=>'complete','reason_code'=>'','started_at'=>$now-20,'updated_at'=>$now,'checked_at'=>$now,
         'source_count'=>2,'source_max_id'=>9,'source_generation'=>'legacy-gen-a','restore_checked_at'=>$now-30,
         'baseline_hash'=>str_repeat('a',64),'baseline_config_hash'=>str_repeat('b',64),'baseline_records'=>16,'baseline_counts'=>array('issuers'=>1,'programs'=>1,'recipients'=>2,'signers'=>1,'batches'=>1,'batch_recipients'=>2,'signer_assignments'=>1,'credential_series'=>2,'credential_numbers'=>2,'credential_versions'=>2,'credential_events'=>3),
-        'receipt_verified'=>true,'legacy_guard_blocked'=>true,'public_gate_verified'=>true,'rollback_verified'=>true,'final_verified'=>true,'fingerprint_state'=>null,'error_message'=>'',
+        'receipt_verified'=>true,'legacy_guard_blocked'=>true,'public_gate_verified'=>true,'rollback_verified'=>true,'final_verified'=>true,'domain_generation'=>'domain-gen-a','fingerprint_state'=>null,'error_message'=>'',
     );
     scr_same('passed',StagingCutoverRehearsal::evidence_state(),'fresh coherent cutover rehearsal evidence is green');
     $valid_state=$GLOBALS['scr_options'][StagingCutoverRehearsal::RESULT_OPTION];
@@ -79,10 +80,13 @@ require dirname(__DIR__).'/src/Infrastructure/Diagnostics/RuntimeEnvironmentEvid
     $GLOBALS['scr_options'][StagingCutoverRehearsal::RESULT_OPTION]['final_verified']=false;
     scr_same(null,StagingCutoverRehearsal::get_last_result(),'tampered passed evidence without final graph proof is rejected');
     $GLOBALS['scr_options'][StagingCutoverRehearsal::RESULT_OPTION]['final_verified']=true;
+    $GLOBALS['scr_domain_generation']='domain-gen-b';
+    scr_same('stale',StagingCutoverRehearsal::evidence_state(),'normalized-domain mutation after cutover rehearsal stales cutover evidence');
+    $GLOBALS['scr_domain_generation']='domain-gen-a';
     $GLOBALS['scr_source']['generation']='legacy-gen-b';
     scr_same('stale',StagingCutoverRehearsal::evidence_state(),'legacy source change stales cutover rehearsal evidence');
     $GLOBALS['scr_source']['generation']='legacy-gen-a';
     $GLOBALS['scr_authority']='domain';
     scr_same('stale',StagingCutoverRehearsal::evidence_state(),'authority no longer at legacy baseline stales rehearsal evidence');
-    echo "PASS  staging cutover rehearsal evidence is privacy-safe, self-consistent, source-bound and requires final legacy baseline\n\n7 checks, 0 failures\n";
+    echo "PASS  staging cutover rehearsal evidence is privacy-safe, self-consistent, source-bound and requires final legacy baseline\n\n8 checks, 0 failures\n";
 }

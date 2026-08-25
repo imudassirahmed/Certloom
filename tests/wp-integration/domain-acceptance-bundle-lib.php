@@ -129,11 +129,32 @@ function certloom_db_validate_base_gate_bundle( $gate_dir, $source_dir ) {
 	if ( ! is_array( $stored ) || certloom_db_canonical_json( $stored ) !== certloom_db_canonical_json( $rebuilt ) ) { throw new RuntimeException( 'Base-gate index does not match exact transcript bytes.' ); }
 	return $rebuilt;
 }
-function certloom_db_build_final_acceptance( array $base, $plugin_version, array $payload, array $environment, array $stored, $generated_at ) {
+
+function certloom_db_current_domain_fingerprint() {
+	if ( ! class_exists( '\Certloom\Infrastructure\Diagnostics\DomainStateFingerprint' ) ) { throw new RuntimeException( 'Canonical normalized-domain fingerprint implementation is unavailable.' ); }
+	try { $owner = bin2hex( random_bytes( 16 ) ); } catch ( Throwable $e ) { throw new RuntimeException( 'Could not create normalized-domain fingerprint owner.' ); }
+	$fingerprint = new \Certloom\Infrastructure\Diagnostics\DomainStateFingerprint();
+	$state = $fingerprint->start( $owner );
+	if ( is_wp_error( $state ) ) { throw new RuntimeException( 'Could not start the final normalized-domain fingerprint: ' . $state->get_error_message() ); }
+	for ( $i = 0; $i < 100000 && is_array( $state ) && empty( $state['complete'] ); ++$i ) {
+		$state = $fingerprint->continue_fingerprint( $state, 500 );
+		if ( is_wp_error( $state ) ) { throw new RuntimeException( 'Could not complete the final normalized-domain fingerprint: ' . $state->get_error_message() ); }
+	}
+	if ( ! is_array( $state ) || empty( $state['complete'] ) ) { throw new RuntimeException( 'Final normalized-domain fingerprint exceeded its bounded scan limit.' ); }
+	$hash = strtolower( trim( (string) ( $state['hash'] ?? '' ) ) );
+	$config = strtolower( trim( (string) ( $state['configuration_hash'] ?? '' ) ) );
+	$generation = (string) ( $state['generation'] ?? '' );
+	$records = filter_var( $state['records'] ?? null, FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 1 ) ) );
+	$counts = isset( $state['entity_counts'] ) && is_array( $state['entity_counts'] ) ? $state['entity_counts'] : null;
+	if ( 1 !== preg_match( '/^[a-f0-9]{64}$/', $hash ) || 1 !== preg_match( '/^[a-f0-9]{64}$/', $config ) || '' === $generation || false === $records || ! is_array( $counts ) ) { throw new RuntimeException( 'Final normalized-domain fingerprint is incomplete.' ); }
+	return array( 'hash'=>$hash, 'configuration_hash'=>$config, 'generation'=>$generation, 'records'=>(int)$records, 'entity_counts'=>$counts );
+}
+
+function certloom_db_build_final_acceptance( array $base, $plugin_version, array $payload, array $environment, array $stored, array $domain_state, $generated_at ) {
 	$payload = certloom_db_normalize_payload( $payload );
 	if ( ! is_array($payload) || ''===trim((string)$plugin_version) || $generated_at<1 ) { throw new RuntimeException('Current Certloom acceptance identity is incomplete.'); }
 	if ( ! hash_equals((string)$base['plugin_version'],(string)$plugin_version) || ! certloom_db_payload_equals($base['runtime_payload'],$payload) || certloom_db_canonical_json($base['environment'])!==certloom_db_canonical_json($environment) ) { throw new RuntimeException('Base gates do not match current Certloom/database environment.'); }
-	$required=array('database_proof'=>array('schema'=>'certloom-database-proof','version'=>4),'domain_acceptance'=>array('schema'=>'certloom-domain-acceptance-proof','version'=>7),'migration_preflight'=>array('schema'=>'certloom-legacy-migration-preflight-proof','version'=>4),'staging_migration'=>array('schema'=>'certloom-staging-migration-rehearsal','version'=>4),'staging_restore'=>array('schema'=>'certloom-staging-restore-rehearsal','version'=>4),'staging_cutover'=>array('schema'=>'certloom-staging-cutover-rehearsal','version'=>4));
+	$required=array('database_proof'=>array('schema'=>'certloom-database-proof','version'=>4),'domain_acceptance'=>array('schema'=>'certloom-domain-acceptance-proof','version'=>7),'migration_preflight'=>array('schema'=>'certloom-legacy-migration-preflight-proof','version'=>4),'staging_migration'=>array('schema'=>'certloom-staging-migration-rehearsal','version'=>4),'staging_restore'=>array('schema'=>'certloom-staging-restore-rehearsal','version'=>5),'staging_cutover'=>array('schema'=>'certloom-staging-cutover-rehearsal','version'=>5));
 	if ( array_keys($stored)!==array_keys($required) ) { throw new RuntimeException('Stored normalized-domain evidence set is incomplete or non-canonical.'); }
 	$out=array();
 	foreach($required as $name=>$contract){ $item=$stored[$name]; $result=$item['result']??null;
@@ -146,5 +167,15 @@ function certloom_db_build_final_acceptance( array $base, $plugin_version, array
 		if(''===$report || strlen($report)>65536){throw new RuntimeException('Privacy-safe normalized-domain evidence report is unavailable: '.$name);}
 		$out[$name]=array('schema'=>(string)$contract['schema'],'version'=>(int)$contract['version'],'checked_at'=>(int)($result['checked_at']??$result['updated_at']??0),'result_sha256'=>hash('sha256',certloom_db_canonical_json($result)),'report_sha256'=>hash('sha256',$report."\n"),'report'=>$report);
 	}
-	return array('schema'=>'certloom-normalized-domain-acceptance-bundle','version'=>2,'status'=>'qualified','generated_at'=>(int)$generated_at,'plugin_version'=>(string)$plugin_version,'runtime_payload'=>$payload,'environment'=>$environment,'environment_sha256'=>hash('sha256',certloom_db_canonical_json($environment)),'base_gates'=>$base,'stored_evidence'=>$out);
+
+	$cutover = $stored['staging_cutover']['result'];
+	$domain_hash = strtolower( trim( (string) ( $domain_state['hash'] ?? '' ) ) );
+	$config_hash = strtolower( trim( (string) ( $domain_state['configuration_hash'] ?? '' ) ) );
+	$generation = (string) ( $domain_state['generation'] ?? '' );
+	$records = filter_var( $domain_state['records'] ?? null, FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 1 ) ) );
+	$counts = isset( $domain_state['entity_counts'] ) && is_array( $domain_state['entity_counts'] ) ? $domain_state['entity_counts'] : null;
+	if ( 1 !== preg_match('/^[a-f0-9]{64}$/',$domain_hash) || 1 !== preg_match('/^[a-f0-9]{64}$/',$config_hash) || '' === $generation || false === $records || ! is_array($counts) ) { throw new RuntimeException('Current normalized-domain graph fingerprint is invalid.'); }
+	if ( ! hash_equals((string)($cutover['baseline_hash']??''),$domain_hash) || ! hash_equals((string)($cutover['baseline_config_hash']??''),$config_hash) || (int)($cutover['baseline_records']??0)!==(int)$records || (array)($cutover['baseline_counts']??array())!==$counts || ! hash_equals((string)($cutover['domain_generation']??''),$generation) ) { throw new RuntimeException('Current normalized-domain graph no longer matches the final cutover rehearsal boundary.'); }
+	$exported_domain_state=array('hash'=>$domain_hash,'configuration_hash'=>$config_hash,'records'=>(int)$records,'entity_counts'=>$counts,'generation_sha256'=>hash('sha256',$generation));
+	return array('schema'=>'certloom-normalized-domain-acceptance-bundle','version'=>3,'status'=>'qualified','generated_at'=>(int)$generated_at,'plugin_version'=>(string)$plugin_version,'runtime_payload'=>$payload,'environment'=>$environment,'environment_sha256'=>hash('sha256',certloom_db_canonical_json($environment)),'domain_state'=>$exported_domain_state,'domain_state_sha256'=>hash('sha256',certloom_db_canonical_json($exported_domain_state)),'base_gates'=>$base,'stored_evidence'=>$out);
 }

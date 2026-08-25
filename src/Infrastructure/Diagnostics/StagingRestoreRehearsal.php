@@ -7,6 +7,7 @@ use Certloom\Application\Migration\DomainCutoverState;
 use Certloom\Application\Migration\LegacyMigrationState;
 use Certloom\Application\Restore\DomainRestoreStagingService;
 use Certloom\Infrastructure\Backup\DomainBackupRepository;
+use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Infrastructure\Database\SchemaManager;
 use Certloom\Infrastructure\Files\PrivateJobFileStore;
 use Certloom\Infrastructure\Repository\LegacyCertificateRepository;
@@ -29,7 +30,7 @@ final class StagingRestoreRehearsal {
 	const RESULT_OPTION  = 'certloom_staging_restore_rehearsal';
 	const LOCK_OPTION    = 'certloom_staging_restore_rehearsal_lock';
 	const RESULT_SCHEMA  = 'certloom-staging-restore-rehearsal';
-	const RESULT_VERSION = 4;
+	const RESULT_VERSION = 5;
 	const MAX_AGE        = 7 * DAY_IN_SECONDS;
 	const LOCK_TTL       = 2 * MINUTE_IN_SECONDS;
 	const MAX_SECONDS    = 4.0;
@@ -154,6 +155,7 @@ final class StagingRestoreRehearsal {
 			'replace_verified'       => false,
 			'merge_verified'         => false,
 			'rollback_verified'      => false,
+			'domain_generation'      => '',
 			'merge_counts'           => array( 'inserted' => 0, 'existing' => 0, 'skipped' => 0 ),
 			'fingerprint_state'      => null,
 			'backup_state'           => null,
@@ -364,6 +366,10 @@ final class StagingRestoreRehearsal {
 			}
 		}
 		$state['backup_path'] = '';
+		$state['domain_generation'] = ( new DomainGeneration() )->current();
+		if ( '' === $state['domain_generation'] ) {
+			return new \WP_Error( 'certloom_staging_restore_domain_generation_unavailable', __( 'Certloom could not bind the completed restore rehearsal to the current normalized-domain generation.', 'certloom' ) );
+		}
 		$state['phase'] = 'complete';
 		$state['status'] = 'passed';
 		$state['checked_at'] = time();
@@ -465,7 +471,7 @@ final class StagingRestoreRehearsal {
 			$merge_counts = isset( $result['merge_counts'] ) && is_array( $result['merge_counts'] ) ? $result['merge_counts'] : array();
 			$baseline_records = absint( $result['baseline_records'] ?? 0 );
 			$backup_records = absint( $result['backup_records'] ?? 0 );
-			if ( 'complete' !== $phase || ! absint( $result['checked_at'] ?? 0 ) || absint( $result['checked_at'] ?? 0 ) < absint( $result['started_at'] ?? 0 ) || empty( $result['replace_verified'] ) || empty( $result['merge_verified'] ) || empty( $result['rollback_verified'] ) || ! preg_match( '/^[a-f0-9]{64}$/', (string) ( $result['baseline_hash'] ?? '' ) ) || ! preg_match( '/^[a-f0-9]{64}$/', (string) ( $result['baseline_config_hash'] ?? '' ) ) || $baseline_records < 1 || $backup_records !== $baseline_records || ! preg_match( '/^[a-f0-9]{64}$/', (string) ( $result['backup_chain'] ?? '' ) ) || array_keys( $baseline_counts ) !== $entities || $backup_counts !== $baseline_counts || array_sum( array_map( 'absint', $baseline_counts ) ) !== $baseline_records || array_keys( $merge_counts ) !== array( 'inserted', 'existing', 'skipped' ) || 0 !== absint( $merge_counts['inserted'] ?? -1 ) || array_sum( array_map( 'absint', $merge_counts ) ) !== $backup_records || '' !== (string) ( $result['backup_path'] ?? '' ) ) { return null; }
+			if ( 'complete' !== $phase || ! absint( $result['checked_at'] ?? 0 ) || absint( $result['checked_at'] ?? 0 ) < absint( $result['started_at'] ?? 0 ) || empty( $result['replace_verified'] ) || empty( $result['merge_verified'] ) || empty( $result['rollback_verified'] ) || '' === (string) ( $result['domain_generation'] ?? '' ) || ! preg_match( '/^[a-f0-9]{64}$/', (string) ( $result['baseline_hash'] ?? '' ) ) || ! preg_match( '/^[a-f0-9]{64}$/', (string) ( $result['baseline_config_hash'] ?? '' ) ) || $baseline_records < 1 || $backup_records !== $baseline_records || ! preg_match( '/^[a-f0-9]{64}$/', (string) ( $result['backup_chain'] ?? '' ) ) || array_keys( $baseline_counts ) !== $entities || $backup_counts !== $baseline_counts || array_sum( array_map( 'absint', $baseline_counts ) ) !== $baseline_records || array_keys( $merge_counts ) !== array( 'inserted', 'existing', 'skipped' ) || 0 !== absint( $merge_counts['inserted'] ?? -1 ) || array_sum( array_map( 'absint', $merge_counts ) ) !== $backup_records || '' !== (string) ( $result['backup_path'] ?? '' ) ) { return null; }
 		}
 		return $result;
 	}
@@ -483,7 +489,7 @@ final class StagingRestoreRehearsal {
 		$current = ( new LegacyCertificateRepository() )->snapshot();
 		$cutover = new DomainCutoverState();
 		$gates_off = ! ( defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) && CERTLOOM_DOMAIN_WRITE_PATHS_READY ) && ! ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) && ! ( defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) && CERTLOOM_DOMAIN_DATA_TOOLS_READY );
-		if ( '' === $current_version || ! hash_equals( $current_version, (string) $result['plugin_version'] ) || ! RuntimePayloadEvidence::matches_current( $result['runtime_payload'] ?? null ) || ! RuntimeEnvironmentEvidence::matches_current( $result['runtime_environment'] ?? null ) || ! $checked_at || $checked_at > time() + 300 || time() - $checked_at > self::MAX_AGE || ! is_array( $current ) || absint( $result['source_count'] ) !== absint( $current['count'] ?? -1 ) || absint( $result['source_max_id'] ) !== absint( $current['max_id'] ?? -1 ) || ! hash_equals( (string) $result['source_generation'], (string) ( $current['generation'] ?? '' ) ) || LegacyMigrationState::COMPLETE !== ( new LegacyMigrationState() )->status() || ! $gates_off || ! $cutover->is_clean_legacy_state() ) { return 'stale'; }
+		if ( '' === $current_version || ! hash_equals( $current_version, (string) $result['plugin_version'] ) || ! RuntimePayloadEvidence::matches_current( $result['runtime_payload'] ?? null ) || ! RuntimeEnvironmentEvidence::matches_current( $result['runtime_environment'] ?? null ) || ! $checked_at || $checked_at > time() + 300 || time() - $checked_at > self::MAX_AGE || ! is_array( $current ) || absint( $result['source_count'] ) !== absint( $current['count'] ?? -1 ) || absint( $result['source_max_id'] ) !== absint( $current['max_id'] ?? -1 ) || ! hash_equals( (string) $result['source_generation'], (string) ( $current['generation'] ?? '' ) ) || ! hash_equals( (string) $result['domain_generation'], ( new DomainGeneration() )->current() ) || LegacyMigrationState::COMPLETE !== ( new LegacyMigrationState() )->status() || ! $gates_off || ! $cutover->is_clean_legacy_state() ) { return 'stale'; }
 		return 'passed';
 	}
 
@@ -508,6 +514,7 @@ final class StagingRestoreRehearsal {
 			sprintf( 'Merge graph parity: %s', ! empty( $result['merge_verified'] ) ? 'PASS' : 'NOT YET' ),
 			sprintf( 'Merge actions: inserted=%d, existing=%d, skipped=%d', absint( $merge['inserted'] ?? 0 ), absint( $merge['existing'] ?? 0 ), absint( $merge['skipped'] ?? 0 ) ),
 			sprintf( 'Forced rollback parity: %s', ! empty( $result['rollback_verified'] ) ? 'PASS' : 'NOT YET' ),
+			sprintf( 'Current normalized-domain generation bound: %s', '' !== (string) ( $result['domain_generation'] ?? '' ) ? 'PASS' : 'NOT YET' ),
 			'Credential authority changed: NO',
 		);
 		if ( ! empty( $result['checked_at'] ) ) { $lines[] = sprintf( 'Completed UTC: %s', gmdate( 'Y-m-d H:i:s', absint( $result['checked_at'] ) ) ); }

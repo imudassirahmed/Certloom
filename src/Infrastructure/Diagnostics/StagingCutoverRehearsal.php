@@ -4,6 +4,7 @@ namespace Certloom\Infrastructure\Diagnostics;
 use Certloom\Application\Migration\DomainCutoverState;
 use Certloom\Application\Migration\LegacyMigrationState;
 use Certloom\Application\Migration\LegacyRegistryWriteGuard;
+use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Infrastructure\Data\DomainMaintenanceLock;
 use Certloom\Infrastructure\Migration\DomainCutoverCoordinator;
 use Certloom\Infrastructure\Repository\LegacyCertificateRepository;
@@ -26,7 +27,7 @@ final class StagingCutoverRehearsal {
 	const RESULT_OPTION  = 'certloom_staging_cutover_rehearsal';
 	const LOCK_OPTION    = 'certloom_staging_cutover_rehearsal_lock';
 	const RESULT_SCHEMA  = 'certloom-staging-cutover-rehearsal';
-	const RESULT_VERSION = 4;
+	const RESULT_VERSION = 5;
 	const MAX_AGE        = 7 * DAY_IN_SECONDS;
 	const LOCK_TTL       = 2 * MINUTE_IN_SECONDS;
 	const MAX_SECONDS    = 4.0;
@@ -149,6 +150,7 @@ final class StagingCutoverRehearsal {
 			'public_gate_verified'   => false,
 			'rollback_verified'      => false,
 			'final_verified'         => false,
+			'domain_generation'      => '',
 			'fingerprint_state'      => null,
 			'error_message'          => '',
 		);
@@ -191,6 +193,10 @@ final class StagingCutoverRehearsal {
 				return new \WP_Error( 'certloom_staging_cutover_graph_changed', __( 'The future credential graph changed during the authority cutover rehearsal.', 'certloom' ) );
 			}
 			$state['final_verified'] = true;
+			$state['domain_generation'] = ( new DomainGeneration() )->current();
+			if ( '' === $state['domain_generation'] ) {
+				return new \WP_Error( 'certloom_staging_cutover_domain_generation_unavailable', __( 'Certloom could not bind the completed cutover rehearsal to the current normalized-domain generation.', 'certloom' ) );
+			}
 			$state['phase'] = 'complete';
 			$state['status'] = 'passed';
 			$state['checked_at'] = time();
@@ -365,7 +371,7 @@ final class StagingCutoverRehearsal {
 		if ( ! in_array( $status, array( 'running', 'passed', 'failed' ), true ) || ! in_array( $phase, array( 'baseline_fingerprint', 'cutover_cycle', 'final_fingerprint', 'complete' ), true ) ) { return null; }
 		if ( '' === (string) ( $result['plugin_version'] ?? '' ) || ! in_array( sanitize_key( (string) ( $result['environment'] ?? '' ) ), array( 'local', 'development', 'staging' ), true ) || ! absint( $result['started_at'] ?? 0 ) || ! absint( $result['updated_at'] ?? 0 ) || '' === (string) ( $result['source_generation'] ?? '' ) ) { return null; }
 		if ( 'passed' === $status ) {
-			if ( 'complete' !== $phase || ! absint( $result['checked_at'] ?? 0 ) || empty( $result['receipt_verified'] ) || empty( $result['legacy_guard_blocked'] ) || empty( $result['public_gate_verified'] ) || empty( $result['rollback_verified'] ) || empty( $result['final_verified'] ) || ! preg_match( '/^[a-f0-9]{64}$/', (string) ( $result['baseline_hash'] ?? '' ) ) || ! preg_match( '/^[a-f0-9]{64}$/', (string) ( $result['baseline_config_hash'] ?? '' ) ) || absint( $result['baseline_records'] ?? 0 ) < 1 || ! is_array( $result['baseline_counts'] ?? null ) ) { return null; }
+			if ( 'complete' !== $phase || ! absint( $result['checked_at'] ?? 0 ) || empty( $result['receipt_verified'] ) || empty( $result['legacy_guard_blocked'] ) || empty( $result['public_gate_verified'] ) || empty( $result['rollback_verified'] ) || empty( $result['final_verified'] ) || '' === (string) ( $result['domain_generation'] ?? '' ) || ! preg_match( '/^[a-f0-9]{64}$/', (string) ( $result['baseline_hash'] ?? '' ) ) || ! preg_match( '/^[a-f0-9]{64}$/', (string) ( $result['baseline_config_hash'] ?? '' ) ) || absint( $result['baseline_records'] ?? 0 ) < 1 || ! is_array( $result['baseline_counts'] ?? null ) ) { return null; }
 		}
 		return $result;
 	}
@@ -383,7 +389,7 @@ final class StagingCutoverRehearsal {
 		$current = ( new LegacyCertificateRepository() )->snapshot();
 		$cutover = new DomainCutoverState();
 		$gates_off = ! ( defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) && CERTLOOM_DOMAIN_WRITE_PATHS_READY ) && ! ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) && ! ( defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) && CERTLOOM_DOMAIN_DATA_TOOLS_READY );
-		if ( '' === $current_version || ! hash_equals( $current_version, (string) $result['plugin_version'] ) || ! RuntimePayloadEvidence::matches_current( $result['runtime_payload'] ?? null ) || ! RuntimeEnvironmentEvidence::matches_current( $result['runtime_environment'] ?? null ) || ! $checked_at || $checked_at > time() + 300 || time() - $checked_at > self::MAX_AGE || ! is_array( $current ) || ! self::same_source_boundary( $result, $current ) || LegacyMigrationState::COMPLETE !== ( new LegacyMigrationState() )->status() || ! StagingRestoreRehearsal::is_current_passed() || ! $gates_off || ! $cutover->is_clean_legacy_state() || false !== get_option( PublicVerificationGate::OPTION, false ) || false !== get_option( DomainCutoverCoordinator::OWNER_OPTION, false ) || ( new DomainMaintenanceLock() )->active() ) { return 'stale'; }
+		if ( '' === $current_version || ! hash_equals( $current_version, (string) $result['plugin_version'] ) || ! RuntimePayloadEvidence::matches_current( $result['runtime_payload'] ?? null ) || ! RuntimeEnvironmentEvidence::matches_current( $result['runtime_environment'] ?? null ) || ! $checked_at || $checked_at > time() + 300 || time() - $checked_at > self::MAX_AGE || ! is_array( $current ) || ! self::same_source_boundary( $result, $current ) || ! hash_equals( (string) $result['domain_generation'], ( new DomainGeneration() )->current() ) || LegacyMigrationState::COMPLETE !== ( new LegacyMigrationState() )->status() || ! StagingRestoreRehearsal::is_current_passed() || ! $gates_off || ! $cutover->is_clean_legacy_state() || false !== get_option( PublicVerificationGate::OPTION, false ) || false !== get_option( DomainCutoverCoordinator::OWNER_OPTION, false ) || ( new DomainMaintenanceLock() )->active() ) { return 'stale'; }
 		return 'passed';
 	}
 
@@ -407,6 +413,7 @@ final class StagingCutoverRehearsal {
 			sprintf( 'Series public verification gate became ready: %s', ! empty( $result['public_gate_verified'] ) ? 'PASS' : 'NOT YET' ),
 			sprintf( 'Legacy/public authority restored after rehearsal: %s', ! empty( $result['rollback_verified'] ) ? 'PASS' : 'NOT YET' ),
 			sprintf( 'Future-domain graph unchanged after cycle: %s', ! empty( $result['final_verified'] ) ? 'PASS' : 'NOT YET' ),
+			sprintf( 'Current normalized-domain generation bound: %s', '' !== (string) ( $result['domain_generation'] ?? '' ) ? 'PASS' : 'NOT YET' ),
 			'Production readiness constants changed: NO',
 			'Final credential authority after rehearsal: LEGACY',
 		);

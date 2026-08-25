@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.44
+Stable tag: 1.6.45
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.44: `PDF-04` still requires the genuine seven-fixture PDF/PNG/JPEG execution. In parallel, normalized-domain evidence is now bound not only to exact Certloom bytes and WordPress/PHP/database software identity but also to a privacy-safe SHA-256 identity of the configured database host/name/user plus active WordPress table prefix. Base-gate transcripts, all six stored proof/rehearsal layers, and the final acceptance collector therefore reject evidence from a sibling/cloned database even when software versions match. No real MySQL/MariaDB run is claimed by this release; all three normalized-domain authority flags stay false. Concrete mPDF/GD candidates remain unaccepted and `accepted.json` remains absent, so production artifacts, Template publication, authoritative Preview, and Designer output stay disabled until the genuine renderer-capable run passes.
+> Development note for 1.6.45: `PDF-04` still requires the genuine seven-fixture PDF/PNG/JPEG execution. In parallel, normalized-domain acceptance is now bound through publication to the exact current normalized credential graph: completed restore/cutover evidence stales after a later Certloom domain-generation change, and the final real-host collector performs a fresh full graph fingerprint and requires exact parity with the cutover rehearsal hash, configuration, record counts, entity counts, and generation. This catches both normal post-rehearsal mutations and direct SQL drift that bypasses Certloom mutation markers. No real MySQL/MariaDB run is claimed by this release; all three normalized-domain authority flags stay false. Concrete mPDF/GD candidates remain unaccepted and `accepted.json` remains absent, so production artifacts, Template publication, authoritative Preview, and Designer output stay disabled until the genuine renderer-capable run passes.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -129,6 +129,13 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.45 =
+* Bind completed staging restore and cutover evidence to the normalized-domain generation that existed when each rehearsal passed, so later official domain mutations immediately stale those proofs.
+* Advance staging restore/cutover evidence to v5 and normalized-domain acceptance bundle/index to v3 so older post-rehearsal-state-unbound evidence cannot qualify.
+* Make the final real-host acceptance collector compute a fresh full normalized-domain graph fingerprint and require exact parity with the cutover rehearsal hash, configuration hash, record/entity counts, and generation.
+* Catch direct SQL/data drift that bypasses Certloom's domain-generation marker while exporting only privacy-safe graph hashes/counts and a hashed generation identity.
+* Keep normalized-domain authority and renderer authority closed until the genuine external database and PDF-04 gates pass.
 
 = 1.6.44 =
 * Advance `RuntimeEnvironmentEvidence` to v2 with a privacy-safe configured database/table-instance SHA-256, closing same-software cross-database acceptance ambiguity.
