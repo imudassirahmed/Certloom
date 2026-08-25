@@ -1,3 +1,10 @@
+1.6.40
+- Add a canonical authorized-release packaging path so reviewed PDF-04 authority is no longer copied manually from the external finalizer output into `resources/renderer/accepted.json`.
+- Make `build-release.sh` snapshot and fully revalidate the six-file finalized authority set, exact Certloom version, imported acceptance/report/environment/index cross-links, RendererReleaseManifest v3 hash, and exact runtime-payload fingerprint before injecting canonical authority into staging.
+- Inject validated `accepted.json` into both source and installable staging so source/production common-byte parity remains intact and an accepted source archive can rebuild deterministically without external evidence while revalidating its bundled authority.
+- Reject stale/cross-release/payload-mismatched authority, unexpected authority files, authority sourced from inside the Certloom tree, and ambiguous simultaneous bundled+external authority inputs.
+- Add a 19-check authorized-release packaging regression proving runtime authority against the exact packaged payload and byte-identical rebuilds of accepted source/installable ZIPs; keep this 1.6.40 release authority-closed until the genuine mPDF/GD PDF-04 run passes.
+
 1.6.39
 - Advance `RendererReleaseManifest` to v3 and bind renderer authority to a deterministic fingerprint of the exact Certloom production payload, not only the semantic plugin version.
 - Add `RuntimePayloadFingerprint`, shared by the source-only finalizer and production `RendererAuthorityGate`, with deterministic build-exclusion parity and fail-closed symbolic-entry/file-count/byte ceilings.

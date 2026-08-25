@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.39
+Stable tag: 1.6.40
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.39: `PDF-04` still requires the genuine seven-fixture PDF/PNG/JPEG execution. Renderer release authority is now bound to the exact deterministic production payload bytes, not only the semantic plugin version: the finalizer fingerprints the production-intended tree and `RendererAuthorityGate` recomputes that identity at runtime, failing closed on any added, removed, or changed production file. Concrete mPDF/GD candidates remain unaccepted and unregistered; `accepted.json` remains absent, and production artifacts, Template publication, authoritative Preview, and Designer output stay disabled until the genuine renderer-capable run passes.
+> Development note for 1.6.40: `PDF-04` still requires the genuine seven-fixture PDF/PNG/JPEG execution. Finalized renderer authority now has a canonical deterministic packaging path: `build-release.sh` can consume only a complete external finalizer authority set, revalidate its acceptance/report/environment/index cross-links and exact runtime-payload identity, snapshot it outside the source tree, and inject the canonical `accepted.json` into both source and installable staging. Accepted source archives are revalidated before rebuild. Concrete mPDF/GD candidates remain unaccepted and unregistered; `accepted.json` remains absent from this release, and production artifacts, Template publication, authoritative Preview, and Designer output stay disabled until the genuine renderer-capable run passes.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
