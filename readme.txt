@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.49
+Stable tag: 1.6.50
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.49: close PHP 8.4 implicit-nullable deprecations across the production codebase using PHP-7.4-compatible explicit nullable types, and refine translator context for genuinely ambiguous short UI labels before translation packs mature. Search actions are distinct from search-field labels, entity status is distinct from maintenance state, and the deterministic POT generator now preserves JavaScript contextual/plural i18n calls as well as PHP. `PDF-04`, normalized-domain acceptance-v4, WordPress 7.1 runtime certification, and `PERF-01` database index benchmarks remain genuine external gates; all authority flags stay closed.
+> Development note for 1.6.50: harden Certloom against the definite PHP 8.5 deprecations reachable in its current production code while preserving the declared PHP 7.4 minimum. Legacy `finfo_close()` and `imagedestroy()` calls now run only for actual legacy resources; modern Fileinfo/GD objects are left to normal object lifetime management. This is static/runtime-boundary hardening, not a claim of complete PHP 8.5 certification. `PDF-04`, normalized-domain acceptance-v4, WordPress 7.1 runtime certification, `PERF-01` database benchmarks, and full PHP 8.5 runtime certification remain genuine external gates; all authority flags stay closed.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 

@@ -58,7 +58,7 @@ final class AssetInspector {
 			$finfo = @finfo_open( FILEINFO_MIME_TYPE );
 			if ( false !== $finfo ) {
 				$finfo_mime = strtolower( trim( (string) @finfo_file( $finfo, $path ) ) );
-				finfo_close( $finfo );
+				if ( is_resource( $finfo ) ) { finfo_close( $finfo ); }
 				if ( in_array( $finfo_mime, array( 'image/png', 'image/jpeg' ), true ) && $finfo_mime !== $detected_mime ) {
 					throw new InvalidArgumentException( 'Resolved asset content detectors disagree about its MIME type.' );
 				}

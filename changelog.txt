@@ -1,3 +1,10 @@
+1.6.50
+- Avoid PHP 8.5-deprecated Fileinfo object closing by calling `finfo_close()` only for legacy resource handles in QR-logo and renderer asset inspection paths.
+- Avoid PHP 8.5-deprecated GD object destruction by calling `imagedestroy()` only for legacy GD resources; modern `GdImage` objects use normal object lifetime management.
+- Add permanent production-source regression ownership for these PHP 8.5 deprecation boundaries while retaining PHP 7.4 compatibility.
+- Record PHP 8.5 as static deprecation-hardening complete for the definite shipped API sites, but keep full PHP 8.5 runtime certification proof-gated to a genuine PHP 8.5 host.
+- Keep renderer/database authority, WordPress 7.1 runtime certification, `PERF-01` database changes, Template publication, Preview and Designer proof-gated.
+
 1.6.49
 - Eliminate PHP 8.4 implicit-nullable parameter deprecations across the production codebase with explicit `?Type` declarations that remain compatible with the declared PHP 7.4 minimum.
 - Add translator context to genuinely ambiguous Search action/field labels and entity/maintenance status wording before formal translation packs mature.

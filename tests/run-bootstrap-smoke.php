@@ -64,6 +64,26 @@ if ( $implicit_nullable ) {
 	exit( 1 );
 }
 
+/* PHP 8.5 deprecates closing modern Fileinfo/GD objects through legacy resource APIs. */
+$php85_resource_violations = array();
+foreach ( array(
+	$production_root . '/includes/class-ecapla-certverify-qr-logo.php',
+	$production_root . '/src/Application/Rendering/AssetInspector.php',
+) as $path ) {
+	$source = (string) file_get_contents( $path );
+	if ( false !== strpos( $source, 'finfo_close( $finfo )' ) && false === strpos( $source, 'if ( is_resource( $finfo ) ) { finfo_close( $finfo ); }' ) ) {
+		$php85_resource_violations[] = $path . ': finfo_close';
+	}
+}
+$gd_driver_source = (string) file_get_contents( $production_root . '/src/Infrastructure/Rendering/NativeGdDriver.php' );
+if ( false !== strpos( $gd_driver_source, 'imagedestroy( $image )' ) && false === strpos( $gd_driver_source, 'if ( is_resource( $image ) ) { imagedestroy( $image ); }' ) ) {
+	$php85_resource_violations[] = $production_root . '/src/Infrastructure/Rendering/NativeGdDriver.php: imagedestroy';
+}
+if ( $php85_resource_violations ) {
+	fwrite( STDERR, "Certloom production code must keep PHP 8.5-deprecated legacy close/destroy APIs restricted to legacy resources: " . implode( ', ', $php85_resource_violations ) . "\n" );
+	exit( 1 );
+}
+
 $pot = file_get_contents( dirname( __DIR__ ) . '/languages/certloom.pot' );
 if ( false === $pot || false === strpos( $pot, 'msgid "This is the native WordPress block. Elementor is not required."' ) || false === strpos( $pot, 'msgid "Certloom could not persist its required administrator access. The migration will be retried automatically."' ) ) {
 	fwrite( STDERR, "Certloom POT must cover both native-block JavaScript and PHP runtime strings.\n" );

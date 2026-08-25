@@ -117,7 +117,7 @@ final class Ecapla_CertVerify_QR_Logo {
 			$finfo = @finfo_open( FILEINFO_MIME_TYPE );
 			if ( false !== $finfo ) {
 				$detected = strtolower( trim( (string) @finfo_buffer( $finfo, $content ) ) );
-				finfo_close( $finfo );
+				if ( is_resource( $finfo ) ) { finfo_close( $finfo ); }
 				if ( in_array( $detected, array( 'image/png', 'image/jpeg' ), true ) && $detected !== $mime ) {
 					return new WP_Error( 'ecapla_certverify_qr_logo_mime', __( 'The Site Icon content detectors disagree about its image type.', 'certloom' ) );
 				}

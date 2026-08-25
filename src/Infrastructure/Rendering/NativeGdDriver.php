@@ -76,5 +76,5 @@ final class NativeGdDriver implements GdDriverInterface {
 		if ( ! $ok || ! is_string( $bytes ) || '' === $bytes ) { throw new RuntimeException( 'GD could not encode the requested raster artifact.' ); }
 		return $bytes;
 	}
-	public function destroy( $image ) { if ( is_resource( $image ) || is_object( $image ) ) { imagedestroy( $image ); } }
+	public function destroy( $image ) { if ( is_resource( $image ) ) { imagedestroy( $image ); } }
 }
