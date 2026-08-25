@@ -1,3 +1,10 @@
+1.6.42
+- Add a canonical source-only real WordPress/MySQL acceptance ceremony so four gate transcripts are captured under one exact run identity instead of being manually stitched together.
+- Advance real-host gate evidence to v2 with exact Certloom payload, exact gate/helper hashes, non-sensitive WordPress/PHP/database environment, and a machine-readable EVIDENCE_JSON record.
+- Add atomic external base-gate publication with required PASS-marker validation, transcript hashes, source isolation, and stale/cross-run/cross-environment rejection.
+- Add a privacy-safe normalized-domain acceptance collector joining the four real-host gates with fresh passing isolated DB, gated-domain, populated preflight, staging migration, staging restore, and staging cutover evidence.
+- Export canonical result hashes plus privacy-safe reports rather than raw stored rehearsal state; keep all normalized-domain and renderer authority gates closed until genuine external acceptance passes.
+
 1.6.41
 - Bind isolated database proof, gated-domain acceptance, populated migration preflight, and staging migration/restore/cutover rehearsal evidence to Certloom's exact deterministic production-payload fingerprint in addition to the semantic version.
 - Fail stored database evidence stale after any same-version production-byte drift, and stop active multi-slice migration/restore/cutover rehearsals if the plugin payload changes after the rehearsal begins.

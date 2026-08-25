@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.41
+Stable tag: 1.6.42
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.41: `PDF-04` still requires the genuine seven-fixture PDF/PNG/JPEG execution. In parallel, every stored normalized-domain database proof/preflight/rehearsal and every real WP-CLI/MySQL gate transcript is now bound to the exact Certloom production payload rather than the semantic version alone. Same-version production-byte changes therefore stale or stop database acceptance evidence. The real WordPress/MySQL migration/restore/cutover sequence remains externally unproven in this release; all three normalized-domain authority flags stay false. Concrete mPDF/GD candidates remain unaccepted and `accepted.json` remains absent, so production artifacts, Template publication, authoritative Preview, and Designer output stay disabled until the genuine renderer-capable run passes.
+> Development note for 1.6.42: `PDF-04` still requires the genuine seven-fixture PDF/PNG/JPEG execution. In parallel, the real WordPress/MySQL normalized-domain gate now has a canonical source-only acceptance ceremony: four exact-byte/environment-bound WP-CLI transcripts are captured under one run identity, then joined with the six current migration/restore/cutover proof layers into one privacy-safe atomic external acceptance bundle. No real MySQL/MariaDB run is claimed by this release; all three normalized-domain authority flags stay false. Concrete mPDF/GD candidates remain unaccepted and `accepted.json` remains absent, so production artifacts, Template publication, authoritative Preview, and Designer output stay disabled until the genuine renderer-capable run passes.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -129,6 +129,13 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.42 =
+* Add a canonical source-only real WordPress/MySQL acceptance ceremony so four gate transcripts are captured under one exact run identity instead of being manually stitched together.
+* Advance real-host transcript evidence to v2 with exact Certloom payload, gate/helper SHA-256, WordPress/PHP/database environment, and one machine-readable `EVIDENCE_JSON` record.
+* Add atomic `run-base-gates.sh` publication with exact required PASS-marker validation, transcript hashing, source isolation, and stale/cross-run/cross-environment rejection.
+* Add a privacy-safe normalized-domain acceptance collector that joins those four real-host gates with fresh passing database proof, gated-domain proof, populated preflight, staging migration, staging restore, and staging cutover evidence.
+* Publish only canonical hashes plus privacy-safe reports for stored proof/rehearsal results; never export raw backup paths, ownership tokens, credential values, or failure examples. Normalized-domain authority and renderer authority remain closed until genuine external acceptance passes.
 
 = 1.6.28 =
 * Add a seventh permanent `PDF-04` fixture covering rectangle, ellipse, line, local image contain, logo cover, signature fill, opacity, and non-text arbitrary rotation.
