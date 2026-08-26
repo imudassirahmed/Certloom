@@ -213,7 +213,7 @@ final class PresetCatalog {
 		$add_text( 'verify-label', $qr_x - 8.0, $qr_y + $qr + 1.5, $qr + 16.0, 5.5, 'SCAN TO VERIFY', 5.5, 700, $palette['muted'] );
 
 		return array(
-			'_meta' => array( 'schema' => LayoutSchema::NAME, 'schema_version' => LayoutSchema::VERSION ),
+			'_meta' => array( 'schema' => LayoutSchema::NAME, 'schema_version' => LayoutSchema::VERSION_V1 ),
 			'page'  => array( 'size' => $size, 'orientation' => $orientation, 'width_mm' => $w, 'height_mm' => $h ),
 			'elements' => $elements,
 		);

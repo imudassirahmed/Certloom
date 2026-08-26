@@ -3,6 +3,7 @@ namespace Certloom\Application\Templates;
 
 use Certloom\Application\Rendering\CanonicalJson;
 use Certloom\Application\Rendering\LayoutValidator;
+use Certloom\Domain\Rendering\LayoutSchema;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -51,8 +52,8 @@ final class TemplatePackage {
 				'description' => $description,
 			),
 			'revision'       => array(
-				'layout_schema'         => 'certloom-layout',
-				'layout_schema_version' => 1,
+				'layout_schema'         => LayoutSchema::NAME,
+				'layout_schema_version' => (int) $layout['_meta']['schema_version'],
 				'layout_sha256'         => $hash,
 				'layout'                => $layout,
 			),
@@ -103,7 +104,8 @@ final class TemplatePackage {
 		if ( '' === $machine_key || $machine_key !== (string) $template['machine_key'] || strlen( $machine_key ) > 191 || '' === $name || $this->length( $name ) > 255 || $this->length( $description ) > 20000 ) {
 			return new \WP_Error( 'certloom_template_import_identity_invalid', __( 'The template package contains an invalid template identity.', 'certloom' ) );
 		}
-		if ( 'certloom-layout' !== (string) $revision['layout_schema'] || 1 !== absint( $revision['layout_schema_version'] ) || ! is_array( $revision['layout'] ) || ! preg_match( '/^[a-f0-9]{64}$/', strtolower( (string) $revision['layout_sha256'] ) ) ) {
+		$package_schema_version = absint( $revision['layout_schema_version'] );
+		if ( LayoutSchema::NAME !== (string) $revision['layout_schema'] || ! LayoutSchema::supports_version( $package_schema_version ) || ! is_array( $revision['layout'] ) || ! preg_match( '/^[a-f0-9]{64}$/', strtolower( (string) $revision['layout_sha256'] ) ) ) {
 			return new \WP_Error( 'certloom_template_import_revision_invalid', __( 'The template package contains an unsupported revision contract.', 'certloom' ) );
 		}
 		try {
@@ -111,6 +113,9 @@ final class TemplatePackage {
 			$hash   = $this->json->hash( $layout );
 		} catch ( \Throwable $error ) {
 			return new \WP_Error( 'certloom_template_import_layout_invalid', __( 'The imported template layout does not satisfy Certloom’s canonical layout contract.', 'certloom' ) );
+		}
+		if ( LayoutSchema::NAME !== (string) $layout['_meta']['schema'] || $package_schema_version !== (int) $layout['_meta']['schema_version'] ) {
+			return new \WP_Error( 'certloom_template_import_schema_mismatch', __( 'The imported template package metadata does not match the canonical layout schema version.', 'certloom' ) );
 		}
 		if ( ! hash_equals( strtolower( (string) $revision['layout_sha256'] ), $hash ) ) {
 			return new \WP_Error( 'certloom_template_import_hash_mismatch', __( 'The imported template layout does not match its recorded integrity hash.', 'certloom' ) );

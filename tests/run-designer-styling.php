@@ -9,14 +9,14 @@ use Certloom\Domain\Rendering\LayoutSchema;
 $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'); $js=file_get_contents($root.'/admin/assets/designer.js'); $css=file_get_contents($root.'/admin/assets/designer.css');
 $pass=0;$fail=0; function dsn4($ok,$label){global $pass,$fail;if($ok){$pass++;echo "PASS  $label\n";}else{$fail++;echo "FAIL  $label\n";}}
 
-dsn4(is_string($admin)&&strpos($admin,'DSN-04 · Typography & styling')!==false,'Template admin identifies DSN-04 truthfully');
+dsn4(is_string($admin)&&strpos($admin,'DSN-06 · Canonical lists')!==false,'Template admin identifies DSN-06 truthfully while retaining DSN-04 styling controls');
 dsn4(strpos($admin,'data-certloom-designer-style-field="opacity"')!==false,'all canonical elements expose common opacity styling');
 foreach(['font_family','font_size_pt','font_weight','italic','color','align','vertical_align','direction','line_height','letter_spacing_pt','overflow'] as $key){ dsn4(strpos($admin,'data-certloom-designer-style-field="'.$key.'"')!==false,"text inspector exposes canonical $key"); }
 dsn4(strpos($admin,'FONT-02 will own controlled local font import/catalog')!==false&&strpos($admin,'data-certloom-designer-style-field="font_family" readonly')!==false,'font key is preserved read-only until controlled FONT-02 manifest ownership exists');
 dsn4(strpos($admin,'data-certloom-designer-style="shape"')!==false&&substr_count($admin,'data-certloom-designer-style-field="fill"')===1,'shape styling exposes canonical fill exactly once');
 dsn4(substr_count($admin,'data-certloom-designer-style-field="stroke"')===2&&substr_count($admin,'data-certloom-designer-style-field="stroke_width_mm"')===2,'shape and line expose their existing canonical stroke fields');
-dsn4(strpos($admin,'image borders/shadows and barcode are not invented as Designer-only CSS')!==false,'DSN-04 refuses non-schema image effects and preserves DSN-05 barcode boundary');
-dsn4(strpos($admin,'DSN-05/06/07/08')!==false,'later schema/list/autosave/registry milestones remain explicit');
+dsn4(strpos($admin,'data-certloom-designer-style-field="box_shadow"')===false&&strpos($admin,'data-certloom-designer-style-field="border_radius"')===false,'DSN-04 still refuses non-schema image effects after the v2 schema milestone');
+dsn4(strpos($admin,'DSN-07/08')!==false,'later list/autosave/registry milestones remain explicit');
 
 dsn4(is_string($js)&&strpos($js,'function applyStyleField')!==false&&strpos($js,'function styleValueForElement')!==false,'Designer has an explicit canonical style mutation path');
 dsn4(strpos($js,'function canonicalColor')!==false&&strpos($js,"/^#[0-9A-F]{6}(?:[0-9A-F]{2})?$/")!==false,'Designer color validation mirrors #RRGGBB/#RRGGBBAA server syntax');
@@ -52,7 +52,7 @@ dsn4($valid&&abs($normalized['elements'][$lineIndex]['stroke_width_mm']-1.25)<0.
 $bad=$base; $bad['elements'][$textIndex]['style']['color']='red'; try{$validator->normalize($bad);$badColor=false;}catch(Throwable $e){$badColor=true;} dsn4($badColor,'server rejects non-canonical named colors even if a browser could display them');
 $bad=$base; $bad['elements'][$textIndex]['style']['font_size_pt']=301; try{$validator->normalize($bad);$badSize=false;}catch(Throwable $e){$badSize=true;} dsn4($badSize,'server rejects out-of-range typography even if client validation were bypassed');
 $bad=$base; $bad['elements'][$lineIndex]['stroke_width_mm']=0; try{$validator->normalize($bad);$badLine=false;}catch(Throwable $e){$badLine=true;} dsn4($badLine,'server retains strict positive line-width boundary');
-$types=LayoutSchema::element_types(); dsn4($types===array('text','merge','image','logo','signature','shape','line','qr'),'DSN-04 changes no immutable layout element type');
+$types=LayoutSchema::element_types(LayoutSchema::VERSION_V1); dsn4($types===array('text','merge','image','logo','signature','shape','line','qr'),'DSN-04 changes no immutable layout element type');
 $all=(new PresetCatalog())->all();$validPresets=0;foreach($all as $preset){try{$validator->normalize($preset['layout']);$validPresets++;}catch(Throwable $e){}} dsn4(count($all)===24&&$validPresets===24,'all 24 factory layouts remain valid after DSN-04');
 
 echo "\n$pass DSN-04 checks, $fail failures\n"; exit($fail?1:0);

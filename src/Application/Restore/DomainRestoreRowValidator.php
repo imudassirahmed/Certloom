@@ -5,6 +5,7 @@ use Certloom\Application\VisibilityPolicy;
 use Certloom\Application\Rendering\CanonicalJson;
 use Certloom\Application\Rendering\LayoutValidator;
 use Certloom\Domain\Credential\PublicCredentialId;
+use Certloom\Domain\Rendering\LayoutSchema;
 use Certloom\Domain\Credential\States;
 use Certloom\Infrastructure\Backup\DomainBackupRepository;
 use Certloom\Infrastructure\Database\SchemaManager;
@@ -116,7 +117,8 @@ final class DomainRestoreRowValidator {
 				$dates = array( 'created_at' => 'datetime', 'updated_at' => 'datetime', 'archived_at' => 'datetime' );
 				break;
 			case 'template_revisions':
-				if ( absint( $row['template_id'] ) < 1 || absint( $row['revision_number'] ) < 1 || 'certloom-layout' !== (string) $row['layout_schema'] || 1 !== absint( $row['layout_schema_version'] ) || ! preg_match( '/^[a-f0-9]{64}$/', strtolower( (string) $row['layout_sha256'] ) ) || ! in_array( (string) $row['source_type'], array( 'manual', 'import', 'preset' ), true ) ) {
+				$stored_layout_version = absint( $row['layout_schema_version'] );
+				if ( absint( $row['template_id'] ) < 1 || absint( $row['revision_number'] ) < 1 || LayoutSchema::NAME !== (string) $row['layout_schema'] || ! LayoutSchema::supports_version( $stored_layout_version ) || ! preg_match( '/^[a-f0-9]{64}$/', strtolower( (string) $row['layout_sha256'] ) ) || ! in_array( (string) $row['source_type'], array( 'manual', 'import', 'preset' ), true ) ) {
 					return $this->invalid( 'template_revision' );
 				}
 				$decoded_layout = json_decode( (string) $row['layout_json'], true );
@@ -128,6 +130,9 @@ final class DomainRestoreRowValidator {
 					$layout_hash = ( new CanonicalJson() )->hash( $layout );
 				} catch ( \Throwable $error ) {
 					return new \WP_Error( 'certloom_domain_restore_template_layout_invalid', __( 'A template revision in the backup does not satisfy Certloom’s canonical layout contract.', 'certloom' ) );
+				}
+				if ( LayoutSchema::NAME !== (string) $layout['_meta']['schema'] || $stored_layout_version !== (int) $layout['_meta']['schema_version'] ) {
+					return new \WP_Error( 'certloom_domain_restore_template_layout_schema_mismatch', __( 'A template revision in the backup has layout metadata that does not match its stored schema version.', 'certloom' ) );
 				}
 				if ( ! hash_equals( strtolower( (string) $row['layout_sha256'] ), $layout_hash ) ) {
 					return new \WP_Error( 'certloom_domain_restore_template_layout_hash_invalid', __( 'A template revision in the backup failed its layout integrity check.', 'certloom' ) );

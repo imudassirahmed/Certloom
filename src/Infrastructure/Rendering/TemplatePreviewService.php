@@ -19,7 +19,7 @@ final class TemplatePreviewService {
 	private $assets;
 
 	public function __construct( ?LayoutResolver $resolver = null, ?RenderPlanBuilder $plans = null, ?TemplatePreviewSamples $samples = null, ?BrowserPreviewFontManifest $fonts = null, ?LocalAssetResolverInterface $assets = null ) {
-		$this->resolver = $resolver ?: new LayoutResolver( null, null, null, new LocalQrEncoder() );
+		$this->resolver = $resolver ?: new LayoutResolver( null, null, null, new LocalQrEncoder(), new LocalCode128Encoder() );
 		$this->plans = $plans ?: new RenderPlanBuilder();
 		$this->samples = $samples ?: new TemplatePreviewSamples();
 		$this->fonts = $fonts ?: new BrowserPreviewFontManifest();

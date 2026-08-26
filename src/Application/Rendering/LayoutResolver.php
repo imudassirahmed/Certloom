@@ -3,6 +3,7 @@ namespace Certloom\Application\Rendering;
 
 use Certloom\Application\Contract\LocalAssetResolverInterface;
 use Certloom\Application\Contract\QrEncoderInterface;
+use Certloom\Application\Contract\BarcodeEncoderInterface;
 use InvalidArgumentException;
 
 /** Resolves immutable merge/asset/QR inputs once before any renderer sees them. */
@@ -11,12 +12,14 @@ final class LayoutResolver {
 	private $directions;
 	private $assets;
 	private $qr_encoder;
+	private $barcode_encoder;
 
-	public function __construct( ?LayoutValidator $validator = null, ?TextDirectionResolver $directions = null, ?AssetInspector $assets = null, ?QrEncoderInterface $qr_encoder = null ) {
+	public function __construct( ?LayoutValidator $validator = null, ?TextDirectionResolver $directions = null, ?AssetInspector $assets = null, ?QrEncoderInterface $qr_encoder = null, ?BarcodeEncoderInterface $barcode_encoder = null ) {
 		$this->validator = $validator ?: new LayoutValidator();
 		$this->directions = $directions ?: new TextDirectionResolver();
 		$this->assets = $assets ?: new AssetInspector();
 		$this->qr_encoder = $qr_encoder;
+		$this->barcode_encoder = $barcode_encoder;
 	}
 
 	/** @return array<string,mixed> */
@@ -44,6 +47,18 @@ final class LayoutResolver {
 				case 'text':
 					$element['style']['direction'] = $this->directions->resolve( $element['text'], $element['style']['direction'] );
 					break;
+				case 'list':
+					$items = isset( $element['items'] ) && is_array( $element['items'] ) ? array_values( $element['items'] ) : array();
+					$lines = array();
+					foreach ( $items as $item_index => $item ) {
+						$prefix = 'decimal' === (string) ( $element['list_style'] ?? 'bullet' ) ? ( ( $item_index + 1 ) . '. ' ) : "• ";
+						$lines[] = $prefix . (string) $item;
+					}
+					$element['type'] = 'text';
+					$element['text'] = $this->resolved_text( implode( "\n", $lines ) );
+					unset( $element['items'], $element['list_style'] );
+					$element['style']['direction'] = $this->directions->resolve( $element['text'], $element['style']['direction'] );
+					break;
 				case 'image':
 				case 'logo':
 				case 'signature':
@@ -67,6 +82,29 @@ final class LayoutResolver {
 					$element['encoder'] = array( 'id' => $encoder_id, 'version' => $encoder_version );
 					unset( $element['source'] );
 					break;
+				case 'barcode':
+					if ( null === $this->barcode_encoder ) {
+						throw new InvalidArgumentException( 'A Certloom Code 128 encoder is required before barcode-bearing layouts can render.' );
+					}
+					$source = (string) ( $element['source'] ?? '' );
+					if ( 'credential.display_number' !== $source || ! array_key_exists( $source, $merge_snapshot ) ) {
+						throw new InvalidArgumentException( 'Barcode rendering requires immutable credential.display_number data.' );
+					}
+					$value = $merge_snapshot[ $source ];
+					if ( is_array( $value ) || is_object( $value ) || is_resource( $value ) || null === $value ) {
+						throw new InvalidArgumentException( 'Barcode data must resolve to scalar certificate-number text.' );
+					}
+					$data = (string) $value;
+					$encoder_id = strtolower( trim( (string) $this->barcode_encoder->id() ) );
+					$encoder_version = trim( (string) $this->barcode_encoder->version() );
+					if ( ! preg_match( '/^[a-z][a-z0-9._-]{0,63}$/', $encoder_id ) || '' === $encoder_version || strlen( $encoder_version ) > 64 ) {
+						throw new InvalidArgumentException( 'Barcode encoder ID/version does not satisfy the stable rendering contract.' );
+					}
+					$element['data'] = $data;
+					$element['modules'] = $this->barcode_modules( $this->barcode_encoder->encode( $data ) );
+					$element['encoder'] = array( 'id' => $encoder_id, 'version' => $encoder_version );
+					unset( $element['source'] );
+					break;
 			}
 			$resolved['elements'][ $index ] = $element;
 		}
@@ -74,6 +112,25 @@ final class LayoutResolver {
 		return $resolved;
 	}
 
+
+
+	/** @return array<int,int> */
+	private function barcode_modules( $modules ) {
+		if ( ! is_array( $modules ) || count( $modules ) < 46 || count( $modules ) > 4096 ) {
+			throw new InvalidArgumentException( 'Code 128 encoder returned an invalid module sequence.' );
+		}
+		$out = array();
+		foreach ( array_values( $modules ) as $module ) {
+			if ( 0 !== $module && 1 !== $module && false !== $module && true !== $module ) {
+				throw new InvalidArgumentException( 'Code 128 module sequence may contain only binary modules.' );
+			}
+			$out[] = $module ? 1 : 0;
+		}
+		if ( 1 !== $out[0] || 1 !== $out[ count( $out ) - 1 ] ) {
+			throw new InvalidArgumentException( 'Code 128 module sequence failed its framing check.' );
+		}
+		return $out;
+	}
 
 	/** @return array<int,array<int,int>> */
 	private function qr_matrix( $matrix ) {

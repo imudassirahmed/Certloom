@@ -9,17 +9,17 @@ use Certloom\Domain\Rendering\LayoutSchema;
 $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'); $js=file_get_contents($root.'/admin/assets/designer.js'); $css=file_get_contents($root.'/admin/assets/designer.css');
 $pass=0;$fail=0; function dsn3($ok,$label){global $pass,$fail;if($ok){$pass++;echo "PASS  $label\n";}else{$fail++;echo "FAIL  $label\n";}}
 
-dsn3(is_string($admin)&&strpos($admin,'DSN-04 · Typography & styling')!==false,'Template admin advances to DSN-04 while retaining the DSN-03 element/content surface');
+dsn3(is_string($admin)&&strpos($admin,'DSN-06 · Canonical lists')!==false,'Template admin advances through DSN-06 while retaining the DSN-03 element/content surface');
 dsn3(strpos($admin,'wp_enqueue_media()')!==false,'WordPress Media Library is explicitly enqueued for local asset selection');
 foreach(['text','merge','image','logo','signature','seal','qr','rectangle','ellipse','line','background'] as $type){ dsn3(strpos($admin,'data-certloom-designer-add="\' . esc_attr( $type )')!==false || strpos($admin,"'$type' => __(")!==false,"palette exposes $type creation"); }
 dsn3(strpos($js,"'seal' === kind")!==false&&strpos($js,"element.type = 'image'")!==false,'seal palette maps to the existing canonical image primitive without schema mutation');
-dsn3(strpos($admin,'Barcode (DSN-05)')!==false&&strpos($admin,'versioned layout-schema upgrader')!==false,'barcode remains visibly deferred to DSN-05 rather than mutating schema v1');
+dsn3(strpos($admin,'data-certloom-designer-add="barcode"')!==false&&strpos($admin,'Upgrade this draft to certloom-layout v2')!==false,'barcode is exposed only behind the explicit v2 upgrade boundary rather than mutating schema v1');
 dsn3(strpos($admin,'data-certloom-designer-remove')!==false,'selected elements can be removed through explicit Designer UI');
 dsn3(strpos($admin,'data-certloom-designer-content-field="text"')!==false&&strpos($admin,'data-certloom-designer-content-field="token"')!==false,'text and merge content editors are present');
 dsn3(strpos($admin,'data-certloom-designer-media')!==false&&strpos($admin,'attachment:123')!==false,'asset editor keeps WordPress-local attachment references visible');
 dsn3(strpos($admin,'error_correction')!==false&&strpos($admin,'quiet_zone_modules')!==false,'QR content controls preserve the canonical v1 QR contract');
-dsn3(strpos($admin,'text typography, canonical colors, opacity, shape fill/stroke and line stroke')!==false,'DSN-03 primitives are now styled only through canonical DSN-04 fields');
-dsn3(strpos($admin,'DSN-05/06/07/08')!==false,'later schema/list/autosave/registry milestones remain explicit');
+dsn3(strpos($admin,'data-certloom-designer-style-field="font_size_pt"')!==false&&strpos($admin,'data-certloom-designer-style-field="opacity"')!==false,'DSN-03 primitives are now styled only through canonical DSN-04 fields');
+dsn3(strpos($admin,'DSN-07/08')!==false,'later schema/list/autosave/registry milestones remain explicit');
 
 dsn3(is_string($js)&&strpos($js,'function secureUuidV4')!==false&&strpos($js,'getRandomValues')!==false,'new element IDs use browser cryptographic randomness');
 dsn3(strpos($js,'Math.random')===false,'element IDs never fall back to Math.random');
@@ -39,7 +39,7 @@ $resolver=file_get_contents($root.'/src/Infrastructure/Rendering/WordPressLocalA
 dsn3(strpos($resolver,"array( 'image/png', 'image/jpeg' )")!==false&&strpos($resolver,'supports only local PNG and JPEG')!==false,'production WordPress asset resolver independently enforces the same PNG/JPEG media boundary');
 dsn3(is_string($css)&&strpos($css,'.certloom-template-designer-palette')!==false&&strpos($css,'.certloom-template-designer-content-editor')!==false,'DSN-03 palette/content editor have dedicated responsive styling');
 
-$types=LayoutSchema::element_types();
+$types=LayoutSchema::element_types(LayoutSchema::VERSION_V1);
 dsn3($types===array('text','merge','image','logo','signature','shape','line','qr'),'certloom-layout v1 element type contract is unchanged');
 dsn3(!in_array('barcode',$types,true),'barcode is not smuggled into immutable layout schema v1');
 

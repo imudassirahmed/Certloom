@@ -1,3 +1,20 @@
+1.6.61
+- DSN-06: add certloom-layout v3 with canonical bullet and decimal list elements while preserving v1/v2 read compatibility and immutable historical revisions.
+- Extend the deterministic schema upgrader so reviewed drafts can advance v1→v2→v3 or v2→v3 without rewriting prior revisions or factory preset identities.
+- Resolve list items centrally into the existing text Render Plan path, keeping PDF/PNG/JPEG/Preview rendering on one composition model instead of inventing a second list renderer.
+- Add Designer v3 list authoring with bounded newline-separated items, bullet/numbered marker selection, shared typography/styling, locks, undo/redo and responsive behavior.
+- Keep Code 128 available from v2 onward; v3 is strictly additive and does not change barcode identity semantics.
+- Keep normalized-domain authority, Template publication authority and renderer accepted.json closed pending final real-host acceptance.
+
+1.6.60
+- DSN-05: add explicit deterministic certloom-layout v1 → v2 upgrading through a new immutable Template revision; historical revisions and all 24 factory preset layouts remain v1/readable.
+- Add the layout-v2 Code 128 primitive, fixed to credential.display_number and resolved centrally through the existing local encoder into scanner-safe shared Render Plans.
+- Bind Template package import/export, repository revision metadata and normalized-domain restore to the actual canonical layout schema/version; reject cross-version metadata mismatches.
+- Add v1/v2 Designer gating, reviewed revision/hash-bound upgrade action and canonical barcode authoring controls without creating another credential identity.
+- Unify QR/Code 128 machine-code composition in HTML/GD/mPDF candidates, including white scanner-safe backgrounds and rotation-aware mPDF SVG composition.
+- Add DSN-05 application/browser compatibility gates and an independent Chromium-raster Code 128 decode gate.
+- Keep normalized-domain authority, Template publication authority and renderer accepted.json closed pending final real-host acceptance.
+
 1.6.59
 - Add DSN-04 canonical typography and visual styling to the existing certloom-layout Designer with no second CSS/document model.
 - Add text/merge controls for font size, weight, italic, color, horizontal/vertical alignment, bidi direction, line height, letter spacing and overflow.

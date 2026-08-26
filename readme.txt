@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.59
+Stable tag: 1.6.61
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.59: DSN-04 adds canonical Designer typography and visual styling without introducing Designer-only CSS. Text/merge elements can edit size, weight, italic, color, horizontal/vertical alignment, bidi direction, line height, letter spacing and overflow; all elements can edit opacity; shapes and lines can edit their existing canonical fill/stroke fields. Existing font keys are preserved read-only until FONT-02 owns controlled local font import/catalog and exact renderer-manifest binding. Barcode and schema expansion remain DSN-05. Normalized-domain and renderer authority remain final-release blockers.
+> Development note for 1.6.61: DSN-06 adds canonical bullet/numbered list elements through certloom-layout v3. Historical v1/v2 revisions remain readable and immutable; the 24 factory preset identities remain v1, existing v2 barcode layouts remain valid, and reviewed schema upgrades create new immutable v3 revisions. List items are bounded canonical text, resolve centrally into the shared text Render Plan path, and use the same typography controls as text/merge elements. DSN-07 autosave/optimistic concurrency is next. Normalized-domain and renderer authority remain final-release blockers.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 

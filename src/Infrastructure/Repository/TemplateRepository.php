@@ -3,6 +3,8 @@ namespace Certloom\Infrastructure\Repository;
 
 use Certloom\Application\Rendering\CanonicalJson;
 use Certloom\Application\Rendering\LayoutValidator;
+use Certloom\Application\Rendering\LayoutSchemaUpgrader;
+use Certloom\Domain\Rendering\LayoutSchema;
 use Certloom\Application\Templates\TemplatePackage;
 use Certloom\Application\Templates\TemplateAssignmentPolicy;
 use Certloom\Application\Templates\TemplateLifecycle;
@@ -151,6 +153,55 @@ final class TemplateRepository {
 			return false === $updated || '' !== (string) $wpdb->last_error
 				? new \WP_Error( 'certloom_template_revision_advance_failed', __( 'Certloom could not advance the template draft safely.', 'certloom' ) )
 				: $revision_id;
+		} );
+	}
+
+
+	/**
+	 * Explicitly upgrades the current draft to a newer canonical layout schema.
+	 * Historical revisions are never rewritten; a successful upgrade creates a
+	 * new immutable revision after exact revision/hash review is revalidated
+	 * under the same template lock.
+	 *
+	 * @return int|\WP_Error
+	 */
+	public function upgrade_current_layout( $template_id, $expected_revision_id, $expected_revision_sha256, $actor_user_id = 0, $target_version = LayoutSchema::VERSION ) {
+		$template_id = absint( $template_id );
+		$expected_revision_id = absint( $expected_revision_id );
+		$expected_revision_sha256 = strtolower( trim( (string) $expected_revision_sha256 ) );
+		$target_version = absint( $target_version );
+		if ( ! $template_id || ! $expected_revision_id || ! preg_match( '/^[a-f0-9]{64}$/', $expected_revision_sha256 ) || ! LayoutSchema::supports_version( $target_version ) ) {
+			return new \WP_Error( 'certloom_template_upgrade_review_required', __( 'Layout upgrading requires the exact reviewed revision, layout hash and supported target schema.', 'certloom' ) );
+		}
+		$generation = ( new DomainGeneration() )->mark_before_mutation();
+		if ( is_wp_error( $generation ) ) { return $generation; }
+		return $this->transaction->run( function () use ( $template_id, $expected_revision_id, $expected_revision_sha256, $actor_user_id, $target_version ) {
+			global $wpdb;
+			$template = $this->lock_template( $template_id );
+			if ( is_wp_error( $template ) ) { return $template; }
+			if ( ! is_array( $template ) || ! empty( $template['archived_at'] ) ) { return new \WP_Error( 'certloom_template_unavailable', __( 'The template is unavailable for schema upgrading.', 'certloom' ) ); }
+			$current_id = absint( $template['current_revision_id'] ?? 0 );
+			if ( $current_id !== $expected_revision_id ) { return new \WP_Error( 'certloom_template_stale_revision', __( 'This template draft changed after you reviewed it. Reload before upgrading.', 'certloom' ) ); }
+			$current = $this->find_revision_row( $current_id, true );
+			if ( is_wp_error( $current ) ) { return $current; }
+			if ( ! is_array( $current ) || absint( $current['template_id'] ?? 0 ) !== $template_id ) { return new \WP_Error( 'certloom_template_revision_pointer_corrupt', __( 'The template draft points to an invalid revision.', 'certloom' ) ); }
+			$verified = $this->verify_revision_row( $current );
+			if ( is_wp_error( $verified ) ) { return $verified; }
+			if ( ! hash_equals( strtolower( (string) $verified['layout_sha256'] ), $expected_revision_sha256 ) ) { return new \WP_Error( 'certloom_template_upgrade_review_stale', __( 'The reviewed template hash no longer matches the revision selected for upgrade.', 'certloom' ) ); }
+			$current_version = absint( $verified['layout']['_meta']['schema_version'] ?? 0 );
+			if ( $current_version > $target_version ) { return new \WP_Error( 'certloom_template_upgrade_downgrade_forbidden', __( 'Certloom never downgrades immutable Template layout schemas.', 'certloom' ) ); }
+			if ( $current_version === $target_version ) { return $current_id; }
+			try { $layout = ( new LayoutSchemaUpgrader( $this->layouts ) )->upgrade( $verified['layout'], $target_version ); }
+			catch ( \Throwable $error ) { return new \WP_Error( 'certloom_template_upgrade_failed', __( 'Certloom could not deterministically upgrade this Template layout.', 'certloom' ) ); }
+			$number = absint( $verified['revision_number'] ?? 0 ) + 1;
+			$now = current_time( 'mysql', true );
+			$revision_id = $this->insert_revision( $template_id, $number, $current_id, $layout, $actor_user_id, self::SOURCE_MANUAL, $now );
+			if ( is_wp_error( $revision_id ) ) { return $revision_id; }
+			$wpdb->last_error = '';
+			$updated = $wpdb->update( SchemaManager::table( 'templates' ), array( 'current_revision_id' => $revision_id, 'updated_at' => $now ), array( 'id' => $template_id ) );
+			return false === $updated || '' !== (string) $wpdb->last_error
+				? new \WP_Error( 'certloom_template_upgrade_advance_failed', __( 'Certloom created the upgraded revision but could not advance the Template draft safely.', 'certloom' ) )
+				: absint( $revision_id );
 		} );
 	}
 
@@ -556,7 +607,7 @@ final class TemplateRepository {
 		$wpdb->last_error = '';
 		$inserted = $wpdb->insert( SchemaManager::table( 'template_revisions' ), array(
 			'template_id' => absint( $template_id ), 'revision_number' => absint( $revision_number ), 'parent_revision_id' => $parent_revision_id ? absint( $parent_revision_id ) : null,
-			'layout_schema' => 'certloom-layout', 'layout_schema_version' => 1, 'layout_json' => $layout_json, 'layout_sha256' => $hash,
+			'layout_schema' => LayoutSchema::NAME, 'layout_schema_version' => absint( $layout['_meta']['schema_version'] ?? 0 ), 'layout_json' => $layout_json, 'layout_sha256' => $hash,
 			'source_type' => $source_type, 'created_by_user_id' => absint( $actor_user_id ) ?: null, 'created_at' => (string) $now,
 		) );
 		return false === $inserted || '' !== (string) $wpdb->last_error || absint( $wpdb->insert_id ) < 1 ? new \WP_Error( 'certloom_template_revision_create_failed', __( 'Certloom could not create the immutable template revision.', 'certloom' ) ) : absint( $wpdb->insert_id );
@@ -582,6 +633,7 @@ final class TemplateRepository {
 		$decoded = json_decode( (string) ( $row['layout_json'] ?? '' ), true );
 		if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $decoded ) ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'A stored template revision contains invalid layout data.', 'certloom' ) ); }
 		try { $layout = $this->layouts->normalize( $decoded ); $hash = $this->json->hash( $layout ); } catch ( \Throwable $error ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'A stored template revision does not satisfy Certloom’s canonical layout contract.', 'certloom' ) ); }
+		if ( LayoutSchema::NAME !== (string) ( $row['layout_schema'] ?? '' ) || absint( $row['layout_schema_version'] ?? 0 ) !== (int) $layout['_meta']['schema_version'] ) { return new \WP_Error( 'certloom_template_revision_schema_mismatch', __( 'A stored Template revision has schema metadata that does not match its canonical layout document.', 'certloom' ) ); }
 		if ( ! hash_equals( strtolower( (string) ( $row['layout_sha256'] ?? '' ) ), $hash ) ) { return new \WP_Error( 'certloom_template_revision_hash_mismatch', __( 'A stored template revision failed its integrity check.', 'certloom' ) ); }
 		$row['layout'] = $layout;
 		return $row;

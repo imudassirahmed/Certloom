@@ -15,6 +15,7 @@ final class LayoutValidator {
 	public function normalize( array $layout ) {
 		$this->assert_keys( $layout, array( '_meta', 'page', 'elements' ), array( '_meta', 'page', 'elements' ), 'layout' );
 		$meta = $this->normalize_meta( $layout['_meta'] );
+		$schema_version = (int) $meta['schema_version'];
 		$page = $this->normalize_page( $layout['page'] );
 		if ( ! is_array( $layout['elements'] ) ) {
 			throw new InvalidArgumentException( 'Layout elements must be an array.' );
@@ -30,7 +31,7 @@ final class LayoutValidator {
 			if ( ! is_array( $element ) ) {
 				throw new InvalidArgumentException( sprintf( 'Element %d must be an object.', $index + 1 ) );
 			}
-			$normalized = $this->normalize_element( $element, $page, $index );
+			$normalized = $this->normalize_element( $element, $page, $index, $schema_version );
 			if ( isset( $ids[ $normalized['id'] ] ) ) {
 				throw new InvalidArgumentException( 'Layout element IDs must be unique.' );
 			}
@@ -60,10 +61,11 @@ final class LayoutValidator {
 		if ( LayoutSchema::NAME !== (string) $meta['schema'] ) {
 			throw new InvalidArgumentException( 'Unsupported layout schema.' );
 		}
-		if ( LayoutSchema::VERSION !== $this->integer( $meta['schema_version'], 'layout schema version' ) ) {
+		$version = $this->integer( $meta['schema_version'], 'layout schema version' );
+		if ( ! LayoutSchema::supports_version( $version ) ) {
 			throw new InvalidArgumentException( 'Unsupported layout schema version.' );
 		}
-		return array( 'schema' => LayoutSchema::NAME, 'schema_version' => LayoutSchema::VERSION );
+		return array( 'schema' => LayoutSchema::NAME, 'schema_version' => $version );
 	}
 
 	/** @return array<string,mixed> */
@@ -88,10 +90,10 @@ final class LayoutValidator {
 	}
 
 	/** @return array<string,mixed> */
-	private function normalize_element( array $element, array $page, $index ) {
+	private function normalize_element( array $element, array $page, $index, $schema_version ) {
 		$common = array( 'id', 'type', 'x_mm', 'y_mm', 'width_mm', 'height_mm', 'z', 'rotation_deg', 'opacity' );
 		$type = isset( $element['type'] ) ? strtolower( (string) $element['type'] ) : '';
-		if ( ! in_array( $type, LayoutSchema::element_types(), true ) ) {
+		if ( ! in_array( $type, LayoutSchema::element_types( $schema_version ), true ) ) {
 			throw new InvalidArgumentException( sprintf( 'Element %d has an unsupported type.', $index + 1 ) );
 		}
 
@@ -104,13 +106,16 @@ final class LayoutValidator {
 			'shape'     => array( 'shape', 'fill', 'stroke', 'stroke_width_mm' ),
 			'line'      => array( 'stroke', 'stroke_width_mm' ),
 			'qr'        => array( 'source', 'error_correction', 'quiet_zone_modules' ),
+			'barcode'   => array( 'source', 'symbology', 'quiet_zone_modules' ),
+			'list'      => array( 'items', 'list_style', 'style' ),
 		);
 		$required = array( 'id', 'type', 'x_mm', 'y_mm', 'width_mm', 'height_mm' );
 		if ( 'text' === $type ) { $required[] = 'text'; }
 		if ( 'merge' === $type ) { $required[] = 'token'; }
 		if ( in_array( $type, array( 'image', 'logo', 'signature' ), true ) ) { $required[] = 'asset'; }
 		if ( 'shape' === $type ) { $required[] = 'shape'; }
-		if ( 'qr' === $type ) { $required[] = 'source'; }
+		if ( 'qr' === $type || 'barcode' === $type ) { $required[] = 'source'; }
+		if ( 'list' === $type ) { $required[] = 'items'; }
 		$this->assert_keys( $element, array_merge( $common, $type_keys[ $type ] ), $required, 'layout element' );
 
 		$id = strtolower( trim( (string) $element['id'] ) );
@@ -198,6 +203,34 @@ final class LayoutValidator {
 					throw new InvalidArgumentException( 'QR quiet zone must be between 4 and 16 modules.' );
 				}
 				break;
+			case 'barcode':
+				if ( (int) $schema_version < LayoutSchema::VERSION_V2 ) {
+					throw new InvalidArgumentException( 'Barcode elements require certloom-layout v2 or newer.' );
+				}
+				$out['source'] = strtolower( trim( (string) $element['source'] ) );
+				if ( 'credential.display_number' !== $out['source'] ) {
+					throw new InvalidArgumentException( 'Code 128 barcode source must be credential.display_number.' );
+				}
+				$out['symbology'] = isset( $element['symbology'] ) ? strtolower( trim( (string) $element['symbology'] ) ) : 'code128';
+				if ( 'code128' !== $out['symbology'] ) {
+					throw new InvalidArgumentException( 'certloom-layout v2 currently supports Code 128 barcodes only.' );
+				}
+				$out['quiet_zone_modules'] = isset( $element['quiet_zone_modules'] ) ? $this->integer( $element['quiet_zone_modules'], 'Code 128 quiet zone' ) : 10;
+				if ( $out['quiet_zone_modules'] < 10 || $out['quiet_zone_modules'] > 50 ) {
+					throw new InvalidArgumentException( 'Code 128 quiet zone must be between 10 and 50 modules.' );
+				}
+				break;
+			case 'list':
+				if ( (int) $schema_version < LayoutSchema::VERSION_V3 ) {
+					throw new InvalidArgumentException( 'List elements require certloom-layout v3 or newer.' );
+				}
+				$out['items'] = $this->list_items( $element['items'] );
+				$out['list_style'] = isset( $element['list_style'] ) ? strtolower( trim( (string) $element['list_style'] ) ) : 'bullet';
+				if ( ! in_array( $out['list_style'], array( 'bullet', 'decimal' ), true ) ) {
+					throw new InvalidArgumentException( 'Unsupported list marker style.' );
+				}
+				$out['style'] = $this->style( isset( $element['style'] ) ? $element['style'] : array() );
+				break;
 		}
 		return $out;
 	}
@@ -272,6 +305,25 @@ final class LayoutValidator {
 		}
 		if ( ! in_array( $out['overflow'], array( LayoutSchema::OVERFLOW_WRAP, LayoutSchema::OVERFLOW_SHRINK, LayoutSchema::OVERFLOW_CLIP ), true ) ) {
 			throw new InvalidArgumentException( 'Unsupported text overflow policy.' );
+		}
+		return $out;
+	}
+
+
+	/** @return string[] */
+	private function list_items( $items ) {
+		if ( ! is_array( $items ) || empty( $items ) || count( $items ) > 100 ) {
+			throw new InvalidArgumentException( 'List elements require between 1 and 100 items.' );
+		}
+		$out = array();
+		$total = 0;
+		foreach ( array_values( $items ) as $item ) {
+			$value = $this->text( $item, 'list item' );
+			if ( '' === trim( $value ) ) { throw new InvalidArgumentException( 'List items may not be empty.' ); }
+			if ( strlen( $value ) > 2000 ) { throw new InvalidArgumentException( 'A list item is too large.' ); }
+			$total += strlen( $value );
+			if ( $total > self::MAX_TEXT_BYTES ) { throw new InvalidArgumentException( 'List text exceeds the canonical text budget.' ); }
+			$out[] = $value;
 		}
 		return $out;
 	}

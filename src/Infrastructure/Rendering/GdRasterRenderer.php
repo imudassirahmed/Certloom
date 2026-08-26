@@ -101,7 +101,8 @@ final class GdRasterRenderer implements RendererInterface {
 	private function draw_unrotated( $canvas, array $plan, array $op, $offset_x_mm, $offset_y_mm ) {
 		switch ( (string) $op['type'] ) {
 			case 'text': $this->draw_text( $canvas, $plan, $op, $offset_x_mm, $offset_y_mm ); break;
-			case 'qr': $this->draw_qr( $canvas, $op, $offset_x_mm, $offset_y_mm ); break;
+			case 'qr': $this->draw_machine_code( $canvas, $op, 'qr', $offset_x_mm, $offset_y_mm ); break;
+			case 'barcode': $this->draw_machine_code( $canvas, $op, 'barcode', $offset_x_mm, $offset_y_mm ); break;
 			case 'shape': $this->draw_shape( $canvas, $op, $offset_x_mm, $offset_y_mm ); break;
 			case 'line': $this->draw_line( $canvas, $op, $offset_x_mm, $offset_y_mm ); break;
 			case 'image': case 'logo': case 'signature': $this->draw_image( $canvas, $plan, $op, $offset_x_mm, $offset_y_mm ); break;
@@ -180,13 +181,23 @@ final class GdRasterRenderer implements RendererInterface {
 	/** @return array<string,float> */
 	private function bbox_metrics( array $box ) { $xs=array($box[0],$box[2],$box[4],$box[6]); $ys=array($box[1],$box[3],$box[5],$box[7]); $minx=min($xs);$maxx=max($xs);$miny=min($ys);$maxy=max($ys); return array('min_x'=>(float)$minx,'max_x'=>(float)$maxx,'min_y'=>(float)$miny,'max_y'=>(float)$maxy,'width'=>(float)($maxx-$minx),'height'=>(float)($maxy-$miny)); }
 
-	private function draw_qr( $canvas, array $op, $ox, $oy ) {
+	private function draw_machine_code( $canvas, array $op, $payload_key, $ox, $oy ) {
+		$box = (array) ( $op['geometry']['box'] ?? array() );
+		$payload = isset( $op[ $payload_key ] ) && is_array( $op[ $payload_key ] ) ? $op[ $payload_key ] : array();
+		$white = $this->driver->allocate_color( $canvas, array( 'r'=>255,'g'=>255,'b'=>255,'alpha_unit'=>1.0 ), 1.0 );
 		$black = $this->driver->allocate_color( $canvas, array( 'r'=>0,'g'=>0,'b'=>0,'alpha_unit'=>1.0 ), (float)$op['opacity'] );
-		foreach ( (array)$op['qr']['dark_runs'] as $run ) {
-			$x1=$this->mm_px_float($run['x_mm']+$ox);$y1=$this->mm_px_float($run['y_mm']+$oy);$x2=$this->mm_px_float($run['x_mm']+$run['width_mm']+$ox);$y2=$this->mm_px_float($run['y_mm']+$run['height_mm']+$oy);
-			$this->driver->filled_rectangle($canvas,(int)floor($x1),(int)floor($y1),(int)ceil($x2)-1,(int)ceil($y2)-1,$black);
+		$x1 = $this->mm_px_float( (float) ( $box['x_mm'] ?? 0 ) + $ox );
+		$y1 = $this->mm_px_float( (float) ( $box['y_mm'] ?? 0 ) + $oy );
+		$x2 = $this->mm_px_float( (float) ( $box['x_mm'] ?? 0 ) + (float) ( $box['width_mm'] ?? 0 ) + $ox );
+		$y2 = $this->mm_px_float( (float) ( $box['y_mm'] ?? 0 ) + (float) ( $box['height_mm'] ?? 0 ) + $oy );
+		$this->driver->filled_rectangle( $canvas, (int) floor( $x1 ), (int) floor( $y1 ), max( (int) floor( $x1 ), (int) ceil( $x2 ) - 1 ), max( (int) floor( $y1 ), (int) ceil( $y2 ) - 1 ), $white );
+		foreach ( isset( $payload['dark_runs'] ) && is_array( $payload['dark_runs'] ) ? $payload['dark_runs'] : array() as $run ) {
+			if ( ! is_array( $run ) || ! isset( $run['x_mm'], $run['y_mm'], $run['width_mm'], $run['height_mm'] ) ) { continue; }
+			$rx1=$this->mm_px_float($run['x_mm']+$ox);$ry1=$this->mm_px_float($run['y_mm']+$oy);$rx2=$this->mm_px_float($run['x_mm']+$run['width_mm']+$ox);$ry2=$this->mm_px_float($run['y_mm']+$run['height_mm']+$oy);
+			$this->driver->filled_rectangle($canvas,(int)floor($rx1),(int)floor($ry1),(int)ceil($rx2)-1,(int)ceil($ry2)-1,$black);
 		}
 	}
+
 	private function draw_shape( $canvas, array $op, $ox, $oy ) {
 		$b=$op['geometry']['box'];$s=$op['shape'];$x1=$this->mm_px_float($b['x_mm']+$ox);$y1=$this->mm_px_float($b['y_mm']+$oy);$x2=$this->mm_px_float($b['x_mm']+$b['width_mm']+$ox);$y2=$this->mm_px_float($b['y_mm']+$b['height_mm']+$oy);$fill=$this->driver->allocate_color($canvas,$s['fill'],(float)$op['opacity']);$stroke=$this->driver->allocate_color($canvas,$s['stroke'],(float)$op['opacity']);$th=max(1,(int)round($this->mm_px_float($s['stroke_width_mm'])));
 		if('rectangle'===$s['kind']){if((int)$s['fill']['alpha']>0){$this->driver->filled_rectangle($canvas,$x1,$y1,$x2,$y2,$fill);}if($s['stroke_width_mm']>0){$this->driver->rectangle($canvas,$x1,$y1,$x2,$y2,$stroke,$th);}}else{$cx=($x1+$x2)/2;$cy=($y1+$y2)/2;$w=$x2-$x1;$h=$y2-$y1;if((int)$s['fill']['alpha']>0){$this->driver->filled_ellipse($canvas,$cx,$cy,$w,$h,$fill);}if($s['stroke_width_mm']>0){$this->driver->ellipse($canvas,$cx,$cy,$w,$h,$stroke,$th);}}

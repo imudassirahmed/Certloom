@@ -127,7 +127,8 @@ final class MpdfPdfRenderer implements RendererInterface {
 		if ( method_exists( $mpdf, 'SetAlpha' ) ) { $mpdf->SetAlpha( $opacity ); }
 		switch ( (string) $op['type'] ) {
 			case 'text': $this->draw_text( $mpdf, $op, $font_aliases ); break;
-			case 'qr': $this->draw_qr( $mpdf, $op ); break;
+			case 'qr': $this->draw_machine_code( $mpdf, $op, 'qr' ); break;
+			case 'barcode': $this->draw_machine_code( $mpdf, $op, 'barcode' ); break;
 			case 'shape': $this->draw_shape( $mpdf, $op ); break;
 			case 'line': $this->draw_line( $mpdf, $op ); break;
 			case 'image': case 'logo': case 'signature': $this->draw_image( $mpdf, $plan, $op ); break;
@@ -160,10 +161,22 @@ final class MpdfPdfRenderer implements RendererInterface {
 		$mpdf->WriteFixedPosHTML( $svg, $op['geometry']['rotated_bounds']['x_mm'], $op['geometry']['rotated_bounds']['y_mm'], $op['geometry']['rotated_bounds']['width_mm'], $op['geometry']['rotated_bounds']['height_mm'], 'hidden' );
 	}
 
-	private function draw_qr( $mpdf, array $op ) {
-		if ( method_exists( $mpdf, 'SetFillColor' ) ) { $mpdf->SetFillColor( 0, 0, 0 ); }
-		foreach ( (array) $op['qr']['dark_runs'] as $run ) { $mpdf->Rect( $run['x_mm'], $run['y_mm'], $run['width_mm'], $run['height_mm'], 'F' ); }
+	private function draw_machine_code( $mpdf, array $op, $payload_key ) {
+		$payload = isset( $op[ $payload_key ] ) && is_array( $op[ $payload_key ] ) ? $op[ $payload_key ] : array();
+		$box = $op['geometry']['box'];
+		$bounds = $op['geometry']['rotated_bounds'];
+		$transform = $this->svg_rotation( $op, $bounds );
+		$x = (float) $box['x_mm'] - (float) $bounds['x_mm'];
+		$y = (float) $box['y_mm'] - (float) $bounds['y_mm'];
+		$body = '<g' . $transform . '><rect x="' . $this->num( $x ) . '" y="' . $this->num( $y ) . '" width="' . $this->num( $box['width_mm'] ) . '" height="' . $this->num( $box['height_mm'] ) . '" fill="#fff"/>';
+		foreach ( isset( $payload['dark_runs'] ) && is_array( $payload['dark_runs'] ) ? $payload['dark_runs'] : array() as $run ) {
+			if ( ! is_array( $run ) || ! isset( $run['x_mm'], $run['y_mm'], $run['width_mm'], $run['height_mm'] ) ) { continue; }
+			$body .= '<rect x="' . $this->num( (float) $run['x_mm'] - (float) $bounds['x_mm'] ) . '" y="' . $this->num( (float) $run['y_mm'] - (float) $bounds['y_mm'] ) . '" width="' . $this->num( $run['width_mm'] ) . '" height="' . $this->num( $run['height_mm'] ) . '" fill="#000"/>';
+		}
+		$body .= '</g>';
+		$this->write_svg_operation( $mpdf, $op, $body );
 	}
+
 	private function draw_shape( $mpdf, array $op ) {
 		$box = $op['geometry']['box']; $shape = $op['shape']; $bounds = $op['geometry']['rotated_bounds'];
 		$x = (float) $box['x_mm'] - (float) $bounds['x_mm']; $y = (float) $box['y_mm'] - (float) $bounds['y_mm'];

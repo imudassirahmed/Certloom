@@ -24,8 +24,8 @@ async def run():
 
         elements=page.locator('[data-certloom-designer-element]')
         await ck(await elements.count()==14,'initialCount')
-        await ck(await page.locator('[data-certloom-designer-add]').count()==11,'paletteCount')
-        await ck(await page.get_by_role('button',name='Barcode (DSN-05)').is_disabled(),'barcodeDisabled')
+        await ck(await page.locator('[data-certloom-designer-add]').count()==13,'paletteCount')
+        await ck(await page.locator('[data-certloom-designer-add="barcode"]').is_disabled(),'barcodeDisabledOnV1')
 
         # Text creation/content editing, canonical UUIDv4, undo/redo.
         await page.locator('[data-certloom-designer-add="text"]').click(); await page.wait_for_timeout(35)
@@ -61,7 +61,7 @@ async def run():
         await ck(await page.locator('.certloom-template-designer-element-shape').count()>=2,'shapeNodes')
         await ck(await page.locator('.certloom-template-designer-element-line').count()>=1,'lineNode')
         await ck(await page.locator('.certloom-template-designer-element-qr').count()>=2,'qrNode')
-        qrQuiet=page.locator('[data-certloom-designer-content-field="quiet_zone_modules"]')
+        qrQuiet=page.locator('[data-certloom-designer-content="qr"] [data-certloom-designer-content-field="quiet_zone_modules"]')
         await ck(await qrQuiet.is_visible() and (await qrQuiet.input_value())=='4','qrInspector')
         await qrQuiet.fill('8'); await qrQuiet.dispatch_event('change'); await page.wait_for_timeout(20)
         await ck((await qrQuiet.input_value())=='8','qrEdit')

@@ -26,8 +26,13 @@ final class RenderPlanBuilder {
 
 	/** @return array<string,mixed> */
 	public function build( array $resolved_document, array $renderer_context = array() ) {
-		if ( isset( $resolved_document['_meta'] ) && is_array( $resolved_document['_meta'] ) && isset( $resolved_document['_meta']['schema'] ) && 'certloom-layout' !== (string) $resolved_document['_meta']['schema'] ) {
-			throw new InvalidArgumentException( 'Resolved render document has an unsupported layout schema.' );
+		if ( isset( $resolved_document['_meta'] ) && is_array( $resolved_document['_meta'] ) ) {
+			if ( isset( $resolved_document['_meta']['schema'] ) && 'certloom-layout' !== (string) $resolved_document['_meta']['schema'] ) {
+				throw new InvalidArgumentException( 'Resolved render document has an unsupported layout schema.' );
+			}
+			if ( isset( $resolved_document['_meta']['schema_version'] ) && ! LayoutSchema::supports_version( (int) $resolved_document['_meta']['schema_version'] ) ) {
+				throw new InvalidArgumentException( 'Resolved render document has an unsupported layout schema version.' );
+			}
 		}
 		$page = isset( $resolved_document['page'] ) && is_array( $resolved_document['page'] ) ? $resolved_document['page'] : null;
 		if ( ! is_array( $page ) || ! isset( $page['size'], $page['orientation'], $page['width_mm'], $page['height_mm'] ) ) {
@@ -107,6 +112,9 @@ final class RenderPlanBuilder {
 					break;
 				case 'qr':
 					$operation['qr'] = $this->qr_operation( $element, $geometry );
+					break;
+				case 'barcode':
+					$operation['barcode'] = $this->barcode_operation( $element, $geometry );
 					break;
 				default:
 					throw new InvalidArgumentException( 'Resolved render document contains an unsupported operation type.' );
@@ -388,6 +396,70 @@ final class RenderPlanBuilder {
 			'encoder' => array( 'id' => $encoder_id, 'version' => $encoder_version ),
 			'error_correction' => $error_correction,
 			'matrix_size' => $modules,
+			'quiet_zone_modules' => $quiet,
+			'total_modules' => $total,
+			'module_size_mm' => $this->clean_float( $module_mm ),
+			'dark_runs' => $runs,
+		);
+	}
+
+
+	/** @return array<string,mixed> */
+	private function barcode_operation( array $element, array $geometry ) {
+		$modules = $element['modules'] ?? null;
+		if ( ! is_array( $modules ) || count( $modules ) < 46 || count( $modules ) > 4096 ) {
+			throw new InvalidArgumentException( 'Render plan barcode operations require the centrally resolved Code 128 module sequence.' );
+		}
+		$normalized = array();
+		foreach ( array_values( $modules ) as $module ) {
+			if ( 0 !== $module && 1 !== $module && false !== $module && true !== $module ) {
+				throw new InvalidArgumentException( 'Render plan barcode modules may contain only binary values.' );
+			}
+			$normalized[] = $module ? 1 : 0;
+		}
+		if ( 1 !== $normalized[0] || 1 !== $normalized[ count( $normalized ) - 1 ] ) {
+			throw new InvalidArgumentException( 'Render plan barcode module framing is invalid.' );
+		}
+		$quiet = $this->integer( $element['quiet_zone_modules'] ?? 10, 'Code 128 quiet zone' );
+		if ( $quiet < 10 || $quiet > 50 ) { throw new InvalidArgumentException( 'Render plan Code 128 quiet zone is outside the canonical range.' ); }
+		if ( 'code128' !== strtolower( (string) ( $element['symbology'] ?? '' ) ) ) { throw new InvalidArgumentException( 'Render plan barcode symbology must be Code 128.' ); }
+		$encoder = isset( $element['encoder'] ) && is_array( $element['encoder'] ) ? $element['encoder'] : array();
+		$encoder_id = strtolower( trim( (string) ( $encoder['id'] ?? '' ) ) );
+		$encoder_version = trim( (string) ( $encoder['version'] ?? '' ) );
+		$data = (string) ( $element['data'] ?? '' );
+		if ( ! preg_match( '/^[a-z][a-z0-9._-]{0,63}$/', $encoder_id ) || '' === $encoder_version || strlen( $encoder_version ) > 64 || '' === $data ) {
+			throw new InvalidArgumentException( 'Render plan barcode identity/data is incomplete.' );
+		}
+		$box = $geometry['box'];
+		$total = count( $normalized ) + ( 2 * $quiet );
+		$module_mm = (float) $box['width_mm'] / $total;
+		if ( $module_mm < 0.19 ) {
+			throw new InvalidArgumentException( 'Code 128 barcode box is too narrow for the resolved payload at Certloom’s minimum module width.' );
+		}
+		if ( (float) $box['height_mm'] < 10.0 ) {
+			throw new InvalidArgumentException( 'Code 128 barcode height must be at least 10 mm.' );
+		}
+		$runs = array(); $start = null;
+		$count = count( $normalized );
+		foreach ( $normalized as $index => $value ) {
+			$dark = 1 === $value;
+			if ( $dark && null === $start ) { $start = $index; }
+			if ( null !== $start && ( ! $dark || $index === $count - 1 ) ) {
+				$end_after = $dark && $index === $count - 1 ? $index + 1 : $index;
+				$runs[] = array(
+					'x_mm' => $this->clean_float( (float) $box['x_mm'] + ( $quiet + $start ) * $module_mm ),
+					'y_mm' => $this->clean_float( (float) $box['y_mm'] ),
+					'width_mm' => $this->clean_float( ( $end_after - $start ) * $module_mm ),
+					'height_mm' => $this->clean_float( (float) $box['height_mm'] ),
+				);
+				$start = null;
+			}
+		}
+		return array(
+			'data' => $data,
+			'symbology' => 'code128',
+			'encoder' => array( 'id' => $encoder_id, 'version' => $encoder_version ),
+			'module_count' => count( $normalized ),
 			'quiet_zone_modules' => $quiet,
 			'total_modules' => $total,
 			'module_size_mm' => $this->clean_float( $module_mm ),

@@ -24,8 +24,11 @@ final class TemplatePreviewSamples {
 		$known = $this->known_values( $profile );
 		$snapshot = array();
 		foreach ( isset( $layout['elements'] ) && is_array( $layout['elements'] ) ? $layout['elements'] : array() as $element ) {
-			if ( ! is_array( $element ) || 'merge' !== (string) ( $element['type'] ?? '' ) ) { continue; }
-			$token = (string) ( $element['token'] ?? '' );
+			if ( ! is_array( $element ) ) { continue; }
+			$type = (string) ( $element['type'] ?? '' );
+			$token = '';
+			if ( 'merge' === $type ) { $token = (string) ( $element['token'] ?? '' ); }
+			elseif ( 'barcode' === $type ) { $token = (string) ( $element['source'] ?? '' ); }
 			if ( '' === $token || array_key_exists( $token, $snapshot ) ) { continue; }
 			$snapshot[ $token ] = array_key_exists( $token, $known ) ? $known[ $token ] : $this->placeholder( $token, $profile );
 		}

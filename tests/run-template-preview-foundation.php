@@ -90,7 +90,7 @@ $src=array(
  'font'=>file_get_contents($root.'/src/Application/Rendering/BrowserPreviewFontManifest.php'),
 );
 foreach($src as $k=>$v){p55(is_string($v)&&''!==$v,'source '.$k.' available');}
-p55has($src['service'],'new LayoutResolver( null, null, null, new LocalQrEncoder() )','Preview uses central LayoutResolver + central local QR encoder');
+p55has($src['service'],'new LayoutResolver( null, null, null, new LocalQrEncoder(), new LocalCode128Encoder() )','Preview uses central LayoutResolver + local QR/Code128 encoders');
 p55has($src['service'],'$this->plans->build','Preview delegates composition to RenderPlanBuilder');
 p55not($src['presenter'],'LayoutValidator','HTML presenter does not interpret canonical layout schema');
 p55not($src['presenter'],'LayoutResolver','HTML presenter does not create a second merge/asset/QR resolution path');

@@ -56,7 +56,9 @@ final class RenderPlanHtmlPreview {
 			case 'line':
 				return $this->line( $operation, $style, $classes );
 			case 'qr':
-				return $this->qr( $operation, $style, $classes );
+				return $this->machine_code( $operation, 'qr', $style, $classes );
+			case 'barcode':
+				return $this->machine_code( $operation, 'barcode', $style, $classes );
 			case 'image':
 			case 'logo':
 			case 'signature':
@@ -96,19 +98,19 @@ final class RenderPlanHtmlPreview {
 	}
 
 	/** @return string */
-	private function qr( array $operation, $style, $classes ) {
-		$qr = (array) ( $operation['qr'] ?? array() );
+	private function machine_code( array $operation, $payload_key, $style, $classes ) {
+		$payload = isset( $operation[ $payload_key ] ) && is_array( $operation[ $payload_key ] ) ? $operation[ $payload_key ] : array();
 		$box = (array) ( $operation['geometry']['box'] ?? array() );
 		$x0 = (float) ( $box['x_mm'] ?? 0 );
 		$y0 = (float) ( $box['y_mm'] ?? 0 );
 		$w = max( 0.001, (float) ( $box['width_mm'] ?? 0.001 ) );
 		$h = max( 0.001, (float) ( $box['height_mm'] ?? 0.001 ) );
 		$rects = '';
-		foreach ( isset( $qr['dark_runs'] ) && is_array( $qr['dark_runs'] ) ? $qr['dark_runs'] : array() as $run ) {
-			if ( ! is_array( $run ) ) { continue; }
+		foreach ( isset( $payload['dark_runs'] ) && is_array( $payload['dark_runs'] ) ? $payload['dark_runs'] : array() as $run ) {
+			if ( ! is_array( $run ) || ! isset( $run['x_mm'], $run['y_mm'], $run['width_mm'], $run['height_mm'] ) ) { continue; }
 			$rects .= '<rect x="' . esc_attr( $this->num( (float) $run['x_mm'] - $x0 ) ) . '" y="' . esc_attr( $this->num( (float) $run['y_mm'] - $y0 ) ) . '" width="' . esc_attr( $this->num( (float) $run['width_mm'] ) ) . '" height="' . esc_attr( $this->num( (float) $run['height_mm'] ) ) . '"/>';
 		}
-		return '<svg aria-hidden="true" class="' . esc_attr( $classes ) . '" style="' . esc_attr( $style . 'background:#fff;' ) . '" viewBox="0 0 ' . esc_attr( $this->num( $w ) ) . ' ' . esc_attr( $this->num( $h ) ) . '" shape-rendering="crispEdges"><g fill="#111">' . $rects . '</g></svg>';
+		return '<svg aria-hidden="true" class="' . esc_attr( $classes ) . '" style="' . esc_attr( $style . 'background:#fff;' ) . '" viewBox="0 0 ' . esc_attr( $this->num( $w ) ) . ' ' . esc_attr( $this->num( $h ) ) . '" shape-rendering="crispEdges"><rect x="0" y="0" width="' . esc_attr( $this->num( $w ) ) . '" height="' . esc_attr( $this->num( $h ) ) . '" fill="#fff"/><g fill="#111">' . $rects . '</g></svg>';
 	}
 
 	/** @return string */

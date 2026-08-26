@@ -23,6 +23,7 @@ use Certloom\Infrastructure\Rendering\RendererCapabilityDetector;
 use Certloom\Infrastructure\Rendering\ArtifactRenderCoordinator;
 use Certloom\Infrastructure\Rendering\ContentAddressedFontResolver;
 use Certloom\Domain\Rendering\ElementId;
+use Certloom\Domain\Rendering\LayoutSchema;
 
 $tests = array();
 function certloom_render_test( $name, callable $fn ) { global $tests; $tests[] = array( $name, $fn ); }
@@ -159,7 +160,7 @@ certloom_render_test( 'merge token machine keys are validated', function () use 
 certloom_render_test( 'QR source is verification URL only in schema v1', function () use ( $validator ) { $l=certloom_render_fixture('qr'); $l['elements'][0]['source']='arbitrary_html'; certloom_render_throws(function()use($validator,$l){$validator->normalize($l);}); } );
 certloom_render_test( 'QR box must be square', function () use ( $validator ) { $l=certloom_render_fixture('qr'); $l['elements'][0]['width_mm']=20; certloom_render_throws(function()use($validator,$l){$validator->normalize($l);}); } );
 certloom_render_test( 'QR quiet zone is bounded', function () use ( $validator ) { $l=certloom_render_fixture('qr'); $l['elements'][0]['quiet_zone_modules']=2; certloom_render_throws(function()use($validator,$l){$validator->normalize($l);}); } );
-certloom_render_test( 'future schema versions fail instead of being guessed', function () use ( $validator ) { $l=certloom_render_fixture('english'); $l['_meta']['schema_version']=2; certloom_render_throws(function()use($validator,$l){$validator->normalize($l);}); } );
+certloom_render_test( 'future schema versions fail instead of being guessed', function () use ( $validator ) { $l=certloom_render_fixture('english'); $l['_meta']['schema_version']=LayoutSchema::VERSION + 1; certloom_render_throws(function()use($validator,$l){$validator->normalize($l);}); } );
 certloom_render_test( 'malformed integer-like schema values fail instead of coercing', function () use ( $validator ) { $l=certloom_render_fixture('english'); $l['elements'][0]['z']='4x'; certloom_render_throws(function()use($validator,$l){$validator->normalize($l);}); } );
 certloom_render_test( 'text italic requires a real boolean', function () use ( $validator ) { $l=certloom_render_fixture('english'); $l['elements'][0]['style']['italic']='false'; certloom_render_throws(function()use($validator,$l){$validator->normalize($l);}); } );
 
