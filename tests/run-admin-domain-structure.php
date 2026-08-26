@@ -40,7 +40,7 @@ function p1e_check( $condition, $message ) {
 }
 function p1e_has( $source, $needle, $message ) { p1e_check( false !== strpos( $source, $needle ), $message ); }
 
-p1e_has( $src['schema'], "const SCHEMA_VERSION         = '16'", 'Expanded normalized domain must use schema contract v16.' );
+p1e_has( $src['schema'], "const SCHEMA_VERSION         = '17'", 'Expanded normalized domain must use schema contract v17.' );
 foreach ( array( 'signers', 'batches', 'batch_recipients', 'signer_assignments' ) as $table ) {
 	p1e_has( $src['schema'], "'$table'", 'Schema table map missing ' . $table . '.' );
 }

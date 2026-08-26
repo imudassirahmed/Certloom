@@ -44,7 +44,7 @@ function jsp_check( $condition, $message ) {
 
 $schema = file_get_contents( dirname( __DIR__ ) . '/src/Infrastructure/Database/SchemaManager.php' );
 $repo   = file_get_contents( dirname( __DIR__ ) . '/src/Infrastructure/Job/JobRepository.php' );
-jsp_check( false !== strpos( $schema, "const SCHEMA_VERSION         = '16'" ), 'schema contract advances to v16 for portable job progress storage' );
+jsp_check( false !== strpos( $schema, "const SCHEMA_VERSION         = '17'" ), 'current schema contract retains the v16 portable job progress migration under v17' );
 jsp_check( false !== strpos( $schema, 'progress_cursor BIGINT UNSIGNED NOT NULL DEFAULT 0' ), 'jobs DDL uses non-reserved progress_cursor identifier' );
 jsp_check( 0 === preg_match( '/^\s*cursor\s+BIGINT\b/m', $schema ), 'jobs DDL never reintroduces unquoted SQL-reserved cursor column' );
 jsp_check( false !== strpos( $repo, "'progress_cursor'  => 0" ) && false !== strpos( $repo, "'progress_cursor' => absint( \$progress['cursor'] ?? 0 )" ), 'job repository persists application cursor through progress_cursor' );

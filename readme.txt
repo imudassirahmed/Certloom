@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.52
+Stable tag: 1.6.53
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.52: fix the real MariaDB gated-domain failure identified by 1.6.51 as `stage=dbdelta; object=jobs`. The jobs table now persists progress in `progress_cursor` instead of the SQL-reserved identifier `cursor`, with an idempotent compatibility copy for any older gated table. The application-level job contract remains `cursor`. Exact 1.6.52 isolated and gated-domain proofs must be rerun before normalized-domain authority can advance; renderer authority remains closed.
+> Development note for 1.6.53: fix the next real MariaDB 10.11 gated-domain failure identified by 1.6.52 as `stage=dbdelta; object=import_rows`. Import staging now persists its source position in `source_row_number` instead of MariaDB 10.7+'s reserved identifier `row_number`, with an idempotent compatibility copy for any older gated table. The application-level import contract remains `row_number`. A whole-domain reserved-identifier regression now owns this portability class. Exact 1.6.53 isolated and gated-domain proofs must be rerun before normalized-domain authority can advance; renderer authority remains closed.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 

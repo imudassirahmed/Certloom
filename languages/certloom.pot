@@ -8499,96 +8499,108 @@ msgstr ""
 msgid "Another Certloom maintenance operation acquired the lock first."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:1180
-msgid "Certloom domain maintenance is already running. Try again shortly."
-msgstr ""
-
-#: src/Infrastructure/Database/SchemaManager.php:1193
-msgid "Certloom could not obtain its domain-maintenance lock."
-msgstr ""
-
-#: src/Infrastructure/Database/SchemaManager.php:1200
-msgid "Certloom could not verify its schema-maintenance lock owner during cleanup."
-msgstr ""
-
-#: src/Infrastructure/Database/SchemaManager.php:1207
-msgid "Certloom refused to release a schema-maintenance lock that is no longer owned by this worker."
-msgstr ""
-
 #: src/Infrastructure/Database/SchemaManager.php:121
 msgid "Certloom created its new domain tables but could not save the schema marker."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:1221
-msgid "Certloom completed schema maintenance but could not release its schema lock safely. Retry after the lease expires or is repaired."
+#: src/Infrastructure/Database/SchemaManager.php:1235
+msgid "Certloom domain maintenance is already running. Try again shortly."
+msgstr ""
+
+#: src/Infrastructure/Database/SchemaManager.php:1248
+msgid "Certloom could not obtain its domain-maintenance lock."
 msgstr ""
 
 #: src/Infrastructure/Database/SchemaManager.php:125
-#: src/Infrastructure/Database/SchemaManager.php:1144
+#: src/Infrastructure/Database/SchemaManager.php:1199
 msgid "Certloom verified its new domain tables but could not save the health marker."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:197
+#: src/Infrastructure/Database/SchemaManager.php:1255
+msgid "Certloom could not verify its schema-maintenance lock owner during cleanup."
+msgstr ""
+
+#: src/Infrastructure/Database/SchemaManager.php:1262
+msgid "Certloom refused to release a schema-maintenance lock that is no longer owned by this worker."
+msgstr ""
+
+#: src/Infrastructure/Database/SchemaManager.php:1276
+msgid "Certloom completed schema maintenance but could not release its schema lock safely. Retry after the lease expires or is repaired."
+msgstr ""
+
+#: src/Infrastructure/Database/SchemaManager.php:201
 msgid "Certloom could not inspect its background-job progress column during schema migration."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:207
+#: src/Infrastructure/Database/SchemaManager.php:211
 msgid "Certloom could not verify its portable background-job progress column."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:228
+#: src/Infrastructure/Database/SchemaManager.php:232
 msgid "Certloom could not preserve existing background-job progress while upgrading its schema."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:248
+#: src/Infrastructure/Database/SchemaManager.php:252
+msgid "Certloom could not inspect its portable import row-number column during schema migration."
+msgstr ""
+
+#: src/Infrastructure/Database/SchemaManager.php:262
+msgid "Certloom could not verify its portable import row-number column."
+msgstr ""
+
+#: src/Infrastructure/Database/SchemaManager.php:283
+msgid "Certloom could not preserve existing staged import row numbers while upgrading its schema."
+msgstr ""
+
+#: src/Infrastructure/Database/SchemaManager.php:303
 msgid "Certloom could not backfill its credential-number assignments."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:266
+#: src/Infrastructure/Database/SchemaManager.php:321
 msgid "Certloom could not inspect its credential-number index."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:276
+#: src/Infrastructure/Database/SchemaManager.php:331
 msgid "Certloom could not migrate its credential-number index safely."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:642
+#: src/Infrastructure/Database/SchemaManager.php:697
 msgid "Certloom could not create or update one of its new domain tables."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:666
+#: src/Infrastructure/Database/SchemaManager.php:721
 msgid "Certloom requires InnoDB for its credential-domain transaction and row-lock guarantees."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:672
+#: src/Infrastructure/Database/SchemaManager.php:727
 msgid "Certloom could not verify one of its required domain tables."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:684
+#: src/Infrastructure/Database/SchemaManager.php:739
 msgid "Certloom detected a missing domain-table column."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:690
+#: src/Infrastructure/Database/SchemaManager.php:745
 msgid "Certloom detected an incompatible domain-table column definition."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:693
+#: src/Infrastructure/Database/SchemaManager.php:748
 msgid "Certloom detected an incompatible domain-table column default."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:696
+#: src/Infrastructure/Database/SchemaManager.php:751
 msgid "Certloom detected an incompatible domain-table identity column."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:703
+#: src/Infrastructure/Database/SchemaManager.php:758
 msgid "Certloom could not verify its required domain-table indexes."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:720
+#: src/Infrastructure/Database/SchemaManager.php:775
 msgid "Certloom detected a missing required domain-table index."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:724
+#: src/Infrastructure/Database/SchemaManager.php:779
 msgid "Certloom detected an incompatible required domain-table index."
 msgstr ""
 

@@ -25,7 +25,7 @@ final class DomainImportStageRepository implements DomainImportStageInterface {
 
 		// A retried preflight slice is idempotent only when the exact normalized plan matches.
 		$wpdb->last_error = '';
-		$by_row = $wpdb->get_row( $wpdb->prepare( 'SELECT row_number, display_number, plan_hash, outcome, existing_series_id FROM %i WHERE job_key = %s AND row_number = %d', $table, $job_key, $row_number ), ARRAY_A );
+		$by_row = $wpdb->get_row( $wpdb->prepare( 'SELECT source_row_number, display_number, plan_hash, outcome, existing_series_id FROM %i WHERE job_key = %s AND source_row_number = %d', $table, $job_key, $row_number ), ARRAY_A );
 		if ( '' !== (string) $wpdb->last_error ) {
 			return new \WP_Error( 'certloom_import_stage_read_failed', __( 'Certloom could not inspect its import staging rows.', 'certloom' ) );
 		}
@@ -37,14 +37,14 @@ final class DomainImportStageRepository implements DomainImportStageInterface {
 		}
 
 		$wpdb->last_error = '';
-		$by_number = $wpdb->get_row( $wpdb->prepare( 'SELECT row_number FROM %i WHERE job_key = %s AND display_number = %s', $table, $job_key, $display_number ), ARRAY_A );
+		$by_number = $wpdb->get_row( $wpdb->prepare( 'SELECT source_row_number FROM %i WHERE job_key = %s AND display_number = %s', $table, $job_key, $display_number ), ARRAY_A );
 		if ( '' !== (string) $wpdb->last_error ) {
 			return new \WP_Error( 'certloom_import_stage_read_failed', __( 'Certloom could not inspect its staged certificate numbers.', 'certloom' ) );
 		}
 		if ( is_array( $by_number ) ) {
 			return new \WP_Error(
 				'certloom_import_stage_duplicate_number',
-				sprintf( __( 'Certificate number %1$s appears more than once in this import (rows %2$d and %3$d).', 'certloom' ), $display_number, absint( $by_number['row_number'] ), $row_number )
+				sprintf( __( 'Certificate number %1$s appears more than once in this import (rows %2$d and %3$d).', 'certloom' ), $display_number, absint( $by_number['source_row_number'] ), $row_number )
 			);
 		}
 
@@ -56,7 +56,7 @@ final class DomainImportStageRepository implements DomainImportStageInterface {
 			$table,
 			array(
 				'job_key' => $job_key,
-				'row_number' => $row_number,
+				'source_row_number' => $row_number,
 				'display_number' => $display_number,
 				'plan_hash' => $hash,
 				'plan_json' => $json,
@@ -68,8 +68,8 @@ final class DomainImportStageRepository implements DomainImportStageInterface {
 		if ( false === $inserted || '' !== (string) $wpdb->last_error ) {
 			// A concurrent insert can race our checks; classify it deterministically.
 			$wpdb->last_error = '';
-			$conflict = $wpdb->get_row( $wpdb->prepare( 'SELECT row_number, plan_hash FROM %i WHERE job_key = %s AND display_number = %s', $table, $job_key, $display_number ), ARRAY_A );
-			if ( is_array( $conflict ) && absint( $conflict['row_number'] ?? 0 ) !== $row_number ) {
+			$conflict = $wpdb->get_row( $wpdb->prepare( 'SELECT source_row_number, plan_hash FROM %i WHERE job_key = %s AND display_number = %s', $table, $job_key, $display_number ), ARRAY_A );
+			if ( is_array( $conflict ) && absint( $conflict['source_row_number'] ?? 0 ) !== $row_number ) {
 				return new \WP_Error( 'certloom_import_stage_duplicate_number', __( 'A duplicate certificate number was detected while the import was being preflighted.', 'certloom' ) );
 			}
 			return new \WP_Error( 'certloom_import_stage_write_failed', __( 'Certloom could not save the validated import row.', 'certloom' ) );
@@ -86,7 +86,7 @@ final class DomainImportStageRepository implements DomainImportStageInterface {
 		$limit = max( 1, min( 500, absint( $limit ) ) );
 		$wpdb->last_error = '';
 		$rows = $wpdb->get_results(
-			$wpdb->prepare( 'SELECT row_number, display_number, plan_json, existing_series_id, outcome, commit_outcome, target_series_id, target_version_id FROM %i WHERE job_key = %s AND outcome = %s AND commit_outcome IS NULL AND row_number > %d ORDER BY row_number ASC LIMIT %d', SchemaManager::table( 'import_rows' ), $job_key, $outcome, absint( $after_row ), $limit ),
+			$wpdb->prepare( 'SELECT source_row_number, display_number, plan_json, existing_series_id, outcome, commit_outcome, target_series_id, target_version_id FROM %i WHERE job_key = %s AND outcome = %s AND commit_outcome IS NULL AND source_row_number > %d ORDER BY source_row_number ASC LIMIT %d', SchemaManager::table( 'import_rows' ), $job_key, $outcome, absint( $after_row ), $limit ),
 			ARRAY_A
 		);
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) {
@@ -99,7 +99,7 @@ final class DomainImportStageRepository implements DomainImportStageInterface {
 				return new \WP_Error( 'certloom_import_stage_corrupt', __( 'A validated import row could not be decoded safely.', 'certloom' ) );
 			}
 			$out[] = array(
-				'row_number' => absint( $row['row_number'] ),
+				'row_number' => absint( $row['source_row_number'] ),
 				'display_number' => (string) $row['display_number'],
 				'plan' => $plan,
 				'existing_series_id' => absint( $row['existing_series_id'] ?? 0 ) ?: null,
@@ -149,14 +149,14 @@ final class DomainImportStageRepository implements DomainImportStageInterface {
 			'committed_at' => current_time( 'mysql', true ),
 		);
 		$wpdb->last_error = '';
-		$updated = $wpdb->update( SchemaManager::table( 'import_rows' ), $row, array( 'job_key' => $job_key, 'row_number' => $row_number, 'commit_outcome' => null ) );
+		$updated = $wpdb->update( SchemaManager::table( 'import_rows' ), $row, array( 'job_key' => $job_key, 'source_row_number' => $row_number, 'commit_outcome' => null ) );
 		if ( '' !== (string) $wpdb->last_error ) {
 			return new \WP_Error( 'certloom_import_commit_receipt_failed', __( 'Certloom could not save the durable import result for a committed row.', 'certloom' ) );
 		}
 		if ( 1 === (int) $updated ) { return true; }
 
 		$wpdb->last_error = '';
-		$existing = $wpdb->get_row( $wpdb->prepare( 'SELECT commit_outcome, target_series_id, target_version_id FROM %i WHERE job_key = %s AND row_number = %d', SchemaManager::table( 'import_rows' ), $job_key, $row_number ), ARRAY_A );
+		$existing = $wpdb->get_row( $wpdb->prepare( 'SELECT commit_outcome, target_series_id, target_version_id FROM %i WHERE job_key = %s AND source_row_number = %d', SchemaManager::table( 'import_rows' ), $job_key, $row_number ), ARRAY_A );
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $existing ) ) {
 			return new \WP_Error( 'certloom_import_commit_receipt_conflict', __( 'Certloom could not verify the durable import result after a concurrent retry.', 'certloom' ) );
 		}

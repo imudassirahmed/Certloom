@@ -1,3 +1,11 @@
+1.6.53
+- Fix the second real MariaDB 10.11 gated-domain schema failure reported as `stage=dbdelta; object=import_rows`: the import staging table no longer uses `row_number`, which MariaDB reserves from 10.7 onward.
+- Persist staged source row positions in `source_row_number` while preserving the application/import contract key `row_number` unchanged.
+- Advance normalized-domain schema contract to v17 and add an idempotent compatibility copy for any older gated import staging table that already contains `row_number` data.
+- Use a new `job_source_row` unique index name so additive dbDelta upgrades cannot collide with a legacy `job_row` index on existing gated tables.
+- Add a whole-domain MariaDB reserved-identifier regression so future table definitions are checked before release rather than one live-host object at a time.
+- Keep normalized-domain and renderer authority closed until exact 1.6.53 live-host acceptance passes.
+
 1.6.52
 - Fix the real MariaDB gated-domain schema failure reported as `stage=dbdelta; object=jobs`: the durable jobs table no longer uses the SQL-reserved column name `cursor`.
 - Persist job progress in the portable `progress_cursor` column while preserving the application/repository API key `cursor`, so job handlers and workflow contracts do not change.

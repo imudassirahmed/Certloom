@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * exercised without changing public verification truth for an existing site.
  */
 final class SchemaManager {
-	const SCHEMA_VERSION         = '16';
+	const SCHEMA_VERSION         = '17';
 	const SCHEMA_OPTION          = 'certloom_domain_schema_version';
 	const HEALTH_OPTION          = 'certloom_domain_schema_health';
 	const LOCK_OPTION            = 'certloom_domain_schema_lock';
@@ -177,6 +177,10 @@ final class SchemaManager {
 			$migrated = self::migrate_job_progress_cursor();
 			if ( is_wp_error( $migrated ) ) { return $migrated; }
 		}
+		if ( version_compare( (string) $installed, '17', '<' ) ) {
+			$migrated = self::migrate_import_source_row_number();
+			if ( is_wp_error( $migrated ) ) { return $migrated; }
+		}
 		return true;
 	}
 
@@ -226,6 +230,57 @@ final class SchemaManager {
 		);
 		return false === $result || '' !== (string) $wpdb->last_error
 			? new \WP_Error( 'certloom_domain_job_cursor_migration_failed', __( 'Certloom could not preserve existing background-job progress while upgrading its schema.', 'certloom' ), array( 'stage' => 'migration', 'object' => 'jobs', 'field' => 'progress_cursor' ) )
+			: true;
+	}
+
+
+	/**
+	 * Schema v17 replaces MariaDB 10.7+'s reserved import_rows.row_number
+	 * identifier with source_row_number. Application contracts continue to use
+	 * the stable row_number key; this migration only changes persisted storage.
+	 * Existing gated rows are copied idempotently and legacy columns/indexes may
+	 * remain because dbDelta is additive.
+	 *
+	 * @return true|\WP_Error
+	 */
+	private static function migrate_import_source_row_number() {
+		global $wpdb;
+		$table = self::table( 'import_rows' );
+		$wpdb->last_error = '';
+		$columns = $wpdb->get_results( $wpdb->prepare( 'SHOW FULL COLUMNS FROM %i', $table ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $columns ) ) {
+			return new \WP_Error( 'certloom_domain_import_row_columns_failed', __( 'Certloom could not inspect its portable import row-number column during schema migration.', 'certloom' ), array( 'stage' => 'migration', 'object' => 'import_rows', 'field' => 'source_row_number' ) );
+		}
+
+		$found = array();
+		foreach ( $columns as $column ) {
+			if ( isset( $column['Field'] ) ) {
+				$found[ strtolower( (string) $column['Field'] ) ] = true;
+			}
+		}
+		if ( empty( $found['source_row_number'] ) ) {
+			return new \WP_Error( 'certloom_domain_import_row_target_missing', __( 'Certloom could not verify its portable import row-number column.', 'certloom' ), array( 'stage' => 'migration', 'object' => 'import_rows', 'field' => 'source_row_number' ) );
+		}
+		if ( empty( $found['row_number'] ) ) {
+			return true;
+		}
+
+		$wpdb->last_error = '';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- One-time versioned compatibility copy between columns in a Certloom-owned gated table.
+		$result = $wpdb->query(
+			$wpdb->prepare(
+				'UPDATE %i SET %i = %i WHERE %i = %d AND %i <> %d',
+				$table,
+				'source_row_number',
+				'row_number',
+				'source_row_number',
+				0,
+				'row_number',
+				0
+			)
+		);
+		return false === $result || '' !== (string) $wpdb->last_error
+			? new \WP_Error( 'certloom_domain_import_row_migration_failed', __( 'Certloom could not preserve existing staged import row numbers while upgrading its schema.', 'certloom' ), array( 'stage' => 'migration', 'object' => 'import_rows', 'field' => 'source_row_number' ) )
 			: true;
 	}
 
@@ -596,7 +651,7 @@ final class SchemaManager {
 		$tables['import_rows'] = "CREATE TABLE $import_rows (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			job_key CHAR(32) NOT NULL,
-			row_number BIGINT UNSIGNED NOT NULL,
+			source_row_number BIGINT UNSIGNED NOT NULL,
 			display_number VARCHAR(100) NOT NULL,
 			plan_hash CHAR(64) NOT NULL,
 			plan_json LONGTEXT NOT NULL,
@@ -608,7 +663,7 @@ final class SchemaManager {
 			committed_at DATETIME NULL,
 			created_at DATETIME NOT NULL,
 			PRIMARY KEY  (id),
-			UNIQUE KEY job_row (job_key,row_number),
+			UNIQUE KEY job_source_row (job_key,source_row_number),
 			UNIQUE KEY job_display (job_key,display_number),
 			KEY job_outcome (job_key,outcome),
 			KEY job_commit (job_key,commit_outcome),
@@ -1081,7 +1136,7 @@ final class SchemaManager {
 				'columns' => array(
 					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
 					'job_key' => array( 'type' => '/^char\(32\)$/', 'null' => 'NO' ),
-					'row_number' => array( 'type' => $bigu, 'null' => 'NO' ),
+					'source_row_number' => array( 'type' => $bigu, 'null' => 'NO' ),
 					'display_number' => array( 'type' => '/^varchar\(100\)$/', 'null' => 'NO' ),
 					'plan_hash' => array( 'type' => '/^char\(64\)$/', 'null' => 'NO' ),
 					'plan_json' => array( 'type' => $lt, 'null' => 'NO' ),
@@ -1095,7 +1150,7 @@ final class SchemaManager {
 				),
 				'indexes' => array(
 					'PRIMARY' => array( 'columns' => array( 'id' ), 'unique' => true ),
-					'job_row' => array( 'columns' => array( 'job_key', 'row_number' ), 'unique' => true ),
+					'job_source_row' => array( 'columns' => array( 'job_key', 'source_row_number' ), 'unique' => true ),
 					'job_display' => array( 'columns' => array( 'job_key', 'display_number' ), 'unique' => true ),
 					'job_outcome' => array( 'columns' => array( 'job_key', 'outcome' ), 'unique' => false ),
 					'job_commit' => array( 'columns' => array( 'job_key', 'commit_outcome' ), 'unique' => false ),

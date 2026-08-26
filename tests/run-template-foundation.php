@@ -54,7 +54,7 @@ $files=array(
  'acceptance'=>file_get_contents($root.'/src/Infrastructure/Diagnostics/DomainAcceptanceProof.php'),
 );
 foreach($files as $k=>$v){tpl_check(is_string($v)&&''!==$v,'source '.$k.' available');}
-tpl_has($files['schema'],"const SCHEMA_VERSION         = '16'",'schema v16');
+tpl_has($files['schema'],"const SCHEMA_VERSION         = '17'",'schema v17');
 foreach(array('templates','template_revisions','template_assignments') as $table){tpl_has($files['schema'],"'$table'",'schema maps '.$table);tpl_has($files['backup_repo'],"'$table'",'backup owns '.$table);}
 tpl_has($files['schema'],'UNIQUE KEY machine_key (machine_key)','stable template identity is unique');
 tpl_has($files['schema'],'UNIQUE KEY template_revision (template_id,revision_number)','revision number immutable identity');
