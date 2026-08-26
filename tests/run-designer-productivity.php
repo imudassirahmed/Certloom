@@ -10,7 +10,7 @@ $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admi
 $pass=0;$fail=0;
 function dsn2($ok,$label){global $pass,$fail;if($ok){$pass++;echo "PASS  $label\n";}else{$fail++;echo "FAIL  $label\n";}}
 
-dsn2(is_string($admin)&&strpos($admin,'DSN-03 · Elements & content')!==false&&strpos($admin,'data-certloom-designer-undo')!==false&&strpos($admin,'data-certloom-designer-redo')!==false,'Template admin advances to DSN-03 while retaining the DSN-02 productivity surface');
+dsn2(is_string($admin)&&strpos($admin,'DSN-04 · Typography & styling')!==false&&strpos($admin,'data-certloom-designer-undo')!==false&&strpos($admin,'data-certloom-designer-redo')!==false,'Template admin advances to DSN-04 while retaining the DSN-02 productivity surface');
 dsn2(strpos($admin,'data-certloom-designer-state-json')!==false&&strpos($admin,'designer_state_json')!==false,'Designer submits non-artifact authoring state separately from canonical layout JSON');
 dsn2(strpos($admin,'update_user_meta')!==false&&strpos($admin,"get_current_blog_id() . '_' . absint( \$template_id )")!==false,'personal locks/snapping persist in site-scoped WordPress user meta rather than artifact content');
 dsn2(strpos($admin,'TemplateDesignerState')!==false,'authoring-state persistence passes through a dedicated normalizer');
@@ -21,7 +21,7 @@ dsn2(substr_count($admin,'data-certloom-designer-align=')>=1&&strpos($admin,"'ce
 dsn2(strpos($admin,'data-certloom-designer-layer-action')!==false&&strpos($admin,'data-certloom-designer-layers')!==false,'layer ordering and layer list controls are present');
 dsn2(strpos($admin,'data-certloom-designer-lock')!==false,'personal authoring lock controls are present');
 dsn2(strpos($admin,'Arrow keys nudge 1 mm')!==false&&strpos($admin,'Alt/Option+Arrow 0.1 mm')!==false,'direct keyboard manipulation is documented in-product');
-dsn2(strpos($admin,'DSN-03 adds creation/removal and content editing only for primitives already valid in certloom-layout v1')!==false,'DSN-02 productivity remains intact while DSN-03 advances content on the same canonical model');
+dsn2(strpos($admin,'DSN-04 edits only styling already valid in certloom-layout v1')!==false,'DSN-02 productivity remains intact while DSN-04 advances styling on the same canonical model');
 
 $catalog=new PresetCatalog(); $layout=$catalog->get('classic-a4-landscape')['layout']; $ids=array_column($layout['elements'],'id'); $state=new TemplateDesignerState();
 $defaults=$state->defaults();

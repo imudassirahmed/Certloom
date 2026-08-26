@@ -14,7 +14,7 @@ dsn(strpos($admin,'certloom_template_revision')!==false&&strpos($admin,'data-cer
 dsn(strpos($admin,'Advanced canonical JSON editor')!==false,'advanced JSON remains an explicit escape hatch over the same canonical layout');
 dsn(strpos($admin,'Archived templates are read-only')!==false,'archived Templates remain read-only before Designer can render a save form');
 dsn(strpos($admin,'DSN-07 owns autosave')!==false,'Designer still keeps autosave in the later DSN-07 milestone');
-dsn(strpos($admin,'DSN-03 adds creation/removal and content editing only for primitives already valid in certloom-layout v1')!==false,'DSN-01 geometry remains intact while DSN-03 advances content without collapsing later styling/schema/autosave milestones');
+dsn(strpos($admin,'DSN-04 edits only styling already valid in certloom-layout v1')!==false,'DSN-01 geometry remains intact while DSN-04 advances styling without collapsing later schema/autosave milestones');
 dsn(is_string($js)&&strpos($js,"A4: { portrait: [ 210, 297 ], landscape: [ 297, 210 ] }")!==false,'Designer owns exact canonical A4 dimensions');
 dsn(strpos($js,"Letter: { portrait: [ 215.9, 279.4 ], landscape: [ 279.4, 215.9 ] }")!==false,'Designer owns exact canonical Letter dimensions');
 dsn(strpos($js,"mode: rotate ? 'rotate' : ( resize ? 'resize' : 'drag' )")!==false,'pointer interaction supports drag, resize and rotate');

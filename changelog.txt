@@ -1,3 +1,13 @@
+1.6.59
+- Add DSN-04 canonical typography and visual styling to the existing certloom-layout Designer with no second CSS/document model.
+- Add text/merge controls for font size, weight, italic, color, horizontal/vertical alignment, bidi direction, line height, letter spacing and overflow.
+- Add common element opacity plus canonical shape fill/stroke/stroke-width and line stroke/stroke-width controls with the same numeric/color bounds enforced by LayoutValidator.
+- Keep font-family keys preserved but read-only until FONT-02 owns controlled local font import/catalog and exact renderer-manifest binding, preventing the Designer from manufacturing unrenderable font dependencies.
+- Improve Designer `direction=auto` preview behavior to use browser bidi auto-detection instead of forcing LTR.
+- Keep image borders/shadows, barcode and other non-schema presentation effects out of DSN-04 rather than creating Designer-only CSS state; DSN-05 remains the versioned schema-upgrader milestone.
+- Add dedicated DSN-04 application/static and real Chromium interaction gates for style validation, serialization, invalid-value rollback, personal locks and responsive/reduced-motion behavior.
+- Keep normalized-domain authority, Template publication and production PDF/PNG/JPEG authority closed; real-host DB and PDF-04 ceremonies remain final release-candidate blockers.
+
 1.6.58
 - Add DSN-03 Designer element/content authoring over the same canonical `certloom-layout`: create/remove text, merge fields, local image/logo/signature/seal visuals, verification QR, rectangle, ellipse, line and page background.
 - Add type-aware content inspectors for text, merge tokens, local asset references/fit, shape kind and QR error-correction/quiet-zone values while retaining the existing immutable Template revision save path and server `LayoutValidator`.

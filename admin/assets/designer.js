@@ -101,6 +101,8 @@
 		var removeButton = root.querySelector( '[data-certloom-designer-remove]' );
 		var contentSections = root.querySelectorAll( '[data-certloom-designer-content]' );
 		var contentFields = root.querySelectorAll( '[data-certloom-designer-content-field]' );
+		var styleSections = root.querySelectorAll( '[data-certloom-designer-style]' );
+		var styleFields = root.querySelectorAll( '[data-certloom-designer-style-field]' );
 		var mediaButton = root.querySelector( '[data-certloom-designer-media]' );
 		if ( ! form || ! jsonField || ! pageEl || ! workspace ) { return; }
 
@@ -230,6 +232,17 @@
 				var value = null == element[ contentKey ] ? '' : element[ contentKey ];
 				contentFields[ field ].value = String( value ); contentFields[ field ].disabled = locked;
 			}
+			var styleGroup = ( 'text' === element.type || 'merge' === element.type ) ? 'text' : ( 'shape' === element.type ? 'shape' : ( 'line' === element.type ? 'line' : '' ) );
+			for ( var styleSection = 0; styleSection < styleSections.length; styleSection++ ) {
+				var sectionGroup = styleSections[ styleSection ].getAttribute( 'data-certloom-designer-style' );
+				styleSections[ styleSection ].hidden = 'general' !== sectionGroup && sectionGroup !== styleGroup;
+			}
+			for ( var styleField = 0; styleField < styleFields.length; styleField++ ) {
+				var styleKey = styleFields[ styleField ].getAttribute( 'data-certloom-designer-style-field' );
+				var styleValue = styleValueForElement( element, styleKey );
+				if ( 'checkbox' === styleFields[ styleField ].type ) { styleFields[ styleField ].checked = !! styleValue; } else { styleFields[ styleField ].value = null == styleValue ? '' : String( styleValue ); }
+				styleFields[ styleField ].disabled = locked || ( 'font_family' === styleKey );
+			}
 			if ( mediaButton ) { mediaButton.disabled = locked || 'asset' !== group; }
 			syncProductivityControls();
 		}
@@ -317,6 +330,42 @@
 			var before = snapshot(); if ( updateElement( element.id, proposed, false ) ) { pushHistory( before ); render(); announce( t( 'contentUpdated', 'Element content updated.' ) ); }
 		}
 
+		function canonicalColor( raw ) {
+			raw = String( raw || '' ).trim().toUpperCase();
+			return /^#[0-9A-F]{6}(?:[0-9A-F]{2})?$/.test( raw ) ? raw : '';
+		}
+		function styleValueForElement( element, key ) {
+			if ( 'opacity' === key ) { return null == element.opacity ? 1 : element.opacity; }
+			if ( 'text' === element.type || 'merge' === element.type ) { return element.style && Object.prototype.hasOwnProperty.call( element.style, key ) ? element.style[ key ] : defaultTextStyle()[ key ]; }
+			return Object.prototype.hasOwnProperty.call( element, key ) ? element[ key ] : '';
+		}
+		function applyStyleField( input ) {
+			var element = selected(); if ( ! element || isLocked( element ) ) { setInspector(); return; }
+			var key = input.getAttribute( 'data-certloom-designer-style-field' ); if ( ! key || 'font_family' === key ) { setInspector(); return; }
+			var raw = 'checkbox' === input.type ? !! input.checked : String( input.value || '' ).trim(); var proposed = clone( element ); var value;
+			if ( 'opacity' === key ) { value = Number( raw ); if ( ! isFinite( value ) || value < 0 || value > 1 ) { showError( t( 'invalidStyleValue', 'That styling value is outside the canonical certloom-layout range. The previous value was kept.' ) ); setInspector(); return; } proposed.opacity = round( value, 3 ); }
+			else if ( 'text' === element.type || 'merge' === element.type ) {
+				proposed.style = Object.assign( defaultTextStyle(), proposed.style || {} );
+				if ( 'font_size_pt' === key ) { value = Number( raw ); if ( ! isFinite( value ) || value < 1 || value > 300 ) { showError( t( 'invalidStyleValue', 'Invalid style value.' ) ); setInspector(); return; } proposed.style[ key ] = round( value, 3 ); }
+				else if ( 'font_weight' === key ) { value = Number( raw ); if ( ! Number.isInteger( value ) || value < 100 || value > 900 || 0 !== value % 100 ) { showError( t( 'invalidStyleValue', 'Invalid style value.' ) ); setInspector(); return; } proposed.style[ key ] = value; }
+				else if ( 'italic' === key ) { proposed.style[ key ] = !! raw; }
+				else if ( 'color' === key ) { value = canonicalColor( raw ); if ( ! value ) { showError( t( 'invalidColor', 'Colors must use #RRGGBB or #RRGGBBAA.' ) ); setInspector(); return; } proposed.style[ key ] = value; }
+				else if ( 'align' === key ) { if ( [ 'left', 'center', 'right', 'start', 'end' ].indexOf( raw ) === -1 ) { setInspector(); return; } proposed.style[ key ] = raw; }
+				else if ( 'vertical_align' === key ) { if ( [ 'top', 'middle', 'bottom' ].indexOf( raw ) === -1 ) { setInspector(); return; } proposed.style[ key ] = raw; }
+				else if ( 'direction' === key ) { if ( [ 'auto', 'ltr', 'rtl' ].indexOf( raw ) === -1 ) { setInspector(); return; } proposed.style[ key ] = raw; }
+				else if ( 'line_height' === key ) { value = Number( raw ); if ( ! isFinite( value ) || value < 0.5 || value > 5 ) { showError( t( 'invalidStyleValue', 'Invalid style value.' ) ); setInspector(); return; } proposed.style[ key ] = round( value, 3 ); }
+				else if ( 'letter_spacing_pt' === key ) { value = Number( raw ); if ( ! isFinite( value ) || value < -20 || value > 50 ) { showError( t( 'invalidStyleValue', 'Invalid style value.' ) ); setInspector(); return; } proposed.style[ key ] = round( value, 3 ); }
+				else if ( 'overflow' === key ) { if ( [ 'wrap', 'shrink', 'clip' ].indexOf( raw ) === -1 ) { setInspector(); return; } proposed.style[ key ] = raw; }
+				else { return; }
+			} else if ( 'shape' === element.type || 'line' === element.type ) {
+				if ( 'fill' === key && 'shape' === element.type ) { value = canonicalColor( raw ); if ( ! value ) { showError( t( 'invalidColor', 'Colors must use #RRGGBB or #RRGGBBAA.' ) ); setInspector(); return; } proposed.fill = value; }
+				else if ( 'stroke' === key ) { value = canonicalColor( raw ); if ( ! value ) { showError( t( 'invalidColor', 'Colors must use #RRGGBB or #RRGGBBAA.' ) ); setInspector(); return; } proposed.stroke = value; }
+				else if ( 'stroke_width_mm' === key ) { value = Number( raw ); var minStroke = 'line' === element.type ? 0.001 : 0; if ( ! isFinite( value ) || value < minStroke || value > 20 ) { showError( t( 'invalidStyleValue', 'Invalid style value.' ) ); setInspector(); return; } proposed.stroke_width_mm = round( value, 3 ); }
+				else { return; }
+			} else { return; }
+			var before = snapshot(); if ( updateElement( element.id, proposed, false ) ) { pushHistory( before ); render(); announce( t( 'styleUpdated', 'Element styling updated.' ) ); }
+		}
+
 		function addHandles( node, element ) {
 			if ( isLocked( element ) ) { return; }
 			var handles = [ 'nw', 'ne', 'sw', 'se' ];
@@ -346,9 +395,11 @@
 				node.classList.add( 'is-text' ); content.textContent = elementTitle( element );
 				var textStyle = element.style || {}; var vertical = textStyle.vertical_align || 'middle';
 				content.style.justifyContent = 'top' === vertical ? 'flex-start' : ( 'bottom' === vertical ? 'flex-end' : 'center' );
-				content.style.textAlign = textStyle.align || 'center'; content.style.direction = textStyle.direction && 'auto' !== textStyle.direction ? textStyle.direction : 'ltr';
-				content.style.color = textStyle.color || '#000'; content.style.fontWeight = String( textStyle.font_weight || 400 ); content.style.fontStyle = textStyle.italic ? 'italic' : 'normal'; content.style.lineHeight = String( textStyle.line_height || 1.2 );
+				content.style.textAlign = textStyle.align || 'center';
+				if ( textStyle.direction && 'auto' !== textStyle.direction ) { content.style.direction = textStyle.direction; content.removeAttribute( 'dir' ); } else { content.style.removeProperty( 'direction' ); content.setAttribute( 'dir', 'auto' ); }
+				content.style.color = textStyle.color || '#000'; content.style.fontFamily = String( textStyle.font_family || 'sans-serif' ); content.style.fontWeight = String( textStyle.font_weight || 400 ); content.style.fontStyle = textStyle.italic ? 'italic' : 'normal'; content.style.lineHeight = String( textStyle.line_height || 1.2 );
 				content.style.fontSize = px( Number( textStyle.font_size_pt || 18 ) * 25.4 / 72, zoom ) + 'px'; content.style.letterSpacing = px( Number( textStyle.letter_spacing_pt || 0 ) * 25.4 / 72, zoom ) + 'px';
+				content.style.whiteSpace = 'clip' === textStyle.overflow ? 'pre' : 'pre-wrap'; content.style.overflow = 'hidden';
 			}
 			node.appendChild( content );
 		}
@@ -556,6 +607,7 @@
 		for ( var addIndex = 0; addIndex < addButtons.length; addIndex++ ) { addButtons[ addIndex ].addEventListener( 'click', function () { addRequested( this.getAttribute( 'data-certloom-designer-add' ) ); } ); }
 		if ( removeButton ) { removeButton.addEventListener( 'click', removeSelected ); }
 		for ( var contentIndex = 0; contentIndex < contentFields.length; contentIndex++ ) { contentFields[ contentIndex ].addEventListener( 'change', function () { applyContentField( this ); } ); }
+		for ( var styleIndex = 0; styleIndex < styleFields.length; styleIndex++ ) { styleFields[ styleIndex ].addEventListener( 'change', function () { applyStyleField( this ); } ); }
 		if ( mediaButton ) { mediaButton.addEventListener( 'click', function () { var element = selected(); if ( ! element || isLocked( element ) || [ 'image', 'logo', 'signature' ].indexOf( element.type ) === -1 ) { return; } mediaFrame( function ( reference ) { var current = selected(); if ( ! current || isLocked( current ) ) { return; } var before = snapshot(); var proposed = clone( current ); proposed.asset = reference; if ( updateElement( current.id, proposed, false ) ) { pushHistory( before ); render(); announce( t( 'assetUpdated', 'Local media asset updated.' ) ); } } ); } ); }
 		if ( resetButton ) { resetButton.addEventListener( 'click', function () { layout = clone( savedLayout ); designerState = clone( savedState ); selectedId = ''; history = []; future = []; activeGuides = { x: null, y: null }; render(); fitWorkspace(); announce( t( 'unsavedChangesReset', 'Unsaved Designer changes reset.' ) ); } ); }
 		for ( var fieldIndex = 0; fieldIndex < fieldInputs.length; fieldIndex++ ) {

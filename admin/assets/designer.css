@@ -1,4 +1,4 @@
-/* Certloom 1.6.58 — DSN-03 Designer elements and content. */
+/* Certloom 1.6.59 — DSN-04 Designer typography and visual styling. */
 .certloom-template-designer {
 	margin: 24px 0;
 	padding: 22px;
@@ -393,4 +393,38 @@
 	.certloom-template-designer-palette { align-items: stretch; }
 	.certloom-template-designer-palette .button { flex: 1 1 auto; justify-content: center; }
 	.certloom-template-designer-palette-spacer { display: none; }
+}
+
+
+/* DSN-04: canonical typography and visual styling. */
+.certloom-template-designer-style-editor {
+	display: grid;
+	gap: 10px;
+	margin-top: 16px;
+	padding-top: 14px;
+	border-top: 1px solid #dcdcde;
+}
+.certloom-template-designer-style-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 10px;
+}
+.certloom-template-designer-style-head h4 { margin: 0; }
+.certloom-template-designer-style-head span { font-size: 10px; font-weight: 800; color: #646970; text-transform: uppercase; letter-spacing: .04em; }
+.certloom-template-designer-style-group:not([hidden]) { display: grid; gap: 8px; }
+.certloom-template-designer-style-grid {
+	display: grid;
+	grid-template-columns: repeat(2,minmax(0,1fr));
+	gap: 9px;
+}
+.certloom-template-designer-style-grid label { display: grid; gap: 4px; min-width: 0; }
+.certloom-template-designer-style-grid label > span { font-size: 11px; font-weight: 700; color: #50575e; }
+.certloom-template-designer-style-grid input,
+.certloom-template-designer-style-grid select { width: 100%; min-width: 0; }
+.certloom-template-designer-style-grid input[readonly] { background: #f6f7f7; color: #50575e; cursor: not-allowed; }
+.certloom-template-designer-style-check { align-content: start; }
+.certloom-template-designer-style-check input[type="checkbox"] { width: auto; min-height: 22px; justify-self: start; }
+@media (max-width: 480px) {
+	.certloom-template-designer-style-grid { grid-template-columns: 1fr; }
 }

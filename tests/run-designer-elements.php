@@ -9,7 +9,7 @@ use Certloom\Domain\Rendering\LayoutSchema;
 $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'); $js=file_get_contents($root.'/admin/assets/designer.js'); $css=file_get_contents($root.'/admin/assets/designer.css');
 $pass=0;$fail=0; function dsn3($ok,$label){global $pass,$fail;if($ok){$pass++;echo "PASS  $label\n";}else{$fail++;echo "FAIL  $label\n";}}
 
-dsn3(is_string($admin)&&strpos($admin,'DSN-03 · Elements & content')!==false,'Template admin identifies DSN-03 truthfully');
+dsn3(is_string($admin)&&strpos($admin,'DSN-04 · Typography & styling')!==false,'Template admin advances to DSN-04 while retaining the DSN-03 element/content surface');
 dsn3(strpos($admin,'wp_enqueue_media()')!==false,'WordPress Media Library is explicitly enqueued for local asset selection');
 foreach(['text','merge','image','logo','signature','seal','qr','rectangle','ellipse','line','background'] as $type){ dsn3(strpos($admin,'data-certloom-designer-add="\' . esc_attr( $type )')!==false || strpos($admin,"'$type' => __(")!==false,"palette exposes $type creation"); }
 dsn3(strpos($js,"'seal' === kind")!==false&&strpos($js,"element.type = 'image'")!==false,'seal palette maps to the existing canonical image primitive without schema mutation');
@@ -18,8 +18,8 @@ dsn3(strpos($admin,'data-certloom-designer-remove')!==false,'selected elements c
 dsn3(strpos($admin,'data-certloom-designer-content-field="text"')!==false&&strpos($admin,'data-certloom-designer-content-field="token"')!==false,'text and merge content editors are present');
 dsn3(strpos($admin,'data-certloom-designer-media')!==false&&strpos($admin,'attachment:123')!==false,'asset editor keeps WordPress-local attachment references visible');
 dsn3(strpos($admin,'error_correction')!==false&&strpos($admin,'quiet_zone_modules')!==false,'QR content controls preserve the canonical v1 QR contract');
-dsn3(strpos($admin,'Advanced typography/styling remains DSN-04')!==false,'DSN-04 styling scope is not silently absorbed');
-dsn3(strpos($admin,'DSN-06/07/08')!==false,'later list/autosave/registry milestones remain explicit');
+dsn3(strpos($admin,'text typography, canonical colors, opacity, shape fill/stroke and line stroke')!==false,'DSN-03 primitives are now styled only through canonical DSN-04 fields');
+dsn3(strpos($admin,'DSN-05/06/07/08')!==false,'later schema/list/autosave/registry milestones remain explicit');
 
 dsn3(is_string($js)&&strpos($js,'function secureUuidV4')!==false&&strpos($js,'getRandomValues')!==false,'new element IDs use browser cryptographic randomness');
 dsn3(strpos($js,'Math.random')===false,'element IDs never fall back to Math.random');
