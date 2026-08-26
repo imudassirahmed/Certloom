@@ -120,7 +120,7 @@ final class TemplateRepository {
 	}
 
 	/** @return int|\WP_Error */
-	public function save_revision( $template_id, $layout, $actor_user_id = 0, $expected_revision_id = 0, $source_type = self::SOURCE_MANUAL ) {
+	public function save_revision( $template_id, $layout, $actor_user_id = 0, $expected_revision_id = 0, $source_type = self::SOURCE_MANUAL, $expected_revision_sha256 = '' ) {
 		$template_id = absint( $template_id );
 		if ( ! $template_id ) { return new \WP_Error( 'certloom_template_id_required', __( 'A valid template is required.', 'certloom' ) ); }
 		$layout = $this->normalize_layout( $layout );
@@ -129,7 +129,7 @@ final class TemplateRepository {
 		if ( is_wp_error( $source_type ) ) { return $source_type; }
 		$generation = ( new DomainGeneration() )->mark_before_mutation();
 		if ( is_wp_error( $generation ) ) { return $generation; }
-		return $this->transaction->run( function () use ( $template_id, $layout, $actor_user_id, $expected_revision_id, $source_type ) {
+		return $this->transaction->run( function () use ( $template_id, $layout, $actor_user_id, $expected_revision_id, $source_type, $expected_revision_sha256 ) {
 			global $wpdb;
 			$template = $this->lock_template( $template_id );
 			if ( is_wp_error( $template ) ) { return $template; }
@@ -142,6 +142,17 @@ final class TemplateRepository {
 			$current = $current_id ? $this->find_revision_row( $current_id, true ) : null;
 			if ( is_wp_error( $current ) ) { return $current; }
 			if ( $current_id && ( ! is_array( $current ) || absint( $current['template_id'] ?? 0 ) !== $template_id ) ) { return new \WP_Error( 'certloom_template_revision_pointer_corrupt', __( 'The template draft points to an invalid revision.', 'certloom' ) ); }
+			$expected_revision_sha256 = strtolower( trim( (string) $expected_revision_sha256 ) );
+			if ( '' !== $expected_revision_sha256 ) {
+				if ( ! preg_match( '/\A[a-f0-9]{64}\z/', $expected_revision_sha256 ) || ! is_array( $current ) ) {
+					return new \WP_Error( 'certloom_template_stale_revision_hash', __( 'This Template revision no longer matches the exact layout hash reviewed in Designer. Reload before saving.', 'certloom' ) );
+				}
+				$verified_current = $this->verify_revision_row( $current );
+				if ( is_wp_error( $verified_current ) ) { return $verified_current; }
+				if ( ! hash_equals( strtolower( (string) ( $verified_current['layout_sha256'] ?? '' ) ), $expected_revision_sha256 ) ) {
+					return new \WP_Error( 'certloom_template_stale_revision_hash', __( 'This Template revision no longer matches the exact layout hash reviewed in Designer. Reload before saving.', 'certloom' ) );
+				}
+			}
 			$hash = $this->json->hash( $layout );
 			if ( is_array( $current ) && hash_equals( (string) $current['layout_sha256'], $hash ) ) { return $current_id; }
 			$number = is_array( $current ) ? absint( $current['revision_number'] ) + 1 : 1;

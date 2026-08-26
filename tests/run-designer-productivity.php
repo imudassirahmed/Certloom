@@ -10,7 +10,7 @@ $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admi
 $pass=0;$fail=0;
 function dsn2($ok,$label){global $pass,$fail;if($ok){$pass++;echo "PASS  $label\n";}else{$fail++;echo "FAIL  $label\n";}}
 
-dsn2(is_string($admin)&&strpos($admin,'DSN-06 · Canonical lists')!==false&&strpos($admin,'data-certloom-designer-undo')!==false&&strpos($admin,'data-certloom-designer-redo')!==false,'Template admin advances through DSN-06 while retaining the DSN-02 productivity surface');
+dsn2(is_string($admin)&&strpos($admin,'DSN-07 · Recovery autosave & concurrency')!==false&&strpos($admin,'data-certloom-designer-undo')!==false&&strpos($admin,'data-certloom-designer-redo')!==false,'Template admin advances through DSN-07 while retaining the DSN-02 productivity surface');
 dsn2(strpos($admin,'data-certloom-designer-state-json')!==false&&strpos($admin,'designer_state_json')!==false,'Designer submits non-artifact authoring state separately from canonical layout JSON');
 dsn2(strpos($admin,'update_user_meta')!==false&&strpos($admin,"get_current_blog_id() . '_' . absint( \$template_id )")!==false,'personal locks/snapping persist in site-scoped WordPress user meta rather than artifact content');
 dsn2(strpos($admin,'TemplateDesignerState')!==false,'authoring-state persistence passes through a dedicated normalizer');
@@ -21,7 +21,7 @@ dsn2(substr_count($admin,'data-certloom-designer-align=')>=1&&strpos($admin,"'ce
 dsn2(strpos($admin,'data-certloom-designer-layer-action')!==false&&strpos($admin,'data-certloom-designer-layers')!==false,'layer ordering and layer list controls are present');
 dsn2(strpos($admin,'data-certloom-designer-lock')!==false,'personal authoring lock controls are present');
 dsn2(strpos($admin,'Arrow keys nudge 1 mm')!==false&&strpos($admin,'Alt/Option+Arrow 0.1 mm')!==false,'direct keyboard manipulation is documented in-product');
-dsn2(strpos($admin,'Historical v1/v2 revisions and the 24 v1 factory presets remain immutable')!==false,'DSN-02 productivity remains intact while later schema versions preserve historical revisions on the same canonical model');
+dsn2(strpos($admin,'only an explicit manual save may create a new immutable revision')!==false,'DSN-02 productivity remains intact while DSN-07 recovery stays outside immutable artifact authority');
 
 $catalog=new PresetCatalog(); $layout=$catalog->get('classic-a4-landscape')['layout']; $ids=array_column($layout['elements'],'id'); $state=new TemplateDesignerState();
 $defaults=$state->defaults();
@@ -45,7 +45,7 @@ dsn2(strpos($js,"event.altKey ? 0.1 : ( event.shiftKey ? 5 : 1 )")!==false,'keyb
 dsn2(strpos($js,"'z' === event.key.toLowerCase()")!==false&&strpos($js,"'y' === event.key.toLowerCase()")!==false,'standard keyboard history shortcuts are wired');
 dsn2(strpos($js,'stateField.value = JSON.stringify( designerState )')!==false&&strpos($js,'jsonField.value = JSON.stringify( layout )')!==false,'submit serializes authoring state and canonical layout through separate fields');
 dsn2(strpos($js,'localStorage')===false&&strpos($js,'sessionStorage')===false,'DSN-02 introduces no browser-local persistence');
-dsn2(strpos($js,'fetch(')===false&&strpos($js,'XMLHttpRequest')===false&&strpos($js,'https://')===false&&substr_count($js,'http://')===1,'Designer remains fully local with only the inert SVG namespace URL');
+dsn2(strpos($js,'fetch(')!==false&&strpos($admin,"admin_url( 'admin-ajax.php' )")!==false&&strpos($js,'XMLHttpRequest')===false&&strpos($js,'https://')===false&&substr_count($js,'http://')===1,'Designer uses only same-origin WordPress AJAX for recovery autosave and introduces no remote dependency');
 dsn2(strpos($js,'eval(')===false&&strpos($js,'new Function')===false,'Designer productivity JavaScript introduces no dynamic code execution');
 dsn2(is_string($css)&&strpos($css,'.certloom-template-designer-guide')!==false&&strpos($css,'.certloom-template-designer-layer')!==false&&strpos($css,'.certloom-template-designer-element.is-locked')!==false,'DSN-02 CSS covers guides, layers and lock state');
 dsn2(strpos($css,'prefers-reduced-motion')!==false,'existing reduced-motion accessibility contract remains intact');

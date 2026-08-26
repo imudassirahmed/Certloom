@@ -45,6 +45,8 @@ final class TemplateAdmin {
 		add_action( 'admin_post_certloom_template_assignment_save', array( $this, 'assignment_save' ) );
 		add_action( 'admin_post_certloom_template_assignment_clear', array( $this, 'assignment_clear' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_designer_assets' ) );
+		add_action( 'wp_ajax_certloom_template_designer_autosave', array( $this, 'designer_autosave' ) );
+		add_action( 'wp_ajax_certloom_template_designer_autosave_discard', array( $this, 'designer_autosave_discard' ) );
 	}
 
 
@@ -115,6 +117,12 @@ final class TemplateAdmin {
 				'styleUpdated' => __( 'Element styling updated.', 'certloom' ),
 				'invalidStyleValue' => __( 'That styling value is outside the canonical certloom-layout range. The previous value was kept.', 'certloom' ),
 				'invalidColor' => __( 'Colors must use #RRGGBB or #RRGGBBAA.', 'certloom' ),
+				'autosaving' => __( 'Saving recovery checkpoint…', 'certloom' ),
+				'autosaved' => __( 'Recovery checkpoint saved', 'certloom' ),
+				'autosaveFailed' => __( 'Recovery autosave is temporarily unavailable. Manual save remains available.', 'certloom' ),
+				'autosaveConflict' => __( 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.', 'certloom' ),
+				'autosaveRecovered' => __( 'Recovered unsaved Designer changes from your latest safe checkpoint.', 'certloom' ),
+				'autosaveDiscarded' => __( 'Recovery checkpoint discarded.', 'certloom' ),
 			)
 		);
 	}
@@ -168,13 +176,61 @@ final class TemplateAdmin {
 		if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $layout ) ) {
 			$result = new \WP_Error( 'certloom_template_layout_json_invalid', __( 'Enter valid canonical layout JSON.', 'certloom' ) );
 		} else {
-			$result = ( new TemplateRepository() )->save_revision( $id, $layout, get_current_user_id(), isset( $_POST['expected_revision_id'] ) ? absint( $_POST['expected_revision_id'] ) : 0 );
-			if ( ! is_wp_error( $result ) && isset( $_POST['designer_state_json'] ) ) {
-				$state = ( new TemplateDesignerState() )->decode( (string) wp_unslash( $_POST['designer_state_json'] ), $layout );
-				update_user_meta( get_current_user_id(), $this->designer_state_key( $id ), wp_json_encode( $state ) );
+			$result = ( new TemplateRepository() )->save_revision(
+				$id,
+				$layout,
+				get_current_user_id(),
+				isset( $_POST['expected_revision_id'] ) ? absint( $_POST['expected_revision_id'] ) : 0,
+				TemplateRepository::SOURCE_MANUAL,
+				isset( $_POST['expected_revision_sha256'] ) ? sanitize_text_field( wp_unslash( $_POST['expected_revision_sha256'] ) ) : ''
+			);
+			if ( ! is_wp_error( $result ) ) {
+				if ( isset( $_POST['designer_state_json'] ) ) {
+					$state = ( new TemplateDesignerState() )->decode( (string) wp_unslash( $_POST['designer_state_json'] ), $layout );
+					update_user_meta( get_current_user_id(), $this->designer_state_key( $id ), wp_json_encode( $state ) );
+				}
+				if ( isset( $_POST['designer_autosave_session_id'] ) ) { ( new TemplateDesignerAutosave() )->discard( $id, get_current_user_id(), sanitize_text_field( wp_unslash( $_POST['designer_autosave_session_id'] ) ) ); }
 			}
 		}
 		$this->redirect( $result, 'revision_saved', array( 'template_id' => $id ) );
+	}
+
+
+	/** DSN-07 AJAX recovery autosave. @return void */
+	public function designer_autosave() {
+		$this->require_capability();
+		$id = isset( $_POST['template_id'] ) ? absint( $_POST['template_id'] ) : 0;
+		check_ajax_referer( 'certloom_template_designer_autosave_' . $id, 'nonce' );
+		$raw_layout = isset( $_POST['layout_json'] ) ? wp_unslash( $_POST['layout_json'] ) : '';
+		$layout = json_decode( (string) $raw_layout, true );
+		$raw_state = isset( $_POST['designer_state_json'] ) ? wp_unslash( $_POST['designer_state_json'] ) : '';
+		$state = json_decode( (string) $raw_state, true );
+		if ( JSON_ERROR_NONE !== json_last_error() && '' !== trim( (string) $raw_state ) ) { $state = array(); }
+		if ( ! is_array( $layout ) ) { wp_send_json_error( array( 'code' => 'certloom_designer_autosave_layout_invalid', 'message' => __( 'Designer autosave received invalid layout JSON.', 'certloom' ) ), 400 ); }
+		$result = ( new TemplateDesignerAutosave() )->save(
+			$id,
+			get_current_user_id(),
+			isset( $_POST['expected_revision_id'] ) ? absint( $_POST['expected_revision_id'] ) : 0,
+			isset( $_POST['expected_revision_sha256'] ) ? sanitize_text_field( wp_unslash( $_POST['expected_revision_sha256'] ) ) : '',
+			isset( $_POST['session_id'] ) ? sanitize_text_field( wp_unslash( $_POST['session_id'] ) ) : '',
+			$layout,
+			is_array( $state ) ? $state : array()
+		);
+		if ( is_wp_error( $result ) ) {
+			$status = in_array( $result->get_error_code(), array( 'certloom_designer_autosave_conflict', 'certloom_designer_autosave_session_conflict' ), true ) ? 409 : 400;
+			wp_send_json_error( array( 'code' => $result->get_error_code(), 'message' => $result->get_error_message(), 'data' => $result->get_error_data() ), $status );
+		}
+		wp_send_json_success( $result );
+	}
+
+	/** DSN-07 discard one personal recovery checkpoint. @return void */
+	public function designer_autosave_discard() {
+		$this->require_capability();
+		$id = isset( $_POST['template_id'] ) ? absint( $_POST['template_id'] ) : 0;
+		check_ajax_referer( 'certloom_template_designer_autosave_' . $id, 'nonce' );
+		$result = ( new TemplateDesignerAutosave() )->discard( $id, get_current_user_id(), isset( $_POST['session_id'] ) ? sanitize_text_field( wp_unslash( $_POST['session_id'] ) ) : '' );
+		if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'code' => $result->get_error_code(), 'message' => $result->get_error_message() ), 409 ); }
+		wp_send_json_success( array( 'status' => 'discarded' ) );
 	}
 
 
@@ -568,7 +624,7 @@ final class TemplateAdmin {
 		try { $layout_json = ( new CanonicalJson() )->encode( $current['layout'] ?? TemplateDefaults::blank_a4_landscape() ); } catch ( \Throwable $e ) { $layout_json = ''; }
 		$this->schema_upgrade_panel( $editing );
 		$this->designer_panel( $editing, $layout_json );
-		echo '<details class="certloom-template-json-editor"><summary>' . esc_html__( 'Advanced canonical JSON editor', 'certloom' ) . '</summary><p class="description">' . esc_html__( 'The Designer and this advanced editor save the same certloom-layout document. Every successful save creates a new immutable revision; there is no separate browser-only design format.', 'certloom' ) . '</p><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_revision"><input type="hidden" name="template_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="expected_revision_id" value="' . esc_attr( (string) absint( $editing['current_revision_id'] ) ) . '">'; wp_nonce_field( 'certloom_template_revision_' . $id );
+		echo '<details class="certloom-template-json-editor"><summary>' . esc_html__( 'Advanced canonical JSON editor', 'certloom' ) . '</summary><p class="description">' . esc_html__( 'The Designer and this advanced editor save the same certloom-layout document. Every successful save creates a new immutable revision; there is no separate browser-only design format.', 'certloom' ) . '</p><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_revision"><input type="hidden" name="template_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="expected_revision_id" value="' . esc_attr( (string) absint( $editing['current_revision_id'] ) ) . '"><input type="hidden" name="expected_revision_sha256" value="' . esc_attr( (string) ( $current['layout_sha256'] ?? '' ) ) . '">'; wp_nonce_field( 'certloom_template_revision_' . $id );
 		echo '<textarea name="layout_json" rows="18" class="large-text code" spellcheck="false">' . esc_textarea( $layout_json ) . '</textarea>'; submit_button( __( 'Save JSON as new revision', 'certloom' ) ); echo '</form></details>';
 
 		$renderer_authority = ( new RendererAuthorityGate() )->publication_status();
@@ -609,7 +665,7 @@ final class TemplateAdmin {
 	}
 
 
-	/** DSN-06 visual Designer over versioned canonical certloom-layout. @return void */
+	/** DSN-07 visual Designer with bounded per-user recovery autosave. @return void */
 	private function designer_panel( array $editing, $layout_json ) {
 		$id = absint( $editing['id'] ?? 0 );
 		$current_id = absint( $editing['current_revision_id'] ?? 0 );
@@ -621,14 +677,29 @@ final class TemplateAdmin {
 		$schema_version = absint( $decoded_layout['_meta']['schema_version'] ?? 0 );
 		$designer_state_json = wp_json_encode( $designer_state );
 		if ( ! is_string( $designer_state_json ) ) { $designer_state_json = '{"version":1,"locked_ids":[],"snap_enabled":true}'; }
+		$current_sha256 = strtolower( (string) ( $editing['current_revision']['layout_sha256'] ?? '' ) );
+		$autosave = ( new TemplateDesignerAutosave() )->inspect( $id, get_current_user_id() );
+		$autosave_status = (string) ( $autosave['status'] ?? 'none' );
+		$recovery_layout_json = '';
+		$recovery_state_json = '';
+		if ( 'ready' === $autosave_status && ! empty( $autosave['record']['layout'] ) && is_array( $autosave['record']['layout'] ) ) {
+			try { $recovery_layout_json = ( new CanonicalJson() )->encode( $autosave['record']['layout'] ); } catch ( \Throwable $error ) { $recovery_layout_json = ''; }
+			$recovery_state_json = wp_json_encode( $autosave['record']['designer_state'] ?? array() );
+			if ( ! is_string( $recovery_state_json ) ) { $recovery_state_json = ''; }
+		}
+		$autosave_nonce = wp_create_nonce( 'certloom_template_designer_autosave_' . $id );
+		$autosave_session = in_array( $autosave_status, array( 'ready', 'stale' ), true ) ? (string) ( $autosave['record']['session_id'] ?? '' ) : '';
 
-		echo '<section class="certloom-template-designer" data-certloom-designer data-layout-schema-version="' . esc_attr( (string) $schema_version ) . '" data-saved-revision="' . esc_attr( (string) $current_id ) . '">';
-		echo '<div class="certloom-template-designer-head"><div><span class="certloom-template-designer-kicker">' . esc_html__( 'DSN-06 · Canonical lists', 'certloom' ) . '</span><h3>' . esc_html__( 'Certificate Designer', 'certloom' ) . '</h3><p>' . esc_html__( 'Edit the same versioned canonical layout used by Preview and rendering. certloom-layout v3 adds canonical bullet/numbered lists while v1/v2 remain readable and immutable. DSN-01–05 geometry, productivity, content, styling and schema upgrading remain intact; every save still creates an immutable revision.', 'certloom' ) . '</p></div><div class="certloom-template-designer-state"><span data-certloom-designer-dirty>' . esc_html__( 'Saved draft', 'certloom' ) . '</span><small>' . esc_html( sprintf( __( 'Revision ID %d', 'certloom' ), $current_id ) ) . '</small></div></div>';
-		echo '<div class="notice notice-info inline certloom-template-designer-boundary"><p><strong>' . esc_html__( 'Designer boundary:', 'certloom' ) . '</strong> ' . esc_html__( 'DSN-06 adds lists only through certloom-layout v3. Barcode remains available from v2 onward and fixed to local Code 128 of credential.display_number. Historical v1/v2 revisions and the 24 v1 factory presets remain immutable. DSN-07/08 remain autosave/concurrency and typed registry.', 'certloom' ) . '</p></div>';
-		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" data-certloom-designer-form><input type="hidden" name="action" value="certloom_template_revision"><input type="hidden" name="template_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="expected_revision_id" value="' . esc_attr( (string) $current_id ) . '">';
+		echo '<section class="certloom-template-designer" data-certloom-designer data-layout-schema-version="' . esc_attr( (string) $schema_version ) . '" data-template-id="' . esc_attr( (string) $id ) . '" data-saved-revision="' . esc_attr( (string) $current_id ) . '" data-saved-sha256="' . esc_attr( $current_sha256 ) . '" data-autosave-status="' . esc_attr( $autosave_status ) . '" data-autosave-session="' . esc_attr( $autosave_session ) . '" data-autosave-nonce="' . esc_attr( $autosave_nonce ) . '" data-ajax-url="' . esc_url( admin_url( 'admin-ajax.php' ) ) . '">';
+		echo '<div class="certloom-template-designer-head"><div><span class="certloom-template-designer-kicker">' . esc_html__( 'DSN-07 · Recovery autosave & concurrency', 'certloom' ) . '</span><h3>' . esc_html__( 'Certificate Designer', 'certloom' ) . '</h3><p>' . esc_html__( 'Edit the same versioned canonical layout used by Preview and rendering. DSN-07 adds bounded per-user recovery autosave without changing Template authority: only an explicit manual save may create a new immutable revision, and every autosave is bound to the exact revision ID and SHA-256 opened in Designer.', 'certloom' ) . '</p></div><div class="certloom-template-designer-state"><span data-certloom-designer-dirty>' . esc_html__( 'Saved draft', 'certloom' ) . '</span><small>' . esc_html( sprintf( __( 'Revision ID %d', 'certloom' ), $current_id ) ) . '</small></div></div>';
+		echo '<div class="notice notice-info inline certloom-template-designer-boundary"><p><strong>' . esc_html__( 'Designer boundary:', 'certloom' ) . '</strong> ' . esc_html__( 'DSN-07 stores at most one personal recovery checkpoint outside certloom-layout and refuses stale base revisions/hashes. It never publishes, never advances current_revision_id and never overwrites another session. DSN-08 remains the Typed Element Registry.', 'certloom' ) . '</p></div>';
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" data-certloom-designer-form><input type="hidden" name="action" value="certloom_template_revision"><input type="hidden" name="template_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="expected_revision_id" value="' . esc_attr( (string) $current_id ) . '"><input type="hidden" name="expected_revision_sha256" value="' . esc_attr( $current_sha256 ) . '">';
 		wp_nonce_field( 'certloom_template_revision_' . $id );
 		echo '<textarea hidden name="layout_json" data-certloom-designer-json>' . esc_textarea( (string) $layout_json ) . '</textarea>';
 		echo '<textarea hidden name="designer_state_json" data-certloom-designer-state-json>' . esc_textarea( $designer_state_json ) . '</textarea>';
+		echo '<input type="hidden" name="designer_autosave_session_id" value="" data-certloom-designer-autosave-session-field>';
+		if ( '' !== $recovery_layout_json ) { echo '<textarea hidden data-certloom-designer-recovery-json>' . esc_textarea( $recovery_layout_json ) . '</textarea><textarea hidden data-certloom-designer-recovery-state-json>' . esc_textarea( $recovery_state_json ) . '</textarea>'; }
+		if ( 'stale' === $autosave_status || 'invalid' === $autosave_status ) { echo '<div class="notice notice-warning inline certloom-template-autosave-warning"><p><strong>' . esc_html__( 'Recovery checkpoint not applied.', 'certloom' ) . '</strong> ' . esc_html__( 'The stored personal autosave is stale or invalid, so Certloom did not merge it into the authoritative current revision. Discard it after confirming you no longer need the older recovery copy.', 'certloom' ) . ' <button type="button" class="button button-small" data-certloom-designer-autosave-discard>' . esc_html__( 'Discard recovery checkpoint', 'certloom' ) . '</button></p></div>'; }
 		echo '<div class="certloom-template-designer-toolbar" role="group" aria-label="' . esc_attr__( 'Designer page, history and zoom controls', 'certloom' ) . '">';
 		echo '<div class="certloom-template-designer-history" role="group" aria-label="' . esc_attr__( 'Designer history', 'certloom' ) . '"><button type="button" class="button" data-certloom-designer-undo disabled>' . esc_html__( 'Undo', 'certloom' ) . '</button><button type="button" class="button" data-certloom-designer-redo disabled>' . esc_html__( 'Redo', 'certloom' ) . '</button></div>';
 		echo '<label><span>' . esc_html__( 'Page size', 'certloom' ) . '</span><select data-certloom-designer-page-size><option value="A4">A4</option><option value="Letter">' . esc_html__( 'Letter', 'certloom' ) . '</option></select></label>';
@@ -673,7 +744,7 @@ final class TemplateAdmin {
 		echo '<div class="certloom-template-designer-style-group" hidden data-certloom-designer-style="shape"><div class="certloom-template-designer-style-grid"><label><span>' . esc_html__( 'Fill', 'certloom' ) . '</span><input type="text" maxlength="9" placeholder="#FFFFFF00" data-certloom-designer-style-field="fill"></label><label><span>' . esc_html__( 'Stroke', 'certloom' ) . '</span><input type="text" maxlength="9" placeholder="#000000" data-certloom-designer-style-field="stroke"></label><label><span>' . esc_html__( 'Stroke width (mm)', 'certloom' ) . '</span><input type="number" min="0" max="20" step="0.1" inputmode="decimal" data-certloom-designer-style-field="stroke_width_mm"></label></div></div>';
 		echo '<div class="certloom-template-designer-style-group" hidden data-certloom-designer-style="line"><div class="certloom-template-designer-style-grid"><label><span>' . esc_html__( 'Stroke', 'certloom' ) . '</span><input type="text" maxlength="9" placeholder="#000000" data-certloom-designer-style-field="stroke"></label><label><span>' . esc_html__( 'Stroke width (mm)', 'certloom' ) . '</span><input type="number" min="0.001" max="20" step="0.1" inputmode="decimal" data-certloom-designer-style-field="stroke_width_mm"></label></div></div></div>';
 		echo '<p class="description">' . esc_html__( 'Arrow keys nudge 1 mm, Shift+Arrow 5 mm and Alt/Option+Arrow 0.1 mm. Ctrl/Cmd+Z undoes; Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y redoes. Locked elements remain selectable but cannot be transformed, reordered, removed or content-edited.', 'certloom' ) . '</p></div><div class="certloom-template-designer-layers"><div class="certloom-template-designer-layers-head"><h4>' . esc_html__( 'Layers', 'certloom' ) . '</h4><span>' . esc_html__( 'Front → back', 'certloom' ) . '</span></div><div data-certloom-designer-layers></div></div></aside></div>';
-		echo '<div class="certloom-template-designer-footer"><p class="description"><span data-certloom-designer-page-readout></span> · ' . esc_html__( 'Manual save remains authoritative; DSN-07 owns autosave and optimistic concurrency.', 'certloom' ) . '</p><button type="submit" class="button button-primary button-large" data-certloom-designer-save>' . esc_html__( 'Save Designer revision', 'certloom' ) . '</button></div>';
+		echo '<div class="certloom-template-designer-footer"><p class="description"><span data-certloom-designer-page-readout></span> · <span data-certloom-designer-autosave-status>' . esc_html__( 'Recovery autosave ready', 'certloom' ) . '</span> · ' . esc_html__( 'Manual save remains the only authoritative revision write.', 'certloom' ) . '</p><button type="submit" class="button button-primary button-large" data-certloom-designer-save>' . esc_html__( 'Save Designer revision', 'certloom' ) . '</button></div>';
 		echo '</form><div class="notice notice-error inline" hidden data-certloom-designer-error><p></p></div><div class="screen-reader-text" aria-live="polite" data-certloom-designer-live></div></section>';
 	}
 

@@ -13,8 +13,8 @@ dsn(strpos($admin,"admin/assets/designer.js")!==false&&strpos($admin,"admin/asse
 dsn(strpos($admin,'certloom_template_revision')!==false&&strpos($admin,'data-certloom-designer-json')!==false,'Designer saves through the established immutable Template revision action');
 dsn(strpos($admin,'Advanced canonical JSON editor')!==false,'advanced JSON remains an explicit escape hatch over the same canonical layout');
 dsn(strpos($admin,'Archived templates are read-only')!==false,'archived Templates remain read-only before Designer can render a save form');
-dsn(strpos($admin,'DSN-07 owns autosave')!==false,'Designer still keeps autosave in the later DSN-07 milestone');
-dsn(strpos($admin,'Historical v1/v2 revisions and the 24 v1 factory presets remain immutable')!==false,'DSN-01 geometry remains intact while later schema versions preserve immutable history without collapsing the DSN-07 autosave milestone');
+dsn(strpos($admin,'DSN-07 stores at most one personal recovery checkpoint')!==false,'Designer implements DSN-07 recovery autosave outside canonical artifact content');
+dsn(strpos($admin,'only an explicit manual save may create a new immutable revision')!==false,'DSN-01 geometry remains intact while DSN-07 keeps immutable revision authority manual and explicit');
 dsn(is_string($js)&&strpos($js,"A4: { portrait: [ 210, 297 ], landscape: [ 297, 210 ] }")!==false,'Designer owns exact canonical A4 dimensions');
 dsn(strpos($js,"Letter: { portrait: [ 215.9, 279.4 ], landscape: [ 279.4, 215.9 ] }")!==false,'Designer owns exact canonical Letter dimensions');
 dsn(strpos($js,"mode: rotate ? 'rotate' : ( resize ? 'resize' : 'drag' )")!==false,'pointer interaction supports drag, resize and rotate');
@@ -22,7 +22,7 @@ dsn(strpos($js,'data-certloom-designer-zoom')!==false&&strpos($js,'fitWorkspace'
 dsn(strpos($js,'rotatedBounds')!==false&&strpos($js,'elementGeometryValid')!==false,'client interaction guards rotated elements against page-boundary escape');
 dsn(strpos($js,'JSON.stringify( layout )')!==false,'visual save serializes the canonical layout document instead of a parallel Designer model');
 dsn(strpos($js,'localStorage')===false&&strpos($js,'sessionStorage')===false,'DSN-01 does not introduce browser persistence ahead of autosave architecture');
-dsn(strpos($js,'fetch(')===false&&strpos($js,'XMLHttpRequest')===false&&strpos($js,'https://')===false&&substr_count($js,'http://')===1&&strpos($js,'http://www.w3.org/2000/svg')!==false,'Designer introduces no remote/network dependency; its only URL literal is the inert SVG namespace');
+dsn(strpos($js,'fetch(')!==false&&strpos($admin,"admin_url( 'admin-ajax.php' )")!==false&&strpos($js,'XMLHttpRequest')===false&&strpos($js,'https://')===false&&substr_count($js,'http://')===1&&strpos($js,'http://www.w3.org/2000/svg')!==false,'Designer network use is limited to authenticated same-origin WordPress autosave; no remote dependency is introduced');
 dsn(strpos($js,'eval(')===false&&strpos($js,'new Function')===false,'Designer JavaScript introduces no dynamic code execution');
 dsn(is_string($css)&&strpos($css,'.certloom-template-designer-page')!==false&&strpos($css,'prefers-reduced-motion')!==false,'Designer CSS includes page isolation and reduced-motion treatment');
 $catalog=new PresetCatalog();$validator=new LayoutValidator();$all=$catalog->all();$valid=0;foreach($all as $preset){try{$validator->normalize($preset['layout']);$valid++;}catch(Throwable $e){}}

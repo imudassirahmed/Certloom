@@ -9,7 +9,7 @@ use Certloom\Domain\Rendering\LayoutSchema;
 $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'); $js=file_get_contents($root.'/admin/assets/designer.js'); $css=file_get_contents($root.'/admin/assets/designer.css');
 $pass=0;$fail=0; function dsn3($ok,$label){global $pass,$fail;if($ok){$pass++;echo "PASS  $label\n";}else{$fail++;echo "FAIL  $label\n";}}
 
-dsn3(is_string($admin)&&strpos($admin,'DSN-06 · Canonical lists')!==false,'Template admin advances through DSN-06 while retaining the DSN-03 element/content surface');
+dsn3(is_string($admin)&&strpos($admin,'DSN-07 · Recovery autosave & concurrency')!==false,'Template admin advances through DSN-07 while retaining the DSN-03 element/content surface');
 dsn3(strpos($admin,'wp_enqueue_media()')!==false,'WordPress Media Library is explicitly enqueued for local asset selection');
 foreach(['text','merge','image','logo','signature','seal','qr','rectangle','ellipse','line','background'] as $type){ dsn3(strpos($admin,'data-certloom-designer-add="\' . esc_attr( $type )')!==false || strpos($admin,"'$type' => __(")!==false,"palette exposes $type creation"); }
 dsn3(strpos($js,"'seal' === kind")!==false&&strpos($js,"element.type = 'image'")!==false,'seal palette maps to the existing canonical image primitive without schema mutation');
@@ -19,7 +19,7 @@ dsn3(strpos($admin,'data-certloom-designer-content-field="text"')!==false&&strpo
 dsn3(strpos($admin,'data-certloom-designer-media')!==false&&strpos($admin,'attachment:123')!==false,'asset editor keeps WordPress-local attachment references visible');
 dsn3(strpos($admin,'error_correction')!==false&&strpos($admin,'quiet_zone_modules')!==false,'QR content controls preserve the canonical v1 QR contract');
 dsn3(strpos($admin,'data-certloom-designer-style-field="font_size_pt"')!==false&&strpos($admin,'data-certloom-designer-style-field="opacity"')!==false,'DSN-03 primitives are now styled only through canonical DSN-04 fields');
-dsn3(strpos($admin,'DSN-07/08')!==false,'later schema/list/autosave/registry milestones remain explicit');
+dsn3(strpos($admin,'DSN-08 remains the Typed Element Registry')!==false,'DSN-08 remains explicit after DSN-07 without collapsing later registry work');
 
 dsn3(is_string($js)&&strpos($js,'function secureUuidV4')!==false&&strpos($js,'getRandomValues')!==false,'new element IDs use browser cryptographic randomness');
 dsn3(strpos($js,'Math.random')===false,'element IDs never fall back to Math.random');
@@ -32,8 +32,8 @@ dsn3(strpos($js,"[ 'image/png', 'image/jpeg' ]")!==false&&strpos($admin,'unsuppo
 dsn3(strpos($js,"/^[a-z][a-z0-9_.:-]{0,127}$/")!==false,'merge token editing mirrors server machine-key syntax');
 dsn3(strpos($js,"/^attachment:[1-9][0-9]*$/")!==false&&strpos($js,"asset:[a-z0-9]")===false,'Designer creates/edits only immediately resolvable attachment:ID assets while schema-reserved asset:key remains future-facing');
 dsn3(strpos($js,'stateLayout = layout')!==false,'authoring-state normalization recognizes newly created element IDs during undo/redo');
-dsn3(strpos($js,'localStorage')===false&&strpos($js,'sessionStorage')===false,'DSN-03 still introduces no browser persistence ahead of DSN-07');
-dsn3(strpos($js,'fetch(')===false&&strpos($js,'XMLHttpRequest')===false&&strpos($js,'https://')===false&&substr_count($js,'http://')===1,'Designer adds no direct remote/network client');
+dsn3(strpos($js,'localStorage')===false&&strpos($js,'sessionStorage')===false,'DSN-03 content remains free of browser-local persistence; DSN-07 recovery is server-side user meta');
+dsn3(strpos($js,'fetch(')!==false&&strpos($admin,"admin_url( 'admin-ajax.php' )")!==false&&strpos($js,'XMLHttpRequest')===false&&strpos($js,'https://')===false&&substr_count($js,'http://')===1,'Designer network activity remains restricted to same-origin WordPress recovery autosave');
 dsn3(strpos($js,'eval(')===false&&strpos($js,'new Function')===false,'Designer adds no dynamic code execution');
 $resolver=file_get_contents($root.'/src/Infrastructure/Rendering/WordPressLocalAssetResolver.php');
 dsn3(strpos($resolver,"array( 'image/png', 'image/jpeg' )")!==false&&strpos($resolver,'supports only local PNG and JPEG')!==false,'production WordPress asset resolver independently enforces the same PNG/JPEG media boundary');

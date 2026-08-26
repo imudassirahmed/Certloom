@@ -1,4 +1,4 @@
-/* Certloom 1.6.61 — DSN-06 canonical list/bullet authoring over versioned layout v3. */
+/* Certloom 1.6.62 — DSN-07 bounded recovery autosave + optimistic concurrency. */
 .certloom-template-designer {
 	margin: 24px 0;
 	padding: 22px;
@@ -427,4 +427,30 @@
 .certloom-template-designer-style-check input[type="checkbox"] { width: auto; min-height: 22px; justify-self: start; }
 @media (max-width: 480px) {
 	.certloom-template-designer-style-grid { grid-template-columns: 1fr; }
+}
+
+
+/* DSN-07: bounded recovery-autosave status; this UI state is not certificate artifact truth. */
+[data-certloom-designer-autosave-status] {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 2px 7px;
+	border-radius: 999px;
+	font-weight: 700;
+	line-height: 1.4;
+}
+[data-certloom-designer-autosave-status][data-state="saving"] { background: #f0f6fc; color: #0a4b78; }
+[data-certloom-designer-autosave-status][data-state="saved"] { background: #edfaef; color: #116329; }
+[data-certloom-designer-autosave-status][data-state="recovered"] { background: #f0f6fc; color: #135e96; }
+[data-certloom-designer-autosave-status][data-state="error"],
+[data-certloom-designer-autosave-status][data-state="conflict"] { background: #fcf0f1; color: #8a2424; }
+[data-certloom-designer-autosave-status][data-state="clean"] { background: transparent; color: #50575e; padding-inline: 0; }
+.certloom-template-designer.has-autosave-conflict { border-color: #d63638; }
+.certloom-template-autosave-warning .button { margin-left: 8px; vertical-align: baseline; }
+@media (max-width: 480px) {
+	.certloom-template-autosave-warning .button { display: block; margin: 8px 0 0; width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+	[data-certloom-designer-autosave-status] { transition: none !important; }
 }

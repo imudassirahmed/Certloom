@@ -1,3 +1,12 @@
+1.6.62
+- DSN-07: add bounded per-user Designer recovery autosave stored outside certloom-layout and outside Template revision authority.
+- Bind every recovery checkpoint to the exact immutable base revision ID + SHA-256 and a UUIDv4 browser editing session; stale bases and parallel-session ownership conflicts fail closed rather than auto-merging.
+- Strengthen manual Template revision saves with optional exact current-revision SHA-256 optimistic-concurrency proof in addition to the existing revision-ID check.
+- Recover only server-vetted canonical layouts whose base still matches; keep recovered work dirty until explicit manual save creates the next immutable revision.
+- Prevent Advanced JSON or another Designer tab from deleting an unrelated recovery checkpoint; checkpoint discard after save/reset is session-owned.
+- Bound recovery records to one site+user+Template checkpoint and 2 MiB canonical layout data, normalize personal Designer state, verify stored bytes, and clean operational recovery metadata on uninstall.
+- Keep normalized-domain authority, Template publication authority and renderer accepted.json closed pending final real-host acceptance.
+
 1.6.61
 - DSN-06: add certloom-layout v3 with canonical bullet and decimal list elements while preserving v1/v2 read compatibility and immutable historical revisions.
 - Extend the deterministic schema upgrader so reviewed drafts can advance v1→v2→v3 or v2→v3 without rewriting prior revisions or factory preset identities.

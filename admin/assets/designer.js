@@ -6,6 +6,8 @@
 	var VALID_MIN_ELEMENT_MM = 0.001;
 	var SNAP_THRESHOLD_MM = 1.75;
 	var MAX_HISTORY = 100;
+	var AUTOSAVE_DELAY_MS = 1800;
+	var AUTOSAVE_RETRY_MS = 12000;
 	var I18N = window.certloomTemplateDesignerI18n || {};
 	var PAGE_DIMENSIONS = {
 		A4: { portrait: [ 210, 297 ], landscape: [ 297, 210 ] },
@@ -104,6 +106,11 @@
 		var styleSections = root.querySelectorAll( '[data-certloom-designer-style]' );
 		var styleFields = root.querySelectorAll( '[data-certloom-designer-style-field]' );
 		var mediaButton = root.querySelector( '[data-certloom-designer-media]' );
+		var recoveryField = root.querySelector( '[data-certloom-designer-recovery-json]' );
+		var recoveryStateField = root.querySelector( '[data-certloom-designer-recovery-state-json]' );
+		var autosaveStatusEl = root.querySelector( '[data-certloom-designer-autosave-status]' );
+		var autosaveDiscardButton = root.querySelector( '[data-certloom-designer-autosave-discard]' );
+		var autosaveSessionField = root.querySelector( '[data-certloom-designer-autosave-session-field]' );
 		if ( ! form || ! jsonField || ! pageEl || ! workspace ) { return; }
 
 		var savedLayout;
@@ -113,8 +120,17 @@
 			try { savedState = normalizeState( JSON.parse( stateField.value ) ); } catch ( stateError ) { savedState = normalizeState( savedState ); }
 		}
 		var layout = clone( savedLayout );
-		var schemaVersion = Number( layout && layout._meta ? layout._meta.schema_version : root.getAttribute( 'data-layout-schema-version' ) || 0 );
 		var designerState = clone( savedState );
+		var autosaveStatus = root.getAttribute( 'data-autosave-status' ) || 'none';
+		var recovered = false;
+		if ( 'ready' === autosaveStatus && recoveryField && recoveryField.value ) {
+			try {
+				layout = JSON.parse( recoveryField.value );
+				if ( recoveryStateField && recoveryStateField.value ) { designerState = JSON.parse( recoveryStateField.value ); }
+				recovered = true;
+			} catch ( recoveryError ) { layout = clone( savedLayout ); designerState = clone( savedState ); recovered = false; }
+		}
+		var schemaVersion = Number( layout && layout._meta ? layout._meta.schema_version : root.getAttribute( 'data-layout-schema-version' ) || 0 );
 		var zoom = Number( zoomControl ? zoomControl.value : 75 ) / 100;
 		var selectedId = '';
 		var pointer = null;
@@ -122,6 +138,19 @@
 		var history = [];
 		var future = [];
 		var isSubmitting = false;
+		var autosaveTimer = null;
+		var autosavePending = false;
+		var autosaveQueued = false;
+		var autosaveConflict = 'stale' === autosaveStatus || 'invalid' === autosaveStatus;
+		var hasServerAutosave = 'ready' === autosaveStatus;
+		var templateId = Number( root.getAttribute( 'data-template-id' ) || 0 );
+		var baseRevisionId = Number( root.getAttribute( 'data-saved-revision' ) || 0 );
+		var baseRevisionSha256 = root.getAttribute( 'data-saved-sha256' ) || '';
+		var autosaveNonce = root.getAttribute( 'data-autosave-nonce' ) || '';
+		var autosaveSessionId = root.getAttribute( 'data-autosave-session' ) || secureUuidV4();
+		var ajaxUrl = root.getAttribute( 'data-ajax-url' ) || '';
+		var lastAutosaveFingerprint = recovered ? stable( { layout: layout, state: designerState } ) : '';
+		if ( autosaveSessionField ) { autosaveSessionField.value = autosaveSessionId; }
 
 		function normalizeState( input ) {
 			var result = { version: 1, locked_ids: [], snap_enabled: true };
@@ -135,6 +164,55 @@
 			}
 			result.locked_ids.sort();
 			return result;
+		}
+
+		if ( recovered ) { designerState = normalizeState( designerState ); lastAutosaveFingerprint = stable( { layout: layout, state: designerState } ); }
+
+		function setAutosaveStatus( message, state ) {
+			if ( autosaveStatusEl ) { autosaveStatusEl.textContent = message || ''; autosaveStatusEl.setAttribute( 'data-state', state || '' ); }
+		}
+		function autosaveFingerprint() { return stable( { layout: layout, state: designerState } ); }
+		function autosaveRequest( action, body, keepalive ) {
+			if ( ! ajaxUrl || ! autosaveNonce || ! templateId || ! autosaveSessionId ) { return Promise.reject( new Error( 'autosave-unavailable' ) ); }
+			var data = new FormData(); data.append( 'action', action ); data.append( 'nonce', autosaveNonce ); data.append( 'template_id', String( templateId ) );
+			if ( body ) { for ( var key in body ) { if ( Object.prototype.hasOwnProperty.call( body, key ) ) { data.append( key, body[ key ] ); } } }
+			return window.fetch( ajaxUrl, { method: 'POST', credentials: 'same-origin', body: data, keepalive: !! keepalive } ).then( function ( response ) {
+				return response.json().catch( function () { return { success: false, data: { code: 'invalid-json' } }; } ).then( function ( payload ) { payload.httpStatus = response.status; return payload; } );
+			} );
+		}
+		function discardAutosave( announceResult ) {
+			if ( autosaveTimer ) { window.clearTimeout( autosaveTimer ); autosaveTimer = null; }
+			if ( ! hasServerAutosave && ! autosaveConflict ) { return; }
+			autosaveRequest( 'certloom_template_designer_autosave_discard', autosaveSessionId ? { session_id: autosaveSessionId } : null, false ).then( function ( payload ) {
+				if ( payload && payload.success ) { hasServerAutosave = false; autosaveConflict = false; lastAutosaveFingerprint = ''; setAutosaveStatus( t( 'savedDraft', 'Saved draft' ), 'clean' ); if ( autosaveDiscardButton ) { autosaveDiscardButton.disabled = true; } if ( announceResult ) { announce( t( 'autosaveDiscarded', 'Recovery checkpoint discarded.' ) ); } }
+				else { setAutosaveStatus( t( 'autosaveConflict', 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.' ), 'conflict' ); if ( announceResult ) { showError( t( 'autosaveConflict', 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.' ) ); } }
+			} ).catch( function () { if ( announceResult ) { showError( t( 'autosaveFailed', 'Recovery autosave is temporarily unavailable. Manual save remains available.' ) ); } } );
+		}
+		function runAutosave() {
+			if ( autosaveConflict || isSubmitting || ! root.classList.contains( 'has-unsaved-changes' ) ) { return; }
+			var fingerprint = autosaveFingerprint();
+			if ( fingerprint === lastAutosaveFingerprint ) { return; }
+			if ( autosavePending ) { autosaveQueued = true; return; }
+			autosavePending = true; setAutosaveStatus( t( 'autosaving', 'Saving recovery checkpoint…' ), 'saving' );
+			autosaveRequest( 'certloom_template_designer_autosave', {
+				expected_revision_id: String( baseRevisionId ), expected_revision_sha256: baseRevisionSha256, session_id: autosaveSessionId,
+				layout_json: JSON.stringify( layout ), designer_state_json: JSON.stringify( designerState )
+			}, false ).then( function ( payload ) {
+				if ( payload && payload.success ) {
+					lastAutosaveFingerprint = fingerprint; hasServerAutosave = true; setAutosaveStatus( t( 'autosaved', 'Recovery checkpoint saved' ), 'saved' );
+				} else {
+					var code = payload && payload.data ? payload.data.code : '';
+					if ( 409 === payload.httpStatus || 'certloom_designer_autosave_conflict' === code || 'certloom_designer_autosave_session_conflict' === code ) { autosaveConflict = true; root.classList.add( 'has-autosave-conflict' ); setAutosaveStatus( t( 'autosaveConflict', 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.' ), 'conflict' ); showError( t( 'autosaveConflict', 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.' ) ); }
+					else { setAutosaveStatus( t( 'autosaveFailed', 'Recovery autosave is temporarily unavailable. Manual save remains available.' ), 'error' ); }
+				}
+			} ).catch( function () { setAutosaveStatus( t( 'autosaveFailed', 'Recovery autosave is temporarily unavailable. Manual save remains available.' ), 'error' ); window.setTimeout( function () { scheduleAutosave(); }, AUTOSAVE_RETRY_MS ); } ).then( function () {
+				autosavePending = false; if ( autosaveQueued ) { autosaveQueued = false; scheduleAutosave(); }
+			} );
+		}
+		function scheduleAutosave() {
+			if ( autosaveConflict || isSubmitting ) { return; }
+			if ( autosaveTimer ) { window.clearTimeout( autosaveTimer ); }
+			autosaveTimer = window.setTimeout( function () { autosaveTimer = null; runAutosave(); }, AUTOSAVE_DELAY_MS );
 		}
 		function announce( message ) { if ( liveRegion ) { liveRegion.textContent = ''; window.setTimeout( function () { liveRegion.textContent = message || ''; }, 0 ); } }
 		function showError( message ) {
@@ -179,6 +257,7 @@
 			var dirty = stable( savedLayout ) !== stable( layout ) || stable( savedState ) !== stable( designerState );
 			if ( dirtyBadge ) { dirtyBadge.textContent = dirty ? t( 'unsavedChanges', 'Unsaved changes' ) : t( 'savedDraft', 'Saved draft' ); dirtyBadge.classList.toggle( 'is-dirty', dirty ); }
 			root.classList.toggle( 'has-unsaved-changes', dirty );
+			if ( dirty ) { scheduleAutosave(); } else if ( hasServerAutosave && ! autosavePending ) { discardAutosave( false ); }
 		}
 		function syncControls() {
 			var p = page(); if ( ! p ) { return; }
@@ -628,7 +707,8 @@
 		for ( var contentIndex = 0; contentIndex < contentFields.length; contentIndex++ ) { contentFields[ contentIndex ].addEventListener( 'change', function () { applyContentField( this ); } ); }
 		for ( var styleIndex = 0; styleIndex < styleFields.length; styleIndex++ ) { styleFields[ styleIndex ].addEventListener( 'change', function () { applyStyleField( this ); } ); }
 		if ( mediaButton ) { mediaButton.addEventListener( 'click', function () { var element = selected(); if ( ! element || isLocked( element ) || [ 'image', 'logo', 'signature' ].indexOf( element.type ) === -1 ) { return; } mediaFrame( function ( reference ) { var current = selected(); if ( ! current || isLocked( current ) ) { return; } var before = snapshot(); var proposed = clone( current ); proposed.asset = reference; if ( updateElement( current.id, proposed, false ) ) { pushHistory( before ); render(); announce( t( 'assetUpdated', 'Local media asset updated.' ) ); } } ); } ); }
-		if ( resetButton ) { resetButton.addEventListener( 'click', function () { layout = clone( savedLayout ); designerState = clone( savedState ); selectedId = ''; history = []; future = []; activeGuides = { x: null, y: null }; render(); fitWorkspace(); announce( t( 'unsavedChangesReset', 'Unsaved Designer changes reset.' ) ); } ); }
+		if ( resetButton ) { resetButton.addEventListener( 'click', function () { layout = clone( savedLayout ); designerState = clone( savedState ); selectedId = ''; history = []; future = []; activeGuides = { x: null, y: null }; render(); fitWorkspace(); discardAutosave( false ); announce( t( 'unsavedChangesReset', 'Unsaved Designer changes reset.' ) ); } ); }
+		if ( autosaveDiscardButton ) { autosaveDiscardButton.addEventListener( 'click', function () { discardAutosave( true ); } ); }
 		for ( var fieldIndex = 0; fieldIndex < fieldInputs.length; fieldIndex++ ) {
 			fieldInputs[ fieldIndex ].addEventListener( 'change', function () {
 				var element = selected(); if ( ! element || isLocked( element ) ) { setInspector(); return; } var before = snapshot(); var proposed = clone( element ); var value = Number( this.value ); if ( ! isFinite( value ) ) { setInspector(); return; }
@@ -639,13 +719,14 @@
 		}
 		document.addEventListener( 'keydown', keyboard );
 		form.addEventListener( 'submit', function ( event ) {
+			if ( autosaveTimer ) { window.clearTimeout( autosaveTimer ); autosaveTimer = null; }
 			var p = page(); var list = elements();
 			for ( var i = 0; i < list.length; i++ ) { if ( 'barcode' === list[ i ].type && schemaVersion < 2 ) { event.preventDefault(); showError( t( 'barcodeDeferred', 'Barcode elements require certloom-layout v2. Upgrade this draft first.' ) ); return; } if ( ! elementGeometryValid( list[ i ], p ) ) { event.preventDefault(); showError( t( 'invalidGeometrySave', 'Designer found invalid element geometry and stopped the save.' ) ); return; } }
-			jsonField.value = JSON.stringify( layout ); if ( stateField ) { stateField.value = JSON.stringify( designerState ); } isSubmitting = true;
+			jsonField.value = JSON.stringify( layout ); if ( stateField ) { stateField.value = JSON.stringify( designerState ); } if ( autosaveSessionField ) { autosaveSessionField.value = autosaveSessionId; } isSubmitting = true;
 		} );
 		window.addEventListener( 'beforeunload', function ( event ) { if ( isSubmitting || ! root.classList.contains( 'has-unsaved-changes' ) ) { return; } event.preventDefault(); event.returnValue = ''; } );
 
-		render(); window.setTimeout( fitWorkspace, 0 );
+		render(); if ( recovered ) { setAutosaveStatus( t( 'autosaveRecovered', 'Recovered unsaved Designer changes from your latest safe checkpoint.' ), 'recovered' ); announce( t( 'autosaveRecovered', 'Recovered unsaved Designer changes from your latest safe checkpoint.' ) ); } window.setTimeout( fitWorkspace, 0 );
 	}
 
 	document.addEventListener( 'DOMContentLoaded', function () {
