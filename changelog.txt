@@ -1,3 +1,12 @@
+1.6.52
+- Fix the real MariaDB gated-domain schema failure reported as `stage=dbdelta; object=jobs`: the durable jobs table no longer uses the SQL-reserved column name `cursor`.
+- Persist job progress in the portable `progress_cursor` column while preserving the application/repository API key `cursor`, so job handlers and workflow contracts do not change.
+- Advance normalized-domain schema contract to v16 and add an idempotent compatibility migration that copies any legacy gated `cursor` values into `progress_cursor` without overwriting already-migrated progress.
+- Keep the legacy column in place when it exists because WordPress dbDelta is additive; schema health and all new writes use only `progress_cursor`.
+- Add permanent job-schema portability coverage so an unquoted SQL-reserved `cursor` column cannot be reintroduced.
+- Simplify the current planning handoff: overlapping nontechnical progress/review/growth MDs are consolidated into one Current Status & Roadmap document, with technical acceptance and release evidence kept separately.
+- Keep normalized-domain authority and renderer authority closed until the exact 1.6.52 live-host ceremonies pass.
+
 1.6.51
 - Replace the inconsistent primary admin Dashicons with shared 20px inline SVG plus/upload icons so Dashboard and registry actions align consistently across WordPress/browser/font environments.
 - Replace the registry hero's database-import glyph with the same upload action icon used by the Dashboard while preserving existing labels and destinations.

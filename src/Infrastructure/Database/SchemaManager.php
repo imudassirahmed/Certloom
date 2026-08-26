@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * exercised without changing public verification truth for an existing site.
  */
 final class SchemaManager {
-	const SCHEMA_VERSION         = '15';
+	const SCHEMA_VERSION         = '16';
 	const SCHEMA_OPTION          = 'certloom_domain_schema_version';
 	const HEALTH_OPTION          = 'certloom_domain_schema_health';
 	const LOCK_OPTION            = 'certloom_domain_schema_lock';
@@ -173,7 +173,60 @@ final class SchemaManager {
 			$changed = self::migrate_version_display_number_index();
 			if ( is_wp_error( $changed ) ) { return $changed; }
 		}
+		if ( version_compare( (string) $installed, '16', '<' ) ) {
+			$migrated = self::migrate_job_progress_cursor();
+			if ( is_wp_error( $migrated ) ) { return $migrated; }
+		}
 		return true;
+	}
+
+	/**
+	 * Schema v16 replaces the SQL-reserved jobs.cursor identifier with
+	 * progress_cursor. Existing gated tables are preserved and copied
+	 * idempotently; the legacy column is intentionally left in place because
+	 * dbDelta is additive and domain authority may still be gated.
+	 *
+	 * @return true|\WP_Error
+	 */
+	private static function migrate_job_progress_cursor() {
+		global $wpdb;
+		$table = self::table( 'jobs' );
+		$wpdb->last_error = '';
+		$columns = $wpdb->get_results( $wpdb->prepare( 'SHOW FULL COLUMNS FROM %i', $table ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $columns ) ) {
+			return new \WP_Error( 'certloom_domain_job_cursor_columns_failed', __( 'Certloom could not inspect its background-job progress column during schema migration.', 'certloom' ), array( 'stage' => 'migration', 'object' => 'jobs', 'field' => 'progress_cursor' ) );
+		}
+
+		$found = array();
+		foreach ( $columns as $column ) {
+			if ( isset( $column['Field'] ) ) {
+				$found[ strtolower( (string) $column['Field'] ) ] = true;
+			}
+		}
+		if ( empty( $found['progress_cursor'] ) ) {
+			return new \WP_Error( 'certloom_domain_job_cursor_target_missing', __( 'Certloom could not verify its portable background-job progress column.', 'certloom' ), array( 'stage' => 'migration', 'object' => 'jobs', 'field' => 'progress_cursor' ) );
+		}
+		if ( empty( $found['cursor'] ) ) {
+			return true;
+		}
+
+		$wpdb->last_error = '';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- One-time versioned compatibility copy between columns in a Certloom-owned gated table.
+		$result = $wpdb->query(
+			$wpdb->prepare(
+				'UPDATE %i SET %i = %i WHERE %i = %d AND %i <> %d',
+				$table,
+				'progress_cursor',
+				'cursor',
+				'progress_cursor',
+				0,
+				'cursor',
+				0
+			)
+		);
+		return false === $result || '' !== (string) $wpdb->last_error
+			? new \WP_Error( 'certloom_domain_job_cursor_migration_failed', __( 'Certloom could not preserve existing background-job progress while upgrading its schema.', 'certloom' ), array( 'stage' => 'migration', 'object' => 'jobs', 'field' => 'progress_cursor' ) )
+			: true;
 	}
 
 	/** Backfills the number-assignment registry before the old Version-unique index is relaxed. @return true|\WP_Error */
@@ -516,7 +569,7 @@ final class SchemaManager {
 			owner_user_id BIGINT UNSIGNED NULL,
 			parent_job_key CHAR(32) NULL,
 			phase VARCHAR(64) NULL,
-			cursor BIGINT UNSIGNED NOT NULL DEFAULT 0,
+			progress_cursor BIGINT UNSIGNED NOT NULL DEFAULT 0,
 			total BIGINT UNSIGNED NULL,
 			selection_max_id BIGINT UNSIGNED NULL,
 			payload_json LONGTEXT NULL,
@@ -998,7 +1051,7 @@ final class SchemaManager {
 					'owner_user_id' => array( 'type' => $bigu, 'null' => 'YES' ),
 					'parent_job_key' => array( 'type' => '/^char\(32\)$/', 'null' => 'YES' ),
 					'phase' => array( 'type' => '/^varchar\(64\)$/', 'null' => 'YES' ),
-					'cursor' => array( 'type' => $bigu, 'null' => 'NO', 'default' => '0' ),
+					'progress_cursor' => array( 'type' => $bigu, 'null' => 'NO', 'default' => '0' ),
 					'total' => array( 'type' => $bigu, 'null' => 'YES' ),
 					'selection_max_id' => array( 'type' => $bigu, 'null' => 'YES' ),
 					'payload_json' => array( 'type' => $lt, 'null' => 'YES' ),

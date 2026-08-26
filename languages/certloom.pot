@@ -375,7 +375,6 @@ msgstr ""
 #: admin/views/list-certificates.php:113
 #: admin/views/list-certificates.php:140
 #: admin/views/settings-manager.php:127
-#: src/Infrastructure/Import/DomainImportCsvReader.php:72
 #: src/Infrastructure/Admin/DomainAdmin.php:260
 #: src/Infrastructure/Admin/DomainAdmin.php:336
 #: src/Infrastructure/Admin/DomainAdmin.php:555
@@ -384,6 +383,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:229
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:612
 #: src/Infrastructure/Admin/TemplateAdmin.php:203
+#: src/Infrastructure/Import/DomainImportCsvReader.php:72
 msgid "Status"
 msgstr ""
 
@@ -4672,9 +4672,9 @@ msgstr ""
 #: includes/class-ecapla-certverify-render.php:226
 #: elementor/class-ecapla-certverify-credential-widget.php:16
 #: admin/class-ecapla-certverify-list-table.php:38
-#: src/Infrastructure/Import/DomainImportCsvReader.php:70
 #: src/Infrastructure/Admin/DomainAdmin.php:383
 #: src/Infrastructure/Admin/DomainAdmin.php:519
+#: src/Infrastructure/Import/DomainImportCsvReader.php:70
 #: blocks/credential/index.js:39
 msgid "Certificate number"
 msgstr ""
@@ -7563,6 +7563,11 @@ msgstr ""
 msgid "%s restore commit queued. Certloom will restage and revalidate before any atomic promotion."
 msgstr ""
 
+#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:244
+#: src/Infrastructure/Job/JobRuntime.php:203
+msgid "That Certloom job is no longer available."
+msgstr ""
+
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:247
 msgid "Only failed Certloom jobs can be retried."
 msgstr ""
@@ -7741,6 +7746,18 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:472
 msgid "Certloom could not verify the uploaded temporary file."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:480
+#: src/Infrastructure/Job/JobDispatcher.php:79
+#: src/Infrastructure/Job/JobRepository.php:410
+#: src/Infrastructure/Import/DomainImportStageRepository.php:215
+msgid "The Certloom job identifier is invalid."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:486
+#: src/Infrastructure/Import/DomainImportUploadSession.php:153
+msgid "The CSV mapping-session identifier is invalid."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:492
@@ -8482,84 +8499,96 @@ msgstr ""
 msgid "Another Certloom maintenance operation acquired the lock first."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:1127
+#: src/Infrastructure/Database/SchemaManager.php:1180
 msgid "Certloom domain maintenance is already running. Try again shortly."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:1140
+#: src/Infrastructure/Database/SchemaManager.php:1193
 msgid "Certloom could not obtain its domain-maintenance lock."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:1147
+#: src/Infrastructure/Database/SchemaManager.php:1200
 msgid "Certloom could not verify its schema-maintenance lock owner during cleanup."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:1154
+#: src/Infrastructure/Database/SchemaManager.php:1207
 msgid "Certloom refused to release a schema-maintenance lock that is no longer owned by this worker."
-msgstr ""
-
-#: src/Infrastructure/Database/SchemaManager.php:1168
-msgid "Certloom completed schema maintenance but could not release its schema lock safely. Retry after the lease expires or is repaired."
 msgstr ""
 
 #: src/Infrastructure/Database/SchemaManager.php:121
 msgid "Certloom created its new domain tables but could not save the schema marker."
 msgstr ""
 
+#: src/Infrastructure/Database/SchemaManager.php:1221
+msgid "Certloom completed schema maintenance but could not release its schema lock safely. Retry after the lease expires or is repaired."
+msgstr ""
+
 #: src/Infrastructure/Database/SchemaManager.php:125
-#: src/Infrastructure/Database/SchemaManager.php:1091
+#: src/Infrastructure/Database/SchemaManager.php:1144
 msgid "Certloom verified its new domain tables but could not save the health marker."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:195
+#: src/Infrastructure/Database/SchemaManager.php:197
+msgid "Certloom could not inspect its background-job progress column during schema migration."
+msgstr ""
+
+#: src/Infrastructure/Database/SchemaManager.php:207
+msgid "Certloom could not verify its portable background-job progress column."
+msgstr ""
+
+#: src/Infrastructure/Database/SchemaManager.php:228
+msgid "Certloom could not preserve existing background-job progress while upgrading its schema."
+msgstr ""
+
+#: src/Infrastructure/Database/SchemaManager.php:248
 msgid "Certloom could not backfill its credential-number assignments."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:213
+#: src/Infrastructure/Database/SchemaManager.php:266
 msgid "Certloom could not inspect its credential-number index."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:223
+#: src/Infrastructure/Database/SchemaManager.php:276
 msgid "Certloom could not migrate its credential-number index safely."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:589
+#: src/Infrastructure/Database/SchemaManager.php:642
 msgid "Certloom could not create or update one of its new domain tables."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:613
+#: src/Infrastructure/Database/SchemaManager.php:666
 msgid "Certloom requires InnoDB for its credential-domain transaction and row-lock guarantees."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:619
+#: src/Infrastructure/Database/SchemaManager.php:672
 msgid "Certloom could not verify one of its required domain tables."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:631
+#: src/Infrastructure/Database/SchemaManager.php:684
 msgid "Certloom detected a missing domain-table column."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:637
+#: src/Infrastructure/Database/SchemaManager.php:690
 msgid "Certloom detected an incompatible domain-table column definition."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:640
+#: src/Infrastructure/Database/SchemaManager.php:693
 msgid "Certloom detected an incompatible domain-table column default."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:643
+#: src/Infrastructure/Database/SchemaManager.php:696
 msgid "Certloom detected an incompatible domain-table identity column."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:650
+#: src/Infrastructure/Database/SchemaManager.php:703
 msgid "Certloom could not verify its required domain-table indexes."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:667
+#: src/Infrastructure/Database/SchemaManager.php:720
 msgid "Certloom detected a missing required domain-table index."
 msgstr ""
 
-#: src/Infrastructure/Database/SchemaManager.php:671
+#: src/Infrastructure/Database/SchemaManager.php:724
 msgid "Certloom detected an incompatible required domain-table index."
 msgstr ""
 
@@ -9804,13 +9833,6 @@ msgstr ""
 msgid "Certloom could not encode the validated import row."
 msgstr ""
 
-#: src/Infrastructure/Import/DomainImportStageRepository.php:215
-#: src/Infrastructure/Job/JobDispatcher.php:79
-#: src/Infrastructure/Job/JobRepository.php:410
-#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:480
-msgid "The Certloom job identifier is invalid."
-msgstr ""
-
 #: src/Infrastructure/Import/DomainImportStageRepository.php:30
 msgid "Certloom could not inspect its import staging rows."
 msgstr ""
@@ -9860,14 +9882,9 @@ msgid "Certloom stopped the CSV mapping session safely (%1$s), but could not rem
 msgstr ""
 
 #: src/Infrastructure/Import/DomainImportUploadSession.php:145
-#: src/Application/Import/DomainImportJobCoordinator.php:124
 #: src/Application/DataTools/DomainDataToolsCoordinator.php:89
+#: src/Application/Import/DomainImportJobCoordinator.php:124
 msgid "file deletion failed"
-msgstr ""
-
-#: src/Infrastructure/Import/DomainImportUploadSession.php:153
-#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:486
-msgid "The CSV mapping-session identifier is invalid."
 msgstr ""
 
 #: src/Infrastructure/Import/DomainImportUploadSession.php:28
@@ -9993,7 +10010,7 @@ msgstr ""
 msgid "Certloom could not encode the job state safely."
 msgstr ""
 
-#: src/Infrastructure/Job/JobRepository.php:435
+#: src/Infrastructure/Job/JobRepository.php:438
 msgid "Stored background job state is invalid JSON."
 msgstr ""
 
@@ -10020,11 +10037,6 @@ msgstr ""
 
 #: src/Infrastructure/Job/JobRepository.php:91
 msgid "Certloom claimed the job but could not reload its state."
-msgstr ""
-
-#: src/Infrastructure/Job/JobRuntime.php:203
-#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:244
-msgid "That Certloom job is no longer available."
 msgstr ""
 
 #: src/Infrastructure/Job/JobRuntime.php:207

@@ -26,7 +26,7 @@ final class JobRepository implements JobRepositoryInterface {
 			'owner_user_id'    => ! empty( $data['owner_user_id'] ) ? absint( $data['owner_user_id'] ) : null,
 			'parent_job_key'   => self::nullable_job_key( $data['parent_job_key'] ?? null ),
 			'phase'            => null,
-			'cursor'           => 0,
+			'progress_cursor'  => 0,
 			'total'            => null === ( $data['total'] ?? null ) ? null : absint( $data['total'] ),
 			'selection_max_id' => null === ( $data['selection_max_id'] ?? null ) ? null : absint( $data['selection_max_id'] ),
 			'payload_json'     => $payload,
@@ -209,7 +209,7 @@ final class JobRepository implements JobRepositoryInterface {
 		$job_key = self::job_key( $job_key );
 		if ( is_wp_error( $job_key ) ) { return $job_key; }
 		$row = array(
-			'cursor'       => absint( $progress['cursor'] ?? 0 ),
+			'progress_cursor' => absint( $progress['cursor'] ?? 0 ),
 			'updated_at'   => current_time( 'mysql', true ),
 			'locked_until' => gmdate( 'Y-m-d H:i:s', time() + max( 30, absint( $progress['lock_seconds'] ?? 120 ) ) ),
 		);
@@ -428,7 +428,10 @@ final class JobRepository implements JobRepositoryInterface {
 
 	/** @return array<string,mixed>|\WP_Error */
 	private static function decode( array $row ) {
-		foreach ( array( 'id', 'owner_user_id', 'cursor', 'total', 'selection_max_id', 'attempts', 'recovery_count' ) as $key ) {
+		$persisted_cursor = array_key_exists( 'progress_cursor', $row ) ? $row['progress_cursor'] : ( $row['cursor'] ?? null );
+		$row['cursor'] = null === $persisted_cursor ? null : absint( $persisted_cursor );
+		unset( $row['progress_cursor'] );
+		foreach ( array( 'id', 'owner_user_id', 'total', 'selection_max_id', 'attempts', 'recovery_count' ) as $key ) {
 			$row[ $key ] = null === ( $row[ $key ] ?? null ) ? null : absint( $row[ $key ] );
 		}
 		foreach ( array( 'payload_json' => 'payload', 'result_json' => 'result', 'error_json' => 'error' ) as $source => $target ) {
