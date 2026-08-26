@@ -1,3 +1,34 @@
+1.6.58
+- Add DSN-03 Designer element/content authoring over the same canonical `certloom-layout`: create/remove text, merge fields, local image/logo/signature/seal visuals, verification QR, rectangle, ellipse, line and page background.
+- Add type-aware content inspectors for text, merge tokens, local asset references/fit, shape kind and QR error-correction/quiet-zone values while retaining the existing immutable Template revision save path and server `LayoutValidator`.
+- Use Web Crypto UUIDv4 for interactive element identity with no `Math.random` fallback, and honor the existing 500-element canonical limit.
+- Integrate the local WordPress Media Library for image/logo/signature/seal creation; persist only immediately resolvable `attachment:ID`, reject non-PNG/JPEG selections early, reserve `asset:key` for the future controlled catalog, and continue rejecting arbitrary remote asset URLs.
+- Reuse canonical `image` for seal visuals and full-page rectangle `shape` for backgrounds instead of inflating layout schema v1.
+- Keep barcode visibly deferred to the versioned DSN-05 schema upgrader because immutable `certloom-layout` v1 has no stored barcode primitive.
+- Fix non-artifact Designer-state normalization so newly created element IDs retain personal lock state through undo/redo before the first save.
+- Add 41/41 DSN-03 static/application checks and a 35-check real Chromium creation/edit/removal/local-media/schema-boundary gate while preserving all DSN-01/02, Template, renderer, QR/barcode and browser regressions.
+- Keep DSN-04 through DSN-08, normalized-domain authority, Template publication and production PDF/PNG/JPEG authority deliberately unopened; real-host DB and PDF-04 ceremonies remain final release-candidate blockers.
+
+1.6.57
+- Add DSN-02 Designer productivity controls over the existing canonical `certloom-layout`: bounded 100-step undo/redo, page/element snapping guides for movement, six exact page-alignment actions, deterministic layer reordering, and direct 0.1/1/5 mm keyboard nudging.
+- Add a keyboard-accessible Layers panel with front-to-back ordering and per-element personal authoring locks; locked elements remain selectable but cannot be dragged, resized, rotated, aligned, nudged or reordered.
+- Keep authoring locks and snapping preference outside certificate content in site-scoped WordPress user meta, normalized against real canonical element IDs, so toggling an editor lock cannot change Template hashes, Render Plans, PDFs or images.
+- Add multisite-safe workspace-state namespacing and uninstall cleanup for the non-artifact per-user Designer state.
+- Preserve meaningful history boundaries: pointer movement is one undoable transaction rather than one history entry per pointermove, and page/inspector/alignment/layer/lock/keyboard actions remain individually reversible.
+- Add transient visual snap guides against page edges/centers and other elements' rotated edges/centers without storing guide data in the canonical layout.
+- Add DSN-02 static/application coverage plus a real Chromium productivity gate covering history shortcuts, fine/default/coarse nudges, alignment, layer order, locks, snapping guides, canonical-vs-authoring-state separation, reset, responsiveness and reduced motion.
+- Localize Designer runtime status, error, layer/action and accessibility strings through WordPress translations while preserving English fallbacks for isolated browser fixtures.
+- Keep DSN-03 through DSN-08, normalized-domain authority, Template publication and production PDF/PNG/JPEG authority deliberately unopened; real-host DB and PDF-04 ceremonies remain final release-candidate blockers.
+
+1.6.56
+- Add DSN-01, the first WYSIWYG Certificate Designer foundation over the existing canonical `certloom-layout` revision model; no browser-only design schema is introduced.
+- Add exact A4/Letter portrait/landscape canvas handling, 25–200% zoom plus fit-to-workspace, pointer selection, drag, four-corner resize, arbitrary rotation and precise millimetre geometry controls.
+- Keep every visual save on the established immutable Template revision action and final server-side `LayoutValidator` boundary; archived Templates remain read-only and the advanced canonical JSON editor remains available over the same document.
+- Add safe page-format conversion that proportionally scales/recenters existing geometry while preserving element IDs, z-order, types and styling, and rejects any conversion that would violate canonical rotated page bounds.
+- Add an isolated Designer JS/CSS layer with unsaved-change protection, explicit reset, responsive workspace, focus-visible treatment and reduced-motion handling; it uses no remote requests or browser persistence.
+- Add dedicated DSN-01 architecture and real Chromium interaction gates covering selection, drag, resize, rotate, page conversion, zoom, canonical serialization, reset and responsive/reduced-motion behavior.
+- Keep DSN-02 through DSN-08, normalized-domain authority, Template publication and PDF/PNG/JPEG renderer authority deliberately unopened; expensive real-host DB/PDF-04 ceremonies remain final release-candidate blockers.
+
 1.6.55
 - Add the canonical Template Preview foundation with exact current-draft vs published-revision selection and deterministic Standard, Long-content, and RTL/Urdu synthetic data profiles.
 - Build every browser Preview through the existing LayoutResolver and RenderPlanBuilder, preserving central merge resolution, text direction, QR encoding/modules, geometry, z-order, colors, and Render Plan SHA-256 instead of introducing a second HTML layout engine.

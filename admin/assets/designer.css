@@ -1,0 +1,396 @@
+/* Certloom 1.6.58 — DSN-03 Designer elements and content. */
+.certloom-template-designer {
+	margin: 24px 0;
+	padding: 22px;
+	border: 1px solid #c3c4c7;
+	border-radius: 12px;
+	background: #f8fafc;
+	box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+.certloom-template-designer-head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 22px;
+}
+.certloom-template-designer-head h3 { margin: 3px 0 7px; font-size: 22px; line-height: 1.25; }
+.certloom-template-designer-head p { max-width: 800px; margin: 0; color: #50575e; }
+.certloom-template-designer-kicker {
+	display: inline-block;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	color: #3858e9;
+}
+.certloom-template-designer-state {
+	display: grid;
+	gap: 4px;
+	min-width: 148px;
+	padding: 10px 12px;
+	border: 1px solid #c3c4c7;
+	border-radius: 9px;
+	background: #fff;
+	text-align: right;
+}
+.certloom-template-designer-state span { font-weight: 700; color: #06752f; }
+.certloom-template-designer-state span.is-dirty { color: #8a6200; }
+.certloom-template-designer-state small { color: #646970; }
+.certloom-template-designer-boundary { margin: 16px 0 !important; }
+.certloom-template-designer-toolbar {
+	display: flex;
+	align-items: end;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin: 16px 0;
+	padding: 12px;
+	border: 1px solid #dcdcde;
+	border-radius: 9px;
+	background: #fff;
+}
+.certloom-template-designer-toolbar label { display: grid; gap: 5px; }
+.certloom-template-designer-toolbar label > span {
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: .04em;
+	text-transform: uppercase;
+	color: #50575e;
+}
+.certloom-template-designer-toolbar select { min-width: 126px; }
+.certloom-template-designer-zoom { min-width: 205px; grid-template-columns: 1fr auto; align-items: center; }
+.certloom-template-designer-zoom > span { grid-column: 1 / -1; }
+.certloom-template-designer-zoom input { width: 160px; }
+.certloom-template-designer-zoom output { min-width: 44px; font-variant-numeric: tabular-nums; font-weight: 700; }
+.certloom-template-designer-shell {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 270px;
+	gap: 14px;
+	align-items: stretch;
+}
+.certloom-template-designer-workspace {
+	position: relative;
+	min-width: 0;
+	height: min(70vh, 760px);
+	min-height: 520px;
+	overflow: auto;
+	padding: 26px;
+	border: 1px solid #a7aaad;
+	border-radius: 10px;
+	background-color: #e8eaed;
+	background-image: linear-gradient(45deg, rgba(255,255,255,.45) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.45) 75%), linear-gradient(45deg, rgba(255,255,255,.45) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.45) 75%);
+	background-position: 0 0, 10px 10px;
+	background-size: 20px 20px;
+}
+.certloom-template-designer-workspace:focus-visible { outline: 2px solid #2271b1; outline-offset: 2px; }
+.certloom-template-designer-page {
+	position: relative;
+	margin: 0 auto;
+	flex: 0 0 auto;
+	overflow: hidden;
+	background: #fff;
+	box-shadow: 0 14px 35px rgba(0,0,0,.2), 0 0 0 1px rgba(0,0,0,.1);
+	isolation: isolate;
+	user-select: none;
+	touch-action: none;
+}
+.certloom-template-designer-element {
+	position: absolute;
+	display: block;
+	margin: 0;
+	padding: 0;
+	border: 1px solid transparent;
+	background: transparent;
+	box-shadow: none;
+	color: inherit;
+	font: inherit;
+	text-align: inherit;
+	cursor: move;
+	box-sizing: border-box;
+	transform-origin: center center;
+	touch-action: none;
+}
+.certloom-template-designer-element:hover { outline: 1px dashed rgba(34,113,177,.7); outline-offset: 1px; }
+.certloom-template-designer-element.is-selected {
+	outline: 2px solid #2271b1;
+	outline-offset: 2px;
+	box-shadow: 0 0 0 1px rgba(255,255,255,.85);
+}
+.certloom-template-designer-content {
+	display: flex;
+	align-items: stretch;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	box-sizing: border-box;
+	pointer-events: none;
+}
+.certloom-template-designer-element.is-text .certloom-template-designer-content {
+	flex-direction: column;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+.certloom-template-designer-element.is-asset .certloom-template-designer-content {
+	align-items: center;
+	padding: 4px;
+	border: 1px dashed #8c8f94;
+	background: rgba(246,247,247,.88);
+	color: #50575e;
+	font-size: 11px !important;
+	text-align: center !important;
+}
+.certloom-template-designer-element.is-qr { background: repeating-conic-gradient(#111 0 25%, #fff 0 50%) 50% / 10px 10px; border: 4px solid #fff; }
+.certloom-template-designer-element.is-qr .certloom-template-designer-content { align-items: center; font-size: 10px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px #000; }
+.certloom-template-designer-element.is-line { overflow: visible; }
+.certloom-template-designer-element.is-line svg { width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.certloom-template-designer-resize,
+.certloom-template-designer-rotate {
+	position: absolute;
+	display: none;
+	width: 11px;
+	height: 11px;
+	border: 2px solid #2271b1;
+	border-radius: 50%;
+	background: #fff;
+	box-sizing: border-box;
+	z-index: 999999;
+}
+.certloom-template-designer-element.is-selected .certloom-template-designer-resize,
+.certloom-template-designer-element.is-selected .certloom-template-designer-rotate { display: block; }
+.certloom-template-designer-resize-nw { left: -7px; top: -7px; cursor: nwse-resize; }
+.certloom-template-designer-resize-ne { right: -7px; top: -7px; cursor: nesw-resize; }
+.certloom-template-designer-resize-sw { left: -7px; bottom: -7px; cursor: nesw-resize; }
+.certloom-template-designer-resize-se { right: -7px; bottom: -7px; cursor: nwse-resize; }
+.certloom-template-designer-rotate { left: calc(50% - 6px); top: -27px; cursor: grab; background: #2271b1; border-color: #fff; box-shadow: 0 0 0 1px #2271b1; }
+.certloom-template-designer-rotate::after { content: ''; position: absolute; left: 3px; top: 9px; width: 1px; height: 15px; background: #2271b1; }
+.certloom-template-designer-inspector {
+	min-width: 0;
+	padding: 16px;
+	border: 1px solid #dcdcde;
+	border-radius: 10px;
+	background: #fff;
+}
+.certloom-template-designer-inspector h4 { margin: 0 0 8px; font-size: 15px; }
+.certloom-template-designer-inspector p { color: #646970; }
+.certloom-template-designer-element-meta { display: grid; gap: 5px; margin-bottom: 14px; }
+.certloom-template-designer-element-meta span { font-size: 11px; font-weight: 800; letter-spacing: .06em; color: #3858e9; }
+.certloom-template-designer-element-meta code { overflow-wrap: anywhere; font-size: 10px; }
+.certloom-template-designer-geometry-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.certloom-template-designer-geometry-grid label { display: grid; gap: 4px; }
+.certloom-template-designer-geometry-grid label:last-child { grid-column: 1 / -1; }
+.certloom-template-designer-geometry-grid span { font-size: 11px; font-weight: 700; color: #50575e; }
+.certloom-template-designer-geometry-grid input { width: 100%; min-width: 0; font-variant-numeric: tabular-nums; }
+.certloom-template-designer-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	margin-top: 14px;
+}
+.certloom-template-designer-footer p { margin: 0 !important; }
+.certloom-template-json-editor { margin: 18px 0; padding: 14px; border: 1px solid #dcdcde; border-radius: 9px; background: #fff; }
+.certloom-template-json-editor summary { cursor: pointer; font-weight: 700; }
+.certloom-template-json-editor textarea { margin-top: 12px; }
+@media (max-width: 1100px) {
+	.certloom-template-designer-shell { grid-template-columns: 1fr; }
+	.certloom-template-designer-inspector { order: -1; }
+	.certloom-template-designer-geometry-grid { grid-template-columns: repeat(5,minmax(0,1fr)); }
+	.certloom-template-designer-geometry-grid label:last-child { grid-column: auto; }
+}
+@media (max-width: 782px) {
+	.certloom-template-designer { padding: 15px; }
+	.certloom-template-designer-head,
+	.certloom-template-designer-footer { flex-direction: column; align-items: stretch; }
+	.certloom-template-designer-state { text-align: left; }
+	.certloom-template-designer-toolbar { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: end; }
+	.certloom-template-designer-toolbar label,
+	.certloom-template-designer-toolbar select,
+	.certloom-template-designer-toolbar .button { width: 100%; min-width: 0; }
+	.certloom-template-designer-zoom { grid-column: 1 / -1; }
+	.certloom-template-designer-zoom input { width: 100%; }
+	.certloom-template-designer-workspace { min-height: 420px; height: 58vh; padding: 18px; }
+	.certloom-template-designer-geometry-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+	.certloom-template-designer-geometry-grid label:last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 480px) {
+	.certloom-template-designer-toolbar { grid-template-columns: 1fr; }
+	.certloom-template-designer-zoom { grid-column: auto; }
+	.certloom-template-designer-geometry-grid { grid-template-columns: 1fr; }
+	.certloom-template-designer-geometry-grid label:last-child { grid-column: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.certloom-template-designer * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+
+
+/* DSN-02 productivity controls. */
+.certloom-template-designer-history {
+	display: inline-flex;
+	gap: 6px;
+	align-items: end;
+}
+.certloom-template-designer-snap { min-width: 145px; }
+.certloom-template-designer-check {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 30px;
+	font-size: 13px;
+	font-weight: 600;
+	color: #1d2327;
+	text-transform: none;
+	letter-spacing: 0;
+}
+.certloom-template-designer-productivity {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 7px;
+	margin: -4px 0 14px;
+	padding: 10px 12px;
+	border: 1px solid #dcdcde;
+	border-radius: 9px;
+	background: #fff;
+}
+.certloom-template-designer-productivity-label {
+	margin: 0 2px 0 8px;
+	font-size: 11px;
+	font-weight: 800;
+	letter-spacing: .045em;
+	text-transform: uppercase;
+	color: #50575e;
+}
+.certloom-template-designer-productivity-label:first-child { margin-left: 0; }
+.certloom-template-designer-guide {
+	position: absolute;
+	z-index: 200500;
+	pointer-events: none;
+	background: #d63638;
+	box-shadow: 0 0 0 1px rgba(255,255,255,.75);
+}
+.certloom-template-designer-guide.is-vertical { top: 0; bottom: 0; width: 1px; }
+.certloom-template-designer-guide.is-horizontal { left: 0; right: 0; height: 1px; }
+.certloom-template-designer-element.is-locked { cursor: default; }
+.certloom-template-designer-element.is-locked::after {
+	content: '🔒';
+	position: absolute;
+	right: 2px;
+	top: 2px;
+	z-index: 999998;
+	padding: 1px 3px;
+	border-radius: 3px;
+	background: rgba(255,255,255,.88);
+	font-size: 10px;
+	line-height: 1.25;
+	pointer-events: none;
+}
+.certloom-template-designer-element-meta em {
+	font-size: 11px;
+	font-style: normal;
+	font-weight: 700;
+	color: #06752f;
+}
+.certloom-template-designer-element-meta em.is-locked { color: #8a6200; }
+.certloom-template-designer-layers {
+	margin-top: 18px;
+	padding-top: 16px;
+	border-top: 1px solid #dcdcde;
+}
+.certloom-template-designer-layers-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 10px;
+	margin-bottom: 8px;
+}
+.certloom-template-designer-layers-head h4 { margin: 0; }
+.certloom-template-designer-layers-head span { font-size: 10px; font-weight: 700; color: #646970; text-transform: uppercase; letter-spacing: .04em; }
+[data-certloom-designer-layers] {
+	display: grid;
+	gap: 5px;
+	max-height: 360px;
+	overflow: auto;
+	padding-right: 2px;
+}
+.certloom-template-designer-layer {
+	display: grid;
+	grid-template-columns: minmax(0,1fr) auto;
+	align-items: stretch;
+	border: 1px solid #dcdcde;
+	border-radius: 7px;
+	background: #f6f7f7;
+	overflow: hidden;
+}
+.certloom-template-designer-layer.is-selected { border-color: #2271b1; box-shadow: 0 0 0 1px #2271b1; }
+.certloom-template-designer-layer.is-locked { background: #fff8e5; }
+.certloom-template-designer-layer-select,
+.certloom-template-designer-layer-lock {
+	appearance: none;
+	border: 0;
+	background: transparent;
+	color: #1d2327;
+	cursor: pointer;
+}
+.certloom-template-designer-layer-select {
+	display: grid;
+	gap: 2px;
+	min-width: 0;
+	padding: 7px 9px;
+	text-align: left;
+	font-weight: 700;
+	overflow-wrap: anywhere;
+}
+.certloom-template-designer-layer-select small { font-size: 9px; font-weight: 600; color: #646970; }
+.certloom-template-designer-layer-lock {
+	min-width: 54px;
+	padding: 5px 8px;
+	border-left: 1px solid #dcdcde;
+	font-size: 10px;
+	font-weight: 700;
+	color: #50575e;
+}
+.certloom-template-designer-layer-lock[aria-pressed="true"] { color: #8a6200; background: #fcf0c7; }
+.certloom-template-designer-layer-select:focus-visible,
+.certloom-template-designer-layer-lock:focus-visible { outline: 2px solid #2271b1; outline-offset: -2px; }
+@media (max-width: 782px) {
+	.certloom-template-designer-productivity { align-items: stretch; }
+	.certloom-template-designer-productivity .button { flex: 1 1 140px; }
+	.certloom-template-designer-productivity-label { flex-basis: 100%; margin: 5px 0 0; }
+	.certloom-template-designer-history { grid-column: 1 / -1; }
+	.certloom-template-designer-history .button { flex: 1; }
+}
+
+/* DSN-03: canonical element/content creation without introducing a second document model. */
+.certloom-template-designer-palette {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	padding: 10px 12px;
+	margin: 0 0 12px;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	background: #fff;
+}
+.certloom-template-designer-palette-spacer { flex: 1 1 18px; }
+.certloom-template-designer-content-editor {
+	display: grid;
+	gap: 10px;
+	margin-top: 14px;
+	padding-top: 14px;
+	border-top: 1px solid #dcdcde;
+}
+.certloom-template-designer-content-editor > div:not([hidden]) { display: grid; gap: 10px; }
+.certloom-template-designer-content-editor label { display: grid; gap: 4px; }
+.certloom-template-designer-content-editor label > span { font-size: 11px; font-weight: 700; color: #50575e; }
+.certloom-template-designer-content-editor input,
+.certloom-template-designer-content-editor select,
+.certloom-template-designer-content-editor textarea { width: 100%; min-width: 0; }
+.certloom-template-designer-content-editor textarea { resize: vertical; }
+.certloom-template-designer-content-editor .button { justify-self: start; }
+
+@media (max-width: 782px) {
+	.certloom-template-designer-palette { align-items: stretch; }
+	.certloom-template-designer-palette .button { flex: 1 1 auto; justify-content: center; }
+	.certloom-template-designer-palette-spacer { display: none; }
+}

@@ -1015,8 +1015,8 @@ class Ecapla_CertVerify_Admin {
 			'certloom-templates' => array(
 				'title' => __( 'Templates', 'certloom' ),
 				'eyebrow' => __( 'Pro commercial core · implementation gated', 'certloom' ),
-				'description' => __( 'Versioned Templates, immutable revisions, six factory design families, deterministic assignments, lifecycle controls, and the canonical Render Plan Preview foundation are implemented. Preview can inspect current or published revisions with Standard/Long/RTL samples without creating a second layout engine. Publication and exact artifact-authoritative typography remain fail-closed behind renderer release authority; the visual Designer is the next product milestone.', 'certloom' ),
-				'status' => __( 'Template Preview foundation implemented · publication/artifact authority gated · Designer next', 'certloom' ),
+				'description' => __( 'Versioned Templates, immutable revisions, six factory design families, deterministic assignments, lifecycle controls, canonical Render Plan Preview, and DSN-01/DSN-02/DSN-03 Designer foundations are implemented. Designer edits the same certloom-layout revision model with A4/Letter geometry, drag/resize/rotate, bounded undo/redo, snapping, alignment, layers, personal locks, secure element creation/removal, merge fields, local Media Library assets, QR, shapes and lines; it does not create another layout engine. Seal/background authoring map to existing image/shape primitives, while barcode storage remains deferred to the versioned DSN-05 schema upgrader. Publication and exact artifact-authoritative typography remain fail-closed behind renderer release authority; DSN-04 typography/styling is next.', 'certloom' ),
+				'status' => __( 'DSN-03 Designer elements/content implemented · publication/artifact authority gated · DSN-04 next', 'certloom' ),
 			),
 			'certloom-issuance' => array(
 				'title' => __( 'Issuance', 'certloom' ),

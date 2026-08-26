@@ -30,6 +30,9 @@ final class WordPressLocalAssetResolver implements LocalAssetResolverInterface {
 		$size = filesize( $real );
 		if ( false === $size || $size < 1 ) { throw new InvalidArgumentException( 'The selected WordPress attachment is empty.' ); }
 		$mime = strtolower( trim( (string) get_post_mime_type( $id ) ) );
+		if ( ! in_array( $mime, array( 'image/png', 'image/jpeg' ), true ) ) {
+			throw new InvalidArgumentException( 'Template Preview supports only local PNG and JPEG WordPress attachments.' );
+		}
 		return array( 'path' => $real, 'sha256' => hash_file( 'sha256', $real ), 'mime' => $mime, 'size' => (int) $size );
 	}
 }

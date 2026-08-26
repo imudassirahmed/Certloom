@@ -147,6 +147,16 @@ function ecapla_certverify_uninstall_site() {
 	delete_option( 'certloom_staging_cutover_rehearsal' );
 	delete_option( 'certloom_staging_cutover_rehearsal_lock' );
 
+	/* DSN-02 personal Designer workspace state is non-artifact UI state and must not survive uninstall. */
+	$designer_state_prefix = 'certloom_template_designer_state_' . get_current_blog_id() . '_';
+	$wpdb->query(
+		$wpdb->prepare(
+			'DELETE FROM %i WHERE meta_key LIKE %s',
+			$wpdb->usermeta,
+			$wpdb->esc_like( $designer_state_prefix ) . '%'
+		)
+	); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Removes only this site's Certloom-owned personal Designer workspace state.
+
 	$transient_prefixes = array(
 		'_transient_ecapla_certverify_import_',
 		'_transient_timeout_ecapla_certverify_import_',

@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.55
+Stable tag: 1.6.58
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.55: continue visible Pro development with the canonical Template Preview foundation. Templates can now preview the exact current or published immutable revision through Certloom's shared LayoutResolver → RenderPlanBuilder composition path, using deterministic Standard, Long-content, and RTL/Urdu synthetic data. The browser presenter consumes the canonical Render Plan—including centrally resolved QR modules—rather than creating a second layout or QR engine. Browser typography remains illustrative until PDF-04 exact renderer/font authority is accepted, so no production artifact authority is manufactured. Normalized-domain and renderer authority remain final-release blockers.
+> Development note for 1.6.58: DSN-03 adds secure canonical element creation/removal and content editing for text, merge fields, WordPress-local image/logo/signature/seal visuals, verification QR, rectangle/ellipse, line, and page background while preserving DSN-01/02 geometry and productivity controls. New IDs use Web Crypto UUIDv4; Media Library assets persist as local `attachment:ID`. Seal/background reuse existing image/shape primitives, while barcode remains deferred to the versioned DSN-05 layout-schema upgrader. DSN-04 styling is next. Normalized-domain and renderer authority remain final-release blockers. Media Library authoring is restricted to local PNG/JPEG attachments; reserved `asset:key` values are not authored until the controlled local catalog exists.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
