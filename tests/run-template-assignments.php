@@ -74,7 +74,7 @@ t17has($files['admin'],'Use inherited/default (None)','explicit None/inheritance
 t17has($files['admin'],'Effective Template','effective assignment is visible');
 t17has($files['admin'],'Fallback path:','fallback chain is explained');
 t17has($files['admin'],'Source: %1$s · fallback depth %2$d','effective assignment source is explicit');
-t17has($files['admin'],'candidate metadata only—not an authoritative rendered preview','candidate metadata does not masquerade as renderer output');
+t17has($files['admin'],'assignment metadata only—not the canonical Render Plan Preview','candidate metadata does not masquerade as renderer output');
 t17has($files['admin'],'Layout hash','candidate integrity metadata is visible');
 t17has($files['admin'],'expected_assignment_id','assignment forms carry optimistic-concurrency identity');
 t17has($files['admin'],'expected_updated_at','assignment forms carry optimistic-concurrency timestamp');
@@ -86,8 +86,8 @@ t17has($files['css'],'.certloom-template-candidate-grid','assignment cards have 
 t17has($files['css'],'focus-visible','assignment controls keep visible keyboard focus');
 t17has($files['css'],'@media (max-width: 782px)','assignment workspace has mobile layout');
 t17has($files['css'],'prefers-reduced-motion','assignment workspace respects reduced motion');
-t17has($files['placeholder'],'Template implementation advanced · publication/Designer renderer-gated','live placeholder no longer calls Templates wholly unimplemented');
-t17has($files['placeholder'],'deterministic assignment/fallback administration are implemented','live placeholder truthfully describes gated TPL-03 implementation');
+t17has($files['placeholder'],'Template Preview foundation implemented · publication/artifact authority gated · Designer next','live placeholder reflects the advanced Template lifecycle without faking renderer authority');
+t17has($files['placeholder'],'canonical Render Plan Preview foundation are implemented','live placeholder truthfully describes TPL-03 plus lifecycle implementation');
 
 echo "PASS  TPL-03 uses one deterministic Batch → Program → Issuer → Global fallback policy\n";
 echo "PASS  assignments support searchable/paginated targets and Templates, explicit None, source visibility, concurrency proof and renderer-honest metadata\n\n";

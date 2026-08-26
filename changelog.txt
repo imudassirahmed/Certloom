@@ -1,3 +1,20 @@
+1.6.55
+- Add the canonical Template Preview foundation with exact current-draft vs published-revision selection and deterministic Standard, Long-content, and RTL/Urdu synthetic data profiles.
+- Build every browser Preview through the existing LayoutResolver and RenderPlanBuilder, preserving central merge resolution, text direction, QR encoding/modules, geometry, z-order, colors, and Render Plan SHA-256 instead of introducing a second HTML layout engine.
+- Add a Render Plan-only browser presenter with responsive scroll containment, keyboard focus, reduced-motion handling, proof hashes, and local-image safety limits.
+- Add a local WordPress attachment resolver for Preview; reject remote references and keep named asset keys fail-closed until the controlled asset catalog is implemented with Designer media elements.
+- Keep browser font rasterization explicitly illustrative until PDF-04 exact renderer/font authority is accepted; the 1.6.55 package still contains no renderer accepted.json and does not open Template publication or artifact authority.
+- Preserve normalized-domain authority closure and defer the expensive real-host DB/renderer ceremonies to final release-candidate certification while continuing automated regression ownership.
+
+1.6.54
+- Add the premium Template lifecycle workflow with explicit Draft, Published, Changes pending, and Archived states derived from immutable current/published revision pointers.
+- Bind Template publication to the exact reviewed immutable revision ID and SHA-256, revalidate stored canonical layout bytes before publication, and keep publication fail-closed behind release-bound renderer authority.
+- Add safe Template duplication that creates a fresh draft identity from an exact reviewed current revision without copying published state or assignments.
+- Make Archive non-destructive for published history, block archival while active assignments exist, add Restore, and keep archived Templates read-only until restored.
+- Add Active / Archived / All Template filters, wire the previously latent main-list pagination, display lifecycle badges and revision summaries, and harden responsive/keyboard/reduced-motion behavior.
+- Add an independently integrity-checked published-Template read boundary and published-only assignment resolver so future issuance cannot silently use a newer draft revision.
+- Keep normalized-domain authority and renderer/PDF-04 authority closed; defer the expensive real-host certification ceremonies to the final release-candidate stage while continuing automated regression ownership during development.
+
 1.6.53
 - Fix the second real MariaDB 10.11 gated-domain schema failure reported as `stage=dbdelta; object=import_rows`: the import staging table no longer uses `row_number`, which MariaDB reserves from 10.7 onward.
 - Persist staged source row positions in `source_row_number` while preserving the application/import contract key `row_number` unchanged.

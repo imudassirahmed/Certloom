@@ -5,6 +5,7 @@ use Certloom\Application\Rendering\CanonicalJson;
 use Certloom\Application\Rendering\LayoutValidator;
 use Certloom\Application\Templates\TemplatePackage;
 use Certloom\Application\Templates\TemplateAssignmentPolicy;
+use Certloom\Application\Templates\TemplateLifecycle;
 use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Infrastructure\Database\SchemaManager;
 use Certloom\Infrastructure\Database\Transaction;
@@ -90,6 +91,7 @@ final class TemplateRepository {
 			$locked = $this->lock_template( $template_id );
 			if ( is_wp_error( $locked ) ) { return $locked; }
 			if ( ! is_array( $locked ) ) { return new \WP_Error( 'certloom_template_missing', __( 'The template no longer exists.', 'certloom' ) ); }
+			if ( ! empty( $locked['archived_at'] ) ) { return new \WP_Error( 'certloom_template_archived_read_only', __( 'Archived templates are read-only. Restore this template before editing it.', 'certloom' ) ); }
 			if ( '' !== (string) $expected_updated_at && ! hash_equals( (string) $locked['updated_at'], (string) $expected_updated_at ) ) {
 				return new \WP_Error( 'certloom_template_stale_edit', __( 'This template changed after you opened it. Reload before saving.', 'certloom' ) );
 			}
@@ -153,26 +155,34 @@ final class TemplateRepository {
 	}
 
 	/** @return true|\WP_Error */
-	public function publish( $template_id, $expected_revision_id = 0 ) {
+	public function publish( $template_id, $expected_revision_id = 0, $expected_revision_sha256 = '' ) {
 		$template_id = absint( $template_id );
 		if ( ! $template_id ) { return new \WP_Error( 'certloom_template_id_required', __( 'A valid template is required.', 'certloom' ) ); }
 		$authority = $this->renderer_authority->publication_status();
 		if ( empty( $authority['accepted'] ) ) {
 			return new \WP_Error( 'certloom_template_publish_renderer_gate', __( 'Template publishing remains disabled until this Certloom release ships with accepted production-renderer authority.', 'certloom' ), array( 'template_id' => $template_id, 'renderer_authority_reason' => (string) ( $authority['reason'] ?? 'unknown' ) ) );
 		}
+		$expected_revision_id = absint( $expected_revision_id );
+		$expected_revision_sha256 = strtolower( trim( (string) $expected_revision_sha256 ) );
+		if ( ! $expected_revision_id || ! preg_match( '/\A[a-f0-9]{64}\z/', $expected_revision_sha256 ) ) {
+			return new \WP_Error( 'certloom_template_publish_review_required', __( 'Publishing requires the exact reviewed template revision and layout hash.', 'certloom' ) );
+		}
 		$generation = ( new DomainGeneration() )->mark_before_mutation();
 		if ( is_wp_error( $generation ) ) { return $generation; }
-		return $this->transaction->run( function () use ( $template_id, $expected_revision_id ) {
+		return $this->transaction->run( function () use ( $template_id, $expected_revision_id, $expected_revision_sha256 ) {
 			global $wpdb;
 			$template = $this->lock_template( $template_id );
 			if ( is_wp_error( $template ) ) { return $template; }
 			if ( ! is_array( $template ) || ! empty( $template['archived_at'] ) ) { return new \WP_Error( 'certloom_template_unavailable', __( 'The template is unavailable for publishing.', 'certloom' ) ); }
 			$current_id = absint( $template['current_revision_id'] ?? 0 );
 			if ( ! $current_id ) { return new \WP_Error( 'certloom_template_revision_required', __( 'The template has no current revision to publish.', 'certloom' ) ); }
-			if ( $expected_revision_id && $current_id !== absint( $expected_revision_id ) ) { return new \WP_Error( 'certloom_template_stale_revision', __( 'This template draft changed after you reviewed it. Reload before publishing.', 'certloom' ) ); }
+			if ( $current_id !== $expected_revision_id ) { return new \WP_Error( 'certloom_template_stale_revision', __( 'This template draft changed after you reviewed it. Reload before publishing.', 'certloom' ) ); }
 			$current = $this->find_revision_row( $current_id, true );
 			if ( is_wp_error( $current ) ) { return $current; }
 			if ( ! is_array( $current ) || absint( $current['template_id'] ?? 0 ) !== $template_id ) { return new \WP_Error( 'certloom_template_revision_pointer_corrupt', __( 'The template draft points to an invalid revision.', 'certloom' ) ); }
+			$verified = $this->verify_revision_row( $current );
+			if ( is_wp_error( $verified ) ) { return $verified; }
+			if ( ! hash_equals( strtolower( (string) $verified['layout_sha256'] ), $expected_revision_sha256 ) ) { return new \WP_Error( 'certloom_template_publish_review_stale', __( 'The reviewed template hash no longer matches the revision selected for publication.', 'certloom' ) ); }
 			if ( absint( $template['published_revision_id'] ?? 0 ) === $current_id ) { return true; }
 			$now = current_time( 'mysql', true );
 			$wpdb->last_error = '';
@@ -195,7 +205,6 @@ final class TemplateRepository {
 			if ( is_wp_error( $template ) ) { return $template; }
 			if ( ! is_array( $template ) ) { return new \WP_Error( 'certloom_template_missing', __( 'The template no longer exists.', 'certloom' ) ); }
 			if ( '' !== (string) $expected_updated_at && ! hash_equals( (string) $template['updated_at'], (string) $expected_updated_at ) ) { return new \WP_Error( 'certloom_template_stale_edit', __( 'This template changed after you opened it. Reload before archiving.', 'certloom' ) ); }
-			if ( ! empty( $template['published_revision_id'] ) ) { return new \WP_Error( 'certloom_template_archive_published', __( 'A published template cannot be archived by the draft-only template foundation.', 'certloom' ) ); }
 			if ( ! empty( $template['archived_at'] ) ) { return true; }
 			$wpdb->last_error = '';
 			$assignment_count = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE template_id=%d AND active=1', SchemaManager::table( 'template_assignments' ), $template_id ) );
@@ -206,6 +215,42 @@ final class TemplateRepository {
 			$updated = $wpdb->update( SchemaManager::table( 'templates' ), array( 'archived_at' => $now, 'updated_at' => $now ), array( 'id' => $template_id ) );
 			return false === $updated || '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_archive_failed', __( 'Certloom could not archive the template.', 'certloom' ) ) : true;
 		} );
+	}
+
+	/** @return true|\WP_Error */
+	public function restore( $template_id, $expected_updated_at = '' ) {
+		$template_id = absint( $template_id );
+		if ( ! $template_id ) { return new \WP_Error( 'certloom_template_id_required', __( 'A valid template is required.', 'certloom' ) ); }
+		$generation = ( new DomainGeneration() )->mark_before_mutation();
+		if ( is_wp_error( $generation ) ) { return $generation; }
+		return $this->transaction->run( function () use ( $template_id, $expected_updated_at ) {
+			global $wpdb;
+			$template = $this->lock_template( $template_id );
+			if ( is_wp_error( $template ) ) { return $template; }
+			if ( ! is_array( $template ) ) { return new \WP_Error( 'certloom_template_missing', __( 'The template no longer exists.', 'certloom' ) ); }
+			if ( '' !== (string) $expected_updated_at && ! hash_equals( (string) $template['updated_at'], (string) $expected_updated_at ) ) { return new \WP_Error( 'certloom_template_stale_edit', __( 'This template changed after you opened it. Reload before restoring.', 'certloom' ) ); }
+			if ( empty( $template['archived_at'] ) ) { return true; }
+			$now = current_time( 'mysql', true );
+			$wpdb->last_error = '';
+			$updated = $wpdb->update( SchemaManager::table( 'templates' ), array( 'archived_at' => null, 'updated_at' => $now ), array( 'id' => $template_id ) );
+			return false === $updated || '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_restore_failed', __( 'Certloom could not restore the template.', 'certloom' ) ) : true;
+		} );
+	}
+
+	/** @return int|\WP_Error */
+	public function duplicate( $template_id, array $identity, $actor_user_id = 0, $expected_revision_id = 0 ) {
+		$template = $this->find( $template_id );
+		if ( is_wp_error( $template ) ) { return $template; }
+		if ( ! is_array( $template ) || empty( $template['current_revision'] ) ) { return new \WP_Error( 'certloom_template_duplicate_missing', __( 'The source template does not have a valid current revision to duplicate.', 'certloom' ) ); }
+		$current_id = absint( $template['current_revision_id'] ?? 0 );
+		if ( ! absint( $expected_revision_id ) || $current_id !== absint( $expected_revision_id ) ) { return new \WP_Error( 'certloom_template_stale_revision', __( 'The source template changed after you opened it. Reload before duplicating.', 'certloom' ) ); }
+		$identity['layout'] = $template['current_revision']['layout'];
+		return $this->create( $identity, $actor_user_id, self::SOURCE_MANUAL );
+	}
+
+	/** @return string */
+	public function lifecycle_state( array $template ) {
+		return TemplateLifecycle::state( $template );
 	}
 
 	/** @return array<string,mixed>|null|\WP_Error */
@@ -235,22 +280,37 @@ final class TemplateRepository {
 			$row['current_revision'] = $revision;
 		}
 		if ( ! empty( $row['published_revision_id'] ) ) {
-			$published = $this->find_revision_row( absint( $row['published_revision_id'] ), false );
+			$published = $this->find_revision( absint( $row['published_revision_id'] ) );
 			if ( is_wp_error( $published ) ) { return $published; }
 			if ( ! is_array( $published ) || absint( $published['template_id'] ?? 0 ) !== absint( $row['id'] ) ) { return new \WP_Error( 'certloom_template_published_pointer_corrupt', __( 'The template published pointer is invalid.', 'certloom' ) ); }
+			$row['published_revision'] = $published;
 		}
+		$row['lifecycle_state'] = TemplateLifecycle::state( $row );
 		return $row;
 	}
 
 	/** @return array<string,mixed>|null|\WP_Error */
 	public function find_revision( $revision_id ) {
 		$row = $this->find_revision_row( $revision_id, false );
-		if ( is_wp_error( $row ) || ! is_array( $row ) ) { return $row; }
-		$decoded = json_decode( (string) $row['layout_json'], true );
-		if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $decoded ) ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'A stored template revision contains invalid layout data.', 'certloom' ) ); }
-		try { $layout = $this->layouts->normalize( $decoded ); $hash = $this->json->hash( $layout ); } catch ( \Throwable $error ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'A stored template revision does not satisfy Certloom’s canonical layout contract.', 'certloom' ) ); }
-		if ( ! hash_equals( strtolower( (string) $row['layout_sha256'] ), $hash ) ) { return new \WP_Error( 'certloom_template_revision_hash_mismatch', __( 'A stored template revision failed its integrity check.', 'certloom' ) ); }
-		$row['layout'] = $layout;
+		return is_wp_error( $row ) || ! is_array( $row ) ? $row : $this->verify_revision_row( $row );
+	}
+
+	/** Published-only read boundary for future authoritative issuance. @return array<string,mixed>|null|\WP_Error */
+	public function find_published( $template_id ) {
+		global $wpdb;
+		$wpdb->last_error = '';
+		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE id=%d', SchemaManager::table( 'templates' ), absint( $template_id ) ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_template_read_failed', __( 'Certloom could not read the template.', 'certloom' ) ); }
+		if ( ! is_array( $row ) ) { return null; }
+		$identity = $this->normalize_identity( array( 'machine_key' => (string) ( $row['machine_key'] ?? '' ), 'name' => (string) ( $row['name'] ?? '' ), 'description' => (string) ( $row['description'] ?? '' ) ) );
+		if ( is_wp_error( $identity ) ) { return new \WP_Error( 'certloom_template_identity_corrupt', __( 'A stored template contains invalid identity data.', 'certloom' ) ); }
+		$published_id = absint( $row['published_revision_id'] ?? 0 );
+		if ( ! $published_id ) { return new \WP_Error( 'certloom_template_not_published', __( 'This template does not have a published revision.', 'certloom' ) ); }
+		$published = $this->find_revision( $published_id );
+		if ( is_wp_error( $published ) ) { return $published; }
+		if ( ! is_array( $published ) || absint( $published['template_id'] ?? 0 ) !== absint( $row['id'] ) ) { return new \WP_Error( 'certloom_template_published_pointer_corrupt', __( 'The template published pointer is invalid.', 'certloom' ) ); }
+		$row['published_revision'] = $published;
+		$row['lifecycle_state'] = TemplateLifecycle::state( $row );
 		return $row;
 	}
 
@@ -268,7 +328,7 @@ final class TemplateRepository {
 		$total = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i t' . $where_sql, array_merge( array( $table ), $args ) ) );
 		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_template_list_failed', __( 'Certloom could not load templates.', 'certloom' ) ); }
 		$wpdb->last_error = '';
-		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT t.*, r.revision_number AS current_revision_number, r.layout_sha256 FROM %i t LEFT JOIN %i r ON r.id=t.current_revision_id' . $where_sql . ' ORDER BY t.updated_at DESC,t.id DESC LIMIT %d OFFSET %d', array_merge( array( $table, $revisions ), $args, array( $per_page, $offset ) ) ), ARRAY_A );
+		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT t.*, r.revision_number AS current_revision_number, r.layout_sha256, pr.revision_number AS published_revision_number, pr.layout_sha256 AS published_layout_sha256 FROM %i t LEFT JOIN %i r ON r.id=t.current_revision_id LEFT JOIN %i pr ON pr.id=t.published_revision_id' . $where_sql . ' ORDER BY t.updated_at DESC,t.id DESC LIMIT %d OFFSET %d', array_merge( array( $table, $revisions, $revisions ), $args, array( $per_page, $offset ) ) ), ARRAY_A );
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) { return new \WP_Error( 'certloom_template_list_failed', __( 'Certloom could not load templates.', 'certloom' ) ); }
 		return array( 'items' => $rows, 'total' => $total );
 	}
@@ -396,14 +456,14 @@ final class TemplateRepository {
 		$total = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i t' . $where_sql, array_merge( array( $templates ), $args ) ) );
 		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_template_list_failed', __( 'Certloom could not load assignable templates.', 'certloom' ) ); }
 		$wpdb->last_error = '';
-		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT t.id,t.machine_key,t.name,t.description,t.current_revision_id,r.revision_number,r.source_type,r.layout_json,r.layout_sha256 FROM %i t INNER JOIN %i r ON r.id=t.current_revision_id' . $where_sql . ' ORDER BY t.name ASC,t.id ASC LIMIT %d OFFSET %d', array_merge( array( $templates, $revisions ), $args, array( $per_page, $offset ) ) ), ARRAY_A );
+		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT t.id,t.machine_key,t.name,t.description,t.current_revision_id,t.published_revision_id,r.revision_number,r.source_type,r.layout_json,r.layout_sha256 FROM %i t INNER JOIN %i r ON r.id=t.current_revision_id' . $where_sql . ' ORDER BY t.name ASC,t.id ASC LIMIT %d OFFSET %d', array_merge( array( $templates, $revisions ), $args, array( $per_page, $offset ) ) ), ARRAY_A );
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) { return new \WP_Error( 'certloom_template_list_failed', __( 'Certloom could not load assignable templates.', 'certloom' ) ); }
 		foreach ( $rows as &$row ) {
 			$decoded = json_decode( (string) ( $row['layout_json'] ?? '' ), true );
 			if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $decoded ) ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'An assignable template contains invalid canonical layout data.', 'certloom' ) ); }
 			try { $layout = $this->layouts->normalize( $decoded ); $hash = $this->json->hash( $layout ); } catch ( \Throwable $error ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'An assignable template does not satisfy Certloom’s canonical layout contract.', 'certloom' ) ); }
 			if ( ! hash_equals( strtolower( (string) ( $row['layout_sha256'] ?? '' ) ), $hash ) ) { return new \WP_Error( 'certloom_template_revision_hash_mismatch', __( 'An assignable template failed its layout integrity check.', 'certloom' ) ); }
-			$row['id'] = absint( $row['id'] ?? 0 ); $row['current_revision_id'] = absint( $row['current_revision_id'] ?? 0 ); $row['revision_number'] = absint( $row['revision_number'] ?? 0 ); $row['factory'] = 0 === strpos( (string) $row['machine_key'], 'certloom-preset-' ); $row['page_size'] = (string) ( $layout['page']['size'] ?? '' ); $row['orientation'] = (string) ( $layout['page']['orientation'] ?? '' ); $row['element_count'] = count( $layout['elements'] ?? array() ); unset( $row['layout_json'] );
+			$row['id'] = absint( $row['id'] ?? 0 ); $row['current_revision_id'] = absint( $row['current_revision_id'] ?? 0 ); $row['published_revision_id'] = absint( $row['published_revision_id'] ?? 0 ); $row['revision_number'] = absint( $row['revision_number'] ?? 0 ); $row['lifecycle_state'] = TemplateLifecycle::state( $row ); $row['factory'] = 0 === strpos( (string) $row['machine_key'], 'certloom-preset-' ); $row['page_size'] = (string) ( $layout['page']['size'] ?? '' ); $row['orientation'] = (string) ( $layout['page']['orientation'] ?? '' ); $row['element_count'] = count( $layout['elements'] ?? array() ); unset( $row['layout_json'] );
 		}
 		unset( $row );
 		return array( 'items' => $rows, 'total' => $total );
@@ -434,6 +494,33 @@ final class TemplateRepository {
 	public function resolve_assignment( array $context ) {
 		$resolved = $this->resolve_assignment_details( $context );
 		return is_wp_error( $resolved ) || ! is_array( $resolved ) ? $resolved : absint( $resolved['template_id'] ?? 0 );
+	}
+
+
+	/** Published-only assignment resolution for future issuance/artifact authority. @return array<string,mixed>|null|\WP_Error */
+	public function resolve_published_assignment_details( array $context ) {
+		$policy = new TemplateAssignmentPolicy();
+		foreach ( $policy->candidates( $context ) as $candidate ) {
+			$assignment = $this->get_publication_assignment_candidate( $candidate['scope_type'], $candidate['scope_id'] );
+			if ( is_wp_error( $assignment ) ) { return $assignment; }
+			if ( ! is_array( $assignment ) || empty( $assignment['active'] ) ) { continue; }
+			if ( ! empty( $assignment['template_archived'] ) ) { return new \WP_Error( 'certloom_template_assignment_corrupt', __( 'An active template assignment points to an archived Template.', 'certloom' ) ); }
+			$template = $this->find_published( absint( $assignment['template_id'] ) );
+			if ( is_wp_error( $template ) ) { return $template; }
+			if ( ! is_array( $template ) || ! empty( $template['archived_at'] ) || empty( $template['published_revision'] ) ) { return new \WP_Error( 'certloom_template_assignment_corrupt', __( 'An active template assignment does not resolve to an available published Template.', 'certloom' ) ); }
+			$revision = $template['published_revision'];
+			$layout = $revision['layout'];
+			$assignment['fallback_depth'] = absint( $candidate['depth'] );
+			$assignment['published_revision_id'] = absint( $revision['id'] ?? 0 );
+			$assignment['published_revision_number'] = absint( $revision['revision_number'] ?? 0 );
+			$assignment['published_layout_sha256'] = (string) ( $revision['layout_sha256'] ?? '' );
+			$assignment['published_layout'] = $layout;
+			$assignment['page_size'] = (string) ( $layout['page']['size'] ?? '' );
+			$assignment['orientation'] = (string) ( $layout['page']['orientation'] ?? '' );
+			$assignment['element_count'] = count( $layout['elements'] ?? array() );
+			return $assignment;
+		}
+		return null;
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
@@ -490,11 +577,38 @@ final class TemplateRepository {
 		return '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_revision_read_failed', __( 'Certloom could not read the template revision.', 'certloom' ) ) : ( is_array( $row ) ? $row : null );
 	}
 
+	/** @return array<string,mixed>|\WP_Error */
+	private function verify_revision_row( array $row ) {
+		$decoded = json_decode( (string) ( $row['layout_json'] ?? '' ), true );
+		if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $decoded ) ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'A stored template revision contains invalid layout data.', 'certloom' ) ); }
+		try { $layout = $this->layouts->normalize( $decoded ); $hash = $this->json->hash( $layout ); } catch ( \Throwable $error ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'A stored template revision does not satisfy Certloom’s canonical layout contract.', 'certloom' ) ); }
+		if ( ! hash_equals( strtolower( (string) ( $row['layout_sha256'] ?? '' ) ), $hash ) ) { return new \WP_Error( 'certloom_template_revision_hash_mismatch', __( 'A stored template revision failed its integrity check.', 'certloom' ) ); }
+		$row['layout'] = $layout;
+		return $row;
+	}
+
 	/** @return bool|\WP_Error */
 	private function has_preset_revision( $template_id ) {
 		global $wpdb; $wpdb->last_error = '';
 		$id = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM %i WHERE template_id=%d AND source_type=%s LIMIT 1', SchemaManager::table( 'template_revisions' ), absint( $template_id ), self::SOURCE_PRESET ) );
 		return '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_revision_read_failed', __( 'Certloom could not inspect factory-template revision provenance.', 'certloom' ) ) : (bool) $id;
+	}
+
+	/** Published resolver reads assignment identity without consulting mutable draft revision state. @return array<string,mixed>|null|\WP_Error */
+	private function get_publication_assignment_candidate( $scope_type, $scope_id ) {
+		$scope = ( new TemplateAssignmentPolicy() )->normalize_scope( $scope_type, $scope_id );
+		if ( is_wp_error( $scope ) ) { return $scope; }
+		global $wpdb;
+		$wpdb->last_error = '';
+		$row = $wpdb->get_row( $wpdb->prepare(
+			'SELECT a.*,t.name AS template_name,t.machine_key,t.archived_at AS template_archived_at,t.published_revision_id FROM %i a LEFT JOIN %i t ON t.id=a.template_id WHERE a.scope_type=%s AND a.scope_id=%d LIMIT 1',
+			SchemaManager::table( 'template_assignments' ), SchemaManager::table( 'templates' ), $scope['scope_type'], $scope['scope_id']
+		), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_template_assignment_read_failed', __( 'Certloom could not inspect the template assignment.', 'certloom' ) ); }
+		if ( ! is_array( $row ) ) { return null; }
+		if ( empty( $row['template_name'] ) ) { return new \WP_Error( 'certloom_template_assignment_corrupt', __( 'A stored template assignment points to an invalid Template.', 'certloom' ) ); }
+		$row['id'] = absint( $row['id'] ?? 0 ); $row['template_id'] = absint( $row['template_id'] ?? 0 ); $row['scope_id'] = absint( $row['scope_id'] ?? 0 ); $row['priority'] = absint( $row['priority'] ?? 0 ); $row['active'] = ! empty( $row['active'] ); $row['published_revision_id'] = absint( $row['published_revision_id'] ?? 0 ); $row['template_archived'] = ! empty( $row['template_archived_at'] );
+		return $row;
 	}
 
 	/** @return array<string,mixed>|null|\WP_Error */

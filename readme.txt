@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.53
+Stable tag: 1.6.55
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.53: fix the next real MariaDB 10.11 gated-domain failure identified by 1.6.52 as `stage=dbdelta; object=import_rows`. Import staging now persists its source position in `source_row_number` instead of MariaDB 10.7+'s reserved identifier `row_number`, with an idempotent compatibility copy for any older gated table. The application-level import contract remains `row_number`. A whole-domain reserved-identifier regression now owns this portability class. Exact 1.6.53 isolated and gated-domain proofs must be rerun before normalized-domain authority can advance; renderer authority remains closed.
+> Development note for 1.6.55: continue visible Pro development with the canonical Template Preview foundation. Templates can now preview the exact current or published immutable revision through Certloom's shared LayoutResolver → RenderPlanBuilder composition path, using deterministic Standard, Long-content, and RTL/Urdu synthetic data. The browser presenter consumes the canonical Render Plan—including centrally resolved QR modules—rather than creating a second layout or QR engine. Browser typography remains illustrative until PDF-04 exact renderer/font authority is accepted, so no production artifact authority is manufactured. Normalized-domain and renderer authority remain final-release blockers.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 

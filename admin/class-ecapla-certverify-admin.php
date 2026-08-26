@@ -1015,13 +1015,13 @@ class Ecapla_CertVerify_Admin {
 			'certloom-templates' => array(
 				'title' => __( 'Templates', 'certloom' ),
 				'eyebrow' => __( 'Pro commercial core · implementation gated', 'certloom' ),
-				'description' => __( 'Versioned Templates, immutable revisions, six factory design families and deterministic assignment/fallback administration are implemented in the normalized domain. They remain acceptance-gated; authoritative publishing, rendered Preview and the visual Designer still require the production renderer gate.', 'certloom' ),
-				'status' => __( 'Template implementation advanced · publication/Designer renderer-gated', 'certloom' ),
+				'description' => __( 'Versioned Templates, immutable revisions, six factory design families, deterministic assignments, lifecycle controls, and the canonical Render Plan Preview foundation are implemented. Preview can inspect current or published revisions with Standard/Long/RTL samples without creating a second layout engine. Publication and exact artifact-authoritative typography remain fail-closed behind renderer release authority; the visual Designer is the next product milestone.', 'certloom' ),
+				'status' => __( 'Template Preview foundation implemented · publication/artifact authority gated · Designer next', 'certloom' ),
 			),
 			'certloom-issuance' => array(
 				'title' => __( 'Issuance', 'certloom' ),
 				'eyebrow' => __( 'Planned issuance workflow', 'certloom' ),
-				'description' => __( 'Manual and bulk issuance will use immutable Credential Versions, server-authoritative artifacts, reviewed eligibility and durable jobs. The current registry editor remains the safe live write path until those dependencies are accepted.', 'certloom' ),
+				'description' => __( 'Manual and bulk issuance will use immutable Credential Versions, server-authoritative artifacts, reviewed eligibility and durable jobs. Template assignment now has a published-only resolution boundary so a newer draft cannot silently become issued output. The current registry editor remains the safe live write path until issuance dependencies are accepted.', 'certloom' ),
 				'status' => __( 'Planned · domain and renderer dependencies', 'certloom' ),
 			),
 			'certloom-integrations' => array(
