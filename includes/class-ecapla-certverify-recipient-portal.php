@@ -75,7 +75,7 @@ final class Ecapla_CertVerify_Recipient_Portal {
 
 		ob_start();
 		?>
-		<section class="certloom-my-credentials certloom-my-credentials--<?php echo esc_attr( $layout ); ?>" aria-labelledby="certloom-my-credentials-heading">
+		<section class="certloom-my-credentials certloom-my-credentials--<?php echo esc_attr( $layout ); ?>" aria-labelledby="certloom-my-credentials-heading" data-copy-success-text="<?php echo esc_attr__( 'Credential link copied.', 'certloom' ); ?>" data-copy-error-text="<?php echo esc_attr__( 'Copy the credential link from your browser.', 'certloom' ); ?>">
 			<header class="certloom-my-credentials__header">
 				<div>
 					<p class="certloom-my-credentials__eyebrow"><?php esc_html_e( 'Recipient portal', 'certloom' ); ?></p>
@@ -188,6 +188,7 @@ final class Ecapla_CertVerify_Recipient_Portal {
 			</dl>
 			<div class="certloom-my-credential-card__actions">
 				<?php if ( ! empty( $item['verify_url'] ) ) : ?><a class="certloom-my-credentials__button" href="<?php echo esc_url( $item['verify_url'] ); ?>" rel="nofollow noopener"><?php esc_html_e( 'Verify', 'certloom' ); ?></a><?php endif; ?>
+				<?php echo self::share_controls( $item ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in helper. ?>
 				<span class="certloom-my-credentials__action-muted" title="<?php esc_attr_e( 'PDF and image downloads remain gated until production artifact authority is accepted.', 'certloom' ); ?>"><?php esc_html_e( 'Downloads gated', 'certloom' ); ?></span>
 			</div>
 		</article>
@@ -209,7 +210,7 @@ final class Ecapla_CertVerify_Recipient_Portal {
 					<td><span class="certloom-my-credential-card__status certloom-my-credential-card__status--<?php echo esc_attr( $code ); ?>"><?php echo esc_html( self::status_label( $code ) ); ?></span><?php if ( ! empty( $item['expiring_soon'] ) ) : ?><small><?php esc_html_e( 'Expiring soon', 'certloom' ); ?></small><?php endif; ?></td>
 					<td><?php echo esc_html( self::date_label( $item['issued_at'] ?? null ) ); ?></td>
 					<td><?php echo esc_html( self::date_label( $item['expires_at'] ?? null, __( 'No expiry', 'certloom' ) ) ); ?></td>
-					<td><?php if ( ! empty( $item['verify_url'] ) ) : ?><a href="<?php echo esc_url( $item['verify_url'] ); ?>" rel="nofollow noopener"><?php esc_html_e( 'Verify', 'certloom' ); ?></a><?php else : ?><span aria-label="<?php esc_attr_e( 'Verification unavailable', 'certloom' ); ?>">—</span><?php endif; ?></td>
+					<td><div class="certloom-my-credentials__table-actions"><?php if ( ! empty( $item['verify_url'] ) ) : ?><a href="<?php echo esc_url( $item['verify_url'] ); ?>" rel="nofollow noopener"><?php esc_html_e( 'Verify', 'certloom' ); ?></a><?php else : ?><span aria-label="<?php esc_attr_e( 'Verification unavailable', 'certloom' ); ?>">—</span><?php endif; ?><?php echo self::share_controls( $item ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in helper. ?></div></td>
 				</tr>
 			<?php endforeach; ?>
 			</tbody>
@@ -217,6 +218,31 @@ final class Ecapla_CertVerify_Recipient_Portal {
 		</div>
 		<?php
 		return (string) ob_get_clean();
+	}
+
+
+	/** @return string */
+	private static function share_controls( array $item ) {
+		if ( empty( $item['share_available'] ) || empty( $item['share_url'] ) || empty( $item['share_links'] ) ) { return ''; }
+		$labels = array(
+			'linkedin' => __( 'LinkedIn', 'certloom' ),
+			'whatsapp' => __( 'WhatsApp', 'certloom' ),
+			'facebook' => __( 'Facebook', 'certloom' ),
+			'x'        => __( 'X', 'certloom' ),
+			'email'    => __( 'Email', 'certloom' ),
+		);
+		$links = '';
+		foreach ( (array) $item['share_links'] as $link ) {
+			if ( ! is_array( $link ) ) { continue; }
+			$platform = sanitize_key( (string) ( $link['platform'] ?? '' ) );
+			if ( ! isset( $labels[ $platform ] ) ) { continue; }
+			$url = esc_url( (string) ( $link['url'] ?? '' ), array( 'http', 'https', 'mailto' ) );
+			if ( '' === $url ) { continue; }
+			$external = 'email' === $platform ? '' : ' target="_blank" rel="nofollow noopener noreferrer"';
+			$links .= '<a class="certloom-share-link certloom-share-link--' . esc_attr( $platform ) . '" href="' . $url . '"' . $external . '>' . esc_html( $labels[ $platform ] ) . '</a>';
+		}
+		if ( '' === $links ) { return ''; }
+		return '<details class="certloom-share certloom-my-credentials__share"><summary class="certloom-my-credentials__button">' . esc_html__( 'Share', 'certloom' ) . '</summary><div class="certloom-share-menu">' . $links . '<button type="button" class="certloom-share-link certloom-share-copy certloom-copy-link" data-copy-url="' . esc_attr( (string) $item['share_url'] ) . '">' . esc_html__( 'Copy URL', 'certloom' ) . '</button><span class="certloom-action-feedback" aria-live="polite"></span></div></details>';
 	}
 
 	/** @return string */

@@ -383,8 +383,22 @@ class Ecapla_CertVerify_Render {
 			$type = sanitize_key( (string) ( $action['type'] ?? '' ) );
 			$label = sanitize_text_field( (string) ( $action['label'] ?? '' ) );
 			$url = isset( $action['url'] ) ? esc_url( (string) $action['url'] ) : '';
-			if ( '' === $label || ! in_array( $type, array( 'copy', 'profile', 'print' ), true ) ) { continue; }
-			if ( 'copy' === $type && '' !== $url ) {
+			if ( '' === $label || ! in_array( $type, array( 'copy', 'profile', 'print', 'share' ), true ) ) { continue; }
+			if ( 'share' === $type ) {
+				$links_html = '';
+				foreach ( (array) ( $action['links'] ?? array() ) as $link ) {
+					if ( ! is_array( $link ) ) { continue; }
+					$platform = sanitize_key( (string) ( $link['platform'] ?? '' ) );
+					$link_label = sanitize_text_field( (string) ( $link['label'] ?? '' ) );
+					$link_url = esc_url( (string) ( $link['url'] ?? '' ), array( 'http', 'https', 'mailto' ) );
+					if ( '' === $link_label || '' === $link_url || ! in_array( $platform, array( 'linkedin', 'whatsapp', 'facebook', 'x', 'email' ), true ) ) { continue; }
+					$external = 'email' === $platform ? '' : ' target="_blank" rel="nofollow noopener noreferrer"';
+					$links_html .= '<a class="certloom-share-link certloom-share-link--' . esc_attr( $platform ) . '" href="' . $link_url . '"' . $external . '>' . esc_html( $link_label ) . '</a>';
+				}
+				if ( '' !== $links_html && '' !== $url ) {
+					$html .= '<details class="certloom-share"><summary class="certloom-result-action ' . esc_attr( $prefix ) . '-result-action">' . esc_html( $label ) . '</summary><div class="certloom-share-menu">' . $links_html . '<button type="button" class="certloom-share-link certloom-share-copy certloom-copy-link" data-copy-url="' . esc_attr( $url ) . '">' . esc_html__( 'Copy URL', 'certloom' ) . '</button></div></details>';
+				}
+			} elseif ( 'copy' === $type && '' !== $url ) {
 				$html .= '<button type="button" class="certloom-result-action ' . esc_attr( $prefix ) . '-result-action certloom-copy-link" data-copy-url="' . esc_attr( $url ) . '">' . esc_html( $label ) . '</button>';
 			} elseif ( 'print' === $type ) {
 				$html .= '<button type="button" class="certloom-result-action ' . esc_attr( $prefix ) . '-result-action certloom-print">' . esc_html( $label ) . '</button>';

@@ -33,6 +33,7 @@ class Ecapla_CertVerify_Fields {
 class Ecapla_CertVerify_Onboarding { public static function get_state(){return array('organization_name'=>'Example Institute');} }
 class Ecapla_CertVerify_Public_Router { public static function verification_url($n){return 'https://example.test/certloom/verify/'.$n.'/';} public static function profile_url($n){return 'https://example.test/certloom/credential/'.$n.'/';} }
 function ecapla_certverify_verification_is_available(){return true;}
+require dirname(__DIR__).'/src/Application/Sharing/ShareLinkBuilder.php';
 require dirname(__DIR__).'/includes/class-ecapla-certverify-public-policy.php';
 require dirname(__DIR__).'/includes/class-ecapla-certverify-public-presentation.php';
 function vcheck($c,$m){if(!$c)throw new RuntimeException($m);echo "PASS  $m\n";}
@@ -44,22 +45,22 @@ Ecapla_CertVerify_Database::$row=$base;
 $v=Ecapla_CertVerify_Public_Presentation::verify('CERT-168',false,'verification');
 vc(!empty($v['found'])&&$v['visibility']==='public','missing visibility defaults to public for backward compatibility');
 vc(array_column($v['fields'],'label')===array('Certificate number','Verify only','Both'),'verification context exposes only verification/both fields');
-vc(array_column($v['actions'],'type')===array('copy','profile','print'),'public verification exposes only current non-mutating actions');
+vc(array_column($v['actions'],'type')===array('copy','profile','share','print'),'public verification exposes only current non-mutating actions');
 $p=Ecapla_CertVerify_Public_Presentation::verify('CERT-168',false,'profile');
 vc(!empty($p['found']),'public credential profile allowed');
 vc(array_column($p['fields'],'label')===array('Certificate number','Profile only','Both'),'profile context exposes only profile/both fields');
-vc(array_column($p['actions'],'type')===array('copy','print'),'profile does not offer a self-referential profile action');
+vc(array_column($p['actions'],'type')===array('copy','share','print'),'profile does not offer a self-referential profile action');
 
 $protected=$base;$protected['custom_fields']['__certloom_verification_code_hash']='$2y$10$012345678901234567890uA012345678901234567890123456789012';Ecapla_CertVerify_Database::$row=$protected;
 $v=Ecapla_CertVerify_Public_Presentation::verify('CERT-PROTECTED',false,'verification','GOOD-CODE');
 vc(!empty($v['found'])&&$v['profile_url']==='','secondary-proof credential never advertises a proof-less standalone profile URL');
-vc(array_column($v['actions'],'type')===array('copy','print'),'secondary-proof credential keeps safe copy/print actions but suppresses profile action');
+vc(array_column($v['actions'],'type')===array('copy','share','print'),'secondary-proof credential keeps safe copy/print actions but suppresses profile action');
 vc(empty(Ecapla_CertVerify_Public_Presentation::verify('CERT-PROTECTED',false,'profile')['found']),'proof-less standalone profile request remains non-enumerating for a protected credential');
 
 $summary=$base;$summary['custom_fields']['__certloom_profile_visibility']='verification_summary';Ecapla_CertVerify_Database::$row=$summary;
 $v=Ecapla_CertVerify_Public_Presentation::verify('CERT-SUMMARY',false,'verification');
 vc(!empty($v['found'])&&$v['profile_url']==='','verification-only credential suppresses profile URL server-side');
-vc(array_column($v['actions'],'type')===array('copy','print'),'verification-only credential suppresses profile action');
+vc(array_column($v['actions'],'type')===array('copy','share','print'),'verification-only credential suppresses profile action');
 $p=Ecapla_CertVerify_Public_Presentation::verify('CERT-SUMMARY-PROFILE',false,'profile');
 vc(empty($p['found']),'verification-only credential hides richer profile existence');
 
@@ -67,7 +68,8 @@ $private=$base;$private['custom_fields']['__certloom_profile_visibility']='priva
 vc(empty(Ecapla_CertVerify_Public_Presentation::verify('CERT-PRIVATE-V',false,'verification')['found']),'private credential hides guest verification existence');
 vc(empty(Ecapla_CertVerify_Public_Presentation::verify('CERT-PRIVATE-P',false,'profile')['found']),'private credential hides guest profile existence');
 vc(!Ecapla_CertVerify_Public_Policy::allows_action('pdf',$private,'verification'),'future PDF action fails closed');
-vc(!Ecapla_CertVerify_Public_Policy::allows_action('share',$base,'verification'),'future share action fails closed');
+vc(Ecapla_CertVerify_Public_Policy::allows_action('share',$base,'verification'),'public share action is now implemented for guest-visible credentials');
+vc(!Ecapla_CertVerify_Public_Policy::allows_action('share',$private,'verification'),'private share action fails closed');
 vc(!Ecapla_CertVerify_Public_Policy::allows_action('claim',$base,'verification'),'future claim action fails closed');
 vc(!Ecapla_CertVerify_Public_Policy::allows_action('unknown',$base,'verification'),'unknown action fails closed');
 $malformed=$base;$malformed['custom_fields']['__certloom_profile_visibility']='definitely-not-valid';Ecapla_CertVerify_Database::$row=$malformed;

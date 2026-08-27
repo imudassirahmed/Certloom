@@ -46,6 +46,17 @@ final class VisibilityPolicy {
 	}
 
 	/**
+	 * Public sharing is never broader than guest verification. Unlisted remains
+	 * shareable because possession of the canonical URL is its access model;
+	 * recipient/org/private credentials stay fail-closed.
+	 *
+	 * @return bool
+	 */
+	public function allows_public_sharing( $visibility ) {
+		return $this->allows_guest_verification( $visibility );
+	}
+
+	/**
 	 * Whether the owning linked Recipient may see the credential in My Credentials.
 	 *
 	 * `private` remains administrator-only and `organization_member` remains closed

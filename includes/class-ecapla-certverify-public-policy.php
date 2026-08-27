@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * This mirrors the normalized-domain visibility vocabulary where it can be represented
  * honestly on legacy records. Browser controls never create permission; renderers and
- * future artifact/share endpoints must ask this policy server-side.
+ * future artifact/claim endpoints must ask this policy server-side; SOC-01 sharing is now owned here.
  */
 final class Ecapla_CertVerify_Public_Policy {
 	const VISIBILITY_PUBLIC              = 'public';
@@ -74,7 +74,7 @@ final class Ecapla_CertVerify_Public_Policy {
 
 	/**
 	 * Returns only currently implemented, non-mutating actions that are permitted
-	 * for this credential/context. Future artifact/share/claim endpoints must add
+	 * for this credential/context. Future artifact/claim endpoints must add
 	 * their own server authorization before adding a browser action.
 	 *
 	 * @return array<int,array<string,string>>
@@ -82,13 +82,13 @@ final class Ecapla_CertVerify_Public_Policy {
 	public static function allows_action( $action, array $certificate, $context = 'verification' ) {
 		$action = sanitize_key( (string) $action );
 		if ( ! self::allows_context( $certificate, $context ) ) { return false; }
-		if ( 'copy' === $action || 'print' === $action ) { return true; }
+		if ( 'copy' === $action || 'print' === $action || 'share' === $action ) { return true; }
 		if ( 'profile' === $action ) {
 			return ! self::requires_secondary_proof( $certificate )
 				&& self::MODE_PROFILE === self::guest_mode( $certificate )
 				&& 'profile' !== sanitize_key( (string) $context );
 		}
-		/* PDF/image/share/claim and unknown actions fail closed until dedicated server authorization ships. */
+		/* PDF/image/claim and unknown actions fail closed until dedicated server authorization ships. */
 		return false;
 	}
 
@@ -102,6 +102,38 @@ final class Ecapla_CertVerify_Public_Policy {
 		}
 		if ( self::allows_action( 'profile', $certificate, $context ) && '' !== (string) $profile_url ) {
 			$actions[] = array( 'type' => 'profile', 'label' => __( 'View credential profile', 'certloom' ), 'url' => (string) $profile_url );
+		}
+		if ( self::allows_action( 'share', $certificate, $context ) ) {
+			$share_url = '' !== (string) $profile_url ? (string) $profile_url : (string) $verification_url;
+			if ( '' !== $share_url && class_exists( '\Certloom\Application\Sharing\ShareLinkBuilder' ) ) {
+				$builder = new \Certloom\Application\Sharing\ShareLinkBuilder();
+				$links = $builder->links(
+					$share_url,
+					__( 'View this verified credential', 'certloom' ),
+					__( 'Verified credential', 'certloom' )
+				);
+				if ( ! empty( $links ) ) {
+					$labels = array(
+						'linkedin' => __( 'LinkedIn', 'certloom' ),
+						'whatsapp' => __( 'WhatsApp', 'certloom' ),
+						'facebook' => __( 'Facebook', 'certloom' ),
+						'x'        => __( 'X', 'certloom' ),
+						'email'    => __( 'Email', 'certloom' ),
+					);
+					foreach ( $links as &$link ) {
+						$platform = sanitize_key( (string) ( $link['platform'] ?? '' ) );
+						$link['label'] = isset( $labels[ $platform ] ) ? $labels[ $platform ] : ucfirst( $platform );
+					}
+					unset( $link );
+					$actions[] = array(
+						'type'  => 'share',
+						'label' => __( 'Share', 'certloom' ),
+						'url'        => $share_url,
+						'copy_label' => __( 'Copy URL', 'certloom' ),
+						'links'      => $links,
+					);
+				}
+			}
 		}
 		if ( self::allows_action( 'print', $certificate, $context ) ) { $actions[] = array( 'type' => 'print', 'label' => __( 'Print', 'certloom' ), 'url' => '' ); }
 		return $actions;

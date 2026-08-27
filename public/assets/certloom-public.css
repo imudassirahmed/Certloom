@@ -1784,3 +1784,18 @@
 @media (max-width:430px){.certloom-my-credential-card__facts{grid-template-columns:1fr}.certloom-my-credential-card__topline{align-items:flex-start;flex-direction:column}.certloom-my-credentials__pagination{justify-content:space-between}.certloom-my-credentials__pagination span{order:-1;width:100%;text-align:center}}
 @media (prefers-reduced-motion:reduce){.certloom-my-credentials *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 @media (forced-colors:active){.certloom-my-credentials,.certloom-my-credential-card,.certloom-my-credentials__filters,.certloom-my-credentials__count,.certloom-my-credentials__table-wrap{border-color:CanvasText;background:Canvas;color:CanvasText}.certloom-my-credential-card__status,.certloom-my-credential-card__expiring{background:Canvas;color:CanvasText}.certloom-my-credentials__button{forced-color-adjust:auto}}
+
+/* SOC-01: public sharing disclosure. Provider links receive only the already-public canonical URL. */
+.certloom-share{position:relative;display:inline-block}
+.certloom-share>summary{list-style:none;cursor:pointer}
+.certloom-share>summary::-webkit-details-marker{display:none}
+.certloom-share>summary::after{content:"▾";margin-inline-start:.45em;font-size:.8em;opacity:.72}
+.certloom-share[open]>summary::after{content:"▴"}
+.certloom-share-menu{position:absolute;z-index:20;inset-inline-start:0;top:calc(100% + 8px);min-width:190px;padding:8px;border:1px solid rgba(120,120,120,.22);border-radius:12px;background:#fff;box-shadow:0 16px 42px rgba(0,0,0,.14);display:grid;gap:4px}
+.certloom-share-link{display:block;width:100%;box-sizing:border-box;border:0;border-radius:8px;background:transparent;color:inherit;font:inherit;text-align:start;text-decoration:none;padding:9px 10px;cursor:pointer}
+.certloom-share-link:hover,.certloom-share-link:focus-visible{background:rgba(120,120,120,.12);text-decoration:none}
+.certloom-share-link:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+@media (max-width:640px){.certloom-share{width:100%}.certloom-share-menu{position:static;margin-top:7px;box-shadow:none}.certloom-share>summary{width:100%;box-sizing:border-box}}
+@media (prefers-reduced-motion:reduce){.certloom-share-menu{scroll-behavior:auto}}
+@media (forced-colors:active){.certloom-share-menu,.certloom-share-link{border:1px solid CanvasText}.certloom-share-link{forced-color-adjust:auto}}
+@media print{.certloom-share{display:none!important}}

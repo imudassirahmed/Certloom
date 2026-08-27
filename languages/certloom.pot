@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Certloom\n"
 "Report-Msgid-Bugs-To: https://ecapla.com\n"
-"POT-Creation-Date: 2026-08-22 00:00+0000\n"
+"POT-Creation-Date: 2026-08-27 12:00+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -38,11 +38,11 @@ msgid "Pro commercial core · implementation gated"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1020
-msgid "Versioned Templates, immutable revisions, six factory design families, deterministic assignments, lifecycle controls, canonical Render Plan Preview, and the full planned DSN-01 through DSN-08 Designer foundation are implemented. Designer edits the same versioned certloom-layout revision model: historical v1/v2 layouts remain readable and immutable, explicit v3 upgrades create a new immutable revision, Code 128 remains bound only to credential.display_number, and canonical bullet/numbered lists resolve through the shared text Render Plan path. DSN-08 now centralizes built-in element schema availability, allowed properties, validation/resolver/renderer mappings, inspector groups, merge requirements and palette defaults behind one closed typed registry; no unversioned filter or arbitrary HTML/CSS callback can mutate it. Recovery autosave remains personal/non-authoritative, manual save remains the only revision-authority path, and FONT-02 still owns controlled local font manifests. Publication and production artifact authority remain fail-closed behind renderer release authority. The P0 Manual Issuance golden path, premium Credential Management workspace and reviewed Bulk Issuance workflow are implemented inside the normalized-domain admin-preview gate: administrators can issue one credential, inspect immutable Version lineage, perform reviewed lifecycle or Program/Batch corrections, then scale through protected CSV review and durable per-row idempotent issuance without rewriting historical snapshots. Email Delivery is implemented from exact immutable Versions with reviewed SHA-256 confirmation, WordPress-local wp_mail()/SMTP interoperability, privacy-minimized delivery evidence, safe failed retry and fail-closed delivery-uncertain handling. Recipient Portal / My Credentials POR-01 is now implemented as an authenticated, explicit wp_user_id-linked collection with cards/grid/table layouts, bounded status/sort filtering, pagination and expiring-soon cues; normalized Verify and artifact downloads remain authority-gated, while Public Sharing is next."
+msgid "Versioned Templates, immutable revisions, six factory design families, deterministic assignments, lifecycle controls, canonical Render Plan Preview, and the full planned DSN-01 through DSN-08 Designer foundation are implemented. Designer edits the same versioned certloom-layout revision model: historical v1/v2 layouts remain readable and immutable, explicit v3 upgrades create a new immutable revision, Code 128 remains bound only to credential.display_number, and canonical bullet/numbered lists resolve through the shared text Render Plan path. DSN-08 now centralizes built-in element schema availability, allowed properties, validation/resolver/renderer mappings, inspector groups, merge requirements and palette defaults behind one closed typed registry; no unversioned filter or arbitrary HTML/CSS callback can mutate it. Recovery autosave remains personal/non-authoritative, manual save remains the only revision-authority path, and FONT-02 still owns controlled local font manifests. Publication and production artifact authority remain fail-closed behind renderer release authority. The P0 Manual Issuance golden path, premium Credential Management workspace and reviewed Bulk Issuance workflow are implemented inside the normalized-domain admin-preview gate: administrators can issue one credential, inspect immutable Version lineage, perform reviewed lifecycle or Program/Batch corrections, then scale through protected CSV review and durable per-row idempotent issuance without rewriting historical snapshots. Email Delivery is implemented from exact immutable Versions with reviewed SHA-256 confirmation, WordPress-local wp_mail()/SMTP interoperability, privacy-minimized delivery evidence, safe failed retry and fail-closed delivery-uncertain handling. Recipient Portal / My Credentials POR-01 is now implemented as an authenticated, explicit wp_user_id-linked collection with cards/grid/table layouts, bounded status/sort filtering, pagination and expiring-soon cues; normalized Verify and artifact downloads remain authority-gated. SOC-01 Public Sharing is implemented only for already guest-verifiable credentials with local LinkedIn/WhatsApp/Facebook/X/email/copy intents; analytics is next."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1021
-msgid "Designer + Manual/Bulk Issuance + Credential Management + Email Delivery + Recipient Portal implemented · authority gated · Public Sharing next"
+msgid "Designer + Issuance + Credential Management + Email Delivery + Recipient Portal + Public Sharing implemented · authority gated · Analytics next"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1025
@@ -50,11 +50,11 @@ msgid "P0 issuance workflow · implementation gated"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1026
-msgid "Manual Issuance is implemented inside the normalized-domain admin-preview gate with existing/new Recipient selection, active Program and verified published-Template selection, mutation-free review, exact SHA-256 confirmation, backdating/permanent/explicit expiry choices, established numbering policy reuse, bounded credential-specific custom merge values, canonical browser Preview, atomic Series/Version/event creation, retry idempotency and an immutable issuance snapshot. Credential Management provides a bounded registry, immutable Version inspection, status/verification workspace, reviewed lifecycle actions and immutable-successor Program/Batch corrections. Bulk Issuance adds protected CSV review, SHA-256 confirmation, durable bounded per-row issuance, progress and row-level outcomes through the same Manual Issuance truth path. Email Delivery adds immutable-Version composition, versioned templates, explicit reviewed queueing, wp_mail()/SMTP interoperability, privacy-minimized status evidence and non-replayable delivery-uncertain recovery. Recipient Portal / My Credentials POR-01 is now implemented with explicit linked-recipient ownership, current-issued Version queries, cards/grid/table layouts and bounded filtering/sorting; Public Sharing is next. Normalized public authority and PDF/PNG/JPEG exports stay fail-closed until final database and renderer acceptance."
+msgid "Manual Issuance is implemented inside the normalized-domain admin-preview gate with existing/new Recipient selection, active Program and verified published-Template selection, mutation-free review, exact SHA-256 confirmation, backdating/permanent/explicit expiry choices, established numbering policy reuse, bounded credential-specific custom merge values, canonical browser Preview, atomic Series/Version/event creation, retry idempotency and an immutable issuance snapshot. Credential Management provides a bounded registry, immutable Version inspection, status/verification workspace, reviewed lifecycle actions and immutable-successor Program/Batch corrections. Bulk Issuance adds protected CSV review, SHA-256 confirmation, durable bounded per-row issuance, progress and row-level outcomes through the same Manual Issuance truth path. Email Delivery adds immutable-Version composition, versioned templates, explicit reviewed queueing, wp_mail()/SMTP interoperability, privacy-minimized status evidence and non-replayable delivery-uncertain recovery. Recipient Portal / My Credentials POR-01 is implemented with explicit linked-recipient ownership, current-issued Version queries, cards/grid/table layouts and bounded filtering/sorting. SOC-01 Public Sharing now adds server-authorized LinkedIn/WhatsApp/Facebook/X/email/copy actions only for already guest-verifiable URLs; analytics is next. Normalized public authority and PDF/PNG/JPEG exports stay fail-closed until final database and renderer acceptance."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1027
-msgid "Manual + Bulk + Credential Management + Email Delivery + Recipient Portal implemented · acceptance gated · Public Sharing next"
+msgid "Manual + Bulk + Credential Management + Email Delivery + Recipient Portal + Public Sharing implemented · acceptance gated · Analytics next"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1031
@@ -92,6 +92,11 @@ msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:111
 msgid "The certificate you tried to update no longer exists."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1112
+#: includes/class-ecapla-certverify-backup.php:402
+msgid "That backup review session expired. Upload the backup again."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1142
@@ -202,6 +207,13 @@ msgstr ""
 msgid "Upload a valid .csv file."
 msgstr ""
 
+#: admin/class-ecapla-certverify-admin.php:56
+#: admin/class-ecapla-certverify-admin.php:57
+#: admin/views/partials/brand-bar.php:7
+#: elementor/class-ecapla-certverify-elementor-widget.php:26
+msgid "Certloom"
+msgstr ""
+
 #: admin/class-ecapla-certverify-admin.php:562
 msgid "The CSV file is larger than the 5 MB import limit."
 msgstr ""
@@ -297,6 +309,20 @@ msgstr ""
 #: admin/class-ecapla-certverify-list-table.php:114
 #: admin/class-ecapla-certverify-list-table.php:124
 msgid "Not set"
+msgstr ""
+
+#: admin/class-ecapla-certverify-list-table.php:145
+#: admin/views/dashboard.php:77
+#: includes/class-ecapla-certverify-fields.php:412
+#: elementor/class-ecapla-certverify-elementor-widget.php:638
+msgid "Withdrawn"
+msgstr ""
+
+#: admin/class-ecapla-certverify-list-table.php:147
+#: includes/class-ecapla-certverify-recipient-portal.php:140
+#: includes/class-ecapla-certverify-recipient-portal.php:179
+#: includes/class-ecapla-certverify-recipient-portal.php:210
+msgid "Expiring soon"
 msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:173
@@ -849,6 +875,11 @@ msgid "Status & reason"
 msgstr ""
 
 #: admin/views/edit-certificate.php:150
+#: includes/class-ecapla-certverify-fields.php:380
+msgid "Internal notes"
+msgstr ""
+
+#: admin/views/edit-certificate.php:150
 msgid "Private administration"
 msgstr ""
 
@@ -1203,6 +1234,11 @@ msgstr ""
 
 #: admin/views/frontend-manager.php:62
 msgid "Native block:"
+msgstr ""
+
+#: admin/views/frontend-manager.php:63
+#: elementor/class-ecapla-certverify-credential-widget.php:7
+msgid "Certloom — Credential Profile"
 msgstr ""
 
 #: admin/views/frontend-manager.php:63
@@ -1649,12 +1685,39 @@ msgstr ""
 msgid "Certificate status views"
 msgstr ""
 
+#: admin/views/list-certificates.php:95
+#: elementor/class-ecapla-certverify-elementor-widget.php:693
+msgid "Columns"
+msgstr ""
+
 #: admin/views/partials/brand-bar.php:9
 msgid "Secure certificate verification for WordPress"
 msgstr ""
 
 #: admin/views/partials/certificate-field.php:20
 msgid "Internal only"
+msgstr ""
+
+#: admin/views/partials/certificate-field.php:22
+#: includes/class-ecapla-certverify-fields.php:335
+msgid "Profile only"
+msgstr ""
+
+#: admin/views/partials/certificate-field.php:22
+#: includes/class-ecapla-certverify-fields.php:336
+msgid "Verification + profile"
+msgstr ""
+
+#: admin/views/partials/certificate-field.php:22
+#: includes/class-ecapla-certverify-fields.php:334
+#: includes/class-ecapla-certverify-public-policy.php:26
+msgid "Verification only"
+msgstr ""
+
+#: admin/views/partials/certificate-field.php:24
+#: includes/class-ecapla-certverify-fields.php:333
+#: includes/class-ecapla-certverify-public-policy.php:27
+msgid "Private"
 msgstr ""
 
 #: admin/views/partials/certificate-field.php:36
@@ -1807,6 +1870,13 @@ msgstr ""
 msgid "Certificate Manager role created with least-privilege access."
 msgstr ""
 
+#: admin/views/settings-manager.php:143
+#: includes/class-ecapla-certverify-system-status.php:164
+#: includes/class-ecapla-certverify-system-status.php:168
+#: includes/class-ecapla-certverify-system-status.php:183
+msgid "Isolated database proof"
+msgstr ""
+
 #: admin/views/settings-manager.php:144
 msgid "This administrator-triggered proof creates one empty Certloom scratch table, exercises WordPress dbDelta(), InnoDB, indexes, uniqueness, transaction rollback/commit, and—when the host permits a second connection—row-lock contention. It never reads certificate records, never creates the gated credential-domain tables, never changes credential authority, and removes the scratch table before returning."
 msgstr ""
@@ -1817,6 +1887,31 @@ msgstr ""
 
 #: admin/views/settings-manager.php:152
 msgid "Database proof check"
+msgstr ""
+
+#: admin/views/settings-manager.php:152
+#: admin/views/settings-manager.php:179
+#: elementor/class-ecapla-certverify-elementor-widget.php:122
+msgid "Result"
+msgstr ""
+
+#: admin/views/settings-manager.php:158
+#: admin/views/settings-manager.php:185
+#: admin/views/settings-manager.php:300
+#: admin/views/settings-manager.php:301
+#: admin/views/settings-manager.php:302
+#: admin/views/settings-manager.php:334
+#: admin/views/settings-manager.php:335
+#: admin/views/settings-manager.php:336
+#: admin/views/settings-manager.php:337
+#: admin/views/settings-manager.php:338
+#: includes/class-ecapla-certverify-system-status.php:178
+#: includes/class-ecapla-certverify-system-status.php:202
+#: includes/class-ecapla-certverify-system-status.php:218
+#: includes/class-ecapla-certverify-system-status.php:244
+#: includes/class-ecapla-certverify-system-status.php:270
+#: includes/class-ecapla-certverify-system-status.php:295
+msgid "Passed"
 msgstr ""
 
 #: admin/views/settings-manager.php:164
@@ -2369,6 +2464,13 @@ msgid "Use the local WordPress Site Icon on clean Certloom routes"
 msgstr ""
 
 #: admin/views/settings-manager.php:87
+#: includes/class-ecapla-certverify-system-status.php:104
+#: includes/class-ecapla-certverify-system-status.php:109
+#: includes/class-ecapla-certverify-system-status.php:125
+msgid "Local verification QR"
+msgstr ""
+
+#: admin/views/settings-manager.php:87
 msgid "Show the locally generated verification QR after a successful public verification and on public Credential Profiles"
 msgstr ""
 
@@ -2389,6 +2491,13 @@ msgid "Use the local WordPress Site Icon as a small center mark in verification 
 msgstr ""
 
 #: admin/views/settings-manager.php:89
+#: includes/class-ecapla-certverify-system-status.php:130
+#: includes/class-ecapla-certverify-system-status.php:134
+#: includes/class-ecapla-certverify-system-status.php:143
+msgid "Local Code 128 barcode"
+msgstr ""
+
+#: admin/views/settings-manager.php:89
 msgid "Show a locally generated Code 128 barcode for compatible certificate numbers after verification and on public Credential Profiles"
 msgstr ""
 
@@ -2397,11 +2506,32 @@ msgid "The barcode represents the existing human certificate number and does not
 msgstr ""
 
 #: admin/views/settings-manager.php:90
+#: elementor/class-ecapla-certverify-elementor-widget.php:161
+#: elementor/class-ecapla-certverify-elementor-widget.php:799
+msgid "Credit line"
+msgstr ""
+
+#: admin/views/settings-manager.php:90
 msgid "Show a public credit line beneath new shortcode output"
 msgstr ""
 
 #: admin/views/settings-manager.php:90
 msgid "This is optional and disabled by default for WordPress.org compliance."
+msgstr ""
+
+#: admin/views/settings-manager.php:91
+#: elementor/class-ecapla-certverify-elementor-widget.php:180
+#: elementor/class-ecapla-certverify-template-widgets.php:201
+#: blocks/certloom/index.js:110
+msgid "Credit text"
+msgstr ""
+
+#: admin/views/settings-manager.php:91
+#: includes/class-ecapla-certverify-render.php:46
+#: includes/class-ecapla-certverify-render.php:77
+#: includes/class-ecapla-certverify-settings.php:17
+#: blocks/certloom/index.js:55
+msgid "Verification powered by Certloom."
 msgstr ""
 
 #: admin/views/settings-manager.php:92
@@ -2821,11 +2951,6 @@ msgstr ""
 msgid "Enter a certificate number in the widget settings to preview the credential profile."
 msgstr ""
 
-#: elementor/class-ecapla-certverify-credential-widget.php:7
-#: admin/views/frontend-manager.php:63
-msgid "Certloom — Credential Profile"
-msgstr ""
-
 #: elementor/class-ecapla-certverify-elementor-widget.php:102
 #: elementor/class-ecapla-certverify-template-widgets.php:168
 msgid "Input placeholder"
@@ -2835,12 +2960,6 @@ msgstr ""
 #: elementor/class-ecapla-certverify-template-widgets.php:169
 #: blocks/certloom/index.js:102
 msgid "Button text"
-msgstr ""
-
-#: elementor/class-ecapla-certverify-elementor-widget.php:122
-#: admin/views/settings-manager.php:152
-#: admin/views/settings-manager.php:179
-msgid "Result"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-elementor-widget.php:147
@@ -2869,31 +2988,12 @@ msgstr ""
 msgid "Hide"
 msgstr ""
 
-#: elementor/class-ecapla-certverify-elementor-widget.php:161
-#: elementor/class-ecapla-certverify-elementor-widget.php:799
-#: admin/views/settings-manager.php:90
-msgid "Credit line"
-msgstr ""
-
 #: elementor/class-ecapla-certverify-elementor-widget.php:168
 msgid "Show credit line"
 msgstr ""
 
-#: elementor/class-ecapla-certverify-elementor-widget.php:180
-#: elementor/class-ecapla-certverify-template-widgets.php:201
-#: admin/views/settings-manager.php:91
-#: blocks/certloom/index.js:110
-msgid "Credit text"
-msgstr ""
-
 #: elementor/class-ecapla-certverify-elementor-widget.php:196
 msgid "Colors"
-msgstr ""
-
-#: elementor/class-ecapla-certverify-elementor-widget.php:204
-#: elementor/class-ecapla-certverify-template-widgets.php:269
-#: src/Infrastructure/Admin/DomainAdmin.php:925
-msgid "Accent color"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-elementor-widget.php:216
@@ -2918,13 +3018,6 @@ msgstr ""
 #: elementor/class-ecapla-certverify-elementor-widget.php:630
 #: elementor/class-ecapla-certverify-template-widgets.php:283
 msgid "Typography"
-msgstr ""
-
-#: elementor/class-ecapla-certverify-elementor-widget.php:26
-#: admin/class-ecapla-certverify-admin.php:56
-#: admin/class-ecapla-certverify-admin.php:57
-#: admin/views/partials/brand-bar.php:7
-msgid "Certloom"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-elementor-widget.php:262
@@ -2963,12 +3056,6 @@ msgstr ""
 msgid "Background color"
 msgstr ""
 
-#: elementor/class-ecapla-certverify-elementor-widget.php:407
-#: elementor/class-ecapla-certverify-elementor-widget.php:810
-#: src/Infrastructure/Admin/TemplateAdmin.php:765
-msgid "Text color"
-msgstr ""
-
 #: elementor/class-ecapla-certverify-elementor-widget.php:473
 msgid "Result card"
 msgstr ""
@@ -2989,31 +3076,12 @@ msgstr ""
 msgid "Status badges"
 msgstr ""
 
-#: elementor/class-ecapla-certverify-elementor-widget.php:655
-#: elementor/class-ecapla-certverify-template-widgets.php:308
-#: src/Infrastructure/Admin/TemplateAdmin.php:111
-#: src/Infrastructure/Admin/TemplateAdmin.php:781
-msgid "Background"
-msgstr ""
-
-#: elementor/class-ecapla-certverify-elementor-widget.php:666
-#: src/Infrastructure/Admin/TemplateAdmin.php:109
-#: src/Infrastructure/Admin/TemplateAdmin.php:777
-#: admin/views/fields-manager.php:125
-msgid "Text"
-msgstr ""
-
 #: elementor/class-ecapla-certverify-elementor-widget.php:68
 msgid "Search box"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-elementor-widget.php:682
 msgid "Status guide cards"
-msgstr ""
-
-#: elementor/class-ecapla-certverify-elementor-widget.php:693
-#: admin/views/list-certificates.php:95
-msgid "Columns"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-elementor-widget.php:713
@@ -3044,32 +3112,6 @@ msgstr ""
 msgid "Alignment"
 msgstr ""
 
-#: elementor/class-ecapla-certverify-elementor-widget.php:847
-#: elementor/class-ecapla-certverify-template-widgets.php:220
-#: src/Infrastructure/Admin/TemplateAdmin.php:727
-#: src/Infrastructure/Admin/TemplateAdmin.php:765
-#: admin/views/settings-manager.php:94
-#: blocks/certloom/index.js:81
-msgid "Left"
-msgstr ""
-
-#: elementor/class-ecapla-certverify-elementor-widget.php:851
-#: elementor/class-ecapla-certverify-template-widgets.php:221
-#: src/Infrastructure/Admin/TemplateAdmin.php:765
-#: admin/views/settings-manager.php:94
-#: blocks/certloom/index.js:82
-msgid "Center"
-msgstr ""
-
-#: elementor/class-ecapla-certverify-elementor-widget.php:855
-#: elementor/class-ecapla-certverify-template-widgets.php:222
-#: src/Infrastructure/Admin/TemplateAdmin.php:727
-#: src/Infrastructure/Admin/TemplateAdmin.php:765
-#: admin/views/settings-manager.php:94
-#: blocks/certloom/index.js:83
-msgid "Right"
-msgstr ""
-
 #: elementor/class-ecapla-certverify-elementor-widget.php:873
 #: blocks/certloom/index.js:63
 #: blocks/my-credentials/index.js:36
@@ -3082,14 +3124,6 @@ msgstr ""
 
 #: elementor/class-ecapla-certverify-elementor-widget.php:894
 msgid "Search card corner radius"
-msgstr ""
-
-#: elementor/class-ecapla-certverify-elementor-widget.php:93
-#: elementor/class-ecapla-certverify-elementor-widget.php:280
-#: src/Infrastructure/Admin/DomainAdmin.php:892
-#: src/Infrastructure/Admin/TemplateAdmin.php:878
-#: blocks/certloom/index.js:100
-msgid "Description"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-template-widgets.php:116
@@ -3608,11 +3642,6 @@ msgstr ""
 
 #: includes/class-ecapla-certverify-backup.php:381
 msgid "Certloom restored the original registry but could not clear its recovery journal. The journal was preserved for retry."
-msgstr ""
-
-#: includes/class-ecapla-certverify-backup.php:402
-#: admin/class-ecapla-certverify-admin.php:1112
-msgid "That backup review session expired. Upload the backup again."
 msgstr ""
 
 #: includes/class-ecapla-certverify-backup.php:431
@@ -4484,87 +4513,12 @@ msgstr ""
 msgid "Internal"
 msgstr ""
 
-#: includes/class-ecapla-certverify-fields.php:333
-#: includes/class-ecapla-certverify-public-policy.php:27
-#: admin/views/partials/certificate-field.php:24
-msgid "Private"
-msgstr ""
-
-#: includes/class-ecapla-certverify-fields.php:334
-#: includes/class-ecapla-certverify-public-policy.php:26
-#: admin/views/partials/certificate-field.php:22
-msgid "Verification only"
-msgstr ""
-
-#: includes/class-ecapla-certverify-fields.php:335
-#: admin/views/partials/certificate-field.php:22
-msgid "Profile only"
-msgstr ""
-
-#: includes/class-ecapla-certverify-fields.php:336
-#: admin/views/partials/certificate-field.php:22
-msgid "Verification + profile"
-msgstr ""
-
-#: includes/class-ecapla-certverify-fields.php:371
-#: includes/class-ecapla-certverify-render.php:133
-#: includes/class-ecapla-certverify-render.php:226
-#: elementor/class-ecapla-certverify-credential-widget.php:16
-#: src/Infrastructure/Admin/DomainAdmin.php:634
-#: src/Infrastructure/Admin/DomainAdmin.php:741
-#: src/Infrastructure/Admin/DomainAdmin.php:750
-#: src/Infrastructure/Admin/DomainAdmin.php:958
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:168
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:186
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
-#: src/Infrastructure/Import/DomainImportCsvReader.php:70
-#: admin/class-ecapla-certverify-list-table.php:38
-#: blocks/credential/index.js:39
-msgid "Certificate number"
-msgstr ""
-
 #: includes/class-ecapla-certverify-fields.php:372
 msgid "Current status"
 msgstr ""
 
-#: includes/class-ecapla-certverify-fields.php:373
-#: src/Infrastructure/Import/DomainImportCsvReader.php:71
-msgid "Certificate holder"
-msgstr ""
-
-#: includes/class-ecapla-certverify-fields.php:374
-#: src/Infrastructure/Admin/TemplateAdmin.php:818
-msgid "Standard"
-msgstr ""
-
-#: includes/class-ecapla-certverify-fields.php:375
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:373
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:386
-msgid "Scope"
-msgstr ""
-
-#: includes/class-ecapla-certverify-fields.php:376
-#: src/Infrastructure/Import/DomainImportCsvReader.php:73
-#: admin/class-ecapla-certverify-list-table.php:41
-#: admin/views/list-certificates.php:113
-msgid "Issue date"
-msgstr ""
-
-#: includes/class-ecapla-certverify-fields.php:377
-#: src/Infrastructure/Import/DomainImportCsvReader.php:74
-#: admin/class-ecapla-certverify-list-table.php:42
-#: admin/views/bulk-review.php:58
-#: admin/views/list-certificates.php:113
-msgid "Expiry date"
-msgstr ""
-
 #: includes/class-ecapla-certverify-fields.php:379
 msgid "Status reason"
-msgstr ""
-
-#: includes/class-ecapla-certverify-fields.php:380
-#: admin/views/edit-certificate.php:150
-msgid "Internal notes"
 msgstr ""
 
 #: includes/class-ecapla-certverify-fields.php:381
@@ -4575,57 +4529,16 @@ msgstr ""
 msgid "Secondary verification proof"
 msgstr ""
 
-#: includes/class-ecapla-certverify-fields.php:402
-#: includes/class-ecapla-certverify-recipient-portal.php:129
-#: includes/class-ecapla-certverify-recipient-portal.php:262
-#: elementor/class-ecapla-certverify-elementor-widget.php:636
-#: src/Infrastructure/Admin/DomainAdmin.php:544
-#: src/Infrastructure/Admin/DomainAdmin.php:588
-#: admin/class-ecapla-certverify-list-table.php:143
-#: admin/views/dashboard.php:65
-msgid "Valid"
-msgstr ""
-
 #: includes/class-ecapla-certverify-fields.php:404
 msgid "The certificate is current and may be accepted as evidence of active certification."
-msgstr ""
-
-#: includes/class-ecapla-certverify-fields.php:407
-#: includes/class-ecapla-certverify-recipient-portal.php:132
-#: includes/class-ecapla-certverify-recipient-portal.php:265
-#: elementor/class-ecapla-certverify-elementor-widget.php:637
-#: src/Infrastructure/Admin/DomainAdmin.php:384
-#: src/Infrastructure/Admin/DomainAdmin.php:545
-#: src/Infrastructure/Admin/DomainAdmin.php:589
-#: admin/class-ecapla-certverify-list-table.php:144
-#: admin/views/dashboard.php:71
-msgid "Suspended"
 msgstr ""
 
 #: includes/class-ecapla-certverify-fields.php:409
 msgid "Certification is temporarily suspended and should not be treated as current evidence."
 msgstr ""
 
-#: includes/class-ecapla-certverify-fields.php:412
-#: elementor/class-ecapla-certverify-elementor-widget.php:638
-#: admin/class-ecapla-certverify-list-table.php:145
-#: admin/views/dashboard.php:77
-msgid "Withdrawn"
-msgstr ""
-
 #: includes/class-ecapla-certverify-fields.php:414
 msgid "The certificate has been withdrawn and is no longer valid."
-msgstr ""
-
-#: includes/class-ecapla-certverify-fields.php:417
-#: includes/class-ecapla-certverify-recipient-portal.php:130
-#: includes/class-ecapla-certverify-recipient-portal.php:263
-#: elementor/class-ecapla-certverify-elementor-widget.php:639
-#: src/Infrastructure/Admin/DomainAdmin.php:547
-#: src/Infrastructure/Admin/DomainAdmin.php:591
-#: admin/class-ecapla-certverify-list-table.php:146
-#: admin/views/dashboard.php:83
-msgid "Expired"
 msgstr ""
 
 #: includes/class-ecapla-certverify-fields.php:419
@@ -5005,7 +4918,38 @@ msgstr ""
 msgid "View credential profile"
 msgstr ""
 
-#: includes/class-ecapla-certverify-public-policy.php:106
+#: includes/class-ecapla-certverify-public-policy.php:117
+#: includes/class-ecapla-certverify-recipient-portal.php:228
+msgid "LinkedIn"
+msgstr ""
+
+#: includes/class-ecapla-certverify-public-policy.php:118
+#: includes/class-ecapla-certverify-recipient-portal.php:229
+msgid "WhatsApp"
+msgstr ""
+
+#: includes/class-ecapla-certverify-public-policy.php:119
+#: includes/class-ecapla-certverify-recipient-portal.php:230
+msgid "Facebook"
+msgstr ""
+
+#: includes/class-ecapla-certverify-public-policy.php:120
+#: includes/class-ecapla-certverify-recipient-portal.php:231
+msgid "X"
+msgstr ""
+
+#: includes/class-ecapla-certverify-public-policy.php:130
+#: includes/class-ecapla-certverify-recipient-portal.php:245
+msgid "Share"
+msgstr ""
+
+#: includes/class-ecapla-certverify-public-policy.php:132
+#: includes/class-ecapla-certverify-recipient-portal.php:245
+#: includes/class-ecapla-certverify-render.php:399
+msgid "Copy URL"
+msgstr ""
+
+#: includes/class-ecapla-certverify-public-policy.php:138
 msgid "Print"
 msgstr ""
 
@@ -5130,41 +5074,6 @@ msgstr ""
 msgid "Credential status is evaluated live from the current immutable Version and lifecycle state."
 msgstr ""
 
-#: includes/class-ecapla-certverify-recipient-portal.php:128
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:612
-#: admin/views/list-certificates.php:142
-msgid "All statuses"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:131
-#: includes/class-ecapla-certverify-recipient-portal.php:264
-#: src/Infrastructure/Admin/DomainAdmin.php:385
-#: src/Infrastructure/Admin/DomainAdmin.php:546
-#: src/Infrastructure/Admin/DomainAdmin.php:590
-msgid "Revoked"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:133
-#: includes/class-ecapla-certverify-recipient-portal.php:266
-#: src/Infrastructure/Admin/DomainAdmin.php:548
-#: src/Infrastructure/Admin/DomainAdmin.php:592
-msgid "Not yet valid"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:134
-#: includes/class-ecapla-certverify-recipient-portal.php:267
-#: src/Infrastructure/Admin/DomainAdmin.php:549
-#: src/Infrastructure/Admin/DomainAdmin.php:593
-msgid "Pending review"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:135
-#: includes/class-ecapla-certverify-recipient-portal.php:268
-#: src/Infrastructure/Admin/DomainAdmin.php:550
-#: src/Infrastructure/Admin/DomainAdmin.php:594
-msgid "Non-compliant"
-msgstr ""
-
 #: includes/class-ecapla-certverify-recipient-portal.php:138
 msgid "Newest issued"
 msgstr ""
@@ -5173,38 +5082,8 @@ msgstr ""
 msgid "Oldest issued"
 msgstr ""
 
-#: includes/class-ecapla-certverify-recipient-portal.php:140
-#: includes/class-ecapla-certverify-recipient-portal.php:179
-#: includes/class-ecapla-certverify-recipient-portal.php:209
-#: admin/class-ecapla-certverify-list-table.php:147
-msgid "Expiring soon"
-msgstr ""
-
 #: includes/class-ecapla-certverify-recipient-portal.php:141
 msgid "Program name"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:147
-#: includes/class-ecapla-certverify-recipient-portal.php:204
-#: src/Infrastructure/Admin/DomainAdmin.php:299
-#: src/Infrastructure/Admin/DomainAdmin.php:395
-#: src/Infrastructure/Admin/DomainAdmin.php:408
-#: src/Infrastructure/Admin/DomainAdmin.php:607
-#: src/Infrastructure/Admin/DomainAdmin.php:994
-#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:357
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:176
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:229
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:612
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:25
-#: src/Infrastructure/Import/DomainImportCsvReader.php:72
-#: admin/class-ecapla-certverify-list-table.php:40
-#: admin/views/dashboard.php:123
-#: admin/views/edit-certificate.php:78
-#: admin/views/edit-certificate.php:144
-#: admin/views/list-certificates.php:113
-#: admin/views/list-certificates.php:140
-#: admin/views/settings-manager.php:127
-msgid "Status"
 msgstr ""
 
 #: includes/class-ecapla-certverify-recipient-portal.php:155
@@ -5215,122 +5094,45 @@ msgstr ""
 msgid "Apply"
 msgstr ""
 
-#: includes/class-ecapla-certverify-recipient-portal.php:173
-#: includes/class-ecapla-certverify-recipient-portal.php:204
-#: includes/class-ecapla-certverify-recipient-portal.php:208
-#: elementor/class-ecapla-certverify-credential-widget.php:15
-#: src/Infrastructure/Admin/DomainAdmin.php:395
-#: src/Infrastructure/Admin/DomainAdmin.php:403
-#: blocks/credential/index.js:38
-msgid "Credential"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:184
-#: src/Infrastructure/Admin/DomainAdmin.php:994
-#: admin/views/dashboard.php:121
-msgid "Certificate"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:185
-#: includes/class-ecapla-certverify-recipient-portal.php:204
-#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
-#: src/Infrastructure/Admin/DomainAdmin.php:635
-#: src/Infrastructure/Admin/DomainAdmin.php:750
-#: src/Infrastructure/Admin/DomainAdmin.php:958
-#: src/Infrastructure/Admin/DomainAdmin.php:994
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:200
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
-#: admin/views/dashboard.php:124
-msgid "Issued"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:186
-#: includes/class-ecapla-certverify-recipient-portal.php:204
-#: src/Infrastructure/Admin/DomainAdmin.php:636
-#: src/Infrastructure/Admin/DomainAdmin.php:958
-#: src/Infrastructure/Admin/DomainAdmin.php:994
-msgid "Expires"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:186
-#: includes/class-ecapla-certverify-recipient-portal.php:211
-#: src/Infrastructure/Admin/DomainAdmin.php:406
-#: src/Infrastructure/Admin/DomainAdmin.php:636
-#: src/Infrastructure/Admin/DomainAdmin.php:730
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
-#: admin/class-ecapla-certverify-list-table.php:124
-msgid "No expiry"
-msgstr ""
-
 #: includes/class-ecapla-certverify-recipient-portal.php:187
 msgid "Grade"
 msgstr ""
 
 #: includes/class-ecapla-certverify-recipient-portal.php:190
-#: includes/class-ecapla-certverify-recipient-portal.php:212
+#: includes/class-ecapla-certverify-recipient-portal.php:213
 msgid "Verify"
 msgstr ""
 
-#: includes/class-ecapla-certverify-recipient-portal.php:191
+#: includes/class-ecapla-certverify-recipient-portal.php:192
 msgid "Downloads gated"
 msgstr ""
 
-#: includes/class-ecapla-certverify-recipient-portal.php:191
+#: includes/class-ecapla-certverify-recipient-portal.php:192
 msgid "PDF and image downloads remain gated until production artifact authority is accepted."
 msgstr ""
 
-#: includes/class-ecapla-certverify-recipient-portal.php:202
+#: includes/class-ecapla-certverify-recipient-portal.php:203
 msgid "My credentials table"
 msgstr ""
 
-#: includes/class-ecapla-certverify-recipient-portal.php:204
-#: src/Infrastructure/Admin/DomainAdmin.php:773
-#: src/Infrastructure/Admin/DomainAdmin.php:790
-#: src/Infrastructure/Admin/DomainAdmin.php:941
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:299
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:373
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:25
-msgid "Action"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:212
+#: includes/class-ecapla-certverify-recipient-portal.php:213
 msgid "Verification unavailable"
 msgstr ""
 
-#: includes/class-ecapla-certverify-recipient-portal.php:238
+#: includes/class-ecapla-certverify-recipient-portal.php:264
 msgid "Previous"
 msgstr ""
 
-#: includes/class-ecapla-certverify-recipient-portal.php:240
+#: includes/class-ecapla-certverify-recipient-portal.php:266
 msgid "Page %1$d of %2$d"
 msgstr ""
 
-#: includes/class-ecapla-certverify-recipient-portal.php:242
+#: includes/class-ecapla-certverify-recipient-portal.php:268
 msgid "Next"
 msgstr ""
 
-#: includes/class-ecapla-certverify-recipient-portal.php:244
-msgid "Credential pages"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:269
-#: src/Infrastructure/Admin/DomainAdmin.php:551
-#: src/Infrastructure/Admin/DomainAdmin.php:595
-msgid "Voided"
-msgstr ""
-
 #: includes/class-ecapla-certverify-recipient-portal.php:270
-#: src/Infrastructure/Admin/DomainAdmin.php:552
-#: src/Infrastructure/Admin/DomainAdmin.php:596
-msgid "Not issued"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:272
-#: includes/class-ecapla-certverify-system-status.php:104
-#: includes/class-ecapla-certverify-system-status.php:130
-#: src/Infrastructure/Admin/DomainAdmin.php:584
-#: src/Infrastructure/Admin/DomainAdmin.php:998
-msgid "Unavailable"
+msgid "Credential pages"
 msgstr ""
 
 #: includes/class-ecapla-certverify-recipient-portal.php:41
@@ -5347,6 +5149,14 @@ msgstr ""
 
 #: includes/class-ecapla-certverify-recipient-portal.php:65
 msgid "Your WordPress account is not linked to a Certloom recipient yet. Contact the credential issuer if you expected credentials here."
+msgstr ""
+
+#: includes/class-ecapla-certverify-recipient-portal.php:78
+msgid "Copy the credential link from your browser."
+msgstr ""
+
+#: includes/class-ecapla-certverify-recipient-portal.php:78
+msgid "Credential link copied."
 msgstr ""
 
 #: includes/class-ecapla-certverify-recipient-portal.php:81
@@ -5453,22 +5263,9 @@ msgstr ""
 msgid "e.g. CERT-9001-2026-00142"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:34
-#: src/Infrastructure/Admin/DomainAdmin.php:1213
-#: src/Infrastructure/Admin/TemplateAdmin.php:425
-#: src/Infrastructure/Admin/TemplateAdmin.php:483
-#: blocks/certloom/index.js:51
-msgctxt "search action button"
-msgid "Search"
-msgstr ""
-
 #: includes/class-ecapla-certverify-render.php:341
 #: includes/class-ecapla-certverify-rest.php:178
 msgid "Credential verification is temporarily unavailable. Please try again later."
-msgstr ""
-
-#: includes/class-ecapla-certverify-render.php:348
-msgid "Verified credential"
 msgstr ""
 
 #: includes/class-ecapla-certverify-render.php:35
@@ -5484,14 +5281,6 @@ msgstr ""
 #: includes/class-ecapla-certverify-render.php:248
 #: blocks/certloom/index.js:53
 msgid "Certificate status guide"
-msgstr ""
-
-#: includes/class-ecapla-certverify-render.php:46
-#: includes/class-ecapla-certverify-render.php:77
-#: includes/class-ecapla-certverify-settings.php:17
-#: admin/views/settings-manager.php:91
-#: blocks/certloom/index.js:55
-msgid "Verification powered by Certloom."
 msgstr ""
 
 #: includes/class-ecapla-certverify-render.php:61
@@ -5545,13 +5334,6 @@ msgid "Certloom could not protect the verification code. Try again."
 msgstr ""
 
 #: includes/class-ecapla-certverify-system-status.php:104
-#: includes/class-ecapla-certverify-system-status.php:109
-#: includes/class-ecapla-certverify-system-status.php:125
-#: admin/views/settings-manager.php:87
-msgid "Local verification QR"
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:104
 msgid "The local QR presentation service is not loaded."
 msgstr ""
 
@@ -5580,13 +5362,6 @@ msgstr ""
 
 #: includes/class-ecapla-certverify-system-status.php:123
 msgid "QR center-logo mode is enabled, but the Site Icon is missing or not a safe local PNG/JPEG; Certloom will fall back to the plain QR."
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:130
-#: includes/class-ecapla-certverify-system-status.php:134
-#: includes/class-ecapla-certverify-system-status.php:143
-#: admin/views/settings-manager.php:89
-msgid "Local Code 128 barcode"
 msgstr ""
 
 #: includes/class-ecapla-certverify-system-status.php:130
@@ -5642,13 +5417,6 @@ msgid "Invalid / mismatched authority"
 msgstr ""
 
 #: includes/class-ecapla-certverify-system-status.php:164
-#: includes/class-ecapla-certverify-system-status.php:168
-#: includes/class-ecapla-certverify-system-status.php:183
-#: admin/views/settings-manager.php:143
-msgid "Isolated database proof"
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:164
 #: includes/class-ecapla-certverify-system-status.php:189
 #: includes/class-ecapla-certverify-system-status.php:210
 #: includes/class-ecapla-certverify-system-status.php:377
@@ -5674,38 +5442,7 @@ msgstr ""
 
 #: includes/class-ecapla-certverify-system-status.php:178
 #: includes/class-ecapla-certverify-system-status.php:202
-#: includes/class-ecapla-certverify-system-status.php:218
-#: includes/class-ecapla-certverify-system-status.php:244
-#: includes/class-ecapla-certverify-system-status.php:270
-#: includes/class-ecapla-certverify-system-status.php:295
-#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
-#: admin/views/settings-manager.php:158
-#: admin/views/settings-manager.php:185
-msgid "Failed"
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:178
-#: includes/class-ecapla-certverify-system-status.php:202
 msgid "Incomplete"
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:178
-#: includes/class-ecapla-certverify-system-status.php:202
-#: includes/class-ecapla-certverify-system-status.php:218
-#: includes/class-ecapla-certverify-system-status.php:244
-#: includes/class-ecapla-certverify-system-status.php:270
-#: includes/class-ecapla-certverify-system-status.php:295
-#: admin/views/settings-manager.php:158
-#: admin/views/settings-manager.php:185
-#: admin/views/settings-manager.php:300
-#: admin/views/settings-manager.php:301
-#: admin/views/settings-manager.php:302
-#: admin/views/settings-manager.php:334
-#: admin/views/settings-manager.php:335
-#: admin/views/settings-manager.php:336
-#: admin/views/settings-manager.php:337
-#: admin/views/settings-manager.php:338
-msgid "Passed"
 msgstr ""
 
 #: includes/class-ecapla-certverify-system-status.php:178
@@ -6092,11 +5829,6 @@ msgstr ""
 
 #: includes/class-ecapla-certverify-system-status.php:72
 msgid "No / not detected"
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:72
-#: src/Infrastructure/Admin/DomainAdmin.php:718
-msgid "Yes"
 msgstr ""
 
 #: includes/class-ecapla-certverify-system-status.php:73
@@ -6996,15 +6728,26 @@ msgstr ""
 msgid "Mutable recipient profile data was anonymized through the WordPress personal-data erasure workflow. Immutable credential evidence was retained."
 msgstr ""
 
-#: src/Application/Recipient/RecipientPortalService.php:134
+#: src/Application/Recipient/RecipientPortalService.php:139
 msgid "One of your credentials has invalid lifecycle state and cannot be displayed safely."
 msgstr ""
 
-#: src/Application/Recipient/RecipientPortalService.php:71
+#: src/Application/Recipient/RecipientPortalService.php:160
+#: includes/class-ecapla-certverify-public-policy.php:112
+msgid "View this verified credential"
+msgstr ""
+
+#: src/Application/Recipient/RecipientPortalService.php:161
+#: includes/class-ecapla-certverify-public-policy.php:113
+#: includes/class-ecapla-certverify-render.php:348
+msgid "Verified credential"
+msgstr ""
+
+#: src/Application/Recipient/RecipientPortalService.php:76
 msgid "Sign in to view your Certloom credentials."
 msgstr ""
 
-#: src/Application/Recipient/RecipientPortalService.php:74
+#: src/Application/Recipient/RecipientPortalService.php:79
 msgid "My Credentials is not available until Certloom’s normalized credential authority has completed its acceptance gate."
 msgstr ""
 
@@ -7533,7 +7276,32 @@ msgid "Errors"
 msgstr ""
 
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
+#: admin/views/settings-manager.php:158
+#: admin/views/settings-manager.php:185
+#: includes/class-ecapla-certverify-system-status.php:178
+#: includes/class-ecapla-certverify-system-status.php:202
+#: includes/class-ecapla-certverify-system-status.php:218
+#: includes/class-ecapla-certverify-system-status.php:244
+#: includes/class-ecapla-certverify-system-status.php:270
+#: includes/class-ecapla-certverify-system-status.php:295
+msgid "Failed"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
 msgid "Idempotent replays"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
+#: src/Infrastructure/Admin/DomainAdmin.php:635
+#: src/Infrastructure/Admin/DomainAdmin.php:750
+#: src/Infrastructure/Admin/DomainAdmin.php:958
+#: src/Infrastructure/Admin/DomainAdmin.php:994
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:200
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
+#: admin/views/dashboard.php:124
+#: includes/class-ecapla-certverify-recipient-portal.php:185
+#: includes/class-ecapla-certverify-recipient-portal.php:205
+msgid "Issued"
 msgstr ""
 
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
@@ -7646,6 +7414,15 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:612
 #: admin/views/list-certificates.php:128
 msgctxt "search field label"
+msgid "Search"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1213
+#: src/Infrastructure/Admin/TemplateAdmin.php:425
+#: src/Infrastructure/Admin/TemplateAdmin.php:483
+#: includes/class-ecapla-certverify-render.php:34
+#: blocks/certloom/index.js:51
+msgctxt "search action button"
 msgid "Search"
 msgstr ""
 
@@ -7779,6 +7556,8 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:299
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:354
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:143
+#: includes/class-ecapla-certverify-public-policy.php:121
+#: includes/class-ecapla-certverify-recipient-portal.php:232
 msgid "Email"
 msgstr ""
 
@@ -7891,6 +7670,29 @@ msgstr ""
 msgid "Program"
 msgstr ""
 
+#: src/Infrastructure/Admin/DomainAdmin.php:299
+#: src/Infrastructure/Admin/DomainAdmin.php:395
+#: src/Infrastructure/Admin/DomainAdmin.php:408
+#: src/Infrastructure/Admin/DomainAdmin.php:607
+#: src/Infrastructure/Admin/DomainAdmin.php:994
+#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:357
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:176
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:229
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:612
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:25
+#: src/Infrastructure/Import/DomainImportCsvReader.php:72
+#: admin/class-ecapla-certverify-list-table.php:40
+#: admin/views/dashboard.php:123
+#: admin/views/edit-certificate.php:78
+#: admin/views/edit-certificate.php:144
+#: admin/views/list-certificates.php:113
+#: admin/views/list-certificates.php:140
+#: admin/views/settings-manager.php:127
+#: includes/class-ecapla-certverify-recipient-portal.php:147
+#: includes/class-ecapla-certverify-recipient-portal.php:205
+msgid "Status"
+msgstr ""
+
 #. translators: %d: days.
 #: src/Infrastructure/Admin/DomainAdmin.php:302
 msgid "%d day"
@@ -7947,8 +7749,38 @@ msgstr ""
 msgid "Valid now"
 msgstr ""
 
+#: src/Infrastructure/Admin/DomainAdmin.php:384
+#: src/Infrastructure/Admin/DomainAdmin.php:545
+#: src/Infrastructure/Admin/DomainAdmin.php:589
+#: admin/class-ecapla-certverify-list-table.php:144
+#: admin/views/dashboard.php:71
+#: includes/class-ecapla-certverify-fields.php:407
+#: includes/class-ecapla-certverify-recipient-portal.php:132
+#: includes/class-ecapla-certverify-recipient-portal.php:291
+#: elementor/class-ecapla-certverify-elementor-widget.php:637
+msgid "Suspended"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:385
+#: src/Infrastructure/Admin/DomainAdmin.php:546
+#: src/Infrastructure/Admin/DomainAdmin.php:590
+#: includes/class-ecapla-certverify-recipient-portal.php:131
+#: includes/class-ecapla-certverify-recipient-portal.php:290
+msgid "Revoked"
+msgstr ""
+
 #: src/Infrastructure/Admin/DomainAdmin.php:386
 msgid "Needs attention"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:395
+#: src/Infrastructure/Admin/DomainAdmin.php:403
+#: includes/class-ecapla-certverify-recipient-portal.php:173
+#: includes/class-ecapla-certverify-recipient-portal.php:205
+#: includes/class-ecapla-certverify-recipient-portal.php:209
+#: elementor/class-ecapla-certverify-credential-widget.php:15
+#: blocks/credential/index.js:38
+msgid "Credential"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:395
@@ -7981,6 +7813,16 @@ msgstr ""
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:184
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
 msgid "Expires %s"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:406
+#: src/Infrastructure/Admin/DomainAdmin.php:636
+#: src/Infrastructure/Admin/DomainAdmin.php:730
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
+#: admin/class-ecapla-certverify-list-table.php:124
+#: includes/class-ecapla-certverify-recipient-portal.php:186
+#: includes/class-ecapla-certverify-recipient-portal.php:212
+msgid "No expiry"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:409
@@ -8092,6 +7934,61 @@ msgstr ""
 msgid "All"
 msgstr ""
 
+#: src/Infrastructure/Admin/DomainAdmin.php:544
+#: src/Infrastructure/Admin/DomainAdmin.php:588
+#: admin/class-ecapla-certverify-list-table.php:143
+#: admin/views/dashboard.php:65
+#: includes/class-ecapla-certverify-fields.php:402
+#: includes/class-ecapla-certverify-recipient-portal.php:129
+#: includes/class-ecapla-certverify-recipient-portal.php:288
+#: elementor/class-ecapla-certverify-elementor-widget.php:636
+msgid "Valid"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:547
+#: src/Infrastructure/Admin/DomainAdmin.php:591
+#: admin/class-ecapla-certverify-list-table.php:146
+#: admin/views/dashboard.php:83
+#: includes/class-ecapla-certverify-fields.php:417
+#: includes/class-ecapla-certverify-recipient-portal.php:130
+#: includes/class-ecapla-certverify-recipient-portal.php:289
+#: elementor/class-ecapla-certverify-elementor-widget.php:639
+msgid "Expired"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:548
+#: src/Infrastructure/Admin/DomainAdmin.php:592
+#: includes/class-ecapla-certverify-recipient-portal.php:133
+#: includes/class-ecapla-certverify-recipient-portal.php:292
+msgid "Not yet valid"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:549
+#: src/Infrastructure/Admin/DomainAdmin.php:593
+#: includes/class-ecapla-certverify-recipient-portal.php:134
+#: includes/class-ecapla-certverify-recipient-portal.php:293
+msgid "Pending review"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:550
+#: src/Infrastructure/Admin/DomainAdmin.php:594
+#: includes/class-ecapla-certverify-recipient-portal.php:135
+#: includes/class-ecapla-certverify-recipient-portal.php:294
+msgid "Non-compliant"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:551
+#: src/Infrastructure/Admin/DomainAdmin.php:595
+#: includes/class-ecapla-certverify-recipient-portal.php:295
+msgid "Voided"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:552
+#: src/Infrastructure/Admin/DomainAdmin.php:596
+#: includes/class-ecapla-certverify-recipient-portal.php:296
+msgid "Not issued"
+msgstr ""
+
 #: src/Infrastructure/Admin/DomainAdmin.php:554
 msgid "Credential status views"
 msgstr ""
@@ -8120,6 +8017,14 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:576
 msgid "Clear search/filter"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:584
+#: src/Infrastructure/Admin/DomainAdmin.php:998
+#: includes/class-ecapla-certverify-recipient-portal.php:298
+#: includes/class-ecapla-certverify-system-status.php:104
+#: includes/class-ecapla-certverify-system-status.php:130
+msgid "Unavailable"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:604
@@ -8191,6 +8096,31 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:633
 msgid "Historical"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:634
+#: src/Infrastructure/Admin/DomainAdmin.php:741
+#: src/Infrastructure/Admin/DomainAdmin.php:750
+#: src/Infrastructure/Admin/DomainAdmin.php:958
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:168
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:186
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
+#: src/Infrastructure/Import/DomainImportCsvReader.php:70
+#: admin/class-ecapla-certverify-list-table.php:38
+#: includes/class-ecapla-certverify-fields.php:371
+#: includes/class-ecapla-certverify-render.php:133
+#: includes/class-ecapla-certverify-render.php:226
+#: elementor/class-ecapla-certverify-credential-widget.php:16
+#: blocks/credential/index.js:39
+msgid "Certificate number"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:636
+#: src/Infrastructure/Admin/DomainAdmin.php:958
+#: src/Infrastructure/Admin/DomainAdmin.php:994
+#: includes/class-ecapla-certverify-recipient-portal.php:186
+#: includes/class-ecapla-certverify-recipient-portal.php:205
+msgid "Expires"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:638
@@ -8377,6 +8307,11 @@ msgstr ""
 msgid "Publicly valid now"
 msgstr ""
 
+#: src/Infrastructure/Admin/DomainAdmin.php:718
+#: includes/class-ecapla-certverify-system-status.php:72
+msgid "Yes"
+msgstr ""
+
 #: src/Infrastructure/Admin/DomainAdmin.php:719
 msgid "Contributors"
 msgstr ""
@@ -8519,6 +8454,16 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:769
 msgid "Preview credential email"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:773
+#: src/Infrastructure/Admin/DomainAdmin.php:790
+#: src/Infrastructure/Admin/DomainAdmin.php:941
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:299
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:373
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:25
+#: includes/class-ecapla-certverify-recipient-portal.php:205
+msgid "Action"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:773
@@ -8737,6 +8682,14 @@ msgid "Leave blank when the program has no default expiry. Issuance may override
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:892
+#: src/Infrastructure/Admin/TemplateAdmin.php:878
+#: elementor/class-ecapla-certverify-elementor-widget.php:93
+#: elementor/class-ecapla-certverify-elementor-widget.php:280
+#: blocks/certloom/index.js:100
+msgid "Description"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:892
 msgid "Internal program context. Public credential copy will use explicit presentation fields rather than exposing this automatically."
 msgstr ""
 
@@ -8819,6 +8772,12 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:924
 msgid "Primary color"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:925
+#: elementor/class-ecapla-certverify-elementor-widget.php:204
+#: elementor/class-ecapla-certverify-template-widgets.php:269
+msgid "Accent color"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:925
@@ -8937,6 +8896,12 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:985
 msgid "Recent current credential identities issued under this program."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:994
+#: admin/views/dashboard.php:121
+#: includes/class-ecapla-certverify-recipient-portal.php:184
+msgid "Certificate"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:111
@@ -9465,6 +9430,12 @@ msgstr ""
 msgid "Role"
 msgstr ""
 
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:373
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:386
+#: includes/class-ecapla-certverify-fields.php:375
+msgid "Scope"
+msgstr ""
+
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:380
 msgid "No hierarchy assignments yet."
 msgstr ""
@@ -9551,6 +9522,12 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:600
 msgid "Signer hierarchy updated."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:612
+#: admin/views/list-certificates.php:142
+#: includes/class-ecapla-certverify-recipient-portal.php:128
+msgid "All statuses"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:68
@@ -10072,9 +10049,23 @@ msgstr ""
 msgid "Designer found invalid element geometry and stopped the save."
 msgstr ""
 
+#: src/Infrastructure/Admin/TemplateAdmin.php:109
+#: src/Infrastructure/Admin/TemplateAdmin.php:777
+#: admin/views/fields-manager.php:125
+#: elementor/class-ecapla-certverify-elementor-widget.php:666
+msgid "Text"
+msgstr ""
+
 #: src/Infrastructure/Admin/TemplateAdmin.php:110
 #: src/Infrastructure/Admin/TemplateAdmin.php:777
 msgid "Merge field"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:111
+#: src/Infrastructure/Admin/TemplateAdmin.php:781
+#: elementor/class-ecapla-certverify-elementor-widget.php:655
+#: elementor/class-ecapla-certverify-template-widgets.php:308
+msgid "Background"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:112
@@ -10672,6 +10663,24 @@ msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:727
 #: src/Infrastructure/Admin/TemplateAdmin.php:765
+#: admin/views/settings-manager.php:94
+#: elementor/class-ecapla-certverify-elementor-widget.php:847
+#: elementor/class-ecapla-certverify-template-widgets.php:220
+#: blocks/certloom/index.js:81
+msgid "Left"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:727
+#: src/Infrastructure/Admin/TemplateAdmin.php:765
+#: admin/views/settings-manager.php:94
+#: elementor/class-ecapla-certverify-elementor-widget.php:855
+#: elementor/class-ecapla-certverify-template-widgets.php:222
+#: blocks/certloom/index.js:83
+msgid "Right"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:727
+#: src/Infrastructure/Admin/TemplateAdmin.php:765
 msgid "Top"
 msgstr ""
 
@@ -10876,6 +10885,14 @@ msgid "Auto"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:765
+#: admin/views/settings-manager.php:94
+#: elementor/class-ecapla-certverify-elementor-widget.php:851
+#: elementor/class-ecapla-certverify-template-widgets.php:221
+#: blocks/certloom/index.js:82
+msgid "Center"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:765
 msgid "Clip"
 msgstr ""
 
@@ -10921,6 +10938,12 @@ msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:765
 msgid "Start"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:765
+#: elementor/class-ecapla-certverify-elementor-widget.php:407
+#: elementor/class-ecapla-certverify-elementor-widget.php:810
+msgid "Text color"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:765
@@ -11050,6 +11073,11 @@ msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:818
 msgid "RTL / Urdu"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:818
+#: includes/class-ecapla-certverify-fields.php:374
+msgid "Standard"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:82
@@ -12646,6 +12674,26 @@ msgstr ""
 
 #: src/Infrastructure/Import/DomainImportCsvReader.php:58
 msgid "The CSV import does not contain a readable header row."
+msgstr ""
+
+#: src/Infrastructure/Import/DomainImportCsvReader.php:71
+#: includes/class-ecapla-certverify-fields.php:373
+msgid "Certificate holder"
+msgstr ""
+
+#: src/Infrastructure/Import/DomainImportCsvReader.php:73
+#: admin/class-ecapla-certverify-list-table.php:41
+#: admin/views/list-certificates.php:113
+#: includes/class-ecapla-certverify-fields.php:376
+msgid "Issue date"
+msgstr ""
+
+#: src/Infrastructure/Import/DomainImportCsvReader.php:74
+#: admin/class-ecapla-certverify-list-table.php:42
+#: admin/views/bulk-review.php:58
+#: admin/views/list-certificates.php:113
+#: includes/class-ecapla-certverify-fields.php:377
+msgid "Expiry date"
 msgstr ""
 
 #: src/Infrastructure/Import/DomainImportCsvReader.php:75

@@ -253,7 +253,21 @@
 				var label = action && 'string' === typeof action.label ? action.label : '';
 				var url = action && 'string' === typeof action.url ? action.url : '';
 				if ( ! label ) { return; }
-				if ( 'copy' === type && url ) {
+				if ( 'share' === type && url && Array.isArray( action.links ) ) {
+					var shareLinks = '';
+					var copyLabel = action && 'string' === typeof action.copy_label ? action.copy_label : 'Copy URL';
+					action.links.forEach( function ( link ) {
+						var platform = statusModifier( link && link.platform );
+						var shareLabel = link && 'string' === typeof link.label ? link.label : '';
+						var shareUrl = link && 'string' === typeof link.url ? link.url : '';
+						if ( ! shareLabel || ! safeShareUrl( shareUrl, platform ) ) { return; }
+						var targetAttrs = 'email' === platform ? '' : ' target="_blank" rel="nofollow noopener noreferrer"';
+						shareLinks += '<a class="certloom-share-link certloom-share-link--' + escapeHtml( platform ) + '" href="' + escapeHtml( shareUrl ) + '"' + targetAttrs + '>' + escapeHtml( shareLabel ) + '</a>';
+					} );
+					if ( shareLinks ) {
+						actionHtml += '<details class="certloom-share"><summary class="certloom-result-action ' + config.prefix + '-result-action">' + escapeHtml( label ) + '</summary><div class="certloom-share-menu">' + shareLinks + '<button type="button" class="certloom-share-link certloom-share-copy certloom-copy-link" data-copy-url="' + escapeHtml( url ) + '">Copy URL</button></div></details>';
+					}
+				} else if ( 'copy' === type && url ) {
 					actionHtml += '<button type="button" class="certloom-result-action ' + config.prefix + '-result-action certloom-copy-link" data-copy-url="' + escapeHtml( url ) + '">' + escapeHtml( label ) + '</button>';
 				} else if ( 'print' === type ) {
 					actionHtml += '<button type="button" class="certloom-result-action ' + config.prefix + '-result-action certloom-print">' + escapeHtml( label ) + '</button>';
@@ -348,8 +362,24 @@
 		}
 	}
 
+	function safeShareUrl( value, platform ) {
+		if ( 'string' !== typeof value || ! value || ! /^(linkedin|whatsapp|facebook|x|email)$/.test( platform ) ) { return false; }
+		if ( 'email' === platform ) { return /^mailto:\?/i.test( value ); }
+		try {
+			var parsed = new URL( value, window.location.href );
+			if ( 'https:' !== parsed.protocol ) { return false; }
+			var hosts = {
+				linkedin: [ 'www.linkedin.com' ],
+				whatsapp: [ 'wa.me' ],
+				facebook: [ 'www.facebook.com' ],
+				x: [ 'twitter.com', 'www.twitter.com', 'x.com', 'www.x.com' ]
+			};
+			return hosts[ platform ] && hosts[ platform ].indexOf( parsed.hostname.toLowerCase() ) !== -1;
+		} catch ( error ) { return false; }
+	}
+
 	function actionRoot( element ) {
-		return element && element.closest ? element.closest( '.cv-widget, .cvx-widget, .cvp-widget' ) : null;
+		return element && element.closest ? element.closest( '.cv-widget, .cvx-widget, .cvp-widget, .certloom-my-credentials' ) : null;
 	}
 
 	function actionFeedback( button, message ) {

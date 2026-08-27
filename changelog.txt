@@ -1,3 +1,11 @@
+1.6.69
+- Add SOC-01 Public Sharing Improvements for already guest-verifiable credentials: LinkedIn, WhatsApp, Facebook, X, email and Copy URL behind one server-owned action policy.
+- Generate provider intents locally from the canonical public credential URL only; do not send recipient name/email/grade or other credential fields to a Certloom-owned service or embed them in provider query payloads.
+- Prefer the public Credential Profile URL when available and fall back to the canonical verification URL for verification-summary/secondary-proof-safe sharing; private and non-guest-visible credentials remain non-shareable.
+- Extend Recipient Portal with the same central public-sharing rule, so recipient-only/org/private credentials never become public merely because their owner can see them in My Credentials.
+- Add accessible responsive share disclosures, Copy URL live feedback, defensive external-link rel attributes, provider-host revalidation in REST-rendered browser results, reduced-motion/forced-colors behavior, focused SOC-01 and real Chromium sharing gates.
+- Keep OG-01 Open Graph/social images, analytics, PDF/image artifacts, Directory, Claim and wallet/wall as separate roadmap/authority work; normalized-domain and renderer production authority remain closed.
+
 1.6.68
 - Add POR-01 Recipient Portal / My Credentials with explicit WordPress-user → Recipient ownership, bounded current-issued credential queries, centralized visibility/status enforcement, cards/grid/table layouts, status/sort filtering, pagination and expiring-soon cues.
 - Add [certloom_my_credentials] plus the original-roadmap [certloom_my_certificates] compatibility alias and a native server-rendered Gutenberg My Credentials block.

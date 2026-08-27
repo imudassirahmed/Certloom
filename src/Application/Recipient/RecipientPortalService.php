@@ -2,6 +2,7 @@
 namespace Certloom\Application\Recipient;
 
 use Certloom\Application\VisibilityPolicy;
+use Certloom\Application\Sharing\ShareLinkBuilder;
 use Certloom\Domain\Credential\StatusService;
 use Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl;
 use Certloom\Infrastructure\Repository\CredentialRepository;
@@ -37,6 +38,8 @@ final class RecipientPortalService {
 	private $verification_gate;
 	/** @var NormalizedPublicCredentialUrl */
 	private $public_urls;
+	/** @var ShareLinkBuilder */
+	private $share_links;
 
 	public function __construct(
 		?RecipientRepository $recipients = null,
@@ -44,7 +47,8 @@ final class RecipientPortalService {
 		?StatusService $status = null,
 		?VisibilityPolicy $visibility = null,
 		?PublicVerificationGate $verification_gate = null,
-		?NormalizedPublicCredentialUrl $public_urls = null
+		?NormalizedPublicCredentialUrl $public_urls = null,
+		?ShareLinkBuilder $share_links = null
 	) {
 		$this->recipients         = $recipients ?: new RecipientRepository();
 		$this->credentials        = $credentials ?: new CredentialRepository();
@@ -52,6 +56,7 @@ final class RecipientPortalService {
 		$this->visibility         = $visibility ?: new VisibilityPolicy();
 		$this->verification_gate  = $verification_gate ?: new PublicVerificationGate();
 		$this->public_urls        = $public_urls ?: new NormalizedPublicCredentialUrl();
+		$this->share_links        = $share_links ?: new ShareLinkBuilder();
 	}
 
 	/**
@@ -144,10 +149,20 @@ final class RecipientPortalService {
 			$row['status'] = $status_result->to_array();
 			$row['expiring_soon'] = self::expiring_soon( $row['expires_at'] ?? null, $today, $status_result->is_valid() );
 			$row['verify_url'] = $verify_url;
-			/* PDF/Image and social sharing remain fail-closed/later roadmap scopes. */
 			$row['pdf_available'] = false;
 			$row['image_available'] = false;
 			$row['share_available'] = false;
+			$row['share_url'] = '';
+			$row['share_links'] = array();
+			if ( '' !== $verify_url && $this->visibility->allows_public_sharing( $row['visibility'] ?? '' ) ) {
+				$row['share_links'] = $this->share_links->links(
+					$verify_url,
+					__( 'View this verified credential', 'certloom' ),
+					__( 'Verified credential', 'certloom' )
+				);
+				$row['share_available'] = ! empty( $row['share_links'] );
+				$row['share_url'] = $row['share_available'] ? $verify_url : '';
+			}
 			$items[] = $row;
 		}
 

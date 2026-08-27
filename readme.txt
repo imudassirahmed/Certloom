@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.68
+Stable tag: 1.6.69
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.68: Recipient Portal / My Credentials POR-01 is implemented as an authenticated, fail-closed read surface over the normalized credential domain after the frozen Email Delivery milestone. Ownership is resolved only through the unique Recipient.wp_user_id link—never email/name inference—and only current issued Versions with recipient-portal-safe visibility leave persistence. Cards, grid and keyboard-accessible table layouts, bounded status/sort filters, pagination, expiring-soon cues, [certloom_my_credentials] plus the original [certloom_my_certificates] alias, and a native server-rendered Gutenberg block share one authoritative renderer. Public Verify appears only after normalized verifier authority opens; PDF/image downloads stay gated behind PDF-04, and social sharing remains the next SOC-01 milestone rather than being falsely claimed complete.
+> Development note for 1.6.69: SOC-01 Public Sharing Improvements are implemented on guest-verifiable credential surfaces with a server-owned visibility/action policy, deterministic local share-link generation and one accessible disclosure for LinkedIn, WhatsApp, Facebook, X, email and Copy URL. Sharing never widens credential visibility: public/verification-summary/unlisted URLs may be shared only when they are already guest-verifiable, while recipient-only, organization-member and private credentials remain fail-closed. Recipient Portal reuses the same rule and only exposes sharing after normalized public verification authority opens. No Certloom-owned sharing service, recipient PII payload, remote QR/image service or renderer candidate is introduced; OG-01 social metadata/images remain a separate renderer-dependent milestone. Verification/issuance analytics are next.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 

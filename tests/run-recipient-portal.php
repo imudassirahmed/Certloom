@@ -27,6 +27,7 @@ por( $visibility->allows_recipient_portal( 'recipient_only' ), 'owning Recipient
 por( ! $visibility->allows_recipient_portal( 'organization_member' ), 'organization_member fails closed until membership authorization exists' );
 por( ! $visibility->allows_recipient_portal( 'private' ), 'private remains administrator-only' );
 por( $visibility->allows_guest_verification( 'public' ) && ! $visibility->allows_guest_verification( 'recipient_only' ), 'portal access is distinct from guest verification visibility' );
+por( $visibility->allows_public_sharing( 'public' ) && $visibility->allows_public_sharing( 'unlisted' ) && ! $visibility->allows_public_sharing( 'recipient_only' ), 'public sharing is never broader than guest verification' );
 
 $status = new StatusService();
 $base = array( 'issuance_state'=>States::ISSUANCE_ISSUED, 'administrative_state'=>States::ADMIN_ACTIVE, 'compliance_state'=>States::COMPLIANCE_COMPLIANT, 'valid_from'=>'2026-01-01', 'expires_at'=>'2026-09-15' );
@@ -43,7 +44,8 @@ por( false === strpos( $portal_service, 'find_by_email' ) && false === strpos( $
 por( false !== strpos( $portal_service, 'certloom_recipient_portal_login_required' ), 'logged-out access fails closed' );
 por( false !== strpos( $portal_service, 'certloom_recipient_portal_authority_closed' ), 'normalized authority closure is explicit' );
 por( false !== strpos( $portal_service, 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && false !== strpos( $portal_service, 'verification_gate->is_ready()' ), 'development preview remains distinct from accepted public authority' );
-por( false !== strpos( $portal_service, "'pdf_available'] = false" ) && false !== strpos( $portal_service, "'image_available'] = false" ) && false !== strpos( $portal_service, "'share_available'] = false" ), 'download/image/share surfaces remain fail-closed/later scope' );
+por( false !== strpos( $portal_service, "'pdf_available'] = false" ) && false !== strpos( $portal_service, "'image_available'] = false" ), 'download/image surfaces remain fail-closed behind renderer authority' );
+por( false !== strpos( $portal_service, 'allows_public_sharing' ) && false !== strpos( $portal_service, "'share_available'] = ! empty" ), 'SOC-01 sharing is derived only from an already-authoritative guest-verifiable URL' );
 por( false !== strpos( $portal_service, 'EXPIRING_DAYS    = 30' ) && false !== strpos( $portal_service, 'expiring_soon' ), '30-day expiring-soon cue is explicit' );
 por( false !== strpos( $portal_service, "array( 'all', 'valid', 'suspended', 'revoked', 'expired', 'not_yet_valid', 'pending_review', 'noncompliant' )" ), 'status-filter allow-list is bounded' );
 por( false !== strpos( $portal_service, "array( 'newest', 'oldest', 'expires_soon', 'program' )" ), 'sort allow-list is bounded' );
@@ -68,7 +70,7 @@ por( false !== strpos( src('includes/class-ecapla-certverify-block.php'), "block
 $renderer = src( 'includes/class-ecapla-certverify-recipient-portal.php' );
 por( false !== strpos( $renderer, "array( 'cards', 'grid', 'table' )" ), 'cards/grid/table presentation is bounded to POR-01 layouts' );
 por( false !== strpos( $renderer, 'wp_login_url' ) && false !== strpos( $renderer, 'is_user_logged_in' ), 'logged-out renderer offers sign-in instead of leaking data' );
-por( false !== strpos( $renderer, 'Downloads gated' ) && false !== strpos( $renderer, 'verify_url' ), 'actions remain authority-aware and visibly honest' );
+por( false !== strpos( $renderer, 'Downloads gated' ) && false !== strpos( $renderer, 'verify_url' ) && false !== strpos( $renderer, 'share_controls' ), 'actions remain authority-aware and add SOC-01 sharing without opening downloads' );
 por( false !== strpos( $renderer, 'Expiring soon' ), 'expiring-soon cue is rendered' );
 por( false !== strpos( $renderer, 'role="region"' ) && false !== strpos( $renderer, 'tabindex="0"' ), 'responsive table is keyboard-focusable as a named scroll region' );
 
