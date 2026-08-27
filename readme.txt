@@ -4,16 +4,13 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.71-preview.1
+Stable tag: 1.6.71
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
 
 == Description ==
-
-**Experience Preview build:** normalized-domain administration screens are unlocked for staging/demo evaluation. Production credential authority, normalized Data Tools, public Series verification, and PDF/PNG/JPEG renderer authority remain closed. Do not use this preview package on a live production site.
-
 
 > Development note for 1.6.71: ANL-02 Issuance Analytics is implemented as a read-only projection over append-only `credential.issued` events and immutable Credential Version snapshots, with Program/Template/organization/Batch attribution, daily/weekly/monthly trends and a current 90-day expiry forecast. Historical Batch values are never guessed from later mutable Series relationships; older issuance without an immutable Batch dimension remains visibly Unattributed. ANL-01 Verification Analytics remains separate, and the Dashboard now surfaces capability-gated 30-day issuance/verification charts, failed lookups and top credential/Program/Template summaries. ANL-03 engagement analytics, renewal workflow and advanced analytics export remain later. Normalized-domain and renderer authority stay closed. 1.6.71 is the frozen ANL-02 + ADM-02 checkpoint; INT-01 integration/LMS adapter architecture is next.
 

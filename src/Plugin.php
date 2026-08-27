@@ -85,18 +85,7 @@ final class Plugin {
 			if ( self::$job_runtime ) {
 				( new \Certloom\Infrastructure\Admin\BulkIssuanceAdmin( self::$job_runtime ) )->register();
 				( new \Certloom\Infrastructure\Admin\EmailDeliveryAdmin( self::$job_runtime ) )->register();
-				/*
-				 * Experience Preview intentionally exposes the product UI but does not
-				 * expose the new-domain import/restore/cutover toolchain by default.
-				 * Data Tools require their real readiness gate or a second explicit
-				 * preview opt-in, keeping "show me the product" separate from migration
-				 * operations that can materially alter staged domain data.
-				 */
-				$data_tools_ready = defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) && CERTLOOM_DOMAIN_DATA_TOOLS_READY;
-				$preview_data_tools = defined( 'CERTLOOM_EXPERIENCE_PREVIEW_DATA_TOOLS' ) && CERTLOOM_EXPERIENCE_PREVIEW_DATA_TOOLS;
-				if ( $data_tools_ready || $preview_data_tools ) {
-					( new \Certloom\Infrastructure\Admin\DomainDataToolsAdmin( self::$job_runtime ) )->register();
-				}
+				( new \Certloom\Infrastructure\Admin\DomainDataToolsAdmin( self::$job_runtime ) )->register();
 			}
 		}
 	}

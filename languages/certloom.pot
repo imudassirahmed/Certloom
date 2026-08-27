@@ -3275,73 +3275,61 @@ msgstr ""
 msgid "This block is recipient-specific. The editor preview uses the current signed-in account and remains fail-closed until normalized credential authority is available."
 msgstr ""
 
-#: certloom.php:160
-msgid "Certloom Experience Preview is enabled."
-msgstr ""
-
-#: certloom.php:160
-msgid "Normalized administration screens are unlocked so you can inspect the product on staging. This does not open production credential authority, normalized Data Tools, public Series verification, or PDF/PNG/JPEG renderer authority."
-msgstr ""
-
-#: certloom.php:160
-msgid "Use this package for staging/demo evaluation only. The legacy registry remains public authority and all final acceptance gates remain intact."
-msgstr ""
-
-#: certloom.php:222
+#: certloom.php:180
 msgid "Certloom could not save the multisite provisioning failure report."
 msgstr ""
 
-#: certloom.php:227
+#: certloom.php:185
 msgid "Certloom completed network setup but could not clear an old provisioning failure report."
 msgstr ""
 
-#: certloom.php:266
+#: certloom.php:224
 msgid "Certloom could not save its required administrator access."
 msgstr ""
 
 #. translators: 1: site ID, 2: setup error.
-#: certloom.php:290
+#: certloom.php:248
 msgid "Site %1$d: %2$s"
 msgstr ""
 
-#: certloom.php:295
+#: certloom.php:253
 msgid "Certloom activation stopped because required setup could not be completed."
 msgstr ""
 
-#: certloom.php:299
+#: certloom.php:257
 msgid "Certloom activation failed"
 msgstr ""
 
 #. translators: %s: comma-separated multisite site IDs.
-#: certloom.php:429
+#: certloom.php:387
 msgid "Certloom could not finish provisioning on site IDs: %s. Visit each affected site administration area to retry database and access setup."
 msgstr ""
 
-#: certloom.php:456
+#: certloom.php:414
 msgid "Certloom could not persist its required administrator access. The migration will be retried automatically."
 msgstr ""
 
-#: certloom.php:473
+#: certloom.php:431
 msgid "Certloom could not persist the multisite provisioning status."
 msgstr ""
 
-#: certloom.php:588
+#: certloom.php:546
 msgid "Certloom publishes only the certificate fields that a site administrator marks as visible. Those fields may include names or other personal information, so administrators should publish only information they are authorised to disclose."
 msgstr ""
 
-#: certloom.php:589
+#: certloom.php:547
 msgid "Depending on the Certloom features enabled by the site, local WordPress storage may also contain recipient identity/contact data and administrator-managed issuer or signer contact details. These records remain on the site unless the administrator exports, changes, or removes them according to the organization’s retention obligations."
 msgstr ""
 
-#: certloom.php:590
+#: certloom.php:548
 msgid "Certificate verification is performed on this WordPress site. Certloom does not send certificate records to Ecapla or another external service. Verification requests may still appear in normal web-server, security, analytics, browser-history, and cache logs. Direct verification links can include the certificate number in the URL."
 msgstr ""
 
-#: certloom.php:591
+#: certloom.php:549
 msgid "When Certloom Verification Analytics is available, Certloom stores daily aggregate verification counters locally for up to 730 days. These aggregates classify outcomes and sources such as manual, QR, or API verification; they do not store raw IP addresses, User-Agents, secondary proof codes, or raw failed certificate-number input. Verification analytics are operational data and are removed when Certloom is uninstalled."
 msgstr ""
 
-#: certloom.php:592
+#: certloom.php:550
 msgid "Site administrators determine how long certificate records are retained and can configure whether Certloom data is removed when the plugin is uninstalled."
 msgstr ""
 
