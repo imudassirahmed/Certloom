@@ -15,131 +15,131 @@ msgstr ""
 "X-Generator: certloom make-pot.py\n"
 "X-Domain: certloom\n"
 
-#: admin/class-ecapla-certverify-admin.php:1009
-#: admin/class-ecapla-certverify-admin.php:1015
+#: admin/class-ecapla-certverify-admin.php:1017
+#: admin/class-ecapla-certverify-admin.php:1023
 msgid "Phase 1 data model"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1010
+#: admin/class-ecapla-certverify-admin.php:1018
 msgid "First-class Recipient administration is implemented in the normalized domain and remains acceptance-gated until the real WordPress/MySQL migration and cutover proof passes."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1011
-#: admin/class-ecapla-certverify-admin.php:1017
+#: admin/class-ecapla-certverify-admin.php:1019
+#: admin/class-ecapla-certverify-admin.php:1025
 msgid "Implementation complete · production acceptance gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1016
+#: admin/class-ecapla-certverify-admin.php:1024
 msgid "Standalone Program administration is implemented in the normalized domain and remains acceptance-gated. Certloom will not emulate Program relationships inside legacy custom fields."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1021
+#: admin/class-ecapla-certverify-admin.php:1029
 msgid "Pro commercial core · implementation gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1022
-msgid "Versioned Templates, immutable revisions, six factory design families, deterministic assignments, lifecycle controls, canonical Render Plan Preview, and the full planned DSN-01 through DSN-08 Designer foundation are implemented. Designer edits the same versioned certloom-layout revision model: historical v1/v2 layouts remain readable and immutable, explicit v3 upgrades create a new immutable revision, Code 128 remains bound only to credential.display_number, and canonical bullet/numbered lists resolve through the shared text Render Plan path. DSN-08 now centralizes built-in element schema availability, allowed properties, validation/resolver/renderer mappings, inspector groups, merge requirements and palette defaults behind one closed typed registry; no unversioned filter or arbitrary HTML/CSS callback can mutate it. Recovery autosave remains personal/non-authoritative, manual save remains the only revision-authority path, and FONT-02 still owns controlled local font manifests. Publication and production artifact authority remain fail-closed behind renderer release authority. The P0 Manual Issuance golden path, premium Credential Management workspace and reviewed Bulk Issuance workflow are implemented inside the normalized-domain admin-preview gate: administrators can issue one credential, inspect immutable Version lineage, perform reviewed lifecycle or Program/Batch corrections, then scale through protected CSV review and durable per-row idempotent issuance without rewriting historical snapshots. Email Delivery is implemented from exact immutable Versions with reviewed SHA-256 confirmation, WordPress-local wp_mail()/SMTP interoperability, privacy-minimized delivery evidence, safe failed retry and fail-closed delivery-uncertain handling. Recipient Portal / My Credentials POR-01 is now implemented as an authenticated, explicit wp_user_id-linked collection with cards/grid/table layouts, bounded status/sort filtering, pagination and expiring-soon cues; normalized Verify and artifact downloads remain authority-gated. SOC-01 Public Sharing is implemented only for already guest-verifiable credentials with local LinkedIn/WhatsApp/Facebook/X/email/copy intents. ANL-01 Verification Analytics is now implemented with privacy-minimized local daily aggregates, bounded retention, outcome/source trends and most-verified reporting; ANL-02 Issuance Analytics remains next."
+#: admin/class-ecapla-certverify-admin.php:1030
+msgid "Versioned Templates, immutable revisions, six factory design families, deterministic assignments, lifecycle controls, canonical Render Plan Preview, and the full planned DSN-01 through DSN-08 Designer foundation are implemented. Designer edits the same versioned certloom-layout revision model: historical v1/v2 layouts remain readable and immutable, explicit v3 upgrades create a new immutable revision, Code 128 remains bound only to credential.display_number, and canonical bullet/numbered lists resolve through the shared text Render Plan path. DSN-08 now centralizes built-in element schema availability, allowed properties, validation/resolver/renderer mappings, inspector groups, merge requirements and palette defaults behind one closed typed registry; no unversioned filter or arbitrary HTML/CSS callback can mutate it. Recovery autosave remains personal/non-authoritative, manual save remains the only revision-authority path, and FONT-02 still owns controlled local font manifests. Publication and production artifact authority remain fail-closed behind renderer release authority. The P0 Manual Issuance golden path, premium Credential Management workspace and reviewed Bulk Issuance workflow are implemented inside the normalized-domain admin-preview gate: administrators can issue one credential, inspect immutable Version lineage, perform reviewed lifecycle or Program/Batch corrections, then scale through protected CSV review and durable per-row idempotent issuance without rewriting historical snapshots. Email Delivery is implemented from exact immutable Versions with reviewed SHA-256 confirmation, WordPress-local wp_mail()/SMTP interoperability, privacy-minimized delivery evidence, safe failed retry and fail-closed delivery-uncertain handling. Recipient Portal / My Credentials POR-01 is now implemented as an authenticated, explicit wp_user_id-linked collection with cards/grid/table layouts, bounded status/sort filtering, pagination and expiring-soon cues; normalized Verify and artifact downloads remain authority-gated. SOC-01 Public Sharing is implemented only for already guest-verifiable credentials with local LinkedIn/WhatsApp/Facebook/X/email/copy intents. ANL-01 Verification Analytics and ANL-02 Issuance Analytics are now implemented with privacy-minimized verification aggregates, immutable issuance-event/snapshot reporting, bounded daily/weekly/monthly trends and a current expiry forecast; INT-01 integration architecture is next."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1023
-msgid "Designer + Issuance + Credential Management + Email Delivery + Recipient Portal + Public Sharing + Verification Analytics implemented · authority gated · Issuance Analytics next"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1027
-msgid "P0 issuance workflow · implementation gated"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1028
-msgid "Manual Issuance is implemented inside the normalized-domain admin-preview gate with existing/new Recipient selection, active Program and verified published-Template selection, mutation-free review, exact SHA-256 confirmation, backdating/permanent/explicit expiry choices, established numbering policy reuse, bounded credential-specific custom merge values, canonical browser Preview, atomic Series/Version/event creation, retry idempotency and an immutable issuance snapshot. Credential Management provides a bounded registry, immutable Version inspection, status/verification workspace, reviewed lifecycle actions and immutable-successor Program/Batch corrections. Bulk Issuance adds protected CSV review, SHA-256 confirmation, durable bounded per-row issuance, progress and row-level outcomes through the same Manual Issuance truth path. Email Delivery adds immutable-Version composition, versioned templates, explicit reviewed queueing, wp_mail()/SMTP interoperability, privacy-minimized status evidence and non-replayable delivery-uncertain recovery. Recipient Portal / My Credentials POR-01 is implemented with explicit linked-recipient ownership, current-issued Version queries, cards/grid/table layouts and bounded filtering/sorting. SOC-01 Public Sharing adds server-authorized LinkedIn/WhatsApp/Facebook/X/email/copy actions only for already guest-verifiable URLs. ANL-01 Verification Analytics is implemented as privacy-minimized WordPress-local aggregates with bounded daily storage, source/outcome reporting and daily/weekly/monthly trends; ANL-02 Issuance Analytics remains next. Normalized public authority and PDF/PNG/JPEG exports stay fail-closed until final database and renderer acceptance."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1029
-msgid "Manual + Bulk + Credential Management + Email Delivery + Recipient Portal + Public Sharing + Verification Analytics implemented · acceptance gated · Issuance Analytics next"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1033
-msgid "Planned automation layer"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1034
-msgid "Tutor LMS and LearnDash are the first planned LMS adapters, followed by additional LMS, commerce, API and webhook integrations. No integration is presented as active before its acceptance tests exist."
+#: admin/class-ecapla-certverify-admin.php:1031
+msgid "Designer + Issuance + Credential Management + Email Delivery + Recipient Portal + Public Sharing + Analytics implemented · authority gated · Integrations next"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1035
+msgid "P0 issuance workflow · implementation gated"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1036
+msgid "Manual Issuance is implemented inside the normalized-domain admin-preview gate with existing/new Recipient selection, active Program and verified published-Template selection, mutation-free review, exact SHA-256 confirmation, backdating/permanent/explicit expiry choices, established numbering policy reuse, bounded credential-specific custom merge values, canonical browser Preview, atomic Series/Version/event creation, retry idempotency and an immutable issuance snapshot. Credential Management provides a bounded registry, immutable Version inspection, status/verification workspace, reviewed lifecycle actions and immutable-successor Program/Batch corrections. Bulk Issuance adds protected CSV review, SHA-256 confirmation, durable bounded per-row issuance, progress and row-level outcomes through the same Manual Issuance truth path. Email Delivery adds immutable-Version composition, versioned templates, explicit reviewed queueing, wp_mail()/SMTP interoperability, privacy-minimized status evidence and non-replayable delivery-uncertain recovery. Recipient Portal / My Credentials POR-01 is implemented with explicit linked-recipient ownership, current-issued Version queries, cards/grid/table layouts and bounded filtering/sorting. SOC-01 Public Sharing adds server-authorized LinkedIn/WhatsApp/Facebook/X/email/copy actions only for already guest-verifiable URLs. ANL-01 Verification Analytics and ANL-02 Issuance Analytics are implemented with bounded verification aggregates, immutable issuance-event/snapshot dimensions, daily/weekly/monthly trends and expiry forecasting; INT-01 integration architecture is next. Normalized public authority and PDF/PNG/JPEG exports stay fail-closed until final database and renderer acceptance."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1037
+msgid "Manual + Bulk + Credential Management + Email Delivery + Recipient Portal + Public Sharing + Analytics implemented · acceptance gated · Integrations next"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1041
+msgid "Planned automation layer"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1042
+msgid "Tutor LMS and LearnDash are the first planned LMS adapters, followed by additional LMS, commerce, API and webhook integrations. No integration is presented as active before its acceptance tests exist."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1043
 msgid "Planned"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1040
+#: admin/class-ecapla-certverify-admin.php:1048
 msgid "That Certloom workspace is not available."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1055
+#: admin/class-ecapla-certverify-admin.php:1063
 msgid "That certificate does not exist."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1072
+#: admin/class-ecapla-certverify-admin.php:1080
 msgid "Those import results expired. Run the import again to generate a new report."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1081
+#: admin/class-ecapla-certverify-admin.php:1089
 msgid "That backup restore process expired. Upload the backup again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1090
-#: admin/class-ecapla-certverify-admin.php:1099
+#: admin/class-ecapla-certverify-admin.php:1098
+#: admin/class-ecapla-certverify-admin.php:1107
 msgid "That import session expired. Upload the CSV again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1114
+#: admin/class-ecapla-certverify-admin.php:1122
 #: includes/class-ecapla-certverify-backup.php:402
 msgid "That backup review session expired. Upload the backup again."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1123
-msgid "You do not have permission to view Certloom analytics."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:113
 msgid "The certificate you tried to update no longer exists."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1154
+#: admin/class-ecapla-certverify-admin.php:1131
+msgid "You do not have permission to view Certloom analytics."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1169
 msgid "The review acknowledgement could not be saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1172
+#: admin/class-ecapla-certverify-admin.php:1187
 msgid "A complete Certloom restore is in progress. Certificate and configuration changes are temporarily paused; public verification remains available."
 msgstr ""
 
 #. translators: 1: number of legacy records, 2: review URL.
-#: admin/class-ecapla-certverify-admin.php:1192
+#: admin/class-ecapla-certverify-admin.php:1207
 msgid "%1$d legacy Expired certificate needs review. <a href=\"%2$s\">Review it now</a>. It will remain Expired until an administrator deliberately chooses a workflow status."
 msgid_plural "%1$d legacy Expired certificates need review. <a href=\"%2$s\">Review them now</a>. They will remain Expired until an administrator deliberately chooses a workflow status."
 msgstr[0] ""
 msgstr[1] ""
 
-#: admin/class-ecapla-certverify-admin.php:1205
+#: admin/class-ecapla-certverify-admin.php:1220
 msgid "Certloom 1.3.0 briefly contained an unsafe legacy-status migration. If that version ran on this site, compare certificate statuses with a pre-1.3.0 backup before launch. The current release does not guess or silently rewrite those records."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1208
+#: admin/class-ecapla-certverify-admin.php:1223
 msgid "I have reviewed this"
 msgstr ""
 
 #. translators: %s: Ecapla website link.
-#: admin/class-ecapla-certverify-admin.php:1220
+#: admin/class-ecapla-certverify-admin.php:1235
 msgid "Certloom is developed and maintained by %s."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1221
+#: admin/class-ecapla-certverify-admin.php:1236
 msgid "Ecapla"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1230
+#: admin/class-ecapla-certverify-admin.php:1245
 msgid "You do not have permission to manage certificates."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1236
+#: admin/class-ecapla-certverify-admin.php:1251
 msgid "You do not have permission to manage these settings."
 msgstr ""
 
@@ -264,7 +264,7 @@ msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:79
 #: admin/class-ecapla-certverify-admin.php:79
-#: admin/class-ecapla-certverify-admin.php:1032
+#: admin/class-ecapla-certverify-admin.php:1040
 msgid "Integrations"
 msgstr ""
 
@@ -339,7 +339,7 @@ msgid "Change selected…"
 msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:39
-#: admin/views/dashboard.php:122
+#: admin/views/dashboard.php:149
 #: admin/views/list-certificates.php:113
 msgid "Holder"
 msgstr ""
@@ -375,178 +375,195 @@ msgstr ""
 msgid "Legacy review required"
 msgstr ""
 
-#: admin/views/analytics.php:10
+#: admin/views/analytics.php:14
 msgid "ANL-01 · Local privacy-safe analytics"
 msgstr ""
 
-#: admin/views/analytics.php:11
+#: admin/views/analytics.php:15
 msgid "Verification Analytics"
 msgstr ""
 
-#: admin/views/analytics.php:12
+#: admin/views/analytics.php:16
 msgid "Understand verification outcomes and trends without storing raw IP addresses, User-Agents, secondary proofs, or failed certificate-number input."
 msgstr ""
 
-#: admin/views/analytics.php:16
+#: admin/views/analytics.php:21
+#: admin/views/issuance-analytics.php:21
 msgid "Reporting period"
 msgstr ""
 
-#: admin/views/analytics.php:22
+#: admin/views/analytics.php:27
+#: admin/views/issuance-analytics.php:23
 #: includes/class-ecapla-certverify-recipient-portal.php:162
 msgid "Apply"
 msgstr ""
 
-#: admin/views/analytics.php:33
+#: admin/views/analytics.php:38
+#: admin/views/issuance-analytics.php:33
 msgid "Daily trend"
 msgstr ""
 
-#: admin/views/analytics.php:33
+#: admin/views/analytics.php:38
+#: admin/views/issuance-analytics.php:33
 msgid "Monthly trend"
 msgstr ""
 
-#: admin/views/analytics.php:33
+#: admin/views/analytics.php:38
+#: admin/views/issuance-analytics.php:33
 msgid "Weekly trend"
 msgstr ""
 
-#: admin/views/analytics.php:34
+#: admin/views/analytics.php:39
 #: admin/views/fields-manager.php:125
+#: admin/views/issuance-analytics.php:34
 msgid "Date"
 msgstr ""
 
-#: admin/views/analytics.php:34
+#: admin/views/analytics.php:39
+#: admin/views/issuance-analytics.php:34
 msgid "Month"
 msgstr ""
 
-#: admin/views/analytics.php:34
+#: admin/views/analytics.php:39
+#: admin/views/issuance-analytics.php:34
 msgid "Week starting"
-msgstr ""
-
-#: admin/views/analytics.php:35
-msgid "Daily verification lookup totals"
-msgstr ""
-
-#: admin/views/analytics.php:35
-msgid "Monthly verification lookup totals"
-msgstr ""
-
-#: admin/views/analytics.php:35
-msgid "Weekly verification lookup totals"
-msgstr ""
-
-#: admin/views/analytics.php:36
-msgid "Daily verification trend table"
-msgstr ""
-
-#: admin/views/analytics.php:36
-msgid "Monthly verification trend table"
-msgstr ""
-
-#: admin/views/analytics.php:36
-msgid "Weekly verification trend table"
-msgstr ""
-
-#: admin/views/analytics.php:38
-msgid "Verification summary"
 msgstr ""
 
 #: admin/views/analytics.php:4
 msgid "Verification analytics are unavailable."
 msgstr ""
 
+#: admin/views/analytics.php:40
+msgid "Daily verification lookup totals"
+msgstr ""
+
+#: admin/views/analytics.php:40
+msgid "Monthly verification lookup totals"
+msgstr ""
+
+#: admin/views/analytics.php:40
+msgid "Weekly verification lookup totals"
+msgstr ""
+
 #: admin/views/analytics.php:41
+msgid "Daily verification trend table"
+msgstr ""
+
+#: admin/views/analytics.php:41
+msgid "Monthly verification trend table"
+msgstr ""
+
+#: admin/views/analytics.php:41
+msgid "Weekly verification trend table"
+msgstr ""
+
+#: admin/views/analytics.php:43
+msgid "Verification summary"
+msgstr ""
+
+#: admin/views/analytics.php:46
 msgid "Total lookups"
 msgstr ""
 
-#: admin/views/analytics.php:42
-#: admin/views/analytics.php:70
+#: admin/views/analytics.php:47
+#: admin/views/analytics.php:75
 msgid "Successful"
 msgstr ""
 
-#: admin/views/analytics.php:44
+#: admin/views/analytics.php:49
 msgid "Invalid input"
 msgstr ""
 
 #: admin/views/analytics.php:5
+#: admin/views/issuance-analytics.php:5
 msgid "12 months"
 msgstr ""
 
 #: admin/views/analytics.php:5
+#: admin/views/issuance-analytics.php:5
 msgid "30 days"
 msgstr ""
 
 #: admin/views/analytics.php:5
+#: admin/views/issuance-analytics.php:5
 msgid "7 days"
 msgstr ""
 
 #: admin/views/analytics.php:5
+#: admin/views/issuance-analytics.php:5
 msgid "90 days"
 msgstr ""
 
-#: admin/views/analytics.php:55
+#: admin/views/analytics.php:60
 msgid "Verification activity"
 msgstr ""
 
-#: admin/views/analytics.php:57
+#: admin/views/analytics.php:62
 msgid "Counts will appear here after public verification requests are recorded."
 msgstr ""
 
-#: admin/views/analytics.php:57
+#: admin/views/analytics.php:62
 msgid "No verification activity in this period."
 msgstr ""
 
-#: admin/views/analytics.php:66
+#: admin/views/analytics.php:71
 msgid "%1$s: %2$d verification lookups"
 msgstr ""
 
-#: admin/views/analytics.php:70
+#: admin/views/analytics.php:75
 msgid "Invalid"
 msgstr ""
 
-#: admin/views/analytics.php:78
+#: admin/views/analytics.php:8
+#: admin/views/issuance-analytics.php:8
+msgid "Analytics reports"
+msgstr ""
+
+#: admin/views/analytics.php:83
 msgid "How verification started"
 msgstr ""
 
-#: admin/views/analytics.php:79
+#: admin/views/analytics.php:84
 msgid "API"
 msgstr ""
 
-#: admin/views/analytics.php:79
+#: admin/views/analytics.php:84
 msgid "Manual / direct"
 msgstr ""
 
-#: admin/views/analytics.php:79
+#: admin/views/analytics.php:84
 msgid "QR scan"
 msgstr ""
 
-#: admin/views/analytics.php:81
+#: admin/views/analytics.php:86
 msgid "Aggregates, not visitor logs"
 msgstr ""
 
-#: admin/views/analytics.php:81
+#: admin/views/analytics.php:86
 msgid "Certloom keeps daily aggregate counters for up to %d days. It does not store raw IP addresses, User-Agents, secondary proof codes, or raw failed certificate-number input in this analytics table."
 msgstr ""
 
-#: admin/views/analytics.php:81
+#: admin/views/analytics.php:86
 msgid "Privacy"
 msgstr ""
 
-#: admin/views/analytics.php:85
+#: admin/views/analytics.php:90
 msgid "Credential interest"
 msgstr ""
 
-#: admin/views/analytics.php:85
+#: admin/views/analytics.php:90
 msgid "Most verified credentials"
 msgstr ""
 
-#: admin/views/analytics.php:86
+#: admin/views/analytics.php:91
 msgid "Lookups"
 msgstr ""
 
-#: admin/views/analytics.php:86
+#: admin/views/analytics.php:91
 msgid "No resolved credentials have verification activity in this period."
 msgstr ""
 
-#: admin/views/analytics.php:86
+#: admin/views/analytics.php:91
 msgid "Open credential"
 msgstr ""
 
@@ -743,29 +760,53 @@ msgstr ""
 msgid "Set custom field: %s"
 msgstr ""
 
-#: admin/views/dashboard.php:105
-#: admin/views/list-certificates.php:85
-msgid "Registry"
+#: admin/views/dashboard.php:109
+msgid "Credential analytics"
 msgstr ""
 
-#: admin/views/dashboard.php:106
-msgid "Recent certificates"
+#: admin/views/dashboard.php:109
+msgid "Last 30 days"
 msgstr ""
 
-#: admin/views/dashboard.php:108
-msgid "View all"
+#: admin/views/dashboard.php:109
+msgid "Open Analytics"
+msgstr ""
+
+#: admin/views/dashboard.php:112
+msgid "Verification lookups"
 msgstr ""
 
 #: admin/views/dashboard.php:113
-msgid "No certificates yet"
+msgid "Failed lookups"
 msgstr ""
 
 #: admin/views/dashboard.php:114
-msgid "Create your first certificate or import existing records to populate the registry."
+#: admin/views/issuance-analytics.php:42
+msgid "Expiring ≤90 days"
 msgstr ""
 
-#: admin/views/dashboard.php:115
-msgid "Create first certificate"
+#: admin/views/dashboard.php:117
+msgid "%1$s: %2$d issued"
+msgstr ""
+
+#: admin/views/dashboard.php:117
+msgid "Daily issued credentials for the last 30 days"
+msgstr ""
+
+#: admin/views/dashboard.php:117
+msgid "Issuance trend"
+msgstr ""
+
+#: admin/views/dashboard.php:118
+msgid "%1$s: %2$d lookups"
+msgstr ""
+
+#: admin/views/dashboard.php:118
+msgid "Daily verification lookups for the last 30 days"
+msgstr ""
+
+#: admin/views/dashboard.php:118
+msgid "Verification trend"
 msgstr ""
 
 #: admin/views/dashboard.php:12
@@ -780,92 +821,138 @@ msgstr ""
 msgid "Review recommended"
 msgstr ""
 
-#: admin/views/dashboard.php:147
-msgid "Dashboard tools"
+#: admin/views/dashboard.php:121
+msgid "No resolved verification activity yet"
 msgstr ""
 
-#: admin/views/dashboard.php:149
-msgid "Shortcuts"
+#: admin/views/dashboard.php:121
+msgid "Top credential"
 msgstr ""
 
-#: admin/views/dashboard.php:150
-msgid "Certloom quick actions"
+#: admin/views/dashboard.php:122
+#: admin/views/dashboard.php:123
+msgid "No normalized issuance activity yet"
 msgstr ""
 
-#: admin/views/dashboard.php:151
-msgid "Create one registry record"
+#: admin/views/dashboard.php:122
+msgid "Top Program"
 msgstr ""
 
-#: admin/views/dashboard.php:152
-msgid "CSV and complete backups"
+#: admin/views/dashboard.php:123
+msgid "Top Template"
 msgstr ""
 
-#: admin/views/dashboard.php:152
-msgid "Import & export"
+#: admin/views/dashboard.php:132
+#: admin/views/list-certificates.php:85
+msgid "Registry"
 msgstr ""
 
-#: admin/views/dashboard.php:153
-msgid "Labels, visibility and custom data"
+#: admin/views/dashboard.php:133
+msgid "Recent certificates"
 msgstr ""
 
-#: admin/views/dashboard.php:153
-#: admin/views/edit-certificate.php:110
-#: admin/views/list-certificates.php:87
-msgid "Manage fields"
+#: admin/views/dashboard.php:135
+msgid "View all"
 msgstr ""
 
-#: admin/views/dashboard.php:154
-#: admin/views/frontend-manager.php:22
-msgid "Appearance & embed"
+#: admin/views/dashboard.php:140
+msgid "No certificates yet"
 msgstr ""
 
-#: admin/views/dashboard.php:154
-msgid "Verification presentation and embeds"
+#: admin/views/dashboard.php:141
+msgid "Create your first certificate or import existing records to populate the registry."
 msgstr ""
 
-#: admin/views/dashboard.php:160
-msgid "System health"
-msgstr ""
-
-#: admin/views/dashboard.php:164
-msgid "The current registry, authority state and runtime checks are healthy."
+#: admin/views/dashboard.php:142
+msgid "Create first certificate"
 msgstr ""
 
 #: admin/views/dashboard.php:17
 msgid "Credential operations"
 msgstr ""
 
-#: admin/views/dashboard.php:172
-msgid "Open System Status"
+#: admin/views/dashboard.php:174
+msgid "Dashboard tools"
 msgstr ""
 
 #: admin/views/dashboard.php:176
-msgid "Data engine"
-msgstr ""
-
-#: admin/views/dashboard.php:176
-msgid "Proven registry is authoritative"
+msgid "Shortcuts"
 msgstr ""
 
 #: admin/views/dashboard.php:177
-msgid "The current 1.5 registry remains the live source of certificate truth. Credential Series migration infrastructure stays safely gated until its real staging acceptance sequence is approved."
+msgid "Certloom quick actions"
 msgstr ""
 
 #: admin/views/dashboard.php:178
-msgid "No automatic authority switch"
+msgid "Create one registry record"
+msgstr ""
+
+#: admin/views/dashboard.php:179
+msgid "CSV and complete backups"
+msgstr ""
+
+#: admin/views/dashboard.php:179
+msgid "Import & export"
+msgstr ""
+
+#: admin/views/dashboard.php:180
+msgid "Labels, visibility and custom data"
+msgstr ""
+
+#: admin/views/dashboard.php:180
+#: admin/views/edit-certificate.php:110
+#: admin/views/list-certificates.php:87
+msgid "Manage fields"
+msgstr ""
+
+#: admin/views/dashboard.php:181
+#: admin/views/frontend-manager.php:22
+msgid "Appearance & embed"
+msgstr ""
+
+#: admin/views/dashboard.php:181
+msgid "Verification presentation and embeds"
+msgstr ""
+
+#: admin/views/dashboard.php:187
+msgid "System health"
 msgstr ""
 
 #: admin/views/dashboard.php:19
 msgid "Manage and monitor your self-hosted certificate registry from one place."
 msgstr ""
 
+#: admin/views/dashboard.php:191
+msgid "The current registry, authority state and runtime checks are healthy."
+msgstr ""
+
+#: admin/views/dashboard.php:199
+msgid "Open System Status"
+msgstr ""
+
+#: admin/views/dashboard.php:203
+msgid "Data engine"
+msgstr ""
+
+#: admin/views/dashboard.php:203
+msgid "Proven registry is authoritative"
+msgstr ""
+
+#: admin/views/dashboard.php:204
+msgid "The current 1.5 registry remains the live source of certificate truth. Credential Series migration infrastructure stays safely gated until its real staging acceptance sequence is approved."
+msgstr ""
+
+#: admin/views/dashboard.php:205
+msgid "No automatic authority switch"
+msgstr ""
+
 #: admin/views/dashboard.php:21
-#: admin/views/dashboard.php:149
+#: admin/views/dashboard.php:176
 msgid "Quick actions"
 msgstr ""
 
 #: admin/views/dashboard.php:24
-#: admin/views/dashboard.php:151
+#: admin/views/dashboard.php:178
 #: admin/views/list-certificates.php:30
 msgid "Add certificate"
 msgstr ""
@@ -1720,6 +1807,144 @@ msgstr ""
 
 #: admin/views/import-upload.php:92
 msgid "Start safe restore"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:14
+msgid "ANL-02 · Immutable issuance analytics"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:15
+msgid "Issuance Analytics"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:16
+msgid "Measure issued credentials by Program, Template, organization and Batch from append-only issuance events and immutable Version snapshots, with a current 90-day expiry forecast."
+msgstr ""
+
+#: admin/views/issuance-analytics.php:36
+msgid "Issuance summary"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:39
+#: admin/views/issuance-analytics.php:57
+msgid "Manual"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:4
+msgid "Issuance analytics are unavailable."
+msgstr ""
+
+#: admin/views/issuance-analytics.php:40
+#: admin/views/issuance-analytics.php:57
+msgid "Bulk"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:41
+msgid "Expiring ≤30 days"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:43
+msgid "Permanent current"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:49
+msgid "Issued credentials"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:50
+msgid "ANL-02 counts actual credential.issued events; migrations and relationship corrections do not masquerade as new issuance."
+msgstr ""
+
+#: admin/views/issuance-analytics.php:50
+msgid "No normalized issuance events in this period."
+msgstr ""
+
+#: admin/views/issuance-analytics.php:52
+msgid "%1$s: %2$d issued credentials"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:52
+msgid "Credential issuance trend"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:53
+msgid "Issuance trend table"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:57
+msgid "How credentials were issued"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:57
+msgid "Issuance source"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:57
+msgid "Other normalized source"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:58
+msgid "Historical facts stay immutable"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:58
+msgid "Program, Template and organization attribution comes from immutable issuance snapshots. Batch is shown as Unattributed when older issuance did not freeze a Batch dimension; Certloom never guesses it from a later Series correction."
+msgstr ""
+
+#: admin/views/issuance-analytics.php:58
+msgid "Truth model"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:62
+msgid "Issuance mix"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:62
+msgid "Top issuance dimensions"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:63
+msgid "No issuance data in this period."
+msgstr ""
+
+#: admin/views/issuance-analytics.php:63
+msgid "Organizations"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:66
+msgid "90-day expiry forecast"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:66
+msgid "Forward-looking"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:67
+msgid "0–30 days"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:67
+msgid "31–60 days"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:67
+msgid "61–90 days"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:67
+msgid "Expiry forecast summary"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:68
+msgid "Forecasts use each Series’ current issued Version and exclude revoked credentials. This is operational expiry visibility only; renewal reminders and re-certification remain the separate REN-01 workflow."
+msgstr ""
+
+#: admin/views/issuance-analytics.php:69
+msgid "Expiring within 90 days"
+msgstr ""
+
+#: admin/views/issuance-analytics.php:69
+msgid "Programs with upcoming expiries"
 msgstr ""
 
 #: admin/views/list-certificates.php:111
@@ -3050,61 +3275,73 @@ msgstr ""
 msgid "This block is recipient-specific. The editor preview uses the current signed-in account and remains fail-closed until normalized credential authority is available."
 msgstr ""
 
-#: certloom.php:180
+#: certloom.php:160
+msgid "Certloom Experience Preview is enabled."
+msgstr ""
+
+#: certloom.php:160
+msgid "Normalized administration screens are unlocked so you can inspect the product on staging. This does not open production credential authority, normalized Data Tools, public Series verification, or PDF/PNG/JPEG renderer authority."
+msgstr ""
+
+#: certloom.php:160
+msgid "Use this package for staging/demo evaluation only. The legacy registry remains public authority and all final acceptance gates remain intact."
+msgstr ""
+
+#: certloom.php:222
 msgid "Certloom could not save the multisite provisioning failure report."
 msgstr ""
 
-#: certloom.php:185
+#: certloom.php:227
 msgid "Certloom completed network setup but could not clear an old provisioning failure report."
 msgstr ""
 
-#: certloom.php:224
+#: certloom.php:266
 msgid "Certloom could not save its required administrator access."
 msgstr ""
 
 #. translators: 1: site ID, 2: setup error.
-#: certloom.php:248
+#: certloom.php:290
 msgid "Site %1$d: %2$s"
 msgstr ""
 
-#: certloom.php:253
+#: certloom.php:295
 msgid "Certloom activation stopped because required setup could not be completed."
 msgstr ""
 
-#: certloom.php:257
+#: certloom.php:299
 msgid "Certloom activation failed"
 msgstr ""
 
 #. translators: %s: comma-separated multisite site IDs.
-#: certloom.php:387
+#: certloom.php:429
 msgid "Certloom could not finish provisioning on site IDs: %s. Visit each affected site administration area to retry database and access setup."
 msgstr ""
 
-#: certloom.php:414
+#: certloom.php:456
 msgid "Certloom could not persist its required administrator access. The migration will be retried automatically."
 msgstr ""
 
-#: certloom.php:431
+#: certloom.php:473
 msgid "Certloom could not persist the multisite provisioning status."
 msgstr ""
 
-#: certloom.php:546
+#: certloom.php:588
 msgid "Certloom publishes only the certificate fields that a site administrator marks as visible. Those fields may include names or other personal information, so administrators should publish only information they are authorised to disclose."
 msgstr ""
 
-#: certloom.php:547
+#: certloom.php:589
 msgid "Depending on the Certloom features enabled by the site, local WordPress storage may also contain recipient identity/contact data and administrator-managed issuer or signer contact details. These records remain on the site unless the administrator exports, changes, or removes them according to the organization’s retention obligations."
 msgstr ""
 
-#: certloom.php:548
+#: certloom.php:590
 msgid "Certificate verification is performed on this WordPress site. Certloom does not send certificate records to Ecapla or another external service. Verification requests may still appear in normal web-server, security, analytics, browser-history, and cache logs. Direct verification links can include the certificate number in the URL."
 msgstr ""
 
-#: certloom.php:549
+#: certloom.php:591
 msgid "When Certloom Verification Analytics is available, Certloom stores daily aggregate verification counters locally for up to 730 days. These aggregates classify outcomes and sources such as manual, QR, or API verification; they do not store raw IP addresses, User-Agents, secondary proof codes, or raw failed certificate-number input. Verification analytics are operational data and are removed when Certloom is uninstalled."
 msgstr ""
 
-#: certloom.php:550
+#: certloom.php:592
 msgid "Site administrators determine how long certificate records are retained and can configure whether Certloom data is removed when the plugin is uninstalled."
 msgstr ""
 
@@ -6146,6 +6383,39 @@ msgstr ""
 msgid "Credential issuer"
 msgstr ""
 
+#: src/Application/Analytics/IssuanceAnalyticsService.php:37
+msgid "Program #%d"
+msgstr ""
+
+#: src/Application/Analytics/IssuanceAnalyticsService.php:37
+#: src/Application/Analytics/IssuanceAnalyticsService.php:112
+msgid "Unattributed program"
+msgstr ""
+
+#: src/Application/Analytics/IssuanceAnalyticsService.php:38
+msgid "Template #%d"
+msgstr ""
+
+#: src/Application/Analytics/IssuanceAnalyticsService.php:38
+msgid "Unattributed template"
+msgstr ""
+
+#: src/Application/Analytics/IssuanceAnalyticsService.php:39
+msgid "Organization #%d"
+msgstr ""
+
+#: src/Application/Analytics/IssuanceAnalyticsService.php:39
+msgid "Unattributed organization"
+msgstr ""
+
+#: src/Application/Analytics/IssuanceAnalyticsService.php:40
+msgid "Batch #%d"
+msgstr ""
+
+#: src/Application/Analytics/IssuanceAnalyticsService.php:40
+msgid "Unattributed batch"
+msgstr ""
+
 #: src/Application/Backup/DomainBackupBuilder.php:109
 msgid "Certloom could not durably record the domain backup batch."
 msgstr ""
@@ -6749,107 +7019,107 @@ msgstr ""
 msgid "The new credential identity could not be re-read safely. Issuance was rolled back."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:235
+#: src/Application/Issuance/ManualIssuanceService.php:242
 msgid "The issued credential could not be re-read safely. Issuance was rolled back."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:247
+#: src/Application/Issuance/ManualIssuanceService.php:254
 msgid "Certificate-number collisions continued while issuing. Nothing was duplicated; review the numbering policy and try again."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:257
+#: src/Application/Issuance/ManualIssuanceService.php:264
 msgid "Choose a recipient that still exists."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:265
+#: src/Application/Issuance/ManualIssuanceService.php:272
 msgid "Choose a program that still exists."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:266
+#: src/Application/Issuance/ManualIssuanceService.php:273
 msgid "Inactive programs cannot receive new credential issuances."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:271
+#: src/Application/Issuance/ManualIssuanceService.php:278
 msgid "The program’s configured issuer no longer exists."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:275
+#: src/Application/Issuance/ManualIssuanceService.php:282
 msgid "Choose an active published template."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:313
+#: src/Application/Issuance/ManualIssuanceService.php:320
 msgid "Certloom could not create a deterministic issuance review fingerprint."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:338
+#: src/Application/Issuance/ManualIssuanceService.php:345
 msgid "Choose an existing recipient or create a new recipient."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:340
+#: src/Application/Issuance/ManualIssuanceService.php:347
 msgid "Choose an existing recipient."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:343
+#: src/Application/Issuance/ManualIssuanceService.php:350
 msgid "Choose a credential program."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:344
+#: src/Application/Issuance/ManualIssuanceService.php:351
 msgid "Choose a published template."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:346
+#: src/Application/Issuance/ManualIssuanceService.php:353
 msgid "Choose a valid credential issue/effective date."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:348
+#: src/Application/Issuance/ManualIssuanceService.php:355
 msgid "Choose the program default, a permanent credential, or a specific expiry date."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:352
+#: src/Application/Issuance/ManualIssuanceService.php:359
 msgid "Choose a valid credential expiry date."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:353
+#: src/Application/Issuance/ManualIssuanceService.php:360
 msgid "The expiry date cannot be earlier than the credential issue/effective date."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:356
+#: src/Application/Issuance/ManualIssuanceService.php:363
 msgid "Grade must be 191 characters or fewer."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:390
+#: src/Application/Issuance/ManualIssuanceService.php:397
 msgid "Certloom could not calculate the program’s default credential expiry date."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:399
+#: src/Application/Issuance/ManualIssuanceService.php:406
 msgid "This recipient already has a Credential Series for the selected program. Manual Issuance will not create a duplicate; future correction/re-certification must add an immutable Version to the existing Series."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:407
+#: src/Application/Issuance/ManualIssuanceService.php:414
 msgid "Certloom could not create the immutable merge snapshot fingerprint. Issuance was rolled back."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:435
+#: src/Application/Issuance/ManualIssuanceService.php:442
 msgid "The issued Credential Series could not be loaded for its receipt."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:456
+#: src/Application/Issuance/ManualIssuanceService.php:463
 msgid "Use a valid YYYY-MM-DD date."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:461
+#: src/Application/Issuance/ManualIssuanceService.php:468
 msgid "Custom fields must be a bounded key/value list with at most 30 entries."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:467
+#: src/Application/Issuance/ManualIssuanceService.php:474
 msgid "Custom fields must use unique machine keys up to 64 characters and scalar values."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:470
+#: src/Application/Issuance/ManualIssuanceService.php:477
 msgid "Each custom field value must be 2,000 characters or fewer."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:472
+#: src/Application/Issuance/ManualIssuanceService.php:479
 msgid "The combined custom-field payload is too large for one Manual Issuance."
 msgstr ""
 
@@ -7516,8 +7786,8 @@ msgid "Errors"
 msgstr ""
 
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
-#: admin/views/analytics.php:43
-#: admin/views/analytics.php:70
+#: admin/views/analytics.php:48
+#: admin/views/analytics.php:75
 #: admin/views/settings-manager.php:158
 #: admin/views/settings-manager.php:185
 #: includes/class-ecapla-certverify-system-status.php:194
@@ -7540,7 +7810,10 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:994
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:200
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
-#: admin/views/dashboard.php:124
+#: admin/views/dashboard.php:111
+#: admin/views/dashboard.php:151
+#: admin/views/issuance-analytics.php:38
+#: admin/views/issuance-analytics.php:53
 #: includes/class-ecapla-certverify-recipient-portal.php:185
 #: includes/class-ecapla-certverify-recipient-portal.php:205
 msgid "Issued"
@@ -7787,7 +8060,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:409
 #: src/Infrastructure/Admin/DomainAdmin.php:611
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:357
-#: admin/views/dashboard.php:125
+#: admin/views/dashboard.php:152
 #: admin/views/edit-certificate.php:82
 msgid "Actions"
 msgstr ""
@@ -7839,7 +8112,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:252
 #: src/Infrastructure/Admin/DomainAdmin.php:303
 #: src/Infrastructure/Admin/DomainAdmin.php:340
-#: admin/views/dashboard.php:138
+#: admin/views/dashboard.php:165
 msgid "Open"
 msgstr ""
 
@@ -7910,6 +8183,7 @@ msgstr ""
 #: src/Application/Templates/TemplateAssignmentPolicy.php:66
 #: admin/views/edit-certificate.php:77
 #: admin/views/edit-certificate.php:105
+#: admin/views/issuance-analytics.php:69
 msgid "Program"
 msgstr ""
 
@@ -7925,7 +8199,7 @@ msgstr ""
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:25
 #: src/Infrastructure/Import/DomainImportCsvReader.php:72
 #: admin/class-ecapla-certverify-list-table.php:40
-#: admin/views/dashboard.php:123
+#: admin/views/dashboard.php:150
 #: admin/views/edit-certificate.php:78
 #: admin/views/edit-certificate.php:144
 #: admin/views/list-certificates.php:113
@@ -8007,8 +8281,8 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:385
 #: src/Infrastructure/Admin/DomainAdmin.php:546
 #: src/Infrastructure/Admin/DomainAdmin.php:590
-#: admin/views/analytics.php:46
-#: admin/views/analytics.php:70
+#: admin/views/analytics.php:51
+#: admin/views/analytics.php:75
 #: includes/class-ecapla-certverify-recipient-portal.php:131
 #: includes/class-ecapla-certverify-recipient-portal.php:290
 msgid "Revoked"
@@ -8097,7 +8371,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:176
 #: admin/class-ecapla-certverify-admin.php:70
 #: admin/class-ecapla-certverify-admin.php:70
-#: admin/class-ecapla-certverify-admin.php:1008
+#: admin/class-ecapla-certverify-admin.php:1016
 msgid "Recipients"
 msgstr ""
 
@@ -8113,7 +8387,8 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:549
 #: admin/class-ecapla-certverify-admin.php:71
 #: admin/class-ecapla-certverify-admin.php:71
-#: admin/class-ecapla-certverify-admin.php:1014
+#: admin/class-ecapla-certverify-admin.php:1022
+#: admin/views/issuance-analytics.php:63
 msgid "Programs"
 msgstr ""
 
@@ -8193,8 +8468,8 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:547
 #: src/Infrastructure/Admin/DomainAdmin.php:591
 #: admin/class-ecapla-certverify-list-table.php:146
-#: admin/views/analytics.php:45
-#: admin/views/analytics.php:70
+#: admin/views/analytics.php:50
+#: admin/views/analytics.php:75
 #: admin/views/dashboard.php:83
 #: includes/class-ecapla-certverify-fields.php:417
 #: includes/class-ecapla-certverify-recipient-portal.php:130
@@ -8282,8 +8557,10 @@ msgid "Overview"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:608
+#: admin/views/analytics.php:9
 #: admin/views/edit-certificate.php:80
 #: admin/views/edit-certificate.php:116
+#: admin/views/issuance-analytics.php:9
 msgid "Verification"
 msgstr ""
 
@@ -8355,7 +8632,7 @@ msgstr ""
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
 #: src/Infrastructure/Import/DomainImportCsvReader.php:70
 #: admin/class-ecapla-certverify-list-table.php:38
-#: admin/views/analytics.php:86
+#: admin/views/analytics.php:91
 #: includes/class-ecapla-certverify-fields.php:371
 #: includes/class-ecapla-certverify-render.php:133
 #: includes/class-ecapla-certverify-render.php:226
@@ -8399,7 +8676,9 @@ msgstr ""
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:38
 #: admin/class-ecapla-certverify-admin.php:75
 #: admin/class-ecapla-certverify-admin.php:75
-#: admin/class-ecapla-certverify-admin.php:1026
+#: admin/class-ecapla-certverify-admin.php:1034
+#: admin/views/analytics.php:10
+#: admin/views/issuance-analytics.php:10
 msgid "Issuance"
 msgstr ""
 
@@ -8651,7 +8930,7 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:750
 #: src/Infrastructure/Admin/TemplateAdmin.php:758
-#: admin/views/analytics.php:78
+#: admin/views/analytics.php:83
 msgid "Source"
 msgstr ""
 
@@ -8712,7 +8991,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:299
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:373
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:25
-#: admin/views/analytics.php:86
+#: admin/views/analytics.php:91
 #: includes/class-ecapla-certverify-recipient-portal.php:205
 msgid "Action"
 msgstr ""
@@ -9150,7 +9429,7 @@ msgid "Recent current credential identities issued under this program."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:994
-#: admin/views/dashboard.php:121
+#: admin/views/dashboard.php:148
 #: includes/class-ecapla-certverify-recipient-portal.php:184
 msgid "Certificate"
 msgstr ""
@@ -9622,6 +9901,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:35
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:164
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:550
+#: admin/views/issuance-analytics.php:63
 msgid "Batches"
 msgstr ""
 
@@ -10421,7 +10701,8 @@ msgstr ""
 #: src/Infrastructure/Admin/TemplateAdmin.php:411
 #: admin/class-ecapla-certverify-admin.php:73
 #: admin/class-ecapla-certverify-admin.php:73
-#: admin/class-ecapla-certverify-admin.php:1020
+#: admin/class-ecapla-certverify-admin.php:1028
+#: admin/views/issuance-analytics.php:63
 msgid "Templates"
 msgstr ""
 
@@ -11539,6 +11820,25 @@ msgstr ""
 
 #: src/Infrastructure/Admin/TemplateDesignerAutosave.php:87
 msgid "Designer autosave could not verify the stored recovery checkpoint."
+msgstr ""
+
+#: src/Infrastructure/Analytics/IssuanceAnalyticsRepository.php:121
+#: src/Infrastructure/Analytics/IssuanceAnalyticsRepository.php:144
+msgid "Certloom could not read issuance analytics."
+msgstr ""
+
+#: src/Infrastructure/Analytics/IssuanceAnalyticsRepository.php:22
+msgid "The issuance analytics date range is invalid."
+msgstr ""
+
+#: src/Infrastructure/Analytics/IssuanceAnalyticsRepository.php:32
+#: src/Infrastructure/Analytics/IssuanceAnalyticsRepository.php:38
+msgid "The expiry forecast date is invalid."
+msgstr ""
+
+#: src/Infrastructure/Analytics/IssuanceAnalyticsRepository.php:74
+#: src/Infrastructure/Analytics/IssuanceAnalyticsRepository.php:83
+msgid "Certloom could not calculate the credential expiry forecast."
 msgstr ""
 
 #: src/Infrastructure/Backup/DomainBackupRepository.php:26

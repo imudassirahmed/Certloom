@@ -5,6 +5,10 @@ $report = isset( $analytics_report ) ? $analytics_report : new WP_Error( 'certlo
 $periods = array( 7 => __( '7 days', 'certloom' ), 30 => __( '30 days', 'certloom' ), 90 => __( '90 days', 'certloom' ), 365 => __( '12 months', 'certloom' ) );
 ?>
 <div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-analytics">
+	<nav class="nav-tab-wrapper certloom-analytics-tabs" aria-label="<?php esc_attr_e( 'Analytics reports', 'certloom' ); ?>">
+		<a class="nav-tab nav-tab-active" aria-current="page" href="<?php echo esc_url( add_query_arg( array( 'page' => 'certloom-analytics', 'section' => 'verification', 'days' => $days ), admin_url( 'admin.php' ) ) ); ?>"><?php esc_html_e( 'Verification', 'certloom' ); ?></a>
+		<a class="nav-tab" href="<?php echo esc_url( add_query_arg( array( 'page' => 'certloom-analytics', 'section' => 'issuance', 'days' => $days ), admin_url( 'admin.php' ) ) ); ?>"><?php esc_html_e( 'Issuance', 'certloom' ); ?></a>
+	</nav>
 	<section class="certloom-dashboard-hero" aria-labelledby="certloom-analytics-title">
 		<div class="certloom-dashboard-hero-copy">
 			<span class="certloom-eyebrow"><?php esc_html_e( 'ANL-01 · Local privacy-safe analytics', 'certloom' ); ?></span>
@@ -13,6 +17,7 @@ $periods = array( 7 => __( '7 days', 'certloom' ), 30 => __( '30 days', 'certloo
 		</div>
 		<form method="get" class="certloom-analytics-period">
 			<input type="hidden" name="page" value="certloom-analytics" />
+			<input type="hidden" name="section" value="verification" />
 			<label for="certloom-analytics-days"><?php esc_html_e( 'Reporting period', 'certloom' ); ?></label>
 			<select id="certloom-analytics-days" name="days">
 				<?php foreach ( $periods as $value => $label ) : ?>

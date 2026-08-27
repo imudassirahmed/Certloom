@@ -69,9 +69,16 @@ if ( false === $admin || false === $view ) {
 dashboard_assert( false !== strpos( $admin, "const CERTIFICATES_PAGE = 'certloom-certificates';" ), 'Certificates need a dedicated submenu route once the root becomes Dashboard.' );
 dashboard_assert( false !== strpos( $admin, "array( \$this, 'render_dashboard_screen' )" ), 'Top-level Certloom route should render the premium dashboard.' );
 dashboard_assert( false !== strpos( $view, 'Recent certificates' ) && false !== strpos( $view, 'Expiring in 30 days' ), 'Dashboard should expose the key ADM-01 operational views.' );
+dashboard_assert( false !== strpos( $admin, "current_user_can( Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS )" ), 'ADM-02 preview must require the granular analytics capability.' );
+dashboard_assert( false !== strpos( $admin, 'Ecapla_CertVerify_Analytics::report( 30 )' ) && false !== strpos( $admin, 'IssuanceAnalyticsService() )->report( 30 )' ), 'ADM-02 preview must use the canonical 30-day ANL-01 and ANL-02 reports.' );
+dashboard_assert( false !== strpos( $admin, '! is_wp_error( $verification_analytics ) && ! is_wp_error( $issuance_analytics )' ), 'ADM-02 preview must fail closed if either analytics report is unavailable.' );
+dashboard_assert( false !== strpos( $view, 'Credential analytics' ) && false !== strpos( $view, 'Verification lookups' ) && false !== strpos( $view, 'Failed lookups' ), 'ADM-02 should expose verification and failed-lookup summaries.' );
+dashboard_assert( false !== strpos( $view, 'Issuance trend' ) && false !== strpos( $view, 'Verification trend' ), 'ADM-02 should expose both canonical trend previews.' );
+dashboard_assert( false !== strpos( $view, 'Top credential' ) && false !== strpos( $view, 'Top Program' ) && false !== strpos( $view, 'Top Template' ), 'ADM-02 should expose the promised top credential, Program and Template leaders.' );
+dashboard_assert( false !== strpos( $view, 'Expiring ≤90 days' ), 'ADM-02 should expose the current ANL-02 90-day expiry forecast without claiming renewal automation.' );
 foreach ( array( 'update_option(', 'delete_option(', '->insert(', '->update(', '->delete(' ) as $mutation ) {
 	dashboard_assert( false === strpos( $view, $mutation ), 'Viewing the dashboard must remain read-only; found mutation primitive ' . $mutation );
 }
 
 echo "PASS  premium admin dashboard is bounded, read-only, authority-safe and operationally useful\n";
-echo "\n12 checks, 0 failures\n";
+echo "\n19 checks, 0 failures\n";

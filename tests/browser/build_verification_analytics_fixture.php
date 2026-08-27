@@ -7,6 +7,7 @@ function __($v,$d=null){return $v;} function esc_html__($v,$d=null){return $v;} 
 function esc_html_e($v,$d=null){echo htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');} function esc_attr_e($v,$d=null){echo htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');}
 function esc_html($v){return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');} function esc_attr($v){return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');}
 function esc_url($v){return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');} function admin_url($v=''){return 'https://example.test/wp-admin/'.ltrim((string)$v,'/');}
+function add_query_arg($args,$url){$sep=strpos($url,'?')===false?'?':'&';return $url.$sep.http_build_query($args);}
 function absint($v){return abs((int)$v);} function sanitize_key($v){return preg_replace('/[^a-z0-9_\-]/','',strtolower((string)$v));}
 function selected($a,$b,$echo=true){$out=((string)$a===(string)$b)?'selected="selected"':'';if($echo)echo $out;return $out;} function number_format_i18n($v){return number_format((int)$v);}
 require dirname(__DIR__,2).'/includes/class-ecapla-certverify-analytics.php';

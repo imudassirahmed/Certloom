@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.70
+Stable tag: 1.6.71-preview.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,10 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.70: ANL-01 Verification Analytics is implemented as WordPress-local, privacy-minimized daily aggregates with total/successful/failed/invalid/expired/revoked outcomes, manual/QR/API source attribution, daily/weekly/monthly trends, most-verified credentials, 730-day bounded retention and granular Analytics capability access. It stores no raw IP addresses, User-Agents, proof codes or raw failed certificate-number input; analytics failure never changes verification truth. The later canonical roadmap keeps issuance analytics in ANL-02 and page/share/click engagement in ANL-03, resolving an older Growth Plan overlap without deleting those promises. Normalized-domain authority and renderer accepted.json remain closed. ANL-02 Issuance Analytics is next.
+**Experience Preview build:** normalized-domain administration screens are unlocked for staging/demo evaluation. Production credential authority, normalized Data Tools, public Series verification, and PDF/PNG/JPEG renderer authority remain closed. Do not use this preview package on a live production site.
+
+
+> Development note for 1.6.71: ANL-02 Issuance Analytics is implemented as a read-only projection over append-only `credential.issued` events and immutable Credential Version snapshots, with Program/Template/organization/Batch attribution, daily/weekly/monthly trends and a current 90-day expiry forecast. Historical Batch values are never guessed from later mutable Series relationships; older issuance without an immutable Batch dimension remains visibly Unattributed. ANL-01 Verification Analytics remains separate, and the Dashboard now surfaces capability-gated 30-day issuance/verification charts, failed lookups and top credential/Program/Template summaries. ANL-03 engagement analytics, renewal workflow and advanced analytics export remain later. Normalized-domain and renderer authority stay closed. 1.6.71 is the frozen ANL-02 + ADM-02 checkpoint; INT-01 integration/LMS adapter architecture is next.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
@@ -129,6 +132,13 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.71 =
+* Add ANL-02 Issuance Analytics from append-only `credential.issued` events and immutable Version snapshots, with bounded 7/30/90/365-day daily/weekly/monthly trends.
+* Report issuance by Program, Template, organization/issuer and Batch without treating relationship-correction Versions as new issuance or borrowing mutable current relationships for historical attribution.
+* Add a current non-revoked issued-Version 30/60/90-day expiry forecast plus permanent-current counts; keep renewal reminders/re-certification in separate REN-01.
+* Add Verification / Issuance tabs to the Analytics workspace and complete the ADM-02 dashboard analytics preview with issuance/verification charts, failed lookups and top credential/Program/Template summaries.
+* Keep ANL-02 read-only: no visitor telemetry, duplicate analytics table, backup-format expansion, ANL-03 engagement metrics or IMP-03 export scope; normalized-domain and renderer production authority remain closed.
 
 = 1.6.49 =
 * Eliminate PHP 8.4 implicit-nullable parameter deprecations with explicit nullable declarations that remain PHP 7.4 compatible.

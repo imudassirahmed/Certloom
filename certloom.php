@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Certloom – Certificate Verification
- * Description: Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
- * Version: 1.6.70
+ * Description: Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets. Experience Preview build: normalized admin UI unlocked; production authority remains closed.
+ * Version: 1.6.71-preview.1
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.70' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.71-preview.1' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
@@ -33,11 +33,27 @@ define( 'ECAPLA_CERTVERIFY_MINIMUM_ELEMENTOR_VERSION', '3.10.0' );
 define( 'CERTLOOM_VERSION', ECAPLA_CERTVERIFY_VERSION );
 define( 'CERTLOOM_PATH', ECAPLA_CERTVERIFY_PATH );
 define( 'CERTLOOM_URL', ECAPLA_CERTVERIFY_URL );
+/*
+ * EXPERIENCE PREVIEW BUILD ONLY.
+ *
+ * This package intentionally unlocks the normalized-domain administration UI
+ * so product surfaces can be inspected on a staging/test WordPress site. It is
+ * not an authority cutover: normalized write authority, normalized Data Tools,
+ * public Series verification and renderer/PDF authority remain fail-closed.
+ *
+ * The constant remains overridable from wp-config.php before this plugin loads.
+ */
+if ( ! defined( 'CERTLOOM_EXPERIENCE_PREVIEW' ) ) {
+	define( 'CERTLOOM_EXPERIENCE_PREVIEW', true );
+}
+if ( ! defined( 'CERTLOOM_EXPERIENCE_PREVIEW_DATA_TOOLS' ) ) {
+	define( 'CERTLOOM_EXPERIENCE_PREVIEW_DATA_TOOLS', false );
+}
 if ( ! defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) ) {
 	define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false );
 }
 if ( ! defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) ) {
-	define( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW', false );
+	define( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW', (bool) CERTLOOM_EXPERIENCE_PREVIEW );
 }
 if ( ! defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) ) {
 	define( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY', false );
@@ -117,6 +133,32 @@ add_action( Ecapla_CertVerify_Analytics::PRUNE_HOOK, array( 'Ecapla_CertVerify_A
 add_action( 'network_admin_notices', 'ecapla_certverify_multisite_provisioning_notice' );
 add_action( 'ecapla_certverify_continue_migrations', 'ecapla_certverify_continue_migrations' );
 add_action( 'upgrader_process_complete', 'ecapla_certverify_after_plugin_upgrade', 10, 2 );
+add_action( 'admin_notices', 'certloom_experience_preview_notice', 1 );
+
+/**
+ * Makes the non-production nature of this package impossible to miss.
+ *
+ * The normalized administration UI is available for visual/functional staging
+ * review, while source-of-truth cutover, public Series verification, new-domain
+ * Data Tools and renderer authority remain deliberately closed.
+ *
+ * @return void
+ */
+function certloom_experience_preview_notice() {
+	if ( ! defined( 'CERTLOOM_EXPERIENCE_PREVIEW' ) || ! CERTLOOM_EXPERIENCE_PREVIEW || ! is_admin() ) {
+		return;
+	}
+	if ( ! current_user_can( ECAPLA_CERTVERIFY_CAP ) && ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+	$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+	$screen_id = is_object( $screen ) && isset( $screen->id ) ? (string) $screen->id : '';
+	$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display-only context.
+	if ( '' !== $screen_id && false === strpos( $screen_id, 'certloom' ) && 0 !== strpos( $page, 'certloom' ) ) {
+		return;
+	}
+	echo '<div class="notice notice-warning certloom-experience-preview-notice"><p><strong>' . esc_html__( 'Certloom Experience Preview is enabled.', 'certloom' ) . '</strong> ' . esc_html__( 'Normalized administration screens are unlocked so you can inspect the product on staging. This does not open production credential authority, normalized Data Tools, public Series verification, or PDF/PNG/JPEG renderer authority.', 'certloom' ) . '</p><p>' . esc_html__( 'Use this package for staging/demo evaluation only. The legacy registry remains public authority and all final acceptance gates remain intact.', 'certloom' ) . '</p></div>';
+}
 
 /**
  * Continues one bounded database-migration batch from WP-Cron.

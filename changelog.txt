@@ -1,3 +1,11 @@
+1.6.71
+- Add ANL-02 Issuance Analytics from append-only `credential.issued` events and immutable Version snapshots, with Program/Template/organization/Batch dimensions and daily/weekly/monthly trends.
+- Keep historical attribution honest across later Program/Batch corrections; uncaptured historical Batch dimensions remain Unattributed rather than being guessed from the current Series.
+- Add a current 90-day expiry forecast over current issued, non-revoked Versions with 0-30/31-60/61-90 day buckets and permanent-current totals.
+- Add Verification / Issuance tabs in Analytics and complete ADM-02 with capability-gated 30-day Dashboard issuance/verification charts, failed lookups and top credential/Program/Template summaries.
+- Extend new issuance-event metadata with compact immutable analytics dimensions while keeping existing issuance fingerprint/idempotency and immutable Version truth unchanged.
+- Keep ANL-03 engagement analytics, REN-01 renewal workflow and IMP-03 advanced exports separate; no new analytics truth table, visitor telemetry, backup scope, normalized-domain authority or renderer authority is introduced.
+
 1.6.70
 - ANL-01 Verification Analytics: add privacy-minimized WordPress-local daily aggregate counters for successful, failed, invalid, expired and revoked verification outcomes.
 - Add bounded manual/QR/API source attribution, including exact QR target attribution without changing credential identity.

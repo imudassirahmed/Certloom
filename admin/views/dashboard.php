@@ -98,6 +98,33 @@ $health_label = 'good' === $health_overall ? __( 'Ready for current operations',
 		</div>
 	</section>
 
+	<?php if ( isset( $dashboard_analytics ) && is_array( $dashboard_analytics ) ) :
+		$verification_30 = $dashboard_analytics['verification'];
+		$issuance_30 = $dashboard_analytics['issuance'];
+		$top_verified = ! empty( $verification_30['most_verified'][0] ) ? $verification_30['most_verified'][0] : null;
+		$top_program = ! empty( $issuance_30['dimensions']['programs'][0] ) ? $issuance_30['dimensions']['programs'][0] : null;
+		$top_template = ! empty( $issuance_30['dimensions']['templates'][0] ) ? $issuance_30['dimensions']['templates'][0] : null;
+	?>
+	<section class="certloom-panel certloom-dashboard-analytics-preview" aria-labelledby="certloom-dashboard-analytics-title">
+		<div class="certloom-panel-header"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Last 30 days', 'certloom' ); ?></span><h2 id="certloom-dashboard-analytics-title"><?php esc_html_e( 'Credential analytics', 'certloom' ); ?></h2></div><a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-analytics' ) ); ?>"><?php esc_html_e( 'Open Analytics', 'certloom' ); ?> <span aria-hidden="true">→</span></a></div>
+		<div class="certloom-dashboard-analytics-grid">
+			<article><span><?php esc_html_e( 'Issued', 'certloom' ); ?></span><strong><?php echo esc_html( number_format_i18n( (int) $issuance_30['summary']['total'] ) ); ?></strong></article>
+			<article><span><?php esc_html_e( 'Verification lookups', 'certloom' ); ?></span><strong><?php echo esc_html( number_format_i18n( (int) $verification_30['summary']['total'] ) ); ?></strong></article>
+			<article><span><?php esc_html_e( 'Failed lookups', 'certloom' ); ?></span><strong><?php echo esc_html( number_format_i18n( (int) $verification_30['summary']['failed'] + (int) $verification_30['summary']['invalid'] ) ); ?></strong></article>
+			<article><span><?php esc_html_e( 'Expiring ≤90 days', 'certloom' ); ?></span><strong><?php echo esc_html( number_format_i18n( (int) $issuance_30['expiry_forecast']['total_90'] ) ); ?></strong></article>
+		</div>
+		<div class="certloom-dashboard-analytics-charts">
+			<section aria-labelledby="certloom-dashboard-issuance-chart-title"><h3 id="certloom-dashboard-issuance-chart-title"><?php esc_html_e( 'Issuance trend', 'certloom' ); ?></h3><div class="certloom-dashboard-mini-chart" role="img" aria-label="<?php esc_attr_e( 'Daily issued credentials for the last 30 days', 'certloom' ); ?>"><?php $issuance_max=1; foreach($issuance_30['trend'] as $row){$issuance_max=max($issuance_max,(int)$row['total']);} foreach($issuance_30['trend'] as $row): $height=max(2,(int)round(100*(int)$row['total']/$issuance_max)); ?><span style="--certloom-dashboard-chart-height:<?php echo esc_attr($height); ?>%"><span class="screen-reader-text"><?php echo esc_html( sprintf( __( '%1$s: %2$d issued', 'certloom' ), $row['label'], (int)$row['total'] ) ); ?></span></span><?php endforeach; ?></div></section>
+			<section aria-labelledby="certloom-dashboard-verification-chart-title"><h3 id="certloom-dashboard-verification-chart-title"><?php esc_html_e( 'Verification trend', 'certloom' ); ?></h3><div class="certloom-dashboard-mini-chart" role="img" aria-label="<?php esc_attr_e( 'Daily verification lookups for the last 30 days', 'certloom' ); ?>"><?php $verification_max=1; foreach($verification_30['trend'] as $row){$row_total=(int)$row['success']+(int)$row['failed']+(int)$row['invalid']+(int)$row['expired']+(int)$row['revoked'];$verification_max=max($verification_max,$row_total);} foreach($verification_30['trend'] as $row): $row_total=(int)$row['success']+(int)$row['failed']+(int)$row['invalid']+(int)$row['expired']+(int)$row['revoked'];$height=max(2,(int)round(100*$row_total/$verification_max)); ?><span style="--certloom-dashboard-chart-height:<?php echo esc_attr($height); ?>%"><span class="screen-reader-text"><?php echo esc_html( sprintf( __( '%1$s: %2$d lookups', 'certloom' ), $row['label'], $row_total ) ); ?></span></span><?php endforeach; ?></div></section>
+		</div>
+		<div class="certloom-dashboard-analytics-leaders">
+			<p><strong><?php esc_html_e( 'Top credential', 'certloom' ); ?>:</strong> <?php echo $top_verified ? esc_html( (string) $top_verified['certificate_number'] ) . ' · ' . esc_html( number_format_i18n( (int) $top_verified['total'] ) ) : esc_html__( 'No resolved verification activity yet', 'certloom' ); ?></p>
+			<p><strong><?php esc_html_e( 'Top Program', 'certloom' ); ?>:</strong> <?php echo $top_program ? esc_html( (string) $top_program['label'] ) . ' · ' . esc_html( number_format_i18n( (int) $top_program['total'] ) ) : esc_html__( 'No normalized issuance activity yet', 'certloom' ); ?></p>
+			<p><strong><?php esc_html_e( 'Top Template', 'certloom' ); ?>:</strong> <?php echo $top_template ? esc_html( (string) $top_template['label'] ) . ' · ' . esc_html( number_format_i18n( (int) $top_template['total'] ) ) : esc_html__( 'No normalized issuance activity yet', 'certloom' ); ?></p>
+		</div>
+	</section>
+	<?php endif; ?>
+
 	<div class="certloom-dashboard-layout">
 		<section class="certloom-panel certloom-recent-panel" aria-labelledby="certloom-recent-title">
 			<div class="certloom-panel-header">
