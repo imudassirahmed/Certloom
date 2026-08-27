@@ -1,0 +1,425 @@
+<?php
+namespace Certloom\Application\Issuance;
+
+use Certloom\Application\Contract\ManualIssuanceNumberAllocatorInterface;
+use Certloom\Application\Contract\ManualIssuanceRepositoryInterface;
+use Certloom\Application\Contract\PublicCredentialUrlInterface;
+use Certloom\Application\Contract\TransactionInterface;
+use Certloom\Application\CredentialLifecycleService;
+use Certloom\Application\Rendering\CanonicalJson;
+use Certloom\Domain\Credential\States;
+use Certloom\Infrastructure\Database\Transaction;
+use Certloom\Infrastructure\Issuance\ManualIssuanceNumberAllocator;
+use Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl;
+use Certloom\Infrastructure\Repository\ManualIssuanceRepository;
+
+if ( ! defined( 'ABSPATH' ) ) { exit; }
+
+/**
+ * P0 one-at-a-time administrator issuance orchestration.
+ *
+ * Review is mutation-free. Confirm re-runs the review, compares an exact
+ * fingerprint, allocates the human number, then creates Recipient (optional),
+ * Series, immutable Version, current pointer and append-only issued event under
+ * one checked database transaction. Artifact authority remains a later gate.
+ */
+final class ManualIssuanceService {
+	const SOURCE_TYPE = 'manual_admin';
+	const SNAPSHOT_SCHEMA = 'certloom-credential-snapshot';
+	const SNAPSHOT_VERSION = 1;
+	const MAX_NUMBER_RETRIES = 8;
+
+	/** @var ManualIssuanceRepositoryInterface */ private $repository;
+	/** @var ManualIssuanceNumberAllocatorInterface */ private $numbers;
+	/** @var PublicCredentialUrlInterface */ private $urls;
+	/** @var CredentialLifecycleService */ private $lifecycle;
+	/** @var TransactionInterface */ private $transaction;
+	/** @var CanonicalJson */ private $json;
+	/** @var MergeSnapshotBuilder */ private $merges;
+	/** @var callable */ private $clock;
+
+	public function __construct( ?ManualIssuanceRepositoryInterface $repository = null, ?ManualIssuanceNumberAllocatorInterface $numbers = null, ?PublicCredentialUrlInterface $urls = null, ?CredentialLifecycleService $lifecycle = null, ?TransactionInterface $transaction = null, ?CanonicalJson $json = null, ?MergeSnapshotBuilder $merges = null, ?callable $clock = null ) {
+		$this->repository = $repository ?: new ManualIssuanceRepository();
+		$this->numbers = $numbers ?: new ManualIssuanceNumberAllocator();
+		$this->urls = $urls ?: new NormalizedPublicCredentialUrl();
+		$this->lifecycle = $lifecycle ?: new CredentialLifecycleService();
+		$this->transaction = $transaction ?: new Transaction();
+		$this->json = $json ?: new CanonicalJson();
+		$this->merges = $merges ?: new MergeSnapshotBuilder();
+		$this->clock = $clock ?: static function () { return current_time( 'mysql', true ); };
+	}
+
+	/** Mutation-free review used by the administrator confirmation screen. @return array<string,mixed>|\WP_Error */
+	public function review( array $request ) {
+		return $this->build_review( $request, true, true );
+	}
+
+
+	/** Loads a read-only receipt for one Manual Issuance Version. @return array<string,mixed>|\WP_Error */
+	public function receipt( $version_id ) {
+		$version = $this->repository->find_version( absint( $version_id ) );
+		if ( is_wp_error( $version ) ) { return $version; }
+		if ( ! is_array( $version ) || self::SOURCE_TYPE !== (string) ( $version['source_type'] ?? '' ) ) {
+			return new \WP_Error( 'certloom_manual_issue_receipt_missing', __( 'That Manual Issuance receipt could not be found.', 'certloom' ) );
+		}
+		return $this->receipt_from_existing( $version, false );
+	}
+
+	/**
+	 * Confirms exactly the reviewed request. A retry of an already committed
+	 * review is idempotent and returns the existing receipt without allocating a
+	 * second number or creating another credential.
+	 *
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public function issue( array $request, $expected_review_fingerprint, $actor_user_id ) {
+		$expected_review_fingerprint = strtolower( trim( (string) $expected_review_fingerprint ) );
+		if ( ! preg_match( '/^[a-f0-9]{64}$/', $expected_review_fingerprint ) ) {
+			return new \WP_Error( 'certloom_manual_issue_review_required', __( 'Review the credential before issuing it.', 'certloom' ) );
+		}
+		$preflight = $this->build_review( $request, false, false );
+		if ( is_wp_error( $preflight ) ) { return $preflight; }
+		if ( ! hash_equals( (string) $preflight['review_fingerprint'], $expected_review_fingerprint ) ) {
+			return new \WP_Error( 'certloom_manual_issue_review_stale', __( 'The issuance inputs or related records changed after review. Review the credential again before issuing it.', 'certloom' ) );
+		}
+		$idempotency = $this->idempotency_key( $expected_review_fingerprint );
+		$existing = $this->repository->find_version_by_idempotency( self::SOURCE_TYPE, $idempotency );
+		if ( is_wp_error( $existing ) ) { return $existing; }
+		if ( is_array( $existing ) ) { return $this->receipt_from_existing( $existing, true ); }
+		$duplicate = $this->duplicate_for_review( $preflight );
+		if ( is_wp_error( $duplicate ) ) { return $duplicate; }
+
+		$automatic = $this->numbers->is_automatic();
+		for ( $attempt = 0; $attempt < self::MAX_NUMBER_RETRIES; $attempt++ ) {
+			$number = $this->numbers->allocate( (string) ( $preflight['request']['display_number'] ?? '' ) );
+			if ( is_wp_error( $number ) ) { return $number; }
+			$issued_at = (string) call_user_func( $this->clock );
+			$result = $this->transaction->run( function () use ( $request, $expected_review_fingerprint, $idempotency, $actor_user_id, $number, $issued_at ) {
+				$current = $this->build_review( $request, false, false );
+				if ( is_wp_error( $current ) ) { return $current; }
+				if ( ! hash_equals( (string) $current['review_fingerprint'], $expected_review_fingerprint ) ) {
+					return new \WP_Error( 'certloom_manual_issue_review_stale', __( 'The issuance inputs or related records changed while the credential was being confirmed. No credential was issued.', 'certloom' ) );
+				}
+				$already = $this->repository->find_version_by_idempotency( self::SOURCE_TYPE, $idempotency );
+				if ( is_wp_error( $already ) ) { return $already; }
+				if ( is_array( $already ) ) { return array( 'idempotent_version' => $already ); }
+				$duplicate = $this->duplicate_for_review( $current );
+				if ( is_wp_error( $duplicate ) ) { return $duplicate; }
+
+				$recipient = $current['recipient'];
+				$recipient_id = absint( $recipient['id'] ?? 0 );
+				if ( 'new' === $current['request']['recipient_mode'] ) {
+					$recipient_id = $this->repository->create_recipient( $current['request']['new_recipient'] );
+					if ( is_wp_error( $recipient_id ) ) { return $recipient_id; }
+					$recipient = $this->repository->find_recipient( $recipient_id );
+					if ( is_wp_error( $recipient ) ) { return $recipient; }
+					if ( ! is_array( $recipient ) ) { return new \WP_Error( 'certloom_manual_issue_recipient_create_unreadable', __( 'The new recipient was created but could not be re-read safely. Issuance was rolled back.', 'certloom' ) ); }
+				}
+				$series_id = $this->repository->create_series( array(
+					'recipient_id' => $recipient_id,
+					'program_id' => absint( $current['program']['id'] ?? 0 ),
+					'issuer_id' => ! empty( $current['issuer']['id'] ) ? absint( $current['issuer']['id'] ) : null,
+					'administrative_state' => States::ADMIN_ACTIVE,
+					'compliance_state' => States::COMPLIANCE_NOT_APPLICABLE,
+					'visibility' => 'verification_summary',
+				) );
+				if ( is_wp_error( $series_id ) ) { return $series_id; }
+				$series = $this->repository->find_series( $series_id );
+				if ( is_wp_error( $series ) ) { return $series; }
+				if ( ! is_array( $series ) || empty( $series['public_id'] ) ) { return new \WP_Error( 'certloom_manual_issue_series_unreadable', __( 'The new credential identity could not be re-read safely. Issuance was rolled back.', 'certloom' ) ); }
+				$verification_url = $this->urls->verification_url( (string) $series['public_id'] );
+				if ( is_wp_error( $verification_url ) ) { return $verification_url; }
+				$display_number = (string) ( $number['certificate_number'] ?? '' );
+				$credential_facts = array(
+					'display_number' => $display_number,
+					'public_id' => (string) $series['public_id'],
+					'valid_from' => $current['valid_from'],
+					'expires_at' => $current['expires_at'],
+					'issued_at' => $issued_at,
+					'grade' => $current['request']['grade'],
+					'score' => '',
+					'verification_url' => $verification_url,
+				);
+				$merge = $this->merges->build( $recipient, $current['program'], $current['issuer'], $credential_facts, $current['template_revision']['layout'], $current['request']['custom_merge_fields'] );
+				if ( is_wp_error( $merge ) ) { return $merge; }
+				$snapshot = $this->snapshot( $current, $recipient, $series, $credential_facts, $merge, $expected_review_fingerprint, $actor_user_id );
+				if ( is_wp_error( $snapshot ) ) { return $snapshot; }
+				$version_id = $this->repository->create_version( $series_id, array(
+					'display_number' => $display_number,
+					'issuance_state' => States::ISSUANCE_DRAFT,
+					'valid_from' => $current['valid_from'],
+					'issued_at' => $issued_at,
+					'expires_at' => $current['expires_at'],
+					'grade' => $current['request']['grade'],
+					'source_type' => self::SOURCE_TYPE,
+					'source_ref' => 'user:' . absint( $actor_user_id ),
+					'source_idempotency_key' => $idempotency,
+					'snapshot' => $snapshot,
+				) );
+				if ( is_wp_error( $version_id ) ) { return $version_id; }
+				$transition = $this->lifecycle->issue_within_transaction( $series_id, $version_id, array(
+					'actor_user_id' => absint( $actor_user_id ),
+					'reason_code' => 'manual_issue',
+					'internal_note' => null,
+					'meta' => array(
+						'source' => self::SOURCE_TYPE,
+						'review_fingerprint' => $expected_review_fingerprint,
+						'template_id' => absint( $current['template']['id'] ?? 0 ),
+						'template_revision_id' => absint( $current['template_revision']['id'] ?? 0 ),
+					),
+				) );
+				if ( is_wp_error( $transition ) ) { return $transition; }
+				$version = $this->repository->find_version( $version_id );
+				if ( is_wp_error( $version ) ) { return $version; }
+				return is_array( $version ) ? array( 'version' => $version ) : new \WP_Error( 'certloom_manual_issue_version_unreadable', __( 'The issued credential could not be re-read safely. Issuance was rolled back.', 'certloom' ) );
+			} );
+
+			if ( ! is_wp_error( $result ) ) {
+				if ( isset( $result['idempotent_version'] ) && is_array( $result['idempotent_version'] ) ) { return $this->receipt_from_existing( $result['idempotent_version'], true ); }
+				if ( isset( $result['version'] ) && is_array( $result['version'] ) ) { return $this->receipt_from_existing( $result['version'], false ); }
+			}
+			$after = $this->repository->find_version_by_idempotency( self::SOURCE_TYPE, $idempotency );
+			if ( ! is_wp_error( $after ) && is_array( $after ) ) { return $this->receipt_from_existing( $after, true ); }
+			if ( $automatic && is_wp_error( $result ) && 'certloom_display_number_duplicate' === $result->get_error_code() ) { continue; }
+			return $result;
+		}
+		return new \WP_Error( 'certloom_manual_issue_number_race_exhausted', __( 'Certificate-number collisions continued while issuing. Nothing was duplicated; review the numbering policy and try again.', 'certloom' ) );
+	}
+
+	/** @return array<string,mixed>|\WP_Error */
+	private function build_review( array $request, $include_number_preview, $check_duplicate ) {
+		$request = $this->normalize_request( $request );
+		if ( is_wp_error( $request ) ) { return $request; }
+		if ( 'existing' === $request['recipient_mode'] ) {
+			$recipient = $this->repository->find_recipient( $request['recipient_id'] );
+			if ( is_wp_error( $recipient ) ) { return $recipient; }
+			if ( ! is_array( $recipient ) ) { return new \WP_Error( 'certloom_manual_issue_recipient_missing', __( 'Choose a recipient that still exists.', 'certloom' ) ); }
+		} else {
+			$recipient = $this->repository->validate_new_recipient( $request['new_recipient'] );
+			if ( is_wp_error( $recipient ) ) { return $recipient; }
+			$recipient['id'] = null;
+		}
+		$program = $this->repository->find_program( $request['program_id'] );
+		if ( is_wp_error( $program ) ) { return $program; }
+		if ( ! is_array( $program ) ) { return new \WP_Error( 'certloom_manual_issue_program_missing', __( 'Choose a program that still exists.', 'certloom' ) ); }
+		if ( empty( $program['active'] ) ) { return new \WP_Error( 'certloom_manual_issue_program_inactive', __( 'Inactive programs cannot receive new credential issuances.', 'certloom' ) ); }
+		$issuer = null;
+		if ( ! empty( $program['issuer_id'] ) ) {
+			$issuer = $this->repository->find_issuer( $program['issuer_id'] );
+			if ( is_wp_error( $issuer ) ) { return $issuer; }
+			if ( ! is_array( $issuer ) ) { return new \WP_Error( 'certloom_manual_issue_issuer_missing', __( 'The program’s configured issuer no longer exists.', 'certloom' ) ); }
+		}
+		$template = $this->repository->find_published_template( $request['template_id'] );
+		if ( is_wp_error( $template ) ) { return $template; }
+		if ( ! is_array( $template ) || ! empty( $template['archived_at'] ) || empty( $template['published_revision'] ) ) { return new \WP_Error( 'certloom_manual_issue_template_unavailable', __( 'Choose an active published template.', 'certloom' ) ); }
+		$revision = $template['published_revision'];
+		$expires_at = $this->expiry_date( $request, $program );
+		if ( is_wp_error( $expires_at ) ) { return $expires_at; }
+		$numbering = null;
+		if ( $include_number_preview ) {
+			$numbering = $this->numbers->review( $request['display_number'] );
+			if ( is_wp_error( $numbering ) ) { return $numbering; }
+		}
+		$preview_display_number = $this->numbers->is_automatic()
+			? ( $include_number_preview && is_array( $numbering ) && ! empty( $numbering['certificate_number'] ) ? (string) $numbering['certificate_number'] : 'AUTO-PENDING' )
+			: $request['display_number'];
+		$probe_facts = array(
+			'display_number' => $preview_display_number,
+			'public_id' => 'PUBLIC-ID-PENDING',
+			'valid_from' => $request['valid_from'],
+			'expires_at' => $expires_at,
+			'grade' => $request['grade'],
+			'verification_url' => 'https://example.invalid/certloom/pending',
+		);
+		$merge_probe = $this->merges->build( $recipient, $program, $issuer, $probe_facts, $revision['layout'], $request['custom_merge_fields'] );
+		if ( is_wp_error( $merge_probe ) ) { return $merge_probe; }
+		$fingerprint_payload = array(
+			'contract' => 'certloom-manual-issuance-review',
+			'version' => 1,
+			'recipient_mode' => $request['recipient_mode'],
+			'recipient' => $this->recipient_fingerprint( $recipient ),
+			'program' => $this->program_fingerprint( $program ),
+			'issuer' => $this->issuer_fingerprint( $issuer ),
+			'template' => $this->template_fingerprint( $template, $revision ),
+			'valid_from' => $request['valid_from'],
+			'expires_at' => $expires_at,
+			'expiry_mode' => $request['expiry_mode'],
+			'grade' => $request['grade'],
+			'numbering_policy' => $this->numbers->policy_identity(),
+			'manual_display_number' => $this->numbers->is_automatic() ? '' : $request['display_number'],
+			'custom_merge_fields' => $request['custom_merge_fields'],
+		);
+		try { $fingerprint = $this->json->hash( $fingerprint_payload ); } catch ( \Throwable $error ) { return new \WP_Error( 'certloom_manual_issue_review_hash_failed', __( 'Certloom could not create a deterministic issuance review fingerprint.', 'certloom' ) ); }
+		$out = array(
+			'request' => $request,
+			'recipient' => $recipient,
+			'program' => $program,
+			'issuer' => $issuer,
+			'template' => $template,
+			'template_revision' => $revision,
+			'valid_from' => $request['valid_from'],
+			'expires_at' => $expires_at,
+			'numbering' => $numbering,
+			'required_merge_tokens' => $this->merges->required_tokens( $revision['layout'] ),
+			'preview_merge_values' => $merge_probe,
+			'review_fingerprint' => $fingerprint,
+		);
+		if ( $check_duplicate ) {
+			$duplicate = $this->duplicate_for_review( $out );
+			if ( is_wp_error( $duplicate ) ) { return $duplicate; }
+		}
+		return $out;
+	}
+
+	/** @return array<string,mixed>|\WP_Error */
+	private function normalize_request( array $request ) {
+		$mode = sanitize_key( (string) ( $request['recipient_mode'] ?? 'existing' ) );
+		if ( ! in_array( $mode, array( 'existing', 'new' ), true ) ) { return new \WP_Error( 'certloom_manual_issue_recipient_mode_invalid', __( 'Choose an existing recipient or create a new recipient.', 'certloom' ) ); }
+		$recipient_id = 'existing' === $mode ? absint( $request['recipient_id'] ?? 0 ) : 0;
+		if ( 'existing' === $mode && ! $recipient_id ) { return new \WP_Error( 'certloom_manual_issue_recipient_required', __( 'Choose an existing recipient.', 'certloom' ) ); }
+		$program_id = absint( $request['program_id'] ?? 0 );
+		$template_id = absint( $request['template_id'] ?? 0 );
+		if ( ! $program_id ) { return new \WP_Error( 'certloom_manual_issue_program_required', __( 'Choose a credential program.', 'certloom' ) ); }
+		if ( ! $template_id ) { return new \WP_Error( 'certloom_manual_issue_template_required', __( 'Choose a published template.', 'certloom' ) ); }
+		$valid_from = $this->date( $request['valid_from'] ?? '' );
+		if ( is_wp_error( $valid_from ) ) { return new \WP_Error( 'certloom_manual_issue_valid_from_invalid', __( 'Choose a valid credential issue/effective date.', 'certloom' ) ); }
+		$expiry_mode = sanitize_key( (string) ( $request['expiry_mode'] ?? 'program' ) );
+		if ( ! in_array( $expiry_mode, array( 'program', 'permanent', 'date' ), true ) ) { return new \WP_Error( 'certloom_manual_issue_expiry_mode_invalid', __( 'Choose the program default, a permanent credential, or a specific expiry date.', 'certloom' ) ); }
+		$expires_at = '';
+		if ( 'date' === $expiry_mode ) {
+			$expires_at = $this->date( $request['expires_at'] ?? '' );
+			if ( is_wp_error( $expires_at ) ) { return new \WP_Error( 'certloom_manual_issue_expiry_invalid', __( 'Choose a valid credential expiry date.', 'certloom' ) ); }
+			if ( $expires_at < $valid_from ) { return new \WP_Error( 'certloom_manual_issue_expiry_before_start', __( 'The expiry date cannot be earlier than the credential issue/effective date.', 'certloom' ) ); }
+		}
+		$grade = trim( sanitize_text_field( (string) ( $request['grade'] ?? '' ) ) );
+		if ( $this->length( $grade ) > 191 ) { return new \WP_Error( 'certloom_manual_issue_grade_too_long', __( 'Grade must be 191 characters or fewer.', 'certloom' ) ); }
+		$new = array();
+		if ( 'new' === $mode ) {
+			foreach ( array( 'display_name', 'first_name', 'middle_name', 'last_name', 'external_id' ) as $key ) { $new[ $key ] = sanitize_text_field( (string) ( $request['new_recipient'][ $key ] ?? '' ) ); }
+			$raw_email = trim( (string) ( $request['new_recipient']['email'] ?? '' ) );
+			$new['email'] = '' === $raw_email ? '' : sanitize_email( $raw_email );
+			$new['custom_fields'] = $this->scalar_map( $request['new_recipient']['custom_fields'] ?? array() );
+			if ( is_wp_error( $new['custom_fields'] ) ) { return $new['custom_fields']; }
+		}
+		$display_number = trim( sanitize_text_field( (string) ( $request['display_number'] ?? '' ) ) );
+		$custom_merge_fields = $this->scalar_map( $request['custom_merge_fields'] ?? array() );
+		if ( is_wp_error( $custom_merge_fields ) ) { return $custom_merge_fields; }
+		return array(
+			'recipient_mode' => $mode,
+			'recipient_id' => $recipient_id,
+			'new_recipient' => $new,
+			'program_id' => $program_id,
+			'template_id' => $template_id,
+			'valid_from' => $valid_from,
+			'expiry_mode' => $expiry_mode,
+			'expires_at' => $expires_at,
+			'grade' => $grade,
+			'display_number' => $this->numbers->is_automatic() ? '' : $display_number,
+			'custom_merge_fields' => $custom_merge_fields,
+		);
+	}
+
+	/** @return string|null|\WP_Error */
+	private function expiry_date( array $request, array $program ) {
+		if ( 'permanent' === $request['expiry_mode'] ) { return null; }
+		if ( 'date' === $request['expiry_mode'] ) { return $request['expires_at']; }
+		$days = null !== ( $program['validity_days'] ?? null ) ? absint( $program['validity_days'] ) : 0;
+		if ( $days < 1 ) { return null; }
+		try { return ( new \DateTimeImmutable( $request['valid_from'] . ' 00:00:00', new \DateTimeZone( 'UTC' ) ) )->modify( '+' . $days . ' days' )->format( 'Y-m-d' ); }
+		catch ( \Throwable $error ) { return new \WP_Error( 'certloom_manual_issue_expiry_calculation_failed', __( 'Certloom could not calculate the program’s default credential expiry date.', 'certloom' ) ); }
+	}
+
+	/** @return true|\WP_Error */
+	private function duplicate_for_review( array $review ) {
+		if ( 'existing' !== (string) ( $review['request']['recipient_mode'] ?? '' ) ) { return true; }
+		$existing = $this->repository->find_existing_series( absint( $review['recipient']['id'] ?? 0 ), absint( $review['program']['id'] ?? 0 ) );
+		if ( is_wp_error( $existing ) ) { return $existing; }
+		if ( is_array( $existing ) ) {
+			return new \WP_Error( 'certloom_manual_issue_duplicate_series', __( 'This recipient already has a Credential Series for the selected program. Manual Issuance will not create a duplicate; future correction/re-certification must add an immutable Version to the existing Series.', 'certloom' ), array( 'series_id' => absint( $existing['id'] ?? 0 ) ) );
+		}
+		return true;
+	}
+
+	/** @return array<string,mixed>|\WP_Error */
+	private function snapshot( array $review, array $recipient, array $series, array $credential, array $merge, $fingerprint, $actor_user_id ) {
+		$template = $review['template']; $revision = $review['template_revision'];
+		try { $merge_sha = $this->json->hash( $merge ); } catch ( \Throwable $error ) { return new \WP_Error( 'certloom_manual_issue_merge_hash_failed', __( 'Certloom could not create the immutable merge snapshot fingerprint. Issuance was rolled back.', 'certloom' ) ); }
+		return array(
+			'_meta' => array( 'schema' => self::SNAPSHOT_SCHEMA, 'schema_version' => self::SNAPSHOT_VERSION ),
+			'issuance' => array( 'source' => self::SOURCE_TYPE, 'actor_user_id' => absint( $actor_user_id ), 'review_fingerprint' => (string) $fingerprint, 'custom_merge_fields' => $review['request']['custom_merge_fields'] ),
+			'recipient' => $this->recipient_snapshot( $recipient ),
+			'program' => $this->program_snapshot( $review['program'] ),
+			'issuer' => $this->issuer_snapshot( $review['issuer'] ),
+			'signer' => null,
+			'template' => array(
+				'id' => absint( $template['id'] ?? 0 ), 'machine_key' => (string) ( $template['machine_key'] ?? '' ), 'name' => (string) ( $template['name'] ?? '' ),
+				'published_revision_id' => absint( $revision['id'] ?? 0 ), 'revision_number' => absint( $revision['revision_number'] ?? 0 ),
+				'layout_schema' => (string) ( $revision['layout_schema'] ?? '' ), 'layout_schema_version' => absint( $revision['layout_schema_version'] ?? 0 ),
+				'layout_sha256' => (string) ( $revision['layout_sha256'] ?? '' ), 'layout' => $revision['layout'],
+			),
+			'credential' => array(
+				'series_id' => absint( $series['id'] ?? 0 ), 'public_id' => (string) ( $series['public_id'] ?? '' ), 'display_number' => (string) $credential['display_number'],
+				'valid_from' => $credential['valid_from'], 'issued_at' => $credential['issued_at'], 'expires_at' => $credential['expires_at'], 'grade' => $credential['grade'],
+				'issuance_state' => States::ISSUANCE_ISSUED, 'administrative_state' => States::ADMIN_ACTIVE, 'verification_url' => (string) $credential['verification_url'],
+			),
+			'merge' => array( 'values' => $merge, 'sha256' => $merge_sha ),
+			'artifact' => array( 'authority' => 'gated', 'renderer_receipt' => null ),
+		);
+	}
+
+	/** @return array<string,mixed>|\WP_Error */
+	private function receipt_from_existing( array $version, $idempotent ) {
+		$series = $this->repository->find_series( absint( $version['series_id'] ?? 0 ) );
+		if ( is_wp_error( $series ) ) { return $series; }
+		if ( ! is_array( $series ) ) { return new \WP_Error( 'certloom_manual_issue_receipt_series_missing', __( 'The issued Credential Series could not be loaded for its receipt.', 'certloom' ) ); }
+		$verification_url = $this->urls->verification_url( (string) ( $series['public_id'] ?? '' ) );
+		if ( is_wp_error( $verification_url ) ) { return $verification_url; }
+		$snapshot = isset( $version['snapshot'] ) && is_array( $version['snapshot'] ) ? $version['snapshot'] : array();
+		return array(
+			'series_id' => absint( $series['id'] ?? 0 ),
+			'version_id' => absint( $version['id'] ?? 0 ),
+			'public_id' => (string) ( $series['public_id'] ?? '' ),
+			'display_number' => (string) ( $version['display_number'] ?? '' ),
+			'issuance_state' => (string) ( $version['issuance_state'] ?? '' ),
+			'issued_at' => $version['issued_at'] ?? null,
+			'expires_at' => $version['expires_at'] ?? null,
+			'verification_url' => $verification_url,
+			'artifact_status' => 'renderer_authority_gated',
+			'exports' => array(),
+			'idempotent_replay' => (bool) $idempotent,
+			'snapshot' => $snapshot,
+		);
+	}
+
+	private function idempotency_key( $fingerprint ) { try { return $this->json->hash( array( 'source' => self::SOURCE_TYPE, 'review_fingerprint' => (string) $fingerprint ) ); } catch ( \Throwable $e ) { return hash( 'sha256', self::SOURCE_TYPE . ':' . (string) $fingerprint ); } }
+	/** @return string|\WP_Error */ private function date( $value ) { $value = trim( (string) $value ); if ( ! preg_match( '/^(\d{4})-(\d{2})-(\d{2})$/', $value, $m ) || ! checkdate( (int) $m[2], (int) $m[3], (int) $m[1] ) ) { return new \WP_Error( 'certloom_manual_issue_date_invalid', __( 'Use a valid YYYY-MM-DD date.', 'certloom' ) ); } return $value; }
+	/** @return array<string,string>|\WP_Error */
+	private function scalar_map( $value ) {
+		if ( null === $value || '' === $value ) { return array(); }
+		if ( ! is_array( $value ) || count( $value ) > 30 ) {
+			return new \WP_Error( 'certloom_manual_issue_custom_fields_invalid', __( 'Custom fields must be a bounded key/value list with at most 30 entries.', 'certloom' ) );
+		}
+		$out = array(); $bytes = 0;
+		foreach ( $value as $k => $v ) {
+			$key = sanitize_key( (string) $k );
+			if ( '' === $key || strlen( $key ) > 64 || array_key_exists( $key, $out ) || is_array( $v ) || is_object( $v ) || is_resource( $v ) ) {
+				return new \WP_Error( 'certloom_manual_issue_custom_fields_invalid', __( 'Custom fields must use unique machine keys up to 64 characters and scalar values.', 'certloom' ) );
+			}
+			$scalar = sanitize_text_field( null === $v ? '' : (string) $v );
+			if ( $this->length( $scalar ) > 2000 ) { return new \WP_Error( 'certloom_manual_issue_custom_field_too_long', __( 'Each custom field value must be 2,000 characters or fewer.', 'certloom' ) ); }
+			$bytes += strlen( $key ) + strlen( $scalar );
+			if ( $bytes > 32768 ) { return new \WP_Error( 'certloom_manual_issue_custom_fields_too_large', __( 'The combined custom-field payload is too large for one Manual Issuance.', 'certloom' ) ); }
+			$out[ $key ] = $scalar;
+		}
+		ksort( $out, SORT_STRING );
+		return $out;
+	}
+	private function length( $value ) { return function_exists( 'mb_strlen' ) ? mb_strlen( (string) $value, 'UTF-8' ) : strlen( (string) $value ); }
+	/** @return array<string,mixed> */ private function recipient_fingerprint( array $r ) { return $this->recipient_snapshot( $r ) + array( 'updated_at' => (string) ( $r['updated_at'] ?? '' ) ); }
+	/** @return array<string,mixed> */ private function program_fingerprint( array $p ) { return $this->program_snapshot( $p ) + array( 'updated_at' => (string) ( $p['updated_at'] ?? '' ) ); }
+	/** @return array<string,mixed>|null */ private function issuer_fingerprint( $i ) { $out=$this->issuer_snapshot($i); return is_array($out)?$out+array('updated_at'=>(string)($i['updated_at']??'')):null; }
+	/** @return array<string,mixed> */ private function template_fingerprint( array $t, array $r ) { return array( 'id'=>absint($t['id']??0),'machine_key'=>(string)($t['machine_key']??''),'name'=>(string)($t['name']??''),'updated_at'=>(string)($t['updated_at']??''),'published_revision_id'=>absint($r['id']??0),'revision_number'=>absint($r['revision_number']??0),'layout_schema'=>(string)($r['layout_schema']??''),'layout_schema_version'=>absint($r['layout_schema_version']??0),'layout_sha256'=>(string)($r['layout_sha256']??'') ); }
+	/** @return array<string,mixed> */ private function recipient_snapshot( array $r ) { return array( 'id'=>!empty($r['id'])?absint($r['id']):null,'display_name'=>(string)($r['display_name']??''),'first_name'=>$r['first_name']??null,'middle_name'=>$r['middle_name']??null,'last_name'=>$r['last_name']??null,'email'=>$r['email']??null,'external_id'=>$r['external_id']??null,'custom_fields'=>isset($r['custom_fields'])&&is_array($r['custom_fields'])?$r['custom_fields']:array() ); }
+	/** @return array<string,mixed> */ private function program_snapshot( array $p ) { return array( 'id'=>absint($p['id']??0),'code'=>$p['code']??null,'title'=>(string)($p['title']??''),'description'=>$p['description']??null,'issuer_id'=>!empty($p['issuer_id'])?absint($p['issuer_id']):null,'validity_days'=>null!==($p['validity_days']??null)?absint($p['validity_days']):null,'metadata'=>isset($p['metadata'])&&is_array($p['metadata'])?$p['metadata']:array() ); }
+	/** @return array<string,mixed>|null */ private function issuer_snapshot( $i ) { if(!is_array($i))return null; return array( 'id'=>absint($i['id']??0),'name'=>(string)($i['name']??''),'slug'=>(string)($i['slug']??''),'logo_attachment_id'=>!empty($i['logo_attachment_id'])?absint($i['logo_attachment_id']):null,'seal_attachment_id'=>!empty($i['seal_attachment_id'])?absint($i['seal_attachment_id']):null,'settings'=>isset($i['settings'])&&is_array($i['settings'])?$i['settings']:array() ); }
+}

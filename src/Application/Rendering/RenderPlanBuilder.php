@@ -2,6 +2,7 @@
 namespace Certloom\Application\Rendering;
 
 use Certloom\Domain\Rendering\ElementId;
+use Certloom\Domain\Rendering\ElementRegistry;
 use Certloom\Domain\Rendering\LayoutSchema;
 use InvalidArgumentException;
 
@@ -72,9 +73,11 @@ final class RenderPlanBuilder {
 				throw new InvalidArgumentException( 'Resolved render elements must be objects.' );
 			}
 			$type = strtolower( trim( (string) ( $element['type'] ?? '' ) ) );
-			if ( 'merge' === $type || '' === $type ) {
-				throw new InvalidArgumentException( 'Render plan accepts only fully resolved element types.' );
+			$definition = ElementRegistry::get( $type );
+			if ( 'merge' === $type || '' === $type || ! is_array( $definition ) ) {
+				throw new InvalidArgumentException( 'Render plan accepts only fully resolved registered element types.' );
 			}
+			$render_operation = (string) $definition['render_operation'];
 			$id = strtolower( trim( (string) ( $element['id'] ?? '' ) ) );
 			$z = $this->integer( $element['z'] ?? $index, 'element z-order' );
 			if ( ! ( new ElementId() )->is_valid( $id ) || $z < -100000 || $z > 100000 || isset( $seen_ids[ $id ] ) || isset( $seen_z[ (string) $z ] ) ) {
@@ -91,13 +94,11 @@ final class RenderPlanBuilder {
 				'geometry' => $geometry,
 			);
 
-			switch ( $type ) {
+			switch ( $render_operation ) {
 				case 'text':
 					$operation['text'] = $this->text_operation( $element, $font_manifest );
 					break;
 				case 'image':
-				case 'logo':
-				case 'signature':
 					$image = $this->image_operation( $element, $geometry );
 					$asset_hash = $image['asset']['sha256'];
 					$runtime['assets'][ $asset_hash ] = array( 'path' => $image['_runtime_path'] );

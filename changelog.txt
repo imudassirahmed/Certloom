@@ -1,3 +1,20 @@
+1.6.64
+- Add the P0 Manual Issuance golden path inside the gated normalized-domain admin preview: Compose → mutation-free Review → exact Issue confirmation → read-only Receipt.
+- Bind confirmation to a deterministic SHA-256 over the Recipient/new-recipient candidate, active Program, issuer, exact verified published Template revision/hash, dates, numbering-policy identity and credential-specific custom merge values; changed inputs fail closed and require re-review.
+- Reuse the established human-number policy with collision checks spanning legacy and normalized credential stores, while browser retries use source idempotency so an exact repeated confirmation returns the existing immutable Version without allocating another number.
+- Freeze Recipient, Program, issuer, canonical published layout, merge values, public credential identity, human display number, dates and verification URL into an immutable Credential Version snapshot before the issued lifecycle event becomes current.
+- Add one checked outer transaction for optional Recipient creation plus Series, Version, current pointer and append-only issuance event; lifecycle orchestration now supports a trusted within-transaction boundary instead of nesting transactions.
+- Add canonical review Preview through LayoutResolver → RenderPlanBuilder, recipient search, bounded custom merge overrides, published-Template-only selection, duplicate Recipient+Program prevention, backdating, permanent/program/specific expiry choices, and explicit renderer/public-authority honesty.
+- Keep normalized-domain authority, Template publication authority and renderer accepted.json closed pending the final real-host DB and PDF-04 acceptance ceremonies.
+
+1.6.63
+- DSN-08: complete the planned Designer foundation with a closed typed Element Registry shared by layout schema availability, validation, resolution, Render Plan mapping and Designer authoring metadata.
+- Replace hardcoded Designer palette/content/style type branching with a server-projected JSON registry contract that the browser snapshots and deep-freezes; the server validator remains final authority.
+- Keep semantic authoring presets such as Seal and Background mapped to existing canonical image/shape primitives rather than manufacturing new persisted element types.
+- Keep barcode/list availability schema-versioned through registry minimum versions while preserving v1/v2/v3 compatibility and immutable history.
+- Keep the registry deliberately closed to WordPress filter/action mutation, arbitrary HTML/CSS callbacks and unversioned third-party types; future extensibility must first earn an explicit schema version plus validator/resolver/renderer support.
+- Add DSN-08 PHP and real Chromium gates, update older Designer regressions for the registry-driven architecture, and keep normalized-domain/renderer authority closed pending final acceptance.
+
 1.6.62
 - DSN-07: add bounded per-user Designer recovery autosave stored outside certloom-layout and outside Template revision authority.
 - Bind every recovery checkpoint to the exact immutable base revision ID + SHA-256 and a UUIDv4 browser editing session; stale bases and parallel-session ownership conflicts fail closed rather than auto-merging.

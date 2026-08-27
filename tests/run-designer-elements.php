@@ -6,26 +6,27 @@ require_once __DIR__ . '/bootstrap-autoload.php';
 use Certloom\Application\Rendering\LayoutValidator;
 use Certloom\Application\Templates\PresetCatalog;
 use Certloom\Domain\Rendering\LayoutSchema;
-$root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'); $js=file_get_contents($root.'/admin/assets/designer.js'); $css=file_get_contents($root.'/admin/assets/designer.css');
+use Certloom\Domain\Rendering\ElementRegistry;
+$root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'); $js=file_get_contents($root.'/admin/assets/designer.js'); $css=file_get_contents($root.'/admin/assets/designer.css'); $registry=file_get_contents($root.'/src/Domain/Rendering/ElementRegistry.php');
 $pass=0;$fail=0; function dsn3($ok,$label){global $pass,$fail;if($ok){$pass++;echo "PASS  $label\n";}else{$fail++;echo "FAIL  $label\n";}}
 
-dsn3(is_string($admin)&&strpos($admin,'DSN-07 · Recovery autosave & concurrency')!==false,'Template admin advances through DSN-07 while retaining the DSN-03 element/content surface');
+dsn3(is_string($admin)&&strpos($admin,'DSN-08 · Typed Element Registry')!==false,'Template admin advances through DSN-08 while retaining the DSN-03 element/content surface');
 dsn3(strpos($admin,'wp_enqueue_media()')!==false,'WordPress Media Library is explicitly enqueued for local asset selection');
-foreach(['text','merge','image','logo','signature','seal','qr','rectangle','ellipse','line','background'] as $type){ dsn3(strpos($admin,'data-certloom-designer-add="\' . esc_attr( $type )')!==false || strpos($admin,"'$type' => __(")!==false,"palette exposes $type creation"); }
-dsn3(strpos($js,"'seal' === kind")!==false&&strpos($js,"element.type = 'image'")!==false,'seal palette maps to the existing canonical image primitive without schema mutation');
-dsn3(strpos($admin,'data-certloom-designer-add="barcode"')!==false&&strpos($admin,'Upgrade this draft to certloom-layout v2')!==false,'barcode is exposed only behind the explicit v2 upgrade boundary rather than mutating schema v1');
+$paletteKinds=array_map(function($item){return $item['kind'];},ElementRegistry::palette()); foreach(['text','merge','image','logo','signature','seal','qr','rectangle','ellipse','line','background'] as $type){ dsn3(in_array($type,$paletteKinds,true),"typed registry palette exposes $type creation"); }
+dsn3(strpos($registry,"self::palette_item( 'seal', 'seal'")!==false&&strpos($registry,"'image' => self::definition")!==false,'seal palette maps through the typed registry to the existing canonical image primitive without schema mutation');
+dsn3(strpos($registry,"self::palette_item( 'barcode', 'barcode'")!==false&&strpos($registry,"'barcode' => self::definition( 'barcode', 2")!==false,'barcode palette availability is registry-gated behind schema v2 rather than mutating schema v1');
 dsn3(strpos($admin,'data-certloom-designer-remove')!==false,'selected elements can be removed through explicit Designer UI');
 dsn3(strpos($admin,'data-certloom-designer-content-field="text"')!==false&&strpos($admin,'data-certloom-designer-content-field="token"')!==false,'text and merge content editors are present');
 dsn3(strpos($admin,'data-certloom-designer-media')!==false&&strpos($admin,'attachment:123')!==false,'asset editor keeps WordPress-local attachment references visible');
 dsn3(strpos($admin,'error_correction')!==false&&strpos($admin,'quiet_zone_modules')!==false,'QR content controls preserve the canonical v1 QR contract');
 dsn3(strpos($admin,'data-certloom-designer-style-field="font_size_pt"')!==false&&strpos($admin,'data-certloom-designer-style-field="opacity"')!==false,'DSN-03 primitives are now styled only through canonical DSN-04 fields');
-dsn3(strpos($admin,'DSN-08 remains the Typed Element Registry')!==false,'DSN-08 remains explicit after DSN-07 without collapsing later registry work');
+dsn3(strpos($admin,'DSN-08 is a closed built-in registry')!==false,'DSN-08 is implemented as a closed typed registry rather than an arbitrary extension surface');
 
 dsn3(is_string($js)&&strpos($js,'function secureUuidV4')!==false&&strpos($js,'getRandomValues')!==false,'new element IDs use browser cryptographic randomness');
 dsn3(strpos($js,'Math.random')===false,'element IDs never fall back to Math.random');
 dsn3(strpos($js,'elements().length >= 500')!==false,'client creation honors the server 500-element ceiling');
 dsn3(strpos($js,'function buildNewElement')!==false&&strpos($js,'function appendElement')!==false&&strpos($js,'function removeSelected')!==false,'creation/removal have explicit bounded operations');
-dsn3(strpos($js,"element.source = 'verification_url'")!==false,'new QR elements use verification_url only');
+dsn3(strpos($registry,"'source' => 'verification_url'")!==false&&strpos($registry,"self::palette_item( 'qr', 'qr'")!==false,'new QR elements receive verification_url only through registry defaults');
 dsn3(strpos($js,"element.asset = assetReference")!==false&&strpos($js,"'attachment:' + Number( data.id )")!==false,'Media Library selection becomes an attachment:ID reference');
 dsn3(strpos($js,'window.wp.media')!==false&&strpos($js,"library: { type: 'image' }")!==false,'asset picker is WordPress-local image media');
 dsn3(strpos($js,"[ 'image/png', 'image/jpeg' ]")!==false&&strpos($admin,'unsupportedMediaType')!==false,'Designer rejects Media Library types outside the renderer-supported PNG/JPEG contract before persistence');

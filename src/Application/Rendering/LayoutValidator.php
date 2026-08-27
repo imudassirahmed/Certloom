@@ -2,6 +2,7 @@
 namespace Certloom\Application\Rendering;
 
 use Certloom\Domain\Rendering\ElementId;
+use Certloom\Domain\Rendering\ElementRegistry;
 use Certloom\Domain\Rendering\LayoutSchema;
 use InvalidArgumentException;
 
@@ -91,32 +92,12 @@ final class LayoutValidator {
 
 	/** @return array<string,mixed> */
 	private function normalize_element( array $element, array $page, $index, $schema_version ) {
-		$common = array( 'id', 'type', 'x_mm', 'y_mm', 'width_mm', 'height_mm', 'z', 'rotation_deg', 'opacity' );
 		$type = isset( $element['type'] ) ? strtolower( (string) $element['type'] ) : '';
-		if ( ! in_array( $type, LayoutSchema::element_types( $schema_version ), true ) ) {
+		$definition = ElementRegistry::get( $type );
+		if ( ! is_array( $definition ) || ! in_array( $type, LayoutSchema::element_types( $schema_version ), true ) ) {
 			throw new InvalidArgumentException( sprintf( 'Element %d has an unsupported type.', $index + 1 ) );
 		}
-
-		$type_keys = array(
-			'text'      => array( 'text', 'style' ),
-			'merge'     => array( 'token', 'style' ),
-			'image'     => array( 'asset', 'fit' ),
-			'logo'      => array( 'asset', 'fit' ),
-			'signature' => array( 'asset', 'fit' ),
-			'shape'     => array( 'shape', 'fill', 'stroke', 'stroke_width_mm' ),
-			'line'      => array( 'stroke', 'stroke_width_mm' ),
-			'qr'        => array( 'source', 'error_correction', 'quiet_zone_modules' ),
-			'barcode'   => array( 'source', 'symbology', 'quiet_zone_modules' ),
-			'list'      => array( 'items', 'list_style', 'style' ),
-		);
-		$required = array( 'id', 'type', 'x_mm', 'y_mm', 'width_mm', 'height_mm' );
-		if ( 'text' === $type ) { $required[] = 'text'; }
-		if ( 'merge' === $type ) { $required[] = 'token'; }
-		if ( in_array( $type, array( 'image', 'logo', 'signature' ), true ) ) { $required[] = 'asset'; }
-		if ( 'shape' === $type ) { $required[] = 'shape'; }
-		if ( 'qr' === $type || 'barcode' === $type ) { $required[] = 'source'; }
-		if ( 'list' === $type ) { $required[] = 'items'; }
-		$this->assert_keys( $element, array_merge( $common, $type_keys[ $type ] ), $required, 'layout element' );
+		$this->assert_keys( $element, $definition['allowed_properties'], $definition['required_properties'], 'layout element' );
 
 		$id = strtolower( trim( (string) $element['id'] ) );
 		if ( ! ( new ElementId() )->is_valid( $id ) ) {
@@ -153,7 +134,7 @@ final class LayoutValidator {
 			throw new InvalidArgumentException( 'Element z-order is outside the supported range.' );
 		}
 
-		switch ( $type ) {
+		switch ( (string) $definition['validation'] ) {
 			case 'text':
 				$out['text'] = $this->text( $element['text'], 'text element' );
 				$out['style'] = $this->style( isset( $element['style'] ) ? $element['style'] : array() );
@@ -162,9 +143,7 @@ final class LayoutValidator {
 				$out['token'] = $this->token( $element['token'] );
 				$out['style'] = $this->style( isset( $element['style'] ) ? $element['style'] : array() );
 				break;
-			case 'image':
-			case 'logo':
-			case 'signature':
+			case 'asset':
 				$out['asset'] = $this->asset_reference( $element['asset'] );
 				$out['fit'] = isset( $element['fit'] ) ? strtolower( (string) $element['fit'] ) : 'contain';
 				if ( ! in_array( $out['fit'], array( 'contain', 'cover', 'fill' ), true ) ) {

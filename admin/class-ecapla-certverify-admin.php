@@ -70,7 +70,9 @@ class Ecapla_CertVerify_Admin {
 			add_submenu_page( self::DASHBOARD_PAGE, __( 'Programs', 'certloom' ), __( 'Programs', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-domain-programs', array( $this, 'render_roadmap_placeholder_screen' ) );
 		}
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Templates', 'certloom' ), __( 'Templates', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-templates', array( $this, 'render_roadmap_placeholder_screen' ) );
-		add_submenu_page( self::DASHBOARD_PAGE, __( 'Issuance', 'certloom' ), __( 'Issuance', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-issuance', array( $this, 'render_roadmap_placeholder_screen' ) );
+		if ( ! ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) ) {
+			add_submenu_page( self::DASHBOARD_PAGE, __( 'Issuance', 'certloom' ), __( 'Issuance', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-issuance', array( $this, 'render_roadmap_placeholder_screen' ) );
+		}
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Data Tools', 'certloom' ), __( 'Data Tools', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-import', array( $this, 'render_import_screen' ) );
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Integrations', 'certloom' ), __( 'Integrations', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-integrations', array( $this, 'render_roadmap_placeholder_screen' ) );
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Settings', 'certloom' ), __( 'Settings', 'certloom' ), 'manage_options', 'certloom-settings', array( $this, 'render_settings_screen' ) );
@@ -1015,14 +1017,14 @@ class Ecapla_CertVerify_Admin {
 			'certloom-templates' => array(
 				'title' => __( 'Templates', 'certloom' ),
 				'eyebrow' => __( 'Pro commercial core · implementation gated', 'certloom' ),
-				'description' => __( 'Versioned Templates, immutable revisions, six factory design families, deterministic assignments, lifecycle controls, canonical Render Plan Preview, and DSN-01 through DSN-07 Designer foundations are implemented. Designer edits the same versioned certloom-layout revision model: historical v1/v2 layouts remain readable and immutable, explicit v3 upgrades create a new immutable revision, Code 128 remains bound only to credential.display_number, and canonical bullet/numbered lists resolve through the shared text Render Plan path. Font-family authoring remains catalog-managed until FONT-02 can bind exact local font manifests. DSN-07 adds bounded per-user recovery autosave bound to the exact immutable revision ID and SHA-256, with same-Template parallel-session conflicts failing closed; manual save remains the only revision-authority path. Publication and production artifact authority remain fail-closed behind renderer release authority; DSN-08 Typed Element Registry is next.', 'certloom' ),
-				'status' => __( 'DSN-07 recovery autosave/concurrency implemented · publication/artifact authority gated · DSN-08 next', 'certloom' ),
+				'description' => __( 'Versioned Templates, immutable revisions, six factory design families, deterministic assignments, lifecycle controls, canonical Render Plan Preview, and the full planned DSN-01 through DSN-08 Designer foundation are implemented. Designer edits the same versioned certloom-layout revision model: historical v1/v2 layouts remain readable and immutable, explicit v3 upgrades create a new immutable revision, Code 128 remains bound only to credential.display_number, and canonical bullet/numbered lists resolve through the shared text Render Plan path. DSN-08 now centralizes built-in element schema availability, allowed properties, validation/resolver/renderer mappings, inspector groups, merge requirements and palette defaults behind one closed typed registry; no unversioned filter or arbitrary HTML/CSS callback can mutate it. Recovery autosave remains personal/non-authoritative, manual save remains the only revision-authority path, and FONT-02 still owns controlled local font manifests. Publication and production artifact authority remain fail-closed behind renderer release authority. The P0 Manual Issuance golden path is now implemented inside the normalized-domain admin-preview gate with exact reviewed inputs, immutable issuance snapshots and atomic lifecycle orchestration; Credential Management UX is next.', 'certloom' ),
+				'status' => __( 'Designer foundation complete · Manual Issuance golden path implemented · publication/artifact authority gated · Credential Management UX next', 'certloom' ),
 			),
 			'certloom-issuance' => array(
 				'title' => __( 'Issuance', 'certloom' ),
-				'eyebrow' => __( 'Planned issuance workflow', 'certloom' ),
-				'description' => __( 'Manual and bulk issuance will use immutable Credential Versions, server-authoritative artifacts, reviewed eligibility and durable jobs. Template assignment now has a published-only resolution boundary so a newer draft cannot silently become issued output. The current registry editor remains the safe live write path until issuance dependencies are accepted.', 'certloom' ),
-				'status' => __( 'Planned · domain and renderer dependencies', 'certloom' ),
+				'eyebrow' => __( 'P0 issuance workflow · implementation gated', 'certloom' ),
+				'description' => __( 'Manual Issuance is implemented inside the normalized-domain admin-preview gate with existing/new Recipient selection, active Program and verified published-Template selection, mutation-free review, exact SHA-256 confirmation, backdating/permanent/explicit expiry choices, established numbering policy reuse, bounded credential-specific custom merge values, canonical browser Preview, atomic Series/Version/event creation, retry idempotency and an immutable issuance snapshot. Bulk issuance remains a later milestone. Normalized public authority and PDF/PNG/JPEG exports stay fail-closed until final database and renderer acceptance.', 'certloom' ),
+				'status' => __( 'Manual Issuance implemented · acceptance gated · Credential Management UX next', 'certloom' ),
 			),
 			'certloom-integrations' => array(
 				'title' => __( 'Integrations', 'certloom' ),

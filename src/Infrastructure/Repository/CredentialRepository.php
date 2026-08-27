@@ -469,7 +469,7 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 			ARRAY_A
 		);
 		if ( '' !== (string) $wpdb->last_error ) {
-			return new \WP_Error( 'certloom_version_idempotency_read_failed', __( 'Certloom could not check whether the legacy certificate was already migrated.', 'certloom' ) );
+			return new \WP_Error( 'certloom_version_idempotency_read_failed', __( 'Certloom could not check whether this source operation was already committed.', 'certloom' ) );
 		}
 		return is_array( $row ) ? self::decode_version( $row ) : null;
 	}
@@ -557,6 +557,33 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 			return new \WP_Error( 'certloom_version_read_failed', __( 'Certloom could not read the credential version.', 'certloom' ) );
 		}
 		return is_array( $row ) ? self::decode_version( $row ) : null;
+	}
+
+
+	/**
+	 * Duplicate-prevention lookup for the one-Series-per-recipient/program
+	 * Manual Issuance boundary. Re-certification belongs to a later immutable
+	 * Version in the same Series rather than a second Series.
+	 *
+	 * @return array<string,mixed>|null|\WP_Error
+	 */
+	public function find_series_for_recipient_program( $recipient_id, $program_id ) {
+		global $wpdb;
+		$recipient_id = absint( $recipient_id );
+		$program_id = absint( $program_id );
+		if ( ! $recipient_id || ! $program_id ) { return null; }
+		$wpdb->last_error = '';
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				'SELECT * FROM %i WHERE recipient_id=%d AND program_id=%d ORDER BY id ASC LIMIT 1',
+				SchemaManager::table( 'credential_series' ),
+				$recipient_id,
+				$program_id
+			),
+			ARRAY_A
+		);
+		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_series_duplicate_check_failed', __( 'Certloom could not check for an existing credential for this recipient and program.', 'certloom' ) ); }
+		return is_array( $row ) ? self::decode_series( $row ) : null;
 	}
 
 	/** @return array<string,mixed>|null|\WP_Error */

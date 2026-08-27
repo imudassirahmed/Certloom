@@ -4,6 +4,7 @@ namespace Certloom\Application\Rendering;
 use Certloom\Application\Contract\LocalAssetResolverInterface;
 use Certloom\Application\Contract\QrEncoderInterface;
 use Certloom\Application\Contract\BarcodeEncoderInterface;
+use Certloom\Domain\Rendering\ElementRegistry;
 use InvalidArgumentException;
 
 /** Resolves immutable merge/asset/QR inputs once before any renderer sees them. */
@@ -29,7 +30,8 @@ final class LayoutResolver {
 
 		$resolved = $layout;
 		foreach ( $resolved['elements'] as $index => $element ) {
-			switch ( $element['type'] ) {
+			$definition = ElementRegistry::require_type( $element['type'] ?? '' );
+			switch ( (string) $definition['resolver'] ) {
 				case 'merge':
 					$token = $element['token'];
 					if ( ! array_key_exists( $token, $merge_snapshot ) ) {
@@ -59,9 +61,7 @@ final class LayoutResolver {
 					unset( $element['items'], $element['list_style'] );
 					$element['style']['direction'] = $this->directions->resolve( $element['text'], $element['style']['direction'] );
 					break;
-				case 'image':
-				case 'logo':
-				case 'signature':
+				case 'asset':
 					$reference = $element['asset'];
 					$verified_asset = $this->assets->inspect( $assets->resolve( $reference ) );
 					$verified_asset['reference'] = $reference;

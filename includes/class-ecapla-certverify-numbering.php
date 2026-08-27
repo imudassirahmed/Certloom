@@ -208,6 +208,83 @@ class Ecapla_CertVerify_Numbering {
 		return new WP_Error( 'ecapla_certverify_number_preview_exhausted', __( 'Certloom could not produce a collision-free certificate-number sample. Review the numbering policy before enabling automatic numbering.', 'certloom' ) );
 	}
 
+
+	/**
+	 * Non-mutating candidate preview against a caller-supplied collision source.
+	 * This lets the normalized domain share one numbering policy without making
+	 * the legacy registry its only uniqueness oracle.
+	 *
+	 * @param callable $exists function(string): bool|WP_Error.
+	 * @return array<string,mixed>|WP_Error
+	 */
+	public static function preview_candidate( callable $exists ) {
+		$policy = self::policy();
+		$mode   = (string) $policy['numbering_mode'];
+		if ( 'manual' === $mode ) {
+			return new WP_Error( 'ecapla_certverify_numbering_disabled', __( 'Automatic certificate numbering is not enabled.', 'certloom' ) );
+		}
+		if ( 'sequential' === $mode ) {
+			$next = self::current_next_sequence();
+			if ( is_wp_error( $next ) ) { return $next; }
+			for ( $offset = 0; $offset < self::MAX_COLLISIONS; $offset++ ) {
+				$sequence = $next + $offset;
+				if ( $sequence > self::MAX_SEQUENCE ) { break; }
+				$candidate = self::format_sequence( $sequence, $policy );
+				if ( is_wp_error( $candidate ) ) { return $candidate; }
+				$collision = call_user_func( $exists, $candidate );
+				if ( is_wp_error( $collision ) ) { return $collision; }
+				if ( ! $collision ) {
+					return array( 'certificate_number' => $candidate, 'mode' => $mode, 'sequence' => $sequence, 'sample' => true, 'skipped_collisions' => $offset );
+				}
+			}
+			return new WP_Error( 'ecapla_certverify_number_preview_exhausted', __( 'Certloom found too many existing numbers in the next sequence range. Increase the sequence start before enabling automatic numbering.', 'certloom' ) );
+		}
+		for ( $attempt = 0; $attempt < self::MAX_COLLISIONS; $attempt++ ) {
+			$candidate = self::generate_candidate( $mode, $policy );
+			if ( is_wp_error( $candidate ) ) { return $candidate; }
+			$collision = call_user_func( $exists, $candidate );
+			if ( is_wp_error( $collision ) ) { return $collision; }
+			if ( ! $collision ) {
+				return array( 'certificate_number' => $candidate, 'mode' => $mode, 'sample' => true, 'skipped_collisions' => $attempt );
+			}
+		}
+		return new WP_Error( 'ecapla_certverify_number_preview_exhausted', __( 'Certloom could not produce a collision-free certificate-number sample. Review the numbering policy before enabling automatic numbering.', 'certloom' ) );
+	}
+
+	/**
+	 * Allocates a unique automatic candidate without inserting a credential row.
+	 * Sequential values are atomically reserved. A later failed issuance may burn
+	 * that sequence value; Certloom intentionally prefers gaps over reuse/duplicates.
+	 *
+	 * @param callable $exists function(string): bool|WP_Error.
+	 * @return array<string,mixed>|WP_Error
+	 */
+	public static function allocate_candidate( callable $exists ) {
+		if ( ! self::is_enabled() ) {
+			return new WP_Error( 'ecapla_certverify_numbering_disabled', __( 'Automatic certificate numbering is not enabled.', 'certloom' ) );
+		}
+		$policy = self::policy();
+		$mode   = (string) $policy['numbering_mode'];
+		for ( $attempt = 0; $attempt < self::MAX_COLLISIONS; $attempt++ ) {
+			$sequence = null;
+			if ( 'sequential' === $mode ) {
+				$sequence = self::allocate_sequence();
+				if ( is_wp_error( $sequence ) ) { return $sequence; }
+				$candidate = self::format_sequence( $sequence, $policy );
+			} else {
+				$candidate = self::generate_candidate( $mode, $policy );
+			}
+			if ( is_wp_error( $candidate ) ) { return $candidate; }
+			$collision = call_user_func( $exists, $candidate );
+			if ( is_wp_error( $collision ) ) { return $collision; }
+			if ( $collision ) { continue; }
+			$result = array( 'certificate_number' => $candidate, 'mode' => $mode, 'skipped_collisions' => $attempt );
+			if ( null !== $sequence ) { $result['sequence'] = $sequence; }
+			return $result;
+		}
+		return new WP_Error( 'ecapla_certverify_number_collision_exhausted', __( 'Certloom could not allocate a unique certificate number after 1000 attempts. Review the numbering policy and try again.', 'certloom' ) );
+	}
+
 	/**
 	 * Creates a new legacy-authority credential using an atomically reserved
 	 * sequence value. Unique database constraints remain the final collision gate.

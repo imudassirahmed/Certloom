@@ -9,6 +9,9 @@
 	var AUTOSAVE_DELAY_MS = 1800;
 	var AUTOSAVE_RETRY_MS = 12000;
 	var I18N = window.certloomTemplateDesignerI18n || {};
+	function registrySnapshot( value ) { try { return JSON.parse( JSON.stringify( value || {} ) ); } catch ( error ) { return {}; } }
+	function deepFreeze( value ) { if ( ! value || 'object' !== typeof value || Object.isFrozen( value ) ) { return value; } Object.freeze( value ); Object.keys( value ).forEach( function ( key ) { deepFreeze( value[ key ] ); } ); return value; }
+	var ELEMENT_REGISTRY = deepFreeze( registrySnapshot( window.certloomTemplateElementRegistry ) );
 	var PAGE_DIMENSIONS = {
 		A4: { portrait: [ 210, 297 ], landscape: [ 297, 210 ] },
 		Letter: { portrait: [ 215.9, 279.4 ], landscape: [ 279.4, 215.9 ] }
@@ -32,10 +35,18 @@
 	function mmFromPx( pixels, zoom ) { return Number( pixels ) / ( BASE_PX_PER_MM * zoom ); }
 	function escapeText( value ) { return String( null == value ? '' : value ); }
 	function t( key, fallback ) { return 'string' === typeof I18N[ key ] && I18N[ key ] ? I18N[ key ] : fallback; }
-	function typeLabel( type ) {
-		var labels = { text: t( 'text', 'Text' ), merge: t( 'mergeField', 'Merge field' ), qr: t( 'qr', 'QR' ), barcode: t( 'barcode', 'Barcode' ), list: t( 'list', 'List' ), shape: t( 'shape', 'Shape' ), line: t( 'line', 'Line' ), image: t( 'image', 'Image' ), logo: t( 'logo', 'Logo' ), signature: t( 'signature', 'Signature' ), element: t( 'element', 'Element' ) };
-		return labels[ type ] || escapeText( type || labels.element );
+	function registryReady() { return 1 === Number( ELEMENT_REGISTRY.contract_version ) && ELEMENT_REGISTRY.types && 'object' === typeof ELEMENT_REGISTRY.types && Array.isArray( ELEMENT_REGISTRY.palette ); }
+	function registryType( type ) { return registryReady() && ELEMENT_REGISTRY.types[ type ] && 'object' === typeof ELEMENT_REGISTRY.types[ type ] ? ELEMENT_REGISTRY.types[ type ] : null; }
+	function paletteDefinition( kind ) {
+		if ( ! registryReady() ) { return null; }
+		for ( var i = 0; i < ELEMENT_REGISTRY.palette.length; i++ ) { if ( ELEMENT_REGISTRY.palette[ i ] && ELEMENT_REGISTRY.palette[ i ].kind === kind ) { return ELEMENT_REGISTRY.palette[ i ]; } }
+		return null;
 	}
+	function typeLabel( type ) {
+		var definition = registryType( type ); var key = definition && definition.label_key ? definition.label_key : 'element';
+		return t( key, type ? escapeText( type ) : t( 'element', 'Element' ) );
+	}
+	function previewKind( element ) { var definition = element ? registryType( element.type ) : null; return definition && definition.preview ? definition.preview : ''; }
 
 	function rotatedBounds( element ) {
 		var x = Number( element.x_mm ), y = Number( element.y_mm );
@@ -112,6 +123,7 @@
 		var autosaveDiscardButton = root.querySelector( '[data-certloom-designer-autosave-discard]' );
 		var autosaveSessionField = root.querySelector( '[data-certloom-designer-autosave-session-field]' );
 		if ( ! form || ! jsonField || ! pageEl || ! workspace ) { return; }
+		if ( ! registryReady() ) { showError( t( 'elementRegistryUnavailable', 'The typed Designer Element Registry is unavailable or invalid. Reload the page before editing this Template.' ) ); root.classList.add( 'has-registry-error' ); return; }
 
 		var savedLayout;
 		try { savedLayout = JSON.parse( jsonField.value ); } catch ( parseError ) { showError( t( 'currentLayoutLoadError', 'The current canonical layout could not be loaded into Designer.' ) ); return; }
@@ -279,9 +291,8 @@
 			if ( removeButton ) { removeButton.disabled = ! element || locked; }
 		}
 		function contentGroup( element ) {
-			if ( ! element ) { return ''; }
-			if ( 'image' === element.type || 'logo' === element.type || 'signature' === element.type ) { return 'asset'; }
-			return element.type || '';
+			var definition = element ? registryType( element.type ) : null;
+			return definition && definition.content_group ? definition.content_group : '';
 		}
 		function setInspector() {
 			var element = selected();
@@ -313,7 +324,7 @@
 				if ( 'items' === contentKey && Array.isArray( value ) ) { value = value.join( '\n' ); }
 				contentFields[ field ].value = String( value ); contentFields[ field ].disabled = locked;
 			}
-			var styleGroup = ( 'text' === element.type || 'merge' === element.type || 'list' === element.type ) ? 'text' : ( 'shape' === element.type ? 'shape' : ( 'line' === element.type ? 'line' : '' ) );
+			var elementDefinition = registryType( element.type ); var styleGroup = elementDefinition && elementDefinition.style_group ? elementDefinition.style_group : '';
 			for ( var styleSection = 0; styleSection < styleSections.length; styleSection++ ) {
 				var sectionGroup = styleSections[ styleSection ].getAttribute( 'data-certloom-designer-style' );
 				styleSections[ styleSection ].hidden = 'general' !== sectionGroup && sectionGroup !== styleGroup;
@@ -324,19 +335,20 @@
 				if ( 'checkbox' === styleFields[ styleField ].type ) { styleFields[ styleField ].checked = !! styleValue; } else { styleFields[ styleField ].value = null == styleValue ? '' : String( styleValue ); }
 				styleFields[ styleField ].disabled = locked || ( 'font_family' === styleKey );
 			}
-			if ( mediaButton ) { mediaButton.disabled = locked || 'asset' !== group; }
+			if ( mediaButton ) { mediaButton.disabled = locked || ! elementDefinition || ! elementDefinition.media; }
 			syncProductivityControls();
 		}
 
 		function elementTitle( element ) {
-			if ( 'text' === element.type ) { return escapeText( element.text ); }
-			if ( 'merge' === element.type ) { return '{{ ' + escapeText( element.token ) + ' }}'; }
-			if ( 'qr' === element.type ) { return t( 'qr', 'QR' ); }
-			if ( 'barcode' === element.type ) { return t( 'barcode', 'Barcode' ) + ' · ' + escapeText( element.source || 'credential.display_number' ); }
-			if ( 'list' === element.type ) { return t( 'list', 'List' ) + ' · ' + ( Array.isArray( element.items ) ? element.items.length : 0 ) + ' ' + t( 'items', 'items' ); }
-			if ( 'shape' === element.type ) { return escapeText( element.shape || t( 'shape', 'Shape' ) ); }
-			if ( 'line' === element.type ) { return t( 'line', 'Line' ); }
-			if ( 'image' === element.type || 'logo' === element.type || 'signature' === element.type ) { return typeLabel( element.type ) + ' · ' + escapeText( element.asset ); }
+			var preview = previewKind( element );
+			if ( 'text' === preview ) { return escapeText( element.text ); }
+			if ( 'merge' === preview ) { return '{{ ' + escapeText( element.token ) + ' }}'; }
+			if ( 'qr' === preview ) { return t( 'qr', 'QR' ); }
+			if ( 'barcode' === preview ) { return t( 'barcode', 'Barcode' ) + ' · ' + escapeText( element.source || 'credential.display_number' ); }
+			if ( 'list' === preview ) { return t( 'list', 'List' ) + ' · ' + ( Array.isArray( element.items ) ? element.items.length : 0 ) + ' ' + t( 'items', 'items' ); }
+			if ( 'shape' === preview ) { return escapeText( element.shape || t( 'shape', 'Shape' ) ); }
+			if ( 'line' === preview ) { return t( 'line', 'Line' ); }
+			if ( 'asset' === preview ) { return typeLabel( element.type ) + ' · ' + escapeText( element.asset ); }
 			return escapeText( element.type );
 		}
 		function secureUuidV4() {
@@ -358,22 +370,22 @@
 			return { x_mm: round( clamp( ( Number( p.width_mm ) - width ) / 2 + offset, 0, Math.max( 0, Number( p.width_mm ) - width ) ), 3 ), y_mm: round( clamp( ( Number( p.height_mm ) - height ) / 2 + offset, 0, Math.max( 0, Number( p.height_mm ) - height ) ), 3 ), width_mm: width, height_mm: height };
 		}
 		function buildNewElement( kind, assetReference ) {
+			var palette = paletteDefinition( kind );
+			if ( ! palette ) { showError( t( 'elementRegistryUnavailable', 'The typed Designer Element Registry is unavailable or invalid. Reload the page before editing this Template.' ) ); return null; }
+			if ( schemaVersion < Number( palette.min_schema_version || 1 ) ) { showError( t( 'elementRequiresSchemaUpgrade', 'This element requires a newer certloom-layout schema. Upgrade the draft before adding it.' ) ); return null; }
 			var id = secureUuidV4(); if ( ! id ) { showError( t( 'uuidUnavailable', 'This browser cannot create a secure element identifier. Update the browser before adding elements.' ) ); return null; }
-			var p = page(), geometry = centeredGeometry( 80, 15 );
-			var element = { id: id, type: kind, x_mm: geometry.x_mm, y_mm: geometry.y_mm, width_mm: geometry.width_mm, height_mm: geometry.height_mm, z: elements().length, rotation_deg: 0, opacity: 1 };
-			if ( 'text' === kind ) { element.text = t( 'text', 'Text' ); element.style = defaultTextStyle(); }
-			else if ( 'merge' === kind ) { element.token = 'recipient.name'; element.style = defaultTextStyle(); }
-			else if ( 'image' === kind || 'logo' === kind || 'signature' === kind || 'seal' === kind ) {
-				if ( 'seal' === kind ) { element.type = 'image'; }
-				geometry = centeredGeometry( 'signature' === kind ? 70 : ( 'seal' === kind ? 40 : 60 ), 'signature' === kind ? 25 : 40 ); Object.assign( element, geometry ); element.asset = assetReference || ''; element.fit = 'contain';
+			var p = page(), defaults = palette.defaults || {}, geometry;
+			if ( defaults.full_page ) { geometry = { x_mm: 0, y_mm: 0, width_mm: Number( p.width_mm ), height_mm: Number( p.height_mm ) }; }
+			else { geometry = centeredGeometry( Number( palette.width_mm || 80 ), Number( palette.height_mm || 15 ) ); }
+			var element = { id: id, type: palette.type, x_mm: geometry.x_mm, y_mm: geometry.y_mm, width_mm: geometry.width_mm, height_mm: geometry.height_mm, z: elements().length, rotation_deg: 0, opacity: 1 };
+			for ( var key in defaults ) {
+				if ( ! Object.prototype.hasOwnProperty.call( defaults, key ) || 'full_page' === key || 'text_i18n' === key || 'items_i18n' === key || 'style_preset' === key ) { continue; }
+				element[ key ] = clone( defaults[ key ] );
 			}
-			else if ( 'qr' === kind ) { geometry = centeredGeometry( 35, 35 ); Object.assign( element, geometry ); element.source = 'verification_url'; element.error_correction = 'H'; element.quiet_zone_modules = 4; }
-			else if ( 'barcode' === kind ) { if ( schemaVersion < 2 ) { showError( t( 'barcodeDeferred', 'Barcode elements require certloom-layout v2. Upgrade this draft first.' ) ); return null; } geometry = centeredGeometry( 110, 18 ); Object.assign( element, geometry ); element.source = 'credential.display_number'; element.symbology = 'code128'; element.quiet_zone_modules = 10; }
-			else if ( 'list' === kind ) { if ( schemaVersion < 3 ) { showError( t( 'listDeferred', 'List elements require certloom-layout v3. Upgrade this draft first.' ) ); return null; } geometry = centeredGeometry( 110, 50 ); Object.assign( element, geometry ); element.items = [ t( 'firstListItem', 'First item' ), t( 'secondListItem', 'Second item' ) ]; element.list_style = 'bullet'; element.style = defaultTextStyle(); element.style.align = 'start'; element.style.vertical_align = 'top'; element.style.overflow = 'wrap'; }
-			else if ( 'line' === kind ) { geometry = centeredGeometry( 60, 1 ); Object.assign( element, geometry ); element.stroke = '#000000'; element.stroke_width_mm = 0.3; }
-			else if ( 'rectangle' === kind || 'ellipse' === kind ) { element.type = 'shape'; geometry = centeredGeometry( 60, 30 ); Object.assign( element, geometry ); element.shape = kind; element.fill = '#FFFFFF00'; element.stroke = '#000000'; element.stroke_width_mm = 0.3; }
-			else if ( 'background' === kind ) { element.type = 'shape'; element.x_mm = 0; element.y_mm = 0; element.width_mm = Number( p.width_mm ); element.height_mm = Number( p.height_mm ); element.z = -1; element.shape = 'rectangle'; element.fill = '#FFFFFF'; element.stroke = '#00000000'; element.stroke_width_mm = 0; }
-			else { return null; }
+			if ( defaults.text_i18n ) { element.text = t( defaults.text_i18n, 'Text' ); }
+			if ( Array.isArray( defaults.items_i18n ) ) { element.items = defaults.items_i18n.map( function ( key ) { return t( key, key ); } ); }
+			if ( defaults.style_preset ) { element.style = defaultTextStyle(); if ( 'list' === defaults.style_preset ) { element.style.align = 'start'; element.style.vertical_align = 'top'; element.style.overflow = 'wrap'; } }
+			if ( palette.requires_media ) { element.asset = assetReference || ''; }
 			return element;
 		}
 		function appendElement( kind, assetReference ) {
@@ -398,9 +410,10 @@
 			} ); frame.open();
 		}
 		function addRequested( kind ) {
-			if ( 'barcode' === kind && schemaVersion < 2 ) { showError( t( 'barcodeDeferred', 'Barcode elements require certloom-layout v2. Upgrade this draft first.' ) ); return; }
-			if ( 'list' === kind && schemaVersion < 3 ) { showError( t( 'listDeferred', 'List elements require certloom-layout v3. Upgrade this draft first.' ) ); return; }
-			if ( 'image' === kind || 'logo' === kind || 'signature' === kind || 'seal' === kind ) { mediaFrame( function ( reference ) { appendElement( kind, reference ); } ); return; }
+			var palette = paletteDefinition( kind );
+			if ( ! palette ) { showError( t( 'elementRegistryUnavailable', 'The typed Designer Element Registry is unavailable or invalid. Reload the page before editing this Template.' ) ); return; }
+			if ( schemaVersion < Number( palette.min_schema_version || 1 ) ) { showError( t( 'elementRequiresSchemaUpgrade', 'This element requires a newer certloom-layout schema. Upgrade the draft before adding it.' ) ); return; }
+			if ( palette.requires_media ) { mediaFrame( function ( reference ) { appendElement( kind, reference ); } ); return; }
 			appendElement( kind, '' );
 		}
 		function applyContentField( input ) {
@@ -425,7 +438,7 @@
 		}
 		function styleValueForElement( element, key ) {
 			if ( 'opacity' === key ) { return null == element.opacity ? 1 : element.opacity; }
-			if ( 'text' === element.type || 'merge' === element.type || 'list' === element.type ) { return element.style && Object.prototype.hasOwnProperty.call( element.style, key ) ? element.style[ key ] : defaultTextStyle()[ key ]; }
+			var definition = registryType( element.type ); if ( definition && 'text' === definition.style_group ) { return element.style && Object.prototype.hasOwnProperty.call( element.style, key ) ? element.style[ key ] : defaultTextStyle()[ key ]; }
 			return Object.prototype.hasOwnProperty.call( element, key ) ? element[ key ] : '';
 		}
 		function applyStyleField( input ) {
@@ -433,7 +446,7 @@
 			var key = input.getAttribute( 'data-certloom-designer-style-field' ); if ( ! key || 'font_family' === key ) { setInspector(); return; }
 			var raw = 'checkbox' === input.type ? !! input.checked : String( input.value || '' ).trim(); var proposed = clone( element ); var value;
 			if ( 'opacity' === key ) { value = Number( raw ); if ( ! isFinite( value ) || value < 0 || value > 1 ) { showError( t( 'invalidStyleValue', 'That styling value is outside the canonical certloom-layout range. The previous value was kept.' ) ); setInspector(); return; } proposed.opacity = round( value, 3 ); }
-			else if ( 'text' === element.type || 'merge' === element.type || 'list' === element.type ) {
+			else if ( registryType( element.type ) && 'text' === registryType( element.type ).style_group ) {
 				proposed.style = Object.assign( defaultTextStyle(), proposed.style || {} );
 				if ( 'font_size_pt' === key ) { value = Number( raw ); if ( ! isFinite( value ) || value < 1 || value > 300 ) { showError( t( 'invalidStyleValue', 'Invalid style value.' ) ); setInspector(); return; } proposed.style[ key ] = round( value, 3 ); }
 				else if ( 'font_weight' === key ) { value = Number( raw ); if ( ! Number.isInteger( value ) || value < 100 || value > 900 || 0 !== value % 100 ) { showError( t( 'invalidStyleValue', 'Invalid style value.' ) ); setInspector(); return; } proposed.style[ key ] = value; }
@@ -446,7 +459,7 @@
 				else if ( 'letter_spacing_pt' === key ) { value = Number( raw ); if ( ! isFinite( value ) || value < -20 || value > 50 ) { showError( t( 'invalidStyleValue', 'Invalid style value.' ) ); setInspector(); return; } proposed.style[ key ] = round( value, 3 ); }
 				else if ( 'overflow' === key ) { if ( [ 'wrap', 'shrink', 'clip' ].indexOf( raw ) === -1 ) { setInspector(); return; } proposed.style[ key ] = raw; }
 				else { return; }
-			} else if ( 'shape' === element.type || 'line' === element.type ) {
+			} else if ( registryType( element.type ) && [ 'shape', 'line' ].indexOf( registryType( element.type ).style_group ) !== -1 ) {
 				if ( 'fill' === key && 'shape' === element.type ) { value = canonicalColor( raw ); if ( ! value ) { showError( t( 'invalidColor', 'Colors must use #RRGGBB or #RRGGBBAA.' ) ); setInspector(); return; } proposed.fill = value; }
 				else if ( 'stroke' === key ) { value = canonicalColor( raw ); if ( ! value ) { showError( t( 'invalidColor', 'Colors must use #RRGGBB or #RRGGBBAA.' ) ); setInspector(); return; } proposed.stroke = value; }
 				else if ( 'stroke_width_mm' === key ) { value = Number( raw ); var minStroke = 'line' === element.type ? 0.001 : 0; if ( ! isFinite( value ) || value < minStroke || value > 20 ) { showError( t( 'invalidStyleValue', 'Invalid style value.' ) ); setInspector(); return; } proposed.stroke_width_mm = round( value, 3 ); }
@@ -468,21 +481,22 @@
 			rotate.className = 'certloom-template-designer-rotate'; rotate.setAttribute( 'data-certloom-designer-rotate', '1' ); rotate.setAttribute( 'aria-hidden', 'true' ); node.appendChild( rotate );
 		}
 		function styleContent( node, element ) {
+			var preview = previewKind( element );
 			var content = document.createElement( 'span' ); content.className = 'certloom-template-designer-content';
-			if ( 'shape' === element.type ) {
+			if ( 'shape' === preview ) {
 				node.classList.add( 'is-shape' );
 				node.style.background = element.fill || 'transparent'; node.style.borderStyle = 'solid'; node.style.borderColor = element.stroke || '#000'; node.style.borderWidth = Math.max( 0, px( Number( element.stroke_width_mm || 0 ), zoom ) ) + 'px';
 				if ( 'ellipse' === element.shape ) { node.style.borderRadius = '50%'; }
 				content.textContent = '';
-			} else if ( 'line' === element.type ) {
+			} else if ( 'line' === preview ) {
 				node.classList.add( 'is-line' ); var svg = makeSvgLine(); var line = svg.querySelector( 'line' ); line.setAttribute( 'stroke', element.stroke || '#000' ); line.setAttribute( 'stroke-width', Math.max( 1, px( Number( element.stroke_width_mm || 0.3 ), zoom ) ) ); node.appendChild( svg ); content.textContent = '';
-			} else if ( 'qr' === element.type ) {
+			} else if ( 'qr' === preview ) {
 				node.classList.add( 'is-qr' ); content.textContent = t( 'qr', 'QR' );
-			} else if ( 'barcode' === element.type ) {
+			} else if ( 'barcode' === preview ) {
 				node.classList.add( 'is-barcode' ); content.textContent = t( 'barcode', 'Barcode' ) + ' · ' + escapeText( element.source || 'credential.display_number' );
-			} else if ( 'image' === element.type || 'logo' === element.type || 'signature' === element.type ) {
+			} else if ( 'asset' === preview ) {
 				node.classList.add( 'is-asset' ); content.textContent = elementTitle( element );
-			} else if ( 'list' === element.type ) {
+			} else if ( 'list' === preview ) {
 				node.classList.add( 'is-text', 'is-list' ); var listLines = []; var rawItems = Array.isArray( element.items ) ? element.items : [];
 				for ( var listIndex = 0; listIndex < rawItems.length; listIndex++ ) { listLines.push( ( 'decimal' === element.list_style ? String( listIndex + 1 ) + '. ' : '• ' ) + rawItems[ listIndex ] ); }
 				content.textContent = listLines.join( '\n' );

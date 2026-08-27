@@ -376,6 +376,31 @@ final class TemplateRepository {
 		return $row;
 	}
 
+
+	/** Published, non-archived Templates suitable for authoritative issuance selection. @return array<int,array<string,mixed>>|\WP_Error */
+	public function list_published_candidates( $limit = 100 ) {
+		global $wpdb;
+		$limit = max( 1, min( 250, absint( $limit ) ) );
+		$wpdb->last_error = '';
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				'SELECT t.id,t.name,t.machine_key,t.published_revision_id,r.revision_number,r.layout_sha256,r.layout_schema_version FROM %i t INNER JOIN %i r ON r.id=t.published_revision_id AND r.template_id=t.id WHERE t.archived_at IS NULL AND t.published_revision_id IS NOT NULL ORDER BY t.name ASC,t.id ASC LIMIT %d',
+				SchemaManager::table( 'templates' ), SchemaManager::table( 'template_revisions' ), $limit
+			), ARRAY_A
+		);
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) { return new \WP_Error( 'certloom_template_published_list_failed', __( 'Certloom could not load published templates for issuance.', 'certloom' ) ); }
+		foreach ( $rows as &$row ) {
+			$row['id'] = absint( $row['id'] ?? 0 );
+			$row['published_revision_id'] = absint( $row['published_revision_id'] ?? 0 );
+			$row['revision_number'] = absint( $row['revision_number'] ?? 0 );
+			$row['layout_schema_version'] = absint( $row['layout_schema_version'] ?? 0 );
+			// The final issuance review still calls find_published(), independently
+			// validating exact canonical bytes/hash before any mutation.
+		}
+		unset( $row );
+		return $rows;
+	}
+
 	/** @return array{items:array<int,array<string,mixed>>,total:int}|\WP_Error */
 	public function list_page( $search = '', $page = 1, $per_page = 20, $status = 'active' ) {
 		global $wpdb;

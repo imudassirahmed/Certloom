@@ -51,8 +51,8 @@ dsn6(1===count($plan['operations'])&&'text'===$plan['operations'][0]['type'],'Re
 dsn6(false!==strpos($plan['operations'][0]['text']['value'],'• Identity verified'),'Render Plan preserves canonical list marker content');
 
 $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'); $js=file_get_contents($root.'/admin/assets/designer.js'); $resolver=file_get_contents($root.'/src/Application/Rendering/LayoutResolver.php');
-dsn6(false!==strpos($admin,'data-certloom-designer-add="list"')&&false!==strpos($admin,'certloom-layout v3'),'admin exposes list only behind v3 authoring boundary');
-dsn6(false!==strpos($js,"'list' === kind")&&false!==strpos($js,'schemaVersion < 3'),'browser refuses list authoring before v3');
+dsn6(false!==strpos($admin,'ElementRegistry::palette()')&&false!==strpos($admin,'min_schema_version'),'admin exposes list through registry schema availability rather than hardcoded palette rules');
+dsn6(false!==strpos($js,'schemaVersion < Number( palette.min_schema_version'),'browser refuses list authoring before v3 using registry-declared minimum schema');
 dsn6(false!==strpos($js,"raw.split( /\\r?\\n/ )")&&false!==strpos($js,"list_style"),'Designer stores list items as canonical lines and controlled marker style');
 dsn6(false!==strpos($resolver,"case 'list'")&&false!==strpos($resolver,'implode( "\\n", $lines )'),'list resolution is centralized before renderer adapters');
 dsn6(!file_exists($root.'/resources/renderer/accepted.json'),'DSN-06 does not manufacture production renderer authority');

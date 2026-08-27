@@ -60,15 +60,7 @@ final class LayoutSchema {
 	/** @return string[] */
 	public static function element_types( $version = self::VERSION ) {
 		$version = (int) $version;
-		if ( self::VERSION_V1 === $version ) {
-			return array( 'text', 'merge', 'image', 'logo', 'signature', 'shape', 'line', 'qr' );
-		}
-		if ( self::VERSION_V2 === $version ) {
-			return array( 'text', 'merge', 'image', 'logo', 'signature', 'shape', 'line', 'qr', 'barcode' );
-		}
-		if ( self::VERSION_V3 === $version ) {
-			return array( 'text', 'merge', 'image', 'logo', 'signature', 'shape', 'line', 'qr', 'barcode', 'list' );
-		}
-		return array();
+		if ( ! self::supports_version( $version ) ) { return array(); }
+		return ElementRegistry::types_for_schema( $version );
 	}
 }

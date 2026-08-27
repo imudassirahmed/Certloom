@@ -9,14 +9,14 @@ use Certloom\Domain\Rendering\LayoutSchema;
 $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'); $js=file_get_contents($root.'/admin/assets/designer.js'); $css=file_get_contents($root.'/admin/assets/designer.css');
 $pass=0;$fail=0; function dsn4($ok,$label){global $pass,$fail;if($ok){$pass++;echo "PASS  $label\n";}else{$fail++;echo "FAIL  $label\n";}}
 
-dsn4(is_string($admin)&&strpos($admin,'DSN-07 · Recovery autosave & concurrency')!==false,'Template admin identifies DSN-07 truthfully while retaining DSN-04 styling controls');
+dsn4(is_string($admin)&&strpos($admin,'DSN-08 · Typed Element Registry')!==false,'Template admin identifies DSN-08 truthfully while retaining DSN-04 styling controls');
 dsn4(strpos($admin,'data-certloom-designer-style-field="opacity"')!==false,'all canonical elements expose common opacity styling');
 foreach(['font_family','font_size_pt','font_weight','italic','color','align','vertical_align','direction','line_height','letter_spacing_pt','overflow'] as $key){ dsn4(strpos($admin,'data-certloom-designer-style-field="'.$key.'"')!==false,"text inspector exposes canonical $key"); }
 dsn4(strpos($admin,'FONT-02 will own controlled local font import/catalog')!==false&&strpos($admin,'data-certloom-designer-style-field="font_family" readonly')!==false,'font key is preserved read-only until controlled FONT-02 manifest ownership exists');
 dsn4(strpos($admin,'data-certloom-designer-style="shape"')!==false&&substr_count($admin,'data-certloom-designer-style-field="fill"')===1,'shape styling exposes canonical fill exactly once');
 dsn4(substr_count($admin,'data-certloom-designer-style-field="stroke"')===2&&substr_count($admin,'data-certloom-designer-style-field="stroke_width_mm"')===2,'shape and line expose their existing canonical stroke fields');
 dsn4(strpos($admin,'data-certloom-designer-style-field="box_shadow"')===false&&strpos($admin,'data-certloom-designer-style-field="border_radius"')===false,'DSN-04 still refuses non-schema image effects after the v2 schema milestone');
-dsn4(strpos($admin,'DSN-08 remains the Typed Element Registry')!==false,'typed registry remains an explicit later milestone after DSN-07');
+dsn4(strpos($admin,'DSN-08 is a closed built-in registry')!==false,'typed registry is now implemented as the closed DSN-08 boundary');
 
 dsn4(is_string($js)&&strpos($js,'function applyStyleField')!==false&&strpos($js,'function styleValueForElement')!==false,'Designer has an explicit canonical style mutation path');
 dsn4(strpos($js,'function canonicalColor')!==false&&strpos($js,"/^#[0-9A-F]{6}(?:[0-9A-F]{2})?$/")!==false,'Designer color validation mirrors #RRGGBB/#RRGGBBAA server syntax');

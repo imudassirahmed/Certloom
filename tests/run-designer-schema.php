@@ -80,7 +80,7 @@ dsn5(false!==strpos($repo,"layout_schema_version' => absint( \$layout['_meta']['
 dsn5(false!==strpos($repo,'certloom_template_stale_revision'),'schema upgrades preserve optimistic concurrency failure boundary');
 dsn5(false!==strpos($admin,'certloom_template_layout_upgrade')&&false!==strpos($admin,'Upgrade draft to layout schema v%d'),'admin exposes explicit immutable upgrade to the current schema');
 dsn5(false!==strpos($admin,'credential.display_number')&&false!==strpos($admin,'Code 128'),'Designer barcode source and symbology are fixed to existing certificate identity');
-dsn5(false!==strpos($js,"'barcode' === kind")&&false!==strpos($js,"schemaVersion < 2"),'browser authoring refuses barcode on v1 and enables it on v2+');
+dsn5(false!==strpos($js,'paletteDefinition( kind )')&&false!==strpos($js,'schemaVersion < Number( palette.min_schema_version'),'browser authoring derives barcode schema gating from the typed registry rather than hardcoded type logic');
 dsn5(false!==strpos($restore,'LayoutSchema::supports_version')&&false!==strpos($restore,'certloom_domain_restore_template_layout_schema_mismatch'),'backup restore accepts supported versions but rejects DB/layout metadata mismatch');
 dsn5(false!==strpos($html,"case 'barcode'")&&false!==strpos($gd,"case 'barcode'")&&false!==strpos($mpdf,"case 'barcode'"),'all three presentation adapters consume the new Render Plan barcode operation');
 dsn5(false!==strpos($mpdf,"draw_machine_code")&&false===strpos($mpdf,'private function draw_qr'),'mPDF QR and barcode share rotation-aware machine-code composition rather than direct QR rectangles');

@@ -13,8 +13,8 @@ dsn(strpos($admin,"admin/assets/designer.js")!==false&&strpos($admin,"admin/asse
 dsn(strpos($admin,'certloom_template_revision')!==false&&strpos($admin,'data-certloom-designer-json')!==false,'Designer saves through the established immutable Template revision action');
 dsn(strpos($admin,'Advanced canonical JSON editor')!==false,'advanced JSON remains an explicit escape hatch over the same canonical layout');
 dsn(strpos($admin,'Archived templates are read-only')!==false,'archived Templates remain read-only before Designer can render a save form');
-dsn(strpos($admin,'DSN-07 stores at most one personal recovery checkpoint')!==false,'Designer implements DSN-07 recovery autosave outside canonical artifact content');
-dsn(strpos($admin,'only an explicit manual save may create a new immutable revision')!==false,'DSN-01 geometry remains intact while DSN-07 keeps immutable revision authority manual and explicit');
+dsn(strpos($admin,'DSN-08 · Typed Element Registry')!==false&&strpos($admin,'Recovery autosave remains non-authoritative')!==false,'Designer advances through DSN-08 while preserving DSN-07 recovery outside canonical artifact content');
+dsn(strpos($admin,'manual save remains the only immutable revision write')!==false,'DSN-01 geometry remains intact while DSN-08 keeps immutable revision authority manual and explicit');
 dsn(is_string($js)&&strpos($js,"A4: { portrait: [ 210, 297 ], landscape: [ 297, 210 ] }")!==false,'Designer owns exact canonical A4 dimensions');
 dsn(strpos($js,"Letter: { portrait: [ 215.9, 279.4 ], landscape: [ 279.4, 215.9 ] }")!==false,'Designer owns exact canonical Letter dimensions');
 dsn(strpos($js,"mode: rotate ? 'rotate' : ( resize ? 'resize' : 'drag' )")!==false,'pointer interaction supports drag, resize and rotate');

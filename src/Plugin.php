@@ -81,6 +81,7 @@ final class Plugin {
 			( new \Certloom\Infrastructure\Admin\DomainAdmin() )->register();
 			( new \Certloom\Infrastructure\Admin\DomainStructureAdmin() )->register();
 			( new \Certloom\Infrastructure\Admin\TemplateAdmin() )->register();
+			( new \Certloom\Infrastructure\Admin\ManualIssuanceAdmin() )->register();
 			if ( self::$job_runtime ) {
 				( new \Certloom\Infrastructure\Admin\DomainDataToolsAdmin( self::$job_runtime ) )->register();
 			}

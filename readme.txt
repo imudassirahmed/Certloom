@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.62
+Stable tag: 1.6.64
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.62: DSN-07 adds bounded per-user Designer recovery autosave and exact optimistic-concurrency proof without changing Template authority. Each checkpoint is bound to the exact immutable base revision ID + SHA-256 and one browser editing session; stale revisions and parallel-session ownership conflicts fail closed, recovery is server-vetted, and only explicit manual save can create a new immutable Template revision. DSN-08 Typed Element Registry is next. Normalized-domain and renderer authority remain final-release blockers.
+> Development note for 1.6.64: the Manual Issuance golden path is implemented inside the gated normalized-domain administration preview. Compose and mutation-free Review bind the exact Recipient/Program/published Template revision, dates, numbering policy and credential-specific custom merge values to a SHA-256; Issue revalidates that review and atomically creates the optional Recipient, Credential Series, immutable Version, frozen layout/merge snapshot and issuance event with retry idempotency. Browser Preview uses the canonical Render Plan path, while normalized public authority and PDF/PNG/JPEG exports remain fail-closed pending final database and PDF-04 acceptance. Credential Management UX is next.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 

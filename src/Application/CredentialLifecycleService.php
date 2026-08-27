@@ -39,35 +39,39 @@ final class CredentialLifecycleService {
 	/** @return true|\WP_Error */
 	public function issue( $series_id, $version_id, array $context = array() ) {
 		return $this->transaction->run( function () use ( $series_id, $version_id, $context ) {
-			$series = $this->credentials->find_series_for_update( $series_id );
-			if ( is_wp_error( $series ) ) {
-				return $series;
-			}
-			$version = $this->credentials->find_version_for_update( $version_id );
-			if ( is_wp_error( $version ) ) {
-				return $version;
-			}
-			if ( ! $series || ! $version || absint( $version['series_id'] ) !== absint( $series_id ) ) {
-				return new \WP_Error( 'certloom_lifecycle_credential_missing', __( 'The credential series or version could not be found.', 'certloom' ) );
-			}
-			try {
-				$next = $this->machine->issue( $version['issuance_state'], $series['administrative_state'] );
-			} catch ( \DomainException $error ) {
-				return new \WP_Error( 'certloom_lifecycle_transition_invalid', $error->getMessage() );
-			}
-			$changed = $this->credentials->set_version_issuance_state( $version_id, $version['issuance_state'], $next['issuance_state'] );
-			if ( is_wp_error( $changed ) ) {
-				return $changed;
-			}
-			$current = $this->credentials->set_current_version( $series_id, $version_id );
-			if ( is_wp_error( $current ) ) {
-				return $current;
-			}
-			return $this->append_event( 'credential.issued', $series_id, $version_id, $context, array(
-				'issuance_state' => $version['issuance_state'],
-				'administrative_state' => $series['administrative_state'],
-			), $next );
+			return $this->issue_within_transaction( $series_id, $version_id, $context );
 		} );
+	}
+
+	/**
+	 * Performs the issue transition inside a transaction already owned by a
+	 * trusted orchestration service such as Manual Issuance. This keeps Series,
+	 * Version, current pointer and append-only event atomic without nesting
+	 * START TRANSACTION/COMMIT boundaries.
+	 *
+	 * @return true|\WP_Error
+	 */
+	public function issue_within_transaction( $series_id, $version_id, array $context = array() ) {
+		$series = $this->credentials->find_series_for_update( $series_id );
+		if ( is_wp_error( $series ) ) { return $series; }
+		$version = $this->credentials->find_version_for_update( $version_id );
+		if ( is_wp_error( $version ) ) { return $version; }
+		if ( ! $series || ! $version || absint( $version['series_id'] ) !== absint( $series_id ) ) {
+			return new \WP_Error( 'certloom_lifecycle_credential_missing', __( 'The credential series or version could not be found.', 'certloom' ) );
+		}
+		try {
+			$next = $this->machine->issue( $version['issuance_state'], $series['administrative_state'] );
+		} catch ( \DomainException $error ) {
+			return new \WP_Error( 'certloom_lifecycle_transition_invalid', $error->getMessage() );
+		}
+		$changed = $this->credentials->set_version_issuance_state( $version_id, $version['issuance_state'], $next['issuance_state'] );
+		if ( is_wp_error( $changed ) ) { return $changed; }
+		$current = $this->credentials->set_current_version( $series_id, $version_id );
+		if ( is_wp_error( $current ) ) { return $current; }
+		return $this->append_event( 'credential.issued', $series_id, $version_id, $context, array(
+			'issuance_state' => $version['issuance_state'],
+			'administrative_state' => $series['administrative_state'],
+		), $next );
 	}
 
 	/** @return true|\WP_Error */
