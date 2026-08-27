@@ -1,10 +1,11 @@
-1.6.65
-- Add the premium acceptance-gated Credential Management workspace after Manual Issuance: bounded registry search/filtering, status views, Program filtering, continuing-Series overview, Recipient/Program/Status/Verification/Versions/Activity/Actions tabs, and responsive administration styling.
-- Make historical Credential Versions explicitly inspection-only and surface immutable issuance provenance including Template revision/hash, merge SHA-256 and gated artifact authority without rewriting snapshot truth.
-- Replace direct lifecycle mutations with owner-bound, 15-minute HMAC Review → Confirm contracts that freeze exact Series/current-Version timestamps, state transition, reason code, public reason and internal note; the transaction rejects stale Series/current-Version evidence before mutation.
-- Add reviewed Program/Batch relationship correction from the Credential workspace using the established immutable-successor service; target relationship and reasons are integrity-bound, and confirmation creates a successor Version plus append-only Event rather than editing historical Versions.
-- Add derived-status registry filtering/summary for valid, suspended, revoked, expired, not-yet-valid, pending-review, non-compliant, voided and not-issued credentials while retaining the Core Status Service as final status semantics.
-- Preserve normalized-domain write/admin/Data Tools gates and renderer authority as closed; final real-host DB certification and PDF-04 remain final-release blockers. Bulk Issuance is next.
+1.6.66
+- Add premium Bulk Issuance inside the gated normalized-domain administration preview: protected CSV upload, bounded/resumable mutation-free preflight, explicit reviewed SHA-256 confirmation, durable bounded commit, progress and row-level results.
+- Reuse the exact Manual Issuance truth path per accepted row, including numbering policy, duplicate prevention, published-Template review, immutable Series/Version snapshot, lifecycle Event, transaction safety and deterministic source idempotency with `bulk_admin` provenance.
+- Add exact existing/new Recipient handling, ambiguous identity fail-closed behavior, shared Program/Template/date/expiry context, and optional per-row grade, certificate number and `custom:machine_key` merge values.
+- Make protected-file cleanup crash/replay safe by moving source/plan deletion into explicit persisted cleanup slices; blocking reviews remove unusable private plans after their result is persisted.
+- Fix worker crash replay so the exact same source operation can resolve through idempotency before unrelated duplicate-Series rejection; stale reviewed rows still fail individually.
+- Add responsive Upload → Review → Confirm → Progress → Results UX, bounded row-level errors and idempotent replay metrics. Keep dedicated Bulk cancel/retry-failed-subset UX explicitly later rather than overclaiming this release.
+- Keep normalized-domain production authority, public normalized verification and renderer/PDF-04 authority closed. Email Delivery is next.
 
 1.6.64
 - Add the P0 Manual Issuance golden path inside the gated normalized-domain admin preview: Compose → mutation-free Review → exact Issue confirmation → read-only Receipt.

@@ -54,6 +54,22 @@ final class ManualIssuanceService {
 		return $this->build_review( $request, true, true );
 	}
 
+	/**
+	 * Mutation-free confirmation revalidation for trusted durable workers.
+	 *
+	 * Unlike the administrator preflight review, this deliberately does not
+	 * reject an existing Recipient+Program Series. That duplicate may be the
+	 * exact row created by an earlier worker attempt whose cursor/result save
+	 * was interrupted. issue_reviewed_for_source() performs the idempotency
+	 * lookup before its ordinary duplicate guard, so a true replay resolves to
+	 * the existing immutable Version while a different duplicate still fails.
+	 *
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public function revalidate_review( array $request ) {
+		return $this->build_review( $request, false, false );
+	}
+
 
 	/** Loads a read-only receipt for one Manual Issuance Version. @return array<string,mixed>|\WP_Error */
 	public function receipt( $version_id ) {
@@ -74,6 +90,51 @@ final class ManualIssuanceService {
 	 */
 	public function issue( array $request, $expected_review_fingerprint, $actor_user_id ) {
 		$expected_review_fingerprint = strtolower( trim( (string) $expected_review_fingerprint ) );
+		$idempotency = $this->idempotency_key( self::SOURCE_TYPE, $expected_review_fingerprint );
+		return $this->issue_internal(
+			$request,
+			$expected_review_fingerprint,
+			$actor_user_id,
+			self::SOURCE_TYPE,
+			'user:' . absint( $actor_user_id ),
+			$idempotency,
+			'manual_issue'
+		);
+	}
+
+	/**
+	 * Trusted reviewed-issuance entry point for the durable Bulk Issuance worker.
+	 *
+	 * This does not bypass Manual Issuance semantics: the exact row review is
+	 * re-executed, duplicate/numbering checks are repeated, and the same atomic
+	 * Recipient → Series → Version → lifecycle transaction is used. The caller
+	 * may only select Certloom's internal bulk source identity.
+	 *
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public function issue_reviewed_for_source( array $request, $expected_review_fingerprint, $actor_user_id, $source_type, $source_ref, $source_idempotency_key, $reason_code = 'bulk_issue' ) {
+		$source_type = sanitize_key( (string) $source_type );
+		if ( 'bulk_admin' !== $source_type ) {
+			return new \WP_Error( 'certloom_issue_source_invalid', __( 'Certloom refused an unsupported issuance source.', 'certloom' ) );
+		}
+		$source_ref = trim( sanitize_text_field( (string) $source_ref ) );
+		if ( '' === $source_ref || $this->length( $source_ref ) > 191 ) {
+			return new \WP_Error( 'certloom_issue_source_ref_invalid', __( 'The bulk issuance source reference is invalid.', 'certloom' ) );
+		}
+		$source_idempotency_key = strtolower( trim( (string) $source_idempotency_key ) );
+		if ( ! preg_match( '/^[a-f0-9]{64}$/', $source_idempotency_key ) ) {
+			return new \WP_Error( 'certloom_issue_idempotency_invalid', __( 'The bulk issuance row identity is invalid.', 'certloom' ) );
+		}
+		$reason_code = sanitize_key( (string) $reason_code );
+		if ( '' === $reason_code || strlen( $reason_code ) > 64 ) {
+			return new \WP_Error( 'certloom_issue_reason_invalid', __( 'The bulk issuance lifecycle reason is invalid.', 'certloom' ) );
+		}
+		return $this->issue_internal( $request, $expected_review_fingerprint, $actor_user_id, $source_type, $source_ref, $source_idempotency_key, $reason_code );
+	}
+
+	/** @return array<string,mixed>|\WP_Error */
+	private function issue_internal( array $request, $expected_review_fingerprint, $actor_user_id, $source_type, $source_ref, $idempotency, $reason_code ) {
+		$expected_review_fingerprint = strtolower( trim( (string) $expected_review_fingerprint ) );
 		if ( ! preg_match( '/^[a-f0-9]{64}$/', $expected_review_fingerprint ) ) {
 			return new \WP_Error( 'certloom_manual_issue_review_required', __( 'Review the credential before issuing it.', 'certloom' ) );
 		}
@@ -82,8 +143,7 @@ final class ManualIssuanceService {
 		if ( ! hash_equals( (string) $preflight['review_fingerprint'], $expected_review_fingerprint ) ) {
 			return new \WP_Error( 'certloom_manual_issue_review_stale', __( 'The issuance inputs or related records changed after review. Review the credential again before issuing it.', 'certloom' ) );
 		}
-		$idempotency = $this->idempotency_key( $expected_review_fingerprint );
-		$existing = $this->repository->find_version_by_idempotency( self::SOURCE_TYPE, $idempotency );
+		$existing = $this->repository->find_version_by_idempotency( $source_type, $idempotency );
 		if ( is_wp_error( $existing ) ) { return $existing; }
 		if ( is_array( $existing ) ) { return $this->receipt_from_existing( $existing, true ); }
 		$duplicate = $this->duplicate_for_review( $preflight );
@@ -94,13 +154,13 @@ final class ManualIssuanceService {
 			$number = $this->numbers->allocate( (string) ( $preflight['request']['display_number'] ?? '' ) );
 			if ( is_wp_error( $number ) ) { return $number; }
 			$issued_at = (string) call_user_func( $this->clock );
-			$result = $this->transaction->run( function () use ( $request, $expected_review_fingerprint, $idempotency, $actor_user_id, $number, $issued_at ) {
+			$result = $this->transaction->run( function () use ( $request, $expected_review_fingerprint, $idempotency, $actor_user_id, $number, $issued_at, $source_type, $source_ref, $reason_code ) {
 				$current = $this->build_review( $request, false, false );
 				if ( is_wp_error( $current ) ) { return $current; }
 				if ( ! hash_equals( (string) $current['review_fingerprint'], $expected_review_fingerprint ) ) {
 					return new \WP_Error( 'certloom_manual_issue_review_stale', __( 'The issuance inputs or related records changed while the credential was being confirmed. No credential was issued.', 'certloom' ) );
 				}
-				$already = $this->repository->find_version_by_idempotency( self::SOURCE_TYPE, $idempotency );
+				$already = $this->repository->find_version_by_idempotency( $source_type, $idempotency );
 				if ( is_wp_error( $already ) ) { return $already; }
 				if ( is_array( $already ) ) { return array( 'idempotent_version' => $already ); }
 				$duplicate = $this->duplicate_for_review( $current );
@@ -142,7 +202,7 @@ final class ManualIssuanceService {
 				);
 				$merge = $this->merges->build( $recipient, $current['program'], $current['issuer'], $credential_facts, $current['template_revision']['layout'], $current['request']['custom_merge_fields'] );
 				if ( is_wp_error( $merge ) ) { return $merge; }
-				$snapshot = $this->snapshot( $current, $recipient, $series, $credential_facts, $merge, $expected_review_fingerprint, $actor_user_id );
+				$snapshot = $this->snapshot( $current, $recipient, $series, $credential_facts, $merge, $expected_review_fingerprint, $actor_user_id, $source_type, $source_ref );
 				if ( is_wp_error( $snapshot ) ) { return $snapshot; }
 				$version_id = $this->repository->create_version( $series_id, array(
 					'display_number' => $display_number,
@@ -151,18 +211,19 @@ final class ManualIssuanceService {
 					'issued_at' => $issued_at,
 					'expires_at' => $current['expires_at'],
 					'grade' => $current['request']['grade'],
-					'source_type' => self::SOURCE_TYPE,
-					'source_ref' => 'user:' . absint( $actor_user_id ),
+					'source_type' => $source_type,
+					'source_ref' => $source_ref,
 					'source_idempotency_key' => $idempotency,
 					'snapshot' => $snapshot,
 				) );
 				if ( is_wp_error( $version_id ) ) { return $version_id; }
 				$transition = $this->lifecycle->issue_within_transaction( $series_id, $version_id, array(
 					'actor_user_id' => absint( $actor_user_id ),
-					'reason_code' => 'manual_issue',
+					'reason_code' => $reason_code,
 					'internal_note' => null,
 					'meta' => array(
-						'source' => self::SOURCE_TYPE,
+						'source' => $source_type,
+						'source_ref' => $source_ref,
 						'review_fingerprint' => $expected_review_fingerprint,
 						'template_id' => absint( $current['template']['id'] ?? 0 ),
 						'template_revision_id' => absint( $current['template_revision']['id'] ?? 0 ),
@@ -178,7 +239,7 @@ final class ManualIssuanceService {
 				if ( isset( $result['idempotent_version'] ) && is_array( $result['idempotent_version'] ) ) { return $this->receipt_from_existing( $result['idempotent_version'], true ); }
 				if ( isset( $result['version'] ) && is_array( $result['version'] ) ) { return $this->receipt_from_existing( $result['version'], false ); }
 			}
-			$after = $this->repository->find_version_by_idempotency( self::SOURCE_TYPE, $idempotency );
+			$after = $this->repository->find_version_by_idempotency( $source_type, $idempotency );
 			if ( ! is_wp_error( $after ) && is_array( $after ) ) { return $this->receipt_from_existing( $after, true ); }
 			if ( $automatic && is_wp_error( $result ) && 'certloom_display_number_duplicate' === $result->get_error_code() ) { continue; }
 			return $result;
@@ -341,12 +402,12 @@ final class ManualIssuanceService {
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
-	private function snapshot( array $review, array $recipient, array $series, array $credential, array $merge, $fingerprint, $actor_user_id ) {
+	private function snapshot( array $review, array $recipient, array $series, array $credential, array $merge, $fingerprint, $actor_user_id, $source_type = self::SOURCE_TYPE, $source_ref = null ) {
 		$template = $review['template']; $revision = $review['template_revision'];
 		try { $merge_sha = $this->json->hash( $merge ); } catch ( \Throwable $error ) { return new \WP_Error( 'certloom_manual_issue_merge_hash_failed', __( 'Certloom could not create the immutable merge snapshot fingerprint. Issuance was rolled back.', 'certloom' ) ); }
 		return array(
 			'_meta' => array( 'schema' => self::SNAPSHOT_SCHEMA, 'schema_version' => self::SNAPSHOT_VERSION ),
-			'issuance' => array( 'source' => self::SOURCE_TYPE, 'actor_user_id' => absint( $actor_user_id ), 'review_fingerprint' => (string) $fingerprint, 'custom_merge_fields' => $review['request']['custom_merge_fields'] ),
+			'issuance' => array( 'source' => (string) $source_type, 'source_ref' => null === $source_ref ? null : (string) $source_ref, 'actor_user_id' => absint( $actor_user_id ), 'review_fingerprint' => (string) $fingerprint, 'custom_merge_fields' => $review['request']['custom_merge_fields'] ),
 			'recipient' => $this->recipient_snapshot( $recipient ),
 			'program' => $this->program_snapshot( $review['program'] ),
 			'issuer' => $this->issuer_snapshot( $review['issuer'] ),
@@ -391,7 +452,7 @@ final class ManualIssuanceService {
 		);
 	}
 
-	private function idempotency_key( $fingerprint ) { try { return $this->json->hash( array( 'source' => self::SOURCE_TYPE, 'review_fingerprint' => (string) $fingerprint ) ); } catch ( \Throwable $e ) { return hash( 'sha256', self::SOURCE_TYPE . ':' . (string) $fingerprint ); } }
+	private function idempotency_key( $source_type, $fingerprint ) { try { return $this->json->hash( array( 'source' => (string) $source_type, 'review_fingerprint' => (string) $fingerprint ) ); } catch ( \Throwable $e ) { return hash( 'sha256', (string) $source_type . ':' . (string) $fingerprint ); } }
 	/** @return string|\WP_Error */ private function date( $value ) { $value = trim( (string) $value ); if ( ! preg_match( '/^(\d{4})-(\d{2})-(\d{2})$/', $value, $m ) || ! checkdate( (int) $m[2], (int) $m[3], (int) $m[1] ) ) { return new \WP_Error( 'certloom_manual_issue_date_invalid', __( 'Use a valid YYYY-MM-DD date.', 'certloom' ) ); } return $value; }
 	/** @return array<string,string>|\WP_Error */
 	private function scalar_map( $value ) {

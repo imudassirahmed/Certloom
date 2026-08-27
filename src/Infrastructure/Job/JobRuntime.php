@@ -13,6 +13,11 @@ use Certloom\Application\Import\DomainImportJobCoordinator;
 use Certloom\Application\Import\DomainImportPreflightJobHandler;
 use Certloom\Application\Import\DomainImportStagedCommitService;
 use Certloom\Application\Import\DomainImportStagingService;
+use Certloom\Application\Issuance\BulkIssuanceCoordinator;
+use Certloom\Application\Issuance\BulkIssuancePreflightJobHandler;
+use Certloom\Application\Issuance\BulkIssuanceCommitJobHandler;
+use Certloom\Infrastructure\Issuance\BulkIssuanceCsvReader;
+use Certloom\Infrastructure\Issuance\BulkIssuancePlanStore;
 use Certloom\Application\Restore\DomainRestoreJobHandler;
 use Certloom\Application\Restore\DomainRestoreMergeJobHandler;
 use Certloom\Application\Restore\DomainRestorePreflightJobHandler;
@@ -44,6 +49,8 @@ final class JobRuntime {
 	private $import_uploads;
 	/** @var DomainDataToolsCoordinator */
 	private $data_tools;
+	/** @var BulkIssuanceCoordinator */
+	private $bulk_issuance;
 
 	public function __construct() {
 		$this->repository = new JobRepository();
@@ -60,6 +67,9 @@ final class JobRuntime {
 		$restore_workspace = new DomainRestoreWorkspace();
 		$restore_staging   = new DomainRestoreStagingService( $restore_workspace, $private_files );
 		$restore_merge     = new DomainRestoreMergeService( $restore_workspace );
+
+		$bulk_reader = new BulkIssuanceCsvReader( $private_files );
+		$bulk_plans = new BulkIssuancePlanStore( $private_files );
 
 		$handlers = array(
 			JobTypes::DOMAIN_BACKUP => new DomainBackupJobHandler(
@@ -86,6 +96,8 @@ final class JobRuntime {
 				$import_stage,
 				$import_consistency
 			),
+			JobTypes::BULK_ISSUANCE_PREFLIGHT => new BulkIssuancePreflightJobHandler( $bulk_reader, $bulk_plans, null, null, $private_files ),
+			JobTypes::BULK_ISSUANCE_COMMIT => new BulkIssuanceCommitJobHandler( $this->repository, $bulk_plans, null, null, $private_files ),
 		);
 
 		$runner           = new JobRunner( $this->service, $this->repository, $handlers );
@@ -101,6 +113,7 @@ final class JobRuntime {
 		);
 		$this->import_uploads = new DomainImportUploadSession( $private_files, $import_reader );
 		$this->data_tools     = new DomainDataToolsCoordinator( $this->queue, $this->repository, $private_files );
+		$this->bulk_issuance  = new BulkIssuanceCoordinator( $this->queue, $this->repository, $private_files, $bulk_reader );
 	}
 
 	public function register() {
@@ -140,6 +153,11 @@ final class JobRuntime {
 	/** @return DomainDataToolsCoordinator */
 	public function data_tools() {
 		return $this->data_tools;
+	}
+
+	/** @return BulkIssuanceCoordinator */
+	public function bulk_issuance() {
+		return $this->bulk_issuance;
 	}
 
 	/**

@@ -38,11 +38,11 @@ msgid "Pro commercial core · implementation gated"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1020
-msgid "Versioned Templates, immutable revisions, six factory design families, deterministic assignments, lifecycle controls, canonical Render Plan Preview, and the full planned DSN-01 through DSN-08 Designer foundation are implemented. Designer edits the same versioned certloom-layout revision model: historical v1/v2 layouts remain readable and immutable, explicit v3 upgrades create a new immutable revision, Code 128 remains bound only to credential.display_number, and canonical bullet/numbered lists resolve through the shared text Render Plan path. DSN-08 now centralizes built-in element schema availability, allowed properties, validation/resolver/renderer mappings, inspector groups, merge requirements and palette defaults behind one closed typed registry; no unversioned filter or arbitrary HTML/CSS callback can mutate it. Recovery autosave remains personal/non-authoritative, manual save remains the only revision-authority path, and FONT-02 still owns controlled local font manifests. Publication and production artifact authority remain fail-closed behind renderer release authority. The P0 Manual Issuance golden path and premium Credential Management workspace are implemented inside the normalized-domain admin-preview gate: administrators can inspect immutable Version lineage, status/verification provenance and reviewed lifecycle or Program/Batch corrections without rewriting historical snapshots; Bulk Issuance is next."
+msgid "Versioned Templates, immutable revisions, six factory design families, deterministic assignments, lifecycle controls, canonical Render Plan Preview, and the full planned DSN-01 through DSN-08 Designer foundation are implemented. Designer edits the same versioned certloom-layout revision model: historical v1/v2 layouts remain readable and immutable, explicit v3 upgrades create a new immutable revision, Code 128 remains bound only to credential.display_number, and canonical bullet/numbered lists resolve through the shared text Render Plan path. DSN-08 now centralizes built-in element schema availability, allowed properties, validation/resolver/renderer mappings, inspector groups, merge requirements and palette defaults behind one closed typed registry; no unversioned filter or arbitrary HTML/CSS callback can mutate it. Recovery autosave remains personal/non-authoritative, manual save remains the only revision-authority path, and FONT-02 still owns controlled local font manifests. Publication and production artifact authority remain fail-closed behind renderer release authority. The P0 Manual Issuance golden path, premium Credential Management workspace and reviewed Bulk Issuance workflow are implemented inside the normalized-domain admin-preview gate: administrators can issue one credential, inspect immutable Version lineage, perform reviewed lifecycle or Program/Batch corrections, then scale through protected CSV review and durable per-row idempotent issuance without rewriting historical snapshots; Email Delivery is next."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1021
-msgid "Designer foundation complete · Manual Issuance + Credential Management implemented · publication/artifact authority gated · Bulk Issuance next"
+msgid "Designer foundation complete · Manual + Bulk Issuance + Credential Management implemented · publication/artifact authority gated · Email Delivery next"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1025
@@ -50,11 +50,11 @@ msgid "P0 issuance workflow · implementation gated"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1026
-msgid "Manual Issuance is implemented inside the normalized-domain admin-preview gate with existing/new Recipient selection, active Program and verified published-Template selection, mutation-free review, exact SHA-256 confirmation, backdating/permanent/explicit expiry choices, established numbering policy reuse, bounded credential-specific custom merge values, canonical browser Preview, atomic Series/Version/event creation, retry idempotency and an immutable issuance snapshot. Credential Management now provides a bounded registry, immutable Version inspection, status/verification workspace, reviewed lifecycle actions and immutable-successor Program/Batch corrections. Bulk Issuance is next. Normalized public authority and PDF/PNG/JPEG exports stay fail-closed until final database and renderer acceptance."
+msgid "Manual Issuance is implemented inside the normalized-domain admin-preview gate with existing/new Recipient selection, active Program and verified published-Template selection, mutation-free review, exact SHA-256 confirmation, backdating/permanent/explicit expiry choices, established numbering policy reuse, bounded credential-specific custom merge values, canonical browser Preview, atomic Series/Version/event creation, retry idempotency and an immutable issuance snapshot. Credential Management provides a bounded registry, immutable Version inspection, status/verification workspace, reviewed lifecycle actions and immutable-successor Program/Batch corrections. Bulk Issuance now adds protected CSV review, SHA-256 confirmation, durable bounded per-row issuance, progress and row-level outcomes through the same Manual Issuance truth path. Email Delivery is next. Normalized public authority and PDF/PNG/JPEG exports stay fail-closed until final database and renderer acceptance."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1027
-msgid "Manual Issuance + Credential Management implemented · acceptance gated · Bulk Issuance next"
+msgid "Manual + Bulk Issuance + Credential Management implemented · acceptance gated · Email Delivery next"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1031
@@ -552,6 +552,7 @@ msgid "Commit reviewed change"
 msgstr ""
 
 #: admin/views/bulk-review.php:103
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:24
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:179
 msgid "Step 2"
 msgstr ""
@@ -626,6 +627,7 @@ msgid "Define the change"
 msgstr ""
 
 #: admin/views/bulk-review.php:34
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:114
 msgid "Step 1"
 msgstr ""
@@ -774,6 +776,7 @@ msgid "Certificate"
 msgstr ""
 
 #: admin/views/dashboard.php:124
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
 #: src/Infrastructure/Admin/DomainAdmin.php:635
 #: src/Infrastructure/Admin/DomainAdmin.php:750
 #: src/Infrastructure/Admin/DomainAdmin.php:954
@@ -2166,6 +2169,7 @@ msgid "Action needed"
 msgstr ""
 
 #: admin/views/settings-manager.php:132
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
 msgid "Ready"
 msgstr ""
 
@@ -2222,6 +2226,7 @@ msgstr ""
 #: includes/class-ecapla-certverify-system-status.php:244
 #: includes/class-ecapla-certverify-system-status.php:270
 #: includes/class-ecapla-certverify-system-status.php:295
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
 msgid "Failed"
 msgstr ""
 
@@ -6530,132 +6535,264 @@ msgstr ""
 msgid "The import staging repository returned an unknown outcome."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:101
-msgid "The issuance inputs or related records changed while the credential was being confirmed. No credential was issued."
+#: src/Application/Issuance/BulkIssuanceCommitJobHandler.php:20
+msgid "Bulk Issuance review must finish before commit."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:116
-msgid "The new recipient was created but could not be re-read safely. Issuance was rolled back."
+#: src/Application/Issuance/BulkIssuanceCommitJobHandler.php:20
+msgid "The reviewed Bulk Issuance job is unavailable."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:129
-msgid "The new credential identity could not be re-read safely. Issuance was rolled back."
+#: src/Application/Issuance/BulkIssuanceCommitJobHandler.php:20
+msgid "This Bulk Issuance review belongs to another administrator."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:174
-msgid "The issued credential could not be re-read safely. Issuance was rolled back."
+#: src/Application/Issuance/BulkIssuanceCommitJobHandler.php:21
+msgid "The Bulk Issuance commit does not match the reviewed batch. Review the CSV again."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:186
-msgid "Certificate-number collisions continued while issuing. Nothing was duplicated; review the numbering policy and try again."
+#: src/Application/Issuance/BulkIssuanceCommitJobHandler.php:23
+msgid "The protected Bulk Issuance review plan changed after review."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:196
-msgid "Choose a recipient that still exists."
+#: src/Application/Issuance/BulkIssuanceCommitJobHandler.php:25
+msgid "This row changed after Bulk Issuance review and was not issued."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:204
-msgid "Choose a program that still exists."
+#: src/Application/Issuance/BulkIssuanceCommitJobHandler.php:26
+msgid "Certloom could not create the row idempotency key."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:205
-msgid "Inactive programs cannot receive new credential issuances."
+#: src/Application/Issuance/BulkIssuanceCommitJobHandler.php:30
+msgid "Bulk Issuance finished, but its protected review plan could not be removed immediately. Retention cleanup will retry."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:210
-msgid "The program’s configured issuer no longer exists."
+#: src/Application/Issuance/BulkIssuanceCoordinator.php:17
+msgid "Certloom Bulk Issuance accepts CSV files."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:214
-msgid "Choose an active published template."
+#: src/Application/Issuance/BulkIssuanceCoordinator.php:17
+msgid "Choose a non-empty Bulk Issuance CSV no larger than 10 MB."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:252
-msgid "Certloom could not create a deterministic issuance review fingerprint."
+#: src/Application/Issuance/BulkIssuanceCoordinator.php:18
+msgid "Certloom could not create a secure Bulk Issuance file identifier."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:277
-msgid "Choose an existing recipient or create a new recipient."
+#: src/Application/Issuance/BulkIssuanceCoordinator.php:18
+msgid "Certloom could not fingerprint the protected Bulk Issuance CSV."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:279
-msgid "Choose an existing recipient."
+#: src/Application/Issuance/BulkIssuanceCoordinator.php:22
+msgid "Bulk Issuance review must finish before credentials can be issued."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:282
-msgid "Choose a credential program."
+#: src/Application/Issuance/BulkIssuanceCoordinator.php:22
+msgid "Confirm the reviewed Bulk Issuance batch before issuing credentials."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:283
-msgid "Choose a published template."
+#: src/Application/Issuance/BulkIssuanceCoordinator.php:22
+msgid "Fix every blocking CSV review error before Bulk Issuance can start."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:285
-msgid "Choose a valid credential issue/effective date."
+#: src/Application/Issuance/BulkIssuanceCoordinator.php:22
+msgid "The Bulk Issuance confirmation no longer matches the reviewed batch."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:287
-msgid "Choose the program default, a permanent credential, or a specific expiry date."
+#: src/Application/Issuance/BulkIssuanceCoordinator.php:22
+msgid "The selected job is not a Bulk Issuance review."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:291
-msgid "Choose a valid credential expiry date."
+#: src/Application/Issuance/BulkIssuanceCoordinator.php:24
+msgid "That Bulk Issuance job belongs to another administrator."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:292
-msgid "The expiry date cannot be earlier than the credential issue/effective date."
+#: src/Application/Issuance/BulkIssuanceCoordinator.php:24
+msgid "That Bulk Issuance job is no longer available."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:295
-msgid "Grade must be 191 characters or fewer."
+#: src/Application/Issuance/BulkIssuanceCoordinator.php:24
+msgid "The Bulk Issuance job identifier is invalid."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:329
-msgid "Certloom could not calculate the program’s default credential expiry date."
+#: src/Application/Issuance/BulkIssuanceCoordinator.php:26
+msgid "Choose a valid Bulk Issuance expiry policy."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:338
-msgid "This recipient already has a Credential Series for the selected program. Manual Issuance will not create a duplicate; future correction/re-certification must add an immutable Version to the existing Series."
+#: src/Application/Issuance/BulkIssuanceCoordinator.php:26
+msgid "Choose an active Program and published Template for Bulk Issuance."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:346
-msgid "Certloom could not create the immutable merge snapshot fingerprint. Issuance was rolled back."
+#: src/Application/Issuance/BulkIssuanceCoordinator.php:27
+msgid "Certloom stopped Bulk Issuance safely (%1$s), but could not remove its protected CSV copy (%2$s)."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:374
-msgid "The issued Credential Series could not be loaded for its receipt."
+#: src/Application/Issuance/BulkIssuancePreflightJobHandler.php:23
+msgid "The protected Bulk Issuance source is unavailable."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:395
-msgid "Use a valid YYYY-MM-DD date."
+#: src/Application/Issuance/BulkIssuancePreflightJobHandler.php:24
+msgid "The protected Bulk Issuance CSV changed after upload. Review was stopped."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:400
-msgid "Custom fields must be a bounded key/value list with at most 30 entries."
+#: src/Application/Issuance/BulkIssuancePreflightJobHandler.php:30
+msgid "The same Recipient identity appears more than once in this Bulk Issuance review."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:406
-msgid "Custom fields must use unique machine keys up to 64 characters and scalar values."
+#: src/Application/Issuance/BulkIssuancePreflightJobHandler.php:35
+msgid "Certloom could not fingerprint the Bulk Issuance review."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:409
-msgid "Each custom field value must be 2,000 characters or fewer."
+#: src/Application/Issuance/BulkIssuancePreflightJobHandler.php:44
+msgid "Bulk review completed, but the protected CSV source could not be removed immediately. Retention cleanup will retry."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:411
-msgid "The combined custom-field payload is too large for one Manual Issuance."
+#: src/Application/Issuance/BulkIssuancePreflightJobHandler.php:45
+msgid "The blocked Bulk Issuance review plan could not be removed immediately. Retention cleanup will retry."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:63
-msgid "That Manual Issuance receipt could not be found."
+#: src/Application/Issuance/ManualIssuanceService.php:118
+msgid "Certloom refused an unsupported issuance source."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:78
+#: src/Application/Issuance/ManualIssuanceService.php:122
+msgid "The bulk issuance source reference is invalid."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:126
+msgid "The bulk issuance row identity is invalid."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:130
+msgid "The bulk issuance lifecycle reason is invalid."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:139
 msgid "Review the credential before issuing it."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:83
+#: src/Application/Issuance/ManualIssuanceService.php:144
 msgid "The issuance inputs or related records changed after review. Review the credential again before issuing it."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:161
+msgid "The issuance inputs or related records changed while the credential was being confirmed. No credential was issued."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:176
+msgid "The new recipient was created but could not be re-read safely. Issuance was rolled back."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:189
+msgid "The new credential identity could not be re-read safely. Issuance was rolled back."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:235
+msgid "The issued credential could not be re-read safely. Issuance was rolled back."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:247
+msgid "Certificate-number collisions continued while issuing. Nothing was duplicated; review the numbering policy and try again."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:257
+msgid "Choose a recipient that still exists."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:265
+msgid "Choose a program that still exists."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:266
+msgid "Inactive programs cannot receive new credential issuances."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:271
+msgid "The program’s configured issuer no longer exists."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:275
+msgid "Choose an active published template."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:313
+msgid "Certloom could not create a deterministic issuance review fingerprint."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:338
+msgid "Choose an existing recipient or create a new recipient."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:340
+msgid "Choose an existing recipient."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:343
+msgid "Choose a credential program."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:344
+msgid "Choose a published template."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:346
+msgid "Choose a valid credential issue/effective date."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:348
+msgid "Choose the program default, a permanent credential, or a specific expiry date."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:352
+msgid "Choose a valid credential expiry date."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:353
+msgid "The expiry date cannot be earlier than the credential issue/effective date."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:356
+msgid "Grade must be 191 characters or fewer."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:390
+msgid "Certloom could not calculate the program’s default credential expiry date."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:399
+msgid "This recipient already has a Credential Series for the selected program. Manual Issuance will not create a duplicate; future correction/re-certification must add an immutable Version to the existing Series."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:407
+msgid "Certloom could not create the immutable merge snapshot fingerprint. Issuance was rolled back."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:435
+msgid "The issued Credential Series could not be loaded for its receipt."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:456
+msgid "Use a valid YYYY-MM-DD date."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:461
+msgid "Custom fields must be a bounded key/value list with at most 30 entries."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:467
+msgid "Custom fields must use unique machine keys up to 64 characters and scalar values."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:470
+msgid "Each custom field value must be 2,000 characters or fewer."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:472
+msgid "The combined custom-field payload is too large for one Manual Issuance."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:79
+msgid "That Manual Issuance receipt could not be found."
 msgstr ""
 
 #. translators: %s: merge token.
@@ -7037,6 +7174,214 @@ msgstr ""
 
 #: src/Domain/Job/JobStateMachine.php:28
 msgid "That Certloom job state transition is not allowed."
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:18
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:18
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:19
+msgid "Bulk Issuance"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:19
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:56
+msgid "Authority boundary:"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:19
+msgid "Bulk Issuance is implemented inside the gated normalized-domain administration preview. Public normalized verification and PDF/PNG/JPEG authority remain closed until their final acceptance ceremonies."
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:19
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:54
+msgid "Normalized-domain preview"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:19
+msgid "Premium issuance workflow"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:19
+msgid "Review a protected CSV completely before any credential is created, then issue the accepted rows through the same immutable Manual Issuance truth path in bounded resumable background slices."
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:21
+msgid "Bulk Issuance review was queued. No credential has been created yet."
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:21
+msgid "Choose a CSV file before starting Bulk Issuance."
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:21
+msgid "The Bulk Issuance CSV upload did not complete successfully."
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:21
+msgid "The temporary Bulk Issuance upload is unavailable."
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:22
+msgid "Bulk Issuance was confirmed and queued. Each row remains independently idempotent and transaction-safe."
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+msgid "Accepted columns"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+msgid "Active Program"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+msgid "Bulk Issuance CSV"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+msgid "Choose Program"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+msgid "Choose Template"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+msgid "Default grade (optional)"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:153
+msgid "Issue / effective date"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+msgid "Mutation-free review"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:157
+msgid "Permanent"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+msgid "Program, published Template, dates and expiry policy are frozen for the batch. CSV rows provide Recipient identity plus optional row-specific grade, certificate number and custom merge values."
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:150
+msgid "Published Template"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+msgid "Review CSV"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+msgid "Review runs in bounded background slices and never issues credentials."
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+msgid "Specific expiry"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:158
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:159
+msgid "Specific expiry date"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+msgid "Upload & define shared issuance context"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:156
+msgid "Use Program validity"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+msgid "or"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:24
+msgid "Bulk review"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:24
+msgid "Row %d"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:24
+msgid "Row issues"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:25
+msgid "Bulk job complete."
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:25
+msgid "Confirming creates a separate durable job. Every row revalidates its exact Manual Issuance review fingerprint before mutation; stale rows fail individually instead of being issued against changed data."
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:25
+msgid "Correct the blocking CSV rows and upload a new review."
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:25
+msgid "Credential Management now contains every successfully issued Series/Version. Email delivery remains the next planned product milestone."
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:25
+msgid "Issue another batch"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:25
+msgid "Issue reviewed batch"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:25
+msgid "Nothing was issued."
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:25
+msgid "Open Credential Management"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:25
+msgid "Protected plan SHA-256"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:25
+msgid "Refresh progress"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:25
+msgid "Reviewed batch SHA-256"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:25
+msgid "Start new review"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:25
+msgid "This durable job is still processing. Refresh to see the latest committed slice; duplicate/racing workers cannot claim the same lease."
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
+msgid "Errors"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
+msgid "Idempotent replays"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
+msgid "Processed"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:27
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:256
+msgid "You do not have permission to issue Certloom credentials."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1009
@@ -8918,33 +9263,12 @@ msgstr ""
 msgid "Choose published Template…"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:150
-msgid "Published Template"
-msgstr ""
-
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:152
 msgid "Only non-archived Templates with an independently verified published revision are listed."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:153
-msgid "Issue / effective date"
-msgstr ""
-
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:154
 msgid "Grade / result (optional)"
-msgstr ""
-
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:156
-msgid "Use Program validity"
-msgstr ""
-
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:157
-msgid "Permanent"
-msgstr ""
-
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:158
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:159
-msgid "Specific expiry date"
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:162
@@ -9139,10 +9463,6 @@ msgstr ""
 msgid "Manual Issuance progress"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:256
-msgid "You do not have permission to issue Certloom credentials."
-msgstr ""
-
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:54
 msgid "Compose one credential, review the exact published Template and immutable inputs, then issue one Credential Series and Version atomically."
 msgstr ""
@@ -9152,15 +9472,7 @@ msgid "Manual Issuance"
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:54
-msgid "Normalized-domain preview"
-msgstr ""
-
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:54
 msgid "Premium credential workflow"
-msgstr ""
-
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:56
-msgid "Authority boundary:"
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:56
@@ -11894,6 +12206,152 @@ msgstr ""
 msgid "The credential selected for correction has no readable current version."
 msgstr ""
 
+#: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:100
+msgid "Custom Bulk Issuance columns must use custom:machine_key with a 1–64 character machine key."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:101
+msgid "Unsupported Bulk Issuance CSV column: %s."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:102
+msgid "The Bulk Issuance CSV contains duplicate column names."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:110
+msgid "A Bulk Issuance CSV row contains more values than its header."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:111
+msgid "A Bulk Issuance CSV cell contains invalid or oversized text."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:111
+msgid "Bulk Issuance rejects spreadsheet-formula-like cell values. Store the intended literal value without a leading =, +, -, or @ character."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:114
+msgid "Use either recipient_id or new Recipient identity columns in one Bulk Issuance row, not both."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:115
+msgid "Each Bulk Issuance row must provide recipient_id or new Recipient identity fields."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:117
+msgid "New Bulk Issuance recipients require display_name."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:118
+msgid "New Bulk Issuance recipients require email or external_id for deterministic identity resolution."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:130
+msgid "The saved Bulk Issuance CSV state is incomplete or unavailable."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:28
+msgid "The Bulk Issuance CSV is not available in protected Certloom storage."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:32
+msgid "The Bulk Issuance CSV must be non-empty and no larger than 10 MB."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:35
+msgid "Certloom could not open the protected Bulk Issuance CSV."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:38
+msgid "The Bulk Issuance CSV does not contain a readable header row."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:63
+msgid "Certloom could not resume the protected Bulk Issuance CSV."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:69
+msgid "Bulk Issuance is limited to %d credential rows per reviewed job in this release."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:73
+msgid "Certloom could not save the Bulk Issuance CSV position safely."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:93
+msgid "The Bulk Issuance CSV header has an unsupported number of columns."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:98
+msgid "The Bulk Issuance CSV header contains invalid or oversized text."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuancePlanStore.php:18
+msgid "Certloom could not create its protected Bulk Issuance review plan."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuancePlanStore.php:28
+msgid "Certloom could not reopen its protected Bulk Issuance review plan."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuancePlanStore.php:30
+msgid "Certloom could not restore the Bulk Issuance review plan to its last committed boundary."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuancePlanStore.php:36
+msgid "The Bulk Issuance review-plan handle is invalid."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuancePlanStore.php:37
+msgid "Certloom could not encode a reviewed Bulk Issuance row deterministically."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuancePlanStore.php:38
+msgid "Certloom could not durably append a reviewed Bulk Issuance row."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuancePlanStore.php:39
+msgid "Certloom could not record the Bulk Issuance plan position."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuancePlanStore.php:47
+msgid "Certloom could not read its Bulk Issuance review plan."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuancePlanStore.php:50
+#: src/Infrastructure/Issuance/BulkIssuancePlanStore.php:61
+msgid "The protected Bulk Issuance review plan is invalid."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuancePlanStore.php:59
+msgid "Certloom could not resume the protected Bulk Issuance plan."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuancePlanStore.php:67
+msgid "Certloom could not fingerprint the protected Bulk Issuance review plan."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkIssuancePlanStore.php:70
+msgid "The protected Bulk Issuance review plan is unavailable."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkRecipientResolver.php:18
+msgid "Each new Bulk Issuance recipient requires an email address or external ID so the row can be resolved deterministically."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkRecipientResolver.php:29
+msgid "Certloom could not safely resolve a Bulk Issuance recipient."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkRecipientResolver.php:35
+msgid "A Bulk Issuance row matches more than one existing Recipient. Resolve the duplicate Recipient identity before issuing."
+msgstr ""
+
+#: src/Infrastructure/Issuance/BulkRecipientResolver.php:41
+#: src/Infrastructure/Issuance/BulkRecipientResolver.php:44
+msgid "The supplied email and external ID do not identify the same existing Recipient."
+msgstr ""
+
 #: src/Infrastructure/Issuance/ManualIssuanceNumberAllocator.php:24
 msgid "That certificate number is already in use."
 msgstr ""
@@ -12023,12 +12481,12 @@ msgstr ""
 msgid "Certloom claimed the job but could not reload its state."
 msgstr ""
 
-#: src/Infrastructure/Job/JobRuntime.php:203
+#: src/Infrastructure/Job/JobRuntime.php:221
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:244
 msgid "That Certloom job is no longer available."
 msgstr ""
 
-#: src/Infrastructure/Job/JobRuntime.php:207
+#: src/Infrastructure/Job/JobRuntime.php:225
 msgid "Only queued, paused, or failed Certloom jobs can be cancelled safely from this screen."
 msgstr ""
 

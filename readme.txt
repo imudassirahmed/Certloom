@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.65
+Stable tag: 1.6.66
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.64: the Manual Issuance golden path is implemented inside the gated normalized-domain administration preview. Compose and mutation-free Review bind the exact Recipient/Program/published Template revision, dates, numbering policy and credential-specific custom merge values to a SHA-256; Issue revalidates that review and atomically creates the optional Recipient, Credential Series, immutable Version, frozen layout/merge snapshot and issuance event with retry idempotency. Browser Preview uses the canonical Render Plan path, while normalized public authority and PDF/PNG/JPEG exports remain fail-closed pending final database and PDF-04 acceptance. Credential Management UX is next.
+> Development note for 1.6.66: Bulk Issuance is implemented inside the gated normalized-domain administration preview after the frozen Manual Issuance and Credential Management milestones. Protected CSV preflight is mutation-free and bounded; a reviewed plan + batch SHA-256 requires explicit confirmation; durable local jobs then revalidate each exact Manual Issuance review and issue immutable Series/Version/Event truth with per-row idempotency, progress and bounded failures. Dedicated Bulk cancel/retry-failed-subset UX remains later roadmap remainder. Normalized public authority and PDF/PNG/JPEG exports remain fail-closed pending final database and PDF-04 acceptance. Email Delivery is next.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 

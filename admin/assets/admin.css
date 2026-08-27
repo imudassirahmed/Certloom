@@ -2842,3 +2842,91 @@
 @media (prefers-reduced-motion: reduce) {
 	.certloom-credential-views a { scroll-behavior: auto; }
 }
+
+/* Bulk Issuance — reviewed CSV → bounded durable issuance. */
+.certloom-bulk-issuance .certloom-bulk-card { max-width: 1180px; }
+.certloom-bulk-issuance .certloom-bulk-csv {
+	display: grid;
+	grid-template-columns: minmax(280px, .8fr) minmax(0, 1.2fr);
+	gap: 18px;
+	align-items: start;
+	margin-top: 18px;
+}
+.certloom-bulk-issuance .certloom-bulk-csv > label,
+.certloom-bulk-issuance .certloom-bulk-expiry {
+	display: grid;
+	gap: 7px;
+	font-weight: 600;
+}
+.certloom-bulk-issuance .certloom-bulk-csv input[type="file"],
+.certloom-bulk-issuance .certloom-bulk-expiry input {
+	width: 100%;
+	max-width: 100%;
+}
+.certloom-bulk-issuance .certloom-bulk-schema {
+	min-width: 0;
+	padding: 15px 16px;
+	border: 1px solid #dcdcde;
+	border-radius: 10px;
+	background: #f6f7f7;
+	line-height: 1.8;
+}
+.certloom-bulk-issuance .certloom-bulk-schema strong { display: block; margin-bottom: 5px; }
+.certloom-bulk-issuance .certloom-bulk-schema code {
+	display: inline-block;
+	margin: 2px 3px 2px 0;
+	max-width: 100%;
+	white-space: normal;
+	word-break: break-word;
+}
+.certloom-bulk-metrics {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+	gap: 12px;
+	margin: 18px 0;
+}
+.certloom-bulk-metrics > div {
+	padding: 15px 16px;
+	border: 1px solid #dcdcde;
+	border-radius: 10px;
+	background: #fff;
+}
+.certloom-bulk-metrics span { display: block; color: #646970; font-size: 12px; font-weight: 600; }
+.certloom-bulk-metrics strong { display: block; margin-top: 5px; font-size: 24px; line-height: 1.15; }
+.certloom-bulk-status {
+	display: inline-flex;
+	align-items: center;
+	min-height: 28px;
+	padding: 3px 9px;
+	border: 1px solid #c3c4c7;
+	border-radius: 999px;
+	background: #f6f7f7;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: .02em;
+	text-transform: uppercase;
+}
+.certloom-bulk-status.is-succeeded { border-color: #9cc7ad; background: #edf8f1; color: #17643f; }
+.certloom-bulk-status.is-partially_succeeded { border-color: #dba617; background: #fff8df; color: #6e4d00; }
+.certloom-bulk-status.is-failed,
+.certloom-bulk-status.is-cancelled { border-color: #d8a3a3; background: #fcf0f1; color: #8a2424; }
+.certloom-bulk-status.is-running,
+.certloom-bulk-status.is-queued { border-color: #9ab7d3; background: #eef6fc; color: #135e96; }
+.certloom-bulk-errors { margin: 8px 0 0 22px; max-height: 320px; overflow: auto; }
+.certloom-bulk-errors li { margin-bottom: 5px; }
+.certloom-bulk-issuance .certloom-template-preview-proof code {
+	max-width: 100%;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+}
+@media (max-width: 782px) {
+	.certloom-bulk-issuance .certloom-bulk-csv { grid-template-columns: 1fr; }
+	.certloom-bulk-issuance .certloom-manual-actions { align-items: stretch; flex-direction: column; }
+	.certloom-bulk-issuance .certloom-manual-actions .button { width: 100%; text-align: center; }
+	.certloom-bulk-issuance .certloom-bulk-errors { max-height: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.certloom-bulk-issuance *,
+	.certloom-bulk-issuance *::before,
+	.certloom-bulk-issuance *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}

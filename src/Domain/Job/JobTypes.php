@@ -9,6 +9,8 @@ final class JobTypes {
 	const DOMAIN_RESTORE_MERGE   = 'domain_restore_merge';
 	const DOMAIN_IMPORT_PREFLIGHT = 'domain_import'; // Stable 1.5.4 machine identifier.
 	const DOMAIN_IMPORT_COMMIT    = 'domain_import_commit';
+	const BULK_ISSUANCE_PREFLIGHT = 'bulk_issuance_preflight';
+	const BULK_ISSUANCE_COMMIT    = 'bulk_issuance_commit';
 	const DOMAIN_IMPORT            = self::DOMAIN_IMPORT_PREFLIGHT; // Backward-compatible alias for development callers.
 
 	/** @return array<int,string> */
@@ -20,6 +22,8 @@ final class JobTypes {
 			self::DOMAIN_RESTORE_MERGE,
 			self::DOMAIN_IMPORT_PREFLIGHT,
 			self::DOMAIN_IMPORT_COMMIT,
+			self::BULK_ISSUANCE_PREFLIGHT,
+			self::BULK_ISSUANCE_COMMIT,
 		);
 	}
 }
