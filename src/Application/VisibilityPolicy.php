@@ -18,6 +18,11 @@ final class VisibilityPolicy {
 		return array( 'public', 'verification_summary', 'unlisted', 'recipient_only', 'organization_member', 'private' );
 	}
 
+	/** @return string[] */
+	public static function recipient_portal_values() {
+		return array( 'public', 'verification_summary', 'unlisted', 'recipient_only' );
+	}
+
 	/** @return string */
 	public function guest_mode( $visibility ) {
 		$visibility = strtolower( trim( (string) $visibility ) );
@@ -38,5 +43,20 @@ final class VisibilityPolicy {
 	/** @return bool */
 	public function allows_guest_verification( $visibility ) {
 		return self::MODE_DENY !== $this->guest_mode( $visibility );
+	}
+
+	/**
+	 * Whether the owning linked Recipient may see the credential in My Credentials.
+	 *
+	 * `private` remains administrator-only and `organization_member` remains closed
+	 * until an accepted organization-membership identity contract exists. This is
+	 * intentionally stricter than simply treating every non-public credential as
+	 * visible to a logged-in user.
+	 *
+	 * @return bool
+	 */
+	public function allows_recipient_portal( $visibility ) {
+		$visibility = strtolower( trim( (string) $visibility ) );
+		return in_array( $visibility, self::recipient_portal_values(), true );
 	}
 }

@@ -1740,3 +1740,47 @@
 	.certloom-verification-barcode{break-inside:avoid;box-shadow:none;border-color:#bbb;}
 	.certloom-verification-barcode-code{overflow:visible;}
 }
+
+/* 1.6.68 POR-01: authenticated My Credentials collection. */
+.certloom-my-credentials{
+	--certloom-portal-border:rgba(15,23,42,.13);
+	--certloom-portal-muted:#64748b;
+	--certloom-portal-surface:#fff;
+	--certloom-portal-soft:#f8fafc;
+	--certloom-portal-ink:#0f172a;
+	width:100%;max-width:1120px;margin:0 auto;padding:clamp(18px,3vw,32px);box-sizing:border-box;
+	border:1px solid var(--certloom-portal-border);border-radius:18px;background:var(--certloom-portal-surface);color:var(--certloom-portal-ink);
+	box-shadow:0 12px 34px rgba(15,23,42,.07);
+}
+.certloom-my-credentials *{box-sizing:border-box}
+.certloom-my-credentials__header{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:22px}
+.certloom-my-credentials__eyebrow{margin:0 0 5px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--certloom-portal-muted)}
+.certloom-my-credentials__heading{margin:0;font-size:clamp(25px,4vw,38px);line-height:1.12;letter-spacing:-.025em;color:inherit}
+.certloom-my-credentials__intro{margin:8px 0 0;color:var(--certloom-portal-muted);font-size:14px;line-height:1.55}
+.certloom-my-credentials__count{display:grid;place-items:center;min-width:92px;padding:12px 16px;border:1px solid var(--certloom-portal-border);border-radius:14px;background:var(--certloom-portal-soft);text-align:center}
+.certloom-my-credentials__count strong{font-size:24px;line-height:1}.certloom-my-credentials__count span{margin-top:5px;font-size:12px;color:var(--certloom-portal-muted)}
+.certloom-my-credentials__filters{display:flex;align-items:flex-end;flex-wrap:wrap;gap:12px;margin:0 0 22px;padding:14px;border:1px solid var(--certloom-portal-border);border-radius:14px;background:var(--certloom-portal-soft)}
+.certloom-my-credentials__filters>div{display:grid;gap:5px;min-width:min(220px,100%);flex:1}
+.certloom-my-credentials__filters label{font-size:12px;font-weight:700;color:var(--certloom-portal-muted)}
+.certloom-my-credentials__filters select{width:100%;min-height:42px;padding:8px 34px 8px 11px;border:1px solid var(--certloom-portal-border);border-radius:10px;background:var(--certloom-portal-surface);color:inherit;font:inherit}
+.certloom-my-credentials__button{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:9px 15px;border:1px solid currentColor;border-radius:10px;background:transparent;color:inherit;font-size:14px;line-height:1.2;font-weight:600;font-family:inherit;text-decoration:none;cursor:pointer}
+.certloom-my-credentials__button:hover,.certloom-my-credentials__button:focus-visible{text-decoration:none;box-shadow:0 0 0 3px rgba(59,130,246,.16)}
+.certloom-my-credentials__collection{display:grid;grid-template-columns:1fr;gap:14px}
+.certloom-my-credentials--grid .certloom-my-credentials__collection{grid-template-columns:repeat(2,minmax(0,1fr))}
+.certloom-my-credential-card{display:flex;flex-direction:column;min-width:0;padding:18px;border:1px solid var(--certloom-portal-border);border-radius:16px;background:var(--certloom-portal-surface);box-shadow:0 4px 16px rgba(15,23,42,.045)}
+.certloom-my-credential-card__topline{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:27px;margin-bottom:10px}
+.certloom-my-credential-card__status,.certloom-my-credential-card__expiring{display:inline-flex;align-items:center;width:max-content;max-width:100%;padding:5px 9px;border:1px solid currentColor;border-radius:999px;font-size:11px;font-weight:700;line-height:1.2}
+.certloom-my-credential-card__status--valid{color:#166534;background:#f0fdf4}.certloom-my-credential-card__status--expired{color:#92400e;background:#fffbeb}.certloom-my-credential-card__status--revoked,.certloom-my-credential-card__status--suspended{color:#991b1b;background:#fef2f2}.certloom-my-credential-card__status--not_yet_valid,.certloom-my-credential-card__status--pending_review,.certloom-my-credential-card__status--suspended_noncompliant{color:#334155;background:#f8fafc}
+.certloom-my-credential-card__expiring{color:#9a3412;background:#fff7ed}
+.certloom-my-credential-card h3{margin:0;font-size:20px;line-height:1.25;overflow-wrap:anywhere}.certloom-my-credential-card__issuer{margin:6px 0 0;color:var(--certloom-portal-muted);font-size:13px}
+.certloom-my-credential-card__facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px;margin:18px 0 0;padding:14px 0;border-block:1px solid var(--certloom-portal-border)}
+.certloom-my-credential-card__facts div{min-width:0}.certloom-my-credential-card__facts dt{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.045em;color:var(--certloom-portal-muted)}.certloom-my-credential-card__facts dd{margin:4px 0 0;font-size:14px;font-weight:600;overflow-wrap:anywhere}
+.certloom-my-credential-card__actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:14px}.certloom-my-credentials__action-muted{font-size:12px;color:var(--certloom-portal-muted)}
+.certloom-my-credentials__empty,.certloom-my-credentials__notice{padding:24px;border:1px dashed var(--certloom-portal-border);border-radius:14px;background:var(--certloom-portal-soft);text-align:center}.certloom-my-credentials__empty p,.certloom-my-credentials__notice p{margin:7px auto 0;max-width:620px;color:var(--certloom-portal-muted)}.certloom-my-credentials__notice .certloom-my-credentials__button{margin-top:14px}
+.certloom-my-credentials__table-wrap{max-width:100%;overflow:auto;border:1px solid var(--certloom-portal-border);border-radius:14px;-webkit-overflow-scrolling:touch}.certloom-my-credentials__table{width:100%;min-width:760px;border:0;border-collapse:collapse;background:var(--certloom-portal-surface)}.certloom-my-credentials__table th,.certloom-my-credentials__table td{padding:13px 14px;border:0;border-bottom:1px solid var(--certloom-portal-border);text-align:left;vertical-align:middle}.certloom-my-credentials__table thead th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--certloom-portal-muted);background:var(--certloom-portal-soft)}.certloom-my-credentials__table tbody tr:last-child>*{border-bottom:0}.certloom-my-credentials__table th small,.certloom-my-credentials__table td small{display:block;margin-top:4px;color:var(--certloom-portal-muted);font-weight:400}
+.certloom-my-credentials__pagination{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:22px}.certloom-my-credentials__pagination a{font-weight:600}.certloom-my-credentials__pagination span{font-size:13px;color:var(--certloom-portal-muted)}
+.certloom-my-credentials__authority-note{margin-top:20px;padding-top:14px;border-top:1px solid var(--certloom-portal-border);font-size:12px;line-height:1.5;color:var(--certloom-portal-muted)}
+@media (max-width:760px){.certloom-my-credentials{padding:18px;border-radius:14px}.certloom-my-credentials__header{align-items:stretch;flex-direction:column}.certloom-my-credentials__count{grid-auto-flow:column;justify-content:center;gap:7px;min-width:0}.certloom-my-credentials__count span{margin:0}.certloom-my-credentials--grid .certloom-my-credentials__collection{grid-template-columns:1fr}.certloom-my-credentials__filters{align-items:stretch;flex-direction:column}.certloom-my-credentials__filters>div{min-width:0}.certloom-my-credential-card__facts{grid-template-columns:1fr 1fr}}
+@media (max-width:430px){.certloom-my-credential-card__facts{grid-template-columns:1fr}.certloom-my-credential-card__topline{align-items:flex-start;flex-direction:column}.certloom-my-credentials__pagination{justify-content:space-between}.certloom-my-credentials__pagination span{order:-1;width:100%;text-align:center}}
+@media (prefers-reduced-motion:reduce){.certloom-my-credentials *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+@media (forced-colors:active){.certloom-my-credentials,.certloom-my-credential-card,.certloom-my-credentials__filters,.certloom-my-credentials__count,.certloom-my-credentials__table-wrap{border-color:CanvasText;background:Canvas;color:CanvasText}.certloom-my-credential-card__status,.certloom-my-credential-card__expiring{background:Canvas;color:CanvasText}.certloom-my-credentials__button{forced-color-adjust:auto}}

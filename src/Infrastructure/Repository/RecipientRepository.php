@@ -173,6 +173,36 @@ final class RecipientRepository {
 		return is_array( $row ) ? $this->decode( $row ) : null;
 	}
 
+	/**
+	 * Resolves the one Recipient explicitly linked to a WordPress user.
+	 *
+	 * The schema owns a unique wp_user_id key, so callers never infer ownership
+	 * from mutable email/name matches. This is the only safe identity bridge for
+	 * the authenticated My Credentials portal.
+	 *
+	 * @return array<string,mixed>|null|\WP_Error
+	 */
+	public function find_by_wp_user_id( $wp_user_id ) {
+		global $wpdb;
+		$wp_user_id = absint( $wp_user_id );
+		if ( ! $wp_user_id ) {
+			return null;
+		}
+		$wpdb->last_error = '';
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				'SELECT * FROM %i WHERE wp_user_id = %d LIMIT 1',
+				SchemaManager::table( 'recipients' ),
+				$wp_user_id
+			),
+			ARRAY_A
+		);
+		if ( '' !== (string) $wpdb->last_error ) {
+			return new \WP_Error( 'certloom_recipient_user_read_failed', __( 'Certloom could not resolve the recipient linked to this WordPress account.', 'certloom' ) );
+		}
+		return is_array( $row ) ? $this->decode( $row ) : null;
+	}
+
 	/** @return array<string,mixed>|\WP_Error */
 	private function normalize_patch( array $data, $creating ) {
 		$row = array();

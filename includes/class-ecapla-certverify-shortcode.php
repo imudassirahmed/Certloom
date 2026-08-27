@@ -22,6 +22,9 @@ class Ecapla_CertVerify_Shortcode {
 	public static function register() {
 		add_shortcode( 'certloom', array( __CLASS__, 'render' ) );
 		add_shortcode( 'certloom_credential', array( __CLASS__, 'render_credential' ) );
+		add_shortcode( 'certloom_my_credentials', array( __CLASS__, 'render_my_credentials' ) );
+		// Compatibility alias retained from the original POR-01 roadmap terminology.
+		add_shortcode( 'certloom_my_certificates', array( __CLASS__, 'render_my_credentials' ) );
 	}
 
 	public static function register_assets() {
@@ -168,6 +171,11 @@ class Ecapla_CertVerify_Shortcode {
 				'notfound_text' => $atts['notfound_text'],
 			)
 		);
+	}
+
+	/** Renders the authenticated POR-01 Recipient Portal collection. */
+	public static function render_my_credentials( $atts ) {
+		return Ecapla_CertVerify_Recipient_Portal::render( is_array( $atts ) ? $atts : array() );
 	}
 
 }

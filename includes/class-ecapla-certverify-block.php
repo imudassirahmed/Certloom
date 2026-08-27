@@ -66,6 +66,20 @@ class Ecapla_CertVerify_Block {
 				}
 			}
 		}
+
+		$portal_path = ECAPLA_CERTVERIFY_PATH . 'blocks/my-credentials';
+		if ( file_exists( $portal_path . '/block.json' ) ) {
+			$portal = register_block_type(
+				$portal_path,
+				array( 'render_callback' => array( __CLASS__, 'render_my_credentials' ) )
+			);
+			if ( $portal && function_exists( 'wp_set_script_translations' ) ) {
+				$portal_handles = ! empty( $portal->editor_script_handles ) ? (array) $portal->editor_script_handles : ( ! empty( $portal->editor_script ) ? array( $portal->editor_script ) : array() );
+				foreach ( $portal_handles as $handle ) {
+					wp_set_script_translations( $handle, 'certloom', ECAPLA_CERTVERIFY_PATH . 'languages' );
+				}
+			}
+		}
 	}
 
 	/**
@@ -144,6 +158,24 @@ class Ecapla_CertVerify_Block {
 		if ( ! in_array( $heading_tag, array( 'h2', 'h3', 'h4', 'h5', 'h6' ), true ) ) { $heading_tag = 'h2'; }
 		$html = Ecapla_CertVerify_Render::credential_profile( $number, array( 'heading' => $attributes['heading'], 'heading_tag' => $heading_tag, 'notfound_text' => $attributes['notFoundText'] ) );
 		$wrapper = function_exists( 'get_block_wrapper_attributes' ) ? get_block_wrapper_attributes( array( 'class' => 'certloom-credential-block' ) ) : 'class="certloom-credential-block"';
+		return '<div ' . $wrapper . '>' . $html . '</div>';
+	}
+
+	/** Renders the dynamic POR-01 My Credentials block. */
+	public static function render_my_credentials( $attributes ) {
+		$attributes = wp_parse_args(
+			is_array( $attributes ) ? $attributes : array(),
+			array( 'layout' => 'cards', 'perPage' => 12, 'showFilters' => true, 'heading' => __( 'My Credentials', 'certloom' ) )
+		);
+		$html = Ecapla_CertVerify_Recipient_Portal::render(
+			array(
+				'layout'       => sanitize_key( (string) $attributes['layout'] ),
+				'per_page'     => max( 1, min( 24, absint( $attributes['perPage'] ) ) ),
+				'show_filters' => ! empty( $attributes['showFilters'] ) ? 'yes' : 'no',
+				'heading'      => (string) $attributes['heading'],
+			)
+		);
+		$wrapper = function_exists( 'get_block_wrapper_attributes' ) ? get_block_wrapper_attributes( array( 'class' => 'certloom-my-credentials-block' ) ) : 'class="certloom-my-credentials-block"';
 		return '<div ' . $wrapper . '>' . $html . '</div>';
 	}
 

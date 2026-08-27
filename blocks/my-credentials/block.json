@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "certloom/my-credentials",
+  "version": "1.6.68",
+  "title": "Certloom – My Credentials",
+  "category": "widgets",
+  "icon": "portfolio",
+  "description": "Display credentials belonging to the signed-in Certloom recipient.",
+  "keywords": ["credentials", "certificates", "recipient", "portal"],
+  "textdomain": "certloom",
+  "attributes": {
+    "layout": {"type": "string", "default": "cards"},
+    "perPage": {"type": "number", "default": 12},
+    "showFilters": {"type": "boolean", "default": true},
+    "heading": {"type": "string", "default": "My Credentials"}
+  },
+  "supports": {
+    "align": ["wide", "full"],
+    "html": false,
+    "anchor": true
+  },
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./editor.css",
+  "style": "ecapla-certloom-public"
+}

@@ -1,3 +1,10 @@
+1.6.68
+- Add POR-01 Recipient Portal / My Credentials with explicit WordPress-user → Recipient ownership, bounded current-issued credential queries, centralized visibility/status enforcement, cards/grid/table layouts, status/sort filtering, pagination and expiring-soon cues.
+- Add [certloom_my_credentials] plus the original-roadmap [certloom_my_certificates] compatibility alias and a native server-rendered Gutenberg My Credentials block.
+- Keep organization_member/private visibility fail-closed without accepted membership/admin authorization; never infer Portal ownership from recipient email/name/external ID.
+- Keep normalized public Verify, PDF/image downloads and sharing honest: Verify requires accepted public authority, artifact downloads remain blocked by PDF-04, and SOC-01 sharing remains the next milestone.
+- Add dedicated POR-01 static/application and real Chromium browser gates.
+
 1.6.67
 - Add premium Email Delivery from exact immutable Credential Versions with mutation-free preview, SHA-256-bound confirmation, issued/resend/test delivery kinds, WordPress-local templates and documented merge placeholders.
 - Delegate transport to wp_mail() so normal WordPress SMTP plugins remain compatible, while PHPMailer AltBody supplies an explicit plain-text fallback.

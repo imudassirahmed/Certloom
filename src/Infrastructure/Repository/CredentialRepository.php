@@ -6,6 +6,7 @@ use Certloom\Application\Data\SafeJson;
 use Certloom\Application\Contract\CredentialQueryRepositoryInterface;
 use Certloom\Application\Contract\CredentialRepositoryInterface;
 use Certloom\Application\Contract\CredentialRelationshipRepositoryInterface;
+use Certloom\Application\VisibilityPolicy;
 use Certloom\Domain\Credential\PublicCredentialId;
 use Certloom\Domain\Credential\States;
 use Certloom\Infrastructure\Database\SchemaManager;
@@ -575,6 +576,84 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 				$item[ $key ] = ! empty( $item[ $key ] ) ? absint( $item[ $key ] ) : null;
 			}
 			$item['version_number'] = ! empty( $item['version_number'] ) ? absint( $item['version_number'] ) : null;
+			$item['legacy_expired'] = ! empty( $item['legacy_expired'] );
+		}
+		unset( $item );
+		return array( 'items' => $items, 'total' => $total );
+	}
+
+	/**
+	 * Bounded authenticated Recipient collection used by POR-01 My Credentials.
+	 *
+	 * Ownership is supplied as one already-resolved Recipient ID; this query never
+	 * attempts to infer identity from email/name input. Only current issued Versions
+	 * are returned. Historical Versions remain available through their dedicated
+	 * immutable-history surfaces rather than being duplicated as portal cards.
+	 *
+	 * @return array{items:array<int,array<string,mixed>>,total:int}|\WP_Error
+	 */
+	public function list_recipient_portal_page( $recipient_id, $page = 1, $per_page = 12, $status = 'all', $sort = 'newest' ) {
+		global $wpdb;
+		$recipient_id = absint( $recipient_id );
+		if ( ! $recipient_id ) {
+			return array( 'items' => array(), 'total' => 0 );
+		}
+		$page     = max( 1, absint( $page ) );
+		$per_page = max( 1, min( 48, absint( $per_page ) ) );
+		$offset   = ( $page - 1 ) * $per_page;
+		$allowed_statuses = array( 'all', 'valid', 'suspended', 'revoked', 'expired', 'not_yet_valid', 'pending_review', 'noncompliant' );
+		$status   = in_array( $status, $allowed_statuses, true ) ? $status : 'all';
+		$allowed_sorts = array( 'newest', 'oldest', 'expires_soon', 'program' );
+		$sort     = in_array( $sort, $allowed_sorts, true ) ? $sort : 'newest';
+
+		$portal_visibility = VisibilityPolicy::recipient_portal_values();
+		$where = array( 's.recipient_id=%d', 'v.issuance_state=%s', 's.visibility IN (%s,%s,%s,%s)' );
+		$args  = array_merge( array( $recipient_id, States::ISSUANCE_ISSUED ), $portal_visibility );
+		if ( 'all' !== $status ) {
+			$predicate = self::management_status_predicate( $status, gmdate( 'Y-m-d' ) );
+			if ( is_wp_error( $predicate ) ) { return $predicate; }
+			$where[] = '(' . $predicate['sql'] . ')';
+			$args = array_merge( $args, $predicate['args'] );
+		}
+
+		$order = 'v.issued_at DESC, s.id DESC';
+		switch ( $sort ) {
+			case 'oldest':
+				$order = 'v.issued_at ASC, s.id ASC';
+				break;
+			case 'expires_soon':
+				$order = 'CASE WHEN v.expires_at IS NULL THEN 1 ELSE 0 END ASC, v.expires_at ASC, v.issued_at DESC, s.id DESC';
+				break;
+			case 'program':
+				$order = 'p.title ASC, v.issued_at DESC, s.id DESC';
+				break;
+		}
+
+		$series   = SchemaManager::table( 'credential_series' );
+		$versions = SchemaManager::table( 'credential_versions' );
+		$programs = SchemaManager::table( 'programs' );
+		$batches  = SchemaManager::table( 'batches' );
+		$issuers  = SchemaManager::table( 'issuers' );
+		$joins = ' FROM %i s INNER JOIN %i v ON v.id=s.current_version_id AND v.series_id=s.id LEFT JOIN %i p ON p.id=s.program_id LEFT JOIN %i b ON b.id=s.batch_id LEFT JOIN %i i ON i.id=s.issuer_id';
+		$where_sql = ' WHERE ' . implode( ' AND ', $where );
+		$base_args = array( $series, $versions, $programs, $batches, $issuers );
+
+		$wpdb->last_error = '';
+		$total = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*)' . $joins . $where_sql, array_merge( $base_args, $args ) ) );
+		if ( '' !== (string) $wpdb->last_error ) {
+			return new \WP_Error( 'certloom_recipient_portal_count_failed', __( 'Certloom could not count your credentials safely.', 'certloom' ) );
+		}
+
+		$sql = 'SELECT s.id AS series_id, s.public_id, s.visibility, s.administrative_state, s.compliance_state, s.program_id, s.batch_id, s.issuer_id, v.id AS version_id, v.version_number, v.display_number, v.issuance_state, v.legacy_expired, v.valid_from, v.issued_at, v.expires_at, v.grade, p.title AS program_title, p.code AS program_code, b.name AS batch_name, i.name AS issuer_name' . $joins . $where_sql . ' ORDER BY ' . $order . ' LIMIT %d OFFSET %d';
+		$wpdb->last_error = '';
+		$items = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( $base_args, $args, array( $per_page, $offset ) ) ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $items ) ) {
+			return new \WP_Error( 'certloom_recipient_portal_list_failed', __( 'Certloom could not load your credentials safely.', 'certloom' ) );
+		}
+		foreach ( $items as &$item ) {
+			foreach ( array( 'series_id', 'program_id', 'batch_id', 'issuer_id', 'version_id', 'version_number' ) as $key ) {
+				$item[ $key ] = ! empty( $item[ $key ] ) ? absint( $item[ $key ] ) : null;
+			}
 			$item['legacy_expired'] = ! empty( $item['legacy_expired'] );
 		}
 		unset( $item );

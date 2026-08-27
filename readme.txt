@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.67
+Stable tag: 1.6.68
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.67: Email Delivery is implemented on top of immutable Credential Versions after the frozen Manual Issuance, Credential Management and Bulk Issuance milestones. Preview is mutation-free and SHA-256 bound to the current versioned email template plus immutable issuance snapshot; explicit confirmation queues a WordPress-local durable job; wp_mail() preserves ordinary SMTP-plugin interoperability and plain-text fallback; destination/message bodies stay in protected short-lived storage while persistent history is privacy-minimized. Interrupted external sends never auto-replay: persisted transport acceptance closes safely as sent, while genuinely ambiguous worker interruption becomes delivery-uncertain and requires reviewed resend. Normalized public verification and PDF attachment authority remain fail-closed pending final database and PDF-04 acceptance. Recipient Portal / My Credentials is next.
+> Development note for 1.6.68: Recipient Portal / My Credentials POR-01 is implemented as an authenticated, fail-closed read surface over the normalized credential domain after the frozen Email Delivery milestone. Ownership is resolved only through the unique Recipient.wp_user_id link—never email/name inference—and only current issued Versions with recipient-portal-safe visibility leave persistence. Cards, grid and keyboard-accessible table layouts, bounded status/sort filters, pagination, expiring-soon cues, [certloom_my_credentials] plus the original [certloom_my_certificates] alias, and a native server-rendered Gutenberg block share one authoritative renderer. Public Verify appears only after normalized verifier authority opens; PDF/image downloads stay gated behind PDF-04, and social sharing remains the next SOC-01 milestone rather than being falsely claimed complete.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
