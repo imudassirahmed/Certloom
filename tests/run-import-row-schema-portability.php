@@ -44,7 +44,7 @@ function irsp_check( $condition, $message ) {
 $root = dirname( __DIR__ );
 $schema = file_get_contents( $root . '/src/Infrastructure/Database/SchemaManager.php' );
 $repo = file_get_contents( $root . '/src/Infrastructure/Import/DomainImportStageRepository.php' );
-irsp_check( false !== strpos( $schema, "const SCHEMA_VERSION         = '17'" ), 'schema contract advances to v17 for portable import row storage' );
+irsp_check( false !== strpos( $schema, "const SCHEMA_VERSION         = '18'" ), 'current schema contract retains portable import row storage after v17' );
 irsp_check( false !== strpos( $schema, 'source_row_number BIGINT UNSIGNED NOT NULL' ), 'import staging persists the portable source_row_number column' );
 irsp_check( 0 === preg_match( '/^\s*row_number\s+BIGINT\b/m', $schema ), 'import staging DDL no longer declares MariaDB-reserved row_number' );
 irsp_check( false !== strpos( $schema, 'UNIQUE KEY job_source_row (job_key,source_row_number)' ), 'portable source-row uniqueness uses a non-conflicting index name' );
@@ -56,7 +56,7 @@ $migrate = new ReflectionMethod( SchemaManager::class, 'migrate_import_source_ro
 $migrate->setAccessible( true );
 $GLOBALS['wpdb']->columns = array( array( 'Field' => 'id' ), array( 'Field' => 'row_number' ), array( 'Field' => 'source_row_number' ) );
 $result = $migrate->invoke( null );
-irsp_check( true === $result && 1 === count( $GLOBALS['wpdb']->queries ), 'schema v17 copies legacy staged row numbers idempotently when both columns exist' );
+irsp_check( true === $result && 1 === count( $GLOBALS['wpdb']->queries ), 'schema compatibility copies legacy staged row numbers idempotently when both columns exist' );
 $query = $GLOBALS['wpdb']->queries[0];
 irsp_check( 'UPDATE %i SET %i = %i WHERE %i = %d AND %i <> %d' === $query['query'], 'compatibility copy quotes legacy reserved identifier through wpdb percent-i placeholders' );
 irsp_check( array( 'wp_certloom_import_rows', 'source_row_number', 'row_number', 'source_row_number', 0, 'row_number', 0 ) === $query['args'], 'compatibility copy preserves nonzero modern values while carrying forward legacy row positions' );

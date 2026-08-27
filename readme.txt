@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.66
+Stable tag: 1.6.67
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.66: Bulk Issuance is implemented inside the gated normalized-domain administration preview after the frozen Manual Issuance and Credential Management milestones. Protected CSV preflight is mutation-free and bounded; a reviewed plan + batch SHA-256 requires explicit confirmation; durable local jobs then revalidate each exact Manual Issuance review and issue immutable Series/Version/Event truth with per-row idempotency, progress and bounded failures. Dedicated Bulk cancel/retry-failed-subset UX remains later roadmap remainder. Normalized public authority and PDF/PNG/JPEG exports remain fail-closed pending final database and PDF-04 acceptance. Email Delivery is next.
+> Development note for 1.6.67: Email Delivery is implemented on top of immutable Credential Versions after the frozen Manual Issuance, Credential Management and Bulk Issuance milestones. Preview is mutation-free and SHA-256 bound to the current versioned email template plus immutable issuance snapshot; explicit confirmation queues a WordPress-local durable job; wp_mail() preserves ordinary SMTP-plugin interoperability and plain-text fallback; destination/message bodies stay in protected short-lived storage while persistent history is privacy-minimized. Interrupted external sends never auto-replay: persisted transport acceptance closes safely as sent, while genuinely ambiguous worker interruption becomes delivery-uncertain and requires reviewed resend. Normalized public verification and PDF attachment authority remain fail-closed pending final database and PDF-04 acceptance. Recipient Portal / My Credentials is next.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 

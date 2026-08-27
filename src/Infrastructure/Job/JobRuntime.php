@@ -16,6 +16,8 @@ use Certloom\Application\Import\DomainImportStagingService;
 use Certloom\Application\Issuance\BulkIssuanceCoordinator;
 use Certloom\Application\Issuance\BulkIssuancePreflightJobHandler;
 use Certloom\Application\Issuance\BulkIssuanceCommitJobHandler;
+use Certloom\Application\Email\EmailDeliveryCoordinator;
+use Certloom\Application\Email\EmailDeliveryJobHandler;
 use Certloom\Infrastructure\Issuance\BulkIssuanceCsvReader;
 use Certloom\Infrastructure\Issuance\BulkIssuancePlanStore;
 use Certloom\Application\Restore\DomainRestoreJobHandler;
@@ -51,6 +53,8 @@ final class JobRuntime {
 	private $data_tools;
 	/** @var BulkIssuanceCoordinator */
 	private $bulk_issuance;
+	/** @var EmailDeliveryCoordinator */
+	private $email_delivery;
 
 	public function __construct() {
 		$this->repository = new JobRepository();
@@ -98,6 +102,7 @@ final class JobRuntime {
 			),
 			JobTypes::BULK_ISSUANCE_PREFLIGHT => new BulkIssuancePreflightJobHandler( $bulk_reader, $bulk_plans, null, null, $private_files ),
 			JobTypes::BULK_ISSUANCE_COMMIT => new BulkIssuanceCommitJobHandler( $this->repository, $bulk_plans, null, null, $private_files ),
+			JobTypes::EMAIL_DELIVERY => new EmailDeliveryJobHandler(),
 		);
 
 		$runner           = new JobRunner( $this->service, $this->repository, $handlers );
@@ -114,6 +119,7 @@ final class JobRuntime {
 		$this->import_uploads = new DomainImportUploadSession( $private_files, $import_reader );
 		$this->data_tools     = new DomainDataToolsCoordinator( $this->queue, $this->repository, $private_files );
 		$this->bulk_issuance  = new BulkIssuanceCoordinator( $this->queue, $this->repository, $private_files, $bulk_reader );
+		$this->email_delivery = new EmailDeliveryCoordinator( $this->queue );
 	}
 
 	public function register() {
@@ -160,6 +166,11 @@ final class JobRuntime {
 		return $this->bulk_issuance;
 	}
 
+	/** @return EmailDeliveryCoordinator */
+	public function email_delivery() {
+		return $this->email_delivery;
+	}
+
 	/**
 	 * Explicitly retries one failed job and schedules its next bounded slice.
 	 *
@@ -169,6 +180,14 @@ final class JobRuntime {
 	 * @return true|\WP_Error
 	 */
 	public function retry_failed( $job_key ) {
+		$job = $this->repository->find( (string) $job_key );
+		if ( is_wp_error( $job ) ) { return $job; }
+		if ( is_array( $job ) && \Certloom\Domain\Job\JobTypes::EMAIL_DELIVERY === (string) ( $job['job_type'] ?? '' ) ) {
+			$error = is_array( $job['error'] ?? null ) ? $job['error'] : array();
+			if ( 'certloom_email_delivery_uncertain' === (string) ( $error['code'] ?? '' ) ) {
+				return new \WP_Error( 'certloom_email_retry_uncertain_forbidden', __( 'Certloom will not automatically retry an interrupted email whose external delivery outcome is uncertain. Review it and create a new explicit resend if needed.', 'certloom' ) );
+			}
+		}
 		$requeued = $this->service->requeue_failed( (string) $job_key );
 		if ( is_wp_error( $requeued ) ) {
 			return $requeued;

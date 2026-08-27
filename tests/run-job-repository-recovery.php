@@ -25,11 +25,11 @@ final class JobRecoveryWpdb {
 	public function prepare($query,...$args){return array('query'=>$query,'args'=>$args);}
 	public function get_results($prepared,$format){
 		$this->last_error='';$q=$prepared['query'];$a=$prepared['args'];
-		if(strpos($q,'SELECT job_key, recovery_count')!==0)return array();
+		if(strpos($q,'SELECT job_key, job_type, payload_json, recovery_count')!==0)return array();
 		$status=$a[1];$now=strtotime($a[2]);$limit=(int)$a[3];$out=array();
 		foreach($this->rows as $row){
 			$locked=empty($row['locked_until'])?0:strtotime($row['locked_until']);
-			if($row['status']===$status&&(!$locked||$locked<$now)){$out[]=array('job_key'=>$row['job_key'],'recovery_count'=>$row['recovery_count']);if(count($out)>=$limit)break;}
+			if($row['status']===$status&&(!$locked||$locked<$now)){$out[]=array('job_key'=>$row['job_key'],'job_type'=>$row['job_type']??'generic_test','payload_json'=>$row['payload_json']??'{}','recovery_count'=>$row['recovery_count']);if(count($out)>=$limit)break;}
 		}
 		return $out;
 	}

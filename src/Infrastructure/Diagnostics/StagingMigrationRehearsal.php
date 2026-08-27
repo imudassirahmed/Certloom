@@ -486,7 +486,7 @@ final class StagingMigrationRehearsal {
 	/** @return true|\WP_Error */
 	private static function assert_domain_empty() {
 		global $wpdb;
-		foreach ( array( 'recipients', 'issuers', 'programs', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'templates', 'template_revisions', 'template_assignments', 'credential_series', 'credential_versions', 'credential_numbers', 'credential_events', 'jobs', 'import_rows', 'restore_map' ) as $logical ) {
+		foreach ( array( 'recipients', 'issuers', 'programs', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'templates', 'template_revisions', 'template_assignments', 'credential_series', 'credential_versions', 'credential_numbers', 'credential_events', 'email_deliveries', 'jobs', 'import_rows', 'restore_map' ) as $logical ) {
 			$table = SchemaManager::table( $logical );
 			$wpdb->last_error = '';
 			$exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) );
