@@ -59,6 +59,8 @@ final class CredentialLifecycleService {
 		if ( ! $series || ! $version || absint( $version['series_id'] ) !== absint( $series_id ) ) {
 			return new \WP_Error( 'certloom_lifecycle_credential_missing', __( 'The credential series or version could not be found.', 'certloom' ) );
 		}
+		$review = $this->assert_review_context( $series, $version, $context );
+		if ( is_wp_error( $review ) ) { return $review; }
 		try {
 			$next = $this->machine->issue( $version['issuance_state'], $series['administrative_state'] );
 		} catch ( \DomainException $error ) {
@@ -103,6 +105,8 @@ final class CredentialLifecycleService {
 			if ( ! $series || ! $version || absint( $version['series_id'] ) !== absint( $series_id ) ) {
 				return new \WP_Error( 'certloom_lifecycle_credential_missing', __( 'The credential series or version could not be found.', 'certloom' ) );
 			}
+			$review = $this->assert_review_context( $series, $version, $context );
+			if ( is_wp_error( $review ) ) { return $review; }
 			try {
 				$next = $this->machine->void( $version['issuance_state'], $series['administrative_state'] );
 			} catch ( \DomainException $error ) {
@@ -136,6 +140,8 @@ final class CredentialLifecycleService {
 			if ( ! $version ) {
 				return new \WP_Error( 'certloom_lifecycle_version_missing', __( 'The current credential version could not be found.', 'certloom' ) );
 			}
+			$review = $this->assert_review_context( $series, $version, $context );
+			if ( is_wp_error( $review ) ) { return $review; }
 			try {
 				$next = $this->machine->{$method}( $version['issuance_state'], $series['administrative_state'] );
 			} catch ( \DomainException $error ) {
@@ -150,6 +156,28 @@ final class CredentialLifecycleService {
 				'administrative_state' => $series['administrative_state'],
 			), $next );
 		} );
+	}
+
+	/**
+	 * Validates optional review-bound optimistic concurrency fields inside the
+	 * transaction after Series/current-Version locks have been acquired.
+	 *
+	 * @return true|\WP_Error
+	 */
+	private function assert_review_context( array $series, array $version, array $context ) {
+		if ( array_key_exists( 'expected_series_updated_at', $context ) && (string) $context['expected_series_updated_at'] !== (string) ( $series['updated_at'] ?? '' ) ) {
+			return new \WP_Error( 'certloom_lifecycle_review_stale', __( 'The credential changed after this lifecycle action was reviewed. Reload and review it again.', 'certloom' ) );
+		}
+		if ( array_key_exists( 'expected_current_version_id', $context ) && absint( $context['expected_current_version_id'] ) !== absint( $series['current_version_id'] ?? 0 ) ) {
+			return new \WP_Error( 'certloom_lifecycle_review_stale', __( 'The current credential Version changed after this lifecycle action was reviewed. Reload and review it again.', 'certloom' ) );
+		}
+		if ( array_key_exists( 'expected_version_id', $context ) && absint( $context['expected_version_id'] ) !== absint( $version['id'] ?? 0 ) ) {
+			return new \WP_Error( 'certloom_lifecycle_review_stale', __( 'The reviewed credential Version is no longer current. Reload and review it again.', 'certloom' ) );
+		}
+		if ( array_key_exists( 'expected_version_updated_at', $context ) && (string) $context['expected_version_updated_at'] !== (string) ( $version['updated_at'] ?? '' ) ) {
+			return new \WP_Error( 'certloom_lifecycle_review_stale', __( 'The credential Version changed after this lifecycle action was reviewed. Reload and review it again.', 'certloom' ) );
+		}
+		return true;
 	}
 
 	/** @return true|\WP_Error */

@@ -1,3 +1,11 @@
+1.6.65
+- Add the premium acceptance-gated Credential Management workspace after Manual Issuance: bounded registry search/filtering, status views, Program filtering, continuing-Series overview, Recipient/Program/Status/Verification/Versions/Activity/Actions tabs, and responsive administration styling.
+- Make historical Credential Versions explicitly inspection-only and surface immutable issuance provenance including Template revision/hash, merge SHA-256 and gated artifact authority without rewriting snapshot truth.
+- Replace direct lifecycle mutations with owner-bound, 15-minute HMAC Review → Confirm contracts that freeze exact Series/current-Version timestamps, state transition, reason code, public reason and internal note; the transaction rejects stale Series/current-Version evidence before mutation.
+- Add reviewed Program/Batch relationship correction from the Credential workspace using the established immutable-successor service; target relationship and reasons are integrity-bound, and confirmation creates a successor Version plus append-only Event rather than editing historical Versions.
+- Add derived-status registry filtering/summary for valid, suspended, revoked, expired, not-yet-valid, pending-review, non-compliant, voided and not-issued credentials while retaining the Core Status Service as final status semantics.
+- Preserve normalized-domain write/admin/Data Tools gates and renderer authority as closed; final real-host DB certification and PDF-04 remain final-release blockers. Bulk Issuance is next.
+
 1.6.64
 - Add the P0 Manual Issuance golden path inside the gated normalized-domain admin preview: Compose → mutation-free Review → exact Issue confirmation → read-only Receipt.
 - Bind confirmation to a deterministic SHA-256 over the Recipient/new-recipient candidate, active Program, issuer, exact verified published Template revision/hash, dates, numbering-policy identity and credential-specific custom merge values; changed inputs fail closed and require re-review.

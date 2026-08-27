@@ -2,6 +2,8 @@
 namespace Certloom\Infrastructure\Admin;
 
 use Certloom\Application\CredentialLifecycleService;
+use Certloom\Application\CredentialLifecycleReviewService;
+use Certloom\Application\CredentialRelationshipBulkService;
 use Certloom\Domain\Credential\States;
 use Certloom\Domain\Credential\StatusService;
 use Certloom\Infrastructure\Repository\CredentialRepository;
@@ -38,6 +40,7 @@ final class DomainAdmin {
 		add_action( 'admin_post_certloom_domain_create_issuer', array( $this, 'create_issuer' ) );
 		add_action( 'admin_post_certloom_domain_update_issuer', array( $this, 'update_issuer' ) );
 		add_action( 'admin_post_certloom_domain_lifecycle', array( $this, 'lifecycle' ) );
+		add_action( 'admin_post_certloom_domain_relationship_correct', array( $this, 'relationship_correct' ) );
 	}
 
 	/** @return void */
@@ -45,7 +48,7 @@ final class DomainAdmin {
 		add_submenu_page( 'certloom', __( 'Recipients', 'certloom' ), __( 'Recipients', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_RECIPIENTS, self::RECIPIENTS_PAGE, array( $this, 'render_recipients' ) );
 		add_submenu_page( 'certloom', __( 'Programs', 'certloom' ), __( 'Programs', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS, self::PROGRAMS_PAGE, array( $this, 'render_programs' ) );
 		add_submenu_page( 'certloom', __( 'Issuers (New Domain)', 'certloom' ), __( 'Issuers (New)', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_ISSUERS, self::ISSUERS_PAGE, array( $this, 'render_issuers' ) );
-		add_submenu_page( 'certloom', __( 'Credentials (New Domain)', 'certloom' ), __( 'Credentials (New)', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS, self::CREDENTIALS_PAGE, array( $this, 'render_credentials' ) );
+		add_submenu_page( 'certloom', __( 'Credential Management', 'certloom' ), __( 'Credentials', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS, self::CREDENTIALS_PAGE, array( $this, 'render_credentials' ) );
 	}
 
 	/** @return void */
@@ -138,21 +141,33 @@ final class DomainAdmin {
 		$this->require_capability( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS );
 		$series_id = isset( $_POST['series_id'] ) ? absint( $_POST['series_id'] ) : 0;
 		check_admin_referer( 'certloom_domain_lifecycle_' . $series_id );
-		$action = isset( $_POST['lifecycle_action'] ) ? sanitize_key( wp_unslash( $_POST['lifecycle_action'] ) ) : '';
-		$credentials = new CredentialRepository();
-		$series = $credentials->find_series( $series_id );
-		if ( is_wp_error( $series ) || ! is_array( $series ) ) {
-			$result = is_wp_error( $series ) ? $series : new \WP_Error( 'certloom_domain_series_missing', __( 'The credential could not be found.', 'certloom' ) );
-			$this->redirect_result( self::CREDENTIALS_PAGE, $result, 'credential_changed' );
+		$review = $this->decode_review_request( 'lifecycle_review' );
+		if ( is_wp_error( $review ) ) {
+			$this->redirect_result( self::CREDENTIALS_PAGE, $review, 'credential_changed', array( 'series_id' => $series_id, 'credential_tab' => 'actions' ) );
+		}
+		$verified = ( new CredentialLifecycleReviewService() )->verify( $review, get_current_user_id() );
+		if ( is_wp_error( $verified ) ) {
+			$this->redirect_result( self::CREDENTIALS_PAGE, $verified, 'credential_changed', array( 'series_id' => $series_id, 'credential_tab' => 'actions' ) );
+		}
+		if ( absint( $verified['series_id'] ?? 0 ) !== $series_id ) {
+			$this->redirect_result( self::CREDENTIALS_PAGE, new \WP_Error( 'certloom_lifecycle_review_series_mismatch', __( 'The reviewed lifecycle action belongs to another credential.', 'certloom' ) ), 'credential_changed', array( 'series_id' => $series_id, 'credential_tab' => 'actions' ) );
 		}
 
 		$context = array(
-			'actor_user_id' => get_current_user_id(),
-			'reason_code'   => isset( $_POST['reason_code'] ) ? sanitize_key( wp_unslash( $_POST['reason_code'] ) ) : null,
-			'public_reason' => isset( $_POST['public_reason'] ) ? sanitize_textarea_field( wp_unslash( $_POST['public_reason'] ) ) : null,
-			'internal_note' => isset( $_POST['internal_note'] ) ? sanitize_textarea_field( wp_unslash( $_POST['internal_note'] ) ) : null,
-			'meta'          => array( 'source' => 'domain_admin_preview' ),
+			'actor_user_id'              => get_current_user_id(),
+			'reason_code'                => $verified['reason_code'] ?? null,
+			'public_reason'              => $verified['public_reason'] ?? null,
+			'internal_note'              => $verified['internal_note'] ?? null,
+			'expected_series_updated_at' => (string) ( $verified['series_updated_at'] ?? '' ),
+			'expected_current_version_id'=> absint( $verified['version_id'] ?? 0 ),
+			'expected_version_id'        => absint( $verified['version_id'] ?? 0 ),
+			'expected_version_updated_at'=> (string) ( $verified['version_updated_at'] ?? '' ),
+			'meta'                       => array(
+				'source'        => 'credential_management',
+				'review_digest' => (string) ( $verified['digest'] ?? '' ),
+			),
 		);
+		$action  = (string) ( $verified['action'] ?? '' );
 		$service = new CredentialLifecycleService();
 		switch ( $action ) {
 			case 'suspend':
@@ -165,13 +180,37 @@ final class DomainAdmin {
 				$result = $service->reinstate( $series_id, $context );
 				break;
 			case 'void':
-				$version_id = absint( $series['current_version_id'] ?? 0 );
-				$result = $version_id ? $service->void( $series_id, $version_id, $context ) : new \WP_Error( 'certloom_domain_version_missing', __( 'The credential has no current version to void.', 'certloom' ) );
+				$result = $service->void( $series_id, absint( $verified['version_id'] ?? 0 ), $context );
 				break;
 			default:
 				$result = new \WP_Error( 'certloom_domain_lifecycle_action_invalid', __( 'Choose a valid credential lifecycle action.', 'certloom' ) );
 		}
-		$this->redirect_result( self::CREDENTIALS_PAGE, $result, 'credential_changed', array( 'series_id' => $series_id ) );
+		$this->redirect_result( self::CREDENTIALS_PAGE, $result, 'credential_changed', array( 'series_id' => $series_id, 'credential_tab' => 'activity' ) );
+	}
+
+	/** @return void */
+	public function relationship_correct() {
+		$this->require_capability( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS );
+		$series_id = isset( $_POST['series_id'] ) ? absint( $_POST['series_id'] ) : 0;
+		check_admin_referer( 'certloom_domain_relationship_' . $series_id );
+		$review = $this->decode_review_request( 'relationship_review' );
+		if ( is_wp_error( $review ) ) {
+			$this->redirect_result( self::CREDENTIALS_PAGE, $review, 'credential_relationship_changed', array( 'series_id' => $series_id, 'credential_tab' => 'program' ) );
+		}
+		$rows = isset( $review['rows'] ) && is_array( $review['rows'] ) ? $review['rows'] : array();
+		if ( 1 !== count( $rows ) || absint( $rows[0]['series_id'] ?? 0 ) !== $series_id ) {
+			$this->redirect_result( self::CREDENTIALS_PAGE, new \WP_Error( 'certloom_relationship_review_series_mismatch', __( 'The reviewed relationship correction belongs to another credential.', 'certloom' ) ), 'credential_relationship_changed', array( 'series_id' => $series_id, 'credential_tab' => 'program' ) );
+		}
+		$context = array(
+			'actor_user_id' => get_current_user_id(),
+			'source_ref'    => 'credential_management',
+		);
+		$result = ( new CredentialRelationshipBulkService() )->commit( $review, $context );
+		if ( ! is_wp_error( $result ) && ! empty( $result['failed'] ) ) {
+			$message = isset( $result['failed'][0]['reason'] ) ? (string) $result['failed'][0]['reason'] : __( 'The relationship correction could not be completed.', 'certloom' );
+			$result = new \WP_Error( 'certloom_relationship_correction_failed', $message );
+		}
+		$this->redirect_result( self::CREDENTIALS_PAGE, $result, 'credential_relationship_changed', array( 'series_id' => $series_id, 'credential_tab' => 'versions' ) );
 	}
 
 	/** @return void */
@@ -323,25 +362,58 @@ final class DomainAdmin {
 			return;
 		}
 
-		$search = $this->search_value();
-		$page   = $this->page_value();
-		$result = ( new CredentialRepository() )->list_page( $search, $page, 20 );
+		$search     = $this->search_value();
+		$page       = $this->page_value();
+		$status     = isset( $_GET['credential_status'] ) ? sanitize_key( wp_unslash( $_GET['credential_status'] ) ) : 'all'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter.
+		$program_id = isset( $_GET['program_id'] ) ? absint( $_GET['program_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter.
+		$allowed    = array( 'all', 'valid', 'suspended', 'revoked', 'expired', 'not_yet_valid', 'pending_review', 'noncompliant', 'voided', 'not_issued' );
+		$status     = in_array( $status, $allowed, true ) ? $status : 'all';
+		$repo       = new CredentialRepository();
+		$result     = $repo->list_management_page( $search, $page, 20, $status, $program_id );
+		$summary    = $repo->management_summary();
+		$programs   = ( new ProgramRepository() )->list_page( '', 1, 100, 'all' );
 		$status_service = new StatusService();
-		$this->header( __( 'Credentials — New Domain Preview', 'certloom' ) );
+
+		$this->header( __( 'Credential Management', 'certloom' ), __( 'Inspect continuing Credential Series, immutable Version lineage, effective status, verification identity, and reviewed lifecycle actions from one premium workspace.', 'certloom' ) );
 		$this->notice();
-		$this->render_search( self::CREDENTIALS_PAGE, $search );
+		if ( ! is_wp_error( $summary ) ) {
+			$this->metric_grid(
+				array(
+					array( 'value' => $summary['total'], 'label' => __( 'Credentials', 'certloom' ) ),
+					array( 'value' => $summary['valid'], 'label' => __( 'Valid now', 'certloom' ) ),
+					array( 'value' => $summary['suspended'], 'label' => __( 'Suspended', 'certloom' ) ),
+					array( 'value' => $summary['revoked'], 'label' => __( 'Revoked', 'certloom' ) ),
+					array( 'value' => $summary['expired'] + $summary['pending_review'] + $summary['noncompliant'], 'label' => __( 'Needs attention', 'certloom' ) ),
+				)
+			);
+		}
+		$this->credential_views( $status, $search, $program_id, is_wp_error( $summary ) ? array() : $summary );
+		$this->credential_filters( $search, $status, $program_id, is_wp_error( $programs ) ? array() : $programs['items'] );
 		if ( is_wp_error( $result ) ) {
 			$this->error( $result->get_error_message() );
 		} else {
-			echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Certificate', 'certloom' ) . '</th><th>' . esc_html__( 'Recipient', 'certloom' ) . '</th><th>' . esc_html__( 'Program', 'certloom' ) . '</th><th>' . esc_html__( 'Public ID', 'certloom' ) . '</th><th>' . esc_html__( 'Status', 'certloom' ) . '</th></tr></thead><tbody>';
+			echo '<div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-table certloom-credential-table"><thead><tr><th>' . esc_html__( 'Credential', 'certloom' ) . '</th><th>' . esc_html__( 'Recipient', 'certloom' ) . '</th><th>' . esc_html__( 'Program / batch', 'certloom' ) . '</th><th>' . esc_html__( 'Issued / expiry', 'certloom' ) . '</th><th>' . esc_html__( 'Version', 'certloom' ) . '</th><th>' . esc_html__( 'Status', 'certloom' ) . '</th><th>' . esc_html__( 'Actions', 'certloom' ) . '</th></tr></thead><tbody>';
 			foreach ( $result['items'] as $item ) {
-				$status = $this->status_from_row( $status_service, $item );
+				$effective = $this->status_from_row( $status_service, $item );
 				$detail_url = add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'series_id' => absint( $item['series_id'] ) ), admin_url( 'admin.php' ) );
-				echo '<tr><td><a href="' . esc_url( $detail_url ) . '">' . esc_html( (string) $item['display_number'] ) . '</a></td><td>' . esc_html( (string) $item['display_name'] ) . '</td><td>' . esc_html( (string) $item['program_title'] ) . '</td><td><code>' . esc_html( (string) $item['public_id'] ) . '</code></td><td>' . esc_html( $status ? $status->code() : __( 'Unavailable', 'certloom' ) ) . '</td></tr>';
+				$number = trim( (string) ( $item['display_number'] ?? '' ) );
+				$program = trim( (string) ( $item['program_title'] ?? '' ) );
+				$batch = trim( (string) ( $item['batch_name'] ?? '' ) );
+				echo '<tr>';
+				echo '<td data-col="' . esc_attr__( 'Credential', 'certloom' ) . '"><strong><a href="' . esc_url( $detail_url ) . '">' . esc_html( '' !== $number ? $number : __( 'Unnumbered credential', 'certloom' ) ) . '</a></strong><div class="certloom-credential-secondary"><code>' . esc_html( (string) $item['public_id'] ) . '</code></div></td>';
+				echo '<td data-col="' . esc_attr__( 'Recipient', 'certloom' ) . '"><strong>' . esc_html( (string) ( $item['display_name'] ?: '—' ) ) . '</strong>' . ( ! empty( $item['recipient_email'] ) ? '<div class="certloom-credential-secondary">' . esc_html( (string) $item['recipient_email'] ) . '</div>' : '' ) . '</td>';
+				echo '<td data-col="' . esc_attr__( 'Program / batch', 'certloom' ) . '">' . esc_html( '' !== $program ? $program : '—' ) . ( '' !== $batch ? '<div class="certloom-credential-secondary">' . esc_html( $batch ) . '</div>' : '' ) . '</td>';
+				echo '<td data-col="' . esc_attr__( 'Issued / expiry', 'certloom' ) . '"><span>' . esc_html( (string) ( $item['issued_at'] ?: '—' ) ) . '</span><div class="certloom-credential-secondary">' . esc_html( ! empty( $item['expires_at'] ) ? sprintf( /* translators: %s: expiry date. */ __( 'Expires %s', 'certloom' ), (string) $item['expires_at'] ) : __( 'No expiry', 'certloom' ) ) . '</div></td>';
+				echo '<td data-col="' . esc_attr__( 'Version', 'certloom' ) . '">' . ( ! empty( $item['version_number'] ) ? '<strong>v' . esc_html( (string) absint( $item['version_number'] ) ) . '</strong>' : '—' ) . '</td>';
+				echo '<td data-col="' . esc_attr__( 'Status', 'certloom' ) . '">' . $this->credential_status_badge( $effective ) . '</td>';
+				echo '<td data-col="' . esc_attr__( 'Actions', 'certloom' ) . '"><a class="button button-small" href="' . esc_url( $detail_url ) . '">' . esc_html__( 'Open workspace', 'certloom' ) . '</a></td>';
+				echo '</tr>';
 			}
-			if ( empty( $result['items'] ) ) { echo '<tr><td colspan="5">' . esc_html__( 'No new-domain credentials found.', 'certloom' ) . '</td></tr>'; }
-			echo '</tbody></table>';
-			$this->pagination( self::CREDENTIALS_PAGE, $page, (int) $result['total'], 20, $search );
+			if ( empty( $result['items'] ) ) {
+				echo '<tr><td colspan="7"><div class="certloom-domain-empty"><strong>' . esc_html__( 'No credentials match these filters.', 'certloom' ) . '</strong><span>' . esc_html__( 'Adjust the search, status, or Program filter. Manual Issuance creates new Credential Series here.', 'certloom' ) . '</span></div></td></tr>';
+			}
+			echo '</tbody></table></div>';
+			$this->pagination( self::CREDENTIALS_PAGE, $page, (int) $result['total'], 20, $search, array( 'credential_status' => $status, 'program_id' => $program_id ) );
 		}
 		$this->footer();
 	}
@@ -349,55 +421,418 @@ final class DomainAdmin {
 	/** @return void */
 	private function render_credential_detail( $series_id ) {
 		$credentials = new CredentialRepository();
-		$series = $credentials->find_series( $series_id );
-		$this->header( __( 'Credential — New Domain Preview', 'certloom' ) );
-		$this->notice();
-		echo '<p><a href="' . esc_url( add_query_arg( 'page', self::CREDENTIALS_PAGE, admin_url( 'admin.php' ) ) ) . '">&larr; ' . esc_html__( 'Back to credentials', 'certloom' ) . '</a></p>';
-		if ( is_wp_error( $series ) ) {
-			$this->error( $series->get_error_message() );
+		$series      = $credentials->find_series( $series_id );
+		if ( is_wp_error( $series ) || ! is_array( $series ) ) {
+			$this->header( __( 'Credential Management', 'certloom' ) );
+			$this->notice();
+			$this->error( is_wp_error( $series ) ? $series->get_error_message() : __( 'The credential could not be found.', 'certloom' ) );
 			$this->footer();
 			return;
 		}
-		if ( ! is_array( $series ) ) {
-			$this->error( __( 'The credential could not be found.', 'certloom' ) );
+
+		$versions = $credentials->list_versions_for_series( $series_id, 250 );
+		if ( is_wp_error( $versions ) ) {
+			$this->header( __( 'Credential Management', 'certloom' ) );
+			$this->notice();
+			$this->error( $versions->get_error_message() );
 			$this->footer();
 			return;
 		}
-		$version = ! empty( $series['current_version_id'] ) ? $credentials->find_version( $series['current_version_id'] ) : null;
-		if ( is_wp_error( $version ) ) {
-			$this->error( $version->get_error_message() );
-			$version = null;
+		$current_version_id = absint( $series['current_version_id'] ?? 0 );
+		$selected_version_id = isset( $_GET['version_id'] ) ? absint( $_GET['version_id'] ) : $current_version_id; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only immutable Version inspection.
+		$version = null;
+		foreach ( $versions as $candidate ) {
+			if ( absint( $candidate['id'] ?? 0 ) === $selected_version_id ) { $version = $candidate; break; }
 		}
+		if ( ! $version && $current_version_id ) {
+			foreach ( $versions as $candidate ) { if ( absint( $candidate['id'] ?? 0 ) === $current_version_id ) { $version = $candidate; $selected_version_id = $current_version_id; break; } }
+		}
+		$is_current = is_array( $version ) && absint( $version['id'] ?? 0 ) === $current_version_id;
+		$tab = isset( $_GET['credential_tab'] ) ? sanitize_key( wp_unslash( $_GET['credential_tab'] ) ) : 'overview'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only workspace tab.
+		$tabs = array( 'overview', 'recipient', 'program', 'status', 'verification', 'versions', 'activity', 'actions' );
+		$tab = in_array( $tab, $tabs, true ) ? $tab : 'overview';
+
 		$recipient = ( new RecipientRepository() )->find( $series['recipient_id'] );
-		$program = ! empty( $series['program_id'] ) ? ( new ProgramRepository() )->find( $series['program_id'] ) : null;
-		$batch = ! empty( $series['batch_id'] ) ? ( new BatchRepository() )->find( $series['batch_id'] ) : null;
-		$issuer = ! empty( $series['issuer_id'] ) ? ( new IssuerRepository() )->find( $series['issuer_id'] ) : null;
-		if ( is_wp_error( $recipient ) ) { $this->error( $recipient->get_error_message() ); $recipient = null; }
-		if ( is_wp_error( $program ) ) { $this->error( $program->get_error_message() ); $program = null; }
-		if ( is_wp_error( $batch ) ) { $this->error( $batch->get_error_message() ); $batch = null; }
-		if ( is_wp_error( $issuer ) ) { $this->error( $issuer->get_error_message() ); $issuer = null; }
-		$status = is_array( $version ) ? $this->status_from_row( new StatusService(), array_merge( $version, array( 'administrative_state' => $series['administrative_state'] ) ) ) : null;
-
-		echo '<table class="widefat striped" style="max-width:900px"><tbody>';
-		$this->detail_row( __( 'Public credential ID', 'certloom' ), '<code>' . esc_html( (string) $series['public_id'] ) . '</code>' );
-		$this->detail_row( __( 'Certificate number', 'certloom' ), esc_html( is_array( $version ) ? (string) $version['display_number'] : '—' ) );
-		$this->detail_row( __( 'Recipient', 'certloom' ), esc_html( is_array( $recipient ) ? (string) $recipient['display_name'] : '—' ) );
-		$this->detail_row( __( 'Program', 'certloom' ), esc_html( is_array( $program ) ? (string) $program['title'] : '—' ) );
-		$this->detail_row( __( 'Batch', 'certloom' ), esc_html( is_array( $batch ) ? (string) $batch['name'] . ' (' . (string) $batch['code'] . ')' : '—' ) );
-		$this->detail_row( __( 'Issuer', 'certloom' ), esc_html( is_array( $issuer ) ? (string) $issuer['name'] : '—' ) );
-		$this->detail_row( __( 'Administrative state', 'certloom' ), esc_html( (string) $series['administrative_state'] ) );
-		$this->detail_row( __( 'Issuance state', 'certloom' ), esc_html( is_array( $version ) ? (string) $version['issuance_state'] : '—' ) );
-		$this->detail_row( __( 'Effective status', 'certloom' ), esc_html( $status ? $status->code() : __( 'Unavailable', 'certloom' ) ) );
-		$this->detail_row( __( 'Issued', 'certloom' ), esc_html( is_array( $version ) && ! empty( $version['issued_at'] ) ? (string) $version['issued_at'] : '—' ) );
-		$this->detail_row( __( 'Expires', 'certloom' ), esc_html( is_array( $version ) && ! empty( $version['expires_at'] ) ? (string) $version['expires_at'] : '—' ) );
-		echo '</tbody></table>';
-
-		if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) && is_array( $version ) ) {
-			$this->lifecycle_form( $series, $version );
+		$program   = ! empty( $series['program_id'] ) ? ( new ProgramRepository() )->find( $series['program_id'] ) : null;
+		$batch     = ! empty( $series['batch_id'] ) ? ( new BatchRepository() )->find( $series['batch_id'] ) : null;
+		$issuer    = ! empty( $series['issuer_id'] ) ? ( new IssuerRepository() )->find( $series['issuer_id'] ) : null;
+		foreach ( array( 'recipient', 'program', 'batch', 'issuer' ) as $name ) {
+			if ( is_wp_error( ${$name} ) ) { ${$name} = null; }
 		}
-		$this->version_history( $credentials, $series_id, absint( $series['current_version_id'] ?? 0 ) );
-		$this->event_history( $series_id );
+		$status = is_array( $version ) ? $this->status_from_row( new StatusService(), array_merge( $version, array( 'administrative_state' => $series['administrative_state'], 'compliance_state' => $series['compliance_state'] ) ) ) : null;
+
+		$lifecycle_review = null;
+		$relationship_review = null;
+		if ( 'POST' === strtoupper( (string) ( $_SERVER['REQUEST_METHOD'] ?? 'GET' ) ) && current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) ) {
+			if ( isset( $_POST['certloom_prepare_lifecycle'] ) ) {
+				check_admin_referer( 'certloom_domain_lifecycle_review_' . $series_id );
+				if ( ! $is_current || ! is_array( $version ) ) {
+					$lifecycle_review = new \WP_Error( 'certloom_lifecycle_historical_read_only', __( 'Historical Versions are read-only. Return to the current Version before reviewing a lifecycle action.', 'certloom' ) );
+				} else {
+					$context = array(
+						'reason_code'   => isset( $_POST['reason_code'] ) ? sanitize_key( wp_unslash( $_POST['reason_code'] ) ) : null,
+						'public_reason' => isset( $_POST['public_reason'] ) ? sanitize_textarea_field( wp_unslash( $_POST['public_reason'] ) ) : null,
+						'internal_note' => isset( $_POST['internal_note'] ) ? sanitize_textarea_field( wp_unslash( $_POST['internal_note'] ) ) : null,
+					);
+					$action = isset( $_POST['lifecycle_action'] ) ? sanitize_key( wp_unslash( $_POST['lifecycle_action'] ) ) : '';
+					$lifecycle_review = ( new CredentialLifecycleReviewService() )->prepare( $series, $version, $action, $context, get_current_user_id() );
+				}
+				$tab = 'actions';
+			}
+			if ( isset( $_POST['certloom_prepare_relationship'] ) ) {
+				check_admin_referer( 'certloom_domain_relationship_review_' . $series_id );
+				$target_program = isset( $_POST['program_id'] ) ? absint( $_POST['program_id'] ) : 0;
+				$target_batch   = isset( $_POST['batch_id'] ) ? absint( $_POST['batch_id'] ) : 0;
+				if ( ! $target_program && ! $target_batch ) {
+					$relationship_review = new \WP_Error( 'certloom_relationship_program_required', __( 'Choose a Program or Batch before reviewing a relationship correction.', 'certloom' ) );
+				} else {
+					$relationship_context = array(
+						'reason_code'   => 'relationship_correction',
+						'public_reason' => isset( $_POST['public_reason'] ) ? sanitize_textarea_field( wp_unslash( $_POST['public_reason'] ) ) : null,
+						'internal_note' => isset( $_POST['internal_note'] ) ? sanitize_textarea_field( wp_unslash( $_POST['internal_note'] ) ) : null,
+					);
+					$relationship_review = ( new CredentialRelationshipBulkService() )->prepare( array( $series_id ), $target_program ?: null, $target_batch ?: null, get_current_user_id(), $relationship_context );
+				}
+				$tab = 'program';
+			}
+		}
+
+		$number = is_array( $version ) && ! empty( $version['display_number'] ) ? (string) $version['display_number'] : __( 'Unnumbered credential', 'certloom' );
+		$this->header( __( 'Credential Management', 'certloom' ), __( 'One continuing credential identity with immutable historical Versions and review-before-commit administration.', 'certloom' ) );
+		$this->notice();
+		echo '<div class="certloom-credential-back"><a href="' . esc_url( add_query_arg( 'page', self::CREDENTIALS_PAGE, admin_url( 'admin.php' ) ) ) . '">&larr; ' . esc_html__( 'Back to credentials', 'certloom' ) . '</a></div>';
+		echo '<section class="certloom-credential-hero"><div><div class="certloom-credential-eyebrow">' . esc_html( $is_current ? __( 'Current immutable Version', 'certloom' ) : __( 'Historical immutable Version', 'certloom' ) ) . '</div><h2>' . esc_html( $number ) . '</h2><div class="certloom-credential-hero-meta"><code>' . esc_html( (string) $series['public_id'] ) . '</code>' . ( is_array( $version ) ? '<span>v' . esc_html( (string) absint( $version['version_number'] ?? 0 ) ) . '</span>' : '' ) . '</div></div><div>' . $this->credential_status_badge( $status ) . '</div></section>';
+		if ( ! $is_current && is_array( $version ) ) {
+			echo '<div class="notice notice-info inline"><p><strong>' . esc_html__( 'Historical Version selected.', 'certloom' ) . '</strong> ' . esc_html__( 'Its immutable snapshot can be inspected, but lifecycle and relationship mutations always target the current Version and never rewrite this history.', 'certloom' ) . ' <a href="' . esc_url( add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'series_id' => $series_id, 'credential_tab' => $tab ), admin_url( 'admin.php' ) ) ) . '">' . esc_html__( 'Return to current Version', 'certloom' ) . '</a></p></div>';
+		}
+		$this->credential_tabs( $series_id, $tab, $selected_version_id, $current_version_id );
+
+		switch ( $tab ) {
+			case 'recipient':
+				$this->credential_recipient_panel( $recipient );
+				break;
+			case 'program':
+				$this->credential_program_panel( $series, $program, $batch, $issuer, $relationship_review, $is_current );
+				break;
+			case 'status':
+				$this->credential_status_panel( $series, $version, $status );
+				break;
+			case 'verification':
+				$this->credential_verification_panel( $series, $version );
+				break;
+			case 'versions':
+				$this->credential_versions_panel( $series_id, $versions, $current_version_id, $selected_version_id );
+				break;
+			case 'activity':
+				$this->event_history( $series_id );
+				break;
+			case 'actions':
+				$this->credential_actions_panel( $series, $version, $lifecycle_review, $is_current );
+				break;
+			case 'overview':
+			default:
+				$this->credential_overview_panel( $series, $version, $recipient, $program, $batch, $issuer, $status, $is_current );
+				break;
+		}
 		$this->footer();
+	}
+
+	/** @return void */
+	private function credential_views( $current, $search, $program_id, array $summary ) {
+		$views = array(
+			'all'            => __( 'All', 'certloom' ),
+			'valid'          => __( 'Valid', 'certloom' ),
+			'suspended'      => __( 'Suspended', 'certloom' ),
+			'revoked'        => __( 'Revoked', 'certloom' ),
+			'expired'        => __( 'Expired', 'certloom' ),
+			'not_yet_valid'  => __( 'Not yet valid', 'certloom' ),
+			'pending_review' => __( 'Pending review', 'certloom' ),
+			'noncompliant'   => __( 'Non-compliant', 'certloom' ),
+			'voided'         => __( 'Voided', 'certloom' ),
+			'not_issued'     => __( 'Not issued', 'certloom' ),
+		);
+		echo '<nav class="certloom-credential-views" aria-label="' . esc_attr__( 'Credential status views', 'certloom' ) . '">';
+		foreach ( $views as $key => $label ) {
+			$args = array( 'page' => self::CREDENTIALS_PAGE, 'credential_status' => $key );
+			if ( '' !== $search ) { $args['s'] = $search; }
+			if ( $program_id ) { $args['program_id'] = $program_id; }
+			$count_key = 'all' === $key ? 'total' : $key;
+			$count = array_key_exists( $count_key, $summary ) ? '<span>' . esc_html( (string) absint( $summary[ $count_key ] ) ) . '</span>' : '';
+			echo '<a class="' . ( $key === $current ? 'is-current' : '' ) . '" href="' . esc_url( add_query_arg( $args, admin_url( 'admin.php' ) ) ) . '">' . esc_html( $label ) . $count . '</a>';
+		}
+		echo '</nav>';
+	}
+
+	/** @param array<int,array<string,mixed>> $programs @return void */
+	private function credential_filters( $search, $status, $program_id, array $programs ) {
+		echo '<form method="get" class="certloom-domain-search certloom-credential-filters"><input type="hidden" name="page" value="' . esc_attr( self::CREDENTIALS_PAGE ) . '"><input type="hidden" name="credential_status" value="' . esc_attr( $status ) . '">';
+		echo '<label><span class="screen-reader-text">' . esc_html__( 'Search credentials', 'certloom' ) . '</span><input type="search" name="s" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr__( 'Certificate, recipient, email, Program, batch, or public ID', 'certloom' ) . '"></label>';
+		echo '<label><span class="screen-reader-text">' . esc_html__( 'Filter by Program', 'certloom' ) . '</span><select name="program_id"><option value="0">' . esc_html__( 'All Programs', 'certloom' ) . '</option>';
+		foreach ( $programs as $program ) {
+			echo '<option value="' . esc_attr( (string) absint( $program['id'] ?? 0 ) ) . '" ' . selected( $program_id, absint( $program['id'] ?? 0 ), false ) . '>' . esc_html( (string) ( $program['title'] ?? '' ) ) . ( ! empty( $program['code'] ) ? ' — ' . esc_html( (string) $program['code'] ) : '' ) . '</option>';
+		}
+		echo '</select></label><button class="button">' . esc_html__( 'Filter', 'certloom' ) . '</button>';
+		if ( '' !== $search || $program_id ) {
+			echo '<a class="button-link" href="' . esc_url( add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'credential_status' => $status ), admin_url( 'admin.php' ) ) ) . '">' . esc_html__( 'Clear search/filter', 'certloom' ) . '</a>';
+		}
+		echo '</form>';
+	}
+
+	/** @return string */
+	private function credential_status_badge( $status ) {
+		if ( ! $status || ! is_object( $status ) || ! method_exists( $status, 'code' ) ) {
+			return '<span class="certloom-credential-status is-unavailable">' . esc_html__( 'Unavailable', 'certloom' ) . '</span>';
+		}
+		$code = sanitize_key( (string) $status->code() );
+		$labels = array(
+			'valid'                  => __( 'Valid', 'certloom' ),
+			'suspended'              => __( 'Suspended', 'certloom' ),
+			'revoked'                => __( 'Revoked', 'certloom' ),
+			'expired'                => __( 'Expired', 'certloom' ),
+			'not_yet_valid'          => __( 'Not yet valid', 'certloom' ),
+			'pending_review'         => __( 'Pending review', 'certloom' ),
+			'suspended_noncompliant' => __( 'Non-compliant', 'certloom' ),
+			'voided'                 => __( 'Voided', 'certloom' ),
+			'not_issued'             => __( 'Not issued', 'certloom' ),
+		);
+		return '<span class="certloom-credential-status is-' . esc_attr( sanitize_html_class( $code ) ) . '">' . esc_html( $labels[ $code ] ?? str_replace( '_', ' ', ucfirst( $code ) ) ) . '</span>';
+	}
+
+	/** @return void */
+	private function credential_tabs( $series_id, $current, $selected_version_id, $current_version_id ) {
+		$tabs = array(
+			'overview'     => __( 'Overview', 'certloom' ),
+			'recipient'    => __( 'Recipient', 'certloom' ),
+			'program'      => __( 'Program', 'certloom' ),
+			'status'       => __( 'Status', 'certloom' ),
+			'verification' => __( 'Verification', 'certloom' ),
+			'versions'     => __( 'Versions', 'certloom' ),
+			'activity'     => __( 'Activity', 'certloom' ),
+			'actions'      => __( 'Actions', 'certloom' ),
+		);
+		echo '<nav class="nav-tab-wrapper certloom-credential-tabs" aria-label="' . esc_attr__( 'Credential workspace', 'certloom' ) . '">';
+		foreach ( $tabs as $key => $label ) {
+			$args = array( 'page' => self::CREDENTIALS_PAGE, 'series_id' => $series_id, 'credential_tab' => $key );
+			if ( $selected_version_id && $selected_version_id !== $current_version_id ) { $args['version_id'] = $selected_version_id; }
+			echo '<a class="nav-tab ' . ( $key === $current ? 'nav-tab-active' : '' ) . '" href="' . esc_url( add_query_arg( $args, admin_url( 'admin.php' ) ) ) . '">' . esc_html( $label ) . '</a>';
+		}
+		echo '</nav>';
+	}
+
+	/** @return void */
+	private function credential_overview_panel( array $series, ?array $version, $recipient, $program, $batch, $issuer, $status, $is_current ) {
+		echo '<section class="certloom-credential-panel"><div class="certloom-credential-panel-head"><div><h3>' . esc_html__( 'Credential overview', 'certloom' ) . '</h3><p>' . esc_html__( 'Continuing Series identity and immutable Version facts are displayed separately so current relationships never masquerade as historical snapshot truth.', 'certloom' ) . '</p></div></div>';
+		echo '<div class="certloom-credential-card-grid">';
+		$this->credential_info_card( __( 'Continuing identity', 'certloom' ), array(
+			__( 'Public ID', 'certloom' ) => '<code>' . esc_html( (string) $series['public_id'] ) . '</code>',
+			__( 'Series ID', 'certloom' ) => '#' . esc_html( (string) absint( $series['id'] ) ),
+			__( 'Visibility', 'certloom' ) => esc_html( (string) $series['visibility'] ),
+			__( 'Last Series change', 'certloom' ) => esc_html( (string) $series['updated_at'] ),
+		) );
+		$this->credential_info_card( __( 'Selected immutable Version', 'certloom' ), array(
+			__( 'Version', 'certloom' ) => is_array( $version ) ? 'v' . esc_html( (string) absint( $version['version_number'] ?? 0 ) ) . ( $is_current ? ' · ' . esc_html__( 'Current', 'certloom' ) : ' · ' . esc_html__( 'Historical', 'certloom' ) ) : '—',
+			__( 'Certificate number', 'certloom' ) => esc_html( is_array( $version ) ? (string) $version['display_number'] : '—' ),
+			__( 'Issued', 'certloom' ) => esc_html( is_array( $version ) && ! empty( $version['issued_at'] ) ? (string) $version['issued_at'] : '—' ),
+			__( 'Expires', 'certloom' ) => esc_html( is_array( $version ) && ! empty( $version['expires_at'] ) ? (string) $version['expires_at'] : __( 'No expiry', 'certloom' ) ),
+		) );
+		$this->credential_info_card( __( 'Current relationships', 'certloom' ), array(
+			__( 'Recipient', 'certloom' ) => esc_html( is_array( $recipient ) ? (string) $recipient['display_name'] : '—' ),
+			__( 'Program', 'certloom' ) => esc_html( is_array( $program ) ? (string) $program['title'] : '—' ),
+			__( 'Batch', 'certloom' ) => esc_html( is_array( $batch ) ? (string) $batch['name'] : '—' ),
+			__( 'Issuer', 'certloom' ) => esc_html( is_array( $issuer ) ? (string) $issuer['name'] : '—' ),
+		) );
+		$this->credential_info_card( __( 'Effective status', 'certloom' ), array(
+			__( 'Public result', 'certloom' ) => $this->credential_status_badge( $status ),
+			__( 'Issuance', 'certloom' ) => esc_html( $status ? (string) $status->issuance_state() : '—' ),
+			__( 'Administrative', 'certloom' ) => esc_html( $status ? (string) $status->administrative_state() : '—' ),
+			__( 'Temporal', 'certloom' ) => esc_html( $status ? (string) $status->temporal_state() : '—' ),
+		) );
+		echo '</div>';
+		$this->credential_snapshot_proof( $version );
+		echo '</section>';
+	}
+
+	/** @return void */
+	private function credential_recipient_panel( $recipient ) {
+		echo '<section class="certloom-credential-panel"><div class="certloom-credential-panel-head"><div><h3>' . esc_html__( 'Recipient', 'certloom' ) . '</h3><p>' . esc_html__( 'This is the current first-class Recipient linked to the continuing Credential Series. Issued Version snapshots remain immutable.', 'certloom' ) . '</p></div></div>';
+		if ( ! is_array( $recipient ) ) { $this->error( __( 'The current Recipient could not be loaded.', 'certloom' ) ); echo '</section>'; return; }
+		$url = add_query_arg( array( 'page' => self::RECIPIENTS_PAGE, 'recipient_id' => absint( $recipient['id'] ) ), admin_url( 'admin.php' ) );
+		$this->credential_info_card( __( 'Recipient identity', 'certloom' ), array(
+			__( 'Display name', 'certloom' ) => esc_html( (string) $recipient['display_name'] ),
+			__( 'Email', 'certloom' ) => esc_html( (string) ( $recipient['email'] ?: '—' ) ),
+			__( 'External ID', 'certloom' ) => esc_html( (string) ( $recipient['external_id'] ?: '—' ) ),
+			__( 'WordPress user', 'certloom' ) => ! empty( $recipient['wp_user_id'] ) ? '#' . esc_html( (string) absint( $recipient['wp_user_id'] ) ) : '—',
+		) );
+		echo '<p class="certloom-credential-panel-actions"><a class="button" href="' . esc_url( $url ) . '">' . esc_html__( 'Open Recipient profile', 'certloom' ) . '</a></p></section>';
+	}
+
+	/** @return void */
+	private function credential_program_panel( array $series, $program, $batch, $issuer, $review, $is_current ) {
+		echo '<section class="certloom-credential-panel"><div class="certloom-credential-panel-head"><div><h3>' . esc_html__( 'Program & batch relationship', 'certloom' ) . '</h3><p>' . esc_html__( 'A correction creates a successor immutable Version, moves the continuing Series relationship atomically, and appends an audit Event. No historical Version is edited.', 'certloom' ) . '</p></div></div>';
+		$this->credential_info_card( __( 'Current Series relationship', 'certloom' ), array(
+			__( 'Program', 'certloom' ) => esc_html( is_array( $program ) ? (string) $program['title'] : '—' ),
+			__( 'Batch', 'certloom' ) => esc_html( is_array( $batch ) ? (string) $batch['name'] . ( ! empty( $batch['code'] ) ? ' (' . (string) $batch['code'] . ')' : '' ) : '—' ),
+			__( 'Issuer', 'certloom' ) => esc_html( is_array( $issuer ) ? (string) $issuer['name'] : '—' ),
+			__( 'Series updated', 'certloom' ) => esc_html( (string) $series['updated_at'] ),
+		) );
+		if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) ) { echo '</section>'; return; }
+		if ( ! $is_current ) {
+			echo '<div class="notice notice-info inline"><p>' . esc_html__( 'Relationship correction is disabled while inspecting a historical Version. Return to the current Version first.', 'certloom' ) . '</p></div></section>';
+			return;
+		}
+		if ( is_wp_error( $review ) ) { $this->error( $review->get_error_message() ); $review = null; }
+		if ( is_array( $review ) ) {
+			$target_program_id = absint( $review['target']['program_id'] ?? 0 );
+			$target_batch_id = absint( $review['target']['batch_id'] ?? 0 );
+			$target_program = $target_program_id ? ( new ProgramRepository() )->find( $target_program_id ) : null;
+			$target_batch = $target_batch_id ? ( new BatchRepository() )->find( $target_batch_id ) : null;
+			echo '<div class="certloom-credential-review"><div class="certloom-credential-review-badge">' . esc_html__( 'Review required', 'certloom' ) . '</div><h4>' . esc_html__( 'Confirm immutable relationship correction', 'certloom' ) . '</h4><p>' . esc_html__( 'Certloom will create a successor Version and preserve the current Version unchanged.', 'certloom' ) . '</p>';
+			echo '<dl><div><dt>' . esc_html__( 'Program', 'certloom' ) . '</dt><dd>' . esc_html( is_array( $target_program ) ? (string) $target_program['title'] : '—' ) . '</dd></div><div><dt>' . esc_html__( 'Batch', 'certloom' ) . '</dt><dd>' . esc_html( is_array( $target_batch ) ? (string) $target_batch['name'] : '—' ) . '</dd></div><div><dt>' . esc_html__( 'Public reason', 'certloom' ) . '</dt><dd>' . esc_html( (string) ( $review['public_reason'] ?? '—' ) ) . '</dd></div><div><dt>' . esc_html__( 'Internal note', 'certloom' ) . '</dt><dd>' . esc_html( (string) ( $review['internal_note'] ?? '—' ) ) . '</dd></div></dl>';
+			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_domain_relationship_correct"><input type="hidden" name="series_id" value="' . esc_attr( (string) absint( $series['id'] ) ) . '"><input type="hidden" name="relationship_review" value="' . esc_attr( $this->encode_review_value( $review ) ) . '">';
+			wp_nonce_field( 'certloom_domain_relationship_' . absint( $series['id'] ) );
+			submit_button( __( 'Confirm and create successor Version', 'certloom' ), 'primary', 'submit', false );
+			echo ' <a class="button" href="' . esc_url( add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'series_id' => absint( $series['id'] ), 'credential_tab' => 'program' ), admin_url( 'admin.php' ) ) ) . '">' . esc_html__( 'Cancel', 'certloom' ) . '</a></form></div>';
+			echo '</section>'; return;
+		}
+
+		$programs = ( new ProgramRepository() )->list_page( '', 1, 100, 'active' );
+		$batches = ( new BatchRepository() )->list_page( '', 1, 100, 'active' );
+		echo '<div class="certloom-credential-subpanel"><h4>' . esc_html__( 'Correct Program / Batch', 'certloom' ) . '</h4><form method="post" action="' . esc_url( add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'series_id' => absint( $series['id'] ), 'credential_tab' => 'program' ), admin_url( 'admin.php' ) ) ) . '">';
+		wp_nonce_field( 'certloom_domain_relationship_review_' . absint( $series['id'] ) );
+		echo '<input type="hidden" name="certloom_prepare_relationship" value="1"><div class="certloom-domain-form-grid"><div class="certloom-domain-field"><label><strong>' . esc_html__( 'Target Program', 'certloom' ) . '</strong></label><select name="program_id" required><option value="">' . esc_html__( 'Choose Program…', 'certloom' ) . '</option>';
+		if ( ! is_wp_error( $programs ) ) { foreach ( $programs['items'] as $item ) { echo '<option value="' . esc_attr( (string) absint( $item['id'] ) ) . '" ' . selected( absint( $series['program_id'] ?? 0 ), absint( $item['id'] ), false ) . '>' . esc_html( (string) $item['title'] ) . ( ! empty( $item['code'] ) ? ' — ' . esc_html( (string) $item['code'] ) : '' ) . '</option>'; } }
+		echo '</select></div><div class="certloom-domain-field"><label><strong>' . esc_html__( 'Target Batch', 'certloom' ) . '</strong></label><select name="batch_id"><option value="">' . esc_html__( 'No batch', 'certloom' ) . '</option>';
+		if ( ! is_wp_error( $batches ) ) { foreach ( $batches['items'] as $item ) { echo '<option value="' . esc_attr( (string) absint( $item['id'] ) ) . '" ' . selected( absint( $series['batch_id'] ?? 0 ), absint( $item['id'] ), false ) . '>' . esc_html( (string) $item['name'] ) . ' — ' . esc_html( (string) ( $item['program_title'] ?? '' ) ) . '</option>'; } }
+		echo '</select><p class="description">' . esc_html__( 'A Batch is valid only when it belongs to the selected Program; the domain service enforces this again inside the transaction.', 'certloom' ) . '</p></div><div class="certloom-domain-field certloom-domain-field-wide"><label><strong>' . esc_html__( 'Public correction reason (optional)', 'certloom' ) . '</strong></label><textarea class="large-text" rows="2" name="public_reason"></textarea></div><div class="certloom-domain-field certloom-domain-field-wide"><label><strong>' . esc_html__( 'Internal note (optional)', 'certloom' ) . '</strong></label><textarea class="large-text" rows="3" name="internal_note"></textarea></div></div>';
+		submit_button( __( 'Review correction', 'certloom' ), 'secondary' );
+		echo '</form></div></section>';
+	}
+
+	/** @return void */
+	private function credential_status_panel( array $series, ?array $version, $status ) {
+		echo '<section class="certloom-credential-panel"><div class="certloom-credential-panel-head"><div><h3>' . esc_html__( 'Four-dimensional credential status', 'certloom' ) . '</h3><p>' . esc_html__( 'The public result is derived at read time from issuance, administrative, temporal, and compliance state rather than trusting one mutable status string.', 'certloom' ) . '</p></div></div>';
+		if ( ! $status ) { $this->error( __( 'Status could not be evaluated for this Version.', 'certloom' ) ); echo '</section>'; return; }
+		$this->credential_info_card( __( 'Effective truth', 'certloom' ), array(
+			__( 'Public result', 'certloom' ) => $this->credential_status_badge( $status ),
+			__( 'Primary reason', 'certloom' ) => '<code>' . esc_html( (string) $status->reason_code() ) . '</code>',
+			__( 'Publicly valid now', 'certloom' ) => esc_html( $status->is_valid() ? __( 'Yes', 'certloom' ) : __( 'No', 'certloom' ) ),
+			__( 'Contributors', 'certloom' ) => esc_html( $status->contributors() ? implode( ', ', $status->contributors() ) : __( 'None', 'certloom' ) ),
+		) );
+		echo '<div class="certloom-credential-dimensions">';
+		foreach ( array(
+			__( 'Issuance', 'certloom' ) => $status->issuance_state(),
+			__( 'Administrative', 'certloom' ) => $status->administrative_state(),
+			__( 'Temporal', 'certloom' ) => $status->temporal_state(),
+			__( 'Compliance', 'certloom' ) => $status->compliance_state(),
+		) as $label => $value ) { echo '<div><span>' . esc_html( $label ) . '</span><strong>' . esc_html( (string) $value ) . '</strong></div>'; }
+		echo '</div>';
+		if ( is_array( $version ) ) {
+			echo '<p class="description">' . esc_html( sprintf( /* translators: 1: valid from, 2: expiry. */ __( 'Validity window: %1$s → %2$s', 'certloom' ), (string) ( $version['valid_from'] ?: __( 'No start restriction', 'certloom' ) ), (string) ( $version['expires_at'] ?: __( 'No expiry', 'certloom' ) ) ) ) . '</p>';
+		}
+		echo '</section>';
+	}
+
+	/** @return void */
+	private function credential_verification_panel( array $series, ?array $version ) {
+		echo '<section class="certloom-credential-panel"><div class="certloom-credential-panel-head"><div><h3>' . esc_html__( 'Verification identity', 'certloom' ) . '</h3><p>' . esc_html__( 'The non-enumerable public credential ID is separate from the human certificate number. Production normalized verification remains gated until final database cutover acceptance.', 'certloom' ) . '</p></div></div>';
+		$url = ( new \Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl() )->verification_url( (string) $series['public_id'] );
+		$this->credential_info_card( __( 'Self-hosted verification', 'certloom' ), array(
+			__( 'Public credential ID', 'certloom' ) => '<code>' . esc_html( (string) $series['public_id'] ) . '</code>',
+			__( 'Certificate number', 'certloom' ) => esc_html( is_array( $version ) ? (string) $version['display_number'] : '—' ),
+			__( 'Normalized endpoint', 'certloom' ) => is_wp_error( $url ) ? esc_html( $url->get_error_message() ) : '<code>' . esc_html( (string) $url ) . '</code>',
+			__( 'Production authority', 'certloom' ) => '<strong>' . esc_html__( 'Gated', 'certloom' ) . '</strong>',
+		) );
+		echo '<div class="notice notice-warning inline"><p><strong>' . esc_html__( 'Authority remains closed.', 'certloom' ) . '</strong> ' . esc_html__( 'Credential Management may inspect normalized verification identity, but it does not enable the normalized public verifier or create renderer authority.', 'certloom' ) . '</p></div></section>';
+	}
+
+	/** @param array<int,array<string,mixed>> $versions @return void */
+	private function credential_versions_panel( $series_id, array $versions, $current_version_id, $selected_version_id ) {
+		echo '<section class="certloom-credential-panel"><div class="certloom-credential-panel-head"><div><h3>' . esc_html__( 'Immutable Version lineage', 'certloom' ) . '</h3><p>' . esc_html__( 'Corrections, renewals, and re-certifications must create successor Versions. Historical rows are inspection-only.', 'certloom' ) . '</p></div></div><div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-table"><thead><tr><th>' . esc_html__( 'Version', 'certloom' ) . '</th><th>' . esc_html__( 'Certificate number', 'certloom' ) . '</th><th>' . esc_html__( 'Issued', 'certloom' ) . '</th><th>' . esc_html__( 'Expiry', 'certloom' ) . '</th><th>' . esc_html__( 'Source', 'certloom' ) . '</th><th>' . esc_html__( 'Lineage', 'certloom' ) . '</th><th>' . esc_html__( 'Inspect', 'certloom' ) . '</th></tr></thead><tbody>';
+		foreach ( $versions as $item ) {
+			$id = absint( $item['id'] ?? 0 );
+			$is_current = $id === absint( $current_version_id );
+			$is_selected = $id === absint( $selected_version_id );
+			$url = add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'series_id' => $series_id, 'version_id' => $id, 'credential_tab' => 'overview' ), admin_url( 'admin.php' ) );
+			echo '<tr class="' . ( $is_selected ? 'is-selected-version' : '' ) . '"><td><strong>v' . esc_html( (string) absint( $item['version_number'] ?? 0 ) ) . '</strong>' . ( $is_current ? ' <span class="certloom-version-current">' . esc_html__( 'Current', 'certloom' ) . '</span>' : '' ) . '</td><td>' . esc_html( (string) $item['display_number'] ) . '</td><td>' . esc_html( (string) ( $item['issued_at'] ?: '—' ) ) . '</td><td>' . esc_html( (string) ( $item['expires_at'] ?: '—' ) ) . '</td><td><code>' . esc_html( (string) ( $item['source_type'] ?: '—' ) ) . '</code></td><td>' . esc_html( ! empty( $item['previous_version_id'] ) ? sprintf( /* translators: %d: Version database ID. */ __( 'Previous #%d', 'certloom' ), absint( $item['previous_version_id'] ) ) : __( 'Origin', 'certloom' ) ) . '</td><td><a class="button button-small" href="' . esc_url( $url ) . '">' . esc_html__( 'Inspect Version', 'certloom' ) . '</a></td></tr>';
+		}
+		if ( empty( $versions ) ) { echo '<tr><td colspan="7">' . esc_html__( 'No credential Versions recorded.', 'certloom' ) . '</td></tr>'; }
+		echo '</tbody></table></div></section>';
+	}
+
+	/** @return void */
+	private function credential_actions_panel( array $series, ?array $version, $review, $is_current ) {
+		echo '<section class="certloom-credential-panel certloom-credential-actions-panel"><div class="certloom-credential-panel-head"><div><h3>' . esc_html__( 'Reviewed lifecycle actions', 'certloom' ) . '</h3><p>' . esc_html__( 'Every state-changing action is reviewed first, integrity-bound to this administrator and exact current Version, then revalidated after transactional row locks before commit.', 'certloom' ) . '</p></div></div>';
+		if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) ) { echo '<p>' . esc_html__( 'You can inspect this credential but do not have permission to change lifecycle state.', 'certloom' ) . '</p></section>'; return; }
+		if ( ! $is_current || ! is_array( $version ) ) { echo '<div class="notice notice-info inline"><p>' . esc_html__( 'Historical Versions are read-only. Return to the current Version to review a lifecycle action.', 'certloom' ) . '</p></div></section>'; return; }
+		if ( is_wp_error( $review ) ) { $this->error( $review->get_error_message() ); $review = null; }
+		if ( is_array( $review ) ) {
+			echo '<div class="certloom-credential-review"><div class="certloom-credential-review-badge">' . esc_html__( 'Review required', 'certloom' ) . '</div><h4>' . esc_html__( 'Confirm lifecycle change', 'certloom' ) . '</h4><dl><div><dt>' . esc_html__( 'Action', 'certloom' ) . '</dt><dd>' . esc_html( ucfirst( (string) $review['action'] ) ) . '</dd></div><div><dt>' . esc_html__( 'Before', 'certloom' ) . '</dt><dd><code>' . esc_html( (string) $review['old_state']['issuance_state'] . ' / ' . (string) $review['old_state']['administrative_state'] ) . '</code></dd></div><div><dt>' . esc_html__( 'After', 'certloom' ) . '</dt><dd><code>' . esc_html( (string) $review['new_state']['issuance_state'] . ' / ' . (string) $review['new_state']['administrative_state'] ) . '</code></dd></div><div><dt>' . esc_html__( 'Reason', 'certloom' ) . '</dt><dd>' . esc_html( (string) ( $review['public_reason'] ?: $review['reason_code'] ?: '—' ) ) . '</dd></div></dl>';
+			echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'Certloom will reject this confirmation if the Series or current Version changed after this review was prepared.', 'certloom' ) . '</p></div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_domain_lifecycle"><input type="hidden" name="series_id" value="' . esc_attr( (string) absint( $series['id'] ) ) . '"><input type="hidden" name="lifecycle_review" value="' . esc_attr( $this->encode_review_value( $review ) ) . '">';
+			wp_nonce_field( 'certloom_domain_lifecycle_' . absint( $series['id'] ) );
+			submit_button( __( 'Confirm lifecycle action', 'certloom' ), 'primary', 'submit', false );
+			echo ' <a class="button" href="' . esc_url( add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'series_id' => absint( $series['id'] ), 'credential_tab' => 'actions' ), admin_url( 'admin.php' ) ) ) . '">' . esc_html__( 'Cancel', 'certloom' ) . '</a></form></div></section>';
+			return;
+		}
+		$actions = array();
+		if ( States::ISSUANCE_ISSUED === (string) $version['issuance_state'] ) {
+			if ( States::ADMIN_ACTIVE === (string) $series['administrative_state'] ) { $actions['suspend'] = __( 'Suspend', 'certloom' ); $actions['revoke'] = __( 'Revoke', 'certloom' ); }
+			if ( States::ADMIN_SUSPENDED === (string) $series['administrative_state'] ) { $actions['reinstate'] = __( 'Reinstate', 'certloom' ); $actions['revoke'] = __( 'Revoke', 'certloom' ); }
+			if ( States::ADMIN_REVOKED === (string) $series['administrative_state'] ) { $actions['reinstate'] = __( 'Reinstate', 'certloom' ); }
+		}
+		if ( States::ISSUANCE_VOIDED !== (string) $version['issuance_state'] ) { $actions['void'] = __( 'Void current Version', 'certloom' ); }
+		if ( empty( $actions ) ) { echo '<p>' . esc_html__( 'No lifecycle action is currently available for this state.', 'certloom' ) . '</p></section>'; return; }
+		echo '<form method="post" action="' . esc_url( add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'series_id' => absint( $series['id'] ), 'credential_tab' => 'actions' ), admin_url( 'admin.php' ) ) ) . '">';
+		wp_nonce_field( 'certloom_domain_lifecycle_review_' . absint( $series['id'] ) );
+		echo '<input type="hidden" name="certloom_prepare_lifecycle" value="1"><div class="certloom-domain-form-grid"><div class="certloom-domain-field"><label><strong>' . esc_html__( 'Action', 'certloom' ) . '</strong></label><select name="lifecycle_action" required><option value="">' . esc_html__( 'Choose…', 'certloom' ) . '</option>';
+		foreach ( $actions as $key => $label ) { echo '<option value="' . esc_attr( $key ) . '">' . esc_html( $label ) . '</option>'; }
+		echo '</select></div><div class="certloom-domain-field"><label><strong>' . esc_html__( 'Reason code', 'certloom' ) . '</strong></label><input class="regular-text" name="reason_code" maxlength="64" placeholder="' . esc_attr__( 'e.g. issuer_request', 'certloom' ) . '"></div><div class="certloom-domain-field certloom-domain-field-wide"><label><strong>' . esc_html__( 'Public reason (optional)', 'certloom' ) . '</strong></label><textarea class="large-text" rows="2" maxlength="1000" name="public_reason"></textarea></div><div class="certloom-domain-field certloom-domain-field-wide"><label><strong>' . esc_html__( 'Internal note (optional)', 'certloom' ) . '</strong></label><textarea class="large-text" rows="3" maxlength="2000" name="internal_note"></textarea></div></div>';
+		submit_button( __( 'Review lifecycle action', 'certloom' ), 'secondary' );
+		echo '</form></section>';
+	}
+
+	/** @param array<string,string> $rows @return void */
+	private function credential_info_card( $title, array $rows ) {
+		echo '<div class="certloom-credential-info-card"><h4>' . esc_html( $title ) . '</h4><dl>';
+		foreach ( $rows as $label => $value ) { echo '<div><dt>' . esc_html( $label ) . '</dt><dd>' . wp_kses_post( $value ) . '</dd></div>'; }
+		echo '</dl></div>';
+	}
+
+	/** @return void */
+	private function credential_snapshot_proof( ?array $version ) {
+		if ( ! is_array( $version ) || empty( $version['snapshot'] ) || ! is_array( $version['snapshot'] ) ) { return; }
+		$snapshot = $version['snapshot'];
+		$template = isset( $snapshot['template'] ) && is_array( $snapshot['template'] ) ? $snapshot['template'] : array();
+		$merge = isset( $snapshot['merge'] ) && is_array( $snapshot['merge'] ) ? $snapshot['merge'] : array();
+		$artifact = isset( $snapshot['artifact'] ) && is_array( $snapshot['artifact'] ) ? $snapshot['artifact'] : array();
+		echo '<div class="certloom-credential-snapshot"><div><h4>' . esc_html__( 'Immutable issuance snapshot evidence', 'certloom' ) . '</h4><p>' . esc_html__( 'These identifiers belong to the selected Version snapshot; changing current Recipient, Program, Template, or renderer configuration does not rewrite them.', 'certloom' ) . '</p></div><dl>';
+		foreach ( array(
+			__( 'Snapshot schema', 'certloom' ) => (string) ( $snapshot['_meta']['schema'] ?? '—' ),
+			__( 'Template revision', 'certloom' ) => ! empty( $template['revision_number'] ) ? 'v' . absint( $template['revision_number'] ) : '—',
+			__( 'Template SHA-256', 'certloom' ) => (string) ( $template['layout_sha256'] ?? '—' ),
+			__( 'Merge SHA-256', 'certloom' ) => (string) ( $merge['sha256'] ?? '—' ),
+			__( 'Artifact authority', 'certloom' ) => (string) ( $artifact['authority'] ?? '—' ),
+		) as $label => $value ) { echo '<div><dt>' . esc_html( $label ) . '</dt><dd><code>' . esc_html( $value ) . '</code></dd></div>'; }
+		echo '</dl></div>';
+	}
+
+	/** @return string */
+	private function encode_review_value( array $review ) {
+		$json = wp_json_encode( $review, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+		return false === $json ? '' : base64_encode( $json );
+	}
+
+	/** @return array<string,mixed>|\WP_Error */
+	private function decode_review_request( $name ) {
+		$raw = isset( $_POST[ $name ] ) ? trim( (string) wp_unslash( $_POST[ $name ] ) ) : '';
+		if ( '' === $raw || strlen( $raw ) > 65536 || ! preg_match( '/^[A-Za-z0-9+\/=]+$/', $raw ) ) {
+			return new \WP_Error( 'certloom_credential_review_missing', __( 'The reviewed credential action is missing or malformed. Review it again.', 'certloom' ) );
+		}
+		$json = base64_decode( $raw, true );
+		$data = false !== $json ? json_decode( $json, true ) : null;
+		if ( ! is_array( $data ) || JSON_ERROR_NONE !== json_last_error() ) {
+			return new \WP_Error( 'certloom_credential_review_decode_failed', __( 'The reviewed credential action could not be decoded safely. Review it again.', 'certloom' ) );
+		}
+		return $data;
 	}
 
 	/** @param array<string,mixed>|null $editing @return void */

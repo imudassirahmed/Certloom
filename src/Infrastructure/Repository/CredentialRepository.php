@@ -510,6 +510,132 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		return array( 'items' => $items, 'total' => $total );
 	}
 
+
+	/**
+	 * Premium bounded credential registry query used by Credential Management UX.
+	 *
+	 * The existing list_page() contract remains available for older internal
+	 * callers. This query adds exact effective-status and Program filters without
+	 * changing public authority or mutating immutable Version history.
+	 *
+	 * @return array{items:array<int,array<string,mixed>>,total:int}|\WP_Error
+	 */
+	public function list_management_page( $search = '', $page = 1, $per_page = 20, $status = 'all', $program_id = 0 ) {
+		global $wpdb;
+		$page       = max( 1, absint( $page ) );
+		$per_page   = max( 1, min( 100, absint( $per_page ) ) );
+		$offset     = ( $page - 1 ) * $per_page;
+		$search     = trim( (string) $search );
+		$program_id = absint( $program_id );
+		$allowed    = array( 'all', 'valid', 'suspended', 'revoked', 'expired', 'not_yet_valid', 'pending_review', 'noncompliant', 'voided', 'not_issued' );
+		$status     = in_array( $status, $allowed, true ) ? $status : 'all';
+		$where      = array();
+		$args       = array();
+
+		if ( '' !== $search ) {
+			$like    = '%' . $wpdb->esc_like( $search ) . '%';
+			$where[] = '(s.public_id LIKE %s OR v.display_number LIKE %s OR r.display_name LIKE %s OR r.email LIKE %s OR r.external_id LIKE %s OR p.title LIKE %s OR p.code LIKE %s OR b.name LIKE %s OR b.code LIKE %s)';
+			$args    = array_merge( $args, array( $like, $like, $like, $like, $like, $like, $like, $like, $like ) );
+		}
+		if ( $program_id ) {
+			$where[] = 's.program_id = %d';
+			$args[]  = $program_id;
+		}
+		if ( 'all' !== $status ) {
+			$predicate = self::management_status_predicate( $status, gmdate( 'Y-m-d' ) );
+			if ( is_wp_error( $predicate ) ) { return $predicate; }
+			$where[] = '(' . $predicate['sql'] . ')';
+			$args     = array_merge( $args, $predicate['args'] );
+		}
+
+		$series     = SchemaManager::table( 'credential_series' );
+		$versions   = SchemaManager::table( 'credential_versions' );
+		$recipients = SchemaManager::table( 'recipients' );
+		$programs   = SchemaManager::table( 'programs' );
+		$batches    = SchemaManager::table( 'batches' );
+		$issuers    = SchemaManager::table( 'issuers' );
+		$joins      = ' FROM %i s LEFT JOIN %i v ON v.id=s.current_version_id AND v.series_id=s.id LEFT JOIN %i r ON r.id=s.recipient_id LEFT JOIN %i p ON p.id=s.program_id LEFT JOIN %i b ON b.id=s.batch_id LEFT JOIN %i i ON i.id=s.issuer_id';
+		$where_sql  = $where ? ' WHERE ' . implode( ' AND ', $where ) : '';
+		$base_args  = array( $series, $versions, $recipients, $programs, $batches, $issuers );
+
+		$wpdb->last_error = '';
+		$total = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*)' . $joins . $where_sql, array_merge( $base_args, $args ) ) );
+		if ( '' !== (string) $wpdb->last_error ) {
+			return new \WP_Error( 'certloom_credential_management_count_failed', __( 'Certloom could not count the credential registry safely.', 'certloom' ) );
+		}
+
+		$sql = 'SELECT s.id AS series_id, s.public_id, s.recipient_id, s.program_id, s.batch_id, s.issuer_id, s.current_version_id, s.administrative_state, s.compliance_state, s.visibility, s.created_at AS series_created_at, s.updated_at AS series_updated_at, r.display_name, r.email AS recipient_email, p.title AS program_title, p.code AS program_code, b.name AS batch_name, b.code AS batch_code, i.name AS issuer_name, v.id AS version_id, v.version_number, v.previous_version_id, v.display_number, v.issuance_state, v.legacy_expired, v.valid_from, v.issued_at, v.expires_at, v.grade, v.updated_at AS version_updated_at' . $joins . $where_sql . ' ORDER BY s.updated_at DESC, s.id DESC LIMIT %d OFFSET %d';
+		$wpdb->last_error = '';
+		$items = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( $base_args, $args, array( $per_page, $offset ) ) ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $items ) ) {
+			return new \WP_Error( 'certloom_credential_management_list_failed', __( 'Certloom could not load the credential registry safely.', 'certloom' ) );
+		}
+		foreach ( $items as &$item ) {
+			foreach ( array( 'series_id', 'recipient_id', 'program_id', 'batch_id', 'issuer_id', 'current_version_id', 'version_id', 'previous_version_id' ) as $key ) {
+				$item[ $key ] = ! empty( $item[ $key ] ) ? absint( $item[ $key ] ) : null;
+			}
+			$item['version_number'] = ! empty( $item['version_number'] ) ? absint( $item['version_number'] ) : null;
+			$item['legacy_expired'] = ! empty( $item['legacy_expired'] );
+		}
+		unset( $item );
+		return array( 'items' => $items, 'total' => $total );
+	}
+
+	/** @return array<string,int>|\WP_Error */
+	public function management_summary() {
+		global $wpdb;
+		$series   = SchemaManager::table( 'credential_series' );
+		$versions = SchemaManager::table( 'credential_versions' );
+		$today    = gmdate( 'Y-m-d' );
+		$statuses = array( 'valid', 'suspended', 'revoked', 'expired', 'not_yet_valid', 'pending_review', 'noncompliant', 'voided', 'not_issued' );
+		$parts          = array( 'COUNT(*) AS total' );
+		$predicate_args = array();
+		foreach ( $statuses as $status ) {
+			$predicate = self::management_status_predicate( $status, $today );
+			if ( is_wp_error( $predicate ) ) { return $predicate; }
+			$parts[]          = 'SUM(CASE WHEN ' . $predicate['sql'] . ' THEN 1 ELSE 0 END) AS ' . $status;
+			$predicate_args = array_merge( $predicate_args, $predicate['args'] );
+		}
+		$sql  = 'SELECT ' . implode( ', ', $parts ) . ' FROM %i s LEFT JOIN %i v ON v.id=s.current_version_id AND v.series_id=s.id';
+		$args = array_merge( $predicate_args, array( $series, $versions ) );
+		$wpdb->last_error = '';
+		$row = $wpdb->get_row( $wpdb->prepare( $sql, $args ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $row ) ) {
+			return new \WP_Error( 'certloom_credential_management_summary_failed', __( 'Certloom could not load credential management totals.', 'certloom' ) );
+		}
+		$out = array();
+		foreach ( array_merge( array( 'total' ), $statuses ) as $key ) { $out[ $key ] = absint( $row[ $key ] ?? 0 ); }
+		return $out;
+	}
+
+	/** @return array{sql:string,args:array<int,mixed>}|\WP_Error */
+	private static function management_status_predicate( $status, $today ) {
+		$issued = States::ISSUANCE_ISSUED;
+		$active = States::ADMIN_ACTIVE;
+		$current_window = 'v.legacy_expired=0 AND (v.valid_from IS NULL OR v.valid_from <= %s) AND (v.expires_at IS NULL OR v.expires_at >= %s)';
+		switch ( (string) $status ) {
+			case 'valid':
+				return array( 'sql' => 'v.issuance_state=%s AND s.administrative_state=%s AND ' . $current_window . ' AND s.compliance_state IN (%s,%s)', 'args' => array( $issued, $active, $today, $today, States::COMPLIANCE_NOT_APPLICABLE, States::COMPLIANCE_COMPLIANT ) );
+			case 'suspended':
+				return array( 'sql' => 'v.issuance_state=%s AND s.administrative_state=%s', 'args' => array( $issued, States::ADMIN_SUSPENDED ) );
+			case 'revoked':
+				return array( 'sql' => 'v.issuance_state=%s AND s.administrative_state=%s', 'args' => array( $issued, States::ADMIN_REVOKED ) );
+			case 'expired':
+				return array( 'sql' => 'v.issuance_state=%s AND s.administrative_state=%s AND (v.legacy_expired=1 OR (v.legacy_expired=0 AND (v.valid_from IS NULL OR v.valid_from <= %s) AND v.expires_at IS NOT NULL AND v.expires_at < %s))', 'args' => array( $issued, $active, $today, $today ) );
+			case 'not_yet_valid':
+				return array( 'sql' => 'v.issuance_state=%s AND s.administrative_state=%s AND v.legacy_expired=0 AND v.valid_from IS NOT NULL AND v.valid_from > %s', 'args' => array( $issued, $active, $today ) );
+			case 'pending_review':
+				return array( 'sql' => 'v.issuance_state=%s AND s.administrative_state=%s AND ' . $current_window . ' AND s.compliance_state=%s', 'args' => array( $issued, $active, $today, $today, States::COMPLIANCE_PENDING ) );
+			case 'noncompliant':
+				return array( 'sql' => 'v.issuance_state=%s AND s.administrative_state=%s AND ' . $current_window . ' AND s.compliance_state=%s', 'args' => array( $issued, $active, $today, $today, States::COMPLIANCE_NONCOMPLIANT ) );
+			case 'voided':
+				return array( 'sql' => 'v.issuance_state=%s', 'args' => array( States::ISSUANCE_VOIDED ) );
+			case 'not_issued':
+				return array( 'sql' => '(v.id IS NULL OR v.issuance_state=%s)', 'args' => array( States::ISSUANCE_DRAFT ) );
+		}
+		return new \WP_Error( 'certloom_credential_management_status_invalid', __( 'Choose a valid credential status filter.', 'certloom' ) );
+	}
+
 	/** @return array<string,mixed>|null|\WP_Error */
 	public function find_series_by_public_id( $public_id ) {
 		global $wpdb;
