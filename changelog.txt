@@ -1,3 +1,10 @@
+1.6.72
+- Add INT-01 + LMSCTX-01 generic integration architecture: closed first-party adapter registry, bounded normalized event context, latest qualifying attempt selection under the certificate threshold, explicit linked-Recipient identity, server-owned Program/Template mapping, and deterministic replay identity.
+- Add a separate trusted `lms_integration` issuance bridge that reuses Manual Issuance transaction/idempotency/snapshot truth and freezes the normalized integration context + SHA without allowing arbitrary source impersonation.
+- Keep Tutor LMS, LearnDash, LMS-specific merge fields, public adapter registration, commerce/API/webhooks and final authority opening as separate later work.
+- Insert the approved UX/Product Simplification Program before Tutor LMS: UX-01, FEUX-01, PRG-02, TPLUX-01/TPLUX-02, DSX-01, I18N-02/I18N-03, BAK-02/BAK-03, WIZ-01/WIZ-02 and UX-QA-01.
+- Correct stale Setup messaging so already-implemented Credential Management, Bulk, Email, Portal, Sharing and Analytics are no longer described as future work.
+
 1.6.71
 - Add ANL-02 Issuance Analytics from append-only `credential.issued` events and immutable Version snapshots, with Program/Template/organization/Batch dimensions and daily/weekly/monthly trends.
 - Keep historical attribution honest across later Program/Batch corrections; uncaptured historical Batch dimensions remain Unattributed rather than being guessed from the current Series.

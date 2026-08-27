@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.71
+Stable tag: 1.6.72
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.71: ANL-02 Issuance Analytics is implemented as a read-only projection over append-only `credential.issued` events and immutable Credential Version snapshots, with Program/Template/organization/Batch attribution, daily/weekly/monthly trends and a current 90-day expiry forecast. Historical Batch values are never guessed from later mutable Series relationships; older issuance without an immutable Batch dimension remains visibly Unattributed. ANL-01 Verification Analytics remains separate, and the Dashboard now surfaces capability-gated 30-day issuance/verification charts, failed lookups and top credential/Program/Template summaries. ANL-03 engagement analytics, renewal workflow and advanced analytics export remain later. Normalized-domain and renderer authority stay closed. 1.6.71 is the frozen ANL-02 + ADM-02 checkpoint; INT-01 integration/LMS adapter architecture is next.
+> Development note for 1.6.72: INT-01 + LMSCTX-01 are implemented as a closed provider-neutral integration foundation. LMS/provider events must normalize into bounded attempt context, satisfy Certloom’s certificate-specific threshold, resolve an explicit linked Recipient plus server-owned Program/Template mapping, and then reuse the immutable issuance path under fixed lms_integration provenance and deterministic event idempotency. No Tutor LMS or LearnDash adapter is active yet. The approved UX/Product Simplification Program now runs before concrete LMS adapters: simplified admin IA and Simple/Advanced mode, compact verifier frontend, Program Profiles, visual Template Library, Quick Designer, locale/RTL and major-language architecture, scheduled Backup/Recovery with Google Drive, and a purpose-driven adaptive Setup Wizard. Normalized-domain and renderer authority remain closed.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 

@@ -132,8 +132,53 @@ final class ManualIssuanceService {
 		return $this->issue_internal( $request, $expected_review_fingerprint, $actor_user_id, $source_type, $source_ref, $source_idempotency_key, $reason_code );
 	}
 
+	/**
+	 * Trusted reviewed-issuance entry point for INT-01 integration orchestration.
+	 *
+	 * The source identity is fixed by Certloom and cannot be caller-selected.
+	 * The normalized provider-neutral context and its SHA-256 are frozen into
+	 * the immutable Version snapshot; arbitrary provider payloads are rejected
+	 * before this boundary by IntegrationEventContext.
+	 *
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public function issue_reviewed_for_integration( array $request, $expected_review_fingerprint, $actor_user_id, array $integration_context, $integration_context_sha256, $source_idempotency_key, $source_ref ) {
+		$schema = (string) ( $integration_context['_meta']['schema'] ?? '' );
+		$version = (int) ( $integration_context['_meta']['schema_version'] ?? 0 );
+		if ( 'certloom-integration-event' !== $schema || 1 !== $version ) {
+			return new \WP_Error( 'certloom_integration_context_schema_invalid', __( 'Certloom refused an unsupported normalized integration context.', 'certloom' ) );
+		}
+		$integration_context_sha256 = strtolower( trim( (string) $integration_context_sha256 ) );
+		if ( ! preg_match( '/^[a-f0-9]{64}$/', $integration_context_sha256 ) ) {
+			return new \WP_Error( 'certloom_integration_context_hash_invalid', __( 'The normalized integration context fingerprint is invalid.', 'certloom' ) );
+		}
+		try { $actual_sha = $this->json->hash( $integration_context ); }
+		catch ( \Throwable $error ) { return new \WP_Error( 'certloom_integration_context_hash_failed', __( 'Certloom could not fingerprint the normalized integration context safely.', 'certloom' ) ); }
+		if ( ! hash_equals( $actual_sha, $integration_context_sha256 ) ) {
+			return new \WP_Error( 'certloom_integration_context_tampered', __( 'The normalized integration context changed after review. No credential was issued.', 'certloom' ) );
+		}
+		$source_idempotency_key = strtolower( trim( (string) $source_idempotency_key ) );
+		if ( ! preg_match( '/^[a-f0-9]{64}$/', $source_idempotency_key ) ) {
+			return new \WP_Error( 'certloom_integration_idempotency_invalid', __( 'The integration source-event identity is invalid.', 'certloom' ) );
+		}
+		$source_ref = trim( (string) $source_ref );
+		if ( '' === $source_ref || $this->length( $source_ref ) > 191 || ! preg_match( '/^[A-Za-z0-9._:@\/\-]+$/', $source_ref ) ) {
+			return new \WP_Error( 'certloom_integration_source_ref_invalid', __( 'The integration source reference is invalid.', 'certloom' ) );
+		}
+		return $this->issue_internal(
+			$request,
+			$expected_review_fingerprint,
+			$actor_user_id,
+			'lms_integration',
+			$source_ref,
+			$source_idempotency_key,
+			'integration_issue',
+			array( 'context' => $integration_context, 'sha256' => $integration_context_sha256 )
+		);
+	}
+
 	/** @return array<string,mixed>|\WP_Error */
-	private function issue_internal( array $request, $expected_review_fingerprint, $actor_user_id, $source_type, $source_ref, $idempotency, $reason_code ) {
+	private function issue_internal( array $request, $expected_review_fingerprint, $actor_user_id, $source_type, $source_ref, $idempotency, $reason_code, $source_context = null ) {
 		$expected_review_fingerprint = strtolower( trim( (string) $expected_review_fingerprint ) );
 		if ( ! preg_match( '/^[a-f0-9]{64}$/', $expected_review_fingerprint ) ) {
 			return new \WP_Error( 'certloom_manual_issue_review_required', __( 'Review the credential before issuing it.', 'certloom' ) );
@@ -154,7 +199,7 @@ final class ManualIssuanceService {
 			$number = $this->numbers->allocate( (string) ( $preflight['request']['display_number'] ?? '' ) );
 			if ( is_wp_error( $number ) ) { return $number; }
 			$issued_at = (string) call_user_func( $this->clock );
-			$result = $this->transaction->run( function () use ( $request, $expected_review_fingerprint, $idempotency, $actor_user_id, $number, $issued_at, $source_type, $source_ref, $reason_code ) {
+			$result = $this->transaction->run( function () use ( $request, $expected_review_fingerprint, $idempotency, $actor_user_id, $number, $issued_at, $source_type, $source_ref, $reason_code, $source_context ) {
 				$current = $this->build_review( $request, false, false );
 				if ( is_wp_error( $current ) ) { return $current; }
 				if ( ! hash_equals( (string) $current['review_fingerprint'], $expected_review_fingerprint ) ) {
@@ -202,7 +247,7 @@ final class ManualIssuanceService {
 				);
 				$merge = $this->merges->build( $recipient, $current['program'], $current['issuer'], $credential_facts, $current['template_revision']['layout'], $current['request']['custom_merge_fields'] );
 				if ( is_wp_error( $merge ) ) { return $merge; }
-				$snapshot = $this->snapshot( $current, $recipient, $series, $credential_facts, $merge, $expected_review_fingerprint, $actor_user_id, $source_type, $source_ref );
+				$snapshot = $this->snapshot( $current, $recipient, $series, $credential_facts, $merge, $expected_review_fingerprint, $actor_user_id, $source_type, $source_ref, $source_context );
 				if ( is_wp_error( $snapshot ) ) { return $snapshot; }
 				$version_id = $this->repository->create_version( $series_id, array(
 					'display_number' => $display_number,
@@ -224,6 +269,7 @@ final class ManualIssuanceService {
 					'meta' => array(
 						'source' => $source_type,
 						'source_ref' => $source_ref,
+						'integration_context_sha256' => is_array( $source_context ) ? (string) ( $source_context['sha256'] ?? '' ) : null,
 						'review_fingerprint' => $expected_review_fingerprint,
 						'program_id' => absint( $current['program']['id'] ?? 0 ),
 						'program_title' => (string) ( $current['program']['title'] ?? '' ),
@@ -409,12 +455,12 @@ final class ManualIssuanceService {
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
-	private function snapshot( array $review, array $recipient, array $series, array $credential, array $merge, $fingerprint, $actor_user_id, $source_type = self::SOURCE_TYPE, $source_ref = null ) {
+	private function snapshot( array $review, array $recipient, array $series, array $credential, array $merge, $fingerprint, $actor_user_id, $source_type = self::SOURCE_TYPE, $source_ref = null, $source_context = null ) {
 		$template = $review['template']; $revision = $review['template_revision'];
 		try { $merge_sha = $this->json->hash( $merge ); } catch ( \Throwable $error ) { return new \WP_Error( 'certloom_manual_issue_merge_hash_failed', __( 'Certloom could not create the immutable merge snapshot fingerprint. Issuance was rolled back.', 'certloom' ) ); }
 		return array(
 			'_meta' => array( 'schema' => self::SNAPSHOT_SCHEMA, 'schema_version' => self::SNAPSHOT_VERSION ),
-			'issuance' => array( 'source' => (string) $source_type, 'source_ref' => null === $source_ref ? null : (string) $source_ref, 'actor_user_id' => absint( $actor_user_id ), 'review_fingerprint' => (string) $fingerprint, 'custom_merge_fields' => $review['request']['custom_merge_fields'] ),
+			'issuance' => array( 'source' => (string) $source_type, 'source_ref' => null === $source_ref ? null : (string) $source_ref, 'actor_user_id' => absint( $actor_user_id ), 'review_fingerprint' => (string) $fingerprint, 'custom_merge_fields' => $review['request']['custom_merge_fields'], 'integration_context_sha256' => is_array( $source_context ) ? (string) ( $source_context['sha256'] ?? '' ) : null, 'integration_context' => is_array( $source_context ) && isset( $source_context['context'] ) && is_array( $source_context['context'] ) ? $source_context['context'] : null ),
 			'recipient' => $this->recipient_snapshot( $recipient ),
 			'program' => $this->program_snapshot( $review['program'] ),
 			'issuer' => $this->issuer_snapshot( $review['issuer'] ),
