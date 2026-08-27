@@ -40,6 +40,11 @@ class Ecapla_CertVerify_REST {
 								'required'          => false,
 								'sanitize_callback' => 'sanitize_text_field',
 							),
+							'source' => array(
+								'type'              => 'string',
+								'required'          => false,
+								'sanitize_callback' => 'sanitize_key',
+							),
 						),
 					),
 				)
@@ -77,7 +82,8 @@ class Ecapla_CertVerify_REST {
 	public static function verify( $request ) {
 		$number = self::sanitize_number( $request->get_param( 'number' ) );
 		$code = self::secondary_code_from_request( $request );
-		$presentation = Ecapla_CertVerify_Public_Presentation::verify( $number, true, 'verification', $code );
+		$source = self::verification_source_from_request( $request );
+		$presentation = Ecapla_CertVerify_Public_Presentation::verify( $number, true, 'verification', $code, $source );
 		if ( is_wp_error( $presentation ) ) {
 			$rate_limited = 'ecapla_certverify_rate_limited' === $presentation->get_error_code();
 			$response = new WP_REST_Response(
@@ -135,6 +141,15 @@ class Ecapla_CertVerify_REST {
 	 * The endpoint exists in 1.5.2 code but stays unavailable until the explicit
 	 * schema + complete legacy-migration cutover gate has been enabled.
 	 */
+
+	/** Privacy-safe source attribution for ANL-01. */
+	private static function verification_source_from_request( $request ) {
+		$source = is_object( $request ) && method_exists( $request, 'get_param' ) ? $request->get_param( 'source' ) : '';
+		if ( class_exists( 'Ecapla_CertVerify_Analytics' ) ) {
+			return Ecapla_CertVerify_Analytics::normalize_source( '' === (string) $source ? 'api' : $source );
+		}
+		return 'api';
+	}
 
 	/** Secondary proof is accepted from POST bodies only, never query strings/URLs. */
 	private static function secondary_code_from_request( $request ) {

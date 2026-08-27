@@ -46,6 +46,7 @@ class Ecapla_CertVerify_System_Status {
 		$checks[] = self::domain_schema_lock_check();
 		$checks[] = self::local_qr_check();
 		$checks[] = self::local_barcode_check();
+		$checks[] = self::verification_analytics_check();
 		$checks[] = self::renderer_authority_check();
 		$checks[] = self::extension_check( 'mbstring', __( 'PHP mbstring', 'certloom' ), __( 'Required by the current mPDF production-renderer benchmark candidate; not required by the current verifier or QR/barcode presentation.', 'certloom' ) );
 		$checks[] = self::extension_check( 'gd', __( 'PHP GD', 'certloom' ), __( 'Required by the current mPDF production-renderer benchmark candidate and expected by future raster output; not required by the current verifier or QR/barcode presentation.', 'certloom' ) );
@@ -113,7 +114,7 @@ class Ecapla_CertVerify_System_Status {
 		$value = $enabled ? __( 'Enabled', 'certloom' ) : __( 'Available — hidden by setting', 'certloom' );
 		$note = sprintf(
 			/* translators: 1: encoder ID, 2: encoder version. */
-			__( 'Encoder %1$s v%2$s runs locally; no remote QR service is used. Public QR encodes only the canonical verification URL.', 'certloom' ),
+			__( 'Encoder %1$s v%2$s runs locally; no remote QR service is used. Public QR encodes the canonical verification URL plus Certloom\'s privacy-safe QR source attribution marker.', 'certloom' ),
 			(string) $health['id'],
 			(string) $health['version']
 		);
@@ -141,6 +142,21 @@ class Ecapla_CertVerify_System_Status {
 			(string) $health['version']
 		);
 		return self::check( 'local_code128', __( 'Local Code 128 barcode', 'certloom' ), 'good', $value, $note );
+	}
+
+
+	private static function verification_analytics_check() {
+		if ( ! class_exists( 'Ecapla_CertVerify_Analytics' ) ) {
+			return self::check( 'verification_analytics', __( 'Verification analytics', 'certloom' ), 'warning', __( 'Unavailable', 'certloom' ), __( 'Verification remains authoritative, but ANL-01 aggregate reporting is unavailable.', 'certloom' ) );
+		}
+		$health = Ecapla_CertVerify_Analytics::health();
+		if ( empty( $health['ready'] ) ) {
+			return self::check( 'verification_analytics', __( 'Verification analytics', 'certloom' ), 'warning', __( 'Storage not ready', 'certloom' ), __( 'Verification continues normally. Visit Certloom administration to retry the privacy-minimized aggregate analytics table setup.', 'certloom' ) );
+		}
+		if ( empty( $health['retention_scheduled'] ) ) {
+			return self::check( 'verification_analytics', __( 'Verification analytics', 'certloom' ), 'warning', __( 'Ready — retention task missing', 'certloom' ), __( 'Aggregate analytics are available, but the 730-day cleanup event is not scheduled. Deactivate/reactivate Certloom or retry setup before relying on the retention ceiling.', 'certloom' ) );
+		}
+		return self::check( 'verification_analytics', __( 'Verification analytics', 'certloom' ), 'good', __( 'Ready', 'certloom' ), __( 'Daily aggregate counters are stored locally with a 730-day retention ceiling; raw IP addresses and User-Agents are not stored.', 'certloom' ) );
 	}
 
 	private static function renderer_authority_check() {

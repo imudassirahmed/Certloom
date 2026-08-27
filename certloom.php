@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Certloom – Certificate Verification
  * Description: Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
- * Version: 1.6.69
+ * Version: 1.6.70
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.69' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.70' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
@@ -80,6 +80,7 @@ require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-settings
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-fields.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-validator.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-database.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-analytics.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-permissions.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-public-router.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-public-policy.php';
@@ -111,6 +112,8 @@ add_action( 'init', 'ecapla_certverify_init', 1 );
 add_action( 'elementor/loaded', 'ecapla_certverify_elementor_loaded' );
 add_action( 'wp_initialize_site', 'ecapla_certverify_initialize_site', 200, 2 );
 add_action( 'admin_init', 'ecapla_certverify_add_privacy_policy_content' );
+add_action( 'admin_init', 'ecapla_certverify_analytics_maybe_upgrade', 2 );
+add_action( Ecapla_CertVerify_Analytics::PRUNE_HOOK, array( 'Ecapla_CertVerify_Analytics', 'prune' ) );
 add_action( 'network_admin_notices', 'ecapla_certverify_multisite_provisioning_notice' );
 add_action( 'ecapla_certverify_continue_migrations', 'ecapla_certverify_continue_migrations' );
 add_action( 'upgrader_process_complete', 'ecapla_certverify_after_plugin_upgrade', 10, 2 );
@@ -125,6 +128,16 @@ function ecapla_certverify_continue_migrations() {
 		if ( ! wp_next_scheduled( 'ecapla_certverify_continue_migrations' ) ) {
 			wp_schedule_single_event( time() + MINUTE_IN_SECONDS, 'ecapla_certverify_continue_migrations' );
 		}
+	}
+}
+
+/**
+ * Completes the bounded verification-analytics table upgrade on administrator requests.
+ */
+function ecapla_certverify_analytics_maybe_upgrade() {
+	$result = Ecapla_CertVerify_Analytics::maybe_upgrade();
+	if ( is_wp_error( $result ) ) {
+		ecapla_certverify_add_runtime_error( $result->get_error_message() );
 	}
 }
 
@@ -195,6 +208,10 @@ function ecapla_certverify_activate_site() {
 	if ( is_wp_error( $database ) ) {
 		return $database;
 	}
+	$analytics = Ecapla_CertVerify_Analytics::activate();
+	if ( is_wp_error( $analytics ) ) {
+		return $analytics;
+	}
 
 	$domain = \Certloom\Plugin::activate();
 	if ( is_wp_error( $domain ) ) {
@@ -256,6 +273,7 @@ function ecapla_certverify_deactivate( $network_wide = false ) {
 /** Clears all legacy and new-domain scheduled work for the current site. */
 function ecapla_certverify_deactivate_site() {
 	Ecapla_CertVerify_Cron::deactivate();
+	Ecapla_CertVerify_Analytics::deactivate();
 	\Certloom\Plugin::deactivate();
 	return true;
 }
@@ -528,6 +546,7 @@ function ecapla_certverify_add_privacy_policy_content() {
 	$content = '<p class="privacy-policy-tutorial">' . esc_html__( 'Certloom publishes only the certificate fields that a site administrator marks as visible. Those fields may include names or other personal information, so administrators should publish only information they are authorised to disclose.', 'certloom' ) . '</p>';
 	$content .= '<p>' . esc_html__( 'Depending on the Certloom features enabled by the site, local WordPress storage may also contain recipient identity/contact data and administrator-managed issuer or signer contact details. These records remain on the site unless the administrator exports, changes, or removes them according to the organization’s retention obligations.', 'certloom' ) . '</p>';
 	$content .= '<p>' . esc_html__( 'Certificate verification is performed on this WordPress site. Certloom does not send certificate records to Ecapla or another external service. Verification requests may still appear in normal web-server, security, analytics, browser-history, and cache logs. Direct verification links can include the certificate number in the URL.', 'certloom' ) . '</p>';
+	$content .= '<p>' . esc_html__( 'When Certloom Verification Analytics is available, Certloom stores daily aggregate verification counters locally for up to 730 days. These aggregates classify outcomes and sources such as manual, QR, or API verification; they do not store raw IP addresses, User-Agents, secondary proof codes, or raw failed certificate-number input. Verification analytics are operational data and are removed when Certloom is uninstalled.', 'certloom' ) . '</p>';
 	$content .= '<p>' . esc_html__( 'Site administrators determine how long certificate records are retained and can configure whether Certloom data is removed when the plugin is uninstalled.', 'certloom' ) . '</p>';
 
 	wp_add_privacy_policy_content( 'Certloom', wp_kses_post( $content ) );

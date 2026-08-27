@@ -89,7 +89,7 @@ okv(false!==strpos($src['editor'],'Generate secure code') && false!==strpos($src
 okv(false===strpos($src['editor'],'__certloom_verification_code_hash" value='),'stored proof hash is never placed in editor value attributes');
 okv(false!==strpos($src['rest'],'WP_REST_Server::CREATABLE') && false!==strpos($src['rest'],"'code'"),'REST verifier accepts POST proof while preserving readable route');
 okv(false!==strpos($src['rest'],'secondary_code_from_request') && false!==strpos($src['rest'],'get_json_params') && false!==strpos($src['rest'],'get_body_params') && false===strpos($src['rest'],"get_param( 'code' )"),'REST proof is read from POST body only, never query parameters');
-okv(false!==strpos($src['js'],"method: 'POST'") && false!==strpos($src['js'],"body: JSON.stringify( { number: number, code: code } )"),'Certloom browser verifier submits proof in POST body');
+okv(false!==strpos($src['js'],"method: 'POST'") && false!==strpos($src['js'],"body: JSON.stringify( { number: number, code: code, source: source } )") && false!==strpos($src['js'],"get( 'certloom_source' ) === 'qr'"),'Certloom browser verifier keeps proof in POST body while adding only bounded analytics source attribution');
 $directCodePos=strpos($src['render'],'private static function direct_code');
 $directCode=$directCodePos===false?'':substr($src['render'],$directCodePos,700);
 okv(false!==strpos($directCode,'$_POST') && false===strpos($directCode,'$_GET'),'no-JS secondary proof reads POST only, never URL query');

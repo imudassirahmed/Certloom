@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Certloom\n"
 "Report-Msgid-Bugs-To: https://ecapla.com\n"
-"POT-Creation-Date: 2026-08-27 12:00+0000\n"
+"POT-Creation-Date: 2026-08-22 00:00+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -15,294 +15,303 @@ msgstr ""
 "X-Generator: certloom make-pot.py\n"
 "X-Domain: certloom\n"
 
-#: admin/class-ecapla-certverify-admin.php:1007
-#: admin/class-ecapla-certverify-admin.php:1013
+#: admin/class-ecapla-certverify-admin.php:1009
+#: admin/class-ecapla-certverify-admin.php:1015
 msgid "Phase 1 data model"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1008
+#: admin/class-ecapla-certverify-admin.php:1010
 msgid "First-class Recipient administration is implemented in the normalized domain and remains acceptance-gated until the real WordPress/MySQL migration and cutover proof passes."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1009
-#: admin/class-ecapla-certverify-admin.php:1015
+#: admin/class-ecapla-certverify-admin.php:1011
+#: admin/class-ecapla-certverify-admin.php:1017
 msgid "Implementation complete · production acceptance gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1014
+#: admin/class-ecapla-certverify-admin.php:1016
 msgid "Standalone Program administration is implemented in the normalized domain and remains acceptance-gated. Certloom will not emulate Program relationships inside legacy custom fields."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1019
+#: admin/class-ecapla-certverify-admin.php:1021
 msgid "Pro commercial core · implementation gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1020
-msgid "Versioned Templates, immutable revisions, six factory design families, deterministic assignments, lifecycle controls, canonical Render Plan Preview, and the full planned DSN-01 through DSN-08 Designer foundation are implemented. Designer edits the same versioned certloom-layout revision model: historical v1/v2 layouts remain readable and immutable, explicit v3 upgrades create a new immutable revision, Code 128 remains bound only to credential.display_number, and canonical bullet/numbered lists resolve through the shared text Render Plan path. DSN-08 now centralizes built-in element schema availability, allowed properties, validation/resolver/renderer mappings, inspector groups, merge requirements and palette defaults behind one closed typed registry; no unversioned filter or arbitrary HTML/CSS callback can mutate it. Recovery autosave remains personal/non-authoritative, manual save remains the only revision-authority path, and FONT-02 still owns controlled local font manifests. Publication and production artifact authority remain fail-closed behind renderer release authority. The P0 Manual Issuance golden path, premium Credential Management workspace and reviewed Bulk Issuance workflow are implemented inside the normalized-domain admin-preview gate: administrators can issue one credential, inspect immutable Version lineage, perform reviewed lifecycle or Program/Batch corrections, then scale through protected CSV review and durable per-row idempotent issuance without rewriting historical snapshots. Email Delivery is implemented from exact immutable Versions with reviewed SHA-256 confirmation, WordPress-local wp_mail()/SMTP interoperability, privacy-minimized delivery evidence, safe failed retry and fail-closed delivery-uncertain handling. Recipient Portal / My Credentials POR-01 is now implemented as an authenticated, explicit wp_user_id-linked collection with cards/grid/table layouts, bounded status/sort filtering, pagination and expiring-soon cues; normalized Verify and artifact downloads remain authority-gated. SOC-01 Public Sharing is implemented only for already guest-verifiable credentials with local LinkedIn/WhatsApp/Facebook/X/email/copy intents; analytics is next."
+#: admin/class-ecapla-certverify-admin.php:1022
+msgid "Versioned Templates, immutable revisions, six factory design families, deterministic assignments, lifecycle controls, canonical Render Plan Preview, and the full planned DSN-01 through DSN-08 Designer foundation are implemented. Designer edits the same versioned certloom-layout revision model: historical v1/v2 layouts remain readable and immutable, explicit v3 upgrades create a new immutable revision, Code 128 remains bound only to credential.display_number, and canonical bullet/numbered lists resolve through the shared text Render Plan path. DSN-08 now centralizes built-in element schema availability, allowed properties, validation/resolver/renderer mappings, inspector groups, merge requirements and palette defaults behind one closed typed registry; no unversioned filter or arbitrary HTML/CSS callback can mutate it. Recovery autosave remains personal/non-authoritative, manual save remains the only revision-authority path, and FONT-02 still owns controlled local font manifests. Publication and production artifact authority remain fail-closed behind renderer release authority. The P0 Manual Issuance golden path, premium Credential Management workspace and reviewed Bulk Issuance workflow are implemented inside the normalized-domain admin-preview gate: administrators can issue one credential, inspect immutable Version lineage, perform reviewed lifecycle or Program/Batch corrections, then scale through protected CSV review and durable per-row idempotent issuance without rewriting historical snapshots. Email Delivery is implemented from exact immutable Versions with reviewed SHA-256 confirmation, WordPress-local wp_mail()/SMTP interoperability, privacy-minimized delivery evidence, safe failed retry and fail-closed delivery-uncertain handling. Recipient Portal / My Credentials POR-01 is now implemented as an authenticated, explicit wp_user_id-linked collection with cards/grid/table layouts, bounded status/sort filtering, pagination and expiring-soon cues; normalized Verify and artifact downloads remain authority-gated. SOC-01 Public Sharing is implemented only for already guest-verifiable credentials with local LinkedIn/WhatsApp/Facebook/X/email/copy intents. ANL-01 Verification Analytics is now implemented with privacy-minimized local daily aggregates, bounded retention, outcome/source trends and most-verified reporting; ANL-02 Issuance Analytics remains next."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1021
-msgid "Designer + Issuance + Credential Management + Email Delivery + Recipient Portal + Public Sharing implemented · authority gated · Analytics next"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1025
-msgid "P0 issuance workflow · implementation gated"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1026
-msgid "Manual Issuance is implemented inside the normalized-domain admin-preview gate with existing/new Recipient selection, active Program and verified published-Template selection, mutation-free review, exact SHA-256 confirmation, backdating/permanent/explicit expiry choices, established numbering policy reuse, bounded credential-specific custom merge values, canonical browser Preview, atomic Series/Version/event creation, retry idempotency and an immutable issuance snapshot. Credential Management provides a bounded registry, immutable Version inspection, status/verification workspace, reviewed lifecycle actions and immutable-successor Program/Batch corrections. Bulk Issuance adds protected CSV review, SHA-256 confirmation, durable bounded per-row issuance, progress and row-level outcomes through the same Manual Issuance truth path. Email Delivery adds immutable-Version composition, versioned templates, explicit reviewed queueing, wp_mail()/SMTP interoperability, privacy-minimized status evidence and non-replayable delivery-uncertain recovery. Recipient Portal / My Credentials POR-01 is implemented with explicit linked-recipient ownership, current-issued Version queries, cards/grid/table layouts and bounded filtering/sorting. SOC-01 Public Sharing now adds server-authorized LinkedIn/WhatsApp/Facebook/X/email/copy actions only for already guest-verifiable URLs; analytics is next. Normalized public authority and PDF/PNG/JPEG exports stay fail-closed until final database and renderer acceptance."
+#: admin/class-ecapla-certverify-admin.php:1023
+msgid "Designer + Issuance + Credential Management + Email Delivery + Recipient Portal + Public Sharing + Verification Analytics implemented · authority gated · Issuance Analytics next"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1027
-msgid "Manual + Bulk + Credential Management + Email Delivery + Recipient Portal + Public Sharing implemented · acceptance gated · Analytics next"
+msgid "P0 issuance workflow · implementation gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1031
-msgid "Planned automation layer"
+#: admin/class-ecapla-certverify-admin.php:1028
+msgid "Manual Issuance is implemented inside the normalized-domain admin-preview gate with existing/new Recipient selection, active Program and verified published-Template selection, mutation-free review, exact SHA-256 confirmation, backdating/permanent/explicit expiry choices, established numbering policy reuse, bounded credential-specific custom merge values, canonical browser Preview, atomic Series/Version/event creation, retry idempotency and an immutable issuance snapshot. Credential Management provides a bounded registry, immutable Version inspection, status/verification workspace, reviewed lifecycle actions and immutable-successor Program/Batch corrections. Bulk Issuance adds protected CSV review, SHA-256 confirmation, durable bounded per-row issuance, progress and row-level outcomes through the same Manual Issuance truth path. Email Delivery adds immutable-Version composition, versioned templates, explicit reviewed queueing, wp_mail()/SMTP interoperability, privacy-minimized status evidence and non-replayable delivery-uncertain recovery. Recipient Portal / My Credentials POR-01 is implemented with explicit linked-recipient ownership, current-issued Version queries, cards/grid/table layouts and bounded filtering/sorting. SOC-01 Public Sharing adds server-authorized LinkedIn/WhatsApp/Facebook/X/email/copy actions only for already guest-verifiable URLs. ANL-01 Verification Analytics is implemented as privacy-minimized WordPress-local aggregates with bounded daily storage, source/outcome reporting and daily/weekly/monthly trends; ANL-02 Issuance Analytics remains next. Normalized public authority and PDF/PNG/JPEG exports stay fail-closed until final database and renderer acceptance."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1032
-msgid "Tutor LMS and LearnDash are the first planned LMS adapters, followed by additional LMS, commerce, API and webhook integrations. No integration is presented as active before its acceptance tests exist."
+#: admin/class-ecapla-certverify-admin.php:1029
+msgid "Manual + Bulk + Credential Management + Email Delivery + Recipient Portal + Public Sharing + Verification Analytics implemented · acceptance gated · Issuance Analytics next"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1033
+msgid "Planned automation layer"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1034
+msgid "Tutor LMS and LearnDash are the first planned LMS adapters, followed by additional LMS, commerce, API and webhook integrations. No integration is presented as active before its acceptance tests exist."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1035
 msgid "Planned"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1038
+#: admin/class-ecapla-certverify-admin.php:1040
 msgid "That Certloom workspace is not available."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1053
+#: admin/class-ecapla-certverify-admin.php:1055
 msgid "That certificate does not exist."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1070
+#: admin/class-ecapla-certverify-admin.php:1072
 msgid "Those import results expired. Run the import again to generate a new report."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1079
+#: admin/class-ecapla-certverify-admin.php:1081
 msgid "That backup restore process expired. Upload the backup again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1088
-#: admin/class-ecapla-certverify-admin.php:1097
+#: admin/class-ecapla-certverify-admin.php:1090
+#: admin/class-ecapla-certverify-admin.php:1099
 msgid "That import session expired. Upload the CSV again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:111
-msgid "The certificate you tried to update no longer exists."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1112
+#: admin/class-ecapla-certverify-admin.php:1114
 #: includes/class-ecapla-certverify-backup.php:402
 msgid "That backup review session expired. Upload the backup again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1142
+#: admin/class-ecapla-certverify-admin.php:1123
+msgid "You do not have permission to view Certloom analytics."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:113
+msgid "The certificate you tried to update no longer exists."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1154
 msgid "The review acknowledgement could not be saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1160
+#: admin/class-ecapla-certverify-admin.php:1172
 msgid "A complete Certloom restore is in progress. Certificate and configuration changes are temporarily paused; public verification remains available."
 msgstr ""
 
 #. translators: 1: number of legacy records, 2: review URL.
-#: admin/class-ecapla-certverify-admin.php:1180
+#: admin/class-ecapla-certverify-admin.php:1192
 msgid "%1$d legacy Expired certificate needs review. <a href=\"%2$s\">Review it now</a>. It will remain Expired until an administrator deliberately chooses a workflow status."
 msgid_plural "%1$d legacy Expired certificates need review. <a href=\"%2$s\">Review them now</a>. They will remain Expired until an administrator deliberately chooses a workflow status."
 msgstr[0] ""
 msgstr[1] ""
 
-#: admin/class-ecapla-certverify-admin.php:1193
+#: admin/class-ecapla-certverify-admin.php:1205
 msgid "Certloom 1.3.0 briefly contained an unsafe legacy-status migration. If that version ran on this site, compare certificate statuses with a pre-1.3.0 backup before launch. The current release does not guess or silently rewrite those records."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1196
+#: admin/class-ecapla-certverify-admin.php:1208
 msgid "I have reviewed this"
 msgstr ""
 
 #. translators: %s: Ecapla website link.
-#: admin/class-ecapla-certverify-admin.php:1208
+#: admin/class-ecapla-certverify-admin.php:1220
 msgid "Certloom is developed and maintained by %s."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1209
+#: admin/class-ecapla-certverify-admin.php:1221
 msgid "Ecapla"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1218
+#: admin/class-ecapla-certverify-admin.php:1230
 msgid "You do not have permission to manage certificates."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1224
+#: admin/class-ecapla-certverify-admin.php:1236
 msgid "You do not have permission to manage these settings."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:335
+#: admin/class-ecapla-certverify-admin.php:337
 msgid "Registry column preferences could not be saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:379
+#: admin/class-ecapla-certverify-admin.php:381
 msgid "The field order, labels, and visibility could not be saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:394
+#: admin/class-ecapla-certverify-admin.php:396
 msgid "Give the new field a label."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:429
+#: admin/class-ecapla-certverify-admin.php:431
 msgid "The custom field could not be added because the field schema was not saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:441
+#: admin/class-ecapla-certverify-admin.php:443
 msgid "Core certificate fields cannot be removed. You can relabel, reorder, or hide them from public results."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:444
+#: admin/class-ecapla-certverify-admin.php:446
 msgid "The field could not be retired safely. No field was removed."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:456
+#: admin/class-ecapla-certverify-admin.php:458
 msgid "The active field layout could not be updated, and the temporary retired marker could not be rolled back. Review the field registry before continuing."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:458
+#: admin/class-ecapla-certverify-admin.php:460
 msgid "The active field layout could not be updated. No field was removed."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:473
+#: admin/class-ecapla-certverify-admin.php:475
 msgid "That retired field cannot be restored."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:493
+#: admin/class-ecapla-certverify-admin.php:495
 msgid "The retired field could not be restored."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:497
+#: admin/class-ecapla-certverify-admin.php:499
 msgid "The retired marker could not be cleared, and the restored field could not be rolled back. Review the active and retired field registries before continuing."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:499
+#: admin/class-ecapla-certverify-admin.php:501
 msgid "The retired field could not be restored safely. The active field layout was rolled back."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:511
+#: admin/class-ecapla-certverify-admin.php:513
 msgid "Core field labels could not be reset for the current site language."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:524
+#: admin/class-ecapla-certverify-admin.php:526
 msgid "That retired field cannot be purged."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:538
+#: admin/class-ecapla-certverify-admin.php:540
 msgid "Stored values were purged, but the retired registry could not be updated. The reserved key remains safe; run Purge again to retry the final registry cleanup."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:552
+#: admin/class-ecapla-certverify-admin.php:554
 msgid "Choose a CSV file to upload."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:558
+#: admin/class-ecapla-certverify-admin.php:560
 msgid "Upload a valid .csv file."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:56
+#: admin/class-ecapla-certverify-admin.php:564
+msgid "The CSV file is larger than the 5 MB import limit."
+msgstr ""
+
 #: admin/class-ecapla-certverify-admin.php:57
+#: admin/class-ecapla-certverify-admin.php:58
 #: admin/views/partials/brand-bar.php:7
 #: elementor/class-ecapla-certverify-elementor-widget.php:26
 msgid "Certloom"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:562
-msgid "The CSV file is larger than the 5 MB import limit."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:582
+#: admin/class-ecapla-certverify-admin.php:584
 msgid "That import session expired. Upload the file again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:593
+#: admin/class-ecapla-certverify-admin.php:595
 msgid "Only an administrator can enable Historical restore mode."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:614
+#: admin/class-ecapla-certverify-admin.php:616
 msgid "That import session expired during processing. Upload the file again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:64
-#: admin/class-ecapla-certverify-admin.php:64
+#: admin/class-ecapla-certverify-admin.php:65
+#: admin/class-ecapla-certverify-admin.php:65
 #: admin/views/dashboard.php:18
 msgid "Dashboard"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:690
+#: admin/class-ecapla-certverify-admin.php:692
 msgid "The settings could not be saved. Role access was not changed."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:724
+#: admin/class-ecapla-certverify-admin.php:726
 msgid "The general settings were saved, but one or more role changes failed and could not be fully rolled back. Review role access before continuing."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:725
+#: admin/class-ecapla-certverify-admin.php:727
 msgid "The general settings were saved, but role access could not be updated. The previous role access was restored."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:76
-#: admin/class-ecapla-certverify-admin.php:76
+#: admin/class-ecapla-certverify-admin.php:77
+#: admin/class-ecapla-certverify-admin.php:77
 msgid "Data Tools"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:77
-#: admin/class-ecapla-certverify-admin.php:77
-#: admin/class-ecapla-certverify-admin.php:1030
+#: admin/class-ecapla-certverify-admin.php:78
+#: admin/class-ecapla-certverify-admin.php:78
+msgid "Analytics"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:79
+#: admin/class-ecapla-certverify-admin.php:79
+#: admin/class-ecapla-certverify-admin.php:1032
 msgid "Integrations"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:78
-#: admin/class-ecapla-certverify-admin.php:78
+#: admin/class-ecapla-certverify-admin.php:80
+#: admin/class-ecapla-certverify-admin.php:80
 msgid "Settings"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:81
-#: admin/class-ecapla-certverify-admin.php:81
+#: admin/class-ecapla-certverify-admin.php:83
+#: admin/class-ecapla-certverify-admin.php:83
 msgid "Add Certificate"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:82
-#: admin/class-ecapla-certverify-admin.php:82
+#: admin/class-ecapla-certverify-admin.php:84
+#: admin/class-ecapla-certverify-admin.php:84
 msgid "Field Manager"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:83
-#: admin/class-ecapla-certverify-admin.php:83
+#: admin/class-ecapla-certverify-admin.php:85
+#: admin/class-ecapla-certverify-admin.php:85
 msgid "Appearance & Embed"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:84
-#: admin/class-ecapla-certverify-admin.php:84
+#: admin/class-ecapla-certverify-admin.php:853
+msgid "The Certificate Manager role could not be created or updated."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:86
+#: admin/class-ecapla-certverify-admin.php:86
 msgid "Setup"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:85
-#: admin/class-ecapla-certverify-admin.php:85
+#: admin/class-ecapla-certverify-admin.php:87
+#: admin/class-ecapla-certverify-admin.php:87
 #: admin/views/bulk-review.php:15
 msgid "Review bulk change"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:851
-msgid "The Certificate Manager role could not be created or updated."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:869
+#: admin/class-ecapla-certverify-admin.php:871
 msgid "Choose a Certloom backup file."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:875
+#: admin/class-ecapla-certverify-admin.php:877
 msgid "Upload a valid .cvbackup or legacy .json Certloom backup."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:889
+#: admin/class-ecapla-certverify-admin.php:891
 msgid "Confirm that you understand the selected restore mode can replace or merge Certloom data and that Certloom writes will be paused until the restore finishes."
 msgstr ""
 
@@ -364,6 +373,181 @@ msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:98
 msgid "Legacy review required"
+msgstr ""
+
+#: admin/views/analytics.php:10
+msgid "ANL-01 · Local privacy-safe analytics"
+msgstr ""
+
+#: admin/views/analytics.php:11
+msgid "Verification Analytics"
+msgstr ""
+
+#: admin/views/analytics.php:12
+msgid "Understand verification outcomes and trends without storing raw IP addresses, User-Agents, secondary proofs, or failed certificate-number input."
+msgstr ""
+
+#: admin/views/analytics.php:16
+msgid "Reporting period"
+msgstr ""
+
+#: admin/views/analytics.php:22
+#: includes/class-ecapla-certverify-recipient-portal.php:162
+msgid "Apply"
+msgstr ""
+
+#: admin/views/analytics.php:33
+msgid "Daily trend"
+msgstr ""
+
+#: admin/views/analytics.php:33
+msgid "Monthly trend"
+msgstr ""
+
+#: admin/views/analytics.php:33
+msgid "Weekly trend"
+msgstr ""
+
+#: admin/views/analytics.php:34
+#: admin/views/fields-manager.php:125
+msgid "Date"
+msgstr ""
+
+#: admin/views/analytics.php:34
+msgid "Month"
+msgstr ""
+
+#: admin/views/analytics.php:34
+msgid "Week starting"
+msgstr ""
+
+#: admin/views/analytics.php:35
+msgid "Daily verification lookup totals"
+msgstr ""
+
+#: admin/views/analytics.php:35
+msgid "Monthly verification lookup totals"
+msgstr ""
+
+#: admin/views/analytics.php:35
+msgid "Weekly verification lookup totals"
+msgstr ""
+
+#: admin/views/analytics.php:36
+msgid "Daily verification trend table"
+msgstr ""
+
+#: admin/views/analytics.php:36
+msgid "Monthly verification trend table"
+msgstr ""
+
+#: admin/views/analytics.php:36
+msgid "Weekly verification trend table"
+msgstr ""
+
+#: admin/views/analytics.php:38
+msgid "Verification summary"
+msgstr ""
+
+#: admin/views/analytics.php:4
+msgid "Verification analytics are unavailable."
+msgstr ""
+
+#: admin/views/analytics.php:41
+msgid "Total lookups"
+msgstr ""
+
+#: admin/views/analytics.php:42
+#: admin/views/analytics.php:70
+msgid "Successful"
+msgstr ""
+
+#: admin/views/analytics.php:44
+msgid "Invalid input"
+msgstr ""
+
+#: admin/views/analytics.php:5
+msgid "12 months"
+msgstr ""
+
+#: admin/views/analytics.php:5
+msgid "30 days"
+msgstr ""
+
+#: admin/views/analytics.php:5
+msgid "7 days"
+msgstr ""
+
+#: admin/views/analytics.php:5
+msgid "90 days"
+msgstr ""
+
+#: admin/views/analytics.php:55
+msgid "Verification activity"
+msgstr ""
+
+#: admin/views/analytics.php:57
+msgid "Counts will appear here after public verification requests are recorded."
+msgstr ""
+
+#: admin/views/analytics.php:57
+msgid "No verification activity in this period."
+msgstr ""
+
+#: admin/views/analytics.php:66
+msgid "%1$s: %2$d verification lookups"
+msgstr ""
+
+#: admin/views/analytics.php:70
+msgid "Invalid"
+msgstr ""
+
+#: admin/views/analytics.php:78
+msgid "How verification started"
+msgstr ""
+
+#: admin/views/analytics.php:79
+msgid "API"
+msgstr ""
+
+#: admin/views/analytics.php:79
+msgid "Manual / direct"
+msgstr ""
+
+#: admin/views/analytics.php:79
+msgid "QR scan"
+msgstr ""
+
+#: admin/views/analytics.php:81
+msgid "Aggregates, not visitor logs"
+msgstr ""
+
+#: admin/views/analytics.php:81
+msgid "Certloom keeps daily aggregate counters for up to %d days. It does not store raw IP addresses, User-Agents, secondary proof codes, or raw failed certificate-number input in this analytics table."
+msgstr ""
+
+#: admin/views/analytics.php:81
+msgid "Privacy"
+msgstr ""
+
+#: admin/views/analytics.php:85
+msgid "Credential interest"
+msgstr ""
+
+#: admin/views/analytics.php:85
+msgid "Most verified credentials"
+msgstr ""
+
+#: admin/views/analytics.php:86
+msgid "Lookups"
+msgstr ""
+
+#: admin/views/analytics.php:86
+msgid "No resolved credentials have verification activity in this period."
+msgstr ""
+
+#: admin/views/analytics.php:86
+msgid "Open credential"
 msgstr ""
 
 #: admin/views/backup-progress.php:13
@@ -983,10 +1167,6 @@ msgstr ""
 
 #: admin/views/fields-manager.php:124
 msgid "e.g. Accreditation body"
-msgstr ""
-
-#: admin/views/fields-manager.php:125
-msgid "Date"
 msgstr ""
 
 #: admin/views/fields-manager.php:125
@@ -1871,9 +2051,9 @@ msgid "Certificate Manager role created with least-privilege access."
 msgstr ""
 
 #: admin/views/settings-manager.php:143
-#: includes/class-ecapla-certverify-system-status.php:164
-#: includes/class-ecapla-certverify-system-status.php:168
-#: includes/class-ecapla-certverify-system-status.php:183
+#: includes/class-ecapla-certverify-system-status.php:180
+#: includes/class-ecapla-certverify-system-status.php:184
+#: includes/class-ecapla-certverify-system-status.php:199
 msgid "Isolated database proof"
 msgstr ""
 
@@ -1905,12 +2085,12 @@ msgstr ""
 #: admin/views/settings-manager.php:336
 #: admin/views/settings-manager.php:337
 #: admin/views/settings-manager.php:338
-#: includes/class-ecapla-certverify-system-status.php:178
-#: includes/class-ecapla-certverify-system-status.php:202
+#: includes/class-ecapla-certverify-system-status.php:194
 #: includes/class-ecapla-certverify-system-status.php:218
-#: includes/class-ecapla-certverify-system-status.php:244
-#: includes/class-ecapla-certverify-system-status.php:270
-#: includes/class-ecapla-certverify-system-status.php:295
+#: includes/class-ecapla-certverify-system-status.php:234
+#: includes/class-ecapla-certverify-system-status.php:260
+#: includes/class-ecapla-certverify-system-status.php:286
+#: includes/class-ecapla-certverify-system-status.php:311
 msgid "Passed"
 msgstr ""
 
@@ -2464,9 +2644,9 @@ msgid "Use the local WordPress Site Icon on clean Certloom routes"
 msgstr ""
 
 #: admin/views/settings-manager.php:87
-#: includes/class-ecapla-certverify-system-status.php:104
-#: includes/class-ecapla-certverify-system-status.php:109
-#: includes/class-ecapla-certverify-system-status.php:125
+#: includes/class-ecapla-certverify-system-status.php:105
+#: includes/class-ecapla-certverify-system-status.php:110
+#: includes/class-ecapla-certverify-system-status.php:126
 msgid "Local verification QR"
 msgstr ""
 
@@ -2491,9 +2671,9 @@ msgid "Use the local WordPress Site Icon as a small center mark in verification 
 msgstr ""
 
 #: admin/views/settings-manager.php:89
-#: includes/class-ecapla-certverify-system-status.php:130
-#: includes/class-ecapla-certverify-system-status.php:134
-#: includes/class-ecapla-certverify-system-status.php:143
+#: includes/class-ecapla-certverify-system-status.php:131
+#: includes/class-ecapla-certverify-system-status.php:135
+#: includes/class-ecapla-certverify-system-status.php:144
 msgid "Local Code 128 barcode"
 msgstr ""
 
@@ -2870,57 +3050,61 @@ msgstr ""
 msgid "This block is recipient-specific. The editor preview uses the current signed-in account and remains fail-closed until normalized credential authority is available."
 msgstr ""
 
-#: certloom.php:167
+#: certloom.php:180
 msgid "Certloom could not save the multisite provisioning failure report."
 msgstr ""
 
-#: certloom.php:172
+#: certloom.php:185
 msgid "Certloom completed network setup but could not clear an old provisioning failure report."
 msgstr ""
 
-#: certloom.php:207
+#: certloom.php:224
 msgid "Certloom could not save its required administrator access."
 msgstr ""
 
 #. translators: 1: site ID, 2: setup error.
-#: certloom.php:231
+#: certloom.php:248
 msgid "Site %1$d: %2$s"
 msgstr ""
 
-#: certloom.php:236
+#: certloom.php:253
 msgid "Certloom activation stopped because required setup could not be completed."
 msgstr ""
 
-#: certloom.php:240
+#: certloom.php:257
 msgid "Certloom activation failed"
 msgstr ""
 
 #. translators: %s: comma-separated multisite site IDs.
-#: certloom.php:369
+#: certloom.php:387
 msgid "Certloom could not finish provisioning on site IDs: %s. Visit each affected site administration area to retry database and access setup."
 msgstr ""
 
-#: certloom.php:396
+#: certloom.php:414
 msgid "Certloom could not persist its required administrator access. The migration will be retried automatically."
 msgstr ""
 
-#: certloom.php:413
+#: certloom.php:431
 msgid "Certloom could not persist the multisite provisioning status."
 msgstr ""
 
-#: certloom.php:528
+#: certloom.php:546
 msgid "Certloom publishes only the certificate fields that a site administrator marks as visible. Those fields may include names or other personal information, so administrators should publish only information they are authorised to disclose."
 msgstr ""
 
-#: certloom.php:529
+#: certloom.php:547
 msgid "Depending on the Certloom features enabled by the site, local WordPress storage may also contain recipient identity/contact data and administrator-managed issuer or signer contact details. These records remain on the site unless the administrator exports, changes, or removes them according to the organization’s retention obligations."
 msgstr ""
 
-#: certloom.php:530
+#: certloom.php:548
 msgid "Certificate verification is performed on this WordPress site. Certloom does not send certificate records to Ecapla or another external service. Verification requests may still appear in normal web-server, security, analytics, browser-history, and cache logs. Direct verification links can include the certificate number in the URL."
 msgstr ""
 
-#: certloom.php:531
+#: certloom.php:549
+msgid "When Certloom Verification Analytics is available, Certloom stores daily aggregate verification counters locally for up to 730 days. These aggregates classify outcomes and sources such as manual, QR, or API verification; they do not store raw IP addresses, User-Agents, secondary proof codes, or raw failed certificate-number input. Verification analytics are operational data and are removed when Certloom is uninstalled."
+msgstr ""
+
+#: certloom.php:550
 msgid "Site administrators determine how long certificate records are retained and can configure whether Certloom data is removed when the plugin is uninstalled."
 msgstr ""
 
@@ -3396,6 +3580,35 @@ msgstr ""
 #: elementor/class-ecapla-certverify-template-widgets.php:96
 #: blocks/certloom/index.js:97
 msgid "Show heading"
+msgstr ""
+
+#: includes/class-ecapla-certverify-analytics.php:162
+msgid "Certloom could not complete verification analytics retention cleanup."
+msgstr ""
+
+#: includes/class-ecapla-certverify-analytics.php:175
+msgid "Verification analytics storage is not ready yet. Open Certloom again after database setup completes."
+msgstr ""
+
+#: includes/class-ecapla-certverify-analytics.php:186
+#: includes/class-ecapla-certverify-analytics.php:212
+msgid "Certloom could not read verification analytics."
+msgstr ""
+
+#: includes/class-ecapla-certverify-analytics.php:56
+msgid "Certloom could not create or update its verification analytics table."
+msgstr ""
+
+#: includes/class-ecapla-certverify-analytics.php:61
+msgid "Certloom could not verify its verification analytics table."
+msgstr ""
+
+#: includes/class-ecapla-certverify-analytics.php:66
+msgid "Certloom created its verification analytics table but could not save its schema marker."
+msgstr ""
+
+#: includes/class-ecapla-certverify-analytics.php:72
+msgid "Certloom could not schedule verification analytics retention cleanup."
 msgstr ""
 
 #: includes/class-ecapla-certverify-backup.php:1003
@@ -4957,24 +5170,24 @@ msgstr ""
 msgid "Public profile"
 msgstr ""
 
-#: includes/class-ecapla-certverify-public-presentation.php:129
+#: includes/class-ecapla-certverify-public-presentation.php:141
 #: includes/class-ecapla-certverify-render.php:371
 msgid "Issued by"
 msgstr ""
 
-#: includes/class-ecapla-certverify-public-presentation.php:130
+#: includes/class-ecapla-certverify-public-presentation.php:142
 #: includes/class-ecapla-certverify-render.php:372
 msgid "Verified"
 msgstr ""
 
-#: includes/class-ecapla-certverify-public-presentation.php:36
-#: includes/class-ecapla-certverify-public-presentation.php:62
-#: includes/class-ecapla-certverify-rest.php:86
+#: includes/class-ecapla-certverify-public-presentation.php:41
+#: includes/class-ecapla-certverify-public-presentation.php:68
+#: includes/class-ecapla-certverify-rest.php:92
 msgid "Certificate verification is temporarily unavailable. Please try again later."
 msgstr ""
 
-#: includes/class-ecapla-certverify-public-presentation.php:42
-#: includes/class-ecapla-certverify-rest.php:167
+#: includes/class-ecapla-certverify-public-presentation.php:47
+#: includes/class-ecapla-certverify-rest.php:182
 msgid "Too many verification requests. Please wait a minute and try again."
 msgstr ""
 
@@ -5022,27 +5235,27 @@ msgstr ""
 msgid "The Site Icon file is too large for QR embedding."
 msgstr ""
 
-#: includes/class-ecapla-certverify-qr.php:103
+#: includes/class-ecapla-certverify-qr.php:105
 msgid "The QR error-correction mode is invalid."
 msgstr ""
 
-#: includes/class-ecapla-certverify-qr.php:112
+#: includes/class-ecapla-certverify-qr.php:114
 msgid "Certloom could not generate the local verification QR code."
 msgstr ""
 
-#: includes/class-ecapla-certverify-qr.php:146
+#: includes/class-ecapla-certverify-qr.php:148
 msgid "The QR logo resolver is unavailable."
 msgstr ""
 
-#: includes/class-ecapla-certverify-qr.php:156
+#: includes/class-ecapla-certverify-qr.php:158
 msgid "The QR center logo cannot be applied safely to this symbol."
 msgstr ""
 
-#: includes/class-ecapla-certverify-qr.php:179
+#: includes/class-ecapla-certverify-qr.php:191
 msgid "A valid verification URL is required for the QR code."
 msgstr ""
 
-#: includes/class-ecapla-certverify-qr.php:183
+#: includes/class-ecapla-certverify-qr.php:195
 msgid "The verification URL cannot be encoded safely."
 msgstr ""
 
@@ -5050,15 +5263,15 @@ msgstr ""
 msgid "Verification QR is disabled."
 msgstr ""
 
-#: includes/class-ecapla-certverify-qr.php:59
+#: includes/class-ecapla-certverify-qr.php:61
 msgid "Verification QR code"
 msgstr ""
 
-#: includes/class-ecapla-certverify-qr.php:59
+#: includes/class-ecapla-certverify-qr.php:61
 msgid "Verification QR code with organization mark"
 msgstr ""
 
-#: includes/class-ecapla-certverify-qr.php:60
+#: includes/class-ecapla-certverify-qr.php:62
 msgid "Scan to open this credential verification page."
 msgstr ""
 
@@ -5088,10 +5301,6 @@ msgstr ""
 
 #: includes/class-ecapla-certverify-recipient-portal.php:155
 msgid "Sort"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:162
-msgid "Apply"
 msgstr ""
 
 #: includes/class-ecapla-certverify-recipient-portal.php:187
@@ -5264,7 +5473,7 @@ msgid "e.g. CERT-9001-2026-00142"
 msgstr ""
 
 #: includes/class-ecapla-certverify-render.php:341
-#: includes/class-ecapla-certverify-rest.php:178
+#: includes/class-ecapla-certverify-rest.php:193
 msgid "Credential verification is temporarily unavailable. Please try again later."
 msgstr ""
 
@@ -5317,7 +5526,7 @@ msgstr ""
 msgid "Understand each certificate status"
 msgstr ""
 
-#: includes/class-ecapla-certverify-rest.php:157
+#: includes/class-ecapla-certverify-rest.php:172
 msgid "Credential verification is temporarily unavailable while Certloom completes its in-place data upgrade."
 msgstr ""
 
@@ -5333,375 +5542,375 @@ msgstr ""
 msgid "Certloom could not protect the verification code. Try again."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:104
+#: includes/class-ecapla-certverify-system-status.php:105
 msgid "The local QR presentation service is not loaded."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:109
+#: includes/class-ecapla-certverify-system-status.php:110
 msgid "Certloom cannot safely present QR codes until the bundled local encoder passes both standard and high-error-correction matrix self-checks."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:109
-#: includes/class-ecapla-certverify-system-status.php:134
+#: includes/class-ecapla-certverify-system-status.php:110
+#: includes/class-ecapla-certverify-system-status.php:135
 msgid "Encoder failed self-check"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:113
-#: includes/class-ecapla-certverify-system-status.php:136
+#: includes/class-ecapla-certverify-system-status.php:114
+#: includes/class-ecapla-certverify-system-status.php:137
 msgid "Available — hidden by setting"
 msgstr ""
 
 #. translators: 1: encoder ID, 2: encoder version.
-#: includes/class-ecapla-certverify-system-status.php:116
-msgid "Encoder %1$s v%2$s runs locally; no remote QR service is used. Public QR encodes only the canonical verification URL."
+#: includes/class-ecapla-certverify-system-status.php:117
+msgid "Encoder %1$s v%2$s runs locally; no remote QR service is used. Public QR encodes the canonical verification URL plus Certloom's privacy-safe QR source attribution marker."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:121
+#: includes/class-ecapla-certverify-system-status.php:122
 msgid "The local Site Icon passed the bounded QR-logo asset check and logo QR uses high error correction."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:123
+#: includes/class-ecapla-certverify-system-status.php:124
 msgid "QR center-logo mode is enabled, but the Site Icon is missing or not a safe local PNG/JPEG; Certloom will fall back to the plain QR."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:130
+#: includes/class-ecapla-certverify-system-status.php:131
 msgid "The local Code 128 presentation service is not loaded."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:134
+#: includes/class-ecapla-certverify-system-status.php:135
 msgid "Certloom cannot present Code 128 until the bundled local encoder passes its structural self-check."
 msgstr ""
 
 #. translators: 1: encoder ID, 2: encoder version.
-#: includes/class-ecapla-certverify-system-status.php:139
+#: includes/class-ecapla-certverify-system-status.php:140
 msgid "Encoder %1$s v%2$s runs locally and represents the existing human certificate number only; it adds no barcode lookup endpoint or alternate credential identity."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:149
+#: includes/class-ecapla-certverify-system-status.php:150
+#: includes/class-ecapla-certverify-system-status.php:154
+#: includes/class-ecapla-certverify-system-status.php:157
+#: includes/class-ecapla-certverify-system-status.php:159
+msgid "Verification analytics"
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:150
+msgid "Verification remains authoritative, but ANL-01 aggregate reporting is unavailable."
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:154
+msgid "Storage not ready"
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:154
+msgid "Verification continues normally. Visit Certloom administration to retry the privacy-minimized aggregate analytics table setup."
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:157
+msgid "Aggregate analytics are available, but the 730-day cleanup event is not scheduled. Deactivate/reactivate Certloom or retry setup before relying on the retention ceiling."
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:157
+msgid "Ready — retention task missing"
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:159
+msgid "Daily aggregate counters are stored locally with a 730-day retention ceiling; raw IP addresses and User-Agents are not stored."
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:165
 msgid "Authority gate unavailable"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:149
+#: includes/class-ecapla-certverify-system-status.php:165
 msgid "Certloom cannot unlock renderer-backed product authority without its release-bound authority gate."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:149
-#: includes/class-ecapla-certverify-system-status.php:153
-#: includes/class-ecapla-certverify-system-status.php:157
-#: includes/class-ecapla-certverify-system-status.php:159
+#: includes/class-ecapla-certverify-system-status.php:165
+#: includes/class-ecapla-certverify-system-status.php:169
+#: includes/class-ecapla-certverify-system-status.php:173
+#: includes/class-ecapla-certverify-system-status.php:175
 msgid "Production renderer authority"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:153
+#: includes/class-ecapla-certverify-system-status.php:169
 msgid "Accepted for this release"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:153
+#: includes/class-ecapla-certverify-system-status.php:169
 msgid "This Certloom release contains a valid release-bound PDF-04 authority manifest. Per-host artifact execution still requires the exact accepted renderer candidates and their runtime dependencies."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:157
+#: includes/class-ecapla-certverify-system-status.php:173
 msgid "Expected while PDF-04 is open. Template publication and production artifact actions remain fail-closed; no WordPress option can bypass this release-bound gate."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:157
+#: includes/class-ecapla-certverify-system-status.php:173
 msgid "Not accepted in this release"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:159
+#: includes/class-ecapla-certverify-system-status.php:175
 msgid "A bundled renderer authority record exists but could not be validated for this Certloom release. Renderer-backed product authority must remain disabled."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:159
+#: includes/class-ecapla-certverify-system-status.php:175
 msgid "Invalid / mismatched authority"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:164
-#: includes/class-ecapla-certverify-system-status.php:189
-#: includes/class-ecapla-certverify-system-status.php:210
-#: includes/class-ecapla-certverify-system-status.php:377
+#: includes/class-ecapla-certverify-system-status.php:180
+#: includes/class-ecapla-certverify-system-status.php:205
+#: includes/class-ecapla-certverify-system-status.php:226
+#: includes/class-ecapla-certverify-system-status.php:393
 msgid "Not available"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:164
+#: includes/class-ecapla-certverify-system-status.php:180
 msgid "The administrator-triggered database acceptance probe is unavailable."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:168
+#: includes/class-ecapla-certverify-system-status.php:184
 msgid "An administrator can run the isolated proof below. It uses a temporary Certloom scratch table and never reads certificate data."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:168
-#: includes/class-ecapla-certverify-system-status.php:193
-#: includes/class-ecapla-certverify-system-status.php:214
-#: includes/class-ecapla-certverify-system-status.php:240
-#: includes/class-ecapla-certverify-system-status.php:266
-#: includes/class-ecapla-certverify-system-status.php:291
+#: includes/class-ecapla-certverify-system-status.php:184
+#: includes/class-ecapla-certverify-system-status.php:209
+#: includes/class-ecapla-certverify-system-status.php:230
+#: includes/class-ecapla-certverify-system-status.php:256
+#: includes/class-ecapla-certverify-system-status.php:282
+#: includes/class-ecapla-certverify-system-status.php:307
 msgid "Not run"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:178
-#: includes/class-ecapla-certverify-system-status.php:202
+#: includes/class-ecapla-certverify-system-status.php:194
+#: includes/class-ecapla-certverify-system-status.php:218
 msgid "Incomplete"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:178
-#: includes/class-ecapla-certverify-system-status.php:202
+#: includes/class-ecapla-certverify-system-status.php:194
+#: includes/class-ecapla-certverify-system-status.php:218
 msgid "Passed previously — run again"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:180
+#: includes/class-ecapla-certverify-system-status.php:196
 msgid "%1$d passed, %2$d warnings, %3$d failed in the stored proof, but the evidence is stale for this Certloom version or older than seven days. Run it again before relying on it."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:181
+#: includes/class-ecapla-certverify-system-status.php:197
 msgid "%1$d passed, %2$d warnings, %3$d failed. This proof uses only an isolated scratch table; the full future-domain acceptance suite is still required before cutover."
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:189
-#: includes/class-ecapla-certverify-system-status.php:193
-#: includes/class-ecapla-certverify-system-status.php:204
-msgid "Gated-domain acceptance proof"
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:193
-msgid "After a fresh passing isolated database proof, an administrator can exercise the real additive Credential Series schema/repositories with rollback-only synthetic data."
 msgstr ""
 
 #: includes/class-ecapla-certverify-system-status.php:20
 msgid "Certloom version"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:203
-msgid "%1$d passed, %2$d warnings, %3$d failed. This proof provisions the additive future-domain tables but rolls back all synthetic credential rows; live legacy migration/restore/cutover remain separate gates."
+#: includes/class-ecapla-certverify-system-status.php:205
+#: includes/class-ecapla-certverify-system-status.php:209
+#: includes/class-ecapla-certverify-system-status.php:220
+msgid "Gated-domain acceptance proof"
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:209
+msgid "After a fresh passing isolated database proof, an administrator can exercise the real additive Credential Series schema/repositories with rollback-only synthetic data."
 msgstr ""
 
 #: includes/class-ecapla-certverify-system-status.php:21
 msgid "WordPress version"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:210
-#: includes/class-ecapla-certverify-system-status.php:214
-#: includes/class-ecapla-certverify-system-status.php:226
-msgid "Populated migration preflight"
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:214
-msgid "After the gated-domain proof passes, Certloom can read-only scan every live 1.5 row through the final migration mapper before any official migration begins."
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:218
-#: includes/class-ecapla-certverify-system-status.php:244
-#: includes/class-ecapla-certverify-system-status.php:270
-#: includes/class-ecapla-certverify-system-status.php:295
-msgid "In progress"
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:218
-msgid "Stale — run again"
+#: includes/class-ecapla-certverify-system-status.php:219
+msgid "%1$d passed, %2$d warnings, %3$d failed. This proof provisions the additive future-domain tables but rolls back all synthetic credential rows; live legacy migration/restore/cutover remain separate gates."
 msgstr ""
 
 #: includes/class-ecapla-certverify-system-status.php:22
 msgid "PHP version"
 msgstr ""
 
-#. translators: 1: mapped rows, 2: source rows, 3: rows requiring review.
-#: includes/class-ecapla-certverify-system-status.php:221
-msgid "%1$d of %2$d live rows mapped; %3$d require review. The proof is read-only and official migration/cutover remain separate gates."
+#: includes/class-ecapla-certverify-system-status.php:226
+#: includes/class-ecapla-certverify-system-status.php:230
+#: includes/class-ecapla-certverify-system-status.php:242
+msgid "Populated migration preflight"
 msgstr ""
 
 #: includes/class-ecapla-certverify-system-status.php:23
 msgid "Database server"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:236
-#: includes/class-ecapla-certverify-system-status.php:262
-#: includes/class-ecapla-certverify-system-status.php:287
+#: includes/class-ecapla-certverify-system-status.php:230
+msgid "After the gated-domain proof passes, Certloom can read-only scan every live 1.5 row through the final migration mapper before any official migration begins."
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:234
+#: includes/class-ecapla-certverify-system-status.php:260
+#: includes/class-ecapla-certverify-system-status.php:286
+#: includes/class-ecapla-certverify-system-status.php:311
+msgid "In progress"
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:234
+msgid "Stale — run again"
+msgstr ""
+
+#. translators: 1: mapped rows, 2: source rows, 3: rows requiring review.
+#: includes/class-ecapla-certverify-system-status.php:237
+msgid "%1$d of %2$d live rows mapped; %3$d require review. The proof is read-only and official migration/cutover remain separate gates."
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:252
+#: includes/class-ecapla-certverify-system-status.php:278
+#: includes/class-ecapla-certverify-system-status.php:303
 msgid "Opt-in required"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:236
-#: includes/class-ecapla-certverify-system-status.php:240
 #: includes/class-ecapla-certverify-system-status.php:252
+#: includes/class-ecapla-certverify-system-status.php:256
+#: includes/class-ecapla-certverify-system-status.php:268
 msgid "Staging migration commit rehearsal"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:236
+#: includes/class-ecapla-certverify-system-status.php:252
 msgid "This non-production environment can run the real populated migration rehearsal after the explicit wp-config opt-in is enabled."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:240
+#: includes/class-ecapla-certverify-system-status.php:256
 msgid "After fresh prerequisite proofs pass, this staging/local-only action can exercise the production migration coordinator without switching credential authority."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:244
-#: includes/class-ecapla-certverify-system-status.php:270
-#: includes/class-ecapla-certverify-system-status.php:295
+#: includes/class-ecapla-certverify-system-status.php:260
+#: includes/class-ecapla-certverify-system-status.php:286
+#: includes/class-ecapla-certverify-system-status.php:311
 msgid "Stale — review staging copy"
 msgstr ""
 
 #. translators: 1: frozen legacy rows, 2: target parity rows, 3: idempotency rows.
-#: includes/class-ecapla-certverify-system-status.php:247
+#: includes/class-ecapla-certverify-system-status.php:263
 msgid "%1$d frozen legacy rows; %2$d target rows parity-verified; %3$d rows replayed idempotently. Credential authority remains unchanged."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:262
-#: includes/class-ecapla-certverify-system-status.php:266
-#: includes/class-ecapla-certverify-system-status.php:277
+#: includes/class-ecapla-certverify-system-status.php:278
+#: includes/class-ecapla-certverify-system-status.php:282
+#: includes/class-ecapla-certverify-system-status.php:293
 msgid "Staging backup/restore rehearsal"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:262
+#: includes/class-ecapla-certverify-system-status.php:278
 msgid "This non-production environment can exercise populated Replace, Merge and forced rollback only after the explicit wp-config opt-in is enabled."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:266
+#: includes/class-ecapla-certverify-system-status.php:282
 msgid "After the populated staging migration rehearsal passes, this staging/local-only action can exercise real domain backup, Replace, Merge and rollback without changing credential authority."
 msgstr ""
 
 #. translators: 1: baseline records, 2: backup records.
-#: includes/class-ecapla-certverify-system-status.php:273
+#: includes/class-ecapla-certverify-system-status.php:289
 msgid "%1$d baseline future-domain records; %2$d backup records. Replace, identical Merge and forced rollback must all reproduce the same complete graph. Credential authority remains unchanged."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:287
-#: includes/class-ecapla-certverify-system-status.php:291
-#: includes/class-ecapla-certverify-system-status.php:302
+#: includes/class-ecapla-certverify-system-status.php:303
+#: includes/class-ecapla-certverify-system-status.php:307
+#: includes/class-ecapla-certverify-system-status.php:318
 msgid "Staging final cutover rehearsal"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:287
+#: includes/class-ecapla-certverify-system-status.php:303
 msgid "This non-production environment can temporarily exercise and roll back the real authority cutover after the explicit wp-config opt-in is enabled."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:291
+#: includes/class-ecapla-certverify-system-status.php:307
 msgid "After populated migration and restore rehearsals pass, this staging/local-only action can exercise the production cutover coordinator, public verification gate and rollback-to-legacy baseline."
 msgstr ""
 
 #. translators: 1: frozen legacy rows, 2: future-domain records fingerprinted.
-#: includes/class-ecapla-certverify-system-status.php:298
+#: includes/class-ecapla-certverify-system-status.php:314
 msgid "%1$d frozen legacy rows; %2$d future-domain records fingerprinted. Cutover receipt, legacy read-only guard, Series verification readiness, rollback to legacy, and graph parity must all pass."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:308
-#: includes/class-ecapla-certverify-system-status.php:311
-#: includes/class-ecapla-certverify-system-status.php:313
+#: includes/class-ecapla-certverify-system-status.php:324
+#: includes/class-ecapla-certverify-system-status.php:327
+#: includes/class-ecapla-certverify-system-status.php:329
 msgid "Credential authority"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:308
+#: includes/class-ecapla-certverify-system-status.php:324
 msgid "Proven 1.5 registry (expected)"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:308
+#: includes/class-ecapla-certverify-system-status.php:324
 msgid "The live 1.5 registry remains authoritative while the next domain is still gated."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:311
+#: includes/class-ecapla-certverify-system-status.php:327
 msgid "Next domain"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:311
+#: includes/class-ecapla-certverify-system-status.php:327
 msgid "The next domain is marked authoritative. Its committed cutover receipt and runtime gates must also be valid."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:313
+#: includes/class-ecapla-certverify-system-status.php:329
 msgid "Certloom intentionally blocks legacy writes and Series public verification when the authority option is non-empty but invalid. Repair it only from known-good migration/cutover recovery evidence."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:313
-#: includes/class-ecapla-certverify-system-status.php:352
+#: includes/class-ecapla-certverify-system-status.php:329
 #: includes/class-ecapla-certverify-system-status.php:368
+#: includes/class-ecapla-certverify-system-status.php:384
 msgid "Corrupt protected state"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:320
-#: includes/class-ecapla-certverify-system-status.php:377
-#: includes/class-ecapla-certverify-system-status.php:409
+#: includes/class-ecapla-certverify-system-status.php:336
+#: includes/class-ecapla-certverify-system-status.php:393
+#: includes/class-ecapla-certverify-system-status.php:425
 msgid "Available"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:320
-#: includes/class-ecapla-certverify-system-status.php:323
-#: includes/class-ecapla-certverify-system-status.php:326
-#: includes/class-ecapla-certverify-system-status.php:328
+#: includes/class-ecapla-certverify-system-status.php:336
+#: includes/class-ecapla-certverify-system-status.php:339
+#: includes/class-ecapla-certverify-system-status.php:342
+#: includes/class-ecapla-certverify-system-status.php:344
 msgid "Certificate writes"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:323
+#: includes/class-ecapla-certverify-system-status.php:339
 msgid "Blocked by corrupt maintenance state"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:323
+#: includes/class-ecapla-certverify-system-status.php:339
 msgid "Certloom intentionally fails closed when a non-empty maintenance lock cannot be parsed. A legitimate restore/recovery operation can repair the lock safely."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:326
+#: includes/class-ecapla-certverify-system-status.php:342
 msgid "A Certloom restore or maintenance operation currently owns the live write boundary."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:326
+#: includes/class-ecapla-certverify-system-status.php:342
 msgid "Paused by restore/maintenance"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:328
+#: includes/class-ecapla-certverify-system-status.php:344
 msgid "Stale maintenance lease detected"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:328
+#: includes/class-ecapla-certverify-system-status.php:344
 msgid "This read-only report does not delete stale state. The next legitimate Certloom maintenance/write check will handle owner-safe expiry cleanup."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:335
-#: includes/class-ecapla-certverify-system-status.php:362
+#: includes/class-ecapla-certverify-system-status.php:351
+#: includes/class-ecapla-certverify-system-status.php:378
 msgctxt "maintenance status"
 msgid "Inactive"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:335
-#: includes/class-ecapla-certverify-system-status.php:352
-#: includes/class-ecapla-certverify-system-status.php:355
-#: includes/class-ecapla-certverify-system-status.php:356
-msgid "Next-domain maintenance"
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:335
-msgid "No gated credential-domain restore/cutover maintenance lease is present."
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:352
-msgid "A non-empty next-domain maintenance value could not be validated. Future-domain writes/cutover must remain fail-closed until a legitimate maintenance worker repairs it."
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:355
-msgid "A gated credential-domain maintenance operation currently owns its write boundary."
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:355
-msgid "Active protected lease"
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:356
-msgid "Stale protected lease"
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:356
-msgid "The lease has expired. This read-only status screen does not repair or delete it."
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:362
+#: includes/class-ecapla-certverify-system-status.php:351
 #: includes/class-ecapla-certverify-system-status.php:368
 #: includes/class-ecapla-certverify-system-status.php:371
 #: includes/class-ecapla-certverify-system-status.php:372
-msgid "Next-domain schema maintenance"
+msgid "Next-domain maintenance"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:362
-msgid "No gated credential-domain schema-maintenance lock is present."
+#: includes/class-ecapla-certverify-system-status.php:351
+msgid "No gated credential-domain restore/cutover maintenance lease is present."
 msgstr ""
 
 #: includes/class-ecapla-certverify-system-status.php:368
-msgid "A non-empty schema-maintenance lock could not be validated. Future-domain schema work must remain fail-closed until repaired by its owner-safe maintenance path."
+msgid "A non-empty next-domain maintenance value could not be validated. Future-domain writes/cutover must remain fail-closed until a legitimate maintenance worker repairs it."
 msgstr ""
 
 #: includes/class-ecapla-certverify-system-status.php:37
@@ -5709,149 +5918,180 @@ msgid "Next-domain feature gates"
 msgstr ""
 
 #: includes/class-ecapla-certverify-system-status.php:371
-msgid "Active protected lock"
+msgid "A gated credential-domain maintenance operation currently owns its write boundary."
 msgstr ""
 
 #: includes/class-ecapla-certverify-system-status.php:371
+msgid "Active protected lease"
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:372
+msgid "Stale protected lease"
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:372
+msgid "The lease has expired. This read-only status screen does not repair or delete it."
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:378
+#: includes/class-ecapla-certverify-system-status.php:384
+#: includes/class-ecapla-certverify-system-status.php:387
+#: includes/class-ecapla-certverify-system-status.php:388
+msgid "Next-domain schema maintenance"
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:378
+msgid "No gated credential-domain schema-maintenance lock is present."
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:384
+msgid "A non-empty schema-maintenance lock could not be validated. Future-domain schema work must remain fail-closed until repaired by its owner-safe maintenance path."
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:387
+msgid "Active protected lock"
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:387
 msgid "Gated credential-domain schema maintenance is currently marked in progress."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:372
+#: includes/class-ecapla-certverify-system-status.php:388
 msgid "Stale protected lock"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:372
+#: includes/class-ecapla-certverify-system-status.php:388
 msgid "The schema-maintenance lock is stale. This read-only status screen does not repair or delete it."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:382
-#: includes/class-ecapla-certverify-system-status.php:395
+#: includes/class-ecapla-certverify-system-status.php:398
+#: includes/class-ecapla-certverify-system-status.php:411
 msgid "Unknown"
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:400
-msgid "Could not inspect"
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:400
-#: includes/class-ecapla-certverify-system-status.php:406
-#: includes/class-ecapla-certverify-system-status.php:409
-msgid "Live certificate table"
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:406
-msgid "Missing / unreadable"
-msgstr ""
-
-#: includes/class-ecapla-certverify-system-status.php:406
-msgid "The proven registry table must be available for current certificate management and verification."
-msgstr ""
-
-#. translators: %s: database storage engine.
-#: includes/class-ecapla-certverify-system-status.php:409
-msgid "Available (%s)"
 msgstr ""
 
 #: includes/class-ecapla-certverify-system-status.php:41
 msgid "All future-domain feature gates are off, so ordinary activation does not require those unused tables."
 msgstr ""
 
+#: includes/class-ecapla-certverify-system-status.php:416
+msgid "Could not inspect"
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:416
+#: includes/class-ecapla-certverify-system-status.php:422
+#: includes/class-ecapla-certverify-system-status.php:425
+msgid "Live certificate table"
+msgstr ""
+
 #: includes/class-ecapla-certverify-system-status.php:42
 msgid "One or more development gates are enabled. The next-domain schema becomes a required dependency."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:423
+#: includes/class-ecapla-certverify-system-status.php:422
+msgid "Missing / unreadable"
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:422
+msgid "The proven registry table must be available for current certificate management and verification."
+msgstr ""
+
+#. translators: %s: database storage engine.
+#: includes/class-ecapla-certverify-system-status.php:425
+msgid "Available (%s)"
+msgstr ""
+
+#: includes/class-ecapla-certverify-system-status.php:439
 msgid "All off (expected)"
 msgstr ""
 
 #. translators: %s: comma separated internal development gates.
-#: includes/class-ecapla-certverify-system-status.php:423
+#: includes/class-ecapla-certverify-system-status.php:439
 msgid "Enabled: %s"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:50
+#: includes/class-ecapla-certverify-system-status.php:51
 msgid "PHP mbstring"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:50
+#: includes/class-ecapla-certverify-system-status.php:51
 msgid "Required by the current mPDF production-renderer benchmark candidate; not required by the current verifier or QR/barcode presentation."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:51
+#: includes/class-ecapla-certverify-system-status.php:52
 msgid "PHP GD"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:51
+#: includes/class-ecapla-certverify-system-status.php:52
 msgid "Required by the current mPDF production-renderer benchmark candidate and expected by future raster output; not required by the current verifier or QR/barcode presentation."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:54
+#: includes/class-ecapla-certverify-system-status.php:55
 msgid "WordPress Cron"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:56
+#: includes/class-ecapla-certverify-system-status.php:57
 msgid "Built-in trigger disabled"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:56
+#: includes/class-ecapla-certverify-system-status.php:57
 msgid "Built-in trigger enabled"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:58
+#: includes/class-ecapla-certverify-system-status.php:59
 msgid "This is fine when a real server cron calls wp-cron.php. Future queued issuance/email jobs must have a reliable trigger."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:59
+#: includes/class-ecapla-certverify-system-status.php:60
 msgid "Future local queues can use WordPress Cron unless the site later switches to a real server cron."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:63
+#: includes/class-ecapla-certverify-system-status.php:64
 msgid "Pretty permalinks"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:65
-#: includes/class-ecapla-certverify-system-status.php:113
-#: includes/class-ecapla-certverify-system-status.php:136
+#: includes/class-ecapla-certverify-system-status.php:66
+#: includes/class-ecapla-certverify-system-status.php:114
+#: includes/class-ecapla-certverify-system-status.php:137
 msgid "Enabled"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:65
+#: includes/class-ecapla-certverify-system-status.php:66
 msgid "Plain permalinks"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:66
+#: includes/class-ecapla-certverify-system-status.php:67
 msgid "Exact verification works either way. Phase 2 clean verification/profile routes use readable paths when pretty permalinks are enabled and query-var fallbacks otherwise."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:70
+#: includes/class-ecapla-certverify-system-status.php:71
 msgid "HTTPS request"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:72
+#: includes/class-ecapla-certverify-system-status.php:73
 msgid "No / not detected"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:73
+#: includes/class-ecapla-certverify-system-status.php:74
 msgid "HTTPS is strongly recommended for public credential verification and future authenticated APIs."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:75
+#: includes/class-ecapla-certverify-system-status.php:76
 msgid "Multisite"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:75
+#: includes/class-ecapla-certverify-system-status.php:76
 msgid "Single site"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:75
+#: includes/class-ecapla-certverify-system-status.php:76
 msgid "WordPress mode"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:76
+#: includes/class-ecapla-certverify-system-status.php:77
 msgid "Large CSV, backup and future rendering workloads benefit from adequate memory, but Certloom continues to batch heavy operations."
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:76
+#: includes/class-ecapla-certverify-system-status.php:77
 msgid "PHP memory limit"
 msgstr ""
 
@@ -7276,14 +7516,16 @@ msgid "Errors"
 msgstr ""
 
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
+#: admin/views/analytics.php:43
+#: admin/views/analytics.php:70
 #: admin/views/settings-manager.php:158
 #: admin/views/settings-manager.php:185
-#: includes/class-ecapla-certverify-system-status.php:178
-#: includes/class-ecapla-certverify-system-status.php:202
+#: includes/class-ecapla-certverify-system-status.php:194
 #: includes/class-ecapla-certverify-system-status.php:218
-#: includes/class-ecapla-certverify-system-status.php:244
-#: includes/class-ecapla-certverify-system-status.php:270
-#: includes/class-ecapla-certverify-system-status.php:295
+#: includes/class-ecapla-certverify-system-status.php:234
+#: includes/class-ecapla-certverify-system-status.php:260
+#: includes/class-ecapla-certverify-system-status.php:286
+#: includes/class-ecapla-certverify-system-status.php:311
 msgid "Failed"
 msgstr ""
 
@@ -7311,6 +7553,7 @@ msgstr ""
 
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
 #: admin/views/settings-manager.php:132
+#: includes/class-ecapla-certverify-system-status.php:159
 msgid "Ready"
 msgstr ""
 
@@ -7764,6 +8007,8 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:385
 #: src/Infrastructure/Admin/DomainAdmin.php:546
 #: src/Infrastructure/Admin/DomainAdmin.php:590
+#: admin/views/analytics.php:46
+#: admin/views/analytics.php:70
 #: includes/class-ecapla-certverify-recipient-portal.php:131
 #: includes/class-ecapla-certverify-recipient-portal.php:290
 msgid "Revoked"
@@ -7850,9 +8095,9 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:227
 #: src/Infrastructure/Admin/DomainAdmin.php:232
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:176
-#: admin/class-ecapla-certverify-admin.php:69
-#: admin/class-ecapla-certverify-admin.php:69
-#: admin/class-ecapla-certverify-admin.php:1006
+#: admin/class-ecapla-certverify-admin.php:70
+#: admin/class-ecapla-certverify-admin.php:70
+#: admin/class-ecapla-certverify-admin.php:1008
 msgid "Recipients"
 msgstr ""
 
@@ -7866,9 +8111,9 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:287
 #: src/Infrastructure/Admin/DomainAdmin.php:337
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:549
-#: admin/class-ecapla-certverify-admin.php:70
-#: admin/class-ecapla-certverify-admin.php:70
-#: admin/class-ecapla-certverify-admin.php:1012
+#: admin/class-ecapla-certverify-admin.php:71
+#: admin/class-ecapla-certverify-admin.php:71
+#: admin/class-ecapla-certverify-admin.php:1014
 msgid "Programs"
 msgstr ""
 
@@ -7922,8 +8167,8 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:299
 #: src/Infrastructure/Admin/DomainAdmin.php:382
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:176
-#: admin/class-ecapla-certverify-admin.php:65
-#: admin/class-ecapla-certverify-admin.php:65
+#: admin/class-ecapla-certverify-admin.php:66
+#: admin/class-ecapla-certverify-admin.php:66
 msgid "Credentials"
 msgstr ""
 
@@ -7948,6 +8193,8 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:547
 #: src/Infrastructure/Admin/DomainAdmin.php:591
 #: admin/class-ecapla-certverify-list-table.php:146
+#: admin/views/analytics.php:45
+#: admin/views/analytics.php:70
 #: admin/views/dashboard.php:83
 #: includes/class-ecapla-certverify-fields.php:417
 #: includes/class-ecapla-certverify-recipient-portal.php:130
@@ -8022,8 +8269,9 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:584
 #: src/Infrastructure/Admin/DomainAdmin.php:998
 #: includes/class-ecapla-certverify-recipient-portal.php:298
-#: includes/class-ecapla-certverify-system-status.php:104
-#: includes/class-ecapla-certverify-system-status.php:130
+#: includes/class-ecapla-certverify-system-status.php:105
+#: includes/class-ecapla-certverify-system-status.php:131
+#: includes/class-ecapla-certverify-system-status.php:150
 msgid "Unavailable"
 msgstr ""
 
@@ -8107,6 +8355,7 @@ msgstr ""
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
 #: src/Infrastructure/Import/DomainImportCsvReader.php:70
 #: admin/class-ecapla-certverify-list-table.php:38
+#: admin/views/analytics.php:86
 #: includes/class-ecapla-certverify-fields.php:371
 #: includes/class-ecapla-certverify-render.php:133
 #: includes/class-ecapla-certverify-render.php:226
@@ -8148,9 +8397,9 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:723
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:38
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:38
-#: admin/class-ecapla-certverify-admin.php:74
-#: admin/class-ecapla-certverify-admin.php:74
-#: admin/class-ecapla-certverify-admin.php:1024
+#: admin/class-ecapla-certverify-admin.php:75
+#: admin/class-ecapla-certverify-admin.php:75
+#: admin/class-ecapla-certverify-admin.php:1026
 msgid "Issuance"
 msgstr ""
 
@@ -8308,7 +8557,7 @@ msgid "Publicly valid now"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:718
-#: includes/class-ecapla-certverify-system-status.php:72
+#: includes/class-ecapla-certverify-system-status.php:73
 msgid "Yes"
 msgstr ""
 
@@ -8402,6 +8651,7 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:750
 #: src/Infrastructure/Admin/TemplateAdmin.php:758
+#: admin/views/analytics.php:78
 msgid "Source"
 msgstr ""
 
@@ -8462,6 +8712,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:299
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:373
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:25
+#: admin/views/analytics.php:86
 #: includes/class-ecapla-certverify-recipient-portal.php:205
 msgid "Action"
 msgstr ""
@@ -10168,9 +10419,9 @@ msgstr ""
 #: src/Infrastructure/Admin/TemplateAdmin.php:148
 #: src/Infrastructure/Admin/TemplateAdmin.php:148
 #: src/Infrastructure/Admin/TemplateAdmin.php:411
-#: admin/class-ecapla-certverify-admin.php:72
-#: admin/class-ecapla-certverify-admin.php:72
-#: admin/class-ecapla-certverify-admin.php:1018
+#: admin/class-ecapla-certverify-admin.php:73
+#: admin/class-ecapla-certverify-admin.php:73
+#: admin/class-ecapla-certverify-admin.php:1020
 msgid "Templates"
 msgstr ""
 

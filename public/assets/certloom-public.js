@@ -57,9 +57,18 @@
 		} ).join( '' );
 	}
 
-	function acquireCertificateRequest( endpoint, number, code ) {
+	function verificationSource() {
+		try {
+			return new URLSearchParams( window.location.search ).get( 'certloom_source' ) === 'qr' ? 'qr' : 'manual';
+		} catch ( error ) {
+			return 'manual';
+		}
+	}
+
+	function acquireCertificateRequest( endpoint, number, code, source ) {
 		code = ( code || '' ).trim();
-		var key = endpoint + '\n' + number + '\n' + code;
+		source = source === 'qr' ? 'qr' : 'manual';
+		var key = endpoint + '\n' + number + '\n' + code + '\n' + source;
 		var entry = inFlightRequests[ key ];
 
 		if ( ! entry ) {
@@ -81,7 +90,7 @@
 			entry.promise = fetch( endpoint, {
 				method: 'POST',
 				headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-				body: JSON.stringify( { number: number, code: code } ),
+				body: JSON.stringify( { number: number, code: code, source: source } ),
 				credentials: 'same-origin',
 				signal: entry.controller ? entry.controller.signal : undefined
 			} ).then( function ( response ) {
@@ -299,7 +308,7 @@
 			}
 			input.removeAttribute( 'aria-invalid' );
 
-			activeRequest = acquireCertificateRequest( endpoint, number, code );
+			activeRequest = acquireCertificateRequest( endpoint, number, code, verificationSource() );
 			var thisRequestHandle = activeRequest;
 			setLoading( true );
 			resultEl.innerHTML = '';

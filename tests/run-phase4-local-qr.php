@@ -32,7 +32,7 @@ $thrown=false;try{$encoder->encode(str_repeat('A',2049),'M');}catch(InvalidArgum
 
 $payload=Ecapla_CertVerify_QR::public_payload($url);
 qcheck(!is_wp_error($payload),'public QR payload is generated locally');
-qcheck($payload['url']===$url,'public QR binds to exact canonical verification URL');
+qcheck($payload['url']===$url.'?certloom_source=qr','public QR binds to the canonical verification URL plus privacy-safe QR source attribution');
 qcheck(preg_match('/^[M0-9 hvz-]+$/',$payload['path'])===1,'public transport carries only validated compact SVG path data');
 qcheck($payload['view_size']===$payload['modules']+8,'public QR includes mandatory four-module quiet zone on every side');
 $svg=Ecapla_CertVerify_QR::svg($url);
@@ -66,7 +66,7 @@ qcheck(false!==strpos($src['bootstrap'],'class-ecapla-certverify-qr.php'),'QR se
 qcheck(false!==strpos($src['settings'],"'verification_qr_enabled'     => true")&&false!==strpos($src['admin'],"'verification_qr_enabled' => ! empty( \$_POST['verification_qr_enabled'] )"),'QR visibility setting has canonical default/save path');
 qcheck(false!==strpos($src['settings_view'],'Generation is fully local and does not call a remote QR service.'),'settings UX states local-only/privacy contract');
 qcheck(false!==strpos($src['render'],'Ecapla_CertVerify_QR::figure_html'),'server/no-JS and profile renderer reuse shared QR service');
-qcheck(false!==strpos($src['rest'],'Ecapla_CertVerify_QR::public_payload')&&false!==strpos($src['rest'],"'qr'                 => \$qr"),'AJAX/REST success payload uses same server QR model');
+qcheck(false!==strpos($src['rest'],'Ecapla_CertVerify_QR::public_payload')&&false!==strpos($src['rest'],"'qr'                 => \$qr"),'AJAX/REST success payload uses same tracked server QR model');
 qcheck(false!==strpos($src['js'],'/^[M0-9 hvz-]+$/')&&false!==strpos($src['js'],'certloom-verification-qr'),'browser reconstructs only validated QR geometry, not arbitrary server HTML');
 qcheck(false!==strpos($src['css'],'.certloom-qr-svg')&&false!==strpos($src['css'],'forced-color-adjust:none'),'QR keeps scan-safe fixed colors even under forced-color themes');
 qcheck(false!==strpos($src['status'],'local_qr_check'),'System Status exposes local QR self-check');

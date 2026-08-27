@@ -22,6 +22,9 @@ qr_vectors = [
     "https://example.test/certloom/verify/CERT-2026-000001/?source=qr%20logo",
 ]
 qr_scales = (8, 12, 16)
+def tracked(url: str) -> str:
+    return url + ('&' if '?' in url else '?') + 'certloom_source=qr'
+
 qr_detector = cv2.QRCodeDetector()
 
 barcode_vectors = [
@@ -60,10 +63,11 @@ with tempfile.TemporaryDirectory(prefix="certloom-qr02-") as tmp_dir:
             if image is None:
                 raise SystemExit(f"FAIL  logo QR vector {index} scale {scale} did not rasterize")
             decoded, points, _ = qr_detector.detectAndDecode(image)
-            if decoded != url:
-                raise SystemExit(f"FAIL  logo QR vector {index} scale {scale} decoded to {decoded!r}")
+            expected = tracked(url)
+            if decoded != expected:
+                raise SystemExit(f"FAIL  logo QR vector {index} scale {scale} decoded to {decoded!r}; expected {expected!r}")
             qr_checks += 1
-            print(f"PASS  logo QR vector {index} at {scale}px/module decodes to exact canonical URL")
+            print(f"PASS  logo QR vector {index} at {scale}px/module decodes to canonical URL plus QR attribution")
 
     barcode_checks = 0
     for index, value in enumerate(barcode_vectors, 1):

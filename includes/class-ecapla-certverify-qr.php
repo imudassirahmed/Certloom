@@ -37,9 +37,11 @@ final class Ecapla_CertVerify_QR {
 		if ( ! self::enabled() ) {
 			return new WP_Error( 'ecapla_certverify_qr_disabled', __( 'Verification QR is disabled.', 'certloom' ) );
 		}
+		$tracked_url = self::tracked_verification_url( $verification_url );
+		if ( is_wp_error( $tracked_url ) ) { return $tracked_url; }
 		$logo_asset = self::configured_logo_asset();
 		$correction = is_wp_error( $logo_asset ) || null === $logo_asset ? self::ERROR_CORRECTION : self::LOGO_ERROR_CORRECTION;
-		$model = self::model( $verification_url, $correction );
+		$model = self::model( $tracked_url, $correction );
 		if ( is_wp_error( $model ) ) { return $model; }
 
 		$logo = null;
@@ -50,7 +52,7 @@ final class Ecapla_CertVerify_QR {
 			}
 		}
 		return array(
-			'url'              => (string) $verification_url,
+			'url'              => (string) $tracked_url,
 			'path'             => (string) $model['path'],
 			'view_size'        => (int) $model['view_size'],
 			'modules'          => (int) $model['modules'],
@@ -77,7 +79,7 @@ final class Ecapla_CertVerify_QR {
 	 * @return string|WP_Error
 	 */
 	public static function svg( $verification_url, $size = self::DEFAULT_SIZE, $logo_override = null ) {
-		$url = self::valid_url( $verification_url );
+		$url = self::tracked_verification_url( $verification_url );
 		if ( is_wp_error( $url ) ) { return $url; }
 		$size = max( 96, min( 512, absint( $size ) ) );
 		$logo_asset = false === $logo_override ? null : ( is_array( $logo_override ) ? $logo_override : self::configured_logo_asset() );
@@ -170,6 +172,16 @@ final class Ecapla_CertVerify_QR {
 			'image_y'  => $y + $inset,
 			'image_size' => max( 1, $cutout - ( 2 * $inset ) ),
 		);
+	}
+
+	/** Adds a privacy-safe QR attribution tag without changing credential identity. */
+	private static function tracked_verification_url( $value ) {
+		$url = self::valid_url( $value );
+		if ( is_wp_error( $url ) ) { return $url; }
+		if ( preg_match( '/([?&])certloom_source=[^&#]*/', $url ) ) {
+			return preg_replace( '/([?&])certloom_source=[^&#]*/', '$1certloom_source=qr', $url, 1 );
+		}
+		return $url . ( false === strpos( $url, '?' ) ? '?' : '&' ) . 'certloom_source=qr';
 	}
 
 	/** @return string|WP_Error */

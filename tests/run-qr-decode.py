@@ -17,6 +17,9 @@ vectors = [
     "https://example.test/?certloom_verify=CERT%2F2026%2F%D8%A7%D8%B1%D8%AF%D9%88-001",
 ]
 
+def tracked(url: str) -> str:
+    return url + ('&' if '?' in url else '?') + 'certloom_source=qr'
+
 detector = cv2.QRCodeDetector()
 with tempfile.TemporaryDirectory(prefix="certloom-qr-") as tmp:
     tmp = Path(tmp)
@@ -38,7 +41,8 @@ with tempfile.TemporaryDirectory(prefix="certloom-qr-") as tmp:
         if image is None:
             raise SystemExit(f"FAIL  public QR vector {index} did not rasterize")
         decoded, points, _ = detector.detectAndDecode(image)
-        if decoded != url:
-            raise SystemExit(f"FAIL  public QR vector {index} decoded to {decoded!r}")
-        print(f"PASS  public PHP SVG vector {index} independently decodes to exact canonical URL")
+        expected = tracked(url)
+        if decoded != expected:
+            raise SystemExit(f"FAIL  public QR vector {index} decoded to {decoded!r}; expected {expected!r}")
+        print(f"PASS  public PHP SVG vector {index} independently decodes to canonical URL plus QR attribution")
 print(f"\n{len(vectors)} public QR raster decode vectors, 0 failures")

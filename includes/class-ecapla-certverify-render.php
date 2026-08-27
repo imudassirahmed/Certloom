@@ -289,7 +289,7 @@ class Ecapla_CertVerify_Render {
 		if ( '' === $number ) {
 			return '';
 		}
-		$presentation = Ecapla_CertVerify_Public_Presentation::verify( $number, true, 'verification', self::direct_code() );
+		$presentation = Ecapla_CertVerify_Public_Presentation::verify( $number, true, 'verification', self::direct_code(), self::analytics_source() );
 		if ( is_wp_error( $presentation ) ) {
 			$message = 'ecapla_certverify_rate_limited' === $presentation->get_error_code() ? $presentation->get_error_message() : $error;
 			return self::message_html( $prefix, $message );
@@ -569,6 +569,13 @@ class Ecapla_CertVerify_Render {
 		return '';
 	}
 
+
+	/** Privacy-safe verification-source attribution. */
+	private static function analytics_source() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public read-only source tag.
+		$value = isset( $_GET['certloom_source'] ) && ! is_array( $_GET['certloom_source'] ) ? sanitize_key( wp_unslash( $_GET['certloom_source'] ) ) : 'manual';
+		return class_exists( 'Ecapla_CertVerify_Analytics' ) ? Ecapla_CertVerify_Analytics::normalize_source( $value ) : 'manual';
+	}
 
 	/** Secondary proof comes only from POST so it never becomes part of a shareable URL. */
 	private static function direct_code() {

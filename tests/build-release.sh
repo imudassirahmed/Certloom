@@ -63,6 +63,18 @@ if [[ -n "$AUTHORITY_MANIFEST" ]]; then
   chmod 0644 "$STAGE/source/certloom/resources/renderer/accepted.json" "$STAGE/release/certloom/resources/renderer/accepted.json"
 fi
 
+# The shipped translation catalog is part of the deterministic release identity.
+# Regenerate it from the exact staged source with the same fixed build epoch and
+# fail closed if the committed POT is stale or carries a wall-clock timestamp.
+pot_check="$STAGE/.certloom.pot"
+SOURCE_DATE_EPOCH="$EPOCH" python3 "$STAGE/source/certloom/tests/i18n/make-pot.py" \
+  "$STAGE/source/certloom" -o "$pot_check" >/dev/null
+if ! cmp -s "$pot_check" "$STAGE/source/certloom/languages/certloom.pot"; then
+  echo "Translation catalog is stale or non-deterministic. Regenerate languages/certloom.pot with SOURCE_DATE_EPOCH=$EPOCH." >&2
+  exit 6
+fi
+rm -f "$pot_check"
+
 # Generated/interpreter/VCS metadata is never part of a Certloom source or
 # production artifact, even if local development tools created it in-tree.
 find "$STAGE/source/certloom" "$STAGE/release/certloom" -type d \( -name __pycache__ -o -name .git -o -name .svn \) -prune -exec rm -rf {} +

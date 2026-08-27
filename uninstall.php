@@ -43,6 +43,7 @@ function ecapla_certverify_uninstall_site() {
 	wp_clear_scheduled_hook( 'ecapla_certverify_continue_migrations' );
 	wp_clear_scheduled_hook( 'certloom_run_job' );
 	wp_clear_scheduled_hook( 'certloom_job_watchdog' );
+	wp_clear_scheduled_hook( 'certloom_verification_analytics_prune' );
 
 	$wp_roles        = wp_roles();
 	$roles_option    = $wp_roles ? $wp_roles->role_key : '';
@@ -246,6 +247,17 @@ function ecapla_certverify_uninstall_site() {
 	 */
 	$database_proof_table = $wpdb->prefix . 'certloom_db_proof';
 	$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $database_proof_table ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.SchemaChange -- Removes only Certloom's isolated database-proof scratch table.
+
+	/*
+	 * ANL-01 verification analytics are privacy-minimized operational aggregates,
+	 * not credential truth. Remove them on uninstall even when credentials are
+	 * retained so the documented 730-day retention ceiling cannot silently stop
+	 * applying after the pruning cron disappears. Future analytics export work
+	 * remains a separate explicit feature rather than changing uninstall semantics.
+	 */
+	$analytics_table = $wpdb->prefix . 'certloom_verification_analytics';
+	$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $analytics_table ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.SchemaChange -- Removes only non-authoritative Certloom analytics aggregates.
+	delete_option( 'certloom_verification_analytics_schema_version' );
 
 	$ephemeral_domain_tables = array(
 		$wpdb->prefix . 'certloom_jobs',

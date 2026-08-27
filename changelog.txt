@@ -1,3 +1,12 @@
+1.6.70
+- ANL-01 Verification Analytics: add privacy-minimized WordPress-local daily aggregate counters for successful, failed, invalid, expired and revoked verification outcomes.
+- Add bounded manual/QR/API source attribution, including exact QR target attribution without changing credential identity.
+- Add 7/30/90/365-day administrator reports with daily/weekly/monthly trend semantics and most-verified credentials.
+- Add a granular Analytics capability surface, responsive/accessibility-first reporting UI, System Status health and Privacy Policy guidance.
+- Keep analytics best-effort and independent of verification truth; store no raw IP, User-Agent, proof code or raw failed identifier and prune aggregates after 730 days.
+- Treat verification analytics as operational data: remove its table/schema marker/schedule on uninstall and keep advanced analytics export in later IMP-03.
+- Preserve roadmap separation: ANL-02 issuance analytics and ANL-03 page/share/click engagement remain later; normalized-domain and renderer production authority remain closed.
+
 1.6.69
 - Add SOC-01 Public Sharing Improvements for already guest-verifiable credentials: LinkedIn, WhatsApp, Facebook, X, email and Copy URL behind one server-owned action policy.
 - Generate provider intents locally from the canonical public credential URL only; do not send recipient name/email/grade or other credential fields to a Certloom-owned service or embed them in provider query payloads.

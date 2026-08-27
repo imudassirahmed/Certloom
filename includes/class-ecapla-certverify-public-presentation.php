@@ -19,6 +19,9 @@ class Ecapla_CertVerify_Public_Presentation {
 	/** @var array<string,mixed> Request-local lookup cache. */
 	private static $lookup_cache = array();
 
+	/** @var array<string,bool> Request-local analytics deduplication. */
+	private static $analytics_recorded = array();
+
 	/**
 	 * Looks up and presents one legacy certificate.
 	 *
@@ -26,10 +29,12 @@ class Ecapla_CertVerify_Public_Presentation {
 	 * @param bool   $rate_limit Whether public rate limiting should be applied.
 	 * @return array|WP_Error Presentation array, not-found result, or fail-closed error.
 	 */
-	public static function verify( $number, $rate_limit = true, $context = 'verification', $secondary_code = '' ) {
+	public static function verify( $number, $rate_limit = true, $context = 'verification', $secondary_code = '', $source = 'manual' ) {
 		$number = trim( sanitize_text_field( (string) $number ) );
+		$source = class_exists( 'Ecapla_CertVerify_Analytics' ) ? Ecapla_CertVerify_Analytics::normalize_source( $source ) : 'manual';
 		$length = function_exists( 'mb_strlen' ) ? mb_strlen( $number ) : strlen( $number );
 		if ( '' === $number || $length > 100 ) {
+			self::record_analytics( 'invalid', $source, 0, $number, $rate_limit, $context );
 			return array( 'found' => false );
 		}
 		if ( function_exists( 'ecapla_certverify_verification_is_available' ) && ! ecapla_certverify_verification_is_available() ) {
@@ -53,6 +58,7 @@ class Ecapla_CertVerify_Public_Presentation {
 			if ( class_exists( 'Ecapla_CertVerify_Secondary_Code' ) ) {
 				Ecapla_CertVerify_Secondary_Code::equalize_public_miss( $secondary_code );
 			}
+			self::record_analytics( 'failed', $source, 0, $key, $rate_limit, $context );
 			return array( 'found' => false );
 		}
 
@@ -66,6 +72,7 @@ class Ecapla_CertVerify_Public_Presentation {
 		$has_secondary = class_exists( 'Ecapla_CertVerify_Secondary_Code' ) && Ecapla_CertVerify_Secondary_Code::has_code( $certificate );
 		if ( $has_secondary ) {
 			if ( ! Ecapla_CertVerify_Secondary_Code::matches( $certificate, $secondary_code ) ) {
+				self::record_analytics( 'failed', $source, 0, $key, $rate_limit, $context );
 				return array( 'found' => false );
 			}
 		} elseif ( class_exists( 'Ecapla_CertVerify_Secondary_Code' ) && '' !== trim( (string) $secondary_code ) ) {
@@ -76,6 +83,11 @@ class Ecapla_CertVerify_Public_Presentation {
 		$presented = self::present_certificate( $certificate, $context );
 		if ( ! empty( $presented['found'] ) ) {
 			$presented['secondary_proof'] = $has_secondary ? 'verified' : 'not_required';
+			$status_key = isset( $presented['status']['key'] ) ? sanitize_key( (string) $presented['status']['key'] ) : '';
+			$outcome = 'valid' === $status_key ? 'success' : ( 'expired' === $status_key ? 'expired' : ( 'revoked' === $status_key ? 'revoked' : 'failed' ) );
+			self::record_analytics( $outcome, $source, max( 0, (int) ( $certificate['id'] ?? 0 ) ), $key, $rate_limit, $context );
+		} else {
+			self::record_analytics( 'failed', $source, 0, $key, $rate_limit, $context );
 		}
 		return $presented;
 	}
@@ -162,6 +174,19 @@ class Ecapla_CertVerify_Public_Presentation {
 			);
 		}
 		return $output;
+	}
+
+	/** Public verification analytics are best-effort and never change verification truth. */
+	private static function record_analytics( $outcome, $source, $credential_id, $lookup_key, $rate_limit, $context ) {
+		if ( ! $rate_limit || 'verification' !== sanitize_key( (string) $context ) || ! class_exists( 'Ecapla_CertVerify_Analytics' ) ) {
+			return;
+		}
+		$dedupe = hash( 'sha256', sanitize_key( (string) $outcome ) . '|' . sanitize_key( (string) $source ) . '|' . max( 0, (int) $credential_id ) . '|' . (string) $lookup_key );
+		if ( isset( self::$analytics_recorded[ $dedupe ] ) ) {
+			return;
+		}
+		self::$analytics_recorded[ $dedupe ] = true;
+		Ecapla_CertVerify_Analytics::record( $outcome, $source, $credential_id );
 	}
 
 	private static function verification_timestamp() {

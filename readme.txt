@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.69
+Stable tag: 1.6.70
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.69: SOC-01 Public Sharing Improvements are implemented on guest-verifiable credential surfaces with a server-owned visibility/action policy, deterministic local share-link generation and one accessible disclosure for LinkedIn, WhatsApp, Facebook, X, email and Copy URL. Sharing never widens credential visibility: public/verification-summary/unlisted URLs may be shared only when they are already guest-verifiable, while recipient-only, organization-member and private credentials remain fail-closed. Recipient Portal reuses the same rule and only exposes sharing after normalized public verification authority opens. No Certloom-owned sharing service, recipient PII payload, remote QR/image service or renderer candidate is introduced; OG-01 social metadata/images remain a separate renderer-dependent milestone. Verification/issuance analytics are next.
+> Development note for 1.6.70: ANL-01 Verification Analytics is implemented as WordPress-local, privacy-minimized daily aggregates with total/successful/failed/invalid/expired/revoked outcomes, manual/QR/API source attribution, daily/weekly/monthly trends, most-verified credentials, 730-day bounded retention and granular Analytics capability access. It stores no raw IP addresses, User-Agents, proof codes or raw failed certificate-number input; analytics failure never changes verification truth. The later canonical roadmap keeps issuance analytics in ANL-02 and page/share/click engagement in ANL-03, resolving an older Growth Plan overlap without deleting those promises. Normalized-domain authority and renderer accepted.json remain closed. ANL-02 Issuance Analytics is next.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 
