@@ -1,3 +1,9 @@
+1.6.79
+- Begin I18N-03 with a fail-closed language-pack quality pipeline rather than bulk-filling translations: exact POT binding, planned/candidate/reviewed states, strict complete/fuzzy/placeholder/plural/HTML/bidi review rules, deterministic MO compilation and deterministic WordPress block-editor JSON catalogs.
+- Record twenty major-language roadmap targets without falsely marking any locale reviewed before human translation review; incomplete candidate entries retain normal English fallback.
+- Add safe bundled textdomain registration at the existing init priority-1 translation boundary and preserve wp_set_script_translations() for native blocks.
+- Add permanent language-pack QA and release-builder enforcement; translation SaaS, remote language authority and renderer/database authority remain absent. Actual reviewed I18N-03 language content follows before BAK-02.
+
 1.6.78
 - Add I18N-02 canonical credential-locale normalization and locale-derived LTR/RTL policy while keeping each administrator's interface language owned by the WordPress user locale.
 - Extend Program Profiles to schema v2 with bounded locale-specific published Template variants and declared fallback semantics. Persist stable Template machine keys rather than database IDs so backup/restore identity is portable.

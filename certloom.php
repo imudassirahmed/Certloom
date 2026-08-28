@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Certloom – Certificate Verification
  * Description: Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
- * Version: 1.6.78
+ * Version: 1.6.79
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.78' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.79' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
@@ -393,9 +393,21 @@ function ecapla_certverify_multisite_provisioning_notice() {
 }
 
 /**
+ * Registers Certloom's bundled/custom language directory after WordPress' safe
+ * translation-loading boundary. WordPress.org language packs may still use the
+ * normal global languages directory; reviewed bundled packs use /languages.
+ */
+function ecapla_certverify_load_textdomain() {
+	if ( function_exists( 'load_plugin_textdomain' ) && function_exists( 'plugin_basename' ) ) {
+		load_plugin_textdomain( 'certloom', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+	}
+}
+
+/**
  * Boots Certloom on init after WordPress translation timing is safe.
  */
 function ecapla_certverify_init() {
+	ecapla_certverify_load_textdomain();
 	$restore_recovery   = Ecapla_CertVerify_Backup::recover_interrupted_restore();
 	$database_upgrade   = is_wp_error( $restore_recovery ) ? true : Ecapla_CertVerify_Database::maybe_upgrade();
 	$permission_upgrade = Ecapla_CertVerify_Permissions::maybe_upgrade_capabilities();

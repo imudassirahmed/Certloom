@@ -75,6 +75,13 @@ if ! cmp -s "$pot_check" "$STAGE/source/certloom/languages/certloom.pot"; then
 fi
 rm -f "$pot_check"
 
+# I18N-03 quality packs are release-bound to the exact POT and must remain
+# honest. Planned locales cannot claim artifacts; candidate/reviewed catalogs
+# are structurally validated; reviewed PO/MO/WordPress-JS artifacts must be
+# complete, safe and byte-identical to the deterministic compiler output.
+python3 "$STAGE/source/certloom/tests/i18n/validate_language_packs.py" \
+  "$STAGE/source/certloom" --manifest languages/certloom-language-packs.json >/dev/null
+
 # Generated/interpreter/VCS metadata is never part of a Certloom source or
 # production artifact, even if local development tools created it in-tree.
 find "$STAGE/source/certloom" "$STAGE/release/certloom" -type d \( -name __pycache__ -o -name .git -o -name .svn \) -prune -exec rm -rf {} +

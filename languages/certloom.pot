@@ -3389,31 +3389,31 @@ msgstr ""
 msgid "Certloom could not finish provisioning on site IDs: %s. Visit each affected site administration area to retry database and access setup."
 msgstr ""
 
-#: certloom.php:414
+#: certloom.php:426
 msgid "Certloom could not persist its required administrator access. The migration will be retried automatically."
 msgstr ""
 
-#: certloom.php:431
+#: certloom.php:443
 msgid "Certloom could not persist the multisite provisioning status."
 msgstr ""
 
-#: certloom.php:546
+#: certloom.php:558
 msgid "Certloom publishes only the certificate fields that a site administrator marks as visible. Those fields may include names or other personal information, so administrators should publish only information they are authorised to disclose."
 msgstr ""
 
-#: certloom.php:547
+#: certloom.php:559
 msgid "Depending on the Certloom features enabled by the site, local WordPress storage may also contain recipient identity/contact data and administrator-managed issuer or signer contact details. These records remain on the site unless the administrator exports, changes, or removes them according to the organization’s retention obligations."
 msgstr ""
 
-#: certloom.php:548
+#: certloom.php:560
 msgid "Certificate verification is performed on this WordPress site. Certloom does not send certificate records to Ecapla or another external service. Verification requests may still appear in normal web-server, security, analytics, browser-history, and cache logs. Direct verification links can include the certificate number in the URL."
 msgstr ""
 
-#: certloom.php:549
+#: certloom.php:561
 msgid "When Certloom Verification Analytics is available, Certloom stores daily aggregate verification counters locally for up to 730 days. These aggregates classify outcomes and sources such as manual, QR, or API verification; they do not store raw IP addresses, User-Agents, secondary proof codes, or raw failed certificate-number input. Verification analytics are operational data and are removed when Certloom is uninstalled."
 msgstr ""
 
-#: certloom.php:550
+#: certloom.php:562
 msgid "Site administrators determine how long certificate records are retained and can configure whether Certloom data is removed when the plugin is uninstalled."
 msgstr ""
 
