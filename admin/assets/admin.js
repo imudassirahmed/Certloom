@@ -169,8 +169,59 @@
 			subcategory.disabled = ! firstAllowed;
 		}
 
+		function initLocaleVariants() {
+			var list = document.querySelector( '[data-certloom-locale-variant-list]' );
+			var add = document.querySelector( '[data-certloom-add-locale-variant]' );
+			var tpl = document.getElementById( 'certloom-program-locale-variant-template' );
+			var fallback = document.querySelector( '[data-certloom-locale-fallback]' );
+			if ( ! list || ! add || ! tpl || ! fallback ) { return; }
+
+			function normalizedLocale( value ) {
+				return String( value || '' ).trim().replace( /-/g, '_' );
+			}
+			function refreshFallback() {
+				var selected = fallback.value || fallback.getAttribute( 'data-selected' ) || 'program_default';
+				var seen = {};
+				var values = [];
+				Array.prototype.forEach.call( list.querySelectorAll( 'input[name="profile_template_variant_locale[]"]' ), function ( input ) {
+					var locale = normalizedLocale( input.value );
+					if ( locale && ! seen[ locale ] ) { seen[ locale ] = true; values.push( locale ); }
+				} );
+				fallback.textContent = '';
+				var base = document.createElement( 'option' );
+				base.value = 'program_default';
+				base.textContent = 'Program default design';
+				fallback.appendChild( base );
+				values.forEach( function ( locale ) { var option = document.createElement( 'option' ); option.value = locale; option.textContent = locale; fallback.appendChild( option ); } );
+				fallback.value = values.indexOf( selected ) !== -1 ? selected : 'program_default';
+				fallback.setAttribute( 'data-selected', fallback.value );
+			}
+
+			add.addEventListener( 'click', function () {
+				if ( list.querySelectorAll( '.certloom-locale-variant-row' ).length >= 30 ) { return; }
+				var fragment = tpl.content.cloneNode( true );
+				list.appendChild( fragment );
+				var rows = list.querySelectorAll( '.certloom-locale-variant-row' );
+				var input = rows[ rows.length - 1 ].querySelector( 'input' );
+				if ( input ) { input.focus(); }
+				refreshFallback();
+			} );
+			list.addEventListener( 'click', function ( event ) {
+				var remove = event.target.closest( '[data-certloom-remove-locale-variant]' );
+				if ( ! remove ) { return; }
+				var row = remove.closest( '.certloom-locale-variant-row' );
+				if ( row ) { row.remove(); refreshFallback(); }
+			} );
+			list.addEventListener( 'input', function ( event ) {
+				if ( event.target.matches( 'input[name="profile_template_variant_locale[]"]' ) ) { refreshFallback(); }
+			} );
+			fallback.addEventListener( 'change', function () { fallback.setAttribute( 'data-selected', fallback.value ); } );
+			refreshFallback();
+		}
+
 		purpose.addEventListener( 'change', updateSubcategories );
 		updateSubcategories();
+		initLocaleVariants();
 	}
 
 

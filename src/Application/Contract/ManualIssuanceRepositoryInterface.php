@@ -16,6 +16,8 @@ interface ManualIssuanceRepositoryInterface {
 	/** @return array<string,mixed>|null|\WP_Error */
 	public function find_published_template( $template_id );
 	/** @return array<string,mixed>|null|\WP_Error */
+	public function find_published_template_by_machine_key( $machine_key );
+	/** @return array<string,mixed>|null|\WP_Error */
 	public function resolve_published_template_for_program( $program_id, $issuer_id = 0 );
 	/** @return array<string,mixed>|null|\WP_Error */
 	public function find_existing_series( $recipient_id, $program_id );

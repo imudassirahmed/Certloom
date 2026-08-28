@@ -5,6 +5,7 @@ use Certloom\Application\CredentialLifecycleService;
 use Certloom\Application\CredentialLifecycleReviewService;
 use Certloom\Application\CredentialRelationshipBulkService;
 use Certloom\Application\Program\ProgramProfile;
+use Certloom\Application\I18n\CredentialLocale;
 use Certloom\Application\Templates\TemplateAssignmentPolicy;
 use Certloom\Domain\Credential\States;
 use Certloom\Domain\Credential\StatusService;
@@ -950,10 +951,15 @@ final class DomainAdmin {
 		$metadata = $is_edit && isset( $editing['metadata'] ) && is_array( $editing['metadata'] ) ? $editing['metadata'] : array();
 		$metadata_editable = $this->is_scalar_map( $metadata );
 		$profile = $is_edit && isset( $editing['profile'] ) && is_array( $editing['profile'] ) ? $editing['profile'] : ProgramProfile::defaults();
+		$template_repo = new TemplateRepository();
 		$design = null;
 		if ( $is_edit ) {
-			$design = ( new TemplateRepository() )->resolve_published_assignment_details( array( 'issuer_id' => absint( $editing['issuer_id'] ?? 0 ), 'program_id' => $id ) );
+			$design = $template_repo->resolve_published_assignment_details( array( 'issuer_id' => absint( $editing['issuer_id'] ?? 0 ), 'program_id' => $id ) );
 		}
+		$published_templates = $template_repo->list_published_candidates( 250 );
+		$published_templates = is_wp_error( $published_templates ) ? array() : (array) ( $published_templates['items'] ?? array() );
+		$locale_policy = new CredentialLocale();
+		$locale_preview = $locale_policy->resolve( $profile['credential_locale'] ?? CredentialLocale::SITE_DEFAULT );
 		echo '<section class="ecapla-certverify-admin-card certloom-domain-editor"><div class="certloom-domain-editor-head"><div><h2>' . esc_html( $is_edit ? __( 'Program profile', 'certloom' ) : __( 'Add program', 'certloom' ) ) . '</h2><p>' . esc_html__( 'Program Profiles centralize purpose, language, lifecycle and experience defaults while issued credentials keep immutable snapshots.', 'certloom' ) . '</p></div>';
 		if ( $is_edit ) { echo '<span class="certloom-domain-id">#' . esc_html( (string) $id ) . '</span>'; }
 		echo '</div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
@@ -979,7 +985,8 @@ final class DomainAdmin {
 		foreach ( array( 'certificate' => __( 'Certificate', 'certloom' ), 'certification' => __( 'Certification', 'certloom' ), 'degree' => __( 'Degree', 'certloom' ), 'diploma' => __( 'Diploma', 'certloom' ), 'license' => __( 'License', 'certloom' ), 'membership' => __( 'Membership', 'certloom' ), 'award' => __( 'Award', 'certloom' ), 'participation' => __( 'Participation', 'certloom' ), 'custom' => __( 'Custom', 'certloom' ) ) as $value => $label ) { echo '<option value="' . esc_attr( $value ) . '" ' . selected( (string) ( $profile['credential_type'] ?? 'certificate' ), $value, false ) . '>' . esc_html( $label ) . '</option>'; }
 		echo '</select></div>';
 		$this->text_field( 'profile[eligibility_context]', __( 'Eligibility context', 'certloom' ), (string) ( $profile['eligibility_context'] ?? '' ), false, __( 'Optional concise administrator-owned rule/context. LMS adapters later map qualifying attempts to this Program; this field is not a compliance assertion.', 'certloom' ) );
-		$this->text_field( 'profile[credential_locale]', __( 'Credential language / locale', 'certloom' ), (string) ( $profile['credential_locale'] ?? 'site_default' ), false, __( 'Use site_default or a locale such as en_US, ar, fr_FR or ur.', 'certloom' ) );
+		$this->text_field( 'profile[credential_locale]', __( 'Credential language / locale', 'certloom' ), (string) ( $profile['credential_locale'] ?? CredentialLocale::SITE_DEFAULT ), false, __( 'Use site_default or a locale such as en_US, ar, fr_FR, ur or zh_Hant. Administrator language continues to follow each WordPress user locale.', 'certloom' ) );
+		if ( ! is_wp_error( $locale_preview ) ) { echo '<div class="certloom-domain-field certloom-program-locale-summary"><span><strong>' . esc_html__( 'Credential direction', 'certloom' ) . '</strong></span><div class="certloom-program-readonly-value">' . esc_html( strtoupper( (string) ( $locale_preview['direction'] ?? 'ltr' ) ) ) . '</div><p class="description">' . esc_html( sprintf( __( 'Effective locale: %1$s. Element direction remains Auto / LTR / RTL, so mixed-script certificates can override individual elements.', 'certloom' ), (string) ( $locale_preview['effective'] ?? '' ) ) ) . '</p></div>'; }
 		echo '<div class="certloom-domain-field"><label for="certloom-program-renewal"><strong>' . esc_html__( 'Renewal relevance', 'certloom' ) . '</strong></label><select id="certloom-program-renewal" name="profile[renewal]">';
 		foreach ( array( 'not_applicable' => __( 'Not applicable', 'certloom' ), 'optional' => __( 'Optional', 'certloom' ), 'required' => __( 'Required', 'certloom' ) ) as $value => $label ) { echo '<option value="' . esc_attr( $value ) . '" ' . selected( (string) ( $profile['renewal'] ?? '' ), $value, false ) . '>' . esc_html( $label ) . '</option>'; }
 		echo '</select></div>';
@@ -993,6 +1000,19 @@ final class DomainAdmin {
 		$numbering_label = ucfirst( (string) ( $numbering_policy['numbering_mode'] ?? 'manual' ) );
 		echo '<div class="certloom-domain-field certloom-program-numbering-summary"><span><strong>' . esc_html__( 'Certificate numbering', 'certloom' ) . '</strong></span><div class="certloom-program-readonly-value">' . esc_html( $numbering_label ) . '</div><p class="description">' . esc_html__( 'This Program currently inherits the established site numbering policy. Program-scoped numbering overrides are not enabled by PRG-02, so Certloom cannot silently create competing sequence authorities.', 'certloom' ) . '</p></div>';
 		echo '</div>';
+		echo '<div class="certloom-program-language-variants"><div class="certloom-domain-subsection-head"><div><h4>' . esc_html__( 'Language-specific certificate designs', 'certloom' ) . '</h4><p>' . esc_html__( 'Map a credential locale to a published Template. Issuance tries the exact locale, then its base language, then the declared fallback, then the normal Program/Issuer/Global design.', 'certloom' ) . '</p></div></div>';
+		$variants = isset( $profile['template_variants'] ) && is_array( $profile['template_variants'] ) ? $profile['template_variants'] : array();
+		$variant_rows = $variants ?: array( '' => 0 );
+		echo '<div class="certloom-locale-variant-list" data-certloom-locale-variant-list>';
+		foreach ( $variant_rows as $variant_locale => $variant_template_id ) {
+			echo '<div class="certloom-locale-variant-row"><label><span>' . esc_html__( 'Locale', 'certloom' ) . '</span><input type="text" name="profile_template_variant_locale[]" maxlength="32" value="' . esc_attr( (string) $variant_locale ) . '" placeholder="ar"></label><label><span>' . esc_html__( 'Published Template', 'certloom' ) . '</span><select name="profile_template_variant_template_id[]"><option value="0">' . esc_html__( 'Choose Template', 'certloom' ) . '</option>';
+			foreach ( $published_templates as $candidate ) { echo '<option value="' . esc_attr( (string) absint( $candidate['id'] ?? 0 ) ) . '" ' . selected( (string) $variant_template_id, (string) ( $candidate['machine_key'] ?? '' ), false ) . '>' . esc_html( (string) ( $candidate['name'] ?? '' ) ) . '</option>'; }
+			echo '</select></label><button type="button" class="button-link-delete certloom-locale-variant-remove" data-certloom-remove-locale-variant>' . esc_html__( 'Remove', 'certloom' ) . '</button></div>';
+		}
+		echo '</div>';
+		$options_html = '<option value="0">' . esc_html__( 'Choose Template', 'certloom' ) . '</option>'; foreach ( $published_templates as $candidate ) { $options_html .= '<option value="' . esc_attr( (string) absint( $candidate['id'] ?? 0 ) ) . '">' . esc_html( (string) ( $candidate['name'] ?? '' ) ) . '</option>'; }
+		echo '<template id="certloom-program-locale-variant-template"><div class="certloom-locale-variant-row"><label><span>' . esc_html__( 'Locale', 'certloom' ) . '</span><input type="text" name="profile_template_variant_locale[]" maxlength="32" placeholder="ar"></label><label><span>' . esc_html__( 'Published Template', 'certloom' ) . '</span><select name="profile_template_variant_template_id[]">' . $options_html . '</select></label><button type="button" class="button-link-delete certloom-locale-variant-remove" data-certloom-remove-locale-variant>' . esc_html__( 'Remove', 'certloom' ) . '</button></div></template>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- options assembled from escaped values.
+		echo '<div class="certloom-locale-variant-actions"><button type="button" class="button" data-certloom-add-locale-variant>' . esc_html__( 'Add language variant', 'certloom' ) . '</button><label><span>' . esc_html__( 'Declared fallback', 'certloom' ) . '</span><select name="profile_template_variant_fallback" data-certloom-locale-fallback data-selected="' . esc_attr( (string) ( $profile['template_variant_fallback'] ?? 'program_default' ) ) . '"><option value="program_default">' . esc_html__( 'Program default design', 'certloom' ) . '</option>'; foreach ( array_keys( $variants ) as $variant_locale ) { echo '<option value="' . esc_attr( (string) $variant_locale ) . '" ' . selected( (string) ( $profile['template_variant_fallback'] ?? 'program_default' ), (string) $variant_locale, false ) . '>' . esc_html( (string) $variant_locale ) . '</option>'; } echo '</select></label></div><p class="description">' . esc_html__( 'A configured locale variant must remain published. If it becomes unavailable, issuance fails closed instead of silently switching certificate artwork.', 'certloom' ) . '</p></div>';
 		echo '<div class="certloom-program-design-default"><h4>' . esc_html__( 'Published certificate design', 'certloom' ) . '</h4>';
 		if ( ! $is_edit ) { echo '<p>' . esc_html__( 'Save the Program first, then assign its published certificate design.', 'certloom' ) . '</p>'; }
 		elseif ( is_wp_error( $design ) ) { echo '<div class="notice notice-error inline"><p>' . esc_html( $design->get_error_message() ) . '</p></div>'; }
@@ -1162,6 +1182,22 @@ final class DomainAdmin {
 			$metadata = $parsed;
 		}
 		$raw_profile = isset( $_POST['profile'] ) && is_array( $_POST['profile'] ) ? wp_unslash( $_POST['profile'] ) : array();
+		$variant_locales = isset( $_POST['profile_template_variant_locale'] ) && is_array( $_POST['profile_template_variant_locale'] ) ? wp_unslash( $_POST['profile_template_variant_locale'] ) : array();
+		$variant_template_ids = isset( $_POST['profile_template_variant_template_id'] ) && is_array( $_POST['profile_template_variant_template_id'] ) ? wp_unslash( $_POST['profile_template_variant_template_id'] ) : array();
+		if ( count( $variant_locales ) !== count( $variant_template_ids ) || count( $variant_locales ) > ProgramProfile::MAX_TEMPLATE_VARIANTS ) { return new \WP_Error( 'certloom_program_profile_template_variants_invalid', __( 'Program language variants are structurally invalid.', 'certloom' ) ); }
+		$variant_map = array(); $locale_policy = new CredentialLocale(); $template_repo = new TemplateRepository();
+		foreach ( $variant_locales as $index => $variant_locale ) {
+			$variant_locale = trim( sanitize_text_field( (string) $variant_locale ) ); $variant_template_id = absint( $variant_template_ids[ $index ] ?? 0 );
+			if ( '' === $variant_locale && ! $variant_template_id ) { continue; }
+			if ( '' === $variant_locale || ! $variant_template_id ) { return new \WP_Error( 'certloom_program_profile_template_variant_incomplete', __( 'Each language variant needs both a locale and a published Template.', 'certloom' ) ); }
+			$normalized_locale = $locale_policy->normalize_locale( $variant_locale ); if ( is_wp_error( $normalized_locale ) ) { return $normalized_locale; }
+			if ( isset( $variant_map[ $normalized_locale ] ) ) { return new \WP_Error( 'certloom_program_profile_template_variant_duplicate', __( 'A Program cannot define the same locale Template variant more than once.', 'certloom' ) ); }
+			$published = $template_repo->find_published( $variant_template_id );
+			if ( is_wp_error( $published ) || ! is_array( $published ) || ! empty( $published['archived_at'] ) ) { return new \WP_Error( 'certloom_program_profile_template_variant_unpublished', __( 'Each Program language variant must reference an active published Template.', 'certloom' ) ); }
+			$variant_map[ $normalized_locale ] = (string) ( $published['machine_key'] ?? '' );
+		}
+		$raw_profile['template_variants'] = $variant_map;
+		$raw_profile['template_variant_fallback'] = isset( $_POST['profile_template_variant_fallback'] ) ? sanitize_text_field( wp_unslash( $_POST['profile_template_variant_fallback'] ) ) : 'program_default';
 		$profile = ( new ProgramProfile() )->normalize( $raw_profile );
 		if ( is_wp_error( $profile ) ) { return $profile; }
 		$combined = ( new ProgramProfile() )->with_metadata( $metadata, $profile );

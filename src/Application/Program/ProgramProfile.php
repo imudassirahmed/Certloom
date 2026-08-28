@@ -1,6 +1,8 @@
 <?php
 namespace Certloom\Application\Program;
 
+use Certloom\Application\I18n\CredentialLocale;
+
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 /**
@@ -11,7 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
  */
 final class ProgramProfile {
 	const STORAGE_KEY = 'certloom_profile_v1';
-	const VERSION = 1;
+	const VERSION = 2;
+	const MAX_TEMPLATE_VARIANTS = 30;
 
 	/** @return array<string,string> */
 	public static function purpose_labels() {
@@ -75,7 +78,9 @@ final class ProgramProfile {
 			'subcategory' => 'custom',
 			'credential_type' => 'certificate',
 			'eligibility_context' => '',
-			'credential_locale' => 'site_default',
+			'credential_locale' => CredentialLocale::SITE_DEFAULT,
+			'template_variants' => array(),
+			'template_variant_fallback' => 'program_default',
 			'renewal' => 'not_applicable',
 			'verification_visibility' => 'inherit',
 			'portal' => 'inherit',
@@ -104,11 +109,19 @@ final class ProgramProfile {
 		}
 		$out['subcategory'] = $subcategory;
 
-		$locale = trim( (string) ( $input['credential_locale'] ?? 'site_default' ) );
-		if ( 'site_default' !== $locale && ! preg_match( '/^[A-Za-z]{2,3}(?:[_-][A-Za-z0-9]{2,8}){0,2}$/', $locale ) ) {
-			return new \WP_Error( 'certloom_program_profile_locale_invalid', __( 'Enter a valid credential locale such as en_US, ar or fr_FR.', 'certloom' ) );
+		$locale = ( new CredentialLocale() )->normalize_configured( $input['credential_locale'] ?? CredentialLocale::SITE_DEFAULT );
+		if ( is_wp_error( $locale ) ) { return new \WP_Error( 'certloom_program_profile_locale_invalid', __( 'Enter a valid credential locale such as en_US, ar, fr_FR or zh_Hant.', 'certloom' ) ); }
+		$out['credential_locale'] = $locale;
+
+		$variants = $this->template_variants( $input['template_variants'] ?? array() );
+		if ( is_wp_error( $variants ) ) { return $variants; }
+		$out['template_variants'] = $variants;
+		$fallback = trim( (string) ( $input['template_variant_fallback'] ?? 'program_default' ) );
+		if ( 'program_default' !== $fallback ) {
+			$fallback = ( new CredentialLocale() )->normalize_locale( $fallback );
+			if ( is_wp_error( $fallback ) || ! isset( $variants[ $fallback ] ) ) { return new \WP_Error( 'certloom_program_profile_template_fallback_invalid', __( 'Choose Program default or a locale that has a configured Template variant.', 'certloom' ) ); }
 		}
-		$out['credential_locale'] = substr( $locale, 0, 32 );
+		$out['template_variant_fallback'] = $fallback;
 
 		$out['credential_type'] = $this->choice( $input['credential_type'] ?? 'certificate', array( 'certificate', 'certification', 'degree', 'diploma', 'license', 'membership', 'award', 'participation', 'custom' ), 'certloom_program_profile_credential_type_invalid', __( 'Choose a valid credential type.', 'certloom' ) );
 		if ( is_wp_error( $out['credential_type'] ) ) { return $out['credential_type']; }
@@ -139,8 +152,15 @@ final class ProgramProfile {
 			return new \WP_Error( 'certloom_program_profile_storage_invalid', __( 'Stored Program Profile configuration is structurally invalid.', 'certloom' ) );
 		}
 		$raw = is_array( $stored ) ? $stored : array();
-		if ( isset( $raw['schema_version'] ) && self::VERSION !== absint( $raw['schema_version'] ) ) {
+		$stored_version = isset( $raw['schema_version'] ) ? absint( $raw['schema_version'] ) : 1;
+		if ( ! in_array( $stored_version, array( 1, self::VERSION ), true ) ) {
 			return new \WP_Error( 'certloom_program_profile_version_unsupported', __( 'Stored Program Profile configuration uses an unsupported schema version.', 'certloom' ) );
+		}
+		// Version 1 upgrades in memory without mutating storage. Saving the Program writes v2.
+		if ( 1 === $stored_version ) {
+			$raw['schema_version'] = self::VERSION;
+			$raw['template_variants'] = array();
+			$raw['template_variant_fallback'] = 'program_default';
 		}
 		return $this->normalize( $raw );
 	}
@@ -151,6 +171,24 @@ final class ProgramProfile {
 		if ( is_wp_error( $normalized ) ) { return $normalized; }
 		$metadata[ self::STORAGE_KEY ] = $normalized;
 		return $metadata;
+	}
+
+
+	/** @return array<string,string>|\WP_Error */
+	private function template_variants( $value ) {
+		if ( null === $value || array() === $value || '' === $value ) { return array(); }
+		if ( ! is_array( $value ) || count( $value ) > self::MAX_TEMPLATE_VARIANTS ) { return new \WP_Error( 'certloom_program_profile_template_variants_invalid', __( 'Program Template variants must be a bounded locale-to-Template map.', 'certloom' ) ); }
+		$out = array(); $locales = new CredentialLocale();
+		foreach ( $value as $locale => $template_key ) {
+			$normalized = $locales->normalize_locale( $locale );
+			if ( is_wp_error( $normalized ) ) { return new \WP_Error( 'certloom_program_profile_template_variant_locale_invalid', __( 'Each Program Template variant must use a valid locale.', 'certloom' ) ); }
+			$template_key = sanitize_key( (string) $template_key );
+			if ( '' === $template_key || strlen( $template_key ) > 191 ) { return new \WP_Error( 'certloom_program_profile_template_variant_template_invalid', __( 'Each Program Template variant must reference a stable Template machine key.', 'certloom' ) ); }
+			if ( isset( $out[ $normalized ] ) ) { return new \WP_Error( 'certloom_program_profile_template_variant_duplicate', __( 'A Program cannot define the same locale Template variant more than once.', 'certloom' ) ); }
+			$out[ $normalized ] = $template_key;
+		}
+		ksort( $out, SORT_STRING );
+		return $out;
 	}
 
 	/** @return string|\WP_Error */

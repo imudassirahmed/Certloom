@@ -3263,3 +3263,17 @@
 	.certloom-ui-mode-bar,.certloom-ui-mode-bar form,.certloom-credential-tabs-simple,.certloom-credential-subtabs,.certloom-settings-tools,.certloom-settings-search-results { border-color:CanvasText; background:Canvas; color:CanvasText; }
 	.certloom-ui-mode-choice.is-current,.certloom-credential-primary-tab.is-current { background:Highlight; color:HighlightText; box-shadow:none; }
 }
+
+/* I18N-02 Program locale / Template variant controls. */
+.certloom-program-language-variants{margin-top:18px;padding-top:18px;border-top:1px solid #dcdcde}
+.certloom-locale-variant-list{display:grid;gap:10px;margin-top:12px}
+.certloom-locale-variant-row{display:grid;grid-template-columns:minmax(130px,.7fr) minmax(220px,1.5fr) auto;gap:10px;align-items:end}
+.certloom-locale-variant-row label,.certloom-locale-variant-actions label{display:grid;gap:5px}
+.certloom-locale-variant-row input,.certloom-locale-variant-row select,.certloom-locale-variant-actions select{min-height:36px;width:100%}
+.certloom-locale-variant-remove{min-height:36px;align-self:end}
+.certloom-locale-variant-actions{display:flex;gap:12px;align-items:end;justify-content:space-between;margin-top:12px;flex-wrap:wrap}
+.certloom-locale-variant-actions label{min-width:220px}
+.certloom-program-locale-summary .certloom-program-readonly-value{display:inline-flex;align-items:center;min-height:34px;padding:0 10px;border:1px solid #dcdcde;border-radius:4px;background:#f6f7f7;font-weight:600;letter-spacing:.04em}
+@media (max-width:782px){.certloom-locale-variant-row{grid-template-columns:1fr}.certloom-locale-variant-remove{justify-self:start;min-height:44px}.certloom-locale-variant-actions{align-items:stretch}.certloom-locale-variant-actions .button{min-height:44px}.certloom-locale-variant-actions label{width:100%;min-width:0}.certloom-locale-variant-row input,.certloom-locale-variant-row select,.certloom-locale-variant-actions select{min-height:44px}}
+@media (forced-colors:active){.certloom-program-locale-summary .certloom-program-readonly-value{border:1px solid CanvasText;background:Canvas}}
+@media (max-width:782px){.certloom-program-profile .certloom-locale-variant-row input[type="text"],.certloom-program-profile .certloom-locale-variant-row select,.certloom-program-profile .certloom-locale-variant-actions select{min-height:44px}}

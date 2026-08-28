@@ -377,6 +377,17 @@ final class TemplateRepository {
 	}
 
 
+	/** Stable-key published read boundary for Program locale variants. @return array<string,mixed>|null|\WP_Error */
+	public function find_published_by_machine_key( $machine_key ) {
+		$machine_key = sanitize_key( (string) $machine_key );
+		if ( '' === $machine_key || strlen( $machine_key ) > 191 ) { return new \WP_Error( 'certloom_template_key_invalid', __( 'Choose a valid Template machine key.', 'certloom' ) ); }
+		global $wpdb; $wpdb->last_error = '';
+		$id = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM %i WHERE machine_key=%s LIMIT 1', SchemaManager::table( 'templates' ), $machine_key ) );
+		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_template_read_failed', __( 'Certloom could not read the template.', 'certloom' ) ); }
+		return $id ? $this->find_published( absint( $id ) ) : null;
+	}
+
+
 	/** Published, non-archived Templates suitable for authoritative issuance selection. @return array<int,array<string,mixed>>|\WP_Error */
 	public function list_published_candidates( $limit = 100 ) {
 		global $wpdb;

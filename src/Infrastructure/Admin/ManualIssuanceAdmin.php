@@ -180,7 +180,26 @@ final class ManualIssuanceAdmin {
 		echo '<div class="certloom-manual-review-grid">';
 		$this->review_fact( __( 'Recipient', 'certloom' ), (string) ( $recipient['display_name'] ?? '' ), ! empty( $recipient['email'] ) ? (string) $recipient['email'] : '' );
 		$this->review_fact( __( 'Program', 'certloom' ), (string) ( $program['title'] ?? '' ), ! empty( $program['code'] ) ? (string) $program['code'] : '' );
-		$this->review_fact( __( 'Template', 'certloom' ), (string) ( $template['name'] ?? '' ), sprintf( __( 'Published revision #%1$d · ID %2$d', 'certloom' ), absint( $revision['revision_number'] ?? 0 ), absint( $revision['id'] ?? 0 ) ) );
+		$locale = isset( $review['credential_locale'] ) && is_array( $review['credential_locale'] ) ? $review['credential_locale'] : array();
+		$locale_effective = (string) ( $locale['effective'] ?? '' );
+		$locale_configured = (string) ( $locale['configured'] ?? '' );
+		$locale_direction = strtoupper( (string) ( $locale['direction'] ?? 'ltr' ) );
+		$locale_meta = $locale_direction;
+		if ( '' !== $locale_configured && $locale_configured !== $locale_effective ) {
+			$locale_meta .= ' · ' . sprintf( __( 'configured %s', 'certloom' ), $locale_configured );
+		}
+		$this->review_fact( __( 'Credential language', 'certloom' ), '' !== $locale_effective ? $locale_effective : __( 'Site default', 'certloom' ), $locale_meta );
+		$template_meta = sprintf( __( 'Published revision #%1$d · ID %2$d', 'certloom' ), absint( $revision['revision_number'] ?? 0 ), absint( $revision['id'] ?? 0 ) );
+		$resolution_scope = (string) ( $review['template_resolution'] ?? 'explicit' );
+		$variant = isset( $review['template_locale_variant'] ) && is_array( $review['template_locale_variant'] ) ? $review['template_locale_variant'] : array();
+		if ( ! empty( $variant['matched_locale'] ) ) {
+			$template_meta .= ' · ' . sprintf( __( 'language variant %s', 'certloom' ), (string) $variant['matched_locale'] );
+		} elseif ( 'explicit' === $resolution_scope ) {
+			$template_meta .= ' · ' . __( 'explicit reviewed override', 'certloom' );
+		} else {
+			$template_meta .= ' · ' . sprintf( __( 'Program design via %s', 'certloom' ), $resolution_scope );
+		}
+		$this->review_fact( __( 'Template', 'certloom' ), (string) ( $template['name'] ?? '' ), $template_meta );
 		$this->review_fact( __( 'Effective date', 'certloom' ), (string) $review['valid_from'], null === $review['expires_at'] ? __( 'Permanent / no expiry', 'certloom' ) : sprintf( __( 'Expires %s', 'certloom' ), (string) $review['expires_at'] ) );
 		$number = is_array( $review['numbering'] ?? null ) ? (string) ( $review['numbering']['certificate_number'] ?? '' ) : (string) ( $request['display_number'] ?? '' );
 		$this->review_fact( __( 'Certificate number', 'certloom' ), '' !== $number ? $number : __( 'Allocated on Issue', 'certloom' ), \Ecapla_CertVerify_Numbering::is_enabled() ? __( 'Preview candidate; not reserved', 'certloom' ) : __( 'Manual number', 'certloom' ) );

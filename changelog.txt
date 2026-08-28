@@ -1,3 +1,11 @@
+1.6.78
+- Add I18N-02 canonical credential-locale normalization and locale-derived LTR/RTL policy while keeping each administrator's interface language owned by the WordPress user locale.
+- Extend Program Profiles to schema v2 with bounded locale-specific published Template variants and declared fallback semantics. Persist stable Template machine keys rather than database IDs so backup/restore identity is portable.
+- Resolve automatic Program designs in exact locale → base language → declared fallback → existing Program/Issuer/Global assignment order. Missing/unpublished configured variants fail closed rather than silently changing certificate artwork.
+- Freeze configured/effective locale, base language, direction, Template resolution scope and locale-variant provenance into Manual/Bulk review fingerprints and immutable Credential Version snapshots; show credential language/design provenance during Manual Issuance confirmation.
+- Preserve mixed-script element-level Auto/LTR/RTL through the existing first-strong TextDirectionResolver; do not add a global Urdu-only RTL switch or second Designer/layout schema.
+- Add dedicated I18N-02 source + real Chromium coverage and preserve normalized-domain/PDF/PNG/JPEG production authority gates. I18N-03 reviewed major-language quality packs are next.
+
 1.6.77
 - Complete DSX-01 Quick Designer: Quick is the production default; Pro preserves the complete DSN-01→08 toolset over the same canonical layout/revision model.
 - Add human Dynamic Fields with realistic samples, including Grade, while persisting the existing canonical merge-token properties; Custom Field remains the advanced escape hatch.

@@ -7,6 +7,8 @@ use Certloom\Application\Contract\PublicCredentialUrlInterface;
 use Certloom\Application\Contract\TransactionInterface;
 use Certloom\Application\CredentialLifecycleService;
 use Certloom\Application\Rendering\CanonicalJson;
+use Certloom\Application\I18n\CredentialLocale;
+use Certloom\Application\I18n\ProgramTemplateVariantResolver;
 use Certloom\Domain\Credential\States;
 use Certloom\Infrastructure\Database\Transaction;
 use Certloom\Infrastructure\Issuance\ManualIssuanceNumberAllocator;
@@ -26,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 final class ManualIssuanceService {
 	const SOURCE_TYPE = 'manual_admin';
 	const SNAPSHOT_SCHEMA = 'certloom-credential-snapshot';
-	const SNAPSHOT_VERSION = 1;
+	const SNAPSHOT_VERSION = 2;
 	const MAX_NUMBER_RETRIES = 8;
 
 	/** @var ManualIssuanceRepositoryInterface */ private $repository;
@@ -323,17 +325,35 @@ final class ManualIssuanceService {
 			if ( is_wp_error( $issuer ) ) { return $issuer; }
 			if ( ! is_array( $issuer ) ) { return new \WP_Error( 'certloom_manual_issue_issuer_missing', __( 'The program’s configured issuer no longer exists.', 'certloom' ) ); }
 		}
+		$locale = ( new CredentialLocale() )->resolve( $program['profile']['credential_locale'] ?? CredentialLocale::SITE_DEFAULT );
+		if ( is_wp_error( $locale ) ) { return $locale; }
 		$template_resolution = 'explicit';
+		$template_locale_variant = null;
 		if ( empty( $request['template_id'] ) ) {
-			$resolved = $this->repository->resolve_published_template_for_program( absint( $program['id'] ?? 0 ), absint( $program['issuer_id'] ?? 0 ) );
-			if ( is_wp_error( $resolved ) ) { return $resolved; }
-			if ( ! is_array( $resolved ) || empty( $resolved['template_id'] ) ) { return new \WP_Error( 'certloom_manual_issue_program_design_missing', __( 'This Program does not resolve to a published certificate design. Assign a published Template to the Program (or an inherited Issuer/Global fallback) before issuing.', 'certloom' ) ); }
-			$request['template_id'] = absint( $resolved['template_id'] );
-			$template_resolution = (string) ( $resolved['scope_type'] ?? 'assigned' );
+			$variant = ( new ProgramTemplateVariantResolver() )->resolve( isset( $program['profile'] ) && is_array( $program['profile'] ) ? $program['profile'] : array(), $locale['effective'] );
+			if ( is_wp_error( $variant ) ) { return $variant; }
+			if ( is_array( $variant ) && ! empty( $variant['template_key'] ) ) {
+				$variant_template = $this->repository->find_published_template_by_machine_key( (string) $variant['template_key'] );
+				if ( is_wp_error( $variant_template ) || ! is_array( $variant_template ) || ! empty( $variant_template['archived_at'] ) || empty( $variant_template['published_revision'] ) ) { return new \WP_Error( 'certloom_manual_issue_locale_template_unavailable', __( 'The Program locale maps to a certificate design that is no longer published. Review the Program language variants before issuing.', 'certloom' ) ); }
+				$request['template_id'] = absint( $variant_template['id'] ?? 0 );
+				$template_resolution = (string) ( $variant['resolution_scope'] ?? 'program_locale_fallback' );
+				$template_locale_variant = $variant;
+			} else {
+				$resolved = $this->repository->resolve_published_template_for_program( absint( $program['id'] ?? 0 ), absint( $program['issuer_id'] ?? 0 ) );
+				if ( is_wp_error( $resolved ) ) { return $resolved; }
+				if ( ! is_array( $resolved ) || empty( $resolved['template_id'] ) ) { return new \WP_Error( 'certloom_manual_issue_program_design_missing', __( 'This Program does not resolve to a published certificate design. Assign a published Template to the Program (or an inherited Issuer/Global fallback) before issuing.', 'certloom' ) ); }
+				$request['template_id'] = absint( $resolved['template_id'] );
+				$template_resolution = (string) ( $resolved['scope_type'] ?? 'assigned' );
+			}
 		}
 		$template = $this->repository->find_published_template( $request['template_id'] );
-		if ( is_wp_error( $template ) ) { return $template; }
-		if ( ! is_array( $template ) || ! empty( $template['archived_at'] ) || empty( $template['published_revision'] ) ) { return new \WP_Error( 'certloom_manual_issue_template_unavailable', __( 'Choose an active published template.', 'certloom' ) ); }
+		if ( is_wp_error( $template ) ) {
+			if ( null !== $template_locale_variant ) { return new \WP_Error( 'certloom_manual_issue_locale_template_unavailable', __( 'The Program locale maps to a certificate design that is no longer published. Review the Program language variants before issuing.', 'certloom' ) ); }
+			return $template;
+		}
+		if ( ! is_array( $template ) || ! empty( $template['archived_at'] ) || empty( $template['published_revision'] ) ) {
+			return new \WP_Error( null !== $template_locale_variant ? 'certloom_manual_issue_locale_template_unavailable' : 'certloom_manual_issue_template_unavailable', null !== $template_locale_variant ? __( 'The Program locale maps to a certificate design that is no longer published. Review the Program language variants before issuing.', 'certloom' ) : __( 'Choose an active published template.', 'certloom' ) );
+		}
 		$revision = $template['published_revision'];
 		$expires_at = $this->expiry_date( $request, $program );
 		if ( is_wp_error( $expires_at ) ) { return $expires_at; }
@@ -370,6 +390,8 @@ final class ManualIssuanceService {
 			'numbering_policy' => $this->numbers->policy_identity(),
 			'manual_display_number' => $this->numbers->is_automatic() ? '' : $request['display_number'],
 			'custom_merge_fields' => $request['custom_merge_fields'],
+			'credential_locale' => $locale,
+			'template_locale_variant' => $template_locale_variant,
 		);
 		try { $fingerprint = $this->json->hash( $fingerprint_payload ); } catch ( \Throwable $error ) { return new \WP_Error( 'certloom_manual_issue_review_hash_failed', __( 'Certloom could not create a deterministic issuance review fingerprint.', 'certloom' ) ); }
 		$out = array(
@@ -380,6 +402,8 @@ final class ManualIssuanceService {
 			'template' => $template,
 			'template_revision' => $revision,
 			'template_resolution' => $template_resolution,
+			'credential_locale' => $locale,
+			'template_locale_variant' => $template_locale_variant,
 			'valid_from' => $request['valid_from'],
 			'expires_at' => $expires_at,
 			'numbering' => $numbering,
@@ -471,11 +495,13 @@ final class ManualIssuanceService {
 			'issuance' => array( 'source' => (string) $source_type, 'source_ref' => null === $source_ref ? null : (string) $source_ref, 'actor_user_id' => absint( $actor_user_id ), 'review_fingerprint' => (string) $fingerprint, 'custom_merge_fields' => $review['request']['custom_merge_fields'], 'integration_context_sha256' => is_array( $source_context ) ? (string) ( $source_context['sha256'] ?? '' ) : null, 'integration_context' => is_array( $source_context ) && isset( $source_context['context'] ) && is_array( $source_context['context'] ) ? $source_context['context'] : null ),
 			'recipient' => $this->recipient_snapshot( $recipient ),
 			'program' => $this->program_snapshot( $review['program'] ),
+			'locale' => isset( $review['credential_locale'] ) && is_array( $review['credential_locale'] ) ? $review['credential_locale'] : array(),
 			'issuer' => $this->issuer_snapshot( $review['issuer'] ),
 			'signer' => null,
 			'template' => array(
 				'id' => absint( $template['id'] ?? 0 ), 'machine_key' => (string) ( $template['machine_key'] ?? '' ), 'name' => (string) ( $template['name'] ?? '' ),
 				'resolution_scope' => (string) ( $review['template_resolution'] ?? 'explicit' ),
+				'locale_variant' => isset( $review['template_locale_variant'] ) && is_array( $review['template_locale_variant'] ) ? array( 'matched_locale' => (string) ( $review['template_locale_variant']['matched_locale'] ?? '' ), 'template_key' => (string) ( $review['template_locale_variant']['template_key'] ?? '' ), 'fallback_chain' => isset( $review['template_locale_variant']['fallback_chain'] ) && is_array( $review['template_locale_variant']['fallback_chain'] ) ? array_values( $review['template_locale_variant']['fallback_chain'] ) : array() ) : null,
 				'published_revision_id' => absint( $revision['id'] ?? 0 ), 'revision_number' => absint( $revision['revision_number'] ?? 0 ),
 				'layout_schema' => (string) ( $revision['layout_schema'] ?? '' ), 'layout_schema_version' => absint( $revision['layout_schema_version'] ?? 0 ),
 				'layout_sha256' => (string) ( $revision['layout_sha256'] ?? '' ), 'layout' => $revision['layout'],

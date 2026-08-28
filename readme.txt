@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.77
+Stable tag: 1.6.78
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Release note for 1.6.77: DSX-01 Quick Designer adds a simplified Add → Canvas → Properties editing experience over the existing DSN-01→08 canonical Designer engine. Quick Designer is the default on the production Designer surface, while Pro Designer preserves exact geometry, snapping, alignment, layers and advanced primitives. Human Dynamic Fields write the same canonical merge tokens, duplicate creates a fresh secure element UUID, WordPress Media Library remains the local asset source, and Preview/Publish/Save reuse the existing Template revision/publication boundaries. Legacy Designer roots without DSX mode metadata remain Pro by default for compatibility. No second layout schema, renderer, browser persistence authority or production artifact authority is introduced. I18N-02 locale-driven language/RTL architecture is next; backup/recovery, Wizard and concrete LMS adapters remain separate.
+> Release note for 1.6.78: I18N-02 separates administrator UI locale, Program credential locale and per-element Auto/LTR/RTL direction. Program Profiles can map normalized credential locales to published certificate designs by stable Template machine key with exact-locale → base-language → declared-fallback → existing Program design resolution, while Manual/Bulk Issuance freeze the effective locale, direction and design provenance into immutable review/version evidence. Configured locale designs fail closed if they are no longer published, and mixed-script certificates continue to use the existing first-strong element direction resolver. No locale-specific renderer, hard-coded Urdu RTL branch, remote translation service, browser-only design authority or production renderer/database authority is introduced. I18N-03 reviewed language quality packs are next; backups, Wizard and concrete LMS adapters remain separate.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 

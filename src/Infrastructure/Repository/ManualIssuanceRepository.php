@@ -45,6 +45,7 @@ final class ManualIssuanceRepository implements ManualIssuanceRepositoryInterfac
 	public function find_program( $id ) { return $this->programs->find( $id ); }
 	public function find_issuer( $id ) { return $this->issuers->find( $id ); }
 	public function find_published_template( $id ) { return $this->templates->find_published( $id ); }
+	public function find_published_template_by_machine_key( $machine_key ) { return $this->templates->find_published_by_machine_key( $machine_key ); }
 	public function resolve_published_template_for_program( $program_id, $issuer_id = 0 ) { return $this->templates->resolve_published_assignment_details( array( 'issuer_id' => absint( $issuer_id ), 'program_id' => absint( $program_id ) ) ); }
 	public function find_existing_series( $recipient_id, $program_id ) { return $this->credentials->find_series_for_recipient_program( $recipient_id, $program_id ); }
 	public function find_series( $id ) { return $this->credentials->find_series( $id ); }

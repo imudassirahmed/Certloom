@@ -50,7 +50,7 @@ msgid "Pro commercial core · implementation gated"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1092
-msgid "Versioned Templates, immutable revisions, six factory design families, deterministic assignments, lifecycle controls, canonical Render Plan Preview, and the full planned DSN-01 through DSN-08 Designer foundation are implemented. Designer edits the same versioned certloom-layout revision model: historical v1/v2 layouts remain readable and immutable, explicit v3 upgrades create a new immutable revision, Code 128 remains bound only to credential.display_number, and canonical bullet/numbered lists resolve through the shared text Render Plan path. DSN-08 now centralizes built-in element schema availability, allowed properties, validation/resolver/renderer mappings, inspector groups, merge requirements and palette defaults behind one closed typed registry; no unversioned filter or arbitrary HTML/CSS callback can mutate it. Recovery autosave remains personal/non-authoritative, manual save remains the only revision-authority path, and FONT-02 still owns controlled local font manifests. Publication and production artifact authority remain fail-closed behind renderer release authority. The P0 Manual Issuance golden path, premium Credential Management workspace and reviewed Bulk Issuance workflow are implemented inside the normalized-domain admin-preview gate: administrators can issue one credential, inspect immutable Version lineage, perform reviewed lifecycle or Program/Batch corrections, then scale through protected CSV review and durable per-row idempotent issuance without rewriting historical snapshots. Email Delivery is implemented from exact immutable Versions with reviewed SHA-256 confirmation, WordPress-local wp_mail()/SMTP interoperability, privacy-minimized delivery evidence, safe failed retry and fail-closed delivery-uncertain handling. Recipient Portal / My Credentials POR-01 is now implemented as an authenticated, explicit wp_user_id-linked collection with cards/grid/table layouts, bounded status/sort filtering, pagination and expiring-soon cues; normalized Verify and artifact downloads remain authority-gated. SOC-01 Public Sharing is implemented only for already guest-verifiable credentials with local LinkedIn/WhatsApp/Facebook/X/email/copy intents. ANL-01 Verification Analytics and ANL-02 Issuance Analytics are implemented with privacy-minimized verification aggregates, immutable issuance-event/snapshot reporting, bounded daily/weekly/monthly trends and a current expiry forecast. INT-01 + LMSCTX-01 now provide a closed provider-neutral integration event, eligibility, mapping and idempotent issuance framework. UX-01 + FEUX-01 provide the simplified administration and compact public experience. PRG-02 Program Profiles now centralize typed purpose/category, credential rules, locale and experience defaults, show the resolved published Program design, and let Manual/Bulk Issuance resolve that design automatically while immutable Versions freeze the exact Program Profile and Template-resolution provenance. TPLUX-01 Visual Template Library and TPLUX-02 curated premium design breadth are implemented; DSX-01 Quick Designer is next before locale variants and concrete Tutor LMS or LearnDash adapters."
+msgid "Versioned Templates, immutable revisions, six factory design families, deterministic assignments, lifecycle controls, canonical Render Plan Preview, and the full planned DSN-01 through DSN-08 Designer foundation are implemented. Designer edits the same versioned certloom-layout revision model: historical v1/v2 layouts remain readable and immutable, explicit v3 upgrades create a new immutable revision, Code 128 remains bound only to credential.display_number, and canonical bullet/numbered lists resolve through the shared text Render Plan path. DSN-08 now centralizes built-in element schema availability, allowed properties, validation/resolver/renderer mappings, inspector groups, merge requirements and palette defaults behind one closed typed registry; no unversioned filter or arbitrary HTML/CSS callback can mutate it. Recovery autosave remains personal/non-authoritative, manual save remains the only revision-authority path, and FONT-02 still owns controlled local font manifests. Publication and production artifact authority remain fail-closed behind renderer release authority. The P0 Manual Issuance golden path, premium Credential Management workspace and reviewed Bulk Issuance workflow are implemented inside the normalized-domain admin-preview gate: administrators can issue one credential, inspect immutable Version lineage, perform reviewed lifecycle or Program/Batch corrections, then scale through protected CSV review and durable per-row idempotent issuance without rewriting historical snapshots. Email Delivery is implemented from exact immutable Versions with reviewed SHA-256 confirmation, WordPress-local wp_mail()/SMTP interoperability, privacy-minimized delivery evidence, safe failed retry and fail-closed delivery-uncertain handling. Recipient Portal / My Credentials POR-01 is now implemented as an authenticated, explicit wp_user_id-linked collection with cards/grid/table layouts, bounded status/sort filtering, pagination and expiring-soon cues; normalized Verify and artifact downloads remain authority-gated. SOC-01 Public Sharing is implemented only for already guest-verifiable credentials with local LinkedIn/WhatsApp/Facebook/X/email/copy intents. ANL-01 Verification Analytics and ANL-02 Issuance Analytics are implemented with privacy-minimized verification aggregates, immutable issuance-event/snapshot reporting, bounded daily/weekly/monthly trends and a current expiry forecast. INT-01 + LMSCTX-01 now provide a closed provider-neutral integration event, eligibility, mapping and idempotent issuance framework. UX-01 + FEUX-01 provide the simplified administration and compact public experience. PRG-02 Program Profiles now centralize typed purpose/category, credential rules, locale and experience defaults, show the resolved published Program design, and let Manual/Bulk Issuance resolve that design automatically while immutable Versions freeze the exact Program Profile and Template-resolution provenance. TPLUX-01 Visual Template Library, TPLUX-02 curated premium design breadth and DSX-01 Quick Designer are implemented. I18N-02 now adds typed credential locale, locale-derived RTL and Program locale-specific published design variants with immutable issuance provenance; I18N-03 reviewed language quality packs is next before concrete Tutor LMS or LearnDash adapters."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1093
@@ -62,7 +62,7 @@ msgid "P0 issuance workflow · implementation gated"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1098
-msgid "Manual Issuance is implemented inside the normalized-domain admin-preview gate with existing/new Recipient selection, active Program and verified published-Template selection, mutation-free review, exact SHA-256 confirmation, backdating/permanent/explicit expiry choices, established numbering policy reuse, bounded credential-specific custom merge values, canonical browser Preview, atomic Series/Version/event creation, retry idempotency and an immutable issuance snapshot. Credential Management provides a bounded registry, immutable Version inspection, status/verification workspace, reviewed lifecycle actions and immutable-successor Program/Batch corrections. Bulk Issuance adds protected CSV review, SHA-256 confirmation, durable bounded per-row issuance, progress and row-level outcomes through the same Manual Issuance truth path. Email Delivery adds immutable-Version composition, versioned templates, explicit reviewed queueing, wp_mail()/SMTP interoperability, privacy-minimized status evidence and non-replayable delivery-uncertain recovery. Recipient Portal / My Credentials POR-01 is implemented with explicit linked-recipient ownership, current-issued Version queries, cards/grid/table layouts and bounded filtering/sorting. SOC-01 Public Sharing adds server-authorized LinkedIn/WhatsApp/Facebook/X/email/copy actions only for already guest-verifiable URLs. ANL-01 Verification Analytics and ANL-02 Issuance Analytics are implemented with bounded verification aggregates, immutable issuance-event/snapshot dimensions, daily/weekly/monthly trends and expiry forecasting. INT-01 + LMSCTX-01 are implemented as the closed generic integration foundation; UX-01 + FEUX-01 and PRG-02 Program Profiles are implemented. Issuance now defaults to the Program’s published certificate design unless an explicit reviewed override is chosen, and new immutable snapshots preserve Program Profile/design-resolution provenance. TPLUX-01 Visual Template Library plus TPLUX-02 curated premium design breadth are implemented. DSX-01 Quick Designer is next before concrete LMS adapters. Normalized public authority and PDF/PNG/JPEG exports stay fail-closed until final database and renderer acceptance."
+msgid "Manual Issuance is implemented inside the normalized-domain admin-preview gate with existing/new Recipient selection, active Program and verified published-Template selection, mutation-free review, exact SHA-256 confirmation, backdating/permanent/explicit expiry choices, established numbering policy reuse, bounded credential-specific custom merge values, canonical browser Preview, atomic Series/Version/event creation, retry idempotency and an immutable issuance snapshot. Credential Management provides a bounded registry, immutable Version inspection, status/verification workspace, reviewed lifecycle actions and immutable-successor Program/Batch corrections. Bulk Issuance adds protected CSV review, SHA-256 confirmation, durable bounded per-row issuance, progress and row-level outcomes through the same Manual Issuance truth path. Email Delivery adds immutable-Version composition, versioned templates, explicit reviewed queueing, wp_mail()/SMTP interoperability, privacy-minimized status evidence and non-replayable delivery-uncertain recovery. Recipient Portal / My Credentials POR-01 is implemented with explicit linked-recipient ownership, current-issued Version queries, cards/grid/table layouts and bounded filtering/sorting. SOC-01 Public Sharing adds server-authorized LinkedIn/WhatsApp/Facebook/X/email/copy actions only for already guest-verifiable URLs. ANL-01 Verification Analytics and ANL-02 Issuance Analytics are implemented with bounded verification aggregates, immutable issuance-event/snapshot dimensions, daily/weekly/monthly trends and expiry forecasting. INT-01 + LMSCTX-01 are implemented as the closed generic integration foundation; UX-01 + FEUX-01 and PRG-02 Program Profiles are implemented. Issuance now defaults to the Program’s published certificate design unless an explicit reviewed override is chosen, and new immutable snapshots preserve Program Profile/design-resolution provenance. TPLUX-01 Visual Template Library, TPLUX-02 curated premium design breadth and DSX-01 Quick Designer are implemented. I18N-02 locale-driven credential language/RTL and Program locale design variants are implemented; I18N-03 reviewed language quality packs is next before concrete LMS adapters. Normalized public authority and PDF/PNG/JPEG exports stay fail-closed until final database and renderer acceptance."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1099
@@ -237,22 +237,6 @@ msgstr ""
 msgid "Stored values were purged, but the retired registry could not be updated. The reserved key remains safe; run Purge again to retry the final registry cleanup."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:60
-#: admin/views/frontend-manager.php:70
-#: src/Infrastructure/Admin/TemplateAdmin.php:465
-#: blocks/certloom/index.js:65
-msgid "Design"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:60
-#: admin/class-ecapla-certverify-admin.php:1090
-#: admin/views/issuance-analytics.php:63
-#: src/Infrastructure/Admin/TemplateAdmin.php:164
-#: src/Infrastructure/Admin/TemplateAdmin.php:164
-#: src/Infrastructure/Admin/TemplateAdmin.php:465
-msgid "Templates"
-msgstr ""
-
 #: admin/class-ecapla-certverify-admin.php:604
 msgid "Choose a CSV file to upload."
 msgstr ""
@@ -284,31 +268,8 @@ msgstr ""
 msgid "That import session expired during processing. Upload the file again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:72
-#: admin/class-ecapla-certverify-admin.php:72
-#: src/Infrastructure/Admin/DomainAdmin.php:55
-#: src/Infrastructure/Admin/DomainAdmin.php:248
-#: src/Infrastructure/Admin/DomainAdmin.php:303
-#: src/Infrastructure/Admin/DomainAdmin.php:386
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:176
-msgid "Credentials"
-msgstr ""
-
 #: admin/class-ecapla-certverify-admin.php:742
 msgid "The settings could not be saved. Role access was not changed."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:77
-#: admin/class-ecapla-certverify-admin.php:77
-#: admin/class-ecapla-certverify-admin.php:101
-#: admin/class-ecapla-certverify-admin.php:101
-#: admin/class-ecapla-certverify-admin.php:1078
-#: src/Infrastructure/Admin/DomainAdmin.php:52
-#: src/Infrastructure/Admin/DomainAdmin.php:52
-#: src/Infrastructure/Admin/DomainAdmin.php:231
-#: src/Infrastructure/Admin/DomainAdmin.php:236
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:176
-msgid "Recipients"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:776
@@ -317,33 +278,6 @@ msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:777
 msgid "The general settings were saved, but role access could not be updated. The previous role access was restored."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:79
-#: admin/class-ecapla-certverify-admin.php:79
-#: admin/class-ecapla-certverify-admin.php:1084
-#: admin/views/issuance-analytics.php:63
-#: src/Infrastructure/Admin/DomainAdmin.php:53
-#: src/Infrastructure/Admin/DomainAdmin.php:53
-#: src/Infrastructure/Admin/DomainAdmin.php:286
-#: src/Infrastructure/Admin/DomainAdmin.php:291
-#: src/Infrastructure/Admin/DomainAdmin.php:341
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:549
-msgid "Programs"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:83
-#: admin/class-ecapla-certverify-admin.php:83
-#: admin/class-ecapla-certverify-admin.php:102
-#: admin/class-ecapla-certverify-admin.php:102
-#: admin/class-ecapla-certverify-admin.php:1096
-#: admin/views/analytics.php:10
-#: admin/views/issuance-analytics.php:10
-#: src/Infrastructure/Admin/DomainAdmin.php:716
-#: src/Infrastructure/Admin/DomainAdmin.php:793
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:38
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:38
-msgid "Issuance"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:86
@@ -417,65 +351,11 @@ msgstr ""
 msgid "Not set"
 msgstr ""
 
-#: admin/class-ecapla-certverify-list-table.php:124
-#: includes/class-ecapla-certverify-recipient-portal.php:186
-#: includes/class-ecapla-certverify-recipient-portal.php:212
-#: src/Infrastructure/Admin/DomainAdmin.php:410
-#: src/Infrastructure/Admin/DomainAdmin.php:706
-#: src/Infrastructure/Admin/DomainAdmin.php:800
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
-msgid "No expiry"
-msgstr ""
-
-#: admin/class-ecapla-certverify-list-table.php:142
-#: src/Infrastructure/Admin/DomainAdmin.php:552
-#: src/Infrastructure/Admin/DomainAdmin.php:1314
-#: src/Infrastructure/Admin/TemplateAdmin.php:661
-msgid "All"
-msgstr ""
-
-#: admin/class-ecapla-certverify-list-table.php:143
-#: admin/views/dashboard.php:65
-#: includes/class-ecapla-certverify-fields.php:402
-#: includes/class-ecapla-certverify-recipient-portal.php:129
-#: includes/class-ecapla-certverify-recipient-portal.php:288
-#: src/Infrastructure/Admin/DomainAdmin.php:553
-#: src/Infrastructure/Admin/DomainAdmin.php:597
-#: src/Infrastructure/Admin/TemplateAdmin.php:150
-#: elementor/class-ecapla-certverify-elementor-widget.php:636
-msgid "Valid"
-msgstr ""
-
-#: admin/class-ecapla-certverify-list-table.php:144
-#: admin/views/dashboard.php:71
-#: includes/class-ecapla-certverify-fields.php:407
-#: includes/class-ecapla-certverify-recipient-portal.php:132
-#: includes/class-ecapla-certverify-recipient-portal.php:291
-#: src/Infrastructure/Admin/DomainAdmin.php:388
-#: src/Infrastructure/Admin/DomainAdmin.php:554
-#: src/Infrastructure/Admin/DomainAdmin.php:598
-#: elementor/class-ecapla-certverify-elementor-widget.php:637
-msgid "Suspended"
-msgstr ""
-
 #: admin/class-ecapla-certverify-list-table.php:145
 #: admin/views/dashboard.php:77
 #: includes/class-ecapla-certverify-fields.php:412
 #: elementor/class-ecapla-certverify-elementor-widget.php:638
 msgid "Withdrawn"
-msgstr ""
-
-#: admin/class-ecapla-certverify-list-table.php:146
-#: admin/views/analytics.php:50
-#: admin/views/analytics.php:75
-#: admin/views/dashboard.php:83
-#: includes/class-ecapla-certverify-fields.php:417
-#: includes/class-ecapla-certverify-recipient-portal.php:130
-#: includes/class-ecapla-certverify-recipient-portal.php:289
-#: src/Infrastructure/Admin/DomainAdmin.php:556
-#: src/Infrastructure/Admin/DomainAdmin.php:600
-#: elementor/class-ecapla-certverify-elementor-widget.php:639
-msgid "Expired"
 msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:147
@@ -489,68 +369,10 @@ msgstr ""
 msgid "Change selected…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-list-table.php:38
-#: admin/views/analytics.php:91
-#: includes/class-ecapla-certverify-fields.php:371
-#: includes/class-ecapla-certverify-render.php:133
-#: includes/class-ecapla-certverify-render.php:226
-#: src/Infrastructure/Import/DomainImportCsvReader.php:70
-#: src/Infrastructure/Admin/DomainAdmin.php:704
-#: src/Infrastructure/Admin/DomainAdmin.php:811
-#: src/Infrastructure/Admin/DomainAdmin.php:820
-#: src/Infrastructure/Admin/DomainAdmin.php:1066
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:168
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:186
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
-#: elementor/class-ecapla-certverify-credential-widget.php:16
-#: blocks/credential/index.js:39
-msgid "Certificate number"
-msgstr ""
-
 #: admin/class-ecapla-certverify-list-table.php:39
 #: admin/views/dashboard.php:149
 #: admin/views/list-certificates.php:113
 msgid "Holder"
-msgstr ""
-
-#: admin/class-ecapla-certverify-list-table.php:40
-#: admin/views/dashboard.php:150
-#: admin/views/edit-certificate.php:78
-#: admin/views/edit-certificate.php:144
-#: admin/views/list-certificates.php:113
-#: admin/views/list-certificates.php:140
-#: admin/views/settings-manager.php:139
-#: includes/class-ecapla-certverify-recipient-portal.php:147
-#: includes/class-ecapla-certverify-recipient-portal.php:205
-#: src/Infrastructure/Import/DomainImportCsvReader.php:72
-#: src/Infrastructure/Admin/DomainAdmin.php:303
-#: src/Infrastructure/Admin/DomainAdmin.php:399
-#: src/Infrastructure/Admin/DomainAdmin.php:412
-#: src/Infrastructure/Admin/DomainAdmin.php:621
-#: src/Infrastructure/Admin/DomainAdmin.php:651
-#: src/Infrastructure/Admin/DomainAdmin.php:1102
-#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:357
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:176
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:229
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:612
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:25
-#: src/Infrastructure/Admin/TemplateAdmin.php:991
-msgid "Status"
-msgstr ""
-
-#: admin/class-ecapla-certverify-list-table.php:41
-#: admin/views/list-certificates.php:113
-#: includes/class-ecapla-certverify-fields.php:376
-#: src/Infrastructure/Import/DomainImportCsvReader.php:73
-msgid "Issue date"
-msgstr ""
-
-#: admin/class-ecapla-certverify-list-table.php:42
-#: admin/views/bulk-review.php:58
-#: admin/views/list-certificates.php:113
-#: includes/class-ecapla-certverify-fields.php:377
-#: src/Infrastructure/Import/DomainImportCsvReader.php:74
-msgid "Expiry date"
 msgstr ""
 
 #. translators: %s: certificate number.
@@ -666,11 +488,6 @@ msgstr ""
 msgid "Weekly verification trend table"
 msgstr ""
 
-#: admin/views/analytics.php:43
-#: src/Infrastructure/Admin/DomainAdmin.php:987
-msgid "Verification summary"
-msgstr ""
-
 #: admin/views/analytics.php:46
 msgid "Total lookups"
 msgstr ""
@@ -678,20 +495,6 @@ msgstr ""
 #: admin/views/analytics.php:47
 #: admin/views/analytics.php:75
 msgid "Successful"
-msgstr ""
-
-#: admin/views/analytics.php:48
-#: admin/views/analytics.php:75
-#: admin/views/settings-manager.php:170
-#: admin/views/settings-manager.php:197
-#: includes/class-ecapla-certverify-system-status.php:194
-#: includes/class-ecapla-certverify-system-status.php:218
-#: includes/class-ecapla-certverify-system-status.php:234
-#: includes/class-ecapla-certverify-system-status.php:260
-#: includes/class-ecapla-certverify-system-status.php:286
-#: includes/class-ecapla-certverify-system-status.php:311
-#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
-msgid "Failed"
 msgstr ""
 
 #: admin/views/analytics.php:49
@@ -716,16 +519,6 @@ msgstr ""
 #: admin/views/analytics.php:5
 #: admin/views/issuance-analytics.php:5
 msgid "90 days"
-msgstr ""
-
-#: admin/views/analytics.php:51
-#: admin/views/analytics.php:75
-#: includes/class-ecapla-certverify-recipient-portal.php:131
-#: includes/class-ecapla-certverify-recipient-portal.php:290
-#: src/Infrastructure/Admin/DomainAdmin.php:389
-#: src/Infrastructure/Admin/DomainAdmin.php:555
-#: src/Infrastructure/Admin/DomainAdmin.php:599
-msgid "Revoked"
 msgstr ""
 
 #: admin/views/analytics.php:60
@@ -757,13 +550,6 @@ msgstr ""
 msgid "How verification started"
 msgstr ""
 
-#: admin/views/analytics.php:83
-#: src/Infrastructure/Admin/DomainAdmin.php:820
-#: src/Infrastructure/Admin/TemplateAdmin.php:589
-#: src/Infrastructure/Admin/TemplateAdmin.php:995
-msgid "Source"
-msgstr ""
-
 #: admin/views/analytics.php:84
 msgid "API"
 msgstr ""
@@ -788,33 +574,12 @@ msgstr ""
 msgid "Privacy"
 msgstr ""
 
-#: admin/views/analytics.php:9
-#: admin/views/edit-certificate.php:80
-#: admin/views/edit-certificate.php:116
-#: admin/views/issuance-analytics.php:9
-#: admin/views/settings-manager.php:18
-#: src/Infrastructure/Admin/DomainAdmin.php:622
-#: src/Infrastructure/Admin/DomainAdmin.php:652
-msgid "Verification"
-msgstr ""
-
 #: admin/views/analytics.php:90
 msgid "Credential interest"
 msgstr ""
 
 #: admin/views/analytics.php:90
 msgid "Most verified credentials"
-msgstr ""
-
-#: admin/views/analytics.php:91
-#: includes/class-ecapla-certverify-recipient-portal.php:205
-#: src/Infrastructure/Admin/DomainAdmin.php:843
-#: src/Infrastructure/Admin/DomainAdmin.php:860
-#: src/Infrastructure/Admin/DomainAdmin.php:1049
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:299
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:373
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:25
-msgid "Action"
 msgstr ""
 
 #: admin/views/analytics.php:91
@@ -870,12 +635,6 @@ msgstr ""
 msgid "Commit reviewed change"
 msgstr ""
 
-#: admin/views/bulk-review.php:103
-#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:24
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:179
-msgid "Step 2"
-msgstr ""
-
 #: admin/views/bulk-review.php:104
 msgid "Reviewed operation"
 msgstr ""
@@ -923,16 +682,6 @@ msgid_plural "%d certificates are frozen in this review session."
 msgstr[0] ""
 msgstr[1] ""
 
-#: admin/views/bulk-review.php:19
-#: admin/views/edit-certificate.php:158
-#: src/Infrastructure/Admin/DomainAdmin.php:764
-#: src/Infrastructure/Admin/DomainAdmin.php:847
-#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:378
-#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:381
-#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:402
-msgid "Cancel"
-msgstr ""
-
 #: admin/views/bulk-review.php:25
 msgid "Changing filters or registry contents does not silently add certificates to this action. You review the exact operation and eligible count before commit."
 msgstr ""
@@ -943,13 +692,6 @@ msgstr ""
 
 #: admin/views/bulk-review.php:34
 msgid "Define the change"
-msgstr ""
-
-#: admin/views/bulk-review.php:34
-#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:21
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:114
-msgid "Step 1"
 msgstr ""
 
 #: admin/views/bulk-review.php:40
@@ -1005,14 +747,6 @@ msgstr ""
 msgid "Custom field"
 msgstr ""
 
-#: admin/views/bulk-review.php:64
-#: admin/views/settings-manager.php:139
-#: src/Infrastructure/Admin/DomainAdmin.php:1360
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:477
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:171
-msgid "Value"
-msgstr ""
-
 #: admin/views/bulk-review.php:67
 msgid "Review change"
 msgstr ""
@@ -1063,22 +797,6 @@ msgstr ""
 
 #: admin/views/dashboard.php:109
 msgid "Open Analytics"
-msgstr ""
-
-#: admin/views/dashboard.php:111
-#: admin/views/dashboard.php:151
-#: admin/views/issuance-analytics.php:38
-#: admin/views/issuance-analytics.php:53
-#: includes/class-ecapla-certverify-recipient-portal.php:185
-#: includes/class-ecapla-certverify-recipient-portal.php:205
-#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
-#: src/Infrastructure/Admin/DomainAdmin.php:705
-#: src/Infrastructure/Admin/DomainAdmin.php:820
-#: src/Infrastructure/Admin/DomainAdmin.php:1066
-#: src/Infrastructure/Admin/DomainAdmin.php:1102
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:200
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
-msgid "Issued"
 msgstr ""
 
 #: admin/views/dashboard.php:112
@@ -1174,33 +892,6 @@ msgstr ""
 
 #: admin/views/dashboard.php:142
 msgid "Create first certificate"
-msgstr ""
-
-#: admin/views/dashboard.php:148
-#: includes/class-ecapla-certverify-recipient-portal.php:184
-#: src/Infrastructure/Admin/DomainAdmin.php:979
-#: src/Infrastructure/Admin/DomainAdmin.php:1102
-msgid "Certificate"
-msgstr ""
-
-#: admin/views/dashboard.php:152
-#: admin/views/edit-certificate.php:82
-#: src/Infrastructure/Admin/DomainAdmin.php:248
-#: src/Infrastructure/Admin/DomainAdmin.php:303
-#: src/Infrastructure/Admin/DomainAdmin.php:341
-#: src/Infrastructure/Admin/DomainAdmin.php:399
-#: src/Infrastructure/Admin/DomainAdmin.php:413
-#: src/Infrastructure/Admin/DomainAdmin.php:616
-#: src/Infrastructure/Admin/DomainAdmin.php:625
-#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:357
-msgid "Actions"
-msgstr ""
-
-#: admin/views/dashboard.php:165
-#: src/Infrastructure/Admin/DomainAdmin.php:256
-#: src/Infrastructure/Admin/DomainAdmin.php:307
-#: src/Infrastructure/Admin/DomainAdmin.php:344
-msgid "Open"
 msgstr ""
 
 #: admin/views/dashboard.php:17
@@ -1461,12 +1152,6 @@ msgid "Activity becomes available after the credential is saved."
 msgstr ""
 
 #: admin/views/edit-certificate.php:137
-#: admin/views/import-results.php:27
-#: src/Infrastructure/Admin/DomainAdmin.php:341
-msgid "Created"
-msgstr ""
-
-#: admin/views/edit-certificate.php:137
 msgid "Last updated"
 msgstr ""
 
@@ -1498,16 +1183,6 @@ msgstr ""
 
 #: admin/views/edit-certificate.php:159
 msgid "Update credential"
-msgstr ""
-
-#: admin/views/edit-certificate.php:51
-#: src/Infrastructure/Admin/DomainAdmin.php:508
-msgid "Back to credentials"
-msgstr ""
-
-#: admin/views/edit-certificate.php:52
-#: src/Infrastructure/Admin/DomainAdmin.php:628
-msgid "Credential workspace"
 msgstr ""
 
 #: admin/views/edit-certificate.php:52
@@ -1559,59 +1234,9 @@ msgstr ""
 msgid "Credential workspace sections"
 msgstr ""
 
-#: admin/views/edit-certificate.php:75
-#: admin/views/edit-certificate.php:92
-#: src/Infrastructure/Admin/DomainAdmin.php:618
-msgid "Overview"
-msgstr ""
-
-#: admin/views/edit-certificate.php:76
-#: admin/views/edit-certificate.php:99
-#: src/Infrastructure/Admin/DomainAdmin.php:248
-#: src/Infrastructure/Admin/DomainAdmin.php:399
-#: src/Infrastructure/Admin/DomainAdmin.php:408
-#: src/Infrastructure/Admin/DomainAdmin.php:619
-#: src/Infrastructure/Admin/DomainAdmin.php:649
-#: src/Infrastructure/Admin/DomainAdmin.php:709
-#: src/Infrastructure/Admin/DomainAdmin.php:727
-#: src/Infrastructure/Admin/DomainAdmin.php:1102
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:299
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:318
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:129
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:181
-msgid "Recipient"
-msgstr ""
-
-#: admin/views/edit-certificate.php:77
-#: admin/views/edit-certificate.php:105
-#: admin/views/issuance-analytics.php:69
-#: src/Application/Templates/TemplateAssignmentPolicy.php:66
-#: src/Infrastructure/Admin/DomainAdmin.php:303
-#: src/Infrastructure/Admin/DomainAdmin.php:620
-#: src/Infrastructure/Admin/DomainAdmin.php:650
-#: src/Infrastructure/Admin/DomainAdmin.php:710
-#: src/Infrastructure/Admin/DomainAdmin.php:743
-#: src/Infrastructure/Admin/DomainAdmin.php:760
-#: src/Infrastructure/Admin/DomainAdmin.php:1102
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:176
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:522
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:147
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:182
-#: src/Infrastructure/Admin/TemplateAdmin.php:578
-#: src/Infrastructure/Admin/TemplateAdmin.php:991
-msgid "Program"
-msgstr ""
-
 #: admin/views/edit-certificate.php:79
 #: admin/views/edit-certificate.php:110
 msgid "Custom Fields"
-msgstr ""
-
-#: admin/views/edit-certificate.php:81
-#: admin/views/edit-certificate.php:136
-#: src/Infrastructure/Admin/DomainAdmin.php:624
-#: src/Infrastructure/Admin/DomainAdmin.php:647
-msgid "Activity"
 msgstr ""
 
 #: admin/views/edit-certificate.php:92
@@ -1620,14 +1245,6 @@ msgstr ""
 
 #: admin/views/edit-certificate.php:99
 msgid "Current certificate holder"
-msgstr ""
-
-#: admin/views/fields-manager.php:100
-#: src/Infrastructure/Admin/DomainAdmin.php:1360
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:303
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:377
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:477
-msgid "Remove"
 msgstr ""
 
 #: admin/views/fields-manager.php:100
@@ -1672,18 +1289,6 @@ msgstr ""
 
 #: admin/views/fields-manager.php:125
 msgid "Number"
-msgstr ""
-
-#: admin/views/fields-manager.php:125
-#: src/Infrastructure/Admin/TemplateAdmin.php:113
-#: src/Infrastructure/Admin/TemplateAdmin.php:1014
-#: elementor/class-ecapla-certverify-elementor-widget.php:666
-msgid "Text"
-msgstr ""
-
-#: admin/views/fields-manager.php:125
-#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:357
-msgid "Type"
 msgstr ""
 
 #: admin/views/fields-manager.php:127
@@ -1952,11 +1557,6 @@ msgstr ""
 
 #: admin/views/import-mapping.php:12
 msgid "Confirm which certificate field each CSV column represents. Columns set to Skip are ignored. Certificate number must be mapped."
-msgstr ""
-
-#: admin/views/import-mapping.php:19
-#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:320
-msgid "CSV column"
 msgstr ""
 
 #. translators: %d: preview row number.
@@ -2231,13 +1831,6 @@ msgstr ""
 msgid "Start safe restore"
 msgstr ""
 
-#: admin/views/integrations.php:16
-#: admin/views/settings-manager.php:144
-#: includes/class-ecapla-certverify-system-status.php:159
-#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
-msgid "Ready"
-msgstr ""
-
 #: admin/views/integrations.php:19
 msgid "Bounded provider-neutral source object, attempts, score/percentage, certificate threshold, completion state, and deterministic source-event identity."
 msgstr ""
@@ -2389,14 +1982,6 @@ msgid "Top issuance dimensions"
 msgstr ""
 
 #: admin/views/issuance-analytics.php:63
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:34
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:35
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:164
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:550
-msgid "Batches"
-msgstr ""
-
-#: admin/views/issuance-analytics.php:63
 msgid "No issuance data in this period."
 msgstr ""
 
@@ -2448,13 +2033,6 @@ msgstr ""
 msgid "Save columns"
 msgstr ""
 
-#: admin/views/list-certificates.php:128
-#: src/Infrastructure/Admin/DomainAdmin.php:1326
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:612
-msgctxt "search field label"
-msgid "Search"
-msgstr ""
-
 #: admin/views/list-certificates.php:129
 msgid "Certificate number or holder"
 msgstr ""
@@ -2475,19 +2053,8 @@ msgstr ""
 msgid "Contains (slower)"
 msgstr ""
 
-#: admin/views/list-certificates.php:142
-#: includes/class-ecapla-certverify-recipient-portal.php:128
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:612
-msgid "All statuses"
-msgstr ""
-
 #: admin/views/list-certificates.php:149
 msgid "Attention"
-msgstr ""
-
-#: admin/views/list-certificates.php:151
-#: src/Infrastructure/Admin/TemplateAdmin.php:588
-msgid "Any"
 msgstr ""
 
 #: admin/views/list-certificates.php:156
@@ -2508,11 +2075,6 @@ msgstr ""
 
 #: admin/views/list-certificates.php:160
 msgid "Expires to"
-msgstr ""
-
-#: admin/views/list-certificates.php:163
-#: src/Infrastructure/Admin/TemplateAdmin.php:586
-msgid "Apply filters"
 msgstr ""
 
 #: admin/views/list-certificates.php:165
@@ -2625,13 +2187,6 @@ msgstr ""
 #: includes/class-ecapla-certverify-fields.php:334
 #: includes/class-ecapla-certverify-public-policy.php:26
 msgid "Verification only"
-msgstr ""
-
-#: admin/views/partials/certificate-field.php:24
-#: includes/class-ecapla-certverify-fields.php:333
-#: includes/class-ecapla-certverify-public-policy.php:27
-#: src/Infrastructure/Admin/DomainAdmin.php:987
-msgid "Private"
 msgstr ""
 
 #: admin/views/partials/certificate-field.php:36
@@ -2759,33 +2314,7 @@ msgid "Credit text size"
 msgstr ""
 
 #: admin/views/settings-manager.php:106
-#: src/Infrastructure/Admin/TemplateAdmin.php:1002
-#: elementor/class-ecapla-certverify-elementor-widget.php:851
-#: elementor/class-ecapla-certverify-template-widgets.php:221
-#: blocks/certloom/index.js:82
-msgid "Center"
-msgstr ""
-
-#: admin/views/settings-manager.php:106
 msgid "Credit alignment"
-msgstr ""
-
-#: admin/views/settings-manager.php:106
-#: src/Infrastructure/Admin/TemplateAdmin.php:961
-#: src/Infrastructure/Admin/TemplateAdmin.php:1002
-#: elementor/class-ecapla-certverify-elementor-widget.php:847
-#: elementor/class-ecapla-certverify-template-widgets.php:220
-#: blocks/certloom/index.js:81
-msgid "Left"
-msgstr ""
-
-#: admin/views/settings-manager.php:106
-#: src/Infrastructure/Admin/TemplateAdmin.php:961
-#: src/Infrastructure/Admin/TemplateAdmin.php:1002
-#: elementor/class-ecapla-certverify-elementor-widget.php:855
-#: elementor/class-ecapla-certverify-template-widgets.php:222
-#: blocks/certloom/index.js:83
-msgid "Right"
 msgstr ""
 
 #: admin/views/settings-manager.php:109
@@ -2915,12 +2444,6 @@ msgstr ""
 
 #: admin/views/settings-manager.php:164
 msgid "Database proof check"
-msgstr ""
-
-#: admin/views/settings-manager.php:164
-#: admin/views/settings-manager.php:191
-#: src/Infrastructure/Admin/DomainAdmin.php:1076
-msgid "Details"
 msgstr ""
 
 #: admin/views/settings-manager.php:164
@@ -3350,12 +2873,6 @@ msgstr ""
 msgid "Can manage certificates"
 msgstr ""
 
-#: admin/views/settings-manager.php:65
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:373
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:388
-msgid "Role"
-msgstr ""
-
 #: admin/views/settings-manager.php:66
 msgid "Administrator access is always enabled"
 msgstr ""
@@ -3363,11 +2880,6 @@ msgstr ""
 #. translators: %s: WordPress role name.
 #: admin/views/settings-manager.php:66
 msgid "Allow %s to manage certificates"
-msgstr ""
-
-#: admin/views/settings-manager.php:77
-#: src/Infrastructure/Admin/DomainAdmin.php:994
-msgid "Certificate numbering"
 msgstr ""
 
 #: admin/views/settings-manager.php:78
@@ -3565,11 +3077,6 @@ msgstr ""
 
 #: admin/views/setup-wizard.php:32
 msgid "Organization & verification"
-msgstr ""
-
-#: admin/views/setup-wizard.php:32
-#: src/Infrastructure/Admin/DomainAdmin.php:984
-msgid "Required"
 msgstr ""
 
 #: admin/views/setup-wizard.php:36
@@ -5532,22 +5039,6 @@ msgstr ""
 msgid "Current status"
 msgstr ""
 
-#: includes/class-ecapla-certverify-fields.php:373
-#: src/Infrastructure/Import/DomainImportCsvReader.php:71
-msgid "Certificate holder"
-msgstr ""
-
-#: includes/class-ecapla-certverify-fields.php:374
-#: src/Infrastructure/Admin/TemplateAdmin.php:1055
-msgid "Standard"
-msgstr ""
-
-#: includes/class-ecapla-certverify-fields.php:375
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:373
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:386
-msgid "Scope"
-msgstr ""
-
 #: includes/class-ecapla-certverify-fields.php:379
 msgid "Status reason"
 msgstr ""
@@ -5949,17 +5440,6 @@ msgstr ""
 msgid "View credential profile"
 msgstr ""
 
-#: includes/class-ecapla-certverify-public-policy.php:112
-#: src/Application/Recipient/RecipientPortalService.php:160
-msgid "View this verified credential"
-msgstr ""
-
-#: includes/class-ecapla-certverify-public-policy.php:113
-#: includes/class-ecapla-certverify-render.php:348
-#: src/Application/Recipient/RecipientPortalService.php:161
-msgid "Verified credential"
-msgstr ""
-
 #: includes/class-ecapla-certverify-public-policy.php:117
 #: includes/class-ecapla-certverify-recipient-portal.php:228
 msgid "LinkedIn"
@@ -5978,18 +5458,6 @@ msgstr ""
 #: includes/class-ecapla-certverify-public-policy.php:120
 #: includes/class-ecapla-certverify-recipient-portal.php:231
 msgid "X"
-msgstr ""
-
-#: includes/class-ecapla-certverify-public-policy.php:121
-#: includes/class-ecapla-certverify-recipient-portal.php:232
-#: src/Infrastructure/Admin/DomainAdmin.php:248
-#: src/Infrastructure/Admin/DomainAdmin.php:732
-#: src/Infrastructure/Admin/DomainAdmin.php:925
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:229
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:299
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:354
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:143
-msgid "Email"
 msgstr ""
 
 #: includes/class-ecapla-certverify-public-policy.php:130
@@ -6128,27 +5596,6 @@ msgstr ""
 msgid "Credential status is evaluated live from the current immutable Version and lifecycle state."
 msgstr ""
 
-#: includes/class-ecapla-certverify-recipient-portal.php:133
-#: includes/class-ecapla-certverify-recipient-portal.php:292
-#: src/Infrastructure/Admin/DomainAdmin.php:557
-#: src/Infrastructure/Admin/DomainAdmin.php:601
-msgid "Not yet valid"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:134
-#: includes/class-ecapla-certverify-recipient-portal.php:293
-#: src/Infrastructure/Admin/DomainAdmin.php:558
-#: src/Infrastructure/Admin/DomainAdmin.php:602
-msgid "Pending review"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:135
-#: includes/class-ecapla-certverify-recipient-portal.php:294
-#: src/Infrastructure/Admin/DomainAdmin.php:559
-#: src/Infrastructure/Admin/DomainAdmin.php:603
-msgid "Non-compliant"
-msgstr ""
-
 #: includes/class-ecapla-certverify-recipient-portal.php:138
 msgid "Newest issued"
 msgstr ""
@@ -6163,30 +5610,6 @@ msgstr ""
 
 #: includes/class-ecapla-certverify-recipient-portal.php:155
 msgid "Sort"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:173
-#: includes/class-ecapla-certverify-recipient-portal.php:205
-#: includes/class-ecapla-certverify-recipient-portal.php:209
-#: src/Infrastructure/Admin/DomainAdmin.php:399
-#: src/Infrastructure/Admin/DomainAdmin.php:407
-#: src/Infrastructure/Admin/DomainAdmin.php:614
-#: elementor/class-ecapla-certverify-credential-widget.php:15
-#: blocks/credential/index.js:38
-msgid "Credential"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:186
-#: includes/class-ecapla-certverify-recipient-portal.php:205
-#: src/Infrastructure/Admin/DomainAdmin.php:706
-#: src/Infrastructure/Admin/DomainAdmin.php:1066
-#: src/Infrastructure/Admin/DomainAdmin.php:1102
-msgid "Expires"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:187
-#: src/Infrastructure/Admin/TemplateAdmin.php:991
-msgid "Grade"
 msgstr ""
 
 #: includes/class-ecapla-certverify-recipient-portal.php:190
@@ -6224,27 +5647,6 @@ msgstr ""
 
 #: includes/class-ecapla-certverify-recipient-portal.php:270
 msgid "Credential pages"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:295
-#: src/Infrastructure/Admin/DomainAdmin.php:560
-#: src/Infrastructure/Admin/DomainAdmin.php:604
-msgid "Voided"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:296
-#: src/Infrastructure/Admin/DomainAdmin.php:561
-#: src/Infrastructure/Admin/DomainAdmin.php:605
-msgid "Not issued"
-msgstr ""
-
-#: includes/class-ecapla-certverify-recipient-portal.php:298
-#: includes/class-ecapla-certverify-system-status.php:105
-#: includes/class-ecapla-certverify-system-status.php:131
-#: includes/class-ecapla-certverify-system-status.php:150
-#: src/Infrastructure/Admin/DomainAdmin.php:593
-#: src/Infrastructure/Admin/DomainAdmin.php:1106
-msgid "Unavailable"
 msgstr ""
 
 #: includes/class-ecapla-certverify-recipient-portal.php:41
@@ -6373,15 +5775,6 @@ msgstr ""
 #: includes/class-ecapla-certverify-render.php:33
 #: blocks/certloom/index.js:50
 msgid "e.g. CERT-9001-2026-00142"
-msgstr ""
-
-#: includes/class-ecapla-certverify-render.php:34
-#: src/Infrastructure/Admin/DomainAdmin.php:1326
-#: src/Infrastructure/Admin/TemplateAdmin.php:665
-#: src/Infrastructure/Admin/TemplateAdmin.php:716
-#: blocks/certloom/index.js:51
-msgctxt "search action button"
-msgid "Search"
 msgstr ""
 
 #: includes/class-ecapla-certverify-render.php:341
@@ -6987,11 +6380,6 @@ msgstr ""
 msgid "No / not detected"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:73
-#: src/Infrastructure/Admin/DomainAdmin.php:788
-msgid "Yes"
-msgstr ""
-
 #: includes/class-ecapla-certverify-system-status.php:74
 msgid "HTTPS is strongly recommended for public credential verification and future authenticated APIs."
 msgstr ""
@@ -7180,6 +6568,11 @@ msgstr ""
 msgid "The Certloom backup contains an oversized record on line %d."
 msgstr ""
 
+#: src/Application/Backup/DomainBackupFormat.php:37
+#: src/Application/Restore/DomainRestoreStagingService.php:62
+msgid "This is not a supported Certloom domain backup."
+msgstr ""
+
 #: src/Application/Backup/DomainBackupFormat.php:42
 msgid "The Certloom backup manifest does not declare the exact supported entity set in canonical order."
 msgstr ""
@@ -7196,8 +6589,37 @@ msgstr ""
 msgid "The Certloom domain backup file could not be read."
 msgstr ""
 
+#: src/Application/Backup/DomainBackupReader.php:13
+#: src/Application/Restore/DomainRestorePreflightService.php:34
+#: src/Application/Restore/DomainRestorePreflightService.php:57
+msgid "The Certloom domain backup exceeds the supported restore size limit."
+msgstr ""
+
 #: src/Application/Backup/DomainBackupReader.php:15
 msgid "The Certloom domain backup file could not be opened."
+msgstr ""
+
+#: src/Application/Backup/DomainBackupReader.php:24
+#: src/Application/Restore/DomainRestorePreflightService.php:59
+#: src/Application/Restore/DomainRestoreStagingService.php:156
+msgid "The Certloom domain backup contains unexpected data after its integrity record."
+msgstr ""
+
+#: src/Application/Backup/DomainBackupReader.php:28
+#: src/Application/Restore/DomainRestorePreflightService.php:63
+#: src/Application/Restore/DomainRestoreStagingService.php:165
+msgid "The Certloom domain backup contains invalid JSON on line %d."
+msgstr ""
+
+#: src/Application/Backup/DomainBackupReader.php:38
+#: src/Application/Restore/DomainRestorePreflightService.php:83
+#: src/Application/Restore/DomainRestoreStagingService.php:184
+msgid "The Certloom domain backup contains an unsupported record on line %d."
+msgstr ""
+
+#: src/Application/Backup/DomainBackupReader.php:39
+#: src/Application/Restore/DomainRestorePreflightService.php:85
+msgid "The Certloom domain backup exceeds the configured record safety limit."
 msgstr ""
 
 #: src/Application/Backup/DomainBackupReader.php:41
@@ -7208,17 +6630,22 @@ msgstr ""
 msgid "The Certloom domain backup is incomplete or failed its integrity check."
 msgstr ""
 
+#: src/Application/Backup/DomainBackupReader.php:53
+#: src/Application/Restore/DomainRestorePreflightService.php:73
+msgid "The Certloom domain backup configuration metadata is inconsistent."
+msgstr ""
+
+#: src/Application/Backup/DomainBackupReader.php:61
+#: src/Application/Restore/DomainRestoreStagingService.php:260
+msgid "The Certloom domain backup record counts do not match its manifest."
+msgstr ""
+
 #: src/Application/CredentialLifecycleReviewService.php:100
 msgid "The reviewed lifecycle action is incomplete."
 msgstr ""
 
 #: src/Application/CredentialLifecycleReviewService.php:33
 msgid "A current credential Version is required before this lifecycle action can be reviewed."
-msgstr ""
-
-#: src/Application/CredentialLifecycleReviewService.php:36
-#: src/Infrastructure/Admin/DomainAdmin.php:190
-msgid "Choose a valid credential lifecycle action."
 msgstr ""
 
 #: src/Application/CredentialLifecycleReviewService.php:72
@@ -7471,6 +6898,10 @@ msgstr ""
 msgid "Certloom could not fingerprint the composed credential email."
 msgstr ""
 
+#: src/Application/I18n/CredentialLocale.php:48
+msgid "The current WordPress site locale cannot be used as a credential locale."
+msgstr ""
+
 #: src/Application/Import/DomainImportCommitJobHandler.php:118
 msgid "The Certloom import writer returned an invalid commit result."
 msgstr ""
@@ -7516,12 +6947,6 @@ msgstr ""
 msgid "Certloom stopped the import safely (%1$s), but could not remove its protected source copy (%2$s)."
 msgstr ""
 
-#: src/Application/Import/DomainImportJobCoordinator.php:124
-#: src/Application/DataTools/DomainDataToolsCoordinator.php:89
-#: src/Infrastructure/Import/DomainImportUploadSession.php:145
-msgid "file deletion failed"
-msgstr ""
-
 #: src/Application/Import/DomainImportJobCoordinator.php:131
 msgid "Confirm the reviewed import before creating its commit job."
 msgstr ""
@@ -7540,12 +6965,6 @@ msgstr ""
 
 #: src/Application/Import/DomainImportJobCoordinator.php:50
 msgid "Choose a non-empty CSV file no larger than 10 MB."
-msgstr ""
-
-#: src/Application/Import/DomainImportJobCoordinator.php:54
-#: src/Application/Import/DomainImportJobCoordinator.php:82
-#: src/Infrastructure/Import/DomainImportUploadSession.php:28
-msgid "Certloom accepts CSV files for this import workflow."
 msgstr ""
 
 #: src/Application/Import/DomainImportJobCoordinator.php:60
@@ -7649,11 +7068,6 @@ msgstr ""
 
 #: src/Application/Integration/IntegrationIssuanceCoordinator.php:37
 msgid "No completed attempt satisfies the certificate eligibility threshold."
-msgstr ""
-
-#: src/Application/Integration/IntegrationIssuanceCoordinator.php:42
-#: src/Infrastructure/Integration/LinkedRecipientResolver.php:19
-msgid "This learner is not explicitly linked to a Certloom recipient. Certloom will not infer identity from email or name."
 msgstr ""
 
 #: src/Application/Integration/IntegrationIssuanceCoordinator.php:46
@@ -7808,171 +7222,177 @@ msgstr ""
 msgid "The blocked Bulk Issuance review plan could not be removed immediately. Retention cleanup will retry."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:118
+#: src/Application/Issuance/ManualIssuanceService.php:120
 msgid "Certloom refused an unsupported issuance source."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:122
+#: src/Application/Issuance/ManualIssuanceService.php:124
 msgid "The bulk issuance source reference is invalid."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:126
+#: src/Application/Issuance/ManualIssuanceService.php:128
 msgid "The bulk issuance row identity is invalid."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:130
+#: src/Application/Issuance/ManualIssuanceService.php:132
 msgid "The bulk issuance lifecycle reason is invalid."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:149
+#: src/Application/Issuance/ManualIssuanceService.php:151
 msgid "Certloom refused an unsupported normalized integration context."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:153
+#: src/Application/Issuance/ManualIssuanceService.php:155
 msgid "The normalized integration context fingerprint is invalid."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:156
+#: src/Application/Issuance/ManualIssuanceService.php:158
 msgid "Certloom could not fingerprint the normalized integration context safely."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:158
+#: src/Application/Issuance/ManualIssuanceService.php:160
 msgid "The normalized integration context changed after review. No credential was issued."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:162
+#: src/Application/Issuance/ManualIssuanceService.php:164
 msgid "The integration source-event identity is invalid."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:166
+#: src/Application/Issuance/ManualIssuanceService.php:168
 msgid "The integration source reference is invalid."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:184
+#: src/Application/Issuance/ManualIssuanceService.php:186
 msgid "Review the credential before issuing it."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:189
+#: src/Application/Issuance/ManualIssuanceService.php:191
 msgid "The issuance inputs or related records changed after review. Review the credential again before issuing it."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:206
+#: src/Application/Issuance/ManualIssuanceService.php:208
 msgid "The issuance inputs or related records changed while the credential was being confirmed. No credential was issued."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:221
+#: src/Application/Issuance/ManualIssuanceService.php:223
 msgid "The new recipient was created but could not be re-read safely. Issuance was rolled back."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:234
+#: src/Application/Issuance/ManualIssuanceService.php:236
 msgid "The new credential identity could not be re-read safely. Issuance was rolled back."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:288
+#: src/Application/Issuance/ManualIssuanceService.php:290
 msgid "The issued credential could not be re-read safely. Issuance was rolled back."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:300
+#: src/Application/Issuance/ManualIssuanceService.php:302
 msgid "Certificate-number collisions continued while issuing. Nothing was duplicated; review the numbering policy and try again."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:310
+#: src/Application/Issuance/ManualIssuanceService.php:312
 msgid "Choose a recipient that still exists."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:318
+#: src/Application/Issuance/ManualIssuanceService.php:320
 msgid "Choose a program that still exists."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:319
+#: src/Application/Issuance/ManualIssuanceService.php:321
 msgid "Inactive programs cannot receive new credential issuances."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:324
+#: src/Application/Issuance/ManualIssuanceService.php:326
 msgid "The program’s configured issuer no longer exists."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:330
+#: src/Application/Issuance/ManualIssuanceService.php:337
+#: src/Application/Issuance/ManualIssuanceService.php:351
+#: src/Application/Issuance/ManualIssuanceService.php:355
+msgid "The Program locale maps to a certificate design that is no longer published. Review the Program language variants before issuing."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:344
 msgid "This Program does not resolve to a published certificate design. Assign a published Template to the Program (or an inherited Issuer/Global fallback) before issuing."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:336
+#: src/Application/Issuance/ManualIssuanceService.php:355
 msgid "Choose an active published template."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:374
+#: src/Application/Issuance/ManualIssuanceService.php:396
 msgid "Certloom could not create a deterministic issuance review fingerprint."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:400
+#: src/Application/Issuance/ManualIssuanceService.php:424
 msgid "Choose an existing recipient or create a new recipient."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:402
+#: src/Application/Issuance/ManualIssuanceService.php:426
 msgid "Choose an existing recipient."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:405
+#: src/Application/Issuance/ManualIssuanceService.php:429
 msgid "Choose a credential program."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:407
+#: src/Application/Issuance/ManualIssuanceService.php:431
 msgid "Choose a valid credential issue/effective date."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:409
+#: src/Application/Issuance/ManualIssuanceService.php:433
 msgid "Choose the program default, a permanent credential, or a specific expiry date."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:413
+#: src/Application/Issuance/ManualIssuanceService.php:437
 msgid "Choose a valid credential expiry date."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:414
+#: src/Application/Issuance/ManualIssuanceService.php:438
 msgid "The expiry date cannot be earlier than the credential issue/effective date."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:417
+#: src/Application/Issuance/ManualIssuanceService.php:441
 msgid "Grade must be 191 characters or fewer."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:451
+#: src/Application/Issuance/ManualIssuanceService.php:475
 msgid "Certloom could not calculate the program’s default credential expiry date."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:460
+#: src/Application/Issuance/ManualIssuanceService.php:484
 msgid "This recipient already has a Credential Series for the selected program. Manual Issuance will not create a duplicate; future correction/re-certification must add an immutable Version to the existing Series."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:468
+#: src/Application/Issuance/ManualIssuanceService.php:492
 msgid "Certloom could not create the immutable merge snapshot fingerprint. Issuance was rolled back."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:497
+#: src/Application/Issuance/ManualIssuanceService.php:523
 msgid "The issued Credential Series could not be loaded for its receipt."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:518
+#: src/Application/Issuance/ManualIssuanceService.php:544
 msgid "Use a valid YYYY-MM-DD date."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:523
+#: src/Application/Issuance/ManualIssuanceService.php:549
 msgid "Custom fields must be a bounded key/value list with at most 30 entries."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:529
+#: src/Application/Issuance/ManualIssuanceService.php:555
 msgid "Custom fields must use unique machine keys up to 64 characters and scalar values."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:532
+#: src/Application/Issuance/ManualIssuanceService.php:558
 msgid "Each custom field value must be 2,000 characters or fewer."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:534
+#: src/Application/Issuance/ManualIssuanceService.php:560
 msgid "The combined custom-field payload is too large for one Manual Issuance."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:79
+#: src/Application/Issuance/ManualIssuanceService.php:81
 msgid "That Manual Issuance receipt could not be found."
 msgstr ""
 
@@ -7999,11 +7419,6 @@ msgstr ""
 
 #: src/Application/Job/JobService.php:115
 msgid "The Certloom worker token is invalid."
-msgstr ""
-
-#: src/Application/Job/JobService.php:22
-#: src/Infrastructure/Job/JobRepository.php:47
-msgid "A Certloom job type is required."
 msgstr ""
 
 #: src/Application/Migration/DomainCutoverState.php:132
@@ -8092,183 +7507,172 @@ msgstr ""
 msgid "Mutable recipient profile data was anonymized through the WordPress personal-data erasure workflow. Immutable credential evidence was retained."
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:103
+#: src/Application/Program/ProgramProfile.php:100
+msgid "Choose a valid Program purpose."
+msgstr ""
+
+#: src/Application/Program/ProgramProfile.php:108
 msgid "Choose a subcategory that belongs to the selected Program purpose."
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:109
-msgid "Enter a valid credential locale such as en_US, ar or fr_FR."
+#: src/Application/Program/ProgramProfile.php:113
+#: src/Application/I18n/CredentialLocale.php:28
+msgid "Enter a valid credential locale such as en_US, ar, fr_FR or zh_Hant."
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:113
+#: src/Application/Program/ProgramProfile.php:122
+msgid "Choose Program default or a locale that has a configured Template variant."
+msgstr ""
+
+#: src/Application/Program/ProgramProfile.php:126
 msgid "Choose a valid credential type."
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:116
+#: src/Application/Program/ProgramProfile.php:129
 msgid "Eligibility context must be 500 characters or fewer."
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:119
+#: src/Application/Program/ProgramProfile.php:132
 msgid "Choose a valid renewal policy."
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:121
+#: src/Application/Program/ProgramProfile.php:134
 msgid "Choose a valid verification visibility default."
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:124
+#: src/Application/Program/ProgramProfile.php:137
 msgid "Choose a valid Program experience default."
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:129
+#: src/Application/Program/ProgramProfile.php:142
 msgid "Program Profile identifiers must be 191 characters or fewer."
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:139
+#: src/Application/Program/ProgramProfile.php:152
 msgid "Stored Program Profile configuration is structurally invalid."
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:143
+#: src/Application/Program/ProgramProfile.php:157
 msgid "Stored Program Profile configuration uses an unsupported schema version."
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:19
-msgid "Certification & Standards"
+#: src/Application/Program/ProgramProfile.php:180
+msgid "Program Template variants must be a bounded locale-to-Template map."
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:20
-msgid "Academic Credentials"
+#: src/Application/Program/ProgramProfile.php:184
+msgid "Each Program Template variant must use a valid locale."
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:21
-msgid "Training & Courses"
+#: src/Application/Program/ProgramProfile.php:186
+msgid "Each Program Template variant must reference a stable Template machine key."
 msgstr ""
 
 #: src/Application/Program/ProgramProfile.php:22
-msgid "Professional License / Membership"
+msgid "Certification & Standards"
 msgstr ""
 
 #: src/Application/Program/ProgramProfile.php:23
-msgid "Awards & Recognition"
+msgid "Academic Credentials"
 msgstr ""
 
 #: src/Application/Program/ProgramProfile.php:24
-msgid "Events & Participation"
+msgid "Training & Courses"
 msgstr ""
 
 #: src/Application/Program/ProgramProfile.php:25
-#: src/Infrastructure/Repository/ProgramRepository.php:141
-msgid "Custom / Other"
+msgid "Professional License / Membership"
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:33
-msgid "Management systems"
+#: src/Application/Program/ProgramProfile.php:26
+msgid "Awards & Recognition"
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:34
-msgid "Personnel"
-msgstr ""
-
-#: src/Application/Program/ProgramProfile.php:35
-msgid "Product / service"
+#: src/Application/Program/ProgramProfile.php:27
+msgid "Events & Participation"
 msgstr ""
 
 #: src/Application/Program/ProgramProfile.php:36
-msgid "Inspection / assessment"
+msgid "Management systems"
 msgstr ""
 
 #: src/Application/Program/ProgramProfile.php:37
-msgid "Custom scheme"
+msgid "Personnel"
+msgstr ""
+
+#: src/Application/Program/ProgramProfile.php:38
+msgid "Product / service"
+msgstr ""
+
+#: src/Application/Program/ProgramProfile.php:39
+msgid "Inspection / assessment"
 msgstr ""
 
 #: src/Application/Program/ProgramProfile.php:40
-#: src/Infrastructure/Admin/DomainAdmin.php:979
-msgid "Degree"
+msgid "Custom scheme"
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:41
-#: src/Infrastructure/Admin/DomainAdmin.php:979
-msgid "Diploma"
-msgstr ""
-
-#: src/Application/Program/ProgramProfile.php:42
+#: src/Application/Program/ProgramProfile.php:45
 msgid "Academic certificate"
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:43
+#: src/Application/Program/ProgramProfile.php:46
 msgid "Course completion"
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:44
+#: src/Application/Program/ProgramProfile.php:47
 msgid "Continuing education"
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:47
+#: src/Application/Program/ProgramProfile.php:50
 msgid "Online course"
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:48
+#: src/Application/Program/ProgramProfile.php:51
 msgid "Workshop"
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:49
+#: src/Application/Program/ProgramProfile.php:52
 msgid "Corporate training"
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:50
+#: src/Application/Program/ProgramProfile.php:53
 msgid "Safety / compliance"
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:51
+#: src/Application/Program/ProgramProfile.php:54
 msgid "CPD"
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:54
+#: src/Application/Program/ProgramProfile.php:57
 msgid "Professional license"
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:55
-#: src/Infrastructure/Admin/DomainAdmin.php:979
-msgid "Membership"
-msgstr ""
-
-#: src/Application/Program/ProgramProfile.php:58
-#: src/Infrastructure/Admin/DomainAdmin.php:979
-msgid "Award"
-msgstr ""
-
-#: src/Application/Program/ProgramProfile.php:59
+#: src/Application/Program/ProgramProfile.php:62
 msgid "Recognition"
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:62
-#: src/Infrastructure/Admin/DomainAdmin.php:979
-msgid "Participation"
-msgstr ""
-
-#: src/Application/Program/ProgramProfile.php:63
+#: src/Application/Program/ProgramProfile.php:66
 msgid "Attendance"
 msgstr ""
 
-#: src/Application/Program/ProgramProfile.php:64
+#: src/Application/Program/ProgramProfile.php:67
 msgid "Speaker"
-msgstr ""
-
-#: src/Application/Program/ProgramProfile.php:66
-#: src/Application/Templates/TemplateLibraryMetadata.php:30
-#: src/Application/Templates/TemplateLibraryMetadata.php:65
-#: src/Infrastructure/Admin/DomainAdmin.php:979
-#: src/Infrastructure/Admin/TemplateAdmin.php:603
-#: src/Infrastructure/Admin/TemplateAdmin.php:759
-msgid "Custom"
-msgstr ""
-
-#: src/Application/Program/ProgramProfile.php:95
-msgid "Choose a valid Program purpose."
 msgstr ""
 
 #: src/Application/Recipient/RecipientPortalService.php:139
 msgid "One of your credentials has invalid lifecycle state and cannot be displayed safely."
+msgstr ""
+
+#: src/Application/Recipient/RecipientPortalService.php:160
+#: includes/class-ecapla-certverify-public-policy.php:112
+msgid "View this verified credential"
+msgstr ""
+
+#: src/Application/Recipient/RecipientPortalService.php:161
+#: includes/class-ecapla-certverify-public-policy.php:113
+#: includes/class-ecapla-certverify-render.php:348
+msgid "Verified credential"
 msgstr ""
 
 #: src/Application/Recipient/RecipientPortalService.php:76
@@ -8332,46 +7736,12 @@ msgstr ""
 msgid "The Certloom backup is missing required configuration metadata."
 msgstr ""
 
-#: src/Application/Restore/DomainRestorePreflightService.php:34
-#: src/Application/Restore/DomainRestorePreflightService.php:57
-#: src/Application/Backup/DomainBackupReader.php:13
-msgid "The Certloom domain backup exceeds the supported restore size limit."
-msgstr ""
-
 #: src/Application/Restore/DomainRestorePreflightService.php:38
 msgid "Certloom could not reopen the validated backup for restore review."
 msgstr ""
 
-#: src/Application/Restore/DomainRestorePreflightService.php:59
-#: src/Application/Restore/DomainRestoreStagingService.php:156
-#: src/Application/Backup/DomainBackupReader.php:24
-msgid "The Certloom domain backup contains unexpected data after its integrity record."
-msgstr ""
-
-#: src/Application/Restore/DomainRestorePreflightService.php:63
-#: src/Application/Restore/DomainRestoreStagingService.php:165
-#: src/Application/Backup/DomainBackupReader.php:28
-msgid "The Certloom domain backup contains invalid JSON on line %d."
-msgstr ""
-
-#: src/Application/Restore/DomainRestorePreflightService.php:73
-#: src/Application/Backup/DomainBackupReader.php:53
-msgid "The Certloom domain backup configuration metadata is inconsistent."
-msgstr ""
-
 #: src/Application/Restore/DomainRestorePreflightService.php:79
 msgid "The Certloom domain backup failed its integrity check during semantic restore review."
-msgstr ""
-
-#: src/Application/Restore/DomainRestorePreflightService.php:83
-#: src/Application/Restore/DomainRestoreStagingService.php:184
-#: src/Application/Backup/DomainBackupReader.php:38
-msgid "The Certloom domain backup contains an unsupported record on line %d."
-msgstr ""
-
-#: src/Application/Restore/DomainRestorePreflightService.php:85
-#: src/Application/Backup/DomainBackupReader.php:39
-msgid "The Certloom domain backup exceeds the configured record safety limit."
 msgstr ""
 
 #: src/Application/Restore/DomainRestoreRowValidator.php:127
@@ -8450,11 +7820,6 @@ msgstr ""
 msgid "The Certloom restore workspace has not completed validation."
 msgstr ""
 
-#: src/Application/Restore/DomainRestoreStagingService.php:260
-#: src/Application/Backup/DomainBackupReader.php:61
-msgid "The Certloom domain backup record counts do not match its manifest."
-msgstr ""
-
 #: src/Application/Restore/DomainRestoreStagingService.php:281
 msgid "The Certloom backup configuration metadata failed its integrity consistency check."
 msgstr ""
@@ -8481,11 +7846,6 @@ msgstr ""
 
 #: src/Application/Restore/DomainRestoreStagingService.php:59
 msgid "The Certloom backup is missing its manifest."
-msgstr ""
-
-#: src/Application/Restore/DomainRestoreStagingService.php:62
-#: src/Application/Backup/DomainBackupFormat.php:37
-msgid "This is not a supported Certloom domain backup."
 msgstr ""
 
 #: src/Application/Restore/DomainRestoreStagingService.php:78
@@ -8561,11 +7921,6 @@ msgstr ""
 msgid "Conference"
 msgstr ""
 
-#: src/Application/Templates/CuratedPresetCatalog.php:138
-#: src/Infrastructure/Admin/DomainAdmin.php:979
-msgid "License"
-msgstr ""
-
 #: src/Application/Templates/CuratedPresetCatalog.php:139
 msgid "Assurance"
 msgstr ""
@@ -8606,40 +7961,12 @@ msgstr ""
 msgid "A factory template is missing its current immutable revision."
 msgstr ""
 
-#: src/Application/Templates/TemplateAssignmentPolicy.php:50
-#: src/Infrastructure/Admin/TemplateAdmin.php:788
-msgid "Choose a valid template assignment scope."
-msgstr ""
-
 #: src/Application/Templates/TemplateAssignmentPolicy.php:54
 msgid "The Global template scope cannot have a record ID."
 msgstr ""
 
 #: src/Application/Templates/TemplateAssignmentPolicy.php:57
 msgid "Choose a valid record for this template assignment scope."
-msgstr ""
-
-#: src/Application/Templates/TemplateAssignmentPolicy.php:65
-#: src/Infrastructure/Admin/DomainAdmin.php:711
-#: src/Infrastructure/Admin/DomainAdmin.php:744
-#: src/Infrastructure/Admin/DomainAdmin.php:760
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:176
-msgid "Batch"
-msgstr ""
-
-#: src/Application/Templates/TemplateAssignmentPolicy.php:67
-#: src/Infrastructure/Admin/DomainAdmin.php:303
-#: src/Infrastructure/Admin/DomainAdmin.php:341
-#: src/Infrastructure/Admin/DomainAdmin.php:712
-#: src/Infrastructure/Admin/DomainAdmin.php:745
-#: src/Infrastructure/Admin/TemplateAdmin.php:991
-msgid "Issuer"
-msgstr ""
-
-#: src/Application/Templates/TemplateAssignmentPolicy.php:68
-#: src/Infrastructure/Repository/SignerRepository.php:568
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:546
-msgid "Global"
 msgstr ""
 
 #: src/Application/Templates/TemplateLibraryMetadata.php:109
@@ -8904,6 +8231,13 @@ msgid "Specific expiry date"
 msgstr ""
 
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:21
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:114
+#: admin/views/bulk-review.php:34
+msgid "Step 1"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
 msgid "Upload & define shared issuance context"
 msgstr ""
 
@@ -8931,6 +8265,12 @@ msgstr ""
 
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:24
 msgid "Row issues"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:24
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:179
+#: admin/views/bulk-review.php:103
+msgid "Step 2"
 msgstr ""
 
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:25
@@ -8990,7 +8330,37 @@ msgid "Errors"
 msgstr ""
 
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
+#: admin/views/analytics.php:48
+#: admin/views/analytics.php:75
+#: admin/views/settings-manager.php:170
+#: admin/views/settings-manager.php:197
+#: includes/class-ecapla-certverify-system-status.php:194
+#: includes/class-ecapla-certverify-system-status.php:218
+#: includes/class-ecapla-certverify-system-status.php:234
+#: includes/class-ecapla-certverify-system-status.php:260
+#: includes/class-ecapla-certverify-system-status.php:286
+#: includes/class-ecapla-certverify-system-status.php:311
+msgid "Failed"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
 msgid "Idempotent replays"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
+#: src/Infrastructure/Admin/DomainAdmin.php:706
+#: src/Infrastructure/Admin/DomainAdmin.php:821
+#: src/Infrastructure/Admin/DomainAdmin.php:1086
+#: src/Infrastructure/Admin/DomainAdmin.php:1122
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:219
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:220
+#: admin/views/dashboard.php:111
+#: admin/views/dashboard.php:151
+#: admin/views/issuance-analytics.php:38
+#: admin/views/issuance-analytics.php:53
+#: includes/class-ecapla-certverify-recipient-portal.php:185
+#: includes/class-ecapla-certverify-recipient-portal.php:205
+msgid "Issued"
 msgstr ""
 
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
@@ -8998,417 +8368,604 @@ msgstr ""
 msgid "Processed"
 msgstr ""
 
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
+#: admin/views/integrations.php:16
+#: admin/views/settings-manager.php:144
+#: includes/class-ecapla-certverify-system-status.php:159
+msgid "Ready"
+msgstr ""
+
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:27
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:256
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:275
 msgid "You do not have permission to issue Certloom credentials."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1000
-msgid "No published Template currently resolves for this Program."
+#: src/Infrastructure/Admin/DomainAdmin.php:1001
+#: admin/views/settings-manager.php:77
+msgid "Certificate numbering"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1001
-msgid "Manage Program design"
+msgid "This Program currently inherits the established site numbering policy. Program-scoped numbering overrides are not enabled by PRG-02, so Certloom cannot silently create competing sequence authorities."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1003
-msgid "Advanced metadata"
+msgid "Language-specific certificate designs"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1003
-msgid "Optional local scalar metadata remains available for advanced integrations. Program Profile configuration above uses a reserved typed envelope and is not duplicated here."
+msgid "Map a credential locale to a published Template. Issuance tries the exact locale, then its base language, then the declared fallback, then the normal Program/Issuer/Global design."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1008
+#: src/Infrastructure/Admin/DomainAdmin.php:1013
+msgid "Choose Template"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1008
+#: src/Infrastructure/Admin/DomainAdmin.php:1014
+msgid "Locale"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1008
+#: src/Infrastructure/Admin/DomainAdmin.php:1014
+msgid "Published Template"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1010
+#: src/Infrastructure/Admin/DomainAdmin.php:1014
+#: src/Infrastructure/Admin/DomainAdmin.php:1396
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:303
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:377
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:477
+#: admin/views/fields-manager.php:100
+msgid "Remove"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1015
+msgid "A configured locale variant must remain published. If it becomes unavailable, issuance fails closed instead of silently switching certificate artwork."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1015
+msgid "Add language variant"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1015
+msgid "Declared fallback"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1015
+msgid "Program default design"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1016
+msgid "Published certificate design"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1017
+msgid "Save the Program first, then assign its published certificate design."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1019
+msgid "Assigned Template"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1019
+msgid "Source: %1$s · published revision %2$d"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1020
+msgid "No published Template currently resolves for this Program."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1021
+msgid "Manage Program design"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1023
+msgid "Advanced metadata"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1023
+msgid "Optional local scalar metadata remains available for advanced integrations. Program Profile configuration above uses a reserved typed envelope and is not duplicated here."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1028
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:470
 msgid "Add metadata field"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1010
+#: src/Infrastructure/Admin/DomainAdmin.php:1030
 msgid "This program contains advanced structured metadata. Certloom will preserve it unchanged until a dedicated editor can represent it safely."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1013
+#: src/Infrastructure/Admin/DomainAdmin.php:1033
 msgid "Update program"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1022
+#: src/Infrastructure/Admin/DomainAdmin.php:1042
 msgid "Add issuer / brand"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1022
+#: src/Infrastructure/Admin/DomainAdmin.php:1042
 msgid "Brand defaults are local configuration. Issued credential Versions preserve their own immutable snapshot."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1022
+#: src/Infrastructure/Admin/DomainAdmin.php:1042
 msgid "Issuer brand profile"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1026
+#: src/Infrastructure/Admin/DomainAdmin.php:1046
 msgid "Organization / issuer name"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1027
+#: src/Infrastructure/Admin/DomainAdmin.php:1047
 msgid "Machine slug"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1027
+#: src/Infrastructure/Admin/DomainAdmin.php:1047
 msgid "Stable identity used by restores, assignments, integrations, and future APIs."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1028
+#: src/Infrastructure/Admin/DomainAdmin.php:1048
 msgid "Website"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1029
+#: src/Infrastructure/Admin/DomainAdmin.php:1049
 msgid "Contact name"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1030
+#: src/Infrastructure/Admin/DomainAdmin.php:1050
 msgid "Contact email"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1031
+#: src/Infrastructure/Admin/DomainAdmin.php:1051
 msgid "A future numbering policy may use this as an issuer default; it does not rewrite existing numbers."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1031
+#: src/Infrastructure/Admin/DomainAdmin.php:1051
 msgid "Certificate prefix"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1032
+#: src/Infrastructure/Admin/DomainAdmin.php:1052
 msgid "Hex color such as #183153."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1032
+#: src/Infrastructure/Admin/DomainAdmin.php:1052
 msgid "Primary color"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1033
+#: src/Infrastructure/Admin/DomainAdmin.php:1053
 #: elementor/class-ecapla-certverify-elementor-widget.php:204
 #: elementor/class-ecapla-certverify-template-widgets.php:269
 msgid "Accent color"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1033
+#: src/Infrastructure/Admin/DomainAdmin.php:1053
 msgid "Hex color such as #C89B3C."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1034
+#: src/Infrastructure/Admin/DomainAdmin.php:1054
 msgid "Logo media ID"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1034
+#: src/Infrastructure/Admin/DomainAdmin.php:1054
 msgid "WordPress Media attachment ID. The renderer will validate actual asset bytes when artifacts are generated."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1035
+#: src/Infrastructure/Admin/DomainAdmin.php:1055
 msgid "Seal media ID"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1036
+#: src/Infrastructure/Admin/DomainAdmin.php:1056
 msgid "Address"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1037
+#: src/Infrastructure/Admin/DomainAdmin.php:1057
 msgid "Signer profiles are assigned separately so the same person can serve at global, issuer, program, or batch scope without duplicating identity data."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1038
+#: src/Infrastructure/Admin/DomainAdmin.php:1058
 msgid "Add issuer"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1038
+#: src/Infrastructure/Admin/DomainAdmin.php:1058
 msgid "Update issuer"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1044
+#: src/Infrastructure/Admin/DomainAdmin.php:1064
 msgid "Lifecycle action"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1045
+#: src/Infrastructure/Admin/DomainAdmin.php:1065
 msgid "This preview routes every state change through the transaction-backed lifecycle service and writes an audit event. It does not directly edit state columns."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1052
+#: src/Infrastructure/Admin/DomainAdmin.php:1072
 msgid "Void current version"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1057
+#: src/Infrastructure/Admin/DomainAdmin.php:1077
 msgid "Apply lifecycle action"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1064
+#: src/Infrastructure/Admin/DomainAdmin.php:1084
 msgid "Every issued correction or renewal remains a separate immutable Version. The current pointer does not erase earlier artifacts."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1066
+#: src/Infrastructure/Admin/DomainAdmin.php:1086
 msgid "Issuance state"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1074
+#: src/Infrastructure/Admin/DomainAdmin.php:1094
 msgid "Append-only activity history"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1074
+#: src/Infrastructure/Admin/DomainAdmin.php:1094
 msgid "Lifecycle and domain events are shown newest first. Internal notes remain administrator-only."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1076
+#: src/Infrastructure/Admin/DomainAdmin.php:1096
 msgid "Actor"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1076
+#: src/Infrastructure/Admin/DomainAdmin.php:1096
+#: admin/views/settings-manager.php:164
+#: admin/views/settings-manager.php:191
+msgid "Details"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1096
 msgid "Event"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1076
+#: src/Infrastructure/Admin/DomainAdmin.php:1096
 msgid "Time (UTC)"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1077
+#: src/Infrastructure/Admin/DomainAdmin.php:1097
 msgid "Internal note:"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1077
+#: src/Infrastructure/Admin/DomainAdmin.php:1097
 msgid "Metadata recorded"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1077
+#: src/Infrastructure/Admin/DomainAdmin.php:1097
 msgid "New state recorded"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1077
+#: src/Infrastructure/Admin/DomainAdmin.php:1097
 msgid "Old state recorded"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1078
+#: src/Infrastructure/Admin/DomainAdmin.php:1098
 msgid "No domain events recorded."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1084
-msgid "Credential history"
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:1084
-msgid "Current credential identities linked to this recipient. Historical Version lineage remains immutable inside each Credential Series."
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:109
+#: src/Infrastructure/Admin/DomainAdmin.php:110
 msgid "The program no longer exists."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1093
+#: src/Infrastructure/Admin/DomainAdmin.php:1104
+msgid "Credential history"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1104
+msgid "Current credential identities linked to this recipient. Historical Version lineage remains immutable inside each Credential Series."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1113
 msgid "Program credential activity"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1093
+#: src/Infrastructure/Admin/DomainAdmin.php:1113
 msgid "Recent current credential identities issued under this program."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1108
+#: src/Infrastructure/Admin/DomainAdmin.php:1128
 msgid "No linked credentials yet."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1121
+#: src/Infrastructure/Admin/DomainAdmin.php:1137
+#: src/Infrastructure/Repository/ManualIssuanceRepository.php:35
+msgid "Enter a valid recipient email address or leave it blank."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1141
 msgid "The selected WordPress user does not exist."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1148
+#: src/Infrastructure/Admin/DomainAdmin.php:1168
 msgid "The selected issuer does not exist."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1179
-msgid "Enter a valid HTTP or HTTPS issuer website or leave it blank."
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:1185
-msgid "Enter a valid issuer contact email or leave it blank."
+#: src/Infrastructure/Admin/DomainAdmin.php:1187
+msgid "Program language variants are structurally invalid."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1192
+msgid "Each language variant needs both a locale and a published Template."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1194
+#: src/Application/Program/ProgramProfile.php:187
+msgid "A Program cannot define the same locale Template variant more than once."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1196
+msgid "Each Program language variant must reference an active published Template."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1215
+msgid "Enter a valid HTTP or HTTPS issuer website or leave it blank."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1221
+msgid "Enter a valid issuer contact email or leave it blank."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1228
 msgid "Issuer colors must use six-digit hexadecimal notation such as #183153."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1200
+#: src/Infrastructure/Admin/DomainAdmin.php:1236
 msgid "Issuer address must be 2,000 characters or fewer."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1203
+#: src/Infrastructure/Admin/DomainAdmin.php:1239
 msgid "Issuer contact name must be 255 characters or fewer."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1206
+#: src/Infrastructure/Admin/DomainAdmin.php:1242
 msgid "Issuer certificate prefix must be 100 characters or fewer."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1267
+#: src/Infrastructure/Admin/DomainAdmin.php:1303
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:585
 msgid "Acceptance preview"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1275
+#: src/Infrastructure/Admin/DomainAdmin.php:1311
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:590
 msgid "Safety gate active."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1275
+#: src/Infrastructure/Admin/DomainAdmin.php:1311
 msgid "These normalized-domain screens are available only when the explicit admin-preview gate is enabled. The proven legacy registry remains production authority until real migration, restore, cutover, and database acceptance pass."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1280
+#: src/Infrastructure/Admin/DomainAdmin.php:1316
 msgid "Recipient created."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1281
+#: src/Infrastructure/Admin/DomainAdmin.php:1317
 msgid "Recipient updated."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1282
+#: src/Infrastructure/Admin/DomainAdmin.php:1318
 msgid "Program created."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1283
+#: src/Infrastructure/Admin/DomainAdmin.php:1319
 msgid "Program updated."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1284
+#: src/Infrastructure/Admin/DomainAdmin.php:1320
 msgid "Issuer created."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1285
+#: src/Infrastructure/Admin/DomainAdmin.php:1321
 msgid "Issuer updated."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1286
+#: src/Infrastructure/Admin/DomainAdmin.php:1322
 msgid "Credential lifecycle updated."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1313
+#: src/Infrastructure/Admin/DomainAdmin.php:1349
 msgid "Program status filters"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1327
+#: src/Infrastructure/Admin/DomainAdmin.php:1362
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:612
+#: admin/views/list-certificates.php:128
+msgctxt "search field label"
+msgid "Search"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1362
+#: src/Infrastructure/Admin/TemplateAdmin.php:665
+#: src/Infrastructure/Admin/TemplateAdmin.php:716
+#: includes/class-ecapla-certverify-render.php:34
+#: blocks/certloom/index.js:51
+msgctxt "search action button"
+msgid "Search"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1363
 msgid "Clear"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1351
+#: src/Infrastructure/Admin/DomainAdmin.php:138
+msgid "The issuer no longer exists."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1387
 msgid "Default issuer"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1351
+#: src/Infrastructure/Admin/DomainAdmin.php:1387
 msgid "No default issuer"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1355
+#: src/Infrastructure/Admin/DomainAdmin.php:1391
 msgid "Optional. Full multi-brand policy remains ORG-01; this stores only the normalized issuer relationship already present in the domain."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1360
+#: src/Infrastructure/Admin/DomainAdmin.php:1396
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:171
 msgid "Field key"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1360
+#: src/Infrastructure/Admin/DomainAdmin.php:1396
 msgid "Field value"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1360
+#: src/Infrastructure/Admin/DomainAdmin.php:1396
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:477
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:171
+#: admin/views/bulk-review.php:64
+#: admin/views/settings-manager.php:139
+msgid "Value"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:1396
 msgid "field_key"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1367
+#: src/Infrastructure/Admin/DomainAdmin.php:1403
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:485
 msgid "Too many custom metadata rows were submitted."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:137
-msgid "The issuer no longer exists."
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:1375
+#: src/Infrastructure/Admin/DomainAdmin.php:1411
 msgid "Every custom metadata value needs a valid machine key."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1376
+#: src/Infrastructure/Admin/DomainAdmin.php:1412
 msgid "Custom metadata keys must be unique."
 msgstr ""
 
 #. translators: %d: WordPress user ID.
-#: src/Infrastructure/Admin/DomainAdmin.php:1408
+#: src/Infrastructure/Admin/DomainAdmin.php:1444
 msgid "#%d (missing)"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:1415
+#: src/Infrastructure/Admin/DomainAdmin.php:1451
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:682
 msgid "You do not have permission to manage this Certloom area."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:157
+#: src/Infrastructure/Admin/DomainAdmin.php:158
 msgid "The reviewed lifecycle action belongs to another credential."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:206
+#: src/Infrastructure/Admin/DomainAdmin.php:191
+#: src/Application/CredentialLifecycleReviewService.php:36
+msgid "Choose a valid credential lifecycle action."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:207
 msgid "The reviewed relationship correction belongs to another credential."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:214
+#: src/Infrastructure/Admin/DomainAdmin.php:215
 msgid "The relationship correction could not be completed."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:231
+#: src/Infrastructure/Admin/DomainAdmin.php:232
 msgid "Normalized people and organizations who receive Certloom credentials."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:237
-#: src/Infrastructure/Admin/DomainAdmin.php:294
+#: src/Infrastructure/Admin/DomainAdmin.php:238
+#: src/Infrastructure/Admin/DomainAdmin.php:295
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:167
 msgid "With credentials"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:238
+#: src/Infrastructure/Admin/DomainAdmin.php:239
 msgid "Linked WordPress users"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:239
+#: src/Infrastructure/Admin/DomainAdmin.php:240
 msgid "With email"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:243
+#: src/Infrastructure/Admin/DomainAdmin.php:244
 msgid "Search name, email, or external ID"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:248
+#: src/Infrastructure/Admin/DomainAdmin.php:249
+#: src/Infrastructure/Admin/DomainAdmin.php:304
+#: src/Infrastructure/Admin/DomainAdmin.php:342
+#: src/Infrastructure/Admin/DomainAdmin.php:400
+#: src/Infrastructure/Admin/DomainAdmin.php:414
+#: src/Infrastructure/Admin/DomainAdmin.php:617
+#: src/Infrastructure/Admin/DomainAdmin.php:626
+#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:357
+#: admin/views/dashboard.php:152
+#: admin/views/edit-certificate.php:82
+msgid "Actions"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:249
 #: src/Infrastructure/Admin/DomainAdmin.php:733
-#: src/Infrastructure/Admin/DomainAdmin.php:929
+#: src/Infrastructure/Admin/DomainAdmin.php:926
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:229
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:299
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:354
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:143
+#: includes/class-ecapla-certverify-public-policy.php:121
+#: includes/class-ecapla-certverify-recipient-portal.php:232
+msgid "Email"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:249
+#: src/Infrastructure/Admin/DomainAdmin.php:734
+#: src/Infrastructure/Admin/DomainAdmin.php:930
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:299
 msgid "External ID"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:248
+#: src/Infrastructure/Admin/DomainAdmin.php:249
 msgid "Latest issuance"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:248
-#: src/Infrastructure/Admin/DomainAdmin.php:734
+#: src/Infrastructure/Admin/DomainAdmin.php:249
+#: src/Infrastructure/Admin/DomainAdmin.php:400
+#: src/Infrastructure/Admin/DomainAdmin.php:409
+#: src/Infrastructure/Admin/DomainAdmin.php:620
+#: src/Infrastructure/Admin/DomainAdmin.php:650
+#: src/Infrastructure/Admin/DomainAdmin.php:710
+#: src/Infrastructure/Admin/DomainAdmin.php:728
+#: src/Infrastructure/Admin/DomainAdmin.php:1122
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:299
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:318
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:129
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:181
+#: admin/views/edit-certificate.php:76
+#: admin/views/edit-certificate.php:99
+msgid "Recipient"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:249
+#: src/Infrastructure/Admin/DomainAdmin.php:735
 msgid "WordPress user"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:258
+#: src/Infrastructure/Admin/DomainAdmin.php:257
+#: src/Infrastructure/Admin/DomainAdmin.php:308
+#: src/Infrastructure/Admin/DomainAdmin.php:345
+#: admin/views/dashboard.php:165
+msgid "Open"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:259
 msgid "Add a recipient or adjust the search."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:258
+#: src/Infrastructure/Admin/DomainAdmin.php:259
 msgid "No recipients found."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:286
+#: src/Infrastructure/Admin/DomainAdmin.php:287
 msgid "Standalone credential programs that work with or without an LMS."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:292
-#: src/Infrastructure/Admin/DomainAdmin.php:307
-#: src/Infrastructure/Admin/DomainAdmin.php:1314
+#: src/Infrastructure/Admin/DomainAdmin.php:293
+#: src/Infrastructure/Admin/DomainAdmin.php:308
+#: src/Infrastructure/Admin/DomainAdmin.php:1350
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:165
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:181
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:219
@@ -9418,9 +8975,9 @@ msgctxt "entity status"
 msgid "Active"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:293
-#: src/Infrastructure/Admin/DomainAdmin.php:307
-#: src/Infrastructure/Admin/DomainAdmin.php:1314
+#: src/Infrastructure/Admin/DomainAdmin.php:294
+#: src/Infrastructure/Admin/DomainAdmin.php:308
+#: src/Infrastructure/Admin/DomainAdmin.php:1350
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:181
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:232
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:612
@@ -9428,427 +8985,741 @@ msgctxt "entity status"
 msgid "Inactive"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:299
+#: src/Infrastructure/Admin/DomainAdmin.php:300
 msgid "Search title, code, or description"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:303
+#: src/Infrastructure/Admin/DomainAdmin.php:304
 msgid "Code"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:303
+#: src/Infrastructure/Admin/DomainAdmin.php:304
 msgid "Default validity"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:303
+#: src/Infrastructure/Admin/DomainAdmin.php:304
+#: src/Infrastructure/Admin/DomainAdmin.php:342
+#: src/Infrastructure/Admin/DomainAdmin.php:713
+#: src/Infrastructure/Admin/DomainAdmin.php:746
+#: src/Infrastructure/Admin/TemplateAdmin.php:991
+#: src/Application/Templates/TemplateAssignmentPolicy.php:67
+msgid "Issuer"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:304
+#: src/Infrastructure/Admin/DomainAdmin.php:621
+#: src/Infrastructure/Admin/DomainAdmin.php:651
+#: src/Infrastructure/Admin/DomainAdmin.php:711
+#: src/Infrastructure/Admin/DomainAdmin.php:744
+#: src/Infrastructure/Admin/DomainAdmin.php:761
+#: src/Infrastructure/Admin/DomainAdmin.php:1122
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:176
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:522
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:147
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:182
+#: src/Infrastructure/Admin/TemplateAdmin.php:578
+#: src/Infrastructure/Admin/TemplateAdmin.php:991
+#: src/Application/Templates/TemplateAssignmentPolicy.php:66
+#: admin/views/edit-certificate.php:77
+#: admin/views/edit-certificate.php:105
+#: admin/views/issuance-analytics.php:69
+msgid "Program"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:304
 msgid "Purpose"
 msgstr ""
 
+#: src/Infrastructure/Admin/DomainAdmin.php:304
+#: src/Infrastructure/Admin/DomainAdmin.php:400
+#: src/Infrastructure/Admin/DomainAdmin.php:413
+#: src/Infrastructure/Admin/DomainAdmin.php:622
+#: src/Infrastructure/Admin/DomainAdmin.php:652
+#: src/Infrastructure/Admin/DomainAdmin.php:1122
+#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:357
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:176
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:229
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:612
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:25
+#: src/Infrastructure/Admin/TemplateAdmin.php:991
+#: src/Infrastructure/Import/DomainImportCsvReader.php:72
+#: admin/class-ecapla-certverify-list-table.php:40
+#: admin/views/dashboard.php:150
+#: admin/views/edit-certificate.php:78
+#: admin/views/edit-certificate.php:144
+#: admin/views/list-certificates.php:113
+#: admin/views/list-certificates.php:140
+#: admin/views/settings-manager.php:139
+#: includes/class-ecapla-certverify-recipient-portal.php:147
+#: includes/class-ecapla-certverify-recipient-portal.php:205
+msgid "Status"
+msgstr ""
+
 #. translators: %d: days.
-#: src/Infrastructure/Admin/DomainAdmin.php:306
+#: src/Infrastructure/Admin/DomainAdmin.php:307
 msgid "%d day"
 msgid_plural "%d days"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:306
+#: src/Infrastructure/Admin/DomainAdmin.php:307
 msgid "No default"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:309
+#: src/Infrastructure/Admin/DomainAdmin.php:310
 msgid "Add a program or adjust the filters."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:309
+#: src/Infrastructure/Admin/DomainAdmin.php:310
 msgid "No programs found."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:335
+#: src/Infrastructure/Admin/DomainAdmin.php:336
 msgid "Issuers & brands"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:335
+#: src/Infrastructure/Admin/DomainAdmin.php:336
 msgid "Manage stable issuing identities and local brand defaults without changing historical credential snapshots."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:341
+#: src/Infrastructure/Admin/DomainAdmin.php:342
+#: admin/views/edit-certificate.php:137
+#: admin/views/import-results.php:27
+msgid "Created"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:342
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:42
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:43
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:218
 msgid "Signers"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:341
+#: src/Infrastructure/Admin/DomainAdmin.php:342
 msgid "Slug"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:346
+#: src/Infrastructure/Admin/DomainAdmin.php:347
 msgid "No issuers found."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:381
+#: src/Infrastructure/Admin/DomainAdmin.php:382
 msgid "Inspect continuing Credential Series, immutable Version lineage, effective status, verification identity, and reviewed lifecycle actions from one premium workspace."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:387
+#: src/Infrastructure/Admin/DomainAdmin.php:388
 msgid "Valid now"
 msgstr ""
 
+#: src/Infrastructure/Admin/DomainAdmin.php:389
+#: src/Infrastructure/Admin/DomainAdmin.php:555
+#: src/Infrastructure/Admin/DomainAdmin.php:599
+#: admin/class-ecapla-certverify-list-table.php:144
+#: admin/views/dashboard.php:71
+#: includes/class-ecapla-certverify-fields.php:407
+#: includes/class-ecapla-certverify-recipient-portal.php:132
+#: includes/class-ecapla-certverify-recipient-portal.php:291
+#: elementor/class-ecapla-certverify-elementor-widget.php:637
+msgid "Suspended"
+msgstr ""
+
 #: src/Infrastructure/Admin/DomainAdmin.php:390
+#: src/Infrastructure/Admin/DomainAdmin.php:556
+#: src/Infrastructure/Admin/DomainAdmin.php:600
+#: admin/views/analytics.php:51
+#: admin/views/analytics.php:75
+#: includes/class-ecapla-certverify-recipient-portal.php:131
+#: includes/class-ecapla-certverify-recipient-portal.php:290
+msgid "Revoked"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:391
 msgid "Needs attention"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:399
-#: src/Infrastructure/Admin/DomainAdmin.php:410
+#: src/Infrastructure/Admin/DomainAdmin.php:400
+#: src/Infrastructure/Admin/DomainAdmin.php:408
+#: src/Infrastructure/Admin/DomainAdmin.php:615
+#: includes/class-ecapla-certverify-recipient-portal.php:173
+#: includes/class-ecapla-certverify-recipient-portal.php:205
+#: includes/class-ecapla-certverify-recipient-portal.php:209
+#: elementor/class-ecapla-certverify-credential-widget.php:15
+#: blocks/credential/index.js:38
+msgid "Credential"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:400
+#: src/Infrastructure/Admin/DomainAdmin.php:411
 msgid "Issued / expiry"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:399
-#: src/Infrastructure/Admin/DomainAdmin.php:409
+#: src/Infrastructure/Admin/DomainAdmin.php:400
+#: src/Infrastructure/Admin/DomainAdmin.php:410
 msgid "Program / batch"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:399
-#: src/Infrastructure/Admin/DomainAdmin.php:411
-#: src/Infrastructure/Admin/DomainAdmin.php:703
-#: src/Infrastructure/Admin/DomainAdmin.php:820
-#: src/Infrastructure/Admin/DomainAdmin.php:1066
-#: src/Infrastructure/Admin/DomainAdmin.php:1076
+#: src/Infrastructure/Admin/DomainAdmin.php:400
+#: src/Infrastructure/Admin/DomainAdmin.php:412
+#: src/Infrastructure/Admin/DomainAdmin.php:704
+#: src/Infrastructure/Admin/DomainAdmin.php:821
+#: src/Infrastructure/Admin/DomainAdmin.php:1086
+#: src/Infrastructure/Admin/DomainAdmin.php:1096
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:25
 msgid "Version"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:407
-#: src/Infrastructure/Admin/DomainAdmin.php:505
+#: src/Infrastructure/Admin/DomainAdmin.php:408
+#: src/Infrastructure/Admin/DomainAdmin.php:506
 msgid "Unnumbered credential"
 msgstr ""
 
 #. translators: %s: expiry date.
-#: src/Infrastructure/Admin/DomainAdmin.php:410
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:184
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
+#: src/Infrastructure/Admin/DomainAdmin.php:411
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:203
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:220
 msgid "Expires %s"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:413
+#: src/Infrastructure/Admin/DomainAdmin.php:411
+#: src/Infrastructure/Admin/DomainAdmin.php:707
+#: src/Infrastructure/Admin/DomainAdmin.php:801
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:220
+#: admin/class-ecapla-certverify-list-table.php:124
+#: includes/class-ecapla-certverify-recipient-portal.php:186
+#: includes/class-ecapla-certverify-recipient-portal.php:212
+msgid "No expiry"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:414
 msgid "Open workspace"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:417
+#: src/Infrastructure/Admin/DomainAdmin.php:418
 msgid "Adjust the search, status, or Program filter. Manual Issuance creates new Credential Series here."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:417
+#: src/Infrastructure/Admin/DomainAdmin.php:418
 msgid "No credentials match these filters."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:432
+#: src/Infrastructure/Admin/DomainAdmin.php:433
 msgid "The credential could not be found."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:475
+#: src/Infrastructure/Admin/DomainAdmin.php:476
 msgid "Historical Versions are read-only. Return to the current Version before reviewing a lifecycle action."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:492
+#: src/Infrastructure/Admin/DomainAdmin.php:493
 msgid "Choose a Program or Batch before reviewing a relationship correction."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:506
+#: src/Infrastructure/Admin/DomainAdmin.php:507
 msgid "One continuing credential identity with immutable historical Versions and review-before-commit administration."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:509
+#: admin/views/edit-certificate.php:51
+msgid "Back to credentials"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:510
 msgid "Current immutable Version"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:509
+#: src/Infrastructure/Admin/DomainAdmin.php:510
 msgid "Historical immutable Version"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:511
+#: src/Infrastructure/Admin/DomainAdmin.php:512
 msgid "Historical Version selected."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:511
+#: src/Infrastructure/Admin/DomainAdmin.php:512
 msgid "Its immutable snapshot can be inspected, but lifecycle and relationship mutations always target the current Version and never rewrite this history."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:511
+#: src/Infrastructure/Admin/DomainAdmin.php:512
 msgid "Return to current Version"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:54
-msgid "Issuers (New Domain)"
+#: src/Infrastructure/Admin/DomainAdmin.php:53
+#: src/Infrastructure/Admin/DomainAdmin.php:53
+#: src/Infrastructure/Admin/DomainAdmin.php:232
+#: src/Infrastructure/Admin/DomainAdmin.php:237
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:176
+#: admin/class-ecapla-certverify-admin.php:77
+#: admin/class-ecapla-certverify-admin.php:77
+#: admin/class-ecapla-certverify-admin.php:101
+#: admin/class-ecapla-certverify-admin.php:101
+#: admin/class-ecapla-certverify-admin.php:1078
+msgid "Recipients"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:54
-msgid "Issuers (New)"
+#: src/Infrastructure/Admin/DomainAdmin.php:54
+#: src/Infrastructure/Admin/DomainAdmin.php:287
+#: src/Infrastructure/Admin/DomainAdmin.php:292
+#: src/Infrastructure/Admin/DomainAdmin.php:342
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:549
+#: admin/class-ecapla-certverify-admin.php:79
+#: admin/class-ecapla-certverify-admin.php:79
+#: admin/class-ecapla-certverify-admin.php:1084
+#: admin/views/issuance-analytics.php:63
+msgid "Programs"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:55
-#: src/Infrastructure/Admin/DomainAdmin.php:381
-#: src/Infrastructure/Admin/DomainAdmin.php:430
-#: src/Infrastructure/Admin/DomainAdmin.php:439
-#: src/Infrastructure/Admin/DomainAdmin.php:506
+msgid "Issuers (New Domain)"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:55
+msgid "Issuers (New)"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:553
+#: src/Infrastructure/Admin/DomainAdmin.php:1350
+#: src/Infrastructure/Admin/TemplateAdmin.php:661
+#: admin/class-ecapla-certverify-list-table.php:142
+msgid "All"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:554
+#: src/Infrastructure/Admin/DomainAdmin.php:598
+#: src/Infrastructure/Admin/TemplateAdmin.php:150
+#: admin/class-ecapla-certverify-list-table.php:143
+#: admin/views/dashboard.php:65
+#: includes/class-ecapla-certverify-fields.php:402
+#: includes/class-ecapla-certverify-recipient-portal.php:129
+#: includes/class-ecapla-certverify-recipient-portal.php:288
+#: elementor/class-ecapla-certverify-elementor-widget.php:636
+msgid "Valid"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:557
+#: src/Infrastructure/Admin/DomainAdmin.php:601
+#: admin/class-ecapla-certverify-list-table.php:146
+#: admin/views/analytics.php:50
+#: admin/views/analytics.php:75
+#: admin/views/dashboard.php:83
+#: includes/class-ecapla-certverify-fields.php:417
+#: includes/class-ecapla-certverify-recipient-portal.php:130
+#: includes/class-ecapla-certverify-recipient-portal.php:289
+#: elementor/class-ecapla-certverify-elementor-widget.php:639
+msgid "Expired"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:558
+#: src/Infrastructure/Admin/DomainAdmin.php:602
+#: includes/class-ecapla-certverify-recipient-portal.php:133
+#: includes/class-ecapla-certverify-recipient-portal.php:292
+msgid "Not yet valid"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:559
+#: src/Infrastructure/Admin/DomainAdmin.php:603
+#: includes/class-ecapla-certverify-recipient-portal.php:134
+#: includes/class-ecapla-certverify-recipient-portal.php:293
+msgid "Pending review"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:56
+#: src/Infrastructure/Admin/DomainAdmin.php:382
+#: src/Infrastructure/Admin/DomainAdmin.php:431
+#: src/Infrastructure/Admin/DomainAdmin.php:440
+#: src/Infrastructure/Admin/DomainAdmin.php:507
 msgid "Credential Management"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:563
+#: src/Infrastructure/Admin/DomainAdmin.php:56
+#: src/Infrastructure/Admin/DomainAdmin.php:249
+#: src/Infrastructure/Admin/DomainAdmin.php:304
+#: src/Infrastructure/Admin/DomainAdmin.php:387
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:176
+#: admin/class-ecapla-certverify-admin.php:72
+#: admin/class-ecapla-certverify-admin.php:72
+msgid "Credentials"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:560
+#: src/Infrastructure/Admin/DomainAdmin.php:604
+#: includes/class-ecapla-certverify-recipient-portal.php:135
+#: includes/class-ecapla-certverify-recipient-portal.php:294
+msgid "Non-compliant"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:561
+#: src/Infrastructure/Admin/DomainAdmin.php:605
+#: includes/class-ecapla-certverify-recipient-portal.php:295
+msgid "Voided"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:562
+#: src/Infrastructure/Admin/DomainAdmin.php:606
+#: includes/class-ecapla-certverify-recipient-portal.php:296
+msgid "Not issued"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:564
 msgid "Credential status views"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:578
+#: src/Infrastructure/Admin/DomainAdmin.php:579
 msgid "Certificate, recipient, email, Program, batch, or public ID"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:578
+#: src/Infrastructure/Admin/DomainAdmin.php:579
 msgid "Search credentials"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:579
+#: src/Infrastructure/Admin/DomainAdmin.php:580
 msgid "All Programs"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:579
+#: src/Infrastructure/Admin/DomainAdmin.php:580
 msgid "Filter by Program"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:583
+#: src/Infrastructure/Admin/DomainAdmin.php:584
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:612
 #: src/Infrastructure/Admin/TemplateAdmin.php:753
 msgid "Filter"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:585
+#: src/Infrastructure/Admin/DomainAdmin.php:586
 msgid "Clear search/filter"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:613
+#: src/Infrastructure/Admin/DomainAdmin.php:594
+#: src/Infrastructure/Admin/DomainAdmin.php:1126
+#: includes/class-ecapla-certverify-recipient-portal.php:298
+#: includes/class-ecapla-certverify-system-status.php:105
+#: includes/class-ecapla-certverify-system-status.php:131
+#: includes/class-ecapla-certverify-system-status.php:150
+msgid "Unavailable"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:614
 msgid "Summary"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:615
+#: src/Infrastructure/Admin/DomainAdmin.php:616
 msgid "History"
 msgstr ""
 
+#: src/Infrastructure/Admin/DomainAdmin.php:619
+#: admin/views/edit-certificate.php:75
+#: admin/views/edit-certificate.php:92
+msgid "Overview"
+msgstr ""
+
 #: src/Infrastructure/Admin/DomainAdmin.php:623
-#: src/Infrastructure/Admin/DomainAdmin.php:646
+#: src/Infrastructure/Admin/DomainAdmin.php:653
+#: admin/views/analytics.php:9
+#: admin/views/edit-certificate.php:80
+#: admin/views/edit-certificate.php:116
+#: admin/views/issuance-analytics.php:9
+#: admin/views/settings-manager.php:18
+msgid "Verification"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:624
+#: src/Infrastructure/Admin/DomainAdmin.php:647
 msgid "Versions"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:654
+#: src/Infrastructure/Admin/DomainAdmin.php:625
+#: src/Infrastructure/Admin/DomainAdmin.php:648
+#: admin/views/edit-certificate.php:81
+#: admin/views/edit-certificate.php:136
+msgid "Activity"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:629
+#: admin/views/edit-certificate.php:52
+msgid "Credential workspace"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:655
 msgid "Credential detail sections"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:654
+#: src/Infrastructure/Admin/DomainAdmin.php:655
 msgid "Credential history sections"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:694
+#: src/Infrastructure/Admin/DomainAdmin.php:695
 msgid "Continuing Series identity and immutable Version facts are displayed separately so current relationships never masquerade as historical snapshot truth."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:694
+#: src/Infrastructure/Admin/DomainAdmin.php:695
 msgid "Credential overview"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:696
+#: src/Infrastructure/Admin/DomainAdmin.php:697
 msgid "Continuing identity"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:697
-#: src/Infrastructure/Admin/DomainAdmin.php:1102
+#: src/Infrastructure/Admin/DomainAdmin.php:698
+#: src/Infrastructure/Admin/DomainAdmin.php:1122
 msgid "Public ID"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:698
+#: src/Infrastructure/Admin/DomainAdmin.php:699
 msgid "Series ID"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:700
+#: src/Infrastructure/Import/DomainImportCsvReader.php:77
+msgid "Visibility"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:701
 msgid "Last Series change"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:702
+#: src/Infrastructure/Admin/DomainAdmin.php:703
 msgid "Selected immutable Version"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:703
-#: src/Infrastructure/Admin/DomainAdmin.php:826
-#: src/Infrastructure/Admin/DomainAdmin.php:1067
+#: src/Infrastructure/Admin/DomainAdmin.php:704
+#: src/Infrastructure/Admin/DomainAdmin.php:827
+#: src/Infrastructure/Admin/DomainAdmin.php:1087
 msgid "Current"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:703
+#: src/Infrastructure/Admin/DomainAdmin.php:704
 msgid "Historical"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:708
+#: src/Infrastructure/Admin/DomainAdmin.php:705
+#: src/Infrastructure/Admin/DomainAdmin.php:812
+#: src/Infrastructure/Admin/DomainAdmin.php:821
+#: src/Infrastructure/Admin/DomainAdmin.php:1086
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:168
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:205
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:220
+#: src/Infrastructure/Import/DomainImportCsvReader.php:70
+#: admin/class-ecapla-certverify-list-table.php:38
+#: admin/views/analytics.php:91
+#: includes/class-ecapla-certverify-fields.php:371
+#: includes/class-ecapla-certverify-render.php:133
+#: includes/class-ecapla-certverify-render.php:226
+#: elementor/class-ecapla-certverify-credential-widget.php:16
+#: blocks/credential/index.js:39
+msgid "Certificate number"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:707
+#: src/Infrastructure/Admin/DomainAdmin.php:1086
+#: src/Infrastructure/Admin/DomainAdmin.php:1122
+#: includes/class-ecapla-certverify-recipient-portal.php:186
+#: includes/class-ecapla-certverify-recipient-portal.php:205
+msgid "Expires"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:709
 msgid "Current relationships"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:714
-msgid "Effective status"
+#: src/Infrastructure/Admin/DomainAdmin.php:712
+#: src/Infrastructure/Admin/DomainAdmin.php:745
+#: src/Infrastructure/Admin/DomainAdmin.php:761
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:176
+#: src/Application/Templates/TemplateAssignmentPolicy.php:65
+msgid "Batch"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:715
-#: src/Infrastructure/Admin/DomainAdmin.php:786
+msgid "Effective status"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:716
+#: src/Infrastructure/Admin/DomainAdmin.php:787
 msgid "Public result"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:717
 #: src/Infrastructure/Admin/DomainAdmin.php:794
-msgid "Administrative"
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:38
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:38
+#: admin/class-ecapla-certverify-admin.php:83
+#: admin/class-ecapla-certverify-admin.php:83
+#: admin/class-ecapla-certverify-admin.php:102
+#: admin/class-ecapla-certverify-admin.php:102
+#: admin/class-ecapla-certverify-admin.php:1096
+#: admin/views/analytics.php:10
+#: admin/views/issuance-analytics.php:10
+msgid "Issuance"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:718
 #: src/Infrastructure/Admin/DomainAdmin.php:795
+msgid "Administrative"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:719
+#: src/Infrastructure/Admin/DomainAdmin.php:796
 msgid "Temporal"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:727
+#: src/Infrastructure/Admin/DomainAdmin.php:728
 msgid "This is the current first-class Recipient linked to the continuing Credential Series. Issued Version snapshots remain immutable."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:728
+#: src/Infrastructure/Admin/DomainAdmin.php:729
 msgid "The current Recipient could not be loaded."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:730
+#: src/Infrastructure/Admin/DomainAdmin.php:731
 msgid "Recipient identity"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:731
-#: src/Infrastructure/Admin/DomainAdmin.php:924
+#: src/Infrastructure/Admin/DomainAdmin.php:732
+#: src/Infrastructure/Admin/DomainAdmin.php:925
 msgid "Display name"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:736
+#: src/Infrastructure/Admin/DomainAdmin.php:737
 msgid "Open Recipient profile"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:741
+#: src/Infrastructure/Admin/DomainAdmin.php:742
 msgid "A correction creates a successor immutable Version, moves the continuing Series relationship atomically, and appends an audit Event. No historical Version is edited."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:741
+#: src/Infrastructure/Admin/DomainAdmin.php:742
 msgid "Program & batch relationship"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:742
+#: src/Infrastructure/Admin/DomainAdmin.php:743
 msgid "Current Series relationship"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:746
+#: src/Infrastructure/Admin/DomainAdmin.php:747
 msgid "Series updated"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:750
+#: src/Infrastructure/Admin/DomainAdmin.php:751
 msgid "Relationship correction is disabled while inspecting a historical Version. Return to the current Version first."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:759
+#: src/Infrastructure/Admin/DomainAdmin.php:760
 msgid "Certloom will create a successor Version and preserve the current Version unchanged."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:759
+#: src/Infrastructure/Admin/DomainAdmin.php:760
 msgid "Confirm immutable relationship correction"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:759
-#: src/Infrastructure/Admin/DomainAdmin.php:843
+#: src/Infrastructure/Admin/DomainAdmin.php:760
+#: src/Infrastructure/Admin/DomainAdmin.php:844
 msgid "Review required"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:760
+#: src/Infrastructure/Admin/DomainAdmin.php:761
 msgid "Internal note"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:760
+#: src/Infrastructure/Admin/DomainAdmin.php:761
 msgid "Public reason"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:763
+#: src/Infrastructure/Admin/DomainAdmin.php:764
 msgid "Confirm and create successor Version"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:770
+#: src/Infrastructure/Admin/DomainAdmin.php:765
+#: src/Infrastructure/Admin/DomainAdmin.php:848
+#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:378
+#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:381
+#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:402
+#: admin/views/bulk-review.php:19
+#: admin/views/edit-certificate.php:158
+msgid "Cancel"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:771
 msgid "Correct Program / Batch"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:772
+#: src/Infrastructure/Admin/DomainAdmin.php:773
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:522
 msgid "Choose Program…"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:772
+#: src/Infrastructure/Admin/DomainAdmin.php:773
 msgid "Target Program"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:774
+#: src/Infrastructure/Admin/DomainAdmin.php:775
 msgid "No batch"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:774
+#: src/Infrastructure/Admin/DomainAdmin.php:775
 msgid "Target Batch"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:776
+#: src/Infrastructure/Admin/DomainAdmin.php:777
 msgid "A Batch is valid only when it belongs to the selected Program; the domain service enforces this again inside the transaction."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:776
-#: src/Infrastructure/Admin/DomainAdmin.php:862
-#: src/Infrastructure/Admin/DomainAdmin.php:1056
+#: src/Infrastructure/Admin/DomainAdmin.php:777
+#: src/Infrastructure/Admin/DomainAdmin.php:863
+#: src/Infrastructure/Admin/DomainAdmin.php:1076
 msgid "Internal note (optional)"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:776
+#: src/Infrastructure/Admin/DomainAdmin.php:777
 msgid "Public correction reason (optional)"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:777
+#: src/Infrastructure/Admin/DomainAdmin.php:778
 msgid "Review correction"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:78
-msgid "The recipient no longer exists."
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:783
+#: src/Infrastructure/Admin/DomainAdmin.php:784
 msgid "Four-dimensional credential status"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:783
+#: src/Infrastructure/Admin/DomainAdmin.php:784
 msgid "The public result is derived at read time from issuance, administrative, temporal, and compliance state rather than trusting one mutable status string."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:784
+#: src/Infrastructure/Admin/DomainAdmin.php:785
 msgid "Status could not be evaluated for this Version."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:785
+#: src/Infrastructure/Admin/DomainAdmin.php:786
 msgid "Effective truth"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:787
+#: src/Infrastructure/Admin/DomainAdmin.php:788
 msgid "Primary reason"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:788
+#: src/Infrastructure/Admin/DomainAdmin.php:789
 msgid "No"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:788
+#: src/Infrastructure/Admin/DomainAdmin.php:789
 msgid "Publicly valid now"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:789
+#: includes/class-ecapla-certverify-system-status.php:73
+msgid "Yes"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:79
+msgid "The recipient no longer exists."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:790
 msgid "Contributors"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:789
+#: src/Infrastructure/Admin/DomainAdmin.php:790
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:535
 #: src/Infrastructure/Admin/TemplateAdmin.php:733
 #: src/Infrastructure/Admin/TemplateAdmin.php:736
@@ -9856,345 +9727,363 @@ msgstr ""
 msgid "None"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:796
+#: src/Infrastructure/Admin/DomainAdmin.php:797
 msgid "Compliance"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:800
+#: src/Infrastructure/Admin/DomainAdmin.php:801
 msgid "No start restriction"
 msgstr ""
 
 #. translators: 1: valid from, 2: expiry.
-#: src/Infrastructure/Admin/DomainAdmin.php:800
+#: src/Infrastructure/Admin/DomainAdmin.php:801
 msgid "Validity window: %1$s → %2$s"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:807
+#: src/Infrastructure/Admin/DomainAdmin.php:808
 msgid "The non-enumerable public credential ID is separate from the human certificate number. Production normalized verification remains gated until final database cutover acceptance."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:807
+#: src/Infrastructure/Admin/DomainAdmin.php:808
 msgid "Verification identity"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:809
+#: src/Infrastructure/Admin/DomainAdmin.php:810
 msgid "Self-hosted verification"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:810
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
+#: src/Infrastructure/Admin/DomainAdmin.php:811
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:220
 msgid "Public credential ID"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:812
+#: src/Infrastructure/Admin/DomainAdmin.php:813
 msgid "Normalized endpoint"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:813
+#: src/Infrastructure/Admin/DomainAdmin.php:814
 msgid "Gated"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:813
+#: src/Infrastructure/Admin/DomainAdmin.php:814
 msgid "Production authority"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:815
+#: src/Infrastructure/Admin/DomainAdmin.php:816
 msgid "Authority remains closed."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:815
+#: src/Infrastructure/Admin/DomainAdmin.php:816
 msgid "Credential Management may inspect normalized verification identity, but it does not enable the normalized public verifier or create renderer authority."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:820
+#: src/Infrastructure/Admin/DomainAdmin.php:821
 msgid "Corrections, renewals, and re-certifications must create successor Versions. Historical rows are inspection-only."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:820
+#: src/Infrastructure/Admin/DomainAdmin.php:821
 msgid "Expiry"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:820
-#: src/Infrastructure/Admin/DomainAdmin.php:1064
+#: src/Infrastructure/Admin/DomainAdmin.php:821
+#: src/Infrastructure/Admin/DomainAdmin.php:1084
 msgid "Immutable Version lineage"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:820
+#: src/Infrastructure/Admin/DomainAdmin.php:821
 msgid "Inspect"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:820
-#: src/Infrastructure/Admin/DomainAdmin.php:1066
+#: src/Infrastructure/Admin/DomainAdmin.php:821
+#: src/Infrastructure/Admin/DomainAdmin.php:1086
 msgid "Lineage"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:826
+#: src/Infrastructure/Admin/DomainAdmin.php:821
+#: src/Infrastructure/Admin/TemplateAdmin.php:589
+#: src/Infrastructure/Admin/TemplateAdmin.php:995
+#: admin/views/analytics.php:83
+msgid "Source"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:827
 msgid "Inspect Version"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:826
-#: src/Infrastructure/Admin/DomainAdmin.php:1067
+#: src/Infrastructure/Admin/DomainAdmin.php:827
+#: src/Infrastructure/Admin/DomainAdmin.php:1087
 msgid "Origin"
 msgstr ""
 
 #. translators: %d: Version database ID.
-#: src/Infrastructure/Admin/DomainAdmin.php:826
-#: src/Infrastructure/Admin/DomainAdmin.php:1067
+#: src/Infrastructure/Admin/DomainAdmin.php:827
+#: src/Infrastructure/Admin/DomainAdmin.php:1087
 msgid "Previous #%d"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:828
-#: src/Infrastructure/Admin/DomainAdmin.php:1068
+#: src/Infrastructure/Admin/DomainAdmin.php:829
+#: src/Infrastructure/Admin/DomainAdmin.php:1088
 msgid "No credential Versions recorded."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:834
+#: src/Infrastructure/Admin/DomainAdmin.php:835
 msgid "Every state-changing action is reviewed first, integrity-bound to this administrator and exact current Version, then revalidated after transactional row locks before commit."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:834
+#: src/Infrastructure/Admin/DomainAdmin.php:835
 msgid "Reviewed lifecycle actions"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:835
+#: src/Infrastructure/Admin/DomainAdmin.php:836
 msgid "You can inspect this credential but do not have permission to change lifecycle state."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:836
+#: src/Infrastructure/Admin/DomainAdmin.php:837
 msgid "Historical Versions are read-only. Return to the current Version to review a lifecycle action."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:839
+#: src/Infrastructure/Admin/DomainAdmin.php:840
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:14
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:14
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:15
 msgid "Email Delivery"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:839
+#: src/Infrastructure/Admin/DomainAdmin.php:840
 msgid "Preview an email composed from this exact immutable Version, then explicitly queue it through WordPress mail. Sending does not change credential truth."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:839
+#: src/Infrastructure/Admin/DomainAdmin.php:840
 msgid "Preview credential email"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:843
-msgid "After"
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:843
-msgid "Before"
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:843
-msgid "Confirm lifecycle change"
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:843
-#: src/Infrastructure/Admin/DomainAdmin.php:1076
-msgid "Reason"
+#: src/Infrastructure/Admin/DomainAdmin.php:844
+#: src/Infrastructure/Admin/DomainAdmin.php:861
+#: src/Infrastructure/Admin/DomainAdmin.php:1069
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:299
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:373
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:25
+#: admin/views/analytics.php:91
+#: includes/class-ecapla-certverify-recipient-portal.php:205
+msgid "Action"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:844
+msgid "After"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:844
+msgid "Before"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:844
+msgid "Confirm lifecycle change"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:844
+#: src/Infrastructure/Admin/DomainAdmin.php:1096
+msgid "Reason"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:845
 msgid "Certloom will reject this confirmation if the Series or current Version changed after this review was prepared."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:846
+#: src/Infrastructure/Admin/DomainAdmin.php:847
 msgid "Confirm lifecycle action"
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:852
-#: src/Infrastructure/Admin/DomainAdmin.php:853
-#: src/Infrastructure/Admin/DomainAdmin.php:1050
-msgid "Revoke"
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:852
-#: src/Infrastructure/Admin/DomainAdmin.php:1050
-msgid "Suspend"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:853
 #: src/Infrastructure/Admin/DomainAdmin.php:854
-#: src/Infrastructure/Admin/DomainAdmin.php:1051
+#: src/Infrastructure/Admin/DomainAdmin.php:1070
+msgid "Revoke"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:853
+#: src/Infrastructure/Admin/DomainAdmin.php:1070
+msgid "Suspend"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:854
+#: src/Infrastructure/Admin/DomainAdmin.php:855
+#: src/Infrastructure/Admin/DomainAdmin.php:1071
 msgid "Reinstate"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:856
+#: src/Infrastructure/Admin/DomainAdmin.php:857
 msgid "Void current Version"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:857
+#: src/Infrastructure/Admin/DomainAdmin.php:858
 msgid "No lifecycle action is currently available for this state."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:860
-#: src/Infrastructure/Admin/DomainAdmin.php:1049
+#: src/Infrastructure/Admin/DomainAdmin.php:861
+#: src/Infrastructure/Admin/DomainAdmin.php:1069
 msgid "Choose…"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:862
-#: src/Infrastructure/Admin/DomainAdmin.php:1055
+#: src/Infrastructure/Admin/DomainAdmin.php:863
+#: src/Infrastructure/Admin/DomainAdmin.php:1075
 msgid "Public reason (optional)"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:862
-#: src/Infrastructure/Admin/DomainAdmin.php:1054
+#: src/Infrastructure/Admin/DomainAdmin.php:863
+#: src/Infrastructure/Admin/DomainAdmin.php:1074
 msgid "Reason code"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:862
-#: src/Infrastructure/Admin/DomainAdmin.php:1054
+#: src/Infrastructure/Admin/DomainAdmin.php:863
+#: src/Infrastructure/Admin/DomainAdmin.php:1074
 msgid "e.g. issuer_request"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:863
+#: src/Infrastructure/Admin/DomainAdmin.php:864
 msgid "Review lifecycle action"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:881
+#: src/Infrastructure/Admin/DomainAdmin.php:882
 msgid "Immutable issuance snapshot evidence"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:881
+#: src/Infrastructure/Admin/DomainAdmin.php:882
 msgid "These identifiers belong to the selected Version snapshot; changing current Recipient, Program, Template, or renderer configuration does not rewrite them."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:883
+#: src/Infrastructure/Admin/DomainAdmin.php:884
 msgid "Snapshot schema"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:884
+#: src/Infrastructure/Admin/DomainAdmin.php:885
 msgid "Template revision"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:885
+#: src/Infrastructure/Admin/DomainAdmin.php:886
 msgid "Template SHA-256"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:886
+#: src/Infrastructure/Admin/DomainAdmin.php:887
 msgid "Merge SHA-256"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:887
+#: src/Infrastructure/Admin/DomainAdmin.php:888
 msgid "Artifact authority"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:902
+#: src/Infrastructure/Admin/DomainAdmin.php:903
 msgid "The reviewed credential action is missing or malformed. Review it again."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:907
+#: src/Infrastructure/Admin/DomainAdmin.php:908
 msgid "The reviewed credential action could not be decoded safely. Review it again."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:918
-#: src/Infrastructure/Admin/DomainAdmin.php:942
+#: src/Infrastructure/Admin/DomainAdmin.php:919
+#: src/Infrastructure/Admin/DomainAdmin.php:943
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:311
 msgid "Add recipient"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:918
+#: src/Infrastructure/Admin/DomainAdmin.php:919
 msgid "Keep recipient identity separate from credential history so renewals and future credentials share one stable recipient record."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:918
+#: src/Infrastructure/Admin/DomainAdmin.php:919
 msgid "Recipient profile"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:924
+#: src/Infrastructure/Admin/DomainAdmin.php:925
 msgid "The canonical name shown in administrator workflows and credential presentation."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:925
+#: src/Infrastructure/Admin/DomainAdmin.php:926
 msgid "Optional. Used by later issuance and email workflows."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:926
+#: src/Infrastructure/Admin/DomainAdmin.php:927
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:141
 msgid "First name"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:927
+#: src/Infrastructure/Admin/DomainAdmin.php:928
 msgid "Middle name"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:928
+#: src/Infrastructure/Admin/DomainAdmin.php:929
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:142
 msgid "Last name"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:929
+#: src/Infrastructure/Admin/DomainAdmin.php:930
 msgid "Optional identifier from an LMS, CRM, SIS, or other source."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:930
+#: src/Infrastructure/Admin/DomainAdmin.php:931
 msgid "Optional numeric WordPress user association. Leave blank for recipients without a site account."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:930
+#: src/Infrastructure/Admin/DomainAdmin.php:931
 msgid "WordPress user ID"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:932
+#: src/Infrastructure/Admin/DomainAdmin.php:933
 msgid "Recipient custom fields"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:932
+#: src/Infrastructure/Admin/DomainAdmin.php:933
 msgid "Structured recipient attributes remain local to WordPress and can later feed merge fields and integrations."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:937
+#: src/Infrastructure/Admin/DomainAdmin.php:938
 msgid "Add custom field"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:939
+#: src/Infrastructure/Admin/DomainAdmin.php:940
 msgid "This recipient contains advanced structured custom data. Certloom will preserve it unchanged until a dedicated editor can represent it safely."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:942
+#: src/Infrastructure/Admin/DomainAdmin.php:943
 msgid "Update recipient"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:957
-#: src/Infrastructure/Admin/DomainAdmin.php:1013
+#: src/Infrastructure/Admin/DomainAdmin.php:963
+#: src/Infrastructure/Admin/DomainAdmin.php:1033
 msgid "Add program"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:957
+#: src/Infrastructure/Admin/DomainAdmin.php:963
 msgid "Program Profiles centralize purpose, language, lifecycle and experience defaults while issued credentials keep immutable snapshots."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:957
+#: src/Infrastructure/Admin/DomainAdmin.php:963
 msgid "Program profile"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:963
+#: src/Infrastructure/Admin/DomainAdmin.php:969
 msgid "Program title"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:963
+#: src/Infrastructure/Admin/DomainAdmin.php:969
 msgid "The human-readable credential program or course name."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:964
+#: src/Infrastructure/Admin/DomainAdmin.php:970
 msgid "Optional unique machine-friendly code used in imports and future automation."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:964
+#: src/Infrastructure/Admin/DomainAdmin.php:970
 msgid "Program code"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:965
+#: src/Infrastructure/Admin/DomainAdmin.php:971
 msgid "Default validity (days)"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:965
+#: src/Infrastructure/Admin/DomainAdmin.php:971
 msgid "Leave blank when the program has no default expiry. Issuance may override this later."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:967
+#: src/Infrastructure/Admin/DomainAdmin.php:973
 #: src/Infrastructure/Admin/TemplateAdmin.php:1116
 #: elementor/class-ecapla-certverify-elementor-widget.php:93
 #: elementor/class-ecapla-certverify-elementor-widget.php:280
@@ -10202,161 +10091,212 @@ msgstr ""
 msgid "Description"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:967
+#: src/Infrastructure/Admin/DomainAdmin.php:973
 msgid "Internal program context. Public credential copy will use explicit presentation fields rather than exposing this automatically."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:968
+#: src/Infrastructure/Admin/DomainAdmin.php:974
 msgid "Active program"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:968
+#: src/Infrastructure/Admin/DomainAdmin.php:974
 msgid "Inactive programs remain in historical credentials but should not be offered for new issuance."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:970
+#: src/Infrastructure/Admin/DomainAdmin.php:976
 msgid "Program defaults"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:970
+#: src/Infrastructure/Admin/DomainAdmin.php:976
 msgid "These are reusable Program configuration defaults. They never rewrite an issued Credential Version."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:971
+#: src/Infrastructure/Admin/DomainAdmin.php:977
 #: src/Infrastructure/Admin/TemplateAdmin.php:583
 msgid "Purpose / category"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:973
+#: src/Infrastructure/Admin/DomainAdmin.php:979
 msgid "Used by the future adaptive Wizard and Template Library filters; it does not claim a legal certification scheme."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:975
+#: src/Infrastructure/Admin/DomainAdmin.php:981
 msgid "Subcategory"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:978
+#: src/Infrastructure/Admin/DomainAdmin.php:984
 msgid "Credential type"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:979
+#: src/Infrastructure/Admin/DomainAdmin.php:985
+#: src/Application/Program/ProgramProfile.php:61
+msgid "Award"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:985
+#: src/Infrastructure/Admin/DomainAdmin.php:1122
+#: admin/views/dashboard.php:148
+#: includes/class-ecapla-certverify-recipient-portal.php:184
+msgid "Certificate"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:985
 msgid "Certification"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:981
+#: src/Infrastructure/Admin/DomainAdmin.php:985
+#: src/Infrastructure/Admin/TemplateAdmin.php:603
+#: src/Infrastructure/Admin/TemplateAdmin.php:759
+#: src/Application/Templates/TemplateLibraryMetadata.php:30
+#: src/Application/Templates/TemplateLibraryMetadata.php:65
+#: src/Application/Program/ProgramProfile.php:69
+msgid "Custom"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:985
+#: src/Application/Program/ProgramProfile.php:43
+msgid "Degree"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:985
+#: src/Application/Program/ProgramProfile.php:44
+msgid "Diploma"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:985
+#: src/Application/Templates/CuratedPresetCatalog.php:138
+msgid "License"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:985
+#: src/Application/Program/ProgramProfile.php:58
+msgid "Membership"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:985
+#: src/Application/Program/ProgramProfile.php:65
+msgid "Participation"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:987
 msgid "Eligibility context"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:981
+#: src/Infrastructure/Admin/DomainAdmin.php:987
 msgid "Optional concise administrator-owned rule/context. LMS adapters later map qualifying attempts to this Program; this field is not a compliance assertion."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:982
+#: src/Infrastructure/Admin/DomainAdmin.php:988
 msgid "Credential language / locale"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:982
-msgid "Use site_default or a locale such as en_US, ar, fr_FR or ur."
+#: src/Infrastructure/Admin/DomainAdmin.php:988
+msgid "Use site_default or a locale such as en_US, ar, fr_FR, ur or zh_Hant. Administrator language continues to follow each WordPress user locale."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:983
+#: src/Infrastructure/Admin/DomainAdmin.php:989
+msgid "Credential direction"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:989
+msgid "Effective locale: %1$s. Element direction remains Auto / LTR / RTL, so mixed-script certificates can override individual elements."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:990
 msgid "Renewal relevance"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:984
+#: src/Infrastructure/Admin/DomainAdmin.php:991
 msgid "Not applicable"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:984
+#: src/Infrastructure/Admin/DomainAdmin.php:991
 msgid "Optional"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:986
+#: src/Infrastructure/Admin/DomainAdmin.php:991
+#: admin/views/setup-wizard.php:32
+msgid "Required"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:993
 msgid "Verification visibility default"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:987
+#: src/Infrastructure/Admin/DomainAdmin.php:994
 msgid "Inherit current safe issuance default"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:987
+#: src/Infrastructure/Admin/DomainAdmin.php:994
 msgid "Organization member"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:987
-msgid "Public"
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:987
-msgid "Recipient only"
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:987
-msgid "Unlisted"
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:988
-msgid "Stored as the Program default contract. Inherit preserves Certloom’s current verification-summary issuance behavior; future activation must remain explicit and review-bound."
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:989
-msgid "Disabled by default"
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:989
-msgid "Email delivery"
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:989
-msgid "Enabled by default"
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:989
-msgid "Inherit / system default"
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:989
-msgid "Public sharing"
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:989
-msgid "Recipient Portal"
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:990
-msgid "Integration mapping key"
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:990
-msgid "Optional stable administrator-owned key for future LMS/automation mappings. No provider payload is stored here."
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:991
-msgid "External scheme / reference ID"
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:991
-msgid "Optional provenance reference; Certloom does not infer legal equivalence from this value."
+#: src/Infrastructure/Admin/DomainAdmin.php:994
+#: admin/views/partials/certificate-field.php:24
+#: includes/class-ecapla-certverify-fields.php:333
+#: includes/class-ecapla-certverify-public-policy.php:27
+msgid "Private"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:994
-msgid "This Program currently inherits the established site numbering policy. Program-scoped numbering overrides are not enabled by PRG-02, so Certloom cannot silently create competing sequence authorities."
+msgid "Public"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:994
+msgid "Recipient only"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:994
+msgid "Unlisted"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:994
+#: admin/views/analytics.php:43
+msgid "Verification summary"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:995
+msgid "Stored as the Program default contract. Inherit preserves Certloom’s current verification-summary issuance behavior; future activation must remain explicit and review-bound."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:996
-msgid "Published certificate design"
+msgid "Disabled by default"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:996
+msgid "Email delivery"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:996
+msgid "Enabled by default"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:996
+msgid "Inherit / system default"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:996
+msgid "Public sharing"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:996
+msgid "Recipient Portal"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:997
-msgid "Save the Program first, then assign its published certificate design."
+msgid "Integration mapping key"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:999
-msgid "Assigned Template"
+#: src/Infrastructure/Admin/DomainAdmin.php:997
+msgid "Optional stable administrator-owned key for future LMS/automation mappings. No provider payload is stored here."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:999
-msgid "Source: %1$s · published revision %2$d"
+#: src/Infrastructure/Admin/DomainAdmin.php:998
+msgid "External scheme / reference ID"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:998
+msgid "Optional provenance reference; Certloom does not infer legal equivalence from this value."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:111
@@ -10401,6 +10341,11 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:230
 msgid "%s restore commit queued. Certloom will restage and revalidate before any atomic promotion."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:244
+#: src/Infrastructure/Job/JobRuntime.php:240
+msgid "That Certloom job is no longer available."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:247
@@ -10449,6 +10394,11 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:310
 msgid "Upload and map CSV"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:320
+#: admin/views/import-mapping.php:19
+msgid "CSV column"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:320
@@ -10513,6 +10463,11 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:357
 msgid "Progress"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:357
+#: admin/views/fields-manager.php:125
+msgid "Type"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:362
@@ -10583,6 +10538,18 @@ msgstr ""
 msgid "Certloom could not verify the uploaded temporary file."
 msgstr ""
 
+#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:480
+#: src/Infrastructure/Import/DomainImportStageRepository.php:215
+#: src/Infrastructure/Job/JobDispatcher.php:79
+#: src/Infrastructure/Job/JobRepository.php:495
+msgid "The Certloom job identifier is invalid."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:486
+#: src/Infrastructure/Import/DomainImportUploadSession.php:153
+msgid "The CSV mapping-session identifier is invalid."
+msgstr ""
+
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:492
 msgid "You do not have permission to use Certloom data tools."
 msgstr ""
@@ -10617,6 +10584,11 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:97
 msgid "The protected Certloom backup file is no longer available."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:114
+#: src/Infrastructure/Repository/SignerRepository.php:58
+msgid "The signer no longer exists."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:142
@@ -10792,6 +10764,14 @@ msgstr ""
 msgid "More than 50 recipients match. Refine the search before choosing a recipient."
 msgstr ""
 
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:34
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:35
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:164
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:550
+#: admin/views/issuance-analytics.php:63
+msgid "Batches"
+msgstr ""
+
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:341
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:358
 msgid "Add signer"
@@ -10842,6 +10822,18 @@ msgstr ""
 msgid "Priority"
 msgstr ""
 
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:373
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:388
+#: admin/views/settings-manager.php:65
+msgid "Role"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:373
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:386
+#: includes/class-ecapla-certverify-fields.php:375
+msgid "Scope"
+msgstr ""
+
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:380
 msgid "No hierarchy assignments yet."
 msgstr ""
@@ -10861,6 +10853,11 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:406
 msgid "The selected instructor signer no longer exists."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:436
+#: src/Infrastructure/Repository/SignerRepository.php:470
+msgid "Enter a valid signer email address or leave it blank."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:461
@@ -10885,6 +10882,12 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:501
 msgid "Metadata keys must be unique."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:546
+#: src/Infrastructure/Repository/SignerRepository.php:568
+#: src/Application/Templates/TemplateAssignmentPolicy.php:68
+msgid "Global"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:548
@@ -10917,6 +10920,17 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:600
 msgid "Signer hierarchy updated."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:612
+#: admin/views/list-certificates.php:142
+#: includes/class-ecapla-certverify-recipient-portal.php:128
+msgid "All statuses"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:68
+#: src/Infrastructure/Repository/BatchRepository.php:55
+msgid "The batch no longer exists."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:91
@@ -11205,163 +11219,187 @@ msgstr ""
 msgid "Review exact issuance"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:183
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:189
+msgid "configured %s"
+msgstr ""
+
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:191
+msgid "Credential language"
+msgstr ""
+
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:191
+msgid "Site default"
+msgstr ""
+
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:192
 msgid "Published revision #%1$d · ID %2$d"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:183
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:196
+msgid "language variant %s"
+msgstr ""
+
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:198
+msgid "explicit reviewed override"
+msgstr ""
+
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:200
+msgid "Program design via %s"
+msgstr ""
+
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:202
 #: src/Infrastructure/Admin/TemplateAdmin.php:666
 msgid "Template"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:184
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:203
 msgid "Effective date"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:184
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:203
 msgid "Permanent / no expiry"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:186
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:205
 msgid "Allocated on Issue"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:186
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:205
 msgid "Manual number"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:186
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:205
 msgid "Preview candidate; not reserved"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:187
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:206
 msgid "Any changed input or related record invalidates this confirmation."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:187
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:206
 msgid "Review SHA-256"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:189
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:208
 #: src/Infrastructure/Admin/TemplateAdmin.php:904
 msgid "Layout schema"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:189
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:208
 msgid "Published layout SHA-256"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:190
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:209
 msgid "Automatic certificate/public IDs and the final self-hosted verification URL are allocated only during Issue. Browser font rasterization remains illustrative until PDF-04 renderer/font authority is accepted."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:190
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:209
 msgid "Browser Preview only"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:190
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:209
 msgid "Built from the exact published layout plus this review’s immutable merge candidate through the canonical Render Plan path."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:190
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:209
 msgid "Credential Preview"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:190
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:209
 #: src/Infrastructure/Admin/TemplateAdmin.php:1072
 msgid "Render Plan SHA-256"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:190
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:209
 msgid "The canonical review plan could not be presented safely in the browser."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:191
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:210
 msgid "Credential-specific custom merge values"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:192
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:211
 msgid "Re-run this review, verify the SHA-256, allocate the human certificate number, create the Recipient if needed, create one Credential Series and immutable Version, freeze merge/layout snapshots, transition it to issued, set the current Version, and append the issuance event under one checked transaction."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:192
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:211
 msgid "What Issue will do:"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:193
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:212
 msgid "Back to compose"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:193
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:212
 msgid "Issue credential"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:200
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:219
 msgid "Issuance receipt"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:200
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:219
 msgid "Step 4"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:220
 msgid "Credential Series"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:220
 msgid "Credential Version"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:220
 msgid "Cryptographically generated normalized identity"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:220
 msgid "Human-facing credential number"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:220
 msgid "Immutable issuance snapshot"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:201
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:220
 msgid "Stable credential lineage"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:202
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:221
 msgid "Artifact status:"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:202
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:221
 msgid "Credential truth is issued, but PDF/PNG/JPEG exports are intentionally unavailable because renderer release authority is still gated. No fake export receipt was created."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:202
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:221
 msgid "Email this credential"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:202
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:221
 msgid "Issue another credential"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:202
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:221
 msgid "Self-hosted verification URL"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:202
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:221
 msgid "Stored in the immutable snapshot, but the normalized public verification gate remains closed until final database cutover certification."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:213
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:232
 msgid "Credential-specific custom merge input is limited to 100 submitted rows and 30 saved values."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:219
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:229
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:238
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:248
 msgid "Each credential-specific custom merge field must use a unique machine key."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:255
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:274
 msgid "Manual Issuance progress"
 msgstr ""
 
@@ -11411,6 +11449,14 @@ msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1002
 msgid "Auto"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+#: admin/views/settings-manager.php:106
+#: elementor/class-ecapla-certverify-elementor-widget.php:851
+#: elementor/class-ecapla-certverify-template-widgets.php:221
+#: blocks/certloom/index.js:82
+msgid "Center"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1002
@@ -11587,6 +11633,11 @@ msgstr ""
 msgid "RTL / Urdu"
 msgstr ""
 
+#: src/Infrastructure/Admin/TemplateAdmin.php:1055
+#: includes/class-ecapla-certverify-fields.php:374
+msgid "Standard"
+msgstr ""
+
 #: src/Infrastructure/Admin/TemplateAdmin.php:106
 msgid "Element unlocked."
 msgstr ""
@@ -11689,6 +11740,13 @@ msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1121
 msgid "Validate and import"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:113
+#: src/Infrastructure/Admin/TemplateAdmin.php:1014
+#: admin/views/fields-manager.php:125
+#: elementor/class-ecapla-certverify-elementor-widget.php:666
+msgid "Text"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:114
@@ -11852,6 +11910,15 @@ msgstr ""
 msgid "A"
 msgstr ""
 
+#: src/Infrastructure/Admin/TemplateAdmin.php:164
+#: src/Infrastructure/Admin/TemplateAdmin.php:164
+#: src/Infrastructure/Admin/TemplateAdmin.php:465
+#: admin/class-ecapla-certverify-admin.php:60
+#: admin/class-ecapla-certverify-admin.php:1090
+#: admin/views/issuance-analytics.php:63
+msgid "Templates"
+msgstr ""
+
 #: src/Infrastructure/Admin/TemplateAdmin.php:194
 msgid "Choose a readable local PNG or JPEG from the WordPress Media Library."
 msgstr ""
@@ -11875,6 +11942,13 @@ msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:444
 msgid "Certloom could not encode the template export safely."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:465
+#: admin/class-ecapla-certverify-admin.php:60
+#: admin/views/frontend-manager.php:70
+#: blocks/certloom/index.js:65
+msgid "Design"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:466
@@ -12018,8 +12092,18 @@ msgstr ""
 msgid "Style"
 msgstr ""
 
+#: src/Infrastructure/Admin/TemplateAdmin.php:586
+#: admin/views/list-certificates.php:163
+msgid "Apply filters"
+msgstr ""
+
 #: src/Infrastructure/Admin/TemplateAdmin.php:587
 msgid "More filters"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:588
+#: admin/views/list-certificates.php:151
+msgid "Any"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:588
@@ -12372,6 +12456,11 @@ msgstr ""
 msgid "All credentials without a more-specific assignment"
 msgstr ""
 
+#: src/Infrastructure/Admin/TemplateAdmin.php:788
+#: src/Application/Templates/TemplateAssignmentPolicy.php:50
+msgid "Choose a valid template assignment scope."
+msgstr ""
+
 #: src/Infrastructure/Admin/TemplateAdmin.php:79
 msgid "Editable"
 msgstr ""
@@ -12690,6 +12779,24 @@ msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:961
 #: src/Infrastructure/Admin/TemplateAdmin.php:1002
+#: admin/views/settings-manager.php:106
+#: elementor/class-ecapla-certverify-elementor-widget.php:847
+#: elementor/class-ecapla-certverify-template-widgets.php:220
+#: blocks/certloom/index.js:81
+msgid "Left"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:961
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+#: admin/views/settings-manager.php:106
+#: elementor/class-ecapla-certverify-elementor-widget.php:855
+#: elementor/class-ecapla-certverify-template-widgets.php:222
+#: blocks/certloom/index.js:83
+msgid "Right"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:961
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
 msgid "Top"
 msgstr ""
 
@@ -12820,6 +12927,11 @@ msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:991
 msgid "Field token"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:991
+#: includes/class-ecapla-certverify-recipient-portal.php:187
+msgid "Grade"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:991
@@ -14361,17 +14473,32 @@ msgstr ""
 msgid "The CSV import does not contain a readable header row."
 msgstr ""
 
+#: src/Infrastructure/Import/DomainImportCsvReader.php:71
+#: includes/class-ecapla-certverify-fields.php:373
+msgid "Certificate holder"
+msgstr ""
+
+#: src/Infrastructure/Import/DomainImportCsvReader.php:73
+#: admin/class-ecapla-certverify-list-table.php:41
+#: admin/views/list-certificates.php:113
+#: includes/class-ecapla-certverify-fields.php:376
+msgid "Issue date"
+msgstr ""
+
+#: src/Infrastructure/Import/DomainImportCsvReader.php:74
+#: admin/class-ecapla-certverify-list-table.php:42
+#: admin/views/bulk-review.php:58
+#: admin/views/list-certificates.php:113
+#: includes/class-ecapla-certverify-fields.php:377
+msgid "Expiry date"
+msgstr ""
+
 #: src/Infrastructure/Import/DomainImportCsvReader.php:75
 msgid "Recipient email"
 msgstr ""
 
 #: src/Infrastructure/Import/DomainImportCsvReader.php:76
 msgid "Recipient external ID"
-msgstr ""
-
-#: src/Infrastructure/Import/DomainImportCsvReader.php:77
-#: src/Infrastructure/Admin/DomainAdmin.php:699
-msgid "Visibility"
 msgstr ""
 
 #: src/Infrastructure/Import/DomainImportStageRepository.php:123
@@ -14412,13 +14539,6 @@ msgstr ""
 
 #: src/Infrastructure/Import/DomainImportStageRepository.php:21
 msgid "Certloom could not encode the validated import row."
-msgstr ""
-
-#: src/Infrastructure/Import/DomainImportStageRepository.php:215
-#: src/Infrastructure/Job/JobDispatcher.php:79
-#: src/Infrastructure/Job/JobRepository.php:495
-#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:480
-msgid "The Certloom job identifier is invalid."
 msgstr ""
 
 #: src/Infrastructure/Import/DomainImportStageRepository.php:30
@@ -14469,9 +14589,16 @@ msgstr ""
 msgid "Certloom stopped the CSV mapping session safely (%1$s), but could not remove its protected upload copy (%2$s)."
 msgstr ""
 
-#: src/Infrastructure/Import/DomainImportUploadSession.php:153
-#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:486
-msgid "The CSV mapping-session identifier is invalid."
+#: src/Infrastructure/Import/DomainImportUploadSession.php:145
+#: src/Application/DataTools/DomainDataToolsCoordinator.php:89
+#: src/Application/Import/DomainImportJobCoordinator.php:124
+msgid "file deletion failed"
+msgstr ""
+
+#: src/Infrastructure/Import/DomainImportUploadSession.php:28
+#: src/Application/Import/DomainImportJobCoordinator.php:54
+#: src/Application/Import/DomainImportJobCoordinator.php:82
+msgid "Certloom accepts CSV files for this import workflow."
 msgstr ""
 
 #: src/Infrastructure/Import/DomainImportUploadSession.php:33
@@ -14516,6 +14643,11 @@ msgstr ""
 
 #: src/Infrastructure/Integration/LinkedRecipientResolver.php:15
 msgid "The integration event does not identify a valid WordPress user."
+msgstr ""
+
+#: src/Infrastructure/Integration/LinkedRecipientResolver.php:19
+#: src/Application/Integration/IntegrationIssuanceCoordinator.php:42
+msgid "This learner is not explicitly linked to a Certloom recipient. Certloom will not infer identity from email or name."
 msgstr ""
 
 #: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:100
@@ -14762,6 +14894,11 @@ msgstr ""
 msgid "Certloom could not inspect dependent background jobs."
 msgstr ""
 
+#: src/Infrastructure/Job/JobRepository.php:47
+#: src/Application/Job/JobService.php:22
+msgid "A Certloom job type is required."
+msgstr ""
+
 #: src/Infrastructure/Job/JobRepository.php:484
 msgid "Certloom could not remove an expired finished background job."
 msgstr ""
@@ -14796,11 +14933,6 @@ msgstr ""
 
 #: src/Infrastructure/Job/JobRuntime.php:188
 msgid "Certloom will not automatically retry an interrupted email whose external delivery outcome is uncertain. Review it and create a new explicit resend if needed."
-msgstr ""
-
-#: src/Infrastructure/Job/JobRuntime.php:240
-#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:244
-msgid "That Certloom job is no longer available."
 msgstr ""
 
 #: src/Infrastructure/Job/JobRuntime.php:244
@@ -15062,11 +15194,6 @@ msgstr ""
 
 #: src/Infrastructure/Repository/BatchRepository.php:481
 msgid "Batch dates must use YYYY-MM-DD."
-msgstr ""
-
-#: src/Infrastructure/Repository/BatchRepository.php:55
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:68
-msgid "The batch no longer exists."
 msgstr ""
 
 #: src/Infrastructure/Repository/BatchRepository.php:76
@@ -15459,11 +15586,6 @@ msgstr ""
 msgid "Recipient names and external IDs must be 191 characters or fewer."
 msgstr ""
 
-#: src/Infrastructure/Repository/ManualIssuanceRepository.php:35
-#: src/Infrastructure/Admin/DomainAdmin.php:1117
-msgid "Enter a valid recipient email address or leave it blank."
-msgstr ""
-
 #: src/Infrastructure/Repository/ManualIssuanceRepository.php:39
 #: src/Infrastructure/Repository/RecipientRepository.php:239
 msgid "Recipient custom fields could not be encoded safely."
@@ -15548,6 +15670,11 @@ msgstr ""
 #: src/Infrastructure/Repository/ProgramRepository.php:136
 #: src/Infrastructure/Repository/ProgramRepository.php:138
 msgid "Needs review"
+msgstr ""
+
+#: src/Infrastructure/Repository/ProgramRepository.php:141
+#: src/Application/Program/ProgramProfile.php:28
+msgid "Custom / Other"
 msgstr ""
 
 #: src/Infrastructure/Repository/ProgramRepository.php:149
@@ -15766,11 +15893,6 @@ msgstr ""
 msgid "Signer title must be 191 characters or fewer."
 msgstr ""
 
-#: src/Infrastructure/Repository/SignerRepository.php:470
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:436
-msgid "Enter a valid signer email address or leave it blank."
-msgstr ""
-
 #: src/Infrastructure/Repository/SignerRepository.php:474
 msgid "Signer metadata could not be encoded safely."
 msgstr ""
@@ -15794,11 +15916,6 @@ msgstr ""
 
 #: src/Infrastructure/Repository/SignerRepository.php:576
 msgid "Stored signer assignment scope is invalid."
-msgstr ""
-
-#: src/Infrastructure/Repository/SignerRepository.php:58
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:114
-msgid "The signer no longer exists."
 msgstr ""
 
 #: src/Infrastructure/Repository/SignerRepository.php:585
@@ -15947,6 +16064,7 @@ msgstr ""
 #: src/Infrastructure/Repository/TemplateRepository.php:325
 #: src/Infrastructure/Repository/TemplateRepository.php:334
 #: src/Infrastructure/Repository/TemplateRepository.php:365
+#: src/Infrastructure/Repository/TemplateRepository.php:386
 msgid "Certloom could not read the template."
 msgstr ""
 
@@ -15968,54 +16086,54 @@ msgstr ""
 msgid "This template does not have a published revision."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:391
+#: src/Infrastructure/Repository/TemplateRepository.php:383
+msgid "Choose a valid Template machine key."
+msgstr ""
+
+#: src/Infrastructure/Repository/TemplateRepository.php:402
 msgid "Certloom could not load published templates for issuance."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:416
-#: src/Infrastructure/Repository/TemplateRepository.php:419
+#: src/Infrastructure/Repository/TemplateRepository.php:427
+#: src/Infrastructure/Repository/TemplateRepository.php:430
 msgid "Certloom could not load templates."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:426
+#: src/Infrastructure/Repository/TemplateRepository.php:437
 msgid "The template cannot be exported because its current revision is unavailable."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:446
+#: src/Infrastructure/Repository/TemplateRepository.php:457
 msgid "Choose a valid template assignment."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:450
+#: src/Infrastructure/Repository/TemplateRepository.php:461
 msgid "The template is unavailable for assignment."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:453
-#: src/Infrastructure/Repository/TemplateRepository.php:494
+#: src/Infrastructure/Repository/TemplateRepository.php:464
+#: src/Infrastructure/Repository/TemplateRepository.php:505
 msgid "The template assignment target no longer exists."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:460
+#: src/Infrastructure/Repository/TemplateRepository.php:471
 msgid "The template became unavailable before the assignment could be saved."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:466
-#: src/Infrastructure/Repository/TemplateRepository.php:469
-#: src/Infrastructure/Repository/TemplateRepository.php:503
-#: src/Infrastructure/Repository/TemplateRepository.php:506
+#: src/Infrastructure/Repository/TemplateRepository.php:477
+#: src/Infrastructure/Repository/TemplateRepository.php:480
+#: src/Infrastructure/Repository/TemplateRepository.php:514
+#: src/Infrastructure/Repository/TemplateRepository.php:517
 msgid "This template assignment changed after you opened it. Reload before saving."
-msgstr ""
-
-#: src/Infrastructure/Repository/TemplateRepository.php:476
-#: src/Infrastructure/Repository/TemplateRepository.php:481
-msgid "Certloom could not save the template assignment."
 msgstr ""
 
 #: src/Infrastructure/Repository/TemplateRepository.php:48
 msgid "Factory preset templates must use the reserved Certloom preset machine-key namespace."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:480
-msgid "This template assignment changed while you were saving it. Reload before trying again."
+#: src/Infrastructure/Repository/TemplateRepository.php:487
+#: src/Infrastructure/Repository/TemplateRepository.php:492
+msgid "Certloom could not save the template assignment."
 msgstr ""
 
 #: src/Infrastructure/Repository/TemplateRepository.php:49
@@ -16023,91 +16141,91 @@ msgstr ""
 msgid "The certloom-preset machine-key namespace is reserved for built-in factory templates."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:511
+#: src/Infrastructure/Repository/TemplateRepository.php:491
+msgid "This template assignment changed while you were saving it. Reload before trying again."
+msgstr ""
+
+#: src/Infrastructure/Repository/TemplateRepository.php:522
 msgid "Certloom could not clear the direct template assignment."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:525
-#: src/Infrastructure/Repository/TemplateRepository.php:695
+#: src/Infrastructure/Repository/TemplateRepository.php:536
+#: src/Infrastructure/Repository/TemplateRepository.php:706
 msgid "Certloom could not inspect the template assignment."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:527
+#: src/Infrastructure/Repository/TemplateRepository.php:538
 msgid "A stored template assignment points to an invalid Template or Revision."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:544
-#: src/Infrastructure/Repository/TemplateRepository.php:547
+#: src/Infrastructure/Repository/TemplateRepository.php:555
+#: src/Infrastructure/Repository/TemplateRepository.php:558
 msgid "Certloom could not load assignable templates."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:550
+#: src/Infrastructure/Repository/TemplateRepository.php:561
 msgid "An assignable template contains invalid canonical layout data."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:551
+#: src/Infrastructure/Repository/TemplateRepository.php:562
 msgid "An assignable template does not satisfy Certloom’s canonical layout contract."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:552
+#: src/Infrastructure/Repository/TemplateRepository.php:563
 msgid "An assignable template failed its layout integrity check."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:566
-#: src/Infrastructure/Repository/TemplateRepository.php:594
+#: src/Infrastructure/Repository/TemplateRepository.php:577
+#: src/Infrastructure/Repository/TemplateRepository.php:605
 msgid "An active template assignment points to an archived Template."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:569
+#: src/Infrastructure/Repository/TemplateRepository.php:580
 msgid "An active template assignment points to an unavailable Template."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:597
+#: src/Infrastructure/Repository/TemplateRepository.php:608
 msgid "An active template assignment does not resolve to an available published Template."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:619
+#: src/Infrastructure/Repository/TemplateRepository.php:630
 msgid "Template machine keys must use a stable lowercase WordPress key."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:620
+#: src/Infrastructure/Repository/TemplateRepository.php:631
 msgid "Enter a template name up to 255 characters."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:621
+#: src/Infrastructure/Repository/TemplateRepository.php:632
 msgid "The template description is too large."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:628
+#: src/Infrastructure/Repository/TemplateRepository.php:639
 msgid "A canonical Certloom layout is required."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:629
+#: src/Infrastructure/Repository/TemplateRepository.php:640
 msgid "The template layout does not satisfy Certloom’s canonical layout contract."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:635
+#: src/Infrastructure/Repository/TemplateRepository.php:646
 msgid "The template revision source is invalid."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:641
+#: src/Infrastructure/Repository/TemplateRepository.php:652
 msgid "Certloom could not encode the template revision safely."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:642
+#: src/Infrastructure/Repository/TemplateRepository.php:653
 msgid "The template layout exceeds Certloom’s safe storage limit."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:649
+#: src/Infrastructure/Repository/TemplateRepository.php:660
 msgid "Certloom could not create the immutable template revision."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:656
+#: src/Infrastructure/Repository/TemplateRepository.php:667
 msgid "Certloom could not lock the template for a safe update."
-msgstr ""
-
-#: src/Infrastructure/Repository/TemplateRepository.php:664
-msgid "Certloom could not read the template revision."
 msgstr ""
 
 #: src/Infrastructure/Repository/TemplateRepository.php:67
@@ -16115,39 +16233,43 @@ msgstr ""
 msgid "That template machine key is already in use."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:670
-msgid "A stored template revision contains invalid layout data."
-msgstr ""
-
-#: src/Infrastructure/Repository/TemplateRepository.php:671
-msgid "A stored template revision does not satisfy Certloom’s canonical layout contract."
-msgstr ""
-
-#: src/Infrastructure/Repository/TemplateRepository.php:672
-msgid "A stored Template revision has schema metadata that does not match its canonical layout document."
-msgstr ""
-
-#: src/Infrastructure/Repository/TemplateRepository.php:673
-msgid "A stored template revision failed its integrity check."
+#: src/Infrastructure/Repository/TemplateRepository.php:675
+msgid "Certloom could not read the template revision."
 msgstr ""
 
 #: src/Infrastructure/Repository/TemplateRepository.php:68
 msgid "Certloom could not create the template."
 msgstr ""
 
+#: src/Infrastructure/Repository/TemplateRepository.php:681
+msgid "A stored template revision contains invalid layout data."
+msgstr ""
+
 #: src/Infrastructure/Repository/TemplateRepository.php:682
+msgid "A stored template revision does not satisfy Certloom’s canonical layout contract."
+msgstr ""
+
+#: src/Infrastructure/Repository/TemplateRepository.php:683
+msgid "A stored Template revision has schema metadata that does not match its canonical layout document."
+msgstr ""
+
+#: src/Infrastructure/Repository/TemplateRepository.php:684
+msgid "A stored template revision failed its integrity check."
+msgstr ""
+
+#: src/Infrastructure/Repository/TemplateRepository.php:693
 msgid "Certloom could not inspect factory-template revision provenance."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:697
+#: src/Infrastructure/Repository/TemplateRepository.php:708
 msgid "A stored template assignment points to an invalid Template."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:706
+#: src/Infrastructure/Repository/TemplateRepository.php:717
 msgid "Certloom could not lock the template assignment for a safe update."
 msgstr ""
 
-#: src/Infrastructure/Repository/TemplateRepository.php:715
+#: src/Infrastructure/Repository/TemplateRepository.php:726
 msgid "Certloom could not verify the template assignment target."
 msgstr ""
 
