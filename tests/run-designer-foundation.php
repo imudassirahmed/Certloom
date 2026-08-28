@@ -13,7 +13,7 @@ dsn(strpos($admin,"admin/assets/designer.js")!==false&&strpos($admin,"admin/asse
 dsn(strpos($admin,'certloom_template_revision')!==false&&strpos($admin,'data-certloom-designer-json')!==false,'Designer saves through the established immutable Template revision action');
 dsn(strpos($admin,'Advanced canonical JSON editor')!==false,'advanced JSON remains an explicit escape hatch over the same canonical layout');
 dsn(strpos($admin,'Archived templates are read-only')!==false,'archived Templates remain read-only before Designer can render a save form');
-dsn(strpos($admin,'DSX-01 · Quick Designer')!==false&&strpos($admin,'DSN-08 is a closed built-in registry')!==false&&strpos($admin,'Recovery checkpoint not applied.')!==false&&strpos($admin,'did not merge it into the authoritative current revision')!==false,'Quick Designer improves presentation while preserving DSN-08 registry and DSN-07 recovery boundaries');
+dsn(strpos($admin,'DSX-02A · Easy Designer')!==false&&strpos($admin,'DSN-08 is a closed built-in registry')!==false&&strpos($admin,'Recovery checkpoint not applied.')!==false&&strpos($admin,'did not merge it into the authoritative current revision')!==false,'Quick Designer improves presentation while preserving DSN-08 registry and DSN-07 recovery boundaries');
 dsn(strpos($admin,'Manual save remains the only authoritative revision write.')!==false,'DSN-01 geometry remains intact while DSN-08 keeps immutable revision authority manual and explicit');
 dsn(is_string($js)&&strpos($js,"A4: { portrait: [ 210, 297 ], landscape: [ 297, 210 ] }")!==false,'Designer owns exact canonical A4 dimensions');
 dsn(strpos($js,"Letter: { portrait: [ 215.9, 279.4 ], landscape: [ 279.4, 215.9 ] }")!==false,'Designer owns exact canonical Letter dimensions');

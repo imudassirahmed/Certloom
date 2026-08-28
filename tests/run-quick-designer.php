@@ -6,7 +6,7 @@ require_once __DIR__ . '/bootstrap-autoload.php';
 use Certloom\Domain\Rendering\ElementRegistry;
 $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'); $js=file_get_contents($root.'/admin/assets/designer.js'); $css=file_get_contents($root.'/admin/assets/designer.css'); $plugin=file_get_contents($root.'/certloom.php');
 $pass=0;$fail=0; function dsx($ok,$label){global$pass,$fail;if($ok){$pass++;echo"PASS  $label\n";}else{$fail++;echo"FAIL  $label\n";}}
-dsx(is_string($admin)&&strpos($admin,'DSX-01 · Quick Designer')!==false,'Template admin identifies DSX-01 Quick Designer');
+dsx(is_string($admin)&&strpos($admin,'DSX-02A · Easy Designer')!==false,'Template admin identifies DSX-01 Quick Designer');
 dsx(strpos($admin,'data-certloom-designer-mode-button="quick"')!==false&&strpos($admin,'data-certloom-designer-mode-button="pro"')!==false,'Quick and Pro presentation modes are explicit');
 dsx(strpos($admin,'Same canonical layout · different editing depth')!==false,'mode switch states one canonical layout authority');
 dsx(strpos($admin,'data-designer-default-mode="quick"')!==false,'Quick Designer is the default presentation');

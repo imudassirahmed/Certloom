@@ -4,13 +4,19 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.82
+Stable tag: 1.6.85
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
 
 == Description ==
+
+> Release note for 1.6.85: FONT-02A adds a bounded Sans Serif / Serif / Monospace family selector to Easy and Pro Designer over the existing canonical font_family key. Designer and browser Preview share a server-owned local/system presentation catalog; arbitrary CSS names and remote-font URLs are not authorable. Production PDF/PNG/JPEG remains stricter and fails closed unless the accepted content-addressed FontManifest provides the exact selected family/weight/style bytes. No layout schema or renderer/database authority is opened.
+
+> Release note for 1.6.84: DSX-02A turns the existing canonical Designer into a substantially easier everyday editing experience without creating another canvas, schema or authority path. Quick Designer now supports click-or-drag placement from the Add rail, direct ordinary-text editing, Smart Guides/sticky alignment with page/center/safe-margin/neighbour targets and Alt/Option temporary bypass, simple page Align controls, and an accessible visual color picker synchronized to the canonical hex value. Image/Logo placement continues to resolve through local WordPress Media Library attachment identity; font-family remains read-only until FONT-02A. The release also hardens the Quick Designer browser fixture so malformed Add-rail nesting cannot silently invalidate layout acceptance. Renderer and normalized-domain production authority remain closed.
+
+> Release note for 1.6.83: REL-DET-01 closes a cross-extraction reproducibility gap in the deterministic translation catalog. POT extraction now canonicalizes directory traversal, source-reference ordering and final entry ordering so exact source bytes reproduce the same catalog independently of filesystem encounter order. A dedicated adversarial traversal regression is part of the release gate. The catalog still contains 3,864 source strings; active language manifests/QA fixtures and future review kits are rebound to the corrected POT identity. Genuine language review remains a parallel external-quality track, while Easy Designer + Smart Alignment is the next customer-facing engineering milestone.
 
 > Release note for 1.6.82: I18N-03 now has a deterministic reviewed-language acceptance boundary over the frozen candidate-intake workflow. Human attestation must bind the exact candidate-intake ZIP, candidate PO, current POT and source-key set; reviewed acceptance additionally requires 100% translated coverage, zero fuzzy entries, safe placeholders/HTML/bidi/plurals, browser/meaning review evidence, and explicit mixed-direction review for RTL locales. Acceptance stays external, preserves the exact candidate archive and review evidence, emits deterministic PO/MO/WordPress-Jed integration artifacts plus a reviewed manifest proposal, and never mutates Certloom or manufactures linguistic review. No locale is newly claimed as reviewed in this release; genuine human translation/review content still precedes BAK-02.
 
@@ -135,6 +141,13 @@ After publication, use the Support tab on the WordPress.org plugin page. Include
 4. Meridian Elementor widget design in the editor preview.
 
 == Changelog ==
+
+= 1.6.83 =
+* Fix cross-extraction deterministic POT generation by canonicalizing directory traversal, source references and final entry order instead of depending on filesystem encounter order.
+* Add an adversarial traversal regression that requires the exact current source tree to reproduce byte-identical POT output and match the committed catalog.
+* Keep the 3,864-string translation source set unchanged while rebinding active language-pack manifests/QA fixtures to the corrected deterministic catalog identity.
+* Move genuine human-reviewed language content to a parallel external-quality track; do not mislabel machine/AI translations as reviewed and do not block engineering while qualified review is unavailable.
+* Keep normalized-domain and PDF/PNG/JPEG production authority closed. DSX-02 Easy Designer + Smart Alignment is the next customer-facing milestone.
 
 = 1.6.71 =
 * Add ANL-02 Issuance Analytics from append-only `credential.issued` events and immutable Version snapshots, with bounded 7/30/90/365-day daily/weekly/monthly trends.

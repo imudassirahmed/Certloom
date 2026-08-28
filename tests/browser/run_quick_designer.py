@@ -112,8 +112,10 @@ async def main():
         await ck(any('certloom-template-preview-card' in str(x) for x in scrolls),'previewTargetsCanonicalPanel')
         await ck(any('certloom-template-publication-card' in str(x) for x in scrolls),'publishTargetsCanonicalPanel')
 
-        desktop=await page.evaluate("""() => ({doc:document.documentElement.scrollWidth,client:document.documentElement.clientWidth,stage:getComputedStyle(document.querySelector('.certloom-template-designer-stage')).gridTemplateColumns,workspaceBg:getComputedStyle(document.querySelector('[data-certloom-designer-workspace]')).backgroundImage})""")
+        desktop=await page.evaluate("""() => {const shell=document.querySelector('.certloom-template-designer-shell');const workspace=document.querySelector('[data-certloom-designer-workspace]');return {doc:document.documentElement.scrollWidth,client:document.documentElement.clientWidth,stage:getComputedStyle(document.querySelector('.certloom-template-designer-stage')).gridTemplateColumns,workspaceBg:getComputedStyle(workspace).backgroundImage,shellParent:shell.parentElement.className,workspaceWidth:workspace.getBoundingClientRect().width};}""")
         await ck(desktop['doc']<=desktop['client']+1,'desktopNoOverflow')
+        await ck('certloom-template-designer-stage' in desktop['shellParent'],'workspaceShellIsStageSibling')
+        await ck(desktop['workspaceWidth']>=500,'desktopWorkspaceHasUsefulWidth')
         await ck('none'==desktop['workspaceBg'],'quickPlainWorkspace')
 
         # Mobile: no horizontal overflow and compact controls keep 44px interaction targets.

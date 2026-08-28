@@ -192,7 +192,11 @@ def main() -> int:
     files = 0
 
     for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = [d for d in dirnames if d not in EXCLUDED_DIRS]
+        # os.walk() follows the filesystem's directory iteration order unless
+        # callers normalize dirnames in-place. Release artifacts must not
+        # depend on extraction order, inode allocation, filesystem hash order,
+        # or the machine that happened to unpack the source archive.
+        dirnames[:] = sorted(d for d in dirnames if d not in EXCLUDED_DIRS)
         for name in sorted(filenames):
             if not name.endswith(".php"):
                 continue
@@ -319,7 +323,24 @@ def main() -> int:
         "",
     ]
 
-    for key in sorted(entries, key=lambda k: (entries[k]["refs"][0], k[1])):
+    # Reference encounter order is not authoritative. Canonicalize every
+    # reference list before it can influence entry order or output bytes. This
+    # is deliberately redundant with sorted directory traversal: it keeps POT
+    # determinism fail-safe if another extractor source is added later.
+    for entry in entries.values():
+        entry["refs"] = sorted(set(entry["refs"]))
+
+    def entry_sort_key(key):
+        entry = entries[key]
+        refs = entry["refs"]
+        return (
+            refs[0] if refs else "",
+            entry["context"] or "",
+            entry["singular"],
+            entry["plural"] or "",
+        )
+
+    for key in sorted(entries, key=entry_sort_key):
         entry = entries[key]
         for note in sorted(entry["comments"]):
             out.append(f"#. {note}")

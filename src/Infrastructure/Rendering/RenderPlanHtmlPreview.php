@@ -2,6 +2,7 @@
 namespace Certloom\Infrastructure\Rendering;
 
 use Certloom\Application\Rendering\RenderPlanBuilder;
+use Certloom\Application\Rendering\DesignerFontCatalog;
 use InvalidArgumentException;
 
 /**
@@ -12,6 +13,10 @@ use InvalidArgumentException;
  * by accepted artifact renderers; this presenter is the administration preview.
  */
 final class RenderPlanHtmlPreview {
+	private $fonts;
+
+	public function __construct( ?DesignerFontCatalog $fonts = null ) { $this->fonts = $fonts ?: new DesignerFontCatalog(); }
+
 	const PX_PER_MM = 2.6;
 	const MAX_INLINE_ASSET_BYTES = 2097152;
 
@@ -82,7 +87,7 @@ final class RenderPlanHtmlPreview {
 		$size_mm = (float) ( $font['size_mm'] ?? 0 );
 		$letter_mm = (float) ( $font['letter_spacing_mm'] ?? 0 );
 		$family = (string) ( $font['family'] ?? 'sans-serif' );
-		$family_css = 'sans-serif' === $family ? 'ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif' : 'ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif';
+		$family_css = $this->fonts->browser_css( $family );
 		return 'display:flex;flex-direction:column;justify-content:' . $justify . ';overflow:hidden;box-sizing:border-box;text-align:' . (string) ( $text['align'] ?? 'center' ) . ';direction:' . (string) ( $text['direction'] ?? 'ltr' ) . ';font-family:' . $family_css . ';font-size:' . $this->num( $this->px( $size_mm ) ) . 'px;font-weight:' . (int) ( $font['weight'] ?? 400 ) . ';font-style:' . ( ! empty( $font['italic'] ) ? 'italic' : 'normal' ) . ';line-height:' . $this->num( (float) ( $font['line_height'] ?? 1.2 ) ) . ';letter-spacing:' . $this->num( $this->px( $letter_mm ) ) . 'px;color:' . $this->css_color( (array) ( $text['color'] ?? array() ) ) . ';unicode-bidi:plaintext;';
 	}
 

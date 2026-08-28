@@ -1,3 +1,25 @@
+1.6.85
+- Add FONT-02A controlled Designer font catalog with bounded Sans Serif, Serif and Monospace roles shared by direct canvas and browser Preview.
+- Remove free-text/read-only font-family authoring; persist only stable canonical font keys and reject arbitrary CSS/remote-font values.
+- Keep production artifacts fail-closed behind exact FontManifest v2 family/weight/style SHA-256 face coverage; renderer and normalized-domain authority remain closed.
+- Add dedicated FONT-02A source coverage and extend Designer browser acceptance for live font selection/serialization.
+
+1.6.84
+- DSX-02A: extend the existing canonical Quick Designer with true palette-to-canvas drag placement while preserving click-to-add and keyboard-accessible alternatives.
+- Add direct ordinary-text editing on the canvas with bounded plain-text validation, one-transaction undo/redo, keyboard commit/cancel and no arbitrary HTML editing path.
+- Promote Smart Guides/sticky alignment into Easy Designer with page edges/centers, 10 mm presentation safe margins and neighbouring element edge/center targets; Alt/Option temporarily bypasses snapping.
+- Add simple Quick page Align controls and an accessible visual color picker synchronized through the existing canonical hex style field.
+- Keep Image/Logo drops local through WordPress Media Library attachment identity and keep font-family editing read-only until FONT-02A controlled local fonts.
+- Harden Designer browser acceptance after discovering a malformed Quick fixture caused by literal \n replacement patterns; the fixture now proves the canvas shell is a sibling of the Add rail and retains useful desktop width.
+- Preserve the same immutable Template revision/layout schema, renderer authority gate, normalized-domain authority gates and historical DSN-01→08/DSX-01 behavior.
+
+1.6.83
+- REL-DET-01: canonicalize POT directory traversal, source-reference ordering and final entry ordering so independent extractions cannot produce different translation-catalog bytes from the same source.
+- Add an adversarial traversal regression and require the committed 3,864-string POT to reproduce from the exact source tree under the fixed release epoch.
+- Rebind active language manifests/QA fixtures to the corrected POT identity; regenerate external review kits only from frozen 1.6.83 bytes.
+- Treat genuine human linguistic review as a parallel external-quality track; DSX-02 Easy Designer + Smart Alignment proceeds next without fabricating language-review evidence.
+- Preserve all normalized-domain and PDF/PNG/JPEG authority gates.
+
 1.6.82
 - Continue I18N-03 with a deterministic reviewed-language acceptance boundary over the frozen candidate intake: exact candidate-archive/PO/POT/source-key binding, complete/non-fuzzy technical validation and explicit human review attestation.
 - Require linguistic, meaning/claims and browser review evidence, plus mixed-direction review for RTL locales; review chronology must not predate candidate submission and ambiguous duplicate-key JSON evidence fails closed.

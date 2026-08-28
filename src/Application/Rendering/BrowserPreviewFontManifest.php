@@ -9,13 +9,17 @@ namespace Certloom\Application\Rendering;
  * must never be handed to ArtifactRenderCoordinator or an artifact renderer.
  */
 final class BrowserPreviewFontManifest {
+	private $catalog;
+
+	public function __construct( ?DesignerFontCatalog $catalog = null ) { $this->catalog = $catalog ?: new DesignerFontCatalog(); }
+
 	/** @return array<string,mixed> */
 	public function for_document( array $resolved_document ) {
 		$families = array();
 		foreach ( isset( $resolved_document['elements'] ) && is_array( $resolved_document['elements'] ) ? $resolved_document['elements'] : array() as $element ) {
 			if ( ! is_array( $element ) || 'text' !== (string) ( $element['type'] ?? '' ) ) { continue; }
 			$style = isset( $element['style'] ) && is_array( $element['style'] ) ? $element['style'] : array();
-			$family = strtolower( trim( (string) ( $style['font_family'] ?? 'sans-serif' ) ) );
+			$family = $this->catalog->normalize_key( $style['font_family'] ?? 'sans-serif' );
 			$weight = (int) ( $style['font_weight'] ?? 400 );
 			$variant = $weight . '-' . ( ! empty( $style['italic'] ) ? 'italic' : 'normal' );
 			$hash = hash( 'sha256', 'certloom-browser-preview-font-contract-v1|' . $family . '|' . $variant );

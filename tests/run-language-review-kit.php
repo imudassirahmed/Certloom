@@ -44,7 +44,7 @@ lrk_check( 0 === $rc_a && 0 === $rc_b, 'Spanish review kit builds twice: ' . $ou
 $report_a = json_decode( $out_a, true );
 $report_b = json_decode( $out_b, true );
 lrk_check( is_array( $report_a ) && 'es_ES' === ( $report_a['locale'] ?? '' ), 'Spanish review kit reports exact locale' );
-lrk_check( 3864 === (int) ( $report_a['source_strings'] ?? 0 ), 'review kit binds all 3,864 source strings' );
+lrk_check( 3876 === (int) ( $report_a['source_strings'] ?? 0 ), 'review kit binds all 3,876 source strings' );
 lrk_check( hash_file( 'sha256', $pot_path ) === ( $report_a['pot_sha256'] ?? '' ), 'review kit binds exact Certloom POT SHA-256' );
 lrk_check( ( $report_a['zip_sha256'] ?? '' ) === ( $report_b['zip_sha256'] ?? '' ), 'same locale review kit ZIP is deterministic across independent outputs' );
 lrk_check( hash_file( 'sha256', $base . '/run-b/certloom-es_ES-review-kit.zip' ) === ( $report_b['zip_sha256'] ?? '' ), 'reported review-kit ZIP SHA-256 matches delivered bytes' );

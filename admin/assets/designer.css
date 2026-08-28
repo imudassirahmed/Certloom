@@ -587,3 +587,79 @@
 	.certloom-template-designer.is-quick-mode .certloom-template-designer-add-panel,
 	.certloom-template-designer.is-quick-mode .certloom-template-designer-inspector { border: 1px solid CanvasText; }
 }
+
+/* DSX-02A: Easy Designer direct placement, direct text editing and Smart Guides. */
+.certloom-template-designer-quick-align {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 7px;
+	margin: -4px 0 14px;
+	padding: 9px 10px;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	background: #fff;
+}
+.certloom-template-designer-color-control {
+	display: grid;
+	grid-template-columns: 44px minmax(0,1fr);
+	gap: 7px;
+	align-items: center;
+}
+.certloom-template-designer-color-control input[type="color"] {
+	width: 44px;
+	min-width: 44px;
+	height: 34px;
+	min-height: 34px;
+	padding: 2px;
+	cursor: pointer;
+}
+.certloom-designer-quick-palette[draggable="true"] { cursor: grab; }
+.certloom-designer-quick-palette[draggable="true"]:active { cursor: grabbing; }
+.certloom-template-designer.is-palette-dragging .certloom-template-designer-page {
+	outline: 2px dashed #2271b1;
+	outline-offset: 5px;
+}
+.certloom-template-designer-page.is-drop-target {
+	box-shadow: 0 0 0 3px #2271b1, 0 14px 35px rgba(0,0,0,.2);
+}
+.certloom-template-designer-direct-text {
+	position: absolute;
+	z-index: 300500;
+	margin: 0;
+	padding: 3px 5px;
+	border: 2px solid #2271b1;
+	border-radius: 3px;
+	background: #fff;
+	box-shadow: 0 0 0 2px rgba(255,255,255,.9);
+	box-sizing: border-box;
+	transform-origin: center center;
+	resize: none;
+	overflow: auto;
+	white-space: pre-wrap;
+	word-break: break-word;
+	user-select: text;
+	touch-action: manipulation;
+}
+.certloom-template-designer-direct-text:focus { outline: 2px solid #72aee6; outline-offset: 1px; }
+.certloom-template-designer-element.is-direct-editing { visibility: hidden; }
+.certloom-template-designer.is-quick-mode .certloom-template-designer-snap { min-width: 132px; }
+.certloom-template-designer.is-quick-mode .certloom-template-designer-check { min-height: 36px; }
+
+@media (max-width: 782px) {
+	.certloom-template-designer-quick-align { align-items: stretch; }
+	.certloom-template-designer-quick-align .button { flex: 1 1 132px; min-height: 44px; }
+	.certloom-template-designer-quick-align .certloom-template-designer-productivity-label { flex-basis: 100%; margin: 0; }
+	.certloom-template-designer-color-control { grid-template-columns: 48px minmax(0,1fr); }
+	.certloom-template-designer-color-control input[type="color"] { width: 48px; min-width: 48px; min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.certloom-template-designer-page.is-drop-target,
+	.certloom-template-designer-direct-text { transition: none !important; animation: none !important; }
+}
+@media (forced-colors: active) {
+	.certloom-template-designer-page.is-drop-target,
+	.certloom-template-designer-direct-text,
+	.certloom-template-designer-quick-align { border-color: CanvasText; outline-color: Highlight; box-shadow: none; }
+	.certloom-template-designer-guide { background: Highlight; box-shadow: none; }
+}

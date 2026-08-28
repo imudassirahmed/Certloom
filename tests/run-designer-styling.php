@@ -9,10 +9,10 @@ use Certloom\Domain\Rendering\LayoutSchema;
 $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'); $js=file_get_contents($root.'/admin/assets/designer.js'); $css=file_get_contents($root.'/admin/assets/designer.css');
 $pass=0;$fail=0; function dsn4($ok,$label){global $pass,$fail;if($ok){$pass++;echo "PASS  $label\n";}else{$fail++;echo "FAIL  $label\n";}}
 
-dsn4(is_string($admin)&&strpos($admin,'DSX-01 · Quick Designer')!==false&&strpos($admin,'Canonical DSN-08')!==false,'Quick Designer retains DSN-08 styling truth and DSN-04 styling controls');
+dsn4(is_string($admin)&&strpos($admin,'DSX-02A · Easy Designer')!==false&&strpos($admin,'Canonical DSN-08')!==false,'Quick Designer retains DSN-08 styling truth and DSN-04 styling controls');
 dsn4(strpos($admin,'data-certloom-designer-style-field="opacity"')!==false,'all canonical elements expose common opacity styling');
 foreach(['font_family','font_size_pt','font_weight','italic','color','align','vertical_align','direction','line_height','letter_spacing_pt','overflow'] as $key){ dsn4(strpos($admin,'data-certloom-designer-style-field="'.$key.'"')!==false,"text inspector exposes canonical $key"); }
-dsn4(strpos($admin,'FONT-02 will own controlled local font import/catalog')!==false&&strpos($admin,'data-certloom-designer-style-field="font_family" readonly')!==false,'font key is preserved read-only until controlled FONT-02 manifest ownership exists');
+dsn4(strpos($admin,'data-certloom-designer-style-field="font_family"')!==false&&strpos($admin,'<option value="serif">')!==false&&strpos($admin,'<option value="monospace">')!==false,'FONT-02A exposes only bounded controlled font-family options');
 dsn4(strpos($admin,'data-certloom-designer-style="shape"')!==false&&substr_count($admin,'data-certloom-designer-style-field="fill"')===1,'shape styling exposes canonical fill exactly once');
 dsn4(substr_count($admin,'data-certloom-designer-style-field="stroke"')===2&&substr_count($admin,'data-certloom-designer-style-field="stroke_width_mm"')===2,'shape and line expose their existing canonical stroke fields');
 dsn4(strpos($admin,'data-certloom-designer-style-field="box_shadow"')===false&&strpos($admin,'data-certloom-designer-style-field="border_radius"')===false,'DSN-04 still refuses non-schema image effects after the v2 schema milestone');
@@ -26,7 +26,7 @@ dsn4(strpos($js,"value < 100 || value > 900 || 0 !== value % 100")!==false,'font
 dsn4(strpos($js,"[ 'left', 'center', 'right', 'start', 'end' ]")!==false&&strpos($js,"[ 'auto', 'ltr', 'rtl' ]")!==false,'alignment/direction enumerations mirror the canonical schema');
 dsn4(strpos($js,"[ 'wrap', 'shrink', 'clip' ]")!==false,'text overflow policy remains canonical');
 dsn4(strpos($js,"var minStroke = 'line' === element.type ? 0.001 : 0")!==false,'line and shape stroke widths preserve their distinct server lower bounds');
-dsn4(strpos($js,"'font_family' === key")!==false&&strpos($js,"styleFields[ styleField ].disabled = locked || ( 'font_family' === styleKey )")!==false,'font-family authoring is fail-closed rather than manufacturing unmanifested fonts');
+dsn4(strpos($js,'function fontKeyAllowed')!==false&&strpos($js,"if ( 'font_family' === key )")!==false&&strpos($js,'Choose a font from the controlled Certloom font list.')!==false,'font-family authoring is bounded to the controlled FONT-02A catalog');
 dsn4(strpos($js,"content.setAttribute( 'dir', 'auto' )")!==false,'Designer auto direction delegates to browser bidi detection instead of forcing LTR');
 dsn4(strpos($js,'content.style.fontFamily')!==false&&strpos($js,'content.style.fontSize')!==false&&strpos($js,'content.style.letterSpacing')!==false,'canvas reflects canonical typography fields');
 dsn4(strpos($js,'node.style.opacity')!==false&&strpos($js,'node.style.background = element.fill')!==false,'canvas reflects opacity and shape color styling');

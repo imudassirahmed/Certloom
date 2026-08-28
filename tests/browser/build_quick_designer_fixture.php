@@ -52,7 +52,7 @@ $html = str_replace(
     $html
 );
 $html = str_replace(
-    '<button type="button" class="button" data-certloom-designer-remove disabled>Delete selected</button></div>\n<div class="certloom-template-designer-shell">',
+    "<button type=\"button\" class=\"button\" data-certloom-designer-remove disabled>Delete selected</button></div>\n<div class=\"certloom-template-designer-shell\">",
     '<button type="button" class="button" data-certloom-designer-remove disabled>Delete selected</button></div></aside><div class="certloom-template-designer-shell">',
     $html
 );
@@ -68,8 +68,8 @@ $html = str_replace(
     $html
 );
 $html = str_replace(
-    '</div></div></aside></div>\n<div class="certloom-template-designer-footer">',
-    '</div></div></aside></div></div>\n<div class="certloom-template-designer-footer">',
+    "</div></div></aside></div>\n<div class=\"certloom-template-designer-footer\">",
+    "</div></div></aside></div></div>\n<div class=\"certloom-template-designer-footer\">",
     $html
 );
 $html = str_replace(
