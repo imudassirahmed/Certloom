@@ -239,7 +239,7 @@ msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:60
 #: admin/views/frontend-manager.php:70
-#: src/Infrastructure/Admin/TemplateAdmin.php:453
+#: src/Infrastructure/Admin/TemplateAdmin.php:465
 #: blocks/certloom/index.js:65
 msgid "Design"
 msgstr ""
@@ -247,9 +247,9 @@ msgstr ""
 #: admin/class-ecapla-certverify-admin.php:60
 #: admin/class-ecapla-certverify-admin.php:1090
 #: admin/views/issuance-analytics.php:63
-#: src/Infrastructure/Admin/TemplateAdmin.php:152
-#: src/Infrastructure/Admin/TemplateAdmin.php:152
-#: src/Infrastructure/Admin/TemplateAdmin.php:453
+#: src/Infrastructure/Admin/TemplateAdmin.php:164
+#: src/Infrastructure/Admin/TemplateAdmin.php:164
+#: src/Infrastructure/Admin/TemplateAdmin.php:465
 msgid "Templates"
 msgstr ""
 
@@ -430,7 +430,7 @@ msgstr ""
 #: admin/class-ecapla-certverify-list-table.php:142
 #: src/Infrastructure/Admin/DomainAdmin.php:552
 #: src/Infrastructure/Admin/DomainAdmin.php:1314
-#: src/Infrastructure/Admin/TemplateAdmin.php:649
+#: src/Infrastructure/Admin/TemplateAdmin.php:661
 msgid "All"
 msgstr ""
 
@@ -441,6 +441,7 @@ msgstr ""
 #: includes/class-ecapla-certverify-recipient-portal.php:288
 #: src/Infrastructure/Admin/DomainAdmin.php:553
 #: src/Infrastructure/Admin/DomainAdmin.php:597
+#: src/Infrastructure/Admin/TemplateAdmin.php:150
 #: elementor/class-ecapla-certverify-elementor-widget.php:636
 msgid "Valid"
 msgstr ""
@@ -533,6 +534,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:229
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:612
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:25
+#: src/Infrastructure/Admin/TemplateAdmin.php:991
 msgid "Status"
 msgstr ""
 
@@ -757,8 +759,8 @@ msgstr ""
 
 #: admin/views/analytics.php:83
 #: src/Infrastructure/Admin/DomainAdmin.php:820
-#: src/Infrastructure/Admin/TemplateAdmin.php:577
-#: src/Infrastructure/Admin/TemplateAdmin.php:979
+#: src/Infrastructure/Admin/TemplateAdmin.php:589
+#: src/Infrastructure/Admin/TemplateAdmin.php:995
 msgid "Source"
 msgstr ""
 
@@ -1595,7 +1597,8 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:522
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:147
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:182
-#: src/Infrastructure/Admin/TemplateAdmin.php:566
+#: src/Infrastructure/Admin/TemplateAdmin.php:578
+#: src/Infrastructure/Admin/TemplateAdmin.php:991
 msgid "Program"
 msgstr ""
 
@@ -1673,7 +1676,7 @@ msgstr ""
 
 #: admin/views/fields-manager.php:125
 #: src/Infrastructure/Admin/TemplateAdmin.php:113
-#: src/Infrastructure/Admin/TemplateAdmin.php:998
+#: src/Infrastructure/Admin/TemplateAdmin.php:1014
 #: elementor/class-ecapla-certverify-elementor-widget.php:666
 msgid "Text"
 msgstr ""
@@ -2483,7 +2486,7 @@ msgid "Attention"
 msgstr ""
 
 #: admin/views/list-certificates.php:151
-#: src/Infrastructure/Admin/TemplateAdmin.php:576
+#: src/Infrastructure/Admin/TemplateAdmin.php:588
 msgid "Any"
 msgstr ""
 
@@ -2508,7 +2511,7 @@ msgid "Expires to"
 msgstr ""
 
 #: admin/views/list-certificates.php:163
-#: src/Infrastructure/Admin/TemplateAdmin.php:574
+#: src/Infrastructure/Admin/TemplateAdmin.php:586
 msgid "Apply filters"
 msgstr ""
 
@@ -2756,7 +2759,7 @@ msgid "Credit text size"
 msgstr ""
 
 #: admin/views/settings-manager.php:106
-#: src/Infrastructure/Admin/TemplateAdmin.php:986
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
 #: elementor/class-ecapla-certverify-elementor-widget.php:851
 #: elementor/class-ecapla-certverify-template-widgets.php:221
 #: blocks/certloom/index.js:82
@@ -2768,8 +2771,8 @@ msgid "Credit alignment"
 msgstr ""
 
 #: admin/views/settings-manager.php:106
-#: src/Infrastructure/Admin/TemplateAdmin.php:948
-#: src/Infrastructure/Admin/TemplateAdmin.php:986
+#: src/Infrastructure/Admin/TemplateAdmin.php:961
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
 #: elementor/class-ecapla-certverify-elementor-widget.php:847
 #: elementor/class-ecapla-certverify-template-widgets.php:220
 #: blocks/certloom/index.js:81
@@ -2777,8 +2780,8 @@ msgid "Left"
 msgstr ""
 
 #: admin/views/settings-manager.php:106
-#: src/Infrastructure/Admin/TemplateAdmin.php:948
-#: src/Infrastructure/Admin/TemplateAdmin.php:986
+#: src/Infrastructure/Admin/TemplateAdmin.php:961
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
 #: elementor/class-ecapla-certverify-elementor-widget.php:855
 #: elementor/class-ecapla-certverify-template-widgets.php:222
 #: blocks/certloom/index.js:83
@@ -5535,7 +5538,7 @@ msgid "Certificate holder"
 msgstr ""
 
 #: includes/class-ecapla-certverify-fields.php:374
-#: src/Infrastructure/Admin/TemplateAdmin.php:1039
+#: src/Infrastructure/Admin/TemplateAdmin.php:1055
 msgid "Standard"
 msgstr ""
 
@@ -6182,6 +6185,7 @@ msgid "Expires"
 msgstr ""
 
 #: includes/class-ecapla-certverify-recipient-portal.php:187
+#: src/Infrastructure/Admin/TemplateAdmin.php:991
 msgid "Grade"
 msgstr ""
 
@@ -6373,8 +6377,8 @@ msgstr ""
 
 #: includes/class-ecapla-certverify-render.php:34
 #: src/Infrastructure/Admin/DomainAdmin.php:1326
-#: src/Infrastructure/Admin/TemplateAdmin.php:653
-#: src/Infrastructure/Admin/TemplateAdmin.php:704
+#: src/Infrastructure/Admin/TemplateAdmin.php:665
+#: src/Infrastructure/Admin/TemplateAdmin.php:716
 #: blocks/certloom/index.js:51
 msgctxt "search action button"
 msgid "Search"
@@ -8254,8 +8258,8 @@ msgstr ""
 #: src/Application/Templates/TemplateLibraryMetadata.php:30
 #: src/Application/Templates/TemplateLibraryMetadata.php:65
 #: src/Infrastructure/Admin/DomainAdmin.php:979
-#: src/Infrastructure/Admin/TemplateAdmin.php:591
-#: src/Infrastructure/Admin/TemplateAdmin.php:747
+#: src/Infrastructure/Admin/TemplateAdmin.php:603
+#: src/Infrastructure/Admin/TemplateAdmin.php:759
 msgid "Custom"
 msgstr ""
 
@@ -8603,7 +8607,7 @@ msgid "A factory template is missing its current immutable revision."
 msgstr ""
 
 #: src/Application/Templates/TemplateAssignmentPolicy.php:50
-#: src/Infrastructure/Admin/TemplateAdmin.php:776
+#: src/Infrastructure/Admin/TemplateAdmin.php:788
 msgid "Choose a valid template assignment scope."
 msgstr ""
 
@@ -8628,6 +8632,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:341
 #: src/Infrastructure/Admin/DomainAdmin.php:712
 #: src/Infrastructure/Admin/DomainAdmin.php:745
+#: src/Infrastructure/Admin/TemplateAdmin.php:991
 msgid "Issuer"
 msgstr ""
 
@@ -9611,7 +9616,7 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:583
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:612
-#: src/Infrastructure/Admin/TemplateAdmin.php:741
+#: src/Infrastructure/Admin/TemplateAdmin.php:753
 msgid "Filter"
 msgstr ""
 
@@ -9845,9 +9850,9 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:789
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:535
-#: src/Infrastructure/Admin/TemplateAdmin.php:721
-#: src/Infrastructure/Admin/TemplateAdmin.php:724
-#: src/Infrastructure/Admin/TemplateAdmin.php:841
+#: src/Infrastructure/Admin/TemplateAdmin.php:733
+#: src/Infrastructure/Admin/TemplateAdmin.php:736
+#: src/Infrastructure/Admin/TemplateAdmin.php:853
 msgid "None"
 msgstr ""
 
@@ -10190,7 +10195,7 @@ msgid "Leave blank when the program has no default expiry. Issuance may override
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:967
-#: src/Infrastructure/Admin/TemplateAdmin.php:1100
+#: src/Infrastructure/Admin/TemplateAdmin.php:1116
 #: elementor/class-ecapla-certverify-elementor-widget.php:93
 #: elementor/class-ecapla-certverify-elementor-widget.php:280
 #: blocks/certloom/index.js:100
@@ -10218,7 +10223,7 @@ msgid "These are reusable Program configuration defaults. They never rewrite an 
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:971
-#: src/Infrastructure/Admin/TemplateAdmin.php:571
+#: src/Infrastructure/Admin/TemplateAdmin.php:583
 msgid "Purpose / category"
 msgstr ""
 
@@ -10664,15 +10669,15 @@ msgid "Search signer name, key, title, or email"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:229
-#: src/Infrastructure/Admin/TemplateAdmin.php:472
+#: src/Infrastructure/Admin/TemplateAdmin.php:484
 msgid "Assignments"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:229
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:352
-#: src/Infrastructure/Admin/TemplateAdmin.php:625
-#: src/Infrastructure/Admin/TemplateAdmin.php:654
-#: src/Infrastructure/Admin/TemplateAdmin.php:1100
+#: src/Infrastructure/Admin/TemplateAdmin.php:637
+#: src/Infrastructure/Admin/TemplateAdmin.php:666
+#: src/Infrastructure/Admin/TemplateAdmin.php:1116
 msgid "Machine key"
 msgstr ""
 
@@ -10850,7 +10855,7 @@ msgid "Choose a Program for the Batch."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:399
-#: src/Infrastructure/Admin/TemplateAdmin.php:788
+#: src/Infrastructure/Admin/TemplateAdmin.php:800
 msgid "The selected Program no longer exists."
 msgstr ""
 
@@ -11205,7 +11210,7 @@ msgid "Published revision #%1$d · ID %2$d"
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:183
-#: src/Infrastructure/Admin/TemplateAdmin.php:654
+#: src/Infrastructure/Admin/TemplateAdmin.php:666
 msgid "Template"
 msgstr ""
 
@@ -11238,7 +11243,7 @@ msgid "Review SHA-256"
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:189
-#: src/Infrastructure/Admin/TemplateAdmin.php:892
+#: src/Infrastructure/Admin/TemplateAdmin.php:904
 msgid "Layout schema"
 msgstr ""
 
@@ -11263,7 +11268,7 @@ msgid "Credential Preview"
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:190
-#: src/Infrastructure/Admin/TemplateAdmin.php:1056
+#: src/Infrastructure/Admin/TemplateAdmin.php:1072
 msgid "Render Plan SHA-256"
 msgstr ""
 
@@ -11392,141 +11397,242 @@ msgstr ""
 msgid "Designer requires a canonical page definition."
 msgstr ""
 
+#: src/Infrastructure/Admin/TemplateAdmin.php:1000
+msgid "Font key"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1000
+msgid "Size (pt)"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1000
+msgid "Weight"
+msgstr ""
+
 #: src/Infrastructure/Admin/TemplateAdmin.php:1002
-msgid "Image asset"
+msgid "Auto"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+msgid "Clip"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+msgid "Direction"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+msgid "End"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+msgid "Font keys remain preserved but read-only through DSN-08. FONT-02 will own controlled local font import/catalog and exact renderer-manifest binding; Designer will not create an unrenderable font dependency today."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+msgid "Horizontal align"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+msgid "Italic"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+msgid "Letter spacing (pt)"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+msgid "Line height"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+msgid "Middle"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+msgid "Overflow"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+msgid "Shrink"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+msgid "Start"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+#: elementor/class-ecapla-certverify-elementor-widget.php:407
+#: elementor/class-ecapla-certverify-elementor-widget.php:810
+msgid "Text color"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+msgid "Vertical align"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+msgid "Wrap"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1003
+#: src/Infrastructure/Admin/TemplateAdmin.php:1004
+msgid "Stroke"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1003
+#: src/Infrastructure/Admin/TemplateAdmin.php:1004
+msgid "Stroke width (mm)"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1005
+msgid "Arrow keys nudge 1 mm, Shift+Arrow 5 mm and Alt/Option+Arrow 0.1 mm. Ctrl/Cmd+Z undoes; Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y redoes. Locked elements remain selectable but cannot be transformed, reordered, removed or content-edited."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1005
+msgid "Front → back"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1005
+#: src/Infrastructure/Admin/TemplateAdmin.php:1005
+msgid "Layers"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1006
+msgid "Manual save remains the only authoritative revision write."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1006
+msgid "Recovery autosave ready"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1006
+msgid "Save Designer revision"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:101
 msgid "Locked element selected."
 msgstr ""
 
+#: src/Infrastructure/Admin/TemplateAdmin.php:1018
+msgid "Image asset"
+msgstr ""
+
 #: src/Infrastructure/Admin/TemplateAdmin.php:102
 msgid "This page conversion would place an element outside the canonical page bounds. No change was applied."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1023
-msgid "Canonical Render Plan"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1023
-msgid "Read-only sample Preview built through the same LayoutResolver → RenderPlanBuilder composition path consumed by Certloom PDF, PNG and JPEG adapters."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1025
-msgid "Renderer release accepted"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1027
-msgid "Artifact authority pending"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:103
 msgid "Selected element aligned to page."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1030
-msgid "Geometry, merge resolution, direction, QR modules, colors, ordering and element composition come from the canonical Render Plan. Browser font rasterization is illustrative until PDF-04 exact renderer/font authority is accepted; this screen never manufactures production artifact authority."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1030
-msgid "Preview boundary:"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1032
-msgid "Template Preview revision"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1033
-msgid "Current draft"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1033
-#: src/Infrastructure/Admin/TemplateAdmin.php:1075
-msgid "Published"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1038
-msgid "Sample data"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1038
-msgid "Template Preview sample data"
+#: src/Infrastructure/Admin/TemplateAdmin.php:1039
+msgid "Canonical Render Plan"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1039
-msgid "Long content"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1039
-msgid "RTL / Urdu"
+msgid "Read-only sample Preview built through the same LayoutResolver → RenderPlanBuilder composition path consumed by Certloom PDF, PNG and JPEG adapters."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:104
 msgid "Layer order updated."
 msgstr ""
 
+#: src/Infrastructure/Admin/TemplateAdmin.php:1041
+msgid "Renderer release accepted"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1043
+msgid "Artifact authority pending"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1046
+msgid "Geometry, merge resolution, direction, QR modules, colors, ordering and element composition come from the canonical Render Plan. Browser font rasterization is illustrative until PDF-04 exact renderer/font authority is accepted; this screen never manufactures production artifact authority."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1046
+msgid "Preview boundary:"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1048
+msgid "Template Preview revision"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1049
+msgid "Current draft"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1049
+#: src/Infrastructure/Admin/TemplateAdmin.php:1091
+msgid "Published"
+msgstr ""
+
 #: src/Infrastructure/Admin/TemplateAdmin.php:105
 msgid "Element locked for this author."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1052
-msgid "The canonical Render Plan passed preparation but could not be presented safely in the browser."
+#: src/Infrastructure/Admin/TemplateAdmin.php:1054
+msgid "Sample data"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1056
-msgid "Layout SHA-256"
+#: src/Infrastructure/Admin/TemplateAdmin.php:1054
+msgid "Template Preview sample data"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1059
-msgid "Synthetic Preview values never read or mutate credential records. Use Standard, Long content and RTL / Urdu samples to stress the design before Designer editing and issuance are introduced."
+#: src/Infrastructure/Admin/TemplateAdmin.php:1055
+msgid "Long content"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1055
+msgid "RTL / Urdu"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:106
 msgid "Element unlocked."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1067
-msgid "Duplicate as a new draft"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1067
-msgid "Duplication copies only the reviewed current revision. It creates a fresh template identity with no published state and no assignments."
-msgstr ""
-
 #: src/Infrastructure/Admin/TemplateAdmin.php:1068
-msgid "Copy"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1068
-msgid "Create duplicate draft"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1068
-msgid "New machine key"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1068
-msgid "New name"
+msgid "The canonical Render Plan passed preparation but could not be presented safely in the browser."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:107
 msgid "Element nudged."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1074
-msgid "Draft"
+#: src/Infrastructure/Admin/TemplateAdmin.php:1072
+msgid "Layout SHA-256"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1076
-msgid "Changes pending"
+#: src/Infrastructure/Admin/TemplateAdmin.php:1075
+msgid "Synthetic Preview values never read or mutate credential records. Use Standard, Long content and RTL / Urdu samples to stress the design before Designer editing and issuance are introduced."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:108
 msgid "Snapping enabled."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1089
-msgid "Premium factory designs"
+#: src/Infrastructure/Admin/TemplateAdmin.php:1083
+msgid "Duplicate as a new draft"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1083
+msgid "Duplication copies only the reviewed current revision. It creates a fresh template identity with no published state and no assignments."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1084
+msgid "Copy"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1084
+msgid "Create duplicate draft"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1084
+msgid "New machine key"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1084
+msgid "New name"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:109
@@ -11534,60 +11640,72 @@ msgid "Snapping disabled."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1090
-msgid "%1$d historical design families × %2$d compatibility variants = %3$d preserved layouts, plus %4$d additive curated premium concepts. Total factory drafts after synchronization: %5$d. Factory layouts remain local drafts until the production renderer gate is accepted."
+msgid "Draft"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1094
-msgid "Install / synchronize factory drafts"
+#: src/Infrastructure/Admin/TemplateAdmin.php:1092
+msgid "Changes pending"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:110
 msgid "Unsaved Designer changes reset."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1100
-msgid "Factory template identity is permanent. Duplicate/export the design for a separately named template."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1100
-msgid "Name"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1100
-msgid "Stable lowercase key used by assignments, imports and future integrations."
-msgstr ""
-
 #: src/Infrastructure/Admin/TemplateAdmin.php:1105
-msgid "Import template"
+msgid "Premium factory designs"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1105
-msgid "Validate and import"
+#: src/Infrastructure/Admin/TemplateAdmin.php:1106
+msgid "%1$d historical design families × %2$d compatibility variants = %3$d preserved layouts, plus %4$d additive curated premium concepts. Total factory drafts after synchronization: %5$d. Factory layouts remain local drafts until the production renderer gate is accepted."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:111
 msgid "That geometry would violate the canonical page boundary. The previous value was kept."
 msgstr ""
 
+#: src/Infrastructure/Admin/TemplateAdmin.php:1110
+msgid "Install / synchronize factory drafts"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1116
+msgid "Factory template identity is permanent. Duplicate/export the design for a separately named template."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1116
+msgid "Name"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1116
+msgid "Stable lowercase key used by assignments, imports and future integrations."
+msgstr ""
+
 #: src/Infrastructure/Admin/TemplateAdmin.php:112
 msgid "Designer found invalid element geometry and stopped the save."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1126
-msgid "Template changes were saved."
+#: src/Infrastructure/Admin/TemplateAdmin.php:1121
+msgid "Import template"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1132
-msgid "You are not allowed to manage Certloom templates."
+#: src/Infrastructure/Admin/TemplateAdmin.php:1121
+msgid "Validate and import"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:114
-#: src/Infrastructure/Admin/TemplateAdmin.php:998
+#: src/Infrastructure/Admin/TemplateAdmin.php:1014
 msgid "Merge field"
 msgstr ""
 
+#: src/Infrastructure/Admin/TemplateAdmin.php:1142
+msgid "Template changes were saved."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1148
+msgid "You are not allowed to manage Certloom templates."
+msgstr ""
+
 #: src/Infrastructure/Admin/TemplateAdmin.php:115
-#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+#: src/Infrastructure/Admin/TemplateAdmin.php:1018
 #: elementor/class-ecapla-certverify-elementor-widget.php:655
 #: elementor/class-ecapla-certverify-template-widgets.php:308
 msgid "Background"
@@ -11650,7 +11768,7 @@ msgid "Barcode elements require certloom-layout v2. Upgrade this draft first."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:130
-#: src/Infrastructure/Admin/TemplateAdmin.php:1000
+#: src/Infrastructure/Admin/TemplateAdmin.php:1016
 msgid "Barcode"
 msgstr ""
 
@@ -11690,366 +11808,411 @@ msgstr ""
 msgid "Recovery checkpoint discarded."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:182
+#: src/Infrastructure/Admin/TemplateAdmin.php:140
+msgid "Quick Designer enabled."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:141
+msgid "Pro Designer enabled."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:142
+msgid "Unlock this element before duplicating it."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:143
+msgid "Element duplicated."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:144
+msgid "Alexandria Noor Rahman"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:145
+msgid "CERT-2026-001"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:146
+msgid "Professional Credential Program"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:147
+msgid "28 August 2026"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:148
+msgid "28 August 2027"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:149
+msgid "Northstar Learning Institute"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:151
+msgid "A"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:194
 msgid "Choose a readable local PNG or JPEG from the WordPress Media Library."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:197
+#: src/Infrastructure/Admin/TemplateAdmin.php:209
 msgid "Created from a local WordPress Media Library background. The image remains a normal canonical Designer element."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:230
+#: src/Infrastructure/Admin/TemplateAdmin.php:242
 msgid "Enter valid canonical layout JSON."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:262
+#: src/Infrastructure/Admin/TemplateAdmin.php:274
 msgid "Designer autosave received invalid layout JSON."
 msgstr ""
 
 #. translators: 1: created templates, 2: updated templates, 3: unchanged templates, 4: customer-customized templates.
-#: src/Infrastructure/Admin/TemplateAdmin.php:371
+#: src/Infrastructure/Admin/TemplateAdmin.php:383
 msgid "Factory templates synchronized: %1$d created, %2$d updated, %3$d unchanged, %4$d customer-customized and preserved."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:432
+#: src/Infrastructure/Admin/TemplateAdmin.php:444
 msgid "Certloom could not encode the template export safely."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:454
+#: src/Infrastructure/Admin/TemplateAdmin.php:466
 msgid "Browse real certificate previews first, then assign a design to a Program or open the same canonical Template in Designer. Template history, publication and renderer authority remain unchanged underneath this visual workspace."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:471
+#: src/Infrastructure/Admin/TemplateAdmin.php:483
 msgid "Design workspace"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:472
-#: src/Infrastructure/Admin/TemplateAdmin.php:646
+#: src/Infrastructure/Admin/TemplateAdmin.php:484
+#: src/Infrastructure/Admin/TemplateAdmin.php:658
 msgid "My Templates"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:472
+#: src/Infrastructure/Admin/TemplateAdmin.php:484
 msgid "Template Library"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:476
+#: src/Infrastructure/Admin/TemplateAdmin.php:488
 msgid "Designer"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:530
+#: src/Infrastructure/Admin/TemplateAdmin.php:542
 msgid "Browse the historical compatibility layouts together with the new curated premium concepts. Every thumbnail is still produced from the Template’s canonical layout through LayoutResolver → RenderPlanBuilder → the existing browser Preview presenter; TPLUX-02 adds design breadth without adding another renderer or design format."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:530
+#: src/Infrastructure/Admin/TemplateAdmin.php:542
 msgid "Choose a certificate design visually"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:530
+#: src/Infrastructure/Admin/TemplateAdmin.php:542
 msgid "Start blank"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:530
+#: src/Infrastructure/Admin/TemplateAdmin.php:542
 msgid "TPLUX-02 · Curated Template Library"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:530
+#: src/Infrastructure/Admin/TemplateAdmin.php:542
 msgid "Upload certificate background"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:537
+#: src/Infrastructure/Admin/TemplateAdmin.php:549
 msgid "This visual discovery pass is intentionally bounded to 250 active Templates. Use search to narrow very large libraries before applying visual facets."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:544
+#: src/Infrastructure/Admin/TemplateAdmin.php:556
 msgid "Current effective design: %s. Purpose-fit Templates are surfaced first; this is browsing guidance, not a compliance assertion."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:544
+#: src/Infrastructure/Admin/TemplateAdmin.php:556
 msgid "No effective design is currently resolved. Purpose-fit Templates are surfaced first; this is browsing guidance, not a compliance assertion."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:544
+#: src/Infrastructure/Admin/TemplateAdmin.php:556
 msgid "Program context"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:546
+#: src/Infrastructure/Admin/TemplateAdmin.php:558
 msgid "%d matching Template"
 msgid_plural "%d matching Templates"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:547
+#: src/Infrastructure/Admin/TemplateAdmin.php:559
 msgid "Sync factory designs"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:549
+#: src/Infrastructure/Admin/TemplateAdmin.php:561
 msgid "Clear one or more facets, or synchronize the factory drafts if this is a new installation."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:549
+#: src/Infrastructure/Admin/TemplateAdmin.php:561
 msgid "No designs match these filters."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:556
+#: src/Infrastructure/Admin/TemplateAdmin.php:568
 msgid "Canonical browser Preview"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:556
+#: src/Infrastructure/Admin/TemplateAdmin.php:568
 msgid "Close"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:556
-#: src/Infrastructure/Admin/TemplateAdmin.php:1023
+#: src/Infrastructure/Admin/TemplateAdmin.php:568
+#: src/Infrastructure/Admin/TemplateAdmin.php:1039
 msgid "Template Preview"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:556
+#: src/Infrastructure/Admin/TemplateAdmin.php:568
 msgid "This large preview is still browser Preview, not accepted PDF/PNG/JPEG production authority."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:565
+#: src/Infrastructure/Admin/TemplateAdmin.php:577
 msgid "Name, key, or description"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:565
+#: src/Infrastructure/Admin/TemplateAdmin.php:577
 msgid "Search"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:566
+#: src/Infrastructure/Admin/TemplateAdmin.php:578
 msgid "Any Program"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:571
+#: src/Infrastructure/Admin/TemplateAdmin.php:583
 msgid "All purposes"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:572
+#: src/Infrastructure/Admin/TemplateAdmin.php:584
 msgid "Any orientation"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:572
-#: src/Infrastructure/Admin/TemplateAdmin.php:625
-#: src/Infrastructure/Admin/TemplateAdmin.php:834
-#: src/Infrastructure/Admin/TemplateAdmin.php:942
+#: src/Infrastructure/Admin/TemplateAdmin.php:584
+#: src/Infrastructure/Admin/TemplateAdmin.php:637
+#: src/Infrastructure/Admin/TemplateAdmin.php:846
+#: src/Infrastructure/Admin/TemplateAdmin.php:955
 msgid "Landscape"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:572
-#: src/Infrastructure/Admin/TemplateAdmin.php:625
-#: src/Infrastructure/Admin/TemplateAdmin.php:834
-#: src/Infrastructure/Admin/TemplateAdmin.php:942
+#: src/Infrastructure/Admin/TemplateAdmin.php:584
+#: src/Infrastructure/Admin/TemplateAdmin.php:637
+#: src/Infrastructure/Admin/TemplateAdmin.php:846
+#: src/Infrastructure/Admin/TemplateAdmin.php:955
 msgid "Orientation"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:572
-#: src/Infrastructure/Admin/TemplateAdmin.php:625
-#: src/Infrastructure/Admin/TemplateAdmin.php:834
-#: src/Infrastructure/Admin/TemplateAdmin.php:942
+#: src/Infrastructure/Admin/TemplateAdmin.php:584
+#: src/Infrastructure/Admin/TemplateAdmin.php:637
+#: src/Infrastructure/Admin/TemplateAdmin.php:846
+#: src/Infrastructure/Admin/TemplateAdmin.php:955
 msgid "Portrait"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:573
+#: src/Infrastructure/Admin/TemplateAdmin.php:585
 msgid "Any style"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:573
+#: src/Infrastructure/Admin/TemplateAdmin.php:585
 msgid "Style"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:575
+#: src/Infrastructure/Admin/TemplateAdmin.php:587
 msgid "More filters"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:576
+#: src/Infrastructure/Admin/TemplateAdmin.php:588
 msgid "Color family"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:576
+#: src/Infrastructure/Admin/TemplateAdmin.php:588
 msgid "Language"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:576
+#: src/Infrastructure/Admin/TemplateAdmin.php:588
 msgid "RTL readiness"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:577
-#: src/Infrastructure/Admin/TemplateAdmin.php:741
+#: src/Infrastructure/Admin/TemplateAdmin.php:589
+#: src/Infrastructure/Admin/TemplateAdmin.php:753
 msgid "Custom / imported"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:577
-#: src/Infrastructure/Admin/TemplateAdmin.php:741
-#: src/Infrastructure/Admin/TemplateAdmin.php:747
+#: src/Infrastructure/Admin/TemplateAdmin.php:589
+#: src/Infrastructure/Admin/TemplateAdmin.php:753
+#: src/Infrastructure/Admin/TemplateAdmin.php:759
 msgid "Factory"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:577
+#: src/Infrastructure/Admin/TemplateAdmin.php:589
 msgid "Factory + custom"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:592
+#: src/Infrastructure/Admin/TemplateAdmin.php:604
 msgid "Purpose fit"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:593
-#: src/Infrastructure/Admin/TemplateAdmin.php:747
+#: src/Infrastructure/Admin/TemplateAdmin.php:605
+#: src/Infrastructure/Admin/TemplateAdmin.php:759
 msgid "Effective"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:594
+#: src/Infrastructure/Admin/TemplateAdmin.php:606
 msgid "%d element"
 msgid_plural "%d elements"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:594
-#: src/Infrastructure/Admin/TemplateAdmin.php:748
+#: src/Infrastructure/Admin/TemplateAdmin.php:606
+#: src/Infrastructure/Admin/TemplateAdmin.php:760
 msgid "No description."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:594
-#: src/Infrastructure/Admin/TemplateAdmin.php:723
+#: src/Infrastructure/Admin/TemplateAdmin.php:606
+#: src/Infrastructure/Admin/TemplateAdmin.php:735
 msgid "Revision %d"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:595
+#: src/Infrastructure/Admin/TemplateAdmin.php:607
 msgid "Draft design. A Program assignment can be prepared now, but issuance still requires a published revision."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:596
+#: src/Infrastructure/Admin/TemplateAdmin.php:608
+#: src/Infrastructure/Admin/TemplateAdmin.php:958
 msgid "Preview"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:599
+#: src/Infrastructure/Admin/TemplateAdmin.php:611
 msgid "Use for Program"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:599
+#: src/Infrastructure/Admin/TemplateAdmin.php:611
 msgid "Used by Program"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:601
+#: src/Infrastructure/Admin/TemplateAdmin.php:613
 msgid "Choose Program first"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:603
+#: src/Infrastructure/Admin/TemplateAdmin.php:615
 msgid "Customize"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:603
+#: src/Infrastructure/Admin/TemplateAdmin.php:615
 msgid "Duplicate"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:613
-#: src/Infrastructure/Admin/TemplateAdmin.php:614
+#: src/Infrastructure/Admin/TemplateAdmin.php:625
+#: src/Infrastructure/Admin/TemplateAdmin.php:626
 msgid "Preview unavailable"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:624
+#: src/Infrastructure/Admin/TemplateAdmin.php:636
 msgid "Choose a local PNG or JPEG. Certloom creates a normal draft with that image as a full-page canonical element; you can then add text, dynamic fields, QR and other elements in Designer."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:624
+#: src/Infrastructure/Admin/TemplateAdmin.php:636
 msgid "Start from a certificate background"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:625
+#: src/Infrastructure/Admin/TemplateAdmin.php:637
 msgid "Choose image"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:625
+#: src/Infrastructure/Admin/TemplateAdmin.php:637
 msgid "Create background draft"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:625
-#: src/Infrastructure/Admin/TemplateAdmin.php:834
-#: src/Infrastructure/Admin/TemplateAdmin.php:941
+#: src/Infrastructure/Admin/TemplateAdmin.php:637
+#: src/Infrastructure/Admin/TemplateAdmin.php:846
+#: src/Infrastructure/Admin/TemplateAdmin.php:954
 msgid "Letter"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:625
+#: src/Infrastructure/Admin/TemplateAdmin.php:637
 msgid "No image selected"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:625
-#: src/Infrastructure/Admin/TemplateAdmin.php:834
-#: src/Infrastructure/Admin/TemplateAdmin.php:941
+#: src/Infrastructure/Admin/TemplateAdmin.php:637
+#: src/Infrastructure/Admin/TemplateAdmin.php:846
+#: src/Infrastructure/Admin/TemplateAdmin.php:954
 msgid "Page size"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:625
+#: src/Infrastructure/Admin/TemplateAdmin.php:637
 msgid "Template name"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:633
+#: src/Infrastructure/Admin/TemplateAdmin.php:645
 msgid "Template Library pages"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:646
+#: src/Infrastructure/Admin/TemplateAdmin.php:658
 msgid "Create blank Template"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:646
+#: src/Infrastructure/Admin/TemplateAdmin.php:658
 msgid "Manage identity, immutable revisions and lifecycle here. Lifecycle remains Draft → Published → Changes pending → Archived; visual discovery stays in Template Library."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:647
+#: src/Infrastructure/Admin/TemplateAdmin.php:659
 msgid "Archive is non-destructive: revisions and any published history remain intact. Active assignments must be cleared before archival."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:648
+#: src/Infrastructure/Admin/TemplateAdmin.php:660
 msgid "Template lifecycle filter"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:649
-#: src/Infrastructure/Admin/TemplateAdmin.php:841
+#: src/Infrastructure/Admin/TemplateAdmin.php:661
+#: src/Infrastructure/Admin/TemplateAdmin.php:853
 msgid "Active"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:649
-#: src/Infrastructure/Admin/TemplateAdmin.php:841
-#: src/Infrastructure/Admin/TemplateAdmin.php:1077
+#: src/Infrastructure/Admin/TemplateAdmin.php:661
+#: src/Infrastructure/Admin/TemplateAdmin.php:853
+#: src/Infrastructure/Admin/TemplateAdmin.php:1093
 msgid "Archived"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:653
+#: src/Infrastructure/Admin/TemplateAdmin.php:665
 msgid "Search name, key, or description"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:653
+#: src/Infrastructure/Admin/TemplateAdmin.php:665
 msgid "Search templates"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:654
+#: src/Infrastructure/Admin/TemplateAdmin.php:666
 msgid "Draft revision"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:654
+#: src/Infrastructure/Admin/TemplateAdmin.php:666
 msgid "Lifecycle"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:654
-#: src/Infrastructure/Admin/TemplateAdmin.php:841
+#: src/Infrastructure/Admin/TemplateAdmin.php:666
+#: src/Infrastructure/Admin/TemplateAdmin.php:853
 msgid "Published revision"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:656
+#: src/Infrastructure/Admin/TemplateAdmin.php:668
 msgid "No templates found for this lifecycle filter."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:671
+#: src/Infrastructure/Admin/TemplateAdmin.php:683
 msgid "Choose a direct Template for a scope, or choose None to inherit the next available fallback. Most-specific scope wins: Batch → Program → Issuer → Global."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:671
+#: src/Infrastructure/Admin/TemplateAdmin.php:683
 msgid "Template assignments"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:671
+#: src/Infrastructure/Admin/TemplateAdmin.php:683
 msgid "Template candidates · publication-aware"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:672
+#: src/Infrastructure/Admin/TemplateAdmin.php:684
 msgid "Template assignment scopes"
 msgstr ""
 
@@ -12061,156 +12224,152 @@ msgstr ""
 msgid "Designer change undone."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:703
-msgid "Choose %s"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:704
-msgid "Search assignment targets"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:704
-msgid "Search name or code"
-msgstr ""
-
 #: src/Infrastructure/Admin/TemplateAdmin.php:71
 msgid "Designer change redone."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:712
-msgid "No matching assignment targets."
+#: src/Infrastructure/Admin/TemplateAdmin.php:715
+msgid "Choose %s"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:716
+msgid "Search assignment targets"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:716
+msgid "Search name or code"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:72
 msgid "Unsaved changes"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:722
-msgid "Assignment target"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:723
-msgid "Direct assignment"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:723
-msgid "No Template is forced at this scope."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:723
-msgid "None · inherit/default"
-msgstr ""
-
 #: src/Infrastructure/Admin/TemplateAdmin.php:724
-msgid "Effective Template"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:724
-msgid "No assignment exists anywhere in the fallback chain."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:724
-msgid "Source: %1$s · fallback depth %2$d"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:725
-msgid "Fallback path:"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:729
-msgid "Clearing a direct assignment preserves the lower-scope fallback rules; it does not delete any Template."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:729
-msgid "Use inherited/default (None)"
+msgid "No matching assignment targets."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:73
-#: src/Infrastructure/Admin/TemplateAdmin.php:930
+#: src/Infrastructure/Admin/TemplateAdmin.php:942
 msgid "Saved draft"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:734
+msgid "Assignment target"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:735
+msgid "Direct assignment"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:735
+msgid "No Template is forced at this scope."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:735
+msgid "None · inherit/default"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:736
+msgid "Effective Template"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:736
+msgid "No assignment exists anywhere in the fallback chain."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:736
+msgid "Source: %1$s · fallback depth %2$d"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:737
+msgid "Fallback path:"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:74
 msgid "element"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:740
-msgid "Choose a Template"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:740
-msgid "This card is assignment metadata only—not the canonical Render Plan Preview. Open a Template to inspect Current or Published Preview. Production artifact authority remains renderer-gated."
+#: src/Infrastructure/Admin/TemplateAdmin.php:741
+msgid "Clearing a direct assignment preserves the lower-scope fallback rules; it does not delete any Template."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:741
-msgid "All Templates"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:741
-msgid "Search Template name, key, or description"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:741
-msgid "Search assignable Templates"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:741
-msgid "Template kind"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:748
-msgid "Elements"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:748
-msgid "Layout hash"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:748
-msgid "Page"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:748
-#: src/Infrastructure/Admin/TemplateAdmin.php:1032
-#: src/Infrastructure/Admin/TemplateAdmin.php:1056
-msgid "Revision"
+msgid "Use inherited/default (None)"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:75
 msgid "elements"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:751
-msgid "Assign at this scope"
+#: src/Infrastructure/Admin/TemplateAdmin.php:752
+msgid "Choose a Template"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:751
-msgid "Assigned here"
+#: src/Infrastructure/Admin/TemplateAdmin.php:752
+msgid "This card is assignment metadata only—not the canonical Render Plan Preview. Open a Template to inspect Current or Published Preview. Production artifact authority remains renderer-gated."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:753
-msgid "No assignable Templates match these filters."
+msgid "All Templates"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:753
+msgid "Search Template name, key, or description"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:753
+msgid "Search assignable Templates"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:753
+msgid "Template kind"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:76
 msgid "Unlock element"
 msgstr ""
 
+#: src/Infrastructure/Admin/TemplateAdmin.php:760
+msgid "Elements"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:760
+msgid "Layout hash"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:760
+msgid "Page"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:760
+#: src/Infrastructure/Admin/TemplateAdmin.php:1048
+#: src/Infrastructure/Admin/TemplateAdmin.php:1072
+msgid "Revision"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:763
+msgid "Assign at this scope"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:763
+msgid "Assigned here"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:765
+msgid "No assignable Templates match these filters."
+msgstr ""
+
 #: src/Infrastructure/Admin/TemplateAdmin.php:77
-#: src/Infrastructure/Admin/TemplateAdmin.php:955
+#: src/Infrastructure/Admin/TemplateAdmin.php:968
 msgid "Lock element"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:771
-msgid "All credentials without a more-specific assignment"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:779
-msgid "The selected template assignment target no longer exists."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:78
 msgid "Locked for this author"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:783
+msgid "All credentials without a more-specific assignment"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:79
@@ -12218,172 +12377,177 @@ msgid "Editable"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:791
-msgid "The selected Batch no longer exists."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:792
-msgid "The selected Batch no longer has a valid Program."
+msgid "The selected template assignment target no longer exists."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:80
-#: src/Infrastructure/Admin/TemplateAdmin.php:1000
+#: src/Infrastructure/Admin/TemplateAdmin.php:1016
 msgid "QR"
 msgstr ""
 
+#: src/Infrastructure/Admin/TemplateAdmin.php:803
+msgid "The selected Batch no longer exists."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:804
+msgid "The selected Batch no longer has a valid Program."
+msgstr ""
+
 #: src/Infrastructure/Admin/TemplateAdmin.php:81
-#: src/Infrastructure/Admin/TemplateAdmin.php:977
-#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+#: src/Infrastructure/Admin/TemplateAdmin.php:980
+#: src/Infrastructure/Admin/TemplateAdmin.php:993
+#: src/Infrastructure/Admin/TemplateAdmin.php:1018
 msgid "Shape"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:82
-#: src/Infrastructure/Admin/TemplateAdmin.php:1001
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 msgid "Line"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:83
-#: src/Infrastructure/Admin/TemplateAdmin.php:998
+#: src/Infrastructure/Admin/TemplateAdmin.php:1014
 msgid "Image"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:833
-msgid "Create template draft"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:834
-msgid "Create template"
-msgstr ""
-
 #: src/Infrastructure/Admin/TemplateAdmin.php:84
-#: src/Infrastructure/Admin/TemplateAdmin.php:999
+#: src/Infrastructure/Admin/TemplateAdmin.php:1015
 msgid "Logo"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:840
-msgid "Template lifecycle & draft"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:841
-msgid "Archive state"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:841
-msgid "Current revision"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:844
-msgid "Export template JSON"
+#: src/Infrastructure/Admin/TemplateAdmin.php:845
+msgid "Create template draft"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:846
-msgid "Restore template"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:848
-msgid "Archive template"
+msgid "Create template"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:85
-#: src/Infrastructure/Admin/TemplateAdmin.php:999
+#: src/Infrastructure/Admin/TemplateAdmin.php:1015
 msgid "Signature"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:855
-msgid "Archived templates are read-only. Their immutable revision history and published revision remain preserved. Restore this template before changing metadata, saving a new draft, publishing, or resetting a factory preset."
+#: src/Infrastructure/Admin/TemplateAdmin.php:852
+msgid "Template lifecycle & draft"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:859
-msgid "Save metadata"
+#: src/Infrastructure/Admin/TemplateAdmin.php:853
+msgid "Archive state"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:853
+msgid "Current revision"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:856
+msgid "Export template JSON"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:858
+msgid "Restore template"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:86
-#: src/Infrastructure/Admin/TemplateAdmin.php:999
+#: src/Infrastructure/Admin/TemplateAdmin.php:1015
 msgid "Seal"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:863
-msgid "Advanced canonical JSON editor"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:863
-msgid "The Designer and this advanced editor save the same certloom-layout document. Every successful save creates a new immutable revision; there is no separate browser-only design format."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:864
-msgid "Save JSON as new revision"
+#: src/Infrastructure/Admin/TemplateAdmin.php:860
+msgid "Archive template"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:867
-msgid "Publication is bound to the exact immutable revision ID and SHA-256 shown here. A stale revision or hash is rejected even after renderer authority is accepted."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:867
-msgid "Publication review"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:869
-msgid "Publish reviewed revision"
+msgid "Archived templates are read-only. Their immutable revision history and published revision remain preserved. Restore this template before changing metadata, saving a new draft, publishing, or resetting a factory preset."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:87
-#: src/Infrastructure/Admin/TemplateAdmin.php:977
-#: src/Infrastructure/Admin/TemplateAdmin.php:1001
+#: src/Infrastructure/Admin/TemplateAdmin.php:993
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 msgid "Rectangle"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:871
-msgid "Publish (renderer gate)"
+msgid "Save metadata"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:871
-msgid "The lifecycle workflow is ready, but this release intentionally cannot publish until PDF-04 renderer authority is accepted and packaged."
+#: src/Infrastructure/Admin/TemplateAdmin.php:875
+msgid "Advanced canonical JSON editor"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:878
-msgid "Restoring a factory design creates another immutable revision. Your current customized revision and any published revision remain in history."
+#: src/Infrastructure/Admin/TemplateAdmin.php:875
+msgid "The Designer and this advanced editor save the same certloom-layout document. Every successful save creates a new immutable revision; there is no separate browser-only design format."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:876
+msgid "Save JSON as new revision"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:879
-msgid "Restore current factory design"
+msgid "Publication is bound to the exact immutable revision ID and SHA-256 shown here. A stale revision or hash is rejected even after renderer authority is accepted."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:879
+msgid "Publication review"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:88
-#: src/Infrastructure/Admin/TemplateAdmin.php:977
-#: src/Infrastructure/Admin/TemplateAdmin.php:1001
+#: src/Infrastructure/Admin/TemplateAdmin.php:993
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 msgid "Ellipse"
 msgstr ""
 
+#: src/Infrastructure/Admin/TemplateAdmin.php:881
+msgid "Publish reviewed revision"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:883
+msgid "Publish (renderer gate)"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:883
+msgid "The lifecycle workflow is ready, but this release intentionally cannot publish until PDF-04 renderer authority is accepted and packaged."
+msgstr ""
+
 #: src/Infrastructure/Admin/TemplateAdmin.php:89
-#: src/Infrastructure/Admin/TemplateAdmin.php:1000
+#: src/Infrastructure/Admin/TemplateAdmin.php:1016
 msgid "List"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:892
-msgid "Current draft uses certloom-layout v%d. Historical revisions are immutable and remain readable."
+#: src/Infrastructure/Admin/TemplateAdmin.php:890
+msgid "Restoring a factory design creates another immutable revision. Your current customized revision and any published revision remain in history."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:896
-msgid "Creates one new immutable revision after rechecking this exact revision ID and SHA-256. Certloom applies every deterministic intermediate schema step internally; historical revisions and factory presets are never rewritten."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:896
-msgid "Upgrade draft to layout schema v%d"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:898
-msgid "This draft can author the controlled Code 128 primitive and DSN-06 canonical list elements while older schema revisions remain immutable."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:898
-msgid "v%d authoring enabled"
+#: src/Infrastructure/Admin/TemplateAdmin.php:891
+msgid "Restore current factory design"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:90
 msgid "items"
 msgstr ""
 
+#: src/Infrastructure/Admin/TemplateAdmin.php:904
+msgid "Current draft uses certloom-layout v%d. Historical revisions are immutable and remain readable."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:908
+msgid "Creates one new immutable revision after rechecking this exact revision ID and SHA-256. Certloom applies every deterministic intermediate schema step internally; historical revisions and factory presets are never rewritten."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:908
+msgid "Upgrade draft to layout schema v%d"
+msgstr ""
+
 #: src/Infrastructure/Admin/TemplateAdmin.php:91
 msgid "First item"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:910
+msgid "This draft can author the controlled Code 128 primitive and DSN-06 canonical list elements while older schema revisions remain immutable."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:910
+msgid "v%d authoring enabled"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:92
@@ -12394,106 +12558,48 @@ msgstr ""
 msgid "The typed Designer Element Registry is unavailable or invalid. Reload the page before editing this Template."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:930
-msgid "Certificate Designer"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:930
-msgid "DSN-08 · Typed Element Registry"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:930
-msgid "Edit the same versioned canonical layout used by Preview and rendering. DSN-08 centralizes every supported element type behind one closed typed registry for schema availability, allowed properties, inspector groups, authoring defaults, merge requirements and renderer mapping. Recovery autosave remains non-authoritative and manual save remains the only immutable revision write."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:930
-msgid "Revision ID %d"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:931
-msgid "DSN-08 is a closed built-in registry: no WordPress filter, arbitrary HTML/CSS callback or unversioned third-party type can mutate the canonical element contract. Future extensions must first earn an explicit layout-schema version plus validator/resolver/renderer support. Manual save and publication authority remain unchanged."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:931
-msgid "Designer boundary:"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:938
-msgid "Discard recovery checkpoint"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:938
-msgid "Recovery checkpoint not applied."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:938
-msgid "The stored personal autosave is stale or invalid, so Certloom did not merge it into the authoritative current revision. Discard it after confirming you no longer need the older recovery copy."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:939
-msgid "Designer page, history and zoom controls"
-msgstr ""
-
 #: src/Infrastructure/Admin/TemplateAdmin.php:94
 msgid "This element requires a newer certloom-layout schema. Upgrade the draft before adding it."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:940
-msgid "Designer history"
+#: src/Infrastructure/Admin/TemplateAdmin.php:942
+msgid "Certificate Designer"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:940
-msgid "Redo"
+#: src/Infrastructure/Admin/TemplateAdmin.php:942
+msgid "DSX-01 · Quick Designer"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:940
-msgid "Undo"
+#: src/Infrastructure/Admin/TemplateAdmin.php:942
+msgid "Quick Designer keeps everyday editing obvious: add content, move it directly on the canvas, then use contextual properties. Switch to Pro Designer whenever you need exact geometry, layer ordering, snapping or advanced controls. Both modes edit the same canonical immutable Template revision model."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:942
+msgid "Revision ID %d"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:943
-msgid "Zoom"
+msgid "DSN-08 is a closed built-in registry: no WordPress filter, arbitrary HTML/CSS callback or unversioned third-party type can mutate the canonical element contract. Future extensions must first earn an explicit layout-schema version plus validator/resolver/renderer support. Manual save and publication authority remain unchanged."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:943
+msgid "Designer boundary:"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:944
-msgid "Guides"
+msgid "Designer mode"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:944
-msgid "Snap while moving"
+msgid "Pro Designer"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:945
-msgid "Fit workspace"
+#: src/Infrastructure/Admin/TemplateAdmin.php:944
+msgid "Quick Designer"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:945
-msgid "Reset unsaved changes"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:947
-msgid "Align to page"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:947
-msgid "Selected element alignment and layer controls"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:948
-#: src/Infrastructure/Admin/TemplateAdmin.php:986
-msgid "Bottom"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:948
-msgid "Center horizontally"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:948
-msgid "Center vertically"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:948
-#: src/Infrastructure/Admin/TemplateAdmin.php:986
-msgid "Top"
+#: src/Infrastructure/Admin/TemplateAdmin.php:944
+msgid "Same canonical layout · different editing depth"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:95
@@ -12501,141 +12607,135 @@ msgid "Element"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:951
-msgid "Layer"
+msgid "Discard recovery checkpoint"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:951
+msgid "Recovery checkpoint not applied."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:951
+msgid "The stored personal autosave is stale or invalid, so Certloom did not merge it into the authoritative current revision. Discard it after confirming you no longer need the older recovery copy."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:952
-msgid "Bring forward"
+msgid "Designer page, history and zoom controls"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:952
-msgid "Bring to front"
+#: src/Infrastructure/Admin/TemplateAdmin.php:953
+msgid "Designer history"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:952
-msgid "Send backward"
+#: src/Infrastructure/Admin/TemplateAdmin.php:953
+msgid "Redo"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:952
-msgid "Send to back"
+#: src/Infrastructure/Admin/TemplateAdmin.php:953
+msgid "Undo"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:956
-msgid "Add"
+msgid "Zoom"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:956
-msgid "Add or remove Designer elements"
+#: src/Infrastructure/Admin/TemplateAdmin.php:957
+msgid "Guides"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:957
+msgid "Snap while moving"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:958
+#: src/Infrastructure/Admin/TemplateAdmin.php:992
+msgid "Fit"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:958
+msgid "Publish"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:958
+msgid "Reset unsaved changes"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:958
+msgid "Save"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:96
 msgid "Unlock"
 msgstr ""
 
+#: src/Infrastructure/Admin/TemplateAdmin.php:960
+msgid "Align to page"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:960
+msgid "Selected element alignment and layer controls"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:961
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+msgid "Bottom"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:961
+msgid "Center horizontally"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:961
+msgid "Center vertically"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:961
+#: src/Infrastructure/Admin/TemplateAdmin.php:1002
+msgid "Top"
+msgstr ""
+
 #: src/Infrastructure/Admin/TemplateAdmin.php:964
-msgid "Upgrade this draft to certloom-layout v%d before adding this element."
+msgid "Layer"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:967
-msgid "Remove selected"
+#: src/Infrastructure/Admin/TemplateAdmin.php:965
+msgid "Bring forward"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:968
-msgid "Certificate Designer canvas workspace"
+#: src/Infrastructure/Admin/TemplateAdmin.php:965
+msgid "Bring to front"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:968
-msgid "Certificate page canvas"
+#: src/Infrastructure/Admin/TemplateAdmin.php:965
+msgid "Send backward"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:969
-msgid "Designer inspector and layers"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:969
-msgid "Element geometry"
+#: src/Infrastructure/Admin/TemplateAdmin.php:965
+msgid "Send to back"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:969
-msgid "Select an element on the page or in Layers to edit its canonical content, geometry and productivity controls."
+#: src/Infrastructure/Admin/TemplateAdmin.php:969
+msgid "Add"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:969
+msgid "Add elements"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:969
+msgid "Add or remove Designer elements"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:969
+msgid "Drag after adding"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:97
 msgid "Lock"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:970
-msgid "Height (mm)"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:970
-msgid "Rotation (°)"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:970
-msgid "Width (mm)"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:970
-msgid "X (mm)"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:970
-msgid "Y (mm)"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:974
-msgid "Text content"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:975
-msgid "Merge field token"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:976
-msgid "Choose from Media Library"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:976
-msgid "Contain"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:976
-msgid "Cover"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:976
-#: src/Infrastructure/Admin/TemplateAdmin.php:987
-msgid "Fill"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:976
-msgid "Fit"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:976
-msgid "Local asset reference"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:978
-msgid "Error correction"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:978
-msgid "QR source remains the canonical verification URL in both supported layout schemas."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:978
-#: src/Infrastructure/Admin/TemplateAdmin.php:979
-msgid "Quiet zone (modules)"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:979
-msgid "Code 128 represents the existing human certificate number only. It creates no alternate credential identity or lookup endpoint."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:979
-msgid "Symbology"
+#: src/Infrastructure/Admin/TemplateAdmin.php:977
+msgid "Upgrade this draft to certloom-layout v%d before adding this element."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:98
@@ -12643,139 +12743,55 @@ msgid "Locked"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:980
-msgid "Bullets"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:980
-msgid "Each non-empty line becomes one canonical list item. Rendering resolves the list to the shared text pipeline, so Preview/PDF/image adapters do not invent separate list geometry."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:980
-msgid "List items"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:980
-msgid "Marker style"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:980
-msgid "Numbered"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:981
-msgid "Line content is geometric; its canonical stroke styling is edited below."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:982
-msgid "Appearance"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:982
-msgid "Canonical DSN-08"
+msgid "Dynamic Field"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:983
-msgid "Opacity"
+msgid "Delete selected"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:983
+msgid "Duplicate selected"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:984
-msgid "Font key"
+msgid "Certificate Designer canvas workspace"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:984
-msgid "Size (pt)"
+msgid "Certificate page canvas"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:984
-msgid "Weight"
+#: src/Infrastructure/Admin/TemplateAdmin.php:985
+msgid "Designer inspector and layers"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:986
-msgid "Auto"
+#: src/Infrastructure/Admin/TemplateAdmin.php:985
+msgid "Properties"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:986
-msgid "Clip"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:986
-msgid "Direction"
+#: src/Infrastructure/Admin/TemplateAdmin.php:985
+msgid "Select an element to edit its content and appearance. Move and resize directly on the canvas; exact geometry stays available in Pro Designer."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:986
-msgid "End"
+msgid "Height (mm)"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:986
-msgid "Font keys remain preserved but read-only through DSN-08. FONT-02 will own controlled local font import/catalog and exact renderer-manifest binding; Designer will not create an unrenderable font dependency today."
+msgid "Rotation (°)"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:986
-msgid "Horizontal align"
+msgid "Width (mm)"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:986
-msgid "Italic"
+msgid "X (mm)"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:986
-msgid "Letter spacing (pt)"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:986
-msgid "Line height"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:986
-msgid "Middle"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:986
-msgid "Overflow"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:986
-msgid "Shrink"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:986
-msgid "Start"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:986
-#: elementor/class-ecapla-certverify-elementor-widget.php:407
-#: elementor/class-ecapla-certverify-elementor-widget.php:810
-msgid "Text color"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:986
-msgid "Vertical align"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:986
-msgid "Wrap"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:987
-#: src/Infrastructure/Admin/TemplateAdmin.php:988
-msgid "Stroke"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:987
-#: src/Infrastructure/Admin/TemplateAdmin.php:988
-msgid "Stroke width (mm)"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:989
-msgid "Arrow keys nudge 1 mm, Shift+Arrow 5 mm and Alt/Option+Arrow 0.1 mm. Ctrl/Cmd+Z undoes; Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y redoes. Locked elements remain selectable but cannot be transformed, reordered, removed or content-edited."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:989
-msgid "Front → back"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:989
-msgid "Layers"
+msgid "Y (mm)"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:99
@@ -12783,15 +12799,113 @@ msgid "locked"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:990
-msgid "Manual save remains the only authoritative revision write."
+msgid "Text content"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:990
-msgid "Recovery autosave ready"
+#: src/Infrastructure/Admin/TemplateAdmin.php:991
+msgid "Certificate Number"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:990
-msgid "Save Designer revision"
+#: src/Infrastructure/Admin/TemplateAdmin.php:991
+msgid "Custom Field…"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:991
+msgid "Dynamic field"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:991
+msgid "Expiry Date"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:991
+msgid "Field token"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:991
+msgid "Issue Date"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:991
+msgid "Recipient Name"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:992
+msgid "Choose from Media Library"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:992
+msgid "Contain"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:992
+msgid "Cover"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:992
+#: src/Infrastructure/Admin/TemplateAdmin.php:1003
+msgid "Fill"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:992
+msgid "Local asset reference"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:994
+msgid "Error correction"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:994
+msgid "QR source remains the canonical verification URL in both supported layout schemas."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:994
+#: src/Infrastructure/Admin/TemplateAdmin.php:995
+msgid "Quiet zone (modules)"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:995
+msgid "Code 128 represents the existing human certificate number only. It creates no alternate credential identity or lookup endpoint."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:995
+msgid "Symbology"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:996
+msgid "Bullets"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:996
+msgid "Each non-empty line becomes one canonical list item. Rendering resolves the list to the shared text pipeline, so Preview/PDF/image adapters do not invent separate list geometry."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:996
+msgid "List items"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:996
+msgid "Marker style"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:996
+msgid "Numbered"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:997
+msgid "Line content is geometric; its canonical stroke styling is edited below."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:998
+msgid "Appearance"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:998
+msgid "Canonical DSN-08"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:999
+msgid "Opacity"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateDesignerAutosave.php:128

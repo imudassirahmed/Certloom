@@ -454,3 +454,136 @@
 @media (prefers-reduced-motion: reduce) {
 	[data-certloom-designer-autosave-status] { transition: none !important; }
 }
+
+/* DSX-01: Quick Designer is a presentation layer over the same canonical DSN layout/revision truth. */
+.certloom-template-designer-mode-switch {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 14px 0 10px;
+}
+.certloom-template-designer-mode-switch > span {
+	margin-left: 4px;
+	font-size: 12px;
+	color: #646970;
+}
+.certloom-template-designer-stage { min-width: 0; }
+.certloom-template-designer-add-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 8px;
+	margin-bottom: 9px;
+}
+.certloom-template-designer-add-head strong { font-size: 14px; }
+.certloom-template-designer-add-head small { color: #646970; font-size: 10px; }
+.certloom-template-designer-layers-toggle { width: 100%; margin-top: 12px; }
+
+.certloom-template-designer.is-quick-mode .certloom-designer-pro-only { display: none !important; }
+.certloom-template-designer.is-pro-mode .certloom-designer-quick-only { display: none !important; }
+
+.certloom-template-designer.is-quick-mode .certloom-template-designer-toolbar {
+	align-items: center;
+	padding: 9px 10px;
+	gap: 7px;
+}
+.certloom-template-designer.is-quick-mode .certloom-template-designer-toolbar .button,
+.certloom-template-designer.is-quick-mode .certloom-template-designer-mode-switch .button {
+	min-height: 36px;
+	border-radius: 6px;
+}
+.certloom-template-designer.is-quick-mode .certloom-template-designer-zoom {
+	margin-left: auto;
+	min-width: 190px;
+}
+.certloom-template-designer.is-quick-mode .certloom-template-designer-stage {
+	display: grid;
+	grid-template-columns: 176px minmax(0,1fr);
+	gap: 12px;
+	align-items: start;
+}
+.certloom-template-designer.is-quick-mode .certloom-template-designer-add-panel {
+	position: sticky;
+	top: 42px;
+	padding: 12px;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	background: #fff;
+}
+.certloom-template-designer.is-quick-mode .certloom-template-designer-palette {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 6px;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+}
+.certloom-template-designer.is-quick-mode .certloom-template-designer-palette > .certloom-template-designer-productivity-label,
+.certloom-template-designer.is-quick-mode .certloom-template-designer-palette-spacer { display: none; }
+.certloom-template-designer.is-quick-mode .certloom-template-designer-palette .button {
+	justify-content: flex-start;
+	width: 100%;
+	min-height: 38px;
+	padding-inline: 10px;
+	border-color: #dcdcde;
+	color: #1d2327;
+}
+.certloom-template-designer.is-quick-mode .certloom-template-designer-palette .button:hover { border-color: #8c8f94; background: #f6f7f7; }
+.certloom-template-designer.is-quick-mode .certloom-template-designer-palette .certloom-button-danger { margin-top: 4px; color: #8a2424; }
+.certloom-template-designer.is-quick-mode .certloom-template-designer-shell {
+	grid-template-columns: minmax(0,1fr) 286px;
+	gap: 12px;
+}
+.certloom-template-designer.is-quick-mode .certloom-template-designer-workspace {
+	background: #eef0f2;
+	background-image: none;
+}
+.certloom-template-designer.is-quick-mode .certloom-template-designer-inspector {
+	padding: 14px;
+	border-radius: 8px;
+}
+.certloom-template-designer.is-quick-mode .certloom-template-designer-element-meta code,
+.certloom-template-designer.is-quick-mode .certloom-template-designer-element-meta em { display: none; }
+.certloom-template-designer.is-quick-mode .certloom-template-designer-style-head span { display: none; }
+.certloom-template-designer.is-quick-mode .certloom-template-designer-layers-panel { display: none; }
+.certloom-template-designer.is-quick-mode.show-quick-layers .certloom-template-designer-layers-panel { display: block; }
+.certloom-template-designer.is-quick-mode .certloom-designer-token-advanced { display: none; }
+.certloom-template-designer.is-quick-mode .certloom-designer-token-advanced.is-custom { display: grid; }
+.certloom-template-designer.is-pro-mode .certloom-template-designer-add-head { display: none; }
+.certloom-template-designer.is-pro-mode .certloom-template-designer-stage { display: block; }
+.certloom-template-designer.is-pro-mode .certloom-template-designer-add-panel { display: block; }
+.certloom-template-designer.is-pro-mode .certloom-template-designer-token-advanced { display: grid; }
+.certloom-template-designer.is-pro-mode .certloom-template-designer-layers-panel { display: block; }
+
+@media (max-width: 1220px) {
+	.certloom-template-designer.is-quick-mode .certloom-template-designer-stage { grid-template-columns: 148px minmax(0,1fr); }
+	.certloom-template-designer.is-quick-mode .certloom-template-designer-shell { grid-template-columns: 1fr; }
+	.certloom-template-designer.is-quick-mode .certloom-template-designer-inspector { order: -1; }
+}
+@media (max-width: 782px) {
+	.certloom-template-designer-mode-switch { align-items: stretch; flex-wrap: wrap; }
+	.certloom-template-designer-mode-switch .button { flex: 1 1 140px; min-height: 44px !important; }
+	.certloom-template-designer-mode-switch > span { flex-basis: 100%; margin: 0; }
+	.certloom-template-designer.is-quick-mode .certloom-template-designer-toolbar { grid-template-columns: repeat(2,minmax(0,1fr)); }
+	.certloom-template-designer.is-quick-mode .certloom-template-designer-toolbar .button { min-height: 44px; }
+	.certloom-template-designer.is-quick-mode .certloom-template-designer-zoom { margin-left: 0; min-width: 0; }
+	.certloom-template-designer.is-quick-mode .certloom-template-designer-stage { grid-template-columns: 1fr; }
+	.certloom-template-designer.is-quick-mode .certloom-template-designer-add-panel { position: static; }
+	.certloom-template-designer.is-quick-mode .certloom-template-designer-palette { grid-template-columns: repeat(2,minmax(0,1fr)); }
+	.certloom-template-designer.is-quick-mode .certloom-template-designer-palette .button,
+	.certloom-template-designer.is-quick-mode [data-certloom-designer-layers-toggle] { min-height: 44px; }
+	.certloom-template-designer.is-quick-mode .certloom-template-designer-inspector { order: 0; }
+}
+@media (max-width: 480px) {
+	.certloom-template-designer.is-quick-mode .certloom-template-designer-palette { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.certloom-template-designer-mode-switch *,
+	.certloom-template-designer-stage * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+}
+@media (forced-colors: active) {
+	.certloom-template-designer-mode-switch .button[aria-pressed="true"],
+	.certloom-template-designer.is-quick-mode .certloom-template-designer-add-panel,
+	.certloom-template-designer.is-quick-mode .certloom-template-designer-inspector { border: 1px solid CanvasText; }
+}

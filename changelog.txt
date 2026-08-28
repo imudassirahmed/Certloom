@@ -1,10 +1,17 @@
+1.6.77
+- Complete DSX-01 Quick Designer: Quick is the production default; Pro preserves the complete DSN-01→08 toolset over the same canonical layout/revision model.
+- Add human Dynamic Fields with realistic samples, including Grade, while persisting the existing canonical merge-token properties; Custom Field remains the advanced escape hatch.
+- Add secure Duplicate/Delete, on-demand Layers, compact Preview/Publish/Save actions and responsive 44px mobile controls without creating browser-local authority.
+- Add permanent DSX-01 browser acceptance and restore backward compatibility so legacy Designer roots without DSX mode metadata default to Pro instead of silently inheriting Quick presentation.
+- Begin DSX-01 Quick Designer as a human-facing experience layer over the existing DSN-01→08 canonical Designer foundation; no new layout schema or renderer authority.
+
 1.6.76
 - TPLUX-02 Curated Premium Template Set: add 18 genuinely distinct premium concepts under new stable `certloom-preset-curated-*` factory identities while preserving the historical six-family × four-variant / 24-layout compatibility catalog byte-for-byte.
 - Extend factory synchronization and explicit reset semantics across both catalogs without changing Template revision immutability, customer-customization preservation or renderer authority.
 - Extend Template Library discovery metadata so curated concepts participate in Program purpose-fit, orientation, style, color, language and RTL-readiness filtering through the existing visual library.
 - Add deterministic curated SVG/PNG visual-reference evidence, an 18-design review contact sheet, 869-check curated source contract and upgraded TPLUX browser coverage; the reference tools remain development-only and non-authoritative.
 - Keep the product count honest: the library now contains 24 genuinely distinct design concepts (six historical + 18 curated), while the older 24 historical factory entries remain format variants rather than being relabeled as separate art concepts.
-- Preserve all normalized-domain and PDF/PNG/JPEG production authority gates. DSX-01 Quick Designer is next.
+- Preserve all normalized-domain and PDF/PNG/JPEG production authority gates. I18N-02 locale-driven language/RTL architecture is next.
 - Freeze 1.6.76 only after the release audit catches and regenerates a stale deterministic POT, then reproduces 139/139 standalone programs, all 24 browser programs, complete syntax/static/authority checks, permanent renderer/Template/QR/barcode/verifier gates and deterministic final A/B publication.
 
 1.6.75

@@ -9,7 +9,7 @@ use Certloom\Domain\Rendering\LayoutSchema;
 $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'); $js=file_get_contents($root.'/admin/assets/designer.js'); $css=file_get_contents($root.'/admin/assets/designer.css');
 $pass=0;$fail=0; function dsn4($ok,$label){global $pass,$fail;if($ok){$pass++;echo "PASS  $label\n";}else{$fail++;echo "FAIL  $label\n";}}
 
-dsn4(is_string($admin)&&strpos($admin,'DSN-08 · Typed Element Registry')!==false,'Template admin identifies DSN-08 truthfully while retaining DSN-04 styling controls');
+dsn4(is_string($admin)&&strpos($admin,'DSX-01 · Quick Designer')!==false&&strpos($admin,'Canonical DSN-08')!==false,'Quick Designer retains DSN-08 styling truth and DSN-04 styling controls');
 dsn4(strpos($admin,'data-certloom-designer-style-field="opacity"')!==false,'all canonical elements expose common opacity styling');
 foreach(['font_family','font_size_pt','font_weight','italic','color','align','vertical_align','direction','line_height','letter_spacing_pt','overflow'] as $key){ dsn4(strpos($admin,'data-certloom-designer-style-field="'.$key.'"')!==false,"text inspector exposes canonical $key"); }
 dsn4(strpos($admin,'FONT-02 will own controlled local font import/catalog')!==false&&strpos($admin,'data-certloom-designer-style-field="font_family" readonly')!==false,'font key is preserved read-only until controlled FONT-02 manifest ownership exists');

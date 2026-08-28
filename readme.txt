@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.76
+Stable tag: 1.6.77
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Release note for 1.6.76: TPLUX-02 adds 18 additive curated premium concepts without rewriting the historical six-family × four-variant factory catalog. The curated designs use new stable reserved factory identities, canonical layout/revision truth, existing Template synchronization/reset semantics, Program/purpose discovery metadata and the same LayoutResolver → RenderPlanBuilder → browser Preview path. The combined library now represents 24 genuinely distinct design concepts (six historical concepts plus 18 curated concepts), while the preserved historical compatibility matrix remains 24 layouts. Deterministic curated SVG/PNG references and a dedicated contact sheet are development evidence only, never renderer authority. DSX-01 Quick Designer is next; I18N-02, backup/recovery, Wizard and concrete LMS adapters remain separate. Normalized-domain and renderer production authority remain closed.
+> Release note for 1.6.77: DSX-01 Quick Designer adds a simplified Add → Canvas → Properties editing experience over the existing DSN-01→08 canonical Designer engine. Quick Designer is the default on the production Designer surface, while Pro Designer preserves exact geometry, snapping, alignment, layers and advanced primitives. Human Dynamic Fields write the same canonical merge tokens, duplicate creates a fresh secure element UUID, WordPress Media Library remains the local asset source, and Preview/Publish/Save reuse the existing Template revision/publication boundaries. Legacy Designer roots without DSX mode metadata remain Pro by default for compatibility. No second layout schema, renderer, browser persistence authority or production artifact authority is introduced. I18N-02 locale-driven language/RTL architecture is next; backup/recovery, Wizard and concrete LMS adapters remain separate.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 

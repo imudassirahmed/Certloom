@@ -112,6 +112,14 @@
 		var fieldInputs = root.querySelectorAll( '[data-certloom-designer-field]' );
 		var addButtons = root.querySelectorAll( '[data-certloom-designer-add]' );
 		var removeButton = root.querySelector( '[data-certloom-designer-remove]' );
+		var duplicateButton = root.querySelector( '[data-certloom-designer-duplicate]' );
+		var modeButtons = root.querySelectorAll( '[data-certloom-designer-mode-button]' );
+		var previewScrollButton = root.querySelector( '[data-certloom-designer-preview-scroll]' );
+		var publicationScrollButton = root.querySelector( '[data-certloom-designer-publication-scroll]' );
+		var layersToggle = root.querySelector( '[data-certloom-designer-layers-toggle]' );
+		var quickTokenSelect = root.querySelector( '[data-certloom-designer-quick-token]' );
+		var customTokenWrap = root.querySelector( '[data-certloom-designer-custom-token]' );
+		var rawTokenInput = root.querySelector( '[data-certloom-designer-content-field="token"]' );
 		var contentSections = root.querySelectorAll( '[data-certloom-designer-content]' );
 		var contentFields = root.querySelectorAll( '[data-certloom-designer-content-field]' );
 		var styleSections = root.querySelectorAll( '[data-certloom-designer-style]' );
@@ -149,6 +157,25 @@
 		var activeGuides = { x: null, y: null };
 		var history = [];
 		var future = [];
+		var designerMode = 'quick';
+
+		function rememberedDesignerMode() {
+			var fallback = root.getAttribute( 'data-designer-default-mode' ) || 'pro';
+			return 'pro' === fallback ? 'pro' : 'quick';
+		}
+		function applyDesignerMode( mode, speak ) {
+			designerMode = 'pro' === mode ? 'pro' : 'quick';
+			root.classList.toggle( 'is-quick-mode', 'quick' === designerMode );
+			root.classList.toggle( 'is-pro-mode', 'pro' === designerMode );
+			root.setAttribute( 'data-designer-mode', designerMode );
+			if ( 'pro' === designerMode ) { root.classList.remove( 'show-quick-layers' ); }
+			for ( var i = 0; i < modeButtons.length; i++ ) { var active = modeButtons[ i ].getAttribute( 'data-certloom-designer-mode-button' ) === designerMode; modeButtons[ i ].setAttribute( 'aria-pressed', active ? 'true' : 'false' ); modeButtons[ i ].classList.toggle( 'button-primary', active ); }
+			if ( layersToggle ) { layersToggle.setAttribute( 'aria-expanded', root.classList.contains( 'show-quick-layers' ) ? 'true' : 'false' ); }
+			syncQuickToken();
+			if ( speak ) { announce( 'quick' === designerMode ? t( 'quickDesignerEnabled', 'Quick Designer enabled.' ) : t( 'proDesignerEnabled', 'Pro Designer enabled.' ) ); }
+			window.setTimeout( fitWorkspace, 0 );
+		}
+		function scrollDesignerTarget( selector ) { var target = document.querySelector( selector ); if ( target && target.scrollIntoView ) { target.scrollIntoView( { behavior: 'smooth', block: 'start' } ); } }
 		var isSubmitting = false;
 		var autosaveTimer = null;
 		var autosavePending = false;
@@ -289,10 +316,22 @@
 				lockButton.disabled = ! element; lockButton.setAttribute( 'aria-pressed', locked ? 'true' : 'false' ); lockButton.textContent = locked ? t( 'unlockElement', 'Unlock element' ) : t( 'lockElement', 'Lock element' );
 			}
 			if ( removeButton ) { removeButton.disabled = ! element || locked; }
+			if ( duplicateButton ) { duplicateButton.disabled = ! element || locked || elements().length >= 500; }
 		}
 		function contentGroup( element ) {
 			var definition = element ? registryType( element.type ) : null;
 			return definition && definition.content_group ? definition.content_group : '';
+		}
+		function knownQuickTokens() { return [ 'recipient.name', 'credential.display_number', 'program.name', 'credential.issue_date', 'credential.expiry_date', 'credential.grade', 'issuer.name', 'credential.status' ]; }
+		function dynamicFieldSample( token ) {
+			var samples = { 'recipient.name': t( 'sampleRecipientName', 'Alexandria Noor Rahman' ), 'credential.display_number': t( 'sampleCertificateNumber', 'CERT-2026-001' ), 'program.name': t( 'sampleProgramName', 'Professional Credential Program' ), 'credential.issue_date': t( 'sampleIssueDate', '28 August 2026' ), 'credential.expiry_date': t( 'sampleExpiryDate', '28 August 2027' ), 'credential.grade': t( 'sampleGrade', 'A' ), 'issuer.name': t( 'sampleIssuerName', 'Northstar Learning Institute' ), 'credential.status': t( 'sampleStatus', 'Valid' ) };
+			return Object.prototype.hasOwnProperty.call( samples, token ) ? samples[ token ] : '{{ ' + escapeText( token ) + ' }}';
+		}
+		function syncQuickToken() {
+			if ( ! quickTokenSelect || ! rawTokenInput ) { return; }
+			var element = selected(); var token = element && 'merge' === element.type ? String( element.token || '' ) : ''; var known = knownQuickTokens(); var custom = token && known.indexOf( token ) === -1;
+			quickTokenSelect.value = custom ? '__custom__' : ( token || 'recipient.name' );
+			if ( customTokenWrap ) { customTokenWrap.classList.toggle( 'is-custom', custom || '__custom__' === quickTokenSelect.value ); }
 		}
 		function setInspector() {
 			var element = selected();
@@ -336,13 +375,14 @@
 				styleFields[ styleField ].disabled = locked || ( 'font_family' === styleKey );
 			}
 			if ( mediaButton ) { mediaButton.disabled = locked || ! elementDefinition || ! elementDefinition.media; }
+			syncQuickToken();
 			syncProductivityControls();
 		}
 
 		function elementTitle( element ) {
 			var preview = previewKind( element );
 			if ( 'text' === preview ) { return escapeText( element.text ); }
-			if ( 'merge' === preview ) { return '{{ ' + escapeText( element.token ) + ' }}'; }
+			if ( 'merge' === preview ) { return 'quick' === designerMode ? dynamicFieldSample( String( element.token || '' ) ) : '{{ ' + escapeText( element.token ) + ' }}'; }
 			if ( 'qr' === preview ) { return t( 'qr', 'QR' ); }
 			if ( 'barcode' === preview ) { return t( 'barcode', 'Barcode' ) + ' · ' + escapeText( element.source || 'credential.display_number' ); }
 			if ( 'list' === preview ) { return t( 'list', 'List' ) + ' · ' + ( Array.isArray( element.items ) ? element.items.length : 0 ) + ' ' + t( 'items', 'items' ); }
@@ -397,6 +437,14 @@
 			var element = selected(); if ( ! element ) { return; }
 			if ( isLocked( element ) ) { showError( t( 'deleteLockedElement', 'Unlock this element before removing it.' ) ); return; }
 			var before = snapshot(); layout.elements = elements().filter( function ( item ) { return item.id !== element.id; } ); designerState.locked_ids = designerState.locked_ids.filter( function ( id ) { return id !== element.id; } ); selectedId = ''; normalizeZOrder(); pushHistory( before ); render(); announce( t( 'elementRemoved', 'Element removed.' ) );
+		}
+		function duplicateSelected() {
+			var element = selected(); if ( ! element ) { return; }
+			if ( isLocked( element ) ) { showError( t( 'duplicateLockedElement', 'Unlock this element before duplicating it.' ) ); return; }
+			if ( elements().length >= 500 ) { showError( t( 'elementLimit', 'This Template already contains the maximum 500 elements.' ) ); return; }
+			var id = secureUuidV4(); if ( ! id ) { showError( t( 'uuidUnavailable', 'This browser cannot create a secure element identifier. Update the browser before adding elements.' ) ); return; }
+			var before = snapshot(); var copy = clone( element ); copy.id = id; copy.z = elements().length; copy.x_mm = round( copy.x_mm + 4, 3 ); copy.y_mm = round( copy.y_mm + 4, 3 ); copy = clampDragged( copy );
+			elements().push( copy ); normalizeZOrder(); selectedId = copy.id; pushHistory( before ); render(); announce( t( 'elementDuplicated', 'Element duplicated.' ) );
 		}
 		function mediaFrame( callback ) {
 			if ( ! window.wp || ! window.wp.media ) { showError( t( 'assetRequired', 'Choose a local WordPress Media Library image before adding this element.' ) ); return; }
@@ -718,6 +766,12 @@
 		for ( var actionIndex = 0; actionIndex < layerActionButtons.length; actionIndex++ ) { layerActionButtons[ actionIndex ].addEventListener( 'click', function () { reorderSelected( this.getAttribute( 'data-certloom-designer-layer-action' ) ); } ); }
 		for ( var addIndex = 0; addIndex < addButtons.length; addIndex++ ) { addButtons[ addIndex ].addEventListener( 'click', function () { addRequested( this.getAttribute( 'data-certloom-designer-add' ) ); } ); }
 		if ( removeButton ) { removeButton.addEventListener( 'click', removeSelected ); }
+		if ( duplicateButton ) { duplicateButton.addEventListener( 'click', duplicateSelected ); }
+		for ( var modeIndex = 0; modeIndex < modeButtons.length; modeIndex++ ) { modeButtons[ modeIndex ].addEventListener( 'click', function () { applyDesignerMode( this.getAttribute( 'data-certloom-designer-mode-button' ), true ); } ); }
+		if ( previewScrollButton ) { previewScrollButton.addEventListener( 'click', function () { scrollDesignerTarget( '.certloom-template-preview-card' ); } ); }
+		if ( publicationScrollButton ) { publicationScrollButton.addEventListener( 'click', function () { scrollDesignerTarget( '.certloom-template-publication-card' ); } ); }
+		if ( layersToggle ) { layersToggle.addEventListener( 'click', function () { root.classList.toggle( 'show-quick-layers' ); layersToggle.setAttribute( 'aria-expanded', root.classList.contains( 'show-quick-layers' ) ? 'true' : 'false' ); } ); }
+		if ( quickTokenSelect && rawTokenInput ) { quickTokenSelect.addEventListener( 'change', function () { var value = String( quickTokenSelect.value || '' ); if ( '__custom__' === value ) { if ( customTokenWrap ) { customTokenWrap.classList.add( 'is-custom' ); } rawTokenInput.focus(); return; } if ( customTokenWrap ) { customTokenWrap.classList.remove( 'is-custom' ); } rawTokenInput.value = value; applyContentField( rawTokenInput ); } ); }
 		for ( var contentIndex = 0; contentIndex < contentFields.length; contentIndex++ ) { contentFields[ contentIndex ].addEventListener( 'change', function () { applyContentField( this ); } ); }
 		for ( var styleIndex = 0; styleIndex < styleFields.length; styleIndex++ ) { styleFields[ styleIndex ].addEventListener( 'change', function () { applyStyleField( this ); } ); }
 		if ( mediaButton ) { mediaButton.addEventListener( 'click', function () { var element = selected(); if ( ! element || isLocked( element ) || [ 'image', 'logo', 'signature' ].indexOf( element.type ) === -1 ) { return; } mediaFrame( function ( reference ) { var current = selected(); if ( ! current || isLocked( current ) ) { return; } var before = snapshot(); var proposed = clone( current ); proposed.asset = reference; if ( updateElement( current.id, proposed, false ) ) { pushHistory( before ); render(); announce( t( 'assetUpdated', 'Local media asset updated.' ) ); } } ); } ); }
@@ -740,6 +794,7 @@
 		} );
 		window.addEventListener( 'beforeunload', function ( event ) { if ( isSubmitting || ! root.classList.contains( 'has-unsaved-changes' ) ) { return; } event.preventDefault(); event.returnValue = ''; } );
 
+		applyDesignerMode( rememberedDesignerMode(), false );
 		render(); if ( recovered ) { setAutosaveStatus( t( 'autosaveRecovered', 'Recovered unsaved Designer changes from your latest safe checkpoint.' ), 'recovered' ); announce( t( 'autosaveRecovered', 'Recovered unsaved Designer changes from your latest safe checkpoint.' ) ); } window.setTimeout( fitWorkspace, 0 );
 	}
 

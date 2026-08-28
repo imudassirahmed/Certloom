@@ -10,7 +10,7 @@ use Certloom\Domain\Rendering\ElementRegistry;
 $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'); $js=file_get_contents($root.'/admin/assets/designer.js'); $css=file_get_contents($root.'/admin/assets/designer.css'); $registry=file_get_contents($root.'/src/Domain/Rendering/ElementRegistry.php');
 $pass=0;$fail=0; function dsn3($ok,$label){global $pass,$fail;if($ok){$pass++;echo "PASS  $label\n";}else{$fail++;echo "FAIL  $label\n";}}
 
-dsn3(is_string($admin)&&strpos($admin,'DSN-08 · Typed Element Registry')!==false,'Template admin advances through DSN-08 while retaining the DSN-03 element/content surface');
+dsn3(is_string($admin)&&strpos($admin,'DSX-01 · Quick Designer')!==false&&strpos($admin,'DSN-08 is a closed built-in registry')!==false,'Quick Designer retains the DSN-03 element/content surface over the closed registry');
 dsn3(strpos($admin,'wp_enqueue_media()')!==false,'WordPress Media Library is explicitly enqueued for local asset selection');
 $paletteKinds=array_map(function($item){return $item['kind'];},ElementRegistry::palette()); foreach(['text','merge','image','logo','signature','seal','qr','rectangle','ellipse','line','background'] as $type){ dsn3(in_array($type,$paletteKinds,true),"typed registry palette exposes $type creation"); }
 dsn3(strpos($registry,"self::palette_item( 'seal', 'seal'")!==false&&strpos($registry,"'image' => self::definition")!==false,'seal palette maps through the typed registry to the existing canonical image primitive without schema mutation');
