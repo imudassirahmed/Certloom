@@ -19,10 +19,13 @@ final class FactoryPresetService {
 	private $templates;
 	/** @var PresetCatalog */
 	private $catalog;
+	/** @var CuratedPresetCatalog */
+	private $curated_catalog;
 
-	public function __construct( ?TemplateRepository $templates = null, ?PresetCatalog $catalog = null ) {
+	public function __construct( ?TemplateRepository $templates = null, ?PresetCatalog $catalog = null, ?CuratedPresetCatalog $curated_catalog = null ) {
 		$this->templates = $templates ?: new TemplateRepository();
-		$this->catalog   = $catalog ?: new PresetCatalog();
+		$this->catalog = $catalog ?: new PresetCatalog();
+		$this->curated_catalog = $curated_catalog ?: new CuratedPresetCatalog();
 	}
 
 	/**
@@ -32,7 +35,8 @@ final class FactoryPresetService {
 	 */
 	public function sync_all( $actor_user_id = 0 ) {
 		$result = array( 'created' => 0, 'updated' => 0, 'unchanged' => 0, 'customized' => 0, 'items' => array() );
-		foreach ( $this->catalog->all() as $definition ) {
+		$definitions = array_merge( $this->catalog->all(), $this->curated_catalog->all() );
+		foreach ( $definitions as $definition ) {
 			$status = $this->sync_one( $definition, $actor_user_id );
 			if ( is_wp_error( $status ) ) {
 				return $status;
@@ -55,7 +59,7 @@ final class FactoryPresetService {
 		if ( ! is_array( $template ) ) { return new \WP_Error( 'certloom_preset_template_missing', __( 'The factory template no longer exists.', 'certloom' ) ); }
 		$preset_key = $this->preset_key_from_machine_key( (string) ( $template['machine_key'] ?? '' ) );
 		if ( '' === $preset_key ) { return new \WP_Error( 'certloom_preset_identity_invalid', __( 'This template is not a Certloom factory preset.', 'certloom' ) ); }
-		$definition = $this->catalog->get( $preset_key );
+		$definition = $this->definition_for_key( $preset_key );
 		if ( ! is_array( $definition ) ) { return new \WP_Error( 'certloom_preset_unknown', __( 'This factory preset is not available in the installed Certloom version.', 'certloom' ) ); }
 		$current_id = absint( $template['current_revision_id'] ?? 0 );
 		if ( $expected_revision_id && $current_id !== absint( $expected_revision_id ) ) {
@@ -116,13 +120,20 @@ final class FactoryPresetService {
 
 	/** @return int|null */
 	private function match_known_factory_version( $preset_key, $layout_hash ) {
-		for ( $version = 1; $version <= PresetCatalog::PRESET_VERSION; $version++ ) {
-			$definition = $this->catalog->get( $preset_key, $version );
-			if ( is_array( $definition ) && hash_equals( (string) $definition['layout_sha256'], (string) $layout_hash ) ) {
-				return $version;
-			}
+		$catalog = 0 === strpos( sanitize_key( (string) $preset_key ), CuratedPresetCatalog::KEY_PREFIX ) ? $this->curated_catalog : $this->catalog;
+		$max_version = $catalog instanceof CuratedPresetCatalog ? CuratedPresetCatalog::PRESET_VERSION : PresetCatalog::PRESET_VERSION;
+		for ( $version = 1; $version <= $max_version; $version++ ) {
+			$definition = $catalog->get( $preset_key, $version );
+			if ( is_array( $definition ) && hash_equals( (string) $definition['layout_sha256'], (string) $layout_hash ) ) { return $version; }
 		}
 		return null;
+	}
+
+	/** @return array<string,mixed>|null */
+	private function definition_for_key( $preset_key ) {
+		$preset_key = sanitize_key( (string) $preset_key );
+		if ( 0 === strpos( $preset_key, CuratedPresetCatalog::KEY_PREFIX ) ) { return $this->curated_catalog->get( $preset_key ); }
+		return $this->catalog->get( $preset_key );
 	}
 
 	private function preset_key_from_machine_key( $machine_key ) {

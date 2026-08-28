@@ -532,7 +532,7 @@ final class TemplateRepository {
 	/** @return array{items:array<int,array<string,mixed>>,total:int}|\WP_Error */
 	public function list_candidates( $search = '', $page = 1, $per_page = 12, $kind = 'all' ) {
 		global $wpdb;
-		$page = max( 1, absint( $page ) ); $per_page = max( 1, min( 48, absint( $per_page ) ) ); $offset = ( $page - 1 ) * $per_page;
+		$page = max( 1, absint( $page ) ); $per_page = max( 1, min( 250, absint( $per_page ) ) ); $offset = ( $page - 1 ) * $per_page;
 		$kind = in_array( $kind, array( 'all', 'factory', 'custom' ), true ) ? $kind : 'all';
 		$where = array( 't.archived_at IS NULL' ); $args = array(); $search = trim( (string) $search );
 		if ( '' !== $search ) { $like = '%' . $wpdb->esc_like( $search ) . '%'; $where[] = '(t.name LIKE %s OR t.machine_key LIKE %s OR t.description LIKE %s)'; $args = array_merge( $args, array( $like, $like, $like ) ); }
@@ -550,7 +550,7 @@ final class TemplateRepository {
 			if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $decoded ) ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'An assignable template contains invalid canonical layout data.', 'certloom' ) ); }
 			try { $layout = $this->layouts->normalize( $decoded ); $hash = $this->json->hash( $layout ); } catch ( \Throwable $error ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'An assignable template does not satisfy Certloom’s canonical layout contract.', 'certloom' ) ); }
 			if ( ! hash_equals( strtolower( (string) ( $row['layout_sha256'] ?? '' ) ), $hash ) ) { return new \WP_Error( 'certloom_template_revision_hash_mismatch', __( 'An assignable template failed its layout integrity check.', 'certloom' ) ); }
-			$row['id'] = absint( $row['id'] ?? 0 ); $row['current_revision_id'] = absint( $row['current_revision_id'] ?? 0 ); $row['published_revision_id'] = absint( $row['published_revision_id'] ?? 0 ); $row['revision_number'] = absint( $row['revision_number'] ?? 0 ); $row['lifecycle_state'] = TemplateLifecycle::state( $row ); $row['factory'] = 0 === strpos( (string) $row['machine_key'], 'certloom-preset-' ); $row['page_size'] = (string) ( $layout['page']['size'] ?? '' ); $row['orientation'] = (string) ( $layout['page']['orientation'] ?? '' ); $row['element_count'] = count( $layout['elements'] ?? array() ); unset( $row['layout_json'] );
+			$row['id'] = absint( $row['id'] ?? 0 ); $row['current_revision_id'] = absint( $row['current_revision_id'] ?? 0 ); $row['published_revision_id'] = absint( $row['published_revision_id'] ?? 0 ); $row['revision_number'] = absint( $row['revision_number'] ?? 0 ); $row['lifecycle_state'] = TemplateLifecycle::state( $row ); $row['factory'] = 0 === strpos( (string) $row['machine_key'], 'certloom-preset-' ); $row['page_size'] = (string) ( $layout['page']['size'] ?? '' ); $row['orientation'] = (string) ( $layout['page']['orientation'] ?? '' ); $row['element_count'] = count( $layout['elements'] ?? array() ); $row['layout'] = $layout; unset( $row['layout_json'] );
 		}
 		unset( $row );
 		return array( 'items' => $rows, 'total' => $total );

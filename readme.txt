@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.74
+Stable tag: 1.6.76
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> Development note for 1.6.74: PRG-02 Program Profiles is frozen over the 1.6.73 UX foundation. Programs now present one coherent operational profile over existing title/code/description, issuer and validity plus typed purpose/subcategory, credential type/locale, renewal, privacy-safe verification, Portal/share/email and integration/provenance defaults. The canonical Template assignment hierarchy remains design authority; Manual and Bulk Issuance default to the Program’s resolved published design and freeze both the exact Program Profile and design-resolution scope into the immutable Version snapshot. Verification visibility defaults to inherit rather than broadening legacy disclosure. Restore preflight validates the typed profile envelope. Program-scoped number allocation and locale-specific Template variants remain explicit later gated work; normalized-domain and renderer production authority stay closed. TPLUX-01 Visual Template Library is next.
+> Release note for 1.6.76: TPLUX-02 adds 18 additive curated premium concepts without rewriting the historical six-family × four-variant factory catalog. The curated designs use new stable reserved factory identities, canonical layout/revision truth, existing Template synchronization/reset semantics, Program/purpose discovery metadata and the same LayoutResolver → RenderPlanBuilder → browser Preview path. The combined library now represents 24 genuinely distinct design concepts (six historical concepts plus 18 curated concepts), while the preserved historical compatibility matrix remains 24 layouts. Deterministic curated SVG/PNG references and a dedicated contact sheet are development evidence only, never renderer authority. DSX-01 Quick Designer is next; I18N-02, backup/recovery, Wizard and concrete LMS adapters remain separate. Normalized-domain and renderer production authority remain closed.
 
 Certloom helps certification bodies, training providers, associations, auditors, and other organizations manage certificate records and publish public verification on WordPress.
 

@@ -1,3 +1,20 @@
+1.6.76
+- TPLUX-02 Curated Premium Template Set: add 18 genuinely distinct premium concepts under new stable `certloom-preset-curated-*` factory identities while preserving the historical six-family × four-variant / 24-layout compatibility catalog byte-for-byte.
+- Extend factory synchronization and explicit reset semantics across both catalogs without changing Template revision immutability, customer-customization preservation or renderer authority.
+- Extend Template Library discovery metadata so curated concepts participate in Program purpose-fit, orientation, style, color, language and RTL-readiness filtering through the existing visual library.
+- Add deterministic curated SVG/PNG visual-reference evidence, an 18-design review contact sheet, 869-check curated source contract and upgraded TPLUX browser coverage; the reference tools remain development-only and non-authoritative.
+- Keep the product count honest: the library now contains 24 genuinely distinct design concepts (six historical + 18 curated), while the older 24 historical factory entries remain format variants rather than being relabeled as separate art concepts.
+- Preserve all normalized-domain and PDF/PNG/JPEG production authority gates. DSX-01 Quick Designer is next.
+- Freeze 1.6.76 only after the release audit catches and regenerates a stale deterministic POT, then reproduces 139/139 standalone programs, all 24 browser programs, complete syntax/static/authority checks, permanent renderer/Template/QR/barcode/verifier gates and deterministic final A/B publication.
+
+1.6.75
+- Add TPLUX-01 Visual Template Library as the default Design workspace: thumbnail-first canonical browser Previews, bounded search/facets, Program context and large Preview without creating a second renderer or layout format.
+- Reuse PRG-02 purpose and Program design authority: purpose-fit is browsing guidance only, direct Program assignment keeps optimistic-concurrency proofs, and Program Manage design deep-links into the visual library.
+- Add approved actions: Use for Program, Customize, Duplicate, Start blank and local PNG/JPEG certificate-background creation as a normal canonical full-page image element.
+- Preserve lifecycle/publication in My Templates, advanced assignment fallback workspace, DSN-01→08 Designer and all renderer/normalized-domain gates. TPLUX-02 curated premium design breadth remains next; DSX-01 Quick Designer and I18N-02 locale variants remain separate.
+- Recover a release-discipline issue during the backward audit: the uploaded 1.6.74 source contained a stale deterministic POT despite its status copy. Regenerate it under the fixed release epoch and branch 1.6.75 only from the corrected green tree rather than carrying the stale archive forward.
+- Freeze 1.6.75 only after exact delivered certification: 138/138 standalone programs, all 24 browser programs, deterministic 3,792-string POT, permanent renderer/Template/QR/barcode gates, independent renderer verifier, and byte-identical 956-source/295-production A/B publication.
+
 1.6.74
 - PRG-02 Program Profiles: one typed versioned configuration envelope over existing Program identity/issuer/validity plus purpose/subcategory, credential type/locale, renewal, verification, Portal/share/email and integration/provenance defaults. Purpose is the top-level category; no duplicate category authority is introduced.
 - Keep verification privacy fail-closed: legacy Programs default to inherit/current verification-summary semantics rather than becoming public merely because Program Profiles exist; restore preflight rejects malformed/unsupported Profile envelopes.
