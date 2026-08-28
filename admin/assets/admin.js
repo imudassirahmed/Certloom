@@ -145,12 +145,82 @@
 		} );
 	}
 
+
+	function initProgramProfile() {
+		var purpose = document.getElementById( 'certloom-program-purpose' );
+		var subcategory = document.getElementById( 'certloom-program-subcategory' );
+		if ( ! purpose || ! subcategory ) { return; }
+
+		function updateSubcategories() {
+			var activePurpose = purpose.value;
+			var options = Array.prototype.slice.call( subcategory.options );
+			var firstAllowed = null;
+			var currentAllowed = false;
+			options.forEach( function ( option ) {
+				var allowed = option.getAttribute( 'data-purpose' ) === activePurpose;
+				option.hidden = ! allowed;
+				option.disabled = ! allowed;
+				if ( allowed && ! firstAllowed ) { firstAllowed = option; }
+				if ( allowed && option.selected ) { currentAllowed = true; }
+			} );
+			if ( ! currentAllowed && firstAllowed ) {
+				firstAllowed.selected = true;
+			}
+			subcategory.disabled = ! firstAllowed;
+		}
+
+		purpose.addEventListener( 'change', updateSubcategories );
+		updateSubcategories();
+	}
+
+
+	function initSettingsSearch() {
+		var workspace = document.querySelector( '.certloom-settings-workspace' );
+		var input = document.getElementById( 'certloom-settings-search' );
+		var results = document.getElementById( 'certloom-settings-search-results' );
+		if ( ! workspace || ! input || ! results ) { return; }
+		var headings = Array.prototype.slice.call( workspace.querySelectorAll( 'h2[id], h3[id]' ) );
+		function escapeHtml( value ) {
+			return String( value ).replace( /[&<>"']/g, function ( c ) {
+				return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[ c ];
+			} );
+		}
+		function update() {
+			var query = input.value.trim().toLocaleLowerCase();
+			if ( query.length < 2 ) {
+				results.hidden = true;
+				results.innerHTML = '';
+				return;
+			}
+			var matches = headings.filter( function ( heading ) {
+				return heading.textContent.toLocaleLowerCase().indexOf( query ) !== -1;
+			} ).slice( 0, 8 );
+			if ( ! matches.length ) {
+				results.innerHTML = '<span>' + escapeHtml( input.getAttribute( 'data-empty-label' ) || 'No settings sections match.' ) + '</span>';
+				results.hidden = false;
+				return;
+			}
+			results.innerHTML = matches.map( function ( heading ) {
+				return '<a href="#' + heading.id.replace( /[^A-Za-z0-9_-]/g, '' ) + '">' + escapeHtml( heading.textContent ) + '</a>';
+			} ).join( '' );
+			results.hidden = false;
+		}
+		input.setAttribute( 'data-empty-label', input.getAttribute( 'data-empty-label' ) || 'No settings sections match.' );
+		input.addEventListener( 'input', update );
+		results.addEventListener( 'click', function ( event ) {
+			var link = event.target.closest( 'a[href^="#"]' );
+			if ( link ) { results.hidden = true; }
+		} );
+	}
+
 	document.addEventListener( 'DOMContentLoaded', function () {
 		initFields();
 		initConfirmations();
 		initBulkOperationFields();
 		initSecondaryCodeGenerator();
 		initDomainKeyValueLists();
+		initProgramProfile();
+		initSettingsSearch();
 	} );
 } )();
 

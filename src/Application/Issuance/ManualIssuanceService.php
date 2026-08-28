@@ -323,6 +323,14 @@ final class ManualIssuanceService {
 			if ( is_wp_error( $issuer ) ) { return $issuer; }
 			if ( ! is_array( $issuer ) ) { return new \WP_Error( 'certloom_manual_issue_issuer_missing', __( 'The program’s configured issuer no longer exists.', 'certloom' ) ); }
 		}
+		$template_resolution = 'explicit';
+		if ( empty( $request['template_id'] ) ) {
+			$resolved = $this->repository->resolve_published_template_for_program( absint( $program['id'] ?? 0 ), absint( $program['issuer_id'] ?? 0 ) );
+			if ( is_wp_error( $resolved ) ) { return $resolved; }
+			if ( ! is_array( $resolved ) || empty( $resolved['template_id'] ) ) { return new \WP_Error( 'certloom_manual_issue_program_design_missing', __( 'This Program does not resolve to a published certificate design. Assign a published Template to the Program (or an inherited Issuer/Global fallback) before issuing.', 'certloom' ) ); }
+			$request['template_id'] = absint( $resolved['template_id'] );
+			$template_resolution = (string) ( $resolved['scope_type'] ?? 'assigned' );
+		}
 		$template = $this->repository->find_published_template( $request['template_id'] );
 		if ( is_wp_error( $template ) ) { return $template; }
 		if ( ! is_array( $template ) || ! empty( $template['archived_at'] ) || empty( $template['published_revision'] ) ) { return new \WP_Error( 'certloom_manual_issue_template_unavailable', __( 'Choose an active published template.', 'certloom' ) ); }
@@ -371,6 +379,7 @@ final class ManualIssuanceService {
 			'issuer' => $issuer,
 			'template' => $template,
 			'template_revision' => $revision,
+			'template_resolution' => $template_resolution,
 			'valid_from' => $request['valid_from'],
 			'expires_at' => $expires_at,
 			'numbering' => $numbering,
@@ -394,7 +403,6 @@ final class ManualIssuanceService {
 		$program_id = absint( $request['program_id'] ?? 0 );
 		$template_id = absint( $request['template_id'] ?? 0 );
 		if ( ! $program_id ) { return new \WP_Error( 'certloom_manual_issue_program_required', __( 'Choose a credential program.', 'certloom' ) ); }
-		if ( ! $template_id ) { return new \WP_Error( 'certloom_manual_issue_template_required', __( 'Choose a published template.', 'certloom' ) ); }
 		$valid_from = $this->date( $request['valid_from'] ?? '' );
 		if ( is_wp_error( $valid_from ) ) { return new \WP_Error( 'certloom_manual_issue_valid_from_invalid', __( 'Choose a valid credential issue/effective date.', 'certloom' ) ); }
 		$expiry_mode = sanitize_key( (string) ( $request['expiry_mode'] ?? 'program' ) );
@@ -467,6 +475,7 @@ final class ManualIssuanceService {
 			'signer' => null,
 			'template' => array(
 				'id' => absint( $template['id'] ?? 0 ), 'machine_key' => (string) ( $template['machine_key'] ?? '' ), 'name' => (string) ( $template['name'] ?? '' ),
+				'resolution_scope' => (string) ( $review['template_resolution'] ?? 'explicit' ),
 				'published_revision_id' => absint( $revision['id'] ?? 0 ), 'revision_number' => absint( $revision['revision_number'] ?? 0 ),
 				'layout_schema' => (string) ( $revision['layout_schema'] ?? '' ), 'layout_schema_version' => absint( $revision['layout_schema_version'] ?? 0 ),
 				'layout_sha256' => (string) ( $revision['layout_sha256'] ?? '' ), 'layout' => $revision['layout'],
@@ -534,6 +543,6 @@ final class ManualIssuanceService {
 	/** @return array<string,mixed>|null */ private function issuer_fingerprint( $i ) { $out=$this->issuer_snapshot($i); return is_array($out)?$out+array('updated_at'=>(string)($i['updated_at']??'')):null; }
 	/** @return array<string,mixed> */ private function template_fingerprint( array $t, array $r ) { return array( 'id'=>absint($t['id']??0),'machine_key'=>(string)($t['machine_key']??''),'name'=>(string)($t['name']??''),'updated_at'=>(string)($t['updated_at']??''),'published_revision_id'=>absint($r['id']??0),'revision_number'=>absint($r['revision_number']??0),'layout_schema'=>(string)($r['layout_schema']??''),'layout_schema_version'=>absint($r['layout_schema_version']??0),'layout_sha256'=>(string)($r['layout_sha256']??'') ); }
 	/** @return array<string,mixed> */ private function recipient_snapshot( array $r ) { return array( 'id'=>!empty($r['id'])?absint($r['id']):null,'display_name'=>(string)($r['display_name']??''),'first_name'=>$r['first_name']??null,'middle_name'=>$r['middle_name']??null,'last_name'=>$r['last_name']??null,'email'=>$r['email']??null,'external_id'=>$r['external_id']??null,'custom_fields'=>isset($r['custom_fields'])&&is_array($r['custom_fields'])?$r['custom_fields']:array() ); }
-	/** @return array<string,mixed> */ private function program_snapshot( array $p ) { return array( 'id'=>absint($p['id']??0),'code'=>$p['code']??null,'title'=>(string)($p['title']??''),'description'=>$p['description']??null,'issuer_id'=>!empty($p['issuer_id'])?absint($p['issuer_id']):null,'validity_days'=>null!==($p['validity_days']??null)?absint($p['validity_days']):null,'metadata'=>isset($p['metadata'])&&is_array($p['metadata'])?$p['metadata']:array() ); }
+	/** @return array<string,mixed> */ private function program_snapshot( array $p ) { return array( 'id'=>absint($p['id']??0),'code'=>$p['code']??null,'title'=>(string)($p['title']??''),'description'=>$p['description']??null,'issuer_id'=>!empty($p['issuer_id'])?absint($p['issuer_id']):null,'validity_days'=>null!==($p['validity_days']??null)?absint($p['validity_days']):null,'profile'=>isset($p['profile'])&&is_array($p['profile'])?$p['profile']:array(),'metadata'=>isset($p['metadata'])&&is_array($p['metadata'])?$p['metadata']:array() ); }
 	/** @return array<string,mixed>|null */ private function issuer_snapshot( $i ) { if(!is_array($i))return null; return array( 'id'=>absint($i['id']??0),'name'=>(string)($i['name']??''),'slug'=>(string)($i['slug']??''),'logo_attachment_id'=>!empty($i['logo_attachment_id'])?absint($i['logo_attachment_id']):null,'seal_attachment_id'=>!empty($i['seal_attachment_id'])?absint($i['seal_attachment_id']):null,'settings'=>isset($i['settings'])&&is_array($i['settings'])?$i['settings']:array() ); }
 }

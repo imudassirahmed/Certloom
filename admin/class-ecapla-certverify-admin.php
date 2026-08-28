@@ -14,6 +14,8 @@ class Ecapla_CertVerify_Admin {
 
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'add_menu' ) );
+		add_action( 'admin_post_certloom_set_ui_mode', array( $this, 'handle_ui_mode_switch' ) );
+		add_action( 'admin_notices', array( $this, 'render_ui_mode_switch' ), 1 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'admin_init', array( $this, 'handle_form_submission' ) );
 		add_action( 'admin_init', array( $this, 'handle_bulk_delete' ) );
@@ -53,6 +55,10 @@ class Ecapla_CertVerify_Admin {
 	}
 
 	public function add_menu() {
+		$simple = \Certloom\Infrastructure\Admin\AdminUiMode::is_simple();
+		$home_label = $simple ? __( 'Home', 'certloom' ) : __( 'Dashboard', 'certloom' );
+		$design_label = $simple ? __( 'Design', 'certloom' ) : __( 'Templates', 'certloom' );
+
 		add_menu_page(
 			__( 'Certloom', 'certloom' ),
 			__( 'Certloom', 'certloom' ),
@@ -62,19 +68,23 @@ class Ecapla_CertVerify_Admin {
 			'dashicons-awards',
 			30
 		);
-		add_submenu_page( self::DASHBOARD_PAGE, __( 'Dashboard', 'certloom' ), __( 'Dashboard', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::DASHBOARD_PAGE, array( $this, 'render_dashboard_screen' ) );
+		add_submenu_page( self::DASHBOARD_PAGE, $home_label, $home_label, ECAPLA_CERTVERIFY_CAP, self::DASHBOARD_PAGE, array( $this, 'render_dashboard_screen' ) );
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Credentials', 'certloom' ), __( 'Credentials', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::CERTIFICATES_PAGE, array( $this, 'render_list_screen' ) );
 
 		// Keep the planned application architecture visible without exposing gated domain data.
 		if ( ! ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) ) {
-			add_submenu_page( self::DASHBOARD_PAGE, __( 'Recipients', 'certloom' ), __( 'Recipients', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-domain-recipients', array( $this, 'render_roadmap_placeholder_screen' ) );
+			if ( ! $simple ) {
+				add_submenu_page( self::DASHBOARD_PAGE, __( 'Recipients', 'certloom' ), __( 'Recipients', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-domain-recipients', array( $this, 'render_roadmap_placeholder_screen' ) );
+			}
 			add_submenu_page( self::DASHBOARD_PAGE, __( 'Programs', 'certloom' ), __( 'Programs', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-domain-programs', array( $this, 'render_roadmap_placeholder_screen' ) );
 		}
-		add_submenu_page( self::DASHBOARD_PAGE, __( 'Templates', 'certloom' ), __( 'Templates', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-templates', array( $this, 'render_roadmap_placeholder_screen' ) );
-		if ( ! ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) ) {
+		add_submenu_page( self::DASHBOARD_PAGE, $design_label, $design_label, ECAPLA_CERTVERIFY_CAP, 'certloom-templates', array( $this, 'render_roadmap_placeholder_screen' ) );
+		if ( ! $simple && ! ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) ) {
 			add_submenu_page( self::DASHBOARD_PAGE, __( 'Issuance', 'certloom' ), __( 'Issuance', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-issuance', array( $this, 'render_roadmap_placeholder_screen' ) );
 		}
-		add_submenu_page( self::DASHBOARD_PAGE, __( 'Data Tools', 'certloom' ), __( 'Data Tools', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-import', array( $this, 'render_import_screen' ) );
+		if ( ! $simple ) {
+			add_submenu_page( self::DASHBOARD_PAGE, __( 'Data Tools', 'certloom' ), __( 'Data Tools', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-import', array( $this, 'render_import_screen' ) );
+		}
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Analytics', 'certloom' ), __( 'Analytics', 'certloom' ), Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS, self::ANALYTICS_PAGE, array( $this, 'render_analytics_screen' ) );
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Integrations', 'certloom' ), __( 'Integrations', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-integrations', array( $this, 'render_integrations_screen' ) );
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Settings', 'certloom' ), __( 'Settings', 'certloom' ), 'manage_options', 'certloom-settings', array( $this, 'render_settings_screen' ) );
@@ -85,6 +95,46 @@ class Ecapla_CertVerify_Admin {
 		add_submenu_page( null, __( 'Appearance & Embed', 'certloom' ), __( 'Appearance & Embed', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-frontend', array( $this, 'render_frontend_screen' ) );
 		add_submenu_page( null, __( 'Setup', 'certloom' ), __( 'Setup', 'certloom' ), 'manage_options', 'certloom-setup', array( $this, 'render_onboarding_screen' ) );
 		add_submenu_page( null, __( 'Review bulk change', 'certloom' ), __( 'Review bulk change', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-bulk-review', array( $this, 'render_bulk_review_screen' ) );
+		if ( $simple ) {
+			add_submenu_page( null, __( 'Data Tools', 'certloom' ), __( 'Data Tools', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-import', array( $this, 'render_import_screen' ) );
+			if ( ! ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) ) {
+				add_submenu_page( null, __( 'Recipients', 'certloom' ), __( 'Recipients', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-domain-recipients', array( $this, 'render_roadmap_placeholder_screen' ) );
+				add_submenu_page( null, __( 'Issuance', 'certloom' ), __( 'Issuance', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-issuance', array( $this, 'render_roadmap_placeholder_screen' ) );
+			}
+		}
+	}
+
+
+	/** Saves the presentation-only Simple/Advanced preference for this administrator. */
+	public function handle_ui_mode_switch() {
+		if ( ! is_user_logged_in() ) {
+			wp_die( esc_html__( 'You must be signed in to change the Certloom workspace mode.', 'certloom' ) );
+		}
+		check_admin_referer( 'certloom_set_ui_mode' );
+		$mode = isset( $_POST['certloom_ui_mode'] ) ? sanitize_key( wp_unslash( $_POST['certloom_ui_mode'] ) ) : '';
+		$result = \Certloom\Infrastructure\Admin\AdminUiMode::save_for_current_user( $mode );
+		if ( is_wp_error( $result ) ) {
+			wp_die( esc_html( $result->get_error_message() ) );
+		}
+		$redirect = isset( $_POST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_POST['redirect_to'] ) ) : admin_url( 'admin.php?page=' . self::DASHBOARD_PAGE );
+		wp_safe_redirect( $redirect );
+		exit;
+	}
+
+	/** Renders one compact mode control on Certloom administration screens only. */
+	public function render_ui_mode_switch() {
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only screen selection.
+		if ( 0 !== strpos( $page, 'certloom' ) || ! is_user_logged_in() ) {
+			return;
+		}
+		$current = \Certloom\Infrastructure\Admin\AdminUiMode::current();
+		$redirect = remove_query_arg( array( 'certloom_error', 'certloom_notice' ) );
+		echo '<div class="certloom-ui-mode-bar" role="region" aria-label="' . esc_attr__( 'Certloom workspace mode', 'certloom' ) . '"><div><strong>' . esc_html__( 'Workspace', 'certloom' ) . '</strong><span>' . esc_html__( 'Simple keeps everyday work concise. Advanced restores specialist and diagnostic surfaces.', 'certloom' ) . '</span></div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_set_ui_mode"><input type="hidden" name="redirect_to" value="' . esc_attr( $redirect ) . '">';
+		wp_nonce_field( 'certloom_set_ui_mode' );
+		foreach ( array( 'simple' => __( 'Simple', 'certloom' ), 'advanced' => __( 'Advanced', 'certloom' ) ) as $value => $label ) {
+			echo '<button type="submit" name="certloom_ui_mode" value="' . esc_attr( $value ) . '" class="certloom-ui-mode-choice ' . ( $current === $value ? 'is-current' : '' ) . '" aria-pressed="' . ( $current === $value ? 'true' : 'false' ) . '">' . esc_html( $label ) . '</button>';
+		}
+		echo '</form></div>';
 	}
 
 	public function enqueue_assets( $hook ) {
@@ -1013,7 +1063,7 @@ class Ecapla_CertVerify_Admin {
 			'status' => __( 'Framework ready', 'certloom' ),
 			'contract' => __( 'INT-01 + LMSCTX-01', 'certloom' ),
 			'adapters' => array(),
-			'next' => __( 'UX simplification program, then Tutor LMS', 'certloom' ),
+			'next' => __( 'Visual Template Library next; Tutor LMS remains paused until UX-QA-01', 'certloom' ),
 		);
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/integrations.php';
 	}
@@ -1039,14 +1089,14 @@ class Ecapla_CertVerify_Admin {
 			'certloom-templates' => array(
 				'title' => __( 'Templates', 'certloom' ),
 				'eyebrow' => __( 'Pro commercial core · implementation gated', 'certloom' ),
-				'description' => __( 'Versioned Templates, immutable revisions, six factory design families, deterministic assignments, lifecycle controls, canonical Render Plan Preview, and the full planned DSN-01 through DSN-08 Designer foundation are implemented. Designer edits the same versioned certloom-layout revision model: historical v1/v2 layouts remain readable and immutable, explicit v3 upgrades create a new immutable revision, Code 128 remains bound only to credential.display_number, and canonical bullet/numbered lists resolve through the shared text Render Plan path. DSN-08 now centralizes built-in element schema availability, allowed properties, validation/resolver/renderer mappings, inspector groups, merge requirements and palette defaults behind one closed typed registry; no unversioned filter or arbitrary HTML/CSS callback can mutate it. Recovery autosave remains personal/non-authoritative, manual save remains the only revision-authority path, and FONT-02 still owns controlled local font manifests. Publication and production artifact authority remain fail-closed behind renderer release authority. The P0 Manual Issuance golden path, premium Credential Management workspace and reviewed Bulk Issuance workflow are implemented inside the normalized-domain admin-preview gate: administrators can issue one credential, inspect immutable Version lineage, perform reviewed lifecycle or Program/Batch corrections, then scale through protected CSV review and durable per-row idempotent issuance without rewriting historical snapshots. Email Delivery is implemented from exact immutable Versions with reviewed SHA-256 confirmation, WordPress-local wp_mail()/SMTP interoperability, privacy-minimized delivery evidence, safe failed retry and fail-closed delivery-uncertain handling. Recipient Portal / My Credentials POR-01 is now implemented as an authenticated, explicit wp_user_id-linked collection with cards/grid/table layouts, bounded status/sort filtering, pagination and expiring-soon cues; normalized Verify and artifact downloads remain authority-gated. SOC-01 Public Sharing is implemented only for already guest-verifiable credentials with local LinkedIn/WhatsApp/Facebook/X/email/copy intents. ANL-01 Verification Analytics and ANL-02 Issuance Analytics are implemented with privacy-minimized verification aggregates, immutable issuance-event/snapshot reporting, bounded daily/weekly/monthly trends and a current expiry forecast. INT-01 + LMSCTX-01 now provide a closed provider-neutral integration event, eligibility, mapping and idempotent issuance framework. The approved UX/Product Simplification Program is next before concrete Tutor LMS or LearnDash adapters.', 'certloom' ),
-				'status' => __( 'Core workflows + Analytics + INT-01 implemented · authority gated · UX simplification next', 'certloom' ),
+				'description' => __( 'Versioned Templates, immutable revisions, six factory design families, deterministic assignments, lifecycle controls, canonical Render Plan Preview, and the full planned DSN-01 through DSN-08 Designer foundation are implemented. Designer edits the same versioned certloom-layout revision model: historical v1/v2 layouts remain readable and immutable, explicit v3 upgrades create a new immutable revision, Code 128 remains bound only to credential.display_number, and canonical bullet/numbered lists resolve through the shared text Render Plan path. DSN-08 now centralizes built-in element schema availability, allowed properties, validation/resolver/renderer mappings, inspector groups, merge requirements and palette defaults behind one closed typed registry; no unversioned filter or arbitrary HTML/CSS callback can mutate it. Recovery autosave remains personal/non-authoritative, manual save remains the only revision-authority path, and FONT-02 still owns controlled local font manifests. Publication and production artifact authority remain fail-closed behind renderer release authority. The P0 Manual Issuance golden path, premium Credential Management workspace and reviewed Bulk Issuance workflow are implemented inside the normalized-domain admin-preview gate: administrators can issue one credential, inspect immutable Version lineage, perform reviewed lifecycle or Program/Batch corrections, then scale through protected CSV review and durable per-row idempotent issuance without rewriting historical snapshots. Email Delivery is implemented from exact immutable Versions with reviewed SHA-256 confirmation, WordPress-local wp_mail()/SMTP interoperability, privacy-minimized delivery evidence, safe failed retry and fail-closed delivery-uncertain handling. Recipient Portal / My Credentials POR-01 is now implemented as an authenticated, explicit wp_user_id-linked collection with cards/grid/table layouts, bounded status/sort filtering, pagination and expiring-soon cues; normalized Verify and artifact downloads remain authority-gated. SOC-01 Public Sharing is implemented only for already guest-verifiable credentials with local LinkedIn/WhatsApp/Facebook/X/email/copy intents. ANL-01 Verification Analytics and ANL-02 Issuance Analytics are implemented with privacy-minimized verification aggregates, immutable issuance-event/snapshot reporting, bounded daily/weekly/monthly trends and a current expiry forecast. INT-01 + LMSCTX-01 now provide a closed provider-neutral integration event, eligibility, mapping and idempotent issuance framework. UX-01 + FEUX-01 provide the simplified administration and compact public experience. PRG-02 Program Profiles now centralize typed purpose/category, credential rules, locale and experience defaults, show the resolved published Program design, and let Manual/Bulk Issuance resolve that design automatically while immutable Versions freeze the exact Program Profile and Template-resolution provenance. TPLUX-01 Visual Template Library is next before curated premium designs, Quick Designer and concrete Tutor LMS or LearnDash adapters.', 'certloom' ),
+				'status' => __( 'Core workflows + Analytics + INT-01 + UX + Program Profiles implemented · authority gated · Visual Template Library next', 'certloom' ),
 			),
 			'certloom-issuance' => array(
 				'title' => __( 'Issuance', 'certloom' ),
 				'eyebrow' => __( 'P0 issuance workflow · implementation gated', 'certloom' ),
-				'description' => __( 'Manual Issuance is implemented inside the normalized-domain admin-preview gate with existing/new Recipient selection, active Program and verified published-Template selection, mutation-free review, exact SHA-256 confirmation, backdating/permanent/explicit expiry choices, established numbering policy reuse, bounded credential-specific custom merge values, canonical browser Preview, atomic Series/Version/event creation, retry idempotency and an immutable issuance snapshot. Credential Management provides a bounded registry, immutable Version inspection, status/verification workspace, reviewed lifecycle actions and immutable-successor Program/Batch corrections. Bulk Issuance adds protected CSV review, SHA-256 confirmation, durable bounded per-row issuance, progress and row-level outcomes through the same Manual Issuance truth path. Email Delivery adds immutable-Version composition, versioned templates, explicit reviewed queueing, wp_mail()/SMTP interoperability, privacy-minimized status evidence and non-replayable delivery-uncertain recovery. Recipient Portal / My Credentials POR-01 is implemented with explicit linked-recipient ownership, current-issued Version queries, cards/grid/table layouts and bounded filtering/sorting. SOC-01 Public Sharing adds server-authorized LinkedIn/WhatsApp/Facebook/X/email/copy actions only for already guest-verifiable URLs. ANL-01 Verification Analytics and ANL-02 Issuance Analytics are implemented with bounded verification aggregates, immutable issuance-event/snapshot dimensions, daily/weekly/monthly trends and expiry forecasting. INT-01 + LMSCTX-01 are implemented as the closed generic integration foundation; the approved UX/Product Simplification Program is next before concrete LMS adapters. Normalized public authority and PDF/PNG/JPEG exports stay fail-closed until final database and renderer acceptance.', 'certloom' ),
-				'status' => __( 'Commercial workflow + Analytics + INT-01 implemented · acceptance gated · UX simplification next', 'certloom' ),
+				'description' => __( 'Manual Issuance is implemented inside the normalized-domain admin-preview gate with existing/new Recipient selection, active Program and verified published-Template selection, mutation-free review, exact SHA-256 confirmation, backdating/permanent/explicit expiry choices, established numbering policy reuse, bounded credential-specific custom merge values, canonical browser Preview, atomic Series/Version/event creation, retry idempotency and an immutable issuance snapshot. Credential Management provides a bounded registry, immutable Version inspection, status/verification workspace, reviewed lifecycle actions and immutable-successor Program/Batch corrections. Bulk Issuance adds protected CSV review, SHA-256 confirmation, durable bounded per-row issuance, progress and row-level outcomes through the same Manual Issuance truth path. Email Delivery adds immutable-Version composition, versioned templates, explicit reviewed queueing, wp_mail()/SMTP interoperability, privacy-minimized status evidence and non-replayable delivery-uncertain recovery. Recipient Portal / My Credentials POR-01 is implemented with explicit linked-recipient ownership, current-issued Version queries, cards/grid/table layouts and bounded filtering/sorting. SOC-01 Public Sharing adds server-authorized LinkedIn/WhatsApp/Facebook/X/email/copy actions only for already guest-verifiable URLs. ANL-01 Verification Analytics and ANL-02 Issuance Analytics are implemented with bounded verification aggregates, immutable issuance-event/snapshot dimensions, daily/weekly/monthly trends and expiry forecasting. INT-01 + LMSCTX-01 are implemented as the closed generic integration foundation; UX-01 + FEUX-01 and PRG-02 Program Profiles are implemented. Issuance now defaults to the Program’s published certificate design unless an explicit reviewed override is chosen, and new immutable snapshots preserve Program Profile/design-resolution provenance. TPLUX-01 Visual Template Library is next before Quick Designer and concrete LMS adapters. Normalized public authority and PDF/PNG/JPEG exports stay fail-closed until final database and renderer acceptance.', 'certloom' ),
+				'status' => __( 'Commercial workflow + Analytics + INT-01 + UX + Program Profiles implemented · acceptance gated · Visual Template Library next', 'certloom' ),
 			),
 		);
 		$planned_feature = isset( $planned_features[ $page ] ) ? $planned_features[ $page ] : null;

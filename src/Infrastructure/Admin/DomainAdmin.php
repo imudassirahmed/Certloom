@@ -4,6 +4,8 @@ namespace Certloom\Infrastructure\Admin;
 use Certloom\Application\CredentialLifecycleService;
 use Certloom\Application\CredentialLifecycleReviewService;
 use Certloom\Application\CredentialRelationshipBulkService;
+use Certloom\Application\Program\ProgramProfile;
+use Certloom\Application\Templates\TemplateAssignmentPolicy;
 use Certloom\Domain\Credential\States;
 use Certloom\Domain\Credential\StatusService;
 use Certloom\Infrastructure\Repository\CredentialRepository;
@@ -12,6 +14,7 @@ use Certloom\Infrastructure\Repository\EventRepository;
 use Certloom\Infrastructure\Repository\IssuerRepository;
 use Certloom\Infrastructure\Repository\ProgramRepository;
 use Certloom\Infrastructure\Repository\RecipientRepository;
+use Certloom\Infrastructure\Repository\TemplateRepository;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -45,10 +48,11 @@ final class DomainAdmin {
 
 	/** @return void */
 	public function menu() {
-		add_submenu_page( 'certloom', __( 'Recipients', 'certloom' ), __( 'Recipients', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_RECIPIENTS, self::RECIPIENTS_PAGE, array( $this, 'render_recipients' ) );
+		$simple = AdminUiMode::is_simple();
+		add_submenu_page( $simple ? null : 'certloom', __( 'Recipients', 'certloom' ), __( 'Recipients', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_RECIPIENTS, self::RECIPIENTS_PAGE, array( $this, 'render_recipients' ) );
 		add_submenu_page( 'certloom', __( 'Programs', 'certloom' ), __( 'Programs', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS, self::PROGRAMS_PAGE, array( $this, 'render_programs' ) );
-		add_submenu_page( 'certloom', __( 'Issuers (New Domain)', 'certloom' ), __( 'Issuers (New)', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_ISSUERS, self::ISSUERS_PAGE, array( $this, 'render_issuers' ) );
-		add_submenu_page( 'certloom', __( 'Credential Management', 'certloom' ), __( 'Credentials', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS, self::CREDENTIALS_PAGE, array( $this, 'render_credentials' ) );
+		add_submenu_page( $simple ? null : 'certloom', __( 'Issuers (New Domain)', 'certloom' ), __( 'Issuers (New)', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_ISSUERS, self::ISSUERS_PAGE, array( $this, 'render_issuers' ) );
+		add_submenu_page( $simple ? null : 'certloom', __( 'Credential Management', 'certloom' ), __( 'Credentials', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS, self::CREDENTIALS_PAGE, array( $this, 'render_credentials' ) );
 	}
 
 	/** @return void */
@@ -251,7 +255,7 @@ final class DomainAdmin {
 				}
 				echo '</td><td>' . esc_html( (string) ( $item['email'] ?: '—' ) ) . '</td><td>' . esc_html( $user_label ) . '</td><td>' . ( $item['external_id'] ? '<code>' . esc_html( (string) $item['external_id'] ) . '</code>' : '—' ) . '</td><td><span class="certloom-domain-count">' . esc_html( (string) absint( $item['credential_count'] ) ) . '</span></td><td>' . esc_html( (string) ( $item['latest_issued_at'] ?: '—' ) ) . '</td><td><a class="button button-small" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Open', 'certloom' ) . '</a></td></tr>';
 			}
-			if ( empty( $result['items'] ) ) { echo '<tr><td colspan="7"><div class="certloom-domain-empty"><strong>' . esc_html__( 'No recipients found.', 'certloom' ) . '</strong><span>' . esc_html__( 'Add a recipient or adjust the search.', 'certloom' ) . '</span></div></td></tr>'; }
+			if ( empty( $result['items'] ) ) { echo '<tr><td colspan="8"><div class="certloom-domain-empty"><strong>' . esc_html__( 'No recipients found.', 'certloom' ) . '</strong><span>' . esc_html__( 'Add a recipient or adjust the search.', 'certloom' ) . '</span></div></td></tr>'; }
 			echo '</tbody></table></div>';
 			$this->pagination( self::RECIPIENTS_PAGE, $page, (int) $result['total'], 20, $search );
 		}
@@ -296,13 +300,13 @@ final class DomainAdmin {
 		if ( is_wp_error( $result ) ) {
 			$this->error( $result->get_error_message() );
 		} else {
-			echo '<div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-table"><thead><tr><th>' . esc_html__( 'Program', 'certloom' ) . '</th><th>' . esc_html__( 'Code', 'certloom' ) . '</th><th>' . esc_html__( 'Issuer', 'certloom' ) . '</th><th>' . esc_html__( 'Default validity', 'certloom' ) . '</th><th>' . esc_html__( 'Credentials', 'certloom' ) . '</th><th>' . esc_html__( 'Status', 'certloom' ) . '</th><th>' . esc_html__( 'Actions', 'certloom' ) . '</th></tr></thead><tbody>';
+			echo '<div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-table"><thead><tr><th>' . esc_html__( 'Program', 'certloom' ) . '</th><th>' . esc_html__( 'Purpose', 'certloom' ) . '</th><th>' . esc_html__( 'Code', 'certloom' ) . '</th><th>' . esc_html__( 'Issuer', 'certloom' ) . '</th><th>' . esc_html__( 'Default validity', 'certloom' ) . '</th><th>' . esc_html__( 'Credentials', 'certloom' ) . '</th><th>' . esc_html__( 'Status', 'certloom' ) . '</th><th>' . esc_html__( 'Actions', 'certloom' ) . '</th></tr></thead><tbody>';
 			foreach ( $result['items'] as $item ) {
 				$edit_url = add_query_arg( array( 'page' => self::PROGRAMS_PAGE, 'program_id' => absint( $item['id'] ) ), admin_url( 'admin.php' ) );
 				$validity = null === $item['validity_days'] ? __( 'No default', 'certloom' ) : sprintf( /* translators: %d: days. */ _n( '%d day', '%d days', absint( $item['validity_days'] ), 'certloom' ), absint( $item['validity_days'] ) );
-				echo '<tr><td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( (string) $item['title'] ) . '</a></strong></td><td>' . ( $item['code'] ? '<code>' . esc_html( (string) $item['code'] ) . '</code>' : '—' ) . '</td><td>' . esc_html( (string) ( $item['issuer_name'] ?: '—' ) ) . '</td><td>' . esc_html( $validity ) . '</td><td><span class="certloom-domain-count">' . esc_html( (string) absint( $item['credential_count'] ) ) . '</span></td><td><span class="certloom-domain-status ' . ( $item['active'] ? 'is-active' : 'is-inactive' ) . '">' . esc_html( $item['active'] ? _x( 'Active', 'entity status', 'certloom' ) : _x( 'Inactive', 'entity status', 'certloom' ) ) . '</span></td><td><a class="button button-small" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Open', 'certloom' ) . '</a></td></tr>';
+				echo '<tr><td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( (string) $item['title'] ) . '</a></strong></td><td><span class="certloom-program-purpose' . ( ! empty( $item['profile_error'] ) ? ' is-review' : '' ) . '">' . esc_html( (string) ( $item['purpose_label'] ?: '—' ) ) . '</span></td><td>' . ( $item['code'] ? '<code>' . esc_html( (string) $item['code'] ) . '</code>' : '—' ) . '</td><td>' . esc_html( (string) ( $item['issuer_name'] ?: '—' ) ) . '</td><td>' . esc_html( $validity ) . '</td><td><span class="certloom-domain-count">' . esc_html( (string) absint( $item['credential_count'] ) ) . '</span></td><td><span class="certloom-domain-status ' . ( $item['active'] ? 'is-active' : 'is-inactive' ) . '">' . esc_html( $item['active'] ? _x( 'Active', 'entity status', 'certloom' ) : _x( 'Inactive', 'entity status', 'certloom' ) ) . '</span></td><td><a class="button button-small" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Open', 'certloom' ) . '</a></td></tr>';
 			}
-			if ( empty( $result['items'] ) ) { echo '<tr><td colspan="7"><div class="certloom-domain-empty"><strong>' . esc_html__( 'No programs found.', 'certloom' ) . '</strong><span>' . esc_html__( 'Add a program or adjust the filters.', 'certloom' ) . '</span></div></td></tr>'; }
+			if ( empty( $result['items'] ) ) { echo '<tr><td colspan="8"><div class="certloom-domain-empty"><strong>' . esc_html__( 'No programs found.', 'certloom' ) . '</strong><span>' . esc_html__( 'Add a program or adjust the filters.', 'certloom' ) . '</span></div></td></tr>'; }
 			echo '</tbody></table></div>';
 			$this->pagination( self::PROGRAMS_PAGE, $page, (int) $result['total'], 20, $search, array( 'program_status' => $status ) );
 		}
@@ -448,9 +452,10 @@ final class DomainAdmin {
 			foreach ( $versions as $candidate ) { if ( absint( $candidate['id'] ?? 0 ) === $current_version_id ) { $version = $candidate; $selected_version_id = $current_version_id; break; } }
 		}
 		$is_current = is_array( $version ) && absint( $version['id'] ?? 0 ) === $current_version_id;
-		$tab = isset( $_GET['credential_tab'] ) ? sanitize_key( wp_unslash( $_GET['credential_tab'] ) ) : 'overview'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only workspace tab.
-		$tabs = array( 'overview', 'recipient', 'program', 'status', 'verification', 'versions', 'activity', 'actions' );
-		$tab = in_array( $tab, $tabs, true ) ? $tab : 'overview';
+		$simple = AdminUiMode::is_simple();
+		$requested_tab = isset( $_GET['credential_tab'] ) ? sanitize_key( wp_unslash( $_GET['credential_tab'] ) ) : ( $simple ? 'summary' : 'overview' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only workspace tab.
+		$requested_section = isset( $_GET['credential_section'] ) ? sanitize_key( wp_unslash( $_GET['credential_section'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only contextual workspace subtab.
+		$tab = $this->credential_panel_target( $requested_tab, $requested_section, $simple );
 
 		$recipient = ( new RecipientRepository() )->find( $series['recipient_id'] );
 		$program   = ! empty( $series['program_id'] ) ? ( new ProgramRepository() )->find( $series['program_id'] ) : null;
@@ -505,7 +510,11 @@ final class DomainAdmin {
 		if ( ! $is_current && is_array( $version ) ) {
 			echo '<div class="notice notice-info inline"><p><strong>' . esc_html__( 'Historical Version selected.', 'certloom' ) . '</strong> ' . esc_html__( 'Its immutable snapshot can be inspected, but lifecycle and relationship mutations always target the current Version and never rewrite this history.', 'certloom' ) . ' <a href="' . esc_url( add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'series_id' => $series_id, 'credential_tab' => $tab ), admin_url( 'admin.php' ) ) ) . '">' . esc_html__( 'Return to current Version', 'certloom' ) . '</a></p></div>';
 		}
-		$this->credential_tabs( $series_id, $tab, $selected_version_id, $current_version_id );
+		$workspace = $this->credential_workspace_state( $tab, $simple );
+		$this->credential_tabs( $series_id, $workspace['primary'], $selected_version_id, $current_version_id, $simple );
+		if ( $simple && in_array( $workspace['primary'], array( 'credential', 'history' ), true ) ) {
+			$this->credential_subtabs( $series_id, $workspace['primary'], $workspace['section'], $selected_version_id, $current_version_id );
+		}
 
 		switch ( $tab ) {
 			case 'recipient':
@@ -599,8 +608,13 @@ final class DomainAdmin {
 	}
 
 	/** @return void */
-	private function credential_tabs( $series_id, $current, $selected_version_id, $current_version_id ) {
-		$tabs = array(
+	private function credential_tabs( $series_id, $current, $selected_version_id, $current_version_id, $simple = false ) {
+		$tabs = $simple ? array(
+			'summary'    => __( 'Summary', 'certloom' ),
+			'credential' => __( 'Credential', 'certloom' ),
+			'history'    => __( 'History', 'certloom' ),
+			'actions'    => __( 'Actions', 'certloom' ),
+		) : array(
 			'overview'     => __( 'Overview', 'certloom' ),
 			'recipient'    => __( 'Recipient', 'certloom' ),
 			'program'      => __( 'Program', 'certloom' ),
@@ -610,13 +624,69 @@ final class DomainAdmin {
 			'activity'     => __( 'Activity', 'certloom' ),
 			'actions'      => __( 'Actions', 'certloom' ),
 		);
-		echo '<nav class="nav-tab-wrapper certloom-credential-tabs" aria-label="' . esc_attr__( 'Credential workspace', 'certloom' ) . '">';
+		$classes = $simple ? 'certloom-credential-tabs certloom-credential-tabs-simple' : 'nav-tab-wrapper certloom-credential-tabs';
+		echo '<nav class="' . esc_attr( $classes ) . '" aria-label="' . esc_attr__( 'Credential workspace', 'certloom' ) . '">';
 		foreach ( $tabs as $key => $label ) {
 			$args = array( 'page' => self::CREDENTIALS_PAGE, 'series_id' => $series_id, 'credential_tab' => $key );
+			if ( $simple && 'credential' === $key ) { $args['credential_section'] = 'recipient'; }
+			if ( $simple && 'history' === $key ) { $args['credential_section'] = 'versions'; }
 			if ( $selected_version_id && $selected_version_id !== $current_version_id ) { $args['version_id'] = $selected_version_id; }
-			echo '<a class="nav-tab ' . ( $key === $current ? 'nav-tab-active' : '' ) . '" href="' . esc_url( add_query_arg( $args, admin_url( 'admin.php' ) ) ) . '">' . esc_html( $label ) . '</a>';
+			if ( $simple ) {
+				echo '<a class="certloom-credential-primary-tab ' . ( $key === $current ? 'is-current' : '' ) . '" ' . ( $key === $current ? 'aria-current="page" ' : '' ) . 'href="' . esc_url( add_query_arg( $args, admin_url( 'admin.php' ) ) ) . '">' . esc_html( $label ) . '</a>';
+			} else {
+				echo '<a class="nav-tab ' . ( $key === $current ? 'nav-tab-active' : '' ) . '" href="' . esc_url( add_query_arg( $args, admin_url( 'admin.php' ) ) ) . '">' . esc_html( $label ) . '</a>';
+			}
 		}
 		echo '</nav>';
+	}
+
+	/** Renders restrained contextual navigation inside grouped Simple-mode workspaces. */
+	private function credential_subtabs( $series_id, $primary, $current, $selected_version_id, $current_version_id ) {
+		$tabs = 'history' === $primary ? array(
+			'versions' => __( 'Versions', 'certloom' ),
+			'activity' => __( 'Activity', 'certloom' ),
+		) : array(
+			'recipient'    => __( 'Recipient', 'certloom' ),
+			'program'      => __( 'Program', 'certloom' ),
+			'status'       => __( 'Status', 'certloom' ),
+			'verification' => __( 'Verification', 'certloom' ),
+		);
+		echo '<nav class="certloom-credential-subtabs" aria-label="' . esc_attr( 'history' === $primary ? __( 'Credential history sections', 'certloom' ) : __( 'Credential detail sections', 'certloom' ) ) . '">';
+		foreach ( $tabs as $key => $label ) {
+			$args = array( 'page' => self::CREDENTIALS_PAGE, 'series_id' => $series_id, 'credential_tab' => $primary, 'credential_section' => $key );
+			if ( $selected_version_id && $selected_version_id !== $current_version_id ) { $args['version_id'] = $selected_version_id; }
+			echo '<a class="' . ( $key === $current ? 'is-current' : '' ) . '" ' . ( $key === $current ? 'aria-current="page" ' : '' ) . 'href="' . esc_url( add_query_arg( $args, admin_url( 'admin.php' ) ) ) . '">' . esc_html( $label ) . '</a>';
+		}
+		echo '</nav>';
+	}
+
+	/** Maps Simple grouped tabs and old deep links to one existing panel renderer. */
+	private function credential_panel_target( $tab, $section, $simple ) {
+		$direct = array( 'overview', 'recipient', 'program', 'status', 'verification', 'versions', 'activity', 'actions' );
+		if ( ! $simple ) {
+			return in_array( $tab, $direct, true ) ? $tab : 'overview';
+		}
+		if ( in_array( $tab, $direct, true ) ) { return $tab; }
+		if ( 'summary' === $tab ) { return 'overview'; }
+		if ( 'credential' === $tab ) {
+			return in_array( $section, array( 'recipient', 'program', 'status', 'verification' ), true ) ? $section : 'recipient';
+		}
+		if ( 'history' === $tab ) {
+			return in_array( $section, array( 'versions', 'activity' ), true ) ? $section : 'versions';
+		}
+		return 'overview';
+	}
+
+	/** @return array{primary:string,section:string} */
+	private function credential_workspace_state( $panel, $simple ) {
+		if ( ! $simple ) { return array( 'primary' => $panel, 'section' => '' ); }
+		if ( in_array( $panel, array( 'recipient', 'program', 'status', 'verification' ), true ) ) {
+			return array( 'primary' => 'credential', 'section' => $panel );
+		}
+		if ( in_array( $panel, array( 'versions', 'activity' ), true ) ) {
+			return array( 'primary' => 'history', 'section' => $panel );
+		}
+		return array( 'primary' => 'actions' === $panel ? 'actions' : 'summary', 'section' => '' );
 	}
 
 	/** @return void */
@@ -879,7 +949,12 @@ final class DomainAdmin {
 		$id = $is_edit ? absint( $editing['id'] ) : 0;
 		$metadata = $is_edit && isset( $editing['metadata'] ) && is_array( $editing['metadata'] ) ? $editing['metadata'] : array();
 		$metadata_editable = $this->is_scalar_map( $metadata );
-		echo '<section class="ecapla-certverify-admin-card certloom-domain-editor"><div class="certloom-domain-editor-head"><div><h2>' . esc_html( $is_edit ? __( 'Program profile', 'certloom' ) : __( 'Add program', 'certloom' ) ) . '</h2><p>' . esc_html__( 'Programs are credential definitions independent of LMS products. LMS integrations will map into these records later.', 'certloom' ) . '</p></div>';
+		$profile = $is_edit && isset( $editing['profile'] ) && is_array( $editing['profile'] ) ? $editing['profile'] : ProgramProfile::defaults();
+		$design = null;
+		if ( $is_edit ) {
+			$design = ( new TemplateRepository() )->resolve_published_assignment_details( array( 'issuer_id' => absint( $editing['issuer_id'] ?? 0 ), 'program_id' => $id ) );
+		}
+		echo '<section class="ecapla-certverify-admin-card certloom-domain-editor"><div class="certloom-domain-editor-head"><div><h2>' . esc_html( $is_edit ? __( 'Program profile', 'certloom' ) : __( 'Add program', 'certloom' ) ) . '</h2><p>' . esc_html__( 'Program Profiles centralize purpose, language, lifecycle and experience defaults while issued credentials keep immutable snapshots.', 'certloom' ) . '</p></div>';
 		if ( $is_edit ) { echo '<span class="certloom-domain-id">#' . esc_html( (string) $id ) . '</span>'; }
 		echo '</div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		echo '<input type="hidden" name="action" value="' . esc_attr( $is_edit ? 'certloom_domain_update_program' : 'certloom_domain_create_program' ) . '">';
@@ -892,7 +967,40 @@ final class DomainAdmin {
 		echo '<div class="certloom-domain-field certloom-domain-field-wide"><label for="certloom-program-description"><strong>' . esc_html__( 'Description', 'certloom' ) . '</strong></label><textarea id="certloom-program-description" class="large-text" rows="5" name="description">' . esc_textarea( $is_edit ? (string) $editing['description'] : '' ) . '</textarea><p class="description">' . esc_html__( 'Internal program context. Public credential copy will use explicit presentation fields rather than exposing this automatically.', 'certloom' ) . '</p></div>';
 		echo '<div class="certloom-domain-field"><label><input type="checkbox" name="active" value="1" ' . checked( $is_edit ? ! empty( $editing['active'] ) : true, true, false ) . '> <strong>' . esc_html__( 'Active program', 'certloom' ) . '</strong></label><p class="description">' . esc_html__( 'Inactive programs remain in historical credentials but should not be offered for new issuance.', 'certloom' ) . '</p></div>';
 		echo '</div>';
-		echo '<div class="certloom-domain-subsection"><div class="certloom-domain-subsection-head"><div><h3>' . esc_html__( 'Program metadata', 'certloom' ) . '</h3><p>' . esc_html__( 'Optional local key/value metadata for future automation and integrations. Template and signer assignment remain their dedicated roadmap features.', 'certloom' ) . '</p></div></div>';
+		echo '<div class="certloom-domain-subsection certloom-program-profile"><div class="certloom-domain-subsection-head"><div><h3>' . esc_html__( 'Program defaults', 'certloom' ) . '</h3><p>' . esc_html__( 'These are reusable Program configuration defaults. They never rewrite an issued Credential Version.', 'certloom' ) . '</p></div></div><div class="certloom-domain-form-grid">';
+		echo '<div class="certloom-domain-field"><label for="certloom-program-purpose"><strong>' . esc_html__( 'Purpose / category', 'certloom' ) . '</strong></label><select id="certloom-program-purpose" name="profile[purpose]">';
+		foreach ( ProgramProfile::purpose_labels() as $value => $label ) { echo '<option value="' . esc_attr( $value ) . '" ' . selected( (string) ( $profile['purpose'] ?? '' ), $value, false ) . '>' . esc_html( $label ) . '</option>'; }
+		echo '</select><p class="description">' . esc_html__( 'Used by the future adaptive Wizard and Template Library filters; it does not claim a legal certification scheme.', 'certloom' ) . '</p></div>';
+		$subs = ProgramProfile::subcategory_labels();
+		echo '<div class="certloom-domain-field"><label for="certloom-program-subcategory"><strong>' . esc_html__( 'Subcategory', 'certloom' ) . '</strong></label><select id="certloom-program-subcategory" name="profile[subcategory]">';
+		foreach ( $subs as $purpose => $items ) { foreach ( $items as $value => $label ) { echo '<option data-purpose="' . esc_attr( $purpose ) . '" value="' . esc_attr( $value ) . '" ' . selected( (string) ( $profile['subcategory'] ?? '' ), $value, false ) . '>' . esc_html( $label ) . '</option>'; } }
+		echo '</select></div>';
+		echo '<div class="certloom-domain-field"><label for="certloom-program-credential-type"><strong>' . esc_html__( 'Credential type', 'certloom' ) . '</strong></label><select id="certloom-program-credential-type" name="profile[credential_type]">';
+		foreach ( array( 'certificate' => __( 'Certificate', 'certloom' ), 'certification' => __( 'Certification', 'certloom' ), 'degree' => __( 'Degree', 'certloom' ), 'diploma' => __( 'Diploma', 'certloom' ), 'license' => __( 'License', 'certloom' ), 'membership' => __( 'Membership', 'certloom' ), 'award' => __( 'Award', 'certloom' ), 'participation' => __( 'Participation', 'certloom' ), 'custom' => __( 'Custom', 'certloom' ) ) as $value => $label ) { echo '<option value="' . esc_attr( $value ) . '" ' . selected( (string) ( $profile['credential_type'] ?? 'certificate' ), $value, false ) . '>' . esc_html( $label ) . '</option>'; }
+		echo '</select></div>';
+		$this->text_field( 'profile[eligibility_context]', __( 'Eligibility context', 'certloom' ), (string) ( $profile['eligibility_context'] ?? '' ), false, __( 'Optional concise administrator-owned rule/context. LMS adapters later map qualifying attempts to this Program; this field is not a compliance assertion.', 'certloom' ) );
+		$this->text_field( 'profile[credential_locale]', __( 'Credential language / locale', 'certloom' ), (string) ( $profile['credential_locale'] ?? 'site_default' ), false, __( 'Use site_default or a locale such as en_US, ar, fr_FR or ur.', 'certloom' ) );
+		echo '<div class="certloom-domain-field"><label for="certloom-program-renewal"><strong>' . esc_html__( 'Renewal relevance', 'certloom' ) . '</strong></label><select id="certloom-program-renewal" name="profile[renewal]">';
+		foreach ( array( 'not_applicable' => __( 'Not applicable', 'certloom' ), 'optional' => __( 'Optional', 'certloom' ), 'required' => __( 'Required', 'certloom' ) ) as $value => $label ) { echo '<option value="' . esc_attr( $value ) . '" ' . selected( (string) ( $profile['renewal'] ?? '' ), $value, false ) . '>' . esc_html( $label ) . '</option>'; }
+		echo '</select></div>';
+		echo '<div class="certloom-domain-field"><label for="certloom-program-verification-visibility"><strong>' . esc_html__( 'Verification visibility default', 'certloom' ) . '</strong></label><select id="certloom-program-verification-visibility" name="profile[verification_visibility]">';
+		foreach ( array( 'inherit' => __( 'Inherit current safe issuance default', 'certloom' ), 'verification_summary' => __( 'Verification summary', 'certloom' ), 'public' => __( 'Public', 'certloom' ), 'unlisted' => __( 'Unlisted', 'certloom' ), 'recipient_only' => __( 'Recipient only', 'certloom' ), 'organization_member' => __( 'Organization member', 'certloom' ), 'private' => __( 'Private', 'certloom' ) ) as $value => $label ) { echo '<option value="' . esc_attr( $value ) . '" ' . selected( (string) ( $profile['verification_visibility'] ?? '' ), $value, false ) . '>' . esc_html( $label ) . '</option>'; }
+		echo '</select><p class="description">' . esc_html__( 'Stored as the Program default contract. Inherit preserves Certloom’s current verification-summary issuance behavior; future activation must remain explicit and review-bound.', 'certloom' ) . '</p></div>';
+		foreach ( array( 'portal' => __( 'Recipient Portal', 'certloom' ), 'sharing' => __( 'Public sharing', 'certloom' ), 'email_delivery' => __( 'Email delivery', 'certloom' ) ) as $field => $label ) { $field_id = 'certloom-program-' . str_replace( '_', '-', $field ); echo '<div class="certloom-domain-field"><label for="' . esc_attr( $field_id ) . '"><strong>' . esc_html( $label ) . '</strong></label><select id="' . esc_attr( $field_id ) . '" name="profile[' . esc_attr( $field ) . ']">'; foreach ( array( 'inherit' => __( 'Inherit / system default', 'certloom' ), 'enabled' => __( 'Enabled by default', 'certloom' ), 'disabled' => __( 'Disabled by default', 'certloom' ) ) as $value => $option ) { echo '<option value="' . esc_attr( $value ) . '" ' . selected( (string) ( $profile[ $field ] ?? '' ), $value, false ) . '>' . esc_html( $option ) . '</option>'; } echo '</select></div>'; }
+		$this->text_field( 'profile[integration_mapping_key]', __( 'Integration mapping key', 'certloom' ), (string) ( $profile['integration_mapping_key'] ?? '' ), false, __( 'Optional stable administrator-owned key for future LMS/automation mappings. No provider payload is stored here.', 'certloom' ) );
+		$this->text_field( 'profile[external_scheme_id]', __( 'External scheme / reference ID', 'certloom' ), (string) ( $profile['external_scheme_id'] ?? '' ), false, __( 'Optional provenance reference; Certloom does not infer legal equivalence from this value.', 'certloom' ) );
+		$numbering_policy = \Ecapla_CertVerify_Numbering::policy();
+		$numbering_label = ucfirst( (string) ( $numbering_policy['numbering_mode'] ?? 'manual' ) );
+		echo '<div class="certloom-domain-field certloom-program-numbering-summary"><span><strong>' . esc_html__( 'Certificate numbering', 'certloom' ) . '</strong></span><div class="certloom-program-readonly-value">' . esc_html( $numbering_label ) . '</div><p class="description">' . esc_html__( 'This Program currently inherits the established site numbering policy. Program-scoped numbering overrides are not enabled by PRG-02, so Certloom cannot silently create competing sequence authorities.', 'certloom' ) . '</p></div>';
+		echo '</div>';
+		echo '<div class="certloom-program-design-default"><h4>' . esc_html__( 'Published certificate design', 'certloom' ) . '</h4>';
+		if ( ! $is_edit ) { echo '<p>' . esc_html__( 'Save the Program first, then assign its published certificate design.', 'certloom' ) . '</p>'; }
+		elseif ( is_wp_error( $design ) ) { echo '<div class="notice notice-error inline"><p>' . esc_html( $design->get_error_message() ) . '</p></div>'; }
+		elseif ( is_array( $design ) ) { echo '<p><strong>' . esc_html( (string) ( $design['template_name'] ?? __( 'Assigned Template', 'certloom' ) ) ) . '</strong> <span class="description">' . esc_html( sprintf( __( 'Source: %1$s · published revision %2$d', 'certloom' ), TemplateAssignmentPolicy::scope_label( (string) ( $design['scope_type'] ?? '' ) ), absint( $design['published_revision_number'] ?? 0 ) ) ) . '</span></p>'; }
+		else { echo '<p>' . esc_html__( 'No published Template currently resolves for this Program.', 'certloom' ) . '</p>'; }
+		if ( $is_edit ) { $design_url = add_query_arg( array( 'page' => 'certloom-templates', 'assignment_scope' => TemplateAssignmentPolicy::SCOPE_PROGRAM, 'assignment_scope_id' => $id ), admin_url( 'admin.php' ) ); echo '<p><a class="button" href="' . esc_url( $design_url ) . '">' . esc_html__( 'Manage Program design', 'certloom' ) . '</a></p>'; }
+		echo '</div></div>';
+		echo '<div class="certloom-domain-subsection"><div class="certloom-domain-subsection-head"><div><h3>' . esc_html__( 'Advanced metadata', 'certloom' ) . '</h3><p>' . esc_html__( 'Optional local scalar metadata remains available for advanced integrations. Program Profile configuration above uses a reserved typed envelope and is not duplicated here.', 'certloom' ) . '</p></div></div>';
 		if ( $metadata_editable ) {
 			echo '<input type="hidden" name="program_metadata_present" value="1"><div class="certloom-domain-kv-list" data-certloom-kv-list="program">';
 			$rows = $metadata ?: array( '' => '' );
@@ -1047,13 +1155,18 @@ final class DomainAdmin {
 			'validity_days' => isset( $_POST['validity_days'] ) && '' !== trim( (string) $_POST['validity_days'] ) ? absint( $_POST['validity_days'] ) : null,
 			'active'        => isset( $_POST['active'] ),
 		);
+		$metadata = null !== $existing && isset( $existing['metadata'] ) && is_array( $existing['metadata'] ) ? $existing['metadata'] : array();
 		if ( isset( $_POST['program_metadata_present'] ) ) {
 			$parsed = $this->parse_key_value_request( 'program_meta_key', 'program_meta_value', 30 );
 			if ( is_wp_error( $parsed ) ) { return $parsed; }
-			$data['metadata'] = $parsed;
-		} elseif ( null === $existing ) {
-			$data['metadata'] = array();
+			$metadata = $parsed;
 		}
+		$raw_profile = isset( $_POST['profile'] ) && is_array( $_POST['profile'] ) ? wp_unslash( $_POST['profile'] ) : array();
+		$profile = ( new ProgramProfile() )->normalize( $raw_profile );
+		if ( is_wp_error( $profile ) ) { return $profile; }
+		$combined = ( new ProgramProfile() )->with_metadata( $metadata, $profile );
+		if ( is_wp_error( $combined ) ) { return $combined; }
+		$data['metadata'] = $combined;
 		return $data;
 	}
 

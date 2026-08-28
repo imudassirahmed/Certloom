@@ -147,9 +147,9 @@ final class ManualIssuanceAdmin {
 		echo '<label><span>' . esc_html__( 'Program', 'certloom' ) . '</span><select name="program_id" required><option value="">' . esc_html__( 'Choose active Program…', 'certloom' ) . '</option>';
 		foreach ( $program_items as $program ) { $label=(string)$program['title']; if(!empty($program['code'])){$label.=' · '.(string)$program['code'];} echo '<option value="'.esc_attr((string)absint($program['id'])).'" '.selected(absint($values['program_id']??0),absint($program['id']),false).'>'.esc_html($label).'</option>'; }
 		echo '</select></label>';
-		echo '<label><span>' . esc_html__( 'Published Template', 'certloom' ) . '</span><select name="template_id" required><option value="">' . esc_html__( 'Choose published Template…', 'certloom' ) . '</option>';
+		echo '<label><span>' . esc_html__( 'Certificate design', 'certloom' ) . '</span><select name="template_id"><option value="0">' . esc_html__( 'Use Program design automatically', 'certloom' ) . '</option>';
 		foreach ( $template_items as $template ) { $label=(string)$template['name'].' · r'.absint($template['revision_number']??0); echo '<option value="'.esc_attr((string)absint($template['id'])).'" '.selected(absint($values['template_id']??0),absint($template['id']),false).'>'.esc_html($label).'</option>'; }
-		echo '</select><small>' . esc_html__( 'Only non-archived Templates with an independently verified published revision are listed.', 'certloom' ) . '</small></label>';
+		echo '</select><small>' . esc_html__( 'Recommended: leave this on Program design. Choose a Template only for an explicit one-off override; issued Versions still freeze the exact published revision.', 'certloom' ) . '</small></label>';
 		$this->text_input( 'valid_from', __( 'Issue / effective date', 'certloom' ), $valid_from, 10, 'date' );
 		$this->text_input( 'grade', __( 'Grade / result (optional)', 'certloom' ), (string) ( $values['grade'] ?? '' ), 191 );
 		echo '</div><div class="certloom-manual-choice-row certloom-manual-expiry">';

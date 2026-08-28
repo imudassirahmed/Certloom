@@ -279,13 +279,16 @@
 				} else if ( 'copy' === type && url ) {
 					actionHtml += '<button type="button" class="certloom-result-action ' + config.prefix + '-result-action certloom-copy-link" data-copy-url="' + escapeHtml( url ) + '">' + escapeHtml( label ) + '</button>';
 				} else if ( 'print' === type ) {
-					actionHtml += '<button type="button" class="certloom-result-action ' + config.prefix + '-result-action certloom-print">' + escapeHtml( label ) + '</button>';
+					actionHtml += '<button type="button" class="certloom-result-action ' + config.prefix + '-result-action certloom-print is-secondary">' + escapeHtml( label ) + '</button>';
 				} else if ( url ) {
 					actionHtml += '<a class="certloom-result-action ' + config.prefix + '-result-action" href="' + escapeHtml( url ) + '">' + escapeHtml( label ) + '</a>';
 				}
 			} );
+			if ( qrHtml ) {
+				actionHtml += '<details class="certloom-qr-disclosure"><summary class="certloom-result-action ' + config.prefix + '-result-action is-secondary">Show QR</summary><div class="certloom-qr-disclosure-panel">' + qrHtml + '</div></details>';
+			}
 			var actionBar = actionHtml ? '<div class="' + config.prefix + '-result-actions">' + actionHtml + '<span class="certloom-action-feedback" aria-live="polite"></span></div>' : '';
-			resultEl.innerHTML = '<div class="' + config.prefix + '-result-card ' + config.prefix + '-status-' + statusKey + '">' + summary + list + qrHtml + barcodeHtml + verified + actionBar + '</div>';
+			resultEl.innerHTML = '<div class="' + config.prefix + '-result-card ' + config.prefix + '-status-' + statusKey + '">' + summary + list + barcodeHtml + verified + actionBar + '</div>';
 			announce( statusDescription ? statusLabel + '. ' + statusDescription : statusLabel );
 		}
 

@@ -371,12 +371,12 @@ class Ecapla_CertVerify_Render {
 		$issuer = ! empty( $presentation['issuer'] ) ? '<p class="' . esc_attr( $prefix ) . '-result-issuer"><span>' . esc_html__( 'Issued by', 'certloom' ) . '</span> ' . esc_html( (string) $presentation['issuer'] ) . '</p>' : '';
 		$verified = ! empty( $presentation['verified_at'] ) ? '<p class="' . esc_attr( $prefix ) . '-verified-at">' . esc_html__( 'Verified', 'certloom' ) . ' <time datetime="' . esc_attr( (string) $presentation['verified_at'] ) . '">' . esc_html( self::format_verified_at( $presentation['verified_at'] ) ) . '</time></p>' : '';
 		$desc = '' !== $status_desc ? '<p class="' . esc_attr( $prefix ) . '-status-description">' . esc_html( $status_desc ) . '</p>' : '';
-		$actions = self::actions_html( (array) ( $presentation['actions'] ?? array() ), $prefix );
-		return '<div class="' . esc_attr( $prefix ) . '-result-card ' . esc_attr( $prefix . '-status-' . $status_key ) . '"><div class="' . esc_attr( $prefix ) . '-result-summary"><span class="' . esc_attr( $prefix . '-status-mark' ) . '" aria-hidden="true">' . esc_html( self::status_icon( $status_key ) ) . '</span><div><p class="' . esc_attr( $prefix ) . '-result-success">' . esc_html( $status_label ) . '</p>' . $desc . $issuer . '</div></div>' . $list . $qr . $barcode . $verified . $actions . '</div>';
+		$actions = self::actions_html( (array) ( $presentation['actions'] ?? array() ), $prefix, $qr );
+		return '<div class="' . esc_attr( $prefix ) . '-result-card ' . esc_attr( $prefix . '-status-' . $status_key ) . '"><div class="' . esc_attr( $prefix ) . '-result-summary"><span class="' . esc_attr( $prefix . '-status-mark' ) . '" aria-hidden="true">' . esc_html( self::status_icon( $status_key ) ) . '</span><div><p class="' . esc_attr( $prefix ) . '-result-success">' . esc_html( $status_label ) . '</p>' . $desc . $issuer . '</div></div>' . $list . $barcode . $verified . $actions . '</div>';
 	}
 
 	/** @return string */
-	private static function actions_html( $actions, $prefix ) {
+	private static function actions_html( $actions, $prefix, $qr_html = '' ) {
 		$html = '';
 		foreach ( $actions as $action ) {
 			if ( ! is_array( $action ) ) { continue; }
@@ -401,10 +401,13 @@ class Ecapla_CertVerify_Render {
 			} elseif ( 'copy' === $type && '' !== $url ) {
 				$html .= '<button type="button" class="certloom-result-action ' . esc_attr( $prefix ) . '-result-action certloom-copy-link" data-copy-url="' . esc_attr( $url ) . '">' . esc_html( $label ) . '</button>';
 			} elseif ( 'print' === $type ) {
-				$html .= '<button type="button" class="certloom-result-action ' . esc_attr( $prefix ) . '-result-action certloom-print">' . esc_html( $label ) . '</button>';
+				$html .= '<button type="button" class="certloom-result-action ' . esc_attr( $prefix ) . '-result-action certloom-print is-secondary">' . esc_html( $label ) . '</button>';
 			} elseif ( '' !== $url ) {
 				$html .= '<a class="certloom-result-action ' . esc_attr( $prefix ) . '-result-action" href="' . $url . '">' . esc_html( $label ) . '</a>';
 			}
+		}
+		if ( '' !== (string) $qr_html ) {
+			$html .= '<details class="certloom-qr-disclosure"><summary class="certloom-result-action ' . esc_attr( $prefix ) . '-result-action is-secondary">' . esc_html__( 'Show QR', 'certloom' ) . '</summary><div class="certloom-qr-disclosure-panel">' . $qr_html . '</div></details>';
 		}
 		return '' !== $html ? '<div class="' . esc_attr( $prefix ) . '-result-actions">' . $html . '<span class="certloom-action-feedback" aria-live="polite"></span></div>' : '';
 	}

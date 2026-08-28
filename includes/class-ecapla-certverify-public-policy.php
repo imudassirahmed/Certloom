@@ -98,7 +98,7 @@ final class Ecapla_CertVerify_Public_Policy {
 		}
 		$actions = array();
 		if ( self::allows_action( 'copy', $certificate, $context ) && '' !== (string) $verification_url ) {
-			$actions[] = array( 'type' => 'copy', 'label' => __( 'Copy verification link', 'certloom' ), 'url' => (string) $verification_url );
+			$actions[] = array( 'type' => 'copy', 'label' => __( 'Copy link', 'certloom' ), 'url' => (string) $verification_url );
 		}
 		if ( self::allows_action( 'profile', $certificate, $context ) && '' !== (string) $profile_url ) {
 			$actions[] = array( 'type' => 'profile', 'label' => __( 'View credential profile', 'certloom' ), 'url' => (string) $profile_url );

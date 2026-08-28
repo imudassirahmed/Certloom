@@ -1,3 +1,17 @@
+1.6.74
+- PRG-02 Program Profiles: one typed versioned configuration envelope over existing Program identity/issuer/validity plus purpose/subcategory, credential type/locale, renewal, verification, Portal/share/email and integration/provenance defaults. Purpose is the top-level category; no duplicate category authority is introduced.
+- Keep verification privacy fail-closed: legacy Programs default to inherit/current verification-summary semantics rather than becoming public merely because Program Profiles exist; restore preflight rejects malformed/unsupported Profile envelopes.
+- Reuse the canonical published Template assignment hierarchy as Program design authority. Manual/Bulk Issuance default to Program design, preserve explicit reviewed overrides, and immutable Versions freeze both the exact Program Profile and design-resolution scope.
+- Program-scoped numbering remains the older gated ID-02 remainder and locale-specific Template variants remain I18N-02; PRG-02 does not fake either capability.
+- Add dedicated Program Profile source + real Chromium gates and preserve the complete existing commercial/rendering/browser regression stack. Normalized-domain and renderer production authority remain locked. TPLUX-01 Visual Template Library is next.
+
+1.6.73
+- UX-01: add per-administrator Simple/Advanced presentation mode, Simple primary navigation, contextual specialist routes, compact Credential Management primary tabs/subtabs, and Settings local navigation/search without creating a second configuration authority.
+- FEUX-01: compact public verification/profile hierarchy, preserve real name casing, use concise Copy link/Share/Print actions, and move the redundant on-page QR into a secondary collapsed Show QR disclosure while retaining scan-safe local QR semantics.
+- Preserve 44px targets, mobile containment, RTL/reduced-motion/forced-colors behavior and the existing mobile Share safety contract.
+- Add dedicated 28-check UX source contract, 27-check Admin UX Chromium gate and 26-check FEUX Chromium gate; retain the complete existing commercial/rendering/browser regression stack.
+- Keep normalized-domain and renderer authority closed. PRG-02 Program Profiles is next.
+
 1.6.72
 - Add INT-01 + LMSCTX-01 generic integration architecture: closed first-party adapter registry, bounded normalized event context, latest qualifying attempt selection under the certificate threshold, explicit linked-Recipient identity, server-owned Program/Template mapping, and deterministic replay identity.
 - Add a separate trusted `lms_integration` issuance bridge that reuses Manual Issuance transaction/idempotency/snapshot truth and freezes the normalized integration context + SHA without allowing arbitrary source impersonation.

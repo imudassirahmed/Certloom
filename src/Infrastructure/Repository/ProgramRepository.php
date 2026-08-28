@@ -3,6 +3,7 @@ namespace Certloom\Infrastructure\Repository;
 
 use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Application\Data\SafeJson;
+use Certloom\Application\Program\ProgramProfile;
 use Certloom\Infrastructure\Database\SchemaManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -80,7 +81,7 @@ final class ProgramRepository {
 		if ( '' !== (string) $wpdb->last_error ) {
 			return new \WP_Error( 'certloom_program_list_failed', __( 'Certloom could not load programs.', 'certloom' ) );
 		}
-		$sql = 'SELECT p.id, p.issuer_id, p.code, p.title, p.validity_days, p.active, p.created_at, p.updated_at, i.name AS issuer_name, (SELECT COUNT(*) FROM %i s WHERE s.program_id = p.id) AS credential_count FROM %i p LEFT JOIN %i i ON i.id = p.issuer_id' . $where . ' ORDER BY p.active DESC, p.title ASC, p.id DESC LIMIT %d OFFSET %d';
+		$sql = 'SELECT p.id, p.issuer_id, p.code, p.title, p.validity_days, p.active, p.metadata_json, p.created_at, p.updated_at, i.name AS issuer_name, (SELECT COUNT(*) FROM %i s WHERE s.program_id = p.id) AS credential_count FROM %i p LEFT JOIN %i i ON i.id = p.issuer_id' . $where . ' ORDER BY p.active DESC, p.title ASC, p.id DESC LIMIT %d OFFSET %d';
 		$wpdb->last_error = '';
 		$items = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( array( $series, $programs, $issuers ), $args, array( $per_page, $offset ) ) ), ARRAY_A );
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $items ) ) { return new \WP_Error( 'certloom_program_list_failed', __( 'Certloom could not load programs.', 'certloom' ) ); }
@@ -90,6 +91,11 @@ final class ProgramRepository {
 			$item['validity_days'] = null !== ( $item['validity_days'] ?? null ) ? absint( $item['validity_days'] ) : null;
 			$item['active'] = ! empty( $item['active'] );
 			$item['credential_count'] = absint( $item['credential_count'] ?? 0 );
+			$profile_summary = $this->profile_summary( $item['metadata_json'] ?? null );
+			$item['purpose'] = (string) ( $profile_summary['purpose'] ?? '' );
+			$item['purpose_label'] = (string) ( $profile_summary['label'] ?? '' );
+			$item['profile_error'] = ! empty( $profile_summary['error'] );
+			unset( $item['metadata_json'] );
 		}
 		unset( $item );
 		return array( 'items' => $items, 'total' => $total );
@@ -123,6 +129,18 @@ final class ProgramRepository {
 		return $rows;
 	}
 
+
+	/** @return array{purpose:string,label:string,error:bool} */
+	private function profile_summary( $metadata_json ) {
+		$metadata = ( new SafeJson() )->decode_array( $metadata_json, 'certloom_program_metadata_corrupt', __( 'Stored program metadata is invalid JSON.', 'certloom' ) );
+		if ( is_wp_error( $metadata ) ) { return array( 'purpose' => '', 'label' => __( 'Needs review', 'certloom' ), 'error' => true ); }
+		$profile = ( new ProgramProfile() )->from_metadata( $metadata );
+		if ( is_wp_error( $profile ) ) { return array( 'purpose' => '', 'label' => __( 'Needs review', 'certloom' ), 'error' => true ); }
+		$purpose = (string) ( $profile['purpose'] ?? '' );
+		$labels = ProgramProfile::purpose_labels();
+		return array( 'purpose' => $purpose, 'label' => (string) ( $labels[ $purpose ] ?? __( 'Custom / Other', 'certloom' ) ), 'error' => false );
+	}
+
 	/** @return array<string,mixed>|null|\WP_Error */
 	public function find( $id ) {
 		global $wpdb;
@@ -134,9 +152,15 @@ final class ProgramRepository {
 		$row['issuer_id'] = ! empty( $row['issuer_id'] ) ? absint( $row['issuer_id'] ) : null;
 		$row['validity_days'] = null !== $row['validity_days'] ? absint( $row['validity_days'] ) : null;
 		$row['active'] = ! empty( $row['active'] );
-		$row['metadata'] = ( new SafeJson() )->decode_array( $row['metadata_json'] ?? null, 'certloom_program_metadata_corrupt', __( 'Stored program metadata is invalid JSON.', 'certloom' ) );
+		$metadata = ( new SafeJson() )->decode_array( $row['metadata_json'] ?? null, 'certloom_program_metadata_corrupt', __( 'Stored program metadata is invalid JSON.', 'certloom' ) );
 		unset( $row['metadata_json'] );
-		return is_wp_error( $row['metadata'] ) ? $row['metadata'] : $row;
+		if ( is_wp_error( $metadata ) ) { return $metadata; }
+		$profile = ( new ProgramProfile() )->from_metadata( $metadata );
+		if ( is_wp_error( $profile ) ) { return $profile; }
+		unset( $metadata[ ProgramProfile::STORAGE_KEY ] );
+		$row['metadata'] = $metadata;
+		$row['profile'] = $profile;
+		return $row;
 	}
 
 	/** @return array<string,mixed>|\WP_Error */

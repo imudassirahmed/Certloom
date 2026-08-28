@@ -2,6 +2,7 @@
 namespace Certloom\Application\Restore;
 
 use Certloom\Application\VisibilityPolicy;
+use Certloom\Application\Program\ProgramProfile;
 use Certloom\Application\Rendering\CanonicalJson;
 use Certloom\Application\Rendering\LayoutValidator;
 use Certloom\Domain\Credential\PublicCredentialId;
@@ -187,6 +188,17 @@ final class DomainRestoreRowValidator {
 				return new \WP_Error( 'certloom_domain_restore_json_field_invalid', __( 'A backup record contains malformed or structurally invalid JSON data.', 'certloom' ), array( 'entity' => $entity, 'field' => $field ) );
 			}
 		}
+		if ( 'programs' === $entity && null !== $row['metadata_json'] && '' !== (string) $row['metadata_json'] ) {
+			$program_metadata = json_decode( (string) $row['metadata_json'], true );
+			if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $program_metadata ) ) {
+				return new \WP_Error( 'certloom_domain_restore_program_profile_invalid', __( 'A Program in the backup contains invalid Program Profile metadata.', 'certloom' ) );
+			}
+			$profile = ( new ProgramProfile() )->from_metadata( $program_metadata );
+			if ( is_wp_error( $profile ) ) {
+				return new \WP_Error( 'certloom_domain_restore_program_profile_invalid', __( 'A Program in the backup contains Program Profile configuration that Certloom cannot safely restore.', 'certloom' ) );
+			}
+		}
+
 		foreach ( $dates as $field => $kind ) {
 			if ( null === $row[ $field ] || '' === (string) $row[ $field ] ) {
 				continue;

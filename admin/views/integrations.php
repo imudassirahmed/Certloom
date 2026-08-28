@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 	<section class="certloom-panel" aria-labelledby="certloom-integration-adapters-title">
 		<div class="certloom-panel-head"><div><span class="certloom-eyebrow"><?php esc_html_e( 'First-party adapters', 'certloom' ); ?></span><h2 id="certloom-integration-adapters-title"><?php esc_html_e( 'No LMS adapter is active yet', 'certloom' ); ?></h2></div></div>
-		<p><?php esc_html_e( 'Tutor LMS and LearnDash will be implemented as adapters to this framework, not as new credential-writing systems. The approved UX simplification program now runs before Tutor LMS so integrations land on the simpler Program/Profile/Template experience.', 'certloom' ); ?></p>
+		<p><?php esc_html_e( 'Tutor LMS and LearnDash will be implemented as adapters to this framework, not as new credential-writing systems. UX-01 + FEUX-01 are now implemented; Program Profiles and the remaining approved UX program continue before Tutor LMS so integrations land on the simpler Program/Profile/Template experience.', 'certloom' ); ?></p>
 		<div class="certloom-callout certloom-callout-info"><span class="dashicons dashicons-info-outline" aria-hidden="true"></span><div><strong><?php esc_html_e( 'Next execution sequence', 'certloom' ); ?></strong><p><?php echo esc_html( $framework['next'] ); ?></p></div></div>
 	</section>
 </div>
