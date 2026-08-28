@@ -1,3 +1,9 @@
+1.6.80
+- Continue I18N-03 with deterministic, translation-free human-review intake kits bound to the exact POT and approved locale manifest; no generated kit changes language support status.
+- Add translator-oriented source/context/risk indexing for printf placeholders, HTML, plurals, gettext context and Gutenberg block-JS ownership, plus a review checklist that protects credential/authority semantics and RTL safety.
+- Add stable per-entry source-key SHA-256 and whole-source-key-set identity for review/delta workflows, deterministic review-kit ZIPs and fail-closed output/POT/manifest boundaries.
+- Keep all twenty roadmap locales planned until qualified human review returns accepted PO/reviewer evidence. No machine-generated bulk translations are introduced; BAK-02 remains after I18N-03 content acceptance.
+
 1.6.79
 - Begin I18N-03 with a fail-closed language-pack quality pipeline rather than bulk-filling translations: exact POT binding, planned/candidate/reviewed states, strict complete/fuzzy/placeholder/plural/HTML/bidi review rules, deterministic MO compilation and deterministic WordPress block-editor JSON catalogs.
 - Record twenty major-language roadmap targets without falsely marking any locale reviewed before human translation review; incomplete candidate entries retain normal English fallback.
