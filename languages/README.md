@@ -53,3 +53,10 @@ SOURCE_DATE_EPOCH=1787356800 python3 tests/i18n/stage_language_candidate.py . es
 ```
 
 The resulting candidate bundle is review workflow evidence only. Genuine linguistic completion, browser review, `reviewed_by` / `reviewed_at` and the frozen reviewed-pack acceptance gate are still required before the locale may be called reviewed.
+
+
+## Reviewed-language acceptance
+
+Source releases include `tests/i18n/accept_language_review.py` as the final engineering boundary after candidate intake. It requires exact human review evidence bound to the candidate-intake ZIP, candidate PO, current POT and source-key set; reviewed acceptance additionally requires 100% translated coverage, zero fuzzy entries, safe placeholders/HTML/bidi/plurals, browser + meaning/claims review and explicit mixed-direction review for RTL locales.
+
+Successful output remains **external**. It preserves the exact candidate intake ZIP and review evidence and emits deterministic proposed PO/MO/WordPress-Jed artifacts plus a reviewed manifest entry. It never edits this directory or makes a locale supported by itself. Integrate only exact accepted artifacts, then run the frozen language validator, locale browser QA and the complete release ceremony before claiming reviewed support.

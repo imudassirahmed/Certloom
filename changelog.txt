@@ -1,3 +1,10 @@
+1.6.82
+- Continue I18N-03 with a deterministic reviewed-language acceptance boundary over the frozen candidate intake: exact candidate-archive/PO/POT/source-key binding, complete/non-fuzzy technical validation and explicit human review attestation.
+- Require linguistic, meaning/claims and browser review evidence, plus mixed-direction review for RTL locales; review chronology must not predate candidate submission and ambiguous duplicate-key JSON evidence fails closed.
+- Preserve the exact candidate intake ZIP and exact review evidence inside the external acceptance bundle, emit deterministic reviewed PO/MO/WordPress-Jed artifacts and a reviewed manifest proposal, but never mutate Certloom or grant support without deliberate source integration and release certification.
+- Recover provenance/operator-safety gaps during the backward audit: human evidence now binds the exact candidate-intake archive (not only candidate.po), original submitted PO identity/provenance is independently checked, symlink ambiguity is rejected before path resolution, pre-created output directories are not touched, and ZIP publication uses a completed temporary artifact plus no-overwrite link.
+- No locale becomes reviewed merely because the acceptance machinery exists. Actual qualified human translation/review remains the I18N-03 content dependency before BAK-02.
+
 1.6.81
 - Continue I18N-03 with a deterministic human-return candidate intake boundary: exact review-kit/POT/source-key verification, exact returned-PO provenance, normalized full-source candidate PO, bounded coverage/fuzzy report and candidate-only manifest proposal.
 - Keep intake external to the plugin tree, refuse symlink/non-empty/overwrite ambiguity, require fixed-epoch deterministic ZIP evidence and never manufacture reviewed status or reviewer identity.
