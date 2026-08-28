@@ -86,8 +86,8 @@ t17has($files['css'],'.certloom-template-candidate-grid','assignment cards have 
 t17has($files['css'],'focus-visible','assignment controls keep visible keyboard focus');
 t17has($files['css'],'@media (max-width: 782px)','assignment workspace has mobile layout');
 t17has($files['css'],'prefers-reduced-motion','assignment workspace respects reduced motion');
-t17has($files['placeholder'],'Core workflows + Analytics + INT-01 + UX + Program Profiles implemented · authority gated · Visual Template Library next','live placeholder reflects the advanced Template lifecycle without faking renderer authority');
-t17has($files['placeholder'],'canonical Render Plan Preview, and the full planned DSN-01 through DSN-08 Designer foundation are implemented','live placeholder truthfully describes TPL-03 plus lifecycle implementation');
+t17has($files['placeholder'],'Template Library + Designer implemented · production artifact authority gated','live placeholder reflects the current Template/Designer state without faking renderer authority');
+t17has($files['placeholder'],'Versioned Templates, the visual Template Library, curated premium design concepts and Quick/Pro Designer are implemented over immutable Template revisions and the canonical Render Plan','live placeholder truthfully describes the current Template lifecycle and Designer implementation');
 
 echo "PASS  TPL-03 uses one deterministic Batch → Program → Issuer → Global fallback policy\n";
 echo "PASS  assignments support searchable/paginated targets and Templates, explicit None, source visibility, concurrency proof and renderer-honest metadata\n\n";

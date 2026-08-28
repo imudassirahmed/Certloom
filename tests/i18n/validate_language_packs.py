@@ -28,6 +28,8 @@ ALLOWED_DIRECTIONS = {"ltr", "rtl"}
 BIDI_FORBIDDEN = set(chr(cp) for cp in list(range(0x202A, 0x202F)) + list(range(0x2066, 0x206A)))
 PRINTF_RE = re.compile(r"%(?:\d+\$)?[-+0 #']*(?:\d+|\*)?(?:\.(?:\d+|\*))?[bcdeEfFgGosuxX%]")
 PLURAL_RE = re.compile(r"(?:^|;)\s*nplurals\s*=\s*(\d+)\s*;")
+PLURAL_FORMS_RE = re.compile(r"^\s*nplurals\s*=\s*(\d+)\s*;\s*plural\s*=\s*([^;]{1,512})\s*;\s*$")
+PLURAL_TOKEN_RE = re.compile(r"\s+|&&|\|\||==|!=|<=|>=|[()?:%*/+\-<>!]|n|\d+")
 LOCALE_RE = re.compile(r"^[a-z]{2,3}(?:_[A-Z][a-z]{3}|_[A-Z]{2}|_[0-9]{3}){0,2}$")
 
 
@@ -80,17 +82,62 @@ def validate_translation(source: str, translated: str, label: str, errors: List[
         errors.append(f"{label}: HTML tag structure mismatch {dict(html_tags(source))} != {dict(html_tags(translated))}")
 
 
-def nplurals_from(headers: Dict[str, str], label: str, errors: List[str]) -> int:
-    plural = headers.get("Plural-Forms", "")
-    match = PLURAL_RE.search(plural)
+def validate_plural_forms_header(value: str, label: str, errors: List[str]) -> int:
+    """Validate a bounded gettext/Jed plural expression without evaluating it.
+
+    WordPress JavaScript catalogs carry this header into Jed-compatible runtime
+    translation logic. Accept only the conventional arithmetic/comparison/
+    boolean/ternary grammar over ``n`` so a translator-controlled header cannot
+    smuggle identifiers, calls, property access, strings or statement syntax.
+    """
+    match = PLURAL_FORMS_RE.match(value or "")
     if not match:
         errors.append(f"{label}: missing or invalid Plural-Forms header")
         return 2
     nplurals = int(match.group(1))
     if nplurals < 1 or nplurals > 6:
         errors.append(f"{label}: nplurals must be between 1 and 6")
-        return 2
+        nplurals = 2
+    expression = match.group(2)
+    position = 0
+    paren_depth = 0
+    questions = 0
+    colons = 0
+    saw_n = False
+    for token in PLURAL_TOKEN_RE.finditer(expression):
+        if token.start() != position:
+            errors.append(f"{label}: Plural-Forms expression contains unsupported syntax")
+            return nplurals
+        value_token = token.group(0)
+        position = token.end()
+        if value_token.isspace():
+            continue
+        if value_token == "n":
+            saw_n = True
+        elif value_token == "(":
+            paren_depth += 1
+        elif value_token == ")":
+            paren_depth -= 1
+            if paren_depth < 0:
+                errors.append(f"{label}: Plural-Forms parentheses are unbalanced")
+                return nplurals
+        elif value_token == "?":
+            questions += 1
+        elif value_token == ":":
+            colons += 1
+    if position != len(expression):
+        errors.append(f"{label}: Plural-Forms expression contains unsupported syntax")
+    if paren_depth != 0:
+        errors.append(f"{label}: Plural-Forms parentheses are unbalanced")
+    if questions != colons:
+        errors.append(f"{label}: Plural-Forms ternary operators are unbalanced")
+    if not saw_n:
+        errors.append(f"{label}: Plural-Forms expression must depend on n")
     return nplurals
+
+
+def nplurals_from(headers: Dict[str, str], label: str, errors: List[str]) -> int:
+    return validate_plural_forms_header(headers.get("Plural-Forms", ""), label, errors)
 
 
 def translated_complete(entry: PoEntry, nplurals: int) -> bool:

@@ -4,13 +4,15 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.80
+Stable tag: 1.6.81
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
 
 == Description ==
+
+> Release note for 1.6.81: I18N-03 now has a fail-closed human-return candidate intake path. Returned PO work is accepted only with the exact Certloom review kit/current POT, preserved as submission evidence, validated for source/placeholder/HTML/bidi/plural safety, normalized into a complete candidate PO skeleton and packaged outside the plugin tree without granting reviewed status. Translator-controlled Plural-Forms syntax is now strictly bounded before MO/Jed compilation, and stale live admin roadmap copy has been replaced with concise current Template/Designer/I18N status. No language is newly claimed as reviewed; genuine linguistic acceptance still precedes BAK-02 under the approved roadmap.
 
 > Release note for 1.6.80: I18N-03 now includes a deterministic, translation-free human-review intake kit so qualified translation teams receive the exact POT plus source/context/risk metadata, stable source-key identities, review checklist and SHA-256 evidence without Certloom manufacturing translations or changing locale support status. Review kits must be generated outside the plugin tree and actual candidate/reviewed PO content still requires genuine human linguistic review under the frozen 1.6.79 quality contract. BAK-02 remains after I18N-03 content acceptance.
 

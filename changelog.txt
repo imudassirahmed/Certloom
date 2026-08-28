@@ -1,3 +1,10 @@
+1.6.81
+- Continue I18N-03 with a deterministic human-return candidate intake boundary: exact review-kit/POT/source-key verification, exact returned-PO provenance, normalized full-source candidate PO, bounded coverage/fuzzy report and candidate-only manifest proposal.
+- Keep intake external to the plugin tree, refuse symlink/non-empty/overwrite ambiguity, require fixed-epoch deterministic ZIP evidence and never manufacture reviewed status or reviewer identity.
+- Harden translator-controlled Plural-Forms before MO/Jed compilation by allowing only bounded conventional arithmetic/comparison/boolean/ternary syntax over n.
+- Recover stale live admin roadmap copy that still said Visual Template Library was next; replace it with concise current Template/Designer/I18N status while preserving renderer/database authority gates.
+- No locale becomes reviewed in this release. Genuine human linguistic acceptance remains required before I18N-03 content closes and BAK-02 begins under the approved roadmap.
+
 1.6.80
 - Continue I18N-03 with deterministic, translation-free human-review intake kits bound to the exact POT and approved locale manifest; no generated kit changes language support status.
 - Add translator-oriented source/context/risk indexing for printf placeholders, HTML, plurals, gettext context and Gutenberg block-JS ownership, plus a review checklist that protects credential/authority semantics and RTL safety.

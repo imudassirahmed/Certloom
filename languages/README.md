@@ -37,3 +37,19 @@ return a PO plus genuine reviewer/date evidence; `validate_language_packs.py` re
 acceptance authority for candidate/reviewed artifacts. Never commit a review kit or use
 its existence as evidence that the locale is translated.
 
+
+## Returned candidate intake
+
+Source releases also include `tests/i18n/stage_language_candidate.py`. It accepts a returned human PO only when paired with the exact Certloom review-kit ZIP for the same locale/current POT. It preserves the returned bytes, validates source identity plus placeholder/HTML/bidi/plural safety, and emits a deterministic **external** candidate evidence bundle.
+
+Candidate intake never writes language artifacts into the plugin tree and never grants `reviewed` status. `Plural-Forms` is treated as runtime-sensitive metadata: only bounded conventional syntax over `n` is accepted before MO or WordPress/Jed JSON compilation.
+
+Example:
+
+```sh
+SOURCE_DATE_EPOCH=1787356800 python3 tests/i18n/stage_language_candidate.py . es_ES /secure/returns/certloom-es_ES.po \
+  --review-kit /secure/review/certloom-es_ES-review-kit.zip \
+  --output /secure/intake/es_ES --submitted-by "Translation team" --submitted-at 2026-08-28
+```
+
+The resulting candidate bundle is review workflow evidence only. Genuine linguistic completion, browser review, `reviewed_by` / `reviewed_at` and the frozen reviewed-pack acceptance gate are still required before the locale may be called reviewed.

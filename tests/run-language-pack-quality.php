@@ -136,6 +136,11 @@ file_put_contents( $base . '/languages/certloom-es_ES.po', $bad_placeholder );
 list( $bad_rc, $bad_out ) = lpq_exec( 'python3 ' . escapeshellarg( $base . '/tests/i18n/validate_language_packs.py' ) . ' ' . escapeshellarg( $base ) . ' --json' );
 lpq_check( 0 !== $bad_rc && false !== strpos( $bad_out, 'placeholder mismatch' ), 'placeholder loss fails closed' );
 
+$unsafe_plural = str_replace( 'Plural-Forms: nplurals=2; plural=(n != 1);', 'Plural-Forms: nplurals=2; plural=(n != 1) || constructor;', $po );
+file_put_contents( $base . '/languages/certloom-es_ES.po', $unsafe_plural );
+list( $plural_rc, $plural_out ) = lpq_exec( 'python3 ' . escapeshellarg( $base . '/tests/i18n/validate_language_packs.py' ) . ' ' . escapeshellarg( $base ) . ' --json' );
+lpq_check( 0 !== $plural_rc && false !== strpos( $plural_out, 'unsupported syntax' ), 'translator-controlled Plural-Forms rejects identifiers/call-capable syntax before MO/Jed compilation' );
+
 $bad_bidi = str_replace( 'msgstr "Guardar"', "msgstr \"Guardar\\u202E\"", $po );
 file_put_contents( $base . '/languages/certloom-es_ES.po', $bad_bidi );
 list( $bidi_rc, $bidi_out ) = lpq_exec( 'python3 ' . escapeshellarg( $base . '/tests/i18n/validate_language_packs.py' ) . ' ' . escapeshellarg( $base ) . ' --json' );
