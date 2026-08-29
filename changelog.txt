@@ -1,3 +1,10 @@
+= 1.6.89 =
+* BAK-02B: verified current-authority safety snapshots before Restore, CSV import, reviewed bulk change/delete and permanent retired-field purge; snapshot failure blocks mutation and multi-request operations reuse one exact-hash receipt.
+* Adds independent bounded safety retention without silently rotating manual backups, including pre-pruning of expired automatic safety snapshots before the hard catalog ceiling can block a protected operation.
+* Adds non-destructive Test restore evidence bound to the exact stored file SHA-256, reusing the existing restore analyzer and deleting temporary review sessions; persisted evidence contains no private filesystem paths and never becomes authority.
+* Adds an explicit canonical builder → real restore-analyzer round-trip regression and tamper rejection so Certloom-generated v4 backups are proven acceptable to Certloom's restore review path.
+* Keeps the normalized-domain and renderer authority gates closed. BAK-03 Google Drive follows, then Tutor LMS and LearnDash before the approved UX/navigation consolidation.
+
 = 1.6.88 =
 * BAK-02A: local Scheduled Backup & Recovery using the same canonical current-authority v4 backup builder as manual downloads.
 * Adds persistent private local storage separate from short-lived job retention, exact post-write/download/restore SHA-256 verification, scheduled-only retention, Back up now and Test storage actions, and Off/Daily/Weekly WordPress Cron scheduling.

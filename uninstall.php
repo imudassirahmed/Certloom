@@ -150,6 +150,8 @@ function ecapla_certverify_uninstall_site() {
 	delete_option( 'certloom_staging_cutover_rehearsal_lock' );
 	delete_option( 'certloom_backup_run_lock' );
 	delete_option( 'certloom_backup_last_result' );
+	delete_option( 'certloom_backup_restore_test_evidence' );
+	delete_option( 'certloom_backup_restore_test_evidence' );
 
 	/* DSN-02 personal Designer workspace state is non-artifact UI state and must not survive uninstall. */
 	$designer_state_prefix = 'certloom_template_designer_state_' . get_current_blog_id() . '_';
@@ -184,6 +186,8 @@ function ecapla_certverify_uninstall_site() {
 		'_transient_timeout_certloom_import_map_',
 		'_transient_certloom_domain_data_tools_notice_',
 		'_transient_timeout_certloom_domain_data_tools_notice_',
+		'_transient_certloom_safety_snapshot_',
+		'_transient_timeout_certloom_safety_snapshot_',
 	);
 
 	foreach ( $transient_prefixes as $prefix ) {
@@ -323,6 +327,8 @@ function ecapla_certverify_uninstall_site() {
 	}
 	delete_option( 'certloom_backup_schedule' );
 	delete_option( 'certloom_backup_retention' );
+	delete_option( 'certloom_safety_backup_retention' );
+	delete_option( 'certloom_safety_backup_retention' );
 
 	/* Explicit delete-data choice removes durable migration/cutover lineage too. */
 	foreach ( array(

@@ -12,12 +12,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<?php if ( isset( $_GET['ecapla_certverify_error'] ) ) : ?><div class="notice notice-error"><p><?php echo esc_html( sanitize_text_field( wp_unslash( $_GET['ecapla_certverify_error'] ) ) ); ?></p></div><?php endif; ?>
 	<?php if ( isset( $_GET['backup_notice'] ) ) : ?>
 		<?php $certloom_backup_notice = sanitize_key( wp_unslash( $_GET['backup_notice'] ) ); ?>
-		<?php if ( in_array( $certloom_backup_notice, array( 'settings-saved', 'storage-verified', 'backup-created', 'backup-deleted' ), true ) ) : ?>
+		<?php if ( in_array( $certloom_backup_notice, array( 'settings-saved', 'storage-verified', 'backup-created', 'backup-deleted', 'restore-tested' ), true ) ) : ?>
 			<div class="notice notice-success is-dismissible"><p>
 				<?php
 				if ( 'settings-saved' === $certloom_backup_notice ) { esc_html_e( 'Automatic backup settings saved.', 'certloom' ); }
 				elseif ( 'storage-verified' === $certloom_backup_notice ) { esc_html_e( 'Private backup storage tested successfully.', 'certloom' ); }
 				elseif ( 'backup-created' === $certloom_backup_notice ) { esc_html_e( 'Backup created, verified, and stored privately.', 'certloom' ); }
+				elseif ( 'restore-tested' === $certloom_backup_notice ) { esc_html_e( 'Restore test passed without changing live Certloom data.', 'certloom' ); }
 				else { esc_html_e( 'Private backup deleted.', 'certloom' ); }
 				?>
 			</p></div>
@@ -55,6 +56,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<p><?php esc_html_e( 'Protect the current authoritative Certloom registry with the same lossless, versioned backup format used by manual downloads. Automatic backups stay in private local storage and never switch credential authority.', 'certloom' ); ?></p>
 				<p><strong><?php esc_html_e( 'Source authority:', 'certloom' ); ?></strong> <?php esc_html_e( 'Current Certloom registry', 'certloom' ); ?><br />
 				<strong><?php esc_html_e( 'Destination:', 'certloom' ); ?></strong> <?php esc_html_e( 'Local private storage', 'certloom' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Before Restore, CSV import, reviewed bulk changes, bulk deletion, or permanent retired-field purge, Certloom creates a verified safety snapshot and stops the destructive operation if that snapshot cannot be created. Automatic safety snapshots use their own bounded retention and never replace explicit manual backups.', 'certloom' ); ?></p>
 
 				<?php if ( is_wp_error( $backup_storage_state ) ) : ?>
 					<div class="notice notice-warning inline"><p><?php echo esc_html( $backup_storage_state->get_error_message() ); ?></p></div>
@@ -100,7 +102,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 					<h3><?php esc_html_e( 'Saved backups', 'certloom' ); ?></h3>
 					<div class="certloom-backup-table-wrap">
 					<table class="widefat striped certloom-backup-table">
-						<thead><tr><th><?php esc_html_e( 'Created', 'certloom' ); ?></th><th><?php esc_html_e( 'Type', 'certloom' ); ?></th><th><?php esc_html_e( 'Certificates', 'certloom' ); ?></th><th><?php esc_html_e( 'Size', 'certloom' ); ?></th><th><?php esc_html_e( 'Integrity', 'certloom' ); ?></th><th><?php esc_html_e( 'Actions', 'certloom' ); ?></th></tr></thead>
+						<thead><tr><th><?php esc_html_e( 'Created', 'certloom' ); ?></th><th><?php esc_html_e( 'Type', 'certloom' ); ?></th><th><?php esc_html_e( 'Certificates', 'certloom' ); ?></th><th><?php esc_html_e( 'Size', 'certloom' ); ?></th><th><?php esc_html_e( 'Integrity', 'certloom' ); ?></th><th><?php esc_html_e( 'Restore test', 'certloom' ); ?></th><th><?php esc_html_e( 'Actions', 'certloom' ); ?></th></tr></thead>
 						<tbody>
 						<?php foreach ( array_slice( $saved_backups, 0, 20 ) as $certloom_saved_backup ) : ?>
 							<tr>
@@ -109,9 +111,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 								<td><?php echo esc_html( number_format_i18n( absint( $certloom_saved_backup['records'] ) ) ); ?></td>
 								<td><?php echo esc_html( size_format( absint( $certloom_saved_backup['bytes'] ) ) ); ?></td>
 								<td><?php esc_html_e( 'Verified at creation', 'certloom' ); ?></td>
+								<?php $certloom_restore_test = \Certloom\Infrastructure\Backup\RestoreTest::latest_for( $certloom_saved_backup['id'] ); ?>
+								<td><?php echo esc_html( ! empty( $certloom_restore_test['tested_ts'] ) && hash_equals( (string) $certloom_saved_backup['file_sha256'], (string) ( $certloom_restore_test['file_sha256'] ?? '' ) ) ? sprintf( /* translators: %s: date/time of last restore test. */ __( 'Passed %s', 'certloom' ), wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), absint( $certloom_restore_test['tested_ts'] ) ) ) : __( 'Not tested', 'certloom' ) ); ?></td>
 								<td class="certloom-backup-row-actions">
 									<a class="button button-small" href="<?php echo esc_url( wp_nonce_url( add_query_arg( array( 'action' => 'certloom_backup_saved_download', 'backup_id' => $certloom_saved_backup['id'] ), admin_url( 'admin-post.php' ) ), 'certloom_backup_saved_download_' . $certloom_saved_backup['id'] ) ); ?>"><?php esc_html_e( 'Download', 'certloom' ); ?></a>
 									<a class="button button-small" href="<?php echo esc_url( wp_nonce_url( add_query_arg( array( 'action' => 'certloom_backup_saved_review', 'backup_id' => $certloom_saved_backup['id'] ), admin_url( 'admin-post.php' ) ), 'certloom_backup_saved_review_' . $certloom_saved_backup['id'] ) ); ?>"><?php esc_html_e( 'Review restore', 'certloom' ); ?></a>
+									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-inline-form">
+										<input type="hidden" name="action" value="certloom_backup_saved_test_restore" />
+										<input type="hidden" name="backup_id" value="<?php echo esc_attr( $certloom_saved_backup['id'] ); ?>" />
+										<?php wp_nonce_field( 'certloom_backup_saved_test_restore_' . $certloom_saved_backup['id'] ); ?>
+										<button type="submit" class="button button-small"><?php esc_html_e( 'Test restore', 'certloom' ); ?></button>
+									</form>
 									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-inline-form">
 										<input type="hidden" name="action" value="certloom_backup_saved_delete" />
 										<input type="hidden" name="backup_id" value="<?php echo esc_attr( $certloom_saved_backup['id'] ); ?>" />
@@ -130,7 +140,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 				<hr />
 				<h3><?php esc_html_e( 'Restore', 'certloom' ); ?></h3>
-				<p><?php esc_html_e( 'Restore always starts with a non-destructive review. Upload a trusted Certloom backup, or choose Review restore beside a saved private backup.', 'certloom' ); ?></p>
+				<p><?php esc_html_e( 'Restore always starts with a non-destructive review. Test restore validates a saved backup through the same analyzer without changing live data. Applying a restore also requires a fresh automatic safety snapshot of the current registry.', 'certloom' ); ?></p>
 				<form method="post" enctype="multipart/form-data" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 					<input type="hidden" name="action" value="ecapla_certverify_backup_analyze" />
 					<?php wp_nonce_field( 'ecapla_certverify_backup_analyze' ); ?>

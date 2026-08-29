@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: Certloom – Certificate Verification (OPEN-GATES REVIEW)
- * Description: STAGING-ONLY review build exposing the normalized-domain admin preview. Not for production use.
- * Version: 1.6.88-review-gates.1
+ * Plugin Name: Certloom – Certificate Verification
+ * Description: Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
+ * Version: 1.6.89
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.88-review-gates.1' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.89' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
@@ -37,7 +37,7 @@ if ( ! defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) ) {
 	define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false );
 }
 if ( ! defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) ) {
-	define( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW', true );
+	define( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW', false );
 }
 if ( ! defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) ) {
 	define( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY', false );
@@ -51,20 +51,6 @@ if ( ! defined( 'CERTLOOM_ALLOW_STAGING_MIGRATION_REHEARSAL' ) ) {
 if ( ! defined( 'CERTLOOM_ALLOW_STAGING_RESTORE_REHEARSAL' ) ) {
 	define( 'CERTLOOM_ALLOW_STAGING_RESTORE_REHEARSAL', false );
 }
-
-if ( ! defined( 'CERTLOOM_REVIEW_GATES_BUILD' ) ) {
-	define( 'CERTLOOM_REVIEW_GATES_BUILD', true );
-}
-
-/** Staging-only review-build warning. */
-function certloom_review_gates_build_notice() {
-	if ( ! current_user_can( 'manage_options' ) ) {
-		return;
-	}
-	echo '<div class="notice notice-error"><p><strong>Certloom OPEN-GATES REVIEW BUILD — STAGING ONLY.</strong> The normalized-domain admin preview is enabled and may create or modify additive preview tables. The current registry remains public authority; normalized cutover/write authority, Data Tools cutover authority, and renderer acceptance remain locked. Do not use this build on a production site.</p></div>';
-}
-add_action( 'admin_notices', 'certloom_review_gates_build_notice' );
-add_action( 'network_admin_notices', 'certloom_review_gates_build_notice' );
 
 require_once CERTLOOM_PATH . 'src/Autoloader.php';
 \Certloom\Autoloader::register();

@@ -16,42 +16,46 @@ msgstr ""
 "X-Domain: certloom\n"
 
 #: admin/class-ecapla-certverify-admin.php:100
-msgid "Field Manager"
+msgid "Add Certificate"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:101
-msgid "Appearance & Embed"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1018
-msgid "Choose a Certloom backup file."
+msgid "Field Manager"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:102
-msgid "Setup"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1024
-msgid "Upload a valid .cvbackup or legacy .json Certloom backup."
+msgid "Appearance & Embed"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:103
+msgid "Setup"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1037
+msgid "Choose a Certloom backup file."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:104
 #: admin/views/bulk-review.php:15
 msgid "Review bulk change"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1038
+#: admin/class-ecapla-certverify-admin.php:1043
+msgid "Upload a valid .cvbackup or legacy .json Certloom backup."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1057
 msgid "Confirm that you understand the selected restore mode can replace or merge Certloom data and that Certloom writes will be paused until the restore finishes."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:105
-#: admin/class-ecapla-certverify-admin.php:92
+#: admin/class-ecapla-certverify-admin.php:106
+#: admin/class-ecapla-certverify-admin.php:93
 msgid "Data Tools"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:107
-#: admin/class-ecapla-certverify-admin.php:1175
-#: admin/class-ecapla-certverify-admin.php:83
+#: admin/class-ecapla-certverify-admin.php:108
+#: admin/class-ecapla-certverify-admin.php:1195
+#: admin/class-ecapla-certverify-admin.php:84
 #: src/Infrastructure/Admin/DomainAdmin.php:232
 #: src/Infrastructure/Admin/DomainAdmin.php:237
 #: src/Infrastructure/Admin/DomainAdmin.php:53
@@ -59,9 +63,9 @@ msgstr ""
 msgid "Recipients"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:108
-#: admin/class-ecapla-certverify-admin.php:1193
-#: admin/class-ecapla-certverify-admin.php:89
+#: admin/class-ecapla-certverify-admin.php:109
+#: admin/class-ecapla-certverify-admin.php:1213
+#: admin/class-ecapla-certverify-admin.php:90
 #: admin/views/analytics.php:10
 #: admin/views/issuance-analytics.php:10
 #: src/Infrastructure/Admin/DomainAdmin.php:717
@@ -70,38 +74,38 @@ msgstr ""
 msgid "Issuance"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1160
-msgid "Framework ready"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1161
-msgid "INT-01 + LMSCTX-01"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1163
-msgid "I18N-03 human language review next; Tutor LMS remains paused until UX-QA-01"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:117
+#: admin/class-ecapla-certverify-admin.php:118
 msgid "You must be signed in to change the Certloom workspace mode."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1176
-#: admin/class-ecapla-certverify-admin.php:1182
-msgid "Phase 1 data model"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1177
-msgid "First-class Recipient administration is implemented in the normalized domain and remains acceptance-gated until the real WordPress/MySQL migration and cutover proof passes."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1178
-#: admin/class-ecapla-certverify-admin.php:1184
-msgid "Implementation complete · production acceptance gated"
+#: admin/class-ecapla-certverify-admin.php:1180
+msgid "Framework ready"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1181
-#: admin/class-ecapla-certverify-admin.php:85
+msgid "INT-01 + LMSCTX-01"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1183
+msgid "I18N-03 human language review next; Tutor LMS remains paused until UX-QA-01"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1196
+#: admin/class-ecapla-certverify-admin.php:1202
+msgid "Phase 1 data model"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1197
+msgid "First-class Recipient administration is implemented in the normalized domain and remains acceptance-gated until the real WordPress/MySQL migration and cutover proof passes."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1198
+#: admin/class-ecapla-certverify-admin.php:1204
+msgid "Implementation complete · production acceptance gated"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1201
+#: admin/class-ecapla-certverify-admin.php:86
 #: admin/views/issuance-analytics.php:63
 #: src/Infrastructure/Admin/DomainAdmin.php:287
 #: src/Infrastructure/Admin/DomainAdmin.php:292
@@ -111,249 +115,253 @@ msgstr ""
 msgid "Programs"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1183
+#: admin/class-ecapla-certverify-admin.php:1203
 msgid "Standalone Program administration is implemented in the normalized domain and remains acceptance-gated. Certloom will not emulate Program relationships inside legacy custom fields."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1187
-#: admin/class-ecapla-certverify-admin.php:66
+#: admin/class-ecapla-certverify-admin.php:1207
+#: admin/class-ecapla-certverify-admin.php:67
 #: admin/views/issuance-analytics.php:63
 #: src/Infrastructure/Admin/TemplateAdmin.php:172
 #: src/Infrastructure/Admin/TemplateAdmin.php:473
 msgid "Templates"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1188
+#: admin/class-ecapla-certverify-admin.php:1208
 msgid "Pro commercial core · implementation gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1189
+#: admin/class-ecapla-certverify-admin.php:1209
 msgid "Versioned Templates, the visual Template Library, curated premium design concepts and Quick/Pro Designer are implemented over immutable Template revisions and the canonical Render Plan. I18N-02 locale/RTL and Program language-specific published-design resolution are implemented. Production PDF/image publication remains fail-closed until renderer release authority is accepted."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1190
+#: admin/class-ecapla-certverify-admin.php:1210
 msgid "Template Library + Designer implemented · production artifact authority gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1194
+#: admin/class-ecapla-certverify-admin.php:1214
 msgid "P0 issuance workflow · implementation gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1195
+#: admin/class-ecapla-certverify-admin.php:1215
 msgid "Manual and Bulk Issuance, Credential Management, Email Delivery, Recipient Portal, Public Sharing, Analytics and INT-01 are implemented. Program Profiles resolve Program and locale-specific published designs, while immutable Versions freeze exact Program, locale and Template provenance. Normalized public authority and production PDF/image exports remain acceptance-gated."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1196
+#: admin/class-ecapla-certverify-admin.php:1216
 msgid "Issuance workflow implemented · normalized/public artifact authority gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1201
+#: admin/class-ecapla-certverify-admin.php:1221
 msgid "That Certloom workspace is not available."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1216
+#: admin/class-ecapla-certverify-admin.php:1236
 msgid "That certificate does not exist."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1233
+#: admin/class-ecapla-certverify-admin.php:1253
 msgid "Those import results expired. Run the import again to generate a new report."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1242
+#: admin/class-ecapla-certverify-admin.php:1262
 msgid "That backup restore process expired. Upload the backup again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1251
-#: admin/class-ecapla-certverify-admin.php:1260
+#: admin/class-ecapla-certverify-admin.php:1271
+#: admin/class-ecapla-certverify-admin.php:1280
 msgid "That import session expired. Upload the CSV again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1275
+#: admin/class-ecapla-certverify-admin.php:1295
 #: includes/class-ecapla-certverify-backup.php:440
 msgid "That backup review session expired. Upload the backup again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1288
+#: admin/class-ecapla-certverify-admin.php:1308
 msgid "You do not have permission to view Certloom analytics."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1326
+#: admin/class-ecapla-certverify-admin.php:1346
 msgid "The review acknowledgement could not be saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1344
+#: admin/class-ecapla-certverify-admin.php:1364
 msgid "A complete Certloom restore is in progress. Certificate and configuration changes are temporarily paused; public verification remains available."
 msgstr ""
 
 #. translators: 1: number of legacy records, 2: review URL.
-#: admin/class-ecapla-certverify-admin.php:1364
+#: admin/class-ecapla-certverify-admin.php:1384
 msgid "%1$d legacy Expired certificate needs review. <a href=\"%2$s\">Review it now</a>. It will remain Expired until an administrator deliberately chooses a workflow status."
 msgid_plural "%1$d legacy Expired certificates need review. <a href=\"%2$s\">Review them now</a>. They will remain Expired until an administrator deliberately chooses a workflow status."
 msgstr[0] ""
 msgstr[1] ""
 
-#: admin/class-ecapla-certverify-admin.php:1377
-msgid "Certloom 1.3.0 briefly contained an unsafe legacy-status migration. If that version ran on this site, compare certificate statuses with a pre-1.3.0 backup before launch. The current release does not guess or silently rewrite those records."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:138
+#: admin/class-ecapla-certverify-admin.php:139
 msgid "Certloom workspace mode"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:138
+#: admin/class-ecapla-certverify-admin.php:139
 msgid "Simple keeps everyday work concise. Advanced restores specialist and diagnostic surfaces."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:138
+#: admin/class-ecapla-certverify-admin.php:139
 msgid "Workspace"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1380
+#: admin/class-ecapla-certverify-admin.php:1397
+msgid "Certloom 1.3.0 briefly contained an unsafe legacy-status migration. If that version ran on this site, compare certificate statuses with a pre-1.3.0 backup before launch. The current release does not guess or silently rewrite those records."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1400
 msgid "I have reviewed this"
 msgstr ""
 
-#. translators: %s: Ecapla website link.
-#: admin/class-ecapla-certverify-admin.php:1392
-msgid "Certloom is developed and maintained by %s."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1393
-msgid "Ecapla"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:140
+#: admin/class-ecapla-certverify-admin.php:141
 #: admin/views/settings-manager.php:20
 msgid "Advanced"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:140
+#: admin/class-ecapla-certverify-admin.php:141
 msgid "Simple"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1402
+#. translators: %s: Ecapla website link.
+#: admin/class-ecapla-certverify-admin.php:1412
+msgid "Certloom is developed and maintained by %s."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1413
+msgid "Ecapla"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1422
 msgid "You do not have permission to manage certificates."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1408
+#: admin/class-ecapla-certverify-admin.php:1428
 msgid "You do not have permission to manage these settings."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:169
+#: admin/class-ecapla-certverify-admin.php:170
 msgid "The certificate you tried to update no longer exists."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:393
+#: admin/class-ecapla-certverify-admin.php:398
 msgid "Registry column preferences could not be saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:437
+#: admin/class-ecapla-certverify-admin.php:442
 msgid "The field order, labels, and visibility could not be saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:452
+#: admin/class-ecapla-certverify-admin.php:457
 msgid "Give the new field a label."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:487
+#: admin/class-ecapla-certverify-admin.php:492
 msgid "The custom field could not be added because the field schema was not saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:499
+#: admin/class-ecapla-certverify-admin.php:504
 msgid "Core certificate fields cannot be removed. You can relabel, reorder, or hide them from public results."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:502
+#: admin/class-ecapla-certverify-admin.php:507
 msgid "The field could not be retired safely. No field was removed."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:514
+#: admin/class-ecapla-certverify-admin.php:519
 msgid "The active field layout could not be updated, and the temporary retired marker could not be rolled back. Review the field registry before continuing."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:516
+#: admin/class-ecapla-certverify-admin.php:521
 msgid "The active field layout could not be updated. No field was removed."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:531
+#: admin/class-ecapla-certverify-admin.php:536
 msgid "That retired field cannot be restored."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:551
+#: admin/class-ecapla-certverify-admin.php:556
 msgid "The retired field could not be restored."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:555
+#: admin/class-ecapla-certverify-admin.php:560
 msgid "The retired marker could not be cleared, and the restored field could not be rolled back. Review the active and retired field registries before continuing."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:557
+#: admin/class-ecapla-certverify-admin.php:562
 msgid "The retired field could not be restored safely. The active field layout was rolled back."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:569
+#: admin/class-ecapla-certverify-admin.php:574
 msgid "Core field labels could not be reset for the current site language."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:582
+#: admin/class-ecapla-certverify-admin.php:587
 msgid "That retired field cannot be purged."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:596
+#: admin/class-ecapla-certverify-admin.php:602
 msgid "Stored values were purged, but the retired registry could not be updated. The reserved key remains safe; run Purge again to retry the final registry cleanup."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:610
+#: admin/class-ecapla-certverify-admin.php:616
 msgid "Choose a CSV file to upload."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:616
+#: admin/class-ecapla-certverify-admin.php:622
 msgid "Upload a valid .csv file."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:620
+#: admin/class-ecapla-certverify-admin.php:626
 msgid "The CSV file is larger than the 5 MB import limit."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:640
+#: admin/class-ecapla-certverify-admin.php:646
 msgid "That import session expired. Upload the file again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:65
-#: admin/views/dashboard.php:18
-msgid "Dashboard"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:65
-msgid "Home"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:651
+#: admin/class-ecapla-certverify-admin.php:657
 msgid "Only an administrator can enable Historical restore mode."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:66
+#: admin/views/dashboard.php:18
+msgid "Dashboard"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:66
+msgid "Home"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:67
 #: admin/views/frontend-manager.php:70
 #: blocks/certloom/index.js:65
 #: src/Infrastructure/Admin/TemplateAdmin.php:473
 msgid "Design"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:672
+#: admin/class-ecapla-certverify-admin.php:679
 msgid "That import session expired during processing. Upload the file again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:69
 #: admin/class-ecapla-certverify-admin.php:70
+#: admin/class-ecapla-certverify-admin.php:71
 #: admin/views/partials/brand-bar.php:7
 #: elementor/class-ecapla-certverify-elementor-widget.php:26
 msgid "Certloom"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:748
+#: admin/class-ecapla-certverify-admin.php:755
 msgid "The settings could not be saved. Role access was not changed."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:78
+#: admin/class-ecapla-certverify-admin.php:789
+msgid "The general settings were saved, but one or more role changes failed and could not be fully rolled back. Review role access before continuing."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:79
 #: src/Infrastructure/Admin/DomainAdmin.php:249
 #: src/Infrastructure/Admin/DomainAdmin.php:304
 #: src/Infrastructure/Admin/DomainAdmin.php:387
@@ -362,38 +370,30 @@ msgstr ""
 msgid "Credentials"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:782
-msgid "The general settings were saved, but one or more role changes failed and could not be fully rolled back. Review role access before continuing."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:783
+#: admin/class-ecapla-certverify-admin.php:790
 msgid "The general settings were saved, but role access could not be updated. The previous role access was restored."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:909
+#: admin/class-ecapla-certverify-admin.php:916
 msgid "The Certificate Manager role could not be created or updated."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:94
+#: admin/class-ecapla-certverify-admin.php:95
 msgid "Analytics"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:95
+#: admin/class-ecapla-certverify-admin.php:96
 #: admin/views/integrations.php:8
 msgid "Integrations"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:96
+#: admin/class-ecapla-certverify-admin.php:97
 #: admin/views/settings-manager.php:11
 msgid "Settings"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:975
+#: admin/class-ecapla-certverify-admin.php:982
 msgid "The verified private backup could not be opened for download."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:99
-msgid "Add Certificate"
 msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:114
@@ -475,7 +475,7 @@ msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:174
 #: admin/class-ecapla-certverify-list-table.php:76
-#: admin/views/import-upload.php:119
+#: admin/views/import-upload.php:129
 msgid "Delete"
 msgstr ""
 
@@ -1170,7 +1170,7 @@ msgstr ""
 
 #: admin/views/dashboard.php:152
 #: admin/views/edit-certificate.php:82
-#: admin/views/import-upload.php:103
+#: admin/views/import-upload.php:105
 #: src/Infrastructure/Admin/DomainAdmin.php:249
 #: src/Infrastructure/Admin/DomainAdmin.php:304
 #: src/Infrastructure/Admin/DomainAdmin.php:342
@@ -1480,7 +1480,7 @@ msgstr ""
 
 #: admin/views/edit-certificate.php:137
 #: admin/views/import-results.php:27
-#: admin/views/import-upload.php:103
+#: admin/views/import-upload.php:105
 #: src/Infrastructure/Admin/DomainAdmin.php:342
 msgid "Created"
 msgstr ""
@@ -1671,7 +1671,7 @@ msgid "Text"
 msgstr ""
 
 #: admin/views/fields-manager.php:125
-#: admin/views/import-upload.php:103
+#: admin/views/import-upload.php:105
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:357
 msgid "Type"
 msgstr ""
@@ -2056,160 +2056,149 @@ msgstr ""
 msgid "View certificates"
 msgstr ""
 
-#: admin/views/import-upload.php:100
+#: admin/views/import-upload.php:102
 msgid "Saved backups"
 msgstr ""
 
-#: admin/views/import-upload.php:103
+#: admin/views/import-upload.php:105
 #: admin/views/list-certificates.php:26
 msgid "Certificates"
 msgstr ""
 
-#: admin/views/import-upload.php:103
+#: admin/views/import-upload.php:105
 msgid "Integrity"
 msgstr ""
 
-#: admin/views/import-upload.php:103
+#: admin/views/import-upload.php:105
+msgid "Restore test"
+msgstr ""
+
+#: admin/views/import-upload.php:105
 msgid "Size"
-msgstr ""
-
-#: admin/views/import-upload.php:108
-#: admin/views/issuance-analytics.php:39
-#: admin/views/issuance-analytics.php:57
-msgid "Manual"
-msgstr ""
-
-#: admin/views/import-upload.php:108
-msgid "Safety"
-msgstr ""
-
-#: admin/views/import-upload.php:108
-msgid "Scheduled"
 msgstr ""
 
 #: admin/views/import-upload.php:11
 msgid "Import, export & backup"
 msgstr ""
 
-#: admin/views/import-upload.php:111
-msgid "Verified at creation"
+#: admin/views/import-upload.php:110
+#: admin/views/issuance-analytics.php:39
+#: admin/views/issuance-analytics.php:57
+msgid "Manual"
+msgstr ""
+
+#: admin/views/import-upload.php:110
+msgid "Safety"
+msgstr ""
+
+#: admin/views/import-upload.php:110
+msgid "Scheduled"
 msgstr ""
 
 #: admin/views/import-upload.php:113
+msgid "Verified at creation"
+msgstr ""
+
+#: admin/views/import-upload.php:115
+msgid "Not tested"
+msgstr ""
+
+#. translators: %s: date/time of last restore test.
+#: admin/views/import-upload.php:115
+msgid "Passed %s"
+msgstr ""
+
+#: admin/views/import-upload.php:117
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:385
 msgid "Download"
 msgstr ""
 
-#: admin/views/import-upload.php:114
+#: admin/views/import-upload.php:118
 msgid "Review restore"
 msgstr ""
 
-#: admin/views/import-upload.php:119
+#: admin/views/import-upload.php:123
+msgid "Test restore"
+msgstr ""
+
+#: admin/views/import-upload.php:129
 msgid "Delete this private backup?"
 msgstr ""
 
-#: admin/views/import-upload.php:128
+#: admin/views/import-upload.php:138
 msgid "No private backups have been saved yet. Use Back up now or enable a schedule."
 msgstr ""
 
-#: admin/views/import-upload.php:132
+#: admin/views/import-upload.php:142
 msgid "Restore"
 msgstr ""
 
-#: admin/views/import-upload.php:133
-msgid "Restore always starts with a non-destructive review. Upload a trusted Certloom backup, or choose Review restore beside a saved private backup."
-msgstr ""
-
-#: admin/views/import-upload.php:137
-msgid "Review a backup before restoring"
-msgstr ""
-
-#: admin/views/import-upload.php:139
-msgid "Analyze backup"
+#: admin/views/import-upload.php:143
+msgid "Restore always starts with a non-destructive review. Test restore validates a saved backup through the same analyzer without changing live data. Applying a restore also requires a fresh automatic safety snapshot of the current registry."
 msgstr ""
 
 #: admin/views/import-upload.php:147
-msgid "Backup restore review"
+msgid "Review a backup before restoring"
 msgstr ""
 
-#: admin/views/import-upload.php:148
-msgid "Nothing has been changed yet. Review this dry-run summary before applying the backup."
-msgstr ""
-
-#: admin/views/import-upload.php:151
-msgid "Certificates in backup"
-msgstr ""
-
-#: admin/views/import-upload.php:152
-msgid "Certificates currently stored"
-msgstr ""
-
-#: admin/views/import-upload.php:153
-msgid "New certificate numbers"
-msgstr ""
-
-#: admin/views/import-upload.php:154
-msgid "Existing certificate conflicts"
-msgstr ""
-
-#: admin/views/import-upload.php:155
-msgid "Current-only certificates"
-msgstr ""
-
-#: admin/views/import-upload.php:156
-msgid "Active field definitions"
+#: admin/views/import-upload.php:149
+msgid "Analyze backup"
 msgstr ""
 
 #: admin/views/import-upload.php:157
-msgid "Retired field definitions"
+msgid "Backup restore review"
 msgstr ""
 
 #: admin/views/import-upload.php:158
-msgid "Backup-only custom fields"
+msgid "Nothing has been changed yet. Review this dry-run summary before applying the backup."
 msgstr ""
 
-#: admin/views/import-upload.php:159
-msgid "Backup created"
+#: admin/views/import-upload.php:161
+msgid "Certificates in backup"
 msgstr ""
 
-#: admin/views/import-upload.php:160
-msgid "Source plugin version"
+#: admin/views/import-upload.php:162
+msgid "Certificates currently stored"
+msgstr ""
+
+#: admin/views/import-upload.php:163
+msgid "New certificate numbers"
+msgstr ""
+
+#: admin/views/import-upload.php:164
+msgid "Existing certificate conflicts"
+msgstr ""
+
+#: admin/views/import-upload.php:165
+msgid "Current-only certificates"
+msgstr ""
+
+#: admin/views/import-upload.php:166
+msgid "Active field definitions"
+msgstr ""
+
+#: admin/views/import-upload.php:167
+msgid "Retired field definitions"
 msgstr ""
 
 #: admin/views/import-upload.php:168
-msgid "Restore mode"
+msgid "Backup-only custom fields"
 msgstr ""
 
 #: admin/views/import-upload.php:169
-msgid "Replace entire registry and configuration"
+msgid "Backup created"
 msgstr ""
 
 #: admin/views/import-upload.php:170
-msgid "Recreates the backup snapshot exactly. Current-only certificates are removed, and the backup’s fields, retired fields, and settings replace the current configuration."
-msgstr ""
-
-#: admin/views/import-upload.php:171
-msgid "Merge certificates into the current registry"
-msgstr ""
-
-#: admin/views/import-upload.php:172
-msgid "Keeps current-only certificates and current settings. Backup-only custom-field definitions are retained as private retired fields so their stored values are not exposed automatically."
-msgstr ""
-
-#: admin/views/import-upload.php:175
-msgid "Merge conflict handling"
-msgstr ""
-
-#: admin/views/import-upload.php:176
-msgid "Keep the existing certificate and skip the backup record"
-msgstr ""
-
-#: admin/views/import-upload.php:177
-msgid "Replace the existing certificate with the backup record"
+msgid "Source plugin version"
 msgstr ""
 
 #: admin/views/import-upload.php:178
-msgid "This choice applies only to Merge mode. Replace mode always uses the backup copy."
+msgid "Restore mode"
+msgstr ""
+
+#: admin/views/import-upload.php:179
+msgid "Replace entire registry and configuration"
 msgstr ""
 
 #: admin/views/import-upload.php:18
@@ -2217,15 +2206,43 @@ msgid "Automatic backup settings saved."
 msgstr ""
 
 #: admin/views/import-upload.php:180
-msgid "I understand the selected mode and that Certloom writes will be temporarily paused while the restore is prepared."
+msgid "Recreates the backup snapshot exactly. Current-only certificates are removed, and the backup’s fields, retired fields, and settings replace the current configuration."
 msgstr ""
 
 #: admin/views/import-upload.php:181
-msgid "Start safe restore"
+msgid "Merge certificates into the current registry"
+msgstr ""
+
+#: admin/views/import-upload.php:182
+msgid "Keeps current-only certificates and current settings. Backup-only custom-field definitions are retained as private retired fields so their stored values are not exposed automatically."
+msgstr ""
+
+#: admin/views/import-upload.php:185
+msgid "Merge conflict handling"
+msgstr ""
+
+#: admin/views/import-upload.php:186
+msgid "Keep the existing certificate and skip the backup record"
+msgstr ""
+
+#: admin/views/import-upload.php:187
+msgid "Replace the existing certificate with the backup record"
+msgstr ""
+
+#: admin/views/import-upload.php:188
+msgid "This choice applies only to Merge mode. Replace mode always uses the backup copy."
 msgstr ""
 
 #: admin/views/import-upload.php:19
 msgid "Private backup storage tested successfully."
+msgstr ""
+
+#: admin/views/import-upload.php:190
+msgid "I understand the selected mode and that Certloom writes will be temporarily paused while the restore is prepared."
+msgstr ""
+
+#: admin/views/import-upload.php:191
+msgid "Start safe restore"
 msgstr ""
 
 #: admin/views/import-upload.php:20
@@ -2233,158 +2250,166 @@ msgid "Backup created, verified, and stored privately."
 msgstr ""
 
 #: admin/views/import-upload.php:21
+msgid "Restore test passed without changing live Certloom data."
+msgstr ""
+
+#: admin/views/import-upload.php:22
 msgid "Private backup deleted."
 msgstr ""
 
-#: admin/views/import-upload.php:29
+#: admin/views/import-upload.php:30
 msgid "Import certificates from CSV"
 msgstr ""
 
-#: admin/views/import-upload.php:30
+#: admin/views/import-upload.php:31
 msgid "CSV is intended for spreadsheet editing and tabular transfers. It is not a complete site backup. Upload a file, review automatic column mapping, and decide how existing certificate numbers should be handled."
 msgstr ""
 
-#: admin/views/import-upload.php:32
+#: admin/views/import-upload.php:33
 msgid "Maximum file size: 5 MB"
 msgstr ""
 
 #. translators: %d: maximum number of rows per import.
-#: admin/views/import-upload.php:33
+#: admin/views/import-upload.php:34
 msgid "Maximum certificate rows per import: %d"
 msgstr ""
 
-#: admin/views/import-upload.php:34
+#: admin/views/import-upload.php:35
 msgid "Accepted format: UTF-8 CSV with one header row"
 msgstr ""
 
-#: admin/views/import-upload.php:35
+#: admin/views/import-upload.php:36
 msgid "Spreadsheet-formula characters in exported CSV files are neutralized for safety and may not round-trip as literal leading characters. Use Complete backup for lossless restoration."
 msgstr ""
 
-#: admin/views/import-upload.php:39
+#: admin/views/import-upload.php:40
 msgid "Choose CSV file"
 msgstr ""
 
-#: admin/views/import-upload.php:41
+#: admin/views/import-upload.php:42
 msgid "Analyze CSV"
 msgstr ""
 
-#: admin/views/import-upload.php:46
+#: admin/views/import-upload.php:47
 msgid "CSV tools"
 msgstr ""
 
-#: admin/views/import-upload.php:47
+#: admin/views/import-upload.php:48
 msgid "Download a template shaped by the active field layout, or export tabular certificate data for spreadsheet use."
 msgstr ""
 
-#: admin/views/import-upload.php:48
+#: admin/views/import-upload.php:49
 msgid "Download import template"
 msgstr ""
 
-#: admin/views/import-upload.php:49
+#: admin/views/import-upload.php:50
 msgid "Export certificate CSV"
 msgstr ""
 
-#: admin/views/import-upload.php:54
+#: admin/views/import-upload.php:55
 msgid "Backup & recovery"
 msgstr ""
 
-#: admin/views/import-upload.php:55
+#: admin/views/import-upload.php:56
 msgid "Protect the current authoritative Certloom registry with the same lossless, versioned backup format used by manual downloads. Automatic backups stay in private local storage and never switch credential authority."
 msgstr ""
 
-#: admin/views/import-upload.php:56
+#: admin/views/import-upload.php:57
 msgid "Current Certloom registry"
 msgstr ""
 
-#: admin/views/import-upload.php:56
+#: admin/views/import-upload.php:57
 msgid "Source authority:"
 msgstr ""
 
-#: admin/views/import-upload.php:57
+#: admin/views/import-upload.php:58
 msgid "Destination:"
 msgstr ""
 
-#: admin/views/import-upload.php:57
+#: admin/views/import-upload.php:58
 msgid "Local private storage"
 msgstr ""
 
-#: admin/views/import-upload.php:64
+#: admin/views/import-upload.php:59
+msgid "Before Restore, CSV import, reviewed bulk changes, bulk deletion, or permanent retired-field purge, Certloom creates a verified safety snapshot and stops the destructive operation if that snapshot cannot be created. Automatic safety snapshots use their own bounded retention and never replace explicit manual backups."
+msgstr ""
+
+#: admin/views/import-upload.php:66
 msgid "Download fresh backup"
 msgstr ""
 
-#: admin/views/import-upload.php:68
+#: admin/views/import-upload.php:70
 msgid "Test storage"
 msgstr ""
 
-#: admin/views/import-upload.php:73
+#: admin/views/import-upload.php:75
 msgid "Back up now"
 msgstr ""
 
-#: admin/views/import-upload.php:77
+#: admin/views/import-upload.php:79
 msgid "Automatic backups"
 msgstr ""
 
-#: admin/views/import-upload.php:81
+#: admin/views/import-upload.php:83
 msgid "Schedule"
 msgstr ""
 
-#: admin/views/import-upload.php:83
+#: admin/views/import-upload.php:85
 msgid "Off"
 msgstr ""
 
-#: admin/views/import-upload.php:84
+#: admin/views/import-upload.php:86
 msgid "Daily"
 msgstr ""
 
-#: admin/views/import-upload.php:85
+#: admin/views/import-upload.php:87
 msgid "Weekly"
 msgstr ""
 
-#: admin/views/import-upload.php:87
+#: admin/views/import-upload.php:89
 msgid "Automatic retention"
 msgstr ""
 
-#: admin/views/import-upload.php:89
+#: admin/views/import-upload.php:91
 msgid "backups"
 msgstr ""
 
-#: admin/views/import-upload.php:90
+#: admin/views/import-upload.php:92
 msgid "Save backup settings"
 msgstr ""
 
-#: admin/views/import-upload.php:94
+#: admin/views/import-upload.php:96
 msgid "Last run:"
 msgstr ""
 
-#: admin/views/import-upload.php:94
+#: admin/views/import-upload.php:96
 msgid "Not run yet"
 msgstr ""
 
-#: admin/views/import-upload.php:95
+#: admin/views/import-upload.php:97
 msgid "Last result:"
 msgstr ""
 
-#: admin/views/import-upload.php:95
+#: admin/views/import-upload.php:97
 #: src/Infrastructure/Admin/DomainAdmin.php:391
 msgid "Needs attention"
 msgstr ""
 
-#: admin/views/import-upload.php:95
+#: admin/views/import-upload.php:97
 #: includes/class-ecapla-certverify-public-presentation.php:142
 #: includes/class-ecapla-certverify-render.php:372
 msgid "Verified"
 msgstr ""
 
-#: admin/views/import-upload.php:95
+#: admin/views/import-upload.php:97
 msgid "—"
 msgstr ""
 
-#: admin/views/import-upload.php:96
+#: admin/views/import-upload.php:98
 msgid "Next scheduled run:"
 msgstr ""
 
-#: admin/views/import-upload.php:96
+#: admin/views/import-upload.php:98
 msgid "Not scheduled"
 msgstr ""
 
@@ -13423,74 +13448,82 @@ msgstr ""
 msgid "The backup file was removed, but Certloom could not update its local backup catalog."
 msgstr ""
 
-#: src/Infrastructure/Backup/LocalBackupStore.php:173
+#: src/Infrastructure/Backup/LocalBackupStore.php:175
 msgid "Certloom stopped automatic retention cleanup because an owned scheduled backup could not be removed safely."
 msgstr ""
 
-#: src/Infrastructure/Backup/LocalBackupStore.php:177
+#: src/Infrastructure/Backup/LocalBackupStore.php:180
 msgid "Certloom removed expired scheduled backup files but could not save the updated retention catalog."
 msgstr ""
 
-#: src/Infrastructure/Backup/LocalBackupStore.php:200
+#: src/Infrastructure/Backup/LocalBackupStore.php:201
+msgid "Certloom stopped safety-snapshot retention because an owned backup could not be removed safely."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:206
+msgid "Certloom removed expired safety snapshots but could not save the updated backup catalog."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:229
 msgid "Certloom could not find persistent private backup storage outside the public WordPress webroot. Configure certloom_private_backup_directory to an absolute non-public path before enabling automatic backups."
 msgstr ""
 
-#: src/Infrastructure/Backup/LocalBackupStore.php:208
+#: src/Infrastructure/Backup/LocalBackupStore.php:237
 msgid "Certloom could not create its private backup directory."
 msgstr ""
 
-#: src/Infrastructure/Backup/LocalBackupStore.php:220
+#: src/Infrastructure/Backup/LocalBackupStore.php:249
 msgid "Certloom could not protect its private backup directory."
 msgstr ""
 
-#: src/Infrastructure/Backup/LocalBackupStore.php:235
+#: src/Infrastructure/Backup/LocalBackupStore.php:264
 msgid "Certloom could not create a secure private-storage test."
 msgstr ""
 
-#: src/Infrastructure/Backup/LocalBackupStore.php:240
+#: src/Infrastructure/Backup/LocalBackupStore.php:269
 msgid "Certloom could not create a test file in the configured private backup destination."
 msgstr ""
 
-#: src/Infrastructure/Backup/LocalBackupStore.php:248
+#: src/Infrastructure/Backup/LocalBackupStore.php:277
 msgid "Certloom could not finish writing its private backup destination test."
 msgstr ""
 
-#: src/Infrastructure/Backup/LocalBackupStore.php:254
+#: src/Infrastructure/Backup/LocalBackupStore.php:283
 msgid "Certloom refused a private backup destination that did not reproduce its test bytes exactly."
 msgstr ""
 
-#: src/Infrastructure/Backup/LocalBackupStore.php:257
+#: src/Infrastructure/Backup/LocalBackupStore.php:286
 msgid "Certloom refused a private backup destination where its temporary test file could not be removed cleanly."
-msgstr ""
-
-#: src/Infrastructure/Backup/LocalBackupStore.php:298
-msgid "Certloom refused a backup path outside its owned private directory."
-msgstr ""
-
-#: src/Infrastructure/Backup/LocalBackupStore.php:313
-#: src/Infrastructure/Backup/LocalBackupStore.php:323
-msgid "Certloom refused to use a filesystem root as its backup directory."
-msgstr ""
-
-#: src/Infrastructure/Backup/LocalBackupStore.php:316
-msgid "Certloom refused a symlink as its persistent backup directory."
 msgstr ""
 
 #: src/Infrastructure/Backup/LocalBackupStore.php:32
 msgid "The completed Certloom backup is not available for private storage."
 msgstr ""
 
-#: src/Infrastructure/Backup/LocalBackupStore.php:320
-msgid "Certloom private backup storage requires an absolute filesystem path."
+#: src/Infrastructure/Backup/LocalBackupStore.php:327
+msgid "Certloom refused a backup path outside its owned private directory."
 msgstr ""
 
-#: src/Infrastructure/Backup/LocalBackupStore.php:331
-msgid "Certloom refused persistent backup storage inside the public WordPress webroot. Server deny files are defense in depth, not a portable confidentiality boundary."
+#: src/Infrastructure/Backup/LocalBackupStore.php:342
+#: src/Infrastructure/Backup/LocalBackupStore.php:352
+msgid "Certloom refused to use a filesystem root as its backup directory."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:345
+msgid "Certloom refused a symlink as its persistent backup directory."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:349
+msgid "Certloom private backup storage requires an absolute filesystem path."
 msgstr ""
 
 #: src/Infrastructure/Backup/LocalBackupStore.php:35
 #: src/Infrastructure/Backup/ScheduledBackup.php:82
 msgid "Certloom refused an invalid backup purpose."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:360
+msgid "Certloom refused persistent backup storage inside the public WordPress webroot. Server deny files are defense in depth, not a portable confidentiality boundary."
 msgstr ""
 
 #: src/Infrastructure/Backup/LocalBackupStore.php:39
@@ -13519,6 +13552,31 @@ msgstr ""
 
 #: src/Infrastructure/Backup/LocalBackupStore.php:83
 msgid "Certloom removed a private backup copy that failed its post-write integrity check."
+msgstr ""
+
+#: src/Infrastructure/Backup/RestoreTest.php:21
+msgid "Certloom could read the backup but could not complete its non-destructive restore preview."
+msgstr ""
+
+#: src/Infrastructure/Backup/RestoreTest.php:43
+msgid "The restore test passed, but Certloom could not save its local evidence record."
+msgstr ""
+
+#: src/Infrastructure/Backup/SafetySnapshot.php:19
+msgid "Certloom refused an unknown safety-snapshot operation."
+msgstr ""
+
+#: src/Infrastructure/Backup/SafetySnapshot.php:23
+msgid "Certloom could not identify the destructive operation safely."
+msgstr ""
+
+#. translators: %s: local backup error.
+#: src/Infrastructure/Backup/SafetySnapshot.php:55
+msgid "Certloom stopped the destructive operation because its safety snapshot could not be created: %s"
+msgstr ""
+
+#: src/Infrastructure/Backup/SafetySnapshot.php:69
+msgid "Certloom created a backup but refused to continue because its safety receipt was incomplete."
 msgstr ""
 
 #: src/Infrastructure/Backup/ScheduledBackup.php:101

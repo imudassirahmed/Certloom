@@ -49,6 +49,7 @@ class Ecapla_CertVerify_Admin {
 		add_action( 'admin_post_certloom_backup_run_now', array( $this, 'handle_backup_run_now' ) );
 		add_action( 'admin_post_certloom_backup_saved_download', array( $this, 'handle_backup_saved_download' ) );
 		add_action( 'admin_post_certloom_backup_saved_review', array( $this, 'handle_backup_saved_review' ) );
+		add_action( 'admin_post_certloom_backup_saved_test_restore', array( $this, 'handle_backup_saved_test_restore' ) );
 		add_action( 'admin_post_certloom_backup_saved_delete', array( $this, 'handle_backup_saved_delete' ) );
 		add_action( 'admin_init', array( $this, 'handle_status_review_acknowledgement' ) );
 		add_action( 'admin_post_ecapla_certverify_delete_certificate', array( $this, 'handle_delete' ) );
@@ -269,6 +270,9 @@ class Ecapla_CertVerify_Admin {
 			exit;
 		}
 
+		if ( ! empty( $ids ) ) {
+			$this->require_safety_snapshot( 'bulk_delete', implode( ',', array_values( array_unique( $ids ) ) ), $this->list_return_url() );
+		}
 		$count = Ecapla_CertVerify_Database::delete_many( $ids );
 		if ( is_wp_error( $count ) ) {
 			$this->redirect_error( $count->get_error_message(), $this->list_return_url() );
@@ -315,6 +319,7 @@ class Ecapla_CertVerify_Admin {
 		if ( is_wp_error( $session ) ) {
 			$this->redirect_error( $session->get_error_message(), admin_url( 'admin.php?page=' . self::CERTIFICATES_PAGE ) );
 		}
+		$this->require_safety_snapshot( 'bulk_change', $token, add_query_arg( array( 'page' => 'certloom-bulk-review', 'token' => $token ), admin_url( 'admin.php' ) ) );
 		$result = Ecapla_CertVerify_Bulk_Manager::commit( $token );
 		if ( is_wp_error( $result ) ) {
 			$this->redirect_error( $result->get_error_message(), add_query_arg( array( 'page' => 'certloom-bulk-review', 'token' => $token ), admin_url( 'admin.php' ) ) );
@@ -582,6 +587,7 @@ class Ecapla_CertVerify_Admin {
 			$this->redirect_error( __( 'That retired field cannot be purged.', 'certloom' ), admin_url( 'admin.php?page=certloom-fields' ) );
 		}
 
+		$this->require_safety_snapshot( 'field_purge', $key, admin_url( 'admin.php?page=certloom-fields' ) );
 		$result = Ecapla_CertVerify_Database::purge_custom_field_values( $key );
 		if ( is_wp_error( $result ) ) {
 			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-fields' ) );
@@ -650,6 +656,7 @@ class Ecapla_CertVerify_Admin {
 		if ( $historical_restore && ! current_user_can( 'manage_options' ) ) {
 			$this->redirect_error( __( 'Only an administrator can enable Historical restore mode.', 'certloom' ), admin_url( 'admin.php?page=certloom-import' ) );
 		}
+		$this->require_safety_snapshot( 'csv_import', $token, admin_url( 'admin.php?page=certloom-import' ) );
 		$progress = Ecapla_CertVerify_Import::start_stored_process( $token, $mapping, ! empty( $_POST['update_existing'] ), ! empty( $_POST['clear_empty'] ), $historical_restore );
 		$this->redirect_import_progress( $token, $progress );
 	}
@@ -999,6 +1006,18 @@ class Ecapla_CertVerify_Admin {
 		exit;
 	}
 
+	public function handle_backup_saved_test_restore() {
+		$this->require_options_permission();
+		$id = isset( $_POST['backup_id'] ) ? sanitize_text_field( wp_unslash( $_POST['backup_id'] ) ) : '';
+		check_admin_referer( 'certloom_backup_saved_test_restore_' . $id );
+		$result = \Certloom\Infrastructure\Backup\RestoreTest::run( $id );
+		if ( is_wp_error( $result ) ) {
+			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
+		}
+		wp_safe_redirect( add_query_arg( 'backup_notice', 'restore-tested', admin_url( 'admin.php?page=certloom-import' ) ) );
+		exit;
+	}
+
 	public function handle_backup_saved_delete() {
 		$this->require_options_permission();
 		$id = isset( $_POST['backup_id'] ) ? sanitize_text_field( wp_unslash( $_POST['backup_id'] ) ) : '';
@@ -1040,6 +1059,7 @@ class Ecapla_CertVerify_Admin {
 		$token  = isset( $_POST['backup_token'] ) ? sanitize_text_field( wp_unslash( $_POST['backup_token'] ) ) : '';
 		$policy = isset( $_POST['conflict_policy'] ) ? sanitize_key( wp_unslash( $_POST['conflict_policy'] ) ) : 'skip';
 		$mode   = isset( $_POST['restore_mode'] ) ? sanitize_key( wp_unslash( $_POST['restore_mode'] ) ) : 'replace';
+		$this->require_safety_snapshot( 'restore', $token, admin_url( 'admin.php?page=certloom-import' ) );
 		$result = Ecapla_CertVerify_Backup::start_restore( $token, $policy, $mode );
 		if ( is_wp_error( $result ) ) {
 			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
@@ -1427,6 +1447,15 @@ class Ecapla_CertVerify_Admin {
 	 *
 	 * @return string
 	 */
+	/** Blocks a reviewed destructive action unless its current-authority safety snapshot is verified. */
+	private function require_safety_snapshot( $operation, $operation_key, $return_url ) {
+		$result = \Certloom\Infrastructure\Backup\SafetySnapshot::before( $operation, $operation_key );
+		if ( is_wp_error( $result ) ) {
+			$this->redirect_error( $result->get_error_message(), $return_url );
+		}
+		return $result;
+	}
+
 	private function bulk_return_state_from_request( $request ) {
 		$request = is_array( $request ) ? $request : array();
 		return Ecapla_CertVerify_Bulk_Manager::sanitize_return_state( $request );

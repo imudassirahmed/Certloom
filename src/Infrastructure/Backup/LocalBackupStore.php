@@ -149,7 +149,9 @@ final class LocalBackupStore {
 			return new \WP_Error( 'certloom_backup_delete_failed', __( 'Certloom could not remove the selected private backup file.', 'certloom' ) );
 		}
 		$catalog = array_values( array_filter( $catalog, function ( $entry ) use ( $id ) { return ! hash_equals( (string) $id, (string) $entry['id'] ); } ) );
-		return $this->save_catalog( $catalog ) ? true : new \WP_Error( 'certloom_backup_catalog_save_failed', __( 'The backup file was removed, but Certloom could not update its local backup catalog.', 'certloom' ) );
+		if ( ! $this->save_catalog( $catalog ) ) { return new \WP_Error( 'certloom_backup_catalog_save_failed', __( 'The backup file was removed, but Certloom could not update its local backup catalog.', 'certloom' ) ); }
+		if ( class_exists( RestoreTest::class ) ) { RestoreTest::forget( $id ); }
+		return true;
 	}
 
 	/** Keep only the newest N scheduled backups; manual/safety backups remain explicit. @return int|\WP_Error */
@@ -172,9 +174,36 @@ final class LocalBackupStore {
 			if ( ( file_exists( $path ) || is_link( $path ) ) && ! @unlink( $path ) ) {
 				return new \WP_Error( 'certloom_backup_prune_failed', __( 'Certloom stopped automatic retention cleanup because an owned scheduled backup could not be removed safely.', 'certloom' ) );
 			}
+			if ( class_exists( RestoreTest::class ) ) { RestoreTest::forget( (string) $entry['id'] ); }
 			$deleted++;
 		}
 		return $this->save_catalog( $keep ) ? $deleted : new \WP_Error( 'certloom_backup_catalog_save_failed', __( 'Certloom removed expired scheduled backup files but could not save the updated retention catalog.', 'certloom' ) );
+	}
+
+	/** Keep only the newest N automatic safety snapshots; manual/scheduled backups remain explicit. @return int|\WP_Error */
+	public function prune_safety( $retain ) {
+		$retain  = max( 3, min( 30, absint( $retain ) ?: 10 ) );
+		$catalog = $this->list_backups();
+		$safety_seen = 0;
+		$keep = array();
+		$remove = array();
+		foreach ( $catalog as $entry ) {
+			if ( 'safety' !== $entry['purpose'] ) { $keep[] = $entry; continue; }
+			$safety_seen++;
+			if ( $safety_seen <= $retain ) { $keep[] = $entry; } else { $remove[] = $entry; }
+		}
+		if ( empty( $remove ) ) { return 0; }
+		$deleted = 0;
+		foreach ( $remove as $entry ) {
+			$path = $this->path_for_entry( $entry, true );
+			if ( is_wp_error( $path ) ) { return $path; }
+			if ( ( file_exists( $path ) || is_link( $path ) ) && ! @unlink( $path ) ) {
+				return new \WP_Error( 'certloom_backup_safety_prune_failed', __( 'Certloom stopped safety-snapshot retention because an owned backup could not be removed safely.', 'certloom' ) );
+			}
+			if ( class_exists( RestoreTest::class ) ) { RestoreTest::forget( (string) $entry['id'] ); }
+			$deleted++;
+		}
+		return $this->save_catalog( $keep ) ? $deleted : new \WP_Error( 'certloom_backup_catalog_save_failed', __( 'Certloom removed expired safety snapshots but could not save the updated backup catalog.', 'certloom' ) );
 	}
 
 	/** @return string|\WP_Error */
