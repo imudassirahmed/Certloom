@@ -10,7 +10,7 @@ $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admi
 $pass=0;$fail=0;
 function dsn2($ok,$label){global $pass,$fail;if($ok){$pass++;echo "PASS  $label\n";}else{$fail++;echo "FAIL  $label\n";}}
 
-dsn2(is_string($admin)&&strpos($admin,'DSX-02A · Easy Designer')!==false&&strpos($admin,'DSN-08 is a closed built-in registry')!==false&&strpos($admin,'data-certloom-designer-undo')!==false&&strpos($admin,'data-certloom-designer-redo')!==false,'Quick Designer retains the DSN-02 productivity surface behind Pro presentation');
+dsn2(is_string($admin)&&strpos($admin,'Easy Designer')!==false&&strpos($admin,'DSN-08 is a closed built-in registry')!==false&&strpos($admin,'data-certloom-designer-undo')!==false&&strpos($admin,'data-certloom-designer-redo')!==false,'Quick Designer retains the DSN-02 productivity surface behind Pro presentation');
 dsn2(strpos($admin,'data-certloom-designer-state-json')!==false&&strpos($admin,'designer_state_json')!==false,'Designer submits non-artifact authoring state separately from canonical layout JSON');
 dsn2(strpos($admin,'update_user_meta')!==false&&strpos($admin,"get_current_blog_id() . '_' . absint( \$template_id )")!==false,'personal locks/snapping persist in site-scoped WordPress user meta rather than artifact content');
 dsn2(strpos($admin,'TemplateDesignerState')!==false,'authoring-state persistence passes through a dedicated normalizer');

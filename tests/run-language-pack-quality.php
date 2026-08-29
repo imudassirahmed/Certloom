@@ -55,7 +55,7 @@ lpq_check( false !== strpos( $build_script, 'validate_language_packs.py' ), 'det
 list( $rc, $output ) = lpq_exec( 'python3 ' . escapeshellarg( $validator ) . ' ' . escapeshellarg( $root ) . ' --json' );
 lpq_check( 0 === $rc, 'production manifest validates: ' . $output );
 $report = json_decode( $output, true );
-lpq_check( 3876 === (int) ( $report['source_strings'] ?? 0 ), 'quality pipeline sees all 3,876 source strings' );
+lpq_check( 3966 === (int) ( $report['source_strings'] ?? 0 ), 'quality pipeline sees all 3,966 source strings' );
 lpq_check( empty( $report['errors'] ), 'production manifest has no quality errors' );
 
 list( $fixture_rc, $fixture_output ) = lpq_exec( 'python3 ' . escapeshellarg( $validator ) . ' ' . escapeshellarg( $root ) . ' --manifest tests/i18n/fixtures/candidate-manifest.json --json' );

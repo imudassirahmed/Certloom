@@ -3277,3 +3277,82 @@
 @media (max-width:782px){.certloom-locale-variant-row{grid-template-columns:1fr}.certloom-locale-variant-remove{justify-self:start;min-height:44px}.certloom-locale-variant-actions{align-items:stretch}.certloom-locale-variant-actions .button{min-height:44px}.certloom-locale-variant-actions label{width:100%;min-width:0}.certloom-locale-variant-row input,.certloom-locale-variant-row select,.certloom-locale-variant-actions select{min-height:44px}}
 @media (forced-colors:active){.certloom-program-locale-summary .certloom-program-readonly-value{border:1px solid CanvasText;background:Canvas}}
 @media (max-width:782px){.certloom-program-profile .certloom-locale-variant-row input[type="text"],.certloom-program-profile .certloom-locale-variant-row select,.certloom-program-profile .certloom-locale-variant-actions select{min-height:44px}}
+
+/* BAK-02A — calm, compact Backup & Recovery workspace. */
+.certloom-backup-center .certloom-backup-actions {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+	margin: 12px 0 18px;
+}
+.certloom-backup-center .certloom-backup-actions p,
+.certloom-backup-center .certloom-backup-actions form,
+.certloom-backup-center .certloom-backup-actions .submit {
+	margin: 0;
+	padding: 0;
+}
+.certloom-backup-settings-form {
+	display: grid;
+	grid-template-columns: minmax(150px, 220px) minmax(150px, 220px) auto;
+	gap: 12px 18px;
+	align-items: end;
+	margin-bottom: 12px;
+}
+.certloom-backup-settings-form p,
+.certloom-backup-settings-form .submit {
+	margin: 0;
+	padding: 0;
+}
+.certloom-backup-settings-form select,
+.certloom-backup-settings-form input[type="number"] {
+	min-height: 40px;
+	width: 100%;
+}
+.certloom-backup-status {
+	margin: 14px 0 18px 18px;
+}
+.certloom-backup-table-wrap {
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+}
+.certloom-backup-table {
+	min-width: 780px;
+}
+.certloom-backup-row-actions {
+	white-space: nowrap;
+}
+.certloom-backup-row-actions .button,
+.certloom-backup-row-actions .certloom-inline-form {
+	display: inline-block;
+	vertical-align: middle;
+	margin: 2px 4px 2px 0;
+}
+.certloom-inline-form {
+	margin: 0;
+}
+@media (max-width: 782px) {
+	.certloom-backup-settings-form {
+		grid-template-columns: 1fr;
+	}
+	.certloom-backup-center .button,
+	.certloom-backup-center button,
+	.certloom-backup-center select,
+	.certloom-backup-center input[type="number"] {
+		min-height: 44px;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.certloom-backup-center *,
+	.certloom-backup-center *::before,
+	.certloom-backup-center *::after {
+		scroll-behavior: auto !important;
+	}
+}
+@media (forced-colors: active) {
+	.certloom-backup-table-wrap,
+	.certloom-backup-settings-form select,
+	.certloom-backup-settings-form input[type="number"] {
+		border: 1px solid CanvasText;
+	}
+}

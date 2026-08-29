@@ -1,3 +1,19 @@
+= 1.6.88 =
+* BAK-02A: local Scheduled Backup & Recovery using the same canonical current-authority v4 backup builder as manual downloads.
+* Adds persistent private local storage separate from short-lived job retention, exact post-write/download/restore SHA-256 verification, scheduled-only retention, Back up now and Test storage actions, and Off/Daily/Weekly WordPress Cron scheduling.
+* Reuses the existing non-destructive restore analyzer and restore engine; no parallel restore authority or normalized-domain cutover is introduced.
+* Refuses public-webroot, filesystem-root and symlink backup directories; protects overlapping runs with owned expiring locks and preserves explicit manual backups from automatic retention.
+* BAK-02B safety snapshots/restore testing follows; BAK-03 Google Drive remains a separate provider-neutral destination milestone.
+
+= 1.6.87 =
+* DSX-QA-01: Designer-wide usability/accessibility certification and customer-language polish.
+* Removes internal DSN/DSX milestone labels from normal editing while preserving technical integrity evidence behind disclosure.
+* Contextual Arrange/Distribute, compact mobile Add palette and comfortable mobile canvas behavior are regression-protected.
+* No layout schema, renderer authority, normalized-domain authority or remote dependency change.
+
+= 1.6.86 =
+* DSX-02B Easy Designer: transient multi-select, atomic group drag/nudge/alignment, equal spacing, locked-selection safety, compact canonical text controls, and dedicated source/Chromium regression. No layout schema or renderer/database authority change.
+
 1.6.85
 - Add FONT-02A controlled Designer font catalog with bounded Sans Serif, Serif and Monospace roles shared by direct canvas and browser Preview.
 - Remove free-text/read-only font-family authoring; persist only stable canonical font keys and reject arbitrary CSS/remote-font values.

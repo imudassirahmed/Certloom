@@ -6,9 +6,9 @@ require_once __DIR__ . '/bootstrap-autoload.php';
 use Certloom\Domain\Rendering\ElementRegistry;
 $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'); $js=file_get_contents($root.'/admin/assets/designer.js'); $css=file_get_contents($root.'/admin/assets/designer.css'); $plugin=file_get_contents($root.'/certloom.php');
 $pass=0;$fail=0; function dsx($ok,$label){global$pass,$fail;if($ok){$pass++;echo"PASS  $label\n";}else{$fail++;echo"FAIL  $label\n";}}
-dsx(is_string($admin)&&strpos($admin,'DSX-02A · Easy Designer')!==false,'Template admin identifies DSX-01 Quick Designer');
+dsx(is_string($admin)&&strpos($admin,'Easy Designer')!==false,'Template admin identifies DSX-01 Quick Designer');
 dsx(strpos($admin,'data-certloom-designer-mode-button="quick"')!==false&&strpos($admin,'data-certloom-designer-mode-button="pro"')!==false,'Quick and Pro presentation modes are explicit');
-dsx(strpos($admin,'Same canonical layout · different editing depth')!==false,'mode switch states one canonical layout authority');
+dsx(strpos($admin,'Same design · more precise controls in Pro')!==false,'mode switch explains Quick versus Pro in customer language while preserving one design authority');
 dsx(strpos($admin,'data-designer-default-mode="quick"')!==false,'Quick Designer is the default presentation');
 dsx(strpos($admin,'certloom-designer-pro-only')!==false&&strpos($admin,'certloom-designer-quick-only')!==false,'progressive disclosure classes exist');
 dsx(strpos($admin,'certloom-template-designer-stage')!==false&&strpos($admin,'certloom-template-designer-add-panel')!==false,'Quick Designer has Add plus canvas/properties stage');
@@ -20,7 +20,7 @@ dsx(strpos($admin,'data-certloom-designer-custom-token')!==false,'custom merge-t
 dsx(strpos($admin,'Choose from Media Library')!==false,'image editing still uses WordPress Media Library');
 dsx(strpos($admin,'data-certloom-designer-layers-toggle')!==false,'Layers are available on demand in Quick mode');
 dsx(strpos($admin,'certloom-template-designer-geometry-grid certloom-designer-pro-only')!==false&&strpos($admin,"'x' => __( 'X (mm)'")!==false,'exact geometry remains available to Pro Designer');
-dsx(strpos($admin,'Canonical DSN-08')!==false&&strpos($admin,'DSN-08 is a closed built-in registry')!==false,'DSN-08 typed registry remains explicit');
+dsx(strpos($admin,'Controlled styles')!==false&&strpos($admin,'DSN-08 is a closed built-in registry')!==false,'customer styling label is plain-language while the collapsed technical boundary still records DSN-08 integrity');
 dsx(strpos($admin,'certloom_template_revision')!==false&&strpos($admin,'data-certloom-designer-json')!==false,'Quick Designer saves through immutable Template revision action');
 
 dsx(is_string($js)&&strpos($js,'applyDesignerMode')!==false,'runtime switches presentation modes without replacing layout state');

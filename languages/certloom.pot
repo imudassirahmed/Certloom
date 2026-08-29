@@ -15,9 +15,43 @@ msgstr ""
 "X-Generator: certloom make-pot.py\n"
 "X-Domain: certloom\n"
 
+#: admin/class-ecapla-certverify-admin.php:100
+msgid "Field Manager"
+msgstr ""
+
 #: admin/class-ecapla-certverify-admin.php:101
-#: admin/class-ecapla-certverify-admin.php:1078
-#: admin/class-ecapla-certverify-admin.php:77
+msgid "Appearance & Embed"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1018
+msgid "Choose a Certloom backup file."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:102
+msgid "Setup"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1024
+msgid "Upload a valid .cvbackup or legacy .json Certloom backup."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:103
+#: admin/views/bulk-review.php:15
+msgid "Review bulk change"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1038
+msgid "Confirm that you understand the selected restore mode can replace or merge Certloom data and that Certloom writes will be paused until the restore finishes."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:105
+#: admin/class-ecapla-certverify-admin.php:92
+msgid "Data Tools"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:107
+#: admin/class-ecapla-certverify-admin.php:1175
+#: admin/class-ecapla-certverify-admin.php:83
 #: src/Infrastructure/Admin/DomainAdmin.php:232
 #: src/Infrastructure/Admin/DomainAdmin.php:237
 #: src/Infrastructure/Admin/DomainAdmin.php:53
@@ -25,9 +59,9 @@ msgstr ""
 msgid "Recipients"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:102
-#: admin/class-ecapla-certverify-admin.php:1096
-#: admin/class-ecapla-certverify-admin.php:83
+#: admin/class-ecapla-certverify-admin.php:108
+#: admin/class-ecapla-certverify-admin.php:1193
+#: admin/class-ecapla-certverify-admin.php:89
 #: admin/views/analytics.php:10
 #: admin/views/issuance-analytics.php:10
 #: src/Infrastructure/Admin/DomainAdmin.php:717
@@ -36,34 +70,38 @@ msgstr ""
 msgid "Issuance"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1063
+#: admin/class-ecapla-certverify-admin.php:1160
 msgid "Framework ready"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1064
+#: admin/class-ecapla-certverify-admin.php:1161
 msgid "INT-01 + LMSCTX-01"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1066
+#: admin/class-ecapla-certverify-admin.php:1163
 msgid "I18N-03 human language review next; Tutor LMS remains paused until UX-QA-01"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1079
-#: admin/class-ecapla-certverify-admin.php:1085
+#: admin/class-ecapla-certverify-admin.php:117
+msgid "You must be signed in to change the Certloom workspace mode."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1176
+#: admin/class-ecapla-certverify-admin.php:1182
 msgid "Phase 1 data model"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1080
+#: admin/class-ecapla-certverify-admin.php:1177
 msgid "First-class Recipient administration is implemented in the normalized domain and remains acceptance-gated until the real WordPress/MySQL migration and cutover proof passes."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1081
-#: admin/class-ecapla-certverify-admin.php:1087
+#: admin/class-ecapla-certverify-admin.php:1178
+#: admin/class-ecapla-certverify-admin.php:1184
 msgid "Implementation complete · production acceptance gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1084
-#: admin/class-ecapla-certverify-admin.php:79
+#: admin/class-ecapla-certverify-admin.php:1181
+#: admin/class-ecapla-certverify-admin.php:85
 #: admin/views/issuance-analytics.php:63
 #: src/Infrastructure/Admin/DomainAdmin.php:287
 #: src/Infrastructure/Admin/DomainAdmin.php:292
@@ -73,249 +111,249 @@ msgstr ""
 msgid "Programs"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1086
+#: admin/class-ecapla-certverify-admin.php:1183
 msgid "Standalone Program administration is implemented in the normalized domain and remains acceptance-gated. Certloom will not emulate Program relationships inside legacy custom fields."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1090
-#: admin/class-ecapla-certverify-admin.php:60
+#: admin/class-ecapla-certverify-admin.php:1187
+#: admin/class-ecapla-certverify-admin.php:66
 #: admin/views/issuance-analytics.php:63
 #: src/Infrastructure/Admin/TemplateAdmin.php:172
 #: src/Infrastructure/Admin/TemplateAdmin.php:473
 msgid "Templates"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1091
+#: admin/class-ecapla-certverify-admin.php:1188
 msgid "Pro commercial core · implementation gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1092
+#: admin/class-ecapla-certverify-admin.php:1189
 msgid "Versioned Templates, the visual Template Library, curated premium design concepts and Quick/Pro Designer are implemented over immutable Template revisions and the canonical Render Plan. I18N-02 locale/RTL and Program language-specific published-design resolution are implemented. Production PDF/image publication remains fail-closed until renderer release authority is accepted."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1093
+#: admin/class-ecapla-certverify-admin.php:1190
 msgid "Template Library + Designer implemented · production artifact authority gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1097
+#: admin/class-ecapla-certverify-admin.php:1194
 msgid "P0 issuance workflow · implementation gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1098
+#: admin/class-ecapla-certverify-admin.php:1195
 msgid "Manual and Bulk Issuance, Credential Management, Email Delivery, Recipient Portal, Public Sharing, Analytics and INT-01 are implemented. Program Profiles resolve Program and locale-specific published designs, while immutable Versions freeze exact Program, locale and Template provenance. Normalized public authority and production PDF/image exports remain acceptance-gated."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1099
+#: admin/class-ecapla-certverify-admin.php:1196
 msgid "Issuance workflow implemented · normalized/public artifact authority gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1104
+#: admin/class-ecapla-certverify-admin.php:1201
 msgid "That Certloom workspace is not available."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:111
-msgid "You must be signed in to change the Certloom workspace mode."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1119
+#: admin/class-ecapla-certverify-admin.php:1216
 msgid "That certificate does not exist."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1136
+#: admin/class-ecapla-certverify-admin.php:1233
 msgid "Those import results expired. Run the import again to generate a new report."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1145
+#: admin/class-ecapla-certverify-admin.php:1242
 msgid "That backup restore process expired. Upload the backup again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1154
-#: admin/class-ecapla-certverify-admin.php:1163
+#: admin/class-ecapla-certverify-admin.php:1251
+#: admin/class-ecapla-certverify-admin.php:1260
 msgid "That import session expired. Upload the CSV again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1178
-#: includes/class-ecapla-certverify-backup.php:402
+#: admin/class-ecapla-certverify-admin.php:1275
+#: includes/class-ecapla-certverify-backup.php:440
 msgid "That backup review session expired. Upload the backup again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1187
+#: admin/class-ecapla-certverify-admin.php:1288
 msgid "You do not have permission to view Certloom analytics."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1225
+#: admin/class-ecapla-certverify-admin.php:1326
 msgid "The review acknowledgement could not be saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1243
+#: admin/class-ecapla-certverify-admin.php:1344
 msgid "A complete Certloom restore is in progress. Certificate and configuration changes are temporarily paused; public verification remains available."
 msgstr ""
 
 #. translators: 1: number of legacy records, 2: review URL.
-#: admin/class-ecapla-certverify-admin.php:1263
+#: admin/class-ecapla-certverify-admin.php:1364
 msgid "%1$d legacy Expired certificate needs review. <a href=\"%2$s\">Review it now</a>. It will remain Expired until an administrator deliberately chooses a workflow status."
 msgid_plural "%1$d legacy Expired certificates need review. <a href=\"%2$s\">Review them now</a>. They will remain Expired until an administrator deliberately chooses a workflow status."
 msgstr[0] ""
 msgstr[1] ""
 
-#: admin/class-ecapla-certverify-admin.php:1276
+#: admin/class-ecapla-certverify-admin.php:1377
 msgid "Certloom 1.3.0 briefly contained an unsafe legacy-status migration. If that version ran on this site, compare certificate statuses with a pre-1.3.0 backup before launch. The current release does not guess or silently rewrite those records."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1279
+#: admin/class-ecapla-certverify-admin.php:138
+msgid "Certloom workspace mode"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:138
+msgid "Simple keeps everyday work concise. Advanced restores specialist and diagnostic surfaces."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:138
+msgid "Workspace"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1380
 msgid "I have reviewed this"
 msgstr ""
 
 #. translators: %s: Ecapla website link.
-#: admin/class-ecapla-certverify-admin.php:1291
+#: admin/class-ecapla-certverify-admin.php:1392
 msgid "Certloom is developed and maintained by %s."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1292
+#: admin/class-ecapla-certverify-admin.php:1393
 msgid "Ecapla"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1301
-msgid "You do not have permission to manage certificates."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1307
-msgid "You do not have permission to manage these settings."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:132
-msgid "Certloom workspace mode"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:132
-msgid "Simple keeps everyday work concise. Advanced restores specialist and diagnostic surfaces."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:132
-msgid "Workspace"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:134
+#: admin/class-ecapla-certverify-admin.php:140
 #: admin/views/settings-manager.php:20
 msgid "Advanced"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:134
+#: admin/class-ecapla-certverify-admin.php:140
 msgid "Simple"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:163
+#: admin/class-ecapla-certverify-admin.php:1402
+msgid "You do not have permission to manage certificates."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1408
+msgid "You do not have permission to manage these settings."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:169
 msgid "The certificate you tried to update no longer exists."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:387
+#: admin/class-ecapla-certverify-admin.php:393
 msgid "Registry column preferences could not be saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:431
+#: admin/class-ecapla-certverify-admin.php:437
 msgid "The field order, labels, and visibility could not be saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:446
+#: admin/class-ecapla-certverify-admin.php:452
 msgid "Give the new field a label."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:481
+#: admin/class-ecapla-certverify-admin.php:487
 msgid "The custom field could not be added because the field schema was not saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:493
+#: admin/class-ecapla-certverify-admin.php:499
 msgid "Core certificate fields cannot be removed. You can relabel, reorder, or hide them from public results."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:496
+#: admin/class-ecapla-certverify-admin.php:502
 msgid "The field could not be retired safely. No field was removed."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:508
+#: admin/class-ecapla-certverify-admin.php:514
 msgid "The active field layout could not be updated, and the temporary retired marker could not be rolled back. Review the field registry before continuing."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:510
+#: admin/class-ecapla-certverify-admin.php:516
 msgid "The active field layout could not be updated. No field was removed."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:525
+#: admin/class-ecapla-certverify-admin.php:531
 msgid "That retired field cannot be restored."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:545
+#: admin/class-ecapla-certverify-admin.php:551
 msgid "The retired field could not be restored."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:549
+#: admin/class-ecapla-certverify-admin.php:555
 msgid "The retired marker could not be cleared, and the restored field could not be rolled back. Review the active and retired field registries before continuing."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:551
+#: admin/class-ecapla-certverify-admin.php:557
 msgid "The retired field could not be restored safely. The active field layout was rolled back."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:563
+#: admin/class-ecapla-certverify-admin.php:569
 msgid "Core field labels could not be reset for the current site language."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:576
+#: admin/class-ecapla-certverify-admin.php:582
 msgid "That retired field cannot be purged."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:59
+#: admin/class-ecapla-certverify-admin.php:596
+msgid "Stored values were purged, but the retired registry could not be updated. The reserved key remains safe; run Purge again to retry the final registry cleanup."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:610
+msgid "Choose a CSV file to upload."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:616
+msgid "Upload a valid .csv file."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:620
+msgid "The CSV file is larger than the 5 MB import limit."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:640
+msgid "That import session expired. Upload the file again."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:65
 #: admin/views/dashboard.php:18
 msgid "Dashboard"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:59
+#: admin/class-ecapla-certverify-admin.php:65
 msgid "Home"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:590
-msgid "Stored values were purged, but the retired registry could not be updated. The reserved key remains safe; run Purge again to retry the final registry cleanup."
+#: admin/class-ecapla-certverify-admin.php:651
+msgid "Only an administrator can enable Historical restore mode."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:60
+#: admin/class-ecapla-certverify-admin.php:66
 #: admin/views/frontend-manager.php:70
 #: blocks/certloom/index.js:65
 #: src/Infrastructure/Admin/TemplateAdmin.php:473
 msgid "Design"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:604
-msgid "Choose a CSV file to upload."
+#: admin/class-ecapla-certverify-admin.php:672
+msgid "That import session expired during processing. Upload the file again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:610
-msgid "Upload a valid .csv file."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:614
-msgid "The CSV file is larger than the 5 MB import limit."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:63
-#: admin/class-ecapla-certverify-admin.php:64
+#: admin/class-ecapla-certverify-admin.php:69
+#: admin/class-ecapla-certverify-admin.php:70
 #: admin/views/partials/brand-bar.php:7
 #: elementor/class-ecapla-certverify-elementor-widget.php:26
 msgid "Certloom"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:634
-msgid "That import session expired. Upload the file again."
+#: admin/class-ecapla-certverify-admin.php:748
+msgid "The settings could not be saved. Role access was not changed."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:645
-msgid "Only an administrator can enable Historical restore mode."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:666
-msgid "That import session expired during processing. Upload the file again."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:72
+#: admin/class-ecapla-certverify-admin.php:78
 #: src/Infrastructure/Admin/DomainAdmin.php:249
 #: src/Infrastructure/Admin/DomainAdmin.php:304
 #: src/Infrastructure/Admin/DomainAdmin.php:387
@@ -324,72 +362,38 @@ msgstr ""
 msgid "Credentials"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:742
-msgid "The settings could not be saved. Role access was not changed."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:776
+#: admin/class-ecapla-certverify-admin.php:782
 msgid "The general settings were saved, but one or more role changes failed and could not be fully rolled back. Review role access before continuing."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:777
+#: admin/class-ecapla-certverify-admin.php:783
 msgid "The general settings were saved, but role access could not be updated. The previous role access was restored."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:86
-#: admin/class-ecapla-certverify-admin.php:99
-msgid "Data Tools"
+#: admin/class-ecapla-certverify-admin.php:909
+msgid "The Certificate Manager role could not be created or updated."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:88
+#: admin/class-ecapla-certverify-admin.php:94
 msgid "Analytics"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:89
+#: admin/class-ecapla-certverify-admin.php:95
 #: admin/views/integrations.php:8
 msgid "Integrations"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:90
+#: admin/class-ecapla-certverify-admin.php:96
 #: admin/views/settings-manager.php:11
 msgid "Settings"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:903
-msgid "The Certificate Manager role could not be created or updated."
+#: admin/class-ecapla-certverify-admin.php:975
+msgid "The verified private backup could not be opened for download."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:921
-msgid "Choose a Certloom backup file."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:927
-msgid "Upload a valid .cvbackup or legacy .json Certloom backup."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:93
+#: admin/class-ecapla-certverify-admin.php:99
 msgid "Add Certificate"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:94
-msgid "Field Manager"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:941
-msgid "Confirm that you understand the selected restore mode can replace or merge Certloom data and that Certloom writes will be paused until the restore finishes."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:95
-msgid "Appearance & Embed"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:96
-msgid "Setup"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:97
-#: admin/views/bulk-review.php:15
-msgid "Review bulk change"
 msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:114
@@ -471,6 +475,7 @@ msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:174
 #: admin/class-ecapla-certverify-list-table.php:76
+#: admin/views/import-upload.php:119
 msgid "Delete"
 msgstr ""
 
@@ -518,7 +523,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:229
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:612
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:25
-#: src/Infrastructure/Admin/TemplateAdmin.php:1004
+#: src/Infrastructure/Admin/TemplateAdmin.php:1006
 #: src/Infrastructure/Import/DomainImportCsvReader.php:72
 msgid "Status"
 msgstr ""
@@ -739,7 +744,7 @@ msgstr ""
 
 #: admin/views/analytics.php:83
 #: src/Infrastructure/Admin/DomainAdmin.php:821
-#: src/Infrastructure/Admin/TemplateAdmin.php:1008
+#: src/Infrastructure/Admin/TemplateAdmin.php:1010
 #: src/Infrastructure/Admin/TemplateAdmin.php:597
 msgid "Source"
 msgstr ""
@@ -1165,6 +1170,7 @@ msgstr ""
 
 #: admin/views/dashboard.php:152
 #: admin/views/edit-certificate.php:82
+#: admin/views/import-upload.php:103
 #: src/Infrastructure/Admin/DomainAdmin.php:249
 #: src/Infrastructure/Admin/DomainAdmin.php:304
 #: src/Infrastructure/Admin/DomainAdmin.php:342
@@ -1368,7 +1374,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:522
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:147
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:182
-#: src/Infrastructure/Admin/TemplateAdmin.php:1004
+#: src/Infrastructure/Admin/TemplateAdmin.php:1006
 #: src/Infrastructure/Admin/TemplateAdmin.php:586
 msgid "Program"
 msgstr ""
@@ -1474,6 +1480,7 @@ msgstr ""
 
 #: admin/views/edit-certificate.php:137
 #: admin/views/import-results.php:27
+#: admin/views/import-upload.php:103
 #: src/Infrastructure/Admin/DomainAdmin.php:342
 msgid "Created"
 msgstr ""
@@ -1657,12 +1664,14 @@ msgstr ""
 
 #: admin/views/fields-manager.php:125
 #: elementor/class-ecapla-certverify-elementor-widget.php:666
-#: src/Infrastructure/Admin/TemplateAdmin.php:1027
+#: src/Infrastructure/Admin/TemplateAdmin.php:1029
 #: src/Infrastructure/Admin/TemplateAdmin.php:121
+#: src/Infrastructure/Admin/TemplateAdmin.php:973
 msgid "Text"
 msgstr ""
 
 #: admin/views/fields-manager.php:125
+#: admin/views/import-upload.php:103
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:357
 msgid "Type"
 msgstr ""
@@ -2047,169 +2056,336 @@ msgstr ""
 msgid "View certificates"
 msgstr ""
 
+#: admin/views/import-upload.php:100
+msgid "Saved backups"
+msgstr ""
+
+#: admin/views/import-upload.php:103
+#: admin/views/list-certificates.php:26
+msgid "Certificates"
+msgstr ""
+
+#: admin/views/import-upload.php:103
+msgid "Integrity"
+msgstr ""
+
+#: admin/views/import-upload.php:103
+msgid "Size"
+msgstr ""
+
+#: admin/views/import-upload.php:108
+#: admin/views/issuance-analytics.php:39
+#: admin/views/issuance-analytics.php:57
+msgid "Manual"
+msgstr ""
+
+#: admin/views/import-upload.php:108
+msgid "Safety"
+msgstr ""
+
+#: admin/views/import-upload.php:108
+msgid "Scheduled"
+msgstr ""
+
 #: admin/views/import-upload.php:11
 msgid "Import, export & backup"
 msgstr ""
 
-#: admin/views/import-upload.php:16
-msgid "Import certificates from CSV"
+#: admin/views/import-upload.php:111
+msgid "Verified at creation"
 msgstr ""
 
-#: admin/views/import-upload.php:17
-msgid "CSV is intended for spreadsheet editing and tabular transfers. It is not a complete site backup. Upload a file, review automatic column mapping, and decide how existing certificate numbers should be handled."
+#: admin/views/import-upload.php:113
+#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:385
+msgid "Download"
+msgstr ""
+
+#: admin/views/import-upload.php:114
+msgid "Review restore"
+msgstr ""
+
+#: admin/views/import-upload.php:119
+msgid "Delete this private backup?"
+msgstr ""
+
+#: admin/views/import-upload.php:128
+msgid "No private backups have been saved yet. Use Back up now or enable a schedule."
+msgstr ""
+
+#: admin/views/import-upload.php:132
+msgid "Restore"
+msgstr ""
+
+#: admin/views/import-upload.php:133
+msgid "Restore always starts with a non-destructive review. Upload a trusted Certloom backup, or choose Review restore beside a saved private backup."
+msgstr ""
+
+#: admin/views/import-upload.php:137
+msgid "Review a backup before restoring"
+msgstr ""
+
+#: admin/views/import-upload.php:139
+msgid "Analyze backup"
+msgstr ""
+
+#: admin/views/import-upload.php:147
+msgid "Backup restore review"
+msgstr ""
+
+#: admin/views/import-upload.php:148
+msgid "Nothing has been changed yet. Review this dry-run summary before applying the backup."
+msgstr ""
+
+#: admin/views/import-upload.php:151
+msgid "Certificates in backup"
+msgstr ""
+
+#: admin/views/import-upload.php:152
+msgid "Certificates currently stored"
+msgstr ""
+
+#: admin/views/import-upload.php:153
+msgid "New certificate numbers"
+msgstr ""
+
+#: admin/views/import-upload.php:154
+msgid "Existing certificate conflicts"
+msgstr ""
+
+#: admin/views/import-upload.php:155
+msgid "Current-only certificates"
+msgstr ""
+
+#: admin/views/import-upload.php:156
+msgid "Active field definitions"
+msgstr ""
+
+#: admin/views/import-upload.php:157
+msgid "Retired field definitions"
+msgstr ""
+
+#: admin/views/import-upload.php:158
+msgid "Backup-only custom fields"
+msgstr ""
+
+#: admin/views/import-upload.php:159
+msgid "Backup created"
+msgstr ""
+
+#: admin/views/import-upload.php:160
+msgid "Source plugin version"
+msgstr ""
+
+#: admin/views/import-upload.php:168
+msgid "Restore mode"
+msgstr ""
+
+#: admin/views/import-upload.php:169
+msgid "Replace entire registry and configuration"
+msgstr ""
+
+#: admin/views/import-upload.php:170
+msgid "Recreates the backup snapshot exactly. Current-only certificates are removed, and the backup’s fields, retired fields, and settings replace the current configuration."
+msgstr ""
+
+#: admin/views/import-upload.php:171
+msgid "Merge certificates into the current registry"
+msgstr ""
+
+#: admin/views/import-upload.php:172
+msgid "Keeps current-only certificates and current settings. Backup-only custom-field definitions are retained as private retired fields so their stored values are not exposed automatically."
+msgstr ""
+
+#: admin/views/import-upload.php:175
+msgid "Merge conflict handling"
+msgstr ""
+
+#: admin/views/import-upload.php:176
+msgid "Keep the existing certificate and skip the backup record"
+msgstr ""
+
+#: admin/views/import-upload.php:177
+msgid "Replace the existing certificate with the backup record"
+msgstr ""
+
+#: admin/views/import-upload.php:178
+msgid "This choice applies only to Merge mode. Replace mode always uses the backup copy."
+msgstr ""
+
+#: admin/views/import-upload.php:18
+msgid "Automatic backup settings saved."
+msgstr ""
+
+#: admin/views/import-upload.php:180
+msgid "I understand the selected mode and that Certloom writes will be temporarily paused while the restore is prepared."
+msgstr ""
+
+#: admin/views/import-upload.php:181
+msgid "Start safe restore"
 msgstr ""
 
 #: admin/views/import-upload.php:19
+msgid "Private backup storage tested successfully."
+msgstr ""
+
+#: admin/views/import-upload.php:20
+msgid "Backup created, verified, and stored privately."
+msgstr ""
+
+#: admin/views/import-upload.php:21
+msgid "Private backup deleted."
+msgstr ""
+
+#: admin/views/import-upload.php:29
+msgid "Import certificates from CSV"
+msgstr ""
+
+#: admin/views/import-upload.php:30
+msgid "CSV is intended for spreadsheet editing and tabular transfers. It is not a complete site backup. Upload a file, review automatic column mapping, and decide how existing certificate numbers should be handled."
+msgstr ""
+
+#: admin/views/import-upload.php:32
 msgid "Maximum file size: 5 MB"
 msgstr ""
 
 #. translators: %d: maximum number of rows per import.
-#: admin/views/import-upload.php:20
+#: admin/views/import-upload.php:33
 msgid "Maximum certificate rows per import: %d"
 msgstr ""
 
-#: admin/views/import-upload.php:21
+#: admin/views/import-upload.php:34
 msgid "Accepted format: UTF-8 CSV with one header row"
 msgstr ""
 
-#: admin/views/import-upload.php:22
+#: admin/views/import-upload.php:35
 msgid "Spreadsheet-formula characters in exported CSV files are neutralized for safety and may not round-trip as literal leading characters. Use Complete backup for lossless restoration."
 msgstr ""
 
-#: admin/views/import-upload.php:26
+#: admin/views/import-upload.php:39
 msgid "Choose CSV file"
 msgstr ""
 
-#: admin/views/import-upload.php:28
+#: admin/views/import-upload.php:41
 msgid "Analyze CSV"
 msgstr ""
 
-#: admin/views/import-upload.php:33
+#: admin/views/import-upload.php:46
 msgid "CSV tools"
 msgstr ""
 
-#: admin/views/import-upload.php:34
+#: admin/views/import-upload.php:47
 msgid "Download a template shaped by the active field layout, or export tabular certificate data for spreadsheet use."
 msgstr ""
 
-#: admin/views/import-upload.php:35
+#: admin/views/import-upload.php:48
 msgid "Download import template"
 msgstr ""
 
-#: admin/views/import-upload.php:36
+#: admin/views/import-upload.php:49
 msgid "Export certificate CSV"
 msgstr ""
 
-#: admin/views/import-upload.php:41
-msgid "Complete backup & restore"
+#: admin/views/import-upload.php:54
+msgid "Backup & recovery"
 msgstr ""
 
-#: admin/views/import-upload.php:42
-msgid "Create a lossless, versioned streaming backup containing certificates, active and retired field definitions, settings, workflow source, and original timestamps."
+#: admin/views/import-upload.php:55
+msgid "Protect the current authoritative Certloom registry with the same lossless, versioned backup format used by manual downloads. Automatic backups stay in private local storage and never switch credential authority."
 msgstr ""
 
-#: admin/views/import-upload.php:43
-msgid "Download complete backup"
+#: admin/views/import-upload.php:56
+msgid "Current Certloom registry"
 msgstr ""
 
-#: admin/views/import-upload.php:48
-msgid "Review a backup before restoring"
+#: admin/views/import-upload.php:56
+msgid "Source authority:"
 msgstr ""
 
-#: admin/views/import-upload.php:50
-msgid "Analyze backup"
+#: admin/views/import-upload.php:57
+msgid "Destination:"
 msgstr ""
 
-#: admin/views/import-upload.php:58
-msgid "Backup restore review"
-msgstr ""
-
-#: admin/views/import-upload.php:59
-msgid "Nothing has been changed yet. Review this dry-run summary before applying the backup."
-msgstr ""
-
-#: admin/views/import-upload.php:62
-msgid "Certificates in backup"
-msgstr ""
-
-#: admin/views/import-upload.php:63
-msgid "Certificates currently stored"
+#: admin/views/import-upload.php:57
+msgid "Local private storage"
 msgstr ""
 
 #: admin/views/import-upload.php:64
-msgid "New certificate numbers"
-msgstr ""
-
-#: admin/views/import-upload.php:65
-msgid "Existing certificate conflicts"
-msgstr ""
-
-#: admin/views/import-upload.php:66
-msgid "Current-only certificates"
-msgstr ""
-
-#: admin/views/import-upload.php:67
-msgid "Active field definitions"
+msgid "Download fresh backup"
 msgstr ""
 
 #: admin/views/import-upload.php:68
-msgid "Retired field definitions"
+msgid "Test storage"
 msgstr ""
 
-#: admin/views/import-upload.php:69
-msgid "Backup-only custom fields"
+#: admin/views/import-upload.php:73
+msgid "Back up now"
 msgstr ""
 
-#: admin/views/import-upload.php:70
-msgid "Backup created"
-msgstr ""
-
-#: admin/views/import-upload.php:71
-msgid "Source plugin version"
-msgstr ""
-
-#: admin/views/import-upload.php:79
-msgid "Restore mode"
-msgstr ""
-
-#: admin/views/import-upload.php:80
-msgid "Replace entire registry and configuration"
+#: admin/views/import-upload.php:77
+msgid "Automatic backups"
 msgstr ""
 
 #: admin/views/import-upload.php:81
-msgid "Recreates the backup snapshot exactly. Current-only certificates are removed, and the backup’s fields, retired fields, and settings replace the current configuration."
-msgstr ""
-
-#: admin/views/import-upload.php:82
-msgid "Merge certificates into the current registry"
+msgid "Schedule"
 msgstr ""
 
 #: admin/views/import-upload.php:83
-msgid "Keeps current-only certificates and current settings. Backup-only custom-field definitions are retained as private retired fields so their stored values are not exposed automatically."
+msgid "Off"
 msgstr ""
 
-#: admin/views/import-upload.php:86
-msgid "Merge conflict handling"
+#: admin/views/import-upload.php:84
+msgid "Daily"
+msgstr ""
+
+#: admin/views/import-upload.php:85
+msgid "Weekly"
 msgstr ""
 
 #: admin/views/import-upload.php:87
-msgid "Keep the existing certificate and skip the backup record"
-msgstr ""
-
-#: admin/views/import-upload.php:88
-msgid "Replace the existing certificate with the backup record"
+msgid "Automatic retention"
 msgstr ""
 
 #: admin/views/import-upload.php:89
-msgid "This choice applies only to Merge mode. Replace mode always uses the backup copy."
+msgid "backups"
 msgstr ""
 
-#: admin/views/import-upload.php:91
-msgid "I understand the selected mode and that Certloom writes will be temporarily paused while the restore is prepared."
+#: admin/views/import-upload.php:90
+msgid "Save backup settings"
 msgstr ""
 
-#: admin/views/import-upload.php:92
-msgid "Start safe restore"
+#: admin/views/import-upload.php:94
+msgid "Last run:"
+msgstr ""
+
+#: admin/views/import-upload.php:94
+msgid "Not run yet"
+msgstr ""
+
+#: admin/views/import-upload.php:95
+msgid "Last result:"
+msgstr ""
+
+#: admin/views/import-upload.php:95
+#: src/Infrastructure/Admin/DomainAdmin.php:391
+msgid "Needs attention"
+msgstr ""
+
+#: admin/views/import-upload.php:95
+#: includes/class-ecapla-certverify-public-presentation.php:142
+#: includes/class-ecapla-certverify-render.php:372
+msgid "Verified"
+msgstr ""
+
+#: admin/views/import-upload.php:95
+msgid "—"
+msgstr ""
+
+#: admin/views/import-upload.php:96
+msgid "Next scheduled run:"
+msgstr ""
+
+#: admin/views/import-upload.php:96
+msgid "Not scheduled"
 msgstr ""
 
 #: admin/views/integrations.php:16
@@ -2289,11 +2465,6 @@ msgstr ""
 
 #: admin/views/issuance-analytics.php:36
 msgid "Issuance summary"
-msgstr ""
-
-#: admin/views/issuance-analytics.php:39
-#: admin/views/issuance-analytics.php:57
-msgid "Manual"
 msgstr ""
 
 #: admin/views/issuance-analytics.php:4
@@ -2524,10 +2695,6 @@ msgstr ""
 msgid "Certificate registry"
 msgstr ""
 
-#: admin/views/list-certificates.php:26
-msgid "Certificates"
-msgstr ""
-
 #: admin/views/list-certificates.php:27
 msgid "Search, review and maintain the authoritative certificate registry without changing verification truth."
 msgstr ""
@@ -2748,7 +2915,8 @@ msgstr ""
 #: blocks/certloom/index.js:82
 #: elementor/class-ecapla-certverify-elementor-widget.php:851
 #: elementor/class-ecapla-certverify-template-widgets.php:221
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
+#: src/Infrastructure/Admin/TemplateAdmin.php:973
 msgid "Center"
 msgstr ""
 
@@ -2760,9 +2928,10 @@ msgstr ""
 #: blocks/certloom/index.js:81
 #: elementor/class-ecapla-certverify-elementor-widget.php:847
 #: elementor/class-ecapla-certverify-template-widgets.php:220
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 #: src/Infrastructure/Admin/TemplateAdmin.php:969
-#: src/Infrastructure/Admin/TemplateAdmin.php:974
+#: src/Infrastructure/Admin/TemplateAdmin.php:973
+#: src/Infrastructure/Admin/TemplateAdmin.php:975
 msgid "Left"
 msgstr ""
 
@@ -2770,9 +2939,10 @@ msgstr ""
 #: blocks/certloom/index.js:83
 #: elementor/class-ecapla-certverify-elementor-widget.php:855
 #: elementor/class-ecapla-certverify-template-widgets.php:222
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 #: src/Infrastructure/Admin/TemplateAdmin.php:969
-#: src/Infrastructure/Admin/TemplateAdmin.php:974
+#: src/Infrastructure/Admin/TemplateAdmin.php:973
+#: src/Infrastructure/Admin/TemplateAdmin.php:975
 msgid "Right"
 msgstr ""
 
@@ -3744,7 +3914,7 @@ msgstr ""
 #: elementor/class-ecapla-certverify-elementor-widget.php:280
 #: elementor/class-ecapla-certverify-elementor-widget.php:93
 #: src/Infrastructure/Admin/DomainAdmin.php:973
-#: src/Infrastructure/Admin/TemplateAdmin.php:1129
+#: src/Infrastructure/Admin/TemplateAdmin.php:1131
 msgid "Description"
 msgstr ""
 
@@ -4179,7 +4349,8 @@ msgstr ""
 
 #: elementor/class-ecapla-certverify-elementor-widget.php:407
 #: elementor/class-ecapla-certverify-elementor-widget.php:810
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
+#: src/Infrastructure/Admin/TemplateAdmin.php:973
 msgid "Text color"
 msgstr ""
 
@@ -4205,7 +4376,7 @@ msgstr ""
 
 #: elementor/class-ecapla-certverify-elementor-widget.php:655
 #: elementor/class-ecapla-certverify-template-widgets.php:308
-#: src/Infrastructure/Admin/TemplateAdmin.php:1031
+#: src/Infrastructure/Admin/TemplateAdmin.php:1033
 #: src/Infrastructure/Admin/TemplateAdmin.php:123
 msgid "Background"
 msgstr ""
@@ -4513,388 +4684,392 @@ msgstr ""
 msgid "Certloom could not schedule verification analytics retention cleanup."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1003
-#: includes/class-ecapla-certverify-backup.php:1016
+#: includes/class-ecapla-certverify-backup.php:1041
+#: includes/class-ecapla-certverify-backup.php:1054
 msgid "Another restore request is already running. Wait a moment and continue."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1027
+#: includes/class-ecapla-certverify-backup.php:1065
 msgid "Certloom refused to release a restore request lock that is no longer owned by this request."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1042
+#: includes/class-ecapla-certverify-backup.php:1080
 msgid "Certloom could not release the restore request lock safely. Wait for the short lease before continuing."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1057
+#: includes/class-ecapla-certverify-backup.php:1095
 msgid "Certloom could not remove an expired restore workspace."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1060
+#: includes/class-ecapla-certverify-backup.php:1098
 msgid "Certloom removed an expired restore workspace but could not release its maintenance lock safely. Cleanup state was preserved for retry."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1069
+#: includes/class-ecapla-certverify-backup.php:1107
 msgid "Certloom removed expired restore workspaces but could not save the cleanup state."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1072
+#: includes/class-ecapla-certverify-backup.php:1110
 msgid "Certloom removed expired restore workspaces but could not clear the cleanup state."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:109
+#: includes/class-ecapla-certverify-backup.php:112
 msgid "Certloom could not create a temporary backup file."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1110
+#: includes/class-ecapla-certverify-backup.php:1148
 msgid "Certloom refused to clear restore-workspace tracking that no longer belongs to this restore."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1116
+#: includes/class-ecapla-certverify-backup.php:1154
 msgid "Certloom completed restore cleanup but could not update its restore-workspace tracking state."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1119
+#: includes/class-ecapla-certverify-backup.php:1157
 msgid "Certloom completed restore cleanup but could not clear its restore-workspace tracking state."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1128
-#: includes/class-ecapla-certverify-backup.php:1281
-#: includes/class-ecapla-certverify-backup.php:288
+#: includes/class-ecapla-certverify-backup.php:1166
+#: includes/class-ecapla-certverify-backup.php:1319
+#: includes/class-ecapla-certverify-backup.php:326
 msgid "The backup file could not be read."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:115
+#: includes/class-ecapla-certverify-backup.php:118
 msgid "Certloom could not open its temporary backup file."
 msgstr ""
 
 #. translators: %d: line number in the uploaded backup file.
-#: includes/class-ecapla-certverify-backup.php:1160
+#: includes/class-ecapla-certverify-backup.php:1198
 msgid "The backup contains invalid JSON on line %d."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1169
+#: includes/class-ecapla-certverify-backup.php:1207
 msgid "The backup manifest is missing."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1191
+#: includes/class-ecapla-certverify-backup.php:1229
 msgid "The backup contains data after its integrity record."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1206
-#: includes/class-ecapla-certverify-backup.php:1327
+#: includes/class-ecapla-certverify-backup.php:1244
+#: includes/class-ecapla-certverify-backup.php:1365
 msgid "The backup exceeds Certloom safety limits."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1213
-#: includes/class-ecapla-certverify-backup.php:1241
-#: includes/class-ecapla-certverify-backup.php:1272
-#: includes/class-ecapla-certverify-backup.php:1493
-#: includes/class-ecapla-certverify-backup.php:1508
+#: includes/class-ecapla-certverify-backup.php:1251
+#: includes/class-ecapla-certverify-backup.php:1279
+#: includes/class-ecapla-certverify-backup.php:1310
+#: includes/class-ecapla-certverify-backup.php:1531
+#: includes/class-ecapla-certverify-backup.php:1546
 msgid "The backup was valid, but its temporary review session could not be stored."
 msgstr ""
 
-#. translators: %d: line number in the uploaded backup file.
-#: includes/class-ecapla-certverify-backup.php:1231
-msgid "The backup contains an unsupported line type on line %d."
-msgstr ""
-
-#: includes/class-ecapla-certverify-backup.php:1248
-msgid "The backup is incomplete or its integrity check failed."
-msgstr ""
-
-#: includes/class-ecapla-certverify-backup.php:125
+#: includes/class-ecapla-certverify-backup.php:126
 msgid "Certloom cannot create a complete backup while the certificate-numbering policy is invalid. Repair Settings → Certificate numbering and try again."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1258
-#: includes/class-ecapla-certverify-backup.php:1339
+#. translators: %d: line number in the uploaded backup file.
+#: includes/class-ecapla-certverify-backup.php:1269
+msgid "The backup contains an unsupported line type on line %d."
+msgstr ""
+
+#: includes/class-ecapla-certverify-backup.php:1286
+msgid "The backup is incomplete or its integrity check failed."
+msgstr ""
+
+#: includes/class-ecapla-certverify-backup.php:1296
+#: includes/class-ecapla-certverify-backup.php:1377
 msgid "Certloom data changed while the backup preview was being prepared. Upload the backup again after current edits finish."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1285
-#: includes/class-ecapla-certverify-backup.php:1347
+#: includes/class-ecapla-certverify-backup.php:1323
+#: includes/class-ecapla-certverify-backup.php:1385
 msgid "This is not a supported Certloom backup file."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1301
+#: includes/class-ecapla-certverify-backup.php:1339
 msgid "The legacy backup is incomplete or damaged."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1351
-#: includes/class-ecapla-certverify-backup.php:1356
+#: includes/class-ecapla-certverify-backup.php:1389
+#: includes/class-ecapla-certverify-backup.php:1394
 msgid "The backup manifest is incomplete or damaged."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1360
+#: includes/class-ecapla-certverify-backup.php:1398
 msgid "The backup manifest is missing certificate-number sequence state."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1370
+#: includes/class-ecapla-certverify-backup.php:1408
 msgid "The backup contains an invalid certificate-numbering policy."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1373
+#: includes/class-ecapla-certverify-backup.php:1411
 msgid "The backup exceeds Certloom field-definition limits."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1386
+#: includes/class-ecapla-certverify-backup.php:1424
 msgid "The backup contains an invalid field definition."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1390
+#: includes/class-ecapla-certverify-backup.php:1428
 msgid "The backup contains duplicate or invalid field keys."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1394
+#: includes/class-ecapla-certverify-backup.php:1432
 msgid "The backup contains an unsupported field type."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1408
+#: includes/class-ecapla-certverify-backup.php:1446
 msgid "The backup contains an invalid certificate record."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1418
+#: includes/class-ecapla-certverify-backup.php:1456
 msgid "The backup contains duplicate certificate numbers. Letter case is ignored."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1424
+#: includes/class-ecapla-certverify-backup.php:1462
 msgid "The backup contains a certificate value without a matching custom-field definition."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1525
+#: includes/class-ecapla-certverify-backup.php:1563
 msgid "Part of that backup review session expired. Upload the backup again."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:160
+#: includes/class-ecapla-certverify-backup.php:158
 msgid "Certloom could not encode the backup manifest."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:1632
+#: includes/class-ecapla-certverify-backup.php:1670
 msgid "Certloom backup unavailable"
 msgstr ""
 
 #. translators: %d: internal certificate record ID.
-#: includes/class-ecapla-certverify-backup.php:196
-msgid "Certificate ID %d could not be encoded. No backup was downloaded."
+#: includes/class-ecapla-certverify-backup.php:194
+msgid "Certificate ID %d could not be encoded. No backup was created."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:205
+#: includes/class-ecapla-certverify-backup.php:202
 msgid "Certloom could not finish writing the backup."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:212
+#: includes/class-ecapla-certverify-backup.php:207
 msgid "The registry exceeds the current complete-backup safety limit."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:221
-msgid "Certificates or Certloom configuration changed while the backup was being generated. No backup was downloaded; try again after current edits finish."
+#: includes/class-ecapla-certverify-backup.php:214
+msgid "Certificates or Certloom configuration changed while the backup was being generated. No backup was created; try again after current edits finish."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:234
+#: includes/class-ecapla-certverify-backup.php:226
 msgid "Certloom could not finalize the backup integrity record."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:239
+#: includes/class-ecapla-certverify-backup.php:229
 msgid "Certloom could not flush the completed backup to disk."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:246
-msgid "The completed backup exceeds the 25 MB download limit."
+#: includes/class-ecapla-certverify-backup.php:236
+msgid "The completed backup exceeds the 25 MB backup limit."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:250
-msgid "The completed backup could not be read reliably from temporary storage. No backup was downloaded."
+#: includes/class-ecapla-certverify-backup.php:240
+msgid "The completed backup could not be read reliably from temporary storage."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:261
-msgid "The completed backup could not be opened for download."
+#: includes/class-ecapla-certverify-backup.php:245
+msgid "Certloom could not fingerprint the completed backup file."
 msgstr ""
 
 #: includes/class-ecapla-certverify-backup.php:284
+msgid "The completed backup could not be opened for download."
+msgstr ""
+
+#: includes/class-ecapla-certverify-backup.php:322
 msgid "Choose a Certloom backup no larger than 25 MB."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:298
+#: includes/class-ecapla-certverify-backup.php:336
 msgid "Legacy JSON backups larger than 5 MB must first be restored with Certloom 1.4.6 and exported again in the current streaming format."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:332
+#: includes/class-ecapla-certverify-backup.php:370
 msgid "Certloom recovered the committed registry but could not refresh its mutation marker. Writes remain paused until recovery succeeds."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:335
+#: includes/class-ecapla-certverify-backup.php:373
 msgid "Certloom could not remove a completed restore rollback table."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:338
+#: includes/class-ecapla-certverify-backup.php:376
 msgid "Certloom could not remove a completed restore staging table."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:341
+#: includes/class-ecapla-certverify-backup.php:379
 msgid "Certloom recovered the committed restore but could not release its maintenance lock safely. The recovery journal was preserved for retry."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:350
+#: includes/class-ecapla-certverify-backup.php:388
 msgid "Certloom recovered the committed restore but could not clear its recovery journal. The journal was preserved for retry."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:357
+#: includes/class-ecapla-certverify-backup.php:395
 msgid "Certloom detected an interrupted restore but could not reactivate the original registry."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:365
+#: includes/class-ecapla-certverify-backup.php:403
 msgid "Certloom reactivated the original registry but could not restore all previous configuration."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:368
+#: includes/class-ecapla-certverify-backup.php:406
 msgid "Certloom restored the original registry but could not remove the interrupted restore staging table. The recovery journal was preserved for retry."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:372
+#: includes/class-ecapla-certverify-backup.php:410
 msgid "Certloom restored the original registry but could not release its maintenance lock safely. The recovery journal was preserved for retry."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:381
+#: includes/class-ecapla-certverify-backup.php:419
 msgid "Certloom restored the original registry but could not clear its recovery journal. The journal was preserved for retry."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:431
+#: includes/class-ecapla-certverify-backup.php:469
 msgid "Certloom data changed after this backup preview was prepared. Nothing was changed; upload the backup again to review current replacement and merge counts."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:443
+#: includes/class-ecapla-certverify-backup.php:481
 msgid "Certloom data changed while the restore workspace was being prepared. Nothing was changed; review the backup and try again."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:445
+#: includes/class-ecapla-certverify-backup.php:483
 msgid "Certloom stopped the restore before changing live data, but could not remove its temporary restore workspace. Cleanup must succeed before the restore can be considered fully abandoned."
-msgstr ""
-
-#: includes/class-ecapla-certverify-backup.php:474
-msgid "Certloom could not save the resumable restore state. No live data was changed."
-msgstr ""
-
-#: includes/class-ecapla-certverify-backup.php:492
-#: includes/class-ecapla-certverify-backup.php:520
-msgid "That restore process expired. Upload the backup again."
-msgstr ""
-
-#: includes/class-ecapla-certverify-backup.php:493
-msgid "That restore process expired and Certloom could not release its maintenance lock safely. Retry recovery after the lease expires."
-msgstr ""
-
-#: includes/class-ecapla-certverify-backup.php:509
-msgid "The restore request finished its bounded work, but Certloom could not release the per-request restore lock safely. Wait for the short lease or repair cleanup before continuing."
 msgstr ""
 
 #: includes/class-ecapla-certverify-backup.php:51
 msgid "A complete Certloom restore is in progress. Certificate and configuration changes are temporarily paused until it finishes or expires."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:527
+#: includes/class-ecapla-certverify-backup.php:512
+msgid "Certloom could not save the resumable restore state. No live data was changed."
+msgstr ""
+
+#: includes/class-ecapla-certverify-backup.php:530
+#: includes/class-ecapla-certverify-backup.php:558
+msgid "That restore process expired. Upload the backup again."
+msgstr ""
+
+#: includes/class-ecapla-certverify-backup.php:531
+msgid "That restore process expired and Certloom could not release its maintenance lock safely. Retry recovery after the lease expires."
+msgstr ""
+
+#: includes/class-ecapla-certverify-backup.php:547
+msgid "The restore request finished its bounded work, but Certloom could not release the per-request restore lock safely. Wait for the short lease or repair cleanup before continuing."
+msgstr ""
+
+#: includes/class-ecapla-certverify-backup.php:565
 msgid "The temporary restore workspace is no longer available. Upload the backup again."
 msgstr ""
 
 #. translators: 1: backup record number, 2: error.
-#: includes/class-ecapla-certverify-backup.php:562
+#: includes/class-ecapla-certverify-backup.php:600
 msgid "Backup record %1$d could not be prepared: %2$s No live data was changed."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:580
+#: includes/class-ecapla-certverify-backup.php:618
 msgid "Certloom could not save restore progress. No live data was changed."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:609
+#: includes/class-ecapla-certverify-backup.php:647
 msgid "Certificates or Certloom configuration changed while the restore was being prepared. Nothing was replaced; review the backup and try again."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:631
+#: includes/class-ecapla-certverify-backup.php:669
 msgid "Certloom could not save the rollback journal, so no live data was changed."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:638
+#: includes/class-ecapla-certverify-backup.php:676
 msgid "Certloom could not promote the restore workspace and also could not remove the temporary staging table. Recovery state was preserved for retry."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:641
+#: includes/class-ecapla-certverify-backup.php:679
 msgid "Certloom could not promote the restore workspace and could not release its maintenance lock safely. Recovery state was preserved for retry."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:648
+#: includes/class-ecapla-certverify-backup.php:686
 msgid "Certloom could not promote the restore workspace and could not clear its prepared recovery journal. The journal was preserved for retry."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:659
+#: includes/class-ecapla-certverify-backup.php:697
 msgid "Certloom could not update the rollback journal. The original registry was restored."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:660
+#: includes/class-ecapla-certverify-backup.php:698
 msgid "Certloom could not update the rollback journal and automatic rollback was incomplete. Restore the site database backup before continuing."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:691
+#: includes/class-ecapla-certverify-backup.php:729
 msgid "Backup configuration could not be saved. The original registry and configuration were restored."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:692
+#: includes/class-ecapla-certverify-backup.php:730
 msgid "Backup configuration could not be saved and automatic rollback was incomplete. Restore the site database backup before continuing."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:711
+#: includes/class-ecapla-certverify-backup.php:749
 msgid "Certloom could not commit the restore journal. The original registry and configuration were restored."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:712
+#: includes/class-ecapla-certverify-backup.php:750
 msgid "Certloom could not commit the restore journal and automatic rollback was incomplete. Restore the site database backup before continuing."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:720
+#: includes/class-ecapla-certverify-backup.php:758
 msgid "The registry restore was committed, but Certloom could not refresh its mutation marker. Writes remain paused and the recovery journal was preserved."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:724
+#: includes/class-ecapla-certverify-backup.php:762
 msgid "The registry restore was committed, but Certloom could not remove its rollback table. Writes remain paused and recovery can retry cleanup safely."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:732
+#: includes/class-ecapla-certverify-backup.php:770
 msgid "The registry restore was committed, but Certloom could not release its maintenance lock safely. The recovery journal was preserved and normal writes remain paused until cleanup succeeds."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:739
+#: includes/class-ecapla-certverify-backup.php:777
 msgid "The registry restore was committed and its maintenance lock was released, but Certloom could not clear its recovery journal. The journal was preserved for safe replay."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:756
+#: includes/class-ecapla-certverify-backup.php:794
 msgid "The original registry was restored, but Certloom could not release its maintenance lock safely. Recovery state was preserved for retry."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:763
+#: includes/class-ecapla-certverify-backup.php:801
 msgid "The original registry was restored and maintenance released, but Certloom could not clear its recovery journal. The journal was preserved for retry."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:798
+#: includes/class-ecapla-certverify-backup.php:836
 msgid "Certloom stopped the restore before changing live data, but could not remove its temporary restore workspace. Cleanup state was preserved for retry."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:801
+#: includes/class-ecapla-certverify-backup.php:839
 msgid "Certloom stopped the restore before changing live data, but could not release its maintenance lock safely. Cleanup state was preserved for retry."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:805
+#: includes/class-ecapla-certverify-backup.php:843
 msgid "Certloom released the restore workspace and maintenance lock, but could not clear the resumable restore state. Upload/review the backup again before retrying."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:830
+#: includes/class-ecapla-certverify-backup.php:868
 msgid "Certloom stopped the restore before changing live data, but could not release its maintenance lock safely. Normal writes remain paused until cleanup succeeds."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:891
+#: includes/class-ecapla-certverify-backup.php:929
 msgid "Certloom could not extend the restore safety lock. No live data was changed."
 msgstr ""
 
-#: includes/class-ecapla-certverify-backup.php:894
-#: includes/class-ecapla-certverify-backup.php:910
+#: includes/class-ecapla-certverify-backup.php:932
+#: includes/class-ecapla-certverify-backup.php:948
 msgid "Another complete Certloom restore is already in progress."
 msgstr ""
 
@@ -5002,11 +5177,11 @@ msgstr ""
 msgid "The saved bulk selection failed its integrity check. No certificate was changed."
 msgstr ""
 
-#: includes/class-ecapla-certverify-cron.php:44
+#: includes/class-ecapla-certverify-cron.php:48
 msgid "Certloom could not retire its legacy scheduled task."
 msgstr ""
 
-#: includes/class-ecapla-certverify-cron.php:48
+#: includes/class-ecapla-certverify-cron.php:52
 msgid "Certloom could not save its scheduled-task migration state."
 msgstr ""
 
@@ -5613,7 +5788,7 @@ msgid "Certificate holder"
 msgstr ""
 
 #: includes/class-ecapla-certverify-fields.php:374
-#: src/Infrastructure/Admin/TemplateAdmin.php:1068
+#: src/Infrastructure/Admin/TemplateAdmin.php:1070
 msgid "Standard"
 msgstr ""
 
@@ -6084,11 +6259,6 @@ msgstr ""
 msgid "Issued by"
 msgstr ""
 
-#: includes/class-ecapla-certverify-public-presentation.php:142
-#: includes/class-ecapla-certverify-render.php:372
-msgid "Verified"
-msgstr ""
-
 #: includes/class-ecapla-certverify-public-presentation.php:41
 #: includes/class-ecapla-certverify-public-presentation.php:68
 #: includes/class-ecapla-certverify-rest.php:92
@@ -6242,7 +6412,7 @@ msgid "Expires"
 msgstr ""
 
 #: includes/class-ecapla-certverify-recipient-portal.php:187
-#: src/Infrastructure/Admin/TemplateAdmin.php:1004
+#: src/Infrastructure/Admin/TemplateAdmin.php:1006
 msgid "Grade"
 msgstr ""
 
@@ -8674,7 +8844,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:342
 #: src/Infrastructure/Admin/DomainAdmin.php:713
 #: src/Infrastructure/Admin/DomainAdmin.php:746
-#: src/Infrastructure/Admin/TemplateAdmin.php:1004
+#: src/Infrastructure/Admin/TemplateAdmin.php:1006
 msgid "Issuer"
 msgstr ""
 
@@ -9712,10 +9882,6 @@ msgstr ""
 msgid "Valid now"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:391
-msgid "Needs attention"
-msgstr ""
-
 #: src/Infrastructure/Admin/DomainAdmin.php:400
 #: src/Infrastructure/Admin/DomainAdmin.php:411
 msgid "Issued / expiry"
@@ -10626,10 +10792,6 @@ msgstr ""
 msgid "Resume"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainDataToolsAdmin.php:385
-msgid "Download"
-msgstr ""
-
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:390
 msgid "Create correction versions"
 msgstr ""
@@ -10791,7 +10953,7 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:229
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:352
-#: src/Infrastructure/Admin/TemplateAdmin.php:1129
+#: src/Infrastructure/Admin/TemplateAdmin.php:1131
 #: src/Infrastructure/Admin/TemplateAdmin.php:645
 #: src/Infrastructure/Admin/TemplateAdmin.php:674
 msgid "Machine key"
@@ -11418,7 +11580,7 @@ msgid "Credential Preview"
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:209
-#: src/Infrastructure/Admin/TemplateAdmin.php:1085
+#: src/Infrastructure/Admin/TemplateAdmin.php:1087
 msgid "Render Plan SHA-256"
 msgstr ""
 
@@ -11547,122 +11709,134 @@ msgstr ""
 msgid "Locked"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1003
+#: src/Infrastructure/Admin/TemplateAdmin.php:1000
+msgid "Designer inspector and layers"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1000
+msgid "Properties"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1000
+msgid "Select an element to edit its content and appearance. Move and resize directly on the canvas; exact geometry stays available in Pro Designer."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1000
+msgid "Selection"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1000
+msgid "elements selected. Drag the selection together or use Align and Distribute. Click one item without a modifier to return to its individual properties."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1001
+msgid "Height (mm)"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1001
+msgid "Rotation (°)"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1001
+msgid "Width (mm)"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1001
+msgid "X (mm)"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1001
+msgid "Y (mm)"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1005
 msgid "Text content"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1004
+#: src/Infrastructure/Admin/TemplateAdmin.php:1006
 msgid "Certificate Number"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1004
+#: src/Infrastructure/Admin/TemplateAdmin.php:1006
 msgid "Custom Field…"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1004
+#: src/Infrastructure/Admin/TemplateAdmin.php:1006
 msgid "Dynamic field"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1004
+#: src/Infrastructure/Admin/TemplateAdmin.php:1006
 msgid "Expiry Date"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1004
+#: src/Infrastructure/Admin/TemplateAdmin.php:1006
 msgid "Field token"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1004
+#: src/Infrastructure/Admin/TemplateAdmin.php:1006
 msgid "Issue Date"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1004
+#: src/Infrastructure/Admin/TemplateAdmin.php:1006
 msgid "Recipient Name"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1005
+#: src/Infrastructure/Admin/TemplateAdmin.php:1007
 msgid "Choose from Media Library"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1005
+#: src/Infrastructure/Admin/TemplateAdmin.php:1007
 msgid "Contain"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1005
+#: src/Infrastructure/Admin/TemplateAdmin.php:1007
 msgid "Cover"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1005
-#: src/Infrastructure/Admin/TemplateAdmin.php:1016
+#: src/Infrastructure/Admin/TemplateAdmin.php:1007
+#: src/Infrastructure/Admin/TemplateAdmin.php:1018
 msgid "Fill"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1005
+#: src/Infrastructure/Admin/TemplateAdmin.php:1007
 #: src/Infrastructure/Admin/TemplateAdmin.php:966
 msgid "Fit"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1005
+#: src/Infrastructure/Admin/TemplateAdmin.php:1007
 msgid "Local asset reference"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1006
-#: src/Infrastructure/Admin/TemplateAdmin.php:1030
+#: src/Infrastructure/Admin/TemplateAdmin.php:1008
+#: src/Infrastructure/Admin/TemplateAdmin.php:1032
 #: src/Infrastructure/Admin/TemplateAdmin.php:90
 msgid "Ellipse"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1006
-#: src/Infrastructure/Admin/TemplateAdmin.php:1030
+#: src/Infrastructure/Admin/TemplateAdmin.php:1008
+#: src/Infrastructure/Admin/TemplateAdmin.php:1032
 #: src/Infrastructure/Admin/TemplateAdmin.php:89
 msgid "Rectangle"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1006
-#: src/Infrastructure/Admin/TemplateAdmin.php:1031
+#: src/Infrastructure/Admin/TemplateAdmin.php:1008
+#: src/Infrastructure/Admin/TemplateAdmin.php:1033
 #: src/Infrastructure/Admin/TemplateAdmin.php:83
-#: src/Infrastructure/Admin/TemplateAdmin.php:993
+#: src/Infrastructure/Admin/TemplateAdmin.php:995
 msgid "Shape"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1007
+#: src/Infrastructure/Admin/TemplateAdmin.php:1009
 msgid "Error correction"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1007
+#: src/Infrastructure/Admin/TemplateAdmin.php:1009
 msgid "QR source remains the canonical verification URL in both supported layout schemas."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1007
-#: src/Infrastructure/Admin/TemplateAdmin.php:1008
+#: src/Infrastructure/Admin/TemplateAdmin.php:1009
+#: src/Infrastructure/Admin/TemplateAdmin.php:1010
 msgid "Quiet zone (modules)"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1008
-msgid "Code 128 represents the existing human certificate number only. It creates no alternate credential identity or lookup endpoint."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1008
-msgid "Symbology"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1009
-msgid "Bullets"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1009
-msgid "Each non-empty line becomes one canonical list item. Rendering resolves the list to the shared text pipeline, so Preview/PDF/image adapters do not invent separate list geometry."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1009
-msgid "List items"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1009
-msgid "Marker style"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1009
-msgid "Numbered"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:101
@@ -11670,197 +11844,201 @@ msgid "locked"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1010
-msgid "Line content is geometric; its canonical stroke styling is edited below."
+msgid "Code 128 represents the existing human certificate number only. It creates no alternate credential identity or lookup endpoint."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1010
+msgid "Symbology"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1011
-msgid "Appearance"
+msgid "Bullets"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1011
-msgid "Canonical DSN-08"
+msgid "Each non-empty line becomes one canonical list item. Rendering resolves the list to the shared text pipeline, so Preview/PDF/image adapters do not invent separate list geometry."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1011
+msgid "List items"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1011
+msgid "Marker style"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1011
+msgid "Numbered"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1012
+msgid "Line content is geometric; its canonical stroke styling is edited below."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1013
+msgid "Appearance"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1013
+msgid "Controlled styles"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1014
 msgid "Opacity"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1013
+#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:973
 msgid "Font"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1013
+#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:973
 msgid "Monospace"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1013
+#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:973
 msgid "Sans Serif"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1013
+#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:973
 msgid "Serif"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1013
+#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:973
 msgid "Size (pt)"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1013
+#: src/Infrastructure/Admin/TemplateAdmin.php:1015
 msgid "Weight"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 msgid "Auto"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 #: src/Infrastructure/Admin/TemplateAdmin.php:969
-#: src/Infrastructure/Admin/TemplateAdmin.php:974
+#: src/Infrastructure/Admin/TemplateAdmin.php:975
 msgid "Bottom"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 msgid "Choose text color"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 msgid "Clip"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 msgid "Direction"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 msgid "End"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 msgid "Font choices use stable controlled local/browser family keys only. No remote font URL or arbitrary CSS family is accepted; production artifacts still fail closed unless the exact renderer FontManifest provides the selected family, weight and style bytes."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 msgid "Horizontal align"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
+#: src/Infrastructure/Admin/TemplateAdmin.php:973
 msgid "Italic"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 msgid "Letter spacing (pt)"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 msgid "Line height"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 msgid "Middle"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 msgid "Overflow"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 msgid "Shrink"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 msgid "Start"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 #: src/Infrastructure/Admin/TemplateAdmin.php:969
-#: src/Infrastructure/Admin/TemplateAdmin.php:974
+#: src/Infrastructure/Admin/TemplateAdmin.php:975
 msgid "Top"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 msgid "Vertical align"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1015
+#: src/Infrastructure/Admin/TemplateAdmin.php:1017
 msgid "Wrap"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1016
-#: src/Infrastructure/Admin/TemplateAdmin.php:1017
+#: src/Infrastructure/Admin/TemplateAdmin.php:1018
+#: src/Infrastructure/Admin/TemplateAdmin.php:1019
 msgid "Stroke"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1016
-#: src/Infrastructure/Admin/TemplateAdmin.php:1017
+#: src/Infrastructure/Admin/TemplateAdmin.php:1018
+#: src/Infrastructure/Admin/TemplateAdmin.php:1019
 msgid "Stroke width (mm)"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1018
-msgid "Arrow keys nudge 1 mm, Shift+Arrow 5 mm and Alt/Option+Arrow 0.1 mm. Ctrl/Cmd+Z undoes; Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y redoes. Locked elements remain selectable but cannot be transformed, reordered, removed or content-edited."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1018
-msgid "Front → back"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1018
-msgid "Layers"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1019
-msgid "Manual save remains the only authoritative revision write."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1019
-msgid "Recovery autosave ready"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1019
-msgid "Save Designer revision"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:102
 msgid "Designer requires a canonical page definition."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1027
+#: src/Infrastructure/Admin/TemplateAdmin.php:1020
+msgid "Arrow keys nudge 1 mm, Shift+Arrow 5 mm and Alt/Option+Arrow 0.1 mm. Ctrl/Cmd+Z undoes; Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y redoes. Locked elements remain selectable but cannot be transformed, reordered, removed or content-edited."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1020
+msgid "Front → back"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1020
+msgid "Layers"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1021
+msgid "Manual save remains the only authoritative revision write."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1021
+msgid "Recovery autosave ready"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1021
+msgid "Save Designer revision"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1029
 #: src/Infrastructure/Admin/TemplateAdmin.php:85
 msgid "Image"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1027
+#: src/Infrastructure/Admin/TemplateAdmin.php:1029
 #: src/Infrastructure/Admin/TemplateAdmin.php:122
 msgid "Merge field"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1028
-#: src/Infrastructure/Admin/TemplateAdmin.php:86
-msgid "Logo"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1028
-#: src/Infrastructure/Admin/TemplateAdmin.php:88
-msgid "Seal"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1028
-#: src/Infrastructure/Admin/TemplateAdmin.php:87
-msgid "Signature"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1029
-#: src/Infrastructure/Admin/TemplateAdmin.php:138
-msgid "Barcode"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1029
-#: src/Infrastructure/Admin/TemplateAdmin.php:91
-msgid "List"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1029
-#: src/Infrastructure/Admin/TemplateAdmin.php:82
-msgid "QR"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:103
@@ -11868,11 +12046,41 @@ msgid "Locked element selected."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1030
+#: src/Infrastructure/Admin/TemplateAdmin.php:86
+msgid "Logo"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1030
+#: src/Infrastructure/Admin/TemplateAdmin.php:88
+msgid "Seal"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1030
+#: src/Infrastructure/Admin/TemplateAdmin.php:87
+msgid "Signature"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1031
+#: src/Infrastructure/Admin/TemplateAdmin.php:138
+msgid "Barcode"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1031
+#: src/Infrastructure/Admin/TemplateAdmin.php:91
+msgid "List"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1031
+#: src/Infrastructure/Admin/TemplateAdmin.php:82
+msgid "QR"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1032
 #: src/Infrastructure/Admin/TemplateAdmin.php:84
 msgid "Line"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1031
+#: src/Infrastructure/Admin/TemplateAdmin.php:1033
 msgid "Image asset"
 msgstr ""
 
@@ -11884,33 +12092,25 @@ msgstr ""
 msgid "Selected element aligned to page."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1052
+#: src/Infrastructure/Admin/TemplateAdmin.php:1054
 msgid "Canonical Render Plan"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1052
+#: src/Infrastructure/Admin/TemplateAdmin.php:1054
 msgid "Read-only sample Preview built through the same LayoutResolver → RenderPlanBuilder composition path consumed by Certloom PDF, PNG and JPEG adapters."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1052
+#: src/Infrastructure/Admin/TemplateAdmin.php:1054
 #: src/Infrastructure/Admin/TemplateAdmin.php:576
 msgid "Template Preview"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1054
+#: src/Infrastructure/Admin/TemplateAdmin.php:1056
 msgid "Renderer release accepted"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1056
+#: src/Infrastructure/Admin/TemplateAdmin.php:1058
 msgid "Artifact authority pending"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1059
-msgid "Geometry, merge resolution, direction, QR modules, colors, ordering and element composition come from the canonical Render Plan. Browser font rasterization is illustrative until PDF-04 exact renderer/font authority is accepted; this screen never manufactures production artifact authority."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1059
-msgid "Preview boundary:"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:106
@@ -11918,85 +12118,93 @@ msgid "Layer order updated."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1061
-#: src/Infrastructure/Admin/TemplateAdmin.php:1085
+msgid "Geometry, merge resolution, direction, QR modules, colors, ordering and element composition come from the canonical Render Plan. Browser font rasterization is illustrative until PDF-04 exact renderer/font authority is accepted; this screen never manufactures production artifact authority."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1061
+msgid "Preview boundary:"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1063
+#: src/Infrastructure/Admin/TemplateAdmin.php:1087
 #: src/Infrastructure/Admin/TemplateAdmin.php:768
 msgid "Revision"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1061
+#: src/Infrastructure/Admin/TemplateAdmin.php:1063
 msgid "Template Preview revision"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1062
+#: src/Infrastructure/Admin/TemplateAdmin.php:1064
 msgid "Current draft"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1062
-#: src/Infrastructure/Admin/TemplateAdmin.php:1104
+#: src/Infrastructure/Admin/TemplateAdmin.php:1064
+#: src/Infrastructure/Admin/TemplateAdmin.php:1106
 msgid "Published"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1067
+#: src/Infrastructure/Admin/TemplateAdmin.php:1069
 msgid "Sample data"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1067
+#: src/Infrastructure/Admin/TemplateAdmin.php:1069
 msgid "Template Preview sample data"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1068
-msgid "Long content"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1068
-msgid "RTL / Urdu"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:107
 msgid "Element locked for this author."
 msgstr ""
 
+#: src/Infrastructure/Admin/TemplateAdmin.php:1070
+msgid "Long content"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1070
+msgid "RTL / Urdu"
+msgstr ""
+
 #: src/Infrastructure/Admin/TemplateAdmin.php:108
 msgid "Element unlocked."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1081
+#: src/Infrastructure/Admin/TemplateAdmin.php:1083
 msgid "The canonical Render Plan passed preparation but could not be presented safely in the browser."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1085
+#: src/Infrastructure/Admin/TemplateAdmin.php:1087
 msgid "Layout SHA-256"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1088
-msgid "Synthetic Preview values never read or mutate credential records. Use Standard, Long content and RTL / Urdu samples to stress the design before Designer editing and issuance are introduced."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:109
 msgid "Element nudged."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1096
+#: src/Infrastructure/Admin/TemplateAdmin.php:1090
+msgid "Synthetic Preview values never read or mutate credential records. Use Standard, Long content and RTL / Urdu samples to stress the design before Designer editing and issuance are introduced."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1098
 msgid "Duplicate as a new draft"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1096
+#: src/Infrastructure/Admin/TemplateAdmin.php:1098
 msgid "Duplication copies only the reviewed current revision. It creates a fresh template identity with no published state and no assignments."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1097
+#: src/Infrastructure/Admin/TemplateAdmin.php:1099
 msgid "Copy"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1097
+#: src/Infrastructure/Admin/TemplateAdmin.php:1099
 msgid "Create duplicate draft"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1097
+#: src/Infrastructure/Admin/TemplateAdmin.php:1099
 msgid "New machine key"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1097
+#: src/Infrastructure/Admin/TemplateAdmin.php:1099
 msgid "New name"
 msgstr ""
 
@@ -12004,15 +12212,15 @@ msgstr ""
 msgid "Element placed on the canvas."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1103
+#: src/Infrastructure/Admin/TemplateAdmin.php:1105
 msgid "Draft"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1105
+#: src/Infrastructure/Admin/TemplateAdmin.php:1107
 msgid "Changes pending"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1106
+#: src/Infrastructure/Admin/TemplateAdmin.php:1108
 #: src/Infrastructure/Admin/TemplateAdmin.php:669
 #: src/Infrastructure/Admin/TemplateAdmin.php:861
 msgid "Archived"
@@ -12022,43 +12230,43 @@ msgstr ""
 msgid "Snapping enabled."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1118
-msgid "Premium factory designs"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1119
-msgid "%1$d historical design families × %2$d compatibility variants = %3$d preserved layouts, plus %4$d additive curated premium concepts. Total factory drafts after synchronization: %5$d. Factory layouts remain local drafts until the production renderer gate is accepted."
-msgstr ""
-
 #: src/Infrastructure/Admin/TemplateAdmin.php:112
 msgid "Snapping disabled."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1123
+#: src/Infrastructure/Admin/TemplateAdmin.php:1120
+msgid "Premium factory designs"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1121
+msgid "%1$d historical design families × %2$d compatibility variants = %3$d preserved layouts, plus %4$d additive curated premium concepts. Total factory drafts after synchronization: %5$d. Factory layouts remain local drafts until the production renderer gate is accepted."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1125
 msgid "Install / synchronize factory drafts"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1129
-msgid "Factory template identity is permanent. Duplicate/export the design for a separately named template."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1129
-msgid "Name"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1129
-msgid "Stable lowercase key used by assignments, imports and future integrations."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:113
 msgid "Direct text editing started. Press Control or Command plus Enter to apply, or Escape to cancel."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1134
+#: src/Infrastructure/Admin/TemplateAdmin.php:1131
+msgid "Factory template identity is permanent. Duplicate/export the design for a separately named template."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1131
+msgid "Name"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1131
+msgid "Stable lowercase key used by assignments, imports and future integrations."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1136
 msgid "Import template"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1134
+#: src/Infrastructure/Admin/TemplateAdmin.php:1136
 msgid "Validate and import"
 msgstr ""
 
@@ -12070,7 +12278,7 @@ msgstr ""
 msgid "Direct text edit cancelled."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1155
+#: src/Infrastructure/Admin/TemplateAdmin.php:1157
 msgid "Template changes were saved."
 msgstr ""
 
@@ -12078,7 +12286,7 @@ msgstr ""
 msgid "Edit certificate text directly on the canvas"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1161
+#: src/Infrastructure/Admin/TemplateAdmin.php:1163
 msgid "You are not allowed to manage Certloom templates."
 msgstr ""
 
@@ -12725,7 +12933,7 @@ msgid "Unlock element"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:79
-#: src/Infrastructure/Admin/TemplateAdmin.php:981
+#: src/Infrastructure/Admin/TemplateAdmin.php:983
 msgid "Lock element"
 msgstr ""
 
@@ -12846,7 +13054,7 @@ msgid "Upgrade draft to layout schema v%d"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:918
-msgid "This draft can author the controlled Code 128 primitive and DSN-06 canonical list elements while older schema revisions remain immutable."
+msgid "This draft can author the controlled Code 128 primitive and structured list elements while older revisions remain immutable."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:918
@@ -12870,15 +13078,15 @@ msgid "The typed Designer Element Registry is unavailable or invalid. Reload the
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:950
+msgid "Add or drag content onto the canvas, edit text directly, use Smart Guides to line things up, and select multiple items when you need to align or space them evenly. Pro Designer keeps the same certificate design but adds exact geometry, layer ordering and deeper controls."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:950
 msgid "Certificate Designer"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:950
-msgid "DSX-02A · Easy Designer"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:950
-msgid "Easy Designer keeps everyday editing obvious: click or drag content onto the canvas, move it with Smart Guides, edit ordinary text directly, then use contextual properties. Pro Designer remains available for exact geometry, layer ordering and deeper controls. Both modes edit the same canonical immutable Template revision model."
+msgid "Easy Designer"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:950
@@ -12891,6 +13099,10 @@ msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:951
 msgid "Designer boundary:"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:951
+msgid "Technical integrity"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:952
@@ -12906,7 +13118,7 @@ msgid "Quick Designer"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:952
-msgid "Same canonical layout · different editing depth"
+msgid "Same design · more precise controls in Pro"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:959
@@ -12966,20 +13178,24 @@ msgid "Save"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:968
-msgid "Align"
+msgid "Arrange"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:968
-msgid "Quick alignment controls"
+msgid "Quick alignment and distribution controls"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:968
+msgid "Shift/Ctrl/Cmd-click to select multiple"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:969
-#: src/Infrastructure/Admin/TemplateAdmin.php:974
+#: src/Infrastructure/Admin/TemplateAdmin.php:975
 msgid "Center horizontally"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:969
-#: src/Infrastructure/Admin/TemplateAdmin.php:974
+#: src/Infrastructure/Admin/TemplateAdmin.php:975
 msgid "Center vertically"
 msgstr ""
 
@@ -12987,51 +13203,82 @@ msgstr ""
 msgid "Element"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:973
-msgid "Align to page"
+#: src/Infrastructure/Admin/TemplateAdmin.php:972
+#: src/Infrastructure/Admin/TemplateAdmin.php:978
+msgid "Distribute"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:972
+msgid "Select 3 or more elements to equalize spacing."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:972
+#: src/Infrastructure/Admin/TemplateAdmin.php:978
+msgid "Space horizontally"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:972
+#: src/Infrastructure/Admin/TemplateAdmin.php:978
+msgid "Space vertically"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:973
+msgid "Bold"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:973
+msgid "Quick text controls"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:973
+msgid "Text size in points"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:974
+msgid "Align"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:974
 msgid "Selected element alignment and layer controls"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:977
+#: src/Infrastructure/Admin/TemplateAdmin.php:979
 msgid "Layer"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:978
-msgid "Bring forward"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:978
-msgid "Bring to front"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:978
-msgid "Send backward"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:978
-msgid "Send to back"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:98
 msgid "Unlock"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:982
+#: src/Infrastructure/Admin/TemplateAdmin.php:980
+msgid "Bring forward"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:980
+msgid "Bring to front"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:980
+msgid "Send backward"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:980
+msgid "Send to back"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:984
 msgid "Add"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:982
+#: src/Infrastructure/Admin/TemplateAdmin.php:984
 msgid "Add elements"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:982
+#: src/Infrastructure/Admin/TemplateAdmin.php:984
 msgid "Add or remove Designer elements"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:982
+#: src/Infrastructure/Admin/TemplateAdmin.php:984
 msgid "Click or drag onto canvas"
 msgstr ""
 
@@ -13039,60 +13286,28 @@ msgstr ""
 msgid "Lock"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:990
+#: src/Infrastructure/Admin/TemplateAdmin.php:992
 msgid "Upgrade this draft to certloom-layout v%d before adding this element."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:993
+#: src/Infrastructure/Admin/TemplateAdmin.php:995
 msgid "Dynamic Field"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:996
+#: src/Infrastructure/Admin/TemplateAdmin.php:998
 msgid "Delete selected"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:996
+#: src/Infrastructure/Admin/TemplateAdmin.php:998
 msgid "Duplicate selected"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:997
+#: src/Infrastructure/Admin/TemplateAdmin.php:999
 msgid "Certificate Designer canvas workspace"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:997
+#: src/Infrastructure/Admin/TemplateAdmin.php:999
 msgid "Certificate page canvas"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:998
-msgid "Designer inspector and layers"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:998
-msgid "Properties"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:998
-msgid "Select an element to edit its content and appearance. Move and resize directly on the canvas; exact geometry stays available in Pro Designer."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:999
-msgid "Height (mm)"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:999
-msgid "Rotation (°)"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:999
-msgid "Width (mm)"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:999
-msgid "X (mm)"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:999
-msgid "Y (mm)"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateDesignerAutosave.php:128
@@ -13176,6 +13391,178 @@ msgstr ""
 
 #: src/Infrastructure/Backup/DomainBackupRepository.php:75
 msgid "Certloom could not read a domain backup batch."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:107
+msgid "Certloom created the backup bytes but could not save their private catalog entry, so the untracked copy was removed."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:116
+#: src/Infrastructure/Backup/LocalBackupStore.php:140
+msgid "The requested Certloom backup identifier is invalid."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:123
+msgid "That private Certloom backup file is no longer available."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:128
+msgid "Certloom refused a stored backup whose bytes no longer match its verified catalog entry."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:133
+#: src/Infrastructure/Backup/LocalBackupStore.php:145
+msgid "That private Certloom backup is not in the local backup catalog."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:149
+msgid "Certloom could not remove the selected private backup file."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:152
+msgid "The backup file was removed, but Certloom could not update its local backup catalog."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:173
+msgid "Certloom stopped automatic retention cleanup because an owned scheduled backup could not be removed safely."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:177
+msgid "Certloom removed expired scheduled backup files but could not save the updated retention catalog."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:200
+msgid "Certloom could not find persistent private backup storage outside the public WordPress webroot. Configure certloom_private_backup_directory to an absolute non-public path before enabling automatic backups."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:208
+msgid "Certloom could not create its private backup directory."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:220
+msgid "Certloom could not protect its private backup directory."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:235
+msgid "Certloom could not create a secure private-storage test."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:240
+msgid "Certloom could not create a test file in the configured private backup destination."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:248
+msgid "Certloom could not finish writing its private backup destination test."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:254
+msgid "Certloom refused a private backup destination that did not reproduce its test bytes exactly."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:257
+msgid "Certloom refused a private backup destination where its temporary test file could not be removed cleanly."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:298
+msgid "Certloom refused a backup path outside its owned private directory."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:313
+#: src/Infrastructure/Backup/LocalBackupStore.php:323
+msgid "Certloom refused to use a filesystem root as its backup directory."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:316
+msgid "Certloom refused a symlink as its persistent backup directory."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:32
+msgid "The completed Certloom backup is not available for private storage."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:320
+msgid "Certloom private backup storage requires an absolute filesystem path."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:331
+msgid "Certloom refused persistent backup storage inside the public WordPress webroot. Server deny files are defense in depth, not a portable confidentiality boundary."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:35
+#: src/Infrastructure/Backup/ScheduledBackup.php:82
+msgid "Certloom refused an invalid backup purpose."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:39
+msgid "The private backup catalog has reached its safety limit. Delete an older manual backup before creating another."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:44
+msgid "Certloom refused incomplete backup integrity metadata."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:49
+msgid "Certloom refused a backup whose stored bytes do not match its completed integrity metadata."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:58
+msgid "Certloom could not create a secure backup identifier."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:68
+msgid "Certloom could not open its private backup storage safely."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:77
+msgid "Certloom could not finish writing the private backup."
+msgstr ""
+
+#: src/Infrastructure/Backup/LocalBackupStore.php:83
+msgid "Certloom removed a private backup copy that failed its post-write integrity check."
+msgstr ""
+
+#: src/Infrastructure/Backup/ScheduledBackup.php:101
+msgid "Certloom could not complete the backup because an unexpected local error occurred."
+msgstr ""
+
+#: src/Infrastructure/Backup/ScheduledBackup.php:141
+msgid "Certloom could not schedule automatic backups with WordPress Cron."
+msgstr ""
+
+#: src/Infrastructure/Backup/ScheduledBackup.php:160
+msgid "Certloom could not create a safe backup-run identity."
+msgstr ""
+
+#: src/Infrastructure/Backup/ScheduledBackup.php:165
+msgid "Another Certloom backup is already running. Wait for it to finish before starting another."
+msgstr ""
+
+#: src/Infrastructure/Backup/ScheduledBackup.php:168
+msgid "Another Certloom backup acquired the run lock first. Try again after it finishes."
+msgstr ""
+
+#: src/Infrastructure/Backup/ScheduledBackup.php:177
+msgid "The backup completed, but Certloom refused to release a run lock that is no longer owned by this process."
+msgstr ""
+
+#: src/Infrastructure/Backup/ScheduledBackup.php:181
+msgid "The backup completed, but Certloom could not safely release its run lock. Wait for the short lease to expire before starting another backup."
+msgstr ""
+
+#: src/Infrastructure/Backup/ScheduledBackup.php:201
+msgid "Backup completed and verified."
+msgstr ""
+
+#: src/Infrastructure/Backup/ScheduledBackup.php:34
+msgid "Once Weekly"
+msgstr ""
+
+#: src/Infrastructure/Backup/ScheduledBackup.php:61
+msgid "Certloom could not save the backup retention setting."
+msgstr ""
+
+#: src/Infrastructure/Backup/ScheduledBackup.php:66
+msgid "Certloom could not save the automatic backup schedule."
 msgstr ""
 
 #: src/Infrastructure/Data/DomainGeneration.php:26

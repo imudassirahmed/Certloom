@@ -19,20 +19,24 @@ class Ecapla_CertVerify_Cron {
 	 * @return true|WP_Error
 	 */
 	public static function activate() {
-		return self::retire_schedule();
+		$retired = self::retire_schedule();
+		if ( is_wp_error( $retired ) ) { return $retired; }
+		return \Certloom\Infrastructure\Backup\ScheduledBackup::activate();
 	}
 
 	public static function deactivate() {
 		wp_clear_scheduled_hook( self::HOOK );
 		wp_clear_scheduled_hook( 'ecapla_certverify_continue_migrations' );
+		\Certloom\Infrastructure\Backup\ScheduledBackup::deactivate();
 	}
 
 	public static function init() {
 		add_action( self::HOOK, array( __CLASS__, 'run' ) );
 		if ( ! get_option( self::RETIRED_OPTION, false ) ) {
-			return self::retire_schedule();
+			$retired = self::retire_schedule();
+			if ( is_wp_error( $retired ) ) { return $retired; }
 		}
-		return true;
+		return \Certloom\Infrastructure\Backup\ScheduledBackup::init();
 	}
 
 	/**

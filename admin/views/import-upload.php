@@ -10,6 +10,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<?php include ECAPLA_CERTVERIFY_PATH . 'admin/views/partials/brand-bar.php'; ?>
 	<h1><?php esc_html_e( 'Import, export & backup', 'certloom' ); ?></h1>
 	<?php if ( isset( $_GET['ecapla_certverify_error'] ) ) : ?><div class="notice notice-error"><p><?php echo esc_html( sanitize_text_field( wp_unslash( $_GET['ecapla_certverify_error'] ) ) ); ?></p></div><?php endif; ?>
+	<?php if ( isset( $_GET['backup_notice'] ) ) : ?>
+		<?php $certloom_backup_notice = sanitize_key( wp_unslash( $_GET['backup_notice'] ) ); ?>
+		<?php if ( in_array( $certloom_backup_notice, array( 'settings-saved', 'storage-verified', 'backup-created', 'backup-deleted' ), true ) ) : ?>
+			<div class="notice notice-success is-dismissible"><p>
+				<?php
+				if ( 'settings-saved' === $certloom_backup_notice ) { esc_html_e( 'Automatic backup settings saved.', 'certloom' ); }
+				elseif ( 'storage-verified' === $certloom_backup_notice ) { esc_html_e( 'Private backup storage tested successfully.', 'certloom' ); }
+				elseif ( 'backup-created' === $certloom_backup_notice ) { esc_html_e( 'Backup created, verified, and stored privately.', 'certloom' ); }
+				else { esc_html_e( 'Private backup deleted.', 'certloom' ); }
+				?>
+			</p></div>
+		<?php endif; ?>
+	<?php endif; ?>
 
 	<div class="ecapla-certverify-admin-grid">
 		<section class="ecapla-certverify-admin-card">
@@ -37,11 +50,87 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</section>
 
 		<?php if ( current_user_can( 'manage_options' ) ) : ?>
-			<section class="ecapla-certverify-admin-card">
-				<h2><?php esc_html_e( 'Complete backup & restore', 'certloom' ); ?></h2>
-				<p><?php esc_html_e( 'Create a lossless, versioned streaming backup containing certificates, active and retired field definitions, settings, workflow source, and original timestamps.', 'certloom' ); ?></p>
-				<p><a class="button button-primary" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=ecapla_certverify_backup_download' ), 'ecapla_certverify_backup_download' ) ); ?>"><?php esc_html_e( 'Download complete backup', 'certloom' ); ?></a></p>
+			<section class="ecapla-certverify-admin-card certloom-backup-center">
+				<h2><?php esc_html_e( 'Backup & recovery', 'certloom' ); ?></h2>
+				<p><?php esc_html_e( 'Protect the current authoritative Certloom registry with the same lossless, versioned backup format used by manual downloads. Automatic backups stay in private local storage and never switch credential authority.', 'certloom' ); ?></p>
+				<p><strong><?php esc_html_e( 'Source authority:', 'certloom' ); ?></strong> <?php esc_html_e( 'Current Certloom registry', 'certloom' ); ?><br />
+				<strong><?php esc_html_e( 'Destination:', 'certloom' ); ?></strong> <?php esc_html_e( 'Local private storage', 'certloom' ); ?></p>
+
+				<?php if ( is_wp_error( $backup_storage_state ) ) : ?>
+					<div class="notice notice-warning inline"><p><?php echo esc_html( $backup_storage_state->get_error_message() ); ?></p></div>
+				<?php endif; ?>
+
+				<div class="certloom-backup-actions">
+					<p><a class="button button-secondary" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=ecapla_certverify_backup_download' ), 'ecapla_certverify_backup_download' ) ); ?>"><?php esc_html_e( 'Download fresh backup', 'certloom' ); ?></a></p>
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+						<input type="hidden" name="action" value="certloom_backup_test_storage" />
+						<?php wp_nonce_field( 'certloom_backup_test_storage' ); ?>
+						<?php submit_button( __( 'Test storage', 'certloom' ), 'secondary', 'submit', false ); ?>
+					</form>
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+						<input type="hidden" name="action" value="certloom_backup_run_now" />
+						<?php wp_nonce_field( 'certloom_backup_run_now' ); ?>
+						<?php submit_button( __( 'Back up now', 'certloom' ), 'primary', 'submit', false ); ?>
+					</form>
+				</div>
+
+				<h3><?php esc_html_e( 'Automatic backups', 'certloom' ); ?></h3>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-backup-settings-form">
+					<input type="hidden" name="action" value="certloom_backup_settings" />
+					<?php wp_nonce_field( 'certloom_backup_settings' ); ?>
+					<p><label for="certloom-backup-schedule"><strong><?php esc_html_e( 'Schedule', 'certloom' ); ?></strong></label><br />
+					<select id="certloom-backup-schedule" name="backup_schedule">
+						<option value="off" <?php selected( $scheduled_backup_state['schedule'] ?? 'off', 'off' ); ?>><?php esc_html_e( 'Off', 'certloom' ); ?></option>
+						<option value="daily" <?php selected( $scheduled_backup_state['schedule'] ?? 'off', 'daily' ); ?>><?php esc_html_e( 'Daily', 'certloom' ); ?></option>
+						<option value="weekly" <?php selected( $scheduled_backup_state['schedule'] ?? 'off', 'weekly' ); ?>><?php esc_html_e( 'Weekly', 'certloom' ); ?></option>
+					</select></p>
+					<p><label for="certloom-backup-retention"><strong><?php esc_html_e( 'Automatic retention', 'certloom' ); ?></strong></label><br />
+					<input id="certloom-backup-retention" type="number" min="1" max="60" step="1" name="backup_retention" value="<?php echo esc_attr( absint( $scheduled_backup_state['retention'] ?? 14 ) ); ?>" />
+					<span><?php esc_html_e( 'backups', 'certloom' ); ?></span></p>
+					<?php submit_button( __( 'Save backup settings', 'certloom' ), 'secondary', 'submit', false ); ?>
+				</form>
+				<?php $certloom_backup_last = (array) ( $scheduled_backup_state['last_result'] ?? array() ); ?>
+				<ul class="ul-disc certloom-backup-status">
+					<li><strong><?php esc_html_e( 'Last run:', 'certloom' ); ?></strong> <?php echo esc_html( ! empty( $certloom_backup_last['ran_ts'] ) ? wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), absint( $certloom_backup_last['ran_ts'] ) ) : __( 'Not run yet', 'certloom' ) ); ?></li>
+					<li><strong><?php esc_html_e( 'Last result:', 'certloom' ); ?></strong> <?php echo esc_html( ! empty( $certloom_backup_last['status'] ) ? ( 'success' === $certloom_backup_last['status'] ? __( 'Verified', 'certloom' ) : __( 'Needs attention', 'certloom' ) ) : __( '—', 'certloom' ) ); ?></li>
+					<li><strong><?php esc_html_e( 'Next scheduled run:', 'certloom' ); ?></strong> <?php echo esc_html( ! empty( $scheduled_backup_state['next_run'] ) ? wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), absint( $scheduled_backup_state['next_run'] ) ) : __( 'Not scheduled', 'certloom' ) ); ?></li>
+				</ul>
+
+				<?php if ( ! empty( $saved_backups ) ) : ?>
+					<h3><?php esc_html_e( 'Saved backups', 'certloom' ); ?></h3>
+					<div class="certloom-backup-table-wrap">
+					<table class="widefat striped certloom-backup-table">
+						<thead><tr><th><?php esc_html_e( 'Created', 'certloom' ); ?></th><th><?php esc_html_e( 'Type', 'certloom' ); ?></th><th><?php esc_html_e( 'Certificates', 'certloom' ); ?></th><th><?php esc_html_e( 'Size', 'certloom' ); ?></th><th><?php esc_html_e( 'Integrity', 'certloom' ); ?></th><th><?php esc_html_e( 'Actions', 'certloom' ); ?></th></tr></thead>
+						<tbody>
+						<?php foreach ( array_slice( $saved_backups, 0, 20 ) as $certloom_saved_backup ) : ?>
+							<tr>
+								<td><?php echo esc_html( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), absint( $certloom_saved_backup['created_ts'] ) ) ); ?></td>
+								<td><?php echo esc_html( 'scheduled' === $certloom_saved_backup['purpose'] ? __( 'Scheduled', 'certloom' ) : ( 'safety' === $certloom_saved_backup['purpose'] ? __( 'Safety', 'certloom' ) : __( 'Manual', 'certloom' ) ) ); ?></td>
+								<td><?php echo esc_html( number_format_i18n( absint( $certloom_saved_backup['records'] ) ) ); ?></td>
+								<td><?php echo esc_html( size_format( absint( $certloom_saved_backup['bytes'] ) ) ); ?></td>
+								<td><?php esc_html_e( 'Verified at creation', 'certloom' ); ?></td>
+								<td class="certloom-backup-row-actions">
+									<a class="button button-small" href="<?php echo esc_url( wp_nonce_url( add_query_arg( array( 'action' => 'certloom_backup_saved_download', 'backup_id' => $certloom_saved_backup['id'] ), admin_url( 'admin-post.php' ) ), 'certloom_backup_saved_download_' . $certloom_saved_backup['id'] ) ); ?>"><?php esc_html_e( 'Download', 'certloom' ); ?></a>
+									<a class="button button-small" href="<?php echo esc_url( wp_nonce_url( add_query_arg( array( 'action' => 'certloom_backup_saved_review', 'backup_id' => $certloom_saved_backup['id'] ), admin_url( 'admin-post.php' ) ), 'certloom_backup_saved_review_' . $certloom_saved_backup['id'] ) ); ?>"><?php esc_html_e( 'Review restore', 'certloom' ); ?></a>
+									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-inline-form">
+										<input type="hidden" name="action" value="certloom_backup_saved_delete" />
+										<input type="hidden" name="backup_id" value="<?php echo esc_attr( $certloom_saved_backup['id'] ); ?>" />
+										<?php wp_nonce_field( 'certloom_backup_saved_delete_' . $certloom_saved_backup['id'] ); ?>
+										<button type="submit" class="button button-small" onclick="return confirm('<?php echo esc_js( __( 'Delete this private backup?', 'certloom' ) ); ?>');"><?php esc_html_e( 'Delete', 'certloom' ); ?></button>
+									</form>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+						</tbody>
+					</table>
+					</div>
+				<?php else : ?>
+					<p class="description"><?php esc_html_e( 'No private backups have been saved yet. Use Back up now or enable a schedule.', 'certloom' ); ?></p>
+				<?php endif; ?>
+
 				<hr />
+				<h3><?php esc_html_e( 'Restore', 'certloom' ); ?></h3>
+				<p><?php esc_html_e( 'Restore always starts with a non-destructive review. Upload a trusted Certloom backup, or choose Review restore beside a saved private backup.', 'certloom' ); ?></p>
 				<form method="post" enctype="multipart/form-data" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 					<input type="hidden" name="action" value="ecapla_certverify_backup_analyze" />
 					<?php wp_nonce_field( 'ecapla_certverify_backup_analyze' ); ?>

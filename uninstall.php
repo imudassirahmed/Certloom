@@ -44,6 +44,7 @@ function ecapla_certverify_uninstall_site() {
 	wp_clear_scheduled_hook( 'certloom_run_job' );
 	wp_clear_scheduled_hook( 'certloom_job_watchdog' );
 	wp_clear_scheduled_hook( 'certloom_verification_analytics_prune' );
+	wp_clear_scheduled_hook( 'certloom_run_scheduled_backup' );
 
 	$wp_roles        = wp_roles();
 	$roles_option    = $wp_roles ? $wp_roles->role_key : '';
@@ -147,6 +148,8 @@ function ecapla_certverify_uninstall_site() {
 	delete_option( 'certloom_staging_restore_rehearsal_lock' );
 	delete_option( 'certloom_staging_cutover_rehearsal' );
 	delete_option( 'certloom_staging_cutover_rehearsal_lock' );
+	delete_option( 'certloom_backup_run_lock' );
+	delete_option( 'certloom_backup_last_result' );
 
 	/* DSN-02 personal Designer workspace state is non-artifact UI state and must not survive uninstall. */
 	$designer_state_prefix = 'certloom_template_designer_state_' . get_current_blog_id() . '_';
@@ -305,6 +308,21 @@ function ecapla_certverify_uninstall_site() {
 	if ( ! $delete_data ) {
 		return;
 	}
+
+	/* Explicit delete-data also removes persistent customer backup packages and their catalog. */
+	$backup_store_file = __DIR__ . '/src/Infrastructure/Backup/LocalBackupStore.php';
+	if ( file_exists( $backup_store_file ) ) {
+		require_once $backup_store_file;
+		$certloom_backup_store = new \Certloom\Infrastructure\Backup\LocalBackupStore();
+		$certloom_backup_cleanup_ok = true;
+		foreach ( $certloom_backup_store->list_backups() as $certloom_backup_entry ) {
+			$certloom_backup_deleted = $certloom_backup_store->delete( $certloom_backup_entry['id'] );
+			if ( is_wp_error( $certloom_backup_deleted ) ) { $certloom_backup_cleanup_ok = false; break; }
+		}
+		if ( $certloom_backup_cleanup_ok ) { delete_option( 'certloom_local_backup_catalog' ); }
+	}
+	delete_option( 'certloom_backup_schedule' );
+	delete_option( 'certloom_backup_retention' );
 
 	/* Explicit delete-data choice removes durable migration/cutover lineage too. */
 	foreach ( array(

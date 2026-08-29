@@ -37,7 +37,7 @@ async def main():
         await ck((await root.get_attribute('data-designer-safe-margin-mm')) == '10', 'safeMarginDeclared')
         await ck(await page.locator('[data-certloom-designer-snap]').is_visible(), 'smartGuidesVisibleQuick')
         await ck(await page.locator('[data-certloom-designer-snap]').is_checked(), 'smartGuidesDefaultOn')
-        await ck(await page.locator('[data-certloom-designer-quick-align]').is_visible(), 'quickAlignVisible')
+        await ck(await page.locator('[data-certloom-designer-quick-align]').is_hidden(), 'quickAlignHiddenWithoutSelection')
         font_family = page.locator('[data-certloom-designer-style-field="font_family"]')
         await ck(await font_family.count() == 1, 'fontCatalogPresent')
         for kind in ['text','image','logo','merge','qr','rectangle','line']:
@@ -54,6 +54,7 @@ async def main():
         await ck(after == before + 1, 'textDragAddsOne')
         dropped = page.locator('[data-certloom-designer-element].is-selected')
         await ck(await dropped.count() == 1, 'droppedTextSelected')
+        await ck(await page.locator('[data-certloom-designer-quick-align]').is_visible(), 'quickAlignVisibleAfterSelection')
         dropped_text_id = await dropped.get_attribute('data-certloom-designer-element')
         db = await dropped.bounding_box(); box = await canvas.bounding_box(); assert db and box
         await ck(abs((db['x']+db['width']/2) - (box['x']+box['width']*0.72)) < max(25, box['width']*0.08), 'dropPositionHonored')

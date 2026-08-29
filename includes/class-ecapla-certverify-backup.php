@@ -99,55 +99,55 @@ class Ecapla_CertVerify_Backup {
 	}
 
 	/**
-	 * Builds the entire backup in a temporary file before sending headers.
-	 * Any read, encoding, or write failure aborts without delivering a partial
-	 * file that could be mistaken for a complete backup.
+	 * Builds and validates one complete current-authority backup file.
+	 *
+	 * Manual downloads and scheduled backups intentionally share this exact
+	 * builder so Certloom has only one definition of a complete backup.
+	 *
+	 * @return array<string,mixed>|WP_Error
 	 */
-	public static function stream_export() {
+	public static function create_export_file() {
 		$temp = wp_tempnam( 'certloom-backup-' . gmdate( 'Y-m-d-His' ) . '.cvbackup' );
 		if ( ! $temp ) {
-			self::download_error( __( 'Certloom could not create a temporary backup file.', 'certloom' ) );
+			return new WP_Error( 'ecapla_certverify_backup_temp_failed', __( 'Certloom could not create a temporary backup file.', 'certloom' ) );
 		}
 
-		$handle = fopen( $temp, 'wb' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- A private temporary file is required for atomic download generation.
+		$handle = fopen( $temp, 'wb' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- A private temporary file is required for atomic backup generation.
 		if ( false === $handle ) {
-			@unlink( $temp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.unlink_unlink
-			self::download_error( __( 'Certloom could not open its temporary backup file.', 'certloom' ) );
+			self::delete_file( $temp );
+			return new WP_Error( 'ecapla_certverify_backup_open_failed', __( 'Certloom could not open its temporary backup file.', 'certloom' ) );
 		}
 
-		$fields         = Ecapla_CertVerify_Fields::get_fields();
-		$retired_fields = Ecapla_CertVerify_Fields::get_retired_fields();
-		$settings       = Ecapla_CertVerify_Settings::get_all();
+		$fields           = Ecapla_CertVerify_Fields::get_fields();
+		$retired_fields  = Ecapla_CertVerify_Fields::get_retired_fields();
+		$settings        = Ecapla_CertVerify_Settings::get_all();
 		$numbering_policy = Ecapla_CertVerify_Numbering::normalize_policy( $settings );
 		if ( is_wp_error( $numbering_policy ) ) {
-			self::close_handle( $handle );
-			@unlink( $temp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.unlink_unlink
-			self::download_error( __( 'Certloom cannot create a complete backup while the certificate-numbering policy is invalid. Repair Settings → Certificate numbering and try again.', 'certloom' ) );
+			return self::abort_export_file( $handle, $temp, new WP_Error( 'ecapla_certverify_backup_numbering_policy', __( 'Certloom cannot create a complete backup while the certificate-numbering policy is invalid. Repair Settings → Certificate numbering and try again.', 'certloom' ) ) );
 		}
 		$settings = array_merge( $settings, $numbering_policy );
+
 		$numbering_state = Ecapla_CertVerify_Numbering::export_state();
 		if ( is_wp_error( $numbering_state ) ) {
-			self::close_handle( $handle );
-			@unlink( $temp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.unlink_unlink
-			self::download_error( $numbering_state->get_error_message() );
-		}
-		$state_marker   = self::capture_state_marker();
-		if ( is_wp_error( $state_marker ) ) {
-			self::close_handle( $handle );
-			@unlink( $temp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.unlink_unlink
-			self::download_error( $state_marker->get_error_message() );
+			return self::abort_export_file( $handle, $temp, $numbering_state );
 		}
 
-		$manifest = array(
-			'type'           => 'manifest',
-			'format'         => self::FORMAT,
-			'format_version' => self::FORMAT_VERSION,
-			'plugin_version' => ECAPLA_CERTVERIFY_VERSION,
-			'schema_version' => ECAPLA_CERTVERIFY_SCHEMA_VERSION,
-			'generated_at'   => gmdate( 'c' ),
-			'fields'         => $fields,
-			'retired_fields' => $retired_fields,
-			'settings'       => $settings,
+		$state_marker = self::capture_state_marker();
+		if ( is_wp_error( $state_marker ) ) {
+			return self::abort_export_file( $handle, $temp, $state_marker );
+		}
+
+		$generated_at = gmdate( 'c' );
+		$manifest     = array(
+			'type'            => 'manifest',
+			'format'          => self::FORMAT,
+			'format_version'  => self::FORMAT_VERSION,
+			'plugin_version'  => ECAPLA_CERTVERIFY_VERSION,
+			'schema_version'  => ECAPLA_CERTVERIFY_SCHEMA_VERSION,
+			'generated_at'    => $generated_at,
+			'fields'          => $fields,
+			'retired_fields'  => $retired_fields,
+			'settings'        => $settings,
 			'numbering_state' => $numbering_state,
 		);
 
@@ -155,9 +155,7 @@ class Ecapla_CertVerify_Backup {
 		$hash          = hash_init( 'sha256' );
 		$manifest_line = is_string( $manifest_json ) ? $manifest_json . "\n" : '';
 		if ( ! is_string( $manifest_json ) || ! self::write_all( $handle, $manifest_line ) ) {
-			self::close_handle( $handle );
-			@unlink( $temp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.unlink_unlink
-			self::download_error( __( 'Certloom could not encode the backup manifest.', 'certloom' ) );
+			return self::abort_export_file( $handle, $temp, new WP_Error( 'ecapla_certverify_backup_manifest_encode_failed', __( 'Certloom could not encode the backup manifest.', 'certloom' ) ) );
 		}
 
 		hash_update( $hash, $manifest_line );
@@ -166,9 +164,7 @@ class Ecapla_CertVerify_Backup {
 		do {
 			$records = Ecapla_CertVerify_Database::get_export_batch( $last_id, 500 );
 			if ( is_wp_error( $records ) ) {
-				self::close_handle( $handle );
-				@unlink( $temp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.unlink_unlink
-				self::download_error( $records->get_error_message() );
+				return self::abort_export_file( $handle, $temp, $records );
 			}
 			foreach ( $records as $record ) {
 				$last_id = max( $last_id, absint( $record['id'] ) );
@@ -188,76 +184,103 @@ class Ecapla_CertVerify_Backup {
 				);
 				$json = wp_json_encode( $item );
 				if ( ! is_string( $json ) ) {
-					self::close_handle( $handle );
-					@unlink( $temp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.unlink_unlink
-					self::download_error(
-						sprintf(
-							/* translators: %d: internal certificate record ID. */
-							__( 'Certificate ID %d could not be encoded. No backup was downloaded.', 'certloom' ),
-							absint( $record['id'] )
+					return self::abort_export_file(
+						$handle,
+						$temp,
+						new WP_Error(
+							'ecapla_certverify_backup_record_encode_failed',
+							sprintf(
+								/* translators: %d: internal certificate record ID. */
+								__( 'Certificate ID %d could not be encoded. No backup was created.', 'certloom' ),
+								absint( $record['id'] )
+							)
 						)
 					);
 				}
 				$line = $json . "\n";
 				if ( ! self::write_all( $handle, $line ) ) {
-					self::close_handle( $handle );
-					@unlink( $temp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.unlink_unlink
-					self::download_error( __( 'Certloom could not finish writing the backup.', 'certloom' ) );
+					return self::abort_export_file( $handle, $temp, new WP_Error( 'ecapla_certverify_backup_record_write_failed', __( 'Certloom could not finish writing the backup.', 'certloom' ) ) );
 				}
 				hash_update( $hash, $line );
 				$count++;
 				if ( $count > self::MAX_RECORDS ) {
-					self::close_handle( $handle );
-					@unlink( $temp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.unlink_unlink
-					self::download_error( __( 'The registry exceeds the current complete-backup safety limit.', 'certloom' ) );
+					return self::abort_export_file( $handle, $temp, new WP_Error( 'ecapla_certverify_backup_record_limit', __( 'The registry exceeds the current complete-backup safety limit.', 'certloom' ) ) );
 				}
 			}
 		} while ( count( $records ) === 500 );
 
 		$final_marker = self::capture_state_marker();
 		if ( is_wp_error( $final_marker ) || ! self::state_markers_match( $state_marker, $final_marker ) ) {
-			self::close_handle( $handle );
-			@unlink( $temp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.unlink_unlink
-			self::download_error( __( 'Certificates or Certloom configuration changed while the backup was being generated. No backup was downloaded; try again after current edits finish.', 'certloom' ) );
+			return self::abort_export_file( $handle, $temp, new WP_Error( 'ecapla_certverify_backup_changed_during_generation', __( 'Certificates or Certloom configuration changed while the backup was being generated. No backup was created; try again after current edits finish.', 'certloom' ) ) );
 		}
 
-		$integrity = wp_json_encode(
+		$content_sha256 = hash_final( $hash );
+		$integrity      = wp_json_encode(
 			array(
 				'type'    => 'integrity',
 				'records' => $count,
-				'sha256'  => hash_final( $hash ),
+				'sha256'  => $content_sha256,
 			)
 		);
 		if ( ! is_string( $integrity ) || ! self::write_all( $handle, $integrity . "\n" ) ) {
-			self::close_handle( $handle );
-			@unlink( $temp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.unlink_unlink
-			self::download_error( __( 'Certloom could not finalize the backup integrity record.', 'certloom' ) );
+			return self::abort_export_file( $handle, $temp, new WP_Error( 'ecapla_certverify_backup_integrity_write_failed', __( 'Certloom could not finalize the backup integrity record.', 'certloom' ) ) );
 		}
 		if ( ! fflush( $handle ) ) {
-			self::close_handle( $handle );
-			@unlink( $temp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.unlink_unlink
-			self::download_error( __( 'Certloom could not flush the completed backup to disk.', 'certloom' ) );
+			return self::abort_export_file( $handle, $temp, new WP_Error( 'ecapla_certverify_backup_flush_failed', __( 'Certloom could not flush the completed backup to disk.', 'certloom' ) ) );
 		}
 		self::close_handle( $handle );
 
 		$size = filesize( $temp );
 		if ( false === $size || $size <= 0 || $size > self::MAX_FILE_BYTES ) {
-			@unlink( $temp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.unlink_unlink
-			self::download_error( __( 'The completed backup exceeds the 25 MB download limit.', 'certloom' ) );
+			self::delete_file( $temp );
+			return new WP_Error( 'ecapla_certverify_backup_size_invalid', __( 'The completed backup exceeds the 25 MB backup limit.', 'certloom' ) );
 		}
 		if ( ! self::preflight_download_file( $temp, $size ) ) {
-			@unlink( $temp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.unlink_unlink
-			self::download_error( __( 'The completed backup could not be read reliably from temporary storage. No backup was downloaded.', 'certloom' ) );
+			self::delete_file( $temp );
+			return new WP_Error( 'ecapla_certverify_backup_preflight_failed', __( 'The completed backup could not be read reliably from temporary storage.', 'certloom' ) );
 		}
+		$file_sha256 = @hash_file( 'sha256', $temp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- A failure returns a guarded error below.
+		if ( ! is_string( $file_sha256 ) || 1 !== preg_match( '/^[a-f0-9]{64}$/', $file_sha256 ) ) {
+			self::delete_file( $temp );
+			return new WP_Error( 'ecapla_certverify_backup_file_hash_failed', __( 'Certloom could not fingerprint the completed backup file.', 'certloom' ) );
+		}
+
+		return array(
+			'path'            => $temp,
+			'filename'        => sanitize_file_name( 'certloom-backup-' . gmdate( 'Y-m-d-His' ) . '.cvbackup' ),
+			'bytes'           => absint( $size ),
+			'records'         => absint( $count ),
+			'file_sha256'     => $file_sha256,
+			'content_sha256'  => $content_sha256,
+			'generated_at'    => $generated_at,
+			'format_version'  => self::FORMAT_VERSION,
+			'plugin_version'  => ECAPLA_CERTVERIFY_VERSION,
+			'schema_version'  => ECAPLA_CERTVERIFY_SCHEMA_VERSION,
+			'source_authority'=> 'current_registry',
+		);
+	}
+
+	/**
+	 * Builds the entire backup in a temporary file before sending headers.
+	 * Any read, encoding, or write failure aborts without delivering a partial
+	 * file that could be mistaken for a complete backup.
+	 */
+	public static function stream_export() {
+		$backup = self::create_export_file();
+		if ( is_wp_error( $backup ) ) {
+			self::download_error( $backup->get_error_message() );
+		}
+		$temp = (string) $backup['path'];
+		$size = absint( $backup['bytes'] );
 
 		nocache_headers();
 		header( 'Content-Type: application/x-ndjson; charset=utf-8' );
 		header( 'X-Content-Type-Options: nosniff' );
-		header( 'Content-Length: ' . absint( $size ) );
-		header( 'Content-Disposition: attachment; filename="' . sanitize_file_name( 'certloom-backup-' . gmdate( 'Y-m-d-His' ) . '.cvbackup' ) . '"' );
+		header( 'Content-Length: ' . $size );
+		header( 'Content-Disposition: attachment; filename="' . sanitize_file_name( (string) $backup['filename'] ) . '"' );
 		$download = fopen( $temp, 'rb' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
 		if ( false === $download ) {
-			@unlink( $temp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.unlink_unlink
+			self::delete_file( $temp );
 			self::download_error( __( 'The completed backup could not be opened for download.', 'certloom' ) );
 		}
 		while ( ! feof( $download ) ) {
@@ -268,8 +291,23 @@ class Ecapla_CertVerify_Backup {
 			echo $buffer; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Validated administrator-requested backup bytes.
 		}
 		self::close_handle( $download );
-		@unlink( $temp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.unlink_unlink
+		self::delete_file( $temp );
 	}
+
+	/** @return WP_Error */
+	private static function abort_export_file( $handle, $path, $error ) {
+		self::close_handle( $handle );
+		self::delete_file( $path );
+		return is_wp_error( $error ) ? $error : new WP_Error( 'ecapla_certverify_backup_failed', (string) $error );
+	}
+
+	/** Deletes one known temporary backup path. */
+	private static function delete_file( $path ) {
+		if ( is_string( $path ) && '' !== $path && file_exists( $path ) ) {
+			@unlink( $path ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.unlink_unlink -- Controlled temporary backup file.
+		}
+	}
+
 
 	/**
 	 * Validates an uploaded v2 stream or legacy v1 JSON backup and stores only

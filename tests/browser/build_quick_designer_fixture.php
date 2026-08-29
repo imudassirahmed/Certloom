@@ -17,7 +17,7 @@ $html = str_replace(
 );
 $html = str_replace(
     '<form data-certloom-designer-form>',
-    '<div class="certloom-template-designer-mode-switch" role="group" aria-label="Designer mode"><button type="button" class="button button-primary" data-certloom-designer-mode-button="quick" aria-pressed="true">Quick Designer</button><button type="button" class="button" data-certloom-designer-mode-button="pro" aria-pressed="false">Pro Designer</button><span>Same canonical layout · different editing depth</span></div><form data-certloom-designer-form>',
+    '<div class="certloom-template-designer-mode-switch" role="group" aria-label="Designer mode"><button type="button" class="button button-primary" data-certloom-designer-mode-button="quick" aria-pressed="true">Quick Designer</button><button type="button" class="button" data-certloom-designer-mode-button="pro" aria-pressed="false">Pro Designer</button><span>Same design · more precise controls in Pro</span></div><form data-certloom-designer-form>',
     $html
 );
 $html = str_replace('<label><span>Page size</span><select data-certloom-designer-page-size>', '<label class="certloom-designer-pro-only"><span>Page size</span><select data-certloom-designer-page-size>', $html);
@@ -47,8 +47,8 @@ $html = str_replace(
     $html
 );
 $html = str_replace(
-    '<div class="certloom-template-designer-palette"><span>Add</span>',
-    '<div class="certloom-template-designer-stage"><aside class="certloom-template-designer-add-panel" aria-label="Add elements"><div class="certloom-template-designer-add-head"><strong>Add</strong><small>Drag after adding</small></div><div class="certloom-template-designer-palette"><span>Add</span>',
+    '<div class="certloom-template-designer-palette"><span class="certloom-template-designer-productivity-label">Add</span>',
+    '<div class="certloom-template-designer-stage"><aside class="certloom-template-designer-add-panel" aria-label="Add elements"><div class="certloom-template-designer-add-head"><strong>Add</strong><small>Drag after adding</small></div><div class="certloom-template-designer-palette"><span class="certloom-template-designer-productivity-label">Add</span>',
     $html
 );
 $html = str_replace(
@@ -78,7 +78,7 @@ $html = str_replace(
     $html
 );
 
-if ( false === strpos( $html, 'data-certloom-designer-quick-token' ) || false === strpos( $html, 'certloom-template-designer-stage' ) ) {
+if ( false === strpos( $html, 'data-certloom-designer-quick-token' ) || false === strpos( $html, '<div class="certloom-template-designer-stage">' ) || false === strpos( $html, '<aside class="certloom-template-designer-add-panel"' ) ) {
     throw new RuntimeException( 'Quick Designer fixture transformation is incomplete.' );
 }
 echo $html;

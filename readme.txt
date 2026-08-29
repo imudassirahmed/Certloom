@@ -4,13 +4,17 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.85
+Stable tag: 1.6.88
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
 
 == Description ==
+
+> Release note for 1.6.88: BAK-02A adds local Scheduled Backup & Recovery over the existing current-authority v4 backup format rather than creating a second backup definition. Manual download and saved/scheduled backups share one validated builder; private saved backups use a persistent store separate from short-lived job retention, with exact SHA-256 re-verification, scheduled-only retention, explicit destination testing, Off/Daily/Weekly schedules and existing non-destructive restore review. Storage inside the public webroot, filesystem roots and symlink directories fail closed. Normalized-domain and renderer authority remain closed; safety snapshots/restore testing continue as BAK-02B and Google Drive remains BAK-03.
+
+> Release note for 1.6.87: DSX-QA-01 certifies the Easy Designer as one coherent workflow rather than adding another editing subsystem. Customer-facing DSN/DSX jargon is removed from normal editing, technical integrity details are collapsed, Arrange/Distribute are contextual, the mobile Add palette is compact, and the phone canvas uses a usable locally scrollable editing view while Fit remains explicit. Dedicated source and Chromium UX gates protect first-use, keyboard, mobile, RTL, reduced-motion and forced-colors behavior.
 
 > Release note for 1.6.85: FONT-02A adds a bounded Sans Serif / Serif / Monospace family selector to Easy and Pro Designer over the existing canonical font_family key. Designer and browser Preview share a server-owned local/system presentation catalog; arbitrary CSS names and remote-font URLs are not authorable. Production PDF/PNG/JPEG remains stricter and fails closed unless the accepted content-addressed FontManifest provides the exact selected family/weight/style bytes. No layout schema or renderer/database authority is opened.
 

@@ -44,6 +44,12 @@ class Ecapla_CertVerify_Admin {
 		add_action( 'admin_post_ecapla_certverify_backup_analyze', array( $this, 'handle_backup_analyze' ) );
 		add_action( 'admin_post_ecapla_certverify_backup_apply', array( $this, 'handle_backup_apply' ) );
 		add_action( 'admin_post_ecapla_certverify_backup_continue', array( $this, 'handle_backup_continue' ) );
+		add_action( 'admin_post_certloom_backup_settings', array( $this, 'handle_backup_settings' ) );
+		add_action( 'admin_post_certloom_backup_test_storage', array( $this, 'handle_backup_test_storage' ) );
+		add_action( 'admin_post_certloom_backup_run_now', array( $this, 'handle_backup_run_now' ) );
+		add_action( 'admin_post_certloom_backup_saved_download', array( $this, 'handle_backup_saved_download' ) );
+		add_action( 'admin_post_certloom_backup_saved_review', array( $this, 'handle_backup_saved_review' ) );
+		add_action( 'admin_post_certloom_backup_saved_delete', array( $this, 'handle_backup_saved_delete' ) );
 		add_action( 'admin_init', array( $this, 'handle_status_review_acknowledgement' ) );
 		add_action( 'admin_post_ecapla_certverify_delete_certificate', array( $this, 'handle_delete' ) );
 		add_action( 'admin_post_ecapla_certverify_delete_field', array( $this, 'handle_field_delete' ) );
@@ -914,6 +920,97 @@ class Ecapla_CertVerify_Admin {
 		exit;
 	}
 
+	public function handle_backup_settings() {
+		$this->require_options_permission();
+		check_admin_referer( 'certloom_backup_settings' );
+		$schedule  = isset( $_POST['backup_schedule'] ) ? sanitize_key( wp_unslash( $_POST['backup_schedule'] ) ) : 'off';
+		$retention = isset( $_POST['backup_retention'] ) ? absint( wp_unslash( $_POST['backup_retention'] ) ) : 14;
+		$result = \Certloom\Infrastructure\Backup\ScheduledBackup::save_settings( $schedule, $retention );
+		if ( is_wp_error( $result ) ) {
+			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
+		}
+		wp_safe_redirect( add_query_arg( 'backup_notice', 'settings-saved', admin_url( 'admin.php?page=certloom-import' ) ) );
+		exit;
+	}
+
+	public function handle_backup_test_storage() {
+		$this->require_options_permission();
+		check_admin_referer( 'certloom_backup_test_storage' );
+		$result = ( new \Certloom\Infrastructure\Backup\LocalBackupStore() )->test_storage();
+		if ( is_wp_error( $result ) ) {
+			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
+		}
+		wp_safe_redirect( add_query_arg( 'backup_notice', 'storage-verified', admin_url( 'admin.php?page=certloom-import' ) ) );
+		exit;
+	}
+
+	public function handle_backup_run_now() {
+		$this->require_options_permission();
+		check_admin_referer( 'certloom_backup_run_now' );
+		$result = \Certloom\Infrastructure\Backup\ScheduledBackup::create_now( 'manual' );
+		if ( is_wp_error( $result ) ) {
+			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
+		}
+		wp_safe_redirect( add_query_arg( 'backup_notice', 'backup-created', admin_url( 'admin.php?page=certloom-import' ) ) );
+		exit;
+	}
+
+	public function handle_backup_saved_download() {
+		$this->require_options_permission();
+		$id = isset( $_GET['backup_id'] ) ? sanitize_text_field( wp_unslash( $_GET['backup_id'] ) ) : '';
+		check_admin_referer( 'certloom_backup_saved_download_' . $id );
+		$resolved = ( new \Certloom\Infrastructure\Backup\LocalBackupStore() )->resolve( $id );
+		if ( is_wp_error( $resolved ) ) {
+			$this->redirect_error( $resolved->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
+		}
+		$path = (string) $resolved['path'];
+		$size = absint( $resolved['bytes'] );
+		nocache_headers();
+		header( 'Content-Type: application/x-ndjson; charset=utf-8' );
+		header( 'X-Content-Type-Options: nosniff' );
+		header( 'Content-Length: ' . $size );
+		header( 'Content-Disposition: attachment; filename="' . sanitize_file_name( 'certloom-backup-' . gmdate( 'Y-m-d-His', absint( $resolved['created_ts'] ) ) . '.cvbackup' ) . '"' );
+		$handle = @fopen( $path, 'rb' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- Verified private administrator-requested backup stream.
+		if ( false === $handle ) {
+			$this->redirect_error( __( 'The verified private backup could not be opened for download.', 'certloom' ), admin_url( 'admin.php?page=certloom-import' ) );
+		}
+		while ( ! feof( $handle ) ) {
+			$buffer = fread( $handle, 65536 ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fread -- Bounded private backup stream.
+			if ( false === $buffer ) { break; }
+			echo $buffer; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Exact verified administrator-requested backup bytes.
+		}
+		fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Streaming resource lifecycle.
+		exit;
+	}
+
+	public function handle_backup_saved_review() {
+		$this->require_options_permission();
+		$id = isset( $_GET['backup_id'] ) ? sanitize_text_field( wp_unslash( $_GET['backup_id'] ) ) : '';
+		check_admin_referer( 'certloom_backup_saved_review_' . $id );
+		$resolved = ( new \Certloom\Infrastructure\Backup\LocalBackupStore() )->resolve( $id );
+		if ( is_wp_error( $resolved ) ) {
+			$this->redirect_error( $resolved->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
+		}
+		$token = Ecapla_CertVerify_Backup::analyze_file( (string) $resolved['path'] );
+		if ( is_wp_error( $token ) ) {
+			$this->redirect_error( $token->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
+		}
+		wp_safe_redirect( add_query_arg( array( 'page' => 'certloom-import', 'backup_token' => $token ), admin_url( 'admin.php' ) ) );
+		exit;
+	}
+
+	public function handle_backup_saved_delete() {
+		$this->require_options_permission();
+		$id = isset( $_POST['backup_id'] ) ? sanitize_text_field( wp_unslash( $_POST['backup_id'] ) ) : '';
+		check_admin_referer( 'certloom_backup_saved_delete_' . $id );
+		$result = ( new \Certloom\Infrastructure\Backup\LocalBackupStore() )->delete( $id );
+		if ( is_wp_error( $result ) ) {
+			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
+		}
+		wp_safe_redirect( add_query_arg( 'backup_notice', 'backup-deleted', admin_url( 'admin.php?page=certloom-import' ) ) );
+		exit;
+	}
+
 	public function handle_backup_analyze() {
 		$this->require_options_permission();
 		check_admin_referer( 'ecapla_certverify_backup_analyze' );
@@ -1178,6 +1275,10 @@ class Ecapla_CertVerify_Admin {
 				$this->redirect_error( __( 'That backup review session expired. Upload the backup again.', 'certloom' ), admin_url( 'admin.php?page=certloom-import' ) );
 			}
 		}
+		$scheduled_backup_state = current_user_can( 'manage_options' ) ? \Certloom\Infrastructure\Backup\ScheduledBackup::settings() : array();
+		$local_backup_store     = current_user_can( 'manage_options' ) ? new \Certloom\Infrastructure\Backup\LocalBackupStore() : null;
+		$saved_backups          = $local_backup_store ? $local_backup_store->list_backups() : array();
+		$backup_storage_state   = $local_backup_store ? $local_backup_store->directory() : '';
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/import-upload.php';
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 	}

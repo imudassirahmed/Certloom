@@ -9,8 +9,8 @@ use Certloom\Domain\Rendering\ElementRegistry;
 $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'); $js=file_get_contents($root.'/admin/assets/designer.js'); $css=file_get_contents($root.'/admin/assets/designer.css'); $plugin=file_get_contents($root.'/certloom.php');
 $pass=0;$fail=0; function dsx02($ok,$label){global$pass,$fail;if($ok){$pass++;echo"PASS  $label\n";}else{$fail++;echo"FAIL  $label\n";}}
 
-dsx02(is_string($admin)&&strpos($admin,'DSX-02A · Easy Designer')!==false,'Template admin identifies DSX-02A Easy Designer');
-dsx02(strpos($admin,'click or drag content onto the canvas')!==false&&strpos($admin,'edit ordinary text directly')!==false,'Easy Designer explains direct placement and direct text editing');
+dsx02(is_string($admin)&&strpos($admin,'Easy Designer')!==false,'Template admin retains the Easy Designer product surface');
+dsx02(strpos($admin,'Add or drag content onto the canvas')!==false&&strpos($admin,'edit text directly')!==false&&strpos($admin,'Smart Guides')!==false,'Easy Designer retains direct placement and direct text editing while using customer-facing language');
 dsx02(strpos($admin,'data-designer-default-mode="quick"')!==false&&strpos($admin,'data-designer-safe-margin-mm="10"')!==false,'Easy Designer defaults to Quick with an explicit presentation-only safe margin');
 dsx02(strpos($admin,'Smart Guides')!==false&&strpos($admin,'Sticky alignment')!==false&&strpos($admin,'data-certloom-designer-snap')!==false,'Smart Guides are promoted into the Easy Designer toolbar');
 dsx02(strpos($admin,'data-certloom-designer-quick-align')!==false&&substr_count($admin,'data-certloom-designer-align=')>=1,'Quick alignment toolbar reuses canonical page-alignment actions');
