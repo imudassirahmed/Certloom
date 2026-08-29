@@ -60,6 +60,9 @@ final class RendererAuthorityGate implements ArtifactAuthorityGateInterface {
 
 	/** @return array<string,mixed> */
 	public function publication_status() {
+		if ( $this->qa_override_enabled() ) {
+			return array( 'accepted' => true, 'reason' => 'publication_authorized', 'message' => 'QA-only ungated build: Template publication authority is bypassed for staging inspection.', 'manifest' => null, 'manifest_sha256' => '' );
+		}
 		$status = $this->manifest_status();
 		if ( empty( $status['accepted'] ) || ! is_array( $status['manifest'] ) ) { return $status; }
 		if ( true !== ( $status['manifest']['authority']['template_publication'] ?? false ) ) {
@@ -73,6 +76,20 @@ final class RendererAuthorityGate implements ArtifactAuthorityGateInterface {
 	/** @return array<string,mixed> */
 	public function artifact_status( $format, RendererRegistry $registry ) {
 		$format = strtolower( trim( (string) $format ) );
+		if ( $this->qa_override_enabled() ) {
+			if ( ! in_array( $format, array( 'pdf', 'png', 'jpeg' ), true ) ) {
+				return array( 'accepted' => false, 'reason' => 'artifact_format_not_authorized', 'message' => 'Unsupported QA artifact format.', 'manifest' => null, 'manifest_sha256' => '' );
+			}
+			try { $renderer = $registry->for_format( $format ); }
+			catch ( \Throwable $error ) {
+				return array( 'accepted' => false, 'reason' => 'renderer_missing', 'message' => 'QA authority is bypassed, but no renderer is registered for ' . strtoupper( $format ) . '.', 'manifest' => null, 'manifest_sha256' => '' );
+			}
+			$runtime = $this->capabilities->inspect( $renderer );
+			if ( empty( $runtime['available'] ) ) {
+				return array( 'accepted' => false, 'reason' => 'renderer_runtime_unavailable', 'message' => 'QA authority is bypassed, but renderer runtime requirements are unavailable: ' . implode( ', ', (array) $runtime['missing'] ), 'manifest' => null, 'manifest_sha256' => '' );
+			}
+			return array( 'accepted' => true, 'reason' => 'artifact_authorized', 'message' => 'QA-only ungated build: renderer release authority is bypassed; actual renderer/runtime checks passed.', 'manifest' => null, 'manifest_sha256' => '', 'format' => $format );
+		}
 		$status = $this->manifest_status();
 		if ( empty( $status['accepted'] ) || ! is_array( $status['manifest'] ) ) { return $status; }
 		$allowed = array_values( (array) ( $status['manifest']['authority']['artifact_formats'] ?? array() ) );
@@ -87,6 +104,18 @@ final class RendererAuthorityGate implements ArtifactAuthorityGateInterface {
 
 	/** @return array<string,mixed> */
 	public function runtime_status( RendererRegistry $registry ) {
+		if ( $this->qa_override_enabled() ) {
+			$available = array();
+			foreach ( array( 'pdf', 'png', 'jpeg' ) as $format ) {
+				if ( ! $registry->has_format( $format ) ) { continue; }
+				$checked = $this->artifact_status( $format, $registry );
+				if ( empty( $checked['accepted'] ) ) { return $checked; }
+				$available[] = $format;
+			}
+			return ! empty( $available )
+				? array( 'accepted' => true, 'reason' => 'runtime_authorized', 'message' => 'QA-only ungated build: release authority is bypassed and registered renderer runtimes are available.', 'manifest' => null, 'manifest_sha256' => '', 'formats' => $available )
+				: array( 'accepted' => false, 'reason' => 'renderer_missing', 'message' => 'QA authority is bypassed, but no artifact renderer is registered on this installation.', 'manifest' => null, 'manifest_sha256' => '' );
+		}
 		$status = $this->manifest_status();
 		if ( empty( $status['accepted'] ) || ! is_array( $status['manifest'] ) ) { return $status; }
 		foreach ( array_values( (array) ( $status['manifest']['authority']['artifact_formats'] ?? array() ) ) as $format ) {
@@ -141,6 +170,11 @@ final class RendererAuthorityGate implements ArtifactAuthorityGateInterface {
 		return $status;
 	}
 
+
+	/** @return bool */
+	private function qa_override_enabled() {
+		return defined( 'CERTLOOM_QA_UNGATED' ) && true === CERTLOOM_QA_UNGATED;
+	}
 
 	/** @return array<string,mixed> */
 	private function runtime_payload() {
