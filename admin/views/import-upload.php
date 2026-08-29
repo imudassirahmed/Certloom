@@ -8,7 +8,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 <div class="wrap ecapla-certverify-admin-wrap">
 	<?php include ECAPLA_CERTVERIFY_PATH . 'admin/views/partials/brand-bar.php'; ?>
-	<h1><?php esc_html_e( 'Import, export & backup', 'certloom' ); ?></h1>
+	<h1><?php esc_html_e( 'Backup & Restore', 'certloom' ); ?></h1>
+	<div class="certloom-product-notice-rail" aria-live="polite">
 	<?php if ( isset( $_GET['ecapla_certverify_error'] ) ) : ?><div class="notice notice-error"><p><?php echo esc_html( sanitize_text_field( wp_unslash( $_GET['ecapla_certverify_error'] ) ) ); ?></p></div><?php endif; ?>
 	<?php if ( isset( $_GET['backup_notice'] ) ) : ?>
 		<?php $certloom_backup_notice = sanitize_key( wp_unslash( $_GET['backup_notice'] ) ); ?>
@@ -31,10 +32,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</p></div>
 		<?php endif; ?>
 	<?php endif; ?>
+	</div>
+	<p class="certloom-recovery-intro"><?php esc_html_e( 'Protect Certloom, restore a backup, or bring certificates in from CSV from one place.', 'certloom' ); ?></p>
+	<nav class="certloom-recovery-quickstart" aria-label="<?php esc_attr_e( 'Backup and restore actions', 'certloom' ); ?>"><a class="button button-primary" href="#certloom-backups"><?php esc_html_e( 'Your backups', 'certloom' ); ?></a><a class="button" href="#certloom-restore"><?php esc_html_e( 'Restore a backup', 'certloom' ); ?></a><a class="button" href="#certloom-csv-import"><?php esc_html_e( 'Import certificates', 'certloom' ); ?></a></nav>
 
-	<div class="ecapla-certverify-admin-grid">
-		<section class="ecapla-certverify-admin-card">
-			<h2><?php esc_html_e( 'Import certificates from CSV', 'certloom' ); ?></h2>
+	<section class="certloom-recovery-intake" data-certloom-recovery-intake aria-labelledby="certloom-recovery-intake-title">
+		<div><span class="certloom-recovery-step-kicker"><?php esc_html_e( 'Import / restore guide', 'certloom' ); ?></span><h2 id="certloom-recovery-intake-title"><?php esc_html_e( 'Bring data into Certloom', 'certloom' ); ?></h2><p><?php esc_html_e( 'Choose what you are bringing in. Certloom will take you to the right file step, review the file before changes, and ask for confirmation only when needed.', 'certloom' ); ?></p></div>
+		<ol class="certloom-recovery-steps" aria-label="<?php esc_attr_e( 'Import and restore steps', 'certloom' ); ?>"><li class="is-current" data-certloom-recovery-step="1"><?php esc_html_e( '1. Choose', 'certloom' ); ?></li><li data-certloom-recovery-step="2"><?php esc_html_e( '2. Review file', 'certloom' ); ?></li><li data-certloom-recovery-step="3"><?php esc_html_e( '3. Confirm', 'certloom' ); ?></li></ol>
+		<div class="certloom-recovery-intake-actions"><button type="button" class="button" data-certloom-recovery-choice="backup" aria-controls="ecapla-certverify-backup-file"><?php esc_html_e( 'Restore a Certloom backup', 'certloom' ); ?></button><button type="button" class="button" data-certloom-recovery-choice="csv" aria-controls="ecapla-certloom-import-file"><?php esc_html_e( 'Import certificates from CSV', 'certloom' ); ?></button></div>
+		<p class="description" data-certloom-recovery-intake-status aria-live="polite"><?php esc_html_e( 'Choose Backup or CSV to continue.', 'certloom' ); ?></p>
+	</section>
+
+	<div class="ecapla-certverify-admin-grid certloom-recovery-grid">
+		<section id="certloom-csv-import" class="ecapla-certverify-admin-card certloom-recovery-card certloom-recovery-import">
+			<h2><?php esc_html_e( 'Import certificates', 'certloom' ); ?></h2>
 			<p><?php esc_html_e( 'CSV is intended for spreadsheet editing and tabular transfers. It is not a complete site backup. Upload a file, review automatic column mapping, and decide how existing certificate numbers should be handled.', 'certloom' ); ?></p>
 			<ul class="ul-disc">
 				<li><?php esc_html_e( 'Maximum file size: 5 MB', 'certloom' ); ?></li>
@@ -46,24 +57,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<?php wp_nonce_field( 'certverify_import_analyze' ); ?>
 				<label for="ecapla-certloom-import-file" class="screen-reader-text"><?php esc_html_e( 'Choose CSV file', 'certloom' ); ?></label>
 				<input id="ecapla-certloom-import-file" type="file" name="import_file" accept=".csv,text/csv" required />
-				<?php submit_button( __( 'Analyze CSV', 'certloom' ), 'primary', 'certverify_import_analyze' ); ?>
+				<?php submit_button( __( 'Review CSV', 'certloom' ), 'primary', 'certverify_import_analyze' ); ?>
 			</form>
 		</section>
 
-		<section class="ecapla-certverify-admin-card">
-			<h2><?php esc_html_e( 'CSV tools', 'certloom' ); ?></h2>
+		<section class="ecapla-certverify-admin-card certloom-recovery-card certloom-recovery-csv-tools">
+			<h2><?php esc_html_e( 'CSV downloads', 'certloom' ); ?></h2>
 			<p><?php esc_html_e( 'Download a template shaped by the active field layout, or export tabular certificate data for spreadsheet use.', 'certloom' ); ?></p>
 			<p><a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=certloom-import&action=template' ), 'certverify_template' ) ); ?>"><?php esc_html_e( 'Download import template', 'certloom' ); ?></a></p>
 			<p><a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=certloom-import&action=export' ), 'certverify_export' ) ); ?>"><?php esc_html_e( 'Export certificate CSV', 'certloom' ); ?></a></p>
 		</section>
 
 		<?php if ( current_user_can( 'manage_options' ) ) : ?>
-			<section class="ecapla-certverify-admin-card certloom-backup-center">
-				<h2><?php esc_html_e( 'Backup & recovery', 'certloom' ); ?></h2>
-				<p><?php esc_html_e( 'Protect the current authoritative Certloom registry with the same lossless, versioned backup format used by manual downloads. Automatic backups stay in private local storage and never switch credential authority.', 'certloom' ); ?></p>
-				<p><strong><?php esc_html_e( 'Source authority:', 'certloom' ); ?></strong> <?php esc_html_e( 'Current Certloom registry', 'certloom' ); ?><br />
-				<strong><?php esc_html_e( 'Destination:', 'certloom' ); ?></strong> <?php esc_html_e( 'Local private storage', 'certloom' ); ?></p>
-				<p class="description"><?php esc_html_e( 'Before Restore, CSV import, reviewed bulk changes, bulk deletion, or permanent retired-field purge, Certloom creates a verified safety snapshot and stops the destructive operation if that snapshot cannot be created. Automatic safety snapshots use their own bounded retention and never replace explicit manual backups.', 'certloom' ); ?></p>
+			<section id="certloom-backups" class="ecapla-certverify-admin-card certloom-backup-center certloom-recovery-card">
+				<h2><?php esc_html_e( 'Your backups', 'certloom' ); ?></h2>
+				<p><?php esc_html_e( 'Create complete Certloom backups, keep automatic copies in private storage, and optionally copy verified backups to Google Drive.', 'certloom' ); ?></p>
+				<p><strong><?php esc_html_e( 'Stored locally:', 'certloom' ); ?></strong> <?php esc_html_e( 'Private backup storage on this site', 'certloom' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Before Restore, CSV import, reviewed bulk changes, bulk deletion, or permanent retired-field purge, Certloom creates a verified safety backup and stops the destructive operation if that backup cannot be created. Automatic safety backups have their own retention limit and never replace backups you create manually.', 'certloom' ); ?></p>
 
 				<?php if ( is_wp_error( $backup_storage_state ) ) : ?>
 					<div class="notice notice-warning inline"><p><?php echo esc_html( $backup_storage_state->get_error_message() ); ?></p></div>
@@ -156,7 +166,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 				<hr />
 				<h3><?php esc_html_e( 'Google Drive', 'certloom' ); ?></h3>
-				<p><?php esc_html_e( 'Google Drive is an optional second copy of verified Certloom backups. Local private storage remains the recovery source and credential authority never moves to Google.', 'certloom' ); ?></p>
+				<p><?php esc_html_e( 'Google Drive is an optional second copy of verified Certloom backups. Local private storage remains the recovery source; Google Drive never becomes the source of credential data.', 'certloom' ); ?></p>
 				<?php $certloom_google_redirect = $google_drive_state['redirect_uri'] ?? ''; ?>
 				<?php if ( is_wp_error( $certloom_google_redirect ) ) : ?><div class="notice notice-warning inline"><p><?php echo esc_html( $certloom_google_redirect->get_error_message() ); ?></p></div><?php endif; ?>
 				<?php if ( empty( $google_drive_state['connected'] ) ) : ?>
@@ -199,22 +209,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<?php endif; ?>
 
 				<hr />
-				<h3><?php esc_html_e( 'Restore', 'certloom' ); ?></h3>
-				<p><?php esc_html_e( 'Restore always starts with a non-destructive review. Test restore validates a saved backup through the same analyzer without changing live data. Applying a restore also requires a fresh automatic safety snapshot of the current registry.', 'certloom' ); ?></p>
+				<h3 id="certloom-restore"><?php esc_html_e( 'Restore a backup', 'certloom' ); ?></h3>
+				<p><?php esc_html_e( 'Choose a Certloom backup and review what it contains before anything changes. When you restore, Certloom first creates a fresh safety backup of your current data.', 'certloom' ); ?></p>
 				<form method="post" enctype="multipart/form-data" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 					<input type="hidden" name="action" value="ecapla_certverify_backup_analyze" />
 					<?php wp_nonce_field( 'ecapla_certverify_backup_analyze' ); ?>
 					<label for="ecapla-certverify-backup-file"><strong><?php esc_html_e( 'Review a backup before restoring', 'certloom' ); ?></strong></label><br />
 					<input id="ecapla-certverify-backup-file" type="file" name="backup_file" accept=".cvbackup,.json,application/x-ndjson,application/json" required />
-					<?php submit_button( __( 'Analyze backup', 'certloom' ), 'secondary', 'submit', false ); ?>
+					<?php submit_button( __( 'Review backup', 'certloom' ), 'secondary', 'submit', false ); ?>
 				</form>
 			</section>
 		<?php endif; ?>
 	</div>
 
 	<?php if ( current_user_can( 'manage_options' ) && is_array( $backup_preview ) ) : ?>
-		<section class="ecapla-certverify-admin-card ecapla-certverify-backup-review">
-			<h2><?php esc_html_e( 'Backup restore review', 'certloom' ); ?></h2>
+		<section class="ecapla-certverify-admin-card ecapla-certverify-backup-review certloom-recovery-review">
+			<h2><?php esc_html_e( 'Review restore', 'certloom' ); ?></h2>
 			<p><?php esc_html_e( 'Nothing has been changed yet. Review this dry-run summary before applying the backup.', 'certloom' ); ?></p>
 			<table class="widefat striped" role="presentation">
 				<tbody>
@@ -236,7 +246,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<?php wp_nonce_field( 'ecapla_certverify_backup_apply' ); ?>
 				<fieldset>
 					<legend><strong><?php esc_html_e( 'Restore mode', 'certloom' ); ?></strong></legend>
-					<label><input type="radio" name="restore_mode" value="replace" checked /> <strong><?php esc_html_e( 'Replace entire registry and configuration', 'certloom' ); ?></strong></label>
+					<label><input type="radio" name="restore_mode" value="replace" checked /> <strong><?php esc_html_e( 'Replace current Certloom data', 'certloom' ); ?></strong></label>
 					<p class="description ecapla-certverify-warning-text"><?php esc_html_e( 'Recreates the backup snapshot exactly. Current-only certificates are removed, and the backup’s fields, retired fields, and settings replace the current configuration.', 'certloom' ); ?></p>
 					<label><input type="radio" name="restore_mode" value="merge" /> <strong><?php esc_html_e( 'Merge certificates into the current registry', 'certloom' ); ?></strong></label>
 					<p class="description"><?php esc_html_e( 'Keeps current-only certificates and current settings. Backup-only custom-field definitions are retained as private retired fields so their stored values are not exposed automatically.', 'certloom' ); ?></p>
@@ -247,8 +257,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 					<label><input type="radio" name="conflict_policy" value="update" /> <?php esc_html_e( 'Replace the existing certificate with the backup record', 'certloom' ); ?></label>
 					<p class="description"><?php esc_html_e( 'This choice applies only to Merge mode. Replace mode always uses the backup copy.', 'certloom' ); ?></p>
 				</fieldset>
-				<p><label><input type="checkbox" name="confirm_restore" value="1" required /> <?php esc_html_e( 'I understand the selected mode and that Certloom writes will be temporarily paused while the restore is prepared.', 'certloom' ); ?></label></p>
-				<?php submit_button( __( 'Start safe restore', 'certloom' ), 'primary', 'submit', false ); ?>
+				<p class="description"><?php esc_html_e( 'Certloom will create and verify a safety backup immediately before restoring.', 'certloom' ); ?></p>
+				<button type="submit" class="button button-primary" data-ecapla-confirm="<?php echo esc_attr__( 'Restore this backup now? Certloom will create a safety backup first. You can cancel here without changing anything.', 'certloom' ); ?>"><?php esc_html_e( 'Restore backup', 'certloom' ); ?></button>
 			</form>
 		</section>
 	<?php endif; ?>

@@ -1169,6 +1169,39 @@
 	color: var(--certloom-accent-strong);
 }
 
+.certloom-setup-readiness {
+	align-items: start;
+}
+
+.certloom-setup-checklist {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px 10px;
+	margin: 10px 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.certloom-setup-checklist li {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin: 0;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--certloom-text-muted);
+}
+
+.certloom-setup-checklist li.is-complete {
+	color: var(--certloom-accent-strong);
+}
+
+.certloom-setup-checklist .dashicons {
+	width: 15px;
+	height: 15px;
+	font-size: 15px;
+}
+
 .certloom-registry-panel {
 	padding-bottom: 0;
 	overflow: hidden;
@@ -3356,3 +3389,122 @@
 		border: 1px solid CanvasText;
 	}
 }
+
+/* 1.6.93 UX-CONS-01 — six-section product shell + simple recovery workspace. */
+.certloom-product-subnav {
+	display:flex;
+	align-items:center;
+	gap:18px;
+	min-height:46px;
+	margin:6px 20px 10px 2px;
+	padding:0 14px;
+	overflow-x:auto;
+	border:1px solid #dcdcde;
+	border-radius:8px;
+	background:#fff;
+	white-space:nowrap;
+}
+.certloom-product-subnav a {
+	position:relative;
+	display:inline-flex;
+	align-items:center;
+	min-height:44px;
+	padding:1px 0 0;
+	color:#50575e;
+	font-weight:600;
+	text-decoration:none;
+}
+.certloom-product-subnav a:hover { color:#135e96; }
+.certloom-product-subnav a.is-current { color:#1d2327; }
+.certloom-product-subnav a.is-current::after {
+	content:"";
+	position:absolute;
+	inset-inline:0;
+	bottom:0;
+	height:2px;
+	background:currentColor;
+}
+.certloom-product-subnav a:focus-visible { outline:2px solid #2271b1; outline-offset:2px; }
+.certloom-recovery-intro { max-width:760px; color:#50575e; font-size:14px; }
+.certloom-recovery-quickstart { display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 18px; }
+.certloom-recovery-quickstart .button { min-height:44px; display:inline-flex; align-items:center; }
+.certloom-product-notice-rail { margin:0 0 16px; }
+.certloom-product-notice-rail:empty { display:none; }
+.certloom-product-notice-rail .notice { margin:8px 0; }
+.certloom-recovery-grid .certloom-backup-center { order:1; grid-column:1/-1; }
+.certloom-recovery-grid .certloom-recovery-import { order:2; }
+.certloom-recovery-grid .certloom-recovery-csv-tools { order:3; }
+.certloom-recovery-card { scroll-margin-top:20px; }
+.certloom-recovery-review { margin-top:18px; }
+.certloom-recovery-review fieldset { margin:18px 0; padding:16px; border:1px solid #dcdcde; border-radius:8px; }
+.certloom-recovery-review fieldset legend { padding:0 6px; }
+.certloom-recovery-review .button-primary { min-height:44px; }
+@media (max-width:782px) {
+	.certloom-product-subnav { margin-right:10px; gap:14px; padding-inline:10px; }
+	.certloom-recovery-grid .certloom-backup-center { grid-column:auto; }
+}
+@media (prefers-reduced-motion:reduce) {
+	.certloom-product-subnav, .certloom-product-subnav *, .certloom-recovery-quickstart, .certloom-recovery-quickstart * { scroll-behavior:auto!important; transition:none!important; animation:none!important; }
+}
+@media (forced-colors:active) {
+	.certloom-product-subnav, .certloom-recovery-review fieldset { border-color:CanvasText; background:Canvas; color:CanvasText; }
+	.certloom-product-subnav a.is-current { color:Highlight; }
+}
+
+/* UX-C01B — compact CSV mapping feedback. */
+.certloom-mapping-status{display:inline-flex;align-items:center;min-height:24px;margin-inline-start:8px;padding:0 8px;border-radius:999px;background:#edfaef;color:#116329;font-size:12px;font-weight:600;white-space:nowrap}.ecapla-certverify-table-scroll select{min-height:44px;max-width:100%}@media(max-width:782px){.certloom-mapping-status{margin:6px 0 0;display:flex;width:max-content}}@media(forced-colors:active){.certloom-mapping-status{border:1px solid CanvasText;background:Canvas;color:CanvasText}}
+
+/* UX-C03 — resilient restore continuation without a spinner-only dead end. */
+.certloom-restore-continuation{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px}.certloom-restore-continuation .button{min-height:44px}.certloom-restore-continuation .description{max-width:680px}@media(max-width:782px){.certloom-restore-continuation{align-items:flex-start;flex-direction:column}}
+
+/* UX-C06 — short task guide over the existing reviewed Import/Restore authorities. */
+.certloom-recovery-intake{display:grid;grid-template-columns:minmax(280px,1.25fr) minmax(300px,.75fr);gap:16px;align-items:center;margin:0 0 18px;padding:16px 18px;border:1px solid #dcdcde;border-radius:10px;background:#fff}.certloom-recovery-intake h2{margin:2px 0 6px}.certloom-recovery-intake p{margin:0;color:#50575e}.certloom-recovery-step-kicker{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#646970}.certloom-recovery-steps{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;list-style:none;margin:0;padding:0}.certloom-recovery-steps li{min-height:40px;display:flex;align-items:center;padding:7px 10px;border:1px solid #dcdcde;border-radius:7px;background:#f6f7f7;color:#646970;font-weight:600}.certloom-recovery-steps li.is-current{border-color:#2271b1;background:#f0f6fc;color:#135e96}.certloom-recovery-steps li.is-complete{border-color:#8c8f94;color:#2c3338}.certloom-recovery-intake-actions{display:flex;flex-wrap:wrap;gap:8px}.certloom-recovery-intake-actions .button{min-height:44px}.certloom-recovery-intake>[data-certloom-recovery-intake-status]{align-self:center}@media(max-width:782px){.certloom-recovery-intake{grid-template-columns:1fr}.certloom-recovery-steps{grid-column:auto}.certloom-recovery-intake-actions{display:grid;grid-template-columns:1fr}.certloom-recovery-intake-actions .button{width:100%}.certloom-recovery-steps li{min-height:44px}}@media(forced-colors:active){.certloom-recovery-intake,.certloom-recovery-steps li{border-color:CanvasText}.certloom-recovery-steps li.is-current{outline:2px solid Highlight}}
+
+/* UX-C01B: mapping tables keep readable columns inside their own scroll region. */
+.ecapla-certverify-admin-wrap .ecapla-certverify-table-scroll table {
+	min-width: 760px;
+	max-width: none;
+}
+
+
+/* 1.6.94 WIZ-01/02 — adaptive, resumable setup over canonical settings. */
+.certloom-adaptive-setup{max-width:1240px}
+.certloom-adaptive-setup .certloom-page-hero{align-items:flex-start}
+.certloom-setup-complete-badge{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 10px;border:1px solid #b8d9c4;border-radius:999px;background:#edfaef;color:#116329;font-weight:600;white-space:nowrap}
+.certloom-wizard-progress{display:flex;gap:6px;margin:0 0 16px;padding:6px;overflow-x:auto;scrollbar-gutter:stable;border:1px solid #dcdcde;border-radius:10px;background:#fff;contain:layout paint}
+.certloom-wizard-progress-step{position:relative;display:inline-flex;align-items:center;gap:8px;flex:1 0 142px;min-height:44px;padding:7px 10px;border-radius:7px;color:#50575e;font-weight:600;text-decoration:none}
+.certloom-wizard-progress-step>span{display:inline-grid;place-items:center;flex:0 0 26px;width:26px;height:26px;border:1px solid #c3c4c7;border-radius:50%;background:#f6f7f7;font-size:12px}
+.certloom-wizard-progress-step:hover{background:#f6f7f7;color:#135e96}
+.certloom-wizard-progress-step.is-current{background:#f0f6fc;color:#0a4b78}
+.certloom-wizard-progress-step.is-current>span{border-color:#2271b1;background:#2271b1;color:#fff}
+.certloom-wizard-progress-step.is-done:not(.is-skipped)>span{border-color:#2e8540;background:#edfaef;color:#116329}
+.certloom-wizard-progress-step.is-skipped>span{border-style:dashed;background:#fff;color:#646970}
+.certloom-wizard-progress-step:focus-visible{outline:2px solid #2271b1;outline-offset:2px}
+.certloom-wizard-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(270px,340px);gap:16px;align-items:start}
+.certloom-wizard-main,.certloom-wizard-summary{min-width:0}
+.certloom-wizard-summary{position:sticky;top:46px}
+.certloom-wizard-form{display:grid;gap:16px}
+.certloom-wizard-mode{margin:0;padding:0;border:0}
+.certloom-wizard-mode legend{margin-bottom:8px;font-weight:700}
+.certloom-wizard-choice-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.certloom-wizard-choice-row label{display:grid;grid-template-columns:auto 1fr;column-gap:9px;align-items:start;min-height:72px;padding:12px;border:1px solid #c3c4c7;border-radius:8px;background:#fff;cursor:pointer}
+.certloom-wizard-choice-row label:has(input:checked){border-color:#2271b1;background:#f0f6fc;box-shadow:0 0 0 1px #2271b1}
+.certloom-wizard-choice-row input{margin-top:3px}
+.certloom-wizard-choice-row strong,.certloom-wizard-choice-row span{grid-column:2}
+.certloom-wizard-choice-row span{margin-top:2px;color:#646970;font-size:12px}
+.certloom-wizard-recommendation{padding:14px 16px;border:1px solid #c7d7e8;border-radius:8px;background:#f6f9fc}
+.certloom-wizard-recommendation p{margin:5px 0}.certloom-wizard-recommendation small{color:#50575e}
+.certloom-wizard-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:2px}
+.certloom-wizard-actions .button{min-height:40px}
+.certloom-wizard-secondary-action{margin-top:12px}
+.certloom-wizard-footer-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px;padding-top:16px;border-top:1px solid #dcdcde}
+.certloom-wizard-footer-actions form{margin:0}.certloom-wizard-footer-actions .button-link,.certloom-wizard-save-exit{min-height:40px;padding:0 4px;border:0;background:transparent;color:#2271b1;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.certloom-wizard-footer-actions .button-link:hover,.certloom-wizard-save-exit:hover{color:#135e96}
+.certloom-wizard-summary-list{display:grid;gap:0;margin:0}.certloom-wizard-summary-list>div{display:grid;grid-template-columns:minmax(92px,.8fr) minmax(0,1.2fr);gap:10px;padding:10px 0;border-bottom:1px solid #f0f0f1}.certloom-wizard-summary-list>div:last-child{border-bottom:0}.certloom-wizard-summary-list dt{color:#646970}.certloom-wizard-summary-list dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.certloom-wizard-restart{margin-top:16px;padding-top:14px;border-top:1px solid #dcdcde}.certloom-wizard-restart .description{margin-bottom:0}
+.certloom-wizard-review-table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}.certloom-wizard-review-table{min-width:720px;max-width:none}.certloom-wizard-review-table th,.certloom-wizard-review-table td{vertical-align:top}.certloom-wizard-review-table tr.has-change td:nth-child(3){font-weight:700}.certloom-wizard-review-table tr.has-change th{box-shadow:inset 3px 0 0 #2271b1}
+.certloom-wizard-scheme[hidden]{display:none!important}
+@media(max-width:960px){.certloom-wizard-layout{grid-template-columns:1fr}.certloom-wizard-summary{position:static}.certloom-wizard-summary-list{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px}.certloom-wizard-progress-step{flex-basis:132px}}
+@media(max-width:782px){.certloom-adaptive-setup{max-width:100%;overflow-x:clip}.certloom-wizard-progress{margin-inline-end:10px}.certloom-wizard-progress-step{flex:0 0 138px;min-height:44px}.certloom-wizard-choice-row{grid-template-columns:1fr}.certloom-wizard-choice-row label{min-height:76px}.certloom-wizard-actions .button,.certloom-wizard-secondary-action .button,.certloom-wizard-footer-actions .button,.certloom-wizard-footer-actions .button-link,.certloom-wizard-save-exit,.certloom-wizard-restart .button,.certloom-adaptive-setup input,.certloom-adaptive-setup select{min-height:44px}.certloom-wizard-footer-actions{align-items:stretch}.certloom-wizard-summary-list{grid-template-columns:1fr}.certloom-wizard-review-table{min-width:680px}}
+@media(prefers-reduced-motion:reduce){.certloom-adaptive-setup,.certloom-adaptive-setup *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+@media(forced-colors:active){.certloom-wizard-progress,.certloom-wizard-choice-row label,.certloom-wizard-recommendation,.certloom-setup-complete-badge{border-color:CanvasText;background:Canvas;color:CanvasText}.certloom-wizard-progress-step.is-current,.certloom-wizard-choice-row label:has(input:checked){outline:2px solid Highlight;box-shadow:none}.certloom-wizard-progress-step.is-current>span{background:Highlight;color:HighlightText;border-color:Highlight}.certloom-wizard-review-table tr.has-change th{box-shadow:inset 3px 0 0 Highlight}}

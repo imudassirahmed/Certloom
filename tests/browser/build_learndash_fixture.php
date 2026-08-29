@@ -20,7 +20,7 @@ $framework = array(
         array( 'key' => 'tutor_lms', 'label' => 'Tutor LMS', 'available' => false ),
         array( 'key' => 'learndash', 'label' => 'LearnDash', 'available' => true ),
     ),
-    'next' => 'Tutor LMS and LearnDash share the same bounded architecture; the approved navigation and plain-language consolidation follows both adapters.',
+    'next' => 'Tutor LMS and LearnDash share the same credential workflow; the approved navigation and plain-language consolidation follows both adapters.',
 );
 $tutor = array('status'=>array('available'=>false,'version'=>'','active_mapping_count'=>0,'authority_ready'=>false),'configuration_ready'=>false,'error'=>null,'courses'=>array(),'programs'=>array(),'templates'=>array(),'mappings'=>array());
 $learndash = array(

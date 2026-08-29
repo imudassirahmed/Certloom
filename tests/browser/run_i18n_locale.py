@@ -24,7 +24,7 @@ async def main():
         await page.get_by_role('button',name='Add language variant').click()
         await ck(await page.locator('[data-certloom-locale-variant-list] .certloom-locale-variant-row').count()==3,'addVariant')
         last=page.locator('[data-certloom-locale-variant-list] .certloom-locale-variant-row').last
-        await last.locator('input').fill('fr-FR')
+        await last.locator('[name="profile_template_variant_locale[]"]').select_option('fr_FR')
         options2=await page.locator('[data-certloom-locale-fallback] option').evaluate_all('(els)=>els.map(e=>e.value)')
         await ck('fr_FR' in options2,'newLocaleAddsFallbackOption')
         await page.locator('[data-certloom-locale-fallback]').select_option('fr_FR')
@@ -43,7 +43,7 @@ async def main():
         await ck(await mobile.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'mobileNoOverflow')
         heights=await mobile.locator('.certloom-locale-variant-row input,.certloom-locale-variant-row select,.certloom-locale-variant-actions .button,.certloom-locale-variant-actions select').evaluate_all('(els)=>els.map(e=>e.getBoundingClientRect().height)')
         await ck(all(h>=44 for h in heights),'mobileControlsAtLeast44')
-        rows=mobile.locator('.certloom-locale-variant-row');b1=await rows.nth(0).locator('input').bounding_box();b2=await rows.nth(0).locator('select').bounding_box();await ck(bool(b1 and b2 and abs(b1['x']-b2['x'])<1),'mobileVariantSingleColumn');await mobile.close()
+        rows=mobile.locator('.certloom-locale-variant-row');selects=rows.nth(0).locator('select');b1=await selects.nth(0).bounding_box();b2=await selects.nth(1).bounding_box();await ck(bool(b1 and b2 and abs(b1['x']-b2['x'])<1),'mobileVariantSingleColumn');await mobile.close()
         reduced=await browser.new_page(viewport={'width':900,'height':700},reduced_motion='reduce');await reduced.set_content(fixture(),wait_until='load');await ck(await reduced.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches"),'reducedMotionActive');await reduced.close()
         forced=await browser.new_page(viewport={'width':900,'height':700},forced_colors='active');await forced.set_content(fixture(),wait_until='load');await ck(await forced.evaluate("matchMedia('(forced-colors: active)').matches"),'forcedColorsActive');await ck(await forced.locator('.certloom-program-locale-summary .certloom-program-readonly-value').is_visible(),'forcedColorsLocaleSummaryVisible');await forced.close();await browser.close()
     if failed:

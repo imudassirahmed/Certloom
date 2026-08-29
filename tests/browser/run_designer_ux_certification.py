@@ -33,6 +33,9 @@ async def main():
         await ck((await page.locator('[data-certloom-designer-workspace]').get_attribute('aria-label'))=='Certificate Designer canvas workspace','workspaceAccessibleName')
         await ck((await canvas.get_attribute('role'))=='application' and (await canvas.get_attribute('aria-label'))=='Certificate page canvas','canvasAccessibleName')
         await ck(await page.evaluate("document.documentElement.scrollWidth<=document.documentElement.clientWidth+1"),'desktopNoPageOverflow')
+        workspace=page.locator('[data-certloom-designer-workspace]')
+        idle_workspace_y=await workspace.evaluate('(e)=>e.getBoundingClientRect().top+window.scrollY')
+        await ck(await page.locator('[data-certloom-designer-context-hint]').is_visible(),'idleSelectionToolsHintVisible')
 
         before=await page.locator('[data-certloom-designer-element]').count()
         add_text=page.locator('[data-certloom-designer-add="text"]'); await add_text.focus(); await add_text.press('Enter'); await page.wait_for_timeout(80)
@@ -43,6 +46,9 @@ async def main():
         await ck(await page.locator('[data-certloom-designer-distribute-group]').is_hidden(),'distributionStillHiddenForSingle')
         status=(await page.locator('[data-certloom-designer-selection-status]').text_content()) or ''
         await ck('add more' in status.lower(),'singleSelectionTeachesAdditiveSelection')
+        selected_workspace_y=await workspace.evaluate('(e)=>e.getBoundingClientRect().top+window.scrollY')
+        await ck(abs(selected_workspace_y-idle_workspace_y)<=1.0,'canvasOriginStableWhenSelectionToolsAppear')
+        await ck(await page.locator('[data-certloom-designer-context-hint]').is_hidden(),'selectionToolsHintHidesWithoutCollapsingDock')
 
         # Keyboard direct edit is a complete non-pointer alternative.
         await selected.focus(); await selected.press('Enter'); await page.wait_for_timeout(50)
@@ -71,6 +77,8 @@ async def main():
         await page.locator(f'[data-certloom-designer-layer-select="{ids[2]}"]').click(modifiers=['Control']); await page.wait_for_timeout(60)
         await ck(await page.locator('[data-certloom-designer-distribute-group]').is_visible(),'distributionAppearsForThree')
         await ck(await page.locator('[data-certloom-designer-element][aria-pressed="true"]').count()==3,'threeItemSelection')
+        multi_workspace_y=await workspace.evaluate('(e)=>e.getBoundingClientRect().top+window.scrollY')
+        await ck(abs(multi_workspace_y-idle_workspace_y)<=1.0,'canvasOriginStableAcrossTextAndMultiSelection')
         await page.locator('[data-certloom-designer-distribute="horizontal"]').click(); await page.wait_for_timeout(70)
         await ck('equal' in (((await page.locator('[data-certloom-designer-spacing-status]').text_content()) or '').lower()),'equalSpacingFeedback')
 

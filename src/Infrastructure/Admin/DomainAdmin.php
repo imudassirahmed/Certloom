@@ -985,7 +985,7 @@ final class DomainAdmin {
 		foreach ( array( 'certificate' => __( 'Certificate', 'certloom' ), 'certification' => __( 'Certification', 'certloom' ), 'degree' => __( 'Degree', 'certloom' ), 'diploma' => __( 'Diploma', 'certloom' ), 'license' => __( 'License', 'certloom' ), 'membership' => __( 'Membership', 'certloom' ), 'award' => __( 'Award', 'certloom' ), 'participation' => __( 'Participation', 'certloom' ), 'custom' => __( 'Custom', 'certloom' ) ) as $value => $label ) { echo '<option value="' . esc_attr( $value ) . '" ' . selected( (string) ( $profile['credential_type'] ?? 'certificate' ), $value, false ) . '>' . esc_html( $label ) . '</option>'; }
 		echo '</select></div>';
 		$this->text_field( 'profile[eligibility_context]', __( 'Eligibility context', 'certloom' ), (string) ( $profile['eligibility_context'] ?? '' ), false, __( 'Optional concise administrator-owned rule/context. LMS adapters later map qualifying attempts to this Program; this field is not a compliance assertion.', 'certloom' ) );
-		$this->text_field( 'profile[credential_locale]', __( 'Credential language / locale', 'certloom' ), (string) ( $profile['credential_locale'] ?? CredentialLocale::SITE_DEFAULT ), false, __( 'Use site_default or a locale such as en_US, ar, fr_FR, ur or zh_Hant. Administrator language continues to follow each WordPress user locale.', 'certloom' ) );
+		$this->credential_locale_field( 'profile[credential_locale]', (string) ( $profile['credential_locale'] ?? CredentialLocale::SITE_DEFAULT ) );
 		if ( ! is_wp_error( $locale_preview ) ) { echo '<div class="certloom-domain-field certloom-program-locale-summary"><span><strong>' . esc_html__( 'Credential direction', 'certloom' ) . '</strong></span><div class="certloom-program-readonly-value">' . esc_html( strtoupper( (string) ( $locale_preview['direction'] ?? 'ltr' ) ) ) . '</div><p class="description">' . esc_html( sprintf( __( 'Effective locale: %1$s. Element direction remains Auto / LTR / RTL, so mixed-script certificates can override individual elements.', 'certloom' ), (string) ( $locale_preview['effective'] ?? '' ) ) ) . '</p></div>'; }
 		echo '<div class="certloom-domain-field"><label for="certloom-program-renewal"><strong>' . esc_html__( 'Renewal relevance', 'certloom' ) . '</strong></label><select id="certloom-program-renewal" name="profile[renewal]">';
 		foreach ( array( 'not_applicable' => __( 'Not applicable', 'certloom' ), 'optional' => __( 'Optional', 'certloom' ), 'required' => __( 'Required', 'certloom' ) ) as $value => $label ) { echo '<option value="' . esc_attr( $value ) . '" ' . selected( (string) ( $profile['renewal'] ?? '' ), $value, false ) . '>' . esc_html( $label ) . '</option>'; }
@@ -1005,13 +1005,13 @@ final class DomainAdmin {
 		$variant_rows = $variants ?: array( '' => 0 );
 		echo '<div class="certloom-locale-variant-list" data-certloom-locale-variant-list>';
 		foreach ( $variant_rows as $variant_locale => $variant_template_id ) {
-			echo '<div class="certloom-locale-variant-row"><label><span>' . esc_html__( 'Locale', 'certloom' ) . '</span><input type="text" name="profile_template_variant_locale[]" maxlength="32" value="' . esc_attr( (string) $variant_locale ) . '" placeholder="ar"></label><label><span>' . esc_html__( 'Published Template', 'certloom' ) . '</span><select name="profile_template_variant_template_id[]"><option value="0">' . esc_html__( 'Choose Template', 'certloom' ) . '</option>';
+			echo '<div class="certloom-locale-variant-row"><label><span>' . esc_html__( 'Certificate language', 'certloom' ) . '</span><select name="profile_template_variant_locale[]" data-certloom-locale-select>' . $this->locale_options_html( (string) $variant_locale, false, true ) . '</select></label><label><span>' . esc_html__( 'Published Template', 'certloom' ) . '</span><select name="profile_template_variant_template_id[]"><option value="0">' . esc_html__( 'Choose Template', 'certloom' ) . '</option>';
 			foreach ( $published_templates as $candidate ) { echo '<option value="' . esc_attr( (string) absint( $candidate['id'] ?? 0 ) ) . '" ' . selected( (string) $variant_template_id, (string) ( $candidate['machine_key'] ?? '' ), false ) . '>' . esc_html( (string) ( $candidate['name'] ?? '' ) ) . '</option>'; }
 			echo '</select></label><button type="button" class="button-link-delete certloom-locale-variant-remove" data-certloom-remove-locale-variant>' . esc_html__( 'Remove', 'certloom' ) . '</button></div>';
 		}
 		echo '</div>';
 		$options_html = '<option value="0">' . esc_html__( 'Choose Template', 'certloom' ) . '</option>'; foreach ( $published_templates as $candidate ) { $options_html .= '<option value="' . esc_attr( (string) absint( $candidate['id'] ?? 0 ) ) . '">' . esc_html( (string) ( $candidate['name'] ?? '' ) ) . '</option>'; }
-		echo '<template id="certloom-program-locale-variant-template"><div class="certloom-locale-variant-row"><label><span>' . esc_html__( 'Locale', 'certloom' ) . '</span><input type="text" name="profile_template_variant_locale[]" maxlength="32" placeholder="ar"></label><label><span>' . esc_html__( 'Published Template', 'certloom' ) . '</span><select name="profile_template_variant_template_id[]">' . $options_html . '</select></label><button type="button" class="button-link-delete certloom-locale-variant-remove" data-certloom-remove-locale-variant>' . esc_html__( 'Remove', 'certloom' ) . '</button></div></template>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- options assembled from escaped values.
+		echo '<template id="certloom-program-locale-variant-template"><div class="certloom-locale-variant-row"><label><span>' . esc_html__( 'Certificate language', 'certloom' ) . '</span><select name="profile_template_variant_locale[]" data-certloom-locale-select>' . $this->locale_options_html( '', false, true ) . '</select></label><label><span>' . esc_html__( 'Published Template', 'certloom' ) . '</span><select name="profile_template_variant_template_id[]">' . $options_html . '</select></label><button type="button" class="button-link-delete certloom-locale-variant-remove" data-certloom-remove-locale-variant>' . esc_html__( 'Remove', 'certloom' ) . '</button></div></template>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- options assembled from escaped values.
 		echo '<div class="certloom-locale-variant-actions"><button type="button" class="button" data-certloom-add-locale-variant>' . esc_html__( 'Add language variant', 'certloom' ) . '</button><label><span>' . esc_html__( 'Declared fallback', 'certloom' ) . '</span><select name="profile_template_variant_fallback" data-certloom-locale-fallback data-selected="' . esc_attr( (string) ( $profile['template_variant_fallback'] ?? 'program_default' ) ) . '"><option value="program_default">' . esc_html__( 'Program default design', 'certloom' ) . '</option>'; foreach ( array_keys( $variants ) as $variant_locale ) { echo '<option value="' . esc_attr( (string) $variant_locale ) . '" ' . selected( (string) ( $profile['template_variant_fallback'] ?? 'program_default' ), (string) $variant_locale, false ) . '>' . esc_html( (string) $variant_locale ) . '</option>'; } echo '</select></label></div><p class="description">' . esc_html__( 'A configured locale variant must remain published. If it becomes unavailable, issuance fails closed instead of silently switching certificate artwork.', 'certloom' ) . '</p></div>';
 		echo '<div class="certloom-program-design-default"><h4>' . esc_html__( 'Published certificate design', 'certloom' ) . '</h4>';
 		if ( ! $is_edit ) { echo '<p>' . esc_html__( 'Save the Program first, then assign its published certificate design.', 'certloom' ) . '</p>'; }
@@ -1374,6 +1374,47 @@ final class DomainAdmin {
 	}
 
 	/** @return void */
+
+	/**
+	 * Render the Program's certificate-locale selector without turning the
+	 * convenience list into a server-side allow-list.
+	 *
+	 * Existing valid locales outside the curated list are retained as a selected
+	 * option, so upgrades never silently rewrite administrator-owned Program data.
+	 * Interface translation remains a separate WordPress/user-locale concern.
+	 *
+	 * @param string $name Field name.
+	 * @param string $selected Current configured locale.
+	 * @return void
+	 */
+	private function credential_locale_field( $name, $selected ) {
+		echo '<div class="certloom-domain-field"><label for="certloom-program-credential-locale"><strong>' . esc_html__( 'Certificate language', 'certloom' ) . '</strong></label><select id="certloom-program-credential-locale" name="' . esc_attr( $name ) . '" data-certloom-credential-locale>' . $this->locale_options_html( (string) $selected, true, false ) . '</select><p class="description">' . esc_html__( 'Controls certificate locale, text direction and language-specific design selection. Certloom’s interface still follows the WordPress user language and only uses translations that are actually installed.', 'certloom' ) . '</p></div>';
+	}
+
+	/**
+	 * @param string $selected Current locale.
+	 * @param bool   $include_site_default Include site-default sentinel.
+	 * @param bool   $include_blank Include an empty “Choose language” option.
+	 * @return string Escaped option markup.
+	 */
+	private function locale_options_html( $selected, $include_site_default = true, $include_blank = false ) {
+		$policy = new CredentialLocale();
+		$selected = trim( (string) $selected );
+		$options = $policy->selection_options( $include_site_default );
+		if ( '' !== $selected && ! isset( $options[ $selected ] ) ) {
+			$normalized = $include_site_default ? $policy->normalize_configured( $selected ) : $policy->normalize_locale( $selected );
+			if ( ! is_wp_error( $normalized ) && CredentialLocale::SITE_DEFAULT !== $normalized ) {
+				$selected = (string) $normalized;
+				$options[ $selected ] = sprintf( __( '%s — current custom locale', 'certloom' ), $selected );
+			}
+		}
+		$html = $include_blank ? '<option value="">' . esc_html__( 'Choose language', 'certloom' ) . '</option>' : '';
+		foreach ( $options as $locale => $label ) {
+			$html .= '<option value="' . esc_attr( (string) $locale ) . '" ' . selected( $selected, (string) $locale, false ) . '>' . esc_html( (string) $label ) . '</option>';
+		}
+		return $html;
+	}
+
 	private function text_field( $name, $label, $value, $required = false, $description = '', $type = 'text', $attributes = '' ) {
 		$id = 'certloom-domain-' . sanitize_html_class( $name );
 		echo '<div class="certloom-domain-field"><label for="' . esc_attr( $id ) . '"><strong>' . esc_html( $label ) . '</strong></label><input id="' . esc_attr( $id ) . '" class="regular-text" type="' . esc_attr( $type ) . '" name="' . esc_attr( $name ) . '" value="' . esc_attr( $value ) . '" ' . ( $required ? 'required ' : '' ) . wp_kses_post( $attributes ) . '>';

@@ -34,13 +34,41 @@ $health_label = 'good' === $health_overall ? __( 'Ready for current operations',
 		<div class="notice notice-error inline certloom-dashboard-notice"><p><?php echo esc_html( $dashboard_error->get_error_message() ); ?></p></div>
 	<?php endif; ?>
 
-	<?php if ( isset( $onboarding_summary ) && is_array( $onboarding_summary ) && empty( $onboarding_summary['completed'] ) ) : ?>
+	<?php if ( isset( $onboarding_summary ) && is_array( $onboarding_summary ) ) :
+		$setup_progress_completed = absint( $onboarding_summary['progress_completed'] ?? 0 );
+		$setup_progress_total     = max( 1, absint( $onboarding_summary['progress_total'] ?? 6 ) );
+		$wizard_walkthrough_done  = ! empty( $onboarding_summary['wizard_completed'] );
+		$readiness_incomplete     = $setup_progress_completed < $setup_progress_total;
+		if ( $wizard_walkthrough_done && $readiness_incomplete ) :
+			$setup_checks = array(
+				array( 'label' => __( 'Organization', 'certloom' ), 'ready' => ! empty( $onboarding_summary['organization_ready'] ) ),
+				array( 'label' => __( 'Certificate fields', 'certloom' ), 'ready' => ! empty( $onboarding_summary['fields_ready'] ) ),
+				array( 'label' => __( 'Verification page', 'certloom' ), 'ready' => ! empty( $onboarding_summary['page_ready'] ) ),
+				array( 'label' => __( 'First certificate', 'certloom' ), 'ready' => ! empty( $onboarding_summary['registry_ready'] ) ),
+				array( 'label' => __( 'Verification test', 'certloom' ), 'ready' => ! empty( $onboarding_summary['verification_tested'] ) ),
+				array( 'label' => __( 'Appearance review', 'certloom' ), 'ready' => ! empty( $onboarding_summary['appearance_ready'] ) ),
+			);
+	?>
+		<div class="certloom-callout certloom-callout-info certloom-setup-callout certloom-setup-readiness" role="status">
+			<span class="dashicons dashicons-yes-alt" aria-hidden="true"></span>
+			<div>
+				<strong><?php esc_html_e( 'Setup review complete', 'certloom' ); ?></strong>
+				<p><?php echo esc_html( sprintf( __( 'Your Wizard choices were reviewed and applied. %1$d of %2$d recommended readiness checks are complete; finish the remaining items when they are relevant to your workflow.', 'certloom' ), $setup_progress_completed, $setup_progress_total ) ); ?></p>
+				<ul class="certloom-setup-checklist" aria-label="<?php esc_attr_e( 'Recommended setup readiness', 'certloom' ); ?>">
+					<?php foreach ( $setup_checks as $setup_check ) : ?>
+						<li class="<?php echo $setup_check['ready'] ? 'is-complete' : 'is-pending'; ?>"><span class="dashicons <?php echo $setup_check['ready'] ? 'dashicons-yes-alt' : 'dashicons-marker'; ?>" aria-hidden="true"></span><?php echo esc_html( $setup_check['label'] ); ?></li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+			<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-setup&step=review' ) ); ?>"><?php esc_html_e( 'Review setup', 'certloom' ); ?></a>
+		</div>
+	<?php elseif ( empty( $onboarding_summary['completed'] ) ) : ?>
 		<div class="certloom-callout certloom-callout-info certloom-setup-callout" role="status">
 			<span class="dashicons dashicons-admin-generic" aria-hidden="true"></span>
-			<div><strong><?php esc_html_e( 'Finish first-run setup', 'certloom' ); ?></strong><p><?php echo esc_html( sprintf( __( '%1$d of %2$d recommended setup steps are complete. Confirm your organization, public verification flow and display choices when convenient; Certloom never forces an activation redirect.', 'certloom' ), absint( $onboarding_summary['progress_completed'] ?? 0 ), absint( $onboarding_summary['progress_total'] ?? 6 ) ) ); ?></p></div>
+			<div><strong><?php esc_html_e( 'Finish first-run setup', 'certloom' ); ?></strong><p><?php echo esc_html( sprintf( __( '%1$d of %2$d recommended setup steps are complete. Confirm your organization, public verification flow and display choices when convenient; Certloom never forces an activation redirect.', 'certloom' ), $setup_progress_completed, $setup_progress_total ) ); ?></p></div>
 			<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-setup' ) ); ?>"><?php esc_html_e( 'Open setup', 'certloom' ); ?></a>
 		</div>
-	<?php endif; ?>
+	<?php endif; endif; ?>
 
 	<?php if ( $review > 0 ) : ?>
 		<div class="certloom-callout certloom-callout-warning" role="status">
@@ -119,8 +147,8 @@ $health_label = 'good' === $health_overall ? __( 'Ready for current operations',
 		</div>
 		<div class="certloom-dashboard-analytics-leaders">
 			<p><strong><?php esc_html_e( 'Top credential', 'certloom' ); ?>:</strong> <?php echo $top_verified ? esc_html( (string) $top_verified['certificate_number'] ) . ' · ' . esc_html( number_format_i18n( (int) $top_verified['total'] ) ) : esc_html__( 'No resolved verification activity yet', 'certloom' ); ?></p>
-			<p><strong><?php esc_html_e( 'Top Program', 'certloom' ); ?>:</strong> <?php echo $top_program ? esc_html( (string) $top_program['label'] ) . ' · ' . esc_html( number_format_i18n( (int) $top_program['total'] ) ) : esc_html__( 'No normalized issuance activity yet', 'certloom' ); ?></p>
-			<p><strong><?php esc_html_e( 'Top Template', 'certloom' ); ?>:</strong> <?php echo $top_template ? esc_html( (string) $top_template['label'] ) . ' · ' . esc_html( number_format_i18n( (int) $top_template['total'] ) ) : esc_html__( 'No normalized issuance activity yet', 'certloom' ); ?></p>
+			<p><strong><?php esc_html_e( 'Top Program', 'certloom' ); ?>:</strong> <?php echo $top_program ? esc_html( (string) $top_program['label'] ) . ' · ' . esc_html( number_format_i18n( (int) $top_program['total'] ) ) : esc_html__( 'No issuance activity yet', 'certloom' ); ?></p>
+			<p><strong><?php esc_html_e( 'Top Template', 'certloom' ); ?>:</strong> <?php echo $top_template ? esc_html( (string) $top_template['label'] ) . ' · ' . esc_html( number_format_i18n( (int) $top_template['total'] ) ) : esc_html__( 'No issuance activity yet', 'certloom' ); ?></p>
 		</div>
 	</section>
 	<?php endif; ?>
@@ -188,7 +216,7 @@ $health_label = 'good' === $health_overall ? __( 'Ready for current operations',
 					<span class="certloom-health-dot" aria-hidden="true"></span>
 				</div>
 				<?php if ( empty( $health['issues'] ) ) : ?>
-					<p><?php esc_html_e( 'The current registry, authority state and runtime checks are healthy.', 'certloom' ); ?></p>
+					<p><?php esc_html_e( 'The credential registry and system checks are healthy.', 'certloom' ); ?></p>
 				<?php else : ?>
 					<ul class="certloom-health-list">
 					<?php foreach ( $health['issues'] as $issue ) : ?>
@@ -202,7 +230,7 @@ $health_label = 'good' === $health_overall ? __( 'Ready for current operations',
 			<section class="certloom-panel certloom-engine-panel" aria-labelledby="certloom-engine-title">
 				<div class="certloom-panel-header"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Data engine', 'certloom' ); ?></span><h2 id="certloom-engine-title"><?php esc_html_e( 'Proven registry is authoritative', 'certloom' ); ?></h2></div></div>
 				<p><?php esc_html_e( 'The current 1.5 registry remains the live source of certificate truth. Credential Series migration infrastructure stays safely gated until its real staging acceptance sequence is approved.', 'certloom' ); ?></p>
-				<div class="certloom-engine-status"><span class="dashicons dashicons-lock" aria-hidden="true"></span><?php esc_html_e( 'No automatic authority switch', 'certloom' ); ?></div>
+				<div class="certloom-engine-status"><span class="dashicons dashicons-lock" aria-hidden="true"></span><?php esc_html_e( 'No automatic data-store switch', 'certloom' ); ?></div>
 			</section>
 		</aside>
 	</div>

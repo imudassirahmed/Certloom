@@ -23,7 +23,7 @@ foreach ( (array) ( $learndash['templates'] ?? array() ) as $template ) { if ( i
 		<div>
 			<span class="certloom-eyebrow"><?php esc_html_e( 'Learning integrations', 'certloom' ); ?></span>
 			<h1 id="certloom-integrations-title"><?php esc_html_e( 'Integrations', 'certloom' ); ?></h1>
-			<p><?php esc_html_e( 'Connect supported learning systems to Certloom without creating a second credential database. Course events are normalized, linked to an explicit Certloom recipient, mapped to a Program and published Template, then sent through the same immutable issuance service as reviewed Certloom issuance.', 'certloom' ); ?></p>
+			<p><?php esc_html_e( 'Connect supported learning systems to Certloom using the same trusted credential workflow as manual issuance. A completed course must belong to an explicitly linked Certloom recipient and an enabled course mapping before a credential can be created.', 'certloom' ); ?></p>
 		</div>
 	</section>
 
@@ -44,10 +44,10 @@ foreach ( (array) ( $learndash['templates'] ?? array() ) as $template ) { if ( i
 			<span class="certloom-status-pill certloom-status-valid"><?php esc_html_e( 'Ready', 'certloom' ); ?></span>
 		</div>
 		<div class="certloom-roadmap-grid certloom-integration-contract-grid">
-			<div><strong><?php esc_html_e( 'Completion event', 'certloom' ); ?></strong><p><?php esc_html_e( 'Tutor LMS and LearnDash course completion events are translated into bounded Certloom events. Learner names, email addresses and arbitrary LMS metadata are not copied into integration provenance.', 'certloom' ); ?></p></div>
+			<div><strong><?php esc_html_e( 'Completion event', 'certloom' ); ?></strong><p><?php esc_html_e( 'Certloom uses only the course, WordPress learner and completion evidence needed to process the integration. Learner names, email addresses and unrelated LMS data are not copied into integration records.', 'certloom' ); ?></p></div>
 			<div><strong><?php esc_html_e( 'Recipient identity', 'certloom' ); ?></strong><p><?php esc_html_e( 'The WordPress learner must already be explicitly linked to one Certloom recipient. Certloom never guesses identity from name or email.', 'certloom' ); ?></p></div>
-			<div><strong><?php esc_html_e( 'Course mapping', 'certloom' ); ?></strong><p><?php esc_html_e( 'Each enabled LMS course maps to one Certloom Program and one published Template. Changing that server-owned mapping invalidates stale issuance review.', 'certloom' ); ?></p></div>
-			<div><strong><?php esc_html_e( 'Duplicate protection', 'certloom' ); ?></strong><p><?php esc_html_e( 'The same LMS course completion for the same WordPress learner reuses one deterministic source identity within that adapter, so hook retries cannot create duplicate credentials.', 'certloom' ); ?></p></div>
+			<div><strong><?php esc_html_e( 'Course mapping', 'certloom' ); ?></strong><p><?php esc_html_e( 'Each enabled LMS course maps to one Certloom Program and one published Template. Certloom checks the mapping again before issuing, so outdated settings cannot be used silently.', 'certloom' ); ?></p></div>
+			<div><strong><?php esc_html_e( 'Duplicate protection', 'certloom' ); ?></strong><p><?php esc_html_e( 'Repeated notifications for the same completed course and learner are recognized as the same completion, helping prevent duplicate credentials.', 'certloom' ); ?></p></div>
 		</div>
 	</section>
 
@@ -63,9 +63,9 @@ foreach ( (array) ( $learndash['templates'] ?? array() ) as $template ) { if ( i
 		<?php if ( ! empty( $tutor_status['available'] ) ) : ?>
 			<p><?php printf( /* translators: 1: Tutor LMS version, 2: active mapping count. */ esc_html__( 'Tutor LMS %1$s is available. Certloom currently has %2$d enabled course mapping(s).', 'certloom' ), esc_html( (string) ( $tutor_status['version'] ?: __( 'detected', 'certloom' ) ) ), absint( $tutor_status['active_mapping_count'] ?? 0 ) ); ?></p>
 			<?php if ( empty( $tutor_status['authority_ready'] ) ) : ?>
-				<div class="certloom-callout certloom-callout-info"><span class="dashicons dashicons-lock" aria-hidden="true"></span><div><strong><?php esc_html_e( 'Automatic issuance remains safely locked', 'certloom' ); ?></strong><p><?php esc_html_e( 'The Tutor LMS adapter and mapping workflow are implemented, but Certloom will not write normalized credentials until the existing credential write-authority acceptance gate is opened. Course completion hooks therefore fail closed instead of bypassing Certloom authority.', 'certloom' ); ?></p></div></div>
+				<div class="certloom-callout certloom-callout-info"><span class="dashicons dashicons-lock" aria-hidden="true"></span><div><strong><?php esc_html_e( 'Automatic issuance remains safely locked', 'certloom' ); ?></strong><p><?php esc_html_e( 'Tutor LMS is connected, but automatic credential creation is not enabled in this build yet. Course completions are blocked safely until Certloom’s production credential-writing checks are approved.', 'certloom' ); ?></p></div></div>
 			<?php else : ?>
-				<div class="certloom-callout certloom-callout-success"><span class="dashicons dashicons-yes-alt" aria-hidden="true"></span><div><strong><?php esc_html_e( 'Automatic issuance is ready', 'certloom' ); ?></strong><p><?php esc_html_e( 'Enabled course mappings can issue through Certloom’s existing immutable integration issuance path when Tutor LMS records course completion.', 'certloom' ); ?></p></div></div>
+				<div class="certloom-callout certloom-callout-success"><span class="dashicons dashicons-yes-alt" aria-hidden="true"></span><div><strong><?php esc_html_e( 'Automatic issuance is ready', 'certloom' ); ?></strong><p><?php esc_html_e( 'Enabled course mappings can create credentials through Certloom’s standard issuance workflow when Tutor LMS records course completion.', 'certloom' ); ?></p></div></div>
 			<?php endif; ?>
 		<?php else : ?>
 			<p><?php esc_html_e( 'Install and activate Tutor LMS to configure course mappings. Certloom does not require Tutor LMS for any standalone credential workflow.', 'certloom' ); ?></p>
@@ -78,7 +78,7 @@ foreach ( (array) ( $learndash['templates'] ?? array() ) as $template ) { if ( i
 		<?php if ( ! empty( $tutor['error'] ) && is_wp_error( $tutor['error'] ) ) : ?>
 			<div class="notice notice-error inline"><p><?php echo esc_html( $tutor['error']->get_error_message() ); ?></p></div>
 		<?php elseif ( empty( $tutor['configuration_ready'] ) ) : ?>
-			<p><?php esc_html_e( 'Mapping configuration is available with the Certloom Program/Template preview domain. The adapter remains installed and fail-closed while that preview/authority boundary is unavailable.', 'certloom' ); ?></p>
+			<p><?php esc_html_e( 'Course mapping is available only when the Program and Template management preview is enabled. Until then, the integration stays installed but cannot create credentials.', 'certloom' ); ?></p>
 		<?php else : ?>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-integration-mapping-form">
 				<input type="hidden" name="action" value="certloom_tutor_lms_mapping_save">
@@ -117,9 +117,9 @@ foreach ( (array) ( $learndash['templates'] ?? array() ) as $template ) { if ( i
 		<?php if ( ! empty( $learndash_status['available'] ) ) : ?>
 			<p><?php printf( /* translators: 1: LearnDash version, 2: active mapping count. */ esc_html__( 'LearnDash %1$s is available. Certloom currently has %2$d enabled course mapping(s).', 'certloom' ), esc_html( (string) ( $learndash_status['version'] ?: __( 'detected', 'certloom' ) ) ), absint( $learndash_status['active_mapping_count'] ?? 0 ) ); ?></p>
 			<?php if ( empty( $learndash_status['authority_ready'] ) ) : ?>
-				<div class="certloom-callout certloom-callout-info"><span class="dashicons dashicons-lock" aria-hidden="true"></span><div><strong><?php esc_html_e( 'Automatic issuance remains safely locked', 'certloom' ); ?></strong><p><?php esc_html_e( 'The LearnDash adapter and mapping workflow are implemented, but Certloom will not write normalized credentials until the existing credential write-authority acceptance gate is opened. Course completion hooks therefore fail closed instead of bypassing Certloom authority.', 'certloom' ); ?></p></div></div>
+				<div class="certloom-callout certloom-callout-info"><span class="dashicons dashicons-lock" aria-hidden="true"></span><div><strong><?php esc_html_e( 'Automatic issuance remains safely locked', 'certloom' ); ?></strong><p><?php esc_html_e( 'LearnDash is connected, but automatic credential creation is not enabled in this build yet. Course completions are blocked safely until Certloom’s production credential-writing checks are approved.', 'certloom' ); ?></p></div></div>
 			<?php else : ?>
-				<div class="certloom-callout certloom-callout-success"><span class="dashicons dashicons-yes-alt" aria-hidden="true"></span><div><strong><?php esc_html_e( 'Automatic issuance is ready', 'certloom' ); ?></strong><p><?php esc_html_e( 'Enabled course mappings can issue through Certloom’s existing immutable integration issuance path when LearnDash records course completion.', 'certloom' ); ?></p></div></div>
+				<div class="certloom-callout certloom-callout-success"><span class="dashicons dashicons-yes-alt" aria-hidden="true"></span><div><strong><?php esc_html_e( 'Automatic issuance is ready', 'certloom' ); ?></strong><p><?php esc_html_e( 'Enabled course mappings can create credentials through Certloom’s standard issuance workflow when LearnDash records course completion.', 'certloom' ); ?></p></div></div>
 			<?php endif; ?>
 		<?php else : ?>
 			<p><?php esc_html_e( 'Install and activate LearnDash to configure course mappings. Certloom does not require LearnDash for any standalone credential workflow.', 'certloom' ); ?></p>
@@ -132,7 +132,7 @@ foreach ( (array) ( $learndash['templates'] ?? array() ) as $template ) { if ( i
 		<?php if ( ! empty( $learndash['error'] ) && is_wp_error( $learndash['error'] ) ) : ?>
 			<div class="notice notice-error inline"><p><?php echo esc_html( $learndash['error']->get_error_message() ); ?></p></div>
 		<?php elseif ( empty( $learndash['configuration_ready'] ) ) : ?>
-			<p><?php esc_html_e( 'Mapping configuration is available with the Certloom Program/Template preview domain. The adapter remains installed and fail-closed while that preview/authority boundary is unavailable.', 'certloom' ); ?></p>
+			<p><?php esc_html_e( 'Course mapping is available only when the Program and Template management preview is enabled. Until then, the integration stays installed but cannot create credentials.', 'certloom' ); ?></p>
 		<?php else : ?>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-integration-mapping-form">
 				<input type="hidden" name="action" value="certloom_learndash_mapping_save">
@@ -160,7 +160,7 @@ foreach ( (array) ( $learndash['templates'] ?? array() ) as $template ) { if ( i
 
 	<section class="certloom-panel" aria-labelledby="certloom-integration-next-title">
 		<div class="certloom-panel-head"><div><span class="certloom-eyebrow"><?php esc_html_e( 'LMS foundation', 'certloom' ); ?></span><h2 id="certloom-integration-next-title"><?php esc_html_e( 'Tutor LMS and LearnDash share one issuance architecture', 'certloom' ); ?></h2></div></div>
-		<p><?php esc_html_e( 'Both first-party adapters reuse the same explicit recipient linking, server-owned mapping, eligibility, provenance and idempotent issuance contract rather than introducing separate credential-writing paths.', 'certloom' ); ?></p>
-		<div class="certloom-callout certloom-callout-info"><span class="dashicons dashicons-info-outline" aria-hidden="true"></span><div><strong><?php esc_html_e( 'Approved execution sequence', 'certloom' ); ?></strong><p><?php echo esc_html( $framework['next'] ); ?></p></div></div>
+		<p><?php esc_html_e( 'Both integrations use the same recipient linking, course mapping, eligibility checks and duplicate protection. Certloom does not maintain a separate credential-writing system for each LMS.', 'certloom' ); ?></p>
+		<div class="certloom-callout certloom-callout-info"><span class="dashicons dashicons-info-outline" aria-hidden="true"></span><div><strong><?php esc_html_e( 'What comes next', 'certloom' ); ?></strong><p><?php echo esc_html( $framework['next'] ); ?></p></div></div>
 	</section>
 </div>

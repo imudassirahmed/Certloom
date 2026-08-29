@@ -21,8 +21,8 @@ async def run():
         page=await browser.new_page(viewport={'width':1200,'height':800})
         await page.set_content(fixture('simple_credential'),wait_until='load')
         labels=await page.locator('[data-primary-label]').evaluate_all('(els)=>els.map(e=>e.textContent.trim())')
-        await ck(labels==['Home','Credentials','Programs','Design','Analytics','Integrations','Settings'],'simplePrimaryNav')
-        await ck(not any(x in labels for x in ['Recipients','Manual Issuance','Data Tools']),'specialistsNotPrimary')
+        await ck(labels==['Dashboard','Credentials','People & Programs','Design','Insights & Integrations','Settings'],'simplePrimaryNav')
+        await ck(len(labels)==6 and not any(x in labels for x in ['Recipients','Manual Issuance','Data Tools']),'sixPrimarySectionsNoSpecialists')
         await ck(await page.locator('.certloom-ui-mode-choice.is-current').inner_text()=='Simple','simpleModeCurrent')
         await ck(await page.locator('.certloom-credential-primary-tab').count()==4,'simpleFourPrimaryTabs')
         await ck(await page.locator('.certloom-credential-subtabs a').count()==4,'credentialFourSubtabs')
@@ -44,7 +44,7 @@ async def run():
         advanced=await browser.new_page(viewport={'width':1240,'height':760})
         await advanced.set_content(fixture('advanced'),wait_until='load')
         advlabels=await advanced.locator('[data-primary-label]').evaluate_all('(els)=>els.map(e=>e.textContent.trim())')
-        await ck(all(x in advlabels for x in ['Recipients','Manual Issuance','Data Tools']),'advancedRestoresSpecialists')
+        await ck(advlabels==['Dashboard','Credentials','People & Programs','Design','Insights & Integrations','Settings'],'advancedKeepsSixSectionShell')
         await ck(await advanced.locator('.nav-tab').count()==8,'advancedEightDirectTabs')
         await ck(await advanced.locator('.certloom-ui-mode-choice.is-current').inner_text()=='Advanced','advancedModeCurrent')
         await advanced.close()
@@ -85,6 +85,6 @@ async def run():
 
     if failed:
         print('FAIL  Admin UX browser gate:', ', '.join(failed)); print(f'\n{checks-len(failed)} passed, {len(failed)} failures'); return 1
-    print('PASS  Admin UX browser gate: Simple/Advanced navigation, contextual Credential subtabs, settings search, accessibility, mobile, reduced motion and forced colors')
+    print('PASS  Admin UX browser gate: six-section Simple/Advanced shell, contextual Credential subtabs, settings search, accessibility, mobile, reduced motion and forced colors')
     print(f'\n{checks} Admin UX browser checks, 0 failures'); return 0
 raise SystemExit(asyncio.run(run()))

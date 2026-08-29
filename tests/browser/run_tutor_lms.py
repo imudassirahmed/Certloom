@@ -40,8 +40,8 @@ async def main():
         await ck(await page.get_by_role('button',name='Remove').count()==1,'removeButton')
         body=(await page.locator('body').inner_text()).lower()
         await ck('learner email' not in body and 'match by email' not in body,'noEmailInference')
-        await ck('write-authority acceptance gate' in body,'authorityTruth')
-        await ck('learner names, email addresses and arbitrary lms metadata are not copied' in body,'privacyCopy')
+        await ck('production credential-writing checks' in body,'authorityTruth')
+        await ck('learner names, email addresses and unrelated lms data are not copied' in body,'privacyCopy')
         await ck(await page.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'desktopNoOverflow')
         await page.close()
 

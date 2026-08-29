@@ -43,6 +43,14 @@ final class LegacyCertificateMapper {
 		$created_at  = $this->nullable_datetime( $row['created_at'] ?? null, 'created_at' );
 		$updated_at  = $this->nullable_datetime( $row['updated_at'] ?? null, 'updated_at' );
 		$custom      = $this->custom_fields( $row['custom_fields'] ?? array() );
+		$recipient   = array( 'display_name' => $holder_name );
+		foreach ( array( 'first_name', 'middle_name', 'last_name', 'email', 'external_id' ) as $profile_key ) {
+			if ( array_key_exists( $profile_key, $custom ) ) {
+				$value = trim( (string) $custom[ $profile_key ] );
+				$recipient[ $profile_key ] = '' === $value ? null : $value;
+			}
+		}
+		$grade = array_key_exists( 'grade', $custom ) ? trim( (string) $custom['grade'] ) : '';
 
 		$administrative_state = States::ADMIN_ACTIVE;
 		if ( 'suspended' === $status ) {
@@ -59,9 +67,7 @@ final class LegacyCertificateMapper {
 		}
 
 		return array(
-			'recipient' => array(
-				'display_name' => $holder_name,
-			),
+			'recipient' => $recipient,
 			'series' => array(
 				'administrative_state' => $administrative_state,
 				'compliance_state'     => States::COMPLIANCE_NOT_APPLICABLE,
@@ -74,6 +80,7 @@ final class LegacyCertificateMapper {
 				'valid_from'             => null,
 				'issued_at'              => $issued_at,
 				'expires_at'             => $expiry_date,
+				'grade'                  => '' === $grade ? null : $grade,
 				'legacy_expired'         => $legacy_expired,
 				'source_type'            => 'certloom_legacy',
 				'source_ref'             => (string) $id,

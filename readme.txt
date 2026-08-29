@@ -4,13 +4,17 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.92
+Stable tag: 1.6.94
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
 
 == Description ==
+
+> Release note for 1.6.94: WIZ-01/02 replaces the legacy setup checklist with a resumable, skippable and rerunnable adaptive Setup Wizard over Certloom's existing canonical authorities. Purpose/subcategory presets reuse ProgramProfile taxonomy and provide editable recommendations only; Simple/Advanced reuses AdminUiMode; review/apply writes only through existing Settings, numbering, onboarding/profile and Scheduled Backup contracts. Program/Template creation remains fail-closed behind the existing domain admin gate, Google Drive is never enabled without OAuth, and normalized-domain/renderer authority remains closed. Wizard completion is tracked separately from real readiness, with the Dashboard showing a compact remaining-readiness checklist. UX-QA-01 follows after this release freezes.
+
+> Release note for 1.6.93: UX-CONS-01 consolidates the post-LMS customer experience without changing credential authority. Certloom now presents at most six primary admin sections with contextual subtabs, one Backup & Restore workspace with safe resumable restore continuation, truthful grouped CSV mapping backed by protected current-registry exchange fields, a real Certificate language selector, a shared top notice rail, whole-certificate contain-only Template Library previews, a stable Designer selection-tools dock, and plain-language default surfaces while technical database/rehearsal evidence remains Advanced-only. Normalized-domain and renderer production authority remain closed. Setup Wizard WIZ-01/02 follows after this release freezes.
 
 > Release note for 1.6.92: INT-03 adds LearnDash as Certloom's second first-party LMS adapter over the same frozen INT-01 architecture used by Tutor LMS. Certloom consumes LearnDash's post-completion course event, verifies provider completion when the LearnDash completion API is available, reads the persisted course-completion timestamp, keeps only bounded course/WordPress-user evidence, requires explicit Recipient linking, and uses server-owned course → Program/published Template mappings. No learner email/name, arbitrary progress payload or LearnDash-specific credential database is retained. Automatic issuance remains fail-closed until normalized credential-write authority is legitimately opened. With Tutor LMS + LearnDash capability breadth complete, the approved ten-point UX/navigation/data-recovery consolidation is next.
 

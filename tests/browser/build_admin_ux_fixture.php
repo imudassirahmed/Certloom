@@ -6,9 +6,7 @@ $css = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' );
 $js  = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.js' );
 $simple = 'advanced' !== $state;
 function ah( $v ) { return htmlspecialchars( (string) $v, ENT_QUOTES, 'UTF-8' ); }
-$primary = $simple
-	? array( 'Home', 'Credentials', 'Programs', 'Design', 'Analytics', 'Integrations', 'Settings' )
-	: array( 'Dashboard', 'Credentials', 'Recipients', 'Programs', 'Manual Issuance', 'Templates', 'Analytics', 'Integrations', 'Data Tools', 'Settings' );
+$primary = array( 'Dashboard', 'Credentials', 'People & Programs', 'Design', 'Insights & Integrations', 'Settings' );
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
 html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}body{margin:0;background:#f0f0f1;color:#1d2327;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;line-height:1.5}.fixture-shell{display:grid;grid-template-columns:190px minmax(0,1fr);min-height:100vh}.fixture-menu{padding:14px 8px;background:#1d2327;color:#fff}.fixture-menu a{display:flex;align-items:center;min-height:44px;padding:0 10px;color:#fff;text-decoration:none;border-radius:4px}.fixture-menu a.is-current{background:#2c3338}.fixture-main{min-width:0;padding:16px 20px}.wrap{margin:0}.button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 12px;border:1px solid #2271b1;border-radius:4px;background:#fff;color:#2271b1}.screen-reader-text{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.fixture-panel{min-height:180px}.fixture-motion{transition:opacity 1.5s ease}
 @media(max-width:720px){.fixture-shell{grid-template-columns:1fr}.fixture-menu{display:flex;overflow:auto;gap:2px}.fixture-menu a{white-space:nowrap}.fixture-main{padding:12px}}

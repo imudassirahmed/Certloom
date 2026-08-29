@@ -1,3 +1,20 @@
+= 1.6.94 =
+* WIZ-01/02: replace the legacy setup checklist with a seven-step adaptive Setup Wizard: Purpose, Organization, First Program, Design, Delivery & Verification, Backup & Finish, and Review configuration.
+* Reuse canonical ProgramProfile purpose/subcategory taxonomy and provide recommendation-only terminology, design, lifecycle, numbering, backup and integration guidance; presets never assert compliance or create Wizard-only runtime values.
+* Keep Wizard workflow state resumable/skippable/rerunnable but non-authoritative; Simple/Advanced reuses AdminUiMode and reviewed changes apply only through existing Settings, Numbering, Onboarding/Profile and Scheduled Backup authorities.
+* Keep Program and Template creation protected while normalized-domain admin authority is closed; the Wizard records a bounded plan and never bypasses Program/Template gates, Google OAuth, normalized credential writes, Data Tools or renderer acceptance.
+* Add explicit current-vs-proposed review, safe apply/rollback failure semantics, real Save & finish later behavior, purpose-adaptive browser interaction, mobile/RTL/reduced-motion/forced-colors acceptance, and a compact post-Wizard Dashboard readiness checklist.
+* Preserve the 1.6.93 six-section customer shell and all UX-C01..C10 behavior. UX-QA-01 follows WIZ-01/02; normalized-domain acceptance/cutover, PDF-04, PERF-01, compatibility, final security/recovery and commercial packaging remain later RC blockers.
+
+= 1.6.93 =
+* UX-CONS-01: consolidate Certloom into a maximum-six-section customer shell with contextual subtabs while preserving existing feature routes and capabilities.
+* Replace duplicate/technical recovery navigation with one Backup & Restore workspace, clear confirmation actions, automatic resumable restore continuation and a visible safe retry path if browser progress stalls.
+* Add protected First/Middle/Last name, Email, External ID and Grade exchange fields over the existing versioned current-registry field envelope; group CSV mapping by customer meaning and auto-map common headings without exposing unpersistable targets.
+* Add a real Certificate language selector that preserves valid custom locales and clearly separates certificate locale/direction from WordPress interface translations.
+* Add a shared top notification rail, whole-certificate contain-only Template Library previews, and a fixed Designer Selection tools dock so selection does not move the canvas workspace.
+* Simplify ordinary Integrations/Issuance/Email/Recovery wording and hide technical database/migration/rehearsal evidence in Advanced mode; preserve technical diagnostics rather than weakening them.
+* Keep normalized credential write/admin/Data Tools and renderer production authority closed. WIZ-01/02 follows this frozen UX consolidation, then UX-QA-01.
+
 = 1.6.92 =
 * INT-03: add LearnDash as a second first-party LMS adapter over the existing closed INT-01/LMSCTX-01 boundary.
 * Consume the official post-completion course event, verify provider completion where available, and normalize only bounded course ID, WordPress user ID and completion-time evidence.

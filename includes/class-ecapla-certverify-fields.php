@@ -375,6 +375,19 @@ class Ecapla_CertVerify_Fields {
 			self::field( 'scope', __( 'Scope', 'certloom' ), 'textarea', null, false, false, 4, false, false, 'sensitive', 'private' ),
 			self::field( 'issue_date', __( 'Issue date', 'certloom' ), 'date', 'issue_date', true, false, 5, false, false, 'public_safe', 'private' ),
 			self::field( 'expiry_date', __( 'Expiry date', 'certloom' ), 'date', 'expiry_date', true, false, 6, false, false, 'public_safe', 'private' ),
+			/*
+			 * UX-C01A: profile/exchange fields that the current registry can persist
+			 * losslessly inside its existing versioned custom_fields authority. These
+			 * keys are protected core fields rather than arbitrary custom fields so
+			 * import/export, backup/restore and legacy->domain migration can rely on
+			 * stable semantics without a legacy-table schema fork.
+			 */
+			self::field( 'first_name', __( 'First name', 'certloom' ), 'text', null, true, true, 90, false, false, 'personal', 'private' ),
+			self::field( 'middle_name', __( 'Middle name', 'certloom' ), 'text', null, true, true, 91, false, false, 'personal', 'private' ),
+			self::field( 'last_name', __( 'Last name', 'certloom' ), 'text', null, true, true, 92, false, false, 'personal', 'private' ),
+			self::field( 'email', __( 'Email', 'certloom' ), 'text', null, true, true, 93, false, false, 'personal', 'private' ),
+			self::field( 'external_id', __( 'External ID', 'certloom' ), 'text', null, true, true, 94, false, false, 'personal', 'private' ),
+			self::field( 'grade', __( 'Grade', 'certloom' ), 'text', null, true, true, 95, false, false, 'personal', 'private' ),
 			// Appended at high default orders so existing installations keep their established field order.
 			self::field( 'status_reason', __( 'Status reason', 'certloom' ), 'textarea', null, true, true, 100, false, false, 'sensitive', 'private' ),
 			self::field( 'internal_notes', __( 'Internal notes', 'certloom' ), 'textarea', null, true, true, 101, false, true, 'internal', 'private' ),

@@ -169,9 +169,10 @@ async def main():
         await ck((await root.evaluate("el=>getComputedStyle(el).direction"))=='rtl','rtlDirectionInherited')
         mobile=await browser.new_page(viewport={'width':390,'height':844}); await mobile.set_content(html,wait_until='load'); await mobile.wait_for_timeout(180)
         mt=mobile.locator('.certloom-template-designer-element-text').first; await mt.click(); await mobile.wait_for_timeout(50)
-        m=await mobile.evaluate("""() => { const controls=[...document.querySelectorAll('[data-certloom-designer-quick-text] button,[data-certloom-designer-quick-text] select,[data-certloom-designer-quick-text] input')].filter(x=>getComputedStyle(x).display!=='none'); return {overflow:document.documentElement.scrollWidth<=document.documentElement.clientWidth+1,min:Math.min(...controls.map(x=>x.getBoundingClientRect().height))}; }""")
+        m=await mobile.evaluate("""() => { const lane=document.querySelector('[data-certloom-designer-quick-text]'); const controls=[...lane.querySelectorAll('button,select,input')].filter(x=>getComputedStyle(x).display!=='none'); return {overflow:document.documentElement.scrollWidth<=document.documentElement.clientWidth+1,min:Math.min(...controls.map(x=>x.getBoundingClientRect().height)),laneScrollable:lane.scrollWidth>lane.clientWidth && getComputedStyle(lane).overflowX==='auto'}; }""")
         await ck(m['overflow'],'mobileNoOverflow')
         await ck(m['min']>=43.5,'mobileTextTargets44')
+        await ck(m['laneScrollable'],'mobileTextLaneScrollable')
         await mobile.close()
 
         reduced=await browser.new_page(viewport={'width':900,'height':700}); await reduced.emulate_media(reduced_motion='reduce'); await reduced.set_content(html,wait_until='load'); await reduced.wait_for_timeout(80)

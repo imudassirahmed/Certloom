@@ -192,6 +192,27 @@ class Ecapla_CertVerify_Validator {
 			return self::secondary_verification_hash( $value );
 		}
 
+		/* Protected profile fields have stable semantics even while stored in the
+		 * current registry's custom_fields envelope. Keep their validation as
+		 * strict as the normalized Recipient/Version columns they later promote to. */
+		if ( 'email' === $key ) {
+			$value = trim( (string) $value );
+			if ( '' === $value ) { return ''; }
+			$clean = sanitize_email( $value );
+			if ( '' === $clean || strtolower( $clean ) !== strtolower( $value ) ) {
+				return new WP_Error( 'ecapla_certverify_invalid_email', __( 'Email must contain a valid email address.', 'certloom' ) );
+			}
+			return self::validate_custom_length( $clean, 191, $field );
+		}
+		if ( in_array( $key, array( 'first_name', 'middle_name', 'last_name', 'external_id' ), true ) ) {
+			$value = sanitize_text_field( (string) $value );
+			return self::validate_custom_length( $value, 191, $field );
+		}
+		if ( 'grade' === $key ) {
+			$value = sanitize_text_field( (string) $value );
+			return self::validate_custom_length( $value, 100, $field );
+		}
+
 		if ( 'visibility' === $type ) {
 			$value = sanitize_key( (string) $value );
 			$allowed = class_exists( 'Ecapla_CertVerify_Public_Policy' ) ? array_keys( Ecapla_CertVerify_Public_Policy::visibility_options() ) : array( 'public', 'verification_summary', 'private' );

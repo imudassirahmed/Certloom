@@ -14,6 +14,48 @@ final class CredentialLocale {
 	const DIRECTION_LTR = 'ltr';
 	const DIRECTION_RTL = 'rtl';
 
+
+	/**
+	 * Curated administrator-facing locale choices for certificate content.
+	 *
+	 * This is intentionally a convenience catalog, not a validation allow-list.
+	 * normalize_locale() remains permissive for valid WordPress/BCP47-style
+	 * locale identifiers so existing/API-managed Program data is never lost.
+	 * These labels describe certificate locale/direction only; they do not claim
+	 * that a reviewed Certloom interface translation is installed.
+	 *
+	 * @param bool $include_site_default Whether to include the site-default sentinel.
+	 * @return array<string,string>
+	 */
+	public function selection_options( $include_site_default = true ) {
+		$options = array();
+		if ( $include_site_default ) { $options[ self::SITE_DEFAULT ] = __( 'Site default', 'certloom' ); }
+		return $options + array(
+			'en_US' => __( 'English (United States)', 'certloom' ),
+			'en_GB' => __( 'English (United Kingdom)', 'certloom' ),
+			'ar'    => __( 'العربية — Arabic', 'certloom' ),
+			'ur'    => __( 'اردو — Urdu', 'certloom' ),
+			'fa_IR' => __( 'فارسی — Persian', 'certloom' ),
+			'he_IL' => __( 'עברית — Hebrew', 'certloom' ),
+			'es_ES' => __( 'Español — Spanish', 'certloom' ),
+			'fr_FR' => __( 'Français — French', 'certloom' ),
+			'de_DE' => __( 'Deutsch — German', 'certloom' ),
+			'pt_BR' => __( 'Português (Brasil)', 'certloom' ),
+			'it_IT' => __( 'Italiano — Italian', 'certloom' ),
+			'nl_NL' => __( 'Nederlands — Dutch', 'certloom' ),
+			'tr_TR' => __( 'Türkçe — Turkish', 'certloom' ),
+			'ru_RU' => __( 'Русский — Russian', 'certloom' ),
+			'hi_IN' => __( 'हिन्दी — Hindi', 'certloom' ),
+			'bn_BD' => __( 'বাংলা — Bengali', 'certloom' ),
+			'id_ID' => __( 'Bahasa Indonesia — Indonesian', 'certloom' ),
+			'ms_MY' => __( 'Bahasa Melayu — Malay', 'certloom' ),
+			'zh_CN' => __( '简体中文 — Chinese (Simplified)', 'certloom' ),
+			'zh_TW' => __( '繁體中文 — Chinese (Traditional)', 'certloom' ),
+			'ja'    => __( '日本語 — Japanese', 'certloom' ),
+			'ko_KR' => __( '한국어 — Korean', 'certloom' ),
+		);
+	}
+
 	/** @return string|\WP_Error */
 	public function normalize_configured( $locale ) {
 		$locale = trim( (string) $locale );

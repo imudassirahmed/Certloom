@@ -132,6 +132,7 @@
 		var styleFields = root.querySelectorAll( '[data-certloom-designer-style-field]' );
 		var distributeButtons = root.querySelectorAll( '[data-certloom-designer-distribute]' );
 		var quickArrangeBar = root.querySelector( '[data-certloom-designer-quick-align]' );
+		var contextHint = root.querySelector( '[data-certloom-designer-context-hint]' );
 		var distributionGroup = root.querySelector( '[data-certloom-designer-distribute-group]' );
 		var selectionStatus = root.querySelector( '[data-certloom-designer-selection-status]' );
 		var spacingStatus = root.querySelector( '[data-certloom-designer-spacing-status]' );
@@ -379,6 +380,7 @@
 		function syncSelectionStatus() {
 			var list = selectedElements(); var count = list.length;
 			if ( quickArrangeBar ) { quickArrangeBar.hidden = 0 === count; }
+			if ( contextHint ) { contextHint.hidden = count > 0; }
 			if ( distributionGroup ) { distributionGroup.hidden = count < 3; }
 			if ( selectionStatus ) { selectionStatus.textContent = count > 1 ? count + ' ' + t( 'elementsSelected', 'elements selected' ) : ( 1 === count ? t( 'oneElementSelected', '1 element selected · Shift/Ctrl/Cmd-click to add more' ) : t( 'selectElementsHint', 'Shift/Ctrl/Cmd-click to select multiple' ) ); }
 			if ( spacingStatus ) {
