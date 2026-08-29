@@ -158,6 +158,8 @@ function ecapla_certverify_uninstall_site() {
 	delete_option( 'certloom_google_drive_last_result' );
 	delete_option( 'certloom_tutor_lms_last_result' );
 	delete_option( 'certloom_tutor_lms_mappings' );
+	delete_option( 'certloom_learndash_last_result' );
+	delete_option( 'certloom_learndash_mappings' );
 
 	/* DSN-02 personal Designer workspace state is non-artifact UI state and must not survive uninstall. */
 	$designer_state_prefix = 'certloom_template_designer_state_' . get_current_blog_id() . '_';

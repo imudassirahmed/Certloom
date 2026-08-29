@@ -25,7 +25,7 @@ msgid "Analytics"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:104
-#: admin/views/integrations.php:16
+#: admin/views/integrations.php:25
 msgid "Integrations"
 msgstr ""
 
@@ -72,7 +72,7 @@ msgid "Confirm that you understand the selected restore mode can replace or merg
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:116
-#: admin/class-ecapla-certverify-admin.php:1287
+#: admin/class-ecapla-certverify-admin.php:1295
 #: admin/class-ecapla-certverify-admin.php:92
 #: src/Infrastructure/Admin/DomainAdmin.php:232
 #: src/Infrastructure/Admin/DomainAdmin.php:237
@@ -82,7 +82,7 @@ msgid "Recipients"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:117
-#: admin/class-ecapla-certverify-admin.php:1305
+#: admin/class-ecapla-certverify-admin.php:1313
 #: admin/class-ecapla-certverify-admin.php:98
 #: admin/views/analytics.php:10
 #: admin/views/issuance-analytics.php:10
@@ -96,43 +96,52 @@ msgstr ""
 msgid "You must be signed in to change the Certloom workspace mode."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1272
-msgid "Integration framework ready"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1272
-msgid "Tutor LMS adapter detected"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1273
-msgid "INT-02 · Tutor LMS"
-msgstr ""
-
 #: admin/class-ecapla-certverify-admin.php:1274
-#: admin/views/integrations.php:45
+#: admin/class-ecapla-certverify-admin.php:1280
+#: admin/views/integrations.php:56
 #: src/Infrastructure/Integration/TutorLmsAdapter.php:21
 msgid "Tutor LMS"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1275
-msgid "LearnDash follows Tutor LMS; the approved navigation and plain-language consolidation remains after both LMS adapters."
+#: admin/class-ecapla-certverify-admin.php:1281
+#: admin/views/integrations.php:110
+#: src/Infrastructure/Integration/LearnDashAdapter.php:21
+msgid "LearnDash"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1288
-#: admin/class-ecapla-certverify-admin.php:1294
+#. translators: %s: detected LMS names.
+#: admin/class-ecapla-certverify-admin.php:1277
+msgid "Detected: %s"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1277
+msgid "Integration framework ready"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1278
+msgid "INT-02/03 · LMS adapters"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1283
+msgid "Tutor LMS and LearnDash share the same bounded recipient, mapping and idempotent issuance architecture. The approved navigation and plain-language consolidation follows both adapters."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1296
+#: admin/class-ecapla-certverify-admin.php:1302
 msgid "Phase 1 data model"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1289
+#: admin/class-ecapla-certverify-admin.php:1297
 msgid "First-class Recipient administration is implemented in the normalized domain and remains acceptance-gated until the real WordPress/MySQL migration and cutover proof passes."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1290
-#: admin/class-ecapla-certverify-admin.php:1296
+#: admin/class-ecapla-certverify-admin.php:1298
+#: admin/class-ecapla-certverify-admin.php:1304
 msgid "Implementation complete · production acceptance gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1293
+#: admin/class-ecapla-certverify-admin.php:1301
 #: admin/class-ecapla-certverify-admin.php:94
 #: admin/views/issuance-analytics.php:63
 #: src/Infrastructure/Admin/DomainAdmin.php:287
@@ -143,11 +152,11 @@ msgstr ""
 msgid "Programs"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1295
+#: admin/class-ecapla-certverify-admin.php:1303
 msgid "Standalone Program administration is implemented in the normalized domain and remains acceptance-gated. Certloom will not emulate Program relationships inside legacy custom fields."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1299
+#: admin/class-ecapla-certverify-admin.php:1307
 #: admin/class-ecapla-certverify-admin.php:75
 #: admin/views/issuance-analytics.php:63
 #: src/Infrastructure/Admin/TemplateAdmin.php:172
@@ -155,65 +164,65 @@ msgstr ""
 msgid "Templates"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1300
+#: admin/class-ecapla-certverify-admin.php:1308
 msgid "Pro commercial core · implementation gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1301
+#: admin/class-ecapla-certverify-admin.php:1309
 msgid "Versioned Templates, the visual Template Library, curated premium design concepts and Quick/Pro Designer are implemented over immutable Template revisions and the canonical Render Plan. I18N-02 locale/RTL and Program language-specific published-design resolution are implemented. Production PDF/image publication remains fail-closed until renderer release authority is accepted."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1302
+#: admin/class-ecapla-certverify-admin.php:1310
 msgid "Template Library + Designer implemented · production artifact authority gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1306
+#: admin/class-ecapla-certverify-admin.php:1314
 msgid "P0 issuance workflow · implementation gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1307
+#: admin/class-ecapla-certverify-admin.php:1315
 msgid "Manual and Bulk Issuance, Credential Management, Email Delivery, Recipient Portal, Public Sharing, Analytics and INT-01 are implemented. Program Profiles resolve Program and locale-specific published designs, while immutable Versions freeze exact Program, locale and Template provenance. Normalized public authority and production PDF/image exports remain acceptance-gated."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1308
+#: admin/class-ecapla-certverify-admin.php:1316
 msgid "Issuance workflow implemented · normalized/public artifact authority gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1313
+#: admin/class-ecapla-certverify-admin.php:1321
 msgid "That Certloom workspace is not available."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1328
+#: admin/class-ecapla-certverify-admin.php:1336
 msgid "That certificate does not exist."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1345
+#: admin/class-ecapla-certverify-admin.php:1353
 msgid "Those import results expired. Run the import again to generate a new report."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1354
+#: admin/class-ecapla-certverify-admin.php:1362
 msgid "That backup restore process expired. Upload the backup again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1363
-#: admin/class-ecapla-certverify-admin.php:1372
+#: admin/class-ecapla-certverify-admin.php:1371
+#: admin/class-ecapla-certverify-admin.php:1380
 msgid "That import session expired. Upload the CSV again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1387
+#: admin/class-ecapla-certverify-admin.php:1395
 #: includes/class-ecapla-certverify-backup.php:440
 msgid "That backup review session expired. Upload the backup again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1401
+#: admin/class-ecapla-certverify-admin.php:1409
 msgid "You do not have permission to view Certloom analytics."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1439
+#: admin/class-ecapla-certverify-admin.php:1447
 msgid "The review acknowledgement could not be saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1457
+#: admin/class-ecapla-certverify-admin.php:1465
 msgid "A complete Certloom restore is in progress. Certificate and configuration changes are temporarily paused; public verification remains available."
 msgstr ""
 
@@ -230,7 +239,7 @@ msgid "Workspace"
 msgstr ""
 
 #. translators: 1: number of legacy records, 2: review URL.
-#: admin/class-ecapla-certverify-admin.php:1477
+#: admin/class-ecapla-certverify-admin.php:1485
 msgid "%1$d legacy Expired certificate needs review. <a href=\"%2$s\">Review it now</a>. It will remain Expired until an administrator deliberately chooses a workflow status."
 msgid_plural "%1$d legacy Expired certificates need review. <a href=\"%2$s\">Review them now</a>. They will remain Expired until an administrator deliberately chooses a workflow status."
 msgstr[0] ""
@@ -245,28 +254,28 @@ msgstr ""
 msgid "Simple"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1490
+#: admin/class-ecapla-certverify-admin.php:1498
 msgid "Certloom 1.3.0 briefly contained an unsafe legacy-status migration. If that version ran on this site, compare certificate statuses with a pre-1.3.0 backup before launch. The current release does not guess or silently rewrite those records."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1493
+#: admin/class-ecapla-certverify-admin.php:1501
 msgid "I have reviewed this"
 msgstr ""
 
 #. translators: %s: Ecapla website link.
-#: admin/class-ecapla-certverify-admin.php:1505
+#: admin/class-ecapla-certverify-admin.php:1513
 msgid "Certloom is developed and maintained by %s."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1506
+#: admin/class-ecapla-certverify-admin.php:1514
 msgid "Ecapla"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1515
+#: admin/class-ecapla-certverify-admin.php:1523
 msgid "You do not have permission to manage certificates."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1521
+#: admin/class-ecapla-certverify-admin.php:1529
 msgid "You do not have permission to manage these settings."
 msgstr ""
 
@@ -416,7 +425,8 @@ msgid "Not set"
 msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:124
-#: admin/views/integrations.php:79
+#: admin/views/integrations.php:144
+#: admin/views/integrations.php:90
 #: includes/class-ecapla-certverify-recipient-portal.php:186
 #: includes/class-ecapla-certverify-recipient-portal.php:212
 #: src/Infrastructure/Admin/DomainAdmin.php:411
@@ -524,7 +534,8 @@ msgstr ""
 #: admin/views/edit-certificate.php:144
 #: admin/views/edit-certificate.php:78
 #: admin/views/import-upload.php:187
-#: admin/views/integrations.php:87
+#: admin/views/integrations.php:152
+#: admin/views/integrations.php:98
 #: admin/views/list-certificates.php:113
 #: admin/views/list-certificates.php:140
 #: admin/views/settings-manager.php:139
@@ -1190,7 +1201,8 @@ msgstr ""
 #: admin/views/edit-certificate.php:82
 #: admin/views/import-upload.php:112
 #: admin/views/import-upload.php:187
-#: admin/views/integrations.php:87
+#: admin/views/integrations.php:152
+#: admin/views/integrations.php:98
 #: src/Infrastructure/Admin/DomainAdmin.php:249
 #: src/Infrastructure/Admin/DomainAdmin.php:304
 #: src/Infrastructure/Admin/DomainAdmin.php:342
@@ -1381,7 +1393,8 @@ msgstr ""
 
 #: admin/views/edit-certificate.php:105
 #: admin/views/edit-certificate.php:77
-#: admin/views/integrations.php:87
+#: admin/views/integrations.php:152
+#: admin/views/integrations.php:98
 #: admin/views/issuance-analytics.php:69
 #: src/Application/Templates/TemplateAssignmentPolicy.php:66
 #: src/Infrastructure/Admin/DomainAdmin.php:1122
@@ -1631,7 +1644,8 @@ msgid "Current certificate holder"
 msgstr ""
 
 #: admin/views/fields-manager.php:100
-#: admin/views/integrations.php:89
+#: admin/views/integrations.php:100
+#: admin/views/integrations.php:154
 #: src/Infrastructure/Admin/DomainAdmin.php:1010
 #: src/Infrastructure/Admin/DomainAdmin.php:1014
 #: src/Infrastructure/Admin/DomainAdmin.php:1396
@@ -2556,205 +2570,254 @@ msgstr ""
 msgid "Save backup settings"
 msgstr ""
 
-#: admin/views/integrations.php:15
-msgid "Learning integrations"
-msgstr ""
-
-#: admin/views/integrations.php:17
-msgid "Connect supported learning systems to Certloom without creating a second credential database. Course events are normalized, linked to an explicit Certloom recipient, mapped to a Program and published Template, then sent through the same immutable issuance service as reviewed Certloom issuance."
-msgstr ""
-
-#: admin/views/integrations.php:25
-msgid "Course mapping removed."
-msgstr ""
-
-#: admin/views/integrations.php:25
-msgid "Course mapping saved."
-msgstr ""
-
-#: admin/views/integrations.php:33
-#: admin/views/settings-manager.php:144
-#: includes/class-ecapla-certverify-system-status.php:159
-#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
-msgid "Ready"
-msgstr ""
-
-#: admin/views/integrations.php:36
-msgid "Completion event"
-msgstr ""
-
-#: admin/views/integrations.php:36
-msgid "Tutor LMS course completion is translated into one bounded Certloom event. Learner names, email addresses and arbitrary Tutor metadata are not copied into integration provenance."
-msgstr ""
-
-#: admin/views/integrations.php:37
-#: src/Infrastructure/Admin/DomainAdmin.php:731
-msgid "Recipient identity"
-msgstr ""
-
-#: admin/views/integrations.php:37
-msgid "The WordPress learner must already be explicitly linked to one Certloom recipient. Certloom never guesses identity from name or email."
-msgstr ""
-
-#: admin/views/integrations.php:38
-msgid "Course mapping"
-msgstr ""
-
-#: admin/views/integrations.php:38
-msgid "Each enabled Tutor course maps to one Certloom Program and one published Template. Changing that server-owned mapping invalidates stale issuance review."
-msgstr ""
-
-#: admin/views/integrations.php:39
-msgid "Duplicate protection"
-msgstr ""
-
-#: admin/views/integrations.php:39
-msgid "The same Tutor course completion for the same WordPress learner reuses one deterministic source identity, so hook retries cannot create duplicate credentials."
-msgstr ""
-
-#: admin/views/integrations.php:45
-msgid "First-party LMS adapter"
-msgstr ""
-
-#: admin/views/integrations.php:47
-msgid "Detected"
-msgstr ""
-
-#: admin/views/integrations.php:49
-msgid "Not installed"
-msgstr ""
-
-#. translators: 1: Tutor LMS version, 2: active mapping count.
-#: admin/views/integrations.php:53
-msgid "Tutor LMS %1$s is available. Certloom currently has %2$d enabled course mapping(s)."
-msgstr ""
-
-#: admin/views/integrations.php:53
-msgid "detected"
-msgstr ""
-
-#: admin/views/integrations.php:55
-msgid "Automatic issuance remains safely locked"
-msgstr ""
-
-#: admin/views/integrations.php:55
-msgid "The Tutor LMS adapter and mapping workflow are implemented, but Certloom will not write normalized credentials until the existing credential write-authority acceptance gate is opened. Course completion hooks therefore fail closed instead of bypassing Certloom authority."
-msgstr ""
-
-#: admin/views/integrations.php:57
-msgid "Automatic issuance is ready"
-msgstr ""
-
-#: admin/views/integrations.php:57
-msgid "Enabled course mappings can issue through Certloom’s existing immutable integration issuance path when Tutor LMS records course completion."
-msgstr ""
-
-#: admin/views/integrations.php:60
-msgid "Install and activate Tutor LMS to configure course mappings. Certloom does not require Tutor LMS for any standalone credential workflow."
-msgstr ""
-
-#: admin/views/integrations.php:66
-msgid "Course mappings"
-msgstr ""
-
-#: admin/views/integrations.php:66
-msgid "Tutor course → Certloom credential"
-msgstr ""
-
-#: admin/views/integrations.php:70
-msgid "Mapping configuration is available with the Certloom Program/Template preview domain. The adapter remains installed and fail-closed while that preview/authority boundary is unavailable."
-msgstr ""
-
-#: admin/views/integrations.php:76
-msgid "Choose a course"
-msgstr ""
-
-#: admin/views/integrations.php:76
-#: admin/views/integrations.php:87
-msgid "Tutor course"
-msgstr ""
-
-#: admin/views/integrations.php:77
-msgid "Certloom Program"
-msgstr ""
-
-#: admin/views/integrations.php:77
-msgid "Choose a Program"
-msgstr ""
-
-#: admin/views/integrations.php:78
-#: src/Infrastructure/Admin/TemplateAdmin.php:760
-msgid "Choose a Template"
-msgstr ""
-
-#: admin/views/integrations.php:78
-#: src/Infrastructure/Admin/DomainAdmin.php:1008
-#: src/Infrastructure/Admin/DomainAdmin.php:1014
-msgid "Published Template"
-msgstr ""
-
-#: admin/views/integrations.php:79
-msgid "Credential expiry"
-msgstr ""
-
-#: admin/views/integrations.php:79
-msgid "Specific date"
-msgstr ""
-
-#: admin/views/integrations.php:79
-#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:158
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:159
-msgid "Specific expiry date"
-msgstr ""
-
-#: admin/views/integrations.php:79
-msgid "Use Program policy"
-msgstr ""
-
-#: admin/views/integrations.php:81
-msgid "Enable automatic issuance for this course"
-msgstr ""
-
-#: admin/views/integrations.php:82
-msgid "Save course mapping"
-msgstr ""
-
-#: admin/views/integrations.php:87
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:202
-#: src/Infrastructure/Admin/TemplateAdmin.php:674
-msgid "Template"
-msgstr ""
-
-#: admin/views/integrations.php:89
+#: admin/views/integrations.php:100
+#: admin/views/integrations.php:154
 msgid "Course #"
 msgstr ""
 
-#: admin/views/integrations.php:89
+#: admin/views/integrations.php:100
+#: admin/views/integrations.php:154
 #: includes/class-ecapla-certverify-system-status.php:114
 #: includes/class-ecapla-certverify-system-status.php:137
 #: includes/class-ecapla-certverify-system-status.php:66
 msgid "Enabled"
 msgstr ""
 
-#: admin/views/integrations.php:89
+#: admin/views/integrations.php:100
+#: admin/views/integrations.php:154
 msgid "Paused"
 msgstr ""
 
-#: admin/views/integrations.php:97
-msgid "LearnDash follows Tutor LMS"
+#: admin/views/integrations.php:110
+#: admin/views/integrations.php:56
+msgid "First-party LMS adapter"
 msgstr ""
 
-#: admin/views/integrations.php:97
-msgid "Next adapter"
+#: admin/views/integrations.php:112
+#: admin/views/integrations.php:58
+msgid "Detected"
 msgstr ""
 
+#: admin/views/integrations.php:114
+#: admin/views/integrations.php:60
+msgid "Not installed"
+msgstr ""
+
+#. translators: 1: LearnDash version, 2: active mapping count.
+#: admin/views/integrations.php:118
+msgid "LearnDash %1$s is available. Certloom currently has %2$d enabled course mapping(s)."
+msgstr ""
+
+#: admin/views/integrations.php:118
+#: admin/views/integrations.php:64
+msgid "detected"
+msgstr ""
+
+#: admin/views/integrations.php:120
+#: admin/views/integrations.php:66
+msgid "Automatic issuance remains safely locked"
+msgstr ""
+
+#: admin/views/integrations.php:120
+msgid "The LearnDash adapter and mapping workflow are implemented, but Certloom will not write normalized credentials until the existing credential write-authority acceptance gate is opened. Course completion hooks therefore fail closed instead of bypassing Certloom authority."
+msgstr ""
+
+#: admin/views/integrations.php:122
+#: admin/views/integrations.php:68
+msgid "Automatic issuance is ready"
+msgstr ""
+
+#: admin/views/integrations.php:122
+msgid "Enabled course mappings can issue through Certloom’s existing immutable integration issuance path when LearnDash records course completion."
+msgstr ""
+
+#: admin/views/integrations.php:125
+msgid "Install and activate LearnDash to configure course mappings. Certloom does not require LearnDash for any standalone credential workflow."
+msgstr ""
+
+#: admin/views/integrations.php:131
+#: admin/views/integrations.php:77
+msgid "Course mappings"
+msgstr ""
+
+#: admin/views/integrations.php:131
+msgid "LearnDash course → Certloom credential"
+msgstr ""
+
+#: admin/views/integrations.php:135
+#: admin/views/integrations.php:81
+msgid "Mapping configuration is available with the Certloom Program/Template preview domain. The adapter remains installed and fail-closed while that preview/authority boundary is unavailable."
+msgstr ""
+
+#: admin/views/integrations.php:141
+#: admin/views/integrations.php:87
+msgid "Choose a course"
+msgstr ""
+
+#: admin/views/integrations.php:141
+#: admin/views/integrations.php:152
+msgid "LearnDash course"
+msgstr ""
+
+#: admin/views/integrations.php:142
+#: admin/views/integrations.php:88
+msgid "Certloom Program"
+msgstr ""
+
+#: admin/views/integrations.php:142
+#: admin/views/integrations.php:88
+msgid "Choose a Program"
+msgstr ""
+
+#: admin/views/integrations.php:143
+#: admin/views/integrations.php:89
+#: src/Infrastructure/Admin/TemplateAdmin.php:760
+msgid "Choose a Template"
+msgstr ""
+
+#: admin/views/integrations.php:143
+#: admin/views/integrations.php:89
+#: src/Infrastructure/Admin/DomainAdmin.php:1008
+#: src/Infrastructure/Admin/DomainAdmin.php:1014
+msgid "Published Template"
+msgstr ""
+
+#: admin/views/integrations.php:144
+#: admin/views/integrations.php:90
+msgid "Credential expiry"
+msgstr ""
+
+#: admin/views/integrations.php:144
+#: admin/views/integrations.php:90
+msgid "Specific date"
+msgstr ""
+
+#: admin/views/integrations.php:144
+#: admin/views/integrations.php:90
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:158
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:159
+msgid "Specific expiry date"
+msgstr ""
+
+#: admin/views/integrations.php:144
+#: admin/views/integrations.php:90
+msgid "Use Program policy"
+msgstr ""
+
+#: admin/views/integrations.php:146
+#: admin/views/integrations.php:92
+msgid "Enable automatic issuance for this course"
+msgstr ""
+
+#: admin/views/integrations.php:147
+#: admin/views/integrations.php:93
+msgid "Save course mapping"
+msgstr ""
+
+#: admin/views/integrations.php:152
 #: admin/views/integrations.php:98
-msgid "LearnDash will reuse the same recipient, mapping, eligibility, provenance and idempotent issuance contract rather than introducing a separate credential-writing path."
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:202
+#: src/Infrastructure/Admin/TemplateAdmin.php:674
+msgid "Template"
 msgstr ""
 
-#: admin/views/integrations.php:99
+#: admin/views/integrations.php:162
+msgid "LMS foundation"
+msgstr ""
+
+#: admin/views/integrations.php:162
+msgid "Tutor LMS and LearnDash share one issuance architecture"
+msgstr ""
+
+#: admin/views/integrations.php:163
+msgid "Both first-party adapters reuse the same explicit recipient linking, server-owned mapping, eligibility, provenance and idempotent issuance contract rather than introducing separate credential-writing paths."
+msgstr ""
+
+#: admin/views/integrations.php:164
 msgid "Approved execution sequence"
+msgstr ""
+
+#: admin/views/integrations.php:24
+msgid "Learning integrations"
+msgstr ""
+
+#: admin/views/integrations.php:26
+msgid "Connect supported learning systems to Certloom without creating a second credential database. Course events are normalized, linked to an explicit Certloom recipient, mapped to a Program and published Template, then sent through the same immutable issuance service as reviewed Certloom issuance."
+msgstr ""
+
+#: admin/views/integrations.php:35
+msgid "Course mapping removed."
+msgstr ""
+
+#: admin/views/integrations.php:36
+msgid "Course mapping saved."
+msgstr ""
+
+#: admin/views/integrations.php:44
+#: admin/views/settings-manager.php:144
+#: includes/class-ecapla-certverify-system-status.php:159
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
+msgid "Ready"
+msgstr ""
+
+#: admin/views/integrations.php:47
+msgid "Completion event"
+msgstr ""
+
+#: admin/views/integrations.php:47
+msgid "Tutor LMS and LearnDash course completion events are translated into bounded Certloom events. Learner names, email addresses and arbitrary LMS metadata are not copied into integration provenance."
+msgstr ""
+
+#: admin/views/integrations.php:48
+#: src/Infrastructure/Admin/DomainAdmin.php:731
+msgid "Recipient identity"
+msgstr ""
+
+#: admin/views/integrations.php:48
+msgid "The WordPress learner must already be explicitly linked to one Certloom recipient. Certloom never guesses identity from name or email."
+msgstr ""
+
+#: admin/views/integrations.php:49
+msgid "Course mapping"
+msgstr ""
+
+#: admin/views/integrations.php:49
+msgid "Each enabled LMS course maps to one Certloom Program and one published Template. Changing that server-owned mapping invalidates stale issuance review."
+msgstr ""
+
+#: admin/views/integrations.php:50
+msgid "Duplicate protection"
+msgstr ""
+
+#: admin/views/integrations.php:50
+msgid "The same LMS course completion for the same WordPress learner reuses one deterministic source identity within that adapter, so hook retries cannot create duplicate credentials."
+msgstr ""
+
+#. translators: 1: Tutor LMS version, 2: active mapping count.
+#: admin/views/integrations.php:64
+msgid "Tutor LMS %1$s is available. Certloom currently has %2$d enabled course mapping(s)."
+msgstr ""
+
+#: admin/views/integrations.php:66
+msgid "The Tutor LMS adapter and mapping workflow are implemented, but Certloom will not write normalized credentials until the existing credential write-authority acceptance gate is opened. Course completion hooks therefore fail closed instead of bypassing Certloom authority."
+msgstr ""
+
+#: admin/views/integrations.php:68
+msgid "Enabled course mappings can issue through Certloom’s existing immutable integration issuance path when Tutor LMS records course completion."
+msgstr ""
+
+#: admin/views/integrations.php:71
+msgid "Install and activate Tutor LMS to configure course mappings. Certloom does not require Tutor LMS for any standalone credential workflow."
+msgstr ""
+
+#: admin/views/integrations.php:77
+msgid "Tutor course → Certloom credential"
+msgstr ""
+
+#: admin/views/integrations.php:87
+#: admin/views/integrations.php:98
+msgid "Tutor course"
 msgstr ""
 
 #: admin/views/issuance-analytics.php:14
@@ -4516,31 +4579,31 @@ msgstr ""
 msgid "Certloom could not finish provisioning on site IDs: %s. Visit each affected site administration area to retry database and access setup."
 msgstr ""
 
-#: certloom.php:427
+#: certloom.php:428
 msgid "Certloom could not persist its required administrator access. The migration will be retried automatically."
 msgstr ""
 
-#: certloom.php:444
+#: certloom.php:445
 msgid "Certloom could not persist the multisite provisioning status."
 msgstr ""
 
-#: certloom.php:560
+#: certloom.php:562
 msgid "Certloom publishes only the certificate fields that a site administrator marks as visible. Those fields may include names or other personal information, so administrators should publish only information they are authorised to disclose."
 msgstr ""
 
-#: certloom.php:561
+#: certloom.php:563
 msgid "Depending on the Certloom features enabled by the site, local WordPress storage may also contain recipient identity/contact data and administrator-managed issuer or signer contact details. These records remain on the site unless the administrator exports, changes, or removes them according to the organization’s retention obligations."
 msgstr ""
 
-#: certloom.php:562
+#: certloom.php:564
 msgid "Certificate verification is performed on this WordPress site. Certloom does not send certificate records to Ecapla or another external service. Verification requests may still appear in normal web-server, security, analytics, browser-history, and cache logs. Direct verification links can include the certificate number in the URL."
 msgstr ""
 
-#: certloom.php:563
+#: certloom.php:565
 msgid "When Certloom Verification Analytics is available, Certloom stores daily aggregate verification counters locally for up to 730 days. These aggregates classify outcomes and sources such as manual, QR, or API verification; they do not store raw IP addresses, User-Agents, secondary proof codes, or raw failed certificate-number input. Verification analytics are operational data and are removed when Certloom is uninstalled."
 msgstr ""
 
-#: certloom.php:564
+#: certloom.php:566
 msgid "Site administrators determine how long certificate records are retained and can configure whether Certloom data is removed when the plugin is uninstalled."
 msgstr ""
 
@@ -11675,6 +11738,33 @@ msgstr ""
 msgid "You do not have permission to deliver Certloom credential email."
 msgstr ""
 
+#: src/Infrastructure/Admin/LearnDashIntegrationAdmin.php:51
+msgid "LearnDash mapping setup is unavailable until the Certloom Program/Template preview domain is enabled."
+msgstr ""
+
+#: src/Infrastructure/Admin/LearnDashIntegrationAdmin.php:57
+msgid "Choose a LearnDash course that still exists."
+msgstr ""
+
+#: src/Infrastructure/Admin/LearnDashIntegrationAdmin.php:59
+#: src/Infrastructure/Admin/TutorLmsIntegrationAdmin.php:59
+msgid "Choose an active Certloom Program."
+msgstr ""
+
+#: src/Infrastructure/Admin/LearnDashIntegrationAdmin.php:61
+#: src/Infrastructure/Admin/TutorLmsIntegrationAdmin.php:61
+msgid "Choose a published Certloom Template."
+msgstr ""
+
+#: src/Infrastructure/Admin/LearnDashIntegrationAdmin.php:86
+msgid "Certloom could not load LearnDash courses."
+msgstr ""
+
+#: src/Infrastructure/Admin/LearnDashIntegrationAdmin.php:93
+#: src/Infrastructure/Admin/TutorLmsIntegrationAdmin.php:93
+msgid "You do not have permission to manage Certloom integrations."
+msgstr ""
+
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:114
 msgid "Compose credential"
 msgstr ""
@@ -13646,20 +13736,8 @@ msgstr ""
 msgid "Choose a Tutor LMS course that still exists."
 msgstr ""
 
-#: src/Infrastructure/Admin/TutorLmsIntegrationAdmin.php:59
-msgid "Choose an active Certloom Program."
-msgstr ""
-
-#: src/Infrastructure/Admin/TutorLmsIntegrationAdmin.php:61
-msgid "Choose a published Certloom Template."
-msgstr ""
-
 #: src/Infrastructure/Admin/TutorLmsIntegrationAdmin.php:86
 msgid "Certloom could not load Tutor LMS courses."
-msgstr ""
-
-#: src/Infrastructure/Admin/TutorLmsIntegrationAdmin.php:93
-msgid "You do not have permission to manage Certloom integrations."
 msgstr ""
 
 #: src/Infrastructure/Analytics/IssuanceAnalyticsRepository.php:121
@@ -15746,6 +15824,48 @@ msgstr ""
 
 #: src/Infrastructure/Import/DomainImportWriter.php:67
 msgid "The credential selected for correction has no readable current version."
+msgstr ""
+
+#: src/Infrastructure/Integration/LearnDashAdapter.php:41
+msgid "LearnDash did not provide a valid course for this completion."
+msgstr ""
+
+#: src/Infrastructure/Integration/LearnDashAdapter.php:42
+msgid "LearnDash did not provide a valid WordPress learner for this completion."
+msgstr ""
+
+#: src/Infrastructure/Integration/LearnDashAdapter.php:48
+#: src/Infrastructure/Integration/LearnDashMappingStore.php:91
+msgid "The LearnDash certificate threshold must be between 0 and 100."
+msgstr ""
+
+#: src/Infrastructure/Integration/LearnDashAdapter.php:92
+#: src/Infrastructure/Integration/LearnDashAdapter.php:96
+msgid "LearnDash completion time could not be normalized safely."
+msgstr ""
+
+#: src/Infrastructure/Integration/LearnDashMappingStore.php:100
+msgid "Choose a valid explicit expiry date for the LearnDash mapping."
+msgstr ""
+
+#: src/Infrastructure/Integration/LearnDashMappingStore.php:120
+msgid "Certloom could not save the LearnDash mapping safely."
+msgstr ""
+
+#: src/Infrastructure/Integration/LearnDashMappingStore.php:65
+msgid "LearnDash mappings reached the Certloom safety limit. Remove an unused mapping before adding another."
+msgstr ""
+
+#: src/Infrastructure/Integration/LearnDashMappingStore.php:75
+msgid "Choose a valid LearnDash course mapping."
+msgstr ""
+
+#: src/Infrastructure/Integration/LearnDashMappingStore.php:87
+msgid "LearnDash mappings require a course, Certloom Program, and published Template."
+msgstr ""
+
+#: src/Infrastructure/Integration/LearnDashMappingStore.php:95
+msgid "Choose a valid expiry rule for the LearnDash mapping."
 msgstr ""
 
 #: src/Infrastructure/Integration/LinkedRecipientResolver.php:15

@@ -8,7 +8,7 @@ namespace Certloom\Application\Contract;
  * normalized event payload. They never issue credentials directly.
  */
 interface IntegrationAdapterInterface {
-	/** Stable machine key owned by Certloom, for example tutor_lms. @return string */
+	/** Stable machine key owned by Certloom, for example tutor_lms or learndash. @return string */
 	public function key();
 
 	/** Human label used only in administrator diagnostics. @return string */

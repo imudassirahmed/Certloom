@@ -5,8 +5,9 @@ function __( $v, $d = null ){ return $v; }
 function esc_html__( $v, $d = null ){ return $v; }
 function esc_html_e( $v, $d = null ){ echo htmlspecialchars( (string) $v, ENT_QUOTES, 'UTF-8' ); }
 function esc_html( $v ){ return htmlspecialchars( (string) $v, ENT_QUOTES, 'UTF-8' ); }
-$framework=array('status'=>'Integration framework ready','contract'=>'INT-02 · Tutor LMS','adapters'=>array(array('key'=>'tutor_lms','label'=>'Tutor LMS','available'=>false)),'next'=>'LearnDash follows Tutor LMS; the approved navigation and plain-language consolidation remains after both LMS adapters.');
+$framework=array('status'=>'Integration framework ready','contract'=>'INT-02/03 · LMS adapters','adapters'=>array(array('key'=>'tutor_lms','label'=>'Tutor LMS','available'=>false),array('key'=>'learndash','label'=>'LearnDash','available'=>false)),'next'=>'Tutor LMS and LearnDash share the same bounded architecture; the approved navigation and plain-language consolidation follows both adapters.');
 $tutor=array('status'=>array('available'=>false,'version'=>'','active_mapping_count'=>0,'authority_ready'=>false),'configuration_ready'=>false,'error'=>null,'courses'=>array(),'programs'=>array(),'templates'=>array(),'mappings'=>array());
+$learndash=array('status'=>array('available'=>false,'version'=>'','active_mapping_count'=>0,'authority_ready'=>false),'configuration_ready'=>false,'error'=>null,'courses'=>array(),'programs'=>array(),'templates'=>array(),'mappings'=>array());
 $css=file_get_contents(dirname(__DIR__,2).'/admin/assets/admin.css');
 ob_start(); include dirname(__DIR__,2).'/admin/views/integrations.php'; $view=ob_get_clean();
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>

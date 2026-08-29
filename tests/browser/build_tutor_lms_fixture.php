@@ -15,10 +15,11 @@ function is_wp_error( $v ){ return false; }
 
 $framework = array(
     'status' => 'Tutor LMS adapter detected',
-    'contract' => 'INT-02 · Tutor LMS',
+    'contract' => 'INT-02/03 · LMS adapters',
     'adapters' => array( array( 'key' => 'tutor_lms', 'label' => 'Tutor LMS', 'available' => true ) ),
-    'next' => 'LearnDash follows Tutor LMS; the approved navigation and plain-language consolidation remains after both LMS adapters.',
+    'next' => 'Tutor LMS and LearnDash share the same bounded architecture; the approved navigation and plain-language consolidation follows both adapters.',
 );
+$learndash = array('status'=>array('available'=>false,'version'=>'','active_mapping_count'=>0,'authority_ready'=>false),'configuration_ready'=>false,'error'=>null,'courses'=>array(),'programs'=>array(),'templates'=>array(),'mappings'=>array());
 $tutor = array(
     'status' => array(
         'available' => true,

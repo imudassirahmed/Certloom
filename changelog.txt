@@ -1,3 +1,11 @@
+= 1.6.92 =
+* INT-03: add LearnDash as a second first-party LMS adapter over the existing closed INT-01/LMSCTX-01 boundary.
+* Consume the official post-completion course event, verify provider completion where available, and normalize only bounded course ID, WordPress user ID and completion-time evidence.
+* Add bounded LearnDash course → Certloom Program/published Template/expiry mappings behind the existing admin-preview gate.
+* Reuse explicit Recipient.wp_user_id resolution plus IntegrationIssuanceCoordinator/ManualIssuanceService; no email/name inference, raw progress retention, legacy write bypass or second credential database.
+* Extend the Integrations workspace for Tutor LMS + LearnDash while preserving standalone fallback, mobile, RTL and forced-colors behavior.
+* Keep normalized credential write/admin/Data Tools and renderer authority closed. Approved UX-C01..C10 consolidation follows both LMS adapters.
+
 = 1.6.91 =
 * INT-02: add the first concrete LMS adapter for Tutor LMS over the frozen provider-neutral INT-01/LMSCTX-01 boundary.
 * Normalize first-party Tutor course completion using bounded course ID, WordPress user ID and completion-time evidence; do not retain learner names/email or arbitrary Tutor payloads.

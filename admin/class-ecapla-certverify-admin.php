@@ -1268,11 +1268,19 @@ class Ecapla_CertVerify_Admin {
 		$this->require_manage_permission();
 		$tutor_admin = new \Certloom\Infrastructure\Admin\TutorLmsIntegrationAdmin();
 		$tutor = $tutor_admin->screen_data();
+		$learndash_admin = new \Certloom\Infrastructure\Admin\LearnDashIntegrationAdmin();
+		$learndash = $learndash_admin->screen_data();
+		$detected = array();
+		if ( ! empty( $tutor['status']['available'] ) ) { $detected[] = __( 'Tutor LMS', 'certloom' ); }
+		if ( ! empty( $learndash['status']['available'] ) ) { $detected[] = __( 'LearnDash', 'certloom' ); }
 		$framework = array(
-			'status' => ! empty( $tutor['status']['available'] ) ? __( 'Tutor LMS adapter detected', 'certloom' ) : __( 'Integration framework ready', 'certloom' ),
-			'contract' => __( 'INT-02 · Tutor LMS', 'certloom' ),
-			'adapters' => array( array( 'key' => 'tutor_lms', 'label' => __( 'Tutor LMS', 'certloom' ), 'available' => ! empty( $tutor['status']['available'] ) ) ),
-			'next' => __( 'LearnDash follows Tutor LMS; the approved navigation and plain-language consolidation remains after both LMS adapters.', 'certloom' ),
+			'status' => $detected ? sprintf( /* translators: %s: detected LMS names. */ __( 'Detected: %s', 'certloom' ), implode( ', ', $detected ) ) : __( 'Integration framework ready', 'certloom' ),
+			'contract' => __( 'INT-02/03 · LMS adapters', 'certloom' ),
+			'adapters' => array(
+				array( 'key' => 'tutor_lms', 'label' => __( 'Tutor LMS', 'certloom' ), 'available' => ! empty( $tutor['status']['available'] ) ),
+				array( 'key' => 'learndash', 'label' => __( 'LearnDash', 'certloom' ), 'available' => ! empty( $learndash['status']['available'] ) ),
+			),
+			'next' => __( 'Tutor LMS and LearnDash share the same bounded recipient, mapping and idempotent issuance architecture. The approved navigation and plain-language consolidation follows both adapters.', 'certloom' ),
 		);
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/integrations.php';
 	}

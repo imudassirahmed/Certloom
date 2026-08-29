@@ -4,13 +4,15 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.91
+Stable tag: 1.6.92
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
 
 == Description ==
+
+> Release note for 1.6.92: INT-03 adds LearnDash as Certloom's second first-party LMS adapter over the same frozen INT-01 architecture used by Tutor LMS. Certloom consumes LearnDash's post-completion course event, verifies provider completion when the LearnDash completion API is available, reads the persisted course-completion timestamp, keeps only bounded course/WordPress-user evidence, requires explicit Recipient linking, and uses server-owned course → Program/published Template mappings. No learner email/name, arbitrary progress payload or LearnDash-specific credential database is retained. Automatic issuance remains fail-closed until normalized credential-write authority is legitimately opened. With Tutor LMS + LearnDash capability breadth complete, the approved ten-point UX/navigation/data-recovery consolidation is next.
 
 > Release note for 1.6.91: INT-02 adds Certloom's first concrete LMS adapter for Tutor LMS over the frozen INT-01 integration architecture. Tutor course completion is normalized from the first-party completion hook into bounded course/WordPress-user evidence, learners resolve only through explicit Recipient links, Tutor course mappings target a Certloom Program and published Template, and hook retries use deterministic idempotent issuance. Learner names/email and arbitrary Tutor payloads are not retained. Automatic issuance remains fail-closed until the existing normalized credential-write authority gate is opened; mapping setup likewise respects the existing Program/Template admin-preview gate. LearnDash follows before the approved UX/navigation consolidation.
 
