@@ -16,7 +16,7 @@ final class LearnDashBridge {
 	public static function register() { add_action( self::HOOK, array( __CLASS__, 'course_completed' ), 20, 1 ); }
 
 	/** @return bool */
-	public static function authority_ready() { return defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) && CERTLOOM_DOMAIN_WRITE_PATHS_READY; }
+	public static function authority_ready() { return \Certloom\Infrastructure\Migration\DomainFeatureGate::write_paths_ready(); }
 
 	/** @return array<string,mixed> */
 	public static function status() {

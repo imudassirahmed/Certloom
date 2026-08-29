@@ -77,7 +77,7 @@ final class Plugin {
 			self::$job_runtime = new JobRuntime();
 			self::$job_runtime->register();
 		}
-		if ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW && is_admin() ) {
+		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() && is_admin() ) {
 			( new \Certloom\Infrastructure\Admin\DomainAdmin() )->register();
 			( new \Certloom\Infrastructure\Admin\DomainStructureAdmin() )->register();
 			( new \Certloom\Infrastructure\Admin\TemplateAdmin() )->register();
@@ -102,9 +102,7 @@ final class Plugin {
 	 * @return bool
 	 */
 	private static function domain_storage_required() {
-		if ( ( defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) && CERTLOOM_DOMAIN_WRITE_PATHS_READY )
-			|| ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW )
-			|| ( defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) && CERTLOOM_DOMAIN_DATA_TOOLS_READY ) ) {
+		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::any_ready() ) {
 			return true;
 		}
 

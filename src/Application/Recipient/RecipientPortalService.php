@@ -66,7 +66,7 @@ final class RecipientPortalService {
 	 */
 	public function runtime_available() {
 		return $this->verification_gate->is_ready()
-			|| ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && true === CERTLOOM_DOMAIN_ADMIN_PREVIEW );
+			|| \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready();
 	}
 
 	/** @return array<string,mixed>|\WP_Error */

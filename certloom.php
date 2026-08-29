@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Certloom – Certificate Verification
  * Description: Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
- * Version: 1.6.95
+ * Version: 1.6.96
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.95' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.96' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
@@ -27,8 +27,14 @@ define( 'ECAPLA_CERTVERIFY_MINIMUM_ELEMENTOR_VERSION', '3.10.0' );
 
 /*
  * Canonical Certloom constants. Legacy ECAPLA_CERTVERIFY_* constants remain
- * available while the proven 1.5 registry is migrated through explicit later
- * milestones inside the same plugin upgrade line.
+ * available while the proven current registry is migrated through explicit
+ * cutover milestones inside the same plugin upgrade line.
+ *
+ * The three historical CERTLOOM_DOMAIN_* readiness constants below are
+ * compatibility sentinels only and intentionally remain false. They are not
+ * production authority: effective normalized-domain release authority is
+ * derived exclusively from the immutable, exact-payload-bound DBAUTH manifest
+ * through DomainFeatureGate. Predefining these constants cannot enable it.
  */
 define( 'CERTLOOM_VERSION', ECAPLA_CERTVERIFY_VERSION );
 define( 'CERTLOOM_PATH', ECAPLA_CERTVERIFY_PATH );

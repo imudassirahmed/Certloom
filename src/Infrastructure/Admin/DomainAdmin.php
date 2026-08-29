@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * 1.5.3 preview admin for the additive Recipient / Program / Credential domain.
  *
- * This entire admin is hidden behind CERTLOOM_DOMAIN_ADMIN_PREVIEW until the
+ * This entire admin is hidden behind manifest-backed normalized-domain admin authority until the
  * real WordPress/MySQL gate passes. The proven 1.5 registry remains the source
  * of truth, so developing these screens cannot strand or rewrite live data.
  */

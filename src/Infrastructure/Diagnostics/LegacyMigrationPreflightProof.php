@@ -254,7 +254,7 @@ final class LegacyMigrationPreflightProof {
 		if ( ! DomainAcceptanceProof::is_current_passed() ) {
 			return new \WP_Error( 'certloom_legacy_preflight_domain_proof_required', __( 'Run a fresh passing gated Credential Series acceptance proof before scanning the populated legacy registry.', 'certloom' ) );
 		}
-		if ( ( defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) && CERTLOOM_DOMAIN_WRITE_PATHS_READY ) || ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) || ( defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) && CERTLOOM_DOMAIN_DATA_TOOLS_READY ) ) {
+		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::any_ready() ) {
 			return new \WP_Error( 'certloom_legacy_preflight_feature_gate_active', __( 'The populated migration preflight is only available before next-domain development features are enabled.', 'certloom' ) );
 		}
 		$migration = new LegacyMigrationState();

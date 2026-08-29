@@ -32,7 +32,7 @@ final class TutorLmsIntegrationAdmin {
 		if ( empty( $status['available'] ) ) { return $data; }
 		$data['courses'] = $this->courses();
 		if ( is_wp_error( $data['courses'] ) ) { $data['error'] = $data['courses']; $data['courses'] = array(); return $data; }
-		if ( ! ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) ) { return $data; }
+		if ( ! \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) { return $data; }
 		$programs = ( new ProgramRepository() )->list_page( '', 1, 100, 'active' );
 		$templates = ( new TemplateRepository() )->list_published_candidates( 100 );
 		if ( is_wp_error( $programs ) ) { $data['error'] = $programs; return $data; }
@@ -47,7 +47,7 @@ final class TutorLmsIntegrationAdmin {
 	public function save_mapping() {
 		$this->require_access();
 		check_admin_referer( 'certloom_tutor_lms_mapping_save' );
-		if ( ! ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) ) {
+		if ( ! \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
 			$this->redirect( new \WP_Error( 'certloom_tutor_mapping_preview_closed', __( 'Tutor LMS mapping setup is unavailable until the Certloom Program/Template preview domain is enabled.', 'certloom' ) ) );
 		}
 		$course_id = isset( $_POST['course_id'] ) ? absint( $_POST['course_id'] ) : 0;

@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Protected 1.5.4 preview UI for the new-domain import/backup/restore pipeline.
  *
- * The screen is deliberately unavailable unless CERTLOOM_DOMAIN_ADMIN_PREVIEW
+ * The screen is deliberately unavailable unless manifest-backed normalized-domain admin authority
  * is enabled. It owns authorization/nonces/upload intent only; all credential
  * work is delegated to application coordinators and durable jobs.
  */

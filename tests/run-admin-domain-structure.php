@@ -155,7 +155,7 @@ foreach ( array( 'certloom_signer_assignments', 'certloom_batch_recipients', 'ce
 	p1e_has( $src['uninstall'], $table, 'Explicit data deletion must own/drop ' . $table . '.' );
 }
 
-p1e_has( $src['plugin'], 'CERTLOOM_DOMAIN_ADMIN_PREVIEW', 'New normalized admin surfaces must remain behind the acceptance gate.' );
+p1e_has( $src['plugin'], 'DomainFeatureGate::admin_preview_ready()', 'New normalized admin surfaces must remain behind manifest-backed release authority.' );
 p1e_has( $src['bootstrap'], "CERTLOOM_DOMAIN_WRITE_PATHS_READY', false", '1.6.5 must not enable normalized write authority.' );
 p1e_has( $src['bootstrap'], "CERTLOOM_DOMAIN_ADMIN_PREVIEW', false", '1.6.5 must not enable normalized admin preview in production.' );
 p1e_has( $src['bootstrap'], "CERTLOOM_DOMAIN_DATA_TOOLS_READY', false", '1.6.5 must not enable normalized data tools in production.' );

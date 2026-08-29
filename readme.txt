@@ -4,13 +4,15 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.95
+Stable tag: 1.6.96
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
 
 == Description ==
+
+> Release note for 1.6.96: DBAUTH-01 adds an immutable, release-bound normalized-domain authority bridge parallel to renderer authority. Genuine WordPress/MySQL/MariaDB v5 acceptance evidence must be imported, finalized and explicitly packaged as `resources/domain/accepted.json` for the exact production payload before normalized write/admin/Data Tools scopes can open. Historical readiness constants remain false/non-authoritative, and per-site migration/cutover remains a second independent safety gate. Ordinary 1.6.96 packaging ships with domain authority absent; real database acceptance and PDF-04 remain external RC gates.
 
 > Release note for 1.6.95: UX-QA-01 certifies Certloom as a whole product rather than another feature slice. The release adds real first-use/current-authority and advanced-admin browser journeys; removes stale milestone, migration and renderer jargon from ordinary Dashboard, Integrations, Appearance, Analytics, protected-workspace and Design surfaces; keeps exact technical evidence in Advanced diagnostics or collapsed Rendering details; simplifies the current-registry first-certificate workspace to relevant sections only; and enforces scoped 44px mobile targets. Backup & Restore/LMS browser fixtures are reconciled to the actual frozen customer UI. No normalized-domain, Program/Template, public-verifier or renderer authority is opened. After UX-QA freezes, Certloom enters the existing final RC gates beginning with genuine normalized-domain acceptance/cutover and PDF-04 renderer acceptance.
 

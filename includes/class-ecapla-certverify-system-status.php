@@ -38,7 +38,7 @@ class Ecapla_CertVerify_System_Status {
 			self::all_domain_gates_off() ? 'good' : 'warning',
 			self::domain_gate_summary(),
 			self::all_domain_gates_off()
-				? __( 'All future-domain feature gates are off, so ordinary activation does not require those unused tables.', 'certloom' )
+				? __( 'Normalized-domain release authority is closed, so ordinary activation does not require those protected tables.', 'certloom' )
 				: __( 'One or more development gates are enabled. The next-domain schema becomes a required dependency.', 'certloom' )
 		);
 		$checks[] = self::maintenance_check();
@@ -426,17 +426,16 @@ class Ecapla_CertVerify_System_Status {
 	}
 
 	private static function all_domain_gates_off() {
-		return ! ( defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) && CERTLOOM_DOMAIN_WRITE_PATHS_READY )
-			&& ! ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW )
-			&& ! ( defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) && CERTLOOM_DOMAIN_DATA_TOOLS_READY );
+		return ! \Certloom\Infrastructure\Migration\DomainFeatureGate::any_ready();
 	}
 
 	private static function domain_gate_summary() {
+		$scopes = \Certloom\Infrastructure\Migration\DomainFeatureGate::scopes();
 		$enabled = array();
-		if ( defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) && CERTLOOM_DOMAIN_WRITE_PATHS_READY ) { $enabled[] = 'write'; }
-		if ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) { $enabled[] = 'admin'; }
-		if ( defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) && CERTLOOM_DOMAIN_DATA_TOOLS_READY ) { $enabled[] = 'data-tools'; }
-		return $enabled ? sprintf( /* translators: %s: comma separated internal development gates. */ __( 'Enabled: %s', 'certloom' ), implode( ', ', $enabled ) ) : __( 'All off (expected)', 'certloom' );
+		if ( ! empty( $scopes['write_paths'] ) ) { $enabled[] = 'write'; }
+		if ( ! empty( $scopes['admin_preview'] ) ) { $enabled[] = 'admin'; }
+		if ( ! empty( $scopes['data_tools'] ) ) { $enabled[] = 'data-tools'; }
+		return $enabled ? sprintf( /* translators: %s: comma separated accepted normalized-domain release scopes. */ __( 'Accepted: %s', 'certloom' ), implode( ', ', $enabled ) ) : __( 'Closed (expected)', 'certloom' );
 	}
 
 	private static function memory_status() {

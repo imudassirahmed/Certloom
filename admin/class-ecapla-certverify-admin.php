@@ -89,14 +89,14 @@ class Ecapla_CertVerify_Admin {
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Credentials', 'certloom' ), __( 'Credentials', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::CERTIFICATES_PAGE, array( $this, 'render_list_screen' ) );
 
 		// Keep the planned application architecture visible without exposing gated domain data.
-		if ( ! ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) ) {
+		if ( ! \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
 			if ( ! $simple ) {
 				add_submenu_page( self::DASHBOARD_PAGE, __( 'Recipients', 'certloom' ), __( 'Recipients', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-domain-recipients', array( $this, 'render_roadmap_placeholder_screen' ) );
 			}
 			add_submenu_page( self::DASHBOARD_PAGE, __( 'Programs', 'certloom' ), __( 'Programs', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-domain-programs', array( $this, 'render_roadmap_placeholder_screen' ) );
 		}
 		add_submenu_page( self::DASHBOARD_PAGE, $design_label, $design_label, ECAPLA_CERTVERIFY_CAP, 'certloom-templates', array( $this, 'render_roadmap_placeholder_screen' ) );
-		if ( ! $simple && ! ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) ) {
+		if ( ! $simple && ! \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
 			add_submenu_page( self::DASHBOARD_PAGE, __( 'Issuance', 'certloom' ), __( 'Issuance', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-issuance', array( $this, 'render_roadmap_placeholder_screen' ) );
 		}
 		if ( ! $simple ) {
@@ -114,7 +114,7 @@ class Ecapla_CertVerify_Admin {
 		add_submenu_page( null, __( 'Review bulk change', 'certloom' ), __( 'Review bulk change', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-bulk-review', array( $this, 'render_bulk_review_screen' ) );
 		if ( $simple ) {
 			add_submenu_page( null, __( 'Data Tools', 'certloom' ), __( 'Data Tools', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-import', array( $this, 'render_import_screen' ) );
-			if ( ! ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) ) {
+			if ( ! \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
 				add_submenu_page( null, __( 'Recipients', 'certloom' ), __( 'Recipients', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-domain-recipients', array( $this, 'render_roadmap_placeholder_screen' ) );
 				add_submenu_page( null, __( 'Issuance', 'certloom' ), __( 'Issuance', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-issuance', array( $this, 'render_roadmap_placeholder_screen' ) );
 			}
@@ -1415,7 +1415,7 @@ class Ecapla_CertVerify_Admin {
 		if ( is_wp_error( $wizard_recommendation ) ) { $wizard_recommendation = array(); }
 		$wizard_current_settings = Ecapla_CertVerify_Settings::get_all();
 		$wizard_backup_settings = \Certloom\Infrastructure\Backup\ScheduledBackup::settings();
-		$wizard_domain_preview = defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW;
+		$wizard_domain_preview = \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready();
 		$wizard_mode = \Certloom\Infrastructure\Admin\AdminUiMode::current();
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/setup-wizard.php';
 	}

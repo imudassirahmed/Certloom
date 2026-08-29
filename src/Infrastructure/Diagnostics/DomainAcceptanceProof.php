@@ -316,9 +316,7 @@ final class DomainAcceptanceProof {
 		if ( ! class_exists( '\\Ecapla_CertVerify_Database_Proof' ) || ! \Ecapla_CertVerify_Database_Proof::is_current_passed() ) {
 			return new \WP_Error( 'certloom_domain_acceptance_database_proof_required', __( 'Run a fresh passing isolated database proof before the gated Credential Series acceptance proof.', 'certloom' ) );
 		}
-		if ( ( defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) && CERTLOOM_DOMAIN_WRITE_PATHS_READY )
-			|| ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW )
-			|| ( defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) && CERTLOOM_DOMAIN_DATA_TOOLS_READY ) ) {
+		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::any_ready() ) {
 			return new \WP_Error( 'certloom_domain_acceptance_feature_gate_active', __( 'The synthetic gated-domain proof is only available before next-domain development features are enabled.', 'certloom' ) );
 		}
 		$cutover = new DomainCutoverState();

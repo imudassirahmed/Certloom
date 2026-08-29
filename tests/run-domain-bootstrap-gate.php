@@ -85,6 +85,7 @@ namespace Certloom\Application\Migration {
 }
 
 namespace {
+	require __DIR__ . '/bootstrap-autoload.php';
 	require dirname( __DIR__ ) . '/src/Plugin.php';
 
 	use Certloom\Plugin;

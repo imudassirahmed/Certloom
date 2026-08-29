@@ -25,6 +25,7 @@ function delete_option($k){if(!array_key_exists($k,$GLOBALS['dap_options']))retu
 function is_multisite(){ return false; }
 function wp_get_environment_type(){ return 'staging'; }
 $GLOBALS['wpdb'] = new class { public $prefix = 'wp_'; public function db_server_info(){ return 'MySQL test-server'; } public function db_version(){ return '8.0.36'; } };
+require_once __DIR__ . '/bootstrap-autoload.php';
 require_once dirname( __DIR__ ) . '/src/Application/Rendering/CanonicalJson.php';
 require_once dirname( __DIR__ ) . '/src/Application/Rendering/RuntimePayloadFingerprint.php';
 require_once dirname( __DIR__ ) . '/src/Infrastructure/Diagnostics/RuntimePayloadEvidence.php';

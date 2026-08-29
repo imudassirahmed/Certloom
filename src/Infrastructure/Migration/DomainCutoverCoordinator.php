@@ -165,11 +165,11 @@ final class DomainCutoverCoordinator {
 
 	/** @return true|\WP_Error */
 	private function assert_feature_flags() {
-		if ( ! defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) || true !== CERTLOOM_DOMAIN_WRITE_PATHS_READY ) {
-			return new \WP_Error( 'certloom_domain_cutover_write_paths_not_ready', __( 'Certloom cannot switch write authority until the new registry/admin write paths are ready.', 'certloom' ) );
+		if ( ! DomainFeatureGate::write_paths_ready() ) {
+			return new \WP_Error( 'certloom_domain_cutover_write_paths_not_ready', __( 'Certloom cannot switch write authority until this exact release has accepted normalized-domain write authority.', 'certloom' ) );
 		}
-		if ( ! defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) || true !== CERTLOOM_DOMAIN_DATA_TOOLS_READY ) {
-			return new \WP_Error( 'certloom_domain_cutover_data_tools_not_ready', __( 'Certloom cannot switch write authority until import, backup, restore, and other registry data tools write the new credential domain safely.', 'certloom' ) );
+		if ( ! DomainFeatureGate::data_tools_ready() ) {
+			return new \WP_Error( 'certloom_domain_cutover_data_tools_not_ready', __( 'Certloom cannot switch write authority until this exact release has accepted normalized-domain import, backup and restore authority.', 'certloom' ) );
 		}
 		return true;
 	}

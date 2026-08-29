@@ -48,6 +48,7 @@ namespace {
     
 function is_multisite(){ return false; }
 $GLOBALS['wpdb'] = new class { public $prefix = 'wp_'; public function db_server_info(){ return 'MySQL test-server'; } public function db_version(){ return '8.0.36'; } };
+require_once __DIR__ . '/bootstrap-autoload.php';
 require dirname(__DIR__).'/src/Application/Rendering/CanonicalJson.php';
     require dirname(__DIR__).'/src/Application/Rendering/RuntimePayloadFingerprint.php';
     require dirname(__DIR__).'/src/Infrastructure/Diagnostics/RuntimePayloadEvidence.php';

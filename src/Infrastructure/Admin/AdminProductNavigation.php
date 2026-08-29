@@ -127,7 +127,7 @@ final class AdminProductNavigation {
 	 * @return array<int,array{label:string,page:string,pages:array<int,string>,capability:string}>
 	 */
 	private function links_for_section( $section ) {
-		$preview  = defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW;
+		$preview  = \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready();
 		$advanced = ! AdminUiMode::is_simple();
 
 		switch ( $section ) {

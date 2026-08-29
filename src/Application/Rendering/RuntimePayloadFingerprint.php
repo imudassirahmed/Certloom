@@ -117,7 +117,7 @@ final class RuntimePayloadFingerprint {
 
     private function excluded( $relative, $name ) {
         $relative = str_replace( '\\', '/', (string) $relative );
-        if ( 'resources/renderer/accepted.json' === $relative ) { return true; }
+        if ( 'resources/renderer/accepted.json' === $relative || 'resources/domain/accepted.json' === $relative ) { return true; }
         $parts = explode( '/', $relative );
         if ( isset( $parts[0] ) && ( 'docs' === $parts[0] || 'tests' === $parts[0] ) ) { return true; }
         foreach ( $parts as $part ) {

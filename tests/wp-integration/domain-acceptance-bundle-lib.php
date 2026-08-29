@@ -59,12 +59,12 @@ function certloom_db_normalize_payload( $value ) {
 	if ( ! is_array( $value ) ) { return null; }
 	$keys = array_keys( $value ); sort( $keys, SORT_STRING );
 	if ( $keys !== array( 'file_count', 'schema', 'sha256', 'total_bytes', 'version' ) ) { return null; }
-	if ( 'certloom-runtime-payload-fingerprint' !== (string) $value['schema'] || 1 !== (int) $value['version'] ) { return null; }
+	if ( 'certloom-runtime-payload' !== (string) $value['schema'] || 1 !== (int) $value['version'] ) { return null; }
 	$hash = strtolower( trim( (string) $value['sha256'] ) );
 	$count = filter_var( $value['file_count'], FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 1 ) ) );
 	$bytes = filter_var( $value['total_bytes'], FILTER_VALIDATE_INT, array( 'options' => array( 'min_range' => 1 ) ) );
 	if ( 1 !== preg_match( '/^[a-f0-9]{64}$/', $hash ) || false === $count || false === $bytes ) { return null; }
-	return array( 'schema' => 'certloom-runtime-payload-fingerprint', 'version' => 1, 'sha256' => $hash, 'file_count' => (int) $count, 'total_bytes' => (int) $bytes );
+	return array( 'schema' => 'certloom-runtime-payload', 'version' => 1, 'sha256' => $hash, 'file_count' => (int) $count, 'total_bytes' => (int) $bytes );
 }
 function certloom_db_payload_equals( $left, $right ) {
 	$left = certloom_db_normalize_payload( $left ); $right = certloom_db_normalize_payload( $right );
@@ -246,5 +246,5 @@ function certloom_db_build_final_acceptance( array $base, $plugin_version, array
 	if ( 1 !== preg_match('/^[a-f0-9]{64}$/',$domain_hash) || 1 !== preg_match('/^[a-f0-9]{64}$/',$config_hash) || '' === $generation || false === $records || ! is_array($counts) ) { throw new RuntimeException('Current normalized-domain graph fingerprint is invalid.'); }
 	if ( ! hash_equals((string)($cutover['baseline_hash']??''),$domain_hash) || ! hash_equals((string)($cutover['baseline_config_hash']??''),$config_hash) || (int)($cutover['baseline_records']??0)!==(int)$records || (array)($cutover['baseline_counts']??array())!==$counts || ! hash_equals((string)($cutover['domain_generation']??''),$generation) ) { throw new RuntimeException('Current normalized-domain graph no longer matches the final cutover rehearsal boundary.'); }
 	$exported_domain_state=array('hash'=>$domain_hash,'configuration_hash'=>$config_hash,'records'=>(int)$records,'entity_counts'=>$counts,'generation_sha256'=>hash('sha256',$generation));
-	return array('schema'=>'certloom-normalized-domain-acceptance-bundle','version'=>4,'status'=>'qualified','generated_at'=>(int)$generated_at,'plugin_version'=>(string)$plugin_version,'runtime_payload'=>$payload,'environment'=>$environment,'environment_sha256'=>hash('sha256',certloom_db_canonical_json($environment)),'domain_state'=>$exported_domain_state,'domain_state_sha256'=>hash('sha256',certloom_db_canonical_json($exported_domain_state)),'base_gates'=>$base,'stored_evidence'=>$out);
+	return array('schema'=>'certloom-normalized-domain-acceptance-bundle','version'=>5,'status'=>'qualified','generated_at'=>(int)$generated_at,'plugin_version'=>(string)$plugin_version,'runtime_payload'=>$payload,'environment'=>$environment,'environment_sha256'=>hash('sha256',certloom_db_canonical_json($environment)),'domain_state'=>$exported_domain_state,'domain_state_sha256'=>hash('sha256',certloom_db_canonical_json($exported_domain_state)),'base_gates'=>$base,'stored_evidence'=>$out);
 }

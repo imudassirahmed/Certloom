@@ -43,7 +43,7 @@ por( false !== strpos( $portal_service, 'find_by_wp_user_id( $wp_user_id )' ), '
 por( false === strpos( $portal_service, 'find_by_email' ) && false === strpos( $portal_service, 'external_id' ), 'Portal ownership never falls back to email/name/external ID inference' );
 por( false !== strpos( $portal_service, 'certloom_recipient_portal_login_required' ), 'logged-out access fails closed' );
 por( false !== strpos( $portal_service, 'certloom_recipient_portal_authority_closed' ), 'normalized authority closure is explicit' );
-por( false !== strpos( $portal_service, 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && false !== strpos( $portal_service, 'verification_gate->is_ready()' ), 'development preview remains distinct from accepted public authority' );
+por( false !== strpos( $portal_service, 'DomainFeatureGate::admin_preview_ready()' ) && false !== strpos( $portal_service, 'verification_gate->is_ready()' ), 'development preview remains distinct from accepted public authority' );
 por( false !== strpos( $portal_service, "'pdf_available'] = false" ) && false !== strpos( $portal_service, "'image_available'] = false" ), 'download/image surfaces remain fail-closed behind renderer authority' );
 por( false !== strpos( $portal_service, 'allows_public_sharing' ) && false !== strpos( $portal_service, "'share_available'] = ! empty" ), 'SOC-01 sharing is derived only from an already-authoritative guest-verifiable URL' );
 por( false !== strpos( $portal_service, 'EXPIRING_DAYS    = 30' ) && false !== strpos( $portal_service, 'expiring_soon' ), '30-day expiring-soon cue is explicit' );

@@ -461,8 +461,8 @@ final class StagingMigrationRehearsal {
 				return new \WP_Error( 'certloom_staging_rehearsal_runtime_environment_changed', __( 'The WordPress/PHP/database environment changed after this rehearsal started. Reclone or restore staging and rerun the rehearsal on one fixed runtime environment.', 'certloom' ) );
 			}
 		}
-		if ( ( defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) && CERTLOOM_DOMAIN_WRITE_PATHS_READY ) || ( defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) && CERTLOOM_DOMAIN_ADMIN_PREVIEW ) || ( defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) && CERTLOOM_DOMAIN_DATA_TOOLS_READY ) ) {
-			return new \WP_Error( 'certloom_staging_rehearsal_feature_gate_active', __( 'Staging migration rehearsal is available only before future-domain feature gates are enabled.', 'certloom' ) );
+		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::any_ready() ) {
+			return new \WP_Error( 'certloom_staging_rehearsal_feature_gate_active', __( 'Staging migration rehearsal is available only while normalized-domain release authority remains closed.', 'certloom' ) );
 		}
 		$cutover = new DomainCutoverState();
 		if ( ! $cutover->is_clean_legacy_state() ) { return new \WP_Error( 'certloom_staging_rehearsal_cutover_active', __( 'Staging migration rehearsal is unavailable after credential authority cutover.', 'certloom' ) ); }

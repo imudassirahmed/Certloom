@@ -19,7 +19,7 @@ final class TutorLmsBridge {
 
 	/** @return bool */
 	public static function authority_ready() {
-		return defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) && CERTLOOM_DOMAIN_WRITE_PATHS_READY;
+		return \Certloom\Infrastructure\Migration\DomainFeatureGate::write_paths_ready();
 	}
 
 	/** @return array<string,mixed> */

@@ -160,7 +160,7 @@ try {
 
 	$index = array(
 		'schema'              => 'certloom-normalized-domain-acceptance-index',
-		'version'             => 4,
+		'version'             => 5,
 		'plugin_version'      => $version,
 		'runtime_payload'     => $locked_payload,
 		'environment_sha256'  => hash( 'sha256', certloom_db_canonical_json( $locked_environment ) ),

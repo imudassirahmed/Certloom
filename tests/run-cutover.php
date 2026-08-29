@@ -1,8 +1,8 @@
 <?php
 /** Pure tests for the final source-of-truth cutover safeguards. */
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
-define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', true );
-define( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY', true );
+define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', true ); // Legacy compatibility sentinel; deliberately ignored by DBAUTH.
+define( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY', true ); // Legacy compatibility sentinel; deliberately ignored by DBAUTH.
 $GLOBALS['cutover_options'] = array();
 $GLOBALS['cutover_fail_delete_once'] = false;
 $GLOBALS['cutover_mutate_option_once'] = '';
@@ -111,7 +111,7 @@ cut_same( true, $state->source_snapshot_matches( array( 'count' => 7, 'max_id' =
 cut_same( false, $state->source_snapshot_matches( array( 'count' => 7, 'max_id' => 11, 'generation' => 'generation-B' ) ), 'changed generation' );
 
 $stale_source = new CutoverSource( array( 'count' => 7, 'max_id' => 11, 'generation' => 'generation-B' ) );
-$coordinator = new DomainCutoverCoordinator( $stale_source, null, $state, null, function(){ return true; } );
+$coordinator = new DomainCutoverCoordinator( $stale_source, null, $state, null, function(){ return true; }, function(){ return true; } );
 $result = $coordinator->promote();
 cut_same( 'certloom_domain_cutover_source_changed', $result->get_error_code(), 'stale migration cannot cut over' );
 cut_same( true, $stale_source->saw_lock, 'final source snapshot is taken while maintenance lock is active' );
@@ -119,18 +119,18 @@ cut_same( DomainCutoverState::LEGACY, $cutover->authority(), 'authority remains 
 
 /* Successful update_option return is not trusted when the persisted receipt/authority is filter-altered. */
 $GLOBALS['cutover_mutate_option_once'] = DomainCutoverState::RECEIPT_OPTION;
-$tampered_receipt = ( new DomainCutoverCoordinator( new CutoverSource( array( 'count' => 7, 'max_id' => 11, 'generation' => 'generation-A' ) ), null, $state, null, function(){ return true; } ) )->promote();
+$tampered_receipt = ( new DomainCutoverCoordinator( new CutoverSource( array( 'count' => 7, 'max_id' => 11, 'generation' => 'generation-A' ) ), null, $state, null, function(){ return true; }, function(){ return true; } ) )->promote();
 cut_same( 'certloom_domain_cutover_receipt_prepare_failed', $tampered_receipt->get_error_code(), 'prepared receipt requires exact readback' );
 cut_same( DomainCutoverState::LEGACY, $cutover->authority(), 'prepared receipt tamper never changes authority' );
 cut_same( false, get_option( DomainCutoverState::RECEIPT_OPTION, false ), 'invalid prepared receipt is removed' );
 $GLOBALS['cutover_mutate_option_once'] = DomainCutoverState::OPTION;
-$tampered_authority = ( new DomainCutoverCoordinator( new CutoverSource( array( 'count' => 7, 'max_id' => 11, 'generation' => 'generation-A' ) ), null, $state, null, function(){ return true; } ) )->promote();
+$tampered_authority = ( new DomainCutoverCoordinator( new CutoverSource( array( 'count' => 7, 'max_id' => 11, 'generation' => 'generation-A' ) ), null, $state, null, function(){ return true; }, function(){ return true; } ) )->promote();
 cut_same( 'certloom_domain_cutover_save_failed', $tampered_authority->get_error_code(), 'authority requires exact readback' );
 cut_same( DomainCutoverState::LEGACY, $cutover->authority(), 'filter-altered authority is rolled back to legacy' );
 cut_same( false, get_option( DomainCutoverState::RECEIPT_OPTION, false ), 'authority tamper cleanup removes prepared receipt' );
 
 $fresh_source = new CutoverSource( array( 'count' => 7, 'max_id' => 11, 'generation' => 'generation-A' ) );
-$coordinator = new DomainCutoverCoordinator( $fresh_source, null, $state, null, function(){ return true; } );
+$coordinator = new DomainCutoverCoordinator( $fresh_source, null, $state, null, function(){ return true; }, function(){ return true; } );
 cut_same( true, $coordinator->promote(), 'fresh migration can cut over' );
 cut_same( true, $fresh_source->saw_lock, 'successful cutover final snapshot is maintenance protected' );
 cut_same( DomainCutoverState::DOMAIN, $cutover->authority(), 'authority promoted after exact source match' );
@@ -155,7 +155,7 @@ cut_same( true, $guard->assert_allowed(), 'legacy writes allowed while legacy re
 
 /* A transient maintenance-lock release failure leaves a durable owner token so retry can clean it idempotently. */
 $GLOBALS['cutover_fail_delete_once'] = true;
-$coordinator = new DomainCutoverCoordinator( new CutoverSource( array( 'count' => 7, 'max_id' => 11, 'generation' => 'generation-A' ) ), null, $state, null, function(){ return true; } );
+$coordinator = new DomainCutoverCoordinator( new CutoverSource( array( 'count' => 7, 'max_id' => 11, 'generation' => 'generation-A' ) ), null, $state, null, function(){ return true; }, function(){ return true; } );
 $result = $coordinator->promote();
 cut_same( 'certloom_domain_cutover_cleanup_failed', $result->get_error_code(), 'cleanup failure is explicit' );
 cut_same( DomainCutoverState::DOMAIN, $cutover->authority(), 'authority result remains explicit after cleanup failure' );

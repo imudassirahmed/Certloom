@@ -1,8 +1,8 @@
 <?php
-/** Pure test: final cutover is blocked until non-admin data tools are domain-aware. */
+/** Pure test: legacy constants cannot bypass manifest-backed final cutover authority. */
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', true );
-define( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY', false );
+define( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY', true );
 $GLOBALS['cut_data_options'] = array();
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error { private $code; private $message; public function __construct($c='',$m=''){ $this->code=$c; $this->message=$m; } public function get_error_code(){return $this->code;} public function get_error_message(){return $this->message;} }
@@ -21,5 +21,5 @@ use Certloom\Infrastructure\Migration\DomainCutoverCoordinator;
 class CutDataSource implements LegacySourceSnapshotInterface { public function snapshot(){ return array('count'=>1,'max_id'=>1,'generation'=>'g'); } }
 $GLOBALS['cut_data_options'][LegacyMigrationState::OPTION] = array('status'=>LegacyMigrationState::COMPLETE,'source_count'=>1,'source_max_id'=>1,'source_generation'=>'g');
 $result=(new DomainCutoverCoordinator(new CutDataSource(), null, null, null, function(){return true;}))->promote();
-if(!is_object($result)||'certloom_domain_cutover_data_tools_not_ready'!==$result->get_error_code()){ throw new RuntimeException('Expected data-tools cutover gate'); }
-echo "PASS  source-of-truth cutover requires domain-aware import/backup/data tools\n\n1 tests, 0 failures\n";
+if(!is_object($result)||'certloom_domain_cutover_write_paths_not_ready'!==$result->get_error_code()){ throw new RuntimeException('Expected manifest-backed release-authority cutover gate'); }
+echo "PASS  source-of-truth cutover ignores legacy constants and requires manifest-backed DBAUTH\n\n1 tests, 0 failures\n";

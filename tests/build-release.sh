@@ -14,6 +14,12 @@ STAGE="$OUT/.stage"
 AUTHORITY_DIR="${CERTLOOM_RENDERER_AUTHORITY_DIR:-}"
 AUTHORITY_SNAPSHOT=""
 AUTHORITY_MANIFEST=""
+DOMAIN_AUTHORITY_DIR="${CERTLOOM_DOMAIN_AUTHORITY_DIR:-}"
+DOMAIN_AUTHORITY_SNAPSHOT=""
+DOMAIN_AUTHORITY_MANIFEST=""
+CLEANUP_DIRS=()
+cleanup_authority_dirs() { for dir in "${CLEANUP_DIRS[@]:-}"; do [[ -n "$dir" ]] && rm -rf -- "$dir" || true; done; return 0; }
+trap cleanup_authority_dirs EXIT
 
 case "$OUT" in
   "$ROOT"|"$ROOT"/*) echo "Refusing to build inside the plugin source tree." >&2; exit 2 ;;
@@ -41,7 +47,7 @@ if [[ -n "$AUTHORITY_DIR" ]]; then
   parent="$(dirname "$OUT")"
   mkdir -p "$parent"
   authority_tmp="$(mktemp -d "$parent/.certloom-authorized-build.XXXXXX")"
-  trap 'rm -rf "$authority_tmp"' EXIT
+  CLEANUP_DIRS+=("$authority_tmp")
   mkdir -p "$authority_tmp/authority"
   cp -a -- "$AUTHORITY_DIR"/. "$authority_tmp/authority/"
   AUTHORITY_SNAPSHOT="$authority_tmp/authority"
@@ -49,6 +55,36 @@ if [[ -n "$AUTHORITY_DIR" ]]; then
   php "$ROOT/tests/renderer-candidate/validate-authorized-release.php" "$AUTHORITY_SNAPSHOT" "$AUTHORITY_MANIFEST" >/dev/null
 elif [[ -f "$ROOT/resources/renderer/accepted.json" ]]; then
   php "$ROOT/tests/renderer-candidate/validate-bundled-authority.php" "$ROOT/resources/renderer/accepted.json" >/dev/null
+fi
+
+# Normalized-domain authority follows the same immutable release-metadata rule.
+# The ordinary closed build contains no resources/domain/accepted.json. A new
+# authority may enter packaging only through an explicitly supplied, finalized
+# external DBAUTH directory; a previously accepted source archive may rebuild
+# from its bundled manifest. Never combine the two sources.
+if [[ -n "$DOMAIN_AUTHORITY_DIR" && -f "$ROOT/resources/domain/accepted.json" ]]; then
+  echo "Refusing ambiguous normalized-domain authority: source already contains accepted.json and an external authority directory was supplied." >&2
+  exit 7
+fi
+if [[ -n "$DOMAIN_AUTHORITY_DIR" ]]; then
+  if ! DOMAIN_AUTHORITY_REAL="$(realpath -e -- "$DOMAIN_AUTHORITY_DIR" 2>/dev/null)" || [[ ! -d "$DOMAIN_AUTHORITY_REAL" ]]; then
+    echo "Normalized-domain authority directory is invalid or unavailable." >&2
+    exit 7
+  fi
+  case "$DOMAIN_AUTHORITY_REAL" in
+    "$ROOT"|"$ROOT"/*) echo "Normalized-domain authority directory must remain outside the Certloom source tree." >&2; exit 7 ;;
+  esac
+  parent="$(dirname "$OUT")"
+  mkdir -p "$parent"
+  domain_authority_tmp="$(mktemp -d "$parent/.certloom-domain-authorized-build.XXXXXX")"
+  CLEANUP_DIRS+=("$domain_authority_tmp")
+  mkdir -p "$domain_authority_tmp/authority"
+  cp -a -- "$DOMAIN_AUTHORITY_DIR"/. "$domain_authority_tmp/authority/"
+  DOMAIN_AUTHORITY_SNAPSHOT="$domain_authority_tmp/authority"
+  DOMAIN_AUTHORITY_MANIFEST="$domain_authority_tmp/accepted.json"
+  php "$ROOT/tests/domain-authority/validate-authorized-release.php" "$DOMAIN_AUTHORITY_SNAPSHOT" "$DOMAIN_AUTHORITY_MANIFEST" >/dev/null
+elif [[ -f "$ROOT/resources/domain/accepted.json" ]]; then
+  php "$ROOT/tests/domain-authority/validate-bundled-authority.php" "$ROOT/resources/domain/accepted.json" >/dev/null
 fi
 
 rm -rf "$OUT"
@@ -61,6 +97,13 @@ if [[ -n "$AUTHORITY_MANIFEST" ]]; then
   cp -- "$AUTHORITY_MANIFEST" "$STAGE/source/certloom/resources/renderer/accepted.json"
   cp -- "$AUTHORITY_MANIFEST" "$STAGE/release/certloom/resources/renderer/accepted.json"
   chmod 0644 "$STAGE/source/certloom/resources/renderer/accepted.json" "$STAGE/release/certloom/resources/renderer/accepted.json"
+fi
+
+if [[ -n "$DOMAIN_AUTHORITY_MANIFEST" ]]; then
+  mkdir -p "$STAGE/source/certloom/resources/domain" "$STAGE/release/certloom/resources/domain"
+  cp -- "$DOMAIN_AUTHORITY_MANIFEST" "$STAGE/source/certloom/resources/domain/accepted.json"
+  cp -- "$DOMAIN_AUTHORITY_MANIFEST" "$STAGE/release/certloom/resources/domain/accepted.json"
+  chmod 0644 "$STAGE/source/certloom/resources/domain/accepted.json" "$STAGE/release/certloom/resources/domain/accepted.json"
 fi
 
 # The shipped translation catalog is part of the deterministic release identity.
@@ -148,4 +191,5 @@ printf 'source_files=%s\n' "$(wc -l < "$source_list" | tr -d ' ')"
 printf 'release_files=%s\n' "$(wc -l < "$release_list" | tr -d ' ')"
 printf 'production_only=0\nmodified_common=0\nreproducible_zip=yes\n'
 if [[ -f "$STAGE/release/certloom/resources/renderer/accepted.json" ]]; then printf 'renderer_authority=validated\n'; else printf 'renderer_authority=absent\n'; fi
+if [[ -f "$STAGE/release/certloom/resources/domain/accepted.json" ]]; then printf 'domain_authority=validated\n'; else printf 'domain_authority=absent\n'; fi
 cat "$OUT/certloom-$VERSION-SHA256SUMS.txt"

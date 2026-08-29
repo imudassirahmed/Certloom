@@ -1,3 +1,10 @@
+= 1.6.96 =
+* DBAUTH-01: add a release-bound normalized-domain authority manifest, importer, runtime gate and authorized deterministic packaging path tied to the exact Certloom production payload and genuine real-host acceptance v5 evidence.
+* Make manifest-backed DomainFeatureGate the sole effective release-level normalized-domain authority; legacy readiness constants remain false/non-authoritative compatibility sentinels and cannot enable write/admin/Data Tools behavior.
+* Advance the real WordPress/MySQL/MariaDB acceptance bundle/index to v5 and align its runtime-payload schema with the canonical `certloom-runtime-payload` v1 contract.
+* Keep per-site DomainCutoverCoordinator migration/schema/maintenance/receipt checks as an independent second safety gate; ordinary release packaging contains no `resources/domain/accepted.json` and therefore remains fail-closed.
+* Add source-only DBAUTH finalization/validation and deterministic authorized-packaging regression. Genuine database acceptance, PDF-04, PERF-01, compatibility and later commercial RC gates remain external/open.
+
 = 1.6.95 =
 * UX-QA-01: certify whole-product first-use/current-authority and advanced-admin journeys across Dashboard, Setup, first certificate, public verification, Backup & Restore, stalled-restore recovery, Integrations and Advanced diagnostics.
 * Remove stale milestone/roadmap/migration/authority jargon from ordinary Dashboard, Integrations, Appearance, Analytics, protected-workspace and Design surfaces while preserving exact technical evidence in Advanced diagnostics or collapsed Rendering details.
