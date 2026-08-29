@@ -40,7 +40,24 @@ $dashboard = array(
 	'health' => array( 'overall'=>'good','checks'=>array( array( 'label'=>'Authority','value'=>'Current production','status'=>'good' ) ) ),
 	'legacy_review_count' => 0,
 );
-$onboarding_summary = array( 'completed'=>true );
+$dashboard_state = getenv( 'CERTLOOM_DASHBOARD_STATE' ) ?: 'ready';
+if ( 'fresh' === $dashboard_state ) {
+	$onboarding_summary = array(
+		'completed'=>false, 'wizard_completed'=>false,
+		'progress_completed'=>0, 'progress_total'=>6,
+		'organization_ready'=>false, 'fields_ready'=>false, 'page_ready'=>false,
+		'registry_ready'=>false, 'verification_tested'=>false, 'appearance_ready'=>false,
+	);
+} elseif ( 'wizard_complete' === $dashboard_state ) {
+	$onboarding_summary = array(
+		'completed'=>false, 'wizard_completed'=>true,
+		'progress_completed'=>3, 'progress_total'=>6,
+		'organization_ready'=>true, 'fields_ready'=>true, 'page_ready'=>true,
+		'registry_ready'=>false, 'verification_tested'=>false, 'appearance_ready'=>false,
+	);
+} else {
+	$onboarding_summary = array( 'completed'=>true, 'wizard_completed'=>true, 'progress_completed'=>6, 'progress_total'=>6 );
+}
 $mode = getenv( 'CERTLOOM_DASHBOARD_ANALYTICS' ) ?: 'present';
 if ( 'present' === $mode ) {
 	$issuance_trend = array();

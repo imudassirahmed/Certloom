@@ -108,8 +108,11 @@ p55has($src['admin'],'Current draft','Preview can inspect the current immutable 
 p55has($src['admin'],'Published','Preview can independently inspect the published immutable revision');
 p55has($src['admin'],'Long content','Preview has overflow stress data');
 p55has($src['admin'],'RTL / Urdu','Preview has RTL stress data');
-p55has($src['admin'],'Canonical Render Plan','admin names the shared composition contract');
-p55has($src['admin'],'Artifact authority pending','admin remains honest while PDF-04 is deferred');
+p55has($src['admin'],'Shared layout preview','Preview default badge uses customer language');
+p55has($src['admin'],'Rendering details','technical renderer evidence is available behind a disclosure');
+p55has($src['admin'],'Canonical Render Plan evidence remains available here for support and release verification.','collapsed technical details preserve the shared composition contract');
+p55has($src['admin'],'Production downloads unavailable','default Preview states the renderer limitation in customer language');
+p55has($src['admin'],'Artifact authority pending means PDF-04 exact renderer/font acceptance has not been approved','collapsed details retain exact deferred-renderer evidence');
 p55has($src['admin'],'this screen never manufactures production artifact authority','Preview explicitly preserves renderer authority gate');
 p55has($src['admin'],'Render Plan SHA-256','admin exposes Preview composition proof identity');
 p55has($src['admin'],'Synthetic Preview values never read or mutate credential records','Preview is explicitly read-only and synthetic');

@@ -18,7 +18,7 @@ async def main():
         page=await browser.new_page(viewport={'width':1280,'height':980})
         await page.set_content(html,wait_until='load')
         await ck(await page.get_by_role('heading',name='Integrations').count()==1,'heading')
-        await ck(await page.get_by_text('INT-02/03 · LMS adapters',exact=True).count()==1,'contract')
+        await ck(await page.get_by_text('Supported LMS adapters',exact=True).count()==1,'contract')
         await ck(await page.get_by_role('heading',name='Tutor LMS',exact=True).count()==1,'tutorHeading')
         await ck(await page.get_by_text('Detected',exact=True).count()==1,'detected')
         await ck(await page.get_by_text('Automatic issuance remains safely locked',exact=True).count()==1,'authorityLock')

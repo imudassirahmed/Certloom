@@ -11,7 +11,7 @@ $periods = array( 7 => __( '7 days', 'certloom' ), 30 => __( '30 days', 'certloo
 	</nav>
 	<section class="certloom-dashboard-hero" aria-labelledby="certloom-analytics-title">
 		<div class="certloom-dashboard-hero-copy">
-			<span class="certloom-eyebrow"><?php esc_html_e( 'ANL-01 · Local privacy-safe analytics', 'certloom' ); ?></span>
+			<span class="certloom-eyebrow"><?php esc_html_e( 'Verification insights', 'certloom' ); ?></span>
 			<h1 id="certloom-analytics-title"><?php esc_html_e( 'Verification Analytics', 'certloom' ); ?></h1>
 			<p><?php esc_html_e( 'Understand verification outcomes and trends without storing raw IP addresses, User-Agents, secondary proofs, or failed certificate-number input.', 'certloom' ); ?></p>
 		</div>

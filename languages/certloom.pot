@@ -130,25 +130,25 @@ msgid "Integration framework ready"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1435
-msgid "INT-02/03 · LMS adapters"
+msgid "Supported LMS adapters"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1440
-msgid "Tutor LMS and LearnDash share the same bounded recipient, mapping and idempotent issuance architecture. The approved navigation and plain-language consolidation follows both adapters."
+msgid "Tutor LMS and LearnDash use Certloom’s standard credential workflow. Course mapping remains unavailable while Program and Template management is protected, and automatic credential creation stays locked until Certloom’s production credential-writing checks are approved."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1453
 #: admin/class-ecapla-certverify-admin.php:1459
-msgid "Phase 1 data model"
+msgid "Protected workspace"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1454
-msgid "First-class Recipient administration is implemented in the normalized domain and remains acceptance-gated until the real WordPress/MySQL migration and cutover proof passes."
+msgid "Recipient management is prepared but not available in this build yet. Certloom keeps this workspace locked until the underlying credential data transition completes its final safety checks. Existing certificate operations remain unchanged."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1455
 #: admin/class-ecapla-certverify-admin.php:1461
-msgid "Implementation complete · production acceptance gated"
+msgid "Protected until final data safety checks complete"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1458
@@ -164,7 +164,7 @@ msgid "Programs"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1460
-msgid "Standalone Program administration is implemented in the normalized domain and remains acceptance-gated. Certloom will not emulate Program relationships inside legacy custom fields."
+msgid "Program management is prepared but not available in this build yet. Certloom keeps Program relationships locked until the underlying credential data transition completes its final safety checks rather than storing a misleading substitute."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1464
@@ -177,27 +177,27 @@ msgid "Templates"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1465
-msgid "Pro commercial core · implementation gated"
+msgid "Design availability"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1466
-msgid "Versioned Templates, the visual Template Library, curated premium design concepts and Quick/Pro Designer are implemented over immutable Template revisions and the canonical Render Plan. I18N-02 locale/RTL and Program language-specific published-design resolution are implemented. Production PDF/image publication remains fail-closed until renderer release authority is accepted."
+msgid "The Template Library and Designer are available through Design. Downloadable PDF and image publication stays protected until its final rendering safety checks are approved."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1467
-msgid "Template Library + Designer implemented · production artifact authority gated"
+msgid "Design tools available · downloadable publication protected"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1471
-msgid "P0 issuance workflow · implementation gated"
+msgid "Issuance availability"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1472
-msgid "Manual and Bulk Issuance, Credential Management, Email Delivery, Recipient Portal, Public Sharing, Analytics and INT-01 are implemented. Program Profiles resolve Program and locale-specific published designs, while immutable Versions freeze exact Program, locale and Template provenance. Normalized public authority and production PDF/image exports remain acceptance-gated."
+msgid "Certloom’s existing certificate, import, delivery, sharing and analytics workflows remain available. Advanced Program-based issuance and downloadable PDF or image publication stay protected until their final data and rendering safety checks are approved."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1473
-msgid "Issuance workflow implemented · normalized/public artifact authority gated"
+msgid "Current credential workflows available · advanced publication protected"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:1478
@@ -557,7 +557,7 @@ msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:40
 #: admin/views/dashboard.php:178
-#: admin/views/edit-certificate.php:144
+#: admin/views/edit-certificate.php:148
 #: admin/views/edit-certificate.php:78
 #: admin/views/import-upload.php:197
 #: admin/views/integrations.php:152
@@ -625,7 +625,7 @@ msgid "Legacy review required"
 msgstr ""
 
 #: admin/views/analytics.php:14
-msgid "ANL-01 · Local privacy-safe analytics"
+msgid "Verification insights"
 msgstr ""
 
 #: admin/views/analytics.php:15
@@ -830,7 +830,7 @@ msgid "Privacy"
 msgstr ""
 
 #: admin/views/analytics.php:9
-#: admin/views/edit-certificate.php:116
+#: admin/views/edit-certificate.php:118
 #: admin/views/edit-certificate.php:80
 #: admin/views/import-mapping.php:12
 #: admin/views/issuance-analytics.php:9
@@ -962,7 +962,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: admin/views/bulk-review.php:19
-#: admin/views/edit-certificate.php:158
+#: admin/views/edit-certificate.php:162
 #: src/Infrastructure/Admin/DomainAdmin.php:765
 #: src/Infrastructure/Admin/DomainAdmin.php:848
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:378
@@ -1324,7 +1324,7 @@ msgid "Labels, visibility and custom data"
 msgstr ""
 
 #: admin/views/dashboard.php:208
-#: admin/views/edit-certificate.php:110
+#: admin/views/edit-certificate.php:112
 #: admin/views/list-certificates.php:87
 msgid "Manage fields"
 msgstr ""
@@ -1351,19 +1351,19 @@ msgid "Open System Status"
 msgstr ""
 
 #: admin/views/dashboard.php:231
-msgid "Data engine"
+msgid "Data safety"
 msgstr ""
 
 #: admin/views/dashboard.php:231
-msgid "Proven registry is authoritative"
+msgid "Your certificate records stay protected"
 msgstr ""
 
 #: admin/views/dashboard.php:232
-msgid "The current 1.5 registry remains the live source of certificate truth. Credential Series migration infrastructure stays safely gated until its real staging acceptance sequence is approved."
+msgid "Certloom keeps your current certificate records in the proven live registry while newer data features remain protected until their safety checks are complete."
 msgstr ""
 
 #: admin/views/dashboard.php:233
-msgid "No automatic data-store switch"
+msgid "No automatic storage changes"
 msgstr ""
 
 #: admin/views/dashboard.php:28
@@ -1460,10 +1460,10 @@ msgid "Current credentials"
 msgstr ""
 
 #: admin/views/edit-certificate.php:101
-msgid "First-class Recipient identity, WordPress-user links and credential history are implemented in the normalized domain but remain production acceptance-gated. This live editor does not invent those relationships in legacy data."
+msgid "This editor uses the holder name stored with this certificate. Linked recipient profiles and WordPress-user connections are not available in this build yet."
 msgstr ""
 
-#: admin/views/edit-certificate.php:105
+#: admin/views/edit-certificate.php:106
 #: admin/views/edit-certificate.php:77
 #: admin/views/integrations.php:152
 #: admin/views/integrations.php:98
@@ -1485,106 +1485,102 @@ msgstr ""
 msgid "Program"
 msgstr ""
 
-#: admin/views/edit-certificate.php:105
+#: admin/views/edit-certificate.php:106
 msgid "Program relationship"
 msgstr ""
 
-#: admin/views/edit-certificate.php:106
-msgid "Standalone Programs are already implemented behind the normalized-domain acceptance gate. Program assignment is intentionally unavailable in the legacy authority instead of being simulated with a custom field."
+#: admin/views/edit-certificate.php:107
+msgid "Program assignment is not available for current-registry certificates in this build yet. Certloom leaves it unset rather than storing a misleading substitute."
 msgstr ""
 
-#: admin/views/edit-certificate.php:110
+#: admin/views/edit-certificate.php:112
 msgid "Credential-specific data"
 msgstr ""
 
-#: admin/views/edit-certificate.php:110
+#: admin/views/edit-certificate.php:112
 #: admin/views/edit-certificate.php:79
 msgid "Custom Fields"
 msgstr ""
 
-#: admin/views/edit-certificate.php:111
+#: admin/views/edit-certificate.php:113
 msgid "Labels and public/private visibility come from Field Manager, so editing and verification use the same schema."
 msgstr ""
 
-#: admin/views/edit-certificate.php:112
+#: admin/views/edit-certificate.php:114
 msgid "No additional custom fields are active."
 msgstr ""
 
-#: admin/views/edit-certificate.php:116
+#: admin/views/edit-certificate.php:118
 #: admin/views/setup-wizard.php:117
 msgid "Public verification"
 msgstr ""
 
-#: admin/views/edit-certificate.php:117
+#: admin/views/edit-certificate.php:119
 msgid "%d field is currently approved for public verification output."
 msgid_plural "%d fields are currently approved for public verification output."
 msgstr[0] ""
 msgstr[1] ""
 
-#: admin/views/edit-certificate.php:120
+#: admin/views/edit-certificate.php:122
 msgid "Secondary verification code"
 msgstr ""
 
-#: admin/views/edit-certificate.php:122
+#: admin/views/edit-certificate.php:124
 msgid "Generate secure code"
 msgstr ""
 
-#: admin/views/edit-certificate.php:123
+#: admin/views/edit-certificate.php:125
 msgid "A secondary proof is enabled. Leave this blank to keep it, enter a new 16-character code to rotate it, or use Clear below. Certloom stores only a salted one-way hash."
 msgstr ""
 
-#: admin/views/edit-certificate.php:123
+#: admin/views/edit-certificate.php:125
 msgid "Optional. When enabled, public verification requires this code in addition to the exact certificate number. Certloom stores only a salted one-way hash."
 msgstr ""
 
-#: admin/views/edit-certificate.php:124
+#: admin/views/edit-certificate.php:126
 msgid "Clear secondary verification code"
 msgstr ""
 
-#: admin/views/edit-certificate.php:127
+#: admin/views/edit-certificate.php:129
 msgid "%d field is approved for Credential Profile output."
 msgid_plural "%d fields are approved for Credential Profile output."
 msgstr[0] ""
 msgstr[1] ""
 
-#: admin/views/edit-certificate.php:129
-#: admin/views/edit-certificate.php:130
+#: admin/views/edit-certificate.php:131
+#: admin/views/edit-certificate.php:132
 #: admin/views/setup-wizard.php:118
 msgid "(opens in a new tab)"
 msgstr ""
 
-#: admin/views/edit-certificate.php:129
+#: admin/views/edit-certificate.php:131
 msgid "Configure verification page"
 msgstr ""
 
-#: admin/views/edit-certificate.php:129
+#: admin/views/edit-certificate.php:131
 msgid "Open verification result"
 msgstr ""
 
-#: admin/views/edit-certificate.php:130
+#: admin/views/edit-certificate.php:132
 msgid "Open credential profile"
 msgstr ""
 
-#: admin/views/edit-certificate.php:131
+#: admin/views/edit-certificate.php:133
 msgid "Review public fields"
 msgstr ""
 
-#: admin/views/edit-certificate.php:136
+#: admin/views/edit-certificate.php:139
 #: admin/views/edit-certificate.php:81
 #: src/Infrastructure/Admin/DomainAdmin.php:625
 #: src/Infrastructure/Admin/DomainAdmin.php:648
 msgid "Activity"
 msgstr ""
 
-#: admin/views/edit-certificate.php:136
+#: admin/views/edit-certificate.php:139
 msgid "Current record timeline"
 msgstr ""
 
-#: admin/views/edit-certificate.php:137
-msgid "Activity becomes available after the credential is saved."
-msgstr ""
-
-#: admin/views/edit-certificate.php:137
+#: admin/views/edit-certificate.php:140
 #: admin/views/import-results.php:27
 #: admin/views/import-upload.php:122
 #: admin/views/import-upload.php:197
@@ -1592,41 +1588,41 @@ msgstr ""
 msgid "Created"
 msgstr ""
 
-#: admin/views/edit-certificate.php:137
+#: admin/views/edit-certificate.php:140
 msgid "Last updated"
 msgstr ""
 
-#: admin/views/edit-certificate.php:137
+#: admin/views/edit-certificate.php:140
 msgid "Not recorded"
 msgstr ""
 
-#: admin/views/edit-certificate.php:138
-msgid "Immutable lifecycle Event history is implemented in the normalized credential domain and remains acceptance-gated. Created/updated timestamps shown here are the truthful limits of the current live registry."
+#: admin/views/edit-certificate.php:141
+msgid "Full credential history is not available for current-registry records yet. Created and last-updated times are the activity details available here."
 msgstr ""
 
-#: admin/views/edit-certificate.php:142
+#: admin/views/edit-certificate.php:146
 msgid "Credential lifecycle and internal data"
 msgstr ""
 
-#: admin/views/edit-certificate.php:144
+#: admin/views/edit-certificate.php:148
 msgid "Status & reason"
 msgstr ""
 
-#: admin/views/edit-certificate.php:150
+#: admin/views/edit-certificate.php:154
 #: includes/class-ecapla-certverify-fields.php:393
 msgid "Internal notes"
 msgstr ""
 
-#: admin/views/edit-certificate.php:150
+#: admin/views/edit-certificate.php:154
 msgid "Private administration"
 msgstr ""
 
-#: admin/views/edit-certificate.php:159
+#: admin/views/edit-certificate.php:163
 #: admin/views/edit-certificate.php:53
 msgid "Add credential"
 msgstr ""
 
-#: admin/views/edit-certificate.php:159
+#: admin/views/edit-certificate.php:163
 msgid "Update credential"
 msgstr ""
 
@@ -1641,7 +1637,7 @@ msgid "Credential workspace"
 msgstr ""
 
 #: admin/views/edit-certificate.php:52
-msgid "New registry credential"
+msgid "New certificate"
 msgstr ""
 
 #: admin/views/edit-certificate.php:53
@@ -1649,11 +1645,11 @@ msgid "Credential details"
 msgstr ""
 
 #: admin/views/edit-certificate.php:54
-msgid "Create a credential record in the current authoritative registry."
+msgid "Create a certificate in the current Certloom registry."
 msgstr ""
 
 #: admin/views/edit-certificate.php:54
-msgid "Review the current authoritative record by responsibility area without changing Certloom’s verification truth."
+msgid "Review this certificate by responsibility area while keeping its public verification details accurate."
 msgstr ""
 
 #: admin/views/edit-certificate.php:57
@@ -2006,7 +2002,7 @@ msgid "Credential profile & clean links"
 msgstr ""
 
 #: admin/views/frontend-manager.php:60
-msgid "Phase 2 adds a shared read-only credential profile that uses the same public field and status rules as verification."
+msgid "Credential profiles use the same public field and status rules as verification, so visitors see consistent certificate information."
 msgstr ""
 
 #: admin/views/frontend-manager.php:61
@@ -2033,7 +2029,7 @@ msgid "Elementor:"
 msgstr ""
 
 #: admin/views/frontend-manager.php:64
-msgid "Canonical clean links use /certloom/verify/{certificate}/ and /certloom/credential/{certificate}/ when pretty permalinks are enabled. Complex certificate numbers are transported in one URL-safe token without changing exact-number verification identity."
+msgid "Clean links use /certloom/verify/{certificate}/ and /certloom/credential/{certificate}/ when pretty permalinks are enabled. Complex certificate numbers stay safely encoded without changing the exact number used for verification."
 msgstr ""
 
 #: admin/views/frontend-manager.php:68
@@ -2041,7 +2037,7 @@ msgid "Shortcode design reference"
 msgstr ""
 
 #: admin/views/frontend-manager.php:77
-msgid "The native block and shortcode use the same secure REST lookup, field visibility rules, status logic, and responsive frontend styles as the Elementor widgets."
+msgid "The native block, shortcode and Elementor widgets use the same secure certificate lookup, field visibility rules, status logic and responsive presentation."
 msgstr ""
 
 #: admin/views/import-mapping.php:10
@@ -2871,11 +2867,11 @@ msgid "Template"
 msgstr ""
 
 #: admin/views/integrations.php:162
-msgid "LMS foundation"
+msgid "Shared credential workflow"
 msgstr ""
 
 #: admin/views/integrations.php:162
-msgid "Tutor LMS and LearnDash share one issuance architecture"
+msgid "Tutor LMS and LearnDash use one credential workflow"
 msgstr ""
 
 #: admin/views/integrations.php:163
@@ -2883,7 +2879,7 @@ msgid "Both integrations use the same recipient linking, course mapping, eligibi
 msgstr ""
 
 #: admin/views/integrations.php:164
-msgid "What comes next"
+msgid "Current availability"
 msgstr ""
 
 #: admin/views/integrations.php:24
@@ -2969,7 +2965,7 @@ msgid "Tutor course"
 msgstr ""
 
 #: admin/views/issuance-analytics.php:14
-msgid "ANL-02 · Immutable issuance analytics"
+msgid "Issuance insights"
 msgstr ""
 
 #: admin/views/issuance-analytics.php:15
@@ -2977,7 +2973,7 @@ msgid "Issuance Analytics"
 msgstr ""
 
 #: admin/views/issuance-analytics.php:16
-msgid "Measure issued credentials by Program, Template, organization and Batch from append-only issuance events and immutable Version snapshots, with a current 90-day expiry forecast."
+msgid "Measure issued credentials by Program, Template, organization and Batch, with a current 90-day expiry forecast."
 msgstr ""
 
 #: admin/views/issuance-analytics.php:36
@@ -3006,11 +3002,11 @@ msgid "Issued credentials"
 msgstr ""
 
 #: admin/views/issuance-analytics.php:50
-msgid "ANL-02 counts actual credential.issued events; migrations and relationship corrections do not masquerade as new issuance."
+msgid "No issuance activity in this period."
 msgstr ""
 
 #: admin/views/issuance-analytics.php:50
-msgid "No normalized issuance events in this period."
+msgid "Only credentials actually issued during this reporting period are counted. Data migrations and relationship corrections are excluded."
 msgstr ""
 
 #: admin/views/issuance-analytics.php:52
@@ -3034,19 +3030,19 @@ msgid "Issuance source"
 msgstr ""
 
 #: admin/views/issuance-analytics.php:57
-msgid "Other normalized source"
+msgid "Other"
 msgstr ""
 
 #: admin/views/issuance-analytics.php:58
-msgid "Historical facts stay immutable"
+msgid "Historical accuracy"
 msgstr ""
 
 #: admin/views/issuance-analytics.php:58
-msgid "Program, Template and organization attribution comes from immutable issuance snapshots. Batch is shown as Unattributed when older issuance did not freeze a Batch dimension; Certloom never guesses it from a later Series correction."
+msgid "Issued credential details stay fixed"
 msgstr ""
 
 #: admin/views/issuance-analytics.php:58
-msgid "Truth model"
+msgid "Program, Template and organization attribution comes from the details stored when the credential was issued. Batch is shown as Unattributed when older issuance did not store a Batch; Certloom never guesses it from later changes."
 msgstr ""
 
 #: admin/views/issuance-analytics.php:62
@@ -3350,11 +3346,11 @@ msgid "Administrator-only notes. Certloom permanently locks this field out of pu
 msgstr ""
 
 #: admin/views/roadmap-placeholder.php:16
-msgid "Roadmap state"
+msgid "Availability"
 msgstr ""
 
 #: admin/views/roadmap-placeholder.php:19
-msgid "This screen is deliberately informational. Certloom does not create fake records, hidden compatibility data, or partially supported workflows merely to make a future module look enabled."
+msgid "This workspace remains read-only until its final safety checks are complete. Certloom does not create placeholder records or partial workflows just to make a protected feature look enabled."
 msgstr ""
 
 #: admin/views/roadmap-placeholder.php:21
@@ -4612,7 +4608,7 @@ msgstr ""
 #: elementor/class-ecapla-certverify-elementor-widget.php:280
 #: elementor/class-ecapla-certverify-elementor-widget.php:93
 #: src/Infrastructure/Admin/DomainAdmin.php:973
-#: src/Infrastructure/Admin/TemplateAdmin.php:1133
+#: src/Infrastructure/Admin/TemplateAdmin.php:1134
 msgid "Description"
 msgstr ""
 
@@ -6475,7 +6471,7 @@ msgid "Certificate holder"
 msgstr ""
 
 #: includes/class-ecapla-certverify-fields.php:374
-#: src/Infrastructure/Admin/TemplateAdmin.php:1072
+#: src/Infrastructure/Admin/TemplateAdmin.php:1073
 msgid "Standard"
 msgstr ""
 
@@ -11814,7 +11810,7 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:229
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:352
-#: src/Infrastructure/Admin/TemplateAdmin.php:1133
+#: src/Infrastructure/Admin/TemplateAdmin.php:1134
 #: src/Infrastructure/Admin/TemplateAdmin.php:645
 #: src/Infrastructure/Admin/TemplateAdmin.php:674
 msgid "Machine key"
@@ -12455,7 +12451,7 @@ msgid "Credential Preview"
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:209
-#: src/Infrastructure/Admin/TemplateAdmin.php:1089
+#: src/Infrastructure/Admin/TemplateAdmin.php:1090
 msgid "Render Plan SHA-256"
 msgstr ""
 
@@ -12984,11 +12980,11 @@ msgid "Selected element aligned to page."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1056
-msgid "Canonical Render Plan"
+msgid "Read-only on-screen sample of this certificate design."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1056
-msgid "Read-only sample Preview built through the same LayoutResolver → RenderPlanBuilder composition path consumed by Certloom PDF, PNG and JPEG adapters."
+msgid "Shared layout preview"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1056
@@ -12997,7 +12993,7 @@ msgid "Template Preview"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1058
-msgid "Renderer release accepted"
+msgid "Production rendering ready"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:106
@@ -13005,33 +13001,41 @@ msgid "Layer order updated."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1060
-msgid "Artifact authority pending"
+msgid "Production downloads unavailable"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1063
-msgid "Geometry, merge resolution, direction, QR modules, colors, ordering and element composition come from the canonical Render Plan. Browser font rasterization is illustrative until PDF-04 exact renderer/font authority is accepted; this screen never manufactures production artifact authority."
+msgid "Preview only:"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1063
-msgid "Preview boundary:"
+msgid "This screen shows layout, direction, QR, colors and element composition for review. PDF, PNG and JPEG downloads remain unavailable until production rendering checks pass."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1065
-#: src/Infrastructure/Admin/TemplateAdmin.php:1089
+#: src/Infrastructure/Admin/TemplateAdmin.php:1064
+msgid "Canonical Render Plan evidence remains available here for support and release verification. Artifact authority pending means PDF-04 exact renderer/font acceptance has not been approved; this screen never manufactures production artifact authority."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1064
+msgid "Rendering details"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1066
+#: src/Infrastructure/Admin/TemplateAdmin.php:1090
 #: src/Infrastructure/Admin/TemplateAdmin.php:768
 msgid "Revision"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1065
+#: src/Infrastructure/Admin/TemplateAdmin.php:1066
 msgid "Template Preview revision"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1066
+#: src/Infrastructure/Admin/TemplateAdmin.php:1067
 msgid "Current draft"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1066
-#: src/Infrastructure/Admin/TemplateAdmin.php:1108
+#: src/Infrastructure/Admin/TemplateAdmin.php:1067
+#: src/Infrastructure/Admin/TemplateAdmin.php:1109
 msgid "Published"
 msgstr ""
 
@@ -13039,19 +13043,19 @@ msgstr ""
 msgid "Element locked for this author."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1071
+#: src/Infrastructure/Admin/TemplateAdmin.php:1072
 msgid "Sample data"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1071
+#: src/Infrastructure/Admin/TemplateAdmin.php:1072
 msgid "Template Preview sample data"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1072
+#: src/Infrastructure/Admin/TemplateAdmin.php:1073
 msgid "Long content"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1072
+#: src/Infrastructure/Admin/TemplateAdmin.php:1073
 msgid "RTL / Urdu"
 msgstr ""
 
@@ -13059,19 +13063,19 @@ msgstr ""
 msgid "Element unlocked."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1085
+#: src/Infrastructure/Admin/TemplateAdmin.php:1086
 msgid "The canonical Render Plan passed preparation but could not be presented safely in the browser."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1089
-msgid "Layout SHA-256"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:109
 msgid "Element nudged."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1092
+#: src/Infrastructure/Admin/TemplateAdmin.php:1090
+msgid "Layout SHA-256"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1093
 msgid "Synthetic Preview values never read or mutate credential records. Use Standard, Long content and RTL / Urdu samples to stress the design before Designer editing and issuance are introduced."
 msgstr ""
 
@@ -13079,36 +13083,32 @@ msgstr ""
 msgid "Element placed on the canvas."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1100
+#: src/Infrastructure/Admin/TemplateAdmin.php:1101
 msgid "Duplicate as a new draft"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1100
+#: src/Infrastructure/Admin/TemplateAdmin.php:1101
 msgid "Duplication copies only the reviewed current revision. It creates a fresh template identity with no published state and no assignments."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1101
+#: src/Infrastructure/Admin/TemplateAdmin.php:1102
 msgid "Copy"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1101
+#: src/Infrastructure/Admin/TemplateAdmin.php:1102
 msgid "Create duplicate draft"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1101
+#: src/Infrastructure/Admin/TemplateAdmin.php:1102
 msgid "New machine key"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1101
+#: src/Infrastructure/Admin/TemplateAdmin.php:1102
 msgid "New name"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1107
+#: src/Infrastructure/Admin/TemplateAdmin.php:1108
 msgid "Draft"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1109
-msgid "Changes pending"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:111
@@ -13116,6 +13116,10 @@ msgid "Snapping enabled."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1110
+msgid "Changes pending"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1111
 #: src/Infrastructure/Admin/TemplateAdmin.php:669
 #: src/Infrastructure/Admin/TemplateAdmin.php:861
 msgid "Archived"
@@ -13125,15 +13129,15 @@ msgstr ""
 msgid "Snapping disabled."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1122
+#: src/Infrastructure/Admin/TemplateAdmin.php:1123
 msgid "Premium factory designs"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1123
+#: src/Infrastructure/Admin/TemplateAdmin.php:1124
 msgid "%1$d historical design families × %2$d compatibility variants = %3$d preserved layouts, plus %4$d additive curated premium concepts. Total factory drafts after synchronization: %5$d. Factory layouts remain local drafts until the production renderer gate is accepted."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1127
+#: src/Infrastructure/Admin/TemplateAdmin.php:1128
 msgid "Install / synchronize factory drafts"
 msgstr ""
 
@@ -13141,23 +13145,23 @@ msgstr ""
 msgid "Direct text editing started. Press Control or Command plus Enter to apply, or Escape to cancel."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1133
+#: src/Infrastructure/Admin/TemplateAdmin.php:1134
 msgid "Factory template identity is permanent. Duplicate/export the design for a separately named template."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1133
+#: src/Infrastructure/Admin/TemplateAdmin.php:1134
 msgid "Name"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1133
+#: src/Infrastructure/Admin/TemplateAdmin.php:1134
 msgid "Stable lowercase key used by assignments, imports and future integrations."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1138
+#: src/Infrastructure/Admin/TemplateAdmin.php:1139
 msgid "Import template"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1138
+#: src/Infrastructure/Admin/TemplateAdmin.php:1139
 msgid "Validate and import"
 msgstr ""
 
@@ -13169,15 +13173,15 @@ msgstr ""
 msgid "Direct text edit cancelled."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1159
-msgid "Template changes were saved."
-msgstr ""
-
 #: src/Infrastructure/Admin/TemplateAdmin.php:116
 msgid "Edit certificate text directly on the canvas"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1165
+#: src/Infrastructure/Admin/TemplateAdmin.php:1160
+msgid "Template changes were saved."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1166
 msgid "You are not allowed to manage Certloom templates."
 msgstr ""
 
@@ -13359,7 +13363,7 @@ msgid "Certloom could not encode the template export safely."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:474
-msgid "Browse real certificate previews first, then assign a design to a Program or open the same canonical Template in Designer. Template history, publication and renderer authority remain unchanged underneath this visual workspace."
+msgid "Browse certificate previews first, then assign a design to a Program or open the same Template in Designer. Revision history and publication stay unchanged underneath this visual workspace."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:491
@@ -13380,7 +13384,7 @@ msgid "Designer"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:550
-msgid "Browse the historical compatibility layouts together with the new curated premium concepts. Every thumbnail is still produced from the Template’s canonical layout through LayoutResolver → RenderPlanBuilder → the existing browser Preview presenter; TPLUX-02 adds design breadth without adding another renderer or design format."
+msgid "Browse historical layouts together with curated premium concepts. Every thumbnail uses the same certificate layout data as Designer and Preview, so visual browsing does not introduce a second design format."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:550
@@ -13388,11 +13392,11 @@ msgid "Choose a certificate design visually"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:550
-msgid "Start blank"
+msgid "Curated Template Library"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:550
-msgid "TPLUX-02 · Curated Template Library"
+msgid "Start blank"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:550
@@ -13434,7 +13438,7 @@ msgid "No designs match these filters."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:576
-msgid "Canonical browser Preview"
+msgid "Certificate preview"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:576
@@ -13442,7 +13446,7 @@ msgid "Close"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:576
-msgid "This large preview is still browser Preview, not accepted PDF/PNG/JPEG production authority."
+msgid "This is an on-screen preview. PDF, PNG and JPEG downloads remain unavailable until production rendering has passed its release checks."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:585
@@ -13585,7 +13589,7 @@ msgid "Preview unavailable"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:644
-msgid "Choose a local PNG or JPEG. Certloom creates a normal draft with that image as a full-page canonical element; you can then add text, dynamic fields, QR and other elements in Designer."
+msgid "Choose a local PNG or JPEG. Certloom creates a normal draft with that image filling the page; you can then add text, dynamic fields, QR and other elements in Designer."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:644
@@ -13629,7 +13633,7 @@ msgid "Create blank Template"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:666
-msgid "Manage identity, immutable revisions and lifecycle here. Lifecycle remains Draft → Published → Changes pending → Archived; visual discovery stays in Template Library."
+msgid "Manage Template identity, revision history and lifecycle here. Lifecycle remains Draft → Published → Changes pending → Archived; visual discovery stays in Template Library."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:667
@@ -13675,11 +13679,11 @@ msgid "Choose a direct Template for a scope, or choose None to inherit the next 
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:691
-msgid "Template assignments"
+msgid "Published designs"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:691
-msgid "Template candidates · publication-aware"
+msgid "Template assignments"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:692
@@ -13768,7 +13772,7 @@ msgid "element"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:760
-msgid "This card is assignment metadata only—not the canonical Render Plan Preview. Open a Template to inspect Current or Published Preview. Production artifact authority remains renderer-gated."
+msgid "Choose the design assigned to this scope. Open a Template when you want to inspect its current draft or published preview."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:761

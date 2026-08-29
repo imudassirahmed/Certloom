@@ -74,7 +74,10 @@ t17has($files['admin'],'Use inherited/default (None)','explicit None/inheritance
 t17has($files['admin'],'Effective Template','effective assignment is visible');
 t17has($files['admin'],'Fallback path:','fallback chain is explained');
 t17has($files['admin'],'Source: %1$s · fallback depth %2$d','effective assignment source is explicit');
-t17has($files['admin'],'assignment metadata only—not the canonical Render Plan Preview','candidate metadata does not masquerade as renderer output');
+$assignment_start = strpos( $files['admin'], 'private function assignment_candidates' );
+$assignment_end = strpos( $files['admin'], 'private function assignment_target_page', $assignment_start );
+$assignment_source = false !== $assignment_start && false !== $assignment_end ? substr( $files['admin'], $assignment_start, $assignment_end - $assignment_start ) : '';
+t17( '' !== $assignment_source && false === strpos( $assignment_source, 'TemplatePreviewService' ) && false === strpos( $assignment_source, 'RenderPlanHtmlPreview' ), 'assignment candidate cards remain metadata-only and do not instantiate renderer Preview output' );
 t17has($files['admin'],'Layout hash','candidate integrity metadata is visible');
 t17has($files['admin'],'expected_assignment_id','assignment forms carry optimistic-concurrency identity');
 t17has($files['admin'],'expected_updated_at','assignment forms carry optimistic-concurrency timestamp');
@@ -86,8 +89,8 @@ t17has($files['css'],'.certloom-template-candidate-grid','assignment cards have 
 t17has($files['css'],'focus-visible','assignment controls keep visible keyboard focus');
 t17has($files['css'],'@media (max-width: 782px)','assignment workspace has mobile layout');
 t17has($files['css'],'prefers-reduced-motion','assignment workspace respects reduced motion');
-t17has($files['placeholder'],'Template Library + Designer implemented · production artifact authority gated','live placeholder reflects the current Template/Designer state without faking renderer authority');
-t17has($files['placeholder'],'Versioned Templates, the visual Template Library, curated premium design concepts and Quick/Pro Designer are implemented over immutable Template revisions and the canonical Render Plan','live placeholder truthfully describes the current Template lifecycle and Designer implementation');
+t17has($files['placeholder'],'Design tools available · downloadable publication protected','live placeholder reflects current Template/Designer availability without technical authority jargon');
+t17has($files['placeholder'],'The Template Library and Designer are available through Design. Downloadable PDF and image publication stays protected until its final rendering safety checks are approved.','live placeholder truthfully describes current Design availability and protected downloadable publication');
 
 echo "PASS  TPL-03 uses one deterministic Batch → Program → Issuer → Global fallback policy\n";
 echo "PASS  assignments support searchable/paginated targets and Templates, explicit None, source visibility, concurrency proof and renderer-honest metadata\n\n";

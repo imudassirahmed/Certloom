@@ -57,11 +57,11 @@ $designs          = array(
 
 	<section class="ecapla-certverify-admin-card ecapla-certverify-embed-reference">
 		<h2><?php esc_html_e( 'Credential profile & clean links', 'certloom' ); ?></h2>
-		<p><?php esc_html_e( 'Phase 2 adds a shared read-only credential profile that uses the same public field and status rules as verification.', 'certloom' ); ?></p>
+		<p><?php esc_html_e( 'Credential profiles use the same public field and status rules as verification, so visitors see consistent certificate information.', 'certloom' ); ?></p>
 		<p><strong><?php esc_html_e( 'Profile shortcode:', 'certloom' ); ?></strong> <code>[certloom_credential number=&quot;CERT-2026-0001&quot;]</code></p>
 		<p><strong><?php esc_html_e( 'Native block:', 'certloom' ); ?></strong> <?php esc_html_e( 'Certloom – Credential Profile', 'certloom' ); ?></p>
 		<p><strong><?php esc_html_e( 'Elementor:', 'certloom' ); ?></strong> <?php esc_html_e( 'Certloom — Credential Profile', 'certloom' ); ?></p>
-		<p class="description"><?php esc_html_e( 'Canonical clean links use /certloom/verify/{certificate}/ and /certloom/credential/{certificate}/ when pretty permalinks are enabled. Complex certificate numbers are transported in one URL-safe token without changing exact-number verification identity.', 'certloom' ); ?></p>
+		<p class="description"><?php esc_html_e( 'Clean links use /certloom/verify/{certificate}/ and /certloom/credential/{certificate}/ when pretty permalinks are enabled. Complex certificate numbers stay safely encoded without changing the exact number used for verification.', 'certloom' ); ?></p>
 	</section>
 
 	<section class="ecapla-certverify-admin-card ecapla-certverify-embed-reference">
@@ -74,6 +74,6 @@ $designs          = array(
 				<?php endforeach; ?>
 			</tbody>
 		</table>
-		<p class="description"><?php esc_html_e( 'The native block and shortcode use the same secure REST lookup, field visibility rules, status logic, and responsive frontend styles as the Elementor widgets.', 'certloom' ); ?></p>
+		<p class="description"><?php esc_html_e( 'The native block, shortcode and Elementor widgets use the same secure certificate lookup, field visibility rules, status logic and responsive presentation.', 'certloom' ); ?></p>
 	</section>
 </div>

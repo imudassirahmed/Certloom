@@ -87,7 +87,7 @@ ia(false!==strpos($repository,'min( 90, absint( $horizon_days ) )'),'expiry fore
 ia(false!==strpos($manual,"'program_id' => absint")&&false!==strpos($manual,"'issuer_id' => absint")&&false!==strpos($manual,"'batch_id' =>"),'new issuance events freeze compact ANL-02 dimension identifiers');
 ia(false!==strpos($manual,"'template_name'")&&false!==strpos($manual,"'program_title'")&&false!==strpos($manual,"'issuer_name'"),'new issuance events preserve compact human labels without re-reading mutable entity names later');
 ia(false!==strpos($admin,"'issuance' === \$analytics_section")&&false!==strpos($admin,'IssuanceAnalyticsService'),'Analytics controller exposes issuance report as a bounded read-only section');
-ia(false!==strpos($view,'ANL-02 · Immutable issuance analytics')&&false!==strpos($verification_view,'Analytics reports'),'Verification and Issuance analytics share one premium Analytics workspace');
+ia(false!==strpos($view,'Issuance insights')&&false!==strpos($verification_view,'Analytics reports'),'Verification and Issuance analytics share one premium Analytics workspace');
 ia(false!==strpos($view,'Programs')&&false!==strpos($view,'Templates')&&false!==strpos($view,'Organizations')&&false!==strpos($view,'Batches'),'ANL-02 UI exposes every roadmap issuance dimension');
 ia(false!==strpos($view,'90-day expiry forecast')&&false!==strpos($view,'0–30 days')&&false!==strpos($view,'31–60 days')&&false!==strpos($view,'61–90 days'),'ANL-02 UI exposes bounded expiry forecast');
 ia(false!==strpos($view,'renewal reminders and re-certification remain the separate REN-01 workflow'),'expiry forecasting does not falsely claim the separate renewal workflow');

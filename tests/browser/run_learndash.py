@@ -18,7 +18,7 @@ async def main():
         page=await browser.new_page(viewport={'width':1280,'height':1000})
         await page.set_content(html,wait_until='load')
         await ck(await page.get_by_role('heading',name='Integrations').count()==1,'heading')
-        await ck(await page.get_by_text('INT-02/03 · LMS adapters',exact=True).count()==1,'contract')
+        await ck(await page.get_by_text('Supported LMS adapters',exact=True).count()==1,'contract')
         await ck(await page.get_by_role('heading',name='LearnDash',exact=True).count()==1,'learndashHeading')
         await ck(await page.get_by_text('Detected',exact=True).count()==1,'detected')
         await ck(await page.get_by_text('Not installed',exact=True).count()==1,'tutorNotInstalled')
@@ -43,7 +43,7 @@ async def main():
         await ck('match by email' not in body,'noEmailInference')
         await ck('production credential-writing checks' in body,'authorityTruth')
         await ck('learner names, email addresses and unrelated lms data are not copied' in body,'privacyCopy')
-        await ck('tutor lms and learndash share one issuance architecture' in body,'sharedArchitecture')
+        await ck('tutor lms and learndash use one credential workflow' in body,'sharedArchitecture')
         await ck(await page.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'desktopNoOverflow')
         await page.close()
 

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "textdomain": "certloom",
-  "source_pot_sha256": "ca05f35f0ecf1d93b93dd6ef762edbdf764d6cb798af5ae6374bc9b2e767d400",
+  "source_pot_sha256": "c03a0e025228dad962b5632b27da86116ae50262e7f5718d69d31ed55d0acf95",
   "targets": [
     {
       "locale": "es_ES",

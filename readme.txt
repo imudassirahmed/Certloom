@@ -4,13 +4,15 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.94
+Stable tag: 1.6.95
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
 
 == Description ==
+
+> Release note for 1.6.95: UX-QA-01 certifies Certloom as a whole product rather than another feature slice. The release adds real first-use/current-authority and advanced-admin browser journeys; removes stale milestone, migration and renderer jargon from ordinary Dashboard, Integrations, Appearance, Analytics, protected-workspace and Design surfaces; keeps exact technical evidence in Advanced diagnostics or collapsed Rendering details; simplifies the current-registry first-certificate workspace to relevant sections only; and enforces scoped 44px mobile targets. Backup & Restore/LMS browser fixtures are reconciled to the actual frozen customer UI. No normalized-domain, Program/Template, public-verifier or renderer authority is opened. After UX-QA freezes, Certloom enters the existing final RC gates beginning with genuine normalized-domain acceptance/cutover and PDF-04 renderer acceptance.
 
 > Release note for 1.6.94: WIZ-01/02 replaces the legacy setup checklist with a resumable, skippable and rerunnable adaptive Setup Wizard over Certloom's existing canonical authorities. Purpose/subcategory presets reuse ProgramProfile taxonomy and provide editable recommendations only; Simple/Advanced reuses AdminUiMode; review/apply writes only through existing Settings, numbering, onboarding/profile and Scheduled Backup contracts. Program/Template creation remains fail-closed behind the existing domain admin gate, Google Drive is never enabled without OAuth, and normalized-domain/renderer authority remains closed. Wizard completion is tracked separately from real readiness, with the Dashboard showing a compact remaining-readiness checklist. UX-QA-01 follows after this release freezes.
 

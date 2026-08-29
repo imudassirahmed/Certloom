@@ -3508,3 +3508,23 @@
 @media(max-width:782px){.certloom-adaptive-setup{max-width:100%;overflow-x:clip}.certloom-wizard-progress{margin-inline-end:10px}.certloom-wizard-progress-step{flex:0 0 138px;min-height:44px}.certloom-wizard-choice-row{grid-template-columns:1fr}.certloom-wizard-choice-row label{min-height:76px}.certloom-wizard-actions .button,.certloom-wizard-secondary-action .button,.certloom-wizard-footer-actions .button,.certloom-wizard-footer-actions .button-link,.certloom-wizard-save-exit,.certloom-wizard-restart .button,.certloom-adaptive-setup input,.certloom-adaptive-setup select{min-height:44px}.certloom-wizard-footer-actions{align-items:stretch}.certloom-wizard-summary-list{grid-template-columns:1fr}.certloom-wizard-review-table{min-width:680px}}
 @media(prefers-reduced-motion:reduce){.certloom-adaptive-setup,.certloom-adaptive-setup *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 @media(forced-colors:active){.certloom-wizard-progress,.certloom-wizard-choice-row label,.certloom-wizard-recommendation,.certloom-setup-complete-badge{border-color:CanvasText;background:Canvas;color:CanvasText}.certloom-wizard-progress-step.is-current,.certloom-wizard-choice-row label:has(input:checked){outline:2px solid Highlight;box-shadow:none}.certloom-wizard-progress-step.is-current>span{background:Highlight;color:HighlightText;border-color:Highlight}.certloom-wizard-review-table tr.has-change th{box-shadow:inset 3px 0 0 Highlight}}
+
+/* UX-QA-01: credential editor mobile touch targets.
+ * Keep this scoped to the current credential workspace instead of changing
+ * WordPress controls globally. The workspace remains compact on desktop while
+ * every actionable mobile control meets the 44px product target. */
+@media (max-width: 782px) {
+	.certloom-certificate-editor .certloom-workspace-nav a,
+	.certloom-certificate-editor .button,
+	.certloom-certificate-editor button,
+	.certloom-certificate-editor input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
+	.certloom-certificate-editor select {
+		min-height: 44px;
+	}
+
+	.certloom-certificate-editor .certloom-workspace-nav a,
+	.certloom-certificate-editor .button,
+	.certloom-certificate-editor button {
+		align-items: center;
+	}
+}

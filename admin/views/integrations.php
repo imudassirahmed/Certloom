@@ -159,8 +159,8 @@ foreach ( (array) ( $learndash['templates'] ?? array() ) as $template ) { if ( i
 	<?php endif; ?>
 
 	<section class="certloom-panel" aria-labelledby="certloom-integration-next-title">
-		<div class="certloom-panel-head"><div><span class="certloom-eyebrow"><?php esc_html_e( 'LMS foundation', 'certloom' ); ?></span><h2 id="certloom-integration-next-title"><?php esc_html_e( 'Tutor LMS and LearnDash share one issuance architecture', 'certloom' ); ?></h2></div></div>
+		<div class="certloom-panel-head"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Shared credential workflow', 'certloom' ); ?></span><h2 id="certloom-integration-next-title"><?php esc_html_e( 'Tutor LMS and LearnDash use one credential workflow', 'certloom' ); ?></h2></div></div>
 		<p><?php esc_html_e( 'Both integrations use the same recipient linking, course mapping, eligibility checks and duplicate protection. Certloom does not maintain a separate credential-writing system for each LMS.', 'certloom' ); ?></p>
-		<div class="certloom-callout certloom-callout-info"><span class="dashicons dashicons-info-outline" aria-hidden="true"></span><div><strong><?php esc_html_e( 'What comes next', 'certloom' ); ?></strong><p><?php echo esc_html( $framework['next'] ); ?></p></div></div>
+		<div class="certloom-callout certloom-callout-info"><span class="dashicons dashicons-info-outline" aria-hidden="true"></span><div><strong><?php esc_html_e( 'Current availability', 'certloom' ); ?></strong><p><?php echo esc_html( $framework['next'] ); ?></p></div></div>
 	</section>
 </div>

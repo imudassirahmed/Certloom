@@ -228,9 +228,9 @@ $health_label = 'good' === $health_overall ? __( 'Ready for current operations',
 			</section>
 
 			<section class="certloom-panel certloom-engine-panel" aria-labelledby="certloom-engine-title">
-				<div class="certloom-panel-header"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Data engine', 'certloom' ); ?></span><h2 id="certloom-engine-title"><?php esc_html_e( 'Proven registry is authoritative', 'certloom' ); ?></h2></div></div>
-				<p><?php esc_html_e( 'The current 1.5 registry remains the live source of certificate truth. Credential Series migration infrastructure stays safely gated until its real staging acceptance sequence is approved.', 'certloom' ); ?></p>
-				<div class="certloom-engine-status"><span class="dashicons dashicons-lock" aria-hidden="true"></span><?php esc_html_e( 'No automatic data-store switch', 'certloom' ); ?></div>
+				<div class="certloom-panel-header"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Data safety', 'certloom' ); ?></span><h2 id="certloom-engine-title"><?php esc_html_e( 'Your certificate records stay protected', 'certloom' ); ?></h2></div></div>
+				<p><?php esc_html_e( 'Certloom keeps your current certificate records in the proven live registry while newer data features remain protected until their safety checks are complete.', 'certloom' ); ?></p>
+				<div class="certloom-engine-status"><span class="dashicons dashicons-lock" aria-hidden="true"></span><?php esc_html_e( 'No automatic storage changes', 'certloom' ); ?></div>
 			</section>
 		</aside>
 	</div>

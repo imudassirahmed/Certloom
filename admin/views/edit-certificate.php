@@ -49,9 +49,9 @@ $ecapla_certverify_updated_label = $certificate && ! empty( $certificate['update
 	<section class="certloom-page-hero certloom-editor-hero" aria-labelledby="certloom-editor-title">
 		<div>
 			<a class="certloom-back-link" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-certificates' ) ); ?>"><span aria-hidden="true">←</span> <?php esc_html_e( 'Back to credentials', 'certloom' ); ?></a>
-			<span class="certloom-eyebrow"><?php echo $certificate ? esc_html__( 'Credential workspace', 'certloom' ) : esc_html__( 'New registry credential', 'certloom' ); ?></span>
+			<span class="certloom-eyebrow"><?php echo $certificate ? esc_html__( 'Credential workspace', 'certloom' ) : esc_html__( 'New certificate', 'certloom' ); ?></span>
 			<h1 id="certloom-editor-title"><?php echo $certificate ? esc_html__( 'Credential details', 'certloom' ) : esc_html__( 'Add credential', 'certloom' ); ?></h1>
-			<p><?php echo $certificate ? esc_html__( 'Review the current authoritative record by responsibility area without changing Certloom’s verification truth.', 'certloom' ) : esc_html__( 'Create a credential record in the current authoritative registry.', 'certloom' ); ?></p>
+			<p><?php echo $certificate ? esc_html__( 'Review this certificate by responsibility area while keeping its public verification details accurate.', 'certloom' ) : esc_html__( 'Create a certificate in the current Certloom registry.', 'certloom' ); ?></p>
 		</div>
 		<?php if ( $certificate ) : ?>
 			<div class="certloom-editor-status-card" aria-label="<?php esc_attr_e( 'Current certificate status', 'certloom' ); ?>">
@@ -74,11 +74,11 @@ $ecapla_certverify_updated_label = $certificate && ! empty( $certificate['update
 	<nav class="certloom-workspace-nav" aria-label="<?php esc_attr_e( 'Credential workspace sections', 'certloom' ); ?>">
 		<a href="#certloom-workspace-overview"><?php esc_html_e( 'Overview', 'certloom' ); ?></a>
 		<a href="#certloom-workspace-recipient"><?php esc_html_e( 'Recipient', 'certloom' ); ?></a>
-		<a href="#certloom-workspace-program"><?php esc_html_e( 'Program', 'certloom' ); ?></a>
+		<?php if ( $certificate ) : ?><a href="#certloom-workspace-program"><?php esc_html_e( 'Program', 'certloom' ); ?></a><?php endif; ?>
 		<a href="#certloom-workspace-status"><?php esc_html_e( 'Status', 'certloom' ); ?></a>
 		<a href="#certloom-workspace-custom"><?php esc_html_e( 'Custom Fields', 'certloom' ); ?></a>
 		<a href="#certloom-workspace-verification"><?php esc_html_e( 'Verification', 'certloom' ); ?></a>
-		<a href="#certloom-workspace-activity"><?php esc_html_e( 'Activity', 'certloom' ); ?></a>
+		<?php if ( $certificate ) : ?><a href="#certloom-workspace-activity"><?php esc_html_e( 'Activity', 'certloom' ); ?></a><?php endif; ?>
 		<a href="#certloom-workspace-actions"><?php esc_html_e( 'Actions', 'certloom' ); ?></a>
 	</nav>
 
@@ -98,13 +98,15 @@ $ecapla_certverify_updated_label = $certificate && ! empty( $certificate['update
 				<section id="certloom-workspace-recipient" class="certloom-panel certloom-editor-section" aria-labelledby="certloom-recipient-title">
 					<div class="certloom-panel-header"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Recipient', 'certloom' ); ?></span><h2 id="certloom-recipient-title"><?php esc_html_e( 'Current certificate holder', 'certloom' ); ?></h2></div></div>
 					<?php if ( $ecapla_certverify_recipient_field ) : $field = $ecapla_certverify_recipient_field; ?><?php include ECAPLA_CERTVERIFY_PATH . 'admin/views/partials/certificate-field.php'; ?><?php endif; ?>
-					<p class="description certloom-gated-note"><span class="dashicons dashicons-lock" aria-hidden="true"></span><?php esc_html_e( 'First-class Recipient identity, WordPress-user links and credential history are implemented in the normalized domain but remain production acceptance-gated. This live editor does not invent those relationships in legacy data.', 'certloom' ); ?></p>
+					<p class="description certloom-gated-note"><span class="dashicons dashicons-lock" aria-hidden="true"></span><?php esc_html_e( 'This editor uses the holder name stored with this certificate. Linked recipient profiles and WordPress-user connections are not available in this build yet.', 'certloom' ); ?></p>
 				</section>
 
+				<?php if ( $certificate ) : ?>
 				<section id="certloom-workspace-program" class="certloom-panel certloom-editor-section" aria-labelledby="certloom-program-title">
 					<div class="certloom-panel-header"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Program', 'certloom' ); ?></span><h2 id="certloom-program-title"><?php esc_html_e( 'Program relationship', 'certloom' ); ?></h2></div><span class="dashicons dashicons-lock" aria-hidden="true"></span></div>
-					<p><?php esc_html_e( 'Standalone Programs are already implemented behind the normalized-domain acceptance gate. Program assignment is intentionally unavailable in the legacy authority instead of being simulated with a custom field.', 'certloom' ); ?></p>
+					<p><?php esc_html_e( 'Program assignment is not available for current-registry certificates in this build yet. Certloom leaves it unset rather than storing a misleading substitute.', 'certloom' ); ?></p>
 				</section>
+				<?php endif; ?>
 
 				<section id="certloom-workspace-custom" class="certloom-panel certloom-editor-section" aria-labelledby="certloom-custom-fields-title">
 					<div class="certloom-panel-header"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Custom Fields', 'certloom' ); ?></span><h2 id="certloom-custom-fields-title"><?php esc_html_e( 'Credential-specific data', 'certloom' ); ?></h2></div><a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-fields' ) ); ?>" class="certloom-inline-link"><?php esc_html_e( 'Manage fields', 'certloom' ); ?></a></div>
@@ -132,11 +134,13 @@ $ecapla_certverify_updated_label = $certificate && ! empty( $certificate['update
 					</div>
 				</section>
 
+				<?php if ( $certificate ) : ?>
 				<section id="certloom-workspace-activity" class="certloom-panel certloom-editor-section" aria-labelledby="certloom-activity-title">
 					<div class="certloom-panel-header"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Activity', 'certloom' ); ?></span><h2 id="certloom-activity-title"><?php esc_html_e( 'Current record timeline', 'certloom' ); ?></h2></div></div>
-					<?php if ( $certificate ) : ?><dl class="certloom-record-facts"><div><dt><?php esc_html_e( 'Created', 'certloom' ); ?></dt><dd><?php echo esc_html( $ecapla_certverify_created_label ?: __( 'Not recorded', 'certloom' ) ); ?></dd></div><div><dt><?php esc_html_e( 'Last updated', 'certloom' ); ?></dt><dd><?php echo esc_html( $ecapla_certverify_updated_label ?: __( 'Not recorded', 'certloom' ) ); ?></dd></div></dl><?php else : ?><p><?php esc_html_e( 'Activity becomes available after the credential is saved.', 'certloom' ); ?></p><?php endif; ?>
-					<p class="description certloom-gated-note"><span class="dashicons dashicons-lock" aria-hidden="true"></span><?php esc_html_e( 'Immutable lifecycle Event history is implemented in the normalized credential domain and remains acceptance-gated. Created/updated timestamps shown here are the truthful limits of the current live registry.', 'certloom' ); ?></p>
+					<dl class="certloom-record-facts"><div><dt><?php esc_html_e( 'Created', 'certloom' ); ?></dt><dd><?php echo esc_html( $ecapla_certverify_created_label ?: __( 'Not recorded', 'certloom' ) ); ?></dd></div><div><dt><?php esc_html_e( 'Last updated', 'certloom' ); ?></dt><dd><?php echo esc_html( $ecapla_certverify_updated_label ?: __( 'Not recorded', 'certloom' ) ); ?></dd></div></dl>
+					<p class="description certloom-gated-note"><span class="dashicons dashicons-lock" aria-hidden="true"></span><?php esc_html_e( 'Full credential history is not available for current-registry records yet. Created and last-updated times are the activity details available here.', 'certloom' ); ?></p>
 				</section>
+				<?php endif; ?>
 			</div>
 
 			<aside class="certloom-editor-sidebar" aria-label="<?php esc_attr_e( 'Credential lifecycle and internal data', 'certloom' ); ?>">

@@ -1432,12 +1432,12 @@ class Ecapla_CertVerify_Admin {
 		if ( ! empty( $learndash['status']['available'] ) ) { $detected[] = __( 'LearnDash', 'certloom' ); }
 		$framework = array(
 			'status' => $detected ? sprintf( /* translators: %s: detected LMS names. */ __( 'Detected: %s', 'certloom' ), implode( ', ', $detected ) ) : __( 'Integration framework ready', 'certloom' ),
-			'contract' => __( 'INT-02/03 · LMS adapters', 'certloom' ),
+			'contract' => __( 'Supported LMS adapters', 'certloom' ),
 			'adapters' => array(
 				array( 'key' => 'tutor_lms', 'label' => __( 'Tutor LMS', 'certloom' ), 'available' => ! empty( $tutor['status']['available'] ) ),
 				array( 'key' => 'learndash', 'label' => __( 'LearnDash', 'certloom' ), 'available' => ! empty( $learndash['status']['available'] ) ),
 			),
-			'next' => __( 'Tutor LMS and LearnDash share the same bounded recipient, mapping and idempotent issuance architecture. The approved navigation and plain-language consolidation follows both adapters.', 'certloom' ),
+			'next' => __( 'Tutor LMS and LearnDash use Certloom’s standard credential workflow. Course mapping remains unavailable while Program and Template management is protected, and automatic credential creation stays locked until Certloom’s production credential-writing checks are approved.', 'certloom' ),
 		);
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/integrations.php';
 	}
@@ -1450,27 +1450,27 @@ class Ecapla_CertVerify_Admin {
 		$planned_features = array(
 			'certloom-domain-recipients' => array(
 				'title' => __( 'Recipients', 'certloom' ),
-				'eyebrow' => __( 'Phase 1 data model', 'certloom' ),
-				'description' => __( 'First-class Recipient administration is implemented in the normalized domain and remains acceptance-gated until the real WordPress/MySQL migration and cutover proof passes.', 'certloom' ),
-				'status' => __( 'Implementation complete · production acceptance gated', 'certloom' ),
+				'eyebrow' => __( 'Protected workspace', 'certloom' ),
+				'description' => __( 'Recipient management is prepared but not available in this build yet. Certloom keeps this workspace locked until the underlying credential data transition completes its final safety checks. Existing certificate operations remain unchanged.', 'certloom' ),
+				'status' => __( 'Protected until final data safety checks complete', 'certloom' ),
 			),
 			'certloom-domain-programs' => array(
 				'title' => __( 'Programs', 'certloom' ),
-				'eyebrow' => __( 'Phase 1 data model', 'certloom' ),
-				'description' => __( 'Standalone Program administration is implemented in the normalized domain and remains acceptance-gated. Certloom will not emulate Program relationships inside legacy custom fields.', 'certloom' ),
-				'status' => __( 'Implementation complete · production acceptance gated', 'certloom' ),
+				'eyebrow' => __( 'Protected workspace', 'certloom' ),
+				'description' => __( 'Program management is prepared but not available in this build yet. Certloom keeps Program relationships locked until the underlying credential data transition completes its final safety checks rather than storing a misleading substitute.', 'certloom' ),
+				'status' => __( 'Protected until final data safety checks complete', 'certloom' ),
 			),
 			'certloom-templates' => array(
 				'title' => __( 'Templates', 'certloom' ),
-				'eyebrow' => __( 'Pro commercial core · implementation gated', 'certloom' ),
-				'description' => __( 'Versioned Templates, the visual Template Library, curated premium design concepts and Quick/Pro Designer are implemented over immutable Template revisions and the canonical Render Plan. I18N-02 locale/RTL and Program language-specific published-design resolution are implemented. Production PDF/image publication remains fail-closed until renderer release authority is accepted.', 'certloom' ),
-				'status' => __( 'Template Library + Designer implemented · production artifact authority gated', 'certloom' ),
+				'eyebrow' => __( 'Design availability', 'certloom' ),
+				'description' => __( 'The Template Library and Designer are available through Design. Downloadable PDF and image publication stays protected until its final rendering safety checks are approved.', 'certloom' ),
+				'status' => __( 'Design tools available · downloadable publication protected', 'certloom' ),
 			),
 			'certloom-issuance' => array(
 				'title' => __( 'Issuance', 'certloom' ),
-				'eyebrow' => __( 'P0 issuance workflow · implementation gated', 'certloom' ),
-				'description' => __( 'Manual and Bulk Issuance, Credential Management, Email Delivery, Recipient Portal, Public Sharing, Analytics and INT-01 are implemented. Program Profiles resolve Program and locale-specific published designs, while immutable Versions freeze exact Program, locale and Template provenance. Normalized public authority and production PDF/image exports remain acceptance-gated.', 'certloom' ),
-				'status' => __( 'Issuance workflow implemented · normalized/public artifact authority gated', 'certloom' ),
+				'eyebrow' => __( 'Issuance availability', 'certloom' ),
+				'description' => __( 'Certloom’s existing certificate, import, delivery, sharing and analytics workflows remain available. Advanced Program-based issuance and downloadable PDF or image publication stay protected until their final data and rendering safety checks are approved.', 'certloom' ),
+				'status' => __( 'Current credential workflows available · advanced publication protected', 'certloom' ),
 			),
 		);
 		$planned_feature = isset( $planned_features[ $page ] ) ? $planned_features[ $page ] : null;

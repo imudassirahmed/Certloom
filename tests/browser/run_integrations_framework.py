@@ -18,7 +18,7 @@ async def main():
         page=await browser.new_page(viewport={'width':1280,'height':900})
         await page.set_content(html,wait_until='load')
         await ck(await page.get_by_role('heading',name='Integrations',exact=True).count()==1,'heading')
-        await ck(await page.get_by_text('INT-02/03 · LMS adapters',exact=True).count()==1,'contract')
+        await ck(await page.get_by_text('Supported LMS adapters',exact=True).count()==1,'contract')
         await ck(await page.get_by_role('heading',name='Integration framework ready',exact=True).count()==1,'ready')
         await ck(await page.get_by_text('Ready',exact=True).count()==1,'readyBadge')
         await ck(await page.get_by_role('heading',name='Tutor LMS',exact=True).count()==1,'tutorHeading')
@@ -27,8 +27,8 @@ async def main():
         for phrase,label in [
             ('Completion event','completion'),('Recipient identity','identity'),('Course mapping','mapping'),('Duplicate protection','idempotency'),
             ('Install and activate Tutor LMS to configure course mappings.','standaloneBoundary'),
-            ('Tutor LMS and LearnDash share one issuance architecture','sharedArchitecture'),
-            ('approved navigation and plain-language consolidation follows both adapters','nextSequence')]:
+            ('Tutor LMS and LearnDash use one credential workflow','sharedArchitecture'),
+            ('automatic credential creation stays locked until Certloom’s production credential-writing checks are approved','availabilityTruth')]:
             await ck(phrase in text,label)
         await ck(await page.locator('#certloom-tutor-course').count()==0,'noMappingFormWithoutTutor')
         await ck('Certloom never guesses identity from name or email.' in text,'noEmailInference')
