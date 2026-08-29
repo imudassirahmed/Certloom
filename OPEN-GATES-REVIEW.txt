@@ -1,0 +1,27 @@
+CERTLOOM 1.6.88 — OPEN-GATES REVIEW BUILD
+==========================================
+
+STAGING / DISPOSABLE REVIEW SITE ONLY.
+
+This build intentionally changes only the review surface:
+- CERTLOOM_DOMAIN_ADMIN_PREVIEW = true
+- CERTLOOM_DOMAIN_WRITE_PATHS_READY = false
+- CERTLOOM_DOMAIN_DATA_TOOLS_READY = false
+- renderer accepted.json is still absent
+- staging cutover/migration/restore opt-ins remain false
+
+Purpose
+-------
+Expose the hidden normalized-domain administration preview so the product can be
+visually and functionally reviewed before the real database/renderer authority
+ceremonies are completed.
+
+Important
+---------
+The preview screens may create or modify ADDITIVE normalized-domain preview data.
+They do not make that domain the public credential source of truth. Never install
+this review build on a production site and never treat its output as release
+authority evidence.
+
+To return to normal behavior, remove this plugin and reinstall the canonical
+Certloom 1.6.88 package.
