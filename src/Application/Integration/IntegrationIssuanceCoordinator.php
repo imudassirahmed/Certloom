@@ -109,6 +109,10 @@ final class IntegrationIssuanceCoordinator {
 		if ( $adapter !== $context->adapter_key() || $type !== $context->source_object_type() || $id !== $context->source_object_id() ) {
 			return new \WP_Error( 'certloom_integration_mapping_mismatch', __( 'The server-owned integration mapping does not match the normalized source event.', 'certloom' ) );
 		}
+		$mapping_threshold = isset( $mapping['certificate_threshold'] ) ? (float) $mapping['certificate_threshold'] : $context->certificate_threshold();
+		if ( ! is_finite( $mapping_threshold ) || $mapping_threshold < 0 || $mapping_threshold > 100 || abs( $mapping_threshold - $context->certificate_threshold() ) > 0.000001 ) {
+			return new \WP_Error( 'certloom_integration_mapping_threshold_mismatch', __( 'The integration eligibility threshold changed after the source event was normalized. Review the integration mapping before issuing.', 'certloom' ) );
+		}
 		$program_id = (int) ( $mapping['program_id'] ?? 0 );
 		$template_id = (int) ( $mapping['template_id'] ?? 0 );
 		if ( $program_id < 1 || $template_id < 1 || isset( $mapping['active'] ) && ! $mapping['active'] ) {
@@ -129,6 +133,7 @@ final class IntegrationIssuanceCoordinator {
 			'source_object_id' => $id,
 			'program_id' => $program_id,
 			'template_id' => $template_id,
+			'certificate_threshold' => $mapping_threshold,
 			'expiry_mode' => $expiry_mode,
 			'expires_at' => $expires_at,
 		);

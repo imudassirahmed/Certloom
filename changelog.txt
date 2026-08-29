@@ -1,3 +1,21 @@
+= 1.6.91 =
+* INT-02: add the first concrete LMS adapter for Tutor LMS over the frozen provider-neutral INT-01/LMSCTX-01 boundary.
+* Normalize first-party Tutor course completion using bounded course ID, WordPress user ID and completion-time evidence; do not retain learner names/email or arbitrary Tutor payloads.
+* Add explicit Tutor course → Certloom Program/published Template/expiry mappings with bounded storage, capability+nonce protection and deterministic source-event idempotency.
+* Resolve learners only through the existing explicit Recipient.wp_user_id relationship and route issuance only through IntegrationIssuanceCoordinator + ManualIssuanceService.
+* Keep Tutor automatic issuance fail-closed while normalized credential-write authority is closed; mapping setup remains behind the existing Program/Template admin-preview gate.
+* Add dedicated Tutor source/Chromium acceptance and preserve the Tutor-not-installed Integrations fallback. LearnDash follows before the approved UX/navigation consolidation.
+
+= 1.6.90 =
+* BAK-03: add Google Drive as an optional provider-neutral copy destination for canonical verified Certloom backups.
+* Use least-privilege `drive.file` OAuth with offline access and authenticated-encrypted client/token storage; credential changes invalidate prior token authority.
+* Add resumable 1 MiB Drive uploads with no redirects, exact size/MD5/SHA metadata verification, pre-generated provider IDs and idempotent retry state.
+* Run scheduled Drive copies only after the local scheduled backup has completed and released its local run lock; Google failure never invalidates the successful local backup.
+* Keep BAK-02B safety snapshots local-only so destructive-operation recovery never depends on Google/network availability.
+* Route Drive recovery through streamed download, exact integrity checks, the real non-destructive restore analyzer and verified LocalBackupStore before any existing restore action can use it.
+* Add remote scheduled-copy retention while preserving explicit manual remote copies, bounded non-secret remote history and uninstall cleanup of OAuth secrets/queued copy work.
+* Preserve renderer and normalized-domain production authority gates; next feature slice is Tutor LMS, then LearnDash, before the approved UX/navigation consolidation.
+
 = 1.6.89 =
 * BAK-02B: verified current-authority safety snapshots before Restore, CSV import, reviewed bulk change/delete and permanent retired-field purge; snapshot failure blocks mutation and multi-request operations reuse one exact-hash receipt.
 * Adds independent bounded safety retention without silently rotating manual backups, including pre-pruning of expired automatic safety snapshots before the hard catalog ceiling can block a protected operation.

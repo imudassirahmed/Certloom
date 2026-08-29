@@ -12,13 +12,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<?php if ( isset( $_GET['ecapla_certverify_error'] ) ) : ?><div class="notice notice-error"><p><?php echo esc_html( sanitize_text_field( wp_unslash( $_GET['ecapla_certverify_error'] ) ) ); ?></p></div><?php endif; ?>
 	<?php if ( isset( $_GET['backup_notice'] ) ) : ?>
 		<?php $certloom_backup_notice = sanitize_key( wp_unslash( $_GET['backup_notice'] ) ); ?>
-		<?php if ( in_array( $certloom_backup_notice, array( 'settings-saved', 'storage-verified', 'backup-created', 'backup-deleted', 'restore-tested' ), true ) ) : ?>
+		<?php if ( in_array( $certloom_backup_notice, array( 'settings-saved', 'storage-verified', 'backup-created', 'backup-deleted', 'restore-tested', 'google-connected', 'google-settings-saved', 'google-tested', 'google-disconnected', 'google-uploaded', 'google-downloaded', 'google-deleted' ), true ) ) : ?>
 			<div class="notice notice-success is-dismissible"><p>
 				<?php
 				if ( 'settings-saved' === $certloom_backup_notice ) { esc_html_e( 'Automatic backup settings saved.', 'certloom' ); }
 				elseif ( 'storage-verified' === $certloom_backup_notice ) { esc_html_e( 'Private backup storage tested successfully.', 'certloom' ); }
 				elseif ( 'backup-created' === $certloom_backup_notice ) { esc_html_e( 'Backup created, verified, and stored privately.', 'certloom' ); }
 				elseif ( 'restore-tested' === $certloom_backup_notice ) { esc_html_e( 'Restore test passed without changing live Certloom data.', 'certloom' ); }
+				elseif ( 'google-connected' === $certloom_backup_notice ) { esc_html_e( 'Google Drive connected. Test the destination before enabling automatic copies.', 'certloom' ); }
+				elseif ( 'google-settings-saved' === $certloom_backup_notice ) { esc_html_e( 'Google Drive backup settings saved.', 'certloom' ); }
+				elseif ( 'google-tested' === $certloom_backup_notice ) { esc_html_e( 'Google Drive passed a real upload, verification, and delete test.', 'certloom' ); }
+				elseif ( 'google-disconnected' === $certloom_backup_notice ) { esc_html_e( 'Google Drive disconnected from Certloom. Existing Drive files were left untouched.', 'certloom' ); }
+				elseif ( 'google-uploaded' === $certloom_backup_notice ) { esc_html_e( 'Backup copied to Google Drive and verified.', 'certloom' ); }
+				elseif ( 'google-downloaded' === $certloom_backup_notice ) { esc_html_e( 'Google Drive backup downloaded, verified, analyzed, and saved in local private storage.', 'certloom' ); }
+				elseif ( 'google-deleted' === $certloom_backup_notice ) { esc_html_e( 'Google Drive backup deleted.', 'certloom' ); }
 				else { esc_html_e( 'Private backup deleted.', 'certloom' ); }
 				?>
 			</p></div>
@@ -122,6 +129,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 										<?php wp_nonce_field( 'certloom_backup_saved_test_restore_' . $certloom_saved_backup['id'] ); ?>
 										<button type="submit" class="button button-small"><?php esc_html_e( 'Test restore', 'certloom' ); ?></button>
 									</form>
+									<?php if ( ! empty( $google_drive_state['connected'] ) && 'safety' !== $certloom_saved_backup['purpose'] ) : ?>
+									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-inline-form">
+										<input type="hidden" name="action" value="certloom_google_drive_upload" />
+										<input type="hidden" name="backup_id" value="<?php echo esc_attr( $certloom_saved_backup['id'] ); ?>" />
+										<?php wp_nonce_field( 'certloom_google_drive_upload_' . $certloom_saved_backup['id'] ); ?>
+										<button type="submit" class="button button-small"><?php esc_html_e( 'Copy to Google Drive', 'certloom' ); ?></button>
+									</form>
+									<?php endif; ?>
 									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-inline-form">
 										<input type="hidden" name="action" value="certloom_backup_saved_delete" />
 										<input type="hidden" name="backup_id" value="<?php echo esc_attr( $certloom_saved_backup['id'] ); ?>" />
@@ -136,6 +151,51 @@ if ( ! defined( 'ABSPATH' ) ) {
 					</div>
 				<?php else : ?>
 					<p class="description"><?php esc_html_e( 'No private backups have been saved yet. Use Back up now or enable a schedule.', 'certloom' ); ?></p>
+				<?php endif; ?>
+
+
+				<hr />
+				<h3><?php esc_html_e( 'Google Drive', 'certloom' ); ?></h3>
+				<p><?php esc_html_e( 'Google Drive is an optional second copy of verified Certloom backups. Local private storage remains the recovery source and credential authority never moves to Google.', 'certloom' ); ?></p>
+				<?php $certloom_google_redirect = $google_drive_state['redirect_uri'] ?? ''; ?>
+				<?php if ( is_wp_error( $certloom_google_redirect ) ) : ?><div class="notice notice-warning inline"><p><?php echo esc_html( $certloom_google_redirect->get_error_message() ); ?></p></div><?php endif; ?>
+				<?php if ( empty( $google_drive_state['connected'] ) ) : ?>
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-google-drive-connect">
+						<input type="hidden" name="action" value="certloom_google_drive_connect" />
+						<?php wp_nonce_field( 'certloom_google_drive_connect' ); ?>
+						<p><label for="certloom-google-client-id"><strong><?php esc_html_e( 'Google OAuth client ID', 'certloom' ); ?></strong></label><br /><input id="certloom-google-client-id" type="text" class="regular-text" name="google_client_id" value="<?php echo esc_attr( (string) ( $google_drive_state['client_id'] ?? '' ) ); ?>" autocomplete="off" /></p>
+						<p><label for="certloom-google-client-secret"><strong><?php esc_html_e( 'Google OAuth client secret', 'certloom' ); ?></strong></label><br /><input id="certloom-google-client-secret" type="password" class="regular-text" name="google_client_secret" value="" autocomplete="new-password" /></p>
+						<?php if ( ! is_wp_error( $certloom_google_redirect ) ) : ?><p class="description"><strong><?php esc_html_e( 'Authorized redirect URI:', 'certloom' ); ?></strong> <code><?php echo esc_html( (string) $certloom_google_redirect ); ?></code></p><?php endif; ?>
+						<?php submit_button( __( 'Connect Google Drive', 'certloom' ), 'secondary', 'submit', false ); ?>
+					</form>
+				<?php else : ?>
+					<p><strong><?php esc_html_e( 'Connection:', 'certloom' ); ?></strong> <?php esc_html_e( 'Connected', 'certloom' ); ?></p>
+					<div class="certloom-backup-actions">
+						<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="certloom_google_drive_test" /><?php wp_nonce_field( 'certloom_google_drive_test' ); ?><button type="submit" class="button"><?php esc_html_e( 'Test Google Drive', 'certloom' ); ?></button></form>
+						<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="certloom_google_drive_disconnect" /><?php wp_nonce_field( 'certloom_google_drive_disconnect' ); ?><button type="submit" class="button" onclick="return confirm('<?php echo esc_js( __( 'Disconnect Google Drive from Certloom? Existing Google Drive backup files will not be deleted.', 'certloom' ) ); ?>');"><?php esc_html_e( 'Disconnect', 'certloom' ); ?></button></form>
+					</div>
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-backup-settings-form">
+						<input type="hidden" name="action" value="certloom_google_drive_settings" /><?php wp_nonce_field( 'certloom_google_drive_settings' ); ?>
+						<p><label><input type="checkbox" name="google_drive_enabled" value="1" <?php checked( ! empty( $google_drive_state['enabled'] ) ); ?> /> <strong><?php esc_html_e( 'Copy scheduled backups to Google Drive', 'certloom' ); ?></strong></label></p>
+						<p><label for="certloom-google-drive-retention"><strong><?php esc_html_e( 'Google Drive retention', 'certloom' ); ?></strong></label><br /><input id="certloom-google-drive-retention" type="number" min="1" max="60" name="google_drive_retention" value="<?php echo esc_attr( absint( $google_drive_state['retention'] ?? 14 ) ); ?>" /> <span><?php esc_html_e( 'scheduled backups', 'certloom' ); ?></span></p>
+						<?php submit_button( __( 'Save Google Drive settings', 'certloom' ), 'secondary', 'submit', false ); ?>
+					</form>
+					<?php $certloom_google_last = (array) ( $google_drive_state['last_result'] ?? array() ); ?>
+					<?php if ( ! empty( $certloom_google_last['ran_ts'] ) ) : ?><p class="description"><strong><?php esc_html_e( 'Last Google Drive copy:', 'certloom' ); ?></strong> <?php echo esc_html( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), absint( $certloom_google_last['ran_ts'] ) ) ); ?> — <?php echo esc_html( 'success' === ( $certloom_google_last['status'] ?? '' ) ? __( 'Verified', 'certloom' ) : __( 'Needs attention', 'certloom' ) ); ?></p><?php endif; ?>
+					<?php if ( ! empty( $google_drive_state['remote'] ) ) : ?>
+						<h4><?php esc_html_e( 'Google Drive copies', 'certloom' ); ?></h4>
+						<div class="certloom-backup-table-wrap"><table class="widefat striped certloom-backup-table"><thead><tr><th><?php esc_html_e( 'Created', 'certloom' ); ?></th><th><?php esc_html_e( 'Type', 'certloom' ); ?></th><th><?php esc_html_e( 'Size', 'certloom' ); ?></th><th><?php esc_html_e( 'Status', 'certloom' ); ?></th><th><?php esc_html_e( 'Actions', 'certloom' ); ?></th></tr></thead><tbody>
+						<?php foreach ( array_slice( (array) $google_drive_state['remote'], 0, 20 ) as $certloom_remote_backup ) : ?><tr>
+							<td><?php echo esc_html( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), absint( $certloom_remote_backup['created_ts'] ?? 0 ) ) ); ?></td>
+							<td><?php echo esc_html( 'scheduled' === ( $certloom_remote_backup['purpose'] ?? '' ) ? __( 'Scheduled', 'certloom' ) : __( 'Manual', 'certloom' ) ); ?></td>
+							<td><?php echo esc_html( size_format( absint( $certloom_remote_backup['bytes'] ?? 0 ) ) ); ?></td>
+							<td><?php echo esc_html( 'verified' === ( $certloom_remote_backup['status'] ?? '' ) ? __( 'Verified', 'certloom' ) : ( 'failed' === ( $certloom_remote_backup['status'] ?? '' ) ? __( 'Needs attention', 'certloom' ) : __( 'Waiting to upload', 'certloom' ) ) ); ?></td>
+							<td class="certloom-backup-row-actions">
+								<?php if ( 'verified' === ( $certloom_remote_backup['status'] ?? '' ) ) : ?><form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-inline-form"><input type="hidden" name="action" value="certloom_google_drive_download_local" /><input type="hidden" name="remote_id" value="<?php echo esc_attr( $certloom_remote_backup['id'] ); ?>" /><?php wp_nonce_field( 'certloom_google_drive_download_local_' . $certloom_remote_backup['id'] ); ?><button type="submit" class="button button-small"><?php esc_html_e( 'Save locally', 'certloom' ); ?></button></form><?php endif; ?>
+								<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-inline-form"><input type="hidden" name="action" value="certloom_google_drive_delete" /><input type="hidden" name="remote_id" value="<?php echo esc_attr( $certloom_remote_backup['id'] ); ?>" /><?php wp_nonce_field( 'certloom_google_drive_delete_' . $certloom_remote_backup['id'] ); ?><button type="submit" class="button button-small" onclick="return confirm('<?php echo esc_js( __( 'Delete this Google Drive backup?', 'certloom' ) ); ?>');"><?php esc_html_e( 'Delete', 'certloom' ); ?></button></form>
+							</td></tr><?php endforeach; ?>
+						</tbody></table></div>
+					<?php endif; ?>
 				<?php endif; ?>
 
 				<hr />

@@ -15,47 +15,65 @@ msgstr ""
 "X-Generator: certloom make-pot.py\n"
 "X-Domain: certloom\n"
 
-#: admin/class-ecapla-certverify-admin.php:100
-msgid "Add Certificate"
-msgstr ""
-
 #: admin/class-ecapla-certverify-admin.php:101
-msgid "Field Manager"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:102
-msgid "Appearance & Embed"
+#: admin/class-ecapla-certverify-admin.php:114
+msgid "Data Tools"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:103
-msgid "Setup"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1037
-msgid "Choose a Certloom backup file."
+msgid "Analytics"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:104
+#: admin/views/integrations.php:16
+msgid "Integrations"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:105
+#: admin/views/settings-manager.php:11
+msgid "Settings"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1059
+msgid "Google Drive connection was cancelled or refused."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:108
+msgid "Add Certificate"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:109
+msgid "Field Manager"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:110
+msgid "Appearance & Embed"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:111
+msgid "Setup"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:112
 #: admin/views/bulk-review.php:15
 msgid "Review bulk change"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1043
+#: admin/class-ecapla-certverify-admin.php:1127
+msgid "Choose a Certloom backup file."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1133
 msgid "Upload a valid .cvbackup or legacy .json Certloom backup."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1057
+#: admin/class-ecapla-certverify-admin.php:1147
 msgid "Confirm that you understand the selected restore mode can replace or merge Certloom data and that Certloom writes will be paused until the restore finishes."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:106
-#: admin/class-ecapla-certverify-admin.php:93
-msgid "Data Tools"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:108
-#: admin/class-ecapla-certverify-admin.php:1195
-#: admin/class-ecapla-certverify-admin.php:84
+#: admin/class-ecapla-certverify-admin.php:116
+#: admin/class-ecapla-certverify-admin.php:1287
+#: admin/class-ecapla-certverify-admin.php:92
 #: src/Infrastructure/Admin/DomainAdmin.php:232
 #: src/Infrastructure/Admin/DomainAdmin.php:237
 #: src/Infrastructure/Admin/DomainAdmin.php:53
@@ -63,9 +81,9 @@ msgstr ""
 msgid "Recipients"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:109
-#: admin/class-ecapla-certverify-admin.php:1213
-#: admin/class-ecapla-certverify-admin.php:90
+#: admin/class-ecapla-certverify-admin.php:117
+#: admin/class-ecapla-certverify-admin.php:1305
+#: admin/class-ecapla-certverify-admin.php:98
 #: admin/views/analytics.php:10
 #: admin/views/issuance-analytics.php:10
 #: src/Infrastructure/Admin/DomainAdmin.php:717
@@ -74,38 +92,48 @@ msgstr ""
 msgid "Issuance"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:118
+#: admin/class-ecapla-certverify-admin.php:126
 msgid "You must be signed in to change the Certloom workspace mode."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1180
-msgid "Framework ready"
+#: admin/class-ecapla-certverify-admin.php:1272
+msgid "Integration framework ready"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1181
-msgid "INT-01 + LMSCTX-01"
+#: admin/class-ecapla-certverify-admin.php:1272
+msgid "Tutor LMS adapter detected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1183
-msgid "I18N-03 human language review next; Tutor LMS remains paused until UX-QA-01"
+#: admin/class-ecapla-certverify-admin.php:1273
+msgid "INT-02 · Tutor LMS"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1196
-#: admin/class-ecapla-certverify-admin.php:1202
+#: admin/class-ecapla-certverify-admin.php:1274
+#: admin/views/integrations.php:45
+#: src/Infrastructure/Integration/TutorLmsAdapter.php:21
+msgid "Tutor LMS"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1275
+msgid "LearnDash follows Tutor LMS; the approved navigation and plain-language consolidation remains after both LMS adapters."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1288
+#: admin/class-ecapla-certverify-admin.php:1294
 msgid "Phase 1 data model"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1197
+#: admin/class-ecapla-certverify-admin.php:1289
 msgid "First-class Recipient administration is implemented in the normalized domain and remains acceptance-gated until the real WordPress/MySQL migration and cutover proof passes."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1198
-#: admin/class-ecapla-certverify-admin.php:1204
+#: admin/class-ecapla-certverify-admin.php:1290
+#: admin/class-ecapla-certverify-admin.php:1296
 msgid "Implementation complete · production acceptance gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1201
-#: admin/class-ecapla-certverify-admin.php:86
+#: admin/class-ecapla-certverify-admin.php:1293
+#: admin/class-ecapla-certverify-admin.php:94
 #: admin/views/issuance-analytics.php:63
 #: src/Infrastructure/Admin/DomainAdmin.php:287
 #: src/Infrastructure/Admin/DomainAdmin.php:292
@@ -115,253 +143,257 @@ msgstr ""
 msgid "Programs"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1203
+#: admin/class-ecapla-certverify-admin.php:1295
 msgid "Standalone Program administration is implemented in the normalized domain and remains acceptance-gated. Certloom will not emulate Program relationships inside legacy custom fields."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1207
-#: admin/class-ecapla-certverify-admin.php:67
+#: admin/class-ecapla-certverify-admin.php:1299
+#: admin/class-ecapla-certverify-admin.php:75
 #: admin/views/issuance-analytics.php:63
 #: src/Infrastructure/Admin/TemplateAdmin.php:172
 #: src/Infrastructure/Admin/TemplateAdmin.php:473
 msgid "Templates"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1208
+#: admin/class-ecapla-certverify-admin.php:1300
 msgid "Pro commercial core · implementation gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1209
+#: admin/class-ecapla-certverify-admin.php:1301
 msgid "Versioned Templates, the visual Template Library, curated premium design concepts and Quick/Pro Designer are implemented over immutable Template revisions and the canonical Render Plan. I18N-02 locale/RTL and Program language-specific published-design resolution are implemented. Production PDF/image publication remains fail-closed until renderer release authority is accepted."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1210
+#: admin/class-ecapla-certverify-admin.php:1302
 msgid "Template Library + Designer implemented · production artifact authority gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1214
+#: admin/class-ecapla-certverify-admin.php:1306
 msgid "P0 issuance workflow · implementation gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1215
+#: admin/class-ecapla-certverify-admin.php:1307
 msgid "Manual and Bulk Issuance, Credential Management, Email Delivery, Recipient Portal, Public Sharing, Analytics and INT-01 are implemented. Program Profiles resolve Program and locale-specific published designs, while immutable Versions freeze exact Program, locale and Template provenance. Normalized public authority and production PDF/image exports remain acceptance-gated."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1216
+#: admin/class-ecapla-certverify-admin.php:1308
 msgid "Issuance workflow implemented · normalized/public artifact authority gated"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1221
+#: admin/class-ecapla-certverify-admin.php:1313
 msgid "That Certloom workspace is not available."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1236
+#: admin/class-ecapla-certverify-admin.php:1328
 msgid "That certificate does not exist."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1253
+#: admin/class-ecapla-certverify-admin.php:1345
 msgid "Those import results expired. Run the import again to generate a new report."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1262
+#: admin/class-ecapla-certverify-admin.php:1354
 msgid "That backup restore process expired. Upload the backup again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1271
-#: admin/class-ecapla-certverify-admin.php:1280
+#: admin/class-ecapla-certverify-admin.php:1363
+#: admin/class-ecapla-certverify-admin.php:1372
 msgid "That import session expired. Upload the CSV again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1295
+#: admin/class-ecapla-certverify-admin.php:1387
 #: includes/class-ecapla-certverify-backup.php:440
 msgid "That backup review session expired. Upload the backup again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1308
+#: admin/class-ecapla-certverify-admin.php:1401
 msgid "You do not have permission to view Certloom analytics."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1346
+#: admin/class-ecapla-certverify-admin.php:1439
 msgid "The review acknowledgement could not be saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1364
+#: admin/class-ecapla-certverify-admin.php:1457
 msgid "A complete Certloom restore is in progress. Certificate and configuration changes are temporarily paused; public verification remains available."
 msgstr ""
 
+#: admin/class-ecapla-certverify-admin.php:147
+msgid "Certloom workspace mode"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:147
+msgid "Simple keeps everyday work concise. Advanced restores specialist and diagnostic surfaces."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:147
+msgid "Workspace"
+msgstr ""
+
 #. translators: 1: number of legacy records, 2: review URL.
-#: admin/class-ecapla-certverify-admin.php:1384
+#: admin/class-ecapla-certverify-admin.php:1477
 msgid "%1$d legacy Expired certificate needs review. <a href=\"%2$s\">Review it now</a>. It will remain Expired until an administrator deliberately chooses a workflow status."
 msgid_plural "%1$d legacy Expired certificates need review. <a href=\"%2$s\">Review them now</a>. They will remain Expired until an administrator deliberately chooses a workflow status."
 msgstr[0] ""
 msgstr[1] ""
 
-#: admin/class-ecapla-certverify-admin.php:139
-msgid "Certloom workspace mode"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:139
-msgid "Simple keeps everyday work concise. Advanced restores specialist and diagnostic surfaces."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:139
-msgid "Workspace"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1397
-msgid "Certloom 1.3.0 briefly contained an unsafe legacy-status migration. If that version ran on this site, compare certificate statuses with a pre-1.3.0 backup before launch. The current release does not guess or silently rewrite those records."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1400
-msgid "I have reviewed this"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:141
+#: admin/class-ecapla-certverify-admin.php:149
 #: admin/views/settings-manager.php:20
 msgid "Advanced"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:141
+#: admin/class-ecapla-certverify-admin.php:149
 msgid "Simple"
 msgstr ""
 
+#: admin/class-ecapla-certverify-admin.php:1490
+msgid "Certloom 1.3.0 briefly contained an unsafe legacy-status migration. If that version ran on this site, compare certificate statuses with a pre-1.3.0 backup before launch. The current release does not guess or silently rewrite those records."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1493
+msgid "I have reviewed this"
+msgstr ""
+
 #. translators: %s: Ecapla website link.
-#: admin/class-ecapla-certverify-admin.php:1412
+#: admin/class-ecapla-certverify-admin.php:1505
 msgid "Certloom is developed and maintained by %s."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1413
+#: admin/class-ecapla-certverify-admin.php:1506
 msgid "Ecapla"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1422
+#: admin/class-ecapla-certverify-admin.php:1515
 msgid "You do not have permission to manage certificates."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1428
+#: admin/class-ecapla-certverify-admin.php:1521
 msgid "You do not have permission to manage these settings."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:170
+#: admin/class-ecapla-certverify-admin.php:178
 msgid "The certificate you tried to update no longer exists."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:398
+#: admin/class-ecapla-certverify-admin.php:406
 msgid "Registry column preferences could not be saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:442
+#: admin/class-ecapla-certverify-admin.php:450
 msgid "The field order, labels, and visibility could not be saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:457
+#: admin/class-ecapla-certverify-admin.php:465
 msgid "Give the new field a label."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:492
+#: admin/class-ecapla-certverify-admin.php:500
 msgid "The custom field could not be added because the field schema was not saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:504
+#: admin/class-ecapla-certverify-admin.php:512
 msgid "Core certificate fields cannot be removed. You can relabel, reorder, or hide them from public results."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:507
+#: admin/class-ecapla-certverify-admin.php:515
 msgid "The field could not be retired safely. No field was removed."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:519
+#: admin/class-ecapla-certverify-admin.php:527
 msgid "The active field layout could not be updated, and the temporary retired marker could not be rolled back. Review the field registry before continuing."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:521
+#: admin/class-ecapla-certverify-admin.php:529
 msgid "The active field layout could not be updated. No field was removed."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:536
+#: admin/class-ecapla-certverify-admin.php:544
 msgid "That retired field cannot be restored."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:556
+#: admin/class-ecapla-certverify-admin.php:564
 msgid "The retired field could not be restored."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:560
+#: admin/class-ecapla-certverify-admin.php:568
 msgid "The retired marker could not be cleared, and the restored field could not be rolled back. Review the active and retired field registries before continuing."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:562
+#: admin/class-ecapla-certverify-admin.php:570
 msgid "The retired field could not be restored safely. The active field layout was rolled back."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:574
+#: admin/class-ecapla-certverify-admin.php:582
 msgid "Core field labels could not be reset for the current site language."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:587
+#: admin/class-ecapla-certverify-admin.php:595
 msgid "That retired field cannot be purged."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:602
+#: admin/class-ecapla-certverify-admin.php:610
 msgid "Stored values were purged, but the retired registry could not be updated. The reserved key remains safe; run Purge again to retry the final registry cleanup."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:616
+#: admin/class-ecapla-certverify-admin.php:624
 msgid "Choose a CSV file to upload."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:622
+#: admin/class-ecapla-certverify-admin.php:630
 msgid "Upload a valid .csv file."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:626
+#: admin/class-ecapla-certverify-admin.php:634
 msgid "The CSV file is larger than the 5 MB import limit."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:646
+#: admin/class-ecapla-certverify-admin.php:654
 msgid "That import session expired. Upload the file again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:657
+#: admin/class-ecapla-certverify-admin.php:665
 msgid "Only an administrator can enable Historical restore mode."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:66
+#: admin/class-ecapla-certverify-admin.php:687
+msgid "That import session expired during processing. Upload the file again."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:74
 #: admin/views/dashboard.php:18
 msgid "Dashboard"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:66
+#: admin/class-ecapla-certverify-admin.php:74
 msgid "Home"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:67
+#: admin/class-ecapla-certverify-admin.php:75
 #: admin/views/frontend-manager.php:70
 #: blocks/certloom/index.js:65
 #: src/Infrastructure/Admin/TemplateAdmin.php:473
 msgid "Design"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:679
-msgid "That import session expired during processing. Upload the file again."
+#: admin/class-ecapla-certverify-admin.php:763
+msgid "The settings could not be saved. Role access was not changed."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:70
-#: admin/class-ecapla-certverify-admin.php:71
+#: admin/class-ecapla-certverify-admin.php:78
+#: admin/class-ecapla-certverify-admin.php:79
 #: admin/views/partials/brand-bar.php:7
 #: elementor/class-ecapla-certverify-elementor-widget.php:26
 msgid "Certloom"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:755
-msgid "The settings could not be saved. Role access was not changed."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:789
+#: admin/class-ecapla-certverify-admin.php:797
 msgid "The general settings were saved, but one or more role changes failed and could not be fully rolled back. Review role access before continuing."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:79
+#: admin/class-ecapla-certverify-admin.php:798
+msgid "The general settings were saved, but role access could not be updated. The previous role access was restored."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:87
 #: src/Infrastructure/Admin/DomainAdmin.php:249
 #: src/Infrastructure/Admin/DomainAdmin.php:304
 #: src/Infrastructure/Admin/DomainAdmin.php:387
@@ -370,29 +402,11 @@ msgstr ""
 msgid "Credentials"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:790
-msgid "The general settings were saved, but role access could not be updated. The previous role access was restored."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:916
+#: admin/class-ecapla-certverify-admin.php:924
 msgid "The Certificate Manager role could not be created or updated."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:95
-msgid "Analytics"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:96
-#: admin/views/integrations.php:8
-msgid "Integrations"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:97
-#: admin/views/settings-manager.php:11
-msgid "Settings"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:982
+#: admin/class-ecapla-certverify-admin.php:990
 msgid "The verified private backup could not be opened for download."
 msgstr ""
 
@@ -402,6 +416,7 @@ msgid "Not set"
 msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:124
+#: admin/views/integrations.php:79
 #: includes/class-ecapla-certverify-recipient-portal.php:186
 #: includes/class-ecapla-certverify-recipient-portal.php:212
 #: src/Infrastructure/Admin/DomainAdmin.php:411
@@ -475,7 +490,8 @@ msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:174
 #: admin/class-ecapla-certverify-list-table.php:76
-#: admin/views/import-upload.php:129
+#: admin/views/import-upload.php:144
+#: admin/views/import-upload.php:195
 msgid "Delete"
 msgstr ""
 
@@ -507,6 +523,8 @@ msgstr ""
 #: admin/views/dashboard.php:150
 #: admin/views/edit-certificate.php:144
 #: admin/views/edit-certificate.php:78
+#: admin/views/import-upload.php:187
+#: admin/views/integrations.php:87
 #: admin/views/list-certificates.php:113
 #: admin/views/list-certificates.php:140
 #: admin/views/settings-manager.php:139
@@ -1170,7 +1188,9 @@ msgstr ""
 
 #: admin/views/dashboard.php:152
 #: admin/views/edit-certificate.php:82
-#: admin/views/import-upload.php:105
+#: admin/views/import-upload.php:112
+#: admin/views/import-upload.php:187
+#: admin/views/integrations.php:87
 #: src/Infrastructure/Admin/DomainAdmin.php:249
 #: src/Infrastructure/Admin/DomainAdmin.php:304
 #: src/Infrastructure/Admin/DomainAdmin.php:342
@@ -1361,6 +1381,7 @@ msgstr ""
 
 #: admin/views/edit-certificate.php:105
 #: admin/views/edit-certificate.php:77
+#: admin/views/integrations.php:87
 #: admin/views/issuance-analytics.php:69
 #: src/Application/Templates/TemplateAssignmentPolicy.php:66
 #: src/Infrastructure/Admin/DomainAdmin.php:1122
@@ -1480,7 +1501,8 @@ msgstr ""
 
 #: admin/views/edit-certificate.php:137
 #: admin/views/import-results.php:27
-#: admin/views/import-upload.php:105
+#: admin/views/import-upload.php:112
+#: admin/views/import-upload.php:187
 #: src/Infrastructure/Admin/DomainAdmin.php:342
 msgid "Created"
 msgstr ""
@@ -1609,6 +1631,7 @@ msgid "Current certificate holder"
 msgstr ""
 
 #: admin/views/fields-manager.php:100
+#: admin/views/integrations.php:89
 #: src/Infrastructure/Admin/DomainAdmin.php:1010
 #: src/Infrastructure/Admin/DomainAdmin.php:1014
 #: src/Infrastructure/Admin/DomainAdmin.php:1396
@@ -1671,7 +1694,8 @@ msgid "Text"
 msgstr ""
 
 #: admin/views/fields-manager.php:125
-#: admin/views/import-upload.php:105
+#: admin/views/import-upload.php:112
+#: admin/views/import-upload.php:187
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:357
 msgid "Type"
 msgstr ""
@@ -2056,149 +2080,171 @@ msgstr ""
 msgid "View certificates"
 msgstr ""
 
-#: admin/views/import-upload.php:102
+#: admin/views/import-upload.php:103
+msgid "Last run:"
+msgstr ""
+
+#: admin/views/import-upload.php:103
+msgid "Not run yet"
+msgstr ""
+
+#: admin/views/import-upload.php:104
+msgid "Last result:"
+msgstr ""
+
+#: admin/views/import-upload.php:104
+#: admin/views/import-upload.php:184
+#: admin/views/import-upload.php:192
+#: src/Infrastructure/Admin/DomainAdmin.php:391
+msgid "Needs attention"
+msgstr ""
+
+#: admin/views/import-upload.php:104
+#: admin/views/import-upload.php:184
+#: admin/views/import-upload.php:192
+#: includes/class-ecapla-certverify-public-presentation.php:142
+#: includes/class-ecapla-certverify-render.php:372
+msgid "Verified"
+msgstr ""
+
+#: admin/views/import-upload.php:104
+msgid "—"
+msgstr ""
+
+#: admin/views/import-upload.php:105
+msgid "Next scheduled run:"
+msgstr ""
+
+#: admin/views/import-upload.php:105
+msgid "Not scheduled"
+msgstr ""
+
+#: admin/views/import-upload.php:109
 msgid "Saved backups"
-msgstr ""
-
-#: admin/views/import-upload.php:105
-#: admin/views/list-certificates.php:26
-msgid "Certificates"
-msgstr ""
-
-#: admin/views/import-upload.php:105
-msgid "Integrity"
-msgstr ""
-
-#: admin/views/import-upload.php:105
-msgid "Restore test"
-msgstr ""
-
-#: admin/views/import-upload.php:105
-msgid "Size"
 msgstr ""
 
 #: admin/views/import-upload.php:11
 msgid "Import, export & backup"
 msgstr ""
 
-#: admin/views/import-upload.php:110
+#: admin/views/import-upload.php:112
+#: admin/views/list-certificates.php:26
+msgid "Certificates"
+msgstr ""
+
+#: admin/views/import-upload.php:112
+msgid "Integrity"
+msgstr ""
+
+#: admin/views/import-upload.php:112
+msgid "Restore test"
+msgstr ""
+
+#: admin/views/import-upload.php:112
+#: admin/views/import-upload.php:187
+msgid "Size"
+msgstr ""
+
+#: admin/views/import-upload.php:117
+#: admin/views/import-upload.php:190
 #: admin/views/issuance-analytics.php:39
 #: admin/views/issuance-analytics.php:57
 msgid "Manual"
 msgstr ""
 
-#: admin/views/import-upload.php:110
+#: admin/views/import-upload.php:117
 msgid "Safety"
 msgstr ""
 
-#: admin/views/import-upload.php:110
+#: admin/views/import-upload.php:117
+#: admin/views/import-upload.php:190
 msgid "Scheduled"
 msgstr ""
 
-#: admin/views/import-upload.php:113
+#: admin/views/import-upload.php:120
 msgid "Verified at creation"
 msgstr ""
 
-#: admin/views/import-upload.php:115
+#: admin/views/import-upload.php:122
 msgid "Not tested"
 msgstr ""
 
 #. translators: %s: date/time of last restore test.
-#: admin/views/import-upload.php:115
+#: admin/views/import-upload.php:122
 msgid "Passed %s"
 msgstr ""
 
-#: admin/views/import-upload.php:117
+#: admin/views/import-upload.php:124
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:385
 msgid "Download"
 msgstr ""
 
-#: admin/views/import-upload.php:118
+#: admin/views/import-upload.php:125
 msgid "Review restore"
 msgstr ""
 
-#: admin/views/import-upload.php:123
+#: admin/views/import-upload.php:130
 msgid "Test restore"
 msgstr ""
 
-#: admin/views/import-upload.php:129
+#: admin/views/import-upload.php:137
+msgid "Copy to Google Drive"
+msgstr ""
+
+#: admin/views/import-upload.php:144
 msgid "Delete this private backup?"
 msgstr ""
 
-#: admin/views/import-upload.php:138
+#: admin/views/import-upload.php:153
 msgid "No private backups have been saved yet. Use Back up now or enable a schedule."
 msgstr ""
 
-#: admin/views/import-upload.php:142
-msgid "Restore"
-msgstr ""
-
-#: admin/views/import-upload.php:143
-msgid "Restore always starts with a non-destructive review. Test restore validates a saved backup through the same analyzer without changing live data. Applying a restore also requires a fresh automatic safety snapshot of the current registry."
-msgstr ""
-
-#: admin/views/import-upload.php:147
-msgid "Review a backup before restoring"
-msgstr ""
-
-#: admin/views/import-upload.php:149
-msgid "Analyze backup"
-msgstr ""
-
-#: admin/views/import-upload.php:157
-msgid "Backup restore review"
-msgstr ""
-
 #: admin/views/import-upload.php:158
-msgid "Nothing has been changed yet. Review this dry-run summary before applying the backup."
+msgid "Google Drive"
 msgstr ""
 
-#: admin/views/import-upload.php:161
-msgid "Certificates in backup"
-msgstr ""
-
-#: admin/views/import-upload.php:162
-msgid "Certificates currently stored"
-msgstr ""
-
-#: admin/views/import-upload.php:163
-msgid "New certificate numbers"
-msgstr ""
-
-#: admin/views/import-upload.php:164
-msgid "Existing certificate conflicts"
-msgstr ""
-
-#: admin/views/import-upload.php:165
-msgid "Current-only certificates"
+#: admin/views/import-upload.php:159
+msgid "Google Drive is an optional second copy of verified Certloom backups. Local private storage remains the recovery source and credential authority never moves to Google."
 msgstr ""
 
 #: admin/views/import-upload.php:166
-msgid "Active field definitions"
+msgid "Google OAuth client ID"
 msgstr ""
 
 #: admin/views/import-upload.php:167
-msgid "Retired field definitions"
+msgid "Google OAuth client secret"
 msgstr ""
 
 #: admin/views/import-upload.php:168
-msgid "Backup-only custom fields"
+msgid "Authorized redirect URI:"
 msgstr ""
 
 #: admin/views/import-upload.php:169
-msgid "Backup created"
+msgid "Connect Google Drive"
 msgstr ""
 
-#: admin/views/import-upload.php:170
-msgid "Source plugin version"
+#: admin/views/import-upload.php:172
+msgid "Connected"
 msgstr ""
 
-#: admin/views/import-upload.php:178
-msgid "Restore mode"
+#: admin/views/import-upload.php:172
+msgid "Connection:"
+msgstr ""
+
+#: admin/views/import-upload.php:174
+msgid "Test Google Drive"
+msgstr ""
+
+#: admin/views/import-upload.php:175
+msgid "Disconnect"
+msgstr ""
+
+#: admin/views/import-upload.php:175
+msgid "Disconnect Google Drive from Certloom? Existing Google Drive backup files will not be deleted."
 msgstr ""
 
 #: admin/views/import-upload.php:179
-msgid "Replace entire registry and configuration"
+msgid "Copy scheduled backups to Google Drive"
 msgstr ""
 
 #: admin/views/import-upload.php:18
@@ -2206,274 +2252,509 @@ msgid "Automatic backup settings saved."
 msgstr ""
 
 #: admin/views/import-upload.php:180
-msgid "Recreates the backup snapshot exactly. Current-only certificates are removed, and the backup’s fields, retired fields, and settings replace the current configuration."
+msgid "Google Drive retention"
+msgstr ""
+
+#: admin/views/import-upload.php:180
+msgid "scheduled backups"
 msgstr ""
 
 #: admin/views/import-upload.php:181
-msgid "Merge certificates into the current registry"
+msgid "Save Google Drive settings"
 msgstr ""
 
-#: admin/views/import-upload.php:182
-msgid "Keeps current-only certificates and current settings. Backup-only custom-field definitions are retained as private retired fields so their stored values are not exposed automatically."
-msgstr ""
-
-#: admin/views/import-upload.php:185
-msgid "Merge conflict handling"
+#: admin/views/import-upload.php:184
+msgid "Last Google Drive copy:"
 msgstr ""
 
 #: admin/views/import-upload.php:186
-msgid "Keep the existing certificate and skip the backup record"
-msgstr ""
-
-#: admin/views/import-upload.php:187
-msgid "Replace the existing certificate with the backup record"
-msgstr ""
-
-#: admin/views/import-upload.php:188
-msgid "This choice applies only to Merge mode. Replace mode always uses the backup copy."
+msgid "Google Drive copies"
 msgstr ""
 
 #: admin/views/import-upload.php:19
 msgid "Private backup storage tested successfully."
 msgstr ""
 
-#: admin/views/import-upload.php:190
-msgid "I understand the selected mode and that Certloom writes will be temporarily paused while the restore is prepared."
+#: admin/views/import-upload.php:192
+msgid "Waiting to upload"
 msgstr ""
 
-#: admin/views/import-upload.php:191
-msgid "Start safe restore"
+#: admin/views/import-upload.php:194
+msgid "Save locally"
+msgstr ""
+
+#: admin/views/import-upload.php:195
+msgid "Delete this Google Drive backup?"
 msgstr ""
 
 #: admin/views/import-upload.php:20
 msgid "Backup created, verified, and stored privately."
 msgstr ""
 
+#: admin/views/import-upload.php:202
+msgid "Restore"
+msgstr ""
+
+#: admin/views/import-upload.php:203
+msgid "Restore always starts with a non-destructive review. Test restore validates a saved backup through the same analyzer without changing live data. Applying a restore also requires a fresh automatic safety snapshot of the current registry."
+msgstr ""
+
+#: admin/views/import-upload.php:207
+msgid "Review a backup before restoring"
+msgstr ""
+
+#: admin/views/import-upload.php:209
+msgid "Analyze backup"
+msgstr ""
+
 #: admin/views/import-upload.php:21
 msgid "Restore test passed without changing live Certloom data."
 msgstr ""
 
+#: admin/views/import-upload.php:217
+msgid "Backup restore review"
+msgstr ""
+
+#: admin/views/import-upload.php:218
+msgid "Nothing has been changed yet. Review this dry-run summary before applying the backup."
+msgstr ""
+
 #: admin/views/import-upload.php:22
+msgid "Google Drive connected. Test the destination before enabling automatic copies."
+msgstr ""
+
+#: admin/views/import-upload.php:221
+msgid "Certificates in backup"
+msgstr ""
+
+#: admin/views/import-upload.php:222
+msgid "Certificates currently stored"
+msgstr ""
+
+#: admin/views/import-upload.php:223
+msgid "New certificate numbers"
+msgstr ""
+
+#: admin/views/import-upload.php:224
+msgid "Existing certificate conflicts"
+msgstr ""
+
+#: admin/views/import-upload.php:225
+msgid "Current-only certificates"
+msgstr ""
+
+#: admin/views/import-upload.php:226
+msgid "Active field definitions"
+msgstr ""
+
+#: admin/views/import-upload.php:227
+msgid "Retired field definitions"
+msgstr ""
+
+#: admin/views/import-upload.php:228
+msgid "Backup-only custom fields"
+msgstr ""
+
+#: admin/views/import-upload.php:229
+msgid "Backup created"
+msgstr ""
+
+#: admin/views/import-upload.php:23
+msgid "Google Drive backup settings saved."
+msgstr ""
+
+#: admin/views/import-upload.php:230
+msgid "Source plugin version"
+msgstr ""
+
+#: admin/views/import-upload.php:238
+msgid "Restore mode"
+msgstr ""
+
+#: admin/views/import-upload.php:239
+msgid "Replace entire registry and configuration"
+msgstr ""
+
+#: admin/views/import-upload.php:24
+msgid "Google Drive passed a real upload, verification, and delete test."
+msgstr ""
+
+#: admin/views/import-upload.php:240
+msgid "Recreates the backup snapshot exactly. Current-only certificates are removed, and the backup’s fields, retired fields, and settings replace the current configuration."
+msgstr ""
+
+#: admin/views/import-upload.php:241
+msgid "Merge certificates into the current registry"
+msgstr ""
+
+#: admin/views/import-upload.php:242
+msgid "Keeps current-only certificates and current settings. Backup-only custom-field definitions are retained as private retired fields so their stored values are not exposed automatically."
+msgstr ""
+
+#: admin/views/import-upload.php:245
+msgid "Merge conflict handling"
+msgstr ""
+
+#: admin/views/import-upload.php:246
+msgid "Keep the existing certificate and skip the backup record"
+msgstr ""
+
+#: admin/views/import-upload.php:247
+msgid "Replace the existing certificate with the backup record"
+msgstr ""
+
+#: admin/views/import-upload.php:248
+msgid "This choice applies only to Merge mode. Replace mode always uses the backup copy."
+msgstr ""
+
+#: admin/views/import-upload.php:25
+msgid "Google Drive disconnected from Certloom. Existing Drive files were left untouched."
+msgstr ""
+
+#: admin/views/import-upload.php:250
+msgid "I understand the selected mode and that Certloom writes will be temporarily paused while the restore is prepared."
+msgstr ""
+
+#: admin/views/import-upload.php:251
+msgid "Start safe restore"
+msgstr ""
+
+#: admin/views/import-upload.php:26
+msgid "Backup copied to Google Drive and verified."
+msgstr ""
+
+#: admin/views/import-upload.php:27
+msgid "Google Drive backup downloaded, verified, analyzed, and saved in local private storage."
+msgstr ""
+
+#: admin/views/import-upload.php:28
+msgid "Google Drive backup deleted."
+msgstr ""
+
+#: admin/views/import-upload.php:29
 msgid "Private backup deleted."
 msgstr ""
 
-#: admin/views/import-upload.php:30
+#: admin/views/import-upload.php:37
 msgid "Import certificates from CSV"
 msgstr ""
 
-#: admin/views/import-upload.php:31
+#: admin/views/import-upload.php:38
 msgid "CSV is intended for spreadsheet editing and tabular transfers. It is not a complete site backup. Upload a file, review automatic column mapping, and decide how existing certificate numbers should be handled."
 msgstr ""
 
-#: admin/views/import-upload.php:33
+#: admin/views/import-upload.php:40
 msgid "Maximum file size: 5 MB"
 msgstr ""
 
 #. translators: %d: maximum number of rows per import.
-#: admin/views/import-upload.php:34
+#: admin/views/import-upload.php:41
 msgid "Maximum certificate rows per import: %d"
 msgstr ""
 
-#: admin/views/import-upload.php:35
+#: admin/views/import-upload.php:42
 msgid "Accepted format: UTF-8 CSV with one header row"
 msgstr ""
 
-#: admin/views/import-upload.php:36
+#: admin/views/import-upload.php:43
 msgid "Spreadsheet-formula characters in exported CSV files are neutralized for safety and may not round-trip as literal leading characters. Use Complete backup for lossless restoration."
 msgstr ""
 
-#: admin/views/import-upload.php:40
+#: admin/views/import-upload.php:47
 msgid "Choose CSV file"
 msgstr ""
 
-#: admin/views/import-upload.php:42
+#: admin/views/import-upload.php:49
 msgid "Analyze CSV"
 msgstr ""
 
-#: admin/views/import-upload.php:47
+#: admin/views/import-upload.php:54
 msgid "CSV tools"
 msgstr ""
 
-#: admin/views/import-upload.php:48
+#: admin/views/import-upload.php:55
 msgid "Download a template shaped by the active field layout, or export tabular certificate data for spreadsheet use."
 msgstr ""
 
-#: admin/views/import-upload.php:49
+#: admin/views/import-upload.php:56
 msgid "Download import template"
 msgstr ""
 
-#: admin/views/import-upload.php:50
+#: admin/views/import-upload.php:57
 msgid "Export certificate CSV"
 msgstr ""
 
-#: admin/views/import-upload.php:55
+#: admin/views/import-upload.php:62
 msgid "Backup & recovery"
 msgstr ""
 
-#: admin/views/import-upload.php:56
+#: admin/views/import-upload.php:63
 msgid "Protect the current authoritative Certloom registry with the same lossless, versioned backup format used by manual downloads. Automatic backups stay in private local storage and never switch credential authority."
 msgstr ""
 
-#: admin/views/import-upload.php:57
+#: admin/views/import-upload.php:64
 msgid "Current Certloom registry"
 msgstr ""
 
-#: admin/views/import-upload.php:57
+#: admin/views/import-upload.php:64
 msgid "Source authority:"
 msgstr ""
 
-#: admin/views/import-upload.php:58
+#: admin/views/import-upload.php:65
 msgid "Destination:"
 msgstr ""
 
-#: admin/views/import-upload.php:58
+#: admin/views/import-upload.php:65
 msgid "Local private storage"
 msgstr ""
 
-#: admin/views/import-upload.php:59
+#: admin/views/import-upload.php:66
 msgid "Before Restore, CSV import, reviewed bulk changes, bulk deletion, or permanent retired-field purge, Certloom creates a verified safety snapshot and stops the destructive operation if that snapshot cannot be created. Automatic safety snapshots use their own bounded retention and never replace explicit manual backups."
 msgstr ""
 
-#: admin/views/import-upload.php:66
+#: admin/views/import-upload.php:73
 msgid "Download fresh backup"
 msgstr ""
 
-#: admin/views/import-upload.php:70
+#: admin/views/import-upload.php:77
 msgid "Test storage"
 msgstr ""
 
-#: admin/views/import-upload.php:75
+#: admin/views/import-upload.php:82
 msgid "Back up now"
 msgstr ""
 
-#: admin/views/import-upload.php:79
+#: admin/views/import-upload.php:86
 msgid "Automatic backups"
 msgstr ""
 
-#: admin/views/import-upload.php:83
+#: admin/views/import-upload.php:90
 msgid "Schedule"
 msgstr ""
 
-#: admin/views/import-upload.php:85
+#: admin/views/import-upload.php:92
 msgid "Off"
 msgstr ""
 
-#: admin/views/import-upload.php:86
+#: admin/views/import-upload.php:93
 msgid "Daily"
 msgstr ""
 
-#: admin/views/import-upload.php:87
+#: admin/views/import-upload.php:94
 msgid "Weekly"
 msgstr ""
 
-#: admin/views/import-upload.php:89
+#: admin/views/import-upload.php:96
 msgid "Automatic retention"
 msgstr ""
 
-#: admin/views/import-upload.php:91
+#: admin/views/import-upload.php:98
 msgid "backups"
 msgstr ""
 
-#: admin/views/import-upload.php:92
+#: admin/views/import-upload.php:99
 msgid "Save backup settings"
 msgstr ""
 
-#: admin/views/import-upload.php:96
-msgid "Last run:"
+#: admin/views/integrations.php:15
+msgid "Learning integrations"
 msgstr ""
 
-#: admin/views/import-upload.php:96
-msgid "Not run yet"
+#: admin/views/integrations.php:17
+msgid "Connect supported learning systems to Certloom without creating a second credential database. Course events are normalized, linked to an explicit Certloom recipient, mapped to a Program and published Template, then sent through the same immutable issuance service as reviewed Certloom issuance."
 msgstr ""
 
-#: admin/views/import-upload.php:97
-msgid "Last result:"
+#: admin/views/integrations.php:25
+msgid "Course mapping removed."
 msgstr ""
 
-#: admin/views/import-upload.php:97
-#: src/Infrastructure/Admin/DomainAdmin.php:391
-msgid "Needs attention"
+#: admin/views/integrations.php:25
+msgid "Course mapping saved."
 msgstr ""
 
-#: admin/views/import-upload.php:97
-#: includes/class-ecapla-certverify-public-presentation.php:142
-#: includes/class-ecapla-certverify-render.php:372
-msgid "Verified"
-msgstr ""
-
-#: admin/views/import-upload.php:97
-msgid "—"
-msgstr ""
-
-#: admin/views/import-upload.php:98
-msgid "Next scheduled run:"
-msgstr ""
-
-#: admin/views/import-upload.php:98
-msgid "Not scheduled"
-msgstr ""
-
-#: admin/views/integrations.php:16
+#: admin/views/integrations.php:33
 #: admin/views/settings-manager.php:144
 #: includes/class-ecapla-certverify-system-status.php:159
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:26
 msgid "Ready"
 msgstr ""
 
-#: admin/views/integrations.php:19
-msgid "Bounded provider-neutral source object, attempts, score/percentage, certificate threshold, completion state, and deterministic source-event identity."
+#: admin/views/integrations.php:36
+msgid "Completion event"
 msgstr ""
 
-#: admin/views/integrations.php:19
-msgid "Normalized event context"
+#: admin/views/integrations.php:36
+msgid "Tutor LMS course completion is translated into one bounded Certloom event. Learner names, email addresses and arbitrary Tutor metadata are not copied into integration provenance."
 msgstr ""
 
-#: admin/views/integrations.php:20
-msgid "Certloom selects the latest completed attempt that satisfies the certificate-specific threshold rather than trusting a provider pass flag."
+#: admin/views/integrations.php:37
+#: src/Infrastructure/Admin/DomainAdmin.php:731
+msgid "Recipient identity"
 msgstr ""
 
-#: admin/views/integrations.php:20
-msgid "Eligibility"
+#: admin/views/integrations.php:37
+msgid "The WordPress learner must already be explicitly linked to one Certloom recipient. Certloom never guesses identity from name or email."
 msgstr ""
 
-#: admin/views/integrations.php:21
-msgid "Identity and mapping"
+#: admin/views/integrations.php:38
+msgid "Course mapping"
 msgstr ""
 
-#: admin/views/integrations.php:21
-msgid "Only an explicit WordPress-user-to-Recipient link and a server-owned Program/Template mapping can advance toward issuance."
+#: admin/views/integrations.php:38
+msgid "Each enabled Tutor course maps to one Certloom Program and one published Template. Changing that server-owned mapping invalidates stale issuance review."
 msgstr ""
 
-#: admin/views/integrations.php:22
-msgid "Accepted events reuse Certloom’s immutable issuance path under fixed lms_integration provenance and replay-safe idempotency."
+#: admin/views/integrations.php:39
+msgid "Duplicate protection"
 msgstr ""
 
-#: admin/views/integrations.php:22
-msgid "Issuance provenance"
+#: admin/views/integrations.php:39
+msgid "The same Tutor course completion for the same WordPress learner reuses one deterministic source identity, so hook retries cannot create duplicate credentials."
 msgstr ""
 
-#: admin/views/integrations.php:27
-msgid "First-party adapters"
+#: admin/views/integrations.php:45
+msgid "First-party LMS adapter"
 msgstr ""
 
-#: admin/views/integrations.php:27
-msgid "No LMS adapter is active yet"
+#: admin/views/integrations.php:47
+msgid "Detected"
 msgstr ""
 
-#: admin/views/integrations.php:28
-msgid "Tutor LMS and LearnDash will be implemented as adapters to this framework, not as new credential-writing systems. UX-01 + FEUX-01 are now implemented; Program Profiles and the remaining approved UX program continue before Tutor LMS so integrations land on the simpler Program/Profile/Template experience."
+#: admin/views/integrations.php:49
+msgid "Not installed"
 msgstr ""
 
-#: admin/views/integrations.php:29
-msgid "Next execution sequence"
+#. translators: 1: Tutor LMS version, 2: active mapping count.
+#: admin/views/integrations.php:53
+msgid "Tutor LMS %1$s is available. Certloom currently has %2$d enabled course mapping(s)."
 msgstr ""
 
-#: admin/views/integrations.php:7
-msgid "Automation foundation"
+#: admin/views/integrations.php:53
+msgid "detected"
 msgstr ""
 
-#: admin/views/integrations.php:9
-msgid "Certloom now has a provider-neutral integration contract for normalized completion events, certificate-specific eligibility, exact learner linking, server-owned mappings, and idempotent issuance. Concrete LMS adapters are intentionally separate releases."
+#: admin/views/integrations.php:55
+msgid "Automatic issuance remains safely locked"
+msgstr ""
+
+#: admin/views/integrations.php:55
+msgid "The Tutor LMS adapter and mapping workflow are implemented, but Certloom will not write normalized credentials until the existing credential write-authority acceptance gate is opened. Course completion hooks therefore fail closed instead of bypassing Certloom authority."
+msgstr ""
+
+#: admin/views/integrations.php:57
+msgid "Automatic issuance is ready"
+msgstr ""
+
+#: admin/views/integrations.php:57
+msgid "Enabled course mappings can issue through Certloom’s existing immutable integration issuance path when Tutor LMS records course completion."
+msgstr ""
+
+#: admin/views/integrations.php:60
+msgid "Install and activate Tutor LMS to configure course mappings. Certloom does not require Tutor LMS for any standalone credential workflow."
+msgstr ""
+
+#: admin/views/integrations.php:66
+msgid "Course mappings"
+msgstr ""
+
+#: admin/views/integrations.php:66
+msgid "Tutor course → Certloom credential"
+msgstr ""
+
+#: admin/views/integrations.php:70
+msgid "Mapping configuration is available with the Certloom Program/Template preview domain. The adapter remains installed and fail-closed while that preview/authority boundary is unavailable."
+msgstr ""
+
+#: admin/views/integrations.php:76
+msgid "Choose a course"
+msgstr ""
+
+#: admin/views/integrations.php:76
+#: admin/views/integrations.php:87
+msgid "Tutor course"
+msgstr ""
+
+#: admin/views/integrations.php:77
+msgid "Certloom Program"
+msgstr ""
+
+#: admin/views/integrations.php:77
+msgid "Choose a Program"
+msgstr ""
+
+#: admin/views/integrations.php:78
+#: src/Infrastructure/Admin/TemplateAdmin.php:760
+msgid "Choose a Template"
+msgstr ""
+
+#: admin/views/integrations.php:78
+#: src/Infrastructure/Admin/DomainAdmin.php:1008
+#: src/Infrastructure/Admin/DomainAdmin.php:1014
+msgid "Published Template"
+msgstr ""
+
+#: admin/views/integrations.php:79
+msgid "Credential expiry"
+msgstr ""
+
+#: admin/views/integrations.php:79
+msgid "Specific date"
+msgstr ""
+
+#: admin/views/integrations.php:79
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:158
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:159
+msgid "Specific expiry date"
+msgstr ""
+
+#: admin/views/integrations.php:79
+msgid "Use Program policy"
+msgstr ""
+
+#: admin/views/integrations.php:81
+msgid "Enable automatic issuance for this course"
+msgstr ""
+
+#: admin/views/integrations.php:82
+msgid "Save course mapping"
+msgstr ""
+
+#: admin/views/integrations.php:87
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:202
+#: src/Infrastructure/Admin/TemplateAdmin.php:674
+msgid "Template"
+msgstr ""
+
+#: admin/views/integrations.php:89
+msgid "Course #"
+msgstr ""
+
+#: admin/views/integrations.php:89
+#: includes/class-ecapla-certverify-system-status.php:114
+#: includes/class-ecapla-certverify-system-status.php:137
+#: includes/class-ecapla-certverify-system-status.php:66
+msgid "Enabled"
+msgstr ""
+
+#: admin/views/integrations.php:89
+msgid "Paused"
+msgstr ""
+
+#: admin/views/integrations.php:97
+msgid "LearnDash follows Tutor LMS"
+msgstr ""
+
+#: admin/views/integrations.php:97
+msgid "Next adapter"
+msgstr ""
+
+#: admin/views/integrations.php:98
+msgid "LearnDash will reuse the same recipient, mapping, eligibility, provenance and idempotent issuance contract rather than introducing a separate credential-writing path."
+msgstr ""
+
+#: admin/views/integrations.php:99
+msgid "Approved execution sequence"
 msgstr ""
 
 #: admin/views/issuance-analytics.php:14
@@ -4235,31 +4516,31 @@ msgstr ""
 msgid "Certloom could not finish provisioning on site IDs: %s. Visit each affected site administration area to retry database and access setup."
 msgstr ""
 
-#: certloom.php:426
+#: certloom.php:427
 msgid "Certloom could not persist its required administrator access. The migration will be retried automatically."
 msgstr ""
 
-#: certloom.php:443
+#: certloom.php:444
 msgid "Certloom could not persist the multisite provisioning status."
 msgstr ""
 
-#: certloom.php:558
+#: certloom.php:560
 msgid "Certloom publishes only the certificate fields that a site administrator marks as visible. Those fields may include names or other personal information, so administrators should publish only information they are authorised to disclose."
 msgstr ""
 
-#: certloom.php:559
+#: certloom.php:561
 msgid "Depending on the Certloom features enabled by the site, local WordPress storage may also contain recipient identity/contact data and administrator-managed issuer or signer contact details. These records remain on the site unless the administrator exports, changes, or removes them according to the organization’s retention obligations."
 msgstr ""
 
-#: certloom.php:560
+#: certloom.php:562
 msgid "Certificate verification is performed on this WordPress site. Certloom does not send certificate records to Ecapla or another external service. Verification requests may still appear in normal web-server, security, analytics, browser-history, and cache logs. Direct verification links can include the certificate number in the URL."
 msgstr ""
 
-#: certloom.php:561
+#: certloom.php:563
 msgid "When Certloom Verification Analytics is available, Certloom stores daily aggregate verification counters locally for up to 730 days. These aggregates classify outcomes and sources such as manual, QR, or API verification; they do not store raw IP addresses, User-Agents, secondary proof codes, or raw failed certificate-number input. Verification analytics are operational data and are removed when Certloom is uninstalled."
 msgstr ""
 
-#: certloom.php:562
+#: certloom.php:564
 msgid "Site administrators determine how long certificate records are retained and can configure whether Certloom data is removed when the plugin is uninstalled."
 msgstr ""
 
@@ -5202,11 +5483,11 @@ msgstr ""
 msgid "The saved bulk selection failed its integrity check. No certificate was changed."
 msgstr ""
 
-#: includes/class-ecapla-certverify-cron.php:48
+#: includes/class-ecapla-certverify-cron.php:52
 msgid "Certloom could not retire its legacy scheduled task."
 msgstr ""
 
-#: includes/class-ecapla-certverify-cron.php:52
+#: includes/class-ecapla-certverify-cron.php:56
 msgid "Certloom could not save its scheduled-task migration state."
 msgstr ""
 
@@ -6681,12 +6962,6 @@ msgstr ""
 msgid "Available — hidden by setting"
 msgstr ""
 
-#: includes/class-ecapla-certverify-system-status.php:114
-#: includes/class-ecapla-certverify-system-status.php:137
-#: includes/class-ecapla-certverify-system-status.php:66
-msgid "Enabled"
-msgstr ""
-
 #. translators: 1: encoder ID, 2: encoder version.
 #: includes/class-ecapla-certverify-system-status.php:117
 msgid "Encoder %1$s v%2$s runs locally; no remote QR service is used. Public QR encodes the canonical verification URL plus Certloom's privacy-safe QR source attribution marker."
@@ -7846,11 +8121,11 @@ msgstr ""
 msgid "Certloom refused an integration adapter with an invalid label."
 msgstr ""
 
-#: src/Application/Integration/IntegrationEventContext.php:110
+#: src/Application/Integration/IntegrationEventContext.php:111
 msgid "The integration event contains an invalid machine key."
 msgstr ""
 
-#: src/Application/Integration/IntegrationEventContext.php:119
+#: src/Application/Integration/IntegrationEventContext.php:120
 msgid "The integration event contains an invalid stable platform identifier."
 msgstr ""
 
@@ -7893,15 +8168,19 @@ msgstr ""
 msgid "The server-owned integration mapping does not match the normalized source event."
 msgstr ""
 
-#: src/Application/Integration/IntegrationIssuanceCoordinator.php:115
-msgid "The integration mapping must target an active Certloom Program and published Template."
+#: src/Application/Integration/IntegrationIssuanceCoordinator.php:114
+msgid "The integration eligibility threshold changed after the source event was normalized. Review the integration mapping before issuing."
 msgstr ""
 
 #: src/Application/Integration/IntegrationIssuanceCoordinator.php:119
+msgid "The integration mapping must target an active Certloom Program and published Template."
+msgstr ""
+
+#: src/Application/Integration/IntegrationIssuanceCoordinator.php:123
 msgid "The integration mapping contains an invalid credential expiry mode."
 msgstr ""
 
-#: src/Application/Integration/IntegrationIssuanceCoordinator.php:124
+#: src/Application/Integration/IntegrationIssuanceCoordinator.php:128
 msgid "The integration mapping requires a valid explicit expiry date."
 msgstr ""
 
@@ -9134,12 +9413,6 @@ msgid "Specific expiry"
 msgstr ""
 
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:158
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:159
-msgid "Specific expiry date"
-msgstr ""
-
-#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:23
 msgid "Upload & define shared issuance context"
 msgstr ""
 
@@ -9258,11 +9531,6 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:1008
 #: src/Infrastructure/Admin/DomainAdmin.php:1014
 msgid "Locale"
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:1008
-#: src/Infrastructure/Admin/DomainAdmin.php:1014
-msgid "Published Template"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1015
@@ -10098,10 +10366,6 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:729
 msgid "The current Recipient could not be loaded."
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainAdmin.php:731
-msgid "Recipient identity"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:732
@@ -11546,11 +11810,6 @@ msgstr ""
 msgid "Program design via %s"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:202
-#: src/Infrastructure/Admin/TemplateAdmin.php:674
-msgid "Template"
-msgstr ""
-
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:203
 msgid "Effective date"
 msgstr ""
@@ -12902,10 +13161,6 @@ msgid "element"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:760
-msgid "Choose a Template"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:760
 msgid "This card is assignment metadata only—not the canonical Render Plan Preview. Open a Template to inspect Current or Published Preview. Production artifact authority remains renderer-gated."
 msgstr ""
 
@@ -13383,6 +13638,30 @@ msgstr ""
 msgid "Designer autosave could not verify the stored recovery checkpoint."
 msgstr ""
 
+#: src/Infrastructure/Admin/TutorLmsIntegrationAdmin.php:51
+msgid "Tutor LMS mapping setup is unavailable until the Certloom Program/Template preview domain is enabled."
+msgstr ""
+
+#: src/Infrastructure/Admin/TutorLmsIntegrationAdmin.php:57
+msgid "Choose a Tutor LMS course that still exists."
+msgstr ""
+
+#: src/Infrastructure/Admin/TutorLmsIntegrationAdmin.php:59
+msgid "Choose an active Certloom Program."
+msgstr ""
+
+#: src/Infrastructure/Admin/TutorLmsIntegrationAdmin.php:61
+msgid "Choose a published Certloom Template."
+msgstr ""
+
+#: src/Infrastructure/Admin/TutorLmsIntegrationAdmin.php:86
+msgid "Certloom could not load Tutor LMS courses."
+msgstr ""
+
+#: src/Infrastructure/Admin/TutorLmsIntegrationAdmin.php:93
+msgid "You do not have permission to manage Certloom integrations."
+msgstr ""
+
 #: src/Infrastructure/Analytics/IssuanceAnalyticsRepository.php:121
 #: src/Infrastructure/Analytics/IssuanceAnalyticsRepository.php:144
 msgid "Certloom could not read issuance analytics."
@@ -13416,6 +13695,277 @@ msgstr ""
 
 #: src/Infrastructure/Backup/DomainBackupRepository.php:75
 msgid "Certloom could not read a domain backup batch."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveBackup.php:103
+msgid "Certloom refused a queued Google Drive copy because the local backup identity no longer matches."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveBackup.php:126
+msgid "Only a verified Google Drive backup can be downloaded into Certloom."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveBackup.php:140
+msgid "Certloom downloaded the Google Drive backup but could not verify it through the restore analyzer."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveBackup.php:154
+#: src/Infrastructure/Backup/RemoteBackupCatalog.php:144
+#: src/Infrastructure/Backup/RemoteBackupCatalog.php:174
+msgid "That Google Drive backup is not in Certloom’s remote backup history."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveBackup.php:172
+msgid "Google Drive copy completed and verified."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveBackup.php:29
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:207
+msgid "Connect Google Drive before enabling automatic Drive copies."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveBackup.php:35
+msgid "Certloom could not save the Google Drive retention setting."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveBackup.php:47
+msgid "Safety snapshots stay in private local storage so destructive operations never depend on Google Drive availability."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveBackup.php:49
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:169
+msgid "Google Drive is not connected to Certloom."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveBackup.php:84
+msgid "Certloom refused invalid local backup metadata before scheduling the Google Drive copy."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveBackup.php:91
+msgid "The local backup completed, but Certloom could not schedule its Google Drive copy."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveClient.php:101
+msgid "Certloom could not read the local backup for Google Drive upload."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveClient.php:109
+msgid "Certloom could not read the complete local backup for Google Drive upload."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveClient.php:131
+msgid "Google Drive returned invalid metadata after the backup upload."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveClient.php:137
+msgid "Google Drive could not finish the Certloom backup upload. The verified local backup is still available."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveClient.php:148
+msgid "Certloom refused an invalid Google Drive download target."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveClient.php:15
+msgid "Google Drive did not return a safe file identifier."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveClient.php:160
+msgid "Certloom could not download the selected Google Drive backup."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveClient.php:173
+msgid "Google Drive did not complete the requested Certloom backup operation."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveClient.php:181
+msgid "Certloom refused an unexpected Google Drive network destination."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveClient.php:194
+msgid "Certloom could not reach Google Drive. The verified local backup remains available."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveClient.php:35
+#: src/Infrastructure/Backup/GoogleDriveClient.php:43
+#: src/Infrastructure/Backup/GoogleDriveDestination.php:152
+msgid "Google Drive returned an invalid file identifier."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveClient.php:47
+msgid "Google Drive could not delete the selected Certloom backup."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveClient.php:61
+msgid "Certloom refused invalid Google Drive backup upload input."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveClient.php:65
+msgid "The local backup file is not available for Google Drive upload."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveClient.php:93
+msgid "Google Drive could not start the Certloom backup upload."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveClient.php:97
+msgid "Google Drive returned an invalid upload session URL."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveDestination.php:128
+msgid "Certloom refused invalid Google Drive backup metadata."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveDestination.php:135
+msgid "Certloom could not create a private temporary file for the Google Drive backup."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveDestination.php:144
+msgid "Certloom removed a Google Drive download that did not match the verified backup checksums."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveDestination.php:165
+msgid "Certloom Backups"
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveDestination.php:169
+msgid "Google Drive did not create a valid Certloom backup folder."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveDestination.php:181
+msgid "Certloom could not verify the Google Drive backup identity after upload."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveDestination.php:184
+msgid "Certloom removed a Google Drive backup whose uploaded bytes could not be verified."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveDestination.php:187
+msgid "Certloom removed a Google Drive backup whose Certloom integrity metadata did not match the local package."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveDestination.php:26
+msgid "Certloom could not create a temporary Google Drive connection test."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveDestination.php:29
+msgid "Certloom could not create a secure Google Drive connection test."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveDestination.php:32
+msgid "Certloom could not prepare the Google Drive connection test."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveDestination.php:62
+msgid "Certloom refused an invalid local backup before Google Drive upload."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveDestination.php:67
+msgid "Certloom refused to upload a local backup whose bytes no longer match its verified catalog entry."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveDestination.php:71
+msgid "Certloom could not calculate the transport checksum for Google Drive upload."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:106
+msgid "Google Drive returned an invalid connection response."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:112
+msgid "The Google Drive connection request expired or did not match this administrator. Start the connection again."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:116
+msgid "The WordPress admin URL changed during Google Drive connection. Start the connection again."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:130
+msgid "Google Drive did not grant the file permission Certloom needs. Reconnect and approve the requested access."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:136
+msgid "Google did not return offline backup access. Disconnect Certloom in your Google account and connect again."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:142
+msgid "Google did not return an access token for the Drive connection."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:155
+msgid "Google authorized the connection, but Certloom could not save its local connection state safely. Re-enter the Google Drive connection settings and connect again."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:157
+msgid "Google authorized the connection, but Certloom could not save the connection state. No new Google Drive token was retained; connect again."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:182
+msgid "Google Drive did not return a refreshed access token. Reconnect Google Drive."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:213
+msgid "Certloom could not save the Google Drive backup setting."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:234
+msgid "Certloom could not save the Google Drive disconnect state or safely restore the previous encrypted connection. Re-enter the Google Drive connection settings before reconnecting."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:236
+msgid "Certloom could not save the Google Drive disconnect state. The previous encrypted connection was restored."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:242
+msgid "Google Drive returned an invalid backup folder identifier."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:247
+msgid "Certloom could not save its Google Drive backup folder."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:258
+msgid "Google Drive connection requires WordPress admin to use HTTPS."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:273
+msgid "Save a Google OAuth client ID and client secret before connecting Google Drive."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:299
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:68
+msgid "Certloom could not save the Google Drive connection securely."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:30
+msgid "Enter a valid Google OAuth client ID."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:311
+msgid "Certloom could not reach Google to complete the Drive connection."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:316
+msgid "Google did not accept the Drive connection. Check the OAuth client settings and connect again."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:44
+msgid "Enter the Google OAuth client secret before connecting Google Drive."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:47
+msgid "The Google OAuth client secret is too long."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:73
+msgid "Certloom could not save the Google Drive settings and could not safely restore the previous encrypted connection. Re-enter the Google Drive connection settings before reconnecting."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:75
+msgid "Certloom could not save the Google Drive connection settings. The previous encrypted connection was restored."
+msgstr ""
+
+#: src/Infrastructure/Backup/GoogleDriveOAuth.php:85
+msgid "Certloom could not start a secure Google Drive connection."
 msgstr ""
 
 #: src/Infrastructure/Backup/LocalBackupStore.php:107
@@ -13554,6 +14104,38 @@ msgstr ""
 msgid "Certloom removed a private backup copy that failed its post-write integrity check."
 msgstr ""
 
+#: src/Infrastructure/Backup/RemoteBackupCatalog.php:124
+msgid "Certloom refused invalid local recovery metadata for the Google Drive backup."
+msgstr ""
+
+#: src/Infrastructure/Backup/RemoteBackupCatalog.php:145
+msgid "Certloom removed the Google Drive backup but could not update its remote backup history."
+msgstr ""
+
+#: src/Infrastructure/Backup/RemoteBackupCatalog.php:161
+msgid "Google Drive retention removed old files but Certloom could not save the updated remote backup history."
+msgstr ""
+
+#: src/Infrastructure/Backup/RemoteBackupCatalog.php:175
+msgid "Certloom could not update its Google Drive backup history."
+msgstr ""
+
+#: src/Infrastructure/Backup/RemoteBackupCatalog.php:55
+msgid "The Google Drive backup history has reached its safety limit. Delete an older remote backup before uploading another."
+msgstr ""
+
+#: src/Infrastructure/Backup/RemoteBackupCatalog.php:61
+msgid "Certloom refused invalid metadata while preparing the Google Drive backup."
+msgstr ""
+
+#: src/Infrastructure/Backup/RemoteBackupCatalog.php:64
+msgid "Certloom could not create a safe Google Drive backup identity."
+msgstr ""
+
+#: src/Infrastructure/Backup/RemoteBackupCatalog.php:89
+msgid "Certloom could not save the pending Google Drive backup safely."
+msgstr ""
+
 #: src/Infrastructure/Backup/RestoreTest.php:21
 msgid "Certloom could read the backup but could not complete its non-destructive restore preview."
 msgstr ""
@@ -13579,35 +14161,35 @@ msgstr ""
 msgid "Certloom created a backup but refused to continue because its safety receipt was incomplete."
 msgstr ""
 
-#: src/Infrastructure/Backup/ScheduledBackup.php:101
+#: src/Infrastructure/Backup/ScheduledBackup.php:105
 msgid "Certloom could not complete the backup because an unexpected local error occurred."
 msgstr ""
 
-#: src/Infrastructure/Backup/ScheduledBackup.php:141
+#: src/Infrastructure/Backup/ScheduledBackup.php:145
 msgid "Certloom could not schedule automatic backups with WordPress Cron."
 msgstr ""
 
-#: src/Infrastructure/Backup/ScheduledBackup.php:160
+#: src/Infrastructure/Backup/ScheduledBackup.php:164
 msgid "Certloom could not create a safe backup-run identity."
 msgstr ""
 
-#: src/Infrastructure/Backup/ScheduledBackup.php:165
+#: src/Infrastructure/Backup/ScheduledBackup.php:169
 msgid "Another Certloom backup is already running. Wait for it to finish before starting another."
 msgstr ""
 
-#: src/Infrastructure/Backup/ScheduledBackup.php:168
+#: src/Infrastructure/Backup/ScheduledBackup.php:172
 msgid "Another Certloom backup acquired the run lock first. Try again after it finishes."
 msgstr ""
 
-#: src/Infrastructure/Backup/ScheduledBackup.php:177
+#: src/Infrastructure/Backup/ScheduledBackup.php:181
 msgid "The backup completed, but Certloom refused to release a run lock that is no longer owned by this process."
 msgstr ""
 
-#: src/Infrastructure/Backup/ScheduledBackup.php:181
+#: src/Infrastructure/Backup/ScheduledBackup.php:185
 msgid "The backup completed, but Certloom could not safely release its run lock. Wait for the short lease to expire before starting another backup."
 msgstr ""
 
-#: src/Infrastructure/Backup/ScheduledBackup.php:201
+#: src/Infrastructure/Backup/ScheduledBackup.php:205
 msgid "Backup completed and verified."
 msgstr ""
 
@@ -13621,6 +14203,43 @@ msgstr ""
 
 #: src/Infrastructure/Backup/ScheduledBackup.php:66
 msgid "Certloom could not save the automatic backup schedule."
+msgstr ""
+
+#: src/Infrastructure/Backup/SecretVault.php:17
+msgid "Certloom could not prepare the backup connection securely."
+msgstr ""
+
+#: src/Infrastructure/Backup/SecretVault.php:28
+#: src/Infrastructure/Backup/SecretVault.php:34
+#: src/Infrastructure/Backup/SecretVault.php:38
+msgid "Certloom could not encrypt the backup connection securely."
+msgstr ""
+
+#: src/Infrastructure/Backup/SecretVault.php:42
+msgid "This server does not provide the authenticated encryption required for Google Drive backup credentials."
+msgstr ""
+
+#: src/Infrastructure/Backup/SecretVault.php:51
+#: src/Infrastructure/Backup/SecretVault.php:55
+msgid "The saved backup connection credentials are not in a supported secure format."
+msgstr ""
+
+#: src/Infrastructure/Backup/SecretVault.php:62
+#: src/Infrastructure/Backup/SecretVault.php:68
+msgid "This server cannot open the saved Google Drive backup credentials securely."
+msgstr ""
+
+#: src/Infrastructure/Backup/SecretVault.php:76
+msgid "The saved Google Drive backup credentials could not be verified. Reconnect Google Drive."
+msgstr ""
+
+#: src/Infrastructure/Backup/SecretVault.php:80
+msgid "The saved Google Drive backup credentials are invalid. Reconnect Google Drive."
+msgstr ""
+
+#: src/Infrastructure/Backup/SecretVault.php:88
+#: src/Infrastructure/Backup/SecretVault.php:92
+msgid "WordPress security salts are unavailable, so Certloom cannot protect Google Drive backup credentials."
 msgstr ""
 
 #: src/Infrastructure/Data/DomainGeneration.php:26
@@ -15131,6 +15750,48 @@ msgstr ""
 
 #: src/Infrastructure/Integration/LinkedRecipientResolver.php:15
 msgid "The integration event does not identify a valid WordPress user."
+msgstr ""
+
+#: src/Infrastructure/Integration/TutorLmsAdapter.php:115
+#: src/Infrastructure/Integration/TutorLmsAdapter.php:119
+msgid "Tutor LMS completion time could not be normalized safely."
+msgstr ""
+
+#: src/Infrastructure/Integration/TutorLmsAdapter.php:44
+msgid "Tutor LMS did not provide a valid course for this completion."
+msgstr ""
+
+#: src/Infrastructure/Integration/TutorLmsAdapter.php:45
+msgid "Tutor LMS did not provide a valid WordPress learner for this completion."
+msgstr ""
+
+#: src/Infrastructure/Integration/TutorLmsAdapter.php:51
+#: src/Infrastructure/Integration/TutorLmsMappingStore.php:93
+msgid "The Tutor LMS certificate threshold must be between 0 and 100."
+msgstr ""
+
+#: src/Infrastructure/Integration/TutorLmsMappingStore.php:102
+msgid "Choose a valid explicit expiry date for the Tutor LMS mapping."
+msgstr ""
+
+#: src/Infrastructure/Integration/TutorLmsMappingStore.php:125
+msgid "Certloom could not save the Tutor LMS mapping safely."
+msgstr ""
+
+#: src/Infrastructure/Integration/TutorLmsMappingStore.php:67
+msgid "Tutor LMS mappings reached the Certloom safety limit. Remove an unused mapping before adding another."
+msgstr ""
+
+#: src/Infrastructure/Integration/TutorLmsMappingStore.php:77
+msgid "Choose a valid Tutor LMS course mapping."
+msgstr ""
+
+#: src/Infrastructure/Integration/TutorLmsMappingStore.php:89
+msgid "Tutor LMS mappings require a course, Certloom Program, and published Template."
+msgstr ""
+
+#: src/Infrastructure/Integration/TutorLmsMappingStore.php:97
+msgid "Choose a valid expiry rule for the Tutor LMS mapping."
 msgstr ""
 
 #: src/Infrastructure/Issuance/BulkIssuanceCsvReader.php:100

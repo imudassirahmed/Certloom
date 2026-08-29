@@ -95,6 +95,10 @@ final class ScheduledBackup {
 				if ( ! is_wp_error( $result ) ) {
 					$pruned = $store->prune_scheduled( self::normalize_retention( get_option( self::OPTION_RETENTION, 14 ) ) );
 					if ( is_wp_error( $pruned ) ) { $result = $pruned; }
+					elseif ( 'scheduled' === $purpose && class_exists( GoogleDriveBackup::class ) ) {
+						/* Remote copy is queued only after the verified local backup exists; Google never extends the local backup run lock. */
+						GoogleDriveBackup::queue_scheduled_local( $result );
+					}
 				}
 			}
 		} catch ( \Throwable $error ) {

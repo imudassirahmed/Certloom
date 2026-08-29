@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.89
+Stable tag: 1.6.91
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,6 +12,9 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
+> Release note for 1.6.91: INT-02 adds Certloom's first concrete LMS adapter for Tutor LMS over the frozen INT-01 integration architecture. Tutor course completion is normalized from the first-party completion hook into bounded course/WordPress-user evidence, learners resolve only through explicit Recipient links, Tutor course mappings target a Certloom Program and published Template, and hook retries use deterministic idempotent issuance. Learner names/email and arbitrary Tutor payloads are not retained. Automatic issuance remains fail-closed until the existing normalized credential-write authority gate is opened; mapping setup likewise respects the existing Program/Template admin-preview gate. LearnDash follows before the approved UX/navigation consolidation.
+
+> Release note for 1.6.90: BAK-03 adds an optional Google Drive copy destination over the canonical verified local `.cvbackup` package. OAuth uses the least-privilege `drive.file` scope, secrets/tokens are authenticated-encrypted at rest, scheduled Drive copies run only after local backup completion, resumable uploads are hash/size/MD5 metadata verified, retry identity is idempotent, safety snapshots stay local, and Drive recovery must re-enter through Certloom's real restore analyzer and verified local store. Google Drive never becomes credential authority. Tutor LMS follows, then LearnDash, before the approved UX/navigation consolidation.
 > Release note for 1.6.89: BAK-02B adds verified automatic safety snapshots before reviewed destructive current-registry operations and explicit non-destructive restore testing over the same canonical v4 `.cvbackup` format. Safety receipts are short-lived and exact-hash bound, safety retention is independent, manual backups remain explicit, restore-test evidence is privacy-safe and never acts as authority, and canonical builder output is regression-proven against the real restore analyzer. Normalized-domain and renderer authority remain closed. BAK-03 Google Drive follows, then Tutor LMS and LearnDash before the approved UX/navigation consolidation.
 > Release note for 1.6.88: BAK-02A adds local Scheduled Backup & Recovery over the existing current-authority v4 backup format rather than creating a second backup definition. Manual download and saved/scheduled backups share one validated builder; private saved backups use a persistent store separate from short-lived job retention, with exact SHA-256 re-verification, scheduled-only retention, explicit destination testing, Off/Daily/Weekly schedules and existing non-destructive restore review. Storage inside the public webroot, filesystem roots and symlink directories fail closed. Normalized-domain and renderer authority remain closed; safety snapshots/restore testing continue as BAK-02B and Google Drive remains BAK-03.
 

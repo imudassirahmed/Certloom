@@ -28,6 +28,7 @@ class Ecapla_CertVerify_Cron {
 		wp_clear_scheduled_hook( self::HOOK );
 		wp_clear_scheduled_hook( 'ecapla_certverify_continue_migrations' );
 		\Certloom\Infrastructure\Backup\ScheduledBackup::deactivate();
+		\Certloom\Infrastructure\Backup\GoogleDriveBackup::deactivate();
 	}
 
 	public static function init() {
@@ -36,7 +37,10 @@ class Ecapla_CertVerify_Cron {
 			$retired = self::retire_schedule();
 			if ( is_wp_error( $retired ) ) { return $retired; }
 		}
-		return \Certloom\Infrastructure\Backup\ScheduledBackup::init();
+		$backup = \Certloom\Infrastructure\Backup\ScheduledBackup::init();
+		if ( is_wp_error( $backup ) ) { return $backup; }
+		\Certloom\Infrastructure\Backup\GoogleDriveBackup::init();
+		return true;
 	}
 
 	/**

@@ -99,6 +99,7 @@ final class IntegrationEventContext {
 	/** @return bool */ public function is_eligible() { return is_array( $this->data['qualifying_attempt'] ?? null ); }
 	/** @return array<string,mixed>|null */ public function qualifying_attempt() { return $this->is_eligible() ? $this->data['qualifying_attempt'] : null; }
 	/** @return int */ public function wp_user_id() { return (int) $this->data['wp_user_id']; }
+	/** @return float */ public function certificate_threshold() { return (float) $this->data['certificate_threshold']; }
 	/** @return string */ public function adapter_key() { return (string) $this->data['adapter']; }
 	/** @return string */ public function source_object_type() { return (string) $this->data['source_object']['type']; }
 	/** @return string */ public function source_object_id() { return (string) $this->data['source_object']['id']; }

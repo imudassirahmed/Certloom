@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Certloom – Certificate Verification
  * Description: Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
- * Version: 1.6.89
+ * Version: 1.6.91
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.89' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.91' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
@@ -415,6 +415,7 @@ function ecapla_certverify_init() {
 	$cron_upgrade       = Ecapla_CertVerify_Cron::init();
 	$field_upgrade      = Ecapla_CertVerify_Fields::maybe_repair_schema();
 	\Certloom\Plugin::boot();
+	\Certloom\Infrastructure\Integration\TutorLmsBridge::register();
 	$provisioning_error = null;
 	if ( is_wp_error( $restore_recovery ) ) {
 		$provisioning_error = $restore_recovery;
@@ -454,6 +455,7 @@ function ecapla_certverify_init() {
 		require_once ECAPLA_CERTVERIFY_PATH . 'admin/class-ecapla-certverify-list-table.php';
 		require_once ECAPLA_CERTVERIFY_PATH . 'admin/class-ecapla-certverify-admin.php';
 		new Ecapla_CertVerify_Admin();
+		( new \Certloom\Infrastructure\Admin\TutorLmsIntegrationAdmin() )->register();
 	}
 
 	if ( did_action( 'elementor/loaded' ) ) {
