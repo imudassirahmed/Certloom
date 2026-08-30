@@ -29,6 +29,8 @@ final class AdminProductNavigation {
 	public function register() {
 		add_action( 'admin_menu', array( $this, 'consolidate_primary_menu' ), 999 );
 		add_action( 'admin_notices', array( $this, 'render_subnav' ), 2 );
+		add_filter( 'parent_file', array( $this, 'filter_parent_file' ) );
+		add_filter( 'submenu_file', array( $this, 'filter_submenu_file' ) );
 	}
 
 	/**
@@ -62,6 +64,33 @@ final class AdminProductNavigation {
 		$submenu['certloom'] = $ordered;
 	}
 
+
+	/** Keeps WordPress' Certloom parent menu highlighted on hidden contextual routes. */
+	public function filter_parent_file( $parent_file ) {
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation state.
+		if ( '' !== $page && 0 === strpos( $page, 'certloom' ) ) {
+			return 'certloom';
+		}
+		return $parent_file;
+	}
+
+	/** Maps hidden contextual routes back to one of the six visible primary rows. */
+	public function filter_submenu_file( $submenu_file ) {
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation state.
+		if ( '' === $page || 0 !== strpos( $page, 'certloom' ) ) {
+			return $submenu_file;
+		}
+		$primary = array(
+			'dashboard'   => 'certloom',
+			'credentials' => 'certloom-certificates',
+			'people'      => 'certloom-domain-programs',
+			'design'      => 'certloom-templates',
+			'insights'    => 'certloom-analytics',
+			'settings'    => 'certloom-settings',
+		);
+		$section = $this->section_for_page( $page );
+		return isset( $primary[ $section ] ) ? $primary[ $section ] : $submenu_file;
+	}
 
 	/** @return string */
 	private function primary_label( $slug ) {

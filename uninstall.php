@@ -20,6 +20,10 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 function ecapla_certverify_uninstall_site() {
 	$settings    = get_option( 'certverify_settings', array() );
 	$delete_data = ! empty( $settings['delete_data_on_uninstall'] );
+	if ( is_multisite() ) {
+		$network_choice = get_site_option( 'certloom_uninstall_delete_data_network_override', null );
+		if ( is_array( $network_choice ) && array_key_exists( 'delete_data', $network_choice ) ) { $delete_data = ! empty( $network_choice['delete_data'] ); }
+	}
 
 	/*
 	 * Migration/cutover metadata becomes part of durable credential lineage once
@@ -412,6 +416,7 @@ function ecapla_certverify_uninstall_all_sites() {
 }
 
 ecapla_certverify_uninstall_all_sites();
+delete_site_option( 'certloom_uninstall_delete_data_network_override' );
 delete_site_option( 'certverify_provisioning_failures' );
 
 // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching

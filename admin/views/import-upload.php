@@ -97,16 +97,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-backup-settings-form">
 					<input type="hidden" name="action" value="certloom_backup_settings" />
 					<?php wp_nonce_field( 'certloom_backup_settings' ); ?>
-					<p><label for="certloom-backup-schedule"><strong><?php esc_html_e( 'Schedule', 'certloom' ); ?></strong></label><br />
-					<select id="certloom-backup-schedule" name="backup_schedule">
-						<option value="off" <?php selected( $scheduled_backup_state['schedule'] ?? 'off', 'off' ); ?>><?php esc_html_e( 'Off', 'certloom' ); ?></option>
-						<option value="daily" <?php selected( $scheduled_backup_state['schedule'] ?? 'off', 'daily' ); ?>><?php esc_html_e( 'Daily', 'certloom' ); ?></option>
-						<option value="weekly" <?php selected( $scheduled_backup_state['schedule'] ?? 'off', 'weekly' ); ?>><?php esc_html_e( 'Weekly', 'certloom' ); ?></option>
-					</select></p>
-					<p><label for="certloom-backup-retention"><strong><?php esc_html_e( 'Automatic retention', 'certloom' ); ?></strong></label><br />
-					<input id="certloom-backup-retention" type="number" min="1" max="60" step="1" name="backup_retention" value="<?php echo esc_attr( absint( $scheduled_backup_state['retention'] ?? 14 ) ); ?>" />
-					<span><?php esc_html_e( 'backups', 'certloom' ); ?></span></p>
-					<?php submit_button( __( 'Save backup settings', 'certloom' ), 'secondary', 'submit', false ); ?>
+					<label class="certloom-backup-setting" for="certloom-backup-schedule"><strong><?php esc_html_e( 'Schedule', 'certloom' ); ?></strong><select id="certloom-backup-schedule" name="backup_schedule"><option value="off" <?php selected( $scheduled_backup_state['schedule'] ?? 'off', 'off' ); ?>><?php esc_html_e( 'Off', 'certloom' ); ?></option><option value="daily" <?php selected( $scheduled_backup_state['schedule'] ?? 'off', 'daily' ); ?>><?php esc_html_e( 'Daily', 'certloom' ); ?></option><option value="weekly" <?php selected( $scheduled_backup_state['schedule'] ?? 'off', 'weekly' ); ?>><?php esc_html_e( 'Weekly', 'certloom' ); ?></option></select></label>
+					<label class="certloom-backup-setting" for="certloom-backup-retention"><strong><?php esc_html_e( 'Automatic retention', 'certloom' ); ?></strong><span class="certloom-backup-number-with-unit"><input id="certloom-backup-retention" type="number" min="1" max="60" step="1" name="backup_retention" value="<?php echo esc_attr( absint( $scheduled_backup_state['retention'] ?? 14 ) ); ?>" /><span><?php esc_html_e( 'backups', 'certloom' ); ?></span></span></label>
+					<div class="certloom-backup-settings-actions"><?php submit_button( __( 'Save backup settings', 'certloom' ), 'secondary', 'submit', false ); ?></div>
 				</form>
 				<?php $certloom_backup_last = (array) ( $scheduled_backup_state['last_result'] ?? array() ); ?>
 				<ul class="ul-disc certloom-backup-status">
@@ -115,13 +108,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 					<li><strong><?php esc_html_e( 'Next scheduled run:', 'certloom' ); ?></strong> <?php echo esc_html( ! empty( $scheduled_backup_state['next_run'] ) ? wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), absint( $scheduled_backup_state['next_run'] ) ) : __( 'Not scheduled', 'certloom' ) ); ?></li>
 				</ul>
 
+				<?php
+				$certloom_backup_per_page = 50;
+				$certloom_backup_page = isset( $_GET['certloom_backup_page'] ) ? max( 1, absint( wp_unslash( $_GET['certloom_backup_page'] ) ) ) : 1;
+				$certloom_backup_total = count( (array) $saved_backups );
+				$certloom_backup_pages = max( 1, (int) ceil( $certloom_backup_total / $certloom_backup_per_page ) );
+				$certloom_backup_page = min( $certloom_backup_page, $certloom_backup_pages );
+				$certloom_visible_backups = array_slice( (array) $saved_backups, ( $certloom_backup_page - 1 ) * $certloom_backup_per_page, $certloom_backup_per_page );
+				?>
 				<?php if ( ! empty( $saved_backups ) ) : ?>
 					<h3><?php esc_html_e( 'Saved backups', 'certloom' ); ?></h3>
 					<div class="certloom-backup-table-wrap">
 					<table class="widefat striped certloom-backup-table">
 						<thead><tr><th><?php esc_html_e( 'Created', 'certloom' ); ?></th><th><?php esc_html_e( 'Type', 'certloom' ); ?></th><th><?php esc_html_e( 'Certificates', 'certloom' ); ?></th><th><?php esc_html_e( 'Size', 'certloom' ); ?></th><th><?php esc_html_e( 'Integrity', 'certloom' ); ?></th><th><?php esc_html_e( 'Restore test', 'certloom' ); ?></th><th><?php esc_html_e( 'Actions', 'certloom' ); ?></th></tr></thead>
 						<tbody>
-						<?php foreach ( array_slice( $saved_backups, 0, 20 ) as $certloom_saved_backup ) : ?>
+						<?php foreach ( $certloom_visible_backups as $certloom_saved_backup ) : ?>
 							<tr>
 								<td><?php echo esc_html( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), absint( $certloom_saved_backup['created_ts'] ) ) ); ?></td>
 								<td><?php echo esc_html( 'scheduled' === $certloom_saved_backup['purpose'] ? __( 'Scheduled', 'certloom' ) : ( 'safety' === $certloom_saved_backup['purpose'] ? __( 'Safety', 'certloom' ) : __( 'Manual', 'certloom' ) ) ); ?></td>
@@ -159,6 +160,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 						</tbody>
 					</table>
 					</div>
+					<?php if ( $certloom_backup_pages > 1 ) : ?>
+						<nav class="certloom-table-pagination" aria-label="<?php esc_attr_e( 'Saved backup pages', 'certloom' ); ?>">
+							<?php if ( $certloom_backup_page > 1 ) : ?><a class="button" href="<?php echo esc_url( add_query_arg( 'certloom_backup_page', $certloom_backup_page - 1 ) . '#certloom-backups' ); ?>"><?php esc_html_e( 'Previous', 'certloom' ); ?></a><?php endif; ?>
+							<span><?php echo esc_html( sprintf( /* translators: 1: current page, 2: total pages. */ __( 'Page %1$d of %2$d', 'certloom' ), $certloom_backup_page, $certloom_backup_pages ) ); ?></span>
+							<?php if ( $certloom_backup_page < $certloom_backup_pages ) : ?><a class="button" href="<?php echo esc_url( add_query_arg( 'certloom_backup_page', $certloom_backup_page + 1 ) . '#certloom-backups' ); ?>"><?php esc_html_e( 'Next', 'certloom' ); ?></a><?php endif; ?>
+						</nav>
+					<?php endif; ?>
 				<?php else : ?>
 					<p class="description"><?php esc_html_e( 'No private backups have been saved yet. Use Back up now or enable a schedule.', 'certloom' ); ?></p>
 				<?php endif; ?>
@@ -170,13 +178,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<?php $certloom_google_redirect = $google_drive_state['redirect_uri'] ?? ''; ?>
 				<?php if ( is_wp_error( $certloom_google_redirect ) ) : ?><div class="notice notice-warning inline"><p><?php echo esc_html( $certloom_google_redirect->get_error_message() ); ?></p></div><?php endif; ?>
 				<?php if ( empty( $google_drive_state['connected'] ) ) : ?>
-					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-google-drive-connect">
-						<input type="hidden" name="action" value="certloom_google_drive_connect" />
+					<?php $certloom_google_client_ready = \Certloom\Infrastructure\Backup\GoogleDriveOAuth::has_client_credentials(); ?>
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-google-drive-connect" target="certloomGoogleDriveOAuth" data-certloom-google-popup-form data-certloom-google-refresh-on-success="1">
+						<input type="hidden" name="action" value="certloom_google_drive_connect" /><input type="hidden" name="certloom_google_return_mode" value="popup" />
 						<?php wp_nonce_field( 'certloom_google_drive_connect' ); ?>
-						<p><label for="certloom-google-client-id"><strong><?php esc_html_e( 'Google OAuth client ID', 'certloom' ); ?></strong></label><br /><input id="certloom-google-client-id" type="text" class="regular-text" name="google_client_id" value="<?php echo esc_attr( (string) ( $google_drive_state['client_id'] ?? '' ) ); ?>" autocomplete="off" /></p>
-						<p><label for="certloom-google-client-secret"><strong><?php esc_html_e( 'Google OAuth client secret', 'certloom' ); ?></strong></label><br /><input id="certloom-google-client-secret" type="password" class="regular-text" name="google_client_secret" value="" autocomplete="new-password" /></p>
-						<?php if ( ! is_wp_error( $certloom_google_redirect ) ) : ?><p class="description"><strong><?php esc_html_e( 'Authorized redirect URI:', 'certloom' ); ?></strong> <code><?php echo esc_html( (string) $certloom_google_redirect ); ?></code></p><?php endif; ?>
-						<?php submit_button( __( 'Connect Google Drive', 'certloom' ), 'secondary', 'submit', false ); ?>
+						<?php if ( ! $certloom_google_client_ready ) : ?><details class="certloom-google-advanced"><summary><?php esc_html_e( 'One-time Google connection setup', 'certloom' ); ?></summary><p class="description"><?php esc_html_e( 'Certloom connects this WordPress site directly to Google. Add this site’s OAuth client once; the secret remains encrypted on this WordPress installation.', 'certloom' ); ?></p><p><label for="certloom-google-client-id"><strong><?php esc_html_e( 'Google OAuth client ID', 'certloom' ); ?></strong></label><br /><input id="certloom-google-client-id" type="text" class="regular-text" name="google_client_id" value="<?php echo esc_attr( (string) ( $google_drive_state['client_id'] ?? '' ) ); ?>" autocomplete="off" /></p><p><label for="certloom-google-client-secret"><strong><?php esc_html_e( 'Google OAuth client secret', 'certloom' ); ?></strong></label><br /><input id="certloom-google-client-secret" type="password" class="regular-text" name="google_client_secret" value="" autocomplete="new-password" /></p><?php if ( ! is_wp_error( $certloom_google_redirect ) ) : ?><p class="description"><strong><?php esc_html_e( 'Authorized redirect URI:', 'certloom' ); ?></strong> <code><?php echo esc_html( (string) $certloom_google_redirect ); ?></code></p><?php endif; ?></details><?php endif; ?>
+						<p class="certloom-google-connect-row"><button type="submit" class="button button-secondary" data-certloom-google-connect><?php esc_html_e( 'Connect with Google', 'certloom' ); ?></button><span role="status" aria-live="polite" data-certloom-google-popup-feedback></span></p>
 					</form>
 				<?php else : ?>
 					<p><strong><?php esc_html_e( 'Connection:', 'certloom' ); ?></strong> <?php esc_html_e( 'Connected', 'certloom' ); ?></p>
@@ -192,10 +199,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 					</form>
 					<?php $certloom_google_last = (array) ( $google_drive_state['last_result'] ?? array() ); ?>
 					<?php if ( ! empty( $certloom_google_last['ran_ts'] ) ) : ?><p class="description"><strong><?php esc_html_e( 'Last Google Drive copy:', 'certloom' ); ?></strong> <?php echo esc_html( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), absint( $certloom_google_last['ran_ts'] ) ) ); ?> — <?php echo esc_html( 'success' === ( $certloom_google_last['status'] ?? '' ) ? __( 'Verified', 'certloom' ) : __( 'Needs attention', 'certloom' ) ); ?></p><?php endif; ?>
+					<?php
+					$certloom_remote_per_page = 50;
+					$certloom_remote_page = isset( $_GET['certloom_drive_page'] ) ? max( 1, absint( wp_unslash( $_GET['certloom_drive_page'] ) ) ) : 1;
+					$certloom_remote_items = (array) ( $google_drive_state['remote'] ?? array() );
+					$certloom_remote_total = count( $certloom_remote_items );
+					$certloom_remote_pages = max( 1, (int) ceil( $certloom_remote_total / $certloom_remote_per_page ) );
+					$certloom_remote_page = min( $certloom_remote_page, $certloom_remote_pages );
+					$certloom_visible_remote = array_slice( $certloom_remote_items, ( $certloom_remote_page - 1 ) * $certloom_remote_per_page, $certloom_remote_per_page );
+					?>
 					<?php if ( ! empty( $google_drive_state['remote'] ) ) : ?>
 						<h4><?php esc_html_e( 'Google Drive copies', 'certloom' ); ?></h4>
 						<div class="certloom-backup-table-wrap"><table class="widefat striped certloom-backup-table"><thead><tr><th><?php esc_html_e( 'Created', 'certloom' ); ?></th><th><?php esc_html_e( 'Type', 'certloom' ); ?></th><th><?php esc_html_e( 'Size', 'certloom' ); ?></th><th><?php esc_html_e( 'Status', 'certloom' ); ?></th><th><?php esc_html_e( 'Actions', 'certloom' ); ?></th></tr></thead><tbody>
-						<?php foreach ( array_slice( (array) $google_drive_state['remote'], 0, 20 ) as $certloom_remote_backup ) : ?><tr>
+						<?php foreach ( $certloom_visible_remote as $certloom_remote_backup ) : ?><tr>
 							<td><?php echo esc_html( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), absint( $certloom_remote_backup['created_ts'] ?? 0 ) ) ); ?></td>
 							<td><?php echo esc_html( 'scheduled' === ( $certloom_remote_backup['purpose'] ?? '' ) ? __( 'Scheduled', 'certloom' ) : __( 'Manual', 'certloom' ) ); ?></td>
 							<td><?php echo esc_html( size_format( absint( $certloom_remote_backup['bytes'] ?? 0 ) ) ); ?></td>
@@ -205,6 +221,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 								<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-inline-form"><input type="hidden" name="action" value="certloom_google_drive_delete" /><input type="hidden" name="remote_id" value="<?php echo esc_attr( $certloom_remote_backup['id'] ); ?>" /><?php wp_nonce_field( 'certloom_google_drive_delete_' . $certloom_remote_backup['id'] ); ?><button type="submit" class="button button-small" onclick="return confirm('<?php echo esc_js( __( 'Delete this Google Drive backup?', 'certloom' ) ); ?>');"><?php esc_html_e( 'Delete', 'certloom' ); ?></button></form>
 							</td></tr><?php endforeach; ?>
 						</tbody></table></div>
+						<?php if ( $certloom_remote_pages > 1 ) : ?>
+							<nav class="certloom-table-pagination" aria-label="<?php esc_attr_e( 'Google Drive backup pages', 'certloom' ); ?>">
+								<?php if ( $certloom_remote_page > 1 ) : ?><a class="button" href="<?php echo esc_url( add_query_arg( 'certloom_drive_page', $certloom_remote_page - 1 ) . '#certloom-backups' ); ?>"><?php esc_html_e( 'Previous', 'certloom' ); ?></a><?php endif; ?>
+								<span><?php echo esc_html( sprintf( /* translators: 1: current page, 2: total pages. */ __( 'Page %1$d of %2$d', 'certloom' ), $certloom_remote_page, $certloom_remote_pages ) ); ?></span>
+								<?php if ( $certloom_remote_page < $certloom_remote_pages ) : ?><a class="button" href="<?php echo esc_url( add_query_arg( 'certloom_drive_page', $certloom_remote_page + 1 ) . '#certloom-backups' ); ?>"><?php esc_html_e( 'Next', 'certloom' ); ?></a><?php endif; ?>
+							</nav>
+						<?php endif; ?>
 					<?php endif; ?>
 				<?php endif; ?>
 

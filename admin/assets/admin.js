@@ -727,6 +727,115 @@
 		update();
 	}
 
+
+	function initSetupNumberingPreview() {
+		var form = document.querySelector( '[data-certloom-numbering-form]' );
+		if ( ! form ) { return; }
+		var mode = form.querySelector( '[data-certloom-numbering-mode]' );
+		var prefix = form.querySelector( '[data-certloom-numbering-prefix]' );
+		var suffix = form.querySelector( '[data-certloom-numbering-suffix]' );
+		var start = form.querySelector( '[data-certloom-numbering-start]' );
+		var padding = form.querySelector( '[data-certloom-numbering-padding]' );
+		var example = form.querySelector( '[data-certloom-numbering-example]' );
+		var format = form.querySelector( '[data-certloom-numbering-format]' );
+		if ( ! mode || ! example || ! format ) { return; }
+		function update() {
+			var value = mode.value || 'manual';
+			format.hidden = 'manual' === value;
+			Array.prototype.forEach.call( form.querySelectorAll( '[data-certloom-sequential-only]' ), function ( row ) { row.hidden = 'sequential' !== value; } );
+			if ( 'manual' === value ) { example.textContent = 'Entered when issuing'; return; }
+			var lead = prefix ? prefix.value : '';
+			var tail = suffix ? suffix.value : '';
+			if ( 'sequential' === value ) {
+				var n = Math.max( 1, parseInt( start && start.value ? start.value : '1', 10 ) || 1 );
+				var width = Math.max( 1, Math.min( 12, parseInt( padding && padding.value ? padding.value : '6', 10 ) || 6 ) );
+				example.textContent = lead + String( n ).padStart( width, '0' ) + tail;
+			} else if ( 'random' === value ) { example.textContent = lead + '8K3M-2Q7P' + tail; }
+			else { example.textContent = lead + '550e8400-e29b-41d4-a716-446655440000' + tail; }
+		}
+		[ mode, prefix, suffix, start, padding ].forEach( function ( input ) { if ( input ) { input.addEventListener( 'input', update ); input.addEventListener( 'change', update ); } } );
+		update();
+	}
+
+	function initWizardTemplatePreview() {
+		var select = document.getElementById( 'certloom-wizard-template' );
+		var panel = document.querySelector( '[data-certloom-wizard-template-preview]' );
+		if ( ! select || ! panel || 'undefined' === typeof window.ajaxurl ) { return; }
+		var name = panel.querySelector( '[data-certloom-template-preview-name]' );
+		var description = panel.querySelector( '[data-certloom-template-preview-description]' );
+		var canvas = panel.querySelector( '[data-certloom-template-preview-canvas]' );
+		var nonce = panel.getAttribute( 'data-preview-nonce' ) || '';
+		var sequence = 0;
+		select.addEventListener( 'change', function () {
+			sequence++;
+			var request = sequence;
+			panel.setAttribute( 'aria-busy', 'true' );
+			if ( name ) { name.textContent = 'Loading preview…'; }
+			if ( description ) { description.textContent = ''; }
+			if ( canvas ) { canvas.innerHTML = ''; }
+			var body = new FormData();
+			body.append( 'action', 'certloom_wizard_template_preview' ); body.append( 'nonce', nonce ); body.append( 'template_id', select.value || '0' );
+			fetch( window.ajaxurl, { method: 'POST', credentials: 'same-origin', body: body } ).then( function ( response ) { return response.json(); } ).then( function ( response ) {
+				if ( request !== sequence ) { return; }
+				if ( ! response || ! response.success || ! response.data ) { throw new Error( response && response.data && response.data.message ? response.data.message : 'Template preview could not be loaded.' ); }
+				if ( name ) { name.textContent = response.data.name || 'No default design selected'; }
+				if ( description ) { description.textContent = response.data.description || ''; }
+				if ( canvas ) { canvas.innerHTML = response.data.html || ''; }
+				panel.setAttribute( 'aria-busy', 'false' );
+			} ).catch( function ( error ) {
+				if ( request !== sequence ) { return; }
+				if ( name ) { name.textContent = 'Preview unavailable'; }
+				if ( description ) { description.textContent = error && error.message ? error.message : 'Template preview could not be loaded.'; }
+				panel.setAttribute( 'aria-busy', 'false' );
+			} );
+		} );
+	}
+
+	function initGoogleDrivePopupConnect() {
+		Array.prototype.forEach.call( document.querySelectorAll( 'form[data-certloom-google-popup-form]' ), function ( form ) {
+			form.addEventListener( 'submit', function () {
+				var popup = null;
+				try { popup = window.open( '', 'certloomGoogleDriveOAuth', 'width=620,height=720,resizable=yes,scrollbars=yes' ); } catch ( error ) { popup = null; }
+				if ( ! popup ) { form.removeAttribute( 'target' ); var returnMode = form.querySelector( 'input[name="certloom_google_return_mode"]' ); if ( returnMode ) { returnMode.value = 'backup'; } }
+				var button = document.querySelector( '[form="' + form.id + '"][data-certloom-google-connect]' ) || form.querySelector( '[data-certloom-google-connect]' );
+				var feedback = document.querySelector( '[data-certloom-google-popup-feedback]' );
+				if ( button ) { button.setAttribute( 'aria-busy', 'true' ); button.dataset.certloomOriginalLabel = button.textContent; button.textContent = popup ? 'Waiting for Google…' : 'Opening Google…'; }
+				if ( feedback ) { feedback.textContent = popup ? 'Complete permission in the Google window.' : 'Your browser blocked the popup, so Google will open in this tab.'; }
+			} );
+		} );
+		window.addEventListener( 'message', function ( event ) {
+			if ( event.origin !== window.location.origin || ! event.data || 'certloom-google-drive-oauth' !== event.data.type ) { return; }
+			var success = 'connected' === event.data.status;
+			Array.prototype.forEach.call( document.querySelectorAll( '[data-certloom-google-popup-feedback]' ), function ( feedback ) { feedback.textContent = event.data.message || ( success ? 'Google Drive connected.' : 'Google Drive was not connected.' ); } );
+			Array.prototype.forEach.call( document.querySelectorAll( '[data-certloom-google-status]' ), function ( status ) { if ( success ) { status.textContent = 'Connected'; status.classList.remove( 'is-disconnected' ); status.classList.add( 'is-connected' ); } } );
+			Array.prototype.forEach.call( document.querySelectorAll( '[data-certloom-google-enable]' ), function ( input ) { if ( success ) { input.disabled = false; } } );
+			Array.prototype.forEach.call( document.querySelectorAll( '.certloom-google-advanced' ), function ( details ) { if ( success ) { details.hidden = true; } } );
+			Array.prototype.forEach.call( document.querySelectorAll( '[data-certloom-google-connect]' ), function ( button ) { button.removeAttribute( 'aria-busy' ); if ( success ) { button.textContent = 'Connected'; button.disabled = true; } else if ( button.dataset.certloomOriginalLabel ) { button.textContent = button.dataset.certloomOriginalLabel; } } );
+			var refresh = document.querySelector( 'form[data-certloom-google-popup-form][data-certloom-google-refresh-on-success="1"]' );
+			if ( success && refresh ) { window.setTimeout( function () { window.location.reload(); }, 350 ); }
+		} );
+	}
+
+
+	function initPluginLifecycleDialog() {
+		var dialog = document.getElementById( 'certloom-plugin-lifecycle-dialog' );
+		if ( ! dialog ) { return; }
+		var pluginFile = dialog.getAttribute( 'data-certloom-plugin-file' ) || '';
+		if ( ! pluginFile ) { return; }
+		var row = Array.prototype.find.call( document.querySelectorAll( 'tr[data-plugin]' ), function ( candidate ) { return candidate.getAttribute( 'data-plugin' ) === pluginFile; } ) || null;
+		var deactivate = row ? row.querySelector( '.deactivate a' ) : null;
+		var redirect = dialog.querySelector( '[data-certloom-deactivate-redirect]' );
+		var firstChoice = dialog.querySelector( 'input[name="delete_data_on_uninstall"]' );
+		if ( ! deactivate || ! redirect ) { return; }
+		deactivate.addEventListener( 'click', function ( event ) {
+			event.preventDefault(); redirect.value = deactivate.href;
+			if ( 'function' === typeof dialog.showModal ) { dialog.showModal(); if ( firstChoice ) { window.setTimeout( function () { firstChoice.focus(); }, 0 ); } }
+			else if ( window.confirm( 'Deactivating Certloom stops public credential verification. Continue?' ) ) { window.location.href = deactivate.href; }
+		} );
+		Array.prototype.forEach.call( dialog.querySelectorAll( '[data-certloom-dialog-close]' ), function ( button ) { button.addEventListener( 'click', function () { if ( dialog.open ) { dialog.close(); } } ); } );
+		dialog.addEventListener( 'click', function ( event ) { if ( event.target === dialog ) { dialog.close(); } } );
+	}
+
 	document.addEventListener( 'DOMContentLoaded', function () {
 		initFields();
 		initConfirmations();
@@ -739,6 +848,10 @@
 		initProductNoticeRail();
 		initRestoreAutoContinue();
 		initAdaptiveSetupWizard();
+		initSetupNumberingPreview();
+		initWizardTemplatePreview();
+		initGoogleDrivePopupConnect();
+		initPluginLifecycleDialog();
 		initScopedContextLookups();
 		initProgramBatchSelectors();
 		initScopedFieldForms();

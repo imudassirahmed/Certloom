@@ -104,7 +104,8 @@ $ecapla_certverify_updated_label = $certificate && ! empty( $certificate['update
 				<?php if ( $certificate ) : ?>
 				<section id="certloom-workspace-program" class="certloom-panel certloom-editor-section" aria-labelledby="certloom-program-title">
 					<div class="certloom-panel-header"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Program', 'certloom' ); ?></span><h2 id="certloom-program-title"><?php esc_html_e( 'Program relationship', 'certloom' ); ?></h2></div><span class="dashicons dashicons-lock" aria-hidden="true"></span></div>
-					<p><?php esc_html_e( 'Program assignment is not available for current-registry certificates in this build yet. Certloom leaves it unset rather than storing a misleading substitute.', 'certloom' ); ?></p>
+					<p><?php esc_html_e( 'This certificate is stored in the legacy Registry, which does not carry normalized Program or Batch relationships. Use Credential Management after migration for Program and Batch assignment; Certloom does not invent a substitute on historical records.', 'certloom' ); ?></p>
+					<?php if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) : ?><p><a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-domain-credentials' ) ); ?>"><?php esc_html_e( 'Open Credential Management', 'certloom' ); ?></a></p><?php endif; ?>
 				</section>
 				<?php endif; ?>
 

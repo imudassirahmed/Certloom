@@ -1,3 +1,11 @@
+= 1.6.98 =
+* UX-OPS-01: make the seven-step Setup Wizard practically complete by selecting/previewing the canonical Global fallback Template, exposing the existing numbering prefix/suffix/start/padding policy, integrating local + Google Drive backup setup, and returning to Dashboard after reviewed Apply.
+* Keep Wizard Apply transactional across settings, numbering, backup, Drive, onboarding and Template assignment, including exact rollback without provider network probes.
+* Simplify Google Drive to a normal Connect with Google popup while keeping site-owned OAuth credentials in an Advanced one-time setup, least-privilege drive.file scope, same-origin callback messaging and popup-blocker fallback; no Certloom/Ecapla OAuth broker or shared secret is introduced.
+* Preserve the correct six-section WordPress parent state on contextual routes, compact the Dashboard readiness reminder with per-admin three-day dismissal, separate the small Setup Wizard action, align Automatic Backup controls and paginate local/Drive histories at 50.
+* Normalize public Copy/Profile/Share/Print action styling, clarify legacy Registry Program/Batch limitations, and intercept Certloom deactivation while the plugin is active so administrators explicitly choose keep-data or delete-on-uninstall with a public-verification-loss warning; uninstall.php remains the destructive authority.
+* Keep normalized-domain and renderer production authority fail-closed. 1.6.98 remains a QA candidate until the focused UX/operations browser matrix and customer staging review are complete.
+
 = 1.6.97 =
 * FLD-02: add Program + optional Batch scoped credential-field contracts over the global Field Catalog, with deterministic inheritance, Program-required downgrade protection, typed Manual/Bulk inputs and immutable issued-Version field/value snapshots.
 * Integrate scoped fields through canonical Designer tokens, Template assignment/publication preflight, public Credential Profile and Recipient Portal privacy presentation, Tutor/LearnDash/INT-01 compatibility, Setup Wizard recommendations, backup/restore validation and safe active-use retirement guards.

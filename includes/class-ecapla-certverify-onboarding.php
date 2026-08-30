@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /** Premium, non-blocking first-run setup and WIZ-01 workflow state. */
 class Ecapla_CertVerify_Onboarding {
 	const OPTION_KEY = 'certverify_onboarding';
-	const VERSION    = 2;
+	const VERSION    = 3;
 
 	/** @return array<int,string> */
 	public static function wizard_steps() {
@@ -174,6 +174,16 @@ class Ecapla_CertVerify_Onboarding {
 		return self::persist( $state );
 	}
 
+	/** Exact sanitized Wizard/onboarding snapshot used only for transactional compensation. */
+	public static function snapshot() { return self::get_state(); }
+
+	/** Restores an exact prior sanitized snapshot after a multi-authority setup apply fails. @return true|WP_Error */
+	public static function restore_snapshot( array $snapshot ) {
+		$allowed = Ecapla_CertVerify_Backup::assert_writes_allowed();
+		if ( is_wp_error( $allowed ) ) { return $allowed; }
+		return self::persist( $snapshot );
+	}
+
 	/** @return int|WP_Error */
 	public static function create_verification_page() {
 		$allowed = Ecapla_CertVerify_Backup::assert_writes_allowed();
@@ -314,16 +324,22 @@ class Ecapla_CertVerify_Onboarding {
 		if ( array_key_exists( 'verification_page_id', $draft ) ) { $out['verification_page_id'] = absint( $draft['verification_page_id'] ); }
 		if ( array_key_exists( 'purpose', $draft ) ) { $out['purpose'] = sanitize_key( (string) $draft['purpose'] ); }
 		if ( array_key_exists( 'subcategory', $draft ) ) { $out['subcategory'] = sanitize_key( (string) $draft['subcategory'] ); }
+		if ( array_key_exists( 'design_template_id', $draft ) ) { $out['design_template_id'] = absint( $draft['design_template_id'] ); }
 		if ( array_key_exists( 'numbering_mode', $draft ) ) {
 			$value = sanitize_key( (string) $draft['numbering_mode'] );
 			$out['numbering_mode'] = in_array( $value, array( 'manual', 'sequential', 'random', 'uuid' ), true ) ? $value : 'manual';
 		}
+		if ( array_key_exists( 'numbering_prefix', $draft ) ) { $out['numbering_prefix'] = self::limit_text( sanitize_text_field( (string) $draft['numbering_prefix'] ), 32 ); }
+		if ( array_key_exists( 'numbering_suffix', $draft ) ) { $out['numbering_suffix'] = self::limit_text( sanitize_text_field( (string) $draft['numbering_suffix'] ), 32 ); }
+		if ( array_key_exists( 'numbering_start', $draft ) ) { $out['numbering_start'] = min( 999999999999, max( 1, absint( $draft['numbering_start'] ) ) ); }
+		if ( array_key_exists( 'numbering_padding', $draft ) ) { $out['numbering_padding'] = min( 12, max( 1, absint( $draft['numbering_padding'] ) ) ); }
 		if ( array_key_exists( 'backup_schedule', $draft ) ) {
 			$value = sanitize_key( (string) $draft['backup_schedule'] );
 			$out['backup_schedule'] = in_array( $value, array( 'off', 'daily', 'weekly' ), true ) ? $value : 'off';
 		}
 		if ( array_key_exists( 'backup_retention', $draft ) ) { $out['backup_retention'] = min( 60, max( 1, absint( $draft['backup_retention'] ) ) ); }
-		foreach ( array( 'verification_qr_enabled', 'verification_barcode_enabled', 'appearance_reviewed', 'verification_tested' ) as $key ) {
+		if ( array_key_exists( 'google_drive_retention', $draft ) ) { $out['google_drive_retention'] = min( 60, max( 1, absint( $draft['google_drive_retention'] ) ) ); }
+		foreach ( array( 'verification_qr_enabled', 'verification_barcode_enabled', 'appearance_reviewed', 'verification_tested', 'google_drive_enabled' ) as $key ) {
 			if ( array_key_exists( $key, $draft ) ) { $out[ $key ] = ! empty( $draft[ $key ] ); }
 		}
 		return $out;

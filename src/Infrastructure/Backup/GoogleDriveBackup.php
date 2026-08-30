@@ -22,6 +22,28 @@ final class GoogleDriveBackup {
 		);
 	}
 
+	/** @return array{enabled:bool,retention:int} Exact local settings snapshot for transactional compensation. */
+	public static function settings_snapshot() {
+		$config = GoogleDriveOAuth::config();
+		return array( 'enabled' => ! empty( $config['enabled'] ), 'retention' => self::retention() );
+	}
+
+	/** Restores only Certloom's local Drive-copy preferences; it deliberately performs no network probe. @return true|\WP_Error */
+	public static function restore_settings_snapshot( array $snapshot ) {
+		$retention = max( 1, min( 60, absint( $snapshot['retention'] ?? 14 ) ?: 14 ) );
+		$previous_retention = self::retention();
+		$saved = update_option( self::RETENTION_OPTION, $retention, false );
+		if ( ! $saved && $retention !== absint( get_option( self::RETENTION_OPTION, 14 ) ) ) {
+			return new \WP_Error( 'certloom_google_retention_restore_failed', __( 'Certloom could not restore the previous Google Drive retention setting.', 'certloom' ) );
+		}
+		$enabled = GoogleDriveOAuth::set_enabled( ! empty( $snapshot['enabled'] ) );
+		if ( is_wp_error( $enabled ) ) {
+			update_option( self::RETENTION_OPTION, $previous_retention, false );
+			return $enabled;
+		}
+		return true;
+	}
+
 	/** @return true|\WP_Error */
 	public static function save_settings( $enabled, $retention ) {
 		$retention = max( 1, min( 60, absint( $retention ) ?: 14 ) );

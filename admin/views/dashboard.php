@@ -18,11 +18,10 @@ $health_label = 'good' === $health_overall ? __( 'Ready for current operations',
 			<h1 id="certloom-dashboard-title"><?php esc_html_e( 'Dashboard', 'certloom' ); ?></h1>
 			<p><?php esc_html_e( 'Manage and monitor your self-hosted certificate registry from one place.', 'certloom' ); ?></p>
 		</div>
+		<a class="certloom-dashboard-setup-link" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-setup' ) ); ?>">
+			<span><?php esc_html_e( 'Setup wizard', 'certloom' ); ?></span><span aria-hidden="true">→</span>
+		</a>
 		<div class="certloom-dashboard-actions" aria-label="<?php esc_attr_e( 'Quick actions', 'certloom' ); ?>">
-			<a class="button button-secondary button-hero" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-setup' ) ); ?>">
-				<svg class="certloom-button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.64 5.64l2.12 2.12m8.48 8.48 2.12 2.12m0-12.72-2.12 2.12M7.76 16.24l-2.12 2.12" /></svg>
-				<?php esc_html_e( 'Setup wizard', 'certloom' ); ?>
-			</a>
 			<a class="button button-primary button-hero" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-add' ) ); ?>">
 				<svg class="certloom-button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" /></svg>
 				<?php esc_html_e( 'Add certificate', 'certloom' ); ?>
@@ -34,6 +33,10 @@ $health_label = 'good' === $health_overall ? __( 'Ready for current operations',
 		</div>
 	</section>
 
+	<?php if ( isset( $_GET['certloom_wizard_applied'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only success flag after a nonce-protected action. ?>
+		<div class="notice notice-success is-dismissible inline certloom-owned-notice certloom-dashboard-notice"><p><?php esc_html_e( 'Setup settings applied.', 'certloom' ); ?></p></div>
+	<?php endif; ?>
+
 	<?php if ( isset( $dashboard_error ) && is_wp_error( $dashboard_error ) ) : ?>
 		<div class="notice notice-error inline certloom-owned-notice certloom-dashboard-notice"><p><?php echo esc_html( $dashboard_error->get_error_message() ); ?></p></div>
 	<?php endif; ?>
@@ -43,37 +46,18 @@ $health_label = 'good' === $health_overall ? __( 'Ready for current operations',
 		$setup_progress_total     = max( 1, absint( $onboarding_summary['progress_total'] ?? 6 ) );
 		$wizard_walkthrough_done  = ! empty( $onboarding_summary['wizard_completed'] );
 		$readiness_incomplete     = $setup_progress_completed < $setup_progress_total;
-		if ( $wizard_walkthrough_done && $readiness_incomplete ) :
-			$setup_checks = array(
-				array( 'label' => __( 'Organization', 'certloom' ), 'ready' => ! empty( $onboarding_summary['organization_ready'] ) ),
-				array( 'label' => __( 'Certificate fields', 'certloom' ), 'ready' => ! empty( $onboarding_summary['fields_ready'] ) ),
-				array( 'label' => __( 'Verification page', 'certloom' ), 'ready' => ! empty( $onboarding_summary['page_ready'] ) ),
-				array( 'label' => __( 'First certificate', 'certloom' ), 'ready' => ! empty( $onboarding_summary['registry_ready'] ) ),
-				array( 'label' => __( 'Verification test', 'certloom' ), 'ready' => ! empty( $onboarding_summary['verification_tested'] ) ),
-				array( 'label' => __( 'Appearance review', 'certloom' ), 'ready' => ! empty( $onboarding_summary['appearance_ready'] ) ),
-			);
+		if ( $readiness_incomplete && ! empty( $setup_reminder_visible ) ) :
 	?>
-		<div class="certloom-callout certloom-callout-info certloom-setup-callout certloom-setup-readiness" role="status">
-			<span class="dashicons dashicons-yes-alt" aria-hidden="true"></span>
-			<div>
-				<strong><?php esc_html_e( 'Setup review complete', 'certloom' ); ?></strong>
-				<p><?php echo esc_html( sprintf( __( 'Your Wizard choices were reviewed and applied. %1$d of %2$d recommended readiness checks are complete; finish the remaining items when they are relevant to your workflow.', 'certloom' ), $setup_progress_completed, $setup_progress_total ) ); ?></p>
-				<ul class="certloom-setup-checklist" aria-label="<?php esc_attr_e( 'Recommended setup readiness', 'certloom' ); ?>">
-					<?php foreach ( $setup_checks as $setup_check ) : ?>
-						<li class="<?php echo $setup_check['ready'] ? 'is-complete' : 'is-pending'; ?>"><span class="dashicons <?php echo $setup_check['ready'] ? 'dashicons-yes-alt' : 'dashicons-marker'; ?>" aria-hidden="true"></span><?php echo esc_html( $setup_check['label'] ); ?></li>
-					<?php endforeach; ?>
-				</ul>
-			</div>
-			<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-setup&step=review' ) ); ?>"><?php esc_html_e( 'Review setup', 'certloom' ); ?></a>
-		</div>
-	<?php elseif ( empty( $onboarding_summary['completed'] ) ) : ?>
-		<div class="certloom-callout certloom-callout-info certloom-setup-callout" role="status">
-			<span class="dashicons dashicons-admin-generic" aria-hidden="true"></span>
-			<div><strong><?php esc_html_e( 'Finish first-run setup', 'certloom' ); ?></strong><p><?php echo esc_html( sprintf( __( '%1$d of %2$d recommended setup steps are complete. Confirm your organization, public verification flow and display choices when convenient; Certloom never forces an activation redirect.', 'certloom' ), $setup_progress_completed, $setup_progress_total ) ); ?></p></div>
-			<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-setup' ) ); ?>"><?php esc_html_e( 'Open setup', 'certloom' ); ?></a>
+		<div class="certloom-setup-reminder" role="status">
+			<span class="dashicons <?php echo $wizard_walkthrough_done ? 'dashicons-yes-alt' : 'dashicons-admin-generic'; ?>" aria-hidden="true"></span>
+			<strong><?php echo esc_html( sprintf( __( 'Setup: %1$d of %2$d checks complete', 'certloom' ), $setup_progress_completed, $setup_progress_total ) ); ?></strong>
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-setup' . ( $wizard_walkthrough_done ? '&step=review' : '' ) ) ); ?>"><?php esc_html_e( 'Review setup', 'certloom' ); ?> <span aria-hidden="true">→</span></a>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-setup-reminder-dismiss">
+				<input type="hidden" name="action" value="certloom_dismiss_setup_reminder"><?php wp_nonce_field( 'certloom_dismiss_setup_reminder' ); ?>
+				<button type="submit" class="button-link" aria-label="<?php esc_attr_e( 'Dismiss setup reminder for three days', 'certloom' ); ?>"><span aria-hidden="true">×</span></button>
+			</form>
 		</div>
 	<?php endif; endif; ?>
-
 	<?php if ( $review > 0 ) : ?>
 		<div class="certloom-callout certloom-callout-warning" role="status">
 			<span class="dashicons dashicons-warning" aria-hidden="true"></span>

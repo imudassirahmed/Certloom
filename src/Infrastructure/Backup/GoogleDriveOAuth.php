@@ -76,15 +76,16 @@ final class GoogleDriveOAuth {
 	}
 
 	/** @return string|\WP_Error */
-	public static function authorization_url() {
+	public static function authorization_url( $context = 'backup' ) {
 		$credentials = self::client_credentials();
 		if ( is_wp_error( $credentials ) ) { return $credentials; }
 		$redirect = self::redirect_uri();
 		if ( is_wp_error( $redirect ) ) { return $redirect; }
 		try { $state = bin2hex( random_bytes( 32 ) ); }
 		catch ( \Throwable $error ) { return new \WP_Error( 'certloom_google_oauth_state_failed', __( 'Certloom could not start a secure Google Drive connection.', 'certloom' ) ); }
+		$context = in_array( sanitize_key( (string) $context ), array( 'backup', 'popup' ), true ) ? sanitize_key( (string) $context ) : 'backup';
 		$key = self::STATE_PREFIX . hash( 'sha256', $state );
-		set_transient( $key, array( 'user_id' => absint( get_current_user_id() ), 'created' => time(), 'redirect_uri' => $redirect ), 10 * MINUTE_IN_SECONDS );
+		set_transient( $key, array( 'user_id' => absint( get_current_user_id() ), 'created' => time(), 'redirect_uri' => $redirect, 'context' => $context ), 10 * MINUTE_IN_SECONDS );
 		$query = array(
 			'client_id'                => $credentials['client_id'],
 			'redirect_uri'             => $redirect,
@@ -96,6 +97,21 @@ final class GoogleDriveOAuth {
 			'state'                    => $state,
 		);
 		return self::AUTH_URL . '?' . http_build_query( $query, '', '&', PHP_QUERY_RFC3986 );
+	}
+
+	/** True when this site already has a usable OAuth client identity. */
+	public static function has_client_credentials() {
+		return ! is_wp_error( self::client_credentials() );
+	}
+
+	/** Returns the pending OAuth UI context without consuming the state. */
+	public static function pending_context( $state ) {
+		$state = trim( (string) $state );
+		if ( 1 !== preg_match( '/^[a-f0-9]{64}$/', $state ) ) { return ''; }
+		$pending = get_transient( self::STATE_PREFIX . hash( 'sha256', $state ) );
+		if ( ! is_array( $pending ) || absint( $pending['user_id'] ?? 0 ) !== absint( get_current_user_id() ) ) { return ''; }
+		$context = sanitize_key( (string) ( $pending['context'] ?? '' ) );
+		return in_array( $context, array( 'backup', 'popup' ), true ) ? $context : '';
 	}
 
 	/** @return true|\WP_Error */

@@ -61,6 +61,8 @@ class Ecapla_CertVerify_Admin {
 		add_action( 'admin_post_certloom_google_drive_upload', array( $this, 'handle_google_drive_upload' ) );
 		add_action( 'admin_post_certloom_google_drive_download_local', array( $this, 'handle_google_drive_download_local' ) );
 		add_action( 'admin_post_certloom_google_drive_delete', array( $this, 'handle_google_drive_delete' ) );
+		add_action( 'admin_post_certloom_dismiss_setup_reminder', array( $this, 'handle_dismiss_setup_reminder' ) );
+		add_action( 'wp_ajax_certloom_wizard_template_preview', array( $this, 'handle_setup_wizard_template_preview' ) );
 		add_action( 'admin_init', array( $this, 'handle_status_review_acknowledgement' ) );
 		add_action( 'admin_post_ecapla_certverify_delete_certificate', array( $this, 'handle_delete' ) );
 		add_action( 'admin_post_ecapla_certverify_delete_field', array( $this, 'handle_field_delete' ) );
@@ -69,6 +71,8 @@ class Ecapla_CertVerify_Admin {
 		add_action( 'admin_post_ecapla_certverify_retranslate_fields', array( $this, 'handle_field_retranslate' ) );
 		add_filter( 'admin_footer_text', array( $this, 'admin_footer_text' ) );
 		add_action( 'admin_notices', array( $this, 'status_review_notices' ) );
+		add_action( 'admin_footer-plugins.php', array( $this, 'render_plugin_lifecycle_dialog' ) );
+		add_action( 'admin_post_certloom_prepare_deactivation', array( $this, 'handle_prepare_deactivation' ) );
 	}
 
 	public function add_menu() {
@@ -148,11 +152,60 @@ class Ecapla_CertVerify_Admin {
 	}
 
 	public function enqueue_assets( $hook ) {
-		if ( false === strpos( (string) $hook, 'certloom' ) ) {
+		if ( false === strpos( (string) $hook, 'certloom' ) && 'plugins.php' !== (string) $hook ) {
 			return;
 		}
 		wp_enqueue_style( 'ecapla-certverify-admin', ECAPLA_CERTVERIFY_URL . 'admin/assets/admin.css', array(), ECAPLA_CERTVERIFY_VERSION );
 		wp_enqueue_script( 'ecapla-certverify-admin', ECAPLA_CERTVERIFY_URL . 'admin/assets/admin.js', array(), ECAPLA_CERTVERIFY_VERSION, true );
+	}
+
+
+	public function render_plugin_lifecycle_dialog() {
+		if ( ! current_user_can( 'activate_plugins' ) ) { return; }
+		$plugin_file = plugin_basename( ECAPLA_CERTVERIFY_PATH . 'certloom.php' );
+		$delete_data = ! empty( Ecapla_CertVerify_Settings::get( 'delete_data_on_uninstall', false ) );
+		$network_wide = is_multisite() && is_network_admin();
+		if ( $network_wide ) {
+			$network_choice = get_site_option( 'certloom_uninstall_delete_data_network_override', null );
+			if ( is_array( $network_choice ) && array_key_exists( 'delete_data', $network_choice ) ) { $delete_data = ! empty( $network_choice['delete_data'] ); }
+		}
+		?>
+		<dialog id="certloom-plugin-lifecycle-dialog" class="certloom-plugin-lifecycle-dialog" data-certloom-plugin-file="<?php echo esc_attr( $plugin_file ); ?>">
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" data-certloom-lifecycle-form>
+				<input type="hidden" name="action" value="certloom_prepare_deactivation"><input type="hidden" name="redirect_to" value="" data-certloom-deactivate-redirect><input type="hidden" name="certloom_network_wide" value="<?php echo $network_wide ? '1' : '0'; ?>"><?php wp_nonce_field( 'certloom_prepare_deactivation' ); ?>
+				<div class="certloom-lifecycle-dialog-head"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Data & verification', 'certloom' ); ?></span><h2><?php esc_html_e( 'Before deactivating Certloom', 'certloom' ); ?></h2></div><button type="button" class="button-link certloom-dialog-close" data-certloom-dialog-close aria-label="<?php esc_attr_e( 'Close', 'certloom' ); ?>">×</button></div>
+				<p><?php esc_html_e( 'Public verification pages, credential QR destinations and the recipient portal stop working while Certloom is inactive.', 'certloom' ); ?></p>
+				<p class="description"><?php esc_html_e( 'WordPress can only delete a plugin after it is inactive, when Certloom code is no longer running. Choose now what should happen if you later delete the plugin.', 'certloom' ); ?></p>
+				<div class="certloom-lifecycle-options">
+					<label><input type="radio" name="delete_data_on_uninstall" value="0" <?php checked( ! $delete_data ); ?>><span><strong><?php esc_html_e( 'Keep certificate data', 'certloom' ); ?></strong><small><?php esc_html_e( 'Recommended. Data stays in WordPress so reinstalling Certloom can restore service. Verification still remains unavailable while the plugin is inactive.', 'certloom' ); ?></small></span></label>
+					<label class="is-destructive"><input type="radio" name="delete_data_on_uninstall" value="1" <?php checked( $delete_data ); ?>><span><strong><?php esc_html_e( 'Delete Certloom data if the plugin is deleted', 'certloom' ); ?></strong><small><?php esc_html_e( 'Permanently removes Certloom certificate data and settings during WordPress plugin deletion. This cannot be undone without a backup.', 'certloom' ); ?></small></span></label>
+				</div>
+				<div class="certloom-lifecycle-dialog-actions"><button type="button" class="button" data-certloom-dialog-close><?php esc_html_e( 'Cancel', 'certloom' ); ?></button><button type="submit" class="button button-primary"><?php esc_html_e( 'Save choice & deactivate', 'certloom' ); ?></button></div>
+			</form>
+		</dialog>
+		<?php
+	}
+
+	public function handle_prepare_deactivation() {
+		if ( ! current_user_can( 'activate_plugins' ) ) { wp_die( esc_html__( 'You do not have permission to deactivate plugins.', 'certloom' ) ); }
+		check_admin_referer( 'certloom_prepare_deactivation' );
+		$delete_data = isset( $_POST['delete_data_on_uninstall'] ) && '1' === (string) wp_unslash( $_POST['delete_data_on_uninstall'] );
+		$network_wide = is_multisite() && ! empty( $_POST['certloom_network_wide'] );
+		if ( $network_wide ) {
+			if ( ! current_user_can( 'manage_network_plugins' ) ) { wp_die( esc_html__( 'You do not have permission to change a network-wide Certloom deletion policy.', 'certloom' ) ); }
+			$choice = array( 'delete_data' => $delete_data ? 1 : 0, 'recorded_at' => time() );
+			$saved = update_site_option( 'certloom_uninstall_delete_data_network_override', $choice );
+			if ( ! $saved && $choice !== get_site_option( 'certloom_uninstall_delete_data_network_override', array() ) ) { wp_die( esc_html__( 'Certloom could not save the network-wide uninstall data choice. The plugin was not deactivated.', 'certloom' ) ); }
+		} else {
+			$settings = Ecapla_CertVerify_Settings::get_all();
+			$settings['delete_data_on_uninstall'] = $delete_data;
+			if ( ! Ecapla_CertVerify_Settings::save( $settings ) ) { wp_die( esc_html__( 'Certloom could not save the uninstall data choice. The plugin was not deactivated.', 'certloom' ) ); }
+		}
+		$redirect = isset( $_POST['redirect_to'] ) ? wp_unslash( $_POST['redirect_to'] ) : '';
+		$redirect = wp_validate_redirect( $redirect, '' );
+		$admin_base = untrailingslashit( admin_url() );
+		if ( '' === $redirect || 0 !== strpos( $redirect, $admin_base ) ) { wp_die( esc_html__( 'Certloom refused an invalid plugin deactivation destination.', 'certloom' ) ); }
+		wp_safe_redirect( $redirect ); exit;
 	}
 
 	public function handle_form_submission() {
@@ -428,7 +481,7 @@ class Ecapla_CertVerify_Admin {
 		if ( 'apply_review' === $action ) {
 			$result = $this->apply_setup_wizard_review();
 			if ( is_wp_error( $result ) ) { $this->redirect_error( $result->get_error_message(), add_query_arg( 'step', 'review', $base ) ); }
-			wp_safe_redirect( add_query_arg( array( 'certloom_wizard_applied' => '1', 'step' => 'review' ), $base ) );
+			wp_safe_redirect( add_query_arg( 'certloom_wizard_applied', '1', admin_url( 'admin.php?page=' . self::DASHBOARD_PAGE ) ) );
 			exit;
 		}
 
@@ -453,10 +506,17 @@ class Ecapla_CertVerify_Admin {
 			case 'program':
 				return array( 'program_title' => isset( $_POST['program_title'] ) ? sanitize_text_field( wp_unslash( $_POST['program_title'] ) ) : '' );
 			case 'design':
-				return array( 'design_note' => isset( $_POST['design_note'] ) ? sanitize_text_field( wp_unslash( $_POST['design_note'] ) ) : '' );
+				return array(
+					'design_template_id' => isset( $_POST['design_template_id'] ) ? absint( $_POST['design_template_id'] ) : 0,
+					'design_note' => isset( $_POST['design_note'] ) ? sanitize_text_field( wp_unslash( $_POST['design_note'] ) ) : '',
+				);
 			case 'delivery':
 				return array(
 					'numbering_mode' => isset( $_POST['numbering_mode'] ) ? sanitize_key( wp_unslash( $_POST['numbering_mode'] ) ) : 'manual',
+					'numbering_prefix' => isset( $_POST['numbering_prefix'] ) ? sanitize_text_field( wp_unslash( $_POST['numbering_prefix'] ) ) : '',
+					'numbering_suffix' => isset( $_POST['numbering_suffix'] ) ? sanitize_text_field( wp_unslash( $_POST['numbering_suffix'] ) ) : '',
+					'numbering_start' => isset( $_POST['numbering_start'] ) ? absint( $_POST['numbering_start'] ) : 1,
+					'numbering_padding' => isset( $_POST['numbering_padding'] ) ? absint( $_POST['numbering_padding'] ) : 6,
 					'verification_qr_enabled' => ! empty( $_POST['verification_qr_enabled'] ),
 					'verification_barcode_enabled' => ! empty( $_POST['verification_barcode_enabled'] ),
 					'appearance_reviewed' => ! empty( $_POST['appearance_reviewed'] ),
@@ -466,6 +526,8 @@ class Ecapla_CertVerify_Admin {
 				return array(
 					'backup_schedule' => isset( $_POST['backup_schedule'] ) ? sanitize_key( wp_unslash( $_POST['backup_schedule'] ) ) : 'off',
 					'backup_retention' => isset( $_POST['backup_retention'] ) ? absint( $_POST['backup_retention'] ) : 14,
+					'google_drive_enabled' => ! empty( $_POST['google_drive_enabled'] ),
+					'google_drive_retention' => isset( $_POST['google_drive_retention'] ) ? absint( $_POST['google_drive_retention'] ) : 14,
 				);
 		}
 		return array();
@@ -483,11 +545,14 @@ class Ecapla_CertVerify_Admin {
 		$draft = isset( $state['wizard_draft'] ) && is_array( $state['wizard_draft'] ) ? $state['wizard_draft'] : array();
 		$current_settings = Ecapla_CertVerify_Settings::get_all();
 		$next_settings = $current_settings;
-		if ( isset( $draft['numbering_mode'] ) ) { $next_settings['numbering_mode'] = $draft['numbering_mode']; }
+		foreach ( array( 'numbering_mode', 'numbering_prefix', 'numbering_suffix', 'numbering_start', 'numbering_padding' ) as $key ) {
+			if ( array_key_exists( $key, $draft ) ) { $next_settings[ $key ] = $draft[ $key ]; }
+		}
 		if ( array_key_exists( 'verification_qr_enabled', $draft ) ) { $next_settings['verification_qr_enabled'] = ! empty( $draft['verification_qr_enabled'] ); }
 		if ( array_key_exists( 'verification_barcode_enabled', $draft ) ) { $next_settings['verification_barcode_enabled'] = ! empty( $draft['verification_barcode_enabled'] ); }
 		$numbering = Ecapla_CertVerify_Numbering::normalize_policy( $next_settings );
 		if ( is_wp_error( $numbering ) ) { return $numbering; }
+		foreach ( $numbering as $key => $value ) { $next_settings[ $key ] = $value; }
 
 		$current_backup = \Certloom\Infrastructure\Backup\ScheduledBackup::settings();
 		$next_schedule = isset( $draft['backup_schedule'] ) ? sanitize_key( (string) $draft['backup_schedule'] ) : (string) $current_backup['schedule'];
@@ -497,38 +562,112 @@ class Ecapla_CertVerify_Admin {
 			if ( is_wp_error( $storage ) ) { return $storage; }
 		}
 
+		$current_google = \Certloom\Infrastructure\Backup\GoogleDriveBackup::state();
+		$current_google_settings = \Certloom\Infrastructure\Backup\GoogleDriveBackup::settings_snapshot();
+		$next_google_enabled = array_key_exists( 'google_drive_enabled', $draft ) ? ! empty( $draft['google_drive_enabled'] ) : ! empty( $current_google['enabled'] );
+		$next_google_retention = isset( $draft['google_drive_retention'] ) ? absint( $draft['google_drive_retention'] ) : absint( $current_google['retention'] ?? 14 );
+		if ( $next_google_enabled && empty( $current_google['connected'] ) ) {
+			return new \WP_Error( 'certloom_setup_google_not_connected', __( 'Connect Google Drive before enabling automatic Drive copies in Setup.', 'certloom' ) );
+		}
+
 		$organization = isset( $draft['organization_name'] ) ? trim( (string) $draft['organization_name'] ) : '';
 		$page_id = isset( $draft['verification_page_id'] ) ? absint( $draft['verification_page_id'] ) : 0;
 		if ( $page_id && ( ! get_post( $page_id ) || 'page' !== get_post_type( $page_id ) ) ) {
 			return new \WP_Error( 'certloom_setup_review_page_invalid', __( 'The selected verification page is no longer available.', 'certloom' ) );
 		}
 
+		$template_repo = null;
+		$template_before = null;
+		$template_id = array_key_exists( 'design_template_id', $draft ) ? absint( $draft['design_template_id'] ) : null;
+		if ( null !== $template_id ) {
+			if ( ! \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
+				return new \WP_Error( 'certloom_setup_template_authority_closed', __( 'The selected default design cannot be applied until Template administration is available.', 'certloom' ) );
+			}
+			$template_repo = new \Certloom\Infrastructure\Repository\TemplateRepository();
+			$template_before = $template_repo->get_assignment( 'global', 0 );
+			if ( is_wp_error( $template_before ) ) { return $template_before; }
+			if ( $template_id ) {
+				$template = $template_repo->find_published( $template_id );
+				if ( is_wp_error( $template ) ) { return $template; }
+				if ( ! is_array( $template ) ) { return new \WP_Error( 'certloom_setup_template_missing', __( 'The selected default design is no longer available.', 'certloom' ) ); }
+			}
+		}
+
+		$onboarding_before = Ecapla_CertVerify_Onboarding::snapshot();
+		$rollback = function () use ( $current_settings, $current_backup, $current_google_settings, $onboarding_before, $template_repo, $template_before ) {
+			$failures = array();
+			if ( $template_repo ) {
+				$current = $template_repo->get_assignment( 'global', 0 );
+				if ( ! is_wp_error( $current ) ) {
+					if ( is_array( $template_before ) ) {
+						$r = $template_repo->assign( absint( $template_before['template_id'] ), 'global', 0, absint( $template_before['priority'] ?? 100 ), is_array( $current ) ? absint( $current['id'] ?? 0 ) : 0, is_array( $current ) ? (string) ( $current['updated_at'] ?? '' ) : '' );
+					} else {
+						$r = $template_repo->clear_assignment( 'global', 0, is_array( $current ) ? absint( $current['id'] ?? 0 ) : 0, is_array( $current ) ? (string) ( $current['updated_at'] ?? '' ) : '' );
+					}
+					if ( is_wp_error( $r ) ) { $failures[] = $r->get_error_message(); }
+				} else { $failures[] = $current->get_error_message(); }
+			}
+			$r = Ecapla_CertVerify_Onboarding::restore_snapshot( $onboarding_before ); if ( is_wp_error( $r ) ) { $failures[] = $r->get_error_message(); }
+			$r = \Certloom\Infrastructure\Backup\GoogleDriveBackup::restore_settings_snapshot( $current_google_settings ); if ( is_wp_error( $r ) ) { $failures[] = $r->get_error_message(); }
+			$r = \Certloom\Infrastructure\Backup\ScheduledBackup::save_settings( $current_backup['schedule'], $current_backup['retention'] ); if ( is_wp_error( $r ) ) { $failures[] = $r->get_error_message(); }
+			if ( ! Ecapla_CertVerify_Settings::save( $current_settings ) ) { $failures[] = __( 'Previous Certloom settings could not be restored.', 'certloom' ); }
+			return $failures;
+		};
+
 		if ( ! Ecapla_CertVerify_Settings::save( $next_settings ) ) {
 			return new \WP_Error( 'certloom_setup_settings_save_failed', __( 'Certloom could not apply the reviewed delivery and verification settings.', 'certloom' ) );
 		}
 		$backup = \Certloom\Infrastructure\Backup\ScheduledBackup::save_settings( $next_schedule, $next_retention );
-		if ( is_wp_error( $backup ) ) {
-			Ecapla_CertVerify_Settings::save( $current_settings );
-			return $backup;
-		}
+		if ( is_wp_error( $backup ) ) { $rollback(); return $backup; }
+		$google = \Certloom\Infrastructure\Backup\GoogleDriveBackup::save_settings( $next_google_enabled, $next_google_retention );
+		if ( is_wp_error( $google ) ) { $rollback(); return $google; }
 		if ( '' !== $organization ) {
-			$profile = Ecapla_CertVerify_Onboarding::save_profile(
-				$organization,
-				$page_id,
-				array_key_exists( 'appearance_reviewed', $draft ) ? ! empty( $draft['appearance_reviewed'] ) : null,
-				array_key_exists( 'verification_tested', $draft ) ? ! empty( $draft['verification_tested'] ) : null
-			);
-			if ( is_wp_error( $profile ) ) {
-				\Certloom\Infrastructure\Backup\ScheduledBackup::save_settings( $current_backup['schedule'], $current_backup['retention'] );
-				Ecapla_CertVerify_Settings::save( $current_settings );
-				return $profile;
+			$profile = Ecapla_CertVerify_Onboarding::save_profile( $organization, $page_id, array_key_exists( 'appearance_reviewed', $draft ) ? ! empty( $draft['appearance_reviewed'] ) : null, array_key_exists( 'verification_tested', $draft ) ? ! empty( $draft['verification_tested'] ) : null );
+			if ( is_wp_error( $profile ) ) { $rollback(); return $profile; }
+		}
+		if ( $template_repo ) {
+			$current_assignment = $template_repo->get_assignment( 'global', 0 );
+			if ( is_wp_error( $current_assignment ) ) { $rollback(); return $current_assignment; }
+			if ( $template_id ) {
+				$template_result = $template_repo->assign( $template_id, 'global', 0, 100, is_array( $current_assignment ) ? absint( $current_assignment['id'] ?? 0 ) : 0, is_array( $current_assignment ) ? (string) ( $current_assignment['updated_at'] ?? '' ) : '' );
+			} else {
+				$template_result = $template_repo->clear_assignment( 'global', 0, is_array( $current_assignment ) ? absint( $current_assignment['id'] ?? 0 ) : 0, is_array( $current_assignment ) ? (string) ( $current_assignment['updated_at'] ?? '' ) : '' );
 			}
+			if ( is_wp_error( $template_result ) ) { $rollback(); return $template_result; }
 		}
 		$completed = Ecapla_CertVerify_Onboarding::complete_wizard();
 		if ( is_wp_error( $completed ) ) {
-			return new \WP_Error( 'certloom_setup_progress_finalize_failed', __( 'Your reviewed settings were applied, but Certloom could not mark the Wizard as complete. You can safely reopen Setup and review the same settings again.', 'certloom' ) );
+			$failures = $rollback();
+			$message = __( 'Certloom could not complete the reviewed setup, so it restored the previous configuration.', 'certloom' );
+			if ( $failures ) { $message .= ' ' . __( 'Some rollback checks also need administrator review.', 'certloom' ); }
+			return new \WP_Error( 'certloom_setup_progress_finalize_failed', $message );
 		}
+		\Certloom\Infrastructure\Admin\SetupReadinessReminder::clear();
 		return true;
+	}
+
+	public function handle_dismiss_setup_reminder() {
+		$this->require_options_permission();
+		check_admin_referer( 'certloom_dismiss_setup_reminder' );
+		$result = \Certloom\Infrastructure\Admin\SetupReadinessReminder::dismiss();
+		if ( is_wp_error( $result ) ) { $this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=' . self::DASHBOARD_PAGE ) ); }
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::DASHBOARD_PAGE ) ); exit;
+	}
+
+	public function handle_setup_wizard_template_preview() {
+		$this->require_options_permission();
+		check_ajax_referer( 'certloom_setup_wizard_preview', 'nonce' );
+		if ( ! \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) { wp_send_json_error( array( 'message' => __( 'Template Preview is not available while Template administration is protected.', 'certloom' ) ), 403 ); }
+		$template_id = isset( $_POST['template_id'] ) ? absint( $_POST['template_id'] ) : 0;
+		if ( ! $template_id ) { wp_send_json_success( array( 'template_id' => 0, 'name' => __( 'None', 'certloom' ), 'description' => __( 'Choose designs per Program, Batch or Issuer later.', 'certloom' ), 'html' => '' ) ); }
+		$template = ( new \Certloom\Infrastructure\Repository\TemplateRepository() )->find_published( $template_id );
+		if ( is_wp_error( $template ) ) { wp_send_json_error( array( 'message' => $template->get_error_message() ), 400 ); }
+		if ( ! is_array( $template ) ) { wp_send_json_error( array( 'message' => __( 'That published Template is no longer available.', 'certloom' ) ), 404 ); }
+		$plan = ( new \Certloom\Infrastructure\Rendering\TemplatePreviewService() )->build( $template, 'published' );
+		if ( is_wp_error( $plan ) ) { wp_send_json_error( array( 'message' => $plan->get_error_message() ), 400 ); }
+		try { $preview = ( new \Certloom\Infrastructure\Rendering\RenderPlanHtmlPreview() )->present( $plan['render_plan'] ); }
+		catch ( \Throwable $error ) { wp_send_json_error( array( 'message' => __( 'Certloom could not build that Template preview.', 'certloom' ) ), 400 ); }
+		wp_send_json_success( array( 'template_id' => $template_id, 'name' => (string) ( $template['name'] ?? '' ), 'description' => (string) ( $template['description'] ?? '' ), 'revision' => absint( $plan['revision_number'] ?? 0 ), 'html' => (string) ( $preview['html'] ?? '' ) ) );
 	}
 
 	public function handle_registry_columns_save() {
@@ -1194,10 +1333,24 @@ class Ecapla_CertVerify_Admin {
 		check_admin_referer( 'certloom_google_drive_connect' );
 		$client_id     = isset( $_POST['google_client_id'] ) ? sanitize_text_field( wp_unslash( $_POST['google_client_id'] ) ) : '';
 		$client_secret = isset( $_POST['google_client_secret'] ) ? trim( (string) wp_unslash( $_POST['google_client_secret'] ) ) : '';
-		$saved = \Certloom\Infrastructure\Backup\GoogleDriveOAuth::save_client_credentials( $client_id, $client_secret );
-		if ( is_wp_error( $saved ) ) { $this->redirect_error( $saved->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) ); }
-		$url = \Certloom\Infrastructure\Backup\GoogleDriveOAuth::authorization_url();
-		if ( is_wp_error( $url ) ) { $this->redirect_error( $url->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) ); }
+		$return_mode   = isset( $_POST['certloom_google_return_mode'] ) ? sanitize_key( wp_unslash( $_POST['certloom_google_return_mode'] ) ) : 'backup';
+		$return_mode   = 'popup' === $return_mode ? 'popup' : 'backup';
+		if ( '' !== $client_id || '' !== $client_secret ) {
+			$saved = \Certloom\Infrastructure\Backup\GoogleDriveOAuth::save_client_credentials( $client_id, $client_secret );
+			if ( is_wp_error( $saved ) ) {
+				if ( 'popup' === $return_mode ) { $this->render_google_drive_popup_result( false, $saved->get_error_message() ); }
+				$this->redirect_error( $saved->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
+			}
+		} elseif ( ! \Certloom\Infrastructure\Backup\GoogleDriveOAuth::has_client_credentials() ) {
+			$message = __( 'Complete the one-time Google connection setup before connecting Google Drive.', 'certloom' );
+			if ( 'popup' === $return_mode ) { $this->render_google_drive_popup_result( false, $message ); }
+			$this->redirect_error( $message, admin_url( 'admin.php?page=certloom-import' ) );
+		}
+		$url = \Certloom\Infrastructure\Backup\GoogleDriveOAuth::authorization_url( $return_mode );
+		if ( is_wp_error( $url ) ) {
+			if ( 'popup' === $return_mode ) { $this->render_google_drive_popup_result( false, $url->get_error_message() ); }
+			$this->redirect_error( $url->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
+		}
 		wp_redirect( esc_url_raw( $url ) ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- Exact Google OAuth URL generated by the provider boundary.
 		exit;
 	}
@@ -1205,15 +1358,34 @@ class Ecapla_CertVerify_Admin {
 	public function handle_google_drive_oauth_callback() {
 		$this->require_options_permission();
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- OAuth state is the one-time CSRF boundary for this provider callback.
-		if ( ! empty( $_GET['error'] ) ) {
-			$this->redirect_error( __( 'Google Drive connection was cancelled or refused.', 'certloom' ), admin_url( 'admin.php?page=certloom-import' ) );
-		}
 		$state = isset( $_GET['state'] ) ? sanitize_text_field( wp_unslash( $_GET['state'] ) ) : '';
 		$code  = isset( $_GET['code'] ) ? sanitize_text_field( wp_unslash( $_GET['code'] ) ) : '';
+		$context = \Certloom\Infrastructure\Backup\GoogleDriveOAuth::pending_context( $state );
+		if ( ! empty( $_GET['error'] ) ) {
+			$message = __( 'Google Drive connection was cancelled or refused.', 'certloom' );
+			if ( 'popup' === $context ) { $this->render_google_drive_popup_result( false, $message ); }
+			$this->redirect_error( $message, admin_url( 'admin.php?page=certloom-import' ) );
+		}
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		$result = \Certloom\Infrastructure\Backup\GoogleDriveOAuth::complete_authorization( $state, $code );
-		if ( is_wp_error( $result ) ) { $this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) ); }
+		if ( is_wp_error( $result ) ) {
+			if ( 'popup' === $context ) { $this->render_google_drive_popup_result( false, $result->get_error_message() ); }
+			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
+		}
+		if ( 'popup' === $context ) { $this->render_google_drive_popup_result( true, __( 'Google Drive connected.', 'certloom' ) ); }
 		wp_safe_redirect( add_query_arg( 'backup_notice', 'google-connected', admin_url( 'admin.php?page=certloom-import' ) ) );
+		exit;
+	}
+
+	private function render_google_drive_popup_result( $success, $message ) {
+		$success = (bool) $success;
+		$message = sanitize_text_field( (string) $message );
+		$parts = wp_parse_url( admin_url() );
+		$origin = isset( $parts['scheme'], $parts['host'] ) ? $parts['scheme'] . '://' . $parts['host'] . ( isset( $parts['port'] ) ? ':' . absint( $parts['port'] ) : '' ) : '';
+		status_header( $success ? 200 : 400 );
+		nocache_headers();
+		header( 'Content-Type: text/html; charset=' . get_option( 'blog_charset', 'UTF-8' ) );
+		?><!doctype html><html><head><meta charset="<?php echo esc_attr( get_option( 'blog_charset', 'UTF-8' ) ); ?>"><meta name="viewport" content="width=device-width,initial-scale=1"><title><?php esc_html_e( 'Google Drive connection', 'certloom' ); ?></title></head><body><main style="font:16px/1.5 system-ui,sans-serif;max-width:34rem;margin:3rem auto;padding:1.5rem"><h1 style="font-size:1.35rem"><?php echo esc_html( $success ? __( 'Google Drive connected', 'certloom' ) : __( 'Google Drive was not connected', 'certloom' ) ); ?></h1><p><?php echo esc_html( $message ); ?></p><p><?php esc_html_e( 'This window can be closed.', 'certloom' ); ?></p></main><script>(function(){var payload=<?php echo wp_json_encode( array( 'type' => 'certloom-google-drive-oauth', 'status' => $success ? 'connected' : 'error', 'message' => $message ) ); ?>;try{if(window.opener&&!window.opener.closed){window.opener.postMessage(payload,<?php echo wp_json_encode( $origin ); ?>);if(payload.status==='connected'){window.setTimeout(function(){window.close();},250);}}}catch(e){}}());</script></body></html><?php
 		exit;
 	}
 
@@ -1358,6 +1530,7 @@ class Ecapla_CertVerify_Admin {
 			);
 		}
 		$onboarding_summary = current_user_can( 'manage_options' ) ? Ecapla_CertVerify_Onboarding::get_summary() : null;
+		$setup_reminder_visible = current_user_can( 'manage_options' ) ? \Certloom\Infrastructure\Admin\SetupReadinessReminder::should_show() : false;
 		$dashboard_analytics = null;
 		if ( current_user_can( Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS ) ) {
 			$verification_analytics = Ecapla_CertVerify_Analytics::report( 30 );
@@ -1430,7 +1603,35 @@ class Ecapla_CertVerify_Admin {
 		}
 		$wizard_current_settings = Ecapla_CertVerify_Settings::get_all();
 		$wizard_backup_settings = \Certloom\Infrastructure\Backup\ScheduledBackup::settings();
+		$wizard_google_drive = \Certloom\Infrastructure\Backup\GoogleDriveBackup::state();
+		$wizard_google_client_ready = \Certloom\Infrastructure\Backup\GoogleDriveOAuth::has_client_credentials();
 		$wizard_domain_preview = \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready();
+		$wizard_template_candidates = array();
+		$wizard_template_assignment = null;
+		$wizard_template = null;
+		$wizard_template_preview_html = '';
+		$wizard_template_preview_error = '';
+		$wizard_selected_template_id = isset( $wizard_draft['design_template_id'] ) ? absint( $wizard_draft['design_template_id'] ) : 0;
+		if ( $wizard_domain_preview ) {
+			$wizard_template_repo = new \Certloom\Infrastructure\Repository\TemplateRepository();
+			$wizard_template_assignment = $wizard_template_repo->get_assignment( 'global', 0 );
+			if ( ! isset( $wizard_draft['design_template_id'] ) && is_array( $wizard_template_assignment ) && ! empty( $wizard_template_assignment['active'] ) ) { $wizard_selected_template_id = absint( $wizard_template_assignment['template_id'] ?? 0 ); }
+			$wizard_template_candidates = $wizard_template_repo->search_published_candidates( '', 20 );
+			if ( is_wp_error( $wizard_template_candidates ) ) { $wizard_template_candidates = array(); }
+			if ( $wizard_selected_template_id ) {
+				$wizard_template = $wizard_template_repo->find_published( $wizard_selected_template_id );
+				if ( is_wp_error( $wizard_template ) ) { $wizard_template_preview_error = $wizard_template->get_error_message(); $wizard_template = null; }
+				if ( is_array( $wizard_template ) ) {
+					$known = false; foreach ( $wizard_template_candidates as $candidate ) { if ( absint( $candidate['id'] ?? 0 ) === $wizard_selected_template_id ) { $known = true; break; } }
+					if ( ! $known ) { array_unshift( $wizard_template_candidates, array( 'id' => $wizard_selected_template_id, 'name' => (string) ( $wizard_template['name'] ?? '' ), 'machine_key' => (string) ( $wizard_template['machine_key'] ?? '' ), 'revision_number' => absint( $wizard_template['published_revision']['revision_number'] ?? 0 ) ) ); }
+					$wizard_plan = ( new \Certloom\Infrastructure\Rendering\TemplatePreviewService() )->build( $wizard_template, 'published' );
+					if ( is_wp_error( $wizard_plan ) ) { $wizard_template_preview_error = $wizard_plan->get_error_message(); }
+					else { try { $wizard_preview = ( new \Certloom\Infrastructure\Rendering\RenderPlanHtmlPreview() )->present( $wizard_plan['render_plan'] ); $wizard_template_preview_html = (string) ( $wizard_preview['html'] ?? '' ); } catch ( \Throwable $error ) { $wizard_template_preview_error = __( 'Certloom could not build this Template preview.', 'certloom' ); } }
+				}
+			}
+		}
+		$wizard_template_preview_nonce = wp_create_nonce( 'certloom_setup_wizard_preview' );
+		$wizard_context_lookup_nonce = wp_create_nonce( \Certloom\Infrastructure\Admin\ScopedFieldAdminAjax::NONCE_ACTION );
 		$wizard_mode = \Certloom\Infrastructure\Admin\AdminUiMode::current();
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/setup-wizard.php';
 	}
