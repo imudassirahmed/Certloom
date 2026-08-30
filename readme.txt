@@ -4,13 +4,15 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.98
+Stable tag: 1.6.98-qa.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
 
 == Description ==
+
+> QA note: 1.6.98-qa.5 is the UX-OPS-03 staging candidate after the ordinary-workflow integrity-proof cleanup. It bypasses release-authority readiness checks in memory only; it is NOT production-certified and must not be used as DBAUTH/PDF-04 evidence. Automated source/Chromium gates are green; hands-on real-WordPress staging acceptance is still pending.
 
 > Release note for 1.6.98: UX-OPS-01/02/03 turns hands-on staging feedback into a coherent Setup/operations/admin polish tranche: the Wizard uses canonical design/numbering/backup authorities and ends with a real Setup complete landing; contextual routes preserve the correct WordPress parent state; Backup & Restore paginates operational history; entity screens are list-first with non-destructive validation retry; Program/Batch fields use compact add/remove + quick-create controls; issuer/signer media uses native WordPress controls; Template publication and assignment language are simplified; and Manual/Bulk Issuance, Email Delivery and Template Preview keep exact integrity proof under collapsed Technical details rather than in the primary workflow. The narrow Ecapla OAuth-relay exception is approved but the hosted relay is not implemented/accepted in this package; site-owned OAuth remains the fallback. Normalized-domain and renderer production authority remain closed.
 
