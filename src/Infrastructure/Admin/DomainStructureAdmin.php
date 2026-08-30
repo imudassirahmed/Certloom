@@ -166,10 +166,18 @@ final class DomainStructureAdmin {
 		$edit_id = isset( $_GET['batch_id'] ) ? absint( $_GET['batch_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation.
 		$editing = $edit_id ? $repo->find( $edit_id ) : null;
 		$creating = isset( $_GET['certloom_new'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin navigation.
-		$action_url = $creating || $edit_id ? add_query_arg( 'page', self::BATCHES_PAGE, admin_url( 'admin.php' ) ) : add_query_arg( array( 'page' => self::BATCHES_PAGE, 'certloom_new' => 1 ), admin_url( 'admin.php' ) ) . '#certloom-domain-editor';
+		$action_url = $creating || $edit_id ? add_query_arg( 'page', self::BATCHES_PAGE, admin_url( 'admin.php' ) ) : add_query_arg( array( 'page' => self::BATCHES_PAGE, 'certloom_new' => 1 ), admin_url( 'admin.php' ) );
 
 		$this->header( __( 'Batches & cohorts', 'certloom' ), __( 'Group recipients under a stable batch code and Program without collapsing credential history into LMS-specific records.', 'certloom' ), array( 'label' => $creating || $edit_id ? __( 'Back to batches', 'certloom' ) : __( 'Add batch', 'certloom' ), 'url' => $action_url, 'secondary' => (bool) ( $creating || $edit_id ) ) );
 		$this->notice();
+		if ( $creating || $edit_id ) {
+			if ( is_wp_error( $editing ) ) { $this->error( $editing->get_error_message() ); }
+			elseif ( is_array( $editing ) ) { $this->batch_form( $editing ); $this->batch_members( $repo, $editing ); }
+			else { $this->batch_form(); }
+			$this->footer();
+			return;
+		}
+
 		if ( ! is_wp_error( $summary ) ) {
 			$this->metric_grid(
 				array(
@@ -222,10 +230,18 @@ final class DomainStructureAdmin {
 		$edit_id = isset( $_GET['signer_id'] ) ? absint( $_GET['signer_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation.
 		$editing = $edit_id ? $repo->find( $edit_id ) : null;
 		$creating = isset( $_GET['certloom_new'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin navigation.
-		$action_url = $creating || $edit_id ? add_query_arg( 'page', self::SIGNERS_PAGE, admin_url( 'admin.php' ) ) : add_query_arg( array( 'page' => self::SIGNERS_PAGE, 'certloom_new' => 1 ), admin_url( 'admin.php' ) ) . '#certloom-domain-editor';
+		$action_url = $creating || $edit_id ? add_query_arg( 'page', self::SIGNERS_PAGE, admin_url( 'admin.php' ) ) : add_query_arg( array( 'page' => self::SIGNERS_PAGE, 'certloom_new' => 1 ), admin_url( 'admin.php' ) );
 
 		$this->header( __( 'Signer profiles', 'certloom' ), __( 'Reusable signer identities with deterministic Batch → Program → Issuer → Global hierarchy.', 'certloom' ), array( 'label' => $creating || $edit_id ? __( 'Back to signers', 'certloom' ) : __( 'Add signer', 'certloom' ), 'url' => $action_url, 'secondary' => (bool) ( $creating || $edit_id ) ) );
 		$this->notice();
+		if ( $creating || $edit_id ) {
+			if ( is_wp_error( $editing ) ) { $this->error( $editing->get_error_message() ); }
+			elseif ( is_array( $editing ) ) { $this->signer_form( $editing ); }
+			else { $this->signer_form(); }
+			$this->footer();
+			return;
+		}
+
 		if ( ! is_wp_error( $summary ) ) {
 			$this->metric_grid(
 				array(
@@ -618,7 +634,16 @@ final class DomainStructureAdmin {
 	}
 
 	private function quick_field_dialog() {
-		return '<dialog class="certloom-quick-field-dialog" data-certloom-quick-field-dialog><form method="dialog" class="certloom-quick-field-dialog-shell"><div class="certloom-dialog-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Credential fields', 'certloom' ) . '</span><h3>' . esc_html__( 'Create a field', 'certloom' ) . '</h3></div><button type="button" class="button-link" data-certloom-quick-field-close aria-label="' . esc_attr__( 'Close', 'certloom' ) . '">×</button></div><p>' . esc_html__( 'New fields start as Personal + Private. Use Settings → Fields for sensitivity, public exposure, ordering or retirement.', 'certloom' ) . '</p><label><span>' . esc_html__( 'Field label', 'certloom' ) . '</span><input type="text" maxlength="100" data-certloom-quick-field-label required></label><label><span>' . esc_html__( 'Field type', 'certloom' ) . '</span><select data-certloom-quick-field-type><option value="text">' . esc_html__( 'Short text', 'certloom' ) . '</option><option value="textarea">' . esc_html__( 'Long text', 'certloom' ) . '</option><option value="number">' . esc_html__( 'Number', 'certloom' ) . '</option><option value="date">' . esc_html__( 'Date', 'certloom' ) . '</option></select></label><div class="certloom-quick-field-feedback" data-certloom-quick-field-feedback aria-live="polite"></div><div class="certloom-dialog-actions"><button type="button" class="button" data-certloom-quick-field-close>' . esc_html__( 'Cancel', 'certloom' ) . '</button><button type="button" class="button button-primary" data-certloom-quick-field-create>' . esc_html__( 'Create & add', 'certloom' ) . '</button></div></form></dialog>';
+		$sensitivity_options = \Ecapla_CertVerify_Fields::get_sensitivity_options();
+		$exposure_options = \Ecapla_CertVerify_Fields::get_public_exposure_options();
+		$html = '<dialog class="certloom-quick-field-dialog" data-certloom-quick-field-dialog><form method="dialog" class="certloom-quick-field-dialog-shell"><div class="certloom-dialog-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Credential fields', 'certloom' ) . '</span><h3>' . esc_html__( 'Create a field', 'certloom' ) . '</h3></div><button type="button" class="button-link certloom-dialog-close" data-certloom-quick-field-close aria-label="' . esc_attr__( 'Close', 'certloom' ) . '">×</button></div>';
+		$html .= '<p class="certloom-quick-field-intro">' . esc_html__( 'Create a reusable credential field and add it as a change for this Batch now. You can still change ordering or retire fields later in Settings → Fields.', 'certloom' ) . '</p>';
+		$html .= '<div class="certloom-quick-field-grid"><label class="certloom-quick-field-wide"><span>' . esc_html__( 'Field label', 'certloom' ) . '</span><input type="text" maxlength="100" data-certloom-quick-field-label required placeholder="' . esc_attr__( 'e.g. Student ID', 'certloom' ) . '"></label><label><span>' . esc_html__( 'Field type', 'certloom' ) . '</span><select data-certloom-quick-field-type><option value="text">' . esc_html__( 'Short text', 'certloom' ) . '</option><option value="textarea">' . esc_html__( 'Long text', 'certloom' ) . '</option><option value="number">' . esc_html__( 'Number', 'certloom' ) . '</option><option value="date">' . esc_html__( 'Date', 'certloom' ) . '</option></select></label>';
+		$html .= '<label><span>' . esc_html__( 'Sensitivity', 'certloom' ) . '</span><select data-certloom-quick-field-sensitivity>'; foreach ( $sensitivity_options as $value => $label ) { $html .= '<option value="' . esc_attr( $value ) . '" ' . selected( 'personal', $value, false ) . '>' . esc_html( $label ) . '</option>'; } $html .= '</select></label>';
+		$html .= '<label class="certloom-quick-field-wide"><span>' . esc_html__( 'Public visibility', 'certloom' ) . '</span><select data-certloom-quick-field-exposure>'; foreach ( $exposure_options as $value => $label ) { $html .= '<option value="' . esc_attr( $value ) . '" ' . selected( 'private', $value, false ) . '>' . esc_html( $label ) . '</option>'; } $html .= '</select><small>' . esc_html__( 'Internal fields are always private. Choose public visibility only when the data is appropriate to show on verification or profile pages.', 'certloom' ) . '</small></label></div>';
+		$html .= '<div class="certloom-quick-field-context"><strong>' . esc_html__( 'Where is this value stored?', 'certloom' ) . '</strong><span>' . esc_html__( 'Quick-created custom fields belong to the credential record, so the value can differ for each credential. Person-level details such as name, email and external ID belong to the Recipient profile.', 'certloom' ) . '</span></div>';
+		$html .= '<div class="certloom-quick-field-feedback" data-certloom-quick-field-feedback aria-live="polite"></div><div class="certloom-dialog-actions"><button type="button" class="button" data-certloom-quick-field-close>' . esc_html__( 'Cancel', 'certloom' ) . '</button><button type="button" class="button button-primary" data-certloom-quick-field-create>' . esc_html__( 'Create & add', 'certloom' ) . '</button></div></form></dialog>';
+		return $html;
 	}
 
 	/** @param array{label:string,url:string,secondary?:bool}|null $action @return void */

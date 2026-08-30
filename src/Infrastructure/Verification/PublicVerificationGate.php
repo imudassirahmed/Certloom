@@ -23,9 +23,6 @@ final class PublicVerificationGate {
 
 	/** @return bool */
 	public function is_ready() {
-		if ( defined( 'CERTLOOM_QA_UNGATED' ) && true === CERTLOOM_QA_UNGATED ) {
-			return true;
-		}
 		if ( ! get_option( self::OPTION, false ) ) {
 			return false;
 		}

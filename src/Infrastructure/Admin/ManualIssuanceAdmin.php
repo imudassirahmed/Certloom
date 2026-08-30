@@ -95,8 +95,17 @@ final class ManualIssuanceAdmin {
 
 	/** @return void */
 	private function render_compose( array $values ) {
+		$selected_recipient_id = absint( $values['recipient_id'] ?? 0 );
+		if ( ! $selected_recipient_id && isset( $_GET['recipient_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only preselection from a Recipient profile.
+			$selected_recipient_id = absint( $_GET['recipient_id'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only preselection from a Recipient profile.
+			if ( $selected_recipient_id ) {
+				$values['recipient_id']   = $selected_recipient_id;
+				$values['recipient_mode'] = 'existing';
+			}
+		}
 		$recipient_search = isset( $_GET['recipient_search'] ) ? sanitize_text_field( wp_unslash( $_GET['recipient_search'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only search.
-		$recipients = ( new RecipientRepository() )->list_page( $recipient_search, 1, 50 );
+		$recipient_repo = new RecipientRepository();
+		$recipients = $recipient_repo->list_page( $recipient_search, 1, 50 );
 		$selected_program_id = absint( $values['program_id'] ?? 0 );
 		$selected_batch_id   = absint( $values['batch_id'] ?? 0 );
 		$context_choices = new ScopedContextChoices();
@@ -109,6 +118,20 @@ final class ManualIssuanceAdmin {
 			return;
 		}
 		$recipient_items = (array) ( $recipients['items'] ?? array() );
+		// A direct "Issue credential" action from a Recipient profile must keep
+		// that exact Recipient selectable even when it is outside the first search
+		// page. The repository lookup is authoritative; the visible 50-row search
+		// window is only a browsing convenience.
+		if ( $selected_recipient_id ) {
+			$selected_recipient = $recipient_repo->find( $selected_recipient_id );
+			if ( is_array( $selected_recipient ) ) {
+				$already_visible = false;
+				foreach ( $recipient_items as $recipient_item ) {
+					if ( $selected_recipient_id === absint( $recipient_item['id'] ?? 0 ) ) { $already_visible = true; break; }
+				}
+				if ( ! $already_visible ) { array_unshift( $recipient_items, $selected_recipient ); }
+			}
+		}
 		$program_items = (array) $programs;
 		$batch_items = (array) $batches;
 		$template_items = (array) $templates;
@@ -133,7 +156,8 @@ final class ManualIssuanceAdmin {
 		wp_nonce_field( 'certloom_manual_issuance_review' );
 		echo '<input type="hidden" name="certloom_manual_issuance_step" value="review">';
 
-		echo '<fieldset class="certloom-manual-fieldset"><legend>' . esc_html__( 'Recipient', 'certloom' ) . '</legend><div class="certloom-manual-choice-row">';
+		echo '<fieldset class="certloom-manual-fieldset"><legend>' . esc_html__( 'Recipient', 'certloom' ) . '</legend>';
+		echo '<p class="certloom-manual-fieldset-intro">' . esc_html__( 'A Recipient is the reusable person or organization profile that receives credentials. Choose an existing profile to keep future credentials connected to the same identity, or create a new Recipient here.', 'certloom' ) . '</p><div class="certloom-manual-choice-row">';
 		$this->radio( 'recipient_mode', 'existing', __( 'Existing recipient', 'certloom' ), $mode );
 		$this->radio( 'recipient_mode', 'new', __( 'Create new recipient', 'certloom' ), $mode );
 		echo '</div><div class="certloom-manual-grid certloom-manual-grid-2">';

@@ -10,6 +10,12 @@ $review  = max( 0, (int) ( $dashboard['legacy_review_count'] ?? 0 ) );
 $statuses = Ecapla_CertVerify_Fields::get_statuses();
 $health_overall = isset( $health['overall'] ) ? sanitize_key( (string) $health['overall'] ) : 'warning';
 $health_label = 'good' === $health_overall ? __( 'Ready for current operations', 'certloom' ) : ( 'bad' === $health_overall ? __( 'Action required', 'certloom' ) : __( 'Review recommended', 'certloom' ) );
+$ecapla_certverify_normalized_issuance_ready = class_exists( '\\Certloom\\Infrastructure\\Migration\\DomainFeatureGate' )
+	&& \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready()
+	&& current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS );
+$ecapla_certverify_create_url = $ecapla_certverify_normalized_issuance_ready
+	? admin_url( 'admin.php?page=certloom-issuance' )
+	: admin_url( 'admin.php?page=certloom-add' );
 ?>
 <div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-dashboard">
 	<section class="certloom-dashboard-hero" aria-labelledby="certloom-dashboard-title">
@@ -22,9 +28,9 @@ $health_label = 'good' === $health_overall ? __( 'Ready for current operations',
 			<span><?php esc_html_e( 'Setup wizard', 'certloom' ); ?></span><span aria-hidden="true">→</span>
 		</a>
 		<div class="certloom-dashboard-actions" aria-label="<?php esc_attr_e( 'Quick actions', 'certloom' ); ?>">
-			<a class="button button-primary button-hero" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-add' ) ); ?>">
+			<a class="button button-primary button-hero" href="<?php echo esc_url( $ecapla_certverify_create_url ); ?>">
 				<svg class="certloom-button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" /></svg>
-				<?php esc_html_e( 'Add certificate', 'certloom' ); ?>
+				<?php $ecapla_certverify_normalized_issuance_ready ? esc_html_e( 'Issue credential', 'certloom' ) : esc_html_e( 'Add certificate', 'certloom' ); ?>
 			</a>
 			<a class="button button-secondary button-hero" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-import' ) ); ?>">
 				<svg class="certloom-button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 15V5m0 0L8 9m4-4 4 4M5 14v5h14v-5" /></svg>
@@ -155,7 +161,7 @@ $health_label = 'good' === $health_overall ? __( 'Ready for current operations',
 					<span class="dashicons dashicons-awards" aria-hidden="true"></span>
 					<h3><?php esc_html_e( 'No certificates yet', 'certloom' ); ?></h3>
 					<p><?php esc_html_e( 'Create your first certificate or import existing records to populate the registry.', 'certloom' ); ?></p>
-					<a class="button button-primary" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-add' ) ); ?>"><?php esc_html_e( 'Create first certificate', 'certloom' ); ?></a>
+					<a class="button button-primary" href="<?php echo esc_url( $ecapla_certverify_create_url ); ?>"><?php $ecapla_certverify_normalized_issuance_ready ? esc_html_e( 'Issue first credential', 'certloom' ) : esc_html_e( 'Create first certificate', 'certloom' ); ?></a>
 				</div>
 			<?php else : ?>
 				<div class="certloom-recent-table-wrap">
@@ -191,7 +197,7 @@ $health_label = 'good' === $health_overall ? __( 'Ready for current operations',
 			<section class="certloom-panel" aria-labelledby="certloom-quick-actions-title">
 				<div class="certloom-panel-header"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Shortcuts', 'certloom' ); ?></span><h2 id="certloom-quick-actions-title"><?php esc_html_e( 'Quick actions', 'certloom' ); ?></h2></div></div>
 				<nav class="certloom-quick-links" aria-label="<?php esc_attr_e( 'Certloom quick actions', 'certloom' ); ?>">
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-add' ) ); ?>"><span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span><span><strong><?php esc_html_e( 'Add certificate', 'certloom' ); ?></strong><small><?php esc_html_e( 'Create one registry record', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a>
+					<a href="<?php echo esc_url( $ecapla_certverify_create_url ); ?>"><span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span><span><strong><?php $ecapla_certverify_normalized_issuance_ready ? esc_html_e( 'Issue credential', 'certloom' ) : esc_html_e( 'Add certificate', 'certloom' ); ?></strong><small><?php $ecapla_certverify_normalized_issuance_ready ? esc_html_e( 'Choose a Recipient and issue one credential', 'certloom' ) : esc_html_e( 'Create one registry record', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-import' ) ); ?>"><span class="dashicons dashicons-database-import" aria-hidden="true"></span><span><strong><?php esc_html_e( 'Import & export', 'certloom' ); ?></strong><small><?php esc_html_e( 'CSV and complete backups', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-fields' ) ); ?>"><span class="dashicons dashicons-editor-table" aria-hidden="true"></span><span><strong><?php esc_html_e( 'Manage fields', 'certloom' ); ?></strong><small><?php esc_html_e( 'Labels, visibility and custom data', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-frontend' ) ); ?>"><span class="dashicons dashicons-layout" aria-hidden="true"></span><span><strong><?php esc_html_e( 'Appearance & embed', 'certloom' ); ?></strong><small><?php esc_html_e( 'Verification presentation and embeds', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a>

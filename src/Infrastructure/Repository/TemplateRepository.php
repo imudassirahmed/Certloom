@@ -371,7 +371,7 @@ final class TemplateRepository {
 		$identity = $this->normalize_identity( array( 'machine_key' => (string) ( $row['machine_key'] ?? '' ), 'name' => (string) ( $row['name'] ?? '' ), 'description' => (string) ( $row['description'] ?? '' ) ) );
 		if ( is_wp_error( $identity ) ) { return new \WP_Error( 'certloom_template_identity_corrupt', __( 'A stored template contains invalid identity data.', 'certloom' ) ); }
 		$published_id = absint( $row['published_revision_id'] ?? 0 );
-		if ( ! $published_id ) { return new \WP_Error( 'certloom_template_not_published', __( 'This template does not have a published revision.', 'certloom' ) ); }
+		if ( ! $published_id ) { return new \WP_Error( 'certloom_template_not_published', __( 'This design is still a draft. Publish it in Design before using it for credential issuance.', 'certloom' ) ); }
 		$published = $this->find_revision( $published_id );
 		if ( is_wp_error( $published ) ) { return $published; }
 		if ( ! is_array( $published ) || absint( $published['template_id'] ?? 0 ) !== absint( $row['id'] ) ) { return new \WP_Error( 'certloom_template_published_pointer_corrupt', __( 'The template published pointer is invalid.', 'certloom' ) ); }

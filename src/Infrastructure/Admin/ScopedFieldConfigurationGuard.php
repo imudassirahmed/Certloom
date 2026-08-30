@@ -108,7 +108,12 @@ final class ScopedFieldConfigurationGuard {
 	/** @return true|\WP_Error */
 	private function validate_resolved_assignment( $program_id, $batch_id, $issuer_id, array $program_contract, ?array $batch_contract, array $catalog ) {
 		$resolved = $this->templates->resolve_published_assignment_details( array( 'issuer_id' => absint( $issuer_id ), 'program_id' => absint( $program_id ), 'batch_id' => absint( $batch_id ) ) );
-		if ( is_wp_error( $resolved ) ) { return $resolved; }
+		if ( is_wp_error( $resolved ) ) {
+			// A draft design must not block Program/Batch structure changes. Publication and
+			// issuance remain fail-closed until that exact design has a published revision.
+			if ( 'certloom_template_not_published' === $resolved->get_error_code() ) { return true; }
+			return $resolved;
+		}
 		if ( ! is_array( $resolved ) || empty( $resolved['template_id'] ) ) { return true; }
 		if ( empty( $resolved['published_layout'] ) || ! is_array( $resolved['published_layout'] ) ) {
 			return new \WP_Error( 'certloom_scoped_field_template_unavailable', __( 'The currently assigned certificate design is no longer published.', 'certloom' ) );

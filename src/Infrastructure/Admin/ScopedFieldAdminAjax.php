@@ -107,6 +107,13 @@ final class ScopedFieldAdminAjax {
 		$allowed_types = array( 'text', 'textarea', 'date', 'number' );
 		$type = isset( $_POST['field_type'] ) ? sanitize_key( wp_unslash( $_POST['field_type'] ) ) : 'text'; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
 		if ( ! in_array( $type, $allowed_types, true ) ) { $type = 'text'; }
+		$sensitivity_options = \Ecapla_CertVerify_Fields::get_sensitivity_options();
+		$exposure_options = \Ecapla_CertVerify_Fields::get_public_exposure_options();
+		$sensitivity = isset( $_POST['sensitivity'] ) ? sanitize_key( wp_unslash( $_POST['sensitivity'] ) ) : 'personal'; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
+		if ( ! array_key_exists( $sensitivity, $sensitivity_options ) ) { $sensitivity = 'personal'; }
+		$public_exposure = isset( $_POST['public_exposure'] ) ? sanitize_key( wp_unslash( $_POST['public_exposure'] ) ) : 'private'; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
+		if ( ! array_key_exists( $public_exposure, $exposure_options ) ) { $public_exposure = 'private'; }
+		if ( 'internal' === $sensitivity ) { $public_exposure = 'private'; }
 		$fields = \Ecapla_CertVerify_Fields::get_fields();
 		$base_key = sanitize_key( str_replace( '-', '_', sanitize_title( $label ) ) );
 		$base_key = '' !== $base_key ? $base_key : 'field';
@@ -118,10 +125,10 @@ final class ScopedFieldAdminAjax {
 			$stem = function_exists( 'mb_substr' ) ? mb_substr( $base_key, 0, $stem_length ) : substr( $base_key, 0, $stem_length ); $key = $stem . $suffix_text;
 		}
 		$max_order = $fields ? max( array_map( 'absint', wp_list_pluck( $fields, 'order' ) ) ) : 0;
-		$field = array( 'key' => $key, 'label' => $label, 'type' => $type, 'column' => null, 'core' => false, 'protected' => false, 'locked_visibility' => false, 'sensitivity' => 'personal', 'public_exposure' => 'private', 'show_on_frontend' => false, 'order' => $max_order + 1 );
+		$field = array( 'key' => $key, 'label' => $label, 'type' => $type, 'column' => null, 'core' => false, 'protected' => false, 'locked_visibility' => false, 'sensitivity' => $sensitivity, 'public_exposure' => $public_exposure, 'show_on_frontend' => 'private' !== $public_exposure, 'order' => $max_order + 1 );
 		$fields[] = $field;
 		if ( ! \Ecapla_CertVerify_Fields::save_fields( $fields ) ) { wp_send_json_error( array( 'message' => __( 'Certloom could not save the new field.', 'certloom' ) ), 500 ); }
-		wp_send_json_success( array( 'field' => $field, 'message' => __( 'Field created. It is Personal and Private until you change its policy in Settings → Fields.', 'certloom' ) ) );
+		wp_send_json_success( array( 'field' => array_merge( $field, array( 'sensitivity_label' => (string) $sensitivity_options[ $sensitivity ], 'public_exposure_label' => (string) $exposure_options[ $public_exposure ] ) ), 'message' => __( 'Field created and added. You can manage its policy later in Settings → Fields.', 'certloom' ) ) );
 	}
 
 	/** Read-only bounded Program/Batch lookup for relationship selectors. @return void */
@@ -131,6 +138,7 @@ final class ScopedFieldAdminAjax {
 			\Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS,
 			\Ecapla_CertVerify_Permissions::CAP_ISSUE_CREDENTIALS,
 			\Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS,
+			\Ecapla_CertVerify_Permissions::CAP_MANAGE_RECIPIENTS,
 			\Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS,
 			\Ecapla_CertVerify_Permissions::CAP_MANAGE_BATCHES,
 			\Ecapla_CertVerify_Permissions::CAP_MANAGE_TEMPLATES,
@@ -183,6 +191,25 @@ final class ScopedFieldAdminAjax {
 		} elseif ( 'signer_scope' === $kind ) {
 			$choices = $this->signer_scope_choices( $query );
 			if ( is_wp_error( $choices ) ) { wp_send_json_error( array( 'message' => $choices->get_error_message() ), 500 ); }
+		} elseif ( 'wp_user' === $kind ) {
+			$args = array(
+				'number'  => 20,
+				'orderby' => 'display_name',
+				'order'   => 'ASC',
+				'fields'  => array( 'ID', 'display_name', 'user_email', 'user_login' ),
+			);
+			if ( '' !== trim( $query ) ) {
+				$args['search'] = '*' . $query . '*';
+				$args['search_columns'] = array( 'user_login', 'user_email', 'display_name' );
+			}
+			$users = get_users( $args );
+			foreach ( is_array( $users ) ? $users : array() as $user ) {
+				if ( ! is_object( $user ) || ! absint( $user->ID ?? 0 ) ) { continue; }
+				$label = trim( (string) ( $user->display_name ?? '' ) );
+				if ( ! empty( $user->user_email ) ) { $label .= ( '' !== $label ? ' · ' : '' ) . (string) $user->user_email; }
+				if ( '' === $label ) { $label = (string) ( $user->user_login ?? ( '#' . absint( $user->ID ) ) ); }
+				$choices[] = array( 'id' => absint( $user->ID ), 'label' => $label );
+			}
 		} elseif ( 'tutor_course' === $kind ) {
 			$choices = $this->course_choices( TutorLmsAdapter::is_available() ? TutorLmsAdapter::course_post_type() : '', $query );
 		} elseif ( 'learndash_course' === $kind ) {

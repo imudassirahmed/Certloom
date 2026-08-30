@@ -18,6 +18,12 @@ $ecapla_certverify_status_map      = Ecapla_CertVerify_Fields::get_statuses();
 $ecapla_certverify_status_label    = isset( $ecapla_certverify_status_map[ $ecapla_certverify_current_status ]['label'] ) ? $ecapla_certverify_status_map[ $ecapla_certverify_current_status ]['label'] : $ecapla_certverify_current_status;
 $ecapla_certverify_hidden_columns  = get_user_meta( get_current_user_id(), 'certloom_registry_hidden_columns', true );
 $ecapla_certverify_hidden_columns  = is_array( $ecapla_certverify_hidden_columns ) ? $ecapla_certverify_hidden_columns : array();
+$ecapla_certverify_normalized_issuance_ready = class_exists( '\\Certloom\\Infrastructure\\Migration\\DomainFeatureGate' )
+	&& \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready()
+	&& current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS );
+$ecapla_certverify_create_url = $ecapla_certverify_normalized_issuance_ready
+	? admin_url( 'admin.php?page=certloom-issuance' )
+	: admin_url( 'admin.php?page=certloom-add' );
 ?>
 <div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-registry-screen">
 	<section class="certloom-page-hero" aria-labelledby="certloom-registry-title">
@@ -27,10 +33,18 @@ $ecapla_certverify_hidden_columns  = is_array( $ecapla_certverify_hidden_columns
 			<p><?php esc_html_e( 'Search, review and maintain the authoritative certificate registry without changing verification truth.', 'certloom' ); ?></p>
 		</div>
 		<div class="certloom-page-actions">
-			<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-add' ) ); ?>" class="button button-primary button-hero"><svg class="certloom-button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" /></svg><?php esc_html_e( 'Add certificate', 'certloom' ); ?></a>
+			<a href="<?php echo esc_url( $ecapla_certverify_create_url ); ?>" class="button button-primary button-hero"><svg class="certloom-button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" /></svg><?php $ecapla_certverify_normalized_issuance_ready ? esc_html_e( 'Issue credential', 'certloom' ) : esc_html_e( 'Add certificate', 'certloom' ); ?></a>
 			<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-import' ) ); ?>" class="button button-secondary button-hero"><svg class="certloom-button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 15V5m0 0L8 9m4-4 4 4M5 14v5h14v-5" /></svg><?php esc_html_e( 'Import / export', 'certloom' ); ?></a>
 		</div>
 	</section>
+
+	<?php if ( $ecapla_certverify_normalized_issuance_ready ) : ?>
+		<div class="certloom-callout certloom-callout-info" role="status">
+			<span class="dashicons dashicons-info-outline" aria-hidden="true"></span>
+			<div><strong><?php esc_html_e( 'Legacy registry', 'certloom' ); ?></strong><p><?php esc_html_e( 'Use this screen to maintain existing registry records. New credentials should be issued through the Recipient-aware Issue credential workflow so each credential is linked to one reusable Recipient profile.', 'certloom' ); ?></p></div>
+			<a class="button" href="<?php echo esc_url( $ecapla_certverify_create_url ); ?>"><?php esc_html_e( 'Issue credential', 'certloom' ); ?></a>
+		</div>
+	<?php endif; ?>
 
 	<?php if ( isset( $database_error ) && is_wp_error( $database_error ) ) : ?>
 		<div class="notice notice-error inline"><p><?php echo esc_html( $database_error->get_error_message() ); ?></p></div>

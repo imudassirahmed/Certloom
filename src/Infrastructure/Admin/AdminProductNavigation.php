@@ -176,11 +176,11 @@ final class AdminProductNavigation {
 		switch ( $section ) {
 			case 'credentials':
 				$links = array(
-					$this->link( __( 'Registry', 'certloom' ), 'certloom-certificates', array( 'certloom-certificates', 'certloom-add', 'certloom-bulk-review' ), ECAPLA_CERTVERIFY_CAP ),
+					$this->link( $preview ? __( 'Legacy registry', 'certloom' ) : __( 'Registry', 'certloom' ), 'certloom-certificates', array( 'certloom-certificates', 'certloom-add', 'certloom-bulk-review' ), ECAPLA_CERTVERIFY_CAP ),
 				);
 				if ( $preview ) {
-					$links[] = $this->link( __( 'Credential management', 'certloom' ), 'certloom-domain-credentials', array( 'certloom-domain-credentials' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS );
-					$links[] = $this->link( __( 'Issue', 'certloom' ), 'certloom-issuance', array( 'certloom-issuance' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS );
+					$links[] = $this->link( __( 'Credentials', 'certloom' ), 'certloom-domain-credentials', array( 'certloom-domain-credentials' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS );
+					$links[] = $this->link( __( 'Issue credential', 'certloom' ), 'certloom-issuance', array( 'certloom-issuance' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS );
 					$links[] = $this->link( __( 'Bulk issue', 'certloom' ), 'certloom-bulk-issuance', array( 'certloom-bulk-issuance' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS );
 					$links[] = $this->link( __( 'Email delivery', 'certloom' ), 'certloom-email-delivery', array( 'certloom-email-delivery' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS );
 				}

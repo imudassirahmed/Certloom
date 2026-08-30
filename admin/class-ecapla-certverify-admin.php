@@ -219,6 +219,13 @@ class Ecapla_CertVerify_Admin {
 
 		$id       = isset( $_POST['cert_id'] ) ? absint( $_POST['cert_id'] ) : 0;
 		$back_url = $id ? admin_url( 'admin.php?page=certloom-add&id=' . $id ) : admin_url( 'admin.php?page=certloom-add' );
+		if ( ! $id && \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
+			// Once the Recipient-aware issuance workflow is available, never create a
+			// second-class legacy record that cannot be linked to a Recipient/Program.
+			// Existing legacy records remain editable through this controller.
+			wp_safe_redirect( admin_url( 'admin.php?page=certloom-issuance' ) );
+			exit;
+		}
 		if ( $id ) {
 			$existing = Ecapla_CertVerify_Database::get_by_id( $id );
 			if ( is_wp_error( $existing ) ) {
@@ -1702,6 +1709,10 @@ class Ecapla_CertVerify_Admin {
 		$this->require_manage_permission();
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only admin route used only to select the record displayed.
 		$id          = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 0;
+		if ( ! $id && \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=certloom-issuance' ) );
+			exit;
+		}
 		$certificate = $id ? Ecapla_CertVerify_Database::get_by_id( $id ) : null;
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		if ( is_wp_error( $certificate ) ) {

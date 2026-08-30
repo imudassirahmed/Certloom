@@ -370,7 +370,7 @@
 			if ( '1' === select.getAttribute( 'data-certloom-context-ready' ) ) { return; }
 			var kind = select.getAttribute( 'data-certloom-context-lookup' );
 			var nonce = select.getAttribute( 'data-certloom-context-nonce' ) || '';
-			if ( [ 'program', 'batch', 'template', 'issuer', 'signer', 'signer_scope', 'tutor_course', 'learndash_course' ].indexOf( kind ) === -1 || ! nonce || 'undefined' === typeof window.ajaxurl ) { return; }
+			if ( [ 'program', 'batch', 'template', 'issuer', 'signer', 'signer_scope', 'wp_user', 'tutor_course', 'learndash_course' ].indexOf( kind ) === -1 || ! nonce || 'undefined' === typeof window.ajaxurl ) { return; }
 			select.setAttribute( 'data-certloom-context-ready', '1' );
 
 			var wrapper = document.createElement( 'div' );
@@ -931,17 +931,20 @@
 			Array.prototype.forEach.call( editor.querySelectorAll( '[data-certloom-quick-field-open]' ), function ( button ) { button.addEventListener( 'click', function () { if ( dialog && dialog.showModal ) { dialog.showModal(); var input = dialog.querySelector( '[data-certloom-quick-field-label]' ); if ( input ) { input.focus(); } } } ); } );
 			Array.prototype.forEach.call( editor.querySelectorAll( '[data-certloom-quick-field-close]' ), function ( button ) { button.addEventListener( 'click', function () { if ( dialog && dialog.open ) { dialog.close(); } } ); } );
 			var create = editor.querySelector( '[data-certloom-quick-field-create]' );
+			var sensitivityInput = dialog ? dialog.querySelector( '[data-certloom-quick-field-sensitivity]' ) : null, exposureInput = dialog ? dialog.querySelector( '[data-certloom-quick-field-exposure]' ) : null;
+			function syncQuickFieldPrivacy() { if ( ! sensitivityInput || ! exposureInput ) { return; } var internal = 'internal' === sensitivityInput.value; if ( internal ) { exposureInput.value = 'private'; } exposureInput.disabled = internal; exposureInput.setAttribute( 'aria-disabled', internal ? 'true' : 'false' ); }
+			if ( sensitivityInput ) { sensitivityInput.addEventListener( 'change', syncQuickFieldPrivacy ); syncQuickFieldPrivacy(); }
 			if ( create && dialog ) { create.addEventListener( 'click', function () {
 				var labelInput = dialog.querySelector( '[data-certloom-quick-field-label]' ), typeInput = dialog.querySelector( '[data-certloom-quick-field-type]' ), feedback = dialog.querySelector( '[data-certloom-quick-field-feedback]' ), labelValue = labelInput ? labelInput.value.trim() : '';
 				if ( ! labelValue ) { if ( feedback ) { feedback.textContent = 'Enter a field label.'; } return; }
 				create.disabled = true; if ( feedback ) { feedback.textContent = 'Creating field…'; }
-				var body = new URLSearchParams(); body.set( 'action', 'certloom_quick_add_scoped_field' ); body.set( 'nonce', editor.getAttribute( 'data-certloom-field-nonce' ) || '' ); body.set( 'label', labelValue ); body.set( 'field_type', typeInput ? typeInput.value : 'text' );
+				var body = new URLSearchParams(); body.set( 'action', 'certloom_quick_add_scoped_field' ); body.set( 'nonce', editor.getAttribute( 'data-certloom-field-nonce' ) || '' ); body.set( 'label', labelValue ); body.set( 'field_type', typeInput ? typeInput.value : 'text' ); body.set( 'sensitivity', sensitivityInput ? sensitivityInput.value : 'personal' ); body.set( 'public_exposure', exposureInput ? exposureInput.value : 'private' );
 				fetch( window.ajaxurl || '', { method:'POST', credentials:'same-origin', headers:{ 'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8' }, body:body.toString() } ).then( function ( response ) { return response.json(); } ).then( function ( response ) {
 					if ( ! response || ! response.success || ! response.data || ! response.data.field ) { throw new Error( response && response.data && response.data.message ? response.data.message : 'Field could not be created.' ); }
 					var field = response.data.field, list = editor.querySelector( '[data-certloom-scope-field-list]' ), scope = editor.getAttribute( 'data-certloom-scope-field-editor' ), row = document.createElement( 'div' ); row.className = 'certloom-scoped-field-row'; row.setAttribute( 'data-certloom-scope-field-row', field.key );
 					var name = 'program' === scope ? 'program_field_requirement[' + field.key + ']' : 'batch_field_requirement[' + field.key + ']';
 					var options = 'program' === scope ? '<option value="">Not used</option><option value="optional" selected>Optional</option><option value="required">Required</option>' : '<option value="">Inherit Program</option><option value="optional" selected>Optional</option><option value="required">Required</option><option value="exclude">Exclude</option>';
-					row.innerHTML = '<div><strong data-certloom-scope-field-label>' + escapeHtml( field.label ) + '</strong><span class="certloom-scoped-field-meta">' + escapeHtml( field.type ) + ' · Personal · Private</span></div><label><span class="screen-reader-text">Field rule</span><select name="' + escapeHtml( name ) + '" data-certloom-scope-field-rule>' + options + '</select></label><button type="button" class="button-link-delete" data-certloom-scope-field-remove>Remove</button>';
+					row.innerHTML = '<div><strong data-certloom-scope-field-label>' + escapeHtml( field.label ) + '</strong><span class="certloom-scoped-field-meta">' + escapeHtml( field.type ) + ' · ' + escapeHtml( field.sensitivity_label || field.sensitivity || 'Personal' ) + ' · ' + escapeHtml( field.public_exposure_label || field.public_exposure || 'Private' ) + '</span></div><label><span class="screen-reader-text">Field rule</span><select name="' + escapeHtml( name ) + '" data-certloom-scope-field-rule>' + options + '</select></label><button type="button" class="button-link-delete" data-certloom-scope-field-remove>Remove</button>';
 					if ( list ) { list.appendChild( row ); } if ( feedback ) { feedback.textContent = response.data.message || 'Field created.'; } if ( labelInput ) { labelInput.value = ''; } window.setTimeout( function () { if ( dialog.open ) { dialog.close(); } }, 450 ); refreshEmpty();
 				} ).catch( function ( error ) { if ( feedback ) { feedback.textContent = error.message || 'Field could not be created.'; } } ).finally( function () { create.disabled = false; } );
 			} ); }

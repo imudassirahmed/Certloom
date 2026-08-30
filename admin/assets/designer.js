@@ -107,6 +107,7 @@
 		var lockButton = root.querySelector( '[data-certloom-designer-lock]' );
 		var layersContainer = root.querySelector( '[data-certloom-designer-layers]' );
 		var dirtyBadge = root.querySelector( '[data-certloom-designer-dirty]' );
+		var saveButtons = root.querySelectorAll( '[data-certloom-designer-quick-save], [data-certloom-designer-save]' );
 		var pageReadout = root.querySelector( '[data-certloom-designer-page-readout]' );
 		var emptyInspector = root.querySelector( '[data-certloom-designer-empty]' );
 		var fieldsInspector = root.querySelector( '[data-certloom-designer-fields]' );
@@ -283,6 +284,14 @@
 			if ( ! error ) { return; }
 			error.hidden = ! message;
 			var p = error.querySelector( 'p' ); if ( p ) { p.textContent = message || ''; }
+		}
+		function setSaveFeedback( label, state, disabled ) {
+			if ( dirtyBadge ) { dirtyBadge.textContent = label; dirtyBadge.classList.toggle( 'is-dirty', 'blocked' === state ); dirtyBadge.classList.toggle( 'is-saving', 'saving' === state ); }
+			for ( var i = 0; i < saveButtons.length; i++ ) { saveButtons[ i ].disabled = !!disabled; if ( disabled ) { saveButtons[ i ].setAttribute( 'aria-busy', 'true' ); } else { saveButtons[ i ].removeAttribute( 'aria-busy' ); } }
+		}
+		function blockSave( message ) {
+			showError( message ); setSaveFeedback( t( 'saveBlocked', 'Save blocked' ), 'blocked', false ); announce( message );
+			if ( error && error.scrollIntoView ) { error.scrollIntoView( { behavior: 'smooth', block: 'nearest' } ); }
 		}
 		function page() { return layout && layout.page ? layout.page : null; }
 		function elements() { return layout && Array.isArray( layout.elements ) ? layout.elements : []; }
@@ -1069,11 +1078,12 @@
 		}
 		document.addEventListener( 'keydown', keyboard );
 		form.addEventListener( 'submit', function ( event ) {
-			if ( directTextEditor ) { closeDirectTextEditor( true ); if ( directTextEditor ) { event.preventDefault(); return; } }
+			showError( '' );
+			if ( directTextEditor ) { closeDirectTextEditor( true ); if ( directTextEditor ) { event.preventDefault(); blockSave( t( 'directTextInvalid', 'Direct text must stay within the canonical 20,000-byte text limit.' ) ); return; } }
 			if ( autosaveTimer ) { window.clearTimeout( autosaveTimer ); autosaveTimer = null; }
 			var p = page(); var list = elements();
-			for ( var i = 0; i < list.length; i++ ) { if ( 'barcode' === list[ i ].type && schemaVersion < 2 ) { event.preventDefault(); showError( t( 'barcodeDeferred', 'Barcode elements require certloom-layout v2. Upgrade this draft first.' ) ); return; } if ( ! elementGeometryValid( list[ i ], p ) ) { event.preventDefault(); showError( t( 'invalidGeometrySave', 'Designer found invalid element geometry and stopped the save.' ) ); return; } }
-			jsonField.value = JSON.stringify( layout ); if ( stateField ) { stateField.value = JSON.stringify( designerState ); } if ( autosaveSessionField ) { autosaveSessionField.value = autosaveSessionId; } isSubmitting = true;
+			for ( var i = 0; i < list.length; i++ ) { if ( 'barcode' === list[ i ].type && schemaVersion < 2 ) { event.preventDefault(); blockSave( t( 'barcodeDeferred', 'Barcode elements require certloom-layout v2. Upgrade this draft first.' ) ); return; } if ( ! elementGeometryValid( list[ i ], p ) ) { event.preventDefault(); blockSave( t( 'invalidGeometrySave', 'Designer found invalid element geometry and stopped the save.' ) ); return; } }
+			jsonField.value = JSON.stringify( layout ); if ( stateField ) { stateField.value = JSON.stringify( designerState ); } if ( autosaveSessionField ) { autosaveSessionField.value = autosaveSessionId; } isSubmitting = true; setSaveFeedback( t( 'savingRevision', 'Saving revision…' ), 'saving', true ); announce( t( 'savingRevision', 'Saving revision…' ) );
 		} );
 		window.addEventListener( 'beforeunload', function ( event ) { if ( isSubmitting || ! root.classList.contains( 'has-unsaved-changes' ) ) { return; } event.preventDefault(); event.returnValue = ''; } );
 
