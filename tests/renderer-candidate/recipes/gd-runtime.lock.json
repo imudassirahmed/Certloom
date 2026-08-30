@@ -1,1 +1,0 @@
-{"renderer_id":"certloom-gd-raster","requirements":{"classes":[],"extensions":["gd"],"functions":["imagettfbbox","imagettftext"],"php_min":"7.4"},"schema":"certloom-native-renderer-lock","version":1}
