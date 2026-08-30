@@ -157,8 +157,10 @@ final class DomainStructureAdmin {
 		$summary = $repo->summary();
 		$edit_id = isset( $_GET['batch_id'] ) ? absint( $_GET['batch_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation.
 		$editing = $edit_id ? $repo->find( $edit_id ) : null;
+		$creating = isset( $_GET['certloom_new'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin navigation.
+		$action_url = $creating || $edit_id ? add_query_arg( 'page', self::BATCHES_PAGE, admin_url( 'admin.php' ) ) : add_query_arg( array( 'page' => self::BATCHES_PAGE, 'certloom_new' => 1 ), admin_url( 'admin.php' ) ) . '#certloom-domain-editor';
 
-		$this->header( __( 'Batches & cohorts', 'certloom' ), __( 'Group recipients under a stable batch code and Program without collapsing credential history into LMS-specific records.', 'certloom' ) );
+		$this->header( __( 'Batches & cohorts', 'certloom' ), __( 'Group recipients under a stable batch code and Program without collapsing credential history into LMS-specific records.', 'certloom' ), array( 'label' => $creating || $edit_id ? __( 'Back to batches', 'certloom' ) : __( 'Add batch', 'certloom' ), 'url' => $action_url, 'secondary' => (bool) ( $creating || $edit_id ) ) );
 		$this->notice();
 		if ( ! is_wp_error( $summary ) ) {
 			$this->metric_grid(
@@ -191,11 +193,11 @@ final class DomainStructureAdmin {
 
 		if ( is_wp_error( $editing ) ) {
 			$this->error( $editing->get_error_message() );
-		} else {
-			$this->batch_form( is_array( $editing ) ? $editing : null );
-			if ( is_array( $editing ) ) {
-				$this->batch_members( $repo, $editing );
-			}
+		} elseif ( is_array( $editing ) ) {
+			$this->batch_form( $editing );
+			$this->batch_members( $repo, $editing );
+		} elseif ( $creating ) {
+			$this->batch_form();
 		}
 		$this->footer();
 	}
@@ -211,8 +213,10 @@ final class DomainStructureAdmin {
 		$summary = $repo->summary();
 		$edit_id = isset( $_GET['signer_id'] ) ? absint( $_GET['signer_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation.
 		$editing = $edit_id ? $repo->find( $edit_id ) : null;
+		$creating = isset( $_GET['certloom_new'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin navigation.
+		$action_url = $creating || $edit_id ? add_query_arg( 'page', self::SIGNERS_PAGE, admin_url( 'admin.php' ) ) : add_query_arg( array( 'page' => self::SIGNERS_PAGE, 'certloom_new' => 1 ), admin_url( 'admin.php' ) ) . '#certloom-domain-editor';
 
-		$this->header( __( 'Signer profiles', 'certloom' ), __( 'Reusable signer identities with deterministic Batch → Program → Issuer → Global hierarchy.', 'certloom' ) );
+		$this->header( __( 'Signer profiles', 'certloom' ), __( 'Reusable signer identities with deterministic Batch → Program → Issuer → Global hierarchy.', 'certloom' ), array( 'label' => $creating || $edit_id ? __( 'Back to signers', 'certloom' ) : __( 'Add signer', 'certloom' ), 'url' => $action_url, 'secondary' => (bool) ( $creating || $edit_id ) ) );
 		$this->notice();
 		if ( ! is_wp_error( $summary ) ) {
 			$this->metric_grid(
@@ -242,11 +246,11 @@ final class DomainStructureAdmin {
 
 		if ( is_wp_error( $editing ) ) {
 			$this->error( $editing->get_error_message() );
-		} else {
-			$this->signer_form( is_array( $editing ) ? $editing : null );
-			if ( is_array( $editing ) ) {
-				$this->signer_assignments( $repo, $editing );
-			}
+		} elseif ( is_array( $editing ) ) {
+			$this->signer_form( $editing );
+			$this->signer_assignments( $repo, $editing );
+		} elseif ( $creating ) {
+			$this->signer_form();
 		}
 		$this->footer();
 	}
@@ -260,7 +264,7 @@ final class DomainStructureAdmin {
 		$field_contract = $is_edit && isset( $editing['field_contract'] ) && is_array( $editing['field_contract'] ) ? $editing['field_contract'] : ScopedFieldContract::empty_batch();
 		$scopable_fields = \Ecapla_CertVerify_Fields::get_scopable_fields();
 
-		echo '<section class="ecapla-certverify-admin-card certloom-domain-editor"><h2>' . esc_html( $is_edit ? __( 'Batch profile', 'certloom' ) : __( 'Add batch', 'certloom' ) ) . '</h2><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		echo '<section id="certloom-domain-editor" class="ecapla-certverify-admin-card certloom-domain-editor"><h2>' . esc_html( $is_edit ? __( 'Batch profile', 'certloom' ) : __( 'Add batch', 'certloom' ) ) . '</h2><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		echo '<input type="hidden" name="action" value="' . esc_attr( $is_edit ? 'certloom_domain_update_batch' : 'certloom_domain_create_batch' ) . '">';
 		if ( $is_edit ) {
 			echo '<input type="hidden" name="batch_id" value="' . esc_attr( $id ) . '">';
@@ -361,7 +365,7 @@ final class DomainStructureAdmin {
 		$metadata = $is_edit && is_array( $editing['metadata'] ?? null ) ? $editing['metadata'] : array();
 		$editable = $this->is_scalar_map( $metadata );
 
-		echo '<section class="ecapla-certverify-admin-card certloom-domain-editor"><h2>' . esc_html( $is_edit ? __( 'Signer profile', 'certloom' ) : __( 'Add signer', 'certloom' ) ) . '</h2><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		echo '<section id="certloom-domain-editor" class="ecapla-certverify-admin-card certloom-domain-editor"><h2>' . esc_html( $is_edit ? __( 'Signer profile', 'certloom' ) : __( 'Add signer', 'certloom' ) ) . '</h2><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		echo '<input type="hidden" name="action" value="' . esc_attr( $is_edit ? 'certloom_domain_update_signer' : 'certloom_domain_create_signer' ) . '">';
 		if ( $is_edit ) {
 			echo '<input type="hidden" name="signer_id" value="' . esc_attr( $id ) . '">';
@@ -600,9 +604,13 @@ final class DomainStructureAdmin {
 		echo '</div>';
 	}
 
-	/** @return void */
-	private function header( $title, $subtitle ) {
-		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-domain-screen"><div class="certloom-domain-title-row"><div><h1>' . esc_html( $title ) . '</h1><p class="certloom-domain-lead">' . esc_html( $subtitle ) . '</p></div><span class="certloom-domain-preview-badge">' . esc_html__( 'Acceptance preview', 'certloom' ) . '</span></div>';
+	/** @param array{label:string,url:string,secondary?:bool}|null $action @return void */
+	private function header( $title, $subtitle, ?array $action = null ) {
+		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-domain-screen"><div class="certloom-domain-title-row"><div><h1>' . esc_html( $title ) . '</h1><p class="certloom-domain-lead">' . esc_html( $subtitle ) . '</p></div><div class="certloom-domain-title-actions">';
+		if ( is_array( $action ) && ! empty( $action['label'] ) && ! empty( $action['url'] ) ) {
+			echo '<a class="button ' . ( empty( $action['secondary'] ) ? 'button-primary' : '' ) . '" href="' . esc_url( (string) $action['url'] ) . '">' . esc_html( (string) $action['label'] ) . '</a>';
+		}
+		echo '<span class="certloom-domain-preview-badge">' . esc_html__( 'Acceptance preview', 'certloom' ) . '</span></div></div>';
 	}
 
 	/** @return void */

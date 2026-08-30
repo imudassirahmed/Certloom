@@ -228,8 +228,10 @@ final class DomainAdmin {
 		$summary = $repo->summary();
 		$edit_id = isset( $_GET['recipient_id'] ) ? absint( $_GET['recipient_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin navigation.
 		$editing = $edit_id ? $repo->find( $edit_id ) : null;
+		$creating = isset( $_GET['certloom_new'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin navigation.
+		$action_url = $creating || $edit_id ? add_query_arg( 'page', self::RECIPIENTS_PAGE, admin_url( 'admin.php' ) ) : add_query_arg( array( 'page' => self::RECIPIENTS_PAGE, 'certloom_new' => 1 ), admin_url( 'admin.php' ) ) . '#certloom-domain-editor';
 
-		$this->header( __( 'Recipients', 'certloom' ), __( 'Normalized people and organizations who receive Certloom credentials.', 'certloom' ) );
+		$this->header( __( 'Recipients', 'certloom' ), __( 'Normalized people and organizations who receive Certloom credentials.', 'certloom' ), array( 'label' => $creating || $edit_id ? __( 'Back to recipients', 'certloom' ) : __( 'Add recipient', 'certloom' ), 'url' => $action_url, 'secondary' => (bool) ( $creating || $edit_id ) ) );
 		$this->notice();
 		if ( ! is_wp_error( $summary ) ) {
 			$this->metric_grid(
@@ -265,7 +267,7 @@ final class DomainAdmin {
 		} elseif ( is_array( $editing ) ) {
 			$this->recipient_form( $editing );
 			$this->recipient_history( $repo, $editing );
-		} else {
+		} elseif ( $creating ) {
 			$this->recipient_form();
 		}
 		$this->footer();
@@ -283,8 +285,10 @@ final class DomainAdmin {
 		$summary = $repo->summary();
 		$edit_id = isset( $_GET['program_id'] ) ? absint( $_GET['program_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin navigation.
 		$editing = $edit_id ? $repo->find( $edit_id ) : null;
+		$creating = isset( $_GET['certloom_new'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin navigation.
+		$action_url = $creating || $edit_id ? add_query_arg( 'page', self::PROGRAMS_PAGE, admin_url( 'admin.php' ) ) : add_query_arg( array( 'page' => self::PROGRAMS_PAGE, 'certloom_new' => 1 ), admin_url( 'admin.php' ) ) . '#certloom-domain-editor';
 
-		$this->header( __( 'Programs', 'certloom' ), __( 'Standalone credential programs that work with or without an LMS.', 'certloom' ) );
+		$this->header( __( 'Programs', 'certloom' ), __( 'Standalone credential programs that work with or without an LMS.', 'certloom' ), array( 'label' => $creating || $edit_id ? __( 'Back to programs', 'certloom' ) : __( 'Add program', 'certloom' ), 'url' => $action_url, 'secondary' => (bool) ( $creating || $edit_id ) ) );
 		$this->notice();
 		if ( ! is_wp_error( $summary ) ) {
 			$this->metric_grid(
@@ -316,7 +320,7 @@ final class DomainAdmin {
 		} elseif ( is_array( $editing ) ) {
 			$this->program_form( $editing );
 			$this->program_history( $repo, $editing );
-		} else {
+		} elseif ( $creating ) {
 			$this->program_form();
 		}
 		$this->footer();
@@ -332,8 +336,10 @@ final class DomainAdmin {
 		$result = $repo->list_page( $search, $page, 50 );
 		$edit_id = isset( $_GET['issuer_id'] ) ? absint( $_GET['issuer_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin navigation.
 		$editing = $edit_id ? $repo->find( $edit_id ) : null;
+		$creating = isset( $_GET['certloom_new'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin navigation.
+		$action_url = $creating || $edit_id ? add_query_arg( 'page', self::ISSUERS_PAGE, admin_url( 'admin.php' ) ) : add_query_arg( array( 'page' => self::ISSUERS_PAGE, 'certloom_new' => 1 ), admin_url( 'admin.php' ) ) . '#certloom-domain-editor';
 
-		$this->header( __( 'Issuers & brands', 'certloom' ), __( 'Manage stable issuing identities and local brand defaults without changing historical credential snapshots.', 'certloom' ) );
+		$this->header( __( 'Issuers & brands', 'certloom' ), __( 'Manage stable issuing identities and local brand defaults without changing historical credential snapshots.', 'certloom' ), array( 'label' => $creating || $edit_id ? __( 'Back to issuers', 'certloom' ) : __( 'Add issuer', 'certloom' ), 'url' => $action_url, 'secondary' => (bool) ( $creating || $edit_id ) ) );
 		$this->notice();
 		$this->render_search( self::ISSUERS_PAGE, $search );
 		if ( is_wp_error( $result ) ) {
@@ -352,7 +358,7 @@ final class DomainAdmin {
 			$this->error( $editing->get_error_message() );
 		} elseif ( is_array( $editing ) ) {
 			$this->issuer_form( $editing );
-		} else {
+		} elseif ( $creating ) {
 			$this->issuer_form();
 		}
 		$this->footer();
@@ -920,7 +926,7 @@ final class DomainAdmin {
 		$id = $is_edit ? absint( $editing['id'] ) : 0;
 		$custom_fields = $is_edit && isset( $editing['custom_fields'] ) && is_array( $editing['custom_fields'] ) ? $editing['custom_fields'] : array();
 		$custom_editable = $this->is_scalar_map( $custom_fields );
-		echo '<section class="ecapla-certverify-admin-card certloom-domain-editor"><div class="certloom-domain-editor-head"><div><h2>' . esc_html( $is_edit ? __( 'Recipient profile', 'certloom' ) : __( 'Add recipient', 'certloom' ) ) . '</h2><p>' . esc_html__( 'Keep recipient identity separate from credential history so renewals and future credentials share one stable recipient record.', 'certloom' ) . '</p></div>';
+		echo '<section id="certloom-domain-editor" class="ecapla-certverify-admin-card certloom-domain-editor"><div class="certloom-domain-editor-head"><div><h2>' . esc_html( $is_edit ? __( 'Recipient profile', 'certloom' ) : __( 'Add recipient', 'certloom' ) ) . '</h2><p>' . esc_html__( 'Keep recipient identity separate from credential history so renewals and future credentials share one stable recipient record.', 'certloom' ) . '</p></div>';
 		if ( $is_edit ) { echo '<span class="certloom-domain-id">#' . esc_html( (string) $id ) . '</span>'; }
 		echo '</div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		echo '<input type="hidden" name="action" value="' . esc_attr( $is_edit ? 'certloom_domain_update_recipient' : 'certloom_domain_create_recipient' ) . '">';
@@ -973,7 +979,7 @@ final class DomainAdmin {
 		}
 		$locale_policy = new CredentialLocale();
 		$locale_preview = $locale_policy->resolve( $profile['credential_locale'] ?? CredentialLocale::SITE_DEFAULT );
-		echo '<section class="ecapla-certverify-admin-card certloom-domain-editor"><div class="certloom-domain-editor-head"><div><h2>' . esc_html( $is_edit ? __( 'Program profile', 'certloom' ) : __( 'Add program', 'certloom' ) ) . '</h2><p>' . esc_html__( 'Program Profiles centralize purpose, language, lifecycle and experience defaults while issued credentials keep immutable snapshots.', 'certloom' ) . '</p></div>';
+		echo '<section id="certloom-domain-editor" class="ecapla-certverify-admin-card certloom-domain-editor"><div class="certloom-domain-editor-head"><div><h2>' . esc_html( $is_edit ? __( 'Program profile', 'certloom' ) : __( 'Add program', 'certloom' ) ) . '</h2><p>' . esc_html__( 'Program Profiles centralize purpose, language, lifecycle and experience defaults while issued credentials keep immutable snapshots.', 'certloom' ) . '</p></div>';
 		if ( $is_edit ) { echo '<span class="certloom-domain-id">#' . esc_html( (string) $id ) . '</span>'; }
 		echo '</div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		echo '<input type="hidden" name="action" value="' . esc_attr( $is_edit ? 'certloom_domain_update_program' : 'certloom_domain_create_program' ) . '">';
@@ -1070,7 +1076,7 @@ final class DomainAdmin {
 	private function issuer_form( ?array $editing = null ) {
 		$is_edit = null !== $editing; $id = $is_edit ? absint( $editing['id'] ) : 0;
 		$settings = $is_edit && isset( $editing['settings'] ) && is_array( $editing['settings'] ) ? $editing['settings'] : array();
-		echo '<section class="ecapla-certverify-admin-card certloom-domain-editor"><div class="certloom-domain-editor-head"><div><h2>' . esc_html( $is_edit ? __( 'Issuer brand profile', 'certloom' ) : __( 'Add issuer / brand', 'certloom' ) ) . '</h2><p>' . esc_html__( 'Brand defaults are local configuration. Issued credential Versions preserve their own immutable snapshot.', 'certloom' ) . '</p></div></div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		echo '<section id="certloom-domain-editor" class="ecapla-certverify-admin-card certloom-domain-editor"><div class="certloom-domain-editor-head"><div><h2>' . esc_html( $is_edit ? __( 'Issuer brand profile', 'certloom' ) : __( 'Add issuer / brand', 'certloom' ) ) . '</h2><p>' . esc_html__( 'Brand defaults are local configuration. Issued credential Versions preserve their own immutable snapshot.', 'certloom' ) . '</p></div></div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		echo '<input type="hidden" name="action" value="' . esc_attr( $is_edit ? 'certloom_domain_update_issuer' : 'certloom_domain_create_issuer' ) . '">';
 		if ( $is_edit ) { echo '<input type="hidden" name="issuer_id" value="' . esc_attr( $id ) . '">'; wp_nonce_field( 'certloom_domain_update_issuer_' . $id ); } else { wp_nonce_field( 'certloom_domain_create_issuer' ); }
 		echo '<div class="certloom-domain-form-grid">';
@@ -1342,11 +1348,15 @@ final class DomainAdmin {
 		return isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only pagination.
 	}
 
-	/** @return void */
-	private function header( $title, $subtitle = '' ) {
+	/** @param array{label:string,url:string,secondary?:bool}|null $action @return void */
+	private function header( $title, $subtitle = '', ?array $action = null ) {
 		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-domain-screen"><div class="certloom-domain-title-row"><div><h1>' . esc_html( $title ) . '</h1>';
 		if ( '' !== (string) $subtitle ) { echo '<p class="certloom-domain-lead">' . esc_html( $subtitle ) . '</p>'; }
-		echo '</div><span class="certloom-domain-preview-badge">' . esc_html__( 'Acceptance preview', 'certloom' ) . '</span></div>';
+		echo '</div><div class="certloom-domain-title-actions">';
+		if ( is_array( $action ) && ! empty( $action['label'] ) && ! empty( $action['url'] ) ) {
+			echo '<a class="button ' . ( empty( $action['secondary'] ) ? 'button-primary' : '' ) . '" href="' . esc_url( (string) $action['url'] ) . '">' . esc_html( (string) $action['label'] ) . '</a>';
+		}
+		echo '<span class="certloom-domain-preview-badge">' . esc_html__( 'Acceptance preview', 'certloom' ) . '</span></div></div>';
 	}
 
 	/** @return void */

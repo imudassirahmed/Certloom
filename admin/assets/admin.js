@@ -388,6 +388,13 @@
 			wrapper.appendChild( search );
 			wrapper.appendChild( select );
 			wrapper.appendChild( status );
+			if ( 'template' === kind ) {
+				var manageDesigns = document.createElement( 'a' );
+				manageDesigns.className = 'certloom-context-lookup__manage';
+				manageDesigns.href = window.location.pathname + '?page=certloom-templates&design_view=templates';
+				manageDesigns.textContent = 'Manage published designs';
+				wrapper.appendChild( manageDesigns );
+			}
 
 			var form = select.closest( 'form' );
 			var requestSequence = 0;
@@ -464,7 +471,7 @@
 						if ( ! response || ! response.success || ! response.data ) { throw new Error( response && response.data && response.data.message ? response.data.message : 'Search failed.' ); }
 						var choices = Array.isArray( response.data.choices ) ? response.data.choices : [];
 						replaceChoices( choices );
-						status.textContent = choices.length ? choices.length + ( 1 === choices.length ? ' match.' : ' matches.' ) : 'No matching choices.';
+						status.textContent = choices.length ? choices.length + ( 1 === choices.length ? ' match.' : ' matches.' ) : ( 'template' === kind ? 'No published designs match. Publish a design in Design first.' : 'No matching choices.' );
 					} )
 					.catch( function ( error ) { if ( sequence === requestSequence ) { status.textContent = error && error.message ? error.message : 'Search failed.'; } } );
 			}

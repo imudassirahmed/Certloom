@@ -41,7 +41,7 @@ final class AdminProductNavigation {
 	 * @return void
 	 */
 	public function consolidate_primary_menu() {
-		global $submenu;
+		global $submenu, $_parent_pages;
 		if ( empty( $submenu['certloom'] ) || ! is_array( $submenu['certloom'] ) ) {
 			return;
 		}
@@ -62,6 +62,20 @@ final class AdminProductNavigation {
 			}
 		}
 		$submenu['certloom'] = $ordered;
+
+		// Hidden contextual pages must still identify Certloom as their WordPress
+		// parent. WordPress uses this map as well as parent_file/submenu_file when
+		// calculating the active top-level menu state. Keep this explicit so a
+		// hidden-but-routable subtab never makes the Certloom sidebar look closed.
+		foreach ( array(
+			'certloom-add', 'certloom-domain-credentials', 'certloom-issuance',
+			'certloom-bulk-issuance', 'certloom-email-delivery', 'certloom-bulk-review',
+			'certloom-domain-recipients', 'certloom-domain-issuers', 'certloom-domain-batches',
+			'certloom-domain-signers', 'certloom-frontend', 'certloom-integrations',
+			'certloom-import', 'certloom-setup', 'certloom-fields', 'certloom-domain-data-tools',
+		) as $contextual_page ) {
+			$_parent_pages[ $contextual_page ] = 'certloom';
+		}
 	}
 
 

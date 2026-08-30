@@ -39,6 +39,7 @@ final class TemplateAdmin {
 		add_action( 'admin_post_certloom_template_revision', array( $this, 'revision' ) );
 		add_action( 'admin_post_certloom_template_layout_upgrade', array( $this, 'layout_upgrade' ) );
 		add_action( 'admin_post_certloom_template_publish', array( $this, 'publish' ) );
+		add_action( 'admin_post_certloom_template_prepare_publish', array( $this, 'prepare_publish' ) );
 		add_action( 'admin_post_certloom_template_duplicate', array( $this, 'duplicate' ) );
 		add_action( 'admin_post_certloom_template_archive', array( $this, 'archive' ) );
 		add_action( 'admin_post_certloom_template_restore', array( $this, 'restore' ) );
@@ -320,6 +321,32 @@ final class TemplateAdmin {
 			LayoutSchema::VERSION
 		);
 		$this->redirect( $result, 'layout_upgraded', array( 'template_id' => $id ) );
+	}
+
+	/** One-click customer publishing boundary: deterministically updates an older draft format when needed, then publishes that exact new revision. @return void */
+	public function prepare_publish() {
+		$this->require_capability();
+		$id = isset( $_POST['template_id'] ) ? absint( $_POST['template_id'] ) : 0;
+		check_admin_referer( 'certloom_template_prepare_publish_' . $id );
+		$expected_id = isset( $_POST['expected_revision_id'] ) ? absint( $_POST['expected_revision_id'] ) : 0;
+		$expected_sha = isset( $_POST['expected_revision_sha256'] ) ? strtolower( sanitize_text_field( wp_unslash( $_POST['expected_revision_sha256'] ) ) ) : '';
+		$repo = new TemplateRepository();
+		$template = $repo->find( $id );
+		if ( is_wp_error( $template ) || ! is_array( $template ) ) { $this->redirect( is_wp_error( $template ) ? $template : new \WP_Error( 'certloom_template_missing', __( 'The design no longer exists.', 'certloom' ) ), 'published', array( 'template_id' => $id ) ); }
+		$current = isset( $template['current_revision'] ) && is_array( $template['current_revision'] ) ? $template['current_revision'] : array();
+		if ( absint( $template['current_revision_id'] ?? 0 ) !== $expected_id || empty( $current['layout_sha256'] ) || ! hash_equals( strtolower( (string) $current['layout_sha256'] ), $expected_sha ) ) {
+			$this->redirect( new \WP_Error( 'certloom_template_publish_review_stale', __( 'This design changed after you opened it. Reload it before publishing.', 'certloom' ) ), 'published', array( 'template_id' => $id ) );
+		}
+		$layout = isset( $current['layout'] ) && is_array( $current['layout'] ) ? $current['layout'] : array();
+		if ( absint( $layout['_meta']['schema_version'] ?? 0 ) < LayoutSchema::VERSION ) {
+			$upgraded = $repo->upgrade_current_layout( $id, $expected_id, $expected_sha, get_current_user_id(), LayoutSchema::VERSION );
+			if ( is_wp_error( $upgraded ) ) { $this->redirect( $upgraded, 'published', array( 'template_id' => $id ) ); }
+			$template = $repo->find( $id );
+			if ( is_wp_error( $template ) || ! is_array( $template ) ) { $this->redirect( is_wp_error( $template ) ? $template : new \WP_Error( 'certloom_template_missing', __( 'The design could not be reloaded after its format update.', 'certloom' ) ), 'published', array( 'template_id' => $id ) ); }
+			$current = isset( $template['current_revision'] ) && is_array( $template['current_revision'] ) ? $template['current_revision'] : array();
+		}
+		$result = $repo->publish( $id, absint( $template['current_revision_id'] ?? 0 ), (string) ( $current['layout_sha256'] ?? '' ) );
+		$this->redirect( $result, 'published', array( 'template_id' => $id ) );
 	}
 
 	/** @return void */
@@ -666,7 +693,7 @@ final class TemplateAdmin {
 		if ( ! in_array( $status, array( 'active', 'archived', 'all' ), true ) ) { $status = 'active'; }
 		$result = $repo->list_page( $search, $page, 50, $status );
 		$this->preset_section();
-		echo '<div class="certloom-template-list-head"><div><h2>' . esc_html__( 'My Templates', 'certloom' ) . '</h2><p class="description">' . esc_html__( 'Manage Template identity, revision history and lifecycle here. Lifecycle remains Draft → Published → Changes pending → Archived; visual discovery stays in Template Library.', 'certloom' ) . '</p></div><a class="button button-primary" href="' . esc_url( add_query_arg( array( 'page' => self::PAGE, 'design_view' => 'editor' ), admin_url( 'admin.php' ) ) ) . '#certloom-template-editor">' . esc_html__( 'Create blank Template', 'certloom' ) . '</a></div>';
+		echo '<div class="certloom-template-list-head"><div><h2>' . esc_html__( 'My Templates', 'certloom' ) . '</h2><p class="description">' . esc_html__( 'Manage design drafts and publication here. Draft designs do not appear in Program or issuance searches; open a draft and choose Publish design when it is ready.', 'certloom' ) . '</p></div><a class="button button-primary" href="' . esc_url( add_query_arg( array( 'page' => self::PAGE, 'design_view' => 'editor' ), admin_url( 'admin.php' ) ) ) . '#certloom-template-editor">' . esc_html__( 'Create blank Template', 'certloom' ) . '</a></div>';
 		echo '<p class="description">' . esc_html__( 'Archive is non-destructive: revisions and any published history remain intact. Active assignments must be cleared before archival.', 'certloom' ) . '</p>';
 		echo '<nav class="certloom-template-lifecycle-tabs" aria-label="' . esc_attr__( 'Template lifecycle filter', 'certloom' ) . '">';
 		foreach ( array( 'active' => __( 'Active', 'certloom' ), 'archived' => __( 'Archived', 'certloom' ), 'all' => __( 'All', 'certloom' ) ) as $key => $label ) { $url = add_query_arg( array( 'page' => self::PAGE, 'design_view' => 'templates', 'template_status' => $key, 's' => $search ?: null ), admin_url( 'admin.php' ) ); echo '<a class="' . ( $key === $status ? 'is-current' : '' ) . '" ' . ( $key === $status ? 'aria-current="page" ' : '' ) . 'href="' . esc_url( $url ) . '">' . esc_html( $label ) . '</a>'; }
@@ -863,6 +890,18 @@ final class TemplateAdmin {
 		echo '<section id="certloom-template-editor" class="certloom-template-editor"><div class="certloom-template-editor-head"><div><h2>' . esc_html__( 'Template lifecycle & draft', 'certloom' ) . '</h2><p><strong>' . esc_html( (string) $editing['name'] ) . '</strong> <code>' . esc_html( (string) $editing['machine_key'] ) . '</code></p></div>' . $this->lifecycle_badge( $state ) . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Helper returns escaped fixed markup.
 		echo '<div class="certloom-template-lifecycle-summary"><div><span>' . esc_html__( 'Current revision', 'certloom' ) . '</span><strong>#' . esc_html( (string) absint( $editing['current_revision_id'] ?? 0 ) ) . '</strong><small><code>' . esc_html( substr( (string) ( $current['layout_sha256'] ?? '' ), 0, 12 ) ) . ( ! empty( $current['layout_sha256'] ) ? '…' : '' ) . '</code></small></div><div><span>' . esc_html__( 'Published revision', 'certloom' ) . '</span><strong>' . esc_html( empty( $editing['published_revision_id'] ) ? __( 'None', 'certloom' ) : '#' . absint( $editing['published_revision_id'] ) ) . '</strong><small><code>' . esc_html( substr( (string) ( $published['layout_sha256'] ?? '' ), 0, 12 ) ) . ( ! empty( $published['layout_sha256'] ) ? '…' : '' ) . '</code></small></div><div><span>' . esc_html__( 'Archive state', 'certloom' ) . '</span><strong>' . esc_html( empty( $editing['archived_at'] ) ? __( 'Active', 'certloom' ) : __( 'Archived', 'certloom' ) ) . '</strong><small>' . esc_html( (string) ( $editing['archived_at'] ?? '' ) ) . '</small></div></div>';
 
+		$renderer_authority = ( new RendererAuthorityGate() )->publication_status();
+		$current_is_published = absint( $editing['published_revision_id'] ?? 0 ) > 0 && absint( $editing['published_revision_id'] ?? 0 ) === absint( $editing['current_revision_id'] ?? 0 );
+		if ( TemplateLifecycle::ARCHIVED !== $state ) {
+			echo '<div class="certloom-template-publish-callout"><div><strong>' . esc_html( $current_is_published ? __( 'This design is published', 'certloom' ) : __( 'Ready to use this design?', 'certloom' ) ) . '</strong><p>' . esc_html( $current_is_published ? __( 'Programs and issuance searches can find this published design now.', 'certloom' ) : __( 'Publish the current design so it becomes available in Programs, issuance and language-specific design selectors.', 'certloom' ) ) . '</p></div>';
+			if ( ! $current_is_published && ! empty( $renderer_authority['accepted'] ) && ! empty( $current['layout_sha256'] ) ) {
+				echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_prepare_publish"><input type="hidden" name="template_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="expected_revision_id" value="' . esc_attr( (string) absint( $editing['current_revision_id'] ) ) . '"><input type="hidden" name="expected_revision_sha256" value="' . esc_attr( (string) $current['layout_sha256'] ) . '">'; wp_nonce_field( 'certloom_template_prepare_publish_' . $id ); echo '<button class="button button-primary">' . esc_html__( 'Publish design', 'certloom' ) . '</button></form>';
+			} elseif ( ! $current_is_published ) {
+				echo '<span class="certloom-template-preview-authority">' . esc_html__( 'Publishing is unavailable until renderer authority is available.', 'certloom' ) . '</span>';
+			}
+			echo '</div>';
+		}
+
 		$export = wp_nonce_url( add_query_arg( array( 'action' => 'certloom_template_export', 'template_id' => $id ), admin_url( 'admin-post.php' ) ), 'certloom_template_export_' . $id );
 		echo '<div class="certloom-template-actionbar"><a class="button" href="' . esc_url( $export ) . '">' . esc_html__( 'Export template JSON', 'certloom' ) . '</a>';
 		if ( TemplateLifecycle::ARCHIVED === $state ) {
@@ -886,14 +925,13 @@ final class TemplateAdmin {
 		echo '<details class="certloom-template-json-editor"><summary>' . esc_html__( 'Advanced canonical JSON editor', 'certloom' ) . '</summary><p class="description">' . esc_html__( 'The Designer and this advanced editor save the same certloom-layout document. Every successful save creates a new immutable revision; there is no separate browser-only design format.', 'certloom' ) . '</p><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_revision"><input type="hidden" name="template_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="expected_revision_id" value="' . esc_attr( (string) absint( $editing['current_revision_id'] ) ) . '"><input type="hidden" name="expected_revision_sha256" value="' . esc_attr( (string) ( $current['layout_sha256'] ?? '' ) ) . '">'; wp_nonce_field( 'certloom_template_revision_' . $id );
 		echo '<textarea name="layout_json" rows="18" class="large-text code" spellcheck="false">' . esc_textarea( $layout_json ) . '</textarea>'; submit_button( __( 'Save JSON as new revision', 'certloom' ) ); echo '</form></details>';
 
-		$renderer_authority = ( new RendererAuthorityGate() )->publication_status();
-		echo '<div class="certloom-template-publication-card"><div><h3>' . esc_html__( 'Publication review', 'certloom' ) . '</h3><p>' . esc_html__( 'Publication is bound to the exact immutable revision ID and SHA-256 shown here. A stale revision or hash is rejected even after renderer authority is accepted.', 'certloom' ) . '</p><p><code>#' . esc_html( (string) absint( $editing['current_revision_id'] ) ) . ' · ' . esc_html( (string) ( $current['layout_sha256'] ?? '' ) ) . '</code></p></div>';
+		echo '<details class="certloom-template-publication-details"><summary>' . esc_html__( 'Publication details', 'certloom' ) . '</summary><div class="certloom-template-publication-card"><div><h3>' . esc_html__( 'Publication review', 'certloom' ) . '</h3><p>' . esc_html__( 'Publication is bound to the exact immutable revision ID and SHA-256 shown here. A stale revision or hash is rejected even after renderer authority is accepted.', 'certloom' ) . '</p><p><code>#' . esc_html( (string) absint( $editing['current_revision_id'] ) ) . ' · ' . esc_html( (string) ( $current['layout_sha256'] ?? '' ) ) . '</code></p></div>';
 		if ( ! empty( $renderer_authority['accepted'] ) && ! empty( $current['layout_sha256'] ) ) {
 			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_publish"><input type="hidden" name="template_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="expected_revision_id" value="' . esc_attr( (string) absint( $editing['current_revision_id'] ) ) . '"><input type="hidden" name="expected_revision_sha256" value="' . esc_attr( (string) $current['layout_sha256'] ) . '">'; wp_nonce_field( 'certloom_template_publish_' . $id ); echo '<button class="button button-primary">' . esc_html__( 'Publish reviewed revision', 'certloom' ) . '</button></form>';
 		} else {
 			echo '<div><button class="button" disabled aria-disabled="true">' . esc_html__( 'Publish (renderer gate)', 'certloom' ) . '</button><p class="description">' . esc_html__( 'The lifecycle workflow is ready, but this release intentionally cannot publish until PDF-04 renderer authority is accepted and packaged.', 'certloom' ) . '</p></div>';
 		}
-		echo '</div>';
+		echo '</div></details>';
 
 		if ( 0 === strpos( (string) ( $editing['machine_key'] ?? '' ), 'certloom-preset-' ) ) {
 			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_preset_reset"><input type="hidden" name="template_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="expected_revision_id" value="' . esc_attr( (string) absint( $editing['current_revision_id'] ) ) . '">';
@@ -911,16 +949,10 @@ final class TemplateAdmin {
 		$current = isset( $editing['current_revision'] ) && is_array( $editing['current_revision'] ) ? $editing['current_revision'] : array();
 		$layout = isset( $current['layout'] ) && is_array( $current['layout'] ) ? $current['layout'] : array();
 		$version = absint( $layout['_meta']['schema_version'] ?? 0 );
-		if ( $version < 1 ) { return; }
-		echo '<div class="certloom-template-publication-card certloom-template-schema-card"><div><h3>' . esc_html__( 'Layout schema', 'certloom' ) . '</h3><p>' . esc_html( sprintf( __( 'Current draft uses certloom-layout v%d. Historical revisions are immutable and remain readable.', 'certloom' ), $version ) ) . '</p></div>';
-		if ( $version < LayoutSchema::VERSION ) {
-			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_layout_upgrade"><input type="hidden" name="template_id" value="' . esc_attr( (string) absint( $editing['id'] ?? 0 ) ) . '"><input type="hidden" name="expected_revision_id" value="' . esc_attr( (string) absint( $editing['current_revision_id'] ?? 0 ) ) . '"><input type="hidden" name="expected_revision_sha256" value="' . esc_attr( (string) ( $current['layout_sha256'] ?? '' ) ) . '">';
-			wp_nonce_field( 'certloom_template_layout_upgrade_' . absint( $editing['id'] ?? 0 ) );
-			echo '<button class="button button-primary">' . esc_html( sprintf( __( 'Upgrade draft to layout schema v%d', 'certloom' ), LayoutSchema::VERSION ) ) . '</button><p class="description">' . esc_html__( 'Creates one new immutable revision after rechecking this exact revision ID and SHA-256. Certloom applies every deterministic intermediate schema step internally; historical revisions and factory presets are never rewritten.', 'certloom' ) . '</p></form>';
-		} else {
-			echo '<div><span class="certloom-template-preview-authority is-accepted">' . esc_html( sprintf( __( 'v%d authoring enabled', 'certloom' ), $version ) ) . '</span><p class="description">' . esc_html__( 'This draft can author the controlled Code 128 primitive and structured list elements while older revisions remain immutable.', 'certloom' ) . '</p></div>';
-		}
-		echo '</div>';
+		if ( $version < 1 || $version >= LayoutSchema::VERSION ) { return; }
+		echo '<details class="certloom-template-format-update"><summary>' . esc_html__( 'Older design format', 'certloom' ) . '</summary><p>' . esc_html__( 'This draft uses an older Certloom design format. You can keep editing compatible content, or update it without rewriting any historical revision.', 'certloom' ) . '</p><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_layout_upgrade"><input type="hidden" name="template_id" value="' . esc_attr( (string) absint( $editing['id'] ?? 0 ) ) . '"><input type="hidden" name="expected_revision_id" value="' . esc_attr( (string) absint( $editing['current_revision_id'] ?? 0 ) ) . '"><input type="hidden" name="expected_revision_sha256" value="' . esc_attr( (string) ( $current['layout_sha256'] ?? '' ) ) . '">';
+		wp_nonce_field( 'certloom_template_layout_upgrade_' . absint( $editing['id'] ?? 0 ) );
+		echo '<button class="button">' . esc_html__( 'Update design format', 'certloom' ) . '</button></form></details>';
 	}
 
 

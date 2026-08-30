@@ -3553,3 +3553,100 @@
 @media(max-width:480px){.certloom-form-grid-compact{grid-template-columns:1fr}.certloom-dashboard-actions{width:100%}.certloom-dashboard-actions .button{flex:1 1 100%}}
 @media(forced-colors:active){.certloom-dashboard-setup-link,.certloom-setup-reminder,.certloom-wizard-template-preview,.certloom-numbering-format,.certloom-wizard-google-card,.certloom-google-advanced{border:1px solid CanvasText}.certloom-dashboard-setup-link{background:ButtonFace;color:ButtonText}}
 .certloom-plugin-lifecycle-dialog{width:min(620px,calc(100vw - 32px));max-width:620px;padding:0;border:0;border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.28);color:#17221f}.certloom-plugin-lifecycle-dialog::backdrop{background:rgba(20,28,25,.54)}.certloom-plugin-lifecycle-dialog form{padding:22px}.certloom-lifecycle-dialog-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}.certloom-lifecycle-dialog-head h2{margin:2px 0 8px;font-size:22px}.certloom-dialog-close{display:grid;place-items:center;width:34px;height:34px;border:0;border-radius:7px;color:#4e5a55;font-size:24px;cursor:pointer}.certloom-dialog-close:hover,.certloom-dialog-close:focus{background:#f0f3f2;color:#17221f}.certloom-lifecycle-options{display:grid;gap:10px;margin:18px 0}.certloom-lifecycle-options>label{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:13px;border:1px solid #d8dfdc;border-radius:9px;background:#fbfdfc;cursor:pointer}.certloom-lifecycle-options>label:has(input:checked){border-color:#0f6e56;box-shadow:0 0 0 1px #0f6e56}.certloom-lifecycle-options>label.is-destructive:has(input:checked){border-color:#b32d2e;box-shadow:0 0 0 1px #b32d2e}.certloom-lifecycle-options input{margin-top:3px}.certloom-lifecycle-options span{display:grid;gap:4px}.certloom-lifecycle-options small{color:#5a6661;line-height:1.45}.certloom-lifecycle-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}@media(max-width:480px){.certloom-lifecycle-dialog-actions{display:grid;grid-template-columns:1fr}.certloom-lifecycle-dialog-actions .button{width:100%;min-height:44px}}@media(forced-colors:active){.certloom-plugin-lifecycle-dialog,.certloom-lifecycle-options>label{border:1px solid CanvasText}}
+
+/* 1.6.98 QA polish — coherent actions, alignment and discoverability. */
+.certloom-domain-title-actions {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+.certloom-domain-title-actions .button { min-height: 36px; display: inline-flex; align-items: center; }
+
+.certloom-template-publish-callout {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 18px;
+	margin: 16px 0 20px;
+	padding: 14px 16px;
+	border: 1px solid #9ccfbd;
+	border-radius: 10px;
+	background: #f1faf6;
+}
+.certloom-template-publish-callout > div { min-width: 0; flex: 1 1 auto; }
+.certloom-template-publish-callout p { margin: 4px 0 0; color: #50575e; }
+.certloom-template-publish-callout form { margin: 0; flex: 0 0 auto; }
+.certloom-template-format-update,
+.certloom-template-publication-details {
+	margin: 16px 0;
+	padding: 12px 14px;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	background: #fff;
+}
+.certloom-template-format-update summary,
+.certloom-template-publication-details > summary { cursor: pointer; font-weight: 600; }
+.certloom-template-format-update form { margin-top: 10px; }
+.certloom-template-publication-details .certloom-template-publication-card { margin: 12px 0 0; }
+.certloom-template-publication-card > div:first-child { flex: 1 1 520px; min-width: 260px; }
+.certloom-template-publication-card form,
+.certloom-template-publication-card > div:last-child { flex: 0 0 auto; max-width: 340px; }
+
+/* Locale design mappings keep labels and controls on the same visual baseline. */
+.certloom-locale-variant-row { grid-template-columns: minmax(190px,.75fr) minmax(360px,1.7fr) auto; align-items: start; }
+.certloom-locale-variant-row > label { min-width: 0; }
+.certloom-locale-variant-row .certloom-context-lookup { width: 100%; }
+.certloom-locale-variant-remove { margin-top: 25px; }
+.certloom-locale-variant-actions { align-items: start; }
+.certloom-locale-variant-actions > .button { margin-top: 0; }
+
+/* Field Manager: policy controls get a stable column and row actions never clip off-screen. */
+.ecapla-certverify-field-row {
+	grid-template-columns: 28px minmax(220px,1.25fr) minmax(80px,.35fr) minmax(320px,1fr);
+	align-items: start;
+	gap: 12px 16px;
+}
+.ecapla-certverify-field-row .certloom-field-policy-cell { min-width: 0; width: 100%; }
+.ecapla-certverify-field-row .ecapla-certverify-field-move-actions {
+	grid-column: 2 / 4;
+	justify-self: end;
+	align-self: center;
+}
+.ecapla-certverify-field-row .ecapla-certverify-field-delete-wrap,
+.ecapla-certverify-field-row > .ecapla-certverify-core-field {
+	grid-column: 4;
+	justify-self: end;
+	align-self: center;
+}
+
+@media (max-width: 1180px) {
+	.ecapla-certverify-field-row { grid-template-columns: 28px minmax(200px,1fr) minmax(90px,.4fr); }
+	.ecapla-certverify-field-row .certloom-field-policy-cell { grid-column: 2 / -1; }
+	.ecapla-certverify-field-row .ecapla-certverify-field-move-actions,
+	.ecapla-certverify-field-row .ecapla-certverify-field-delete-wrap,
+	.ecapla-certverify-field-row > .ecapla-certverify-core-field { grid-column: 2 / -1; justify-self: start; }
+}
+@media (max-width: 782px) {
+	.certloom-domain-title-actions { width: 100%; justify-content: flex-start; }
+	.certloom-template-publish-callout { align-items: stretch; flex-direction: column; }
+	.certloom-template-publish-callout form .button { min-height: 44px; width: 100%; justify-content: center; }
+	.certloom-locale-variant-row { grid-template-columns: 1fr; }
+	.certloom-locale-variant-remove { margin-top: 0; }
+	.ecapla-certverify-field-row { grid-template-columns: 24px minmax(0,1fr); }
+	.ecapla-certverify-field-row .certloom-field-name-cell,
+	.ecapla-certverify-field-row .ecapla-certverify-field-type,
+	.ecapla-certverify-field-row .certloom-field-policy-cell,
+	.ecapla-certverify-field-row .ecapla-certverify-field-move-actions,
+	.ecapla-certverify-field-row .ecapla-certverify-field-delete-wrap,
+	.ecapla-certverify-field-row > .ecapla-certverify-core-field { grid-column: 2; justify-self: stretch; }
+}
+@media (forced-colors: active) {
+	.certloom-template-publish-callout,
+	.certloom-template-format-update,
+	.certloom-template-publication-details { border-color: CanvasText; background: Canvas; color: CanvasText; }
+}
+.certloom-context-lookup__manage { width: fit-content; font-size: 12px; text-decoration: none; }
+.certloom-context-lookup__manage:hover,
+.certloom-context-lookup__manage:focus-visible { text-decoration: underline; }
