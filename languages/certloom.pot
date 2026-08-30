@@ -5273,61 +5273,61 @@ msgstr ""
 msgid "This block is recipient-specific. The editor preview uses the current signed-in account and remains fail-closed until normalized credential authority is available."
 msgstr ""
 
-#: certloom.php:212
+#: certloom.php:186
 msgid "Certloom could not save the multisite provisioning failure report."
 msgstr ""
 
-#: certloom.php:217
+#: certloom.php:191
 msgid "Certloom completed network setup but could not clear an old provisioning failure report."
 msgstr ""
 
-#: certloom.php:256
+#: certloom.php:230
 msgid "Certloom could not save its required administrator access."
 msgstr ""
 
 #. translators: 1: site ID, 2: setup error.
-#: certloom.php:280
+#: certloom.php:254
 msgid "Site %1$d: %2$s"
 msgstr ""
 
-#: certloom.php:285
+#: certloom.php:259
 msgid "Certloom activation stopped because required setup could not be completed."
 msgstr ""
 
-#: certloom.php:289
+#: certloom.php:263
 msgid "Certloom activation failed"
 msgstr ""
 
 #. translators: %s: comma-separated multisite site IDs.
-#: certloom.php:419
+#: certloom.php:393
 msgid "Certloom could not finish provisioning on site IDs: %s. Visit each affected site administration area to retry database and access setup."
 msgstr ""
 
-#: certloom.php:460
+#: certloom.php:434
 msgid "Certloom could not persist its required administrator access. The migration will be retried automatically."
 msgstr ""
 
-#: certloom.php:477
+#: certloom.php:451
 msgid "Certloom could not persist the multisite provisioning status."
 msgstr ""
 
-#: certloom.php:594
+#: certloom.php:568
 msgid "Certloom publishes only the certificate fields that a site administrator marks as visible. Those fields may include names or other personal information, so administrators should publish only information they are authorised to disclose."
 msgstr ""
 
-#: certloom.php:595
+#: certloom.php:569
 msgid "Depending on the Certloom features enabled by the site, local WordPress storage may also contain recipient identity/contact data and administrator-managed issuer or signer contact details. These records remain on the site unless the administrator exports, changes, or removes them according to the organization’s retention obligations."
 msgstr ""
 
-#: certloom.php:596
+#: certloom.php:570
 msgid "Certificate verification is performed on this WordPress site. Certloom does not send certificate records to Ecapla or another external service. Verification requests may still appear in normal web-server, security, analytics, browser-history, and cache logs. Direct verification links can include the certificate number in the URL."
 msgstr ""
 
-#: certloom.php:597
+#: certloom.php:571
 msgid "When Certloom Verification Analytics is available, Certloom stores daily aggregate verification counters locally for up to 730 days. These aggregates classify outcomes and sources such as manual, QR, or API verification; they do not store raw IP addresses, User-Agents, secondary proof codes, or raw failed certificate-number input. Verification analytics are operational data and are removed when Certloom is uninstalled."
 msgstr ""
 
-#: certloom.php:598
+#: certloom.php:572
 msgid "Site administrators determine how long certificate records are retained and can configure whether Certloom data is removed when the plugin is uninstalled."
 msgstr ""
 
@@ -19417,34 +19417,34 @@ msgstr ""
 msgid "Certloom could not remove its restore workspace marker safely."
 msgstr ""
 
-#: src/Infrastructure/Verification/PublicVerificationGate.php:59
+#: src/Infrastructure/Verification/PublicVerificationGate.php:56
 msgid "Certloom cannot enable Series verification while credential maintenance is active or its maintenance lock requires recovery."
 msgstr ""
 
-#: src/Infrastructure/Verification/PublicVerificationGate.php:63
+#: src/Infrastructure/Verification/PublicVerificationGate.php:60
 msgid "Certloom cannot enable Series verification before legacy migration is complete."
 msgstr ""
 
-#: src/Infrastructure/Verification/PublicVerificationGate.php:67
+#: src/Infrastructure/Verification/PublicVerificationGate.php:64
 msgid "Certloom cannot enable Series verification while credential-authority state is invalid."
 msgstr ""
 
-#: src/Infrastructure/Verification/PublicVerificationGate.php:70
+#: src/Infrastructure/Verification/PublicVerificationGate.php:67
 msgid "Certloom cannot enable Series verification while the legacy registry is still the authoritative write model."
 msgstr ""
 
-#: src/Infrastructure/Verification/PublicVerificationGate.php:73
+#: src/Infrastructure/Verification/PublicVerificationGate.php:70
 msgid "Certloom cannot enable Series verification until the locked domain-cutover coordinator has committed a receipt matching the completed migration boundary."
 msgstr ""
 
-#: src/Infrastructure/Verification/PublicVerificationGate.php:76
+#: src/Infrastructure/Verification/PublicVerificationGate.php:73
 msgid "Certloom cannot enable Series verification before the domain schema is current."
 msgstr ""
 
-#: src/Infrastructure/Verification/PublicVerificationGate.php:83
+#: src/Infrastructure/Verification/PublicVerificationGate.php:80
 msgid "Certloom could not confirm the live domain schema health result, so Series verification remains disabled."
 msgstr ""
 
-#: src/Infrastructure/Verification/PublicVerificationGate.php:88
+#: src/Infrastructure/Verification/PublicVerificationGate.php:85
 msgid "Certloom could not save the public verification cutover marker exactly."
 msgstr ""
