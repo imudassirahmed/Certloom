@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.98-qa.3
+Stable tag: 1.6.98-qa.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,9 +12,9 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> QA note: 1.6.98-qa.3 is the UX-OPS-03 next-chat staging checkpoint. It bypasses release-authority readiness checks in memory only; it is NOT production-certified and must not be used as DBAUTH/PDF-04 evidence. UX-OPS-03 browser acceptance is still pending.
+> QA note: 1.6.98-qa.4 is the UX-OPS-03 next-chat staging checkpoint. It bypasses release-authority readiness checks in memory only; it is NOT production-certified and must not be used as DBAUTH/PDF-04 evidence. UX-OPS-03 source and dedicated automated Chromium gates are green; hands-on real-WordPress staging acceptance is still pending.
 
-> Release note for 1.6.98: UX-OPS-01 turns staging feedback into a coherent Setup/operations polish tranche: the Wizard selects and previews the canonical Global fallback design, exposes the existing numbering prefix/suffix/start/padding policy, integrates self-hosted Google Drive OAuth and transactional apply/rollback, returns to Dashboard after Apply, and uses compact dismissible readiness reminders. Contextual routes preserve the correct WordPress parent state, Backup & Restore aligns its controls and paginates operational histories at 50, public credential actions share one visual hierarchy, legacy-registry Program messaging is truthful, and plugin deactivation records the keep/delete-data policy that uninstall.php later enforces with an explicit verification-loss warning. No Certloom OAuth broker is introduced and normalized-domain/renderer production authority remain closed.
+> Release note for 1.6.98: UX-OPS-01 turns staging feedback into a coherent Setup/operations polish tranche: the Wizard selects and previews the canonical Global fallback design, exposes the existing numbering prefix/suffix/start/padding policy, integrates self-hosted Google Drive OAuth and transactional apply/rollback, returns to Dashboard after Apply, and uses compact dismissible readiness reminders. Contextual routes preserve the correct WordPress parent state, Backup & Restore aligns its controls and paginates operational histories at 50, public credential actions share one visual hierarchy, legacy-registry Program messaging is truthful, and plugin deactivation records the keep/delete-data policy that uninstall.php later enforces with an explicit verification-loss warning. The narrow Ecapla OAuth-relay exception is approved, but no hosted relay is implemented or accepted in this package; site-owned OAuth remains the fallback and normalized-domain/renderer production authority remain closed.
 
 > Release note for 1.6.97: FLD-02 adds Program + optional Batch scoped credential-field contracts over the existing global Field Catalog, with deterministic inheritance, typed Manual/Bulk inputs, immutable issued-Version snapshots, Designer/Template compatibility, privacy-safe public/Portal presentation, LMS/Wizard/restore integration and safe field retirement. SCALE-01 replaces fixed first-N relationship assumptions with bounded searchable Program, Batch, Template, Issuer, Signer and LMS-course lookups while preserving current selections and server revalidation. The release also promotes staging QA corrections for routable contextual subtabs, direct QR, isolated credential printing, Design actions, operational pagination and persistent Setup access. Normalized-domain and renderer production authority remain closed; genuine DBAUTH/PDF-04 acceptance remains external.
 

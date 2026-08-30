@@ -24,7 +24,7 @@ u3( false !== strpos( $js, "top.classList.add( 'wp-has-current-submenu', 'wp-men
 // 2. Entity validation errors return to the editor and browser-session drafts are restored.
 foreach ( array( 'RECIPIENTS_PAGE','PROGRAMS_PAGE','ISSUERS_PAGE' ) as $page ) { u3( false !== strpos( $domain, "'certloom_retry' => 1" ), 'Domain entity failures preserve editor retry state' ); break; }
 u3( substr_count( $domain, 'data-certloom-preserve-on-error' ) >= 3 && substr_count( $structure, 'data-certloom-preserve-on-error' ) >= 2, 'Create/edit forms opt into non-destructive retry preservation' );
-u3( false !== strpos( $js, 'certloomDomainDraft:' ) && false !== strpos( $js, "'1' === params.get( 'certloom_retry' )" ) && false !== strpos( $js, 'storage.setItem' ), 'Browser restores submitted entity values only on a marked validation retry' );
+u3( false !== strpos( $js, 'certloomDomainDraft:' ) && false !== strpos( $js, "'1' === params.get( 'certloom_retry' )" ) && false !== strpos( $js, 'storage.setItem' ) && false !== strpos( $js, "kinds[ name ] = 'checkable'" ), 'Browser restores complete submitted entity state, including unchecked controls, only on a marked validation retry' );
 u3( false !== strpos( $domain, "'certloom_new' => 1, 'certloom_retry' => 1" ) && false !== strpos( $structure, "'certloom_new' => 1, 'certloom_retry' => 1" ), 'Create failures return to the create editor rather than the list' );
 
 // 3. Program/Batch scoped fields show selected changes, support quick creation, and keep full policy in Settings → Fields.
@@ -32,7 +32,7 @@ u3( false !== strpos( $domain, 'program_field_editor' ) && false !== strpos( $do
 u3( false !== strpos( $structure, 'batch_field_editor' ) && false !== strpos( $structure, "'Credential field changes', 'certloom'" ), 'Batch field contract shows only Batch changes/additions' );
 u3( false !== strpos( $fields, "const QUICK_FIELD_ACTION = 'certloom_quick_add_scoped_field'" ) && false !== strpos( $fields, 'Personal and Private' ), 'Quick field creation is server-authorized and starts privacy-conservative' );
 u3( false !== strpos( $domain, 'Settings → Fields' ) && false !== strpos( $structure, 'Settings → Fields' ), 'Quick-create dialogs point to the canonical full Field Manager' );
-u3( false !== strpos( $js, "body.set( 'action', 'certloom_quick_add_scoped_field' )" ) && false !== strpos( $js, 'data-certloom-scope-field-remove' ), 'Scoped-field UI supports quick add and explicit remove without a full catalog table' );
+u3( false !== strpos( $js, "body.set( 'action', 'certloom_quick_add_scoped_field' )" ) && false !== strpos( $js, 'data-certloom-scope-field-remove' ) && false !== strpos( $css, '.certloom-scoped-field-row[hidden]{display:none!important}' ), 'Scoped-field UI supports quick add/remove and CSS cannot override the hidden state' );
 
 // 4. Brand/media controls are visual; complex machine fields use compact contextual help.
 u3( false !== strpos( $domain, 'input type="color"' ) && false !== strpos( $domain, 'data-certloom-color-picker' ), 'Issuer brand colors use a real visual color picker' );
@@ -50,7 +50,7 @@ u3( false === strpos( $template, 'Choose Program first' ) && false !== strpos( $
 u3( false === strpos( $template, 'data-certloom-designer-publication-scroll' ) && false === strpos( $template, 'Publish reviewed revision' ), 'Designer no longer exposes competing publication buttons or technical review wording' );
 
 // 7. Assignment language describes what the action does at the current hierarchy level.
-u3( false === strpos( $template, 'Assign at this scope' ), 'Internal scope terminology is removed from customer-facing Template assignment' );
+u3( false === strpos( $template, 'Assign at this scope' ) && false === strpos( $template, 'Choose a direct Template for a scope' ) && false === strpos( $template, 'Source: %1$s · fallback depth %2$d' ) && false === strpos( $template, 'This visual discovery pass is intentionally bounded' ) && false !== strpos( $template, 'Design priority:' ) && false !== strpos( $template, 'Inherited from: %s' ) && false !== strpos( $template, 'Technical details' ), 'Template assignment hides implementation terminology while preserving collapsed technical integrity details' );
 foreach ( array( 'Use for this Program','Use for this Batch','Use for this issuer','Use as global default' ) as $copy ) { u3( false !== strpos( $template, $copy ), 'Template assignment uses context-specific copy: ' . $copy ); }
 
 // 8. Completed Wizard is actually complete and restarts explicitly.

@@ -62,23 +62,24 @@ t17has($files['repo'],'t.archived_at IS NULL','archived Templates are excluded f
 t17has($files['repo'],"'active' => 0",'None preserves row identity by deactivating direct assignment');
 
 // Premium UX requirements.
-t17has($files['admin'],'Template assignment scopes','scope navigation is labelled for accessibility');
-t17has($files['admin'],'Search assignment targets','Issuer/Program/Batch targets are searchable');
+t17has($files['admin'],'Design assignment levels','assignment-level navigation is labelled for accessibility');
+t17has($files['admin'],'Search design targets','Issuer/Program/Batch design targets are searchable');
 t17has($files['admin'],'scope_paged','assignment targets are paginated');
-t17has($files['admin'],'Search assignable Templates','Template candidates are searchable');
+t17has($files['admin'],'Search available designs','design candidates are searchable');
 t17has($files['admin'],'template_paged','Template candidates are paginated');
 t17has($files['admin'],'All Templates','candidate kind filter is exposed');
 t17has($files['admin'],'Factory','factory candidates can be filtered');
 t17has($files['admin'],'Custom / imported','custom/imported candidates can be filtered');
-t17has($files['admin'],'Use inherited/default (None)','explicit None/inheritance control is exposed');
-t17has($files['admin'],'Effective Template','effective assignment is visible');
-t17has($files['admin'],'Fallback path:','fallback chain is explained');
-t17has($files['admin'],'Source: %1$s · fallback depth %2$d','effective assignment source is explicit');
+t17has($files['admin'],'Use next available default','explicit default/inheritance control is exposed');
+t17has($files['admin'],'Design currently used','effective design is visible');
+t17has($files['admin'],'Design priority:','design priority is explained in customer language');
+t17has($files['admin'],'Inherited from: %s','effective assignment source is explicit without implementation depth');
 $assignment_start = strpos( $files['admin'], 'private function assignment_candidates' );
 $assignment_end = strpos( $files['admin'], 'private function assignment_target_page', $assignment_start );
 $assignment_source = false !== $assignment_start && false !== $assignment_end ? substr( $files['admin'], $assignment_start, $assignment_end - $assignment_start ) : '';
 t17( '' !== $assignment_source && false === strpos( $assignment_source, 'TemplatePreviewService' ) && false === strpos( $assignment_source, 'RenderPlanHtmlPreview' ), 'assignment candidate cards remain metadata-only and do not instantiate renderer Preview output' );
-t17has($files['admin'],'Layout hash','candidate integrity metadata is visible');
+t17has($files['admin'],'Technical details','candidate integrity metadata is collapsed under technical details');
+t17has($files['admin'],'Layout hash','candidate integrity metadata remains available when technical details are opened');
 t17has($files['admin'],'expected_assignment_id','assignment forms carry optimistic-concurrency identity');
 t17has($files['admin'],'expected_updated_at','assignment forms carry optimistic-concurrency timestamp');
 t17has($files['admin'],'certloom_template_assignment_','assignment mutations are nonce-bound to exact scope');

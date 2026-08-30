@@ -870,7 +870,8 @@
 							if ( ! item || ! item.name ) { return; }
 							var nodes = form.querySelectorAll( '[name="' + escapeSelector( item.name ) + '"]' );
 							nodes.forEach( function ( node ) {
-								if ( 'checkbox' === node.type || 'radio' === node.type ) { node.checked = Array.isArray( item.value ) ? item.value.indexOf( node.value ) !== -1 : item.value === node.value; }
+								if ( 'checkable' === item.kind || 'checkbox' === node.type || 'radio' === node.type ) { node.checked = Array.isArray( item.value ) && item.value.indexOf( node.value ) !== -1; }
+								else if ( 'multiple' === item.kind && node.options ) { Array.prototype.forEach.call( node.options, function ( option ) { option.selected = Array.isArray( item.value ) && item.value.indexOf( option.value ) !== -1; } ); node.dispatchEvent( new Event( 'change', { bubbles:true } ) ); }
 								else { node.value = item.value; node.dispatchEvent( new Event( 'change', { bubbles:true } ) ); }
 							} );
 						} );
@@ -879,13 +880,23 @@
 				} catch ( error ) { try { storage.removeItem( key ); } catch ( ignored ) {} }
 			} else { try { storage.removeItem( key ); } catch ( ignored ) {} }
 			form.addEventListener( 'submit', function () {
-				var map = {}, data = new FormData( form );
+				var map = {}, kinds = {}, data = new FormData( form );
 				data.forEach( function ( value, name ) {
 					if ( '_wpnonce' === name || '_wp_http_referer' === name || value instanceof File ) { return; }
 					if ( Object.prototype.hasOwnProperty.call( map, name ) ) { map[ name ] = Array.isArray( map[ name ] ) ? map[ name ].concat( [ String( value ) ] ) : [ map[ name ], String( value ) ]; }
 					else { map[ name ] = String( value ); }
 				} );
-				var payload = Object.keys( map ).map( function ( name ) { return { name:name, value:map[ name ] }; } );
+				var checkable = {};
+				form.querySelectorAll( 'input[type="checkbox"][name], input[type="radio"][name]' ).forEach( function ( node ) {
+					if ( '_wpnonce' === node.name || '_wp_http_referer' === node.name ) { return; }
+					if ( ! Object.prototype.hasOwnProperty.call( checkable, node.name ) ) { checkable[ node.name ] = []; }
+					if ( node.checked ) { checkable[ node.name ].push( String( node.value ) ); }
+				} );
+				Object.keys( checkable ).forEach( function ( name ) { map[ name ] = checkable[ name ]; kinds[ name ] = 'checkable'; } );
+				form.querySelectorAll( 'select[multiple][name]' ).forEach( function ( node ) {
+					map[ node.name ] = Array.prototype.filter.call( node.options, function ( option ) { return option.selected; } ).map( function ( option ) { return String( option.value ); } ); kinds[ node.name ] = 'multiple';
+				} );
+				var payload = Object.keys( map ).map( function ( name ) { return { name:name, value:map[ name ], kind:kinds[ name ] || 'value' }; } );
 				try { storage.setItem( key, JSON.stringify( payload ) ); } catch ( error ) {}
 			} );
 		} );

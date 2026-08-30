@@ -565,7 +565,7 @@ final class DomainStructureAdmin {
 				echo '<option value="' . esc_attr( absint( $item['id'] ?? 0 ) ) . '" ' . selected( absint( $selected ), absint( $item['id'] ?? 0 ), false ) . '>' . esc_html( ScopedContextChoices::program_label( $item ) ) . '</option>';
 			}
 		}
-		echo '</select><p class="description">' . esc_html__( 'Searches the complete active Program registry while keeping the page bounded on large sites.', 'certloom' ) . '</p></div>';
+		echo '</select><p class="description">' . esc_html__( 'Search the complete active Program list without loading every Program at once.', 'certloom' ) . '</p></div>';
 	}
 
 	/** @return void */
@@ -577,7 +577,7 @@ final class DomainStructureAdmin {
 		if ( ! is_wp_error( $items ) ) {
 			foreach ( $items as $item ) { echo '<option value="' . esc_attr( absint( $item['id'] ?? 0 ) ) . '" ' . selected( absint( $selected ), absint( $item['id'] ?? 0 ), false ) . '>' . esc_html( (string) ( $item['display_name'] ?? '' ) ) . '</option>'; }
 		}
-		echo '</select><p class="description">' . esc_html__( 'Searches the complete active Signer registry; the current selection remains available even when it is outside the initial bounded set.', 'certloom' ) . '</p></div>';
+		echo '</select><p class="description">' . esc_html__( 'Search the complete active Signer list. Your current selection remains available even when it is not in the first results shown.', 'certloom' ) . '</p></div>';
 	}
 
 	/** @return void */

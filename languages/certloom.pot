@@ -12779,7 +12779,7 @@ msgid "Metadata keys must be unique."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:568
-msgid "Searches the complete active Program registry while keeping the page bounded on large sites."
+msgid "Search the complete active Program list without loading every Program at once."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:576
@@ -12787,7 +12787,7 @@ msgid "Search active Signers…"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:580
-msgid "Searches the complete active Signer registry; the current selection remains available even when it is outside the initial bounded set."
+msgid "Search the complete active Signer list. Your current selection remains available even when it is not in the first results shown."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:586
@@ -14450,7 +14450,7 @@ msgid "Upload certificate background"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:596
-msgid "This visual discovery pass is intentionally bounded to 250 active Templates. Use search to narrow very large libraries before applying visual facets."
+msgid "For very large design libraries, use search first to narrow the results before applying visual filters."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:603
@@ -14609,11 +14609,12 @@ msgid "Edit design"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:648
-msgid "Use for Program"
+#: src/Infrastructure/Admin/TemplateAdmin.php:807
+msgid "Use for this Program"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:648
-msgid "Used by Program"
+msgid "Used by this Program"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:649
@@ -14716,7 +14717,7 @@ msgid "No templates found for this lifecycle filter."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:717
-msgid "Choose a direct Template for a scope, or choose None to inherit the next available fallback. Most-specific scope wins: Batch → Program → Issuer → Global."
+msgid "Choose the design used at this level, or choose None to use the next available default. Priority is Batch → Program → Issuer → Global."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:717
@@ -14728,7 +14729,7 @@ msgid "Template assignments"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:718
-msgid "Template assignment scopes"
+msgid "Design assignment levels"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:73
@@ -14748,7 +14749,7 @@ msgid "Designer change redone."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:750
-msgid "Search assignment targets"
+msgid "Search design targets"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:750
@@ -14764,19 +14765,19 @@ msgid "Unsaved changes"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:768
-msgid "Assignment target"
+msgid "Applies to"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:769
-msgid "Direct assignment"
+msgid "None · use default"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:769
-msgid "No Template is forced at this scope."
+msgid "Selected at this level"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:769
-msgid "None · inherit/default"
+msgid "This level uses the next available default."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:77
@@ -14785,27 +14786,27 @@ msgid "Saved draft"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:770
-msgid "Effective Template"
+msgid "Design currently used"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:770
-msgid "No assignment exists anywhere in the fallback chain."
+msgid "Inherited from: %s"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:770
-msgid "Source: %1$s · fallback depth %2$d"
+msgid "No design is available from the current priority order."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:771
-msgid "Fallback path:"
+msgid "Design priority:"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:775
-msgid "Clearing a direct assignment preserves the lower-scope fallback rules; it does not delete any Template."
+msgid "Clearing this choice keeps the normal design priority and does not delete any design."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:775
-msgid "Use inherited/default (None)"
+msgid "Use next available default"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:78
@@ -14821,11 +14822,11 @@ msgid "All Templates"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:787
-msgid "Search Template name, key, or description"
+msgid "Search available designs"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:787
-msgid "Search assignable Templates"
+msgid "Search design name or description"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:787
@@ -14848,20 +14849,20 @@ msgstr ""
 msgid "Page"
 msgstr ""
 
+#: src/Infrastructure/Admin/TemplateAdmin.php:794
+msgid "Technical details"
+msgstr ""
+
 #: src/Infrastructure/Admin/TemplateAdmin.php:797
 msgid "Used here"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:799
-msgid "No assignable Templates match these filters."
+msgid "No published designs match these filters."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:80
 msgid "Unlock element"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:807
-msgid "Use for this Program"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:808
