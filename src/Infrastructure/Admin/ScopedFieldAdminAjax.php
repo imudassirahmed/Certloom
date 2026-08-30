@@ -22,12 +22,14 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 final class ScopedFieldAdminAjax {
 	const ACTION = 'certloom_resolve_scoped_fields';
 	const LOOKUP_ACTION = 'certloom_lookup_scoped_context';
+	const QUICK_FIELD_ACTION = 'certloom_quick_add_scoped_field';
 	const NONCE_ACTION = 'certloom_scoped_fields_admin';
 
 	/** @return void */
 	public function register() {
 		add_action( 'wp_ajax_' . self::ACTION, array( $this, 'resolve' ) );
 		add_action( 'wp_ajax_' . self::LOOKUP_ACTION, array( $this, 'lookup' ) );
+		add_action( 'wp_ajax_' . self::QUICK_FIELD_ACTION, array( $this, 'quick_add_field' ) );
 	}
 
 	/** @return void */
@@ -90,6 +92,38 @@ final class ScopedFieldAdminAjax {
 			)
 		);
 	}
+	/** Creates a conservative catalog field from Program/Batch setup without exposing the full Field Manager. @return void */
+	public function quick_add_field() {
+		if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS ) && ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_BATCHES ) ) {
+			wp_send_json_error( array( 'message' => __( 'You do not have permission to create credential fields.', 'certloom' ) ), 403 );
+		}
+		check_ajax_referer( self::NONCE_ACTION, 'nonce' );
+		if ( ! \Certloom\Infrastructure\Migration\DomainFeatureGate::write_paths_ready() ) {
+			wp_send_json_error( array( 'message' => __( 'Credential field changes are unavailable until normalized write authority is ready.', 'certloom' ) ), 409 );
+		}
+		$label = isset( $_POST['label'] ) ? sanitize_text_field( wp_unslash( $_POST['label'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
+		$label = function_exists( 'mb_substr' ) ? mb_substr( trim( $label ), 0, 100 ) : substr( trim( $label ), 0, 100 );
+		if ( '' === $label ) { wp_send_json_error( array( 'message' => __( 'Give the new field a label.', 'certloom' ) ), 400 ); }
+		$allowed_types = array( 'text', 'textarea', 'date', 'number' );
+		$type = isset( $_POST['field_type'] ) ? sanitize_key( wp_unslash( $_POST['field_type'] ) ) : 'text'; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
+		if ( ! in_array( $type, $allowed_types, true ) ) { $type = 'text'; }
+		$fields = \Ecapla_CertVerify_Fields::get_fields();
+		$base_key = sanitize_key( str_replace( '-', '_', sanitize_title( $label ) ) );
+		$base_key = '' !== $base_key ? $base_key : 'field';
+		$base_key = function_exists( 'mb_substr' ) ? mb_substr( $base_key, 0, 50 ) : substr( $base_key, 0, 50 );
+		$existing = \Ecapla_CertVerify_Fields::get_reserved_keys();
+		$key = $base_key; $suffix = 2;
+		while ( in_array( $key, $existing, true ) ) {
+			$suffix_text = '_' . $suffix++; $stem_length = max( 1, 50 - strlen( $suffix_text ) );
+			$stem = function_exists( 'mb_substr' ) ? mb_substr( $base_key, 0, $stem_length ) : substr( $base_key, 0, $stem_length ); $key = $stem . $suffix_text;
+		}
+		$max_order = $fields ? max( array_map( 'absint', wp_list_pluck( $fields, 'order' ) ) ) : 0;
+		$field = array( 'key' => $key, 'label' => $label, 'type' => $type, 'column' => null, 'core' => false, 'protected' => false, 'locked_visibility' => false, 'sensitivity' => 'personal', 'public_exposure' => 'private', 'show_on_frontend' => false, 'order' => $max_order + 1 );
+		$fields[] = $field;
+		if ( ! \Ecapla_CertVerify_Fields::save_fields( $fields ) ) { wp_send_json_error( array( 'message' => __( 'Certloom could not save the new field.', 'certloom' ) ), 500 ); }
+		wp_send_json_success( array( 'field' => $field, 'message' => __( 'Field created. It is Personal and Private until you change its policy in Settings → Fields.', 'certloom' ) ) );
+	}
+
 	/** Read-only bounded Program/Batch lookup for relationship selectors. @return void */
 	public function lookup() {
 		$allowed = false;

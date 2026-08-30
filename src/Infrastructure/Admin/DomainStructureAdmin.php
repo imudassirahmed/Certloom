@@ -53,8 +53,10 @@ final class DomainStructureAdmin {
 	public function create_batch() {
 		$this->require_capability( \Ecapla_CertVerify_Permissions::CAP_MANAGE_BATCHES );
 		check_admin_referer( 'certloom_domain_create_batch' );
-		$data   = $this->batch_request();
-		$result = is_wp_error( $data ) ? $data : ( new BatchRepository() )->create( $data );
+		$data = $this->batch_request();
+		if ( is_wp_error( $data ) ) { $this->redirect_result( self::BATCHES_PAGE, $data, 'batch_created', array( 'certloom_new' => 1, 'certloom_retry' => 1 ) ); }
+		$result = ( new BatchRepository() )->create( $data );
+		if ( is_wp_error( $result ) ) { $this->redirect_result( self::BATCHES_PAGE, $result, 'batch_created', array( 'certloom_new' => 1, 'certloom_retry' => 1 ) ); }
 		$this->redirect_result( self::BATCHES_PAGE, $result, 'batch_created' );
 	}
 
@@ -71,8 +73,10 @@ final class DomainStructureAdmin {
 			$this->redirect_result( self::BATCHES_PAGE, $result, 'batch_updated' );
 		}
 
-		$data   = $this->batch_request( $existing );
-		$result = is_wp_error( $data ) ? $data : $repo->update( $id, $data );
+		$data = $this->batch_request( $existing );
+		if ( is_wp_error( $data ) ) { $this->redirect_result( self::BATCHES_PAGE, $data, 'batch_updated', array( 'batch_id' => $id, 'certloom_retry' => 1 ) ); }
+		$result = $repo->update( $id, $data );
+		if ( is_wp_error( $result ) ) { $this->redirect_result( self::BATCHES_PAGE, $result, 'batch_updated', array( 'batch_id' => $id, 'certloom_retry' => 1 ) ); }
 		$this->redirect_result( self::BATCHES_PAGE, $result, 'batch_updated', array( 'batch_id' => $id ) );
 	}
 
@@ -99,8 +103,10 @@ final class DomainStructureAdmin {
 	public function create_signer() {
 		$this->require_capability( \Ecapla_CertVerify_Permissions::CAP_MANAGE_SIGNERS );
 		check_admin_referer( 'certloom_domain_create_signer' );
-		$data   = $this->signer_request();
-		$result = is_wp_error( $data ) ? $data : ( new SignerRepository() )->create( $data );
+		$data = $this->signer_request();
+		if ( is_wp_error( $data ) ) { $this->redirect_result( self::SIGNERS_PAGE, $data, 'signer_created', array( 'certloom_new' => 1, 'certloom_retry' => 1 ) ); }
+		$result = ( new SignerRepository() )->create( $data );
+		if ( is_wp_error( $result ) ) { $this->redirect_result( self::SIGNERS_PAGE, $result, 'signer_created', array( 'certloom_new' => 1, 'certloom_retry' => 1 ) ); }
 		$this->redirect_result( self::SIGNERS_PAGE, $result, 'signer_created' );
 	}
 
@@ -117,8 +123,10 @@ final class DomainStructureAdmin {
 			$this->redirect_result( self::SIGNERS_PAGE, $result, 'signer_updated' );
 		}
 
-		$data   = $this->signer_request( $existing );
-		$result = is_wp_error( $data ) ? $data : $repo->update( $id, $data );
+		$data = $this->signer_request( $existing );
+		if ( is_wp_error( $data ) ) { $this->redirect_result( self::SIGNERS_PAGE, $data, 'signer_updated', array( 'signer_id' => $id, 'certloom_retry' => 1 ) ); }
+		$result = $repo->update( $id, $data );
+		if ( is_wp_error( $result ) ) { $this->redirect_result( self::SIGNERS_PAGE, $result, 'signer_updated', array( 'signer_id' => $id, 'certloom_retry' => 1 ) ); }
 		$this->redirect_result( self::SIGNERS_PAGE, $result, 'signer_updated', array( 'signer_id' => $id ) );
 	}
 
@@ -264,7 +272,7 @@ final class DomainStructureAdmin {
 		$field_contract = $is_edit && isset( $editing['field_contract'] ) && is_array( $editing['field_contract'] ) ? $editing['field_contract'] : ScopedFieldContract::empty_batch();
 		$scopable_fields = \Ecapla_CertVerify_Fields::get_scopable_fields();
 
-		echo '<section id="certloom-domain-editor" class="ecapla-certverify-admin-card certloom-domain-editor"><h2>' . esc_html( $is_edit ? __( 'Batch profile', 'certloom' ) : __( 'Add batch', 'certloom' ) ) . '</h2><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		echo '<section id="certloom-domain-editor" class="ecapla-certverify-admin-card certloom-domain-editor"><h2>' . esc_html( $is_edit ? __( 'Batch profile', 'certloom' ) : __( 'Add batch', 'certloom' ) ) . '</h2><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" data-certloom-preserve-on-error>';
 		echo '<input type="hidden" name="action" value="' . esc_attr( $is_edit ? 'certloom_domain_update_batch' : 'certloom_domain_create_batch' ) . '">';
 		if ( $is_edit ) {
 			echo '<input type="hidden" name="batch_id" value="' . esc_attr( $id ) . '">';
@@ -282,23 +290,14 @@ final class DomainStructureAdmin {
 		$this->signer_select( 'instructor_signer_id', __( 'Instructor signer profile', 'certloom' ), $is_edit ? $editing['instructor_signer_id'] : 0 );
 		$this->text_field( 'instructor_name', __( 'Instructor display fallback', 'certloom' ), $is_edit ? (string) $editing['instructor_name'] : '', false, 'text', __( 'Optional display fallback when no reusable signer profile is assigned.', 'certloom' ) );
 		echo '<div class="certloom-domain-field"><label><input type="checkbox" name="active" value="1" ' . checked( $is_edit ? ! empty( $editing['active'] ) : true, true, false ) . '> <strong>' . esc_html__( 'Active batch', 'certloom' ) . '</strong></label></div></div>';
-		echo '<div class="certloom-domain-subsection certloom-batch-field-contract"><div class="certloom-domain-subsection-head"><div><h3>' . esc_html__( 'Credential field overrides', 'certloom' ) . '</h3><p>' . esc_html__( 'Normally a Batch inherits its Program field contract. Use an override only when this cohort needs a field added, tightened, or an optional Program field omitted.', 'certloom' ) . '</p></div></div>';
-		$current_rules = is_array( $field_contract['fields'] ?? null ) ? $field_contract['fields'] : array();
-		$parent_rules = array();
-		if ( $is_edit && ! empty( $editing['program_id'] ) ) {
-			$parent_program = ( new ProgramRepository() )->find( absint( $editing['program_id'] ) );
-			if ( is_array( $parent_program ) && is_array( $parent_program['field_contract']['fields'] ?? null ) ) { $parent_rules = $parent_program['field_contract']['fields']; }
-		}
-		if ( empty( $scopable_fields ) ) {
-			echo '<p class="description">' . esc_html__( 'No assignable fields exist in the global Field Catalog yet.', 'certloom' ) . '</p>';
+		echo '<div class="certloom-domain-subsection certloom-batch-field-contract"><div class="certloom-domain-subsection-head"><div><h3>' . esc_html__( 'Credential field changes', 'certloom' ) . '</h3><p>' . esc_html__( 'Only list fields this Batch changes or adds. Program-required fields stay required automatically.', 'certloom' ) . '</p></div></div>';
+		if ( ! $is_edit || ! absint( $editing['program_id'] ?? 0 ) ) {
+			echo '<div class="certloom-domain-empty">' . esc_html__( 'Save the Batch with a Program first, then add Batch-specific field changes.', 'certloom' ) . '</div>';
 		} else {
-			echo '<div class="certloom-domain-table-wrap"><table class="widefat striped"><thead><tr><th>' . esc_html__( 'Field', 'certloom' ) . '</th><th>' . esc_html__( 'Program rule', 'certloom' ) . '</th><th>' . esc_html__( 'Batch override', 'certloom' ) . '</th></tr></thead><tbody>';
-			foreach ( $scopable_fields as $field ) {
-				$key = sanitize_key( (string) ( $field['key'] ?? '' ) ); if ( '' === $key ) { continue; }
-				$rule = (string) ( $current_rules[ $key ] ?? '' ); $parent = (string) ( $parent_rules[ $key ] ?? '' );
-				echo '<tr><td><strong>' . esc_html( (string) ( $field['label'] ?? $key ) ) . '</strong><br><code>' . esc_html( $key ) . '</code></td><td>' . esc_html( '' === $parent ? __( 'Not used', 'certloom' ) : ucfirst( $parent ) ) . '</td><td><select name="batch_field_requirement[' . esc_attr( $key ) . ']"><option value="" ' . selected( $rule, '', false ) . '>' . esc_html__( 'Inherit Program', 'certloom' ) . '</option><option value="optional" ' . selected( $rule, 'optional', false ) . '>' . esc_html__( 'Optional', 'certloom' ) . '</option><option value="required" ' . selected( $rule, 'required', false ) . '>' . esc_html__( 'Required', 'certloom' ) . '</option><option value="exclude" ' . selected( $rule, 'exclude', false ) . '>' . esc_html__( 'Exclude', 'certloom' ) . '</option></select></td></tr>';
-			}
-			echo '</tbody></table></div><p class="description">' . esc_html__( 'A Batch cannot exclude or downgrade a Program-required field. Certloom validates this again on save and issuance.', 'certloom' ) . '</p>';
+			$program = ( new ProgramRepository() )->find( absint( $editing['program_id'] ) );
+			$parent_rules = is_array( $program ) && is_array( $program['field_contract']['fields'] ?? null ) ? $program['field_contract']['fields'] : array();
+			$current_rules = is_array( $field_contract['fields'] ?? null ) ? $field_contract['fields'] : array();
+			$this->batch_field_editor( $scopable_fields, $parent_rules, $current_rules );
 		}
 		echo '</div>';
 		$this->metadata_editor( 'batch', $metadata, $editable );
@@ -325,7 +324,7 @@ final class DomainStructureAdmin {
 
 		echo '<div class="certloom-domain-table-wrap"><table class="widefat striped"><thead><tr><th>' . esc_html__( 'Recipient', 'certloom' ) . '</th><th>' . esc_html__( 'Email', 'certloom' ) . '</th><th>' . esc_html__( 'External ID', 'certloom' ) . '</th><th>' . esc_html__( 'Action', 'certloom' ) . '</th></tr></thead><tbody>';
 		foreach ( $members['items'] as $member ) {
-			echo '<tr><td>' . esc_html( (string) $member['display_name'] ) . '</td><td>' . esc_html( (string) ( $member['email'] ?: '—' ) ) . '</td><td>' . esc_html( (string) ( $member['external_id'] ?: '—' ) ) . '</td><td><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+			echo '<tr><td>' . esc_html( (string) $member['display_name'] ) . '</td><td>' . esc_html( (string) ( $member['email'] ?: '—' ) ) . '</td><td>' . esc_html( (string) ( $member['external_id'] ?: '—' ) ) . '</td><td><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" data-certloom-preserve-on-error>';
 			wp_nonce_field( 'certloom_domain_batch_member_' . $batch_id );
 			echo '<input type="hidden" name="action" value="certloom_domain_batch_member"><input type="hidden" name="membership_action" value="remove"><input type="hidden" name="batch_id" value="' . esc_attr( $batch_id ) . '"><input type="hidden" name="recipient_id" value="' . esc_attr( absint( $member['id'] ) ) . '"><button class="button button-small">' . esc_html__( 'Remove', 'certloom' ) . '</button></form></td></tr>';
 		}
@@ -340,7 +339,7 @@ final class DomainStructureAdmin {
 		if ( is_wp_error( $recipients ) ) {
 			$this->error( $recipients->get_error_message() );
 		} else {
-			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" data-certloom-preserve-on-error>';
 			wp_nonce_field( 'certloom_domain_batch_member_' . $batch_id );
 			echo '<input type="hidden" name="action" value="certloom_domain_batch_member"><input type="hidden" name="membership_action" value="add"><input type="hidden" name="batch_id" value="' . esc_attr( $batch_id ) . '"><label for="certloom-batch-recipient-id"><strong>' . esc_html__( 'Recipient', 'certloom' ) . '</strong></label> <select id="certloom-batch-recipient-id" name="recipient_id" required><option value="">' . esc_html__( 'Choose recipient…', 'certloom' ) . '</option>';
 			foreach ( $recipients['items'] as $recipient ) {
@@ -365,7 +364,7 @@ final class DomainStructureAdmin {
 		$metadata = $is_edit && is_array( $editing['metadata'] ?? null ) ? $editing['metadata'] : array();
 		$editable = $this->is_scalar_map( $metadata );
 
-		echo '<section id="certloom-domain-editor" class="ecapla-certverify-admin-card certloom-domain-editor"><h2>' . esc_html( $is_edit ? __( 'Signer profile', 'certloom' ) : __( 'Add signer', 'certloom' ) ) . '</h2><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		echo '<section id="certloom-domain-editor" class="ecapla-certverify-admin-card certloom-domain-editor"><h2>' . esc_html( $is_edit ? __( 'Signer profile', 'certloom' ) : __( 'Add signer', 'certloom' ) ) . '</h2><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" data-certloom-preserve-on-error>';
 		echo '<input type="hidden" name="action" value="' . esc_attr( $is_edit ? 'certloom_domain_update_signer' : 'certloom_domain_create_signer' ) . '">';
 		if ( $is_edit ) {
 			echo '<input type="hidden" name="signer_id" value="' . esc_attr( $id ) . '">';
@@ -379,7 +378,7 @@ final class DomainStructureAdmin {
 		$this->text_field( 'slug', __( 'Machine key', 'certloom' ), $is_edit ? (string) $editing['slug'] : '', true, 'text', __( 'Stable machine identity used by restore, hierarchy assignment, integrations, and future APIs.', 'certloom' ) );
 		$this->text_field( 'title', __( 'Title / role', 'certloom' ), $is_edit ? (string) $editing['title'] : '' );
 		$this->text_field( 'email', __( 'Email', 'certloom' ), $is_edit ? (string) $editing['email'] : '', false, 'email' );
-		$this->text_field( 'signature_attachment_id', __( 'Signature media ID', 'certloom' ), $is_edit ? (string) ( $editing['signature_attachment_id'] ?: '' ) : '', false, 'number', __( 'WordPress Media attachment ID. Artifact rendering validates the actual local asset before use.', 'certloom' ), 'min="1"' );
+		$this->media_field( 'signature_attachment_id', __( 'Signature image', 'certloom' ), $is_edit ? absint( $editing['signature_attachment_id'] ?? 0 ) : 0, __( 'Choose or upload the signer signature image from WordPress Media.', 'certloom' ) );
 		echo '<div class="certloom-domain-field"><label><input type="checkbox" name="active" value="1" ' . checked( $is_edit ? ! empty( $editing['active'] ) : true, true, false ) . '> <strong>' . esc_html__( 'Active signer', 'certloom' ) . '</strong></label></div></div>';
 		$this->metadata_editor( 'signer', $metadata, $editable );
 		submit_button( $is_edit ? __( 'Update signer', 'certloom' ) : __( 'Add signer', 'certloom' ), 'primary' );
@@ -399,7 +398,7 @@ final class DomainStructureAdmin {
 
 		echo '<div class="certloom-domain-table-wrap"><table class="widefat striped"><thead><tr><th>' . esc_html__( 'Scope', 'certloom' ) . '</th><th>' . esc_html__( 'Role', 'certloom' ) . '</th><th>' . esc_html__( 'Priority', 'certloom' ) . '</th><th>' . esc_html__( 'Action', 'certloom' ) . '</th></tr></thead><tbody>';
 		foreach ( $rows as $row ) {
-			echo '<tr><td>' . esc_html( (string) $row['scope_label'] ) . '</td><td>' . esc_html( (string) $row['role_type'] ) . '</td><td>' . esc_html( (string) $row['priority'] ) . '</td><td><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+			echo '<tr><td>' . esc_html( (string) $row['scope_label'] ) . '</td><td>' . esc_html( (string) $row['role_type'] ) . '</td><td>' . esc_html( (string) $row['priority'] ) . '</td><td><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" data-certloom-preserve-on-error>';
 			wp_nonce_field( 'certloom_domain_signer_assignment_' . $signer_id );
 			echo '<input type="hidden" name="action" value="certloom_domain_signer_assignment"><input type="hidden" name="assignment_action" value="remove"><input type="hidden" name="signer_id" value="' . esc_attr( $signer_id ) . '"><input type="hidden" name="assignment_id" value="' . esc_attr( absint( $row['id'] ) ) . '"><button class="button button-small">' . esc_html__( 'Remove', 'certloom' ) . '</button></form></td></tr>';
 		}
@@ -597,11 +596,29 @@ final class DomainStructureAdmin {
 	/** @return void */
 	private function text_field( $name, $label, $value, $required = false, $type = 'text', $description = '', $attributes = '' ) {
 		$id = 'certloom-domain-' . sanitize_html_class( $name );
-		echo '<div class="certloom-domain-field"><label for="' . esc_attr( $id ) . '"><strong>' . esc_html( $label ) . '</strong></label><input id="' . esc_attr( $id ) . '" class="regular-text" type="' . esc_attr( $type ) . '" name="' . esc_attr( $name ) . '" value="' . esc_attr( $value ) . '" ' . ( $required ? 'required ' : '' ) . wp_kses_post( $attributes ) . '>';
-		if ( '' !== $description ) {
-			echo '<p class="description">' . esc_html( $description ) . '</p>';
-		}
-		echo '</div>';
+		echo '<div class="certloom-domain-field"><label class="certloom-field-label" for="' . esc_attr( $id ) . '"><strong>' . esc_html( $label ) . '</strong>' . $this->help_tip( $description ) . '</label><input id="' . esc_attr( $id ) . '" class="regular-text" type="' . esc_attr( $type ) . '" name="' . esc_attr( $name ) . '" value="' . esc_attr( $value ) . '" ' . ( $required ? 'required ' : '' ) . wp_kses_post( $attributes ) . '></div>';
+	}
+
+	private function help_tip( $description ) { $description = trim( (string) $description ); return '' === $description ? '' : '<span class="certloom-help-tip" tabindex="0" aria-label="' . esc_attr( $description ) . '">?<span role="tooltip">' . esc_html( $description ) . '</span></span>'; }
+
+	private function media_field( $name, $label, $attachment_id, $description = '' ) {
+		$id = 'certloom-domain-' . sanitize_html_class( $name ); $attachment_id = absint( $attachment_id ); $url = $attachment_id ? wp_get_attachment_image_url( $attachment_id, 'thumbnail' ) : ''; $filename = $attachment_id ? basename( (string) get_attached_file( $attachment_id ) ) : '';
+		echo '<div class="certloom-domain-field"><label class="certloom-field-label"><strong>' . esc_html( $label ) . '</strong>' . $this->help_tip( $description ) . '</label><div class="certloom-media-control" data-certloom-media-control><input type="hidden" id="' . esc_attr( $id ) . '" name="' . esc_attr( $name ) . '" value="' . esc_attr( (string) $attachment_id ) . '" data-certloom-media-id><div class="certloom-media-preview" data-certloom-media-preview>';
+		if ( $url ) { echo '<img src="' . esc_url( $url ) . '" alt=""><span>' . esc_html( $filename ) . '</span>'; } else { echo '<span>' . esc_html__( 'No file selected', 'certloom' ) . '</span>'; }
+		echo '</div><div class="certloom-media-actions"><button type="button" class="button" data-certloom-media-select>' . esc_html__( 'Choose or upload', 'certloom' ) . '</button><button type="button" class="button-link-delete" data-certloom-media-clear ' . ( $attachment_id ? '' : 'hidden' ) . '>' . esc_html__( 'Remove', 'certloom' ) . '</button></div></div></div>';
+	}
+
+	private function batch_field_editor( array $fields, array $parent_rules, array $rules ) {
+		$manage_url = add_query_arg( 'page', 'certloom-fields', admin_url( 'admin.php' ) );
+		echo '<div class="certloom-scoped-field-editor" data-certloom-scope-field-editor="batch" data-certloom-field-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '"><div class="certloom-scoped-field-toolbar"><label><span>' . esc_html__( 'Add a field change', 'certloom' ) . '</span><select data-certloom-scope-field-picker><option value="">' . esc_html__( 'Choose field…', 'certloom' ) . '</option>';
+		foreach ( $fields as $field ) { $key = sanitize_key( (string) ( $field['key'] ?? '' ) ); if ( '' === $key || ! empty( $rules[ $key ] ) ) { continue; } echo '<option value="' . esc_attr( $key ) . '">' . esc_html( (string) ( $field['label'] ?? $key ) ) . '</option>'; }
+		echo '</select></label><button type="button" class="button" data-certloom-scope-field-add>' . esc_html__( 'Add field', 'certloom' ) . '</button><button type="button" class="button" data-certloom-quick-field-open>' . esc_html__( 'Create new field', 'certloom' ) . '</button><a href="' . esc_url( $manage_url ) . '">' . esc_html__( 'Manage all fields', 'certloom' ) . '</a></div><div class="certloom-scoped-field-list" data-certloom-scope-field-list>';
+		foreach ( $fields as $field ) { $key = sanitize_key( (string) ( $field['key'] ?? '' ) ); if ( '' === $key ) { continue; } $rule = (string) ( $rules[ $key ] ?? '' ); $parent = (string) ( $parent_rules[ $key ] ?? '' ); $parent_label = '' === $parent ? __( 'Not used by Program', 'certloom' ) : sprintf( __( 'Program: %s', 'certloom' ), ucfirst( $parent ) ); echo '<div class="certloom-scoped-field-row" data-certloom-scope-field-row="' . esc_attr( $key ) . '"' . ( '' === $rule ? ' hidden' : '' ) . '><div><strong data-certloom-scope-field-label>' . esc_html( (string) ( $field['label'] ?? $key ) ) . '</strong><span class="certloom-scoped-field-meta">' . esc_html( (string) ( $field['type'] ?? 'text' ) ) . ' · ' . esc_html( $parent_label ) . '</span></div><label><span class="screen-reader-text">' . esc_html( sprintf( __( 'Batch rule for %s', 'certloom' ), (string) ( $field['label'] ?? $key ) ) ) . '</span><select name="batch_field_requirement[' . esc_attr( $key ) . ']" data-certloom-scope-field-rule><option value="" ' . selected( $rule, '', false ) . '>' . esc_html__( 'Inherit Program', 'certloom' ) . '</option><option value="optional" ' . selected( $rule, 'optional', false ) . '>' . esc_html__( 'Optional', 'certloom' ) . '</option><option value="required" ' . selected( $rule, 'required', false ) . '>' . esc_html__( 'Required', 'certloom' ) . '</option><option value="exclude" ' . selected( $rule, 'exclude', false ) . '>' . esc_html__( 'Exclude', 'certloom' ) . '</option></select></label><button type="button" class="button-link-delete" data-certloom-scope-field-remove>' . esc_html__( 'Remove change', 'certloom' ) . '</button></div>'; }
+		echo '</div><p class="certloom-scoped-field-empty" data-certloom-scope-field-empty' . ( array_filter( $rules ) ? ' hidden' : '' ) . '>' . esc_html__( 'This Batch currently inherits its Program field contract without changes.', 'certloom' ) . '</p>' . $this->quick_field_dialog() . '</div>';
+	}
+
+	private function quick_field_dialog() {
+		return '<dialog class="certloom-quick-field-dialog" data-certloom-quick-field-dialog><form method="dialog" class="certloom-quick-field-dialog-shell"><div class="certloom-dialog-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Credential fields', 'certloom' ) . '</span><h3>' . esc_html__( 'Create a field', 'certloom' ) . '</h3></div><button type="button" class="button-link" data-certloom-quick-field-close aria-label="' . esc_attr__( 'Close', 'certloom' ) . '">×</button></div><p>' . esc_html__( 'New fields start as Personal + Private. Use Settings → Fields for sensitivity, public exposure, ordering or retirement.', 'certloom' ) . '</p><label><span>' . esc_html__( 'Field label', 'certloom' ) . '</span><input type="text" maxlength="100" data-certloom-quick-field-label required></label><label><span>' . esc_html__( 'Field type', 'certloom' ) . '</span><select data-certloom-quick-field-type><option value="text">' . esc_html__( 'Short text', 'certloom' ) . '</option><option value="textarea">' . esc_html__( 'Long text', 'certloom' ) . '</option><option value="number">' . esc_html__( 'Number', 'certloom' ) . '</option><option value="date">' . esc_html__( 'Date', 'certloom' ) . '</option></select></label><div class="certloom-quick-field-feedback" data-certloom-quick-field-feedback aria-live="polite"></div><div class="certloom-dialog-actions"><button type="button" class="button" data-certloom-quick-field-close>' . esc_html__( 'Cancel', 'certloom' ) . '</button><button type="button" class="button button-primary" data-certloom-quick-field-create>' . esc_html__( 'Create & add', 'certloom' ) . '</button></div></form></dialog>';
 	}
 
 	/** @param array{label:string,url:string,secondary?:bool}|null $action @return void */

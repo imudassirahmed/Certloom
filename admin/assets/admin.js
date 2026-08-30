@@ -7,6 +7,8 @@
 		} );
 	}
 
+	function escapeSelector( value ) { return window.CSS && 'function' === typeof window.CSS.escape ? window.CSS.escape( String( value ) ) : String( value ).replace( /[^a-zA-Z0-9_-]/g, function ( character ) { return '\\' + character; } ); }
+
 	function updateFieldIndexes( list ) {
 		var rows = list.querySelectorAll( '.ecapla-certverify-field-row' );
 		for ( var index = 0; index < rows.length; index++ ) {
@@ -824,6 +826,138 @@
 	}
 
 
+
+	function initCertloomWordPressMenuState() {
+		var params = new URLSearchParams( window.location.search || '' );
+		var page = params.get( 'page' ) || '';
+		if ( 0 !== page.indexOf( 'certloom' ) ) { return; }
+		var top = document.getElementById( 'toplevel_page_certloom' );
+		if ( ! top ) { return; }
+		top.classList.add( 'wp-has-current-submenu', 'wp-menu-open' );
+		top.classList.remove( 'wp-not-current-submenu' );
+		var link = top.querySelector( ':scope > a.menu-top' ) || top.querySelector( 'a.menu-top' );
+		if ( link ) { link.classList.add( 'wp-has-current-submenu', 'wp-menu-open' ); link.setAttribute( 'aria-current', 'page' ); }
+		var submenu = top.querySelector( '.wp-submenu' );
+		if ( submenu ) { submenu.removeAttribute( 'hidden' ); }
+	}
+
+	function initDomainFormPersistence() {
+		var prefix = 'certloomDomainDraft:';
+		var storage = null;
+		try { storage = window.sessionStorage; } catch ( error ) { storage = null; }
+		// Form-draft recovery is a progressive enhancement. If browser/storage policy denies
+		// sessionStorage, the rest of Certloom's admin JavaScript must continue normally.
+		if ( ! storage ) { return; }
+		var params = new URLSearchParams( window.location.search || '' );
+		var retry = '1' === params.get( 'certloom_retry' );
+		var forms = document.querySelectorAll( 'form[data-certloom-preserve-on-error]' );
+		if ( ! forms.length ) {
+			if ( ! retry ) { Object.keys( storage ).forEach( function ( key ) { if ( 0 === key.indexOf( prefix ) ) { storage.removeItem( key ); } } ); }
+			return;
+		}
+		function keyFor( form ) {
+			var action = form.querySelector( 'input[name="action"]' );
+			var id = form.querySelector( 'input[name$="_id"]' );
+			return prefix + ( action ? action.value : 'domain' ) + ':' + ( id ? id.value : 'new' );
+		}
+		forms.forEach( function ( form ) {
+			var key = keyFor( form );
+			if ( retry ) {
+				try {
+					var saved = JSON.parse( storage.getItem( key ) || 'null' );
+					if ( saved && Array.isArray( saved ) ) {
+						saved.forEach( function ( item ) {
+							if ( ! item || ! item.name ) { return; }
+							var nodes = form.querySelectorAll( '[name="' + escapeSelector( item.name ) + '"]' );
+							nodes.forEach( function ( node ) {
+								if ( 'checkbox' === node.type || 'radio' === node.type ) { node.checked = Array.isArray( item.value ) ? item.value.indexOf( node.value ) !== -1 : item.value === node.value; }
+								else { node.value = item.value; node.dispatchEvent( new Event( 'change', { bubbles:true } ) ); }
+							} );
+						} );
+						var editor = document.getElementById( 'certloom-domain-editor' ); if ( editor ) { editor.scrollIntoView( { block:'start' } ); }
+					}
+				} catch ( error ) { try { storage.removeItem( key ); } catch ( ignored ) {} }
+			} else { try { storage.removeItem( key ); } catch ( ignored ) {} }
+			form.addEventListener( 'submit', function () {
+				var map = {}, data = new FormData( form );
+				data.forEach( function ( value, name ) {
+					if ( '_wpnonce' === name || '_wp_http_referer' === name || value instanceof File ) { return; }
+					if ( Object.prototype.hasOwnProperty.call( map, name ) ) { map[ name ] = Array.isArray( map[ name ] ) ? map[ name ].concat( [ String( value ) ] ) : [ map[ name ], String( value ) ]; }
+					else { map[ name ] = String( value ); }
+				} );
+				var payload = Object.keys( map ).map( function ( name ) { return { name:name, value:map[ name ] }; } );
+				try { storage.setItem( key, JSON.stringify( payload ) ); } catch ( error ) {}
+			} );
+		} );
+	}
+
+	function initDomainMediaAndColorControls() {
+		document.querySelectorAll( '[data-certloom-color-control]' ).forEach( function ( control ) {
+			var hidden = control.querySelector( '[data-certloom-color-value]' ), picker = control.querySelector( '[data-certloom-color-picker]' ), label = control.querySelector( '[data-certloom-color-label]' ), clear = control.querySelector( '[data-certloom-color-clear]' );
+			if ( picker && hidden ) { picker.addEventListener( 'input', function () { hidden.value = picker.value.toUpperCase(); if ( label ) { label.textContent = hidden.value; } } ); }
+			if ( clear && hidden ) { clear.addEventListener( 'click', function () { hidden.value = ''; if ( label ) { label.textContent = 'Default'; } } ); }
+		} );
+		document.querySelectorAll( '[data-certloom-media-control]' ).forEach( function ( control ) {
+			var id = control.querySelector( '[data-certloom-media-id]' ), preview = control.querySelector( '[data-certloom-media-preview]' ), choose = control.querySelector( '[data-certloom-media-select]' ), clear = control.querySelector( '[data-certloom-media-clear]' );
+			if ( choose ) { choose.addEventListener( 'click', function () {
+				if ( ! window.wp || ! wp.media ) { return; }
+				var frame = wp.media( { title:'Choose media', button:{ text:'Use this file' }, multiple:false, library:{ type:'image' } } );
+				frame.on( 'select', function () { var attachment = frame.state().get( 'selection' ).first().toJSON(); id.value = attachment.id || ''; var src = attachment.sizes && attachment.sizes.thumbnail ? attachment.sizes.thumbnail.url : attachment.url; preview.innerHTML = ( src ? '<img src="' + escapeHtml( src ) + '" alt="">' : '' ) + '<span>' + escapeHtml( attachment.filename || attachment.title || 'Selected file' ) + '</span>'; if ( clear ) { clear.hidden = false; } } );
+				frame.open();
+			} ); }
+			if ( clear ) { clear.addEventListener( 'click', function () { id.value = ''; preview.innerHTML = '<span>No file selected</span>'; clear.hidden = true; } ); }
+		} );
+	}
+
+	function initScopedFieldEditors() {
+		document.querySelectorAll( '[data-certloom-scope-field-editor]' ).forEach( function ( editor ) {
+			var picker = editor.querySelector( '[data-certloom-scope-field-picker]' ), add = editor.querySelector( '[data-certloom-scope-field-add]' ), empty = editor.querySelector( '[data-certloom-scope-field-empty]' );
+			function refreshEmpty() { if ( empty ) { empty.hidden = !!editor.querySelector( '[data-certloom-scope-field-row]:not([hidden])' ); } }
+			function activate( key, defaultRule ) { var row = editor.querySelector( '[data-certloom-scope-field-row="' + escapeSelector( key ) + '"]' ); if ( ! row ) { return; } row.hidden = false; var select = row.querySelector( '[data-certloom-scope-field-rule]' ); if ( select && ! select.value ) { select.value = defaultRule || 'optional'; } var option = picker ? picker.querySelector( 'option[value="' + escapeSelector( key ) + '"]' ) : null; if ( option ) { option.remove(); } if ( picker ) { picker.value = ''; } refreshEmpty(); }
+			if ( add && picker ) { add.addEventListener( 'click', function () { if ( picker.value ) { activate( picker.value, 'optional' ); } } ); }
+			editor.addEventListener( 'click', function ( event ) { var remove = event.target.closest( '[data-certloom-scope-field-remove]' ); if ( ! remove ) { return; } var row = remove.closest( '[data-certloom-scope-field-row]' ), select = row ? row.querySelector( '[data-certloom-scope-field-rule]' ) : null; if ( ! row || ! select ) { return; } select.value = ''; row.hidden = true; var key = row.getAttribute( 'data-certloom-scope-field-row' ), label = row.querySelector( '[data-certloom-scope-field-label]' ); if ( picker && key && ! picker.querySelector( 'option[value="' + escapeSelector( key ) + '"]' ) ) { var option = document.createElement( 'option' ); option.value = key; option.textContent = label ? label.textContent : key; picker.appendChild( option ); } refreshEmpty(); } );
+			var dialog = editor.querySelector( '[data-certloom-quick-field-dialog]' );
+			Array.prototype.forEach.call( editor.querySelectorAll( '[data-certloom-quick-field-open]' ), function ( button ) { button.addEventListener( 'click', function () { if ( dialog && dialog.showModal ) { dialog.showModal(); var input = dialog.querySelector( '[data-certloom-quick-field-label]' ); if ( input ) { input.focus(); } } } ); } );
+			Array.prototype.forEach.call( editor.querySelectorAll( '[data-certloom-quick-field-close]' ), function ( button ) { button.addEventListener( 'click', function () { if ( dialog && dialog.open ) { dialog.close(); } } ); } );
+			var create = editor.querySelector( '[data-certloom-quick-field-create]' );
+			if ( create && dialog ) { create.addEventListener( 'click', function () {
+				var labelInput = dialog.querySelector( '[data-certloom-quick-field-label]' ), typeInput = dialog.querySelector( '[data-certloom-quick-field-type]' ), feedback = dialog.querySelector( '[data-certloom-quick-field-feedback]' ), labelValue = labelInput ? labelInput.value.trim() : '';
+				if ( ! labelValue ) { if ( feedback ) { feedback.textContent = 'Enter a field label.'; } return; }
+				create.disabled = true; if ( feedback ) { feedback.textContent = 'Creating field…'; }
+				var body = new URLSearchParams(); body.set( 'action', 'certloom_quick_add_scoped_field' ); body.set( 'nonce', editor.getAttribute( 'data-certloom-field-nonce' ) || '' ); body.set( 'label', labelValue ); body.set( 'field_type', typeInput ? typeInput.value : 'text' );
+				fetch( window.ajaxurl || '', { method:'POST', credentials:'same-origin', headers:{ 'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8' }, body:body.toString() } ).then( function ( response ) { return response.json(); } ).then( function ( response ) {
+					if ( ! response || ! response.success || ! response.data || ! response.data.field ) { throw new Error( response && response.data && response.data.message ? response.data.message : 'Field could not be created.' ); }
+					var field = response.data.field, list = editor.querySelector( '[data-certloom-scope-field-list]' ), scope = editor.getAttribute( 'data-certloom-scope-field-editor' ), row = document.createElement( 'div' ); row.className = 'certloom-scoped-field-row'; row.setAttribute( 'data-certloom-scope-field-row', field.key );
+					var name = 'program' === scope ? 'program_field_requirement[' + field.key + ']' : 'batch_field_requirement[' + field.key + ']';
+					var options = 'program' === scope ? '<option value="">Not used</option><option value="optional" selected>Optional</option><option value="required">Required</option>' : '<option value="">Inherit Program</option><option value="optional" selected>Optional</option><option value="required">Required</option><option value="exclude">Exclude</option>';
+					row.innerHTML = '<div><strong data-certloom-scope-field-label>' + escapeHtml( field.label ) + '</strong><span class="certloom-scoped-field-meta">' + escapeHtml( field.type ) + ' · Personal · Private</span></div><label><span class="screen-reader-text">Field rule</span><select name="' + escapeHtml( name ) + '" data-certloom-scope-field-rule>' + options + '</select></label><button type="button" class="button-link-delete" data-certloom-scope-field-remove>Remove</button>';
+					if ( list ) { list.appendChild( row ); } if ( feedback ) { feedback.textContent = response.data.message || 'Field created.'; } if ( labelInput ) { labelInput.value = ''; } window.setTimeout( function () { if ( dialog.open ) { dialog.close(); } }, 450 ); refreshEmpty();
+				} ).catch( function ( error ) { if ( feedback ) { feedback.textContent = error.message || 'Field could not be created.'; } } ).finally( function () { create.disabled = false; } );
+			} ); }
+			refreshEmpty();
+		} );
+	}
+
+
+	function initTemplateCardPublishing() {
+		document.addEventListener( 'click', function ( event ) {
+			var button = event.target.closest( '[data-certloom-card-publish]' );
+			if ( ! button ) { return; }
+			var card = button.closest( '.certloom-template-library-card' ), feedback = card ? card.querySelector( '[data-certloom-card-feedback]' ) : null;
+			button.disabled = true; button.setAttribute( 'aria-busy', 'true' ); var original = button.textContent; button.textContent = 'Publishing…'; if ( feedback ) { feedback.textContent = ''; }
+			var body = new URLSearchParams(); body.set( 'action', 'certloom_template_quick_publish' ); body.set( 'template_id', button.getAttribute( 'data-template-id' ) || '0' ); body.set( 'expected_revision_id', button.getAttribute( 'data-revision-id' ) || '0' ); body.set( 'expected_revision_sha256', button.getAttribute( 'data-revision-sha' ) || '' ); body.set( 'nonce', button.getAttribute( 'data-nonce' ) || '' );
+			fetch( window.ajaxurl || '', { method:'POST', credentials:'same-origin', headers:{ 'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8' }, body:body.toString() } ).then( function ( response ) { return response.json(); } ).then( function ( response ) {
+				if ( ! response || ! response.success ) { throw new Error( response && response.data && response.data.message ? response.data.message : 'This design could not be published.' ); }
+				if ( feedback ) { feedback.classList.remove( 'is-error' ); feedback.classList.add( 'is-success' ); feedback.textContent = response.data.message || 'Design published.'; }
+				var state = card ? card.querySelector( '.certloom-template-publish-state' ) : null; if ( state ) { state.textContent = 'Published'; state.classList.remove( 'is-draft' ); state.classList.add( 'is-published' ); }
+				button.remove();
+			} ).catch( function ( error ) {
+				button.disabled = false; button.removeAttribute( 'aria-busy' ); button.textContent = original;
+				if ( feedback ) { feedback.classList.remove( 'is-success' ); feedback.classList.add( 'is-error' ); feedback.textContent = error && error.message ? error.message : 'This design could not be published.'; }
+			} );
+		} );
+	}
+
 	function initPluginLifecycleDialog() {
 		var dialog = document.getElementById( 'certloom-plugin-lifecycle-dialog' );
 		if ( ! dialog ) { return; }
@@ -844,6 +978,11 @@
 	}
 
 	document.addEventListener( 'DOMContentLoaded', function () {
+		initCertloomWordPressMenuState();
+		initDomainFormPersistence();
+		initDomainMediaAndColorControls();
+		initScopedFieldEditors();
+		initTemplateCardPublishing();
 		initFields();
 		initConfirmations();
 		initBulkOperationFields();

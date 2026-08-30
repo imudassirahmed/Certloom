@@ -53,10 +53,15 @@ $certloom_step_url = static function ( $step ) { return add_query_arg( array( 'p
 	<section class="certloom-page-hero" aria-labelledby="certloom-setup-title">
 		<div>
 			<span class="certloom-eyebrow"><?php esc_html_e( 'Adaptive setup', 'certloom' ); ?></span>
-			<h1 id="certloom-setup-title"><?php esc_html_e( 'Set up Certloom', 'certloom' ); ?></h1>
-			<p><?php esc_html_e( 'Choose what you need, review the recommendations, and apply only the settings you approve. You can leave and return at any time.', 'certloom' ); ?></p>
+			<?php if ( $certloom_wizard_completed ) : ?>
+				<h1 id="certloom-setup-title"><?php esc_html_e( 'Setup complete', 'certloom' ); ?></h1>
+				<p><?php esc_html_e( 'Your reviewed setup is active. Return here only when you want to run a fresh setup review.', 'certloom' ); ?></p>
+			<?php else : ?>
+				<h1 id="certloom-setup-title"><?php esc_html_e( 'Set up Certloom', 'certloom' ); ?></h1>
+				<p><?php esc_html_e( 'Choose what you need, review the recommendations, and apply only the settings you approve. You can leave and return at any time.', 'certloom' ); ?></p>
+			<?php endif; ?>
 		</div>
-		<?php if ( $certloom_wizard_completed ) : ?><span class="certloom-setup-complete-badge"><span class="dashicons dashicons-yes-alt" aria-hidden="true"></span><?php esc_html_e( 'Setup reviewed', 'certloom' ); ?></span><?php endif; ?>
+		<?php if ( $certloom_wizard_completed ) : ?><span class="certloom-setup-complete-badge"><span class="dashicons dashicons-yes-alt" aria-hidden="true"></span><?php esc_html_e( 'Complete', 'certloom' ); ?></span><?php endif; ?>
 	</section>
 
 	<div class="certloom-notice-rail" role="region" aria-label="<?php esc_attr_e( 'Setup notices', 'certloom' ); ?>">
@@ -66,6 +71,16 @@ $certloom_step_url = static function ( $step ) { return add_query_arg( array( 'p
 		<?php if ( isset( $_GET['ecapla_certverify_setup_page_created'] ) ) : ?><div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Verification page created and linked.', 'certloom' ); ?></p></div><?php endif; ?>
 		<?php if ( isset( $_GET['ecapla_certverify_error'] ) ) : ?><div class="notice notice-error"><p><?php echo esc_html( sanitize_text_field( wp_unslash( $_GET['ecapla_certverify_error'] ) ) ); ?></p></div><?php endif; ?>
 	</div>
+
+	<?php if ( $certloom_wizard_completed ) : ?>
+		<section class="certloom-panel certloom-setup-completed-landing" aria-labelledby="certloom-setup-completed-title">
+			<span class="dashicons dashicons-yes-alt" aria-hidden="true"></span>
+			<h2 id="certloom-setup-completed-title"><?php esc_html_e( 'Setup is complete', 'certloom' ); ?></h2>
+			<p><?php esc_html_e( 'Your reviewed settings are active. You can return to the Dashboard or start a fresh setup review whenever your organization changes.', 'certloom' ); ?></p>
+			<div class="certloom-setup-completed-actions"><a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom' ) ); ?>"><?php esc_html_e( 'Back to Dashboard', 'certloom' ); ?></a><form method="post"><?php wp_nonce_field( 'certloom_setup_wizard' ); ?><input type="hidden" name="certloom_setup_wizard_action" value="restart"><button class="button button-primary" type="submit"><?php esc_html_e( 'Run setup again', 'certloom' ); ?></button></form></div>
+		</section>
+	</div>
+	<?php return; endif; ?>
 
 	<nav class="certloom-wizard-progress" aria-label="<?php esc_attr_e( 'Setup progress', 'certloom' ); ?>">
 		<?php foreach ( $wizard_steps as $key => $label ) :

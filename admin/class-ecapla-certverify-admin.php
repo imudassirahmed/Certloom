@@ -157,6 +157,8 @@ class Ecapla_CertVerify_Admin {
 		}
 		wp_enqueue_style( 'ecapla-certverify-admin', ECAPLA_CERTVERIFY_URL . 'admin/assets/admin.css', array(), ECAPLA_CERTVERIFY_VERSION );
 		wp_enqueue_script( 'ecapla-certverify-admin', ECAPLA_CERTVERIFY_URL . 'admin/assets/admin.js', array(), ECAPLA_CERTVERIFY_VERSION, true );
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Asset routing only.
+		if ( in_array( $page, array( 'certloom-domain-issuers', 'certloom-domain-signers' ), true ) ) { wp_enqueue_media(); }
 	}
 
 

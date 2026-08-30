@@ -29,8 +29,8 @@ final class AdminProductNavigation {
 	public function register() {
 		add_action( 'admin_menu', array( $this, 'consolidate_primary_menu' ), 999 );
 		add_action( 'admin_notices', array( $this, 'render_subnav' ), 2 );
-		add_filter( 'parent_file', array( $this, 'filter_parent_file' ) );
-		add_filter( 'submenu_file', array( $this, 'filter_submenu_file' ) );
+		add_filter( 'parent_file', array( $this, 'filter_parent_file' ), 9999 );
+		add_filter( 'submenu_file', array( $this, 'filter_submenu_file' ), 9999 );
 	}
 
 	/**
