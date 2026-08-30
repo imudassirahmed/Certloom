@@ -62,7 +62,7 @@ $result = json_decode( $stage_out, true );
 lci_check( is_array( $result ) && 'candidate' === ( $result['status'] ?? '' ), 'staged return remains candidate status' );
 lci_check( false === ( $result['reviewed_status_granted'] ?? true ), 'staging never grants reviewed status' );
 lci_check( false === ( $result['human_review_complete'] ?? true ), 'staging never claims human review complete' );
-lci_check( 4478 === (int) ( $result['source_strings'] ?? 0 ), 'candidate binds all 4,478 current source strings' );
+lci_check( 4481 === (int) ( $result['source_strings'] ?? 0 ), 'candidate binds all 4,481 current source strings' );
 lci_check( 6 === (int) ( $result['translated_entries_complete'] ?? 0 ), 'candidate reports exact complete translated-entry count' );
 lci_check( 7 === (int) ( $result['translated_values_nonempty'] ?? 0 ), 'candidate reports exact translated value count including plurals' );
 lci_check( abs( 0.13 - (float) ( $result['coverage_percent'] ?? 0 ) ) < 0.001, 'candidate coverage remains truthful and partial after INT-03 catalog growth' );
@@ -89,7 +89,7 @@ list( $count_rc, $count_out ) = lci_exec(
     'python3 -c ' . escapeshellarg( 'import sys; sys.path.insert(0, sys.argv[1]); from po_tools import parse_po; print(len(parse_po(sys.argv[2]))-1)' )
     . ' ' . escapeshellarg( $root . '/tests/i18n' ) . ' ' . escapeshellarg( $out1 . '/candidate.po' )
 );
-lci_check( 0 === $count_rc && '4478' === trim( $count_out ), 'normalized candidate PO contains the complete current source-key skeleton' );
+lci_check( 0 === $count_rc && '4481' === trim( $count_out ), 'normalized candidate PO contains the complete current source-key skeleton' );
 
 $out2 = $base . '/intake-b/es_ES';
 $cmd2 = str_replace( escapeshellarg( $out1 ), escapeshellarg( $out2 ), $cmd );

@@ -32,7 +32,7 @@ async def run():
         await ck('custom:machine_key' in await page.locator('.certloom-bulk-schema').inner_text(),'customColumnContract')
         await ck(await page.get_by_role('button',name='Review CSV').count()==1,'reviewCsvAction')
         await ck(await page.get_by_role('button',name='Issue reviewed batch').count()==0,'noPrematureIssue')
-        await ck('never issues credentials' in (await page.locator('.certloom-manual-actions').inner_text()).lower(),'mutationFreePromise')
+        await ck('no credentials are created during review' in (await page.locator('.certloom-manual-actions').inner_text()).lower(),'mutationFreePromise')
         await ck(await page.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'uploadDesktopNoOverflow')
         await page.close()
 
@@ -45,15 +45,18 @@ async def run():
         await ck((await mobile.locator('.certloom-bulk-schema').bounding_box())['width'] <= 340,'schemaFitsMobile')
         await mobile.close()
 
-        # Review freezes two independent SHA-256 proofs and exposes the only mutation action.
+        # Review keeps integrity proof available but collapsed and exposes the only mutation action.
         review=await browser.new_page(viewport={'width':900,'height':900})
         await review.set_content(fixture('review'),wait_until='load')
+        tech=review.locator('.certloom-technical-details')
+        await ck(await tech.count()==1 and not await tech.get_attribute('open'),'technicalDetailsCollapsed')
+        await tech.locator('summary').click()
         batch=(await review.locator('[data-batch-sha]').inner_text()).strip(); plan=(await review.locator('[data-plan-sha]').inner_text()).strip()
         await ck(len(batch)==64 and set(batch)=={'b'},'batchSha256')
         await ck(len(plan)==64 and set(plan)=={'c'},'planSha256')
         await ck(await review.locator('.certloom-bulk-metrics > div').count()==3,'reviewMetrics')
         await ck('250' in await review.locator('.certloom-bulk-metrics').inner_text(),'reviewReadyCount')
-        await ck('revalidates its exact Manual Issuance review fingerprint' in await review.locator('.notice-info').inner_text(),'perRowRevalidationPromise')
+        await ck('checks every row again before creating a credential' in await review.locator('.notice-info').inner_text(),'perRowRevalidationPromise')
         await ck(await review.get_by_role('button',name='Issue reviewed batch').count()==1,'explicitFinalIssueAction')
         await ck(await review.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'reviewNoOverflow')
         await review.close()
@@ -67,7 +70,7 @@ async def run():
         await ck(all(x in txt for x in ('175','172','3','2')),'progressCommittedCounts')
         await ck(await progress.locator('.certloom-bulk-errors li').count()==3,'rowLevelErrors')
         await ck(await progress.get_by_role('link',name='Refresh progress').count()==1,'refreshProgressAction')
-        await ck('duplicate/racing workers cannot claim the same lease' in await progress.locator('p').last.inner_text(),'leaseHonesty')
+        await ck('still processing this batch' in (await progress.locator('p').last.inner_text()).lower(),'progressCopy')
         await ck(await progress.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'progressNoOverflow')
         await progress.close()
 
@@ -79,7 +82,7 @@ async def run():
         await ck(await results.get_by_role('link',name='Issue another batch').count()==1,'issueAnotherBatchAction')
         await ck(await results.get_by_role('button',name='Retry failed rows').count()==0,'retryUxStillDeferred')
         await ck(await results.get_by_role('button',name='Cancel bulk issuance').count()==0,'cancelUxStillDeferred')
-        await ck('Email delivery remains the next planned product milestone' in await results.locator('p').last.inner_text(),'emailNextTruth')
+        await ck('Email Delivery or the Recipient Portal' in await results.locator('p').last.inner_text(),'nextActionsTruth')
         await ck(await results.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'resultsNoOverflow')
         await results.close()
 

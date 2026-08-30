@@ -10722,6 +10722,18 @@ msgid "Start new review"
 msgstr ""
 
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:49
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:22
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:224
+#: src/Infrastructure/Admin/TemplateAdmin.php:1159
+#: src/Infrastructure/Admin/TemplateAdmin.php:794
+msgid "Technical details"
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:49
+msgid "These integrity identifiers are checked automatically before issuance and are available for support or auditing."
+msgstr ""
+
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:49
 msgid "When you continue, Certloom checks every row again before creating a credential. If a reviewed row has changed, that row stops safely instead of using outdated data."
 msgstr ""
 
@@ -12635,11 +12647,11 @@ msgid "Update batch"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:316
-msgid "Batch recipients"
+msgid "Adding or removing a recipient changes this Batch going forward. Already-issued credential records are never rewritten."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:316
-msgid "Membership is a normalized relationship. Adding or removing a recipient does not rewrite already-issued credential snapshots."
+msgid "Batch recipients"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:317
@@ -12716,7 +12728,7 @@ msgid "Update signer"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:392
-msgid "Most-specific scope wins: Batch → Program → Issuer → Global. Lower priority numbers win inside the same scope."
+msgid "Certloom uses the most specific assignment first: Batch → Program → Issuer → Global. When two assignments apply at the same level, the lower priority number is used first."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:392
@@ -12971,6 +12983,10 @@ msgid "Subject"
 msgstr ""
 
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:22
+msgid "This integrity identifier is checked automatically before sending and is available for support or auditing."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:22
 msgid "This review is tied to the current credential and email template. If either changes, Certloom will ask you to preview again before sending."
 msgstr ""
 
@@ -13161,7 +13177,7 @@ msgid "Choose a Program to load its credential fields."
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:186
-msgid "Legacy Program mode: optional credential-specific custom merge values use stable machine keys. Once a Program adopts Credential fields, Certloom replaces this free-key grid with the exact Program/Batch fields."
+msgid "Legacy Program mode: optional credential-specific custom values use short field keys. Once a Program adopts Credential fields, Certloom replaces this free-key grid with the exact Program/Batch fields."
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:189
@@ -13224,12 +13240,8 @@ msgstr ""
 msgid "Number preview; not reserved"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:222
-msgid "Any changed input or related record invalidates this confirmation."
-msgstr ""
-
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:222
-msgid "Review SHA-256"
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:224
+msgid "Integrity identifiers are available for support and auditing. They are checked automatically and are not required for normal issuance."
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:224
@@ -13238,6 +13250,15 @@ msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:224
 msgid "Published layout SHA-256"
+msgstr ""
+
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:224
+#: src/Infrastructure/Admin/TemplateAdmin.php:1159
+msgid "Render Plan SHA-256"
+msgstr ""
+
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:224
+msgid "Review SHA-256"
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:225
@@ -13254,11 +13275,6 @@ msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:225
 msgid "Credential Preview"
-msgstr ""
-
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:225
-#: src/Infrastructure/Admin/TemplateAdmin.php:1159
-msgid "Render Plan SHA-256"
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:225
@@ -13347,7 +13363,7 @@ msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:254
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:264
-msgid "Each credential-specific custom merge field must use a unique machine key."
+msgid "Each credential-specific custom field must use a unique field key."
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:291
@@ -14115,6 +14131,10 @@ msgstr ""
 msgid "Layout SHA-256"
 msgstr ""
 
+#: src/Infrastructure/Admin/TemplateAdmin.php:1159
+msgid "Revision and integrity identifiers are available for support and auditing. They are checked automatically when Certloom uses this design."
+msgstr ""
+
 #: src/Infrastructure/Admin/TemplateAdmin.php:116
 msgid "Text updated on the canvas."
 msgstr ""
@@ -14847,10 +14867,6 @@ msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:794
 msgid "Page"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:794
-msgid "Technical details"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:797

@@ -15,7 +15,10 @@ $admin     = u3_src( $root, 'admin/class-ecapla-certverify-admin.php' );
 $js        = u3_src( $root, 'admin/assets/admin.js' );
 $css       = u3_src( $root, 'admin/assets/admin.css' );
 $wizard    = u3_src( $root, 'admin/views/setup-wizard.php' );
-foreach ( array( $nav,$domain,$structure,$fields,$template,$admin,$js,$css,$wizard ) as $source ) { u3( '' !== $source, 'Required UX-OPS-03 source is available' ); }
+$manual    = u3_src( $root, 'src/Infrastructure/Admin/ManualIssuanceAdmin.php' );
+$bulk      = u3_src( $root, 'src/Infrastructure/Admin/BulkIssuanceAdmin.php' );
+$email     = u3_src( $root, 'src/Infrastructure/Admin/EmailDeliveryAdmin.php' );
+foreach ( array( $nav,$domain,$structure,$fields,$template,$admin,$js,$css,$wizard,$manual,$bulk,$email ) as $source ) { u3( '' !== $source, 'Required UX-OPS-03 source is available' ); }
 
 // 1. Contextual pages keep the WordPress Certloom parent visibly active, even if another filter runs late.
 u3( false !== strpos( $nav, "add_filter( 'parent_file', array( \$this, 'filter_parent_file' ), 9999 )" ) && false !== strpos( $nav, "add_filter( 'submenu_file', array( \$this, 'filter_submenu_file' ), 9999 )" ), 'WordPress parent/submenu mapping runs at late priority' );
@@ -52,6 +55,13 @@ u3( false === strpos( $template, 'data-certloom-designer-publication-scroll' ) &
 // 7. Assignment language describes what the action does at the current hierarchy level.
 u3( false === strpos( $template, 'Assign at this scope' ) && false === strpos( $template, 'Choose a direct Template for a scope' ) && false === strpos( $template, 'Source: %1$s · fallback depth %2$d' ) && false === strpos( $template, 'This visual discovery pass is intentionally bounded' ) && false !== strpos( $template, 'Design priority:' ) && false !== strpos( $template, 'Inherited from: %s' ) && false !== strpos( $template, 'Technical details' ), 'Template assignment hides implementation terminology while preserving collapsed technical integrity details' );
 foreach ( array( 'Use for this Program','Use for this Batch','Use for this issuer','Use as global default' ) as $copy ) { u3( false !== strpos( $template, $copy ), 'Template assignment uses context-specific copy: ' . $copy ); }
+
+// 7B. Integrity evidence stays available without dominating ordinary issuance/delivery/preview workflows.
+u3( false !== strpos( $manual, 'certloom-technical-details certloom-manual-proof' ) && false !== strpos( $manual, "'Review SHA-256', 'certloom'" ) && false === strpos( $manual, "review_fact( __( 'Review SHA-256'" ), 'Manual Issuance collapses review/layout/render integrity identifiers under Technical details' );
+u3( false !== strpos( $bulk, 'certloom-technical-details' ) && false !== strpos( $bulk, "'Reviewed batch fingerprint','certloom'" ), 'Bulk Issuance keeps batch/plan integrity identifiers in collapsed Technical details' );
+u3( false !== strpos( $email, 'certloom-email-review-meta' ) && false !== strpos( $email, 'certloom-technical-details' ) && false !== strpos( $email, "'Composition SHA-256','certloom'" ), 'Email Delivery keeps destination/kind visible while collapsing composition integrity proof' );
+u3( false !== strpos( $template, 'certloom-template-preview-technical' ) && false !== strpos( $template, "'Layout SHA-256', 'certloom'" ) && false !== strpos( $template, "'Render Plan SHA-256', 'certloom'" ), 'Template Preview moves revision/hash evidence into collapsed Technical details' );
+u3( false !== strpos( $css, '.certloom-technical-details' ) && false !== strpos( $css, '.certloom-technical-details>summary:focus-visible' ), 'Technical-details disclosures have an explicit keyboard-visible presentation contract' );
 
 // 8. Completed Wizard is actually complete and restarts explicitly.
 u3( false !== strpos( $wizard, "'Setup complete', 'certloom'" ) && false !== strpos( $wizard, "'Run setup again', 'certloom'" ), 'Completed Setup opens a finished landing with an explicit restart action' );

@@ -4,6 +4,9 @@
 * Simplify Google Drive to a normal Connect with Google popup while keeping site-owned OAuth credentials in an Advanced one-time setup, least-privilege drive.file scope, same-origin callback messaging and popup-blocker fallback; no Certloom/Ecapla OAuth broker or shared secret is introduced.
 * Preserve the correct six-section WordPress parent state on contextual routes, compact the Dashboard readiness reminder with per-admin three-day dismissal, separate the small Setup Wizard action, align Automatic Backup controls and paginate local/Drive histories at 50.
 * Normalize public Copy/Profile/Share/Print action styling, clarify legacy Registry Program/Batch limitations, and intercept Certloom deactivation while the plugin is active so administrators explicitly choose keep-data or delete-on-uninstall with a public-verification-loss warning; uninstall.php remains the destructive authority.
+* UX-OPS-02/03: simplify Template publication and entity administration, preserve forms after validation errors, add compact scoped-field editing/quick creation, use real color/Media Library controls, keep contextual WordPress parent state open, and finish Setup with an explicit Run setup again landing.
+* Keep Manual/Bulk Issuance, Email Delivery and Template Preview focused on human decisions: exact hashes/fingerprints/revision proof remain available under collapsed Technical details rather than permanently occupying the normal workflow.
+* Record the narrow Ecapla OAuth-relay exception as approved infrastructure while keeping the hosted relay unimplemented/unaccepted and site-owned Google OAuth as the current fallback.
 * Keep normalized-domain and renderer production authority fail-closed. 1.6.98 remains a QA candidate until the focused UX/operations browser matrix and customer staging review are complete.
 
 = 1.6.97 =

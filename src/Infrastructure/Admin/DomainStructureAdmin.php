@@ -313,7 +313,7 @@ final class DomainStructureAdmin {
 		$recipient_find = isset( $_GET['recipient_s'] ) ? sanitize_text_field( wp_unslash( $_GET['recipient_s'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only search.
 		$members        = $repo->members_page( $batch_id, $member_search, $member_page, 50 );
 
-		echo '<section class="ecapla-certverify-admin-card certloom-domain-history"><h2>' . esc_html__( 'Batch recipients', 'certloom' ) . '</h2><p>' . esc_html__( 'Membership is a normalized relationship. Adding or removing a recipient does not rewrite already-issued credential snapshots.', 'certloom' ) . '</p>';
+		echo '<section class="ecapla-certverify-admin-card certloom-domain-history"><h2>' . esc_html__( 'Batch recipients', 'certloom' ) . '</h2><p>' . esc_html__( 'Adding or removing a recipient changes this Batch going forward. Already-issued credential records are never rewritten.', 'certloom' ) . '</p>';
 		echo '<form method="get" class="certloom-domain-search"><input type="hidden" name="page" value="' . esc_attr( self::BATCHES_PAGE ) . '"><input type="hidden" name="batch_id" value="' . esc_attr( $batch_id ) . '"><label class="screen-reader-text" for="certloom-batch-member-search">' . esc_html__( 'Search batch recipients', 'certloom' ) . '</label><input id="certloom-batch-member-search" type="search" name="member_s" value="' . esc_attr( $member_search ) . '" placeholder="' . esc_attr__( 'Search assigned recipients', 'certloom' ) . '"><button class="button">' . esc_html__( 'Search members', 'certloom' ) . '</button></form>';
 
 		if ( is_wp_error( $members ) ) {
@@ -389,7 +389,7 @@ final class DomainStructureAdmin {
 	private function signer_assignments( SignerRepository $repo, array $signer ) {
 		$signer_id = absint( $signer['id'] );
 		$rows      = $repo->assignments( $signer_id );
-		echo '<section class="ecapla-certverify-admin-card certloom-domain-history"><h2>' . esc_html__( 'Signer hierarchy assignments', 'certloom' ) . '</h2><p>' . esc_html__( 'Most-specific scope wins: Batch → Program → Issuer → Global. Lower priority numbers win inside the same scope.', 'certloom' ) . '</p>';
+		echo '<section class="ecapla-certverify-admin-card certloom-domain-history"><h2>' . esc_html__( 'Signer hierarchy assignments', 'certloom' ) . '</h2><p>' . esc_html__( 'Certloom uses the most specific assignment first: Batch → Program → Issuer → Global. When two assignments apply at the same level, the lower priority number is used first.', 'certloom' ) . '</p>';
 		if ( is_wp_error( $rows ) ) {
 			$this->error( $rows->get_error_message() );
 			echo '</section>';

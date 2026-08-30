@@ -44,14 +44,18 @@ async def run():
         await ck(await mobile.locator('.certloom-manual-recipient-search').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").length')==1,'searchMobileSingleColumn')
         await mobile.close()
 
-        # Review: SHA proof, canonical Preview, explicit final mutation action.
+        # Review: integrity proof stays available but collapsed; Preview and final action remain obvious.
         review=await browser.new_page(viewport={'width':768,'height':1000})
         await review.set_content(fixture('review'),wait_until='load')
         await ck(await review.locator('.certloom-manual-steps [aria-current="step"]').inner_text()=='Review','reviewCurrentStep')
+        tech=review.locator('.certloom-technical-details')
+        await ck(await tech.count()==1 and not await tech.get_attribute('open'),'technicalDetailsCollapsed')
+        await ck(await tech.get_by_text('Review SHA-256',exact=True).count()==1 and await tech.get_by_text('Render Plan SHA-256',exact=True).count()==1,'technicalProofAvailable')
+        await tech.locator('summary').click()
         sha=(await review.locator('[data-review-sha]').inner_text()).strip()
         await ck(len(sha)==64 and set(sha)=={'b'},'reviewSha256Proof')
         await ck(await review.locator('.certloom-template-preview-card').count()==1,'canonicalPreviewCard')
-        await ck('browser preview only' in (await review.locator('.certloom-template-preview-authority').inner_text()).lower(),'previewAuthorityHonest')
+        await ck('browser preview' in (await review.locator('.certloom-template-preview-authority').inner_text()).lower(),'previewAuthorityHonest')
         await ck(await review.get_by_role('button',name='Issue credential').count()==1,'explicitIssueAction')
         await ck(await review.get_by_role('link',name='Back to compose').count()==1,'reviewBackAction')
         await ck(await review.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'reviewNoDocumentOverflow')
