@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Certloom – Certificate Verification (QA Ungated)
- * Description: QA-only ungated Certloom 1.6.98 UX-OPS-04 checkpoint for staging/frontend inspection. NOT FOR PRODUCTION or release certification.
- * Version: 1.6.98-qa.6
+ * Description: QA-only ungated Certloom 1.6.98 UX-OPS-05 checkpoint for staging/frontend inspection. NOT FOR PRODUCTION or release certification.
+ * Version: 1.6.98-qa.7
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.98-qa.6' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.98-qa.7' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );

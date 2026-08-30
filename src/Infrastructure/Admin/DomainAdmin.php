@@ -961,7 +961,7 @@ final class DomainAdmin {
 		$custom_editable = $this->is_scalar_map( $custom_fields );
 		echo '<section id="certloom-domain-editor" class="ecapla-certverify-admin-card certloom-domain-editor"><div class="certloom-domain-editor-head"><div><h2>' . esc_html( $is_edit ? __( 'Recipient profile', 'certloom' ) : __( 'Add recipient', 'certloom' ) ) . '</h2><p>' . esc_html__( 'Keep recipient identity separate from credential history so renewals and future credentials share one stable recipient record.', 'certloom' ) . '</p></div>';
 		if ( $is_edit ) { echo '<span class="certloom-domain-id">#' . esc_html( (string) $id ) . '</span>'; }
-		echo '</div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" data-certloom-preserve-on-error>';
+		echo '</div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" data-certloom-preserve-on-error data-certloom-entity-form="recipient" data-certloom-saving-message="' . esc_attr( $is_edit ? __( 'Saving recipient…', 'certloom' ) : __( 'Adding recipient…', 'certloom' ) ) . '" data-certloom-invalid-message="' . esc_attr__( 'Please complete the highlighted required field before saving this recipient.', 'certloom' ) . '">';
 		echo '<input type="hidden" name="action" value="' . esc_attr( $is_edit ? 'certloom_domain_update_recipient' : 'certloom_domain_create_recipient' ) . '">';
 		if ( $is_edit ) { echo '<input type="hidden" name="recipient_id" value="' . esc_attr( $id ) . '">'; wp_nonce_field( 'certloom_domain_update_recipient_' . $id ); } else { wp_nonce_field( 'certloom_domain_create_recipient' ); }
 		echo '<div class="certloom-domain-form-grid">';
@@ -987,6 +987,7 @@ final class DomainAdmin {
 			echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'This recipient contains advanced structured custom data. Certloom will preserve it unchanged until a dedicated editor can represent it safely.', 'certloom' ) . '</p></div>';
 		}
 		echo '</div>';
+		echo '<div class="certloom-domain-form-feedback" data-certloom-domain-form-feedback aria-live="polite"></div>';
 		submit_button( $is_edit ? __( 'Update recipient', 'certloom' ) : __( 'Add recipient', 'certloom' ), 'primary' );
 		echo '</form></section>';
 	}
@@ -1018,7 +1019,7 @@ final class DomainAdmin {
 		$locale_preview = $locale_policy->resolve( $profile['credential_locale'] ?? CredentialLocale::SITE_DEFAULT );
 		echo '<section id="certloom-domain-editor" class="ecapla-certverify-admin-card certloom-domain-editor"><div class="certloom-domain-editor-head"><div><h2>' . esc_html( $is_edit ? __( 'Program profile', 'certloom' ) : __( 'Add program', 'certloom' ) ) . '</h2><p>' . esc_html__( 'Program Profiles centralize purpose, language, lifecycle and experience defaults while issued credentials keep immutable snapshots.', 'certloom' ) . '</p></div>';
 		if ( $is_edit ) { echo '<span class="certloom-domain-id">#' . esc_html( (string) $id ) . '</span>'; }
-		echo '</div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" data-certloom-preserve-on-error>';
+		echo '</div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" data-certloom-preserve-on-error data-certloom-entity-form="program" data-certloom-saving-message="' . esc_attr( $is_edit ? __( 'Saving program…', 'certloom' ) : __( 'Adding program…', 'certloom' ) ) . '" data-certloom-invalid-message="' . esc_attr__( 'Please complete the highlighted required field before saving this program.', 'certloom' ) . '">';
 		echo '<input type="hidden" name="action" value="' . esc_attr( $is_edit ? 'certloom_domain_update_program' : 'certloom_domain_create_program' ) . '">';
 		if ( $is_edit ) { echo '<input type="hidden" name="program_id" value="' . esc_attr( $id ) . '">'; wp_nonce_field( 'certloom_domain_update_program_' . $id ); } else { wp_nonce_field( 'certloom_domain_create_program' ); }
 		echo '<div class="certloom-domain-form-grid">';
@@ -1090,6 +1091,7 @@ final class DomainAdmin {
 			echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'This program contains advanced structured metadata. Certloom will preserve it unchanged until a dedicated editor can represent it safely.', 'certloom' ) . '</p></div>';
 		}
 		echo '</div>';
+		echo '<div class="certloom-domain-form-feedback" data-certloom-domain-form-feedback aria-live="polite"></div>';
 		submit_button( $is_edit ? __( 'Update program', 'certloom' ) : __( 'Add program', 'certloom' ), 'primary' );
 		echo '</form></section>';
 	}
@@ -1099,7 +1101,7 @@ final class DomainAdmin {
 	private function issuer_form( ?array $editing = null ) {
 		$is_edit = null !== $editing; $id = $is_edit ? absint( $editing['id'] ) : 0;
 		$settings = $is_edit && isset( $editing['settings'] ) && is_array( $editing['settings'] ) ? $editing['settings'] : array();
-		echo '<section id="certloom-domain-editor" class="ecapla-certverify-admin-card certloom-domain-editor"><div class="certloom-domain-editor-head"><div><h2>' . esc_html( $is_edit ? __( 'Issuer brand profile', 'certloom' ) : __( 'Add issuer / brand', 'certloom' ) ) . '</h2><p>' . esc_html__( 'Brand defaults are local configuration. Issued credential Versions preserve their own immutable snapshot.', 'certloom' ) . '</p></div></div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" data-certloom-preserve-on-error>';
+		echo '<section id="certloom-domain-editor" class="ecapla-certverify-admin-card certloom-domain-editor"><div class="certloom-domain-editor-head"><div><h2>' . esc_html( $is_edit ? __( 'Issuer brand profile', 'certloom' ) : __( 'Add issuer / brand', 'certloom' ) ) . '</h2><p>' . esc_html__( 'Brand defaults are local configuration. Issued credential Versions preserve their own immutable snapshot.', 'certloom' ) . '</p></div></div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" data-certloom-preserve-on-error data-certloom-entity-form="issuer" data-certloom-saving-message="' . esc_attr( $is_edit ? __( 'Saving issuer…', 'certloom' ) : __( 'Adding issuer…', 'certloom' ) ) . '" data-certloom-invalid-message="' . esc_attr__( 'Please complete the highlighted required field before saving this issuer.', 'certloom' ) . '">';
 		echo '<input type="hidden" name="action" value="' . esc_attr( $is_edit ? 'certloom_domain_update_issuer' : 'certloom_domain_create_issuer' ) . '">';
 		if ( $is_edit ) { echo '<input type="hidden" name="issuer_id" value="' . esc_attr( $id ) . '">'; wp_nonce_field( 'certloom_domain_update_issuer_' . $id ); } else { wp_nonce_field( 'certloom_domain_create_issuer' ); }
 		echo '<div class="certloom-domain-form-grid">';
@@ -1115,6 +1117,7 @@ final class DomainAdmin {
 		$this->media_field( 'seal_attachment_id', __( 'Seal', 'certloom' ), $is_edit ? absint( $editing['seal_attachment_id'] ?? 0 ) : 0, __( 'Optional seal or emblem used by designs that include an issuer seal.', 'certloom' ) );
 		echo '<div class="certloom-domain-field certloom-domain-field-wide"><label for="certloom-domain-address"><strong>' . esc_html__( 'Address', 'certloom' ) . '</strong></label><textarea id="certloom-domain-address" class="large-text" rows="3" name="address">' . esc_textarea( (string) ( $settings['address'] ?? '' ) ) . '</textarea></div>';
 		echo '</div><p class="description">' . esc_html__( 'Signer profiles are assigned separately so the same person can serve at global, issuer, program, or batch scope without duplicating identity data.', 'certloom' ) . '</p>';
+		echo '<div class="certloom-domain-form-feedback" data-certloom-domain-form-feedback aria-live="polite"></div>';
 		submit_button( $is_edit ? __( 'Update issuer', 'certloom' ) : __( 'Add issuer', 'certloom' ), 'primary' ); echo '</form></section>';
 	}
 
@@ -1497,7 +1500,7 @@ final class DomainAdmin {
 
 	private function text_field( $name, $label, $value, $required = false, $description = '', $type = 'text', $attributes = '' ) {
 		$id = 'certloom-domain-' . sanitize_html_class( $name );
-		echo '<div class="certloom-domain-field"><label class="certloom-field-label" for="' . esc_attr( $id ) . '"><strong>' . esc_html( $label ) . '</strong>' . $this->help_tip( $description ) . '</label><input id="' . esc_attr( $id ) . '" class="regular-text" type="' . esc_attr( $type ) . '" name="' . esc_attr( $name ) . '" value="' . esc_attr( $value ) . '" ' . ( $required ? 'required ' : '' ) . wp_kses_post( $attributes ) . '></div>';
+		echo '<div class="certloom-domain-field"><label class="certloom-field-label" for="' . esc_attr( $id ) . '"><strong>' . esc_html( $label ) . '</strong>' . ( $required ? '<span class="certloom-field-required">' . esc_html__( 'Required', 'certloom' ) . '</span>' : '' ) . $this->help_tip( $description ) . '</label><input id="' . esc_attr( $id ) . '" class="regular-text" type="' . esc_attr( $type ) . '" name="' . esc_attr( $name ) . '" value="' . esc_attr( $value ) . '" ' . ( $required ? 'required aria-required="true" ' : '' ) . wp_kses_post( $attributes ) . '></div>';
 	}
 
 	/** Compact accessible inline help, intentionally replacing most below-field explanatory paragraphs. */
@@ -1531,13 +1534,13 @@ final class DomainAdmin {
 	private function quick_field_dialog() {
 		$sensitivity_options = \Ecapla_CertVerify_Fields::get_sensitivity_options();
 		$exposure_options = \Ecapla_CertVerify_Fields::get_public_exposure_options();
-		$html = '<dialog class="certloom-quick-field-dialog" data-certloom-quick-field-dialog><form method="dialog" class="certloom-quick-field-dialog-shell"><div class="certloom-dialog-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Credential fields', 'certloom' ) . '</span><h3>' . esc_html__( 'Create a field', 'certloom' ) . '</h3></div><button type="button" class="button-link certloom-dialog-close" data-certloom-quick-field-close aria-label="' . esc_attr__( 'Close', 'certloom' ) . '">×</button></div>';
+		$html = '<dialog class="certloom-quick-field-dialog" data-certloom-quick-field-dialog><div class="certloom-quick-field-dialog-shell" role="document"><div class="certloom-dialog-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Credential fields', 'certloom' ) . '</span><h3>' . esc_html__( 'Create a field', 'certloom' ) . '</h3></div><button type="button" class="button-link certloom-dialog-close" data-certloom-quick-field-close aria-label="' . esc_attr__( 'Close', 'certloom' ) . '">×</button></div>';
 		$html .= '<p class="certloom-quick-field-intro">' . esc_html__( 'Create a reusable credential field and add it to this Program now. You can still change ordering or retire fields later in Settings → Fields.', 'certloom' ) . '</p>';
-		$html .= '<div class="certloom-quick-field-grid"><label class="certloom-quick-field-wide"><span>' . esc_html__( 'Field label', 'certloom' ) . '</span><input type="text" maxlength="100" data-certloom-quick-field-label required placeholder="' . esc_attr__( 'e.g. Student ID', 'certloom' ) . '"></label><label><span>' . esc_html__( 'Field type', 'certloom' ) . '</span><select data-certloom-quick-field-type><option value="text">' . esc_html__( 'Short text', 'certloom' ) . '</option><option value="textarea">' . esc_html__( 'Long text', 'certloom' ) . '</option><option value="number">' . esc_html__( 'Number', 'certloom' ) . '</option><option value="date">' . esc_html__( 'Date', 'certloom' ) . '</option></select></label>';
-		$html .= '<label><span>' . esc_html__( 'Sensitivity', 'certloom' ) . '</span><select data-certloom-quick-field-sensitivity>'; foreach ( $sensitivity_options as $value => $label ) { $html .= '<option value="' . esc_attr( $value ) . '" ' . selected( 'personal', $value, false ) . '>' . esc_html( $label ) . '</option>'; } $html .= '</select></label>';
-		$html .= '<label class="certloom-quick-field-wide"><span>' . esc_html__( 'Public visibility', 'certloom' ) . '</span><select data-certloom-quick-field-exposure>'; foreach ( $exposure_options as $value => $label ) { $html .= '<option value="' . esc_attr( $value ) . '" ' . selected( 'private', $value, false ) . '>' . esc_html( $label ) . '</option>'; } $html .= '</select><small>' . esc_html__( 'Internal fields are always private. Choose public visibility only when the data is appropriate to show on verification or profile pages.', 'certloom' ) . '</small></label></div>';
+		$html .= '<div class="certloom-quick-field-grid"><div class="certloom-quick-field-field certloom-quick-field-wide"><label for="certloom-quick-field-label">' . esc_html__( 'Field label', 'certloom' ) . '</label><input id="certloom-quick-field-label" type="text" maxlength="100" data-certloom-quick-field-label required placeholder="' . esc_attr__( 'e.g. Student ID', 'certloom' ) . '"></div><div class="certloom-quick-field-field"><label for="certloom-quick-field-type">' . esc_html__( 'Field type', 'certloom' ) . '</label><select id="certloom-quick-field-type" data-certloom-quick-field-type><option value="text">' . esc_html__( 'Short text', 'certloom' ) . '</option><option value="textarea">' . esc_html__( 'Long text', 'certloom' ) . '</option><option value="number">' . esc_html__( 'Number', 'certloom' ) . '</option><option value="date">' . esc_html__( 'Date', 'certloom' ) . '</option></select></div>';
+		$html .= '<div class="certloom-quick-field-field"><label for="certloom-quick-field-sensitivity">' . esc_html__( 'Sensitivity', 'certloom' ) . '</label><select id="certloom-quick-field-sensitivity" data-certloom-quick-field-sensitivity>'; foreach ( $sensitivity_options as $value => $label ) { $html .= '<option value="' . esc_attr( $value ) . '" ' . selected( 'personal', $value, false ) . '>' . esc_html( $label ) . '</option>'; } $html .= '</select></div>';
+		$html .= '<div class="certloom-quick-field-field certloom-quick-field-wide"><label for="certloom-quick-field-exposure">' . esc_html__( 'Public visibility', 'certloom' ) . '</label><select id="certloom-quick-field-exposure" data-certloom-quick-field-exposure>'; foreach ( $exposure_options as $value => $label ) { $html .= '<option value="' . esc_attr( $value ) . '" ' . selected( 'private', $value, false ) . '>' . esc_html( $label ) . '</option>'; } $html .= '</select><small>' . esc_html__( 'Internal fields are always private. Choose public visibility only when the data is appropriate to show on verification or profile pages.', 'certloom' ) . '</small></div></div>';
 		$html .= '<div class="certloom-quick-field-context"><strong>' . esc_html__( 'Where is this value stored?', 'certloom' ) . '</strong><span>' . esc_html__( 'Quick-created custom fields belong to the credential record, so the value can differ for each credential. Person-level details such as name, email and external ID belong to the Recipient profile.', 'certloom' ) . '</span></div>';
-		$html .= '<div class="certloom-quick-field-feedback" data-certloom-quick-field-feedback aria-live="polite"></div><div class="certloom-dialog-actions"><button type="button" class="button" data-certloom-quick-field-close>' . esc_html__( 'Cancel', 'certloom' ) . '</button><button type="button" class="button button-primary" data-certloom-quick-field-create>' . esc_html__( 'Create & add', 'certloom' ) . '</button></div></form></dialog>';
+		$html .= '<div class="certloom-quick-field-feedback" data-certloom-quick-field-feedback aria-live="polite"></div><div class="certloom-dialog-actions"><button type="button" class="button" data-certloom-quick-field-close>' . esc_html__( 'Cancel', 'certloom' ) . '</button><button type="button" class="button button-primary" data-certloom-quick-field-create>' . esc_html__( 'Create & add', 'certloom' ) . '</button></div></div></dialog>';
 		return $html;
 	}
 

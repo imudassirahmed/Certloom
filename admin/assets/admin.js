@@ -841,6 +841,39 @@
 		if ( submenu ) { submenu.removeAttribute( 'hidden' ); }
 	}
 
+	function initDomainEntityFormFeedback() {
+		document.querySelectorAll( '#certloom-domain-editor form[data-certloom-entity-form]' ).forEach( function ( form ) {
+			var feedback = form.querySelector( '[data-certloom-domain-form-feedback]' );
+			var submit = form.querySelector( 'button[type="submit"], input[type="submit"]' );
+			if ( ! feedback || ! submit ) { return; }
+			function show( message, state ) {
+				feedback.textContent = message || '';
+				feedback.classList.remove( 'is-error', 'is-saving', 'is-visible' );
+				if ( message ) { feedback.classList.add( 'is-visible', state || 'is-error' ); }
+			}
+			function clearFieldState( control ) {
+				var field = control ? control.closest( '.certloom-domain-field' ) : null;
+				if ( field ) { field.classList.remove( 'is-invalid' ); }
+			}
+			form.addEventListener( 'invalid', function ( event ) {
+				var control = event.target;
+				var field = control && control.closest ? control.closest( '.certloom-domain-field' ) : null;
+				if ( field ) { field.classList.add( 'is-invalid' ); }
+				show( form.getAttribute( 'data-certloom-invalid-message' ) || 'Please complete the highlighted required field before saving.', 'is-error' );
+				if ( field && field.scrollIntoView ) { window.setTimeout( function () { field.scrollIntoView( { block:'center', behavior:'smooth' } ); }, 0 ); }
+			}, true );
+			form.addEventListener( 'input', function ( event ) { clearFieldState( event.target ); } );
+			form.addEventListener( 'change', function ( event ) { clearFieldState( event.target ); } );
+			form.addEventListener( 'submit', function () {
+				show( form.getAttribute( 'data-certloom-saving-message' ) || 'Saving…', 'is-saving' );
+				submit.setAttribute( 'aria-busy', 'true' ); submit.disabled = true;
+				if ( 'INPUT' === submit.tagName ) { if ( ! submit.getAttribute( 'data-certloom-original-label' ) ) { submit.setAttribute( 'data-certloom-original-label', submit.value || '' ); } submit.value = form.getAttribute( 'data-certloom-saving-message' ) || 'Saving…'; }
+				else { if ( ! submit.getAttribute( 'data-certloom-original-label' ) ) { submit.setAttribute( 'data-certloom-original-label', submit.textContent || '' ); } submit.textContent = form.getAttribute( 'data-certloom-saving-message' ) || 'Saving…'; }
+			} );
+		} );
+	}
+
+
 	function initDomainFormPersistence() {
 		var prefix = 'certloomDomainDraft:';
 		var storage = null;
@@ -993,6 +1026,7 @@
 
 	document.addEventListener( 'DOMContentLoaded', function () {
 		initCertloomWordPressMenuState();
+		initDomainEntityFormFeedback();
 		initDomainFormPersistence();
 		initDomainMediaAndColorControls();
 		initScopedFieldEditors();

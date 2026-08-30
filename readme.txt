@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.98-qa.6
+Stable tag: 1.6.98-qa.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> QA note: 1.6.98-qa.6 is the UX-OPS-04 staging candidate after the QA.5 workflow corrections. It bypasses normalized-domain, public-verification and renderer release-authority readiness checks in memory only; it is NOT production-certified and must not be used as DBAUTH/PDF-04 evidence. UX-OPS-04 fixes focused entity Add routes, privacy-complete quick field creation, draft-design configuration vs published issuance, Designer save feedback, the Template Library Program-filter structure, and the canonical Recipient-aware new-credential path with searchable WordPress-account ownership. Hands-on real-WordPress staging acceptance is still pending.
+> QA note: 1.6.98-qa.7 is the UX-OPS-05 staging candidate after QA.6 exposed an invalid nested-form boundary in the Program/Batch quick-field dialog. It bypasses normalized-domain, public-verification and renderer release-authority readiness checks in memory only; it is NOT production-certified and must not be used as DBAUTH/PDF-04 evidence. UX-OPS-05 removes the nested dialog form, hardens quick-field spacing/layout, and gives Program/Recipient/Issuer/Batch/Signer editors explicit validation and saving feedback while preserving server authority. Hands-on real-WordPress staging acceptance is still pending.
 
 > Release note for 1.6.98: UX-OPS-01/02/03 turns hands-on staging feedback into a coherent Setup/operations/admin polish tranche: the Wizard uses canonical design/numbering/backup authorities and ends with a real Setup complete landing; contextual routes preserve the correct WordPress parent state; Backup & Restore paginates operational history; entity screens are list-first with non-destructive validation retry; Program/Batch fields use compact add/remove + quick-create controls; issuer/signer media uses native WordPress controls; Template publication and assignment language are simplified; and Manual/Bulk Issuance, Email Delivery and Template Preview keep exact integrity proof under collapsed Technical details rather than in the primary workflow. The narrow Ecapla OAuth-relay exception is approved but the hosted relay is not implemented/accepted in this package; site-owned OAuth remains the fallback. Normalized-domain and renderer production authority remain closed.
 
