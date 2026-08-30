@@ -8,6 +8,8 @@ use Certloom\Domain\Rendering\LayoutSchema;
 use Certloom\Application\Templates\TemplatePackage;
 use Certloom\Application\Templates\TemplateAssignmentPolicy;
 use Certloom\Application\Templates\TemplateLifecycle;
+use Certloom\Application\Templates\TemplateFieldCompatibility;
+use Certloom\Application\Fields\ScopedFieldContract;
 use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Infrastructure\Database\SchemaManager;
 use Certloom\Infrastructure\Database\Transaction;
@@ -245,6 +247,8 @@ final class TemplateRepository {
 			$verified = $this->verify_revision_row( $current );
 			if ( is_wp_error( $verified ) ) { return $verified; }
 			if ( ! hash_equals( strtolower( (string) $verified['layout_sha256'] ), $expected_revision_sha256 ) ) { return new \WP_Error( 'certloom_template_publish_review_stale', __( 'The reviewed template hash no longer matches the revision selected for publication.', 'certloom' ) ); }
+			$compatibility = $this->validate_active_assignment_field_contracts( $template_id, (array) $verified['layout'] );
+			if ( is_wp_error( $compatibility ) ) { return $compatibility; }
 			if ( absint( $template['published_revision_id'] ?? 0 ) === $current_id ) { return true; }
 			$now = current_time( 'mysql', true );
 			$wpdb->last_error = '';
@@ -412,6 +416,35 @@ final class TemplateRepository {
 		return $rows;
 	}
 
+	/** Search published, non-archived Templates without pretending a fixed first page is complete. @return array<int,array<string,mixed>>|\WP_Error */
+	public function search_published_candidates( $search = '', $limit = 20 ) {
+		global $wpdb;
+		$search = trim( (string) $search );
+		$limit = max( 1, min( 50, absint( $limit ) ) );
+		$where = ''; $args = array( SchemaManager::table( 'templates' ), SchemaManager::table( 'template_revisions' ) );
+		if ( '' !== $search ) {
+			$like = '%' . $wpdb->esc_like( $search ) . '%';
+			$where = ' AND (t.name LIKE %s OR t.machine_key LIKE %s OR t.description LIKE %s)';
+			$args[] = $like; $args[] = $like; $args[] = $like;
+		}
+		$args[] = $limit; $wpdb->last_error = '';
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				'SELECT t.id,t.name,t.machine_key,t.published_revision_id,r.revision_number,r.layout_sha256,r.layout_schema_version FROM %i t INNER JOIN %i r ON r.id=t.published_revision_id AND r.template_id=t.id WHERE t.archived_at IS NULL AND t.published_revision_id IS NOT NULL' . $where . ' ORDER BY t.name ASC,t.id ASC LIMIT %d',
+				$args
+			), ARRAY_A
+		);
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) { return new \WP_Error( 'certloom_template_published_search_failed', __( 'Certloom could not search published templates.', 'certloom' ) ); }
+		foreach ( $rows as &$row ) {
+			$row['id'] = absint( $row['id'] ?? 0 );
+			$row['published_revision_id'] = absint( $row['published_revision_id'] ?? 0 );
+			$row['revision_number'] = absint( $row['revision_number'] ?? 0 );
+			$row['layout_schema_version'] = absint( $row['layout_schema_version'] ?? 0 );
+		}
+		unset( $row );
+		return $rows;
+	}
+
 	/** @return array{items:array<int,array<string,mixed>>,total:int}|\WP_Error */
 	public function list_page( $search = '', $page = 1, $per_page = 20, $status = 'active' ) {
 		global $wpdb;
@@ -462,6 +495,8 @@ final class TemplateRepository {
 		$exists = $this->scope_exists( $scope_type, $scope_id );
 		if ( is_wp_error( $exists ) ) { return $exists; }
 		if ( ! $exists ) { return new \WP_Error( 'certloom_template_assignment_scope_missing', __( 'The template assignment target no longer exists.', 'certloom' ) ); }
+		$compatibility = $this->validate_assignment_field_contract( $scope_type, $scope_id, (array) ( $template['current_revision']['layout'] ?? array() ) );
+		if ( is_wp_error( $compatibility ) ) { return $compatibility; }
 		$generation = ( new DomainGeneration() )->mark_before_mutation();
 		if ( is_wp_error( $generation ) ) { return $generation; }
 		return $this->transaction->run( function () use ( $template_id, $scope_type, $scope_id, $priority, $expected_assignment_id, $expected_updated_at ) {
@@ -715,6 +750,79 @@ final class TemplateRepository {
 		global $wpdb; $wpdb->last_error = '';
 		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE scope_type=%s AND scope_id=%d FOR UPDATE', SchemaManager::table( 'template_assignments' ), (string) $scope_type, absint( $scope_id ) ), ARRAY_A );
 		return '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_assignment_lock_failed', __( 'Certloom could not lock the template assignment for a safe update.', 'certloom' ) ) : ( is_array( $row ) ? $row : null );
+	}
+
+	/**
+	 * FLD-02 compatibility preflight for direct Program/Batch assignments.
+	 * Templates consume the Program/Batch contract; they never create or alter it.
+	 *
+	 * @param string              $scope_type
+	 * @param int                 $scope_id
+	 * @param array<string,mixed> $layout
+	 * @return true|\WP_Error
+	 */
+	private function validate_assignment_field_contract( $scope_type, $scope_id, array $layout ) {
+		$scope_type = (string) $scope_type;
+		$catalog = class_exists( '\Ecapla_CertVerify_Fields' ) ? \Ecapla_CertVerify_Fields::get_field_map() : array();
+		if ( in_array( $scope_type, array( 'global', 'issuer' ), true ) ) {
+			// Broad-scope designs cannot promise Program/Batch credential fields because
+			// there is no single effective field contract at Global or Issuer scope.
+			// Use universal merge tokens here; scoped fields belong on Program/Batch
+			// assignments where Certloom can prove their availability.
+			$valid = ( new TemplateFieldCompatibility() )->validate( $layout, ScopedFieldContract::empty_program( true ), null, $catalog );
+			if ( ! is_wp_error( $valid ) ) { return true; }
+			return new \WP_Error(
+				'certloom_template_broad_scope_field_incompatible',
+				__( 'Global and Issuer certificate designs can use universal credential tokens, but Program/Batch Credential fields must be assigned at Program or Batch scope where Certloom can prove the field contract.', 'certloom' ),
+				$valid->get_error_data()
+			);
+		}
+		if ( ! in_array( $scope_type, array( 'program', 'batch' ), true ) ) {
+			return new \WP_Error( 'certloom_template_assignment_scope_invalid', __( 'Choose a valid Template assignment scope.', 'certloom' ) );
+		}
+		$program_contract = array();
+		$batch_contract = null;
+		if ( 'program' === $scope_type ) {
+			$program = ( new ProgramRepository() )->find( $scope_id );
+			if ( is_wp_error( $program ) ) { return $program; }
+			if ( ! is_array( $program ) ) { return new \WP_Error( 'certloom_template_assignment_program_missing', __( 'The Program for this Template assignment no longer exists.', 'certloom' ) ); }
+			$program_contract = (array) ( $program['field_contract'] ?? array() );
+		} else {
+			$batch = ( new BatchRepository() )->find( $scope_id );
+			if ( is_wp_error( $batch ) ) { return $batch; }
+			if ( ! is_array( $batch ) ) { return new \WP_Error( 'certloom_template_assignment_batch_missing', __( 'The Batch for this Template assignment no longer exists.', 'certloom' ) ); }
+			$program = ( new ProgramRepository() )->find( absint( $batch['program_id'] ?? 0 ) );
+			if ( is_wp_error( $program ) ) { return $program; }
+			if ( ! is_array( $program ) ) { return new \WP_Error( 'certloom_template_assignment_program_missing', __( 'The Batch Program for this Template assignment no longer exists.', 'certloom' ) ); }
+			$program_contract = (array) ( $program['field_contract'] ?? array() );
+			$batch_contract = (array) ( $batch['field_contract'] ?? array() );
+		}
+		return ( new TemplateFieldCompatibility() )->validate( $layout, $program_contract, $batch_contract, $catalog );
+	}
+
+	/**
+	 * Revalidates all directly assigned Program/Batch consumers before a draft
+	 * becomes published truth. This closes the edit-after-assignment loophole.
+	 *
+	 * @param int                 $template_id
+	 * @param array<string,mixed> $layout
+	 * @return true|\WP_Error
+	 */
+	private function validate_active_assignment_field_contracts( $template_id, array $layout ) {
+		global $wpdb;
+		$wpdb->last_error = '';
+		$rows = $wpdb->get_results( $wpdb->prepare(
+			'SELECT scope_type, scope_id FROM %i WHERE template_id=%d AND active=1 ORDER BY id ASC',
+			SchemaManager::table( 'template_assignments' ), absint( $template_id )
+		), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) {
+			return new \WP_Error( 'certloom_template_assignment_read_failed', __( 'Certloom could not verify Template field compatibility before publishing.', 'certloom' ) );
+		}
+		foreach ( $rows as $row ) {
+			$valid = $this->validate_assignment_field_contract( (string) ( $row['scope_type'] ?? '' ), absint( $row['scope_id'] ?? 0 ), $layout );
+			if ( is_wp_error( $valid ) ) { return $valid; }
+		}
+		return true;
 	}
 
 	/** @return bool|\WP_Error */

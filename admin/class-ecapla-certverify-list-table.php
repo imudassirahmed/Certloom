@@ -182,7 +182,7 @@ class Ecapla_CertVerify_List_Table extends WP_List_Table {
 
 	public function prepare_items() {
 		$this->_column_headers = array( $this->get_columns(), $this->get_hidden_columns(), $this->get_sortable_columns() );
-		$per_page     = 20;
+		$per_page     = 50;
 		$current_page = $this->get_pagenum();
 
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Search, filters, sorting, and pagination are read-only list state.

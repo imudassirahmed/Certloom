@@ -431,7 +431,7 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		$wpdb->last_error = '';
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				'SELECT s.id AS series_id, s.public_id, s.recipient_id, s.program_id, s.batch_id, s.issuer_id, s.current_version_id, s.administrative_state, s.compliance_state, s.visibility, v.id AS version_id, v.version_number, v.display_number, v.issuance_state, v.legacy_expired, v.valid_from, v.issued_at, v.expires_at FROM %i s LEFT JOIN %i v ON v.id = s.current_version_id AND v.series_id = s.id WHERE s.public_id = %s LIMIT 1',
+				'SELECT s.id AS series_id, s.public_id, s.recipient_id, s.program_id, s.batch_id, s.issuer_id, s.current_version_id, s.administrative_state, s.compliance_state, s.visibility, v.id AS version_id, v.version_number, v.display_number, v.issuance_state, v.legacy_expired, v.valid_from, v.issued_at, v.expires_at, v.snapshot_json FROM %i s LEFT JOIN %i v ON v.id = s.current_version_id AND v.series_id = s.id WHERE s.public_id = %s LIMIT 1',
 				SchemaManager::table( 'credential_series' ),
 				SchemaManager::table( 'credential_versions' ),
 				$public_id
@@ -448,6 +448,9 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		foreach ( array( 'series_id', 'recipient_id', 'program_id', 'batch_id', 'issuer_id', 'current_version_id', 'version_id', 'version_number' ) as $key ) {
 			$row[ $key ] = ! empty( $row[ $key ] ) ? absint( $row[ $key ] ) : null;
 		}
+		$row['snapshot'] = ( new SafeJson() )->decode_array( $row['snapshot_json'] ?? null, 'certloom_version_snapshot_corrupt', __( 'Stored credential snapshot is invalid JSON.', 'certloom' ) );
+		unset( $row['snapshot_json'] );
+		if ( is_wp_error( $row['snapshot'] ) ) { return $row['snapshot']; }
 		return $row;
 	}
 
@@ -644,7 +647,7 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 			return new \WP_Error( 'certloom_recipient_portal_count_failed', __( 'Certloom could not count your credentials safely.', 'certloom' ) );
 		}
 
-		$sql = 'SELECT s.id AS series_id, s.public_id, s.visibility, s.administrative_state, s.compliance_state, s.program_id, s.batch_id, s.issuer_id, v.id AS version_id, v.version_number, v.display_number, v.issuance_state, v.legacy_expired, v.valid_from, v.issued_at, v.expires_at, v.grade, p.title AS program_title, p.code AS program_code, b.name AS batch_name, i.name AS issuer_name' . $joins . $where_sql . ' ORDER BY ' . $order . ' LIMIT %d OFFSET %d';
+		$sql = 'SELECT s.id AS series_id, s.public_id, s.visibility, s.administrative_state, s.compliance_state, s.program_id, s.batch_id, s.issuer_id, v.id AS version_id, v.version_number, v.display_number, v.issuance_state, v.legacy_expired, v.valid_from, v.issued_at, v.expires_at, v.grade, v.snapshot_json, p.title AS program_title, p.code AS program_code, b.name AS batch_name, i.name AS issuer_name' . $joins . $where_sql . ' ORDER BY ' . $order . ' LIMIT %d OFFSET %d';
 		$wpdb->last_error = '';
 		$items = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( $base_args, $args, array( $per_page, $offset ) ) ), ARRAY_A );
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $items ) ) {
@@ -655,6 +658,9 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 				$item[ $key ] = ! empty( $item[ $key ] ) ? absint( $item[ $key ] ) : null;
 			}
 			$item['legacy_expired'] = ! empty( $item['legacy_expired'] );
+			$item['snapshot'] = ( new SafeJson() )->decode_array( $item['snapshot_json'] ?? null, 'certloom_version_snapshot_corrupt', __( 'Stored credential snapshot is invalid JSON.', 'certloom' ) );
+			unset( $item['snapshot_json'] );
+			if ( is_wp_error( $item['snapshot'] ) ) { return $item['snapshot']; }
 		}
 		unset( $item );
 		return array( 'items' => $items, 'total' => $total );

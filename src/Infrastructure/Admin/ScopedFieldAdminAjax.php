@@ -1,0 +1,192 @@
+<?php
+namespace Certloom\Infrastructure\Admin;
+
+use Certloom\Application\Fields\ScopedFieldContract;
+use Certloom\Infrastructure\Integration\LearnDashAdapter;
+use Certloom\Infrastructure\Integration\TutorLmsAdapter;
+use Certloom\Infrastructure\Repository\BatchRepository;
+use Certloom\Infrastructure\Repository\IssuerRepository;
+use Certloom\Infrastructure\Repository\ProgramRepository;
+use Certloom\Infrastructure\Repository\SignerRepository;
+use Certloom\Infrastructure\Repository\TemplateRepository;
+
+if ( ! defined( 'ABSPATH' ) ) { exit; }
+
+/**
+ * Read-only FLD-02 resolver used by premium admin forms.
+ *
+ * The browser receives only the bounded effective field schema needed to render
+ * inputs/guidance. The server always resolves and validates the contract again
+ * during issuance, so this endpoint is never an authority boundary.
+ */
+final class ScopedFieldAdminAjax {
+	const ACTION = 'certloom_resolve_scoped_fields';
+	const LOOKUP_ACTION = 'certloom_lookup_scoped_context';
+	const NONCE_ACTION = 'certloom_scoped_fields_admin';
+
+	/** @return void */
+	public function register() {
+		add_action( 'wp_ajax_' . self::ACTION, array( $this, 'resolve' ) );
+		add_action( 'wp_ajax_' . self::LOOKUP_ACTION, array( $this, 'lookup' ) );
+	}
+
+	/** @return void */
+	public function resolve() {
+		if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) ) {
+			wp_send_json_error( array( 'message' => __( 'You do not have permission to inspect credential field requirements.', 'certloom' ) ), 403 );
+		}
+		check_ajax_referer( self::NONCE_ACTION, 'nonce' );
+
+		$program_id = isset( $_POST['program_id'] ) ? absint( $_POST['program_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
+		$batch_id   = isset( $_POST['batch_id'] ) ? absint( $_POST['batch_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
+		if ( ! $program_id ) {
+			wp_send_json_success( array( 'configured' => false, 'fields' => array() ) );
+		}
+
+		$program = ( new ProgramRepository() )->find( $program_id );
+		if ( is_wp_error( $program ) ) { wp_send_json_error( array( 'message' => $program->get_error_message() ), 500 ); }
+		if ( ! is_array( $program ) || empty( $program['active'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Choose an active Program that still exists.', 'certloom' ) ), 400 );
+		}
+
+		$batch = null;
+		if ( $batch_id ) {
+			$batch = ( new BatchRepository() )->find( $batch_id );
+			if ( is_wp_error( $batch ) ) { wp_send_json_error( array( 'message' => $batch->get_error_message() ), 500 ); }
+			if ( ! is_array( $batch ) || empty( $batch['active'] ) || absint( $batch['program_id'] ?? 0 ) !== $program_id ) {
+				wp_send_json_error( array( 'message' => __( 'Choose an active Batch that belongs to the selected Program.', 'certloom' ) ), 400 );
+			}
+		}
+
+		$catalog = class_exists( '\\Ecapla_CertVerify_Fields' ) ? \Ecapla_CertVerify_Fields::get_field_map() : array();
+		$resolved = ( new ScopedFieldContract() )->resolve(
+			is_array( $program['field_contract'] ?? null ) ? $program['field_contract'] : ScopedFieldContract::empty_program( false ),
+			is_array( $batch ) && is_array( $batch['field_contract'] ?? null ) ? $batch['field_contract'] : null,
+			$catalog
+		);
+		if ( is_wp_error( $resolved ) ) { wp_send_json_error( array( 'message' => $resolved->get_error_message() ), 400 ); }
+
+		$fields = array();
+		foreach ( (array) ( $resolved['fields'] ?? array() ) as $field ) {
+			if ( ! is_array( $field ) || empty( $field['key'] ) ) { continue; }
+			$fields[] = array(
+				'key'             => sanitize_key( (string) $field['key'] ),
+				'label'           => (string) ( $field['label'] ?? $field['key'] ),
+				'type'            => sanitize_key( (string) ( $field['type'] ?? 'text' ) ),
+				'required'        => ! empty( $field['required'] ),
+				'requirement'     => sanitize_key( (string) ( $field['requirement'] ?? 'optional' ) ),
+				'origin'          => sanitize_key( (string) ( $field['origin'] ?? 'program' ) ),
+				'value_source'    => sanitize_key( (string) ( $field['value_source'] ?? 'credential_custom' ) ),
+				'sensitivity'     => sanitize_key( (string) ( $field['sensitivity'] ?? 'personal' ) ),
+				'public_exposure' => sanitize_key( (string) ( $field['public_exposure'] ?? 'private' ) ),
+			);
+		}
+
+		wp_send_json_success(
+			array(
+				'configured'       => ! empty( $resolved['_meta']['configured'] ),
+				'batch_configured' => ! empty( $resolved['_meta']['batch_configured'] ),
+				'fields'           => $fields,
+			)
+		);
+	}
+	/** Read-only bounded Program/Batch lookup for relationship selectors. @return void */
+	public function lookup() {
+		$allowed = false;
+		foreach ( array(
+			\Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS,
+			\Ecapla_CertVerify_Permissions::CAP_ISSUE_CREDENTIALS,
+			\Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS,
+			\Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS,
+			\Ecapla_CertVerify_Permissions::CAP_MANAGE_BATCHES,
+			\Ecapla_CertVerify_Permissions::CAP_MANAGE_TEMPLATES,
+			\Ecapla_CertVerify_Permissions::CAP_MANAGE_INTEGRATIONS,
+		) as $capability ) { if ( current_user_can( $capability ) ) { $allowed = true; break; } }
+		if ( ! $allowed ) { wp_send_json_error( array( 'message' => __( 'You do not have permission to search Certloom relationship choices.', 'certloom' ) ), 403 ); }
+		check_ajax_referer( self::NONCE_ACTION, 'nonce' );
+		$kind = isset( $_POST['kind'] ) ? sanitize_key( wp_unslash( $_POST['kind'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
+		$query = isset( $_POST['query'] ) ? sanitize_text_field( wp_unslash( $_POST['query'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
+		$query = function_exists( 'mb_substr' ) ? mb_substr( $query, 0, 120, 'UTF-8' ) : substr( $query, 0, 120 );
+		$choices = array();
+		if ( 'program' === $kind ) {
+			$program_status = isset( $_POST['program_status'] ) ? sanitize_key( wp_unslash( $_POST['program_status'] ) ) : 'active'; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
+			$program_status = in_array( $program_status, array( 'active', 'inactive', 'all' ), true ) ? $program_status : 'active';
+			$result = ( new ProgramRepository() )->list_page( $query, 1, 20, $program_status );
+			if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'message' => $result->get_error_message() ), 500 ); }
+			foreach ( (array) ( $result['items'] ?? array() ) as $row ) {
+				$label = (string) ( $row['title'] ?? '' ); if ( ! empty( $row['code'] ) ) { $label .= ' · ' . (string) $row['code']; }
+				$choices[] = array( 'id' => absint( $row['id'] ?? 0 ), 'label' => $label );
+			}
+		} elseif ( 'batch' === $kind ) {
+			$program_id = isset( $_POST['program_id'] ) ? absint( $_POST['program_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
+			$result = ( new BatchRepository() )->search_active_for_program( $program_id, $query, 20 );
+			if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'message' => $result->get_error_message() ), 500 ); }
+			foreach ( (array) $result as $row ) {
+				$label = (string) ( $row['name'] ?? '' ); if ( ! empty( $row['code'] ) ) { $label .= ' · ' . (string) $row['code']; }
+				$choices[] = array( 'id' => absint( $row['id'] ?? 0 ), 'label' => $label, 'program_id' => absint( $row['program_id'] ?? 0 ) );
+			}
+		} elseif ( 'template' === $kind ) {
+			$result = ( new TemplateRepository() )->search_published_candidates( $query, 20 );
+			if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'message' => $result->get_error_message() ), 500 ); }
+			foreach ( (array) $result as $row ) {
+				$label = ScopedContextChoices::template_label( $row );
+				$choices[] = array( 'id' => absint( $row['id'] ?? 0 ), 'label' => $label );
+			}
+		} elseif ( 'issuer' === $kind ) {
+			$result = ( new IssuerRepository() )->list_page( $query, 1, 20 );
+			if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'message' => $result->get_error_message() ), 500 ); }
+			foreach ( (array) ( $result['items'] ?? array() ) as $row ) {
+				$label = (string) ( $row['name'] ?? '' ); if ( ! empty( $row['slug'] ) ) { $label .= ' · ' . (string) $row['slug']; }
+				$choices[] = array( 'id' => absint( $row['id'] ?? 0 ), 'label' => $label );
+			}
+		} elseif ( 'signer' === $kind ) {
+			$result = ( new SignerRepository() )->list_page( $query, 1, 20, 'active' );
+			if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'message' => $result->get_error_message() ), 500 ); }
+			foreach ( (array) ( $result['items'] ?? array() ) as $row ) {
+				$label = (string) ( $row['display_name'] ?? '' ); if ( ! empty( $row['title'] ) ) { $label .= ' · ' . (string) $row['title']; }
+				$choices[] = array( 'id' => absint( $row['id'] ?? 0 ), 'label' => $label );
+			}
+		} elseif ( 'signer_scope' === $kind ) {
+			$choices = $this->signer_scope_choices( $query );
+			if ( is_wp_error( $choices ) ) { wp_send_json_error( array( 'message' => $choices->get_error_message() ), 500 ); }
+		} elseif ( 'tutor_course' === $kind ) {
+			$choices = $this->course_choices( TutorLmsAdapter::is_available() ? TutorLmsAdapter::course_post_type() : '', $query );
+		} elseif ( 'learndash_course' === $kind ) {
+			$choices = $this->course_choices( LearnDashAdapter::is_available() ? LearnDashAdapter::course_post_type() : '', $query );
+		} else {
+			wp_send_json_error( array( 'message' => __( 'Choose a valid Certloom lookup type.', 'certloom' ) ), 400 );
+		}
+		wp_send_json_success( array( 'choices' => $choices, 'limit' => 20 ) );
+	}
+
+	/** @return array<int,array<string,mixed>>|\WP_Error */
+	private function signer_scope_choices( $query ) {
+		$choices = array();
+		if ( '' === trim( (string) $query ) || false !== stripos( __( 'Global', 'certloom' ), (string) $query ) ) {
+			$choices[] = array( 'value' => 'global:0', 'label' => __( 'Global', 'certloom' ) );
+		}
+		$issuer_result = ( new IssuerRepository() )->list_page( $query, 1, 10 );
+		if ( is_wp_error( $issuer_result ) ) { return $issuer_result; }
+		foreach ( (array) ( $issuer_result['items'] ?? array() ) as $row ) { $choices[] = array( 'value' => 'issuer:' . absint( $row['id'] ?? 0 ), 'label' => __( 'Issuer', 'certloom' ) . ' · ' . (string) ( $row['name'] ?? '' ) ); }
+		$program_result = ( new ProgramRepository() )->list_page( $query, 1, 10, 'active' );
+		if ( is_wp_error( $program_result ) ) { return $program_result; }
+		foreach ( (array) ( $program_result['items'] ?? array() ) as $row ) { $choices[] = array( 'value' => 'program:' . absint( $row['id'] ?? 0 ), 'label' => __( 'Program', 'certloom' ) . ' · ' . ScopedContextChoices::program_label( $row ) ); }
+		$batch_result = ( new BatchRepository() )->list_page( $query, 1, 10, 'active' );
+		if ( is_wp_error( $batch_result ) ) { return $batch_result; }
+		foreach ( (array) ( $batch_result['items'] ?? array() ) as $row ) { $choices[] = array( 'value' => 'batch:' . absint( $row['id'] ?? 0 ), 'label' => __( 'Batch', 'certloom' ) . ' · ' . ScopedContextChoices::batch_label( $row ) ); }
+		return $choices;
+	}
+
+	/** @return array<int,array<string,mixed>> */
+	private function course_choices( $post_type, $query ) {
+		$post_type = sanitize_key( (string) $post_type );
+		if ( '' === $post_type ) { return array(); }
+		$args = array( 'post_type' => $post_type, 'post_status' => array( 'publish', 'private', 'draft' ), 'posts_per_page' => 20, 'orderby' => 'title', 'order' => 'ASC', 'suppress_filters' => false );
+		if ( '' !== trim( (string) $query ) ) { $args['s'] = (string) $query; }
+		$posts = get_posts( $args );
+		$out = array();
+		foreach ( is_array( $posts ) ? $posts : array() as $post ) { if ( is_object( $post ) && absint( $post->ID ?? 0 ) ) { $out[] = array( 'id' => absint( $post->ID ), 'label' => (string) get_the_title( $post ) ); } }
+		return $out;
+	}
+
+}

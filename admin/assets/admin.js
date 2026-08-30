@@ -1,6 +1,12 @@
 ( function () {
 	'use strict';
 
+	function escapeHtml( value ) {
+		return String( value ).replace( /[&<>"']/g, function ( character ) {
+			return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[ character ];
+		} );
+	}
+
 	function updateFieldIndexes( list ) {
 		var rows = list.querySelectorAll( '.ecapla-certverify-field-row' );
 		for ( var index = 0; index < rows.length; index++ ) {
@@ -202,7 +208,9 @@
 				var fragment = tpl.content.cloneNode( true );
 				list.appendChild( fragment );
 				var rows = list.querySelectorAll( '.certloom-locale-variant-row' );
-				var localeSelect = rows[ rows.length - 1 ].querySelector( '[name="profile_template_variant_locale[]"]' );
+				var newRow = rows[ rows.length - 1 ];
+				initScopedContextLookups( newRow );
+				var localeSelect = newRow.querySelector( '[name="profile_template_variant_locale[]"]' );
 				if ( localeSelect ) { localeSelect.focus(); }
 				refreshFallback();
 			} );
@@ -298,7 +306,7 @@
 		var wrap = document.querySelector( '.wrap' );
 		if ( ! wrap ) { return; }
 		var rail = wrap.querySelector( ':scope > .certloom-product-notice-rail' );
-		var notices = Array.prototype.slice.call( wrap.querySelectorAll( ':scope > .notice:not(.inline), .certloom-dashboard-notice' ) ).filter( function ( notice, index, list ) {
+		var notices = Array.prototype.slice.call( wrap.querySelectorAll( ':scope > .notice.certloom-owned-notice, .certloom-dashboard-notice' ) ).filter( function ( notice, index, list ) {
 			return list.indexOf( notice ) === index && ( ! rail || ! rail.contains( notice ) );
 		} );
 		if ( ! rail && ! notices.length ) { return; }
@@ -324,11 +332,6 @@
 		var results = document.getElementById( 'certloom-settings-search-results' );
 		if ( ! workspace || ! input || ! results ) { return; }
 		var headings = Array.prototype.slice.call( workspace.querySelectorAll( 'h2[id], h3[id]' ) );
-		function escapeHtml( value ) {
-			return String( value ).replace( /[&<>"']/g, function ( c ) {
-				return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[ c ];
-			} );
-		}
 		function update() {
 			var query = input.value.trim().toLocaleLowerCase();
 			if ( query.length < 2 ) {
@@ -357,6 +360,334 @@
 		} );
 	}
 
+
+
+	function initScopedContextLookups( root ) {
+		root = root && root.querySelectorAll ? root : document;
+		Array.prototype.forEach.call( root.querySelectorAll( 'select[data-certloom-context-lookup]' ), function ( select ) {
+			if ( '1' === select.getAttribute( 'data-certloom-context-ready' ) ) { return; }
+			var kind = select.getAttribute( 'data-certloom-context-lookup' );
+			var nonce = select.getAttribute( 'data-certloom-context-nonce' ) || '';
+			if ( [ 'program', 'batch', 'template', 'issuer', 'signer', 'signer_scope', 'tutor_course', 'learndash_course' ].indexOf( kind ) === -1 || ! nonce || 'undefined' === typeof window.ajaxurl ) { return; }
+			select.setAttribute( 'data-certloom-context-ready', '1' );
+
+			var wrapper = document.createElement( 'div' );
+			wrapper.className = 'certloom-context-lookup';
+			var search = document.createElement( 'input' );
+			search.type = 'search';
+			search.className = 'certloom-context-lookup__search';
+			search.autocomplete = 'off';
+			search.placeholder = select.getAttribute( 'data-certloom-context-search-placeholder' ) || ( 'batch' === kind ? 'Search Batches…' : ( 'template' === kind ? 'Search published Templates…' : 'Search choices…' ) );
+			search.setAttribute( 'aria-label', search.placeholder.replace( /…/g, '' ) );
+			var status = document.createElement( 'span' );
+			status.className = 'certloom-context-lookup__status';
+			status.setAttribute( 'role', 'status' );
+			status.setAttribute( 'aria-live', 'polite' );
+			status.setAttribute( 'aria-atomic', 'true' );
+			select.parentNode.insertBefore( wrapper, select );
+			wrapper.appendChild( search );
+			wrapper.appendChild( select );
+			wrapper.appendChild( status );
+
+			var form = select.closest( 'form' );
+			var requestSequence = 0;
+			var timer = null;
+			var defaultValue = select.hasAttribute( 'data-certloom-context-empty-value' ) ? select.getAttribute( 'data-certloom-context-empty-value' ) : ( 'batch' === kind ? '0' : '' );
+			var defaultLabel = select.options.length ? select.options[ 0 ].textContent : ( 'batch' === kind ? 'No Batch' : 'Choose Program…' );
+
+			function optionLabel( choice ) { return String( choice && choice.label ? choice.label : '' ); }
+			function selectedSnapshot() {
+				var selected = select.options[ select.selectedIndex ];
+				return selected && select.value && select.value !== defaultValue ? { id: String( select.value ), label: selected.textContent } : null;
+			}
+			function programId() {
+				if ( 'batch' !== kind || ! form ) { return 0; }
+				var program = form.querySelector( 'select[name="program_id"]' );
+				return program ? parseInt( program.value || '0', 10 ) || 0 : 0;
+			}
+			function replaceChoices( choices ) {
+				var previous = selectedSnapshot();
+				var chosen = previous ? previous.id : defaultValue;
+				select.innerHTML = '';
+				var first = document.createElement( 'option' );
+				first.value = defaultValue;
+				first.textContent = defaultLabel;
+				select.appendChild( first );
+				var seen = {};
+				( Array.isArray( choices ) ? choices : [] ).forEach( function ( choice ) {
+					var value = choice && choice.value !== undefined && choice.value !== null ? String( choice.value ) : String( parseInt( choice.id || '0', 10 ) || 0 );
+					if ( ! value || '0' === value || seen[ value ] ) { return; }
+					seen[ value ] = true;
+					var option = document.createElement( 'option' );
+					option.value = value;
+					option.textContent = optionLabel( choice );
+					if ( 'batch' === kind && choice.program_id ) { option.setAttribute( 'data-program-id', String( choice.program_id ) ); }
+					select.appendChild( option );
+				} );
+				if ( previous && ! seen[ previous.id ] ) {
+					var keep = document.createElement( 'option' );
+					keep.value = previous.id;
+					keep.textContent = previous.label;
+					if ( 'batch' === kind && programId() ) { keep.setAttribute( 'data-program-id', String( programId() ) ); }
+					select.appendChild( keep );
+				}
+				select.value = chosen;
+			}
+			function lookup( query ) {
+				if ( 'batch' === kind && ! programId() ) {
+					replaceChoices( [] );
+					select.disabled = true;
+					search.disabled = true;
+					status.textContent = 'Choose a Program first.';
+					return;
+				}
+				select.disabled = false;
+				search.disabled = false;
+				requestSequence++;
+				var sequence = requestSequence;
+				status.textContent = 'Searching…';
+				var body = new FormData();
+				body.append( 'action', 'certloom_lookup_scoped_context' );
+				body.append( 'nonce', nonce );
+				body.append( 'kind', kind );
+				body.append( 'query', String( query || '' ) );
+				if ( 'program' === kind ) {
+					var programStatus = select.getAttribute( 'data-certloom-context-program-status' ) || 'active';
+					if ( [ 'active', 'inactive', 'all' ].indexOf( programStatus ) === -1 ) { programStatus = 'active'; }
+					body.append( 'program_status', programStatus );
+				}
+				if ( 'batch' === kind ) { body.append( 'program_id', String( programId() ) ); }
+				fetch( window.ajaxurl, { method: 'POST', credentials: 'same-origin', body: body } )
+					.then( function ( response ) { return response.json(); } )
+					.then( function ( response ) {
+						if ( sequence !== requestSequence ) { return; }
+						if ( ! response || ! response.success || ! response.data ) { throw new Error( response && response.data && response.data.message ? response.data.message : 'Search failed.' ); }
+						var choices = Array.isArray( response.data.choices ) ? response.data.choices : [];
+						replaceChoices( choices );
+						status.textContent = choices.length ? choices.length + ( 1 === choices.length ? ' match.' : ' matches.' ) : 'No matching choices.';
+					} )
+					.catch( function ( error ) { if ( sequence === requestSequence ) { status.textContent = error && error.message ? error.message : 'Search failed.'; } } );
+			}
+			function schedule() {
+				if ( timer ) { window.clearTimeout( timer ); }
+				timer = window.setTimeout( function () { lookup( search.value.trim() ); }, 220 );
+			}
+			search.addEventListener( 'input', schedule );
+			search.addEventListener( 'focus', function () { if ( ! search.value ) { lookup( '' ); } } );
+
+			if ( 'batch' === kind && form ) {
+				var program = form.querySelector( 'select[name="program_id"]' );
+				if ( program ) {
+					program.addEventListener( 'change', function () {
+						search.value = '';
+						replaceChoices( [] );
+						select.value = defaultValue;
+						select.dispatchEvent( new Event( 'change', { bubbles: true } ) );
+						lookup( '' );
+					} );
+				}
+			}
+			if ( 'batch' === kind && ! programId() ) { select.disabled = true; search.disabled = true; status.textContent = 'Choose a Program first.'; }
+		} );
+	}
+
+
+	function initProgramBatchSelectors() {
+		Array.prototype.forEach.call( document.querySelectorAll( 'form' ), function ( form ) {
+			var program = form.querySelector( 'select[name="program_id"]' );
+			var batch = form.querySelector( 'select[name="batch_id"]' );
+			if ( ! program || ! batch ) { return; }
+			function update() {
+				var programId = String( program.value || '' );
+				var selectedStillValid = false;
+				Array.prototype.forEach.call( batch.options, function ( option ) {
+					var owner = option.getAttribute( 'data-program-id' );
+					var allowed = ! owner || ( programId && owner === programId );
+					option.hidden = ! allowed;
+					option.disabled = ! allowed;
+					if ( allowed && option.selected ) { selectedStillValid = true; }
+				} );
+				if ( ! selectedStillValid ) { batch.value = '0'; }
+			}
+			program.addEventListener( 'change', update );
+			update();
+		} );
+	}
+
+
+	function initScopedFieldForms() {
+		Array.prototype.forEach.call( document.querySelectorAll( 'form[data-certloom-scoped-fields-form]' ), function ( form ) {
+			var program = form.querySelector( 'select[name="program_id"]' );
+			var batch = form.querySelector( 'select[name="batch_id"]' );
+			var nonce = form.getAttribute( 'data-certloom-scoped-fields-nonce' ) || '';
+			if ( ! program || ! nonce ) { return; }
+			var status = form.querySelector( '[data-certloom-scoped-field-status]' );
+			var container = form.querySelector( '[data-certloom-scoped-field-inputs]' );
+			var legacy = form.querySelector( '[data-certloom-legacy-custom-fields]' );
+			var bulkSchema = form.querySelector( '[data-certloom-bulk-field-schema-body]' );
+			var existingScript = form.querySelector( '[data-certloom-scoped-existing-values]' );
+			var values = {};
+			var requestSequence = 0;
+			try { values = existingScript ? JSON.parse( existingScript.textContent || '{}' ) : {}; } catch ( error ) { values = {}; }
+
+			function cacheCurrentValues() {
+				if ( ! container ) { return; }
+				Array.prototype.forEach.call( container.querySelectorAll( '[data-certloom-scoped-value-key]' ), function ( input ) {
+					values[ input.getAttribute( 'data-certloom-scoped-value-key' ) ] = input.value;
+				} );
+			}
+
+			function setLegacyEnabled( enabled ) {
+				if ( ! legacy ) { return; }
+				legacy.hidden = ! enabled;
+				Array.prototype.forEach.call( legacy.querySelectorAll( 'input,select,textarea,button' ), function ( control ) { control.disabled = ! enabled; } );
+			}
+
+			function resetRecipientRequirements() {
+				Array.prototype.forEach.call( form.querySelectorAll( '[data-certloom-field-contract-required="1"]' ), function ( input ) {
+					input.required = false;
+					input.removeAttribute( 'data-certloom-field-contract-required' );
+				} );
+			}
+
+			function applyRecipientRequirements( fields ) {
+				resetRecipientRequirements();
+				var newMode = form.querySelector( 'input[name="recipient_mode"][value="new"]' );
+				if ( ! newMode || ! newMode.checked ) { return; }
+				fields.forEach( function ( field ) {
+					if ( ! field.required || 'recipient' !== field.value_source ) { return; }
+					var input = form.querySelector( '[name="new_recipient[' + field.key.replace( /[^a-z0-9_-]/g, '' ) + ']"]' );
+					if ( input ) { input.required = true; input.setAttribute( 'data-certloom-field-contract-required', '1' ); }
+				} );
+			}
+
+			function renderManual( payload ) {
+				if ( ! container ) { return; }
+				container.innerHTML = '';
+				var fields = Array.isArray( payload.fields ) ? payload.fields : [];
+				setLegacyEnabled( ! payload.configured );
+				applyRecipientRequirements( fields );
+
+				var gradeInput = form.querySelector( 'input[name="grade"]' );
+				var gradeWrap = form.querySelector( '[data-certloom-grade-field]' );
+				if ( gradeInput ) { gradeInput.required = false; gradeInput.removeAttribute( 'data-certloom-field-contract-required' ); gradeInput.disabled = false; }
+				var gradeField = fields.filter( function ( field ) { return 'grade' === field.key; } )[ 0 ];
+				var gradeAvailable = ! payload.configured || !! gradeField;
+				if ( gradeWrap ) { gradeWrap.hidden = ! gradeAvailable; }
+				if ( gradeInput ) { gradeInput.disabled = ! gradeAvailable; }
+				if ( gradeInput && gradeField && gradeField.required ) { gradeInput.required = true; gradeInput.setAttribute( 'data-certloom-field-contract-required', '1' ); }
+
+				if ( ! payload.configured ) {
+					if ( status ) { status.textContent = 'Legacy Program field mode — optional free custom keys remain available until this Program adopts Credential fields.'; }
+					return;
+				}
+				if ( ! fields.length ) {
+					if ( status ) { status.textContent = 'This Program uses Credential fields but currently assigns no additional fields.'; }
+					return;
+				}
+				if ( status ) { status.textContent = 'Credential fields loaded from the selected Program' + ( batch && batch.value && '0' !== batch.value ? ' + Batch' : '' ) + '.'; }
+
+				fields.forEach( function ( field ) {
+					var row = document.createElement( 'div' );
+					row.className = 'certloom-scoped-field-row';
+					var heading = document.createElement( 'div' );
+					heading.className = 'certloom-scoped-field-row__label';
+					var strong = document.createElement( 'strong' );
+					strong.textContent = field.label + ( field.required ? ' *' : '' );
+					heading.appendChild( strong );
+					var meta = document.createElement( 'small' );
+					meta.textContent = ( 'batch' === field.origin ? 'Batch' : 'Program' ) + ' · ' + ( field.required ? 'Required' : 'Optional' );
+					heading.appendChild( meta );
+					row.appendChild( heading );
+
+					if ( 'recipient' === field.value_source ) {
+						var source = document.createElement( 'p' );
+						source.className = 'description';
+						source.textContent = 'Value comes from the Recipient profile and is frozen into the issued credential.';
+						row.appendChild( source );
+					} else if ( 'credential' === field.value_source && 'grade' === field.key ) {
+						var grade = document.createElement( 'p' );
+						grade.className = 'description';
+						grade.textContent = 'Use the Grade / result field above.';
+						row.appendChild( grade );
+					} else {
+						var input;
+						if ( 'textarea' === field.type ) {
+							input = document.createElement( 'textarea' ); input.rows = 3;
+						} else {
+							input = document.createElement( 'input' );
+							input.type = 'date' === field.type ? 'date' : ( 'number' === field.type ? 'number' : 'text' );
+							if ( 'number' === field.type ) { input.step = 'any'; }
+						}
+						input.name = 'custom_merge_fields[' + field.key + ']';
+						input.setAttribute( 'data-certloom-scoped-value-key', field.key );
+						input.maxLength = 2000;
+						input.required = !! field.required;
+						input.value = Object.prototype.hasOwnProperty.call( values, field.key ) ? String( values[ field.key ] ) : '';
+						input.setAttribute( 'aria-label', field.label );
+						row.appendChild( input );
+					}
+					var privacy = document.createElement( 'small' );
+					privacy.className = 'description';
+					privacy.textContent = 'Privacy: ' + String( field.public_exposure || 'private' ).replace( /_/g, ' ' ) + ' · ' + String( field.sensitivity || 'personal' ).replace( /_/g, ' ' );
+					row.appendChild( privacy );
+					container.appendChild( row );
+				} );
+			}
+
+			function renderBulkSchema( payload ) {
+				if ( ! bulkSchema ) { return; }
+				var fields = Array.isArray( payload.fields ) ? payload.fields : [];
+				var html = '<code>recipient_id</code> <em>or</em> <code>display_name</code> + <code>email</code>/<code>external_id</code>, <code>first_name</code>, <code>middle_name</code>, <code>last_name</code>, <code>certificate_number</code>';
+				var extras = [];
+				fields.forEach( function ( field ) {
+					if ( 'recipient' === field.value_source ) { return; }
+					var column = 'grade' === field.key ? 'grade' : 'custom:' + field.key;
+					extras.push( '<code>' + escapeHtml( column ) + '</code>' + ( field.required ? ' <strong>(required)</strong>' : '' ) );
+				} );
+				if ( ! payload.configured ) { extras.push( '<code>grade</code>', '<code>custom:machine_key</code>' ); }
+				bulkSchema.innerHTML = html + ( extras.length ? ', ' + extras.join( ', ' ) : '' ) + '.';
+			}
+
+			function renderError( message ) {
+				if ( status ) { status.textContent = message || 'Credential fields could not be loaded. The server will still validate before issuance.'; }
+			}
+
+			function resolve() {
+				cacheCurrentValues();
+				requestSequence++;
+				var sequence = requestSequence;
+				if ( ! program.value ) {
+					renderManual( { configured: false, fields: [] } );
+					renderBulkSchema( { configured: false, fields: [] } );
+					if ( status ) { status.textContent = 'Choose a Program to load its credential fields.'; }
+					return;
+				}
+				if ( status ) { status.textContent = 'Loading credential fields…'; }
+				var body = new FormData();
+				body.append( 'action', 'certloom_resolve_scoped_fields' );
+				body.append( 'nonce', nonce );
+				body.append( 'program_id', program.value );
+				body.append( 'batch_id', batch ? ( batch.value || '0' ) : '0' );
+				window.fetch( window.ajaxurl || '/wp-admin/admin-ajax.php', { method: 'POST', credentials: 'same-origin', body: body } )
+					.then( function ( response ) { if ( ! response.ok ) { throw new Error( 'HTTP ' + response.status ); } return response.json(); } )
+					.then( function ( response ) {
+						if ( sequence !== requestSequence ) { return; }
+						if ( ! response || ! response.success || ! response.data ) { throw new Error( response && response.data && response.data.message ? response.data.message : 'Invalid response' ); }
+						renderManual( response.data );
+						renderBulkSchema( response.data );
+					} )
+					.catch( function ( error ) { if ( sequence === requestSequence ) { renderError( error && error.message ? error.message : '' ); } } );
+			}
+
+			program.addEventListener( 'change', resolve );
+			if ( batch ) { batch.addEventListener( 'change', resolve ); }
+			Array.prototype.forEach.call( form.querySelectorAll( 'input[name="recipient_mode"]' ), function ( input ) {
+				input.addEventListener( 'change', resolve );
+			} );
+			resolve();
+		} );
+	}
 
 	function initAdaptiveSetupWizard() {
 		var form = document.querySelector( '[data-certloom-purpose-form]' );
@@ -408,5 +739,8 @@
 		initProductNoticeRail();
 		initRestoreAutoContinue();
 		initAdaptiveSetupWizard();
+		initScopedContextLookups();
+		initProgramBatchSelectors();
+		initScopedFieldForms();
 	} );
 } )();

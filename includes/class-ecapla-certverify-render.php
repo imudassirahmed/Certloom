@@ -311,6 +311,120 @@ class Ecapla_CertVerify_Render {
 	}
 
 	/**
+	 * Renders a normalized Credential Series profile through the same guest-safe
+	 * verification service used by the REST adapter. This route remains hard-gated
+	 * until normalized public cutover has genuinely earned authority.
+	 *
+	 * @param string $public_id Checksummed public Credential Series ID.
+	 * @param array  $atts      Optional presentation attributes.
+	 * @return string
+	 */
+	public static function normalized_credential_profile( $public_id, $atts = array() ) {
+		Ecapla_CertVerify_Shortcode::enqueue_assets();
+		$atts = wp_parse_args(
+			is_array( $atts ) ? $atts : array(),
+			array(
+				'heading'       => __( 'Credential profile', 'certloom' ),
+				'notfound_text' => __( 'This credential could not be found or is not available.', 'certloom' ),
+			)
+		);
+		$heading = self::limit_text( sanitize_text_field( (string) $atts['heading'] ), 200 );
+		$heading_tag = isset( $atts['heading_tag'] ) ? sanitize_key( (string) $atts['heading_tag'] ) : 'h2';
+		if ( ! in_array( $heading_tag, array( 'h1', 'h2', 'h3', 'h4', 'h5', 'h6' ), true ) ) { $heading_tag = 'h2'; }
+		$notfound = self::limit_text( sanitize_textarea_field( (string) $atts['notfound_text'] ), 500 );
+		$instance_id = wp_unique_id( 'certloom-series-credential-' );
+		$heading_id = $instance_id . '-heading';
+		$content = '';
+
+		$gate = new \Certloom\Infrastructure\Verification\PublicVerificationGate();
+		if ( ! $gate->is_ready() ) {
+			$content = self::message_html( 'cvp', __( 'Credential verification is temporarily unavailable while Certloom completes its protected data transition.', 'certloom' ) );
+		} elseif ( class_exists( 'Ecapla_CertVerify_REST' ) && Ecapla_CertVerify_REST::is_rate_limited( 'credential_verify', true ) ) {
+			$content = self::message_html( 'cvp', __( 'Too many verification requests. Please wait a minute and try again.', 'certloom' ) );
+		} else {
+			$repo = new \Certloom\Infrastructure\Repository\CredentialRepository();
+			$result = ( new \Certloom\Application\CredentialVerificationService( $repo ) )->verify_public_id( $public_id );
+			if ( is_wp_error( $result ) ) {
+				$content = self::message_html( 'cvp', __( 'Credential verification is temporarily unavailable. Please try again later.', 'certloom' ) );
+			} else {
+				$payload = ( new \Certloom\Application\PublicCredentialPresenter() )->present( $result, 'profile' );
+				if ( empty( $payload['found'] ) ) {
+					$content = self::message_html( 'cvp', $notfound );
+				} else {
+					$status = isset( $payload['status'] ) && is_array( $payload['status'] ) ? $payload['status'] : array();
+					$code = sanitize_key( (string) ( $status['code'] ?? 'unknown' ) );
+					$fields = array();
+					foreach ( array(
+						__( 'Credential ID', 'certloom' ) => (string) ( $payload['credential_id'] ?? '' ),
+						__( 'Certificate number', 'certloom' ) => (string) ( $payload['certificate_number'] ?? '' ),
+						__( 'Issued', 'certloom' ) => (string) ( $payload['issued_at'] ?? '' ),
+						__( 'Expires', 'certloom' ) => (string) ( $payload['expires_at'] ?? '' ),
+					) as $label => $value ) {
+						if ( '' !== $value ) { $fields[] = array( 'label' => $label, 'value' => $value, 'is_status' => false ); }
+					}
+					$fields = array_merge( $fields, (array) ( $payload['fields'] ?? array() ) );
+					$url = ( new \Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl() )->verification_url( $result->public_id() );
+					$credential = $result->credential();
+					$snapshot = is_array( $credential ) && is_array( $credential['snapshot'] ?? null ) ? $credential['snapshot'] : array();
+					$issuer = is_array( $snapshot['issuer'] ?? null ) ? (string) ( $snapshot['issuer']['name'] ?? '' ) : '';
+					$presentation = array(
+						'found' => true,
+						'status' => array(
+							'key' => $code,
+							'label' => self::normalized_status_label( $code ),
+							'description' => self::normalized_status_description( $code ),
+						),
+						'certificate_number' => (string) ( $payload['certificate_number'] ?? '' ),
+						'fields' => $fields,
+						'issuer' => $issuer,
+						'verified_at' => current_time( 'mysql' ),
+						'verification_url' => is_wp_error( $url ) ? '' : (string) $url,
+						'actions' => is_wp_error( $url ) ? array( array( 'type' => 'print', 'label' => __( 'Print', 'certloom' ) ) ) : array(
+							array( 'type' => 'copy', 'label' => __( 'Copy verification link', 'certloom' ), 'url' => (string) $url ),
+							array( 'type' => 'print', 'label' => __( 'Print', 'certloom' ) ),
+						),
+					);
+					$content = self::result_card_html( $presentation, 'cvp' );
+				}
+			}
+		}
+
+		return '<section id="' . esc_attr( $instance_id ) . '" class="certloom-credential-profile cvp-widget" aria-labelledby="' . esc_attr( $heading_id ) . '" data-copy-success-text="' . esc_attr__( 'Verification link copied.', 'certloom' ) . '" data-copy-error-text="' . esc_attr__( 'Copy the verification link from your browser.', 'certloom' ) . '"><header class="cvp-header"><p class="cvp-eyebrow">' . esc_html__( 'Verified credential', 'certloom' ) . '</p><' . $heading_tag . ' id="' . esc_attr( $heading_id ) . '" class="cvp-heading">' . esc_html( $heading ) . '</' . $heading_tag . '></header><div class="cvp-result" role="region" aria-labelledby="' . esc_attr( $heading_id ) . '">' . $content . '</div><div class="screen-reader-text certloom-live-status" role="status" aria-live="polite" aria-atomic="true"></div></section>';
+	}
+
+	/** @return string */
+	private static function normalized_status_label( $code ) {
+		$labels = array(
+			'valid' => __( 'Valid credential', 'certloom' ),
+			'suspended' => __( 'Suspended credential', 'certloom' ),
+			'revoked' => __( 'Revoked credential', 'certloom' ),
+			'expired' => __( 'Expired credential', 'certloom' ),
+			'not_yet_valid' => __( 'Not yet valid', 'certloom' ),
+			'pending_review' => __( 'Pending review', 'certloom' ),
+			'suspended_noncompliant' => __( 'Requirements not met', 'certloom' ),
+			'voided' => __( 'Voided credential', 'certloom' ),
+			'not_issued' => __( 'Not issued', 'certloom' ),
+		);
+		return (string) ( $labels[ sanitize_key( (string) $code ) ] ?? __( 'Credential status', 'certloom' ) );
+	}
+
+	/** @return string */
+	private static function normalized_status_description( $code ) {
+		$descriptions = array(
+			'valid' => __( 'This credential currently satisfies its issuance, administrative, validity and compliance requirements.', 'certloom' ),
+			'suspended' => __( 'This credential has been administratively suspended.', 'certloom' ),
+			'revoked' => __( 'This credential has been revoked.', 'certloom' ),
+			'expired' => __( 'This credential is outside its validity period.', 'certloom' ),
+			'not_yet_valid' => __( 'This credential’s validity period has not started yet.', 'certloom' ),
+			'pending_review' => __( 'This credential is awaiting a required review.', 'certloom' ),
+			'suspended_noncompliant' => __( 'This credential does not currently satisfy its compliance requirements.', 'certloom' ),
+			'voided' => __( 'This credential was voided and is not valid.', 'certloom' ),
+			'not_issued' => __( 'This credential has not reached the issued state.', 'certloom' ),
+		);
+		return (string) ( $descriptions[ sanitize_key( (string) $code ) ] ?? '' );
+	}
+
+	/**
 	 * Renders a known legacy certificate as a profile without a search form.
 	 *
 	 * @param string $number Certificate number.
@@ -371,12 +485,13 @@ class Ecapla_CertVerify_Render {
 		$issuer = ! empty( $presentation['issuer'] ) ? '<p class="' . esc_attr( $prefix ) . '-result-issuer"><span>' . esc_html__( 'Issued by', 'certloom' ) . '</span> ' . esc_html( (string) $presentation['issuer'] ) . '</p>' : '';
 		$verified = ! empty( $presentation['verified_at'] ) ? '<p class="' . esc_attr( $prefix ) . '-verified-at">' . esc_html__( 'Verified', 'certloom' ) . ' <time datetime="' . esc_attr( (string) $presentation['verified_at'] ) . '">' . esc_html( self::format_verified_at( $presentation['verified_at'] ) ) . '</time></p>' : '';
 		$desc = '' !== $status_desc ? '<p class="' . esc_attr( $prefix ) . '-status-description">' . esc_html( $status_desc ) . '</p>' : '';
-		$actions = self::actions_html( (array) ( $presentation['actions'] ?? array() ), $prefix, $qr );
-		return '<div class="' . esc_attr( $prefix ) . '-result-card ' . esc_attr( $prefix . '-status-' . $status_key ) . '"><div class="' . esc_attr( $prefix ) . '-result-summary"><span class="' . esc_attr( $prefix . '-status-mark' ) . '" aria-hidden="true">' . esc_html( self::status_icon( $status_key ) ) . '</span><div><p class="' . esc_attr( $prefix ) . '-result-success">' . esc_html( $status_label ) . '</p>' . $desc . $issuer . '</div></div>' . $list . $barcode . $verified . $actions . '</div>';
+		$actions = self::actions_html( (array) ( $presentation['actions'] ?? array() ), $prefix );
+		$qr_block = '' !== $qr ? '<div class="certloom-result-qr">' . $qr . '</div>' : '';
+		return '<div class="' . esc_attr( $prefix ) . '-result-card ' . esc_attr( $prefix . '-status-' . $status_key ) . '"><div class="' . esc_attr( $prefix ) . '-result-summary"><span class="' . esc_attr( $prefix . '-status-mark' ) . '" aria-hidden="true">' . esc_html( self::status_icon( $status_key ) ) . '</span><div><p class="' . esc_attr( $prefix ) . '-result-success">' . esc_html( $status_label ) . '</p>' . $desc . $issuer . '</div></div>' . $list . $barcode . $qr_block . $verified . $actions . '</div>';
 	}
 
 	/** @return string */
-	private static function actions_html( $actions, $prefix, $qr_html = '' ) {
+	private static function actions_html( $actions, $prefix ) {
 		$html = '';
 		foreach ( $actions as $action ) {
 			if ( ! is_array( $action ) ) { continue; }
@@ -405,9 +520,6 @@ class Ecapla_CertVerify_Render {
 			} elseif ( '' !== $url ) {
 				$html .= '<a class="certloom-result-action ' . esc_attr( $prefix ) . '-result-action" href="' . $url . '">' . esc_html( $label ) . '</a>';
 			}
-		}
-		if ( '' !== (string) $qr_html ) {
-			$html .= '<details class="certloom-qr-disclosure"><summary class="certloom-result-action ' . esc_attr( $prefix ) . '-result-action is-secondary">' . esc_html__( 'Show QR', 'certloom' ) . '</summary><div class="certloom-qr-disclosure-panel">' . $qr_html . '</div></details>';
 		}
 		return '' !== $html ? '<div class="' . esc_attr( $prefix ) . '-result-actions">' . $html . '<span class="certloom-action-feedback" aria-live="polite"></span></div>' : '';
 	}

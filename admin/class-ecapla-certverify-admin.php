@@ -74,7 +74,6 @@ class Ecapla_CertVerify_Admin {
 	public function add_menu() {
 		$simple = \Certloom\Infrastructure\Admin\AdminUiMode::is_simple();
 		$home_label = $simple ? __( 'Home', 'certloom' ) : __( 'Dashboard', 'certloom' );
-		$design_label = $simple ? __( 'Design', 'certloom' ) : __( 'Templates', 'certloom' );
 
 		add_menu_page(
 			__( 'Certloom', 'certloom' ),
@@ -88,37 +87,31 @@ class Ecapla_CertVerify_Admin {
 		add_submenu_page( self::DASHBOARD_PAGE, $home_label, $home_label, ECAPLA_CERTVERIFY_CAP, self::DASHBOARD_PAGE, array( $this, 'render_dashboard_screen' ) );
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Credentials', 'certloom' ), __( 'Credentials', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::CERTIFICATES_PAGE, array( $this, 'render_list_screen' ) );
 
-		// Keep the planned application architecture visible without exposing gated domain data.
+		/*
+		 * WordPress treats submenu registration as route registration too. The
+		 * consolidated Certloom shell intentionally shows only six primary rows,
+		 * so contextual/deep-link screens are registered with a null parent. This
+		 * keeps them routable without letting the late menu-consolidation pass
+		 * accidentally turn a valid Certloom subtab into a generic WordPress 403.
+		 */
 		if ( ! \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
-			if ( ! $simple ) {
-				add_submenu_page( self::DASHBOARD_PAGE, __( 'Recipients', 'certloom' ), __( 'Recipients', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-domain-recipients', array( $this, 'render_roadmap_placeholder_screen' ) );
-			}
+			add_submenu_page( null, __( 'Recipients', 'certloom' ), __( 'Recipients', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-domain-recipients', array( $this, 'render_roadmap_placeholder_screen' ) );
 			add_submenu_page( self::DASHBOARD_PAGE, __( 'Programs', 'certloom' ), __( 'Programs', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-domain-programs', array( $this, 'render_roadmap_placeholder_screen' ) );
+			add_submenu_page( self::DASHBOARD_PAGE, __( 'Design', 'certloom' ), __( 'Design', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-templates', array( $this, 'render_roadmap_placeholder_screen' ) );
+			add_submenu_page( null, __( 'Issuance', 'certloom' ), __( 'Issuance', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-issuance', array( $this, 'render_roadmap_placeholder_screen' ) );
 		}
-		add_submenu_page( self::DASHBOARD_PAGE, $design_label, $design_label, ECAPLA_CERTVERIFY_CAP, 'certloom-templates', array( $this, 'render_roadmap_placeholder_screen' ) );
-		if ( ! $simple && ! \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
-			add_submenu_page( self::DASHBOARD_PAGE, __( 'Issuance', 'certloom' ), __( 'Issuance', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-issuance', array( $this, 'render_roadmap_placeholder_screen' ) );
-		}
-		if ( ! $simple ) {
-			add_submenu_page( self::DASHBOARD_PAGE, __( 'Data Tools', 'certloom' ), __( 'Data Tools', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-import', array( $this, 'render_import_screen' ) );
-		}
+
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Analytics', 'certloom' ), __( 'Analytics', 'certloom' ), Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS, self::ANALYTICS_PAGE, array( $this, 'render_analytics_screen' ) );
-		add_submenu_page( self::DASHBOARD_PAGE, __( 'Integrations', 'certloom' ), __( 'Integrations', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-integrations', array( $this, 'render_integrations_screen' ) );
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Settings', 'certloom' ), __( 'Settings', 'certloom' ), 'manage_options', 'certloom-settings', array( $this, 'render_settings_screen' ) );
 
-		// Contextual utility screens stay reachable from the application but do not clutter the primary shell.
+		// Contextual utility screens stay routable while remaining out of the six-section primary menu.
+		add_submenu_page( null, __( 'Integrations', 'certloom' ), __( 'Integrations', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-integrations', array( $this, 'render_integrations_screen' ) );
+		add_submenu_page( null, __( 'Backup & Restore', 'certloom' ), __( 'Backup & Restore', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-import', array( $this, 'render_import_screen' ) );
 		add_submenu_page( null, __( 'Add Certificate', 'certloom' ), __( 'Add Certificate', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-add', array( $this, 'render_edit_screen' ) );
 		add_submenu_page( null, __( 'Field Manager', 'certloom' ), __( 'Field Manager', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-fields', array( $this, 'render_fields_screen' ) );
 		add_submenu_page( null, __( 'Appearance & Embed', 'certloom' ), __( 'Appearance & Embed', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-frontend', array( $this, 'render_frontend_screen' ) );
 		add_submenu_page( null, __( 'Setup', 'certloom' ), __( 'Setup', 'certloom' ), 'manage_options', 'certloom-setup', array( $this, 'render_onboarding_screen' ) );
 		add_submenu_page( null, __( 'Review bulk change', 'certloom' ), __( 'Review bulk change', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-bulk-review', array( $this, 'render_bulk_review_screen' ) );
-		if ( $simple ) {
-			add_submenu_page( null, __( 'Data Tools', 'certloom' ), __( 'Data Tools', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-import', array( $this, 'render_import_screen' ) );
-			if ( ! \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
-				add_submenu_page( null, __( 'Recipients', 'certloom' ), __( 'Recipients', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-domain-recipients', array( $this, 'render_roadmap_placeholder_screen' ) );
-				add_submenu_page( null, __( 'Issuance', 'certloom' ), __( 'Issuance', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-issuance', array( $this, 'render_roadmap_placeholder_screen' ) );
-			}
-		}
 	}
 
 
@@ -146,7 +139,7 @@ class Ecapla_CertVerify_Admin {
 		}
 		$current = \Certloom\Infrastructure\Admin\AdminUiMode::current();
 		$redirect = remove_query_arg( array( 'certloom_error', 'certloom_notice' ) );
-		echo '<div class="certloom-ui-mode-bar" role="region" aria-label="' . esc_attr__( 'Certloom workspace mode', 'certloom' ) . '"><div><strong>' . esc_html__( 'Workspace', 'certloom' ) . '</strong><span>' . esc_html__( 'Simple keeps everyday work concise. Advanced restores specialist and diagnostic surfaces.', 'certloom' ) . '</span></div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_set_ui_mode"><input type="hidden" name="redirect_to" value="' . esc_attr( $redirect ) . '">';
+		echo '<div class="certloom-ui-mode-bar" role="region" aria-label="' . esc_attr__( 'Certloom workspace mode', 'certloom' ) . '"><div><strong>' . esc_html__( 'Workspace', 'certloom' ) . '</strong><span>' . esc_html__( 'Simple hides specialist and diagnostic screens. Advanced shows them. This changes presentation only—not permissions, credential data, or production authority.', 'certloom' ) . '</span></div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_set_ui_mode"><input type="hidden" name="redirect_to" value="' . esc_attr( $redirect ) . '">';
 		wp_nonce_field( 'certloom_set_ui_mode' );
 		foreach ( array( 'simple' => __( 'Simple', 'certloom' ), 'advanced' => __( 'Advanced', 'certloom' ) ) as $value => $label ) {
 			echo '<button type="submit" name="certloom_ui_mode" value="' . esc_attr( $value ) . '" class="certloom-ui-mode-choice ' . ( $current === $value ? 'is-current' : '' ) . '" aria-pressed="' . ( $current === $value ? 'true' : 'false' ) . '">' . esc_html( $label ) . '</button>';
@@ -656,6 +649,17 @@ class Ecapla_CertVerify_Admin {
 		$field = Ecapla_CertVerify_Fields::get_field( $key );
 		if ( ! $field || ! empty( $field['core'] ) || ! empty( $field['protected'] ) ) {
 			$this->redirect_error( __( 'Core certificate fields cannot be removed. You can relabel, reorder, or hide them from public results.', 'certloom' ), admin_url( 'admin.php?page=certloom-fields' ) );
+		}
+		$usage = ( new \Certloom\Infrastructure\Repository\ScopedFieldUsageRepository() )->usage_for( $key );
+		if ( is_wp_error( $usage ) ) {
+			$this->redirect_error( $usage->get_error_message(), admin_url( 'admin.php?page=certloom-fields' ) );
+		}
+		if ( ! empty( $usage['referenced'] ) ) {
+			$parts = array();
+			if ( ! empty( $usage['program_count'] ) ) { $parts[] = sprintf( _n( '%d Program', '%d Programs', absint( $usage['program_count'] ), 'certloom' ), absint( $usage['program_count'] ) ); }
+			if ( ! empty( $usage['batch_count'] ) ) { $parts[] = sprintf( _n( '%d Batch override', '%d Batch overrides', absint( $usage['batch_count'] ), 'certloom' ), absint( $usage['batch_count'] ) ); }
+			if ( ! empty( $usage['template_count'] ) ) { $parts[] = sprintf( _n( '%d active Template', '%d active Templates', absint( $usage['template_count'] ), 'certloom' ), absint( $usage['template_count'] ) ); }
+			$this->redirect_error( sprintf( __( '“%1$s” is still used by %2$s. Remove those active assignments/references before retiring the field. Existing issued credential history will remain protected.', 'certloom' ), (string) ( $field['label'] ?? $key ), implode( ', ', $parts ) ), admin_url( 'admin.php?page=certloom-fields' ) );
 		}
 		if ( ! Ecapla_CertVerify_Fields::retire_field( $field ) ) {
 			$this->redirect_error( __( 'The field could not be retired safely. No field was removed.', 'certloom' ), admin_url( 'admin.php?page=certloom-fields' ) );
@@ -1413,6 +1417,17 @@ class Ecapla_CertVerify_Admin {
 		$wizard_subcategory = isset( $wizard_draft['subcategory'] ) ? (string) $wizard_draft['subcategory'] : 'custom';
 		$wizard_recommendation = $wizard_engine->recommend( $wizard_purpose, $wizard_subcategory );
 		if ( is_wp_error( $wizard_recommendation ) ) { $wizard_recommendation = array(); }
+		$wizard_recommended_fields = array();
+		$wizard_field_catalog = class_exists( 'Ecapla_CertVerify_Fields' ) ? Ecapla_CertVerify_Fields::get_field_map() : array();
+		foreach ( (array) ( $wizard_recommendation['recommended_fields'] ?? array() ) as $field_key => $requirement ) {
+			$field_key = sanitize_key( (string) $field_key );
+			if ( '' === $field_key || ! isset( $wizard_field_catalog[ $field_key ] ) || ! is_array( $wizard_field_catalog[ $field_key ] ) ) { continue; }
+			$wizard_recommended_fields[] = array(
+				'key' => $field_key,
+				'label' => (string) ( $wizard_field_catalog[ $field_key ]['label'] ?? $field_key ),
+				'requirement' => 'required' === sanitize_key( (string) $requirement ) ? 'required' : 'optional',
+			);
+		}
 		$wizard_current_settings = Ecapla_CertVerify_Settings::get_all();
 		$wizard_backup_settings = \Certloom\Infrastructure\Backup\ScheduledBackup::settings();
 		$wizard_domain_preview = \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready();

@@ -2,6 +2,7 @@
 namespace Certloom\Infrastructure\Repository;
 
 use Certloom\Application\Data\SafeJson;
+use Certloom\Application\Fields\ScopedFieldContract;
 use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Infrastructure\Database\SchemaManager;
 
@@ -91,6 +92,55 @@ final class BatchRepository {
 			return new \WP_Error( 'certloom_batch_read_failed', __( 'Certloom could not read the batch.', 'certloom' ) );
 		}
 		return is_array( $row ) ? $this->decode( $row ) : null;
+	}
+
+	/**
+	 * Bounded FLD-02 dependency scan for one Program. This intentionally avoids
+	 * loading every Batch into memory when validating a Program field-contract
+	 * change. Callers continue with the last returned id until fewer than limit.
+	 *
+	 * @return array<int,array<string,mixed>>|\WP_Error
+	 */
+	public function list_for_program_after( $program_id, $after_id = 0, $limit = 100 ) {
+		$program_id = absint( $program_id );
+		$after_id = absint( $after_id );
+		$limit = max( 1, min( 100, absint( $limit ) ) );
+		if ( ! $program_id ) { return new \WP_Error( 'certloom_batch_program_required', __( 'A valid Program is required to inspect Batch dependencies.', 'certloom' ) ); }
+		global $wpdb;
+		$wpdb->last_error = '';
+		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i WHERE program_id=%d AND id>%d ORDER BY id ASC LIMIT %d', SchemaManager::table( 'batches' ), $program_id, $after_id, $limit ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) { return new \WP_Error( 'certloom_batch_dependency_read_failed', __( 'Certloom could not verify dependent Batches before changing the Program credential-field contract.', 'certloom' ) ); }
+		$out = array();
+		foreach ( $rows as $row ) { $decoded = $this->decode( $row ); if ( is_wp_error( $decoded ) ) { return $decoded; } $out[] = $decoded; }
+		return $out;
+	}
+
+
+	/**
+	 * Bounded relationship lookup for Program-aware admin selectors.
+	 *
+	 * @return array<int,array<string,mixed>>|\WP_Error
+	 */
+	public function search_active_for_program( $program_id, $search = '', $limit = 20 ) {
+		$program_id = absint( $program_id );
+		$search = trim( (string) $search );
+		$limit = max( 1, min( 20, absint( $limit ) ) );
+		if ( ! $program_id ) { return array(); }
+		global $wpdb;
+		$where = 'program_id=%d AND active=1';
+		$args = array( SchemaManager::table( 'batches' ), $program_id );
+		if ( '' !== $search ) {
+			$like = '%' . $wpdb->esc_like( $search ) . '%';
+			$where .= ' AND (name LIKE %s OR code LIKE %s)';
+			$args[] = $like; $args[] = $like;
+		}
+		$args[] = $limit;
+		$wpdb->last_error = '';
+		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i WHERE ' . $where . ' ORDER BY name ASC,id ASC LIMIT %d', $args ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) { return new \WP_Error( 'certloom_batch_lookup_failed', __( 'Certloom could not search Batches for this Program.', 'certloom' ) ); }
+		$out = array();
+		foreach ( $rows as $row ) { $decoded = $this->decode( $row ); if ( is_wp_error( $decoded ) ) { return $decoded; } $out[] = $decoded; }
+		return $out;
 	}
 
 	/** @return array{items:array<int,array<string,mixed>>,total:int}|\WP_Error */
@@ -432,7 +482,12 @@ final class BatchRepository {
 			if ( is_wp_error( $meta ) ) {
 				return $meta;
 			}
+			$catalog = class_exists( '\\Ecapla_CertVerify_Fields' ) ? \Ecapla_CertVerify_Fields::get_field_map() : array();
+			$field_contract = ( new ScopedFieldContract() )->from_batch_metadata( $meta, $catalog );
+			if ( is_wp_error( $field_contract ) ) { return $field_contract; }
+			unset( $meta[ ScopedFieldContract::STORAGE_KEY ] );
 			$row['metadata'] = $meta;
+			$row['field_contract'] = $field_contract;
 			unset( $row['metadata_json'] );
 		}
 		return $row;

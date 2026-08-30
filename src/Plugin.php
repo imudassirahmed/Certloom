@@ -82,6 +82,7 @@ final class Plugin {
 			( new \Certloom\Infrastructure\Admin\DomainStructureAdmin() )->register();
 			( new \Certloom\Infrastructure\Admin\TemplateAdmin() )->register();
 			( new \Certloom\Infrastructure\Admin\ManualIssuanceAdmin() )->register();
+			( new \Certloom\Infrastructure\Admin\ScopedFieldAdminAjax() )->register();
 			if ( self::$job_runtime ) {
 				( new \Certloom\Infrastructure\Admin\BulkIssuanceAdmin( self::$job_runtime ) )->register();
 				( new \Certloom\Infrastructure\Admin\EmailDeliveryAdmin( self::$job_runtime ) )->register();

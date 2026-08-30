@@ -20,4 +20,6 @@ interface EmailDeliveryRepositoryInterface {
 	public function mark_failed( $delivery_key, $failure_code, array $evidence = array(), $uncertain = false );
 	/** @return array<int,array<string,mixed>>|\WP_Error */
 	public function recent( $limit = 50 );
+	/** @return array{items:array<int,array<string,mixed>>,total:int,page:int,per_page:int}|\WP_Error */
+	public function list_page( $page = 1, $per_page = 50 );
 }

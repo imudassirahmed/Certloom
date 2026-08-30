@@ -2,6 +2,7 @@
 namespace Certloom\Application\Recipient;
 
 use Certloom\Application\VisibilityPolicy;
+use Certloom\Application\Fields\ScopedFieldPresentation;
 use Certloom\Application\Sharing\ShareLinkBuilder;
 use Certloom\Domain\Credential\StatusService;
 use Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl;
@@ -40,6 +41,8 @@ final class RecipientPortalService {
 	private $public_urls;
 	/** @var ShareLinkBuilder */
 	private $share_links;
+	/** @var ScopedFieldPresentation */
+	private $field_presentation;
 
 	public function __construct(
 		?RecipientRepository $recipients = null,
@@ -48,7 +51,8 @@ final class RecipientPortalService {
 		?VisibilityPolicy $visibility = null,
 		?PublicVerificationGate $verification_gate = null,
 		?NormalizedPublicCredentialUrl $public_urls = null,
-		?ShareLinkBuilder $share_links = null
+		?ShareLinkBuilder $share_links = null,
+		?ScopedFieldPresentation $field_presentation = null
 	) {
 		$this->recipients         = $recipients ?: new RecipientRepository();
 		$this->credentials        = $credentials ?: new CredentialRepository();
@@ -57,6 +61,7 @@ final class RecipientPortalService {
 		$this->verification_gate  = $verification_gate ?: new PublicVerificationGate();
 		$this->public_urls        = $public_urls ?: new NormalizedPublicCredentialUrl();
 		$this->share_links        = $share_links ?: new ShareLinkBuilder();
+		$this->field_presentation = $field_presentation ?: new ScopedFieldPresentation();
 	}
 
 	/**
@@ -147,6 +152,14 @@ final class RecipientPortalService {
 			}
 
 			$row['status'] = $status_result->to_array();
+			$row['credential_fields'] = array_values( array_filter(
+				$this->field_presentation->recipient_fields( isset( $row['snapshot'] ) && is_array( $row['snapshot'] ) ? $row['snapshot'] : array() ),
+				static function ( $field ) {
+					/* Grade already has a first-class credential fact in every Portal layout. */
+					return is_array( $field ) && 'grade' !== sanitize_key( (string) ( $field['key'] ?? '' ) );
+				}
+			) );
+			unset( $row['snapshot'] );
 			$row['expiring_soon'] = self::expiring_soon( $row['expires_at'] ?? null, $today, $status_result->is_valid() );
 			$row['verify_url'] = $verify_url;
 			$row['pdf_available'] = false;

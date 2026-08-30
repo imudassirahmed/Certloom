@@ -47,7 +47,7 @@ final class DomainDataToolsAdmin {
 	/** @return void */
 	public function menu() {
 		add_submenu_page(
-			'certloom',
+			null,
 			__( 'Data Tools (New Domain)', 'certloom' ),
 			__( 'Data Tools (New)', 'certloom' ),
 			\Ecapla_CertVerify_Permissions::CAP_MANAGE_DATA_TOOLS,
@@ -348,20 +348,16 @@ final class DomainDataToolsAdmin {
 
 	/** @return void */
 	private function render_jobs() {
-		$jobs = $this->runtime->repository()->recent( 50 );
-		echo '<hr><h2>' . esc_html__( 'Recent new-domain jobs', 'certloom' ) . '</h2>';
-		if ( is_wp_error( $jobs ) ) {
-			$this->error( $jobs->get_error_message() );
-			return;
-		}
+		$page = isset( $_GET['jobs_paged'] ) ? max( 1, absint( $_GET['jobs_paged'] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only pagination.
+		$result = $this->runtime->repository()->list_page( $page, 50 );
+		echo '<hr><h2>' . esc_html__( 'Background job history', 'certloom' ) . '</h2>';
+		if ( is_wp_error( $result ) ) { $this->error( $result->get_error_message() ); return; }
+		$jobs = (array) ( $result['items'] ?? array() );
 		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Job', 'certloom' ) . '</th><th>' . esc_html__( 'Type', 'certloom' ) . '</th><th>' . esc_html__( 'Status', 'certloom' ) . '</th><th>' . esc_html__( 'Progress', 'certloom' ) . '</th><th>' . esc_html__( 'Actions', 'certloom' ) . '</th></tr></thead><tbody>';
-		foreach ( $jobs as $job ) {
-			$this->render_job_row( $job );
-		}
-		if ( empty( $jobs ) ) {
-			echo '<tr><td colspan="5">' . esc_html__( 'No new-domain background jobs yet.', 'certloom' ) . '</td></tr>';
-		}
+		foreach ( $jobs as $job ) { $this->render_job_row( $job ); }
+		if ( empty( $jobs ) ) { echo '<tr><td colspan="5">' . esc_html__( 'No new-domain background jobs yet.', 'certloom' ) . '</td></tr>'; }
 		echo '</tbody></table>';
+		$total=absint($result['total']??0);$pages=max(1,(int)ceil($total/50));if($pages>1){echo'<div class="tablenav"><div class="tablenav-pages">'.wp_kses_post(paginate_links(array('base'=>str_replace('999999999','%#%',add_query_arg(array('page'=>self::PAGE,'jobs_paged'=>999999999),admin_url('admin.php'))),'format'=>'','current'=>$page,'total'=>$pages,'type'=>'plain'))).'</div></div>';}
 	}
 
 	/** @param array<string,mixed> $job @return void */

@@ -1821,37 +1821,26 @@
 .certloom-result-action { min-height:44px; min-width:44px; padding:8px 12px; border-color:rgba(60,67,74,.45); border-radius:7px; font-size:13px; font-weight:650; }
 .certloom-result-action.is-secondary { color:#50575e; border-color:rgba(80,87,94,.32); }
 
-.certloom-qr-disclosure { position:relative; display:inline-block; }
-.certloom-qr-disclosure > summary { list-style:none; }
-.certloom-qr-disclosure > summary::-webkit-details-marker { display:none; }
-.certloom-qr-disclosure > summary::after { content:"▾"; margin-inline-start:.45em; font-size:.75em; }
-.certloom-qr-disclosure[open] > summary::after { content:"▴"; }
-.certloom-qr-disclosure-panel {
-	position:absolute;
-	z-index:24;
-	inset-inline-end:0;
-	top:calc(100% + 7px);
-	width:min(260px,calc(100vw - 36px));
-	padding:10px;
-	border:1px solid rgba(80,87,94,.26);
-	border-radius:9px;
-	background:#fff;
-	box-shadow:0 10px 28px rgba(20,24,31,.12);
+.certloom-result-qr {
+	display:flex;
+	justify-content:flex-start;
+	margin-top:14px;
 }
-.certloom-qr-disclosure .certloom-verification-qr {
+.certloom-result-qr .certloom-verification-qr {
 	grid-template-columns:132px;
 	justify-items:center;
-	gap:8px;
+	gap:7px;
 	margin:0;
-	padding:8px;
-	max-width:none;
-	border:0;
-	border-radius:6px;
+	padding:10px;
+	max-width:170px;
+	border:1px solid rgba(80,87,94,.18);
+	border-radius:9px;
+	background:#fff;
 	text-align:center;
 }
-.certloom-qr-disclosure .certloom-verification-qr-code { width:132px; }
-.certloom-qr-disclosure .certloom-verification-qr figcaption { max-width:210px; font-size:11px; line-height:1.4; }
-.certloom-qr-disclosure .certloom-qr-svg { width:132px; height:132px; }
+.certloom-result-qr .certloom-verification-qr-code { width:132px; }
+.certloom-result-qr .certloom-verification-qr figcaption { max-width:150px; font-size:11px; line-height:1.35; color:#646970; }
+.certloom-result-qr .certloom-qr-svg { width:132px; height:132px; }
 
 .certloom-route-brand { margin-bottom:14px; padding:10px 12px; border-radius:8px; box-shadow:none; }
 .certloom-route-brand-icon { width:40px; height:40px; flex-basis:40px; border-radius:7px; }
@@ -1864,20 +1853,34 @@
 	.certloom-share { width:100%; }
 	.certloom-share > summary { width:max-content; max-width:100%; box-sizing:border-box; }
 	.certloom-share-menu { width:100%; box-sizing:border-box; }
-	.certloom-qr-disclosure { width:auto; }
-	.certloom-qr-disclosure-panel { position:static; width:min(100%,260px); margin-top:7px; box-shadow:none; }
 }
 @media (max-width:380px) {
 	.cvp-result-list { grid-template-columns:1fr; }
 	.certloom-result-action { padding-inline:10px; }
 }
 @media (prefers-reduced-motion:reduce) {
-	.certloom-qr-disclosure *, .certloom-result-action { transition:none!important; animation:none!important; scroll-behavior:auto!important; }
+	.certloom-result-action { transition:none!important; animation:none!important; scroll-behavior:auto!important; }
 }
 @media (forced-colors:active) {
-	.certloom-qr-disclosure-panel { border:1px solid CanvasText; background:Canvas; color:CanvasText; box-shadow:none; }
+	.certloom-result-qr .certloom-verification-qr { border:1px solid CanvasText; background:Canvas; color:CanvasText; }
 	.certloom-result-action.is-secondary { color:ButtonText; border-color:ButtonText; }
 }
+
+
+/* QA/FEUX: print only the selected Certloom verification/profile component. */
+.certloom-print-portal { display:none; }
 @media print {
-	.certloom-qr-disclosure { display:none!important; }
+	body.certloom-printing > *:not(.certloom-print-portal) { display:none!important; }
+	body.certloom-printing .certloom-print-portal { display:block!important; position:static!important; width:100%!important; margin:0!important; padding:0!important; background:#fff!important; color:#000!important; }
+	body.certloom-printing .certloom-print-portal > * { width:100%!important; max-width:none!important; margin:0!important; box-shadow:none!important; }
+	body.certloom-printing .certloom-print-portal .cv-form,
+	body.certloom-printing .certloom-print-portal .cvx-form,
+	body.certloom-printing .certloom-print-portal .cv-result-actions,
+	body.certloom-printing .certloom-print-portal .cvx-result-actions,
+	body.certloom-printing .certloom-print-portal .cvp-result-actions,
+	body.certloom-printing .certloom-print-portal .certloom-share,
+	body.certloom-printing .certloom-print-portal .certloom-action-feedback { display:none!important; }
+	body.certloom-printing .certloom-print-portal .certloom-result-qr { display:flex!important; }
+	body.certloom-printing .certloom-print-portal .certloom-verification-qr { break-inside:avoid; box-shadow:none!important; }
 }
+.certloom-my-credential-card__credential-fields{margin-top:14px;padding:14px;border:1px solid var(--certloom-portal-border);border-radius:10px;background:color-mix(in srgb,var(--certloom-portal-surface) 94%,var(--certloom-portal-border))}.certloom-my-credential-card__credential-fields h4{margin:0 0 10px;font-size:13px}.certloom-my-credential-card__credential-fields dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 14px;margin:0}.certloom-my-credential-card__credential-fields dt{font-size:11px;font-weight:700;color:var(--certloom-portal-muted)}.certloom-my-credential-card__credential-fields dd{margin:3px 0 0;overflow-wrap:anywhere}@media(max-width:430px){.certloom-my-credential-card__credential-fields dl{grid-template-columns:1fr}}

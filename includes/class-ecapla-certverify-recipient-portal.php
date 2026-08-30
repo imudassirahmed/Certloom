@@ -186,6 +186,16 @@ final class Ecapla_CertVerify_Recipient_Portal {
 				<?php echo self::fact( __( 'Expires', 'certloom' ), self::date_label( $item['expires_at'] ?? null, __( 'No expiry', 'certloom' ) ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				<?php if ( ! empty( $item['grade'] ) ) : echo self::fact( __( 'Grade', 'certloom' ), (string) $item['grade'] ); endif; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 			</dl>
+			<?php if ( ! empty( $item['credential_fields'] ) && is_array( $item['credential_fields'] ) ) : ?>
+				<div class="certloom-my-credential-card__credential-fields" aria-label="<?php esc_attr_e( 'Credential details', 'certloom' ); ?>">
+					<h4><?php esc_html_e( 'Credential details', 'certloom' ); ?></h4>
+					<dl>
+					<?php foreach ( $item['credential_fields'] as $field ) : if ( ! is_array( $field ) || '' === trim( (string) ( $field['value'] ?? '' ) ) ) { continue; } ?>
+						<?php echo self::fact( (string) ( $field['label'] ?? $field['key'] ?? '' ), (string) $field['value'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in helper. ?>
+					<?php endforeach; ?>
+					</dl>
+				</div>
+			<?php endif; ?>
 			<div class="certloom-my-credential-card__actions">
 				<?php if ( ! empty( $item['verify_url'] ) ) : ?><a class="certloom-my-credentials__button" href="<?php echo esc_url( $item['verify_url'] ); ?>" rel="nofollow noopener"><?php esc_html_e( 'Verify', 'certloom' ); ?></a><?php endif; ?>
 				<?php echo self::share_controls( $item ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in helper. ?>

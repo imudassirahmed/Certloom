@@ -4,6 +4,7 @@ namespace Certloom\Infrastructure\Repository;
 use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Application\Data\SafeJson;
 use Certloom\Application\Program\ProgramProfile;
+use Certloom\Application\Fields\ScopedFieldContract;
 use Certloom\Infrastructure\Database\SchemaManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -157,9 +158,13 @@ final class ProgramRepository {
 		if ( is_wp_error( $metadata ) ) { return $metadata; }
 		$profile = ( new ProgramProfile() )->from_metadata( $metadata );
 		if ( is_wp_error( $profile ) ) { return $profile; }
-		unset( $metadata[ ProgramProfile::STORAGE_KEY ] );
+		$catalog = class_exists( '\\Ecapla_CertVerify_Fields' ) ? \Ecapla_CertVerify_Fields::get_field_map() : array();
+		$field_contract = ( new ScopedFieldContract() )->from_program_metadata( $metadata, $catalog );
+		if ( is_wp_error( $field_contract ) ) { return $field_contract; }
+		unset( $metadata[ ProgramProfile::STORAGE_KEY ], $metadata[ ScopedFieldContract::STORAGE_KEY ] );
 		$row['metadata'] = $metadata;
 		$row['profile'] = $profile;
+		$row['field_contract'] = $field_contract;
 		return $row;
 	}
 

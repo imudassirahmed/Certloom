@@ -59,6 +59,7 @@ final class PurposePresetEngine {
 			'qualification_emphasis'  => false,
 			'sharing_emphasis'        => false,
 			'recommendation_only'     => true,
+			'recommended_fields'       => array(),
 			'notice'                  => __( 'These are editable starting points, not legal, accreditation, certification, or compliance advice.', 'certloom' ),
 		);
 
@@ -72,6 +73,7 @@ final class PurposePresetEngine {
 				$base['terminology']              = __( 'Certification', 'certloom' );
 				$base['design_tone']              = __( 'Formal certification', 'certloom' );
 				$base['lifecycle_emphasis']       = true;
+				$base['recommended_fields']       = array( 'first_name' => 'optional', 'last_name' => 'optional', 'external_id' => 'optional' );
 				break;
 			case 'academic_credentials':
 				$base['credential_type']          = in_array( $subcategory, array( 'degree', 'diploma' ), true ) ? $subcategory : 'certificate';
@@ -81,6 +83,7 @@ final class PurposePresetEngine {
 				$base['terminology']              = __( 'Academic credential', 'certloom' );
 				$base['design_tone']              = __( 'Academic and institution-led', 'certloom' );
 				$base['qualification_emphasis']   = true;
+				$base['recommended_fields']       = array( 'first_name' => 'optional', 'last_name' => 'optional', 'external_id' => 'optional', 'grade' => 'optional' );
 				break;
 			case 'training_courses':
 				$base['validity']                 = 'optional';
@@ -89,6 +92,7 @@ final class PurposePresetEngine {
 				$base['terminology']              = __( 'Course', 'certloom' );
 				$base['design_tone']              = __( 'Course completion', 'certloom' );
 				$base['integration_focus']        = true;
+				$base['recommended_fields']       = array( 'first_name' => 'optional', 'last_name' => 'optional', 'grade' => 'optional' );
 				break;
 			case 'professional_license_membership':
 				$base['credential_type']          = 'professional_license' === $subcategory ? 'license' : 'membership';
@@ -98,6 +102,7 @@ final class PurposePresetEngine {
 				$base['numbering_mode']           = 'sequential';
 				$base['terminology']              = 'professional_license' === $subcategory ? __( 'License', 'certloom' ) : __( 'Membership', 'certloom' );
 				$base['lifecycle_emphasis']       = true;
+				$base['recommended_fields']       = array( 'first_name' => 'optional', 'last_name' => 'optional', 'external_id' => 'optional' );
 				break;
 			case 'awards_recognition':
 				$base['credential_type']          = 'award';
@@ -106,6 +111,7 @@ final class PurposePresetEngine {
 				$base['terminology']              = __( 'Award', 'certloom' );
 				$base['design_tone']              = __( 'Recognition and achievement', 'certloom' );
 				$base['sharing_emphasis']         = true;
+				$base['recommended_fields']       = array( 'first_name' => 'optional', 'last_name' => 'optional' );
 				break;
 			case 'events_participation':
 				$base['credential_type']          = 'participation';
@@ -114,6 +120,7 @@ final class PurposePresetEngine {
 				$base['terminology']              = __( 'Participation credential', 'certloom' );
 				$base['design_tone']              = __( 'Event and participation', 'certloom' );
 				$base['sharing_emphasis']         = true;
+				$base['recommended_fields']       = array( 'first_name' => 'optional', 'last_name' => 'optional' );
 				break;
 			case 'custom_other':
 			default:

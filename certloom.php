@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: Certloom – Certificate Verification (QA Ungated)
- * Description: QA-only ungated Certloom build for staging inspection. NOT FOR PRODUCTION or release certification.
- * Version: 1.6.96-qa.1
+ * Plugin Name: Certloom – Certificate Verification
+ * Description: Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
+ * Version: 1.6.97
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,18 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.96-qa.1' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.97' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_TABLE', 'certverify_certificates' );
 define( 'ECAPLA_CERTVERIFY_CAP', 'manage_certverify' );
 define( 'ECAPLA_CERTVERIFY_MINIMUM_ELEMENTOR_VERSION', '3.10.0' );
-
-/* QA-only authority override. This build must never be treated as accepted production evidence. */
-if ( ! defined( 'CERTLOOM_QA_UNGATED' ) ) {
-	define( 'CERTLOOM_QA_UNGATED', true );
-}
 
 /*
  * Canonical Certloom constants. Legacy ECAPLA_CERTVERIFY_* constants remain
@@ -61,13 +56,6 @@ if ( ! defined( 'CERTLOOM_ALLOW_STAGING_MIGRATION_REHEARSAL' ) ) {
 }
 if ( ! defined( 'CERTLOOM_ALLOW_STAGING_RESTORE_REHEARSAL' ) ) {
 	define( 'CERTLOOM_ALLOW_STAGING_RESTORE_REHEARSAL', false );
-}
-
-if ( function_exists( 'add_action' ) ) {
-	add_action( 'admin_notices', static function () {
-		if ( ! current_user_can( 'manage_options' ) ) { return; }
-		echo '<div class="notice notice-error"><p><strong>Certloom QA Ungated:</strong> release-authority gates are bypassed for staging inspection. This build is NOT production-certified and must not be used as acceptance evidence or on a live site.</p></div>';
-	} );
 }
 
 require_once CERTLOOM_PATH . 'src/Autoloader.php';

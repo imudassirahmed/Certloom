@@ -19,6 +19,10 @@ $health_label = 'good' === $health_overall ? __( 'Ready for current operations',
 			<p><?php esc_html_e( 'Manage and monitor your self-hosted certificate registry from one place.', 'certloom' ); ?></p>
 		</div>
 		<div class="certloom-dashboard-actions" aria-label="<?php esc_attr_e( 'Quick actions', 'certloom' ); ?>">
+			<a class="button button-secondary button-hero" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-setup' ) ); ?>">
+				<svg class="certloom-button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.64 5.64l2.12 2.12m8.48 8.48 2.12 2.12m0-12.72-2.12 2.12M7.76 16.24l-2.12 2.12" /></svg>
+				<?php esc_html_e( 'Setup wizard', 'certloom' ); ?>
+			</a>
 			<a class="button button-primary button-hero" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-add' ) ); ?>">
 				<svg class="certloom-button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" /></svg>
 				<?php esc_html_e( 'Add certificate', 'certloom' ); ?>
@@ -31,7 +35,7 @@ $health_label = 'good' === $health_overall ? __( 'Ready for current operations',
 	</section>
 
 	<?php if ( isset( $dashboard_error ) && is_wp_error( $dashboard_error ) ) : ?>
-		<div class="notice notice-error inline certloom-dashboard-notice"><p><?php echo esc_html( $dashboard_error->get_error_message() ); ?></p></div>
+		<div class="notice notice-error inline certloom-owned-notice certloom-dashboard-notice"><p><?php echo esc_html( $dashboard_error->get_error_message() ); ?></p></div>
 	<?php endif; ?>
 
 	<?php if ( isset( $onboarding_summary ) && is_array( $onboarding_summary ) ) :

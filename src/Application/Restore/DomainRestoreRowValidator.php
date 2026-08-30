@@ -2,6 +2,7 @@
 namespace Certloom\Application\Restore;
 
 use Certloom\Application\VisibilityPolicy;
+use Certloom\Application\Fields\ScopedFieldContract;
 use Certloom\Application\Program\ProgramProfile;
 use Certloom\Application\Rendering\CanonicalJson;
 use Certloom\Application\Rendering\LayoutValidator;
@@ -196,6 +197,15 @@ final class DomainRestoreRowValidator {
 			$profile = ( new ProgramProfile() )->from_metadata( $program_metadata );
 			if ( is_wp_error( $profile ) ) {
 				return new \WP_Error( 'certloom_domain_restore_program_profile_invalid', __( 'A Program in the backup contains Program Profile configuration that Certloom cannot safely restore.', 'certloom' ) );
+			}
+		}
+		if ( in_array( $entity, array( 'programs', 'batches' ), true ) && null !== $row['metadata_json'] && '' !== (string) $row['metadata_json'] ) {
+			$metadata = json_decode( (string) $row['metadata_json'], true );
+			if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $metadata ) ) { return new \WP_Error( 'certloom_domain_restore_scoped_field_metadata_invalid', __( 'A Program or Batch in the backup contains invalid scoped-field metadata.', 'certloom' ) ); }
+			if ( array_key_exists( ScopedFieldContract::STORAGE_KEY, $metadata ) ) {
+				$scope = 'programs' === $entity ? 'program' : 'batch';
+				$stored = ( new ScopedFieldContract() )->validate_stored_envelope( $metadata[ ScopedFieldContract::STORAGE_KEY ], $scope );
+				if ( is_wp_error( $stored ) ) { return new \WP_Error( 'certloom_domain_restore_scoped_field_contract_invalid', __( 'A Program or Batch in the backup contains a scoped-field contract that Certloom cannot safely restore.', 'certloom' ), array( 'entity' => $entity, 'reason' => $stored->get_error_code() ) ); }
 			}
 		}
 

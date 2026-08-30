@@ -394,6 +394,29 @@ final class JobRepository implements JobRepositoryInterface {
 		return $out;
 	}
 
+
+	/**
+	 * Returns one bounded page of protected admin job history.
+	 *
+	 * @return array{items:array<int,array<string,mixed>>,total:int,page:int,per_page:int}|\WP_Error
+	 */
+	public function list_page( $page = 1, $per_page = 50 ) {
+		global $wpdb;
+		$page = max( 1, absint( $page ) );
+		$per_page = max( 1, min( 100, absint( $per_page ) ) );
+		$offset = ( $page - 1 ) * $per_page;
+		$table = SchemaManager::table( 'jobs' );
+		$wpdb->last_error = '';
+		$total = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i', $table ) );
+		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_job_recent_read_failed', __( 'Certloom could not read background job history.', 'certloom' ) ); }
+		$wpdb->last_error = '';
+		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i ORDER BY id DESC LIMIT %d OFFSET %d', $table, $per_page, $offset ), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) { return new \WP_Error( 'certloom_job_recent_read_failed', __( 'Certloom could not read background job history.', 'certloom' ) ); }
+		$out = array();
+		foreach ( $rows as $row ) { $decoded = self::decode( $row ); if ( is_wp_error( $decoded ) ) { return $decoded; } $out[] = $decoded; }
+		return array( 'items' => $out, 'total' => absint( $total ), 'page' => $page, 'per_page' => $per_page );
+	}
+
 	/**
 	 * Finds bounded terminal jobs eligible for retention cleanup.
 	 *

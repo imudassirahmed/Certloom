@@ -1,3 +1,11 @@
+= 1.6.97 =
+* FLD-02: add Program + optional Batch scoped credential-field contracts over the global Field Catalog, with deterministic inheritance, Program-required downgrade protection, typed Manual/Bulk inputs and immutable issued-Version field/value snapshots.
+* Integrate scoped fields through canonical Designer tokens, Template assignment/publication preflight, public Credential Profile and Recipient Portal privacy presentation, Tutor/LearnDash/INT-01 compatibility, Setup Wizard recommendations, backup/restore validation and safe active-use retirement guards.
+* SCALE-01: replace fixed first-N Program/Batch/Template/Issuer/Signer/LMS relationship selectors with bounded searchable server continuation, preserve existing selections, constrain Batch by Program and keep historical Credential filters able to find inactive Programs.
+* Separate human normalized credential-profile URLs from machine REST endpoints while keeping one canonical verification service, and fix Program locale-specific Template selection to compare stable numeric IDs correctly.
+* Promote staging QA corrections: contextual subtabs stay hidden-but-routable, Dashboard notices are Certloom-owned, QR is directly visible, printing isolates the Certloom credential, Design exposes real Create/Edit actions, ordinary data tables paginate at 50 where appropriate, and Setup remains available from Dashboard quick actions.
+* Keep normalized-domain and renderer production authority fail-closed. Genuine WordPress/MySQL/MariaDB v5 DBAUTH acceptance and PDF-04 remain external RC gates after this release is fully certified.
+
 = 1.6.96 =
 * DBAUTH-01: add a release-bound normalized-domain authority manifest, importer, runtime gate and authorized deterministic packaging path tied to the exact Certloom production payload and genuine real-host acceptance v5 evidence.
 * Make manifest-backed DomainFeatureGate the sole effective release-level normalized-domain authority; legacy readiness constants remain false/non-authoritative compatibility sentinels and cannot enable write/admin/Data Tools behavior.

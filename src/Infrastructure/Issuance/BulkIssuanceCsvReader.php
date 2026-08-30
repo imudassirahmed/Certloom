@@ -119,7 +119,7 @@ final class BulkIssuanceCsvReader {
 		$custom = array(); foreach ( $values as $key => $value ) { if ( 0 === strpos( $key, 'custom:' ) && '' !== $value ) { $custom[ substr( $key, 7 ) ] = $value; } } ksort( $custom, SORT_STRING );
 		return array(
 			'recipient_mode' => $recipient_id ? 'existing' : 'new', 'recipient_id' => $recipient_id, 'new_recipient' => $new,
-			'program_id' => $shared['program_id'] ?? 0, 'template_id' => $shared['template_id'] ?? 0,
+			'program_id' => $shared['program_id'] ?? 0, 'batch_id' => $shared['batch_id'] ?? 0, 'template_id' => $shared['template_id'] ?? 0,
 			'valid_from' => (string) ( $shared['valid_from'] ?? '' ), 'expiry_mode' => (string) ( $shared['expiry_mode'] ?? 'program' ), 'expires_at' => (string) ( $shared['expires_at'] ?? '' ),
 			'grade' => '' !== (string) ( $values['grade'] ?? '' ) ? (string) $values['grade'] : (string) ( $shared['grade'] ?? '' ),
 			'display_number' => (string) ( $values['certificate_number'] ?? '' ), 'custom_merge_fields' => $custom,

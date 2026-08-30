@@ -284,11 +284,9 @@
 					actionHtml += '<a class="certloom-result-action ' + config.prefix + '-result-action" href="' + escapeHtml( url ) + '">' + escapeHtml( label ) + '</a>';
 				}
 			} );
-			if ( qrHtml ) {
-				actionHtml += '<details class="certloom-qr-disclosure"><summary class="certloom-result-action ' + config.prefix + '-result-action is-secondary">Show QR</summary><div class="certloom-qr-disclosure-panel">' + qrHtml + '</div></details>';
-			}
 			var actionBar = actionHtml ? '<div class="' + config.prefix + '-result-actions">' + actionHtml + '<span class="certloom-action-feedback" aria-live="polite"></span></div>' : '';
-			resultEl.innerHTML = '<div class="' + config.prefix + '-result-card ' + config.prefix + '-status-' + statusKey + '">' + summary + list + barcodeHtml + verified + actionBar + '</div>';
+			var qrBlock = qrHtml ? '<div class="certloom-result-qr">' + qrHtml + '</div>' : '';
+			resultEl.innerHTML = '<div class="' + config.prefix + '-result-card ' + config.prefix + '-status-' + statusKey + '">' + summary + list + barcodeHtml + qrBlock + verified + actionBar + '</div>';
 			announce( statusDescription ? statusLabel + '. ' + statusDescription : statusLabel );
 		}
 
@@ -414,12 +412,35 @@
 		return copied;
 	}
 
+
+	function printCertloomArea( root ) {
+		if ( ! root || ! document.body ) { window.print(); return; }
+		var existing = document.querySelector( '.certloom-print-portal' );
+		if ( existing && existing.parentNode ) { existing.parentNode.removeChild( existing ); }
+		var portal = document.createElement( 'div' );
+		portal.className = 'certloom-print-portal';
+		portal.setAttribute( 'aria-hidden', 'true' );
+		portal.appendChild( root.cloneNode( true ) );
+		document.body.appendChild( portal );
+		document.body.classList.add( 'certloom-printing' );
+		var cleaned = false;
+		var cleanup = function () {
+			if ( cleaned ) { return; }
+			cleaned = true;
+			document.body.classList.remove( 'certloom-printing' );
+			if ( portal.parentNode ) { portal.parentNode.removeChild( portal ); }
+		};
+		window.addEventListener( 'afterprint', cleanup, { once: true } );
+		window.print();
+		window.setTimeout( cleanup, 1500 );
+	}
+
 	document.addEventListener( 'click', function ( event ) {
 		var target = event.target && event.target.closest ? event.target.closest( '.certloom-copy-link, .certloom-print' ) : null;
 		if ( ! target ) { return; }
 		if ( target.classList.contains( 'certloom-print' ) ) {
 			event.preventDefault();
-			window.print();
+			printCertloomArea( actionRoot( target ) );
 			return;
 		}
 		var url = target.getAttribute( 'data-copy-url' ) || '';

@@ -62,7 +62,9 @@ get_header();
 			</section>
 		<?php endif; ?>
 		<?php
-		if ( 'credential' === $route ) {
+		if ( 'series' === $route ) {
+			echo Ecapla_CertVerify_Render::normalized_credential_profile( $number, array( 'heading_tag' => 'h1' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shared renderer escapes output.
+		} elseif ( 'credential' === $route ) {
 			echo Ecapla_CertVerify_Render::credential_profile( $number, array( 'heading_tag' => 'h1' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shared renderer escapes output.
 		} else {
 			echo Ecapla_CertVerify_Render::legacy_widget( array( 'show_guide' => false ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shared renderer escapes output.

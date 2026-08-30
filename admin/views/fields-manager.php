@@ -5,13 +5,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template variables are local to the rendering method that includes this file.
 // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Templates only read display state; all mutations are handled by nonce-protected controllers.
+$certloom_field_usage = ( new \Certloom\Infrastructure\Repository\ScopedFieldUsageRepository() )->all_usage();
+$certloom_field_usage_error = is_wp_error( $certloom_field_usage ) ? $certloom_field_usage : null;
+if ( $certloom_field_usage_error ) { $certloom_field_usage = array(); }
 ?>
 <div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-fields-screen">
 	<section class="certloom-page-hero" aria-labelledby="certloom-fields-title">
 		<div>
 			<span class="certloom-eyebrow"><?php esc_html_e( 'Data schema', 'certloom' ); ?></span>
 			<h1 id="certloom-fields-title"><?php esc_html_e( 'Field manager', 'certloom' ); ?></h1>
-			<p><?php esc_html_e( 'Control labels, ordering, data sensitivity, public exposure, and protected historical fields from one certificate schema.', 'certloom' ); ?></p>
+			<p><?php esc_html_e( 'Manage the global field catalog used across Certloom. Program- and Batch-specific field sets are not configured on this screen.', 'certloom' ); ?></p>
 		</div>
 		<div class="certloom-page-actions">
 			<a class="button button-secondary button-hero" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-certificates' ) ); ?>"><span class="dashicons dashicons-awards" aria-hidden="true"></span><?php esc_html_e( 'Open registry', 'certloom' ); ?></a>
@@ -41,12 +44,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<?php if ( isset( $_GET['ecapla_certverify_error'] ) ) : ?><div class="notice notice-error"><p><?php echo esc_html( sanitize_text_field( wp_unslash( $_GET['ecapla_certverify_error'] ) ) ); ?></p></div><?php endif; ?>
 
 	<div class="certloom-callout certloom-callout-info">
+		<span class="dashicons dashicons-networking" aria-hidden="true"></span>
+		<div>
+			<strong><?php esc_html_e( 'Current scope: global field catalog', 'certloom' ); ?></strong>
+			<p><?php esc_html_e( 'These definitions are shared product-wide. Assign Optional/Required rules from each Program, then use Batch overrides only when a cohort needs to add or tighten those requirements. Templates and issued credentials consume that contract; they do not create a competing field scope.', 'certloom' ); ?></p>
+		</div>
+	</div>
+
+	<div class="certloom-callout certloom-callout-info">
 		<span class="dashicons dashicons-shield" aria-hidden="true"></span>
 		<div>
 			<strong><?php esc_html_e( 'Privacy-first field schema', 'certloom' ); ?></strong>
 			<p><?php esc_html_e( 'Fresh installations publish only certificate number and status. Classify data before exposing it, then choose whether a field may appear in verification, the richer credential profile, both, or neither. Internal fields are forced private server-side.', 'certloom' ); ?></p>
 		</div>
 	</div>
+
+	<?php if ( $certloom_field_usage_error ) : ?>
+		<div class="notice notice-error"><p><?php echo esc_html( $certloom_field_usage_error->get_error_message() ); ?> <?php esc_html_e( 'Field retirement is disabled until usage can be verified safely.', 'certloom' ); ?></p></div>
+	<?php endif; ?>
 
 	<section class="certloom-panel certloom-fields-panel" aria-labelledby="certloom-active-fields-title">
 		<div class="certloom-panel-header">
@@ -72,6 +87,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 							<label class="screen-reader-text" for="certloom-field-label-<?php echo esc_attr( $index ); ?>"><?php echo esc_html( sprintf( __( 'Label for %s', 'certloom' ), $field['key'] ) ); ?></label>
 							<input id="certloom-field-label-<?php echo esc_attr( $index ); ?>" type="text" name="fields[<?php echo esc_attr( $index ); ?>][label]" value="<?php echo esc_attr( $field['label'] ); ?>" class="ecapla-certverify-field-label regular-text" />
 							<code><?php echo esc_html( $field['key'] ); ?></code>
+							<?php $certloom_usage = $certloom_field_usage[ $field['key'] ] ?? array( 'program_count' => 0, 'batch_count' => 0, 'template_count' => 0, 'referenced' => false ); ?>
+							<?php if ( ! empty( $certloom_usage['referenced'] ) ) : ?>
+								<small class="description certloom-field-usage"><?php echo esc_html( sprintf( __( 'In use: %1$d Programs · %2$d Batch overrides · %3$d Templates', 'certloom' ), absint( $certloom_usage['program_count'] ?? 0 ), absint( $certloom_usage['batch_count'] ?? 0 ), absint( $certloom_usage['template_count'] ?? 0 ) ) ); ?></small>
+							<?php endif; ?>
 						</div>
 						<span class="ecapla-certverify-field-type"><?php echo esc_html( $field['type'] ); ?></span>
 						<div class="certloom-field-policy-cell">
@@ -97,7 +116,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 						</div>
 						<?php if ( empty( $field['core'] ) ) : ?>
 							<div class="ecapla-certverify-field-delete-wrap">
-								<button type="submit" form="ecapla-certverify-delete-field-form" name="field_key" value="<?php echo esc_attr( $field['key'] ); ?>" class="button-link-delete" data-ecapla-confirm="<?php esc_attr_e( 'Retire this custom field? Existing stored values will remain protected and the key will be reserved.', 'certloom' ); ?>"><?php esc_html_e( 'Remove', 'certloom' ); ?></button>
+								<?php if ( $certloom_field_usage_error ) : ?>
+									<span class="description"><?php esc_html_e( 'Usage check unavailable', 'certloom' ); ?></span>
+								<?php elseif ( ! empty( $certloom_usage['referenced'] ) ) : ?>
+									<span class="certloom-visibility-pill is-internal"><?php esc_html_e( 'In use', 'certloom' ); ?></span>
+								<?php else : ?>
+									<button type="submit" form="ecapla-certverify-delete-field-form" name="field_key" value="<?php echo esc_attr( $field['key'] ); ?>" class="button-link-delete" data-ecapla-confirm="<?php esc_attr_e( 'Retire this custom field? Existing issued history remains protected and the key will be reserved.', 'certloom' ); ?>"><?php esc_html_e( 'Retire', 'certloom' ); ?></button>
+								<?php endif; ?>
 							</div>
 						<?php else : ?>
 							<span class="ecapla-certverify-core-field"><?php esc_html_e( 'Core field', 'certloom' ); ?></span>

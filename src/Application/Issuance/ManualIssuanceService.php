@@ -9,6 +9,8 @@ use Certloom\Application\CredentialLifecycleService;
 use Certloom\Application\Rendering\CanonicalJson;
 use Certloom\Application\I18n\CredentialLocale;
 use Certloom\Application\I18n\ProgramTemplateVariantResolver;
+use Certloom\Application\Fields\ScopedFieldContract;
+use Certloom\Application\Templates\TemplateFieldCompatibility;
 use Certloom\Domain\Credential\States;
 use Certloom\Infrastructure\Database\Transaction;
 use Certloom\Infrastructure\Issuance\ManualIssuanceNumberAllocator;
@@ -225,6 +227,7 @@ final class ManualIssuanceService {
 				$series_id = $this->repository->create_series( array(
 					'recipient_id' => $recipient_id,
 					'program_id' => absint( $current['program']['id'] ?? 0 ),
+					'batch_id' => ! empty( $current['batch']['id'] ) ? absint( $current['batch']['id'] ) : null,
 					'issuer_id' => ! empty( $current['issuer']['id'] ) ? absint( $current['issuer']['id'] ) : null,
 					'administrative_state' => States::ADMIN_ACTIVE,
 					'compliance_state' => States::COMPLIANCE_NOT_APPLICABLE,
@@ -247,7 +250,7 @@ final class ManualIssuanceService {
 					'score' => '',
 					'verification_url' => $verification_url,
 				);
-				$merge = $this->merges->build( $recipient, $current['program'], $current['issuer'], $credential_facts, $current['template_revision']['layout'], $current['request']['custom_merge_fields'] );
+				$merge = $this->merges->build( $recipient, $current['program'], $current['issuer'], $credential_facts, $current['template_revision']['layout'], $this->credential_custom_values( $current['field_contract'], $current['field_values'], $current['request']['custom_merge_fields'] ) );
 				if ( is_wp_error( $merge ) ) { return $merge; }
 				$snapshot = $this->snapshot( $current, $recipient, $series, $credential_facts, $merge, $expected_review_fingerprint, $actor_user_id, $source_type, $source_ref, $source_context );
 				if ( is_wp_error( $snapshot ) ) { return $snapshot; }
@@ -319,6 +322,18 @@ final class ManualIssuanceService {
 		if ( is_wp_error( $program ) ) { return $program; }
 		if ( ! is_array( $program ) ) { return new \WP_Error( 'certloom_manual_issue_program_missing', __( 'Choose a program that still exists.', 'certloom' ) ); }
 		if ( empty( $program['active'] ) ) { return new \WP_Error( 'certloom_manual_issue_program_inactive', __( 'Inactive programs cannot receive new credential issuances.', 'certloom' ) ); }
+		$batch = null;
+		if ( ! empty( $request['batch_id'] ) ) {
+			$batch = $this->repository->find_batch( $request['batch_id'] );
+			if ( is_wp_error( $batch ) ) { return $batch; }
+			if ( ! is_array( $batch ) ) { return new \WP_Error( 'certloom_manual_issue_batch_missing', __( 'Choose a Batch that still exists.', 'certloom' ) ); }
+			if ( empty( $batch['active'] ) ) { return new \WP_Error( 'certloom_manual_issue_batch_inactive', __( 'Inactive Batches cannot receive new credential issuances.', 'certloom' ) ); }
+			if ( absint( $batch['program_id'] ?? 0 ) !== absint( $program['id'] ?? 0 ) ) { return new \WP_Error( 'certloom_manual_issue_batch_program_mismatch', __( 'The selected Batch belongs to a different Program.', 'certloom' ) ); }
+		}
+		$field_contract = ( new ScopedFieldContract() )->resolve( is_array( $program['field_contract'] ?? null ) ? $program['field_contract'] : ScopedFieldContract::empty_program(), is_array( $batch ) && is_array( $batch['field_contract'] ?? null ) ? $batch['field_contract'] : null, $this->field_catalog() );
+		if ( is_wp_error( $field_contract ) ) { return $field_contract; }
+		$field_values = $this->resolve_field_values( $field_contract, $recipient, $request );
+		if ( is_wp_error( $field_values ) ) { return $field_values; }
 		$issuer = null;
 		if ( ! empty( $program['issuer_id'] ) ) {
 			$issuer = $this->repository->find_issuer( $program['issuer_id'] );
@@ -339,7 +354,7 @@ final class ManualIssuanceService {
 				$template_resolution = (string) ( $variant['resolution_scope'] ?? 'program_locale_fallback' );
 				$template_locale_variant = $variant;
 			} else {
-				$resolved = $this->repository->resolve_published_template_for_program( absint( $program['id'] ?? 0 ), absint( $program['issuer_id'] ?? 0 ) );
+				$resolved = $this->repository->resolve_published_template_for_context( absint( $program['id'] ?? 0 ), absint( $batch['id'] ?? 0 ), absint( $program['issuer_id'] ?? 0 ) );
 				if ( is_wp_error( $resolved ) ) { return $resolved; }
 				if ( ! is_array( $resolved ) || empty( $resolved['template_id'] ) ) { return new \WP_Error( 'certloom_manual_issue_program_design_missing', __( 'This Program does not resolve to a published certificate design. Assign a published Template to the Program (or an inherited Issuer/Global fallback) before issuing.', 'certloom' ) ); }
 				$request['template_id'] = absint( $resolved['template_id'] );
@@ -355,6 +370,13 @@ final class ManualIssuanceService {
 			return new \WP_Error( null !== $template_locale_variant ? 'certloom_manual_issue_locale_template_unavailable' : 'certloom_manual_issue_template_unavailable', null !== $template_locale_variant ? __( 'The Program locale maps to a certificate design that is no longer published. Review the Program language variants before issuing.', 'certloom' ) : __( 'Choose an active published template.', 'certloom' ) );
 		}
 		$revision = $template['published_revision'];
+		$template_fields = ( new TemplateFieldCompatibility() )->validate(
+			(array) ( $revision['layout'] ?? array() ),
+			is_array( $program['field_contract'] ?? null ) ? $program['field_contract'] : ScopedFieldContract::empty_program(),
+			is_array( $batch ) && is_array( $batch['field_contract'] ?? null ) ? $batch['field_contract'] : null,
+			$this->field_catalog()
+		);
+		if ( is_wp_error( $template_fields ) ) { return $template_fields; }
 		$expires_at = $this->expiry_date( $request, $program );
 		if ( is_wp_error( $expires_at ) ) { return $expires_at; }
 		$numbering = null;
@@ -373,7 +395,7 @@ final class ManualIssuanceService {
 			'grade' => $request['grade'],
 			'verification_url' => 'https://example.invalid/certloom/pending',
 		);
-		$merge_probe = $this->merges->build( $recipient, $program, $issuer, $probe_facts, $revision['layout'], $request['custom_merge_fields'] );
+		$merge_probe = $this->merges->build( $recipient, $program, $issuer, $probe_facts, $revision['layout'], $this->credential_custom_values( $field_contract, $field_values, $request['custom_merge_fields'] ) );
 		if ( is_wp_error( $merge_probe ) ) { return $merge_probe; }
 		$fingerprint_payload = array(
 			'contract' => 'certloom-manual-issuance-review',
@@ -381,6 +403,9 @@ final class ManualIssuanceService {
 			'recipient_mode' => $request['recipient_mode'],
 			'recipient' => $this->recipient_fingerprint( $recipient ),
 			'program' => $this->program_fingerprint( $program ),
+			'batch' => $this->batch_fingerprint( $batch ),
+			'field_contract' => $field_contract,
+			'field_values' => $field_values,
 			'issuer' => $this->issuer_fingerprint( $issuer ),
 			'template' => $this->template_fingerprint( $template, $revision ),
 			'valid_from' => $request['valid_from'],
@@ -398,6 +423,9 @@ final class ManualIssuanceService {
 			'request' => $request,
 			'recipient' => $recipient,
 			'program' => $program,
+			'batch' => $batch,
+			'field_contract' => $field_contract,
+			'field_values' => $field_values,
 			'issuer' => $issuer,
 			'template' => $template,
 			'template_revision' => $revision,
@@ -425,6 +453,7 @@ final class ManualIssuanceService {
 		$recipient_id = 'existing' === $mode ? absint( $request['recipient_id'] ?? 0 ) : 0;
 		if ( 'existing' === $mode && ! $recipient_id ) { return new \WP_Error( 'certloom_manual_issue_recipient_required', __( 'Choose an existing recipient.', 'certloom' ) ); }
 		$program_id = absint( $request['program_id'] ?? 0 );
+		$batch_id = absint( $request['batch_id'] ?? 0 );
 		$template_id = absint( $request['template_id'] ?? 0 );
 		if ( ! $program_id ) { return new \WP_Error( 'certloom_manual_issue_program_required', __( 'Choose a credential program.', 'certloom' ) ); }
 		$valid_from = $this->date( $request['valid_from'] ?? '' );
@@ -455,6 +484,7 @@ final class ManualIssuanceService {
 			'recipient_id' => $recipient_id,
 			'new_recipient' => $new,
 			'program_id' => $program_id,
+			'batch_id' => $batch_id,
 			'template_id' => $template_id,
 			'valid_from' => $valid_from,
 			'expiry_mode' => $expiry_mode,
@@ -463,6 +493,49 @@ final class ManualIssuanceService {
 			'display_number' => $this->numbers->is_automatic() ? '' : $display_number,
 			'custom_merge_fields' => $custom_merge_fields,
 		);
+	}
+
+	/** @return array<string,array<string,mixed>> */
+	private function field_catalog() { return class_exists( 'Ecapla_CertVerify_Fields' ) ? \Ecapla_CertVerify_Fields::get_field_map() : array(); }
+
+	/** Resolve exact FLD-02 values without letting mutable Program/Batch settings leak past issuance. @return array<string,string>|\WP_Error */
+	private function resolve_field_values( array $contract, array $recipient, array $request ) {
+		$rows = isset( $contract['fields'] ) && is_array( $contract['fields'] ) ? $contract['fields'] : array();
+		$submitted = isset( $request['custom_merge_fields'] ) && is_array( $request['custom_merge_fields'] ) ? $request['custom_merge_fields'] : array();
+		$configured = ! empty( $contract['_meta']['configured'] );
+		$assigned = array();
+		foreach ( $rows as $row ) { $key = sanitize_key( (string) ( $row['key'] ?? '' ) ); if ( '' !== $key ) { $assigned[ $key ] = true; } }
+		if ( $configured && '' !== trim( (string) ( $request['grade'] ?? '' ) ) && ! isset( $assigned['grade'] ) ) {
+			return new \WP_Error( 'certloom_manual_issue_unassigned_grade', __( 'Grade / result is not assigned to the selected Program/Batch credential-field contract.', 'certloom' ) );
+		}
+		if ( empty( $rows ) ) {
+			if ( $configured && ! empty( $submitted ) ) {
+				return new \WP_Error( 'certloom_manual_issue_unassigned_field', __( 'This Program uses a scoped credential-field contract and does not accept unassigned credential-specific fields.', 'certloom' ) );
+			}
+			return array();
+		}
+		$catalog = $this->field_catalog();
+		$allowed_custom = array(); $values = array();
+		foreach ( $rows as $row ) {
+			$key = sanitize_key( (string) ( $row['key'] ?? '' ) ); if ( '' === $key || ! isset( $catalog[ $key ] ) ) { continue; }
+			$source = (string) ( $row['value_source'] ?? ScopedFieldContract::value_source( $key ) );
+			if ( 'recipient' === $source ) { $raw = $recipient[ $key ] ?? ''; }
+			elseif ( 'credential' === $source && 'grade' === $key ) { $raw = $request['grade'] ?? ''; }
+			else { $raw = $submitted[ $key ] ?? ''; $allowed_custom[ $key ] = true; }
+			$clean = \Ecapla_CertVerify_Validator::custom_field_value( $raw, $catalog[ $key ] );
+			if ( is_wp_error( $clean ) ) { return $clean; }
+			if ( ! empty( $row['required'] ) && '' === trim( (string) $clean ) ) { return new \WP_Error( 'certloom_manual_issue_required_field_missing', sprintf( __( 'Complete required credential field “%s” before issuing.', 'certloom' ), (string) ( $row['label'] ?? $key ) ) ); }
+			$values[ $key ] = (string) $clean;
+		}
+		foreach ( $submitted as $raw_key => $unused ) { $key = sanitize_key( (string) $raw_key ); if ( '' !== $key && ! isset( $allowed_custom[ $key ] ) ) { return new \WP_Error( 'certloom_manual_issue_unassigned_field', __( 'A credential-specific field was submitted that is not assigned to the selected Program/Batch field contract.', 'certloom' ) ); } }
+		ksort( $values, SORT_STRING ); return $values;
+	}
+
+	/** Preserve legacy free custom merge rows only for Programs that have not opted into FLD-02 yet. @return array<string,string> */
+	private function credential_custom_values( array $contract, array $values, array $legacy ) {
+		$rows = isset( $contract['fields'] ) && is_array( $contract['fields'] ) ? $contract['fields'] : array();
+		if ( empty( $rows ) ) { return ! empty( $contract['_meta']['configured'] ) ? array() : $legacy; }
+		$out = array(); foreach ( $rows as $row ) { if ( 'credential_custom' !== (string) ( $row['value_source'] ?? '' ) ) { continue; } $key = sanitize_key( (string) ( $row['key'] ?? '' ) ); if ( '' !== $key && array_key_exists( $key, $values ) ) { $out[ $key ] = (string) $values[ $key ]; } } ksort( $out, SORT_STRING ); return $out;
 	}
 
 	/** @return string|null|\WP_Error */
@@ -495,6 +568,8 @@ final class ManualIssuanceService {
 			'issuance' => array( 'source' => (string) $source_type, 'source_ref' => null === $source_ref ? null : (string) $source_ref, 'actor_user_id' => absint( $actor_user_id ), 'review_fingerprint' => (string) $fingerprint, 'custom_merge_fields' => $review['request']['custom_merge_fields'], 'integration_context_sha256' => is_array( $source_context ) ? (string) ( $source_context['sha256'] ?? '' ) : null, 'integration_context' => is_array( $source_context ) && isset( $source_context['context'] ) && is_array( $source_context['context'] ) ? $source_context['context'] : null ),
 			'recipient' => $this->recipient_snapshot( $recipient ),
 			'program' => $this->program_snapshot( $review['program'] ),
+			'batch' => $this->batch_snapshot( $review['batch'] ?? null ),
+			'fields' => array( 'contract' => isset( $review['field_contract'] ) && is_array( $review['field_contract'] ) ? $review['field_contract'] : array(), 'values' => isset( $review['field_values'] ) && is_array( $review['field_values'] ) ? $review['field_values'] : array() ),
 			'locale' => isset( $review['credential_locale'] ) && is_array( $review['credential_locale'] ) ? $review['credential_locale'] : array(),
 			'issuer' => $this->issuer_snapshot( $review['issuer'] ),
 			'signer' => null,
@@ -566,9 +641,11 @@ final class ManualIssuanceService {
 	private function length( $value ) { return function_exists( 'mb_strlen' ) ? mb_strlen( (string) $value, 'UTF-8' ) : strlen( (string) $value ); }
 	/** @return array<string,mixed> */ private function recipient_fingerprint( array $r ) { return $this->recipient_snapshot( $r ) + array( 'updated_at' => (string) ( $r['updated_at'] ?? '' ) ); }
 	/** @return array<string,mixed> */ private function program_fingerprint( array $p ) { return $this->program_snapshot( $p ) + array( 'updated_at' => (string) ( $p['updated_at'] ?? '' ) ); }
+	/** @return array<string,mixed>|null */ private function batch_fingerprint( $b ) { $out=$this->batch_snapshot($b); return is_array($out)?$out+array('updated_at'=>(string)($b['updated_at']??'')):null; }
 	/** @return array<string,mixed>|null */ private function issuer_fingerprint( $i ) { $out=$this->issuer_snapshot($i); return is_array($out)?$out+array('updated_at'=>(string)($i['updated_at']??'')):null; }
 	/** @return array<string,mixed> */ private function template_fingerprint( array $t, array $r ) { return array( 'id'=>absint($t['id']??0),'machine_key'=>(string)($t['machine_key']??''),'name'=>(string)($t['name']??''),'updated_at'=>(string)($t['updated_at']??''),'published_revision_id'=>absint($r['id']??0),'revision_number'=>absint($r['revision_number']??0),'layout_schema'=>(string)($r['layout_schema']??''),'layout_schema_version'=>absint($r['layout_schema_version']??0),'layout_sha256'=>(string)($r['layout_sha256']??'') ); }
 	/** @return array<string,mixed> */ private function recipient_snapshot( array $r ) { return array( 'id'=>!empty($r['id'])?absint($r['id']):null,'display_name'=>(string)($r['display_name']??''),'first_name'=>$r['first_name']??null,'middle_name'=>$r['middle_name']??null,'last_name'=>$r['last_name']??null,'email'=>$r['email']??null,'external_id'=>$r['external_id']??null,'custom_fields'=>isset($r['custom_fields'])&&is_array($r['custom_fields'])?$r['custom_fields']:array() ); }
 	/** @return array<string,mixed> */ private function program_snapshot( array $p ) { return array( 'id'=>absint($p['id']??0),'code'=>$p['code']??null,'title'=>(string)($p['title']??''),'description'=>$p['description']??null,'issuer_id'=>!empty($p['issuer_id'])?absint($p['issuer_id']):null,'validity_days'=>null!==($p['validity_days']??null)?absint($p['validity_days']):null,'profile'=>isset($p['profile'])&&is_array($p['profile'])?$p['profile']:array(),'metadata'=>isset($p['metadata'])&&is_array($p['metadata'])?$p['metadata']:array() ); }
+	/** @return array<string,mixed>|null */ private function batch_snapshot( $b ) { if(!is_array($b))return null; return array( 'id'=>absint($b['id']??0),'program_id'=>absint($b['program_id']??0),'code'=>(string)($b['code']??''),'name'=>(string)($b['name']??''),'start_date'=>$b['start_date']??null,'end_date'=>$b['end_date']??null ); }
 	/** @return array<string,mixed>|null */ private function issuer_snapshot( $i ) { if(!is_array($i))return null; return array( 'id'=>absint($i['id']??0),'name'=>(string)($i['name']??''),'slug'=>(string)($i['slug']??''),'logo_attachment_id'=>!empty($i['logo_attachment_id'])?absint($i['logo_attachment_id']):null,'seal_attachment_id'=>!empty($i['seal_attachment_id'])?absint($i['seal_attachment_id']):null,'settings'=>isset($i['settings'])&&is_array($i['settings'])?$i['settings']:array() ); }
 }

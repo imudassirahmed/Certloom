@@ -8,7 +8,7 @@ class Ecapla_CertVerify_Public_Router {
 	const ROUTE_VAR       = 'certloom_route';
 	const TOKEN_VAR       = 'certloom_token';
 	const REWRITE_OPTION  = 'certverify_public_rewrite_version';
-	const REWRITE_VERSION = '1';
+	const REWRITE_VERSION = '2';
 
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'register_rewrites' ), 5 );
@@ -25,6 +25,7 @@ class Ecapla_CertVerify_Public_Router {
 			return;
 		}
 		add_rewrite_rule( '^certloom/verify/([^/]{1,180})/?$', 'index.php?' . self::ROUTE_VAR . '=verify&' . self::TOKEN_VAR . '=$matches[1]', 'top' );
+		add_rewrite_rule( '^certloom/credential/id/([^/]{1,40})/?$', 'index.php?' . self::ROUTE_VAR . '=series&' . self::TOKEN_VAR . '=$matches[1]', 'top' );
 		add_rewrite_rule( '^certloom/credential/([^/]{1,180})/?$', 'index.php?' . self::ROUTE_VAR . '=credential&' . self::TOKEN_VAR . '=$matches[1]', 'top' );
 	}
 
@@ -56,7 +57,7 @@ class Ecapla_CertVerify_Public_Router {
 
 	public static function current_route() {
 		$route = function_exists( 'get_query_var' ) ? sanitize_key( (string) get_query_var( self::ROUTE_VAR ) ) : '';
-		if ( ! in_array( $route, array( 'verify', 'credential' ), true ) ) {
+		if ( ! in_array( $route, array( 'verify', 'credential', 'series' ), true ) ) {
 			return '';
 		}
 		return $route;
@@ -141,7 +142,7 @@ class Ecapla_CertVerify_Public_Router {
 
 	public static function document_title( $title ) {
 		$route = self::current_route();
-		if ( 'credential' === $route ) {
+		if ( in_array( $route, array( 'credential', 'series' ), true ) ) {
 			/* Never leak a requested identifier through <title> before visibility policy runs. */
 			return __( 'Credential profile', 'certloom' );
 		}

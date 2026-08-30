@@ -470,8 +470,11 @@ final class TemplateAdmin {
 		if ( $edit_id ) { $view = 'editor'; }
 		if ( isset( $_GET['assignment_scope'] ) && '' !== (string) $_GET['assignment_scope'] && '' === $requested ) { $view = 'assignments'; } // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Backwards-compatible read-only deep link.
 		$simple = AdminUiMode::is_simple();
-		echo '<div class="wrap certloom-domain-admin certloom-template-admin"><h1>' . esc_html( $simple ? __( 'Design', 'certloom' ) : __( 'Templates', 'certloom' ) ) . '</h1>';
-		echo '<p class="description">' . esc_html__( 'Browse certificate previews first, then assign a design to a Program or open the same Template in Designer. Revision history and publication stay unchanged underneath this visual workspace.', 'certloom' ) . '</p>';
+		$new_url = add_query_arg( array( 'page' => self::PAGE, 'design_view' => 'editor', 'library_action' => 'start_blank' ), admin_url( 'admin.php' ) ) . '#certloom-template-editor';
+		$library_url = add_query_arg( array( 'page' => self::PAGE, 'design_view' => 'library' ), admin_url( 'admin.php' ) );
+		echo '<div class="wrap certloom-domain-admin certloom-template-admin"><div class="certloom-template-page-head"><div><h1>' . esc_html( $simple ? __( 'Design', 'certloom' ) : __( 'Templates', 'certloom' ) ) . '</h1><p class="description">' . esc_html__( 'Browse certificate previews first, then assign a design to a Program or open the same Template in Designer. Revision history and publication stay unchanged underneath this visual workspace.', 'certloom' ) . '</p></div><div class="certloom-template-page-actions">';
+		if ( 'editor' === $view ) { echo '<a class="button" href="' . esc_url( $library_url ) . '">' . esc_html__( 'Back to library', 'certloom' ) . '</a>'; }
+		echo '<a class="button button-primary" href="' . esc_url( $new_url ) . '">' . esc_html__( 'Create template', 'certloom' ) . '</a></div></div>';
 		$this->notice();
 		$this->design_nav( $view );
 		if ( 'library' === $view ) {
@@ -512,7 +515,7 @@ final class TemplateAdmin {
 		); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filters.
 		$page = isset( $_GET['library_paged'] ) ? max( 1, absint( $_GET['library_paged'] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only pagination.
 		$program_id = isset( $_GET['library_program_id'] ) ? absint( $_GET['library_program_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Program context.
-		$programs = ( new ProgramRepository() )->list_page( '', 1, 100, 'active' );
+		$programs = ( new ScopedContextChoices() )->programs( $program_id );
 		$program = $program_id ? ( new ProgramRepository() )->find( $program_id ) : null;
 		if ( is_wp_error( $program ) ) { $program = null; }
 		$direct = $program_id ? $repo->get_assignment( TemplateAssignmentPolicy::SCOPE_PROGRAM, $program_id ) : null;
@@ -547,7 +550,7 @@ final class TemplateAdmin {
 		$per_page = 12; $total = count( $items ); $pages = max( 1, (int) ceil( $total / $per_page ) ); $page = min( $page, $pages );
 		$visible = array_slice( $items, ( $page - 1 ) * $per_page, $per_page );
 
-		echo '<section class="certloom-template-library-visual"><header class="certloom-template-library-hero"><div><span class="certloom-template-library-kicker">' . esc_html__( 'Curated Template Library', 'certloom' ) . '</span><h2>' . esc_html__( 'Choose a certificate design visually', 'certloom' ) . '</h2><p>' . esc_html__( 'Browse historical layouts together with curated premium concepts. Every thumbnail uses the same certificate layout data as Designer and Preview, so visual browsing does not introduce a second design format.', 'certloom' ) . '</p></div><div class="certloom-template-library-create"><a class="button button-primary" href="' . esc_url( add_query_arg( array( 'page' => self::PAGE, 'design_view' => 'editor', 'library_action' => 'start_blank' ), admin_url( 'admin.php' ) ) ) . '#certloom-template-editor">' . esc_html__( 'Start blank', 'certloom' ) . '</a><button type="button" class="button" data-certloom-library-background-toggle>' . esc_html__( 'Upload certificate background', 'certloom' ) . '</button></div></header>';
+		echo '<section class="certloom-template-library-visual"><header class="certloom-template-library-hero"><div><span class="certloom-template-library-kicker">' . esc_html__( 'Curated Template Library', 'certloom' ) . '</span><h2>' . esc_html__( 'Choose a certificate design visually', 'certloom' ) . '</h2><p>' . esc_html__( 'Browse historical layouts together with curated premium concepts. Every thumbnail uses the same certificate layout data as Designer and Preview, so visual browsing does not introduce a second design format.', 'certloom' ) . '</p></div><div class="certloom-template-library-create"><button type="button" class="button" data-certloom-library-background-toggle>' . esc_html__( 'Upload certificate background', 'certloom' ) . '</button></div></header>';
 		$this->background_creation_form();
 		$this->library_filters( $filters, $search, $kind, $program_id, $programs, $program );
 		if ( is_wp_error( $pool ) ) {
@@ -583,9 +586,9 @@ final class TemplateAdmin {
 		$purposes = TemplateLibraryMetadata::purpose_labels();
 		echo '<form id="certloom-template-library-filters" method="get" class="certloom-template-library-filters"><input type="hidden" name="page" value="' . esc_attr( self::PAGE ) . '"><input type="hidden" name="design_view" value="library"><div class="certloom-template-library-filter-primary">';
 		echo '<label><span>' . esc_html__( 'Search', 'certloom' ) . '</span><input type="search" name="library_s" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr__( 'Name, key, or description', 'certloom' ) . '"></label>';
-		echo '<label><span>' . esc_html__( 'Program', 'certloom' ) . '</span><select name="library_program_id"><option value="0">' . esc_html__( 'Any Program', 'certloom' ) . '</option>';
+		echo '<label><span>' . esc_html__( 'Program', 'certloom' ) . '</span><select name="library_program_id" data-certloom-context-lookup="program" data-certloom-context-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search active Programs…', 'certloom' ) . '"><option value="">' . esc_html__( 'Any Program', 'certloom' ) . '</option>';
 		$seen_program = false;
-		if ( ! is_wp_error( $programs ) ) { foreach ( $programs['items'] as $row ) { $id = absint( $row['id'] ?? 0 ); if ( $id === absint( $program_id ) ) { $seen_program = true; } echo '<option value="' . esc_attr( (string) $id ) . '" ' . selected( $program_id, $id, false ) . '>' . esc_html( (string) $row['title'] ) . '</option>'; } }
+		if ( ! is_wp_error( $programs ) ) { foreach ( $programs as $row ) { $id = absint( $row['id'] ?? 0 ); if ( $id === absint( $program_id ) ) { $seen_program = true; } echo '<option value="' . esc_attr( (string) $id ) . '" ' . selected( $program_id, $id, false ) . '>' . esc_html( (string) $row['title'] ) . '</option>'; } }
 		if ( $program_id && is_array( $program ) && ! $seen_program ) { echo '<option value="' . esc_attr( (string) $program_id ) . '" selected>' . esc_html( (string) $program['title'] ) . '</option>'; }
 		echo '</select></label>';
 		echo '<label><span>' . esc_html__( 'Purpose / category', 'certloom' ) . '</span><select name="library_purpose"><option value="">' . esc_html__( 'All purposes', 'certloom' ) . '</option>'; foreach ( $purposes as $key => $label ) { echo '<option value="' . esc_attr( $key ) . '" ' . selected( $filters['purpose'], $key, false ) . '>' . esc_html( $label ) . '</option>'; } echo '</select></label>';
@@ -620,7 +623,7 @@ final class TemplateAdmin {
 		} else {
 			echo '<a class="button button-primary" href="#certloom-template-library-filters">' . esc_html__( 'Choose Program first', 'certloom' ) . '</a>';
 		}
-		echo '<a class="button" href="' . esc_url( $edit_url . '#certloom-template-designer' ) . '">' . esc_html__( 'Customize', 'certloom' ) . '</a><a class="button button-link" href="' . esc_url( $edit_url . '#certloom-template-duplicate' ) . '">' . esc_html__( 'Duplicate', 'certloom' ) . '</a></div></div></article>';
+		echo '<a class="button" href="' . esc_url( $edit_url . '#certloom-template-designer' ) . '">' . esc_html__( 'Edit in Designer', 'certloom' ) . '</a><a class="button button-link" href="' . esc_url( $edit_url . '#certloom-template-duplicate' ) . '">' . esc_html__( 'Duplicate', 'certloom' ) . '</a></div></div></article>';
 	}
 
 	/** @return array{html:string,scale:float,page_width:float,page_height:float} */
@@ -661,7 +664,7 @@ final class TemplateAdmin {
 		$page = isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter.
 		$status = isset( $_GET['template_status'] ) ? sanitize_key( wp_unslash( $_GET['template_status'] ) ) : 'active'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter.
 		if ( ! in_array( $status, array( 'active', 'archived', 'all' ), true ) ) { $status = 'active'; }
-		$result = $repo->list_page( $search, $page, 20, $status );
+		$result = $repo->list_page( $search, $page, 50, $status );
 		$this->preset_section();
 		echo '<div class="certloom-template-list-head"><div><h2>' . esc_html__( 'My Templates', 'certloom' ) . '</h2><p class="description">' . esc_html__( 'Manage Template identity, revision history and lifecycle here. Lifecycle remains Draft → Published → Changes pending → Archived; visual discovery stays in Template Library.', 'certloom' ) . '</p></div><a class="button button-primary" href="' . esc_url( add_query_arg( array( 'page' => self::PAGE, 'design_view' => 'editor' ), admin_url( 'admin.php' ) ) ) . '#certloom-template-editor">' . esc_html__( 'Create blank Template', 'certloom' ) . '</a></div>';
 		echo '<p class="description">' . esc_html__( 'Archive is non-destructive: revisions and any published history remain intact. Active assignments must be cleared before archival.', 'certloom' ) . '</p>';
@@ -674,7 +677,7 @@ final class TemplateAdmin {
 			echo '<div class="certloom-template-table-wrap"><table class="widefat striped certloom-template-table"><thead><tr><th>' . esc_html__( 'Template', 'certloom' ) . '</th><th>' . esc_html__( 'Machine key', 'certloom' ) . '</th><th>' . esc_html__( 'Draft revision', 'certloom' ) . '</th><th>' . esc_html__( 'Published revision', 'certloom' ) . '</th><th>' . esc_html__( 'Lifecycle', 'certloom' ) . '</th></tr></thead><tbody>';
 			foreach ( $result['items'] as $item ) { $url = add_query_arg( array( 'page' => self::PAGE, 'design_view' => 'editor', 'template_id' => absint( $item['id'] ), 'template_status' => $status, 's' => $search ?: null ), admin_url( 'admin.php' ) ); $state = $repo->lifecycle_state( $item ); echo '<tr><td><strong><a href="' . esc_url( $url ) . '">' . esc_html( (string) $item['name'] ) . '</a></strong><br><span class="description">' . esc_html( (string) ( $item['description'] ?? '' ) ) . '</span></td><td><code>' . esc_html( (string) $item['machine_key'] ) . '</code></td><td>' . esc_html( (string) absint( $item['current_revision_number'] ?? 0 ) ) . '</td><td>' . esc_html( empty( $item['published_revision_number'] ) ? '—' : '#' . absint( $item['published_revision_number'] ) ) . '</td><td>' . $this->lifecycle_badge( $state ) . '</td></tr>'; } // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Lifecycle helper is escaped.
 			if ( empty( $result['items'] ) ) { echo '<tr><td colspan="5">' . esc_html__( 'No templates found for this lifecycle filter.', 'certloom' ) . '</td></tr>'; }
-			echo '</tbody></table></div>'; $this->template_list_pagination( $page, (int) $result['total'], 20, $search, $status );
+			echo '</tbody></table></div>'; $this->template_list_pagination( $page, (int) $result['total'], 50, $search, $status );
 		}
 		$this->import_form();
 	}
@@ -1005,7 +1008,9 @@ final class TemplateAdmin {
 		}
 		echo '</div><div class="certloom-template-designer-content-editor" data-certloom-designer-content-editor>';
 		echo '<div hidden data-certloom-designer-content="text"><label><span>' . esc_html__( 'Text content', 'certloom' ) . '</span><textarea rows="4" maxlength="20000" data-certloom-designer-content-field="text"></textarea></label></div>';
-		echo '<div hidden data-certloom-designer-content="merge"><label class="certloom-designer-quick-only"><span>' . esc_html__( 'Dynamic field', 'certloom' ) . '</span><select data-certloom-designer-quick-token><option value="recipient.name">' . esc_html__( 'Recipient Name', 'certloom' ) . '</option><option value="credential.display_number">' . esc_html__( 'Certificate Number', 'certloom' ) . '</option><option value="program.name">' . esc_html__( 'Program', 'certloom' ) . '</option><option value="credential.issue_date">' . esc_html__( 'Issue Date', 'certloom' ) . '</option><option value="credential.expiry_date">' . esc_html__( 'Expiry Date', 'certloom' ) . '</option><option value="credential.grade">' . esc_html__( 'Grade', 'certloom' ) . '</option><option value="issuer.name">' . esc_html__( 'Issuer', 'certloom' ) . '</option><option value="credential.status">' . esc_html__( 'Status', 'certloom' ) . '</option><option value="__custom__">' . esc_html__( 'Custom Field…', 'certloom' ) . '</option></select></label><label class="certloom-designer-token-advanced" data-certloom-designer-custom-token><span>' . esc_html__( 'Field token', 'certloom' ) . '</span><input type="text" maxlength="128" pattern="[a-z][a-z0-9_.:-]{0,127}" data-certloom-designer-content-field="token" list="certloom-designer-merge-tokens"></label><datalist id="certloom-designer-merge-tokens"><option value="recipient.name"><option value="recipient.first_name"><option value="recipient.last_name"><option value="program.name"><option value="program.title"><option value="issuer.name"><option value="credential.display_number"><option value="credential.public_id"><option value="credential.issue_date"><option value="credential.expiry_date"><option value="credential.grade"><option value="credential.status"><option value="batch.name"></datalist></div>';
+		$catalog_options = $this->designer_catalog_field_options();
+		$catalog_datalist = $this->designer_catalog_field_datalist();
+		echo '<div hidden data-certloom-designer-content="merge"><label class="certloom-designer-quick-only"><span>' . esc_html__( 'Dynamic field', 'certloom' ) . '</span><select data-certloom-designer-quick-token><option value="recipient.name">' . esc_html__( 'Recipient Name', 'certloom' ) . '</option><option value="credential.display_number">' . esc_html__( 'Certificate Number', 'certloom' ) . '</option><option value="program.name">' . esc_html__( 'Program', 'certloom' ) . '</option><option value="credential.issue_date">' . esc_html__( 'Issue Date', 'certloom' ) . '</option><option value="credential.expiry_date">' . esc_html__( 'Expiry Date', 'certloom' ) . '</option><option value="credential.grade">' . esc_html__( 'Grade', 'certloom' ) . '</option><option value="issuer.name">' . esc_html__( 'Issuer', 'certloom' ) . '</option><option value="credential.status">' . esc_html__( 'Status', 'certloom' ) . '</option>' . $catalog_options . '<option value="__custom__">' . esc_html__( 'Advanced custom token…', 'certloom' ) . '</option></select><small>' . esc_html__( 'Credential fields come from the Global Field Catalog. Program/Batch assignment determines whether a field can be satisfied at issuance.', 'certloom' ) . '</small></label><label class="certloom-designer-token-advanced" data-certloom-designer-custom-token><span>' . esc_html__( 'Field token', 'certloom' ) . '</span><input type="text" maxlength="128" pattern="[a-z][a-z0-9_.:-]{0,127}" data-certloom-designer-content-field="token" list="certloom-designer-merge-tokens"></label><datalist id="certloom-designer-merge-tokens"><option value="recipient.name"><option value="recipient.first_name"><option value="recipient.last_name"><option value="program.name"><option value="program.title"><option value="issuer.name"><option value="credential.display_number"><option value="credential.public_id"><option value="credential.issue_date"><option value="credential.expiry_date"><option value="credential.grade"><option value="credential.status"><option value="batch.name">' . $catalog_datalist . '</datalist></div>';
 		echo '<div hidden data-certloom-designer-content="asset"><label><span>' . esc_html__( 'Local asset reference', 'certloom' ) . '</span><input type="text" maxlength="150" data-certloom-designer-content-field="asset" placeholder="attachment:123"></label><label><span>' . esc_html__( 'Fit', 'certloom' ) . '</span><select data-certloom-designer-content-field="fit"><option value="contain">' . esc_html__( 'Contain', 'certloom' ) . '</option><option value="cover">' . esc_html__( 'Cover', 'certloom' ) . '</option><option value="fill">' . esc_html__( 'Fill', 'certloom' ) . '</option></select></label><button type="button" class="button" data-certloom-designer-media>' . esc_html__( 'Choose from Media Library', 'certloom' ) . '</button></div>';
 		echo '<div hidden data-certloom-designer-content="shape"><label><span>' . esc_html__( 'Shape', 'certloom' ) . '</span><select data-certloom-designer-content-field="shape"><option value="rectangle">' . esc_html__( 'Rectangle', 'certloom' ) . '</option><option value="ellipse">' . esc_html__( 'Ellipse', 'certloom' ) . '</option></select></label></div>';
 		echo '<div hidden data-certloom-designer-content="qr"><label><span>' . esc_html__( 'Error correction', 'certloom' ) . '</span><select data-certloom-designer-content-field="error_correction"><option value="L">L</option><option value="M">M</option><option value="Q">Q</option><option value="H">H</option></select></label><label><span>' . esc_html__( 'Quiet zone (modules)', 'certloom' ) . '</span><input type="number" min="4" max="16" step="1" data-certloom-designer-content-field="quiet_zone_modules"></label><p class="description">' . esc_html__( 'QR source remains the canonical verification URL in both supported layout schemas.', 'certloom' ) . '</p></div>';
@@ -1024,6 +1029,37 @@ final class TemplateAdmin {
 		echo '</form><div class="notice notice-error inline" hidden data-certloom-designer-error><p></p></div><div class="screen-reader-text" aria-live="polite" data-certloom-designer-live></div></section>';
 	}
 
+
+
+	/** Catalog-backed custom merge options for the Designer quick picker. @return string */
+	private function designer_catalog_field_options() {
+		if ( ! class_exists( '\\Ecapla_CertVerify_Fields' ) ) { return ''; }
+		$html = '';
+		foreach ( \Ecapla_CertVerify_Fields::get_scopable_fields() as $field ) {
+			$key = sanitize_key( (string) ( $field['key'] ?? '' ) );
+			if ( '' === $key ) { continue; }
+			$label = trim( (string) ( $field['label'] ?? $key ) );
+			$token = \Certloom\Application\Fields\ScopedFieldContract::merge_token( $key );
+			if ( '' === $token || in_array( $token, array( 'credential.grade' ), true ) ) { continue; }
+			$owner = 'recipient' === \Certloom\Application\Fields\ScopedFieldContract::value_source( $key ) ? __( 'Recipient field', 'certloom' ) : __( 'Credential field', 'certloom' );
+			$html .= '<option value="' . esc_attr( $token ) . '">' . esc_html( sprintf( /* translators: 1: field ownership, 2: field label. */ __( '%1$s · %2$s', 'certloom' ), $owner, $label ) ) . '</option>';
+		}
+		return $html;
+	}
+
+	/** Catalog-backed datalist tokens for advanced Designer entry. @return string */
+	private function designer_catalog_field_datalist() {
+		if ( ! class_exists( '\\Ecapla_CertVerify_Fields' ) ) { return ''; }
+		$html = '';
+		foreach ( \Ecapla_CertVerify_Fields::get_scopable_fields() as $field ) {
+			$key = sanitize_key( (string) ( $field['key'] ?? '' ) );
+			if ( '' === $key ) { continue; }
+			$token = \Certloom\Application\Fields\ScopedFieldContract::merge_token( $key );
+			if ( '' === $token || in_array( $token, array( 'credential.grade' ), true ) ) { continue; }
+			$html .= '<option value="' . esc_attr( $token ) . '"></option>';
+		}
+		return $html;
+	}
 
 	/** Translatable labels referenced by the executable-free typed registry contract. @return array<string,string> */
 	private function designer_registry_labels() {

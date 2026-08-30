@@ -349,6 +349,23 @@ class Ecapla_CertVerify_Fields {
 		return self::get_manageable_fields();
 	}
 
+	/**
+	 * Field definitions eligible for FLD-02 Program/Batch requirements.
+	 * Identity/status/date facts that Certloom always owns are intentionally not
+	 * configurable as scoped extras; protected recipient profile fields, Grade,
+	 * and administrator-created custom fields may be assigned.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public static function get_scopable_fields() {
+		return array_values( array_filter( self::get_manageable_fields(), static function ( $field ) {
+			if ( ! class_exists( '\\Certloom\\Application\\Fields\\ScopedFieldContract' ) ) {
+				return false;
+			}
+			return \Certloom\Application\Fields\ScopedFieldContract::is_scopable_definition( $field );
+		} ) );
+	}
+
 	public static function get_field( $key ) {
 		$map = self::get_field_map();
 		return isset( $map[ $key ] ) ? $map[ $key ] : null;

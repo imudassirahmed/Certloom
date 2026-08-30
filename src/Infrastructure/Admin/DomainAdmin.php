@@ -6,6 +6,7 @@ use Certloom\Application\CredentialLifecycleReviewService;
 use Certloom\Application\CredentialRelationshipBulkService;
 use Certloom\Application\Program\ProgramProfile;
 use Certloom\Application\I18n\CredentialLocale;
+use Certloom\Application\Fields\ScopedFieldContract;
 use Certloom\Application\Templates\TemplateAssignmentPolicy;
 use Certloom\Domain\Credential\States;
 use Certloom\Domain\Credential\StatusService;
@@ -49,11 +50,10 @@ final class DomainAdmin {
 
 	/** @return void */
 	public function menu() {
-		$simple = AdminUiMode::is_simple();
-		add_submenu_page( $simple ? null : 'certloom', __( 'Recipients', 'certloom' ), __( 'Recipients', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_RECIPIENTS, self::RECIPIENTS_PAGE, array( $this, 'render_recipients' ) );
+		add_submenu_page( null, __( 'Recipients', 'certloom' ), __( 'Recipients', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_RECIPIENTS, self::RECIPIENTS_PAGE, array( $this, 'render_recipients' ) );
 		add_submenu_page( 'certloom', __( 'Programs', 'certloom' ), __( 'Programs', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS, self::PROGRAMS_PAGE, array( $this, 'render_programs' ) );
-		add_submenu_page( $simple ? null : 'certloom', __( 'Issuers (New Domain)', 'certloom' ), __( 'Issuers (New)', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_ISSUERS, self::ISSUERS_PAGE, array( $this, 'render_issuers' ) );
-		add_submenu_page( $simple ? null : 'certloom', __( 'Credential Management', 'certloom' ), __( 'Credentials', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS, self::CREDENTIALS_PAGE, array( $this, 'render_credentials' ) );
+		add_submenu_page( null, __( 'Issuers (New Domain)', 'certloom' ), __( 'Issuers (New)', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_ISSUERS, self::ISSUERS_PAGE, array( $this, 'render_issuers' ) );
+		add_submenu_page( null, __( 'Credential Management', 'certloom' ), __( 'Credentials', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS, self::CREDENTIALS_PAGE, array( $this, 'render_credentials' ) );
 	}
 
 	/** @return void */
@@ -224,7 +224,7 @@ final class DomainAdmin {
 		$search = $this->search_value();
 		$page   = $this->page_value();
 		$repo   = new RecipientRepository();
-		$result = $repo->list_page( $search, $page, 20 );
+		$result = $repo->list_page( $search, $page, 50 );
 		$summary = $repo->summary();
 		$edit_id = isset( $_GET['recipient_id'] ) ? absint( $_GET['recipient_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin navigation.
 		$editing = $edit_id ? $repo->find( $edit_id ) : null;
@@ -258,7 +258,7 @@ final class DomainAdmin {
 			}
 			if ( empty( $result['items'] ) ) { echo '<tr><td colspan="8"><div class="certloom-domain-empty"><strong>' . esc_html__( 'No recipients found.', 'certloom' ) . '</strong><span>' . esc_html__( 'Add a recipient or adjust the search.', 'certloom' ) . '</span></div></td></tr>'; }
 			echo '</tbody></table></div>';
-			$this->pagination( self::RECIPIENTS_PAGE, $page, (int) $result['total'], 20, $search );
+			$this->pagination( self::RECIPIENTS_PAGE, $page, (int) $result['total'], 50, $search );
 		}
 		if ( is_wp_error( $editing ) ) {
 			$this->error( $editing->get_error_message() );
@@ -279,7 +279,7 @@ final class DomainAdmin {
 		$status = isset( $_GET['program_status'] ) ? sanitize_key( wp_unslash( $_GET['program_status'] ) ) : 'all'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter.
 		$status = in_array( $status, array( 'all', 'active', 'inactive' ), true ) ? $status : 'all';
 		$repo   = new ProgramRepository();
-		$result = $repo->list_page( $search, $page, 20, $status );
+		$result = $repo->list_page( $search, $page, 50, $status );
 		$summary = $repo->summary();
 		$edit_id = isset( $_GET['program_id'] ) ? absint( $_GET['program_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin navigation.
 		$editing = $edit_id ? $repo->find( $edit_id ) : null;
@@ -309,7 +309,7 @@ final class DomainAdmin {
 			}
 			if ( empty( $result['items'] ) ) { echo '<tr><td colspan="8"><div class="certloom-domain-empty"><strong>' . esc_html__( 'No programs found.', 'certloom' ) . '</strong><span>' . esc_html__( 'Add a program or adjust the filters.', 'certloom' ) . '</span></div></td></tr>'; }
 			echo '</tbody></table></div>';
-			$this->pagination( self::PROGRAMS_PAGE, $page, (int) $result['total'], 20, $search, array( 'program_status' => $status ) );
+			$this->pagination( self::PROGRAMS_PAGE, $page, (int) $result['total'], 50, $search, array( 'program_status' => $status ) );
 		}
 		if ( is_wp_error( $editing ) ) {
 			$this->error( $editing->get_error_message() );
@@ -329,7 +329,7 @@ final class DomainAdmin {
 		$search = $this->search_value();
 		$page   = $this->page_value();
 		$repo   = new IssuerRepository();
-		$result = $repo->list_page( $search, $page, 20 );
+		$result = $repo->list_page( $search, $page, 50 );
 		$edit_id = isset( $_GET['issuer_id'] ) ? absint( $_GET['issuer_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin navigation.
 		$editing = $edit_id ? $repo->find( $edit_id ) : null;
 
@@ -346,7 +346,7 @@ final class DomainAdmin {
 			}
 			if ( empty( $result['items'] ) ) { echo '<tr><td colspan="6">' . esc_html__( 'No issuers found.', 'certloom' ) . '</td></tr>'; }
 			echo '</tbody></table>';
-			$this->pagination( self::ISSUERS_PAGE, $page, (int) $result['total'], 20, $search );
+			$this->pagination( self::ISSUERS_PAGE, $page, (int) $result['total'], 50, $search );
 		}
 		if ( is_wp_error( $editing ) ) {
 			$this->error( $editing->get_error_message() );
@@ -374,9 +374,9 @@ final class DomainAdmin {
 		$allowed    = array( 'all', 'valid', 'suspended', 'revoked', 'expired', 'not_yet_valid', 'pending_review', 'noncompliant', 'voided', 'not_issued' );
 		$status     = in_array( $status, $allowed, true ) ? $status : 'all';
 		$repo       = new CredentialRepository();
-		$result     = $repo->list_management_page( $search, $page, 20, $status, $program_id );
+		$result     = $repo->list_management_page( $search, $page, 50, $status, $program_id );
 		$summary    = $repo->management_summary();
-		$programs   = ( new ProgramRepository() )->list_page( '', 1, 100, 'all' );
+		$programs   = ( new ScopedContextChoices() )->programs( $program_id, 'all' );
 		$status_service = new StatusService();
 
 		$this->header( __( 'Credential Management', 'certloom' ), __( 'Inspect continuing Credential Series, immutable Version lineage, effective status, verification identity, and reviewed lifecycle actions from one premium workspace.', 'certloom' ) );
@@ -393,7 +393,7 @@ final class DomainAdmin {
 			);
 		}
 		$this->credential_views( $status, $search, $program_id, is_wp_error( $summary ) ? array() : $summary );
-		$this->credential_filters( $search, $status, $program_id, is_wp_error( $programs ) ? array() : $programs['items'] );
+		$this->credential_filters( $search, $status, $program_id, is_wp_error( $programs ) ? array() : $programs );
 		if ( is_wp_error( $result ) ) {
 			$this->error( $result->get_error_message() );
 		} else {
@@ -418,7 +418,7 @@ final class DomainAdmin {
 				echo '<tr><td colspan="7"><div class="certloom-domain-empty"><strong>' . esc_html__( 'No credentials match these filters.', 'certloom' ) . '</strong><span>' . esc_html__( 'Adjust the search, status, or Program filter. Manual Issuance creates new Credential Series here.', 'certloom' ) . '</span></div></td></tr>';
 			}
 			echo '</tbody></table></div>';
-			$this->pagination( self::CREDENTIALS_PAGE, $page, (int) $result['total'], 20, $search, array( 'credential_status' => $status, 'program_id' => $program_id ) );
+			$this->pagination( self::CREDENTIALS_PAGE, $page, (int) $result['total'], 50, $search, array( 'credential_status' => $status, 'program_id' => $program_id ) );
 		}
 		$this->footer();
 	}
@@ -453,7 +453,6 @@ final class DomainAdmin {
 			foreach ( $versions as $candidate ) { if ( absint( $candidate['id'] ?? 0 ) === $current_version_id ) { $version = $candidate; $selected_version_id = $current_version_id; break; } }
 		}
 		$is_current = is_array( $version ) && absint( $version['id'] ?? 0 ) === $current_version_id;
-		$simple = AdminUiMode::is_simple();
 		$requested_tab = isset( $_GET['credential_tab'] ) ? sanitize_key( wp_unslash( $_GET['credential_tab'] ) ) : ( $simple ? 'summary' : 'overview' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only workspace tab.
 		$requested_section = isset( $_GET['credential_section'] ) ? sanitize_key( wp_unslash( $_GET['credential_section'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only contextual workspace subtab.
 		$tab = $this->credential_panel_target( $requested_tab, $requested_section, $simple );
@@ -577,7 +576,8 @@ final class DomainAdmin {
 	private function credential_filters( $search, $status, $program_id, array $programs ) {
 		echo '<form method="get" class="certloom-domain-search certloom-credential-filters"><input type="hidden" name="page" value="' . esc_attr( self::CREDENTIALS_PAGE ) . '"><input type="hidden" name="credential_status" value="' . esc_attr( $status ) . '">';
 		echo '<label><span class="screen-reader-text">' . esc_html__( 'Search credentials', 'certloom' ) . '</span><input type="search" name="s" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr__( 'Certificate, recipient, email, Program, batch, or public ID', 'certloom' ) . '"></label>';
-		echo '<label><span class="screen-reader-text">' . esc_html__( 'Filter by Program', 'certloom' ) . '</span><select name="program_id"><option value="0">' . esc_html__( 'All Programs', 'certloom' ) . '</option>';
+		$context_nonce = wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION );
+		echo '<label><span class="screen-reader-text">' . esc_html__( 'Filter by Program', 'certloom' ) . '</span><select name="program_id" data-certloom-context-lookup="program" data-certloom-context-program-status="all" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search all Programs…', 'certloom' ) . '"><option value="0">' . esc_html__( 'All Programs', 'certloom' ) . '</option>';
 		foreach ( $programs as $program ) {
 			echo '<option value="' . esc_attr( (string) absint( $program['id'] ?? 0 ) ) . '" ' . selected( $program_id, absint( $program['id'] ?? 0 ), false ) . '>' . esc_html( (string) ( $program['title'] ?? '' ) ) . ( ! empty( $program['code'] ) ? ' — ' . esc_html( (string) $program['code'] ) : '' ) . '</option>';
 		}
@@ -766,15 +766,19 @@ final class DomainAdmin {
 			echo '</section>'; return;
 		}
 
-		$programs = ( new ProgramRepository() )->list_page( '', 1, 100, 'active' );
-		$batches = ( new BatchRepository() )->list_page( '', 1, 100, 'active' );
+		$current_program_id = absint( $series['program_id'] ?? 0 );
+		$current_batch_id = absint( $series['batch_id'] ?? 0 );
+		$choices = new ScopedContextChoices();
+		$programs = $choices->programs( $current_program_id );
+		$batches = $choices->batches( $current_program_id, $current_batch_id );
+		$context_nonce = wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION );
 		echo '<div class="certloom-credential-subpanel"><h4>' . esc_html__( 'Correct Program / Batch', 'certloom' ) . '</h4><form method="post" action="' . esc_url( add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'series_id' => absint( $series['id'] ), 'credential_tab' => 'program' ), admin_url( 'admin.php' ) ) ) . '">';
 		wp_nonce_field( 'certloom_domain_relationship_review_' . absint( $series['id'] ) );
-		echo '<input type="hidden" name="certloom_prepare_relationship" value="1"><div class="certloom-domain-form-grid"><div class="certloom-domain-field"><label><strong>' . esc_html__( 'Target Program', 'certloom' ) . '</strong></label><select name="program_id" required><option value="">' . esc_html__( 'Choose Program…', 'certloom' ) . '</option>';
-		if ( ! is_wp_error( $programs ) ) { foreach ( $programs['items'] as $item ) { echo '<option value="' . esc_attr( (string) absint( $item['id'] ) ) . '" ' . selected( absint( $series['program_id'] ?? 0 ), absint( $item['id'] ), false ) . '>' . esc_html( (string) $item['title'] ) . ( ! empty( $item['code'] ) ? ' — ' . esc_html( (string) $item['code'] ) : '' ) . '</option>'; } }
-		echo '</select></div><div class="certloom-domain-field"><label><strong>' . esc_html__( 'Target Batch', 'certloom' ) . '</strong></label><select name="batch_id"><option value="">' . esc_html__( 'No batch', 'certloom' ) . '</option>';
-		if ( ! is_wp_error( $batches ) ) { foreach ( $batches['items'] as $item ) { echo '<option value="' . esc_attr( (string) absint( $item['id'] ) ) . '" ' . selected( absint( $series['batch_id'] ?? 0 ), absint( $item['id'] ), false ) . '>' . esc_html( (string) $item['name'] ) . ' — ' . esc_html( (string) ( $item['program_title'] ?? '' ) ) . '</option>'; } }
-		echo '</select><p class="description">' . esc_html__( 'A Batch is valid only when it belongs to the selected Program; the domain service enforces this again inside the transaction.', 'certloom' ) . '</p></div><div class="certloom-domain-field certloom-domain-field-wide"><label><strong>' . esc_html__( 'Public correction reason (optional)', 'certloom' ) . '</strong></label><textarea class="large-text" rows="2" name="public_reason"></textarea></div><div class="certloom-domain-field certloom-domain-field-wide"><label><strong>' . esc_html__( 'Internal note (optional)', 'certloom' ) . '</strong></label><textarea class="large-text" rows="3" name="internal_note"></textarea></div></div>';
+		echo '<input type="hidden" name="certloom_prepare_relationship" value="1"><div class="certloom-domain-form-grid"><div class="certloom-domain-field"><label><strong>' . esc_html__( 'Target Program', 'certloom' ) . '</strong></label><select name="program_id" required data-certloom-context-lookup="program" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search active Programs…', 'certloom' ) . '"><option value="">' . esc_html__( 'Choose Program…', 'certloom' ) . '</option>';
+		if ( ! is_wp_error( $programs ) ) { foreach ( $programs as $item ) { echo '<option value="' . esc_attr( (string) absint( $item['id'] ?? 0 ) ) . '" ' . selected( $current_program_id, absint( $item['id'] ?? 0 ), false ) . '>' . esc_html( ScopedContextChoices::program_label( $item ) ) . '</option>'; } }
+		echo '</select></div><div class="certloom-domain-field"><label><strong>' . esc_html__( 'Target Batch', 'certloom' ) . '</strong></label><select name="batch_id" data-certloom-context-lookup="batch" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search Batches in this Program…', 'certloom' ) . '"><option value="0">' . esc_html__( 'No batch', 'certloom' ) . '</option>';
+		if ( ! is_wp_error( $batches ) ) { foreach ( $batches as $item ) { echo '<option value="' . esc_attr( (string) absint( $item['id'] ?? 0 ) ) . '" data-program-id="' . esc_attr( (string) absint( $item['program_id'] ?? 0 ) ) . '" ' . selected( $current_batch_id, absint( $item['id'] ?? 0 ), false ) . '>' . esc_html( ScopedContextChoices::batch_label( $item ) ) . '</option>'; } }
+		echo '</select><p class="description">' . esc_html__( 'Search is constrained to the selected Program. The domain service validates the Program/Batch relationship again inside the immutable correction transaction.', 'certloom' ) . '</p></div><div class="certloom-domain-field certloom-domain-field-wide"><label><strong>' . esc_html__( 'Public correction reason (optional)', 'certloom' ) . '</strong></label><textarea class="large-text" rows="2" name="public_reason"></textarea></div><div class="certloom-domain-field certloom-domain-field-wide"><label><strong>' . esc_html__( 'Internal note (optional)', 'certloom' ) . '</strong></label><textarea class="large-text" rows="3" name="internal_note"></textarea></div></div>';
 		submit_button( __( 'Review correction', 'certloom' ), 'secondary' );
 		echo '</form></div></section>';
 	}
@@ -951,13 +955,22 @@ final class DomainAdmin {
 		$metadata = $is_edit && isset( $editing['metadata'] ) && is_array( $editing['metadata'] ) ? $editing['metadata'] : array();
 		$metadata_editable = $this->is_scalar_map( $metadata );
 		$profile = $is_edit && isset( $editing['profile'] ) && is_array( $editing['profile'] ) ? $editing['profile'] : ProgramProfile::defaults();
+		$field_contract = $is_edit && isset( $editing['field_contract'] ) && is_array( $editing['field_contract'] ) ? $editing['field_contract'] : ScopedFieldContract::empty_program();
+		$scopable_fields = \Ecapla_CertVerify_Fields::get_scopable_fields();
 		$template_repo = new TemplateRepository();
 		$design = null;
 		if ( $is_edit ) {
 			$design = $template_repo->resolve_published_assignment_details( array( 'issuer_id' => absint( $editing['issuer_id'] ?? 0 ), 'program_id' => $id ) );
 		}
-		$published_templates = $template_repo->list_published_candidates( 250 );
-		$published_templates = is_wp_error( $published_templates ) ? array() : (array) ( $published_templates['items'] ?? array() );
+		$published_templates = ( new ScopedContextChoices() )->templates();
+		$published_templates = is_wp_error( $published_templates ) ? array() : (array) $published_templates;
+		$variant_template_ids = array_values( array_unique( array_filter( array_map( 'absint', (array) ( $profile['template_variants'] ?? array() ) ) ) ) );
+		foreach ( $variant_template_ids as $variant_template_id ) {
+			$already_loaded = false; foreach ( $published_templates as $candidate ) { if ( absint( $candidate['id'] ?? 0 ) === $variant_template_id ) { $already_loaded = true; break; } }
+			if ( $already_loaded ) { continue; }
+			$selected_template = $template_repo->find_published( $variant_template_id );
+			if ( is_array( $selected_template ) ) { $published_templates[] = array( 'id' => absint( $selected_template['id'] ?? 0 ), 'name' => (string) ( $selected_template['name'] ?? '' ), 'machine_key' => (string) ( $selected_template['machine_key'] ?? '' ), 'revision_number' => absint( $selected_template['published_revision']['revision_number'] ?? 0 ) ); }
+		}
 		$locale_policy = new CredentialLocale();
 		$locale_preview = $locale_policy->resolve( $profile['credential_locale'] ?? CredentialLocale::SITE_DEFAULT );
 		echo '<section class="ecapla-certverify-admin-card certloom-domain-editor"><div class="certloom-domain-editor-head"><div><h2>' . esc_html( $is_edit ? __( 'Program profile', 'certloom' ) : __( 'Add program', 'certloom' ) ) . '</h2><p>' . esc_html__( 'Program Profiles centralize purpose, language, lifecycle and experience defaults while issued credentials keep immutable snapshots.', 'certloom' ) . '</p></div>';
@@ -1005,13 +1018,13 @@ final class DomainAdmin {
 		$variant_rows = $variants ?: array( '' => 0 );
 		echo '<div class="certloom-locale-variant-list" data-certloom-locale-variant-list>';
 		foreach ( $variant_rows as $variant_locale => $variant_template_id ) {
-			echo '<div class="certloom-locale-variant-row"><label><span>' . esc_html__( 'Certificate language', 'certloom' ) . '</span><select name="profile_template_variant_locale[]" data-certloom-locale-select>' . $this->locale_options_html( (string) $variant_locale, false, true ) . '</select></label><label><span>' . esc_html__( 'Published Template', 'certloom' ) . '</span><select name="profile_template_variant_template_id[]"><option value="0">' . esc_html__( 'Choose Template', 'certloom' ) . '</option>';
-			foreach ( $published_templates as $candidate ) { echo '<option value="' . esc_attr( (string) absint( $candidate['id'] ?? 0 ) ) . '" ' . selected( (string) $variant_template_id, (string) ( $candidate['machine_key'] ?? '' ), false ) . '>' . esc_html( (string) ( $candidate['name'] ?? '' ) ) . '</option>'; }
+			echo '<div class="certloom-locale-variant-row"><label><span>' . esc_html__( 'Certificate language', 'certloom' ) . '</span><select name="profile_template_variant_locale[]" data-certloom-locale-select>' . $this->locale_options_html( (string) $variant_locale, false, true ) . '</select></label><label><span>' . esc_html__( 'Published Template', 'certloom' ) . '</span><select name="profile_template_variant_template_id[]" data-certloom-context-lookup="template" data-certloom-context-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '" data-certloom-context-empty-value="0" data-certloom-context-search-placeholder="' . esc_attr__( 'Search published Templates…', 'certloom' ) . '"><option value="0">' . esc_html__( 'Choose Template', 'certloom' ) . '</option>';
+			foreach ( $published_templates as $candidate ) { echo '<option value="' . esc_attr( (string) absint( $candidate['id'] ?? 0 ) ) . '" ' . selected( absint( $variant_template_id ), absint( $candidate['id'] ?? 0 ), false ) . '>' . esc_html( (string) ( $candidate['name'] ?? '' ) ) . '</option>'; }
 			echo '</select></label><button type="button" class="button-link-delete certloom-locale-variant-remove" data-certloom-remove-locale-variant>' . esc_html__( 'Remove', 'certloom' ) . '</button></div>';
 		}
 		echo '</div>';
 		$options_html = '<option value="0">' . esc_html__( 'Choose Template', 'certloom' ) . '</option>'; foreach ( $published_templates as $candidate ) { $options_html .= '<option value="' . esc_attr( (string) absint( $candidate['id'] ?? 0 ) ) . '">' . esc_html( (string) ( $candidate['name'] ?? '' ) ) . '</option>'; }
-		echo '<template id="certloom-program-locale-variant-template"><div class="certloom-locale-variant-row"><label><span>' . esc_html__( 'Certificate language', 'certloom' ) . '</span><select name="profile_template_variant_locale[]" data-certloom-locale-select>' . $this->locale_options_html( '', false, true ) . '</select></label><label><span>' . esc_html__( 'Published Template', 'certloom' ) . '</span><select name="profile_template_variant_template_id[]">' . $options_html . '</select></label><button type="button" class="button-link-delete certloom-locale-variant-remove" data-certloom-remove-locale-variant>' . esc_html__( 'Remove', 'certloom' ) . '</button></div></template>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- options assembled from escaped values.
+		echo '<template id="certloom-program-locale-variant-template"><div class="certloom-locale-variant-row"><label><span>' . esc_html__( 'Certificate language', 'certloom' ) . '</span><select name="profile_template_variant_locale[]" data-certloom-locale-select>' . $this->locale_options_html( '', false, true ) . '</select></label><label><span>' . esc_html__( 'Published Template', 'certloom' ) . '</span><select name="profile_template_variant_template_id[]" data-certloom-context-lookup="template" data-certloom-context-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '" data-certloom-context-empty-value="0" data-certloom-context-search-placeholder="' . esc_attr__( 'Search published Templates…', 'certloom' ) . '">' . $options_html . '</select></label><button type="button" class="button-link-delete certloom-locale-variant-remove" data-certloom-remove-locale-variant>' . esc_html__( 'Remove', 'certloom' ) . '</button></div></template>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- options assembled from escaped values.
 		echo '<div class="certloom-locale-variant-actions"><button type="button" class="button" data-certloom-add-locale-variant>' . esc_html__( 'Add language variant', 'certloom' ) . '</button><label><span>' . esc_html__( 'Declared fallback', 'certloom' ) . '</span><select name="profile_template_variant_fallback" data-certloom-locale-fallback data-selected="' . esc_attr( (string) ( $profile['template_variant_fallback'] ?? 'program_default' ) ) . '"><option value="program_default">' . esc_html__( 'Program default design', 'certloom' ) . '</option>'; foreach ( array_keys( $variants ) as $variant_locale ) { echo '<option value="' . esc_attr( (string) $variant_locale ) . '" ' . selected( (string) ( $profile['template_variant_fallback'] ?? 'program_default' ), (string) $variant_locale, false ) . '>' . esc_html( (string) $variant_locale ) . '</option>'; } echo '</select></label></div><p class="description">' . esc_html__( 'A configured locale variant must remain published. If it becomes unavailable, issuance fails closed instead of silently switching certificate artwork.', 'certloom' ) . '</p></div>';
 		echo '<div class="certloom-program-design-default"><h4>' . esc_html__( 'Published certificate design', 'certloom' ) . '</h4>';
 		if ( ! $is_edit ) { echo '<p>' . esc_html__( 'Save the Program first, then assign its published certificate design.', 'certloom' ) . '</p>'; }
@@ -1020,6 +1033,24 @@ final class DomainAdmin {
 		else { echo '<p>' . esc_html__( 'No published Template currently resolves for this Program.', 'certloom' ) . '</p>'; }
 		if ( $is_edit ) { $design_url = add_query_arg( array( 'page' => 'certloom-templates', 'design_view' => 'library', 'library_program_id' => $id ), admin_url( 'admin.php' ) ); echo '<p><a class="button" href="' . esc_url( $design_url ) . '">' . esc_html__( 'Manage Program design', 'certloom' ) . '</a></p>'; }
 		echo '</div></div>';
+		echo '<div class="certloom-domain-subsection certloom-program-field-contract"><div class="certloom-domain-subsection-head"><div><h3>' . esc_html__( 'Credential fields', 'certloom' ) . '</h3><p>' . esc_html__( 'Choose the fields this Program uses for credential issuance. A Batch may add fields or make optional fields required, but it can never remove a Program-required field.', 'certloom' ) . '</p></div></div>';
+		echo '<p class="description">' . esc_html__( 'Program and Batch define where a field is required. Recipient identity remains on the Recipient; credential-specific values are frozen on the immutable issued Version. Changing this Program later never rewrites existing credentials.', 'certloom' ) . '</p>';
+		if ( empty( $scopable_fields ) ) {
+			echo '<div class="notice notice-info inline"><p>' . esc_html__( 'No assignable fields exist in the global Field Catalog yet.', 'certloom' ) . '</p></div>';
+		} else {
+			$current_rules = is_array( $field_contract['fields'] ?? null ) ? $field_contract['fields'] : array();
+			echo '<div class="certloom-domain-table-wrap"><table class="widefat striped"><thead><tr><th>' . esc_html__( 'Field', 'certloom' ) . '</th><th>' . esc_html__( 'Value belongs to', 'certloom' ) . '</th><th>' . esc_html__( 'Public policy', 'certloom' ) . '</th><th>' . esc_html__( 'Program rule', 'certloom' ) . '</th></tr></thead><tbody>';
+			foreach ( $scopable_fields as $field ) {
+				$key = sanitize_key( (string) ( $field['key'] ?? '' ) );
+				if ( '' === $key ) { continue; }
+				$rule = (string) ( $current_rules[ $key ] ?? '' );
+				$source = ScopedFieldContract::value_source( $key );
+				$source_label = 'recipient' === $source ? __( 'Recipient profile', 'certloom' ) : __( 'Issued credential', 'certloom' );
+				echo '<tr><td><strong>' . esc_html( (string) ( $field['label'] ?? $key ) ) . '</strong><br><code>' . esc_html( $key ) . '</code> <span class="description">· ' . esc_html( (string) ( $field['type'] ?? 'text' ) ) . '</span></td><td>' . esc_html( $source_label ) . '</td><td>' . esc_html( (string) ( $field['public_exposure'] ?? 'private' ) ) . '</td><td><label class="screen-reader-text" for="certloom-program-field-' . esc_attr( $key ) . '">' . esc_html( sprintf( __( 'Program rule for %s', 'certloom' ), (string) ( $field['label'] ?? $key ) ) ) . '</label><select id="certloom-program-field-' . esc_attr( $key ) . '" name="program_field_requirement[' . esc_attr( $key ) . ']"><option value="" ' . selected( $rule, '', false ) . '>' . esc_html__( 'Not used', 'certloom' ) . '</option><option value="optional" ' . selected( $rule, 'optional', false ) . '>' . esc_html__( 'Optional', 'certloom' ) . '</option><option value="required" ' . selected( $rule, 'required', false ) . '>' . esc_html__( 'Required', 'certloom' ) . '</option></select></td></tr>';
+			}
+			echo '</tbody></table></div>';
+		}
+		echo '</div>';
 		echo '<div class="certloom-domain-subsection"><div class="certloom-domain-subsection-head"><div><h3>' . esc_html__( 'Advanced metadata', 'certloom' ) . '</h3><p>' . esc_html__( 'Optional local scalar metadata remains available for advanced integrations. Program Profile configuration above uses a reserved typed envelope and is not duplicated here.', 'certloom' ) . '</p></div></div>';
 		if ( $metadata_editable ) {
 			echo '<input type="hidden" name="program_metadata_present" value="1"><div class="certloom-domain-kv-list" data-certloom-kv-list="program">';
@@ -1202,6 +1233,21 @@ final class DomainAdmin {
 		if ( is_wp_error( $profile ) ) { return $profile; }
 		$combined = ( new ProgramProfile() )->with_metadata( $metadata, $profile );
 		if ( is_wp_error( $combined ) ) { return $combined; }
+		$raw_field_rules = isset( $_POST['program_field_requirement'] ) && is_array( $_POST['program_field_requirement'] ) ? wp_unslash( $_POST['program_field_requirement'] ) : array();
+		$field_rules = array();
+		foreach ( $raw_field_rules as $raw_key => $raw_rule ) {
+			$key = sanitize_key( (string) $raw_key );
+			$rule = sanitize_key( (string) $raw_rule );
+			if ( '' !== $key && in_array( $rule, array( 'optional', 'required' ), true ) ) { $field_rules[ $key ] = $rule; }
+		}
+		$contract = new ScopedFieldContract();
+		$catalog = \Ecapla_CertVerify_Fields::get_field_map();
+		$combined = $contract->with_program_metadata( $combined, $field_rules, $catalog );
+		if ( is_wp_error( $combined ) ) { return $combined; }
+		$program_contract = $contract->from_program_metadata( $combined, $catalog );
+		if ( is_wp_error( $program_contract ) ) { return $program_contract; }
+		$guarded = ( new ScopedFieldConfigurationGuard() )->validate_program_change( absint( $existing['id'] ?? 0 ), $program_contract, $profile, absint( $issuer_id ) );
+		if ( is_wp_error( $guarded ) ) { return $guarded; }
 		$data['metadata'] = $combined;
 		return $data;
 	}
@@ -1424,12 +1470,10 @@ final class DomainAdmin {
 
 	/** @return void */
 	private function issuer_field( $selected ) {
-		$result = ( new IssuerRepository() )->list_page( '', 1, 100 );
-		echo '<div class="certloom-domain-field"><label for="certloom-domain-issuer-id"><strong>' . esc_html__( 'Default issuer', 'certloom' ) . '</strong></label><select id="certloom-domain-issuer-id" name="issuer_id"><option value="">' . esc_html__( 'No default issuer', 'certloom' ) . '</option>';
-		if ( ! is_wp_error( $result ) ) {
-			foreach ( $result['items'] as $issuer ) { echo '<option value="' . esc_attr( (string) absint( $issuer['id'] ) ) . '" ' . selected( absint( $selected ), absint( $issuer['id'] ), false ) . '>' . esc_html( (string) $issuer['name'] ) . '</option>'; }
-		}
-		echo '</select><p class="description">' . esc_html__( 'Optional. Full multi-brand policy remains ORG-01; this stores only the normalized issuer relationship already present in the domain.', 'certloom' ) . '</p></div>';
+		$items = ( new ScopedContextChoices() )->issuers( $selected );
+		echo '<div class="certloom-domain-field"><label for="certloom-domain-issuer-id"><strong>' . esc_html__( 'Default issuer', 'certloom' ) . '</strong></label><select id="certloom-domain-issuer-id" name="issuer_id" data-certloom-context-lookup="issuer" data-certloom-context-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search issuers…', 'certloom' ) . '"><option value="">' . esc_html__( 'No default issuer', 'certloom' ) . '</option>';
+		if ( ! is_wp_error( $items ) ) { foreach ( $items as $issuer ) { echo '<option value="' . esc_attr( (string) absint( $issuer['id'] ?? 0 ) ) . '" ' . selected( absint( $selected ), absint( $issuer['id'] ?? 0 ), false ) . '>' . esc_html( (string) ( $issuer['name'] ?? '' ) ) . '</option>'; } }
+		echo '</select><p class="description">' . esc_html__( 'Optional. Searches the complete issuer registry while keeping the form bounded on large sites. Full multi-brand policy remains ORG-01.', 'certloom' ) . '</p></div>';
 	}
 
 	/** @return void */
