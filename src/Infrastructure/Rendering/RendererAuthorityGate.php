@@ -36,7 +36,6 @@ final class RendererAuthorityGate implements ArtifactAuthorityGateInterface {
 
 	/** @return array<string,mixed> */
 	public function manifest_status() {
-		if ( $this->qa_ungated() ) { return array( 'accepted' => true, 'reason' => 'qa_ungated', 'message' => 'QA staging derivative bypasses renderer release authority in memory; no production acceptance manifest is present.', 'manifest' => array( 'authority' => array( 'template_publication' => true, 'artifact_formats' => array( 'pdf', 'png', 'jpeg' ) ), 'renderers' => array() ), 'manifest_sha256' => '' ); }
 		try {
 			$manifest = $this->load_manifest();
 		} catch ( \Throwable $error ) {
@@ -74,7 +73,6 @@ final class RendererAuthorityGate implements ArtifactAuthorityGateInterface {
 	/** @return array<string,mixed> */
 	public function artifact_status( $format, RendererRegistry $registry ) {
 		$format = strtolower( trim( (string) $format ) );
-		if ( $this->qa_ungated() ) { $ok = in_array( $format, array( 'pdf', 'png', 'jpeg' ), true ); return array( 'accepted' => $ok, 'reason' => $ok ? 'artifact_authorized' : 'artifact_format_not_authorized', 'message' => 'QA staging derivative bypasses renderer release authority in memory.', 'manifest' => null, 'manifest_sha256' => '', 'format' => $format ); }
 		$status = $this->manifest_status();
 		if ( empty( $status['accepted'] ) || ! is_array( $status['manifest'] ) ) { return $status; }
 		$allowed = array_values( (array) ( $status['manifest']['authority']['artifact_formats'] ?? array() ) );
@@ -89,7 +87,6 @@ final class RendererAuthorityGate implements ArtifactAuthorityGateInterface {
 
 	/** @return array<string,mixed> */
 	public function runtime_status( RendererRegistry $registry ) {
-		if ( $this->qa_ungated() ) { return array( 'accepted' => true, 'reason' => 'runtime_authorized', 'message' => 'QA staging derivative bypasses renderer release authority in memory.', 'manifest' => null, 'manifest_sha256' => '' ); }
 		$status = $this->manifest_status();
 		if ( empty( $status['accepted'] ) || ! is_array( $status['manifest'] ) ) { return $status; }
 		foreach ( array_values( (array) ( $status['manifest']['authority']['artifact_formats'] ?? array() ) ) as $format ) {
@@ -144,9 +141,6 @@ final class RendererAuthorityGate implements ArtifactAuthorityGateInterface {
 		return $status;
 	}
 
-
-	/** @return bool */
-	private function qa_ungated() { return defined( 'CERTLOOM_QA_UNGATED' ) && true === CERTLOOM_QA_UNGATED; }
 
 	/** @return array<string,mixed> */
 	private function runtime_payload() {
