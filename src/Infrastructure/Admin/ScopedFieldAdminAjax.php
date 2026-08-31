@@ -99,7 +99,7 @@ final class ScopedFieldAdminAjax {
 		}
 		check_ajax_referer( self::NONCE_ACTION, 'nonce' );
 		if ( ! \Certloom\Infrastructure\Migration\DomainFeatureGate::write_paths_ready() ) {
-			wp_send_json_error( array( 'message' => __( 'Credential field changes are unavailable until normalized write authority is ready.', 'certloom' ) ), 409 );
+			wp_send_json_error( array( 'message' => __( 'Credential field changes are not available on this site yet.', 'certloom' ) ), 409 );
 		}
 		$label = isset( $_POST['label'] ) ? sanitize_text_field( wp_unslash( $_POST['label'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
 		$label = function_exists( 'mb_substr' ) ? mb_substr( trim( $label ), 0, 100 ) : substr( trim( $label ), 0, 100 );

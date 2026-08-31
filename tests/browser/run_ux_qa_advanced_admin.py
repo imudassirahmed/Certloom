@@ -52,12 +52,14 @@ async def main():
 
         # 4. Integrations states availability honestly without roadmap/developer language or identity guessing.
         integ=await b.new_page(viewport={'width':1200,'height':820})
-        await integ.set_content(build('build_integrations_fixture.php'),wait_until='load')
-        await ck(await integ.get_by_text('Supported LMS adapters',exact=True).is_visible(),'integrationsCurrentContract')
+        await integ.set_content(build('build_integrations_fixture.php',{'CERTLOOM_INTEGRATIONS_MODE':'advanced'}),wait_until='load')
+        await ck(await integ.get_by_role('heading',name='Integrations',exact=True).is_visible(),'integrationsCurrentContract')
         itext=await integ.locator('.certloom-integrations-workspace').inner_text()
-        await ck('Tutor LMS and LearnDash use one credential workflow' in itext,'integrationsSharedWorkflow')
-        await ck('Certloom never guesses identity from name or email.' in itext,'integrationsNoIdentityGuessing')
-        await ck('automatic credential creation stays locked until Certloom’s production credential-writing checks are approved' in itext,'integrationsAvailabilityTruth')
+        await ck('Every source uses the same Recipient → Program → credential workflow.' in itext,'integrationsSharedWorkflow')
+        await ck('Explicit account or External ID — no name/email guessing' in itext,'integrationsNoIdentityGuessing')
+        await ck(itext.count('Not detected')>=3 and 'Not connected' in itext and 'Create endpoint' in itext,'integrationsAvailabilityTruth')
+        await ck(await integ.get_by_text('Technical boundary',exact=True).is_visible(),'integrationsAdvancedTechnicalBoundary')
+        await ck('Publishing destinations' in itext and 'Destinations never decide who earned a credential' in itext,'integrationsSourceDestinationBoundary')
         await ck('What comes next' not in itext and 'roadmap' not in itext.lower(),'integrationsNoRoadmapHistory')
         await integ.close()
 

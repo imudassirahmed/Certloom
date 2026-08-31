@@ -18,27 +18,29 @@ async def main():
         page=await browser.new_page(viewport={'width':1280,'height':900})
         await page.set_content(html,wait_until='load')
         await ck(await page.get_by_role('heading',name='Integrations',exact=True).count()==1,'heading')
-        await ck(await page.get_by_text('Supported LMS adapters',exact=True).count()==1,'contract')
-        await ck(await page.get_by_role('heading',name='Integration framework ready',exact=True).count()==1,'ready')
-        await ck(await page.get_by_text('Ready',exact=True).count()==1,'readyBadge')
-        await ck(await page.get_by_role('heading',name='Tutor LMS',exact=True).count()==1,'tutorHeading')
-        await ck(await page.get_by_text('Not installed',exact=True).count()==2,'bothNotInstalled')
         text=await page.locator('.certloom-integrations-workspace').inner_text()
         for phrase,label in [
-            ('Completion event','completion'),('Recipient identity','identity'),('Course mapping','mapping'),('Duplicate protection','idempotency'),
-            ('Install and activate Tutor LMS to configure course mappings.','standaloneBoundary'),
-            ('Tutor LMS and LearnDash use one credential workflow','sharedArchitecture'),
-            ('automatic credential creation stays locked until Certloom’s production credential-writing checks are approved','availabilityTruth')]:
+            ('Source confirms eligibility','sourceFlow'),
+            ('Certloom resolves the Recipient','recipientFlow'),
+            ('Issue once, automate next','issuanceFlow'),
+            ('Explicit account or External ID — no name/email guessing','identityBoundary'),
+            ('One Certloom credential, then optional delivery','singleCredential'),
+            ('Tutor LMS','tutor'),('LearnDash','learndash'),('WooCommerce','woocommerce'),
+            ('Coursera','coursera'),('Webhook / API','webhook'),
+            ('Publishing destinations','destinations'),('Credly','credly'),
+            ('Destinations never decide who earned a credential.','destinationBoundary')]:
             await ck(phrase in text,label)
+        await ck(text.count('Not detected')==3,'threeLocalSourcesUnavailable')
+        await ck('production credential-writing authority' not in text,'simpleHidesAuthorityJargon')
+        await ck('Canonical credential first' not in text,'simpleHidesCanonicalJargon')
         await ck(await page.locator('#certloom-tutor-course').count()==0,'noMappingFormWithoutTutor')
-        await ck('Certloom never guesses identity from name or email.' in text,'noEmailInference')
         await ck(await page.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'desktopNoOverflow')
         await page.close()
         mobile=await browser.new_page(viewport={'width':390,'height':820})
         await mobile.set_content(html,wait_until='load')
         await ck(await mobile.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'mobileNoOverflow')
-        await ck(await mobile.get_by_role('heading',name='Integration framework ready',exact=True).is_visible(),'mobileReadyVisible')
-        await ck(await mobile.get_by_role('heading',name='Tutor LMS',exact=True).is_visible(),'mobileTutorVisible')
+        await ck(await mobile.get_by_role('heading',name='Integrations',exact=True).is_visible(),'mobileHeadingVisible')
+        await ck(await mobile.get_by_role('heading',name='Publishing destinations',exact=True).is_visible(),'mobileDestinationsVisible')
         await mobile.close()
         forced=await browser.new_page(viewport={'width':760,'height':700},forced_colors='active')
         await forced.set_content(html,wait_until='load')
@@ -46,7 +48,7 @@ async def main():
         await ck(await forced.get_by_role('heading',name='Integrations',exact=True).is_visible(),'forcedColorsHeadingVisible')
         await forced.close(); await browser.close()
     if failed:
-        print('FAIL  INT-01/02 Integrations browser gate:',', '.join(failed)); return 1
-    print('PASS  INT-01/02 Integrations browser gate: framework truth, Tutor-unavailable fallback, identity boundary, responsive layout and forced-colors behavior')
+        print('FAIL  UX-CORE Integrations browser gate:',', '.join(failed)); return 1
+    print('PASS  UX-CORE Integrations browser gate: source → Recipient → credential → destination flow, Simple-language boundary, responsive layout and forced-colors behavior')
     print(f'\n{checks} Integrations browser checks, 0 failures'); return 0
 raise SystemExit(asyncio.run(main()))

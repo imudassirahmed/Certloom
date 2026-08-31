@@ -22,6 +22,9 @@ $validator = $root . '/tests/i18n/validate_language_packs.py';
 $tools = $root . '/tests/i18n/po_tools.py';
 $manifest = $root . '/languages/certloom-language-packs.json';
 $pot = $root . '/languages/certloom.pot';
+$pot_text = file_get_contents( $pot );
+preg_match_all( '/^msgid /m', $pot_text, $pot_msgids );
+$expected_source_strings = max( 0, count( $pot_msgids[0] ) - 1 );
 
 lpq_check( is_file( $validator ), 'validator exists' );
 lpq_check( is_file( $tools ), 'dependency-free PO/MO tools exist' );
@@ -55,7 +58,7 @@ lpq_check( false !== strpos( $build_script, 'validate_language_packs.py' ), 'det
 list( $rc, $output ) = lpq_exec( 'python3 ' . escapeshellarg( $validator ) . ' ' . escapeshellarg( $root ) . ' --json' );
 lpq_check( 0 === $rc, 'production manifest validates: ' . $output );
 $report = json_decode( $output, true );
-lpq_check( 4517 === (int) ( $report['source_strings'] ?? 0 ), 'quality pipeline sees all 4,517 source strings' );
+lpq_check( $expected_source_strings === (int) ( $report['source_strings'] ?? 0 ), 'quality pipeline sees every current POT source string' );
 lpq_check( empty( $report['errors'] ), 'production manifest has no quality errors' );
 
 list( $fixture_rc, $fixture_output ) = lpq_exec( 'python3 ' . escapeshellarg( $validator ) . ' ' . escapeshellarg( $root ) . ' --manifest tests/i18n/fixtures/candidate-manifest.json --json' );

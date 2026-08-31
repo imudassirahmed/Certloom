@@ -193,7 +193,7 @@ final class JobRuntime {
 		if ( is_array( $job ) && \Certloom\Domain\Job\JobTypes::CREDLY_PUBLISH === (string) ( $job['job_type'] ?? '' ) ) {
 			$error = is_array( $job['error'] ?? null ) ? $job['error'] : array();
 			if ( 'certloom_credly_publish_uncertain' === (string) ( $error['code'] ?? '' ) ) {
-				return new \WP_Error( 'certloom_credly_retry_uncertain_forbidden', __( 'Certloom will not automatically retry an interrupted Credly publication whose external outcome is uncertain. Review the Credly issuer account first.', 'certloom' ) );
+				return new \WP_Error( 'certloom_credly_retry_uncertain_forbidden', __( 'Certloom will not automatically retry this Credly publication because the external result is uncertain. Review the Credly issuer account first.', 'certloom' ) );
 			}
 		}
 		$requeued = $this->service->requeue_failed( (string) $job_key );

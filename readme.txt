@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.98
+Stable tag: 1.6.98-qa.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,8 +12,10 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
+> **QA.8 STAGING BUILD — NOT FOR PRODUCTION.** This derivative intentionally bypasses normalized-domain, public-verification and renderer release-readiness gates in memory so the redesigned workflows can be exercised before genuine DBAUTH/PDF-04 acceptance. It contains no accepted authority manifest and must not be installed on a live production site.
 
-> Release note for 1.6.98: UX-OPS-01/02/03 turns hands-on staging feedback into a coherent Setup/operations/admin polish tranche: the Wizard uses canonical design/numbering/backup authorities and ends with a real Setup complete landing; contextual routes preserve the correct WordPress parent state; Backup & Restore paginates operational history; entity screens are list-first with non-destructive validation retry; Program/Batch fields use compact add/remove + quick-create controls; issuer/signer media uses native WordPress controls; Template publication and assignment language are simplified; and Manual/Bulk Issuance, Email Delivery and Template Preview keep exact integrity proof under collapsed Technical details rather than in the primary workflow. The narrow Ecapla OAuth-relay exception is approved but the hosted relay is not implemented/accepted in this package; site-owned OAuth remains the fallback. Normalized-domain and renderer production authority remain closed.
+
+> Release note for 1.6.98: UX-CORE turns the accumulated 1.6.98 staging findings into a whole-product workflow redesign rather than another isolated admin patch. Simple mode is now task-based (Home → Credentials → Programs → Design → Automations → Settings), uses the normalized Recipient → Program → Credential model, demotes the legacy registry and technical authority evidence, and connects Program setup, Recipient-aware issuance, public Credential Profiles, reusable email messages, automatic delivery and integrations into one human journey. Manual, Bulk, Tutor LMS, LearnDash, WooCommerce, Coursera xAPI and generic Webhook/API act as qualification sources that converge on Certloom's canonical issuance service; Email and Credly are post-issuance destinations. Google Drive normally connects through the narrow Ecapla OAuth relay, while a site-owned Google app remains available in Advanced. The relay implementation is bundled separately and its focused security/behavior suite is green, but live auth.ecapla.com deployment/Google OAuth acceptance is still external and is not claimed by this WordPress package. Normalized-domain and renderer production authority remain closed pending the genuine DBAUTH/PDF-04 ceremonies.
 
 > Release note for 1.6.97: FLD-02 adds Program + optional Batch scoped credential-field contracts over the existing global Field Catalog, with deterministic inheritance, typed Manual/Bulk inputs, immutable issued-Version snapshots, Designer/Template compatibility, privacy-safe public/Portal presentation, LMS/Wizard/restore integration and safe field retirement. SCALE-01 replaces fixed first-N relationship assumptions with bounded searchable Program, Batch, Template, Issuer, Signer and LMS-course lookups while preserving current selections and server revalidation. The release also promotes staging QA corrections for routable contextual subtabs, direct QR, isolated credential printing, Design actions, operational pagination and persistent Setup access. Normalized-domain and renderer production authority remain closed; genuine DBAUTH/PDF-04 acceptance remains external.
 

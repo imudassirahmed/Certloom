@@ -152,7 +152,7 @@
 		var autosaveDiscardButton = root.querySelector( '[data-certloom-designer-autosave-discard]' );
 		var autosaveSessionField = root.querySelector( '[data-certloom-designer-autosave-session-field]' );
 		if ( ! form || ! jsonField || ! pageEl || ! workspace ) { return; }
-		if ( ! registryReady() ) { showError( t( 'elementRegistryUnavailable', 'The typed Designer Element Registry is unavailable or invalid. Reload the page before editing this Template.' ) ); root.classList.add( 'has-registry-error' ); return; }
+		if ( ! registryReady() ) { showError( t( 'elementRegistryUnavailable', 'The Designer could not load its editing controls. Reload the page before editing this design.' ) ); root.classList.add( 'has-registry-error' ); return; }
 
 		var savedLayout;
 		try { savedLayout = JSON.parse( jsonField.value ); } catch ( parseError ) { showError( t( 'currentLayoutLoadError', 'The current canonical layout could not be loaded into Designer.' ) ); return; }
@@ -542,9 +542,9 @@
 		}
 		function buildNewElement( kind, assetReference, point ) {
 			var palette = paletteDefinition( kind );
-			if ( ! palette ) { showError( t( 'elementRegistryUnavailable', 'The typed Designer Element Registry is unavailable or invalid. Reload the page before editing this Template.' ) ); return null; }
-			if ( schemaVersion < Number( palette.min_schema_version || 1 ) ) { showError( t( 'elementRequiresSchemaUpgrade', 'This element requires a newer certloom-layout schema. Upgrade the draft before adding it.' ) ); return null; }
-			var id = secureUuidV4(); if ( ! id ) { showError( t( 'uuidUnavailable', 'This browser cannot create a secure element identifier. Update the browser before adding elements.' ) ); return null; }
+			if ( ! palette ) { showError( t( 'elementRegistryUnavailable', 'The Designer could not load its editing controls. Reload the page before editing this design.' ) ); return null; }
+			if ( schemaVersion < Number( palette.min_schema_version || 1 ) ) { showError( t( 'elementRequiresSchemaUpgrade', 'This element needs a newer design format. Save or upgrade the design before adding it.' ) ); return null; }
+			var id = secureUuidV4(); if ( ! id ) { showError( t( 'uuidUnavailable', 'This browser cannot safely add a new design element. Update the browser and try again.' ) ); return null; }
 			var p = page(), defaults = palette.defaults || {}, geometry;
 			if ( defaults.full_page ) { geometry = { x_mm: 0, y_mm: 0, width_mm: Number( p.width_mm ), height_mm: Number( p.height_mm ) }; }
 			else { geometry = geometryAtPoint( Number( palette.width_mm || 80 ), Number( palette.height_mm || 15 ), point ); }
@@ -575,7 +575,7 @@
 			var element = selected(); if ( ! element ) { return; }
 			if ( isLocked( element ) ) { showError( t( 'duplicateLockedElement', 'Unlock this element before duplicating it.' ) ); return; }
 			if ( elements().length >= 500 ) { showError( t( 'elementLimit', 'This Template already contains the maximum 500 elements.' ) ); return; }
-			var id = secureUuidV4(); if ( ! id ) { showError( t( 'uuidUnavailable', 'This browser cannot create a secure element identifier. Update the browser before adding elements.' ) ); return; }
+			var id = secureUuidV4(); if ( ! id ) { showError( t( 'uuidUnavailable', 'This browser cannot safely add a new design element. Update the browser and try again.' ) ); return; }
 			var before = snapshot(); var copy = clone( element ); copy.id = id; copy.z = elements().length; copy.x_mm = round( copy.x_mm + 4, 3 ); copy.y_mm = round( copy.y_mm + 4, 3 ); copy = clampDragged( copy );
 			elements().push( copy ); normalizeZOrder(); selectOnly( copy.id ); pushHistory( before ); render(); announce( t( 'elementDuplicated', 'Element duplicated.' ) );
 		}
@@ -592,8 +592,8 @@
 		}
 		function addRequested( kind, point ) {
 			var palette = paletteDefinition( kind );
-			if ( ! palette ) { showError( t( 'elementRegistryUnavailable', 'The typed Designer Element Registry is unavailable or invalid. Reload the page before editing this Template.' ) ); return; }
-			if ( schemaVersion < Number( palette.min_schema_version || 1 ) ) { showError( t( 'elementRequiresSchemaUpgrade', 'This element requires a newer certloom-layout schema. Upgrade the draft before adding it.' ) ); return; }
+			if ( ! palette ) { showError( t( 'elementRegistryUnavailable', 'The Designer could not load its editing controls. Reload the page before editing this design.' ) ); return; }
+			if ( schemaVersion < Number( palette.min_schema_version || 1 ) ) { showError( t( 'elementRequiresSchemaUpgrade', 'This element needs a newer design format. Save or upgrade the design before adding it.' ) ); return; }
 			if ( palette.requires_media ) { mediaFrame( function ( reference ) { appendElement( kind, reference, point ); } ); return; }
 			appendElement( kind, '', point );
 		}
@@ -601,13 +601,13 @@
 			var element = selected(); if ( ! element || isLocked( element ) ) { setInspector(); return; }
 			var key = input.getAttribute( 'data-certloom-designer-content-field' ); var raw = String( input.value || '' ); var proposed = clone( element );
 			if ( 'text' === key ) { proposed.text = raw; }
-			else if ( 'token' === key ) { raw = raw.trim(); if ( ! /^[a-z][a-z0-9_.:-]{0,127}$/.test( raw ) ) { showError( t( 'invalidMergeToken', 'Merge field token is invalid.' ) ); setInspector(); return; } proposed.token = raw; }
-			else if ( 'asset' === key ) { raw = raw.trim(); if ( ! /^attachment:[1-9][0-9]*$/.test( raw ) ) { showError( t( 'invalidAssetReference', 'Designer assets must use a local WordPress attachment:ID reference.' ) ); setInspector(); return; } proposed.asset = raw; }
+			else if ( 'token' === key ) { raw = raw.trim(); if ( ! /^[a-z][a-z0-9_.:-]{0,127}$/.test( raw ) ) { showError( t( 'invalidMergeToken', 'This dynamic field is not valid. Choose another field or check its advanced field name.' ) ); setInspector(); return; } proposed.token = raw; }
+			else if ( 'asset' === key ) { raw = raw.trim(); if ( ! /^attachment:[1-9][0-9]*$/.test( raw ) ) { showError( t( 'invalidAssetReference', 'Choose an image from the WordPress Media Library.' ) ); setInspector(); return; } proposed.asset = raw; }
 			else if ( 'fit' === key ) { if ( [ 'contain', 'cover', 'fill' ].indexOf( raw ) === -1 ) { setInspector(); return; } proposed.fit = raw; }
 			else if ( 'shape' === key ) { if ( [ 'rectangle', 'ellipse' ].indexOf( raw ) === -1 ) { setInspector(); return; } proposed.shape = raw; }
 			else if ( 'error_correction' === key ) { raw = raw.toUpperCase(); if ( [ 'L', 'M', 'Q', 'H' ].indexOf( raw ) === -1 ) { setInspector(); return; } proposed.error_correction = raw; }
 			else if ( 'quiet_zone_modules' === key ) { var quiet = Number( raw ); var minQuiet = 'barcode' === element.type ? 10 : 4; var maxQuiet = 'barcode' === element.type ? 50 : 16; if ( ! Number.isInteger( quiet ) || quiet < minQuiet || quiet > maxQuiet ) { setInspector(); return; } proposed.quiet_zone_modules = quiet; }
-			else if ( 'items' === key ) { var listItems = raw.split( /\r?\n/ ).map( function ( item ) { return item.trim(); } ).filter( function ( item ) { return '' !== item; } ); var bytes = 0; for ( var li = 0; li < listItems.length; li++ ) { bytes += unescape( encodeURIComponent( listItems[ li ] ) ).length; } if ( listItems.length < 1 || listItems.length > 100 || bytes > 20000 ) { showError( t( 'invalidListItems', 'Lists require 1–100 non-empty lines and must stay within the canonical text budget.' ) ); setInspector(); return; } proposed.items = listItems; }
+			else if ( 'items' === key ) { var listItems = raw.split( /\r?\n/ ).map( function ( item ) { return item.trim(); } ).filter( function ( item ) { return '' !== item; } ); var bytes = 0; for ( var li = 0; li < listItems.length; li++ ) { bytes += unescape( encodeURIComponent( listItems[ li ] ) ).length; } if ( listItems.length < 1 || listItems.length > 100 || bytes > 20000 ) { showError( t( 'invalidListItems', 'Lists need 1–100 non-empty lines and must stay within the supported text limit.' ) ); setInspector(); return; } proposed.items = listItems; }
 			else if ( 'list_style' === key ) { if ( [ 'bullet', 'decimal' ].indexOf( raw ) === -1 ) { setInspector(); return; } proposed.list_style = raw; }
 			else { return; }
 			var before = snapshot(); if ( updateElement( element.id, proposed, false ) ) { pushHistory( before ); render(); announce( t( 'contentUpdated', 'Element content updated.' ) ); }
@@ -1065,8 +1065,8 @@
 		for ( var quickToggleIndex = 0; quickToggleIndex < quickToggleButtons.length; quickToggleIndex++ ) { quickToggleButtons[ quickToggleIndex ].addEventListener( 'click', function () { var key = this.getAttribute( 'data-certloom-designer-quick-toggle' ); if ( 'bold' === key ) { applyQuickStyleValue( 'font_weight', 'true' === this.getAttribute( 'aria-pressed' ) ? 400 : 700 ); } if ( 'italic' === key ) { applyQuickStyleValue( 'italic', 'true' !== this.getAttribute( 'aria-pressed' ) ); } } ); }
 		for ( var quickAlignIndex = 0; quickAlignIndex < quickTextAlignButtons.length; quickAlignIndex++ ) { quickTextAlignButtons[ quickAlignIndex ].addEventListener( 'click', function () { applyQuickStyleValue( 'align', this.getAttribute( 'data-certloom-designer-quick-text-align' ) ); } ); }
 		if ( colorPicker && colorTextField ) { colorPicker.addEventListener( 'change', function () { if ( colorPicker.disabled ) { return; } colorTextField.value = String( colorPicker.value || '#000000' ).toUpperCase(); applyStyleField( colorTextField ); } ); }
-		if ( mediaButton ) { mediaButton.addEventListener( 'click', function () { var element = selected(); if ( ! element || isLocked( element ) || [ 'image', 'logo', 'signature' ].indexOf( element.type ) === -1 ) { return; } mediaFrame( function ( reference ) { var current = selected(); if ( ! current || isLocked( current ) ) { return; } var before = snapshot(); var proposed = clone( current ); proposed.asset = reference; if ( updateElement( current.id, proposed, false ) ) { pushHistory( before ); render(); announce( t( 'assetUpdated', 'Local media asset updated.' ) ); } } ); } ); }
-		if ( resetButton ) { resetButton.addEventListener( 'click', function () { if ( directTextEditor ) { closeDirectTextEditor( false ); } layout = clone( savedLayout ); designerState = clone( savedState ); selectOnly( '' ); history = []; future = []; activeGuides = { x: null, y: null }; render(); fitWorkspace( true ); discardAutosave( false ); announce( t( 'unsavedChangesReset', 'Unsaved Designer changes reset.' ) ); } ); }
+		if ( mediaButton ) { mediaButton.addEventListener( 'click', function () { var element = selected(); if ( ! element || isLocked( element ) || [ 'image', 'logo', 'signature' ].indexOf( element.type ) === -1 ) { return; } mediaFrame( function ( reference ) { var current = selected(); if ( ! current || isLocked( current ) ) { return; } var before = snapshot(); var proposed = clone( current ); proposed.asset = reference; if ( updateElement( current.id, proposed, false ) ) { pushHistory( before ); render(); announce( t( 'assetUpdated', 'Image updated.' ) ); } } ); } ); }
+		if ( resetButton ) { resetButton.addEventListener( 'click', function () { if ( directTextEditor ) { closeDirectTextEditor( false ); } layout = clone( savedLayout ); designerState = clone( savedState ); selectOnly( '' ); history = []; future = []; activeGuides = { x: null, y: null }; render(); fitWorkspace( true ); discardAutosave( false ); announce( t( 'unsavedChangesReset', 'Unsaved design changes reset.' ) ); } ); }
 		if ( autosaveDiscardButton ) { autosaveDiscardButton.addEventListener( 'click', function () { discardAutosave( true ); } ); }
 		for ( var fieldIndex = 0; fieldIndex < fieldInputs.length; fieldIndex++ ) {
 			fieldInputs[ fieldIndex ].addEventListener( 'change', function () {

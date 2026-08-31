@@ -78,7 +78,7 @@ $root=dirname(__DIR__); $repo=file_get_contents($root.'/src/Infrastructure/Repos
 dsn5(false!==strpos($repo,'upgrade_current_layout')&&false!==strpos($repo,'expected_revision_sha256'),'repository upgrade boundary requires exact revision/hash review proof');
 dsn5(false!==strpos($repo,"layout_schema_version' => absint( \$layout['_meta']['schema_version']"),'repository persists actual normalized schema version instead of hardcoded v1');
 dsn5(false!==strpos($repo,'certloom_template_stale_revision'),'schema upgrades preserve optimistic concurrency failure boundary');
-dsn5(false!==strpos($admin,'certloom_template_layout_upgrade')&&false!==strpos($admin,'Upgrade draft to layout schema v%d'),'admin exposes explicit immutable upgrade to the current schema');
+dsn5(false!==strpos($admin,'certloom_template_layout_upgrade')&&false!==strpos($admin,'Update design format'),'admin exposes the explicit reviewed format upgrade in human language');
 dsn5(false!==strpos($admin,'credential.display_number')&&false!==strpos($admin,'Code 128'),'Designer barcode source and symbology are fixed to existing certificate identity');
 dsn5(false!==strpos($js,'paletteDefinition( kind )')&&false!==strpos($js,'schemaVersion < Number( palette.min_schema_version'),'browser authoring derives barcode schema gating from the typed registry rather than hardcoded type logic');
 dsn5(false!==strpos($restore,'LayoutSchema::supports_version')&&false!==strpos($restore,'certloom_domain_restore_template_layout_schema_mismatch'),'backup restore accepts supported versions but rejects DB/layout metadata mismatch');

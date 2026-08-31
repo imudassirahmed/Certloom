@@ -43,6 +43,23 @@ namespace Certloom\Infrastructure\Job {
 	final class JobRuntime {
 		public static $register_calls = 0;
 		public function register() { self::$register_calls++; }
+		public function email_delivery() { return true; }
+		public function queue() { return true; }
+	}
+}
+
+
+namespace Certloom\Infrastructure\Email {
+	final class EmailAutomationListener {
+		public function __construct( $delivery ) {}
+		public function register() {}
+	}
+}
+
+namespace Certloom\Infrastructure\Integration {
+	final class CredlyPublishingListener {
+		public function __construct( $queue ) {}
+		public function register() {}
 	}
 }
 

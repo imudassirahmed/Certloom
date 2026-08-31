@@ -1,7 +1,7 @@
 <?php
 /** Browser-only INT-03 LearnDash fixture using the production Integrations view/CSS. */
 define( 'ABSPATH', __DIR__ . '/' );
-require_once dirname( __DIR__, 2 ) . '/src/Infrastructure/Admin/ScopedFieldAdminAjax.php';
+require_once dirname( __DIR__ ) . '/bootstrap-autoload.php';
 function __( $v, $d = null ){ return $v; }
 function esc_html__( $v, $d = null ){ return $v; }
 function esc_html_e( $v, $d = null ){ echo htmlspecialchars( (string) $v, ENT_QUOTES, 'UTF-8' ); }
@@ -11,6 +11,7 @@ function esc_attr( $v ){ return htmlspecialchars( (string) $v, ENT_QUOTES, 'UTF-
 function esc_attr_e( $v, $d = null ){ echo htmlspecialchars( (string) $v, ENT_QUOTES, 'UTF-8' ); }
 function esc_url( $v ){ return htmlspecialchars( (string) $v, ENT_QUOTES, 'UTF-8' ); }
 function absint( $v ){ return abs( (int) $v ); }
+function number_format_i18n( $v ){ return number_format( (float) $v ); }
 function admin_url( $p = '' ){ return 'https://example.test/wp-admin/' . ltrim( (string) $p, '/' ); }
 function wp_nonce_field( $action ){ echo '<input type="hidden" name="_wpnonce" value="fixture-' . esc_attr( $action ) . '">'; }
 function is_wp_error( $v ){ return false; }

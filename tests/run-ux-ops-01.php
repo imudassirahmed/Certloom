@@ -37,7 +37,7 @@ uxops_check( false !== strpos( $wizard, 'data-certloom-numbering-example' ) && f
 uxops_check( false !== strpos( $admin, 'Ecapla_CertVerify_Numbering::normalize_policy' ), 'Wizard numbering remains validated by the canonical numbering engine' );
 
 // 3/7. Google Drive: direct self-hosted OAuth, popup flow, advanced first-time client setup.
-uxops_check( false !== strpos( $wizard, "'Connect with Google', 'certloom'" ) && false !== strpos( $wizard, "'One-time Google connection setup', 'certloom'" ), 'Wizard presents a simple Connect with Google action and hides client setup as an advanced first-time task' );
+uxops_check( false !== strpos( $wizard, "'Connect with Google', 'certloom'" ) && false !== strpos( $wizard, "'Advanced: use your own Google app', 'certloom'" ) && false !== strpos( $wizard, 'name="google_connection_mode" value="relay"' ) && false !== strpos( $wizard, 'name="google_connection_mode" value="direct"' ), 'Wizard presents managed Connect with Google by default and keeps the site-owned app path in Advanced' );
 uxops_check( false !== strpos( $oauth, "https://www.googleapis.com/auth/drive.file" ) && false !== strpos( $oauth, 'access_type' ) && false !== strpos( $oauth, "'offline'" ), 'Google integration requests the bounded Drive file scope with offline backup access' );
 uxops_check( false !== strpos( $admin_js, "window.open( '', 'certloomGoogleDriveOAuth'" ) && false !== strpos( $admin_js, "event.origin !== window.location.origin" ), 'OAuth popup uses a separate window and same-origin postMessage validation' );
 uxops_check( false !== strpos( $admin_js, 'Your browser blocked the popup' ) && false !== strpos( $admin_js, "returnMode.value = 'backup'" ), 'OAuth has a usable same-tab fallback when a popup is blocked' );

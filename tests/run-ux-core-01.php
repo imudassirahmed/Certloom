@@ -66,6 +66,7 @@ uxcore( false !== strpos( $css, 'UX-CORE-01' ) && false !== strpos( $css, '--cer
 uxcore( false !== strpos( $css, '.certloom-simple-credential-grid' ) && false !== strpos( $css, '.certloom-simple-program-grid' ), 'Simple Credential and Program collections share premium card structure' );
 uxcore( false !== strpos( $css, '.certloom-dashboard-credential-list' ) && false !== strpos( $css, '.certloom-metric-grid-simple' ), 'Simple Dashboard has dedicated normalized responsive styling' );
 uxcore( false !== strpos( $public_css, '.cvp-profile-recipient' ) && false !== strpos( $public_css, '.cvp-profile-proof' ), 'Public profile has dedicated human hierarchy and verification styling' );
+uxcore( false !== strpos( $renderer, 'cvp-widget--normalized' ) && false !== strpos( $public_css, '.cvp-widget.cvp-widget--normalized' ), 'Normalized profile gets the wider premium layout without widening legacy compact verification cards' );
 uxcore( false !== strpos( $css, '@media(forced-colors:active)' ) && false !== strpos( $public_css, '@media (forced-colors: active)' ) || false !== strpos( $public_css, '@media(forced-colors:active)' ), 'Backend and public redesign preserve forced-colors coverage' );
 
 uxcore( false !== strpos( uxcore_src( $root, 'src/Infrastructure/Migration/DomainFeatureGate.php' ), 'DomainAuthorityGate' ), 'Structural redesign does not replace manifest-backed normalized-domain authority' );

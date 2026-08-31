@@ -52,10 +52,15 @@ final class ManualIssuanceAdmin {
 			$review = is_wp_error( $this->request_error ) ? $this->request_error : ( new ManualIssuanceService() )->review( $request );
 		}
 
+		$simple = AdminUiMode::is_simple();
 		echo '<div class="wrap certloom-shell certloom-manual-issuance">';
-		echo '<div class="certloom-page-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Premium credential workflow', 'certloom' ) . '</span><h1>' . esc_html__( 'Manual Issuance', 'certloom' ) . '</h1><p>' . esc_html__( 'Create one credential, review the recipient and published design, then issue it as one checked transaction.', 'certloom' ) . '</p></div><span class="certloom-domain-preview-badge">' . esc_html__( 'Credential preview', 'certloom' ) . '</span></div>';
+		echo '<div class="certloom-page-head"><div><span class="certloom-eyebrow">' . esc_html( $simple ? __( 'Issue a credential', 'certloom' ) : __( 'Premium credential workflow', 'certloom' ) ) . '</span><h1>' . esc_html__( 'Manual Issuance', 'certloom' ) . '</h1><p>' . esc_html__( 'Create one credential, review the recipient and published design, then issue it as one checked transaction.', 'certloom' ) . '</p></div>' . ( $simple ? '' : '<span class="certloom-domain-preview-badge">' . esc_html__( 'Credential preview', 'certloom' ) . '</span>' ) . '</div>';
 		$this->notice();
-		echo '<div class="notice notice-warning inline certloom-manual-issuance-authority"><p><strong>' . esc_html__( 'Availability:', 'certloom' ) . '</strong> ' . esc_html__( 'Manual Issuance is available in the credential-management preview. The existing registry still powers public verification in this build, and PDF/PNG/JPEG exports remain unavailable until the certificate renderer is approved.', 'certloom' ) . '</p></div>';
+		if ( $simple ) {
+			echo '<div class="notice notice-info inline certloom-manual-issuance-authority"><p>' . esc_html__( 'Online verification or downloadable certificate files may be unavailable until this site finishes its release setup. You can still prepare and review the credential here.', 'certloom' ) . '</p></div>';
+		} else {
+			echo '<div class="notice notice-warning inline certloom-manual-issuance-authority"><p><strong>' . esc_html__( 'Availability:', 'certloom' ) . '</strong> ' . esc_html__( 'Manual Issuance is available in the credential-management preview. The existing registry still powers public verification in this build, and PDF/PNG/JPEG exports remain unavailable until the certificate renderer is approved.', 'certloom' ) . '</p></div>';
+		}
 		$this->steps( $receipt_version ? 'receipt' : ( is_array( $review ) ? 'review' : 'compose' ) );
 
 		if ( $receipt_version ) {

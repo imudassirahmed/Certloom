@@ -91,16 +91,23 @@ uxroute( false !== strpos( $oauth, 'EcaplaOAuthRelay' ) && false !== strpos( $oa
 uxroute( false !== strpos( $relay, 'https://auth.ecapla.com/' ) || false !== strpos( $relay, "auth.ecapla.com" ), 'Managed OAuth client is pinned to Ecapla relay host' );
 uxroute( false !== strpos( $admin, 'certloom_google_drive_connect' ) || false !== strpos( uxsrc( 'admin/views/setup-wizard.php' ), 'certloom_google_drive_connect' ), 'Google connection submit is exposed through a registered Certloom action' );
 
-// No redesigned flow may make QA authority a prerequisite or silently open production gates.
+// Release flavor is explicit. Production-intent source must contain no QA bypass or
+// QA-only identity; an intentionally versioned -qa.* derivative must contain all
+// three reviewed in-memory gate overrides plus visible staging identity. The same
+// permanent contract therefore protects both lanes without maintaining a QA-only
+// fork of this test.
+$release_bootstrap = uxsrc( 'certloom.php' );
+$is_qa_source = 1 === preg_match( '/^[[:space:]]*\* Version:[[:space:]]*[^\r\n]*-qa\.[0-9]+/mi', $release_bootstrap );
 foreach ( array(
     'src/Infrastructure/Migration/DomainFeatureGate.php',
     'src/Infrastructure/Rendering/RendererAuthorityGate.php',
     'src/Infrastructure/Verification/PublicVerificationGate.php',
 ) as $gate_file ) {
     $gate = uxsrc( $gate_file );
-    uxroute( false === strpos( $gate, 'CERTLOOM_QA_UNGATED' ), 'Production-intent redesign contains no QA readiness override in ' . basename( $gate_file ) );
+    uxroute( $is_qa_source ? false !== strpos( $gate, 'CERTLOOM_QA_UNGATED' ) : false === strpos( $gate, 'CERTLOOM_QA_UNGATED' ), ( $is_qa_source ? 'QA derivative contains reviewed in-memory readiness override in ' : 'Production-intent redesign contains no QA readiness override in ' ) . basename( $gate_file ) );
 }
-uxroute( false === strpos( uxsrc( 'certloom.php' ), 'CERTLOOM_QA_UNGATED' ), 'Production-intent plugin bootstrap contains no QA ungated constant' );
+uxroute( $is_qa_source ? false !== strpos( $release_bootstrap, 'CERTLOOM_QA_UNGATED' ) : false === strpos( $release_bootstrap, 'CERTLOOM_QA_UNGATED' ), $is_qa_source ? 'QA derivative bootstrap contains explicit QA ungated constant' : 'Production-intent plugin bootstrap contains no QA ungated constant' );
+uxroute( $is_qa_source ? ( false !== strpos( $release_bootstrap, 'Certloom QA' ) && false !== strpos( $release_bootstrap, 'certloom-qa-ungated' ) && false !== strpos( $release_bootstrap, 'authority gates are bypassed for QA' ) ) : ( false === strpos( $release_bootstrap, 'Certloom QA' ) && false === strpos( $release_bootstrap, 'certloom-qa-ungated' ) && false === strpos( $release_bootstrap, 'authority gates are bypassed for QA' ) ), $is_qa_source ? 'QA derivative exposes persistent staging identity' : 'Production-intent plugin bootstrap contains no QA-only presentation identity' );
 
 printf( "\n%d UX-CORE human-continuation checks, %d failures\n", $checks, $failures );
 exit( $failures ? 1 : 0 );

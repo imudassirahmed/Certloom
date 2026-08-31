@@ -115,7 +115,7 @@ $preflight = file_get_contents( $root . '/src/Infrastructure/Diagnostics/LegacyM
 cr( false !== strpos( $listener, "add_action( 'certloom_credential_issued'" ), 'Credly starts only after canonical credential issuance commits' );
 cr( false !== strpos( $listener, "'destination' => 'credly'" ) && false !== strpos( $listener, "JobTypes::CREDLY_PUBLISH" ), 'successful issuance creates one durable Credly destination job' );
 cr( false !== strpos( $listener, "hash( 'sha256', 'credly|'" ) && false !== strpos( $schema, 'UNIQUE KEY dedupe_key' ), 'Credly delivery is deterministically deduplicated per immutable Version and destination mapping' );
-cr( false !== strpos( $handler, 'STATUS_UNCERTAIN' ) && false !== strpos( $handler, 'requires administrator review' ), 'uncertain Credly delivery is terminal until reviewed' );
+cr( false !== strpos( $handler, 'STATUS_UNCERTAIN' ) && false !== strpos( $handler, 'Review the Credly account before trying again.' ), 'uncertain Credly delivery is terminal until reviewed' );
 cr( false !== strpos( $jobs, 'certloom_credly_publish_uncertain' ) && false !== strpos( $runtime, 'certloom_credly_retry_uncertain_forbidden' ), 'interrupted Credly side effects cannot auto-replay' );
 cr( false !== strpos( $schema, "const SCHEMA_VERSION         = '19'" ) && false !== strpos( $schema, "'destination_deliveries'" ) && false !== strpos( $schema, 'UNIQUE KEY dedupe_key' ), 'schema v19 includes durable deduplicated destination delivery evidence' );
 cr( false !== strpos( $accept, "'destination_deliveries'" ) && false !== strpos( $stage, "'destination_deliveries'" ) && false !== strpos( $preflight, "'destination_deliveries'" ), 'real-host and migration diagnostics include the destination-delivery table' );

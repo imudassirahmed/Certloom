@@ -81,8 +81,9 @@ wiz_check(false!==strpos($admin,'ScheduledBackup::save_settings') && false===str
 wiz_check(false!==strpos($admin,'LocalBackupStore() )->test_storage()'),'Wizard must verify local backup storage before enabling automatic backups.');
 wiz_check(false!==strpos($admin,'Ecapla_CertVerify_Settings::save') && false!==strpos($admin,'Ecapla_CertVerify_Numbering::normalize_policy'),'Wizard review must use canonical settings/numbering validation.');
 wiz_check(false===strpos($admin,'ProgramRepository::create') && false===strpos($admin,'TemplateRepository::create'),'Wizard controller must not bypass gated Program/Template creation authority.');
-wiz_check(false!==strpos($view,'Program creation remains protected') && false!==strpos($view,'Authority stays fail-closed'),'Wizard must disclose protected Program/Template boundaries in normal review UX.');
-wiz_check(false!==strpos($view,'Suggested credential fields') && false!==strpos($view,'The Wizard never applies them automatically'),'Wizard may recommend FLD-02 Program fields but must not silently configure the Program contract.');
+wiz_check(false!==strpos($view,'Program setup is not available yet') && false!==strpos($view,'will not create anything until Programs are available on this site'),'Wizard must explain unavailable Program setup in human language while remaining fail-closed.');
+wiz_check(false!==strpos($view,'Suggested credential fields') && false!==strpos($view,'Nothing is added automatically'),'Wizard may suggest Program fields but must not silently configure them.');
+wiz_check(false!==strpos($view,'Open Programs') && false===strpos($view,'Open canonical Program manager'),'Wizard must link to Programs without exposing internal authority terminology.');
 wiz_check(false!==strpos($view,'Apply reviewed settings') && false!==strpos($view,'Apply the reviewed setup changes now?'),'Review application must be explicit and confirmation-protected.');
 wiz_check(false!==strpos($view,'form="certloom-wizard-step-form"') && false!==strpos($admin,"wizard_finish_later"),'Save & finish later must submit and save the current draft rather than discard unsaved fields.');
 wiz_check(false!==strpos($js,'initAdaptiveSetupWizard') && false!==strpos($js,'data-certloom-wizard-summary-purpose'),'Purpose/subcategory changes must have an accessible live adaptive interaction layer.');

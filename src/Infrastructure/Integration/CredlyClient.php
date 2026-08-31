@@ -57,7 +57,7 @@ final class CredlyClient {
 		$issued_at = trim( (string) ( $payload['issued_at'] ?? '' ) );
 		$expires_at = trim( (string) ( $payload['expires_at'] ?? '' ) );
 		if ( '' === $template || strlen( $template ) > 191 || ! preg_match( '/^[A-Za-z0-9._:-]+$/', $template ) ) { return new \WP_Error( 'certloom_credly_template_invalid', __( 'The Credly badge template ID is invalid.', 'certloom' ) ); }
-		if ( '' === $email || strlen( $email ) > 320 ) { return new \WP_Error( 'certloom_credly_recipient_email_missing', __( 'Credly publishing requires an email address on the immutable issued Recipient snapshot.', 'certloom' ) ); }
+		if ( '' === $email || strlen( $email ) > 320 ) { return new \WP_Error( 'certloom_credly_recipient_email_missing', __( 'Credly publishing needs an email address saved with the issued credential.', 'certloom' ) ); }
 		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $issued_at ) ) { return new \WP_Error( 'certloom_credly_issued_date_invalid', __( 'The issued credential does not contain a valid Credly publication date.', 'certloom' ) ); }
 		if ( '' !== $expires_at && ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $expires_at ) ) { return new \WP_Error( 'certloom_credly_expiry_date_invalid', __( 'The issued credential does not contain a valid Credly expiry date.', 'certloom' ) ); }
 		$out = array(

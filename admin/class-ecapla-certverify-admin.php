@@ -1741,26 +1741,6 @@ class Ecapla_CertVerify_Admin {
 		$webhooks = $webhook_admin->screen_data();
 		$credly_admin = new \Certloom\Infrastructure\Admin\CredlyIntegrationAdmin();
 		$credly = $credly_admin->screen_data();
-		$detected = array();
-		if ( ! empty( $tutor['status']['available'] ) ) { $detected[] = __( 'Tutor LMS', 'certloom' ); }
-		if ( ! empty( $learndash['status']['available'] ) ) { $detected[] = __( 'LearnDash', 'certloom' ); }
-		if ( ! empty( $woocommerce['status']['available'] ) ) { $detected[] = __( 'WooCommerce', 'certloom' ); }
-		if ( ! empty( $coursera['credentials']['configured'] ) ) { $detected[] = __( 'Coursera xAPI', 'certloom' ); }
-		if ( ! empty( $webhooks['sources'] ) ) { $detected[] = __( 'Webhook / API', 'certloom' ); }
-		if ( ! empty( $credly['connection']['configured'] ) ) { $detected[] = __( 'Credly publishing', 'certloom' ); }
-		$framework = array(
-			'status' => $detected ? sprintf( /* translators: %s: detected LMS names. */ __( 'Detected: %s', 'certloom' ), implode( ', ', $detected ) ) : __( 'Integration framework ready', 'certloom' ),
-			'contract' => __( 'Supported LMS adapters', 'certloom' ),
-			'adapters' => array(
-				array( 'key' => 'tutor_lms', 'label' => __( 'Tutor LMS', 'certloom' ), 'available' => ! empty( $tutor['status']['available'] ) ),
-				array( 'key' => 'learndash', 'label' => __( 'LearnDash', 'certloom' ), 'available' => ! empty( $learndash['status']['available'] ) ),
-				array( 'key' => 'woocommerce', 'label' => __( 'WooCommerce', 'certloom' ), 'available' => ! empty( $woocommerce['status']['available'] ) ),
-				array( 'key' => 'coursera', 'label' => __( 'Coursera xAPI', 'certloom' ), 'available' => ! empty( $coursera['credentials']['configured'] ) ),
-				array( 'key' => 'webhook', 'label' => __( 'Webhook / API', 'certloom' ), 'available' => ! empty( $webhooks['sources'] ) ),
-				array( 'key' => 'credly', 'label' => __( 'Credly destination', 'certloom' ), 'available' => ! empty( $credly['connection']['configured'] ) ),
-			),
-			'next' => __( 'Tutor LMS, LearnDash, WooCommerce and Coursera all feed the same Recipient → Program → credential workflow. Automatic issuance remains fail-closed until Certloom’s production credential-writing checks are approved.', 'certloom' ),
-		);
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/integrations.php';
 	}
 

@@ -35,11 +35,11 @@ final class CredlyPublishJobHandler implements JobHandlerInterface {
 		if ( ! is_array( $delivery ) || 'credly' !== (string) ( $delivery['destination'] ?? '' ) ) { return new \WP_Error( 'certloom_credly_delivery_missing', __( 'The Credly publishing record is unavailable.', 'certloom' ) ); }
 		$status = (string) ( $delivery['status'] ?? '' );
 		if ( DestinationDeliveryRepository::STATUS_SUCCEEDED === $status ) { return JobSliceResult::succeeded( array( 'delivery_key' => $key, 'status' => 'succeeded', 'idempotent_terminal' => true ), 1 ); }
-		if ( DestinationDeliveryRepository::STATUS_UNCERTAIN === $status ) { return JobSliceResult::failed( array( 'code' => 'certloom_credly_publish_uncertain', 'message' => __( 'This Credly publishing attempt has an uncertain external result and requires administrator review.', 'certloom' ) ), array( 'delivery_key' => $key, 'status' => 'uncertain' ), 0 ); }
+		if ( DestinationDeliveryRepository::STATUS_UNCERTAIN === $status ) { return JobSliceResult::failed( array( 'code' => 'certloom_credly_publish_uncertain', 'message' => __( 'Credly may have received this publication, but Certloom could not confirm the result. Review the Credly account before trying again.', 'certloom' ) ), array( 'delivery_key' => $key, 'status' => 'uncertain' ), 0 ); }
 
 		$version = $this->credentials->find_version( absint( $delivery['version_id'] ?? 0 ) );
 		if ( is_wp_error( $version ) ) { return $version; }
-		if ( ! is_array( $version ) || 'issued' !== (string) ( $version['issuance_state'] ?? '' ) ) { return new \WP_Error( 'certloom_credly_version_invalid', __( 'Credly publishing requires the exact issued credential Version that created this publishing record.', 'certloom' ) ); }
+		if ( ! is_array( $version ) || 'issued' !== (string) ( $version['issuance_state'] ?? '' ) ) { return new \WP_Error( 'certloom_credly_version_invalid', __( 'Credly publishing could not find the issued credential record for this publication.', 'certloom' ) ); }
 		$snapshot = is_array( $version['snapshot'] ?? null ) ? $version['snapshot'] : array();
 		$program_id = absint( $snapshot['program']['id'] ?? 0 );
 		$mapping = $this->mappings->find( $program_id );

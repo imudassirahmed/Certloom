@@ -184,7 +184,7 @@ final class JobRepository implements JobRepositoryInterface {
 					$uncertain = $deliveries->mark_failed( $delivery_key, 'publication_uncertain', array( 'recovery' => 'interrupted_worker' ), true );
 					if ( is_wp_error( $uncertain ) ) { return $uncertain; }
 				}
-				$error = self::encode_json( array( 'code' => 'certloom_credly_publish_uncertain', 'message' => __( 'This Credly worker was interrupted after external publishing may have begun. Certloom will not replay it automatically; review Credly before trying again.', 'certloom' ) ), 'certloom_job_error_invalid' );
+				$error = self::encode_json( array( 'code' => 'certloom_credly_publish_uncertain', 'message' => __( 'Credly publishing was interrupted after the external request may have started. Certloom will not retry automatically; review Credly before trying again.', 'certloom' ) ), 'certloom_job_error_invalid' );
 				if ( is_wp_error( $error ) ) { return $error; }
 				$updated = $wpdb->query( $wpdb->prepare( 'UPDATE %i SET status = %s, recovery_count = recovery_count + 1, error_json = %s, locked_by = NULL, locked_until = NULL, updated_at = %s, finished_at = %s WHERE job_key = %s AND status = %s AND (locked_until IS NULL OR locked_until < %s)', SchemaManager::table( 'jobs' ), JobStates::FAILED, $error, $now, $now, $job_key, JobStates::RUNNING, $now ) );
 				if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_job_stale_recovery_failed', __( 'Certloom could not fail closed an interrupted Credly publishing job.', 'certloom' ) ); }
