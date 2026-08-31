@@ -294,8 +294,25 @@ final class ManualIssuanceService {
 			} );
 
 			if ( ! is_wp_error( $result ) ) {
-				if ( isset( $result['idempotent_version'] ) && is_array( $result['idempotent_version'] ) ) { return $this->receipt_from_existing( $result['idempotent_version'], true ); }
-				if ( isset( $result['version'] ) && is_array( $result['version'] ) ) { return $this->receipt_from_existing( $result['version'], false ); }
+				if ( isset( $result['idempotent_version'] ) && is_array( $result['idempotent_version'] ) ) {
+					return $this->receipt_from_existing( $result['idempotent_version'], true );
+				}
+				if ( isset( $result['version'] ) && is_array( $result['version'] ) ) {
+					$receipt = $this->receipt_from_existing( $result['version'], false );
+					if ( ! is_wp_error( $receipt ) ) {
+						$automation_source = $source_type;
+						if ( 'lms_integration' === $source_type && is_array( $source_context ) ) {
+							$adapter = sanitize_key( (string) ( $source_context['context']['adapter'] ?? '' ) );
+							if ( '' !== $adapter ) {
+								$automation_source = $adapter;
+							}
+						}
+						if ( function_exists( 'do_action' ) ) {
+							\do_action( 'certloom_credential_issued', absint( $receipt['version_id'] ), absint( $receipt['series_id'] ), absint( $actor_user_id ), $automation_source, (string) $source_ref );
+						}
+					}
+					return $receipt;
+				}
 			}
 			$after = $this->repository->find_version_by_idempotency( $source_type, $idempotency );
 			if ( ! is_wp_error( $after ) && is_array( $after ) ) { return $this->receipt_from_existing( $after, true ); }

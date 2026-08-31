@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Certloom – Certificate Verification
- * Description: Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
+ * Description: Self-hosted credential issuance, verification and lifecycle management for WordPress.
  * Version: 1.6.98
  * Author: Ecapla
  * Author URI: https://ecapla.com
@@ -56,6 +56,27 @@ if ( ! defined( 'CERTLOOM_ALLOW_STAGING_MIGRATION_REHEARSAL' ) ) {
 }
 if ( ! defined( 'CERTLOOM_ALLOW_STAGING_RESTORE_REHEARSAL' ) ) {
 	define( 'CERTLOOM_ALLOW_STAGING_RESTORE_REHEARSAL', false );
+}
+
+if ( function_exists( 'add_action' ) ) {
+	/* Persistent QA identity without injecting notices into Certloom content cards. */
+	add_action( 'admin_bar_menu', static function ( $admin_bar ) {
+		if ( ! is_object( $admin_bar ) || ! current_user_can( 'manage_options' ) ) { return; }
+		$admin_bar->add_node(
+			array(
+				'id'    => 'certloom-qa-ungated',
+				'title' => 'Certloom QA · Ungated',
+				'href'  => admin_url( 'admin.php?page=certloom' ),
+				'meta'  => array( 'title' => 'Staging only. Domain, public-verification and renderer release-authority gates are bypassed for QA; this package is not production-certified.' ),
+			)
+		);
+	}, 100 );
+	$certloom_qa_bar_style = static function () {
+		if ( ! current_user_can( 'manage_options' ) ) { return; }
+		echo '<style>#wp-admin-bar-certloom-qa-ungated>.ab-item{background:#b32d2e!important;color:#fff!important;font-weight:700!important}</style>';
+	};
+	add_action( 'admin_head', $certloom_qa_bar_style );
+	add_action( 'wp_head', $certloom_qa_bar_style );
 }
 
 require_once CERTLOOM_PATH . 'src/Autoloader.php';
@@ -423,6 +444,7 @@ function ecapla_certverify_init() {
 	\Certloom\Plugin::boot();
 	\Certloom\Infrastructure\Integration\TutorLmsBridge::register();
 	\Certloom\Infrastructure\Integration\LearnDashBridge::register();
+	\Certloom\Infrastructure\Integration\WooCommerceBridge::register();
 	$provisioning_error = null;
 	if ( is_wp_error( $restore_recovery ) ) {
 		$provisioning_error = $restore_recovery;
@@ -464,7 +486,14 @@ function ecapla_certverify_init() {
 		new Ecapla_CertVerify_Admin();
 		( new \Certloom\Infrastructure\Admin\TutorLmsIntegrationAdmin() )->register();
 		( new \Certloom\Infrastructure\Admin\LearnDashIntegrationAdmin() )->register();
+		( new \Certloom\Infrastructure\Admin\WooCommerceIntegrationAdmin() )->register();
+		( new \Certloom\Infrastructure\Admin\CourseraIntegrationAdmin() )->register();
+		( new \Certloom\Infrastructure\Admin\WebhookIntegrationAdmin() )->register();
+		( new \Certloom\Infrastructure\Admin\CredlyIntegrationAdmin() )->register();
 	}
+
+	\Certloom\Infrastructure\Integration\CourseraXapiRest::register();
+	\Certloom\Infrastructure\Integration\WebhookRest::register();
 
 	if ( did_action( 'elementor/loaded' ) ) {
 		ecapla_certverify_elementor_loaded();

@@ -9,14 +9,20 @@ final class GoogleDriveOAuth {
 	const AUTH_URL       = 'https://accounts.google.com/o/oauth2/v2/auth';
 	const TOKEN_URL      = 'https://oauth2.googleapis.com/token';
 	const STATE_PREFIX   = 'certloom_gdrive_oauth_';
+	const MAX_TOKEN_BYTES = 8192;
 
 	/** @return array<string,mixed> */
 	public static function config() {
 		$raw = get_option( self::CONFIG_OPTION, array() );
 		if ( ! is_array( $raw ) ) { $raw = array(); }
+		$connection_mode = sanitize_key( (string) ( $raw['connection_mode'] ?? '' ) );
+		if ( ! in_array( $connection_mode, array( 'relay', 'direct' ), true ) ) {
+			$connection_mode = '' !== self::configured_client_id( $raw ) ? 'direct' : 'relay';
+		}
 		return array(
-			'client_id'    => self::configured_client_id( $raw ),
-			'enabled'      => ! empty( $raw['enabled'] ),
+			'client_id'       => self::configured_client_id( $raw ),
+			'connection_mode' => $connection_mode,
+			'enabled'         => ! empty( $raw['enabled'] ),
 			'folder_id'    => self::clean_file_id( $raw['folder_id'] ?? '' ),
 			'connected_at' => sanitize_text_field( (string) ( $raw['connected_at'] ?? '' ) ),
 			'connected_ts' => absint( $raw['connected_ts'] ?? 0 ),
@@ -54,6 +60,7 @@ final class GoogleDriveOAuth {
 		$sealed = SecretVault::seal( $current );
 		if ( is_wp_error( $sealed ) ) { return $sealed; }
 		$config = $config_before;
+		$config['connection_mode'] = 'direct';
 		if ( ! self::constant_client_id() ) { $config['client_id'] = $client_id; }
 		if ( $credentials_changed ) {
 			$config['enabled']      = 0;
@@ -145,32 +152,12 @@ final class GoogleDriveOAuth {
 		if ( ! in_array( self::SCOPE, is_array( $scope ) ? $scope : array(), true ) ) {
 			return new \WP_Error( 'certloom_google_scope_missing', __( 'Google Drive did not grant the file permission Certloom needs. Reconnect and approve the requested access.', 'certloom' ) );
 		}
-		$current = self::secret_payload();
-		if ( is_wp_error( $current ) ) { return $current; }
-		$refresh = trim( (string) ( $response['refresh_token'] ?? $current['refresh_token'] ?? '' ) );
-		if ( '' === $refresh ) {
-			return new \WP_Error( 'certloom_google_refresh_token_missing', __( 'Google did not return offline backup access. Disconnect Certloom in your Google account and connect again.', 'certloom' ) );
-		}
-		$current['refresh_token'] = $refresh;
-		$current['access_token']  = trim( (string) ( $response['access_token'] ?? '' ) );
-		$current['access_expiry'] = time() + max( 60, absint( $response['expires_in'] ?? 3600 ) );
-		if ( '' === $current['access_token'] ) {
-			return new \WP_Error( 'certloom_google_access_token_missing', __( 'Google did not return an access token for the Drive connection.', 'certloom' ) );
-		}
-		$old_sealed  = get_option( self::SECRETS_OPTION, false );
-		$had_secrets = false !== $old_sealed;
-		$saved = self::save_secret_payload( $current );
-		if ( is_wp_error( $saved ) ) { return $saved; }
-		$config = get_option( self::CONFIG_OPTION, array() );
-		if ( ! is_array( $config ) ) { $config = array(); }
-		$config['connected_at'] = gmdate( 'c' );
-		$config['connected_ts'] = time();
-		$config_saved = update_option( self::CONFIG_OPTION, $config, false );
-		if ( $config_saved || $config === get_option( self::CONFIG_OPTION, array() ) ) { return true; }
-		if ( ! self::restore_secret_option( $had_secrets, $old_sealed ) ) {
-			return new \WP_Error( 'certloom_google_oauth_save_rollback_failed', __( 'Google authorized the connection, but Certloom could not save its local connection state safely. Re-enter the Google Drive connection settings and connect again.', 'certloom' ) );
-		}
-		return new \WP_Error( 'certloom_google_config_save_failed', __( 'Google authorized the connection, but Certloom could not save the connection state. No new Google Drive token was retained; connect again.', 'certloom' ) );
+		return self::persist_authorization_response( $response, 'direct' );
+	}
+
+	/** Accepts the one-time token response from the reviewed Ecapla OAuth relay. @return true|\WP_Error */
+	public static function accept_relay_authorization( array $response ) {
+		return self::persist_authorization_response( $response, 'relay' );
 	}
 
 	/** @return string|\WP_Error */
@@ -184,14 +171,19 @@ final class GoogleDriveOAuth {
 		if ( '' === $refresh ) {
 			return new \WP_Error( 'certloom_google_not_connected', __( 'Google Drive is not connected to Certloom.', 'certloom' ) );
 		}
-		$credentials = self::client_credentials();
-		if ( is_wp_error( $credentials ) ) { return $credentials; }
-		$response = self::token_request( array(
-			'client_id'     => $credentials['client_id'],
-			'client_secret' => $credentials['client_secret'],
-			'refresh_token' => $refresh,
-			'grant_type'    => 'refresh_token',
-		) );
+		$config = self::config();
+		if ( 'relay' === (string) ( $config['connection_mode'] ?? '' ) ) {
+			$response = EcaplaOAuthRelay::refresh_access_token( $refresh );
+		} else {
+			$credentials = self::client_credentials();
+			if ( is_wp_error( $credentials ) ) { return $credentials; }
+			$response = self::token_request( array(
+				'client_id'     => $credentials['client_id'],
+				'client_secret' => $credentials['client_secret'],
+				'refresh_token' => $refresh,
+				'grant_type'    => 'refresh_token',
+			) );
+		}
 		if ( is_wp_error( $response ) ) { return $response; }
 		$access = trim( (string) ( $response['access_token'] ?? '' ) );
 		if ( '' === $access ) {
@@ -274,6 +266,48 @@ final class GoogleDriveOAuth {
 			return new \WP_Error( 'certloom_google_https_required', __( 'Google Drive connection requires WordPress admin to use HTTPS.', 'certloom' ) );
 		}
 		return $url;
+	}
+
+	/** Stable WordPress return URI used only by the Ecapla OAuth relay. @return string|\WP_Error */
+	public static function relay_return_uri() {
+		return EcaplaOAuthRelay::return_uri();
+	}
+
+	/** @return true|\WP_Error */
+	private static function persist_authorization_response( array $response, $mode ) {
+		$mode = 'relay' === sanitize_key( (string) $mode ) ? 'relay' : 'direct';
+		$scope = preg_split( '/\s+/', trim( (string) ( $response['scope'] ?? '' ) ) );
+		if ( ! in_array( self::SCOPE, is_array( $scope ) ? $scope : array(), true ) ) {
+			return new \WP_Error( 'certloom_google_scope_missing', __( 'Google Drive did not grant the file permission Certloom needs. Reconnect and approve the requested access.', 'certloom' ) );
+		}
+		$current = self::secret_payload();
+		if ( is_wp_error( $current ) ) { return $current; }
+		$refresh = trim( (string) ( $response['refresh_token'] ?? $current['refresh_token'] ?? '' ) );
+		$access  = trim( (string) ( $response['access_token'] ?? '' ) );
+		if ( '' === $refresh || strlen( $refresh ) > self::MAX_TOKEN_BYTES ) {
+			return new \WP_Error( 'certloom_google_refresh_token_missing', __( 'Google did not return offline backup access. Disconnect Certloom in your Google account and connect again.', 'certloom' ) );
+		}
+		if ( '' === $access || strlen( $access ) > self::MAX_TOKEN_BYTES ) {
+			return new \WP_Error( 'certloom_google_access_token_missing', __( 'Google did not return an access token for the Drive connection.', 'certloom' ) );
+		}
+		$current['refresh_token'] = $refresh;
+		$current['access_token']  = $access;
+		$current['access_expiry'] = time() + max( 60, min( DAY_IN_SECONDS, absint( $response['expires_in'] ?? 3600 ) ) );
+		$old_sealed  = get_option( self::SECRETS_OPTION, false );
+		$had_secrets = false !== $old_sealed;
+		$saved = self::save_secret_payload( $current );
+		if ( is_wp_error( $saved ) ) { return $saved; }
+		$config = get_option( self::CONFIG_OPTION, array() );
+		if ( ! is_array( $config ) ) { $config = array(); }
+		$config['connection_mode'] = $mode;
+		$config['connected_at']    = gmdate( 'c' );
+		$config['connected_ts']    = time();
+		$config_saved = update_option( self::CONFIG_OPTION, $config, false );
+		if ( $config_saved || $config === get_option( self::CONFIG_OPTION, array() ) ) { return true; }
+		if ( ! self::restore_secret_option( $had_secrets, $old_sealed ) ) {
+			return new \WP_Error( 'certloom_google_oauth_save_rollback_failed', __( 'Google authorized the connection, but Certloom could not save its local connection state safely. Reconnect Google Drive.', 'certloom' ) );
+		}
+		return new \WP_Error( 'certloom_google_config_save_failed', __( 'Google authorized the connection, but Certloom could not save the connection state. No new Google Drive token was retained; connect again.', 'certloom' ) );
 	}
 
 	/** @return array<string,string>|\WP_Error */

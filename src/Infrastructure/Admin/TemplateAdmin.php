@@ -183,10 +183,12 @@ final class TemplateAdmin {
 		$size_key = isset( $_POST['page_size'] ) ? strtolower( sanitize_text_field( wp_unslash( $_POST['page_size'] ) ) ) : 'a4';
 		$size = 'letter' === $size_key ? LayoutSchema::PAGE_LETTER : LayoutSchema::PAGE_A4;
 		$orientation = isset( $_POST['orientation'] ) ? sanitize_key( wp_unslash( $_POST['orientation'] ) ) : LayoutSchema::ORIENTATION_LANDSCAPE;
+		$name = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+		$machine_key = $this->posted_machine_key( $name );
 		$result = ( new TemplateRepository() )->create(
 			array(
-				'machine_key' => isset( $_POST['machine_key'] ) ? sanitize_key( wp_unslash( $_POST['machine_key'] ) ) : '',
-				'name' => isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '',
+				'machine_key' => $machine_key,
+				'name' => $name,
 				'description' => isset( $_POST['description'] ) ? sanitize_textarea_field( wp_unslash( $_POST['description'] ) ) : '',
 				'layout' => TemplateDefaults::blank( $size, $orientation ),
 			),
@@ -214,10 +216,12 @@ final class TemplateAdmin {
 			'width_mm' => (float) $layout['page']['width_mm'], 'height_mm' => (float) $layout['page']['height_mm'],
 			'z' => 0, 'rotation_deg' => 0.0, 'opacity' => 1.0, 'asset' => 'attachment:' . $attachment_id, 'fit' => 'cover',
 		);
+		$name = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+		$machine_key = $this->posted_machine_key( $name );
 		$result = ( new TemplateRepository() )->create(
 			array(
-				'machine_key' => isset( $_POST['machine_key'] ) ? sanitize_key( wp_unslash( $_POST['machine_key'] ) ) : '',
-				'name' => isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '',
+				'machine_key' => $machine_key,
+				'name' => $name,
 				'description' => __( 'Created from a local WordPress Media Library background. The image remains a normal canonical Designer element.', 'certloom' ),
 				'layout' => $layout,
 			),
@@ -670,7 +674,9 @@ final class TemplateAdmin {
 	/** @return void */
 	private function background_creation_form() {
 		echo '<section class="certloom-template-library-background" hidden data-certloom-library-background-panel><div><h3>' . esc_html__( 'Start from a certificate background', 'certloom' ) . '</h3><p>' . esc_html__( 'Choose a local PNG or JPEG. Certloom creates a normal draft with that image filling the page; you can then add text, dynamic fields, QR and other elements in Designer.', 'certloom' ) . '</p></div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_background_create"><input type="hidden" name="attachment_id" value="" data-certloom-library-background-id>'; wp_nonce_field( 'certloom_template_background_create' );
-		echo '<label><span>' . esc_html__( 'Template name', 'certloom' ) . '</span><input type="text" name="name" maxlength="255" required></label><label><span>' . esc_html__( 'Machine key', 'certloom' ) . '</span><input type="text" name="machine_key" maxlength="191" pattern="[a-z0-9_-]+" required></label><label><span>' . esc_html__( 'Page size', 'certloom' ) . '</span><select name="page_size"><option value="A4">A4</option><option value="LETTER">' . esc_html__( 'Letter', 'certloom' ) . '</option></select></label><label><span>' . esc_html__( 'Orientation', 'certloom' ) . '</span><select name="orientation"><option value="landscape">' . esc_html__( 'Landscape', 'certloom' ) . '</option><option value="portrait">' . esc_html__( 'Portrait', 'certloom' ) . '</option></select></label><div class="certloom-template-library-media"><button type="button" class="button" data-certloom-library-background-media>' . esc_html__( 'Choose image', 'certloom' ) . '</button><span data-certloom-library-background-name>' . esc_html__( 'No image selected', 'certloom' ) . '</span></div><button class="button button-primary" type="submit" disabled data-certloom-library-background-submit>' . esc_html__( 'Create background draft', 'certloom' ) . '</button></form></section>';
+		echo '<label><span>' . esc_html__( 'Design name', 'certloom' ) . '</span><input type="text" name="name" maxlength="255" required></label>';
+		if ( AdminUiMode::is_simple() ) { echo '<input type="hidden" name="machine_key" value="">'; } else { echo '<label><span>' . esc_html__( 'Machine key', 'certloom' ) . '</span><input type="text" name="machine_key" maxlength="191" pattern="[a-z0-9_-]+" required></label>'; }
+		echo '<label><span>' . esc_html__( 'Page size', 'certloom' ) . '</span><select name="page_size"><option value="A4">A4</option><option value="LETTER">' . esc_html__( 'Letter', 'certloom' ) . '</option></select></label><label><span>' . esc_html__( 'Orientation', 'certloom' ) . '</span><select name="orientation"><option value="landscape">' . esc_html__( 'Landscape', 'certloom' ) . '</option><option value="portrait">' . esc_html__( 'Portrait', 'certloom' ) . '</option></select></label><div class="certloom-template-library-media"><button type="button" class="button" data-certloom-library-background-media>' . esc_html__( 'Choose image', 'certloom' ) . '</button><span data-certloom-library-background-name>' . esc_html__( 'No image selected', 'certloom' ) . '</span></div><button class="button button-primary" type="submit" disabled data-certloom-library-background-submit>' . esc_html__( 'Create background draft', 'certloom' ) . '</button></form></section>';
 	}
 
 	/** @return void */
@@ -683,28 +689,41 @@ final class TemplateAdmin {
 		echo '</nav>';
 	}
 
-	/** Existing lifecycle table is preserved as My Templates rather than being the primary discovery surface. @return void */
+	/** Existing lifecycle management remains available, but Simple mode presents designs as human cards. @return void */
 	private function my_templates( TemplateRepository $repo ) {
 		$search = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter.
 		$page = isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter.
 		$status = isset( $_GET['template_status'] ) ? sanitize_key( wp_unslash( $_GET['template_status'] ) ) : 'active'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter.
 		if ( ! in_array( $status, array( 'active', 'archived', 'all' ), true ) ) { $status = 'active'; }
 		$result = $repo->list_page( $search, $page, 50, $status );
-		$this->preset_section();
-		echo '<div class="certloom-template-list-head"><div><h2>' . esc_html__( 'My Templates', 'certloom' ) . '</h2><p class="description">' . esc_html__( 'Manage design drafts and publication here. Draft designs do not appear in Program or issuance searches; open a draft and choose Publish design when it is ready.', 'certloom' ) . '</p></div><a class="button button-primary" href="' . esc_url( add_query_arg( array( 'page' => self::PAGE, 'design_view' => 'editor' ), admin_url( 'admin.php' ) ) ) . '#certloom-template-editor">' . esc_html__( 'Create blank Template', 'certloom' ) . '</a></div>';
-		echo '<p class="description">' . esc_html__( 'Archive is non-destructive: revisions and any published history remain intact. Active assignments must be cleared before archival.', 'certloom' ) . '</p>';
-		echo '<nav class="certloom-template-lifecycle-tabs" aria-label="' . esc_attr__( 'Template lifecycle filter', 'certloom' ) . '">';
+		$simple = AdminUiMode::is_simple();
+		if ( ! $simple ) { $this->preset_section(); }
+		echo '<div class="certloom-template-list-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Design library', 'certloom' ) . '</span><h2>' . esc_html( $simple ? __( 'My designs', 'certloom' ) : __( 'My Templates', 'certloom' ) ) . '</h2><p class="description">' . esc_html__( 'Drafts stay private until you publish them. Open a design to edit, preview or publish it.', 'certloom' ) . '</p></div><a class="button button-primary" href="' . esc_url( add_query_arg( array( 'page' => self::PAGE, 'design_view' => 'editor' ), admin_url( 'admin.php' ) ) ) . '#certloom-template-editor">' . esc_html__( 'Create design', 'certloom' ) . '</a></div>';
+		echo '<nav class="certloom-template-lifecycle-tabs" aria-label="' . esc_attr__( 'Design status filter', 'certloom' ) . '">';
 		foreach ( array( 'active' => __( 'Active', 'certloom' ), 'archived' => __( 'Archived', 'certloom' ), 'all' => __( 'All', 'certloom' ) ) as $key => $label ) { $url = add_query_arg( array( 'page' => self::PAGE, 'design_view' => 'templates', 'template_status' => $key, 's' => $search ?: null ), admin_url( 'admin.php' ) ); echo '<a class="' . ( $key === $status ? 'is-current' : '' ) . '" ' . ( $key === $status ? 'aria-current="page" ' : '' ) . 'href="' . esc_url( $url ) . '">' . esc_html( $label ) . '</a>'; }
 		echo '</nav>';
 		if ( is_wp_error( $result ) ) { echo '<div class="notice notice-error"><p>' . esc_html( $result->get_error_message() ) . '</p></div>'; }
 		else {
-			echo '<form method="get" class="certloom-template-library-search"><input type="hidden" name="page" value="' . esc_attr( self::PAGE ) . '"><input type="hidden" name="design_view" value="templates"><input type="hidden" name="template_status" value="' . esc_attr( $status ) . '"><label class="screen-reader-text" for="certloom-template-search">' . esc_html__( 'Search templates', 'certloom' ) . '</label><input id="certloom-template-search" type="search" name="s" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr__( 'Search name, key, or description', 'certloom' ) . '"><button class="button">' . esc_html_x( 'Search', 'search action button', 'certloom' ) . '</button></form>';
-			echo '<div class="certloom-template-table-wrap"><table class="widefat striped certloom-template-table"><thead><tr><th>' . esc_html__( 'Template', 'certloom' ) . '</th><th>' . esc_html__( 'Machine key', 'certloom' ) . '</th><th>' . esc_html__( 'Draft revision', 'certloom' ) . '</th><th>' . esc_html__( 'Published revision', 'certloom' ) . '</th><th>' . esc_html__( 'Lifecycle', 'certloom' ) . '</th></tr></thead><tbody>';
-			foreach ( $result['items'] as $item ) { $url = add_query_arg( array( 'page' => self::PAGE, 'design_view' => 'editor', 'template_id' => absint( $item['id'] ), 'template_status' => $status, 's' => $search ?: null ), admin_url( 'admin.php' ) ); $state = $repo->lifecycle_state( $item ); echo '<tr><td><strong><a href="' . esc_url( $url ) . '">' . esc_html( (string) $item['name'] ) . '</a></strong><br><span class="description">' . esc_html( (string) ( $item['description'] ?? '' ) ) . '</span></td><td><code>' . esc_html( (string) $item['machine_key'] ) . '</code></td><td>' . esc_html( (string) absint( $item['current_revision_number'] ?? 0 ) ) . '</td><td>' . esc_html( empty( $item['published_revision_number'] ) ? '—' : '#' . absint( $item['published_revision_number'] ) ) . '</td><td>' . $this->lifecycle_badge( $state ) . '</td></tr>'; } // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Lifecycle helper is escaped.
-			if ( empty( $result['items'] ) ) { echo '<tr><td colspan="5">' . esc_html__( 'No templates found for this lifecycle filter.', 'certloom' ) . '</td></tr>'; }
-			echo '</tbody></table></div>'; $this->template_list_pagination( $page, (int) $result['total'], 50, $search, $status );
+			echo '<form method="get" class="certloom-template-library-search"><input type="hidden" name="page" value="' . esc_attr( self::PAGE ) . '"><input type="hidden" name="design_view" value="templates"><input type="hidden" name="template_status" value="' . esc_attr( $status ) . '"><label class="screen-reader-text" for="certloom-template-search">' . esc_html__( 'Search designs', 'certloom' ) . '</label><input id="certloom-template-search" type="search" name="s" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr__( 'Search designs', 'certloom' ) . '"><button class="button">' . esc_html_x( 'Search', 'search action button', 'certloom' ) . '</button></form>';
+			if ( $simple ) {
+				echo '<div class="certloom-template-card-grid certloom-my-design-card-grid">';
+				foreach ( $result['items'] as $item ) {
+					$url = add_query_arg( array( 'page' => self::PAGE, 'design_view' => 'editor', 'template_id' => absint( $item['id'] ), 'template_status' => $status, 's' => $search ?: null ), admin_url( 'admin.php' ) );
+					$state = $repo->lifecycle_state( $item );
+					echo '<article class="certloom-workspace-card certloom-my-design-card"><div class="certloom-workspace-card-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Design', 'certloom' ) . '</span><h3>' . esc_html( (string) $item['name'] ) . '</h3></div>' . $this->lifecycle_badge( $state ) . '</div><p>' . esc_html( (string) ( $item['description'] ?: __( 'No description yet.', 'certloom' ) ) ) . '</p><div class="certloom-form-actions"><a class="button button-primary" href="' . esc_url( $url ) . '">' . esc_html__( 'Open design', 'certloom' ) . '</a></div></article>';
+				}
+				if ( empty( $result['items'] ) ) { echo '<div class="certloom-premium-empty-state certloom-empty-compact"><span class="dashicons dashicons-art" aria-hidden="true"></span><h3>' . esc_html__( 'No designs found', 'certloom' ) . '</h3><p>' . esc_html__( 'Create a design or try another search.', 'certloom' ) . '</p></div>'; }
+				echo '</div>';
+			} else {
+				echo '<p class="description">' . esc_html__( 'Archive is non-destructive: revisions and any published history remain intact. Active assignments must be cleared before archival.', 'certloom' ) . '</p>';
+				echo '<div class="certloom-template-table-wrap"><table class="widefat striped certloom-template-table"><thead><tr><th>' . esc_html__( 'Template', 'certloom' ) . '</th><th>' . esc_html__( 'Machine key', 'certloom' ) . '</th><th>' . esc_html__( 'Draft revision', 'certloom' ) . '</th><th>' . esc_html__( 'Published revision', 'certloom' ) . '</th><th>' . esc_html__( 'Lifecycle', 'certloom' ) . '</th></tr></thead><tbody>';
+				foreach ( $result['items'] as $item ) { $url = add_query_arg( array( 'page' => self::PAGE, 'design_view' => 'editor', 'template_id' => absint( $item['id'] ), 'template_status' => $status, 's' => $search ?: null ), admin_url( 'admin.php' ) ); $state = $repo->lifecycle_state( $item ); echo '<tr><td><strong><a href="' . esc_url( $url ) . '">' . esc_html( (string) $item['name'] ) . '</a></strong><br><span class="description">' . esc_html( (string) ( $item['description'] ?? '' ) ) . '</span></td><td><code>' . esc_html( (string) $item['machine_key'] ) . '</code></td><td>' . esc_html( (string) absint( $item['current_revision_number'] ?? 0 ) ) . '</td><td>' . esc_html( empty( $item['published_revision_number'] ) ? '—' : '#' . absint( $item['published_revision_number'] ) ) . '</td><td>' . $this->lifecycle_badge( $state ) . '</td></tr>'; } // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Lifecycle helper is escaped.
+				if ( empty( $result['items'] ) ) { echo '<tr><td colspan="5">' . esc_html__( 'No templates found for this lifecycle filter.', 'certloom' ) . '</td></tr>'; }
+				echo '</tbody></table></div>';
+			}
+			$this->template_list_pagination( $page, (int) $result['total'], 50, $search, $status );
 		}
-		$this->import_form();
+		if ( ! $simple ) { $this->import_form(); }
 	}
 
 	/** @return void */
@@ -885,6 +904,7 @@ final class TemplateAdmin {
 
 	/** @return void */
 	private function editor( $editing ) {
+		$simple = AdminUiMode::is_simple();
 		if ( is_wp_error( $editing ) ) { echo '<div class="notice notice-error"><p>' . esc_html( $editing->get_error_message() ) . '</p></div>'; return; }
 		if ( ! is_array( $editing ) ) {
 			echo '<section id="certloom-template-editor" class="certloom-template-editor"><h2>' . esc_html__( 'Create template draft', 'certloom' ) . '</h2><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_create">'; wp_nonce_field( 'certloom_template_create' );
@@ -894,23 +914,32 @@ final class TemplateAdmin {
 		$state = (string) ( $editing['lifecycle_state'] ?? TemplateLifecycle::state( $editing ) );
 		$current = $editing['current_revision'] ?? array();
 		$published = $editing['published_revision'] ?? array();
-		echo '<section id="certloom-template-editor" class="certloom-template-editor"><div class="certloom-template-editor-head"><div><h2>' . esc_html__( 'Template lifecycle & draft', 'certloom' ) . '</h2><p><strong>' . esc_html( (string) $editing['name'] ) . '</strong> <code>' . esc_html( (string) $editing['machine_key'] ) . '</code></p></div>' . $this->lifecycle_badge( $state ) . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Helper returns escaped fixed markup.
-		echo '<div class="certloom-template-lifecycle-summary"><div><span>' . esc_html__( 'Current revision', 'certloom' ) . '</span><strong>#' . esc_html( (string) absint( $editing['current_revision_id'] ?? 0 ) ) . '</strong><small><code>' . esc_html( substr( (string) ( $current['layout_sha256'] ?? '' ), 0, 12 ) ) . ( ! empty( $current['layout_sha256'] ) ? '…' : '' ) . '</code></small></div><div><span>' . esc_html__( 'Published revision', 'certloom' ) . '</span><strong>' . esc_html( empty( $editing['published_revision_id'] ) ? __( 'None', 'certloom' ) : '#' . absint( $editing['published_revision_id'] ) ) . '</strong><small><code>' . esc_html( substr( (string) ( $published['layout_sha256'] ?? '' ), 0, 12 ) ) . ( ! empty( $published['layout_sha256'] ) ? '…' : '' ) . '</code></small></div><div><span>' . esc_html__( 'Archive state', 'certloom' ) . '</span><strong>' . esc_html( empty( $editing['archived_at'] ) ? __( 'Active', 'certloom' ) : __( 'Archived', 'certloom' ) ) . '</strong><small>' . esc_html( (string) ( $editing['archived_at'] ?? '' ) ) . '</small></div></div>';
+		$current_is_published = absint( $editing['published_revision_id'] ?? 0 ) > 0 && absint( $editing['published_revision_id'] ?? 0 ) === absint( $editing['current_revision_id'] ?? 0 );
+		echo '<section id="certloom-template-editor" class="certloom-template-editor"><div class="certloom-template-editor-head"><div><h2>' . esc_html( $simple ? __( 'Edit design', 'certloom' ) : __( 'Template lifecycle & draft', 'certloom' ) ) . '</h2><p><strong>' . esc_html( (string) $editing['name'] ) . '</strong>' . ( $simple ? '' : ' <code>' . esc_html( (string) $editing['machine_key'] ) . '</code>' ) . '</p></div>' . $this->lifecycle_badge( $state ) . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Helper returns escaped fixed markup.
+		if ( $simple ) {
+			$simple_state_labels = array(
+				TemplateLifecycle::DRAFT           => __( 'Draft', 'certloom' ),
+				TemplateLifecycle::PUBLISHED       => __( 'Published', 'certloom' ),
+				TemplateLifecycle::CHANGES_PENDING => __( 'Changes pending', 'certloom' ),
+				TemplateLifecycle::ARCHIVED        => __( 'Archived', 'certloom' ),
+			);
+			$simple_state_label = $simple_state_labels[ $state ] ?? __( 'Draft', 'certloom' );
+			echo '<div class="certloom-design-simple-status"><div><span class="certloom-eyebrow">' . esc_html__( 'Design status', 'certloom' ) . '</span><h3>' . esc_html( $simple_state_label ) . '</h3><p>' . esc_html__( 'Certloom keeps revision history automatically in the background.', 'certloom' ) . '</p></div></div>';
+		} else { echo '<div class="certloom-template-lifecycle-summary"><div><span>' . esc_html__( 'Current revision', 'certloom' ) . '</span><strong>#' . esc_html( (string) absint( $editing['current_revision_id'] ?? 0 ) ) . '</strong><small><code>' . esc_html( substr( (string) ( $current['layout_sha256'] ?? '' ), 0, 12 ) ) . ( ! empty( $current['layout_sha256'] ) ? '…' : '' ) . '</code></small></div><div><span>' . esc_html__( 'Published revision', 'certloom' ) . '</span><strong>' . esc_html( empty( $editing['published_revision_id'] ) ? __( 'None', 'certloom' ) : '#' . absint( $editing['published_revision_id'] ) ) . '</strong><small><code>' . esc_html( substr( (string) ( $published['layout_sha256'] ?? '' ), 0, 12 ) ) . ( ! empty( $published['layout_sha256'] ) ? '…' : '' ) . '</code></small></div><div><span>' . esc_html__( 'Archive state', 'certloom' ) . '</span><strong>' . esc_html( empty( $editing['archived_at'] ) ? __( 'Active', 'certloom' ) : __( 'Archived', 'certloom' ) ) . '</strong><small>' . esc_html( (string) ( $editing['archived_at'] ?? '' ) ) . '</small></div></div>'; }
 
 		$renderer_authority = ( new RendererAuthorityGate() )->publication_status();
-		$current_is_published = absint( $editing['published_revision_id'] ?? 0 ) > 0 && absint( $editing['published_revision_id'] ?? 0 ) === absint( $editing['current_revision_id'] ?? 0 );
 		if ( TemplateLifecycle::ARCHIVED !== $state ) {
 			echo '<div class="certloom-template-publish-callout"><div><strong>' . esc_html( $current_is_published ? __( 'This design is published', 'certloom' ) : __( 'Ready to use this design?', 'certloom' ) ) . '</strong><p>' . esc_html( $current_is_published ? __( 'Programs and issuance searches can find this published design now.', 'certloom' ) : __( 'Publish the current design so it becomes available in Programs, issuance and language-specific design selectors.', 'certloom' ) ) . '</p></div>';
 			if ( ! $current_is_published && ! empty( $renderer_authority['accepted'] ) && ! empty( $current['layout_sha256'] ) ) {
 				echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_prepare_publish"><input type="hidden" name="template_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="expected_revision_id" value="' . esc_attr( (string) absint( $editing['current_revision_id'] ) ) . '"><input type="hidden" name="expected_revision_sha256" value="' . esc_attr( (string) $current['layout_sha256'] ) . '">'; wp_nonce_field( 'certloom_template_prepare_publish_' . $id ); echo '<button class="button button-primary">' . esc_html__( 'Publish design', 'certloom' ) . '</button></form>';
 			} elseif ( ! $current_is_published ) {
-				echo '<span class="certloom-template-preview-authority">' . esc_html__( 'Publishing is unavailable until renderer authority is available.', 'certloom' ) . '</span>';
+				echo '<span class="certloom-template-preview-authority">' . esc_html( $simple ? __( 'Publishing is not available on this site yet.', 'certloom' ) : __( 'Publishing is unavailable until renderer authority is available.', 'certloom' ) ) . '</span>';
 			}
 			echo '</div>';
 		}
 
 		$export = wp_nonce_url( add_query_arg( array( 'action' => 'certloom_template_export', 'template_id' => $id ), admin_url( 'admin-post.php' ) ), 'certloom_template_export_' . $id );
-		echo '<div class="certloom-template-actionbar"><a class="button" href="' . esc_url( $export ) . '">' . esc_html__( 'Export template JSON', 'certloom' ) . '</a>';
+		echo '<div class="certloom-template-actionbar">'; if ( ! $simple ) { echo '<a class="button" href="' . esc_url( $export ) . '">' . esc_html__( 'Export template JSON', 'certloom' ) . '</a>'; }
 		if ( TemplateLifecycle::ARCHIVED === $state ) {
 			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_restore"><input type="hidden" name="template_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="expected_updated_at" value="' . esc_attr( (string) $editing['updated_at'] ) . '">'; wp_nonce_field( 'certloom_template_restore_' . $id ); echo '<button class="button button-primary">' . esc_html__( 'Restore template', 'certloom' ) . '</button></form>';
 		} else {
@@ -927,14 +956,14 @@ final class TemplateAdmin {
 
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_metadata"><input type="hidden" name="template_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="expected_updated_at" value="' . esc_attr( (string) $editing['updated_at'] ) . '">'; wp_nonce_field( 'certloom_template_metadata_' . $id ); $this->identity_fields( $editing ); submit_button( __( 'Save metadata', 'certloom' ) ); echo '</form>';
 		try { $layout_json = ( new CanonicalJson() )->encode( $current['layout'] ?? TemplateDefaults::blank_a4_landscape() ); } catch ( \Throwable $e ) { $layout_json = ''; }
-		$this->schema_upgrade_panel( $editing );
+		if ( ! $simple ) { $this->schema_upgrade_panel( $editing ); }
 		$this->designer_panel( $editing, $layout_json );
-		echo '<details class="certloom-template-json-editor"><summary>' . esc_html__( 'Advanced canonical JSON editor', 'certloom' ) . '</summary><p class="description">' . esc_html__( 'The Designer and this advanced editor save the same certloom-layout document. Every successful save creates a new immutable revision; there is no separate browser-only design format.', 'certloom' ) . '</p><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_revision"><input type="hidden" name="template_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="expected_revision_id" value="' . esc_attr( (string) absint( $editing['current_revision_id'] ) ) . '"><input type="hidden" name="expected_revision_sha256" value="' . esc_attr( (string) ( $current['layout_sha256'] ?? '' ) ) . '">'; wp_nonce_field( 'certloom_template_revision_' . $id );
-		echo '<textarea name="layout_json" rows="18" class="large-text code" spellcheck="false">' . esc_textarea( $layout_json ) . '</textarea>'; submit_button( __( 'Save JSON as new revision', 'certloom' ) ); echo '</form></details>';
+		if ( ! $simple ) { echo '<details class="certloom-template-json-editor"><summary>' . esc_html__( 'Advanced canonical JSON editor', 'certloom' ) . '</summary><p class="description">' . esc_html__( 'The Designer and this advanced editor save the same certloom-layout document. Every successful save creates a new immutable revision; there is no separate browser-only design format.', 'certloom' ) . '</p><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_revision"><input type="hidden" name="template_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="expected_revision_id" value="' . esc_attr( (string) absint( $editing['current_revision_id'] ) ) . '"><input type="hidden" name="expected_revision_sha256" value="' . esc_attr( (string) ( $current['layout_sha256'] ?? '' ) ) . '">'; wp_nonce_field( 'certloom_template_revision_' . $id );
+		echo '<textarea name="layout_json" rows="18" class="large-text code" spellcheck="false">' . esc_textarea( $layout_json ) . '</textarea>'; submit_button( __( 'Save JSON as new revision', 'certloom' ) ); echo '</form></details>'; }
 
-		echo '<details class="certloom-template-publication-details"><summary>' . esc_html__( 'Publication details', 'certloom' ) . '</summary><div class="certloom-template-publication-card"><div><h3>' . esc_html__( 'Publication review', 'certloom' ) . '</h3><p>' . esc_html__( 'Publication is bound to the exact immutable revision ID and SHA-256 shown here. A stale revision or hash is rejected even after renderer authority is accepted.', 'certloom' ) . '</p><p><code>#' . esc_html( (string) absint( $editing['current_revision_id'] ) ) . ' · ' . esc_html( (string) ( $current['layout_sha256'] ?? '' ) ) . '</code></p></div>';
+		if ( ! $simple ) { echo '<details class="certloom-template-publication-details"><summary>' . esc_html__( 'Publication details', 'certloom' ) . '</summary><div class="certloom-template-publication-card"><div><h3>' . esc_html__( 'Publication review', 'certloom' ) . '</h3><p>' . esc_html__( 'Publication is bound to the exact immutable revision ID and SHA-256 shown here. A stale revision or hash is rejected even after renderer authority is accepted.', 'certloom' ) . '</p><p><code>#' . esc_html( (string) absint( $editing['current_revision_id'] ) ) . ' · ' . esc_html( (string) ( $current['layout_sha256'] ?? '' ) ) . '</code></p></div>';
 		echo '<div><p class="description">' . esc_html__( 'Use the single Publish design action at the top of this editor. This section only shows the technical revision identity used for integrity checks.', 'certloom' ) . '</p></div>';
-		echo '</div></details>';
+		echo '</div></details>'; }
 
 		if ( 0 === strpos( (string) ( $editing['machine_key'] ?? '' ), 'certloom-preset-' ) ) {
 			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_preset_reset"><input type="hidden" name="template_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="expected_revision_id" value="' . esc_attr( (string) absint( $editing['current_revision_id'] ) ) . '">';
@@ -1176,7 +1205,7 @@ final class TemplateAdmin {
 		$base_key = preg_replace( '/-copy(?:-[0-9]+)?$/', '', (string) ( $editing['machine_key'] ?? 'template' ) );
 		$suggested_key = sanitize_key( $base_key . '-copy' );
 		echo '<details id="certloom-template-duplicate" class="certloom-template-duplicate"><summary>' . esc_html__( 'Duplicate as a new draft', 'certloom' ) . '</summary><p class="description">' . esc_html__( 'Duplication copies only the reviewed current revision. It creates a fresh template identity with no published state and no assignments.', 'certloom' ) . '</p><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_duplicate"><input type="hidden" name="template_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="expected_revision_id" value="' . esc_attr( (string) absint( $editing['current_revision_id'] ?? 0 ) ) . '"><input type="hidden" name="description" value="' . esc_attr( (string) ( $editing['description'] ?? '' ) ) . '">'; wp_nonce_field( 'certloom_template_duplicate_' . $id );
-		echo '<div class="certloom-template-duplicate-fields"><label><span>' . esc_html__( 'New name', 'certloom' ) . '</span><input class="regular-text" name="name" maxlength="255" required value="' . esc_attr( (string) $editing['name'] . ' ' . __( 'Copy', 'certloom' ) ) . '"></label><label><span>' . esc_html__( 'New machine key', 'certloom' ) . '</span><input class="regular-text code" name="machine_key" maxlength="191" required value="' . esc_attr( $suggested_key ) . '"></label></div>'; submit_button( __( 'Create duplicate draft', 'certloom' ), 'secondary', 'submit', false ); echo '</form></details>';
+		echo '<div class="certloom-template-duplicate-fields"><label><span>' . esc_html__( 'New name', 'certloom' ) . '</span><input class="regular-text" name="name" maxlength="255" required value="' . esc_attr( (string) $editing['name'] . ' ' . __( 'Copy', 'certloom' ) ) . '"></label>'; if ( AdminUiMode::is_simple() ) { echo '<input type="hidden" name="machine_key" value="' . esc_attr( $suggested_key ) . '">'; } else { echo '<label><span>' . esc_html__( 'New machine key', 'certloom' ) . '</span><input class="regular-text code" name="machine_key" maxlength="191" required value="' . esc_attr( $suggested_key ) . '"></label>'; } echo '</div>'; submit_button( __( 'Create duplicate draft', 'certloom' ), 'secondary', 'submit', false ); echo '</form></details>';
 	}
 
 	/** @return string */
@@ -1208,7 +1237,24 @@ final class TemplateAdmin {
 	/** @return void */
 	private function identity_fields( array $data ) {
 		$is_factory = 0 === strpos( (string) ( $data['machine_key'] ?? '' ), 'certloom-preset-' );
+		$simple = AdminUiMode::is_simple();
+		if ( $simple ) {
+			echo '<div class="certloom-form-grid certloom-form-grid-2 certloom-design-identity-grid"><label class="certloom-field-control"><span>' . esc_html__( 'Design name', 'certloom' ) . '</span><input id="certloom-template-name" name="name" maxlength="255" required value="' . esc_attr( (string) ( $data['name'] ?? '' ) ) . '"></label><label class="certloom-field-control"><span>' . esc_html__( 'Description', 'certloom' ) . '</span><textarea rows="3" id="certloom-template-description" name="description" placeholder="' . esc_attr__( 'Optional note about when to use this design', 'certloom' ) . '">' . esc_textarea( (string) ( $data['description'] ?? '' ) ) . '</textarea></label></div>';
+			echo '<input type="hidden" name="machine_key" value="' . esc_attr( (string) ( $data['machine_key'] ?? '' ) ) . '">';
+			if ( ! empty( $data['machine_key'] ) ) { echo '<details class="certloom-technical-details"><summary>' . esc_html__( 'Technical details', 'certloom' ) . '</summary><p><strong>' . esc_html__( 'Design key', 'certloom' ) . ':</strong> <code>' . esc_html( (string) $data['machine_key'] ) . '</code></p></details>'; }
+			return;
+		}
 		echo '<table class="form-table"><tr><th><label for="certloom-template-name">' . esc_html__( 'Name', 'certloom' ) . '</label></th><td><input class="regular-text" id="certloom-template-name" name="name" maxlength="255" required value="' . esc_attr( (string) ( $data['name'] ?? '' ) ) . '"></td></tr><tr><th><label for="certloom-template-key">' . esc_html__( 'Machine key', 'certloom' ) . '</label></th><td><input class="regular-text code" id="certloom-template-key" name="machine_key" maxlength="191" required ' . ( $is_factory ? 'readonly aria-readonly="true" ' : '' ) . 'value="' . esc_attr( (string) ( $data['machine_key'] ?? '' ) ) . '"><p class="description">' . esc_html( $is_factory ? __( 'Factory template identity is permanent. Duplicate/export the design for a separately named template.', 'certloom' ) : __( 'Stable lowercase key used by assignments, imports and future integrations.', 'certloom' ) ) . '</p></td></tr><tr><th><label for="certloom-template-description">' . esc_html__( 'Description', 'certloom' ) . '</label></th><td><textarea class="large-text" rows="4" id="certloom-template-description" name="description">' . esc_textarea( (string) ( $data['description'] ?? '' ) ) . '</textarea></td></tr></table>';
+	}
+
+	/** Generate a stable internal key when Simple mode deliberately hides machine identifiers. @return string */
+	private function posted_machine_key( $name ) {
+		$key = isset( $_POST['machine_key'] ) ? sanitize_key( wp_unslash( $_POST['machine_key'] ) ) : '';
+		if ( '' !== $key ) { return $key; }
+		$base = sanitize_key( preg_replace( '/[^a-z0-9]+/i', '-', strtolower( (string) $name ) ) );
+		$base = '' !== $base ? trim( $base, '-' ) : 'design';
+		$suffix = substr( str_replace( '-', '', wp_generate_uuid4() ), 0, 10 );
+		return substr( $base . '-' . $suffix, 0, 191 );
 	}
 
 	/** @return void */

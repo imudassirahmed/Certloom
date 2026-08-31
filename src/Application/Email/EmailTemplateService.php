@@ -51,7 +51,7 @@ final class EmailTemplateService {
 		$url = $verification_authoritative ? trim( (string) ( $credential['verification_url'] ?? '' ) ) : '';
 		$link_html = '' !== $url
 			? '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Verify this credential', 'certloom' ) . '</a>'
-			: '<span>' . esc_html__( 'Public normalized verification is not yet authoritative for this credential.', 'certloom' ) . '</span>';
+			: '<span>' . esc_html__( 'Online verification is not available for this credential yet.', 'certloom' ) . '</span>';
 
 		$plain = array(
 			'recipient_name' => (string) ( $recipient['display_name'] ?? '' ),

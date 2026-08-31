@@ -52,6 +52,20 @@ final class PublicCredentialPresenter {
 		$status = $result->status();
 		$snapshot = isset( $credential['snapshot'] ) && is_array( $credential['snapshot'] ) ? $credential['snapshot'] : array();
 		$public_fields = $this->fields->public_fields( $snapshot, $effective_context );
+		$profile = array();
+		if ( 'profile' === $effective_context ) {
+			$recipient = is_array( $snapshot['recipient'] ?? null ) ? $snapshot['recipient'] : array();
+			$program   = is_array( $snapshot['program'] ?? null ) ? $snapshot['program'] : array();
+			$batch     = is_array( $snapshot['batch'] ?? null ) ? $snapshot['batch'] : array();
+			$issuer    = is_array( $snapshot['issuer'] ?? null ) ? $snapshot['issuer'] : array();
+			$profile = array(
+				'recipient_name'      => self::bounded_text( $recipient['display_name'] ?? '', 255 ),
+				'program_title'       => self::bounded_text( $program['title'] ?? '', 255 ),
+				'program_description' => self::bounded_text( $program['description'] ?? '', 1000 ),
+				'batch_name'          => self::bounded_text( $batch['name'] ?? '', 255 ),
+				'issuer_name'         => self::bounded_text( $issuer['name'] ?? '', 255 ),
+			);
+		}
 		return array(
 			'found'              => true,
 			'credential_id'      => $this->public_ids->format( $result->public_id() ),
@@ -60,7 +74,16 @@ final class PublicCredentialPresenter {
 			'expires_at'         => self::date_part( $credential['expires_at'] ?? null ),
 			'status'             => $status ? $status->to_array() : null,
 			'fields'             => $public_fields,
+			'profile'            => $profile,
 		);
+	}
+
+	/** Public-profile text is always bounded before presentation. @return string */
+	private static function bounded_text( $value, $max ) {
+		$value = trim( sanitize_text_field( (string) $value ) );
+		if ( '' === $value ) { return ''; }
+		$max = max( 1, absint( $max ) );
+		return function_exists( 'mb_substr' ) ? mb_substr( $value, 0, $max, 'UTF-8' ) : substr( $value, 0, $max );
 	}
 
 	/** @return string|null */

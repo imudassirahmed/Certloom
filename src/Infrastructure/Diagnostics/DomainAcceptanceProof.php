@@ -44,7 +44,7 @@ final class DomainAcceptanceProof {
 	/** @var string[] */
 	private static $tables = array(
 		'recipients', 'issuers', 'programs', 'signers', 'batches', 'batch_recipients', 'signer_assignments', 'templates', 'template_revisions', 'template_assignments', 'credential_series', 'credential_versions',
-		'credential_numbers', 'credential_events', 'email_deliveries', 'jobs', 'import_rows', 'restore_map',
+		'credential_numbers', 'credential_events', 'email_deliveries', 'destination_deliveries', 'jobs', 'import_rows', 'restore_map',
 	);
 
 	/** @return array<string,mixed>|\WP_Error */

@@ -355,7 +355,6 @@ class Ecapla_CertVerify_Render {
 					$code = sanitize_key( (string) ( $status['code'] ?? 'unknown' ) );
 					$fields = array();
 					foreach ( array(
-						__( 'Credential ID', 'certloom' ) => (string) ( $payload['credential_id'] ?? '' ),
 						__( 'Certificate number', 'certloom' ) => (string) ( $payload['certificate_number'] ?? '' ),
 						__( 'Issued', 'certloom' ) => (string) ( $payload['issued_at'] ?? '' ),
 						__( 'Expires', 'certloom' ) => (string) ( $payload['expires_at'] ?? '' ),
@@ -374,22 +373,72 @@ class Ecapla_CertVerify_Render {
 							'label' => self::normalized_status_label( $code ),
 							'description' => self::normalized_status_description( $code ),
 						),
+						'credential_id' => (string) ( $payload['credential_id'] ?? '' ),
 						'certificate_number' => (string) ( $payload['certificate_number'] ?? '' ),
+						'profile' => isset( $payload['profile'] ) && is_array( $payload['profile'] ) ? $payload['profile'] : array(),
 						'fields' => $fields,
 						'issuer' => $issuer,
 						'verified_at' => current_time( 'mysql' ),
 						'verification_url' => is_wp_error( $url ) ? '' : (string) $url,
 						'actions' => is_wp_error( $url ) ? array( array( 'type' => 'print', 'label' => __( 'Print', 'certloom' ) ) ) : array(
-							array( 'type' => 'copy', 'label' => __( 'Copy verification link', 'certloom' ), 'url' => (string) $url ),
+							array( 'type' => 'copy', 'label' => __( 'Copy link', 'certloom' ), 'url' => (string) $url ),
 							array( 'type' => 'print', 'label' => __( 'Print', 'certloom' ) ),
 						),
 					);
-					$content = self::result_card_html( $presentation, 'cvp' );
+					$content = self::normalized_profile_card_html( $presentation, 'cvp' );
 				}
 			}
 		}
 
 		return '<section id="' . esc_attr( $instance_id ) . '" class="certloom-credential-profile cvp-widget" aria-labelledby="' . esc_attr( $heading_id ) . '" data-copy-success-text="' . esc_attr__( 'Verification link copied.', 'certloom' ) . '" data-copy-error-text="' . esc_attr__( 'Copy the verification link from your browser.', 'certloom' ) . '"><header class="cvp-header"><p class="cvp-eyebrow">' . esc_html__( 'Verified credential', 'certloom' ) . '</p><' . $heading_tag . ' id="' . esc_attr( $heading_id ) . '" class="cvp-heading">' . esc_html( $heading ) . '</' . $heading_tag . '></header><div class="cvp-result" role="region" aria-labelledby="' . esc_attr( $heading_id ) . '">' . $content . '</div><div class="screen-reader-text certloom-live-status" role="status" aria-live="polite" aria-atomic="true"></div></section>';
+	}
+
+	/** Premium human-facing normalized credential profile. @return string */
+	private static function normalized_profile_card_html( array $presentation, $prefix ) {
+		$status = isset( $presentation['status'] ) && is_array( $presentation['status'] ) ? $presentation['status'] : array();
+		$status_key = sanitize_key( (string) ( $status['key'] ?? 'unknown' ) );
+		$status_label = (string) ( $status['label'] ?? __( 'Credential status', 'certloom' ) );
+		$status_desc = (string) ( $status['description'] ?? '' );
+		$profile = isset( $presentation['profile'] ) && is_array( $presentation['profile'] ) ? $presentation['profile'] : array();
+		$recipient = trim( (string) ( $profile['recipient_name'] ?? '' ) );
+		$program = trim( (string) ( $profile['program_title'] ?? '' ) );
+		$program_desc = trim( (string) ( $profile['program_description'] ?? '' ) );
+		$batch = trim( (string) ( $profile['batch_name'] ?? '' ) );
+		$issuer = trim( (string) ( $profile['issuer_name'] ?? ( $presentation['issuer'] ?? '' ) ) );
+		$number = trim( (string) ( $presentation['certificate_number'] ?? '' ) );
+		$credential_id = trim( (string) ( $presentation['credential_id'] ?? '' ) );
+
+		$hero = '<div class="cvp-profile-hero"><div class="cvp-profile-status-row"><span class="cvp-status-mark" aria-hidden="true">' . esc_html( self::status_icon( $status_key ) ) . '</span><div><span class="cvp-profile-status-label">' . esc_html( $status_label ) . '</span>' . ( '' !== $status_desc ? '<p>' . esc_html( $status_desc ) . '</p>' : '' ) . '</div></div>';
+		if ( '' !== $recipient ) { $hero .= '<h2 class="cvp-profile-recipient" dir="auto">' . esc_html( $recipient ) . '</h2>'; }
+		if ( '' !== $program ) { $hero .= '<p class="cvp-profile-program" dir="auto">' . esc_html( $program ) . '</p>'; }
+		if ( '' !== $program_desc ) { $hero .= '<p class="cvp-profile-program-description" dir="auto">' . esc_html( $program_desc ) . '</p>'; }
+		$hero .= '</div>';
+
+		$facts = array();
+		if ( '' !== $number ) { $facts[] = array( __( 'Credential number', 'certloom' ), $number ); }
+		foreach ( (array) ( $presentation['fields'] ?? array() ) as $field ) {
+			if ( ! is_array( $field ) || ! empty( $field['is_status'] ) ) { continue; }
+			$label = trim( (string) ( $field['label'] ?? '' ) );
+			$value = trim( (string) ( $field['value'] ?? '' ) );
+			if ( '' !== $label && '' !== $value ) { $facts[] = array( $label, $value ); }
+		}
+		if ( '' !== $batch ) { $facts[] = array( __( 'Cohort / batch', 'certloom' ), $batch ); }
+		if ( '' !== $issuer ) { $facts[] = array( __( 'Issued by', 'certloom' ), $issuer ); }
+		$facts_html = '';
+		if ( $facts ) {
+			$facts_html = '<dl class="cvp-profile-facts">';
+			foreach ( array_slice( $facts, 0, 20 ) as $fact ) { $facts_html .= '<div><dt>' . esc_html( (string) $fact[0] ) . '</dt><dd dir="auto">' . esc_html( (string) $fact[1] ) . '</dd></div>'; }
+			$facts_html .= '</dl>';
+		}
+
+		$qr = class_exists( 'Ecapla_CertVerify_QR' ) && ! empty( $presentation['verification_url'] ) ? Ecapla_CertVerify_QR::figure_html( (string) $presentation['verification_url'], $prefix ) : '';
+		$barcode = class_exists( 'Ecapla_CertVerify_Barcode' ) && '' !== $number ? Ecapla_CertVerify_Barcode::figure_html( $number, $prefix ) : '';
+		$verified = ! empty( $presentation['verified_at'] ) ? '<p class="cvp-profile-verified">' . esc_html__( 'Verified from the issuer’s Certloom registry', 'certloom' ) . ' · <time datetime="' . esc_attr( (string) $presentation['verified_at'] ) . '">' . esc_html( self::format_verified_at( $presentation['verified_at'] ) ) . '</time></p>' : '';
+		$proof = '<section class="cvp-profile-proof" aria-label="' . esc_attr__( 'Credential verification', 'certloom' ) . '"><div class="cvp-profile-proof-copy"><span class="cvp-eyebrow">' . esc_html__( 'Verification', 'certloom' ) . '</span><h3>' . esc_html__( 'Authentic credential record', 'certloom' ) . '</h3><p>' . esc_html__( 'This page is generated from the credential’s current verified record. Use the QR code or copy this page link to verify it again.', 'certloom' ) . '</p>' . $verified;
+		if ( '' !== $credential_id ) { $proof .= '<details class="cvp-profile-technical"><summary>' . esc_html__( 'Credential ID', 'certloom' ) . '</summary><code>' . esc_html( $credential_id ) . '</code></details>'; }
+		$proof .= '</div>' . ( '' !== $qr ? '<div class="cvp-profile-qr">' . $qr . '</div>' : '' ) . '</section>';
+		$actions = self::actions_html( (array) ( $presentation['actions'] ?? array() ), $prefix );
+		return '<article class="cvp-result-card cvp-profile-card cvp-status-' . esc_attr( $status_key ) . '">' . $hero . $facts_html . ( '' !== $barcode ? '<div class="cvp-profile-barcode">' . $barcode . '</div>' : '' ) . $proof . $actions . '</article>';
 	}
 
 	/** @return string */

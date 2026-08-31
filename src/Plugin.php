@@ -76,6 +76,12 @@ final class Plugin {
 		if ( ! is_wp_error( $result ) ) {
 			self::$job_runtime = new JobRuntime();
 			self::$job_runtime->register();
+			// Post-issuance automations must also be available when Tutor, LearnDash,
+			// WooCommerce or another integration issues outside wp-admin. The
+			// listener only reacts after the canonical issuance service commits a
+			// new immutable Version; it never creates credential truth itself.
+			( new \Certloom\Infrastructure\Email\EmailAutomationListener( self::$job_runtime->email_delivery() ) )->register();
+			( new \Certloom\Infrastructure\Integration\CredlyPublishingListener( self::$job_runtime->queue() ) )->register();
 		}
 		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() && is_admin() ) {
 			( new \Certloom\Infrastructure\Admin\DomainAdmin() )->register();
@@ -83,6 +89,7 @@ final class Plugin {
 			( new \Certloom\Infrastructure\Admin\TemplateAdmin() )->register();
 			( new \Certloom\Infrastructure\Admin\ManualIssuanceAdmin() )->register();
 			( new \Certloom\Infrastructure\Admin\ScopedFieldAdminAjax() )->register();
+			( new \Certloom\Infrastructure\Admin\AutomationAdmin() )->register();
 			if ( self::$job_runtime ) {
 				( new \Certloom\Infrastructure\Admin\BulkIssuanceAdmin( self::$job_runtime ) )->register();
 				( new \Certloom\Infrastructure\Admin\EmailDeliveryAdmin( self::$job_runtime ) )->register();

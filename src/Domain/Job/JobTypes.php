@@ -12,6 +12,7 @@ final class JobTypes {
 	const BULK_ISSUANCE_PREFLIGHT = 'bulk_issuance_preflight';
 	const BULK_ISSUANCE_COMMIT    = 'bulk_issuance_commit';
 	const EMAIL_DELIVERY          = 'email_delivery';
+	const CREDLY_PUBLISH          = 'credly_publish';
 	const DOMAIN_IMPORT            = self::DOMAIN_IMPORT_PREFLIGHT; // Backward-compatible alias for development callers.
 
 	/** @return array<int,string> */
@@ -26,6 +27,7 @@ final class JobTypes {
 			self::BULK_ISSUANCE_PREFLIGHT,
 			self::BULK_ISSUANCE_COMMIT,
 			self::EMAIL_DELIVERY,
+			self::CREDLY_PUBLISH,
 		);
 	}
 }

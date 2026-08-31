@@ -1,0 +1,35 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Certloom\n"
+"Language: es_ES\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Domain: certloom\n"
+"X-Certloom-Pack-Schema: 1\n"
+"X-Certloom-POT-SHA256: 7161a99e1c794372594ba793047707d17f599c52964e7b01aaee430b43bda91e\n"
+"X-Certloom-Review-Status: candidate\n"
+"X-Certloom-Direction: ltr\n"
+
+msgctxt "search field label"
+msgid "Search"
+msgstr "Buscar"
+
+msgctxt "search action button"
+msgid "Search"
+msgstr "Buscar"
+
+msgid "Program"
+msgstr "Programa"
+
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgid "Save"
+msgstr "Guardar"
+
+msgid "%d day"
+msgid_plural "%d days"
+msgstr[0] "%d día"
+msgstr[1] "%d días"

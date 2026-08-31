@@ -203,6 +203,32 @@ final class RecipientRepository {
 		return is_array( $row ) ? $this->decode( $row ) : null;
 	}
 
+	/**
+	 * Resolves one Recipient by an explicitly configured external identifier.
+	 * External IDs are not schema-unique for backwards compatibility, so a
+	 * duplicate is treated as ambiguous and fails closed rather than guessing.
+	 *
+	 * @return array<string,mixed>|null|\WP_Error
+	 */
+	public function find_by_external_id_exact( $external_id ) {
+		global $wpdb;
+		$external_id = trim( (string) $external_id );
+		if ( '' === $external_id || self::text_length( $external_id ) > 191 ) { return null; }
+		$wpdb->last_error = '';
+		$rows = $wpdb->get_results(
+			$wpdb->prepare( 'SELECT * FROM %i WHERE external_id = %s ORDER BY id ASC LIMIT 2', SchemaManager::table( 'recipients' ), $external_id ),
+			ARRAY_A
+		);
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) {
+			return new \WP_Error( 'certloom_recipient_external_read_failed', __( 'Certloom could not resolve the recipient external ID safely.', 'certloom' ) );
+		}
+		if ( 0 === count( $rows ) ) { return null; }
+		if ( 1 !== count( $rows ) ) {
+			return new \WP_Error( 'certloom_recipient_external_ambiguous', __( 'More than one Recipient uses this external ID. Make the Recipient external IDs unique before using this integration.', 'certloom' ) );
+		}
+		return $this->decode( $rows[0] );
+	}
+
 	/** @return array<string,mixed>|\WP_Error */
 	private function normalize_patch( array $data, $creating ) {
 		$row = array();

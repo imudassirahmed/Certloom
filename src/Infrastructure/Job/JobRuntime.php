@@ -18,6 +18,7 @@ use Certloom\Application\Issuance\BulkIssuancePreflightJobHandler;
 use Certloom\Application\Issuance\BulkIssuanceCommitJobHandler;
 use Certloom\Application\Email\EmailDeliveryCoordinator;
 use Certloom\Application\Email\EmailDeliveryJobHandler;
+use Certloom\Application\Integration\CredlyPublishJobHandler;
 use Certloom\Infrastructure\Issuance\BulkIssuanceCsvReader;
 use Certloom\Infrastructure\Issuance\BulkIssuancePlanStore;
 use Certloom\Application\Restore\DomainRestoreJobHandler;
@@ -103,6 +104,7 @@ final class JobRuntime {
 			JobTypes::BULK_ISSUANCE_PREFLIGHT => new BulkIssuancePreflightJobHandler( $bulk_reader, $bulk_plans, null, null, $private_files ),
 			JobTypes::BULK_ISSUANCE_COMMIT => new BulkIssuanceCommitJobHandler( $this->repository, $bulk_plans, null, null, $private_files ),
 			JobTypes::EMAIL_DELIVERY => new EmailDeliveryJobHandler(),
+			JobTypes::CREDLY_PUBLISH => new CredlyPublishJobHandler(),
 		);
 
 		$runner           = new JobRunner( $this->service, $this->repository, $handlers );
@@ -186,6 +188,12 @@ final class JobRuntime {
 			$error = is_array( $job['error'] ?? null ) ? $job['error'] : array();
 			if ( 'certloom_email_delivery_uncertain' === (string) ( $error['code'] ?? '' ) ) {
 				return new \WP_Error( 'certloom_email_retry_uncertain_forbidden', __( 'Certloom will not automatically retry an interrupted email whose external delivery outcome is uncertain. Review it and create a new explicit resend if needed.', 'certloom' ) );
+			}
+		}
+		if ( is_array( $job ) && \Certloom\Domain\Job\JobTypes::CREDLY_PUBLISH === (string) ( $job['job_type'] ?? '' ) ) {
+			$error = is_array( $job['error'] ?? null ) ? $job['error'] : array();
+			if ( 'certloom_credly_publish_uncertain' === (string) ( $error['code'] ?? '' ) ) {
+				return new \WP_Error( 'certloom_credly_retry_uncertain_forbidden', __( 'Certloom will not automatically retry an interrupted Credly publication whose external outcome is uncertain. Review the Credly issuer account first.', 'certloom' ) );
 			}
 		}
 		$requeued = $this->service->requeue_failed( (string) $job_key );

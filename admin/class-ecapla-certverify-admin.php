@@ -55,6 +55,7 @@ class Ecapla_CertVerify_Admin {
 		add_action( 'admin_post_certloom_backup_saved_delete', array( $this, 'handle_backup_saved_delete' ) );
 		add_action( 'admin_post_certloom_google_drive_connect', array( $this, 'handle_google_drive_connect' ) );
 		add_action( 'admin_post_certloom_google_drive_oauth_callback', array( $this, 'handle_google_drive_oauth_callback' ) );
+		add_action( 'admin_post_certloom_google_drive_relay_callback', array( $this, 'handle_google_drive_relay_callback' ) );
 		add_action( 'admin_post_certloom_google_drive_settings', array( $this, 'handle_google_drive_settings' ) );
 		add_action( 'admin_post_certloom_google_drive_test', array( $this, 'handle_google_drive_test' ) );
 		add_action( 'admin_post_certloom_google_drive_disconnect', array( $this, 'handle_google_drive_disconnect' ) );
@@ -108,6 +109,10 @@ class Ecapla_CertVerify_Admin {
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Analytics', 'certloom' ), __( 'Analytics', 'certloom' ), Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS, self::ANALYTICS_PAGE, array( $this, 'render_analytics_screen' ) );
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Settings', 'certloom' ), __( 'Settings', 'certloom' ), 'manage_options', 'certloom-settings', array( $this, 'render_settings_screen' ) );
 
+		// Automations is a first-class Simple-mode task. The late product-navigation
+		// pass hides it again in Advanced mode, where Delivery remains contextual.
+		add_submenu_page( self::DASHBOARD_PAGE, __( 'Automations', 'certloom' ), __( 'Automations', 'certloom' ), Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS, 'certloom-automations', array( $this, 'render_automations_screen' ) );
+
 		// Contextual utility screens stay routable while remaining out of the six-section primary menu.
 		add_submenu_page( null, __( 'Integrations', 'certloom' ), __( 'Integrations', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-integrations', array( $this, 'render_integrations_screen' ) );
 		add_submenu_page( null, __( 'Backup & Restore', 'certloom' ), __( 'Backup & Restore', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-import', array( $this, 'render_import_screen' ) );
@@ -143,7 +148,10 @@ class Ecapla_CertVerify_Admin {
 		}
 		$current = \Certloom\Infrastructure\Admin\AdminUiMode::current();
 		$redirect = remove_query_arg( array( 'certloom_error', 'certloom_notice' ) );
-		echo '<div class="certloom-ui-mode-bar" role="region" aria-label="' . esc_attr__( 'Certloom workspace mode', 'certloom' ) . '"><div><strong>' . esc_html__( 'Workspace', 'certloom' ) . '</strong><span>' . esc_html__( 'Simple hides specialist and diagnostic screens. Advanced shows them. This changes presentation only—not permissions, credential data, or production authority.', 'certloom' ) . '</span></div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_set_ui_mode"><input type="hidden" name="redirect_to" value="' . esc_attr( $redirect ) . '">';
+		$mode_description = 'simple' === $current
+			? __( 'Task-focused workspace. Specialist maintenance and diagnostics stay out of the way.', 'certloom' )
+			: __( 'Full administration, diagnostics and release-maintenance tools.', 'certloom' );
+		echo '<div class="certloom-ui-mode-bar" role="region" aria-label="' . esc_attr__( 'Certloom workspace mode', 'certloom' ) . '"><div><strong>' . esc_html( 'simple' === $current ? __( 'Simple workspace', 'certloom' ) : __( 'Advanced workspace', 'certloom' ) ) . '</strong><span>' . esc_html( $mode_description ) . '</span></div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_set_ui_mode"><input type="hidden" name="redirect_to" value="' . esc_attr( $redirect ) . '">';
 		wp_nonce_field( 'certloom_set_ui_mode' );
 		foreach ( array( 'simple' => __( 'Simple', 'certloom' ), 'advanced' => __( 'Advanced', 'certloom' ) ) as $value => $label ) {
 			echo '<button type="submit" name="certloom_ui_mode" value="' . esc_attr( $value ) . '" class="certloom-ui-mode-choice ' . ( $current === $value ? 'is-current' : '' ) . '" aria-pressed="' . ( $current === $value ? 'true' : 'false' ) . '">' . esc_html( $label ) . '</button>';
@@ -1340,27 +1348,33 @@ class Ecapla_CertVerify_Admin {
 	public function handle_google_drive_connect() {
 		$this->require_options_permission();
 		check_admin_referer( 'certloom_google_drive_connect' );
-		$client_id     = isset( $_POST['google_client_id'] ) ? sanitize_text_field( wp_unslash( $_POST['google_client_id'] ) ) : '';
-		$client_secret = isset( $_POST['google_client_secret'] ) ? trim( (string) wp_unslash( $_POST['google_client_secret'] ) ) : '';
-		$return_mode   = isset( $_POST['certloom_google_return_mode'] ) ? sanitize_key( wp_unslash( $_POST['certloom_google_return_mode'] ) ) : 'backup';
-		$return_mode   = 'popup' === $return_mode ? 'popup' : 'backup';
-		if ( '' !== $client_id || '' !== $client_secret ) {
-			$saved = \Certloom\Infrastructure\Backup\GoogleDriveOAuth::save_client_credentials( $client_id, $client_secret );
-			if ( is_wp_error( $saved ) ) {
-				if ( 'popup' === $return_mode ) { $this->render_google_drive_popup_result( false, $saved->get_error_message() ); }
-				$this->redirect_error( $saved->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
+		$client_id       = isset( $_POST['google_client_id'] ) ? sanitize_text_field( wp_unslash( $_POST['google_client_id'] ) ) : '';
+		$client_secret   = isset( $_POST['google_client_secret'] ) ? trim( (string) wp_unslash( $_POST['google_client_secret'] ) ) : '';
+		$connection_mode = isset( $_POST['google_connection_mode'] ) ? sanitize_key( wp_unslash( $_POST['google_connection_mode'] ) ) : 'relay';
+		$return_mode     = isset( $_POST['certloom_google_return_mode'] ) ? sanitize_key( wp_unslash( $_POST['certloom_google_return_mode'] ) ) : 'backup';
+		$return_mode     = 'popup' === $return_mode ? 'popup' : 'backup';
+		$use_direct      = 'direct' === $connection_mode || '' !== $client_id || '' !== $client_secret;
+		if ( $use_direct ) {
+			if ( '' !== $client_id || '' !== $client_secret ) {
+				$saved = \Certloom\Infrastructure\Backup\GoogleDriveOAuth::save_client_credentials( $client_id, $client_secret );
+				if ( is_wp_error( $saved ) ) {
+					if ( 'popup' === $return_mode ) { $this->render_google_drive_popup_result( false, $saved->get_error_message() ); }
+					$this->redirect_error( $saved->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
+				}
+			} elseif ( ! \Certloom\Infrastructure\Backup\GoogleDriveOAuth::has_client_credentials() ) {
+				$message = __( 'Add this site’s Google OAuth client ID and secret before using the site-owned connection.', 'certloom' );
+				if ( 'popup' === $return_mode ) { $this->render_google_drive_popup_result( false, $message ); }
+				$this->redirect_error( $message, admin_url( 'admin.php?page=certloom-import' ) );
 			}
-		} elseif ( ! \Certloom\Infrastructure\Backup\GoogleDriveOAuth::has_client_credentials() ) {
-			$message = __( 'Complete the one-time Google connection setup before connecting Google Drive.', 'certloom' );
-			if ( 'popup' === $return_mode ) { $this->render_google_drive_popup_result( false, $message ); }
-			$this->redirect_error( $message, admin_url( 'admin.php?page=certloom-import' ) );
+			$url = \Certloom\Infrastructure\Backup\GoogleDriveOAuth::authorization_url( $return_mode );
+		} else {
+			$url = \Certloom\Infrastructure\Backup\EcaplaOAuthRelay::authorization_url( $return_mode );
 		}
-		$url = \Certloom\Infrastructure\Backup\GoogleDriveOAuth::authorization_url( $return_mode );
 		if ( is_wp_error( $url ) ) {
 			if ( 'popup' === $return_mode ) { $this->render_google_drive_popup_result( false, $url->get_error_message() ); }
 			$this->redirect_error( $url->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
 		}
-		wp_redirect( esc_url_raw( $url ) ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- Exact Google OAuth URL generated by the provider boundary.
+		wp_redirect( esc_url_raw( $url ) ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- Exact reviewed Google or Ecapla OAuth URL generated by the provider boundary.
 		exit;
 	}
 
@@ -1377,6 +1391,29 @@ class Ecapla_CertVerify_Admin {
 		}
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		$result = \Certloom\Infrastructure\Backup\GoogleDriveOAuth::complete_authorization( $state, $code );
+		if ( is_wp_error( $result ) ) {
+			if ( 'popup' === $context ) { $this->render_google_drive_popup_result( false, $result->get_error_message() ); }
+			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
+		}
+		if ( 'popup' === $context ) { $this->render_google_drive_popup_result( true, __( 'Google Drive connected.', 'certloom' ) ); }
+		wp_safe_redirect( add_query_arg( 'backup_notice', 'google-connected', admin_url( 'admin.php?page=certloom-import' ) ) );
+		exit;
+	}
+
+
+	public function handle_google_drive_relay_callback() {
+		$this->require_options_permission();
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Local one-time state is the CSRF boundary; relay_code is a single-use server-bound handoff.
+		$state      = isset( $_GET['state'] ) ? sanitize_text_field( wp_unslash( $_GET['state'] ) ) : '';
+		$relay_code = isset( $_GET['relay_code'] ) ? sanitize_text_field( wp_unslash( $_GET['relay_code'] ) ) : '';
+		$context    = \Certloom\Infrastructure\Backup\EcaplaOAuthRelay::pending_context( $state );
+		if ( ! empty( $_GET['relay_error'] ) ) {
+			$message = __( 'Google Drive connection was cancelled or could not be completed.', 'certloom' );
+			if ( 'popup' === $context ) { $this->render_google_drive_popup_result( false, $message ); }
+			$this->redirect_error( $message, admin_url( 'admin.php?page=certloom-import' ) );
+		}
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		$result = \Certloom\Infrastructure\Backup\EcaplaOAuthRelay::complete_authorization( $state, $relay_code );
 		if ( is_wp_error( $result ) ) {
 			if ( 'popup' === $context ) { $this->render_google_drive_popup_result( false, $result->get_error_message() ); }
 			$this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=certloom-import' ) );
@@ -1646,23 +1683,83 @@ class Ecapla_CertVerify_Admin {
 	}
 
 
+	public function render_automations_screen() {
+		$this->require_manage_permission();
+		if ( ! \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
+			$this->redirect_error( __( 'Automations become available with Certloom’s Program-based credential workflow.', 'certloom' ), admin_url( 'admin.php?page=' . self::DASHBOARD_PAGE ) );
+		}
+
+		$email_templates = ( new \Certloom\Infrastructure\Email\EmailTemplateCatalogRepository() )->all();
+		$email_rules     = ( new \Certloom\Infrastructure\Email\EmailAutomationRuleRepository() )->all();
+		$programs_result = ( new \Certloom\Infrastructure\Repository\ProgramRepository() )->list_page( '', 1, 20, 'active' );
+		$programs        = is_wp_error( $programs_result ) ? array() : (array) ( $programs_result['items'] ?? array() );
+
+		$tutor     = ( new \Certloom\Infrastructure\Admin\TutorLmsIntegrationAdmin() )->screen_data();
+		$learndash = ( new \Certloom\Infrastructure\Admin\LearnDashIntegrationAdmin() )->screen_data();
+		$coursera  = ( new \Certloom\Infrastructure\Admin\CourseraIntegrationAdmin() )->screen_data();
+		$credly    = ( new \Certloom\Infrastructure\Admin\CredlyIntegrationAdmin() )->screen_data();
+		$destination_status = array(
+			array( 'label' => __( 'Credly', 'certloom' ), 'icon' => 'dashicons-awards', 'status' => ! empty( $credly['connection']['configured'] ) ? __( 'Connected', 'certloom' ) : __( 'Not connected', 'certloom' ) ),
+		);
+		$source_status = array(
+			array(
+				'label'  => __( 'Tutor LMS', 'certloom' ),
+				'icon'   => 'dashicons-welcome-learn-more',
+				'status' => ! empty( $tutor['status']['available'] ) ? __( 'Available on this site', 'certloom' ) : __( 'Not detected', 'certloom' ),
+			),
+			array(
+				'label'  => __( 'LearnDash', 'certloom' ),
+				'icon'   => 'dashicons-welcome-learn-more',
+				'status' => ! empty( $learndash['status']['available'] ) ? __( 'Available on this site', 'certloom' ) : __( 'Not detected', 'certloom' ),
+			),
+			array(
+				'label'  => __( 'WooCommerce', 'certloom' ),
+				'icon'   => 'dashicons-cart',
+				'status' => class_exists( 'WooCommerce' ) ? __( 'Available on this site', 'certloom' ) : __( 'Not detected', 'certloom' ),
+			),
+			array(
+				'label'  => __( 'Coursera', 'certloom' ),
+				'icon'   => 'dashicons-cloud',
+				'status' => ! empty( $coursera['credentials']['configured'] ) ? __( 'Connected', 'certloom' ) : __( 'Not connected', 'certloom' ),
+			),
+		);
+
+		include ECAPLA_CERTVERIFY_PATH . 'admin/views/automations.php';
+	}
+
 	public function render_integrations_screen() {
 		$this->require_manage_permission();
 		$tutor_admin = new \Certloom\Infrastructure\Admin\TutorLmsIntegrationAdmin();
 		$tutor = $tutor_admin->screen_data();
 		$learndash_admin = new \Certloom\Infrastructure\Admin\LearnDashIntegrationAdmin();
 		$learndash = $learndash_admin->screen_data();
+		$woocommerce_admin = new \Certloom\Infrastructure\Admin\WooCommerceIntegrationAdmin();
+		$woocommerce = $woocommerce_admin->screen_data();
+		$coursera_admin = new \Certloom\Infrastructure\Admin\CourseraIntegrationAdmin();
+		$coursera = $coursera_admin->screen_data();
+		$webhook_admin = new \Certloom\Infrastructure\Admin\WebhookIntegrationAdmin();
+		$webhooks = $webhook_admin->screen_data();
+		$credly_admin = new \Certloom\Infrastructure\Admin\CredlyIntegrationAdmin();
+		$credly = $credly_admin->screen_data();
 		$detected = array();
 		if ( ! empty( $tutor['status']['available'] ) ) { $detected[] = __( 'Tutor LMS', 'certloom' ); }
 		if ( ! empty( $learndash['status']['available'] ) ) { $detected[] = __( 'LearnDash', 'certloom' ); }
+		if ( ! empty( $woocommerce['status']['available'] ) ) { $detected[] = __( 'WooCommerce', 'certloom' ); }
+		if ( ! empty( $coursera['credentials']['configured'] ) ) { $detected[] = __( 'Coursera xAPI', 'certloom' ); }
+		if ( ! empty( $webhooks['sources'] ) ) { $detected[] = __( 'Webhook / API', 'certloom' ); }
+		if ( ! empty( $credly['connection']['configured'] ) ) { $detected[] = __( 'Credly publishing', 'certloom' ); }
 		$framework = array(
 			'status' => $detected ? sprintf( /* translators: %s: detected LMS names. */ __( 'Detected: %s', 'certloom' ), implode( ', ', $detected ) ) : __( 'Integration framework ready', 'certloom' ),
 			'contract' => __( 'Supported LMS adapters', 'certloom' ),
 			'adapters' => array(
 				array( 'key' => 'tutor_lms', 'label' => __( 'Tutor LMS', 'certloom' ), 'available' => ! empty( $tutor['status']['available'] ) ),
 				array( 'key' => 'learndash', 'label' => __( 'LearnDash', 'certloom' ), 'available' => ! empty( $learndash['status']['available'] ) ),
+				array( 'key' => 'woocommerce', 'label' => __( 'WooCommerce', 'certloom' ), 'available' => ! empty( $woocommerce['status']['available'] ) ),
+				array( 'key' => 'coursera', 'label' => __( 'Coursera xAPI', 'certloom' ), 'available' => ! empty( $coursera['credentials']['configured'] ) ),
+				array( 'key' => 'webhook', 'label' => __( 'Webhook / API', 'certloom' ), 'available' => ! empty( $webhooks['sources'] ) ),
+				array( 'key' => 'credly', 'label' => __( 'Credly destination', 'certloom' ), 'available' => ! empty( $credly['connection']['configured'] ) ),
 			),
-			'next' => __( 'Tutor LMS and LearnDash use Certloom’s standard credential workflow. Course mapping remains unavailable while Program and Template management is protected, and automatic credential creation stays locked until Certloom’s production credential-writing checks are approved.', 'certloom' ),
+			'next' => __( 'Tutor LMS, LearnDash, WooCommerce and Coursera all feed the same Recipient → Program → credential workflow. Automatic issuance remains fail-closed until Certloom’s production credential-writing checks are approved.', 'certloom' ),
 		);
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/integrations.php';
 	}

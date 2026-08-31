@@ -164,6 +164,17 @@ function ecapla_certverify_uninstall_site() {
 	delete_option( 'certloom_tutor_lms_mappings' );
 	delete_option( 'certloom_learndash_last_result' );
 	delete_option( 'certloom_learndash_mappings' );
+	delete_option( 'certloom_woocommerce_last_result' );
+	delete_option( 'certloom_woocommerce_mappings' );
+	delete_option( 'certloom_coursera_last_result' );
+	delete_option( 'certloom_coursera_mappings_v1' );
+	delete_option( 'certloom_coursera_xapi_credentials_v1' );
+	delete_option( 'certloom_webhook_sources_v1' );
+	delete_option( 'certloom_webhook_last_result' );
+	delete_option( 'certloom_email_template_catalog_v1' );
+	delete_option( 'certloom_email_automation_rules_v1' );
+	delete_option( 'certloom_credly_connection_v1' );
+	delete_option( 'certloom_credly_mappings_v1' );
 
 	/* DSN-02 personal Designer workspace state is non-artifact UI state and must not survive uninstall. */
 	$designer_state_prefix = 'certloom_template_designer_state_' . get_current_blog_id() . '_';
@@ -202,6 +213,10 @@ function ecapla_certverify_uninstall_site() {
 		'_transient_timeout_certloom_safety_snapshot_',
 		'_transient_certloom_gdrive_oauth_',
 		'_transient_timeout_certloom_gdrive_oauth_',
+		'_transient_certloom_coursera_setup_secret_',
+		'_transient_timeout_certloom_coursera_setup_secret_',
+		'_transient_certloom_webhook_setup_secret_',
+		'_transient_timeout_certloom_webhook_setup_secret_',
 	);
 
 	foreach ( $transient_prefixes as $prefix ) {
@@ -281,6 +296,8 @@ function ecapla_certverify_uninstall_site() {
 	delete_option( 'certloom_verification_analytics_schema_version' );
 
 	$ephemeral_domain_tables = array(
+		$wpdb->prefix . 'certloom_email_deliveries',
+		$wpdb->prefix . 'certloom_destination_deliveries',
 		$wpdb->prefix . 'certloom_jobs',
 		$wpdb->prefix . 'certloom_import_rows',
 		$wpdb->prefix . 'certloom_restore_map',

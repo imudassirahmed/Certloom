@@ -2,6 +2,7 @@
 namespace Certloom\Application\Integration;
 
 use Certloom\Application\Contract\IntegrationMappingResolverInterface;
+use Certloom\Application\Contract\IntegrationContextRecipientResolverInterface;
 use Certloom\Application\Contract\IntegrationRecipientResolverInterface;
 use Certloom\Application\Issuance\ManualIssuanceService;
 use Certloom\Application\Rendering\CanonicalJson;
@@ -36,7 +37,7 @@ final class IntegrationIssuanceCoordinator {
 		if ( ! $context->is_eligible() ) {
 			return new \WP_Error( 'certloom_integration_not_eligible', __( 'No completed attempt satisfies the certificate eligibility threshold.', 'certloom' ) );
 		}
-		$recipient = $this->recipients->resolve_recipient_for_wp_user( $context->wp_user_id() );
+		$recipient = $this->recipients instanceof IntegrationContextRecipientResolverInterface ? $this->recipients->resolve_recipient_for_context( $context ) : $this->recipients->resolve_recipient_for_wp_user( $context->wp_user_id() );
 		if ( is_wp_error( $recipient ) ) { return $recipient; }
 		if ( ! is_array( $recipient ) || empty( $recipient['id'] ) ) {
 			return new \WP_Error( 'certloom_integration_recipient_unlinked', __( 'This learner is not explicitly linked to a Certloom recipient. Certloom will not infer identity from email or name.', 'certloom' ) );

@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * exercised without changing public verification truth for an existing site.
  */
 final class SchemaManager {
-	const SCHEMA_VERSION         = '18';
+	const SCHEMA_VERSION         = '19';
 	const SCHEMA_OPTION          = 'certloom_domain_schema_version';
 	const HEALTH_OPTION          = 'certloom_domain_schema_health';
 	const LOCK_OPTION            = 'certloom_domain_schema_lock';
@@ -38,6 +38,7 @@ final class SchemaManager {
 		'credential_events'   => 'certloom_credential_events',
 		'jobs'                => 'certloom_jobs',
 		'email_deliveries'    => 'certloom_email_deliveries',
+		'destination_deliveries' => 'certloom_destination_deliveries',
 		'import_rows'         => 'certloom_import_rows',
 		'restore_map'         => 'certloom_restore_map',
 	);
@@ -682,6 +683,37 @@ final class SchemaManager {
 			KEY failure_code (failure_code)
 		) ENGINE=InnoDB $charset_collate;";
 
+		$destination_deliveries = self::table( 'destination_deliveries' );
+		$tables['destination_deliveries'] = "CREATE TABLE $destination_deliveries (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			delivery_key CHAR(32) NOT NULL,
+			dedupe_key CHAR(64) NOT NULL,
+			destination VARCHAR(32) NOT NULL,
+			series_id BIGINT UNSIGNED NOT NULL,
+			version_id BIGINT UNSIGNED NOT NULL,
+			job_key CHAR(32) NULL,
+			status VARCHAR(32) NOT NULL DEFAULT 'preparing',
+			mapping_sha256 CHAR(64) NOT NULL,
+			configuration_sha256 CHAR(64) NOT NULL,
+			recipient_sha256 CHAR(64) NOT NULL,
+			external_reference VARCHAR(191) NULL,
+			attempt_token CHAR(32) NULL,
+			attempted_at DATETIME NULL,
+			accepted_at DATETIME NULL,
+			failed_at DATETIME NULL,
+			failure_code VARCHAR(64) NULL,
+			evidence_json LONGTEXT NULL,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY delivery_key (delivery_key),
+			UNIQUE KEY dedupe_key (dedupe_key),
+			UNIQUE KEY job_key (job_key),
+			KEY version_destination (version_id,destination),
+			KEY status_created (status,created_at),
+			KEY failure_code (failure_code)
+		) ENGINE=InnoDB $charset_collate;";
+
 		$import_rows = self::table( 'import_rows' );
 		$tables['import_rows'] = "CREATE TABLE $import_rows (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -1201,6 +1233,41 @@ final class SchemaManager {
 					'version_created' => array( 'columns' => array( 'version_id', 'created_at' ), 'unique' => false ),
 					'status_created' => array( 'columns' => array( 'status', 'created_at' ), 'unique' => false ),
 					'destination_sha256' => array( 'columns' => array( 'destination_sha256' ), 'unique' => false ),
+					'failure_code' => array( 'columns' => array( 'failure_code' ), 'unique' => false ),
+				),
+			),
+
+
+			'destination_deliveries' => array(
+				'columns' => array(
+					'id' => array( 'type' => $bigu, 'null' => 'NO', 'extra' => 'auto_increment' ),
+					'delivery_key' => array( 'type' => '/^char\(32\)$/', 'null' => 'NO' ),
+					'dedupe_key' => array( 'type' => '/^char\(64\)$/', 'null' => 'NO' ),
+					'destination' => array( 'type' => '/^varchar\(32\)$/', 'null' => 'NO' ),
+					'series_id' => array( 'type' => $bigu, 'null' => 'NO' ),
+					'version_id' => array( 'type' => $bigu, 'null' => 'NO' ),
+					'job_key' => array( 'type' => '/^char\(32\)$/', 'null' => 'YES' ),
+					'status' => array( 'type' => '/^varchar\(32\)$/', 'null' => 'NO', 'default' => 'preparing' ),
+					'mapping_sha256' => array( 'type' => '/^char\(64\)$/', 'null' => 'NO' ),
+					'configuration_sha256' => array( 'type' => '/^char\(64\)$/', 'null' => 'NO' ),
+					'recipient_sha256' => array( 'type' => '/^char\(64\)$/', 'null' => 'NO' ),
+					'external_reference' => array( 'type' => '/^varchar\(191\)$/', 'null' => 'YES' ),
+					'attempt_token' => array( 'type' => '/^char\(32\)$/', 'null' => 'YES' ),
+					'attempted_at' => array( 'type' => $dt, 'null' => 'YES' ),
+					'accepted_at' => array( 'type' => $dt, 'null' => 'YES' ),
+					'failed_at' => array( 'type' => $dt, 'null' => 'YES' ),
+					'failure_code' => array( 'type' => '/^varchar\(64\)$/', 'null' => 'YES' ),
+					'evidence_json' => array( 'type' => $lt, 'null' => 'YES' ),
+					'created_at' => array( 'type' => $dt, 'null' => 'NO' ),
+					'updated_at' => array( 'type' => $dt, 'null' => 'NO' ),
+				),
+				'indexes' => array(
+					'PRIMARY' => array( 'columns' => array( 'id' ), 'unique' => true ),
+					'delivery_key' => array( 'columns' => array( 'delivery_key' ), 'unique' => true ),
+					'dedupe_key' => array( 'columns' => array( 'dedupe_key' ), 'unique' => true ),
+					'job_key' => array( 'columns' => array( 'job_key' ), 'unique' => true ),
+					'version_destination' => array( 'columns' => array( 'version_id', 'destination' ), 'unique' => false ),
+					'status_created' => array( 'columns' => array( 'status', 'created_at' ), 'unique' => false ),
 					'failure_code' => array( 'columns' => array( 'failure_code' ), 'unique' => false ),
 				),
 			),

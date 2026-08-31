@@ -16,7 +16,17 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class AdminProductNavigation {
 	/** @var array<string,string> */
-	private const PRIMARY = array(
+	private const PRIMARY_SIMPLE = array(
+		'certloom'                 => 'Home',
+		'certloom-certificates'    => 'Credentials',
+		'certloom-domain-programs' => 'Programs',
+		'certloom-templates'       => 'Design',
+		'certloom-automations'     => 'Automations',
+		'certloom-settings'        => 'Settings',
+	);
+
+	/** @var array<string,string> */
+	private const PRIMARY_ADVANCED = array(
 		'certloom'                 => 'Dashboard',
 		'certloom-certificates'    => 'Credentials',
 		'certloom-domain-programs' => 'People & Programs',
@@ -46,17 +56,18 @@ final class AdminProductNavigation {
 			return;
 		}
 
+		$primary = $this->primary_map();
 		$registered = array();
 		foreach ( $submenu['certloom'] as $item ) {
 			$slug = isset( $item[2] ) ? (string) $item[2] : '';
-			if ( isset( self::PRIMARY[ $slug ] ) && ! isset( $registered[ $slug ] ) ) {
+			if ( isset( $primary[ $slug ] ) && ! isset( $registered[ $slug ] ) ) {
 				$item[0] = $this->primary_label( $slug );
 				$registered[ $slug ] = $item;
 			}
 		}
 
 		$ordered = array();
-		foreach ( array_keys( self::PRIMARY ) as $slug ) {
+		foreach ( array_keys( $primary ) as $slug ) {
 			if ( isset( $registered[ $slug ] ) ) {
 				$ordered[] = $registered[ $slug ];
 			}
@@ -72,7 +83,7 @@ final class AdminProductNavigation {
 			'certloom-bulk-issuance', 'certloom-email-delivery', 'certloom-bulk-review',
 			'certloom-domain-recipients', 'certloom-domain-issuers', 'certloom-domain-batches',
 			'certloom-domain-signers', 'certloom-frontend', 'certloom-integrations',
-			'certloom-import', 'certloom-setup', 'certloom-fields', 'certloom-domain-data-tools',
+			'certloom-import', 'certloom-setup', 'certloom-fields', 'certloom-domain-data-tools', 'certloom-automations',
 		) as $contextual_page ) {
 			$_parent_pages[ $contextual_page ] = 'certloom';
 		}
@@ -99,24 +110,32 @@ final class AdminProductNavigation {
 			'credentials' => 'certloom-certificates',
 			'people'      => 'certloom-domain-programs',
 			'design'      => 'certloom-templates',
-			'insights'    => 'certloom-analytics',
+			'insights'    => AdminUiMode::is_simple() ? 'certloom-automations' : 'certloom-analytics',
 			'settings'    => 'certloom-settings',
 		);
 		$section = $this->section_for_page( $page );
 		return isset( $primary[ $section ] ) ? $primary[ $section ] : $submenu_file;
 	}
 
+	/** @return array<string,string> */
+	private function primary_map() {
+		return AdminUiMode::is_simple() ? self::PRIMARY_SIMPLE : self::PRIMARY_ADVANCED;
+	}
+
 	/** @return string */
 	private function primary_label( $slug ) {
+		$simple = AdminUiMode::is_simple();
 		switch ( $slug ) {
 			case 'certloom':
-				return __( 'Dashboard', 'certloom' );
+				return $simple ? __( 'Home', 'certloom' ) : __( 'Dashboard', 'certloom' );
 			case 'certloom-certificates':
 				return __( 'Credentials', 'certloom' );
 			case 'certloom-domain-programs':
-				return __( 'People & Programs', 'certloom' );
+				return $simple ? __( 'Programs', 'certloom' ) : __( 'People & Programs', 'certloom' );
 			case 'certloom-templates':
 				return __( 'Design', 'certloom' );
+			case 'certloom-automations':
+				return __( 'Automations', 'certloom' );
 			case 'certloom-analytics':
 				return __( 'Insights & Integrations', 'certloom' );
 			case 'certloom-settings':
@@ -155,7 +174,7 @@ final class AdminProductNavigation {
 			'credentials' => array( 'certloom-certificates', 'certloom-add', 'certloom-domain-credentials', 'certloom-issuance', 'certloom-bulk-issuance', 'certloom-email-delivery', 'certloom-bulk-review' ),
 			'people'      => array( 'certloom-domain-programs', 'certloom-domain-recipients', 'certloom-domain-issuers', 'certloom-domain-batches', 'certloom-domain-signers' ),
 			'design'      => array( 'certloom-templates', 'certloom-frontend' ),
-			'insights'    => array( 'certloom-analytics', 'certloom-integrations' ),
+			'insights'    => array( 'certloom-analytics', 'certloom-integrations', 'certloom-automations', 'certloom-email-delivery' ),
 			'settings'    => array( 'certloom-settings', 'certloom-import', 'certloom-setup', 'certloom-fields', 'certloom-domain-data-tools' ),
 		);
 		foreach ( $groups as $section => $pages ) {
@@ -170,13 +189,21 @@ final class AdminProductNavigation {
 	 * @return array<int,array{label:string,page:string,pages:array<int,string>,capability:string}>
 	 */
 	private function links_for_section( $section ) {
-		$preview  = \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready();
-		$advanced = ! AdminUiMode::is_simple();
+		$preview = \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready();
+		$simple  = AdminUiMode::is_simple();
 
 		switch ( $section ) {
 			case 'credentials':
+				if ( $simple && $preview ) {
+					return array(
+						$this->link( __( 'Credentials', 'certloom' ), 'certloom-domain-credentials', array( 'certloom-certificates', 'certloom-domain-credentials' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS ),
+						$this->link( __( 'Issue', 'certloom' ), 'certloom-issuance', array( 'certloom-issuance' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ),
+						$this->link( __( 'Recipients', 'certloom' ), 'certloom-domain-recipients', array( 'certloom-domain-recipients' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_RECIPIENTS ),
+						$this->link( __( 'Bulk issue', 'certloom' ), 'certloom-bulk-issuance', array( 'certloom-bulk-issuance' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ),
+					);
+				}
 				$links = array(
-					$this->link( $preview ? __( 'Legacy registry', 'certloom' ) : __( 'Registry', 'certloom' ), 'certloom-certificates', array( 'certloom-certificates', 'certloom-add', 'certloom-bulk-review' ), ECAPLA_CERTVERIFY_CAP ),
+					$this->link( $preview ? __( 'Legacy data', 'certloom' ) : __( 'Registry', 'certloom' ), 'certloom-certificates', array( 'certloom-certificates', 'certloom-add', 'certloom-bulk-review' ), ECAPLA_CERTVERIFY_CAP ),
 				);
 				if ( $preview ) {
 					$links[] = $this->link( __( 'Credentials', 'certloom' ), 'certloom-domain-credentials', array( 'certloom-domain-credentials' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS );
@@ -187,6 +214,11 @@ final class AdminProductNavigation {
 				return $links;
 
 			case 'people':
+				if ( $simple ) {
+					return array(
+						$this->link( __( 'Programs', 'certloom' ), 'certloom-domain-programs', array( 'certloom-domain-programs', 'certloom-domain-issuers', 'certloom-domain-batches', 'certloom-domain-signers' ), ECAPLA_CERTVERIFY_CAP ),
+					);
+				}
 				$links = array(
 					$this->link( __( 'Programs', 'certloom' ), 'certloom-domain-programs', array( 'certloom-domain-programs' ), ECAPLA_CERTVERIFY_CAP ),
 				);
@@ -200,14 +232,22 @@ final class AdminProductNavigation {
 
 			case 'design':
 				return array(
-					$this->link( __( 'Templates', 'certloom' ), 'certloom-templates', array( 'certloom-templates' ), ECAPLA_CERTVERIFY_CAP ),
-					$this->link( __( 'Verification appearance', 'certloom' ), 'certloom-frontend', array( 'certloom-frontend' ), ECAPLA_CERTVERIFY_CAP ),
+					$this->link( $simple ? __( 'Designs', 'certloom' ) : __( 'Templates', 'certloom' ), 'certloom-templates', array( 'certloom-templates' ), ECAPLA_CERTVERIFY_CAP ),
+					$this->link( __( 'Verification page', 'certloom' ), 'certloom-frontend', array( 'certloom-frontend' ), ECAPLA_CERTVERIFY_CAP ),
 				);
 
 			case 'insights':
+				if ( $simple ) {
+					return array(
+						$this->link( __( 'Automations', 'certloom' ), 'certloom-automations', array( 'certloom-automations' ), ECAPLA_CERTVERIFY_CAP ),
+						$this->link( __( 'Integrations', 'certloom' ), 'certloom-integrations', array( 'certloom-integrations' ), ECAPLA_CERTVERIFY_CAP ),
+						$this->link( __( 'Analytics', 'certloom' ), 'certloom-analytics', array( 'certloom-analytics' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS ),
+					);
+				}
 				return array(
 					$this->link( __( 'Analytics', 'certloom' ), 'certloom-analytics', array( 'certloom-analytics' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS ),
 					$this->link( __( 'Integrations', 'certloom' ), 'certloom-integrations', array( 'certloom-integrations' ), ECAPLA_CERTVERIFY_CAP ),
+					$this->link( __( 'Delivery', 'certloom' ), 'certloom-email-delivery', array( 'certloom-email-delivery' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ),
 				);
 
 			case 'settings':
@@ -217,7 +257,7 @@ final class AdminProductNavigation {
 					$this->link( __( 'Setup', 'certloom' ), 'certloom-setup', array( 'certloom-setup' ), 'manage_options' ),
 					$this->link( __( 'Fields', 'certloom' ), 'certloom-fields', array( 'certloom-fields' ), ECAPLA_CERTVERIFY_CAP ),
 				);
-				if ( $preview && $advanced ) {
+				if ( $preview && ! $simple ) {
 					$links[] = $this->link( __( 'Developer tools', 'certloom' ), 'certloom-domain-data-tools', array( 'certloom-domain-data-tools' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_DATA_TOOLS );
 				}
 				return $links;

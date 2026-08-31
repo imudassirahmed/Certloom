@@ -38,7 +38,8 @@ final class IntegrationEventContext {
 		$event_type = self::machine_key( $input['event_type'] ?? '', self::MAX_EVENT_TYPE_BYTES );
 		if ( is_wp_error( $event_type ) ) { return $event_type; }
 		$wp_user_id = (int) ( $input['wp_user_id'] ?? 0 );
-		if ( $wp_user_id < 1 ) { return new \WP_Error( 'certloom_integration_user_invalid', __( 'The integration event requires a valid WordPress user identifier.', 'certloom' ) ); }
+		$recipient_id = (int) ( $input['recipient_id'] ?? 0 );
+		if ( $wp_user_id < 1 && $recipient_id < 1 ) { return new \WP_Error( 'certloom_integration_user_invalid', __( 'The integration event requires an explicit Certloom recipient or WordPress user identity.', 'certloom' ) ); }
 		$object = isset( $input['source_object'] ) && is_array( $input['source_object'] ) ? $input['source_object'] : array();
 		$object_type = self::machine_key( $object['type'] ?? '', 64 );
 		if ( is_wp_error( $object_type ) ) { return new \WP_Error( 'certloom_integration_object_type_invalid', __( 'The integration event requires a bounded source-object type.', 'certloom' ) ); }
@@ -84,6 +85,9 @@ final class IntegrationEventContext {
 			'attempts' => $normalized_attempts,
 			'qualifying_attempt' => $qualifying,
 		);
+		// Keep the v1 payload byte-for-byte stable for existing WP-user integrations.
+		// External connectors add only the explicit local Recipient identifier.
+		if ( $recipient_id > 0 ) { $data['recipient_id'] = $recipient_id; }
 		try {
 			$sha = $json->hash( $data );
 			$idempotency = $json->hash( array( 'source' => 'lms_integration', 'adapter' => $adapter, 'event_identity_sha256' => $event_identity ) );
@@ -99,6 +103,7 @@ final class IntegrationEventContext {
 	/** @return bool */ public function is_eligible() { return is_array( $this->data['qualifying_attempt'] ?? null ); }
 	/** @return array<string,mixed>|null */ public function qualifying_attempt() { return $this->is_eligible() ? $this->data['qualifying_attempt'] : null; }
 	/** @return int */ public function wp_user_id() { return (int) $this->data['wp_user_id']; }
+	/** @return int */ public function recipient_id() { return absint( $this->data['recipient_id'] ?? 0 ); }
 	/** @return float */ public function certificate_threshold() { return (float) $this->data['certificate_threshold']; }
 	/** @return string */ public function adapter_key() { return (string) $this->data['adapter']; }
 	/** @return string */ public function source_object_type() { return (string) $this->data['source_object']['type']; }
