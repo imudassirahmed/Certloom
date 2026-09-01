@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Certloom – Certificate Verification
  * Description: Self-hosted credential issuance, verification and lifecycle management for WordPress.
- * Version: 1.6.98-qa.11
+ * Version: 1.6.98
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.98-qa.11' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.98' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
@@ -39,7 +39,6 @@ define( 'ECAPLA_CERTVERIFY_MINIMUM_ELEMENTOR_VERSION', '3.10.0' );
 define( 'CERTLOOM_VERSION', ECAPLA_CERTVERIFY_VERSION );
 define( 'CERTLOOM_PATH', ECAPLA_CERTVERIFY_PATH );
 define( 'CERTLOOM_URL', ECAPLA_CERTVERIFY_URL );
-define( 'CERTLOOM_QA_UNGATED', true );
 if ( ! defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) ) {
 	define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false );
 }
@@ -57,17 +56,6 @@ if ( ! defined( 'CERTLOOM_ALLOW_STAGING_MIGRATION_REHEARSAL' ) ) {
 }
 if ( ! defined( 'CERTLOOM_ALLOW_STAGING_RESTORE_REHEARSAL' ) ) {
 	define( 'CERTLOOM_ALLOW_STAGING_RESTORE_REHEARSAL', false );
-}
-
-if ( function_exists( 'add_action' ) ) {
-	/* Persistent staging identity for the intentionally ungated QA derivative. */
-	add_action( 'admin_bar_menu', static function ( $admin_bar ) {
-		if ( ! is_object( $admin_bar ) || ! current_user_can( 'manage_options' ) ) { return; }
-		$admin_bar->add_node( array( 'id' => 'certloom-qa-ungated', 'title' => 'Certloom QA.11 · Ungated', 'href' => admin_url( 'admin.php?page=certloom' ), 'meta' => array( 'title' => 'Staging only. Domain, public-verification and renderer authority gates are bypassed for QA; this package is not production-certified.' ) ) );
-	}, 100 );
-	$certloom_qa_bar_style = static function () { if ( current_user_can( 'manage_options' ) ) { echo '<style>#wp-admin-bar-certloom-qa-ungated>.ab-item{background:#b32d2e!important;color:#fff!important;font-weight:700!important}</style>'; } };
-	add_action( 'admin_head', $certloom_qa_bar_style );
-	add_action( 'wp_head', $certloom_qa_bar_style );
 }
 
 require_once CERTLOOM_PATH . 'src/Autoloader.php';
