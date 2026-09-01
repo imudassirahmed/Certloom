@@ -67,7 +67,7 @@ async def main():
         await ck((await page.locator('[data-certloom-designer-content-field="asset"]').input_value()) == 'attachment:321', 'imageDragUsesLocalAttachment')
 
         # Keyboard direct text editing: Enter opens editor, Ctrl+Enter commits, undo is one transaction.
-        text = page.locator('.certloom-template-designer-element-text').first
+        text = page.locator('.certloom-template-designer-element.is-text').first
         await text.click(); await page.wait_for_timeout(40)
         old_text = (await text.text_content()) or ''
         await text.press('Enter'); await page.wait_for_timeout(50)

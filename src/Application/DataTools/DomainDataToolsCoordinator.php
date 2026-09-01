@@ -86,7 +86,7 @@ final class DomainDataToolsCoordinator {
 		if ( is_wp_error( $job_key ) ) {
 			$deleted = $this->files->delete( $private_path );
 			if ( is_wp_error( $deleted ) || false === $deleted ) {
-				return new \WP_Error( 'certloom_domain_restore_private_cleanup_failed', sprintf( __( 'Certloom could not queue the restore review (%1$s), and its protected backup copy could not be removed (%2$s).', 'certloom' ), $job_key->get_error_message(), is_wp_error( $deleted ) ? $deleted->get_error_message() : __( 'file deletion failed', 'certloom' ) ) );
+				return new \WP_Error( 'certloom_domain_restore_private_cleanup_failed', sprintf( /* translators: %1$s: job key; %2$s: cleanup error. */ __( 'Certloom could not queue the restore review (%1$s), and its protected backup copy could not be removed (%2$s).', 'certloom' ), $job_key->get_error_message(), is_wp_error( $deleted ) ? $deleted->get_error_message() : __( 'file deletion failed', 'certloom' ) ) );
 			}
 			return $job_key;
 		}

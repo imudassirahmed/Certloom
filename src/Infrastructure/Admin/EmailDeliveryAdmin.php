@@ -58,7 +58,7 @@ final class EmailDeliveryAdmin {
 		$version       = isset( $_GET['version_id'] ) ? absint( $_GET['version_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only route context.
 		$preview_token = isset( $_GET['email_preview'] ) ? sanitize_text_field( wp_unslash( $_GET['email_preview'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only transient key.
 
-		echo '<div class="wrap certloom-shell certloom-flow-workspace certloom-email-delivery">';
+		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-flow-workspace certloom-email-delivery">';
 		echo '<section class="certloom-workspace-hero certloom-email-hero"><div class="certloom-workspace-hero-copy">';
 		echo '<span class="certloom-eyebrow">' . esc_html__( 'Manual delivery', 'certloom' ) . '</span>';
 		echo '<h1>' . esc_html__( 'Send credential email', 'certloom' ) . '</h1>';

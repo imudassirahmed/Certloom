@@ -87,6 +87,10 @@ async def main():
         await ck(all(h>=44 for h in action_heights),'mobileActionsAtLeast44')
         await ck(await mobile.locator('.certloom-template-library-grid').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").length===1'),'mobileSingleColumnCards')
         await ck(await mobile.locator('.certloom-library-filter-program .certloom-context-lookup').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").length===1'),'mobileProgramLookupStacks')
+        for index,label in enumerate(('a4Landscape','a4Portrait','letterLandscape','letterPortrait')):
+            stage=mobile.locator('.certloom-template-library-thumbnail-stage').nth(index)
+            contained=await stage.evaluate("""(stage)=>{const page=stage.querySelector('.certloom-template-preview-page');if(!page)return false;const s=stage.getBoundingClientRect(),p=page.getBoundingClientRect();return p.left>=s.left-1&&p.top>=s.top-1&&p.right<=s.right+1&&p.bottom<=s.bottom+1;}""")
+            await ck(contained,'mobile'+label.title()+'ThumbnailFullyContained')
         await mobile.close()
         # RTL does not overflow or reverse underlying authority semantics.
         rtl=await browser.new_page(viewport={'width':900,'height':780})

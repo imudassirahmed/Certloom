@@ -146,7 +146,7 @@ final class DomainRestoreMergeService {
 			return new \WP_Error(
 				'certloom_domain_restore_merge_map_cleanup_failed',
 				sprintf(
-					__( 'The Merge restore was committed, but Certloom could not clear its private mapping state safely (%s). Retry the completed restore cleanup; credential data will not be promoted again.', 'certloom' ),
+					/* translators: %s: cleanup error. */ __( 'The Merge restore was committed, but Certloom could not clear its private mapping state safely (%s). Retry the completed restore cleanup; credential data will not be promoted again.', 'certloom' ),
 					$cleared->get_error_message()
 				)
 			);

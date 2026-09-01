@@ -130,7 +130,7 @@ python3 "$STAGE/source/certloom/tests/i18n/validate_language_packs.py" \
 find "$STAGE/source/certloom" "$STAGE/release/certloom" -type d \( -name __pycache__ -o -name .git -o -name .svn \) -prune -exec rm -rf {} +
 find "$STAGE/source/certloom" "$STAGE/release/certloom" -type f \( -name '*.pyc' -o -name '*.pyo' -o -name '.DS_Store' \) -delete
 
-rm -rf "$STAGE/release/certloom/docs" "$STAGE/release/certloom/tests"
+rm -rf "$STAGE/release/certloom/docs" "$STAGE/release/certloom/tests" "$STAGE/release/certloom/bin"
 
 # Development-only reproducibility: archive metadata must not depend on the
 # operator's clock or filesystem traversal order.

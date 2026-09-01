@@ -1181,7 +1181,48 @@
 		dialog.addEventListener( 'click', function ( event ) { if ( event.target === dialog ) { dialog.close(); } } );
 	}
 
+	function initDescriptionAssociations() {
+		var descriptions = document.querySelectorAll( '.ecapla-certverify-admin-wrap p.description, .certloom-product-subnav + .wrap p.description' );
+		var serial = 0;
+		Array.prototype.forEach.call( descriptions, function ( description ) {
+			var container = description.closest( 'td, label, fieldset, .certloom-domain-field, .certloom-form-field, .certloom-manual-fieldset, .certloom-premium-dialog, .ecapla-certverify-admin-card' );
+			if ( ! container ) { return; }
+			var controls = container.querySelectorAll( 'input:not([type="hidden"]), select, textarea' );
+			if ( 1 !== controls.length ) { return; }
+			var control = controls[ 0 ];
+			if ( ! description.id ) { serial++; description.id = 'certloom-description-' + serial; }
+			var describedBy = ( control.getAttribute( 'aria-describedby' ) || '' ).split( /\s+/ ).filter( Boolean );
+			if ( describedBy.indexOf( description.id ) === -1 ) { describedBy.push( description.id ); control.setAttribute( 'aria-describedby', describedBy.join( ' ' ) ); }
+		} );
+	}
+
+	function initCopyBlocks() {
+		var l10n = window.certloomAdminL10n || {};
+		var blocks = document.querySelectorAll( '.ecapla-certverify-code-copy' );
+		Array.prototype.forEach.call( blocks, function ( block ) {
+			var code = block.querySelector( 'code' );
+			if ( ! code || block.querySelector( '.certloom-copy-button' ) ) { return; }
+			var button = document.createElement( 'button' );
+			button.type = 'button';
+			button.className = 'button button-small certloom-copy-button';
+			button.textContent = l10n.copy || 'Copy';
+			button.addEventListener( 'click', function () {
+				var text = code.textContent || '';
+				var done = function ( ok ) {
+					button.textContent = ok ? ( l10n.copied || 'Copied' ) : ( l10n.copyFailed || 'Press Ctrl+C or Cmd+C to copy' );
+					window.setTimeout( function () { button.textContent = l10n.copy || 'Copy'; }, 2000 );
+				};
+				if ( navigator.clipboard && window.isSecureContext ) { navigator.clipboard.writeText( text ).then( function () { done( true ); }, function () { done( false ); } ); return; }
+				var scratch = document.createElement( 'textarea' ); scratch.value = text; scratch.setAttribute( 'readonly', '' ); scratch.style.position = 'absolute'; scratch.style.left = '-9999px'; document.body.appendChild( scratch ); scratch.select();
+				var ok = false; try { ok = document.execCommand( 'copy' ); } catch ( error ) { ok = false; } document.body.removeChild( scratch ); done( ok );
+			} );
+			block.appendChild( button );
+		} );
+	}
+
 	document.addEventListener( 'DOMContentLoaded', function () {
+		initCopyBlocks();
+		initDescriptionAssociations();
 		initCertloomWordPressMenuState();
 		initHumanFormValidation();
 		initPremiumDialogs();

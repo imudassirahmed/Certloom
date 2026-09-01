@@ -37,7 +37,7 @@ u4( false !== strpos( $admin_js, "body.set( 'sensitivity'" ) && false !== strpos
 u4( false !== strpos( $admin_js, "exposureInput.disabled = internal" ), 'Quick-create immediately explains/enforces Internal → Private in the browser' );
 u4( false !== strpos( $domain, "'Recipient profile', 'certloom'" ) && false !== strpos( $domain, "'Credential record', 'certloom'" ), 'Field ownership uses Recipient profile versus Credential record language' );
 u4( false !== strpos( $domain, 'Recipient profile fields (such as name, email and external ID) are reused for that person.' ), 'Program field editor explains what Recipient profile ownership means' );
-u4( false !== strpos( $admin_css, '.certloom-quick-field-grid' ) && false !== strpos( $admin_css, 'width:min(760px' ) && false !== strpos( $admin_css, '.certloom-quick-field-field>label{display:block!important' ), 'Quick field dialog has a deliberate responsive layout instead of the broken narrow row' );
+u4( false !== strpos( $admin_css, '.certloom-quick-field-grid' ) && 1 === preg_match( '/width\s*:\s*min\(760px/', $admin_css ) && 1 === preg_match( '/\.certloom-quick-field-field\s*>\s*label\s*\{[^}]*display\s*:\s*block\s*!important/s', $admin_css ), 'Quick field dialog has a deliberate responsive layout instead of the broken narrow row' );
 
 // 4. Draft artwork does not block structural Batch/Program configuration, but issuance remains fail-closed.
 u4( false !== strpos( $guard, "'certloom_template_not_published' === \$resolved->get_error_code()" ), 'Draft design assignment is treated as non-blocking for Program/Batch configuration only' );

@@ -968,11 +968,11 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 			return null;
 		}
 		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $value ) ) {
-			return new \WP_Error( 'certloom_version_date_invalid', sprintf( __( '%s must use the YYYY-MM-DD date format.', 'certloom' ), $field ) );
+			return new \WP_Error( 'certloom_version_date_invalid', sprintf( /* translators: %s: field label. */ __( '%s must use the YYYY-MM-DD date format.', 'certloom' ), $field ) );
 		}
 		list( $year, $month, $day ) = array_map( 'intval', explode( '-', $value ) );
 		if ( ! checkdate( $month, $day, $year ) ) {
-			return new \WP_Error( 'certloom_version_date_invalid', sprintf( __( '%s is not a valid calendar date.', 'certloom' ), $field ) );
+			return new \WP_Error( 'certloom_version_date_invalid', sprintf( /* translators: %s: field label. */ __( '%s is not a valid calendar date.', 'certloom' ), $field ) );
 		}
 		return $value;
 	}
@@ -985,7 +985,7 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		}
 		$date = \DateTimeImmutable::createFromFormat( '!Y-m-d H:i:s', $value );
 		if ( ! $date || $date->format( 'Y-m-d H:i:s' ) !== $value ) {
-			return new \WP_Error( 'certloom_version_datetime_invalid', sprintf( __( '%s must be a valid UTC YYYY-MM-DD HH:MM:SS value.', 'certloom' ), $field ) );
+			return new \WP_Error( 'certloom_version_datetime_invalid', sprintf( /* translators: %s: field label. */ __( '%s must be a valid UTC YYYY-MM-DD HH:MM:SS value.', 'certloom' ), $field ) );
 		}
 		return $value;
 	}

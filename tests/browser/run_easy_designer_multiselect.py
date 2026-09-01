@@ -127,7 +127,7 @@ async def main():
         await ck(await page.locator('[data-certloom-designer-element][aria-pressed="true"]').count()==1,'escapeCollapsesMulti')
 
         # Compact text controls proxy canonical style fields, update canvas immediately, and stay single-selection only.
-        text=page.locator('.certloom-template-designer-element-text').nth(1)
+        text=page.locator('.certloom-template-designer-element.is-text').nth(1)
         await text.click(); await page.wait_for_timeout(50)
         qt=page.locator('[data-certloom-designer-quick-text]')
         await ck(await qt.is_visible(),'compactTextToolbarVisible')
@@ -168,7 +168,7 @@ async def main():
         await page.evaluate("document.documentElement.dir='rtl'"); await page.wait_for_timeout(40)
         await ck((await root.evaluate("el=>getComputedStyle(el).direction"))=='rtl','rtlDirectionInherited')
         mobile=await browser.new_page(viewport={'width':390,'height':844}); await mobile.set_content(html,wait_until='load'); await mobile.wait_for_timeout(180)
-        mt=mobile.locator('.certloom-template-designer-element-text').first; await mt.click(); await mobile.wait_for_timeout(50)
+        mt=mobile.locator('.certloom-template-designer-element.is-text').first; await mt.click(); await mobile.wait_for_timeout(50)
         m=await mobile.evaluate("""() => { const lane=document.querySelector('[data-certloom-designer-quick-text]'); const controls=[...lane.querySelectorAll('button,select,input')].filter(x=>getComputedStyle(x).display!=='none'); return {overflow:document.documentElement.scrollWidth<=document.documentElement.clientWidth+1,min:Math.min(...controls.map(x=>x.getBoundingClientRect().height)),laneScrollable:lane.scrollWidth>lane.clientWidth && getComputedStyle(lane).overflowX==='auto'}; }""")
         await ck(m['overflow'],'mobileNoOverflow')
         await ck(m['min']>=43.5,'mobileTextTargets44')

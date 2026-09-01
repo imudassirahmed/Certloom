@@ -33,12 +33,12 @@ ux3( false !== strpos( $css, 'min-height:40px' ) && false !== strpos( $css, 'bor
 ux3( false !== strpos( $css, 'label.is-invalid input' ) && false !== strpos( $css, '.certloom-inline-field-error' ) && false !== strpos( $css, '#b32d2e' ), 'Invalid fields have a persistent red field and inline-error presentation' );
 ux3( false !== strpos( $js, "control.getAttribute( 'data-certloom-required-example' )" ) && false !== strpos( $js, 'Please fill in this required field.' ), 'Required-field validation prefers an appropriate example and has a clear fallback' );
 ux3( false !== strpos( $js, 'initDomainEntityFormFeedback' ) && false !== strpos( $js, 'initHumanFormValidation' ), 'Entity forms and connected human forms share explicit browser validation feedback' );
-ux3( false !== strpos( $css, '@media(max-width:782px)' ) && false !== strpos( $css, '.certloom-premium-row-link{min-height:44px}' ), 'Compact desktop UI preserves 44px mobile interaction targets' );
+ux3( 1 === preg_match( '/@media\s*\(max-width\s*:\s*782px\)/', $css ) && 1 === preg_match( '/\.certloom-premium-row-link\s*\{[^}]*min-height\s*:\s*44px/s', $css ), 'Compact desktop UI preserves 44px mobile interaction targets' );
 
-ux3( false !== strpos( $css, '.certloom-manual-card{padding:18px' ) && false !== strpos( $css, '.certloom-manual-card-head h2{font-size:18px}' ), 'Compose Credential uses a restrained form surface instead of an oversized card' );
+ux3( 1 === preg_match( '/\.certloom-manual-card\s*\{[^}]*padding\s*:\s*18px/s', $css ) && 1 === preg_match( '/\.certloom-manual-card-head h2\s*\{[^}]*font-size\s*:\s*18px/s', $css ), 'Compose Credential uses a restrained form surface instead of an oversized card' );
 ux3( false !== strpos( $manual, 'data-certloom-context-lookup="recipient"' ) && false !== strpos( $manual, 'Search recipients by name, email, or external ID' ), 'Existing Recipient is one server-backed searchable selector, not a duplicate search form' );
 ux3( false !== strpos( $manual, 'certloom-new-recipient-dialog' ) && false !== strpos( $manual, 'Complete recipient profile' ), 'New Recipient retains the complete profile popup' );
-ux3( false !== strpos( $css, '.certloom-premium-dialog input:not([type=checkbox]):not([type=radio]),.certloom-premium-dialog select{height:40px' ), 'Quick-create dialogs use the same compact desktop control height' );
+ux3( 1 === preg_match( '/\.certloom-premium-dialog input:not\(\[type=checkbox\]\):not\(\[type=radio\]\)\s*,\s*\.certloom-premium-dialog select\s*\{[^}]*height\s*:\s*40px/s', $css ), 'Quick-create dialogs use the same compact desktop control height' );
 
 ux3( false !== strpos( $css, '.certloom-automations-workspace .certloom-context-lookup__search' ) && false !== strpos( $css, 'height:40px!important' ), 'Automation enhanced selectors align with ordinary 40px fields' );
 ux3( false !== strpos( $automations, 'data-certloom-human-form' ) && false !== strpos( $automations, 'data-certloom-invalid-message' ), 'Automation forms participate in explicit required-field feedback' );

@@ -739,9 +739,9 @@
 			for ( var i = 0; i < list.length; i++ ) {
 				( function ( element ) {
 					var row = document.createElement( 'div' ); row.className = 'certloom-template-designer-layer'; row.classList.toggle( 'is-selected', isSelectedId( element.id ) ); row.classList.toggle( 'is-primary-selected', element.id === selectedId ); row.classList.toggle( 'is-locked', isLocked( element ) );
-					var select = document.createElement( 'button' ); select.type = 'button'; select.className = 'certloom-template-designer-layer-select'; select.setAttribute( 'data-certloom-designer-layer-select', element.id ); select.setAttribute( 'aria-pressed', isSelectedId( element.id ) ? 'true' : 'false' ); select.textContent = elementTitle( element ) || typeLabel( element.type );
+					var select = document.createElement( 'button' ); select.type = 'button'; select.className = 'button button-small certloom-template-designer-layer-select'; select.setAttribute( 'data-certloom-designer-layer-select', element.id ); select.setAttribute( 'aria-pressed', isSelectedId( element.id ) ? 'true' : 'false' ); select.textContent = elementTitle( element ) || typeLabel( element.type );
 					var meta = document.createElement( 'small' ); meta.textContent = String( element.type || 'element' ).toUpperCase() + ' · z ' + Number( element.z || 0 ); select.appendChild( meta ); row.appendChild( select );
-					var lock = document.createElement( 'button' ); lock.type = 'button'; lock.className = 'certloom-template-designer-layer-lock'; lock.setAttribute( 'data-certloom-designer-layer-lock', element.id ); lock.setAttribute( 'aria-pressed', isLocked( element ) ? 'true' : 'false' ); lock.setAttribute( 'aria-label', ( isLocked( element ) ? t( 'unlock', 'Unlock' ) : t( 'lock', 'Lock' ) ) + ' ' + elementTitle( element ) ); lock.textContent = isLocked( element ) ? t( 'locked', 'Locked' ) : t( 'lock', 'Lock' ); row.appendChild( lock );
+					var lock = document.createElement( 'button' ); lock.type = 'button'; lock.className = 'button button-small certloom-template-designer-layer-lock'; lock.setAttribute( 'data-certloom-designer-layer-lock', element.id ); lock.setAttribute( 'aria-pressed', isLocked( element ) ? 'true' : 'false' ); lock.setAttribute( 'aria-label', ( isLocked( element ) ? t( 'unlock', 'Unlock' ) : t( 'lock', 'Lock' ) ) + ' ' + elementTitle( element ) ); lock.textContent = isLocked( element ) ? t( 'locked', 'Locked' ) : t( 'lock', 'Lock' ); row.appendChild( lock );
 					layersContainer.appendChild( row );
 				} )( list[ i ] );
 			}
@@ -753,7 +753,7 @@
 			var list = elements();
 			for ( var i = 0; i < list.length; i++ ) {
 				var element = list[ i ]; var node = document.createElement( 'button' ); node.type = 'button';
-				node.className = 'certloom-template-designer-element certloom-template-designer-element-' + String( element.type || 'unknown' );
+				node.className = 'certloom-template-designer-element';
 				node.setAttribute( 'data-certloom-designer-element', element.id ); node.setAttribute( 'aria-label', typeLabel( element.type ) + ': ' + elementTitle( element ) + ( isLocked( element ) ? ' (' + t( 'lockedSuffix', 'locked' ) + ')' : '' ) );
 				node.style.left = px( element.x_mm, zoom ) + 'px'; node.style.top = px( element.y_mm, zoom ) + 'px'; node.style.width = px( element.width_mm, zoom ) + 'px'; node.style.height = px( element.height_mm, zoom ) + 'px'; node.style.zIndex = String( 100001 + Number( element.z || 0 ) ); node.style.opacity = String( null == element.opacity ? 1 : element.opacity ); node.style.transform = 'rotate(' + Number( element.rotation_deg || 0 ) + 'deg)';
 				node.setAttribute( 'aria-pressed', isSelectedId( element.id ) ? 'true' : 'false' );
@@ -998,6 +998,12 @@
 		function isFormControl( target ) { return !! target && ( /^(INPUT|SELECT|TEXTAREA)$/.test( target.tagName ) || ( 'BUTTON' === target.tagName && ! target.hasAttribute( 'data-certloom-designer-element' ) ) ); }
 		function keyboard( event ) {
 			var modifier = event.ctrlKey || event.metaKey; var inside = root.contains( event.target );
+			if ( modifier && ! event.altKey && 's' === event.key.toLowerCase() ) {
+				if ( ! inside || isFormControl( event.target ) && ! root.contains( event.target ) ) { return; }
+				event.preventDefault();
+				for ( var saveIndex = 0; saveIndex < saveButtons.length; saveIndex++ ) { if ( ! saveButtons[ saveIndex ].disabled ) { saveButtons[ saveIndex ].click(); break; } }
+				return;
+			}
 			if ( modifier && ! event.altKey && ( 'z' === event.key.toLowerCase() || 'y' === event.key.toLowerCase() ) ) {
 				if ( isFormControl( event.target ) || ( ! inside && event.target !== document.body ) ) { return; }
 				if ( 'y' === event.key.toLowerCase() || event.shiftKey ) { redo(); } else { undo(); }
@@ -1006,6 +1012,7 @@
 			if ( ! inside || isFormControl( event.target ) ) { return; }
 			if ( 'Escape' === event.key && selectionIds().length > 1 ) { selectOnly( selectedId ); render(); announce( t( 'multiSelectionCleared', 'Multi-selection cleared.' ) ); event.preventDefault(); return; }
 			if ( 'Enter' === event.key && ! modifier && selected() && 'text' === selected().type ) { if ( startDirectTextEdit( selected().id ) ) { event.preventDefault(); } return; }
+			if ( ( 'Delete' === event.key || 'Backspace' === event.key ) && selectionIds().length && ! selectionHasLocked() ) { event.preventDefault(); removeSelected(); return; }
 			if ( nudgeSelected( event ) ) { event.preventDefault(); }
 		}
 		function applyQuickStyleValue( key, value ) {

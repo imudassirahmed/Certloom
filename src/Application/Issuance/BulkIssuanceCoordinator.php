@@ -64,10 +64,10 @@ final class BulkIssuanceCoordinator {
 		foreach ( $header as $column ) {
 			if ( 0 !== strpos( (string) $column, 'custom:' ) ) { continue; }
 			$key = sanitize_key( substr( (string) $column, 7 ) );
-			if ( ! isset( $allowed_custom[ $key ] ) ) { return new \WP_Error( 'certloom_bulk_csv_unassigned_field', sprintf( __( 'CSV column “custom:%s” is not assigned to the selected Program/Batch credential-field contract.', 'certloom' ), $key ) ); }
+			if ( ! isset( $allowed_custom[ $key ] ) ) { return new \WP_Error( 'certloom_bulk_csv_unassigned_field', sprintf( /* translators: %s: field key. */ __( 'CSV column “custom:%s” is not assigned to the selected Program/Batch credential-field contract.', 'certloom' ), $key ) ); }
 		}
 		foreach ( $required_custom as $key => $label ) {
-			if ( ! isset( $header_set[ 'custom:' . $key ] ) ) { return new \WP_Error( 'certloom_bulk_csv_required_field_header_missing', sprintf( __( 'Required credential field “%s” needs a custom:%s column in this Bulk Issuance CSV.', 'certloom' ), $label, $key ) ); }
+			if ( ! isset( $header_set[ 'custom:' . $key ] ) ) { return new \WP_Error( 'certloom_bulk_csv_required_field_header_missing', sprintf( /* translators: %s: label; %s: field key. */ __( 'Required credential field “%s” needs a custom:%s column in this Bulk Issuance CSV.', 'certloom' ), $label, $key ) ); }
 		}
 		$has_grade_value = '' !== trim( (string) ( $shared['grade'] ?? '' ) );
 		$has_grade_column = isset( $header_set['grade'] );
@@ -78,5 +78,5 @@ final class BulkIssuanceCoordinator {
 
 	/** @return array<string,mixed>|\WP_Error */
 	private function shared(array $s){$program=absint($s['program_id']??0);$batch=absint($s['batch_id']??0);$template=absint($s['template_id']??0);if(!$program){return new \WP_Error('certloom_bulk_context_required',__('Choose an active Program for Bulk Issuance. Certloom can resolve the Program’s published certificate design automatically.','certloom'));}$mode=sanitize_key((string)($s['expiry_mode']??'program'));if(!in_array($mode,array('program','permanent','date'),true)){return new \WP_Error('certloom_bulk_expiry_mode_invalid',__('Choose a valid Bulk Issuance expiry policy.','certloom'));}$valid=trim(sanitize_text_field((string)($s['valid_from']??'')));$expires=trim(sanitize_text_field((string)($s['expires_at']??'')));$grade=trim(sanitize_text_field((string)($s['grade']??'')));return array('program_id'=>$program,'batch_id'=>$batch,'template_id'=>$template,'valid_from'=>$valid,'expiry_mode'=>$mode,'expires_at'=>$expires,'grade'=>$grade);}
-	/** @return \WP_Error */ private function cleanup($path,\WP_Error $primary){$d=$this->files->delete((string)$path);return(!is_wp_error($d)&&false!==$d)?$primary:new \WP_Error('certloom_bulk_private_cleanup_failed',sprintf(__('Certloom stopped Bulk Issuance safely (%1$s), but could not remove its protected CSV copy (%2$s).','certloom'),$primary->get_error_message(),is_wp_error($d)?$d->get_error_message():__('file deletion failed','certloom')));}
+	/** @return \WP_Error */ private function cleanup($path,\WP_Error $primary){$d=$this->files->delete((string)$path);return(!is_wp_error($d)&&false!==$d)?$primary:new \WP_Error('certloom_bulk_private_cleanup_failed',sprintf(/* translators: %1$s: primary error; %2$s: d. */ __('Certloom stopped Bulk Issuance safely (%1$s), but could not remove its protected CSV copy (%2$s).','certloom'),$primary->get_error_message(),is_wp_error($d)?$d->get_error_message():__('file deletion failed','certloom')));}
 }

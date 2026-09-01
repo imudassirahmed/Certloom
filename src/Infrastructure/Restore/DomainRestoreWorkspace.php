@@ -414,7 +414,7 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 				return new \WP_Error(
 					'certloom_domain_restore_swap_cleanup_failed',
 					sprintf(
-						__( 'Certloom could not swap the restore workspace (%1$s), and it also could not clear the owner-matched rollback journal safely (%2$s). No authority was switched; review restore recovery state before retrying.', 'certloom' ),
+						/* translators: %1$s: table swap error; %2$s: journal cleanup error. */ __( 'Certloom could not swap the restore workspace (%1$s), and it also could not clear the owner-matched rollback journal safely (%2$s). No authority was switched; review restore recovery state before retrying.', 'certloom' ),
 						$swapped->get_error_message(),
 						$journal_deleted->get_error_message()
 					)
@@ -789,7 +789,7 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		return new \WP_Error(
 			'certloom_domain_restore_cleanup_failed',
 			sprintf(
-				__( 'Certloom restore failed (%1$s), and its maintenance lock could not be released safely (%2$s). Credential writes remain paused until recovery cleanup succeeds.', 'certloom' ),
+				/* translators: %1$s: primary error; %2$s: lock release error. */ __( 'Certloom restore failed (%1$s), and its maintenance lock could not be released safely (%2$s). Credential writes remain paused until recovery cleanup succeeds.', 'certloom' ),
 				$error->get_error_message(),
 				$released->get_error_message()
 			)

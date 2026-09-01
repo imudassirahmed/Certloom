@@ -16,7 +16,7 @@ async def run():
             nonlocal checks; checks+=1
             if not ok: failed.append(label)
         # select first text/merge and exercise every text style field.
-        text=page.locator('[data-certloom-designer-element].certloom-template-designer-element-text').first
+        text=page.locator('[data-certloom-designer-element].certloom-template-designer-element.is-text').first
         text_id=await text.get_attribute('data-certloom-designer-element')
         await text.click(); await page.wait_for_timeout(20)
         await ck(await page.locator('[data-certloom-designer-style="text"]').is_visible(),'textStyleVisible')
@@ -44,18 +44,18 @@ async def run():
         color=page.locator('[data-certloom-designer-style-field="color"]'); await color.fill('red'); await color.dispatch_event('change'); await page.wait_for_timeout(15)
         await ck(await page.locator('[data-certloom-designer-error]').is_visible(),'invalidColorError'); await ck(await color.input_value()=='#12345678','invalidColorRestored')
         # Shape canonical fill/stroke/width.
-        shape=page.locator('[data-certloom-designer-element].certloom-template-designer-element-shape').first; await shape.evaluate('(n)=>n.click()'); await page.wait_for_timeout(15)
+        shape=page.locator('[data-certloom-designer-element].certloom-template-designer-element.is-shape').first; await shape.evaluate('(n)=>n.click()'); await page.wait_for_timeout(15)
         await ck(await page.locator('[data-certloom-designer-style="shape"]').is_visible(),'shapeStyleVisible'); await ck(await page.locator('[data-certloom-designer-style="text"]').is_hidden(),'textStyleHiddenForShape')
         visible_shape=lambda key: page.locator(f'[data-certloom-designer-style="shape"] [data-certloom-designer-style-field="{key}"]')
         await visible_shape('fill').fill('#ABCDEF80'); await visible_shape('fill').dispatch_event('change'); await visible_shape('stroke').fill('#102030'); await visible_shape('stroke').dispatch_event('change'); await visible_shape('stroke_width_mm').fill('0'); await visible_shape('stroke_width_mm').dispatch_event('change'); await change('[data-certloom-designer-style-field="opacity"]',0.4)
         await page.wait_for_timeout(20); selected=page.locator('[data-certloom-designer-element].is-selected'); await ck('rgba' in (await selected.evaluate('(n)=>n.style.background')) or '#' in (await selected.evaluate('(n)=>n.style.background')),'shapeFillCanvas'); await ck(abs(float(await selected.evaluate('(n)=>n.style.opacity'))-.4)<.001,'shapeOpacityCanvas')
         # Line keeps positive width; zero is rejected.
-        line=page.locator('[data-certloom-designer-element].certloom-template-designer-element-line').first; await line.evaluate('(n)=>n.click()'); await page.wait_for_timeout(10)
+        line=page.locator('[data-certloom-designer-element].certloom-template-designer-element.is-line').first; await line.evaluate('(n)=>n.click()'); await page.wait_for_timeout(10)
         await ck(await page.locator('[data-certloom-designer-style="line"]').is_visible(),'lineStyleVisible')
         line_width=page.locator('[data-certloom-designer-style="line"] [data-certloom-designer-style-field="stroke_width_mm"]'); await line_width.fill('1.25'); await line_width.dispatch_event('change'); await page.wait_for_timeout(10); await ck(await line_width.input_value()=='1.25','lineWidthAccepted')
         await line_width.fill('0'); await line_width.dispatch_event('change'); await page.wait_for_timeout(10); await ck(float(await line_width.input_value())>0,'lineZeroRejected')
         # Asset gets only common opacity; non-schema style groups remain hidden.
-        visual=page.locator('[data-certloom-designer-element].certloom-template-designer-element-qr').first
+        visual=page.locator('[data-certloom-designer-element].certloom-template-designer-element.is-qr').first
         await visual.evaluate('(n)=>n.click()'); await page.wait_for_timeout(10); await ck(await page.locator('[data-certloom-designer-style="text"]').is_hidden(),'textHiddenForNonText'); await ck(await page.locator('[data-certloom-designer-style="shape"]').is_hidden(),'shapeHiddenForNonShape'); await ck(await page.locator('[data-certloom-designer-style="general"]').is_visible(),'opacityVisibleForVisual')
         # Locks make styling immutable for the current author.
         await page.locator('[data-certloom-designer-lock]').click(); await page.wait_for_timeout(10); await ck(await page.locator('[data-certloom-designer-style-field="opacity"]').is_disabled(),'lockedStyleDisabled'); await page.locator('[data-certloom-designer-lock]').click()
@@ -63,7 +63,7 @@ async def run():
         await text.evaluate('(n)=>n.click()'); await page.locator('[data-certloom-designer-form]').evaluate("f=>f.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))"); await page.wait_for_timeout(20); saved=json.loads(await page.locator('[data-certloom-designer-json]').input_value()); styled=[e for e in saved['elements'] if e.get('id')==text_id][0]
         await ck(abs(float(styled['opacity'])-.65)<.001,'opacitySerialized'); await ck(styled['style']['font_family']=='serif','fontFamilySerialized'); await ck(styled['style']['font_size_pt']==32.5,'fontSizeSerialized'); await ck(styled['style']['font_weight']==700,'fontWeightSerialized'); await ck(styled['style']['italic'] is True,'italicSerialized'); await ck(styled['style']['color']=='#12345678','colorSerialized'); await ck(styled['style']['align']=='right','alignSerialized'); await ck(styled['style']['vertical_align']=='top','verticalSerialized'); await ck(styled['style']['direction']=='rtl','directionSerialized'); await ck(styled['style']['line_height']==1.55,'lineHeightSerialized'); await ck(styled['style']['letter_spacing_pt']==2.25,'letterSpacingSerialized'); await ck(styled['style']['overflow']=='clip','overflowSerialized')
         # Responsive styling inspector.
-        media=await browser.new_page(viewport={'width':480,'height':900}); await media.emulate_media(reduced_motion='reduce'); await media.set_content(html,wait_until='load'); await media.wait_for_timeout(80); await media.locator('[data-certloom-designer-element].certloom-template-designer-element-text').first.evaluate('(n)=>n.click()'); await ck(await media.locator('[data-certloom-designer-style-editor]').is_visible(),'responsiveStyleEditor'); await ck(await media.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches"),'reducedMotion')
+        media=await browser.new_page(viewport={'width':480,'height':900}); await media.emulate_media(reduced_motion='reduce'); await media.set_content(html,wait_until='load'); await media.wait_for_timeout(80); await media.locator('[data-certloom-designer-element].certloom-template-designer-element.is-text').first.evaluate('(n)=>n.click()'); await ck(await media.locator('[data-certloom-designer-style-editor]').is_visible(),'responsiveStyleEditor'); await ck(await media.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches"),'reducedMotion')
         await media.close(); await page.close(); await browser.close()
     if failed:
         print('FAIL  DSN-04 Designer browser gate: '+', '.join(sorted(set(failed)))); print(f'\n{checks} checks, {len(set(failed))} failures'); return 1

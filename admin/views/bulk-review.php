@@ -13,7 +13,7 @@ $certloom_bulk_statuses = Ecapla_CertVerify_Fields::get_editable_statuses();
 		<div>
 			<span class="certloom-eyebrow"><?php esc_html_e( 'Safe bulk management', 'certloom' ); ?></span>
 			<h1 id="certloom-bulk-title"><?php esc_html_e( 'Review bulk change', 'certloom' ); ?></h1>
-			<p><?php echo esc_html( sprintf( _n( '%d certificate is frozen in this review session.', '%d certificates are frozen in this review session.', $certloom_bulk_count, 'certloom' ), $certloom_bulk_count ) ); ?></p>
+			<p><?php echo esc_html( sprintf( /* translators: %d: bulk count. */ _n( '%d certificate is frozen in this review session.', '%d certificates are frozen in this review session.', $certloom_bulk_count, 'certloom' ), $certloom_bulk_count ) ); ?></p>
 		</div>
 		<div class="certloom-page-actions">
 			<a class="button button-secondary" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-certificates' ) ); ?>"><?php esc_html_e( 'Cancel', 'certloom' ); ?></a>
@@ -75,7 +75,7 @@ $certloom_bulk_statuses = Ecapla_CertVerify_Fields::get_editable_statuses();
 				<li><strong><?php echo esc_html( (string) $record['cert_number'] ); ?></strong><span><?php echo esc_html( (string) $record['holder_name'] ); ?></span></li>
 			<?php endforeach; ?>
 			</ul>
-			<?php if ( $certloom_bulk_count > 25 ) : ?><p class="description"><?php echo esc_html( sprintf( __( 'And %d more selected certificates.', 'certloom' ), $certloom_bulk_count - 25 ) ); ?></p><?php endif; ?>
+			<?php if ( $certloom_bulk_count > 25 ) : ?><p class="description"><?php echo esc_html( sprintf( /* translators: %d: additional selected credential count. */ __( 'And %d more selected certificates.', 'certloom' ), $certloom_bulk_count - 25 ) ); ?></p><?php endif; ?>
 		</aside>
 	</div>
 
@@ -86,17 +86,17 @@ $certloom_bulk_statuses = Ecapla_CertVerify_Fields::get_editable_statuses();
 		$certloom_reviewed_label = __( 'Reviewed bulk change', 'certloom' );
 		if ( 'set_status' === $certloom_reviewed_type ) {
 			$certloom_reviewed_status = $certloom_bulk_statuses[ $certloom_reviewed_operation['status'] ]['label'] ?? ucfirst( (string) $certloom_reviewed_operation['status'] );
-			$certloom_reviewed_label = sprintf( __( 'Set workflow status to %s', 'certloom' ), $certloom_reviewed_status );
+			$certloom_reviewed_label = sprintf( /* translators: %s: workflow status label. */ __( 'Set workflow status to %s', 'certloom' ), $certloom_reviewed_status );
 			if ( ! empty( $certloom_reviewed_operation['reason_set'] ) ) {
 				$certloom_reviewed_label .= ' · ' . __( 'replace status reason', 'certloom' );
 			}
 		} elseif ( 'set_expiry' === $certloom_reviewed_type ) {
-			$certloom_reviewed_label = sprintf( __( 'Set expiry date to %s', 'certloom' ), Ecapla_CertVerify_Validator::format_date( $certloom_reviewed_operation['expiry_date'] ) );
+			$certloom_reviewed_label = sprintf( /* translators: %s: formatted expiry date. */ __( 'Set expiry date to %s', 'certloom' ), Ecapla_CertVerify_Validator::format_date( $certloom_reviewed_operation['expiry_date'] ) );
 		} elseif ( 'clear_expiry' === $certloom_reviewed_type ) {
 			$certloom_reviewed_label = __( 'Clear expiry date', 'certloom' );
 		} elseif ( in_array( $certloom_reviewed_type, array( 'set_custom_field', 'clear_custom_field' ), true ) ) {
 			$certloom_reviewed_field = $bulk_fields[ $certloom_reviewed_operation['field_key'] ]['label'] ?? $certloom_reviewed_operation['field_key'];
-			$certloom_reviewed_label = 'set_custom_field' === $certloom_reviewed_type ? sprintf( __( 'Set custom field: %s', 'certloom' ), $certloom_reviewed_field ) : sprintf( __( 'Clear custom field: %s', 'certloom' ), $certloom_reviewed_field );
+			$certloom_reviewed_label = 'set_custom_field' === $certloom_reviewed_type ? sprintf( /* translators: %s: custom field label. */ __( 'Set custom field: %s', 'certloom' ), $certloom_reviewed_field ) : sprintf( /* translators: %s: custom field label. */ __( 'Clear custom field: %s', 'certloom' ), $certloom_reviewed_field );
 		}
 		?>
 		<section class="certloom-panel certloom-bulk-commit-panel" aria-labelledby="certloom-bulk-commit-title">

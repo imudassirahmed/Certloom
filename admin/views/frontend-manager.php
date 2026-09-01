@@ -17,7 +17,7 @@ $designs          = array(
 	'forge'        => __( 'Forge', 'certloom' ),
 );
 ?>
-<div class="wrap ecapla-certverify-admin-wrap">
+<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-appearance-workspace">
 	<?php include ECAPLA_CERTVERIFY_PATH . 'admin/views/partials/brand-bar.php'; ?>
 	<h1><?php esc_html_e( 'Appearance & embed', 'certloom' ); ?></h1>
 	<p class="description"><?php esc_html_e( 'Publish certificate verification with the native WordPress block, a shortcode, or one of six optional Elementor widgets. Certificate lookup works without Elementor.', 'certloom' ); ?></p>
@@ -64,16 +64,28 @@ $designs          = array(
 		<p class="description"><?php esc_html_e( 'Clean links use /certloom/verify/{certificate}/ and /certloom/credential/{certificate}/ when pretty permalinks are enabled. Complex certificate numbers stay safely encoded without changing the exact number used for verification.', 'certloom' ); ?></p>
 	</section>
 
-	<section class="ecapla-certverify-admin-card ecapla-certverify-embed-reference">
-		<h2><?php esc_html_e( 'Shortcode design reference', 'certloom' ); ?></h2>
-		<table class="widefat striped">
-			<thead><tr><th><?php esc_html_e( 'Design', 'certloom' ); ?></th><th><?php esc_html_e( 'Shortcode', 'certloom' ); ?></th></tr></thead>
-			<tbody>
-				<?php foreach ( $designs as $slug => $label ) : ?>
-					<tr><td><?php echo esc_html( $label ); ?></td><td><code>[certloom design=&quot;<?php echo esc_attr( $slug ); ?>&quot;]</code></td></tr>
-				<?php endforeach; ?>
-			</tbody>
-		</table>
-		<p class="description"><?php esc_html_e( 'The native block, shortcode and Elementor widgets use the same secure certificate lookup, field visibility rules, status logic and responsive presentation.', 'certloom' ); ?></p>
+	<section class="ecapla-certverify-admin-card ecapla-certverify-embed-reference certloom-design-reference">
+		<div class="certloom-panel-header">
+			<div><span class="certloom-eyebrow"><?php esc_html_e( 'Verification appearance', 'certloom' ); ?></span><h2><?php esc_html_e( 'Choose a design visually', 'certloom' ); ?></h2></div>
+		</div>
+		<p><?php esc_html_e( 'Each design below is a visual preview of the public verification experience. Copy its shortcode when you find the presentation that fits your site.', 'certloom' ); ?></p>
+		<div class="certloom-embed-design-grid">
+			<?php foreach ( $designs as $slug => $label ) : ?>
+				<article class="certloom-embed-design-card certloom-embed-design-<?php echo esc_attr( $slug ); ?>">
+					<div class="certloom-embed-design-preview" aria-hidden="true">
+						<span class="certloom-embed-preview-kicker"><?php echo esc_html( $label ); ?></span>
+						<span class="certloom-embed-preview-title"><?php esc_html_e( 'Verify a credential', 'certloom' ); ?></span>
+						<span class="certloom-embed-preview-copy"><?php esc_html_e( 'Enter a credential number to check its status.', 'certloom' ); ?></span>
+						<span class="certloom-embed-preview-field"></span>
+						<span class="certloom-embed-preview-button"></span>
+					</div>
+					<div class="certloom-embed-design-card-body">
+						<strong><?php echo esc_html( $label ); ?></strong>
+						<div class="ecapla-certverify-code-copy"><code>[certloom design=&quot;<?php echo esc_attr( $slug ); ?>&quot;]</code></div>
+					</div>
+				</article>
+			<?php endforeach; ?>
+		</div>
+		<p class="description"><?php esc_html_e( 'The native block, shortcode and Elementor widgets use the same secure credential lookup, field visibility rules and status logic. The preview represents the design language; your site typography and content can affect final spacing.', 'certloom' ); ?></p>
 	</section>
 </div>

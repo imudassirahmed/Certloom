@@ -813,3 +813,10 @@
 	.certloom-template-designer-context-dock,
 	.certloom-template-designer-context-hint { border-color: CanvasText; }
 }
+
+/* UX-SYSTEM-01 — visible designer semantics for every supported element type. */
+.certloom-template-designer-element.is-barcode{background:repeating-linear-gradient(90deg,#111 0 2px,#fff 2px 5px);border:4px solid #fff}
+.certloom-template-designer-element.is-barcode .certloom-template-designer-content{align-items:flex-end;font-size:10px;font-weight:700;color:#111;background:rgba(255,255,255,.9)}
+.certloom-template-designer-element.is-shape{border:1px dashed var(--certloom-muted,#8c8f94);background:rgba(95,111,105,.10)}
+.certloom-template-designer-element.is-list .certloom-template-designer-content{flex-direction:column;align-items:flex-start;white-space:pre-wrap}
+.certloom-template-designer-element:hover,.certloom-template-designer-element.is-selected{outline-color:var(--certloom-accent,#0f6e56)}

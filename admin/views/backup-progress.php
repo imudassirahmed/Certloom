@@ -8,7 +8,7 @@ $ecapla_certverify_total        = absint( $backup_progress['total_chunks'] ?? 0 
 $ecapla_certverify_restore_mode = 'merge' === ( $backup_progress['restore_mode'] ?? '' ) ? 'merge' : 'replace';
 $ecapla_certverify_is_merge     = 'merge' === $ecapla_certverify_restore_mode;
 ?>
-<div class="wrap ecapla-certverify-admin-wrap">
+<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell">
 	<?php include ECAPLA_CERTVERIFY_PATH . 'admin/views/partials/brand-bar.php'; ?>
 	<h1><?php echo esc_html( $ecapla_certverify_is_merge ? __( 'Restoring backup', 'certloom' ) : __( 'Restoring backup', 'certloom' ) ); ?></h1>
 	<section class="ecapla-certverify-admin-card ecapla-certloom-import-progress" aria-live="polite">

@@ -21,11 +21,11 @@ $data_tools = uxcons_src( $root, 'src/Infrastructure/Admin/DomainDataToolsAdmin.
 $plugin     = uxcons_src( $root, 'certloom.php' );
 $roadmap    = uxcons_src( $root, 'docs/approved-ux-consolidation-after-lms.md' );
 
-uxcons_check( false !== strpos( $navigation, "'certloom'                 => 'Dashboard'" ), 'product shell defines Dashboard primary section' );
+uxcons_check( false !== strpos( $navigation, "'certloom'                    => 'Home'" ) && false !== strpos( $navigation, "'certloom'                 => 'Home'" ), 'Simple and Advanced product shells use the canonical Home label' );
 uxcons_check( false !== strpos( $navigation, "'certloom-certificates'    => 'Credentials'" ), 'product shell defines Credentials primary section' );
-uxcons_check( false !== strpos( $navigation, "'certloom-domain-programs' => 'People & Programs'" ), 'product shell defines People & Programs primary section' );
+uxcons_check( substr_count( $navigation, "'certloom-domain-programs'    => 'Programs'" ) >= 1 || substr_count( $navigation, "'certloom-domain-programs' => 'Programs'" ) >= 1, 'product shell uses the canonical Programs primary label' );
 uxcons_check( false !== strpos( $navigation, "'certloom-templates'       => 'Design'" ), 'product shell defines Design primary section' );
-uxcons_check( false !== strpos( $navigation, "'certloom-analytics'       => 'Insights & Integrations'" ), 'product shell defines Insights & Integrations primary section' );
+uxcons_check( false !== strpos( $navigation, "'certloom-automations'     => 'Automations'" ) && false !== strpos( $navigation, "'certloom-analytics'       => 'Automations'" ), 'Simple and Advanced product shells use the canonical Automations label' );
 uxcons_check( false !== strpos( $navigation, "'certloom-settings'        => 'Settings'" ), 'product shell defines Settings primary section' );
 uxcons_check( 6 === substr_count( preg_replace( '/.*private const PRIMARY_SIMPLE = array\((.*?)\);.*private const PRIMARY_ADVANCED.*/s', '$1', $navigation ), '=>' ) && 6 === substr_count( preg_replace( '/.*private const PRIMARY_ADVANCED = array\((.*?)\);.*public function register.*/s', '$1', $navigation ), '=>' ), 'Simple and Advanced primary shells are each bounded to exactly six configured destinations' );
 uxcons_check( false !== strpos( $navigation, "add_action( 'admin_menu', array( \$this, 'consolidate_primary_menu' ), 999 )" ), 'menu consolidation runs after feature page registration' );

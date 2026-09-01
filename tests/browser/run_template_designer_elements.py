@@ -58,9 +58,9 @@ async def run():
         raw=await page.locator('[data-certloom-designer-json]').input_value()
         # hidden field sync occurs on submit, so inspect in-memory via DOM labels/types first.
         await ck(await elements.count()==20,'primitiveAdds')
-        await ck(await page.locator('.certloom-template-designer-element-shape').count()>=2,'shapeNodes')
-        await ck(await page.locator('.certloom-template-designer-element-line').count()>=1,'lineNode')
-        await ck(await page.locator('.certloom-template-designer-element-qr').count()>=2,'qrNode')
+        await ck(await page.locator('.certloom-template-designer-element.is-shape').count()>=2,'shapeNodes')
+        await ck(await page.locator('.certloom-template-designer-element.is-line').count()>=1,'lineNode')
+        await ck(await page.locator('.certloom-template-designer-element.is-qr').count()>=2,'qrNode')
         qrQuiet=page.locator('[data-certloom-designer-content="qr"] [data-certloom-designer-content-field="quiet_zone_modules"]')
         await ck(await qrQuiet.is_visible() and (await qrQuiet.input_value())=='4','qrInspector')
         await qrQuiet.fill('8'); await qrQuiet.dispatch_event('change'); await page.wait_for_timeout(20)

@@ -12,3 +12,10 @@
 @media (max-width:420px){.certloom-template-library-thumbnail{padding:10px}.certloom-template-library-thumbnail-stage{max-width:100%}.certloom-template-library-actions{display:grid;grid-template-columns:1fr 1fr}.certloom-template-library-actions form{display:contents}.certloom-template-library-actions .button{width:100%}.certloom-template-library-dialog-head{align-items:flex-start}.certloom-template-library-dialog-head .button{min-height:44px}}
 @media (prefers-reduced-motion:reduce){.certloom-template-library-visual *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 @media (forced-colors:active){.certloom-template-library-card,.certloom-template-library-filters,.certloom-template-library-background,.certloom-template-library-dialog{border:1px solid CanvasText}.certloom-template-library-card.is-program-current{outline:2px solid Highlight}.certloom-template-library-program-context{border-inline-start-color:Highlight}.certloom-template-library-badges>span{border-color:CanvasText}.certloom-template-library-badges .is-fit,.certloom-template-library-badges .is-effective{color:CanvasText}}
+
+/* UX-SYSTEM-01 — Design workspace consistency. */
+.certloom-template-library-card{border-color:var(--certloom-border);border-radius:var(--certloom-radius-md);background:var(--certloom-surface)}
+.certloom-template-library-card.is-program-current{border-color:var(--certloom-accent);box-shadow:inset 0 0 0 1px var(--certloom-accent)}
+.certloom-template-library-card :focus-visible,.certloom-template-library-filters :focus-visible,.certloom-design-nav :focus-visible,.certloom-template-library-dialog :focus-visible,.certloom-template-library-background :focus-visible{outline-color:var(--certloom-focus)}
+.certloom-template-library-thumbnail{background:var(--certloom-surface-soft);border-bottom-color:var(--certloom-border)}
+.certloom-template-library-thumbnail-stage{width:260px;max-width:100%;height:190px;flex:0 1 auto}

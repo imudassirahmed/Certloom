@@ -121,7 +121,7 @@ final class DomainImportJobCoordinator {
 		if ( ! is_wp_error( $deleted ) && false !== $deleted ) { return $primary; }
 		return new \WP_Error(
 			'certloom_import_private_cleanup_failed',
-			sprintf( __( 'Certloom stopped the import safely (%1$s), but could not remove its protected source copy (%2$s).', 'certloom' ), $primary->get_error_message(), is_wp_error( $deleted ) ? $deleted->get_error_message() : __( 'file deletion failed', 'certloom' ) )
+			sprintf( /* translators: %1$s: primary error; %2$s: cleanup error. */ __( 'Certloom stopped the import safely (%1$s), but could not remove its protected source copy (%2$s).', 'certloom' ), $primary->get_error_message(), is_wp_error( $deleted ) ? $deleted->get_error_message() : __( 'file deletion failed', 'certloom' ) )
 		);
 	}
 

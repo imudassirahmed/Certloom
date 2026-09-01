@@ -33,7 +33,7 @@ async def run():
         before=await page.locator('[data-certloom-designer-element]').count(); await barcode.click(); await page.wait_for_timeout(35)
         await ck(await page.locator('[data-certloom-designer-element]').count()==before+1,'barcodeAdded')
         selected=page.locator('[data-certloom-designer-element].is-selected')
-        await ck('certloom-template-designer-element-barcode' in (await selected.get_attribute('class') or ''),'barcodeCanvasType')
+        await ck('is-barcode' in (await selected.get_attribute('class') or ''),'barcodeCanvasType')
         eid=await selected.get_attribute('data-certloom-designer-element'); await ck(bool(eid and re.match(r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',eid)),'barcodeUuid')
         section=page.locator('[data-certloom-designer-content="barcode"]'); await ck(await section.is_visible(),'barcodeInspectorVisible')
         readonly=section.locator('input[readonly]'); await ck(await readonly.count()==2,'sourceSymbologyReadOnly')

@@ -25,6 +25,44 @@ class Ecapla_CertVerify_List_Table extends WP_List_Table {
 		);
 	}
 
+	/**
+	 * Renders a guided registry empty state instead of WordPress' bare fallback.
+	 *
+	 * @return void
+	 */
+	public function no_items() {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only filter state.
+		$filtered = ! empty( $_GET['s'] )
+			|| ! empty( $_GET['status'] )
+			|| ! empty( $_GET['attention'] )
+			|| ! empty( $_GET['issue_from'] )
+			|| ! empty( $_GET['issue_to'] )
+			|| ! empty( $_GET['expiry_from'] )
+			|| ! empty( $_GET['expiry_to'] )
+			|| ! empty( $_GET['legacy_expired'] );
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+		echo '<div class="certloom-premium-empty-state">';
+		if ( $filtered ) {
+			echo '<span class="dashicons dashicons-filter" aria-hidden="true"></span>';
+			echo '<h3>' . esc_html__( 'No credentials match these filters', 'certloom' ) . '</h3>';
+			echo '<p>' . esc_html__( 'Try a wider date range or status, or clear the filters to see the complete registry.', 'certloom' ) . '</p>';
+			echo '<a class="button button-primary" href="' . esc_url( admin_url( 'admin.php?page=certloom-certificates' ) ) . '">' . esc_html__( 'Clear filters', 'certloom' ) . '</a>';
+			echo '</div>';
+			return;
+		}
+
+		$create_url = class_exists( '\\Certloom\\Infrastructure\\Migration\\DomainFeatureGate' )
+			&& \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready()
+			? admin_url( 'admin.php?page=certloom-issuance' )
+			: admin_url( 'admin.php?page=certloom-add' );
+		echo '<span class="dashicons dashicons-awards" aria-hidden="true"></span>';
+		echo '<h3>' . esc_html__( 'No credentials yet', 'certloom' ) . '</h3>';
+		echo '<p>' . esc_html__( 'Issue your first credential, or import records you already hold elsewhere.', 'certloom' ) . '</p>';
+		echo '<div class="certloom-empty-state-actions"><a class="button button-primary" href="' . esc_url( $create_url ) . '">' . esc_html__( 'Issue first credential', 'certloom' ) . '</a><a class="button" href="' . esc_url( admin_url( 'admin.php?page=certloom-import' ) ) . '">' . esc_html__( 'Import from CSV', 'certloom' ) . '</a></div>';
+		echo '</div>';
+	}
+
 	public function get_columns() {
 		$field_map = Ecapla_CertVerify_Fields::get_field_map();
 		$label = static function ( $key, $fallback ) use ( $field_map ) {

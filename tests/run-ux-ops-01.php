@@ -55,7 +55,7 @@ uxops_check( false !== strpos( $nav, "add_filter( 'submenu_file'" ) && false !==
 // 6/8/9. Backup alignment and compact Dashboard readiness/setup actions.
 uxops_check( false !== strpos( $backup, 'certloom-backup-setting' ) && false !== strpos( $backup, 'certloom-backup-settings-actions' ), 'Automatic backup fields and save action use the compact aligned layout contract' );
 uxops_check( false !== strpos( $admin_css, 'grid-template-columns:minmax(180px,280px) minmax(180px,240px) max-content' ) && false !== strpos( $admin_css, 'width:auto!important' ), 'Backup save action is content-sized rather than stretched across the card' );
-uxops_check( false !== strpos( $dashboard, "'Setup: %1\$d of %2\$d checks complete', 'certloom'" ) && false !== strpos( $dashboard, "'Dismiss setup reminder for three days', 'certloom'" ), 'Dashboard uses a compact readiness count with an explicit three-day dismiss action' );
+uxops_check( false !== strpos( $dashboard, "'Setup: %1\$d of %2\$d checks complete', 'certloom'" ) && false !== strpos( $dashboard, "'Remind me in 3 days', 'certloom'" ) && false !== strpos( $dashboard, "'Do not remind me again', 'certloom'" ), 'Dashboard uses a compact readiness count with snooze and permanent-dismiss actions' );
 uxops_check( false !== strpos( $admin_css, '.certloom-dashboard-setup-link{position:absolute;top:18px;right:20px' ) && false !== strpos( $dashboard, 'certloom-dashboard-setup-link' ), 'Setup Wizard is a small visually separate top-right Dashboard action' );
 
 // 8. The reminder cadence is per-user, not a global option.

@@ -84,12 +84,12 @@ if ( $certloom_field_usage_error ) { $certloom_field_usage = array(); }
 						<span class="dashicons dashicons-menu ecapla-certverify-drag-handle" draggable="true" aria-hidden="true" title="<?php esc_attr_e( 'Drag to reorder', 'certloom' ); ?>"></span>
 						<input type="hidden" name="fields[<?php echo esc_attr( $index ); ?>][key]" value="<?php echo esc_attr( $field['key'] ); ?>" />
 						<div class="certloom-field-name-cell">
-							<label class="screen-reader-text" for="certloom-field-label-<?php echo esc_attr( $index ); ?>"><?php echo esc_html( sprintf( __( 'Label for %s', 'certloom' ), $field['key'] ) ); ?></label>
+							<label class="screen-reader-text" for="certloom-field-label-<?php echo esc_attr( $index ); ?>"><?php echo esc_html( sprintf( /* translators: %s: field key. */ __( 'Label for %s', 'certloom' ), $field['key'] ) ); ?></label>
 							<input id="certloom-field-label-<?php echo esc_attr( $index ); ?>" type="text" name="fields[<?php echo esc_attr( $index ); ?>][label]" value="<?php echo esc_attr( $field['label'] ); ?>" class="ecapla-certverify-field-label regular-text" />
 							<code><?php echo esc_html( $field['key'] ); ?></code>
 							<?php $certloom_usage = $certloom_field_usage[ $field['key'] ] ?? array( 'program_count' => 0, 'batch_count' => 0, 'template_count' => 0, 'referenced' => false ); ?>
 							<?php if ( ! empty( $certloom_usage['referenced'] ) ) : ?>
-								<small class="description certloom-field-usage"><?php echo esc_html( sprintf( __( 'In use: %1$d Programs · %2$d Batch overrides · %3$d Templates', 'certloom' ), absint( $certloom_usage['program_count'] ?? 0 ), absint( $certloom_usage['batch_count'] ?? 0 ), absint( $certloom_usage['template_count'] ?? 0 ) ) ); ?></small>
+								<small class="description certloom-field-usage"><?php echo esc_html( sprintf( /* translators: %1$d: program count; %2$d: batch count; %3$d: template count. */ __( 'In use: %1$d Programs · %2$d Batch overrides · %3$d Templates', 'certloom' ), absint( $certloom_usage['program_count'] ?? 0 ), absint( $certloom_usage['batch_count'] ?? 0 ), absint( $certloom_usage['template_count'] ?? 0 ) ) ); ?></small>
 							<?php endif; ?>
 						</div>
 						<span class="ecapla-certverify-field-type"><?php echo esc_html( $field['type'] ); ?></span>
