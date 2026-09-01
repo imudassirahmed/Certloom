@@ -4,13 +4,15 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.98
+Stable tag: 1.6.98-qa.13
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
 
 == Description ==
+
+> **QA.13 STAGING BUILD — NOT FOR PRODUCTION.** This derivative intentionally bypasses normalized-domain, public-verification and renderer release-readiness gates in memory so the UX-CORE-05 Credential/Legacy workflow and final provenance-wording consistency can be exercised before genuine DBAUTH/PDF-04 acceptance. It contains no accepted authority manifest and must not be installed on a live production site.
 
 
 > Release note for 1.6.98: UX-CORE turns the accumulated 1.6.98 staging findings into a whole-product workflow redesign rather than another isolated admin patch. Simple mode is now task-based (Home → Credentials → Programs → Design → Automations → Settings), uses the normalized Recipient → Program → Credential model, demotes the legacy registry and technical authority evidence, and connects Program setup, Recipient-aware issuance, public Credential Profiles, reusable email messages, automatic delivery and integrations into one human journey. Manual, Bulk, Tutor LMS, LearnDash, WooCommerce, Coursera xAPI and generic Webhook/API act as qualification sources that converge on Certloom's canonical issuance service; Email and Credly are post-issuance destinations. Google Drive normally connects through the narrow Ecapla OAuth relay, while a site-owned Google app remains available in Advanced. The relay implementation is bundled separately and its focused security/behavior suite is green, but live auth.ecapla.com deployment/Google OAuth acceptance is still external and is not claimed by this WordPress package. The real-WordPress corrective tranche also consolidates Simple mode onto one Recipient-aware Credentials authority, makes the issued certificate visible on the public Credential Profile from the immutable issuance snapshot, restores correct Credentials/Programs navigation ownership and Signers placement, repairs existing-admin Analytics capability drift and Setup completion consistency, adds complete New Recipient and Program/Batch quick-create dialogs, preserves Program/Batch credential fields for Existing Recipients, and standardizes the core registries/Automations on compact lists plus consistent required-field validation. Normalized-domain and renderer production authority remain closed pending the genuine DBAUTH/PDF-04 ceremonies.

@@ -5851,3 +5851,52 @@ padding:15px}
 .certloom-template-duplicate-link:hover{text-decoration:underline;text-underline-offset:3px}
 @media(prefers-reduced-motion:reduce){.certloom-publication-switch>span[aria-hidden="true"]{transition:none}}
 @media(forced-colors:active){.certloom-publication-switch{border:1px solid ButtonText}.certloom-publication-switch.is-on{background:Highlight}}
+
+
+/* UX-CORE-05 — current Credential records use one form-like editor with locked issuance truth and inline audit evidence. */
+.certloom-credential-record-editor{display:grid;gap:14px}
+.certloom-credential-record-nav{position:sticky;top:32px;z-index:8;margin:0 0 2px;border:1px solid var(--certloom-border);border-radius:var(--certloom-radius-md);background:rgba(255,255,255,.97);box-shadow:0 6px 18px rgba(23,34,31,.04)}
+.certloom-credential-record-nav a{display:inline-flex;align-items:center;min-height:40px}
+.certloom-credential-record-editor .certloom-credential-panel{margin:0;border:1px solid var(--certloom-border);border-radius:var(--certloom-radius-md);box-shadow:0 3px 14px rgba(23,34,31,.035)}
+.certloom-record-anchor{display:grid;gap:14px;scroll-margin-top:108px}
+.certloom-record-section{scroll-margin-top:108px}
+.certloom-locked-record-badge{display:inline-flex;align-items:center;gap:5px;min-height:28px;padding:4px 9px;border:1px solid #d9ddd9;border-radius:999px;background:#f5f7f5;color:#56615c;font-size:11px;font-weight:700;white-space:nowrap}
+.certloom-locked-record-badge .dashicons{width:15px;height:15px;font-size:15px}
+.certloom-locked-field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.certloom-locked-field{display:grid;gap:6px;min-width:0}
+.certloom-locked-field>span{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#35423d;font-size:12px}
+.certloom-locked-field>span .dashicons{width:15px;height:15px;font-size:15px;color:#8a948f}
+.ecapla-certverify-admin-wrap .certloom-locked-field input[readonly]{height:40px;min-height:40px;border-color:#d9dfdc!important;background:#f6f8f7!important;color:#45514c!important;box-shadow:none!important;cursor:default}
+.certloom-locked-field-subsection{margin-top:18px;padding-top:16px;border-top:1px solid #e8ecea}
+.certloom-locked-field-subsection h4{margin:0 0 12px;font-size:13px}
+.certloom-audit-list{display:grid;gap:10px}
+.certloom-audit-row{padding:14px 15px;border:1px solid #e1e7e4;border-radius:9px;background:#fbfcfc}
+.certloom-audit-row-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.certloom-audit-row-head>div{display:grid;gap:3px}
+.certloom-audit-row-head strong{font-size:13px;color:#22302a}
+.certloom-audit-row-head>div>span{font-size:11px;color:#75807b}
+.certloom-audit-actor{display:inline-flex;align-items:center;gap:5px;color:#55635d;font-size:11px;font-weight:650;white-space:nowrap}
+.certloom-audit-actor .dashicons{width:15px;height:15px;font-size:15px}
+.certloom-audit-changes{display:grid;gap:5px;margin:11px 0 0;padding:0;list-style:none}
+.certloom-audit-changes li{position:relative;margin:0;padding-left:14px;color:#3f4c47;font-size:12px;line-height:1.45}
+.certloom-audit-changes li:before{content:"";position:absolute;left:1px;top:.58em;width:5px;height:5px;border-radius:50%;background:var(--certloom-accent)}
+.certloom-audit-reason,.certloom-audit-note{margin:10px 0 0;padding-top:9px;border-top:1px solid #e8ecea;color:#55625d;font-size:12px;line-height:1.45}
+.certloom-audit-note{display:flex;align-items:flex-start;gap:5px;color:#656d69}
+.certloom-audit-note .dashicons{width:15px;height:15px;font-size:15px;flex:0 0 auto}
+.certloom-credential-record-editor .certloom-credential-actions-panel{border-color:#d7e4df}
+.certloom-credential-record-editor .certloom-credential-subpanel form .submit{margin-bottom:0}
+@media(max-width:782px){.certloom-credential-record-nav{top:46px;overflow-x:auto;flex-wrap:nowrap}.certloom-credential-record-nav a{min-height:44px}.certloom-locked-field-grid{grid-template-columns:1fr}.certloom-audit-row-head{flex-direction:column}.certloom-audit-actor{white-space:normal}.ecapla-certverify-admin-wrap .certloom-locked-field input[readonly]{min-height:44px;height:44px}}
+@media(forced-colors:active){.certloom-locked-record-badge,.certloom-audit-row,.certloom-credential-record-editor .certloom-credential-panel{border-color:CanvasText}}
+
+/* UX-CORE-05 — visible provenance pills and separated record actions. */
+.certloom-credential-source-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0}
+.certloom-credential-source-line>strong{min-width:0}
+.certloom-credential-source{display:inline-flex;align-items:center;min-height:22px;padding:2px 8px;border:1px solid transparent;border-radius:999px;font-size:10px!important;font-weight:750!important;line-height:1.2!important;letter-spacing:.02em;white-space:nowrap;vertical-align:middle}
+.certloom-credential-source.is-credential{border-color:#c9e6db;background:#eef8f4;color:#0f6e56}
+.certloom-credential-source.is-legacy{border-color:#dedbd1;background:#f7f5ef;color:#665f4d}
+.certloom-credential-source-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:5px}
+.certloom-credential-hero-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.certloom-credential-hero-actions>.button{display:inline-flex;align-items:center;justify-content:center;min-height:40px;margin:0!important}
+.certloom-credential-eyebrow .certloom-credential-source{margin-bottom:2px}
+@media(max-width:640px){.certloom-credential-hero-actions{width:100%;justify-content:flex-start}.certloom-credential-hero-actions>.button{min-height:44px}}
+@media(forced-colors:active){.certloom-credential-source{border-color:CanvasText}.certloom-credential-source.is-credential,.certloom-credential-source.is-legacy{background:Canvas;color:CanvasText}}

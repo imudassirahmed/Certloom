@@ -20,7 +20,7 @@ async def main():
         nav=await b.new_page(viewport={'width':1240,'height':800})
         await nav.set_content(build('build_admin_ux_fixture.php',{'CERTLOOM_ADMIN_UX_STATE':'advanced'}),wait_until='load')
         labels=await nav.locator('[data-primary-label]').all_inner_texts()
-        await ck([x.strip() for x in labels]==['Dashboard','Credentials','People & Programs','Design','Insights & Integrations','Settings'],'advancedSixSectionShell')
+        await ck([x.strip() for x in labels]==['Home','Credentials','Programs','Design','Automations','Settings'],'advancedSixSectionShell')
         await ck(await nav.locator('.certloom-ui-mode-choice.is-current').inner_text()=='Advanced','advancedModeVisible')
         await ck(await nav.locator('.nav-tab').count()==8,'advancedContextDetailAvailable')
         await nav.close()

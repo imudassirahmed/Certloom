@@ -557,8 +557,9 @@ final class DomainAdmin {
 			echo '<div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-table certloom-credential-table"><thead><tr><th>' . esc_html__( 'Credential', 'certloom' ) . '</th><th>' . esc_html__( 'Recipient', 'certloom' ) . '</th><th>' . esc_html__( 'Program / batch', 'certloom' ) . '</th><th>' . esc_html__( 'Issued / expiry', 'certloom' ) . '</th><th>' . esc_html__( 'Version', 'certloom' ) . '</th><th>' . esc_html__( 'Status', 'certloom' ) . '</th><th>' . esc_html__( 'Actions', 'certloom' ) . '</th></tr></thead><tbody>';
 			foreach ( $result['items'] as $item ) {
 				$is_historical = 'historical' === (string) ( $item['_credential_source'] ?? '' );
-				$source_label = (string) ( $item['_credential_source_label'] ?? ( $is_historical ? __( 'Historical', 'certloom' ) : __( 'Current', 'certloom' ) ) );
-				$source_class = 'Historical' === $source_label ? 'is-historical' : 'is-current';
+				$source_label = (string) ( $item['_credential_source_label'] ?? ( $is_historical ? __( 'Legacy', 'certloom' ) : __( 'Credential', 'certloom' ) ) );
+				$is_legacy = $is_historical || ! empty( $item['_credential_historical_origin'] );
+				$source_class = $is_legacy ? 'is-legacy' : 'is-credential';
 				$effective = $is_historical ? null : $this->status_from_row( $status_service, $item );
 				$detail_url = $is_historical
 					? add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'legacy_id' => absint( $item['legacy_id'] ?? 0 ) ), admin_url( 'admin.php' ) )
@@ -604,11 +605,11 @@ final class DomainAdmin {
 		$verify_url = class_exists( 'Ecapla_CertVerify_Public_Router' ) ? \Ecapla_CertVerify_Public_Router::verification_url( $number ) : '';
 		$profile_url = class_exists( 'Ecapla_CertVerify_Public_Router' ) ? \Ecapla_CertVerify_Public_Router::profile_url( $number ) : '';
 		$edit_url = add_query_arg( array( 'page' => 'certloom-add', 'id' => absint( $row['id'] ?? 0 ) ), admin_url( 'admin.php' ) );
-		echo '<section class="certloom-credential-hero certloom-historical-credential-hero"><div><span class="certloom-credential-source is-historical">' . esc_html__( 'Historical', 'certloom' ) . '</span><h2>' . esc_html( '' !== $number ? $number : __( 'Historical credential', 'certloom' ) ) . '</h2><p>' . esc_html( (string) ( $row['holder_name'] ?? '' ) ) . '</p></div><div class="certloom-credential-hero-actions">';
+		echo '<section class="certloom-credential-hero certloom-historical-credential-hero"><div><span class="certloom-credential-source is-legacy">' . esc_html__( 'Legacy', 'certloom' ) . '</span><h2>' . esc_html( '' !== $number ? $number : __( 'Legacy credential', 'certloom' ) ) . '</h2><p>' . esc_html( (string) ( $row['holder_name'] ?? '' ) ) . '</p></div><div class="certloom-credential-hero-actions">';
 		if ( '' !== $profile_url ) { echo '<a class="button button-primary" href="' . esc_url( $profile_url ) . '" target="_blank" rel="noopener">' . esc_html__( 'View credential', 'certloom' ) . ' <span aria-hidden="true">↗</span></a>'; }
-		if ( current_user_can( \ECAPLA_CERTVERIFY_CAP ) ) { echo '<a class="button" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Edit historical record', 'certloom' ) . '</a>'; }
+		if ( current_user_can( \ECAPLA_CERTVERIFY_CAP ) ) { echo '<a class="button" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Edit Legacy record', 'certloom' ) . '</a>'; }
 		echo '</div></section>';
-		echo '<section class="certloom-credential-panel"><div class="certloom-credential-panel-head"><div><h3>' . esc_html__( 'Credential summary', 'certloom' ) . '</h3><p>' . esc_html__( 'Historical records are labeled so you can distinguish them from current Program-based credentials without maintaining a second registry screen.', 'certloom' ) . '</p></div>' . $this->historical_status_badge( (string) ( $row['legacy_status_code'] ?? '' ) ) . '</div>';
+		echo '<section class="certloom-credential-panel"><div class="certloom-credential-panel-head"><div><h3>' . esc_html__( 'Credential summary', 'certloom' ) . '</h3><p>' . esc_html__( 'Legacy records are labeled so you can distinguish their original storage from Program-based credentials without maintaining a second registry screen.', 'certloom' ) . '</p></div>' . $this->historical_status_badge( (string) ( $row['legacy_status_code'] ?? '' ) ) . '</div>';
 		$this->credential_info_card( __( 'Issued record', 'certloom' ), array(
 			__( 'Recipient', 'certloom' ) => esc_html( (string) ( $row['holder_name'] ?? '—' ) ),
 			__( 'Certificate number', 'certloom' ) => esc_html( '' !== $number ? $number : '—' ),
@@ -702,8 +703,8 @@ final class DomainAdmin {
 
 		$number = is_array( $version ) && ! empty( $version['display_number'] ) ? (string) $version['display_number'] : __( 'Unnumbered credential', 'certloom' );
 		$this->header(
-			$simple ? __( 'Credential', 'certloom' ) : __( 'Credential Management', 'certloom' ),
-			$simple ? __( 'View the credential, its recipient and Program, deliver it, or manage its current status from one place.', 'certloom' ) : __( 'One continuing credential identity with immutable historical Versions and review-before-commit administration.', 'certloom' )
+			$simple ? __( 'Edit credential record', 'certloom' ) : __( 'Credential Management', 'certloom' ),
+			$simple ? __( 'Review locked issuance facts, update supported relationships or status, and see the complete change history from one record workspace.', 'certloom' ) : __( 'One continuing credential identity with immutable historical Versions and review-before-commit administration.', 'certloom' )
 		);
 		$this->notice();
 		echo '<div class="certloom-credential-back"><a href="' . esc_url( add_query_arg( 'page', self::CREDENTIALS_PAGE, admin_url( 'admin.php' ) ) ) . '">&larr; ' . esc_html__( 'Back to credentials', 'certloom' ) . '</a></div>';
@@ -712,7 +713,10 @@ final class DomainAdmin {
 			$program_label = is_array( $program ) ? trim( (string) ( $program['title'] ?? '' ) ) : '';
 			$public_url = ( new \Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl() )->verification_url( (string) $series['public_id'] );
 			$issue_again_url = add_query_arg( array( 'page' => ManualIssuanceAdmin::PAGE, 'recipient_id' => absint( $series['recipient_id'] ?? 0 ), 'program_id' => absint( $series['program_id'] ?? 0 ), 'batch_id' => absint( $series['batch_id'] ?? 0 ) ), admin_url( 'admin.php' ) );
-			echo '<section class="certloom-credential-hero certloom-credential-hero-simple"><div><div class="certloom-credential-eyebrow">' . esc_html( $is_current ? __( 'Credential', 'certloom' ) : __( 'Credential history', 'certloom' ) ) . '</div><h2>' . esc_html( $number ) . '</h2><div class="certloom-credential-hero-meta">' . ( '' !== $recipient_label ? '<span>' . esc_html( $recipient_label ) . '</span>' : '' ) . ( '' !== $program_label ? '<span>' . esc_html( $program_label ) . '</span>' : '' ) . '</div></div><div class="certloom-credential-hero-actions">' . $this->credential_status_badge( $status );
+			$is_legacy_origin = is_array( $version ) && 'certloom_legacy' === (string) ( $version['source_type'] ?? '' );
+			$record_label = $is_legacy_origin ? __( 'Legacy', 'certloom' ) : __( 'Credential', 'certloom' );
+			$record_class = $is_legacy_origin ? 'is-legacy' : 'is-credential';
+			echo '<section class="certloom-credential-hero certloom-credential-hero-simple"><div><div class="certloom-credential-eyebrow"><span class="certloom-credential-source ' . esc_attr( $record_class ) . '">' . esc_html( $record_label ) . '</span></div><h2>' . esc_html( $number ) . '</h2><div class="certloom-credential-hero-meta">' . ( '' !== $recipient_label ? '<span>' . esc_html( $recipient_label ) . '</span>' : '' ) . ( '' !== $program_label ? '<span>' . esc_html( $program_label ) . '</span>' : '' ) . '</div></div><div class="certloom-credential-hero-actions">' . $this->credential_status_badge( $status );
 			if ( $is_current && ! is_wp_error( $public_url ) ) { echo '<a class="button button-primary" href="' . esc_url( (string) $public_url ) . '" target="_blank" rel="noopener">' . esc_html__( 'View credential', 'certloom' ) . ' <span aria-hidden="true">↗</span></a>'; }
 			if ( $is_current ) { echo '<a class="button" href="' . esc_url( $issue_again_url ) . '">' . esc_html__( 'Issue another', 'certloom' ) . '</a>'; }
 			echo '</div></section>';
@@ -722,11 +726,14 @@ final class DomainAdmin {
 		if ( ! $is_current && is_array( $version ) ) {
 			echo '<div class="notice notice-info inline"><p><strong>' . esc_html( $simple ? __( 'Earlier credential record selected.', 'certloom' ) : __( 'Historical Version selected.', 'certloom' ) ) . '</strong> ' . esc_html( $simple ? __( 'You can review this earlier record, but changes are made only to the current credential.', 'certloom' ) : __( 'Its immutable snapshot can be inspected, but lifecycle and relationship mutations always target the current Version and never rewrite this history.', 'certloom' ) ) . ' <a href="' . esc_url( add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'series_id' => $series_id, 'credential_tab' => $tab ), admin_url( 'admin.php' ) ) ) . '">' . esc_html( $simple ? __( 'Return to current credential', 'certloom' ) : __( 'Return to current Version', 'certloom' ) ) . '</a></p></div>';
 		}
-		$workspace = $this->credential_workspace_state( $tab, $simple );
-		$this->credential_tabs( $series_id, $workspace['primary'], $selected_version_id, $current_version_id, $simple );
-		if ( $simple && in_array( $workspace['primary'], array( 'credential', 'history' ), true ) ) {
-			$this->credential_subtabs( $series_id, $workspace['primary'], $workspace['section'], $selected_version_id, $current_version_id );
+		if ( $simple ) {
+			$this->credential_record_editor( $series, $version, $versions, $recipient, $program, $batch, $issuer, $status, $lifecycle_review, $relationship_review, $is_current, $current_version_id, $selected_version_id );
+			$this->footer();
+			return;
 		}
+
+		$workspace = $this->credential_workspace_state( $tab, false );
+		$this->credential_tabs( $series_id, $workspace['primary'], $selected_version_id, $current_version_id, false );
 
 		switch ( $tab ) {
 			case 'recipient':
@@ -756,6 +763,89 @@ final class DomainAdmin {
 				break;
 		}
 		$this->footer();
+	}
+
+
+	/**
+	 * Simple-mode record editor: one continuous form-like workspace instead of
+	 * tabs. Issued Version facts are visibly locked; supported corrections and
+	 * lifecycle changes stay review-before-commit and append audit evidence.
+	 *
+	 * @param array<string,mixed> $series Credential Series.
+	 * @param array<string,mixed>|null $version Selected immutable Version.
+	 * @param array<int,array<string,mixed>> $versions Version history.
+	 * @return void
+	 */
+	private function credential_record_editor( array $series, ?array $version, array $versions, $recipient, $program, $batch, $issuer, $status, $lifecycle_review, $relationship_review, $is_current, $current_version_id, $selected_version_id ) {
+		$series_id = absint( $series['id'] ?? 0 );
+		echo '<div class="certloom-credential-record-editor">';
+		echo '<nav class="certloom-workspace-nav certloom-credential-record-nav" aria-label="' . esc_attr__( 'Credential record sections', 'certloom' ) . '"><a href="#certloom-record-issued">' . esc_html__( 'Issued record', 'certloom' ) . '</a><a href="#certloom-record-recipient">' . esc_html__( 'Recipient', 'certloom' ) . '</a><a href="#certloom-record-program">' . esc_html__( 'Program & Batch', 'certloom' ) . '</a><a href="#certloom-record-status">' . esc_html__( 'Status & delivery', 'certloom' ) . '</a><a href="#certloom-record-verification">' . esc_html__( 'Verification', 'certloom' ) . '</a><a href="#certloom-record-history">' . esc_html__( 'History & audit', 'certloom' ) . '</a></nav>';
+
+		$this->credential_locked_record_panel( $series, $version, $status, $is_current );
+		echo '<div id="certloom-record-recipient" class="certloom-record-anchor">';
+		$this->credential_recipient_panel( $recipient );
+		echo '</div><div id="certloom-record-program" class="certloom-record-anchor">';
+		$this->credential_program_panel( $series, $program, $batch, $issuer, $relationship_review, $is_current );
+		echo '</div><div id="certloom-record-status" class="certloom-record-anchor">';
+		$this->credential_status_panel( $series, $version, $status );
+		$this->credential_actions_panel( $series, $version, $lifecycle_review, $is_current );
+		echo '</div><div id="certloom-record-verification" class="certloom-record-anchor">';
+		$this->credential_verification_panel( $series, $version );
+		echo '</div><div id="certloom-record-history" class="certloom-record-anchor">';
+		$this->credential_versions_panel( $series_id, $versions, $current_version_id, $selected_version_id );
+		$this->event_history( $series_id );
+		echo '</div></div>';
+	}
+
+	/** @return void */
+	private function credential_locked_record_panel( array $series, ?array $version, $status, $is_current ) {
+		$snapshot = is_array( $version ) && isset( $version['snapshot'] ) && is_array( $version['snapshot'] ) ? $version['snapshot'] : array();
+		$template = isset( $snapshot['template'] ) && is_array( $snapshot['template'] ) ? $snapshot['template'] : array();
+		$issuance = isset( $snapshot['issuance'] ) && is_array( $snapshot['issuance'] ) ? $snapshot['issuance'] : array();
+		$fields   = isset( $snapshot['fields'] ) && is_array( $snapshot['fields'] ) ? $snapshot['fields'] : array();
+		$actor    = $this->credential_actor_label( absint( $issuance['actor_user_id'] ?? 0 ) );
+		echo '<section id="certloom-record-issued" class="certloom-credential-panel certloom-record-section certloom-locked-record-panel"><div class="certloom-credential-panel-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Issued record', 'certloom' ) . '</span><h3>' . esc_html__( 'Credential facts', 'certloom' ) . '</h3><p>' . esc_html__( 'These values belong to the issued record. Locked fields are preserved exactly so later profile, Program, design, or settings changes cannot rewrite what was issued.', 'certloom' ) . '</p></div><span class="certloom-locked-record-badge"><span class="dashicons dashicons-lock" aria-hidden="true"></span>' . esc_html__( 'Immutable', 'certloom' ) . '</span></div>';
+		echo '<div class="certloom-locked-field-grid">';
+		$this->credential_locked_field( __( 'Certificate number', 'certloom' ), is_array( $version ) ? (string) ( $version['display_number'] ?? '' ) : '' );
+		$this->credential_locked_field( __( 'Issued', 'certloom' ), is_array( $version ) ? (string) ( $version['issued_at'] ?? '' ) : '' );
+		$this->credential_locked_field( __( 'Valid from', 'certloom' ), is_array( $version ) ? (string) ( $version['valid_from'] ?? '' ) : '' );
+		$this->credential_locked_field( __( 'Expires', 'certloom' ), is_array( $version ) && ! empty( $version['expires_at'] ) ? (string) $version['expires_at'] : __( 'No expiry', 'certloom' ) );
+		$this->credential_locked_field( __( 'Grade', 'certloom' ), is_array( $version ) ? (string) ( $version['grade'] ?? '' ) : '' );
+		$this->credential_locked_field( __( 'Design used', 'certloom' ), (string) ( $template['name'] ?? '' ) );
+		$this->credential_locked_field( __( 'Issued by', 'certloom' ), $actor );
+		$this->credential_locked_field( __( 'Record version', 'certloom' ), is_array( $version ) ? 'v' . (string) absint( $version['version_number'] ?? 0 ) : '' );
+		echo '</div>';
+		$this->credential_locked_custom_fields( $fields );
+		if ( ! $is_current ) {
+			echo '<div class="notice notice-info inline"><p>' . esc_html__( 'You are viewing an earlier immutable record. Editing controls apply only to the current credential record.', 'certloom' ) . '</p></div>';
+		}
+		echo '</section>';
+	}
+
+	/** @return void */
+	private function credential_locked_field( $label, $value ) {
+		$value = '' !== trim( (string) $value ) ? (string) $value : '—';
+		echo '<label class="certloom-locked-field"><span><strong>' . esc_html( $label ) . '</strong><span class="dashicons dashicons-lock" aria-hidden="true"></span></span><input type="text" value="' . esc_attr( $value ) . '" readonly aria-readonly="true"></label>';
+	}
+
+	/** @param array<string,mixed> $fields @return void */
+	private function credential_locked_custom_fields( array $fields ) {
+		$contract = isset( $fields['contract']['fields'] ) && is_array( $fields['contract']['fields'] ) ? $fields['contract']['fields'] : array();
+		$values   = isset( $fields['values'] ) && is_array( $fields['values'] ) ? $fields['values'] : array();
+		if ( empty( $contract ) ) { return; }
+		$rows = array();
+		foreach ( $contract as $definition ) {
+			if ( ! is_array( $definition ) ) { continue; }
+			$key = sanitize_key( (string) ( $definition['key'] ?? '' ) );
+			if ( '' === $key || 'grade' === $key || 'recipient' === (string) ( $definition['value_source'] ?? '' ) ) { continue; }
+			$value = $values[ $key ] ?? '';
+			if ( is_array( $value ) || is_object( $value ) ) { continue; }
+			$rows[] = array( 'label' => (string) ( $definition['label'] ?? $key ), 'value' => null === $value ? '' : (string) $value );
+		}
+		if ( empty( $rows ) ) { return; }
+		echo '<div class="certloom-locked-field-subsection"><h4>' . esc_html__( 'Issued credential fields', 'certloom' ) . '</h4><div class="certloom-locked-field-grid">';
+		foreach ( $rows as $row ) { $this->credential_locked_field( $row['label'], $row['value'] ); }
+		echo '</div></div>';
 	}
 
 	/** @return void */
@@ -825,12 +915,14 @@ final class DomainAdmin {
 				$public_url  = $public_ready ? $url_builder->verification_url( (string) ( $item['public_id'] ?? '' ) ) : null;
 				$status_html = $this->credential_status_badge( $this->status_from_row( $status_service, $item ) );
 			}
-			echo '<article class="certloom-premium-list-row" role="listitem"><div class="certloom-premium-list-main"><span class="certloom-eyebrow">' . esc_html( '' !== $number ? $number : __( 'Credential', 'certloom' ) ) . '</span><div class="certloom-credential-source-line"><strong>' . esc_html( '' !== $recipient ? $recipient : __( 'Unnamed recipient', 'certloom' ) ) . '</strong><span class="certloom-credential-source is-' . esc_attr( $is_historical ? 'historical' : 'current' ) . '">' . esc_html( $is_historical ? __( 'Historical', 'certloom' ) : __( 'Current', 'certloom' ) ) . '</span></div><span>' . esc_html( '' !== $program ? $program : ( $is_historical ? __( 'Imported / earlier Certloom record', 'certloom' ) : __( 'No Program', 'certloom' ) ) ) . '</span></div>';
+			$source_label = (string) ( $item['_credential_source_label'] ?? ( $is_historical ? __( 'Legacy', 'certloom' ) : __( 'Credential', 'certloom' ) ) );
+			$is_legacy = $is_historical || ! empty( $item['_credential_historical_origin'] );
+			echo '<article class="certloom-premium-list-row" role="listitem"><div class="certloom-premium-list-main"><span class="certloom-eyebrow">' . esc_html( '' !== $number ? $number : __( 'Credential', 'certloom' ) ) . '</span><div class="certloom-credential-source-line"><strong>' . esc_html( '' !== $recipient ? $recipient : __( 'Unnamed recipient', 'certloom' ) ) . '</strong><span class="certloom-credential-source ' . esc_attr( $is_legacy ? 'is-legacy' : 'is-credential' ) . '">' . esc_html( $source_label ) . '</span></div><span>' . esc_html( '' !== $program ? $program : ( $is_historical ? __( 'Imported / earlier Certloom record', 'certloom' ) : __( 'No Program', 'certloom' ) ) ) . '</span></div>';
 			echo '<div class="certloom-premium-list-status">' . $status_html . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Status helper returns fixed escaped markup.
 			echo '<div class="certloom-premium-list-meta"><span><small>' . esc_html__( 'Issued', 'certloom' ) . '</small><strong>' . esc_html( ! empty( $item['issued_at'] ) ? (string) $item['issued_at'] : '—' ) . '</strong></span><span><small>' . esc_html__( 'Expiry', 'certloom' ) . '</small><strong>' . esc_html( ! empty( $item['expires_at'] ) ? (string) $item['expires_at'] : __( 'No expiry', 'certloom' ) ) . '</strong></span></div>';
 			echo '<div class="certloom-premium-list-actions">';
 			if ( is_string( $public_url ) && '' !== $public_url ) { echo '<a class="button button-primary" href="' . esc_url( $public_url ) . '" target="_blank" rel="noopener">' . esc_html__( 'View', 'certloom' ) . ' <span aria-hidden="true">↗</span></a>'; }
-			echo '<a class="certloom-premium-row-link" href="' . esc_url( $detail_url ) . '">' . esc_html__( 'Manage', 'certloom' ) . ' <span aria-hidden="true">→</span></a></div></article>';
+			echo '<a class="certloom-premium-row-link" href="' . esc_url( $detail_url ) . '">' . esc_html__( 'Edit record', 'certloom' ) . ' <span aria-hidden="true">→</span></a></div></article>';
 		}
 		echo '</div>';
 	}
@@ -1014,32 +1106,26 @@ final class DomainAdmin {
 		);
 		if ( ! $simple ) { $identity[ __( 'External ID', 'certloom' ) ] = esc_html( (string) ( $recipient['external_id'] ?: '—' ) ); }
 		$this->credential_info_card( $simple ? __( 'Recipient profile', 'certloom' ) : __( 'Recipient identity', 'certloom' ), $identity );
-		echo '<p class="certloom-credential-panel-actions"><a class="button" href="' . esc_url( $url ) . '">' . esc_html__( 'Open Recipient profile', 'certloom' ) . '</a></p></section>';
+		$recipient_action_label = $simple ? __( 'Edit Recipient profile', 'certloom' ) : __( 'Open Recipient profile', 'certloom' );
+		echo '<p class="certloom-credential-panel-actions"><a class="button" href="' . esc_url( $url ) . '">' . esc_html( $recipient_action_label ) . '</a></p></section>';
 	}
 
 	/** @return void */
 	private function credential_program_panel( array $series, $program, $batch, $issuer, $review, $is_current ) {
-		if ( AdminUiMode::is_simple() ) {
-			echo '<section class="certloom-credential-panel"><div class="certloom-credential-panel-head"><div><h3>' . esc_html__( 'Program', 'certloom' ) . '</h3><p>' . esc_html__( 'The Program, cohort and issuer connected to this credential.', 'certloom' ) . '</p></div></div>';
-			$this->credential_info_card( __( 'Credential setup', 'certloom' ), array(
-				__( 'Program', 'certloom' ) => esc_html( is_array( $program ) ? (string) $program['title'] : '—' ),
-				__( 'Batch', 'certloom' ) => esc_html( is_array( $batch ) ? (string) $batch['name'] : '—' ),
-				__( 'Issuer', 'certloom' ) => esc_html( is_array( $issuer ) ? (string) $issuer['name'] : '—' ),
-			) );
-			if ( is_array( $program ) ) { $program_url = add_query_arg( array( 'page' => self::PROGRAMS_PAGE, 'program_id' => absint( $program['id'] ?? 0 ) ), admin_url( 'admin.php' ) ); echo '<p class="certloom-credential-panel-actions"><a class="button" href="' . esc_url( $program_url ) . '">' . esc_html__( 'Open Program', 'certloom' ) . '</a></p>'; }
-			echo '</section>';
-			return;
-		}
-		echo '<section class="certloom-credential-panel"><div class="certloom-credential-panel-head"><div><h3>' . esc_html__( 'Program & batch relationship', 'certloom' ) . '</h3><p>' . esc_html__( 'A correction creates a successor immutable Version, moves the continuing Series relationship atomically, and appends an audit Event. No historical Version is edited.', 'certloom' ) . '</p></div></div>';
-		$this->credential_info_card( __( 'Current Series relationship', 'certloom' ), array(
+		$simple = AdminUiMode::is_simple();
+		echo '<section class="certloom-credential-panel"><div class="certloom-credential-panel-head"><div><h3>' . esc_html( $simple ? __( 'Program & Batch', 'certloom' ) : __( 'Program & batch relationship', 'certloom' ) ) . '</h3><p>' . esc_html( $simple ? __( 'Review the Program, Batch and issuer connected to this credential. A correction creates a new locked record and keeps the earlier record in history.', 'certloom' ) : __( 'A correction creates a successor immutable Version, moves the continuing Series relationship atomically, and appends an audit Event. No historical Version is edited.', 'certloom' ) ) . '</p></div></div>';
+		$this->credential_info_card( $simple ? __( 'Current assignment', 'certloom' ) : __( 'Current Series relationship', 'certloom' ), array(
 			__( 'Program', 'certloom' ) => esc_html( is_array( $program ) ? (string) $program['title'] : '—' ),
-			__( 'Batch', 'certloom' ) => esc_html( is_array( $batch ) ? (string) $batch['name'] . ( ! empty( $batch['code'] ) ? ' (' . (string) $batch['code'] . ')' : '' ) : '—' ),
+			__( 'Batch', 'certloom' ) => esc_html( is_array( $batch ) ? (string) $batch['name'] . ( ! $simple && ! empty( $batch['code'] ) ? ' (' . (string) $batch['code'] . ')' : '' ) : '—' ),
 			__( 'Issuer', 'certloom' ) => esc_html( is_array( $issuer ) ? (string) $issuer['name'] : '—' ),
-			__( 'Series updated', 'certloom' ) => esc_html( (string) $series['updated_at'] ),
 		) );
+		if ( is_array( $program ) ) {
+			$program_url = add_query_arg( array( 'page' => self::PROGRAMS_PAGE, 'program_id' => absint( $program['id'] ?? 0 ) ), admin_url( 'admin.php' ) );
+			echo '<p class="certloom-credential-panel-actions"><a class="button" href="' . esc_url( $program_url ) . '">' . esc_html__( 'Open Program', 'certloom' ) . '</a></p>';
+		}
 		if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) ) { echo '</section>'; return; }
 		if ( ! $is_current ) {
-			echo '<div class="notice notice-info inline"><p>' . esc_html__( 'Relationship correction is disabled while inspecting a historical Version. Return to the current Version first.', 'certloom' ) . '</p></div></section>';
+			echo '<div class="notice notice-info inline"><p>' . esc_html( $simple ? __( 'Program and Batch changes are disabled for earlier records. Return to the current credential first.', 'certloom' ) : __( 'Relationship correction is disabled while inspecting a historical Version. Return to the current Version first.', 'certloom' ) ) . '</p></div></section>';
 			return;
 		}
 		if ( is_wp_error( $review ) ) { $this->error( $review->get_error_message() ); $review = null; }
@@ -1048,13 +1134,13 @@ final class DomainAdmin {
 			$target_batch_id = absint( $review['target']['batch_id'] ?? 0 );
 			$target_program = $target_program_id ? ( new ProgramRepository() )->find( $target_program_id ) : null;
 			$target_batch = $target_batch_id ? ( new BatchRepository() )->find( $target_batch_id ) : null;
-			echo '<div class="certloom-credential-review"><div class="certloom-credential-review-badge">' . esc_html__( 'Review required', 'certloom' ) . '</div><h4>' . esc_html__( 'Confirm immutable relationship correction', 'certloom' ) . '</h4><p>' . esc_html__( 'Certloom will create a successor Version and preserve the current Version unchanged.', 'certloom' ) . '</p>';
-			echo '<dl><div><dt>' . esc_html__( 'Program', 'certloom' ) . '</dt><dd>' . esc_html( is_array( $target_program ) ? (string) $target_program['title'] : '—' ) . '</dd></div><div><dt>' . esc_html__( 'Batch', 'certloom' ) . '</dt><dd>' . esc_html( is_array( $target_batch ) ? (string) $target_batch['name'] : '—' ) . '</dd></div><div><dt>' . esc_html__( 'Public reason', 'certloom' ) . '</dt><dd>' . esc_html( (string) ( $review['public_reason'] ?? '—' ) ) . '</dd></div><div><dt>' . esc_html__( 'Internal note', 'certloom' ) . '</dt><dd>' . esc_html( (string) ( $review['internal_note'] ?? '—' ) ) . '</dd></div></dl>';
+			echo '<div class="certloom-credential-review"><div class="certloom-credential-review-badge">' . esc_html__( 'Review first', 'certloom' ) . '</div><h4>' . esc_html( $simple ? __( 'Confirm Program / Batch correction', 'certloom' ) : __( 'Confirm immutable relationship correction', 'certloom' ) ) . '</h4><p>' . esc_html( $simple ? __( 'Certloom will create a new immutable credential record and preserve the earlier one in History & audit.', 'certloom' ) : __( 'Certloom will create a successor Version and preserve the current Version unchanged.', 'certloom' ) ) . '</p>';
+			echo '<dl><div><dt>' . esc_html__( 'Program', 'certloom' ) . '</dt><dd>' . esc_html( is_array( $target_program ) ? (string) $target_program['title'] : '—' ) . '</dd></div><div><dt>' . esc_html__( 'Batch', 'certloom' ) . '</dt><dd>' . esc_html( is_array( $target_batch ) ? (string) $target_batch['name'] : '—' ) . '</dd></div><div><dt>' . esc_html__( 'Reason', 'certloom' ) . '</dt><dd>' . esc_html( (string) ( $review['public_reason'] ?? '—' ) ) . '</dd></div></dl>';
 			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" data-certloom-preserve-on-error><input type="hidden" name="action" value="certloom_domain_relationship_correct"><input type="hidden" name="series_id" value="' . esc_attr( (string) absint( $series['id'] ) ) . '"><input type="hidden" name="relationship_review" value="' . esc_attr( $this->encode_review_value( $review ) ) . '">';
 			wp_nonce_field( 'certloom_domain_relationship_' . absint( $series['id'] ) );
-			submit_button( __( 'Confirm and create successor Version', 'certloom' ), 'primary', 'submit', false );
-			echo ' <a class="button" href="' . esc_url( add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'series_id' => absint( $series['id'] ), 'credential_tab' => 'program' ), admin_url( 'admin.php' ) ) ) . '">' . esc_html__( 'Cancel', 'certloom' ) . '</a></form></div>';
-			echo '</section>'; return;
+			submit_button( $simple ? __( 'Confirm correction', 'certloom' ) : __( 'Confirm and create successor Version', 'certloom' ), 'primary', 'submit', false );
+			echo ' <a class="button" href="' . esc_url( add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'series_id' => absint( $series['id'] ) ), admin_url( 'admin.php' ) ) ) . '">' . esc_html__( 'Cancel', 'certloom' ) . '</a></form></div></section>';
+			return;
 		}
 
 		$current_program_id = absint( $series['program_id'] ?? 0 );
@@ -1063,14 +1149,14 @@ final class DomainAdmin {
 		$programs = $choices->programs( $current_program_id );
 		$batches = $choices->batches( $current_program_id, $current_batch_id );
 		$context_nonce = wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION );
-		echo '<div class="certloom-credential-subpanel"><h4>' . esc_html__( 'Correct Program / Batch', 'certloom' ) . '</h4><form method="post" action="' . esc_url( add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'series_id' => absint( $series['id'] ), 'credential_tab' => 'program' ), admin_url( 'admin.php' ) ) ) . '">';
+		echo '<div class="certloom-credential-subpanel"><h4>' . esc_html( $simple ? __( 'Edit Program / Batch', 'certloom' ) : __( 'Correct Program / Batch', 'certloom' ) ) . '</h4><p>' . esc_html( $simple ? __( 'Use this only when the credential was connected to the wrong Program or Batch. The issued certificate facts above remain locked.', 'certloom' ) : __( 'Review the replacement relationship before committing the immutable correction.', 'certloom' ) ) . '</p><form method="post" action="' . esc_url( add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'series_id' => absint( $series['id'] ) ), admin_url( 'admin.php' ) ) ) . '">';
 		wp_nonce_field( 'certloom_domain_relationship_review_' . absint( $series['id'] ) );
-		echo '<input type="hidden" name="certloom_prepare_relationship" value="1"><div class="certloom-domain-form-grid"><div class="certloom-domain-field"><label><strong>' . esc_html__( 'Target Program', 'certloom' ) . '</strong></label><select name="program_id" required data-certloom-context-lookup="program" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search active Programs…', 'certloom' ) . '"><option value="">' . esc_html__( 'Choose Program…', 'certloom' ) . '</option>';
+		echo '<input type="hidden" name="certloom_prepare_relationship" value="1"><div class="certloom-domain-form-grid"><div class="certloom-domain-field"><label><strong>' . esc_html__( 'Program', 'certloom' ) . '</strong></label><select name="program_id" required data-certloom-context-lookup="program" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search active Programs…', 'certloom' ) . '"><option value="">' . esc_html__( 'Choose Program…', 'certloom' ) . '</option>';
 		if ( ! is_wp_error( $programs ) ) { foreach ( $programs as $item ) { echo '<option value="' . esc_attr( (string) absint( $item['id'] ?? 0 ) ) . '" ' . selected( $current_program_id, absint( $item['id'] ?? 0 ), false ) . '>' . esc_html( ScopedContextChoices::program_label( $item ) ) . '</option>'; } }
-		echo '</select></div><div class="certloom-domain-field"><label><strong>' . esc_html__( 'Target Batch', 'certloom' ) . '</strong></label><select name="batch_id" data-certloom-context-lookup="batch" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search Batches in this Program…', 'certloom' ) . '"><option value="0">' . esc_html__( 'No batch', 'certloom' ) . '</option>';
+		echo '</select></div><div class="certloom-domain-field"><label><strong>' . esc_html__( 'Batch', 'certloom' ) . '</strong></label><select name="batch_id" data-certloom-context-lookup="batch" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search Batches in this Program…', 'certloom' ) . '"><option value="0">' . esc_html__( 'No batch', 'certloom' ) . '</option>';
 		if ( ! is_wp_error( $batches ) ) { foreach ( $batches as $item ) { echo '<option value="' . esc_attr( (string) absint( $item['id'] ?? 0 ) ) . '" data-program-id="' . esc_attr( (string) absint( $item['program_id'] ?? 0 ) ) . '" ' . selected( $current_batch_id, absint( $item['id'] ?? 0 ), false ) . '>' . esc_html( ScopedContextChoices::batch_label( $item ) ) . '</option>'; } }
-		echo '</select><p class="description">' . esc_html__( 'Search is constrained to the selected Program. The domain service validates the Program/Batch relationship again inside the immutable correction transaction.', 'certloom' ) . '</p></div><div class="certloom-domain-field certloom-domain-field-wide"><label><strong>' . esc_html__( 'Public correction reason (optional)', 'certloom' ) . '</strong></label><textarea class="large-text" rows="2" name="public_reason"></textarea></div><div class="certloom-domain-field certloom-domain-field-wide"><label><strong>' . esc_html__( 'Internal note (optional)', 'certloom' ) . '</strong></label><textarea class="large-text" rows="3" name="internal_note"></textarea></div></div>';
-		submit_button( __( 'Review correction', 'certloom' ), 'secondary' );
+		echo '</select><p class="description">' . esc_html__( 'Batch choices follow the selected Program and are validated again before the correction is saved.', 'certloom' ) . '</p></div><div class="certloom-domain-field certloom-domain-field-wide"><label><strong>' . esc_html__( 'Reason for change (optional)', 'certloom' ) . '</strong></label><textarea class="large-text" rows="2" name="public_reason" placeholder="' . esc_attr__( 'Example: Credential was assigned to the wrong cohort.', 'certloom' ) . '"></textarea></div><div class="certloom-domain-field certloom-domain-field-wide"><label><strong>' . esc_html__( 'Internal note (optional)', 'certloom' ) . '</strong></label><textarea class="large-text" rows="3" name="internal_note"></textarea></div></div>';
+		submit_button( $simple ? __( 'Review changes', 'certloom' ) : __( 'Review correction', 'certloom' ), 'secondary' );
 		echo '</form></div></section>';
 	}
 
@@ -1086,7 +1172,7 @@ final class DomainAdmin {
 				__( 'Valid from', 'certloom' ) => esc_html( is_array( $version ) && ! empty( $version['valid_from'] ) ? (string) $version['valid_from'] : __( 'No start restriction', 'certloom' ) ),
 				__( 'Expires', 'certloom' ) => esc_html( is_array( $version ) && ! empty( $version['expires_at'] ) ? (string) $version['expires_at'] : __( 'No expiry', 'certloom' ) ),
 			) );
-			echo '<p class="description">' . esc_html__( 'For suspensions, revocations or other status changes, use Credential actions.', 'certloom' ) . '</p></section>';
+			echo '<p class="description">' . esc_html__( 'Status changes are available directly below and are recorded in History & audit.', 'certloom' ) . '</p></section>';
 			return;
 		}
 		echo '<section class="certloom-credential-panel"><div class="certloom-credential-panel-head"><div><h3>' . esc_html__( 'Four-dimensional credential status', 'certloom' ) . '</h3><p>' . esc_html__( 'The public result is derived at read time from issuance, administrative, temporal, and compliance state rather than trusting one mutable status string.', 'certloom' ) . '</p></div></div>';
@@ -1162,7 +1248,7 @@ final class DomainAdmin {
 	/** @return void */
 	private function credential_actions_panel( array $series, ?array $version, $review, $is_current ) {
 		$simple = AdminUiMode::is_simple();
-		echo '<section class="certloom-credential-panel certloom-credential-actions-panel"><div class="certloom-credential-panel-head"><div><h3>' . esc_html( $simple ? __( 'Credential actions', 'certloom' ) : __( 'Reviewed lifecycle actions', 'certloom' ) ) . '</h3><p>' . esc_html( $simple ? __( 'Deliver this credential or review a status change before applying it.', 'certloom' ) : __( 'Every state-changing action is reviewed first, integrity-bound to this administrator and exact current Version, then revalidated after transactional row locks before commit.', 'certloom' ) ) . '</p></div></div>';
+		echo '<section class="certloom-credential-panel certloom-credential-actions-panel"><div class="certloom-credential-panel-head"><div><h3>' . esc_html( $simple ? __( 'Status & delivery', 'certloom' ) : __( 'Reviewed lifecycle actions', 'certloom' ) ) . '</h3><p>' . esc_html( $simple ? __( 'Send the credential or review a status change. Every saved status change is recorded in History & audit.', 'certloom' ) : __( 'Every state-changing action is reviewed first, integrity-bound to this administrator and exact current Version, then revalidated after transactional row locks before commit.', 'certloom' ) ) . '</p></div></div>';
 		if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) ) { echo '<p>' . esc_html( $simple ? __( 'You can view this credential but do not have permission to change its status.', 'certloom' ) : __( 'You can inspect this credential but do not have permission to change lifecycle state.', 'certloom' ) ) . '</p></section>'; return; }
 		if ( ! $is_current || ! is_array( $version ) ) { echo '<div class="notice notice-info inline"><p>' . esc_html( $simple ? __( 'Earlier credential records are read-only. Return to the current credential before changing its status.', 'certloom' ) : __( 'Historical Versions are read-only. Return to the current Version to review a lifecycle action.', 'certloom' ) ) . '</p></div></section>'; return; }
 		if ( States::ISSUANCE_ISSUED === (string) ( $version['issuance_state'] ?? '' ) ) {
@@ -1474,11 +1560,76 @@ final class DomainAdmin {
 	/** @return void */
 	private function event_history( $series_id ) {
 		$events = ( new EventRepository() )->list_for_series( $series_id, 100 );
-		echo '<hr><h2>' . esc_html__( 'Append-only activity history', 'certloom' ) . '</h2><p class="description">' . esc_html__( 'Lifecycle and domain events are shown newest first. Internal notes remain administrator-only.', 'certloom' ) . '</p>';
 		if ( is_wp_error( $events ) ) { $this->error( $events->get_error_message() ); return; }
+		if ( AdminUiMode::is_simple() ) {
+			echo '<section class="certloom-credential-panel certloom-audit-panel"><div class="certloom-credential-panel-head"><div><h3>' . esc_html__( 'Audit log', 'certloom' ) . '</h3><p>' . esc_html__( 'Every recorded credential change is append-only. The administrator, time, reason and changed values stay visible here.', 'certloom' ) . '</p></div></div><div class="certloom-audit-list">';
+			foreach ( $events as $event ) {
+				$actor = $this->credential_actor_label( absint( $event['actor_user_id'] ?? 0 ) );
+				$when = (string) ( $event['created_at'] ?? '' );
+				if ( '' !== $when && function_exists( 'get_date_from_gmt' ) ) { $when = get_date_from_gmt( $when, trim( (string) get_option( 'date_format', 'F j, Y' ) . ' ' . (string) get_option( 'time_format', 'g:i a' ) ) ); }
+				$changes = $this->credential_event_changes( $event );
+				echo '<article class="certloom-audit-row"><div class="certloom-audit-row-head"><div><strong>' . esc_html( $this->credential_event_label( (string) ( $event['event_type'] ?? '' ) ) ) . '</strong><span>' . esc_html( $when ?: '—' ) . '</span></div><span class="certloom-audit-actor"><span class="dashicons dashicons-admin-users" aria-hidden="true"></span>' . esc_html( $actor ) . '</span></div>';
+				if ( $changes ) { echo '<ul class="certloom-audit-changes">'; foreach ( $changes as $change ) { echo '<li>' . esc_html( $change ) . '</li>'; } echo '</ul>'; }
+				$reason = trim( (string) ( $event['public_reason'] ?: $event['reason_code'] ?: '' ) );
+				if ( '' !== $reason ) { echo '<p class="certloom-audit-reason"><strong>' . esc_html__( 'Reason:', 'certloom' ) . '</strong> ' . esc_html( $reason ) . '</p>'; }
+				if ( ! empty( $event['internal_note'] ) ) { echo '<p class="certloom-audit-note"><span class="dashicons dashicons-lock" aria-hidden="true"></span><strong>' . esc_html__( 'Internal note:', 'certloom' ) . '</strong> ' . esc_html( (string) $event['internal_note'] ) . '</p>'; }
+				echo '</article>';
+			}
+			if ( empty( $events ) ) { echo '<div class="certloom-premium-empty-state certloom-empty-compact"><h3>' . esc_html__( 'No recorded changes yet', 'certloom' ) . '</h3><p>' . esc_html__( 'Issuance and future reviewed changes will appear here.', 'certloom' ) . '</p></div>'; }
+			echo '</div></section>';
+			return;
+		}
+		echo '<hr><h2>' . esc_html__( 'Append-only activity history', 'certloom' ) . '</h2><p class="description">' . esc_html__( 'Lifecycle and domain events are shown newest first. Internal notes remain administrator-only.', 'certloom' ) . '</p>';
 		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Time (UTC)', 'certloom' ) . '</th><th>' . esc_html__( 'Event', 'certloom' ) . '</th><th>' . esc_html__( 'Version', 'certloom' ) . '</th><th>' . esc_html__( 'Reason', 'certloom' ) . '</th><th>' . esc_html__( 'Actor', 'certloom' ) . '</th><th>' . esc_html__( 'Details', 'certloom' ) . '</th></tr></thead><tbody>';
-		foreach ( $events as $event ) { $details = array(); if ( ! empty( $event['old_state'] ) ) { $details[] = __( 'Old state recorded', 'certloom' ); } if ( ! empty( $event['new_state'] ) ) { $details[] = __( 'New state recorded', 'certloom' ); } if ( ! empty( $event['internal_note'] ) ) { $details[] = __( 'Internal note:', 'certloom' ) . ' ' . (string) $event['internal_note']; } if ( ! empty( $event['meta'] ) ) { $details[] = __( 'Metadata recorded', 'certloom' ); } echo '<tr><td>' . esc_html( (string) $event['created_at'] ) . '</td><td><code>' . esc_html( (string) $event['event_type'] ) . '</code></td><td>' . esc_html( $event['version_id'] ? '#' . (string) $event['version_id'] : '—' ) . '</td><td>' . esc_html( (string) ( $event['public_reason'] ?: $event['reason_code'] ?: '—' ) ) . '</td><td>' . esc_html( $event['actor_user_id'] ? '#' . (string) $event['actor_user_id'] : '—' ) . '</td><td>' . esc_html( $details ? implode( ' · ', $details ) : '—' ) . '</td></tr>'; }
+		foreach ( $events as $event ) { $details = array(); if ( ! empty( $event['old_state'] ) ) { $details[] = __( 'Old state recorded', 'certloom' ); } if ( ! empty( $event['new_state'] ) ) { $details[] = __( 'New state recorded', 'certloom' ); } if ( ! empty( $event['internal_note'] ) ) { $details[] = __( 'Internal note:', 'certloom' ) . ' ' . (string) $event['internal_note']; } if ( ! empty( $event['meta'] ) ) { $details[] = __( 'Metadata recorded', 'certloom' ); } echo '<tr><td>' . esc_html( (string) $event['created_at'] ) . '</td><td><code>' . esc_html( (string) $event['event_type'] ) . '</code></td><td>' . esc_html( $event['version_id'] ? '#' . (string) $event['version_id'] : '—' ) . '</td><td>' . esc_html( (string) ( $event['public_reason'] ?: $event['reason_code'] ?: '—' ) ) . '</td><td>' . esc_html( $this->credential_actor_label( absint( $event['actor_user_id'] ?? 0 ) ) ) . '</td><td>' . esc_html( $details ? implode( ' · ', $details ) : '—' ) . '</td></tr>'; }
 		if ( empty( $events ) ) { echo '<tr><td colspan="6">' . esc_html__( 'No domain events recorded.', 'certloom' ) . '</td></tr>'; } echo '</tbody></table>';
+	}
+
+	/** @return string */
+	private function credential_actor_label( $user_id ) {
+		$user_id = absint( $user_id );
+		if ( ! $user_id ) { return __( 'System / automation', 'certloom' ); }
+		$user = function_exists( 'get_userdata' ) ? get_userdata( $user_id ) : null;
+		if ( $user && ! empty( $user->display_name ) ) { return (string) $user->display_name . ' · #' . $user_id; }
+		return sprintf( /* translators: %d: WordPress user ID. */ __( 'WordPress user #%d', 'certloom' ), $user_id );
+	}
+
+	/** @return string */
+	private function credential_event_label( $event_type ) {
+		$labels = array(
+			'credential.issued'                 => __( 'Credential issued', 'certloom' ),
+			'credential.suspended'              => __( 'Credential suspended', 'certloom' ),
+			'credential.revoked'                => __( 'Credential revoked', 'certloom' ),
+			'credential.reinstated'             => __( 'Credential reinstated', 'certloom' ),
+			'credential.voided'                 => __( 'Credential voided', 'certloom' ),
+			'credential.relationship_corrected' => __( 'Program / Batch corrected', 'certloom' ),
+		);
+		return $labels[ $event_type ] ?? ucwords( str_replace( array( 'credential.', '.', '_' ), array( '', ' ', ' ' ), $event_type ) );
+	}
+
+	/** @param array<string,mixed> $event @return array<int,string> */
+	private function credential_event_changes( array $event ) {
+		$old = isset( $event['old_state'] ) && is_array( $event['old_state'] ) ? $event['old_state'] : array();
+		$new = isset( $event['new_state'] ) && is_array( $event['new_state'] ) ? $event['new_state'] : array();
+		$keys = array_unique( array_merge( array_keys( $old ), array_keys( $new ) ) );
+		$labels = array( 'program_id' => __( 'Program', 'certloom' ), 'batch_id' => __( 'Batch', 'certloom' ), 'issuance_state' => __( 'Issuance status', 'certloom' ), 'administrative_state' => __( 'Credential status', 'certloom' ), 'compliance_state' => __( 'Compliance', 'certloom' ) );
+		$out = array();
+		foreach ( $keys as $key ) {
+			if ( 'current_version_id' === $key ) { continue; }
+			$before = $old[ $key ] ?? null; $after = $new[ $key ] ?? null;
+			if ( $before === $after ) { continue; }
+			$label = $labels[ $key ] ?? ucwords( str_replace( '_', ' ', (string) $key ) );
+			$out[] = sprintf( /* translators: 1: changed field label, 2: previous value, 3: new value. */ __( '%1$s: %2$s → %3$s', 'certloom' ), $label, $this->credential_event_value( (string) $key, $before ), $this->credential_event_value( (string) $key, $after ) );
+		}
+		return $out;
+	}
+
+	/** @return string */
+	private function credential_event_value( $key, $value ) {
+		if ( null === $value || '' === (string) $value ) { return __( 'None', 'certloom' ); }
+		if ( 'program_id' === $key ) { $row = ( new ProgramRepository() )->find( absint( $value ) ); return is_array( $row ) ? (string) ( $row['title'] ?? '#' . absint( $value ) ) : '#' . absint( $value ); }
+		if ( 'batch_id' === $key ) { $row = ( new BatchRepository() )->find( absint( $value ) ); return is_array( $row ) ? (string) ( $row['name'] ?? '#' . absint( $value ) ) : '#' . absint( $value ); }
+		return ucwords( str_replace( '_', ' ', (string) $value ) );
 	}
 
 	/** @param RecipientRepository $repo @param array<string,mixed> $recipient @return void */
@@ -1837,7 +1988,7 @@ final class DomainAdmin {
 			echo '<article class="certloom-premium-list-row" role="listitem"><div class="certloom-premium-list-main"><span class="certloom-eyebrow">' . esc_html( (string) ( $item['purpose_label'] ?: __( 'Program', 'certloom' ) ) ) . '</span><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( (string) ( $item['title'] ?? '' ) ) . '</a></strong><span>' . esc_html( '' !== $issuer ? $issuer : __( 'Issuer not added yet', 'certloom' ) ) . '</span></div>';
 			echo '<div class="certloom-premium-list-status"><span class="certloom-state-pill ' . ( ! empty( $item['active'] ) ? 'is-success' : '' ) . '">' . esc_html( ! empty( $item['active'] ) ? _x( 'Active', 'entity status', 'certloom' ) : _x( 'Paused', 'entity status', 'certloom' ) ) . '</span></div>';
 			echo '<div class="certloom-premium-list-meta"><span><small>' . esc_html__( 'Credentials', 'certloom' ) . '</small><strong>' . esc_html( number_format_i18n( absint( $item['credential_count'] ?? 0 ) ) ) . '</strong></span><span><small>' . esc_html__( 'Code', 'certloom' ) . '</small><strong>' . esc_html( (string) ( $item['code'] ?: '—' ) ) . '</strong></span></div>';
-			echo '<div class="certloom-premium-list-actions"><a class="button button-primary" href="' . esc_url( $issue_url ) . '">' . esc_html__( 'Issue', 'certloom' ) . '</a><a class="certloom-premium-row-link" href="' . esc_url( $design_url ) . '">' . esc_html__( 'Design', 'certloom' ) . '</a><a class="certloom-premium-row-link" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Manage', 'certloom' ) . ' <span aria-hidden="true">→</span></a></div></article>';
+			echo '<div class="certloom-premium-list-actions"><a class="button button-primary" href="' . esc_url( $issue_url ) . '">' . esc_html__( 'Issue', 'certloom' ) . '</a><a class="certloom-premium-row-link" href="' . esc_url( $design_url ) . '">' . esc_html__( 'Design', 'certloom' ) . '</a><a class="certloom-premium-row-link" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Edit record', 'certloom' ) . ' <span aria-hidden="true">→</span></a></div></article>';
 		}
 		echo '</div>';
 	}

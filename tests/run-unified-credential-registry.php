@@ -101,7 +101,7 @@ namespace {
 	$times = array_column( $first['items'], '_credential_sort_at' ); $sorted = $times; rsort( $sorted, SORT_NUMERIC );
 	ucr( $times === $sorted, 'Unified Credentials are merged in one descending chronology' );
 	ucr( count( array_unique( array_column( $first['items'], '_credential_source' ) ) ) > 1, 'Current and Historical records can appear together on the same page' );
-	ucr( in_array( 'Historical', array_column( $first['items'], '_credential_source_label' ), true ) && in_array( 'Current', array_column( $first['items'], '_credential_source_label' ), true ), 'Merged rows carry explicit Current/Historical labels' );
+	ucr( in_array( 'Legacy', array_column( $first['items'], '_credential_source_label' ), true ) && in_array( 'Credential', array_column( $first['items'], '_credential_source_label' ), true ), 'Merged rows carry explicit Credential/Legacy provenance labels' );
 
 	$deep = $registry->list_page( '', 12, 10, 'all', 0 );
 	ucr( ! is_wp_error( $deep ) && 10 === count( $deep['items'] ), 'Deep merged pagination is complete beyond the first repository chunk' );
@@ -127,7 +127,7 @@ namespace {
 	$post_cutover = $registry->list_page( '', 1, 175, 'all', 0 );
 	ucr( ! is_wp_error( $post_cutover ) && 140 === (int) $post_cutover['total'], 'After official cutover the duplicate historical storage is omitted and migrated Series become the sole rows' );
 	$migrated = array_values( array_filter( $post_cutover['items'], static function ( $row ) { return 6 === (int) ( $row['series_id'] ?? 0 ); } ) );
-	ucr( 1 === count( $migrated ) && 'current' === $migrated[0]['_credential_source'] && 'Historical' === $migrated[0]['_credential_source_label'], 'Migrated Series stay fully manageable while retaining the Historical customer label after cutover' );
+	ucr( 1 === count( $migrated ) && 'current' === $migrated[0]['_credential_source'] && 'Legacy' === $migrated[0]['_credential_source_label'], 'Migrated Series stay fully manageable while retaining the Legacy provenance label after cutover' );
 	$GLOBALS['certloom_domain_authoritative'] = false;
 
 	$source = file_get_contents( dirname( __DIR__ ) . '/src/Infrastructure/Repository/UnifiedCredentialRegistry.php' );

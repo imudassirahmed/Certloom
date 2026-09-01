@@ -41,7 +41,7 @@ $ecapla_certverify_create_url = $ecapla_certverify_normalized_issuance_ready
 	<?php if ( $ecapla_certverify_normalized_issuance_ready ) : ?>
 		<div class="certloom-callout certloom-callout-info" role="status">
 			<span class="dashicons dashicons-info-outline" aria-hidden="true"></span>
-			<div><strong><?php esc_html_e( 'Historical credentials', 'certloom' ); ?></strong><p><?php esc_html_e( 'These historical records remain available for compatibility and verification. New credentials are issued through the Recipient-aware Issue credential workflow so each credential is linked to one reusable Recipient profile.', 'certloom' ); ?></p></div>
+			<div><strong><?php esc_html_e( 'Legacy credentials', 'certloom' ); ?></strong><p><?php esc_html_e( 'Legacy records remain available for compatibility and verification. New credentials are issued through the Recipient-aware Issue credential workflow so each credential is linked to one reusable Recipient profile.', 'certloom' ); ?></p></div>
 			<a class="button" href="<?php echo esc_url( $ecapla_certverify_create_url ); ?>"><?php esc_html_e( 'Issue credential', 'certloom' ); ?></a>
 		</div>
 	<?php endif; ?>

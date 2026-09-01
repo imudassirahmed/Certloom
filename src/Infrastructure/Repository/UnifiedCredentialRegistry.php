@@ -37,7 +37,7 @@ final class UnifiedCredentialRegistry {
 		foreach ( (array) ( $current['items'] ?? array() ) as $row ) {
 			$migrated_historical = 'certloom_legacy' === (string) ( $row['source_type'] ?? '' );
 			$row['_credential_source']       = 'current';
-			$row['_credential_source_label'] = $migrated_historical ? __( 'Historical', 'certloom' ) : __( 'Current', 'certloom' );
+			$row['_credential_source_label'] = $migrated_historical ? __( 'Legacy', 'certloom' ) : __( 'Credential', 'certloom' );
 			$row['_credential_historical_origin'] = $migrated_historical;
 			$row['_credential_sort_at']      = $this->sort_value( (string) ( $row['series_updated_at'] ?? $row['version_updated_at'] ?? '' ), (string) ( $row['issued_at'] ?? '' ) );
 			$current_items[]                  = $row;
@@ -54,7 +54,7 @@ final class UnifiedCredentialRegistry {
 			$status_code = class_exists( 'Ecapla_CertVerify_Database' ) ? (string) \Ecapla_CertVerify_Database::effective_status( $row ) : sanitize_key( (string) ( $row['status'] ?? '' ) );
 			$legacy_items[] = array(
 				'_credential_source'       => 'historical',
-				'_credential_source_label' => __( 'Historical', 'certloom' ),
+				'_credential_source_label' => __( 'Legacy', 'certloom' ),
 				'_credential_sort_at'      => $this->sort_value( (string) ( $row['created_at'] ?? '' ), (string) ( $row['issue_date'] ?? '' ) ),
 				'legacy_id'                => absint( $row['id'] ?? 0 ),
 				'series_id'                => 0,
@@ -155,7 +155,7 @@ final class UnifiedCredentialRegistry {
 			return $row;
 		}
 		$row['_credential_source']       = 'historical';
-		$row['_credential_source_label'] = __( 'Historical', 'certloom' );
+		$row['_credential_source_label'] = __( 'Legacy', 'certloom' );
 		$row['legacy_status_code']       = $this->normalized_legacy_status( (string) \Ecapla_CertVerify_Database::effective_status( $row ) );
 		return $row;
 	}

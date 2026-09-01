@@ -239,8 +239,9 @@ $certloom_design_url      = admin_url( 'admin.php?page=certloom-templates' );
 					<div class="certloom-dashboard-credential-list">
 					<?php foreach ( $certloom_normalized_recent as $credential ) :
 						$is_historical = 'historical' === (string) ( $credential['_credential_source'] ?? '' );
-						$source_label = (string) ( $credential['_credential_source_label'] ?? ( $is_historical ? __( 'Historical', 'certloom' ) : __( 'Current', 'certloom' ) ) );
-						$source_class = 'Historical' === $source_label ? 'is-historical' : 'is-current';
+						$source_label = (string) ( $credential['_credential_source_label'] ?? ( $is_historical ? __( 'Legacy', 'certloom' ) : __( 'Credential', 'certloom' ) ) );
+						$is_legacy = $is_historical || ! empty( $credential['_credential_historical_origin'] );
+						$source_class = $is_legacy ? 'is-legacy' : 'is-credential';
 						$series_id  = absint( $credential['series_id'] ?? 0 );
 						$public_id  = (string) ( $credential['public_id'] ?? '' );
 						$manage_url = $is_historical
@@ -265,7 +266,7 @@ $certloom_design_url      = admin_url( 'admin.php?page=certloom-templates' );
 							</div>
 							<div class="certloom-dashboard-credential-actions">
 								<?php if ( $view_url ) : ?><a class="button button-small" href="<?php echo esc_url( $view_url ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'View credential', 'certloom' ); ?></a><?php endif; ?>
-								<a class="button button-small button-secondary" href="<?php echo esc_url( $manage_url ); ?>"><?php esc_html_e( 'Manage', 'certloom' ); ?></a>
+								<a class="button button-small button-secondary" href="<?php echo esc_url( $manage_url ); ?>"><?php esc_html_e( 'Edit record', 'certloom' ); ?></a>
 							</div>
 						</article>
 					<?php endforeach; ?>

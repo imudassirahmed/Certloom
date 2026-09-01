@@ -62,7 +62,7 @@ uxops_check( false !== strpos( $admin_css, '.certloom-dashboard-setup-link{posit
 uxops_check( false !== strpos( uxops_src( $root, 'src/Infrastructure/Admin/SetupReadinessReminder.php' ), 'get_user_meta' ) && false !== strpos( uxops_src( $root, 'src/Infrastructure/Admin/SetupReadinessReminder.php' ), '3 * DAY_IN_SECONDS' ), 'Setup reminder snooze is per-administrator and exactly three days' );
 
 // 10. Legacy Registry relationship explanation is truthful and points to normalized management.
-uxops_check( false !== strpos( $editor, 'historical credential issued before the current Program and Batch model' ) && false !== strpos( $editor, "'Open Credential Management', 'certloom'" ), 'Historical credential view explains why Program/Batch assignment is absent and points to normalized Credential Management' );
+uxops_check( false !== strpos( $editor, 'Legacy credential issued before the current Program and Batch model' ) && false !== strpos( $editor, "'Open Credential Management', 'certloom'" ), 'Legacy credential view explains why Program/Batch assignment is absent and points to normalized Credential Management' );
 
 // 11. Public actions share one strong action palette and consistent focus/hover treatment.
 uxops_check( false !== strpos( $public_css, '.certloom-result-action,.certloom-result-action.is-secondary{color:#0f6e56' ) && false !== strpos( $public_css, '.certloom-result-action:hover,.certloom-result-action:focus-visible' ), 'Copy/Profile/Share/Print actions share one strong Certloom action color and hover/focus treatment' );
