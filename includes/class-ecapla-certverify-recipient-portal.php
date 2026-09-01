@@ -81,10 +81,12 @@ final class Ecapla_CertVerify_Recipient_Portal {
 					<p class="certloom-my-credentials__eyebrow"><?php esc_html_e( 'Recipient portal', 'certloom' ); ?></p>
 					<h2 id="certloom-my-credentials-heading" class="certloom-my-credentials__heading"><?php echo esc_html( $heading ); ?></h2>
 					<?php if ( '' !== $recipient_name ) : ?>
-						<p class="certloom-my-credentials__intro"><?php echo esc_html( sprintf( /* translators: %s: Recipient name. */ __( 'Credentials linked to %s.', 'certloom' ), $recipient_name ) ); ?></p>
+						/* translators: linked record name */
+						<p class="certloom-my-credentials__intro"><?php echo esc_html( sprintf( __( 'Credentials linked to %s.', 'certloom' ), $recipient_name ) ); ?></p>
 					<?php endif; ?>
 				</div>
-				<div class="certloom-my-credentials__count" aria-label="<?php echo esc_attr( sprintf( /* translators: %d: credential count. */ _n( '%d credential', '%d credentials', $total, 'certloom' ), $total ) ); ?>">
+				/* translators: number of credentials */
+				<div class="certloom-my-credentials__count" aria-label="<?php echo esc_attr( sprintf( _n( '%d credential', '%d credentials', $total, 'certloom' ), $total ) ); ?>">
 					<strong><?php echo esc_html( number_format_i18n( $total ) ); ?></strong>
 					<span><?php echo esc_html( _n( 'credential', 'credentials', $total, 'certloom' ) ); ?></span>
 				</div>
@@ -273,7 +275,8 @@ final class Ecapla_CertVerify_Recipient_Portal {
 		if ( $page > 1 ) {
 			$links[] = '<a rel="prev" href="' . esc_url( add_query_arg( array( self::STATUS_QUERY => $status, self::SORT_QUERY => $sort, self::PAGE_QUERY => $page - 1 ), $base ) ) . '">' . esc_html__( 'Previous', 'certloom' ) . '</a>';
 		}
-		$links[] = '<span>' . esc_html( sprintf( /* translators: %1$d: current page; %2$d: total pages. */ __( 'Page %1$d of %2$d', 'certloom' ), $page, $pages ) ) . '</span>';
+		/* translators: 1: current page number, 2: total page count */
+		$links[] = '<span>' . esc_html( sprintf( __( 'Page %1$d of %2$d', 'certloom' ), $page, $pages ) ) . '</span>';
 		if ( $page < $pages ) {
 			$links[] = '<a rel="next" href="' . esc_url( add_query_arg( array( self::STATUS_QUERY => $status, self::SORT_QUERY => $sort, self::PAGE_QUERY => $page + 1 ), $base ) ) . '">' . esc_html__( 'Next', 'certloom' ) . '</a>';
 		}

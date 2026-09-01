@@ -26,12 +26,15 @@ class Ecapla_CertVerify_List_Table extends WP_List_Table {
 	}
 
 	/**
-	 * Renders a guided registry empty state instead of WordPress' bare fallback.
+	 * Renders a guided empty state instead of WordPress' bare "No items found."
+	 *
+	 * An empty registry and an over-narrow filter are different problems with
+	 * opposite next actions, so they are distinguished here.
 	 *
 	 * @return void
 	 */
 	public function no_items() {
-		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only filter state.
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only display state.
 		$filtered = ! empty( $_GET['s'] )
 			|| ! empty( $_GET['status'] )
 			|| ! empty( $_GET['attention'] )
@@ -42,26 +45,37 @@ class Ecapla_CertVerify_List_Table extends WP_List_Table {
 			|| ! empty( $_GET['legacy_expired'] );
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
-		echo '<div class="certloom-premium-empty-state">';
 		if ( $filtered ) {
+			echo '<div class="certloom-premium-empty-state">';
 			echo '<span class="dashicons dashicons-filter" aria-hidden="true"></span>';
-			echo '<h3>' . esc_html__( 'No credentials match these filters', 'certloom' ) . '</h3>';
-			echo '<p>' . esc_html__( 'Try a wider date range or status, or clear the filters to see the complete registry.', 'certloom' ) . '</p>';
-			echo '<a class="button button-primary" href="' . esc_url( admin_url( 'admin.php?page=certloom-certificates' ) ) . '">' . esc_html__( 'Clear filters', 'certloom' ) . '</a>';
+			echo '<h3>' . esc_html__( 'No certificates match these filters', 'certloom' ) . '</h3>';
+			echo '<p>' . esc_html__( 'Try a wider date range, a different status, or clear the filters to see the whole registry.', 'certloom' ) . '</p>';
+			echo '<div class="certloom-empty-state-actions"><a class="button button-primary" href="' . esc_url( admin_url( 'admin.php?page=certloom-certificates' ) ) . '">' . esc_html__( 'Clear filters', 'certloom' ) . '</a></div>';
 			echo '</div>';
 			return;
 		}
 
-		$create_url = class_exists( '\\Certloom\\Infrastructure\\Migration\\DomainFeatureGate' )
+		$issuance_ready = class_exists( '\\Certloom\\Infrastructure\\Migration\\DomainFeatureGate' )
 			&& \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready()
+			&& current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS );
+
+		$create_url = $issuance_ready
 			? admin_url( 'admin.php?page=certloom-issuance' )
 			: admin_url( 'admin.php?page=certloom-add' );
+
+		echo '<div class="certloom-premium-empty-state">';
 		echo '<span class="dashicons dashicons-awards" aria-hidden="true"></span>';
-		echo '<h3>' . esc_html__( 'No credentials yet', 'certloom' ) . '</h3>';
-		echo '<p>' . esc_html__( 'Issue your first credential, or import records you already hold elsewhere.', 'certloom' ) . '</p>';
-		echo '<div class="certloom-empty-state-actions"><a class="button button-primary" href="' . esc_url( $create_url ) . '">' . esc_html__( 'Issue first credential', 'certloom' ) . '</a><a class="button" href="' . esc_url( admin_url( 'admin.php?page=certloom-import' ) ) . '">' . esc_html__( 'Import from CSV', 'certloom' ) . '</a></div>';
+		echo '<h3>' . esc_html__( 'No certificates yet', 'certloom' ) . '</h3>';
+		echo '<p>' . esc_html__( 'Issue your first credential, or import records you already hold elsewhere. Both routes end up in this registry.', 'certloom' ) . '</p>';
+		echo '<div class="certloom-empty-state-actions">';
+		echo '<a class="button button-primary" href="' . esc_url( $create_url ) . '">' . esc_html( $issuance_ready ? __( 'Issue first credential', 'certloom' ) : __( 'Create first certificate', 'certloom' ) ) . '</a>';
+		echo '<a class="button" href="' . esc_url( admin_url( 'admin.php?page=certloom-import' ) ) . '">' . esc_html__( 'Import from CSV', 'certloom' ) . '</a>';
+		echo '</div>';
 		echo '</div>';
 	}
+
+	/** @var array<string,int> */
+	private $source_counts = array();
 
 	public function get_columns() {
 		$field_map = Ecapla_CertVerify_Fields::get_field_map();
@@ -74,6 +88,7 @@ class Ecapla_CertVerify_List_Table extends WP_List_Table {
 		return array(
 			'cb'          => '<input type="checkbox" />',
 			'cert_number' => $label( 'cert_number', __( 'Certificate number', 'certloom' ) ),
+			'origin'      => __( 'Source', 'certloom' ),
 			'holder_name' => $label( 'holder_name', __( 'Holder', 'certloom' ) ),
 			'status'      => $label( 'status', __( 'Status', 'certloom' ) ),
 			'issue_date'  => $label( 'issue_date', __( 'Issue date', 'certloom' ) ),
@@ -89,6 +104,30 @@ class Ecapla_CertVerify_List_Table extends WP_List_Table {
 			'issue_date'  => array( 'issue_date', false ),
 			'expiry_date' => array( 'expiry_date', false ),
 		);
+	}
+
+	/**
+	 * Marks which storage generation a row came from.
+	 *
+	 * Both the legacy 1.5 registry and the normalized Series/Version domain
+	 * appear in this one list, so the row has to say which it is. Domain rows
+	 * additionally show their Version number.
+	 *
+	 * @param array<string,mixed> $item
+	 * @return string
+	 */
+	protected function column_origin( $item ) {
+		$is_legacy = ! isset( $item['origin'] ) || \Certloom\Application\Registry\UnifiedCredentialQuery::ORIGIN_LEGACY === (string) $item['origin'];
+		if ( $is_legacy ) {
+			return '<span class="certloom-origin-badge is-legacy">' . esc_html__( 'Legacy', 'certloom' ) . '</span>';
+		}
+		$version = absint( $item['version_number'] ?? 0 );
+		$out = '<span class="certloom-origin-badge is-domain">' . esc_html__( 'Credential', 'certloom' ) . '</span>';
+		if ( $version ) {
+			/* translators: version number */
+			$out .= ' <span class="certloom-origin-version">' . esc_html( sprintf( __( 'v%d', 'certloom' ), $version ) ) . '</span>';
+		}
+		return $out;
 	}
 
 	protected function column_cb( $item ) {
@@ -225,24 +264,57 @@ class Ecapla_CertVerify_List_Table extends WP_List_Table {
 
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Search, filters, sorting, and pagination are read-only list state.
 		$legacy_expired = isset( $_REQUEST['legacy_expired'] ) && '1' === sanitize_text_field( wp_unslash( $_REQUEST['legacy_expired'] ) );
-		$result          = Ecapla_CertVerify_Database::get_list(
-			array(
-				'search'         => isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : '',
-				'search_mode'    => isset( $_REQUEST['search_mode'] ) ? sanitize_key( wp_unslash( $_REQUEST['search_mode'] ) ) : 'prefix',
-				'status'         => isset( $_REQUEST['status'] ) ? sanitize_key( wp_unslash( $_REQUEST['status'] ) ) : '',
-				'legacy_expired' => $legacy_expired,
-				'attention'      => isset( $_REQUEST['attention'] ) ? sanitize_key( wp_unslash( $_REQUEST['attention'] ) ) : '',
-				'issue_from'     => isset( $_REQUEST['issue_from'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['issue_from'] ) ) : '',
-				'issue_to'       => isset( $_REQUEST['issue_to'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['issue_to'] ) ) : '',
-				'expiry_from'    => isset( $_REQUEST['expiry_from'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['expiry_from'] ) ) : '',
-				'expiry_to'      => isset( $_REQUEST['expiry_to'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['expiry_to'] ) ) : '',
-				'orderby'        => isset( $_REQUEST['orderby'] ) ? sanitize_key( wp_unslash( $_REQUEST['orderby'] ) ) : 'created_at',
-				'order'          => isset( $_REQUEST['order'] ) ? sanitize_key( wp_unslash( $_REQUEST['order'] ) ) : 'DESC',
-				'per_page'       => $per_page,
-				'page'           => $current_page,
-			)
+		$query_args = array(
+			'search'         => isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : '',
+			'search_mode'    => isset( $_REQUEST['search_mode'] ) ? sanitize_key( wp_unslash( $_REQUEST['search_mode'] ) ) : 'prefix',
+			'status'         => isset( $_REQUEST['status'] ) ? sanitize_key( wp_unslash( $_REQUEST['status'] ) ) : '',
+			'legacy_expired' => $legacy_expired,
+			'attention'      => isset( $_REQUEST['attention'] ) ? sanitize_key( wp_unslash( $_REQUEST['attention'] ) ) : '',
+			'issue_from'     => isset( $_REQUEST['issue_from'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['issue_from'] ) ) : '',
+			'issue_to'       => isset( $_REQUEST['issue_to'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['issue_to'] ) ) : '',
+			'expiry_from'    => isset( $_REQUEST['expiry_from'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['expiry_from'] ) ) : '',
+			'expiry_to'      => isset( $_REQUEST['expiry_to'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['expiry_to'] ) ) : '',
+			'orderby'        => isset( $_REQUEST['orderby'] ) ? sanitize_key( wp_unslash( $_REQUEST['orderby'] ) ) : 'created_at',
+			'order'          => isset( $_REQUEST['order'] ) ? sanitize_key( wp_unslash( $_REQUEST['order'] ) ) : 'DESC',
+			'per_page'       => $per_page,
+			'page'           => $current_page,
+			'origin'         => isset( $_REQUEST['origin'] ) ? sanitize_key( wp_unslash( $_REQUEST['origin'] ) ) : '',
 		);
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+		/*
+		 * One list across both storage generations.
+		 *
+		 * The unified query does its sorting and paging inside a UNION ALL so
+		 * this stays flat on installs with tens of thousands of records. The
+		 * attention and legacy_expired filters are legacy-only refinements, so
+		 * those fall back to the legacy reader, which already implements them.
+		 */
+		$legacy_only = '' !== (string) $query_args['attention'] || $legacy_expired;
+		if ( $legacy_only ) {
+			$result = Ecapla_CertVerify_Database::get_list( $query_args );
+		} else {
+			$unified = new \Certloom\Application\Registry\UnifiedCredentialQuery();
+			$result  = $unified->list_page(
+				array(
+					'search'      => $query_args['search'],
+					'status'      => $query_args['status'],
+					'origin'      => $query_args['origin'],
+					'issue_from'  => $query_args['issue_from'],
+					'issue_to'    => $query_args['issue_to'],
+					'expiry_from' => $query_args['expiry_from'],
+					'expiry_to'   => $query_args['expiry_to'],
+					'orderby'     => $this->map_orderby( $query_args['orderby'] ),
+					'order'       => $query_args['order'],
+					'per_page'    => $per_page,
+					'page'        => $current_page,
+				)
+			);
+			if ( is_array( $result ) ) {
+				$this->source_counts = isset( $result['sources'] ) ? (array) $result['sources'] : array();
+				$result['items']     = array_map( array( $this, 'to_row' ), $result['items'] );
+			}
+		}
 
 		if ( is_wp_error( $result ) ) {
 			$this->database_error = $result;
@@ -269,8 +341,57 @@ class Ecapla_CertVerify_List_Table extends WP_List_Table {
 
 	private function get_hidden_columns() {
 		$saved = get_user_meta( get_current_user_id(), 'certloom_registry_hidden_columns', true );
-		$allowed = array( 'holder_name', 'status', 'issue_date', 'expiry_date' );
+		$allowed = array( 'origin', 'holder_name', 'status', 'issue_date', 'expiry_date' );
 		return is_array( $saved ) ? array_values( array_intersect( $allowed, array_map( 'sanitize_key', $saved ) ) ) : array();
+	}
+
+	/**
+	 * Translates a legacy column name into the unified projection's name.
+	 *
+	 * @param string $orderby
+	 * @return string
+	 */
+	private function map_orderby( $orderby ) {
+		$map = array(
+			'cert_number' => 'display_number',
+			'holder_name' => 'holder_name',
+			'issue_date'  => 'issue_date',
+			'expiry_date' => 'expiry_date',
+			'created_at'  => 'created_at',
+			'status'      => 'created_at',
+		);
+		return isset( $map[ $orderby ] ) ? $map[ $orderby ] : 'created_at';
+	}
+
+	/**
+	 * Shapes a unified row into the array shape the column renderers expect,
+	 * so the existing registry columns keep working unchanged.
+	 *
+	 * @param array<string,mixed> $row
+	 * @return array<string,mixed>
+	 */
+	private function to_row( array $row ) {
+		return array(
+			'id'             => absint( $row['source_id'] ?? 0 ),
+			'origin'         => (string) ( $row['origin'] ?? '' ),
+			'public_id'      => (string) ( $row['public_id'] ?? '' ),
+			'version_number' => absint( $row['version_number'] ?? 0 ),
+			'cert_number'    => (string) ( $row['display_number'] ?? '' ),
+			'holder_name'    => (string) ( $row['holder_name'] ?? '' ),
+			'status'         => (string) ( $row['status_key'] ?? 'valid' ),
+			'status_source'  => (string) ( $row['status_source'] ?? '' ),
+			'issue_date'     => (string) ( $row['issue_date'] ?? '' ),
+			'expiry_date'    => (string) ( $row['expiry_date'] ?? '' ),
+			'created_at'     => (string) ( $row['created_at'] ?? '' ),
+			'custom_fields'  => array(),
+		);
+	}
+
+	/**
+	 * @return array<string,int>
+	 */
+	public function get_source_counts() {
+		return $this->source_counts;
 	}
 
 	/**

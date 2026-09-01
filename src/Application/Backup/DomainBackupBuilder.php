@@ -34,7 +34,7 @@ final class DomainBackupBuilder implements DomainBackupBuilderInterface {
 			return new \WP_Error(
 				'certloom_domain_backup_snapshot_cleanup_failed',
 				sprintf(
-					/* translators: %s: lock release error. */ __( 'Certloom could not release its backup snapshot lock safely (%s). Credential writes remain paused until maintenance cleanup succeeds.', 'certloom' ),
+					__( 'Certloom could not release its backup snapshot lock safely (%s). Credential writes remain paused until maintenance cleanup succeeds.', 'certloom' ),
 					$released->get_error_message()
 				)
 			);
@@ -185,7 +185,7 @@ final class DomainBackupBuilder implements DomainBackupBuilderInterface {
 			return new \WP_Error(
 				'certloom_domain_backup_cleanup_failed',
 				sprintf(
-					/* translators: %1$s: message; %2$s: cleanup message. */ __( '%1$s Certloom also could not remove the invalid private backup file safely (%2$s).', 'certloom' ),
+					__( '%1$s Certloom also could not remove the invalid private backup file safely (%2$s).', 'certloom' ),
 					(string) $message,
 					$cleanup_message
 				),

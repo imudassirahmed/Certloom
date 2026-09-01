@@ -1446,6 +1446,18 @@
 	gap:12px;
 	margin-bottom:18px;
 }
+/*
+ * Status badge colours.
+ *
+ * The default is deliberately NEUTRAL, not green. StatusService can return
+ * nine verdicts and this stylesheet previously covered only the legacy four
+ * (valid / expired / suspended / withdrawn), so revoked, voided, not_issued,
+ * pending_review, not_yet_valid and suspended_noncompliant all inherited the
+ * green "valid" badge. On a verification page that is the worst possible
+ * failure mode.
+ *
+ * Green is now opt-in. Any verdict added in future fails safe to neutral.
+ */
 .cv-status-mark,
 .cvx-status-mark,
 .cvp-status-mark{
@@ -1459,15 +1471,23 @@
 	color:#57564f;
 	flex:0 0 34px;
 }
-/* Fail-safe status contract: neutral by default; only explicit valid earns green. */
-.cv-status-valid .cv-status-mark,.cvx-status-valid .cvx-status-mark,.cvp-status-valid .cvp-status-mark{background:#e3f5ec;color:#0f6e42;}
+
+/* Valid — the only verdict that earns green. */
+.cv-status-valid .cv-status-mark,.cvx-status-valid .cvx-status-mark,.cvp-status-valid .cvp-status-mark{background:var(--cv-valid-bg,#e3f5ec);color:var(--cv-valid-text,#0f6e42);}
+
+/* Held or awaiting confirmation. */
 .cv-status-suspended .cv-status-mark,.cvx-status-suspended .cvx-status-mark,.cvp-status-suspended .cvp-status-mark,
+.cv-status-suspended_noncompliant .cv-status-mark,.cvx-status-suspended_noncompliant .cvx-status-mark,.cvp-status-suspended_noncompliant .cvp-status-mark,
 .cv-status-pending_review .cv-status-mark,.cvx-status-pending_review .cvx-status-mark,.cvp-status-pending_review .cvp-status-mark,
-.cv-status-suspended_noncompliant .cv-status-mark,.cvx-status-suspended_noncompliant .cvx-status-mark,.cvp-status-suspended_noncompliant .cvp-status-mark{background:#fdf3d8;color:#8a5c00;}
+.cv-status-noncompliant .cv-status-mark,.cvx-status-noncompliant .cvx-status-mark,.cvp-status-noncompliant .cvp-status-mark{background:#fdf3d8;color:#8a5c00;}
+
+/* Deliberately ended. Must never read as valid. */
 .cv-status-withdrawn .cv-status-mark,.cvx-status-withdrawn .cvx-status-mark,.cvp-status-withdrawn .cvp-status-mark,
 .cv-status-revoked .cv-status-mark,.cvx-status-revoked .cvx-status-mark,.cvp-status-revoked .cvp-status-mark,
 .cv-status-voided .cv-status-mark,.cvx-status-voided .cvx-status-mark,.cvp-status-voided .cvp-status-mark,
 .cv-status-not_issued .cv-status-mark,.cvx-status-not_issued .cvx-status-mark,.cvp-status-not_issued .cvp-status-mark{background:#fbe4e4;color:#9a2b2b;}
+
+/* Time-based, not a failure. */
 .cv-status-expired .cv-status-mark,.cvx-status-expired .cvx-status-mark,.cvp-status-expired .cvp-status-mark,
 .cv-status-not_yet_valid .cv-status-mark,.cvx-status-not_yet_valid .cvx-status-mark,.cvp-status-not_yet_valid .cvp-status-mark,
 .cv-status-unknown .cv-status-mark,.cvx-status-unknown .cvx-status-mark,.cvp-status-unknown .cvp-status-mark{background:#eceae5;color:#57564f;}
@@ -1961,7 +1981,109 @@
 .cvp-certificate-preview .certloom-certificate-preview-stage>.certloom-template-preview-page{margin:0;will-change:transform}
 @media(prefers-reduced-motion:reduce){.cvp-certificate-preview .certloom-certificate-preview-stage>.certloom-template-preview-page{will-change:auto}}
 
-.certloom-my-credential-card__status--voided,.certloom-my-credential-card__status--not_issued{color:#991b1b;background:#fef2f2}
+/* -------------------------------------------------------------------------
+ * Certloom 1.6.98 status contract repairs.
+ *
+ * StatusService can return not_issued and voided. The recipient portal card
+ * had no rule for either, so both fell back to the base card styling with no
+ * indication that the credential is not usable.
+ * ---------------------------------------------------------------------- */
+.certloom-my-credential-card__status--revoked,
+.certloom-my-credential-card__status--voided,
+.certloom-my-credential-card__status--not_issued{
+	color:#9a2b2b;
+	background:#fbe4e4;
+}
 
-/* UX-SYSTEM-01 — visible verification labels with optional proof disclosure. */
-.certloom-verification-field{display:grid;gap:6px;flex:1 1 260px;min-width:0}.certloom-verification-label{display:block;font-size:13px;font-weight:700;line-height:1.3;color:inherit}.certloom-verification-code-disclosure{flex:1 1 100%;min-width:0;margin:0}.certloom-verification-code-disclosure summary{cursor:pointer;width:max-content;max-width:100%;font-size:13px;font-weight:650;text-decoration:underline;text-underline-offset:2px}.certloom-verification-code-disclosure[open]{display:grid;gap:6px;padding-top:4px}.certloom-verification-code-disclosure .certloom-secondary-code-input{width:100%;max-width:420px}.cvx-input-field{flex-basis:100%}
+/* Public widget hooks emitted with no rule. */
+.cv-btn-text,.cvx-btn-text{display:inline-block;}
+.cv-noscript,.cvx-noscript{margin:10px 0 0;color:#5f6368;font-size:13px;}
+
+/* Recipient portal action rows. */
+.certloom-my-credentials__share,
+.certloom-my-credentials__table-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+
+/* Sample credential profile shown in the admin preview. */
+.certloom-credential-profile--sample{position:relative;}
+
+/* -------------------------------------------------------------------------
+ * Verification form: visible labels and optional-code disclosure.
+ *
+ * Both search forms are flex rows. Labels and the <details> take a full row
+ * via flex-basis:100%, so the input and button keep their existing sizing and
+ * none of the Elementor !important overrides need changing.
+ * ---------------------------------------------------------------------- */
+.cv-field-label,
+.cvx-field-label{
+	flex:0 0 100%;
+	width:100%;
+	margin:0 0 -4px;
+	font-size:13px;
+	font-weight:650;
+	line-height:1.4;
+}
+.ecapla-certverify-widget.cv-widget .cv-field-label{color:var(--cv-heading,#1c1f26);}
+.ecapla-certverify-template.cvx-widget .cvx-field-label{color:var(--cvx-heading,#1c1f26);}
+
+.certloom-optional-code{
+	flex:0 0 100%;
+	width:100%;
+	min-width:0;
+	margin:2px 0 0;
+}
+.certloom-optional-code > summary{
+	display:inline-flex;
+	align-items:center;
+	gap:6px;
+	min-height:32px;
+	padding:0;
+	color:inherit;
+	opacity:.82;
+	font-size:13px;
+	font-weight:600;
+	cursor:pointer;
+	list-style:none;
+}
+.certloom-optional-code > summary::-webkit-details-marker{display:none;}
+.certloom-optional-code > summary::before{
+	content:"+";
+	display:inline-grid;
+	place-items:center;
+	width:18px;
+	height:18px;
+	border:1px solid currentColor;
+	border-radius:4px;
+	font-size:13px;
+	line-height:1;
+}
+.certloom-optional-code[open] > summary::before{content:"\2212";}
+.certloom-optional-code > summary:hover{opacity:1;}
+.certloom-optional-code > summary:focus-visible{
+	outline:2px solid var(--cv-accent,var(--cvx-accent,#0f6e56));
+	outline-offset:2px;
+	border-radius:4px;
+}
+.certloom-optional-code > .cv-field-label,
+.certloom-optional-code > .cvx-field-label{margin-top:10px;}
+.certloom-optional-code .cv-search-input,
+.certloom-optional-code .cvx-input-wrap{
+	width:100%!important;
+	max-width:100%!important;
+	margin-top:6px;
+}
+@media (forced-colors: active){
+	.certloom-optional-code > summary::before{border-color:CanvasText;}
+}
+
+/* Design-specific tuning for the optional-code disclosure. The legacy widget
+   stacks at 12px gaps; the template designs at 10px. */
+.ecapla-certverify-widget.cv-widget .cv-optional-code > summary{color:var(--cv-muted,#5f6368);}
+.ecapla-certverify-widget.cv-widget .cv-optional-code[open]{margin-bottom:2px;}
+.ecapla-certverify-template.cvx-widget .cvx-optional-code > summary{color:var(--cvx-muted,#5f6368);}
+.ecapla-certverify-template.cvx-widget .cvx-optional-code[open]{margin-bottom:0;}
+
+/* Composite chips and icon buttons on the public side. */
+.cv-badge,.cvx-badge,.cvp-badge{gap:6px;}
+.certloom-my-credential-card{gap:14px;}
+.certloom-my-credential-card__status,
+.certloom-my-credential-card__expiring{gap:6px;}

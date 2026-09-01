@@ -205,7 +205,8 @@ final class StagingRestoreRehearsal {
 			$state['phase'] = 'backup';
 		} else {
 			if ( ! hash_equals( (string) $state['baseline_hash'], $hash ) || absint( $state['baseline_records'] ) !== $records || ! hash_equals( (string) $state['baseline_config_hash'], $config_hash ) || (array) $state['baseline_counts'] !== $counts ) {
-				return new \WP_Error( 'certloom_staging_restore_parity_failed', sprintf( /* translators: %s: field key. */ __( 'The %s restore rehearsal did not reproduce the complete baseline credential graph and configuration.', 'certloom' ), sanitize_key( $key ) ) );
+				/* translators: backup file name */
+				return new \WP_Error( 'certloom_staging_restore_parity_failed', sprintf( __( 'The %s restore rehearsal did not reproduce the complete baseline credential graph and configuration.', 'certloom' ), sanitize_key( $key ) ) );
 			}
 			if ( 'replace' === $key ) { $state['replace_verified'] = true; $state['phase'] = 'merge_stage'; }
 			elseif ( 'merge' === $key ) { $state['merge_verified'] = true; $state['phase'] = 'rollback_stage'; }

@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template variables are local to the rendering method that includes this file.
 // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Templates only read display state; all mutations are handled by nonce-protected controllers.
 ?>
-<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell">
+<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-restore-flow">
 	<?php include ECAPLA_CERTVERIFY_PATH . 'admin/views/partials/brand-bar.php'; ?>
 	<h1><?php esc_html_e( 'Backup & Restore', 'certloom' ); ?></h1>
 	<div class="certloom-product-notice-rail" aria-live="polite">

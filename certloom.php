@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: Certloom – Certificate Verification
+ * Plugin Name: Certloom (Claude v1 — Ungated QA)
  * Description: Self-hosted credential issuance, verification and lifecycle management for WordPress.
- * Version: 1.6.98
+ * Version: 1.6.98-claude-v1-qa
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.98' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.98-claude-v1-qa' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
@@ -197,8 +197,18 @@ function ecapla_certverify_activate( $network_wide = false ) {
 	if ( is_wp_error( $result ) ) {
 		ecapla_certverify_fail_activation( array( get_current_blog_id() => $result ) );
 	}
-	// One-shot first-run continuation. Never used for network-wide activation.
-	set_transient( 'certloom_activation_redirect_' . get_current_user_id(), 1, 60 );
+
+	/*
+	 * One-shot flag so the next admin page load can open the setup wizard.
+	 * Setup is registered with a null parent and is therefore invisible in the
+	 * menu, so without this a first-time administrator has no obvious route
+	 * into onboarding. The consumer refuses to redirect on bulk activation.
+	 */
+	$activating_user = get_current_user_id();
+	if ( $activating_user ) {
+		set_transient( 'certloom_activation_redirect_' . $activating_user, 1, MINUTE_IN_SECONDS );
+	}
+
 	return true;
 }
 

@@ -44,7 +44,8 @@ final class DomainImportStageRepository implements DomainImportStageInterface {
 		if ( is_array( $by_number ) ) {
 			return new \WP_Error(
 				'certloom_import_stage_duplicate_number',
-				sprintf( /* translators: %1$s: credential number; %2$d: source row number; %3$d: row number. */ __( 'Certificate number %1$s appears more than once in this import (rows %2$d and %3$d).', 'certloom' ), $display_number, absint( $by_number['source_row_number'] ), $row_number )
+				/* translators: 1: certificate number, 2: first row number, 3: duplicate row number */
+				sprintf( __( 'Certificate number %1$s appears more than once in this import (rows %2$d and %3$d).', 'certloom' ), $display_number, absint( $by_number['source_row_number'] ), $row_number )
 			);
 		}
 

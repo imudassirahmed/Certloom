@@ -542,7 +542,8 @@ final class ManualIssuanceService {
 			else { $raw = $submitted[ $key ] ?? ''; $allowed_custom[ $key ] = true; }
 			$clean = \Ecapla_CertVerify_Validator::custom_field_value( $raw, $catalog[ $key ] );
 			if ( is_wp_error( $clean ) ) { return $clean; }
-			if ( ! empty( $row['required'] ) && '' === trim( (string) $clean ) ) { return new \WP_Error( 'certloom_manual_issue_required_field_missing', sprintf( /* translators: %s: label. */ __( 'Complete required credential field “%s” before issuing.', 'certloom' ), (string) ( $row['label'] ?? $key ) ) ); }
+			/* translators: credential field label */
+			if ( ! empty( $row['required'] ) && '' === trim( (string) $clean ) ) { return new \WP_Error( 'certloom_manual_issue_required_field_missing', sprintf( __( 'Complete required credential field “%s” before issuing.', 'certloom' ), (string) ( $row['label'] ?? $key ) ) ); }
 			$values[ $key ] = (string) $clean;
 		}
 		foreach ( $submitted as $raw_key => $unused ) { $key = sanitize_key( (string) $raw_key ); if ( '' !== $key && ! isset( $allowed_custom[ $key ] ) ) { return new \WP_Error( 'certloom_manual_issue_unassigned_field', __( 'A credential-specific field was submitted that is not assigned to the selected Program/Batch field contract.', 'certloom' ) ); } }

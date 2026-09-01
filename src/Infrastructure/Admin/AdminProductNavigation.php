@@ -27,11 +27,11 @@ final class AdminProductNavigation {
 
 	/** @var array<string,string> */
 	private const PRIMARY_ADVANCED = array(
-		'certloom'                 => 'Home',
+		'certloom'                 => 'Dashboard',
 		'certloom-certificates'    => 'Credentials',
-		'certloom-domain-programs' => 'Programs',
+		'certloom-domain-programs' => 'People & Programs',
 		'certloom-templates'       => 'Design',
-		'certloom-analytics'       => 'Automations',
+		'certloom-analytics'       => 'Insights & Integrations',
 		'certloom-settings'        => 'Settings',
 	);
 
@@ -127,18 +127,18 @@ final class AdminProductNavigation {
 		$simple = AdminUiMode::is_simple();
 		switch ( $slug ) {
 			case 'certloom':
-				return __( 'Home', 'certloom' );
+				return $simple ? __( 'Home', 'certloom' ) : __( 'Dashboard', 'certloom' );
 			case 'certloom-certificates':
 			case 'certloom-domain-credentials':
 				return __( 'Credentials', 'certloom' );
 			case 'certloom-domain-programs':
-				return __( 'Programs', 'certloom' );
+				return $simple ? __( 'Programs', 'certloom' ) : __( 'People & Programs', 'certloom' );
 			case 'certloom-templates':
 				return __( 'Design', 'certloom' );
 			case 'certloom-automations':
 				return __( 'Automations', 'certloom' );
 			case 'certloom-analytics':
-				return __( 'Automations', 'certloom' );
+				return __( 'Insights & Integrations', 'certloom' );
 			case 'certloom-settings':
 				return __( 'Settings', 'certloom' );
 		}
@@ -184,6 +184,24 @@ final class AdminProductNavigation {
 			'insights'    => array( 'certloom-analytics', 'certloom-integrations', 'certloom-automations' ),
 			'settings'    => array( 'certloom-settings', 'certloom-import', 'certloom-setup', 'certloom-verification-sample', 'certloom-fields', 'certloom-domain-data-tools' ),
 		);
+
+		/*
+		 * A page slug must belong to exactly one section. When a slug appeared
+		 * in two groups the first match silently won, so following a link from
+		 * the losing section swapped the sub-navigation out from under the
+		 * administrator mid-task.
+		 */
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			$all_pages = array_merge( ...array_values( $groups ) );
+			if ( count( $all_pages ) !== count( array_unique( $all_pages ) ) ) {
+				_doing_it_wrong(
+					__METHOD__,
+					'A Certloom page slug appears in more than one navigation section.',
+					'1.6.98'
+				);
+			}
+		}
+
 		foreach ( $groups as $section => $pages ) {
 			if ( in_array( $page, $pages, true ) ) {
 				return $section;
@@ -242,7 +260,7 @@ final class AdminProductNavigation {
 
 			case 'design':
 				return array(
-					$this->link( __( 'Designs', 'certloom' ), 'certloom-templates', array( 'certloom-templates' ), ECAPLA_CERTVERIFY_CAP ),
+					$this->link( $simple ? __( 'Designs', 'certloom' ) : __( 'Templates', 'certloom' ), 'certloom-templates', array( 'certloom-templates' ), ECAPLA_CERTVERIFY_CAP ),
 					$this->link( __( 'Verification page', 'certloom' ), 'certloom-frontend', array( 'certloom-frontend' ), ECAPLA_CERTVERIFY_CAP ),
 				);
 
@@ -254,6 +272,11 @@ final class AdminProductNavigation {
 						$this->link( __( 'Analytics', 'certloom' ), 'certloom-analytics', array( 'certloom-analytics' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS ),
 					);
 				}
+				/*
+				 * Delivery lives in the Credentials section, where the
+				 * credential lifecycle belongs. It is reachable from the
+				 * Credentials sub-navigation in both modes.
+				 */
 				return array(
 					$this->link( __( 'Analytics', 'certloom' ), 'certloom-analytics', array( 'certloom-analytics' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS ),
 					$this->link( __( 'Integrations', 'certloom' ), 'certloom-integrations', array( 'certloom-integrations' ), ECAPLA_CERTVERIFY_CAP ),

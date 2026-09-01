@@ -74,7 +74,8 @@ $ecapla_certverify_create_url = $ecapla_certverify_normalized_issuance_ready
 	<?php if ( isset( $_GET['ecapla_certverify_bulk_changed'] ) ) : ?>
 		<?php $ecapla_certverify_bulk_changed = absint( $_GET['ecapla_certverify_bulk_changed'] ); $ecapla_certverify_bulk_failed = isset( $_GET['ecapla_certverify_bulk_failed'] ) ? absint( $_GET['ecapla_certverify_bulk_failed'] ) : 0; $ecapla_certverify_bulk_skipped = isset( $_GET['ecapla_certverify_bulk_skipped'] ) ? absint( $_GET['ecapla_certverify_bulk_skipped'] ) : 0; ?>
 		<div class="notice <?php echo $ecapla_certverify_bulk_failed ? 'notice-warning' : 'notice-success'; ?> is-dismissible"><p>
-			<?php echo esc_html( sprintf( /* translators: %1$d: bulk changed; %2$d: bulk skipped; %3$d: bulk failed. */ __( 'Bulk change complete: %1$d changed, %2$d skipped during review, %3$d failed during commit.', 'certloom' ), $ecapla_certverify_bulk_changed, $ecapla_certverify_bulk_skipped, $ecapla_certverify_bulk_failed ) ); ?>
+			/* translators: 1: changed count, 2: skipped count, 3: failed count */
+			<?php echo esc_html( sprintf( __( 'Bulk change complete: %1$d changed, %2$d skipped during review, %3$d failed during commit.', 'certloom' ), $ecapla_certverify_bulk_changed, $ecapla_certverify_bulk_skipped, $ecapla_certverify_bulk_failed ) ); ?>
 		</p></div>
 	<?php endif; ?>
 	<?php if ( isset( $_GET['ecapla_certverify_error'] ) ) : ?>
@@ -185,11 +186,15 @@ $ecapla_certverify_create_url = $ecapla_certverify_normalized_issuance_ready
 			<div class="certloom-active-filters" role="status" aria-live="polite">
 				<span class="dashicons dashicons-filter" aria-hidden="true"></span>
 				<strong><?php esc_html_e( 'Filtered registry', 'certloom' ); ?></strong>
-				<?php if ( '' !== $ecapla_certverify_search ) : ?><span><?php echo esc_html( sprintf( /* translators: %s: search. */ __( 'Search: %s', 'certloom' ), $ecapla_certverify_search ) ); ?></span><?php endif; ?>
-				<?php if ( '' !== $ecapla_certverify_current_status ) : ?><span><?php echo esc_html( sprintf( /* translators: %s: status label. */ __( 'Status: %s', 'certloom' ), $ecapla_certverify_status_label ) ); ?></span><?php endif; ?>
+				/* translators: search term */
+				<?php if ( '' !== $ecapla_certverify_search ) : ?><span><?php echo esc_html( sprintf( __( 'Search: %s', 'certloom' ), $ecapla_certverify_search ) ); ?></span><?php endif; ?>
+				/* translators: status label */
+				<?php if ( '' !== $ecapla_certverify_current_status ) : ?><span><?php echo esc_html( sprintf( __( 'Status: %s', 'certloom' ), $ecapla_certverify_status_label ) ); ?></span><?php endif; ?>
 				<?php if ( 'expiring_soon' === $ecapla_certverify_attention ) : ?><span><?php esc_html_e( 'Expiring in 30 days', 'certloom' ); ?></span><?php endif; ?>
-				<?php if ( '' !== $ecapla_certverify_issue_from || '' !== $ecapla_certverify_issue_to ) : ?><span><?php echo esc_html( sprintf( /* translators: %1$s: issued-from date; %2$s: issued-to date. */ __( 'Issued: %1$s → %2$s', 'certloom' ), $ecapla_certverify_issue_from ?: '…', $ecapla_certverify_issue_to ?: '…' ) ); ?></span><?php endif; ?>
-				<?php if ( '' !== $ecapla_certverify_expiry_from || '' !== $ecapla_certverify_expiry_to ) : ?><span><?php echo esc_html( sprintf( /* translators: %1$s: expiry-from date; %2$s: expiry-to date. */ __( 'Expires: %1$s → %2$s', 'certloom' ), $ecapla_certverify_expiry_from ?: '…', $ecapla_certverify_expiry_to ?: '…' ) ); ?></span><?php endif; ?>
+				/* translators: 1: previous issue date, 2: new issue date */
+				<?php if ( '' !== $ecapla_certverify_issue_from || '' !== $ecapla_certverify_issue_to ) : ?><span><?php echo esc_html( sprintf( __( 'Issued: %1$s → %2$s', 'certloom' ), $ecapla_certverify_issue_from ?: '…', $ecapla_certverify_issue_to ?: '…' ) ); ?></span><?php endif; ?>
+				/* translators: 1: previous expiry date, 2: new expiry date */
+				<?php if ( '' !== $ecapla_certverify_expiry_from || '' !== $ecapla_certverify_expiry_to ) : ?><span><?php echo esc_html( sprintf( __( 'Expires: %1$s → %2$s', 'certloom' ), $ecapla_certverify_expiry_from ?: '…', $ecapla_certverify_expiry_to ?: '…' ) ); ?></span><?php endif; ?>
 			</div>
 		<?php endif; ?>
 

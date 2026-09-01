@@ -998,12 +998,6 @@
 		function isFormControl( target ) { return !! target && ( /^(INPUT|SELECT|TEXTAREA)$/.test( target.tagName ) || ( 'BUTTON' === target.tagName && ! target.hasAttribute( 'data-certloom-designer-element' ) ) ); }
 		function keyboard( event ) {
 			var modifier = event.ctrlKey || event.metaKey; var inside = root.contains( event.target );
-			if ( modifier && ! event.altKey && 's' === event.key.toLowerCase() ) {
-				if ( ! inside || isFormControl( event.target ) && ! root.contains( event.target ) ) { return; }
-				event.preventDefault();
-				for ( var saveIndex = 0; saveIndex < saveButtons.length; saveIndex++ ) { if ( ! saveButtons[ saveIndex ].disabled ) { saveButtons[ saveIndex ].click(); break; } }
-				return;
-			}
 			if ( modifier && ! event.altKey && ( 'z' === event.key.toLowerCase() || 'y' === event.key.toLowerCase() ) ) {
 				if ( isFormControl( event.target ) || ( ! inside && event.target !== document.body ) ) { return; }
 				if ( 'y' === event.key.toLowerCase() || event.shiftKey ) { redo(); } else { undo(); }
@@ -1012,7 +1006,6 @@
 			if ( ! inside || isFormControl( event.target ) ) { return; }
 			if ( 'Escape' === event.key && selectionIds().length > 1 ) { selectOnly( selectedId ); render(); announce( t( 'multiSelectionCleared', 'Multi-selection cleared.' ) ); event.preventDefault(); return; }
 			if ( 'Enter' === event.key && ! modifier && selected() && 'text' === selected().type ) { if ( startDirectTextEdit( selected().id ) ) { event.preventDefault(); } return; }
-			if ( ( 'Delete' === event.key || 'Backspace' === event.key ) && selectionIds().length && ! selectionHasLocked() ) { event.preventDefault(); removeSelected(); return; }
 			if ( nudgeSelected( event ) ) { event.preventDefault(); }
 		}
 		function applyQuickStyleValue( key, value ) {

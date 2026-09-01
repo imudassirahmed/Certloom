@@ -296,21 +296,26 @@ final class ManualIssuanceAdmin {
 		$locale_direction = strtoupper( (string) ( $locale['direction'] ?? 'ltr' ) );
 		$locale_meta = $locale_direction;
 		if ( '' !== $locale_configured && $locale_configured !== $locale_effective ) {
-			$locale_meta .= ' · ' . sprintf( /* translators: %s: locale configured. */ __( 'configured %s', 'certloom' ), $locale_configured );
+			/* translators: configured value */
+			$locale_meta .= ' · ' . sprintf( __( 'configured %s', 'certloom' ), $locale_configured );
 		}
 		$this->review_fact( __( 'Credential language', 'certloom' ), '' !== $locale_effective ? $locale_effective : __( 'Site default', 'certloom' ), $locale_meta );
-		$template_meta = sprintf( /* translators: %1$d: revision number; %2$d: ID. */ __( 'Published revision #%1$d · ID %2$d', 'certloom' ), absint( $revision['revision_number'] ?? 0 ), absint( $revision['id'] ?? 0 ) );
+		/* translators: 1: revision number, 2: template ID */
+		$template_meta = sprintf( __( 'Published revision #%1$d · ID %2$d', 'certloom' ), absint( $revision['revision_number'] ?? 0 ), absint( $revision['id'] ?? 0 ) );
 		$resolution_scope = (string) ( $review['template_resolution'] ?? 'explicit' );
 		$variant = isset( $review['template_locale_variant'] ) && is_array( $review['template_locale_variant'] ) ? $review['template_locale_variant'] : array();
 		if ( ! empty( $variant['matched_locale'] ) ) {
-			$template_meta .= ' · ' . sprintf( /* translators: %s: matched locale. */ __( 'language variant %s', 'certloom' ), (string) $variant['matched_locale'] );
+			/* translators: language code */
+			$template_meta .= ' · ' . sprintf( __( 'language variant %s', 'certloom' ), (string) $variant['matched_locale'] );
 		} elseif ( 'explicit' === $resolution_scope ) {
 			$template_meta .= ' · ' . __( 'explicit reviewed override', 'certloom' );
 		} else {
-			$template_meta .= ' · ' . sprintf( /* translators: %s: resolution scope. */ __( 'Program design via %s', 'certloom' ), $resolution_scope );
+			/* translators: program name */
+			$template_meta .= ' · ' . sprintf( __( 'Program design via %s', 'certloom' ), $resolution_scope );
 		}
 		$this->review_fact( __( 'Template', 'certloom' ), (string) ( $template['name'] ?? '' ), $template_meta );
-		$this->review_fact( __( 'Effective date', 'certloom' ), (string) $review['valid_from'], null === $review['expires_at'] ? __( 'Permanent / no expiry', 'certloom' ) : sprintf( /* translators: %s: expires at. */ __( 'Expires %s', 'certloom' ), (string) $review['expires_at'] ) );
+		/* translators: expiry date */
+		$this->review_fact( __( 'Effective date', 'certloom' ), (string) $review['valid_from'], null === $review['expires_at'] ? __( 'Permanent / no expiry', 'certloom' ) : sprintf( __( 'Expires %s', 'certloom' ), (string) $review['expires_at'] ) );
 		$number = is_array( $review['numbering'] ?? null ) ? (string) ( $review['numbering']['certificate_number'] ?? '' ) : (string) ( $request['display_number'] ?? '' );
 		$this->review_fact( __( 'Certificate number', 'certloom' ), '' !== $number ? $number : __( 'Allocated on Issue', 'certloom' ), \Ecapla_CertVerify_Numbering::is_enabled() ? __( 'Number preview; not reserved', 'certloom' ) : __( 'Manual number', 'certloom' ) );
 		echo '</div>';
@@ -327,7 +332,8 @@ final class ManualIssuanceAdmin {
 		$receipt=(new ManualIssuanceService())->receipt($version_id); if(is_wp_error($receipt)){echo '<div class="notice notice-error inline"><p>'.esc_html($receipt->get_error_message()).'</p></div>';return;}
 		$public_ready=(new PublicVerificationGate())->is_ready();
 		echo '<section class="certloom-manual-card certloom-manual-receipt"><div class="certloom-manual-card-head"><div><span class="certloom-eyebrow">'.esc_html__( 'Step 4', 'certloom' ).'</span><h2>'.esc_html__( 'Issuance receipt', 'certloom' ).'</h2></div><span class="certloom-template-state certloom-template-state-published">'.esc_html__( 'Issued', 'certloom' ).'</span></div><div class="certloom-manual-review-grid">';
-		$this->review_fact(__( 'Certificate number', 'certloom' ),(string)$receipt['display_number'],__( 'Human-facing credential number', 'certloom' )); $this->review_fact(__( 'Public credential ID', 'certloom' ),(string)$receipt['public_id'],__( 'Secure generated identity', 'certloom' ),true); $this->review_fact(__( 'Credential Series', 'certloom' ),'#'.absint($receipt['series_id']),__( 'Stable credential lineage', 'certloom' )); $this->review_fact(__( 'Credential Version', 'certloom' ),'#'.absint($receipt['version_id']),__( 'Saved issuance details', 'certloom' )); $this->review_fact(__( 'Issued', 'certloom' ),(string)($receipt['issued_at']??'—'),null===($receipt['expires_at']??null)?__( 'No expiry', 'certloom' ):sprintf(/* translators: %s: expires at. */ __( 'Expires %s', 'certloom' ),(string)$receipt['expires_at']));
+		/* translators: expiry date */
+		$this->review_fact(__( 'Certificate number', 'certloom' ),(string)$receipt['display_number'],__( 'Human-facing credential number', 'certloom' )); $this->review_fact(__( 'Public credential ID', 'certloom' ),(string)$receipt['public_id'],__( 'Secure generated identity', 'certloom' ),true); $this->review_fact(__( 'Credential Series', 'certloom' ),'#'.absint($receipt['series_id']),__( 'Stable credential lineage', 'certloom' )); $this->review_fact(__( 'Credential Version', 'certloom' ),'#'.absint($receipt['version_id']),__( 'Saved issuance details', 'certloom' )); $this->review_fact(__( 'Issued', 'certloom' ),(string)($receipt['issued_at']??'—'),null===($receipt['expires_at']??null)?__( 'No expiry', 'certloom' ):sprintf(__( 'Expires %s', 'certloom' ),(string)$receipt['expires_at']));
 		echo '</div><div class="certloom-manual-receipt-url"><span>'.esc_html__( 'Self-hosted verification URL', 'certloom' ).'</span>'; if($public_ready){echo '<a href="'.esc_url((string)$receipt['verification_url']).'" target="_blank" rel="noopener">'.esc_html((string)$receipt['verification_url']).'</a>';}else{echo '<code>'.esc_html((string)$receipt['verification_url']).'</code><small>'.esc_html__( 'Saved with the issued credential, but public verification from the new credential store is not enabled in this build yet.', 'certloom' ).'</small>';} echo '</div><div class="notice notice-info inline"><p><strong>'.esc_html__( 'Download status:', 'certloom' ).'</strong> '.esc_html__( 'The credential is issued, but PDF/PNG/JPEG downloads are not enabled until the certificate renderer passes its production approval checks.', 'certloom' ).'</p></div><div class="certloom-manual-actions"><a class="button button-primary" href="'.esc_url(add_query_arg(array('page'=>'certloom-email-delivery','version_id'=>absint($receipt['version_id'])),admin_url('admin.php'))).'">'.esc_html__( 'Email this credential', 'certloom' ).'</a><a class="button" href="'.esc_url(admin_url('admin.php?page='.self::PAGE)).'">'.esc_html__( 'Issue another credential', 'certloom' ).'</a></div></section>';
 	}
 

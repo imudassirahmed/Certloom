@@ -1181,48 +1181,7 @@
 		dialog.addEventListener( 'click', function ( event ) { if ( event.target === dialog ) { dialog.close(); } } );
 	}
 
-	function initDescriptionAssociations() {
-		var descriptions = document.querySelectorAll( '.ecapla-certverify-admin-wrap p.description, .certloom-product-subnav + .wrap p.description' );
-		var serial = 0;
-		Array.prototype.forEach.call( descriptions, function ( description ) {
-			var container = description.closest( 'td, label, fieldset, .certloom-domain-field, .certloom-form-field, .certloom-manual-fieldset, .certloom-premium-dialog, .ecapla-certverify-admin-card' );
-			if ( ! container ) { return; }
-			var controls = container.querySelectorAll( 'input:not([type="hidden"]), select, textarea' );
-			if ( 1 !== controls.length ) { return; }
-			var control = controls[ 0 ];
-			if ( ! description.id ) { serial++; description.id = 'certloom-description-' + serial; }
-			var describedBy = ( control.getAttribute( 'aria-describedby' ) || '' ).split( /\s+/ ).filter( Boolean );
-			if ( describedBy.indexOf( description.id ) === -1 ) { describedBy.push( description.id ); control.setAttribute( 'aria-describedby', describedBy.join( ' ' ) ); }
-		} );
-	}
-
-	function initCopyBlocks() {
-		var l10n = window.certloomAdminL10n || {};
-		var blocks = document.querySelectorAll( '.ecapla-certverify-code-copy' );
-		Array.prototype.forEach.call( blocks, function ( block ) {
-			var code = block.querySelector( 'code' );
-			if ( ! code || block.querySelector( '.certloom-copy-button' ) ) { return; }
-			var button = document.createElement( 'button' );
-			button.type = 'button';
-			button.className = 'button button-small certloom-copy-button';
-			button.textContent = l10n.copy || 'Copy';
-			button.addEventListener( 'click', function () {
-				var text = code.textContent || '';
-				var done = function ( ok ) {
-					button.textContent = ok ? ( l10n.copied || 'Copied' ) : ( l10n.copyFailed || 'Press Ctrl+C or Cmd+C to copy' );
-					window.setTimeout( function () { button.textContent = l10n.copy || 'Copy'; }, 2000 );
-				};
-				if ( navigator.clipboard && window.isSecureContext ) { navigator.clipboard.writeText( text ).then( function () { done( true ); }, function () { done( false ); } ); return; }
-				var scratch = document.createElement( 'textarea' ); scratch.value = text; scratch.setAttribute( 'readonly', '' ); scratch.style.position = 'absolute'; scratch.style.left = '-9999px'; document.body.appendChild( scratch ); scratch.select();
-				var ok = false; try { ok = document.execCommand( 'copy' ); } catch ( error ) { ok = false; } document.body.removeChild( scratch ); done( ok );
-			} );
-			block.appendChild( button );
-		} );
-	}
-
 	document.addEventListener( 'DOMContentLoaded', function () {
-		initCopyBlocks();
-		initDescriptionAssociations();
 		initCertloomWordPressMenuState();
 		initHumanFormValidation();
 		initPremiumDialogs();
@@ -1252,3 +1211,157 @@
 		initScopedFieldForms();
 	} );
 } )();
+
+/**
+ * Copy-to-clipboard for shortcode / snippet blocks.
+ *
+ * Progressive enhancement only: the markup already renders selectable text,
+ * this adds a button when scripting is available.
+ */
+( function () {
+	'use strict';
+
+	function label( key, fallback ) {
+		return ( window.certloomAdminL10n && window.certloomAdminL10n[ key ] ) || fallback;
+	}
+
+	function copyText( text, done ) {
+		if ( navigator.clipboard && window.isSecureContext ) {
+			navigator.clipboard.writeText( text ).then(
+				function () { done( true ); },
+				function () { done( false ); }
+			);
+			return;
+		}
+		var scratch = document.createElement( 'textarea' );
+		scratch.value = text;
+		scratch.setAttribute( 'readonly', '' );
+		scratch.style.position = 'absolute';
+		scratch.style.left = '-9999px';
+		document.body.appendChild( scratch );
+		scratch.select();
+		var ok = false;
+		try { ok = document.execCommand( 'copy' ); } catch ( error ) { ok = false; }
+		document.body.removeChild( scratch );
+		done( ok );
+	}
+
+	function enhance( block ) {
+		var code = block.querySelector( 'code' );
+		if ( ! code || block.querySelector( '.certloom-copy-button' ) ) { return; }
+
+		var button = document.createElement( 'button' );
+		button.type = 'button';
+		button.className = 'button button-small certloom-copy-button';
+		button.textContent = label( 'copy', 'Copy' );
+		button.setAttribute( 'aria-label', label( 'copyLabel', 'Copy this snippet to the clipboard' ) );
+
+		var status = document.createElement( 'span' );
+		status.className = 'screen-reader-text';
+		status.setAttribute( 'role', 'status' );
+		status.setAttribute( 'aria-live', 'polite' );
+
+		button.addEventListener( 'click', function () {
+			copyText( code.textContent || '', function ( ok ) {
+				var message = ok ? label( 'copied', 'Copied' ) : label( 'copyFailed', 'Press Ctrl+C to copy' );
+				button.textContent = message;
+				status.textContent = message;
+				window.setTimeout( function () {
+					button.textContent = label( 'copy', 'Copy' );
+					status.textContent = '';
+				}, 2000 );
+			} );
+		} );
+
+		block.appendChild( button );
+		block.appendChild( status );
+	}
+
+	function boot() {
+		var blocks = document.querySelectorAll( '.ecapla-certverify-code-copy' );
+		Array.prototype.forEach.call( blocks, enhance );
+	}
+
+	if ( 'loading' === document.readyState ) {
+		document.addEventListener( 'DOMContentLoaded', boot );
+	} else {
+		boot();
+	}
+}() );
+
+/**
+ * Active-section tracking for in-page anchor navigation.
+ *
+ * .certloom-settings-local-nav and .certloom-workspace-nav are same-page
+ * anchor jumps, not page navigation, so aria-current="page" would be wrong.
+ * ARIA defines "location" for exactly this case: the current position within
+ * a page. Previously neither nav marked an active item at all, so on the
+ * Settings screen — one long scroll of roughly forty fields — there was no
+ * indication of where you were.
+ */
+( function () {
+	'use strict';
+
+	function track( nav ) {
+		var links = Array.prototype.slice.call( nav.querySelectorAll( 'a[href^="#"]' ) );
+		if ( ! links.length ) { return; }
+
+		var targets = [];
+		links.forEach( function ( link ) {
+			var id = link.getAttribute( 'href' ).slice( 1 );
+			var el = id ? document.getElementById( id ) : null;
+			if ( el ) { targets.push( { link: link, el: el } ); }
+		} );
+		if ( ! targets.length ) { return; }
+
+		function mark( link ) {
+			targets.forEach( function ( t ) {
+				if ( t.link === link ) {
+					t.link.setAttribute( 'aria-current', 'location' );
+				} else {
+					t.link.removeAttribute( 'aria-current' );
+				}
+			} );
+		}
+
+		// Clicking an anchor should mark it immediately; the observer will
+		// confirm once the scroll settles.
+		targets.forEach( function ( t ) {
+			t.link.addEventListener( 'click', function () { mark( t.link ); } );
+		} );
+
+		if ( ! ( 'IntersectionObserver' in window ) ) {
+			mark( targets[ 0 ].link );
+			return;
+		}
+
+		var visible = [];
+		var observer = new IntersectionObserver( function ( entries ) {
+			entries.forEach( function ( entry ) {
+				var i = visible.indexOf( entry.target );
+				if ( entry.isIntersecting && i === -1 ) { visible.push( entry.target ); }
+				if ( ! entry.isIntersecting && i !== -1 ) { visible.splice( i, 1 ); }
+			} );
+			if ( ! visible.length ) { return; }
+			// Whichever tracked section sits highest on screen wins.
+			var top = visible.reduce( function ( best, el ) {
+				return el.getBoundingClientRect().top < best.getBoundingClientRect().top ? el : best;
+			} );
+			var match = targets.filter( function ( t ) { return t.el === top; } )[ 0 ];
+			if ( match ) { mark( match.link ); }
+		}, { rootMargin: '-80px 0px -55% 0px', threshold: 0 } );
+
+		targets.forEach( function ( t ) { observer.observe( t.el ); } );
+	}
+
+	function boot() {
+		var navs = document.querySelectorAll( '.certloom-settings-local-nav, .certloom-workspace-nav' );
+		Array.prototype.forEach.call( navs, track );
+	}
+
+	if ( 'loading' === document.readyState ) {
+		document.addEventListener( 'DOMContentLoaded', boot );
+	} else {
+		boot();
+	}
+}() );

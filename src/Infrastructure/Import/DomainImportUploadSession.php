@@ -142,7 +142,8 @@ final class DomainImportUploadSession {
 	private function cleanup_after_error( $path, \WP_Error $primary ) {
 		$deleted = $this->files->delete( (string) $path );
 		if ( ! is_wp_error( $deleted ) && false !== $deleted ) { return $primary; }
-		return new \WP_Error( 'certloom_import_mapping_cleanup_failed', sprintf( /* translators: %1$s: primary error; %2$s: cleanup error. */ __( 'Certloom stopped the CSV mapping session safely (%1$s), but could not remove its protected upload copy (%2$s).', 'certloom' ), $primary->get_error_message(), is_wp_error( $deleted ) ? $deleted->get_error_message() : __( 'file deletion failed', 'certloom' ) ) );
+		/* translators: 1: stop reason, 2: cleanup error message */
+		return new \WP_Error( 'certloom_import_mapping_cleanup_failed', sprintf( __( 'Certloom stopped the CSV mapping session safely (%1$s), but could not remove its protected upload copy (%2$s).', 'certloom' ), $primary->get_error_message(), is_wp_error( $deleted ) ? $deleted->get_error_message() : __( 'file deletion failed', 'certloom' ) ) );
 	}
 
 	/** @return string|\WP_Error */

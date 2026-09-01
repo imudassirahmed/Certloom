@@ -117,7 +117,8 @@ $ecapla_certverify_updated_label = $certificate && ! empty( $certificate['update
 
 				<section id="certloom-workspace-verification" class="certloom-panel certloom-editor-section" aria-labelledby="certloom-verification-title">
 					<div class="certloom-panel-header"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Verification', 'certloom' ); ?></span><h2 id="certloom-verification-title"><?php esc_html_e( 'Public verification', 'certloom' ); ?></h2></div></div>
-					<p><?php echo esc_html( sprintf( /* translators: %d: public field count. */ _n( '%d field is currently approved for public verification output.', '%d fields are currently approved for public verification output.', $ecapla_certverify_public_field_count, 'certloom' ), $ecapla_certverify_public_field_count ) ); ?></p>
+					/* translators: number of approved fields */
+					<p><?php echo esc_html( sprintf( _n( '%d field is currently approved for public verification output.', '%d fields are currently approved for public verification output.', $ecapla_certverify_public_field_count, 'certloom' ), $ecapla_certverify_public_field_count ) ); ?></p>
 					<?php if ( $ecapla_certverify_visibility_field ) : $field = $ecapla_certverify_visibility_field; ?><div class="certloom-verification-policy"><?php include ECAPLA_CERTVERIFY_PATH . 'admin/views/partials/certificate-field.php'; ?></div><?php endif; ?>
 					<div class="certloom-secondary-code-admin">
 						<div class="certloom-form-field"><label for="certloom-secondary-code"><strong><?php esc_html_e( 'Secondary verification code', 'certloom' ); ?></strong></label>
@@ -127,7 +128,8 @@ $ecapla_certverify_updated_label = $certificate && ! empty( $certificate['update
 						<?php if ( $ecapla_certverify_secondary_code_enabled ) : ?><label><input type="checkbox" name="certloom_secondary_code_clear" value="1" /> <?php esc_html_e( 'Clear secondary verification code', 'certloom' ); ?></label><?php endif; ?>
 						</div>
 					</div>
-					<p><?php echo esc_html( sprintf( /* translators: %d: profile field count. */ _n( '%d field is approved for Credential Profile output.', '%d fields are approved for Credential Profile output.', $ecapla_certverify_profile_field_count, 'certloom' ), $ecapla_certverify_profile_field_count ) ); ?></p>
+					/* translators: number of approved fields */
+					<p><?php echo esc_html( sprintf( _n( '%d field is approved for Credential Profile output.', '%d fields are approved for Credential Profile output.', $ecapla_certverify_profile_field_count, 'certloom' ), $ecapla_certverify_profile_field_count ) ); ?></p>
 					<div class="certloom-page-actions">
 						<?php if ( $ecapla_certverify_verification_url ) : ?><a class="button button-secondary" href="<?php echo esc_url( $ecapla_certverify_verification_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open verification result', 'certloom' ); ?><span class="screen-reader-text"> <?php esc_html_e( '(opens in a new tab)', 'certloom' ); ?></span></a><?php else : ?><a class="button button-secondary" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-setup' ) ); ?>"><?php esc_html_e( 'Configure verification page', 'certloom' ); ?></a><?php endif; ?>
 						<?php if ( $ecapla_certverify_profile_url ) : ?><a class="button button-secondary" href="<?php echo esc_url( $ecapla_certverify_profile_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open credential profile', 'certloom' ); ?><span class="screen-reader-text"> <?php esc_html_e( '(opens in a new tab)', 'certloom' ); ?></span></a><?php endif; ?>

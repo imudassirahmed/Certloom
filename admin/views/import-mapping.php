@@ -28,7 +28,7 @@ foreach ( $fields as $certloom_field ) {
 	if ( ! $certloom_added && '' !== $certloom_key ) { $certloom_grouped_fields[ $certloom_custom_group ][] = $certloom_field; }
 }
 ?>
-<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell">
+<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-restore-flow">
 	<?php include ECAPLA_CERTVERIFY_PATH . 'admin/views/partials/brand-bar.php'; ?>
 	<h1><?php esc_html_e( 'Map CSV columns', 'certloom' ); ?></h1>
 	<p class="description"><?php esc_html_e( 'Certloom maps familiar column names automatically. Review the suggestions, change anything that is wrong, and leave unrelated columns as Skip. Certificate number must be mapped.', 'certloom' ); ?></p>

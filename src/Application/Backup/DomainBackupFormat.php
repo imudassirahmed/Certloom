@@ -106,7 +106,8 @@ final class DomainBackupFormat {
 			return feof( $handle ) ? null : new \WP_Error( 'certloom_domain_backup_read_failed', __( 'Certloom could not read the backup stream safely.', 'certloom' ) );
 		}
 		if ( strlen( $line ) > self::MAX_LINE_BYTES || ( self::MAX_LINE_BYTES === strlen( $line ) && ! "\n" === substr( $line, -1 ) && ! feof( $handle ) ) ) {
-			return new \WP_Error( 'certloom_domain_backup_line_too_large', sprintf( /* translators: %d: line number. */ __( 'The Certloom backup contains an oversized record on line %d.', 'certloom' ), absint( $line_no ) ) );
+			/* translators: line number in the backup file */
+			return new \WP_Error( 'certloom_domain_backup_line_too_large', sprintf( __( 'The Certloom backup contains an oversized record on line %d.', 'certloom' ), absint( $line_no ) ) );
 		}
 		return $line;
 	}

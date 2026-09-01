@@ -18,7 +18,7 @@ class Ecapla_CertVerify_Admin {
 		add_action( 'admin_post_certloom_set_ui_mode', array( $this, 'handle_ui_mode_switch' ) );
 		add_action( 'admin_notices', array( $this, 'render_ui_mode_switch' ), 1 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
-		add_action( 'admin_init', array( $this, 'maybe_redirect_after_activation' ) );
+		add_action( 'admin_init', array( $this, 'maybe_redirect_after_activation' ), 1 );
 		add_action( 'admin_init', array( $this, 'handle_form_submission' ) );
 		add_action( 'admin_init', array( $this, 'handle_bulk_delete' ) );
 		add_action( 'admin_init', array( $this, 'handle_bulk_preview' ) );
@@ -161,15 +161,40 @@ class Ecapla_CertVerify_Admin {
 		echo '</form></div>';
 	}
 
-	/** Sends a newly activated single site into Setup exactly once. */
+	/**
+	 * Opens the setup wizard once, immediately after a single-plugin activation.
+	 *
+	 * Stays silent when several plugins were activated together, when the
+	 * wizard is already complete, or when the administrator cannot run it.
+	 *
+	 * @return void
+	 */
 	public function maybe_redirect_after_activation() {
-		$key = 'certloom_activation_redirect_' . get_current_user_id();
-		if ( ! get_transient( $key ) ) { return; }
+		$user_id = get_current_user_id();
+		if ( ! $user_id ) {
+			return;
+		}
+
+		$key = 'certloom_activation_redirect_' . $user_id;
+		if ( ! get_transient( $key ) ) {
+			return;
+		}
 		delete_transient( $key );
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only bulk activation detection.
-		if ( isset( $_GET['activate-multi'] ) || wp_doing_ajax() || ! current_user_can( 'manage_options' ) ) { return; }
+
+		if ( wp_doing_ajax() || wp_doing_cron() || is_network_admin() || ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only bulk-activation detection.
+		if ( isset( $_GET['activate-multi'] ) ) {
+			return;
+		}
+
 		$state = Ecapla_CertVerify_Onboarding::get_state();
-		if ( is_array( $state ) && ! empty( $state['wizard_completed_at'] ) ) { return; }
+		if ( is_array( $state ) && ! empty( $state['wizard_completed_at'] ) ) {
+			return;
+		}
+
 		wp_safe_redirect( admin_url( 'admin.php?page=certloom-setup' ) );
 		exit;
 	}
@@ -180,11 +205,16 @@ class Ecapla_CertVerify_Admin {
 		}
 		wp_enqueue_style( 'ecapla-certverify-admin', ECAPLA_CERTVERIFY_URL . 'admin/assets/admin.css', array(), ECAPLA_CERTVERIFY_VERSION );
 		wp_enqueue_script( 'ecapla-certverify-admin', ECAPLA_CERTVERIFY_URL . 'admin/assets/admin.js', array(), ECAPLA_CERTVERIFY_VERSION, true );
-		wp_localize_script( 'ecapla-certverify-admin', 'certloomAdminL10n', array(
-			'copy' => __( 'Copy', 'certloom' ),
-			'copied' => __( 'Copied', 'certloom' ),
-			'copyFailed' => __( 'Press Ctrl+C or Cmd+C to copy', 'certloom' ),
-		) );
+		wp_localize_script(
+			'ecapla-certverify-admin',
+			'certloomAdminL10n',
+			array(
+				'copy'       => __( 'Copy', 'certloom' ),
+				'copied'     => __( 'Copied', 'certloom' ),
+				'copyFailed' => __( 'Press Ctrl+C to copy', 'certloom' ),
+				'copyLabel'  => __( 'Copy this snippet to the clipboard', 'certloom' ),
+			)
+		);
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Asset routing only.
 		if ( in_array( $page, array( 'certloom-domain-issuers', 'certloom-domain-signers' ), true ) ) { wp_enqueue_media(); }
 	}
@@ -686,8 +716,7 @@ class Ecapla_CertVerify_Admin {
 	public function handle_dismiss_setup_reminder() {
 		$this->require_options_permission();
 		check_admin_referer( 'certloom_dismiss_setup_reminder' );
-		$mode = isset( $_POST['reminder_mode'] ) ? sanitize_key( wp_unslash( $_POST['reminder_mode'] ) ) : 'snooze';
-		$result = \Certloom\Infrastructure\Admin\SetupReadinessReminder::dismiss( 0, 'dismiss' === $mode );
+		$result = \Certloom\Infrastructure\Admin\SetupReadinessReminder::dismiss();
 		if ( is_wp_error( $result ) ) { $this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=' . self::DASHBOARD_PAGE ) ); }
 		wp_safe_redirect( admin_url( 'admin.php?page=' . self::DASHBOARD_PAGE ) ); exit;
 	}
@@ -833,10 +862,14 @@ class Ecapla_CertVerify_Admin {
 		}
 		if ( ! empty( $usage['referenced'] ) ) {
 			$parts = array();
-			if ( ! empty( $usage['program_count'] ) ) { $parts[] = sprintf( /* translators: %d: program count. */ _n( '%d Program', '%d Programs', absint( $usage['program_count'] ), 'certloom' ), absint( $usage['program_count'] ) ); }
-			if ( ! empty( $usage['batch_count'] ) ) { $parts[] = sprintf( /* translators: %d: batch count. */ _n( '%d Batch override', '%d Batch overrides', absint( $usage['batch_count'] ), 'certloom' ), absint( $usage['batch_count'] ) ); }
-			if ( ! empty( $usage['template_count'] ) ) { $parts[] = sprintf( /* translators: %d: template count. */ _n( '%d active Template', '%d active Templates', absint( $usage['template_count'] ), 'certloom' ), absint( $usage['template_count'] ) ); }
-			$this->redirect_error( sprintf( /* translators: %1$s: label; %2$s: parts. */ __( '“%1$s” is still used by %2$s. Remove those active assignments/references before retiring the field. Existing issued credential history will remain protected.', 'certloom' ), (string) ( $field['label'] ?? $key ), implode( ', ', $parts ) ), admin_url( 'admin.php?page=certloom-fields' ) );
+			/* translators: number of programs */
+			if ( ! empty( $usage['program_count'] ) ) { $parts[] = sprintf( _n( '%d Program', '%d Programs', absint( $usage['program_count'] ), 'certloom' ), absint( $usage['program_count'] ) ); }
+			/* translators: number of batch overrides */
+			if ( ! empty( $usage['batch_count'] ) ) { $parts[] = sprintf( _n( '%d Batch override', '%d Batch overrides', absint( $usage['batch_count'] ), 'certloom' ), absint( $usage['batch_count'] ) ); }
+			/* translators: number of active templates */
+			if ( ! empty( $usage['template_count'] ) ) { $parts[] = sprintf( _n( '%d active Template', '%d active Templates', absint( $usage['template_count'] ), 'certloom' ), absint( $usage['template_count'] ) ); }
+			/* translators: 1: field label, 2: list of records still using the field */
+			$this->redirect_error( sprintf( __( '“%1$s” is still used by %2$s. Remove those active assignments/references before retiring the field. Existing issued credential history will remain protected.', 'certloom' ), (string) ( $field['label'] ?? $key ), implode( ', ', $parts ) ), admin_url( 'admin.php?page=certloom-fields' ) );
 		}
 		if ( ! Ecapla_CertVerify_Fields::retire_field( $field ) ) {
 			$this->redirect_error( __( 'The field could not be retired safely. No field was removed.', 'certloom' ), admin_url( 'admin.php?page=certloom-fields' ) );
