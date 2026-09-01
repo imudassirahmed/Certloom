@@ -20,7 +20,7 @@ $results = wp_parse_args(
 );
 $ecapla_certverify_backup_restored = ! empty( $_GET['backup_restored'] );
 ?>
-<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-restore-flow">
+<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell">
 	<?php include ECAPLA_CERTVERIFY_PATH . 'admin/views/partials/brand-bar.php'; ?>
 	<h1><?php echo esc_html( $ecapla_certverify_backup_restored ? __( 'Backup restore complete', 'certloom' ) : __( 'Import complete', 'certloom' ) ); ?></h1>
 	<div class="ecapla-certverify-stat-grid">

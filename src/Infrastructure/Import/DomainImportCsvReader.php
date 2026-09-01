@@ -295,19 +295,16 @@ final class DomainImportCsvReader {
 		$type = sanitize_key( (string) ( $field['type'] ?? 'text' ) );
 		if ( 'date' === $type && '' !== $value ) {
 			if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $value ) ) {
-				/* translators: custom field label */
-				return new \WP_Error( 'certloom_import_csv_custom_date_invalid', sprintf( __( 'Custom field %s requires a YYYY-MM-DD date.', 'certloom' ), $key ) );
+				return new \WP_Error( 'certloom_import_csv_custom_date_invalid', sprintf( /* translators: %s: field key. */ __( 'Custom field %s requires a YYYY-MM-DD date.', 'certloom' ), $key ) );
 			}
 			list( $year, $month, $day ) = array_map( 'intval', explode( '-', $value ) );
 			if ( ! checkdate( $month, $day, $year ) ) {
-				/* translators: custom field label */
-				return new \WP_Error( 'certloom_import_csv_custom_date_invalid', sprintf( __( 'Custom field %s contains an invalid calendar date.', 'certloom' ), $key ) );
+				return new \WP_Error( 'certloom_import_csv_custom_date_invalid', sprintf( /* translators: %s: field key. */ __( 'Custom field %s contains an invalid calendar date.', 'certloom' ), $key ) );
 			}
 			return $value;
 		}
 		if ( 'number' === $type && '' !== $value && ! is_numeric( $value ) ) {
-			/* translators: custom field label */
-			return new \WP_Error( 'certloom_import_csv_custom_number_invalid', sprintf( __( 'Custom field %s requires a numeric value.', 'certloom' ), $key ) );
+			return new \WP_Error( 'certloom_import_csv_custom_number_invalid', sprintf( /* translators: %s: field key. */ __( 'Custom field %s requires a numeric value.', 'certloom' ), $key ) );
 		}
 		return 'textarea' === $type ? sanitize_textarea_field( $value ) : sanitize_text_field( $value );
 	}

@@ -68,8 +68,7 @@ $periods = array( 7 => __( '7 days', 'certloom' ), 30 => __( '30 days', 'certloo
 					foreach ( $report['trend'] as $row ) :
 						$day_total = (int) $row['success'] + (int) $row['failed'] + (int) $row['invalid'] + (int) $row['expired'] + (int) $row['revoked'];
 						$height = max( 2, (int) round( 100 * $day_total / $max_day ) ); ?>
-						/* translators: 1: period label, 2: verification lookup count */
-						<div class="certloom-analytics-bar" style="--certloom-analytics-height:<?php echo esc_attr( $height ); ?>%" title="<?php echo esc_attr( $row['label'] . ': ' . $day_total ); ?>"><span class="screen-reader-text"><?php echo esc_html( sprintf( __( '%1$s: %2$d verification lookups', 'certloom' ), $row['label'], $day_total ) ); ?></span></div>
+						<div class="certloom-analytics-bar" style="--certloom-analytics-height:<?php echo esc_attr( $height ); ?>%" title="<?php echo esc_attr( $row['label'] . ': ' . $day_total ); ?>"><span class="screen-reader-text"><?php echo esc_html( sprintf( /* translators: %1$s: date/period label; %2$d: verification lookup count. */ __( '%1$s: %2$d verification lookups', 'certloom' ), $row['label'], $day_total ) ); ?></span></div>
 					<?php endforeach; ?>
 					</div>
 					<div class="certloom-analytics-table-wrap" tabindex="0" role="region" aria-label="<?php echo esc_attr( $table_label ); ?>">
@@ -84,8 +83,7 @@ $periods = array( 7 => __( '7 days', 'certloom' ), 30 => __( '30 days', 'certloo
 				<section class="certloom-manual-card"><div class="certloom-manual-card-head"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Source', 'certloom' ); ?></span><h2><?php esc_html_e( 'How verification started', 'certloom' ); ?></h2></div></div>
 					<dl class="certloom-analytics-source-list"><div><dt><?php esc_html_e( 'Manual / direct', 'certloom' ); ?></dt><dd><?php echo esc_html( number_format_i18n( $report['sources']['manual'] ) ); ?></dd></div><div><dt><?php esc_html_e( 'QR scan', 'certloom' ); ?></dt><dd><?php echo esc_html( number_format_i18n( $report['sources']['qr'] ) ); ?></dd></div><div><dt><?php esc_html_e( 'API', 'certloom' ); ?></dt><dd><?php echo esc_html( number_format_i18n( $report['sources']['api'] ) ); ?></dd></div></dl>
 				</section>
-				/* translators: number of days counters are retained */
-				<section class="certloom-manual-card"><div class="certloom-manual-card-head"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Privacy', 'certloom' ); ?></span><h2><?php esc_html_e( 'Aggregates, not visitor logs', 'certloom' ); ?></h2></div></div><p><?php echo esc_html( sprintf( __( 'Certloom keeps daily aggregate counters for up to %d days. It does not store raw IP addresses, User-Agents, secondary proof codes, or raw failed certificate-number input in this analytics table.', 'certloom' ), (int) $report['retention_days'] ) ); ?></p></section>
+				<section class="certloom-manual-card"><div class="certloom-manual-card-head"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Privacy', 'certloom' ); ?></span><h2><?php esc_html_e( 'Aggregates, not visitor logs', 'certloom' ); ?></h2></div></div><p><?php echo esc_html( sprintf( /* translators: %d: retention days. */ __( 'Certloom keeps daily aggregate counters for up to %d days. It does not store raw IP addresses, User-Agents, secondary proof codes, or raw failed certificate-number input in this analytics table.', 'certloom' ), (int) $report['retention_days'] ) ); ?></p></section>
 			</aside>
 		</div>
 

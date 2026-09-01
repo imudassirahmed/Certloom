@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.98
+Stable tag: 1.6.98-qa.11
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,8 +12,12 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
+> **QA.11 STAGING BUILD — NOT FOR PRODUCTION.** This derivative intentionally bypasses normalized-domain, public-verification and renderer release-readiness gates in memory so the UX-CORE-04 unified Credentials workflow can be exercised before genuine DBAUTH/PDF-04 acceptance. It contains no accepted authority manifest and must not be installed on a live production site.
+
 
 > Release note for 1.6.98: UX-CORE turns the accumulated 1.6.98 staging findings into a whole-product workflow redesign rather than another isolated admin patch. Simple mode is now task-based (Home → Credentials → Programs → Design → Automations → Settings), uses the normalized Recipient → Program → Credential model, demotes the legacy registry and technical authority evidence, and connects Program setup, Recipient-aware issuance, public Credential Profiles, reusable email messages, automatic delivery and integrations into one human journey. Manual, Bulk, Tutor LMS, LearnDash, WooCommerce, Coursera xAPI and generic Webhook/API act as qualification sources that converge on Certloom's canonical issuance service; Email and Credly are post-issuance destinations. Google Drive normally connects through the narrow Ecapla OAuth relay, while a site-owned Google app remains available in Advanced. The relay implementation is bundled separately and its focused security/behavior suite is green, but live auth.ecapla.com deployment/Google OAuth acceptance is still external and is not claimed by this WordPress package. The real-WordPress corrective tranche also consolidates Simple mode onto one Recipient-aware Credentials authority, makes the issued certificate visible on the public Credential Profile from the immutable issuance snapshot, restores correct Credentials/Programs navigation ownership and Signers placement, repairs existing-admin Analytics capability drift and Setup completion consistency, adds complete New Recipient and Program/Batch quick-create dialogs, preserves Program/Batch credential fields for Existing Recipients, and standardizes the core registries/Automations on compact lists plus consistent required-field validation. Normalized-domain and renderer production authority remain closed pending the genuine DBAUTH/PDF-04 ceremonies.
+
+External QA.9 audit corrections are also folded into the gated 1.6.98 source: public verification status styling now fails safe (only explicit valid is green), every reviewed admin workflow uses the common token/shell system, Design/Template Library state/filter/pagination/canvas gaps are corrected, Appearance provides visual design previews and copy controls, Setup has a safe first-run continuation, and permanent CSS/i18n/responsive guards protect these contracts. QA staging packages remain non-production and cannot confer normalized-domain or renderer authority.
 
 > Release note for 1.6.97: FLD-02 adds Program + optional Batch scoped credential-field contracts over the existing global Field Catalog, with deterministic inheritance, typed Manual/Bulk inputs, immutable issued-Version snapshots, Designer/Template compatibility, privacy-safe public/Portal presentation, LMS/Wizard/restore integration and safe field retirement. SCALE-01 replaces fixed first-N relationship assumptions with bounded searchable Program, Batch, Template, Issuer, Signer and LMS-course lookups while preserving current selections and server revalidation. The release also promotes staging QA corrections for routable contextual subtabs, direct QR, isolated credential printing, Design actions, operational pagination and persistent Setup access. Normalized-domain and renderer production authority remain closed; genuine DBAUTH/PDF-04 acceptance remains external.
 

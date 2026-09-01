@@ -8,6 +8,7 @@ use Certloom\Infrastructure\Repository\IssuerRepository;
 use Certloom\Infrastructure\Repository\ProgramRepository;
 use Certloom\Infrastructure\Repository\RecipientRepository;
 use Certloom\Infrastructure\Repository\SignerRepository;
+use Certloom\Infrastructure\Repository\TemplateRepository;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -57,6 +58,8 @@ final class DomainStructureAdmin {
 		if ( is_wp_error( $data ) ) { $this->redirect_result( self::BATCHES_PAGE, $data, 'batch_created', array( 'certloom_new' => 1, 'certloom_retry' => 1 ) ); }
 		$result = ( new BatchRepository() )->create( $data );
 		if ( is_wp_error( $result ) ) { $this->redirect_result( self::BATCHES_PAGE, $result, 'batch_created', array( 'certloom_new' => 1, 'certloom_retry' => 1 ) ); }
+		$template_result = $this->save_batch_template_assignment( absint( $result ), isset( $_POST['batch_template_id'] ) ? absint( $_POST['batch_template_id'] ) : 0 );
+		if ( is_wp_error( $template_result ) ) { $this->redirect_result( self::BATCHES_PAGE, $template_result, 'batch_created', array( 'batch_id' => absint( $result ) ) ); }
 		$this->redirect_result( self::BATCHES_PAGE, $result, 'batch_created' );
 	}
 
@@ -77,6 +80,8 @@ final class DomainStructureAdmin {
 		if ( is_wp_error( $data ) ) { $this->redirect_result( self::BATCHES_PAGE, $data, 'batch_updated', array( 'batch_id' => $id, 'certloom_retry' => 1 ) ); }
 		$result = $repo->update( $id, $data );
 		if ( is_wp_error( $result ) ) { $this->redirect_result( self::BATCHES_PAGE, $result, 'batch_updated', array( 'batch_id' => $id, 'certloom_retry' => 1 ) ); }
+		$template_result = $this->save_batch_template_assignment( $id, isset( $_POST['batch_template_id'] ) ? absint( $_POST['batch_template_id'] ) : 0 );
+		if ( is_wp_error( $template_result ) ) { $this->redirect_result( self::BATCHES_PAGE, $template_result, 'batch_updated', array( 'batch_id' => $id ) ); }
 		$this->redirect_result( self::BATCHES_PAGE, $result, 'batch_updated', array( 'batch_id' => $id ) );
 	}
 
@@ -200,12 +205,11 @@ final class DomainStructureAdmin {
 				$meta = array();
 				if ( ! empty( $item['program_title'] ) ) { $meta[] = (string) $item['program_title']; }
 				if ( $date_parts ) { $meta[] = implode( ' → ', $date_parts ); }
-				/* translators: number of recipients */
-				$meta[] = sprintf( _n( '%d recipient', '%d recipients', absint( $item['recipient_count'] ), 'certloom' ), absint( $item['recipient_count'] ) );
+				$meta[] = sprintf( /* translators: %d: recipient count. */ _n( '%d recipient', '%d recipients', absint( $item['recipient_count'] ), 'certloom' ), absint( $item['recipient_count'] ) );
 				$status_label = ! empty( $item['active'] ) ? _x( 'Active', 'entity status', 'certloom' ) : _x( 'Inactive', 'entity status', 'certloom' );
 				echo '<article class="certloom-premium-list-row"><div class="certloom-premium-list-main"><strong><a href="' . esc_url( $url ) . '">' . esc_html( (string) $item['name'] ) . '</a></strong><div class="certloom-premium-list-meta">' . esc_html( implode( ' · ', $meta ) ) . '</div></div><span class="certloom-domain-status ' . ( ! empty( $item['active'] ) ? 'is-active' : 'is-inactive' ) . '">' . esc_html( $status_label ) . '</span><div class="certloom-premium-list-actions"><a class="certloom-premium-row-link" href="' . esc_url( $url ) . '">' . esc_html__( 'Details', 'certloom' ) . ' <span aria-hidden="true">→</span></a></div></article>';
 			}
-			if ( empty( $result['items'] ) ) { echo '<div class="certloom-domain-empty">' . esc_html__( 'No batches found.', 'certloom' ) . '</div>'; }
+			if ( empty( $result['items'] ) ) { $add_url = add_query_arg( array( 'page' => self::BATCHES_PAGE, 'certloom_new' => 1 ), admin_url( 'admin.php' ) ); echo '<div class="certloom-premium-empty-state certloom-empty-compact"><h3>' . esc_html__( 'No batches yet', 'certloom' ) . '</h3><p>' . esc_html__( 'Add a cohort or intake when a Program needs grouped issuance.', 'certloom' ) . '</p><a class="button button-primary" href="' . esc_url( $add_url ) . '">' . esc_html__( 'Add batch', 'certloom' ) . '</a></div>'; }
 			echo '</div>';
 			$this->pagination( self::BATCHES_PAGE, $page, (int) $result['total'], 50, $search, $status );
 		} else {
@@ -274,10 +278,9 @@ final class DomainStructureAdmin {
 			foreach ( $result['items'] as $item ) {
 				$url = add_query_arg( array( 'page' => self::SIGNERS_PAGE, 'signer_id' => absint( $item['id'] ) ), admin_url( 'admin.php' ) );
 				$status_label = ! empty( $item['active'] ) ? _x( 'Active', 'entity status', 'certloom' ) : _x( 'Inactive', 'entity status', 'certloom' );
-				/* translators: number of assignments */
-				echo '<article class="certloom-premium-list-row"><div class="certloom-premium-list-main"><strong><a href="' . esc_url( $url ) . '">' . esc_html( (string) $item['display_name'] ) . '</a></strong><div class="certloom-premium-list-meta">' . esc_html( (string) ( $item['title'] ?: __( 'Signer', 'certloom' ) ) ) . ( ! empty( $item['email'] ) ? ' · ' . esc_html( (string) $item['email'] ) : '' ) . ' · ' . esc_html( sprintf( _n( '%d assignment', '%d assignments', absint( $item['assignment_count'] ), 'certloom' ), absint( $item['assignment_count'] ) ) ) . '</div></div><span class="certloom-domain-status ' . ( ! empty( $item['active'] ) ? 'is-active' : 'is-inactive' ) . '">' . esc_html( $status_label ) . '</span><div class="certloom-premium-list-actions"><a class="certloom-premium-row-link" href="' . esc_url( $url ) . '">' . esc_html__( 'Details', 'certloom' ) . ' <span aria-hidden="true">→</span></a></div></article>';
+				echo '<article class="certloom-premium-list-row"><div class="certloom-premium-list-main"><strong><a href="' . esc_url( $url ) . '">' . esc_html( (string) $item['display_name'] ) . '</a></strong><div class="certloom-premium-list-meta">' . esc_html( (string) ( $item['title'] ?: __( 'Signer', 'certloom' ) ) ) . ( ! empty( $item['email'] ) ? ' · ' . esc_html( (string) $item['email'] ) : '' ) . ' · ' . esc_html( sprintf( /* translators: %d: assignment count. */ _n( '%d assignment', '%d assignments', absint( $item['assignment_count'] ), 'certloom' ), absint( $item['assignment_count'] ) ) ) . '</div></div><span class="certloom-domain-status ' . ( ! empty( $item['active'] ) ? 'is-active' : 'is-inactive' ) . '">' . esc_html( $status_label ) . '</span><div class="certloom-premium-list-actions"><a class="certloom-premium-row-link" href="' . esc_url( $url ) . '">' . esc_html__( 'Details', 'certloom' ) . ' <span aria-hidden="true">→</span></a></div></article>';
 			}
-			if ( empty( $result['items'] ) ) { echo '<div class="certloom-domain-empty">' . esc_html__( 'No signers found.', 'certloom' ) . '</div>'; }
+			if ( empty( $result['items'] ) ) { $add_url = add_query_arg( array( 'page' => self::SIGNERS_PAGE, 'certloom_new' => 1 ), admin_url( 'admin.php' ) ); echo '<div class="certloom-premium-empty-state certloom-empty-compact"><h3>' . esc_html__( 'No signers yet', 'certloom' ) . '</h3><p>' . esc_html__( 'Add a signer whose name or signature can appear on credentials.', 'certloom' ) . '</p><a class="button button-primary" href="' . esc_url( $add_url ) . '">' . esc_html__( 'Add signer', 'certloom' ) . '</a></div>'; }
 			echo '</div>';
 			$this->pagination( self::SIGNERS_PAGE, $page, (int) $result['total'], 50, $search, $status );
 		} else {
@@ -310,6 +313,11 @@ final class DomainStructureAdmin {
 		$editable = $this->is_scalar_map( $metadata );
 		$field_contract = $is_edit && isset( $editing['field_contract'] ) && is_array( $editing['field_contract'] ) ? $editing['field_contract'] : ScopedFieldContract::empty_batch();
 		$scopable_fields = \Ecapla_CertVerify_Fields::get_scopable_fields();
+		$template_repo = new TemplateRepository();
+		$direct_design = $is_edit ? $template_repo->get_assignment( 'batch', $id ) : null;
+		$direct_template_id = is_array( $direct_design ) && ! empty( $direct_design['active'] ) ? absint( $direct_design['template_id'] ?? 0 ) : 0;
+		$published_templates = $template_repo->list_published_candidates( 250 );
+		$published_templates = is_wp_error( $published_templates ) ? array() : (array) $published_templates;
 
 		echo '<section id="certloom-domain-editor" class="ecapla-certverify-admin-card certloom-domain-editor"><h2>' . esc_html( $is_edit ? __( 'Batch profile', 'certloom' ) : __( 'Add batch', 'certloom' ) ) . '</h2><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" data-certloom-preserve-on-error data-certloom-entity-form="batch" data-certloom-saving-message="' . esc_attr( $is_edit ? __( 'Saving batch…', 'certloom' ) : __( 'Adding batch…', 'certloom' ) ) . '" data-certloom-invalid-message="' . esc_attr__( 'Please complete the highlighted required field before saving this batch.', 'certloom' ) . '">';
 		echo '<input type="hidden" name="action" value="' . esc_attr( $is_edit ? 'certloom_domain_update_batch' : 'certloom_domain_create_batch' ) . '">';
@@ -329,15 +337,16 @@ final class DomainStructureAdmin {
 		$this->signer_select( 'instructor_signer_id', __( 'Instructor signer profile', 'certloom' ), $is_edit ? $editing['instructor_signer_id'] : 0 );
 		$this->text_field( 'instructor_name', __( 'Instructor display fallback', 'certloom' ), $is_edit ? (string) $editing['instructor_name'] : '', false, 'text', __( 'Optional display fallback when no reusable signer profile is assigned.', 'certloom' ) );
 		echo '<div class="certloom-domain-field"><label><input type="checkbox" name="active" value="1" ' . checked( $is_edit ? ! empty( $editing['active'] ) : true, true, false ) . '> <strong>' . esc_html__( 'Active batch', 'certloom' ) . '</strong></label></div></div>';
-		echo '<div class="certloom-domain-subsection certloom-batch-field-contract"><div class="certloom-domain-subsection-head"><div><h3>' . esc_html__( 'Credential field changes', 'certloom' ) . '</h3><p>' . esc_html__( 'Only list fields this Batch changes or adds. Program-required fields stay required automatically.', 'certloom' ) . '</p></div></div>';
-		if ( ! $is_edit || ! absint( $editing['program_id'] ?? 0 ) ) {
-			echo '<div class="certloom-domain-empty">' . esc_html__( 'Save the Batch with a Program first, then add Batch-specific field changes.', 'certloom' ) . '</div>';
-		} else {
-			$program = ( new ProgramRepository() )->find( absint( $editing['program_id'] ) );
-			$parent_rules = is_array( $program ) && is_array( $program['field_contract']['fields'] ?? null ) ? $program['field_contract']['fields'] : array();
-			$current_rules = is_array( $field_contract['fields'] ?? null ) ? $field_contract['fields'] : array();
-			$this->batch_field_editor( $scopable_fields, $parent_rules, $current_rules );
-		}
+		echo '<div class="certloom-domain-subsection certloom-batch-design"><div class="certloom-domain-subsection-head"><div><h3>' . esc_html__( 'Certificate design', 'certloom' ) . '</h3><p>' . esc_html__( 'Inherit the Program design by default, or choose a published design just for this Batch. A Batch design always takes priority for credentials issued in this cohort.', 'certloom' ) . '</p></div></div>';
+		echo '<label class="certloom-domain-field certloom-domain-field-wide"><span><strong>' . esc_html__( 'Batch design', 'certloom' ) . '</strong></span><select name="batch_template_id" data-certloom-context-lookup="template" data-certloom-context-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '" data-certloom-context-empty-value="0" data-certloom-context-search-placeholder="' . esc_attr__( 'Search published designs…', 'certloom' ) . '"><option value="0">' . esc_html__( 'Inherit Program design', 'certloom' ) . '</option>';
+		foreach ( $published_templates as $candidate ) { echo '<option value="' . esc_attr( (string) absint( $candidate['id'] ?? 0 ) ) . '" ' . selected( $direct_template_id, absint( $candidate['id'] ?? 0 ), false ) . '>' . esc_html( (string) ( $candidate['name'] ?? '' ) ) . '</option>'; }
+		echo '</select><small>' . esc_html__( 'Choose Inherit Program design to keep this Batch automatically aligned with its Program. Visit Design for previews, publishing and advanced changes.', 'certloom' ) . '</small></label></div>';
+		echo '<div class="certloom-domain-subsection certloom-batch-field-contract"><div class="certloom-domain-subsection-head"><div><h3>' . esc_html__( 'Credential field changes', 'certloom' ) . '</h3><p>' . esc_html__( 'Choose only the fields this Batch adds, tightens or excludes. Program-required fields remain required automatically; advanced metadata stays out of this setup.', 'certloom' ) . '</p></div></div>';
+		$program = $is_edit && absint( $editing['program_id'] ?? 0 ) ? ( new ProgramRepository() )->find( absint( $editing['program_id'] ) ) : null;
+		$parent_rules = is_array( $program ) && is_array( $program['field_contract']['fields'] ?? null ) ? $program['field_contract']['fields'] : array();
+		$current_rules = is_array( $field_contract['fields'] ?? null ) ? $field_contract['fields'] : array();
+		$this->batch_field_editor( $scopable_fields, $parent_rules, $current_rules );
+		if ( ! $is_edit ) { echo '<p class="description">' . esc_html__( 'The selected Program is validated when you save; any Program-required field remains protected even if this new Batch form was opened before the Program was selected.', 'certloom' ) . '</p>'; }
 		echo '</div>';
 		if ( ! AdminUiMode::is_simple() ) { $this->metadata_editor( 'batch', $metadata, $editable ); }
 		echo '<div class="certloom-domain-form-feedback" data-certloom-domain-form-feedback aria-live="polite"></div>';
@@ -348,9 +357,16 @@ final class DomainStructureAdmin {
 
 	/** Quick-create a Program without abandoning an unsaved Batch form. */
 	private function batch_quick_program_dialog() {
-		echo '<dialog id="certloom-batch-quick-program-dialog" class="certloom-premium-dialog"><form data-certloom-quick-create="program" data-certloom-quick-target="#certloom-batch-program-id" data-certloom-human-form data-certloom-invalid-message="' . esc_attr__( 'Complete the highlighted Program field.', 'certloom' ) . '"><input type="hidden" name="action" value="certloom_manual_quick_program"><input type="hidden" name="nonce" value="' . esc_attr( wp_create_nonce( 'certloom_manual_quick_program' ) ) . '">';
-		echo '<div class="certloom-dialog-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Quick setup', 'certloom' ) . '</span><h2>' . esc_html__( 'Add Program', 'certloom' ) . '</h2><p>' . esc_html__( 'Create the Program here, select it for this Batch, and keep everything already entered in the Batch form.', 'certloom' ) . '</p></div><button type="button" class="button-link" data-certloom-dialog-close aria-label="' . esc_attr__( 'Close Add Program', 'certloom' ) . '">×</button></div>';
-		echo '<div class="certloom-dialog-body certloom-manual-grid certloom-manual-grid-2"><label><span>' . esc_html__( 'Program title', 'certloom' ) . '</span><input type="text" name="program_title" maxlength="255" required data-certloom-required-example="' . esc_attr__( 'Example: Internal Auditor Certification', 'certloom' ) . '"><small>' . esc_html__( 'Example: Internal Auditor Certification', 'certloom' ) . '</small></label><label><span>' . esc_html__( 'Short code (optional)', 'certloom' ) . '</span><input type="text" name="program_code" maxlength="100" placeholder="IA-101"></label></div>';
+		$templates = ( new TemplateRepository() )->list_published_candidates( 250 );
+		$templates = is_wp_error( $templates ) ? array() : (array) $templates;
+		$fields = \Ecapla_CertVerify_Fields::get_scopable_fields();
+		echo '<dialog id="certloom-batch-quick-program-dialog" class="certloom-premium-dialog certloom-premium-dialog-scroll"><form data-certloom-quick-create="program" data-certloom-quick-target="#certloom-batch-program-id" data-certloom-human-form data-certloom-invalid-message="' . esc_attr__( 'Complete the highlighted Program field.', 'certloom' ) . '"><input type="hidden" name="action" value="certloom_manual_quick_program"><input type="hidden" name="nonce" value="' . esc_attr( wp_create_nonce( 'certloom_manual_quick_program' ) ) . '">';
+		echo '<div class="certloom-dialog-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Quick setup', 'certloom' ) . '</span><h2>' . esc_html__( 'Add Program', 'certloom' ) . '</h2><p>' . esc_html__( 'Create the Program, choose its normal design and required credential fields, then return to this unfinished Batch automatically.', 'certloom' ) . '</p></div><button type="button" class="button-link" data-certloom-dialog-close aria-label="' . esc_attr__( 'Close Add Program', 'certloom' ) . '">×</button></div>';
+		echo '<div class="certloom-dialog-body"><div class="certloom-manual-grid certloom-manual-grid-2"><label><span>' . esc_html__( 'Program title', 'certloom' ) . '</span><input type="text" name="program_title" maxlength="255" required data-certloom-required-example="' . esc_attr__( 'Example: Internal Auditor Certification', 'certloom' ) . '"><small>' . esc_html__( 'Example: Internal Auditor Certification', 'certloom' ) . '</small></label><label><span>' . esc_html__( 'Short code (optional)', 'certloom' ) . '</span><input type="text" name="program_code" maxlength="100" placeholder="IA-101"></label></div>';
+		echo '<div class="certloom-dialog-section"><h3>' . esc_html__( 'Certificate design', 'certloom' ) . '</h3><label><span>' . esc_html__( 'Program design', 'certloom' ) . '</span><select name="program_template_id"><option value="0">' . esc_html__( 'Inherit Issuer / site design', 'certloom' ) . '</option>'; foreach ( $templates as $template ) { echo '<option value="' . esc_attr( (string) absint( $template['id'] ?? 0 ) ) . '">' . esc_html( (string) ( $template['name'] ?? '' ) ) . '</option>'; } echo '</select><small>' . esc_html__( 'You can preview, publish or change designs later from Program → Design.', 'certloom' ) . '</small></label></div>';
+		echo '<div class="certloom-dialog-section"><h3>' . esc_html__( 'Credential fields', 'certloom' ) . '</h3><p>' . esc_html__( 'Choose only fields this Program needs when credentials are issued. Advanced metadata is intentionally kept out of quick setup.', 'certloom' ) . '</p><div class="certloom-quick-field-requirements">';
+		foreach ( $fields as $field ) { $key = sanitize_key( (string) ( $field['key'] ?? '' ) ); if ( '' === $key ) { continue; } echo '<label><span>' . esc_html( (string) ( $field['label'] ?? $key ) ) . '</span><select name="program_field_requirement[' . esc_attr( $key ) . ']"><option value="">' . esc_html__( 'Not used', 'certloom' ) . '</option><option value="optional">' . esc_html__( 'Optional', 'certloom' ) . '</option><option value="required">' . esc_html__( 'Required', 'certloom' ) . '</option></select></label>'; }
+		echo '</div><p class="description">' . esc_html__( 'Visit Programs after saving for language variants, lifecycle defaults and other deeper Program settings.', 'certloom' ) . '</p></div></div>';
 		echo '<div class="certloom-dialog-actions"><button type="button" class="button" data-certloom-dialog-close>' . esc_html__( 'Cancel', 'certloom' ) . '</button><button type="submit" class="button button-primary">' . esc_html__( 'Add Program', 'certloom' ) . '</button></div></form></dialog>';
 	}
 
@@ -673,8 +689,7 @@ final class DomainStructureAdmin {
 		echo '<div class="certloom-scoped-field-editor" data-certloom-scope-field-editor="batch" data-certloom-field-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '"><div class="certloom-scoped-field-toolbar"><label><span>' . esc_html__( 'Add a field change', 'certloom' ) . '</span><select data-certloom-scope-field-picker><option value="">' . esc_html__( 'Choose field…', 'certloom' ) . '</option>';
 		foreach ( $fields as $field ) { $key = sanitize_key( (string) ( $field['key'] ?? '' ) ); if ( '' === $key || ! empty( $rules[ $key ] ) ) { continue; } echo '<option value="' . esc_attr( $key ) . '">' . esc_html( (string) ( $field['label'] ?? $key ) ) . '</option>'; }
 		echo '</select></label><button type="button" class="button" data-certloom-scope-field-add>' . esc_html__( 'Add field', 'certloom' ) . '</button><button type="button" class="button" data-certloom-quick-field-open>' . esc_html__( 'Create new field', 'certloom' ) . '</button><a href="' . esc_url( $manage_url ) . '">' . esc_html__( 'Manage all fields', 'certloom' ) . '</a></div><div class="certloom-scoped-field-list" data-certloom-scope-field-list>';
-		/* translators: program name */
-		foreach ( $fields as $field ) { $key = sanitize_key( (string) ( $field['key'] ?? '' ) ); if ( '' === $key ) { continue; } $rule = (string) ( $rules[ $key ] ?? '' ); $parent = (string) ( $parent_rules[ $key ] ?? '' ); $parent_label = '' === $parent ? __( 'Not used by Program', 'certloom' ) : sprintf( __( 'Program: %s', 'certloom' ), ucfirst( $parent ) ); echo '<div class="certloom-scoped-field-row" data-certloom-scope-field-row="' . esc_attr( $key ) . '"' . ( '' === $rule ? ' hidden' : '' ) . '><div><strong data-certloom-scope-field-label>' . esc_html( (string) ( $field['label'] ?? $key ) ) . '</strong><span class="certloom-scoped-field-meta">' . esc_html( (string) ( $field['type'] ?? 'text' ) ) . ' · ' . esc_html( $parent_label ) . '</span></div><label><span class="screen-reader-text">' . esc_html( sprintf( __( 'Batch rule for %s', 'certloom' ), (string) ( $field['label'] ?? $key ) ) ) . '</span><select name="batch_field_requirement[' . esc_attr( $key ) . ']" data-certloom-scope-field-rule><option value="" ' . selected( $rule, '', false ) . '>' . esc_html__( 'Inherit Program', 'certloom' ) . '</option><option value="optional" ' . selected( $rule, 'optional', false ) . '>' . esc_html__( 'Optional', 'certloom' ) . '</option><option value="required" ' . selected( $rule, 'required', false ) . '>' . esc_html__( 'Required', 'certloom' ) . '</option><option value="exclude" ' . selected( $rule, 'exclude', false ) . '>' . esc_html__( 'Exclude', 'certloom' ) . '</option></select></label><button type="button" class="button-link-delete" data-certloom-scope-field-remove>' . esc_html__( 'Remove change', 'certloom' ) . '</button></div>'; }
+		foreach ( $fields as $field ) { $key = sanitize_key( (string) ( $field['key'] ?? '' ) ); if ( '' === $key ) { continue; } $rule = (string) ( $rules[ $key ] ?? '' ); $parent = (string) ( $parent_rules[ $key ] ?? '' ); $parent_label = '' === $parent ? __( 'Not used by Program', 'certloom' ) : sprintf( /* translators: %s: parent. */ __( 'Program: %s', 'certloom' ), ucfirst( $parent ) ); echo '<div class="certloom-scoped-field-row" data-certloom-scope-field-row="' . esc_attr( $key ) . '"' . ( '' === $rule ? ' hidden' : '' ) . '><div><strong data-certloom-scope-field-label>' . esc_html( (string) ( $field['label'] ?? $key ) ) . '</strong><span class="certloom-scoped-field-meta">' . esc_html( (string) ( $field['type'] ?? 'text' ) ) . ' · ' . esc_html( $parent_label ) . '</span></div><label><span class="screen-reader-text">' . esc_html( sprintf( /* translators: %s: label. */ __( 'Batch rule for %s', 'certloom' ), (string) ( $field['label'] ?? $key ) ) ) . '</span><select name="batch_field_requirement[' . esc_attr( $key ) . ']" data-certloom-scope-field-rule><option value="" ' . selected( $rule, '', false ) . '>' . esc_html__( 'Inherit Program', 'certloom' ) . '</option><option value="optional" ' . selected( $rule, 'optional', false ) . '>' . esc_html__( 'Optional', 'certloom' ) . '</option><option value="required" ' . selected( $rule, 'required', false ) . '>' . esc_html__( 'Required', 'certloom' ) . '</option><option value="exclude" ' . selected( $rule, 'exclude', false ) . '>' . esc_html__( 'Exclude', 'certloom' ) . '</option></select></label><button type="button" class="button-link-delete" data-certloom-scope-field-remove>' . esc_html__( 'Remove change', 'certloom' ) . '</button></div>'; }
 		echo '</div><p class="certloom-scoped-field-empty" data-certloom-scope-field-empty' . ( array_filter( $rules ) ? ' hidden' : '' ) . '>' . esc_html__( 'This Batch currently inherits its Program field contract without changes.', 'certloom' ) . '</p>' . $this->quick_field_dialog() . '</div>';
 	}
 
@@ -799,6 +814,20 @@ final class DomainStructureAdmin {
 	}
 
 	/** @return void */
+	/** Save or clear the Batch-specific design override. Zero means inherit Program. @return true|\WP_Error */
+	private function save_batch_template_assignment( $batch_id, $template_id ) {
+		$repo = new TemplateRepository();
+		$existing = $repo->get_assignment( 'batch', absint( $batch_id ) );
+		if ( is_wp_error( $existing ) ) { return $existing; }
+		$expected_id = is_array( $existing ) ? absint( $existing['id'] ?? 0 ) : 0;
+		$expected_updated_at = is_array( $existing ) ? (string) ( $existing['updated_at'] ?? '' ) : '';
+		if ( ! absint( $template_id ) ) {
+			if ( ! $expected_id ) { return true; }
+			return $repo->clear_assignment( 'batch', absint( $batch_id ), $expected_id, $expected_updated_at );
+		}
+		return $repo->assign( absint( $template_id ), 'batch', absint( $batch_id ), 100, $expected_id, $expected_updated_at );
+	}
+
 	private function redirect_result( $page_slug, $result, $success_key, array $extra = array() ) {
 		$args = array_merge( array( 'page' => $page_slug ), $extra );
 		if ( is_wp_error( $result ) ) {

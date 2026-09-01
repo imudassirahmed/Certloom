@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: Certloom (Claude v1 — Gated)
+ * Plugin Name: Certloom – Certificate Verification
  * Description: Self-hosted credential issuance, verification and lifecycle management for WordPress.
- * Version: 1.6.98-claude-v1
+ * Version: 1.6.98-qa.11
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.98-claude-v1' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.98-qa.11' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
@@ -39,6 +39,7 @@ define( 'ECAPLA_CERTVERIFY_MINIMUM_ELEMENTOR_VERSION', '3.10.0' );
 define( 'CERTLOOM_VERSION', ECAPLA_CERTVERIFY_VERSION );
 define( 'CERTLOOM_PATH', ECAPLA_CERTVERIFY_PATH );
 define( 'CERTLOOM_URL', ECAPLA_CERTVERIFY_URL );
+define( 'CERTLOOM_QA_UNGATED', true );
 if ( ! defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) ) {
 	define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false );
 }
@@ -56,6 +57,17 @@ if ( ! defined( 'CERTLOOM_ALLOW_STAGING_MIGRATION_REHEARSAL' ) ) {
 }
 if ( ! defined( 'CERTLOOM_ALLOW_STAGING_RESTORE_REHEARSAL' ) ) {
 	define( 'CERTLOOM_ALLOW_STAGING_RESTORE_REHEARSAL', false );
+}
+
+if ( function_exists( 'add_action' ) ) {
+	/* Persistent staging identity for the intentionally ungated QA derivative. */
+	add_action( 'admin_bar_menu', static function ( $admin_bar ) {
+		if ( ! is_object( $admin_bar ) || ! current_user_can( 'manage_options' ) ) { return; }
+		$admin_bar->add_node( array( 'id' => 'certloom-qa-ungated', 'title' => 'Certloom QA.11 · Ungated', 'href' => admin_url( 'admin.php?page=certloom' ), 'meta' => array( 'title' => 'Staging only. Domain, public-verification and renderer authority gates are bypassed for QA; this package is not production-certified.' ) ) );
+	}, 100 );
+	$certloom_qa_bar_style = static function () { if ( current_user_can( 'manage_options' ) ) { echo '<style>#wp-admin-bar-certloom-qa-ungated>.ab-item{background:#b32d2e!important;color:#fff!important;font-weight:700!important}</style>'; } };
+	add_action( 'admin_head', $certloom_qa_bar_style );
+	add_action( 'wp_head', $certloom_qa_bar_style );
 }
 
 require_once CERTLOOM_PATH . 'src/Autoloader.php';
@@ -197,18 +209,8 @@ function ecapla_certverify_activate( $network_wide = false ) {
 	if ( is_wp_error( $result ) ) {
 		ecapla_certverify_fail_activation( array( get_current_blog_id() => $result ) );
 	}
-
-	/*
-	 * One-shot flag so the next admin page load can open the setup wizard.
-	 * Setup is registered with a null parent and is therefore invisible in the
-	 * menu, so without this a first-time administrator has no obvious route
-	 * into onboarding. The consumer refuses to redirect on bulk activation.
-	 */
-	$activating_user = get_current_user_id();
-	if ( $activating_user ) {
-		set_transient( 'certloom_activation_redirect_' . $activating_user, 1, MINUTE_IN_SECONDS );
-	}
-
+	// One-shot first-run continuation. Never used for network-wide activation.
+	set_transient( 'certloom_activation_redirect_' . get_current_user_id(), 1, 60 );
 	return true;
 }
 

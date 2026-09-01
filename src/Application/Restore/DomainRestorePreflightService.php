@@ -60,8 +60,7 @@ final class DomainRestorePreflightService {
 				continue;
 			}
 			$item = json_decode( trim( $line ), true );
-			/* translators: line number in the backup file */
-			if ( ! is_array( $item ) ) { fclose( $handle ); return new \WP_Error( 'certloom_domain_backup_json_invalid', sprintf( __( 'The Certloom domain backup contains invalid JSON on line %d.', 'certloom' ), $line_no ) ); }
+			if ( ! is_array( $item ) ) { fclose( $handle ); return new \WP_Error( 'certloom_domain_backup_json_invalid', sprintf( /* translators: %d: line number. */ __( 'The Certloom domain backup contains invalid JSON on line %d.', 'certloom' ), $line_no ) ); }
 			$item_type = (string) ( $item['type'] ?? '' );
 			if ( 1 === $line_no ) {
 				$normalized = $this->format->normalize_manifest( $item );
@@ -81,8 +80,7 @@ final class DomainRestorePreflightService {
 				$after_integrity = true;
 				continue;
 			}
-			/* translators: line number in the backup file */
-			if ( 'entity' !== $item_type || empty( $item['entity'] ) || ! is_array( $item['data'] ?? null ) ) { fclose( $handle ); return new \WP_Error( 'certloom_domain_backup_record_invalid', sprintf( __( 'The Certloom domain backup contains an unsupported record on line %d.', 'certloom' ), $line_no ) ); }
+			if ( 'entity' !== $item_type || empty( $item['entity'] ) || ! is_array( $item['data'] ?? null ) ) { fclose( $handle ); return new \WP_Error( 'certloom_domain_backup_record_invalid', sprintf( /* translators: %d: line number. */ __( 'The Certloom domain backup contains an unsupported record on line %d.', 'certloom' ), $line_no ) ); }
 			$records++;
 			if ( $records > max( 1, absint( $max_records ) ) ) { fclose( $handle ); return new \WP_Error( 'certloom_domain_backup_limit', __( 'The Certloom domain backup exceeds the configured record safety limit.', 'certloom' ) ); }
 			$type = sanitize_key( (string) ( $item['entity'] ?? '' ) );
@@ -232,8 +230,7 @@ final class DomainRestorePreflightService {
 		}
 
 		if ( ! empty( $errors ) ) {
-			/* translators: number of semantic relationship errors */
-			return new \WP_Error( 'certloom_domain_restore_semantic_invalid', sprintf( __( 'The Certloom backup passed file integrity checks but contains %d semantic relationship error(s).', 'certloom' ), count( $errors ) ), $errors );
+			return new \WP_Error( 'certloom_domain_restore_semantic_invalid', sprintf( /* translators: %d: errors. */ __( 'The Certloom backup passed file integrity checks but contains %d semantic relationship error(s).', 'certloom' ), count( $errors ) ), $errors );
 		}
 		return array( 'manifest' => $manifest, 'records' => $records, 'counts' => $counts, 'configuration' => $config, 'chain_sha256' => $hash, 'ready' => true );
 	}

@@ -27,11 +27,11 @@ final class AdminProductNavigation {
 
 	/** @var array<string,string> */
 	private const PRIMARY_ADVANCED = array(
-		'certloom'                 => 'Dashboard',
-		'certloom-certificates'    => 'Credentials',
-		'certloom-domain-programs' => 'People & Programs',
+		'certloom'                 => 'Home',
+		'certloom-domain-credentials' => 'Credentials',
+		'certloom-domain-programs' => 'Programs',
 		'certloom-templates'       => 'Design',
-		'certloom-analytics'       => 'Insights & Integrations',
+		'certloom-analytics'       => 'Automations',
 		'certloom-settings'        => 'Settings',
 	);
 
@@ -107,7 +107,7 @@ final class AdminProductNavigation {
 		}
 		$primary = array(
 			'dashboard'   => 'certloom',
-			'credentials' => AdminUiMode::is_simple() ? 'certloom-domain-credentials' : 'certloom-certificates',
+			'credentials' => 'certloom-domain-credentials',
 			'people'      => 'certloom-domain-programs',
 			'design'      => 'certloom-templates',
 			'insights'    => AdminUiMode::is_simple() ? 'certloom-automations' : 'certloom-analytics',
@@ -127,18 +127,18 @@ final class AdminProductNavigation {
 		$simple = AdminUiMode::is_simple();
 		switch ( $slug ) {
 			case 'certloom':
-				return $simple ? __( 'Home', 'certloom' ) : __( 'Dashboard', 'certloom' );
+				return __( 'Home', 'certloom' );
 			case 'certloom-certificates':
 			case 'certloom-domain-credentials':
 				return __( 'Credentials', 'certloom' );
 			case 'certloom-domain-programs':
-				return $simple ? __( 'Programs', 'certloom' ) : __( 'People & Programs', 'certloom' );
+				return __( 'Programs', 'certloom' );
 			case 'certloom-templates':
 				return __( 'Design', 'certloom' );
 			case 'certloom-automations':
 				return __( 'Automations', 'certloom' );
 			case 'certloom-analytics':
-				return __( 'Insights & Integrations', 'certloom' );
+				return __( 'Automations', 'certloom' );
 			case 'certloom-settings':
 				return __( 'Settings', 'certloom' );
 		}
@@ -184,24 +184,6 @@ final class AdminProductNavigation {
 			'insights'    => array( 'certloom-analytics', 'certloom-integrations', 'certloom-automations' ),
 			'settings'    => array( 'certloom-settings', 'certloom-import', 'certloom-setup', 'certloom-verification-sample', 'certloom-fields', 'certloom-domain-data-tools' ),
 		);
-
-		/*
-		 * A page slug must belong to exactly one section. When a slug appeared
-		 * in two groups the first match silently won, so following a link from
-		 * the losing section swapped the sub-navigation out from under the
-		 * administrator mid-task.
-		 */
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			$all_pages = array_merge( ...array_values( $groups ) );
-			if ( count( $all_pages ) !== count( array_unique( $all_pages ) ) ) {
-				_doing_it_wrong(
-					__METHOD__,
-					'A Certloom page slug appears in more than one navigation section.',
-					'1.6.98'
-				);
-			}
-		}
-
 		foreach ( $groups as $section => $pages ) {
 			if ( in_array( $page, $pages, true ) ) {
 				return $section;
@@ -219,24 +201,17 @@ final class AdminProductNavigation {
 
 		switch ( $section ) {
 			case 'credentials':
-				if ( $simple && $preview ) {
-					return array(
-						$this->link( __( 'Credentials', 'certloom' ), 'certloom-domain-credentials', array( 'certloom-domain-credentials' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS ),
-						$this->link( __( 'Issue', 'certloom' ), 'certloom-issuance', array( 'certloom-issuance' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ),
+				if ( $preview ) {
+					$links = array(
+						$this->link( __( 'Credentials', 'certloom' ), 'certloom-domain-credentials', array( 'certloom-domain-credentials', 'certloom-certificates', 'certloom-add', 'certloom-bulk-review' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS ),
+						$this->link( $simple ? __( 'Issue', 'certloom' ) : __( 'Issue credential', 'certloom' ), 'certloom-issuance', array( 'certloom-issuance' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ),
 						$this->link( __( 'Recipients', 'certloom' ), 'certloom-domain-recipients', array( 'certloom-domain-recipients' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_RECIPIENTS ),
 						$this->link( __( 'Bulk issue', 'certloom' ), 'certloom-bulk-issuance', array( 'certloom-bulk-issuance' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ),
 					);
+					if ( ! $simple ) { $links[] = $this->link( __( 'Email delivery', 'certloom' ), 'certloom-email-delivery', array( 'certloom-email-delivery' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ); }
+					return $links;
 				}
-				$links = array(
-					$this->link( $preview ? __( 'Legacy data', 'certloom' ) : __( 'Registry', 'certloom' ), 'certloom-certificates', array( 'certloom-certificates', 'certloom-add', 'certloom-bulk-review' ), ECAPLA_CERTVERIFY_CAP ),
-				);
-				if ( $preview ) {
-					$links[] = $this->link( __( 'Credentials', 'certloom' ), 'certloom-domain-credentials', array( 'certloom-domain-credentials' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS );
-					$links[] = $this->link( __( 'Issue credential', 'certloom' ), 'certloom-issuance', array( 'certloom-issuance' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS );
-					$links[] = $this->link( __( 'Bulk issue', 'certloom' ), 'certloom-bulk-issuance', array( 'certloom-bulk-issuance' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS );
-					$links[] = $this->link( __( 'Email delivery', 'certloom' ), 'certloom-email-delivery', array( 'certloom-email-delivery' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS );
-				}
-				return $links;
+				return array( $this->link( __( 'Credentials', 'certloom' ), 'certloom-certificates', array( 'certloom-certificates', 'certloom-add', 'certloom-bulk-review' ), ECAPLA_CERTVERIFY_CAP ) );
 
 			case 'people':
 				if ( $simple ) {
@@ -260,7 +235,7 @@ final class AdminProductNavigation {
 
 			case 'design':
 				return array(
-					$this->link( $simple ? __( 'Designs', 'certloom' ) : __( 'Templates', 'certloom' ), 'certloom-templates', array( 'certloom-templates' ), ECAPLA_CERTVERIFY_CAP ),
+					$this->link( __( 'Designs', 'certloom' ), 'certloom-templates', array( 'certloom-templates' ), ECAPLA_CERTVERIFY_CAP ),
 					$this->link( __( 'Verification page', 'certloom' ), 'certloom-frontend', array( 'certloom-frontend' ), ECAPLA_CERTVERIFY_CAP ),
 				);
 
@@ -272,11 +247,6 @@ final class AdminProductNavigation {
 						$this->link( __( 'Analytics', 'certloom' ), 'certloom-analytics', array( 'certloom-analytics' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS ),
 					);
 				}
-				/*
-				 * Delivery lives in the Credentials section, where the
-				 * credential lifecycle belongs. It is reachable from the
-				 * Credentials sub-navigation in both modes.
-				 */
 				return array(
 					$this->link( __( 'Analytics', 'certloom' ), 'certloom-analytics', array( 'certloom-analytics' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS ),
 					$this->link( __( 'Integrations', 'certloom' ), 'certloom-integrations', array( 'certloom-integrations' ), ECAPLA_CERTVERIFY_CAP ),

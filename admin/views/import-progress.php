@@ -3,7 +3,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 ?>
-<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-restore-flow">
+<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell">
 	<?php include ECAPLA_CERTVERIFY_PATH . 'admin/views/partials/brand-bar.php'; ?>
 	<h1><?php esc_html_e( 'Import in progress', 'certloom' ); ?></h1>
 	<section class="ecapla-certverify-admin-card ecapla-certloom-import-progress-card">

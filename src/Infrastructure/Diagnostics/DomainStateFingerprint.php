@@ -154,8 +154,7 @@ final class DomainStateFingerprint {
 	private function release_after_error( $owner, \WP_Error $error ) {
 		$released = $this->maintenance->release( (string) $owner );
 		if ( is_wp_error( $released ) ) {
-			/* translators: 1: fingerprinting error message, 2: boundary release error message */
-			return new \WP_Error( 'certloom_domain_fingerprint_cleanup_failed', sprintf( __( 'Certloom domain fingerprinting failed (%1$s) and its maintenance boundary could not be released safely (%2$s).', 'certloom' ), $error->get_error_message(), $released->get_error_message() ) );
+			return new \WP_Error( 'certloom_domain_fingerprint_cleanup_failed', sprintf( /* translators: %1$s: primary error; %2$s: lock release error. */ __( 'Certloom domain fingerprinting failed (%1$s) and its maintenance boundary could not be released safely (%2$s).', 'certloom' ), $error->get_error_message(), $released->get_error_message() ) );
 		}
 		return $error;
 	}

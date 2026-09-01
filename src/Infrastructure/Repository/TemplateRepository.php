@@ -259,6 +259,30 @@ final class TemplateRepository {
 		} );
 	}
 
+	/** Move an unassigned published template back to Draft without deleting revisions. @return true|\WP_Error */
+	public function unpublish( $template_id, $expected_updated_at = '' ) {
+		$template_id = absint( $template_id );
+		if ( ! $template_id ) { return new \WP_Error( 'certloom_template_id_required', __( 'A valid template is required.', 'certloom' ) ); }
+		$generation = ( new DomainGeneration() )->mark_before_mutation();
+		if ( is_wp_error( $generation ) ) { return $generation; }
+		return $this->transaction->run( function () use ( $template_id, $expected_updated_at ) {
+			global $wpdb;
+			$template = $this->lock_template( $template_id );
+			if ( is_wp_error( $template ) ) { return $template; }
+			if ( ! is_array( $template ) || ! empty( $template['archived_at'] ) ) { return new \WP_Error( 'certloom_template_unavailable', __( 'The design is unavailable.', 'certloom' ) ); }
+			if ( '' !== (string) $expected_updated_at && ! hash_equals( (string) $template['updated_at'], (string) $expected_updated_at ) ) { return new \WP_Error( 'certloom_template_stale_edit', __( 'This design changed after you opened it. Reload before changing its publication state.', 'certloom' ) ); }
+			if ( ! absint( $template['published_revision_id'] ?? 0 ) ) { return true; }
+			$wpdb->last_error = '';
+			$assignment_count = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE template_id=%d AND active=1', SchemaManager::table( 'template_assignments' ), $template_id ) );
+			if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_template_assignment_read_failed', __( 'Certloom could not verify where this design is currently used.', 'certloom' ) ); }
+			if ( $assignment_count > 0 ) { return new \WP_Error( 'certloom_template_unpublish_assigned', __( 'This design is currently assigned to a Program, Batch, Issuer or site default. Choose another design there before moving this one back to Draft.', 'certloom' ) ); }
+			$now = current_time( 'mysql', true );
+			$wpdb->last_error = '';
+			$updated = $wpdb->update( SchemaManager::table( 'templates' ), array( 'published_revision_id' => null, 'updated_at' => $now ), array( 'id' => $template_id ) );
+			return false === $updated || '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_unpublish_failed', __( 'Certloom could not move this design back to Draft safely.', 'certloom' ) ) : true;
+		} );
+	}
+
 	/** @return true|\WP_Error */
 	public function archive( $template_id, $expected_updated_at = '' ) {
 		$template_id = absint( $template_id );

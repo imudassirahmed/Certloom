@@ -814,64 +814,9 @@
 	.certloom-template-designer-context-hint { border-color: CanvasText; }
 }
 
-/* -------------------------------------------------------------------------
- * Canvas element types that previously had no rule.
- *
- * The base .certloom-template-designer-element is transparent with a
- * transparent border, so any type without a modifier rule was invisible on
- * the canvas and could only be found by clicking where it was expected.
- * ---------------------------------------------------------------------- */
-.certloom-template-designer-element.is-barcode {
-	background: repeating-linear-gradient(90deg, #111 0 2px, #fff 2px 5px);
-	border: 4px solid #fff;
-}
-.certloom-template-designer-element.is-barcode .certloom-template-designer-content {
-	align-items: flex-end;
-	justify-content: center;
-	padding: 1px 4px;
-	background: rgba(255, 255, 255, .9);
-	color: #111;
-	font-size: 10px !important;
-	font-weight: 700;
-	text-align: center !important;
-}
-.certloom-template-designer-element.is-shape {
-	border: 1px dashed #8c8f94;
-	background: rgba(140, 143, 148, .10);
-}
-.certloom-template-designer-element.is-shape .certloom-template-designer-content {
-	align-items: center;
-	justify-content: center;
-	color: #50575e;
-	font-size: 11px !important;
-	text-align: center !important;
-}
-.certloom-template-designer-element.is-list .certloom-template-designer-content {
-	flex-direction: column;
-	align-items: flex-start;
-	white-space: pre-wrap;
-	word-break: break-word;
-}
-
-/* Selection feedback in Certloom colours rather than WordPress blue. */
-.certloom-template-designer-element:hover {
-	outline: 1px dashed var(--certloom-accent);
-	outline-offset: 1px;
-}
-.certloom-template-designer-element.is-selected {
-	outline: 2px solid var(--certloom-accent);
-	outline-offset: 2px;
-	box-shadow: 0 0 0 1px rgba(255, 255, 255, .85);
-}
-.certloom-template-designer-element.is-multi-selected:not(.is-selected) {
-	outline: 2px dashed var(--certloom-accent-strong);
-	outline-offset: 2px;
-	box-shadow: 0 0 0 1px rgba(255, 255, 255, .82);
-}
-
-/* Layers panel buttons now also carry .button, so keep them compact. */
-.certloom-template-designer-layer-select.button,
-.certloom-template-designer-layer-lock.button {
-	min-height: 30px;
-	padding: 0 8px;
-}
+/* UX-SYSTEM-01 — visible designer semantics for every supported element type. */
+.certloom-template-designer-element.is-barcode{background:repeating-linear-gradient(90deg,#111 0 2px,#fff 2px 5px);border:4px solid #fff}
+.certloom-template-designer-element.is-barcode .certloom-template-designer-content{align-items:flex-end;font-size:10px;font-weight:700;color:#111;background:rgba(255,255,255,.9)}
+.certloom-template-designer-element.is-shape{border:1px dashed var(--certloom-muted,#8c8f94);background:rgba(95,111,105,.10)}
+.certloom-template-designer-element.is-list .certloom-template-designer-content{flex-direction:column;align-items:flex-start;white-space:pre-wrap}
+.certloom-template-designer-element:hover,.certloom-template-designer-element.is-selected{outline-color:var(--certloom-accent,#0f6e56)}

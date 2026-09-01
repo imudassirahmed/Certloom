@@ -193,10 +193,8 @@ class Ecapla_CertVerify_System_Status {
 		$status = 'passed' === $state ? 'good' : ( 'failed' === $state ? 'bad' : 'warning' );
 		$value  = 'passed' === $state ? __( 'Passed', 'certloom' ) : ( 'failed' === $state ? __( 'Failed', 'certloom' ) : ( 'stale' === $state ? __( 'Passed previously — run again', 'certloom' ) : __( 'Incomplete', 'certloom' ) ) );
 		$note = 'stale' === $state
-			/* translators: 1: passed check count, 2: warning count, 3: failed check count */
-			? sprintf( __( '%1$d passed, %2$d warnings, %3$d failed in the stored proof, but the evidence is stale for this Certloom version or older than seven days. Run it again before relying on it.', 'certloom' ), (int) $counts['pass'], (int) $counts['warning'], (int) $counts['fail'] )
-			/* translators: 1: passed check count, 2: warning count, 3: failed check count */
-			: sprintf( __( '%1$d passed, %2$d warnings, %3$d failed. This proof uses only an isolated scratch table; the full future-domain acceptance suite is still required before cutover.', 'certloom' ), (int) $counts['pass'], (int) $counts['warning'], (int) $counts['fail'] );
+			? sprintf( /* translators: %1$d: pass; %2$d: warning; %3$d: fail. */ __( '%1$d passed, %2$d warnings, %3$d failed in the stored proof, but the evidence is stale for this Certloom version or older than seven days. Run it again before relying on it.', 'certloom' ), (int) $counts['pass'], (int) $counts['warning'], (int) $counts['fail'] )
+			: sprintf( /* translators: %1$d: pass; %2$d: warning; %3$d: fail. */ __( '%1$d passed, %2$d warnings, %3$d failed. This proof uses only an isolated scratch table; the full future-domain acceptance suite is still required before cutover.', 'certloom' ), (int) $counts['pass'], (int) $counts['warning'], (int) $counts['fail'] );
 		if ( 'failed' !== $overall && 'passed' !== $overall && 'stale' !== $state ) { $status = 'warning'; }
 		return self::check( 'database_proof', __( 'Isolated database proof', 'certloom' ), $status, $value, $note );
 	}
@@ -218,8 +216,7 @@ class Ecapla_CertVerify_System_Status {
 		}
 		$status = 'passed' === $state ? 'good' : ( 'failed' === $state ? 'bad' : 'warning' );
 		$value = 'passed' === $state ? __( 'Passed', 'certloom' ) : ( 'failed' === $state ? __( 'Failed', 'certloom' ) : ( 'stale' === $state ? __( 'Passed previously — run again', 'certloom' ) : __( 'Incomplete', 'certloom' ) ) );
-		/* translators: 1: passed check count, 2: warning count, 3: failed check count */
-		$note = sprintf( __( '%1$d passed, %2$d warnings, %3$d failed. This proof provisions the additive future-domain tables but rolls back all synthetic credential rows; live legacy migration/restore/cutover remain separate gates.', 'certloom' ), (int) $counts['pass'], (int) $counts['warning'], (int) $counts['fail'] );
+		$note = sprintf( /* translators: %1$d: pass; %2$d: warning; %3$d: fail. */ __( '%1$d passed, %2$d warnings, %3$d failed. This proof provisions the additive future-domain tables but rolls back all synthetic credential rows; live legacy migration/restore/cutover remain separate gates.', 'certloom' ), (int) $counts['pass'], (int) $counts['warning'], (int) $counts['fail'] );
 		return self::check( 'domain_acceptance_proof', __( 'Gated-domain acceptance proof', 'certloom' ), $status, $value, $note );
 	}
 

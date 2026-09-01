@@ -524,7 +524,7 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 	 *
 	 * @return array{items:array<int,array<string,mixed>>,total:int}|\WP_Error
 	 */
-	public function list_management_page( $search = '', $page = 1, $per_page = 20, $status = 'all', $program_id = 0 ) {
+	public function list_management_page( $search = '', $page = 1, $per_page = 20, $status = 'all', $program_id = 0, $exclude_source_type = '' ) {
 		global $wpdb;
 		$page       = max( 1, absint( $page ) );
 		$per_page   = max( 1, min( 100, absint( $per_page ) ) );
@@ -544,6 +544,11 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		if ( $program_id ) {
 			$where[] = 's.program_id = %d';
 			$args[]  = $program_id;
+		}
+		$exclude_source_type = trim( (string) $exclude_source_type );
+		if ( '' !== $exclude_source_type ) {
+			$where[] = '(v.source_type IS NULL OR v.source_type <> %s)';
+			$args[]  = $exclude_source_type;
 		}
 		if ( 'all' !== $status ) {
 			$predicate = self::management_status_predicate( $status, gmdate( 'Y-m-d' ) );
@@ -568,7 +573,7 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 			return new \WP_Error( 'certloom_credential_management_count_failed', __( 'Certloom could not count the credential registry safely.', 'certloom' ) );
 		}
 
-		$sql = 'SELECT s.id AS series_id, s.public_id, s.recipient_id, s.program_id, s.batch_id, s.issuer_id, s.current_version_id, s.administrative_state, s.compliance_state, s.visibility, s.created_at AS series_created_at, s.updated_at AS series_updated_at, r.display_name, r.email AS recipient_email, p.title AS program_title, p.code AS program_code, b.name AS batch_name, b.code AS batch_code, i.name AS issuer_name, v.id AS version_id, v.version_number, v.previous_version_id, v.display_number, v.issuance_state, v.legacy_expired, v.valid_from, v.issued_at, v.expires_at, v.grade, v.updated_at AS version_updated_at' . $joins . $where_sql . ' ORDER BY s.updated_at DESC, s.id DESC LIMIT %d OFFSET %d';
+		$sql = 'SELECT s.id AS series_id, s.public_id, s.recipient_id, s.program_id, s.batch_id, s.issuer_id, s.current_version_id, s.administrative_state, s.compliance_state, s.visibility, s.created_at AS series_created_at, s.updated_at AS series_updated_at, r.display_name, r.email AS recipient_email, p.title AS program_title, p.code AS program_code, b.name AS batch_name, b.code AS batch_code, i.name AS issuer_name, v.id AS version_id, v.version_number, v.previous_version_id, v.display_number, v.issuance_state, v.legacy_expired, v.valid_from, v.issued_at, v.expires_at, v.grade, v.source_type, v.source_idempotency_key, v.updated_at AS version_updated_at' . $joins . $where_sql . ' ORDER BY s.updated_at DESC, s.id DESC LIMIT %d OFFSET %d';
 		$wpdb->last_error = '';
 		$items = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( $base_args, $args, array( $per_page, $offset ) ) ), ARRAY_A );
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $items ) ) {
@@ -667,7 +672,7 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 	}
 
 	/** @return array<string,int>|\WP_Error */
-	public function management_summary() {
+	public function management_summary( $exclude_source_type = '' ) {
 		global $wpdb;
 		$series   = SchemaManager::table( 'credential_series' );
 		$versions = SchemaManager::table( 'credential_versions' );
@@ -681,8 +686,11 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 			$parts[]          = 'SUM(CASE WHEN ' . $predicate['sql'] . ' THEN 1 ELSE 0 END) AS ' . $status;
 			$predicate_args = array_merge( $predicate_args, $predicate['args'] );
 		}
-		$sql  = 'SELECT ' . implode( ', ', $parts ) . ' FROM %i s LEFT JOIN %i v ON v.id=s.current_version_id AND v.series_id=s.id';
+		$exclude_source_type = trim( (string) $exclude_source_type );
+		$where = '' !== $exclude_source_type ? ' WHERE (v.source_type IS NULL OR v.source_type <> %s)' : '';
+		$sql  = 'SELECT ' . implode( ', ', $parts ) . ' FROM %i s LEFT JOIN %i v ON v.id=s.current_version_id AND v.series_id=s.id' . $where;
 		$args = array_merge( $predicate_args, array( $series, $versions ) );
+		if ( '' !== $exclude_source_type ) { $args[] = $exclude_source_type; }
 		$wpdb->last_error = '';
 		$row = $wpdb->get_row( $wpdb->prepare( $sql, $args ), ARRAY_A );
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $row ) ) {
@@ -968,13 +976,11 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 			return null;
 		}
 		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $value ) ) {
-			/* translators: field label */
-			return new \WP_Error( 'certloom_version_date_invalid', sprintf( __( '%s must use the YYYY-MM-DD date format.', 'certloom' ), $field ) );
+			return new \WP_Error( 'certloom_version_date_invalid', sprintf( /* translators: %s: field label. */ __( '%s must use the YYYY-MM-DD date format.', 'certloom' ), $field ) );
 		}
 		list( $year, $month, $day ) = array_map( 'intval', explode( '-', $value ) );
 		if ( ! checkdate( $month, $day, $year ) ) {
-			/* translators: field label */
-			return new \WP_Error( 'certloom_version_date_invalid', sprintf( __( '%s is not a valid calendar date.', 'certloom' ), $field ) );
+			return new \WP_Error( 'certloom_version_date_invalid', sprintf( /* translators: %s: field label. */ __( '%s is not a valid calendar date.', 'certloom' ), $field ) );
 		}
 		return $value;
 	}
@@ -987,8 +993,7 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		}
 		$date = \DateTimeImmutable::createFromFormat( '!Y-m-d H:i:s', $value );
 		if ( ! $date || $date->format( 'Y-m-d H:i:s' ) !== $value ) {
-			/* translators: field label */
-			return new \WP_Error( 'certloom_version_datetime_invalid', sprintf( __( '%s must be a valid UTC YYYY-MM-DD HH:MM:SS value.', 'certloom' ), $field ) );
+			return new \WP_Error( 'certloom_version_datetime_invalid', sprintf( /* translators: %s: field label. */ __( '%s must be a valid UTC YYYY-MM-DD HH:MM:SS value.', 'certloom' ), $field ) );
 		}
 		return $value;
 	}

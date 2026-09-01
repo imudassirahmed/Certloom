@@ -119,7 +119,7 @@ final class RuntimePayloadFingerprint {
         $relative = str_replace( '\\', '/', (string) $relative );
         if ( 'resources/renderer/accepted.json' === $relative || 'resources/domain/accepted.json' === $relative ) { return true; }
         $parts = explode( '/', $relative );
-        if ( isset( $parts[0] ) && ( 'docs' === $parts[0] || 'tests' === $parts[0] ) ) { return true; }
+        if ( isset( $parts[0] ) && in_array( $parts[0], array( 'docs', 'tests', 'bin' ), true ) ) { return true; }
         foreach ( $parts as $part ) {
             if ( '.git' === $part || '.svn' === $part || '__pycache__' === $part ) { return true; }
         }

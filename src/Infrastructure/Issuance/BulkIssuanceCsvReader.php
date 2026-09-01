@@ -66,8 +66,7 @@ final class BulkIssuanceCsvReader {
 			$raw = fgetcsv( $handle, 0, ',', '"', '' ); if ( false === $raw ) { break; }
 			if ( $this->blank( $raw ) ) { $state['offset'] = (int) ftell( $handle ); continue; }
 			$state['row_number'] = absint( $state['row_number'] ) + 1;
-			/* translators: number of credentials */
-			if ( $state['row_number'] > absint( $state['max_rows'] ) ) { fclose( $handle ); return new \WP_Error( 'certloom_bulk_csv_row_limit', sprintf( __( 'Bulk Issuance is limited to %d credential rows per reviewed job in this release.', 'certloom' ), absint( $state['max_rows'] ) ) ); }
+			if ( $state['row_number'] > absint( $state['max_rows'] ) ) { fclose( $handle ); return new \WP_Error( 'certloom_bulk_csv_row_limit', sprintf( /* translators: %d: credential count. */ __( 'Bulk Issuance is limited to %d credential rows per reviewed job in this release.', 'certloom' ), absint( $state['max_rows'] ) ) ); }
 			$request = $this->map_row( $raw, (array) $state['header'], (array) $state['shared'] );
 			$records[] = is_wp_error( $request ) ? array( 'row_number' => absint( $state['row_number'] ), 'error' => $request ) : array( 'row_number' => absint( $state['row_number'] ), 'request' => $request );
 			$read++;
@@ -99,8 +98,7 @@ final class BulkIssuanceCsvReader {
 			if ( strlen( $value ) > self::MAX_CELL_BYTES || ! $this->valid_utf8( $value ) || false !== strpos( $value, "\0" ) ) { return new \WP_Error( 'certloom_bulk_csv_header_invalid', __( 'The Bulk Issuance CSV header contains invalid or oversized text.', 'certloom' ) ); }
 			$key = strtolower( trim( $value ) ); $key = str_replace( array( ' ', '-' ), '_', $key );
 			if ( 0 === strpos( $key, 'custom:' ) ) { $custom = substr( $key, 7 ); if ( ! preg_match( '/^[a-z0-9_-]{1,64}$/', $custom ) ) { return new \WP_Error( 'certloom_bulk_csv_custom_header_invalid', __( 'Custom Bulk Issuance columns must use custom:machine_key with a 1–64 character machine key.', 'certloom' ) ); } $key = 'custom:' . $custom; }
-			/* translators: CSV column name */
-			elseif ( ! in_array( $key, $allowed, true ) ) { return new \WP_Error( 'certloom_bulk_csv_header_unknown', sprintf( __( 'Unsupported Bulk Issuance CSV column: %s.', 'certloom' ), $value ) ); }
+			elseif ( ! in_array( $key, $allowed, true ) ) { return new \WP_Error( 'certloom_bulk_csv_header_unknown', sprintf( /* translators: %s: value. */ __( 'Unsupported Bulk Issuance CSV column: %s.', 'certloom' ), $value ) ); }
 			if ( isset( $seen[ $key ] ) ) { return new \WP_Error( 'certloom_bulk_csv_duplicate_header', __( 'The Bulk Issuance CSV contains duplicate column names.', 'certloom' ) ); }
 			$seen[ $key ] = true; $out[] = $key;
 		}

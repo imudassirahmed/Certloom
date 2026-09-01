@@ -162,8 +162,7 @@ final class DomainRestoreStagingService implements DomainRestoreStagingInterface
 			$item = json_decode( trim( $line ), true );
 			if ( ! is_array( $item ) ) {
 				fclose( $handle );
-				/* translators: line number in the backup file */
-				return $this->abort( $state, new \WP_Error( 'certloom_domain_backup_json_invalid', sprintf( __( 'The Certloom domain backup contains invalid JSON on line %d.', 'certloom' ), $next_line_no ) ) );
+				return $this->abort( $state, new \WP_Error( 'certloom_domain_backup_json_invalid', sprintf( /* translators: %d: line number. */ __( 'The Certloom domain backup contains invalid JSON on line %d.', 'certloom' ), $next_line_no ) ) );
 			}
 			$type = (string) ( $item['type'] ?? '' );
 			if ( 'integrity' === $type ) {
@@ -182,8 +181,7 @@ final class DomainRestoreStagingService implements DomainRestoreStagingInterface
 			}
 			if ( 'entity' !== $type || empty( $item['entity'] ) || ! is_array( $item['data'] ?? null ) ) {
 				fclose( $handle );
-				/* translators: line number in the backup file */
-				return $this->abort( $state, new \WP_Error( 'certloom_domain_backup_record_invalid', sprintf( __( 'The Certloom domain backup contains an unsupported record on line %d.', 'certloom' ), $next_line_no ) ) );
+				return $this->abort( $state, new \WP_Error( 'certloom_domain_backup_record_invalid', sprintf( /* translators: %d: line number. */ __( 'The Certloom domain backup contains an unsupported record on line %d.', 'certloom' ), $next_line_no ) ) );
 			}
 			$entity = sanitize_key( (string) $item['entity'] );
 			if ( ! isset( $order[ $entity ] ) || $order[ $entity ] < (int) $state['entity_order'] ) {
