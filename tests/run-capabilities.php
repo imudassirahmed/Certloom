@@ -28,6 +28,7 @@ function get_option($k,$d=false){ return array_key_exists($k,$GLOBALS['cap_optio
 function update_option($k,$v){ $GLOBALS['cap_options'][$k]=$v; if($k==='wp_user_roles'){$GLOBALS['fake_roles_obj']->roles=$v;} return true; }
 function delete_option($k){ unset($GLOBALS['cap_options'][$k]); return true; }
 function sanitize_key($v){ return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$v)); }
+function absint($v){ return abs((int)$v); }
 function get_current_blog_id(){ return 1; }
 function __( $t ){ return $t; }
 function current_user_can($cap){ return false; }
@@ -49,4 +50,20 @@ foreach(Ecapla_CertVerify_Permissions::all_capabilities() as $cap){
 cp_true(!empty($roles['administrator']['capabilities']['manage_certverify']),'admin legacy cap preserved');
 cp_true(!empty($roles['editor']['capabilities']['manage_certverify']),'editor legacy cap preserved');
 
-echo "PASS  legacy broad-access roles receive granular capabilities without granting unrelated roles\n\n1 tests, 0 failures\n";
+// Existing installations may already have the current schema/health marker while
+// missing a capability introduced by an incomplete older upgrade. The health
+// fast path must verify the administrator's persisted capability set, not trust
+// the marker alone.
+$GLOBALS['cap_options'][Ecapla_CertVerify_Permissions::CAPABILITY_SCHEMA_OPTION] = Ecapla_CertVerify_Permissions::CAPABILITY_SCHEMA_VERSION;
+$GLOBALS['cap_options'][Ecapla_CertVerify_Permissions::HEALTH_OPTION] = array(
+    'version' => Ecapla_CertVerify_Permissions::CAPABILITY_SCHEMA_VERSION,
+    'checked_at' => time(),
+);
+unset($GLOBALS['cap_options']['wp_user_roles']['administrator']['capabilities'][Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS]);
+$GLOBALS['fake_roles_obj']->roles = $GLOBALS['cap_options']['wp_user_roles'];
+cp_false(!empty($GLOBALS['cap_options']['wp_user_roles']['administrator']['capabilities'][Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS]), 'fixture must begin with analytics capability missing');
+cp_true(Ecapla_CertVerify_Permissions::maybe_upgrade_capabilities(false), 'current-marker capability self-repair');
+cp_true(!empty($GLOBALS['cap_options']['wp_user_roles']['administrator']['capabilities'][Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS]), 'administrator analytics capability restored despite current health marker');
+
+echo "PASS  legacy broad-access roles receive granular capabilities without granting unrelated roles\n";
+echo "PASS  current health markers cannot mask a missing administrator analytics capability\n\n2 tests, 0 failures\n";

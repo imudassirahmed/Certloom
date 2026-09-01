@@ -378,6 +378,7 @@ class Ecapla_CertVerify_Render {
 						'profile' => isset( $payload['profile'] ) && is_array( $payload['profile'] ) ? $payload['profile'] : array(),
 						'fields' => $fields,
 						'issuer' => $issuer,
+						'snapshot' => $snapshot,
 						'verified_at' => current_time( 'mysql' ),
 						'verification_url' => is_wp_error( $url ) ? '' : (string) $url,
 						'actions' => is_wp_error( $url ) ? array( array( 'type' => 'print', 'label' => __( 'Print', 'certloom' ) ) ) : array(
@@ -391,6 +392,40 @@ class Ecapla_CertVerify_Render {
 		}
 
 		return '<section id="' . esc_attr( $instance_id ) . '" class="certloom-credential-profile cvp-widget cvp-widget--normalized" aria-labelledby="' . esc_attr( $heading_id ) . '" data-copy-success-text="' . esc_attr__( 'Verification link copied.', 'certloom' ) . '" data-copy-error-text="' . esc_attr__( 'Copy the verification link from your browser.', 'certloom' ) . '"><header class="cvp-header"><p class="cvp-eyebrow">' . esc_html__( 'Verified credential', 'certloom' ) . '</p><' . $heading_tag . ' id="' . esc_attr( $heading_id ) . '" class="cvp-heading">' . esc_html( $heading ) . '</' . $heading_tag . '></header><div class="cvp-result" role="region" aria-labelledby="' . esc_attr( $heading_id ) . '">' . $content . '</div><div class="screen-reader-text certloom-live-status" role="status" aria-live="polite" aria-atomic="true"></div></section>';
+	}
+
+	/**
+	 * Admin-only setup sample. It deliberately uses obvious sample data and never
+	 * queries or creates a credential record.
+	 *
+	 * @return string
+	 */
+	public static function setup_sample_credential_profile() {
+		Ecapla_CertVerify_Shortcode::enqueue_assets();
+		$site_name = trim( (string) get_bloginfo( 'name' ) );
+		if ( '' === $site_name ) { $site_name = __( 'Example Organization', 'certloom' ); }
+		$presentation = array(
+			'found' => true,
+			'status' => array( 'key' => 'valid', 'label' => __( 'Valid credential', 'certloom' ), 'description' => __( 'Sample status: this is how a valid issued credential is presented to a verifier.', 'certloom' ) ),
+			'credential_id' => 'SAMPLE-CREDENTIAL-ID',
+			'certificate_number' => 'CERT-EXAMPLE-0001',
+			'profile' => array(
+				'recipient_name' => __( 'Amina Khan', 'certloom' ),
+				'program_title' => __( 'Example Professional Certificate', 'certloom' ),
+				'program_description' => __( 'Sample public presentation used only during setup.', 'certloom' ),
+				'issuer_name' => $site_name,
+			),
+			'fields' => array(
+				array( 'label' => __( 'Issued', 'certloom' ), 'value' => wp_date( 'Y-m-d' ), 'is_status' => false ),
+			),
+			'issuer' => $site_name,
+			'snapshot' => array(),
+			'verified_at' => current_time( 'mysql' ),
+			'verification_url' => home_url( '/' ),
+			'actions' => array(),
+		);
+		$content = self::normalized_profile_card_html( $presentation, 'cvp' );
+		return '<section class="certloom-credential-profile cvp-widget cvp-widget--normalized certloom-credential-profile--sample" aria-label="' . esc_attr__( 'Sample credential verification result', 'certloom' ) . '"><div class="cvp-result">' . $content . '</div><p class="certloom-sample-watermark">' . esc_html__( 'Sample preview — not a real credential', 'certloom' ) . '</p></section>';
 	}
 
 	/** Premium human-facing normalized credential profile. @return string */
@@ -431,6 +466,8 @@ class Ecapla_CertVerify_Render {
 			$facts_html .= '</dl>';
 		}
 
+		$snapshot = isset( $presentation['snapshot'] ) && is_array( $presentation['snapshot'] ) ? $presentation['snapshot'] : array();
+		$certificate_preview = self::normalized_certificate_preview_html( $snapshot );
 		$qr = class_exists( 'Ecapla_CertVerify_QR' ) && ! empty( $presentation['verification_url'] ) ? Ecapla_CertVerify_QR::figure_html( (string) $presentation['verification_url'], $prefix ) : '';
 		$barcode = class_exists( 'Ecapla_CertVerify_Barcode' ) && '' !== $number ? Ecapla_CertVerify_Barcode::figure_html( $number, $prefix ) : '';
 		$verified = ! empty( $presentation['verified_at'] ) ? '<p class="cvp-profile-verified">' . esc_html__( 'Verified from the issuer’s Certloom registry', 'certloom' ) . ' · <time datetime="' . esc_attr( (string) $presentation['verified_at'] ) . '">' . esc_html( self::format_verified_at( $presentation['verified_at'] ) ) . '</time></p>' : '';
@@ -438,8 +475,44 @@ class Ecapla_CertVerify_Render {
 		if ( '' !== $credential_id ) { $proof .= '<details class="cvp-profile-technical"><summary>' . esc_html__( 'Credential ID', 'certloom' ) . '</summary><code>' . esc_html( $credential_id ) . '</code></details>'; }
 		$proof .= '</div>' . ( '' !== $qr ? '<div class="cvp-profile-qr">' . $qr . '</div>' : '' ) . '</section>';
 		$actions = self::actions_html( (array) ( $presentation['actions'] ?? array() ), $prefix );
-		return '<article class="cvp-result-card cvp-profile-card cvp-status-' . esc_attr( $status_key ) . '">' . $hero . $facts_html . ( '' !== $barcode ? '<div class="cvp-profile-barcode">' . $barcode . '</div>' : '' ) . $proof . $actions . '</article>';
+		return '<article class="cvp-result-card cvp-profile-card cvp-status-' . esc_attr( $status_key ) . '">' . $hero . $facts_html . $certificate_preview . ( '' !== $barcode ? '<div class="cvp-profile-barcode">' . $barcode . '</div>' : '' ) . $proof . $actions . '</article>';
 	}
+
+
+	/**
+	 * Browser-only certificate presentation built from the immutable issued
+	 * snapshot. This does not manufacture PDF/PNG/JPEG authority; it gives the
+	 * recipient a faithful visual certificate on the public Credential Profile.
+	 *
+	 * @return string
+	 */
+	private static function normalized_certificate_preview_html( array $snapshot ) {
+		$template = isset( $snapshot['template'] ) && is_array( $snapshot['template'] ) ? $snapshot['template'] : array();
+		$merge = isset( $snapshot['merge']['values'] ) && is_array( $snapshot['merge']['values'] ) ? $snapshot['merge']['values'] : array();
+		$layout = isset( $template['layout'] ) && is_array( $template['layout'] ) ? $template['layout'] : array();
+		if ( empty( $layout ) || empty( $merge ) ) { return ''; }
+		$verification_url = trim( (string) ( $snapshot['credential']['verification_url'] ?? $merge['verification_url'] ?? $merge['verification.url'] ?? '' ) );
+		if ( '' === $verification_url ) { $verification_url = home_url( '/' ); }
+		try {
+			$resolver = new \Certloom\Application\Rendering\LayoutResolver(
+				null,
+				null,
+				null,
+				new \Certloom\Infrastructure\Rendering\LocalQrEncoder(),
+				new \Certloom\Infrastructure\Rendering\LocalCode128Encoder()
+			);
+			$resolved = $resolver->resolve( $layout, $merge, $verification_url, new \Certloom\Infrastructure\Rendering\WordPressLocalAssetResolver() );
+			$fonts = ( new \Certloom\Application\Rendering\BrowserPreviewFontManifest() )->for_document( $resolved );
+			$plan = ( new \Certloom\Application\Rendering\RenderPlanBuilder() )->build( $resolved, array( 'font_manifest' => $fonts ) );
+			$presented = ( new \Certloom\Infrastructure\Rendering\RenderPlanHtmlPreview() )->present( $plan );
+		} catch ( \Throwable $error ) {
+			return '<section class="cvp-profile-certificate cvp-profile-certificate-unavailable"><h3>' . esc_html__( 'Certificate', 'certloom' ) . '</h3><p>' . esc_html__( 'The credential record is valid, but its visual certificate could not be displayed in this browser.', 'certloom' ) . '</p></section>';
+		}
+		$html = (string) ( $presented['html'] ?? '' );
+		if ( '' === $html ) { return ''; }
+		return '<section class="cvp-profile-certificate" aria-labelledby="cvp-profile-certificate-title"><div class="cvp-profile-section-head"><span class="cvp-eyebrow">' . esc_html__( 'Certificate', 'certloom' ) . '</span><h3 id="cvp-profile-certificate-title">' . esc_html__( 'Issued certificate', 'certloom' ) . '</h3></div><div class="cvp-certificate-preview">' . $html . '</div></section>';
+	}
+
 
 	/** @return string */
 	private static function normalized_status_label( $code ) {

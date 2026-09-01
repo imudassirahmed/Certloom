@@ -122,6 +122,8 @@ $certloom_advanced_mode = \Certloom\Infrastructure\Admin\AdminUiMode::is_advance
 			<option value="anonymize_mutable_recipient" <?php selected( Ecapla_CertVerify_Settings::get( 'privacy_erasure_policy', 'retain' ), 'anonymize_mutable_recipient' ); ?>><?php esc_html_e( 'Anonymize mutable Recipient profiles; retain immutable credential history', 'certloom' ); ?></option>
 		</select></p>
 		<p class="description"><?php esc_html_e( 'This setting affects WordPress Tools → Erase Personal Data. It never rewrites issued certificate Versions or audit Events. Legacy certificate records and issuer/signer identities are retained for explicit administrator review.', 'certloom' ); ?></p>
+		<p><label><input type="checkbox" name="recipient_user_sync_enabled" value="1" <?php checked( Ecapla_CertVerify_Settings::get( 'recipient_user_sync_enabled', true ) ); ?> /> <strong><?php esc_html_e( 'Keep WordPress users connected to Recipient profiles', 'certloom' ); ?></strong></label></p>
+		<p class="description"><?php esc_html_e( 'When enabled, new WordPress users receive an exact user-ID-linked Recipient profile and later profile changes keep its name/email current. Certloom never claims ownership by matching email or name, and organizations can still exist as Recipients without WordPress accounts.', 'certloom' ); ?></p>
 
 		<?php submit_button( __( 'Save settings', 'certloom' ), 'primary', 'certverify_save_settings' ); ?>
 	</form>

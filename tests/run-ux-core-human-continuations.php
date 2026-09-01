@@ -45,7 +45,7 @@ uxroute( false !== strpos( $dashboard, "'certloom-domain-credentials'" ), 'Dashb
 
 // Credential/Recipient continuity.
 uxroute( false !== strpos( $domain, "'page' => ManualIssuanceAdmin::PAGE, 'recipient_id'" ), 'Recipient Issue credential preselects the exact Recipient' );
-uxroute( false !== strpos( $domain, "'page' => 'certloom-issuance', 'recipient_id'") && false !== strpos( $domain, "'program_id'" ), 'Credential Issue another keeps Recipient and Program context' );
+uxroute( false !== strpos( $domain, "'page' => ManualIssuanceAdmin::PAGE, 'recipient_id'" ) && false !== strpos( $domain, "'program_id'" ) && false !== strpos( $domain, "'batch_id'" ), 'Credential Issue another keeps Recipient, Program and Batch context' );
 uxroute( false !== strpos( $domain, "'page' => 'certloom-email-delivery', 'version_id'" ), 'Credential Email action binds the exact immutable Version' );
 uxroute( false !== strpos( $domain, "View credential" ) && false !== strpos( $domain, "target=\"_blank\"" ), 'Credential exposes a direct human public View credential continuation when available' );
 uxroute( false !== strpos( $manual, "'page'=>'certloom-email-delivery','version_id'=>absint(\$receipt['version_id'])" ), 'Successful Manual Issuance continues directly into Email Delivery' );

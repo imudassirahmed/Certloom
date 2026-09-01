@@ -53,7 +53,7 @@ if ( 'fresh' === $dashboard_state ) {
 } elseif ( 'wizard_complete' === $dashboard_state ) {
 	$onboarding_summary = array(
 		'completed'=>false, 'wizard_completed'=>true,
-		'progress_completed'=>3, 'progress_total'=>6,
+		'progress_completed'=>6, 'progress_total'=>6,
 		'organization_ready'=>true, 'fields_ready'=>true, 'page_ready'=>true,
 		'registry_ready'=>false, 'verification_tested'=>false, 'appearance_ready'=>false,
 	);

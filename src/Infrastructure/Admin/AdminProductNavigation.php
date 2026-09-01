@@ -17,9 +17,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class AdminProductNavigation {
 	/** @var array<string,string> */
 	private const PRIMARY_SIMPLE = array(
-		'certloom'                 => 'Home',
-		'certloom-certificates'    => 'Credentials',
-		'certloom-domain-programs' => 'Programs',
+		'certloom'                    => 'Home',
+		'certloom-domain-credentials' => 'Credentials',
+		'certloom-domain-programs'    => 'Programs',
 		'certloom-templates'       => 'Design',
 		'certloom-automations'     => 'Automations',
 		'certloom-settings'        => 'Settings',
@@ -83,7 +83,7 @@ final class AdminProductNavigation {
 			'certloom-bulk-issuance', 'certloom-email-delivery', 'certloom-bulk-review',
 			'certloom-domain-recipients', 'certloom-domain-issuers', 'certloom-domain-batches',
 			'certloom-domain-signers', 'certloom-frontend', 'certloom-integrations',
-			'certloom-import', 'certloom-setup', 'certloom-fields', 'certloom-domain-data-tools', 'certloom-automations',
+			'certloom-import', 'certloom-setup', 'certloom-verification-sample', 'certloom-fields', 'certloom-domain-data-tools', 'certloom-automations',
 		) as $contextual_page ) {
 			$_parent_pages[ $contextual_page ] = 'certloom';
 		}
@@ -107,7 +107,7 @@ final class AdminProductNavigation {
 		}
 		$primary = array(
 			'dashboard'   => 'certloom',
-			'credentials' => 'certloom-certificates',
+			'credentials' => AdminUiMode::is_simple() ? 'certloom-domain-credentials' : 'certloom-certificates',
 			'people'      => 'certloom-domain-programs',
 			'design'      => 'certloom-templates',
 			'insights'    => AdminUiMode::is_simple() ? 'certloom-automations' : 'certloom-analytics',
@@ -129,6 +129,7 @@ final class AdminProductNavigation {
 			case 'certloom':
 				return $simple ? __( 'Home', 'certloom' ) : __( 'Dashboard', 'certloom' );
 			case 'certloom-certificates':
+			case 'certloom-domain-credentials':
 				return __( 'Credentials', 'certloom' );
 			case 'certloom-domain-programs':
 				return $simple ? __( 'Programs', 'certloom' ) : __( 'People & Programs', 'certloom' );
@@ -170,12 +171,18 @@ final class AdminProductNavigation {
 
 	/** @return string */
 	private function section_for_page( $page ) {
+		// In Simple mode Recipients belong to the credential workflow. Keeping
+		// them in the old People section caused Programs to become active and the
+		// Credentials subtabs to disappear while issuing.
+		if ( AdminUiMode::is_simple() && 'certloom-domain-recipients' === $page ) {
+			return 'credentials';
+		}
 		$groups = array(
 			'credentials' => array( 'certloom-certificates', 'certloom-add', 'certloom-domain-credentials', 'certloom-issuance', 'certloom-bulk-issuance', 'certloom-email-delivery', 'certloom-bulk-review' ),
 			'people'      => array( 'certloom-domain-programs', 'certloom-domain-recipients', 'certloom-domain-issuers', 'certloom-domain-batches', 'certloom-domain-signers' ),
 			'design'      => array( 'certloom-templates', 'certloom-frontend' ),
 			'insights'    => array( 'certloom-analytics', 'certloom-integrations', 'certloom-automations', 'certloom-email-delivery' ),
-			'settings'    => array( 'certloom-settings', 'certloom-import', 'certloom-setup', 'certloom-fields', 'certloom-domain-data-tools' ),
+			'settings'    => array( 'certloom-settings', 'certloom-import', 'certloom-setup', 'certloom-verification-sample', 'certloom-fields', 'certloom-domain-data-tools' ),
 		);
 		foreach ( $groups as $section => $pages ) {
 			if ( in_array( $page, $pages, true ) ) {
@@ -196,7 +203,7 @@ final class AdminProductNavigation {
 			case 'credentials':
 				if ( $simple && $preview ) {
 					return array(
-						$this->link( __( 'Credentials', 'certloom' ), 'certloom-domain-credentials', array( 'certloom-certificates', 'certloom-domain-credentials' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS ),
+						$this->link( __( 'Credentials', 'certloom' ), 'certloom-domain-credentials', array( 'certloom-domain-credentials' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS ),
 						$this->link( __( 'Issue', 'certloom' ), 'certloom-issuance', array( 'certloom-issuance' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ),
 						$this->link( __( 'Recipients', 'certloom' ), 'certloom-domain-recipients', array( 'certloom-domain-recipients' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_RECIPIENTS ),
 						$this->link( __( 'Bulk issue', 'certloom' ), 'certloom-bulk-issuance', array( 'certloom-bulk-issuance' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ),
@@ -216,7 +223,10 @@ final class AdminProductNavigation {
 			case 'people':
 				if ( $simple ) {
 					return array(
-						$this->link( __( 'Programs', 'certloom' ), 'certloom-domain-programs', array( 'certloom-domain-programs', 'certloom-domain-issuers', 'certloom-domain-batches', 'certloom-domain-signers' ), ECAPLA_CERTVERIFY_CAP ),
+						$this->link( __( 'Programs', 'certloom' ), 'certloom-domain-programs', array( 'certloom-domain-programs' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS ),
+						$this->link( __( 'Issuers', 'certloom' ), 'certloom-domain-issuers', array( 'certloom-domain-issuers' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_ISSUERS ),
+						$this->link( __( 'Batches', 'certloom' ), 'certloom-domain-batches', array( 'certloom-domain-batches' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_BATCHES ),
+						$this->link( __( 'Signers', 'certloom' ), 'certloom-domain-signers', array( 'certloom-domain-signers' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_SIGNERS ),
 					);
 				}
 				$links = array(

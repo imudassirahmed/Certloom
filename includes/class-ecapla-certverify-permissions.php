@@ -100,7 +100,8 @@ class Ecapla_CertVerify_Permissions {
 			&& self::CAPABILITY_SCHEMA_VERSION === $installed
 			&& ! get_option( self::UNINSTALL_CLEANUP_OPTION, false )
 			&& ! get_option( self::MANAGER_PRESERVED_OPTION, false )
-			&& self::health_marker_is_fresh() ) {
+			&& self::health_marker_is_fresh()
+			&& self::administrator_has_required_capabilities() ) {
 			return true;
 		}
 
@@ -320,6 +321,19 @@ class Ecapla_CertVerify_Permissions {
 			&& ! empty( $stored[ sanitize_key( $role_key ) ]['capabilities'][ sanitize_key( $capability ) ] );
 	}
 
+
+
+	private static function administrator_has_required_capabilities() {
+		if ( ! self::stored_role_has_capability( 'administrator', ECAPLA_CERTVERIFY_CAP ) ) {
+			return false;
+		}
+		foreach ( self::all_capabilities() as $capability ) {
+			if ( ! self::stored_role_has_capability( 'administrator', $capability ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
 
 	private static function health_marker_is_fresh() {
 		$health = get_option( self::HEALTH_OPTION, array() );

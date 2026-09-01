@@ -57,7 +57,7 @@ final class DomainAdmin {
 		add_submenu_page( null, __( 'Recipients', 'certloom' ), __( 'Recipients', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_RECIPIENTS, self::RECIPIENTS_PAGE, array( $this, 'render_recipients' ) );
 		add_submenu_page( 'certloom', __( 'Programs', 'certloom' ), __( 'Programs', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS, self::PROGRAMS_PAGE, array( $this, 'render_programs' ) );
 		add_submenu_page( null, __( 'Issuers (New Domain)', 'certloom' ), __( 'Issuers (New)', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_ISSUERS, self::ISSUERS_PAGE, array( $this, 'render_issuers' ) );
-		add_submenu_page( null, __( 'Credential Management', 'certloom' ), __( 'Credentials', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS, self::CREDENTIALS_PAGE, array( $this, 'render_credentials' ) );
+		add_submenu_page( AdminUiMode::is_simple() ? 'certloom' : null, __( 'Credential Management', 'certloom' ), __( 'Credentials', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS, self::CREDENTIALS_PAGE, array( $this, 'render_credentials' ) );
 	}
 
 	/** @return void */
@@ -331,17 +331,14 @@ final class DomainAdmin {
 		} else {
 			$this->prime_wp_users( $result['items'] );
 			if ( AdminUiMode::is_simple() ) {
-				echo '<div class="certloom-recipient-card-grid">';
+				echo '<div class="certloom-premium-list certloom-recipient-list" role="list">';
 				foreach ( $result['items'] as $item ) {
 					$edit_url = add_query_arg( array( 'page' => self::RECIPIENTS_PAGE, 'recipient_id' => absint( $item['id'] ) ), admin_url( 'admin.php' ) );
 					$issue_url = add_query_arg( array( 'page' => ManualIssuanceAdmin::PAGE, 'recipient_id' => absint( $item['id'] ) ), admin_url( 'admin.php' ) );
 					$user_label = $this->wp_user_label( $item['wp_user_id'] ?? null );
-					echo '<article class="certloom-workspace-card certloom-recipient-card"><div class="certloom-workspace-card-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Recipient', 'certloom' ) . '</span><h3><a href="' . esc_url( $edit_url ) . '">' . esc_html( (string) $item['display_name'] ) . '</a></h3></div><span class="certloom-count-chip">' . esc_html( sprintf( _n( '%s credential', '%s credentials', absint( $item['credential_count'] ), 'certloom' ), number_format_i18n( absint( $item['credential_count'] ) ) ) ) . '</span></div>';
-					echo '<div class="certloom-recipient-card-meta">';
-					if ( ! empty( $item['email'] ) ) { echo '<span><strong>' . esc_html__( 'Email', 'certloom' ) . '</strong>' . esc_html( (string) $item['email'] ) . '</span>'; }
-					if ( '—' !== $user_label ) { echo '<span><strong>' . esc_html__( 'WordPress account', 'certloom' ) . '</strong>' . esc_html( $user_label ) . '</span>'; }
-					if ( ! empty( $item['latest_issued_at'] ) ) { echo '<span><strong>' . esc_html__( 'Latest credential', 'certloom' ) . '</strong>' . esc_html( (string) $item['latest_issued_at'] ) . '</span>'; }
-					echo '</div><div class="certloom-form-actions"><a class="button button-primary" href="' . esc_url( $issue_url ) . '">' . esc_html__( 'Issue credential', 'certloom' ) . '</a><a class="button" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Open profile', 'certloom' ) . '</a></div></article>';
+					echo '<article class="certloom-premium-list-row" role="listitem"><div class="certloom-premium-list-main"><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( (string) $item['display_name'] ) . '</a></strong><span>' . esc_html( (string) ( $item['email'] ?: ( '—' !== $user_label ? $user_label : __( 'No email added', 'certloom' ) ) ) ) . '</span></div>';
+					echo '<div class="certloom-premium-list-meta"><span><small>' . esc_html__( 'Credentials', 'certloom' ) . '</small><strong>' . esc_html( number_format_i18n( absint( $item['credential_count'] ) ) ) . '</strong></span><span><small>' . esc_html__( 'Latest', 'certloom' ) . '</small><strong>' . esc_html( (string) ( $item['latest_issued_at'] ?: '—' ) ) . '</strong></span></div>';
+					echo '<div class="certloom-premium-list-actions"><a class="button button-primary" href="' . esc_url( $issue_url ) . '">' . esc_html__( 'Issue', 'certloom' ) . '</a><a class="certloom-premium-row-link" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Profile', 'certloom' ) . ' <span aria-hidden="true">→</span></a></div></article>';
 				}
 				if ( empty( $result['items'] ) ) { echo '<div class="certloom-premium-empty-state certloom-empty-compact"><span class="dashicons dashicons-groups" aria-hidden="true"></span><h3>' . esc_html__( 'No recipients found', 'certloom' ) . '</h3><p>' . esc_html__( 'Add a recipient or try another search.', 'certloom' ) . '</p></div>'; }
 				echo '</div>';
@@ -415,7 +412,7 @@ final class DomainAdmin {
 		if ( is_wp_error( $result ) ) {
 			$this->error( $result->get_error_message() );
 		} elseif ( AdminUiMode::is_simple() ) {
-			$this->simple_program_cards( (array) $result['items'] );
+			$this->simple_program_list( (array) $result['items'] );
 			$this->pagination( self::PROGRAMS_PAGE, $page, (int) $result['total'], 50, $search, array( 'program_status' => $status ) );
 		} else {
 			echo '<div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-table"><thead><tr><th>' . esc_html__( 'Program', 'certloom' ) . '</th><th>' . esc_html__( 'Purpose', 'certloom' ) . '</th><th>' . esc_html__( 'Code', 'certloom' ) . '</th><th>' . esc_html__( 'Issuer', 'certloom' ) . '</th><th>' . esc_html__( 'Default validity', 'certloom' ) . '</th><th>' . esc_html__( 'Credentials', 'certloom' ) . '</th><th>' . esc_html__( 'Status', 'certloom' ) . '</th><th>' . esc_html__( 'Actions', 'certloom' ) . '</th></tr></thead><tbody>';
@@ -466,6 +463,17 @@ final class DomainAdmin {
 		$this->render_search( self::ISSUERS_PAGE, $search );
 		if ( is_wp_error( $result ) ) {
 			$this->error( $result->get_error_message() );
+		} elseif ( AdminUiMode::is_simple() ) {
+			echo '<div class="certloom-premium-list certloom-premium-list-issuers">';
+			foreach ( $result['items'] as $item ) {
+				$edit_url = add_query_arg( array( 'page' => self::ISSUERS_PAGE, 'issuer_id' => absint( $item['id'] ) ), admin_url( 'admin.php' ) );
+				$program_count = absint( $item['program_count'] ?? 0 );
+				$signer_count = absint( $item['signer_count'] ?? 0 );
+				echo '<article class="certloom-premium-list-row"><div class="certloom-premium-list-main"><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( (string) $item['name'] ) . '</a></strong><div class="certloom-premium-list-meta">' . esc_html( sprintf( _n( '%d Program', '%d Programs', $program_count, 'certloom' ), $program_count ) ) . ' · ' . esc_html( sprintf( _n( '%d signer', '%d signers', $signer_count, 'certloom' ), $signer_count ) ) . '</div></div><div class="certloom-premium-list-actions"><a class="certloom-premium-row-link" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Details', 'certloom' ) . ' <span aria-hidden="true">→</span></a></div></article>';
+			}
+			if ( empty( $result['items'] ) ) { echo '<div class="certloom-domain-empty">' . esc_html__( 'No issuers found.', 'certloom' ) . '</div>'; }
+			echo '</div>';
+			$this->pagination( self::ISSUERS_PAGE, $page, (int) $result['total'], 50, $search );
 		} else {
 			echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Issuer', 'certloom' ) . '</th><th>' . esc_html__( 'Slug', 'certloom' ) . '</th><th>' . esc_html__( 'Programs', 'certloom' ) . '</th><th>' . esc_html__( 'Signers', 'certloom' ) . '</th><th>' . esc_html__( 'Created', 'certloom' ) . '</th><th>' . esc_html__( 'Actions', 'certloom' ) . '</th></tr></thead><tbody>';
 			foreach ( $result['items'] as $item ) {
@@ -533,7 +541,7 @@ final class DomainAdmin {
 		if ( is_wp_error( $result ) ) {
 			$this->error( $result->get_error_message() );
 		} elseif ( $simple ) {
-			$this->simple_credential_cards( (array) $result['items'], $status_service );
+			$this->simple_credential_list( (array) $result['items'], $status_service );
 			$this->pagination( self::CREDENTIALS_PAGE, $page, (int) $result['total'], 50, $search, array( 'credential_status' => $status, 'program_id' => $program_id ) );
 		} else {
 			echo '<div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-table certloom-credential-table"><thead><tr><th>' . esc_html__( 'Credential', 'certloom' ) . '</th><th>' . esc_html__( 'Recipient', 'certloom' ) . '</th><th>' . esc_html__( 'Program / batch', 'certloom' ) . '</th><th>' . esc_html__( 'Issued / expiry', 'certloom' ) . '</th><th>' . esc_html__( 'Version', 'certloom' ) . '</th><th>' . esc_html__( 'Status', 'certloom' ) . '</th><th>' . esc_html__( 'Actions', 'certloom' ) . '</th></tr></thead><tbody>';
@@ -653,8 +661,10 @@ final class DomainAdmin {
 			$recipient_label = is_array( $recipient ) ? trim( (string) ( $recipient['display_name'] ?? '' ) ) : '';
 			$program_label = is_array( $program ) ? trim( (string) ( $program['title'] ?? '' ) ) : '';
 			$public_url = ( new \Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl() )->verification_url( (string) $series['public_id'] );
+			$issue_again_url = add_query_arg( array( 'page' => ManualIssuanceAdmin::PAGE, 'recipient_id' => absint( $series['recipient_id'] ?? 0 ), 'program_id' => absint( $series['program_id'] ?? 0 ), 'batch_id' => absint( $series['batch_id'] ?? 0 ) ), admin_url( 'admin.php' ) );
 			echo '<section class="certloom-credential-hero certloom-credential-hero-simple"><div><div class="certloom-credential-eyebrow">' . esc_html( $is_current ? __( 'Credential', 'certloom' ) : __( 'Credential history', 'certloom' ) ) . '</div><h2>' . esc_html( $number ) . '</h2><div class="certloom-credential-hero-meta">' . ( '' !== $recipient_label ? '<span>' . esc_html( $recipient_label ) . '</span>' : '' ) . ( '' !== $program_label ? '<span>' . esc_html( $program_label ) . '</span>' : '' ) . '</div></div><div class="certloom-credential-hero-actions">' . $this->credential_status_badge( $status );
 			if ( $is_current && ! is_wp_error( $public_url ) ) { echo '<a class="button button-primary" href="' . esc_url( (string) $public_url ) . '" target="_blank" rel="noopener">' . esc_html__( 'View credential', 'certloom' ) . ' <span aria-hidden="true">↗</span></a>'; }
+			if ( $is_current ) { echo '<a class="button" href="' . esc_url( $issue_again_url ) . '">' . esc_html__( 'Issue another', 'certloom' ) . '</a>'; }
 			echo '</div></section>';
 		} else {
 			echo '<section class="certloom-credential-hero"><div><div class="certloom-credential-eyebrow">' . esc_html( $is_current ? __( 'Current immutable Version', 'certloom' ) : __( 'Historical immutable Version', 'certloom' ) ) . '</div><h2>' . esc_html( $number ) . '</h2><div class="certloom-credential-hero-meta"><code>' . esc_html( (string) $series['public_id'] ) . '</code>' . ( is_array( $version ) ? '<span>v' . esc_html( (string) absint( $version['version_number'] ?? 0 ) ) . '</span>' : '' ) . '</div></div><div>' . $this->credential_status_badge( $status ) . '</div></section>';
@@ -742,33 +752,28 @@ final class DomainAdmin {
 		echo '</form>';
 	}
 
-	/** Compact Simple-mode credential collection with direct public-view continuity. @return void */
-	private function simple_credential_cards( array $items, StatusService $status_service ) {
+	/** Compact Simple-mode credential list with direct public-view continuity. @return void */
+	private function simple_credential_list( array $items, StatusService $status_service ) {
 		if ( empty( $items ) ) {
 			echo '<div class="certloom-premium-empty-state certloom-empty-compact"><span class="dashicons dashicons-awards" aria-hidden="true"></span><h3>' . esc_html__( 'No credentials match these filters', 'certloom' ) . '</h3><p>' . esc_html__( 'Try another filter, or issue a credential to a Recipient.', 'certloom' ) . '</p><a class="button button-primary" href="' . esc_url( add_query_arg( 'page', 'certloom-issuance', admin_url( 'admin.php' ) ) ) . '">' . esc_html__( 'Issue credential', 'certloom' ) . '</a></div>';
 			return;
 		}
 		$public_ready = ( new \Certloom\Infrastructure\Verification\PublicVerificationGate() )->is_ready();
 		$url_builder  = new \Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl();
-		echo '<div class="certloom-simple-credential-grid">';
+		echo '<div class="certloom-premium-list certloom-credential-list" role="list">';
 		foreach ( $items as $item ) {
 			$effective  = $this->status_from_row( $status_service, $item );
 			$detail_url = add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'series_id' => absint( $item['series_id'] ?? 0 ) ), admin_url( 'admin.php' ) );
 			$number     = trim( (string) ( $item['display_number'] ?? '' ) );
 			$recipient  = trim( (string) ( $item['display_name'] ?? '' ) );
 			$program    = trim( (string) ( $item['program_title'] ?? '' ) );
-			$batch      = trim( (string) ( $item['batch_name'] ?? '' ) );
 			$public_url = $public_ready ? $url_builder->verification_url( (string) ( $item['public_id'] ?? '' ) ) : null;
-			$issue_again_url = add_query_arg( array( 'page' => 'certloom-issuance', 'recipient_id' => absint( $item['recipient_id'] ?? 0 ), 'program_id' => absint( $item['program_id'] ?? 0 ) ), admin_url( 'admin.php' ) );
-			echo '<article class="certloom-simple-credential-card">';
-			echo '<div class="certloom-simple-credential-card-top"><div><span class="certloom-eyebrow">' . esc_html( '' !== $number ? $number : __( 'Credential', 'certloom' ) ) . '</span><h2>' . esc_html( '' !== $recipient ? $recipient : __( 'Unnamed recipient', 'certloom' ) ) . '</h2></div>' . $this->credential_status_badge( $effective ) . '</div>';
-			echo '<p class="certloom-simple-credential-program"><strong>' . esc_html( '' !== $program ? $program : __( 'No Program', 'certloom' ) ) . '</strong>' . ( '' !== $batch ? '<span>' . esc_html( $batch ) . '</span>' : '' ) . '</p>';
-			echo '<div class="certloom-simple-credential-meta"><span><small>' . esc_html__( 'Issued', 'certloom' ) . '</small><strong>' . esc_html( ! empty( $item['issued_at'] ) ? (string) $item['issued_at'] : '—' ) . '</strong></span><span><small>' . esc_html__( 'Expiry', 'certloom' ) . '</small><strong>' . esc_html( ! empty( $item['expires_at'] ) ? (string) $item['expires_at'] : __( 'No expiry', 'certloom' ) ) . '</strong></span></div>';
-			echo '<div class="certloom-simple-credential-actions">';
-			if ( is_string( $public_url ) && '' !== $public_url ) { echo '<a class="button button-primary" href="' . esc_url( $public_url ) . '" target="_blank" rel="noopener">' . esc_html__( 'View credential', 'certloom' ) . ' <span aria-hidden="true">↗</span></a>'; }
-			echo '<a class="button" href="' . esc_url( $detail_url ) . '">' . esc_html__( 'Manage', 'certloom' ) . '</a>';
-			if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) ) { echo '<a class="button-link" href="' . esc_url( $issue_again_url ) . '">' . esc_html__( 'Issue another', 'certloom' ) . '</a>'; }
-			echo '</div></article>';
+			echo '<article class="certloom-premium-list-row" role="listitem"><div class="certloom-premium-list-main"><span class="certloom-eyebrow">' . esc_html( '' !== $number ? $number : __( 'Credential', 'certloom' ) ) . '</span><strong>' . esc_html( '' !== $recipient ? $recipient : __( 'Unnamed recipient', 'certloom' ) ) . '</strong><span>' . esc_html( '' !== $program ? $program : __( 'No Program', 'certloom' ) ) . '</span></div>';
+			echo '<div class="certloom-premium-list-status">' . $this->credential_status_badge( $effective ) . '</div>';
+			echo '<div class="certloom-premium-list-meta"><span><small>' . esc_html__( 'Issued', 'certloom' ) . '</small><strong>' . esc_html( ! empty( $item['issued_at'] ) ? (string) $item['issued_at'] : '—' ) . '</strong></span><span><small>' . esc_html__( 'Expiry', 'certloom' ) . '</small><strong>' . esc_html( ! empty( $item['expires_at'] ) ? (string) $item['expires_at'] : __( 'No expiry', 'certloom' ) ) . '</strong></span></div>';
+			echo '<div class="certloom-premium-list-actions">';
+			if ( is_string( $public_url ) && '' !== $public_url ) { echo '<a class="button button-primary" href="' . esc_url( $public_url ) . '" target="_blank" rel="noopener">' . esc_html__( 'View', 'certloom' ) . ' <span aria-hidden="true">↗</span></a>'; }
+			echo '<a class="certloom-premium-row-link" href="' . esc_url( $detail_url ) . '">' . esc_html__( 'Manage', 'certloom' ) . ' <span aria-hidden="true">→</span></a></div></article>';
 		}
 		echo '</div>';
 	}
@@ -1186,7 +1191,7 @@ final class DomainAdmin {
 		echo '<input type="hidden" name="action" value="' . esc_attr( $is_edit ? 'certloom_domain_update_recipient' : 'certloom_domain_create_recipient' ) . '">';
 		if ( $is_edit ) { echo '<input type="hidden" name="recipient_id" value="' . esc_attr( $id ) . '">'; wp_nonce_field( 'certloom_domain_update_recipient_' . $id ); } else { wp_nonce_field( 'certloom_domain_create_recipient' ); }
 		echo '<div class="certloom-domain-form-grid">';
-		$this->text_field( 'display_name', __( 'Display name', 'certloom' ), $is_edit ? (string) $editing['display_name'] : '', true, $simple ? __( 'The name shown in Certloom and on credentials where this Recipient is used.', 'certloom' ) : __( 'The canonical name shown in administrator workflows and credential presentation.', 'certloom' ) );
+		$this->text_field( 'display_name', __( 'Display name', 'certloom' ), $is_edit ? (string) $editing['display_name'] : '', true, $simple ? __( 'The name shown in Certloom and on credentials where this Recipient is used.', 'certloom' ) : __( 'The canonical name shown in administrator workflows and credential presentation.', 'certloom' ), 'text', '', __( 'Example: Amina Khan or Northstar Academy', 'certloom' ) );
 		$this->text_field( 'email', __( 'Email', 'certloom' ), $is_edit ? (string) $editing['email'] : '', false, __( 'Optional. Used by later issuance and email workflows.', 'certloom' ), 'email' );
 		$this->text_field( 'first_name', __( 'First name', 'certloom' ), $is_edit ? (string) $editing['first_name'] : '' );
 		$this->text_field( 'middle_name', __( 'Middle name', 'certloom' ), $is_edit ? (string) $editing['middle_name'] : '' );
@@ -1247,7 +1252,7 @@ final class DomainAdmin {
 		echo '<input type="hidden" name="action" value="' . esc_attr( $is_edit ? 'certloom_domain_update_program' : 'certloom_domain_create_program' ) . '">';
 		if ( $is_edit ) { echo '<input type="hidden" name="program_id" value="' . esc_attr( $id ) . '">'; wp_nonce_field( 'certloom_domain_update_program_' . $id ); } else { wp_nonce_field( 'certloom_domain_create_program' ); }
 		echo '<div class="certloom-domain-form-grid">';
-		$this->text_field( 'title', __( 'Program title', 'certloom' ), $is_edit ? (string) $editing['title'] : '', true, __( 'The human-readable credential program or course name.', 'certloom' ) );
+		$this->text_field( 'title', __( 'Program title', 'certloom' ), $is_edit ? (string) $editing['title'] : '', true, __( 'The human-readable credential program or course name.', 'certloom' ), 'text', '', __( 'Example: Internal Auditor Certification', 'certloom' ) );
 		$this->text_field( 'code', $simple ? __( 'Short code', 'certloom' ) : __( 'Program code', 'certloom' ), $is_edit ? (string) $editing['code'] : '', false, $simple ? __( 'Optional. A short label such as BSC-CS or SAFETY-101 can make Programs easier to recognize.', 'certloom' ) : __( 'Optional unique machine-friendly code used in imports and future automation.', 'certloom' ) );
 		$this->text_field( 'validity_days', __( 'Default validity (days)', 'certloom' ), $is_edit && null !== $editing['validity_days'] ? (string) $editing['validity_days'] : '', false, __( 'Leave blank when the program has no default expiry. Issuance may override this later.', 'certloom' ), 'number', 'min="0" step="1"' );
 		$this->issuer_field( $is_edit ? ( $editing['issuer_id'] ?? null ) : null );
@@ -1342,12 +1347,12 @@ final class DomainAdmin {
 		echo '<input type="hidden" name="action" value="' . esc_attr( $is_edit ? 'certloom_domain_update_issuer' : 'certloom_domain_create_issuer' ) . '">';
 		if ( $is_edit ) { echo '<input type="hidden" name="issuer_id" value="' . esc_attr( $id ) . '">'; wp_nonce_field( 'certloom_domain_update_issuer_' . $id ); } else { wp_nonce_field( 'certloom_domain_create_issuer' ); }
 		echo '<div class="certloom-domain-form-grid">';
-		$this->text_field( 'name', __( 'Organization / issuer name', 'certloom' ), $is_edit ? (string) $editing['name'] : '', true );
+		$this->text_field( 'name', __( 'Organization / issuer name', 'certloom' ), $is_edit ? (string) $editing['name'] : '', true, '', 'text', '', __( 'Example: Northstar Training Institute', 'certloom' ) );
 		if ( $simple ) {
 			$issuer_slug = $is_edit ? (string) $editing['slug'] : '';
 			echo '<input type="hidden" name="slug" value="' . esc_attr( $issuer_slug ) . '">';
 		} else {
-			$this->text_field( 'slug', __( 'Machine slug', 'certloom' ), $is_edit ? (string) $editing['slug'] : '', true, __( 'Stable identity used by restores, assignments, integrations, and future APIs.', 'certloom' ) );
+			$this->text_field( 'slug', __( 'Machine slug', 'certloom' ), $is_edit ? (string) $editing['slug'] : '', true, __( 'Stable identity used by restores, assignments, integrations, and future APIs.', 'certloom' ), 'text', '', __( 'Example: northstar-training', 'certloom' ) );
 		}
 		$this->text_field( 'website', __( 'Website', 'certloom' ), (string) ( $settings['website'] ?? '' ), false, '', 'url' );
 		$this->text_field( 'contact_name', __( 'Contact name', 'certloom' ), (string) ( $settings['contact_name'] ?? '' ) );
@@ -1584,9 +1589,14 @@ final class DomainAdmin {
 		);
 		$settings = null !== $existing && isset( $existing['settings'] ) && is_array( $existing['settings'] ) ? $existing['settings'] : array();
 		foreach ( $known as $key => $value ) { if ( '' === $value ) { unset( $settings[ $key ] ); } else { $settings[ $key ] = $value; } }
+		$name = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+		$slug = isset( $_POST['slug'] ) ? sanitize_title( wp_unslash( $_POST['slug'] ) ) : '';
+		if ( AdminUiMode::is_simple() && '' === $slug ) {
+			$slug = null !== $existing && ! empty( $existing['slug'] ) ? sanitize_title( (string) $existing['slug'] ) : sanitize_title( $name );
+		}
 		return array(
-			'name' => isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '',
-			'slug' => isset( $_POST['slug'] ) ? sanitize_title( wp_unslash( $_POST['slug'] ) ) : '',
+			'name' => $name,
+			'slug' => $slug,
 			'logo_attachment_id' => isset( $_POST['logo_attachment_id'] ) && '' !== trim( (string) $_POST['logo_attachment_id'] ) ? absint( $_POST['logo_attachment_id'] ) : null,
 			'seal_attachment_id' => isset( $_POST['seal_attachment_id'] ) && '' !== trim( (string) $_POST['seal_attachment_id'] ) ? absint( $_POST['seal_attachment_id'] ) : null,
 			'settings' => $settings,
@@ -1738,27 +1748,23 @@ final class DomainAdmin {
 		echo '</div>';
 	}
 
-	/** Task-oriented Program collection for Simple mode. @return void */
-	private function simple_program_cards( array $items ) {
+	/** Task-oriented Program list for Simple mode. @return void */
+	private function simple_program_list( array $items ) {
 		if ( empty( $items ) ) {
 			echo '<div class="certloom-premium-empty-state certloom-empty-compact"><span class="dashicons dashicons-welcome-learn-more" aria-hidden="true"></span><h3>' . esc_html__( 'Create your first Program', 'certloom' ) . '</h3><p>' . esc_html__( 'A Program connects the issuer, optional cohorts, signers, design and credentials in one place.', 'certloom' ) . '</p><a class="button button-primary" href="' . esc_url( add_query_arg( array( 'page' => self::PROGRAMS_PAGE, 'certloom_new' => 1 ), admin_url( 'admin.php' ) ) ) . '">' . esc_html__( 'Add program', 'certloom' ) . '</a></div>';
 			return;
 		}
-		echo '<div class="certloom-simple-program-grid">';
+		echo '<div class="certloom-premium-list certloom-program-list" role="list">';
 		foreach ( $items as $item ) {
 			$program_id = absint( $item['id'] ?? 0 );
 			$edit_url   = add_query_arg( array( 'page' => self::PROGRAMS_PAGE, 'program_id' => $program_id ), admin_url( 'admin.php' ) );
 			$issue_url  = add_query_arg( array( 'page' => 'certloom-issuance', 'program_id' => $program_id ), admin_url( 'admin.php' ) );
 			$design_url = add_query_arg( array( 'page' => 'certloom-templates', 'program_id' => $program_id ), admin_url( 'admin.php' ) );
 			$issuer     = trim( (string) ( $item['issuer_name'] ?? '' ) );
-			$credentials= absint( $item['credential_count'] ?? 0 );
-			$validity   = null === ( $item['validity_days'] ?? null ) ? __( 'No expiry default', 'certloom' ) : sprintf( /* translators: %d: days. */ _n( '%d-day validity', '%d-day validity', absint( $item['validity_days'] ), 'certloom' ), absint( $item['validity_days'] ) );
-			echo '<article class="certloom-simple-program-card">';
-			echo '<div class="certloom-simple-program-card-head"><div><span class="certloom-eyebrow">' . esc_html( (string) ( $item['purpose_label'] ?: __( 'Program', 'certloom' ) ) ) . '</span><h2><a href="' . esc_url( $edit_url ) . '">' . esc_html( (string) ( $item['title'] ?? '' ) ) . '</a></h2></div><span class="certloom-state-pill ' . ( ! empty( $item['active'] ) ? 'is-success' : '' ) . '">' . esc_html( ! empty( $item['active'] ) ? _x( 'Active', 'entity status', 'certloom' ) : _x( 'Paused', 'entity status', 'certloom' ) ) . '</span></div>';
-			echo '<div class="certloom-simple-program-facts"><span><small>' . esc_html__( 'Issuer', 'certloom' ) . '</small><strong>' . esc_html( '' !== $issuer ? $issuer : __( 'Not added yet', 'certloom' ) ) . '</strong></span><span><small>' . esc_html__( 'Credentials', 'certloom' ) . '</small><strong>' . esc_html( number_format_i18n( $credentials ) ) . '</strong></span><span><small>' . esc_html__( 'Validity', 'certloom' ) . '</small><strong>' . esc_html( $validity ) . '</strong></span></div>';
-			if ( '' === $issuer ) { echo '<p class="certloom-program-readiness-note"><span class="dashicons dashicons-info-outline" aria-hidden="true"></span>' . esc_html__( 'Open this Program to add its issuing organization, cohorts and signers without leaving the workspace.', 'certloom' ) . '</p>'; }
-			echo '<div class="certloom-simple-program-actions"><a class="button button-primary" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Open setup', 'certloom' ) . '</a><a class="button" href="' . esc_url( $design_url ) . '">' . esc_html__( 'Design', 'certloom' ) . '</a><a class="button" href="' . esc_url( $issue_url ) . '">' . esc_html__( 'Issue', 'certloom' ) . '</a></div>';
-			echo '</article>';
+			echo '<article class="certloom-premium-list-row" role="listitem"><div class="certloom-premium-list-main"><span class="certloom-eyebrow">' . esc_html( (string) ( $item['purpose_label'] ?: __( 'Program', 'certloom' ) ) ) . '</span><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( (string) ( $item['title'] ?? '' ) ) . '</a></strong><span>' . esc_html( '' !== $issuer ? $issuer : __( 'Issuer not added yet', 'certloom' ) ) . '</span></div>';
+			echo '<div class="certloom-premium-list-status"><span class="certloom-state-pill ' . ( ! empty( $item['active'] ) ? 'is-success' : '' ) . '">' . esc_html( ! empty( $item['active'] ) ? _x( 'Active', 'entity status', 'certloom' ) : _x( 'Paused', 'entity status', 'certloom' ) ) . '</span></div>';
+			echo '<div class="certloom-premium-list-meta"><span><small>' . esc_html__( 'Credentials', 'certloom' ) . '</small><strong>' . esc_html( number_format_i18n( absint( $item['credential_count'] ?? 0 ) ) ) . '</strong></span><span><small>' . esc_html__( 'Code', 'certloom' ) . '</small><strong>' . esc_html( (string) ( $item['code'] ?: '—' ) ) . '</strong></span></div>';
+			echo '<div class="certloom-premium-list-actions"><a class="button button-primary" href="' . esc_url( $issue_url ) . '">' . esc_html__( 'Issue', 'certloom' ) . '</a><a class="certloom-premium-row-link" href="' . esc_url( $design_url ) . '">' . esc_html__( 'Design', 'certloom' ) . '</a><a class="certloom-premium-row-link" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Manage', 'certloom' ) . ' <span aria-hidden="true">→</span></a></div></article>';
 		}
 		echo '</div>';
 	}
@@ -1834,9 +1840,10 @@ final class DomainAdmin {
 		return $html;
 	}
 
-	private function text_field( $name, $label, $value, $required = false, $description = '', $type = 'text', $attributes = '' ) {
+	private function text_field( $name, $label, $value, $required = false, $description = '', $type = 'text', $attributes = '', $example = '' ) {
 		$id = 'certloom-domain-' . sanitize_html_class( $name );
-		echo '<div class="certloom-domain-field"><label class="certloom-field-label" for="' . esc_attr( $id ) . '"><strong>' . esc_html( $label ) . '</strong>' . ( $required ? '<span class="certloom-field-required">' . esc_html__( 'Required', 'certloom' ) . '</span>' : '' ) . $this->help_tip( $description ) . '</label><input id="' . esc_attr( $id ) . '" class="regular-text" type="' . esc_attr( $type ) . '" name="' . esc_attr( $name ) . '" value="' . esc_attr( $value ) . '" ' . ( $required ? 'required aria-required="true" ' : '' ) . wp_kses_post( $attributes ) . '></div>';
+		$example_attr = $required && '' !== trim( (string) $example ) ? ' data-certloom-required-example="' . esc_attr( $example ) . '"' : '';
+		echo '<div class="certloom-domain-field"><label class="certloom-field-label" for="' . esc_attr( $id ) . '"><strong>' . esc_html( $label ) . '</strong>' . ( $required ? '<span class="certloom-field-required">' . esc_html__( 'Required', 'certloom' ) . '</span>' : '' ) . $this->help_tip( $description ) . '</label><input id="' . esc_attr( $id ) . '" class="regular-text" type="' . esc_attr( $type ) . '" name="' . esc_attr( $name ) . '" value="' . esc_attr( $value ) . '" ' . ( $required ? 'required aria-required="true"' . $example_attr . ' ' : '' ) . wp_kses_post( $attributes ) . '></div>';
 	}
 
 	/** Compact accessible inline help, intentionally replacing most below-field explanatory paragraphs. */

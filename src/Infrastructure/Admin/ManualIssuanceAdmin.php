@@ -33,6 +33,8 @@ final class ManualIssuanceAdmin {
 	public function register() {
 		add_action( 'admin_menu', array( $this, 'menu' ), 55 );
 		add_action( 'admin_post_certloom_manual_issuance_issue', array( $this, 'issue' ) );
+		add_action( 'wp_ajax_certloom_manual_quick_program', array( $this, 'quick_program' ) );
+		add_action( 'wp_ajax_certloom_manual_quick_batch', array( $this, 'quick_batch' ) );
 	}
 
 	/** @return void */
@@ -108,11 +110,12 @@ final class ManualIssuanceAdmin {
 				$values['recipient_mode'] = 'existing';
 			}
 		}
-		$recipient_search = isset( $_GET['recipient_search'] ) ? sanitize_text_field( wp_unslash( $_GET['recipient_search'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only search.
 		$recipient_repo = new RecipientRepository();
-		$recipients = $recipient_repo->list_page( $recipient_search, 1, 50 );
+		$recipients = $recipient_repo->list_page( '', 1, 20 );
 		$selected_program_id = absint( $values['program_id'] ?? 0 );
 		$selected_batch_id   = absint( $values['batch_id'] ?? 0 );
+		if ( ! $selected_program_id && isset( $_GET['program_id'] ) ) { $selected_program_id = absint( $_GET['program_id'] ); $values['program_id'] = $selected_program_id; } // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only quick-create preselection.
+		if ( ! $selected_batch_id && isset( $_GET['batch_id'] ) ) { $selected_batch_id = absint( $_GET['batch_id'] ); $values['batch_id'] = $selected_batch_id; } // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only quick-create preselection.
 		$context_choices = new ScopedContextChoices();
 		$programs = $context_choices->programs( $selected_program_id );
 		$batches  = $context_choices->batches( $selected_program_id, $selected_batch_id );
@@ -146,52 +149,43 @@ final class ManualIssuanceAdmin {
 		$numbering = new ManualIssuanceNumberAllocator();
 		$number_preview = $numbering->is_automatic() ? $numbering->review( '' ) : null;
 
-		echo '<section class="certloom-manual-card"><div class="certloom-manual-card-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Step 1', 'certloom' ) . '</span><h2>' . esc_html__( 'Compose credential', 'certloom' ) . '</h2></div><p>' . esc_html__( 'No Recipient, sequence value or credential record is created while composing or reviewing.', 'certloom' ) . '</p></div>';
+		echo '<section class="certloom-manual-card"><div class="certloom-manual-card-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Step 1', 'certloom' ) . '</span><h2>' . esc_html__( 'Compose credential', 'certloom' ) . '</h2></div><p>' . esc_html__( 'Nothing is issued or numbered until you review and confirm.', 'certloom' ) . '</p></div>';
 		if ( empty( $program_items ) ) { echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'Create and activate at least one Program before Manual Issuance can continue.', 'certloom' ) . '</p></div>'; }
 		if ( empty( $template_items ) ) { echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'Publish at least one active Template before Manual Issuance can continue.', 'certloom' ) . '</p></div>'; }
 
-		echo '<form method="get" action="' . esc_url( admin_url( 'admin.php' ) ) . '" class="certloom-manual-recipient-search" role="search">';
-		echo '<input type="hidden" name="page" value="' . esc_attr( self::PAGE ) . '">';
-		echo '<label for="certloom-recipient-search"><span>' . esc_html__( 'Find an existing recipient', 'certloom' ) . '</span></label>';
-		echo '<div><input id="certloom-recipient-search" type="search" name="recipient_search" value="' . esc_attr( $recipient_search ) . '" maxlength="255" placeholder="' . esc_attr__( 'Name, email, or external ID', 'certloom' ) . '"> <button class="button" type="submit">' . esc_html__( 'Search recipients', 'certloom' ) . '</button>';
-		if ( '' !== $recipient_search ) { echo ' <a class="button-link" href="' . esc_url( admin_url( 'admin.php?page=' . self::PAGE ) ) . '">' . esc_html__( 'Clear search', 'certloom' ) . '</a>'; }
-		echo '</div><small>' . esc_html( sprintf( _n( '%d matching recipient shown (up to 50).', '%d matching recipients shown (up to 50).', count( $recipient_items ), 'certloom' ), count( $recipient_items ) ) ) . '</small></form>';
-
-		echo '<form method="post" action="' . esc_url( admin_url( 'admin.php?page=' . self::PAGE ) ) . '" class="certloom-manual-form" data-certloom-scoped-fields-form data-certloom-scoped-fields-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '">';
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin.php?page=' . self::PAGE ) ) . '" class="certloom-manual-form" data-certloom-human-form data-certloom-scoped-fields-form data-certloom-scoped-fields-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '" data-certloom-invalid-message="' . esc_attr__( 'Please complete the highlighted field before reviewing this credential.', 'certloom' ) . '">';
 		wp_nonce_field( 'certloom_manual_issuance_review' );
 		echo '<input type="hidden" name="certloom_manual_issuance_step" value="review">';
 
-		echo '<fieldset class="certloom-manual-fieldset"><legend>' . esc_html__( 'Recipient', 'certloom' ) . '</legend>';
-		echo '<p class="certloom-manual-fieldset-intro">' . esc_html__( 'A Recipient is the reusable person or organization profile that receives credentials. Choose an existing profile to keep future credentials connected to the same identity, or create a new Recipient here.', 'certloom' ) . '</p><div class="certloom-manual-choice-row">';
-		$this->radio( 'recipient_mode', 'existing', __( 'Existing recipient', 'certloom' ), $mode );
+		echo '<fieldset class="certloom-manual-fieldset certloom-recipient-compose" data-certloom-recipient-compose><legend>' . esc_html__( 'Recipient', 'certloom' ) . '</legend>';
+		echo '<p class="certloom-manual-fieldset-intro">' . esc_html__( 'Who is receiving this credential?', 'certloom' ) . '</p><div class="certloom-manual-choice-row certloom-choice-pills">';
+		$this->radio( 'recipient_mode', 'existing', __( 'Choose existing recipient', 'certloom' ), $mode );
 		$this->radio( 'recipient_mode', 'new', __( 'Create new recipient', 'certloom' ), $mode );
-		echo '</div><div class="certloom-manual-grid certloom-manual-grid-2">';
-		echo '<label><span>' . esc_html__( 'Existing recipient', 'certloom' ) . '</span><select name="recipient_id"><option value="">' . esc_html__( 'Choose recipient…', 'certloom' ) . '</option>';
+		echo '</div>';
+
+		echo '<div class="certloom-recipient-mode-panel" data-certloom-recipient-existing-panel' . ( 'new' === $mode ? ' hidden' : '' ) . '><label class="certloom-manual-primary-field"><span>' . esc_html__( 'Recipient', 'certloom' ) . '</span><select name="recipient_id" data-certloom-recipient-existing-select data-certloom-context-lookup="recipient" data-certloom-context-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search recipients by name, email, or external ID…', 'certloom' ) . '" data-certloom-required-example="' . esc_attr__( 'Choose the person or organization that should receive this credential.', 'certloom' ) . '"><option value="">' . esc_html__( 'Choose recipient…', 'certloom' ) . '</option>';
 		foreach ( $recipient_items as $recipient ) {
 			$label = (string) ( $recipient['display_name'] ?? '' ); if ( ! empty( $recipient['email'] ) ) { $label .= ' — ' . (string) $recipient['email']; }
 			echo '<option value="' . esc_attr( (string) absint( $recipient['id'] ?? 0 ) ) . '" ' . selected( absint( $values['recipient_id'] ?? 0 ), absint( $recipient['id'] ?? 0 ), false ) . '>' . esc_html( $label ) . '</option>';
 		}
-		echo '</select><small>' . esc_html__( 'The selector shows up to 50 recipients from the current search.', 'certloom' ) . '</small></label>';
+		echo '</select><small>' . esc_html__( 'Start typing to search all Recipient profiles. Use one profile for the same person or organization across multiple credentials.', 'certloom' ) . '</small></label></div>';
+
 		$new = isset( $values['new_recipient'] ) && is_array( $values['new_recipient'] ) ? $values['new_recipient'] : array();
-		$this->text_input( 'new_recipient[display_name]', __( 'New recipient display name', 'certloom' ), (string) ( $new['display_name'] ?? '' ), 255 );
-		$this->text_input( 'new_recipient[first_name]', __( 'First name', 'certloom' ), (string) ( $new['first_name'] ?? '' ), 191 );
-		$this->text_input( 'new_recipient[middle_name]', __( 'Middle name', 'certloom' ), (string) ( $new['middle_name'] ?? '' ), 191 );
-		$this->text_input( 'new_recipient[last_name]', __( 'Last name', 'certloom' ), (string) ( $new['last_name'] ?? '' ), 191 );
-		$this->text_input( 'new_recipient[email]', __( 'Email', 'certloom' ), (string) ( $new['email'] ?? '' ), 320, 'email' );
-		$this->text_input( 'new_recipient[external_id]', __( 'External ID', 'certloom' ), (string) ( $new['external_id'] ?? '' ), 191 );
-		echo '</div></fieldset>';
+		$new_name = trim( (string) ( $new['display_name'] ?? '' ) );
+		echo '<div class="certloom-recipient-mode-panel certloom-recipient-new-panel" data-certloom-recipient-new-panel' . ( 'new' !== $mode ? ' hidden' : '' ) . '><div class="certloom-recipient-new-summary"><div><strong data-certloom-recipient-new-summary-name>' . esc_html( '' !== $new_name ? $new_name : __( 'New Recipient profile', 'certloom' ) ) . '</strong><p class="description">' . esc_html__( 'Create the complete Recipient profile once. Credential-specific fields such as grade remain in the credential section below.', 'certloom' ) . '</p></div><button type="button" class="button" data-certloom-dialog-open="certloom-new-recipient-dialog">' . esc_html( '' !== $new_name ? __( 'Edit profile', 'certloom' ) : __( 'Complete recipient profile', 'certloom' ) ) . '</button></div></div>';
+		$this->render_new_recipient_dialog( $new );
 
 		echo '<fieldset class="certloom-manual-fieldset"><legend>' . esc_html__( 'Credential context', 'certloom' ) . '</legend><div class="certloom-manual-grid certloom-manual-grid-2">';
 		$context_nonce = wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION );
-		echo '<label><span>' . esc_html__( 'Program', 'certloom' ) . '</span><select name="program_id" required data-certloom-context-lookup="program" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search active Programs…', 'certloom' ) . '"><option value="">' . esc_html__( 'Choose active Program…', 'certloom' ) . '</option>';
+		echo '<label><span>' . esc_html__( 'Program', 'certloom' ) . '</span><select name="program_id" required data-certloom-required-example="' . esc_attr__( 'Choose the Program this credential belongs to.', 'certloom' ) . '" data-certloom-context-lookup="program" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search active Programs…', 'certloom' ) . '"><option value="">' . esc_html__( 'Choose active Program…', 'certloom' ) . '</option>';
 		foreach ( $program_items as $program ) { echo '<option value="' . esc_attr( (string) absint( $program['id'] ?? 0 ) ) . '" ' . selected( $selected_program_id, absint( $program['id'] ?? 0 ), false ) . '>' . esc_html( ScopedContextChoices::program_label( $program ) ) . '</option>'; }
-		echo '</select><small>' . esc_html__( 'Searches the complete active Program registry; only a small set of matches is loaded at a time.', 'certloom' ) . '</small></label>';
+		echo '</select><small>' . esc_html__( 'Choose the Program or qualification this credential represents.', 'certloom' ) . '</small></label><div class="certloom-context-inline-actions"><button type="button" class="button-link" data-certloom-dialog-open="certloom-quick-program-dialog">' . esc_html__( 'Add new Program', 'certloom' ) . '</button></div>';
 		echo '<label><span>' . esc_html__( 'Batch / cohort (optional)', 'certloom' ) . '</span><select name="batch_id" data-certloom-context-lookup="batch" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search Batches in this Program…', 'certloom' ) . '"><option value="0">' . esc_html__( 'No Batch', 'certloom' ) . '</option>';
 		foreach ( $batch_items as $batch ) { echo '<option value="' . esc_attr( (string) absint( $batch['id'] ?? 0 ) ) . '" data-program-id="' . esc_attr( (string) absint( $batch['program_id'] ?? 0 ) ) . '" ' . selected( $selected_batch_id, absint( $batch['id'] ?? 0 ), false ) . '>' . esc_html( ScopedContextChoices::batch_label( $batch ) ) . '</option>'; }
-		echo '</select><small>' . esc_html__( 'A Batch inherits the Program field contract and may add or tighten cohort-specific requirements. Search is restricted to the selected Program and the server validates the relationship again.', 'certloom' ) . '</small></label>';
+		echo '</select><small>' . esc_html__( 'Optional: choose a cohort or intake within the selected Program.', 'certloom' ) . '</small></label><div class="certloom-context-inline-actions"><button type="button" class="button-link" data-certloom-dialog-open="certloom-quick-batch-dialog">' . esc_html__( 'Add new Batch', 'certloom' ) . '</button></div>';
 		echo '<label><span>' . esc_html__( 'Certificate design', 'certloom' ) . '</span><select name="template_id" data-certloom-context-lookup="template" data-certloom-context-empty-value="0" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search published Templates…', 'certloom' ) . '"><option value="0">' . esc_html__( 'Use Program design automatically', 'certloom' ) . '</option>';
 		foreach ( $template_items as $template ) { $label=ScopedContextChoices::template_label( $template ); echo '<option value="'.esc_attr((string)absint($template['id'])).'" '.selected(absint($values['template_id']??0),absint($template['id']),false).'>'.esc_html($label).'</option>'; }
-		echo '</select><small>' . esc_html__( 'Recommended: leave this on Program design. Choose a Template only for an explicit one-off override; issued Versions still freeze the exact published revision.', 'certloom' ) . '</small></label>';
+		echo '</select><small>' . esc_html__( 'Usually keep the Program design. Choose a different published design only for this credential.', 'certloom' ) . '</small></label>';
 		$this->text_input( 'valid_from', __( 'Issue / effective date', 'certloom' ), $valid_from, 10, 'date' );
 		echo '<div data-certloom-grade-field>'; $this->text_input( 'grade', __( 'Grade / result (optional)', 'certloom' ), (string) ( $values['grade'] ?? '' ), 191 ); echo '</div>';
 		echo '</div><div class="certloom-manual-choice-row certloom-manual-expiry">';
@@ -201,7 +195,7 @@ final class ManualIssuanceAdmin {
 		echo '</div>'; $this->text_input( 'expires_at', __( 'Specific expiry date', 'certloom' ), (string) ( $values['expires_at'] ?? '' ), 10, 'date' );
 		echo '</fieldset>';
 
-		echo '<fieldset class="certloom-manual-fieldset"><legend>' . esc_html__( 'Certificate number & custom merge values', 'certloom' ) . '</legend>';
+		echo '<fieldset class="certloom-manual-fieldset"><legend>' . esc_html__( 'Credential details', 'certloom' ) . '</legend>';
 		if ( $numbering->is_automatic() ) {
 			echo '<p><strong>' . esc_html__( 'Automatic numbering is enabled.', 'certloom' ) . '</strong> ';
 			if ( is_wp_error( $number_preview ) ) { echo '<span class="certloom-text-danger">' . esc_html( $number_preview->get_error_message() ) . '</span>'; }
@@ -212,16 +206,87 @@ final class ManualIssuanceAdmin {
 		$json_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
 		echo '<div class="certloom-scoped-field-panel" data-certloom-scoped-field-panel><div class="certloom-scoped-field-status" data-certloom-scoped-field-status aria-live="polite">' . esc_html__( 'Choose a Program to load its credential fields.', 'certloom' ) . '</div><div class="certloom-scoped-field-inputs" data-certloom-scoped-field-inputs></div></div>';
 		echo '<script type="application/json" data-certloom-scoped-existing-values>' . wp_json_encode( $custom, $json_flags ) . '</script>';
-		echo '<div data-certloom-legacy-custom-fields><p class="description">' . esc_html__( 'Legacy Program mode: optional credential-specific custom values use short field keys. Once a Program adopts Credential fields, Certloom replaces this free-key grid with the exact Program/Batch fields.', 'certloom' ) . '</p><div class="certloom-manual-custom-grid">';
-		$rows = max( 4, min( 10, count( $custom ) + 2 ) ); $keys=array_keys($custom); for($i=0;$i<$rows;$i++){ $key=$keys[$i]??''; $val=''!==$key?(string)$custom[$key]:''; echo '<div class="certloom-manual-custom-row"><label><span>'.esc_html__( 'Field key', 'certloom' ).'</span><input type="text" name="custom_merge_key[]" maxlength="64" value="'.esc_attr($key).'" placeholder="membership_level"></label><label><span>'.esc_html__( 'Value', 'certloom' ).'</span><input type="text" name="custom_merge_value[]" maxlength="2000" value="'.esc_attr($val).'"></label></div>'; }
-		echo '</div></div></fieldset>';
-		echo '<div class="certloom-manual-actions"><button type="submit" class="button button-primary button-hero" ' . ( empty( $program_items ) || empty( $template_items ) ? 'disabled' : '' ) . '>' . esc_html__( 'Review credential', 'certloom' ) . '</button><span>' . esc_html__( 'Review is read-only and does not reserve a certificate number.', 'certloom' ) . '</span></div></form></section>';
+		if ( AdminUiMode::is_simple() ) {
+			echo '<div data-certloom-legacy-custom-fields><p class="description">' . esc_html__( 'Additional credential fields are managed from the Program. Choose a Program above to load the fields it uses.', 'certloom' ) . '</p></div>';
+		} else {
+			echo '<div data-certloom-legacy-custom-fields><p class="description">' . esc_html__( 'Legacy Program mode: optional credential-specific custom values use short field keys. Once a Program adopts Credential fields, Certloom replaces this free-key grid with the exact Program/Batch fields.', 'certloom' ) . '</p><div class="certloom-manual-custom-grid">';
+			$rows = max( 4, min( 10, count( $custom ) + 2 ) ); $keys=array_keys($custom); for($i=0;$i<$rows;$i++){ $key=$keys[$i]??''; $val=''!==$key?(string)$custom[$key]:''; echo '<div class="certloom-manual-custom-row"><label><span>'.esc_html__( 'Field key', 'certloom' ).'</span><input type="text" name="custom_merge_key[]" maxlength="64" value="'.esc_attr($key).'" placeholder="membership_level"></label><label><span>'.esc_html__( 'Value', 'certloom' ).'</span><input type="text" name="custom_merge_value[]" maxlength="2000" value="'.esc_attr($val).'"></label></div>'; }
+			echo '</div></div>';
+		}
+		echo '</fieldset>';
+		echo '<div class="certloom-manual-actions"><button type="submit" class="button button-primary button-hero" data-certloom-manual-review data-certloom-has-templates="' . esc_attr( empty( $template_items ) ? '0' : '1' ) . '" ' . ( empty( $program_items ) || empty( $template_items ) ? 'disabled' : '' ) . '>' . esc_html__( 'Review credential', 'certloom' ) . '</button><span>' . esc_html__( 'Review is read-only and does not reserve a certificate number.', 'certloom' ) . '</span></div></form></section>';
+		$this->render_quick_context_dialogs( $selected_program_id );
+	}
+
+
+	/** Renders the complete mutable Recipient profile in a focused issuance popup. */
+	private function render_new_recipient_dialog( array $new ) {
+		$wp_user_id = absint( $new['wp_user_id'] ?? 0 );
+		$wp_user_label = '';
+		if ( $wp_user_id && function_exists( 'get_userdata' ) ) {
+			$user = get_userdata( $wp_user_id );
+			if ( $user ) { $wp_user_label = trim( (string) $user->display_name . ' — ' . (string) $user->user_email ); }
+		}
+		echo '<dialog id="certloom-new-recipient-dialog" class="certloom-premium-dialog certloom-recipient-profile-dialog" data-certloom-recipient-dialog><div class="certloom-dialog-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Recipient profile', 'certloom' ) . '</span><h2>' . esc_html__( 'New recipient', 'certloom' ) . '</h2><p>' . esc_html__( 'Profile information is reusable across future credentials. It is separate from grade, score and other credential-specific values.', 'certloom' ) . '</p></div><button type="button" class="button-link" data-certloom-dialog-close aria-label="' . esc_attr__( 'Close recipient profile', 'certloom' ) . '">×</button></div><div class="certloom-dialog-body"><div class="certloom-manual-grid certloom-manual-grid-2">';
+		$this->text_input( 'new_recipient[display_name]', __( 'Display name', 'certloom' ), (string) ( $new['display_name'] ?? '' ), 255, 'text', true, __( 'Example: Amina Khan or Northstar Academy', 'certloom' ) );
+		$this->text_input( 'new_recipient[email]', __( 'Email', 'certloom' ), (string) ( $new['email'] ?? '' ), 320, 'email', false, __( 'Optional. Used for delivery and account contact.', 'certloom' ) );
+		$this->text_input( 'new_recipient[first_name]', __( 'First name', 'certloom' ), (string) ( $new['first_name'] ?? '' ), 191 );
+		$this->text_input( 'new_recipient[middle_name]', __( 'Middle name', 'certloom' ), (string) ( $new['middle_name'] ?? '' ), 191 );
+		$this->text_input( 'new_recipient[last_name]', __( 'Last name', 'certloom' ), (string) ( $new['last_name'] ?? '' ), 191 );
+		$this->text_input( 'new_recipient[external_id]', __( 'External learner / customer ID', 'certloom' ), (string) ( $new['external_id'] ?? '' ), 191, 'text', false, __( 'Optional. Use an exact LMS, CRM, SIS or customer identifier when available.', 'certloom' ) );
+		echo '<label><span>' . esc_html__( 'WordPress account', 'certloom' ) . '</span><select name="new_recipient[wp_user_id]" data-certloom-context-lookup="wp_user" data-certloom-context-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search WordPress users…', 'certloom' ) . '"><option value="0">' . esc_html__( 'No linked WordPress account', 'certloom' ) . '</option>';
+		if ( $wp_user_id ) { echo '<option value="' . esc_attr( (string) $wp_user_id ) . '" selected>' . esc_html( '' !== $wp_user_label ? $wp_user_label : '#' . $wp_user_id ) . '</option>'; }
+		echo '</select><small>' . esc_html__( 'Optional. Linking the exact WordPress account powers My Credentials and account-based LMS/WooCommerce identity. Certloom never links by matching email or name.', 'certloom' ) . '</small></label>';
+		echo '</div><div class="certloom-callout certloom-callout-info"><span class="dashicons dashicons-info-outline" aria-hidden="true"></span><div><strong>' . esc_html__( 'Credential fields stay separate', 'certloom' ) . '</strong><p>' . esc_html__( 'Grade, score, completion result and Program/Batch credential fields are entered after you choose the credential context. They are not Recipient-profile fields.', 'certloom' ) . '</p></div></div></div><div class="certloom-dialog-actions"><button type="button" class="button" data-certloom-dialog-close>' . esc_html__( 'Cancel', 'certloom' ) . '</button><button type="button" class="button button-primary" data-certloom-recipient-profile-save>' . esc_html__( 'Use this recipient profile', 'certloom' ) . '</button></div></dialog>';
+	}
+
+	/** Quick-create Program/Batch without abandoning the issuance draft. */
+	private function render_quick_context_dialogs( $selected_program_id ) {
+		echo '<dialog id="certloom-quick-program-dialog" class="certloom-premium-dialog"><form data-certloom-quick-create="program" data-certloom-quick-target="select[name=program_id]" data-certloom-human-form data-certloom-invalid-message="' . esc_attr__( 'Complete the highlighted Program field.', 'certloom' ) . '"><input type="hidden" name="action" value="certloom_manual_quick_program"><input type="hidden" name="nonce" value="' . esc_attr( wp_create_nonce( 'certloom_manual_quick_program' ) ) . '">';
+		echo '<div class="certloom-dialog-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Quick setup', 'certloom' ) . '</span><h2>' . esc_html__( 'Add Program', 'certloom' ) . '</h2><p>' . esc_html__( 'Create the Program now, select it for this credential, then complete its deeper settings from Programs when needed.', 'certloom' ) . '</p></div><button type="button" class="button-link" data-certloom-dialog-close aria-label="' . esc_attr__( 'Close Add Program', 'certloom' ) . '">×</button></div><div class="certloom-dialog-body certloom-manual-grid certloom-manual-grid-2">';
+		$this->text_input( 'program_title', __( 'Program title', 'certloom' ), '', 255, 'text', true, __( 'Example: Internal Auditor Certification', 'certloom' ) );
+		$this->text_input( 'program_code', __( 'Short code (optional)', 'certloom' ), '', 100, 'text', false, __( 'Example: IA-101', 'certloom' ) );
+		echo '</div><div class="certloom-dialog-actions"><button type="button" class="button" data-certloom-dialog-close>' . esc_html__( 'Cancel', 'certloom' ) . '</button><button type="submit" class="button button-primary">' . esc_html__( 'Add Program', 'certloom' ) . '</button></div></form></dialog>';
+
+		echo '<dialog id="certloom-quick-batch-dialog" class="certloom-premium-dialog"><form data-certloom-quick-create="batch" data-certloom-quick-target="select[name=batch_id]" data-certloom-quick-program-source="select[name=program_id]" data-certloom-human-form data-certloom-invalid-message="' . esc_attr__( 'Complete the highlighted Batch field.', 'certloom' ) . '"><input type="hidden" name="action" value="certloom_manual_quick_batch"><input type="hidden" name="nonce" value="' . esc_attr( wp_create_nonce( 'certloom_manual_quick_batch' ) ) . '">';
+		echo '<div class="certloom-dialog-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Quick setup', 'certloom' ) . '</span><h2>' . esc_html__( 'Add Batch', 'certloom' ) . '</h2><p>' . esc_html__( 'Create a cohort or intake and return directly to this issuance.', 'certloom' ) . '</p></div><button type="button" class="button-link" data-certloom-dialog-close aria-label="' . esc_attr__( 'Close Add Batch', 'certloom' ) . '">×</button></div><div class="certloom-dialog-body certloom-manual-grid certloom-manual-grid-2">';
+		echo '<label><span>' . esc_html__( 'Program', 'certloom' ) . '</span><select name="program_id" required data-certloom-required-example="' . esc_attr__( 'Choose the Program this Batch belongs to.', 'certloom' ) . '" data-certloom-context-lookup="program" data-certloom-context-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search active Programs…', 'certloom' ) . '"><option value="">' . esc_html__( 'Choose Program…', 'certloom' ) . '</option>';
+		$programs = ( new ScopedContextChoices() )->programs( $selected_program_id );
+		if ( ! is_wp_error( $programs ) ) { foreach ( $programs as $program ) { echo '<option value="' . esc_attr( (string) absint( $program['id'] ?? 0 ) ) . '" ' . selected( absint( $selected_program_id ), absint( $program['id'] ?? 0 ), false ) . '>' . esc_html( ScopedContextChoices::program_label( $program ) ) . '</option>'; } }
+		echo '</select></label>';
+		$this->text_input( 'batch_name', __( 'Batch name', 'certloom' ), '', 255, 'text', true, __( 'Example: Spring 2027 Cohort', 'certloom' ) );
+		$this->text_input( 'batch_code', __( 'Batch code (optional)', 'certloom' ), '', 100, 'text', false, __( 'Leave blank to generate one from the Batch name.', 'certloom' ) );
+		echo '</div><div class="certloom-dialog-actions"><button type="button" class="button" data-certloom-dialog-close>' . esc_html__( 'Cancel', 'certloom' ) . '</button><button type="submit" class="button button-primary">' . esc_html__( 'Add Batch', 'certloom' ) . '</button></div></form></dialog>';
+	}
+
+	/** @return void */
+	public function quick_program() {
+		if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS ) ) { wp_send_json_error( array( 'message' => __( 'You do not have permission to add Programs.', 'certloom' ) ), 403 ); }
+		check_ajax_referer( 'certloom_manual_quick_program', 'nonce' );
+		$title = isset( $_POST['program_title'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['program_title'] ) ) ) : '';
+		$code = isset( $_POST['program_code'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['program_code'] ) ) ) : '';
+		$result = ( new ProgramRepository() )->create( array( 'title' => $title, 'code' => $code, 'active' => 1 ) );
+		if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'message' => $result->get_error_message() ), 400 ); }
+		wp_send_json_success( array( 'id' => absint( $result ), 'label' => '' !== $code ? $title . ' — ' . $code : $title, 'message' => __( 'Program added and selected.', 'certloom' ) ) );
+	}
+
+	/** @return void */
+	public function quick_batch() {
+		if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_BATCHES ) ) { wp_send_json_error( array( 'message' => __( 'You do not have permission to add Batches.', 'certloom' ) ), 403 ); }
+		check_ajax_referer( 'certloom_manual_quick_batch', 'nonce' );
+		$program_id = isset( $_POST['program_id'] ) ? absint( $_POST['program_id'] ) : 0;
+		$name = isset( $_POST['batch_name'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['batch_name'] ) ) ) : '';
+		$code = isset( $_POST['batch_code'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['batch_code'] ) ) ) : '';
+		if ( '' === $code && '' !== $name ) { $code = trim( strtoupper( substr( preg_replace( '/[^A-Za-z0-9]+/', '-', $name ), 0, 80 ) ), '-' ); }
+		$result = ( new BatchRepository() )->create( array( 'program_id' => $program_id, 'name' => $name, 'code' => $code, 'active' => 1 ) );
+		if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'message' => $result->get_error_message() ), 400 ); }
+		wp_send_json_success( array( 'id' => absint( $result ), 'program_id' => $program_id, 'label' => '' !== $code ? $name . ' — ' . $code : $name, 'message' => __( 'Batch added and selected.', 'certloom' ) ) );
 	}
 
 	/** @return void */
 	private function render_review( array $review ) {
 		$request = (array) $review['request']; $recipient=(array)$review['recipient']; $program=(array)$review['program']; $template=(array)$review['template']; $revision=(array)$review['template_revision'];
-		echo '<section class="certloom-manual-card"><div class="certloom-manual-card-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Step 2', 'certloom' ) . '</span><h2>' . esc_html__( 'Review exact issuance', 'certloom' ) . '</h2></div><span class="certloom-template-state certloom-template-state-published">' . esc_html__( 'Published revision only', 'certloom' ) . '</span></div>';
+		echo '<section class="certloom-manual-card"><div class="certloom-manual-card-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Step 2', 'certloom' ) . '</span><h2>' . esc_html__( 'Review credential', 'certloom' ) . '</h2></div><span class="certloom-template-state certloom-template-state-published">' . esc_html__( 'Ready to issue', 'certloom' ) . '</span></div>';
 		echo '<div class="certloom-manual-review-grid">';
 		$this->review_fact( __( 'Recipient', 'certloom' ), (string) ( $recipient['display_name'] ?? '' ), ! empty( $recipient['email'] ) ? (string) $recipient['email'] : '' );
 		$this->review_fact( __( 'Program', 'certloom' ), (string) ( $program['title'] ?? '' ), ! empty( $program['code'] ) ? (string) $program['code'] : '' );
@@ -315,7 +380,7 @@ final class ManualIssuanceAdmin {
 	/** @return void */
 	private function hidden_request( array $r ) { foreach(array('recipient_mode','recipient_id','program_id','batch_id','template_id','valid_from','expiry_mode','expires_at','grade','display_number') as $k){echo '<input type="hidden" name="'.esc_attr($k).'" value="'.esc_attr((string)($r[$k]??'')).'">';} foreach((array)($r['new_recipient']??array()) as $k=>$v){if(!is_array($v)){echo '<input type="hidden" name="new_recipient['.esc_attr((string)$k).']" value="'.esc_attr((string)$v).'">';}} foreach((array)($r['custom_merge_fields']??array()) as $k=>$v){echo '<input type="hidden" name="custom_merge_fields['.esc_attr((string)$k).']" value="'.esc_attr((string)$v).'">';} }
 	/** @return void */ private function review_fact($label,$value,$meta='',$code=false){echo '<div class="certloom-manual-review-fact"><span>'.esc_html($label).'</span>'.($code?'<code>'.esc_html($value).'</code>':'<strong>'.esc_html($value).'</strong>').(''!==(string)$meta?'<small>'.esc_html((string)$meta).'</small>':'').'</div>';}
-	/** @return void */ private function text_input($name,$label,$value,$max,$type='text'){echo '<label><span>'.esc_html($label).'</span><input type="'.esc_attr($type).'" name="'.esc_attr($name).'" maxlength="'.esc_attr((string)$max).'" value="'.esc_attr($value).'"></label>';}
+	/** @return void */ private function text_input($name,$label,$value,$max,$type='text',$required=false,$example=''){echo '<label><span>'.esc_html($label).'</span><input type="'.esc_attr($type).'" name="'.esc_attr($name).'" maxlength="'.esc_attr((string)$max).'" value="'.esc_attr($value).'"'.($required?' required':'').(''!==$example?' data-certloom-required-example="'.esc_attr($example).'"':'').'>'.(''!==$example?'<small>'.esc_html($example).'</small>':'').'</label>';}
 	/** @return void */ private function radio($name,$value,$label,$current){echo '<label><input type="radio" name="'.esc_attr($name).'" value="'.esc_attr($value).'" '.checked((string)$current,(string)$value,false).'> <span>'.esc_html($label).'</span></label>';}
 	/** @return void */ private function steps($current){$steps=array('compose'=>__( 'Compose', 'certloom' ),'review'=>__( 'Review', 'certloom' ),'issue'=>__( 'Issue', 'certloom' ),'receipt'=>__( 'Receipt', 'certloom' ));echo '<ol class="certloom-manual-steps" aria-label="'.esc_attr__( 'Manual Issuance progress', 'certloom' ).'">';$seen=true;foreach($steps as $key=>$label){$class=$key===$current?'is-current':($seen?'is-complete':'');echo '<li class="'.esc_attr($class).'" '.($key===$current?'aria-current="step"':'').'><span>'.esc_html($label).'</span></li>';if($key===$current)$seen=false;}echo '</ol>';}
 	/** @return void */ private function require_capability(){if(!current_user_can(\Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS)){wp_die(esc_html__( 'You do not have permission to issue Certloom credentials.', 'certloom' ));}}

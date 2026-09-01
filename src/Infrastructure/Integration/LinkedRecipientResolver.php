@@ -4,6 +4,7 @@ namespace Certloom\Infrastructure\Integration;
 use Certloom\Application\Contract\IntegrationContextRecipientResolverInterface;
 use Certloom\Application\Integration\IntegrationEventContext;
 use Certloom\Infrastructure\Repository\RecipientRepository;
+use Certloom\Infrastructure\Recipient\RecipientUserSync;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -31,8 +32,12 @@ final class LinkedRecipientResolver implements IntegrationContextRecipientResolv
 		if ( $wp_user_id < 1 ) { return new \WP_Error( 'certloom_integration_user_invalid', __( 'The integration event does not identify a valid WordPress user.', 'certloom' ) ); }
 		$recipient = $this->recipients->find_by_wp_user_id( $wp_user_id );
 		if ( is_wp_error( $recipient ) ) { return $recipient; }
+		if ( ( ! is_array( $recipient ) || empty( $recipient['id'] ) ) && RecipientUserSync::enabled() ) {
+			$recipient = ( new RecipientUserSync( $this->recipients ) )->ensure_for_user( $wp_user_id );
+			if ( is_wp_error( $recipient ) ) { return $recipient; }
+		}
 		if ( ! is_array( $recipient ) || empty( $recipient['id'] ) ) {
-			return new \WP_Error( 'certloom_integration_recipient_unlinked', __( 'This learner is not explicitly linked to a Certloom recipient. Certloom will not infer identity from email or name.', 'certloom' ) );
+			return new \WP_Error( 'certloom_integration_recipient_unlinked', __( 'This WordPress account is not linked to a Certloom Recipient. Link it from Recipients or enable Recipient account sync in Settings.', 'certloom' ) );
 		}
 		return $recipient;
 	}

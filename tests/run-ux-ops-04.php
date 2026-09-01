@@ -61,7 +61,7 @@ u4( false !== strpos( $library_css, '@media (max-width:782px)' ) && false !== st
 
 // 7. Recipient is a reusable first-class identity and the ordinary create path
 // must not silently bypass it once normalized issuance is available.
-u4( false !== strpos( $manual, 'A Recipient is the reusable person or organization profile that receives credentials.' ), 'Issuance explains the reusable Recipient concept in the workflow itself' );
+u4( false !== strpos( $manual, 'Who is receiving this credential?' ) && false !== strpos( $manual, 'Use one profile for the same person or organization across multiple credentials.' ) && false !== strpos( $manual, 'Profile information is reusable across future credentials.' ), 'Issuance explains the reusable Recipient concept through concise contextual guidance' );
 u4( false !== strpos( $manual, "isset( \$_GET['recipient_id'] )" ) && false !== strpos( $manual, 'array_unshift( $recipient_items, $selected_recipient )' ), 'Recipient profile deep-link preselection survives the bounded recipient search window' );
 u4( false !== strpos( $domain, "ManualIssuanceAdmin::PAGE, 'recipient_id'" ) && false !== strpos( $domain, "'Issue credential to this recipient', 'certloom'" ), 'Recipient profiles provide a direct Recipient-preselected Issue credential action' );
 u4( false !== strpos( $domain, 'data-certloom-context-lookup="wp_user"' ) && false !== strpos( $domain, "'WordPress account', 'certloom'" ) && false === strpos( $domain, "'WordPress user ID', 'certloom'" ), 'Recipient editor uses a searchable WordPress account selector instead of a raw numeric user ID' );

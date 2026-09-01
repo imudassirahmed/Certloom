@@ -18,6 +18,7 @@ namespace {
 	function is_wp_error( $value ) { return $value instanceof WP_Error; }
 	function get_option( $key, $default = false ) { return array_key_exists( $key, $GLOBALS['dbg_options'] ) ? $GLOBALS['dbg_options'][ $key ] : $default; }
 	function is_admin() { return true; }
+	function add_action( $hook, $callback, $priority = 10, $accepted_args = 1 ) { return true; }
 	function dbg_same( $expected, $actual, $message ) {
 		if ( $expected !== $actual ) {
 			throw new \RuntimeException( $message . ': expected ' . var_export( $expected, true ) . ', got ' . var_export( $actual, true ) );

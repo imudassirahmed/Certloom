@@ -21,6 +21,7 @@ class Ecapla_CertVerify_Settings {
 			'credit_align'            => 'center',
 			'delete_data_on_uninstall' => false,
 			'privacy_erasure_policy'   => 'retain',
+			'recipient_user_sync_enabled' => true,
 			'verification_branding_enabled' => false,
 			'verification_brand_name'    => '',
 			'verification_brand_tagline' => '',
@@ -74,6 +75,7 @@ class Ecapla_CertVerify_Settings {
 		$clean['credit_align']  = in_array( $data['credit_align'], array( 'left', 'center', 'right' ), true ) ? $data['credit_align'] : 'center';
 		$clean['delete_data_on_uninstall'] = ! empty( $data['delete_data_on_uninstall'] );
 		$clean['privacy_erasure_policy'] = isset( $data['privacy_erasure_policy'] ) && 'anonymize_mutable_recipient' === sanitize_key( (string) $data['privacy_erasure_policy'] ) ? 'anonymize_mutable_recipient' : 'retain';
+		$clean['recipient_user_sync_enabled'] = ! empty( $data['recipient_user_sync_enabled'] );
 		$clean['verification_branding_enabled'] = ! empty( $data['verification_branding_enabled'] );
 		$clean['verification_brand_name'] = sanitize_text_field( (string) $data['verification_brand_name'] );
 		$clean['verification_brand_name'] = function_exists( 'mb_substr' ) ? mb_substr( $clean['verification_brand_name'], 0, 120 ) : substr( $clean['verification_brand_name'], 0, 120 );

@@ -45,14 +45,12 @@ async def main():
         await ck(await wiz.get_by_text('Recommendations are editable starting points, not compliance claims.',exact=True).is_visible(),'wizardNoComplianceClaim')
         await wiz.close()
 
-        # 3. Post-Wizard Dashboard: walkthrough completion does not fabricate readiness.
+        # 3. Post-Wizard Dashboard: transactional Wizard completion is the setup completion boundary; optional review checks cannot contradict it.
         post=await b.new_page(viewport={'width':1280,'height':900})
         html=build('build_admin_dashboard_fixture.php',{'CERTLOOM_DASHBOARD_STATE':'wizard_complete','CERTLOOM_DASHBOARD_ANALYTICS':'absent'})
         await post.set_content(html,wait_until='load')
-        await ck(await post.get_by_text('Setup: 3 of 6 checks complete',exact=True).is_visible(),'postWizardCompactReadiness')
-        await ck(await post.locator('.certloom-setup-reminder').count()==1,'postWizardOneCompactReminder')
-        await ck(await post.get_by_role('link',name='Review setup',exact=False).is_visible(),'postWizardReviewSetup')
-        await ck(await post.get_by_role('button',name='Dismiss setup reminder for three days',exact=True).is_visible(),'postWizardDismissible')
+        await ck(await post.get_by_text('Setup: 4 of 6 checks complete',exact=True).count()==0,'postWizardNoContradictoryFourOfSix')
+        await ck(await post.locator('.certloom-setup-reminder').count()==0,'postWizardNoIncompleteReminder')
         await ck(await post.get_by_role('link',name='Setup wizard',exact=True).is_visible(),'postWizardPermanentSetupEntry')
         await ck(await post.locator('.certloom-setup-checklist').count()==0,'postWizardNoHeavyChecklist')
         await post.close()
@@ -92,6 +90,6 @@ async def main():
         await mobile.close(); await b.close()
     if failed:
         print('FAIL  UX-QA-01 first-use journey: '+', '.join(failed)); print(f'\n{checks} checks, {len(failed)} failures'); return 1
-    print('PASS  UX-QA-01 first-use journey: compact Dashboard setup → Wizard → truthful readiness → first certificate → public verification')
+    print('PASS  UX-QA-01 first-use journey: compact Dashboard setup → Wizard → consistent completion → first certificate → public verification')
     print(f'\n{checks} checks, 0 failures'); return 0
 if __name__=='__main__': raise SystemExit(asyncio.run(main()))

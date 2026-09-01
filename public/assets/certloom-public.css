@@ -1918,3 +1918,36 @@
 @media(max-width:640px){.cvp-profile-facts{grid-template-columns:1fr}.cvp-profile-facts>div:nth-child(odd),.cvp-profile-facts>div:nth-child(even){padding-inline:0;border-inline-start:0}.cvp-profile-proof{grid-template-columns:1fr}.cvp-profile-qr{width:120px;min-width:0}.cvp-profile-qr img,.cvp-profile-qr svg{max-width:120px}.cvp-profile-status-row{margin-bottom:21px}}
 @media(forced-colors:active){.cvp-profile-hero,.cvp-profile-proof,.cvp-profile-facts>div{border-color:CanvasText}.cvp-profile-proof{background:Canvas}}
 @media print{.cvp-profile-hero{background:#fff}.cvp-profile-proof{break-inside:avoid}.cvp-profile-card>.cvp-result-actions{display:none!important}}
+
+
+/* UX-CORE-02 — issued certificate preview and hostile-theme-safe QR layout. */
+.cvp-profile-certificate{margin:22px clamp(24px,5vw,44px);padding-top:2px}
+.cvp-profile-section-head{margin-bottom:12px}
+.cvp-profile-section-head h3{margin:3px 0 0;color:#202b26;font-size:17px}
+.cvp-certificate-preview{min-width:0;max-width:100%;overflow:hidden;border:1px solid #dfe7e3;border-radius:12px;background:#f6f8f7}
+.cvp-certificate-preview .certloom-template-preview-scroll{overflow:auto;max-width:100%;padding:14px;box-sizing:border-box;background:#eef2f0}
+.cvp-certificate-preview .certloom-template-preview-page{position:relative;margin:0 auto;overflow:hidden;flex:0 0 auto;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.12),0 0 0 1px rgba(0,0,0,.06);color:#111;isolation:isolate}
+.cvp-certificate-preview .certloom-template-preview-op{position:absolute;margin:0;padding:0;box-sizing:border-box}
+.cvp-certificate-preview .certloom-template-preview-op-text>span{display:block;width:100%;max-width:100%;overflow:hidden;text-overflow:clip}
+.cvp-certificate-preview .certloom-template-preview-op-line,
+.cvp-certificate-preview .certloom-template-preview-op-qr{display:block;overflow:visible}
+.cvp-certificate-preview .certloom-template-preview-op-image img,
+.cvp-certificate-preview .certloom-template-preview-op-logo img,
+.cvp-certificate-preview .certloom-template-preview-op-signature img{max-width:none}
+.cvp-certificate-preview .certloom-template-preview-asset-placeholder{display:flex;align-items:center;justify-content:center;border:1px dashed #8c8f94;background:#f6f7f7}
+.cvp-profile-certificate-unavailable{padding:16px;border:1px solid #e3e9e6;border-radius:10px;background:#fafcfc}
+.cvp-profile-certificate-unavailable h3{margin:0 0 5px}.cvp-profile-certificate-unavailable p{margin:0;color:#66736d;font-size:12px}
+.cvp-profile-qr .certloom-verification-qr{display:grid!important;grid-template-columns:1fr!important;justify-items:center!important;width:140px!important;max-width:140px!important;margin:0!important;padding:10px!important;gap:8px!important;box-sizing:border-box!important;text-align:center!important}
+.cvp-profile-qr .certloom-verification-qr-code{width:118px!important;max-width:118px!important}
+.cvp-profile-qr .certloom-verification-qr figcaption{max-width:118px!important;margin:0!important;font-size:10px!important;line-height:1.35!important;overflow-wrap:normal!important;word-break:normal!important;white-space:normal!important}
+.certloom-credential-profile.cvp-widget.cvp-widget--normalized,
+.certloom-credential-profile.cvp-widget.cvp-widget--normalized *{min-width:0}
+@media(max-width:640px){.cvp-profile-certificate{margin-inline:18px}.cvp-certificate-preview .certloom-template-preview-scroll{padding:8px}.cvp-profile-qr .certloom-verification-qr{width:120px!important;max-width:120px!important}.cvp-profile-qr .certloom-verification-qr-code,.cvp-profile-qr .certloom-verification-qr figcaption{width:100px!important;max-width:100px!important}}
+@media(forced-colors:active){.cvp-certificate-preview,.cvp-profile-certificate-unavailable{border-color:CanvasText}.cvp-certificate-preview .certloom-template-preview-page{box-shadow:0 0 0 1px CanvasText}}
+@media print{.cvp-profile-certificate{break-inside:avoid}.cvp-certificate-preview .certloom-template-preview-scroll{overflow:visible;padding:0;border:0;background:#fff}}
+
+
+.cvp-certificate-preview .certloom-template-preview-scroll[data-certloom-preview-fitted="1"]{overflow:hidden}
+.cvp-certificate-preview .certloom-certificate-preview-stage{position:relative;max-width:100%;overflow:visible}
+.cvp-certificate-preview .certloom-certificate-preview-stage>.certloom-template-preview-page{margin:0;will-change:transform}
+@media(prefers-reduced-motion:reduce){.cvp-certificate-preview .certloom-certificate-preview-stage>.certloom-template-preview-page{will-change:auto}}

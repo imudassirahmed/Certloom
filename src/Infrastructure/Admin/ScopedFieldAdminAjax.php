@@ -7,6 +7,7 @@ use Certloom\Infrastructure\Integration\TutorLmsAdapter;
 use Certloom\Infrastructure\Repository\BatchRepository;
 use Certloom\Infrastructure\Repository\IssuerRepository;
 use Certloom\Infrastructure\Repository\ProgramRepository;
+use Certloom\Infrastructure\Repository\RecipientRepository;
 use Certloom\Infrastructure\Repository\SignerRepository;
 use Certloom\Infrastructure\Repository\TemplateRepository;
 
@@ -150,7 +151,16 @@ final class ScopedFieldAdminAjax {
 		$query = isset( $_POST['query'] ) ? sanitize_text_field( wp_unslash( $_POST['query'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
 		$query = function_exists( 'mb_substr' ) ? mb_substr( $query, 0, 120, 'UTF-8' ) : substr( $query, 0, 120 );
 		$choices = array();
-		if ( 'program' === $kind ) {
+		if ( 'recipient' === $kind ) {
+			$result = ( new RecipientRepository() )->list_page( $query, 1, 20 );
+			if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'message' => $result->get_error_message() ), 500 ); }
+			foreach ( (array) ( $result['items'] ?? array() ) as $row ) {
+				$label = trim( (string) ( $row['display_name'] ?? '' ) );
+				if ( ! empty( $row['email'] ) ) { $label .= ( '' !== $label ? ' · ' : '' ) . (string) $row['email']; }
+				if ( '' === $label && ! empty( $row['external_id'] ) ) { $label = (string) $row['external_id']; }
+				$choices[] = array( 'id' => absint( $row['id'] ?? 0 ), 'label' => $label );
+			}
+		} elseif ( 'program' === $kind ) {
 			$program_status = isset( $_POST['program_status'] ) ? sanitize_key( wp_unslash( $_POST['program_status'] ) ) : 'active'; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
 			$program_status = in_array( $program_status, array( 'active', 'inactive', 'all' ), true ) ? $program_status : 'active';
 			$result = ( new ProgramRepository() )->list_page( $query, 1, 20, $program_status );

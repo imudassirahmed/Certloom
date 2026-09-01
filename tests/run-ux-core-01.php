@@ -20,16 +20,16 @@ $email_admin = uxcore_src( $root, 'src/Infrastructure/Admin/EmailDeliveryAdmin.p
 $email_coordinator = uxcore_src( $root, 'src/Application/Email/EmailDeliveryCoordinator.php' );
 $email_template_service = uxcore_src( $root, 'src/Application/Email/EmailTemplateService.php' );
 
-uxcore( false !== strpos( $nav, "'certloom'                 => 'Home'" ) && false !== strpos( $nav, "'certloom-automations'     => 'Automations'" ), 'Simple primary navigation is task based' );
-uxcore( false !== strpos( $nav, "'certloom-domain-programs' => 'Programs'" ) && false !== strpos( $nav, "'certloom-templates'       => 'Design'" ), 'Simple primary navigation makes Program and Design first-class tasks' );
+uxcore( false !== strpos( $nav, "private const PRIMARY_SIMPLE" ) && false !== strpos( $nav, "'certloom'" ) && false !== strpos( $nav, "=> 'Home'" ) && false !== strpos( $nav, "'certloom-automations'" ) && false !== strpos( $nav, "=> 'Automations'" ), 'Simple primary navigation is task based' );
+uxcore( false !== strpos( $nav, "'certloom-domain-programs'" ) && false !== strpos( $nav, "=> 'Programs'" ) && false !== strpos( $nav, "'certloom-templates'" ) && false !== strpos( $nav, "=> 'Design'" ), 'Simple primary navigation makes Program and Design first-class tasks' );
 uxcore( false !== strpos( $nav, "'Legacy data', 'certloom'" ) && false !== strpos( $nav, 'if ( $simple && $preview )' ), 'Legacy data is retained for Advanced while Simple uses canonical Credentials' );
 uxcore( false !== strpos( $nav, "__( 'Recipients', 'certloom' )" ) && false !== strpos( $nav, "__( 'Issue', 'certloom' )" ), 'Simple Credentials keeps Recipient and issuance context close together' );
-uxcore( false !== strpos( $nav, "__( 'Programs', 'certloom' )" ) && false !== strpos( $nav, "array( 'certloom-domain-programs', 'certloom-domain-issuers', 'certloom-domain-batches', 'certloom-domain-signers' )" ), 'Simple People routes collapse into one Program workspace context' );
+uxcore( false !== strpos( $nav, "__( 'Programs', 'certloom' )" ) && false !== strpos( $nav, "__( 'Issuers', 'certloom' )" ) && false !== strpos( $nav, "__( 'Batches', 'certloom' )" ) && false !== strpos( $nav, "__( 'Signers', 'certloom' )" ), 'Simple Programs keeps Issuers, Batches and Signers together while Recipients stay with Credentials' );
 
-uxcore( false !== strpos( $domain, 'simple_credential_cards' ) && false !== strpos( $domain, 'certloom-simple-credential-grid' ), 'Simple Credentials uses cards instead of the Advanced implementation table' );
+uxcore( false !== strpos( $domain, 'simple_credential_list' ) && false !== strpos( $domain, 'certloom-premium-list certloom-credential-list' ), 'Simple Credentials uses a compact premium list instead of cards or the Advanced implementation table' );
 uxcore( false !== strpos( $domain, "'View credential', 'certloom'" ) && false !== strpos( $domain, 'NormalizedPublicCredentialUrl' ), 'Simple Credentials exposes a direct human public View credential action' );
 uxcore( false !== strpos( $domain, "'Issue another', 'certloom'" ) || false !== strpos( $domain, "'Issue credential', 'certloom'" ), 'Credential cards continue naturally into another issuance task' );
-uxcore( false !== strpos( $domain, 'simple_program_cards' ) && false !== strpos( $domain, 'certloom-simple-program-grid' ), 'Simple Programs uses connected workspace cards' );
+uxcore( false !== strpos( $domain, 'simple_program_list' ) && false !== strpos( $domain, 'certloom-premium-list certloom-program-list' ), 'Simple Programs uses a connected premium list' );
 uxcore( false !== strpos( $domain, 'program_workspace' ) && false !== strpos( $domain, "'Design & issue', 'certloom'" ), 'Program becomes the connected setup workspace and continues into design/issuance' );
 uxcore( false !== strpos( $domain, 'certloom_program_quick_issuer' ) && false !== strpos( $domain, 'certloom_program_quick_batch' ) && false !== strpos( $domain, 'certloom_program_quick_signer' ), 'Program workspace supports quick Issuer, Batch and Signer setup without tab hopping' );
 
@@ -63,7 +63,7 @@ uxcore( false !== strpos( $email_admin, "saved['template_id']" ) && false !== st
 uxcore( false !== strpos( $email_template_service, 'Online verification is not available for this credential yet.' ) && false === strpos( $email_template_service, 'Public normalized verification is not yet authoritative' ), 'Recipient-facing email copy hides normalized-domain authority jargon' );
 
 uxcore( false !== strpos( $css, 'UX-CORE-01' ) && false !== strpos( $css, '--certloom-flow-' ), 'Backend redesign uses one shared UX-CORE visual grammar' );
-uxcore( false !== strpos( $css, '.certloom-simple-credential-grid' ) && false !== strpos( $css, '.certloom-simple-program-grid' ), 'Simple Credential and Program collections share premium card structure' );
+uxcore( false !== strpos( $css, '.certloom-premium-list' ) && false !== strpos( $css, '.certloom-premium-list-row' ), 'Simple Credential and Program collections share premium list structure' );
 uxcore( false !== strpos( $css, '.certloom-dashboard-credential-list' ) && false !== strpos( $css, '.certloom-metric-grid-simple' ), 'Simple Dashboard has dedicated normalized responsive styling' );
 uxcore( false !== strpos( $public_css, '.cvp-profile-recipient' ) && false !== strpos( $public_css, '.cvp-profile-proof' ), 'Public profile has dedicated human hierarchy and verification styling' );
 uxcore( false !== strpos( $renderer, 'cvp-widget--normalized' ) && false !== strpos( $public_css, '.cvp-widget.cvp-widget--normalized' ), 'Normalized profile gets the wider premium layout without widening legacy compact verification cards' );

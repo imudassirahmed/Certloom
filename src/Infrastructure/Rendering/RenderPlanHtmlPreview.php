@@ -31,7 +31,7 @@ final class RenderPlanHtmlPreview {
 		$width_px = $this->px( $width_mm );
 		$height_px = $this->px( $height_mm );
 		$warnings = array();
-		$html = '<div class="certloom-template-preview-scroll" tabindex="0"><div class="certloom-template-preview-page" style="width:' . esc_attr( $this->num( $width_px ) ) . 'px;height:' . esc_attr( $this->num( $height_px ) ) . 'px" role="img" aria-label="' . esc_attr__( 'Template composition preview', 'certloom' ) . '">';
+		$html = '<div class="certloom-template-preview-scroll" tabindex="0" data-certloom-preview-width="' . esc_attr( $this->num( $width_px ) ) . '" data-certloom-preview-height="' . esc_attr( $this->num( $height_px ) ) . '"><div class="certloom-template-preview-page" style="width:' . esc_attr( $this->num( $width_px ) ) . 'px;height:' . esc_attr( $this->num( $height_px ) ) . 'px" role="img" aria-label="' . esc_attr__( 'Template composition preview', 'certloom' ) . '">';
 		foreach ( $plan['operations'] as $operation ) {
 			if ( ! is_array( $operation ) ) { continue; }
 			$html .= $this->operation( $plan, $operation, $warnings );

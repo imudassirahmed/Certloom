@@ -457,8 +457,62 @@
 		}
 	} );
 
+
+	var previewObservers = typeof WeakMap === 'function' ? new WeakMap() : null;
+
+	function fitCertificatePreview( scroll ) {
+		if ( ! scroll || ! scroll.querySelector ) { return; }
+		var page = scroll.querySelector( '.certloom-template-preview-page' );
+		if ( ! page ) { return; }
+		var naturalWidth = parseFloat( scroll.getAttribute( 'data-certloom-preview-width' ) || '' );
+		var naturalHeight = parseFloat( scroll.getAttribute( 'data-certloom-preview-height' ) || '' );
+		if ( ! naturalWidth || ! naturalHeight ) {
+			naturalWidth = parseFloat( page.style.width || '' );
+			naturalHeight = parseFloat( page.style.height || '' );
+		}
+		if ( ! naturalWidth || ! naturalHeight ) { return; }
+		var stage = page.parentNode && page.parentNode.classList && page.parentNode.classList.contains( 'certloom-certificate-preview-stage' ) ? page.parentNode : null;
+		if ( ! stage ) {
+			stage = document.createElement( 'div' );
+			stage.className = 'certloom-certificate-preview-stage';
+			page.parentNode.insertBefore( stage, page );
+			stage.appendChild( page );
+		}
+		var style = window.getComputedStyle ? window.getComputedStyle( scroll ) : null;
+		var horizontalPadding = style ? ( parseFloat( style.paddingLeft || 0 ) + parseFloat( style.paddingRight || 0 ) ) : 0;
+		var available = Math.max( 1, scroll.clientWidth - horizontalPadding );
+		var scale = Math.min( 1, available / naturalWidth );
+		page.style.transformOrigin = 'top left';
+		page.style.transform = 'scale(' + scale.toFixed( 6 ) + ')';
+		stage.style.width = Math.max( 1, naturalWidth * scale ) + 'px';
+		stage.style.height = Math.max( 1, naturalHeight * scale ) + 'px';
+		stage.style.margin = '0 auto';
+		scroll.setAttribute( 'data-certloom-preview-fitted', '1' );
+	}
+
+	function initCertificatePreview( scroll ) {
+		if ( ! scroll || scroll.getAttribute( 'data-certloom-preview-initialized' ) === '1' ) { return; }
+		scroll.setAttribute( 'data-certloom-preview-initialized', '1' );
+		fitCertificatePreview( scroll );
+		if ( typeof ResizeObserver === 'function' ) {
+			var observer = new ResizeObserver( function () { fitCertificatePreview( scroll ); } );
+			observer.observe( scroll );
+			if ( previewObservers ) { previewObservers.set( scroll, observer ); }
+		} else {
+			window.addEventListener( 'resize', function () { fitCertificatePreview( scroll ); } );
+		}
+	}
+
+	function scanCertificatePreviews( root ) {
+		if ( ! root ) { return; }
+		if ( root.matches && root.matches( '.cvp-certificate-preview .certloom-template-preview-scroll' ) ) { initCertificatePreview( root ); }
+		var previews = root.querySelectorAll ? root.querySelectorAll( '.cvp-certificate-preview .certloom-template-preview-scroll' ) : [];
+		for ( var i = 0; i < previews.length; i++ ) { initCertificatePreview( previews[ i ] ); }
+	}
+
 	function scan( scope ) {
 		var root = scope || document;
+		scanCertificatePreviews( root );
 		if ( root.matches && root.matches( '.cv-widget, .cvx-widget' ) ) {
 			initWidget( root );
 		}

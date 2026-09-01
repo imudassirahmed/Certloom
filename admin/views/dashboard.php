@@ -86,7 +86,10 @@ $certloom_design_url      = admin_url( 'admin.php?page=certloom-templates' );
 		$setup_progress_total     = max( 1, absint( $onboarding_summary['progress_total'] ?? 6 ) );
 		$wizard_walkthrough_done  = ! empty( $onboarding_summary['wizard_completed'] );
 		$readiness_incomplete     = $setup_progress_completed < $setup_progress_total;
-		if ( $readiness_incomplete && ! empty( $setup_reminder_visible ) ) :
+		// Completing the transactional Wizard means setup is complete. The two
+		// verification review flags below are optional post-setup confidence
+		// checks and must never make Dashboard contradict the Wizard.
+		if ( ! $wizard_walkthrough_done && $readiness_incomplete && ! empty( $setup_reminder_visible ) ) :
 	?>
 		<div class="certloom-setup-reminder" role="status">
 			<span class="dashicons <?php echo $wizard_walkthrough_done ? 'dashicons-yes-alt' : 'dashicons-admin-generic'; ?>" aria-hidden="true"></span>
@@ -238,7 +241,7 @@ $certloom_design_url      = admin_url( 'admin.php?page=certloom-templates' );
 						$public_id  = (string) ( $credential['public_id'] ?? '' );
 						$manage_url = add_query_arg( array( 'page' => 'certloom-domain-credentials', 'series_id' => $series_id ), admin_url( 'admin.php' ) );
 						$view_url   = '';
-						if ( $public_id && class_exists( '\Certloom\Infrastructure\Verification\PublicVerificationGate' ) && \Certloom\Infrastructure\Verification\PublicVerificationGate::ready() ) {
+						if ( $public_id && class_exists( '\Certloom\Infrastructure\Verification\PublicVerificationGate' ) && ( new \Certloom\Infrastructure\Verification\PublicVerificationGate() )->is_ready() ) {
 							$view_result = ( new \Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl() )->verification_url( $public_id );
 							if ( ! is_wp_error( $view_result ) ) { $view_url = (string) $view_result; }
 						}

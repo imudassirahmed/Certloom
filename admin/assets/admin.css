@@ -3735,73 +3735,6 @@
 @media(max-width:1180px){.certloom-integration-source-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.certloom-form-grid-3{grid-template-columns:1fr 1fr}}
 @media(max-width:782px){.certloom-integration-source-grid,.certloom-form-grid-3,.certloom-external-card-grid{grid-template-columns:1fr}.certloom-mapping-row{grid-template-columns:minmax(0,1fr) auto}.certloom-mapping-row form{grid-column:1/-1}}
 
-/* UX-CORE-01 — Simple mode collections use connected cards rather than implementation tables. */
-.certloom-simple-credential-grid,
-.certloom-simple-program-grid{
-	display:grid;
-	grid-template-columns:repeat(2,minmax(0,1fr));
-	gap:14px;
-	margin:16px 0 4px;
-}
-.certloom-simple-credential-card,
-.certloom-simple-program-card{
-	display:flex;
-	flex-direction:column;
-	min-width:0;
-	padding:18px;
-	border:1px solid #dfe7e3;
-	border-radius:12px;
-	background:#fff;
-	box-shadow:0 3px 14px rgba(23,34,31,.025);
-}
-.certloom-simple-credential-card-top,
-.certloom-simple-program-card-head{
-	display:flex;
-	align-items:flex-start;
-	justify-content:space-between;
-	gap:16px;
-}
-.certloom-simple-credential-card h2,
-.certloom-simple-program-card h2{
-	margin:3px 0 0;
-	font-size:17px;
-	line-height:1.3;
-	letter-spacing:-.01em;
-}
-.certloom-simple-program-card h2 a{color:#202a26;text-decoration:none}
-.certloom-simple-program-card h2 a:hover,.certloom-simple-program-card h2 a:focus{color:var(--certloom-flow-accent,#0f6e56)}
-.certloom-simple-credential-program{display:grid;gap:3px;margin:15px 0 0;color:#2f3a36}
-.certloom-simple-credential-program span{color:#73807b;font-size:12px}
-.certloom-simple-credential-meta,
-.certloom-simple-program-facts{
-	display:grid;
-	grid-template-columns:repeat(3,minmax(0,1fr));
-	gap:0;
-	margin:16px 0;
-	padding:13px 0;
-	border-top:1px solid #edf1ef;
-	border-bottom:1px solid #edf1ef;
-}
-.certloom-simple-credential-meta{grid-template-columns:repeat(2,minmax(0,1fr))}
-.certloom-simple-credential-meta>span,
-.certloom-simple-program-facts>span{display:grid;gap:4px;min-width:0;padding-inline:12px;border-inline-start:1px solid #edf1ef}
-.certloom-simple-credential-meta>span:first-child,
-.certloom-simple-program-facts>span:first-child{padding-inline-start:0;border-inline-start:0}
-.certloom-simple-credential-meta small,
-.certloom-simple-program-facts small{color:#7a8681;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
-.certloom-simple-credential-meta strong,
-.certloom-simple-program-facts strong{overflow-wrap:anywhere;color:#2c3733;font-size:12px;font-weight:650}
-.certloom-simple-credential-actions,
-.certloom-simple-program-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:auto}
-.certloom-simple-credential-actions .button,
-.certloom-simple-program-actions .button{min-height:44px;display:inline-flex;align-items:center}
-.certloom-simple-credential-actions .button-link{margin-inline-start:auto;text-decoration:none;font-weight:650}
-.certloom-program-readiness-note{display:flex;align-items:flex-start;gap:7px;margin:0 0 14px;padding:10px 11px;border-radius:8px;background:#f7faf8;color:#5d6c66;font-size:12px;line-height:1.45}
-.certloom-program-readiness-note .dashicons{width:17px;height:17px;font-size:17px;color:#6f8079}
-@media(max-width:980px){.certloom-simple-credential-grid,.certloom-simple-program-grid{grid-template-columns:1fr}}
-@media(max-width:560px){.certloom-simple-credential-card,.certloom-simple-program-card{padding:15px}.certloom-simple-credential-meta,.certloom-simple-program-facts{grid-template-columns:1fr}.certloom-simple-credential-meta>span,.certloom-simple-program-facts>span{padding:8px 0;border-inline-start:0;border-top:1px solid #edf1ef}.certloom-simple-credential-meta>span:first-child,.certloom-simple-program-facts>span:first-child{border-top:0}.certloom-simple-credential-actions .button,.certloom-simple-program-actions .button{flex:1 1 auto;justify-content:center}.certloom-simple-credential-actions .button-link{width:100%;margin:3px 0 0;text-align:center}}
-@media(forced-colors:active){.certloom-simple-credential-card,.certloom-simple-program-card,.certloom-simple-credential-meta,.certloom-simple-program-facts,.certloom-program-readiness-note{border-color:CanvasText}}
-
 /* UX-CORE-01 — Simple Dashboard follows the normalized task flow, never the legacy registry. */
 .certloom-metric-grid-simple{grid-template-columns:repeat(4,minmax(0,1fr))}
 .certloom-dashboard-credential-list{display:grid;border-top:1px solid #edf1ef}
@@ -3875,16 +3808,142 @@
 @media(prefers-reduced-motion:reduce){.certloom-email-delivery *,.certloom-email-delivery *::before,.certloom-email-delivery *::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 @media(forced-colors:active){.certloom-choice-pills span,.certloom-email-preview,.certloom-email-review-meta,.certloom-email-preview-subject,.certloom-email-preview-body,.certloom-email-preview .certloom-email-plain,.certloom-email-confirm,.certloom-email-empty{border-color:CanvasText}.certloom-choice-pills input:checked+span{background:Highlight;color:HighlightText}}
 
-/* UX-CORE-08 — Simple Recipients and My Designs use the same calm card language as Dashboard/Fields. */
-.certloom-recipient-card-grid,.certloom-my-design-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:16px 0 4px}
-.certloom-recipient-card,.certloom-my-design-card{display:flex;min-width:0;min-height:180px;flex-direction:column;margin:0}
-.certloom-recipient-card h3,.certloom-my-design-card h3{margin:3px 0 0;font-size:17px;line-height:1.3;letter-spacing:-.01em}
-.certloom-recipient-card h3 a{color:var(--certloom-flow-ink,#17231f);text-decoration:none}.certloom-recipient-card h3 a:hover,.certloom-recipient-card h3 a:focus{color:var(--certloom-flow-accent,#166b54)}
-.certloom-recipient-card-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;margin:15px 0;background:#edf1ef;border:1px solid #edf1ef;border-radius:9px;overflow:hidden}
-.certloom-recipient-card-meta>span{display:grid;gap:4px;min-width:0;padding:11px 12px;background:#fbfcfc;color:#56655f;font-size:12px;overflow-wrap:anywhere}
-.certloom-recipient-card-meta strong{color:#7a8681;font-size:10px;font-weight:750;letter-spacing:.04em;text-transform:uppercase}
-.certloom-recipient-card .certloom-form-actions,.certloom-my-design-card .certloom-form-actions{margin-top:auto}
+
+/* UX-CORE — My Designs remains a visual gallery; data registries use compact premium lists. */
+.certloom-my-design-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:16px 0 4px}
+.certloom-my-design-card{display:flex;min-width:0;min-height:180px;flex-direction:column;margin:0}
+.certloom-my-design-card h3{margin:3px 0 0;font-size:17px;line-height:1.3;letter-spacing:-.01em}
+.certloom-my-design-card .certloom-form-actions{margin-top:auto}
 .certloom-design-identity-grid{align-items:start}.certloom-design-simple-status{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin:16px 0;padding:14px 16px;border:1px solid var(--certloom-flow-line,#dfe8e4);border-radius:10px;background:#fafcfb}.certloom-design-simple-status h3{margin:3px 0 4px;font-size:15px}.certloom-design-simple-status p{margin:0;color:var(--certloom-flow-subtle,#63726d);font-size:12px;line-height:1.45}
-@media(max-width:980px){.certloom-recipient-card-grid,.certloom-my-design-card-grid{grid-template-columns:1fr}}
-@media(max-width:560px){.certloom-recipient-card,.certloom-my-design-card{padding:15px}.certloom-recipient-card-meta{grid-template-columns:1fr}.certloom-recipient-card .certloom-form-actions .button,.certloom-my-design-card .certloom-form-actions .button{flex:1;justify-content:center}.certloom-design-simple-status{align-items:flex-start;flex-direction:column}}
-@media(forced-colors:active){.certloom-recipient-card-meta,.certloom-design-simple-status{border-color:CanvasText}.certloom-recipient-card-meta>span{background:Canvas}}
+@media(max-width:980px){.certloom-my-design-card-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.certloom-my-design-card{padding:15px}.certloom-my-design-card .certloom-form-actions .button{flex:1;justify-content:center}.certloom-design-simple-status{align-items:flex-start;flex-direction:column}}
+
+/* UX-CORE-02 — compact premium collections and consistent form rhythm. */
+.certloom-premium-list{display:grid;margin:14px 0 4px;border:1px solid #dde5e1;border-radius:10px;background:#fff;overflow:hidden}
+.certloom-premium-list-row{display:grid;grid-template-columns:minmax(220px,1.5fr) auto minmax(220px,.8fr) auto;align-items:center;gap:18px;min-width:0;padding:13px 15px;border-bottom:1px solid #edf1ef;background:#fff}
+.certloom-premium-list-row:last-child{border-bottom:0}
+.certloom-premium-list-row:hover{background:#fbfdfc}
+.certloom-premium-list-main{display:grid;gap:3px;min-width:0}
+.certloom-premium-list-main>a,.certloom-premium-list-main strong a{color:#17231f;text-decoration:none}
+.certloom-premium-list-main strong{overflow:hidden;text-overflow:ellipsis;font-size:14px}
+.certloom-premium-list-main>span:not(.certloom-eyebrow){overflow:hidden;text-overflow:ellipsis;color:#697771;font-size:12px}
+.certloom-premium-list-status{display:flex;align-items:center}
+.certloom-premium-list-meta{display:grid;grid-template-columns:repeat(2,minmax(88px,1fr));gap:14px;min-width:0}
+.certloom-premium-list-meta span{display:grid;gap:2px;min-width:0}
+.certloom-premium-list-meta small{color:#7a8681;font-size:9px;font-weight:750;letter-spacing:.045em;text-transform:uppercase}
+.certloom-premium-list-meta strong{overflow:hidden;text-overflow:ellipsis;color:#34413c;font-size:11px;font-weight:650;white-space:nowrap}
+.certloom-premium-list-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.certloom-premium-list-actions .button{min-height:36px!important;height:36px!important;padding:0 11px!important;border-radius:6px!important;line-height:34px!important}
+.ecapla-certverify-admin-wrap input[type=text],
+.ecapla-certverify-admin-wrap input[type=email],
+.ecapla-certverify-admin-wrap input[type=password],
+.ecapla-certverify-admin-wrap input[type=search],
+.ecapla-certverify-admin-wrap input[type=url],
+.ecapla-certverify-admin-wrap input[type=number],
+.ecapla-certverify-admin-wrap input[type=date],
+.ecapla-certverify-admin-wrap select{min-height:40px;max-height:none;padding-block:4px;border:1px solid #c8d2ce;border-radius:6px;box-shadow:none}
+.ecapla-certverify-admin-wrap textarea{border:1px solid #c8d2ce;border-radius:6px;box-shadow:none}
+.ecapla-certverify-admin-wrap input:focus,
+.ecapla-certverify-admin-wrap select:focus,
+.ecapla-certverify-admin-wrap textarea:focus{border-color:#5c9c88;box-shadow:0 0 0 1px #5c9c88;outline:0}
+.ecapla-certverify-admin-wrap label.is-invalid input,
+.ecapla-certverify-admin-wrap label.is-invalid select,
+.ecapla-certverify-admin-wrap label.is-invalid textarea,
+.ecapla-certverify-admin-wrap .is-invalid input,
+.ecapla-certverify-admin-wrap .is-invalid select,
+.ecapla-certverify-admin-wrap .is-invalid textarea,
+.ecapla-certverify-admin-wrap [aria-invalid=true]{border-color:#b32d2e!important;box-shadow:0 0 0 1px #b32d2e!important}
+.certloom-inline-field-error{display:block;margin-top:5px;color:#b32d2e;font-size:11px;font-weight:650;line-height:1.4}
+.certloom-recipient-mode-panel{margin-top:12px;padding:14px;border:1px solid #e0e7e4;border-radius:8px;background:#fbfcfc}
+.certloom-recipient-mode-panel[hidden],
+.certloom-manual-recipient-search[hidden]{display:none!important}
+.certloom-recipient-name-details{margin-top:12px;padding-top:10px;border-top:1px solid #e6ece9}
+.certloom-recipient-name-details>summary{cursor:pointer;color:#335e51;font-size:12px;font-weight:700}
+.certloom-manual-primary-field{display:grid;gap:6px}
+.certloom-manual-grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.certloom-manual-form .button-hero{min-height:40px!important;padding:0 16px!important;font-size:13px!important}
+.certloom-form-grid,.certloom-manual-grid,.certloom-email-compose-grid,.certloom-form-grid-3{gap:12px!important}
+.certloom-form-field,.certloom-field-control,.certloom-manual-grid>label{gap:5px!important}
+@media(max-width:1050px){.certloom-premium-list-row{grid-template-columns:minmax(220px,1.2fr) auto minmax(180px,.8fr)}.certloom-premium-list-actions{grid-column:1/-1;justify-content:flex-start;padding-top:3px}}
+@media(max-width:782px){.certloom-premium-list-row{grid-template-columns:minmax(0,1fr) auto;gap:10px}.certloom-premium-list-meta{grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr))}.certloom-premium-list-actions{grid-column:1/-1}.certloom-manual-grid-3{grid-template-columns:1fr}}
+@media(forced-colors:active){.certloom-premium-list,.certloom-premium-list-row,.certloom-recipient-mode-panel{border-color:CanvasText}}
+
+/* UX-CORE-02 — Wizard review actions and public-sample bridge. */
+.certloom-wizard-connected-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0}
+.certloom-wizard-connected-actions .button{min-height:40px!important;height:40px!important;display:inline-flex!important;align-items:center!important;padding:0 12px!important;border-radius:6px!important}
+.certloom-wizard-review-reminders{gap:9px!important}.certloom-wizard-review-reminders>label{display:flex;align-items:center;gap:7px}
+.certloom-setup-public-sample{max-width:900px;margin:24px auto;padding:24px;border:1px solid #dce5e1;border-radius:12px;background:#fff;overflow:auto}
+.certloom-sample-watermark{margin:12px 0 0!important;padding:8px 10px;border:1px dashed #b7c4be;border-radius:7px;color:#59665f;font-size:12px;text-align:center}
+@media(max-width:782px){.certloom-wizard-connected-actions{align-items:stretch}.certloom-wizard-connected-actions .button{justify-content:center;flex:1 1 180px}.certloom-setup-public-sample{padding:12px}}
+
+/* UX-CORE-02 real-WordPress acceptance — compact lists and uniform form controls. */
+.certloom-premium-list-issuers .certloom-premium-list-row{grid-template-columns:minmax(0,1fr) auto}
+.certloom-premium-list-batches .certloom-premium-list-row,
+.certloom-premium-list-signers .certloom-premium-list-row{grid-template-columns:minmax(0,1fr) auto auto}
+.certloom-premium-list-batches .certloom-premium-list-meta,
+.certloom-premium-list-signers .certloom-premium-list-meta{display:block;color:#697771;font-size:12px;line-height:1.45}
+.certloom-premium-list-issuers .certloom-premium-list-main,
+.certloom-premium-list-batches .certloom-premium-list-main,
+.certloom-premium-list-signers .certloom-premium-list-main{gap:4px}
+.certloom-premium-list-issuers .certloom-premium-list-row,
+.certloom-premium-list-batches .certloom-premium-list-row,
+.certloom-premium-list-signers .certloom-premium-list-row{padding:12px 14px}
+.certloom-clean-form .certloom-field-control input,
+.certloom-clean-form .certloom-field-control select{height:40px!important;min-height:40px!important;padding:0 10px!important;border:1px solid #c8d2ce!important;border-radius:6px!important;line-height:38px!important;background:#fff;box-shadow:none!important}
+.certloom-clean-form .certloom-field-control textarea{width:100%;padding:9px 10px!important;border:1px solid #c8d2ce!important;border-radius:6px!important;background:#fff;box-shadow:none!important;line-height:1.45}
+.certloom-clean-form .certloom-form-actions .button,
+.certloom-automations-workspace .certloom-workspace-hero-actions .button{min-height:40px!important;height:40px!important;padding:0 13px!important;border-radius:6px!important;line-height:38px!important}
+.certloom-clean-form .certloom-field-control.is-invalid input,
+.certloom-clean-form .certloom-field-control.is-invalid select,
+.certloom-clean-form .certloom-field-control.is-invalid textarea{border-color:#b32d2e!important;box-shadow:0 0 0 1px #b32d2e!important}
+.certloom-domain-editor .certloom-domain-form-grid{column-gap:14px!important;row-gap:12px!important}
+.certloom-domain-editor .certloom-domain-field>input,
+.certloom-domain-editor .certloom-domain-field>select{width:100%;max-width:none}
+.certloom-domain-editor .certloom-field-label{margin-bottom:5px}
+.certloom-domain-editor .submit{margin:14px 0 0;padding:0}
+.certloom-domain-editor .submit .button-primary{min-height:40px!important;height:40px!important;padding:0 15px!important;border-radius:6px!important;line-height:38px!important}
+@media(max-width:782px){
+ .certloom-premium-list-issuers .certloom-premium-list-row,
+ .certloom-premium-list-batches .certloom-premium-list-row,
+ .certloom-premium-list-signers .certloom-premium-list-row{grid-template-columns:minmax(0,1fr) auto}
+ .certloom-premium-list-batches .certloom-premium-list-actions,
+ .certloom-premium-list-signers .certloom-premium-list-actions{grid-column:1/-1;justify-content:flex-start}
+}
+
+/* UX-CORE-02: focused quick-create dialogs and recipient-profile compose. */
+.certloom-premium-dialog{width:min(760px,calc(100vw - 32px));max-width:760px;padding:0;border:0;border-radius:14px;box-shadow:0 24px 80px rgba(0,0,0,.24);color:#17221f;background:#fff;overflow:hidden}.certloom-premium-dialog::backdrop{background:rgba(17,24,39,.42)}.certloom-premium-dialog>form{margin:0}.certloom-premium-dialog .certloom-dialog-head{padding:22px 24px 16px;border-bottom:1px solid #e2e7e5}.certloom-premium-dialog .certloom-dialog-head h2{margin:2px 0 6px;font-size:22px;line-height:1.2}.certloom-premium-dialog .certloom-dialog-head p{margin:0;max-width:62ch;color:#5d6864}.certloom-premium-dialog .certloom-dialog-head>[data-certloom-dialog-close]{display:grid;place-items:center;min-width:40px;min-height:40px;border:0;border-radius:8px;font-size:24px;text-decoration:none;color:#4d5954;cursor:pointer}.certloom-premium-dialog .certloom-dialog-head>[data-certloom-dialog-close]:hover,.certloom-premium-dialog .certloom-dialog-head>[data-certloom-dialog-close]:focus-visible{background:#f0f3f2;color:#17221f}.certloom-premium-dialog .certloom-dialog-body{padding:22px 24px}.certloom-premium-dialog .certloom-dialog-actions{padding:16px 24px 20px;border-top:1px solid #e2e7e5}.certloom-premium-dialog input:not([type=checkbox]):not([type=radio]),.certloom-premium-dialog select,.certloom-premium-dialog textarea{min-height:44px;width:100%;max-width:none;box-sizing:border-box;border-radius:7px;border-color:#8c8f94}.certloom-premium-dialog label>span{display:block;margin-bottom:7px;font-weight:600}.certloom-recipient-new-summary{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 16px;border:1px solid #d8dfdc;border-radius:10px;background:#fbfdfc}.certloom-recipient-new-summary p{margin:4px 0 0}.certloom-context-inline-actions{margin-top:-7px;margin-bottom:7px}.certloom-context-inline-actions .button-link{font-weight:600}.certloom-recipient-profile-dialog .certloom-callout{margin:20px 0 0}.certloom-recipient-mode-panel[hidden]{display:none!important}@media(max-width:640px){.certloom-premium-dialog{width:calc(100vw - 20px)}.certloom-premium-dialog .certloom-dialog-head,.certloom-premium-dialog .certloom-dialog-body,.certloom-premium-dialog .certloom-dialog-actions{padding-left:18px;padding-right:18px}.certloom-recipient-new-summary{align-items:flex-start;flex-direction:column}.certloom-dialog-actions{grid-template-columns:1fr 1fr}.certloom-dialog-actions .button{min-height:44px;width:100%}}@media(forced-colors:active){.certloom-premium-dialog,.certloom-recipient-new-summary{border:1px solid CanvasText}}
+/* UX-CORE-03 — compact premium lists and forms after real-WordPress acceptance. */
+.certloom-premium-row-link{display:inline-flex;align-items:center;min-height:36px;padding:0 4px;color:#315f51;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap}
+.certloom-premium-row-link:hover,.certloom-premium-row-link:focus-visible{color:#0f6e56;text-decoration:underline;text-underline-offset:3px}
+.certloom-premium-row-link:focus-visible{outline:2px solid #2271b1;outline-offset:2px;border-radius:4px}
+.certloom-premium-list-actions .button-primary{box-shadow:none!important}
+.certloom-domain-search{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.certloom-domain-search input[type=search]{min-width:min(340px,100%);height:40px!important}.certloom-domain-search .button{min-height:40px!important;height:40px!important;line-height:38px!important;border-radius:6px!important}
+.certloom-manual-card{padding:18px;border-radius:10px;box-shadow:0 1px 4px rgba(23,34,31,.025);margin-bottom:18px}.certloom-manual-card-head{gap:14px;padding-bottom:12px;margin-bottom:14px}.certloom-manual-card-head h2{font-size:18px}.certloom-manual-fieldset{padding:14px 0 2px}.certloom-manual-fieldset legend{font-size:14px;margin-bottom:10px}.certloom-manual-grid{gap:12px}.certloom-manual-actions,.certloom-manual-confirm{gap:10px;margin-top:16px;padding-top:14px}.certloom-recipient-mode-panel{padding:12px}
+.certloom-premium-dialog .certloom-dialog-head{padding:18px 20px 13px}.certloom-premium-dialog .certloom-dialog-head h2{font-size:19px}.certloom-premium-dialog .certloom-dialog-body{padding:18px 20px}.certloom-premium-dialog .certloom-dialog-actions{padding:13px 20px 16px}.certloom-premium-dialog input:not([type=checkbox]):not([type=radio]),.certloom-premium-dialog select{height:40px;min-height:40px;padding-block:4px;border:1px solid #c8d2ce}.certloom-premium-dialog textarea{border:1px solid #c8d2ce}.certloom-premium-dialog label>span{margin-bottom:5px}
+.certloom-automations-workspace .certloom-context-lookup{gap:5px}.certloom-automations-workspace .certloom-context-lookup__search,.certloom-automations-workspace .certloom-context-lookup select{height:40px!important;min-height:40px!important;border:1px solid #c8d2ce!important;border-radius:6px!important;box-shadow:none!important}.certloom-automations-workspace .certloom-context-lookup__status{min-height:16px;margin:0;font-size:11px}.certloom-automations-workspace .certloom-field-control>span{line-height:1.35}
+@media(max-width:782px){.certloom-premium-row-link{min-height:44px}.certloom-premium-list-actions .button{min-height:44px!important;height:44px!important;line-height:42px!important}.certloom-domain-search input[type=search],.certloom-domain-search .button{min-height:44px!important;height:44px!important}.certloom-premium-dialog input:not([type=checkbox]):not([type=radio]),.certloom-premium-dialog select,.certloom-premium-dialog button,.certloom-premium-dialog .button{min-height:44px!important}.certloom-manual-card{padding:15px}}
+@media(forced-colors:active){.certloom-premium-row-link{color:LinkText}.certloom-premium-row-link:focus-visible{outline-color:Highlight}}
+
+/* UX-CORE-02 accessibility: search is a primary interactive target even in the compact form rhythm. */
+.certloom-settings-search-label #certloom-settings-search{min-height:44px}
+
+/* UX-CORE-02 — late compact form rules must not shrink mobile touch targets. */
+@media(max-width:782px){
+ .certloom-certificate-editor select,
+ .certloom-certificate-editor input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
+ .certloom-certificate-editor .button,
+ .certloom-certificate-editor button{min-height:44px!important}
+}
+/* UX-CORE-03 — compact desktop rhythm must never override WordPress/mobile touch targets. */
+@media(max-width:782px){
+ .ecapla-certverify-admin-wrap input[type=text],
+ .ecapla-certverify-admin-wrap input[type=email],
+ .ecapla-certverify-admin-wrap input[type=password],
+ .ecapla-certverify-admin-wrap input[type=search],
+ .ecapla-certverify-admin-wrap input[type=url],
+ .ecapla-certverify-admin-wrap input[type=number],
+ .ecapla-certverify-admin-wrap input[type=date],
+ .ecapla-certverify-admin-wrap select{min-height:44px!important;height:44px!important}
+ .ecapla-certverify-admin-wrap form .button,
+ .ecapla-certverify-admin-wrap form button:not(.button-link):not(.button-link-delete){min-height:44px!important}
+}

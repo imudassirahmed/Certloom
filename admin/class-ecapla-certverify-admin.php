@@ -120,6 +120,7 @@ class Ecapla_CertVerify_Admin {
 		add_submenu_page( null, __( 'Field Manager', 'certloom' ), __( 'Field Manager', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-fields', array( $this, 'render_fields_screen' ) );
 		add_submenu_page( null, __( 'Appearance & Embed', 'certloom' ), __( 'Appearance & Embed', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-frontend', array( $this, 'render_frontend_screen' ) );
 		add_submenu_page( null, __( 'Setup', 'certloom' ), __( 'Setup', 'certloom' ), 'manage_options', 'certloom-setup', array( $this, 'render_onboarding_screen' ) );
+		add_submenu_page( null, __( 'Verification sample', 'certloom' ), __( 'Verification sample', 'certloom' ), 'manage_options', 'certloom-verification-sample', array( $this, 'render_verification_sample_screen' ) );
 		add_submenu_page( null, __( 'Review bulk change', 'certloom' ), __( 'Review bulk change', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-bulk-review', array( $this, 'render_bulk_review_screen' ) );
 	}
 
@@ -1033,6 +1034,7 @@ class Ecapla_CertVerify_Admin {
 			'credit_align'             => $credit_align,
 			'delete_data_on_uninstall' => ! empty( $_POST['delete_data_on_uninstall'] ),
 			'privacy_erasure_policy'   => isset( $_POST['privacy_erasure_policy'] ) && 'anonymize_mutable_recipient' === sanitize_key( wp_unslash( $_POST['privacy_erasure_policy'] ) ) ? 'anonymize_mutable_recipient' : 'retain',
+			'recipient_user_sync_enabled' => ! empty( $_POST['recipient_user_sync_enabled'] ),
 			'verification_branding_enabled' => ! empty( $_POST['verification_branding_enabled'] ),
 			'verification_brand_name'    => isset( $_POST['verification_brand_name'] ) ? sanitize_text_field( wp_unslash( $_POST['verification_brand_name'] ) ) : '',
 			'verification_brand_tagline' => isset( $_POST['verification_brand_tagline'] ) ? sanitize_text_field( wp_unslash( $_POST['verification_brand_tagline'] ) ) : '',
@@ -1590,6 +1592,14 @@ class Ecapla_CertVerify_Admin {
 
 	public function render_list_screen() {
 		$this->require_manage_permission();
+		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready()
+			&& \Certloom\Infrastructure\Admin\AdminUiMode::is_simple() ) {
+			// Simple mode has one canonical Credentials workspace. The historical
+			// registry remains available only in Advanced mode for legacy data
+			// maintenance and must never appear as a second Credentials product.
+			wp_safe_redirect( admin_url( 'admin.php?page=certloom-domain-credentials' ) );
+			exit;
+		}
 		$table = new Ecapla_CertVerify_List_Table();
 		$table->prepare_items();
 		$database_error = $table->get_database_error();
@@ -1618,6 +1628,15 @@ class Ecapla_CertVerify_Admin {
 		$bulk_preview = isset( $session['preview'] ) && is_array( $session['preview'] ) ? $session['preview'] : null;
 		$bulk_fields  = Ecapla_CertVerify_Bulk_Manager::get_editable_custom_fields();
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/bulk-review.php';
+	}
+
+	/** Admin-only sample that lets a new administrator review the public result before a real credential exists. */
+	public function render_verification_sample_screen() {
+		$this->require_options_permission();
+		$back = add_query_arg( array( 'page' => 'certloom-setup', 'step' => 'delivery' ), admin_url( 'admin.php' ) );
+		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-verification-sample-screen"><section class="certloom-page-hero certloom-page-hero-compact"><div><span class="certloom-eyebrow">' . esc_html__( 'Setup preview', 'certloom' ) . '</span><h1>' . esc_html__( 'Sample verification result', 'certloom' ) . '</h1><p>' . esc_html__( 'This is sample data only. Use it to review the public credential hierarchy, spacing and verification presentation before you have issued a real credential.', 'certloom' ) . '</p></div><a class="button" href="' . esc_url( $back ) . '">' . esc_html__( 'Back to setup', 'certloom' ) . '</a></section><div class="certloom-setup-public-sample">';
+		echo Ecapla_CertVerify_Render::setup_sample_credential_profile(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Renderer escapes its complete presentation.
+		echo '</div></div>';
 	}
 
 	public function render_onboarding_screen() {

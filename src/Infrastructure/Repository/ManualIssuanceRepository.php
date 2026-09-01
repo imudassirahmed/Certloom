@@ -36,7 +36,18 @@ final class ManualIssuanceRepository implements ManualIssuanceRepositoryInterfac
 		$email = trim( (string) ( $data['email'] ?? '' ) );
 		if ( $this->length( $email ) > 320 || ( '' !== $email && function_exists( 'is_email' ) && ! is_email( $email ) ) ) { return new \WP_Error( 'certloom_recipient_email_invalid', __( 'Enter a valid recipient email address or leave it blank.', 'certloom' ) ); }
 		$out['email'] = '' === $email ? null : $email;
-		$out['wp_user_id'] = null;
+		$wp_user_id = absint( $data['wp_user_id'] ?? 0 );
+		if ( $wp_user_id ) {
+			if ( function_exists( 'get_userdata' ) && ! get_userdata( $wp_user_id ) ) {
+				return new \WP_Error( 'certloom_recipient_wp_user_missing', __( 'The selected WordPress account no longer exists.', 'certloom' ) );
+			}
+			$linked = $this->recipients->find_by_wp_user_id( $wp_user_id );
+			if ( is_wp_error( $linked ) ) { return $linked; }
+			if ( is_array( $linked ) && ! empty( $linked['id'] ) ) {
+				return new \WP_Error( 'certloom_recipient_wp_user_duplicate', __( 'That WordPress account is already linked to another Recipient. Choose the existing Recipient instead.', 'certloom' ) );
+			}
+		}
+		$out['wp_user_id'] = $wp_user_id ?: null;
 		$custom = isset( $data['custom_fields'] ) && is_array( $data['custom_fields'] ) ? $data['custom_fields'] : array();
 		$encoded = ( new SafeJson() )->encode_array( $custom, 'certloom_recipient_custom_fields_invalid', __( 'Recipient custom fields could not be encoded safely.', 'certloom' ) );
 		if ( is_wp_error( $encoded ) ) { return $encoded; }

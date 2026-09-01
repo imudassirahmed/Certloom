@@ -74,6 +74,7 @@ final class Plugin {
 			ecapla_certverify_add_runtime_error( $result->get_error_message() );
 		}
 		if ( ! is_wp_error( $result ) ) {
+			( new \Certloom\Infrastructure\Recipient\RecipientUserSync() )->register();
 			self::$job_runtime = new JobRuntime();
 			self::$job_runtime->register();
 			// Post-issuance automations must also be available when Tutor, LearnDash,

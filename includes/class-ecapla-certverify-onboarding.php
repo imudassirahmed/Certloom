@@ -249,6 +249,7 @@ class Ecapla_CertVerify_Onboarding {
 			! empty( $state['verification_tested'] ),
 			! empty( $state['appearance_reviewed'] ),
 		);
+		$wizard_completed = '' !== (string) $state['wizard_completed_at'];
 		return array(
 			'state'                => $state,
 			'organization_ready'   => $progress_flags[0],
@@ -258,11 +259,11 @@ class Ecapla_CertVerify_Onboarding {
 			'verification_tested'  => $progress_flags[4],
 			'appearance_ready'     => $progress_flags[5],
 			'completed'            => '' !== (string) $state['completed_at'],
-			'wizard_completed'     => '' !== (string) $state['wizard_completed_at'],
+			'wizard_completed'     => $wizard_completed,
 			'certificate_count'    => absint( $count ),
 			'field_count'          => count( $fields ),
 			'sample_cert_number'   => $sample_cert_number,
-			'progress_completed'   => count( array_filter( $progress_flags ) ),
+			'progress_completed'   => $wizard_completed ? count( $progress_flags ) : count( array_filter( $progress_flags ) ),
 			'progress_total'       => count( $progress_flags ),
 		);
 	}

@@ -490,6 +490,7 @@ final class ManualIssuanceService {
 			foreach ( array( 'display_name', 'first_name', 'middle_name', 'last_name', 'external_id' ) as $key ) { $new[ $key ] = sanitize_text_field( (string) ( $request['new_recipient'][ $key ] ?? '' ) ); }
 			$raw_email = trim( (string) ( $request['new_recipient']['email'] ?? '' ) );
 			$new['email'] = '' === $raw_email ? '' : sanitize_email( $raw_email );
+			$new['wp_user_id'] = absint( $request['new_recipient']['wp_user_id'] ?? 0 );
 			$new['custom_fields'] = $this->scalar_map( $request['new_recipient']['custom_fields'] ?? array() );
 			if ( is_wp_error( $new['custom_fields'] ) ) { return $new['custom_fields']; }
 		}
