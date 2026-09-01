@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: Certloom (Claude v1 — Ungated QA)
+ * Plugin Name: Certloom (Claude v1 — Gated)
  * Description: Self-hosted credential issuance, verification and lifecycle management for WordPress.
- * Version: 1.6.98-claude-v1-qa
+ * Version: 1.6.98-claude-v1
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.98-claude-v1-qa' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.98-claude-v1' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
