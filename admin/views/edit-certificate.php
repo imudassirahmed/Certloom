@@ -44,11 +44,14 @@ $ecapla_certverify_profile_field_count = count( Ecapla_CertVerify_Fields::get_vi
 $ecapla_certverify_datetime_format = trim( (string) get_option( 'date_format', 'F j, Y' ) . ' ' . (string) get_option( 'time_format', 'g:i a' ) );
 $ecapla_certverify_created_label = $certificate && ! empty( $certificate['created_at'] ) ? mysql2date( $ecapla_certverify_datetime_format, (string) $certificate['created_at'], true ) : '';
 $ecapla_certverify_updated_label = $certificate && ! empty( $certificate['updated_at'] ) ? mysql2date( $ecapla_certverify_datetime_format, (string) $certificate['updated_at'], true ) : '';
+$ecapla_certverify_credentials_url = \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready()
+	? admin_url( 'admin.php?page=certloom-domain-credentials' )
+	: admin_url( 'admin.php?page=certloom-certificates' );
 ?>
 <div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-certificate-editor">
 	<section class="certloom-page-hero certloom-editor-hero" aria-labelledby="certloom-editor-title">
 		<div>
-			<a class="certloom-back-link" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-certificates' ) ); ?>"><span aria-hidden="true">←</span> <?php esc_html_e( 'Back to credentials', 'certloom' ); ?></a>
+			<a class="certloom-back-link" href="<?php echo esc_url( $ecapla_certverify_credentials_url ); ?>"><span aria-hidden="true">←</span> <?php esc_html_e( 'Back to credentials', 'certloom' ); ?></a>
 			<span class="certloom-eyebrow"><?php echo $certificate ? esc_html__( 'Credential workspace', 'certloom' ) : esc_html__( 'New certificate', 'certloom' ); ?></span>
 			<h1 id="certloom-editor-title"><?php echo $certificate ? esc_html__( 'Credential details', 'certloom' ) : esc_html__( 'Add credential', 'certloom' ); ?></h1>
 			<p><?php echo $certificate ? esc_html__( 'Review this certificate by responsibility area while keeping its public verification details accurate.', 'certloom' ) : esc_html__( 'Create a certificate in the current Certloom registry.', 'certloom' ); ?></p>
@@ -64,6 +67,9 @@ $ecapla_certverify_updated_label = $certificate && ! empty( $certificate['update
 
 	<?php if ( isset( $_GET['ecapla_certverify_error'] ) ) : ?>
 		<div class="notice notice-error"><p><?php echo esc_html( sanitize_text_field( wp_unslash( $_GET['ecapla_certverify_error'] ) ) ); ?></p></div>
+	<?php endif; ?>
+	<?php if ( isset( $_GET['ecapla_certverify_saved'] ) ) : ?>
+		<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Saved.', 'certloom' ); ?></p></div>
 	<?php endif; ?>
 	<?php if ( $certificate && Ecapla_CertVerify_Database::is_legacy_expired( $certificate ) ) : ?>
 		<div class="certloom-callout certloom-callout-warning"><span class="dashicons dashicons-warning" aria-hidden="true"></span><div><strong><?php esc_html_e( 'Legacy status review required', 'certloom' ); ?></strong><p><?php esc_html_e( 'This historical Expired record stays Expired until you deliberately choose Valid, Suspended, or Withdrawn and save it.', 'certloom' ); ?></p></div></div>
@@ -160,7 +166,7 @@ $ecapla_certverify_updated_label = $certificate && ! empty( $certificate['update
 		</div>
 
 		<div id="certloom-workspace-actions" class="certloom-editor-actions">
-			<a class="button button-secondary" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-certificates' ) ); ?>"><?php esc_html_e( 'Cancel', 'certloom' ); ?></a>
+			<a class="button button-secondary" href="<?php echo esc_url( $ecapla_certverify_credentials_url ); ?>"><?php esc_html_e( 'Cancel', 'certloom' ); ?></a>
 			<?php submit_button( $certificate ? __( 'Update credential', 'certloom' ) : __( 'Add credential', 'certloom' ), 'primary', 'certverify_save', false ); ?>
 		</div>
 	</form>

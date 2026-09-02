@@ -79,7 +79,7 @@ final class AdminProductNavigation {
 		// calculating the active top-level menu state. Keep this explicit so a
 		// hidden-but-routable subtab never makes the Certloom sidebar look closed.
 		foreach ( array(
-			'certloom-add', 'certloom-domain-credentials', 'certloom-issuance',
+			'certloom-add', 'certloom-certificates', 'certloom-domain-credentials', 'certloom-issuance',
 			'certloom-bulk-issuance', 'certloom-email-delivery', 'certloom-bulk-review',
 			'certloom-domain-recipients', 'certloom-domain-issuers', 'certloom-domain-batches',
 			'certloom-domain-signers', 'certloom-frontend', 'certloom-integrations',

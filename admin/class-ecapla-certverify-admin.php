@@ -91,7 +91,15 @@ class Ecapla_CertVerify_Admin {
 			30
 		);
 		add_submenu_page( self::DASHBOARD_PAGE, $home_label, $home_label, ECAPLA_CERTVERIFY_CAP, self::DASHBOARD_PAGE, array( $this, 'render_dashboard_screen' ) );
-		add_submenu_page( self::DASHBOARD_PAGE, __( 'Credentials', 'certloom' ), __( 'Credentials', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::CERTIFICATES_PAGE, array( $this, 'render_list_screen' ) );
+		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
+			// The historical list slug remains a compatibility route while the unified
+			// Credentials workspace is authoritative in the QA domain preview. Register
+			// it as a hidden route so stale links/redirects reach our redirect callback
+			// instead of failing WordPress' page-access check before Certloom can act.
+			add_submenu_page( null, __( 'Credentials', 'certloom' ), __( 'Credentials', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::CERTIFICATES_PAGE, array( $this, 'render_list_screen' ) );
+		} else {
+			add_submenu_page( self::DASHBOARD_PAGE, __( 'Credentials', 'certloom' ), __( 'Credentials', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::CERTIFICATES_PAGE, array( $this, 'render_list_screen' ) );
+		}
 
 		/*
 		 * WordPress treats submenu registration as route registration too. The
@@ -311,7 +319,11 @@ class Ecapla_CertVerify_Admin {
 			$this->redirect_error( $result->get_error_message(), $back_url );
 		}
 
-		wp_safe_redirect( add_query_arg( 'ecapla_certverify_saved', '1', admin_url( 'admin.php?page=' . self::CERTIFICATES_PAGE ) ) );
+		// Existing Legacy records stay in their edit workspace after save. This
+		// avoids bouncing through the retired compatibility-list slug and preserves
+		// the administrator's context while showing an explicit success state.
+		$success_url = $id ? $back_url : admin_url( 'admin.php?page=' . self::CERTIFICATES_PAGE );
+		wp_safe_redirect( add_query_arg( 'ecapla_certverify_saved', '1', $success_url ) );
 		exit;
 	}
 
@@ -1615,10 +1627,29 @@ class Ecapla_CertVerify_Admin {
 	public function render_list_screen() {
 		$this->require_manage_permission();
 		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
-			// The current domain owns one Credentials product in every UI mode.
-			// Historical registry rows are adapted into that workspace and labeled
-			// there instead of exposing a second customer-facing registry.
-			wp_safe_redirect( admin_url( 'admin.php?page=certloom-domain-credentials' ) );
+			// The current domain owns one Credentials product in every UI mode. Keep
+			// the historical slug as a hidden compatibility route, then translate the
+			// common legacy list intent into the canonical unified registry.
+			$args = array( 'page' => 'certloom-domain-credentials' );
+			// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only compatibility redirect state.
+			if ( isset( $_GET['s'] ) && '' !== trim( (string) $_GET['s'] ) ) {
+				$args['s'] = sanitize_text_field( wp_unslash( $_GET['s'] ) );
+			}
+			$status = isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : '';
+			if ( ! empty( $_GET['legacy_expired'] ) ) {
+				$status = 'expired';
+			}
+			if ( 'withdrawn' === $status ) {
+				$status = 'revoked';
+			}
+			if ( in_array( $status, array( 'valid', 'suspended', 'revoked', 'expired' ), true ) ) {
+				$args['credential_status'] = $status;
+			}
+			if ( ! empty( $_GET['paged'] ) ) {
+				$args['paged'] = max( 1, absint( $_GET['paged'] ) );
+			}
+			// phpcs:enable WordPress.Security.NonceVerification.Recommended
+			wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );
 			exit;
 		}
 		$table = new Ecapla_CertVerify_List_Table();
