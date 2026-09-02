@@ -43,6 +43,7 @@ $issuer_pos = strpos( $nav, "link( __( 'Issuers', 'certloom' )", $batch_pos );
 $signer_pos = strpos( $nav, "link( __( 'Signers', 'certloom' )", $issuer_pos );
 ux6( false !== $program_pos && false !== $batch_pos && false !== $issuer_pos && false !== $signer_pos && $program_pos < $batch_pos && $batch_pos < $issuer_pos && $issuer_pos < $signer_pos, 'Programs family is ordered Programs then Batches then Issuers then Signers' );
 ux6( false !== strpos( $nav, "if ( 'certloom-domain-recipients' === \$page )" ) && false !== strpos( $nav, "return 'credentials';" ), 'Recipients remain in Credentials navigation ownership in both UI modes' );
+ux6( false !== strpos( $domain, "add_submenu_page( 'certloom', __( 'Credential Management', 'certloom' )" ) && false === strpos( $domain, "AdminUiMode::is_simple() ? 'certloom' : null, __( 'Credential Management'" ), 'Credentials stays registered as a visible primary menu source in Advanced mode before product-menu consolidation' );
 ux6( substr_count( $nav, "'certloom-automations'" ) >= 2 && false !== strpos( $nav, "'certloom-integrations'" ) && false !== strpos( $nav, "'certloom-analytics'" ), 'Advanced Automations destination retains Automations Integrations and Analytics continuations' );
 
 ux6( false !== strpos( $domain, 'find_published_by_machine_key' ) && false !== strpos( $domain, "profile_template_variant_template_id[]" ), 'Program language-design edit round-trip resolves stored machine keys back to published design IDs' );

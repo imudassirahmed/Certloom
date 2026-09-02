@@ -2978,6 +2978,34 @@ align-items:center}
 	font-size: 12px;
 }
 
+/* Credential registry row actions mirror WordPress list-table familiarity without a bulky Actions column. */
+.certloom-credential-title { display: block; line-height: 1.35; }
+.certloom-credential-row-actions {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: 4px;
+	font-size: 12px;
+	line-height: 1.35;
+}
+.certloom-credential-row-actions a {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	padding: 2px 7px;
+	border: 1px solid #dce6e1;
+	border-radius: 5px;
+	background: #f7faf8;
+	color: #3f6f60;
+	font-weight: 650;
+	text-decoration: none;
+}
+.certloom-credential-row-actions a:hover,
+.certloom-credential-row-actions a:focus { border-color: #9fc1b5; background: #eef6f2; color: #0f6e56; text-decoration: none; }
+.certloom-credential-table { min-width: 1120px !important; }
+.certloom-credential-table th { white-space: nowrap; }
+.certloom-credential-table td { line-height: 1.4; }
+
 .certloom-credential-status,
 .certloom-version-current,
 .certloom-credential-review-badge {

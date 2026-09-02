@@ -29,7 +29,10 @@ async def run():
         await ck(await registry.locator('.certloom-credential-source.is-credential').count()==1,'registryCredentialSourceLabel')
         await ck(await registry.locator('.certloom-credential-source.is-legacy').count()==1,'registryLegacySourceLabel')
         await ck(await registry.locator('.certloom-credential-status.is-revoked').count()==1,'registryHistoricalUsesCanonicalRevokedStatus')
-        await ck(await registry.get_by_role('link',name='Open workspace').count()==2,'registryWorkspaceActionsUnified')
+        await ck(await registry.locator('thead th').all_inner_texts()==['Credential','Recipient','Program / batch','Issue date','Expiry date','Credential status','Version','Added'],'registryExplicitColumns')
+        await ck(await registry.locator('.certloom-credential-row-actions a').filter(has_text='View').count()==2,'registryViewActionsUnderTitle')
+        await ck(await registry.get_by_role('link',name='Manage').count()==2,'registryManageActionsUnderTitle')
+        await ck(await registry.locator('.certloom-credential-row-actions').count()==2,'registryModernRowActions')
         await ck(await registry.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'registryDesktopNoOverflow')
         await registry.close()
 

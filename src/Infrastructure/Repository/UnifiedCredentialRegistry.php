@@ -40,6 +40,7 @@ final class UnifiedCredentialRegistry {
 			$row['_credential_source_label'] = $migrated_historical ? __( 'Legacy', 'certloom' ) : __( 'Credential', 'certloom' );
 			$row['_credential_historical_origin'] = $migrated_historical;
 			$row['_credential_sort_at']      = $this->sort_value( (string) ( $row['series_updated_at'] ?? $row['version_updated_at'] ?? '' ), (string) ( $row['issued_at'] ?? '' ) );
+			$row['entry_created_at']          = (string) ( $row['series_created_at'] ?? '' );
 			$current_items[]                  = $row;
 		}
 
@@ -66,6 +67,7 @@ final class UnifiedCredentialRegistry {
 				'batch_name'               => '',
 				'issued_at'                => (string) ( $row['issue_date'] ?? '' ),
 				'expires_at'               => (string) ( $row['expiry_date'] ?? '' ),
+				'entry_created_at'         => (string) ( $row['created_at'] ?? '' ),
 				'version_number'           => 0,
 				'legacy_status_code'       => $this->normalized_legacy_status( $status_code ),
 				'legacy_row'               => $row,

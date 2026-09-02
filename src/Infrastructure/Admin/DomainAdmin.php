@@ -58,7 +58,7 @@ final class DomainAdmin {
 		add_submenu_page( null, __( 'Recipients', 'certloom' ), __( 'Recipients', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_RECIPIENTS, self::RECIPIENTS_PAGE, array( $this, 'render_recipients' ) );
 		add_submenu_page( 'certloom', __( 'Programs', 'certloom' ), __( 'Programs', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS, self::PROGRAMS_PAGE, array( $this, 'render_programs' ) );
 		add_submenu_page( null, __( 'Issuers (New Domain)', 'certloom' ), __( 'Issuers (New)', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_ISSUERS, self::ISSUERS_PAGE, array( $this, 'render_issuers' ) );
-		add_submenu_page( AdminUiMode::is_simple() ? 'certloom' : null, __( 'Credential Management', 'certloom' ), __( 'Credentials', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS, self::CREDENTIALS_PAGE, array( $this, 'render_credentials' ) );
+		add_submenu_page( 'certloom', __( 'Credential Management', 'certloom' ), __( 'Credentials', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS, self::CREDENTIALS_PAGE, array( $this, 'render_credentials' ) );
 	}
 
 	/** @return void */
@@ -599,7 +599,9 @@ final class DomainAdmin {
 			$this->simple_credential_list( (array) $result['items'], $status_service );
 			$this->pagination( self::CREDENTIALS_PAGE, $page, (int) $result['total'], 50, $search, array( 'credential_status' => $status, 'program_id' => $program_id ) );
 		} else {
-			echo '<div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-table certloom-credential-table"><thead><tr><th>' . esc_html__( 'Credential', 'certloom' ) . '</th><th>' . esc_html__( 'Recipient', 'certloom' ) . '</th><th>' . esc_html__( 'Program / batch', 'certloom' ) . '</th><th>' . esc_html__( 'Issued / expiry', 'certloom' ) . '</th><th>' . esc_html__( 'Version', 'certloom' ) . '</th><th>' . esc_html__( 'Status', 'certloom' ) . '</th><th>' . esc_html__( 'Actions', 'certloom' ) . '</th></tr></thead><tbody>';
+			$public_ready = ( new \Certloom\Infrastructure\Verification\PublicVerificationGate() )->is_ready();
+			$url_builder  = new \Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl();
+			echo '<div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-table certloom-credential-table"><thead><tr><th>' . esc_html__( 'Credential', 'certloom' ) . '</th><th>' . esc_html__( 'Recipient', 'certloom' ) . '</th><th>' . esc_html__( 'Program / batch', 'certloom' ) . '</th><th>' . esc_html__( 'Issue date', 'certloom' ) . '</th><th>' . esc_html__( 'Expiry date', 'certloom' ) . '</th><th>' . esc_html__( 'Credential status', 'certloom' ) . '</th><th>' . esc_html__( 'Version', 'certloom' ) . '</th><th>' . esc_html__( 'Added', 'certloom' ) . '</th></tr></thead><tbody>';
 			foreach ( $result['items'] as $item ) {
 				$is_historical = 'historical' === (string) ( $item['_credential_source'] ?? '' );
 				$source_label = (string) ( $item['_credential_source_label'] ?? ( $is_historical ? __( 'Legacy', 'certloom' ) : __( 'Credential', 'certloom' ) ) );
@@ -612,18 +614,23 @@ final class DomainAdmin {
 				$number = trim( (string) ( $item['display_number'] ?? '' ) );
 				$program = trim( (string) ( $item['program_title'] ?? '' ) );
 				$batch = trim( (string) ( $item['batch_name'] ?? '' ) );
+				$public_url = $is_historical
+					? ( class_exists( 'Ecapla_CertVerify_Public_Router' ) && '' !== $number ? \Ecapla_CertVerify_Public_Router::profile_url( $number ) : '' )
+					: ( $public_ready ? $url_builder->verification_url( (string) ( $item['public_id'] ?? '' ) ) : null );
+				$entry_date = trim( (string) ( $item['entry_created_at'] ?? $item['series_created_at'] ?? '' ) );
 				echo '<tr>';
-				echo '<td data-col="' . esc_attr__( 'Credential', 'certloom' ) . '"><strong><a href="' . esc_url( $detail_url ) . '">' . esc_html( '' !== $number ? $number : __( 'Unnumbered credential', 'certloom' ) ) . '</a></strong><div class="certloom-credential-secondary certloom-credential-source-meta"><span class="certloom-credential-source ' . esc_attr( $source_class ) . '">' . esc_html( $source_label ) . '</span>' . ( ! $is_historical && ! empty( $item['public_id'] ) ? '<code>' . esc_html( (string) $item['public_id'] ) . '</code>' : '' ) . '</div></td>';
+				echo '<td data-col="' . esc_attr__( 'Credential', 'certloom' ) . '"><strong class="certloom-credential-title"><a href="' . esc_url( $detail_url ) . '">' . esc_html( '' !== $number ? $number : __( 'Unnumbered credential', 'certloom' ) ) . '</a></strong><div class="certloom-credential-row-actions" aria-label="' . esc_attr__( 'Credential actions', 'certloom' ) . '">' . ( is_string( $public_url ) && '' !== $public_url ? '<a href="' . esc_url( $public_url ) . '" target="_blank" rel="noopener">' . esc_html__( 'View', 'certloom' ) . ' <span aria-hidden="true">↗</span></a>' : '' ) . '<a href="' . esc_url( $detail_url ) . '">' . esc_html__( 'Manage', 'certloom' ) . '</a></div><div class="certloom-credential-secondary certloom-credential-source-meta"><span class="certloom-credential-source ' . esc_attr( $source_class ) . '">' . esc_html( $source_label ) . '</span>' . ( ! $is_historical && ! empty( $item['public_id'] ) ? '<code>' . esc_html( (string) $item['public_id'] ) . '</code>' : '' ) . '</div></td>';
 				echo '<td data-col="' . esc_attr__( 'Recipient', 'certloom' ) . '"><strong>' . esc_html( (string) ( $item['display_name'] ?: '—' ) ) . '</strong>' . ( ! empty( $item['recipient_email'] ) ? '<div class="certloom-credential-secondary">' . esc_html( (string) $item['recipient_email'] ) . '</div>' : '' ) . '</td>';
 				echo '<td data-col="' . esc_attr__( 'Program / batch', 'certloom' ) . '">' . esc_html( '' !== $program ? $program : '—' ) . ( '' !== $batch ? '<div class="certloom-credential-secondary">' . esc_html( $batch ) . '</div>' : '' ) . '</td>';
-				echo '<td data-col="' . esc_attr__( 'Issued / expiry', 'certloom' ) . '"><span>' . esc_html( (string) ( $item['issued_at'] ?: '—' ) ) . '</span><div class="certloom-credential-secondary">' . esc_html( ! empty( $item['expires_at'] ) ? sprintf( /* translators: %s: expiry date. */ __( 'Expires %s', 'certloom' ), (string) $item['expires_at'] ) : __( 'No expiry', 'certloom' ) ) . '</div></td>';
+				echo '<td data-col="' . esc_attr__( 'Issue date', 'certloom' ) . '">' . esc_html( ! empty( $item['issued_at'] ) ? (string) $item['issued_at'] : '—' ) . '</td>';
+				echo '<td data-col="' . esc_attr__( 'Expiry date', 'certloom' ) . '">' . esc_html( ! empty( $item['expires_at'] ) ? (string) $item['expires_at'] : __( 'No expiry', 'certloom' ) ) . '</td>';
+				echo '<td data-col="' . esc_attr__( 'Credential status', 'certloom' ) . '">' . ( $is_historical ? $this->historical_status_badge( (string) ( $item['legacy_status_code'] ?? '' ) ) : $this->credential_status_badge( $effective ) ) . '</td>';
 				echo '<td data-col="' . esc_attr__( 'Version', 'certloom' ) . '">' . ( ! empty( $item['version_number'] ) ? '<strong>v' . esc_html( (string) absint( $item['version_number'] ) ) . '</strong>' : '—' ) . '</td>';
-				echo '<td data-col="' . esc_attr__( 'Status', 'certloom' ) . '">' . ( $is_historical ? $this->historical_status_badge( (string) ( $item['legacy_status_code'] ?? '' ) ) : $this->credential_status_badge( $effective ) ) . '</td>';
-				echo '<td data-col="' . esc_attr__( 'Actions', 'certloom' ) . '"><a class="button button-small" href="' . esc_url( $detail_url ) . '">' . esc_html__( 'Open workspace', 'certloom' ) . '</a></td>';
+				echo '<td data-col="' . esc_attr__( 'Added', 'certloom' ) . '">' . esc_html( '' !== $entry_date ? $entry_date : '—' ) . '</td>';
 				echo '</tr>';
 			}
 			if ( empty( $result['items'] ) ) {
-				echo '<tr><td colspan="7"><div class="certloom-domain-empty"><strong>' . esc_html__( 'No credentials match these filters.', 'certloom' ) . '</strong><span>' . esc_html__( 'Adjust the search, status, or Program filter. Manual Issuance creates new Credential Series here.', 'certloom' ) . '</span></div></td></tr>';
+				echo '<tr><td colspan="8"><div class="certloom-domain-empty"><strong>' . esc_html__( 'No credentials match these filters.', 'certloom' ) . '</strong><span>' . esc_html__( 'Adjust the search, status, or Program filter. Manual Issuance creates new Credential Series here.', 'certloom' ) . '</span></div></td></tr>';
 			}
 			echo '</tbody></table></div>';
 			$this->pagination( self::CREDENTIALS_PAGE, $page, (int) $result['total'], 50, $search, array( 'credential_status' => $status, 'program_id' => $program_id ) );
