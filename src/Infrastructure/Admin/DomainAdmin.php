@@ -601,7 +601,7 @@ final class DomainAdmin {
 		} else {
 			$public_ready = ( new \Certloom\Infrastructure\Verification\PublicVerificationGate() )->is_ready();
 			$url_builder  = new \Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl();
-			echo '<div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-table certloom-credential-table"><thead><tr><th>' . esc_html__( 'Credential', 'certloom' ) . '</th><th>' . esc_html__( 'Recipient', 'certloom' ) . '</th><th>' . esc_html__( 'Program / batch', 'certloom' ) . '</th><th>' . esc_html__( 'Issue date', 'certloom' ) . '</th><th>' . esc_html__( 'Expiry date', 'certloom' ) . '</th><th>' . esc_html__( 'Credential status', 'certloom' ) . '</th><th>' . esc_html__( 'Version', 'certloom' ) . '</th><th>' . esc_html__( 'Added', 'certloom' ) . '</th></tr></thead><tbody>';
+			echo '<div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-table certloom-credential-table"><thead><tr><th>' . esc_html__( 'Credential', 'certloom' ) . '</th><th>' . esc_html__( 'Recipient', 'certloom' ) . '</th><th>' . esc_html__( 'Program / batch', 'certloom' ) . '</th><th>' . esc_html__( 'Issue date', 'certloom' ) . '</th><th>' . esc_html__( 'Expiry date', 'certloom' ) . '</th><th>' . esc_html__( 'Credential status', 'certloom' ) . '</th><th>' . esc_html__( 'Record version', 'certloom' ) . '</th><th>' . esc_html__( 'Added to Certloom', 'certloom' ) . '</th></tr></thead><tbody>';
 			foreach ( $result['items'] as $item ) {
 				$is_historical = 'historical' === (string) ( $item['_credential_source'] ?? '' );
 				$source_label = (string) ( $item['_credential_source_label'] ?? ( $is_historical ? __( 'Legacy', 'certloom' ) : __( 'Credential', 'certloom' ) ) );
@@ -625,8 +625,8 @@ final class DomainAdmin {
 				echo '<td data-col="' . esc_attr__( 'Issue date', 'certloom' ) . '">' . esc_html( ! empty( $item['issued_at'] ) ? (string) $item['issued_at'] : '—' ) . '</td>';
 				echo '<td data-col="' . esc_attr__( 'Expiry date', 'certloom' ) . '">' . esc_html( ! empty( $item['expires_at'] ) ? (string) $item['expires_at'] : __( 'No expiry', 'certloom' ) ) . '</td>';
 				echo '<td data-col="' . esc_attr__( 'Credential status', 'certloom' ) . '">' . ( $is_historical ? $this->historical_status_badge( (string) ( $item['legacy_status_code'] ?? '' ) ) : $this->credential_status_badge( $effective ) ) . '</td>';
-				echo '<td data-col="' . esc_attr__( 'Version', 'certloom' ) . '">' . ( ! empty( $item['version_number'] ) ? '<strong>v' . esc_html( (string) absint( $item['version_number'] ) ) . '</strong>' : '—' ) . '</td>';
-				echo '<td data-col="' . esc_attr__( 'Added', 'certloom' ) . '">' . esc_html( '' !== $entry_date ? $entry_date : '—' ) . '</td>';
+				echo '<td data-col="' . esc_attr__( 'Record version', 'certloom' ) . '">' . ( ! empty( $item['version_number'] ) ? '<strong title="' . esc_attr__( 'Current immutable record version; earlier versions remain in the credential history.', 'certloom' ) . '">v' . esc_html( (string) absint( $item['version_number'] ) ) . '</strong>' : '—' ) . '</td>';
+				echo '<td data-col="' . esc_attr__( 'Added to Certloom', 'certloom' ) . '">' . esc_html( '' !== $entry_date ? $entry_date : '—' ) . '</td>';
 				echo '</tr>';
 			}
 			if ( empty( $result['items'] ) ) {
@@ -2111,12 +2111,11 @@ final class DomainAdmin {
 			$program_id = absint( $item['id'] ?? 0 );
 			$edit_url   = add_query_arg( array( 'page' => self::PROGRAMS_PAGE, 'program_id' => $program_id ), admin_url( 'admin.php' ) );
 			$issue_url  = add_query_arg( array( 'page' => 'certloom-issuance', 'program_id' => $program_id ), admin_url( 'admin.php' ) );
-			$design_url = add_query_arg( array( 'page' => 'certloom-templates', 'program_id' => $program_id ), admin_url( 'admin.php' ) );
 			$issuer     = trim( (string) ( $item['issuer_name'] ?? '' ) );
 			echo '<article class="certloom-premium-list-row" role="listitem"><div class="certloom-premium-list-main"><span class="certloom-eyebrow">' . esc_html( (string) ( $item['purpose_label'] ?: __( 'Program', 'certloom' ) ) ) . '</span><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( (string) ( $item['title'] ?? '' ) ) . '</a></strong><span>' . esc_html( '' !== $issuer ? $issuer : __( 'Issuer not added yet', 'certloom' ) ) . '</span></div>';
 			echo '<div class="certloom-premium-list-status"><span class="certloom-state-pill ' . ( ! empty( $item['active'] ) ? 'is-success' : '' ) . '">' . esc_html( ! empty( $item['active'] ) ? _x( 'Active', 'entity status', 'certloom' ) : _x( 'Paused', 'entity status', 'certloom' ) ) . '</span></div>';
 			echo '<div class="certloom-premium-list-meta"><span><small>' . esc_html__( 'Credentials', 'certloom' ) . '</small><strong>' . esc_html( number_format_i18n( absint( $item['credential_count'] ?? 0 ) ) ) . '</strong></span><span><small>' . esc_html__( 'Code', 'certloom' ) . '</small><strong>' . esc_html( (string) ( $item['code'] ?: '—' ) ) . '</strong></span></div>';
-			echo '<div class="certloom-premium-list-actions"><a class="button button-primary" href="' . esc_url( $issue_url ) . '">' . esc_html__( 'Issue', 'certloom' ) . '</a><a class="certloom-premium-row-link" href="' . esc_url( $design_url ) . '">' . esc_html__( 'Design', 'certloom' ) . '</a><a class="certloom-premium-row-link" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Edit record', 'certloom' ) . ' <span aria-hidden="true">→</span></a></div></article>';
+			echo '<div class="certloom-premium-list-actions"><a class="button button-primary" href="' . esc_url( $issue_url ) . '">' . esc_html__( 'Issue', 'certloom' ) . '</a><a class="certloom-premium-row-link" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Edit record', 'certloom' ) . ' <span aria-hidden="true">→</span></a></div></article>';
 		}
 		echo '</div>';
 	}

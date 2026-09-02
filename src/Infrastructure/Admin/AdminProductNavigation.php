@@ -243,13 +243,13 @@ final class AdminProductNavigation {
 					return array(
 						$this->link( __( 'Automations', 'certloom' ), 'certloom-automations', array( 'certloom-automations' ), ECAPLA_CERTVERIFY_CAP ),
 						$this->link( __( 'Integrations', 'certloom' ), 'certloom-integrations', array( 'certloom-integrations' ), ECAPLA_CERTVERIFY_CAP ),
-						$this->link( __( 'Analytics', 'certloom' ), 'certloom-analytics', array( 'certloom-analytics' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS ),
+						$this->link( __( 'Analytics', 'certloom' ), 'certloom-analytics', array( 'certloom-analytics' ), ECAPLA_CERTVERIFY_CAP ),
 					);
 				}
 				return array(
 					$this->link( __( 'Automations', 'certloom' ), 'certloom-automations', array( 'certloom-automations' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ),
 					$this->link( __( 'Integrations', 'certloom' ), 'certloom-integrations', array( 'certloom-integrations' ), ECAPLA_CERTVERIFY_CAP ),
-					$this->link( __( 'Analytics', 'certloom' ), 'certloom-analytics', array( 'certloom-analytics' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS ),
+					$this->link( __( 'Analytics', 'certloom' ), 'certloom-analytics', array( 'certloom-analytics' ), ECAPLA_CERTVERIFY_CAP ),
 				);
 
 			case 'settings':

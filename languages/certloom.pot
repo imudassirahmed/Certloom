@@ -25,7 +25,8 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:358
 #: src/Infrastructure/Admin/DomainAdmin.php:371
 #: src/Infrastructure/Admin/DomainAdmin.php:58
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:216
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:214
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:220
 msgid "Recipients"
 msgstr ""
 
@@ -49,7 +50,6 @@ msgstr ""
 #: blocks/certloom/index.js:65
 #: includes/class-ecapla-certverify-onboarding.php:22
 #: src/Infrastructure/Admin/AdminProductNavigation.php:137
-#: src/Infrastructure/Admin/DomainAdmin.php:2119
 #: src/Infrastructure/Admin/TemplateAdmin.php:542
 #: src/Infrastructure/Admin/TemplateAdmin.php:744
 msgid "Design"
@@ -213,7 +213,7 @@ msgid "Simple workspace"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:158
-#: admin/views/settings-manager.php:21
+#: admin/views/settings-manager.php:22
 #: admin/views/setup-wizard.php:110
 msgid "Advanced"
 msgstr ""
@@ -459,8 +459,8 @@ msgid "Before deactivating Certloom"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:206
-#: src/Infrastructure/Admin/DomainAdmin.php:2247
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:723
+#: src/Infrastructure/Admin/DomainAdmin.php:2246
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:734
 #: src/Infrastructure/Admin/TemplateAdmin.php:646
 msgid "Close"
 msgstr ""
@@ -498,12 +498,12 @@ msgstr ""
 #: admin/views/edit-certificate.php:163
 #: src/Infrastructure/Admin/DomainAdmin.php:1194
 #: src/Infrastructure/Admin/DomainAdmin.php:1322
-#: src/Infrastructure/Admin/DomainAdmin.php:2253
+#: src/Infrastructure/Admin/DomainAdmin.php:2252
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:376
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:379
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:400
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:370
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:729
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:374
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:740
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:241
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:260
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:275
@@ -587,7 +587,7 @@ msgstr ""
 #: admin/views/setup-wizard.php:41
 #: src/Infrastructure/Admin/DomainAdmin.php:1236
 #: src/Infrastructure/Admin/DomainAdmin.php:1714
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:675
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:686
 #: src/Infrastructure/Admin/TemplateAdmin.php:1002
 #: src/Infrastructure/Admin/TemplateAdmin.php:823
 #: src/Infrastructure/Admin/TemplateAdmin.php:826
@@ -712,14 +712,14 @@ msgstr ""
 #: src/Infrastructure/Admin/AdminProductNavigation.php:133
 #: src/Infrastructure/Admin/AdminProductNavigation.php:206
 #: src/Infrastructure/Admin/AdminProductNavigation.php:214
-#: src/Infrastructure/Admin/DomainAdmin.php:2118
+#: src/Infrastructure/Admin/DomainAdmin.php:2117
 #: src/Infrastructure/Admin/DomainAdmin.php:390
 #: src/Infrastructure/Admin/DomainAdmin.php:396
 #: src/Infrastructure/Admin/DomainAdmin.php:468
 #: src/Infrastructure/Admin/DomainAdmin.php:578
 #: src/Infrastructure/Admin/DomainAdmin.php:586
 #: src/Infrastructure/Admin/DomainAdmin.php:61
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:216
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:220
 msgid "Credentials"
 msgstr ""
 
@@ -798,7 +798,7 @@ msgid "No expiry"
 msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:180
-#: src/Infrastructure/Admin/DomainAdmin.php:2127
+#: src/Infrastructure/Admin/DomainAdmin.php:2126
 #: src/Infrastructure/Admin/DomainAdmin.php:906
 #: src/Infrastructure/Admin/TemplateAdmin.php:734
 msgid "All"
@@ -933,7 +933,7 @@ msgstr ""
 #: admin/views/import-upload.php:213
 #: admin/views/list-certificates.php:127
 #: admin/views/list-certificates.php:154
-#: admin/views/settings-manager.php:145
+#: admin/views/settings-manager.php:152
 #: includes/class-ecapla-certverify-recipient-portal.php:147
 #: includes/class-ecapla-certverify-recipient-portal.php:215
 #: src/Infrastructure/Admin/DomainAdmin.php:1027
@@ -944,9 +944,9 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:1747
 #: src/Infrastructure/Admin/DomainAdmin.php:468
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:357
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:216
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:287
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:766
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:220
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:291
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:777
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:300
 #: src/Infrastructure/Admin/TemplateAdmin.php:1162
 #: src/Infrastructure/Import/DomainImportCsvReader.php:72
@@ -1013,8 +1013,8 @@ msgstr ""
 #: admin/views/analytics.php:39
 #: admin/views/fields-manager.php:150
 #: admin/views/issuance-analytics.php:34
-#: src/Infrastructure/Admin/DomainAdmin.php:2249
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:725
+#: src/Infrastructure/Admin/DomainAdmin.php:2248
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:736
 msgid "Date"
 msgstr ""
 
@@ -1073,8 +1073,8 @@ msgstr ""
 #: admin/views/analytics.php:48
 #: admin/views/analytics.php:75
 #: admin/views/integrations.php:315
-#: admin/views/settings-manager.php:176
-#: admin/views/settings-manager.php:203
+#: admin/views/settings-manager.php:183
+#: admin/views/settings-manager.php:210
 #: includes/class-ecapla-certverify-system-status.php:194
 #: includes/class-ecapla-certverify-system-status.php:218
 #: includes/class-ecapla-certverify-system-status.php:234
@@ -1210,8 +1210,8 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:1335
 #: src/Infrastructure/Admin/DomainAdmin.php:1623
 #: src/Infrastructure/Admin/DomainAdmin.php:1745
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:390
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:469
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:394
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:474
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:300
 msgid "Action"
 msgstr ""
@@ -1265,13 +1265,13 @@ msgstr ""
 #: admin/views/integrations.php:310
 #: src/Infrastructure/Admin/DomainAdmin.php:1539
 #: src/Infrastructure/Admin/DomainAdmin.php:1543
-#: src/Infrastructure/Admin/DomainAdmin.php:2216
-#: src/Infrastructure/Admin/DomainAdmin.php:2240
-#: src/Infrastructure/Admin/DomainAdmin.php:2267
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:394
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:473
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:615
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:708
+#: src/Infrastructure/Admin/DomainAdmin.php:2215
+#: src/Infrastructure/Admin/DomainAdmin.php:2239
+#: src/Infrastructure/Admin/DomainAdmin.php:2266
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:398
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:478
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:626
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:719
 msgid "Remove"
 msgstr ""
 
@@ -1780,9 +1780,9 @@ msgid "Custom field"
 msgstr ""
 
 #: admin/views/bulk-review.php:64
-#: admin/views/settings-manager.php:145
-#: src/Infrastructure/Admin/DomainAdmin.php:2267
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:615
+#: admin/views/settings-manager.php:152
+#: src/Infrastructure/Admin/DomainAdmin.php:2266
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:626
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:214
 msgid "Value"
 msgstr ""
@@ -2114,8 +2114,8 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:623
 #: src/Infrastructure/Admin/DomainAdmin.php:666
 #: src/Infrastructure/Admin/DomainAdmin.php:834
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:390
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:409
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:394
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:413
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:265
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:300
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:161
@@ -2135,7 +2135,7 @@ msgid "View credential"
 msgstr ""
 
 #: admin/views/dashboard.php:269
-#: src/Infrastructure/Admin/DomainAdmin.php:2119
+#: src/Infrastructure/Admin/DomainAdmin.php:2118
 #: src/Infrastructure/Admin/DomainAdmin.php:977
 msgid "Edit record"
 msgstr ""
@@ -2356,11 +2356,11 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:1479
 #: src/Infrastructure/Admin/DomainAdmin.php:1700
 #: src/Infrastructure/Admin/DomainAdmin.php:1743
-#: src/Infrastructure/Admin/DomainAdmin.php:2116
+#: src/Infrastructure/Admin/DomainAdmin.php:2115
 #: src/Infrastructure/Admin/DomainAdmin.php:468
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:216
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:661
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:689
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:220
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:672
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:700
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:181
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:264
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:333
@@ -2597,8 +2597,8 @@ msgstr ""
 
 #: admin/views/fields-manager.php:102
 #: admin/views/fields-manager.php:104
-#: src/Infrastructure/Admin/DomainAdmin.php:2250
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:726
+#: src/Infrastructure/Admin/DomainAdmin.php:2249
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:737
 msgid "Sensitivity"
 msgstr ""
 
@@ -2663,14 +2663,14 @@ msgid "Data schema"
 msgstr ""
 
 #: admin/views/fields-manager.php:150
-#: src/Infrastructure/Admin/DomainAdmin.php:2249
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:725
+#: src/Infrastructure/Admin/DomainAdmin.php:2248
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:736
 msgid "Long text"
 msgstr ""
 
 #: admin/views/fields-manager.php:150
-#: src/Infrastructure/Admin/DomainAdmin.php:2249
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:725
+#: src/Infrastructure/Admin/DomainAdmin.php:2248
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:736
 msgid "Number"
 msgstr ""
 
@@ -2691,8 +2691,8 @@ msgid "Type"
 msgstr ""
 
 #: admin/views/fields-manager.php:152
-#: src/Infrastructure/Admin/DomainAdmin.php:2239
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:715
+#: src/Infrastructure/Admin/DomainAdmin.php:2238
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:726
 msgid "Add field"
 msgstr ""
 
@@ -3757,7 +3757,7 @@ msgid "Create endpoint"
 msgstr ""
 
 #: admin/views/integrations.php:138
-#: admin/views/settings-manager.php:150
+#: admin/views/settings-manager.php:157
 #: includes/class-ecapla-certverify-system-status.php:159
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:221
 msgid "Ready"
@@ -4575,8 +4575,8 @@ msgid "Save columns"
 msgstr ""
 
 #: admin/views/list-certificates.php:142
-#: src/Infrastructure/Admin/DomainAdmin.php:2139
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:766
+#: src/Infrastructure/Admin/DomainAdmin.php:2138
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:777
 msgctxt "search field label"
 msgid "Search"
 msgstr ""
@@ -4603,7 +4603,7 @@ msgstr ""
 
 #: admin/views/list-certificates.php:156
 #: includes/class-ecapla-certverify-recipient-portal.php:128
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:766
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:777
 msgid "All statuses"
 msgstr ""
 
@@ -4732,7 +4732,7 @@ msgid "Registry"
 msgstr ""
 
 #: admin/views/partials/brand-bar.php:12
-#: admin/views/settings-manager.php:368
+#: admin/views/settings-manager.php:142
 msgid "Report an issue"
 msgstr ""
 
@@ -4829,81 +4829,85 @@ msgid "Back to Dashboard"
 msgstr ""
 
 #: admin/views/settings-manager.php:100
+msgid "Clean-page surface color"
+msgstr ""
+
+#: admin/views/settings-manager.php:101
 msgid "Clean-page text color"
 msgstr ""
 
-#: admin/views/settings-manager.php:101
+#: admin/views/settings-manager.php:102
 msgid "Brand mark"
 msgstr ""
 
-#: admin/views/settings-manager.php:101
+#: admin/views/settings-manager.php:102
 msgid "Use the local WordPress Site Icon on clean Certloom routes"
 msgstr ""
 
-#: admin/views/settings-manager.php:102
+#: admin/views/settings-manager.php:103
 #: includes/class-ecapla-certverify-system-status.php:105
 #: includes/class-ecapla-certverify-system-status.php:110
 #: includes/class-ecapla-certverify-system-status.php:126
 msgid "Local verification QR"
 msgstr ""
 
-#: admin/views/settings-manager.php:102
+#: admin/views/settings-manager.php:103
 msgid "Show the locally generated verification QR after a successful public verification and on public Credential Profiles"
 msgstr ""
 
-#: admin/views/settings-manager.php:102
+#: admin/views/settings-manager.php:103
 msgid "The QR encodes only the canonical Certloom verification URL. Secondary proof codes and private credential data are never embedded. Generation is fully local and does not call a remote QR service."
 msgstr ""
 
-#: admin/views/settings-manager.php:103
+#: admin/views/settings-manager.php:104
 msgid "Logo QR uses high error correction and only a bounded local PNG/JPEG Site Icon from WordPress uploads. If the Site Icon cannot be verified safely, Certloom falls back to the plain scan-safe QR rather than fetching or embedding a remote image."
 msgstr ""
 
-#: admin/views/settings-manager.php:103
+#: admin/views/settings-manager.php:104
 msgid "QR center logo"
 msgstr ""
 
-#: admin/views/settings-manager.php:103
+#: admin/views/settings-manager.php:104
 msgid "Use the local WordPress Site Icon as a small center mark in verification QR codes"
 msgstr ""
 
-#: admin/views/settings-manager.php:104
+#: admin/views/settings-manager.php:105
 #: includes/class-ecapla-certverify-system-status.php:131
 #: includes/class-ecapla-certverify-system-status.php:135
 #: includes/class-ecapla-certverify-system-status.php:144
 msgid "Local Code 128 barcode"
 msgstr ""
 
-#: admin/views/settings-manager.php:104
+#: admin/views/settings-manager.php:105
 msgid "Show a locally generated Code 128 barcode for compatible certificate numbers after verification and on public Credential Profiles"
 msgstr ""
 
-#: admin/views/settings-manager.php:104
+#: admin/views/settings-manager.php:105
 msgid "The barcode represents the existing human certificate number and does not create a new lookup route or identifier. Printable ASCII certificate numbers are supported; unsupported values simply omit the barcode."
 msgstr ""
 
-#: admin/views/settings-manager.php:105
+#: admin/views/settings-manager.php:106
 #: elementor/class-ecapla-certverify-elementor-widget.php:161
 #: elementor/class-ecapla-certverify-elementor-widget.php:799
 msgid "Credit line"
 msgstr ""
 
-#: admin/views/settings-manager.php:105
+#: admin/views/settings-manager.php:106
 msgid "Show a public credit line beneath new shortcode output"
 msgstr ""
 
-#: admin/views/settings-manager.php:105
+#: admin/views/settings-manager.php:106
 msgid "This is optional and disabled by default for WordPress.org compliance."
 msgstr ""
 
-#: admin/views/settings-manager.php:106
+#: admin/views/settings-manager.php:107
 #: blocks/certloom/index.js:110
 #: elementor/class-ecapla-certverify-elementor-widget.php:180
 #: elementor/class-ecapla-certverify-template-widgets.php:201
 msgid "Credit text"
 msgstr ""
 
-#: admin/views/settings-manager.php:106
+#: admin/views/settings-manager.php:107
 #: blocks/certloom/index.js:55
 #: includes/class-ecapla-certverify-render.php:46
 #: includes/class-ecapla-certverify-render.php:77
@@ -4911,15 +4915,15 @@ msgstr ""
 msgid "Verification powered by Certloom."
 msgstr ""
 
-#: admin/views/settings-manager.php:107
+#: admin/views/settings-manager.php:108
 msgid "Credit text color"
 msgstr ""
 
-#: admin/views/settings-manager.php:108
+#: admin/views/settings-manager.php:109
 msgid "Credit text size"
 msgstr ""
 
-#: admin/views/settings-manager.php:109
+#: admin/views/settings-manager.php:110
 #: blocks/certloom/index.js:82
 #: elementor/class-ecapla-certverify-elementor-widget.php:851
 #: elementor/class-ecapla-certverify-template-widgets.php:221
@@ -4928,11 +4932,11 @@ msgstr ""
 msgid "Center"
 msgstr ""
 
-#: admin/views/settings-manager.php:109
+#: admin/views/settings-manager.php:110
 msgid "Credit alignment"
 msgstr ""
 
-#: admin/views/settings-manager.php:109
+#: admin/views/settings-manager.php:110
 #: blocks/certloom/index.js:81
 #: elementor/class-ecapla-certverify-elementor-widget.php:847
 #: elementor/class-ecapla-certverify-template-widgets.php:220
@@ -4943,7 +4947,7 @@ msgstr ""
 msgid "Left"
 msgstr ""
 
-#: admin/views/settings-manager.php:109
+#: admin/views/settings-manager.php:110
 #: blocks/certloom/index.js:83
 #: elementor/class-ecapla-certverify-elementor-widget.php:855
 #: elementor/class-ecapla-certverify-template-widgets.php:222
@@ -4954,68 +4958,81 @@ msgstr ""
 msgid "Right"
 msgstr ""
 
-#: admin/views/settings-manager.php:112
+#: admin/views/settings-manager.php:113
 msgid "Status guide wording"
 msgstr ""
 
-#: admin/views/settings-manager.php:113
+#: admin/views/settings-manager.php:114
 msgid "Customize the explanatory text displayed in the optional public status guide."
 msgstr ""
 
-#: admin/views/settings-manager.php:116
+#: admin/views/settings-manager.php:117
 msgid "Data retention"
 msgstr ""
 
-#: admin/views/settings-manager.php:117
+#: admin/views/settings-manager.php:118
 msgid "Permanently delete certificates, settings, and field definitions when the plugin is uninstalled"
 msgstr ""
 
-#: admin/views/settings-manager.php:118
+#: admin/views/settings-manager.php:119
 msgid "Leave this disabled to preserve certificate data and settings. Scheduled tasks, temporary data, and plugin capabilities are cleaned up during uninstall in either mode."
 msgstr ""
 
-#: admin/views/settings-manager.php:119
+#: admin/views/settings-manager.php:120
 msgid "WordPress personal-data erasure policy"
 msgstr ""
 
-#: admin/views/settings-manager.php:121
+#: admin/views/settings-manager.php:122
 msgid "Retain and require administrator review (safest default)"
 msgstr ""
 
-#: admin/views/settings-manager.php:122
+#: admin/views/settings-manager.php:123
 msgid "Anonymize mutable Recipient profiles; retain immutable credential history"
 msgstr ""
 
-#: admin/views/settings-manager.php:124
+#: admin/views/settings-manager.php:125
 msgid "This setting affects WordPress Tools → Erase Personal Data. It never rewrites issued certificate Versions or audit Events. Legacy certificate records and issuer/signer identities are retained for explicit administrator review."
 msgstr ""
 
-#: admin/views/settings-manager.php:125
+#: admin/views/settings-manager.php:126
 msgid "Keep WordPress users connected to Recipient profiles"
 msgstr ""
 
-#: admin/views/settings-manager.php:126
+#: admin/views/settings-manager.php:127
 msgid "When enabled, new WordPress users receive an exact user-ID-linked Recipient profile and later profile changes keep its name/email current. Certloom never claims ownership by matching email or name, and organizations can still exist as Recipients without WordPress accounts."
 msgstr ""
 
-#: admin/views/settings-manager.php:128
+#: admin/views/settings-manager.php:129
 msgid "Save settings"
 msgstr ""
 
-#: admin/views/settings-manager.php:132
-msgid "Expiry behavior"
+#: admin/views/settings-manager.php:133
+#: admin/views/settings-manager.php:21
+msgid "Guidance & support"
 msgstr ""
 
 #: admin/views/settings-manager.php:133
-msgid "Expired is calculated automatically from each certificate’s expiry date. Renewing the expiry date immediately returns the certificate to Valid unless its manual status is Suspended or Withdrawn. No scheduled synchronization task is required."
+msgid "Important behavior and support information, kept separate from editable settings."
+msgstr ""
+
+#: admin/views/settings-manager.php:133
+msgid "Reference"
 msgstr ""
 
 #: admin/views/settings-manager.php:136
-msgid "Privacy note"
+msgid "Expired is calculated automatically from each credential’s expiry date. Changing the expiry to a future date returns it to Valid unless its manual status is Suspended or Withdrawn. No scheduled synchronization task is required."
 msgstr ""
 
-#: admin/views/settings-manager.php:137
-msgid "Fields marked “Show on public result” are returned through a public exact-match REST endpoint. Avoid publishing sensitive personal data. Certificate numbers entered in a browser may also appear in server logs, browser history, analytics, and cache layers."
+#: admin/views/settings-manager.php:136
+msgid "Expiry behavior"
+msgstr ""
+
+#: admin/views/settings-manager.php:139
+msgid "Fields marked “Show on public result” can be returned by public verification. Do not publish sensitive personal data. Credential numbers entered in a browser may also appear in normal server logs, browser history, analytics and cache layers."
+msgstr ""
+
+#: admin/views/settings-manager.php:139
+msgid "Public-data privacy"
 msgstr ""
 
 #: admin/views/settings-manager.php:14
@@ -5030,92 +5047,108 @@ msgstr ""
 msgid "Search settings sections"
 msgstr ""
 
-#: admin/views/settings-manager.php:141
-msgid "System status"
+#: admin/views/settings-manager.php:142
+msgid "Open the Certloom website for product information, or start a support email with the Certloom issue subject already filled in."
 msgstr ""
 
 #: admin/views/settings-manager.php:142
+msgid "Support"
+msgstr ""
+
+#: admin/views/settings-manager.php:142
+msgid "Visit ecapla.com"
+msgstr ""
+
+#: admin/views/settings-manager.php:148
+msgid "System status"
+msgstr ""
+
+#: admin/views/settings-manager.php:149
 msgid "Read-only local diagnostics for Certloom. Nothing in this report is sent to Ecapla, and it intentionally excludes certificate data, site URLs, filesystem paths, database names, user data, and plugin inventories."
-msgstr ""
-
-#: admin/views/settings-manager.php:145
-msgid "Check"
-msgstr ""
-
-#: admin/views/settings-manager.php:145
-msgid "Notes"
 msgstr ""
 
 #: admin/views/settings-manager.php:15
 msgid "Settings sections"
 msgstr ""
 
-#: admin/views/settings-manager.php:150
-msgid "Action needed"
+#: admin/views/settings-manager.php:152
+msgid "Check"
 msgstr ""
 
-#: admin/views/settings-manager.php:150
-#: admin/views/settings-manager.php:176
-#: admin/views/settings-manager.php:203
-msgid "Review"
+#: admin/views/settings-manager.php:152
+msgid "Notes"
 msgstr ""
 
 #: admin/views/settings-manager.php:157
-msgid "Copyable support report"
+msgid "Action needed"
+msgstr ""
+
+#: admin/views/settings-manager.php:157
+#: admin/views/settings-manager.php:183
+#: admin/views/settings-manager.php:210
+msgid "Review"
 msgstr ""
 
 #: admin/views/settings-manager.php:16
 msgid "Access"
 msgstr ""
 
-#: admin/views/settings-manager.php:161
+#: admin/views/settings-manager.php:164
+msgid "Copyable support report"
+msgstr ""
+
+#: admin/views/settings-manager.php:168
 #: includes/class-ecapla-certverify-system-status.php:180
 #: includes/class-ecapla-certverify-system-status.php:184
 #: includes/class-ecapla-certverify-system-status.php:199
 msgid "Isolated database proof"
 msgstr ""
 
-#: admin/views/settings-manager.php:162
+#: admin/views/settings-manager.php:169
 msgid "This administrator-triggered proof creates one empty Certloom scratch table, exercises WordPress dbDelta(), InnoDB, indexes, uniqueness, transaction rollback/commit, and—when the host permits a second connection—row-lock contention. It never reads certificate records, never creates the gated credential-domain tables, never changes credential authority, and removes the scratch table before returning."
-msgstr ""
-
-#: admin/views/settings-manager.php:165
-msgid "Run isolated database proof"
 msgstr ""
 
 #: admin/views/settings-manager.php:17
 msgid "Numbering"
 msgstr ""
 
-#: admin/views/settings-manager.php:170
+#: admin/views/settings-manager.php:172
+msgid "Run isolated database proof"
+msgstr ""
+
+#: admin/views/settings-manager.php:177
 msgid "Database proof check"
 msgstr ""
 
-#: admin/views/settings-manager.php:170
-#: admin/views/settings-manager.php:197
+#: admin/views/settings-manager.php:177
+#: admin/views/settings-manager.php:204
 #: src/Infrastructure/Admin/DomainAdmin.php:1668
 #: src/Infrastructure/Admin/DomainAdmin.php:522
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:210
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:281
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:214
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:285
 msgid "Details"
 msgstr ""
 
-#: admin/views/settings-manager.php:170
-#: admin/views/settings-manager.php:197
+#: admin/views/settings-manager.php:177
+#: admin/views/settings-manager.php:204
 #: elementor/class-ecapla-certverify-elementor-widget.php:122
 msgid "Result"
 msgstr ""
 
-#: admin/views/settings-manager.php:176
-#: admin/views/settings-manager.php:203
-#: admin/views/settings-manager.php:318
-#: admin/views/settings-manager.php:319
-#: admin/views/settings-manager.php:320
-#: admin/views/settings-manager.php:352
-#: admin/views/settings-manager.php:353
-#: admin/views/settings-manager.php:354
-#: admin/views/settings-manager.php:355
-#: admin/views/settings-manager.php:356
+#: admin/views/settings-manager.php:18
+msgid "Brand"
+msgstr ""
+
+#: admin/views/settings-manager.php:183
+#: admin/views/settings-manager.php:210
+#: admin/views/settings-manager.php:325
+#: admin/views/settings-manager.php:326
+#: admin/views/settings-manager.php:327
+#: admin/views/settings-manager.php:359
+#: admin/views/settings-manager.php:360
+#: admin/views/settings-manager.php:361
+#: admin/views/settings-manager.php:362
+#: admin/views/settings-manager.php:363
 #: includes/class-ecapla-certverify-system-status.php:194
 #: includes/class-ecapla-certverify-system-status.php:218
 #: includes/class-ecapla-certverify-system-status.php:234
@@ -5125,564 +5158,544 @@ msgstr ""
 msgid "Passed"
 msgstr ""
 
-#: admin/views/settings-manager.php:18
-msgid "Brand"
-msgstr ""
-
-#: admin/views/settings-manager.php:182
+#: admin/views/settings-manager.php:189
 msgid "Copyable database-proof report"
 msgstr ""
 
-#: admin/views/settings-manager.php:186
+#: admin/views/settings-manager.php:193
 msgid "Gated Credential Series acceptance proof"
 msgstr ""
 
-#: admin/views/settings-manager.php:187
+#: admin/views/settings-manager.php:194
 msgid "This stronger proof is available only after a fresh passing isolated database proof. It deliberately provisions/validates Certloom’s additive future Credential Series tables, then exercises the real repositories, immutable Version constraints, lifecycle events, Status Service/verification, and synthetic legacy-status parity inside one rollback-only transaction. It does not read individual live certificate rows, does not migrate the live registry, does not change credential authority, and leaves no synthetic credential rows behind."
 msgstr ""
 
-#: admin/views/settings-manager.php:191
+#: admin/views/settings-manager.php:198
 msgid "Run gated-domain acceptance proof"
-msgstr ""
-
-#: admin/views/settings-manager.php:193
-msgid "Run a fresh passing isolated database proof first."
-msgstr ""
-
-#: admin/views/settings-manager.php:197
-msgid "Domain acceptance check"
 msgstr ""
 
 #: admin/views/settings-manager.php:20
 msgid "Retention"
 msgstr ""
 
-#: admin/views/settings-manager.php:209
+#: admin/views/settings-manager.php:200
+msgid "Run a fresh passing isolated database proof first."
+msgstr ""
+
+#: admin/views/settings-manager.php:204
+msgid "Domain acceptance check"
+msgstr ""
+
+#: admin/views/settings-manager.php:216
 msgid "Copyable gated-domain proof report"
 msgstr ""
 
-#: admin/views/settings-manager.php:213
+#: admin/views/settings-manager.php:220
 msgid "Populated legacy migration preflight"
 msgstr ""
 
-#: admin/views/settings-manager.php:214
+#: admin/views/settings-manager.php:221
 msgid "After the real gated-domain proof passes, this read-only rehearsal scans the actual populated Certloom 1.5 registry through the final migration mapper and Status Service. It runs in bounded resumable slices, performs a second fingerprint-verification pass, never writes Credential Series rows, never starts official migration, and never changes credential authority. The local error table contains only numeric legacy row IDs plus migration-review messages; the copyable report excludes certificate numbers, names and custom-field values."
 msgstr ""
 
-#: admin/views/settings-manager.php:220
+#: admin/views/settings-manager.php:227
 msgid "Continue migration preflight"
 msgstr ""
 
-#: admin/views/settings-manager.php:220
+#: admin/views/settings-manager.php:227
 msgid "Run populated migration preflight"
 msgstr ""
 
-#: admin/views/settings-manager.php:222
+#: admin/views/settings-manager.php:229
 msgid "Run a fresh passing gated Credential Series acceptance proof first."
 msgstr ""
 
-#: admin/views/settings-manager.php:229
-#: admin/views/settings-manager.php:270
-#: admin/views/settings-manager.php:313
-#: admin/views/settings-manager.php:348
+#: admin/views/settings-manager.php:236
+#: admin/views/settings-manager.php:277
+#: admin/views/settings-manager.php:320
+#: admin/views/settings-manager.php:355
 msgid "State"
 msgstr ""
 
-#: admin/views/settings-manager.php:230
-#: admin/views/settings-manager.php:271
-#: admin/views/settings-manager.php:314
-#: admin/views/settings-manager.php:349
+#: admin/views/settings-manager.php:237
+#: admin/views/settings-manager.php:278
+#: admin/views/settings-manager.php:321
+#: admin/views/settings-manager.php:356
 msgid "Phase"
 msgstr ""
 
-#: admin/views/settings-manager.php:231
+#: admin/views/settings-manager.php:238
 msgid "Rows mapped"
 msgstr ""
 
-#: admin/views/settings-manager.php:232
+#: admin/views/settings-manager.php:239
 msgid "Rows fingerprint-verified"
 msgstr ""
 
-#: admin/views/settings-manager.php:233
+#: admin/views/settings-manager.php:240
 msgid "Rows ready"
 msgstr ""
 
-#: admin/views/settings-manager.php:234
+#: admin/views/settings-manager.php:241
 msgid "Rows requiring review"
 msgstr ""
 
-#: admin/views/settings-manager.php:238
+#: admin/views/settings-manager.php:245
 msgid "Local bounded error examples"
 msgstr ""
 
-#: admin/views/settings-manager.php:239
-#: admin/views/settings-manager.php:281
+#: admin/views/settings-manager.php:246
+#: admin/views/settings-manager.php:288
 msgid "Legacy row ID"
 msgstr ""
 
-#: admin/views/settings-manager.php:239
+#: admin/views/settings-manager.php:246
 msgid "Migration review message"
 msgstr ""
 
-#: admin/views/settings-manager.php:245
+#: admin/views/settings-manager.php:252
 msgid "Copyable migration-preflight report"
 msgstr ""
 
-#: admin/views/settings-manager.php:251
+#: admin/views/settings-manager.php:258
 msgid "Staging populated-migration commit rehearsal"
 msgstr ""
 
-#: admin/views/settings-manager.php:252
+#: admin/views/settings-manager.php:259
 msgid "Staging/local only — this intentionally writes the real future-domain tables."
 msgstr ""
 
-#: admin/views/settings-manager.php:252
+#: admin/views/settings-manager.php:259
 msgid "Use this only on a disposable or restorable staging/local copy. It drives Certloom’s production migration coordinator against the real populated historical credential store, verifies every migrated credential, then replays every source row through the real writer to prove idempotency. It never changes credential authority, but it deliberately leaves the migrated future-domain rows in place for later restore/cutover rehearsal. Reclone or restore the staging database if you need to start over."
 msgstr ""
 
-#: admin/views/settings-manager.php:257
+#: admin/views/settings-manager.php:264
 msgid "To opt in on this non-production copy, add this line to wp-config.php before WordPress loads Certloom:"
 msgstr ""
 
-#: admin/views/settings-manager.php:26
+#: admin/views/settings-manager.php:27
 msgid "Settings saved."
 msgstr ""
 
-#: admin/views/settings-manager.php:263
+#: admin/views/settings-manager.php:270
 msgid "Continue staging migration rehearsal"
 msgstr ""
 
-#: admin/views/settings-manager.php:263
+#: admin/views/settings-manager.php:270
 msgid "Run staging migration commit rehearsal"
 msgstr ""
 
-#: admin/views/settings-manager.php:265
+#: admin/views/settings-manager.php:272
 msgid "Run fresh passing database, gated-domain, and populated migration-preflight proofs first."
 msgstr ""
 
-#: admin/views/settings-manager.php:266
+#: admin/views/settings-manager.php:273
 msgid "This rehearsal intentionally has no destructive reset button. Review the failure and reclone/restore the staging database before trying a new rehearsal."
 msgstr ""
 
-#: admin/views/settings-manager.php:27
-msgid "Certificate Manager role created with least-privilege access."
-msgstr ""
-
-#: admin/views/settings-manager.php:272
-#: admin/views/settings-manager.php:350
+#: admin/views/settings-manager.php:279
+#: admin/views/settings-manager.php:357
 msgid "Frozen legacy rows"
 msgstr ""
 
-#: admin/views/settings-manager.php:273
+#: admin/views/settings-manager.php:28
+msgid "Certificate Manager role created with least-privilege access."
+msgstr ""
+
+#: admin/views/settings-manager.php:280
 msgid "Official preflight mapped"
 msgstr ""
 
-#: admin/views/settings-manager.php:274
+#: admin/views/settings-manager.php:281
 msgid "Official preflight fingerprint-verified"
 msgstr ""
 
 #. translators: 1: migrated rows, 2: idempotently skipped rows.
-#: admin/views/settings-manager.php:275
+#: admin/views/settings-manager.php:282
 msgid "%1$d migrated, %2$d skipped"
 msgstr ""
 
-#: admin/views/settings-manager.php:275
+#: admin/views/settings-manager.php:282
 msgid "Migration writes"
 msgstr ""
 
-#: admin/views/settings-manager.php:276
+#: admin/views/settings-manager.php:283
 msgid "Target parity verified"
 msgstr ""
 
-#: admin/views/settings-manager.php:277
+#: admin/views/settings-manager.php:284
 msgid "Idempotency replay checked"
 msgstr ""
 
-#: admin/views/settings-manager.php:280
+#: admin/views/settings-manager.php:287
 msgid "Local bounded rehearsal errors"
 msgstr ""
 
-#: admin/views/settings-manager.php:281
+#: admin/views/settings-manager.php:288
 msgid "Review message"
 msgstr ""
 
-#: admin/views/settings-manager.php:287
+#: admin/views/settings-manager.php:294
 msgid "Copyable staging-migration rehearsal report"
 msgstr ""
 
-#: admin/views/settings-manager.php:294
+#: admin/views/settings-manager.php:301
 msgid "Staging populated backup/restore rehearsal"
 msgstr ""
 
-#: admin/views/settings-manager.php:295
+#: admin/views/settings-manager.php:302
 msgid "Staging/local only — this intentionally exercises real future-domain backup and restore promotion."
 msgstr ""
 
-#: admin/views/settings-manager.php:295
+#: admin/views/settings-manager.php:302
 msgid "Use only on a disposable or restorable non-production copy after the populated migration rehearsal passes. Certloom fingerprints the complete migrated graph, builds a real private domain backup, proves Replace parity, proves an identical Merge inserts zero new records, and forces a post-swap configuration mismatch to exercise the production rollback path. Credential authority never changes. A successful rehearsal leaves the populated domain graph intact for the later cutover rehearsal."
 msgstr ""
 
-#: admin/views/settings-manager.php:300
-#: admin/views/settings-manager.php:335
+#: admin/views/settings-manager.php:307
+#: admin/views/settings-manager.php:342
 msgid "To opt in on this disposable non-production copy, add this line to wp-config.php before WordPress loads Certloom:"
 msgstr ""
 
-#: admin/views/settings-manager.php:306
+#: admin/views/settings-manager.php:313
 msgid "Continue staging restore rehearsal"
 msgstr ""
 
-#: admin/views/settings-manager.php:306
+#: admin/views/settings-manager.php:313
 msgid "Run staging backup/restore rehearsal"
 msgstr ""
 
-#: admin/views/settings-manager.php:308
+#: admin/views/settings-manager.php:315
 msgid "Run a fresh passing populated staging migration rehearsal first."
 msgstr ""
 
-#: admin/views/settings-manager.php:309
+#: admin/views/settings-manager.php:316
 msgid "This destructive staging proof intentionally has no reset button. Preserve the failure evidence and reclone/restore staging before another rehearsal."
 msgstr ""
 
-#: admin/views/settings-manager.php:315
+#: admin/views/settings-manager.php:322
 msgid "Migrated legacy rows"
 msgstr ""
 
-#: admin/views/settings-manager.php:316
+#: admin/views/settings-manager.php:323
 msgid "Baseline future-domain records"
 msgstr ""
 
-#: admin/views/settings-manager.php:317
+#: admin/views/settings-manager.php:324
 msgid "Generated backup records"
 msgstr ""
 
-#: admin/views/settings-manager.php:318
-#: admin/views/settings-manager.php:319
-#: admin/views/settings-manager.php:320
-#: admin/views/settings-manager.php:352
-#: admin/views/settings-manager.php:353
-#: admin/views/settings-manager.php:354
-#: admin/views/settings-manager.php:355
-#: admin/views/settings-manager.php:356
+#: admin/views/settings-manager.php:325
+#: admin/views/settings-manager.php:326
+#: admin/views/settings-manager.php:327
+#: admin/views/settings-manager.php:359
+#: admin/views/settings-manager.php:360
+#: admin/views/settings-manager.php:361
+#: admin/views/settings-manager.php:362
+#: admin/views/settings-manager.php:363
 msgid "Not yet"
 msgstr ""
 
-#: admin/views/settings-manager.php:318
+#: admin/views/settings-manager.php:325
 msgid "Replace parity"
 msgstr ""
 
-#: admin/views/settings-manager.php:319
+#: admin/views/settings-manager.php:326
 msgid "Merge parity"
 msgstr ""
 
-#: admin/views/settings-manager.php:320
+#: admin/views/settings-manager.php:327
 msgid "Forced rollback parity"
 msgstr ""
 
-#: admin/views/settings-manager.php:322
+#: admin/views/settings-manager.php:329
 msgid "Copyable staging-restore rehearsal report"
 msgstr ""
 
-#: admin/views/settings-manager.php:329
+#: admin/views/settings-manager.php:336
 msgid "Staging final authority-cutover rehearsal"
 msgstr ""
 
-#: admin/views/settings-manager.php:33
-msgid "The isolated database proof completed with one or more checks that still require external confirmation."
-msgstr ""
-
-#: admin/views/settings-manager.php:33
-msgid "The isolated database proof found one or more requirements that are not ready."
-msgstr ""
-
-#: admin/views/settings-manager.php:33
-msgid "The isolated database proof passed."
-msgstr ""
-
-#: admin/views/settings-manager.php:330
+#: admin/views/settings-manager.php:337
 msgid "Staging/local only — this temporarily exercises the real authority switch and then rolls it back."
 msgstr ""
 
-#: admin/views/settings-manager.php:330
+#: admin/views/settings-manager.php:337
 msgid "Use only on a disposable/restorable non-production copy after the populated migration and backup/restore rehearsals pass. Certloom fingerprints the complete future-domain graph, runs the production cutover coordinator with a staging-only readiness policy, proves the historical credential store becomes read-only, proves Series public verification can become ready, then disables Series verification, restores the original credential authority, and fingerprints the graph again. Normalized-domain release authority remains closed throughout; this rehearsal uses only its staging-specific readiness policy."
 msgstr ""
 
-#: admin/views/settings-manager.php:341
+#: admin/views/settings-manager.php:34
+msgid "The isolated database proof completed with one or more checks that still require external confirmation."
+msgstr ""
+
+#: admin/views/settings-manager.php:34
+msgid "The isolated database proof found one or more requirements that are not ready."
+msgstr ""
+
+#: admin/views/settings-manager.php:34
+msgid "The isolated database proof passed."
+msgstr ""
+
+#: admin/views/settings-manager.php:348
 msgid "Continue staging cutover rehearsal"
 msgstr ""
 
-#: admin/views/settings-manager.php:341
+#: admin/views/settings-manager.php:348
 msgid "Run final cutover rehearsal"
 msgstr ""
 
-#: admin/views/settings-manager.php:343
+#: admin/views/settings-manager.php:350
 msgid "Run a fresh passing populated staging backup/restore rehearsal first."
 msgstr ""
 
-#: admin/views/settings-manager.php:344
+#: admin/views/settings-manager.php:351
 msgid "Preserve the failure evidence and reclone/restore staging before attempting another final authority rehearsal."
 msgstr ""
 
-#: admin/views/settings-manager.php:351
+#: admin/views/settings-manager.php:358
 msgid "Future-domain records fingerprinted"
 msgstr ""
 
-#: admin/views/settings-manager.php:352
+#: admin/views/settings-manager.php:359
 msgid "Committed receipt parity"
 msgstr ""
 
-#: admin/views/settings-manager.php:353
+#: admin/views/settings-manager.php:360
 msgid "Legacy write guard"
 msgstr ""
 
-#: admin/views/settings-manager.php:354
+#: admin/views/settings-manager.php:361
 msgid "Series verification gate"
 msgstr ""
 
-#: admin/views/settings-manager.php:355
+#: admin/views/settings-manager.php:362
 msgid "Legacy authority restored"
 msgstr ""
 
-#: admin/views/settings-manager.php:356
+#: admin/views/settings-manager.php:363
 msgid "Graph unchanged"
 msgstr ""
 
-#: admin/views/settings-manager.php:358
+#: admin/views/settings-manager.php:365
 msgid "Copyable staging-cutover rehearsal report"
 msgstr ""
 
-#: admin/views/settings-manager.php:365
-msgid "Ecapla support"
-msgstr ""
-
-#: admin/views/settings-manager.php:367
-msgid "Visit ecapla.com"
-msgstr ""
-
-#: admin/views/settings-manager.php:370
-msgid "Report an issue opens your email application with a Certloom support subject. The website button opens ecapla.com in a new tab."
-msgstr ""
-
-#: admin/views/settings-manager.php:40
+#: admin/views/settings-manager.php:41
 msgid "The gated Credential Series acceptance proof completed with one or more checks that still require review."
 msgstr ""
 
-#: admin/views/settings-manager.php:40
+#: admin/views/settings-manager.php:41
 msgid "The gated Credential Series acceptance proof found one or more requirements that are not ready."
 msgstr ""
 
-#: admin/views/settings-manager.php:40
+#: admin/views/settings-manager.php:41
 msgid "The gated Credential Series acceptance proof passed."
 msgstr ""
 
-#: admin/views/settings-manager.php:47
+#: admin/views/settings-manager.php:48
 msgid "The populated legacy migration preflight became stale because its frozen source boundary changed. Run it again from a fresh boundary."
 msgstr ""
 
-#: admin/views/settings-manager.php:47
+#: admin/views/settings-manager.php:48
 msgid "The populated legacy migration preflight found rows or source conditions that require review."
 msgstr ""
 
-#: admin/views/settings-manager.php:47
+#: admin/views/settings-manager.php:48
 msgid "The populated legacy migration preflight is still running. Continue the next bounded slice below."
 msgstr ""
 
-#: admin/views/settings-manager.php:47
+#: admin/views/settings-manager.php:48
 msgid "The populated legacy migration preflight passed."
 msgstr ""
 
-#: admin/views/settings-manager.php:55
+#: admin/views/settings-manager.php:56
 msgid "The staging populated-migration commit rehearsal is still running. Continue the next bounded slice below."
 msgstr ""
 
-#: admin/views/settings-manager.php:55
+#: admin/views/settings-manager.php:56
 msgid "The staging populated-migration commit rehearsal passed."
 msgstr ""
 
-#: admin/views/settings-manager.php:55
+#: admin/views/settings-manager.php:56
 msgid "The staging populated-migration commit rehearsal stopped safely and requires review."
 msgstr ""
 
-#: admin/views/settings-manager.php:60
+#: admin/views/settings-manager.php:61
 msgid "Who can manage certificates"
 msgstr ""
 
-#: admin/views/settings-manager.php:61
+#: admin/views/settings-manager.php:62
 msgid "Administrators always retain access. Grant the dedicated Certloom capability only to roles that genuinely need certificate-management access."
 msgstr ""
 
-#: admin/views/settings-manager.php:63
+#: admin/views/settings-manager.php:64
 msgid "Create Certificate Manager role"
 msgstr ""
 
-#: admin/views/settings-manager.php:63
+#: admin/views/settings-manager.php:64
 msgid "Creates a minimal role with read access and Certloom management only."
 msgstr ""
 
-#: admin/views/settings-manager.php:68
+#: admin/views/settings-manager.php:69
 msgid "Can manage certificates"
 msgstr ""
 
-#: admin/views/settings-manager.php:68
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:469
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:484
+#: admin/views/settings-manager.php:69
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:474
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:489
 msgid "Role"
 msgstr ""
 
-#: admin/views/settings-manager.php:69
+#: admin/views/settings-manager.php:70
 msgid "Administrator access is always enabled"
 msgstr ""
 
 #. translators: %s: WordPress role name.
-#: admin/views/settings-manager.php:69
+#: admin/views/settings-manager.php:70
 msgid "Allow %s to manage certificates"
 msgstr ""
 
-#: admin/views/settings-manager.php:80
+#: admin/views/settings-manager.php:81
 #: admin/views/setup-wizard.php:169
 #: admin/views/setup-wizard.php:205
 #: src/Infrastructure/Admin/DomainAdmin.php:1524
 msgid "Certificate numbering"
 msgstr ""
 
-#: admin/views/settings-manager.php:81
+#: admin/views/settings-manager.php:82
 msgid "Choose how Certloom creates the human certificate number for a new administrator-created credential when the number field is left blank. Existing issued numbers are never changed automatically, and CSV imports still require explicit certificate numbers."
 msgstr ""
 
-#: admin/views/settings-manager.php:83
+#: admin/views/settings-manager.php:84
 msgid "Default numbering policy"
 msgstr ""
 
-#: admin/views/settings-manager.php:83
+#: admin/views/settings-manager.php:84
 msgid "Manual certificate numbers"
 msgstr ""
 
-#: admin/views/settings-manager.php:83
+#: admin/views/settings-manager.php:84
 msgid "Manual remains the upgrade default. In any generated mode, entering a number explicitly is a deliberate manual override. Random uses 100 bits of local cryptographic randomness; UUID uses RFC-4122 version 4."
 msgstr ""
 
-#: admin/views/settings-manager.php:83
+#: admin/views/settings-manager.php:84
 msgid "Random non-guessable when blank"
 msgstr ""
 
-#: admin/views/settings-manager.php:83
+#: admin/views/settings-manager.php:84
 msgid "Sequential when number is blank"
 msgstr ""
 
-#: admin/views/settings-manager.php:83
+#: admin/views/settings-manager.php:84
 msgid "UUID v4 when blank"
 msgstr ""
 
-#: admin/views/settings-manager.php:84
+#: admin/views/settings-manager.php:85
 msgid "Applied to Sequential, Random, and UUID generated numbers. Up to 32 letters, numbers, periods, underscores, or hyphens. Include your own separator, for example CERT-."
 msgstr ""
 
-#: admin/views/settings-manager.php:84
+#: admin/views/settings-manager.php:85
 #: admin/views/setup-wizard.php:172
 msgid "Prefix"
 msgstr ""
 
-#: admin/views/settings-manager.php:85
+#: admin/views/settings-manager.php:86
 msgid "Optional fixed suffix applied to all generated strategies. Include its separator if required."
 msgstr ""
 
-#: admin/views/settings-manager.php:85
+#: admin/views/settings-manager.php:86
 #: admin/views/setup-wizard.php:172
 msgid "Suffix"
 msgstr ""
 
-#: admin/views/settings-manager.php:86
+#: admin/views/settings-manager.php:87
 msgid "Sequence start / floor"
 msgstr ""
 
-#: admin/views/settings-manager.php:86
+#: admin/views/settings-manager.php:87
 msgid "Sequential mode only. Used for the first allocation and as a one-way minimum. Lowering this later never rewinds an already-used sequence."
 msgstr ""
 
-#: admin/views/settings-manager.php:87
+#: admin/views/settings-manager.php:88
 msgid "Minimum sequence digits"
 msgstr ""
 
-#: admin/views/settings-manager.php:87
+#: admin/views/settings-manager.php:88
 msgid "Sequential mode only. For example, 6 formats sequence 42 as 000042. Larger sequence values are never truncated."
 msgstr ""
 
-#: admin/views/settings-manager.php:88
+#: admin/views/settings-manager.php:89
 msgid "Current sequence state"
 msgstr ""
 
-#: admin/views/settings-manager.php:88
+#: admin/views/settings-manager.php:89
 msgid "Not used by the selected strategy."
 msgstr ""
 
-#: admin/views/settings-manager.php:88
+#: admin/views/settings-manager.php:89
 msgid "Sequential mode advances this durable state atomically. Random and UUID modes are stateless and use local cryptographic randomness for every generated number."
 msgstr ""
 
 #. translators: %d: skipped collisions.
-#: admin/views/settings-manager.php:89
+#: admin/views/settings-manager.php:90
 msgid "%d existing collision would be skipped."
 msgid_plural "%d existing collisions would be skipped."
 msgstr[0] ""
 msgstr[1] ""
 
-#: admin/views/settings-manager.php:89
+#: admin/views/settings-manager.php:90
 msgid "Manual mode does not generate a preview."
 msgstr ""
 
-#: admin/views/settings-manager.php:89
+#: admin/views/settings-manager.php:90
 msgid "Non-mutating preview"
 msgstr ""
 
-#: admin/views/settings-manager.php:89
+#: admin/views/settings-manager.php:90
 msgid "Preview never reserves a number. Sequential previews may advance before save; Random and UUID previews are samples and the saved credential receives a freshly generated value."
 msgstr ""
 
-#: admin/views/settings-manager.php:91
+#: admin/views/settings-manager.php:92
 msgid "Historical credential records do not own accepted Program or Template relationships, so Certloom will not simulate scoped sequences with custom fields. The allocator contract is designed so those scopes can be added after their authoritative relationships are accepted."
 msgstr ""
 
-#: admin/views/settings-manager.php:91
+#: admin/views/settings-manager.php:92
 msgid "Program and template sequences remain gated."
 msgstr ""
 
-#: admin/views/settings-manager.php:93
+#: admin/views/settings-manager.php:94
 msgid "Branding"
 msgstr ""
 
-#: admin/views/settings-manager.php:95
+#: admin/views/settings-manager.php:96
 msgid "Default accent color"
 msgstr ""
 
-#: admin/views/settings-manager.php:95
+#: admin/views/settings-manager.php:96
 msgid "Used by the shortcode and as the default for new Elementor widgets."
 msgstr ""
 
-#: admin/views/settings-manager.php:96
+#: admin/views/settings-manager.php:97
 msgid "Clean verification branding"
 msgstr ""
 
-#: admin/views/settings-manager.php:96
+#: admin/views/settings-manager.php:97
 msgid "Show organization branding on Certloom-owned clean verification and credential-profile routes"
 msgstr ""
 
-#: admin/views/settings-manager.php:96
+#: admin/views/settings-manager.php:97
 msgid "This does not override shortcode or Elementor design settings."
 msgstr ""
 
-#: admin/views/settings-manager.php:97
+#: admin/views/settings-manager.php:98
 msgid "Leave blank to use the organization configured during Certloom setup, then the WordPress site name."
 msgstr ""
 
-#: admin/views/settings-manager.php:97
+#: admin/views/settings-manager.php:98
 msgid "Verification brand name"
 msgstr ""
 
-#: admin/views/settings-manager.php:98
-msgid "Verification brand tagline"
-msgstr ""
-
 #: admin/views/settings-manager.php:99
-msgid "Clean-page surface color"
+msgid "Verification brand tagline"
 msgstr ""
 
 #. translators: %1$d: current step; %2$d: total steps.
@@ -5761,7 +5774,7 @@ msgstr ""
 
 #: admin/views/setup-wizard.php:134
 #: src/Infrastructure/Admin/DomainAdmin.php:1485
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:365
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:369
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:253
 msgid "Example: Internal Auditor Certification"
 msgstr ""
@@ -5781,9 +5794,9 @@ msgstr ""
 
 #: admin/views/setup-wizard.php:136
 #: src/Infrastructure/Admin/DomainAdmin.php:1510
-#: src/Infrastructure/Admin/DomainAdmin.php:2240
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:368
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:716
+#: src/Infrastructure/Admin/DomainAdmin.php:2239
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:372
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:727
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:259
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:274
 msgid "Optional"
@@ -5791,12 +5804,12 @@ msgstr ""
 
 #: admin/views/setup-wizard.php:136
 #: src/Infrastructure/Admin/DomainAdmin.php:1510
-#: src/Infrastructure/Admin/DomainAdmin.php:2198
-#: src/Infrastructure/Admin/DomainAdmin.php:2240
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:368
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:661
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:699
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:716
+#: src/Infrastructure/Admin/DomainAdmin.php:2197
+#: src/Infrastructure/Admin/DomainAdmin.php:2239
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:372
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:672
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:710
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:727
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:259
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:274
 msgid "Required"
@@ -5837,8 +5850,8 @@ msgstr ""
 #: src/Infrastructure/Admin/AdminProductNavigation.php:231
 #: src/Infrastructure/Admin/DomainAdmin.php:2028
 #: src/Infrastructure/Admin/DomainAdmin.php:528
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:253
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:266
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:257
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:270
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:45
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:46
 msgid "Signers"
@@ -6381,7 +6394,7 @@ msgstr ""
 
 #: blocks/certloom/index.js:51
 #: includes/class-ecapla-certverify-render.php:34
-#: src/Infrastructure/Admin/DomainAdmin.php:2139
+#: src/Infrastructure/Admin/DomainAdmin.php:2138
 #: src/Infrastructure/Admin/TemplateAdmin.php:738
 #: src/Infrastructure/Admin/TemplateAdmin.php:806
 msgctxt "search action button"
@@ -8176,8 +8189,7 @@ msgid "Standard"
 msgstr ""
 
 #: includes/class-ecapla-certverify-fields.php:392
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:469
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:482
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:487
 msgid "Scope"
 msgstr ""
 
@@ -8206,9 +8218,9 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:1404
 #: src/Infrastructure/Admin/DomainAdmin.php:2029
 #: src/Infrastructure/Admin/DomainAdmin.php:396
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:287
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:390
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:449
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:291
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:394
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:453
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:233
 msgid "Email"
 msgstr ""
@@ -8217,7 +8229,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:1159
 #: src/Infrastructure/Admin/DomainAdmin.php:1408
 #: src/Infrastructure/Admin/DomainAdmin.php:396
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:390
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:394
 msgid "External ID"
 msgstr ""
 
@@ -11687,8 +11699,8 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:1190
 #: src/Infrastructure/Admin/DomainAdmin.php:1208
 #: src/Infrastructure/Admin/DomainAdmin.php:1700
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:216
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:691
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:220
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:702
 #: src/Infrastructure/Admin/ScopedFieldAdminAjax.php:247
 msgid "Batch"
 msgstr ""
@@ -11701,14 +11713,14 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:2013
 #: src/Infrastructure/Admin/DomainAdmin.php:468
 #: src/Infrastructure/Admin/DomainAdmin.php:528
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:687
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:698
 #: src/Infrastructure/Admin/ScopedFieldAdminAjax.php:241
 #: src/Infrastructure/Admin/TemplateAdmin.php:1162
 msgid "Issuer"
 msgstr ""
 
 #: src/Application/Templates/TemplateAssignmentPolicy.php:68
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:685
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:696
 #: src/Infrastructure/Admin/ScopedFieldAdminAjax.php:236
 #: src/Infrastructure/Admin/ScopedFieldAdminAjax.php:237
 #: src/Infrastructure/Repository/SignerRepository.php:568
@@ -11878,7 +11890,7 @@ msgid "Certloom section navigation"
 msgstr ""
 
 #: src/Infrastructure/Admin/AdminProductNavigation.php:207
-#: src/Infrastructure/Admin/DomainAdmin.php:2119
+#: src/Infrastructure/Admin/DomainAdmin.php:2118
 #: src/Infrastructure/Admin/DomainAdmin.php:391
 msgid "Issue"
 msgstr ""
@@ -12006,7 +12018,7 @@ msgstr ""
 
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:142
 #: src/Infrastructure/Admin/DomainAdmin.php:1206
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:661
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:672
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:181
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:264
 #: src/Infrastructure/Admin/TemplateAdmin.php:654
@@ -12028,14 +12040,14 @@ msgid "No Batch"
 msgstr ""
 
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:148
-msgid "Optional. Search is limited to the selected Program. Batch field overrides and Batch-specific design assignments are revalidated for every row."
+msgid "Optional. Search is limited to the selected Program. Batch field overrides and Batch-specific design choices are revalidated for every row."
 msgstr ""
 
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:150
 #: src/Infrastructure/Admin/DomainAdmin.php:1546
 #: src/Infrastructure/Admin/DomainAdmin.php:1606
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:340
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:366
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:344
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:370
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:187
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:255
 msgid "Certificate design"
@@ -12363,8 +12375,6 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:1288
 #: src/Infrastructure/Admin/DomainAdmin.php:1640
 #: src/Infrastructure/Admin/DomainAdmin.php:1668
-#: src/Infrastructure/Admin/DomainAdmin.php:604
-#: src/Infrastructure/Admin/DomainAdmin.php:628
 msgid "Version"
 msgstr ""
 
@@ -12417,7 +12427,7 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1160
 #: src/Infrastructure/Admin/DomainAdmin.php:1397
-#: src/Infrastructure/Admin/DomainAdmin.php:2240
+#: src/Infrastructure/Admin/DomainAdmin.php:2239
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:231
 msgid "Recipient profile"
 msgstr ""
@@ -12525,7 +12535,7 @@ msgid "Use this only when the credential was connected to the wrong Program or B
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1206
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:661
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:672
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:264
 msgid "Choose Program…"
 msgstr ""
@@ -12705,7 +12715,7 @@ msgid "Earlier issued records stay available when a credential is corrected, ren
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1282
-#: src/Infrastructure/Admin/DomainAdmin.php:2240
+#: src/Infrastructure/Admin/DomainAdmin.php:2239
 msgid "Credential record"
 msgstr ""
 
@@ -12964,7 +12974,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:1428
 #: src/Infrastructure/Admin/DomainAdmin.php:358
 #: src/Infrastructure/Admin/DomainAdmin.php:393
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:402
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:406
 msgid "Add recipient"
 msgstr ""
 
@@ -13084,7 +13094,7 @@ msgid "Saving program…"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1485
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:365
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:369
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:253
 msgid "Program title"
 msgstr ""
@@ -13300,7 +13310,7 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1533
 #: src/Infrastructure/Admin/DomainAdmin.php:1543
-#: src/Infrastructure/Admin/DomainAdmin.php:2168
+#: src/Infrastructure/Admin/DomainAdmin.php:2167
 msgid "Certificate language"
 msgstr ""
 
@@ -13324,7 +13334,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:1543
 #: src/Infrastructure/Admin/DomainAdmin.php:1547
 #: src/Infrastructure/Admin/DomainAdmin.php:1607
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:341
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:345
 msgid "Search published designs…"
 msgstr ""
 
@@ -13362,13 +13372,13 @@ msgid "Choose a published design for this Program, or inherit from its Issuer an
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1547
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:366
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:370
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:255
 msgid "Inherit Issuer / Global design"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1547
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:366
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:370
 msgid "Program design"
 msgstr ""
 
@@ -13394,9 +13404,9 @@ msgid "Add only the fields this Program needs. Batches can add or tighten fields
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1553
-#: src/Infrastructure/Admin/DomainAdmin.php:2247
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:367
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:723
+#: src/Infrastructure/Admin/DomainAdmin.php:2246
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:371
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:734
 msgid "Credential fields"
 msgstr ""
 
@@ -13409,7 +13419,7 @@ msgid "Optional local scalar metadata remains available for advanced integration
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1563
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:608
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:619
 msgid "Add metadata field"
 msgstr ""
 
@@ -13764,7 +13774,7 @@ msgid "Issuer certificate prefix must be 100 characters or fewer."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1985
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:739
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:750
 msgid "Acceptance preview"
 msgstr ""
 
@@ -13821,20 +13831,20 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:2024
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:176
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:212
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:322
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:353
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:216
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:326
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:357
 msgid "Add batch"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:2024
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:334
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:338
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:268
 msgid "Batch name"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:2024
-#: src/Infrastructure/Admin/DomainAdmin.php:2118
+#: src/Infrastructure/Admin/DomainAdmin.php:2117
 #: src/Infrastructure/Admin/DomainAdmin.php:468
 msgid "Code"
 msgstr ""
@@ -13871,10 +13881,10 @@ msgid "People"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:2029
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:253
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:283
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:432
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:454
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:257
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:287
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:436
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:458
 msgid "Add signer"
 msgstr ""
 
@@ -13888,7 +13898,7 @@ msgid "Quick add signer"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:2029
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:287
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:291
 msgid "Title"
 msgstr ""
 
@@ -13918,7 +13928,7 @@ msgid "Issuer “%1$s” was created, but it was not connected to this Program: 
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:2063
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:744
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:755
 msgid "Safety gate active."
 msgstr ""
 
@@ -13974,221 +13984,221 @@ msgstr ""
 msgid "Create your first Program"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2116
+#: src/Infrastructure/Admin/DomainAdmin.php:2115
 msgid "Issuer not added yet"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2117
-#: src/Infrastructure/Admin/DomainAdmin.php:2127
+#: src/Infrastructure/Admin/DomainAdmin.php:2116
+#: src/Infrastructure/Admin/DomainAdmin.php:2126
 #: src/Infrastructure/Admin/DomainAdmin.php:454
 #: src/Infrastructure/Admin/DomainAdmin.php:472
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:190
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:209
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:221
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:267
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:280
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:290
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:766
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:213
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:225
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:271
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:284
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:294
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:777
 msgctxt "entity status"
 msgid "Active"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2117
+#: src/Infrastructure/Admin/DomainAdmin.php:2116
 msgctxt "entity status"
 msgid "Paused"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2126
+#: src/Infrastructure/Admin/DomainAdmin.php:2125
 msgid "Program status filters"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2127
+#: src/Infrastructure/Admin/DomainAdmin.php:2126
 #: src/Infrastructure/Admin/DomainAdmin.php:455
 #: src/Infrastructure/Admin/DomainAdmin.php:472
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:209
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:221
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:280
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:290
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:766
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:213
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:225
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:284
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:294
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:777
 msgctxt "entity status"
 msgid "Inactive"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2140
+#: src/Infrastructure/Admin/DomainAdmin.php:2139
 msgid "Clear"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2168
+#: src/Infrastructure/Admin/DomainAdmin.php:2167
 msgid "Controls certificate locale, text direction and language-specific design selection. Certloom’s interface still follows the WordPress user language and only uses translations that are actually installed."
 msgstr ""
 
 #. translators: %s: selected locale.
-#: src/Infrastructure/Admin/DomainAdmin.php:2185
+#: src/Infrastructure/Admin/DomainAdmin.php:2184
 msgid "%s — current custom locale"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2188
+#: src/Infrastructure/Admin/DomainAdmin.php:2187
 msgid "Choose language"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2209
+#: src/Infrastructure/Admin/DomainAdmin.php:2208
 msgid "Default"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2209
+#: src/Infrastructure/Admin/DomainAdmin.php:2208
 msgid "Use default"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2215
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:707
+#: src/Infrastructure/Admin/DomainAdmin.php:2214
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:718
 msgid "No file selected"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2216
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:708
+#: src/Infrastructure/Admin/DomainAdmin.php:2215
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:719
 msgid "Choose or upload"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2237
+#: src/Infrastructure/Admin/DomainAdmin.php:2236
 msgid "Add an existing field"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2237
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:713
+#: src/Infrastructure/Admin/DomainAdmin.php:2236
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:724
 msgid "Choose field…"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2239
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:715
+#: src/Infrastructure/Admin/DomainAdmin.php:2238
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:726
 msgid "Create new field"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2239
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:715
+#: src/Infrastructure/Admin/DomainAdmin.php:2238
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:726
 msgid "Manage all fields"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2239
+#: src/Infrastructure/Admin/DomainAdmin.php:2238
 msgid "Recipient profile fields (such as name, email and external ID) are reused for that person. Credential record fields can be different on each issued credential."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2240
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:368
+#: src/Infrastructure/Admin/DomainAdmin.php:2239
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:372
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:259
 msgid "Not used"
 msgstr ""
 
 #. translators: %s: label.
-#: src/Infrastructure/Admin/DomainAdmin.php:2240
+#: src/Infrastructure/Admin/DomainAdmin.php:2239
 msgid "Program rule for %s"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2241
+#: src/Infrastructure/Admin/DomainAdmin.php:2240
 msgid "No additional credential fields are assigned to this Program yet."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2247
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:723
+#: src/Infrastructure/Admin/DomainAdmin.php:2246
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:734
 msgid "Create a field"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2248
+#: src/Infrastructure/Admin/DomainAdmin.php:2247
 msgid "Create a reusable credential field and add it to this Program now. You can still change ordering or retire fields later in Settings → Fields."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2249
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:725
+#: src/Infrastructure/Admin/DomainAdmin.php:2248
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:736
 msgid "Field label"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2249
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:725
+#: src/Infrastructure/Admin/DomainAdmin.php:2248
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:736
 msgid "Field type"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2249
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:725
+#: src/Infrastructure/Admin/DomainAdmin.php:2248
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:736
 msgid "Short text"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2249
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:725
+#: src/Infrastructure/Admin/DomainAdmin.php:2248
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:736
 msgid "e.g. Student ID"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2251
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:727
+#: src/Infrastructure/Admin/DomainAdmin.php:2250
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:738
 msgid "Internal fields are always private. Choose public visibility only when the data is appropriate to show on verification or profile pages."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2251
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:727
+#: src/Infrastructure/Admin/DomainAdmin.php:2250
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:738
 msgid "Public visibility"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2252
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:728
+#: src/Infrastructure/Admin/DomainAdmin.php:2251
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:739
 msgid "Quick-created custom fields belong to the credential record, so the value can differ for each credential. Person-level details such as name, email and external ID belong to the Recipient profile."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2252
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:728
+#: src/Infrastructure/Admin/DomainAdmin.php:2251
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:739
 msgid "Where is this value stored?"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2253
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:729
+#: src/Infrastructure/Admin/DomainAdmin.php:2252
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:740
 msgid "Create & add"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2260
+#: src/Infrastructure/Admin/DomainAdmin.php:2259
 msgid "Default issuer"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2260
+#: src/Infrastructure/Admin/DomainAdmin.php:2259
 msgid "No default issuer"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2260
+#: src/Infrastructure/Admin/DomainAdmin.php:2259
 msgid "Search issuers…"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2262
+#: src/Infrastructure/Admin/DomainAdmin.php:2261
 msgid "Optional default issuer. Search covers the complete issuer registry without loading every record at once."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2267
+#: src/Infrastructure/Admin/DomainAdmin.php:2266
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:214
 msgid "Field key"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2267
+#: src/Infrastructure/Admin/DomainAdmin.php:2266
 msgid "Field value"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2267
+#: src/Infrastructure/Admin/DomainAdmin.php:2266
 msgid "field_key"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2274
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:623
+#: src/Infrastructure/Admin/DomainAdmin.php:2273
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:634
 msgid "Too many custom metadata rows were submitted."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2282
+#: src/Infrastructure/Admin/DomainAdmin.php:2281
 msgid "Every custom metadata value needs a valid machine key."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2283
+#: src/Infrastructure/Admin/DomainAdmin.php:2282
 msgid "Custom metadata keys must be unique."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2321
+#: src/Infrastructure/Admin/DomainAdmin.php:2320
 msgid "Linked account unavailable"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:2328
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:836
+#: src/Infrastructure/Admin/DomainAdmin.php:2327
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:847
 msgid "You do not have permission to manage this Certloom area."
 msgstr ""
 
@@ -14362,12 +14372,18 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:604
 #: src/Infrastructure/Admin/DomainAdmin.php:629
-msgid "Added"
+msgid "Added to Certloom"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:604
 #: src/Infrastructure/Admin/DomainAdmin.php:624
 msgid "Program / batch"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:604
+#: src/Infrastructure/Admin/DomainAdmin.php:628
+#: src/Infrastructure/Admin/DomainAdmin.php:868
+msgid "Record version"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:622
@@ -14386,6 +14402,10 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:622
 #: src/Infrastructure/Admin/DomainAdmin.php:976
 msgid "View"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:628
+msgid "Current immutable record version; earlier versions remain in the credential history."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:633
@@ -14510,10 +14530,6 @@ msgstr ""
 msgid "Design used"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainAdmin.php:868
-msgid "Record version"
-msgstr ""
-
 #: src/Infrastructure/Admin/DomainAdmin.php:872
 msgid "You are viewing an earlier immutable record. Editing controls apply only to the current credential record."
 msgstr ""
@@ -14551,7 +14567,7 @@ msgid "Search all Programs…"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:940
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:766
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:777
 #: src/Infrastructure/Admin/TemplateAdmin.php:844
 msgid "Filter"
 msgstr ""
@@ -14902,470 +14918,505 @@ msgstr ""
 msgid "Search batch name, code, or Program"
 msgstr ""
 
-#. translators: %d: recipient count.
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:208
-msgid "%d recipient"
-msgid_plural "%d recipients"
-msgstr[0] ""
-msgstr[1] ""
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:206
+msgid "Dates not set"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:206
+msgid "No end date"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:206
+msgid "No start date"
+msgstr ""
+
+#. translators: %s: instructor name.
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:212
+msgid "Instructor: %s"
+msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:212
+msgid "No instructor"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:214
+msgid "Credentials issued"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:216
 msgid "Add a cohort or intake when a Program needs grouped issuance."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:212
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:216
 msgid "No batches yet"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:216
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:220
 msgid "Dates"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:216
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:484
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:220
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:476
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:489
 msgid "Instructor"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:223
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:227
 msgid "No batches found."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:253
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:257
 msgid "Add the people whose names or signatures can appear on credentials."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:253
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:257
 msgid "Back to signers"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:253
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:257
 msgid "Reusable signer identities with deterministic Batch → Program → Issuer → Global hierarchy."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:268
-msgid "Active assignments"
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:272
+msgid "Hierarchy uses"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:272
+msgid "Places used"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:276
 msgid "Search signer name, key, title, or email"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:272
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:276
 msgid "Search signer name, title, or email"
 msgstr ""
 
-#. translators: %d: assignment count.
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:281
-msgid "%d assignment"
-msgid_plural "%d assignments"
-msgstr[0] ""
-msgstr[1] ""
-
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:281
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:287
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:484
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:285
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:291
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:476
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:489
 msgid "Signer"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:283
+#. translators: %d: number of places where this signer is used.
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:285
+msgid "Used in %d place"
+msgid_plural "Used in %d places"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:287
 msgid "Add a signer whose name or signature can appear on credentials."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:283
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:287
 msgid "No signers yet"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:287
-#: src/Infrastructure/Admin/TemplateAdmin.php:562
-msgid "Assignments"
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:287
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:446
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:291
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:450
 #: src/Infrastructure/Admin/TemplateAdmin.php:1326
 #: src/Infrastructure/Admin/TemplateAdmin.php:709
 #: src/Infrastructure/Admin/TemplateAdmin.php:754
 msgid "Machine key"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:292
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:291
+msgid "Used in"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:296
 msgid "No signer profiles found."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:322
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:326
 msgid "Adding batch…"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:322
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:326
 msgid "Batch profile"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:322
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:326
 msgid "Please complete the highlighted required field before saving this batch."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:322
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:326
 msgid "Saving batch…"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:333
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:337
 msgid "A short reference for this cohort or intake."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:333
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:337
 msgid "Batch code"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:333
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:337
 msgid "Example: SPRING-2026"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:333
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:337
 msgid "Stable code used by restores, integrations, and future automation."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:334
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:338
 msgid "Example: Spring 2026 Cohort"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:335
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:339
 msgid "Start date"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:336
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:340
 msgid "End date"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:337
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:341
 msgid "Instructor signer profile"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:338
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:342
 msgid "Instructor display fallback"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:338
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:342
 msgid "Optional display fallback when no reusable signer profile is assigned."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:339
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:343
 msgid "Active batch"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:340
-msgid "The inheritance chain is Global → Issuer → Program → Batch. Inherit the Program result by default, or choose a published design just for this Batch; a Batch design is the most specific assignment and always wins for this cohort."
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:344
+msgid "The inheritance chain is Global → Issuer → Program → Batch. Inherit the Program result by default, or choose a published design just for this Batch; a Batch design is the most specific design choice and always wins for this cohort."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:341
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:345
 #: src/Infrastructure/Admin/IntegrationMappingTargetGuard.php:135
 msgid "Batch design"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:341
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:345
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:270
 msgid "Inherit Program design"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:343
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:347
 msgid "Choose Inherit Program design to keep this Batch following Program → Issuer → Global automatically. Select a Batch design only when this cohort needs its own certificate appearance."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:344
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:348
 msgid "Choose only the fields this Batch adds, tightens or excludes. Program-required fields remain required automatically; advanced metadata stays out of this setup."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:344
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:348
 msgid "Credential field changes"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:349
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:353
 msgid "The selected Program is validated when you save; any Program-required field remains protected even if this new Batch form was opened before the Program was selected."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:353
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:357
 msgid "Update batch"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:363
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:367
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:250
 msgid "Complete the highlighted Program field."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:364
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:370
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:368
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:374
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:251
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:260
 msgid "Add Program"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:364
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:368
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:251
 msgid "Close Add Program"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:364
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:368
 msgid "Create the Program, choose its normal design and required credential fields, then return to this unfinished Batch automatically."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:364
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:368
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:251
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:263
 msgid "Quick setup"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:365
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:369
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:254
 msgid "Short code (optional)"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:366
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:370
 msgid "You can preview, publish or change designs later from Program → Design."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:367
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:371
 msgid "Choose only fields this Program needs when credentials are issued. Advanced metadata is intentionally kept out of quick setup."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:369
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:373
 msgid "Visit Programs after saving for language variants, lifecycle defaults and other deeper Program settings."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:381
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:385
 msgid "Adding or removing a recipient changes this Batch going forward. Already-issued credential records are never rewritten."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:381
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:385
 msgid "Batch recipients"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:382
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:386
 msgid "Search assigned recipients"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:382
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:386
 msgid "Search batch recipients"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:382
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:386
 msgid "Search members"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:397
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:401
 msgid "No recipients match this Batch view."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:402
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:406
 msgid "Find a recipient to add"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:402
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:406
 msgid "Find recipient"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:402
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:406
 msgid "Find recipient by name, email, or external ID"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:409
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:413
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:167
 msgid "Choose recipient…"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:417
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:421
 msgid "Add to batch"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:419
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:423
 msgid "More than 50 recipients match. Refine the search before choosing a recipient."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:432
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:436
 msgid "Adding signer…"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:432
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:436
 msgid "Please complete the highlighted required field before saving this signer."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:432
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:436
 msgid "Saving signer…"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:432
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:436
 msgid "Signer profile"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:442
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:446
 msgid "Example: Dr. Amina Khan"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:442
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:446
 msgid "Signer name"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:446
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:450
 msgid "Example: amina-khan"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:446
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:450
 msgid "Stable machine identity used by restore, hierarchy assignment, integrations, and future APIs."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:448
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:452
 msgid "Title / role"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:450
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:454
 msgid "Choose or upload the signer signature image from WordPress Media."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:450
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:454
 msgid "Signature image"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:451
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:455
 msgid "Active signer"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:454
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:458
 msgid "Update signer"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:462
-msgid "Certloom uses the most specific assignment first: Batch → Program → Issuer → Global. When two assignments apply at the same level, the lower priority number is used first."
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:467
+msgid "Choose where this person should be available on credentials. A Batch choice is most specific, followed by Program, Issuer and Global."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:462
-msgid "Signer hierarchy assignments"
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:467
+msgid "Signer hierarchy rules"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:469
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:484
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:467
+msgid "These rules determine where the signer is available. Certloom resolves Batch → Program → Issuer → Global; when multiple rules apply at the same level, the lower priority number wins."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:467
+msgid "Where this signer is used"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:474
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:493
 msgid "Priority"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:476
-msgid "No hierarchy assignments yet."
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:474
+msgid "Used for"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:484
-msgid "Add assignment"
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:481
+msgid "This signer is not connected to a Global, Issuer, Program or Batch context yet."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:491
-msgid "Choose a Program for the Batch."
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:487
+msgid "Use for"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:495
+msgid "Add hierarchy rule"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:495
+msgid "Add use"
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:502
+msgid "Choose a Program for the Batch."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:506
 #: src/Infrastructure/Admin/TemplateAdmin.php:885
 #: src/Infrastructure/Admin/TemplateAdmin.php:938
 msgid "The selected Program no longer exists."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:502
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:513
 msgid "The selected instructor signer no longer exists."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:569
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:580
 #: src/Infrastructure/Repository/SignerRepository.php:470
 msgid "Enter a valid signer email address or leave it blank."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:599
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:610
 msgid "Metadata"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:601
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:612
 msgid "This record contains structured metadata that the simple editor cannot round-trip exactly. Certloom will preserve it unchanged."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:615
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:626
 msgid "Metadata key"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:615
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:626
 msgid "Metadata value"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:636
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:647
 msgid "Metadata keys must be stable machine keys."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:639
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:650
 msgid "Metadata keys must be unique."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:661
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:672
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:264
 msgid "Choose the Program this Batch belongs to."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:667
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:678
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:183
 msgid "Add new Program"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:667
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:678
 msgid "Choose the Program this cohort belongs to."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:675
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:686
 msgid "Search active Signers…"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:679
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:690
 msgid "Search the complete active Signer list. Your current selection remains available even when it is not in the first results shown."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:685
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:696
 msgid "Search issuer, Program, or Batch…"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:713
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:724
 msgid "Add a field change"
 msgstr ""
 
 #. translators: %s: label.
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:716
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:727
 msgid "Batch rule for %s"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:716
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:727
 msgid "Exclude"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:716
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:727
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:274
 msgid "Inherit Program"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:716
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:727
 msgid "Not used by Program"
 msgstr ""
 
 #. translators: %s: parent.
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:716
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:727
 msgid "Program: %s"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:716
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:727
 msgid "Remove change"
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:717
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:728
 msgid "This Batch currently inherits its Program field contract without changes."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:724
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:735
 msgid "Create a reusable credential field and add it as a change for this Batch now. You can still change ordering or retire fields later in Settings → Fields."
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:744
-msgid "These normalized-domain screens remain unavailable in production until the real database, migration, restore, and cutover acceptance gates pass."
-msgstr ""
-
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:749
-msgid "Batch created."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:75
@@ -15373,24 +15424,32 @@ msgstr ""
 msgid "The batch no longer exists."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:750
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:755
+msgid "These normalized-domain screens remain unavailable in production until the real database, migration, restore, and cutover acceptance gates pass."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:760
+msgid "Batch created."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:761
 msgid "Batch updated."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:751
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:762
 msgid "Batch membership updated."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:752
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:763
 msgid "Signer created."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:753
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:764
 msgid "Signer updated."
 msgstr ""
 
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:754
-msgid "Signer hierarchy updated."
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:765
+msgid "Signer usage updated."
 msgstr ""
 
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:131
@@ -15943,7 +16002,7 @@ msgid "Batch certificate design"
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:272
-msgid "A selected Batch design is the most specific assignment and overrides Program, Issuer and Global for this Batch only."
+msgid "A selected Batch design is the most specific choice and overrides Program, Issuer and Global for this Batch only."
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:273
@@ -17538,6 +17597,10 @@ msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:561
 msgid "Design workspace"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:562
+msgid "Assignments"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:562

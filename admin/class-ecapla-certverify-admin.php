@@ -107,7 +107,7 @@ class Ecapla_CertVerify_Admin {
 			add_submenu_page( null, __( 'Issuance', 'certloom' ), __( 'Issuance', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-issuance', array( $this, 'render_roadmap_placeholder_screen' ) );
 		}
 
-		add_submenu_page( self::DASHBOARD_PAGE, __( 'Analytics', 'certloom' ), __( 'Analytics', 'certloom' ), Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS, self::ANALYTICS_PAGE, array( $this, 'render_analytics_screen' ) );
+		add_submenu_page( self::DASHBOARD_PAGE, __( 'Analytics', 'certloom' ), __( 'Analytics', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::ANALYTICS_PAGE, array( $this, 'render_analytics_screen' ) );
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Settings', 'certloom' ), __( 'Settings', 'certloom' ), 'manage_options', 'certloom-settings', array( $this, 'render_settings_screen' ) );
 
 		// Automations is a first-class Simple-mode task. The late product-navigation
@@ -1928,7 +1928,7 @@ class Ecapla_CertVerify_Admin {
 	}
 
 	public function render_analytics_screen() {
-		if ( ! current_user_can( Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS ) ) {
+		if ( ! current_user_can( Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS ) && ! current_user_can( ECAPLA_CERTVERIFY_CAP ) ) {
 			wp_die( esc_html__( 'You do not have permission to view Certloom analytics.', 'certloom' ) );
 		}
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only bounded reporting filters.

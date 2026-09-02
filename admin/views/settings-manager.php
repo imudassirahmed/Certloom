@@ -18,6 +18,7 @@ $certloom_advanced_mode = \Certloom\Infrastructure\Admin\AdminUiMode::is_advance
 			<a href="#certloom-settings-branding"><?php esc_html_e( 'Brand', 'certloom' ); ?></a>
 			<a href="#certloom-settings-verification"><?php esc_html_e( 'Verification', 'certloom' ); ?></a>
 			<a href="#certloom-settings-retention"><?php esc_html_e( 'Retention', 'certloom' ); ?></a>
+			<a href="#certloom-settings-guidance"><?php esc_html_e( 'Guidance & support', 'certloom' ); ?></a>
 			<?php if ( $certloom_advanced_mode ) : ?><a href="#certloom-system-status"><?php esc_html_e( 'Advanced', 'certloom' ); ?></a><?php endif; ?>
 		</nav>
 		<div id="certloom-settings-search-results" class="certloom-settings-search-results" aria-live="polite" hidden></div>
@@ -128,15 +129,21 @@ $certloom_advanced_mode = \Certloom\Infrastructure\Admin\AdminUiMode::is_advance
 		<?php submit_button( __( 'Save settings', 'certloom' ), 'primary', 'certverify_save_settings' ); ?>
 	</form>
 
-	<hr />
-	<h2 id="certloom-settings-expiry"><?php esc_html_e( 'Expiry behavior', 'certloom' ); ?></h2>
-	<p class="description"><?php esc_html_e( 'Expired is calculated automatically from each certificate’s expiry date. Renewing the expiry date immediately returns the certificate to Valid unless its manual status is Suspended or Withdrawn. No scheduled synchronization task is required.', 'certloom' ); ?></p>
+	<section id="certloom-settings-guidance" class="certloom-settings-guidance" aria-labelledby="certloom-settings-guidance-title">
+		<div class="certloom-settings-guidance-head"><span class="certloom-eyebrow"><?php esc_html_e( 'Reference', 'certloom' ); ?></span><h2 id="certloom-settings-guidance-title"><?php esc_html_e( 'Guidance & support', 'certloom' ); ?></h2><p><?php esc_html_e( 'Important behavior and support information, kept separate from editable settings.', 'certloom' ); ?></p></div>
+		<div class="certloom-settings-info-grid">
+			<article class="certloom-settings-info-card" aria-labelledby="certloom-settings-expiry">
+				<span class="dashicons dashicons-clock" aria-hidden="true"></span><div><h3 id="certloom-settings-expiry"><?php esc_html_e( 'Expiry behavior', 'certloom' ); ?></h3><p><?php esc_html_e( 'Expired is calculated automatically from each credential’s expiry date. Changing the expiry to a future date returns it to Valid unless its manual status is Suspended or Withdrawn. No scheduled synchronization task is required.', 'certloom' ); ?></p></div>
+			</article>
+			<article class="certloom-settings-info-card is-caution" aria-labelledby="certloom-settings-privacy">
+				<span class="dashicons dashicons-shield" aria-hidden="true"></span><div><h3 id="certloom-settings-privacy"><?php esc_html_e( 'Public-data privacy', 'certloom' ); ?></h3><p><?php esc_html_e( 'Fields marked “Show on public result” can be returned by public verification. Do not publish sensitive personal data. Credential numbers entered in a browser may also appear in normal server logs, browser history, analytics and cache layers.', 'certloom' ); ?></p></div>
+			</article>
+			<article class="certloom-settings-info-card is-support" aria-labelledby="certloom-settings-support">
+				<span class="dashicons dashicons-sos" aria-hidden="true"></span><div><h3 id="certloom-settings-support"><?php esc_html_e( 'Support', 'certloom' ); ?></h3><p><?php esc_html_e( 'Open the Certloom website for product information, or start a support email with the Certloom issue subject already filled in.', 'certloom' ); ?></p><div class="certloom-settings-support-actions"><a class="button" href="https://ecapla.com" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Visit ecapla.com', 'certloom' ); ?></a><a class="button button-primary" href="mailto:support@ecapla.com?subject=Certloom%20%E2%80%93%20Report%20an%20Issue"><?php esc_html_e( 'Report an issue', 'certloom' ); ?></a></div></div>
+			</article>
+		</div>
+	</section>
 
-	<hr />
-	<h2 id="certloom-settings-privacy"><?php esc_html_e( 'Privacy note', 'certloom' ); ?></h2>
-	<p class="description"><?php esc_html_e( 'Fields marked “Show on public result” are returned through a public exact-match REST endpoint. Avoid publishing sensitive personal data. Certificate numbers entered in a browser may also appear in server logs, browser history, analytics, and cache layers.', 'certloom' ); ?></p>
-
-	<hr />
 	<?php if ( $certloom_advanced_mode ) : ?>
 	<h2 id="certloom-system-status"><?php esc_html_e( 'System status', 'certloom' ); ?></h2>
 	<p class="description"><?php esc_html_e( 'Read-only local diagnostics for Certloom. Nothing in this report is sent to Ecapla, and it intentionally excludes certificate data, site URLs, filesystem paths, database names, user data, and plugin inventories.', 'certloom' ); ?></p>
@@ -361,11 +368,4 @@ $certloom_advanced_mode = \Certloom\Infrastructure\Admin\AdminUiMode::is_advance
 	<?php endif; ?>
 	<?php endif; ?>
 
-	<hr />
-	<h2 id="certloom-settings-support"><?php esc_html_e( 'Ecapla support', 'certloom' ); ?></h2>
-	<p class="ecapla-certverify-support-actions">
-		<a class="button button-secondary" href="https://ecapla.com" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Visit ecapla.com', 'certloom' ); ?></a>
-		<a class="button button-primary" href="mailto:support@ecapla.com?subject=Certloom%20%E2%80%93%20Report%20an%20Issue"><?php esc_html_e( 'Report an issue', 'certloom' ); ?></a>
-	</p>
-	<p class="description"><?php esc_html_e( 'Report an issue opens your email application with a Certloom support subject. The website button opens ecapla.com in a new tab.', 'certloom' ); ?></p>
 </div>
