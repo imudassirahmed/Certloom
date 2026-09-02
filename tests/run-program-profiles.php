@@ -51,8 +51,8 @@ pp(false!==strpos($adminjs,'function initProgramProfile()')&&false!==strpos($adm
 pp(false!==strpos($assignment,'resolve_published_assignment_details')&&false!==strpos($assignment,'resolve_published_assignment_details'),'existing assignment hierarchy remains canonical design source');
 pp(false!==strpos($svc,'resolve_published_template_for_context')&&false!==strpos($svc,'certloom_manual_issue_program_design_missing'),'Manual Issuance resolves Program + optional Batch design context and fails closed if no published design exists');
 pp(false!==strpos($svc,"'resolution_scope'")&&false!==strpos($svc,"'profile'=>isset(\$p['profile'])"),'issued snapshots freeze Program Profile and design-resolution provenance');
-pp(false!==strpos($manual,'Use Program design automatically'),'Manual Issuance defaults to Program design instead of forcing Template hunting');
-pp(false!==strpos($bulk,'Use Program design automatically'),'Bulk Issuance defaults to Program design instead of forcing Template hunting');
+pp(false!==strpos($manual,'Global → Issuer → Program → Batch')&&false!==strpos($manual,'one-off override'),'Manual Issuance defaults to canonical hierarchy resolution and keeps explicit one-off override separate');
+pp(false!==strpos($bulk,'Global → Issuer → Program → Batch')&&false!==strpos($bulk,'one-off design override'),'Bulk Issuance defaults to canonical hierarchy resolution and keeps explicit one-off override separate');
 pp(false!==strpos($restore,'ProgramProfile')&&false!==strpos($restore,'certloom_domain_restore_program_profile_invalid'),'restore preflight validates typed Program Profile metadata');
 pp(false===strpos($admin,'if language == Urdu'),'Program Profile does not hard-code Urdu as the RTL model');
 pp(!file_exists($root.'/resources/renderer/accepted.json'),'PRG-02 does not manufacture renderer authority');

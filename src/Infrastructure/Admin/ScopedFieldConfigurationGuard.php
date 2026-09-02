@@ -58,13 +58,22 @@ final class ScopedFieldConfigurationGuard {
 				if ( is_wp_error( $effective ) ) {
 					return new \WP_Error( 'certloom_program_field_contract_breaks_batch', sprintf( /* translators: %s: Batch name. */ __( 'This Program field change conflicts with existing Batch “%s”. Update that Batch override first.', 'certloom' ), (string) ( $batch['name'] ?? ( '#' . absint( $batch['id'] ?? 0 ) ) ) ), array( 'batch_id' => absint( $batch['id'] ?? 0 ), 'reason' => $effective->get_error_code() ) );
 				}
-				$valid = $this->validate_templates( $variants, $program_contract, $batch_contract, $catalog );
-				if ( is_wp_error( $valid ) ) { return $this->with_batch_context( $valid, $batch ); }
+				// Program locale variants are Program-level designs. A direct Batch
+				// assignment is more specific and therefore owns compatibility for
+				// this Batch; an inherited Batch must remain compatible with all
+				// Program locale variants that could actually be selected.
+				$direct_batch = $this->has_active_direct_assignment( 'batch', absint( $batch['id'] ?? 0 ) );
+				if ( is_wp_error( $direct_batch ) ) { return $this->with_batch_context( $direct_batch, $batch ); }
+				if ( ! $direct_batch ) {
+					$valid = $this->validate_templates( $variants, $program_contract, $batch_contract, $catalog );
+					if ( is_wp_error( $valid ) ) { return $this->with_batch_context( $valid, $batch ); }
+				}
 				$valid = $this->validate_resolved_assignment( $program_id, absint( $batch['id'] ?? 0 ), absint( $issuer_id ), $program_contract, $batch_contract, $catalog );
 				if ( is_wp_error( $valid ) ) { return $this->with_batch_context( $valid, $batch ); }
 			}
 		} while ( count( $rows ) === self::BATCH_CHUNK );
-		return true;
+		$integration = ( new IntegrationConfigurationDependencyGuard() )->validate_program_field_change( $program_id, $program_contract );
+		return is_wp_error( $integration ) ? $integration : true;
 	}
 
 	/** @return true|\WP_Error */
@@ -75,9 +84,16 @@ final class ScopedFieldConfigurationGuard {
 		if ( is_wp_error( $effective ) ) { return $effective; }
 		$variants = $this->variant_templates( is_array( $program['profile'] ?? null ) ? $program['profile'] : array() );
 		if ( is_wp_error( $variants ) ) { return $variants; }
-		$valid = $this->validate_templates( $variants, $program_contract, $batch_contract, $catalog );
-		if ( is_wp_error( $valid ) ) { return $valid; }
-		return $this->validate_resolved_assignment( absint( $program['id'] ?? 0 ), absint( $batch_id ), absint( $program['issuer_id'] ?? 0 ), $program_contract, $batch_contract, $catalog );
+		$direct_batch = $this->has_active_direct_assignment( 'batch', absint( $batch_id ) );
+		if ( is_wp_error( $direct_batch ) ) { return $direct_batch; }
+		if ( ! $direct_batch ) {
+			$valid = $this->validate_templates( $variants, $program_contract, $batch_contract, $catalog );
+			if ( is_wp_error( $valid ) ) { return $valid; }
+		}
+		$design = $this->validate_resolved_assignment( absint( $program['id'] ?? 0 ), absint( $batch_id ), absint( $program['issuer_id'] ?? 0 ), $program_contract, $batch_contract, $catalog );
+		if ( is_wp_error( $design ) ) { return $design; }
+		$integration = ( new IntegrationConfigurationDependencyGuard() )->validate_batch_field_change( $program, absint( $batch_id ), $batch_contract );
+		return is_wp_error( $integration ) ? $integration : true;
 	}
 
 	/** @return array<int,array<string,mixed>>|\WP_Error */
@@ -119,6 +135,16 @@ final class ScopedFieldConfigurationGuard {
 			return new \WP_Error( 'certloom_scoped_field_template_unavailable', __( 'The currently assigned certificate design is no longer published.', 'certloom' ) );
 		}
 		return $this->compatibility->validate( (array) $resolved['published_layout'], $program_contract, $batch_contract, $catalog );
+	}
+
+
+	/** Program locale variants sit at Program scope and must not outrank an explicit Batch design. @return bool|\WP_Error */
+	private function has_active_direct_assignment( $scope_type, $scope_id ) {
+		$scope_id = absint( $scope_id );
+		if ( ! $scope_id ) { return false; }
+		$assignment = $this->templates->get_assignment( $scope_type, $scope_id );
+		if ( is_wp_error( $assignment ) ) { return $assignment; }
+		return is_array( $assignment ) && ! empty( $assignment['active'] );
 	}
 
 	/** @return array<string,array<string,mixed>> */

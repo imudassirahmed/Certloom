@@ -362,20 +362,31 @@ final class ManualIssuanceService {
 		$template_resolution = 'explicit';
 		$template_locale_variant = null;
 		if ( empty( $request['template_id'] ) ) {
-			$variant = ( new ProgramTemplateVariantResolver() )->resolve( isset( $program['profile'] ) && is_array( $program['profile'] ) ? $program['profile'] : array(), $locale['effective'] );
-			if ( is_wp_error( $variant ) ) { return $variant; }
-			if ( is_array( $variant ) && ! empty( $variant['template_key'] ) ) {
-				$variant_template = $this->repository->find_published_template_by_machine_key( (string) $variant['template_key'] );
-				if ( is_wp_error( $variant_template ) || ! is_array( $variant_template ) || ! empty( $variant_template['archived_at'] ) || empty( $variant_template['published_revision'] ) ) { return new \WP_Error( 'certloom_manual_issue_locale_template_unavailable', __( 'The Program locale maps to a certificate design that is no longer published. Review the Program language variants before issuing.', 'certloom' ) ); }
-				$request['template_id'] = absint( $variant_template['id'] ?? 0 );
-				$template_resolution = (string) ( $variant['resolution_scope'] ?? 'program_locale_fallback' );
-				$template_locale_variant = $variant;
-			} else {
-				$resolved = $this->repository->resolve_published_template_for_context( absint( $program['id'] ?? 0 ), absint( $batch['id'] ?? 0 ), absint( $program['issuer_id'] ?? 0 ) );
-				if ( is_wp_error( $resolved ) ) { return $resolved; }
-				if ( ! is_array( $resolved ) || empty( $resolved['template_id'] ) ) { return new \WP_Error( 'certloom_manual_issue_program_design_missing', __( 'This Program does not resolve to a published certificate design. Assign a published Template to the Program (or an inherited Issuer/Global fallback) before issuing.', 'certloom' ) ); }
+			// Canonical design precedence is:
+			// Global → Issuer → Program → Batch, with the most-specific direct
+			// assignment winning. Program locale variants live at Program scope,
+			// so a direct Batch assignment must win over a locale variant too.
+			$resolved = $this->repository->resolve_published_template_for_context( absint( $program['id'] ?? 0 ), absint( $batch['id'] ?? 0 ), absint( $program['issuer_id'] ?? 0 ) );
+			if ( is_wp_error( $resolved ) ) { return $resolved; }
+
+			if ( is_array( $resolved ) && 'batch' === (string) ( $resolved['scope_type'] ?? '' ) && ! empty( $resolved['template_id'] ) ) {
 				$request['template_id'] = absint( $resolved['template_id'] );
-				$template_resolution = (string) ( $resolved['scope_type'] ?? 'assigned' );
+				$template_resolution = 'batch';
+			} else {
+				$variant = ( new ProgramTemplateVariantResolver() )->resolve( isset( $program['profile'] ) && is_array( $program['profile'] ) ? $program['profile'] : array(), $locale['effective'] );
+				if ( is_wp_error( $variant ) ) { return $variant; }
+				if ( is_array( $variant ) && ! empty( $variant['template_key'] ) ) {
+					$variant_template = $this->repository->find_published_template_by_machine_key( (string) $variant['template_key'] );
+					if ( is_wp_error( $variant_template ) || ! is_array( $variant_template ) || ! empty( $variant_template['archived_at'] ) || empty( $variant_template['published_revision'] ) ) { return new \WP_Error( 'certloom_manual_issue_locale_template_unavailable', __( 'The Program locale maps to a certificate design that is no longer published. Review the Program language variants before issuing.', 'certloom' ) ); }
+					$request['template_id'] = absint( $variant_template['id'] ?? 0 );
+					$template_resolution = (string) ( $variant['resolution_scope'] ?? 'program_locale_fallback' );
+					$template_locale_variant = $variant;
+				} elseif ( is_array( $resolved ) && ! empty( $resolved['template_id'] ) ) {
+					$request['template_id'] = absint( $resolved['template_id'] );
+					$template_resolution = (string) ( $resolved['scope_type'] ?? 'assigned' );
+				} else {
+					return new \WP_Error( 'certloom_manual_issue_program_design_missing', __( 'This credential does not resolve to a published certificate design. Configure the inheritance chain Global → Issuer → Program → Batch, or choose a one-off design before issuing.', 'certloom' ) );
+				}
 			}
 		}
 		$template = $this->repository->find_published_template( $request['template_id'] );

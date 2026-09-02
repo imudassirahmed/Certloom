@@ -102,6 +102,36 @@ final class ProgramRepository {
 		return array( 'items' => $items, 'total' => $total );
 	}
 
+
+	/**
+	 * Bounded Program labels for workflow summaries without N+1 reads.
+	 *
+	 * @param array<int,int|string> $ids
+	 * @return array<int,string>|\WP_Error
+	 */
+	public function labels_by_ids( array $ids ) {
+		$ids = array_values( array_unique( array_filter( array_map( 'absint', $ids ) ) ) );
+		if ( empty( $ids ) ) { return array(); }
+		if ( count( $ids ) > 2500 ) { return new \WP_Error( 'certloom_program_label_limit', __( 'Too many Program labels were requested at once.', 'certloom' ) ); }
+		global $wpdb;
+		$out = array();
+		foreach ( array_chunk( $ids, 200 ) as $chunk ) {
+			$placeholders = implode( ',', array_fill( 0, count( $chunk ), '%d' ) );
+			$args = array_merge( array( SchemaManager::table( 'programs' ) ), $chunk );
+			$wpdb->last_error = '';
+			$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT id,title,code FROM %i WHERE id IN (' . $placeholders . ')', $args ), ARRAY_A );
+			if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) { return new \WP_Error( 'certloom_program_label_read_failed', __( 'Certloom could not load Program labels.', 'certloom' ) ); }
+			foreach ( $rows as $row ) {
+				$id = absint( $row['id'] ?? 0 );
+				if ( ! $id ) { continue; }
+				$label = (string) ( $row['title'] ?? '' );
+				if ( ! empty( $row['code'] ) ) { $label .= ' · ' . (string) $row['code']; }
+				$out[ $id ] = $label;
+			}
+		}
+		return $out;
+	}
+
 	/** @return array{total:int,active:int,inactive:int,with_credentials:int}|\WP_Error */
 	public function summary() {
 		global $wpdb;

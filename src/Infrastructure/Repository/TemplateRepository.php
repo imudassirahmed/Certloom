@@ -562,6 +562,10 @@ final class TemplateRepository {
 		$exists = $this->scope_exists( $scope_type, $scope_id );
 		if ( is_wp_error( $exists ) ) { return $exists; }
 		if ( ! $exists ) { return new \WP_Error( 'certloom_template_assignment_scope_missing', __( 'The template assignment target no longer exists.', 'certloom' ) ); }
+		if ( 'batch' === $scope_type ) {
+			$fallback = $this->validate_batch_inherited_fallback_field_contract( $scope_id );
+			if ( is_wp_error( $fallback ) ) { return $fallback; }
+		}
 		$generation = ( new DomainGeneration() )->mark_before_mutation();
 		if ( is_wp_error( $generation ) ) { return $generation; }
 		return $this->transaction->run( function () use ( $scope_type, $scope_id, $expected_assignment_id, $expected_updated_at ) {
@@ -580,6 +584,86 @@ final class TemplateRepository {
 			$updated = $wpdb->update( SchemaManager::table( 'template_assignments' ), array( 'active' => 0, 'updated_at' => current_time( 'mysql', true ) ), array( 'id' => absint( $existing['id'] ) ) );
 			return false === $updated || '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_assignment_clear_failed', __( 'Certloom could not clear the direct template assignment.', 'certloom' ) ) : true;
 		} );
+	}
+
+	/**
+	 * Before a Batch switches from its direct design to inheritance, verify every
+	 * published Program-level design that may become effective for that Batch.
+	 * Draft/unconfigured parent scopes remain allowed during staged setup, while
+	 * published incompatible fallbacks are rejected before they can affect
+	 * issuance.
+	 *
+	 * @return true|\WP_Error
+	 */
+	private function validate_batch_inherited_fallback_field_contract( $batch_id ) {
+		$batch = ( new BatchRepository() )->find( $batch_id );
+		if ( is_wp_error( $batch ) ) { return $batch; }
+		if ( ! is_array( $batch ) ) { return new \WP_Error( 'certloom_template_assignment_batch_missing', __( 'The Batch for this Template assignment no longer exists.', 'certloom' ) ); }
+		$program = ( new ProgramRepository() )->find( absint( $batch['program_id'] ?? 0 ) );
+		if ( is_wp_error( $program ) ) { return $program; }
+		if ( ! is_array( $program ) ) { return new \WP_Error( 'certloom_template_assignment_program_missing', __( 'The Batch Program for this Template assignment no longer exists.', 'certloom' ) ); }
+
+		$catalog = class_exists( '\\Ecapla_CertVerify_Fields' ) ? \Ecapla_CertVerify_Fields::get_field_map() : array();
+		$program_contract = is_array( $program['field_contract'] ?? null ) ? $program['field_contract'] : array();
+		$batch_contract = is_array( $batch['field_contract'] ?? null ) ? $batch['field_contract'] : array();
+		$compatibility = new TemplateFieldCompatibility();
+
+		// Locale variants are Program-level and therefore become eligible again
+		// as soon as the Batch stops overriding its design.
+		foreach ( (array) ( $program['profile']['template_variants'] ?? array() ) as $locale => $machine_key ) {
+			$machine_key = sanitize_key( (string) $machine_key );
+			if ( '' === $machine_key ) { continue; }
+			$template = $this->find_published_by_machine_key( $machine_key );
+			if ( is_wp_error( $template ) ) { return $template; }
+			if ( ! is_array( $template ) || empty( $template['published_revision']['layout'] ) ) {
+				return new \WP_Error(
+					'certloom_template_batch_inherit_variant_unavailable',
+					sprintf(
+						/* translators: %s: credential locale code. */
+						__( 'This Batch cannot inherit yet because the Program language design for %s is no longer published. Fix or remove that Program language variant first.', 'certloom' ),
+						(string) $locale
+					)
+				);
+			}
+			$valid = $compatibility->validate( (array) $template['published_revision']['layout'], $program_contract, $batch_contract, $catalog );
+			if ( is_wp_error( $valid ) ) {
+				return new \WP_Error(
+					'certloom_template_batch_inherit_variant_incompatible',
+					sprintf(
+						/* translators: 1: credential locale code, 2: field compatibility error. */
+						__( 'This Batch cannot inherit the Program language design for %1$s: %2$s Keep the Batch-specific design or adjust the field/design configuration.', 'certloom' ),
+						(string) $locale,
+						$valid->get_error_message()
+					),
+					array( 'locale' => (string) $locale, 'reason' => $valid->get_error_code() )
+				);
+			}
+		}
+
+		$resolved = $this->resolve_published_assignment_details( array(
+			'issuer_id' => absint( $program['issuer_id'] ?? 0 ),
+			'program_id' => absint( $program['id'] ?? 0 ),
+			'batch_id' => 0,
+		) );
+		if ( is_wp_error( $resolved ) ) {
+			// Staged configuration may temporarily have a draft parent design. The
+			// issuance path still fails closed until it is published.
+			return 'certloom_template_not_published' === $resolved->get_error_code() ? true : $resolved;
+		}
+		if ( ! is_array( $resolved ) || empty( $resolved['published_layout'] ) ) { return true; }
+		$valid = $compatibility->validate( (array) $resolved['published_layout'], $program_contract, $batch_contract, $catalog );
+		if ( is_wp_error( $valid ) ) {
+			return new \WP_Error(
+				'certloom_template_batch_inherit_incompatible',
+				sprintf(
+					/* translators: %s: field compatibility error. */
+					__( 'This Batch cannot switch to inherited design because the Program → Issuer → Global fallback is incompatible: %s', 'certloom' ),
+					$valid->get_error_message()
+				),
+				array( 'reason' => $valid->get_error_code() )
+			);
+		}
+		return true;
 	}
 
 	/** @return array<string,mixed>|null|\WP_Error */
@@ -656,8 +740,31 @@ final class TemplateRepository {
 
 	/** Published-only assignment resolution for future issuance/artifact authority. @return array<string,mixed>|null|\WP_Error */
 	public function resolve_published_assignment_details( array $context ) {
+		return $this->resolve_published_assignment_details_internal( $context, null );
+	}
+
+	/**
+	 * Resolve the hierarchy while pretending one direct assignment is absent.
+	 * Used only for configuration preflight before an administrator switches a
+	 * scope back to inheritance; it never changes stored assignment state.
+	 *
+	 * @return array<string,mixed>|null|\WP_Error
+	 */
+	public function resolve_published_assignment_details_excluding( array $context, $scope_type, $scope_id = 0 ) {
+		$scope = ( new TemplateAssignmentPolicy() )->normalize_scope( $scope_type, $scope_id );
+		if ( is_wp_error( $scope ) ) { return $scope; }
+		return $this->resolve_published_assignment_details_internal( $context, $scope );
+	}
+
+	/** @return array<string,mixed>|null|\WP_Error */
+	private function resolve_published_assignment_details_internal( array $context, ?array $excluded_scope ) {
 		$policy = new TemplateAssignmentPolicy();
 		foreach ( $policy->candidates( $context ) as $candidate ) {
+			if ( is_array( $excluded_scope )
+				&& (string) $candidate['scope_type'] === (string) $excluded_scope['scope_type']
+				&& absint( $candidate['scope_id'] ) === absint( $excluded_scope['scope_id'] ) ) {
+				continue;
+			}
 			$assignment = $this->get_publication_assignment_candidate( $candidate['scope_type'], $candidate['scope_id'] );
 			if ( is_wp_error( $assignment ) ) { return $assignment; }
 			if ( ! is_array( $assignment ) || empty( $assignment['active'] ) ) { continue; }
@@ -811,6 +918,41 @@ final class TemplateRepository {
 			if ( is_wp_error( $program ) ) { return $program; }
 			if ( ! is_array( $program ) ) { return new \WP_Error( 'certloom_template_assignment_program_missing', __( 'The Program for this Template assignment no longer exists.', 'certloom' ) ); }
 			$program_contract = (array) ( $program['field_contract'] ?? array() );
+			$valid = ( new TemplateFieldCompatibility() )->validate( $layout, $program_contract, null, $catalog );
+			if ( is_wp_error( $valid ) ) { return $valid; }
+
+			// A Program design is also the effective design for every Batch that
+			// inherits from the Program. Validate those consumers now so changing a
+			// Program assignment cannot silently make an existing Batch unissuable.
+			$batches = new BatchRepository();
+			$after_id = 0;
+			do {
+				$rows = $batches->list_for_program_after( $scope_id, $after_id, 100 );
+				if ( is_wp_error( $rows ) ) { return $rows; }
+				foreach ( $rows as $batch ) {
+					$batch_id = absint( $batch['id'] ?? 0 );
+					if ( ! $batch_id ) { continue; }
+					$after_id = max( $after_id, $batch_id );
+					$direct = $this->get_assignment( 'batch', $batch_id );
+					if ( is_wp_error( $direct ) ) { return $direct; }
+					if ( is_array( $direct ) && ! empty( $direct['active'] ) ) { continue; }
+					$batch_contract = is_array( $batch['field_contract'] ?? null ) ? $batch['field_contract'] : array();
+					$valid = ( new TemplateFieldCompatibility() )->validate( $layout, $program_contract, $batch_contract, $catalog );
+					if ( is_wp_error( $valid ) ) {
+						return new \WP_Error(
+							'certloom_template_program_batch_incompatible',
+							sprintf(
+								/* translators: 1: Batch name, 2: field compatibility error. */
+								__( 'This Program design would break the inheriting Batch “%1$s”: %2$s Assign a compatible Batch-specific design first, or adjust the Batch field rules.', 'certloom' ),
+								(string) ( $batch['name'] ?? '#' . $batch_id ),
+								$valid->get_error_message()
+							),
+							array( 'batch_id' => $batch_id, 'reason' => $valid->get_error_code() )
+						);
+					}
+				}
+			} while ( count( $rows ) === 100 );
+			return true;
 		} else {
 			$batch = ( new BatchRepository() )->find( $scope_id );
 			if ( is_wp_error( $batch ) ) { return $batch; }

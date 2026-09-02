@@ -6,7 +6,7 @@ use Certloom\Application\Integration\IntegrationEventContext;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-/** Server-owned WooCommerce product → Certloom Program/Template mappings. */
+/** Server-owned WooCommerce product → Certloom Program/Batch mappings. */
 final class WooCommerceMappingStore implements IntegrationMappingResolverInterface {
 	const OPTION         = 'certloom_woocommerce_mappings';
 	const SCHEMA_VERSION = 1;
@@ -24,7 +24,9 @@ final class WooCommerceMappingStore implements IntegrationMappingResolverInterfa
 			'source_object_type'    => WooCommerceAdapter::SOURCE_OBJECT_TYPE,
 			'source_object_id'      => (string) $product_id,
 			'program_id'            => absint( $row['program_id'] ?? 0 ),
-			'template_id'           => absint( $row['template_id'] ?? 0 ),
+			'batch_id'              => absint( $row['batch_id'] ?? 0 ),
+			'template_id'           => 0,
+			'legacy_template_id'    => absint( $row['template_id'] ?? 0 ),
 			'expiry_mode'           => (string) ( $row['expiry_mode'] ?? 'program' ),
 			'expires_at'            => $row['expires_at'] ?? null,
 			'certificate_threshold' => 100.0,
@@ -82,9 +84,10 @@ final class WooCommerceMappingStore implements IntegrationMappingResolverInterfa
 	private function normalize_row( array $row, $touch ) {
 		$product_id = absint( $row['product_id'] ?? 0 );
 		$program_id = absint( $row['program_id'] ?? 0 );
-		$template_id = absint( $row['template_id'] ?? 0 );
-		if ( $product_id < 1 || $program_id < 1 || $template_id < 1 ) {
-			return new \WP_Error( 'certloom_woocommerce_mapping_target_invalid', __( 'WooCommerce mappings require a product, Certloom Program, and published design.', 'certloom' ) );
+		$batch_id = absint( $row['batch_id'] ?? 0 );
+		$template_id = absint( $row['template_id'] ?? 0 ); // legacy compatibility only.
+		if ( $product_id < 1 || $program_id < 1 ) {
+			return new \WP_Error( 'certloom_woocommerce_mapping_target_invalid', __( 'WooCommerce mappings require a product and Certloom Program. A Batch is optional; design follows Global → Issuer → Program → Batch.', 'certloom' ) );
 		}
 		$expiry_mode = strtolower( trim( (string) ( $row['expiry_mode'] ?? 'program' ) ) );
 		if ( ! in_array( $expiry_mode, array( 'program', 'permanent', 'date' ), true ) ) {
@@ -98,6 +101,7 @@ final class WooCommerceMappingStore implements IntegrationMappingResolverInterfa
 		$out = array(
 			'product_id'  => $product_id,
 			'program_id'  => $program_id,
+			'batch_id'    => $batch_id,
 			'template_id' => $template_id,
 			'expiry_mode' => $expiry_mode,
 			'expires_at'  => $expires_at,

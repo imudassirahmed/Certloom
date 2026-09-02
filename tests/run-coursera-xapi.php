@@ -55,7 +55,7 @@ $found=$store->find('course-42');cx(is_array($found)&&7===($found['program_id']?
 $resolved=$store->resolve_mapping($context);cx(is_array($resolved)&&'coursera'===($resolved['adapter']??'')&&'course-42'===($resolved['source_object_id']??''),'Coursera mapping resolves into generic mapping contract');
 cx(cxerr($store->save(array('course_id'=>'bad course','program_id'=>7,'template_id'=>9)),'certloom_coursera_mapping_target_invalid'),'unsafe Coursera course mapping fails closed');
 cx(cxerr($store->save(array('course_id'=>'course-x','program_id'=>0,'template_id'=>9)),'certloom_coursera_mapping_target_invalid'),'mapping requires Program');
-cx(cxerr($store->save(array('course_id'=>'course-x','program_id'=>7,'template_id'=>0)),'certloom_coursera_mapping_target_invalid'),'mapping requires published design target');
+cx(true===$store->save(array('course_id'=>'course-x','program_id'=>7,'batch_id'=>0,'template_id'=>0)),'mapping stores Program context without pinning a certificate design');
 cx(true===$store->delete('course-42')&&null===$store->find('course-42'),'Coursera mapping deletes cleanly');
 
 $statement=array(
@@ -81,7 +81,7 @@ cx(false!==strpos($recipient,'certloom_recipient_external_ambiguous')&&false!==s
 cx(false!==strpos($rest,"'/integrations/coursera/token'")&&false!==strpos($rest,"'/integrations/coursera/xapi/statements'"),'Coursera registers bounded OAuth token and statement endpoints');
 cx(false!==strpos($rest,"'grant_type'")&&false!==strpos($rest,"'client_credentials'"),'token endpoint accepts only OAuth client-credentials grant');
 cx(false!==strpos($admin,'CAP_MANAGE_INTEGRATIONS')&&false!==strpos($admin,'check_admin_referer'),'Coursera admin mutations require integration capability and nonces');
-cx(false!==strpos($admin,'find_published')&&false!==strpos($admin,'TemplateFieldCompatibility'),'Coursera mapping validates published design and Program field compatibility');
+cx(false!==strpos($admin,'IntegrationMappingTargetGuard'),'Coursera mapping validates Program/Batch fields and certificate-design hierarchy through the shared target guard');
 cx(false!==strpos($admin,'one_time_secret')&&false!==strpos($admin,'delete_transient'),'Coursera client secret is shown through one-time user-bound handoff');
 cx(false!==strpos($view,"'Your Client Secret is shown once'")&&false!==strpos($view,"'Learner identity must be explicit'"),'Coursera setup explains secret and Recipient identity boundaries in human language');
 cx(false!==strpos($view,"'Publishing destinations'")&&false!==strpos($view,"'Credly'"),'Credly is visibly separated from eligibility sources as a destination');

@@ -17,9 +17,20 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 final class IntegrationFieldCompatibility {
 	/** @return true|\WP_Error */
 	public function validate_program( array $program, array $catalog ) {
+		return $this->validate_context( $program, null, $catalog );
+	}
+
+	/**
+	 * Automatic sources must satisfy the exact Program + optional Batch field
+	 * contract because they do not get a second interactive form at issuance.
+	 *
+	 * @param array<string,mixed>|null $batch
+	 * @return true|\WP_Error
+	 */
+	public function validate_context( array $program, ?array $batch, array $catalog ) {
 		$contract = ( new ScopedFieldContract() )->resolve(
 			is_array( $program['field_contract'] ?? null ) ? $program['field_contract'] : ScopedFieldContract::empty_program(),
-			null,
+			is_array( $batch ) && is_array( $batch['field_contract'] ?? null ) ? $batch['field_contract'] : null,
 			$catalog
 		);
 		if ( is_wp_error( $contract ) ) { return $contract; }
@@ -37,7 +48,7 @@ final class IntegrationFieldCompatibility {
 			'certloom_integration_required_fields_unmapped',
 			sprintf(
 				/* translators: %s: comma-separated credential field labels. */
-				__( 'Automatic LMS issuance cannot supply these required Program fields yet: %s. Make them optional, collect them from the Recipient, or issue through Manual/Bulk Issuance until an explicit integration field mapping is configured.', 'certloom' ),
+				__( 'Automatic integration issuance cannot supply these required Program/Batch fields yet: %s. Make them optional, collect them from the Recipient, or issue through Manual/Bulk Issuance until an explicit integration field mapping is configured.', 'certloom' ),
 				implode( ', ', $unsupported )
 			)
 		);

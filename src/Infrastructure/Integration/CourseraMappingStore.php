@@ -6,7 +6,7 @@ use Certloom\Application\Integration\IntegrationEventContext;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-/** Server-owned Coursera course → Certloom Program/design mappings. */
+/** Server-owned Coursera course → Certloom Program/Batch mappings. */
 final class CourseraMappingStore implements IntegrationMappingResolverInterface {
 	const OPTION         = 'certloom_coursera_mappings_v1';
 	const SCHEMA_VERSION = 1;
@@ -22,7 +22,9 @@ final class CourseraMappingStore implements IntegrationMappingResolverInterface 
 			'source_object_type'    => CourseraXapiAdapter::SOURCE_OBJECT_TYPE,
 			'source_object_id'      => (string) $row['course_id'],
 			'program_id'            => absint( $row['program_id'] ),
-			'template_id'           => absint( $row['template_id'] ),
+			'batch_id'              => absint( $row['batch_id'] ?? 0 ),
+			'template_id'           => 0,
+			'legacy_template_id'    => absint( $row['template_id'] ?? 0 ),
 			'expiry_mode'           => (string) $row['expiry_mode'],
 			'expires_at'            => $row['expires_at'],
 			'certificate_threshold' => 100.0,
@@ -59,11 +61,11 @@ final class CourseraMappingStore implements IntegrationMappingResolverInterface 
 
 	/** @return array<string,mixed>|\WP_Error */
 	private function normalize_row( array $row, $touch ) {
-		$course_id=trim((string)($row['course_id']??'')); $program_id=absint($row['program_id']??0); $template_id=absint($row['template_id']??0);
-		if(!self::stable_id($course_id)||$program_id<1||$template_id<1){return new \WP_Error('certloom_coursera_mapping_target_invalid',__('Coursera mappings require a course ID, Certloom Program, and published design.','certloom'));}
+		$course_id=trim((string)($row['course_id']??'')); $program_id=absint($row['program_id']??0); $batch_id=absint($row['batch_id']??0); $template_id=absint($row['template_id']??0);
+		if(!self::stable_id($course_id)||$program_id<1){return new \WP_Error('certloom_coursera_mapping_target_invalid',__('Coursera mappings require a course ID and Certloom Program. A Batch is optional; design follows Global → Issuer → Program → Batch.','certloom'));}
 		$expiry_mode=strtolower(trim((string)($row['expiry_mode']??'program'))); if(!in_array($expiry_mode,array('program','permanent','date'),true)){return new \WP_Error('certloom_coursera_mapping_expiry_invalid',__('Choose a valid expiry rule for the Coursera mapping.','certloom'));}
 		$expires_at=null; if('date'===$expiry_mode){$expires_at=trim((string)($row['expires_at']??''));if(!preg_match('/^\d{4}-\d{2}-\d{2}$/',$expires_at)){return new \WP_Error('certloom_coursera_mapping_expiry_invalid',__('Choose a valid explicit expiry date for the Coursera mapping.','certloom'));}}
-		$out=array('course_id'=>$course_id,'program_id'=>$program_id,'template_id'=>$template_id,'expiry_mode'=>$expiry_mode,'expires_at'=>$expires_at,'active'=>!array_key_exists('active',$row)||!empty($row['active']),'updated_at'=>trim((string)($row['updated_at']??'')));
+		$out=array('course_id'=>$course_id,'program_id'=>$program_id,'batch_id'=>$batch_id,'template_id'=>$template_id,'expiry_mode'=>$expiry_mode,'expires_at'=>$expires_at,'active'=>!array_key_exists('active',$row)||!empty($row['active']),'updated_at'=>trim((string)($row['updated_at']??'')));
 		if($touch||!preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/',$out['updated_at'])){$out['updated_at']=current_time('mysql',true);} return $out;
 	}
 	/** @return true|\WP_Error */ private function persist(array $mappings){$payload=array('schema_version'=>self::SCHEMA_VERSION,'mappings'=>$mappings);$saved=update_option(self::OPTION,$payload,false);return $saved||$payload===get_option(self::OPTION,null)?true:new \WP_Error('certloom_coursera_mapping_save_failed',__('Certloom could not save the Coursera mapping safely.','certloom'));}

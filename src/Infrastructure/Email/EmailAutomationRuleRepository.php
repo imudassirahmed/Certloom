@@ -30,19 +30,19 @@ final class EmailAutomationRuleRepository {
 	}
 
 	/** @return array<int,array<string,mixed>> */
-	public function matching( $program_id, $source_type ) {
+	public function matching( $issuer_id, $program_id, $batch_id, $source_type ) {
+		$issuer_id   = absint( $issuer_id );
 		$program_id  = absint( $program_id );
+		$batch_id    = absint( $batch_id );
 		$source_type = sanitize_key( (string) $source_type );
 		return array_values(
 			array_filter(
 				$this->all(),
-				static function ( array $rule ) use ( $program_id, $source_type ) {
-					if ( empty( $rule['active'] ) ) {
-						return false;
-					}
-					if ( absint( $rule['program_id'] ?? 0 ) > 0 && absint( $rule['program_id'] ) !== $program_id ) {
-						return false;
-					}
+				static function ( array $rule ) use ( $issuer_id, $program_id, $batch_id, $source_type ) {
+					if ( empty( $rule['active'] ) ) { return false; }
+					if ( absint( $rule['issuer_id'] ?? 0 ) > 0 && absint( $rule['issuer_id'] ) !== $issuer_id ) { return false; }
+					if ( absint( $rule['program_id'] ?? 0 ) > 0 && absint( $rule['program_id'] ) !== $program_id ) { return false; }
+					if ( absint( $rule['batch_id'] ?? 0 ) > 0 && absint( $rule['batch_id'] ) !== $batch_id ) { return false; }
 					return 'any' === (string) $rule['source_type'] || (string) $rule['source_type'] === $source_type;
 				}
 			)
@@ -121,7 +121,9 @@ final class EmailAutomationRuleRepository {
 			'name'        => $name,
 			'active'      => empty( $rule['active'] ) ? 0 : 1,
 			'trigger'     => 'credential_issued',
+			'issuer_id'   => absint( $rule['issuer_id'] ?? 0 ),
 			'program_id'  => absint( $rule['program_id'] ?? 0 ),
+			'batch_id'    => absint( $rule['batch_id'] ?? 0 ),
 			'template_id' => $template_id,
 			'source_type' => $source_type,
 			'updated_at'  => current_time( 'mysql', true ),

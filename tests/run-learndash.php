@@ -85,7 +85,7 @@ ldcheck(is_array($resolved)&&'learndash'===($resolved['adapter']??'')&&100.0===(
 $other=$event;$other['adapter']='tutor_lms';$otherContext=IntegrationEventContext::from_array($other);
 ldcheck(!is_wp_error($otherContext)&&null===$store->resolve_mapping($otherContext),'LearnDash store refuses a different LMS adapter');
 ldcheck(lderr($store->save(array('course_id'=>102,'program_id'=>0,'template_id'=>9)),'certloom_learndash_mapping_target_invalid'),'mapping refuses missing Certloom Program');
-ldcheck(lderr($store->save(array('course_id'=>102,'program_id'=>7,'template_id'=>0)),'certloom_learndash_mapping_target_invalid'),'mapping refuses missing published Template');
+ldcheck(true===$store->save(array('course_id'=>102,'program_id'=>7,'batch_id'=>0,'template_id'=>0)),'mapping stores Program context without pinning a certificate design');
 ldcheck(lderr($store->save(array('course_id'=>102,'program_id'=>7,'template_id'=>9,'expiry_mode'=>'date','expires_at'=>'bad-date')),'certloom_learndash_mapping_expiry_invalid'),'mapping refuses invalid explicit expiry date');
 ldcheck(true===$store->delete(101)&&null===$store->find(101),'LearnDash mapping deletes cleanly');
 $store->save(array('course_id'=>101,'program_id'=>7,'template_id'=>9,'certificate_threshold'=>100,'expiry_mode'=>'program','active'=>true));
@@ -130,7 +130,7 @@ ldcheck(false!==strpos($bridgeSrc,"const HOOK = 'learndash_course_completed'")&&
 ldcheck(false===strpos($adapterSrc,'Ecapla_CertVerify_Database')&&false===strpos($bridgeSrc,'Ecapla_CertVerify_Database'),'LearnDash adapter never writes legacy credential tables directly');
 ldcheck(false===stripos($adapterSrc,'user_email')&&false===stripos($bridgeSrc,'user_email')&&false===stripos($mappingSrc,'email'),'LearnDash path contains no email-based recipient inference');
 ldcheck(false!==strpos($adminSrc,'CAP_MANAGE_INTEGRATIONS')&&false!==strpos($adminSrc,'check_admin_referer'),'LearnDash mapping mutations require dedicated capability and nonce');
-ldcheck(false!==strpos($adminSrc,'DomainFeatureGate::admin_preview_ready()')&&false!==strpos($adminSrc,'find_published'),'LearnDash mappings require gated Program/Template preview and published Template validation');
+ldcheck(false!==strpos($adminSrc,'DomainFeatureGate::admin_preview_ready()')&&false!==strpos($adminSrc,'IntegrationMappingTargetGuard'),'LearnDash mappings require gated Program/Batch preview and shared hierarchy compatibility validation');
 ldcheck(false!==strpos($adminSrc,"add_query_arg( 'certloom_error', \$result->get_error_message(), \$url )")&&false===strpos($adminSrc,'rawurlencode( $result->get_error_message() )'),'LearnDash admin redirect lets WordPress encode errors once rather than double-encoding');
 ldcheck(false!==strpos($view,"'learndash_mapping_deleted'")&&false!==strpos($view,"'Course mapping removed.'")&&false!==strpos($view,"'Course mapping saved.'"),'LearnDash mapping saved/deleted notices are accurate');
 ldcheck(false!==strpos($coordSrc,'certificate_threshold')&&false!==strpos($coordSrc,'certloom_integration_mapping_threshold_mismatch'),'generic coordinator binds LearnDash mapping threshold to normalized event threshold');

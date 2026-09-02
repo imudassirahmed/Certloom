@@ -143,6 +143,35 @@ final class BatchRepository {
 		return $out;
 	}
 
+
+	/**
+	 * Bounded display labels for integration mapping summaries without N+1 reads.
+	 *
+	 * @param array<int,int|string> $ids
+	 * @return array<int,string>|\WP_Error
+	 */
+	public function labels_by_ids( array $ids ) {
+		$ids = array_values( array_unique( array_filter( array_map( 'absint', $ids ) ) ) );
+		if ( empty( $ids ) ) { return array(); }
+		if ( count( $ids ) > 2500 ) { return new \WP_Error( 'certloom_batch_label_limit', __( 'Too many Batch labels were requested at once.', 'certloom' ) ); }
+		global $wpdb;
+		$out = array();
+		foreach ( array_chunk( $ids, 200 ) as $chunk ) {
+			$placeholders = implode( ',', array_fill( 0, count( $chunk ), '%d' ) );
+			$args = array_merge( array( SchemaManager::table( 'batches' ) ), $chunk );
+			$wpdb->last_error = '';
+			$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT id,name,code FROM %i WHERE id IN (' . $placeholders . ')', $args ), ARRAY_A );
+			if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) { return new \WP_Error( 'certloom_batch_label_read_failed', __( 'Certloom could not load Batch labels for integration mappings.', 'certloom' ) ); }
+			foreach ( $rows as $row ) {
+				$id = absint( $row['id'] ?? 0 ); if ( ! $id ) { continue; }
+				$label = (string) ( $row['name'] ?? '' );
+				if ( ! empty( $row['code'] ) ) { $label .= ' · ' . (string) $row['code']; }
+				$out[ $id ] = $label;
+			}
+		}
+		return $out;
+	}
+
 	/** @return array{items:array<int,array<string,mixed>>,total:int}|\WP_Error */
 	public function list_page( $search = '', $page = 1, $per_page = 20, $status = 'all' ) {
 		global $wpdb;

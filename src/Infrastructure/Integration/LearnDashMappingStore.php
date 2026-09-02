@@ -6,7 +6,7 @@ use Certloom\Application\Integration\IntegrationEventContext;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-/** Server-owned LearnDash course → Certloom Program/Template mappings. */
+/** Server-owned LearnDash course → Certloom Program/Batch mappings. */
 final class LearnDashMappingStore implements IntegrationMappingResolverInterface {
 	const OPTION = 'certloom_learndash_mappings';
 	const SCHEMA_VERSION = 1;
@@ -24,7 +24,11 @@ final class LearnDashMappingStore implements IntegrationMappingResolverInterface
 			'source_object_type' => LearnDashAdapter::SOURCE_OBJECT_TYPE,
 			'source_object_id' => (string) $course_id,
 			'program_id' => absint( $row['program_id'] ?? 0 ),
-			'template_id' => absint( $row['template_id'] ?? 0 ),
+			'batch_id' => absint( $row['batch_id'] ?? 0 ),
+			// Stored template_id is legacy mapping data only. Automatic issuance
+			// resolves the live Global → Issuer → Program → Batch hierarchy.
+			'template_id' => 0,
+			'legacy_template_id' => absint( $row['template_id'] ?? 0 ),
 			'expiry_mode' => (string) ( $row['expiry_mode'] ?? 'program' ),
 			'expires_at' => $row['expires_at'] ?? null,
 			'certificate_threshold' => (float) ( $row['certificate_threshold'] ?? 100 ),
@@ -82,9 +86,10 @@ final class LearnDashMappingStore implements IntegrationMappingResolverInterface
 	private function normalize_row( array $row, $touch ) {
 		$course_id = absint( $row['course_id'] ?? 0 );
 		$program_id = absint( $row['program_id'] ?? 0 );
-		$template_id = absint( $row['template_id'] ?? 0 );
-		if ( $course_id < 1 || $program_id < 1 || $template_id < 1 ) {
-			return new \WP_Error( 'certloom_learndash_mapping_target_invalid', __( 'LearnDash mappings require a course, Certloom Program, and published Template.', 'certloom' ) );
+		$batch_id = absint( $row['batch_id'] ?? 0 );
+		$template_id = absint( $row['template_id'] ?? 0 ); // legacy compatibility only.
+		if ( $course_id < 1 || $program_id < 1 ) {
+			return new \WP_Error( 'certloom_learndash_mapping_target_invalid', __( 'LearnDash mappings require a course and Certloom Program. A Batch is optional; design follows Global → Issuer → Program → Batch.', 'certloom' ) );
 		}
 		$threshold = isset( $row['certificate_threshold'] ) ? (float) $row['certificate_threshold'] : 100.0;
 		if ( ! is_finite( $threshold ) || $threshold < 0 || $threshold > 100 ) {
@@ -102,6 +107,7 @@ final class LearnDashMappingStore implements IntegrationMappingResolverInterface
 		$out = array(
 			'course_id' => $course_id,
 			'program_id' => $program_id,
+			'batch_id' => $batch_id,
 			'template_id' => $template_id,
 			'certificate_threshold' => $threshold,
 			'expiry_mode' => $expiry_mode,

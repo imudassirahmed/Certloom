@@ -43,17 +43,17 @@ final class EmailAutomationListener {
 		}
 
 		$snapshot   = is_array( $version['snapshot'] ?? null ) ? $version['snapshot'] : array();
+		$issuer_id  = absint( $snapshot['issuer']['id'] ?? 0 );
 		$program_id = absint( $snapshot['program']['id'] ?? 0 );
-		if ( ! $program_id ) {
-			return;
-		}
+		$batch_id   = absint( $snapshot['batch']['id'] ?? 0 );
+		if ( ! $program_id ) { return; }
 		$destination = sanitize_email( (string) ( $snapshot['recipient']['email'] ?? '' ) );
 		if ( '' === $destination ) {
 			do_action( 'certloom_email_automation_skipped', 'recipient_email_missing', absint( $version_id ), (string) $source_type );
 			return;
 		}
 
-		foreach ( $this->rules->matching( $program_id, $source_type ) as $rule ) {
+		foreach ( $this->rules->matching( $issuer_id, $program_id, $batch_id, $source_type ) as $rule ) {
 			$result = $this->delivery->enqueue(
 				absint( $version_id ),
 				$destination,

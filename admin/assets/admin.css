@@ -5900,3 +5900,13 @@ padding:15px}
 .certloom-credential-eyebrow .certloom-credential-source{margin-bottom:2px}
 @media(max-width:640px){.certloom-credential-hero-actions{width:100%;justify-content:flex-start}.certloom-credential-hero-actions>.button{min-height:44px}}
 @media(forced-colors:active){.certloom-credential-source{border-color:CanvasText}.certloom-credential-source.is-credential,.certloom-credential-source.is-legacy{background:Canvas;color:CanvasText}}
+
+/* UX-CORE-06: contextual configuration warnings stay visible without adding bulky notice chrome. */
+.certloom-field-warning {
+	display: block;
+	margin-top: 6px;
+	color: var(--certloom-warning);
+	font-size: 12px;
+	line-height: 1.45;
+	font-weight: 600;
+}

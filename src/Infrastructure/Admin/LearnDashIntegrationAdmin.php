@@ -1,13 +1,9 @@
 <?php
 namespace Certloom\Infrastructure\Admin;
 
-use Certloom\Application\Integration\IntegrationFieldCompatibility;
-use Certloom\Application\Templates\TemplateFieldCompatibility;
 use Certloom\Infrastructure\Integration\LearnDashAdapter;
 use Certloom\Infrastructure\Integration\LearnDashBridge;
 use Certloom\Infrastructure\Integration\LearnDashMappingStore;
-use Certloom\Infrastructure\Repository\ProgramRepository;
-use Certloom\Infrastructure\Repository\TemplateRepository;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -27,7 +23,6 @@ final class LearnDashIntegrationAdmin {
 			'mappings' => ( new LearnDashMappingStore() )->all(),
 			'courses' => array(),
 			'programs' => array(),
-			'templates' => array(),
 			'configuration_ready' => false,
 			'error' => null,
 		);
@@ -37,11 +32,8 @@ final class LearnDashIntegrationAdmin {
 		if ( is_wp_error( $data['courses'] ) ) { $data['error'] = $data['courses']; $data['courses'] = array(); return $data; }
 		if ( ! \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) { return $data; }
 		$programs = ( new ScopedContextChoices() )->programs();
-		$templates = ( new ScopedContextChoices() )->templates();
 		if ( is_wp_error( $programs ) ) { $data['error'] = $programs; return $data; }
-		if ( is_wp_error( $templates ) ) { $data['error'] = $templates; return $data; }
 		$data['programs'] = (array) $programs;
-		$data['templates'] = $templates;
 		$data['configuration_ready'] = true;
 		return $data;
 	}
@@ -51,26 +43,20 @@ final class LearnDashIntegrationAdmin {
 		$this->require_access();
 		check_admin_referer( 'certloom_learndash_mapping_save' );
 		if ( ! \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
-			$this->redirect( new \WP_Error( 'certloom_learndash_mapping_preview_closed', __( 'LearnDash mapping setup is unavailable until the Certloom Program/Template preview domain is enabled.', 'certloom' ) ) );
+			$this->redirect( new \WP_Error( 'certloom_learndash_mapping_preview_closed', __( 'LearnDash mapping setup is unavailable until the Certloom Program/Batch workflow is enabled.', 'certloom' ) ) );
 		}
 		$course_id = isset( $_POST['course_id'] ) ? absint( $_POST['course_id'] ) : 0;
 		$program_id = isset( $_POST['program_id'] ) ? absint( $_POST['program_id'] ) : 0;
-		$template_id = isset( $_POST['template_id'] ) ? absint( $_POST['template_id'] ) : 0;
+		$batch_id = isset( $_POST['batch_id'] ) ? absint( $_POST['batch_id'] ) : 0;
 		$course = $course_id ? get_post( $course_id ) : null;
 		if ( ! $course || LearnDashAdapter::course_post_type() !== (string) $course->post_type ) { $this->redirect( new \WP_Error( 'certloom_learndash_course_invalid', __( 'Choose a LearnDash course that still exists.', 'certloom' ) ) ); }
-		$program = ( new ProgramRepository() )->find( $program_id );
-		if ( is_wp_error( $program ) || ! is_array( $program ) || empty( $program['active'] ) ) { $this->redirect( is_wp_error( $program ) ? $program : new \WP_Error( 'certloom_learndash_program_invalid', __( 'Choose an active Certloom Program.', 'certloom' ) ) ); }
-		$catalog = class_exists( '\Ecapla_CertVerify_Fields' ) ? \Ecapla_CertVerify_Fields::get_field_map() : array();
-		$field_compatibility = ( new IntegrationFieldCompatibility() )->validate_program( $program, $catalog );
-		if ( is_wp_error( $field_compatibility ) ) { $this->redirect( $field_compatibility ); }
-		$template = ( new TemplateRepository() )->find_published( $template_id );
-		if ( is_wp_error( $template ) || ! is_array( $template ) ) { $this->redirect( is_wp_error( $template ) ? $template : new \WP_Error( 'certloom_learndash_template_invalid', __( 'Choose a published Certloom Template.', 'certloom' ) ) ); }
-		$template_field_compatibility = ( new TemplateFieldCompatibility() )->validate( (array) ( $template['published_revision']['layout'] ?? array() ), $program, null, $catalog );
-		if ( is_wp_error( $template_field_compatibility ) ) { $this->redirect( $template_field_compatibility ); }
+		$target = ( new IntegrationMappingTargetGuard() )->validate( $program_id, $batch_id );
+		if ( is_wp_error( $target ) ) { $this->redirect( $target ); }
 		$result = ( new LearnDashMappingStore() )->save( array(
 			'course_id' => $course_id,
 			'program_id' => $program_id,
-			'template_id' => $template_id,
+			'batch_id' => $batch_id,
+			'template_id' => 0,
 			'certificate_threshold' => 100,
 			'expiry_mode' => isset( $_POST['expiry_mode'] ) ? sanitize_key( wp_unslash( $_POST['expiry_mode'] ) ) : 'program',
 			'expires_at' => isset( $_POST['expires_at'] ) ? sanitize_text_field( wp_unslash( $_POST['expires_at'] ) ) : '',

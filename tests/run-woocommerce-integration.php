@@ -44,7 +44,7 @@ $found=$store->find(55);wo(is_array($found)&&7===($found['program_id']??0)&&9===
 $resolved=$store->resolve_mapping($context);wo(is_array($resolved)&&'woocommerce'===($resolved['adapter']??'')&&'55'===($resolved['source_object_id']??''),'WooCommerce mapping resolves through generic mapping contract');
 wo(woerr($store->save(array('product_id'=>0,'program_id'=>7,'template_id'=>9)),'certloom_woocommerce_mapping_target_invalid'),'mapping requires WooCommerce product');
 wo(woerr($store->save(array('product_id'=>56,'program_id'=>0,'template_id'=>9)),'certloom_woocommerce_mapping_target_invalid'),'mapping requires Certloom Program');
-wo(woerr($store->save(array('product_id'=>56,'program_id'=>7,'template_id'=>0)),'certloom_woocommerce_mapping_target_invalid'),'mapping requires published design');
+wo(true===$store->save(array('product_id'=>56,'program_id'=>7,'batch_id'=>0,'template_id'=>0)),'mapping stores Program context without pinning a certificate design');
 wo(woerr($store->save(array('product_id'=>56,'program_id'=>7,'template_id'=>9,'expiry_mode'=>'date','expires_at'=>'bad')),'certloom_woocommerce_mapping_expiry_invalid'),'invalid explicit expiry fails closed');
 
 $GLOBALS['woo_orders'][201]=new WooOrderStub(0,array(55));WooCommerceBridge::order_completed(201);$last=get_option(WooCommerceBridge::LAST_RESULT_OPTION,array());
@@ -60,7 +60,7 @@ wo(false!==strpos($bridge,"const HOOK               = 'woocommerce_order_status_
 wo(false===strpos($bridge,'get_billing_email')&&false===strpos($bridge,'get_billing_first_name')&&false===strpos($bridge,'get_billing_last_name'),'runtime never guesses Recipient ownership from billing identity');
 wo(false!==strpos($bridge,'LinkedRecipientResolver')&&false!==strpos($bridge,'IntegrationIssuanceCoordinator'),'WooCommerce uses explicit WP-user Recipient resolver and canonical issuance coordinator');
 wo(false!==strpos($admin,'CAP_MANAGE_INTEGRATIONS')&&false!==strpos($admin,'check_admin_referer'),'WooCommerce mapping mutations are capability and nonce protected');
-wo(false!==strpos($admin,'find_published')&&false!==strpos($admin,'TemplateFieldCompatibility'),'WooCommerce mappings require a published compatible design');
+wo(false!==strpos($admin,'IntegrationMappingTargetGuard'),'WooCommerce mappings validate Program/Batch field and hierarchy compatibility through the shared target guard');
 wo(false!==strpos($view,"'Commerce source'")&&false!==strpos($view,"'WooCommerce product'")&&false!==strpos($view,"'Issue automatically after completed order'"),'WooCommerce has a human source → Program → design configuration flow');
 wo(false!==strpos($plugin,'WooCommerceBridge::register()')&&false!==strpos($plugin,'WooCommerceIntegrationAdmin()'),'plugin boot registers WooCommerce runtime and admin boundaries');
 wo(false!==strpos($uninstall,"'certloom_woocommerce_mappings'")&&false!==strpos($uninstall,"'certloom_woocommerce_last_result'"),'uninstall removes WooCommerce mappings and operational evidence');

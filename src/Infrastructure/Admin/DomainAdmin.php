@@ -144,10 +144,51 @@ final class DomainAdmin {
 			$this->redirect_program_workspace( $program_id, is_wp_error( $program ) ? $program : new \WP_Error( 'certloom_program_missing', __( 'The Program no longer exists.', 'certloom' ) ) );
 		}
 		$name = isset( $_POST['issuer_name'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['issuer_name'] ) ) ) : '';
+		$template_id = isset( $_POST['issuer_template_id'] ) ? absint( $_POST['issuer_template_id'] ) : 0;
+		$issuer_preflight = ( new DesignHierarchyConfigurationGuard() )->validate_issuer(
+			array( 'id' => 0, 'name' => $name ),
+			$template_id
+		);
+		if ( is_wp_error( $issuer_preflight ) ) { $this->redirect_program_workspace( $program_id, $issuer_preflight ); }
 		$result = ( new IssuerRepository() )->create( array( 'name' => $name, 'slug' => sanitize_title( $name ) ) );
 		if ( is_wp_error( $result ) ) { $this->redirect_program_workspace( $program_id, $result ); }
-		$connected = ( new ProgramRepository() )->update( $program_id, array( 'issuer_id' => absint( $result ) ) );
-		if ( is_wp_error( $connected ) ) { $this->redirect_program_workspace( $program_id, $connected ); }
+		$issuer_id = absint( $result );
+		$template_result = $this->save_scope_template_assignment( 'issuer', $issuer_id, $template_id );
+		if ( is_wp_error( $template_result ) ) {
+			$this->redirect_program_workspace(
+				$program_id,
+				new \WP_Error(
+					'certloom_program_quick_issuer_design_failed',
+					sprintf(
+						/* translators: 1: Issuer name, 2: design-assignment error. */
+						__( 'Issuer “%1$s” was created, but Certloom could not connect its design: %2$s The Issuer is still available under Programs → Issuers.', 'certloom' ),
+						$name,
+						$template_result->get_error_message()
+					)
+				)
+			);
+		}
+		$proposed_program = $program;
+		$proposed_program['issuer_id'] = $issuer_id;
+		$automation_dependency = ( new AutomationConfigurationDependencyGuard() )->validate_program_issuer_change( $program_id, $issuer_id );
+		if ( is_wp_error( $automation_dependency ) ) {
+			$this->redirect_program_workspace( $program_id, $this->quick_issuer_created_but_not_connected_error( $name, $automation_dependency ) );
+		}
+		$integration_dependency = ( new IntegrationConfigurationDependencyGuard() )->validate_program_context_change( $proposed_program );
+		if ( is_wp_error( $integration_dependency ) ) {
+			$this->redirect_program_workspace( $program_id, $this->quick_issuer_created_but_not_connected_error( $name, $integration_dependency ) );
+		}
+		$program_assignment = ( new TemplateRepository() )->get_assignment( 'program', $program_id );
+		if ( is_wp_error( $program_assignment ) ) {
+			$this->redirect_program_workspace( $program_id, $this->quick_issuer_created_but_not_connected_error( $name, $program_assignment ) );
+		}
+		$program_template_id = is_array( $program_assignment ) && ! empty( $program_assignment['active'] ) ? absint( $program_assignment['template_id'] ?? 0 ) : 0;
+		$design_dependency = ( new DesignHierarchyConfigurationGuard() )->validate_program( $proposed_program, $program_template_id );
+		if ( is_wp_error( $design_dependency ) ) {
+			$this->redirect_program_workspace( $program_id, $this->quick_issuer_created_but_not_connected_error( $name, $design_dependency ) );
+		}
+		$connected = ( new ProgramRepository() )->update( $program_id, array( 'issuer_id' => $issuer_id ) );
+		if ( is_wp_error( $connected ) ) { $this->redirect_program_workspace( $program_id, $this->quick_issuer_created_but_not_connected_error( $name, $connected ) ); }
 		$this->redirect_program_workspace( $program_id, true, 'issuer_added' );
 	}
 
@@ -202,6 +243,8 @@ final class DomainAdmin {
 		if ( is_wp_error( $data ) ) { $this->redirect_result( self::ISSUERS_PAGE, $data, 'issuer_created', array( 'certloom_new' => 1, 'certloom_retry' => 1 ) ); }
 		$result = ( new IssuerRepository() )->create( $data );
 		if ( is_wp_error( $result ) ) { $this->redirect_result( self::ISSUERS_PAGE, $result, 'issuer_created', array( 'certloom_new' => 1, 'certloom_retry' => 1 ) ); }
+		$template_result = $this->save_scope_template_assignment( 'issuer', absint( $result ), isset( $_POST['issuer_template_id'] ) ? absint( $_POST['issuer_template_id'] ) : 0 );
+		if ( is_wp_error( $template_result ) ) { $this->redirect_result( self::ISSUERS_PAGE, $template_result, 'issuer_created', array( 'issuer_id' => absint( $result ) ) ); }
 		$this->redirect_result( self::ISSUERS_PAGE, $result, 'issuer_created' );
 	}
 
@@ -217,6 +260,8 @@ final class DomainAdmin {
 		if ( is_wp_error( $data ) ) { $this->redirect_result( self::ISSUERS_PAGE, $data, 'issuer_updated', array( 'issuer_id' => $id, 'certloom_retry' => 1 ) ); }
 		$result = $repo->update( $id, $data );
 		if ( is_wp_error( $result ) ) { $this->redirect_result( self::ISSUERS_PAGE, $result, 'issuer_updated', array( 'issuer_id' => $id, 'certloom_retry' => 1 ) ); }
+		$template_result = $this->save_scope_template_assignment( 'issuer', $id, isset( $_POST['issuer_template_id'] ) ? absint( $_POST['issuer_template_id'] ) : 0 );
+		if ( is_wp_error( $template_result ) ) { $this->redirect_result( self::ISSUERS_PAGE, $template_result, 'issuer_updated', array( 'issuer_id' => $id ) ); }
 		$this->redirect_result( self::ISSUERS_PAGE, $result, 'issuer_updated', array( 'issuer_id' => $id ) );
 	}
 
@@ -1396,12 +1441,31 @@ final class DomainAdmin {
 		$direct_template_id = is_array( $direct_design ) && ! empty( $direct_design['active'] ) ? absint( $direct_design['template_id'] ?? 0 ) : 0;
 		$published_templates = ( new ScopedContextChoices() )->templates();
 		$published_templates = is_wp_error( $published_templates ) ? array() : (array) $published_templates;
-		$variant_template_ids = array_values( array_unique( array_filter( array_map( 'absint', (array) ( $profile['template_variants'] ?? array() ) ) ) ) );
-		foreach ( $variant_template_ids as $variant_template_id ) {
-			$already_loaded = false; foreach ( $published_templates as $candidate ) { if ( absint( $candidate['id'] ?? 0 ) === $variant_template_id ) { $already_loaded = true; break; } }
-			if ( $already_loaded ) { continue; }
-			$selected_template = $template_repo->find_published( $variant_template_id );
-			if ( is_array( $selected_template ) ) { $published_templates[] = array( 'id' => absint( $selected_template['id'] ?? 0 ), 'name' => (string) ( $selected_template['name'] ?? '' ), 'machine_key' => (string) ( $selected_template['machine_key'] ?? '' ), 'revision_number' => absint( $selected_template['published_revision']['revision_number'] ?? 0 ) ); }
+		$variant_template_ids = array();
+		$variant_unavailable = array();
+		foreach ( (array) ( $profile['template_variants'] ?? array() ) as $variant_locale => $variant_machine_key ) {
+			$variant_machine_key = sanitize_key( (string) $variant_machine_key );
+			if ( '' === $variant_machine_key ) { continue; }
+			$selected_template = $template_repo->find_published_by_machine_key( $variant_machine_key );
+			if ( ! is_array( $selected_template ) ) {
+				$variant_template_ids[ (string) $variant_locale ] = 0;
+				$variant_unavailable[ (string) $variant_locale ] = $variant_machine_key;
+				continue;
+			}
+			$variant_template_id = absint( $selected_template['id'] ?? 0 );
+			$variant_template_ids[ (string) $variant_locale ] = $variant_template_id;
+			$already_loaded = false;
+			foreach ( $published_templates as $candidate ) {
+				if ( absint( $candidate['id'] ?? 0 ) === $variant_template_id ) { $already_loaded = true; break; }
+			}
+			if ( ! $already_loaded ) {
+				$published_templates[] = array(
+					'id' => $variant_template_id,
+					'name' => (string) ( $selected_template['name'] ?? '' ),
+					'machine_key' => (string) ( $selected_template['machine_key'] ?? '' ),
+					'revision_number' => absint( $selected_template['published_revision']['revision_number'] ?? 0 ),
+				);
+			}
 		}
 		$locale_policy = new CredentialLocale();
 		$locale_preview = $locale_policy->resolve( $profile['credential_locale'] ?? CredentialLocale::SITE_DEFAULT );
@@ -1454,22 +1518,26 @@ final class DomainAdmin {
 		if ( $simple ) { echo '</div></div></details></div>'; }
 		echo '</div>';
 		if ( $simple ) { echo '<details class="certloom-create-drawer certloom-program-language-options"><summary><span class="dashicons dashicons-translation" aria-hidden="true"></span>' . esc_html__( 'Language-specific designs', 'certloom' ) . '</summary><div class="certloom-create-drawer-body">'; }
-		echo '<div class="certloom-program-language-variants"><div class="certloom-domain-subsection-head"><div><h4>' . esc_html__( 'Language-specific certificate designs', 'certloom' ) . '</h4><p>' . esc_html( $simple ? __( 'Choose a different published design for a specific certificate language. If none is selected, Certloom uses the normal Program design.', 'certloom' ) : __( 'Map a credential locale to a published Template. Issuance tries the exact locale, then its base language, then the declared fallback, then the normal Program/Issuer/Global design.', 'certloom' ) ) . '</p></div></div>';
+		echo '<div class="certloom-program-language-variants"><div class="certloom-domain-subsection-head"><div><h4>' . esc_html__( 'Language-specific certificate designs', 'certloom' ) . '</h4><p>' . esc_html( $simple ? __( 'Choose a different published design for a specific certificate language. This is a Program-level variant: a Batch-specific design still wins; otherwise Certloom falls back through Program → Issuer → Global.', 'certloom' ) : __( 'Map a credential locale to a published Template. Batch-specific design remains most specific. Without a Batch override, issuance tries the exact Program locale variant, its base language, the declared fallback, then Program → Issuer → Global.', 'certloom' ) ) . '</p></div></div>';
 		$variants = isset( $profile['template_variants'] ) && is_array( $profile['template_variants'] ) ? $profile['template_variants'] : array();
-		$variant_rows = $variants ?: array( '' => 0 );
+		$variant_rows = $variants ? $variant_template_ids : array( '' => 0 );
 		echo '<div class="certloom-locale-variant-list" data-certloom-locale-variant-list>';
 		foreach ( $variant_rows as $variant_locale => $variant_template_id ) {
 			echo '<div class="certloom-locale-variant-row"><label><span>' . esc_html__( 'Certificate language', 'certloom' ) . '</span><select name="profile_template_variant_locale[]" data-certloom-locale-select>' . $this->locale_options_html( (string) $variant_locale, false, true ) . '</select></label><label><span>' . esc_html( $simple ? __( 'Published design', 'certloom' ) : __( 'Published Template', 'certloom' ) ) . '</span><select name="profile_template_variant_template_id[]" data-certloom-context-lookup="template" data-certloom-context-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '" data-certloom-context-empty-value="0" data-certloom-context-search-placeholder="' . esc_attr( $simple ? __( 'Search published designs…', 'certloom' ) : __( 'Search published Templates…', 'certloom' ) ) . '"><option value="0">' . esc_html( $simple ? __( 'Choose design', 'certloom' ) : __( 'Choose Template', 'certloom' ) ) . '</option>';
 			foreach ( $published_templates as $candidate ) { echo '<option value="' . esc_attr( (string) absint( $candidate['id'] ?? 0 ) ) . '" ' . selected( absint( $variant_template_id ), absint( $candidate['id'] ?? 0 ), false ) . '>' . esc_html( (string) ( $candidate['name'] ?? '' ) ) . '</option>'; }
-			echo '</select></label><button type="button" class="button-link-delete certloom-locale-variant-remove" data-certloom-remove-locale-variant>' . esc_html__( 'Remove', 'certloom' ) . '</button></div>';
+			echo '</select>';
+			if ( ! empty( $variant_unavailable[ (string) $variant_locale ] ) ) {
+				echo '<small class="certloom-field-warning">' . esc_html( sprintf( /* translators: %s: unavailable Template machine key. */ __( 'The previously selected design (%s) is no longer published. Choose a replacement before saving this Program.', 'certloom' ), (string) $variant_unavailable[ (string) $variant_locale ] ) ) . '</small>';
+			}
+			echo '</label><button type="button" class="button-link-delete certloom-locale-variant-remove" data-certloom-remove-locale-variant>' . esc_html__( 'Remove', 'certloom' ) . '</button></div>';
 		}
 		echo '</div>';
 		$options_html = '<option value="0">' . esc_html( $simple ? __( 'Choose design', 'certloom' ) : __( 'Choose Template', 'certloom' ) ) . '</option>'; foreach ( $published_templates as $candidate ) { $options_html .= '<option value="' . esc_attr( (string) absint( $candidate['id'] ?? 0 ) ) . '">' . esc_html( (string) ( $candidate['name'] ?? '' ) ) . '</option>'; }
 		echo '<template id="certloom-program-locale-variant-template"><div class="certloom-locale-variant-row"><label><span>' . esc_html__( 'Certificate language', 'certloom' ) . '</span><select name="profile_template_variant_locale[]" data-certloom-locale-select>' . $this->locale_options_html( '', false, true ) . '</select></label><label><span>' . esc_html( $simple ? __( 'Published design', 'certloom' ) : __( 'Published Template', 'certloom' ) ) . '</span><select name="profile_template_variant_template_id[]" data-certloom-context-lookup="template" data-certloom-context-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '" data-certloom-context-empty-value="0" data-certloom-context-search-placeholder="' . esc_attr( $simple ? __( 'Search published designs…', 'certloom' ) : __( 'Search published Templates…', 'certloom' ) ) . '">' . $options_html . '</select></label><button type="button" class="button-link-delete certloom-locale-variant-remove" data-certloom-remove-locale-variant>' . esc_html__( 'Remove', 'certloom' ) . '</button></div></template>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- options assembled from escaped values.
 		echo '<div class="certloom-locale-variant-actions"><button type="button" class="button" data-certloom-add-locale-variant>' . esc_html__( 'Add language variant', 'certloom' ) . '</button><label><span>' . esc_html( $simple ? __( 'Fallback design', 'certloom' ) : __( 'Declared fallback', 'certloom' ) ) . '</span><select name="profile_template_variant_fallback" data-certloom-locale-fallback data-selected="' . esc_attr( (string) ( $profile['template_variant_fallback'] ?? 'program_default' ) ) . '"><option value="program_default">' . esc_html__( 'Program default design', 'certloom' ) . '</option>'; foreach ( array_keys( $variants ) as $variant_locale ) { echo '<option value="' . esc_attr( (string) $variant_locale ) . '" ' . selected( (string) ( $profile['template_variant_fallback'] ?? 'program_default' ), (string) $variant_locale, false ) . '>' . esc_html( (string) $variant_locale ) . '</option>'; } echo '</select></label></div><p class="description">' . esc_html( $simple ? __( 'If a language-specific design is no longer published, Certloom stops and asks you to choose another instead of sending the wrong design.', 'certloom' ) : __( 'A configured locale variant must remain published. If it becomes unavailable, issuance fails closed instead of silently switching certificate artwork.', 'certloom' ) ) . '</p></div>';
 		if ( $simple ) { echo '</div></details>'; }
-		echo '<div class="certloom-program-design-default"><div class="certloom-domain-subsection-head"><div><h4>' . esc_html__( 'Certificate design', 'certloom' ) . '</h4><p>' . esc_html__( 'Choose a published design for this Program, or inherit the next available Issuer / site default.', 'certloom' ) . '</p></div></div>';
-		echo '<label class="certloom-domain-field certloom-domain-field-wide"><span><strong>' . esc_html__( 'Program design', 'certloom' ) . '</strong></span><select name="program_template_id" data-certloom-context-lookup="template" data-certloom-context-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '" data-certloom-context-empty-value="0" data-certloom-context-search-placeholder="' . esc_attr__( 'Search published designs…', 'certloom' ) . '"><option value="0">' . esc_html__( 'Inherit Issuer / site design', 'certloom' ) . '</option>';
+		echo '<div class="certloom-program-design-default"><div class="certloom-domain-subsection-head"><div><h4>' . esc_html__( 'Certificate design', 'certloom' ) . '</h4><p>' . esc_html__( 'Choose a published design for this Program, or inherit from its Issuer and then the Global fallback. The inheritance chain is Global → Issuer → Program → Batch; a Batch-specific design wins over this Program.', 'certloom' ) . '</p></div></div>';
+		echo '<label class="certloom-domain-field certloom-domain-field-wide"><span><strong>' . esc_html__( 'Program design', 'certloom' ) . '</strong></span><select name="program_template_id" data-certloom-context-lookup="template" data-certloom-context-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '" data-certloom-context-empty-value="0" data-certloom-context-search-placeholder="' . esc_attr__( 'Search published designs…', 'certloom' ) . '"><option value="0">' . esc_html__( 'Inherit Issuer / Global design', 'certloom' ) . '</option>';
 		foreach ( $published_templates as $candidate ) { echo '<option value="' . esc_attr( (string) absint( $candidate['id'] ?? 0 ) ) . '" ' . selected( $direct_template_id, absint( $candidate['id'] ?? 0 ), false ) . '>' . esc_html( (string) ( $candidate['name'] ?? '' ) ) . '</option>'; }
 		echo '</select><small>' . esc_html__( 'This is the default for credentials issued under this Program. A Batch can override it for that cohort.', 'certloom' ) . '</small></label>';
 		if ( $is_edit && is_array( $design ) ) { echo '<p class="certloom-context-note"><span class="dashicons dashicons-art" aria-hidden="true"></span><span>' . esc_html( sprintf( /* translators: %s: resolved design name. */ __( 'Effective design now: %s', 'certloom' ), (string) ( $design['template_name'] ?? __( 'Assigned design', 'certloom' ) ) ) ) . '</span></p>'; }
@@ -1502,6 +1570,11 @@ final class DomainAdmin {
 		$is_edit = null !== $editing; $id = $is_edit ? absint( $editing['id'] ) : 0;
 		$settings = $is_edit && isset( $editing['settings'] ) && is_array( $editing['settings'] ) ? $editing['settings'] : array();
 		$simple = AdminUiMode::is_simple();
+		$template_repo = new TemplateRepository();
+		$direct_design = $is_edit ? $template_repo->get_assignment( 'issuer', $id ) : null;
+		$direct_template_id = is_array( $direct_design ) && ! empty( $direct_design['active'] ) ? absint( $direct_design['template_id'] ?? 0 ) : 0;
+		$published_templates = ( new ScopedContextChoices() )->templates();
+		$published_templates = is_wp_error( $published_templates ) ? array() : (array) $published_templates;
 		echo '<section id="certloom-domain-editor" class="ecapla-certverify-admin-card certloom-domain-editor"><div class="certloom-domain-editor-head"><div><h2>' . esc_html( $is_edit ? ( $simple ? __( 'Issuer', 'certloom' ) : __( 'Issuer brand profile', 'certloom' ) ) : __( 'Add issuer / brand', 'certloom' ) ) . '</h2><p>' . esc_html( $simple ? __( 'Add the organization or brand shown on credentials. Its logo, colors and contact details can be reused across Programs.', 'certloom' ) : __( 'Brand defaults are local configuration. Issued credential Versions preserve their own immutable snapshot.', 'certloom' ) ) . '</p></div></div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" data-certloom-preserve-on-error data-certloom-entity-form="issuer" data-certloom-saving-message="' . esc_attr( $is_edit ? __( 'Saving issuer…', 'certloom' ) : __( 'Adding issuer…', 'certloom' ) ) . '" data-certloom-invalid-message="' . esc_attr__( 'Please complete the highlighted required field before saving this issuer.', 'certloom' ) . '">';
 		echo '<input type="hidden" name="action" value="' . esc_attr( $is_edit ? 'certloom_domain_update_issuer' : 'certloom_domain_create_issuer' ) . '">';
 		if ( $is_edit ) { echo '<input type="hidden" name="issuer_id" value="' . esc_attr( $id ) . '">'; wp_nonce_field( 'certloom_domain_update_issuer_' . $id ); } else { wp_nonce_field( 'certloom_domain_create_issuer' ); }
@@ -1522,7 +1595,12 @@ final class DomainAdmin {
 		$this->media_field( 'logo_attachment_id', __( 'Logo', 'certloom' ), $is_edit ? absint( $editing['logo_attachment_id'] ?? 0 ) : 0, __( 'Choose or upload the issuer logo from WordPress Media.', 'certloom' ) );
 		$this->media_field( 'seal_attachment_id', __( 'Seal', 'certloom' ), $is_edit ? absint( $editing['seal_attachment_id'] ?? 0 ) : 0, __( 'Optional seal or emblem used by designs that include an issuer seal.', 'certloom' ) );
 		echo '<div class="certloom-domain-field certloom-domain-field-wide"><label for="certloom-domain-address"><strong>' . esc_html__( 'Address', 'certloom' ) . '</strong></label><textarea id="certloom-domain-address" class="large-text" rows="3" name="address">' . esc_textarea( (string) ( $settings['address'] ?? '' ) ) . '</textarea></div>';
-		echo '</div><p class="description">' . esc_html__( 'Signer profiles are assigned separately so the same person can serve at global, issuer, program, or batch scope without duplicating identity data.', 'certloom' ) . '</p>';
+		echo '</div>';
+		echo '<div class="certloom-domain-subsection certloom-issuer-design"><div class="certloom-domain-subsection-head"><div><h3>' . esc_html__( 'Certificate design', 'certloom' ) . '</h3><p>' . esc_html__( 'Set the normal design for this Issuer, or inherit the Global design. The inheritance chain is Global → Issuer → Program → Batch; the most specific selected design wins.', 'certloom' ) . '</p></div></div>';
+		echo '<label class="certloom-domain-field certloom-domain-field-wide"><span><strong>' . esc_html__( 'Issuer design', 'certloom' ) . '</strong></span><select name="issuer_template_id" data-certloom-context-lookup="template" data-certloom-context-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '" data-certloom-context-empty-value="0" data-certloom-context-search-placeholder="' . esc_attr__( 'Search published designs…', 'certloom' ) . '"><option value="0">' . esc_html__( 'Inherit Global design', 'certloom' ) . '</option>';
+		foreach ( $published_templates as $candidate ) { echo '<option value="' . esc_attr( (string) absint( $candidate['id'] ?? 0 ) ) . '" ' . selected( $direct_template_id, absint( $candidate['id'] ?? 0 ), false ) . '>' . esc_html( (string) ( $candidate['name'] ?? '' ) ) . '</option>'; }
+		echo '</select><small>' . esc_html__( 'Programs using this Issuer inherit this design unless the Program selects its own design. A Batch-specific design overrides both.', 'certloom' ) . '</small></label></div>';
+		echo '<p class="description">' . esc_html__( 'Signer profiles are assigned separately so the same person can serve at global, issuer, program, or batch scope without duplicating identity data.', 'certloom' ) . '</p>';
 		echo '<div class="certloom-domain-form-feedback" data-certloom-domain-form-feedback aria-live="polite"></div>';
 		submit_button( $is_edit ? __( 'Update issuer', 'certloom' ) : __( 'Add issuer', 'certloom' ), 'primary' ); echo '</form></section>';
 	}
@@ -1760,8 +1838,29 @@ final class DomainAdmin {
 		if ( is_wp_error( $combined ) ) { return $combined; }
 		$program_contract = $contract->from_program_metadata( $combined, $catalog );
 		if ( is_wp_error( $program_contract ) ) { return $program_contract; }
+		if ( null !== $existing && absint( $existing['issuer_id'] ?? 0 ) !== absint( $issuer_id ) ) {
+			$automation_dependency = ( new AutomationConfigurationDependencyGuard() )->validate_program_issuer_change( absint( $existing['id'] ?? 0 ), absint( $issuer_id ) );
+			if ( is_wp_error( $automation_dependency ) ) { return $automation_dependency; }
+		}
 		$guarded = ( new ScopedFieldConfigurationGuard() )->validate_program_change( absint( $existing['id'] ?? 0 ), $program_contract, $profile, absint( $issuer_id ) );
 		if ( is_wp_error( $guarded ) ) { return $guarded; }
+		$proposed_program = null !== $existing ? $existing : array( 'id' => 0 );
+		$proposed_program['issuer_id'] = $issuer_id;
+		$proposed_program['active'] = ! empty( $data['active'] );
+		$proposed_program['profile'] = $profile;
+		$proposed_program['field_contract'] = $program_contract;
+		if ( null !== $existing ) {
+			$integration_dependency = ( new IntegrationConfigurationDependencyGuard() )->validate_program_context_change(
+				$proposed_program,
+				array( 'scope_type' => 'program', 'scope_id' => absint( $existing['id'] ?? 0 ), 'template_id' => isset( $_POST['program_template_id'] ) ? absint( $_POST['program_template_id'] ) : 0 )
+			);
+			if ( is_wp_error( $integration_dependency ) ) { return $integration_dependency; }
+		}
+		$design_dependency = ( new DesignHierarchyConfigurationGuard() )->validate_program(
+			$proposed_program,
+			isset( $_POST['program_template_id'] ) ? absint( $_POST['program_template_id'] ) : 0
+		);
+		if ( is_wp_error( $design_dependency ) ) { return $design_dependency; }
 		$data['metadata'] = $combined;
 		return $data;
 	}
@@ -1818,13 +1917,20 @@ final class DomainAdmin {
 		if ( AdminUiMode::is_simple() && '' === $slug ) {
 			$slug = null !== $existing && ! empty( $existing['slug'] ) ? sanitize_title( (string) $existing['slug'] ) : sanitize_title( $name );
 		}
-		return array(
+		$data = array(
 			'name' => $name,
 			'slug' => $slug,
 			'logo_attachment_id' => isset( $_POST['logo_attachment_id'] ) && '' !== trim( (string) $_POST['logo_attachment_id'] ) ? absint( $_POST['logo_attachment_id'] ) : null,
 			'seal_attachment_id' => isset( $_POST['seal_attachment_id'] ) && '' !== trim( (string) $_POST['seal_attachment_id'] ) ? absint( $_POST['seal_attachment_id'] ) : null,
 			'settings' => $settings,
 		);
+		$proposed_issuer = null !== $existing ? $existing : array( 'id' => 0 );
+		$proposed_issuer = array_merge( $proposed_issuer, $data );
+		$design_dependency = ( new DesignHierarchyConfigurationGuard() )->validate_issuer(
+			$proposed_issuer,
+			isset( $_POST['issuer_template_id'] ) ? absint( $_POST['issuer_template_id'] ) : 0
+		);
+		return is_wp_error( $design_dependency ) ? $design_dependency : $data;
 	}
 
 
@@ -1889,6 +1995,8 @@ final class DomainAdmin {
 		$design_ready = is_array( $design ) && ! empty( $design['published_revision'] );
 		$issue_url = add_query_arg( array( 'page' => 'certloom-issuance', 'program_id' => $program_id ), admin_url( 'admin.php' ) );
 		$design_url = add_query_arg( array( 'page' => 'certloom-templates', 'program_id' => $program_id ), admin_url( 'admin.php' ) );
+		$published_templates = ( new ScopedContextChoices() )->templates();
+		$published_templates = is_wp_error( $published_templates ) ? array() : (array) $published_templates;
 
 		echo '<section class="certloom-program-workspace certloom-workspace-card" aria-labelledby="certloom-program-next-title">';
 		echo '<header class="certloom-workspace-card-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Continue setup', 'certloom' ) . '</span><h2 id="certloom-program-next-title">' . esc_html__( 'Everything this Program needs', 'certloom' ) . '</h2><p>' . esc_html__( 'Add the related organization, cohorts and signers here, then move straight into design or issuance.', 'certloom' ) . '</p></div></header>';
@@ -1900,13 +2008,13 @@ final class DomainAdmin {
 			$issuer = ( new IssuerRepository() )->find( absint( $program['issuer_id'] ) );
 			echo '<p><strong>' . esc_html( is_array( $issuer ) ? (string) ( $issuer['name'] ?? __( 'Connected issuer', 'certloom' ) ) : __( 'Connected issuer', 'certloom' ) ) . '</strong><br><span>' . esc_html__( 'Used as the organization identity for this Program.', 'certloom' ) . '</span></p>';
 		} elseif ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_ISSUERS ) ) {
-			echo '<p>' . esc_html__( 'Add the organization issuing these credentials.', 'certloom' ) . '</p><form class="certloom-quick-inline-form" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_program_quick_issuer"><input type="hidden" name="program_id" value="' . esc_attr( (string) $program_id ) . '">'; wp_nonce_field( 'certloom_program_quick_issuer_' . $program_id ); echo '<label><span class="screen-reader-text">' . esc_html__( 'Issuer name', 'certloom' ) . '</span><input name="issuer_name" required maxlength="255" placeholder="' . esc_attr__( 'Organization name', 'certloom' ) . '"></label><button class="button" type="submit">' . esc_html__( 'Add issuer', 'certloom' ) . '</button></form>';
+			echo '<p>' . esc_html__( 'Add the organization issuing these credentials. Its design can inherit Global or define the Issuer level in Global → Issuer → Program → Batch.', 'certloom' ) . '</p><form class="certloom-quick-stack-form" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_program_quick_issuer"><input type="hidden" name="program_id" value="' . esc_attr( (string) $program_id ) . '">'; wp_nonce_field( 'certloom_program_quick_issuer_' . $program_id ); echo '<label><span>' . esc_html__( 'Issuer name', 'certloom' ) . '</span><input name="issuer_name" required maxlength="255" placeholder="' . esc_attr__( 'Organization name', 'certloom' ) . '"></label><label><span>' . esc_html__( 'Issuer design', 'certloom' ) . '</span><select name="issuer_template_id"><option value="0">' . esc_html__( 'Inherit Global design', 'certloom' ) . '</option>'; foreach ( $published_templates as $candidate ) { echo '<option value="' . esc_attr( (string) absint( $candidate['id'] ?? 0 ) ) . '">' . esc_html( (string) ( $candidate['name'] ?? '' ) ) . '</option>'; } echo '</select><small>' . esc_html__( 'Programs and Batches may override this later; the most specific selected design wins.', 'certloom' ) . '</small></label><button class="button" type="submit">' . esc_html__( 'Add issuer', 'certloom' ) . '</button></form>';
 		} else { echo '<p>' . esc_html__( 'No issuer connected yet.', 'certloom' ) . '</p>'; }
 		echo '</div></article>';
 
 		// Batches.
 		echo '<article class="certloom-program-flow-card"><div class="certloom-program-flow-icon dashicons dashicons-groups" aria-hidden="true"></div><div><span class="certloom-eyebrow">' . esc_html__( 'Optional grouping', 'certloom' ) . '</span><h3>' . esc_html__( 'Batches', 'certloom' ) . '</h3><p>' . esc_html( $batches ? sprintf( /* translators: %d: batches. */ _n( '%d active batch is connected.', '%d active batches are connected.', count( $batches ), 'certloom' ), count( $batches ) ) : __( 'Use Batches for cohorts, classes or intakes. Skip them if you do not need grouping.', 'certloom' ) ) . '</p>';
-		if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_BATCHES ) ) { echo '<details class="certloom-quick-drawer"><summary>' . esc_html__( 'Quick add batch', 'certloom' ) . '</summary><form class="certloom-quick-stack-form" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_program_quick_batch"><input type="hidden" name="program_id" value="' . esc_attr( (string) $program_id ) . '">'; wp_nonce_field( 'certloom_program_quick_batch_' . $program_id ); echo '<label><span>' . esc_html__( 'Batch name', 'certloom' ) . '</span><input name="batch_name" required maxlength="255" placeholder="' . esc_attr__( 'e.g. Spring 2027', 'certloom' ) . '"></label><label><span>' . esc_html__( 'Code', 'certloom' ) . '</span><input name="batch_code" maxlength="100" placeholder="' . esc_attr__( 'Optional — generated from name', 'certloom' ) . '"></label><button class="button" type="submit">' . esc_html__( 'Add batch', 'certloom' ) . '</button></form></details>'; }
+		if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_BATCHES ) ) { echo '<details class="certloom-quick-drawer"><summary>' . esc_html__( 'Quick add batch', 'certloom' ) . '</summary><form class="certloom-quick-stack-form" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_program_quick_batch"><input type="hidden" name="program_id" value="' . esc_attr( (string) $program_id ) . '">'; wp_nonce_field( 'certloom_program_quick_batch_' . $program_id ); echo '<label><span>' . esc_html__( 'Batch name', 'certloom' ) . '</span><input name="batch_name" required maxlength="255" placeholder="' . esc_attr__( 'e.g. Spring 2027', 'certloom' ) . '"></label><label><span>' . esc_html__( 'Code', 'certloom' ) . '</span><input name="batch_code" maxlength="100" placeholder="' . esc_attr__( 'Optional — generated from name', 'certloom' ) . '"></label><p class="description">' . esc_html__( 'Quick-created Batches inherit this Program design. Open the Batch afterward if it needs its own design or field changes.', 'certloom' ) . '</p><button class="button" type="submit">' . esc_html__( 'Add batch', 'certloom' ) . '</button></form></details>'; }
 		echo '</div></article>';
 
 		// Signers.
@@ -1918,6 +2026,19 @@ final class DomainAdmin {
 		echo '<article class="certloom-program-flow-card is-primary"><div class="certloom-program-flow-icon dashicons dashicons-art" aria-hidden="true"></div><div><span class="certloom-eyebrow">' . esc_html__( 'Next step', 'certloom' ) . '</span><h3>' . esc_html__( 'Design & issue', 'certloom' ) . '</h3><p>' . esc_html( $design_ready ? __( 'A published design is ready. You can issue a credential now.', 'certloom' ) : __( 'Choose or publish a design, then issue a credential to a Recipient.', 'certloom' ) ) . '</p><div class="certloom-program-flow-actions"><a class="button" href="' . esc_url( $design_url ) . '">' . esc_html__( 'Choose design', 'certloom' ) . '</a><a class="button button-primary" href="' . esc_url( $issue_url ) . '">' . esc_html__( 'Issue credential', 'certloom' ) . '</a></div></div></article>';
 
 		echo '</div></section>';
+	}
+
+	/** @return \WP_Error */
+	private function quick_issuer_created_but_not_connected_error( $issuer_name, \WP_Error $reason ) {
+		return new \WP_Error(
+			'certloom_program_quick_issuer_not_connected',
+			sprintf(
+				/* translators: 1: Issuer name, 2: reason the Program could not be connected. */
+				__( 'Issuer “%1$s” was created, but it was not connected to this Program: %2$s Update the dependency first, then choose the Issuer from the Program form.', 'certloom' ),
+				(string) $issuer_name,
+				$reason->get_error_message()
+			)
+		);
 	}
 
 	/** @return void */
@@ -2118,7 +2239,7 @@ final class DomainAdmin {
 		$exposure_options = \Ecapla_CertVerify_Fields::get_public_exposure_options();
 		$html = '<dialog class="certloom-quick-field-dialog" data-certloom-quick-field-dialog><div class="certloom-quick-field-dialog-shell" role="document"><div class="certloom-dialog-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Credential fields', 'certloom' ) . '</span><h3>' . esc_html__( 'Create a field', 'certloom' ) . '</h3></div><button type="button" class="button-link certloom-dialog-close" data-certloom-quick-field-close aria-label="' . esc_attr__( 'Close', 'certloom' ) . '">×</button></div>';
 		$html .= '<p class="certloom-quick-field-intro">' . esc_html__( 'Create a reusable credential field and add it to this Program now. You can still change ordering or retire fields later in Settings → Fields.', 'certloom' ) . '</p>';
-		$html .= '<div class="certloom-quick-field-grid"><div class="certloom-quick-field-field certloom-quick-field-wide"><label for="certloom-quick-field-label">' . esc_html__( 'Field label', 'certloom' ) . '</label><input id="certloom-quick-field-label" type="text" maxlength="100" data-certloom-quick-field-label required placeholder="' . esc_attr__( 'e.g. Student ID', 'certloom' ) . '"></div><div class="certloom-quick-field-field"><label for="certloom-quick-field-type">' . esc_html__( 'Field type', 'certloom' ) . '</label><select id="certloom-quick-field-type" data-certloom-quick-field-type><option value="text">' . esc_html__( 'Short text', 'certloom' ) . '</option><option value="textarea">' . esc_html__( 'Long text', 'certloom' ) . '</option><option value="number">' . esc_html__( 'Number', 'certloom' ) . '</option><option value="date">' . esc_html__( 'Date', 'certloom' ) . '</option></select></div>';
+		$html .= '<div class="certloom-quick-field-grid"><div class="certloom-quick-field-field certloom-quick-field-wide"><label for="certloom-quick-field-label">' . esc_html__( 'Field label', 'certloom' ) . '</label><input id="certloom-quick-field-label" type="text" maxlength="100" data-certloom-quick-field-label placeholder="' . esc_attr__( 'e.g. Student ID', 'certloom' ) . '"></div><div class="certloom-quick-field-field"><label for="certloom-quick-field-type">' . esc_html__( 'Field type', 'certloom' ) . '</label><select id="certloom-quick-field-type" data-certloom-quick-field-type><option value="text">' . esc_html__( 'Short text', 'certloom' ) . '</option><option value="textarea">' . esc_html__( 'Long text', 'certloom' ) . '</option><option value="number">' . esc_html__( 'Number', 'certloom' ) . '</option><option value="date">' . esc_html__( 'Date', 'certloom' ) . '</option></select></div>';
 		$html .= '<div class="certloom-quick-field-field"><label for="certloom-quick-field-sensitivity">' . esc_html__( 'Sensitivity', 'certloom' ) . '</label><select id="certloom-quick-field-sensitivity" data-certloom-quick-field-sensitivity>'; foreach ( $sensitivity_options as $value => $label ) { $html .= '<option value="' . esc_attr( $value ) . '" ' . selected( 'personal', $value, false ) . '>' . esc_html( $label ) . '</option>'; } $html .= '</select></div>';
 		$html .= '<div class="certloom-quick-field-field certloom-quick-field-wide"><label for="certloom-quick-field-exposure">' . esc_html__( 'Public visibility', 'certloom' ) . '</label><select id="certloom-quick-field-exposure" data-certloom-quick-field-exposure>'; foreach ( $exposure_options as $value => $label ) { $html .= '<option value="' . esc_attr( $value ) . '" ' . selected( 'private', $value, false ) . '>' . esc_html( $label ) . '</option>'; } $html .= '</select><small>' . esc_html__( 'Internal fields are always private. Choose public visibility only when the data is appropriate to show on verification or profile pages.', 'certloom' ) . '</small></div></div>';
 		$html .= '<div class="certloom-quick-field-context"><strong>' . esc_html__( 'Where is this value stored?', 'certloom' ) . '</strong><span>' . esc_html__( 'Quick-created custom fields belong to the credential record, so the value can differ for each credential. Person-level details such as name, email and external ID belong to the Recipient profile.', 'certloom' ) . '</span></div>';

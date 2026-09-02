@@ -134,7 +134,7 @@ final class BulkIssuanceAdmin {
 		$context_nonce   = wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION );
 
 		echo '<section class="certloom-manual-card certloom-bulk-card"><div class="certloom-manual-card-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Step 1', 'certloom' ) . '</span><h2>' . esc_html__( 'Upload & define shared issuance context', 'certloom' ) . '</h2></div><span class="certloom-template-state">' . esc_html__( 'Review before issuing', 'certloom' ) . '</span></div>';
-		echo '<p>' . esc_html__( 'Choose the Program, optional Batch, published design, dates and expiry policy. Certloom resolves the same field contract here that it validates again for every CSV row.', 'certloom' ) . '</p>';
+		echo '<p>' . esc_html__( 'Choose the Program, optional Batch, dates and expiry policy. The normal design resolves through Global → Issuer → Program → Batch; you can still choose a one-off design override for this bulk job. Certloom validates the same field and design context again for every CSV row.', 'certloom' ) . '</p>';
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" enctype="multipart/form-data" class="certloom-manual-form" data-certloom-scoped-fields-form data-certloom-scoped-fields-nonce="' . esc_attr( $context_nonce ) . '"><input type="hidden" name="action" value="certloom_bulk_issuance_upload">';
 		wp_nonce_field( 'certloom_bulk_issuance_upload' );
 
@@ -147,11 +147,11 @@ final class BulkIssuanceAdmin {
 
 		echo '<label><span>' . esc_html__( 'Batch / cohort (optional)', 'certloom' ) . '</span><select name="batch_id" data-certloom-context-lookup="batch" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search Batches in this Program…', 'certloom' ) . '"><option value="0">' . esc_html__( 'No Batch', 'certloom' ) . '</option></select><small>' . esc_html__( 'Optional. Search is limited to the selected Program. Batch field overrides and Batch-specific design assignments are revalidated for every row.', 'certloom' ) . '</small></label>';
 
-		echo '<label><span>' . esc_html__( 'Certificate design', 'certloom' ) . '</span><select name="template_id" data-certloom-context-lookup="template" data-certloom-context-empty-value="0" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search published Templates…', 'certloom' ) . '"><option value="0">' . esc_html__( 'Use Program design automatically', 'certloom' ) . '</option>';
+		echo '<label><span>' . esc_html__( 'Certificate design', 'certloom' ) . '</span><select name="template_id" data-certloom-context-lookup="template" data-certloom-context-empty-value="0" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search published Templates…', 'certloom' ) . '"><option value="0">' . esc_html__( 'Use inherited design automatically', 'certloom' ) . '</option>';
 		foreach ( $t as $template ) {
 			echo '<option value="' . esc_attr( (string) absint( $template['id'] ?? 0 ) ) . '">' . esc_html( ScopedContextChoices::template_label( $template ) ) . '</option>';
 		}
-		echo '</select></label>';
+		echo '</select><small>' . esc_html__( 'Inherited design follows Global → Issuer → Program → Batch. A selected design here overrides that hierarchy only for this bulk issuance job.', 'certloom' ) . '</small></label>';
 		echo '<label><span>' . esc_html__( 'Issue / effective date', 'certloom' ) . '</span><input type="date" name="valid_from" required value="' . esc_attr( gmdate( 'Y-m-d' ) ) . '"></label>';
 		echo '<label><span>' . esc_html__( 'Default grade (optional)', 'certloom' ) . '</span><input type="text" maxlength="191" name="grade"></label>';
 		echo '</div>';

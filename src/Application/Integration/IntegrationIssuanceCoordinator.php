@@ -52,7 +52,10 @@ final class IntegrationIssuanceCoordinator {
 			'recipient_mode' => 'existing',
 			'recipient_id' => (int) $recipient['id'],
 			'program_id' => $mapping['program_id'],
-			'template_id' => $mapping['template_id'],
+			'batch_id' => $mapping['batch_id'],
+			// Automatic sources never pin a parallel design. Canonical issuance
+			// resolves Global → Issuer → Program → Batch at review/issue time.
+			'template_id' => 0,
 			'valid_from' => substr( (string) $attempt['attempted_at'], 0, 10 ),
 			'expiry_mode' => (string) $mapping['expiry_mode'],
 			'expires_at' => $mapping['expires_at'],
@@ -61,6 +64,15 @@ final class IntegrationIssuanceCoordinator {
 			'custom_merge_fields' => array(),
 		);
 		$issuance_review = $allow_existing_series ? $this->issuance->revalidate_review( $request ) : $this->issuance->review( $request );
+		// Compatibility bridge for mappings created before the shared design
+		// hierarchy existed. Only a genuinely missing hierarchy may fall back to
+		// the old pinned design; an explicitly configured but draft/broken design
+		// still fails closed. New and re-saved mappings store no legacy design.
+		if ( is_wp_error( $issuance_review ) && 'certloom_manual_issue_program_design_missing' === $issuance_review->get_error_code() && ! empty( $mapping['legacy_template_id'] ) ) {
+			$request['template_id'] = absint( $mapping['legacy_template_id'] );
+			$mapping['design_resolution'] = 'legacy_mapping_fallback';
+			$issuance_review = $allow_existing_series ? $this->issuance->revalidate_review( $request ) : $this->issuance->review( $request );
+		}
 		if ( is_wp_error( $issuance_review ) ) { return $issuance_review; }
 		$payload = array(
 			'integration_context_sha256' => $context->sha256(),
@@ -115,9 +127,10 @@ final class IntegrationIssuanceCoordinator {
 			return new \WP_Error( 'certloom_integration_mapping_threshold_mismatch', __( 'The integration eligibility threshold changed after the source event was normalized. Review the integration mapping before issuing.', 'certloom' ) );
 		}
 		$program_id = (int) ( $mapping['program_id'] ?? 0 );
-		$template_id = (int) ( $mapping['template_id'] ?? 0 );
-		if ( $program_id < 1 || $template_id < 1 || isset( $mapping['active'] ) && ! $mapping['active'] ) {
-			return new \WP_Error( 'certloom_integration_mapping_invalid', __( 'The integration mapping must target an active Certloom Program and published Template.', 'certloom' ) );
+		$batch_id = (int) ( $mapping['batch_id'] ?? 0 );
+		$legacy_template_id = (int) ( $mapping['legacy_template_id'] ?? 0 );
+		if ( $program_id < 1 || $batch_id < 0 || isset( $mapping['active'] ) && ! $mapping['active'] ) {
+			return new \WP_Error( 'certloom_integration_mapping_invalid', __( 'The integration mapping must target an active Certloom Program. A Batch is optional; certificate design is resolved from Global → Issuer → Program → Batch.', 'certloom' ) );
 		}
 		$expiry_mode = strtolower( trim( (string) ( $mapping['expiry_mode'] ?? 'program' ) ) );
 		if ( ! in_array( $expiry_mode, array( 'program', 'permanent', 'date' ), true ) ) {
@@ -133,7 +146,9 @@ final class IntegrationIssuanceCoordinator {
 			'source_object_type' => $type,
 			'source_object_id' => $id,
 			'program_id' => $program_id,
-			'template_id' => $template_id,
+			'batch_id' => $batch_id,
+			'template_id' => 0,
+			'legacy_template_id' => max( 0, $legacy_template_id ),
 			'certificate_threshold' => $mapping_threshold,
 			'expiry_mode' => $expiry_mode,
 			'expires_at' => $expires_at,

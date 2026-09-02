@@ -56,12 +56,21 @@ final class AutomationAdmin {
 	public function save_rule() {
 		$this->require_capability();
 		check_admin_referer( 'certloom_automation_rule_save' );
+		$issuer_id  = isset( $_POST['issuer_id'] ) ? absint( $_POST['issuer_id'] ) : 0;
+		$program_id = isset( $_POST['program_id'] ) ? absint( $_POST['program_id'] ) : 0;
+		$batch_id   = isset( $_POST['batch_id'] ) ? absint( $_POST['batch_id'] ) : 0;
+		$target = ( new AutomationRuleTargetGuard() )->validate( $issuer_id, $program_id, $batch_id );
+		if ( is_wp_error( $target ) ) {
+			$this->redirect( $target, '', 'rules' );
+		}
 		$result = ( new EmailAutomationRuleRepository() )->save(
 			array(
 				'id'          => isset( $_POST['rule_id'] ) ? sanitize_key( wp_unslash( $_POST['rule_id'] ) ) : '',
 				'name'        => isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '',
 				'active'      => ! empty( $_POST['active'] ),
-				'program_id'  => isset( $_POST['program_id'] ) ? absint( $_POST['program_id'] ) : 0,
+				'issuer_id'   => $target['issuer_id'],
+				'program_id'  => $target['program_id'],
+				'batch_id'    => $target['batch_id'],
 				'template_id' => isset( $_POST['template_id'] ) ? sanitize_key( wp_unslash( $_POST['template_id'] ) ) : EmailTemplateCatalogRepository::DEFAULT_ID,
 				'source_type' => isset( $_POST['source_type'] ) ? sanitize_key( wp_unslash( $_POST['source_type'] ) ) : 'any',
 			)

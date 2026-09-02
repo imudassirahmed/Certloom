@@ -628,6 +628,8 @@ class Ecapla_CertVerify_Admin {
 				if ( is_wp_error( $template ) ) { return $template; }
 				if ( ! is_array( $template ) ) { return new \WP_Error( 'certloom_setup_template_missing', __( 'The selected default design is no longer available.', 'certloom' ) ); }
 			}
+			$design_preflight = ( new \Certloom\Infrastructure\Admin\DesignHierarchyConfigurationGuard() )->validate_global( $template_id );
+			if ( is_wp_error( $design_preflight ) ) { return $design_preflight; }
 		}
 
 		$onboarding_before = Ecapla_CertVerify_Onboarding::snapshot();
@@ -1729,8 +1731,28 @@ class Ecapla_CertVerify_Admin {
 
 		$email_templates = ( new \Certloom\Infrastructure\Email\EmailTemplateCatalogRepository() )->all();
 		$email_rules     = ( new \Certloom\Infrastructure\Email\EmailAutomationRuleRepository() )->all();
-		$programs_result = ( new \Certloom\Infrastructure\Repository\ProgramRepository() )->list_page( '', 1, 20, 'active' );
+		$program_repository = new \Certloom\Infrastructure\Repository\ProgramRepository();
+		$issuer_repository  = new \Certloom\Infrastructure\Repository\IssuerRepository();
+		$batch_repository   = new \Certloom\Infrastructure\Repository\BatchRepository();
+		$programs_result = $program_repository->list_page( '', 1, 20, 'active' );
 		$programs        = is_wp_error( $programs_result ) ? array() : (array) ( $programs_result['items'] ?? array() );
+		$issuers_result  = $issuer_repository->list_page( '', 1, 20 );
+		$issuers         = is_wp_error( $issuers_result ) ? array() : (array) ( $issuers_result['items'] ?? array() );
+		$automation_issuer_ids  = array();
+		$automation_program_ids = array();
+		$automation_batch_ids   = array();
+		foreach ( $email_rules as $rule ) {
+			if ( ! is_array( $rule ) ) { continue; }
+			if ( ! empty( $rule['issuer_id'] ) ) { $automation_issuer_ids[] = absint( $rule['issuer_id'] ); }
+			if ( ! empty( $rule['program_id'] ) ) { $automation_program_ids[] = absint( $rule['program_id'] ); }
+			if ( ! empty( $rule['batch_id'] ) ) { $automation_batch_ids[] = absint( $rule['batch_id'] ); }
+		}
+		$automation_issuer_names  = $issuer_repository->labels_by_ids( $automation_issuer_ids );
+		$automation_program_names = $program_repository->labels_by_ids( $automation_program_ids );
+		$automation_batch_names   = $batch_repository->labels_by_ids( $automation_batch_ids );
+		$automation_issuer_names  = is_wp_error( $automation_issuer_names ) ? array() : $automation_issuer_names;
+		$automation_program_names = is_wp_error( $automation_program_names ) ? array() : $automation_program_names;
+		$automation_batch_names   = is_wp_error( $automation_batch_names ) ? array() : $automation_batch_names;
 
 		$tutor     = ( new \Certloom\Infrastructure\Admin\TutorLmsIntegrationAdmin() )->screen_data();
 		$learndash = ( new \Certloom\Infrastructure\Admin\LearnDashIntegrationAdmin() )->screen_data();

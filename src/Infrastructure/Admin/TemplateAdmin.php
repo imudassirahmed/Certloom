@@ -467,18 +467,23 @@ final class TemplateAdmin {
 		$scope_type = isset( $_POST['scope_type'] ) ? sanitize_key( wp_unslash( $_POST['scope_type'] ) ) : '';
 		$scope_id = isset( $_POST['scope_id'] ) ? absint( $_POST['scope_id'] ) : 0;
 		check_admin_referer( 'certloom_template_assignment_' . $scope_type . '_' . $scope_id );
+		$template_id = isset( $_POST['template_id'] ) ? absint( $_POST['template_id'] ) : 0;
+		$return_to = isset( $_POST['return_to'] ) ? sanitize_key( wp_unslash( $_POST['return_to'] ) ) : '';
+		$redirect_args = ( 'library' === $return_to && TemplateAssignmentPolicy::SCOPE_PROGRAM === $scope_type )
+			? array( 'design_view' => 'library', 'library_program_id' => $scope_id )
+			: $this->assignment_redirect_args( $scope_type, $scope_id );
+		$preflight = $this->assignment_hierarchy_preflight( $scope_type, $scope_id, $template_id );
+		if ( is_wp_error( $preflight ) ) {
+			$this->redirect( $preflight, 'assignment_saved', $redirect_args );
+		}
 		$result = ( new TemplateRepository() )->assign(
-			isset( $_POST['template_id'] ) ? absint( $_POST['template_id'] ) : 0,
+			$template_id,
 			$scope_type,
 			$scope_id,
 			100,
 			isset( $_POST['expected_assignment_id'] ) ? absint( $_POST['expected_assignment_id'] ) : 0,
 			isset( $_POST['expected_updated_at'] ) ? sanitize_text_field( wp_unslash( $_POST['expected_updated_at'] ) ) : ''
 		);
-		$return_to = isset( $_POST['return_to'] ) ? sanitize_key( wp_unslash( $_POST['return_to'] ) ) : '';
-		$redirect_args = ( 'library' === $return_to && TemplateAssignmentPolicy::SCOPE_PROGRAM === $scope_type )
-			? array( 'design_view' => 'library', 'library_program_id' => $scope_id )
-			: $this->assignment_redirect_args( $scope_type, $scope_id );
 		$this->redirect( $result, 'assignment_saved', $redirect_args );
 	}
 
@@ -488,6 +493,10 @@ final class TemplateAdmin {
 		$scope_type = isset( $_POST['scope_type'] ) ? sanitize_key( wp_unslash( $_POST['scope_type'] ) ) : '';
 		$scope_id = isset( $_POST['scope_id'] ) ? absint( $_POST['scope_id'] ) : 0;
 		check_admin_referer( 'certloom_template_assignment_' . $scope_type . '_' . $scope_id );
+		$preflight = $this->assignment_hierarchy_preflight( $scope_type, $scope_id, 0 );
+		if ( is_wp_error( $preflight ) ) {
+			$this->redirect( $preflight, 'assignment_cleared', $this->assignment_redirect_args( $scope_type, $scope_id ) );
+		}
 		$result = ( new TemplateRepository() )->clear_assignment(
 			$scope_type,
 			$scope_id,
@@ -761,7 +770,7 @@ final class TemplateAdmin {
 		$scope_search = isset( $_GET['scope_s'] ) ? sanitize_text_field( wp_unslash( $_GET['scope_s'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only search.
 		$scope_page = isset( $_GET['scope_paged'] ) ? max( 1, absint( $_GET['scope_paged'] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only pagination.
 
-		echo '<section class="certloom-template-assignment-workspace"><div class="certloom-template-assignment-head"><div><h2>' . esc_html__( 'Template assignments', 'certloom' ) . '</h2><p>' . esc_html__( 'Choose the design used at this level, or choose None to use the next available default. Priority is Batch → Program → Issuer → Global.', 'certloom' ) . '</p></div><span class="certloom-domain-preview-badge">' . esc_html__( 'Published designs', 'certloom' ) . '</span></div>';
+		echo '<section class="certloom-template-assignment-workspace"><div class="certloom-template-assignment-head"><div><h2>' . esc_html__( 'Template assignments', 'certloom' ) . '</h2><p>' . esc_html__( 'Inheritance runs Global → Issuer → Program → Batch. Choose a design at any level to override the levels before it; the most specific selected design wins. Choose None to keep inheriting.', 'certloom' ) . '</p></div><span class="certloom-domain-preview-badge">' . esc_html__( 'Published designs', 'certloom' ) . '</span></div>';
 		echo '<nav class="certloom-template-scope-tabs" aria-label="' . esc_attr__( 'Design assignment levels', 'certloom' ) . '">';
 		foreach ( TemplateAssignmentPolicy::scopes() as $scope ) {
 			$url = add_query_arg( array( 'page' => self::PAGE, 'assignment_scope' => $scope ), admin_url( 'admin.php' ) );
@@ -848,6 +857,44 @@ final class TemplateAdmin {
 		echo '</div>';
 		$this->assignment_pagination( array( 'page' => self::PAGE, 'assignment_scope' => $scope_type, 'assignment_scope_id' => $scope_id, 'template_s' => $search, 'template_kind' => $kind ), 'template_paged', $page, (int) $result['total'], 12 );
 		echo '</div>';
+	}
+
+	/**
+	 * Apply the same Global → Issuer → Program → Batch safety checks when an
+	 * assignment is changed from the Design workspace instead of an entity form.
+	 *
+	 * @return true|\WP_Error
+	 */
+	private function assignment_hierarchy_preflight( $scope_type, $scope_id, $template_id ) {
+		$scope_type = sanitize_key( (string) $scope_type );
+		$scope_id = absint( $scope_id );
+		$template_id = absint( $template_id );
+		$guard = new DesignHierarchyConfigurationGuard();
+		if ( TemplateAssignmentPolicy::SCOPE_GLOBAL === $scope_type ) {
+			return $guard->validate_global( $template_id );
+		}
+		if ( TemplateAssignmentPolicy::SCOPE_ISSUER === $scope_type ) {
+			$issuer = ( new IssuerRepository() )->find( $scope_id );
+			if ( is_wp_error( $issuer ) ) { return $issuer; }
+			if ( ! is_array( $issuer ) ) { return new \WP_Error( 'certloom_template_assignment_scope_missing', __( 'The selected Issuer no longer exists.', 'certloom' ) ); }
+			return $guard->validate_issuer( $issuer, $template_id );
+		}
+		if ( TemplateAssignmentPolicy::SCOPE_PROGRAM === $scope_type ) {
+			$program = ( new ProgramRepository() )->find( $scope_id );
+			if ( is_wp_error( $program ) ) { return $program; }
+			if ( ! is_array( $program ) ) { return new \WP_Error( 'certloom_template_assignment_scope_missing', __( 'The selected Program no longer exists.', 'certloom' ) ); }
+			return $guard->validate_program( $program, $template_id );
+		}
+		if ( TemplateAssignmentPolicy::SCOPE_BATCH === $scope_type ) {
+			$batch = ( new BatchRepository() )->find( $scope_id );
+			if ( is_wp_error( $batch ) ) { return $batch; }
+			if ( ! is_array( $batch ) ) { return new \WP_Error( 'certloom_template_assignment_scope_missing', __( 'The selected Batch no longer exists.', 'certloom' ) ); }
+			$program = ( new ProgramRepository() )->find( absint( $batch['program_id'] ?? 0 ) );
+			if ( is_wp_error( $program ) ) { return $program; }
+			if ( ! is_array( $program ) ) { return new \WP_Error( 'certloom_template_assignment_relationship_corrupt', __( 'The selected Batch no longer has a valid Program.', 'certloom' ) ); }
+			return $guard->validate_batch( $program, $batch, $template_id );
+		}
+		return new \WP_Error( 'certloom_template_assignment_scope_invalid', __( 'Choose a valid template assignment scope.', 'certloom' ) );
 	}
 
 	private function assignment_action_label( $scope_type ) {
