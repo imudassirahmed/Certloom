@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.98-qa.20
+Stable tag: 1.6.98-qa.21
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 

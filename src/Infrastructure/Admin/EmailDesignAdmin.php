@@ -27,10 +27,12 @@ final class EmailDesignAdmin {
 
 	/** @return void */
 	public function menu() {
-		// Refresh any upgraded role/current-user capability state immediately
-		// before WordPress decides whether this route may be registered.
+		// Keep route reachability on the established Certloom management boundary.
+		// The render/mutation callbacks enforce granular Email authorization too,
+		// so a stale granular role map cannot make WordPress permanently mark this
+		// contextual route as no-privilege before Certloom can explain/repair it.
 		\Ecapla_CertVerify_Permissions::maybe_upgrade_capabilities();
-		add_submenu_page( 'certloom', __( 'Email designs', 'certloom' ), __( 'Email designs', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS, self::PAGE, array( $this, 'render' ) );
+		add_submenu_page( 'certloom', __( 'Email designs', 'certloom' ), __( 'Email designs', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::PAGE, array( $this, 'render' ) );
 	}
 
 	/** @return void */
@@ -137,6 +139,6 @@ final class EmailDesignAdmin {
 		return (string) ( $batch_names[ $id ] ?? sprintf( /* translators: %d: Batch database ID used only as a fallback label. */ __( 'Batch #%d', 'certloom' ), $id ) );
 	}
 
-	private function cap() { if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) ) { wp_die( esc_html__( 'You do not have permission to manage Certloom email designs.', 'certloom' ) ); } }
+	private function cap() { if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) && ! current_user_can( ECAPLA_CERTVERIFY_CAP ) ) { wp_die( esc_html__( 'You do not have permission to manage Certloom email designs.', 'certloom' ) ); } }
 	private function redirect( $result, $success, $design_id = '' ) { $args = array( 'page' => self::PAGE ); if ( is_wp_error( $result ) ) { $args['certloom_error'] = $result->get_error_message(); } else { $args['certloom_notice'] = $success; if ( '' !== $design_id ) { $args['design_id'] = $design_id; } } wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) ); exit; }
 }

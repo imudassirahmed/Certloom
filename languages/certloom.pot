@@ -15,11 +15,11 @@ msgstr ""
 "X-Generator: certloom make-pot.py\n"
 "X-Domain: certloom\n"
 
-#: admin/class-ecapla-certverify-admin.php:1006
+#: admin/class-ecapla-certverify-admin.php:1007
 msgid "That retired field cannot be purged."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1021
+#: admin/class-ecapla-certverify-admin.php:1022
 msgid "Stored values were purged, but the retired registry could not be updated. The reserved key remains safe; run Purge again to retry the final registry cleanup."
 msgstr ""
 
@@ -39,32 +39,32 @@ msgstr ""
 msgid "Credentials"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1035
+#: admin/class-ecapla-certverify-admin.php:1036
 msgid "Choose a CSV file to upload."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1041
+#: admin/class-ecapla-certverify-admin.php:1042
 msgid "Upload a valid .csv file."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1045
+#: admin/class-ecapla-certverify-admin.php:1046
 msgid "The CSV file is larger than the 5 MB import limit."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1065
+#: admin/class-ecapla-certverify-admin.php:1066
 msgid "That import session expired. Upload the file again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1076
+#: admin/class-ecapla-certverify-admin.php:1077
 msgid "Only an administrator can enable Historical restore mode."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1098
+#: admin/class-ecapla-certverify-admin.php:1099
 msgid "That import session expired during processing. Upload the file again."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:116
-#: admin/class-ecapla-certverify-admin.php:1914
+#: admin/class-ecapla-certverify-admin.php:1915
 #: src/Infrastructure/Admin/AdminProductNavigation.php:99
 #: src/Infrastructure/Admin/DomainAdmin.php:358
 #: src/Infrastructure/Admin/DomainAdmin.php:371
@@ -75,7 +75,7 @@ msgid "Recipients"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:117
-#: admin/class-ecapla-certverify-admin.php:1920
+#: admin/class-ecapla-certverify-admin.php:1921
 #: admin/views/dashboard.php:156
 #: admin/views/dashboard.php:350
 #: admin/views/issuance-analytics.php:63
@@ -88,7 +88,7 @@ msgstr ""
 msgid "Programs"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1175
+#: admin/class-ecapla-certverify-admin.php:1176
 msgid "The settings could not be saved. Role access was not changed."
 msgstr ""
 
@@ -103,7 +103,7 @@ msgid "Design"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:119
-#: admin/class-ecapla-certverify-admin.php:1932
+#: admin/class-ecapla-certverify-admin.php:1933
 #: admin/views/analytics.php:10
 #: admin/views/issuance-analytics.php:10
 #: src/Infrastructure/Admin/DomainAdmin.php:1128
@@ -113,28 +113,28 @@ msgstr ""
 msgid "Issuance"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1209
+#: admin/class-ecapla-certverify-admin.php:1210
 msgid "The general settings were saved, but one or more role changes failed and could not be fully rolled back. Review role access before continuing."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1210
+#: admin/class-ecapla-certverify-admin.php:1211
 msgid "The general settings were saved, but role access could not be updated. The previous role access was restored."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:128
+#: admin/class-ecapla-certverify-admin.php:129
 #: admin/views/dashboard.php:356
 #: src/Infrastructure/Admin/AdminProductNavigation.php:114
 msgid "Analytics"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:129
+#: admin/class-ecapla-certverify-admin.php:130
 #: admin/views/settings-manager.php:12
 #: src/Infrastructure/Admin/AdminProductNavigation.php:116
 #: src/Infrastructure/Admin/AdminProductNavigation.php:60
 msgid "Settings"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:132
+#: admin/class-ecapla-certverify-admin.php:133
 #: admin/views/automations.php:24
 #: admin/views/dashboard.php:352
 #: src/Infrastructure/Admin/AdminProductNavigation.php:114
@@ -142,136 +142,132 @@ msgstr ""
 msgid "Automations"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1336
+#: admin/class-ecapla-certverify-admin.php:1337
 msgid "The Certificate Manager role could not be created or updated."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:135
+#: admin/class-ecapla-certverify-admin.php:136
 #: admin/views/dashboard.php:354
 #: admin/views/integrations.php:90
 #: src/Infrastructure/Admin/AdminProductNavigation.php:114
 msgid "Integrations"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:136
+#: admin/class-ecapla-certverify-admin.php:137
 #: admin/views/dashboard.php:355
 #: admin/views/import-upload.php:11
 #: src/Infrastructure/Admin/AdminProductNavigation.php:116
 msgid "Backup & Restore"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:137
+#: admin/class-ecapla-certverify-admin.php:138
 msgid "Add Certificate"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:138
+#: admin/class-ecapla-certverify-admin.php:139
 msgid "Field Manager"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:139
+#: admin/class-ecapla-certverify-admin.php:140
 msgid "Appearance & Embed"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:140
-#: src/Infrastructure/Admin/AdminProductNavigation.php:116
-msgid "Setup"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1402
+#: admin/class-ecapla-certverify-admin.php:1403
 msgid "The verified private backup could not be opened for download."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:141
-msgid "Verification sample"
+#: src/Infrastructure/Admin/AdminProductNavigation.php:116
+msgid "Setup"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:142
+msgid "Verification sample"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:143
 #: admin/views/bulk-review.php:15
 msgid "Review bulk change"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1471
+#: admin/class-ecapla-certverify-admin.php:1472
 msgid "Add this site’s Google OAuth client ID and secret before using the site-owned connection."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:149
-msgid "You must be signed in to change the Certloom workspace mode."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1494
+#: admin/class-ecapla-certverify-admin.php:1495
 msgid "Google Drive connection was cancelled or refused."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1504
-#: admin/class-ecapla-certverify-admin.php:1527
-#: admin/class-ecapla-certverify-admin.php:240
+#: admin/class-ecapla-certverify-admin.php:150
+msgid "You must be signed in to change the Certloom workspace mode."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1505
+#: admin/class-ecapla-certverify-admin.php:1528
+#: admin/class-ecapla-certverify-admin.php:241
 msgid "Google Drive connected."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1517
+#: admin/class-ecapla-certverify-admin.php:1518
 msgid "Google Drive connection was cancelled or could not be completed."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1540
+#: admin/class-ecapla-certverify-admin.php:1541
 msgid "Google Drive connected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1540
+#: admin/class-ecapla-certverify-admin.php:1541
 msgid "Google Drive connection"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1540
+#: admin/class-ecapla-certverify-admin.php:1541
 msgid "Google Drive was not connected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1540
+#: admin/class-ecapla-certverify-admin.php:1541
 msgid "This window can be closed."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1601
+#: admin/class-ecapla-certverify-admin.php:1602
 msgid "Choose a Certloom backup file."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1607
+#: admin/class-ecapla-certverify-admin.php:1608
 msgid "Upload a valid .cvbackup or legacy .json Certloom backup."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1759
+#: admin/class-ecapla-certverify-admin.php:1760
 msgid "Back to setup"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1759
+#: admin/class-ecapla-certverify-admin.php:1760
 msgid "Sample verification result"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1759
+#: admin/class-ecapla-certverify-admin.php:1760
 msgid "Setup preview"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1759
+#: admin/class-ecapla-certverify-admin.php:1760
 msgid "This is sample data only. Use it to review the public credential hierarchy, spacing and verification presentation before you have issued a real credential."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1816
+#: admin/class-ecapla-certverify-admin.php:1817
 msgid "Certloom could not build this Template preview."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1829
+#: admin/class-ecapla-certverify-admin.php:1830
 msgid "Automations become available with Certloom’s Program-based credential workflow."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:185
+#: admin/class-ecapla-certverify-admin.php:186
 #: src/Infrastructure/Admin/TemplateAdmin.php:1289
 msgid "Copy"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:186
-msgid "Copied"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1862
-#: admin/class-ecapla-certverify-admin.php:1883
-#: admin/class-ecapla-certverify-admin.php:242
+#: admin/class-ecapla-certverify-admin.php:1863
+#: admin/class-ecapla-certverify-admin.php:1884
+#: admin/class-ecapla-certverify-admin.php:243
 #: admin/views/import-upload.php:189
 #: admin/views/integrations.php:131
 #: admin/views/integrations.php:152
@@ -281,14 +277,14 @@ msgstr ""
 msgid "Connected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1862
+#: admin/class-ecapla-certverify-admin.php:1863
 #: admin/views/integrations.php:153
 #: admin/views/integrations.php:265
 msgid "Credly"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1862
-#: admin/class-ecapla-certverify-admin.php:1883
+#: admin/class-ecapla-certverify-admin.php:1863
+#: admin/class-ecapla-certverify-admin.php:1884
 #: admin/views/integrations.php:152
 #: admin/views/integrations.php:210
 #: admin/views/integrations.php:266
@@ -296,7 +292,7 @@ msgstr ""
 msgid "Not connected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1866
+#: admin/class-ecapla-certverify-admin.php:1867
 #: admin/views/automations.php:20
 #: admin/views/integrations.php:113
 #: admin/views/integrations.php:162
@@ -305,24 +301,24 @@ msgstr ""
 msgid "Tutor LMS"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1868
-#: admin/class-ecapla-certverify-admin.php:1873
-#: admin/class-ecapla-certverify-admin.php:1878
+#: admin/class-ecapla-certverify-admin.php:1869
+#: admin/class-ecapla-certverify-admin.php:1874
+#: admin/class-ecapla-certverify-admin.php:1879
 msgid "Available on this site"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1868
-#: admin/class-ecapla-certverify-admin.php:1873
-#: admin/class-ecapla-certverify-admin.php:1878
+#: admin/class-ecapla-certverify-admin.php:1869
+#: admin/class-ecapla-certverify-admin.php:1874
+#: admin/class-ecapla-certverify-admin.php:1879
 #: admin/views/integrations.php:123
 msgid "Not detected"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:187
-msgid "Press Ctrl+C or Cmd+C to copy"
+msgid "Copied"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1871
+#: admin/class-ecapla-certverify-admin.php:1872
 #: admin/views/automations.php:20
 #: admin/views/integrations.php:114
 #: admin/views/integrations.php:178
@@ -331,7 +327,7 @@ msgstr ""
 msgid "LearnDash"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1876
+#: admin/class-ecapla-certverify-admin.php:1877
 #: admin/views/automations.php:20
 #: admin/views/integrations.php:115
 #: admin/views/integrations.php:194
@@ -341,11 +337,10 @@ msgid "WooCommerce"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:188
-#: admin/views/email-designs.php:68
-msgid "Search Batches…"
+msgid "Press Ctrl+C or Cmd+C to copy"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1881
+#: admin/class-ecapla-certverify-admin.php:1882
 #: admin/views/automations.php:20
 #: admin/views/integrations.php:132
 #: admin/views/integrations.php:210
@@ -355,6 +350,11 @@ msgid "Coursera"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:189
+#: admin/views/email-designs.php:68
+msgid "Search Batches…"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:190
 #: admin/views/setup-wizard.php:145
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:150
 #: src/Infrastructure/Admin/DomainAdmin.php:1559
@@ -363,168 +363,172 @@ msgstr ""
 msgid "Search published Templates…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:190
+#: admin/class-ecapla-certverify-admin.php:191
 msgid "Search choices…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:191
-msgid "Manage published designs"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1915
-#: admin/class-ecapla-certverify-admin.php:1921
+#: admin/class-ecapla-certverify-admin.php:1916
+#: admin/class-ecapla-certverify-admin.php:1922
 msgid "Protected workspace"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1916
+#: admin/class-ecapla-certverify-admin.php:1917
 msgid "Recipient management is prepared but not available in this build yet. Certloom keeps this workspace locked until the underlying credential data transition completes its final safety checks. Existing certificate operations remain unchanged."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1917
-#: admin/class-ecapla-certverify-admin.php:1923
+#: admin/class-ecapla-certverify-admin.php:1918
+#: admin/class-ecapla-certverify-admin.php:1924
 msgid "Protected until final data safety checks complete"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:192
-msgid "Choose a Program first."
+msgid "Manage published designs"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1922
+#: admin/class-ecapla-certverify-admin.php:1923
 msgid "Program management is prepared but not available in this build yet. Certloom keeps Program relationships locked until the underlying credential data transition completes its final safety checks rather than storing a misleading substitute."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1926
+#: admin/class-ecapla-certverify-admin.php:1927
 #: admin/views/issuance-analytics.php:63
 #: src/Infrastructure/Admin/TemplateAdmin.php:177
 #: src/Infrastructure/Admin/TemplateAdmin.php:542
 msgid "Templates"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1927
+#: admin/class-ecapla-certverify-admin.php:1928
 msgid "Design availability"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1928
+#: admin/class-ecapla-certverify-admin.php:1929
 msgid "The Template Library and Designer are available through Design. Downloadable PDF and image publication stays protected until its final rendering safety checks are approved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1929
+#: admin/class-ecapla-certverify-admin.php:193
+msgid "Choose a Program first."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1930
 msgid "Design tools available · downloadable publication protected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:193
-msgid "Searching…"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1933
+#: admin/class-ecapla-certverify-admin.php:1934
 msgid "Issuance availability"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1934
+#: admin/class-ecapla-certverify-admin.php:1935
 msgid "Certloom’s existing certificate, import, delivery, sharing and analytics workflows remain available. Program-based issuance and downloadable PDF or image publication stay protected until their final data and rendering safety checks are approved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1935
+#: admin/class-ecapla-certverify-admin.php:1936
 msgid "Current credential workflows available · publication authority protected"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:194
-msgid "Search failed."
+msgid "Searching…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1940
+#: admin/class-ecapla-certverify-admin.php:1941
 msgid "That Certloom workspace is not available."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:195
-msgid "1 match."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1959
-msgid "That certificate does not exist."
+msgid "Search failed."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:196
-msgid "%d matches."
+msgid "1 match."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1960
+msgid "That certificate does not exist."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:197
-msgid "No published designs match. Publish a design in Design first."
+msgid "%d matches."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1976
+#: admin/class-ecapla-certverify-admin.php:1977
 msgid "Those import results expired. Run the import again to generate a new report."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:198
-msgid "No matching choices."
+msgid "No published designs match. Publish a design in Design first."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1985
+#: admin/class-ecapla-certverify-admin.php:1986
 msgid "That backup restore process expired. Upload the backup again."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:199
+msgid "No matching choices."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1995
+#: admin/class-ecapla-certverify-admin.php:2004
+msgid "That import session expired. Upload the CSV again."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:200
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:148
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:185
 msgid "No Batch"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1994
-#: admin/class-ecapla-certverify-admin.php:2003
-msgid "That import session expired. Upload the CSV again."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:200
+#: admin/class-ecapla-certverify-admin.php:201
 #: src/Infrastructure/Admin/DomainAdmin.php:1232
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:676
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:267
 msgid "Choose Program…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:201
-#: src/Infrastructure/Admin/DomainAdmin.php:1570
-msgid "Program default design"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:2018
+#: admin/class-ecapla-certverify-admin.php:2019
 #: includes/class-ecapla-certverify-backup.php:440
 msgid "That backup review session expired. Upload the backup again."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:202
-msgid "Step 2: choose the Certloom backup you want to review."
+#: src/Infrastructure/Admin/DomainAdmin.php:1570
+msgid "Program default design"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:203
-msgid "Step 2: choose the CSV file you want to review."
+msgid "Step 2: choose the Certloom backup you want to review."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2032
+#: admin/class-ecapla-certverify-admin.php:2033
 msgid "You do not have permission to view Certloom analytics."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:204
-msgid "Legacy Program field mode — optional free custom keys remain available until this Program adopts Credential fields."
+msgid "Step 2: choose the CSV file you want to review."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:205
-msgid "This Program uses Credential fields but currently assigns no additional fields."
+msgid "Legacy Program field mode — optional free custom keys remain available until this Program adopts Credential fields."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:206
-msgid "Credential fields loaded from the selected Program."
+msgid "This Program uses Credential fields but currently assigns no additional fields."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:207
-msgid "Credential fields loaded from the selected Program + Batch."
+msgid "Credential fields loaded from the selected Program."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2070
+#: admin/class-ecapla-certverify-admin.php:2071
 msgid "The review acknowledgement could not be saved."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:208
+msgid "Credential fields loaded from the selected Program + Batch."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:2089
+msgid "A complete Certloom restore is in progress. Certificate and configuration changes are temporarily paused; public verification remains available."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:209
 #: admin/views/email-designs.php:65
 #: admin/views/email-designs.php:68
 #: src/Application/Templates/TemplateAssignmentPolicy.php:65
@@ -540,11 +544,7 @@ msgstr ""
 msgid "Batch"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2088
-msgid "A complete Certloom restore is in progress. Certificate and configuration changes are temporarily paused; public verification remains available."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:209
+#: admin/class-ecapla-certverify-admin.php:210
 #: admin/views/edit-certificate.php:112
 #: admin/views/edit-certificate.php:83
 #: admin/views/email-designs.php:65
@@ -580,7 +580,14 @@ msgstr ""
 msgid "Program"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:210
+#. translators: 1: number of legacy records, 2: review URL.
+#: admin/class-ecapla-certverify-admin.php:2109
+msgid "%1$d legacy Expired certificate needs review. <a href=\"%2$s\">Review it now</a>. It will remain Expired until an administrator deliberately chooses a workflow status."
+msgid_plural "%1$d legacy Expired certificates need review. <a href=\"%2$s\">Review them now</a>. They will remain Expired until an administrator deliberately chooses a workflow status."
+msgstr[0] ""
+msgstr[1] ""
+
+#: admin/class-ecapla-certverify-admin.php:211
 #: admin/views/setup-wizard.php:134
 #: src/Infrastructure/Admin/DomainAdmin.php:1536
 #: src/Infrastructure/Admin/DomainAdmin.php:2226
@@ -594,14 +601,7 @@ msgstr ""
 msgid "Required"
 msgstr ""
 
-#. translators: 1: number of legacy records, 2: review URL.
-#: admin/class-ecapla-certverify-admin.php:2108
-msgid "%1$d legacy Expired certificate needs review. <a href=\"%2$s\">Review it now</a>. It will remain Expired until an administrator deliberately chooses a workflow status."
-msgid_plural "%1$d legacy Expired certificates need review. <a href=\"%2$s\">Review them now</a>. They will remain Expired until an administrator deliberately chooses a workflow status."
-msgstr[0] ""
-msgstr[1] ""
-
-#: admin/class-ecapla-certverify-admin.php:211
+#: admin/class-ecapla-certverify-admin.php:212
 #: admin/views/setup-wizard.php:134
 #: src/Infrastructure/Admin/DomainAdmin.php:1536
 #: src/Infrastructure/Admin/DomainAdmin.php:2268
@@ -612,40 +612,44 @@ msgstr[1] ""
 msgid "Optional"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:212
-msgid "Value comes from the Recipient profile and is frozen into the issued credential."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:2121
+#: admin/class-ecapla-certverify-admin.php:2122
 msgid "Certloom 1.3.0 briefly contained an unsafe legacy-status migration. If that version ran on this site, compare certificate statuses with a pre-1.3.0 backup before launch. The current release does not guess or silently rewrite those records."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2124
+#: admin/class-ecapla-certverify-admin.php:2125
 msgid "I have reviewed this"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:213
-msgid "Use the Grade / result field above."
+msgid "Value comes from the Recipient profile and is frozen into the issued credential."
 msgstr ""
 
 #. translators: %s: Ecapla website link.
-#: admin/class-ecapla-certverify-admin.php:2136
+#: admin/class-ecapla-certverify-admin.php:2137
 msgid "Certloom is developed and maintained by %s."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2137
+#: admin/class-ecapla-certverify-admin.php:2138
 msgid "Ecapla"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:214
-msgid "Privacy:"
+msgid "Use the Grade / result field above."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2146
+#: admin/class-ecapla-certverify-admin.php:2147
 msgid "You do not have permission to manage certificates."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:215
+msgid "Privacy:"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:2153
+msgid "You do not have permission to manage these settings."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:216
 #: admin/views/partials/certificate-field.php:24
 #: includes/class-ecapla-certverify-fields.php:333
 #: includes/class-ecapla-certverify-public-policy.php:27
@@ -653,76 +657,72 @@ msgstr ""
 msgid "Private"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2152
-msgid "You do not have permission to manage these settings."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:216
+#: admin/class-ecapla-certverify-admin.php:217
 #: admin/views/partials/certificate-field.php:22
 #: includes/class-ecapla-certverify-fields.php:334
 #: includes/class-ecapla-certverify-public-policy.php:26
 msgid "Verification only"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:217
+#: admin/class-ecapla-certverify-admin.php:218
 #: admin/views/partials/certificate-field.php:22
 #: includes/class-ecapla-certverify-fields.php:335
 msgid "Profile only"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:218
+#: admin/class-ecapla-certverify-admin.php:219
 #: admin/views/partials/certificate-field.php:22
 #: includes/class-ecapla-certverify-fields.php:336
 msgid "Verification + profile"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:219
+#: admin/class-ecapla-certverify-admin.php:220
 #: includes/class-ecapla-certverify-fields.php:323
 msgid "Public-safe"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:220
+#: admin/class-ecapla-certverify-admin.php:221
 #: includes/class-ecapla-certverify-fields.php:324
 msgid "Personal"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:221
+#: admin/class-ecapla-certverify-admin.php:222
 #: includes/class-ecapla-certverify-fields.php:325
 msgid "Sensitive"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:222
+#: admin/class-ecapla-certverify-admin.php:223
 #: includes/class-ecapla-certverify-fields.php:326
 msgid "Internal"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:223
+#: admin/class-ecapla-certverify-admin.php:224
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:166
 msgid "or"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:224
+#: admin/class-ecapla-certverify-admin.php:225
 msgid "required"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:225
+#: admin/class-ecapla-certverify-admin.php:226
 msgid "Credential fields could not be loaded. The server will still validate before issuance."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:226
+#: admin/class-ecapla-certverify-admin.php:227
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:209
 msgid "Choose a Program to load its credential fields."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:227
+#: admin/class-ecapla-certverify-admin.php:228
 msgid "Loading credential fields…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:228
+#: admin/class-ecapla-certverify-admin.php:229
 msgid "Invalid response"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:229
+#: admin/class-ecapla-certverify-admin.php:230
 #: admin/views/dashboard.php:236
 #: admin/views/dashboard.php:248
 #: admin/views/dashboard.php:288
@@ -746,12 +746,12 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:774
 #: src/Infrastructure/Admin/DomainAdmin.php:975
 #: src/Infrastructure/Admin/DomainAdmin.php:977
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:301
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:302
 #: src/Infrastructure/Repository/UnifiedCredentialRegistry.php:40
 msgid "Credential"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:230
+#: admin/class-ecapla-certverify-admin.php:231
 #: admin/views/setup-wizard.php:112
 #: admin/views/setup-wizard.php:142
 #: admin/views/setup-wizard.php:229
@@ -759,123 +759,123 @@ msgstr ""
 msgid "Clear and professional"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:231
+#: admin/class-ecapla-certverify-admin.php:232
 #: admin/views/setup-wizard.php:26
 msgid "Entered when issuing"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:232
+#: admin/class-ecapla-certverify-admin.php:233
 msgid "Loading preview…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:233
+#: admin/class-ecapla-certverify-admin.php:234
 msgid "Template preview could not be loaded."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:234
+#: admin/class-ecapla-certverify-admin.php:235
 #: admin/views/setup-wizard.php:152
 msgid "No default design selected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:235
+#: admin/class-ecapla-certverify-admin.php:236
 #: src/Infrastructure/Admin/TemplateAdmin.php:696
 #: src/Infrastructure/Admin/TemplateAdmin.php:697
 msgid "Preview unavailable"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:236
+#: admin/class-ecapla-certverify-admin.php:237
 msgid "Waiting for Google…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:237
+#: admin/class-ecapla-certverify-admin.php:238
 msgid "Opening Google…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:238
+#: admin/class-ecapla-certverify-admin.php:239
 msgid "Complete permission in the Google window."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:239
+#: admin/class-ecapla-certverify-admin.php:240
 msgid "Your browser blocked the popup, so Google will open in this tab."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:241
+#: admin/class-ecapla-certverify-admin.php:242
 msgid "Google Drive was not connected."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:243
+#: admin/class-ecapla-certverify-admin.php:244
 msgid "Please fill in this required field."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:244
+#: admin/class-ecapla-certverify-admin.php:245
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:177
 msgid "New Recipient profile"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:245
+#: admin/class-ecapla-certverify-admin.php:246
 msgid "Complete the highlighted required field."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:246
+#: admin/class-ecapla-certverify-admin.php:247
 msgid "Adding…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:247
+#: admin/class-ecapla-certverify-admin.php:248
 msgid "This item could not be added."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:248
+#: admin/class-ecapla-certverify-admin.php:249
 msgid "Added."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:249
+#: admin/class-ecapla-certverify-admin.php:250
 msgid "Saving…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:250
+#: admin/class-ecapla-certverify-admin.php:251
 #: src/Infrastructure/Admin/DomainAdmin.php:2237
 msgid "Default"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:251
+#: admin/class-ecapla-certverify-admin.php:252
 msgid "Enter a field label."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:252
+#: admin/class-ecapla-certverify-admin.php:253
 msgid "Creating field…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:253
+#: admin/class-ecapla-certverify-admin.php:254
 msgid "Field could not be created."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:254
+#: admin/class-ecapla-certverify-admin.php:255
 msgid "Field created."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:255
+#: admin/class-ecapla-certverify-admin.php:256
 #: src/Infrastructure/Admin/DomainAdmin.php:2268
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:372
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:262
 msgid "Not used"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:256
+#: admin/class-ecapla-certverify-admin.php:257
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:731
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:277
 msgid "Inherit Program"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:257
+#: admin/class-ecapla-certverify-admin.php:258
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:731
 msgid "Exclude"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:258
+#: admin/class-ecapla-certverify-admin.php:259
 msgid "Field rule"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:259
+#: admin/class-ecapla-certverify-admin.php:260
 #: admin/views/automations.php:32
 #: admin/views/integrations.php:171
 #: admin/views/integrations.php:187
@@ -892,27 +892,27 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:482
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:630
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:723
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:45
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:47
 msgid "Remove"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:260
+#: admin/class-ecapla-certverify-admin.php:261
 msgid "This design could not be published."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:261
+#: admin/class-ecapla-certverify-admin.php:262
 msgid "This design could not be moved to Draft."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:262
+#: admin/class-ecapla-certverify-admin.php:263
 msgid "Design published."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:263
+#: admin/class-ecapla-certverify-admin.php:264
 msgid "Design moved to Draft."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:264
+#: admin/class-ecapla-certverify-admin.php:265
 #: admin/views/integrations.php:315
 #: src/Infrastructure/Admin/TemplateAdmin.php:1254
 #: src/Infrastructure/Admin/TemplateAdmin.php:1296
@@ -921,7 +921,7 @@ msgstr ""
 msgid "Published"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:265
+#: admin/class-ecapla-certverify-admin.php:266
 #: src/Infrastructure/Admin/TemplateAdmin.php:1002
 #: src/Infrastructure/Admin/TemplateAdmin.php:1295
 #: src/Infrastructure/Admin/TemplateAdmin.php:676
@@ -929,60 +929,60 @@ msgstr ""
 msgid "Draft"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:266
+#: admin/class-ecapla-certverify-admin.php:267
 #: src/Infrastructure/Admin/TemplateAdmin.php:678
 msgid "Move published design back to Draft"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:267
+#: admin/class-ecapla-certverify-admin.php:268
 #: src/Infrastructure/Admin/TemplateAdmin.php:680
 msgid "Publish this draft design"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:268
+#: admin/class-ecapla-certverify-admin.php:269
 msgid "Deactivating Certloom stops public credential verification. Continue?"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:288
+#: admin/class-ecapla-certverify-admin.php:289
 msgid "Before deactivating Certloom"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:288
+#: admin/class-ecapla-certverify-admin.php:289
 #: src/Infrastructure/Admin/DomainAdmin.php:2275
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:738
 #: src/Infrastructure/Admin/TemplateAdmin.php:646
 msgid "Close"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:288
+#: admin/class-ecapla-certverify-admin.php:289
 msgid "Data & verification"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:289
+#: admin/class-ecapla-certverify-admin.php:290
 msgid "Public verification pages, credential QR destinations and the recipient portal stop working while Certloom is inactive."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:290
+#: admin/class-ecapla-certverify-admin.php:291
 msgid "WordPress can only delete a plugin after it is inactive, when Certloom code is no longer running. Choose now what should happen if you later delete the plugin."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:292
+#: admin/class-ecapla-certverify-admin.php:293
 msgid "Keep certificate data"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:292
+#: admin/class-ecapla-certverify-admin.php:293
 msgid "Recommended. Data stays in WordPress so reinstalling Certloom can restore service. Verification still remains unavailable while the plugin is inactive."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:293
+#: admin/class-ecapla-certverify-admin.php:294
 msgid "Delete Certloom data if the plugin is deleted"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:293
+#: admin/class-ecapla-certverify-admin.php:294
 msgid "Permanently removes Certloom certificate data and settings during WordPress plugin deletion. This cannot be undone without a backup."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:295
+#: admin/class-ecapla-certverify-admin.php:296
 #: admin/views/bulk-review.php:19
 #: admin/views/edit-certificate.php:169
 #: src/Infrastructure/Admin/DomainAdmin.php:1220
@@ -999,79 +999,79 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:295
+#: admin/class-ecapla-certverify-admin.php:296
 msgid "Save choice & deactivate"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:302
+#: admin/class-ecapla-certverify-admin.php:303
 msgid "You do not have permission to deactivate plugins."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:307
+#: admin/class-ecapla-certverify-admin.php:308
 msgid "You do not have permission to change a network-wide Certloom deletion policy."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:310
+#: admin/class-ecapla-certverify-admin.php:311
 msgid "Certloom could not save the network-wide uninstall data choice. The plugin was not deactivated."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:314
+#: admin/class-ecapla-certverify-admin.php:315
 msgid "Certloom could not save the uninstall data choice. The plugin was not deactivated."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:319
+#: admin/class-ecapla-certverify-admin.php:320
 msgid "Certloom refused an invalid plugin deactivation destination."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:345
+#: admin/class-ecapla-certverify-admin.php:346
 msgid "The certificate you tried to update no longer exists."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:607
+#: admin/class-ecapla-certverify-admin.php:608
 msgid "Certloom could not identify that setup action."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:689
+#: admin/class-ecapla-certverify-admin.php:690
 msgid "Connect Google Drive before enabling automatic Drive copies in Setup."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:695
+#: admin/class-ecapla-certverify-admin.php:696
 msgid "The selected verification page is no longer available."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:703
+#: admin/class-ecapla-certverify-admin.php:704
 msgid "The selected default design cannot be applied until Template administration is available."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:711
+#: admin/class-ecapla-certverify-admin.php:712
 msgid "The selected default design is no longer available."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:734
+#: admin/class-ecapla-certverify-admin.php:735
 msgid "Previous Certloom settings could not be restored."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:739
+#: admin/class-ecapla-certverify-admin.php:740
 msgid "Certloom could not apply the reviewed delivery and verification settings."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:762
+#: admin/class-ecapla-certverify-admin.php:763
 msgid "Certloom could not complete the reviewed setup, so it restored the previous configuration."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:763
+#: admin/class-ecapla-certverify-admin.php:764
 msgid "Some rollback checks also need administrator review."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:782
+#: admin/class-ecapla-certverify-admin.php:783
 msgid "Template Preview is not available while Template administration is protected."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:784
+#: admin/class-ecapla-certverify-admin.php:785
 msgid "Choose designs per Program, Batch or Issuer later."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:784
+#: admin/class-ecapla-certverify-admin.php:785
 #: admin/views/setup-wizard.php:40
 #: admin/views/setup-wizard.php:41
 #: src/Infrastructure/Admin/DomainAdmin.php:1262
@@ -1084,19 +1084,19 @@ msgstr ""
 msgid "None"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:787
+#: admin/class-ecapla-certverify-admin.php:788
 msgid "That published Template is no longer available."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:791
+#: admin/class-ecapla-certverify-admin.php:792
 msgid "Certloom could not build that Template preview."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:806
+#: admin/class-ecapla-certverify-admin.php:807
 msgid "Registry column preferences could not be saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:850
+#: admin/class-ecapla-certverify-admin.php:851
 msgid "The field order, labels, and visibility could not be saved."
 msgstr ""
 
@@ -1105,7 +1105,7 @@ msgstr ""
 msgid "Home"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:865
+#: admin/class-ecapla-certverify-admin.php:866
 #: src/Infrastructure/Admin/ScopedFieldAdminAjax.php:107
 msgid "Give the new field a label."
 msgstr ""
@@ -1117,16 +1117,16 @@ msgstr ""
 msgid "Certloom"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:900
+#: admin/class-ecapla-certverify-admin.php:901
 msgid "The custom field could not be added because the field schema was not saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:912
+#: admin/class-ecapla-certverify-admin.php:913
 msgid "Core certificate fields cannot be removed. You can relabel, reorder, or hide them from public results."
 msgstr ""
 
 #. translators: %d: program count.
-#: admin/class-ecapla-certverify-admin.php:920
+#: admin/class-ecapla-certverify-admin.php:921
 #: src/Infrastructure/Admin/DomainAdmin.php:524
 msgid "%d Program"
 msgid_plural "%d Programs"
@@ -1134,53 +1134,53 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: batch count.
-#: admin/class-ecapla-certverify-admin.php:921
+#: admin/class-ecapla-certverify-admin.php:922
 msgid "%d Batch override"
 msgid_plural "%d Batch overrides"
 msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: template count.
-#: admin/class-ecapla-certverify-admin.php:922
+#: admin/class-ecapla-certverify-admin.php:923
 msgid "%d active Template"
 msgid_plural "%d active Templates"
 msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %1$s: label; %2$s: parts.
-#: admin/class-ecapla-certverify-admin.php:923
+#: admin/class-ecapla-certverify-admin.php:924
 msgid "“%1$s” is still used by %2$s. Remove those active assignments/references before retiring the field. Existing issued credential history will remain protected."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:926
+#: admin/class-ecapla-certverify-admin.php:927
 msgid "The field could not be retired safely. No field was removed."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:938
+#: admin/class-ecapla-certverify-admin.php:939
 msgid "The active field layout could not be updated, and the temporary retired marker could not be rolled back. Review the field registry before continuing."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:940
+#: admin/class-ecapla-certverify-admin.php:941
 msgid "The active field layout could not be updated. No field was removed."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:955
+#: admin/class-ecapla-certverify-admin.php:956
 msgid "That retired field cannot be restored."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:975
+#: admin/class-ecapla-certverify-admin.php:976
 msgid "The retired field could not be restored."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:979
+#: admin/class-ecapla-certverify-admin.php:980
 msgid "The retired marker could not be cleared, and the restored field could not be rolled back. Review the active and retired field registries before continuing."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:981
+#: admin/class-ecapla-certverify-admin.php:982
 msgid "The retired field could not be restored safely. The active field layout was rolled back."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:993
+#: admin/class-ecapla-certverify-admin.php:994
 msgid "Core field labels could not be reset for the current site language."
 msgstr ""
 
@@ -1393,7 +1393,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:220
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:291
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:781
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:301
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:302
 #: src/Infrastructure/Admin/TemplateAdmin.php:1163
 #: src/Infrastructure/Import/DomainImportCsvReader.php:72
 msgid "Status"
@@ -1406,7 +1406,7 @@ msgstr ""
 #: includes/class-ecapla-certverify-fields.php:393
 #: src/Infrastructure/Admin/DomainAdmin.php:609
 #: src/Infrastructure/Admin/DomainAdmin.php:630
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:53
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:55
 #: src/Infrastructure/Import/DomainImportCsvReader.php:73
 msgid "Issue date"
 msgstr ""
@@ -1419,7 +1419,7 @@ msgstr ""
 #: includes/class-ecapla-certverify-fields.php:394
 #: src/Infrastructure/Admin/DomainAdmin.php:609
 #: src/Infrastructure/Admin/DomainAdmin.php:631
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:53
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:55
 #: src/Infrastructure/Import/DomainImportCsvReader.php:74
 msgid "Expiry date"
 msgstr ""
@@ -1607,7 +1607,7 @@ msgstr ""
 #: admin/views/analytics.php:83
 #: admin/views/setup-wizard.php:213
 #: src/Infrastructure/Admin/DomainAdmin.php:1314
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:266
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:267
 #: src/Infrastructure/Admin/TemplateAdmin.php:664
 msgid "Source"
 msgstr ""
@@ -1668,7 +1668,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:1772
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:394
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:474
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:301
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:302
 msgid "Action"
 msgstr ""
 
@@ -1774,7 +1774,7 @@ msgstr ""
 #: admin/views/automations.php:31
 #: admin/views/integrations.php:44
 #: src/Application/Analytics/IssuanceAnalyticsService.php:40
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:137
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:139
 msgid "Batch #%d"
 msgstr ""
 
@@ -2464,8 +2464,8 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:839
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:394
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:413
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:266
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:301
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:267
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:302
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:162
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:168
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:335
@@ -2957,8 +2957,8 @@ msgstr ""
 
 #: admin/views/email-designs.php:13
 #: src/Infrastructure/Admin/AdminProductNavigation.php:110
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:70
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:33
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:71
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:35
 msgid "Email designs"
 msgstr ""
 
@@ -2971,7 +2971,7 @@ msgid "Create email design"
 msgstr ""
 
 #: admin/views/email-designs.php:14
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:287
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:288
 msgid "Open Automations"
 msgstr ""
 
@@ -3062,7 +3062,7 @@ msgid "e.g. Graduation credential"
 msgstr ""
 
 #: admin/views/email-designs.php:38
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:275
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:276
 msgid "Subject"
 msgstr ""
 
@@ -3083,12 +3083,12 @@ msgid "Add content"
 msgstr ""
 
 #: admin/views/email-designs.php:44
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:43
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:45
 msgid "Button"
 msgstr ""
 
 #: admin/views/email-designs.php:44
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:43
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:45
 msgid "Divider"
 msgstr ""
 
@@ -3101,26 +3101,26 @@ msgstr ""
 #: elementor/class-ecapla-certverify-elementor-widget.php:84
 #: elementor/class-ecapla-certverify-template-widgets.php:107
 #: elementor/class-ecapla-certverify-template-widgets.php:285
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:43
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:45
 msgid "Heading"
 msgstr ""
 
 #: admin/views/email-designs.php:44
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:43
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:45
 #: src/Infrastructure/Admin/TemplateAdmin.php:1217
 #: src/Infrastructure/Admin/TemplateAdmin.php:90
 msgid "Image"
 msgstr ""
 
 #: admin/views/email-designs.php:44
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:43
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:45
 msgid "Spacer"
 msgstr ""
 
 #: admin/views/email-designs.php:44
 #: admin/views/fields-manager.php:150
 #: elementor/class-ecapla-certverify-elementor-widget.php:666
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:43
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:45
 #: src/Infrastructure/Admin/TemplateAdmin.php:1125
 #: src/Infrastructure/Admin/TemplateAdmin.php:1217
 #: src/Infrastructure/Admin/TemplateAdmin.php:126
@@ -3128,7 +3128,7 @@ msgid "Text"
 msgstr ""
 
 #: admin/views/email-designs.php:44
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:43
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:45
 msgid "Two columns"
 msgstr ""
 
@@ -3172,17 +3172,17 @@ msgid "Reorder blocks with the arrow controls. Free-positioned objects are inten
 msgstr ""
 
 #: admin/views/email-designs.php:54
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:48
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:50
 msgid "Desktop preview"
 msgstr ""
 
 #: admin/views/email-designs.php:54
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:48
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:50
 msgid "Email preview"
 msgstr ""
 
 #: admin/views/email-designs.php:54
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:265
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:266
 #: src/Infrastructure/Admin/TemplateAdmin.php:1117
 #: src/Infrastructure/Admin/TemplateAdmin.php:684
 msgid "Preview"
@@ -3205,7 +3205,7 @@ msgid "Optional custom plain text"
 msgstr ""
 
 #: admin/views/email-designs.php:56
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:277
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:278
 msgid "Plain-text version"
 msgstr ""
 
@@ -3236,7 +3236,7 @@ msgstr ""
 #: admin/views/email-designs.php:65
 #: src/Application/Templates/TemplateAssignmentPolicy.php:68
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:700
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:134
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:136
 #: src/Infrastructure/Admin/ScopedFieldAdminAjax.php:236
 #: src/Infrastructure/Admin/ScopedFieldAdminAjax.php:237
 #: src/Infrastructure/Repository/SignerRepository.php:568
@@ -3282,7 +3282,7 @@ msgid "Choose a Program first to find its Batches. The email rule itself is save
 msgstr ""
 
 #: admin/views/email-designs.php:69
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:235
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:236
 msgid "Email design"
 msgstr ""
 
@@ -3336,12 +3336,12 @@ msgid "Public exposure"
 msgstr ""
 
 #: admin/views/fields-manager.php:114
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:45
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:47
 msgid "Move up"
 msgstr ""
 
 #: admin/views/fields-manager.php:115
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:45
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:47
 msgid "Move down"
 msgstr ""
 
@@ -7133,7 +7133,7 @@ msgstr ""
 
 #: blocks/credential/index.js:41
 #: elementor/class-ecapla-certverify-credential-widget.php:18
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:46
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:48
 msgid "Heading level"
 msgstr ""
 
@@ -8845,7 +8845,7 @@ msgstr ""
 #: includes/class-ecapla-certverify-fields.php:407
 #: includes/class-ecapla-certverify-recipient-portal.php:194
 #: src/Infrastructure/Admin/DomainAdmin.php:870
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:53
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:55
 #: src/Infrastructure/Admin/TemplateAdmin.php:1163
 msgid "Grade"
 msgstr ""
@@ -9639,7 +9639,7 @@ msgid "Sample preview — not a real credential"
 msgstr ""
 
 #: includes/class-ecapla-certverify-render.php:457
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:53
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:55
 msgid "Credential number"
 msgstr ""
 
@@ -10397,7 +10397,7 @@ msgstr ""
 
 #. translators: %d: Program database ID used only as a fallback label.
 #: src/Application/Analytics/IssuanceAnalyticsService.php:37
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:136
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:138
 msgid "Program #%d"
 msgstr ""
 
@@ -10826,12 +10826,12 @@ msgid "Only an issued credential Version can be delivered by email."
 msgstr ""
 
 #: src/Application/Email/EmailTemplateService.php:26
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:69
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:71
 msgid "Your {{program_title}} credential"
 msgstr ""
 
 #: src/Application/Email/EmailTemplateService.php:27
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:69
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:71
 msgid "Your credential is ready to view and verify."
 msgstr ""
 
@@ -10859,7 +10859,7 @@ msgid ""
 msgstr ""
 
 #: src/Application/Email/EmailTemplateService.php:54
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:47
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:49
 msgid "Verify this credential"
 msgstr ""
 
@@ -12703,7 +12703,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:1617
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:448
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:478
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:278
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:279
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:362
 #: src/Infrastructure/Admin/TemplateAdmin.php:1277
 #: src/Infrastructure/Admin/TemplateAdmin.php:1289
@@ -13068,7 +13068,7 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1215
 #: src/Infrastructure/Admin/DomainAdmin.php:1339
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:223
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:224
 msgid "Review first"
 msgstr ""
 
@@ -13658,7 +13658,7 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1511
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:369
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:53
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:55
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:256
 msgid "Program title"
 msgstr ""
@@ -14370,7 +14370,7 @@ msgid "Add the organization issuing these credentials. Its design can inherit Gl
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:2045
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:53
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:55
 msgid "Issuer name"
 msgstr ""
 
@@ -14967,7 +14967,7 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:666
 #: src/Infrastructure/Admin/DomainAdmin.php:777
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:44
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:46
 #: src/Infrastructure/Email/EmailDesignCompiler.php:38
 msgid "View credential"
 msgstr ""
@@ -16009,373 +16009,373 @@ msgstr ""
 msgid "Signer usage updated."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:139
-msgid "That email review expired. Preview the message again before sending."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:146
-msgid "The credential or selected message changed after review. Preview it again before sending."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:161
-msgid "Credential email is being sent through WordPress."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:173
-msgid "That Email Delivery job is unavailable."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:177
-msgid "That Email Delivery job belongs to another administrator."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:183
-msgid "The failed Email Delivery job was explicitly requeued."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:195
-msgid "Reusable email content is now managed in Design → Email designs. No legacy template changes were applied."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:223
-msgid "Nothing is sent until you review the final message and confirm delivery."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:223
-msgid "Preview message"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:223
-msgid "Send one credential"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:226
-msgid "Choose a credential first"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:226
-msgid "Choose credential"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:226
-msgid "Open the credential you want to deliver, then choose Email credential. This keeps delivery connected to the exact issued credential instead of asking you for an internal ID."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:236
-msgid "Automatic — use email hierarchy"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:242
-msgid "Automatic resolves Batch → Program → Issuer → Global. Choosing a named design is a one-send override and does not change inheritance."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:243
-msgid "Leave blank to use the email saved with the issued credential."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:243
-msgid "Send to"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:243
-msgid "Uses the recipient email when blank"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:245
-msgid "Delivery type"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:247
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:307
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:366
-msgid "Issued credential"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:247
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:367
-msgid "Resend"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:247
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:368
-msgid "Test"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:251
-msgid "Preview email"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:251
-msgid "Previewing does not send anything."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:265
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:370
-msgid "Credential email"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:265
-msgid "Ready to review"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:266
-msgid "Delivery"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:266
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:301
-msgid "Message"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:269
-msgid "This site cannot include an online verification link for this credential yet. The preview below shows exactly what will be sent."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:272
-msgid "No certificate file will be attached to this email yet. Delivery remains available without an attachment."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:278
-msgid "Certloom checks this integrity fingerprint again before sending. It is available for support and auditing."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:278
-msgid "Composition SHA-256"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:279
-msgid "If the credential or selected message changes, Certloom will require another preview before sending."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:279
-msgid "Looks right?"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:281
-msgid "Send reviewed email"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:287
-msgid "Automations decide when to send"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:287
-msgid "Email designs decide what the recipient sees. Automations decide when an issued credential email runs, who it applies to, and which issuance sources it covers."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:287
-msgid "Want this to happen automatically?"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:294
-msgid "Email delivery history"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:294
-msgid "Recent activity"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:294
-msgid "See delivery status without storing full recipient email addresses in the history table."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:301
-msgid "Attempted"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:309
-msgid "Delivery outcome is unknown. Review before sending again."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:316
-msgid "Retry failed"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:318
-msgid "Retry is available to the administrator who started this delivery."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:320
-msgid "Review resend"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:327
-msgid "No credential emails have been sent yet."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:327
-msgid "Send from an issued credential, or create an Automation for automatic delivery."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:352
-msgid "Inherited from Batch"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:353
-msgid "Inherited from Program"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:354
-msgid "Inherited from Issuer"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:355
-msgid "Inherited from Global"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:356
-msgid "Default email design"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:357
-msgid "One-send override"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:360
-msgid "Automatic email hierarchy"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:376
-msgid "You do not have permission to deliver Certloom credential email."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:51
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:52
-msgid "Email Delivery"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:67
-msgid "Manual delivery"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:68
-msgid "Send credential email"
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:69
-msgid "Use the email hierarchy by default, or choose a one-send override. Preview exactly what the recipient will receive before anything is queued."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:90
-msgid "That email delivery type is invalid."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:99
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:100
 msgid "Certloom could not create the email review token."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:107
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:140
+msgid "That email review expired. Preview the message again before sending."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:147
+msgid "The credential or selected message changed after review. Preview it again before sending."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:162
+msgid "Credential email is being sent through WordPress."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:174
+msgid "That Email Delivery job is unavailable."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:178
+msgid "That Email Delivery job belongs to another administrator."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:184
+msgid "The failed Email Delivery job was explicitly requeued."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:196
+msgid "Reusable email content is now managed in Design → Email designs. No legacy template changes were applied."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:224
+msgid "Nothing is sent until you review the final message and confirm delivery."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:224
+msgid "Preview message"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:224
+msgid "Send one credential"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:227
+msgid "Choose a credential first"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:227
+msgid "Choose credential"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:227
+msgid "Open the credential you want to deliver, then choose Email credential. This keeps delivery connected to the exact issued credential instead of asking you for an internal ID."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:237
+msgid "Automatic — use email hierarchy"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:243
+msgid "Automatic resolves Batch → Program → Issuer → Global. Choosing a named design is a one-send override and does not change inheritance."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:244
+msgid "Leave blank to use the email saved with the issued credential."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:244
+msgid "Send to"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:244
+msgid "Uses the recipient email when blank"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:246
+msgid "Delivery type"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:248
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:308
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:367
+msgid "Issued credential"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:248
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:368
+msgid "Resend"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:248
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:369
+msgid "Test"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:252
+msgid "Preview email"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:252
+msgid "Previewing does not send anything."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:266
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:371
+msgid "Credential email"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:266
+msgid "Ready to review"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:267
+msgid "Delivery"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:267
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:302
+msgid "Message"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:270
+msgid "This site cannot include an online verification link for this credential yet. The preview below shows exactly what will be sent."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:273
+msgid "No certificate file will be attached to this email yet. Delivery remains available without an attachment."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:279
+msgid "Certloom checks this integrity fingerprint again before sending. It is available for support and auditing."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:279
+msgid "Composition SHA-256"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:280
+msgid "If the credential or selected message changes, Certloom will require another preview before sending."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:280
+msgid "Looks right?"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:282
+msgid "Send reviewed email"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:288
+msgid "Automations decide when to send"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:288
+msgid "Email designs decide what the recipient sees. Automations decide when an issued credential email runs, who it applies to, and which issuance sources it covers."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:288
+msgid "Want this to happen automatically?"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:295
+msgid "Email delivery history"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:295
+msgid "Recent activity"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:295
+msgid "See delivery status without storing full recipient email addresses in the history table."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:302
+msgid "Attempted"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:310
+msgid "Delivery outcome is unknown. Review before sending again."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:317
+msgid "Retry failed"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:319
+msgid "Retry is available to the administrator who started this delivery."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:321
+msgid "Review resend"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:328
+msgid "No credential emails have been sent yet."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:328
+msgid "Send from an issued credential, or create an Automation for automatic delivery."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:353
+msgid "Inherited from Batch"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:354
+msgid "Inherited from Program"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:355
+msgid "Inherited from Issuer"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:356
+msgid "Inherited from Global"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:357
+msgid "Default email design"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:358
+msgid "One-send override"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:361
+msgid "Automatic email hierarchy"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:377
+msgid "You do not have permission to deliver Certloom credential email."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:52
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:53
+msgid "Email Delivery"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:68
+msgid "Manual delivery"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:69
+msgid "Send credential email"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:70
+msgid "Use the email hierarchy by default, or choose a one-send override. Preview exactly what the recipient will receive before anything is queued."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:91
+msgid "That email delivery type is invalid."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:101
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:52
+msgid "Add at least one usable content block before saving this email design."
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:109
 msgid "Email design saved."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:113
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:115
 msgid "Email design deleted."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:122
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:124
 msgid "Email inheritance updated."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:128
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:130
 msgid "Inheritance restored."
 msgstr ""
 
 #. translators: %d: Issuer database ID used only as a fallback label.
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:135
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:137
 msgid "Issuer #%d"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:140
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:142
 msgid "You do not have permission to manage Certloom email designs."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:44
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:46
 msgid "Write the message recipients should receive."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:44
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:46
 #: src/Infrastructure/Email/EmailDesignCompiler.php:36
 msgid "Your credential is ready"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:45
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:47
 msgid "Choose an email image"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:45
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:47
 msgid "Content block"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:45
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:47
 msgid "Use this image"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:46
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:48
 msgid "Alternative text"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:46
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:48
 msgid "Left column"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:46
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:48
 msgid "Right column"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:46
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:48
 msgid "Spacing (px)"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:46
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:48
 msgid "URL"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:47
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:49
 msgid "Distinction"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:47
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:49
 msgid "Example Institute"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:47
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:49
 msgid "Professional Leadership Program"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:47
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:49
 msgid "Sara Khan"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:48
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:50
 msgid "Mobile preview"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:49
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:51
 msgid "No available email design matches this message purpose. Create or activate a compatible design first."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:50
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:99
-msgid "Add at least one usable content block before saving this email design."
-msgstr ""
-
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:51
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:53
 msgid "No content blocks yet. Add a Heading, Text, Button, Image or another block to build this message."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:53
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:55
 msgid "Recipient name"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:53
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:55
 msgid "Verification URL"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:53
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:55
 msgid "Verification link"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:96
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:98
 msgid "Certloom could not read the email content blocks. Reload the editor and try again; your saved design has not been changed."
 msgstr ""
 

@@ -120,12 +120,13 @@ class Ecapla_CertVerify_Admin {
 		}
 
 		/*
-		 * Analytics has its own granular read capability. Re-run the bounded health
-		 * refresh immediately before registration as a defensive upgrade boundary,
-		 * matching Email Design/Delivery route registration.
+		 * Analytics is a contextual Certloom route. Register it on the established
+		 * parent management boundary, then enforce CAP_VIEW_ANALYTICS (with the
+		 * legacy-equivalent management fallback) in render_analytics_screen(). This
+		 * avoids WordPress' generic pre-callback 403 when granular role state drifts.
 		 */
 		Ecapla_CertVerify_Permissions::maybe_upgrade_capabilities();
-		add_submenu_page( self::DASHBOARD_PAGE, __( 'Analytics', 'certloom' ), __( 'Analytics', 'certloom' ), Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS, self::ANALYTICS_PAGE, array( $this, 'render_analytics_screen' ) );
+		add_submenu_page( self::DASHBOARD_PAGE, __( 'Analytics', 'certloom' ), __( 'Analytics', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::ANALYTICS_PAGE, array( $this, 'render_analytics_screen' ) );
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Settings', 'certloom' ), __( 'Settings', 'certloom' ), 'manage_options', 'certloom-settings', array( $this, 'render_settings_screen' ) );
 
 		// Automations is a first-class task in the unified Certloom workspace.

@@ -43,14 +43,15 @@ final class EmailDeliveryAdmin {
 
 	/** @return void */
 	public function menu() {
-		// WordPress checks the capability while registering the route. Ensure
-		// upgraded roles and the already-loaded current user agree first.
+		// Register on Certloom's established management boundary so WordPress does
+		// not fail this contextual route closed because of a stale granular role
+		// map. render()/actions still enforce granular-or-legacy-equivalent access.
 		\Ecapla_CertVerify_Permissions::maybe_upgrade_capabilities();
 		add_submenu_page(
 			'certloom',
 			__( 'Email Delivery', 'certloom' ),
 			__( 'Email Delivery', 'certloom' ),
-			\Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS,
+			ECAPLA_CERTVERIFY_CAP,
 			self::PAGE,
 			array( $this, 'render' )
 		);
@@ -372,7 +373,7 @@ final class EmailDeliveryAdmin {
 
 	/** @return void */
 	private function cap() {
-		if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) ) {
+		if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) && ! current_user_can( ECAPLA_CERTVERIFY_CAP ) ) {
 			wp_die( esc_html__( 'You do not have permission to deliver Certloom credential email.', 'certloom' ) );
 		}
 	}

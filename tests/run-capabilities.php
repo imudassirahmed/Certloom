@@ -44,8 +44,9 @@ $GLOBALS['fake_current_user']=new FakeCurrentUser();
 function wp_get_current_user(){ return $GLOBALS['fake_current_user']; }
 function current_user_can($cap){ return !empty($GLOBALS['fake_current_user']->allcaps[$cap]); }
 $GLOBALS['registered_submenus']=array();
+$GLOBALS['submenu_nopriv']=array();
 function add_submenu_page($parent,$page_title,$menu_title,$capability,$slug,$callback=null){
-    if(!current_user_can($capability)){ return false; }
+    if(!current_user_can($capability)){ $GLOBALS['submenu_nopriv'][$parent][$slug]=true; return false; }
     $GLOBALS['registered_submenus'][$slug]=array('parent'=>$parent,'capability'=>$capability);
     return $parent.'_page_'.$slug;
 }
@@ -99,15 +100,24 @@ cp_true(current_user_can(Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS),
 $refreshes_before=$GLOBALS['fake_current_user']->refreshes;
 cp_true(Ecapla_CertVerify_Permissions::maybe_upgrade_capabilities(false), 'healthy fast path refreshes already-loaded current user capabilities');
 cp_true($GLOBALS['fake_current_user']->refreshes>$refreshes_before, 'healthy fast path does not leave a stale WP_User allcaps map in memory');
-add_submenu_page('certloom','Email designs','Email designs',Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS,'certloom-email-designs');
-add_submenu_page('certloom','Email Delivery','Email Delivery',Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS,'certloom-email-delivery');
-add_submenu_page('certloom','Analytics','Analytics',Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS,'certloom-analytics');
-cp_true(isset($GLOBALS['registered_submenus']['certloom-email-designs'],$GLOBALS['registered_submenus']['certloom-email-delivery']), 'Email routes register in the same request after current-user capability refresh');
-cp_true(isset($GLOBALS['registered_submenus']['certloom-analytics']), 'Analytics route registers in the same request with the repaired granular analytics capability');
+// Contextual routes use the established Certloom management capability for
+// WordPress route registration. Their callbacks separately enforce granular
+// authorization. This prevents core from writing a permanent request-local
+// no-priv marker before Certloom can reach its own authorization/repair logic.
+unset($GLOBALS['fake_current_user']->allcaps[Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS]);
+unset($GLOBALS['fake_current_user']->allcaps[Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS]);
+cp_true(current_user_can(ECAPLA_CERTVERIFY_CAP), 'fixture retains established Certloom management access while granular current-user map is stale');
+add_submenu_page('certloom','Email designs','Email designs',ECAPLA_CERTVERIFY_CAP,'certloom-email-designs');
+add_submenu_page('certloom','Email Delivery','Email Delivery',ECAPLA_CERTVERIFY_CAP,'certloom-email-delivery');
+add_submenu_page('certloom','Analytics','Analytics',ECAPLA_CERTVERIFY_CAP,'certloom-analytics');
+cp_true(isset($GLOBALS['registered_submenus']['certloom-email-designs'],$GLOBALS['registered_submenus']['certloom-email-delivery']), 'Email contextual routes remain registered when granular current-user capability state is stale');
+cp_true(isset($GLOBALS['registered_submenus']['certloom-analytics']), 'Analytics contextual route remains registered when granular current-user capability state is stale');
+cp_false(isset($GLOBALS['submenu_nopriv']['certloom']['certloom-email-designs'])||isset($GLOBALS['submenu_nopriv']['certloom']['certloom-email-delivery'])||isset($GLOBALS['submenu_nopriv']['certloom']['certloom-analytics']), 'contextual routes do not poison WordPress no-priv routing for legitimate Certloom managers');
 
 echo "PASS  legacy broad-access roles receive granular capabilities without granting unrelated roles\n";
 echo "PASS  current health markers cannot mask a missing administrator analytics capability\n";
 echo "PASS  fresh health markers cannot mask missing granular access on legacy Certloom-enabled roles\n";
-echo "PASS  current-request WP_User capability maps are refreshed before Email routes register\n";
-echo "PASS  Email Design and Email Delivery routes register after same-request capability repair\n";
-echo "PASS  Analytics route registers after same-request capability repair\n\n6 tests, 0 failures\n";
+echo "PASS  current-request WP_User capability maps are refreshed before contextual routes register\n";
+echo "PASS  Email Design and Email Delivery routes stay routable across granular-capability drift\n";
+echo "PASS  Analytics route stays routable across granular-capability drift\n";
+echo "PASS  WordPress no-priv routing is not poisoned for legitimate Certloom managers\n\n7 tests, 0 failures\n";
