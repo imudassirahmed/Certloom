@@ -10,7 +10,7 @@ class Ecapla_CertVerify_Permissions {
 
 	const MANAGER_ROLE              = 'certverify_manager';
 	const CAPABILITY_SCHEMA_OPTION  = 'certverify_capability_schema_version';
-	const CAPABILITY_SCHEMA_VERSION = '1.6.4';
+	const CAPABILITY_SCHEMA_VERSION = '1.6.5';
 	const MANAGER_PRESERVED_OPTION  = 'certverify_manager_role_preserved';
 	const UNINSTALL_CLEANUP_OPTION  = 'certverify_uninstall_role_cleanup_failed';
 	const HEALTH_OPTION             = 'certverify_capability_health';
@@ -101,7 +101,8 @@ class Ecapla_CertVerify_Permissions {
 			&& ! get_option( self::UNINSTALL_CLEANUP_OPTION, false )
 			&& ! get_option( self::MANAGER_PRESERVED_OPTION, false )
 			&& self::health_marker_is_fresh()
-			&& self::administrator_has_required_capabilities() ) {
+			&& self::administrator_has_required_capabilities()
+			&& self::legacy_roles_have_required_capabilities() ) {
 			return true;
 		}
 
@@ -330,6 +331,31 @@ class Ecapla_CertVerify_Permissions {
 		foreach ( self::all_capabilities() as $capability ) {
 			if ( ! self::stored_role_has_capability( 'administrator', $capability ) ) {
 				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * A fresh schema marker must not hide drift on older Certloom-enabled roles.
+	 * Any role retaining the historical broad capability is expected to keep the
+	 * equivalent granular set until an administrator deliberately revokes access.
+	 */
+	private static function legacy_roles_have_required_capabilities() {
+		$wp_roles = wp_roles();
+		$stored   = get_option( $wp_roles->role_key, array() );
+		if ( ! is_array( $stored ) ) {
+			return false;
+		}
+
+		foreach ( $stored as $role ) {
+			if ( empty( $role['capabilities'][ ECAPLA_CERTVERIFY_CAP ] ) ) {
+				continue;
+			}
+			foreach ( self::all_capabilities() as $capability ) {
+				if ( empty( $role['capabilities'][ $capability ] ) ) {
+					return false;
+				}
 			}
 		}
 		return true;

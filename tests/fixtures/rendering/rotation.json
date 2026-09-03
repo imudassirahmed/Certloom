@@ -1,1 +1,0 @@
-{"_meta":{"schema":"certloom-layout","schema_version":1},"page":{"size":"A4","orientation":"portrait","width_mm":210,"height_mm":297},"elements":[{"id":"55555555-5555-4555-8555-555555555555","type":"text","x_mm":15,"y_mm":20,"width_mm":80,"height_mm":20,"rotation_deg":17.5,"text":"Rotated credential text","style":{"direction":"ltr","overflow":"clip"}}]}

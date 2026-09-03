@@ -6369,3 +6369,69 @@ color:CanvasText}
 .certloom-email-rule-warning .dashicons{flex:0 0 16px;width:16px;height:16px;margin-top:1px;font-size:16px}
 @media(max-width:782px){.certloom-settings-diagnostics>summary{min-height:44px;padding:14px 15px}.certloom-settings-diagnostics-body{padding-inline:15px}.certloom-email-inheritance-broken .button{min-height:44px}}
 @media(forced-colors:active){.certloom-settings-diagnostics,.certloom-settings-diagnostics>summary::after,.certloom-email-inheritance-broken>td{border-color:CanvasText}.certloom-email-inheritance-broken>td{background:Canvas!important}.certloom-email-rule-warning{color:CanvasText}}
+
+/* QA.19 — unified operational dashboard disclosures. */
+.certloom-dashboard-more-tools{
+	margin:16px 0 0;
+	padding:0;
+	border:0;
+	background:transparent;
+}
+.certloom-dashboard-more-tools>summary{
+	display:inline-flex;
+	align-items:center;
+	min-height:44px;
+	padding:0 4px;
+	color:var(--certloom-muted);
+	font-size:12px;
+	font-weight:700;
+	cursor:pointer;
+}
+.certloom-dashboard-more-tools[open]>summary{
+	margin-bottom:8px;
+}
+.certloom-dashboard-more-tools-links{
+	padding-top:2px;
+	border-top:1px solid var(--certloom-border);
+}
+.certloom-dashboard-data-safety{
+	padding:0;
+	overflow:hidden;
+}
+.certloom-dashboard-data-safety>summary{
+	display:flex;
+	align-items:center;
+	justify-content:space-between;
+	gap:12px;
+	min-height:64px;
+	padding:15px 18px;
+	cursor:pointer;
+	list-style-position:inside;
+}
+.certloom-dashboard-data-safety>summary strong{
+	display:block;
+	color:var(--certloom-ink);
+	font-size:14px;
+}
+.certloom-dashboard-data-safety>summary .certloom-eyebrow{
+	margin-bottom:2px;
+}
+.certloom-dashboard-data-safety-body{
+	padding:0 18px 18px;
+	border-top:1px solid var(--certloom-border);
+}
+.certloom-dashboard-data-safety-body p{
+	margin:16px 0 12px;
+}
+@media(max-width:782px){
+	.certloom-dashboard-more-tools>summary,
+	.certloom-dashboard-data-safety>summary{
+		min-height:48px;
+	}
+}
+@media(forced-colors:active){
+	.certloom-dashboard-more-tools-links,
+	.certloom-dashboard-data-safety-body{
+		border-color:CanvasText;
+	}
+}
