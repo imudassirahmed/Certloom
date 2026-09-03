@@ -129,9 +129,9 @@ final class EmailDesignAdmin {
 	public static function scope_label( array $row, array $issuer_names, array $program_names, array $batch_names ) {
 		$id = absint( $row['scope_id'] ?? 0 );
 		if ( 'global' === $row['scope_type'] ) { return __( 'Global', 'certloom' ); }
-		if ( 'issuer' === $row['scope_type'] ) { return (string) ( $issuer_names[ $id ] ?? sprintf( __( 'Issuer #%d', 'certloom' ), $id ) ); }
-		if ( 'program' === $row['scope_type'] ) { return (string) ( $program_names[ $id ] ?? sprintf( __( 'Program #%d', 'certloom' ), $id ) ); }
-		return (string) ( $batch_names[ $id ] ?? sprintf( __( 'Batch #%d', 'certloom' ), $id ) );
+		if ( 'issuer' === $row['scope_type'] ) { return (string) ( $issuer_names[ $id ] ?? sprintf( /* translators: %d: Issuer database ID used only as a fallback label. */ __( 'Issuer #%d', 'certloom' ), $id ) ); }
+		if ( 'program' === $row['scope_type'] ) { return (string) ( $program_names[ $id ] ?? sprintf( /* translators: %d: Program database ID used only as a fallback label. */ __( 'Program #%d', 'certloom' ), $id ) ); }
+		return (string) ( $batch_names[ $id ] ?? sprintf( /* translators: %d: Batch database ID used only as a fallback label. */ __( 'Batch #%d', 'certloom' ), $id ) );
 	}
 
 	private function cap() { if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) ) { wp_die( esc_html__( 'You do not have permission to manage Certloom email designs.', 'certloom' ) ); } }

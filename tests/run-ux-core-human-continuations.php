@@ -29,14 +29,14 @@ $bootstrap = uxsrc( 'certloom.php' );
 $oauth = uxsrc( 'src/Infrastructure/Backup/GoogleDriveOAuth.php' );
 $relay = uxsrc( 'src/Infrastructure/Backup/EcaplaOAuthRelay.php' );
 
-// The six Simple-mode destinations must be registered/routable product pages.
-foreach ( array( 'certloom', 'certloom-certificates', 'certloom-domain-programs', 'certloom-templates', 'certloom-automations', 'certloom-settings' ) as $slug ) {
-    uxroute( false !== strpos( $nav, "'{$slug}'" ), 'Simple navigation owns registered route ' . $slug );
+// The six unified-workspace destinations must be registered/routable product pages.
+foreach ( array( 'certloom', 'certloom-domain-credentials', 'certloom-domain-programs', 'certloom-templates', 'certloom-automations', 'certloom-settings' ) as $slug ) {
+    uxroute( false !== strpos( $nav, "'{$slug}'" ), 'Unified navigation owns registered route ' . $slug );
 }
 uxroute( false === strpos( $nav, "__( 'Legacy data', 'certloom' )" ) && false !== strpos( $nav, "'certloom-domain-credentials', 'certloom-certificates', 'certloom-add'" ), 'Historical registry routes resolve inside the single Credentials destination without exposing a Legacy data subtab' );
-uxroute( false !== strpos( $nav, "__( 'Integrations', 'certloom' )" ) && false !== strpos( $nav, "'certloom-integrations'" ), 'Simple Automations area has a direct Integrations continuation' );
+uxroute( false !== strpos( $nav, "'Integrations'" ) && false !== strpos( $nav, "'certloom-integrations'" ), 'Automations has a direct Integrations continuation' );
 
-// Dashboard: every primary Simple task continues to the canonical task rather than legacy create.
+// Dashboard: every primary task continues to the canonical task rather than legacy create.
 uxroute( false !== strpos( $dashboard, 'admin.php?page=certloom-issuance' ), 'Dashboard Issue routes to canonical Manual Issuance' );
 uxroute( false !== strpos( $dashboard, 'admin.php?page=certloom-domain-programs' ), 'Dashboard Programs routes to Program workspace' );
 uxroute( false !== strpos( $dashboard, 'admin.php?page=certloom-templates' ), 'Dashboard Design routes to canonical Design' );
@@ -59,14 +59,17 @@ uxroute( false !== strpos( $domain, 'Choose design' ) && false !== strpos( $doma
 uxroute( false !== strpos( $domain_structure, "name=\"recipient_id\" required" ), 'Batch membership still connects explicitly to Recipient identity' );
 
 // Email Delivery has one template authority and returns to the human workflow.
-uxroute( false !== strpos( $email, 'certloom-automations#certloom-email-templates-title' ), 'Manual Email Delivery manages reusable messages through Automations' );
+uxroute( false !== strpos( $email, 'certloom-email-designs' ) && false !== strpos( $email, "'Email designs', 'certloom'" ), 'Manual Email Delivery continues to Design → Email designs for reusable content' );
 uxroute( false !== strpos( $email, 'Choose a credential first' ) && false !== strpos( $email, 'certloom-domain-credentials' ), 'Direct Email Delivery asks for a human credential instead of Version ID' );
 uxroute( false === strpos( $email, 'name="version_id" type="text"' ) && false === strpos( $email, 'name="version_id" type="number"' ), 'Email Delivery never exposes a raw Version-ID input' );
 uxroute( false !== strpos( $email, 'Open Automations' ), 'Manual Email Delivery continues into automatic delivery setup' );
 
 // Automations actions are registered and use the same catalog for manual + automatic delivery.
-foreach ( array( 'certloom_automation_rule_save', 'certloom_automation_rule_delete', 'certloom_automation_template_save', 'certloom_automation_template_delete' ) as $action ) {
-    uxroute( false !== strpos( $automation, "admin_post_{$action}" ) && false !== strpos( $automations_view, "value=\"{$action}\"" ), 'Automation control is both rendered and registered: ' . $action );
+foreach ( array( 'certloom_automation_rule_save', 'certloom_automation_rule_delete' ) as $action ) {
+    uxroute( false !== strpos( $automation, "admin_post_{$action}" ) && false !== strpos( $automations_view, "value=\"{$action}\"" ), 'Automation rule control is both rendered and registered: ' . $action );
+}
+foreach ( array( 'certloom_automation_template_save', 'certloom_automation_template_delete' ) as $action ) {
+    uxroute( false !== strpos( $automation, "admin_post_{$action}" ) && false === strpos( $automations_view, "value=\"{$action}\"" ), 'Retired Automation template endpoint remains registered only as a non-rendered compatibility shim: ' . $action );
 }
 uxroute( false !== strpos( $automations_view, 'Manage integrations' ) && false !== strpos( $automations_view, 'certloom-integrations' ), 'Automations continues into qualification sources and publishing destinations' );
 

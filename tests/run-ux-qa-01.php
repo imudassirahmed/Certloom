@@ -46,8 +46,8 @@ uxqa_check( false !== strpos( $analytics, "'Verification insights', 'certloom'" 
 uxqa_check( false !== strpos( $issuance_analytics, "'Issuance insights', 'certloom'" ) && false === strpos( $issuance_analytics, 'ANL-02 · Immutable issuance analytics' ), 'Issuance Analytics removes internal milestone/data-model labeling' );
 uxqa_check( false === strpos( $frontend, 'Phase 2 adds a shared read-only credential profile' ), 'Appearance & embed no longer exposes historical phase labeling' );
 
-uxqa_check( false !== strpos( $settings, "'Populated legacy migration preflight', 'certloom'" ) && false !== strpos( $settings, "'Staging final authority-cutover rehearsal', 'certloom'" ), 'Advanced diagnostics retain exact engineering evidence' );
-uxqa_check( false !== strpos( $settings, '<?php if ( $certloom_advanced_mode ) : ?>' ), 'Technical diagnostics remain behind Advanced presentation mode' );
+uxqa_check( false !== strpos( $settings, "'Populated legacy migration preflight', 'certloom'" ) && false !== strpos( $settings, "'Staging final authority-cutover rehearsal', 'certloom'" ), 'Diagnostics retain exact engineering evidence' );
+uxqa_check( false !== strpos( $settings, 'class="certloom-technical-details certloom-settings-diagnostics"' ) && false !== strpos( $settings, "'Diagnostics & maintenance', 'certloom'" ), 'Technical diagnostics remain available through collapsed progressive disclosure in the unified workspace' );
 
 uxqa_check( false !== strpos( $bootstrap, "define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false )" ), 'UX-QA leaves normalized write authority closed' );
 uxqa_check( false !== strpos( $bootstrap, "define( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW', false )" ), 'UX-QA leaves normalized admin-preview authority closed' );

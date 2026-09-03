@@ -37,7 +37,7 @@ uxops_check( false !== strpos( $wizard, 'data-certloom-numbering-example' ) && f
 uxops_check( false !== strpos( $admin, 'Ecapla_CertVerify_Numbering::normalize_policy' ), 'Wizard numbering remains validated by the canonical numbering engine' );
 
 // 3/7. Google Drive: direct self-hosted OAuth, popup flow, advanced first-time client setup.
-uxops_check( false !== strpos( $wizard, "'Connect with Google', 'certloom'" ) && false !== strpos( $wizard, "'Advanced: use your own Google app', 'certloom'" ) && false !== strpos( $wizard, 'name="google_connection_mode" value="relay"' ) && false !== strpos( $wizard, 'name="google_connection_mode" value="direct"' ), 'Wizard presents managed Connect with Google by default and keeps the site-owned app path in Advanced' );
+uxops_check( false !== strpos( $wizard, "'Connect with Google', 'certloom'" ) && false !== strpos( $wizard, "'Use your own Google app', 'certloom'" ) && false !== strpos( $wizard, 'name="google_connection_mode" value="relay"' ) && false !== strpos( $wizard, 'name="google_connection_mode" value="direct"' ), 'Wizard presents managed Connect with Google by default and keeps the site-owned app path in progressive disclosure' );
 uxops_check( false !== strpos( $oauth, "https://www.googleapis.com/auth/drive.file" ) && false !== strpos( $oauth, 'access_type' ) && false !== strpos( $oauth, "'offline'" ), 'Google integration requests the bounded Drive file scope with offline backup access' );
 uxops_check( false !== strpos( $admin_js, "window.open( '', 'certloomGoogleDriveOAuth'" ) && false !== strpos( $admin_js, "event.origin !== window.location.origin" ), 'OAuth popup uses a separate window and same-origin postMessage validation' );
 uxops_check( false !== strpos( $admin_js, 'Your browser blocked the popup' ) && false !== strpos( $admin_js, "returnMode.value = 'backup'" ), 'OAuth has a usable same-tab fallback when a popup is blocked' );
@@ -49,7 +49,7 @@ uxops_check( false !== strpos( $admin, 'restore_snapshot( $onboarding_before )' 
 uxops_check( false !== strpos( $admin, "clear_assignment( 'global', 0" ) && false !== strpos( $admin, "get_assignment( 'global', 0 )" ), 'Wizard Apply can restore the exact prior Global Template assignment' );
 
 // 5. Hidden contextual routes keep the correct visible WordPress parent active.
-uxops_check( false !== strpos( $nav, "add_filter( 'parent_file'" ) && false !== strpos( $nav, "return 'certloom';" ), 'Hidden Certloom routes keep the Certloom WordPress parent menu highlighted' );
+uxops_check( false !== strpos( $nav, "add_filter( 'parent_file'" ) && false !== strpos( $nav, "? 'certloom' : $parent_file" ), 'Hidden Certloom routes keep the Certloom WordPress parent menu highlighted' );
 uxops_check( false !== strpos( $nav, "add_filter( 'submenu_file'" ) && false !== strpos( $nav, "'certloom-domain-data-tools'" ), 'Hidden contextual routes map back to one of the six visible primary rows' );
 
 // 6/8/9. Backup alignment and compact Dashboard readiness/setup actions.

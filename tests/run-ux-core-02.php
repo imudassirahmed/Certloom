@@ -53,7 +53,7 @@ ux2( false !== strpos( $batch_admin, 'certloom-batch-quick-program-dialog' ) && 
 ux2( false !== strpos( $domain, 'name="program_template_id"' ) && false !== strpos( $domain, 'A Batch can override it for that cohort.' ), 'Program editor makes the Program design default explicit while documenting Batch precedence' );
 ux2( false !== strpos( $css, '.certloom-premium-dialog>form' ) && false !== strpos( $css, 'overflow:auto' ) && false !== strpos( $css, 'max-height:min(88vh,820px)' ), 'Quick-create dialogs are viewport-bounded with independently scrollable bodies' );
 
-ux2( false !== strpos( $nav, "__( 'Signers', 'certloom' )" ) && false !== strpos( $nav, "'certloom-domain-signers'" ), 'Signers remain visible in the Simple Programs section' );
+ux2( false !== strpos( $nav, "'Signers'" ) && false !== strpos( $nav, "'certloom-domain-signers'" ), 'Signers remain visible in the unified Programs section' );
 ux2( false !== strpos( $domain, "certloom_program_quick_signer" ) && false !== strpos( $domain, "<h3>' . esc_html__( 'Signers'" ), 'Program workspace can manage and quick-add Signers' );
 ux2( false !== strpos( $domain, "'page' => ManualIssuanceAdmin::PAGE, 'recipient_id'" ) && false !== strpos( $domain, "'program_id'" ) && false !== strpos( $domain, "'batch_id'" ), 'Issue another keeps Recipient, Program and Batch context' );
 

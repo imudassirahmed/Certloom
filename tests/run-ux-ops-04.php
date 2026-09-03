@@ -71,7 +71,7 @@ u4( false !== strpos( $domain, "'Linked WordPress accounts', 'certloom'" ) && fa
 u4( false !== strpos( $dashboard, 'certloom-issuance' ) && false !== strpos( $dashboard, "'Issue credential', 'certloom'" ), 'Dashboard create actions prefer Recipient-aware issuance when normalized preview is available' );
 u4( false !== strpos( $registry, 'certloom-issuance' ) && false !== strpos( $registry, "'Legacy credentials', 'certloom'" ), 'Legacy compatibility view visibly hands new credentials to Recipient-aware issuance' );
 u4( false !== strpos( $legacy_admin, 'DomainFeatureGate::admin_preview_ready()' ) && substr_count( $legacy_admin, "admin.php?page=certloom-issuance" ) >= 2, 'Legacy new-record route and POST fail over to canonical Recipient-aware issuance while existing legacy edits remain supported' );
-u4( false === strpos( $navigation, "__( 'Legacy data', 'certloom' )" ) && false !== strpos( $navigation, "__( 'Issue', 'certloom' )" ) && false !== strpos( $navigation, "'certloom-certificates', 'certloom-add', 'certloom-bulk-review'" ), 'Credentials subnavigation keeps canonical issuance and absorbs historical routes without a second Legacy data destination' );
+u4( false === strpos( $navigation, "__( 'Legacy data', 'certloom' )" ) && false !== strpos( $navigation, "__( 'Issue credential', 'certloom' )" ) && false !== strpos( $navigation, "'certloom-certificates', 'certloom-add', 'certloom-bulk-review'" ), 'Credentials subnavigation keeps canonical issuance and absorbs historical routes without a second Legacy data destination' );
 
 // Authority remains closed in this UX tranche.
 $feature_gate = u4_src( $root, 'src/Infrastructure/Migration/DomainFeatureGate.php' );

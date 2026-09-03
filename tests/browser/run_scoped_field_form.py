@@ -27,7 +27,7 @@ async def run():
         statement=manual.locator('[name="custom_merge_fields[statement]"]')
         await ck(await statement.evaluate('(e)=>e.tagName')=='TEXTAREA','textareaTypeRenderedTruthfully')
         await ck(await manual.locator('[data-certloom-grade-field]').is_visible() and await manual.locator('[name="grade"]').get_attribute('required') is None,'optionalGradeVisible')
-        await ck('Privacy: profile · personal' in await manual.locator('.certloom-scoped-field-row').filter(has_text='GPA').inner_text(),'privacyMetadataVisible')
+        await ck('Privacy: Profile only · Personal' in await manual.locator('.certloom-scoped-field-row').filter(has_text='GPA').inner_text(),'privacyMetadataVisible')
 
         await gpa.fill('3.91')
         await manual.locator('select[name="batch_id"]').select_option('501'); await manual.locator('select[name="batch_id"]').dispatch_event('change'); await page.wait_for_timeout(50)
