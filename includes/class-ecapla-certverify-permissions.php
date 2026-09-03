@@ -10,7 +10,7 @@ class Ecapla_CertVerify_Permissions {
 
 	const MANAGER_ROLE              = 'certverify_manager';
 	const CAPABILITY_SCHEMA_OPTION  = 'certverify_capability_schema_version';
-	const CAPABILITY_SCHEMA_VERSION = '1.6.5';
+	const CAPABILITY_SCHEMA_VERSION = '1.6.6';
 	const MANAGER_PRESERVED_OPTION  = 'certverify_manager_role_preserved';
 	const UNINSTALL_CLEANUP_OPTION  = 'certverify_uninstall_role_cleanup_failed';
 	const HEALTH_OPTION             = 'certverify_capability_health';
@@ -103,6 +103,14 @@ class Ecapla_CertVerify_Permissions {
 			&& self::health_marker_is_fresh()
 			&& self::administrator_has_required_capabilities()
 			&& self::legacy_roles_have_required_capabilities() ) {
+			/*
+			 * WordPress can keep the current WP_User::allcaps map in memory even
+			 * after the persisted roles option has been repaired on a previous
+			 * request (persistent object caches make this particularly visible).
+			 * Refresh it before admin_menu runs so add_submenu_page() evaluates
+			 * the same granular capability state that is already persisted.
+			 */
+			self::refresh_current_user_capabilities();
 			return true;
 		}
 
@@ -144,6 +152,7 @@ class Ecapla_CertVerify_Permissions {
 				return false;
 			}
 		}
+		self::refresh_current_user_capabilities();
 		return self::save_health_marker();
 	}
 
@@ -359,6 +368,32 @@ class Ecapla_CertVerify_Permissions {
 			}
 		}
 		return true;
+	}
+
+
+	/**
+	 * Refreshes the already-loaded current user after role capability repair.
+	 *
+	 * add_submenu_page() performs its capability check while admin_menu is being
+	 * built. A stale WP_User::allcaps array can therefore make WordPress skip
+	 * route registration and emit its generic "not allowed" screen even though
+	 * the role option already contains the repaired Certloom capability.
+	 *
+	 * @return void
+	 */
+	private static function refresh_current_user_capabilities() {
+		if ( ! function_exists( 'wp_get_current_user' ) ) {
+			return;
+		}
+		$user = wp_get_current_user();
+		if ( ! is_object( $user ) || empty( $user->ID ) ) {
+			return;
+		}
+		if ( method_exists( $user, 'for_site' ) ) {
+			$user->for_site( get_current_blog_id() );
+		} elseif ( method_exists( $user, 'get_role_caps' ) ) {
+			$user->get_role_caps();
+		}
 	}
 
 	private static function health_marker_is_fresh() {

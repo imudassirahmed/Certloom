@@ -43,6 +43,9 @@ final class EmailDeliveryAdmin {
 
 	/** @return void */
 	public function menu() {
+		// WordPress checks the capability while registering the route. Ensure
+		// upgraded roles and the already-loaded current user agree first.
+		\Ecapla_CertVerify_Permissions::maybe_upgrade_capabilities();
 		add_submenu_page(
 			'certloom',
 			__( 'Email Delivery', 'certloom' ),

@@ -27,6 +27,9 @@ final class EmailDesignAdmin {
 
 	/** @return void */
 	public function menu() {
+		// Refresh any upgraded role/current-user capability state immediately
+		// before WordPress decides whether this route may be registered.
+		\Ecapla_CertVerify_Permissions::maybe_upgrade_capabilities();
 		add_submenu_page( 'certloom', __( 'Email designs', 'certloom' ), __( 'Email designs', 'certloom' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS, self::PAGE, array( $this, 'render' ) );
 	}
 

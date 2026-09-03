@@ -47,6 +47,7 @@ $certloom_credentials_url = admin_url( 'admin.php?page=certloom-domain-credentia
 $certloom_programs_url    = admin_url( 'admin.php?page=certloom-domain-programs' );
 $certloom_automations_url = admin_url( 'admin.php?page=certloom-automations' );
 $certloom_design_url      = admin_url( 'admin.php?page=certloom-templates' );
+$certloom_fields_url      = admin_url( 'admin.php?page=certloom-fields' );
 ?>
 <div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-dashboard">
 	<section class="certloom-dashboard-hero" aria-labelledby="certloom-dashboard-title">
@@ -215,41 +216,91 @@ $certloom_design_url      = admin_url( 'admin.php?page=certloom-templates' );
 						<p><?php esc_html_e( 'Choose a Recipient and Program, review the design, then issue. Certloom keeps the issued credential connected to that Recipient from then on.', 'certloom' ); ?></p>
 						<a class="button button-primary" href="<?php echo esc_url( $ecapla_certverify_create_url ); ?>"><?php esc_html_e( 'Issue first credential', 'certloom' ); ?></a>
 					</div>
-				<?php else : ?>
-					<div class="certloom-dashboard-credential-list">
-					<?php foreach ( $certloom_normalized_recent as $credential ) :
-						$is_historical = 'historical' === (string) ( $credential['_credential_source'] ?? '' );
-						$source_label = (string) ( $credential['_credential_source_label'] ?? ( $is_historical ? __( 'Legacy', 'certloom' ) : __( 'Credential', 'certloom' ) ) );
-						$is_legacy = $is_historical || ! empty( $credential['_credential_historical_origin'] );
-						$source_class = $is_legacy ? 'is-legacy' : 'is-credential';
-						$series_id  = absint( $credential['series_id'] ?? 0 );
-						$public_id  = (string) ( $credential['public_id'] ?? '' );
-						$manage_url = $is_historical
-							? add_query_arg( array( 'page' => 'certloom-domain-credentials', 'legacy_id' => absint( $credential['legacy_id'] ?? 0 ) ), admin_url( 'admin.php' ) )
-							: add_query_arg( array( 'page' => 'certloom-domain-credentials', 'series_id' => $series_id ), admin_url( 'admin.php' ) );
-						$view_url   = '';
-						if ( $is_historical && class_exists( 'Ecapla_CertVerify_Public_Router' ) && ! empty( $credential['display_number'] ) ) {
-							$view_url = Ecapla_CertVerify_Public_Router::profile_url( (string) $credential['display_number'] );
-						} elseif ( $public_id && class_exists( '\Certloom\Infrastructure\Verification\PublicVerificationGate' ) && ( new \Certloom\Infrastructure\Verification\PublicVerificationGate() )->is_ready() ) {
-							$view_result = ( new \Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl() )->verification_url( $public_id );
-							if ( ! is_wp_error( $view_result ) ) { $view_url = (string) $view_result; }
-						}
-					?>
-						<article class="certloom-dashboard-credential-row">
-							<div class="certloom-dashboard-credential-main">
-								<div class="certloom-credential-source-line"><strong><?php echo esc_html( (string) ( $credential['display_name'] ?: __( 'Recipient', 'certloom' ) ) ); ?></strong><span class="certloom-credential-source <?php echo esc_attr( $source_class ); ?>"><?php echo esc_html( $source_label ); ?></span></div>
-								<span><?php echo esc_html( (string) ( $credential['program_title'] ?: ( $is_historical ? __( 'Earlier Certloom record', 'certloom' ) : __( 'Credential', 'certloom' ) ) ) ); ?></span>
-							</div>
-							<div class="certloom-dashboard-credential-meta">
-								<?php if ( ! empty( $credential['display_number'] ) ) : ?><span><?php echo esc_html( (string) $credential['display_number'] ); ?></span><?php endif; ?>
-								<?php if ( ! empty( $credential['issued_at'] ) ) : ?><span><?php echo esc_html( wp_date( get_option( 'date_format' ), strtotime( (string) $credential['issued_at'] ) ) ); ?></span><?php endif; ?>
-							</div>
-							<div class="certloom-dashboard-credential-actions">
-								<?php if ( $view_url ) : ?><a class="button button-small" href="<?php echo esc_url( $view_url ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'View credential', 'certloom' ); ?></a><?php endif; ?>
-								<a class="button button-small button-secondary" href="<?php echo esc_url( $manage_url ); ?>"><?php esc_html_e( 'Edit record', 'certloom' ); ?></a>
-							</div>
-						</article>
-					<?php endforeach; ?>
+				<?php else :
+					$certloom_dashboard_status_labels = array(
+						'valid'                  => __( 'Valid', 'certloom' ),
+						'suspended'              => __( 'Suspended', 'certloom' ),
+						'revoked'                => __( 'Revoked', 'certloom' ),
+						'expired'                => __( 'Expired', 'certloom' ),
+						'not_yet_valid'          => __( 'Not yet valid', 'certloom' ),
+						'pending_review'         => __( 'Pending review', 'certloom' ),
+						'suspended_noncompliant' => __( 'Non-compliant', 'certloom' ),
+						'voided'                 => __( 'Voided', 'certloom' ),
+						'not_issued'             => __( 'Not issued', 'certloom' ),
+					);
+					$certloom_dashboard_status_service = class_exists( '\\Certloom\\Domain\\Credential\\StatusService' ) ? new \Certloom\Domain\Credential\StatusService() : null;
+				?>
+					<div class="certloom-domain-table-wrap certloom-dashboard-recent-table-wrap">
+					<table class="widefat striped certloom-domain-table certloom-credential-table certloom-dashboard-recent-table">
+						<thead><tr>
+							<th scope="col"><?php esc_html_e( 'Credential', 'certloom' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Recipient', 'certloom' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Program / batch', 'certloom' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Issue date', 'certloom' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Expiry date', 'certloom' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Credential status', 'certloom' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Record version', 'certloom' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Added to Certloom', 'certloom' ); ?></th>
+						</tr></thead>
+						<tbody>
+						<?php foreach ( $certloom_normalized_recent as $credential ) :
+							$is_historical = 'historical' === (string) ( $credential['_credential_source'] ?? '' );
+							$source_label = (string) ( $credential['_credential_source_label'] ?? ( $is_historical ? __( 'Legacy', 'certloom' ) : __( 'Credential', 'certloom' ) ) );
+							$is_legacy = $is_historical || ! empty( $credential['_credential_historical_origin'] );
+							$source_class = $is_legacy ? 'is-legacy' : 'is-credential';
+							$series_id  = absint( $credential['series_id'] ?? 0 );
+							$public_id  = (string) ( $credential['public_id'] ?? '' );
+							$number     = trim( (string) ( $credential['display_number'] ?? '' ) );
+							$program    = trim( (string) ( $credential['program_title'] ?? '' ) );
+							$batch      = trim( (string) ( $credential['batch_name'] ?? '' ) );
+							$manage_url = $is_historical
+								? add_query_arg( array( 'page' => 'certloom-domain-credentials', 'legacy_id' => absint( $credential['legacy_id'] ?? 0 ) ), admin_url( 'admin.php' ) )
+								: add_query_arg( array( 'page' => 'certloom-domain-credentials', 'series_id' => $series_id ), admin_url( 'admin.php' ) );
+							$view_url = '';
+							if ( $is_historical && class_exists( 'Ecapla_CertVerify_Public_Router' ) && '' !== $number ) {
+								$view_url = Ecapla_CertVerify_Public_Router::profile_url( $number );
+							} elseif ( '' !== $public_id && class_exists( '\\Certloom\\Infrastructure\\Verification\\PublicVerificationGate' ) && ( new \Certloom\Infrastructure\Verification\PublicVerificationGate() )->is_ready() ) {
+								$view_result = ( new \Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl() )->verification_url( $public_id );
+								if ( ! is_wp_error( $view_result ) ) { $view_url = (string) $view_result; }
+							}
+							$status_code = 'unavailable';
+							if ( $is_historical ) {
+								$status_code = sanitize_key( (string) ( $credential['legacy_status_code'] ?? '' ) );
+							} elseif ( $certloom_dashboard_status_service ) {
+								try {
+									$status_result = $certloom_dashboard_status_service->evaluate( array(
+										'issuance_state'       => (string) ( $credential['issuance_state'] ?? \Certloom\Domain\Credential\States::ISSUANCE_DRAFT ),
+										'administrative_state' => (string) ( $credential['administrative_state'] ?? \Certloom\Domain\Credential\States::ADMIN_ACTIVE ),
+										'legacy_expired'       => ! empty( $credential['legacy_expired'] ),
+										'valid_from'           => $credential['valid_from'] ?? null,
+										'expires_at'           => $credential['expires_at'] ?? null,
+										'compliance_state'      => (string) ( $credential['compliance_state'] ?? \Certloom\Domain\Credential\States::COMPLIANCE_NOT_APPLICABLE ),
+									) );
+									$status_code = sanitize_key( (string) $status_result->code() );
+								} catch ( \Throwable $error ) {
+									$status_code = 'unavailable';
+								}
+							}
+							$status_label = $certloom_dashboard_status_labels[ $status_code ] ?? ( 'unavailable' === $status_code ? __( 'Unavailable', 'certloom' ) : str_replace( '_', ' ', ucfirst( $status_code ) ) );
+							$entry_date = trim( (string) ( $credential['entry_created_at'] ?? $credential['series_created_at'] ?? '' ) );
+						?>
+							<tr>
+								<td data-col="<?php esc_attr_e( 'Credential', 'certloom' ); ?>">
+									<strong class="certloom-credential-title"><a href="<?php echo esc_url( $manage_url ); ?>"><?php echo esc_html( '' !== $number ? $number : __( 'Unnumbered credential', 'certloom' ) ); ?></a></strong>
+									<div class="certloom-credential-row-actions" aria-label="<?php esc_attr_e( 'Credential actions', 'certloom' ); ?>"><?php if ( '' !== $view_url ) : ?><a href="<?php echo esc_url( $view_url ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'View', 'certloom' ); ?> <span aria-hidden="true">↗</span></a><?php endif; ?><a href="<?php echo esc_url( $manage_url ); ?>"><?php esc_html_e( 'Manage', 'certloom' ); ?></a></div>
+									<div class="certloom-credential-secondary certloom-credential-source-meta"><span class="certloom-credential-source <?php echo esc_attr( $source_class ); ?>"><?php echo esc_html( $source_label ); ?></span></div>
+								</td>
+								<td data-col="<?php esc_attr_e( 'Recipient', 'certloom' ); ?>"><strong><?php echo esc_html( (string) ( $credential['display_name'] ?: '—' ) ); ?></strong><?php if ( ! empty( $credential['recipient_email'] ) ) : ?><div class="certloom-credential-secondary"><?php echo esc_html( (string) $credential['recipient_email'] ); ?></div><?php endif; ?></td>
+								<td data-col="<?php esc_attr_e( 'Program / batch', 'certloom' ); ?>"><?php echo esc_html( '' !== $program ? $program : '—' ); ?><?php if ( '' !== $batch ) : ?><div class="certloom-credential-secondary"><?php echo esc_html( $batch ); ?></div><?php endif; ?></td>
+								<td data-col="<?php esc_attr_e( 'Issue date', 'certloom' ); ?>"><?php echo esc_html( ! empty( $credential['issued_at'] ) ? (string) $credential['issued_at'] : '—' ); ?></td>
+								<td data-col="<?php esc_attr_e( 'Expiry date', 'certloom' ); ?>"><?php echo esc_html( ! empty( $credential['expires_at'] ) ? (string) $credential['expires_at'] : __( 'No expiry', 'certloom' ) ); ?></td>
+								<td data-col="<?php esc_attr_e( 'Credential status', 'certloom' ); ?>"><span class="certloom-credential-status is-<?php echo esc_attr( $status_code ); ?>"><?php echo esc_html( $status_label ); ?></span></td>
+								<td data-col="<?php esc_attr_e( 'Record version', 'certloom' ); ?>"><?php echo ! empty( $credential['version_number'] ) ? '<strong>v' . esc_html( (string) absint( $credential['version_number'] ) ) . '</strong>' : '<span aria-hidden="true">—</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped value or literal fallback. ?></td>
+								<td data-col="<?php esc_attr_e( 'Added to Certloom', 'certloom' ); ?>"><?php echo esc_html( '' !== $entry_date ? $entry_date : '—' ); ?></td>
+							</tr>
+						<?php endforeach; ?>
+						</tbody>
+					</table>
 					</div>
 				<?php endif; ?>
 			<?php else : ?>
@@ -294,23 +345,17 @@ $certloom_design_url      = admin_url( 'admin.php?page=certloom-templates' );
 		<aside class="certloom-dashboard-sidebar" aria-label="<?php esc_attr_e( 'Dashboard tools', 'certloom' ); ?>">
 			<section class="certloom-panel" aria-labelledby="certloom-quick-actions-title">
 				<div class="certloom-panel-header"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Shortcuts', 'certloom' ); ?></span><h2 id="certloom-quick-actions-title"><?php esc_html_e( 'Quick actions', 'certloom' ); ?></h2></div></div>
-				<nav class="certloom-quick-links" aria-label="<?php esc_attr_e( 'Certloom quick actions', 'certloom' ); ?>">
-					<a href="<?php echo esc_url( $ecapla_certverify_create_url ); ?>"><span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span><span><strong><?php $ecapla_certverify_normalized_issuance_ready ? esc_html_e( 'Issue credential', 'certloom' ) : esc_html_e( 'Add certificate', 'certloom' ); ?></strong><small><?php $ecapla_certverify_normalized_issuance_ready ? esc_html_e( 'Choose a Recipient and Program', 'certloom' ) : esc_html_e( 'Create one registry record', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a>
-					<a href="<?php echo esc_url( $certloom_programs_url ); ?>"><span class="dashicons dashicons-welcome-learn-more" aria-hidden="true"></span><span><strong><?php esc_html_e( 'Programs', 'certloom' ); ?></strong><small><?php esc_html_e( 'Programs, Batches, Issuers and Signers', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a>
-					<a href="<?php echo esc_url( $certloom_design_url ); ?>"><span class="dashicons dashicons-art" aria-hidden="true"></span><span><strong><?php esc_html_e( 'Design', 'certloom' ); ?></strong><small><?php esc_html_e( 'Certificate and email designs', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a>
-					<a href="<?php echo esc_url( $certloom_automations_url ); ?>"><span class="dashicons dashicons-controls-repeat" aria-hidden="true"></span><span><strong><?php esc_html_e( 'Automations', 'certloom' ); ?></strong><small><?php esc_html_e( 'Timing, scope and follow-up rules', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a>
+				<nav class="certloom-dashboard-quick-grid" aria-label="<?php esc_attr_e( 'Certloom quick actions', 'certloom' ); ?>">
+					<a href="<?php echo esc_url( $certloom_fields_url ); ?>"><span class="dashicons dashicons-editor-table" aria-hidden="true"></span><strong><?php esc_html_e( 'Manage Fields', 'certloom' ); ?></strong></a>
+					<a href="<?php echo esc_url( $certloom_programs_url ); ?>"><span class="dashicons dashicons-welcome-learn-more" aria-hidden="true"></span><strong><?php esc_html_e( 'Programs', 'certloom' ); ?></strong></a>
+					<a href="<?php echo esc_url( $certloom_design_url ); ?>"><span class="dashicons dashicons-art" aria-hidden="true"></span><strong><?php esc_html_e( 'Design', 'certloom' ); ?></strong></a>
+					<a href="<?php echo esc_url( $certloom_automations_url ); ?>"><span class="dashicons dashicons-controls-repeat" aria-hidden="true"></span><strong><?php esc_html_e( 'Automations', 'certloom' ); ?></strong></a>
+					<?php if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) ) : ?><a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-email-designs' ) ); ?>"><span class="dashicons dashicons-email-alt" aria-hidden="true"></span><strong><?php esc_html_e( 'Email Designs', 'certloom' ); ?></strong></a><?php endif; ?>
+					<?php if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_INTEGRATIONS ) ) : ?><a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-integrations' ) ); ?>"><span class="dashicons dashicons-admin-links" aria-hidden="true"></span><strong><?php esc_html_e( 'Integrations', 'certloom' ); ?></strong></a><?php endif; ?>
+					<?php if ( current_user_can( 'manage_options' ) ) : ?><a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-import' ) ); ?>"><span class="dashicons dashicons-database" aria-hidden="true"></span><strong><?php esc_html_e( 'Backup & Restore', 'certloom' ); ?></strong></a><?php endif; ?>
+					<?php if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS ) ) : ?><a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-analytics' ) ); ?>"><span class="dashicons dashicons-chart-area" aria-hidden="true"></span><strong><?php esc_html_e( 'Analytics', 'certloom' ); ?></strong></a><?php endif; ?>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-frontend' ) ); ?>"><span class="dashicons dashicons-layout" aria-hidden="true"></span><strong><?php esc_html_e( 'Verification page', 'certloom' ); ?></strong></a>
 				</nav>
-				<details class="certloom-dashboard-more-tools certloom-technical-details">
-					<summary><?php esc_html_e( 'More tools', 'certloom' ); ?></summary>
-					<nav class="certloom-quick-links certloom-dashboard-more-tools-links" aria-label="<?php esc_attr_e( 'More Certloom tools', 'certloom' ); ?>">
-						<?php if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) ) : ?><a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-email-designs' ) ); ?>"><span class="dashicons dashicons-email-alt" aria-hidden="true"></span><span><strong><?php esc_html_e( 'Email designs', 'certloom' ); ?></strong><small><?php esc_html_e( 'Reusable content and hierarchy assignments', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a><?php endif; ?>
-						<?php if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_INTEGRATIONS ) ) : ?><a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-integrations' ) ); ?>"><span class="dashicons dashicons-admin-links" aria-hidden="true"></span><span><strong><?php esc_html_e( 'Integrations', 'certloom' ); ?></strong><small><?php esc_html_e( 'Connect LMS and external workflows', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a><?php endif; ?>
-						<?php if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS ) ) : ?><a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-analytics' ) ); ?>"><span class="dashicons dashicons-chart-area" aria-hidden="true"></span><span><strong><?php esc_html_e( 'Analytics', 'certloom' ); ?></strong><small><?php esc_html_e( 'Issuance and verification activity', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a><?php endif; ?>
-						<?php if ( current_user_can( 'manage_options' ) ) : ?><a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-import' ) ); ?>"><span class="dashicons dashicons-database" aria-hidden="true"></span><span><strong><?php esc_html_e( 'Backup & Restore', 'certloom' ); ?></strong><small><?php esc_html_e( 'Import, export and recovery tools', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a><?php endif; ?>
-						<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-fields' ) ); ?>"><span class="dashicons dashicons-editor-table" aria-hidden="true"></span><span><strong><?php esc_html_e( 'Fields', 'certloom' ); ?></strong><small><?php esc_html_e( 'Credential and profile data definitions', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a>
-						<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-frontend' ) ); ?>"><span class="dashicons dashicons-layout" aria-hidden="true"></span><span><strong><?php esc_html_e( 'Verification page', 'certloom' ); ?></strong><small><?php esc_html_e( 'Public credential presentation and embeds', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a>
-					</nav>
-				</details>
 			</section>
 
 			<section class="certloom-panel certloom-health-panel is-<?php echo esc_attr( $health_overall ); ?>" aria-labelledby="certloom-health-title">

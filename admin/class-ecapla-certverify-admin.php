@@ -77,6 +77,12 @@ class Ecapla_CertVerify_Admin {
 	}
 
 	public function add_menu() {
+		/*
+		 * WordPress evaluates capabilities while routes are registered. Refresh the
+		 * versioned Certloom role/current-user capability state before registering
+		 * any menu route so upgraded roles cannot receive a generic admin.php 403.
+		 */
+		Ecapla_CertVerify_Permissions::maybe_upgrade_capabilities();
 		$home_label = __( 'Home', 'certloom' );
 
 		add_menu_page(
@@ -113,7 +119,13 @@ class Ecapla_CertVerify_Admin {
 			add_submenu_page( null, __( 'Issuance', 'certloom' ), __( 'Issuance', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-issuance', array( $this, 'render_roadmap_placeholder_screen' ) );
 		}
 
-		add_submenu_page( self::DASHBOARD_PAGE, __( 'Analytics', 'certloom' ), __( 'Analytics', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::ANALYTICS_PAGE, array( $this, 'render_analytics_screen' ) );
+		/*
+		 * Analytics has its own granular read capability. Re-run the bounded health
+		 * refresh immediately before registration as a defensive upgrade boundary,
+		 * matching Email Design/Delivery route registration.
+		 */
+		Ecapla_CertVerify_Permissions::maybe_upgrade_capabilities();
+		add_submenu_page( self::DASHBOARD_PAGE, __( 'Analytics', 'certloom' ), __( 'Analytics', 'certloom' ), Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS, self::ANALYTICS_PAGE, array( $this, 'render_analytics_screen' ) );
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Settings', 'certloom' ), __( 'Settings', 'certloom' ), 'manage_options', 'certloom-settings', array( $this, 'render_settings_screen' ) );
 
 		// Automations is a first-class task in the unified Certloom workspace.

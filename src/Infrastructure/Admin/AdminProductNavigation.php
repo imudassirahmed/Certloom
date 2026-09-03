@@ -111,7 +111,7 @@ final class AdminProductNavigation {
 					$this->link( __( 'Verification page', 'certloom' ), 'certloom-frontend', array( 'certloom-frontend' ), ECAPLA_CERTVERIFY_CAP ),
 				);
 			case 'insights':
-				return array( $this->link( __( 'Automations','certloom'),'certloom-automations',array('certloom-automations'),\Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS), $this->link(__( 'Integrations','certloom'),'certloom-integrations',array('certloom-integrations'),ECAPLA_CERTVERIFY_CAP), $this->link(__( 'Analytics','certloom'),'certloom-analytics',array('certloom-analytics'),ECAPLA_CERTVERIFY_CAP) );
+				return array( $this->link( __( 'Automations','certloom'),'certloom-automations',array('certloom-automations'),\Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS), $this->link(__( 'Integrations','certloom'),'certloom-integrations',array('certloom-integrations'),ECAPLA_CERTVERIFY_CAP), $this->link(__( 'Analytics','certloom'),'certloom-analytics',array('certloom-analytics'),\Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS) );
 			case 'settings':
 				$links = array( $this->link(__( 'Settings','certloom'),'certloom-settings',array('certloom-settings'),'manage_options'), $this->link(__( 'Backup & Restore','certloom'),'certloom-import',array('certloom-import'),'manage_options'), $this->link(__( 'Setup','certloom'),'certloom-setup',array('certloom-setup'),'manage_options'), $this->link(__( 'Fields','certloom'),'certloom-fields',array('certloom-fields'),ECAPLA_CERTVERIFY_CAP) );
 				if ( $preview ) { $links[] = $this->link( __( 'Developer tools','certloom'), 'certloom-domain-data-tools', array('certloom-domain-data-tools'), \Ecapla_CertVerify_Permissions::CAP_MANAGE_DATA_TOOLS ); }

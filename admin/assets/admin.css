@@ -5073,7 +5073,7 @@ line-height:1.45}
 @media(max-width:1180px){.certloom-integration-source-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.certloom-form-grid-3{grid-template-columns:1fr 1fr}}
 @media(max-width:782px){.certloom-integration-source-grid,.certloom-form-grid-3,.certloom-external-card-grid{grid-template-columns:1fr}.certloom-mapping-row{grid-template-columns:minmax(0,1fr) auto}.certloom-mapping-row form{grid-column:1/-1}}
 
-/* UX-CORE-01 — Simple Dashboard follows the normalized task flow, never the legacy registry. */
+/* UX-CORE-01 — Dashboard follows the normalized task flow, never a legacy-only registry. */
 .certloom-metric-grid-simple{grid-template-columns:repeat(4,minmax(0,1fr))}
 .certloom-dashboard-credential-list{display:grid;border-top:1px solid #edf1ef}
 .certloom-dashboard-credential-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(150px,.8fr) auto;align-items:center;gap:16px;padding:15px 0;border-bottom:1px solid #edf1ef}
@@ -6433,5 +6433,82 @@ color:CanvasText}
 	.certloom-dashboard-more-tools-links,
 	.certloom-dashboard-data-safety-body{
 		border-color:CanvasText;
+	}
+}
+
+/* QA.20 Dashboard — compact keypad shortcuts and registry-consistent recent credentials. */
+.certloom-dashboard-quick-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 9px;
+}
+
+.certloom-dashboard-quick-grid a {
+	display: flex;
+	min-width: 0;
+	min-height: 94px;
+	padding: 12px 8px;
+	border: 1px solid var(--certloom-line);
+	border-radius: 10px;
+	background: var(--certloom-surface-soft);
+	color: var(--certloom-ink);
+	text-align: center;
+	text-decoration: none;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+}
+
+.certloom-dashboard-quick-grid a:hover,
+.certloom-dashboard-quick-grid a:focus-visible {
+	border-color: var(--certloom-accent);
+	background: var(--certloom-accent-soft);
+	color: var(--certloom-ink);
+}
+
+.certloom-dashboard-quick-grid .dashicons {
+	width: 24px;
+	height: 24px;
+	color: var(--certloom-accent);
+	font-size: 24px;
+}
+
+.certloom-dashboard-quick-grid strong {
+	display: block;
+	max-width: 100%;
+	font-size: 12px;
+	line-height: 1.25;
+}
+
+.certloom-dashboard-recent-table-wrap {
+	margin-top: 2px;
+}
+
+.certloom-dashboard-recent-table .certloom-credential-source-meta {
+	margin-top: 6px;
+}
+
+@media (max-width: 540px) {
+	.certloom-dashboard-quick-grid {
+		gap: 7px;
+	}
+	.certloom-dashboard-quick-grid a {
+		min-height: 84px;
+		padding: 9px 5px;
+	}
+	.certloom-dashboard-quick-grid strong {
+		font-size: 11px;
+	}
+}
+
+@media (forced-colors: active) {
+	.certloom-dashboard-quick-grid a {
+		border-color: ButtonText;
+	}
+	.certloom-dashboard-quick-grid a:hover,
+	.certloom-dashboard-quick-grid a:focus-visible {
+		outline: 2px solid Highlight;
+		outline-offset: 2px;
 	}
 }
