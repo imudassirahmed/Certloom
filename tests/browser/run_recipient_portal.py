@@ -85,9 +85,18 @@ async def run():
 
         ready=await browser.new_page(viewport={'width':960,'height':800})
         await ready.set_content(fixture('authority_ready'),wait_until='load')
-        await ck(await ready.get_by_role('link',name='Verify').count()==1,'authorityReadyVerifyAction')
-        await ck((await ready.get_by_role('link',name='Verify').get_attribute('rel'))=='nofollow noopener','authorityReadyVerifyRel')
+        await ck(await ready.get_by_role('link',name='Verify').count()==2,'authorityReadyVerifyAction')
+        await ck((await ready.get_by_role('link',name='Verify').first.get_attribute('rel'))=='nofollow noopener','authorityReadyVerifyRel')
         await ck('immutable version' in (await ready.locator('.certloom-my-credentials__authority-note').inner_text()).lower(),'authorityReadyLiveTruthCopy')
+        # Each credential owns its own copy feedback. A copy from the second card must not
+        # announce success inside the first card.
+        await ready.evaluate("Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:()=>Promise.resolve()}})")
+        shares=ready.locator('.certloom-my-credentials__share')
+        await shares.nth(1).locator('summary').click()
+        await shares.nth(1).get_by_role('button',name='Copy URL').click()
+        await ready.wait_for_timeout(40)
+        await ck((await shares.nth(0).locator('.certloom-action-feedback').inner_text())=='','shareFeedbackDoesNotLeakToFirstCard')
+        await ck((await shares.nth(1).locator('.certloom-action-feedback').inner_text())=='Credential link copied.','shareFeedbackStaysWithClickedCard')
         await ready.close()
 
         empty=await browser.new_page(viewport={'width':760,'height':600})

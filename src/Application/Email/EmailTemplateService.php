@@ -24,6 +24,7 @@ final class EmailTemplateService {
 			'schema' => self::TEMPLATE_SCHEMA,
 			'schema_version' => self::TEMPLATE_VERSION,
 			'subject' => __( 'Your {{program_title}} credential', 'certloom' ),
+			'preheader' => __( 'Your credential is ready to view and verify.', 'certloom' ),
 			'html_body' => '<p>' . esc_html__( 'Hello {{recipient_name}},', 'certloom' ) . '</p>'
 				. '<p>' . esc_html__( 'Your credential for {{program_title}} has been issued.', 'certloom' ) . '</p>'
 				. '<p><strong>' . esc_html__( 'Certificate number:', 'certloom' ) . '</strong> {{credential_number}}</p>'
@@ -70,9 +71,14 @@ final class EmailTemplateService {
 		$html['verification_link'] = $link_html;
 
 		$subject = $this->replace( (string) $template['subject'], $plain );
+		$preheader = $this->replace( (string) ( $template['preheader'] ?? '' ), $plain );
 		$subject = sanitize_text_field( wp_strip_all_tags( $subject ) );
 		$html_body = $this->replace( (string) $template['html_body'], $html );
 		$html_body = wp_kses_post( $html_body );
+		$preheader = sanitize_text_field( wp_strip_all_tags( $preheader ) );
+		if ( '' !== $preheader ) {
+			$html_body = '<div style="display:none!important;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">' . esc_html( $preheader ) . '</div>' . $html_body;
+		}
 		$text_body = $this->replace( (string) $template['text_body'], $plain );
 		$text_body = trim( wp_strip_all_tags( $text_body ) );
 		if ( preg_match( '/\{\{[a-z0-9_:-]+\}\}/i', $subject . "\n" . $html_body . "\n" . $text_body ) ) {
@@ -97,6 +103,7 @@ final class EmailTemplateService {
 
 		return array(
 			'subject' => $subject,
+			'preheader' => $preheader,
 			'html_body' => $html_body,
 			'text_body' => $text_body,
 			'subject_sha256' => hash( 'sha256', $subject ),
@@ -114,12 +121,29 @@ final class EmailTemplateService {
 	public function normalize_template( array $template ) {
 		$template = array_merge( self::defaults(), $template );
 		$subject = trim( sanitize_text_field( (string) $template['subject'] ) );
+		$preheader = trim( sanitize_text_field( (string) ( $template['preheader'] ?? '' ) ) );
 		$html = wp_kses_post( (string) $template['html_body'] );
-		$text = sanitize_textarea_field( (string) $template['text_body'] );
-		if ( '' === $subject || strlen( $subject ) > 200 ) { return new \WP_Error( 'certloom_email_subject_invalid', __( 'Email subject must contain between 1 and 200 characters.', 'certloom' ) ); }
+		$text = sanitize_textarea_field( (string) ( $template['text_body'] ?? '' ) );
+		if ( '' === trim( $text ) && '' !== trim( $html ) ) {
+			$plain_html = preg_replace_callback(
+				'/<a\b[^>]*href=(?:"([^"]+)"|\'([^\']+)\')[^>]*>(.*?)<\/a>/is',
+				static function ( $match ) {
+					$url = html_entity_decode( (string) ( $match[1] ?: $match[2] ), ENT_QUOTES | ENT_HTML5, get_bloginfo( 'charset' ) ?: 'UTF-8' );
+					$label = trim( wp_strip_all_tags( (string) $match[3] ) );
+					return '' !== $label ? $label . ' — ' . $url : $url;
+				},
+				$html
+			);
+			$plain_html = str_ireplace( array( '<br>', '<br/>', '<br />', '</p>', '</div>', '</tr>' ), "\n", (string) $plain_html );
+			$text = html_entity_decode( wp_strip_all_tags( $plain_html, true ), ENT_QUOTES | ENT_HTML5, get_bloginfo( 'charset' ) ?: 'UTF-8' );
+			$text = preg_replace( '/[ \t]+/', ' ', (string) $text );
+			$text = trim( (string) preg_replace( '/\n{3,}/', "\n\n", (string) $text ) );
+		}
+		if ( '' === $subject || $this->text_length( $subject ) > 200 ) { return new \WP_Error( 'certloom_email_subject_invalid', __( 'Email subject must contain between 1 and 200 characters.', 'certloom' ) ); }
 		if ( '' === trim( $html ) || strlen( $html ) > 20000 ) { return new \WP_Error( 'certloom_email_html_invalid', __( 'Email HTML body must contain between 1 and 20,000 bytes.', 'certloom' ) ); }
+		if ( $this->text_length( $preheader ) > 180 ) { return new \WP_Error( 'certloom_email_preheader_invalid', __( 'Email preheader must be 180 characters or fewer.', 'certloom' ) ); }
 		if ( '' === trim( $text ) || strlen( $text ) > 20000 ) { return new \WP_Error( 'certloom_email_text_invalid', __( 'Email plain-text body must contain between 1 and 20,000 bytes.', 'certloom' ) ); }
-		return array( 'schema' => self::TEMPLATE_SCHEMA, 'schema_version' => self::TEMPLATE_VERSION, 'subject' => $subject, 'html_body' => $html, 'text_body' => $text );
+		return array( 'schema' => self::TEMPLATE_SCHEMA, 'schema_version' => self::TEMPLATE_VERSION, 'subject' => $subject, 'preheader' => $preheader, 'html_body' => $html, 'text_body' => $text );
 	}
 
 	/** @return true|\WP_Error */
@@ -143,4 +167,6 @@ final class EmailTemplateService {
 	private function renderer_authoritative() {
 		return defined( 'CERTLOOM_PATH' ) && is_file( rtrim( CERTLOOM_PATH, '/\\' ) . '/resources/renderer/accepted.json' );
 	}
+
+	private function text_length( $value ) { return function_exists( 'mb_strlen' ) ? mb_strlen( (string) $value ) : strlen( (string) $value ); }
 }

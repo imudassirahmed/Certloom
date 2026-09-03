@@ -20,7 +20,7 @@
 	}
 
 	function statusIcon( value ) {
-		var icons = { valid: '✓', suspended: '!', withdrawn: '×', expired: '○' };
+		var icons = { valid: '✓', suspended: '!', withdrawn: '×', revoked: '×', expired: '○', not_yet_valid: '◷', pending_review: '…', suspended_noncompliant: '!', voided: '×', not_issued: '—' };
 		return icons[ statusModifier( value ) ] || '•';
 	}
 
@@ -274,7 +274,7 @@
 						shareLinks += '<a class="certloom-share-link certloom-share-link--' + escapeHtml( platform ) + '" href="' + escapeHtml( shareUrl ) + '"' + targetAttrs + '>' + escapeHtml( shareLabel ) + '</a>';
 					} );
 					if ( shareLinks ) {
-						actionHtml += '<details class="certloom-share"><summary class="certloom-result-action ' + config.prefix + '-result-action">' + escapeHtml( label ) + '</summary><div class="certloom-share-menu">' + shareLinks + '<button type="button" class="certloom-share-link certloom-share-copy certloom-copy-link" data-copy-url="' + escapeHtml( url ) + '">Copy URL</button></div></details>';
+						actionHtml += '<details class="certloom-share"><summary class="certloom-result-action ' + config.prefix + '-result-action">' + escapeHtml( label ) + '</summary><div class="certloom-share-menu">' + shareLinks + '<button type="button" class="certloom-share-link certloom-share-copy certloom-copy-link" data-copy-url="' + escapeHtml( url ) + '">' + escapeHtml( copyLabel ) + '</button></div></details>';
 					}
 				} else if ( 'copy' === type && url ) {
 					actionHtml += '<button type="button" class="certloom-result-action ' + config.prefix + '-result-action certloom-copy-link" data-copy-url="' + escapeHtml( url ) + '">' + escapeHtml( label ) + '</button>';
@@ -393,8 +393,15 @@
 	}
 
 	function actionFeedback( button, message ) {
-		var root = actionRoot( button );
-		var target = root ? root.querySelector( '.certloom-action-feedback' ) : null;
+		/* Keep feedback next to the action that produced it. Recipient Portal pages can
+		 * contain many Share controls; querying the whole portal would otherwise update
+		 * the first credential card no matter which Copy URL button was pressed. */
+		var local = button && button.closest ? button.closest( '.certloom-share, .cv-result-actions, .cvx-result-actions, .cvp-result-actions, .certloom-my-credential-card__actions' ) : null;
+		var target = local && local.querySelector ? local.querySelector( '.certloom-action-feedback' ) : null;
+		if ( ! target ) {
+			var root = actionRoot( button );
+			target = root ? root.querySelector( '.certloom-action-feedback' ) : null;
+		}
 		if ( target ) { target.textContent = message || ''; }
 	}
 

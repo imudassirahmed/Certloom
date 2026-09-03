@@ -20,7 +20,7 @@ $periods = array( 7 => __( '7 days', 'certloom' ), 30 => __( '30 days', 'certloo
 			<input type="hidden" name="section" value="issuance" />
 			<label for="certloom-issuance-analytics-days"><?php esc_html_e( 'Reporting period', 'certloom' ); ?></label>
 			<select id="certloom-issuance-analytics-days" name="days"><?php foreach ( $periods as $value => $label ) : ?><option value="<?php echo esc_attr( $value ); ?>" <?php selected( $days, $value ); ?>><?php echo esc_html( $label ); ?></option><?php endforeach; ?></select>
-			<button class="button"><?php esc_html_e( 'Apply', 'certloom' ); ?></button>
+			<button type="submit" class="button"><?php esc_html_e( 'Apply', 'certloom' ); ?></button>
 		</form>
 	</section>
 

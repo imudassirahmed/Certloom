@@ -8,48 +8,43 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * WordPress-local catalog of reusable credential email templates.
+ * WordPress-local catalog of reusable credential email designs.
  *
- * The legacy single-template option remains readable through
- * EmailTemplateSettingsRepository, which delegates its default template to
- * this catalog. That preserves existing installations without maintaining two
- * independent email-template authorities.
+ * The historical class name remains for binary/source compatibility with the
+ * delivery subsystem. Product UI calls these Email designs. Existing v1
+ * templates are upgraded lazily in memory to purpose=credential_issued.
  */
 final class EmailTemplateCatalogRepository {
 	const OPTION         = 'certloom_email_template_catalog_v1';
-	const SCHEMA_VERSION = 1;
+	const SCHEMA_VERSION = 2;
 	const DEFAULT_ID     = 'default';
-	const MAX_TEMPLATES  = 30;
+	const MAX_TEMPLATES  = 100;
 
 	/** @var EmailTemplateService */
 	private $service;
+	/** @var EmailDesignCompiler */
+	private $compiler;
 
-	public function __construct( ?EmailTemplateService $service = null ) {
-		$this->service = $service ?: new EmailTemplateService();
+	public function __construct( ?EmailTemplateService $service = null, ?EmailDesignCompiler $compiler = null ) {
+		$this->service  = $service ?: new EmailTemplateService();
+		$this->compiler = $compiler ?: new EmailDesignCompiler();
 	}
 
 	/** @return array<int,array<string,mixed>> */
 	public function all() {
 		$stored = get_option( self::OPTION, array() );
 		$items  = array();
-		if ( is_array( $stored ) && self::SCHEMA_VERSION === absint( $stored['schema_version'] ?? 0 ) && is_array( $stored['templates'] ?? null ) ) {
+		if ( is_array( $stored ) && is_array( $stored['templates'] ?? null ) ) {
 			foreach ( array_slice( $stored['templates'], 0, self::MAX_TEMPLATES ) as $template ) {
-				if ( ! is_array( $template ) ) {
-					continue;
-				}
+				if ( ! is_array( $template ) ) { continue; }
 				$normalized = $this->normalize( $template, false );
-				if ( ! is_wp_error( $normalized ) ) {
-					$items[] = $normalized;
-				}
+				if ( ! is_wp_error( $normalized ) ) { $items[] = $normalized; }
 			}
 		}
 
 		$has_default = false;
 		foreach ( $items as $item ) {
-			if ( self::DEFAULT_ID === (string) $item['id'] ) {
-				$has_default = true;
-				break;
-			}
+			if ( self::DEFAULT_ID === (string) $item['id'] ) { $has_default = true; break; }
 		}
 		if ( ! $has_default ) {
 			$legacy = get_option( EmailTemplateSettingsRepository::OPTION, array() );
@@ -58,16 +53,15 @@ final class EmailTemplateCatalogRepository {
 				array_merge(
 					$legacy,
 					array(
-						'id'     => self::DEFAULT_ID,
-						'name'   => __( 'Default credential email', 'certloom' ),
-						'active' => 1,
+						'id'      => self::DEFAULT_ID,
+						'name'    => __( 'Default credential email', 'certloom' ),
+						'purpose' => EmailDesignPurposes::ISSUED,
+						'active'  => 1,
 					)
 				),
 				false
 			);
-			if ( ! is_wp_error( $default ) ) {
-				array_unshift( $items, $default );
-			}
+			if ( ! is_wp_error( $default ) ) { array_unshift( $items, $default ); }
 		}
 		return array_values( $items );
 	}
@@ -76,104 +70,135 @@ final class EmailTemplateCatalogRepository {
 	public function get( $template_id ) {
 		$template_id = sanitize_key( (string) $template_id );
 		foreach ( $this->all() as $template ) {
-			if ( $template_id === (string) $template['id'] ) {
-				return $template;
-			}
+			if ( $template_id === (string) $template['id'] ) { return $template; }
 		}
 		return null;
+	}
+
+	/** @return array<int,array<string,mixed>> */
+	public function for_purpose( $purpose, $active_only = false ) {
+		if ( ! EmailDesignPurposes::is_valid( $purpose ) ) { return array(); }
+		$purpose = sanitize_key( (string) $purpose );
+		return array_values( array_filter( $this->all(), static function( array $template ) use ( $purpose, $active_only ) {
+			if ( $purpose !== (string) ( $template['purpose'] ?? '' ) ) { return false; }
+			return ! $active_only || ! empty( $template['active'] );
+		} ) );
 	}
 
 	/** @return string|\WP_Error */
 	public function save( array $template ) {
 		$normalized = $this->normalize( $template, true );
-		if ( is_wp_error( $normalized ) ) {
-			return $normalized;
-		}
+		if ( is_wp_error( $normalized ) ) { return $normalized; }
 
 		$items = $this->all();
 		$found = false;
 		foreach ( $items as $index => $existing ) {
 			if ( (string) $existing['id'] === (string) $normalized['id'] ) {
+				// An inherited design must not silently change purpose or become inactive.
+				if ( ( new EmailDesignAssignmentRepository() )->design_is_assigned( (string) $existing['id'] ) ) {
+					if ( empty( $normalized['active'] ) ) {
+						return new \WP_Error( 'certloom_email_design_assigned_pause_blocked', __( 'This email design is currently inherited by one or more scopes. Restore or move those inheritance rules before pausing it.', 'certloom' ) );
+					}
+					if ( (string) $existing['purpose'] !== (string) $normalized['purpose'] ) {
+						return new \WP_Error( 'certloom_email_design_assigned_purpose_blocked', __( 'This email design is currently inherited. Move or restore those inheritance rules before changing its message purpose.', 'certloom' ) );
+					}
+				}
 				$items[ $index ] = $normalized;
 				$found = true;
 				break;
 			}
 		}
 		if ( ! $found ) {
-			if ( count( $items ) >= self::MAX_TEMPLATES ) {
-				return new \WP_Error( 'certloom_email_template_catalog_limit', __( 'Certloom supports up to 30 reusable email templates per site.', 'certloom' ) );
-			}
+			if ( count( $items ) >= self::MAX_TEMPLATES ) { return new \WP_Error( 'certloom_email_template_catalog_limit', __( 'Certloom supports up to 100 reusable email designs per site.', 'certloom' ) ); }
 			$items[] = $normalized;
 		}
-
 		$result = $this->persist( $items );
-		if ( is_wp_error( $result ) ) {
-			return $result;
-		}
-		return (string) $normalized['id'];
+		return is_wp_error( $result ) ? $result : (string) $normalized['id'];
 	}
 
 	/** @return true|\WP_Error */
 	public function delete( $template_id ) {
 		$template_id = sanitize_key( (string) $template_id );
-		if ( self::DEFAULT_ID === $template_id ) {
-			return new \WP_Error( 'certloom_email_default_template_required', __( 'The default credential email cannot be deleted. You can edit or pause it instead.', 'certloom' ) );
+		if ( self::DEFAULT_ID === $template_id ) { return new \WP_Error( 'certloom_email_default_template_required', __( 'The default credential email cannot be deleted. You can edit it instead.', 'certloom' ) ); }
+		if ( ( new EmailDesignAssignmentRepository() )->design_is_assigned( $template_id ) ) { return new \WP_Error( 'certloom_email_design_in_use', __( 'This email design is inherited by one or more scopes. Restore inheritance or choose another design before deleting it.', 'certloom' ) ); }
+		foreach ( ( new EmailAutomationRuleRepository() )->all() as $rule ) {
+			if ( $template_id === (string) ( $rule['legacy_template_id'] ?? '' ) ) { return new \WP_Error( 'certloom_email_design_legacy_rule_in_use', __( 'A legacy Automation still references this email design. Re-save or remove that Automation before deleting the design.', 'certloom' ) ); }
 		}
-		$items = array_values(
-			array_filter(
-				$this->all(),
-				static function ( array $template ) use ( $template_id ) {
-					return $template_id !== (string) $template['id'];
-				}
-			)
-		);
+		$items = array_values( array_filter( $this->all(), static function( array $template ) use ( $template_id ) { return $template_id !== (string) $template['id']; } ) );
 		return $this->persist( $items );
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
 	private function normalize( array $template, $generate_id ) {
 		$id = sanitize_key( (string) ( $template['id'] ?? '' ) );
-		if ( '' === $id && $generate_id ) {
-			$id = sanitize_key( 'email-' . gmdate( 'Ymd-His' ) . '-' . strtolower( wp_generate_password( 6, false, false ) ) );
-		}
-		if ( '' === $id ) {
-			return new \WP_Error( 'certloom_email_template_id_invalid', __( 'The email template identity is invalid.', 'certloom' ) );
-		}
+		if ( '' === $id && $generate_id ) { $id = sanitize_key( 'email-' . gmdate( 'Ymd-His' ) . '-' . strtolower( wp_generate_password( 6, false, false ) ) ); }
+		if ( '' === $id ) { return new \WP_Error( 'certloom_email_template_id_invalid', __( 'The email design identity is invalid.', 'certloom' ) ); }
 		$name = trim( sanitize_text_field( (string) ( $template['name'] ?? '' ) ) );
-		if ( '' === $name || strlen( $name ) > 120 ) {
-			return new \WP_Error( 'certloom_email_template_name_invalid', __( 'Give the email template a name between 1 and 120 characters.', 'certloom' ) );
+		if ( '' === $name || $this->text_length( $name ) > 120 ) { return new \WP_Error( 'certloom_email_template_name_invalid', __( 'Give the email design a name between 1 and 120 characters.', 'certloom' ) ); }
+
+		$has_purpose = array_key_exists( 'purpose', $template ) && '' !== trim( (string) $template['purpose'] );
+		$raw_purpose = sanitize_key( (string) ( $template['purpose'] ?? '' ) );
+		if ( ( $generate_id || $has_purpose ) && ! EmailDesignPurposes::is_valid( $raw_purpose ) ) {
+			return new \WP_Error( 'certloom_email_design_purpose_invalid', $generate_id ? __( 'Choose a valid message purpose for this email design.', 'certloom' ) : __( 'A stored email design has an invalid message purpose and has been excluded until it is repaired.', 'certloom' ) );
 		}
+		// Missing purpose is accepted only for pre-purpose legacy records. A modern
+		// record with an explicit invalid purpose must never become issued silently.
+		$purpose = $has_purpose ? $raw_purpose : EmailDesignPurposes::ISSUED;
+		$preheader = trim( sanitize_text_field( (string) ( $template['preheader'] ?? '' ) ) );
+		if ( $this->text_length( $preheader ) > 180 ) { return new \WP_Error( 'certloom_email_preheader_invalid', __( 'Keep the email preheader to 180 characters or fewer.', 'certloom' ) ); }
+
+		$blocks = $template['blocks'] ?? null;
+		if ( is_string( $blocks ) && '' !== trim( $blocks ) ) {
+			$decoded = json_decode( $blocks, true );
+			$blocks  = is_array( $decoded ) ? $decoded : null;
+		}
+		$theme = $template['theme'] ?? array();
+		if ( is_string( $theme ) && '' !== trim( $theme ) ) {
+			$decoded = json_decode( $theme, true );
+			$theme   = is_array( $decoded ) ? $decoded : array();
+		}
+
+		if ( is_array( $blocks ) ) {
+			$compiled = $this->compiler->compile( $blocks, $theme );
+			$template['html_body'] = $compiled['html_body'];
+			if ( '' === trim( (string) ( $template['text_body'] ?? '' ) ) ) { $template['text_body'] = $compiled['text_body']; }
+			$blocks = $compiled['blocks'];
+			$theme  = $compiled['theme'];
+		} else {
+			// Legacy/custom HTML designs remain editable and become a single safe text block
+			// the first time they are opened in the visual designer.
+			$theme  = $this->compiler->normalize_theme( $theme );
+			$legacy_html = wp_kses_post( (string) ( $template['html_body'] ?? EmailTemplateService::defaults()['html_body'] ) );
+			$blocks = array( array( 'type' => 'text', 'html' => $legacy_html ) );
+		}
+
+		$template['preheader'] = $preheader;
 		$content = $this->service->normalize_template( $template );
-		if ( is_wp_error( $content ) ) {
-			return $content;
-		}
+		if ( is_wp_error( $content ) ) { return $content; }
 		return array(
 			'id'             => $id,
 			'name'           => $name,
+			'purpose'        => $purpose,
+			'preheader'      => (string) ( $content['preheader'] ?? $preheader ),
 			'active'         => array_key_exists( 'active', $template ) ? ( empty( $template['active'] ) ? 0 : 1 ) : 1,
 			'schema'         => (string) $content['schema'],
 			'schema_version' => absint( $content['schema_version'] ),
 			'subject'        => (string) $content['subject'],
 			'html_body'      => (string) $content['html_body'],
 			'text_body'      => (string) $content['text_body'],
+			'blocks'         => $blocks,
+			'theme'          => $theme,
 			'updated_at'     => $this->valid_timestamp( $template['updated_at'] ?? '' ) ? (string) $template['updated_at'] : current_time( 'mysql', true ),
 		);
 	}
 
 	/** @return true|\WP_Error */
 	private function persist( array $items ) {
-		$payload = array(
-			'schema_version' => self::SCHEMA_VERSION,
-			'templates'      => array_values( $items ),
-		);
+		$payload = array( 'schema_version' => self::SCHEMA_VERSION, 'templates' => array_values( $items ) );
 		$saved = update_option( self::OPTION, $payload, false );
-		return $saved || $payload === get_option( self::OPTION, array() )
-			? true
-			: new \WP_Error( 'certloom_email_template_catalog_save_failed', __( 'Certloom could not save the email template catalog.', 'certloom' ) );
+		return $saved || $payload === get_option( self::OPTION, array() ) ? true : new \WP_Error( 'certloom_email_template_catalog_save_failed', __( 'Certloom could not save the email design catalog.', 'certloom' ) );
 	}
 
-	/** @return bool */
-	private function valid_timestamp( $value ) {
-		return 1 === preg_match( '/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', (string) $value );
-	}
+	private function valid_timestamp( $value ) { return 1 === preg_match( '/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', (string) $value ); }
+	private function text_length( $value ) { return function_exists( 'mb_strlen' ) ? mb_strlen( (string) $value ) : strlen( (string) $value ); }
 }

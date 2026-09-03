@@ -74,6 +74,9 @@ por( false !== strpos( $renderer, 'wp_login_url' ) && false !== strpos( $rendere
 por( false !== strpos( $renderer, 'Downloads gated' ) && false !== strpos( $renderer, 'verify_url' ) && false !== strpos( $renderer, 'share_controls' ), 'actions remain authority-aware and add SOC-01 sharing without opening downloads' );
 por( false !== strpos( $renderer, 'Expiring soon' ), 'expiring-soon cue is rendered' );
 por( false !== strpos( $renderer, 'role="region"' ) && false !== strpos( $renderer, 'tabindex="0"' ), 'responsive table is keyboard-focusable as a named scroll region' );
+por( false !== strpos( $renderer, 'private static $instance_counter = 0' ) && false !== strpos( $renderer, "'certloom-my-status-' . absint( \$instance_id )" ) && false !== strpos( $renderer, "'certloom-my-sort-' . absint( \$instance_id )" ), 'multiple My Credentials shortcodes keep heading and filter control IDs unique' );
+$public_js = src( 'public/assets/certloom-public.js' );
+por( false !== strpos( $public_js, "button.closest( '.certloom-share, .cv-result-actions" ) && false !== strpos( $public_js, "local.querySelector( '.certloom-action-feedback' )" ), 'copy/share feedback stays local to the credential action that produced it' );
 
 $css = src( 'public/assets/certloom-public.css' );
 por( false !== strpos( $css, '.certloom-my-credentials' ) && false !== strpos( $css, '@media (prefers-reduced-motion:reduce)' ), 'Portal CSS includes reduced-motion support' );

@@ -19,13 +19,13 @@ ade_check( false !== strpos( $admin, 'Acceptance preview' ) && false !== strpos(
 ade_check( false !== strpos( $admin, "'first_name'" ) && false !== strpos( $admin, "'middle_name'" ) && false !== strpos( $admin, "'last_name'" ), 'REC-01 identity fields must be editable.' );
 ade_check( false !== strpos( $admin, "'wp_user_id'" ) && false !== strpos( $admin, 'get_userdata' ), 'REC-01 WordPress-user association must be editable and validated.' );
 ade_check( false !== strpos( $admin, 'recipient_custom_fields_present' ) && false !== strpos( $admin, 'parse_key_value_request' ), 'REC-01 custom fields must have a structured editor.' );
-ade_check( false !== strpos( $admin, 'advanced structured custom data' ), 'Unsupported nested recipient data must be preserved rather than flattened.' );
+ade_check( false !== strpos( $admin, 'technical structured custom data' ), 'Unsupported nested recipient data must be preserved rather than flattened.' );
 ade_check( false !== strpos( $admin, 'recipient_history' ) && false !== strpos( $recipients, 'credential_history' ), 'REC-01 credential history must be surfaced through a read-only repository query.' );
 ade_check( false !== strpos( $admin, "__( 'Description', 'certloom' )" ), 'PRG-01 description must be editable.' );
 ade_check( false !== strpos( $admin, 'issuer_field' ) && false !== strpos( $admin, "name=\"issuer_id\"" ), 'PRG-01 normalized issuer relationship must be exposed.' );
 ade_check( false !== strpos( $admin, 'program_metadata_present' ), 'Program metadata must have a structured editor.' );
 ade_check( false !== strpos( $admin, '$data = $this->program_request();' ) && false !== strpos( $admin, 'if ( is_wp_error( $data ) )' ), 'Program create must surface request-validation errors before calling the array-typed repository.' );
-ade_check( false !== strpos( $admin, 'advanced structured metadata' ), 'Unsupported nested program metadata must be preserved rather than flattened.' );
+ade_check( false !== strpos( $admin, 'technical structured metadata' ), 'Unsupported nested program metadata must be preserved rather than flattened.' );
 ade_check( false !== strpos( $admin, 'program_history' ) && false !== strpos( $programs, 'credential_history' ), 'Program credential activity must be visible.' );
 ade_check( false !== strpos( $admin, 'program_status' ) && false !== strpos( $programs, "array( 'all', 'active', 'inactive' )" ), 'Programs need bounded active/inactive operational views.' );
 ade_check( false !== strpos( $recipients, 'credential_count' ) && false !== strpos( $programs, 'credential_count' ), 'Entity lists must expose credential counts without loading full histories.' );

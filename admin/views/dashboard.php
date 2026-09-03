@@ -102,7 +102,7 @@ $certloom_design_url      = admin_url( 'admin.php?page=certloom-templates' );
 			</form>
 		</div>
 	<?php endif; endif; ?>
-	<?php if ( $review > 0 && ! $certloom_simple_normalized ) : ?>
+	<?php if ( $review > 0 ) : ?>
 		<div class="certloom-callout certloom-callout-warning" role="status">
 			<span class="dashicons dashicons-warning" aria-hidden="true"></span>
 			<div>
@@ -211,7 +211,7 @@ $certloom_design_url      = admin_url( 'admin.php?page=certloom-templates' );
 		<div class="certloom-dashboard-analytics-leaders">
 			<p><strong><?php esc_html_e( 'Top credential', 'certloom' ); ?>:</strong> <?php echo $top_verified ? esc_html( (string) $top_verified['certificate_number'] ) . ' · ' . esc_html( number_format_i18n( (int) $top_verified['total'] ) ) : esc_html__( 'No resolved verification activity yet', 'certloom' ); ?></p>
 			<p><strong><?php esc_html_e( 'Top Program', 'certloom' ); ?>:</strong> <?php echo $top_program ? esc_html( (string) $top_program['label'] ) . ' · ' . esc_html( number_format_i18n( (int) $top_program['total'] ) ) : esc_html__( 'No issuance activity yet', 'certloom' ); ?></p>
-			<p><strong><?php esc_html_e( 'Top Template', 'certloom' ); ?>:</strong> <?php echo $top_template ? esc_html( (string) $top_template['label'] ) . ' · ' . esc_html( number_format_i18n( (int) $top_template['total'] ) ) : esc_html__( 'No issuance activity yet', 'certloom' ); ?></p>
+			<p><strong><?php esc_html_e( 'Top certificate design', 'certloom' ); ?>:</strong> <?php echo $top_template ? esc_html( (string) $top_template['label'] ) . ' · ' . esc_html( number_format_i18n( (int) $top_template['total'] ) ) : esc_html__( 'No issuance activity yet', 'certloom' ); ?></p>
 		</div>
 	</section>
 	<?php endif; ?>
@@ -319,7 +319,7 @@ $certloom_design_url      = admin_url( 'admin.php?page=certloom-templates' );
 					<?php if ( $certloom_simple_normalized ) : ?>
 					<a href="<?php echo esc_url( $certloom_programs_url ); ?>"><span class="dashicons dashicons-welcome-learn-more" aria-hidden="true"></span><span><strong><?php esc_html_e( 'Programs', 'certloom' ); ?></strong><small><?php esc_html_e( 'Issuer, cohorts, signers and design', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a>
 					<a href="<?php echo esc_url( $certloom_design_url ); ?>"><span class="dashicons dashicons-art" aria-hidden="true"></span><span><strong><?php esc_html_e( 'Design', 'certloom' ); ?></strong><small><?php esc_html_e( 'Create and publish credential designs', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a>
-					<a href="<?php echo esc_url( $certloom_automations_url ); ?>"><span class="dashicons dashicons-email-alt" aria-hidden="true"></span><span><strong><?php esc_html_e( 'Automations', 'certloom' ); ?></strong><small><?php esc_html_e( 'Templates and post-issuance delivery', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a>
+					<a href="<?php echo esc_url( $certloom_automations_url ); ?>"><span class="dashicons dashicons-email-alt" aria-hidden="true"></span><span><strong><?php esc_html_e( 'Automations', 'certloom' ); ?></strong><small><?php esc_html_e( 'Delivery rules and follow-up actions', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a>
 					<?php else : ?>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-import' ) ); ?>"><span class="dashicons dashicons-database-import" aria-hidden="true"></span><span><strong><?php esc_html_e( 'Import & export', 'certloom' ); ?></strong><small><?php esc_html_e( 'CSV and complete backups', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-fields' ) ); ?>"><span class="dashicons dashicons-editor-table" aria-hidden="true"></span><span><strong><?php esc_html_e( 'Manage fields', 'certloom' ); ?></strong><small><?php esc_html_e( 'Labels, visibility and custom data', 'certloom' ); ?></small></span><span aria-hidden="true">→</span></a>

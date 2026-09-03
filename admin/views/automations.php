@@ -1,194 +1,45 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
-
-$email_templates = is_array( $email_templates ?? null ) ? $email_templates : array();
-$email_rules     = is_array( $email_rules ?? null ) ? $email_rules : array();
-$programs        = is_array( $programs ?? null ) ? $programs : array();
-$issuers         = is_array( $issuers ?? null ) ? $issuers : array();
-$automation_issuer_names  = is_array( $automation_issuer_names ?? null ) ? $automation_issuer_names : array();
+if ( ! defined( 'ABSPATH' ) ) { exit; }
+$email_rules = is_array( $email_rules ?? null ) ? $email_rules : array();
+$programs = is_array( $programs ?? null ) ? $programs : array();
+$issuers = is_array( $issuers ?? null ) ? $issuers : array();
+$automation_issuer_names = is_array( $automation_issuer_names ?? null ) ? $automation_issuer_names : array();
 $automation_program_names = is_array( $automation_program_names ?? null ) ? $automation_program_names : array();
-$automation_batch_names   = is_array( $automation_batch_names ?? null ) ? $automation_batch_names : array();
-$source_status   = is_array( $source_status ?? null ) ? $source_status : array();
+$automation_batch_names = is_array( $automation_batch_names ?? null ) ? $automation_batch_names : array();
+$source_status = is_array( $source_status ?? null ) ? $source_status : array();
 $destination_status = is_array( $destination_status ?? null ) ? $destination_status : array();
-$context_nonce   = wp_create_nonce( \Certloom\Infrastructure\Admin\ScopedFieldAdminAjax::NONCE_ACTION );
-$notice          = isset( $_GET['certloom_notice'] ) ? sanitize_text_field( wp_unslash( $_GET['certloom_notice'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Redirected notice only.
-$error           = isset( $_GET['certloom_error'] ) ? sanitize_text_field( wp_unslash( $_GET['certloom_error'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Redirected notice only.
-
-$template_names = array();
-foreach ( $email_templates as $template ) {
-	if ( is_array( $template ) ) {
-		$template_names[ (string) ( $template['id'] ?? '' ) ] = (string) ( $template['name'] ?? '' );
-	}
-}
+$context_nonce = wp_create_nonce( \Certloom\Infrastructure\Admin\ScopedFieldAdminAjax::NONCE_ACTION );
+$notice = isset( $_GET['certloom_notice'] ) ? sanitize_text_field( wp_unslash( $_GET['certloom_notice'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+$error = isset( $_GET['certloom_error'] ) ? sanitize_text_field( wp_unslash( $_GET['certloom_error'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 $program_names = $automation_program_names;
-foreach ( $programs as $program ) {
-	if ( is_array( $program ) ) {
-		$program_names[ absint( $program['id'] ?? 0 ) ] = (string) ( $program['title'] ?? '' );
-	}
-}
+foreach ( $programs as $program ) { if ( is_array( $program ) ) { $program_names[ absint( $program['id'] ?? 0 ) ] = (string) ( $program['title'] ?? '' ); } }
 $issuer_names = $automation_issuer_names;
-foreach ( $issuers as $issuer ) {
-	if ( is_array( $issuer ) ) {
-		$issuer_names[ absint( $issuer['id'] ?? 0 ) ] = (string) ( $issuer['name'] ?? '' );
-	}
-}
+foreach ( $issuers as $issuer ) { if ( is_array( $issuer ) ) { $issuer_names[ absint( $issuer['id'] ?? 0 ) ] = (string) ( $issuer['name'] ?? '' ); } }
 $batch_names = $automation_batch_names;
 $source_labels = array(
-	'any'          => __( 'Any issuance source', 'certloom' ),
-	'manual_admin' => __( 'Manual issuance', 'certloom' ),
-	'bulk_admin'   => __( 'Bulk issuance', 'certloom' ),
-	'tutor_lms'    => __( 'Tutor LMS', 'certloom' ),
-	'learndash'    => __( 'LearnDash', 'certloom' ),
-	'woocommerce'  => __( 'WooCommerce', 'certloom' ),
-	'coursera'     => __( 'Coursera', 'certloom' ),
-	'webhook'      => __( 'Webhook / API', 'certloom' ),
+	'any' => __( 'Any issuance source', 'certloom' ), 'manual_admin' => __( 'Manual issuance', 'certloom' ), 'bulk_admin' => __( 'Bulk issuance', 'certloom' ), 'tutor_lms' => __( 'Tutor LMS', 'certloom' ), 'learndash' => __( 'LearnDash', 'certloom' ), 'woocommerce' => __( 'WooCommerce', 'certloom' ), 'coursera' => __( 'Coursera', 'certloom' ), 'webhook' => __( 'Webhook / API', 'certloom' ),
 );
 ?>
 <div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-flow-workspace certloom-automations-workspace">
-	<section class="certloom-workspace-hero" aria-labelledby="certloom-automations-title">
-		<div class="certloom-workspace-hero-copy">
-			<span class="certloom-eyebrow"><?php esc_html_e( 'Delivery & follow-up', 'certloom' ); ?></span>
-			<h1 id="certloom-automations-title"><?php esc_html_e( 'Automations', 'certloom' ); ?></h1>
-			<p><?php esc_html_e( 'Decide what should happen after Certloom successfully issues a credential. Manual, bulk, LMS and commerce sources all finish through the same credential workflow.', 'certloom' ); ?></p>
-		</div>
-		<div class="certloom-workspace-hero-actions">
-			<a class="button button-primary" href="#certloom-new-rule"><?php esc_html_e( 'Create automation', 'certloom' ); ?></a>
-			<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-integrations' ) ); ?>"><?php esc_html_e( 'Connect a source', 'certloom' ); ?></a>
-		</div>
-	</section>
-
+	<section class="certloom-workspace-hero" aria-labelledby="certloom-automations-title"><div class="certloom-workspace-hero-copy"><span class="certloom-eyebrow"><?php esc_html_e( 'Delivery & follow-up', 'certloom' ); ?></span><h1 id="certloom-automations-title"><?php esc_html_e( 'Automations', 'certloom' ); ?></h1><p><?php esc_html_e( 'Choose when credential delivery runs, who it applies to, and which issuance sources qualify. Reusable message content and branding are managed separately in Email designs.', 'certloom' ); ?></p></div><div class="certloom-workspace-hero-actions"><a class="button button-primary" href="#certloom-new-rule"><?php esc_html_e( 'Create automation', 'certloom' ); ?></a><a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-email-designs' ) ); ?>"><?php esc_html_e( 'Open Email designs', 'certloom' ); ?></a></div></section>
 	<?php if ( $notice ) : ?><div class="notice notice-success is-dismissible certloom-owned-notice"><p><?php echo esc_html( $notice ); ?></p></div><?php endif; ?>
 	<?php if ( $error ) : ?><div class="notice notice-error certloom-owned-notice"><p><?php echo esc_html( $error ); ?></p></div><?php endif; ?>
-
-	<section class="certloom-flow-map" aria-label="<?php esc_attr_e( 'Credential automation flow', 'certloom' ); ?>">
-		<div class="certloom-flow-step"><span class="certloom-flow-step-number">1</span><div><strong><?php esc_html_e( 'A person qualifies', 'certloom' ); ?></strong><small><?php esc_html_e( 'Manual, bulk, LMS or purchase', 'certloom' ); ?></small></div></div>
-		<span class="certloom-flow-arrow" aria-hidden="true">→</span>
-		<div class="certloom-flow-step"><span class="certloom-flow-step-number">2</span><div><strong><?php esc_html_e( 'Certloom issues', 'certloom' ); ?></strong><small><?php esc_html_e( 'Recipient → Program → Credential', 'certloom' ); ?></small></div></div>
-		<span class="certloom-flow-arrow" aria-hidden="true">→</span>
-		<div class="certloom-flow-step"><span class="certloom-flow-step-number">3</span><div><strong><?php esc_html_e( 'Automation runs', 'certloom' ); ?></strong><small><?php esc_html_e( 'Deliver or trigger follow-up', 'certloom' ); ?></small></div></div>
-	</section>
+	<section class="certloom-flow-map" aria-label="<?php esc_attr_e( 'Credential automation flow', 'certloom' ); ?>"><div class="certloom-flow-step"><span class="certloom-flow-step-number">1</span><div><strong><?php esc_html_e( 'A person qualifies', 'certloom' ); ?></strong><small><?php esc_html_e( 'Manual, bulk, LMS or purchase', 'certloom' ); ?></small></div></div><span class="certloom-flow-arrow" aria-hidden="true">→</span><div class="certloom-flow-step"><span class="certloom-flow-step-number">2</span><div><strong><?php esc_html_e( 'Certloom issues', 'certloom' ); ?></strong><small><?php esc_html_e( 'Recipient → Program → Credential', 'certloom' ); ?></small></div></div><span class="certloom-flow-arrow" aria-hidden="true">→</span><div class="certloom-flow-step"><span class="certloom-flow-step-number">3</span><div><strong><?php esc_html_e( 'Automation runs', 'certloom' ); ?></strong><small><?php esc_html_e( 'Email design resolves automatically', 'certloom' ); ?></small></div></div></section>
 
 	<div class="certloom-workspace-grid certloom-workspace-grid-main">
-		<section class="certloom-workspace-card" aria-labelledby="certloom-rules-title">
-			<header class="certloom-workspace-card-head">
-				<div><span class="certloom-eyebrow"><?php esc_html_e( 'Automatic actions', 'certloom' ); ?></span><h2 id="certloom-rules-title"><?php esc_html_e( 'Your automations', 'certloom' ); ?></h2><p><?php esc_html_e( 'Rules run only after issuance succeeds. They never create or alter credential truth.', 'certloom' ); ?></p></div>
-				<span class="certloom-count-chip"><?php echo esc_html( number_format_i18n( count( $email_rules ) ) ); ?></span>
-			</header>
-
-			<?php if ( $email_rules ) : ?>
-				<div class="certloom-clean-list">
-				<?php foreach ( $email_rules as $rule ) :
-					$template_id = (string) ( $rule['template_id'] ?? '' );
-					$issuer_id   = absint( $rule['issuer_id'] ?? 0 );
-					$program_id  = absint( $rule['program_id'] ?? 0 );
-					$batch_id    = absint( $rule['batch_id'] ?? 0 );
-					$source_type = (string) ( $rule['source_type'] ?? 'any' );
-				?>
-					<article class="certloom-clean-list-row">
-						<div class="certloom-clean-list-main">
-							<div class="certloom-clean-list-title"><strong><?php echo esc_html( (string) $rule['name'] ); ?></strong><span class="certloom-status-dot <?php echo ! empty( $rule['active'] ) ? 'is-on' : ''; ?>" aria-hidden="true"></span></div>
-							<p><?php
-								$scope_parts = array();
-								if ( $issuer_id ) { $scope_parts[] = $issuer_names[ $issuer_id ] ?? __( 'Selected Issuer', 'certloom' ); }
-								if ( $program_id ) { $scope_parts[] = $program_names[ $program_id ] ?? __( 'Selected Program', 'certloom' ); }
-								if ( $batch_id ) { $scope_parts[] = $batch_names[ $batch_id ] ?? sprintf( /* translators: %d: Batch ID. */ __( 'Batch #%d', 'certloom' ), $batch_id ); }
-								if ( ! $scope_parts ) { $scope_parts[] = __( 'All issued credentials', 'certloom' ); }
-								printf(
-									/* translators: 1: email message name, 2: Issuer/Program/Batch scope, 3: issuance source. */
-									esc_html__( 'Send “%1$s” · %2$s · %3$s', 'certloom' ),
-									esc_html( $template_names[ $template_id ] ?? $template_id ),
-									esc_html( implode( ' → ', $scope_parts ) ),
-									esc_html( $source_labels[ $source_type ] ?? $source_type )
-								);
-							?></p>
-						</div>
-						<span class="certloom-state-pill <?php echo ! empty( $rule['active'] ) ? 'is-success' : ''; ?>"><?php echo ! empty( $rule['active'] ) ? esc_html__( 'On', 'certloom' ) : esc_html__( 'Paused', 'certloom' ); ?></span>
-						<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-							<input type="hidden" name="action" value="certloom_automation_rule_delete"><input type="hidden" name="rule_id" value="<?php echo esc_attr( (string) $rule['id'] ); ?>"><?php wp_nonce_field( 'certloom_automation_rule_delete_' . (string) $rule['id'] ); ?>
-							<button class="button button-small" type="submit"><?php esc_html_e( 'Remove', 'certloom' ); ?></button>
-						</form>
-					</article>
-				<?php endforeach; ?>
-				</div>
-			<?php else : ?>
-				<div class="certloom-premium-empty-state certloom-empty-compact"><span class="dashicons dashicons-controls-repeat" aria-hidden="true"></span><h3><?php esc_html_e( 'Nothing is automated yet', 'certloom' ); ?></h3><p><?php esc_html_e( 'Credentials still work normally. Add your first rule when you want delivery to happen automatically.', 'certloom' ); ?></p><a href="#certloom-new-rule" class="button button-primary"><?php esc_html_e( 'Create first automation', 'certloom' ); ?></a></div>
-			<?php endif; ?>
-		</section>
-
-		<aside class="certloom-workspace-card certloom-source-summary" aria-labelledby="certloom-source-summary-title">
-			<header class="certloom-workspace-card-head"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Sources', 'certloom' ); ?></span><h2 id="certloom-source-summary-title"><?php esc_html_e( 'Connected systems', 'certloom' ); ?></h2><p><?php esc_html_e( 'Every source feeds the same Recipient and Program model.', 'certloom' ); ?></p></div></header>
-			<div class="certloom-source-mini-list">
-			<?php foreach ( $source_status as $source ) : if ( ! is_array( $source ) ) { continue; } ?>
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-integrations' ) ); ?>"><span class="certloom-source-icon dashicons <?php echo esc_attr( (string) ( $source['icon'] ?? 'dashicons-admin-plugins' ) ); ?>" aria-hidden="true"></span><span><strong><?php echo esc_html( (string) ( $source['label'] ?? '' ) ); ?></strong><small><?php echo esc_html( (string) ( $source['status'] ?? '' ) ); ?></small></span><span aria-hidden="true">→</span></a>
-			<?php endforeach; ?>
-			</div>
-			<?php if ( $destination_status ) : ?>
-			<div class="certloom-source-summary-divider" aria-hidden="true"></div>
-			<div class="certloom-destination-summary-head"><span class="certloom-eyebrow"><?php esc_html_e( 'Destinations', 'certloom' ); ?></span><p><?php esc_html_e( 'Destinations run only after Certloom has issued the credential.', 'certloom' ); ?></p></div>
-			<div class="certloom-source-mini-list certloom-destination-mini-list">
-			<?php foreach ( $destination_status as $destination ) : if ( ! is_array( $destination ) ) { continue; } ?>
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-integrations#certloom-credly-setup' ) ); ?>"><span class="certloom-source-icon dashicons <?php echo esc_attr( (string) ( $destination['icon'] ?? 'dashicons-share' ) ); ?>" aria-hidden="true"></span><span><strong><?php echo esc_html( (string) ( $destination['label'] ?? '' ) ); ?></strong><small><?php echo esc_html( (string) ( $destination['status'] ?? '' ) ); ?></small></span><span aria-hidden="true">→</span></a>
-			<?php endforeach; ?>
-			</div>
-			<?php endif; ?>
-			<a class="certloom-inline-link" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-integrations' ) ); ?>"><?php esc_html_e( 'Manage integrations', 'certloom' ); ?> <span aria-hidden="true">→</span></a>
-		</aside>
+		<section class="certloom-workspace-card" aria-labelledby="certloom-rules-title"><header class="certloom-workspace-card-head"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Automatic actions', 'certloom' ); ?></span><h2 id="certloom-rules-title"><?php esc_html_e( 'Your automations', 'certloom' ); ?></h2><p><?php esc_html_e( 'Rules run only after issuance succeeds. When multiple rules match, Certloom uses the most specific Batch → Program → Issuer → Global rule.', 'certloom' ); ?></p></div><span class="certloom-count-chip"><?php echo esc_html( number_format_i18n( count( $email_rules ) ) ); ?></span></header>
+		<?php if ( $email_rules ) : ?><div class="certloom-clean-list"><?php foreach ( $email_rules as $rule ) : $issuer_id=absint($rule['issuer_id']??0);$program_id=absint($rule['program_id']??0);$batch_id=absint($rule['batch_id']??0);$source_type=(string)($rule['source_type']??'any');$scope_parts=array();if($issuer_id){$scope_parts[]=$issuer_names[$issuer_id]??__('Selected Issuer','certloom');}if($program_id){$scope_parts[]=$program_names[$program_id]??__('Selected Program','certloom');}if($batch_id){$scope_parts[]=$batch_names[$batch_id]??sprintf(/* translators: %d: Batch ID. */__('Batch #%d','certloom'),$batch_id);}if(!$scope_parts){$scope_parts[]=__('All issued credentials','certloom');} ?>
+			<article class="certloom-clean-list-row"><div class="certloom-clean-list-main"><div class="certloom-clean-list-title"><strong><?php echo esc_html((string)$rule['name']); ?></strong><span class="certloom-status-dot <?php echo !empty($rule['active'])?'is-on':''; ?>" aria-hidden="true"></span></div><p><?php printf(/* translators: 1: hierarchy scope, 2: issuance source. */esc_html__('Send the inherited Credential issued email · %1$s · %2$s','certloom'),esc_html(implode(' → ',$scope_parts)),esc_html($source_labels[$source_type]??$source_type)); ?></p><?php if(!empty($rule['legacy_template_id'])):?><small class="certloom-legacy-note"><?php esc_html_e('Legacy email pin retained only as a fallback until this Automation is re-saved.','certloom'); ?></small><?php endif; ?></div><span class="certloom-state-pill <?php echo !empty($rule['active'])?'is-success':''; ?>"><?php echo !empty($rule['active'])?esc_html__('On','certloom'):esc_html__('Paused','certloom'); ?></span><form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"><input type="hidden" name="action" value="certloom_automation_rule_delete"><input type="hidden" name="rule_id" value="<?php echo esc_attr((string)$rule['id']); ?>"><?php wp_nonce_field('certloom_automation_rule_delete_'.(string)$rule['id']); ?><button class="button button-small" type="submit" data-ecapla-confirm="<?php esc_attr_e( 'Remove this Automation? Matching credentials will no longer send through this rule.', 'certloom' ); ?>"><?php esc_html_e('Remove','certloom'); ?></button></form></article>
+		<?php endforeach; ?></div><?php else: ?><div class="certloom-premium-empty-state certloom-empty-compact"><span class="dashicons dashicons-controls-repeat" aria-hidden="true"></span><h3><?php esc_html_e('Nothing is automated yet','certloom'); ?></h3><p><?php esc_html_e('Credentials still work normally. Add your first rule when you want the inherited Credential issued email to send automatically.','certloom'); ?></p><a href="#certloom-new-rule" class="button button-primary"><?php esc_html_e('Create first automation','certloom'); ?></a></div><?php endif; ?></section>
+		<aside class="certloom-workspace-card certloom-source-summary" aria-labelledby="certloom-source-summary-title"><header class="certloom-workspace-card-head"><div><span class="certloom-eyebrow"><?php esc_html_e('Sources','certloom'); ?></span><h2 id="certloom-source-summary-title"><?php esc_html_e('Connected systems','certloom'); ?></h2><p><?php esc_html_e('Every source feeds the same Recipient and Program model.','certloom'); ?></p></div></header><div class="certloom-source-mini-list"><?php foreach($source_status as $source):if(!is_array($source))continue; ?><a href="<?php echo esc_url(admin_url('admin.php?page=certloom-integrations')); ?>"><span class="certloom-source-icon dashicons <?php echo esc_attr((string)($source['icon']??'dashicons-admin-plugins')); ?>" aria-hidden="true"></span><span><strong><?php echo esc_html((string)($source['label']??'')); ?></strong><small><?php echo esc_html((string)($source['status']??'')); ?></small></span><span aria-hidden="true">→</span></a><?php endforeach; ?></div></aside>
 	</div>
 
-	<section id="certloom-new-rule" class="certloom-workspace-card certloom-setup-card" aria-labelledby="certloom-new-rule-title">
-		<header class="certloom-workspace-card-head"><div><span class="certloom-eyebrow"><?php esc_html_e( 'New rule', 'certloom' ); ?></span><h2 id="certloom-new-rule-title"><?php esc_html_e( 'When a credential is issued…', 'certloom' ); ?></h2><p><?php esc_html_e( 'Choose the email message to send and optionally narrow it by Issuer, Program, Batch, or issuance source.', 'certloom' ); ?></p></div></header>
-		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-clean-form" data-certloom-human-form data-certloom-invalid-message="<?php esc_attr_e( 'Please complete the highlighted field before saving this automation.', 'certloom' ); ?>">
-			<input type="hidden" name="action" value="certloom_automation_rule_save"><?php wp_nonce_field( 'certloom_automation_rule_save' ); ?>
-			<div class="certloom-form-grid certloom-form-grid-2">
-				<label class="certloom-field-control"><span><?php esc_html_e( 'Automation name', 'certloom' ); ?></span><input type="text" name="name" required data-certloom-required-example="<?php esc_attr_e( 'Example: Send course completion email', 'certloom' ); ?>" maxlength="120" placeholder="<?php esc_attr_e( 'e.g. Send course completion email', 'certloom' ); ?>"></label>
-				<label class="certloom-field-control"><span><?php esc_html_e( 'Email message', 'certloom' ); ?></span><select name="template_id" required data-certloom-required-example="<?php esc_attr_e( 'Choose the reusable email message this automation should send.', 'certloom' ); ?>"><?php foreach ( $email_templates as $template ) : if ( empty( $template['active'] ) ) { continue; } ?><option value="<?php echo esc_attr( (string) $template['id'] ); ?>"><?php echo esc_html( (string) $template['name'] ); ?></option><?php endforeach; ?></select><small><?php esc_html_e( 'This is an email message, not the certificate design. Certificate design follows Global → Issuer → Program → Batch.', 'certloom' ); ?></small></label>
-				<label class="certloom-field-control"><span><?php esc_html_e( 'Issuer (optional)', 'certloom' ); ?></span><select name="issuer_id" data-certloom-context-lookup="issuer" data-certloom-context-nonce="<?php echo esc_attr( $context_nonce ); ?>" data-certloom-context-empty-value="0" data-certloom-context-search-placeholder="<?php esc_attr_e( 'Search Issuers…', 'certloom' ); ?>"><option value="0"><?php esc_html_e( 'Any Issuer', 'certloom' ); ?></option><?php foreach ( $issuers as $issuer ) : ?><option value="<?php echo esc_attr( absint( $issuer['id'] ?? 0 ) ); ?>"><?php echo esc_html( (string) ( $issuer['name'] ?? '' ) ); ?></option><?php endforeach; ?></select></label>
-				<label class="certloom-field-control"><span><?php esc_html_e( 'Program (optional)', 'certloom' ); ?></span><select name="program_id" data-certloom-context-lookup="program" data-certloom-context-program-status="active" data-certloom-context-nonce="<?php echo esc_attr( $context_nonce ); ?>" data-certloom-context-empty-value="0" data-certloom-context-search-placeholder="<?php esc_attr_e( 'Search Programs…', 'certloom' ); ?>"><option value="0"><?php esc_html_e( 'Any Program', 'certloom' ); ?></option><?php foreach ( $programs as $program ) : ?><option value="<?php echo esc_attr( absint( $program['id'] ?? 0 ) ); ?>"><?php echo esc_html( (string) ( $program['title'] ?? '' ) ); ?></option><?php endforeach; ?></select></label>
-				<label class="certloom-field-control"><span><?php esc_html_e( 'Batch (optional)', 'certloom' ); ?></span><select name="batch_id" data-certloom-context-lookup="batch" data-certloom-context-nonce="<?php echo esc_attr( $context_nonce ); ?>" data-certloom-context-empty-value="0" data-certloom-context-search-placeholder="<?php esc_attr_e( 'Search Batches in this Program…', 'certloom' ); ?>"><option value="0"><?php esc_html_e( 'Any Batch in this Program', 'certloom' ); ?></option></select><small><?php esc_html_e( 'Choose a Program first to narrow this automation to one Batch.', 'certloom' ); ?></small></label>
-				<label class="certloom-field-control"><span><?php esc_html_e( 'Issued through', 'certloom' ); ?></span><select name="source_type"><?php foreach ( $source_labels as $key => $label ) : ?><option value="<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $label ); ?></option><?php endforeach; ?></select></label>
-			</div>
-			<p class="certloom-token-note"><?php esc_html_e( 'These are delivery filters only. They never choose or override the credential design, field contract, Program, Batch, or issuer saved at issuance.', 'certloom' ); ?></p>
-			<label class="certloom-switch-row"><input type="checkbox" name="active" value="1" checked><span><strong><?php esc_html_e( 'Turn on now', 'certloom' ); ?></strong><small><?php esc_html_e( 'You can remove or replace the rule later.', 'certloom' ); ?></small></span></label>
-			<div class="certloom-form-actions"><button class="button button-primary" type="submit"><?php esc_html_e( 'Save automation', 'certloom' ); ?></button></div>
+	<section id="certloom-new-rule" class="certloom-workspace-card certloom-automation-create" aria-labelledby="certloom-new-rule-title"><header class="certloom-workspace-card-head"><div><span class="certloom-eyebrow"><?php esc_html_e('New automation','certloom'); ?></span><h2 id="certloom-new-rule-title"><?php esc_html_e('Send after credential issuance','certloom'); ?></h2><p><?php esc_html_e('This QA tranche certifies the Credential issued trigger. The email itself resolves independently from Email Design inheritance.','certloom'); ?></p></div></header>
+		<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="certloom-clean-form" data-certloom-human-form data-certloom-invalid-message="<?php esc_attr_e('Please complete the highlighted field before saving this Automation.','certloom'); ?>"><input type="hidden" name="action" value="certloom_automation_rule_save"><?php wp_nonce_field('certloom_automation_rule_save'); ?>
+			<div class="certloom-form-grid certloom-form-grid-2"><label class="certloom-field-control"><span><?php esc_html_e('Automation name','certloom'); ?></span><input name="name" required maxlength="120" placeholder="<?php esc_attr_e('e.g. Email every issued credential','certloom'); ?>"></label><label class="certloom-field-control"><span><?php esc_html_e('When','certloom'); ?></span><input type="text" value="<?php esc_attr_e('Credential issued','certloom'); ?>" readonly><small><?php esc_html_e('Additional lifecycle triggers will only appear after their event paths are implemented and tested.','certloom'); ?></small></label></div>
+			<div class="certloom-form-grid certloom-form-grid-4"><label class="certloom-field-control"><span><?php esc_html_e('Issuer (optional)','certloom'); ?></span><select name="issuer_id" data-certloom-context-lookup="issuer" data-certloom-context-nonce="<?php echo esc_attr($context_nonce); ?>" data-certloom-context-empty-value="0" data-certloom-context-search-placeholder="<?php esc_attr_e('Search Issuers…','certloom'); ?>"><option value="0"><?php esc_html_e('Any Issuer','certloom'); ?></option><?php foreach($issuers as $issuer):?><option value="<?php echo esc_attr(absint($issuer['id']??0)); ?>"><?php echo esc_html((string)($issuer['name']??'')); ?></option><?php endforeach; ?></select></label><label class="certloom-field-control"><span><?php esc_html_e('Program (optional)','certloom'); ?></span><select name="program_id" data-certloom-context-lookup="program" data-certloom-context-program-status="active" data-certloom-context-nonce="<?php echo esc_attr($context_nonce); ?>" data-certloom-context-empty-value="0" data-certloom-context-search-placeholder="<?php esc_attr_e('Search Programs…','certloom'); ?>"><option value="0"><?php esc_html_e('Any Program','certloom'); ?></option><?php foreach($programs as $program):?><option value="<?php echo esc_attr(absint($program['id']??0)); ?>"><?php echo esc_html((string)($program['title']??'')); ?></option><?php endforeach; ?></select></label><label class="certloom-field-control"><span><?php esc_html_e('Batch (optional)','certloom'); ?></span><select name="batch_id" data-certloom-context-lookup="batch" data-certloom-context-nonce="<?php echo esc_attr($context_nonce); ?>" data-certloom-context-empty-value="0" data-certloom-context-search-placeholder="<?php esc_attr_e('Search Batches in this Program…','certloom'); ?>"><option value="0"><?php esc_html_e('Any Batch in this Program','certloom'); ?></option></select><small><?php esc_html_e('Choose a Program first to narrow this Automation to one Batch.','certloom'); ?></small></label><label class="certloom-field-control"><span><?php esc_html_e('Issued through','certloom'); ?></span><select name="source_type"><?php foreach($source_labels as $key=>$label):?><option value="<?php echo esc_attr($key); ?>"><?php echo esc_html($label); ?></option><?php endforeach; ?></select></label></div>
+			<div class="certloom-email-resolution-card"><span class="dashicons dashicons-email-alt2" aria-hidden="true"></span><div><strong><?php esc_html_e('Email design: Automatic','certloom'); ?></strong><p><?php esc_html_e('At delivery time Certloom resolves Credential issued through Batch → Program → Issuer → Global. This Automation does not pin or override that design.','certloom'); ?></p><a href="<?php echo esc_url(admin_url('admin.php?page=certloom-email-designs')); ?>"><?php esc_html_e('Manage Email inheritance','certloom'); ?> →</a></div></div>
+			<label class="certloom-switch-row"><input type="checkbox" name="active" value="1" checked><span><strong><?php esc_html_e('Turn on now','certloom'); ?></strong><small><?php esc_html_e('You can remove or replace the rule later.','certloom'); ?></small></span></label><div class="certloom-form-actions"><button class="button button-primary" type="submit"><?php esc_html_e('Save automation','certloom'); ?></button></div>
 		</form>
-	</section>
-
-	<section class="certloom-workspace-card" aria-labelledby="certloom-email-templates-title">
-		<header class="certloom-workspace-card-head"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Reusable email messages', 'certloom' ); ?></span><h2 id="certloom-email-templates-title"><?php esc_html_e( 'Email messages', 'certloom' ); ?></h2><p><?php esc_html_e( 'Keep different messages for degrees, training, awards or different Programs. Each message uses the recipient and credential details that were saved when the credential was issued.', 'certloom' ); ?></p></div><span class="certloom-count-chip"><?php echo esc_html( number_format_i18n( count( $email_templates ) ) ); ?></span></header>
-		<div class="certloom-template-card-grid">
-		<?php foreach ( $email_templates as $template ) : ?>
-			<details class="certloom-edit-card">
-				<summary><span class="certloom-edit-card-title"><strong><?php echo esc_html( (string) $template['name'] ); ?></strong><small><?php echo ! empty( $template['active'] ) ? esc_html__( 'Available for delivery', 'certloom' ) : esc_html__( 'Paused', 'certloom' ); ?></small></span><span class="certloom-edit-card-action"><?php esc_html_e( 'Edit', 'certloom' ); ?> <span aria-hidden="true">↓</span></span></summary>
-				<div class="certloom-edit-card-body">
-				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-clean-form" data-certloom-human-form data-certloom-invalid-message="<?php esc_attr_e( 'Please complete the highlighted field before saving this email message.', 'certloom' ); ?>">
-					<input type="hidden" name="action" value="certloom_automation_template_save"><input type="hidden" name="template_id" value="<?php echo esc_attr( (string) $template['id'] ); ?>"><?php wp_nonce_field( 'certloom_automation_template_save' ); ?>
-					<label class="certloom-field-control"><span><?php esc_html_e( 'Message name', 'certloom' ); ?></span><input name="name" required data-certloom-required-example="<?php esc_attr_e( 'Example: Graduation email', 'certloom' ); ?>" maxlength="120" value="<?php echo esc_attr( (string) $template['name'] ); ?>"></label>
-					<label class="certloom-field-control"><span><?php esc_html_e( 'Subject', 'certloom' ); ?></span><input name="subject" required data-certloom-required-example="<?php esc_attr_e( 'Example: Your credential is ready', 'certloom' ); ?>" maxlength="200" value="<?php echo esc_attr( (string) $template['subject'] ); ?>"></label>
-					<label class="certloom-field-control"><span><?php esc_html_e( 'Message', 'certloom' ); ?></span><textarea rows="7" name="html_body" required data-certloom-required-example="<?php esc_attr_e( 'Write the email message recipients should receive.', 'certloom' ); ?>"><?php echo esc_textarea( (string) $template['html_body'] ); ?></textarea></label>
-					<details class="certloom-technical-details"><summary><?php esc_html_e( 'Plain-text fallback', 'certloom' ); ?></summary><label class="certloom-field-control"><span class="screen-reader-text"><?php esc_html_e( 'Plain-text fallback', 'certloom' ); ?></span><textarea rows="6" name="text_body" required data-certloom-required-example="<?php esc_attr_e( 'Add a plain-text version for email clients that cannot display HTML.', 'certloom' ); ?>"><?php echo esc_textarea( (string) $template['text_body'] ); ?></textarea></label></details>
-					<label class="certloom-switch-row"><input type="checkbox" name="active" value="1" <?php checked( ! empty( $template['active'] ) ); ?>><span><strong><?php esc_html_e( 'Available for delivery', 'certloom' ); ?></strong></span></label>
-					<p class="certloom-token-note"><?php esc_html_e( 'You can use recipient name, Program, issuer, credential number, issue/expiry dates, grade and verification link placeholders.', 'certloom' ); ?></p>
-					<div class="certloom-form-actions"><button class="button button-primary" type="submit"><?php esc_html_e( 'Save message', 'certloom' ); ?></button></div>
-				</form>
-				<?php if ( \Certloom\Infrastructure\Email\EmailTemplateCatalogRepository::DEFAULT_ID !== (string) $template['id'] ) : ?><form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-destructive-inline"><input type="hidden" name="action" value="certloom_automation_template_delete"><input type="hidden" name="template_id" value="<?php echo esc_attr( (string) $template['id'] ); ?>"><?php wp_nonce_field( 'certloom_automation_template_delete_' . (string) $template['id'] ); ?><button class="button-link-delete" type="submit"><?php esc_html_e( 'Delete message', 'certloom' ); ?></button></form><?php endif; ?>
-				</div>
-			</details>
-		<?php endforeach; ?>
-		</div>
-
-		<details class="certloom-create-drawer">
-			<summary><span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span><?php esc_html_e( 'Create another email message', 'certloom' ); ?></summary>
-			<div class="certloom-create-drawer-body">
-			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-clean-form" data-certloom-human-form data-certloom-invalid-message="<?php esc_attr_e( 'Please complete the highlighted field before creating this email message.', 'certloom' ); ?>">
-				<input type="hidden" name="action" value="certloom_automation_template_save"><?php wp_nonce_field( 'certloom_automation_template_save' ); ?>
-				<div class="certloom-form-grid certloom-form-grid-2"><label class="certloom-field-control"><span><?php esc_html_e( 'Message name', 'certloom' ); ?></span><input name="name" required data-certloom-required-example="<?php esc_attr_e( 'Example: Graduation email', 'certloom' ); ?>" maxlength="120" placeholder="<?php esc_attr_e( 'e.g. Graduation email', 'certloom' ); ?>"></label><label class="certloom-field-control"><span><?php esc_html_e( 'Subject', 'certloom' ); ?></span><input name="subject" required data-certloom-required-example="<?php esc_attr_e( 'Example: Your credential is ready', 'certloom' ); ?>" maxlength="200" value="<?php esc_attr_e( 'Your {{program_title}} credential', 'certloom' ); ?>"></label></div>
-				<label class="certloom-field-control"><span><?php esc_html_e( 'Message', 'certloom' ); ?></span><textarea rows="7" name="html_body" required data-certloom-required-example="<?php esc_attr_e( 'Write the email message recipients should receive.', 'certloom' ); ?>">&lt;p&gt;Hello {{recipient_name}},&lt;/p&gt;&lt;p&gt;Your credential for {{program_title}} has been issued.&lt;/p&gt;&lt;p&gt;{{verification_link}}&lt;/p&gt;</textarea></label>
-				<input type="hidden" name="text_body" value="Hello {{recipient_name}},&#10;&#10;Your credential for {{program_title}} has been issued.&#10;{{verification_url}}"><input type="hidden" name="active" value="1">
-				<div class="certloom-form-actions"><button class="button button-primary" type="submit"><?php esc_html_e( 'Create message', 'certloom' ); ?></button></div>
-			</form>
-			</div>
-		</details>
 	</section>
 </div>

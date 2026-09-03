@@ -601,7 +601,7 @@
 			var element = selected(); if ( ! element || isLocked( element ) ) { setInspector(); return; }
 			var key = input.getAttribute( 'data-certloom-designer-content-field' ); var raw = String( input.value || '' ); var proposed = clone( element );
 			if ( 'text' === key ) { proposed.text = raw; }
-			else if ( 'token' === key ) { raw = raw.trim(); if ( ! /^[a-z][a-z0-9_.:-]{0,127}$/.test( raw ) ) { showError( t( 'invalidMergeToken', 'This dynamic field is not valid. Choose another field or check its advanced field name.' ) ); setInspector(); return; } proposed.token = raw; }
+			else if ( 'token' === key ) { raw = raw.trim(); if ( ! /^[a-z][a-z0-9_.:-]{0,127}$/.test( raw ) ) { showError( t( 'invalidMergeToken', 'This dynamic field is not valid. Choose another field or check its technical field name.' ) ); setInspector(); return; } proposed.token = raw; }
 			else if ( 'asset' === key ) { raw = raw.trim(); if ( ! /^attachment:[1-9][0-9]*$/.test( raw ) ) { showError( t( 'invalidAssetReference', 'Choose an image from the WordPress Media Library.' ) ); setInspector(); return; } proposed.asset = raw; }
 			else if ( 'fit' === key ) { if ( [ 'contain', 'cover', 'fill' ].indexOf( raw ) === -1 ) { setInspector(); return; } proposed.fit = raw; }
 			else if ( 'shape' === key ) { if ( [ 'rectangle', 'ellipse' ].indexOf( raw ) === -1 ) { setInspector(); return; } proposed.shape = raw; }

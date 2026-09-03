@@ -45,9 +45,10 @@ final class EmailTemplateSettingsRepository {
 			array_merge(
 				$clean,
 				array(
-					'id'     => EmailTemplateCatalogRepository::DEFAULT_ID,
-					'name'   => __( 'Default credential email', 'certloom' ),
-					'active' => 1,
+					'id'      => EmailTemplateCatalogRepository::DEFAULT_ID,
+					'name'    => __( 'Default credential email', 'certloom' ),
+					'purpose' => EmailDesignPurposes::ISSUED,
+					'active'  => 1,
 				)
 			)
 		);

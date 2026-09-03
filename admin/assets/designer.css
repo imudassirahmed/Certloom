@@ -553,7 +553,7 @@
 .certloom-template-designer.is-pro-mode .certloom-template-designer-add-head { display: none; }
 .certloom-template-designer.is-pro-mode .certloom-template-designer-stage { display: block; }
 .certloom-template-designer.is-pro-mode .certloom-template-designer-add-panel { display: block; }
-.certloom-template-designer.is-pro-mode .certloom-template-designer-token-advanced { display: grid; }
+.certloom-template-designer.is-pro-mode .certloom-designer-token-advanced { display: grid; }
 .certloom-template-designer.is-pro-mode .certloom-template-designer-layers-panel { display: block; }
 
 @media (max-width: 1220px) {

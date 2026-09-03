@@ -6,6 +6,8 @@ use Certloom\Application\Job\JobQueue;
 use Certloom\Application\Migration\DomainCutoverState;
 use Certloom\Domain\Job\JobTypes;
 use Certloom\Infrastructure\Email\EmailEnvelopeStore;
+use Certloom\Infrastructure\Email\EmailDesignAssignmentRepository;
+use Certloom\Infrastructure\Email\EmailDesignPurposes;
 use Certloom\Infrastructure\Email\EmailTemplateCatalogRepository;
 use Certloom\Infrastructure\Email\EmailTemplateSettingsRepository;
 use Certloom\Infrastructure\Repository\EmailDeliveryRepository;
@@ -28,6 +30,8 @@ final class EmailDeliveryCoordinator {
 	private $settings;
 	/** @var EmailTemplateCatalogRepository */
 	private $catalog;
+	/** @var EmailDesignAssignmentRepository */
+	private $assignments;
 
 	public function __construct(
 		JobQueue $queue,
@@ -35,7 +39,8 @@ final class EmailDeliveryCoordinator {
 		?EmailEnvelopeStore $envelopes = null,
 		?EmailTemplateService $templates = null,
 		?EmailTemplateSettingsRepository $settings = null,
-		?EmailTemplateCatalogRepository $catalog = null
+		?EmailTemplateCatalogRepository $catalog = null,
+		?EmailDesignAssignmentRepository $assignments = null
 	) {
 		$this->queue      = $queue;
 		$this->repository = $repository ?: new EmailDeliveryRepository();
@@ -43,10 +48,11 @@ final class EmailDeliveryCoordinator {
 		$this->templates  = $templates ?: new EmailTemplateService();
 		$this->settings   = $settings ?: new EmailTemplateSettingsRepository();
 		$this->catalog    = $catalog ?: new EmailTemplateCatalogRepository();
+		$this->assignments = $assignments ?: new EmailDesignAssignmentRepository();
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
-	public function preview( $version_id, $destination = '', $template_id = EmailTemplateCatalogRepository::DEFAULT_ID ) {
+	public function preview( $version_id, $destination = '', $template_id = 'automatic', $purpose = EmailDesignPurposes::ISSUED ) {
 		$version = $this->repository->find_version( absint( $version_id ) );
 		if ( is_wp_error( $version ) ) {
 			return $version;
@@ -64,11 +70,9 @@ final class EmailDeliveryCoordinator {
 			return $destination;
 		}
 
-		$template_id = sanitize_key( (string) $template_id );
-		$template    = $this->catalog->get( $template_id );
-		if ( ! is_array( $template ) || empty( $template['active'] ) ) {
-			return new \WP_Error( 'certloom_email_template_unavailable', __( 'Choose an available credential email template.', 'certloom' ) );
-		}
+		$selection = $this->resolve_template( $snapshot, $template_id, $purpose );
+		if ( is_wp_error( $selection ) ) { return $selection; }
+		$template = $selection['design'];
 
 		$authoritative = ( new DomainCutoverState() )->is_domain_authoritative();
 		$composed      = $this->templates->compose( $snapshot, $template, $authoritative );
@@ -83,6 +87,10 @@ final class EmailDeliveryCoordinator {
 			'destination_sha256'         => hash( 'sha256', strtolower( $destination ) ),
 			'template_id'                => (string) $template['id'],
 			'template_name'              => (string) $template['name'],
+			'selection_intent'            => (string) $selection['selection_intent'],
+			'resolution_scope'            => (string) $selection['scope_type'],
+			'resolution_scope_id'         => absint( $selection['scope_id'] ),
+			'message_purpose'             => (string) $selection['purpose'],
 			'composed'                   => $composed,
 			'snapshot'                   => $snapshot,
 			'verification_authoritative' => $authoritative,
@@ -91,7 +99,7 @@ final class EmailDeliveryCoordinator {
 	}
 
 	/** @return string|\WP_Error */
-	public function enqueue( $version_id, $destination, $owner_user_id, $delivery_kind = 'issued', $confirmed = false, $template_id = EmailTemplateCatalogRepository::DEFAULT_ID ) {
+	public function enqueue( $version_id, $destination, $owner_user_id, $delivery_kind = 'issued', $confirmed = false, $template_id = 'automatic', $purpose = EmailDesignPurposes::ISSUED ) {
 		if ( ! $confirmed ) {
 			return new \WP_Error( 'certloom_email_confirmation_required', __( 'Review and explicitly confirm the credential email before queueing delivery.', 'certloom' ) );
 		}
@@ -100,7 +108,7 @@ final class EmailDeliveryCoordinator {
 			return new \WP_Error( 'certloom_email_kind_invalid', __( 'The credential email delivery type is invalid.', 'certloom' ) );
 		}
 
-		$review = $this->preview( $version_id, $destination, $template_id );
+		$review = $this->preview( $version_id, $destination, $template_id, $purpose );
 		if ( is_wp_error( $review ) ) {
 			return $review;
 		}
@@ -124,6 +132,10 @@ final class EmailDeliveryCoordinator {
 					'verification_authoritative' => (bool) $composed['verification_authoritative'],
 					'attachment_status'          => (string) $composed['attachment_status'],
 					'requested_by'               => absint( $owner_user_id ),
+					'selection_intent'            => (string) $review['selection_intent'],
+					'resolution_scope'            => (string) $review['resolution_scope'],
+					'resolution_scope_id'         => absint( $review['resolution_scope_id'] ),
+					'message_purpose'             => (string) $review['message_purpose'],
 				),
 			)
 		);
@@ -186,9 +198,9 @@ final class EmailDeliveryCoordinator {
 		return $this->settings->get();
 	}
 
-	/** Legacy default-template API retained for compatibility. @return true|\WP_Error */
+	/** Legacy write API retained only to fail closed after Email Designs became authoritative. @return \WP_Error */
 	public function save_template( array $template ) {
-		return $this->settings->save( $template );
+		return new \WP_Error( 'certloom_email_content_authority_moved', __( 'Reusable email content is managed in Design → Email designs. No legacy email changes were applied.', 'certloom' ) );
 	}
 
 	/** @return array<int,array<string,mixed>> */
@@ -196,9 +208,32 @@ final class EmailDeliveryCoordinator {
 		return $this->catalog->all();
 	}
 
-	/** @return string|\WP_Error */
+	/** Legacy catalog write API retained only to fail closed after Email Designs became authoritative. @return \WP_Error */
 	public function save_catalog_template( array $template ) {
-		return $this->catalog->save( $template );
+		return new \WP_Error( 'certloom_email_content_authority_moved', __( 'Reusable email content is managed in Design → Email designs. No legacy email changes were applied.', 'certloom' ) );
+	}
+
+
+	/** @return array<string,mixed>|\WP_Error */
+	private function resolve_template( array $snapshot, $template_id, $purpose ) {
+		if ( ! EmailDesignPurposes::is_valid( $purpose ) ) {
+			return new \WP_Error( 'certloom_email_purpose_invalid', __( 'The requested email message purpose is not supported.', 'certloom' ) );
+		}
+		$purpose = sanitize_key( (string) $purpose );
+		$requested = sanitize_key( (string) $template_id );
+		if ( '' !== $requested && 'automatic' !== $requested ) {
+			$template = $this->catalog->get( $requested );
+			if ( ! is_array( $template ) || empty( $template['active'] ) || $purpose !== (string) ( $template['purpose'] ?? EmailDesignPurposes::ISSUED ) ) {
+				return new \WP_Error( 'certloom_email_template_unavailable', __( 'Choose an active email design for this message purpose.', 'certloom' ) );
+			}
+			return array( 'design' => $template, 'selection_intent' => 'override', 'scope_type' => 'one_send_override', 'scope_id' => 0, 'purpose' => $purpose );
+		}
+		$issuer_id  = absint( $snapshot['issuer']['id'] ?? 0 );
+		$program_id = absint( $snapshot['program']['id'] ?? 0 );
+		$batch_id   = absint( $snapshot['batch']['id'] ?? 0 );
+		$resolved = $this->assignments->resolve( $issuer_id, $program_id, $batch_id, $purpose );
+		if ( is_wp_error( $resolved ) ) { return $resolved; }
+		return array( 'design' => $resolved['design'], 'selection_intent' => 'automatic', 'scope_type' => (string) $resolved['scope_type'], 'scope_id' => absint( $resolved['scope_id'] ), 'purpose' => $purpose );
 	}
 
 	/** @return string|\WP_Error */

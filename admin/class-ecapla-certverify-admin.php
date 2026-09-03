@@ -16,7 +16,6 @@ class Ecapla_CertVerify_Admin {
 		( new \Certloom\Infrastructure\Admin\AdminProductNavigation() )->register();
 		add_action( 'admin_menu', array( $this, 'add_menu' ) );
 		add_action( 'admin_post_certloom_set_ui_mode', array( $this, 'handle_ui_mode_switch' ) );
-		add_action( 'admin_notices', array( $this, 'render_ui_mode_switch' ), 1 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'admin_init', array( $this, 'maybe_redirect_after_activation' ) );
 		add_action( 'admin_init', array( $this, 'handle_form_submission' ) );
@@ -78,8 +77,7 @@ class Ecapla_CertVerify_Admin {
 	}
 
 	public function add_menu() {
-		$simple = \Certloom\Infrastructure\Admin\AdminUiMode::is_simple();
-		$home_label = $simple ? __( 'Home', 'certloom' ) : __( 'Dashboard', 'certloom' );
+		$home_label = __( 'Home', 'certloom' );
 
 		add_menu_page(
 			__( 'Certloom', 'certloom' ),
@@ -118,8 +116,7 @@ class Ecapla_CertVerify_Admin {
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Analytics', 'certloom' ), __( 'Analytics', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::ANALYTICS_PAGE, array( $this, 'render_analytics_screen' ) );
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Settings', 'certloom' ), __( 'Settings', 'certloom' ), 'manage_options', 'certloom-settings', array( $this, 'render_settings_screen' ) );
 
-		// Automations is a first-class Simple-mode task. The late product-navigation
-		// pass hides it again in Advanced mode, where Delivery remains contextual.
+		// Automations is a first-class task in the unified Certloom workspace.
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Automations', 'certloom' ), __( 'Automations', 'certloom' ), Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS, 'certloom-automations', array( $this, 'render_automations_screen' ) );
 
 		// Contextual utility screens stay routable while remaining out of the six-section primary menu.
@@ -134,7 +131,7 @@ class Ecapla_CertVerify_Admin {
 	}
 
 
-	/** Saves the presentation-only Simple/Advanced preference for this administrator. */
+	/** Compatibility endpoint for stale pre-unification workspace preference forms. */
 	public function handle_ui_mode_switch() {
 		if ( ! is_user_logged_in() ) {
 			wp_die( esc_html__( 'You must be signed in to change the Certloom workspace mode.', 'certloom' ) );
@@ -150,24 +147,8 @@ class Ecapla_CertVerify_Admin {
 		exit;
 	}
 
-	/** Renders one compact mode control on Certloom administration screens only. */
-	public function render_ui_mode_switch() {
-		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only screen selection.
-		if ( 0 !== strpos( $page, 'certloom' ) || ! is_user_logged_in() ) {
-			return;
-		}
-		$current = \Certloom\Infrastructure\Admin\AdminUiMode::current();
-		$redirect = remove_query_arg( array( 'certloom_error', 'certloom_notice' ) );
-		$mode_description = 'simple' === $current
-			? __( 'Task-focused workspace. Specialist maintenance and diagnostics stay out of the way.', 'certloom' )
-			: __( 'Full administration, diagnostics and release-maintenance tools.', 'certloom' );
-		echo '<div class="certloom-ui-mode-bar" role="region" aria-label="' . esc_attr__( 'Certloom workspace mode', 'certloom' ) . '"><div><strong>' . esc_html( 'simple' === $current ? __( 'Simple workspace', 'certloom' ) : __( 'Advanced workspace', 'certloom' ) ) . '</strong><span>' . esc_html( $mode_description ) . '</span></div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_set_ui_mode"><input type="hidden" name="redirect_to" value="' . esc_attr( $redirect ) . '">';
-		wp_nonce_field( 'certloom_set_ui_mode' );
-		foreach ( array( 'simple' => __( 'Simple', 'certloom' ), 'advanced' => __( 'Advanced', 'certloom' ) ) as $value => $label ) {
-			echo '<button type="submit" name="certloom_ui_mode" value="' . esc_attr( $value ) . '" class="certloom-ui-mode-choice ' . ( $current === $value ? 'is-current' : '' ) . '" aria-pressed="' . ( $current === $value ? 'true' : 'false' ) . '">' . esc_html( $label ) . '</button>';
-		}
-		echo '</form></div>';
-	}
+	/** Retired compatibility method. Certloom now has one workspace. */
+	public function render_ui_mode_switch() { return; }
 
 	/** Sends a newly activated single site into Setup exactly once. */
 	public function maybe_redirect_after_activation() {
@@ -192,6 +173,87 @@ class Ecapla_CertVerify_Admin {
 			'copy' => __( 'Copy', 'certloom' ),
 			'copied' => __( 'Copied', 'certloom' ),
 			'copyFailed' => __( 'Press Ctrl+C or Cmd+C to copy', 'certloom' ),
+			'contextSearchBatches' => __( 'Search Batches…', 'certloom' ),
+			'contextSearchTemplates' => __( 'Search published Templates…', 'certloom' ),
+			'contextSearchChoices' => __( 'Search choices…', 'certloom' ),
+			'contextManageDesigns' => __( 'Manage published designs', 'certloom' ),
+			'contextChooseProgramFirst' => __( 'Choose a Program first.', 'certloom' ),
+			'contextSearching' => __( 'Searching…', 'certloom' ),
+			'contextSearchFailed' => __( 'Search failed.', 'certloom' ),
+			'contextOneMatch' => __( '1 match.', 'certloom' ),
+			'contextMatches' => __( '%d matches.', 'certloom' ),
+			'contextNoPublishedDesigns' => __( 'No published designs match. Publish a design in Design first.', 'certloom' ),
+			'contextNoChoices' => __( 'No matching choices.', 'certloom' ),
+			'contextNoBatch' => __( 'No Batch', 'certloom' ),
+			'contextChooseProgram' => __( 'Choose Program…', 'certloom' ),
+			'programDefaultDesign' => __( 'Program default design', 'certloom' ),
+			'recoveryChooseBackup' => __( 'Step 2: choose the Certloom backup you want to review.', 'certloom' ),
+			'recoveryChooseCsv' => __( 'Step 2: choose the CSV file you want to review.', 'certloom' ),
+			'legacyProgramFieldMode' => __( 'Legacy Program field mode — optional free custom keys remain available until this Program adopts Credential fields.', 'certloom' ),
+			'programNoCredentialFields' => __( 'This Program uses Credential fields but currently assigns no additional fields.', 'certloom' ),
+			'credentialFieldsLoadedProgram' => __( 'Credential fields loaded from the selected Program.', 'certloom' ),
+			'credentialFieldsLoadedBatch' => __( 'Credential fields loaded from the selected Program + Batch.', 'certloom' ),
+			'scopeBatch' => __( 'Batch', 'certloom' ),
+			'scopeProgram' => __( 'Program', 'certloom' ),
+			'fieldRequired' => __( 'Required', 'certloom' ),
+			'fieldOptional' => __( 'Optional', 'certloom' ),
+			'recipientValueFrozen' => __( 'Value comes from the Recipient profile and is frozen into the issued credential.', 'certloom' ),
+			'useGradeField' => __( 'Use the Grade / result field above.', 'certloom' ),
+			'privacyPrefix' => __( 'Privacy:', 'certloom' ),
+			'privacyPrivate' => __( 'Private', 'certloom' ),
+			'privacyVerification' => __( 'Verification only', 'certloom' ),
+			'privacyProfile' => __( 'Profile only', 'certloom' ),
+			'privacyBoth' => __( 'Verification + profile', 'certloom' ),
+			'sensitivityPublicSafe' => __( 'Public-safe', 'certloom' ),
+			'sensitivityPersonal' => __( 'Personal', 'certloom' ),
+			'sensitivitySensitive' => __( 'Sensitive', 'certloom' ),
+			'sensitivityInternal' => __( 'Internal', 'certloom' ),
+			'bulkOr' => __( 'or', 'certloom' ),
+			'bulkRequired' => __( 'required', 'certloom' ),
+			'credentialFieldsLoadFailed' => __( 'Credential fields could not be loaded. The server will still validate before issuance.', 'certloom' ),
+			'chooseProgramLoadFields' => __( 'Choose a Program to load its credential fields.', 'certloom' ),
+			'loadingCredentialFields' => __( 'Loading credential fields…', 'certloom' ),
+			'invalidResponse' => __( 'Invalid response', 'certloom' ),
+			'defaultCredentialTerm' => __( 'Credential', 'certloom' ),
+			'defaultDesignDescription' => __( 'Clear and professional', 'certloom' ),
+			'enteredWhenIssuing' => __( 'Entered when issuing', 'certloom' ),
+			'loadingPreview' => __( 'Loading preview…', 'certloom' ),
+			'previewLoadFailed' => __( 'Template preview could not be loaded.', 'certloom' ),
+			'noDefaultDesign' => __( 'No default design selected', 'certloom' ),
+			'previewUnavailable' => __( 'Preview unavailable', 'certloom' ),
+			'googleWaiting' => __( 'Waiting for Google…', 'certloom' ),
+			'googleOpening' => __( 'Opening Google…', 'certloom' ),
+			'googleCompletePermission' => __( 'Complete permission in the Google window.', 'certloom' ),
+			'googlePopupBlocked' => __( 'Your browser blocked the popup, so Google will open in this tab.', 'certloom' ),
+			'googleConnected' => __( 'Google Drive connected.', 'certloom' ),
+			'googleNotConnected' => __( 'Google Drive was not connected.', 'certloom' ),
+			'connected' => __( 'Connected', 'certloom' ),
+			'requiredField' => __( 'Please fill in this required field.', 'certloom' ),
+			'newRecipientProfile' => __( 'New Recipient profile', 'certloom' ),
+			'quickInvalid' => __( 'Complete the highlighted required field.', 'certloom' ),
+			'adding' => __( 'Adding…', 'certloom' ),
+			'itemAddFailed' => __( 'This item could not be added.', 'certloom' ),
+			'added' => __( 'Added.', 'certloom' ),
+			'saving' => __( 'Saving…', 'certloom' ),
+			'defaultLabel' => __( 'Default', 'certloom' ),
+			'enterFieldLabel' => __( 'Enter a field label.', 'certloom' ),
+			'creatingField' => __( 'Creating field…', 'certloom' ),
+			'fieldCreateFailed' => __( 'Field could not be created.', 'certloom' ),
+			'fieldCreated' => __( 'Field created.', 'certloom' ),
+			'scopeNotUsed' => __( 'Not used', 'certloom' ),
+			'scopeInheritProgram' => __( 'Inherit Program', 'certloom' ),
+			'scopeExclude' => __( 'Exclude', 'certloom' ),
+			'fieldRule' => __( 'Field rule', 'certloom' ),
+			'remove' => __( 'Remove', 'certloom' ),
+			'designPublishFailed' => __( 'This design could not be published.', 'certloom' ),
+			'designDraftFailed' => __( 'This design could not be moved to Draft.', 'certloom' ),
+			'designPublished' => __( 'Design published.', 'certloom' ),
+			'designMovedDraft' => __( 'Design moved to Draft.', 'certloom' ),
+			'published' => __( 'Published', 'certloom' ),
+			'draft' => __( 'Draft', 'certloom' ),
+			'movePublishedDraft' => __( 'Move published design back to Draft', 'certloom' ),
+			'publishDraftDesign' => __( 'Publish this draft design', 'certloom' ),
+			'deactivateVerificationWarning' => __( 'Deactivating Certloom stops public credential verification. Continue?', 'certloom' ),
 		) );
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Asset routing only.
 		if ( in_array( $page, array( 'certloom-domain-issuers', 'certloom-domain-signers' ), true ) ) { wp_enqueue_media(); }
@@ -511,10 +573,6 @@ class Ecapla_CertVerify_Admin {
 		if ( in_array( $action, array( 'save_step', 'skip_step' ), true ) ) {
 			$step = isset( $_POST['wizard_step'] ) ? sanitize_key( wp_unslash( $_POST['wizard_step'] ) ) : '';
 			$next = isset( $_POST['wizard_next_step'] ) ? sanitize_key( wp_unslash( $_POST['wizard_next_step'] ) ) : '';
-			if ( isset( $_POST['workspace_mode'] ) ) {
-				$mode = \Certloom\Infrastructure\Admin\AdminUiMode::save_for_current_user( sanitize_key( wp_unslash( $_POST['workspace_mode'] ) ) );
-				if ( is_wp_error( $mode ) ) { $this->redirect_error( $mode->get_error_message(), $base ); }
-			}
 			$patch = 'skip_step' === $action ? array() : $this->setup_wizard_draft_request( $step );
 			$result = Ecapla_CertVerify_Onboarding::save_wizard_step( $step, $patch, $next, 'skip_step' === $action );
 			if ( is_wp_error( $result ) ) { $this->redirect_error( $result->get_error_message(), $base ); }
@@ -1749,7 +1807,6 @@ class Ecapla_CertVerify_Admin {
 		}
 		$wizard_template_preview_nonce = wp_create_nonce( 'certloom_setup_wizard_preview' );
 		$wizard_context_lookup_nonce = wp_create_nonce( \Certloom\Infrastructure\Admin\ScopedFieldAdminAjax::NONCE_ACTION );
-		$wizard_mode = \Certloom\Infrastructure\Admin\AdminUiMode::current();
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/setup-wizard.php';
 	}
 
@@ -1862,8 +1919,8 @@ class Ecapla_CertVerify_Admin {
 			'certloom-issuance' => array(
 				'title' => __( 'Issuance', 'certloom' ),
 				'eyebrow' => __( 'Issuance availability', 'certloom' ),
-				'description' => __( 'Certloom’s existing certificate, import, delivery, sharing and analytics workflows remain available. Advanced Program-based issuance and downloadable PDF or image publication stay protected until their final data and rendering safety checks are approved.', 'certloom' ),
-				'status' => __( 'Current credential workflows available · advanced publication protected', 'certloom' ),
+				'description' => __( 'Certloom’s existing certificate, import, delivery, sharing and analytics workflows remain available. Program-based issuance and downloadable PDF or image publication stay protected until their final data and rendering safety checks are approved.', 'certloom' ),
+				'status' => __( 'Current credential workflows available · publication authority protected', 'certloom' ),
 			),
 		);
 		$planned_feature = isset( $planned_features[ $page ] ) ? $planned_features[ $page ] : null;

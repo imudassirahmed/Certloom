@@ -105,7 +105,7 @@ p1e_has( $src['admin'], 'data-certloom-kv-list', 'Structured metadata list contr
 p1e_has( $src['js'], 'certloom-add-kv', 'Admin JS must support the structured metadata add action.' );
 p1e_has( $src['admin'], 'members_page(', 'Batch membership UI must use paginated repository reads.' );
 p1e_has( $src['admin'], 'recipient_s', 'Batch membership UI must support bounded recipient search.' );
-p1e_has( $src['admin'], 'structured metadata that the simple editor cannot round-trip exactly', 'Reduced metadata editor must preserve unrepresentable structured data.' );
+p1e_has( $src['admin'], 'structured metadata that the key/value editor cannot round-trip exactly', 'Technical key/value metadata editor must preserve unrepresentable structured data.' );
 
 p1e_has( $src['domain_admin'], 'Immutable Version lineage', 'Credential detail must present immutable Version lineage.' );
 p1e_has( $src['domain_admin'], 'Append-only activity history', 'Credential detail must present append-only activity history.' );

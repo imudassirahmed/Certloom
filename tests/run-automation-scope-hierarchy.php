@@ -22,6 +22,6 @@ ach($ids($r->matching(5,7,9,'tutor_lms'))===array('all','issuer','batch'),'exact
 ach($ids($r->matching(5,7,10,'tutor_lms'))===array('all','issuer'),'different Batch excludes Batch-narrowed rule');
 ach($ids($r->matching(5,7,9,'manual_admin'))===array('all','issuer'),'different issuance source excludes source-narrowed rule');
 ach($ids($r->matching(6,7,9,'tutor_lms'))===array('all'),'different Issuer excludes Issuer-narrowed rules');
-$matched=$r->matching(5,7,9,'tutor_lms'); ach('mail-a'===($matched[2]['template_id']??''),'matched template_id remains reusable email-message identity, not certificate-design identity');
+$matched=$r->matching(5,7,9,'tutor_lms'); ach('mail-a'===($matched[2]['legacy_template_id']??''),'historical template_id is normalized into the disclosed legacy email fallback'); ach(!array_key_exists('template_id',$matched[2]),'Automation matching does not restore a live reusable-email design authority');
 ach(!in_array('paused',$ids($r->matching(5,7,9,'tutor_lms')),true),'paused automation never matches');
 printf("\n%d automation scope checks, %d failures\n",$pass,$fail);exit($fail?1:0);

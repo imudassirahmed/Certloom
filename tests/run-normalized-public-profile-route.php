@@ -24,9 +24,12 @@ npr( false !== strpos( $render, "'issuer' => \$issuer" ) && false !== strpos( $r
 npr( false !== strpos( $render, "'snapshot' => \$snapshot" ) && false !== strpos( $render, 'normalized_certificate_preview_html( $snapshot )' ), 'normalized public profile carries the immutable issued snapshot into its certificate presentation' );
 npr( false !== strpos( $render, "\$snapshot['template']" ) && false !== strpos( $render, "\$template['layout']" ) && false !== strpos( $render, "\$snapshot['merge']['values']" ), 'browser certificate is reconstructed from issued template layout plus issued merge values, not current editable design state' );
 npr( false !== strpos( $render, 'RenderPlanHtmlPreview' ) && false !== strpos( $render, 'cvp-certificate-preview' ) && false !== strpos( $render, 'Issued certificate' ), 'public profile visibly includes the issued certificate through the canonical browser render-plan presenter' );
+npr( false !== strpos( $render, "wp_unique_id( 'cvp-profile-certificate-title-' )" ) && false !== strpos( $render, "aria-labelledby=\"' . esc_attr( \$title_id )" ), 'issued-certificate section uses a per-render heading id so multiple public profiles remain accessibility-safe on one page' );
+npr( false !== strpos( $render, "'not_yet_valid'           => '◷'" ) && false !== strpos( $render, "'pending_review'          => '…'" ) && false !== strpos( $render, "'voided'                  => '×'" ) && false !== strpos( $render, "'not_issued'              => '—'" ), 'PHP profile renderer gives every normalized lifecycle state a visible status mark' );
 $preview = file_get_contents( $root . '/src/Infrastructure/Rendering/RenderPlanHtmlPreview.php' );
 $public_js = file_get_contents( $root . '/public/assets/certloom-public.js' );
 $public_css = file_get_contents( $root . '/public/assets/certloom-public.css' );
 npr( false !== strpos( $preview, 'data-certloom-preview-width' ), 'render-plan browser output exposes bounded natural geometry so the public certificate can scale responsively' );
 npr( false !== strpos( $public_js, 'fitCertificatePreview' ) && false !== strpos( $public_css, 'certloom-certificate-preview-stage' ), 'public certificate preview has responsive fit behavior rather than forcing a broken horizontal certificate canvas' );
-echo "\n17 normalized public profile alignment checks, 0 failures\n";
+npr( false !== strpos( $public_js, "not_yet_valid: '◷'" ) && false !== strpos( $public_js, "pending_review: '…'" ) && false !== strpos( $public_js, "voided: '×'" ) && false !== strpos( $public_js, "not_issued: '—'" ), 'REST-rendered public results mirror normalized lifecycle status marks instead of falling back to an ambiguous bullet' );
+echo "\n20 normalized public profile alignment checks, 0 failures\n";

@@ -15,8 +15,9 @@ dsx(strpos($admin,'certloom-template-designer-stage')!==false&&strpos($admin,'ce
 foreach(array('Text','Image','Logo','Dynamic Field','QR','Shape','Line') as $label){ dsx(strpos($admin,"__( '$label', 'certloom' )")!==false||strpos($admin,"esc_html__( '$label', 'certloom' )")!==false,"Quick Add exposes $label"); }
 dsx(strpos($admin,'Duplicate selected')!==false&&strpos($admin,'Delete selected')!==false,'direct duplicate/delete actions exist');
 dsx(strpos($admin,'data-certloom-designer-preview-scroll')!==false&&strpos($admin,'data-certloom-designer-quick-save')!==false&&strpos($admin,'Save design')!==false,'compact Quick Designer exposes Preview and explicit Save while publication stays in the design publication workflow');
-dsx(strpos($admin,'Dynamic field')!==false&&strpos($admin,'Recipient Name')!==false&&strpos($admin,'Certificate Number')!==false&&strpos($admin,'Grade')!==false&&strpos($admin,'designer_catalog_field_options')!==false&&strpos($admin,'Advanced custom field…')!==false&&strpos($admin,'$custom_token_option = $simple ?')!==false,'human-readable dynamic field chooser includes catalog-backed fields while the raw custom-token escape hatch stays Advanced-only');
+dsx(strpos($admin,'Dynamic field')!==false&&strpos($admin,'Recipient Name')!==false&&strpos($admin,'Certificate Number')!==false&&strpos($admin,'Grade')!==false&&strpos($admin,'designer_catalog_field_options')!==false&&strpos($admin,'Technical custom field…')!==false&&strpos($admin,'Technical field token')!==false,'human-readable dynamic field chooser includes catalog-backed fields with an explicit Technical custom-field escape hatch');
 dsx(strpos($admin,'data-certloom-designer-custom-token')!==false,'custom merge-token escape hatch remains available');
+dsx(strpos($css,'.is-quick-mode .certloom-designer-token-advanced')!==false&&strpos($css,'.certloom-designer-token-advanced.is-custom')!==false&&strpos($css,'.is-pro-mode .certloom-designer-token-advanced')!==false,'Technical field token is progressively disclosed in Quick mode and available in Pro precision controls');
 dsx(strpos($admin,'Choose from Media Library')!==false,'image editing still uses WordPress Media Library');
 dsx(strpos($admin,'data-certloom-designer-layers-toggle')!==false,'Layers are available on demand in Quick mode');
 dsx(strpos($admin,'certloom-template-designer-geometry-grid certloom-designer-pro-only')!==false&&strpos($admin,"'x' => __( 'X (mm)'")!==false,'exact geometry remains available to Pro Designer');
@@ -40,7 +41,7 @@ dsx(strpos($js,'eval(')===false&&strpos($js,'new Function')===false,'Quick Desig
 dsx(is_string($css)&&strpos($css,'DSX-01: Quick Designer')!==false,'dedicated Quick Designer styling exists');
 dsx(strpos($css,'grid-template-columns: 176px minmax(0,1fr)')!==false,'Quick Designer provides a compact Add rail beside the editing stage');
 dsx(strpos($css,'background-image: none')!==false,'Quick canvas removes decorative checkerboard treatment');
-dsx(strpos($css,'.is-quick-mode .certloom-designer-pro-only')!==false,'advanced controls are hidden by presentation only');
+dsx(strpos($css,'.is-quick-mode .certloom-designer-pro-only')!==false,'precision Designer controls are hidden by presentation only');
 dsx(strpos($css,'.is-pro-mode .certloom-designer-quick-only')!==false,'Quick-only helpers disappear in Pro mode');
 dsx(strpos($css,'min-height: 44px')!==false,'mobile Quick controls preserve accessible target sizing');
 dsx(strpos($css,'prefers-reduced-motion: reduce')!==false&&strpos($css,'forced-colors: active')!==false,'Quick Designer covers reduced motion and forced colors');

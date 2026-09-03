@@ -53,20 +53,31 @@ final class EmailAutomationListener {
 			return;
 		}
 
-		foreach ( $this->rules->matching( $issuer_id, $program_id, $batch_id, $source_type ) as $rule ) {
+		$rule = $this->rules->best_matching( $issuer_id, $program_id, $batch_id, $source_type );
+		if ( ! is_array( $rule ) ) { return; }
+
+		$result = $this->delivery->enqueue(
+			absint( $version_id ),
+			$destination,
+			absint( $actor_user_id ),
+			'issued',
+			true,
+			'automatic'
+		);
+		if ( is_wp_error( $result ) && 'certloom_email_design_unresolved' === $result->get_error_code() && ! empty( $rule['legacy_template_id'] ) ) {
 			$result = $this->delivery->enqueue(
 				absint( $version_id ),
 				$destination,
 				absint( $actor_user_id ),
 				'issued',
 				true,
-				(string) $rule['template_id']
+				(string) $rule['legacy_template_id']
 			);
-			if ( is_wp_error( $result ) ) {
-				do_action( 'certloom_email_automation_failed', (string) $rule['id'], $result, absint( $version_id ), (string) $source_ref );
-				continue;
-			}
-			do_action( 'certloom_email_automation_queued', (string) $rule['id'], (string) $result, absint( $version_id ) );
 		}
+		if ( is_wp_error( $result ) ) {
+			do_action( 'certloom_email_automation_failed', (string) $rule['id'], $result, absint( $version_id ), (string) $source_ref );
+			return;
+		}
+		do_action( 'certloom_email_automation_queued', (string) $rule['id'], (string) $result, absint( $version_id ) );
 	}
 }

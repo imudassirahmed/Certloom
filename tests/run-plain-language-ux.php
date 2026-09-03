@@ -1,5 +1,5 @@
 <?php
-/** UX-C04 / UX-CORE — normal workflows use human language; specialist evidence remains Advanced-only. */
+/** UX-C04 / UX-CORE — normal workflows use human language; specialist evidence remains progressively disclosed. */
 $root = dirname( __DIR__ );
 $pass = 0;
 $fail = 0;
@@ -18,25 +18,25 @@ $designer_js = plx_src( $root, 'admin/assets/designer.js' );
 $plugin = plx_src( $root, 'certloom.php' );
 $roadmap = plx_src( $root, 'docs/approved-ux-consolidation-after-lms.md' );
 
-plx_check( false !== strpos( $settings, '$certloom_advanced_mode = \\Certloom\\Infrastructure\\Admin\\AdminUiMode::is_advanced();' ), 'Settings resolves the per-user Advanced presentation boundary' );
-plx_check( false !== strpos( $settings, '<?php if ( $certloom_advanced_mode ) : ?>' ) && false !== strpos( $settings, 'id="certloom-system-status"' ), 'database and migration diagnostics remain Advanced-only' );
-plx_check( false !== strpos( $nav, '$preview && ! $simple' ) && false !== strpos( $nav, "__( 'Developer tools', 'certloom' )" ), 'developer tooling stays Advanced-only in product navigation' );
-plx_check( false !== strpos( $roadmap, 'Technical terminology remains available only in Advanced/Diagnostics/Developer surfaces where genuinely useful.' ), 'approved plain-language rule remains explicit' );
+plx_check( false !== strpos( $settings, '$certloom_show_diagnostics = current_user_can( \'manage_options\' );' ) && false === strpos( $settings, '$certloom_advanced_mode' ), 'Settings uses capability-based diagnostics without a retired workspace-mode boundary' );
+plx_check( false !== strpos( $settings, '<details id="certloom-system-status" class="certloom-technical-details certloom-settings-diagnostics"' ) && false !== strpos( $settings, "esc_html_e( 'Diagnostics & maintenance', 'certloom' )" ), 'database and migration diagnostics remain available under collapsed Technical details' );
+plx_check( false !== strpos( $nav, "__( 'Developer tools','certloom')" ) && false === strpos( $nav, '$preview && ! $simple' ), 'developer tooling remains capability-controlled without a retired mode gate' );
+plx_check( false !== strpos( $roadmap, 'Technical terminology remains available only in Technical details, Diagnostics, Designer specialist controls, or Developer surfaces where genuinely useful.' ), 'approved progressive-disclosure language rule remains explicit' );
 
-plx_check( false !== strpos( $domain, '$simple = AdminUiMode::is_simple();' ) && false !== strpos( $domain, "__( 'Credentials', 'certloom' )" ), 'Credential Management has an explicit Simple presentation path' );
+plx_check( false !== strpos( $domain, '$detailed_registry = true;' ) && false !== strpos( $domain, "__( 'Credentials', 'certloom' )" ), 'Credential Management keeps the detailed registry inside the one task-focused workspace' );
 plx_check( false !== strpos( $domain, "__( 'Credential status', 'certloom' )" ) && false !== strpos( $domain, "__( 'See whether this credential is currently valid and the dates that affect it.', 'certloom' )" ), 'Simple credential status explains the human outcome rather than the status engine' );
 plx_check( false !== strpos( $domain, "__( 'Review status change', 'certloom' )" ) && false !== strpos( $domain, "__( 'Confirm status change', 'certloom' )" ), 'Simple credential actions use status-change language rather than lifecycle-operation language' );
-plx_check( false !== strpos( $domain, '$simple ?') && false !== strpos( $domain, "__( 'Current immutable Version', 'certloom' )" ), 'advanced immutable-Version evidence remains available without becoming the Simple hero' );
+plx_check( false !== strpos( $domain, 'certloom-credential-technical-overview' ) && false !== strpos( $domain, "__( 'Record version', 'certloom' )" ) && false !== strpos( $domain, "__( 'Public Credential ID', 'certloom' )" ), 'immutable credential identity remains available under Technical details without becoming the primary view' );
 plx_check( false !== strpos( $domain, "'Public ID', 'certloom'" ) && false !== strpos( $domain, 'if ( $simple )') && false !== strpos( $domain, "__( 'Open credential', 'certloom' )" ), 'Simple linked-credential history omits raw Public ID and provides a human continuation' );
 
-plx_check( false !== strpos( $manual, '$simple = AdminUiMode::is_simple();' ) && false !== strpos( $manual, "__( 'Issue a credential', 'certloom' )" ), 'Manual Issuance has an explicit Simple-mode header' );
+plx_check( false !== strpos( $manual, '$simple = AdminUiMode::is_simple();' ) && false !== strpos( $manual, "__( 'Issue a credential', 'certloom' )" ), 'Manual Issuance uses the task-focused header in the unified workspace' );
 plx_check( false !== strpos( $manual, 'Online verification or downloadable certificate files may be unavailable until this site finishes its release setup.' ), 'Simple Manual Issuance describes feature availability without authority/renderer jargon' );
-plx_check( false !== strpos( $manual, 'The existing registry still powers public verification in this build') && false !== strpos( $manual, '} else {'), 'specialist Manual Issuance authority explanation remains available in Advanced mode' );
+plx_check( false !== strpos( $manual, 'certloom-manual-issuance-technical-status' ) && false !== strpos( $manual, 'The existing registry still powers public verification in this build' ), 'specialist Manual Issuance authority explanation remains available under Technical status' );
 plx_check( false !== strpos( $manual, "__( 'Technical details', 'certloom' )" ) && false !== strpos( $manual, 'Review SHA-256' ), 'issuance integrity evidence is preserved under explicit Technical details' );
 
-plx_check( false !== strpos( $template, 'if ( ! $simple )') && false !== strpos( $template, "__( 'Technical integrity', 'certloom' )" ), 'Designer integrity architecture remains Advanced-only' );
-plx_check( false !== strpos( $template, "__( 'Design name', 'certloom' )" ) && false !== strpos( $template, '<input type="hidden" name="machine_key"'), 'Simple Design hides its internal machine key while preserving it for writes' );
-plx_check( false !== strpos( $template, '$custom_token_option = $simple ?') && false !== strpos( $template, "__( 'Advanced custom field…', 'certloom' )" ), 'raw custom field-token editing is not offered in Simple Designer' );
+plx_check( false !== strpos( $template, 'certloom-template-designer-boundary' ) && false !== strpos( $template, "__( 'Technical integrity', 'certloom' )" ), 'Designer integrity architecture remains available under Technical integrity disclosure' );
+plx_check( false !== strpos( $template, "__( 'Design name', 'certloom' )" ) && false !== strpos( $template, 'certloom-design-identity-technical' ) && false !== strpos( $template, "__( 'Machine key', 'certloom' )" ), 'Design machine identity is progressively disclosed rather than lost' );
+plx_check( false !== strpos( $template, "__( 'Technical custom field…', 'certloom' )" ) && false !== strpos( $template, "__( 'Technical field token', 'certloom' )" ), 'raw custom field-token editing remains a deliberately technical escape hatch' );
 plx_check( false !== strpos( $template, "__( 'Choose information that should be filled automatically when the credential is issued.', 'certloom' )" ), 'Simple dynamic-field help explains purpose instead of catalog mechanics' );
 plx_check( false !== strpos( $template, "__( 'Certificate number', 'certloom' )" ) && false !== strpos( $template, "__( 'The barcode represents the credential’s certificate number.', 'certloom' )" ), 'barcode controls name the human certificate number instead of its machine token' );
 plx_check( false !== strpos( $template, "__( 'On-screen preview', 'certloom' )" ) && false !== strpos( $template, "__( 'Rendering details', 'certloom' )" ), 'preview uses a human Simple label while retaining Advanced rendering evidence' );
@@ -48,7 +48,7 @@ plx_check( false !== strpos( $designer_js, 'supported text limit') && false === 
 
 plx_check( false !== strpos( $integrations, 'Only a successfully issued Certloom credential can be published to a destination.' ), 'destination UX describes the issuance boundary in customer language' );
 plx_check( false !== strpos( $integrations, 'Open Credly to review this publication before trying again.') && false !== strpos( $integrations, 'Review reason:' ), 'Credly history gives Simple guidance while preserving Advanced reason evidence' );
-plx_check( false !== strpos( $setup, 'Advanced options stay connected' ) && false === strpos( $setup, 'Advanced choices stay canonical' ), 'Setup avoids canonical terminology in its Advanced-mode guidance' );
+plx_check( false !== strpos( $setup, 'Specialist options stay connected' ) && false !== strpos( $setup, 'More settings or Technical details' ) && false === strpos( $setup, 'Advanced choices stay canonical' ), 'Setup explains progressive disclosure without resurrecting an Advanced workspace' );
 plx_check( false !== strpos( $scoped, 'Credential field changes are not available on this site yet.' ) && false === strpos( $scoped, 'normalized write authority is ready' ), 'quick field creation reports availability without write-authority jargon' );
 
 $is_qa_flavor = false !== strpos( $plugin, "define( 'CERTLOOM_QA_UNGATED', true )" );

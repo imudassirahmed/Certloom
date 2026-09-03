@@ -74,7 +74,7 @@ dashboard_assert( false !== strpos( $admin, 'Ecapla_CertVerify_Analytics::report
 dashboard_assert( false !== strpos( $admin, '! is_wp_error( $verification_analytics ) && ! is_wp_error( $issuance_analytics )' ), 'ADM-02 preview must fail closed if either analytics report is unavailable.' );
 dashboard_assert( false !== strpos( $view, 'Credential analytics' ) && false !== strpos( $view, 'Verification lookups' ) && false !== strpos( $view, 'Failed lookups' ), 'ADM-02 should expose verification and failed-lookup summaries.' );
 dashboard_assert( false !== strpos( $view, 'Issuance trend' ) && false !== strpos( $view, 'Verification trend' ), 'ADM-02 should expose both canonical trend previews.' );
-dashboard_assert( false !== strpos( $view, 'Top credential' ) && false !== strpos( $view, 'Top Program' ) && false !== strpos( $view, 'Top Template' ), 'ADM-02 should expose the promised top credential, Program and Template leaders.' );
+dashboard_assert( false !== strpos( $view, 'Top credential' ) && false !== strpos( $view, 'Top Program' ) && false !== strpos( $view, 'Top certificate design' ), 'ADM-02 should expose the promised top credential, Program and certificate-design leaders.' );
 dashboard_assert( false !== strpos( $view, 'Expiring ≤90 days' ), 'ADM-02 should expose the current ANL-02 90-day expiry forecast without claiming renewal automation.' );
 foreach ( array( 'update_option(', 'delete_option(', '->insert(', '->update(', '->delete(' ) as $mutation ) {
 	dashboard_assert( false === strpos( $view, $mutation ), 'Viewing the dashboard must remain read-only; found mutation primitive ' . $mutation );

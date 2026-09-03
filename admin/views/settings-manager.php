@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template variables are local to the rendering method that includes this file.
 // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Templates only read display state; all mutations are handled by nonce-protected controllers.
-$certloom_advanced_mode = \Certloom\Infrastructure\Admin\AdminUiMode::is_advanced();
+$certloom_show_diagnostics = current_user_can( 'manage_options' );
 ?>
 <div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-settings-workspace">
 	<?php include ECAPLA_CERTVERIFY_PATH . 'admin/views/partials/brand-bar.php'; ?>
@@ -19,7 +19,7 @@ $certloom_advanced_mode = \Certloom\Infrastructure\Admin\AdminUiMode::is_advance
 			<a href="#certloom-settings-verification"><?php esc_html_e( 'Verification', 'certloom' ); ?></a>
 			<a href="#certloom-settings-retention"><?php esc_html_e( 'Retention', 'certloom' ); ?></a>
 			<a href="#certloom-settings-guidance"><?php esc_html_e( 'Guidance & support', 'certloom' ); ?></a>
-			<?php if ( $certloom_advanced_mode ) : ?><a href="#certloom-system-status"><?php esc_html_e( 'Advanced', 'certloom' ); ?></a><?php endif; ?>
+			<?php if ( $certloom_show_diagnostics ) : ?><a href="#certloom-system-status"><?php esc_html_e( 'Diagnostics', 'certloom' ); ?></a><?php endif; ?>
 		</nav>
 		<div id="certloom-settings-search-results" class="certloom-settings-search-results" aria-live="polite" hidden></div>
 	</div>
@@ -27,7 +27,7 @@ $certloom_advanced_mode = \Certloom\Infrastructure\Admin\AdminUiMode::is_advance
 	<?php if ( isset( $_GET['ecapla_certverify_settings_saved'] ) ) : ?><div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Settings saved.', 'certloom' ); ?></p></div><?php endif; ?>
 	<?php if ( isset( $_GET['ecapla_certverify_role_created'] ) ) : ?><div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Certificate Manager role created with least-privilege access.', 'certloom' ); ?></p></div><?php endif; ?>
 
-	<?php if ( $certloom_advanced_mode ) : ?>
+	<?php if ( $certloom_show_diagnostics ) : ?>
 	<?php if ( isset( $_GET['certloom_database_proof'] ) ) : ?>
 		<?php $certloom_database_proof_state = sanitize_key( wp_unslash( $_GET['certloom_database_proof'] ) ); ?>
 		<div class="notice <?php echo 'passed' === $certloom_database_proof_state ? 'notice-success' : ( 'failed' === $certloom_database_proof_state ? 'notice-error' : 'notice-warning' ); ?> is-dismissible"><p>
@@ -144,8 +144,11 @@ $certloom_advanced_mode = \Certloom\Infrastructure\Admin\AdminUiMode::is_advance
 		</div>
 	</section>
 
-	<?php if ( $certloom_advanced_mode ) : ?>
-	<h2 id="certloom-system-status"><?php esc_html_e( 'System status', 'certloom' ); ?></h2>
+	<?php if ( $certloom_show_diagnostics ) : ?>
+	<details id="certloom-system-status" class="certloom-technical-details certloom-settings-diagnostics"<?php echo ( isset( $_GET['certloom_database_proof'] ) || isset( $_GET['certloom_domain_acceptance_proof'] ) || isset( $_GET['certloom_legacy_migration_preflight'] ) || isset( $_GET['certloom_staging_migration_rehearsal'] ) ) ? ' open' : ''; ?>>
+		<summary><span><strong><?php esc_html_e( 'Diagnostics & maintenance', 'certloom' ); ?></strong><small><?php esc_html_e( 'System status, database proofs, migration checks and staging-only rehearsals.', 'certloom' ); ?></small></span></summary>
+		<div class="certloom-settings-diagnostics-body">
+	<h2 id="certloom-settings-system-status"><?php esc_html_e( 'System status', 'certloom' ); ?></h2>
 	<p class="description"><?php esc_html_e( 'Read-only local diagnostics for Certloom. Nothing in this report is sent to Ecapla, and it intentionally excludes certificate data, site URLs, filesystem paths, database names, user data, and plugin inventories.', 'certloom' ); ?></p>
 	<?php $certloom_system_checks = Ecapla_CertVerify_System_Status::get_checks(); ?>
 	<table class="widefat striped" role="table">
@@ -366,6 +369,8 @@ $certloom_advanced_mode = \Certloom\Infrastructure\Admin\AdminUiMode::is_advance
 			<textarea id="certloom_staging_cutover_report" class="large-text code" rows="14" readonly><?php echo esc_textarea( \Certloom\Infrastructure\Diagnostics\StagingCutoverRehearsal::get_text_report( $certloom_staging_cutover ) ); ?></textarea>
 		<?php endif; ?>
 	<?php endif; ?>
+		</div>
+	</details>
 	<?php endif; ?>
 
 </div>

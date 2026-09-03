@@ -1,6 +1,24 @@
 ( function () {
 	'use strict';
 
+	var certloomL10n = window.certloomAdminL10n || {};
+	function certloomText( key, fallback ) {
+		return 'string' === typeof certloomL10n[ key ] && certloomL10n[ key ] ? certloomL10n[ key ] : fallback;
+	}
+	function certloomCountText( count ) {
+		if ( 1 === count ) { return certloomText( 'contextOneMatch', '1 match.' ); }
+		return certloomText( 'contextMatches', '%d matches.' ).replace( '%d', String( count ) );
+	}
+
+	function certloomFieldPrivacyText( kind, value ) {
+		var maps = {
+			exposure: { private: [ 'privacyPrivate', 'Private' ], verification: [ 'privacyVerification', 'Verification only' ], profile: [ 'privacyProfile', 'Profile only' ], both: [ 'privacyBoth', 'Verification + profile' ] },
+			sensitivity: { public_safe: [ 'sensitivityPublicSafe', 'Public-safe' ], personal: [ 'sensitivityPersonal', 'Personal' ], sensitive: [ 'sensitivitySensitive', 'Sensitive' ], internal: [ 'sensitivityInternal', 'Internal' ] }
+		};
+		var item = maps[ kind ] && maps[ kind ][ value ] ? maps[ kind ][ value ] : null;
+		return item ? certloomText( item[ 0 ], item[ 1 ] ) : String( value || '' ).replace( /_/g, ' ' );
+	}
+
 	function escapeHtml( value ) {
 		return String( value ).replace( /[&<>"']/g, function ( character ) {
 			return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[ character ];
@@ -198,7 +216,7 @@
 				fallback.textContent = '';
 				var base = document.createElement( 'option' );
 				base.value = 'program_default';
-				base.textContent = 'Program default design';
+				base.textContent = certloomText( 'programDefaultDesign', 'Program default design' );
 				fallback.appendChild( base );
 				values.forEach( function ( locale ) { var option = document.createElement( 'option' ); option.value = locale; option.textContent = locale; fallback.appendChild( option ); } );
 				fallback.value = values.indexOf( selected ) !== -1 ? selected : 'program_default';
@@ -294,7 +312,7 @@
 				buttons[ j ].classList.toggle( 'button-primary', active );
 				buttons[ j ].setAttribute( 'aria-pressed', active ? 'true' : 'false' );
 			}
-			if ( status ) { status.textContent = 'backup' === kind ? 'Step 2: choose the Certloom backup you want to review.' : 'Step 2: choose the CSV file you want to review.'; }
+			if ( status ) { status.textContent = 'backup' === kind ? certloomText( 'recoveryChooseBackup', 'Step 2: choose the Certloom backup you want to review.' ) : certloomText( 'recoveryChooseCsv', 'Step 2: choose the CSV file you want to review.' ); }
 			target.scrollIntoView( { block: 'center', behavior: window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches ? 'auto' : 'smooth' } );
 			window.setTimeout( function () { target.focus(); }, 0 );
 		}
@@ -356,10 +374,22 @@
 		}
 		input.setAttribute( 'data-empty-label', input.getAttribute( 'data-empty-label' ) || 'No settings sections match.' );
 		input.addEventListener( 'input', update );
+		function revealTarget( hash ) {
+			if ( ! hash || '#' === hash ) { return; }
+			var target = document.getElementById( hash.replace( /^#/, '' ) );
+			if ( ! target ) { return; }
+			var details = target.closest( 'details' );
+			if ( details ) { details.open = true; }
+		}
 		results.addEventListener( 'click', function ( event ) {
 			var link = event.target.closest( 'a[href^="#"]' );
-			if ( link ) { results.hidden = true; }
+			if ( link ) { revealTarget( link.getAttribute( 'href' ) ); results.hidden = true; }
 		} );
+		Array.prototype.forEach.call( workspace.querySelectorAll( '.certloom-settings-local-nav a[href^="#"]' ), function ( link ) {
+			link.addEventListener( 'click', function () { revealTarget( link.getAttribute( 'href' ) ); } );
+		} );
+		if ( window.location.hash ) { revealTarget( window.location.hash ); }
+		window.addEventListener( 'hashchange', function () { revealTarget( window.location.hash ); } );
 	}
 
 
@@ -379,7 +409,7 @@
 			search.type = 'search';
 			search.className = 'certloom-context-lookup__search';
 			search.autocomplete = 'off';
-			search.placeholder = select.getAttribute( 'data-certloom-context-search-placeholder' ) || ( 'batch' === kind ? 'Search Batches…' : ( 'template' === kind ? 'Search published Templates…' : 'Search choices…' ) );
+			search.placeholder = select.getAttribute( 'data-certloom-context-search-placeholder' ) || ( 'batch' === kind ? certloomText( 'contextSearchBatches', 'Search Batches…' ) : ( 'template' === kind ? certloomText( 'contextSearchTemplates', 'Search published Templates…' ) : certloomText( 'contextSearchChoices', 'Search choices…' ) ) );
 			search.setAttribute( 'aria-label', search.placeholder.replace( /…/g, '' ) );
 			var status = document.createElement( 'span' );
 			status.className = 'certloom-context-lookup__status';
@@ -394,7 +424,7 @@
 				var manageDesigns = document.createElement( 'a' );
 				manageDesigns.className = 'certloom-context-lookup__manage';
 				manageDesigns.href = window.location.pathname + '?page=certloom-templates&design_view=templates';
-				manageDesigns.textContent = 'Manage published designs';
+				manageDesigns.textContent = certloomText( 'contextManageDesigns', 'Manage published designs' );
 				wrapper.appendChild( manageDesigns );
 			}
 
@@ -402,7 +432,7 @@
 			var requestSequence = 0;
 			var timer = null;
 			var defaultValue = select.hasAttribute( 'data-certloom-context-empty-value' ) ? select.getAttribute( 'data-certloom-context-empty-value' ) : ( 'batch' === kind ? '0' : '' );
-			var defaultLabel = select.options.length ? select.options[ 0 ].textContent : ( 'batch' === kind ? 'No Batch' : 'Choose Program…' );
+			var defaultLabel = select.options.length ? select.options[ 0 ].textContent : ( 'batch' === kind ? certloomText( 'contextNoBatch', 'No Batch' ) : certloomText( 'contextChooseProgram', 'Choose Program…' ) );
 
 			function optionLabel( choice ) { return String( choice && choice.label ? choice.label : '' ); }
 			function selectedSnapshot() {
@@ -447,14 +477,14 @@
 					replaceChoices( [] );
 					select.disabled = true;
 					search.disabled = true;
-					status.textContent = 'Choose a Program first.';
+					status.textContent = certloomText( 'contextChooseProgramFirst', 'Choose a Program first.' );
 					return;
 				}
 				select.disabled = false;
 				search.disabled = false;
 				requestSequence++;
 				var sequence = requestSequence;
-				status.textContent = 'Searching…';
+				status.textContent = certloomText( 'contextSearching', 'Searching…' );
 				var body = new FormData();
 				body.append( 'action', 'certloom_lookup_scoped_context' );
 				body.append( 'nonce', nonce );
@@ -470,12 +500,12 @@
 					.then( function ( response ) { return response.json(); } )
 					.then( function ( response ) {
 						if ( sequence !== requestSequence ) { return; }
-						if ( ! response || ! response.success || ! response.data ) { throw new Error( response && response.data && response.data.message ? response.data.message : 'Search failed.' ); }
+						if ( ! response || ! response.success || ! response.data ) { throw new Error( response && response.data && response.data.message ? response.data.message : certloomText( 'contextSearchFailed', 'Search failed.' ) ); }
 						var choices = Array.isArray( response.data.choices ) ? response.data.choices : [];
 						replaceChoices( choices );
-						status.textContent = choices.length ? choices.length + ( 1 === choices.length ? ' match.' : ' matches.' ) : ( 'template' === kind ? 'No published designs match. Publish a design in Design first.' : 'No matching choices.' );
+						status.textContent = choices.length ? certloomCountText( choices.length ) : ( 'template' === kind ? certloomText( 'contextNoPublishedDesigns', 'No published designs match. Publish a design in Design first.' ) : certloomText( 'contextNoChoices', 'No matching choices.' ) );
 					} )
-					.catch( function ( error ) { if ( sequence === requestSequence ) { status.textContent = error && error.message ? error.message : 'Search failed.'; } } );
+					.catch( function ( error ) { if ( sequence === requestSequence ) { status.textContent = error && error.message ? error.message : certloomText( 'contextSearchFailed', 'Search failed.' ); } } );
 			}
 			function schedule() {
 				if ( timer ) { window.clearTimeout( timer ); }
@@ -496,7 +526,7 @@
 					} );
 				}
 			}
-			if ( 'batch' === kind && ! programId() ) { select.disabled = true; search.disabled = true; status.textContent = 'Choose a Program first.'; }
+			if ( 'batch' === kind && ! programId() ) { select.disabled = true; search.disabled = true; status.textContent = certloomText( 'contextChooseProgramFirst', 'Choose a Program first.' ); }
 		} );
 	}
 
@@ -587,14 +617,14 @@
 				if ( gradeInput && gradeField && gradeField.required ) { gradeInput.required = true; gradeInput.setAttribute( 'data-certloom-field-contract-required', '1' ); }
 
 				if ( ! payload.configured ) {
-					if ( status ) { status.textContent = 'Legacy Program field mode — optional free custom keys remain available until this Program adopts Credential fields.'; }
+					if ( status ) { status.textContent = certloomText( 'legacyProgramFieldMode', 'Legacy Program field mode — optional free custom keys remain available until this Program adopts Credential fields.' ); }
 					return;
 				}
 				if ( ! fields.length ) {
-					if ( status ) { status.textContent = 'This Program uses Credential fields but currently assigns no additional fields.'; }
+					if ( status ) { status.textContent = certloomText( 'programNoCredentialFields', 'This Program uses Credential fields but currently assigns no additional fields.' ); }
 					return;
 				}
-				if ( status ) { status.textContent = 'Credential fields loaded from the selected Program' + ( batch && batch.value && '0' !== batch.value ? ' + Batch' : '' ) + '.'; }
+				if ( status ) { status.textContent = batch && batch.value && '0' !== batch.value ? certloomText( 'credentialFieldsLoadedBatch', 'Credential fields loaded from the selected Program + Batch.' ) : certloomText( 'credentialFieldsLoadedProgram', 'Credential fields loaded from the selected Program.' ); }
 
 				fields.forEach( function ( field ) {
 					var row = document.createElement( 'div' );
@@ -605,19 +635,19 @@
 					strong.textContent = field.label + ( field.required ? ' *' : '' );
 					heading.appendChild( strong );
 					var meta = document.createElement( 'small' );
-					meta.textContent = ( 'batch' === field.origin ? 'Batch' : 'Program' ) + ' · ' + ( field.required ? 'Required' : 'Optional' );
+					meta.textContent = ( 'batch' === field.origin ? certloomText( 'scopeBatch', 'Batch' ) : certloomText( 'scopeProgram', 'Program' ) ) + ' · ' + ( field.required ? certloomText( 'fieldRequired', 'Required' ) : certloomText( 'fieldOptional', 'Optional' ) );
 					heading.appendChild( meta );
 					row.appendChild( heading );
 
 					if ( 'recipient' === field.value_source ) {
 						var source = document.createElement( 'p' );
 						source.className = 'description';
-						source.textContent = 'Value comes from the Recipient profile and is frozen into the issued credential.';
+						source.textContent = certloomText( 'recipientValueFrozen', 'Value comes from the Recipient profile and is frozen into the issued credential.' );
 						row.appendChild( source );
 					} else if ( 'credential' === field.value_source && 'grade' === field.key ) {
 						var grade = document.createElement( 'p' );
 						grade.className = 'description';
-						grade.textContent = 'Use the Grade / result field above.';
+						grade.textContent = certloomText( 'useGradeField', 'Use the Grade / result field above.' );
 						row.appendChild( grade );
 					} else {
 						var input;
@@ -638,7 +668,7 @@
 					}
 					var privacy = document.createElement( 'small' );
 					privacy.className = 'description';
-					privacy.textContent = 'Privacy: ' + String( field.public_exposure || 'private' ).replace( /_/g, ' ' ) + ' · ' + String( field.sensitivity || 'personal' ).replace( /_/g, ' ' );
+					privacy.textContent = certloomText( 'privacyPrefix', 'Privacy:' ) + ' ' + certloomFieldPrivacyText( 'exposure', field.public_exposure || 'private' ) + ' · ' + certloomFieldPrivacyText( 'sensitivity', field.sensitivity || 'personal' );
 					row.appendChild( privacy );
 					container.appendChild( row );
 				} );
@@ -647,19 +677,19 @@
 			function renderBulkSchema( payload ) {
 				if ( ! bulkSchema ) { return; }
 				var fields = Array.isArray( payload.fields ) ? payload.fields : [];
-				var html = '<code>recipient_id</code> <em>or</em> <code>display_name</code> + <code>email</code>/<code>external_id</code>, <code>first_name</code>, <code>middle_name</code>, <code>last_name</code>, <code>certificate_number</code>';
+				var html = '<code>recipient_id</code> <em>' + escapeHtml( certloomText( 'bulkOr', 'or' ) ) + '</em> <code>display_name</code> + <code>email</code>/<code>external_id</code>, <code>first_name</code>, <code>middle_name</code>, <code>last_name</code>, <code>certificate_number</code>';
 				var extras = [];
 				fields.forEach( function ( field ) {
 					if ( 'recipient' === field.value_source ) { return; }
 					var column = 'grade' === field.key ? 'grade' : 'custom:' + field.key;
-					extras.push( '<code>' + escapeHtml( column ) + '</code>' + ( field.required ? ' <strong>(required)</strong>' : '' ) );
+					extras.push( '<code>' + escapeHtml( column ) + '</code>' + ( field.required ? ' <strong>(' + escapeHtml( certloomText( 'bulkRequired', 'required' ) ) + ')</strong>' : '' ) );
 				} );
 				if ( ! payload.configured ) { extras.push( '<code>grade</code>', '<code>custom:machine_key</code>' ); }
 				bulkSchema.innerHTML = html + ( extras.length ? ', ' + extras.join( ', ' ) : '' ) + '.';
 			}
 
 			function renderError( message ) {
-				if ( status ) { status.textContent = message || 'Credential fields could not be loaded. The server will still validate before issuance.'; }
+				if ( status ) { status.textContent = message || certloomText( 'credentialFieldsLoadFailed', 'Credential fields could not be loaded. The server will still validate before issuance.' ); }
 			}
 
 			function resolve() {
@@ -669,10 +699,10 @@
 				if ( ! program.value ) {
 					renderManual( { configured: false, fields: [] } );
 					renderBulkSchema( { configured: false, fields: [] } );
-					if ( status ) { status.textContent = 'Choose a Program to load its credential fields.'; }
+					if ( status ) { status.textContent = certloomText( 'chooseProgramLoadFields', 'Choose a Program to load its credential fields.' ); }
 					return;
 				}
-				if ( status ) { status.textContent = 'Loading credential fields…'; }
+				if ( status ) { status.textContent = certloomText( 'loadingCredentialFields', 'Loading credential fields…' ); }
 				var body = new FormData();
 				body.append( 'action', 'certloom_resolve_scoped_fields' );
 				body.append( 'nonce', nonce );
@@ -682,7 +712,7 @@
 					.then( function ( response ) { if ( ! response.ok ) { throw new Error( 'HTTP ' + response.status ); } return response.json(); } )
 					.then( function ( response ) {
 						if ( sequence !== requestSequence ) { return; }
-						if ( ! response || ! response.success || ! response.data ) { throw new Error( response && response.data && response.data.message ? response.data.message : 'Invalid response' ); }
+						if ( ! response || ! response.success || ! response.data ) { throw new Error( response && response.data && response.data.message ? response.data.message : certloomText( 'invalidResponse', 'Invalid response' ) ); }
 						renderManual( response.data );
 						renderBulkSchema( response.data );
 					} )
@@ -728,8 +758,8 @@
 			if ( scheme ) { scheme.hidden = 'certification_standards' !== activePurpose; }
 			if ( summaryPurpose && purposeOption ) { summaryPurpose.textContent = purposeOption.textContent; }
 			if ( summaryType && selected ) { summaryType.textContent = selected.textContent; }
-			if ( summaryTerminology && selected ) { summaryTerminology.textContent = selected.getAttribute( 'data-terminology' ) || 'Credential'; }
-			if ( summaryDesign && selected ) { summaryDesign.textContent = selected.getAttribute( 'data-design' ) || 'Clear and professional'; }
+			if ( summaryTerminology && selected ) { summaryTerminology.textContent = selected.getAttribute( 'data-terminology' ) || certloomText( 'defaultCredentialTerm', 'Credential' ); }
+			if ( summaryDesign && selected ) { summaryDesign.textContent = selected.getAttribute( 'data-design' ) || certloomText( 'defaultDesignDescription', 'Clear and professional' ); }
 		}
 		purpose.addEventListener( 'change', update );
 		subcategory.addEventListener( 'change', update );
@@ -752,7 +782,7 @@
 			var value = mode.value || 'manual';
 			format.hidden = 'manual' === value;
 			Array.prototype.forEach.call( form.querySelectorAll( '[data-certloom-sequential-only]' ), function ( row ) { row.hidden = 'sequential' !== value; } );
-			if ( 'manual' === value ) { example.textContent = 'Entered when issuing'; return; }
+			if ( 'manual' === value ) { example.textContent = certloomText( 'enteredWhenIssuing', 'Entered when issuing' ); return; }
 			var lead = prefix ? prefix.value : '';
 			var tail = suffix ? suffix.value : '';
 			if ( 'sequential' === value ) {
@@ -779,22 +809,22 @@
 			sequence++;
 			var request = sequence;
 			panel.setAttribute( 'aria-busy', 'true' );
-			if ( name ) { name.textContent = 'Loading preview…'; }
+			if ( name ) { name.textContent = certloomText( 'loadingPreview', 'Loading preview…' ); }
 			if ( description ) { description.textContent = ''; }
 			if ( canvas ) { canvas.innerHTML = ''; }
 			var body = new FormData();
 			body.append( 'action', 'certloom_wizard_template_preview' ); body.append( 'nonce', nonce ); body.append( 'template_id', select.value || '0' );
 			fetch( window.ajaxurl, { method: 'POST', credentials: 'same-origin', body: body } ).then( function ( response ) { return response.json(); } ).then( function ( response ) {
 				if ( request !== sequence ) { return; }
-				if ( ! response || ! response.success || ! response.data ) { throw new Error( response && response.data && response.data.message ? response.data.message : 'Template preview could not be loaded.' ); }
-				if ( name ) { name.textContent = response.data.name || 'No default design selected'; }
+				if ( ! response || ! response.success || ! response.data ) { throw new Error( response && response.data && response.data.message ? response.data.message : certloomText( 'previewLoadFailed', 'Template preview could not be loaded.' ) ); }
+				if ( name ) { name.textContent = response.data.name || certloomText( 'noDefaultDesign', 'No default design selected' ); }
 				if ( description ) { description.textContent = response.data.description || ''; }
 				if ( canvas ) { canvas.innerHTML = response.data.html || ''; }
 				panel.setAttribute( 'aria-busy', 'false' );
 			} ).catch( function ( error ) {
 				if ( request !== sequence ) { return; }
-				if ( name ) { name.textContent = 'Preview unavailable'; }
-				if ( description ) { description.textContent = error && error.message ? error.message : 'Template preview could not be loaded.'; }
+				if ( name ) { name.textContent = certloomText( 'previewUnavailable', 'Preview unavailable' ); }
+				if ( description ) { description.textContent = error && error.message ? error.message : certloomText( 'previewLoadFailed', 'Template preview could not be loaded.' ); }
 				panel.setAttribute( 'aria-busy', 'false' );
 			} );
 		} );
@@ -808,18 +838,18 @@
 				if ( ! popup ) { form.removeAttribute( 'target' ); var returnMode = form.querySelector( 'input[name="certloom_google_return_mode"]' ); if ( returnMode ) { returnMode.value = 'backup'; } }
 				var button = document.querySelector( '[form="' + form.id + '"][data-certloom-google-connect]' ) || form.querySelector( '[data-certloom-google-connect]' );
 				var feedback = document.querySelector( '[data-certloom-google-popup-feedback]' );
-				if ( button ) { button.setAttribute( 'aria-busy', 'true' ); button.dataset.certloomOriginalLabel = button.textContent; button.textContent = popup ? 'Waiting for Google…' : 'Opening Google…'; }
-				if ( feedback ) { feedback.textContent = popup ? 'Complete permission in the Google window.' : 'Your browser blocked the popup, so Google will open in this tab.'; }
+				if ( button ) { button.setAttribute( 'aria-busy', 'true' ); button.dataset.certloomOriginalLabel = button.textContent; button.textContent = popup ? certloomText( 'googleWaiting', 'Waiting for Google…' ) : certloomText( 'googleOpening', 'Opening Google…' ); }
+				if ( feedback ) { feedback.textContent = popup ? certloomText( 'googleCompletePermission', 'Complete permission in the Google window.' ) : certloomText( 'googlePopupBlocked', 'Your browser blocked the popup, so Google will open in this tab.' ); }
 			} );
 		} );
 		window.addEventListener( 'message', function ( event ) {
 			if ( event.origin !== window.location.origin || ! event.data || 'certloom-google-drive-oauth' !== event.data.type ) { return; }
 			var success = 'connected' === event.data.status;
-			Array.prototype.forEach.call( document.querySelectorAll( '[data-certloom-google-popup-feedback]' ), function ( feedback ) { feedback.textContent = event.data.message || ( success ? 'Google Drive connected.' : 'Google Drive was not connected.' ); } );
-			Array.prototype.forEach.call( document.querySelectorAll( '[data-certloom-google-status]' ), function ( status ) { if ( success ) { status.textContent = 'Connected'; status.classList.remove( 'is-disconnected' ); status.classList.add( 'is-connected' ); } } );
+			Array.prototype.forEach.call( document.querySelectorAll( '[data-certloom-google-popup-feedback]' ), function ( feedback ) { feedback.textContent = event.data.message || ( success ? certloomText( 'googleConnected', 'Google Drive connected.' ) : certloomText( 'googleNotConnected', 'Google Drive was not connected.' ) ); } );
+			Array.prototype.forEach.call( document.querySelectorAll( '[data-certloom-google-status]' ), function ( status ) { if ( success ) { status.textContent = certloomText( 'connected', 'Connected' ); status.classList.remove( 'is-disconnected' ); status.classList.add( 'is-connected' ); } } );
 			Array.prototype.forEach.call( document.querySelectorAll( '[data-certloom-google-enable]' ), function ( input ) { if ( success ) { input.disabled = false; } } );
 			Array.prototype.forEach.call( document.querySelectorAll( '.certloom-google-advanced' ), function ( details ) { if ( success ) { details.hidden = true; } } );
-			Array.prototype.forEach.call( document.querySelectorAll( '[data-certloom-google-connect]' ), function ( button ) { button.removeAttribute( 'aria-busy' ); if ( success ) { button.textContent = 'Connected'; button.disabled = true; } else if ( button.dataset.certloomOriginalLabel ) { button.textContent = button.dataset.certloomOriginalLabel; } } );
+			Array.prototype.forEach.call( document.querySelectorAll( '[data-certloom-google-connect]' ), function ( button ) { button.removeAttribute( 'aria-busy' ); if ( success ) { button.textContent = certloomText( 'connected', 'Connected' ); button.disabled = true; } else if ( button.dataset.certloomOriginalLabel ) { button.textContent = button.dataset.certloomOriginalLabel; } } );
 			var refresh = document.querySelector( 'form[data-certloom-google-popup-form][data-certloom-google-refresh-on-success="1"]' );
 			if ( success && refresh ) { window.setTimeout( function () { window.location.reload(); }, 350 ); }
 		} );
@@ -869,7 +899,7 @@
 					error.setAttribute( 'role', 'alert' );
 					field.appendChild( error );
 				}
-				error.textContent = control.getAttribute( 'data-certloom-required-example' ) || form.getAttribute( 'data-certloom-invalid-message' ) || 'Please fill in this required field.';
+				error.textContent = control.getAttribute( 'data-certloom-required-example' ) || form.getAttribute( 'data-certloom-invalid-message' ) || certloomText( 'requiredField', 'Please fill in this required field.' );
 			}
 			form.addEventListener( 'invalid', function ( event ) {
 				show( event.target );
@@ -902,7 +932,7 @@
 			if ( newName ) { window.setTimeout( function () { newName.focus(); }, 0 ); }
 		}
 		function syncSummary() {
-			if ( summaryName ) { summaryName.textContent = newName && newName.value.trim() ? newName.value.trim() : 'New Recipient profile'; }
+			if ( summaryName ) { summaryName.textContent = newName && newName.value.trim() ? newName.value.trim() : certloomText( 'newRecipientProfile', 'New Recipient profile' ); }
 		}
 		function sync( openWhenNew ) {
 			var current = mode();
@@ -966,17 +996,17 @@
 		} );
 		document.addEventListener( 'submit', function ( event ) {
 			var form = event.target && event.target.matches && event.target.matches( 'form[data-certloom-quick-create]' ) ? event.target : null; if ( ! form ) { return; } event.preventDefault();
-			if ( ! form.checkValidity() ) { form.reportValidity(); setQuickFeedback( form, form.getAttribute( 'data-certloom-invalid-message' ) || 'Complete the highlighted required field.', true ); return; }
-			var button = form.querySelector( 'button[type="submit"]' ); var original = button ? button.textContent : ''; if ( button ) { button.disabled = true; button.setAttribute( 'aria-busy', 'true' ); button.textContent = 'Adding…'; } setQuickFeedback( form, 'Adding…', false );
+			if ( ! form.checkValidity() ) { form.reportValidity(); setQuickFeedback( form, form.getAttribute( 'data-certloom-invalid-message' ) || certloomText( 'quickInvalid', 'Complete the highlighted required field.' ), true ); return; }
+			var button = form.querySelector( 'button[type="submit"]' ); var original = button ? button.textContent : ''; if ( button ) { button.disabled = true; button.setAttribute( 'aria-busy', 'true' ); button.textContent = certloomText( 'adding', 'Adding…' ); } setQuickFeedback( form, certloomText( 'adding', 'Adding…' ), false );
 			var data = new FormData( form );
 			fetch( window.ajaxurl || '', { method:'POST', credentials:'same-origin', body:data } ).then( function ( response ) { return response.json(); } ).then( function ( response ) {
-				if ( ! response || ! response.success || ! response.data || ! response.data.id ) { throw new Error( response && response.data && response.data.message ? response.data.message : 'This item could not be added.' ); }
+				if ( ! response || ! response.success || ! response.data || ! response.data.id ) { throw new Error( response && response.data && response.data.message ? response.data.message : certloomText( 'itemAddFailed', 'This item could not be added.' ) ); }
 				var kind = form.getAttribute( 'data-certloom-quick-create' ); var targetSelector = form.getAttribute( 'data-certloom-quick-target' ); var target = targetSelector ? document.querySelector( targetSelector ) : null; addOption( target, response.data.id, response.data.label || '', response.data.program_id || 0 ); if ( target ) { target.value = String( response.data.id ); target.dispatchEvent( new Event( 'change', { bubbles:true } ) ); }
 				if ( 'program' === kind ) { document.querySelectorAll( 'select[data-certloom-quick-program-mirror], #certloom-quick-batch-dialog select[name="program_id"]' ).forEach( function ( select ) { addOption( select, response.data.id, response.data.label || '' ); } ); }
-				setQuickFeedback( form, response.data.message || 'Added.', false );
+				setQuickFeedback( form, response.data.message || certloomText( 'added', 'Added.' ), false );
 				var review = document.querySelector( '[data-certloom-manual-review]' ); if ( review ) { var program = document.querySelector( 'select[name="program_id"]' ); review.disabled = ! ( program && program.value ) || '1' !== review.getAttribute( 'data-certloom-has-templates' ); }
 				window.setTimeout( function () { closeDialog( form.closest( 'dialog' ) ); if ( 'program' === kind ) { var title = form.querySelector( '[name="program_title"]' ), code = form.querySelector( '[name="program_code"]' ); if ( title ) { title.value = ''; } if ( code ) { code.value = ''; } } else if ( 'batch' === kind ) { var name = form.querySelector( '[name="batch_name"]' ), batchCode = form.querySelector( '[name="batch_code"]' ); if ( name ) { name.value = ''; } if ( batchCode ) { batchCode.value = ''; } } }, 350 );
-			} ).catch( function ( error ) { setQuickFeedback( form, error && error.message ? error.message : 'This item could not be added.', true ); } ).finally( function () { if ( button ) { button.disabled = false; button.removeAttribute( 'aria-busy' ); button.textContent = original; } } );
+			} ).catch( function ( error ) { setQuickFeedback( form, error && error.message ? error.message : certloomText( 'itemAddFailed', 'This item could not be added.' ), true ); } ).finally( function () { if ( button ) { button.disabled = false; button.removeAttribute( 'aria-busy' ); button.textContent = original; } } );
 		} );
 		document.querySelectorAll( 'dialog.certloom-premium-dialog' ).forEach( function ( dialog ) { dialog.addEventListener( 'click', function ( event ) { if ( event.target === dialog ) { var rect = dialog.getBoundingClientRect(); var inside = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom; if ( ! inside ) { closeDialog( dialog ); } } } ); } );
 	}
@@ -1022,10 +1052,10 @@
 			form.addEventListener( 'input', function ( event ) { clearFieldState( event.target ); } );
 			form.addEventListener( 'change', function ( event ) { clearFieldState( event.target ); } );
 			form.addEventListener( 'submit', function () {
-				show( form.getAttribute( 'data-certloom-saving-message' ) || 'Saving…', 'is-saving' );
+				show( form.getAttribute( 'data-certloom-saving-message' ) || certloomText( 'saving', 'Saving…' ), 'is-saving' );
 				submit.setAttribute( 'aria-busy', 'true' ); submit.disabled = true;
-				if ( 'INPUT' === submit.tagName ) { if ( ! submit.getAttribute( 'data-certloom-original-label' ) ) { submit.setAttribute( 'data-certloom-original-label', submit.value || '' ); } submit.value = form.getAttribute( 'data-certloom-saving-message' ) || 'Saving…'; }
-				else { if ( ! submit.getAttribute( 'data-certloom-original-label' ) ) { submit.setAttribute( 'data-certloom-original-label', submit.textContent || '' ); } submit.textContent = form.getAttribute( 'data-certloom-saving-message' ) || 'Saving…'; }
+				if ( 'INPUT' === submit.tagName ) { if ( ! submit.getAttribute( 'data-certloom-original-label' ) ) { submit.setAttribute( 'data-certloom-original-label', submit.value || '' ); } submit.value = form.getAttribute( 'data-certloom-saving-message' ) || certloomText( 'saving', 'Saving…' ); }
+				else { if ( ! submit.getAttribute( 'data-certloom-original-label' ) ) { submit.setAttribute( 'data-certloom-original-label', submit.textContent || '' ); } submit.textContent = form.getAttribute( 'data-certloom-saving-message' ) || certloomText( 'saving', 'Saving…' ); }
 			} );
 		} );
 	}
@@ -1096,7 +1126,7 @@
 		document.querySelectorAll( '[data-certloom-color-control]' ).forEach( function ( control ) {
 			var hidden = control.querySelector( '[data-certloom-color-value]' ), picker = control.querySelector( '[data-certloom-color-picker]' ), label = control.querySelector( '[data-certloom-color-label]' ), clear = control.querySelector( '[data-certloom-color-clear]' );
 			if ( picker && hidden ) { picker.addEventListener( 'input', function () { hidden.value = picker.value.toUpperCase(); if ( label ) { label.textContent = hidden.value; } } ); }
-			if ( clear && hidden ) { clear.addEventListener( 'click', function () { hidden.value = ''; if ( label ) { label.textContent = 'Default'; } } ); }
+			if ( clear && hidden ) { clear.addEventListener( 'click', function () { hidden.value = ''; if ( label ) { label.textContent = certloomText( 'defaultLabel', 'Default' ); } } ); }
 		} );
 		document.querySelectorAll( '[data-certloom-media-control]' ).forEach( function ( control ) {
 			var id = control.querySelector( '[data-certloom-media-id]' ), preview = control.querySelector( '[data-certloom-media-preview]' ), choose = control.querySelector( '[data-certloom-media-select]' ), clear = control.querySelector( '[data-certloom-media-clear]' );
@@ -1126,17 +1156,19 @@
 			if ( sensitivityInput ) { sensitivityInput.addEventListener( 'change', syncQuickFieldPrivacy ); syncQuickFieldPrivacy(); }
 			if ( create && dialog ) { create.addEventListener( 'click', function () {
 				var labelInput = dialog.querySelector( '[data-certloom-quick-field-label]' ), typeInput = dialog.querySelector( '[data-certloom-quick-field-type]' ), feedback = dialog.querySelector( '[data-certloom-quick-field-feedback]' ), labelValue = labelInput ? labelInput.value.trim() : '';
-				if ( ! labelValue ) { if ( feedback ) { feedback.textContent = 'Enter a field label.'; } return; }
-				create.disabled = true; if ( feedback ) { feedback.textContent = 'Creating field…'; }
+				if ( ! labelValue ) { if ( feedback ) { feedback.textContent = certloomText( 'enterFieldLabel', 'Enter a field label.' ); } return; }
+				create.disabled = true; if ( feedback ) { feedback.textContent = certloomText( 'creatingField', 'Creating field…' ); }
 				var body = new URLSearchParams(); body.set( 'action', 'certloom_quick_add_scoped_field' ); body.set( 'nonce', editor.getAttribute( 'data-certloom-field-nonce' ) || '' ); body.set( 'label', labelValue ); body.set( 'field_type', typeInput ? typeInput.value : 'text' ); body.set( 'sensitivity', sensitivityInput ? sensitivityInput.value : 'personal' ); body.set( 'public_exposure', exposureInput ? exposureInput.value : 'private' );
 				fetch( window.ajaxurl || '', { method:'POST', credentials:'same-origin', headers:{ 'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8' }, body:body.toString() } ).then( function ( response ) { return response.json(); } ).then( function ( response ) {
-					if ( ! response || ! response.success || ! response.data || ! response.data.field ) { throw new Error( response && response.data && response.data.message ? response.data.message : 'Field could not be created.' ); }
+					if ( ! response || ! response.success || ! response.data || ! response.data.field ) { throw new Error( response && response.data && response.data.message ? response.data.message : certloomText( 'fieldCreateFailed', 'Field could not be created.' ) ); }
 					var field = response.data.field, list = editor.querySelector( '[data-certloom-scope-field-list]' ), scope = editor.getAttribute( 'data-certloom-scope-field-editor' ), row = document.createElement( 'div' ); row.className = 'certloom-scoped-field-row'; row.setAttribute( 'data-certloom-scope-field-row', field.key );
 					var name = 'program' === scope ? 'program_field_requirement[' + field.key + ']' : 'batch_field_requirement[' + field.key + ']';
-					var options = 'program' === scope ? '<option value="">Not used</option><option value="optional" selected>Optional</option><option value="required">Required</option>' : '<option value="">Inherit Program</option><option value="optional" selected>Optional</option><option value="required">Required</option><option value="exclude">Exclude</option>';
-					row.innerHTML = '<div><strong data-certloom-scope-field-label>' + escapeHtml( field.label ) + '</strong><span class="certloom-scoped-field-meta">' + escapeHtml( field.type ) + ' · ' + escapeHtml( field.sensitivity_label || field.sensitivity || 'Personal' ) + ' · ' + escapeHtml( field.public_exposure_label || field.public_exposure || 'Private' ) + '</span></div><label><span class="screen-reader-text">Field rule</span><select name="' + escapeHtml( name ) + '" data-certloom-scope-field-rule>' + options + '</select></label><button type="button" class="button-link-delete" data-certloom-scope-field-remove>Remove</button>';
-					if ( list ) { list.appendChild( row ); } if ( feedback ) { feedback.textContent = response.data.message || 'Field created.'; } if ( labelInput ) { labelInput.value = ''; } window.setTimeout( function () { if ( dialog.open ) { dialog.close(); } }, 450 ); refreshEmpty();
-				} ).catch( function ( error ) { if ( feedback ) { feedback.textContent = error.message || 'Field could not be created.'; } } ).finally( function () { create.disabled = false; } );
+					var options = 'program' === scope
+						? '<option value="">' + escapeHtml( certloomText( 'scopeNotUsed', 'Not used' ) ) + '</option><option value="optional" selected>' + escapeHtml( certloomText( 'fieldOptional', 'Optional' ) ) + '</option><option value="required">' + escapeHtml( certloomText( 'fieldRequired', 'Required' ) ) + '</option>'
+						: '<option value="">' + escapeHtml( certloomText( 'scopeInheritProgram', 'Inherit Program' ) ) + '</option><option value="optional" selected>' + escapeHtml( certloomText( 'fieldOptional', 'Optional' ) ) + '</option><option value="required">' + escapeHtml( certloomText( 'fieldRequired', 'Required' ) ) + '</option><option value="exclude">' + escapeHtml( certloomText( 'scopeExclude', 'Exclude' ) ) + '</option>';
+					row.innerHTML = '<div><strong data-certloom-scope-field-label>' + escapeHtml( field.label ) + '</strong><span class="certloom-scoped-field-meta">' + escapeHtml( field.type ) + ' · ' + escapeHtml( field.sensitivity_label || field.sensitivity || certloomText( 'sensitivityPersonal', 'Personal' ) ) + ' · ' + escapeHtml( field.public_exposure_label || field.public_exposure || certloomText( 'privacyPrivate', 'Private' ) ) + '</span></div><label><span class="screen-reader-text">' + escapeHtml( certloomText( 'fieldRule', 'Field rule' ) ) + '</span><select name="' + escapeHtml( name ) + '" data-certloom-scope-field-rule>' + options + '</select></label><button type="button" class="button-link-delete" data-certloom-scope-field-remove>' + escapeHtml( certloomText( 'remove', 'Remove' ) ) + '</button>';
+					if ( list ) { list.appendChild( row ); } if ( feedback ) { feedback.textContent = response.data.message || certloomText( 'fieldCreated', 'Field created.' ); } if ( labelInput ) { labelInput.value = ''; } window.setTimeout( function () { if ( dialog.open ) { dialog.close(); } }, 450 ); refreshEmpty();
+				} ).catch( function ( error ) { if ( feedback ) { feedback.textContent = error.message || certloomText( 'fieldCreateFailed', 'Field could not be created.' ); } } ).finally( function () { create.disabled = false; } );
 			} ); }
 			refreshEmpty();
 		} );
@@ -1161,24 +1193,24 @@
 				body.set( 'expected_updated_at', button.getAttribute( 'data-expected-updated-at' ) || '' );
 			}
 			fetch( window.ajaxurl || '', { method:'POST', credentials:'same-origin', headers:{ 'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8' }, body:body.toString() } ).then( function ( response ) { return response.json(); } ).then( function ( response ) {
-				if ( ! response || ! response.success ) { throw new Error( response && response.data && response.data.message ? response.data.message : ( publishing ? 'This design could not be published.' : 'This design could not be moved to Draft.' ) ); }
-				if ( feedback ) { feedback.classList.remove( 'is-error' ); feedback.classList.add( 'is-success' ); feedback.textContent = response.data.message || ( publishing ? 'Design published.' : 'Design moved to Draft.' ); }
+				if ( ! response || ! response.success ) { throw new Error( response && response.data && response.data.message ? response.data.message : ( publishing ? certloomText( 'designPublishFailed', 'This design could not be published.' ) : certloomText( 'designDraftFailed', 'This design could not be moved to Draft.' ) ) ); }
+				if ( feedback ) { feedback.classList.remove( 'is-error' ); feedback.classList.add( 'is-success' ); feedback.textContent = response.data.message || ( publishing ? certloomText( 'designPublished', 'Design published.' ) : certloomText( 'designMovedDraft', 'Design moved to Draft.' ) ); }
 				var state = card ? card.querySelector( '[data-certloom-publish-state]' ) : null;
-				if ( state ) { state.textContent = publishing ? 'Published' : 'Draft'; state.classList.toggle( 'is-draft', ! publishing ); state.classList.toggle( 'is-published', publishing ); }
+				if ( state ) { state.textContent = publishing ? certloomText( 'published', 'Published' ) : certloomText( 'draft', 'Draft' ); state.classList.toggle( 'is-draft', ! publishing ); state.classList.toggle( 'is-published', publishing ); }
 				button.removeAttribute( 'aria-busy' ); button.disabled = false;
 				button.classList.toggle( 'is-on', publishing ); button.setAttribute( 'aria-checked', publishing ? 'true' : 'false' );
 				if ( publishing ) {
 					button.removeAttribute( 'data-certloom-card-publish' ); button.setAttribute( 'data-certloom-card-unpublish', '' ); button.removeAttribute( 'data-revision-id' ); button.removeAttribute( 'data-revision-sha' );
 					button.setAttribute( 'data-expected-updated-at', response.data.updated_at || '' ); button.setAttribute( 'data-nonce', response.data.unpublish_nonce || '' );
-					var srPublished = button.querySelector( '.screen-reader-text' ); if ( srPublished ) { srPublished.textContent = 'Move published design back to Draft'; }
+					var srPublished = button.querySelector( '.screen-reader-text' ); if ( srPublished ) { srPublished.textContent = certloomText( 'movePublishedDraft', 'Move published design back to Draft' ); }
 				} else {
 					button.removeAttribute( 'data-certloom-card-unpublish' ); button.setAttribute( 'data-certloom-card-publish', '' ); button.removeAttribute( 'data-expected-updated-at' );
 					button.setAttribute( 'data-revision-id', response.data.revision_id || '0' ); button.setAttribute( 'data-revision-sha', response.data.revision_sha256 || '' ); button.setAttribute( 'data-nonce', response.data.publish_nonce || '' );
-					var srDraft = button.querySelector( '.screen-reader-text' ); if ( srDraft ) { srDraft.textContent = 'Publish this draft design'; }
+					var srDraft = button.querySelector( '.screen-reader-text' ); if ( srDraft ) { srDraft.textContent = certloomText( 'publishDraftDesign', 'Publish this draft design' ); }
 				}
 			} ).catch( function ( error ) {
 				button.disabled = false; button.removeAttribute( 'aria-busy' );
-				if ( feedback ) { feedback.classList.remove( 'is-success' ); feedback.classList.add( 'is-error' ); feedback.textContent = error && error.message ? error.message : ( publishing ? 'This design could not be published.' : 'This design could not be moved to Draft.' ); }
+				if ( feedback ) { feedback.classList.remove( 'is-success' ); feedback.classList.add( 'is-error' ); feedback.textContent = error && error.message ? error.message : ( publishing ? certloomText( 'designPublishFailed', 'This design could not be published.' ) : certloomText( 'designDraftFailed', 'This design could not be moved to Draft.' ) ); }
 			} );
 		} );
 	}
@@ -1196,7 +1228,7 @@
 		deactivate.addEventListener( 'click', function ( event ) {
 			event.preventDefault(); redirect.value = deactivate.href;
 			if ( 'function' === typeof dialog.showModal ) { dialog.showModal(); if ( firstChoice ) { window.setTimeout( function () { firstChoice.focus(); }, 0 ); } }
-			else if ( window.confirm( 'Deactivating Certloom stops public credential verification. Continue?' ) ) { window.location.href = deactivate.href; }
+			else if ( window.confirm( certloomText( 'deactivateVerificationWarning', 'Deactivating Certloom stops public credential verification. Continue?' ) ) ) { window.location.href = deactivate.href; }
 		} );
 		Array.prototype.forEach.call( dialog.querySelectorAll( '[data-certloom-dialog-close]' ), function ( button ) { button.addEventListener( 'click', function () { if ( dialog.open ) { dialog.close(); } } ); } );
 		dialog.addEventListener( 'click', function ( event ) { if ( event.target === dialog ) { dialog.close(); } } );

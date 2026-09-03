@@ -514,7 +514,8 @@ class Ecapla_CertVerify_Render {
 		}
 		$html = (string) ( $presented['html'] ?? '' );
 		if ( '' === $html ) { return ''; }
-		return '<section class="cvp-profile-certificate" aria-labelledby="cvp-profile-certificate-title"><div class="cvp-profile-section-head"><span class="cvp-eyebrow">' . esc_html__( 'Certificate', 'certloom' ) . '</span><h3 id="cvp-profile-certificate-title">' . esc_html__( 'Issued certificate', 'certloom' ) . '</h3></div><div class="cvp-certificate-preview">' . $html . '</div></section>';
+		$title_id = wp_unique_id( 'cvp-profile-certificate-title-' );
+		return '<section class="cvp-profile-certificate" aria-labelledby="' . esc_attr( $title_id ) . '"><div class="cvp-profile-section-head"><span class="cvp-eyebrow">' . esc_html__( 'Certificate', 'certloom' ) . '</span><h3 id="' . esc_attr( $title_id ) . '">' . esc_html__( 'Issued certificate', 'certloom' ) . '</h3></div><div class="cvp-certificate-preview">' . $html . '</div></section>';
 	}
 
 
@@ -886,20 +887,32 @@ class Ecapla_CertVerify_Render {
 
 	private static function status_icon( $key ) {
 		$icons = array(
-			'valid'     => '✓',
-			'suspended' => '!',
-			'withdrawn' => '×',
-			'expired'   => '○',
+			'valid'                   => '✓',
+			'suspended'               => '!',
+			'withdrawn'               => '×',
+			'revoked'                 => '×',
+			'expired'                 => '○',
+			'not_yet_valid'           => '◷',
+			'pending_review'          => '…',
+			'suspended_noncompliant' => '!',
+			'voided'                  => '×',
+			'not_issued'              => '—',
 		);
 		return isset( $icons[ $key ] ) ? $icons[ $key ] : '';
 	}
 
 	private static function status_icon_entity( $key ) {
 		$icons = array(
-			'valid'     => '&#10003;',
-			'suspended' => '&#9888;',
-			'withdrawn' => '&#10005;',
-			'expired'   => '&#9675;',
+			'valid'                   => '&#10003;',
+			'suspended'               => '&#9888;',
+			'withdrawn'               => '&#10005;',
+			'revoked'                 => '&#10005;',
+			'expired'                 => '&#9675;',
+			'not_yet_valid'           => '&#9719;',
+			'pending_review'          => '&#8230;',
+			'suspended_noncompliant' => '&#9888;',
+			'voided'                  => '&#10005;',
+			'not_issued'              => '&#8212;',
 		);
 		return isset( $icons[ $key ] ) ? $icons[ $key ] : '';
 	}

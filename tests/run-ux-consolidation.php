@@ -21,16 +21,18 @@ $data_tools = uxcons_src( $root, 'src/Infrastructure/Admin/DomainDataToolsAdmin.
 $plugin     = uxcons_src( $root, 'certloom.php' );
 $roadmap    = uxcons_src( $root, 'docs/approved-ux-consolidation-after-lms.md' );
 
-uxcons_check( false !== strpos( $navigation, "'certloom'                    => 'Home'" ) && false !== strpos( $navigation, "'certloom'                 => 'Home'" ), 'Simple and Advanced product shells use the canonical Home label' );
+uxcons_check( false !== strpos( $navigation, 'private const PRIMARY = array(' ) && false === strpos( $navigation, 'PRIMARY_SIMPLE' ) && false === strpos( $navigation, 'PRIMARY_ADVANCED' ), 'one canonical product shell replaces the retired Simple/Advanced split' );
+uxcons_check( false !== strpos( $navigation, "'certloom'                    => 'Home'" ), 'product shell uses the canonical Home label' );
 uxcons_check( false !== strpos( $navigation, "'certloom-domain-credentials' => 'Credentials'" ) && false === strpos( $navigation, "'certloom-certificates'    => 'Credentials'" ), 'product shell defines one canonical Credentials primary section and keeps the old registry route hidden' );
-uxcons_check( substr_count( $navigation, "'certloom-domain-programs'    => 'Programs'" ) >= 1 || substr_count( $navigation, "'certloom-domain-programs' => 'Programs'" ) >= 1, 'product shell uses the canonical Programs primary label' );
-uxcons_check( false !== strpos( $navigation, "'certloom-templates'       => 'Design'" ), 'product shell defines Design primary section' );
-uxcons_check( substr_count( $navigation, "'certloom-automations'" ) >= 2 && false !== strpos( $navigation, "return __( 'Automations', 'certloom' );" ), 'Simple and Advanced product shells use Automations as the canonical primary destination' );
-uxcons_check( false !== strpos( $navigation, "'certloom-settings'        => 'Settings'" ), 'product shell defines Settings primary section' );
-uxcons_check( 6 === substr_count( preg_replace( '/.*private const PRIMARY_SIMPLE = array\((.*?)\);.*private const PRIMARY_ADVANCED.*/s', '$1', $navigation ), '=>' ) && 6 === substr_count( preg_replace( '/.*private const PRIMARY_ADVANCED = array\((.*?)\);.*public function register.*/s', '$1', $navigation ), '=>' ), 'Simple and Advanced primary shells are each bounded to exactly six configured destinations' );
+uxcons_check( false !== strpos( $navigation, "'certloom-domain-programs'    => 'Programs'" ), 'product shell uses the canonical Programs primary label' );
+uxcons_check( false !== strpos( $navigation, "'certloom-templates'" ) && false !== strpos( $navigation, "=> 'Design'" ), 'product shell defines Design primary section' );
+uxcons_check( false !== strpos( $navigation, "'certloom-automations'" ) && false !== strpos( $navigation, "=> 'Automations'" ), 'product shell defines Automations primary section' );
+uxcons_check( false !== strpos( $navigation, "'certloom-settings'" ) && false !== strpos( $navigation, "=> 'Settings'" ), 'product shell defines Settings primary section' );
+$primary_block = preg_replace( '/.*private const PRIMARY = array\((.*?)\);.*public function register.*/s', '$1', $navigation );
+uxcons_check( 6 === substr_count( $primary_block, '=>' ), 'unified primary shell is bounded to exactly six configured destinations' );
 uxcons_check( false !== strpos( $navigation, "add_action( 'admin_menu', array( \$this, 'consolidate_primary_menu' ), 999 )" ), 'menu consolidation runs after feature page registration' );
-uxcons_check( false !== strpos( $navigation, "__( 'Backup & Restore', 'certloom' )" ), 'Backup & Restore is a Settings subtab rather than a primary Data Tools destination' );
-uxcons_check( false !== strpos( $navigation, "__( 'Developer tools', 'certloom' )" ) && false !== strpos( $navigation, 'if ( $preview && ! $simple )' ), 'technical new-domain tools are available only as an Advanced/preview subtab' );
+uxcons_check( false !== strpos( $navigation, "__( 'Backup & Restore','certloom')" ) || false !== strpos( $navigation, "__( 'Backup & Restore', 'certloom' )" ), 'Backup & Restore is a Settings continuation rather than a primary destination' );
+uxcons_check( false !== strpos( $navigation, "__( 'Developer tools','certloom')" ) || false !== strpos( $navigation, "__( 'Developer tools', 'certloom' )" ), 'Developer tools remains capability/preview-controlled as a contextual Settings continuation without a global UI mode' );
 uxcons_check( false !== strpos( $admin, 'AdminProductNavigation()' ), 'legacy administration registers the shared product navigation once' );
 uxcons_check( false !== strpos( $admin, "add_submenu_page( null, __( 'Integrations', 'certloom' )" ) && false !== strpos( $admin, "add_submenu_page( null, __( 'Backup & Restore', 'certloom' )" ), 'contextual subtabs are registered as hidden WordPress routes so menu consolidation cannot turn them into 403 pages' );
 

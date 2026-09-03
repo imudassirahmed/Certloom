@@ -3,6 +3,7 @@ namespace Certloom\Infrastructure\Admin;
 
 use Certloom\Domain\Job\JobStates;
 use Certloom\Domain\Job\JobTypes;
+use Certloom\Infrastructure\Email\EmailDesignPurposes;
 use Certloom\Infrastructure\Email\EmailTemplateCatalogRepository;
 use Certloom\Infrastructure\Job\JobRuntime;
 
@@ -13,9 +14,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Human-facing manual email delivery for one already-issued credential Version.
  *
- * Reusable message templates are owned by Automations. This screen intentionally
- * does not provide a second template editor or a second delivery configuration
- * authority; it is only credential -> message -> preview -> send.
+ * Reusable message content is owned by Design → Email designs. This screen is
+ * intentionally only credential → selection intent → preview → send. Automations
+ * decide when delivery runs; they are not a second message-design authority.
  */
 final class EmailDeliveryAdmin {
 	const PAGE   = 'certloom-email-delivery';
@@ -36,14 +37,14 @@ final class EmailDeliveryAdmin {
 		add_action( 'admin_post_certloom_email_retry', array( $this, 'retry_action' ) );
 
 		// Backward-compatible handler for older bookmarked/form submissions. The
-		// normal product UI owns reusable templates exclusively in Automations.
+		// normal product UI owns reusable message content exclusively in Email designs.
 		add_action( 'admin_post_certloom_email_template_save', array( $this, 'save_template' ) );
 	}
 
 	/** @return void */
 	public function menu() {
 		add_submenu_page(
-			null,
+			'certloom',
 			__( 'Email Delivery', 'certloom' ),
 			__( 'Email Delivery', 'certloom' ),
 			\Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS,
@@ -62,8 +63,8 @@ final class EmailDeliveryAdmin {
 		echo '<section class="certloom-workspace-hero certloom-email-hero"><div class="certloom-workspace-hero-copy">';
 		echo '<span class="certloom-eyebrow">' . esc_html__( 'Manual delivery', 'certloom' ) . '</span>';
 		echo '<h1>' . esc_html__( 'Send credential email', 'certloom' ) . '</h1>';
-		echo '<p>' . esc_html__( 'Choose one reusable message, preview exactly what the recipient will receive, then send it through your WordPress mail setup.', 'certloom' ) . '</p>';
-		echo '</div><div class="certloom-workspace-hero-actions"><a class="button" href="' . esc_url( admin_url( 'admin.php?page=certloom-automations#certloom-email-templates-title' ) ) . '">' . esc_html__( 'Manage messages', 'certloom' ) . '</a></div></section>';
+		echo '<p>' . esc_html__( 'Use the email hierarchy by default, or choose a one-send override. Preview exactly what the recipient will receive before anything is queued.', 'certloom' ) . '</p>';
+		echo '</div><div class="certloom-workspace-hero-actions"><a class="button" href="' . esc_url( admin_url( 'admin.php?page=certloom-email-designs' ) ) . '">' . esc_html__( 'Email designs', 'certloom' ) . '</a></div></section>';
 
 		$this->notice();
 		$this->composer( $version, $preview_token );
@@ -80,7 +81,7 @@ final class EmailDeliveryAdmin {
 		$version_id  = absint( $_POST['version_id'] ?? 0 );
 		$destination = isset( $_POST['destination'] ) ? sanitize_email( wp_unslash( $_POST['destination'] ) ) : '';
 		$kind        = isset( $_POST['delivery_kind'] ) ? sanitize_key( wp_unslash( $_POST['delivery_kind'] ) ) : 'issued';
-		$template_id = isset( $_POST['template_id'] ) ? sanitize_key( wp_unslash( $_POST['template_id'] ) ) : EmailTemplateCatalogRepository::DEFAULT_ID;
+		$template_id = isset( $_POST['template_id'] ) ? sanitize_key( wp_unslash( $_POST['template_id'] ) ) : 'automatic';
 
 		if ( ! in_array( $kind, array( 'issued', 'resend', 'test' ), true ) ) {
 			$this->fail( __( 'That email delivery type is invalid.', 'certloom' ), $version_id );
@@ -100,9 +101,13 @@ final class EmailDeliveryAdmin {
 				'version_id'         => $version_id,
 				'destination'        => (string) $review['destination'],
 				'delivery_kind'      => $kind,
-				'template_id'        => (string) $review['template_id'],
-				'template_name'      => (string) $review['template_name'],
-				'composition_sha256' => (string) $review['composed']['composition_sha256'],
+				'selection_intent'    => 'automatic' === $template_id ? 'automatic' : 'override',
+				'selection_value'     => $template_id,
+				'template_id'         => (string) $review['template_id'],
+				'template_name'       => (string) $review['template_name'],
+				'resolution_scope'    => (string) ( $review['resolution_scope'] ?? '' ),
+				'resolution_scope_id' => absint( $review['resolution_scope_id'] ?? 0 ),
+				'composition_sha256'  => (string) $review['composed']['composition_sha256'],
 			),
 			300
 		);
@@ -131,8 +136,9 @@ final class EmailDeliveryAdmin {
 			$this->fail( __( 'That email review expired. Preview the message again before sending.', 'certloom' ) );
 		}
 
-		$template_id = sanitize_key( (string) ( $saved['template_id'] ?? EmailTemplateCatalogRepository::DEFAULT_ID ) );
-		$review      = $this->runtime->email_delivery()->preview( absint( $saved['version_id'] ), (string) $saved['destination'], $template_id );
+		$selection = sanitize_key( (string) ( $saved['selection_value'] ?? 'automatic' ) );
+		if ( '' === $selection ) { $selection = 'automatic'; }
+		$review = $this->runtime->email_delivery()->preview( absint( $saved['version_id'] ), (string) $saved['destination'], $selection, EmailDesignPurposes::ISSUED );
 		if ( is_wp_error( $review ) || ! hash_equals( (string) ( $saved['composition_sha256'] ?? '' ), is_wp_error( $review ) ? '' : (string) $review['composed']['composition_sha256'] ) ) {
 			$this->fail( __( 'The credential or selected message changed after review. Preview it again before sending.', 'certloom' ), absint( $saved['version_id'] ) );
 		}
@@ -143,7 +149,8 @@ final class EmailDeliveryAdmin {
 			get_current_user_id(),
 			(string) ( $saved['delivery_kind'] ?? 'issued' ),
 			true,
-			$template_id
+			$selection,
+			EmailDesignPurposes::ISSUED
 		);
 		if ( is_wp_error( $job ) ) {
 			$this->fail( $job->get_error_message(), absint( $saved['version_id'] ) );
@@ -159,8 +166,12 @@ final class EmailDeliveryAdmin {
 		$job = isset( $_POST['job_key'] ) ? strtolower( sanitize_text_field( wp_unslash( $_POST['job_key'] ) ) ) : '';
 		check_admin_referer( 'certloom_email_retry_' . $job );
 		$row = $this->runtime->repository()->find( $job );
-		if ( is_wp_error( $row ) || ! is_array( $row ) || JobTypes::EMAIL_DELIVERY !== (string) ( $row['job_type'] ?? '' ) || absint( $row['owner_user_id'] ?? 0 ) !== get_current_user_id() ) {
-			$this->fail( __( 'That Email Delivery job is unavailable or belongs to another administrator.', 'certloom' ) );
+		if ( is_wp_error( $row ) || ! is_array( $row ) || JobTypes::EMAIL_DELIVERY !== (string) ( $row['job_type'] ?? '' ) ) {
+			$this->fail( __( 'That Email Delivery job is unavailable.', 'certloom' ) );
+		}
+		$owner = absint( $row['owner_user_id'] ?? 0 );
+		if ( 0 !== $owner && $owner !== get_current_user_id() ) {
+			$this->fail( __( 'That Email Delivery job belongs to another administrator.', 'certloom' ) );
 		}
 		$retry = $this->runtime->retry_failed( $job );
 		if ( is_wp_error( $retry ) ) {
@@ -171,24 +182,16 @@ final class EmailDeliveryAdmin {
 	}
 
 	/**
-	 * Legacy compatibility only. Reusable template management lives in Automations.
+	 * Legacy compatibility only. Email designs are the only reusable content authority.
 	 *
 	 * @return void
 	 */
 	public function save_template() {
 		$this->cap();
 		check_admin_referer( 'certloom_email_template_save' );
-		$template = array(
-			'subject'   => isset( $_POST['subject'] ) ? wp_unslash( $_POST['subject'] ) : '',
-			'html_body' => isset( $_POST['html_body'] ) ? wp_unslash( $_POST['html_body'] ) : '',
-			'text_body' => isset( $_POST['text_body'] ) ? wp_unslash( $_POST['text_body'] ) : '',
-		);
-		$saved = $this->runtime->email_delivery()->save_template( $template );
-		if ( is_wp_error( $saved ) ) {
-			$this->fail( $saved->get_error_message() );
-		}
-		$this->success( __( 'Default credential email updated. Reusable message templates are managed in Automations.', 'certloom' ) );
-		$this->go();
+		$this->success( __( 'Reusable email content is now managed in Design → Email designs. No legacy template changes were applied.', 'certloom' ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=certloom-email-designs' ) );
+		exit;
 	}
 
 	/** @return void */
@@ -199,17 +202,17 @@ final class EmailDeliveryAdmin {
 			array_filter(
 				$this->runtime->email_delivery()->templates(),
 				static function ( $template ) {
-					return is_array( $template ) && ! empty( $template['active'] );
+					return is_array( $template ) && ! empty( $template['active'] ) && EmailDesignPurposes::ISSUED === (string) ( $template['purpose'] ?? EmailDesignPurposes::ISSUED );
 				}
 			)
 		);
-		$template_id = EmailTemplateCatalogRepository::DEFAULT_ID;
+		$template_id = 'automatic';
 
 		if ( '' !== $token ) {
 			$saved = get_transient( 'certloom_email_preview_' . $token . '_' . get_current_user_id() );
 			if ( is_array( $saved ) ) {
-				$template_id = sanitize_key( (string) ( $saved['template_id'] ?? EmailTemplateCatalogRepository::DEFAULT_ID ) );
-				$review      = $this->runtime->email_delivery()->preview( absint( $saved['version_id'] ), (string) $saved['destination'], $template_id );
+				$template_id = sanitize_key( (string) ( $saved['selection_value'] ?? 'automatic' ) );
+				$review      = $this->runtime->email_delivery()->preview( absint( $saved['version_id'] ), (string) $saved['destination'], $template_id, EmailDesignPurposes::ISSUED );
 			}
 		}
 
@@ -222,23 +225,18 @@ final class EmailDeliveryAdmin {
 			return;
 		}
 
-		if ( empty( $templates ) ) {
-			echo '<div class="certloom-premium-empty-state certloom-email-empty"><span class="dashicons dashicons-email-alt2" aria-hidden="true"></span><h3>' . esc_html__( 'Create an email message first', 'certloom' ) . '</h3><p>' . esc_html__( 'There are no active reusable email templates. Create or re-enable one in Automations, then return to this credential.', 'certloom' ) . '</p><a class="button button-primary" href="' . esc_url( admin_url( 'admin.php?page=certloom-automations#certloom-email-templates-title' ) ) . '">' . esc_html__( 'Manage email templates', 'certloom' ) . '</a></div>';
-			echo '</section>';
-			return;
-		}
-
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="certloom-clean-form certloom-email-compose-form">';
 		echo '<input type="hidden" name="action" value="certloom_email_preview"><input type="hidden" name="version_id" value="' . esc_attr( $version_id ) . '">';
 		wp_nonce_field( 'certloom_email_preview' );
 		echo '<div class="certloom-form-grid certloom-email-compose-grid">';
-		echo '<label class="certloom-field-control"><span>' . esc_html__( 'Message', 'certloom' ) . '</span><select name="template_id" required>';
+		echo '<label class="certloom-field-control"><span>' . esc_html__( 'Email design', 'certloom' ) . '</span><select name="template_id" required>';
+		echo '<option value="automatic" ' . selected( $template_id, 'automatic', false ) . '>' . esc_html__( 'Automatic — use email hierarchy', 'certloom' ) . '</option>';
 		foreach ( $templates as $template ) {
 			$id   = (string) ( $template['id'] ?? '' );
 			$name = (string) ( $template['name'] ?? '' );
 			echo '<option value="' . esc_attr( $id ) . '" ' . selected( $template_id, $id, false ) . '>' . esc_html( $name ) . '</option>';
 		}
-		echo '</select><small>' . esc_html__( 'Reusable messages are created in Automations.', 'certloom' ) . '</small></label>';
+		echo '</select><small>' . esc_html__( 'Automatic resolves Batch → Program → Issuer → Global. Choosing a named design is a one-send override and does not change inheritance.', 'certloom' ) . '</small></label>';
 		echo '<label class="certloom-field-control"><span>' . esc_html__( 'Send to', 'certloom' ) . '</span><input type="email" name="destination" value="' . esc_attr( is_array( $saved ) ? (string) ( $saved['destination'] ?? '' ) : '' ) . '" placeholder="' . esc_attr__( 'Uses the recipient email when blank', 'certloom' ) . '"><small>' . esc_html__( 'Leave blank to use the email saved with the issued credential.', 'certloom' ) . '</small></label>';
 		echo '</div>';
 		echo '<fieldset class="certloom-email-kind"><legend>' . esc_html__( 'Delivery type', 'certloom' ) . '</legend><div class="certloom-choice-pills">';
@@ -262,7 +260,7 @@ final class EmailDeliveryAdmin {
 		$composed = (array) $review['composed'];
 		echo '<div class="certloom-email-preview">';
 		echo '<div class="certloom-email-preview-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Ready to review', 'certloom' ) . '</span><h3>' . esc_html( (string) ( $review['template_name'] ?? __( 'Credential email', 'certloom' ) ) ) . '</h3></div><span class="certloom-state-pill is-success">' . esc_html__( 'Preview', 'certloom' ) . '</span></div>';
-		echo '<div class="certloom-email-review-meta"><div><span>' . esc_html__( 'Recipient', 'certloom' ) . '</span><strong>' . esc_html( (string) $review['destination_mask'] ) . '</strong></div><div><span>' . esc_html__( 'Delivery', 'certloom' ) . '</span><strong>' . esc_html( $this->kind_label( (string) ( $saved['delivery_kind'] ?? 'issued' ) ) ) . '</strong></div><div><span>' . esc_html__( 'Message', 'certloom' ) . '</span><strong>' . esc_html( (string) ( $review['template_name'] ?? '' ) ) . '</strong></div></div>';
+		echo '<div class="certloom-email-review-meta"><div><span>' . esc_html__( 'Recipient', 'certloom' ) . '</span><strong>' . esc_html( (string) $review['destination_mask'] ) . '</strong></div><div><span>' . esc_html__( 'Delivery', 'certloom' ) . '</span><strong>' . esc_html( $this->kind_label( (string) ( $saved['delivery_kind'] ?? 'issued' ) ) ) . '</strong></div><div><span>' . esc_html__( 'Message', 'certloom' ) . '</span><strong>' . esc_html( (string) ( $review['template_name'] ?? '' ) ) . '</strong></div><div><span>' . esc_html__( 'Source', 'certloom' ) . '</span><strong>' . esc_html( $this->resolution_label( (string) ( $review['resolution_scope'] ?? '' ) ) ) . '</strong></div></div>';
 
 		if ( empty( $review['verification_authoritative'] ) ) {
 			echo '<div class="certloom-email-context-note"><span class="dashicons dashicons-info-outline" aria-hidden="true"></span><p>' . esc_html__( 'This site cannot include an online verification link for this credential yet. The preview below shows exactly what will be sent.', 'certloom' ) . '</p></div>';
@@ -283,7 +281,7 @@ final class EmailDeliveryAdmin {
 
 	/** @return void */
 	private function automation_bridge() {
-		echo '<section class="certloom-workspace-card certloom-email-automation-bridge"><div class="certloom-email-automation-copy"><span class="certloom-eyebrow">' . esc_html__( 'Want this to happen automatically?', 'certloom' ) . '</span><h2>' . esc_html__( 'Reuse the same messages in Automations', 'certloom' ) . '</h2><p>' . esc_html__( 'Create multiple email templates and rules for specific Programs or issuance sources. Automatic email runs only after Certloom successfully issues the credential.', 'certloom' ) . '</p></div><a class="button" href="' . esc_url( admin_url( 'admin.php?page=certloom-automations' ) ) . '">' . esc_html__( 'Open Automations', 'certloom' ) . '</a></section>';
+		echo '<section class="certloom-workspace-card certloom-email-automation-bridge"><div class="certloom-email-automation-copy"><span class="certloom-eyebrow">' . esc_html__( 'Want this to happen automatically?', 'certloom' ) . '</span><h2>' . esc_html__( 'Automations decide when to send', 'certloom' ) . '</h2><p>' . esc_html__( 'Email designs decide what the recipient sees. Automations decide when an issued credential email runs, who it applies to, and which issuance sources it covers.', 'certloom' ) . '</p></div><a class="button" href="' . esc_url( admin_url( 'admin.php?page=certloom-automations' ) ) . '">' . esc_html__( 'Open Automations', 'certloom' ) . '</a></section>';
 	}
 
 	/** @return void */
@@ -309,10 +307,10 @@ final class EmailDeliveryAdmin {
 			}
 			echo '</td><td>' . esc_html( (string) ( $row['attempted_at'] ?? '—' ) ) . '</td><td>';
 			$owner = absint( $evidence['requested_by'] ?? 0 );
-			if ( 'failed' === $status && ! empty( $row['job_key'] ) && $owner === get_current_user_id() ) {
+			if ( 'failed' === $status && ! empty( $row['job_key'] ) && ( 0 === $owner || $owner === get_current_user_id() ) ) {
 				echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_email_retry"><input type="hidden" name="job_key" value="' . esc_attr( (string) $row['job_key'] ) . '">';
 				wp_nonce_field( 'certloom_email_retry_' . (string) $row['job_key'] );
-				echo '<button class="button button-small">' . esc_html__( 'Retry failed', 'certloom' ) . '</button></form>';
+				echo '<button type="submit" class="button button-small">' . esc_html__( 'Retry failed', 'certloom' ) . '</button></form>';
 			} elseif ( 'failed' === $status && ! empty( $row['job_key'] ) ) {
 				echo '<span class="description">' . esc_html__( 'Retry is available to the administrator who started this delivery.', 'certloom' ) . '</span>';
 			} elseif ( 'uncertain' === $status ) {
@@ -343,6 +341,20 @@ final class EmailDeliveryAdmin {
 			) . '</div></div>';
 		}
 		echo '</section>';
+	}
+
+	/** @return string */
+	private function resolution_label( $scope ) {
+		$labels = array(
+			'batch'             => __( 'Inherited from Batch', 'certloom' ),
+			'program'           => __( 'Inherited from Program', 'certloom' ),
+			'issuer'            => __( 'Inherited from Issuer', 'certloom' ),
+			'global'            => __( 'Inherited from Global', 'certloom' ),
+			'catalog_default'   => __( 'Default email design', 'certloom' ),
+			'one_send_override' => __( 'One-send override', 'certloom' ),
+		);
+		$scope = sanitize_key( (string) $scope );
+		return (string) ( $labels[ $scope ] ?? __( 'Automatic email hierarchy', 'certloom' ) );
 	}
 
 	/** @return string */

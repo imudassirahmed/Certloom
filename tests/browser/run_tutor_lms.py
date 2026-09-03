@@ -54,7 +54,7 @@ async def main():
         await ck('production credential-writing checks' not in body and 'automatic issuance remains safely locked' not in body,'noAuthorityJargonInSimple')
         await ck('match by email' not in body and 'learner email' not in (await setup.inner_text()).lower(),'noEmailInference')
         await ck('destinations never decide who earned a credential' in body,'sourceDestinationBoundary')
-        await ck(await setup.locator('.certloom-technical-details').count()==0,'simpleHidesLmsTechnicalStatus')
+        await ck(await setup.locator('.certloom-technical-details').count()==1 and not await setup.locator('.certloom-technical-details').get_attribute('open'),'technicalStatusProgressivelyDisclosed')
         await ck(await page.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'desktopNoOverflow')
         await page.close()
 
@@ -82,6 +82,6 @@ async def main():
         await forced.close(); await browser.close()
     if failed:
         print('FAIL  INT-02 Tutor LMS browser gate:',', '.join(failed)); return 1
-    print('PASS  INT-02 Tutor LMS browser gate: source-first mapping, explicit Recipient identity, scalable lookups, Simple-mode language, responsive layout, RTL and forced colors')
+    print('PASS  INT-02 Tutor LMS browser gate: source-first mapping, explicit Recipient identity, scalable lookups, progressive-disclosure language, responsive layout, RTL and forced colors')
     print(f'\n{checks} INT-02 Tutor LMS browser checks, 0 failures'); return 0
 raise SystemExit(asyncio.run(main()))

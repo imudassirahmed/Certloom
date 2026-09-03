@@ -37,14 +37,17 @@ ux6( false !== strpos( $target, 'excluded_assignment' ) && false !== strpos( $ta
 ux6( false !== strpos( $target, 'proposed_assignment' ) && false !== strpos( $target, 'normalize_proposed_assignment' ) && false !== strpos( $dependencies, 'proposed_assignment' ), 'Program/Batch edits can validate fields/context and a replacement design together without consulting the stale assignment being replaced' );
 ux6( false !== strpos( $dependencies, 'validate_program_context_change' ) && false !== strpos( $dependencies, 'validate_batch_context_change' ) && false !== strpos( $dependencies, 'validate_design_inheritance_change' ), 'automatic-source dependencies guard structure fields and design inheritance changes' );
 
-$program_pos = strpos( $nav, "link( __( 'Programs', 'certloom' )" );
-$batch_pos = strpos( $nav, "link( __( 'Batches', 'certloom' )", $program_pos );
-$issuer_pos = strpos( $nav, "link( __( 'Issuers', 'certloom' )", $batch_pos );
-$signer_pos = strpos( $nav, "link( __( 'Signers', 'certloom' )", $issuer_pos );
+$people_start = strpos( $nav, "case 'people':" );
+$people_end = strpos( $nav, "case 'design':", $people_start );
+$people_nav = false !== $people_start && false !== $people_end ? substr( $nav, $people_start, $people_end - $people_start ) : '';
+$program_pos = strpos( $people_nav, 'certloom-domain-programs' );
+$batch_pos = strpos( $people_nav, 'certloom-domain-batches' );
+$issuer_pos = strpos( $people_nav, 'certloom-domain-issuers' );
+$signer_pos = strpos( $people_nav, 'certloom-domain-signers' );
 ux6( false !== $program_pos && false !== $batch_pos && false !== $issuer_pos && false !== $signer_pos && $program_pos < $batch_pos && $batch_pos < $issuer_pos && $issuer_pos < $signer_pos, 'Programs family is ordered Programs then Batches then Issuers then Signers' );
-ux6( false !== strpos( $nav, "if ( 'certloom-domain-recipients' === \$page )" ) && false !== strpos( $nav, "return 'credentials';" ), 'Recipients remain in Credentials navigation ownership in both UI modes' );
-ux6( false !== strpos( $domain, "add_submenu_page( 'certloom', __( 'Credential Management', 'certloom' )" ) && false === strpos( $domain, "AdminUiMode::is_simple() ? 'certloom' : null, __( 'Credential Management'" ), 'Credentials stays registered as a visible primary menu source in Advanced mode before product-menu consolidation' );
-ux6( substr_count( $nav, "'certloom-automations'" ) >= 2 && false !== strpos( $nav, "'certloom-integrations'" ) && false !== strpos( $nav, "'certloom-analytics'" ), 'Advanced Automations destination retains Automations Integrations and Analytics continuations' );
+ux6( false !== strpos( $nav, "if ( 'certloom-domain-recipients' === \$page )" ) && false !== strpos( $nav, "return 'credentials';" ), 'Recipients remain in Credentials navigation ownership in the unified workspace' );
+ux6( false !== strpos( $domain, "add_submenu_page( 'certloom', __( 'Credential Management', 'certloom' )" ) && false === strpos( $domain, "AdminUiMode::is_simple() ? 'certloom' : null, __( 'Credential Management'" ), 'Credentials stays registered as a visible primary menu source before product-menu consolidation' );
+ux6( substr_count( $nav, "'certloom-automations'" ) >= 2 && false !== strpos( $nav, "'certloom-integrations'" ) && false !== strpos( $nav, "'certloom-analytics'" ), 'Automations section retains Automations, Integrations and Analytics continuations' );
 
 ux6( false !== strpos( $domain, 'find_published_by_machine_key' ) && false !== strpos( $domain, "profile_template_variant_template_id[]" ), 'Program language-design edit round-trip resolves stored machine keys back to published design IDs' );
 ux6( false !== strpos( $domain, "name=\"issuer_template_id\"" ) && false !== strpos( $domain, 'Programs and Batches may override this later' ) && false !== strpos( $domain, 'quick_issuer_created_but_not_connected_error' ), 'Program workspace quick Issuer creation exposes Issuer design inheritance and guards the Program connection' );
@@ -66,7 +69,7 @@ ux6( false !== strpos( $integrations, 'design follows hierarchy' ) && false !== 
 ux6( false !== strpos( $automation_rules, "'issuer_id'" ) && false !== strpos( $automation_rules, "'program_id'" ) && false !== strpos( $automation_rules, "'batch_id'" ) && false !== strpos( $automation_rules, "'source_type'" ), 'email automation rules can scope by Issuer Program Batch and issuance source' );
 ux6( false !== strpos( $automation_listener, "snapshot['issuer']['id']" ) && false !== strpos( $automation_listener, "snapshot['program']['id']" ) && false !== strpos( $automation_listener, "snapshot['batch']['id']" ), 'automation matching uses immutable issued snapshot context' );
 ux6( false !== strpos( $automation_dependencies, 'validate_program_issuer_change' ) && false !== strpos( $automation_dependencies, 'validate_batch_program_change' ), 'relationship changes cannot silently make saved automation scopes impossible' );
-ux6( false !== strpos( $automations, 'Email message' ) && false !== strpos( $automations, 'certificate design' ), 'Automations distinguishes reusable email messages from certificate designs' );
+ux6( false !== strpos( $automations, 'Reusable message content and branding are managed separately in Email designs.' ) && false !== strpos( $automations, 'This Automation does not pin or override that design.' ), 'Automations stays a delivery-rule authority while Email designs owns reusable message appearance' );
 ux6( false !== strpos( $integrations, 'Credly badge template ID' ) && false !== strpos( $integrations, 'separate from Certloom certificate designs' ), 'external Credly badge template identity remains distinct from Certloom certificate design inheritance' );
 ux6( false !== strpos( $css, '.certloom-field-warning' ) && false !== strpos( $css, 'var(--certloom-warning)' ), 'unavailable inherited/language design warnings have deliberate premium styling' );
 

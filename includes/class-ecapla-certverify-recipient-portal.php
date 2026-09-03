@@ -13,6 +13,9 @@ use Certloom\Application\Recipient\RecipientPortalService;
  * application/repository layer.
  */
 final class Ecapla_CertVerify_Recipient_Portal {
+	/** @var int Per-request instance counter keeps shortcode control IDs unique when a page renders more than one portal. */
+	private static $instance_counter = 0;
+
 	const STATUS_QUERY = 'certloom_my_status';
 	const SORT_QUERY   = 'certloom_my_sort';
 	const PAGE_QUERY   = 'certloom_my_page';
@@ -67,6 +70,8 @@ final class Ecapla_CertVerify_Recipient_Portal {
 
 		$heading = trim( wp_strip_all_tags( (string) $atts['heading'] ) );
 		if ( '' === $heading ) { $heading = __( 'My Credentials', 'certloom' ); }
+		$instance_id = ++self::$instance_counter;
+		$heading_id  = 'certloom-my-credentials-heading-' . $instance_id;
 		$items = (array) ( $result['items'] ?? array() );
 		$total = absint( $result['total'] ?? 0 );
 		$recipient_name = (string) ( $result['recipient']['display_name'] ?? '' );
@@ -75,11 +80,11 @@ final class Ecapla_CertVerify_Recipient_Portal {
 
 		ob_start();
 		?>
-		<section class="certloom-my-credentials certloom-my-credentials--<?php echo esc_attr( $layout ); ?>" aria-labelledby="certloom-my-credentials-heading" data-copy-success-text="<?php echo esc_attr__( 'Credential link copied.', 'certloom' ); ?>" data-copy-error-text="<?php echo esc_attr__( 'Copy the credential link from your browser.', 'certloom' ); ?>">
+		<section class="certloom-my-credentials certloom-my-credentials--<?php echo esc_attr( $layout ); ?>" aria-labelledby="<?php echo esc_attr( $heading_id ); ?>" data-copy-success-text="<?php echo esc_attr__( 'Credential link copied.', 'certloom' ); ?>" data-copy-error-text="<?php echo esc_attr__( 'Copy the credential link from your browser.', 'certloom' ); ?>">
 			<header class="certloom-my-credentials__header">
 				<div>
 					<p class="certloom-my-credentials__eyebrow"><?php esc_html_e( 'Recipient portal', 'certloom' ); ?></p>
-					<h2 id="certloom-my-credentials-heading" class="certloom-my-credentials__heading"><?php echo esc_html( $heading ); ?></h2>
+					<h2 id="<?php echo esc_attr( $heading_id ); ?>" class="certloom-my-credentials__heading"><?php echo esc_html( $heading ); ?></h2>
 					<?php if ( '' !== $recipient_name ) : ?>
 						<p class="certloom-my-credentials__intro"><?php echo esc_html( sprintf( /* translators: %s: Recipient name. */ __( 'Credentials linked to %s.', 'certloom' ), $recipient_name ) ); ?></p>
 					<?php endif; ?>
@@ -91,7 +96,7 @@ final class Ecapla_CertVerify_Recipient_Portal {
 			</header>
 
 			<?php if ( $show_filters ) : ?>
-				<?php echo self::filters( $filter_status, $filter_sort ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in helper. ?>
+				<?php echo self::filters( $filter_status, $filter_sort, $instance_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in helper. ?>
 			<?php endif; ?>
 
 			<?php if ( empty( $items ) ) : ?>
@@ -123,7 +128,7 @@ final class Ecapla_CertVerify_Recipient_Portal {
 	}
 
 	/** @return string */
-	private static function filters( $status, $sort ) {
+	private static function filters( $status, $sort, $instance_id ) {
 		$statuses = array(
 			'all'            => __( 'All statuses', 'certloom' ),
 			'valid'          => __( 'Valid', 'certloom' ),
@@ -140,20 +145,22 @@ final class Ecapla_CertVerify_Recipient_Portal {
 			'expires_soon' => __( 'Expiring soon', 'certloom' ),
 			'program'      => __( 'Program name', 'certloom' ),
 		);
+		$status_id = 'certloom-my-status-' . absint( $instance_id );
+		$sort_id   = 'certloom-my-sort-' . absint( $instance_id );
 		ob_start();
 		?>
 		<form class="certloom-my-credentials__filters" method="get" action="<?php echo esc_url( self::current_page_url() ); ?>">
 			<div>
-				<label for="certloom-my-status"><?php esc_html_e( 'Status', 'certloom' ); ?></label>
-				<select id="certloom-my-status" name="<?php echo esc_attr( self::STATUS_QUERY ); ?>">
+				<label for="<?php echo esc_attr( $status_id ); ?>"><?php esc_html_e( 'Status', 'certloom' ); ?></label>
+				<select id="<?php echo esc_attr( $status_id ); ?>" name="<?php echo esc_attr( self::STATUS_QUERY ); ?>">
 					<?php foreach ( $statuses as $value => $label ) : ?>
 						<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $status, $value ); ?>><?php echo esc_html( $label ); ?></option>
 					<?php endforeach; ?>
 				</select>
 			</div>
 			<div>
-				<label for="certloom-my-sort"><?php esc_html_e( 'Sort', 'certloom' ); ?></label>
-				<select id="certloom-my-sort" name="<?php echo esc_attr( self::SORT_QUERY ); ?>">
+				<label for="<?php echo esc_attr( $sort_id ); ?>"><?php esc_html_e( 'Sort', 'certloom' ); ?></label>
+				<select id="<?php echo esc_attr( $sort_id ); ?>" name="<?php echo esc_attr( self::SORT_QUERY ); ?>">
 					<?php foreach ( $sorts as $value => $label ) : ?>
 						<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $sort, $value ); ?>><?php echo esc_html( $label ); ?></option>
 					<?php endforeach; ?>

@@ -172,6 +172,8 @@ function ecapla_certverify_uninstall_site() {
 	delete_option( 'certloom_webhook_sources_v1' );
 	delete_option( 'certloom_webhook_last_result' );
 	delete_option( 'certloom_email_template_catalog_v1' );
+	delete_option( 'certloom_email_template_issued_v1' );
+	delete_option( 'certloom_email_design_assignments_v1' );
 	delete_option( 'certloom_email_automation_rules_v1' );
 	delete_option( 'certloom_credly_connection_v1' );
 	delete_option( 'certloom_credly_mappings_v1' );
@@ -217,6 +219,10 @@ function ecapla_certverify_uninstall_site() {
 		'_transient_timeout_certloom_coursera_setup_secret_',
 		'_transient_certloom_webhook_setup_secret_',
 		'_transient_timeout_certloom_webhook_setup_secret_',
+		'_transient_certloom_email_preview_',
+		'_transient_timeout_certloom_email_preview_',
+		'_transient_certloom_email_notice_',
+		'_transient_timeout_certloom_email_notice_',
 	);
 
 	foreach ( $transient_prefixes as $prefix ) {

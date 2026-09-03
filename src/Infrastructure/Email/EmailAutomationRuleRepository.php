@@ -49,6 +49,24 @@ final class EmailAutomationRuleRepository {
 		);
 	}
 
+
+	/** @return array<string,mixed>|null */
+	public function best_matching( $issuer_id, $program_id, $batch_id, $source_type ) {
+		$matches = $this->matching( $issuer_id, $program_id, $batch_id, $source_type );
+		if ( empty( $matches ) ) { return null; }
+		usort( $matches, static function( array $a, array $b ) use ( $source_type ) {
+			$score = static function( array $rule ) use ( $source_type ) {
+				return ( absint( $rule['batch_id'] ?? 0 ) ? 16 : 0 )
+					+ ( absint( $rule['program_id'] ?? 0 ) ? 8 : 0 )
+					+ ( absint( $rule['issuer_id'] ?? 0 ) ? 4 : 0 )
+					+ ( 'any' !== (string) ( $rule['source_type'] ?? 'any' ) && (string) $rule['source_type'] === sanitize_key( (string) $source_type ) ? 2 : 0 );
+			};
+			$delta = $score( $b ) - $score( $a );
+			return 0 !== $delta ? $delta : strcmp( (string) ( $a['id'] ?? '' ), (string) ( $b['id'] ?? '' ) );
+		} );
+		return $matches[0];
+	}
+
 	/** @return string|\WP_Error */
 	public function save( array $rule ) {
 		$normalized = $this->normalize( $rule, true );
@@ -106,11 +124,7 @@ final class EmailAutomationRuleRepository {
 		if ( '' === $name || strlen( $name ) > 120 ) {
 			return new \WP_Error( 'certloom_email_rule_name_invalid', __( 'Give the automation a name between 1 and 120 characters.', 'certloom' ) );
 		}
-		$template_id = sanitize_key( (string) ( $rule['template_id'] ?? EmailTemplateCatalogRepository::DEFAULT_ID ) );
-		$template    = ( new EmailTemplateCatalogRepository() )->get( $template_id );
-		if ( ! is_array( $template ) || empty( $template['active'] ) ) {
-			return new \WP_Error( 'certloom_email_rule_template_missing', __( 'Choose an available email template for this automation.', 'certloom' ) );
-		}
+		$legacy_template_id = sanitize_key( (string) ( $rule['legacy_template_id'] ?? $rule['template_id'] ?? '' ) );
 		$source_type = sanitize_key( (string) ( $rule['source_type'] ?? 'any' ) );
 		$allowed     = array( 'any', 'manual_admin', 'bulk_admin', 'tutor_lms', 'learndash', 'woocommerce', 'coursera', 'webhook' );
 		if ( ! in_array( $source_type, $allowed, true ) ) {
@@ -124,7 +138,7 @@ final class EmailAutomationRuleRepository {
 			'issuer_id'   => absint( $rule['issuer_id'] ?? 0 ),
 			'program_id'  => absint( $rule['program_id'] ?? 0 ),
 			'batch_id'    => absint( $rule['batch_id'] ?? 0 ),
-			'template_id' => $template_id,
+			'legacy_template_id' => $legacy_template_id,
 			'source_type' => $source_type,
 			'updated_at'  => current_time( 'mysql', true ),
 		);

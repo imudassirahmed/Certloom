@@ -2,7 +2,6 @@
 namespace Certloom\Infrastructure\Admin;
 
 use Certloom\Infrastructure\Email\EmailAutomationRuleRepository;
-use Certloom\Infrastructure\Email\EmailTemplateCatalogRepository;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -20,36 +19,21 @@ final class AutomationAdmin {
 		add_action( 'admin_post_certloom_automation_rule_delete', array( $this, 'delete_rule' ) );
 	}
 
-	/** @return void */
+	/** Legacy endpoint retained so cached forms fail safely without creating a second email-content authority. */
 	public function save_template() {
 		$this->require_capability();
 		check_admin_referer( 'certloom_automation_template_save' );
-		$id = isset( $_POST['template_id'] ) ? sanitize_key( wp_unslash( $_POST['template_id'] ) ) : '';
-		$result = ( new EmailTemplateCatalogRepository() )->save(
-			array(
-				'id'        => $id,
-				'name'      => isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '',
-				'active'    => ! empty( $_POST['active'] ),
-				'subject'   => isset( $_POST['subject'] ) ? sanitize_text_field( wp_unslash( $_POST['subject'] ) ) : '',
-				'html_body' => isset( $_POST['html_body'] ) ? wp_kses_post( wp_unslash( $_POST['html_body'] ) ) : '',
-				'text_body' => isset( $_POST['text_body'] ) ? sanitize_textarea_field( wp_unslash( $_POST['text_body'] ) ) : '',
-			)
-		);
-		$this->redirect( $result, __( 'Email template saved.', 'certloom' ), 'templates' );
+		wp_safe_redirect( add_query_arg( array( 'page' => EmailDesignAdmin::PAGE, 'certloom_notice' => __( 'Email content is now managed in Design → Email designs. No changes were made from the retired Automation editor.', 'certloom' ) ), admin_url( 'admin.php' ) ) );
+		exit;
 	}
 
-	/** @return void */
+	/** Legacy endpoint retained so cached forms cannot delete Email Designs from Automations. */
 	public function delete_template() {
 		$this->require_capability();
 		$id = isset( $_POST['template_id'] ) ? sanitize_key( wp_unslash( $_POST['template_id'] ) ) : '';
 		check_admin_referer( 'certloom_automation_template_delete_' . $id );
-		foreach ( ( new EmailAutomationRuleRepository() )->all() as $rule ) {
-			if ( $id === (string) ( $rule['template_id'] ?? '' ) ) {
-				$this->redirect( new \WP_Error( 'certloom_email_template_in_use', __( 'This email template is used by an automation. Change or remove that automation first.', 'certloom' ) ), '', 'templates' );
-			}
-		}
-		$result = ( new EmailTemplateCatalogRepository() )->delete( $id );
-		$this->redirect( $result, __( 'Email template deleted.', 'certloom' ), 'templates' );
+		wp_safe_redirect( add_query_arg( array( 'page' => EmailDesignAdmin::PAGE, 'certloom_notice' => __( 'Email designs are managed in Design. No design was deleted from the retired Automation endpoint.', 'certloom' ) ), admin_url( 'admin.php' ) ) );
+		exit;
 	}
 
 	/** @return void */
@@ -71,7 +55,6 @@ final class AutomationAdmin {
 				'issuer_id'   => $target['issuer_id'],
 				'program_id'  => $target['program_id'],
 				'batch_id'    => $target['batch_id'],
-				'template_id' => isset( $_POST['template_id'] ) ? sanitize_key( wp_unslash( $_POST['template_id'] ) ) : EmailTemplateCatalogRepository::DEFAULT_ID,
 				'source_type' => isset( $_POST['source_type'] ) ? sanitize_key( wp_unslash( $_POST['source_type'] ) ) : 'any',
 			)
 		);

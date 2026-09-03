@@ -387,7 +387,7 @@ final class DomainDataToolsAdmin {
 			wp_nonce_field( 'certloom_domain_import_commit_' . $key );
 			echo '<select name="duplicate_policy"><option value="skip">' . esc_html__( 'Skip existing', 'certloom' ) . '</option><option value="correct">' . esc_html__( 'Create correction versions', 'certloom' ) . '</option></select> ';
 			echo '<label><input type="checkbox" name="confirm_commit" value="1" required> ' . esc_html__( 'Confirm commit', 'certloom' ) . '</label> ';
-			echo '<button class="button button-small">' . esc_html__( 'Queue commit', 'certloom' ) . '</button></form>';
+			echo '<button type="submit" class="button button-small">' . esc_html__( 'Queue commit', 'certloom' ) . '</button></form>';
 		}
 		if ( JobStates::FAILED === $status ) {
 			$error = $this->job_error_summary( (array) ( $job['error'] ?? array() ) );
@@ -396,7 +396,7 @@ final class DomainDataToolsAdmin {
 			}
 			echo '<form style="display:inline" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_domain_job_retry"><input type="hidden" name="job_key" value="' . esc_attr( $key ) . '">';
 			wp_nonce_field( 'certloom_domain_job_retry_' . $key );
-			echo '<button class="button button-small">' . esc_html__( 'Retry failed job', 'certloom' ) . '</button></form> ';
+			echo '<button type="submit" class="button button-small">' . esc_html__( 'Retry failed job', 'certloom' ) . '</button></form> ';
 			$this->render_job_action( 'certloom_domain_job_cancel', 'certloom_domain_job_cancel_' . $key, $key, __( 'Cancel', 'certloom' ), true );
 		}
 		if ( JobTypes::DOMAIN_RESTORE_PREFLIGHT === $type && JobStates::SUCCEEDED === $status && ! empty( $job['result']['ready_for_commit'] ) ) {
@@ -409,7 +409,7 @@ final class DomainDataToolsAdmin {
 			echo '<form style="display:inline" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_domain_restore_commit"><input type="hidden" name="preflight_job_key" value="' . esc_attr( $key ) . '">';
 			wp_nonce_field( 'certloom_domain_restore_commit_' . $key );
 			echo '<label>' . esc_html( sprintf( /* translators: %s: confirmation phrase. */ __( 'Type %s to commit: ', 'certloom' ), $expected ) ) . '<input name="confirm_phrase" autocomplete="off" required></label> ';
-			echo '<button class="button button-small">' . esc_html__( 'Queue restore commit', 'certloom' ) . '</button></form>';
+			echo '<button type="submit" class="button button-small">' . esc_html__( 'Queue restore commit', 'certloom' ) . '</button></form>';
 		}
 		echo '</td></tr>';
 	}
@@ -421,7 +421,7 @@ final class DomainDataToolsAdmin {
 		if ( $confirm ) {
 			echo '<label><input type="checkbox" name="confirm_cancel" value="1" required> ' . esc_html__( 'Confirm', 'certloom' ) . '</label> ';
 		}
-		echo '<button class="button button-small">' . esc_html( $label ) . '</button></form> ';
+		echo '<button type="submit" class="button button-small">' . esc_html( $label ) . '</button></form> ';
 	}
 
 	/**
