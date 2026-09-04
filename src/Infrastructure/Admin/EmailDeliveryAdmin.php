@@ -43,12 +43,13 @@ final class EmailDeliveryAdmin {
 
 	/** @return void */
 	public function menu() {
-		// Register on Certloom's established management boundary so WordPress does
-		// not fail this contextual route closed because of a stale granular role
-		// map. render()/actions still enforce granular-or-legacy-equivalent access.
+		// Email Delivery is contextual rather than a primary WordPress submenu row.
+		// Parentless registration keeps its admin_page_* hook stable after Certloom
+		// consolidates the visible menu. render()/actions still enforce the real
+		// granular-or-established-management authorization boundary.
 		\Ecapla_CertVerify_Permissions::maybe_upgrade_capabilities();
 		add_submenu_page(
-			'certloom',
+			null,
 			__( 'Email Delivery', 'certloom' ),
 			__( 'Email Delivery', 'certloom' ),
 			ECAPLA_CERTVERIFY_CAP,

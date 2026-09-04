@@ -120,13 +120,14 @@ class Ecapla_CertVerify_Admin {
 		}
 
 		/*
-		 * Analytics is a contextual Certloom route. Register it on the established
-		 * parent management boundary, then enforce CAP_VIEW_ANALYTICS (with the
-		 * legacy-equivalent management fallback) in render_analytics_screen(). This
-		 * avoids WordPress' generic pre-callback 403 when granular role state drifts.
+		 * Analytics is contextual rather than a primary WordPress submenu row.
+		 * Register it parentless from the outset so its hook remains admin_page_*
+		 * after the unified-menu consolidation removes contextual rows. The screen
+		 * callback still enforces CAP_VIEW_ANALYTICS (with the established Certloom
+		 * management fallback) before rendering anything.
 		 */
 		Ecapla_CertVerify_Permissions::maybe_upgrade_capabilities();
-		add_submenu_page( self::DASHBOARD_PAGE, __( 'Analytics', 'certloom' ), __( 'Analytics', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::ANALYTICS_PAGE, array( $this, 'render_analytics_screen' ) );
+		add_submenu_page( null, __( 'Analytics', 'certloom' ), __( 'Analytics', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::ANALYTICS_PAGE, array( $this, 'render_analytics_screen' ) );
 		add_submenu_page( self::DASHBOARD_PAGE, __( 'Settings', 'certloom' ), __( 'Settings', 'certloom' ), 'manage_options', 'certloom-settings', array( $this, 'render_settings_screen' ) );
 
 		// Automations is a first-class task in the unified Certloom workspace.

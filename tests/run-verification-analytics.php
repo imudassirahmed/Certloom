@@ -155,7 +155,7 @@ anl(false!==strpos($presentation,"'verification' !== sanitize_key")&&false!==str
 anl(false!==strpos($presentation,'self::$analytics_recorded'),'request-local presentation reuse is analytics-deduplicated');
 anl(false!==strpos($qr,'tracked_verification_url')&&false!==strpos($qr,"'url'              => (string) \$tracked_url"),'all QR public payload paths bind privacy-safe QR source attribution');
 anl(false!==strpos($rest,'verification_source_from_request')&&false!==strpos($js,"get( 'certloom_source' ) === 'qr'"),'REST and browser propagate bounded QR/manual source attribution');
-anl(false!==strpos($admin,'ECAPLA_CERTVERIFY_CAP, self::ANALYTICS_PAGE')&&false!==strpos($admin,'CAP_VIEW_ANALYTICS')&&false!==strpos($permissions,"certloom_view_analytics"),'Analytics route uses the established Certloom boundary while the screen keeps granular analytics authorization');
+anl(false!==strpos($admin,'ECAPLA_CERTVERIFY_CAP, self::ANALYTICS_PAGE')&&false!==strpos($admin,'CAP_VIEW_ANALYTICS')&&false!==strpos($permissions,"certloom_view_analytics"),'Analytics is registered as a hidden contextual route while the screen keeps granular analytics authorization');
 anl(false!==strpos($view,"'Weekly trend'")&&false!==strpos($view,"'Monthly trend'")&&false!==strpos($view,'Daily verification trend table'),'administrator UX exposes roadmap daily/weekly/monthly trend semantics with accessible table');
 anl(false!==strpos($bootstrap,'Ecapla_CertVerify_Analytics::activate()')&&false!==strpos($bootstrap,'wp_initialize_site'),'activation and new multisite-site provisioning include analytics storage');
 anl(false!==strpos($bootstrap,'Ecapla_CertVerify_Analytics::deactivate()'),'deactivation clears analytics executable schedule state');

@@ -27,12 +27,12 @@ final class EmailDesignAdmin {
 
 	/** @return void */
 	public function menu() {
-		// Keep route reachability on the established Certloom management boundary.
-		// The render/mutation callbacks enforce granular Email authorization too,
-		// so a stale granular role map cannot make WordPress permanently mark this
-		// contextual route as no-privilege before Certloom can explain/repair it.
+		// Email designs is a contextual route, not a primary WordPress submenu row.
+		// Register parentless so WordPress keeps the same admin_page_* hook identity
+		// after Certloom consolidates its visible submenu. render()/mutations retain
+		// granular-or-established-management authorization.
 		\Ecapla_CertVerify_Permissions::maybe_upgrade_capabilities();
-		add_submenu_page( 'certloom', __( 'Email designs', 'certloom' ), __( 'Email designs', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::PAGE, array( $this, 'render' ) );
+		add_submenu_page( null, __( 'Email designs', 'certloom' ), __( 'Email designs', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::PAGE, array( $this, 'render' ) );
 	}
 
 	/** @return void */

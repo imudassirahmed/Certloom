@@ -44,11 +44,15 @@ $GLOBALS['fake_current_user']=new FakeCurrentUser();
 function wp_get_current_user(){ return $GLOBALS['fake_current_user']; }
 function current_user_can($cap){ return !empty($GLOBALS['fake_current_user']->allcaps[$cap]); }
 $GLOBALS['registered_submenus']=array();
+$GLOBALS['registered_page_hooks']=array();
 $GLOBALS['submenu_nopriv']=array();
+function fake_plugin_page_hook($slug,$parent){ return empty($parent) ? 'admin_page_'.$slug : $parent.'_page_'.$slug; }
 function add_submenu_page($parent,$page_title,$menu_title,$capability,$slug,$callback=null){
-    if(!current_user_can($capability)){ $GLOBALS['submenu_nopriv'][$parent][$slug]=true; return false; }
-    $GLOBALS['registered_submenus'][$slug]=array('parent'=>$parent,'capability'=>$capability);
-    return $parent.'_page_'.$slug;
+    if(!current_user_can($capability)){ $GLOBALS['submenu_nopriv'][(string)$parent][$slug]=true; return false; }
+    $hook=fake_plugin_page_hook($slug,$parent);
+    $GLOBALS['registered_submenus'][$slug]=array('parent'=>$parent,'capability'=>$capability,'hook'=>$hook);
+    $GLOBALS['registered_page_hooks'][$hook]=true;
+    return $hook;
 }
 function get_role($key){ return isset($GLOBALS['cap_options']['wp_user_roles'][$key]) ? new FakeRole($key) : null; }
 function add_role($key,$name,$caps){ $r=get_option('wp_user_roles',array()); $r[$key]=array('name'=>$name,'capabilities'=>$caps); update_option('wp_user_roles',$r); return new FakeRole($key); }
@@ -100,19 +104,25 @@ cp_true(current_user_can(Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS),
 $refreshes_before=$GLOBALS['fake_current_user']->refreshes;
 cp_true(Ecapla_CertVerify_Permissions::maybe_upgrade_capabilities(false), 'healthy fast path refreshes already-loaded current user capabilities');
 cp_true($GLOBALS['fake_current_user']->refreshes>$refreshes_before, 'healthy fast path does not leave a stale WP_User allcaps map in memory');
-// Contextual routes use the established Certloom management capability for
-// WordPress route registration. Their callbacks separately enforce granular
-// authorization. This prevents core from writing a permanent request-local
-// no-priv marker before Certloom can reach its own authorization/repair logic.
+// Contextual routes use the established Certloom management capability, but
+// they must be parentless from registration time. The unified menu later removes
+// contextual rows; registering them under `certloom` would leave a certloom_page_*
+// hook while WordPress rediscovers an empty parent and looks for admin_page_*.
+// Their callbacks separately enforce granular authorization.
 unset($GLOBALS['fake_current_user']->allcaps[Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS]);
 unset($GLOBALS['fake_current_user']->allcaps[Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS]);
 cp_true(current_user_can(ECAPLA_CERTVERIFY_CAP), 'fixture retains established Certloom management access while granular current-user map is stale');
-add_submenu_page('certloom','Email designs','Email designs',ECAPLA_CERTVERIFY_CAP,'certloom-email-designs');
-add_submenu_page('certloom','Email Delivery','Email Delivery',ECAPLA_CERTVERIFY_CAP,'certloom-email-delivery');
-add_submenu_page('certloom','Analytics','Analytics',ECAPLA_CERTVERIFY_CAP,'certloom-analytics');
+add_submenu_page(null,'Email designs','Email designs',ECAPLA_CERTVERIFY_CAP,'certloom-email-designs');
+add_submenu_page(null,'Email Delivery','Email Delivery',ECAPLA_CERTVERIFY_CAP,'certloom-email-delivery');
+add_submenu_page(null,'Analytics','Analytics',ECAPLA_CERTVERIFY_CAP,'certloom-analytics');
 cp_true(isset($GLOBALS['registered_submenus']['certloom-email-designs'],$GLOBALS['registered_submenus']['certloom-email-delivery']), 'Email contextual routes remain registered when granular current-user capability state is stale');
 cp_true(isset($GLOBALS['registered_submenus']['certloom-analytics']), 'Analytics contextual route remains registered when granular current-user capability state is stale');
-cp_false(isset($GLOBALS['submenu_nopriv']['certloom']['certloom-email-designs'])||isset($GLOBALS['submenu_nopriv']['certloom']['certloom-email-delivery'])||isset($GLOBALS['submenu_nopriv']['certloom']['certloom-analytics']), 'contextual routes do not poison WordPress no-priv routing for legitimate Certloom managers');
+cp_false(isset($GLOBALS['submenu_nopriv']['']['certloom-email-designs'])||isset($GLOBALS['submenu_nopriv']['']['certloom-email-delivery'])||isset($GLOBALS['submenu_nopriv']['']['certloom-analytics']), 'contextual routes do not poison WordPress no-priv routing for legitimate Certloom managers');
+foreach(array('certloom-email-designs','certloom-email-delivery','certloom-analytics') as $slug){
+    cp_true(null===$GLOBALS['registered_submenus'][$slug]['parent'], $slug.' is registered as a genuinely hidden parentless route');
+    $dispatch_hook=fake_plugin_page_hook($slug,''); // mirrors core after visible submenu consolidation.
+    cp_true(!empty($GLOBALS['registered_page_hooks'][$dispatch_hook]), $slug.' keeps the same hook identity after submenu consolidation');
+}
 
 echo "PASS  legacy broad-access roles receive granular capabilities without granting unrelated roles\n";
 echo "PASS  current health markers cannot mask a missing administrator analytics capability\n";
@@ -120,4 +130,5 @@ echo "PASS  fresh health markers cannot mask missing granular access on legacy C
 echo "PASS  current-request WP_User capability maps are refreshed before contextual routes register\n";
 echo "PASS  Email Design and Email Delivery routes stay routable across granular-capability drift\n";
 echo "PASS  Analytics route stays routable across granular-capability drift\n";
-echo "PASS  WordPress no-priv routing is not poisoned for legitimate Certloom managers\n\n7 tests, 0 failures\n";
+echo "PASS  WordPress no-priv routing is not poisoned for legitimate Certloom managers\n";
+echo "PASS  contextual route hook identities survive unified submenu consolidation\n\n8 tests, 0 failures\n";
