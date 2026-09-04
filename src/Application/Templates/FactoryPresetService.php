@@ -33,6 +33,41 @@ final class FactoryPresetService {
 	 *
 	 * @return array<string,mixed>|\WP_Error
 	 */
+	/**
+	 * Keep the built-in library present without making administrators run a
+	 * manual repair action. The marker avoids database work on every Design
+	 * visit, while the count check repairs a partially seeded catalog.
+	 * Customer-modified preset revisions remain protected by sync_all().
+	 *
+	 * @return array<string,mixed>|true|\WP_Error
+	 */
+	public function ensure_current( $actor_user_id = 0 ) {
+		$definitions = array_merge( $this->catalog->all(), $this->curated_catalog->all() );
+		$expected = count( $definitions );
+		$signature = hash( 'sha256', wp_json_encode( array(
+			'preset_version' => PresetCatalog::PRESET_VERSION,
+			'curated_version' => CuratedPresetCatalog::PRESET_VERSION,
+			'count' => $expected,
+		) ) );
+		$state = get_option( 'certloom_factory_design_catalog_v1', array() );
+		$inventory = $this->templates->list_candidates( '', 1, 1, 'factory' );
+		if ( ! is_wp_error( $inventory )
+			&& is_array( $state )
+			&& hash_equals( $signature, (string) ( $state['signature'] ?? '' ) )
+			&& absint( $inventory['total'] ?? 0 ) >= $expected ) {
+			return true;
+		}
+
+		$result = $this->sync_all( $actor_user_id );
+		if ( is_wp_error( $result ) ) { return $result; }
+		update_option( 'certloom_factory_design_catalog_v1', array(
+			'signature' => $signature,
+			'count' => $expected,
+			'checked_at' => current_time( 'mysql', true ),
+		), false );
+		return $result;
+	}
+
 	public function sync_all( $actor_user_id = 0 ) {
 		$result = array( 'created' => 0, 'updated' => 0, 'unchanged' => 0, 'customized' => 0, 'items' => array() );
 		$definitions = array_merge( $this->catalog->all(), $this->curated_catalog->all() );

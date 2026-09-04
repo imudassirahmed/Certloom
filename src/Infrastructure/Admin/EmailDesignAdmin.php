@@ -3,15 +3,20 @@ namespace Certloom\Infrastructure\Admin;
 
 use Certloom\Infrastructure\Email\EmailDesignAssignmentRepository;
 use Certloom\Infrastructure\Email\EmailDesignCompiler;
+use Certloom\Infrastructure\Email\EmailDesignPackage;
 use Certloom\Infrastructure\Email\EmailDesignPurposes;
 use Certloom\Infrastructure\Email\EmailTemplateCatalogRepository;
-use Certloom\Infrastructure\Repository\BatchRepository;
-use Certloom\Infrastructure\Repository\IssuerRepository;
-use Certloom\Infrastructure\Repository\ProgramRepository;
 
-if ( ! defined( 'ABSPATH' ) ) { exit; }
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
-/** First-class Email Design workspace and hierarchy authority. */
+/**
+ * Modern Email Design library and dedicated designer.
+ *
+ * Assignment authority intentionally lives in Design Rules. The compatibility
+ * mutation routes at the bottom remain only for older submitted forms/links.
+ */
 final class EmailDesignAdmin {
 	const PAGE = 'certloom-email-designs';
 
@@ -21,124 +26,464 @@ final class EmailDesignAdmin {
 		add_action( 'admin_enqueue_scripts', array( $this, 'assets' ) );
 		add_action( 'admin_post_certloom_email_design_save', array( $this, 'save' ) );
 		add_action( 'admin_post_certloom_email_design_delete', array( $this, 'delete' ) );
+		add_action( 'admin_post_certloom_email_design_publish', array( $this, 'publish' ) );
+		add_action( 'admin_post_certloom_email_design_duplicate', array( $this, 'duplicate' ) );
+		add_action( 'admin_post_certloom_email_design_import', array( $this, 'import' ) );
+		add_action( 'admin_post_certloom_email_design_export', array( $this, 'export' ) );
+
+		// Backward-compatible mutation routes. The current UI does not expose them.
 		add_action( 'admin_post_certloom_email_design_assign', array( $this, 'assign' ) );
 		add_action( 'admin_post_certloom_email_design_inherit', array( $this, 'inherit' ) );
 	}
 
 	/** @return void */
 	public function menu() {
-		// Email designs is a contextual route, not a primary WordPress submenu row.
-		// Register parentless so WordPress keeps the same admin_page_* hook identity
-		// after Certloom consolidates its visible submenu. render()/mutations retain
-		// granular-or-established-management authorization.
 		\Ecapla_CertVerify_Permissions::maybe_upgrade_capabilities();
-		add_submenu_page( null, __( 'Email designs', 'certloom' ), __( 'Email designs', 'certloom' ), ECAPLA_CERTVERIFY_CAP, self::PAGE, array( $this, 'render' ) );
+		add_submenu_page(
+			null,
+			__( 'Email designs', 'certloom' ),
+			__( 'Email designs', 'certloom' ),
+			\Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS,
+			self::PAGE,
+			array( $this, 'render' )
+		);
 	}
 
 	/** @return void */
 	public function assets() {
-		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- asset routing.
-		if ( self::PAGE !== $page ) { return; }
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only asset routing.
+		if ( self::PAGE !== $page ) {
+			return;
+		}
+
 		wp_enqueue_media();
-		wp_enqueue_script( 'certloom-email-designer', CERTLOOM_URL . 'admin/assets/email-designer.js', array(), CERTLOOM_VERSION, true );
-		wp_localize_script( 'certloom-email-designer', 'certloomEmailDesignerL10n', array(
-			'addHeading' => __( 'Heading', 'certloom' ), 'addText' => __( 'Text', 'certloom' ), 'addButton' => __( 'Button', 'certloom' ), 'addImage' => __( 'Image', 'certloom' ), 'addDivider' => __( 'Divider', 'certloom' ), 'addSpacer' => __( 'Spacer', 'certloom' ), 'addColumns' => __( 'Two columns', 'certloom' ),
-			'headingPlaceholder' => __( 'Your credential is ready', 'certloom' ), 'textPlaceholder' => __( 'Write the message recipients should receive.', 'certloom' ), 'buttonText' => __( 'View credential', 'certloom' ), 'buttonUrl' => '{{verification_url}}',
-			'chooseImage' => __( 'Choose an email image', 'certloom' ), 'useImage' => __( 'Use this image', 'certloom' ), 'remove' => __( 'Remove', 'certloom' ), 'moveUp' => __( 'Move up', 'certloom' ), 'moveDown' => __( 'Move down', 'certloom' ), 'blockType' => __( 'Content block', 'certloom' ),
-			'leftColumn' => __( 'Left column', 'certloom' ), 'rightColumn' => __( 'Right column', 'certloom' ), 'urlLabel' => __( 'URL', 'certloom' ), 'altText' => __( 'Alternative text', 'certloom' ), 'spacingPixels' => __( 'Spacing (px)', 'certloom' ), 'headingLevel' => __( 'Heading level', 'certloom' ),
-			'sampleRecipient' => __( 'Sara Khan', 'certloom' ), 'sampleProgram' => __( 'Professional Leadership Program', 'certloom' ), 'sampleIssuer' => __( 'Example Institute', 'certloom' ), 'sampleGrade' => __( 'Distinction', 'certloom' ), 'verifyThisCredential' => __( 'Verify this credential', 'certloom' ),
-			'desktop' => __( 'Desktop preview', 'certloom' ), 'mobile' => __( 'Mobile preview', 'certloom' ), 'previewTitle' => __( 'Email preview', 'certloom' ),
-			'noCompatibleDesign' => __( 'No available email design matches this message purpose. Create or activate a compatible design first.', 'certloom' ),
-			'contentBlocksRequired' => __( 'Add at least one usable content block before saving this email design.', 'certloom' ),
-			'emptyContent' => __( 'No content blocks yet. Add a Heading, Text, Button, Image or another block to build this message.', 'certloom' ),
-			'tokens' => array(
-				'recipient_name' => __( 'Recipient name', 'certloom' ), 'program_title' => __( 'Program title', 'certloom' ), 'issuer_name' => __( 'Issuer name', 'certloom' ), 'credential_number' => __( 'Credential number', 'certloom' ), 'issue_date' => __( 'Issue date', 'certloom' ), 'expiry_date' => __( 'Expiry date', 'certloom' ), 'grade' => __( 'Grade', 'certloom' ), 'verification_url' => __( 'Verification URL', 'certloom' ), 'verification_link' => __( 'Verification link', 'certloom' ),
-			),
-		) );
+		wp_enqueue_style(
+			'certloom-email-designs',
+			CERTLOOM_URL . 'admin/assets/email-designs.css',
+			array( 'ecapla-certverify-admin' ),
+			CERTLOOM_VERSION
+		);
+		wp_enqueue_script(
+			'certloom-email-designer',
+			CERTLOOM_URL . 'admin/assets/email-designer.js',
+			array(),
+			CERTLOOM_VERSION,
+			true
+		);
+		wp_localize_script(
+			'certloom-email-designer',
+			'certloomEmailDesignerL10n',
+			array(
+				'addHeading'            => __( 'Heading', 'certloom' ),
+				'addText'               => __( 'Text', 'certloom' ),
+				'addButton'             => __( 'Button', 'certloom' ),
+				'addImage'              => __( 'Image', 'certloom' ),
+				'addDivider'            => __( 'Divider', 'certloom' ),
+				'addSpacer'             => __( 'Spacer', 'certloom' ),
+				'addColumns'            => __( 'Two columns', 'certloom' ),
+				'headingPlaceholder'    => __( 'Your credential is ready', 'certloom' ),
+				'textPlaceholder'       => __( 'Write the message recipients should receive.', 'certloom' ),
+				'buttonText'            => __( 'View credential', 'certloom' ),
+				'buttonUrl'             => '{{verification_url}}',
+				'chooseImage'           => __( 'Choose an email image', 'certloom' ),
+				'useImage'              => __( 'Use this image', 'certloom' ),
+				'remove'                => __( 'Remove', 'certloom' ),
+				'duplicate'             => __( 'Duplicate', 'certloom' ),
+				'moveUp'                => __( 'Move up', 'certloom' ),
+				'moveDown'              => __( 'Move down', 'certloom' ),
+				'dragBlock'             => __( 'Drag to reorder', 'certloom' ),
+				'leftColumn'            => __( 'Left column', 'certloom' ),
+				'rightColumn'           => __( 'Right column', 'certloom' ),
+				'urlLabel'              => __( 'URL', 'certloom' ),
+				'altText'               => __( 'Alternative text', 'certloom' ),
+				'spacingPixels'         => __( 'Spacing', 'certloom' ),
+				'headingLevel'          => __( 'Heading level', 'certloom' ),
+				'sampleRecipient'       => __( 'Sara Khan', 'certloom' ),
+				'sampleProgram'         => __( 'Professional Leadership Program', 'certloom' ),
+				'sampleIssuer'          => __( 'Example Institute', 'certloom' ),
+				'sampleGrade'           => __( 'Distinction', 'certloom' ),
+				'verifyThisCredential'  => __( 'Verify this credential', 'certloom' ),
+				'contentBlocksRequired' => __( 'Add at least one usable content block before saving this email design.', 'certloom' ),
+				'emptyContent'          => __( 'Add a content block to start the message.', 'certloom' ),
+				'selectBlock'           => __( 'Select a block on the canvas to edit it.', 'certloom' ),
+				'tokens'                => array(
+					'recipient_name'    => __( 'Recipient name', 'certloom' ),
+					'program_title'     => __( 'Program title', 'certloom' ),
+					'issuer_name'       => __( 'Issuer name', 'certloom' ),
+					'credential_number' => __( 'Credential number', 'certloom' ),
+					'issue_date'        => __( 'Issue date', 'certloom' ),
+					'expiry_date'       => __( 'Expiry date', 'certloom' ),
+					'grade'             => __( 'Grade', 'certloom' ),
+					'verification_url'  => __( 'Verification URL', 'certloom' ),
+					'verification_link' => __( 'Verification link', 'certloom' ),
+				),
+			)
+		);
 	}
 
 	/** @return void */
 	public function render() {
 		$this->cap();
+
 		$catalog = new EmailTemplateCatalogRepository();
-		$designs = $catalog->all();
-		$design_by_id = array();
-		foreach ( $designs as $design ) { if ( is_array( $design ) && ! empty( $design['id'] ) ) { $design_by_id[ (string) $design['id'] ] = $design; } }
-		$edit_id = isset( $_GET['design_id'] ) ? sanitize_key( wp_unslash( $_GET['design_id'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only editor selection.
-		$editing = '' !== $edit_id ? $catalog->get( $edit_id ) : null;
-		if ( ! is_array( $editing ) ) {
-			$compiled = ( new EmailDesignCompiler() )->compile( EmailDesignCompiler::default_blocks(), EmailDesignCompiler::default_theme() );
-			$editing = array( 'id' => '', 'name' => '', 'purpose' => EmailDesignPurposes::ISSUED, 'preheader' => __( 'Your credential is ready to view and verify.', 'certloom' ), 'active' => 1, 'subject' => __( 'Your {{program_title}} credential', 'certloom' ), 'text_body' => '', 'blocks' => $compiled['blocks'], 'theme' => $compiled['theme'] );
+		$catalog->ensure_factory_presets();
+		$view = isset( $_GET['email_view'] ) ? sanitize_key( wp_unslash( $_GET['email_view'] ) ) : 'library'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation.
+		$edit_id = isset( $_GET['design_id'] ) ? sanitize_key( wp_unslash( $_GET['design_id'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation.
+
+		if ( '' !== $edit_id || 'designer' === $view ) {
+			$view = 'designer';
 		}
-		$assignments = ( new EmailDesignAssignmentRepository() )->all();
-		$issuer_ids = $program_ids = $batch_ids = array();
-		foreach ( $assignments as $row ) {
-			if ( 'issuer' === $row['scope_type'] ) { $issuer_ids[] = absint( $row['scope_id'] ); }
-			if ( 'program' === $row['scope_type'] ) { $program_ids[] = absint( $row['scope_id'] ); }
-			if ( 'batch' === $row['scope_type'] ) { $batch_ids[] = absint( $row['scope_id'] ); }
+		if ( ! in_array( $view, array( 'library', 'mine', 'designer' ), true ) ) {
+			$view = 'library';
 		}
-		$issuer_names = ( new IssuerRepository() )->labels_by_ids( $issuer_ids ); if ( is_wp_error( $issuer_names ) ) { $issuer_names = array(); }
-		$program_names = ( new ProgramRepository() )->labels_by_ids( $program_ids ); if ( is_wp_error( $program_names ) ) { $program_names = array(); }
-		$batch_names = ( new BatchRepository() )->labels_by_ids( $batch_ids ); if ( is_wp_error( $batch_names ) ) { $batch_names = array(); }
-		$initial_issuers = ( new IssuerRepository() )->list_page( '', 1, 20 ); $initial_issuers = is_wp_error( $initial_issuers ) ? array() : (array) $initial_issuers['items'];
-		$initial_programs = ( new ProgramRepository() )->list_page( '', 1, 20, 'active' ); $initial_programs = is_wp_error( $initial_programs ) ? array() : (array) $initial_programs['items'];
-		$context_nonce = wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION );
-		$notice = isset( $_GET['certloom_notice'] ) ? sanitize_text_field( wp_unslash( $_GET['certloom_notice'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$error = isset( $_GET['certloom_error'] ) ? sanitize_text_field( wp_unslash( $_GET['certloom_error'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		$notice = isset( $_GET['certloom_notice'] ) ? sanitize_text_field( wp_unslash( $_GET['certloom_notice'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only notice rendering.
+		$error = isset( $_GET['certloom_error'] ) ? sanitize_text_field( wp_unslash( $_GET['certloom_error'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only notice rendering.
 		$purposes = EmailDesignPurposes::labels();
+
+		if ( 'designer' === $view ) {
+			$editing = '' !== $edit_id ? $catalog->get( $edit_id ) : null;
+			if ( is_array( $editing ) && 'factory' === (string) ( $editing['source'] ?? '' ) ) {
+				wp_safe_redirect(
+					add_query_arg(
+						array(
+							'page'           => self::PAGE,
+							'email_view'     => 'library',
+							'certloom_error' => __( 'Built-in email designs are customized by creating your own copy.', 'certloom' ),
+						),
+						admin_url( 'admin.php' )
+					)
+				);
+				exit;
+			}
+			if ( ! is_array( $editing ) ) {
+				$compiled = ( new EmailDesignCompiler() )->compile(
+					EmailDesignCompiler::default_blocks(),
+					EmailDesignCompiler::default_theme()
+				);
+				$editing = array(
+					'id'        => '',
+					'name'      => __( 'Untitled email', 'certloom' ),
+					'purpose'   => EmailDesignPurposes::ISSUED,
+					'preheader' => __( 'Your credential is ready to view and verify.', 'certloom' ),
+					'active'    => 0,
+					'subject'   => __( 'Your {{program_title}} credential', 'certloom' ),
+					'text_body' => '',
+					'blocks'    => $compiled['blocks'],
+					'theme'     => $compiled['theme'],
+					'source'    => 'customer',
+				);
+			}
+
+			include CERTLOOM_PATH . 'admin/views/email-designer.php';
+			return;
+		}
+
+		$all = $catalog->all();
+		$source = 'library' === $view ? 'factory' : 'mine';
+		$search = isset( $_GET['email_s'] ) ? trim( sanitize_text_field( wp_unslash( $_GET['email_s'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filtering.
+		$purpose_filter = isset( $_GET['email_purpose'] ) ? sanitize_key( wp_unslash( $_GET['email_purpose'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filtering.
+		$status_filter = isset( $_GET['email_status'] ) ? sanitize_key( wp_unslash( $_GET['email_status'] ) ) : 'all'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filtering.
+		if ( ! in_array( $status_filter, array( 'all', 'published', 'unpublished' ), true ) ) {
+			$status_filter = 'all';
+		}
+
+		$designs = array_values(
+			array_filter(
+				$all,
+				static function( $design ) use ( $source, $search, $purpose_filter, $status_filter ) {
+					$is_factory = 'factory' === (string) ( $design['source'] ?? '' );
+					if ( ( 'factory' === $source ) !== $is_factory ) {
+						return false;
+					}
+					if ( '' !== $search && false === stripos( (string) ( $design['name'] ?? '' ), $search ) ) {
+						return false;
+					}
+					if ( '' !== $purpose_filter && $purpose_filter !== (string) ( $design['purpose'] ?? '' ) ) {
+						return false;
+					}
+					if ( 'published' === $status_filter && empty( $design['active'] ) ) {
+						return false;
+					}
+					if ( 'unpublished' === $status_filter && ! empty( $design['active'] ) ) {
+						return false;
+					}
+					return true;
+				}
+			)
+		);
+
+		$usage = new EmailDesignAssignmentRepository();
+		foreach ( $designs as &$design ) {
+			$design['usage_count'] = $usage->usage_count( (string) $design['id'] );
+		}
+		unset( $design );
+
+		$package_upload_limit_label = $this->design_package_upload_limit_label( EmailDesignPackage::MAX_BYTES );
 		include CERTLOOM_PATH . 'admin/views/email-designs.php';
 	}
 
 	/** @return void */
 	public function save() {
-		$this->cap(); check_admin_referer( 'certloom_email_design_save' );
-		$raw_blocks = isset( $_POST['blocks_json'] ) ? (string) wp_unslash( $_POST['blocks_json'] ) : '';
-		$blocks = '' !== trim( $raw_blocks ) ? json_decode( $raw_blocks, true ) : null;
-		if ( ! is_array( $blocks ) || JSON_ERROR_NONE !== json_last_error() ) {
-			$this->redirect( new \WP_Error( 'certloom_email_design_blocks_invalid', __( 'Certloom could not read the email content blocks. Reload the editor and try again; your saved design has not been changed.', 'certloom' ) ), '' );
+		$this->cap();
+		check_admin_referer( 'certloom_email_design_save' );
+
+		$raw = isset( $_POST['blocks_json'] ) ? (string) wp_unslash( $_POST['blocks_json'] ) : '';
+		$blocks = json_decode( $raw, true );
+		$compiler = new EmailDesignCompiler();
+		if ( ! is_array( $blocks ) || JSON_ERROR_NONE !== json_last_error() || ! $compiler->sanitize_blocks( $blocks ) ) {
+			$this->redirect(
+				new \WP_Error(
+					'certloom_email_design_blocks_invalid',
+					__( 'Add at least one usable content block before saving this email design.', 'certloom' )
+				),
+				''
+			);
 		}
-		if ( ! ( new EmailDesignCompiler() )->sanitize_blocks( $blocks ) ) {
-			$this->redirect( new \WP_Error( 'certloom_email_design_blocks_empty', __( 'Add at least one usable content block before saving this email design.', 'certloom' ) ), '' );
-		}
+
 		$theme = array(
-			'background' => $_POST['theme_background'] ?? '', 'content_background' => $_POST['theme_content_background'] ?? '', 'text_color' => $_POST['theme_text_color'] ?? '', 'heading_color' => $_POST['theme_heading_color'] ?? '', 'button_background' => $_POST['theme_button_background'] ?? '', 'button_text' => $_POST['theme_button_text'] ?? '', 'link_color' => $_POST['theme_link_color'] ?? '', 'font_family' => isset( $_POST['theme_font_family'] ) ? sanitize_text_field( wp_unslash( $_POST['theme_font_family'] ) ) : '', 'email_width' => absint( $_POST['theme_email_width'] ?? 640 ), 'border_radius' => absint( $_POST['theme_border_radius'] ?? 12 ),
+			'background'        => $_POST['theme_background'] ?? '',
+			'content_background'=> $_POST['theme_content_background'] ?? '',
+			'text_color'        => $_POST['theme_text_color'] ?? '',
+			'heading_color'     => $_POST['theme_heading_color'] ?? '',
+			'button_background' => $_POST['theme_button_background'] ?? '',
+			'button_text'       => $_POST['theme_button_text'] ?? '',
+			'link_color'        => $_POST['theme_link_color'] ?? '',
+			'font_family'       => isset( $_POST['theme_font_family'] ) ? sanitize_text_field( wp_unslash( $_POST['theme_font_family'] ) ) : '',
+			'email_width'       => absint( $_POST['theme_email_width'] ?? 640 ),
+			'border_radius'     => absint( $_POST['theme_border_radius'] ?? 12 ),
 		);
-		$result = ( new EmailTemplateCatalogRepository() )->save( array(
-			'id' => isset( $_POST['design_id'] ) ? sanitize_key( wp_unslash( $_POST['design_id'] ) ) : '', 'name' => isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '', 'purpose' => isset( $_POST['purpose'] ) ? sanitize_key( wp_unslash( $_POST['purpose'] ) ) : '', 'preheader' => isset( $_POST['preheader'] ) ? sanitize_text_field( wp_unslash( $_POST['preheader'] ) ) : '', 'active' => ! empty( $_POST['active'] ), 'subject' => isset( $_POST['subject'] ) ? sanitize_text_field( wp_unslash( $_POST['subject'] ) ) : '', 'text_body' => isset( $_POST['text_body'] ) ? sanitize_textarea_field( wp_unslash( $_POST['text_body'] ) ) : '', 'blocks' => $blocks, 'theme' => $theme,
-		) );
-		$this->redirect( $result, __( 'Email design saved.', 'certloom' ), is_wp_error( $result ) ? '' : (string) $result );
+		$id = isset( $_POST['design_id'] ) ? sanitize_key( wp_unslash( $_POST['design_id'] ) ) : '';
+		$catalog = new EmailTemplateCatalogRepository();
+		$existing = '' !== $id ? $catalog->get( $id ) : null;
+		$intent = isset( $_POST['save_intent'] ) ? sanitize_key( wp_unslash( $_POST['save_intent'] ) ) : 'save';
+		$active = 'publish' === $intent ? 1 : ( is_array( $existing ) && ! empty( $existing['active'] ) ? 1 : 0 );
+
+		$result = $catalog->save(
+			array(
+				'id'        => $id,
+				'name'      => isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '',
+				'purpose'   => isset( $_POST['purpose'] ) ? sanitize_key( wp_unslash( $_POST['purpose'] ) ) : '',
+				'preheader' => isset( $_POST['preheader'] ) ? sanitize_text_field( wp_unslash( $_POST['preheader'] ) ) : '',
+				'active'    => $active,
+				'subject'   => isset( $_POST['subject'] ) ? sanitize_text_field( wp_unslash( $_POST['subject'] ) ) : '',
+				'text_body' => isset( $_POST['text_body'] ) ? sanitize_textarea_field( wp_unslash( $_POST['text_body'] ) ) : '',
+				'blocks'    => $blocks,
+				'theme'     => $theme,
+			)
+		);
+		$this->redirect(
+			$result,
+			'publish' === $intent ? __( 'Email design published.', 'certloom' ) : __( 'Email design saved.', 'certloom' ),
+			is_wp_error( $result ) ? '' : (string) $result,
+			'designer'
+		);
+	}
+
+	/** @return void */
+	public function publish() {
+		$this->cap();
+		$id = isset( $_POST['design_id'] ) ? sanitize_key( wp_unslash( $_POST['design_id'] ) ) : '';
+		$published = ! empty( $_POST['published'] );
+		check_admin_referer( 'certloom_email_design_publish_' . $id );
+		$result = ( new EmailTemplateCatalogRepository() )->set_published( $id, $published );
+		$return_view = isset( $_POST['return_view'] ) ? sanitize_key( wp_unslash( $_POST['return_view'] ) ) : 'mine';
+		$this->redirect(
+			$result,
+			$published ? __( 'Email design published.', 'certloom' ) : __( 'Email design unpublished.', 'certloom' ),
+			'',
+			$return_view
+		);
+	}
+
+	/** @return void */
+	public function duplicate() {
+		$this->cap();
+		$id = isset( $_POST['design_id'] ) ? sanitize_key( wp_unslash( $_POST['design_id'] ) ) : '';
+		check_admin_referer( 'certloom_email_design_duplicate_' . $id );
+		$result = ( new EmailTemplateCatalogRepository() )->duplicate( $id );
+		$this->redirect(
+			$result,
+			__( 'Email design copy created.', 'certloom' ),
+			is_wp_error( $result ) ? '' : (string) $result,
+			'designer'
+		);
 	}
 
 	/** @return void */
 	public function delete() {
-		$this->cap(); $id = isset( $_POST['design_id'] ) ? sanitize_key( wp_unslash( $_POST['design_id'] ) ) : ''; check_admin_referer( 'certloom_email_design_delete_' . $id );
-		$this->redirect( ( new EmailTemplateCatalogRepository() )->delete( $id ), __( 'Email design deleted.', 'certloom' ) );
+		$this->cap();
+		$id = isset( $_POST['design_id'] ) ? sanitize_key( wp_unslash( $_POST['design_id'] ) ) : '';
+		check_admin_referer( 'certloom_email_design_delete_' . $id );
+		$this->redirect(
+			( new EmailTemplateCatalogRepository() )->delete( $id ),
+			__( 'Email design deleted.', 'certloom' ),
+			'',
+			'mine'
+		);
 	}
 
 	/** @return void */
+	public function import() {
+		$this->cap();
+		check_admin_referer( 'certloom_email_design_import' );
+		$json = isset( $_POST['package_json'] ) ? (string) wp_unslash( $_POST['package_json'] ) : '';
+
+		if ( '' === trim( $json ) && ! empty( $_FILES['design_package'] ) && is_array( $_FILES['design_package'] ) ) {
+			$file = $_FILES['design_package'];
+			$size = absint( $file['size'] ?? 0 );
+			$tmp = (string) ( $file['tmp_name'] ?? '' );
+			$upload_limit = $this->design_package_upload_limit( EmailDesignPackage::MAX_BYTES );
+			if (
+				UPLOAD_ERR_OK !== absint( $file['error'] ?? UPLOAD_ERR_NO_FILE ) ||
+				$size < 1 ||
+				$size > $upload_limit ||
+				'' === $tmp ||
+				! is_uploaded_file( $tmp )
+			) {
+				$this->redirect(
+					new \WP_Error(
+						'certloom_email_design_import_upload',
+						sprintf(
+							/* translators: %s: maximum upload size for this site. */
+							__( 'Choose a Certloom email design package no larger than %s.', 'certloom' ),
+							$this->design_package_upload_limit_label( EmailDesignPackage::MAX_BYTES )
+						)
+					),
+					'',
+					'',
+					'mine'
+				);
+			}
+			$contents = file_get_contents( $tmp ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Bounded local upload.
+			$json = is_string( $contents ) ? $contents : '';
+		}
+
+		$result = ( new EmailTemplateCatalogRepository() )->import_package( $json );
+		$this->redirect(
+			$result,
+			__( 'Email design imported as unpublished.', 'certloom' ),
+			is_wp_error( $result ) ? '' : (string) $result,
+			'designer'
+		);
+	}
+
+	/** @return void */
+	public function export() {
+		$this->cap();
+		$id = isset( $_GET['design_id'] ) ? sanitize_key( wp_unslash( $_GET['design_id'] ) ) : '';
+		check_admin_referer( 'certloom_email_design_export_' . $id );
+		$result = ( new EmailTemplateCatalogRepository() )->export_package(
+			$id,
+			defined( 'ECAPLA_CERTVERIFY_VERSION' ) ? ECAPLA_CERTVERIFY_VERSION : ''
+		);
+		if ( is_wp_error( $result ) ) {
+			$this->redirect( $result, '', '', 'mine' );
+		}
+		$json = ( new EmailDesignPackage( new EmailDesignCompiler() ) )->encode( $result );
+		if ( is_wp_error( $json ) ) {
+			$this->redirect( $json, '', '', 'mine' );
+		}
+
+		nocache_headers();
+		header( 'Content-Type: application/json; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="certloom-email-design-' . sanitize_file_name( $id ) . '.json"' );
+		header( 'X-Content-Type-Options: nosniff' );
+		echo $json; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Bounded package JSON download.
+		exit;
+	}
+
+	/** Compatibility-only old route; the current UI uses Design Rules. @return void */
 	public function assign() {
-		$this->cap(); check_admin_referer( 'certloom_email_design_assign' );
+		$this->cap();
+		check_admin_referer( 'certloom_email_design_assign' );
 		$scope = isset( $_POST['scope_type'] ) ? sanitize_key( wp_unslash( $_POST['scope_type'] ) ) : 'global';
-		$id = 0; if ( 'issuer' === $scope ) { $id = absint( $_POST['issuer_id'] ?? 0 ); } elseif ( 'program' === $scope ) { $id = absint( $_POST['program_id'] ?? 0 ); } elseif ( 'batch' === $scope ) { $id = absint( $_POST['batch_id'] ?? 0 ); }
-		$result = ( new EmailDesignAssignmentRepository() )->save( $scope, $id, $_POST['purpose'] ?? '', $_POST['design_id'] ?? '' );
-		$this->redirect( $result, __( 'Email inheritance updated.', 'certloom' ) );
+		if ( 'issuer' === $scope ) {
+			$scope_id = absint( $_POST['issuer_id'] ?? 0 );
+		} elseif ( 'program' === $scope ) {
+			$scope_id = absint( $_POST['program_id'] ?? 0 );
+		} elseif ( 'batch' === $scope ) {
+			$scope_id = absint( $_POST['batch_id'] ?? 0 );
+		} else {
+			$scope_id = 0;
+		}
+		$purpose = isset( $_POST['purpose'] ) ? sanitize_key( wp_unslash( $_POST['purpose'] ) ) : '';
+		$design_id = isset( $_POST['design_id'] ) ? sanitize_key( wp_unslash( $_POST['design_id'] ) ) : '';
+		$result = ( new EmailDesignAssignmentRepository() )->save( $scope, $scope_id, $purpose, $design_id );
+		$this->rules_redirect( $result, __( 'Design rule updated.', 'certloom' ), $scope, $scope_id );
+	}
+
+	/** Compatibility-only old route; the current UI uses Design Rules. @return void */
+	public function inherit() {
+		$this->cap();
+		$scope = isset( $_POST['scope_type'] ) ? sanitize_key( wp_unslash( $_POST['scope_type'] ) ) : '';
+		$scope_id = absint( $_POST['scope_id'] ?? 0 );
+		$purpose = isset( $_POST['purpose'] ) ? sanitize_key( wp_unslash( $_POST['purpose'] ) ) : '';
+		check_admin_referer( 'certloom_email_design_inherit_' . $scope . '_' . $scope_id . '_' . $purpose );
+		$result = ( new EmailDesignAssignmentRepository() )->remove( $scope, $scope_id, $purpose );
+		$this->rules_redirect( $result, __( 'Design inheritance restored.', 'certloom' ), $scope, $scope_id );
 	}
 
 	/** @return void */
-	public function inherit() {
-		$this->cap(); $scope = isset( $_POST['scope_type'] ) ? sanitize_key( wp_unslash( $_POST['scope_type'] ) ) : ''; $id = absint( $_POST['scope_id'] ?? 0 ); $purpose = isset( $_POST['purpose'] ) ? sanitize_key( wp_unslash( $_POST['purpose'] ) ) : ''; check_admin_referer( 'certloom_email_design_inherit_' . $scope . '_' . $id . '_' . $purpose );
-		$this->redirect( ( new EmailDesignAssignmentRepository() )->remove( $scope, $id, $purpose ), __( 'Inheritance restored.', 'certloom' ) );
+	private function rules_redirect( $result, $success, $scope = '', $scope_id = 0 ) {
+		$args = array( 'page' => DesignRulesAdmin::PAGE );
+		if ( in_array( $scope, array( 'issuer', 'program', 'batch' ), true ) && absint( $scope_id ) ) {
+			$args['rule_scope'] = $scope;
+			$args['rule_scope_id'] = absint( $scope_id );
+		}
+		if ( is_wp_error( $result ) ) {
+			$args['certloom_error'] = '1';
+			$args['certloom_message'] = $result->get_error_message();
+		} else {
+			$args['certloom_notice'] = 'rules_saved';
+			$args['certloom_message'] = $success;
+		}
+		wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );
+		exit;
+	}
+
+	/** @return int */
+	private function design_package_upload_limit( $package_limit ) {
+		$package_limit = max( 1, absint( $package_limit ) );
+		$site_limit = function_exists( 'wp_max_upload_size' ) ? absint( wp_max_upload_size() ) : 0;
+		return $site_limit > 0 ? min( $package_limit, $site_limit ) : $package_limit;
 	}
 
 	/** @return string */
-	public static function scope_label( array $row, array $issuer_names, array $program_names, array $batch_names ) {
-		$id = absint( $row['scope_id'] ?? 0 );
-		if ( 'global' === $row['scope_type'] ) { return __( 'Global', 'certloom' ); }
-		if ( 'issuer' === $row['scope_type'] ) { return (string) ( $issuer_names[ $id ] ?? sprintf( /* translators: %d: Issuer database ID used only as a fallback label. */ __( 'Issuer #%d', 'certloom' ), $id ) ); }
-		if ( 'program' === $row['scope_type'] ) { return (string) ( $program_names[ $id ] ?? sprintf( /* translators: %d: Program database ID used only as a fallback label. */ __( 'Program #%d', 'certloom' ), $id ) ); }
-		return (string) ( $batch_names[ $id ] ?? sprintf( /* translators: %d: Batch database ID used only as a fallback label. */ __( 'Batch #%d', 'certloom' ), $id ) );
+	private function design_package_upload_limit_label( $package_limit ) {
+		$bytes = $this->design_package_upload_limit( $package_limit );
+		if ( function_exists( 'size_format' ) ) {
+			return size_format( $bytes, 0 );
+		}
+		return (string) max( 1, (int) floor( $bytes / 1048576 ) ) . ' MB';
 	}
 
-	private function cap() { if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) && ! current_user_can( ECAPLA_CERTVERIFY_CAP ) ) { wp_die( esc_html__( 'You do not have permission to manage Certloom email designs.', 'certloom' ) ); } }
-	private function redirect( $result, $success, $design_id = '' ) { $args = array( 'page' => self::PAGE ); if ( is_wp_error( $result ) ) { $args['certloom_error'] = $result->get_error_message(); } else { $args['certloom_notice'] = $success; if ( '' !== $design_id ) { $args['design_id'] = $design_id; } } wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) ); exit; }
+	/** @return void */
+	private function cap() {
+		if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) && ! current_user_can( ECAPLA_CERTVERIFY_CAP ) ) {
+			wp_die(
+				esc_html__( 'You do not have permission to manage Certloom email designs.', 'certloom' ),
+				'',
+				array( 'response' => 403 )
+			);
+		}
+	}
+
+	/** @return void */
+	private function redirect( $result, $success, $design_id = '', $view = 'library' ) {
+		$args = array(
+			'page'       => self::PAGE,
+			'email_view' => $view,
+		);
+		if ( is_wp_error( $result ) ) {
+			$args['certloom_error'] = $result->get_error_message();
+		} else {
+			$args['certloom_notice'] = $success;
+			if ( '' !== $design_id ) {
+				$args['design_id'] = $design_id;
+			}
+		}
+		wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );
+		exit;
+	}
 }

@@ -52,7 +52,7 @@ final class EmailDeliveryAdmin {
 			null,
 			__( 'Email Delivery', 'certloom' ),
 			__( 'Email Delivery', 'certloom' ),
-			ECAPLA_CERTVERIFY_CAP,
+			\Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS,
 			self::PAGE,
 			array( $this, 'render' )
 		);

@@ -89,6 +89,7 @@ final class Plugin {
 			( new \Certloom\Infrastructure\Admin\DomainStructureAdmin() )->register();
 			( new \Certloom\Infrastructure\Admin\TemplateAdmin() )->register();
 			( new \Certloom\Infrastructure\Admin\EmailDesignAdmin() )->register();
+			( new \Certloom\Infrastructure\Admin\DesignRulesAdmin() )->register();
 			( new \Certloom\Infrastructure\Admin\ManualIssuanceAdmin() )->register();
 			( new \Certloom\Infrastructure\Admin\ScopedFieldAdminAjax() )->register();
 			( new \Certloom\Infrastructure\Admin\AutomationAdmin() )->register();

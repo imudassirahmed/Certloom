@@ -51,13 +51,13 @@ u4( false !== strpos( $designer_js, 'blockSave' ) && false !== strpos( $designer
 u4( false !== strpos( $template, "'revision_saved'" ) && false !== strpos( $template, "'certloom-template-designer'" ), 'Revision save redirects back to the Designer itself rather than losing the user at page top' );
 u4( false !== strpos( $template, 'certloom-designer-save-notice' ) && false !== strpos( $template, "'Saved.', 'certloom'" ), 'Designer renders an inline post-save confirmation at the interaction point' );
 
-// 6. Template filtering is structurally redesigned: Program lookup gets its own strip; equal-height controls share the main row.
-u4( false !== strpos( $template, 'certloom-template-library-program-filter' ) && false !== strpos( $template, "'Program fit', 'certloom'" ), 'Template Library has a dedicated Program-fit filter strip' );
-u4( false !== strpos( $template, "'Filter for a Program', 'certloom'" ) && false !== strpos( $template, "'Optional. Search a Program to see designs that fit its current setup.', 'certloom'" ), 'Program filtering has concise purpose-oriented guidance' );
-u4( false !== strpos( $library_css, '.certloom-library-filter-program .certloom-context-lookup{display:grid;grid-template-columns:' ), 'Program search and Program select have an explicit aligned desktop layout' );
-u4( false !== strpos( $library_css, '.certloom-template-library-filter-primary,.certloom-template-library-filter-advanced{display:grid;grid-template-columns:minmax(220px,1.45fr) repeat(3,minmax(145px,1fr)) auto' ), 'Primary filter row now contains only equal-height Search/Purpose/Orientation/Style plus action' );
+// 6. Certificate Library filtering is design-focused; hierarchy assignment moved to Design Rules.
+u4( false === strpos( $template, 'library_program_id' ) && false === strpos( $template, 'certloom-template-library-program-filter' ), 'Certificate Library no longer mixes Program assignment context into design discovery' );
+u4( false !== strpos( $template, "'Search', 'certloom'" ) && false !== strpos( $template, "'Purpose', 'certloom'" ) && false !== strpos( $template, "'Orientation', 'certloom'" ) && false !== strpos( $template, "'Style', 'certloom'" ), 'Certificate filtering keeps concise design-oriented controls' );
+u4( false === strpos( $library_css, 'certloom-library-filter-program' ) && false === strpos( $library_css, 'certloom-template-library-program-filter' ), 'Retired Program-filter styling is physically removed instead of left dormant' );
+u4( false !== strpos( $library_css, '.certloom-template-library-filter-primary,.certloom-template-library-filter-advanced{display:grid;grid-template-columns:minmax(220px,1.45fr) repeat(3,minmax(145px,1fr)) auto' ), 'Primary filter row contains equal-height Search/Purpose/Orientation/Style plus action' );
 u4( false === strpos( $admin_css, '.certloom-template-library-filter-primary{display:grid!important' ), 'Old conflicting six-column !important filter override is gone' );
-u4( false !== strpos( $library_css, '@media (max-width:782px)' ) && false !== strpos( $library_css, '.certloom-library-filter-program .certloom-context-lookup{grid-template-columns:1fr}' ), 'New filter structure deliberately stacks on mobile' );
+u4( false !== strpos( $library_css, '@media (max-width:782px)' ) && false !== strpos( $library_css, '.certloom-template-library-filter-primary,.certloom-template-library-filter-advanced{grid-template-columns:1fr}' ), 'Current filter structure deliberately stacks on mobile' );
 
 // 7. Recipient is a reusable first-class identity and the ordinary create path
 // must not silently bypass it once normalized issuance is available.

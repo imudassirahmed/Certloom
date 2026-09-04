@@ -92,12 +92,11 @@ async def main():
         await ck(await failure.locator('[data-certloom-card-publish]').is_enabled(),'failedPublishCanRetry')
         await ck('changed after you opened it' in await failure.locator('[data-certloom-card-feedback]').inner_text(),'exactPublishFailureShown')
 
-        assignment=page.locator('.certloom-template-assignment-workspace')
-        copy=(await assignment.inner_text()).lower()
-        await ck('scope' not in copy and 'fallback depth' not in copy,'assignmentAvoidsInternalVocabulary')
-        await ck('use for this program' in copy and 'design priority' in copy,'assignmentUsesHumanCopy')
-        details=assignment.locator('.certloom-template-candidate-technical')
-        await ck(await details.get_attribute('open') is None,'technicalDetailsCollapsedByDefault')
+        rules=page.locator('.certloom-design-rules')
+        copy=(await rules.inner_text()).lower()
+        await ck('fallback depth' not in copy and 'layout hash' not in copy,'designRulesAvoidInternalVocabulary')
+        await ck('design rules' in copy and 'no change' in copy and 'inherit from parent' in copy,'designRulesUseHumanCopy')
+        await ck('certificate design' in copy and 'email design' in copy,'designRulesKeepAuthoritiesVisibleAndIndependent')
 
         await ck(await page.get_by_role('heading',name='Setup complete',exact=True).is_visible(),'setupCompleteLanding')
         await ck(await page.get_by_role('button',name='Run setup again',exact=True).is_visible(),'setupRestartAction')
@@ -117,6 +116,6 @@ async def main():
         await browser.close()
     if failed:
         print('FAIL  UX-OPS-03 browser gate: '+', '.join(failed)); print(f'\n{checks-len(failed)} passed, {len(failed)} failures'); return 1
-    print('PASS  UX-OPS-03 browser gate: parent state, complete non-destructive retry, visual/media controls, scoped fields, in-card publishing, human assignment copy, completed Setup and responsive/RTL/forced-colors')
+    print('PASS  UX-OPS-03 browser gate: parent state, complete non-destructive retry, visual/media controls, scoped fields, in-card publishing, central Design Rules copy, completed Setup and responsive/RTL/forced-colors')
     print(f'\n{checks} checks, 0 failures'); return 0
 if __name__=='__main__': raise SystemExit(asyncio.run(main()))

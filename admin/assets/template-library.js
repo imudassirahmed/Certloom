@@ -93,6 +93,17 @@
 		});
 	}
 
-	function init() { initBackground(); initPreview(); }
+	function initImport() {
+		var open = q('[data-certloom-certificate-import-open]');
+		var dialog = q('[data-certloom-certificate-import-dialog]');
+		var close = dialog ? q('[data-certloom-certificate-import-close]', dialog) : null;
+		if (!open || !dialog || typeof dialog.showModal !== 'function') { return; }
+		open.addEventListener('click', function () { dialog.showModal(); var input=q('input[type=\"file\"]',dialog); if(input){input.focus();} });
+		if(close){close.addEventListener('click',function(){dialog.close();});}
+		dialog.addEventListener('click',function(event){if(event.target===dialog){dialog.close();}});
+		dialog.addEventListener('close',function(){open.focus();});
+	}
+
+	function init() { initBackground(); initPreview(); initImport(); }
 	if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
 }());

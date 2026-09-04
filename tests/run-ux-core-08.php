@@ -30,7 +30,7 @@ ux8( false !== strpos( $structure, "__( 'Signer hierarchy rules', 'certloom' )" 
 ux8( false !== strpos( $structure, "certloom-signer-priority-control" ) && false !== strpos( $structure, "__( 'Technical options', 'certloom' )" ) && false !== strpos( $structure, 'name="priority" value="100"' ), 'Signer priority stays out of the normal flow but remains reachable under Technical options with a safe default' );
 
 ux8( false !== strpos( $css, 'var(--certloom-flow-accent,#0f6e56)' ), 'primary actions retain visible contrast even when the flow accent custom property is unavailable' );
-ux8( false !== strpos( $templates, "esc_html__( 'Open design', 'certloom' )" ), 'My Designs keeps an explicit Open design action' );
+ux8( false !== strpos( $templates, "__( 'Edit', 'certloom' )" ) && false !== strpos( $templates, "__( 'View design', 'certloom' )" ), 'My Designs keeps explicit Edit/View design actions' );
 
 ux8( false !== strpos( $legacy_admin, 'Ecapla_CertVerify_Permissions::maybe_upgrade_capabilities();' ) && false !== strpos( $legacy_admin, "add_submenu_page( null, __( 'Analytics', 'certloom' ), __( 'Analytics', 'certloom' ), ECAPLA_CERTVERIFY_CAP" ), 'Analytics refreshes capability health and registers as a hidden parentless route' );
 ux8( false !== strpos( $legacy_admin, 'CAP_VIEW_ANALYTICS ) && ! current_user_can( ECAPLA_CERTVERIFY_CAP )' ), 'Analytics render guard accepts either granular analytics access or the legacy-equivalent Certloom management capability' );

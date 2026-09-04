@@ -1,3 +1,11 @@
+= 1.6.98-qa.23 =
+* Redesign Certificate and Email Design management around visual Library/My Designs or Library/My Templates workspaces, with assignment controls removed from design creation/editing.
+* Add a dedicated Email Designer with drag-and-drop plus keyboard reordering, contextual settings, dynamic-data insertion, WordPress Media Library support, responsive preview, inline validation, and sandboxed/CSP-isolated full preview.
+* Add centralized Design Rules for Global, Issuer, Program, and Batch certificate/email inheritance, including bulk selection, server-backed search, live effective previews, purpose-aware email rules, and shared contextual entity controls.
+* Add portable, assignment-free Certificate and Email Design packages with integrity-checked embedded local PNG/JPEG media and destination-site Media Library rewriting.
+* Restore the full built-in Certificate collection as a normal self-healing library while preserving customer-customized revisions and fail-closed publication/renderer authority.
+* Preserve the six-section unified workspace, QA.22 parentless contextual-route correction, granular capabilities, frontend parity, mobile/RTL/accessibility requirements, and absent normalized-domain/renderer accepted manifests.
+
 = 1.6.98 =
 * QA.20 staging corrective: harden Email Designs and Email Delivery route registration against stale current-request WordPress capability maps by refreshing granular access immediately before admin_menu registration, while preserving the granular security boundary.
 * Refine the restored operational Home dashboard: Quick actions are a compact 3-column keypad with Manage Fields first and no duplicate Issue credential shortcut; Recent Credentials now mirrors the canonical registry with Credential, Recipient, Program / batch, Issue date, Expiry date, status, record version and Added to Certloom columns plus View/Manage actions.

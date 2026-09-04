@@ -36,8 +36,10 @@ $root=dirname(__DIR__);
 $files=array(
 	'repo'=>file_get_contents($root.'/src/Infrastructure/Repository/TemplateRepository.php'),
 	'admin'=>file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'),
+	'rules'=>file_get_contents($root.'/src/Infrastructure/Admin/DesignRulesAdmin.php'),
+	'manager'=>file_get_contents($root.'/src/Infrastructure/Admin/DesignRuleManager.php'),
 	'policy'=>file_get_contents($root.'/src/Application/Templates/TemplateAssignmentPolicy.php'),
-	'css'=>file_get_contents($root.'/admin/assets/admin.css'),
+	'css'=>file_get_contents($root.'/admin/assets/design-rules.css'),
 	'placeholder'=>file_get_contents($root.'/admin/class-ecapla-certverify-admin.php'),
 	'roadmap'=>file_get_contents($root.'/docs/roadmap-1.6.16-delta.md'),
 );
@@ -61,38 +63,42 @@ t17has($files['repo'],'$this->json->hash','candidate metadata recomputes canonic
 t17has($files['repo'],'t.archived_at IS NULL','archived Templates are excluded from candidates');
 t17has($files['repo'],"'active' => 0",'None preserves row identity by deactivating direct assignment');
 
-// Premium UX requirements.
-t17has($files['admin'],'Design assignment levels','assignment-level navigation is labelled for accessibility');
-t17has($files['admin'],'Search design targets','Issuer/Program/Batch design targets are searchable');
-t17has($files['admin'],'scope_paged','assignment targets are paginated');
-t17has($files['admin'],'Search available designs','design candidates are searchable');
-t17has($files['admin'],'template_paged','Template candidates are paginated');
-t17has($files['admin'],'All Templates','candidate kind filter is exposed');
-t17has($files['admin'],'Factory','factory candidates can be filtered');
-t17has($files['admin'],'Custom / imported','custom/imported candidates can be filtered');
-t17has($files['admin'],'Use next available default','explicit default/inheritance control is exposed');
-t17has($files['admin'],'Design currently used','effective design is visible');
-t17has($files['admin'],'Design priority:','design priority is explained in customer language');
-t17has($files['admin'],'Inherited from: %s','effective assignment source is explicit without implementation depth');
-$assignment_start = strpos( $files['admin'], 'private function assignment_candidates' );
-$assignment_end = strpos( $files['admin'], 'private function assignment_target_page', $assignment_start );
-$assignment_source = false !== $assignment_start && false !== $assignment_end ? substr( $files['admin'], $assignment_start, $assignment_end - $assignment_start ) : '';
-t17( '' !== $assignment_source && false === strpos( $assignment_source, 'TemplatePreviewService' ) && false === strpos( $assignment_source, 'RenderPlanHtmlPreview' ), 'assignment candidate cards remain metadata-only and do not instantiate renderer Preview output' );
-t17has($files['admin'],'Technical details','candidate integrity metadata is collapsed under technical details');
-t17has($files['admin'],'Layout hash','candidate integrity metadata remains available when technical details are opened');
-t17has($files['admin'],'expected_assignment_id','assignment forms carry optimistic-concurrency identity');
-t17has($files['admin'],'expected_updated_at','assignment forms carry optimistic-concurrency timestamp');
-t17has($files['admin'],'certloom_template_assignment_','assignment mutations are nonce-bound to exact scope');
-t17has($files['admin'],'template_list_pagination','main Templates list now uses its existing pagination capability');
+// Premium UX requirements now live in the central Design Rules workspace.
+t17has($files['rules'],'Global → Issuer → Program → Batch','Design Rules explains the canonical hierarchy at the page level');
+t17has($files['rules'],'Global defaults','Global certificate/email defaults are a dedicated visual section');
+t17has($files['rules'],'Issuer, Program and Batch rules','record-level overrides are grouped below Global defaults');
+t17has($files['rules'],'Search Issuers, Programs or Batches','large target inventories are server-searchable');
+t17has($files['rules'],'data-certloom-rule-load-more','large target inventories support incremental loading');
+t17has($files['rules'],'Selected records','bulk editing has a dedicated selected-record editor');
+t17has($files['rules'],'No change','bulk editing can leave one design authority untouched');
+t17has($files['rules'],'Inherit from parent','explicit inheritance is a first-class bulk action');
+t17has($files['rules'],'Certificate design','certificate and email rules are edited independently');
+t17has($files['rules'],'Email design','email design control is visible beside certificate design');
+t17has($files['rules'],'Per message purpose','email rules retain their message-purpose dimension');
+t17has($files['rules'],'Apply changes','bulk mutation has one explicit commit action after previews');
+t17has($files['rules'],'data-certloom-rule-preview','effective result previews are part of the rule editor');
+t17has($files['rules'],'The Global default also uses this design.','Used-by deep links distinguish Global usage from direct record rules');
+t17has($files['manager'],'MODE_NO_CHANGE','shared manager preserves independent no-change semantics');
+t17has($files['manager'],'MODE_INHERIT','shared manager owns inheritance semantics');
+t17has($files['manager'],'MAX_TARGETS','bulk operations have an explicit server-side target bound');
+t17has($files['manager'],'Snapshot the complete selection before the first mutation','bulk rollback snapshots are taken before writes');
+t17has($files['admin'],'expected_assignment_id','legacy certificate assignment POST compatibility retains optimistic-concurrency identity');
+t17has($files['admin'],'expected_updated_at','legacy certificate assignment POST compatibility retains optimistic-concurrency timestamp');
+t17has($files['admin'],'certloom_template_assignment_','legacy assignment mutations remain nonce-bound to exact scope');
+t17has($files['admin'],'template_list_pagination','main Templates list retains its existing pagination capability');
+t17(false===strpos($files['admin'],'private function assignment_workspace'),'retired certificate assignment workspace code is removed rather than left unreachable');
+t17(false===strpos($files['admin'],'Use for this Program'),'retired Program-assignment copy is not retained in Certificate Design');
 
 // Responsive/accessibility and current-authority honesty.
-t17has($files['css'],'.certloom-template-candidate-grid','assignment cards have dedicated component CSS');
-t17has($files['css'],'focus-visible','assignment controls keep visible keyboard focus');
-t17has($files['css'],'@media (max-width: 782px)','assignment workspace has mobile layout');
-t17has($files['css'],'prefers-reduced-motion','assignment workspace respects reduced motion');
+t17has($files['css'],'.certloom-design-rules-form','Design Rules has dedicated two-column workspace CSS');
+t17has($files['css'],'position:sticky','selected-record editor remains available while browsing targets on desktop');
+t17has($files['css'],':focus-visible','Design Rules controls keep visible keyboard focus');
+t17has($files['css'],'@media(max-width:782px)','Design Rules has a mobile layout');
+t17has($files['css'],'prefers-reduced-motion','Design Rules respects reduced motion');
+t17has($files['css'],'forced-colors:active','Design Rules supports forced-colors mode');
 t17has($files['placeholder'],'Design tools available · downloadable publication protected','live placeholder reflects current Template/Designer availability without technical authority jargon');
 t17has($files['placeholder'],'The Template Library and Designer are available through Design. Downloadable PDF and image publication stays protected until its final rendering safety checks are approved.','live placeholder truthfully describes current Design availability and protected downloadable publication');
 
 echo "PASS  TPL-03 uses one deterministic Batch → Program → Issuer → Global fallback policy\n";
-echo "PASS  assignments support searchable/paginated targets and Templates, explicit None, source visibility, concurrency proof and renderer-honest metadata\n\n";
+echo "PASS  Design Rules centralizes searchable/bulk certificate + email inheritance while legacy certificate mutation compatibility stays concurrency-safe\n\n";
 echo $checks . " checks, 0 failures\n";

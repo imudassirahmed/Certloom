@@ -48,6 +48,6 @@ c76(is_file(__DIR__.'/fixtures/templates/curated-reference/contact-sheet.png'),'
 $root=dirname(__DIR__);$service=file_get_contents($root.'/src/Application/Templates/FactoryPresetService.php');$admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php');
 c76(false!==strpos($service,'array_merge( $this->catalog->all(), $this->curated_catalog->all() )'),'factory synchronization includes legacy plus curated catalogs');
 c76(false!==strpos($service,'definition_for_key'),'factory reset resolves both historical and curated stable identities');
-c76(false!==strpos($admin,'Curated Template Library') && false===strpos($admin,'TPLUX-02 · Curated Template Library'),'Design workspace uses customer-facing curated-library identity without milestone-code leakage');
+c76(false!==strpos($admin,'Certificate library') && false!==strpos($admin,'Built-in Certloom collection') && false===strpos($admin,'TPLUX-02'),'Design workspace uses the approved customer-facing certificate-library identity without milestone-code leakage');
 
 if($fail){echo"\n$pass passed, $fail failed\n";exit(1);} echo"\n$pass checks, 0 failures\n";

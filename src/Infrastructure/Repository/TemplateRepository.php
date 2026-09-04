@@ -15,6 +15,7 @@ use Certloom\Infrastructure\Database\SchemaManager;
 use Certloom\Infrastructure\Database\Transaction;
 use Certloom\Application\Contract\TransactionInterface;
 use Certloom\Infrastructure\Rendering\RendererAuthorityGate;
+use Certloom\Infrastructure\Media\PortableDesignAssets;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -470,12 +471,14 @@ final class TemplateRepository {
 	}
 
 	/** @return array{items:array<int,array<string,mixed>>,total:int}|\WP_Error */
-	public function list_page( $search = '', $page = 1, $per_page = 20, $status = 'active' ) {
+	public function list_page( $search = '', $page = 1, $per_page = 20, $status = 'active', $kind = 'all' ) {
 		global $wpdb;
 		$page = max( 1, absint( $page ) ); $per_page = max( 1, min( 100, absint( $per_page ) ) ); $offset = ( $page - 1 ) * $per_page;
 		$status = in_array( $status, array( 'active', 'archived', 'all' ), true ) ? $status : 'active';
+		$kind = in_array( $kind, array( 'all', 'factory', 'custom' ), true ) ? $kind : 'all';
 		$where = array(); $args = array(); $search = trim( (string) $search );
 		if ( 'active' === $status ) { $where[] = 't.archived_at IS NULL'; } elseif ( 'archived' === $status ) { $where[] = 't.archived_at IS NOT NULL'; }
+		if ( 'factory' === $kind ) { $where[] = "t.machine_key LIKE 'certloom-preset-%'"; } elseif ( 'custom' === $kind ) { $where[] = "t.machine_key NOT LIKE 'certloom-preset-%'"; }
 		if ( '' !== $search ) { $like = '%' . $wpdb->esc_like( $search ) . '%'; $where[] = '(t.name LIKE %s OR t.machine_key LIKE %s OR t.description LIKE %s)'; $args = array_merge( $args, array( $like, $like, $like ) ); }
 		$where_sql = $where ? ' WHERE ' . implode( ' AND ', $where ) : '';
 		$table = SchemaManager::table( 'templates' ); $revisions = SchemaManager::table( 'template_revisions' );
@@ -483,23 +486,74 @@ final class TemplateRepository {
 		$total = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i t' . $where_sql, array_merge( array( $table ), $args ) ) );
 		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_template_list_failed', __( 'Certloom could not load templates.', 'certloom' ) ); }
 		$wpdb->last_error = '';
-		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT t.*, r.revision_number AS current_revision_number, r.layout_sha256, pr.revision_number AS published_revision_number, pr.layout_sha256 AS published_layout_sha256 FROM %i t LEFT JOIN %i r ON r.id=t.current_revision_id LEFT JOIN %i pr ON pr.id=t.published_revision_id' . $where_sql . ' ORDER BY t.updated_at DESC,t.id DESC LIMIT %d OFFSET %d', array_merge( array( $table, $revisions, $revisions ), $args, array( $per_page, $offset ) ) ), ARRAY_A );
+		$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT t.*, r.revision_number AS current_revision_number, r.layout_json AS current_layout_json, r.layout_sha256, pr.revision_number AS published_revision_number, pr.layout_sha256 AS published_layout_sha256 FROM %i t LEFT JOIN %i r ON r.id=t.current_revision_id LEFT JOIN %i pr ON pr.id=t.published_revision_id' . $where_sql . ' ORDER BY t.updated_at DESC,t.id DESC LIMIT %d OFFSET %d', array_merge( array( $table, $revisions, $revisions ), $args, array( $per_page, $offset ) ) ), ARRAY_A );
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) { return new \WP_Error( 'certloom_template_list_failed', __( 'Certloom could not load templates.', 'certloom' ) ); }
+		foreach ( $rows as &$row ) {
+			$raw_layout = (string) ( $row['current_layout_json'] ?? '' );
+			if ( '' === $raw_layout ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'A certificate design is missing its current layout.', 'certloom' ) ); }
+			$decoded = json_decode( $raw_layout, true );
+			if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $decoded ) ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'A certificate design contains invalid current layout data.', 'certloom' ) ); }
+			try {
+				$layout = $this->layouts->normalize( $decoded );
+				$hash = $this->json->hash( $layout );
+			} catch ( \Throwable $error ) {
+				return new \WP_Error( 'certloom_template_revision_corrupt', __( 'A certificate design does not satisfy Certloom’s canonical layout contract.', 'certloom' ) );
+			}
+			if ( ! hash_equals( strtolower( (string) ( $row['layout_sha256'] ?? '' ) ), $hash ) ) { return new \WP_Error( 'certloom_template_revision_hash_mismatch', __( 'A certificate design failed its current-layout integrity check.', 'certloom' ) ); }
+			$row['current_layout'] = $layout;
+			unset( $row['current_layout_json'] );
+		}
+		unset( $row );
 		return array( 'items' => $rows, 'total' => $total );
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
 	public function export_package( $template_id, $plugin_version ) {
 		$template = $this->find( $template_id );
-		if ( is_wp_error( $template ) || ! is_array( $template ) || empty( $template['current_revision'] ) ) { return is_wp_error( $template ) ? $template : new \WP_Error( 'certloom_template_export_missing', __( 'The template cannot be exported because its current revision is unavailable.', 'certloom' ) ); }
-		return ( new TemplatePackage( $this->layouts, $this->json ) )->build( $template, $template['current_revision'], $plugin_version );
+		if ( is_wp_error( $template ) || ! is_array( $template ) || empty( $template['current_revision'] ) ) {
+			return is_wp_error( $template )
+				? $template
+				: new \WP_Error( 'certloom_template_export_missing', __( 'The design cannot be exported because its current revision is unavailable.', 'certloom' ) );
+		}
+
+		$portable = ( new PortableDesignAssets() )->prepare_certificate_export( (array) $template['current_revision']['layout'] );
+		if ( is_wp_error( $portable ) ) {
+			return $portable;
+		}
+
+		$revision = $template['current_revision'];
+		$revision['layout'] = $portable['layout'];
+		return ( new TemplatePackage( $this->layouts, $this->json ) )->build(
+			$template,
+			$revision,
+			$plugin_version,
+			$portable['assets']
+		);
 	}
 
 	/** @return int|\WP_Error */
 	public function import_package( $json, $actor_user_id = 0 ) {
 		$decoded = ( new TemplatePackage( $this->layouts, $this->json ) )->decode( $json );
-		if ( is_wp_error( $decoded ) ) { return $decoded; }
-		return $this->create( $decoded, $actor_user_id, self::SOURCE_IMPORT );
+		if ( is_wp_error( $decoded ) ) {
+			return $decoded;
+		}
+
+		$media = new PortableDesignAssets();
+		$installed = $media->install_certificate_assets(
+			(array) $decoded['layout'],
+			(array) ( $decoded['assets'] ?? array() )
+		);
+		if ( is_wp_error( $installed ) ) {
+			return $installed;
+		}
+
+		$decoded['layout'] = $installed['layout'];
+		unset( $decoded['assets'], $decoded['layout_sha256'] );
+		$created = $this->create( $decoded, $actor_user_id, self::SOURCE_IMPORT );
+		if ( is_wp_error( $created ) ) {
+			$media->cleanup( $installed['created_ids'] );
+		}
+		return $created;
 	}
 
 	/**
@@ -664,6 +718,29 @@ final class TemplateRepository {
 			);
 		}
 		return true;
+	}
+
+
+	/** Bounded active assignment inventory for administration and usage summaries. @return array<int,array<string,mixed>>|\WP_Error */
+	public function list_assignments( $limit = 5000 ) {
+		global $wpdb;
+		$limit = max( 1, min( 5000, absint( $limit ) ) );
+		$wpdb->last_error = '';
+		$rows = $wpdb->get_results( $wpdb->prepare(
+			'SELECT a.id,a.template_id,a.scope_type,a.scope_id,a.priority,a.active,a.updated_at,t.name AS template_name,t.archived_at AS template_archived_at FROM %i a LEFT JOIN %i t ON t.id=a.template_id WHERE a.active=1 ORDER BY a.scope_type ASC,a.scope_id ASC LIMIT %d',
+			SchemaManager::table( 'template_assignments' ), SchemaManager::table( 'templates' ), $limit
+		), ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) { return new \WP_Error( 'certloom_template_assignment_list_failed', __( 'Certloom could not load certificate design rules.', 'certloom' ) ); }
+		foreach ( $rows as &$row ) { $row['id']=absint($row['id']??0); $row['template_id']=absint($row['template_id']??0); $row['scope_id']=absint($row['scope_id']??0); $row['priority']=absint($row['priority']??0); $row['active']=!empty($row['active']); $row['template_archived']=!empty($row['template_archived_at']); }
+		unset( $row );
+		return $rows;
+	}
+
+	/** @return int|\WP_Error */
+	public function usage_count( $template_id ) {
+		global $wpdb; $wpdb->last_error='';
+		$count = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE template_id=%d AND active=1', SchemaManager::table( 'template_assignments' ), absint( $template_id ) ) );
+		return '' !== (string) $wpdb->last_error ? new \WP_Error( 'certloom_template_usage_count_failed', __( 'Certloom could not inspect certificate design usage.', 'certloom' ) ) : $count;
 	}
 
 	/** @return array<string,mixed>|null|\WP_Error */

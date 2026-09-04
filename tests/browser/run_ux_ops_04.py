@@ -48,21 +48,20 @@ async def main():
         await ck(await wp_select.input_value()=='42','wpUserCurrentSelectionPreserved')
         await ck(await wp_select.locator('option[value="77"]').count()==1,'wpUserSearchResultLoaded')
         await ck(await page.get_by_role('link',name='Issue credential',exact=True).count()==1,'recipientIssueActionVisible')
-        # Template program filter: search and selected Program have their own aligned strip.
-        program_search=page.locator('.certloom-library-filter-program .certloom-context-lookup__search'); program_select=page.locator('.certloom-library-filter-program select')
-        await ck(await program_search.count()==1,'programLookupEnhanced')
-        a=await program_search.bounding_box(); b=await program_select.bounding_box(); await ck(bool(a and b and abs(a['y']-b['y'])<2 and abs(a['height']-b['height'])<2),'programSearchSelectAligned')
+        # Certificate Library: discovery filters stay design-focused and do not reintroduce Program assignment context.
+        await ck(await page.locator('[name="library_program_id"], .certloom-template-library-program-filter').count()==0,'programAssignmentContextAbsent')
         primary=await page.locator('.certloom-template-library-filter-primary input, .certloom-template-library-filter-primary select').evaluate_all('(els)=>els.map(e=>e.getBoundingClientRect()).map(r=>({y:r.y,h:r.height}))')
         await ck(len(primary)==4 and max(abs(x['y']-primary[0]['y']) for x in primary)<2,'primaryFiltersAligned')
+        await ck(await page.get_by_text('Purpose',exact=True).count()==1 and await page.get_by_text('Orientation',exact=True).count()==1 and await page.get_by_text('Style',exact=True).count()==1,'designFiltersVisible')
         await ck(await page.evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'desktopNoOverflow')
         await page.close()
         mobile=await browser.new_page(viewport={'width':390,'height':844}); await mobile.set_content(fixture(),wait_until='load'); await mobile.wait_for_timeout(100)
-        await ck(await mobile.locator('.certloom-library-filter-program .certloom-context-lookup').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").length===1'),'mobileProgramLookupStacks')
+        await ck(await mobile.locator('.certloom-template-library-filter-primary').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").length===1'),'mobileLibraryFiltersStack')
         await mobile.get_by_role('button',name='Create new field').click(); await ck(await mobile.locator('.certloom-quick-field-grid').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").length===1'),'mobileQuickFieldSingleColumn')
         await ck(await mobile.evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'mobileNoOverflow')
         await mobile.close(); await browser.close()
     if failed:
         print('FAIL  UX-OPS-04 browser:', ', '.join(failed)); print(f'\n{checks-len(failed)} passed, {len(failed)} failures'); return 1
-    print('PASS  UX-OPS-04 browser: quick-field privacy/layout and redesigned Template Program filter are responsive and coherent')
+    print('PASS  UX-OPS-04 browser: quick-field privacy/layout and assignment-free Certificate Library filtering are responsive and coherent')
     print(f'\n{checks} UX-OPS-04 browser checks, 0 failures'); return 0
 raise SystemExit(asyncio.run(main()))

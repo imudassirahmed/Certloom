@@ -25,7 +25,7 @@ uxsys(false!==strpos($frontend,'certloom-embed-design-grid') && false!==strpos($
 uxsys(false!==strpos($admin,'certloomAdminL10n') && false!==strpos(uxsyssrc($root,'admin/assets/admin.js'),'navigator.clipboard') && false!==strpos(uxsyssrc($root,'admin/assets/admin.js'),'certloom-copy-button'), 'Shortcode copy enhancement has localized Clipboard + fallback behavior');
 uxsys(false!==strpos($tpl,'certloom-template-library-filter-advanced'), 'Template Library emits its advanced-filter grid class');
 uxsys(false!==strpos($css,'.certloom-template-state-draft'), 'Draft lifecycle state has explicit styling');
-uxsys(false!==strpos($tplcss,'border-color:var(--certloom-accent)') && false!==strpos($css,'.certloom-domain-pagination'), 'Template Library current state and pagination use the shared design system');
+uxsys(false!==strpos($tplcss,'.certloom-design-nav .is-current') && false!==strpos($tplcss,'border-bottom-color:var(--certloom-accent)') && false!==strpos($css,'.certloom-domain-pagination'), 'Template Library current state and shared pagination contracts use the design system');
 uxsys(false===strpos($designer,"certloom-template-designer-element-' +") && false!==strpos($designcss,'.is-barcode') && false!==strpos($designcss,'.is-shape') && false!==strpos($designcss,'.is-list'), 'Designer elements have deliberate type semantics without dead dynamic classes');
 uxsys(false!==strpos($designer,"'s' === event.key.toLowerCase()") && false!==strpos($designer,"'Delete' === event.key"), 'Designer includes save and delete keyboard shortcuts in addition to existing history/nudge controls');
 uxsys(false!==strpos($render,'certloom-verification-label') && false!==strpos($render,'I have a verification code') && false!==strpos($render,'certloom-verification-code-disclosure'), 'Public verification uses visible labels and optional-code disclosure');
@@ -40,7 +40,7 @@ uxsys(false!==strpos($public,'.cv-status-unknown .cv-status-mark'), 'Unknown pub
 uxsys(0===substr_count(strtolower($css),'#126b55') && 1===substr_count(strtolower($css),'#2271b1'), 'Brand/current-state styling no longer bleeds WordPress blue; platform blue remains only the focus token');
 $css_lines=preg_split('/\R/',$css); $css_longest=0; foreach($css_lines as $line){$css_longest=max($css_longest,strlen($line));}
 uxsys($css_longest<=500, 'Admin CSS has no minified mega-lines longer than 500 characters');
-uxsys(false!==strpos($tpl,'Create your first design') && false!==strpos($tpl,'Clear filters') && false!==strpos($tpl,'certloom-empty-state-actions'), 'Design empty states always offer a next action and distinguish filtered-empty results');
+uxsys(false!==strpos($tpl,'Create from scratch, customize a built-in certificate, or import a Certloom design package.') && false!==strpos($tpl,'Clear filters') && false!==strpos($tpl,'certloom-empty-state-actions'), 'Design empty states always offer a next action and distinguish filtered-empty results');
 $bulk=uxsyssrc($root,'src/Infrastructure/Admin/BulkIssuanceAdmin.php'); $bulk_lines=preg_split('/\R/',$bulk); $bulk_longest=0; foreach($bulk_lines as $line){$bulk_longest=max($bulk_longest,strlen($line));}
 uxsys(count($bulk_lines)>=200 && $bulk_longest<1000, 'Bulk Issuance production source is expanded into reviewable PHP instead of compressed one-line logic');
 

@@ -246,8 +246,6 @@ final class ManualIssuanceAdmin {
 
 	/** Quick-create Program/Batch without abandoning the issuance draft. */
 	private function render_quick_context_dialogs( $selected_program_id ) {
-		$templates = ( new ScopedContextChoices() )->templates();
-		$templates = is_wp_error( $templates ) ? array() : (array) $templates;
 		$fields = \Ecapla_CertVerify_Fields::get_scopable_fields();
 
 		echo '<dialog id="certloom-quick-program-dialog" class="certloom-premium-dialog"><form data-certloom-quick-create="program" data-certloom-quick-target="select[name=program_id]" data-certloom-human-form data-certloom-invalid-message="' . esc_attr__( 'Complete the highlighted Program field.', 'certloom' ) . '"><input type="hidden" name="action" value="certloom_manual_quick_program"><input type="hidden" name="nonce" value="' . esc_attr( wp_create_nonce( 'certloom_manual_quick_program' ) ) . '">';
@@ -255,24 +253,20 @@ final class ManualIssuanceAdmin {
 		echo '<div class="certloom-manual-grid certloom-manual-grid-2">';
 		$this->text_input( 'program_title', __( 'Program title', 'certloom' ), '', 255, 'text', true, __( 'Example: Internal Auditor Certification', 'certloom' ) );
 		$this->text_input( 'program_code', __( 'Short code (optional)', 'certloom' ), '', 100, 'text', false, __( 'Example: IA-101', 'certloom' ) );
-		echo '<label><span>' . esc_html__( 'Certificate design', 'certloom' ) . '</span><select name="program_template_id"><option value="0">' . esc_html__( 'Inherit Issuer / Global design', 'certloom' ) . '</option>';
-		foreach ( $templates as $template ) { echo '<option value="' . esc_attr( (string) absint( $template['id'] ?? 0 ) ) . '">' . esc_html( (string) ( $template['name'] ?? '' ) ) . '</option>'; }
-		echo '</select><small>' . esc_html__( 'Choose the default published design for this Program.', 'certloom' ) . '</small></label></div>';
+		echo '<div class="certloom-dialog-inheritance-note"><strong>' . esc_html__( 'Designs inherit automatically', 'certloom' ) . '</strong><small>' . esc_html__( 'This Program will use its Issuer and Global certificate/email designs until you add an override from the Program Designs card or Design Rules.', 'certloom' ) . '</small></div></div>';
 		echo '<details class="certloom-dialog-options" open><summary>' . esc_html__( 'Credential fields used by this Program', 'certloom' ) . '</summary><div class="certloom-quick-contract-grid">';
 		foreach ( $fields as $field ) { $key = sanitize_key( (string) ( $field['key'] ?? '' ) ); if ( '' === $key ) { continue; } echo '<label><span>' . esc_html( (string) ( $field['label'] ?? $key ) ) . '</span><select name="program_field_requirement[' . esc_attr( $key ) . ']"><option value="">' . esc_html__( 'Not used', 'certloom' ) . '</option><option value="optional">' . esc_html__( 'Optional', 'certloom' ) . '</option><option value="required">' . esc_html__( 'Required', 'certloom' ) . '</option></select></label>'; }
 		echo '</div></details><p class="certloom-dialog-footnote">' . esc_html__( 'Need another field or more Program options? Save this Program, then open Programs → Program to make deeper changes.', 'certloom' ) . '</p></div><div class="certloom-dialog-actions"><button type="button" class="button" data-certloom-dialog-close>' . esc_html__( 'Cancel', 'certloom' ) . '</button><button type="submit" class="button button-primary">' . esc_html__( 'Add Program', 'certloom' ) . '</button></div></form></dialog>';
 
 		echo '<dialog id="certloom-quick-batch-dialog" class="certloom-premium-dialog"><form data-certloom-quick-create="batch" data-certloom-quick-target="select[name=batch_id]" data-certloom-quick-program-source="select[name=program_id]" data-certloom-human-form data-certloom-invalid-message="' . esc_attr__( 'Complete the highlighted Batch field.', 'certloom' ) . '"><input type="hidden" name="action" value="certloom_manual_quick_batch"><input type="hidden" name="nonce" value="' . esc_attr( wp_create_nonce( 'certloom_manual_quick_batch' ) ) . '">';
-		echo '<div class="certloom-dialog-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Quick setup', 'certloom' ) . '</span><h2>' . esc_html__( 'Add Batch', 'certloom' ) . '</h2><p>' . esc_html__( 'Create a cohort or intake, including the design and credential-field changes it needs, then return to this issuance.', 'certloom' ) . '</p></div><button type="button" class="button-link" data-certloom-dialog-close aria-label="' . esc_attr__( 'Close Add Batch', 'certloom' ) . '">×</button></div><div class="certloom-dialog-body">';
+		echo '<div class="certloom-dialog-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Quick setup', 'certloom' ) . '</span><h2>' . esc_html__( 'Add Batch', 'certloom' ) . '</h2><p>' . esc_html__( 'Create a cohort or intake and its credential-field changes, then return to this issuance. The Batch inherits its Program designs by default.', 'certloom' ) . '</p></div><button type="button" class="button-link" data-certloom-dialog-close aria-label="' . esc_attr__( 'Close Add Batch', 'certloom' ) . '">×</button></div><div class="certloom-dialog-body">';
 		echo '<div class="certloom-manual-grid certloom-manual-grid-2"><label><span>' . esc_html__( 'Program', 'certloom' ) . '</span><select name="program_id" required data-certloom-required-example="' . esc_attr__( 'Choose the Program this Batch belongs to.', 'certloom' ) . '" data-certloom-context-lookup="program" data-certloom-context-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search active Programs…', 'certloom' ) . '"><option value="">' . esc_html__( 'Choose Program…', 'certloom' ) . '</option>';
 		$programs = ( new ScopedContextChoices() )->programs( $selected_program_id );
 		if ( ! is_wp_error( $programs ) ) { foreach ( $programs as $program ) { echo '<option value="' . esc_attr( (string) absint( $program['id'] ?? 0 ) ) . '" ' . selected( absint( $selected_program_id ), absint( $program['id'] ?? 0 ), false ) . '>' . esc_html( ScopedContextChoices::program_label( $program ) ) . '</option>'; } }
 		echo '</select></label>';
 		$this->text_input( 'batch_name', __( 'Batch name', 'certloom' ), '', 255, 'text', true, __( 'Example: Spring 2027 Cohort', 'certloom' ) );
 		$this->text_input( 'batch_code', __( 'Batch code (optional)', 'certloom' ), '', 100, 'text', false, __( 'Leave blank to generate one from the Batch name.', 'certloom' ) );
-		echo '<label><span>' . esc_html__( 'Batch certificate design', 'certloom' ) . '</span><select name="batch_template_id"><option value="0">' . esc_html__( 'Inherit Program design', 'certloom' ) . '</option>';
-		foreach ( $templates as $template ) { echo '<option value="' . esc_attr( (string) absint( $template['id'] ?? 0 ) ) . '">' . esc_html( (string) ( $template['name'] ?? '' ) ) . '</option>'; }
-		echo '</select><small>' . esc_html__( 'A selected Batch design is the most specific choice and overrides Program, Issuer and Global for this Batch only.', 'certloom' ) . '</small></label></div>';
+		echo '<div class="certloom-dialog-inheritance-note"><strong>' . esc_html__( 'Designs inherit automatically', 'certloom' ) . '</strong><small>' . esc_html__( 'This Batch will follow its Program certificate/email designs until you add a Batch override later.', 'certloom' ) . '</small></div></div>';
 		echo '<details class="certloom-dialog-options"><summary>' . esc_html__( 'Batch credential-field changes', 'certloom' ) . '</summary><div class="certloom-quick-contract-grid">';
 		foreach ( $fields as $field ) { $key = sanitize_key( (string) ( $field['key'] ?? '' ) ); if ( '' === $key ) { continue; } echo '<label><span>' . esc_html( (string) ( $field['label'] ?? $key ) ) . '</span><select name="batch_field_requirement[' . esc_attr( $key ) . ']"><option value="">' . esc_html__( 'Inherit Program', 'certloom' ) . '</option><option value="optional">' . esc_html__( 'Optional', 'certloom' ) . '</option><option value="required">' . esc_html__( 'Required', 'certloom' ) . '</option><option value="exclude">' . esc_html__( 'Do not use', 'certloom' ) . '</option></select></label>'; }
 		echo '</div></details><p class="certloom-dialog-footnote">' . esc_html__( 'Only issuance-relevant choices are shown here. Visit Programs → Batches for dates, signer and deeper Batch settings.', 'certloom' ) . '</p></div><div class="certloom-dialog-actions"><button type="button" class="button" data-certloom-dialog-close>' . esc_html__( 'Cancel', 'certloom' ) . '</button><button type="submit" class="button button-primary">' . esc_html__( 'Add Batch', 'certloom' ) . '</button></div></form></dialog>';
@@ -289,9 +283,7 @@ final class ManualIssuanceAdmin {
 		if ( is_wp_error( $metadata ) ) { wp_send_json_error( array( 'message' => $metadata->get_error_message() ), 400 ); }
 		$result = ( new ProgramRepository() )->create( array( 'title' => $title, 'code' => $code, 'active' => 1, 'metadata' => $metadata ) );
 		if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'message' => $result->get_error_message() ), 400 ); }
-		$template_id = isset( $_POST['program_template_id'] ) ? absint( $_POST['program_template_id'] ) : 0;
-		if ( $template_id ) { $assigned = ( new TemplateRepository() )->assign( $template_id, 'program', absint( $result ) ); if ( is_wp_error( $assigned ) ) { wp_send_json_error( array( 'message' => $assigned->get_error_message() ), 400 ); } }
-		wp_send_json_success( array( 'id' => absint( $result ), 'label' => '' !== $code ? $title . ' — ' . $code : $title, 'message' => __( 'Program added with its issuance fields and design, then selected.', 'certloom' ) ) );
+		wp_send_json_success( array( 'id' => absint( $result ), 'label' => '' !== $code ? $title . ' — ' . $code : $title, 'message' => __( 'Program added with its issuance fields and inherited designs, then selected.', 'certloom' ) ) );
 	}
 
 	/** @return void */
@@ -313,9 +305,7 @@ final class ManualIssuanceAdmin {
 		if ( is_wp_error( $resolved ) ) { wp_send_json_error( array( 'message' => $resolved->get_error_message() ), 400 ); }
 		$result = ( new BatchRepository() )->create( array( 'program_id' => $program_id, 'name' => $name, 'code' => $code, 'active' => 1, 'metadata' => $metadata ) );
 		if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'message' => $result->get_error_message() ), 400 ); }
-		$template_id = isset( $_POST['batch_template_id'] ) ? absint( $_POST['batch_template_id'] ) : 0;
-		if ( $template_id ) { $assigned = ( new TemplateRepository() )->assign( $template_id, 'batch', absint( $result ) ); if ( is_wp_error( $assigned ) ) { wp_send_json_error( array( 'message' => $assigned->get_error_message() ), 400 ); } }
-		wp_send_json_success( array( 'id' => absint( $result ), 'program_id' => $program_id, 'label' => '' !== $code ? $name . ' — ' . $code : $name, 'message' => __( 'Batch added with its issuance settings and selected.', 'certloom' ) ) );
+		wp_send_json_success( array( 'id' => absint( $result ), 'program_id' => $program_id, 'label' => '' !== $code ? $name . ' — ' . $code : $name, 'message' => __( 'Batch added with its issuance settings and inherited designs, then selected.', 'certloom' ) ) );
 	}
 
 

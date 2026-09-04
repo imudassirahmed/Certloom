@@ -11,6 +11,7 @@ $domain    = u3_src( $root, 'src/Infrastructure/Admin/DomainAdmin.php' );
 $structure = u3_src( $root, 'src/Infrastructure/Admin/DomainStructureAdmin.php' );
 $fields    = u3_src( $root, 'src/Infrastructure/Admin/ScopedFieldAdminAjax.php' );
 $template  = u3_src( $root, 'src/Infrastructure/Admin/TemplateAdmin.php' );
+$rules     = u3_src( $root, 'src/Infrastructure/Admin/DesignRulesAdmin.php' );
 $admin     = u3_src( $root, 'admin/class-ecapla-certverify-admin.php' );
 $js        = u3_src( $root, 'admin/assets/admin.js' );
 $css       = u3_src( $root, 'admin/assets/admin.css' );
@@ -18,7 +19,7 @@ $wizard    = u3_src( $root, 'admin/views/setup-wizard.php' );
 $manual    = u3_src( $root, 'src/Infrastructure/Admin/ManualIssuanceAdmin.php' );
 $bulk      = u3_src( $root, 'src/Infrastructure/Admin/BulkIssuanceAdmin.php' );
 $email     = u3_src( $root, 'src/Infrastructure/Admin/EmailDeliveryAdmin.php' );
-foreach ( array( $nav,$domain,$structure,$fields,$template,$admin,$js,$css,$wizard,$manual,$bulk,$email ) as $source ) { u3( '' !== $source, 'Required UX-OPS-03 source is available' ); }
+foreach ( array( $nav,$domain,$structure,$fields,$template,$rules,$admin,$js,$css,$wizard,$manual,$bulk,$email ) as $source ) { u3( '' !== $source, 'Required UX-OPS-03 source is available' ); }
 
 // 1. Contextual pages keep the WordPress Certloom parent visibly active, even if another filter runs late.
 u3( false !== strpos( $nav, "add_filter( 'parent_file', array( \$this, 'filter_parent_file' ), 9999 )" ) && false !== strpos( $nav, "add_filter( 'submenu_file', array( \$this, 'filter_submenu_file' ), 9999 )" ), 'WordPress parent/submenu mapping runs at late priority' );
@@ -45,17 +46,17 @@ u3( false !== strpos( $admin, 'wp_enqueue_media()' ), 'WordPress Media Library i
 u3( false !== strpos( $domain, 'certloom-help-tip' ) && false !== strpos( $structure, 'certloom-help-tip' ) && false !== strpos( $css, '.certloom-help-tip' ), 'Complex field guidance uses compact accessible help affordances instead of permanent helper paragraphs' );
 
 // 5/6. Template Library is aligned and has one obvious publication route.
-u3( false !== strpos( $template, 'certloom-template-library-filter-primary' ) && false !== strpos( $css, '.certloom-template-library-filter-primary' ), 'Template Library filter row has an explicit responsive grid contract' );
-u3( false !== strpos( $template, "'Search designs', 'certloom'" ) && false !== strpos( $template, "'Program', 'certloom'" ) && false !== strpos( $template, 'certloom-library-filter-action' ), 'Template filters use concise aligned Search/Program/Purpose/Orientation/Style controls' );
-u3( false !== strpos( $template, 'role="switch"' ) && false !== strpos( $template, 'data-certloom-card-publish' ) && false !== strpos( $template, 'data-certloom-card-unpublish' ) && false !== strpos( $template, "'Published', 'certloom'" ) && false !== strpos( $template, "'Draft', 'certloom'" ), 'Template cards expose an accessible Draft/Published switch in place' );
-u3( false === strpos( $template, 'certloom-template-card-more' ) && false !== strpos( $template, 'certloom-template-duplicate-link' ), 'Template cards keep Preview/Edit/Duplicate compact without a More menu' );
+u3( false !== strpos( $template, 'certloom-template-library-filter-primary' ) && false !== strpos( u3_src( $root, 'admin/assets/template-library.css' ), '.certloom-template-library-filter-primary' ), 'Certificate Library filter row has an explicit responsive grid contract' );
+u3( false !== strpos( $template, "'Search', 'certloom'" ) && false !== strpos( $template, "'Purpose', 'certloom'" ) && false !== strpos( $template, "'Orientation', 'certloom'" ) && false !== strpos( $template, "'Style', 'certloom'" ) && false === strpos( $template, 'library_program_id' ), 'Certificate Library filters designs without reintroducing Program assignment context' );
+u3( false !== strpos( $template, 'role="switch"' ) && false !== strpos( $template, 'data-certloom-card-publish' ) && false !== strpos( $template, 'data-certloom-card-unpublish' ) && false !== strpos( $template, "'Published', 'certloom'" ) && false !== strpos( $template, "'Draft', 'certloom'" ), 'Customer certificate cards retain an accessible Draft/Published lifecycle control' );
+u3( false !== strpos( $template, 'certloom-template-card-more' ) && false !== strpos( $template, "'Export', 'certloom'" ) && false !== strpos( $template, "'Used by %d rule'" ), 'Certificate cards keep secondary Export and usage actions in a compact overflow menu' );
 u3( false !== strpos( $js, 'initTemplateCardPublishing' ) && false !== strpos( $js, 'data-certloom-card-feedback' ), 'Card publication surfaces exact success/failure feedback without redirecting away' );
-u3( false === strpos( $template, 'Choose Program first' ) && false !== strpos( $template, "'Edit design', 'certloom'" ) && false !== strpos( $template, 'certloom-template-duplicate-link' ) && false === strpos( $template, "'More', 'certloom'" ), 'Template cards keep a compact Preview/Edit/Duplicate hierarchy without a More menu' );
+u3( false !== strpos( $template, "'Preview', 'certloom'" ) && false !== strpos( $template, "'Customize', 'certloom'" ) && false === strpos( $template, 'Choose Program first' ), 'Built-in Certificate Library cards use Preview/Customize without assignment prerequisites' );
 u3( false === strpos( $template, 'data-certloom-designer-publication-scroll' ) && false === strpos( $template, 'Publish reviewed revision' ), 'Designer no longer exposes competing publication buttons or technical review wording' );
 
-// 7. Assignment language describes what the action does at the current hierarchy level.
-u3( false === strpos( $template, 'Assign at this scope' ) && false === strpos( $template, 'Choose a direct Template for a scope' ) && false === strpos( $template, 'Source: %1$s · fallback depth %2$d' ) && false === strpos( $template, 'This visual discovery pass is intentionally bounded' ) && false !== strpos( $template, 'Design priority:' ) && false !== strpos( $template, 'Inherited from: %s' ) && false !== strpos( $template, 'Technical details' ), 'Template assignment hides implementation terminology while preserving collapsed technical integrity details' );
-foreach ( array( 'Use for this Program','Use for this Batch','Use for this issuer','Use as global default' ) as $copy ) { u3( false !== strpos( $template, $copy ), 'Template assignment uses context-specific copy: ' . $copy ); }
+// 7. Assignment authority is centralized in Design Rules rather than duplicated in Design.
+u3( false === strpos( $template, 'Assign at this scope' ) && false === strpos( $template, 'Use for this Program' ) && false === strpos( $template, 'library_program_id' ) && false !== strpos( $rules, "'Design Rules', 'certloom'" ), 'Certificate Design is assignment-free and hands hierarchy authority to Design Rules' );
+u3( false !== strpos( $rules, "'No change', 'certloom'" ) && false !== strpos( $rules, "'Inherit from parent', 'certloom'" ) && false !== strpos( $rules, "'Certificate design', 'certloom'" ) && false !== strpos( $rules, "'Email design', 'certloom'" ), 'Design Rules exposes explicit independent bulk semantics for certificate and email design authority' );
 
 // 7B. Integrity evidence stays available without dominating ordinary issuance/delivery/preview workflows.
 u3( false !== strpos( $manual, 'certloom-technical-details certloom-manual-proof' ) && false !== strpos( $manual, "'Review SHA-256', 'certloom'" ) && false === strpos( $manual, "review_fact( __( 'Review SHA-256'" ), 'Manual Issuance collapses review/layout/render integrity identifiers under Technical details' );

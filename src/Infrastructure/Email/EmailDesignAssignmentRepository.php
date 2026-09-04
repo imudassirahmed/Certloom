@@ -37,7 +37,7 @@ final class EmailDesignAssignmentRepository {
 			if ( $this->same_key( $existing, $row ) ) { $rows[ $index ] = $row; $found = true; break; }
 		}
 		if ( ! $found ) {
-			if ( count( $rows ) >= self::MAX_ASSIGNMENTS ) { return new \WP_Error( 'certloom_email_assignment_limit', __( 'Certloom has reached the email inheritance rule limit for this site.', 'certloom' ) ); }
+			if ( count( $rows ) >= self::MAX_ASSIGNMENTS ) { return new \WP_Error( 'certloom_email_assignment_limit', __( 'Certloom has reached the email design rule limit for this site.', 'certloom' ) ); }
 			$rows[] = $row;
 		}
 		return $this->persist( $rows );
@@ -47,14 +47,14 @@ final class EmailDesignAssignmentRepository {
 	public function remove( $scope_type, $scope_id, $purpose ) {
 		$scope_type = sanitize_key( (string) $scope_type );
 		if ( ! in_array( $scope_type, array( 'global', 'issuer', 'program', 'batch' ), true ) ) {
-			return new \WP_Error( 'certloom_email_assignment_scope_invalid', __( 'Choose Global, Issuer, Program or Batch for email inheritance.', 'certloom' ) );
+			return new \WP_Error( 'certloom_email_assignment_scope_invalid', __( 'Choose Global, Issuer, Program or Batch for email design rules.', 'certloom' ) );
 		}
 		if ( ! EmailDesignPurposes::is_valid( $purpose ) ) {
-			return new \WP_Error( 'certloom_email_assignment_purpose_invalid', __( 'Choose a valid email message purpose before changing inheritance.', 'certloom' ) );
+			return new \WP_Error( 'certloom_email_assignment_purpose_invalid', __( 'Choose a valid email message purpose before changing the design rule.', 'certloom' ) );
 		}
 		$scope_id = 'global' === $scope_type ? 0 : absint( $scope_id );
 		if ( 'global' !== $scope_type && ! $scope_id ) {
-			return new \WP_Error( 'certloom_email_assignment_target_required', __( 'Choose the record whose email inheritance should be restored.', 'certloom' ) );
+			return new \WP_Error( 'certloom_email_assignment_target_required', __( 'Choose the record whose email design rule should be restored.', 'certloom' ) );
 		}
 		$purpose = sanitize_key( (string) $purpose );
 		$rows = array_values( array_filter( $this->all(), static function( array $row ) use ( $scope_type, $scope_id, $purpose ) {
@@ -65,14 +65,44 @@ final class EmailDesignAssignmentRepository {
 
 	/** @return array<string,mixed>|\WP_Error */
 	public function resolve( $issuer_id, $program_id, $batch_id, $purpose = EmailDesignPurposes::ISSUED ) {
-		if ( ! EmailDesignPurposes::is_valid( $purpose ) ) {
-			return new \WP_Error( 'certloom_email_assignment_purpose_invalid', __( 'The requested email message purpose is not supported.', 'certloom' ) );
-		}
+		return $this->resolve_internal( $issuer_id, $program_id, $batch_id, $purpose, null );
+	}
+
+
+	/** @return array<string,mixed>|null|\WP_Error */
+	public function get( $scope_type, $scope_id, $purpose ) {
+		$scope_type = sanitize_key( (string) $scope_type );
+		$scope_id = 'global' === $scope_type ? 0 : absint( $scope_id );
 		$purpose = sanitize_key( (string) $purpose );
-		$by_key  = array();
-		foreach ( $this->all() as $row ) {
-			$by_key[ $this->key( $row['scope_type'], $row['scope_id'], $row['purpose'] ) ] = $row;
+		if ( ! in_array( $scope_type, array( 'global', 'issuer', 'program', 'batch' ), true ) || ! EmailDesignPurposes::is_valid( $purpose ) ) {
+			return new \WP_Error( 'certloom_email_assignment_key_invalid', __( 'The email design rule key is invalid.', 'certloom' ) );
 		}
+		foreach ( $this->all() as $row ) {
+			if ( $scope_type === (string) $row['scope_type'] && $scope_id === absint( $row['scope_id'] ) && $purpose === (string) $row['purpose'] ) { return $row; }
+		}
+		return null;
+	}
+
+	/** Resolve as if one direct rule were absent, for inheritance previews and preflight. @return array<string,mixed>|\WP_Error */
+	public function resolve_excluding( $issuer_id, $program_id, $batch_id, $purpose, $scope_type, $scope_id ) {
+		$scope_type = sanitize_key( (string) $scope_type );
+		$scope_id = 'global' === $scope_type ? 0 : absint( $scope_id );
+		return $this->resolve_internal( $issuer_id, $program_id, $batch_id, $purpose, array( $scope_type, $scope_id ) );
+	}
+
+	/** @return int */
+	public function usage_count( $design_id ) {
+		$design_id = sanitize_key( (string) $design_id ); $count = 0;
+		foreach ( $this->all() as $row ) { if ( $design_id === (string) $row['design_id'] ) { $count++; } }
+		return $count;
+	}
+
+	/** @return array<string,mixed>|\WP_Error */
+	private function resolve_internal( $issuer_id, $program_id, $batch_id, $purpose, ?array $excluded ) {
+		if ( ! EmailDesignPurposes::is_valid( $purpose ) ) { return new \WP_Error( 'certloom_email_assignment_purpose_invalid', __( 'The requested email message purpose is not supported.', 'certloom' ) ); }
+		$purpose = sanitize_key( (string) $purpose );
+		$by_key = array();
+		foreach ( $this->all() as $row ) { $by_key[ $this->key( $row['scope_type'], $row['scope_id'], $row['purpose'] ) ] = $row; }
 		$candidates = array();
 		if ( absint( $batch_id ) ) { $candidates[] = array( 'batch', absint( $batch_id ) ); }
 		if ( absint( $program_id ) ) { $candidates[] = array( 'program', absint( $program_id ) ); }
@@ -80,26 +110,23 @@ final class EmailDesignAssignmentRepository {
 		$candidates[] = array( 'global', 0 );
 		$catalog = new EmailTemplateCatalogRepository();
 		foreach ( $candidates as $candidate ) {
+			if ( is_array( $excluded ) && (string) $candidate[0] === (string) $excluded[0] && absint( $candidate[1] ) === absint( $excluded[1] ) ) { continue; }
 			$key = $this->key( $candidate[0], $candidate[1], $purpose );
 			if ( ! isset( $by_key[ $key ] ) ) { continue; }
-			$row    = $by_key[ $key ];
+			$row = $by_key[ $key ];
 			$design = $catalog->get( (string) $row['design_id'] );
 			if ( ! is_array( $design ) || empty( $design['active'] ) || $purpose !== (string) ( $design['purpose'] ?? '' ) ) {
-				return new \WP_Error( 'certloom_email_assignment_broken', __( 'The selected email inheritance rule points to an unavailable or incompatible email design. Restore inheritance or choose another design before sending.', 'certloom' ) );
+				return new \WP_Error( 'certloom_email_assignment_broken', __( 'The selected email design rule points to an unavailable or incompatible design. Restore inheritance or choose another design before sending.', 'certloom' ) );
 			}
 			return array( 'design' => $design, 'scope_type' => $candidate[0], 'scope_id' => $candidate[1], 'purpose' => $purpose );
 		}
-
-		// Compatibility: installations upgraded from the single-template model still
-		// have a usable issued-email default until the administrator creates an
-		// explicit hierarchy. Do not use this fallback to conceal a broken rule.
 		if ( EmailDesignPurposes::ISSUED === $purpose ) {
 			$default = $catalog->get( EmailTemplateCatalogRepository::DEFAULT_ID );
 			if ( is_array( $default ) && ! empty( $default['active'] ) && EmailDesignPurposes::ISSUED === (string) ( $default['purpose'] ?? EmailDesignPurposes::ISSUED ) ) {
 				return array( 'design' => $default, 'scope_type' => 'catalog_default', 'scope_id' => 0, 'purpose' => $purpose );
 			}
 		}
-		return new \WP_Error( 'certloom_email_design_unresolved', __( 'No active email design is available for this message purpose. Assign one in Design → Email designs.', 'certloom' ) );
+		return new \WP_Error( 'certloom_email_design_unresolved', __( 'No published email design is available for this message purpose. Publish a compatible design, then choose it in Design Rules.', 'certloom' ) );
 	}
 
 	/** @return bool */
@@ -113,7 +140,7 @@ final class EmailDesignAssignmentRepository {
 	private function normalize( array $row, $validate_target ) {
 		$scope = sanitize_key( (string) ( $row['scope_type'] ?? '' ) );
 		if ( ! in_array( $scope, array( 'global', 'issuer', 'program', 'batch' ), true ) ) {
-			return new \WP_Error( 'certloom_email_assignment_scope_invalid', __( 'Choose Global, Issuer, Program or Batch for email inheritance.', 'certloom' ) );
+			return new \WP_Error( 'certloom_email_assignment_scope_invalid', __( 'Choose Global, Issuer, Program or Batch for email design rules.', 'certloom' ) );
 		}
 		$id = 'global' === $scope ? 0 : absint( $row['scope_id'] ?? 0 );
 		if ( 'global' !== $scope && ! $id ) {
@@ -122,12 +149,12 @@ final class EmailDesignAssignmentRepository {
 
 		$raw_purpose = sanitize_key( (string) ( $row['purpose'] ?? '' ) );
 		if ( ! EmailDesignPurposes::is_valid( $raw_purpose ) ) {
-			return new \WP_Error( 'certloom_email_assignment_purpose_invalid', __( 'Choose a valid email message purpose for this inheritance rule.', 'certloom' ) );
+			return new \WP_Error( 'certloom_email_assignment_purpose_invalid', __( 'Choose a valid email message purpose for this design rule.', 'certloom' ) );
 		}
 		$purpose   = $raw_purpose;
 		$design_id = sanitize_key( (string) ( $row['design_id'] ?? '' ) );
 		if ( '' === $design_id ) {
-			return new \WP_Error( 'certloom_email_assignment_design_required', __( 'Choose an email design for this inheritance rule.', 'certloom' ) );
+			return new \WP_Error( 'certloom_email_assignment_design_required', __( 'Choose an email design for this design rule.', 'certloom' ) );
 		}
 
 		// Reads preserve structurally valid rules even if their referenced design or
@@ -156,7 +183,7 @@ final class EmailDesignAssignmentRepository {
 	private function persist( array $rows ) {
 		$rows = array_values( $rows );
 		$saved = update_option( self::OPTION, $rows, false );
-		return $saved || $rows === get_option( self::OPTION, array() ) ? true : new \WP_Error( 'certloom_email_assignment_save_failed', __( 'Certloom could not save the email inheritance rule.', 'certloom' ) );
+		return $saved || $rows === get_option( self::OPTION, array() ) ? true : new \WP_Error( 'certloom_email_assignment_save_failed', __( 'Certloom could not save the email design rule.', 'certloom' ) );
 	}
 
 	private function key( $scope, $id, $purpose ) { return sanitize_key( (string) $purpose ) . '|' . sanitize_key( (string) $scope ) . '|' . absint( $id ); }

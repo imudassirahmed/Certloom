@@ -2,6 +2,7 @@
 namespace Certloom\Infrastructure\Email;
 
 use Certloom\Application\Email\EmailTemplateService;
+use Certloom\Infrastructure\Media\PortableDesignAssets;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -16,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class EmailTemplateCatalogRepository {
 	const OPTION         = 'certloom_email_template_catalog_v1';
-	const SCHEMA_VERSION = 2;
+	const SCHEMA_VERSION = 3;
 	const DEFAULT_ID     = 'default';
 	const MAX_TEMPLATES  = 100;
 
@@ -94,13 +95,15 @@ final class EmailTemplateCatalogRepository {
 		$found = false;
 		foreach ( $items as $index => $existing ) {
 			if ( (string) $existing['id'] === (string) $normalized['id'] ) {
+				$normalized['source'] = (string) ( $existing['source'] ?? 'customer' );
+				$normalized['factory_version'] = absint( $existing['factory_version'] ?? 0 );
 				// An inherited design must not silently change purpose or become inactive.
 				if ( ( new EmailDesignAssignmentRepository() )->design_is_assigned( (string) $existing['id'] ) ) {
 					if ( empty( $normalized['active'] ) ) {
-						return new \WP_Error( 'certloom_email_design_assigned_pause_blocked', __( 'This email design is currently inherited by one or more scopes. Restore or move those inheritance rules before pausing it.', 'certloom' ) );
+						return new \WP_Error( 'certloom_email_design_assigned_pause_blocked', __( 'This email design is used by one or more Design Rules. Move or inherit those rules before unpublishing it.', 'certloom' ) );
 					}
 					if ( (string) $existing['purpose'] !== (string) $normalized['purpose'] ) {
-						return new \WP_Error( 'certloom_email_design_assigned_purpose_blocked', __( 'This email design is currently inherited. Move or restore those inheritance rules before changing its message purpose.', 'certloom' ) );
+						return new \WP_Error( 'certloom_email_design_assigned_purpose_blocked', __( 'This email design is used by one or more Design Rules. Move or inherit those rules before changing its message purpose.', 'certloom' ) );
 					}
 				}
 				$items[ $index ] = $normalized;
@@ -116,11 +119,114 @@ final class EmailTemplateCatalogRepository {
 		return is_wp_error( $result ) ? $result : (string) $normalized['id'];
 	}
 
+
+	/**
+	 * Keep the product-owned starter library present and canonical. Publishing is
+	 * user state, so repairs/upgrades preserve each built-in design's current
+	 * Published/Unpublished choice while restoring the product-owned content.
+	 *
+	 * @return true|\WP_Error
+	 */
+	public function ensure_factory_presets() {
+		$items = $this->all();
+		$by_id = array();
+		foreach ( $items as $index => $item ) {
+			$by_id[ (string) ( $item['id'] ?? '' ) ] = $index;
+		}
+
+		$changed = false;
+		foreach ( ( new EmailDesignPresetCatalog() )->all() as $preset ) {
+			$id = (string) ( $preset['id'] ?? '' );
+			if ( '' === $id ) { continue; }
+
+			if ( ! isset( $by_id[ $id ] ) ) {
+				if ( count( $items ) >= self::MAX_TEMPLATES ) {
+					return new \WP_Error( 'certloom_email_template_catalog_limit', __( 'Certloom could not add its built-in email designs because the site has reached the 100-design catalog limit.', 'certloom' ) );
+				}
+				$normalized = $this->normalize( $preset, false );
+				if ( is_wp_error( $normalized ) ) { return $normalized; }
+				$items[] = $normalized;
+				$by_id[ $id ] = count( $items ) - 1;
+				$changed = true;
+				continue;
+			}
+
+			$index = $by_id[ $id ];
+			$existing = $items[ $index ];
+			if ( 'factory' !== (string) ( $existing['source'] ?? '' ) ) {
+				return new \WP_Error( 'certloom_email_factory_identity_conflict', __( 'A custom email design is using an identity reserved for Certloom’s built-in library. Rename or re-import that custom design before repairing the library.', 'certloom' ) );
+			}
+
+			// Built-in content is product-owned; status is site-owned. Re-normalizing
+			// every time also repairs a partially written older factory record without
+			// changing whether the administrator has published it.
+			$preset['active'] = ! empty( $existing['active'] ) ? 1 : 0;
+			$preset['updated_at'] = (string) ( $existing['updated_at'] ?? '' );
+			$normalized = $this->normalize( $preset, false );
+			if ( is_wp_error( $normalized ) ) { return $normalized; }
+			if ( $normalized !== $existing ) {
+				$items[ $index ] = $normalized;
+				$changed = true;
+			}
+		}
+
+		return $changed ? $this->persist( $items ) : true;
+	}
+
+	/** @return string|\WP_Error */
+	public function duplicate( $template_id ) {
+		$design = $this->get( $template_id );
+		if ( ! is_array( $design ) ) { return new \WP_Error( 'certloom_email_design_missing', __( 'The email design no longer exists.', 'certloom' ) ); }
+		unset( $design['id'], $design['updated_at'], $design['html_body'], $design['schema'], $design['schema_version'], $design['factory_version'] );
+		$design['name'] = sprintf( /* translators: %s: design name. */ __( '%s copy', 'certloom' ), (string) $design['name'] );
+		$design['source'] = 'customer';
+		$design['active'] = 0;
+		return $this->save( $design );
+	}
+
+	/** @return true|\WP_Error */
+	public function set_published( $template_id, $published ) {
+		$design = $this->get( $template_id );
+		if ( ! is_array( $design ) ) { return new \WP_Error( 'certloom_email_design_missing', __( 'The email design no longer exists.', 'certloom' ) ); }
+		$design['active'] = $published ? 1 : 0;
+		$result = $this->save( $design );
+		return is_wp_error( $result ) ? $result : true;
+	}
+
+	/** @return array<string,mixed>|\WP_Error */
+	public function export_package( $template_id, $plugin_version = '' ) {
+		$design = $this->get( $template_id );
+		if ( ! is_array( $design ) ) { return new \WP_Error( 'certloom_email_design_export_missing', __( 'The email design cannot be exported because it no longer exists.', 'certloom' ) ); }
+		return ( new EmailDesignPackage( $this->compiler ) )->build( $design, $plugin_version );
+	}
+
+	/** Imported designs are intentionally unpublished until reviewed. @return string|\WP_Error */
+	public function import_package( $json ) {
+		$design = ( new EmailDesignPackage( $this->compiler ) )->decode( $json );
+		if ( is_wp_error( $design ) ) { return $design; }
+
+		$media = new PortableDesignAssets();
+		$installed = $media->install_email_assets(
+			(array) ( $design['blocks'] ?? array() ),
+			(array) ( $design['assets'] ?? array() )
+		);
+		if ( is_wp_error( $installed ) ) { return $installed; }
+
+		$design['blocks'] = $installed['blocks'];
+		unset( $design['assets'] );
+
+		$saved = $this->save( $design );
+		if ( is_wp_error( $saved ) ) {
+			$media->cleanup( $installed['created_ids'] );
+		}
+		return $saved;
+	}
+
 	/** @return true|\WP_Error */
 	public function delete( $template_id ) {
 		$template_id = sanitize_key( (string) $template_id );
 		if ( self::DEFAULT_ID === $template_id ) { return new \WP_Error( 'certloom_email_default_template_required', __( 'The default credential email cannot be deleted. You can edit it instead.', 'certloom' ) ); }
-		if ( ( new EmailDesignAssignmentRepository() )->design_is_assigned( $template_id ) ) { return new \WP_Error( 'certloom_email_design_in_use', __( 'This email design is inherited by one or more scopes. Restore inheritance or choose another design before deleting it.', 'certloom' ) ); }
+		if ( ( new EmailDesignAssignmentRepository() )->design_is_assigned( $template_id ) ) { return new \WP_Error( 'certloom_email_design_in_use', __( 'This email design is used by one or more Design Rules. Move or inherit those rules before deleting it.', 'certloom' ) ); }
 		foreach ( ( new EmailAutomationRuleRepository() )->all() as $rule ) {
 			if ( $template_id === (string) ( $rule['legacy_template_id'] ?? '' ) ) { return new \WP_Error( 'certloom_email_design_legacy_rule_in_use', __( 'A legacy Automation still references this email design. Re-save or remove that Automation before deleting the design.', 'certloom' ) ); }
 		}
@@ -175,6 +281,9 @@ final class EmailTemplateCatalogRepository {
 		$template['preheader'] = $preheader;
 		$content = $this->service->normalize_template( $template );
 		if ( is_wp_error( $content ) ) { return $content; }
+		$source = sanitize_key( (string) ( $template['source'] ?? ( self::DEFAULT_ID === $id ? 'legacy' : 'customer' ) ) );
+		if ( ! in_array( $source, array( 'factory', 'customer', 'import', 'legacy' ), true ) ) { $source = 'customer'; }
+
 		return array(
 			'id'             => $id,
 			'name'           => $name,
@@ -189,6 +298,8 @@ final class EmailTemplateCatalogRepository {
 			'blocks'         => $blocks,
 			'theme'          => $theme,
 			'updated_at'     => $this->valid_timestamp( $template['updated_at'] ?? '' ) ? (string) $template['updated_at'] : current_time( 'mysql', true ),
+			'source'         => $source,
+			'factory_version'=> 'factory' === $source ? max( 1, absint( $template['factory_version'] ?? 1 ) ) : 0,
 		);
 	}
 

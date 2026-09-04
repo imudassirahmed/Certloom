@@ -1,0 +1,653 @@
+.certloom-email-designs,.certloom-email-designer-wrap {
+	--cl-border: #dfe5e2;
+	--cl-muted: #66736e;
+	--cl-ink: #17231f;
+	--cl-soft: #f6f8f7;
+	--cl-brand: #176b55;
+	max-width: 1480px;
+}
+.certloom-email-hero {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 24px;
+	margin: 24px 0 16px;
+	padding: 28px 30px;
+	border: 1px solid var(--cl-border);
+	border-radius: 18px;
+	background: #fff;
+}
+.certloom-eyebrow {
+	margin: 0 0 6px;
+	text-transform: uppercase;
+	letter-spacing: .08em;
+	font-size: 11px;
+	font-weight: 700;
+	color: var(--cl-muted);
+}
+.certloom-email-hero h1 {
+	margin: 0 0 8px;
+	font-size: 30px;
+	line-height: 1.15;
+}
+.certloom-email-lede {
+	max-width: 760px;
+	margin: 0;
+	color: var(--cl-muted);
+	font-size: 15px;
+}
+.certloom-email-hero__actions {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+.certloom-email-tabs {
+	display: flex;
+	gap: 4px;
+	border-bottom: 1px solid var(--cl-border);
+	margin-bottom: 18px;
+}
+.certloom-email-tabs a {
+	padding: 11px 16px;
+	text-decoration: none;
+	color: #44504c;
+	border-bottom: 2px solid transparent;
+	font-weight: 600;
+}
+.certloom-email-tabs a.is-active {
+	color: var(--cl-ink);
+	border-color: var(--cl-brand);
+}
+.certloom-email-filters {
+	display: grid;
+	grid-template-columns: minmax(220px,2fr) minmax(180px,1fr) minmax(160px,1fr) auto;
+	gap: 10px;
+	align-items: end;
+	margin: 16px 0 22px;
+	padding: 16px;
+	border: 1px solid var(--cl-border);
+	background: #fff;
+	border-radius: 14px;
+}
+.certloom-email-filters label,.certloom-message-settings label,.certloom-theme-grid label {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	font-weight: 600;
+	color: #37433f;
+}
+.certloom-email-filters input,.certloom-email-filters select,.certloom-message-settings input,.certloom-message-settings select,.certloom-theme-grid input,.certloom-theme-grid select {
+	width: 100%;
+	min-height: 40px;
+}
+.certloom-email-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill,minmax(300px,1fr));
+	gap: 18px;
+}
+.certloom-email-card {
+	min-width: 0;
+	border: 1px solid var(--cl-border);
+	border-radius: 16px;
+	background: #fff;
+	overflow: visible;
+	box-shadow: 0 1px 2px rgba(17,35,29,.04);
+}
+.certloom-email-card__preview {
+	display: block;
+	width: 100%;
+	height: 260px;
+	overflow: hidden;
+	border: 0;
+	border-bottom: 1px solid var(--cl-border);
+	background: #eef2f0;
+	padding: 18px;
+	cursor: pointer;
+	text-align: initial;
+}
+.certloom-email-card__frame {
+	display: block;
+	transform: scale(.46);
+	transform-origin: top left;
+	width: 217%;
+	pointer-events: none;
+}
+.certloom-email-card__body {
+	padding: 18px;
+}
+.certloom-email-card__meta {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+	color: var(--cl-muted);
+	font-size: 12px;
+}
+.certloom-email-card h2 {
+	font-size: 17px;
+	margin: 9px 0 5px;
+}
+.certloom-email-card__source {
+	margin: 0 0 16px;
+	color: var(--cl-muted);
+}
+.certloom-status {
+	display: inline-flex;
+	align-items: center;
+	border-radius: 999px;
+	padding: 3px 8px;
+	font-size: 11px;
+	font-weight: 700;
+}
+.certloom-status.is-published {
+	background: #e8f5ef;
+	color: #165c48;
+}
+.certloom-status.is-unpublished {
+	background: #f1f2f1;
+	color: #606863;
+}
+.certloom-email-card__actions {
+	display: flex;
+	gap: 7px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+.certloom-email-card__actions form {
+	margin: 0;
+}
+.certloom-email-more {
+	position: relative;
+	margin-left: auto;
+}
+.certloom-email-more summary {
+	list-style: none;
+	cursor: pointer;
+}
+.certloom-email-more summary::-webkit-details-marker {
+	display: none;
+}
+.certloom-email-more__menu {
+	position: absolute;
+	z-index: 20;
+	right: 0;
+	top: calc(100% + 6px);
+	min-width: 180px;
+	padding: 6px;
+	border: 1px solid var(--cl-border);
+	border-radius: 10px;
+	background: #fff;
+	box-shadow: 0 12px 30px rgba(24,37,32,.14);
+}
+.certloom-email-more__menu a,.certloom-email-more__menu button {
+	display: block;
+	width: 100%;
+	padding: 8px 10px;
+	border: 0;
+	background: transparent;
+	text-align: left;
+	text-decoration: none;
+	color: #26332e;
+	cursor: pointer;
+	border-radius: 6px;
+}
+.certloom-email-more__menu a:hover,.certloom-email-more__menu button:hover {
+	background: var(--cl-soft);
+}
+.certloom-email-more__menu .is-destructive {
+	color: #a12622;
+}
+.certloom-email-empty {
+	text-align: center;
+	padding: 58px 24px;
+	border: 1px dashed #cbd4d0;
+	border-radius: 16px;
+	background: #fff;
+}
+.certloom-email-dialog {
+	width: min(900px,calc(100vw - 48px));
+	max-height: 90vh;
+	padding: 0;
+	border: 0;
+	border-radius: 16px;
+	box-shadow: 0 24px 80px rgba(0,0,0,.2);
+}
+.certloom-email-dialog::backdrop {
+	background: rgba(15,23,20,.54);
+}
+.certloom-email-dialog__bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 16px 20px;
+	border-bottom: 1px solid var(--cl-border);
+	background: #fff;
+}
+.certloom-email-dialog__bar h2 {
+	margin: 0;
+}
+.certloom-email-dialog__preview {
+	max-height: 72vh;
+	overflow: auto;
+	padding: 22px;
+	background: #eef2f0;
+}
+.certloom-email-drop {
+	display: flex;
+	min-height: 220px;
+	margin: 20px;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 9px;
+	padding: 24px;
+	text-align: center;
+	border: 1px dashed #aebbb5;
+	border-radius: 14px;
+	background: var(--cl-soft);
+}
+.certloom-email-drop input {
+	margin-top: 10px;
+}
+.certloom-email-dialog__footer {
+	display: flex;
+	justify-content: flex-end;
+	padding: 0 20px 20px;
+}
+/* Dedicated designer */
+.certloom-email-designer-wrap {
+	max-width: none;
+	margin-left: -10px;
+}
+.certloom-designer-toolbar {
+	position: sticky;
+	top: 32px;
+	z-index: 40;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 16px;
+	padding: 12px 20px;
+	border-bottom: 1px solid var(--cl-border);
+	background: rgba(255,255,255,.96);
+	backdrop-filter: blur(10px);
+}
+.certloom-designer-toolbar__identity {
+	display: flex;
+	align-items: center;
+	gap: 18px;
+	min-width: 0;
+}
+.certloom-designer-back {
+	text-decoration: none;
+	font-weight: 600;
+}
+.certloom-designer-toolbar__identity>div {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+.certloom-designer-toolbar__identity strong {
+	max-width: 280px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.certloom-designer-toolbar__identity small {
+	color: var(--cl-muted);
+}
+.certloom-designer-toolbar__actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.certloom-view-switch {
+	display: flex;
+	border: 1px solid var(--cl-border);
+	border-radius: 8px;
+	overflow: hidden;
+}
+.certloom-view-switch button {
+	border: 0;
+	border-right: 1px solid var(--cl-border);
+	padding: 7px 10px;
+	background: #fff;
+	cursor: pointer;
+}
+.certloom-view-switch button:last-child {
+	border-right: 0;
+}
+.certloom-view-switch button.is-active {
+	background: #eef5f2;
+	color: #135f4c;
+	font-weight: 700;
+}
+.certloom-message-settings {
+	display: grid;
+	grid-template-columns: minmax(220px,1.2fr) minmax(180px,.8fr) minmax(260px,1.7fr) minmax(260px,1.7fr);
+	gap: 12px;
+	padding: 16px 20px;
+	background: #f7f9f8;
+	border-bottom: 1px solid var(--cl-border);
+}
+.certloom-designer-shell {
+	display: grid;
+	grid-template-columns: 220px minmax(420px,1fr) 320px;
+	min-height: calc(100vh - 220px);
+	background: #eef1f0;
+}
+.certloom-designer-palette,.certloom-designer-inspector {
+	padding: 18px;
+	background: #fff;
+}
+.certloom-designer-palette {
+	border-right: 1px solid var(--cl-border);
+}
+.certloom-designer-inspector {
+	border-left: 1px solid var(--cl-border);
+	overflow: auto;
+	max-height: calc(100vh - 220px);
+	position: sticky;
+	top: 188px;
+	align-self: start;
+}
+.certloom-designer-palette h2,.certloom-designer-inspector h2 {
+	font-size: 15px;
+	margin: 0 0 14px;
+}
+.certloom-block-palette {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+}
+.certloom-block-palette button {
+	display: flex;
+	min-height: 66px;
+	flex-direction: column;
+	align-items: flex-start;
+	justify-content: center;
+	gap: 4px;
+	padding: 10px;
+	border: 1px solid var(--cl-border);
+	border-radius: 10px;
+	background: #fff;
+	cursor: pointer;
+	font-size: 16px;
+}
+.certloom-block-palette button span {
+	font-size: 12px;
+	font-weight: 600;
+}
+.certloom-block-palette button:hover,.certloom-block-palette button:focus {
+	border-color: #719f91;
+	background: #f5faf8;
+}
+.certloom-token-browser {
+	margin-top: 26px;
+	padding-top: 20px;
+	border-top: 1px solid var(--cl-border);
+}
+.certloom-token-browser h3 {
+	font-size: 14px;
+	margin: 0 0 9px;
+}
+.certloom-token-list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+.certloom-token-list button {
+	padding: 6px 8px;
+	border: 0;
+	border-radius: 6px;
+	background: #f3f6f5;
+	text-align: left;
+	cursor: pointer;
+}
+.certloom-designer-stage {
+	padding: 36px;
+	overflow: auto;
+}
+.certloom-canvas-frame {
+	width: min(720px,100%);
+	margin: 0 auto;
+	transition: max-width .2s ease;
+}
+.certloom-canvas-frame.is-mobile {
+	max-width: 390px;
+}
+.certloom-email-canvas {
+	min-height: 560px;
+	padding: 34px;
+	background: #fff;
+	border-radius: 12px;
+	box-shadow: 0 12px 40px rgba(17,31,26,.09);
+}
+.certloom-canvas-block {
+	position: relative;
+	margin: 0 -8px 8px;
+	padding: 8px;
+	border: 1px solid transparent;
+	border-radius: 8px;
+	cursor: pointer;
+}
+.certloom-canvas-block:hover {
+	border-color: #b9c9c3;
+}
+.certloom-canvas-block.is-selected {
+	border-color: #3b8b73;
+	box-shadow: 0 0 0 1px #3b8b73;
+}
+.certloom-canvas-block__controls {
+	display: none;
+	position: absolute;
+	right: 4px;
+	top: -28px;
+	z-index: 4;
+	gap: 2px;
+	padding: 2px;
+	border: 1px solid var(--cl-border);
+	border-radius: 7px;
+	background: #fff;
+	box-shadow: 0 4px 12px rgba(0,0,0,.08);
+}
+.certloom-canvas-block.is-selected .certloom-canvas-block__controls {
+	display: flex;
+}
+.certloom-canvas-block__controls button {
+	border: 0;
+	background: #fff;
+	cursor: pointer;
+	padding: 4px 6px;
+}
+.certloom-inspector-form {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+.certloom-inspector-form label {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	font-weight: 600;
+}
+.certloom-inspector-form input,.certloom-inspector-form textarea,.certloom-inspector-form select {
+	width: 100%;
+}
+.certloom-inspector-actions {
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
+	border-top: 1px solid var(--cl-border);
+	padding-top: 12px;
+}
+.certloom-inspector-actions .is-destructive {
+	color: #a12622;
+}
+.certloom-theme-panel,.certloom-plain-text {
+	margin-top: 18px;
+	border-top: 1px solid var(--cl-border);
+	padding-top: 14px;
+}
+.certloom-theme-panel summary,.certloom-plain-text summary {
+	cursor: pointer;
+	font-weight: 700;
+}
+.certloom-theme-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+	margin-top: 14px;
+}
+.certloom-theme-grid label.is-wide {
+	grid-column: 1/-1;
+}
+.certloom-theme-grid input[type=color] {
+	height: 36px;
+	padding: 2px;
+}
+.certloom-plain-text textarea {
+	width: 100%;
+	margin-top: 12px;
+}
+.certloom-designer-preview {
+	width: min(880px,calc(100vw - 40px));
+}
+.certloom-designer-preview iframe {
+	display: block;
+	width: 100%;
+	height: 72vh;
+	border: 0;
+	background: #eef2f0;
+}
+@media (max-width:1100px) {
+	.certloom-designer-shell {
+		grid-template-columns: 190px minmax(360px,1fr);
+	}
+	.certloom-designer-inspector {
+		grid-column: 1/-1;
+		position: static;
+		max-height: none;
+		border-left: 0;
+		border-top: 1px solid var(--cl-border);
+	}
+	.certloom-message-settings {
+		grid-template-columns: 1fr 1fr;
+	}
+	.certloom-message-settings .is-wide {
+		grid-column: auto;
+	}
+	.certloom-designer-toolbar {
+		position: static;
+	}
+	.certloom-designer-inspector {
+		top: auto;
+	}
+}
+@media (max-width:782px) {
+	.certloom-email-hero {
+		flex-direction: column;
+	}
+	.certloom-email-filters {
+		grid-template-columns: 1fr;
+	}
+	.certloom-email-grid {
+		grid-template-columns: 1fr;
+	}
+	.certloom-designer-wrap {
+		margin-left: -10px;
+	}
+	.certloom-designer-toolbar {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+	.certloom-designer-toolbar__actions {
+		width: 100%;
+		overflow-x: auto;
+	}
+	.certloom-message-settings {
+		grid-template-columns: 1fr;
+	}
+	.certloom-designer-shell {
+		display: block;
+	}
+	.certloom-designer-palette,.certloom-designer-inspector {
+		border: 0;
+		border-bottom: 1px solid var(--cl-border);
+	}
+	.certloom-block-palette {
+		grid-template-columns: repeat(3,1fr);
+	}
+	.certloom-designer-stage {
+		padding: 18px;
+	}
+	.certloom-token-list {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+	}
+}
+@media (prefers-reduced-motion:reduce) {
+	.certloom-canvas-frame {
+		transition: none;
+	}
+}
+@media (forced-colors:active) {
+	.certloom-email-card,.certloom-email-hero,.certloom-email-filters,.certloom-email-canvas,.certloom-block-palette button,.certloom-canvas-block.is-selected {
+		border: 1px solid CanvasText;
+	}
+	.certloom-status {
+		border: 1px solid CanvasText;
+	}
+}
+.certloom-designer-feedback {
+	margin: 14px 20px 0;
+	padding: 12px 14px;
+	border: 1px solid #dba617;
+	border-radius: 10px;
+	background: #fcf9e8;
+	color: #3c434a;
+}
+.certloom-designer-feedback.is-error {
+	border-color: #d63638;
+	background: #fcf0f1;
+	color: #8a2424;
+}
+.certloom-designer-feedback:focus {
+	outline: 2px solid #2271b1;
+	outline-offset: 2px;
+}
+.certloom-canvas-drag-handle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 26px;
+	min-height: 26px;
+	cursor: grab;
+	color: #646970;
+	user-select: none;
+}
+.certloom-canvas-drag-handle:active {
+	cursor: grabbing;
+}
+.certloom-canvas-block.is-dragging {
+	opacity: .55;
+}
+.certloom-canvas-block.is-drop-target {
+	box-shadow: inset 0 3px 0 #2271b1;
+}
+@media (prefers-reduced-motion:reduce) {
+	.certloom-canvas-block {
+		transition: none !important;
+	}
+}
+@media (forced-colors:active) {
+	.certloom-designer-feedback,.certloom-canvas-block.is-drop-target {
+		border-color: CanvasText;
+	}
+	.certloom-canvas-block.is-drop-target {
+		outline: 2px solid Highlight;
+		box-shadow: none;
+	}
+}
