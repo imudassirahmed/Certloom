@@ -1,3 +1,14 @@
+= 1.7.0-alpha.2 =
+* Lock UI Phase 2 around Recipient + credential title + issue date, with hierarchy moved into progressive Additional details instead of the required issuance path.
+* Add mutually exclusive Details only, uploaded PNG/JPEG and Certloom Design presentation controls; unsupported alpha paths fail visibly until the approved backend authority phase rather than being silently coerced into Program + design issuance.
+* Add compact Training/LMS, ISO/Management Systems, Government/Licensing and School/Results hierarchy explanations while keeping canonical Issuer/Program/Batch/Signer names stable.
+* Refine the Credentials ledger to prefer credential title when available, keep the number as secondary identity, remove the decorative View arrow, and expose Review resend through the existing Email Delivery evidence path.
+* Add one Import / issue from file entry that first asks whether rows issue new credentials or import existing records, while preserving the proven separate backend engines until the reusable mapper phase.
+* Adapt useful PressPrimer 1.1.0 UX patterns without importing weaker authority: persistent/replayable onboarding reference, duplicate guidance without an Issue-anyway bypass, row-level resend through Certloom authority, lifecycle reinstatement and scoped Any-source ideas retained for their scheduled phases.
+* Preserve Phase 1 token/ledger/artifact contracts and keep normalized-domain and renderer production authority closed.
+* Remove the inherited QA.23 `CERTLOOM_QA_UNGATED` staging bypass and QA admin-bar marker from the production-intent 1.7 alpha line; domain, public-verification and renderer authority now remain fail-closed unless their real authority conditions are satisfied.
+* Reconcile the permanent responsive guard by semantically normalizing two low-risk mobile rules to the canonical 600px breakpoint, restoring the frozen 34-occurrence legacy ceiling without blind breakpoint replacement.
+
 = 1.7.0-alpha.1 =
 * Start the Certloom 1.7 development line from frozen 1.6.98-qa.23 without opening normalized-domain or renderer production authority.
 * Add the shared 1.7 design-token authority: navy ink, blue action, credential-only verdict colors, three semantic radii, two elevations, seven type sizes, focus and motion tokens.

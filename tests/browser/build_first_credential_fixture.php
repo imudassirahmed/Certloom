@@ -2,8 +2,17 @@
 /** UX-QA browser fixture for the real current-authority Add credential view. */
 define( 'ABSPATH', __DIR__ . '/' );
 define( 'ECAPLA_CERTVERIFY_PATH', dirname( __DIR__, 2 ) . '/' );
-define( 'CERTLOOM_QA_UNGATED', true );
-require ECAPLA_CERTVERIFY_PATH . 'src/Infrastructure/Migration/DomainFeatureGate.php';
+define( 'CERTLOOM_PATH', ECAPLA_CERTVERIFY_PATH );
+require ECAPLA_CERTVERIFY_PATH . 'src/Autoloader.php';
+\Certloom\Autoloader::register();
+
+/* Browser fixture only: exercise the current-authority editor without adding a
+ * production QA bypass. The production source remains fail-closed and the
+ * fixture explicitly seeds DomainFeatureGate's request-local cache. */
+$certloom_gate_reflection = new ReflectionClass( \Certloom\Infrastructure\Migration\DomainFeatureGate::class );
+$certloom_gate_scopes = $certloom_gate_reflection->getProperty( 'scopes' );
+$certloom_gate_scopes->setAccessible( true );
+$certloom_gate_scopes->setValue( null, array( 'write_paths' => true, 'admin_preview' => true, 'data_tools' => true ) );
 
 function __( $v, $d = null ) { return $v; }
 function _n( $s, $p, $n, $d = null ) { return 1 === (int) $n ? $s : $p; }

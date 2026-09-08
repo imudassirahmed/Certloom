@@ -296,3 +296,293 @@
     background: CanvasText;
   }
 }
+
+/* ============================================================================
+   UI PHASE 2 · CREDENTIAL WORKFLOWS
+   The issue surface stays compact and flat. Presentation choices are controls,
+   not marketing cards; hierarchy remains progressive rather than prerequisite.
+   ============================================================================ */
+.certloom-issue-page-head {
+  margin-block: var(--cl-4);
+  padding-bottom: var(--cl-4);
+  border-bottom: 1px solid var(--cl-rule);
+}
+
+.certloom-issue-page-head p {
+  max-width: 74ch;
+  margin: var(--cl-1) 0 0;
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-sm);
+}
+
+.certloom-issue-v2-card {
+  max-width: 960px;
+  padding: 0;
+  border: 1px solid var(--cl-rule);
+  border-radius: var(--cl-r-none);
+  background: var(--cl-surface);
+  box-shadow: none;
+}
+
+.certloom-issue-v2-card > header,
+.certloom-issue-v2-card > .certloom-issue-section,
+.certloom-issue-v2-card > .certloom-additional-details,
+.certloom-issue-v2-card > .certloom-phase2-compatibility,
+.certloom-issue-v2-card > .certloom-issue-actions {
+  padding: var(--cl-4);
+}
+
+.certloom-issue-v2-card > header,
+.certloom-issue-v2-card > .certloom-issue-section,
+.certloom-issue-v2-card > .certloom-additional-details,
+.certloom-issue-v2-card > .certloom-phase2-compatibility {
+  border-bottom: 1px solid var(--cl-rule);
+}
+
+.certloom-ui-contract-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: var(--cl-2);
+  padding: var(--cl-1) var(--cl-2);
+  border: 1px solid var(--cl-blue);
+  border-radius: var(--cl-r-ctl);
+  color: var(--cl-blue-deep);
+  background: var(--cl-blue-wash);
+  font-size: var(--cl-t-xs);
+  font-weight: 600;
+}
+
+.certloom-phase2-backend-boundary {
+  margin: 0;
+  padding: var(--cl-3) var(--cl-4);
+  border-left: 2px solid var(--cl-blue);
+  color: var(--cl-ink);
+  background: var(--cl-blue-wash);
+  font-size: var(--cl-t-sm);
+}
+
+.certloom-presentation-choices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--cl-2);
+  margin-top: var(--cl-2);
+}
+
+.certloom-presentation-choice {
+  display: flex;
+  gap: var(--cl-2);
+  min-width: 0;
+  padding: var(--cl-3);
+  border: 1px solid var(--cl-rule-firm);
+  border-radius: var(--cl-r-ctl);
+  background: var(--cl-surface);
+  cursor: pointer;
+}
+
+.certloom-presentation-choice:has(input:checked) {
+  border-color: var(--cl-blue);
+  background: var(--cl-blue-wash);
+}
+
+.certloom-presentation-choice input {
+  margin-top: var(--cl-1);
+}
+
+.certloom-presentation-choice span,
+.certloom-presentation-choice small {
+  display: block;
+}
+
+.certloom-presentation-choice small {
+  margin-top: var(--cl-1);
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-xs);
+  line-height: 1.4;
+}
+
+.certloom-presentation-panel {
+  margin-top: var(--cl-3);
+  padding-top: var(--cl-3);
+  border-top: 1px solid var(--cl-rule);
+}
+
+.certloom-certificate-image-control {
+  margin-bottom: var(--cl-2);
+}
+
+.certloom-additional-details {
+  margin: 0;
+  border-radius: var(--cl-r-none);
+}
+
+.certloom-additional-details > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cl-3);
+  color: var(--cl-ink);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.certloom-additional-details > summary small {
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-xs);
+  font-weight: 400;
+}
+
+.certloom-additional-details[open] > summary {
+  margin-bottom: var(--cl-4);
+}
+
+.certloom-context-model-help,
+.certloom-numbering-summary {
+  margin-top: var(--cl-3);
+  padding: var(--cl-3) 0;
+  border-top: 1px solid var(--cl-rule);
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-xs);
+}
+
+.certloom-phase2-compatibility {
+  display: flex;
+  gap: var(--cl-3);
+  align-items: flex-start;
+  background: var(--cl-paper);
+}
+
+.certloom-phase2-compatibility strong {
+  flex: 0 0 auto;
+}
+
+.certloom-phase2-compatibility p {
+  margin: 0;
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-sm);
+}
+
+.certloom-issue-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--cl-2);
+}
+
+.certloom-duplicate-guidance {
+  max-width: 760px;
+  padding: var(--cl-4);
+  border: 1px solid var(--cl-rule-firm);
+  border-left: 2px solid var(--cl-expired);
+  border-radius: var(--cl-r-none);
+  background: var(--cl-expired-wash);
+}
+
+.certloom-duplicate-guidance h2 {
+  margin-top: 0;
+}
+
+.certloom-file-intake {
+  max-width: 920px;
+}
+
+.certloom-file-intake-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--cl-rule-firm);
+  border-bottom: 1px solid var(--cl-rule);
+}
+
+.certloom-file-intake-option {
+  padding: var(--cl-4);
+  color: var(--cl-ink);
+  background: var(--cl-surface);
+  text-decoration: none;
+}
+
+.certloom-file-intake-option + .certloom-file-intake-option {
+  border-left: 1px solid var(--cl-rule);
+}
+
+.certloom-file-intake-option:hover,
+.certloom-file-intake-option:focus {
+  color: var(--cl-blue-deep);
+  background: var(--cl-blue-wash);
+}
+
+.certloom-file-intake-option strong,
+.certloom-file-intake-option span {
+  display: block;
+}
+
+.certloom-file-intake-option span {
+  margin-top: var(--cl-1);
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-sm);
+}
+
+.certloom-file-intake-note {
+  margin-top: var(--cl-3);
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-xs);
+}
+
+@media (max-width: 782px) {
+  .certloom-presentation-choices,
+  .certloom-file-intake-options {
+    grid-template-columns: 1fr;
+  }
+
+  .certloom-file-intake-option + .certloom-file-intake-option {
+    border-left: 0;
+    border-top: 1px solid var(--cl-rule);
+  }
+
+  .certloom-phase2-compatibility {
+    display: block;
+  }
+}
+
+@media (forced-colors: active) {
+  .certloom-presentation-choice:has(input:checked),
+  .certloom-phase2-backend-boundary,
+  .certloom-duplicate-guidance {
+    border-color: Highlight;
+  }
+}
+
+.certloom-profile-context-help {
+  margin-top: var(--cl-2);
+  padding-top: var(--cl-2);
+  border-top: 1px solid var(--cl-rule);
+}
+
+.certloom-profile-context-help > summary {
+  color: var(--cl-blue-deep);
+  font-size: var(--cl-t-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.certloom-profile-context-grid {
+  margin-top: var(--cl-2);
+  border-top: 1px solid var(--cl-rule);
+}
+
+.certloom-profile-context-row {
+  display: grid;
+  grid-template-columns: minmax(140px, .35fr) 1fr;
+  gap: var(--cl-3);
+  padding: var(--cl-2) 0;
+  border-bottom: 1px solid var(--cl-rule);
+  font-size: var(--cl-t-xs);
+}
+
+.certloom-profile-context-row span {
+  color: var(--cl-ink-soft);
+}
+
+@media (max-width: 782px) {
+  .certloom-profile-context-row {
+    grid-template-columns: 1fr;
+    gap: var(--cl-1);
+  }
+}

@@ -272,10 +272,19 @@ class Ecapla_CertVerify_Admin {
 			'draft' => __( 'Draft', 'certloom' ),
 			'movePublishedDraft' => __( 'Move published design back to Draft', 'certloom' ),
 			'publishDraftDesign' => __( 'Publish this draft design', 'certloom' ),
+			'certificateImageTypeInvalid' => __( 'Choose a PNG or JPEG image.', 'certloom' ),
+			'selectedFile' => __( 'Selected file', 'certloom' ),
+			'noFileSelected' => __( 'No file selected', 'certloom' ),
+			'noCertificateImage' => __( 'No certificate image selected', 'certloom' ),
+			'phase2DetailsPending' => __( 'Details-only presentation is locked in the UI; persistence follows in the backend phase.', 'certloom' ),
+			'phase2ImagePending' => __( 'PNG/JPEG presentation is locked in the UI; artifact snapshot/provenance persistence follows in the backend phase.', 'certloom' ),
+			'phase2StandalonePending' => __( 'Standalone issuance is locked in the UI; alpha.2 still needs a Program to exercise the existing backend.', 'certloom' ),
+			'phase2CompleteCore' => __( 'Complete Recipient and credential title to review the backend-compatible design path.', 'certloom' ),
+			'phase2Compatible' => __( 'Backend-compatible alpha path ready: Program + Certloom design. Review remains mutation-free.', 'certloom' ),
 			'deactivateVerificationWarning' => __( 'Deactivating Certloom stops public credential verification. Continue?', 'certloom' ),
 		) );
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Asset routing only.
-		if ( in_array( $page, array( 'certloom-domain-issuers', 'certloom-domain-signers' ), true ) ) { wp_enqueue_media(); }
+		if ( in_array( $page, array( 'certloom-domain-issuers', 'certloom-domain-signers', 'certloom-issuance' ), true ) ) { wp_enqueue_media(); }
 	}
 
 

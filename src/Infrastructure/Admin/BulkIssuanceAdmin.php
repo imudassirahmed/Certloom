@@ -11,7 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /** Premium reviewed CSV → durable background Bulk Issuance workflow. */
 final class BulkIssuanceAdmin {
-	const PAGE   = 'certloom-bulk-issuance';
+	const PAGE        = 'certloom-bulk-issuance';
+	const INTAKE_PAGE = 'certloom-file-intake';
 	const NOTICE = 'certloom_bulk_notice_';
 
 	/** @var JobRuntime */
@@ -36,6 +37,31 @@ final class BulkIssuanceAdmin {
 			self::PAGE,
 			array( $this, 'render' )
 		);
+		add_submenu_page(
+			null,
+			__( 'Import / issue from file', 'certloom' ),
+			__( 'Import / issue from file', 'certloom' ),
+			\Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS,
+			self::INTAKE_PAGE,
+			array( $this, 'render_intake' )
+		);
+	}
+
+
+	/** Phase 2 unified file-workflow entry. Existing import/issuance engines remain authoritative behind it. */
+	public function render_intake() {
+		$this->cap();
+		$issue_url  = add_query_arg( 'page', self::PAGE, admin_url( 'admin.php' ) );
+		$import_url = admin_url( 'admin.php?page=certloom-import#certloom-csv-import' );
+
+		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-file-intake">';
+		echo '<div class="certloom-page-head"><div><h1>' . esc_html__( 'Import / issue from file', 'certloom' ) . '</h1><p>' . esc_html__( 'Start with what the rows mean. Both paths use CSV review before records are changed.', 'certloom' ) . '</p></div></div>';
+		echo '<div class="certloom-file-intake-options" role="list">';
+		echo '<a class="certloom-file-intake-option" role="listitem" href="' . esc_url( $issue_url ) . '"><strong>' . esc_html__( 'Issue new credentials', 'certloom' ) . '</strong><span>' . esc_html__( 'Use recipient rows to create new credentials after review. The current alpha still uses the proven Program + design bulk engine behind this entry while standalone/presentation authority is implemented later.', 'certloom' ) . '</span></a>';
+		echo '<a class="certloom-file-intake-option" role="listitem" href="' . esc_url( $import_url ) . '"><strong>' . esc_html__( 'Import existing credential records', 'certloom' ) . '</strong><span>' . esc_html__( 'Bring existing certificate records into Certloom, map the detected columns, preview sample rows, then confirm the reviewed import.', 'certloom' ) . '</span></a>';
+		echo '</div>';
+		echo '<p class="certloom-file-intake-note">' . esc_html__( '1.7 will converge these paths on one reusable profile-aware mapper. This UI does not pretend that backend convergence is already complete.', 'certloom' ) . '</p>';
+		echo '</div>';
 	}
 
 	public function render() {

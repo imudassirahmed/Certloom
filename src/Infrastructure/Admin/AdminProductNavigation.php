@@ -35,7 +35,7 @@ final class AdminProductNavigation {
 		$submenu['certloom'] = $ordered;
 
 		foreach ( array(
-			'certloom-add', 'certloom-certificates', 'certloom-domain-credentials', 'certloom-issuance', 'certloom-bulk-issuance', 'certloom-email-delivery', 'certloom-bulk-review',
+			'certloom-add', 'certloom-certificates', 'certloom-domain-credentials', 'certloom-issuance', 'certloom-file-intake', 'certloom-bulk-issuance', 'certloom-email-delivery', 'certloom-bulk-review',
 			'certloom-domain-recipients', 'certloom-domain-issuers', 'certloom-domain-batches', 'certloom-domain-signers',
 			'certloom-templates', 'certloom-email-designs', 'certloom-frontend',
 			'certloom-automations', 'certloom-design-rules', 'certloom-integrations', 'certloom-analytics',
@@ -78,7 +78,7 @@ final class AdminProductNavigation {
 	private function section_for_page( $page ) {
 		if ( 'certloom-domain-recipients' === $page ) { return 'credentials'; }
 		$groups = array(
-			'credentials' => array( 'certloom-certificates', 'certloom-add', 'certloom-domain-credentials', 'certloom-issuance', 'certloom-bulk-issuance', 'certloom-email-delivery', 'certloom-bulk-review' ),
+			'credentials' => array( 'certloom-certificates', 'certloom-add', 'certloom-domain-credentials', 'certloom-issuance', 'certloom-file-intake', 'certloom-bulk-issuance', 'certloom-email-delivery', 'certloom-bulk-review' ),
 			'people'      => array( 'certloom-domain-programs', 'certloom-domain-issuers', 'certloom-domain-batches', 'certloom-domain-signers' ),
 			'design'      => array( 'certloom-templates', 'certloom-email-designs', 'certloom-frontend' ),
 			'insights'    => array( 'certloom-analytics', 'certloom-integrations', 'certloom-automations', 'certloom-design-rules' ),
@@ -97,7 +97,7 @@ final class AdminProductNavigation {
 					$this->link( __( 'Credentials', 'certloom' ), 'certloom-domain-credentials', array( 'certloom-domain-credentials', 'certloom-certificates', 'certloom-add', 'certloom-bulk-review' ), \Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS ),
 					$this->link( __( 'Issue credential', 'certloom' ), 'certloom-issuance', array( 'certloom-issuance' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ),
 					$this->link( __( 'Recipients', 'certloom' ), 'certloom-domain-recipients', array( 'certloom-domain-recipients' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_RECIPIENTS ),
-					$this->link( __( 'Bulk issue', 'certloom' ), 'certloom-bulk-issuance', array( 'certloom-bulk-issuance' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ),
+					$this->link( __( 'Import / issue from file', 'certloom' ), 'certloom-file-intake', array( 'certloom-file-intake', 'certloom-bulk-issuance' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ),
 					$this->link( __( 'Email delivery', 'certloom' ), 'certloom-email-delivery', array( 'certloom-email-delivery' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ),
 				);
 			case 'people':

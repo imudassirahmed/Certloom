@@ -23,7 +23,6 @@ final class PublicVerificationGate {
 
 	/** @return bool */
 	public function is_ready() {
-		if ( defined( 'CERTLOOM_QA_UNGATED' ) && true === CERTLOOM_QA_UNGATED ) { return true; }
 		if ( ! get_option( self::OPTION, false ) ) {
 			return false;
 		}
@@ -53,7 +52,6 @@ final class PublicVerificationGate {
 	 * @return true|\WP_Error
 	 */
 	public function enable() {
-		if ( defined( 'CERTLOOM_QA_UNGATED' ) && true === CERTLOOM_QA_UNGATED ) { return true; }
 		if ( ( new DomainMaintenanceLock() )->active() ) {
 			return new \WP_Error( 'certloom_series_verification_maintenance_active', __( 'Certloom cannot enable Series verification while credential maintenance is active or its maintenance lock requires recovery.', 'certloom' ) );
 		}

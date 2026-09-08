@@ -959,6 +959,68 @@
 		sync( false );
 	}
 
+
+	function initPhase2Issuance() {
+		document.querySelectorAll( 'form[data-certloom-phase2-issuance]' ).forEach( function ( form ) {
+			var presentationRadios = Array.prototype.slice.call( form.querySelectorAll( 'input[name="presentation_mode"]' ) );
+			var panels = Array.prototype.slice.call( form.querySelectorAll( '[data-certloom-presentation-panel]' ) );
+			var template = form.querySelector( 'select[name="template_id"]' );
+			var imageId = form.querySelector( 'input[name="certificate_image_id"]' );
+			var imagePreview = form.querySelector( '.certloom-certificate-image-control [data-certloom-media-preview]' );
+			var imageClear = form.querySelector( '.certloom-certificate-image-control [data-certloom-media-clear]' );
+			var program = form.querySelector( 'select[name="program_id"]' );
+			var title = form.querySelector( 'input[name="credential_title"]' );
+			var expiryRadios = Array.prototype.slice.call( form.querySelectorAll( 'input[name="expiry_mode"]' ) );
+			var expiryPanel = form.querySelector( '[data-certloom-expiry-date-panel]' );
+			var expiryDate = form.querySelector( 'input[name="expires_at"]' );
+			var review = form.querySelector( '[data-certloom-manual-review]' );
+			var message = form.querySelector( '[data-certloom-phase2-compatibility-message]' );
+			function presentationMode() { var checked = presentationRadios.find( function ( radio ) { return radio.checked; } ); return checked ? checked.value : 'details_only'; }
+			function recipientReady() {
+				var mode = form.querySelector( 'input[name="recipient_mode"]:checked' );
+				if ( ! mode || 'existing' === mode.value ) { var select = form.querySelector( '[data-certloom-recipient-existing-select]' ); return !! ( select && select.value ); }
+				var name = form.querySelector( 'input[name="new_recipient[display_name]"]' ); return !! ( name && name.value.trim() );
+			}
+			function clearImage() { if ( imageId ) { imageId.value = ''; } if ( imagePreview ) { imagePreview.innerHTML = '<span>' + escapeHtml( certloomText( 'noCertificateImage', 'No certificate image selected' ) ) + '</span>'; } if ( imageClear ) { imageClear.hidden = true; } }
+			function syncCompatibility() {
+				if ( ! review ) { return; }
+				var mode = presentationMode(); var hasProgram = !! ( program && program.value && '0' !== program.value ); var hasTitle = !! ( title && title.value.trim() ); var hasRecipient = recipientReady();
+				var compatible = 'design' === mode && hasProgram && hasTitle && hasRecipient;
+				review.disabled = ! compatible;
+				if ( ! message ) { return; }
+				if ( 'details_only' === mode ) { message.textContent = certloomText( 'phase2DetailsPending', 'Details-only presentation is locked in the UI; persistence follows in the backend phase.' ); }
+				else if ( 'image' === mode ) { message.textContent = certloomText( 'phase2ImagePending', 'PNG/JPEG presentation is locked in the UI; artifact snapshot/provenance persistence follows in the backend phase.' ); }
+				else if ( ! hasProgram ) { message.textContent = certloomText( 'phase2StandalonePending', 'Standalone issuance is locked in the UI; alpha.2 still needs a Program to exercise the existing backend.' ); }
+				else if ( ! hasTitle || ! hasRecipient ) { message.textContent = certloomText( 'phase2CompleteCore', 'Complete Recipient and credential title to review the backend-compatible design path.' ); }
+				else { message.textContent = certloomText( 'phase2Compatible', 'Backend-compatible alpha path ready: Program + Certloom design. Review remains mutation-free.' ); }
+			}
+			function syncPresentation( changed ) {
+				var mode = presentationMode();
+				panels.forEach( function ( panel ) { panel.hidden = panel.getAttribute( 'data-certloom-presentation-panel' ) !== mode; } );
+				if ( template ) { template.disabled = 'design' !== mode; if ( changed && 'design' !== mode ) { template.value = '0'; } }
+				if ( changed && 'image' !== mode ) { clearImage(); }
+				syncCompatibility();
+			}
+			function syncExpiry() {
+				var selected = expiryRadios.find( function ( radio ) { return radio.checked; } ); var isDate = selected && 'date' === selected.value;
+				if ( expiryPanel ) { expiryPanel.hidden = ! isDate; }
+				if ( expiryDate ) { expiryDate.disabled = ! isDate; expiryDate.required = !! isDate; }
+				var programValidity = expiryRadios.find( function ( radio ) { return 'program' === radio.value; } );
+				if ( programValidity ) {
+					programValidity.disabled = ! ( program && program.value && '0' !== program.value );
+					if ( programValidity.checked && programValidity.disabled ) { var permanent = expiryRadios.find( function ( radio ) { return 'permanent' === radio.value; } ); if ( permanent ) { permanent.checked = true; syncExpiry(); return; } }
+				}
+			}
+			presentationRadios.forEach( function ( radio ) { radio.addEventListener( 'change', function () { syncPresentation( true ); } ); } );
+			expiryRadios.forEach( function ( radio ) { radio.addEventListener( 'change', syncExpiry ); } );
+			if ( program ) { program.addEventListener( 'change', function () { syncExpiry(); syncCompatibility(); } ); }
+			if ( title ) { title.addEventListener( 'input', syncCompatibility ); }
+			form.addEventListener( 'change', function ( event ) { if ( event.target && ( event.target.name === 'recipient_id' || event.target.name === 'recipient_mode' ) ) { syncCompatibility(); } } );
+			form.addEventListener( 'input', function ( event ) { if ( event.target && event.target.name === 'new_recipient[display_name]' ) { syncCompatibility(); } } );
+			syncPresentation( false ); syncExpiry(); syncCompatibility();
+		} );
+	}
+
 	function initPremiumDialogs() {
 		function closeDialog( dialog ) { if ( ! dialog ) { return; } if ( dialog.open && 'function' === typeof dialog.close ) { dialog.close(); } else { dialog.removeAttribute( 'open' ); } }
 		function feedbackFor( form ) {
@@ -1004,7 +1066,7 @@
 				var kind = form.getAttribute( 'data-certloom-quick-create' ); var targetSelector = form.getAttribute( 'data-certloom-quick-target' ); var target = targetSelector ? document.querySelector( targetSelector ) : null; addOption( target, response.data.id, response.data.label || '', response.data.program_id || 0 ); if ( target ) { target.value = String( response.data.id ); target.dispatchEvent( new Event( 'change', { bubbles:true } ) ); }
 				if ( 'program' === kind ) { document.querySelectorAll( 'select[data-certloom-quick-program-mirror], #certloom-quick-batch-dialog select[name="program_id"]' ).forEach( function ( select ) { addOption( select, response.data.id, response.data.label || '' ); } ); }
 				setQuickFeedback( form, response.data.message || certloomText( 'added', 'Added.' ), false );
-				var review = document.querySelector( '[data-certloom-manual-review]' ); if ( review ) { var program = document.querySelector( 'select[name="program_id"]' ); review.disabled = ! ( program && program.value ) || '1' !== review.getAttribute( 'data-certloom-has-templates' ); }
+				var review = document.querySelector( '[data-certloom-manual-review]' ); if ( review && ! review.closest( 'form[data-certloom-phase2-issuance]' ) ) { var program = document.querySelector( 'select[name="program_id"]' ); review.disabled = ! ( program && program.value ) || '1' !== review.getAttribute( 'data-certloom-has-templates' ); }
 				window.setTimeout( function () { closeDialog( form.closest( 'dialog' ) ); if ( 'program' === kind ) { var title = form.querySelector( '[name="program_title"]' ), code = form.querySelector( '[name="program_code"]' ); if ( title ) { title.value = ''; } if ( code ) { code.value = ''; } } else if ( 'batch' === kind ) { var name = form.querySelector( '[name="batch_name"]' ), batchCode = form.querySelector( '[name="batch_code"]' ); if ( name ) { name.value = ''; } if ( batchCode ) { batchCode.value = ''; } } }, 350 );
 			} ).catch( function ( error ) { setQuickFeedback( form, error && error.message ? error.message : certloomText( 'itemAddFailed', 'This item could not be added.' ), true ); } ).finally( function () { if ( button ) { button.disabled = false; button.removeAttribute( 'aria-busy' ); button.textContent = original; } } );
 		} );
@@ -1130,13 +1192,24 @@
 		} );
 		document.querySelectorAll( '[data-certloom-media-control]' ).forEach( function ( control ) {
 			var id = control.querySelector( '[data-certloom-media-id]' ), preview = control.querySelector( '[data-certloom-media-preview]' ), choose = control.querySelector( '[data-certloom-media-select]' ), clear = control.querySelector( '[data-certloom-media-clear]' );
+			var allowedTypes = String( control.getAttribute( 'data-certloom-media-types' ) || '' ).split( ',' ).map( function ( value ) { return value.trim(); } ).filter( Boolean );
 			if ( choose ) { choose.addEventListener( 'click', function () {
 				if ( ! window.wp || ! wp.media ) { return; }
 				var frame = wp.media( { title:'Choose media', button:{ text:'Use this file' }, multiple:false, library:{ type:'image' } } );
-				frame.on( 'select', function () { var attachment = frame.state().get( 'selection' ).first().toJSON(); id.value = attachment.id || ''; var src = attachment.sizes && attachment.sizes.thumbnail ? attachment.sizes.thumbnail.url : attachment.url; preview.innerHTML = ( src ? '<img src="' + escapeHtml( src ) + '" alt="">' : '' ) + '<span>' + escapeHtml( attachment.filename || attachment.title || 'Selected file' ) + '</span>'; if ( clear ) { clear.hidden = false; } } );
+				frame.on( 'select', function () {
+					var attachment = frame.state().get( 'selection' ).first().toJSON();
+					if ( allowedTypes.length && allowedTypes.indexOf( String( attachment.mime || '' ) ) === -1 ) {
+						if ( preview ) { preview.innerHTML = '<span>' + escapeHtml( certloomText( 'certificateImageTypeInvalid', 'Choose a PNG or JPEG image.' ) ) + '</span>'; }
+						return;
+					}
+					id.value = attachment.id || '';
+					var src = attachment.sizes && attachment.sizes.thumbnail ? attachment.sizes.thumbnail.url : attachment.url;
+					preview.innerHTML = ( src ? '<img src="' + escapeHtml( src ) + '" alt="">' : '' ) + '<span>' + escapeHtml( attachment.filename || attachment.title || certloomText( 'selectedFile', 'Selected file' ) ) + '</span>';
+					if ( clear ) { clear.hidden = false; }
+				} );
 				frame.open();
 			} ); }
-			if ( clear ) { clear.addEventListener( 'click', function () { id.value = ''; preview.innerHTML = '<span>No file selected</span>'; clear.hidden = true; } ); }
+			if ( clear ) { clear.addEventListener( 'click', function () { id.value = ''; preview.innerHTML = '<span>' + escapeHtml( control.classList.contains( 'certloom-certificate-image-control' ) ? certloomText( 'noCertificateImage', 'No certificate image selected' ) : certloomText( 'noFileSelected', 'No file selected' ) ) + '</span>'; clear.hidden = true; } ); }
 		} );
 	}
 
@@ -1280,6 +1353,7 @@
 		initHumanFormValidation();
 		initPremiumDialogs();
 		initRecipientCompose();
+		initPhase2Issuance();
 		initDomainEntityFormFeedback();
 		initDomainFormPersistence();
 		initDomainMediaAndColorControls();

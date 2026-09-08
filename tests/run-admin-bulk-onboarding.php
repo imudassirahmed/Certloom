@@ -147,9 +147,9 @@ p1d_check( false !== strpos( $editor_view, 'Open verification result' ) && false
 p1d_check( false !== strpos( $editor_view, 'Created' ) && false !== strpos( $editor_view, 'Last updated' ) && false !== strpos( $editor_view, 'Full credential history is not available for current-registry records yet' ), 'Activity workspace must show only truthful current-registry timestamps and explain the unavailable history in customer language.' );
 p1d_check( false !== strpos( file_get_contents( $root . '/includes/class-ecapla-certverify-bulk-manager.php' ), 'Certificate changed after bulk review' ), 'Bulk commit must include optimistic-concurrency protection.' );
 p1d_check( false !== strpos( $admin, 'maybe_redirect_after_activation' ) && false !== strpos( $bootstrap, 'certloom_activation_redirect_' ) && false !== strpos( $admin, 'isset( $_GET[\'activate-multi\'] )' ), 'First-run Setup continuation must be one-shot and skip bulk activation rather than permanently hijacking admin navigation.' );
-preg_match( '/Version:\s+(1\.6\.\d+(?:-qa\.\d+)?)/', $bootstrap, $header_version );
-preg_match( "/ECAPLA_CERTVERIFY_VERSION',\s*'(1\.6\.\d+(?:-qa\.\d+)?)'/", $bootstrap, $constant_version );
-p1d_check( ! empty( $header_version[1] ) && ! empty( $constant_version[1] ) && $header_version[1] === $constant_version[1], 'Current build must use matching 1.6.x patch/QA versioning in header and constant.' );
+preg_match( '/Version:\s+(1\.7\.0-alpha\.\d+)/', $bootstrap, $header_version );
+preg_match( "/ECAPLA_CERTVERIFY_VERSION',\s*'(1\.7\.0-alpha\.\d+)'/", $bootstrap, $constant_version );
+p1d_check( ! empty( $header_version[1] ) && ! empty( $constant_version[1] ) && $header_version[1] === $constant_version[1], 'Current build must use matching 1.7 alpha versioning in header and constant.' );
 p1d_check( false !== strpos( $bootstrap, "CERTLOOM_DOMAIN_WRITE_PATHS_READY', false" ) && false !== strpos( $bootstrap, "CERTLOOM_DOMAIN_ADMIN_PREVIEW', false" ) && false !== strpos( $bootstrap, "CERTLOOM_DOMAIN_DATA_TOOLS_READY', false" ), 'Phase 1D must leave all future-domain production gates disabled.' );
 
 echo "PASS  Phase 1D reviewed bulk management and non-blocking onboarding are authority-safe\n";

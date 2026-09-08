@@ -2116,7 +2116,7 @@
 .certloom-column-options { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px 16px; margin: 12px 0; }
 .certloom-date-filter-grid { display: grid; grid-template-columns: repeat(4,minmax(150px,1fr)); gap: 12px; margin-top: 12px; }
 @media (max-width: 900px) { .certloom-date-filter-grid { grid-template-columns: repeat(2,minmax(150px,1fr)); } }
-@media (max-width: 540px) { .certloom-date-filter-grid, .certloom-column-options { grid-template-columns: 1fr; } .certloom-column-preferences-form { min-width: 0; } }
+@media (max-width: 600px) { .certloom-date-filter-grid, .certloom-column-options { grid-template-columns: 1fr; } .certloom-column-preferences-form { min-width: 0; } }
 
 /* 1.6.3 premium application-shell and credential-workspace refinements. */
 .certloom-workspace-nav {
@@ -5132,7 +5132,7 @@ align-items:flex-start}
 .certloom-my-design-card .certloom-form-actions{margin-top:auto}
 .certloom-design-identity-grid{align-items:start}.certloom-design-simple-status{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin:16px 0;padding:14px 16px;border:1px solid var(--certloom-flow-line,#dfe8e4);border-radius:10px;background:#fafcfb}.certloom-design-simple-status h3{margin:3px 0 4px;font-size:15px}.certloom-design-simple-status p{margin:0;color:var(--certloom-flow-subtle,#63726d);font-size:12px;line-height:1.45}
 @media(max-width:980px){.certloom-my-design-card-grid{grid-template-columns:1fr}}
-@media(max-width:560px){.certloom-my-design-card{padding:15px}.certloom-my-design-card .certloom-form-actions .button{flex:1;justify-content:center}.certloom-design-simple-status{align-items:flex-start;flex-direction:column}}
+@media(max-width:600px){.certloom-my-design-card{padding:15px}.certloom-my-design-card .certloom-form-actions .button{flex:1;justify-content:center}.certloom-design-simple-status{align-items:flex-start;flex-direction:column}}
 
 /* UX-CORE-02 — compact premium collections and consistent form rhythm. */
 .certloom-premium-list{display:grid;margin:14px 0 4px;border:1px solid #dde5e1;border-radius:10px;background:#fff;overflow:hidden}

@@ -26,7 +26,7 @@ foreach ( $files as $key => $path ) {
 	phase1_assert( false !== $source[ $key ], 'Could not read Phase 1 file: ' . $path );
 }
 
-phase1_assert( false !== strpos( $source['bootstrap'], 'Version: 1.7.0-alpha.1' ), 'Development package must identify the 1.7 alpha line.' );
+phase1_assert( false !== strpos( $source['bootstrap'], 'Version: 1.7.0-alpha.' ), 'Development package must identify the 1.7 alpha line.' );
 phase1_assert( false !== strpos( $source['tokens'], '--cl-ink: #01133D' ), 'Token authority must include Certloom navy ink.' );
 phase1_assert( false !== strpos( $source['tokens'], '--cl-blue: #1450E0' ), 'Token authority must include blue action.' );
 phase1_assert( false !== strpos( $source['tokens'], '--cl-valid: #00734E' ), 'Token authority must reserve verified green.' );

@@ -569,6 +569,9 @@ final class DomainAdmin {
 			$simple ? __( 'See who received each credential, open the public view, or continue managing it without navigating through internal record structures.', 'certloom' ) : __( 'Inspect continuing Credential Series, immutable Version lineage, effective status, verification identity, and reviewed lifecycle actions from one premium workspace.', 'certloom' ),
 			$issue_action
 		);
+		if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) ) {
+			echo '<p class="certloom-registry-secondary-actions"><a class="button" href="' . esc_url( add_query_arg( 'page', BulkIssuanceAdmin::INTAKE_PAGE, admin_url( 'admin.php' ) ) ) . '">' . esc_html__( 'Import / issue from file', 'certloom' ) . '</a></p>';
+		}
 		$this->notice();
 		if ( ! is_wp_error( $summary ) ) {
 			$this->metric_grid(
@@ -602,6 +605,7 @@ final class DomainAdmin {
 					? add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'legacy_id' => absint( $item['legacy_id'] ?? 0 ) ), admin_url( 'admin.php' ) )
 					: add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'series_id' => absint( $item['series_id'] ?? 0 ) ), admin_url( 'admin.php' ) );
 				$number = trim( (string) ( $item['display_number'] ?? '' ) );
+				$credential_title = trim( (string) ( $item['credential_title'] ?? $item['title'] ?? '' ) );
 				$program = trim( (string) ( $item['program_title'] ?? '' ) );
 				$batch = trim( (string) ( $item['batch_name'] ?? '' ) );
 				$public_url = $is_historical
@@ -609,7 +613,11 @@ final class DomainAdmin {
 					: ( $public_ready ? $url_builder->verification_url( (string) ( $item['public_id'] ?? '' ) ) : null );
 				$entry_date = trim( (string) ( $item['entry_created_at'] ?? $item['series_created_at'] ?? '' ) );
 				echo '<tr>';
-				echo '<td data-col="' . esc_attr__( 'Credential', 'certloom' ) . '"><strong class="certloom-credential-title"><a href="' . esc_url( $detail_url ) . '">' . esc_html( '' !== $number ? $number : __( 'Unnumbered credential', 'certloom' ) ) . '</a></strong><div class="certloom-credential-row-actions" aria-label="' . esc_attr__( 'Credential actions', 'certloom' ) . '">' . ( is_string( $public_url ) && '' !== $public_url ? '<a href="' . esc_url( $public_url ) . '" target="_blank" rel="noopener">' . esc_html__( 'View', 'certloom' ) . ' <span aria-hidden="true">↗</span></a>' : '' ) . '<a href="' . esc_url( $detail_url ) . '">' . esc_html__( 'Manage', 'certloom' ) . '</a></div><div class="certloom-credential-secondary certloom-credential-source-meta"><span class="certloom-credential-source ' . esc_attr( $source_class ) . '">' . esc_html( $source_label ) . '</span>' . ( ! $is_historical && ! empty( $item['public_id'] ) ? '<code>' . esc_html( (string) $item['public_id'] ) . '</code>' : '' ) . '</div></td>';
+				$primary_label = '' !== $credential_title ? $credential_title : ( '' !== $number ? $number : __( 'Credential', 'certloom' ) );
+				$resend_url = ! $is_historical && ! empty( $item['version_id'] )
+					? add_query_arg( array( 'page' => 'certloom-email-delivery', 'version_id' => absint( $item['version_id'] ) ), admin_url( 'admin.php' ) )
+					: '';
+				echo '<td data-col="' . esc_attr__( 'Credential', 'certloom' ) . '"><strong class="certloom-credential-title"><a href="' . esc_url( $detail_url ) . '">' . esc_html( $primary_label ) . '</a></strong>' . ( '' !== $credential_title && '' !== $number ? '<div class="certloom-credential-secondary"><code>' . esc_html( $number ) . '</code></div>' : '' ) . '<div class="certloom-credential-row-actions" aria-label="' . esc_attr__( 'Credential actions', 'certloom' ) . '">' . ( is_string( $public_url ) && '' !== $public_url ? '<a href="' . esc_url( $public_url ) . '" target="_blank" rel="noopener">' . esc_html__( 'View credential', 'certloom' ) . '</a>' : '' ) . '<a href="' . esc_url( $detail_url ) . '">' . esc_html__( 'Manage', 'certloom' ) . '</a>' . ( '' !== $resend_url ? '<a href="' . esc_url( $resend_url ) . '">' . esc_html__( 'Review resend', 'certloom' ) . '</a>' : '' ) . '</div><div class="certloom-credential-secondary certloom-credential-source-meta"><span class="certloom-credential-source ' . esc_attr( $source_class ) . '">' . esc_html( $source_label ) . '</span>' . ( ! $is_historical && ! empty( $item['public_id'] ) ? '<code>' . esc_html( (string) $item['public_id'] ) . '</code>' : '' ) . '</div></td>';
 				echo '<td data-col="' . esc_attr__( 'Recipient', 'certloom' ) . '"><strong>' . esc_html( (string) ( $item['display_name'] ?: '—' ) ) . '</strong>' . ( ! empty( $item['recipient_email'] ) ? '<div class="certloom-credential-secondary">' . esc_html( (string) $item['recipient_email'] ) . '</div>' : '' ) . '</td>';
 				echo '<td data-col="' . esc_attr__( 'Program / batch', 'certloom' ) . '">' . esc_html( '' !== $program ? $program : '—' ) . ( '' !== $batch ? '<div class="certloom-credential-secondary">' . esc_html( $batch ) . '</div>' : '' ) . '</td>';
 				echo '<td data-col="' . esc_attr__( 'Issue date', 'certloom' ) . '">' . esc_html( ! empty( $item['issued_at'] ) ? (string) $item['issued_at'] : '—' ) . '</td>';
@@ -620,7 +628,7 @@ final class DomainAdmin {
 				echo '</tr>';
 			}
 			if ( empty( $result['items'] ) ) {
-				echo '<tr><td colspan="8"><div class="certloom-domain-empty"><strong>' . esc_html__( 'No credentials match these filters.', 'certloom' ) . '</strong><span>' . esc_html__( 'Adjust the search, status, or Program filter. Manual Issuance creates new Credential Series here.', 'certloom' ) . '</span></div></td></tr>';
+				echo '<tr><td colspan="8"><div class="certloom-domain-empty"><strong>' . esc_html__( 'No credentials match these filters.', 'certloom' ) . '</strong><span>' . esc_html__( 'Adjust the search, status, or Program filter. Issue credential creates new records here.', 'certloom' ) . '</span></div></td></tr>';
 			}
 			echo '</tbody></table></div>';
 			$this->pagination( self::CREDENTIALS_PAGE, $page, (int) $result['total'], 50, $search, array( 'credential_status' => $status, 'program_id' => $program_id ) );
