@@ -43,15 +43,15 @@ $periods = array( 7 => __( '7 days', 'certloom' ), 30 => __( '30 days', 'certloo
 		<section class="certloom-analytics-metrics" aria-label="<?php esc_attr_e( 'Verification summary', 'certloom' ); ?>">
 			<?php
 			$metrics = array(
-				array( 'value' => $total, 'label' => __( 'Total lookups', 'certloom' ) ),
-				array( 'value' => (int) $summary['success'], 'label' => __( 'Successful', 'certloom' ) ),
-				array( 'value' => (int) $summary['failed'], 'label' => __( 'Failed', 'certloom' ) ),
-				array( 'value' => (int) $summary['invalid'], 'label' => __( 'Invalid input', 'certloom' ) ),
-				array( 'value' => (int) $summary['expired'], 'label' => __( 'Expired', 'certloom' ) ),
-				array( 'value' => (int) $summary['revoked'], 'label' => __( 'Revoked', 'certloom' ) ),
+				array( 'value' => $total, 'label' => __( 'Total lookups', 'certloom' ), 'class' => 'is-total' ),
+				array( 'value' => (int) $summary['success'], 'label' => __( 'Successful', 'certloom' ), 'class' => 'is-success' ),
+				array( 'value' => (int) $summary['failed'], 'label' => __( 'Failed', 'certloom' ), 'class' => 'is-failed' ),
+				array( 'value' => (int) $summary['invalid'], 'label' => __( 'Invalid input', 'certloom' ), 'class' => 'is-invalid' ),
+				array( 'value' => (int) $summary['expired'], 'label' => __( 'Expired', 'certloom' ), 'class' => 'is-expired' ),
+				array( 'value' => (int) $summary['revoked'], 'label' => __( 'Revoked', 'certloom' ), 'class' => 'is-revoked' ),
 			);
 			foreach ( $metrics as $metric ) : ?>
-				<article class="certloom-domain-metric"><strong><?php echo esc_html( number_format_i18n( $metric['value'] ) ); ?></strong><span><?php echo esc_html( $metric['label'] ); ?></span></article>
+				<article class="certloom-domain-metric <?php echo esc_attr( $metric['class'] ?? '' ); ?>"><strong><?php echo esc_html( number_format_i18n( $metric['value'] ) ); ?></strong><span><?php echo esc_html( $metric['label'] ); ?></span></article>
 			<?php endforeach; ?>
 		</section>
 
@@ -61,7 +61,7 @@ $periods = array( 7 => __( '7 days', 'certloom' ), 30 => __( '30 days', 'certloo
 				<?php if ( 0 === $total ) : ?>
 					<p class="certloom-domain-empty"><strong><?php esc_html_e( 'No verification activity in this period.', 'certloom' ); ?></strong><span><?php esc_html_e( 'Counts will appear here after public verification requests are recorded.', 'certloom' ); ?></span></p>
 				<?php else : ?>
-					<div class="certloom-analytics-chart" role="img" aria-label="<?php echo esc_attr( $chart_label ); ?>">
+					<div class="certloom-analytics-chart is-verification" role="img" aria-label="<?php echo esc_attr( $chart_label ); ?>">
 					<?php
 					$max_day = 1;
 					foreach ( $report['trend'] as $row ) { $max_day = max( $max_day, array_sum( array_intersect_key( $row, array_flip( array( 'success', 'failed', 'invalid', 'expired', 'revoked' ) ) ) ) ); }

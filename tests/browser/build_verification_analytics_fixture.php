@@ -22,8 +22,8 @@ $analytics_report=array(
  'most_verified'=>array(array('credential_id'=>7,'certificate_number'=>'CERT-2026-0007','total'=>38),array('credential_id'=>12,'certificate_number'=>'CERT-2026-0012','total'=>31)),
  'retention_days'=>730,'privacy'=>array('raw_ip_stored'=>false,'user_agent_stored'=>false,'raw_failed_identifier_stored'=>false,'aggregation'=>'daily'),
 );
-$css=file_get_contents(dirname(__DIR__,2).'/admin/assets/admin.css');
+$tokens=file_get_contents(dirname(__DIR__,2).'/assets/css/certloom-tokens.css');$css=file_get_contents(dirname(__DIR__,2).'/admin/assets/admin.css');$foundation=file_get_contents(dirname(__DIR__,2).'/admin/assets/certloom-foundation.css');
 ob_start(); include dirname(__DIR__,2).'/admin/views/analytics.php'; $view=ob_get_clean();
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
 html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}body{margin:0;background:#f0f0f1;color:#1d2327;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;line-height:1.5}.wrap{margin:20px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:0 12px;border:1px solid #2271b1;background:#f6f7f7;color:#2271b1}.widefat{width:100%;border-collapse:collapse;background:#fff}.widefat th,.widefat td{padding:9px;border-bottom:1px solid #dcdcde;text-align:left}.certloom-dashboard-hero{display:flex;justify-content:space-between}.certloom-domain-metric{background:#fff;border:1px solid #dcdcde;padding:14px;border-radius:8px}.certloom-domain-metric strong,.certloom-domain-metric span{display:block}.certloom-manual-card{background:#fff;border:1px solid #dcdcde;border-radius:10px;padding:16px}.certloom-eyebrow{font-size:11px;font-weight:700;text-transform:uppercase}.certloom-analytics-bar{transition:height 2s ease}
-<?php echo $css; ?></style></head><body><?php echo $view; ?></body></html>
+<?php echo $tokens, "\n", $css, "\n", $foundation; ?></style></head><body><?php echo $view; ?></body></html>

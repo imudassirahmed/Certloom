@@ -586,3 +586,463 @@
     gap: var(--cl-1);
   }
 }
+
+/* ============================================================================
+   CERTLOOM 1.7 · UI PHASE 2.1 VISUAL CONSISTENCY
+   Top-level admin headers are page structure, not promotional cards. This
+   explicitly neutralizes legacy hero gradients/glass/shadows that survived the
+   Phase 1 token migration while preserving compact actions and responsive flow.
+   ============================================================================ */
+.certloom-admin-shell .certloom-page-hero,
+.certloom-admin-shell .certloom-workspace-hero,
+.certloom-admin-shell .certloom-dashboard-hero,
+.certloom-admin-shell .certloom-credential-hero {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--cl-4);
+  margin: var(--cl-4) 0;
+  padding: 0 0 var(--cl-4);
+  border: 0;
+  border-bottom: 1px solid var(--cl-rule);
+  border-radius: var(--cl-r-none);
+  background: transparent;
+  box-shadow: none;
+  color: var(--cl-ink);
+}
+
+/* A narrow brand rail may use the logo spectrum as a graphic accent.
+   The header surface itself remains flat; this is deliberately not a hero fill. */
+.certloom-admin-shell .certloom-page-hero::before,
+.certloom-admin-shell .certloom-workspace-hero::before,
+.certloom-admin-shell .certloom-dashboard-hero::before,
+.certloom-admin-shell .certloom-credential-hero::before,
+.certloom-admin-shell .certloom-email-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, var(--cl-ink) 0 24%, var(--cl-blue) 24% 50%, var(--cl-cyan) 50% 74%, var(--cl-valid-mark) 74% 100%);
+  pointer-events: none;
+}
+
+.certloom-admin-shell .certloom-dashboard-hero,
+.certloom-admin-shell .certloom-email-hero {
+  position: relative;
+  padding-top: var(--cl-3);
+}
+
+.certloom-admin-shell .certloom-page-hero h1,
+.certloom-admin-shell .certloom-workspace-hero h1,
+.certloom-admin-shell .certloom-dashboard-hero h1,
+.certloom-admin-shell .certloom-credential-hero h1 {
+  margin: var(--cl-1) 0 var(--cl-1);
+  color: var(--cl-ink);
+  font-size: var(--cl-t-lg);
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.certloom-admin-shell .certloom-page-hero p,
+.certloom-admin-shell .certloom-workspace-hero p,
+.certloom-admin-shell .certloom-dashboard-hero p,
+.certloom-admin-shell .certloom-credential-hero p {
+  max-width: 72ch;
+  margin: 0;
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-sm);
+  line-height: 1.5;
+}
+
+.certloom-admin-shell .certloom-eyebrow,
+.certloom-admin-shell .certloom-dashboard-hero .certloom-eyebrow {
+  margin: 0 0 var(--cl-1);
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-xs);
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.certloom-admin-shell .certloom-dashboard-actions,
+.certloom-admin-shell .certloom-page-actions,
+.certloom-admin-shell .certloom-workspace-hero-actions,
+.certloom-admin-shell .certloom-credential-hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--cl-2);
+  flex-wrap: wrap;
+}
+
+.certloom-admin-shell .certloom-dashboard-actions .button,
+.certloom-admin-shell .certloom-page-actions .button,
+.certloom-admin-shell .certloom-workspace-hero-actions .button,
+.certloom-admin-shell .certloom-credential-hero-actions .button {
+  min-height: 36px;
+  padding-inline: var(--cl-3);
+  border-radius: var(--cl-r-ctl);
+  box-shadow: none;
+}
+
+.certloom-admin-shell .certloom-dashboard-actions .button-secondary {
+  color: var(--cl-blue);
+  border-color: var(--cl-rule-firm);
+  background: var(--cl-surface);
+}
+
+.certloom-admin-shell .certloom-dashboard-actions .button-secondary:hover,
+.certloom-admin-shell .certloom-dashboard-actions .button-secondary:focus {
+  color: var(--cl-blue-deep);
+  border-color: var(--cl-blue);
+  background: var(--cl-blue-wash);
+}
+
+/* Dashboard summary tiles are compact data cells: flat, ruled and scan-first. */
+.certloom-admin-shell .certloom-metric-grid {
+  gap: var(--cl-2);
+  margin-bottom: var(--cl-4);
+}
+
+.certloom-admin-shell .certloom-metric-card {
+  --certloom-card-accent: var(--cl-chart-1);
+  min-height: 120px;
+  padding: var(--cl-3);
+  border-color: var(--cl-rule);
+  border-block-start: 3px solid var(--certloom-card-accent);
+  border-radius: var(--cl-r-none);
+  background: var(--cl-surface);
+  box-shadow: none;
+  color: var(--cl-ink);
+  transition: border-color .16s ease, background-color .16s ease;
+}
+
+/* Brand accents cycle only across non-status cards. Status cards retain
+   credential semantics rather than borrowing arbitrary chart colours. */
+.certloom-admin-shell .certloom-metric-card:nth-child(3n + 1) { --certloom-card-accent: var(--cl-chart-1); }
+.certloom-admin-shell .certloom-metric-card:nth-child(3n + 2) { --certloom-card-accent: var(--cl-chart-2); }
+.certloom-admin-shell .certloom-metric-card:nth-child(3n) { --certloom-card-accent: var(--cl-chart-3); }
+.certloom-admin-shell .certloom-metric-card:has(.certloom-metric-icon.is-valid) { --certloom-card-accent: var(--cl-valid-mark); }
+.certloom-admin-shell .certloom-metric-card:has(.certloom-metric-icon.is-withdrawn) { --certloom-card-accent: var(--cl-revoked); }
+.certloom-admin-shell .certloom-metric-card:has(.certloom-metric-icon.is-expired),
+.certloom-admin-shell .certloom-metric-card:has(.certloom-metric-icon.is-expiring) { --certloom-card-accent: var(--cl-expired); }
+
+.certloom-admin-shell .certloom-metric-card:not(.is-static):hover,
+.certloom-admin-shell .certloom-metric-card:not(.is-static):focus-visible {
+  border-color: var(--cl-rule-firm);
+  background: var(--cl-blue-wash);
+  box-shadow: none;
+  color: var(--cl-ink);
+  transform: none;
+}
+
+.certloom-admin-shell .certloom-metric-card strong {
+  margin-top: var(--cl-3);
+  color: var(--cl-ink);
+  font-size: var(--cl-t-lg);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.certloom-admin-shell .certloom-metric-label,
+.certloom-admin-shell .certloom-metric-meta {
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-xs);
+}
+
+.certloom-admin-shell .certloom-metric-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--cl-r-ctl);
+  background: var(--cl-blue-wash);
+  color: var(--cl-blue);
+}
+
+.certloom-admin-shell .certloom-metric-icon.is-valid {
+  background: var(--cl-valid-wash);
+  color: var(--cl-valid);
+}
+
+.certloom-admin-shell .certloom-metric-icon.is-withdrawn {
+  background: var(--cl-revoked-wash);
+  color: var(--cl-revoked);
+}
+
+.certloom-admin-shell .certloom-metric-icon.is-expired,
+.certloom-admin-shell .certloom-metric-icon.is-expiring {
+  background: var(--cl-expired-wash);
+  color: var(--cl-expired);
+}
+
+.certloom-admin-shell .certloom-metric-icon.is-suspended,
+.certloom-admin-shell .certloom-metric-icon.is-issued {
+  background: var(--cl-paper);
+  color: var(--cl-ink-soft);
+}
+
+/* Secondary dashboard/analytics metric cells follow the same flat data language. */
+.certloom-admin-shell .certloom-dashboard-analytics-grid article,
+.certloom-admin-shell .certloom-domain-metric,
+.certloom-admin-shell .certloom-expiry-buckets article,
+.certloom-admin-shell .certloom-editor-status-card {
+  padding: var(--cl-3);
+  border: 1px solid var(--cl-rule);
+  border-radius: var(--cl-r-none);
+  background: var(--cl-surface);
+  box-shadow: none;
+}
+
+.certloom-admin-shell .certloom-dashboard-analytics-grid strong,
+.certloom-admin-shell .certloom-domain-metric strong,
+.certloom-admin-shell .certloom-expiry-buckets strong {
+  color: var(--cl-ink);
+  font-size: var(--cl-t-md);
+}
+
+.certloom-admin-shell .certloom-dashboard-mini-chart,
+.certloom-admin-shell .certloom-analytics-chart {
+  border-color: var(--cl-rule);
+  border-radius: var(--cl-r-none);
+  background: var(--cl-surface);
+}
+
+.certloom-admin-shell .certloom-dashboard-mini-chart > span,
+.certloom-admin-shell .certloom-analytics-bar {
+  background: var(--cl-chart-1);
+}
+
+/* A time series remains one colour; separate series use the brand palette. */
+.certloom-admin-shell .certloom-dashboard-mini-chart.is-issuance > span,
+.certloom-admin-shell .certloom-analytics-chart.is-issuance .certloom-analytics-bar {
+  background: var(--cl-chart-1);
+}
+
+.certloom-admin-shell .certloom-dashboard-mini-chart.is-verification > span,
+.certloom-admin-shell .certloom-analytics-chart.is-verification .certloom-analytics-bar {
+  background: var(--cl-chart-2);
+}
+
+/* Reusable series contract for future multi-line/multi-series charts.
+   After four series, colours repeat and stroke pattern changes so lines remain
+   distinguishable without expanding the product palette. */
+.certloom-admin-shell .certloom-chart-series {
+  --certloom-series-color: var(--cl-chart-1);
+  --certloom-series-dash: none;
+  color: var(--certloom-series-color);
+  stroke: var(--certloom-series-color);
+}
+.certloom-admin-shell .certloom-chart-series:nth-child(4n + 2) { --certloom-series-color: var(--cl-chart-2); }
+.certloom-admin-shell .certloom-chart-series:nth-child(4n + 3) { --certloom-series-color: var(--cl-chart-3); }
+.certloom-admin-shell .certloom-chart-series:nth-child(4n) { --certloom-series-color: var(--cl-chart-4); }
+.certloom-admin-shell .certloom-chart-series:nth-child(n + 5) { --certloom-series-dash: 6 4; stroke-dasharray: var(--certloom-series-dash); }
+
+.certloom-admin-shell .certloom-dashboard-quick-grid a {
+  border-color: var(--cl-rule);
+  border-radius: var(--cl-r-ctl);
+  background: var(--cl-surface);
+  box-shadow: none;
+}
+
+.certloom-admin-shell .certloom-dashboard-quick-grid a:hover,
+.certloom-admin-shell .certloom-dashboard-quick-grid a:focus-visible {
+  border-color: var(--cl-blue);
+  background: var(--cl-blue-wash);
+}
+
+
+/* Analytics summary cells use brand/status accents without gradient fills. */
+.certloom-admin-shell .certloom-analytics-metrics .certloom-domain-metric {
+  border-block-start: 3px solid var(--cl-chart-1);
+}
+.certloom-admin-shell .certloom-analytics-metrics .is-success { border-block-start-color: var(--cl-valid-mark); }
+.certloom-admin-shell .certloom-analytics-metrics .is-failed { border-block-start-color: var(--cl-error); }
+.certloom-admin-shell .certloom-analytics-metrics .is-invalid { border-block-start-color: var(--cl-chart-2); }
+.certloom-admin-shell .certloom-analytics-metrics .is-expired { border-block-start-color: var(--cl-expired); }
+.certloom-admin-shell .certloom-analytics-metrics .is-revoked { border-block-start-color: var(--cl-revoked); }
+
+.certloom-admin-shell .certloom-dashboard-analytics-grid article:nth-child(4n + 1) { border-block-start: 3px solid var(--cl-chart-1); }
+.certloom-admin-shell .certloom-dashboard-analytics-grid article:nth-child(4n + 2) { border-block-start: 3px solid var(--cl-chart-2); }
+.certloom-admin-shell .certloom-dashboard-analytics-grid article:nth-child(4n + 3) { border-block-start: 3px solid var(--cl-error); }
+.certloom-admin-shell .certloom-dashboard-analytics-grid article:nth-child(4n) { border-block-start: 3px solid var(--cl-expired); }
+
+/* Sticky admin chrome is opaque. Blur/glass belongs nowhere in normal UI. */
+.certloom-admin-shell .certloom-editor-actions,
+.certloom-admin-shell .certloom-credential-record-nav {
+  background: var(--cl-surface);
+  backdrop-filter: none;
+}
+
+@media (forced-colors: active) {
+  .certloom-admin-shell .certloom-page-hero::before,
+  .certloom-admin-shell .certloom-workspace-hero::before,
+  .certloom-admin-shell .certloom-dashboard-hero::before,
+  .certloom-admin-shell .certloom-credential-hero::before,
+  .certloom-admin-shell .certloom-email-hero::before {
+    background: CanvasText;
+  }
+}
+
+@media (max-width: 782px) {
+  .certloom-admin-shell .certloom-page-hero,
+  .certloom-admin-shell .certloom-workspace-hero,
+  .certloom-admin-shell .certloom-dashboard-hero,
+  .certloom-admin-shell .certloom-credential-hero {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--cl-3);
+    padding: 0 0 var(--cl-3);
+  }
+
+  .certloom-admin-shell .certloom-dashboard-actions,
+  .certloom-admin-shell .certloom-page-actions,
+  .certloom-admin-shell .certloom-workspace-hero-actions,
+  .certloom-admin-shell .certloom-credential-hero-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .certloom-admin-shell .certloom-dashboard-actions .button,
+  .certloom-admin-shell .certloom-page-actions .button,
+  .certloom-admin-shell .certloom-workspace-hero-actions .button,
+  .certloom-admin-shell .certloom-credential-hero-actions .button {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .certloom-admin-shell .certloom-metric-card {
+    transition: none;
+  }
+}
+
+/* Phase 2.1: Dashboard setup is a normal secondary action, not a glass pill. */
+.certloom-admin-shell .certloom-dashboard-setup-link {
+  position: static;
+  top: auto;
+  right: auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 var(--cl-3);
+  border: 1px solid var(--cl-rule-firm);
+  border-radius: var(--cl-r-ctl);
+  background: var(--cl-surface);
+  color: var(--cl-blue);
+  font-size: var(--cl-t-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.certloom-admin-shell .certloom-dashboard-setup-link:hover,
+.certloom-admin-shell .certloom-dashboard-setup-link:focus {
+  border-color: var(--cl-blue);
+  background: var(--cl-blue-wash);
+  color: var(--cl-blue-deep);
+  text-decoration: none;
+}
+
+/* Shared section surfaces retain useful padding but lose card-soup elevation. */
+.certloom-admin-shell .certloom-workspace-card,
+.certloom-admin-shell .certloom-manual-card,
+.certloom-admin-shell .certloom-bulk-card,
+.certloom-admin-shell .certloom-card,
+.certloom-admin-shell .certloom-settings-info-card,
+.certloom-admin-shell .certloom-integration-source-card,
+.certloom-admin-shell .certloom-integration-config-card,
+.certloom-admin-shell .certloom-destination-config-card {
+  border-color: var(--cl-rule);
+  border-radius: var(--cl-r-none);
+  background: var(--cl-surface);
+  box-shadow: none;
+}
+
+/* Dashboard shortcuts remain a 3×3 keypad, but use compact institutional density. */
+.certloom-admin-shell .certloom-dashboard-quick-grid {
+  gap: var(--cl-2);
+}
+
+.certloom-admin-shell .certloom-dashboard-quick-grid a {
+  min-height: 72px;
+  padding: var(--cl-2);
+  gap: var(--cl-1);
+}
+
+.certloom-admin-shell .certloom-dashboard-quick-grid .dashicons {
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+}
+
+/* Generic admin state/action accents must never borrow credential-valid green. */
+.certloom-admin-shell .ecapla-certverify-admin-brand-bar {
+  border-color: var(--cl-rule);
+  border-left-color: var(--cl-blue);
+  border-radius: var(--cl-r-none);
+  background: var(--cl-surface);
+  box-shadow: none;
+}
+
+.certloom-admin-shell .ecapla-certverify-feature-icon,
+.certloom-admin-shell .certloom-setup-reminder .dashicons,
+.certloom-admin-shell .certloom-settings-info-card > .dashicons {
+  color: var(--cl-blue);
+}
+
+.certloom-admin-shell .ecapla-certverify-progress > span {
+  background: var(--cl-blue);
+}
+
+.certloom-admin-shell .certloom-domain-views a.is-current,
+.certloom-admin-shell .certloom-credential-views a:hover,
+.certloom-admin-shell .certloom-credential-views a:focus,
+.certloom-admin-shell .certloom-credential-views a.is-current,
+.certloom-admin-shell .certloom-premium-row-link,
+.certloom-admin-shell .certloom-premium-row-link:hover,
+.certloom-admin-shell .certloom-premium-row-link:focus-visible {
+  border-bottom-color: var(--cl-blue);
+  color: var(--cl-blue);
+}
+
+.certloom-admin-shell .certloom-premium-row-link:hover,
+.certloom-admin-shell .certloom-premium-row-link:focus-visible {
+  color: var(--cl-blue-deep);
+}
+
+.certloom-admin-shell .certloom-setup-reminder {
+  border-color: var(--cl-rule);
+  border-radius: var(--cl-r-ctl);
+  background: var(--cl-blue-wash);
+  color: var(--cl-ink);
+}
+
+.certloom-admin-shell .certloom-setup-reminder > a {
+  color: var(--cl-blue);
+}
+
+.certloom-admin-shell .certloom-lifecycle-options > label:has(input:checked) {
+  border-color: var(--cl-blue);
+  background: var(--cl-blue-wash);
+  box-shadow: none;
+}
+
+.certloom-admin-shell .certloom-credential-source.is-credential {
+  border-color: var(--cl-rule);
+  background: var(--cl-paper);
+  color: var(--cl-ink-soft);
+}
+
+.certloom-admin-shell .certloom-settings-info-card > .dashicons {
+  border-radius: var(--cl-r-ctl);
+  background: var(--cl-blue-wash);
+}
+
+.certloom-admin-shell .certloom-settings-info-card.is-caution > .dashicons {
+  background: var(--cl-expired-wash);
+  color: var(--cl-expired);
+}
+
+.certloom-admin-shell .certloom-settings-info-card.is-support > .dashicons {
+  background: var(--cl-blue-wash);
+  color: var(--cl-blue);
+}

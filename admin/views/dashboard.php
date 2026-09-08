@@ -56,9 +56,6 @@ $certloom_fields_url      = admin_url( 'admin.php?page=certloom-fields' );
 			<h1 id="certloom-dashboard-title"><?php esc_html_e( 'Dashboard', 'certloom' ); ?></h1>
 			<p><?php esc_html_e( 'Monitor credential health, recent activity, delivery and verification from one operational workspace.', 'certloom' ); ?></p>
 		</div>
-		<a class="certloom-dashboard-setup-link" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-setup' ) ); ?>">
-			<span><?php esc_html_e( 'Setup wizard', 'certloom' ); ?></span><span aria-hidden="true">→</span>
-		</a>
 		<div class="certloom-dashboard-actions" aria-label="<?php esc_attr_e( 'Quick actions', 'certloom' ); ?>">
 			<a class="button button-primary button-hero" href="<?php echo esc_url( $ecapla_certverify_create_url ); ?>">
 				<svg class="certloom-button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" /></svg>
@@ -68,6 +65,7 @@ $certloom_fields_url      = admin_url( 'admin.php?page=certloom-fields' );
 				<svg class="certloom-button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 15V5m0 0L8 9m4-4 4 4M5 14v5h14v-5" /></svg>
 				<?php $ecapla_certverify_normalized_issuance_ready ? esc_html_e( 'Open programs', 'certloom' ) : esc_html_e( 'Import certificates', 'certloom' ); ?>
 			</a>
+			<a class="button certloom-dashboard-setup-link" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-setup' ) ); ?>"><?php esc_html_e( 'Setup wizard', 'certloom' ); ?></a>
 		</div>
 	</section>
 
@@ -92,7 +90,7 @@ $certloom_fields_url      = admin_url( 'admin.php?page=certloom-fields' );
 		<div class="certloom-setup-reminder" role="status">
 			<span class="dashicons <?php echo $wizard_walkthrough_done ? 'dashicons-yes-alt' : 'dashicons-admin-generic'; ?>" aria-hidden="true"></span>
 			<strong><?php echo esc_html( sprintf( /* translators: %1$d: completed setup checks; %2$d: total setup checks. */ __( 'Setup: %1$d of %2$d checks complete', 'certloom' ), $setup_progress_completed, $setup_progress_total ) ); ?></strong>
-			<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-setup' . ( $wizard_walkthrough_done ? '&step=review' : '' ) ) ); ?>"><?php esc_html_e( 'Review setup', 'certloom' ); ?> <span aria-hidden="true">→</span></a>
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-setup' . ( $wizard_walkthrough_done ? '&step=review' : '' ) ) ); ?>"><?php esc_html_e( 'Review setup', 'certloom' ); ?></a>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-setup-reminder-dismiss">
 				<input type="hidden" name="action" value="certloom_dismiss_setup_reminder"><?php wp_nonce_field( 'certloom_dismiss_setup_reminder' ); ?>
 				<button type="submit" name="reminder_mode" value="snooze" class="button-link"><?php esc_html_e( 'Remind me in 3 days', 'certloom' ); ?></button>
@@ -178,7 +176,7 @@ $certloom_fields_url      = admin_url( 'admin.php?page=certloom-fields' );
 		$top_template = ! empty( $issuance_30['dimensions']['templates'][0] ) ? $issuance_30['dimensions']['templates'][0] : null;
 	?>
 	<section class="certloom-panel certloom-dashboard-analytics-preview" aria-labelledby="certloom-dashboard-analytics-title">
-		<div class="certloom-panel-header"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Last 30 days', 'certloom' ); ?></span><h2 id="certloom-dashboard-analytics-title"><?php esc_html_e( 'Credential analytics', 'certloom' ); ?></h2></div><a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-analytics' ) ); ?>"><?php esc_html_e( 'Open Analytics', 'certloom' ); ?> <span aria-hidden="true">→</span></a></div>
+		<div class="certloom-panel-header"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Last 30 days', 'certloom' ); ?></span><h2 id="certloom-dashboard-analytics-title"><?php esc_html_e( 'Credential analytics', 'certloom' ); ?></h2></div><a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-analytics' ) ); ?>"><?php esc_html_e( 'Open Analytics', 'certloom' ); ?></a></div>
 		<div class="certloom-dashboard-analytics-grid">
 			<article><span><?php esc_html_e( 'Issued', 'certloom' ); ?></span><strong><?php echo esc_html( number_format_i18n( (int) $issuance_30['summary']['total'] ) ); ?></strong></article>
 			<article><span><?php esc_html_e( 'Verification lookups', 'certloom' ); ?></span><strong><?php echo esc_html( number_format_i18n( (int) $verification_30['summary']['total'] ) ); ?></strong></article>
@@ -186,8 +184,8 @@ $certloom_fields_url      = admin_url( 'admin.php?page=certloom-fields' );
 			<article><span><?php esc_html_e( 'Expiring ≤90 days', 'certloom' ); ?></span><strong><?php echo esc_html( number_format_i18n( (int) $issuance_30['expiry_forecast']['total_90'] ) ); ?></strong></article>
 		</div>
 		<div class="certloom-dashboard-analytics-charts">
-			<section aria-labelledby="certloom-dashboard-issuance-chart-title"><h3 id="certloom-dashboard-issuance-chart-title"><?php esc_html_e( 'Issuance trend', 'certloom' ); ?></h3><div class="certloom-dashboard-mini-chart" role="img" aria-label="<?php esc_attr_e( 'Daily issued credentials for the last 30 days', 'certloom' ); ?>"><?php $issuance_max=1; foreach($issuance_30['trend'] as $row){$issuance_max=max($issuance_max,(int)$row['total']);} foreach($issuance_30['trend'] as $row): $height=max(2,(int)round(100*(int)$row['total']/$issuance_max)); ?><span style="--certloom-dashboard-chart-height:<?php echo esc_attr($height); ?>%"><span class="screen-reader-text"><?php echo esc_html( sprintf( /* translators: %1$s: date/period label; %2$d: issued credential count. */ __( '%1$s: %2$d issued', 'certloom' ), $row['label'], (int)$row['total'] ) ); ?></span></span><?php endforeach; ?></div></section>
-			<section aria-labelledby="certloom-dashboard-verification-chart-title"><h3 id="certloom-dashboard-verification-chart-title"><?php esc_html_e( 'Verification trend', 'certloom' ); ?></h3><div class="certloom-dashboard-mini-chart" role="img" aria-label="<?php esc_attr_e( 'Daily verification lookups for the last 30 days', 'certloom' ); ?>"><?php $verification_max=1; foreach($verification_30['trend'] as $row){$row_total=(int)$row['success']+(int)$row['failed']+(int)$row['invalid']+(int)$row['expired']+(int)$row['revoked'];$verification_max=max($verification_max,$row_total);} foreach($verification_30['trend'] as $row): $row_total=(int)$row['success']+(int)$row['failed']+(int)$row['invalid']+(int)$row['expired']+(int)$row['revoked'];$height=max(2,(int)round(100*$row_total/$verification_max)); ?><span style="--certloom-dashboard-chart-height:<?php echo esc_attr($height); ?>%"><span class="screen-reader-text"><?php echo esc_html( sprintf( /* translators: %1$s: date/period label; %2$d: verification lookup count. */ __( '%1$s: %2$d lookups', 'certloom' ), $row['label'], $row_total ) ); ?></span></span><?php endforeach; ?></div></section>
+			<section aria-labelledby="certloom-dashboard-issuance-chart-title"><h3 id="certloom-dashboard-issuance-chart-title"><?php esc_html_e( 'Issuance trend', 'certloom' ); ?></h3><div class="certloom-dashboard-mini-chart is-issuance" role="img" aria-label="<?php esc_attr_e( 'Daily issued credentials for the last 30 days', 'certloom' ); ?>"><?php $issuance_max=1; foreach($issuance_30['trend'] as $row){$issuance_max=max($issuance_max,(int)$row['total']);} foreach($issuance_30['trend'] as $row): $height=max(2,(int)round(100*(int)$row['total']/$issuance_max)); ?><span style="--certloom-dashboard-chart-height:<?php echo esc_attr($height); ?>%"><span class="screen-reader-text"><?php echo esc_html( sprintf( /* translators: %1$s: date/period label; %2$d: issued credential count. */ __( '%1$s: %2$d issued', 'certloom' ), $row['label'], (int)$row['total'] ) ); ?></span></span><?php endforeach; ?></div></section>
+			<section aria-labelledby="certloom-dashboard-verification-chart-title"><h3 id="certloom-dashboard-verification-chart-title"><?php esc_html_e( 'Verification trend', 'certloom' ); ?></h3><div class="certloom-dashboard-mini-chart is-verification" role="img" aria-label="<?php esc_attr_e( 'Daily verification lookups for the last 30 days', 'certloom' ); ?>"><?php $verification_max=1; foreach($verification_30['trend'] as $row){$row_total=(int)$row['success']+(int)$row['failed']+(int)$row['invalid']+(int)$row['expired']+(int)$row['revoked'];$verification_max=max($verification_max,$row_total);} foreach($verification_30['trend'] as $row): $row_total=(int)$row['success']+(int)$row['failed']+(int)$row['invalid']+(int)$row['expired']+(int)$row['revoked'];$height=max(2,(int)round(100*$row_total/$verification_max)); ?><span style="--certloom-dashboard-chart-height:<?php echo esc_attr($height); ?>%"><span class="screen-reader-text"><?php echo esc_html( sprintf( /* translators: %1$s: date/period label; %2$d: verification lookup count. */ __( '%1$s: %2$d lookups', 'certloom' ), $row['label'], $row_total ) ); ?></span></span><?php endforeach; ?></div></section>
 		</div>
 		<div class="certloom-dashboard-analytics-leaders">
 			<p><strong><?php esc_html_e( 'Top credential', 'certloom' ); ?>:</strong> <?php echo $top_verified ? esc_html( (string) $top_verified['certificate_number'] ) . ' · ' . esc_html( number_format_i18n( (int) $top_verified['total'] ) ) : esc_html__( 'No resolved verification activity yet', 'certloom' ); ?></p>
@@ -204,7 +202,7 @@ $certloom_fields_url      = admin_url( 'admin.php?page=certloom-fields' );
 					<span class="certloom-eyebrow"><?php esc_html_e( 'Latest activity', 'certloom' ); ?></span>
 					<h2 id="certloom-recent-title"><?php echo esc_html( $ecapla_certverify_normalized_issuance_ready ? __( 'Recent credentials', 'certloom' ) : __( 'Recent certificates', 'certloom' ) ); ?></h2>
 				</div>
-				<a href="<?php echo esc_url( $ecapla_certverify_normalized_issuance_ready ? $certloom_credentials_url : admin_url( 'admin.php?page=certloom-certificates' ) ); ?>"><?php esc_html_e( 'View all', 'certloom' ); ?> <span aria-hidden="true">→</span></a>
+				<a href="<?php echo esc_url( $ecapla_certverify_normalized_issuance_ready ? $certloom_credentials_url : admin_url( 'admin.php?page=certloom-certificates' ) ); ?>"><?php esc_html_e( 'View all', 'certloom' ); ?></a>
 			</div>
 			<?php if ( $ecapla_certverify_normalized_issuance_ready ) : ?>
 				<?php if ( $certloom_dashboard_domain_error ) : ?>
@@ -287,7 +285,7 @@ $certloom_fields_url      = admin_url( 'admin.php?page=certloom-fields' );
 							<tr>
 								<td data-col="<?php esc_attr_e( 'Credential', 'certloom' ); ?>">
 									<strong class="certloom-credential-title"><a href="<?php echo esc_url( $manage_url ); ?>"><?php echo esc_html( '' !== $number ? $number : __( 'Unnumbered credential', 'certloom' ) ); ?></a></strong>
-									<div class="certloom-credential-row-actions" aria-label="<?php esc_attr_e( 'Credential actions', 'certloom' ); ?>"><?php if ( '' !== $view_url ) : ?><a href="<?php echo esc_url( $view_url ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'View', 'certloom' ); ?> <span aria-hidden="true">↗</span></a><?php endif; ?><a href="<?php echo esc_url( $manage_url ); ?>"><?php esc_html_e( 'Manage', 'certloom' ); ?></a></div>
+									<div class="certloom-credential-row-actions" aria-label="<?php esc_attr_e( 'Credential actions', 'certloom' ); ?>"><?php if ( '' !== $view_url ) : ?><a href="<?php echo esc_url( $view_url ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'View', 'certloom' ); ?></a><?php endif; ?><a href="<?php echo esc_url( $manage_url ); ?>"><?php esc_html_e( 'Manage', 'certloom' ); ?></a></div>
 									<div class="certloom-credential-secondary certloom-credential-source-meta"><span class="certloom-credential-source <?php echo esc_attr( $source_class ); ?>"><?php echo esc_html( $source_label ); ?></span></div>
 								</td>
 								<td data-col="<?php esc_attr_e( 'Recipient', 'certloom' ); ?>"><strong><?php echo esc_html( (string) ( $credential['display_name'] ?: '—' ) ); ?></strong><?php if ( ! empty( $credential['recipient_email'] ) ) : ?><div class="certloom-credential-secondary"><?php echo esc_html( (string) $credential['recipient_email'] ); ?></div><?php endif; ?></td>

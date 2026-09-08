@@ -80,8 +80,8 @@ msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:117
 #: admin/class-ecapla-certverify-admin.php:1936
-#: admin/views/dashboard.php:156
-#: admin/views/dashboard.php:350
+#: admin/views/dashboard.php:154
+#: admin/views/dashboard.php:348
 #: admin/views/issuance-analytics.php:63
 #: src/Infrastructure/Admin/AdminProductNavigation.php:104
 #: src/Infrastructure/Admin/AdminProductNavigation.php:60
@@ -94,7 +94,7 @@ msgid "Programs"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:118
-#: admin/views/dashboard.php:351
+#: admin/views/dashboard.php:349
 #: blocks/certloom/index.js:65
 #: includes/class-ecapla-certverify-onboarding.php:22
 #: src/Infrastructure/Admin/AdminProductNavigation.php:60
@@ -125,7 +125,7 @@ msgid "The general settings were saved, but role access could not be updated. Th
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:130
-#: admin/views/dashboard.php:356
+#: admin/views/dashboard.php:354
 #: src/Infrastructure/Admin/AdminProductNavigation.php:114
 msgid "Analytics"
 msgstr ""
@@ -139,7 +139,7 @@ msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:134
 #: admin/views/automations.php:24
-#: admin/views/dashboard.php:352
+#: admin/views/dashboard.php:350
 #: src/Infrastructure/Admin/AdminProductNavigation.php:114
 #: src/Infrastructure/Admin/AdminProductNavigation.php:60
 msgid "Automations"
@@ -150,14 +150,14 @@ msgid "The Certificate Manager role could not be created or updated."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:137
-#: admin/views/dashboard.php:354
+#: admin/views/dashboard.php:352
 #: admin/views/integrations.php:90
 #: src/Infrastructure/Admin/AdminProductNavigation.php:114
 msgid "Integrations"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:138
-#: admin/views/dashboard.php:355
+#: admin/views/dashboard.php:353
 #: admin/views/import-upload.php:11
 #: src/Infrastructure/Admin/AdminProductNavigation.php:116
 msgid "Backup & Restore"
@@ -721,9 +721,9 @@ msgid "Invalid response"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:236
-#: admin/views/dashboard.php:236
-#: admin/views/dashboard.php:248
-#: admin/views/dashboard.php:288
+#: admin/views/dashboard.php:234
+#: admin/views/dashboard.php:246
+#: admin/views/dashboard.php:286
 #: admin/views/import-mapping.php:10
 #: admin/views/integrations.php:315
 #: admin/views/setup-wizard.php:112
@@ -1278,7 +1278,7 @@ msgid "Not set"
 msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:162
-#: admin/views/dashboard.php:296
+#: admin/views/dashboard.php:294
 #: includes/class-ecapla-certverify-recipient-portal.php:193
 #: includes/class-ecapla-certverify-recipient-portal.php:229
 #: src/Infrastructure/Admin/DomainAdmin.php:1103
@@ -1302,9 +1302,9 @@ msgid "All"
 msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:181
-#: admin/views/dashboard.php:126
-#: admin/views/dashboard.php:164
-#: admin/views/dashboard.php:221
+#: admin/views/dashboard.php:124
+#: admin/views/dashboard.php:162
+#: admin/views/dashboard.php:219
 #: elementor/class-ecapla-certverify-elementor-widget.php:636
 #: includes/class-ecapla-certverify-fields.php:432
 #: includes/class-ecapla-certverify-recipient-portal.php:134
@@ -1317,9 +1317,9 @@ msgid "Valid"
 msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:182
-#: admin/views/dashboard.php:132
-#: admin/views/dashboard.php:165
-#: admin/views/dashboard.php:222
+#: admin/views/dashboard.php:130
+#: admin/views/dashboard.php:163
+#: admin/views/dashboard.php:220
 #: elementor/class-ecapla-certverify-elementor-widget.php:637
 #: includes/class-ecapla-certverify-fields.php:437
 #: includes/class-ecapla-certverify-recipient-portal.php:137
@@ -1332,7 +1332,7 @@ msgid "Suspended"
 msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:183
-#: admin/views/dashboard.php:166
+#: admin/views/dashboard.php:164
 #: elementor/class-ecapla-certverify-elementor-widget.php:638
 #: includes/class-ecapla-certverify-fields.php:442
 msgid "Withdrawn"
@@ -1341,9 +1341,9 @@ msgstr ""
 #: admin/class-ecapla-certverify-list-table.php:184
 #: admin/views/analytics.php:50
 #: admin/views/analytics.php:75
-#: admin/views/dashboard.php:144
-#: admin/views/dashboard.php:167
-#: admin/views/dashboard.php:224
+#: admin/views/dashboard.php:142
+#: admin/views/dashboard.php:165
+#: admin/views/dashboard.php:222
 #: elementor/class-ecapla-certverify-elementor-widget.php:639
 #: includes/class-ecapla-certverify-fields.php:447
 #: includes/class-ecapla-certverify-recipient-portal.php:135
@@ -1393,8 +1393,8 @@ msgid "Import from CSV"
 msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:62
-#: admin/views/dashboard.php:217
-#: admin/views/dashboard.php:312
+#: admin/views/dashboard.php:215
+#: admin/views/dashboard.php:310
 msgid "Issue first credential"
 msgstr ""
 
@@ -1422,13 +1422,13 @@ msgid "Certificate number"
 msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:77
-#: admin/views/dashboard.php:319
+#: admin/views/dashboard.php:317
 #: admin/views/list-certificates.php:126
 msgid "Holder"
 msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:78
-#: admin/views/dashboard.php:320
+#: admin/views/dashboard.php:318
 #: admin/views/edit-certificate.php:155
 #: admin/views/edit-certificate.php:84
 #: admin/views/email-designs.php:50
@@ -1456,8 +1456,8 @@ msgid "Status"
 msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:79
-#: admin/views/dashboard.php:239
-#: admin/views/dashboard.php:295
+#: admin/views/dashboard.php:237
+#: admin/views/dashboard.php:293
 #: admin/views/list-certificates.php:126
 #: includes/class-ecapla-certverify-fields.php:393
 #: src/Infrastructure/Admin/DomainAdmin.php:597
@@ -1470,8 +1470,8 @@ msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:80
 #: admin/views/bulk-review.php:58
-#: admin/views/dashboard.php:240
-#: admin/views/dashboard.php:296
+#: admin/views/dashboard.php:238
+#: admin/views/dashboard.php:294
 #: admin/views/list-certificates.php:126
 #: includes/class-ecapla-certverify-fields.php:394
 #: src/Infrastructure/Admin/DomainAdmin.php:597
@@ -1622,8 +1622,8 @@ msgstr ""
 
 #: admin/views/analytics.php:51
 #: admin/views/analytics.php:75
-#: admin/views/dashboard.php:138
-#: admin/views/dashboard.php:223
+#: admin/views/dashboard.php:136
+#: admin/views/dashboard.php:221
 #: includes/class-ecapla-certverify-recipient-portal.php:136
 #: includes/class-ecapla-certverify-recipient-portal.php:307
 #: src/Infrastructure/Admin/DomainAdmin.php:1007
@@ -2233,23 +2233,27 @@ msgid "Set custom field: %s"
 msgstr ""
 
 #. translators: %d: legacy record count.
-#: admin/views/dashboard.php:107
+#: admin/views/dashboard.php:105
 msgid "%d legacy Expired record needs review"
 msgid_plural "%d legacy Expired records need review"
 msgstr[0] ""
 msgstr[1] ""
 
-#: admin/views/dashboard.php:108
+#: admin/views/dashboard.php:106
 msgid "These records remain Expired until an administrator deliberately confirms their workflow status."
 msgstr ""
 
-#: admin/views/dashboard.php:110
+#: admin/views/dashboard.php:108
 msgid "Review records"
 msgstr ""
 
-#: admin/views/dashboard.php:117
+#: admin/views/dashboard.php:115
 #: src/Infrastructure/Admin/DomainAdmin.php:662
 msgid "Credential summary"
+msgstr ""
+
+#: admin/views/dashboard.php:118
+msgid "Total credentials"
 msgstr ""
 
 #: admin/views/dashboard.php:12
@@ -2265,32 +2269,28 @@ msgid "Review recommended"
 msgstr ""
 
 #: admin/views/dashboard.php:120
-msgid "Total credentials"
-msgstr ""
-
-#: admin/views/dashboard.php:122
 msgid "Open credential registry"
 msgstr ""
 
-#: admin/views/dashboard.php:128
+#: admin/views/dashboard.php:126
 msgid "Currently verifiable"
 msgstr ""
 
-#: admin/views/dashboard.php:134
-#: admin/views/dashboard.php:165
+#: admin/views/dashboard.php:132
+#: admin/views/dashboard.php:163
 msgid "Temporarily inactive"
 msgstr ""
 
-#: admin/views/dashboard.php:140
-#: admin/views/dashboard.php:166
+#: admin/views/dashboard.php:138
+#: admin/views/dashboard.php:164
 msgid "No longer valid"
 msgstr ""
 
-#: admin/views/dashboard.php:146
+#: admin/views/dashboard.php:144
 msgid "Past validity window"
 msgstr ""
 
-#: admin/views/dashboard.php:150
+#: admin/views/dashboard.php:148
 #: admin/views/import-upload.php:107
 #: admin/views/import-upload.php:201
 #: admin/views/import-upload.php:218
@@ -2298,66 +2298,66 @@ msgstr ""
 msgid "Needs attention"
 msgstr ""
 
-#: admin/views/dashboard.php:152
+#: admin/views/dashboard.php:150
 msgid "Pending review or noncompliant"
 msgstr ""
 
-#: admin/views/dashboard.php:158
+#: admin/views/dashboard.php:156
 msgid "Manage issuance structure"
 msgstr ""
 
-#: admin/views/dashboard.php:162
+#: admin/views/dashboard.php:160
 msgid "Certificate summary"
 msgstr ""
 
-#: admin/views/dashboard.php:163
+#: admin/views/dashboard.php:161
 msgid "Total certificates"
 msgstr ""
 
-#: admin/views/dashboard.php:163
+#: admin/views/dashboard.php:161
 msgid "View registry"
 msgstr ""
 
-#: admin/views/dashboard.php:164
+#: admin/views/dashboard.php:162
 msgid "Current credentials"
 msgstr ""
 
-#: admin/views/dashboard.php:167
+#: admin/views/dashboard.php:165
 msgid "Past validity date"
 msgstr ""
 
-#: admin/views/dashboard.php:168
+#: admin/views/dashboard.php:166
 #: admin/views/list-certificates.php:165
 #: admin/views/list-certificates.php:189
 msgid "Expiring in 30 days"
 msgstr ""
 
-#: admin/views/dashboard.php:168
+#: admin/views/dashboard.php:166
 msgid "Review upcoming expiries"
 msgstr ""
 
-#: admin/views/dashboard.php:169
+#: admin/views/dashboard.php:167
 msgid "By issue date"
 msgstr ""
 
-#: admin/views/dashboard.php:169
+#: admin/views/dashboard.php:167
 msgid "Issued this month"
 msgstr ""
 
-#: admin/views/dashboard.php:181
+#: admin/views/dashboard.php:179
 msgid "Credential analytics"
 msgstr ""
 
-#: admin/views/dashboard.php:181
+#: admin/views/dashboard.php:179
 msgid "Last 30 days"
 msgstr ""
 
-#: admin/views/dashboard.php:181
+#: admin/views/dashboard.php:179
 msgid "Open Analytics"
 msgstr ""
 
-#: admin/views/dashboard.php:183
-#: admin/views/dashboard.php:321
+#: admin/views/dashboard.php:181
+#: admin/views/dashboard.php:319
 #: admin/views/issuance-analytics.php:38
 #: admin/views/issuance-analytics.php:53
 #: includes/class-ecapla-certverify-recipient-portal.php:192
@@ -2379,91 +2379,91 @@ msgstr ""
 msgid "Issued"
 msgstr ""
 
-#: admin/views/dashboard.php:184
+#: admin/views/dashboard.php:182
 msgid "Verification lookups"
 msgstr ""
 
-#: admin/views/dashboard.php:185
+#: admin/views/dashboard.php:183
 msgid "Failed lookups"
 msgstr ""
 
-#: admin/views/dashboard.php:186
+#: admin/views/dashboard.php:184
 #: admin/views/issuance-analytics.php:42
 msgid "Expiring ≤90 days"
 msgstr ""
 
 #. translators: %1$s: date/period label; %2$d: issued credential count.
-#: admin/views/dashboard.php:189
+#: admin/views/dashboard.php:187
 msgid "%1$s: %2$d issued"
 msgstr ""
 
-#: admin/views/dashboard.php:189
+#: admin/views/dashboard.php:187
 msgid "Daily issued credentials for the last 30 days"
 msgstr ""
 
-#: admin/views/dashboard.php:189
+#: admin/views/dashboard.php:187
 msgid "Issuance trend"
 msgstr ""
 
 #. translators: %1$s: date/period label; %2$d: verification lookup count.
-#: admin/views/dashboard.php:190
+#: admin/views/dashboard.php:188
 msgid "%1$s: %2$d lookups"
 msgstr ""
 
-#: admin/views/dashboard.php:190
+#: admin/views/dashboard.php:188
 msgid "Daily verification lookups for the last 30 days"
 msgstr ""
 
-#: admin/views/dashboard.php:190
+#: admin/views/dashboard.php:188
 msgid "Verification trend"
 msgstr ""
 
-#: admin/views/dashboard.php:193
+#: admin/views/dashboard.php:191
 msgid "No resolved verification activity yet"
 msgstr ""
 
-#: admin/views/dashboard.php:193
+#: admin/views/dashboard.php:191
 msgid "Top credential"
 msgstr ""
 
-#: admin/views/dashboard.php:194
-#: admin/views/dashboard.php:195
+#: admin/views/dashboard.php:192
+#: admin/views/dashboard.php:193
 msgid "No issuance activity yet"
 msgstr ""
 
-#: admin/views/dashboard.php:194
+#: admin/views/dashboard.php:192
 msgid "Top Program"
 msgstr ""
 
-#: admin/views/dashboard.php:195
+#: admin/views/dashboard.php:193
 msgid "Top certificate design"
 msgstr ""
 
-#: admin/views/dashboard.php:204
+#: admin/views/dashboard.php:202
 msgid "Latest activity"
 msgstr ""
 
-#: admin/views/dashboard.php:205
+#: admin/views/dashboard.php:203
 msgid "Recent certificates"
 msgstr ""
 
-#: admin/views/dashboard.php:205
+#: admin/views/dashboard.php:203
 msgid "Recent credentials"
 msgstr ""
 
-#: admin/views/dashboard.php:207
+#: admin/views/dashboard.php:205
 msgid "View all"
 msgstr ""
 
-#: admin/views/dashboard.php:215
+#: admin/views/dashboard.php:213
 msgid "Your first credential starts here"
 msgstr ""
 
-#: admin/views/dashboard.php:216
+#: admin/views/dashboard.php:214
 msgid "Choose a Recipient and Program, review the design, then issue. Certloom keeps the issued credential connected to that Recipient from then on."
 msgstr ""
 
-#: admin/views/dashboard.php:225
+#: admin/views/dashboard.php:223
 #: includes/class-ecapla-certverify-recipient-portal.php:138
 #: includes/class-ecapla-certverify-recipient-portal.php:309
 #: includes/class-ecapla-certverify-render.php:529
@@ -2472,7 +2472,7 @@ msgstr ""
 msgid "Not yet valid"
 msgstr ""
 
-#: admin/views/dashboard.php:226
+#: admin/views/dashboard.php:224
 #: includes/class-ecapla-certverify-recipient-portal.php:139
 #: includes/class-ecapla-certverify-recipient-portal.php:310
 #: includes/class-ecapla-certverify-render.php:530
@@ -2481,7 +2481,7 @@ msgstr ""
 msgid "Pending review"
 msgstr ""
 
-#: admin/views/dashboard.php:227
+#: admin/views/dashboard.php:225
 #: includes/class-ecapla-certverify-recipient-portal.php:140
 #: includes/class-ecapla-certverify-recipient-portal.php:311
 #: src/Infrastructure/Admin/DomainAdmin.php:911
@@ -2489,14 +2489,14 @@ msgstr ""
 msgid "Non-compliant"
 msgstr ""
 
-#: admin/views/dashboard.php:228
+#: admin/views/dashboard.php:226
 #: includes/class-ecapla-certverify-recipient-portal.php:312
 #: src/Infrastructure/Admin/DomainAdmin.php:912
 #: src/Infrastructure/Admin/DomainAdmin.php:994
 msgid "Voided"
 msgstr ""
 
-#: admin/views/dashboard.php:229
+#: admin/views/dashboard.php:227
 #: includes/class-ecapla-certverify-recipient-portal.php:313
 #: includes/class-ecapla-certverify-render.php:533
 #: src/Infrastructure/Admin/DomainAdmin.php:913
@@ -2504,8 +2504,8 @@ msgstr ""
 msgid "Not issued"
 msgstr ""
 
-#: admin/views/dashboard.php:237
-#: admin/views/dashboard.php:293
+#: admin/views/dashboard.php:235
+#: admin/views/dashboard.php:291
 #: admin/views/edit-certificate.php:105
 #: admin/views/edit-certificate.php:82
 #: admin/views/import-mapping.php:9
@@ -2530,15 +2530,15 @@ msgstr ""
 msgid "Recipient"
 msgstr ""
 
-#: admin/views/dashboard.php:238
-#: admin/views/dashboard.php:294
+#: admin/views/dashboard.php:236
+#: admin/views/dashboard.php:292
 #: src/Infrastructure/Admin/DomainAdmin.php:597
 #: src/Infrastructure/Admin/DomainAdmin.php:622
 msgid "Program / batch"
 msgstr ""
 
-#: admin/views/dashboard.php:241
-#: admin/views/dashboard.php:297
+#: admin/views/dashboard.php:239
+#: admin/views/dashboard.php:295
 #: includes/class-ecapla-certverify-render.php:439
 #: includes/class-ecapla-certverify-render.php:535
 #: src/Infrastructure/Admin/DomainAdmin.php:1238
@@ -2548,8 +2548,8 @@ msgstr ""
 msgid "Credential status"
 msgstr ""
 
-#: admin/views/dashboard.php:242
-#: admin/views/dashboard.php:298
+#: admin/views/dashboard.php:240
+#: admin/views/dashboard.php:296
 #: src/Infrastructure/Admin/DomainAdmin.php:1117
 #: src/Infrastructure/Admin/DomainAdmin.php:597
 #: src/Infrastructure/Admin/DomainAdmin.php:626
@@ -2557,14 +2557,14 @@ msgstr ""
 msgid "Record version"
 msgstr ""
 
-#: admin/views/dashboard.php:243
-#: admin/views/dashboard.php:299
+#: admin/views/dashboard.php:241
+#: admin/views/dashboard.php:297
 #: src/Infrastructure/Admin/DomainAdmin.php:597
 #: src/Infrastructure/Admin/DomainAdmin.php:627
 msgid "Added to Certloom"
 msgstr ""
 
-#: admin/views/dashboard.php:248
+#: admin/views/dashboard.php:246
 #: src/Infrastructure/Admin/DomainAdmin.php:600
 #: src/Infrastructure/Admin/DomainAdmin.php:658
 #: src/Infrastructure/Admin/DomainAdmin.php:767
@@ -2575,7 +2575,7 @@ msgstr ""
 msgid "Legacy"
 msgstr ""
 
-#: admin/views/dashboard.php:284
+#: admin/views/dashboard.php:282
 #: includes/class-ecapla-certverify-recipient-portal.php:315
 #: includes/class-ecapla-certverify-system-status.php:105
 #: includes/class-ecapla-certverify-system-status.php:131
@@ -2586,39 +2586,39 @@ msgstr ""
 msgid "Unavailable"
 msgstr ""
 
-#: admin/views/dashboard.php:289
+#: admin/views/dashboard.php:287
 #: src/Infrastructure/Admin/DomainAdmin.php:754
 msgid "Unnumbered credential"
 msgstr ""
 
-#: admin/views/dashboard.php:290
+#: admin/views/dashboard.php:288
 #: src/Infrastructure/Admin/DomainAdmin.php:620
 msgid "Credential actions"
 msgstr ""
 
-#: admin/views/dashboard.php:290
+#: admin/views/dashboard.php:288
 #: src/Infrastructure/Admin/DomainAdmin.php:620
 msgid "Manage"
 msgstr ""
 
-#: admin/views/dashboard.php:290
+#: admin/views/dashboard.php:288
 #: src/Infrastructure/Admin/DomainAdmin.php:974
 msgid "View"
 msgstr ""
 
-#: admin/views/dashboard.php:310
+#: admin/views/dashboard.php:308
 msgid "No certificates yet"
 msgstr ""
 
-#: admin/views/dashboard.php:311
+#: admin/views/dashboard.php:309
 msgid "Create your first certificate or import existing records to populate the registry."
 msgstr ""
 
-#: admin/views/dashboard.php:312
+#: admin/views/dashboard.php:310
 msgid "Create first certificate"
 msgstr ""
 
-#: admin/views/dashboard.php:318
+#: admin/views/dashboard.php:316
 #: includes/class-ecapla-certverify-recipient-portal.php:191
 #: includes/class-ecapla-certverify-render.php:513
 #: includes/class-ecapla-certverify-render.php:518
@@ -2630,7 +2630,7 @@ msgstr ""
 msgid "Certificate"
 msgstr ""
 
-#: admin/views/dashboard.php:322
+#: admin/views/dashboard.php:320
 #: admin/views/edit-certificate.php:88
 #: admin/views/import-upload.php:123
 #: admin/views/import-upload.php:213
@@ -2643,69 +2643,69 @@ msgstr ""
 msgid "Actions"
 msgstr ""
 
-#: admin/views/dashboard.php:335
+#: admin/views/dashboard.php:333
 #: src/Infrastructure/Admin/DomainAdmin.php:388
 #: src/Infrastructure/Admin/DomainAdmin.php:459
 #: src/Infrastructure/Admin/DomainAdmin.php:518
 msgid "Open"
 msgstr ""
 
-#: admin/views/dashboard.php:345
+#: admin/views/dashboard.php:343
 msgid "Dashboard tools"
 msgstr ""
 
-#: admin/views/dashboard.php:347
-#: admin/views/dashboard.php:62
+#: admin/views/dashboard.php:345
+#: admin/views/dashboard.php:59
 msgid "Quick actions"
 msgstr ""
 
-#: admin/views/dashboard.php:347
+#: admin/views/dashboard.php:345
 msgid "Shortcuts"
 msgstr ""
 
-#: admin/views/dashboard.php:348
+#: admin/views/dashboard.php:346
 msgid "Certloom quick actions"
 msgstr ""
 
-#: admin/views/dashboard.php:349
+#: admin/views/dashboard.php:347
 msgid "Manage Fields"
 msgstr ""
 
-#: admin/views/dashboard.php:353
+#: admin/views/dashboard.php:351
 msgid "Email Designs"
 msgstr ""
 
-#: admin/views/dashboard.php:357
+#: admin/views/dashboard.php:355
 #: admin/views/setup-wizard.php:123
 #: src/Infrastructure/Admin/AdminProductNavigation.php:111
 msgid "Verification page"
 msgstr ""
 
-#: admin/views/dashboard.php:363
+#: admin/views/dashboard.php:361
 msgid "System health"
 msgstr ""
 
-#: admin/views/dashboard.php:367
+#: admin/views/dashboard.php:365
 msgid "The credential registry and system checks are healthy."
 msgstr ""
 
-#: admin/views/dashboard.php:375
+#: admin/views/dashboard.php:373
 msgid "Open System Status"
 msgstr ""
 
-#: admin/views/dashboard.php:379
+#: admin/views/dashboard.php:377
 msgid "Credential authority and storage"
 msgstr ""
 
-#: admin/views/dashboard.php:379
+#: admin/views/dashboard.php:377
 msgid "Data safety"
 msgstr ""
 
-#: admin/views/dashboard.php:381
+#: admin/views/dashboard.php:379
 msgid "Certloom keeps credential authority fail-closed and does not silently change storage authority while safety gates remain pending."
 msgstr ""
 
-#: admin/views/dashboard.php:382
+#: admin/views/dashboard.php:380
 msgid "No automatic authority changes"
 msgstr ""
 
@@ -2721,16 +2721,12 @@ msgstr ""
 msgid "Monitor credential health, recent activity, delivery and verification from one operational workspace."
 msgstr ""
 
-#: admin/views/dashboard.php:60
-msgid "Setup wizard"
-msgstr ""
-
-#: admin/views/dashboard.php:65
+#: admin/views/dashboard.php:62
 #: admin/views/list-certificates.php:35
 msgid "Add certificate"
 msgstr ""
 
-#: admin/views/dashboard.php:65
+#: admin/views/dashboard.php:62
 #: admin/views/list-certificates.php:35
 #: admin/views/list-certificates.php:44
 #: src/Infrastructure/Admin/AdminProductNavigation.php:98
@@ -2743,35 +2739,39 @@ msgstr ""
 msgid "Issue credential"
 msgstr ""
 
-#: admin/views/dashboard.php:69
+#: admin/views/dashboard.php:66
 #: admin/views/import-mapping.php:70
 #: admin/views/import-upload.php:37
 #: admin/views/import-upload.php:48
 msgid "Import certificates"
 msgstr ""
 
-#: admin/views/dashboard.php:69
+#: admin/views/dashboard.php:66
 msgid "Open programs"
 msgstr ""
 
-#: admin/views/dashboard.php:75
+#: admin/views/dashboard.php:68
+msgid "Setup wizard"
+msgstr ""
+
+#: admin/views/dashboard.php:73
 msgid "Setup settings applied."
 msgstr ""
 
 #. translators: %1$d: completed setup checks; %2$d: total setup checks.
-#: admin/views/dashboard.php:94
+#: admin/views/dashboard.php:92
 msgid "Setup: %1$d of %2$d checks complete"
 msgstr ""
 
-#: admin/views/dashboard.php:95
+#: admin/views/dashboard.php:93
 msgid "Review setup"
 msgstr ""
 
-#: admin/views/dashboard.php:98
+#: admin/views/dashboard.php:96
 msgid "Remind me in 3 days"
 msgstr ""
 
-#: admin/views/dashboard.php:99
+#: admin/views/dashboard.php:97
 msgid "Do not remind me again"
 msgstr ""
 

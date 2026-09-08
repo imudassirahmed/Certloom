@@ -1,3 +1,11 @@
+= 1.7.0-alpha.2.1 =
+* Add UI Phase 2.1 as an explicit visual-review tranche before Setup Wizard work; nothing is frozen and user visual review remains a required unchecked gate.
+* Replace the legacy dark-green Dashboard hero and half-migrated page/workspace headers with flat ruled Certloom headers using navy ink, blue action semantics and deliberate compact spacing.
+* Remove glass-style Dashboard Setup and Email Designer toolbar treatment, and make the shared editor/action chrome opaque rather than backdrop-blurred.
+* Flatten Dashboard metrics, quick actions and summary surfaces to the approved ledger language while preserving valid/revoked/expired credential-only verdict colours.
+* Stop Email Designs from shadowing the canonical Certloom ink token and remap generic progress/tab/setup/info accents away from legacy green.
+* Add dedicated Phase 2.1 source and Chromium visual contracts covering desktop/mobile, reduced-motion and forced-colour behavior before the full cross-cutting regression inventory.
+
 = 1.7.0-alpha.2 =
 * Lock UI Phase 2 around Recipient + credential title + issue date, with hierarchy moved into progressive Additional details instead of the required issuance path.
 * Add mutually exclusive Details only, uploaded PNG/JPEG and Certloom Design presentation controls; unsupported alpha paths fail visibly until the approved backend authority phase rather than being silently coerced into Program + design issuance.

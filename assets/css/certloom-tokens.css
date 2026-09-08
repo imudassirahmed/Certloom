@@ -22,6 +22,13 @@
   --cl-cyan: #03CDF3;
   --cl-cyan-deep: #009ED4;
 
+  /* Analytics / data-viz series. Generic series avoid verdict colours.
+     Status-aware charts may opt into --cl-valid-mark / revoked / expired. */
+  --cl-chart-1: var(--cl-blue);
+  --cl-chart-2: var(--cl-cyan-deep);
+  --cl-chart-3: var(--cl-blue-bright);
+  --cl-chart-4: var(--cl-ink-soft);
+
   /* Credential verdicts */
   --cl-valid: #00734E;
   --cl-valid-mark: #01C174;

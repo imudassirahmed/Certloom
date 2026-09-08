@@ -10,6 +10,7 @@ $dashboard = uxops_src( $root, 'admin/views/dashboard.php' );
 $admin = uxops_src( $root, 'admin/class-ecapla-certverify-admin.php' );
 $admin_js = uxops_src( $root, 'admin/assets/admin.js' );
 $admin_css = uxops_src( $root, 'admin/assets/admin.css' );
+$foundation_css = uxops_src( $root, 'admin/assets/certloom-foundation.css' );
 $backup = uxops_src( $root, 'admin/views/import-upload.php' );
 $editor = uxops_src( $root, 'admin/views/edit-certificate.php' );
 $public_css = uxops_src( $root, 'public/assets/certloom-public.css' );
@@ -49,14 +50,14 @@ uxops_check( false !== strpos( $admin, 'restore_snapshot( $onboarding_before )' 
 uxops_check( false !== strpos( $admin, "clear_assignment( 'global', 0" ) && false !== strpos( $admin, "get_assignment( 'global', 0 )" ), 'Wizard Apply can restore the exact prior Global Template assignment' );
 
 // 5. Hidden contextual routes keep the correct visible WordPress parent active.
-uxops_check( false !== strpos( $nav, "add_filter( 'parent_file'" ) && false !== strpos( $nav, "? 'certloom' : $parent_file" ), 'Hidden Certloom routes keep the Certloom WordPress parent menu highlighted' );
+uxops_check( false !== strpos( $nav, "add_filter( 'parent_file'" ) && false !== strpos( $nav, '? \'certloom\' : $parent_file' ), 'Hidden Certloom routes keep the Certloom WordPress parent menu highlighted' );
 uxops_check( false !== strpos( $nav, "add_filter( 'submenu_file'" ) && false !== strpos( $nav, "'certloom-domain-data-tools'" ), 'Hidden contextual routes map back to one of the six visible primary rows' );
 
 // 6/8/9. Backup alignment and compact Dashboard readiness/setup actions.
 uxops_check( false !== strpos( $backup, 'certloom-backup-setting' ) && false !== strpos( $backup, 'certloom-backup-settings-actions' ), 'Automatic backup fields and save action use the compact aligned layout contract' );
 uxops_check( false !== strpos( $admin_css, 'grid-template-columns:minmax(180px,280px) minmax(180px,240px) max-content' ) && false !== strpos( $admin_css, 'width:auto!important' ), 'Backup save action is content-sized rather than stretched across the card' );
 uxops_check( false !== strpos( $dashboard, "'Setup: %1\$d of %2\$d checks complete', 'certloom'" ) && false !== strpos( $dashboard, "'Remind me in 3 days', 'certloom'" ) && false !== strpos( $dashboard, "'Do not remind me again', 'certloom'" ), 'Dashboard uses a compact readiness count with snooze and permanent-dismiss actions' );
-uxops_check( false !== strpos( $admin_css, '.certloom-dashboard-setup-link{position:absolute;top:18px;right:20px' ) && false !== strpos( $dashboard, 'certloom-dashboard-setup-link' ), 'Setup Wizard is a small visually separate top-right Dashboard action' );
+uxops_check( false !== strpos( $foundation_css, '.certloom-admin-shell .certloom-dashboard-setup-link' ) && false !== strpos( $foundation_css, 'position: static;' ) && false !== strpos( $dashboard, 'class="button certloom-dashboard-setup-link"' ), 'Setup Wizard remains a compact permanent Dashboard action without the retired glass/top-right treatment' );
 
 // 8. The reminder cadence is per-user, not a global option.
 uxops_check( false !== strpos( uxops_src( $root, 'src/Infrastructure/Admin/SetupReadinessReminder.php' ), 'get_user_meta' ) && false !== strpos( uxops_src( $root, 'src/Infrastructure/Admin/SetupReadinessReminder.php' ), '3 * DAY_IN_SECONDS' ), 'Setup reminder snooze is per-administrator and exactly three days' );
