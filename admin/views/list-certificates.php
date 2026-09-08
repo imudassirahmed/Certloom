@@ -28,7 +28,6 @@ $ecapla_certverify_create_url = $ecapla_certverify_normalized_issuance_ready
 <div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-registry-screen">
 	<section class="certloom-page-hero" aria-labelledby="certloom-registry-title">
 		<div>
-			<span class="certloom-eyebrow"><?php esc_html_e( 'Certificate registry', 'certloom' ); ?></span>
 			<h1 id="certloom-registry-title"><?php esc_html_e( 'Certificates', 'certloom' ); ?></h1>
 			<p><?php esc_html_e( 'Search, review and maintain the authoritative certificate registry without changing verification truth.', 'certloom' ); ?></p>
 		</div>

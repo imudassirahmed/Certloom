@@ -1,3 +1,12 @@
+= 1.7.0-alpha.1 =
+* Start the Certloom 1.7 development line from frozen 1.6.98-qa.23 without opening normalized-domain or renderer production authority.
+* Add the shared 1.7 design-token authority: navy ink, blue action, credential-only verdict colors, three semantic radii, two elevations, seven type sizes, focus and motion tokens.
+* Replace the generic WordPress award Dashicon with the monochrome Certloom shield/check silhouette and bring every literal Certloom admin root onto the shared admin shell.
+* Establish the compact Credentials ledger reference with ruled/square surfaces, blue actions, sentence-case labels and status word + color + shape semantics.
+* Establish the public Verification artifact reference with a flat document structure, Source Serif roles for verdict/recipient, distinct verdict colors/shapes and separated certificate artwork.
+* Update default public action/text fallbacks to the approved blue/navy system while preserving saved customer branding choices.
+* Add focused source and Chromium contracts for the Phase 1 cascade, responsive behavior, forced colors and reduced motion.
+
 = 1.6.98-qa.23 =
 * Redesign Certificate and Email Design management around visual Library/My Designs or Library/My Templates workspaces, with assignment controls removed from design creation/editing.
 * Add a dedicated Email Designer with drag-and-drop plus keyboard reordering, contextual settings, dynamic-data insertion, WordPress Media Library support, responsive preview, inline validation, and sandboxed/CSP-isolated full preview.

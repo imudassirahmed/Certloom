@@ -20,7 +20,7 @@ $render_preview = static function( array $design ) use ( $compiler, $sample ) {
 };
 $purpose_labels = isset( $purposes ) && is_array( $purposes ) ? $purposes : array();
 ?>
-<div class="wrap certloom-email-designs">
+<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-email-designs">
 	<header class="certloom-email-hero">
 		<div>
 			<p class="certloom-eyebrow"><?php esc_html_e( 'Recipient communication', 'certloom' ); ?></p>

@@ -5,7 +5,7 @@ $blocks=is_array($editing['blocks']??null)?$editing['blocks']:array();
 $theme=is_array($editing['theme']??null)?$editing['theme']:\Certloom\Infrastructure\Email\EmailDesignCompiler::default_theme();
 $is_published=!empty($editing['active']);
 ?>
-<div class="wrap certloom-email-designer-wrap" data-certloom-email-designer-root>
+<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-email-designer-wrap" data-certloom-email-designer-root>
 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" data-certloom-email-designer>
 <input type="hidden" name="action" value="certloom_email_design_save"><input type="hidden" name="design_id" value="<?php echo esc_attr((string)($editing['id']??'')); ?>"><input type="hidden" name="blocks_json" value="<?php echo esc_attr(wp_json_encode($blocks)); ?>" data-certloom-blocks-json><?php wp_nonce_field('certloom_email_design_save'); ?>
 <header class="certloom-designer-toolbar">

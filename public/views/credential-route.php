@@ -10,9 +10,9 @@ $branding_enabled = (bool) Ecapla_CertVerify_Settings::get( 'verification_brandi
 $brand_name        = '';
 $brand_tagline     = '';
 $brand_icon        = '';
-$brand_accent      = '#0f6e56';
+$brand_accent      = '#1450e0';
 $brand_surface     = '#ffffff';
-$brand_text        = '#17201d';
+$brand_text        = '#01133d';
 if ( $branding_enabled ) {
 	$brand_name = trim( (string) Ecapla_CertVerify_Settings::get( 'verification_brand_name', '' ) );
 	if ( '' === $brand_name && class_exists( 'Ecapla_CertVerify_Onboarding' ) ) {
@@ -24,9 +24,9 @@ if ( $branding_enabled ) {
 	}
 	$brand_tagline = trim( (string) Ecapla_CertVerify_Settings::get( 'verification_brand_tagline', '' ) );
 
-	$accent  = sanitize_hex_color( (string) Ecapla_CertVerify_Settings::get( 'accent_color', '#0f6e56' ) );
+	$accent  = sanitize_hex_color( (string) Ecapla_CertVerify_Settings::get( 'accent_color', '#1450e0' ) );
 	$surface = sanitize_hex_color( (string) Ecapla_CertVerify_Settings::get( 'verification_surface_color', '#ffffff' ) );
-	$text    = sanitize_hex_color( (string) Ecapla_CertVerify_Settings::get( 'verification_text_color', '#17201d' ) );
+	$text    = sanitize_hex_color( (string) Ecapla_CertVerify_Settings::get( 'verification_text_color', '#01133d' ) );
 	if ( $accent ) {
 		$brand_accent = $accent;
 	}
@@ -46,7 +46,7 @@ if ( $branding_enabled ) {
 get_header();
 ?>
 <a class="certloom-skip-link screen-reader-text" href="#certloom-route-content"><?php esc_html_e( 'Skip to credential content', 'certloom' ); ?></a>
-<main id="primary" class="certloom-route-main certloom-route-<?php echo esc_attr( $route ); ?><?php echo $branding_enabled ? ' is-certloom-branded' : ''; ?>"<?php if ( $branding_enabled ) : ?> style="--certloom-brand-accent:<?php echo esc_attr( $brand_accent ); ?>;--certloom-brand-surface:<?php echo esc_attr( $brand_surface ); ?>;--certloom-brand-text:<?php echo esc_attr( $brand_text ); ?>;"<?php endif; ?>>
+<main id="primary" class="certloom-public certloom-route-main certloom-route-<?php echo esc_attr( $route ); ?><?php echo $branding_enabled ? ' is-certloom-branded' : ''; ?>"<?php if ( $branding_enabled ) : ?> style="--certloom-brand-accent:<?php echo esc_attr( $brand_accent ); ?>;--certloom-brand-surface:<?php echo esc_attr( $brand_surface ); ?>;--certloom-brand-text:<?php echo esc_attr( $brand_text ); ?>;"<?php endif; ?>>
 	<div id="certloom-route-content" class="certloom-route-shell" tabindex="-1">
 		<?php if ( $branding_enabled ) : ?>
 			<section class="certloom-route-brand" aria-label="<?php esc_attr_e( 'Credential issuer', 'certloom' ); ?>">

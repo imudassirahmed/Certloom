@@ -1903,7 +1903,7 @@
 
 /* UX-CORE-01 — human credential profile. Evidence stays present, but identity and achievement lead. */
 .certloom-credential-profile.cvp-widget.cvp-widget--normalized{width:min(100%,860px)}
-.cvp-profile-card{overflow:hidden;padding:0!important;border-radius:18px!important;background:#fff}
+.cvp-profile-card{overflow:hidden;padding:0;border-radius:18px;background:#fff}
 .cvp-profile-hero{padding:clamp(24px,5vw,44px);background:linear-gradient(180deg,#f8fbfa 0%,#fff 100%);border-bottom:1px solid var(--cvp-border)}
 .cvp-profile-status-row{display:flex;align-items:flex-start;gap:11px;margin-bottom:28px}
 .cvp-profile-status-row .cvp-status-mark{margin-top:1px}

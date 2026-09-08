@@ -12,7 +12,7 @@ class Ecapla_CertVerify_Settings {
 
 	public static function defaults() {
 		return array(
-			'accent_color'            => '#0f6e56',
+			'accent_color'            => '#1450e0',
 			'show_credit'             => false,
 			'credit_text'             => __( 'Verification powered by Certloom.', 'certloom' ),
 			'status_desc'             => array(),
@@ -26,7 +26,7 @@ class Ecapla_CertVerify_Settings {
 			'verification_brand_name'    => '',
 			'verification_brand_tagline' => '',
 			'verification_surface_color' => '#ffffff',
-			'verification_text_color'    => '#17201d',
+			'verification_text_color'    => '#01133d',
 			'verification_use_site_icon' => false,
 			'verification_qr_enabled'     => true,
 			'verification_qr_logo_enabled' => false,
@@ -66,7 +66,7 @@ class Ecapla_CertVerify_Settings {
 		$clean = self::defaults();
 
 		$accent                 = sanitize_hex_color( (string) $data['accent_color'] );
-		$clean['accent_color']  = $accent ? $accent : '#0f6e56';
+		$clean['accent_color']  = $accent ? $accent : '#1450e0';
 		$credit_color           = sanitize_hex_color( (string) $data['credit_color'] );
 		$clean['credit_color']  = is_string( $credit_color ) ? $credit_color : '';
 		$clean['show_credit']   = ! empty( $data['show_credit'] );
@@ -84,7 +84,7 @@ class Ecapla_CertVerify_Settings {
 		$surface = sanitize_hex_color( (string) $data['verification_surface_color'] );
 		$text = sanitize_hex_color( (string) $data['verification_text_color'] );
 		$clean['verification_surface_color'] = $surface ? $surface : '#ffffff';
-		$clean['verification_text_color'] = self::accessible_text_color( $clean['verification_surface_color'], $text ? $text : '#17201d' );
+		$clean['verification_text_color'] = self::accessible_text_color( $clean['verification_surface_color'], $text ? $text : '#01133d' );
 		$clean['verification_use_site_icon'] = ! empty( $data['verification_use_site_icon'] );
 		$clean['verification_qr_enabled'] = ! empty( $data['verification_qr_enabled'] );
 		$clean['verification_qr_logo_enabled'] = ! empty( $data['verification_qr_logo_enabled'] );
@@ -129,7 +129,7 @@ class Ecapla_CertVerify_Settings {
 	/** Keeps clean-route brand text at WCAG AA contrast for normal text. */
 	public static function accessible_text_color( $surface, $preferred ) {
 		$surface   = self::normalize_hex( $surface, '#ffffff' );
-		$preferred = self::normalize_hex( $preferred, '#17201d' );
+		$preferred = self::normalize_hex( $preferred, '#01133d' );
 		if ( self::contrast_ratio( $surface, $preferred ) >= 4.5 ) {
 			return $preferred;
 		}

@@ -28,7 +28,9 @@ class Ecapla_CertVerify_Shortcode {
 	}
 
 	public static function register_assets() {
-		wp_register_style( 'ecapla-certloom-public', ECAPLA_CERTVERIFY_URL . 'public/assets/certloom-public.css', array(), ECAPLA_CERTVERIFY_VERSION );
+		wp_register_style( 'certloom-tokens', ECAPLA_CERTVERIFY_URL . 'assets/css/certloom-tokens.css', array(), ECAPLA_CERTVERIFY_VERSION );
+		wp_register_style( 'ecapla-certloom-public', ECAPLA_CERTVERIFY_URL . 'public/assets/certloom-public.css', array( 'certloom-tokens' ), ECAPLA_CERTVERIFY_VERSION );
+		wp_register_style( 'certloom-artifact-foundation', ECAPLA_CERTVERIFY_URL . 'public/assets/certloom-artifact-foundation.css', array( 'ecapla-certloom-public' ), ECAPLA_CERTVERIFY_VERSION );
 		wp_register_script( 'ecapla-certloom-public', ECAPLA_CERTVERIFY_URL . 'public/assets/certloom-public.js', array(), ECAPLA_CERTVERIFY_VERSION, true );
 	}
 
@@ -36,7 +38,7 @@ class Ecapla_CertVerify_Shortcode {
 		if ( ! wp_style_is( 'ecapla-certloom-public', 'registered' ) ) {
 			self::register_assets();
 		}
-		wp_enqueue_style( 'ecapla-certloom-public' );
+		wp_enqueue_style( 'certloom-artifact-foundation' );
 		wp_enqueue_script( 'ecapla-certloom-public' );
 	}
 

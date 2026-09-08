@@ -1,0 +1,11 @@
+/* Certloom 1.7 WordPress menu mark: monochrome shield/check silhouette. */
+#toplevel_page_certloom .wp-menu-image::before {
+  content: "";
+  display: block;
+  width: 20px;
+  height: 21px;
+  margin: 6px auto 0;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 103'%3E%3Cpath fill-rule='evenodd' d='M50 6 L89 18 L89 50 C89 73 71 89 50 97 C29 89 11 73 11 50 L11 18 Z M29 50 L44 65 L71 36 L79 44 L44 80 L21 57 Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 103'%3E%3Cpath fill-rule='evenodd' d='M50 6 L89 18 L89 50 C89 73 71 89 50 97 C29 89 11 73 11 50 L11 18 Z M29 50 L44 65 L71 36 L79 44 L44 80 L21 57 Z'/%3E%3C/svg%3E") center / contain no-repeat;
+}

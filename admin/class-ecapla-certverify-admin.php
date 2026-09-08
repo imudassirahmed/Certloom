@@ -91,7 +91,7 @@ class Ecapla_CertVerify_Admin {
 			ECAPLA_CERTVERIFY_CAP,
 			self::DASHBOARD_PAGE,
 			array( $this, 'render_dashboard_screen' ),
-			'dashicons-awards',
+			'none',
 			30
 		);
 		add_submenu_page( self::DASHBOARD_PAGE, $home_label, $home_label, ECAPLA_CERTVERIFY_CAP, self::DASHBOARD_PAGE, array( $this, 'render_dashboard_screen' ) );
@@ -178,10 +178,15 @@ class Ecapla_CertVerify_Admin {
 	}
 
 	public function enqueue_assets( $hook ) {
+		// The monochrome Certloom mark belongs to the WordPress menu on every admin page.
+		wp_enqueue_style( 'certloom-admin-menu-icon', ECAPLA_CERTVERIFY_URL . 'admin/assets/menu-icon.css', array(), ECAPLA_CERTVERIFY_VERSION );
+
 		if ( false === strpos( (string) $hook, 'certloom' ) && 'plugins.php' !== (string) $hook ) {
 			return;
 		}
-		wp_enqueue_style( 'ecapla-certverify-admin', ECAPLA_CERTVERIFY_URL . 'admin/assets/admin.css', array(), ECAPLA_CERTVERIFY_VERSION );
+		wp_enqueue_style( 'certloom-tokens', ECAPLA_CERTVERIFY_URL . 'assets/css/certloom-tokens.css', array(), ECAPLA_CERTVERIFY_VERSION );
+		wp_enqueue_style( 'ecapla-certverify-admin', ECAPLA_CERTVERIFY_URL . 'admin/assets/admin.css', array( 'certloom-tokens' ), ECAPLA_CERTVERIFY_VERSION );
+		wp_enqueue_style( 'certloom-admin-foundation', ECAPLA_CERTVERIFY_URL . 'admin/assets/certloom-foundation.css', array( 'ecapla-certverify-admin' ), ECAPLA_CERTVERIFY_VERSION );
 		wp_enqueue_script( 'ecapla-certverify-admin', ECAPLA_CERTVERIFY_URL . 'admin/assets/admin.js', array(), ECAPLA_CERTVERIFY_VERSION, true );
 		wp_localize_script( 'ecapla-certverify-admin', 'certloomAdminL10n', array(
 			'copy' => __( 'Copy', 'certloom' ),
@@ -1132,7 +1137,7 @@ class Ecapla_CertVerify_Admin {
 			$credit_align = 'center';
 		}
 		$data = array(
-			'accent_color'             => $accent ? $accent : '#0f6e56',
+			'accent_color'             => $accent ? $accent : '#1450e0',
 			'show_credit'              => ! empty( $_POST['show_credit'] ),
 			'credit_text'              => isset( $_POST['credit_text'] ) ? sanitize_text_field( wp_unslash( $_POST['credit_text'] ) ) : '',
 			'credit_color'             => $credit_color,
@@ -1145,7 +1150,7 @@ class Ecapla_CertVerify_Admin {
 			'verification_brand_name'    => isset( $_POST['verification_brand_name'] ) ? sanitize_text_field( wp_unslash( $_POST['verification_brand_name'] ) ) : '',
 			'verification_brand_tagline' => isset( $_POST['verification_brand_tagline'] ) ? sanitize_text_field( wp_unslash( $_POST['verification_brand_tagline'] ) ) : '',
 			'verification_surface_color' => isset( $_POST['verification_surface_color'] ) ? sanitize_hex_color( wp_unslash( $_POST['verification_surface_color'] ) ) : '#ffffff',
-			'verification_text_color'    => isset( $_POST['verification_text_color'] ) ? sanitize_hex_color( wp_unslash( $_POST['verification_text_color'] ) ) : '#17201d',
+			'verification_text_color'    => isset( $_POST['verification_text_color'] ) ? sanitize_hex_color( wp_unslash( $_POST['verification_text_color'] ) ) : '#01133d',
 			'verification_use_site_icon' => ! empty( $_POST['verification_use_site_icon'] ),
 			'verification_qr_enabled' => ! empty( $_POST['verification_qr_enabled'] ),
 			'verification_qr_logo_enabled' => ! empty( $_POST['verification_qr_logo_enabled'] ),

@@ -44,7 +44,7 @@ class Ecapla_CertVerify_Render {
 			'guide_heading'    => '',
 			'show_credit'      => (bool) Ecapla_CertVerify_Settings::get( 'show_credit', false ),
 			'credit_text'      => Ecapla_CertVerify_Settings::get( 'credit_text', __( 'Verification powered by Certloom.', 'certloom' ) ),
-			'accent'           => Ecapla_CertVerify_Settings::get( 'accent_color', '#0f6e56' ),
+			'accent'           => Ecapla_CertVerify_Settings::get( 'accent_color', '#1450e0' ),
 			'credit_color'     => Ecapla_CertVerify_Settings::get( 'credit_color', '' ),
 			'credit_size'      => Ecapla_CertVerify_Settings::get( 'credit_size', '' ),
 			'credit_align'     => Ecapla_CertVerify_Settings::get( 'credit_align', 'center' ),
@@ -75,7 +75,7 @@ class Ecapla_CertVerify_Render {
 			'guide_heading'    => __( 'Understand each certificate status', 'certloom' ),
 			'show_credit'      => (bool) Ecapla_CertVerify_Settings::get( 'show_credit', false ),
 			'credit_text'      => Ecapla_CertVerify_Settings::get( 'credit_text', __( 'Verification powered by Certloom.', 'certloom' ) ),
-			'accent'           => Ecapla_CertVerify_Settings::get( 'accent_color', '#0f6e56' ),
+			'accent'           => Ecapla_CertVerify_Settings::get( 'accent_color', '#1450e0' ),
 			'credit_color'     => Ecapla_CertVerify_Settings::get( 'credit_color', '' ),
 			'credit_size'      => Ecapla_CertVerify_Settings::get( 'credit_size', '' ),
 			'credit_align'     => Ecapla_CertVerify_Settings::get( 'credit_align', 'center' ),
@@ -395,7 +395,7 @@ class Ecapla_CertVerify_Render {
 			}
 		}
 
-		return '<section id="' . esc_attr( $instance_id ) . '" class="certloom-credential-profile cvp-widget cvp-widget--normalized" aria-labelledby="' . esc_attr( $heading_id ) . '" data-copy-success-text="' . esc_attr__( 'Verification link copied.', 'certloom' ) . '" data-copy-error-text="' . esc_attr__( 'Copy the verification link from your browser.', 'certloom' ) . '"><header class="cvp-header"><p class="cvp-eyebrow">' . esc_html__( 'Verified credential', 'certloom' ) . '</p><' . $heading_tag . ' id="' . esc_attr( $heading_id ) . '" class="cvp-heading">' . esc_html( $heading ) . '</' . $heading_tag . '></header><div class="cvp-result" role="region" aria-labelledby="' . esc_attr( $heading_id ) . '">' . $content . '</div><div class="screen-reader-text certloom-live-status" role="status" aria-live="polite" aria-atomic="true"></div></section>';
+		return '<section id="' . esc_attr( $instance_id ) . '" class="certloom-public certloom-credential-profile cvp-widget cvp-widget--normalized" aria-labelledby="' . esc_attr( $heading_id ) . '" data-copy-success-text="' . esc_attr__( 'Verification link copied.', 'certloom' ) . '" data-copy-error-text="' . esc_attr__( 'Copy the verification link from your browser.', 'certloom' ) . '"><header class="cvp-header"><p class="cvp-eyebrow">' . esc_html__( 'Verified credential', 'certloom' ) . '</p><' . $heading_tag . ' id="' . esc_attr( $heading_id ) . '" class="cvp-heading">' . esc_html( $heading ) . '</' . $heading_tag . '></header><div class="cvp-result" role="region" aria-labelledby="' . esc_attr( $heading_id ) . '">' . $content . '</div><div class="screen-reader-text certloom-live-status" role="status" aria-live="polite" aria-atomic="true"></div></section>';
 	}
 
 	/**
@@ -429,7 +429,7 @@ class Ecapla_CertVerify_Render {
 			'actions' => array(),
 		);
 		$content = self::normalized_profile_card_html( $presentation, 'cvp' );
-		return '<section class="certloom-credential-profile cvp-widget cvp-widget--normalized certloom-credential-profile--sample" aria-label="' . esc_attr__( 'Sample credential verification result', 'certloom' ) . '"><div class="cvp-result">' . $content . '</div><p class="certloom-sample-watermark">' . esc_html__( 'Sample preview — not a real credential', 'certloom' ) . '</p></section>';
+		return '<section class="certloom-public certloom-credential-profile cvp-widget cvp-widget--normalized certloom-credential-profile--sample" aria-label="' . esc_attr__( 'Sample credential verification result', 'certloom' ) . '"><div class="cvp-result">' . $content . '</div><p class="certloom-sample-watermark">' . esc_html__( 'Sample preview — not a real credential', 'certloom' ) . '</p></section>';
 	}
 
 	/** Premium human-facing normalized credential profile. @return string */
@@ -447,8 +447,8 @@ class Ecapla_CertVerify_Render {
 		$number = trim( (string) ( $presentation['certificate_number'] ?? '' ) );
 		$credential_id = trim( (string) ( $presentation['credential_id'] ?? '' ) );
 
-		$hero = '<div class="cvp-profile-hero"><div class="cvp-profile-status-row"><span class="cvp-status-mark" aria-hidden="true">' . esc_html( self::status_icon( $status_key ) ) . '</span><div><span class="cvp-profile-status-label">' . esc_html( $status_label ) . '</span>' . ( '' !== $status_desc ? '<p>' . esc_html( $status_desc ) . '</p>' : '' ) . '</div></div>';
-		if ( '' !== $recipient ) { $hero .= '<h2 class="cvp-profile-recipient" dir="auto">' . esc_html( $recipient ) . '</h2>'; }
+		$hero = '<div class="cvp-profile-hero"><div class="cvp-profile-status-row"><span class="cvp-status-mark" aria-hidden="true">' . esc_html( self::status_icon( $status_key ) ) . '</span><div><span class="cvp-profile-status-label certloom-verdict">' . esc_html( $status_label ) . '</span>' . ( '' !== $status_desc ? '<p>' . esc_html( $status_desc ) . '</p>' : '' ) . '</div></div>';
+		if ( '' !== $recipient ) { $hero .= '<h2 class="cvp-profile-recipient certloom-recipient-name" dir="auto">' . esc_html( $recipient ) . '</h2>'; }
 		if ( '' !== $program ) { $hero .= '<p class="cvp-profile-program" dir="auto">' . esc_html( $program ) . '</p>'; }
 		if ( '' !== $program_desc ) { $hero .= '<p class="cvp-profile-program-description" dir="auto">' . esc_html( $program_desc ) . '</p>'; }
 		$hero .= '</div>';

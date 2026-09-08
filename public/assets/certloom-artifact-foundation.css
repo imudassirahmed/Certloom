@@ -1,0 +1,278 @@
+/* ============================================================================
+   CERTLOOM 1.7 · PUBLIC VERIFICATION ARTIFACT BASELINE
+   Trust-first counterpart to the dense admin ledger. This is intentionally
+   flat and document-like; reusable certificate artwork remains separate.
+   ============================================================================ */
+.certloom-public .certloom-credential-profile.cvp-widget.cvp-widget--normalized,
+.certloom-public.certloom-credential-profile.cvp-widget.cvp-widget--normalized {
+  --cvp-border: var(--cl-rule);
+  --cvp-text: var(--cl-ink);
+  --cvp-muted: var(--cl-ink-soft);
+  width: min(100%, 820px);
+  color: var(--cl-ink);
+  font-family: var(--cl-sans);
+}
+
+.certloom-public .cvp-header {
+  margin-bottom: var(--cl-5);
+  text-align: center;
+}
+
+.certloom-public .cvp-eyebrow {
+  margin: 0 0 var(--cl-2);
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-xs);
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.certloom-public .cvp-heading {
+  margin: 0;
+  color: var(--cl-ink);
+  font-size: var(--cl-t-md);
+  line-height: 1.3;
+  font-weight: 650;
+}
+
+.certloom-public .cvp-profile-card {
+  overflow: visible;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--cl-rule-firm);
+  border-bottom: 1px solid var(--cl-rule-firm);
+  border-radius: var(--cl-r-none);
+  background: var(--cl-surface);
+  box-shadow: none;
+}
+
+.certloom-public .cvp-profile-hero {
+  padding: var(--cl-7) var(--cl-5) var(--cl-6);
+  background: var(--cl-surface);
+  border-bottom: 1px solid var(--cl-rule);
+  text-align: center;
+}
+
+.certloom-public .cvp-profile-status-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cl-2);
+  margin-bottom: var(--cl-5);
+}
+
+.certloom-public .cvp-profile-status-row .cvp-status-mark {
+  display: grid;
+  place-items: center;
+  width: var(--cl-6);
+  height: var(--cl-6);
+  flex: 0 0 var(--cl-6);
+  margin: 0;
+  border: 1px solid currentColor;
+  border-radius: var(--cl-r-none);
+  background: var(--cl-surface);
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-sm);
+}
+
+.certloom-public .cvp-status-valid .cvp-status-mark {
+  color: var(--cl-valid);
+  background: var(--cl-valid-wash);
+  border-radius: 50%;
+}
+
+.certloom-public .cvp-status-revoked .cvp-status-mark,
+.certloom-public .cvp-status-withdrawn .cvp-status-mark,
+.certloom-public .cvp-status-voided .cvp-status-mark,
+.certloom-public .cvp-status-not_issued .cvp-status-mark {
+  color: var(--cl-revoked);
+  background: var(--cl-revoked-wash);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  border: 0;
+}
+
+.certloom-public .cvp-status-expired .cvp-status-mark {
+  color: var(--cl-expired);
+  background: var(--cl-expired-wash);
+}
+
+.certloom-public .cvp-status-suspended .cvp-status-mark,
+.certloom-public .cvp-status-pending_review .cvp-status-mark,
+.certloom-public .cvp-status-not_yet_valid .cvp-status-mark {
+  color: var(--cl-expired);
+  background: var(--cl-expired-wash);
+  transform: rotate(45deg) scale(.82);
+}
+
+.certloom-public .cvp-profile-status-label {
+  display: block;
+  color: var(--cl-ink);
+  font-family: var(--cl-serif);
+  font-size: var(--cl-t-2xl);
+  font-weight: 600;
+  line-height: 1.05;
+}
+
+.certloom-public .cvp-status-valid .cvp-profile-status-label { color: var(--cl-valid); }
+.certloom-public .cvp-status-revoked .cvp-profile-status-label,
+.certloom-public .cvp-status-withdrawn .cvp-profile-status-label,
+.certloom-public .cvp-status-voided .cvp-profile-status-label,
+.certloom-public .cvp-status-not_issued .cvp-profile-status-label { color: var(--cl-revoked); }
+.certloom-public .cvp-status-expired .cvp-profile-status-label { color: var(--cl-expired); }
+
+.certloom-public .cvp-profile-status-row p {
+  max-width: 62ch;
+  margin: 0;
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-sm);
+  line-height: 1.5;
+}
+
+.certloom-public .cvp-profile-recipient {
+  margin: 0;
+  color: var(--cl-ink);
+  font-family: var(--cl-serif);
+  font-size: var(--cl-t-xl);
+  line-height: 1.15;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.certloom-public .cvp-profile-program {
+  margin: var(--cl-2) 0 0;
+  color: var(--cl-ink);
+  font-size: var(--cl-t-base);
+  font-weight: 650;
+}
+
+.certloom-public .cvp-profile-program-description {
+  max-width: 64ch;
+  margin: var(--cl-2) auto 0;
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-sm);
+  line-height: 1.55;
+}
+
+.certloom-public .cvp-profile-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+  padding: 0 var(--cl-5);
+}
+
+.certloom-public .cvp-profile-facts > div,
+.certloom-public .cvp-profile-facts > div:nth-child(odd),
+.certloom-public .cvp-profile-facts > div:nth-child(even) {
+  min-width: 0;
+  padding: var(--cl-4) 0;
+  border-inline: 0;
+  border-bottom: 1px solid var(--cl-rule);
+}
+
+.certloom-public .cvp-profile-facts > div:nth-child(odd) { padding-inline-end: var(--cl-4); }
+.certloom-public .cvp-profile-facts > div:nth-child(even) { padding-inline-start: var(--cl-4); }
+
+.certloom-public .cvp-profile-facts dt {
+  margin: 0 0 var(--cl-1);
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-xs);
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.certloom-public .cvp-profile-facts dd {
+  margin: 0;
+  color: var(--cl-ink);
+  font-size: var(--cl-t-base);
+  font-weight: 550;
+  line-height: 1.45;
+}
+
+.certloom-public .cvp-profile-proof {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--cl-5);
+  align-items: center;
+  margin: 0 var(--cl-5);
+  padding: var(--cl-5) 0;
+  border: 0;
+  border-bottom: 1px solid var(--cl-rule);
+  border-radius: var(--cl-r-none);
+  background: var(--cl-surface);
+}
+
+.certloom-public .cvp-profile-proof-copy h3 {
+  margin: 0 0 var(--cl-2);
+  color: var(--cl-ink);
+  font-size: var(--cl-t-base);
+}
+
+.certloom-public .cvp-profile-proof-copy > p,
+.certloom-public .cvp-profile-verified {
+  max-width: 62ch;
+  margin: 0;
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-sm);
+  line-height: 1.55;
+}
+
+.certloom-public .cvp-profile-verified {
+  margin-top: var(--cl-2);
+  font-weight: 600;
+}
+
+.certloom-public .cvp-profile-technical summary {
+  color: var(--cl-blue);
+  font-size: var(--cl-t-xs);
+}
+
+.certloom-public .cvp-profile-technical code {
+  border-radius: var(--cl-r-ctl);
+  background: var(--cl-paper);
+  color: var(--cl-ink);
+  font-size: var(--cl-t-xs);
+}
+
+.certloom-public .cvp-profile-card > .cvp-result-actions {
+  margin: 0;
+  padding: var(--cl-4) var(--cl-5) var(--cl-5);
+  border: 0;
+}
+
+.certloom-public .certloom-result-action,
+.certloom-public .certloom-result-action.is-secondary {
+  color: var(--cl-blue);
+  border-color: var(--cl-blue);
+  border-radius: var(--cl-r-ctl);
+  background: var(--cl-surface);
+}
+
+.certloom-public .certloom-result-action:hover,
+.certloom-public .certloom-result-action:focus-visible,
+.certloom-public .certloom-result-action.is-secondary:hover,
+.certloom-public .certloom-result-action.is-secondary:focus-visible {
+  color: var(--cl-blue-deep);
+  border-color: var(--cl-blue-deep);
+  background: var(--cl-blue-wash);
+}
+
+@media (max-width: 640px) {
+  .certloom-public .cvp-profile-hero { padding: var(--cl-6) var(--cl-4) var(--cl-5); }
+  .certloom-public .cvp-profile-facts { grid-template-columns: 1fr; padding-inline: var(--cl-4); }
+  .certloom-public .cvp-profile-facts > div:nth-child(odd),
+  .certloom-public .cvp-profile-facts > div:nth-child(even) { padding-inline: 0; }
+  .certloom-public .cvp-profile-proof { grid-template-columns: 1fr; margin-inline: var(--cl-4); }
+  .certloom-public .cvp-profile-card > .cvp-result-actions { padding-inline: var(--cl-4); }
+}
+
+@media (forced-colors: active) {
+  .certloom-public .cvp-profile-card,
+  .certloom-public .cvp-profile-hero,
+  .certloom-public .cvp-profile-facts > div,
+  .certloom-public .cvp-profile-proof,
+  .certloom-public .cvp-profile-status-row .cvp-status-mark {
+    border-color: CanvasText;
+  }
+}
