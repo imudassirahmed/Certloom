@@ -105,6 +105,8 @@
 		var undoButton = root.querySelector( '[data-certloom-designer-undo]' );
 		var redoButton = root.querySelector( '[data-certloom-designer-redo]' );
 		var snapControl = root.querySelector( '[data-certloom-designer-snap]' );
+		var safeAreaButton = root.querySelector( '[data-certloom-designer-safe-area]' );
+		var panToolButton = root.querySelector( '[data-certloom-designer-pan-tool]' );
 		var alignButtons = root.querySelectorAll( '[data-certloom-designer-align]' );
 		var layerActionButtons = root.querySelectorAll( '[data-certloom-designer-layer-action]' );
 		var lockButton = root.querySelector( '[data-certloom-designer-lock]' );
@@ -199,6 +201,14 @@
 		var designerClipboard = [];
 		var designerClipboardLabels = {};
 		var renamingLayerId = '';
+		var safeAreaVisible = false;
+		var panToolActive = false;
+		var spacePanHeld = false;
+		var panGesture = null;
+		var marqueeGesture = null;
+		var suppressCanvasClick = false;
+		var activeSpacingGuides = [];
+		var contextMenu = null;
 		var activeSampleProfile = sampleDataControl && sampleDataControl.value ? String( sampleDataControl.value ) : ( SAMPLE_DATA.default || 'standard' );
 
 		function rememberedDesignerMode() {
@@ -373,7 +383,7 @@
 		}
 		function restoreSnapshot( value ) {
 			layout = clone( value.layout ); designerState = normalizeState( value.state ); selectedId = value.selectedId || ''; selectedIds = Array.isArray( value.selectedIds ) ? value.selectedIds.slice() : ( selectedId ? [ selectedId ] : [] ); selectionIds();
-			activeGuides = { x: null, y: null }; syncDirty(); render();
+			activeGuides = { x: null, y: null }; activeSpacingGuides = []; syncDirty(); render();
 		}
 		function undo() {
 			if ( ! history.length ) { return; }
@@ -393,6 +403,11 @@
 			root.classList.toggle( 'has-unsaved-changes', dirty );
 			if ( dirty ) { scheduleAutosave(); } else if ( hasServerAutosave && ! autosavePending ) { discardAutosave( false ); }
 		}
+		function syncCanvasTools() {
+			if ( safeAreaButton ) { safeAreaButton.setAttribute( 'aria-pressed', safeAreaVisible ? 'true' : 'false' ); safeAreaButton.classList.toggle( 'button-primary', safeAreaVisible ); }
+			if ( panToolButton ) { panToolButton.setAttribute( 'aria-pressed', panToolActive ? 'true' : 'false' ); panToolButton.classList.toggle( 'button-primary', panToolActive ); }
+			root.classList.toggle( 'is-pan-tool-active', panToolActive ); workspace.classList.toggle( 'is-pan-ready', panToolActive || spacePanHeld );
+		}
 		function syncControls() {
 			var p = page(); if ( ! p ) { return; }
 			if ( sizeControl ) { sizeControl.value = p.size; }
@@ -401,7 +416,7 @@
 			if ( zoomOutput ) { zoomOutput.textContent = Math.round( zoom * 100 ) + '%'; }
 			if ( snapControl ) { snapControl.checked = !! designerState.snap_enabled; }
 			if ( pageReadout ) { pageReadout.textContent = 'layout v' + schemaVersion + ' · ' + p.size + ' · ' + p.orientation + ' · ' + round( p.width_mm, 1 ) + ' × ' + round( p.height_mm, 1 ) + ' mm · ' + elements().length + ' ' + ( 1 === elements().length ? t( 'elementCountSingular', 'element' ) : t( 'elementCountPlural', 'elements' ) ); }
-			syncHistoryButtons();
+			syncHistoryButtons(); syncCanvasTools();
 		}
 		function combinedBounds( list ) {
 			if ( ! list || ! list.length ) { return null; }
@@ -610,7 +625,7 @@
 			if ( elements().length >= 500 ) { showError( t( 'elementLimit', 'This Template already contains the maximum 500 elements.' ) ); return; }
 			var element = buildNewElement( kind, assetReference, point ); if ( ! element ) { return; }
 			var before = snapshot();
-			if ( point && ! ( paletteDefinition( kind ) || {} ).full_page ) { var snapped = snapDragged( clampDragged( clone( element ) ) ); element.x_mm = snapped.x_mm; element.y_mm = snapped.y_mm; activeGuides = { x: null, y: null }; }
+			if ( point && ! ( paletteDefinition( kind ) || {} ).full_page ) { var snapped = snapDragged( clampDragged( clone( element ) ) ); element.x_mm = snapped.x_mm; element.y_mm = snapped.y_mm; activeGuides = { x: null, y: null }; activeSpacingGuides = []; }
 			elements().push( element ); normalizeZOrder(); selectOnly( element.id ); pushHistory( before ); render(); announce( point ? t( 'elementDropped', 'Element placed on the canvas.' ) : t( 'elementAdded', 'Element added.' ) );
 		}
 		function removeSelected() {
@@ -808,6 +823,21 @@
 			if ( null != activeGuides.x ) { var gx = document.createElement( 'span' ); gx.className = 'certloom-template-designer-guide is-vertical'; gx.style.left = px( activeGuides.x, zoom ) + 'px'; gx.setAttribute( 'aria-hidden', 'true' ); pageEl.appendChild( gx ); }
 			if ( null != activeGuides.y ) { var gy = document.createElement( 'span' ); gy.className = 'certloom-template-designer-guide is-horizontal'; gy.style.top = px( activeGuides.y, zoom ) + 'px'; gy.setAttribute( 'aria-hidden', 'true' ); pageEl.appendChild( gy ); }
 		}
+		function renderSafeArea() {
+			if ( ! safeAreaVisible ) { return; }
+			var margin = safeMarginMm(); if ( margin <= 0 ) { return; }
+			var safe = document.createElement( 'span' ); safe.className = 'certloom-template-designer-safe-area'; safe.setAttribute( 'data-certloom-designer-safe-area-overlay', '' ); safe.setAttribute( 'aria-hidden', 'true' );
+			safe.style.left = px( margin, zoom ) + 'px'; safe.style.top = px( margin, zoom ) + 'px'; safe.style.right = px( margin, zoom ) + 'px'; safe.style.bottom = px( margin, zoom ) + 'px'; pageEl.appendChild( safe );
+		}
+		function renderSpacingGuides() {
+			for ( var i = 0; i < activeSpacingGuides.length; i++ ) {
+				var guide = activeSpacingGuides[ i ]; var line = document.createElement( 'span' ); line.className = 'certloom-template-designer-spacing-guide ' + ( 'x' === guide.axis ? 'is-horizontal-gap' : 'is-vertical-gap' ); line.setAttribute( 'aria-hidden', 'true' );
+				if ( 'x' === guide.axis ) { line.style.left = px( guide.start, zoom ) + 'px'; line.style.top = px( guide.cross, zoom ) + 'px'; line.style.width = Math.max( 1, px( guide.end - guide.start, zoom ) ) + 'px'; }
+				else { line.style.left = px( guide.cross, zoom ) + 'px'; line.style.top = px( guide.start, zoom ) + 'px'; line.style.height = Math.max( 1, px( guide.end - guide.start, zoom ) ) + 'px'; }
+				if ( guide.label ) { var label = document.createElement( 'span' ); label.className = 'certloom-template-designer-spacing-guide-label'; label.textContent = round( guide.gap, 1 ) + ' mm'; line.appendChild( label ); }
+				pageEl.appendChild( line );
+			}
+		}
 		function layerActionButton( element, action, label, glyph, disabled ) {
 			var button = document.createElement( 'button' ); button.type = 'button'; button.className = 'button button-small certloom-template-designer-layer-action';
 			button.setAttribute( 'data-certloom-designer-layer-row-action', action ); button.setAttribute( 'data-certloom-designer-layer-id', element.id ); button.setAttribute( 'aria-label', label + ' ' + layerDisplayName( element ) ); button.setAttribute( 'title', label );
@@ -863,7 +893,7 @@
 				if ( isLocked( element ) ) { node.classList.add( 'is-locked' ); }
 				styleContent( node, element ); addHandles( node, element ); pageEl.appendChild( node );
 			}
-			renderGuides(); renderLayers(); syncControls(); setInspector(); syncDirty(); showError( '' );
+			renderSafeArea(); renderGuides(); renderSpacingGuides(); renderLayers(); syncControls(); setInspector(); syncDirty(); showError( '' );
 		}
 		function updateElement( id, proposed, mark ) {
 			var list = elements(); var p = page();
@@ -915,19 +945,47 @@
 			}
 			return best;
 		}
+		function equalSpacingCandidateForBounds( bounds, axis, excludedIds ) {
+			if ( ! bounds ) { return null; }
+			var useX = 'x' === axis; var excluded = Array.isArray( excludedIds ) ? excludedIds : [ excludedIds ];
+			var currentMin = useX ? bounds.minX : bounds.minY; var currentMax = useX ? bounds.maxX : bounds.maxY; var before = null; var after = null;
+			var list = elements();
+			for ( var i = 0; i < list.length; i++ ) {
+				if ( excluded.indexOf( list[ i ].id ) !== -1 || isHiddenId( list[ i ].id ) ) { continue; }
+				var b = rotatedBounds( list[ i ] ); if ( useX && ( b.maxY < bounds.minY || b.minY > bounds.maxY ) ) { continue; } if ( ! useX && ( b.maxX < bounds.minX || b.minX > bounds.maxX ) ) { continue; } var min = useX ? b.minX : b.minY; var max = useX ? b.maxX : b.maxY;
+				if ( max <= currentMin + 0.001 && ( ! before || max > before.max ) ) { before = { min: min, max: max }; }
+				if ( min >= currentMax - 0.001 && ( ! after || min < after.min ) ) { after = { min: min, max: max }; }
+			}
+			if ( ! before || ! after ) { return null; }
+			var size = currentMax - currentMin; var gap = ( after.min - before.max - size ) / 2; if ( gap < -0.001 ) { return null; }
+			var desiredMin = before.max + gap; var delta = desiredMin - currentMin; var distance = Math.abs( delta );
+			if ( distance > SNAP_THRESHOLD_MM ) { return null; }
+			return { axis: axis, delta: delta, distance: distance, gap: Math.max( 0, gap ), beforeEdge: before.max, afterEdge: after.min };
+		}
+		function setEqualSpacingGuides( candidate, movedBounds ) {
+			if ( ! candidate || ! movedBounds ) { return; }
+			var useX = 'x' === candidate.axis; var min = ( useX ? movedBounds.minX : movedBounds.minY ) + candidate.delta; var max = ( useX ? movedBounds.maxX : movedBounds.maxY ) + candidate.delta; var cross = useX ? movedBounds.centerY : movedBounds.centerX;
+			activeSpacingGuides.push( { axis: candidate.axis, start: candidate.beforeEdge, end: min, cross: cross, gap: candidate.gap, label: true } );
+			activeSpacingGuides.push( { axis: candidate.axis, start: max, end: candidate.afterEdge, cross: cross, gap: candidate.gap, label: false } );
+		}
 		function snapDragged( element, bypass ) {
-			activeGuides = { x: null, y: null };
+			activeGuides = { x: null, y: null }; activeSpacingGuides = [];
 			if ( bypass || ! designerState.snap_enabled ) { return element; }
 			var bounds = rotatedBounds( element );
 			var sx = closestSnap( [ bounds.minX, bounds.centerX, bounds.maxX ], snapTargets( 'x', element.id ) );
 			var sy = closestSnap( [ bounds.minY, bounds.centerY, bounds.maxY ], snapTargets( 'y', element.id ) );
+			var ex = equalSpacingCandidateForBounds( bounds, 'x', [ element.id ] ); var ey = equalSpacingCandidateForBounds( bounds, 'y', [ element.id ] );
+			var useEx = ex && ( ! sx || ex.distance < sx.distance ); var useEy = ey && ( ! sy || ey.distance < sy.distance );
 			var candidate = clone( element );
-			if ( sx ) { candidate.x_mm = round( Number( candidate.x_mm ) + sx.delta, 3 ); activeGuides.x = round( sx.target, 3 ); }
-			if ( sy ) { candidate.y_mm = round( Number( candidate.y_mm ) + sy.delta, 3 ); activeGuides.y = round( sy.target, 3 ); }
+			if ( useEx ) { candidate.x_mm = round( Number( candidate.x_mm ) + ex.delta, 3 ); setEqualSpacingGuides( ex, bounds ); }
+			else if ( sx ) { candidate.x_mm = round( Number( candidate.x_mm ) + sx.delta, 3 ); activeGuides.x = round( sx.target, 3 ); }
+			if ( useEy ) { candidate.y_mm = round( Number( candidate.y_mm ) + ey.delta, 3 ); setEqualSpacingGuides( ey, bounds ); }
+			else if ( sy ) { candidate.y_mm = round( Number( candidate.y_mm ) + sy.delta, 3 ); activeGuides.y = round( sy.target, 3 ); }
 			candidate = clampDragged( candidate );
 			if ( elementGeometryValid( candidate, page() ) ) { return candidate; }
-			activeGuides = { x: null, y: null }; return element;
+			activeGuides = { x: null, y: null }; activeSpacingGuides = []; return element;
 		}
+
 		function translatedSelection( initialById, dx, dy ) {
 			var result = {}; for ( var id in initialById ) { if ( Object.prototype.hasOwnProperty.call( initialById, id ) ) { var element = clone( initialById[ id ] ); element.x_mm = round( Number( element.x_mm ) + dx, 3 ); element.y_mm = round( Number( element.y_mm ) + dy, 3 ); result[ id ] = element; } } return result;
 		}
@@ -941,14 +999,86 @@
 			return map;
 		}
 		function snapSelectionMap( map, bypass ) {
-			activeGuides = { x: null, y: null }; if ( bypass || ! designerState.snap_enabled ) { return map; }
+			activeGuides = { x: null, y: null }; activeSpacingGuides = []; if ( bypass || ! designerState.snap_enabled ) { return map; }
 			var ids = Object.keys( map ); var bounds = combinedBounds( selectionArrayFromMap( map ) ); if ( ! bounds ) { return map; }
 			var sx = closestSnap( [ bounds.minX, bounds.centerX, bounds.maxX ], snapTargets( 'x', ids ) );
 			var sy = closestSnap( [ bounds.minY, bounds.centerY, bounds.maxY ], snapTargets( 'y', ids ) );
-			if ( sx || sy ) { for ( var id in map ) { if ( Object.prototype.hasOwnProperty.call( map, id ) ) { if ( sx ) { map[ id ].x_mm = round( Number( map[ id ].x_mm ) + sx.delta, 3 ); } if ( sy ) { map[ id ].y_mm = round( Number( map[ id ].y_mm ) + sy.delta, 3 ); } } } }
-			if ( sx ) { activeGuides.x = round( sx.target, 3 ); } if ( sy ) { activeGuides.y = round( sy.target, 3 ); }
+			var ex = equalSpacingCandidateForBounds( bounds, 'x', ids ); var ey = equalSpacingCandidateForBounds( bounds, 'y', ids );
+			var dx = ex && ( ! sx || ex.distance < sx.distance ) ? ex.delta : ( sx ? sx.delta : 0 ); var dy = ey && ( ! sy || ey.distance < sy.distance ) ? ey.delta : ( sy ? sy.delta : 0 );
+			if ( dx || dy ) { for ( var id in map ) { if ( Object.prototype.hasOwnProperty.call( map, id ) ) { if ( dx ) { map[ id ].x_mm = round( Number( map[ id ].x_mm ) + dx, 3 ); } if ( dy ) { map[ id ].y_mm = round( Number( map[ id ].y_mm ) + dy, 3 ); } } } }
+			if ( ex && dx === ex.delta && ( ! sx || ex.distance < sx.distance ) ) { setEqualSpacingGuides( ex, bounds ); } else if ( sx ) { activeGuides.x = round( sx.target, 3 ); }
+			if ( ey && dy === ey.delta && ( ! sy || ey.distance < sy.distance ) ) { setEqualSpacingGuides( ey, bounds ); } else if ( sy ) { activeGuides.y = round( sy.target, 3 ); }
 			return clampSelectionMap( map );
 		}
+
+
+		function canvasPointFromEvent( event ) {
+			var rect = pageEl.getBoundingClientRect(); var p = page();
+			return { x: round( clamp( mmFromPx( event.clientX - rect.left, zoom ), 0, Number( p.width_mm ) ), 3 ), y: round( clamp( mmFromPx( event.clientY - rect.top, zoom ), 0, Number( p.height_mm ) ), 3 ) };
+		}
+		function marqueeRect() {
+			if ( ! marqueeGesture ) { return null; } var a = marqueeGesture.start, b = marqueeGesture.current;
+			return { minX: Math.min( a.x, b.x ), minY: Math.min( a.y, b.y ), maxX: Math.max( a.x, b.x ), maxY: Math.max( a.y, b.y ) };
+		}
+		function renderMarqueeGesture() {
+			var existing = pageEl.querySelector( '[data-certloom-designer-marquee]' ); if ( existing ) { existing.remove(); }
+			if ( ! marqueeGesture || ! marqueeGesture.moved ) { return; } var rect = marqueeRect(); if ( ! rect ) { return; }
+			var marquee = document.createElement( 'span' ); marquee.className = 'certloom-template-designer-marquee'; marquee.setAttribute( 'data-certloom-designer-marquee', '' ); marquee.setAttribute( 'aria-hidden', 'true' );
+			marquee.style.left = px( rect.minX, zoom ) + 'px'; marquee.style.top = px( rect.minY, zoom ) + 'px'; marquee.style.width = Math.max( 1, px( rect.maxX - rect.minX, zoom ) ) + 'px'; marquee.style.height = Math.max( 1, px( rect.maxY - rect.minY, zoom ) ) + 'px'; pageEl.appendChild( marquee );
+		}
+		function boundsIntersect( a, b ) { return !! a && !! b && a.maxX >= b.minX && a.minX <= b.maxX && a.maxY >= b.minY && a.minY <= b.maxY; }
+		function startMarqueeSelection( event ) {
+			if ( event.button !== 0 || panToolActive || spacePanHeld || event.target.closest( '[data-certloom-designer-element]' ) ) { return false; }
+			var point = canvasPointFromEvent( event ); marqueeGesture = { pointerId: event.pointerId, start: point, current: point, startClientX: event.clientX, startClientY: event.clientY, moved: false, additive: !!( event.shiftKey || event.ctrlKey || event.metaKey ), baseIds: ( event.shiftKey || event.ctrlKey || event.metaKey ) ? selectionIds() : [] };
+			closeContextMenu(); try { pageEl.setPointerCapture( event.pointerId ); } catch ( ignore ) {} event.preventDefault(); return true;
+		}
+		function moveMarqueeSelection( event ) {
+			if ( ! marqueeGesture ) { return false; } if ( marqueeGesture.pointerId !== event.pointerId ) { return true; }
+			marqueeGesture.current = canvasPointFromEvent( event ); if ( Math.abs( event.clientX - marqueeGesture.startClientX ) >= 3 || Math.abs( event.clientY - marqueeGesture.startClientY ) >= 3 ) { marqueeGesture.moved = true; }
+			renderMarqueeGesture(); event.preventDefault(); return true;
+		}
+		function endMarqueeSelection( event ) {
+			if ( ! marqueeGesture || ( null != event.pointerId && marqueeGesture.pointerId !== event.pointerId ) ) { return false; }
+			var gesture = marqueeGesture; var rect = marqueeRect(); marqueeGesture = null; var overlay = pageEl.querySelector( '[data-certloom-designer-marquee]' ); if ( overlay ) { overlay.remove(); }
+			if ( ! gesture.moved || ! rect ) { return true; }
+			var hits = []; var list = elements(); for ( var i = 0; i < list.length; i++ ) { if ( isHiddenId( list[ i ].id ) ) { continue; } if ( boundsIntersect( rect, rotatedBounds( list[ i ] ) ) ) { hits.push( list[ i ].id ); } }
+			var next = gesture.additive ? gesture.baseIds.slice() : []; for ( var h = 0; h < hits.length; h++ ) { if ( next.indexOf( hits[ h ] ) === -1 ) { next.push( hits[ h ] ); } }
+			selectedIds = next; selectedId = hits.length ? hits[ hits.length - 1 ] : ( next.length ? next[ next.length - 1 ] : '' ); suppressCanvasClick = true; render(); announce( next.length ? t( 'marqueeSelectionUpdated', 'Marquee selection updated.' ) : t( 'selectionCleared', 'Selection cleared.' ) ); return true;
+		}
+		function startCanvasPan( event ) {
+			var temporary = spacePanHeld || event.button === 1; if ( ! temporary && ! panToolActive ) { return false; } if ( event.button !== 0 && event.button !== 1 ) { return false; }
+			panGesture = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, scrollLeft: workspace.scrollLeft, scrollTop: workspace.scrollTop, moved: false, temporary: temporary };
+			workspace.classList.add( 'is-panning' ); closeContextMenu(); try { workspace.setPointerCapture( event.pointerId ); } catch ( ignore ) {} event.preventDefault(); event.stopPropagation(); return true;
+		}
+		function moveCanvasPan( event ) {
+			if ( ! panGesture ) { return false; } if ( panGesture.pointerId !== event.pointerId ) { return true; }
+			var dx = event.clientX - panGesture.startX, dy = event.clientY - panGesture.startY; if ( Math.abs( dx ) >= 2 || Math.abs( dy ) >= 2 ) { panGesture.moved = true; }
+			workspace.scrollLeft = Math.max( 0, panGesture.scrollLeft - dx ); workspace.scrollTop = Math.max( 0, panGesture.scrollTop - dy ); event.preventDefault(); return true;
+		}
+		function endCanvasPan( event ) {
+			if ( ! panGesture || ( null != event.pointerId && panGesture.pointerId !== event.pointerId ) ) { return false; }
+			var moved = panGesture.moved; panGesture = null; workspace.classList.remove( 'is-panning' ); if ( moved ) { suppressCanvasClick = true; } syncCanvasTools(); return true;
+		}
+		function closeContextMenu() { if ( contextMenu ) { contextMenu.hidden = true; contextMenu.removeAttribute( 'data-open' ); } }
+		function contextMenuActionButton( action, label ) { var button = document.createElement( 'button' ); button.type = 'button'; button.setAttribute( 'role', 'menuitem' ); button.setAttribute( 'data-certloom-designer-context-action', action ); button.textContent = label; return button; }
+		function ensureContextMenu() {
+			if ( contextMenu ) { return contextMenu; } contextMenu = document.createElement( 'div' ); contextMenu.className = 'certloom-template-designer-context-menu'; contextMenu.setAttribute( 'data-certloom-designer-context-menu', '' ); contextMenu.setAttribute( 'role', 'menu' ); contextMenu.setAttribute( 'aria-label', t( 'elementActions', 'Element actions' ) ); contextMenu.hidden = true;
+			contextMenu.appendChild( contextMenuActionButton( 'copy', t( 'copy', 'Copy' ) ) ); contextMenu.appendChild( contextMenuActionButton( 'cut', t( 'cut', 'Cut' ) ) ); contextMenu.appendChild( contextMenuActionButton( 'duplicate', t( 'duplicate', 'Duplicate' ) ) ); contextMenu.appendChild( contextMenuActionButton( 'front', t( 'bringToFront', 'Bring to front' ) ) ); contextMenu.appendChild( contextMenuActionButton( 'back', t( 'sendToBack', 'Send to back' ) ) ); contextMenu.appendChild( contextMenuActionButton( 'lock', t( 'lock', 'Lock' ) ) ); contextMenu.appendChild( contextMenuActionButton( 'delete', t( 'delete', 'Delete' ) ) ); root.appendChild( contextMenu );
+			contextMenu.addEventListener( 'click', function ( event ) { var button = event.target.closest( '[data-certloom-designer-context-action]' ); if ( ! button || button.disabled ) { return; } var action = button.getAttribute( 'data-certloom-designer-context-action' ); closeContextMenu(); if ( 'copy' === action ) { copySelectionToDesignerClipboard( false ); } else if ( 'cut' === action ) { copySelectionToDesignerClipboard( true ); } else if ( 'duplicate' === action ) { duplicateSelected(); } else if ( 'front' === action || 'back' === action ) { reorderSelected( action ); } else if ( 'lock' === action ) { if ( selectedId ) { toggleLock( selectedId ); } } else if ( 'delete' === action ) { removeSelected(); } } ); return contextMenu;
+		}
+		function syncContextMenu() {
+			var menu = ensureContextMenu(); var selection = selectedElements(); var element = selected(); var locked = selectionHasLocked(); var multi = selection.length > 1; var buttons = menu.querySelectorAll( '[data-certloom-designer-context-action]' );
+			for ( var i = 0; i < buttons.length; i++ ) { var action = buttons[ i ].getAttribute( 'data-certloom-designer-context-action' ); buttons[ i ].disabled = ! selection.length || ( [ 'cut', 'delete' ].indexOf( action ) !== -1 && locked ) || ( [ 'duplicate', 'front', 'back', 'lock' ].indexOf( action ) !== -1 && ( multi || ! element || isLocked( element ) && 'lock' !== action ) ); if ( 'lock' === action ) { buttons[ i ].textContent = element && isLocked( element ) ? t( 'unlock', 'Unlock' ) : t( 'lock', 'Lock' ); buttons[ i ].disabled = multi || ! element; } }
+		}
+		function openContextMenuAt( clientX, clientY ) {
+			if ( ! selectionIds().length ) { return; } var menu = ensureContextMenu(); syncContextMenu(); menu.hidden = false; menu.setAttribute( 'data-open', 'true' ); menu.style.left = '0px'; menu.style.top = '0px'; var rect = menu.getBoundingClientRect(); var left = clamp( Number( clientX ), 8, Math.max( 8, window.innerWidth - rect.width - 8 ) ); var top = clamp( Number( clientY ), 8, Math.max( 8, window.innerHeight - rect.height - 8 ) ); menu.style.left = Math.round( left ) + 'px'; menu.style.top = Math.round( top ) + 'px'; var first = menu.querySelector( '[role="menuitem"]:not([disabled])' ); if ( first ) { try { first.focus( { preventScroll: true } ); } catch ( ignore ) { first.focus(); } }
+		}
+		function openContextMenuForSelection() {
+			if ( ! selectedId ) { return; } var node = pageEl.querySelector( '[data-certloom-designer-element="' + selectedId + '"]' ); if ( ! node ) { return; } var rect = node.getBoundingClientRect(); openContextMenuAt( rect.left + rect.width / 2, rect.top + rect.height / 2 );
+		}
+		function canvasPointerMove( event ) { if ( moveCanvasPan( event ) ) { return; } if ( moveMarqueeSelection( event ) ) { return; } pointerMove( event ); }
+		function canvasPointerEnd( event ) { if ( endCanvasPan( event ) ) { return; } if ( endMarqueeSelection( event ) ) { return; } pointerEnd(); }
+
 		function pointerStart( event ) {
 			var node = event.target.closest( '[data-certloom-designer-element]' ); if ( ! node || ! pageEl.contains( node ) ) { return; }
 			var id = node.getAttribute( 'data-certloom-designer-element' ); var additive = event.shiftKey || event.ctrlKey || event.metaKey;
@@ -983,13 +1113,13 @@
 				if ( pointer.handle.indexOf( 'w' ) !== -1 ) { var maxDx = Number( pointer.initial.width_mm ) - MIN_RESIZE_MM; var usedDx = Math.min( dx, maxDx ); proposed.x_mm = round( Number( pointer.initial.x_mm ) + usedDx, 3 ); proposed.width_mm = round( Number( pointer.initial.width_mm ) - usedDx, 3 ); }
 				if ( pointer.handle.indexOf( 'n' ) !== -1 ) { var maxDy = Number( pointer.initial.height_mm ) - MIN_RESIZE_MM; var usedDy = Math.min( dy, maxDy ); proposed.y_mm = round( Number( pointer.initial.y_mm ) + usedDy, 3 ); proposed.height_mm = round( Number( pointer.initial.height_mm ) - usedDy, 3 ); }
 			} else {
-				activeGuides = { x: null, y: null }; var currentAngle = Math.atan2( event.clientY - pointer.centerY, event.clientX - pointer.centerX ) * 180 / Math.PI; proposed.rotation_deg = normalizedAngle( pointer.initialRotation + currentAngle - pointer.startAngle );
+				activeGuides = { x: null, y: null }; activeSpacingGuides = []; var currentAngle = Math.atan2( event.clientY - pointer.centerY, event.clientX - pointer.centerX ) * 180 / Math.PI; proposed.rotation_deg = normalizedAngle( pointer.initialRotation + currentAngle - pointer.startAngle );
 			}
 			updateElement( pointer.id, proposed, false ); syncDirty(); event.preventDefault();
 		}
 		function pointerEnd() {
 			if ( ! pointer ) { return; }
-			var before = pointer.before; var completed = pointer; pointer = null; activeGuides = { x: null, y: null }; if ( 'drag' === completed.mode && ! completed.moved ) { lastElementPointer = { id: completed.id, at: Date.now() }; } else { lastElementPointer = { id: '', at: 0 }; } pushHistory( before ); render();
+			var before = pointer.before; var completed = pointer; pointer = null; activeGuides = { x: null, y: null }; activeSpacingGuides = []; if ( 'drag' === completed.mode && ! completed.moved ) { lastElementPointer = { id: completed.id, at: Date.now() }; } else { lastElementPointer = { id: '', at: 0 }; } pushHistory( before ); render();
 		}
 		function pageChange() {
 			var p = page(); if ( ! p ) { return; }
@@ -1117,7 +1247,8 @@
 		}
 		function isFormControl( target ) { return !! target && ( /^(INPUT|SELECT|TEXTAREA)$/.test( target.tagName ) || ( 'BUTTON' === target.tagName && ! target.hasAttribute( 'data-certloom-designer-element' ) ) ); }
 		function keyboard( event ) {
-			var modifier = event.ctrlKey || event.metaKey; var inside = root.contains( event.target ); var key = String( event.key || '' ); var lower = key.toLowerCase();
+			var modifier = event.ctrlKey || event.metaKey; var inside = root.contains( event.target ); var key = String( event.key || '' ); var lower = key.toLowerCase(); var canvasFocused = event.target === workspace || pageEl.contains( event.target );
+			if ( 'Escape' === key && contextMenu && ! contextMenu.hidden ) { closeContextMenu(); focusSelectedCanvasElement(); event.preventDefault(); return; }
 			if ( modifier && ! event.altKey && 's' === lower ) {
 				if ( ! inside || isFormControl( event.target ) && ! root.contains( event.target ) ) { return; }
 				event.preventDefault();
@@ -1130,6 +1261,8 @@
 				event.preventDefault(); return;
 			}
 			if ( ! inside || isFormControl( event.target ) ) { return; }
+			if ( canvasFocused && ! modifier && ! event.altKey && ( ' ' === key || 'Spacebar' === key ) ) { spacePanHeld = true; syncCanvasTools(); event.preventDefault(); return; }
+			if ( canvasFocused && selectionIds().length && ( 'ContextMenu' === key || ( event.shiftKey && 'F10' === key ) ) ) { event.preventDefault(); openContextMenuForSelection(); return; }
 			if ( modifier && ! event.altKey && 'c' === lower ) { event.preventDefault(); copySelectionToDesignerClipboard( false ); return; }
 			if ( modifier && ! event.altKey && 'x' === lower ) { event.preventDefault(); copySelectionToDesignerClipboard( true ); return; }
 			if ( modifier && ! event.altKey && 'v' === lower ) { event.preventDefault(); pasteDesignerClipboard(); return; }
@@ -1142,15 +1275,20 @@
 			if ( modifier && ! event.altKey && 'a' === lower ) {
 				event.preventDefault(); selectedIds = elements().map( function ( element ) { return element.id; } ); selectedId = selectedIds.length ? selectedIds[ selectedIds.length - 1 ] : ''; render(); focusSelectedCanvasElement(); announce( t( 'allElementsSelected', 'All canvas elements selected.' ) ); return;
 			}
+			if ( 'Escape' === key && panToolActive ) { panToolActive = false; syncCanvasTools(); announce( t( 'panToolDisabled', 'Pan tool off.' ) ); event.preventDefault(); return; }
 			if ( 'Escape' === key && selectionIds().length ) { selectOnly( '' ); render(); announce( t( 'selectionCleared', 'Selection cleared.' ) ); event.preventDefault(); return; }
 			if ( 'Enter' === key && ! modifier && selected() && 'text' === selected().type ) { if ( startDirectTextEdit( selected().id ) ) { event.preventDefault(); } return; }
 			if ( ( 'Delete' === key || 'Backspace' === key ) && selectionIds().length && ! selectionHasLocked() ) { event.preventDefault(); removeSelected(); return; }
-			var canvasFocused = event.target === workspace || pageEl.contains( event.target );
 			if ( canvasFocused && ! modifier && ! event.altKey && ( '+' === key || '=' === key ) ) { event.preventDefault(); setZoomLevel( zoom + .1, true, true ); return; }
 			if ( canvasFocused && ! modifier && ! event.altKey && '-' === key ) { event.preventDefault(); setZoomLevel( zoom - .1, true, true ); return; }
 			if ( canvasFocused && ! modifier && ! event.altKey && '0' === key ) { event.preventDefault(); fitWorkspace( false ); return; }
 			if ( canvasFocused && ! modifier && ! event.altKey && '1' === key ) { event.preventDefault(); trueSize( true ); return; }
 			if ( nudgeSelected( event ) ) { event.preventDefault(); }
+		}
+
+		function keyboardUp( event ) {
+			var key = String( event.key || '' ); if ( ' ' !== key && 'Spacebar' !== key ) { return; }
+			if ( spacePanHeld ) { spacePanHeld = false; syncCanvasTools(); }
 		}
 
 		function applyQuickStyleValue( key, value ) {
@@ -1166,14 +1304,20 @@
 			var id = node.getAttribute( 'data-certloom-designer-element' ); var now = Date.now(); var previous = lastElementPointer;
 			if ( previous.id === id && now - previous.at <= 500 ) { var list = elements(); var element = null; for ( var i = 0; i < list.length; i++ ) { if ( list[ i ].id === id ) { element = list[ i ]; break; } } if ( element && 'text' === element.type && ! isLocked( element ) ) { event.preventDefault(); event.stopPropagation(); lastElementPointer = { id: '', at: 0 }; startDirectTextEdit( id ); } }
 		}, true );
-		pageEl.addEventListener( 'pointerdown', pointerStart ); window.addEventListener( 'pointermove', pointerMove ); window.addEventListener( 'pointerup', pointerEnd ); window.addEventListener( 'pointercancel', pointerEnd );
+		workspace.addEventListener( 'pointerdown', function ( event ) { startCanvasPan( event ); }, true );
+		pageEl.addEventListener( 'pointerdown', function ( event ) { startMarqueeSelection( event ); } );
+		pageEl.addEventListener( 'pointerdown', pointerStart ); window.addEventListener( 'pointermove', canvasPointerMove ); window.addEventListener( 'pointerup', canvasPointerEnd ); window.addEventListener( 'pointercancel', canvasPointerEnd );
 		pageEl.addEventListener( 'click', function ( event ) {
+			if ( suppressCanvasClick ) { suppressCanvasClick = false; return; }
 			var node = event.target.closest( '[data-certloom-designer-element]' );
 			if ( event.shiftKey || event.ctrlKey || event.metaKey ) { return; }
 			if ( node ) { var id = node.getAttribute( 'data-certloom-designer-element' ); if ( isSelectedId( id ) && selectionIds().length > 1 ) { selectedId = id; } else { selectOnly( id ); } render(); return; }
 			selectOnly( '' ); render();
 		} );
 		pageEl.addEventListener( 'dblclick', function ( event ) { var node = event.target.closest( '[data-certloom-designer-element]' ); if ( node && startDirectTextEdit( node.getAttribute( 'data-certloom-designer-element' ) ) ) { event.preventDefault(); } } );
+		pageEl.addEventListener( 'contextmenu', function ( event ) { var node = event.target.closest( '[data-certloom-designer-element]' ); if ( ! node || ! pageEl.contains( node ) ) { closeContextMenu(); return; } event.preventDefault(); var id = node.getAttribute( 'data-certloom-designer-element' ); if ( ! isSelectedId( id ) ) { selectOnly( id ); } else { selectedId = id; } render(); openContextMenuAt( event.clientX, event.clientY ); } );
+		document.addEventListener( 'pointerdown', function ( event ) { if ( contextMenu && ! contextMenu.hidden && ! contextMenu.contains( event.target ) ) { closeContextMenu(); } } );
+		workspace.addEventListener( 'scroll', closeContextMenu ); window.addEventListener( 'scroll', closeContextMenu, true ); window.addEventListener( 'resize', closeContextMenu );
 		pageEl.addEventListener( 'dragover', function ( event ) { if ( ! draggedPaletteKind ) { return; } event.preventDefault(); if ( event.dataTransfer ) { event.dataTransfer.dropEffect = 'copy'; } pageEl.classList.add( 'is-drop-target' ); } );
 		pageEl.addEventListener( 'dragleave', function ( event ) { if ( event.relatedTarget && pageEl.contains( event.relatedTarget ) ) { return; } pageEl.classList.remove( 'is-drop-target' ); } );
 		pageEl.addEventListener( 'drop', function ( event ) {
@@ -1205,6 +1349,8 @@
 		if ( orientationControl ) { orientationControl.addEventListener( 'change', pageChange ); }
 		if ( zoomControl ) { zoomControl.addEventListener( 'input', function () { setZoomLevel( Number( zoomControl.value ) / 100, false ); } ); }
 		if ( snapControl ) { snapControl.addEventListener( 'change', function () { var before = snapshot(); designerState.snap_enabled = !! snapControl.checked; pushHistory( before ); render(); announce( designerState.snap_enabled ? t( 'snappingEnabled', 'Snapping enabled.' ) : t( 'snappingDisabled', 'Snapping disabled.' ) ); } ); }
+		if ( safeAreaButton ) { safeAreaButton.addEventListener( 'click', function () { safeAreaVisible = ! safeAreaVisible; render(); announce( safeAreaVisible ? t( 'safeAreaShown', 'Safe area shown.' ) : t( 'safeAreaHidden', 'Safe area hidden.' ) ); } ); }
+		if ( panToolButton ) { panToolButton.addEventListener( 'click', function () { panToolActive = ! panToolActive; syncCanvasTools(); announce( panToolActive ? t( 'panToolEnabled', 'Pan tool on. Drag the canvas workspace to move around.' ) : t( 'panToolDisabled', 'Pan tool off.' ) ); } ); }
 		if ( fitButton ) { fitButton.addEventListener( 'click', function () { fitWorkspace( false ); } ); }
 		if ( trueSizeButton ) { trueSizeButton.addEventListener( 'click', function () { trueSize( false ); } ); }
 		if ( undoButton ) { undoButton.addEventListener( 'click', undo ); }
@@ -1242,7 +1388,7 @@
 			var requested = String( sampleDataControl.value || '' ); if ( ! SAMPLE_DATA.profiles || ! SAMPLE_DATA.profiles[ requested ] ) { sampleDataControl.value = SAMPLE_DATA.default || 'standard'; requested = String( sampleDataControl.value || 'standard' ); }
 			activeSampleProfile = requested; render(); announce( t( 'sampleDataChanged', 'Designer sample data changed. Saved certificate data is unchanged.' ) );
 		} ); }
-		if ( resetButton ) { resetButton.addEventListener( 'click', function () { if ( directTextEditor ) { closeDirectTextEditor( false ); } layout = clone( savedLayout ); designerState = clone( savedState ); selectOnly( '' ); history = []; future = []; activeGuides = { x: null, y: null }; render(); fitWorkspace( true ); discardAutosave( false ); announce( t( 'unsavedChangesReset', 'Unsaved design changes reset.' ) ); } ); }
+		if ( resetButton ) { resetButton.addEventListener( 'click', function () { if ( directTextEditor ) { closeDirectTextEditor( false ); } layout = clone( savedLayout ); designerState = clone( savedState ); selectOnly( '' ); history = []; future = []; activeGuides = { x: null, y: null }; activeSpacingGuides = []; safeAreaVisible = false; panToolActive = false; spacePanHeld = false; closeContextMenu(); render(); fitWorkspace( true ); discardAutosave( false ); announce( t( 'unsavedChangesReset', 'Unsaved design changes reset.' ) ); } ); }
 		if ( autosaveDiscardButton ) { autosaveDiscardButton.addEventListener( 'click', function () { discardAutosave( true ); } ); }
 		for ( var fieldIndex = 0; fieldIndex < fieldInputs.length; fieldIndex++ ) {
 			fieldInputs[ fieldIndex ].addEventListener( 'change', function () {
@@ -1252,7 +1398,7 @@
 				if ( updateElement( element.id, proposed, false ) ) { pushHistory( before ); render(); } else { showError( t( 'geometryBoundary', 'That geometry would violate the canonical page boundary. The previous value was kept.' ) ); setInspector(); }
 			} );
 		}
-		document.addEventListener( 'keydown', keyboard );
+		document.addEventListener( 'keydown', keyboard ); document.addEventListener( 'keyup', keyboardUp );
 		form.addEventListener( 'submit', function ( event ) {
 			showError( '' );
 			if ( directTextEditor ) { closeDirectTextEditor( true ); if ( directTextEditor ) { event.preventDefault(); blockSave( t( 'directTextInvalid', 'Direct text must stay within the canonical 20,000-byte text limit.' ) ); return; } }

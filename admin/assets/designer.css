@@ -1334,3 +1334,106 @@
 		grid-template-columns: 190px minmax(420px, 1fr) 250px;
 	}
 }
+
+/* Phase 4.5 canvas interactions — transient selection/pan/safe-area overlays only.
+ * These surfaces never enter certloom-layout or artifact rendering. */
+.certloom-template-designer-safe-area {
+	position: absolute;
+	z-index: 100000;
+	box-sizing: border-box;
+	border: 1px dashed var(--cl-blue);
+	background: transparent;
+	pointer-events: none;
+}
+.certloom-template-designer-marquee {
+	position: absolute;
+	z-index: 300000;
+	box-sizing: border-box;
+	border: 1px solid var(--cl-blue);
+	background: color-mix(in srgb, var(--cl-blue-wash) 72%, transparent);
+	pointer-events: none;
+}
+.certloom-template-designer-spacing-guide {
+	position: absolute;
+	z-index: 200600;
+	box-sizing: border-box;
+	pointer-events: none;
+	background: var(--cl-cyan-deep);
+}
+.certloom-template-designer-spacing-guide.is-horizontal-gap { height: 1px; }
+.certloom-template-designer-spacing-guide.is-vertical-gap { width: 1px; }
+.certloom-template-designer-spacing-guide::before,
+.certloom-template-designer-spacing-guide::after {
+	content: '';
+	position: absolute;
+	background: var(--cl-cyan-deep);
+}
+.certloom-template-designer-spacing-guide.is-horizontal-gap::before,
+.certloom-template-designer-spacing-guide.is-horizontal-gap::after { top: -3px; width: 1px; height: 7px; }
+.certloom-template-designer-spacing-guide.is-horizontal-gap::before { left: 0; }
+.certloom-template-designer-spacing-guide.is-horizontal-gap::after { right: 0; }
+.certloom-template-designer-spacing-guide.is-vertical-gap::before,
+.certloom-template-designer-spacing-guide.is-vertical-gap::after { left: -3px; width: 7px; height: 1px; }
+.certloom-template-designer-spacing-guide.is-vertical-gap::before { top: 0; }
+.certloom-template-designer-spacing-guide.is-vertical-gap::after { bottom: 0; }
+.certloom-template-designer-spacing-guide-label {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	padding: 1px 4px;
+	border: 1px solid var(--cl-rule-firm);
+	border-radius: var(--cl-r-ctl);
+	background: var(--cl-surface);
+	color: var(--cl-ink);
+	font-size: 10px;
+	font-weight: 700;
+	line-height: 1.4;
+	white-space: nowrap;
+}
+.certloom-template-designer-workspace.is-pan-ready,
+.certloom-template-designer-workspace.is-pan-ready .certloom-template-designer-page,
+.certloom-template-designer-workspace.is-pan-ready .certloom-template-designer-element { cursor: grab; }
+.certloom-template-designer-workspace.is-panning,
+.certloom-template-designer-workspace.is-panning .certloom-template-designer-page,
+.certloom-template-designer-workspace.is-panning .certloom-template-designer-element { cursor: grabbing; }
+.certloom-template-designer-context-menu {
+	position: fixed;
+	z-index: 1000000;
+	display: grid;
+	min-width: 180px;
+	padding: var(--cl-1);
+	border: 1px solid var(--cl-rule-firm);
+	border-radius: var(--cl-r-lift);
+	background: var(--cl-surface);
+	box-shadow: var(--cl-float);
+}
+.certloom-template-designer-context-menu[hidden] { display: none; }
+.certloom-template-designer-context-menu [role="menuitem"] {
+	min-height: 34px;
+	padding: 6px 9px;
+	border: 0;
+	border-radius: var(--cl-r-ctl);
+	background: transparent;
+	color: var(--cl-ink);
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+.certloom-template-designer-context-menu [role="menuitem"]:hover,
+.certloom-template-designer-context-menu [role="menuitem"]:focus-visible { background: var(--cl-blue-wash); }
+.certloom-template-designer-context-menu [role="menuitem"]:disabled { color: var(--cl-ink-soft); cursor: not-allowed; opacity: .62; }
+@media (max-width: 782px) {
+	.certloom-template-designer-context-menu [role="menuitem"] { min-height: 44px; }
+}
+@media (forced-colors: active) {
+	.certloom-template-designer-safe-area,
+	.certloom-template-designer-marquee,
+	.certloom-template-designer-spacing-guide,
+	.certloom-template-designer-context-menu { border-color: Highlight; }
+	.certloom-template-designer-spacing-guide,
+	.certloom-template-designer-spacing-guide::before,
+	.certloom-template-designer-spacing-guide::after { background: Highlight; }
+	.certloom-template-designer-context-menu [role="menuitem"]:hover,
+	.certloom-template-designer-context-menu [role="menuitem"]:focus-visible { outline: 1px solid Highlight; }
+}

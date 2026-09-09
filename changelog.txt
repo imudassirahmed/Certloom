@@ -1,3 +1,11 @@
+= 1.7.0-alpha.4.5 =
+* Phase 4 Designer-v2 canvas-interactions review checkpoint: add real marquee and modifier-additive selection, excluding editor-hidden elements while keeping locked elements selectable.
+* Add explicit Pan plus Space-drag and middle-button temporary panning that changes only the sticky centre workspace scroll position; Escape exits Pan safely.
+* Add a 10 mm editor-only safe-area overlay plus equal-spacing detection, snap and transient gap guides with millimetre labels; none of these transient tools mutate certloom-layout or Designer authoring state.
+* Add accessible right-click and Shift+F10 element context menus that reuse the existing Copy/Cut/Duplicate/layer-order/Lock/Delete authorities, fail closed for locked or ambiguous selections, and restore canvas focus on Escape.
+* Preserve the alpha.4.4.1 sticky-middle-workspace correction, existing Insert/sample-data behavior, canonical Save/undo/autosave boundaries, and fail-closed renderer/domain authority.
+* Add dedicated Phase 4.5 source + Chromium acceptance. Phase 4 remains in progress; Schema 4, signer snapshots, Table/Data Table, final historical/render parity, user approval and earlier-phase acceptance remain open.
+
 = 1.7.0-alpha.4.4.1 =
 * User-review correction for Certificate Designer v2: replace the rejected fixed-height editor frame that could crush the real canvas after toolbar/context growth.
 * Make the centre certificate workspace the sticky desktop pane with its own internal scrolling; Layers and Properties now follow normal page flow instead of competing internal/sticky panes.
