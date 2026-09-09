@@ -75,12 +75,17 @@ async def main():
         # Align selected items to the same top edge, then Undo restores the distinct tops in one transaction.
         def sel_boxes_script(ids):
             return """ids => ids.map(id => { const r=document.querySelector('[data-certloom-designer-element="'+id+'"]').getBoundingClientRect(); return {x:r.x,y:r.y,w:r.width,h:r.height}; })"""
-        before_align=await page.evaluate(sel_boxes_script(new_ids),new_ids)
+        def sel_document_boxes_script(ids):
+            return """ids => ids.map(id => { const r=document.querySelector('[data-certloom-designer-element="'+id+'"]').getBoundingClientRect(); return {x:r.x+window.scrollX,y:r.y+window.scrollY,w:r.width,h:r.height}; })"""
+        # This legacy compatibility fixture can require Playwright to scroll its old off-screen
+        # Arrange controls into view. Compare document coordinates here so the undo contract
+        # measures canonical geometry rather than a harness-induced viewport scroll offset.
+        before_align=await page.evaluate(sel_document_boxes_script(new_ids),new_ids)
         await page.locator('[data-certloom-designer-quick-align] [data-certloom-designer-align="top"]').click(); await page.wait_for_timeout(90)
-        after_align=await page.evaluate(sel_boxes_script(new_ids),new_ids)
+        after_align=await page.evaluate(sel_document_boxes_script(new_ids),new_ids)
         await ck(max(b['y'] for b in after_align)-min(b['y'] for b in after_align)<=1.5,'multiAlignTop')
         await page.locator('[data-certloom-designer-undo]').click(); await page.wait_for_timeout(80)
-        undo_align=await page.evaluate(sel_boxes_script(new_ids),new_ids)
+        undo_align=await page.evaluate(sel_document_boxes_script(new_ids),new_ids)
         await ck(all(close(undo_align[i]['y'],before_align[i]['y'],2.0) for i in range(3)),'alignOneStepUndo')
 
         # Horizontal equal-spacing produces equal visible gaps while preserving first/last anchors.

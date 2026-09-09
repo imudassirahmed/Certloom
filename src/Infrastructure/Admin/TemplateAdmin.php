@@ -119,6 +119,22 @@ final class TemplateAdmin {
 				'sendToBack' => __( 'Send to back', 'certloom' ),
 				'duplicate' => __( 'Duplicate', 'certloom' ),
 				'delete' => __( 'Delete', 'certloom' ),
+				'copy' => __( 'Copy', 'certloom' ),
+				'cut' => __( 'Cut', 'certloom' ),
+				'paste' => __( 'Paste', 'certloom' ),
+				'copied' => __( 'Selection copied.', 'certloom' ),
+				'cutToClipboard' => __( 'Selection cut to Designer clipboard.', 'certloom' ),
+				'pasted' => __( 'Designer clipboard pasted.', 'certloom' ),
+				'renameLayer' => __( 'Rename layer', 'certloom' ),
+				'layerRenameLabel' => __( 'Layer name', 'certloom' ),
+				'saveLayerName' => __( 'Save layer name', 'certloom' ),
+				'cancelLayerRename' => __( 'Cancel layer rename', 'certloom' ),
+				'layerRenamed' => __( 'Layer name updated for this editor.', 'certloom' ),
+				'hideInEditor' => __( 'Hide in editor', 'certloom' ),
+				'hiddenInEditor' => __( 'Hidden in editor', 'certloom' ),
+				'showInEditor' => __( 'Show in editor', 'certloom' ),
+				'layerHiddenInEditor' => __( 'Layer hidden in this editor only. Certificate output is unchanged.', 'certloom' ),
+				'layerShownInEditor' => __( 'Layer shown in the editor.', 'certloom' ),
 				'allElementsSelected' => __( 'All canvas elements selected.', 'certloom' ),
 				'selectionCleared' => __( 'Selection cleared.', 'certloom' ),
 				'elementLocked' => __( 'Element locked for this author.', 'certloom' ),
@@ -975,7 +991,7 @@ final class TemplateAdmin {
 		$designer_state = ( new TemplateDesignerState() )->decode( is_string( $stored_state ) ? $stored_state : '', $decoded_layout );
 		$schema_version = absint( $decoded_layout['_meta']['schema_version'] ?? 0 );
 		$designer_state_json = wp_json_encode( $designer_state );
-		if ( ! is_string( $designer_state_json ) ) { $designer_state_json = '{"version":1,"locked_ids":[],"snap_enabled":true}'; }
+		if ( ! is_string( $designer_state_json ) ) { $designer_state_json = '{"version":2,"locked_ids":[],"hidden_ids":[],"layer_labels":{},"snap_enabled":true}'; }
 		$current_sha256 = strtolower( (string) ( $editing['current_revision']['layout_sha256'] ?? '' ) );
 		$autosave = ( new TemplateDesignerAutosave() )->inspect( $id, get_current_user_id() );
 		$autosave_status = (string) ( $autosave['status'] ?? 'none' );
@@ -1007,6 +1023,7 @@ final class TemplateAdmin {
 		if ( 'stale' === $autosave_status || 'invalid' === $autosave_status ) { echo '<div class="notice notice-warning inline certloom-template-autosave-warning"><p><strong>' . esc_html__( 'Recovery checkpoint not applied.', 'certloom' ) . '</strong> ' . esc_html__( 'The stored personal autosave is stale or invalid, so Certloom did not merge it into the authoritative current revision. Discard it after confirming you no longer need the older recovery copy.', 'certloom' ) . ' <button type="button" class="button button-small" data-certloom-designer-autosave-discard>' . esc_html__( 'Discard recovery checkpoint', 'certloom' ) . '</button></p></div>'; }
 		echo '<div class="certloom-template-designer-toolbar" role="toolbar" aria-label="' . esc_attr__( 'Certificate Designer tools', 'certloom' ) . '"><button type="button" class="button certloom-designer-v2-insert" data-certloom-designer-insert-focus title="' . esc_attr__( 'Insert element', 'certloom' ) . '">' . esc_html__( '+ Insert', 'certloom' ) . '</button>';
 		echo '<div class="certloom-template-designer-history" role="group" aria-label="' . esc_attr__( 'Designer history', 'certloom' ) . '"><button type="button" class="button" data-certloom-designer-undo disabled title="' . esc_attr__( 'Undo (Ctrl/Cmd+Z)', 'certloom' ) . '">' . esc_html__( 'Undo', 'certloom' ) . '</button><button type="button" class="button" data-certloom-designer-redo disabled title="' . esc_attr__( 'Redo (Ctrl/Cmd+Shift+Z)', 'certloom' ) . '">' . esc_html__( 'Redo', 'certloom' ) . '</button></div>';
+		echo '<div class="certloom-template-designer-clipboard" role="group" aria-label="' . esc_attr__( 'Designer clipboard', 'certloom' ) . '"><button type="button" class="button" data-certloom-designer-copy disabled title="' . esc_attr__( 'Copy selection (Ctrl/Cmd+C)', 'certloom' ) . '">' . esc_html__( 'Copy', 'certloom' ) . '</button><button type="button" class="button" data-certloom-designer-cut disabled title="' . esc_attr__( 'Cut selection (Ctrl/Cmd+X)', 'certloom' ) . '">' . esc_html__( 'Cut', 'certloom' ) . '</button><button type="button" class="button" data-certloom-designer-paste disabled title="' . esc_attr__( 'Paste Designer clipboard (Ctrl/Cmd+V)', 'certloom' ) . '">' . esc_html__( 'Paste', 'certloom' ) . '</button></div>';
 		echo '<label class="certloom-designer-pro-only"><span>' . esc_html__( 'Page size', 'certloom' ) . '</span><select data-certloom-designer-page-size><option value="A4">A4</option><option value="Letter">' . esc_html__( 'Letter', 'certloom' ) . '</option></select></label>';
 		echo '<label class="certloom-designer-pro-only"><span>' . esc_html__( 'Orientation', 'certloom' ) . '</span><select data-certloom-designer-orientation><option value="landscape">' . esc_html__( 'Landscape', 'certloom' ) . '</option><option value="portrait">' . esc_html__( 'Portrait', 'certloom' ) . '</option></select></label>';
 		echo '<label class="certloom-template-designer-zoom"><span>' . esc_html__( 'Zoom', 'certloom' ) . '</span><input type="range" min="25" max="200" step="5" value="75" data-certloom-designer-zoom><output data-certloom-designer-zoom-output>75%</output></label>';

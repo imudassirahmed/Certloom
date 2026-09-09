@@ -30,12 +30,12 @@ $wpdb->template=array('id'=>7,'machine_key'=>'dsn7-template','name'=>'DSN 7','de
 $wpdb->revision=array('id'=>11,'template_id'=>7,'revision_number'=>3,'parent_revision_id'=>10,'layout_schema'=>LayoutSchema::NAME,'layout_schema_version'=>3,'layout_json'=>$layoutJson,'layout_sha256'=>$sha,'source_type'=>'manual','created_by_user_id'=>5,'created_at'=>'2026-08-27 00:00:00');
 $service=new TemplateDesignerAutosave(); $session='11111111-1111-4111-8111-111111111111';
 $changed=$layout; $changed['elements'][0]['text']='Recovered unsaved work';
-$state=array('version'=>1,'locked_ids'=>array('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','missing'),'snap_enabled'=>false);
+$state=array('version'=>2,'locked_ids'=>array('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','missing'),'hidden_ids'=>array('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),'layer_labels'=>array('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'=>'Primary title','missing'=>'Nope'),'snap_enabled'=>false);
 $result=$service->save(7,5,11,$sha,$session,$changed,$state);
 dsn7(!is_wp_error($result)&&'saved'===($result['status']??''),'valid recovery checkpoint saves without creating a Template revision');
 $key=TemplateDesignerAutosave::meta_key(7); dsn7('certloom_template_designer_autosave_4_7'===$key,'autosave key is site + Template scoped');
 $stored=json_decode(get_user_meta(5,$key,true),true); dsn7(11===($stored['base_revision_id']??0)&&$sha===($stored['base_revision_sha256']??''),'checkpoint binds exact immutable revision ID and SHA-256');
-dsn7(array('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')===($stored['designer_state']['locked_ids']??array()),'personal lock state is normalized to elements present in recovery layout');
+dsn7(array('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')===($stored['designer_state']['locked_ids']??array())&&array('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')===($stored['designer_state']['hidden_ids']??array())&&'Primary title'===($stored['designer_state']['layer_labels']['aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa']??''),'personal authoring organization state is normalized to elements present in recovery layout');
 $inspected=$service->inspect(7,5); dsn7('ready'===($inspected['status']??'')&&'Recovered unsaved work'===($inspected['record']['layout']['elements'][0]['text']??''),'matching checkpoint is eligible for explicit Designer recovery');
 $otherSession=$service->save(7,5,11,$sha,'22222222-2222-4222-8222-222222222222',$changed,$state); dsn7(is_wp_error($otherSession)&&'certloom_designer_autosave_session_conflict'===$otherSession->get_error_code(),'second browser session cannot overwrite the first recovery checkpoint');
 $wrongDiscard=$service->discard(7,5,'22222222-2222-4222-8222-222222222222'); dsn7(is_wp_error($wrongDiscard)&&'certloom_designer_autosave_session_conflict'===$wrongDiscard->get_error_code()&&''!==get_user_meta(5,$key,true),'second browser session cannot discard another session recovery checkpoint');

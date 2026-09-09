@@ -153,12 +153,15 @@
 		var autosaveStatusEl = root.querySelector( '[data-certloom-designer-autosave-status]' );
 		var autosaveDiscardButton = root.querySelector( '[data-certloom-designer-autosave-discard]' );
 		var autosaveSessionField = root.querySelector( '[data-certloom-designer-autosave-session-field]' );
+		var copyButton = root.querySelector( '[data-certloom-designer-copy]' );
+		var cutButton = root.querySelector( '[data-certloom-designer-cut]' );
+		var pasteButton = root.querySelector( '[data-certloom-designer-paste]' );
 		if ( ! form || ! jsonField || ! pageEl || ! workspace ) { return; }
 		if ( ! registryReady() ) { showError( t( 'elementRegistryUnavailable', 'The Designer could not load its editing controls. Reload the page before editing this design.' ) ); root.classList.add( 'has-registry-error' ); return; }
 
 		var savedLayout;
 		try { savedLayout = JSON.parse( jsonField.value ); } catch ( parseError ) { showError( t( 'currentLayoutLoadError', 'The current canonical layout could not be loaded into Designer.' ) ); return; }
-		var savedState = { version: 1, locked_ids: [], snap_enabled: true };
+		var savedState = { version: 2, locked_ids: [], hidden_ids: [], layer_labels: {}, snap_enabled: true };
 		if ( stateField ) {
 			try { savedState = normalizeState( JSON.parse( stateField.value ) ); } catch ( stateError ) { savedState = normalizeState( savedState ); }
 		}
@@ -187,6 +190,9 @@
 		var draggedPaletteKind = '';
 		var draggedLayerId = '';
 		var lastElementPointer = { id: '', at: 0 };
+		var designerClipboard = [];
+		var designerClipboardLabels = {};
+		var renamingLayerId = '';
 
 		function rememberedDesignerMode() {
 			var fallback = root.getAttribute( 'data-designer-default-mode' ) || 'pro';
@@ -221,16 +227,26 @@
 		if ( autosaveSessionField ) { autosaveSessionField.value = autosaveSessionId; }
 
 		function normalizeState( input ) {
-			var result = { version: 1, locked_ids: [], snap_enabled: true };
+			var result = { version: 2, locked_ids: [], hidden_ids: [], layer_labels: {}, snap_enabled: true };
 			var ids = {};
 			var stateLayout = layout && Array.isArray( layout.elements ) ? layout : savedLayout;
 			var list = stateLayout && Array.isArray( stateLayout.elements ) ? stateLayout.elements : [];
 			for ( var i = 0; i < list.length; i++ ) { ids[ list[ i ].id ] = true; }
 			if ( input && false === input.snap_enabled ) { result.snap_enabled = false; }
 			if ( input && Array.isArray( input.locked_ids ) ) {
-				for ( var j = 0; j < input.locked_ids.length; j++ ) { if ( ids[ input.locked_ids[ j ] ] ) { result.locked_ids.push( input.locked_ids[ j ] ); } }
+				for ( var j = 0; j < input.locked_ids.length; j++ ) { if ( ids[ input.locked_ids[ j ] ] && result.locked_ids.indexOf( input.locked_ids[ j ] ) === -1 ) { result.locked_ids.push( input.locked_ids[ j ] ); } }
 			}
-			result.locked_ids.sort();
+			if ( input && Array.isArray( input.hidden_ids ) ) {
+				for ( var hiddenIndex = 0; hiddenIndex < input.hidden_ids.length; hiddenIndex++ ) { if ( ids[ input.hidden_ids[ hiddenIndex ] ] && result.hidden_ids.indexOf( input.hidden_ids[ hiddenIndex ] ) === -1 ) { result.hidden_ids.push( input.hidden_ids[ hiddenIndex ] ); } }
+			}
+			if ( input && input.layer_labels && 'object' === typeof input.layer_labels && ! Array.isArray( input.layer_labels ) ) {
+				Object.keys( input.layer_labels ).forEach( function ( id ) {
+					if ( ! ids[ id ] ) { return; }
+					var label = String( input.layer_labels[ id ] || '' ).replace( /[\u0000-\u001F\u007F]/g, '' ).trim();
+					if ( label ) { result.layer_labels[ id ] = label.slice( 0, 80 ); }
+				} );
+			}
+			result.locked_ids.sort(); result.hidden_ids.sort();
 			return result;
 		}
 
@@ -336,6 +352,10 @@
 		function selectionHasLocked() { var list = selectedElements(); for ( var i = 0; i < list.length; i++ ) { if ( isLocked( list[ i ] ) ) { return true; } } return false; }
 		function isLockedId( id ) { return designerState.locked_ids.indexOf( id ) !== -1; }
 		function isLocked( element ) { return !! element && isLockedId( element.id ); }
+		function isHiddenId( id ) { return designerState.hidden_ids.indexOf( id ) !== -1; }
+		function layerLabel( id ) { return designerState.layer_labels && designerState.layer_labels[ id ] ? designerState.layer_labels[ id ] : ''; }
+		function layerDisplayName( element ) { return layerLabel( element.id ) || elementTitle( element ) || typeLabel( element.type ); }
+		function normalizeLayerLabel( value ) { return String( value || '' ).replace( /[\u0000-\u001F\u007F]/g, '' ).trim().slice( 0, 80 ); }
 		function snapshot() { return { layout: clone( layout ), state: clone( designerState ), selectedId: selectedId, selectedIds: selectionIds() }; }
 		function snapshotChanged( before ) { return stable( before.layout ) !== stable( layout ) || stable( before.state ) !== stable( designerState ); }
 		function pushHistory( before ) {
@@ -412,6 +432,9 @@
 			}
 			if ( removeButton ) { removeButton.disabled = ! selection.length || groupLocked; }
 			if ( duplicateButton ) { duplicateButton.disabled = ! element || locked || multi || elements().length >= 500; }
+			if ( copyButton ) { copyButton.disabled = ! selection.length; }
+			if ( cutButton ) { cutButton.disabled = ! selection.length || groupLocked; }
+			if ( pasteButton ) { pasteButton.disabled = ! designerClipboard.length || elements().length + designerClipboard.length > 500; }
 			syncSelectionStatus(); syncQuickTextControls();
 		}
 		function contentGroup( element ) {
@@ -572,7 +595,7 @@
 		function removeSelected() {
 			var ids = selectionIds(); if ( ! ids.length ) { return; }
 			if ( selectionHasLocked() ) { showError( t( 'deleteLockedElement', 'Unlock the selected element or selection before removing it.' ) ); return; }
-			var before = snapshot(); layout.elements = elements().filter( function ( item ) { return ids.indexOf( item.id ) === -1; } ); designerState.locked_ids = designerState.locked_ids.filter( function ( id ) { return ids.indexOf( id ) === -1; } ); selectOnly( '' ); normalizeZOrder(); pushHistory( before ); render(); announce( ids.length > 1 ? t( 'elementsRemoved', 'Selected elements removed.' ) : t( 'elementRemoved', 'Element removed.' ) );
+			var before = snapshot(); layout.elements = elements().filter( function ( item ) { return ids.indexOf( item.id ) === -1; } ); designerState.locked_ids = designerState.locked_ids.filter( function ( id ) { return ids.indexOf( id ) === -1; } ); designerState.hidden_ids = designerState.hidden_ids.filter( function ( id ) { return ids.indexOf( id ) === -1; } ); ids.forEach( function ( id ) { delete designerState.layer_labels[ id ]; } ); selectOnly( '' ); normalizeZOrder(); pushHistory( before ); render(); announce( ids.length > 1 ? t( 'elementsRemoved', 'Selected elements removed.' ) : t( 'elementRemoved', 'Element removed.' ) );
 		}
 		function duplicateSelected() {
 			var element = selected(); if ( ! element ) { return; }
@@ -581,6 +604,35 @@
 			var id = secureUuidV4(); if ( ! id ) { showError( t( 'uuidUnavailable', 'This browser cannot safely add a new design element. Update the browser and try again.' ) ); return; }
 			var before = snapshot(); var copy = clone( element ); copy.id = id; copy.z = elements().length; copy.x_mm = round( copy.x_mm + 4, 3 ); copy.y_mm = round( copy.y_mm + 4, 3 ); copy = clampDragged( copy );
 			elements().push( copy ); normalizeZOrder(); selectOnly( copy.id ); pushHistory( before ); render(); announce( t( 'elementDuplicated', 'Element duplicated.' ) );
+		}
+		function copySelectionToDesignerClipboard( cut ) {
+			var selection = selectedElements(); if ( ! selection.length ) { return; }
+			if ( cut && selectionHasLocked() ) { showError( t( 'deleteLockedElement', 'Unlock the selected element or selection before removing it.' ) ); return; }
+			designerClipboard = selection.map( function ( element ) { return clone( element ); } ); designerClipboardLabels = {};
+			for ( var i = 0; i < selection.length; i++ ) { var label = layerLabel( selection[ i ].id ); if ( label ) { designerClipboardLabels[ selection[ i ].id ] = label; } }
+			if ( cut ) { removeSelected(); announce( t( 'cutToClipboard', 'Selection cut to Designer clipboard.' ) ); }
+			else { syncProductivityControls(); announce( t( 'copied', 'Selection copied.' ) ); }
+		}
+		function pasteDesignerClipboard() {
+			if ( ! designerClipboard.length ) { return; }
+			if ( elements().length + designerClipboard.length > 500 ) { showError( t( 'elementLimit', 'This Template already contains the maximum 500 elements.' ) ); return; }
+			var before = snapshot(); var newIds = []; var labelUpdates = {}; var baseZ = elements().length;
+			for ( var i = 0; i < designerClipboard.length; i++ ) {
+				var source = designerClipboard[ i ]; var id = secureUuidV4(); if ( ! id ) { restoreSnapshot( before ); showError( t( 'uuidUnavailable', 'This browser cannot safely add a new design element. Update the browser and try again.' ) ); return; }
+				var copy = clone( source ); var sourceId = copy.id; copy.id = id; copy.z = baseZ + i; copy.x_mm = round( Number( copy.x_mm || 0 ) + 4, 3 ); copy.y_mm = round( Number( copy.y_mm || 0 ) + 4, 3 ); copy = clampDragged( copy ); elements().push( copy ); newIds.push( id );
+				if ( designerClipboardLabels[ sourceId ] ) { labelUpdates[ id ] = designerClipboardLabels[ sourceId ]; }
+			}
+			Object.keys( labelUpdates ).forEach( function ( id ) { designerState.layer_labels[ id ] = labelUpdates[ id ]; } ); normalizeZOrder(); selectedIds = newIds.slice(); selectedId = newIds.length ? newIds[ newIds.length - 1 ] : ''; pushHistory( before ); render(); focusSelectedCanvasElement(); announce( t( 'pasted', 'Designer clipboard pasted.' ) );
+		}
+		function setLayerLabel( id, raw ) {
+			if ( ! id ) { return; } var label = normalizeLayerLabel( raw ); var before = snapshot();
+			if ( label ) { designerState.layer_labels[ id ] = label; } else { delete designerState.layer_labels[ id ]; }
+			renamingLayerId = ''; pushHistory( before ); render(); announce( t( 'layerRenamed', 'Layer name updated for this editor.' ) );
+		}
+		function toggleEditorVisibility( id ) {
+			if ( ! id ) { return; } var before = snapshot(); var at = designerState.hidden_ids.indexOf( id );
+			if ( at === -1 ) { designerState.hidden_ids.push( id ); designerState.hidden_ids.sort(); } else { designerState.hidden_ids.splice( at, 1 ); }
+			pushHistory( before ); render(); announce( at === -1 ? t( 'layerHiddenInEditor', 'Layer hidden in this editor only. Certificate output is unchanged.' ) : t( 'layerShownInEditor', 'Layer shown in the editor.' ) );
 		}
 		function mediaFrame( callback ) {
 			if ( ! window.wp || ! window.wp.media ) { showError( t( 'assetRequired', 'Choose a local WordPress Media Library image before adding this element.' ) ); return; }
@@ -737,8 +789,16 @@
 		}
 		function layerActionButton( element, action, label, glyph, disabled ) {
 			var button = document.createElement( 'button' ); button.type = 'button'; button.className = 'button button-small certloom-template-designer-layer-action';
-			button.setAttribute( 'data-certloom-designer-layer-row-action', action ); button.setAttribute( 'data-certloom-designer-layer-id', element.id ); button.setAttribute( 'aria-label', label + ' ' + elementTitle( element ) ); button.setAttribute( 'title', label );
+			button.setAttribute( 'data-certloom-designer-layer-row-action', action ); button.setAttribute( 'data-certloom-designer-layer-id', element.id ); button.setAttribute( 'aria-label', label + ' ' + layerDisplayName( element ) ); button.setAttribute( 'title', label );
 			button.disabled = !! disabled; button.textContent = glyph; return button;
+		}
+		function renderLayerRenameEditor( row, element ) {
+			var editor = document.createElement( 'div' ); editor.className = 'certloom-template-designer-layer-rename'; editor.setAttribute( 'data-certloom-designer-layer-rename-editor', element.id );
+			var input = document.createElement( 'input' ); input.type = 'text'; input.maxLength = 80; input.value = layerLabel( element.id ) || layerDisplayName( element ); input.setAttribute( 'data-certloom-designer-layer-rename-input', element.id ); input.setAttribute( 'aria-label', t( 'layerRenameLabel', 'Layer name' ) );
+			var save = document.createElement( 'button' ); save.type = 'button'; save.className = 'button button-small'; save.setAttribute( 'data-certloom-designer-layer-rename-save', element.id ); save.textContent = t( 'saveLayerName', 'Save layer name' );
+			var cancel = document.createElement( 'button' ); cancel.type = 'button'; cancel.className = 'button button-small'; cancel.setAttribute( 'data-certloom-designer-layer-rename-cancel', element.id ); cancel.textContent = t( 'cancelLayerRename', 'Cancel' );
+			editor.appendChild( input ); editor.appendChild( save ); editor.appendChild( cancel ); row.appendChild( editor );
+			window.setTimeout( function () { input.focus(); input.select(); }, 0 );
 		}
 		function renderLayers() {
 			if ( ! layersContainer ) { return; }
@@ -746,11 +806,14 @@
 			var list = elements().slice().sort( function ( a, b ) { return Number( b.z || 0 ) - Number( a.z || 0 ); } );
 			for ( var i = 0; i < list.length; i++ ) {
 				( function ( element ) {
-					var locked = isLocked( element );
-					var row = document.createElement( 'div' ); row.className = 'certloom-template-designer-layer'; row.classList.toggle( 'is-selected', isSelectedId( element.id ) ); row.classList.toggle( 'is-primary-selected', element.id === selectedId ); row.classList.toggle( 'is-locked', locked ); row.setAttribute( 'data-certloom-designer-layer-row', element.id ); row.setAttribute( 'draggable', locked ? 'false' : 'true' );
-					var select = document.createElement( 'button' ); select.type = 'button'; select.className = 'button button-small certloom-template-designer-layer-select'; select.setAttribute( 'data-certloom-designer-layer-select', element.id ); select.setAttribute( 'aria-pressed', isSelectedId( element.id ) ? 'true' : 'false' ); select.setAttribute( 'title', t( 'layerSelectHint', 'Select layer. Shift/Ctrl/Cmd-click adds it to the selection.' ) ); select.textContent = elementTitle( element ) || typeLabel( element.type );
-					var meta = document.createElement( 'small' ); meta.textContent = String( element.type || 'element' ).toUpperCase() + ' · z ' + Number( element.z || 0 ); select.appendChild( meta ); row.appendChild( select );
+					var locked = isLocked( element ); var hidden = isHiddenId( element.id );
+					var row = document.createElement( 'div' ); row.className = 'certloom-template-designer-layer'; row.classList.toggle( 'is-selected', isSelectedId( element.id ) ); row.classList.toggle( 'is-primary-selected', element.id === selectedId ); row.classList.toggle( 'is-locked', locked ); row.classList.toggle( 'is-hidden-in-editor', hidden ); row.setAttribute( 'data-certloom-designer-layer-row', element.id ); row.setAttribute( 'draggable', locked || renamingLayerId === element.id ? 'false' : 'true' );
+					var select = document.createElement( 'button' ); select.type = 'button'; select.className = 'button button-small certloom-template-designer-layer-select'; select.setAttribute( 'data-certloom-designer-layer-select', element.id ); select.setAttribute( 'aria-pressed', isSelectedId( element.id ) ? 'true' : 'false' ); select.setAttribute( 'title', t( 'layerSelectHint', 'Select layer. Shift/Ctrl/Cmd-click adds it to the selection.' ) ); select.textContent = layerDisplayName( element );
+					var meta = document.createElement( 'small' ); meta.textContent = String( element.type || 'element' ).toUpperCase() + ' · z ' + Number( element.z || 0 ) + ( hidden ? ' · ' + t( 'hiddenInEditor', 'Hidden in editor' ) : '' ); select.appendChild( meta ); row.appendChild( select );
+					if ( renamingLayerId === element.id ) { select.hidden = true; renderLayerRenameEditor( row, element ); }
 					var actions = document.createElement( 'div' ); actions.className = 'certloom-template-designer-layer-actions'; actions.setAttribute( 'role', 'group' ); actions.setAttribute( 'aria-label', t( 'layerActions', 'Layer actions' ) );
+					actions.appendChild( layerActionButton( element, 'visibility', hidden ? t( 'showInEditor', 'Show in editor' ) : t( 'hideInEditor', 'Hide in editor' ), hidden ? 'Show' : 'Hide', false ) );
+					actions.appendChild( layerActionButton( element, 'rename', t( 'renameLayer', 'Rename layer' ), 'Rename', false ) );
 					actions.appendChild( layerActionButton( element, 'front', t( 'bringToFront', 'Bring to front' ), '⇈', locked ) );
 					actions.appendChild( layerActionButton( element, 'forward', t( 'bringForward', 'Bring forward' ), '↑', locked ) );
 					actions.appendChild( layerActionButton( element, 'backward', t( 'sendBackward', 'Send backward' ), '↓', locked ) );
@@ -769,7 +832,7 @@
 			pageEl.style.width = px( p.width_mm, zoom ) + 'px'; pageEl.style.height = px( p.height_mm, zoom ) + 'px';
 			var list = elements();
 			for ( var i = 0; i < list.length; i++ ) {
-				var element = list[ i ]; var node = document.createElement( 'button' ); node.type = 'button';
+				var element = list[ i ]; if ( isHiddenId( element.id ) ) { continue; } var node = document.createElement( 'button' ); node.type = 'button';
 				node.className = 'certloom-template-designer-element';
 				node.setAttribute( 'data-certloom-designer-element', element.id ); node.setAttribute( 'aria-label', typeLabel( element.type ) + ': ' + elementTitle( element ) + ( isLocked( element ) ? ' (' + t( 'lockedSuffix', 'locked' ) + ')' : '' ) );
 				node.style.left = px( element.x_mm, zoom ) + 'px'; node.style.top = px( element.y_mm, zoom ) + 'px'; node.style.width = px( element.width_mm, zoom ) + 'px'; node.style.height = px( element.height_mm, zoom ) + 'px'; node.style.zIndex = String( 100001 + Number( element.z || 0 ) ); node.style.opacity = String( null == element.opacity ? 1 : element.opacity ); node.style.transform = 'rotate(' + Number( element.rotation_deg || 0 ) + 'deg)';
@@ -1046,6 +1109,9 @@
 				event.preventDefault(); return;
 			}
 			if ( ! inside || isFormControl( event.target ) ) { return; }
+			if ( modifier && ! event.altKey && 'c' === lower ) { event.preventDefault(); copySelectionToDesignerClipboard( false ); return; }
+			if ( modifier && ! event.altKey && 'x' === lower ) { event.preventDefault(); copySelectionToDesignerClipboard( true ); return; }
+			if ( modifier && ! event.altKey && 'v' === lower ) { event.preventDefault(); pasteDesignerClipboard(); return; }
 			if ( modifier && ! event.altKey && 'd' === lower ) { event.preventDefault(); duplicateSelected(); return; }
 			if ( modifier && ! event.altKey && ( ']' === key || '[' === key ) ) {
 				event.preventDefault();
@@ -1095,9 +1161,18 @@
 		} );
 		if ( layersContainer ) {
 			layersContainer.addEventListener( 'click', function ( event ) {
+				var renameSave = event.target.closest( '[data-certloom-designer-layer-rename-save]' );
+				if ( renameSave ) { var saveId = renameSave.getAttribute( 'data-certloom-designer-layer-rename-save' ); var saveInput = layersContainer.querySelector( '[data-certloom-designer-layer-rename-input="' + saveId + '"]' ); setLayerLabel( saveId, saveInput ? saveInput.value : '' ); return; }
+				var renameCancel = event.target.closest( '[data-certloom-designer-layer-rename-cancel]' );
+				if ( renameCancel ) { renamingLayerId = ''; render(); return; }
 				var action = event.target.closest( '[data-certloom-designer-layer-row-action]' );
-				if ( action ) { var actionId = action.getAttribute( 'data-certloom-designer-layer-id' ); var mode = action.getAttribute( 'data-certloom-designer-layer-row-action' ); selectOnly( actionId ); if ( 'lock' === mode ) { toggleLock( actionId ); } else if ( 'duplicate' === mode ) { duplicateSelected(); } else if ( 'delete' === mode ) { removeSelected(); } else { reorderSelected( mode ); } return; }
+				if ( action ) { var actionId = action.getAttribute( 'data-certloom-designer-layer-id' ); var mode = action.getAttribute( 'data-certloom-designer-layer-row-action' ); selectOnly( actionId ); if ( 'visibility' === mode ) { toggleEditorVisibility( actionId ); } else if ( 'rename' === mode ) { renamingLayerId = actionId; render(); } else if ( 'lock' === mode ) { toggleLock( actionId ); } else if ( 'duplicate' === mode ) { duplicateSelected(); } else if ( 'delete' === mode ) { removeSelected(); } else { reorderSelected( mode ); } return; }
 				var select = event.target.closest( '[data-certloom-designer-layer-select]' ); if ( select ) { var id = select.getAttribute( 'data-certloom-designer-layer-select' ); if ( event.shiftKey || event.ctrlKey || event.metaKey ) { toggleSelection( id ); } else { selectOnly( id ); } render(); }
+			} );
+			layersContainer.addEventListener( 'keydown', function ( event ) {
+				var input = event.target.closest( '[data-certloom-designer-layer-rename-input]' ); if ( ! input ) { return; }
+				if ( 'Enter' === event.key ) { event.preventDefault(); setLayerLabel( input.getAttribute( 'data-certloom-designer-layer-rename-input' ), input.value ); }
+				else if ( 'Escape' === event.key ) { event.preventDefault(); renamingLayerId = ''; render(); }
 			} );
 			layersContainer.addEventListener( 'dragstart', function ( event ) { var row = event.target.closest( '[data-certloom-designer-layer-row]' ); if ( ! row ) { return; } var id = row.getAttribute( 'data-certloom-designer-layer-row' ); if ( ! id || isLockedId( id ) ) { event.preventDefault(); return; } draggedLayerId = id; row.classList.add( 'is-dragging' ); if ( event.dataTransfer ) { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData( 'application/x-certloom-layer', id ); event.dataTransfer.setData( 'text/plain', id ); } } );
 			layersContainer.addEventListener( 'dragover', function ( event ) { if ( ! draggedLayerId ) { return; } var row = event.target.closest( '[data-certloom-designer-layer-row]' ); if ( ! row || row.getAttribute( 'data-certloom-designer-layer-row' ) === draggedLayerId ) { return; } event.preventDefault(); row.classList.add( 'is-layer-drop-target' ); if ( event.dataTransfer ) { event.dataTransfer.dropEffect = 'move'; } } );
@@ -1124,6 +1199,9 @@
 		}
 		if ( removeButton ) { removeButton.addEventListener( 'click', removeSelected ); }
 		if ( duplicateButton ) { duplicateButton.addEventListener( 'click', duplicateSelected ); }
+		if ( copyButton ) { copyButton.addEventListener( 'click', function () { copySelectionToDesignerClipboard( false ); } ); }
+		if ( cutButton ) { cutButton.addEventListener( 'click', function () { copySelectionToDesignerClipboard( true ); } ); }
+		if ( pasteButton ) { pasteButton.addEventListener( 'click', pasteDesignerClipboard ); }
 		for ( var modeIndex = 0; modeIndex < modeButtons.length; modeIndex++ ) { modeButtons[ modeIndex ].addEventListener( 'click', function () { applyDesignerMode( this.getAttribute( 'data-certloom-designer-mode-button' ), true ); } ); }
 		if ( insertFocusButton ) { insertFocusButton.addEventListener( 'click', function () { var firstInsert = root.querySelector( '[data-certloom-designer-add]:not([disabled])' ); if ( firstInsert ) { firstInsert.focus(); } } ); }
 		if ( previewScrollButton ) { previewScrollButton.addEventListener( 'click', function () { scrollDesignerTarget( '.certloom-template-preview-card' ); } ); }

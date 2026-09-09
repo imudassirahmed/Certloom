@@ -1,3 +1,9 @@
+= 1.7.0-alpha.4.2 =
+* Phase 4 Designer-v2 review checkpoint: adds inline layer rename, editor-only layer visibility, and internal multi-selection Copy/Cut/Paste with keyboard and non-keyboard equivalents.
+* Expands non-artifact Designer authoring state to v2 for locks, editor-hidden ids, bounded layer labels, and snapping while keeping certificate layout/render authority unchanged.
+* Adds focused source + Chromium acceptance for the new layer-organization/clipboard tranche.
+* This remains a Phase 4 review checkpoint, not Phase 4 completion; contextual toolbar/Properties/Insert/sample-data, remaining canvas work, Schema 4, signer snapshots, Table/Data Table, final renderer parity and user approval remain open.
+
 = 1.7.0-alpha.4.1 =
 * Continue the in-progress Certificate Designer v2 review line after the alpha.4 shell checkpoint; Phase 4 remains open and user-reviewable.
 * Add direct Layers controls for reorder, lock/unlock, duplicate and delete, plus real drag reordering and synchronized canvas/layer selection behavior.

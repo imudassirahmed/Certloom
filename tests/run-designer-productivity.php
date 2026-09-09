@@ -12,7 +12,7 @@ function dsn2($ok,$label){global $pass,$fail;if($ok){$pass++;echo "PASS  $label\
 
 dsn2(is_string($admin)&&strpos($admin,'certloom-template-designer-v2')!==false&&strpos($admin,'DSN-08 is a closed built-in registry')!==false&&strpos($admin,'data-certloom-designer-undo')!==false&&strpos($admin,'data-certloom-designer-redo')!==false,'Designer v2 retains the DSN-02 productivity surface in the unified editor');
 dsn2(strpos($admin,'data-certloom-designer-state-json')!==false&&strpos($admin,'designer_state_json')!==false,'Designer submits non-artifact authoring state separately from canonical layout JSON');
-dsn2(strpos($admin,'update_user_meta')!==false&&strpos($admin,"get_current_blog_id() . '_' . absint( \$template_id )")!==false,'personal locks/snapping persist in site-scoped WordPress user meta rather than artifact content');
+dsn2(strpos($admin,'update_user_meta')!==false&&strpos($admin,"get_current_blog_id() . '_' . absint( \$template_id )")!==false,'personal locks/editor organization/snapping persist in site-scoped WordPress user meta rather than artifact content');
 dsn2(strpos($admin,'TemplateDesignerState')!==false,'authoring-state persistence passes through a dedicated normalizer');
 dsn2(is_string($uninstall)&&strpos($uninstall,'certloom_template_designer_state_')!==false&&strpos($uninstall,'$wpdb->usermeta')!==false,'site-scoped personal Designer state is uninstall-owned operational UI data');
 dsn2(strpos($admin,'data-certloom-designer-undo')!==false&&strpos($admin,'data-certloom-designer-redo')!==false,'undo/redo controls are present');
@@ -25,15 +25,15 @@ dsn2(strpos($admin,'Manual save remains the only authoritative revision write.')
 
 $catalog=new PresetCatalog(); $layout=$catalog->get('classic-a4-landscape')['layout']; $ids=array_column($layout['elements'],'id'); $state=new TemplateDesignerState();
 $defaults=$state->defaults();
-dsn2($defaults===array('version'=>1,'locked_ids'=>array(),'snap_enabled'=>true),'authoring state has deterministic safe defaults');
-$normalized=$state->normalize(array('version'=>999,'locked_ids'=>array($ids[3],'not-an-element',$ids[1],$ids[3]),'snap_enabled'=>false,'unexpected'=>'discard'),$layout);
+dsn2($defaults===array('version'=>2,'locked_ids'=>array(),'hidden_ids'=>array(),'layer_labels'=>array(),'snap_enabled'=>true),'authoring state has deterministic safe defaults');
+$normalized=$state->normalize(array('version'=>999,'locked_ids'=>array($ids[3],'not-an-element',$ids[1],$ids[3]),'hidden_ids'=>array($ids[2],'missing',$ids[2]),'layer_labels'=>array($ids[0]=>' Recipient title ', 'missing'=>'Nope', $ids[1]=>str_repeat('X',100)),'snap_enabled'=>false,'unexpected'=>'discard'),$layout);
 $expected_locks=array($ids[1],$ids[3]); sort($expected_locks,SORT_STRING);
-dsn2(1===$normalized['version']&&false===$normalized['snap_enabled']&&$expected_locks===$normalized['locked_ids'],'authoring-state normalizer keeps only known unique element locks and supported preferences');
+dsn2(2===$normalized['version']&&false===$normalized['snap_enabled']&&$expected_locks===$normalized['locked_ids']&&array($ids[2])===$normalized['hidden_ids']&&'Recipient title'===($normalized['layer_labels'][$ids[0]]??'')&&80===strlen($normalized['layer_labels'][$ids[1]]??''),'authoring-state normalizer keeps only known locks/editor visibility/bounded labels and supported preferences');
 dsn2($state->decode('{bad json',$layout)===$defaults,'malformed non-authoritative authoring state fails safely to defaults');
 
 // Canonical artifact hashes must not need or accept lock/snap authoring metadata.
 $validator=new LayoutValidator(); $canonical=$validator->normalize($layout);
-dsn2(!isset($canonical['locked_ids'])&&!isset($canonical['snap_enabled']),'authoring locks/snapping remain outside certloom-layout artifact content');
+dsn2(!isset($canonical['locked_ids'])&&!isset($canonical['hidden_ids'])&&!isset($canonical['layer_labels'])&&!isset($canonical['snap_enabled']),'authoring locks/editor visibility/layer labels/snapping remain outside certloom-layout artifact content');
 
 dsn2(is_string($js)&&strpos($js,'MAX_HISTORY = 100')!==false&&strpos($js,'function undo()')!==false&&strpos($js,'function redo()')!==false,'Designer owns bounded undo/redo history');
 dsn2(strpos($js,'SNAP_THRESHOLD_MM')!==false&&strpos($js,'function snapTargets')!==false&&strpos($js,'function snapDragged')!==false,'moving elements can snap to page/element guides');

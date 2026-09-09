@@ -25,7 +25,7 @@ p4i_has( $js, "layerActionButton( element, 'back'", 'Layer rows can send an elem
 p4i_has( $js, "layerActionButton( element, 'lock'", 'Layer rows can lock/unlock.' );
 p4i_has( $js, "layerActionButton( element, 'duplicate'", 'Layer rows can duplicate.' );
 p4i_has( $js, "layerActionButton( element, 'delete'", 'Layer rows can delete.' );
-p4i_has( $js, "row.setAttribute( 'draggable', locked ? 'false' : 'true' )", 'Unlocked Layers are draggable while locked Layers fail closed.' );
+p4i_has( $js, "row.setAttribute( 'draggable', locked || renamingLayerId === element.id ? 'false' : 'true' )", 'Unlocked Layers are draggable while locked Layers fail closed.' );
 p4i_has( $js, "layersContainer.addEventListener( 'dragstart'", 'Layers implement drag start.' );
 p4i_has( $js, "layersContainer.addEventListener( 'drop'", 'Layers implement a drop reorder boundary.' );
 p4i_has( $js, 'moveLayerInFrontOf', 'Layer drag resolves through the canonical z-order model.' );

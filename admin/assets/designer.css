@@ -1079,3 +1079,40 @@
 @media (max-width: 900px) {
 	.certloom-template-designer-v2 .certloom-template-designer-layer-action { min-width: 44px; min-height: 44px; }
 }
+
+/* Phase 4.2 authoring organization — editor-only layer labels/visibility. */
+.certloom-template-designer-v2 .certloom-template-designer-layer.is-hidden-in-editor {
+	background: var(--cl-surface-muted);
+}
+.certloom-template-designer-v2 .certloom-template-designer-layer.is-hidden-in-editor .certloom-template-designer-layer-select {
+	opacity: .68;
+}
+.certloom-template-designer-v2 .certloom-template-designer-layer-rename {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto auto;
+	gap: var(--cl-1);
+	padding: var(--cl-1) var(--cl-2) var(--cl-2);
+	align-items: center;
+}
+.certloom-template-designer-v2 .certloom-template-designer-layer-rename input {
+	min-width: 0;
+}
+.certloom-template-designer-v2 .certloom-template-designer-layer-rename input:focus-visible {
+	outline: 2px solid var(--cl-focus);
+	outline-offset: 1px;
+}
+@media (max-width: 900px) {
+	.certloom-template-designer-v2 .certloom-template-designer-layer-rename {
+		grid-template-columns: 1fr;
+	}
+	.certloom-template-designer-v2 .certloom-template-designer-layer-rename .button {
+		min-height: 44px;
+	}
+}
+
+/* Compatibility safety: dynamic layer actions must never share/cover the layer-name grid cell. */
+.certloom-template-designer-layer-actions {
+	grid-column: 1 / -1;
+	min-width: 0;
+	position: relative;
+}

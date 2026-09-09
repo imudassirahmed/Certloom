@@ -135,8 +135,8 @@ async def run():
         await ck((await page.locator('[data-certloom-designer-dirty]').inner_text())=='Saving revision…','savePendingVisible')
         await ck(await page.locator('[data-certloom-designer-save]').is_disabled(),'saveButtonsBusyDuringSubmit')
         await ck(saved_layout.get('_meta',{}).get('schema')=='certloom-layout','canonicalSerialization')
-        await ck(saved_state.get('version')==1 and saved_state.get('snap_enabled') is False and len(saved_state.get('locked_ids',[]))==1,'authoringStateSerialization')
-        await ck('locked_ids' not in saved_layout and 'snap_enabled' not in saved_layout,'authoringStateOutsideArtifact')
+        await ck(saved_state.get('version')==2 and saved_state.get('snap_enabled') is False and len(saved_state.get('locked_ids',[]))==1 and saved_state.get('hidden_ids',[])==[] and isinstance(saved_state.get('layer_labels',{}),dict),'authoringStateSerialization')
+        await ck(all(key not in saved_layout for key in ('locked_ids','hidden_ids','layer_labels','snap_enabled')),'authoringStateOutsideArtifact')
 
         # Reset returns both canonical layout and personal workspace state to saved values and clears history.
         await page.locator('[data-certloom-designer-reset]').click(); await page.wait_for_timeout(30)

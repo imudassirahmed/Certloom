@@ -28,7 +28,7 @@ async def main():
         rows = page.locator('[data-certloom-designer-layer-row]')
         initial = await rows.count()
         await ck(initial >= 10, 'fixtureHasLayerDepth')
-        await ck(await page.locator('[data-certloom-designer-layer-row-action]').count() == initial * 7, 'sevenDirectActionsPerLayer')
+        await ck(await page.locator('[data-certloom-designer-layer-row-action]').count() == initial * 9, 'nineDirectActionsPerLayer')
         await ck((await rows.first.get_attribute('draggable')) == 'true', 'unlockedLayerDraggable')
         await ck(await page.locator('[data-certloom-designer-true-size]').is_visible(), 'trueSizeVisible')
         await ck('Ctrl/Cmd+D' in (await page.locator('[data-certloom-designer-duplicate]').get_attribute('title') or ''), 'duplicateShortcutTooltip')
