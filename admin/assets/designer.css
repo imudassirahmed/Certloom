@@ -1437,3 +1437,47 @@
 	.certloom-template-designer-context-menu [role="menuitem"]:hover,
 	.certloom-template-designer-context-menu [role="menuitem"]:focus-visible { outline: 1px solid Highlight; }
 }
+
+/* Phase 4.6 Schema 4 rich inline authoring. Token wash is editor-only. */
+.certloom-template-designer-rich-text-editor { display: grid; gap: var(--cl-2); }
+.certloom-template-designer-rich-text-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--cl-2); }
+.certloom-template-designer-rich-text-head .description { margin: 3px 0 0; }
+.certloom-template-designer-rich-text-add { display: flex; flex-wrap: wrap; gap: var(--cl-1); }
+[data-certloom-designer-rich-runs] { display: grid; gap: var(--cl-2); }
+.certloom-template-designer-rich-run {
+	display: grid;
+	gap: var(--cl-1);
+	padding: var(--cl-2);
+	border: 1px solid var(--cl-rule);
+	border-radius: var(--cl-r-lift);
+	background: var(--cl-surface);
+}
+.certloom-template-designer-rich-run-head { display: flex; align-items: center; gap: var(--cl-1); }
+.certloom-template-designer-rich-run-head strong { margin-right: auto; }
+.certloom-template-designer-rich-run > label { display: grid; gap: 5px; }
+.certloom-template-designer-rich-run textarea,
+.certloom-template-designer-rich-run input,
+.certloom-template-designer-rich-run select { max-width: 100%; }
+.certloom-template-designer-rich-insert-field { justify-self: start; margin-top: 4px; }
+.certloom-template-designer-rich-run-style { border-top: 1px solid var(--cl-rule); padding-top: var(--cl-1); }
+.certloom-template-designer-rich-run-style summary { cursor: pointer; font-weight: 600; }
+.certloom-template-designer-rich-run-style-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cl-1); padding-top: var(--cl-1); }
+.certloom-template-designer-rich-run-style-grid label { display: grid; gap: 4px; }
+.certloom-template-designer-rich-preview-run.is-token {
+	display: inline;
+	padding: 0 .18em;
+	border-radius: .22em;
+	background: var(--cl-blue-wash);
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cl-blue) 28%, transparent);
+}
+@media (max-width: 782px) {
+	.certloom-template-designer-rich-text-head { display: grid; }
+	.certloom-template-designer-rich-run-head .button,
+	.certloom-template-designer-rich-text-add .button,
+	.certloom-template-designer-rich-insert-field { min-height: 44px; min-width: 44px; }
+	.certloom-template-designer-rich-run-style-grid { grid-template-columns: 1fr; }
+}
+@media (forced-colors: active) {
+	.certloom-template-designer-rich-preview-run.is-token { outline: 1px solid Highlight; background: Canvas; color: CanvasText; box-shadow: none; }
+	.certloom-template-designer-rich-run { border-color: CanvasText; }
+}

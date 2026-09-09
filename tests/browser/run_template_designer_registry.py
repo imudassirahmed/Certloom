@@ -4,8 +4,8 @@ from pathlib import Path
 from playwright.async_api import async_playwright
 ROOT=Path(__file__).resolve().parents[2]
 
-def fixture_html(corrupt=False):
-    env=os.environ.copy(); env['CERTLOOM_DESIGNER_SCHEMA_VERSION']='3'; env['CERTLOOM_DESIGNER_REGISTRY_CORRUPT']='1' if corrupt else '0'
+def fixture_html(corrupt=False, schema=3):
+    env=os.environ.copy(); env['CERTLOOM_DESIGNER_SCHEMA_VERSION']=str(schema); env['CERTLOOM_DESIGNER_REGISTRY_CORRUPT']='1' if corrupt else '0'
     r=subprocess.run(['php',str(ROOT/'tests/browser/build_template_designer_fixture.php')],cwd=ROOT,env=env,capture_output=True,text=True)
     if r.returncode: raise RuntimeError(r.stderr or r.stdout)
     return r.stdout
@@ -22,12 +22,12 @@ async def run():
         await page.set_content(fixture_html(False),wait_until='load'); await page.wait_for_timeout(150)
         contract=await page.evaluate('window.certloomTemplateElementRegistry')
         await ck(contract.get('contract_version')==1,'contractVersion')
-        await ck(len(contract.get('types',{}))==10,'tenCanonicalTypes')
-        await ck(len(contract.get('palette',[]))==13,'thirteenPaletteTools')
+        await ck(len(contract.get('types',{}))==11,'crossSchemaCanonicalTypes')
+        await ck(len(contract.get('palette',[]))==14,'crossSchemaPaletteDefinitions')
         dom_kinds=await page.locator('[data-certloom-designer-add]').evaluate_all('(els)=>els.map(e=>e.dataset.certloomDesignerAdd)')
         registry_kinds=[x['kind'] for x in contract['palette']]
         await ck(dom_kinds==registry_kinds,'domPaletteMatchesServerRegistryOrder')
-        await ck(await page.locator('[data-certloom-designer-add]:disabled').count()==0,'allV3PaletteToolsEnabled')
+        await ck(await page.locator('[data-certloom-designer-add]:disabled').count()==1 and await page.locator('[data-certloom-designer-add="rich_text"]').is_disabled() and not await page.locator('[data-certloom-designer-add="merge"]').is_disabled(),'schema3KeepsMergeAndFailsClosedRichText')
 
         # Mutating the public global after Designer boot must not alter its frozen snapshot.
         await page.evaluate('window.certloomTemplateElementRegistry.palette=[]; window.certloomTemplateElementRegistry.types={};')
@@ -61,6 +61,11 @@ async def run():
         await ck(not await page.locator('[data-certloom-designer]').evaluate('(e)=>e.classList.contains("has-registry-error")'),'validRegistryInitializesDesigner')
         await page.close()
 
+        schema4=await browser.new_page(viewport={'width':1100,'height':760})
+        await schema4.set_content(fixture_html(False,4),wait_until='load'); await schema4.wait_for_timeout(100)
+        await ck(await schema4.locator('[data-certloom-designer-add]').count()==13 and await schema4.locator('[data-certloom-designer-add="merge"]').count()==0 and not await schema4.locator('[data-certloom-designer-add="rich_text"]').is_disabled(),'schema4NormalPaletteReplacesLegacyMergeWithRichText')
+        await schema4.close()
+
         corrupt=await browser.new_page(viewport={'width':900,'height':700})
         await corrupt.set_content(fixture_html(True),wait_until='load'); await corrupt.wait_for_timeout(120)
         await ck(await corrupt.locator('[data-certloom-designer]').evaluate('(e)=>e.classList.contains("has-registry-error")'),'invalidContractFailsClosed')
@@ -71,7 +76,7 @@ async def run():
         reduced=await browser.new_page(viewport={'width':360,'height':760}, reduced_motion='reduce')
         await reduced.set_content(fixture_html(False),wait_until='load'); await reduced.wait_for_timeout(80)
         await ck((await reduced.locator('[data-certloom-designer-workspace]').evaluate('(e)=>getComputedStyle(e).overflowX')) in ('auto','scroll'),'registryDesignerRemainsResponsive')
-        await ck(await reduced.locator('[data-certloom-designer-add]').count()==13,'registryPaletteSurvivesReducedMotionViewport')
+        await ck(await reduced.locator('[data-certloom-designer-add]').count()==14 and await reduced.locator('[data-certloom-designer-add="rich_text"]').is_disabled(),'registryPaletteSurvivesReducedMotionViewport')
         await reduced.close(); await browser.close()
     if failed:
         print('FAIL  DSN-08 typed Element Registry browser gate:', ', '.join(failed)); return 1

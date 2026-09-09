@@ -24,7 +24,7 @@ async def run():
 
         elements=page.locator('[data-certloom-designer-element]')
         await ck(await elements.count()==14,'initialCount')
-        await ck(await page.locator('[data-certloom-designer-add]').count()==13,'paletteCount')
+        await ck(await page.locator('[data-certloom-designer-add]').count()==14 and await page.locator('[data-certloom-designer-add="rich_text"]').is_disabled(),'schema1PaletteIncludesSchema4RichTextFailClosed')
         await ck(await page.locator('[data-certloom-designer-add="barcode"]').is_disabled(),'barcodeDisabledOnV1')
 
         # Text creation/content editing, canonical UUIDv4, undo/redo.

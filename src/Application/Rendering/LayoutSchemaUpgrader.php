@@ -42,6 +42,13 @@ final class LayoutSchemaUpgrader {
 				$normalized = $this->validator->normalize( $normalized );
 				continue;
 			}
+			if ( LayoutSchema::VERSION_V3 === $current ) {
+				// v4 is additive: historical positioned elements remain byte/behavior compatible; rich inline text becomes newly authorable.
+				$normalized['_meta']['schema_version'] = LayoutSchema::VERSION_V4;
+				$current = LayoutSchema::VERSION_V4;
+				$normalized = $this->validator->normalize( $normalized );
+				continue;
+			}
 			throw new InvalidArgumentException( 'No deterministic layout upgrade path is available.' );
 		}
 		return $normalized;

@@ -1,3 +1,11 @@
+= 1.7.0-alpha.4.6 =
+* Phase 4 Schema 4 rich-inline-text review checkpoint: add one additive schema-version boundary for structured rich text while preserving schema 1–3 canonical history and legacy standalone Merge readability exactly.
+* Add bounded ordered rich-text runs containing only literal text or validated dynamic-field tokens, with sparse per-run typography overrides; reject HTML, arbitrary CSS, executable/nested structures and unsupported properties.
+* Add Designer authoring for Rich text, including caret-level Insert field behavior, run add/reorder/delete, sample-data token preview, lock safety, undo/autosave/Save integration, and schema-aware retirement of normal standalone Merge insertion after schema 3.
+* Resolve rich-text token runs only through the immutable credential merge snapshot and preserve machine tokens in canonical authoring bytes; sample values remain preview-only presentation.
+* Keep Schema 4 artifact rendering fail-closed until the separate PHP/JS/PDF/raster renderer-parity ceremony is genuinely accepted; no renderer/domain authority manifest is manufactured by this tranche.
+* Add dedicated Phase 4.6 source + Chromium acceptance and adapt Phase 4.4 palette assertions to the cross-schema registry contract. Phase 4 remains in progress; signer snapshots, Table/Data Table, final historical/render parity, user approval and earlier-phase acceptance remain open.
+
 = 1.7.0-alpha.4.5 =
 * Phase 4 Designer-v2 canvas-interactions review checkpoint: add real marquee and modifier-additive selection, excluding editor-hidden elements while keeping locked elements selectable.
 * Add explicit Pan plus Space-drag and middle-button temporary panning that changes only the sticky centre workspace scroll position; Escape exits Pan safely.

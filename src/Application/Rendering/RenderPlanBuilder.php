@@ -54,6 +54,11 @@ final class RenderPlanBuilder {
 		$width = (float) $expected_width;
 		$height = (float) $expected_height;
 		$elements = isset( $resolved_document['elements'] ) && is_array( $resolved_document['elements'] ) ? array_values( $resolved_document['elements'] ) : array();
+		foreach ( $elements as $element ) {
+			if ( is_array( $element ) && 'rich_text' === strtolower( trim( (string) ( $element['type'] ?? '' ) ) ) ) {
+				throw new InvalidArgumentException( 'Schema 4 rich-text render-plan parity is not accepted yet; artifact rendering fails closed.' );
+			}
+		}
 		$operations = array();
 		$seen_ids = array();
 		$seen_z = array();

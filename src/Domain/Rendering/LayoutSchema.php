@@ -17,7 +17,8 @@ final class LayoutSchema {
 	const VERSION_V1 = 1;
 	const VERSION_V2 = 2;
 	const VERSION_V3 = 3;
-	const VERSION = self::VERSION_V3;
+	const VERSION_V4 = 4;
+	const VERSION = self::VERSION_V4;
 
 	const PAGE_A4 = 'A4';
 	const PAGE_LETTER = 'Letter';
@@ -35,7 +36,7 @@ final class LayoutSchema {
 
 	/** @return int[] */
 	public static function supported_versions() {
-		return array( self::VERSION_V1, self::VERSION_V2, self::VERSION_V3 );
+		return array( self::VERSION_V1, self::VERSION_V2, self::VERSION_V3, self::VERSION_V4 );
 	}
 
 	/** @return bool */

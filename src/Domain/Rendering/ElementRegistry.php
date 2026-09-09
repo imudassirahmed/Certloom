@@ -23,7 +23,11 @@ final class ElementRegistry {
 				self::palette_item( 'text', 'text', 80, 15, array( 'text_i18n' => 'text', 'style_preset' => 'text' ) ),
 			), $common ),
 			'merge' => self::definition( 'merge', 1, array( 'token', 'style' ), array( 'token' ), 'merge', 'merge', 'merge', 'text', 'merge', array( 'dynamic_token' ), array( 'content' => 'merge', 'style' => 'text', 'style_properties' => $text_style ), array(
-				self::palette_item( 'merge', 'mergeField', 80, 15, array( 'token' => 'recipient.name', 'style_preset' => 'text' ) ),
+				// Legacy standalone merge boxes remain readable forever, but schema 4 moves normal authoring to inline rich-text runs.
+				self::palette_item( 'merge', 'mergeField', 80, 15, array( 'token' => 'recipient.name', 'style_preset' => 'text' ), false, 3 ),
+			), $common ),
+			'rich_text' => self::definition( 'rich_text', 4, array( 'runs', 'style' ), array( 'runs' ), 'rich_text', 'rich_text', 'rich_text', 'rich_text', 'richText', array( 'inline_dynamic_tokens' ), array( 'content' => 'rich_text', 'style' => 'text', 'style_properties' => $text_style ), array(
+				self::palette_item( 'rich_text', 'richText', 110, 24, array( 'rich_preset' => 'certificate_line', 'style_preset' => 'text' ) ),
 			), $common ),
 			'image' => self::definition( 'image', 1, array( 'asset', 'fit' ), array( 'asset' ), 'asset', 'asset', 'asset', 'image', 'asset', array(), array( 'content' => 'asset', 'style' => '', 'media' => true ), array(
 				self::palette_item( 'image', 'image', 60, 40, array( 'fit' => 'contain' ), true ),
@@ -137,8 +141,8 @@ final class ElementRegistry {
 	}
 
 	/** @return array<string,mixed> */
-	private static function palette_item( $kind, $label_key, $width_mm, $height_mm, array $defaults, $requires_media = false ) {
-		return array(
+	private static function palette_item( $kind, $label_key, $width_mm, $height_mm, array $defaults, $requires_media = false, $max_schema_version = null ) {
+		$item = array(
 			'kind' => (string) $kind,
 			'label_key' => (string) $label_key,
 			'width_mm' => (float) $width_mm,
@@ -146,5 +150,7 @@ final class ElementRegistry {
 			'requires_media' => (bool) $requires_media,
 			'defaults' => $defaults,
 		);
+		if ( null !== $max_schema_version ) { $item['max_schema_version'] = (int) $max_schema_version; }
+		return $item;
 	}
 }

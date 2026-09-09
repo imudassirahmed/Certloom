@@ -41,6 +41,15 @@ final class TemplatePreviewSamples {
 			if ( ! is_array( $element ) ) { continue; }
 			$type = (string) ( $element['type'] ?? '' );
 			$token = '';
+			if ( 'rich_text' === $type && isset( $element['runs'] ) && is_array( $element['runs'] ) ) {
+				foreach ( $element['runs'] as $run ) {
+					if ( ! is_array( $run ) || 'token' !== (string) ( $run['kind'] ?? '' ) ) { continue; }
+					$run_token = (string) ( $run['token'] ?? '' );
+					if ( '' === $run_token || array_key_exists( $run_token, $snapshot ) ) { continue; }
+					$snapshot[ $run_token ] = array_key_exists( $run_token, $known ) ? $known[ $run_token ] : $this->placeholder( $run_token, $profile );
+				}
+				continue;
+			}
 			if ( 'merge' === $type ) { $token = (string) ( $element['token'] ?? '' ); }
 			elseif ( 'barcode' === $type ) { $token = (string) ( $element['source'] ?? '' ); }
 			if ( '' === $token || array_key_exists( $token, $snapshot ) ) { continue; }

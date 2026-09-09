@@ -20,8 +20,8 @@ $pass=0;$fail=0; function dsn6($ok,$label){global $pass,$fail;if($ok){$pass++;ec
 function dsn6manifest(){ return array('schema'=>'certloom-font-manifest','version'=>2,'families'=>array('sans-serif'=>array('400-normal'=>array('faces'=>array(array('sha256'=>str_repeat('a',64),'format'=>'ttf','coverage'=>array('U+0000-024F','U+2000-206F'))))))); }
 
 $validator=new LayoutValidator(); $upgrader=new LayoutSchemaUpgrader($validator); $canonical=new CanonicalJson();
-dsn6(LayoutSchema::VERSION===3,'latest canonical authoring schema is v3');
-dsn6(LayoutSchema::supported_versions()===array(1,2,3),'v1 and v2 remain permanently readable beside v3');
+dsn6(LayoutSchema::VERSION===4,'latest canonical authoring schema is v4 while list semantics remain v3-compatible');
+dsn6(LayoutSchema::supported_versions()===array(1,2,3,4),'v1-v3 remain permanently readable beside v4');
 dsn6(LayoutSchema::element_types(2)===array('text','merge','image','logo','signature','shape','line','qr','barcode'),'v2 primitive inventory remains frozen');
 dsn6(LayoutSchema::element_types(3)===array('text','merge','image','logo','signature','shape','line','qr','barcode','list'),'v3 adds list without mutating v2 semantics');
 $v1=(new PresetCatalog())->get('classic-a4-landscape')['layout']; $v2=$upgrader->upgrade($v1,2); $v3=$upgrader->upgrade($v2,3); $v3direct=$upgrader->upgrade($v1,3);
@@ -29,7 +29,7 @@ dsn6(3===$v3['_meta']['schema_version']&&3===$v3direct['_meta']['schema_version'
 dsn6($canonical->hash($v3)===$canonical->hash($v3direct),'direct v1→v3 equals stepwise v1→v2→v3');
 dsn6($v3===$upgrader->upgrade($v3,3),'v3 upgrading is idempotent');
 dsn6throws(function()use($upgrader,$v3){$upgrader->upgrade($v3,2);},'v3 downgrade is rejected');
-dsn6(3===TemplateDefaults::blank_a4_landscape()['_meta']['schema_version'],'new blank Templates author at v3');
+dsn6(4===TemplateDefaults::blank_a4_landscape()['_meta']['schema_version'],'new blank Templates author at v4');
 
 $list=array('id'=>'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','type'=>'list','x_mm'=>40,'y_mm'=>80,'width_mm'=>160,'height_mm'=>50,'z'=>99,'rotation_deg'=>0,'opacity'=>1,'items'=>array('Accredited training completed','Identity verified','Credential issued locally'),'list_style'=>'bullet','style'=>array('font_family'=>'sans-serif','font_size_pt'=>16,'font_weight'=>400,'italic'=>false,'color'=>'#111111','align'=>'start','vertical_align'=>'top','direction'=>'auto','line_height'=>1.25,'letter_spacing_pt'=>0,'overflow'=>'wrap'));
 $layout=$v3; $layout['elements']=array($list); $normalized=$validator->normalize($layout);

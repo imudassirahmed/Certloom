@@ -46,6 +46,37 @@ final class LayoutResolver {
 					unset( $element['token'] );
 					$element['style']['direction'] = $this->directions->resolve( $element['text'], $element['style']['direction'] );
 					break;
+				case 'rich_text':
+					$runs = array();
+					$plain_text = '';
+					$total = 0;
+					foreach ( array_values( $element['runs'] ) as $run ) {
+						$resolved_run = array( 'kind' => 'text' );
+						if ( 'token' === (string) $run['kind'] ) {
+							$token = (string) $run['token'];
+							if ( ! array_key_exists( $token, $merge_snapshot ) ) {
+								throw new InvalidArgumentException( 'Missing immutable rich-text merge value: ' . $token );
+							}
+							$value = $merge_snapshot[ $token ];
+							if ( is_array( $value ) || is_object( $value ) || is_resource( $value ) ) {
+								throw new InvalidArgumentException( 'Rich-text merge values must resolve to scalar text.' );
+							}
+							$text = $this->resolved_text( null === $value ? '' : (string) $value );
+						} else {
+							$text = $this->resolved_text( (string) $run['text'] );
+						}
+						$total += strlen( $text );
+						if ( $total > LayoutValidator::MAX_TEXT_BYTES ) {
+							throw new InvalidArgumentException( 'Resolved rich text exceeds the canonical text budget.' );
+						}
+						$resolved_run['text'] = $text;
+						if ( ! empty( $run['style'] ) && is_array( $run['style'] ) ) { $resolved_run['style'] = $run['style']; }
+						$runs[] = $resolved_run;
+						$plain_text .= $text;
+					}
+					$element['runs'] = $runs;
+					$element['style']['direction'] = $this->directions->resolve( $plain_text, $element['style']['direction'] );
+					break;
 				case 'text':
 					$element['style']['direction'] = $this->directions->resolve( $element['text'], $element['style']['direction'] );
 					break;

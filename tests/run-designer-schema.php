@@ -25,7 +25,7 @@ $pass=0;$fail=0; function dsn5($ok,$label){global $pass,$fail;if($ok){$pass++;ec
 function dsn5throws($fn,$label){try{$fn();dsn5(false,$label);}catch(Throwable $e){dsn5(true,$label);}}
 
 $validator=new LayoutValidator(); $upgrader=new LayoutSchemaUpgrader($validator); $canonical=new CanonicalJson();
-dsn5(LayoutSchema::supported_versions()===array(1,2,3),'layout compatibility boundary retains v1/v2 and adds v3');
+dsn5(LayoutSchema::supported_versions()===array(1,2,3,4),'layout compatibility boundary permanently retains v1/v2/v3 and adds v4');
 dsn5(LayoutSchema::element_types(LayoutSchema::VERSION_V1)===array('text','merge','image','logo','signature','shape','line','qr'),'v1 primitive inventory remains frozen');
 dsn5(LayoutSchema::element_types(LayoutSchema::VERSION_V2)===array('text','merge','image','logo','signature','shape','line','qr','barcode'),'v2 adds barcode without changing v1 semantics');
 
@@ -38,7 +38,7 @@ dsn5($v2===$upgrader->upgrade($v2,2),'v2 upgrade is idempotent');
 $v2again=$upgrader->upgrade($v1,2); dsn5($canonical->hash($v2)===$canonical->hash($v2again),'v1 to v2 upgrade is deterministic');
 $withoutMeta=$v2; $withoutMeta['_meta']['schema_version']=1; dsn5($canonical->hash($withoutMeta)===$v1hash,'additive v2 upgrade preserves existing v1 content semantics');
 dsn5throws(function()use($upgrader,$v2){$upgrader->upgrade($v2,1);},'schema downgrade is rejected');
-$blank=TemplateDefaults::blank_a4_landscape(); dsn5(3===$blank['_meta']['schema_version'],'new blank templates author against latest v3 schema while v2 remains readable');
+$blank=TemplateDefaults::blank_a4_landscape(); dsn5(4===$blank['_meta']['schema_version'],'new blank templates author against latest v4 schema while v1-v3 remain readable');
 $all=(new PresetCatalog())->all(); $presetV1=0; foreach($all as $preset){ if(1===(int)$preset['layout']['_meta']['schema_version']){$presetV1++;} }
 dsn5(24===count($all)&&24===$presetV1,'all 24 factory layouts remain stable v1 references');
 

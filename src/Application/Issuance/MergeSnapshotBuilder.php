@@ -112,6 +112,13 @@ final class MergeSnapshotBuilder {
 				$token = trim( (string) ( $element['token'] ?? '' ) );
 				if ( '' !== $token ) { $tokens[] = $token; }
 			}
+			if ( 'rich_text' === $type && isset( $element['runs'] ) && is_array( $element['runs'] ) ) {
+				foreach ( $element['runs'] as $run ) {
+					if ( ! is_array( $run ) || 'token' !== (string) ( $run['kind'] ?? '' ) ) { continue; }
+					$token = trim( (string) ( $run['token'] ?? '' ) );
+					if ( '' !== $token ) { $tokens[] = $token; }
+				}
+			}
 			foreach ( (array) ( $definition['merge_requirements'] ?? array() ) as $requirement ) {
 				if ( 'dynamic_token' === $requirement || 'verification_url' === $requirement ) { continue; }
 				$tokens[] = (string) $requirement;

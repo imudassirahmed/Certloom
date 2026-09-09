@@ -85,16 +85,15 @@ final class FontManifest {
 	/** @return void */
 	public function assert_document_supported( array $resolved_document, array $manifest ) {
 		$manifest = $this->normalize( $manifest );
-		foreach ( isset( $resolved_document['elements'] ) && is_array( $resolved_document['elements'] ) ? $resolved_document['elements'] : array() as $element ) {
-			if ( ! is_array( $element ) || 'text' !== (string) ( $element['type'] ?? '' ) ) { continue; }
-			$style = isset( $element['style'] ) && is_array( $element['style'] ) ? $element['style'] : array();
+		foreach ( $this->text_segments( $resolved_document ) as $segment ) {
+			$style = $segment['style'];
 			$family = strtolower( trim( (string) ( $style['font_family'] ?? '' ) ) );
 			$weight = (int) ( $style['font_weight'] ?? 400 );
 			$variant = $weight . '-' . ( ! empty( $style['italic'] ) ? 'italic' : 'normal' );
 			if ( '' === $family || empty( $manifest['families'][ $family ][ $variant ]['faces'] ) ) {
 				throw new InvalidArgumentException( 'Renderer font manifest does not provide the exact family/weight/style required by the resolved document.' );
 			}
-			$this->unicode->assert_text_covered( (string) ( $element['text'] ?? '' ), $manifest['families'][ $family ][ $variant ]['faces'] );
+			$this->unicode->assert_text_covered( (string) $segment['text'], $manifest['families'][ $family ][ $variant ]['faces'] );
 		}
 	}
 
@@ -111,9 +110,8 @@ final class FontManifest {
 		$manifest = $this->normalize( $manifest );
 		$this->assert_document_supported( $resolved_document, $manifest );
 		$required = array();
-		foreach ( isset( $resolved_document['elements'] ) && is_array( $resolved_document['elements'] ) ? $resolved_document['elements'] : array() as $element ) {
-			if ( ! is_array( $element ) || 'text' !== (string) ( $element['type'] ?? '' ) ) { continue; }
-			$style = isset( $element['style'] ) && is_array( $element['style'] ) ? $element['style'] : array();
+		foreach ( $this->text_segments( $resolved_document ) as $segment ) {
+			$style = $segment['style'];
 			$family = strtolower( trim( (string) ( $style['font_family'] ?? '' ) ) );
 			$weight = (int) ( $style['font_weight'] ?? 400 );
 			$variant = $weight . '-' . ( ! empty( $style['italic'] ) ? 'italic' : 'normal' );
@@ -129,8 +127,30 @@ final class FontManifest {
 	/** @return bool */
 	public function document_uses_text( array $resolved_document ) {
 		foreach ( isset( $resolved_document['elements'] ) && is_array( $resolved_document['elements'] ) ? $resolved_document['elements'] : array() as $element ) {
-			if ( is_array( $element ) && 'text' === (string) ( $element['type'] ?? '' ) ) { return true; }
+			if ( is_array( $element ) && in_array( (string) ( $element['type'] ?? '' ), array( 'text', 'rich_text' ), true ) ) { return true; }
 		}
 		return false;
 	}
+
+	/** @return array<int,array{text:string,style:array<string,mixed>}> */
+	private function text_segments( array $resolved_document ) {
+		$out = array();
+		foreach ( isset( $resolved_document['elements'] ) && is_array( $resolved_document['elements'] ) ? $resolved_document['elements'] : array() as $element ) {
+			if ( ! is_array( $element ) ) { continue; }
+			$type = (string) ( $element['type'] ?? '' );
+			$base_style = isset( $element['style'] ) && is_array( $element['style'] ) ? $element['style'] : array();
+			if ( 'text' === $type ) {
+				$out[] = array( 'text' => (string) ( $element['text'] ?? '' ), 'style' => $base_style );
+				continue;
+			}
+			if ( 'rich_text' !== $type || ! isset( $element['runs'] ) || ! is_array( $element['runs'] ) ) { continue; }
+			foreach ( $element['runs'] as $run ) {
+				if ( ! is_array( $run ) || 'text' !== (string) ( $run['kind'] ?? '' ) ) { continue; }
+				$run_style = isset( $run['style'] ) && is_array( $run['style'] ) ? $run['style'] : array();
+				$out[] = array( 'text' => (string) ( $run['text'] ?? '' ), 'style' => array_merge( $base_style, $run_style ) );
+			}
+		}
+		return $out;
+	}
+
 }

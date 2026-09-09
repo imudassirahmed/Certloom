@@ -59,7 +59,7 @@ async def main():
             await ck(False,'longIsoScopeAppliedLive')
 
         palette=page.locator('[data-certloom-designer-palette-item]')
-        await ck(await palette.count()==13,'allCurrentRegistryInsertItemsVisible')
+        await ck(await palette.count()==14 and not await page.locator('[data-certloom-designer-add="merge"]').is_disabled() and await page.locator('[data-certloom-designer-add="rich_text"]').is_disabled(),'schema3PaletteKeepsLegacyMergeAndShowsRichTextFailClosed')
         await ck(await page.locator('[data-certloom-designer-add="table"]').count()==0,'tableNotFabricated')
         draggable=await palette.evaluate_all("els=>els.filter(e=>!e.disabled).every(e=>e.getAttribute('draggable')==='true')")
         await ck(draggable,'allEnabledPrimitivesDraggable')

@@ -142,6 +142,9 @@
 		var contextHint = root.querySelector( '[data-certloom-designer-context-hint]' );
 		var contextGroups = root.querySelectorAll( '[data-certloom-designer-context-group]' );
 		var contextEditTextButton = root.querySelector( '[data-certloom-designer-context-edit-text]' );
+		var contextRichTextButton = root.querySelector( '[data-certloom-designer-context-rich-text]' );
+		var richRunsContainer = root.querySelector( '[data-certloom-designer-rich-runs]' );
+		var richAddButtons = root.querySelectorAll( '[data-certloom-designer-rich-add]' );
 		var contextTokenWrap = root.querySelector( '[data-certloom-designer-context-token-wrap]' );
 		var contextTokenSelect = root.querySelector( '[data-certloom-designer-context-token]' );
 		var distributionGroup = root.querySelector( '[data-certloom-designer-distribute-group]' );
@@ -471,6 +474,145 @@
 			var label = String( token || '' ).replace( /[^a-z0-9]+/gi, ' ' ).replace( /\s+/g, ' ' ).trim();
 			return t( 'sampleFallbackPrefix', 'Sample' ) + ( label ? ' · ' + label : '' );
 		}
+		function richRunText( run ) {
+			if ( ! run || 'object' !== typeof run ) { return ''; }
+			return 'token' === run.kind ? dynamicFieldSample( String( run.token || '' ) ) : String( run.text || '' );
+		}
+		function richTextPlain( element ) {
+			var out = ''; var runs = element && Array.isArray( element.runs ) ? element.runs : [];
+			for ( var i = 0; i < runs.length; i++ ) { out += richRunText( runs[ i ] ); }
+			return out;
+		}
+		function richRunStyleCanonical( raw ) {
+			if ( null == raw ) { return {}; }
+			if ( 'object' !== typeof raw || Array.isArray( raw ) ) { return false; }
+			var allowed = [ 'font_family', 'font_size_pt', 'font_weight', 'italic', 'color', 'letter_spacing_pt' ]; var keys = Object.keys( raw ); var out = {};
+			for ( var i = 0; i < keys.length; i++ ) { if ( allowed.indexOf( keys[ i ] ) === -1 ) { return false; } }
+			if ( Object.prototype.hasOwnProperty.call( raw, 'font_family' ) ) { var family = String( raw.font_family || '' ).toLowerCase(); if ( ! fontKeyAllowed( family ) ) { return false; } out.font_family = family; }
+			if ( Object.prototype.hasOwnProperty.call( raw, 'font_size_pt' ) ) { var size = Number( raw.font_size_pt ); if ( ! isFinite( size ) || size < 1 || size > 300 ) { return false; } out.font_size_pt = round( size, 3 ); }
+			if ( Object.prototype.hasOwnProperty.call( raw, 'font_weight' ) ) { var weight = Number( raw.font_weight ); if ( ! Number.isInteger( weight ) || weight < 100 || weight > 900 || 0 !== weight % 100 ) { return false; } out.font_weight = weight; }
+			if ( Object.prototype.hasOwnProperty.call( raw, 'italic' ) ) { if ( 'boolean' !== typeof raw.italic ) { return false; } out.italic = raw.italic; }
+			if ( Object.prototype.hasOwnProperty.call( raw, 'color' ) ) { var color = canonicalColor( raw.color ); if ( ! color ) { return false; } out.color = color; }
+			if ( Object.prototype.hasOwnProperty.call( raw, 'letter_spacing_pt' ) ) { var spacing = Number( raw.letter_spacing_pt ); if ( ! isFinite( spacing ) || spacing < -20 || spacing > 50 ) { return false; } out.letter_spacing_pt = round( spacing, 3 ); }
+			return out;
+		}
+		function richRunsCanonical( runs ) {
+			if ( ! Array.isArray( runs ) || runs.length < 1 || runs.length > 256 ) { return false; }
+			var out = [], total = 0;
+			for ( var i = 0; i < runs.length; i++ ) {
+				var source = runs[ i ]; if ( ! source || 'object' !== typeof source || Array.isArray( source ) ) { return false; }
+				var keys = Object.keys( source ); for ( var k = 0; k < keys.length; k++ ) { if ( [ 'kind', 'text', 'token', 'style' ].indexOf( keys[ k ] ) === -1 ) { return false; } }
+				var kind = String( source.kind || '' ); var run = { kind: kind };
+				if ( 'text' === kind ) { if ( ! Object.prototype.hasOwnProperty.call( source, 'text' ) || Object.prototype.hasOwnProperty.call( source, 'token' ) ) { return false; } run.text = String( source.text || '' ); if ( '' === run.text || run.text.indexOf( '\0' ) !== -1 ) { return false; } total += directTextByteLength( run.text ); }
+				else if ( 'token' === kind ) { if ( ! Object.prototype.hasOwnProperty.call( source, 'token' ) || Object.prototype.hasOwnProperty.call( source, 'text' ) ) { return false; } run.token = String( source.token || '' ).trim(); if ( ! /^[a-z][a-z0-9_.:-]{0,127}$/.test( run.token ) ) { return false; } total += directTextByteLength( run.token ); }
+				else { return false; }
+				if ( total > 20000 ) { return false; }
+				if ( Object.prototype.hasOwnProperty.call( source, 'style' ) ) { var style = richRunStyleCanonical( source.style ); if ( false === style ) { return false; } if ( Object.keys( style ).length ) { run.style = style; } }
+				out.push( run );
+			}
+			return out;
+		}
+		function materializeRichRunDefaults( runs ) {
+			if ( ! Array.isArray( runs ) ) { return []; }
+			var out = [];
+			for ( var i = 0; i < runs.length; i++ ) {
+				var source = clone( runs[ i ] || {} ); var run = { kind: String( source.kind || '' ) };
+				if ( 'text' === run.kind ) { run.text = source.text_i18n ? t( String( source.text_i18n ), 'Text' ) : String( source.text || '' ); }
+				else if ( 'token' === run.kind ) { run.token = String( source.token || 'recipient.name' ); }
+				if ( source.style && 'object' === typeof source.style ) { run.style = clone( source.style ); }
+				out.push( run );
+			}
+			var canonical = richRunsCanonical( out ); return false === canonical ? [] : canonical;
+		}
+		function updateRichRuns( nextRuns ) {
+			var element = selected(); if ( ! element || 'rich_text' !== element.type || isLocked( element ) ) { setInspector(); return false; }
+			var canonical = richRunsCanonical( nextRuns ); if ( false === canonical ) { showError( t( 'invalidRichText', 'That inline content is outside the supported rich-text contract. The previous value was kept.' ) ); setInspector(); return false; }
+			var proposed = clone( element ); proposed.runs = canonical; if ( stable( proposed.runs ) === stable( element.runs || [] ) ) { setInspector(); return true; }
+			var before = snapshot(); if ( updateElement( element.id, proposed, false ) ) { pushHistory( before ); render(); announce( t( 'richTextUpdated', 'Inline rich text updated.' ) ); return true; } return false;
+		}
+		function richStyleSelect( key, value, label ) {
+			var select = document.createElement( 'select' ); select.setAttribute( 'data-certloom-designer-rich-style', key ); select.setAttribute( 'aria-label', label ); var inherit = document.createElement( 'option' ); inherit.value = ''; inherit.textContent = t( 'inherit', 'Inherit' ); select.appendChild( inherit );
+			if ( 'font_family' === key ) { Object.keys( FONT_CATALOG || {} ).sort().forEach( function ( family ) { var option = document.createElement( 'option' ); option.value = family; option.textContent = ( FONT_CATALOG[ family ] && FONT_CATALOG[ family ].label ) ? FONT_CATALOG[ family ].label : family; select.appendChild( option ); } ); }
+			else if ( 'font_weight' === key ) { for ( var weight = 100; weight <= 900; weight += 100 ) { var weightOption = document.createElement( 'option' ); weightOption.value = String( weight ); weightOption.textContent = String( weight ); select.appendChild( weightOption ); } }
+			else if ( 'italic' === key ) { var italic = document.createElement( 'option' ); italic.value = 'true'; italic.textContent = t( 'italic', 'Italic' ); select.appendChild( italic ); var normal = document.createElement( 'option' ); normal.value = 'false'; normal.textContent = t( 'normal', 'Normal' ); select.appendChild( normal ); }
+			select.value = null == value ? '' : String( value ); return select;
+		}
+		function renderRichRunEditor( element ) {
+			if ( ! richRunsContainer ) { return; } richRunsContainer.innerHTML = '';
+			if ( ! element || 'rich_text' !== element.type ) { return; }
+			var locked = isLocked( element ); var runs = Array.isArray( element.runs ) ? element.runs : [];
+			for ( var i = 0; i < runs.length; i++ ) {
+				( function ( index, run ) {
+					var row = document.createElement( 'div' ); row.className = 'certloom-template-designer-rich-run'; row.setAttribute( 'data-certloom-designer-rich-run', String( index ) );
+					var head = document.createElement( 'div' ); head.className = 'certloom-template-designer-rich-run-head'; var badge = document.createElement( 'strong' ); badge.textContent = 'token' === run.kind ? t( 'inlineField', 'Field' ) : t( 'inlineText', 'Text' ); head.appendChild( badge );
+					[ [ 'up', '↑', t( 'moveRunUp', 'Move run up' ) ], [ 'down', '↓', t( 'moveRunDown', 'Move run down' ) ], [ 'delete', '×', t( 'deleteRun', 'Delete run' ) ] ].forEach( function ( action ) { var button = document.createElement( 'button' ); button.type = 'button'; button.className = 'button button-small'; button.setAttribute( 'data-certloom-designer-rich-action', action[ 0 ] ); button.setAttribute( 'data-certloom-designer-rich-index', String( index ) ); button.setAttribute( 'aria-label', action[ 2 ] ); button.title = action[ 2 ]; button.textContent = action[ 1 ]; button.disabled = locked || ( 'up' === action[ 0 ] && 0 === index ) || ( 'down' === action[ 0 ] && index === runs.length - 1 ) || ( 'delete' === action[ 0 ] && runs.length <= 1 ); head.appendChild( button ); } ); row.appendChild( head );
+					var valueLabel = document.createElement( 'label' ); var valueCaption = document.createElement( 'span' ); valueCaption.textContent = 'token' === run.kind ? t( 'inlineField', 'Field' ) : t( 'inlineText', 'Text' ); valueLabel.appendChild( valueCaption ); var valueInput;
+					if ( 'token' === run.kind ) { valueInput = document.createElement( 'input' ); valueInput.type = 'text'; valueInput.maxLength = 128; valueInput.setAttribute( 'list', 'certloom-designer-merge-tokens' ); valueInput.value = String( run.token || '' ); }
+					else { valueInput = document.createElement( 'textarea' ); valueInput.rows = 2; valueInput.maxLength = 20000; valueInput.value = String( run.text || '' ); }
+					valueInput.setAttribute( 'data-certloom-designer-rich-value', run.kind ); valueInput.setAttribute( 'data-certloom-designer-rich-index', String( index ) ); valueInput.disabled = locked; valueLabel.appendChild( valueInput );
+					if ( 'text' === run.kind ) { var insertField = document.createElement( 'button' ); insertField.type = 'button'; insertField.className = 'button button-small certloom-template-designer-rich-insert-field'; insertField.setAttribute( 'data-certloom-designer-rich-insert-field', String( index ) ); insertField.textContent = t( 'insertFieldAtCaret', 'Insert field at caret' ); insertField.disabled = locked || runs.length >= 256; valueLabel.appendChild( insertField ); }
+					row.appendChild( valueLabel );
+					var details = document.createElement( 'details' ); details.className = 'certloom-template-designer-rich-run-style'; var summary = document.createElement( 'summary' ); summary.textContent = t( 'appearance', 'Inline style' ); details.appendChild( summary ); var grid = document.createElement( 'div' ); grid.className = 'certloom-template-designer-rich-run-style-grid'; var style = run.style || {};
+					var fontLabel = document.createElement( 'label' ); fontLabel.appendChild( document.createTextNode( t( 'font', 'Font' ) ) ); fontLabel.appendChild( richStyleSelect( 'font_family', style.font_family, t( 'font', 'Font' ) ) ); grid.appendChild( fontLabel );
+					var sizeLabel = document.createElement( 'label' ); sizeLabel.appendChild( document.createTextNode( t( 'size', 'Size (pt)' ) ) ); var size = document.createElement( 'input' ); size.type = 'number'; size.min = '1'; size.max = '300'; size.step = '0.5'; size.placeholder = t( 'inherit', 'Inherit' ); size.setAttribute( 'data-certloom-designer-rich-style', 'font_size_pt' ); size.value = null == style.font_size_pt ? '' : String( style.font_size_pt ); sizeLabel.appendChild( size ); grid.appendChild( sizeLabel );
+					var weightLabel = document.createElement( 'label' ); weightLabel.appendChild( document.createTextNode( t( 'weight', 'Weight' ) ) ); weightLabel.appendChild( richStyleSelect( 'font_weight', style.font_weight, t( 'weight', 'Weight' ) ) ); grid.appendChild( weightLabel );
+					var italicLabel = document.createElement( 'label' ); italicLabel.appendChild( document.createTextNode( t( 'italic', 'Italic' ) ) ); italicLabel.appendChild( richStyleSelect( 'italic', Object.prototype.hasOwnProperty.call( style, 'italic' ) ? style.italic : null, t( 'italic', 'Italic' ) ) ); grid.appendChild( italicLabel );
+					var colorLabel = document.createElement( 'label' ); colorLabel.appendChild( document.createTextNode( t( 'textColor', 'Color' ) ) ); var color = document.createElement( 'input' ); color.type = 'text'; color.maxLength = 9; color.placeholder = t( 'inherit', 'Inherit' ); color.setAttribute( 'data-certloom-designer-rich-style', 'color' ); color.value = style.color || ''; colorLabel.appendChild( color ); grid.appendChild( colorLabel );
+					var spacingLabel = document.createElement( 'label' ); spacingLabel.appendChild( document.createTextNode( t( 'letterSpacing', 'Letter spacing (pt)' ) ) ); var spacing = document.createElement( 'input' ); spacing.type = 'number'; spacing.min = '-20'; spacing.max = '50'; spacing.step = '0.1'; spacing.placeholder = t( 'inherit', 'Inherit' ); spacing.setAttribute( 'data-certloom-designer-rich-style', 'letter_spacing_pt' ); spacing.value = null == style.letter_spacing_pt ? '' : String( style.letter_spacing_pt ); spacingLabel.appendChild( spacing ); grid.appendChild( spacingLabel );
+					for ( var fieldIndex = 0; fieldIndex < grid.querySelectorAll( 'input,select' ).length; fieldIndex++ ) { var styleInput = grid.querySelectorAll( 'input,select' )[ fieldIndex ]; styleInput.setAttribute( 'data-certloom-designer-rich-index', String( index ) ); styleInput.disabled = locked; }
+					details.appendChild( grid ); row.appendChild( details ); richRunsContainer.appendChild( row );
+				} )( i, runs[ i ] );
+			}
+			for ( var b = 0; b < richAddButtons.length; b++ ) { richAddButtons[ b ].disabled = locked || runs.length >= 256; }
+		}
+		function focusRichTextEditor() {
+			var element = selected(); if ( ! element || 'rich_text' !== element.type || ! richRunsContainer ) { return; }
+			var section = richRunsContainer.closest( '[data-certloom-designer-content="rich_text"]' ); if ( section && section.scrollIntoView ) { try { section.scrollIntoView( { block: 'nearest', behavior: 'smooth' } ); } catch ( error ) { section.scrollIntoView(); } }
+			var first = richRunsContainer.querySelector( '[data-certloom-designer-rich-value]' ); if ( first ) { window.setTimeout( function () { first.focus(); }, 0 ); }
+		}
+
+		function addRichRun( kind ) {
+			var element = selected(); if ( ! element || 'rich_text' !== element.type || isLocked( element ) ) { return; }
+			var runs = Array.isArray( element.runs ) ? clone( element.runs ) : []; if ( runs.length >= 256 ) { showError( t( 'richTextRunLimit', 'Inline rich text supports at most 256 runs.' ) ); return; }
+			runs.push( 'token' === kind ? { kind: 'token', token: 'recipient.name' } : { kind: 'text', text: t( 'text', 'Text' ) } );
+			if ( updateRichRuns( runs ) ) { window.setTimeout( function () { var fields = richRunsContainer ? richRunsContainer.querySelectorAll( '[data-certloom-designer-rich-value]' ) : []; if ( fields.length ) { fields[ fields.length - 1 ].focus(); } }, 0 ); }
+		}
+		function changeRichRunValue( input ) {
+			var element = selected(); if ( ! element || 'rich_text' !== element.type || isLocked( element ) ) { return; }
+			var index = Number( input.getAttribute( 'data-certloom-designer-rich-index' ) ); if ( ! Number.isInteger( index ) || ! element.runs || ! element.runs[ index ] ) { return; }
+			var runs = clone( element.runs ); if ( 'token' === input.getAttribute( 'data-certloom-designer-rich-value' ) ) { runs[ index ].token = String( input.value || '' ).trim(); } else { runs[ index ].text = String( input.value || '' ); }
+			updateRichRuns( runs );
+		}
+		function changeRichRunStyle( input ) {
+			var element = selected(); if ( ! element || 'rich_text' !== element.type || isLocked( element ) ) { return; }
+			var index = Number( input.getAttribute( 'data-certloom-designer-rich-index' ) ); var key = String( input.getAttribute( 'data-certloom-designer-rich-style' ) || '' ); if ( ! Number.isInteger( index ) || ! element.runs || ! element.runs[ index ] || ! key ) { return; }
+			var runs = clone( element.runs ); var style = runs[ index ].style && 'object' === typeof runs[ index ].style ? clone( runs[ index ].style ) : {}; var raw = String( input.value || '' ).trim();
+			if ( '' === raw ) { delete style[ key ]; }
+			else if ( 'italic' === key ) { if ( 'true' !== raw && 'false' !== raw ) { renderRichRunEditor( element ); return; } style[ key ] = 'true' === raw; }
+			else if ( [ 'font_size_pt', 'font_weight', 'letter_spacing_pt' ].indexOf( key ) !== -1 ) { style[ key ] = Number( raw ); }
+			else { style[ key ] = raw; }
+			if ( Object.keys( style ).length ) { runs[ index ].style = style; } else { delete runs[ index ].style; }
+			updateRichRuns( runs );
+		}
+		function richRunAction( action, index ) {
+			var element = selected(); if ( ! element || 'rich_text' !== element.type || isLocked( element ) || ! Array.isArray( element.runs ) ) { return; }
+			var runs = clone( element.runs ); if ( ! Number.isInteger( index ) || index < 0 || index >= runs.length ) { return; }
+			if ( 'delete' === action ) { if ( runs.length <= 1 ) { return; } runs.splice( index, 1 ); }
+			else if ( 'up' === action ) { if ( index <= 0 ) { return; } var up = runs.splice( index, 1 )[ 0 ]; runs.splice( index - 1, 0, up ); }
+			else if ( 'down' === action ) { if ( index >= runs.length - 1 ) { return; } var down = runs.splice( index, 1 )[ 0 ]; runs.splice( index + 1, 0, down ); }
+			else { return; }
+			updateRichRuns( runs );
+		}
+		function insertRichTokenAtCaret( index, textarea ) {
+			var element = selected(); if ( ! element || 'rich_text' !== element.type || isLocked( element ) || ! Array.isArray( element.runs ) || ! element.runs[ index ] || 'text' !== element.runs[ index ].kind ) { return; }
+			var source = clone( element.runs[ index ] ); var text = String( source.text || '' ); var caret = textarea && Number.isInteger( textarea.selectionStart ) ? textarea.selectionStart : text.length; caret = Math.max( 0, Math.min( text.length, caret ) );
+			var replacement = []; var left = text.slice( 0, caret ), right = text.slice( caret ); var inherited = source.style && 'object' === typeof source.style ? clone( source.style ) : null;
+			if ( left ) { var leftRun = { kind: 'text', text: left }; if ( inherited ) { leftRun.style = clone( inherited ); } replacement.push( leftRun ); }
+			var tokenRun = { kind: 'token', token: 'recipient.name' }; if ( inherited ) { tokenRun.style = clone( inherited ); } var tokenOffset = replacement.length; replacement.push( tokenRun );
+			if ( right ) { var rightRun = { kind: 'text', text: right }; if ( inherited ) { rightRun.style = clone( inherited ); } replacement.push( rightRun ); }
+			var runs = clone( element.runs ); runs.splice.apply( runs, [ index, 1 ].concat( replacement ) ); if ( runs.length > 256 ) { showError( t( 'richTextRunLimit', 'Inline rich text supports at most 256 runs.' ) ); return; }
+			if ( updateRichRuns( runs ) ) { var tokenIndex = index + tokenOffset; window.setTimeout( function () { if ( ! richRunsContainer ) { return; } var field = richRunsContainer.querySelector( '[data-certloom-designer-rich-value="token"][data-certloom-designer-rich-index="' + tokenIndex + '"]' ); if ( field ) { field.focus(); if ( field.select ) { field.select(); } } }, 0 ); }
+		}
 		function syncQuickToken() {
 			if ( ! quickTokenSelect || ! rawTokenInput ) { return; }
 			var element = selected(); var token = element && 'merge' === element.type ? String( element.token || '' ) : ''; var known = knownQuickTokens(); var custom = token && known.indexOf( token ) === -1;
@@ -485,6 +627,7 @@
 			var selection = selectedElements(); var element = selected(); var locked = isLocked( element );
 			for ( var i = 0; i < contextGroups.length; i++ ) { contextGroups[ i ].hidden = true; }
 			if ( contextEditTextButton ) { contextEditTextButton.hidden = ! element || 'text' !== element.type; contextEditTextButton.disabled = ! element || locked || 'text' !== element.type; }
+			if ( contextRichTextButton ) { contextRichTextButton.hidden = ! element || 'rich_text' !== element.type; contextRichTextButton.disabled = ! element || locked || 'rich_text' !== element.type; }
 			if ( contextTokenWrap ) { contextTokenWrap.hidden = ! element || 'merge' !== element.type; }
 			if ( contextTokenSelect ) { contextTokenSelect.disabled = ! element || locked || 'merge' !== element.type; if ( element && 'merge' === element.type ) { var token = String( element.token || 'recipient.name' ); var option = contextTokenSelect.querySelector( 'option[value="' + token.replace( /"/g, '\\"' ) + '"]' ); contextTokenSelect.value = option ? token : 'recipient.name'; } }
 			if ( 1 !== selection.length || ! element ) { return; }
@@ -563,6 +706,7 @@
 				colorPicker.disabled = locked || ! elementDefinition || 'text' !== elementDefinition.style_group;
 			}
 			for ( var mediaIndex = 0; mediaIndex < mediaButtons.length; mediaIndex++ ) { mediaButtons[ mediaIndex ].disabled = locked || ! elementDefinition || ! elementDefinition.media; }
+			renderRichRunEditor( element );
 			syncQuickToken();
 			syncProductivityControls();
 		}
@@ -571,6 +715,7 @@
 			var preview = previewKind( element );
 			if ( 'text' === preview ) { return escapeText( element.text ); }
 			if ( 'merge' === preview ) { return dynamicFieldSample( String( element.token || '' ) ); }
+			if ( 'rich_text' === preview ) { return richTextPlain( element ); }
 			if ( 'qr' === preview ) { return t( 'qr', 'QR' ); }
 			if ( 'barcode' === preview ) { return t( 'barcode', 'Barcode' ) + ' · ' + dynamicFieldSample( String( element.source || 'credential.display_number' ) ); }
 			if ( 'list' === preview ) { return t( 'list', 'List' ) + ' · ' + ( Array.isArray( element.items ) ? element.items.length : 0 ) + ' ' + t( 'items', 'items' ); }
@@ -606,17 +751,19 @@
 			var palette = paletteDefinition( kind );
 			if ( ! palette ) { showError( t( 'elementRegistryUnavailable', 'The Designer could not load its editing controls. Reload the page before editing this design.' ) ); return null; }
 			if ( schemaVersion < Number( palette.min_schema_version || 1 ) ) { showError( t( 'elementRequiresSchemaUpgrade', 'This element needs a newer design format. Save or upgrade the design before adding it.' ) ); return null; }
+			if ( Number( palette.max_schema_version || 0 ) && schemaVersion > Number( palette.max_schema_version ) ) { showError( t( 'legacyElementAuthoring', 'This legacy element remains readable, but new designs use inline rich text instead.' ) ); return null; }
 			var id = secureUuidV4(); if ( ! id ) { showError( t( 'uuidUnavailable', 'This browser cannot safely add a new design element. Update the browser and try again.' ) ); return null; }
 			var p = page(), defaults = palette.defaults || {}, geometry;
 			if ( defaults.full_page ) { geometry = { x_mm: 0, y_mm: 0, width_mm: Number( p.width_mm ), height_mm: Number( p.height_mm ) }; }
 			else { geometry = geometryAtPoint( Number( palette.width_mm || 80 ), Number( palette.height_mm || 15 ), point ); }
 			var element = { id: id, type: palette.type, x_mm: geometry.x_mm, y_mm: geometry.y_mm, width_mm: geometry.width_mm, height_mm: geometry.height_mm, z: elements().length, rotation_deg: 0, opacity: 1 };
 			for ( var key in defaults ) {
-				if ( ! Object.prototype.hasOwnProperty.call( defaults, key ) || 'full_page' === key || 'text_i18n' === key || 'items_i18n' === key || 'style_preset' === key ) { continue; }
+				if ( ! Object.prototype.hasOwnProperty.call( defaults, key ) || 'full_page' === key || 'text_i18n' === key || 'items_i18n' === key || 'style_preset' === key || 'rich_preset' === key ) { continue; }
 				element[ key ] = clone( defaults[ key ] );
 			}
 			if ( defaults.text_i18n ) { element.text = t( defaults.text_i18n, 'Text' ); }
 			if ( Array.isArray( defaults.items_i18n ) ) { element.items = defaults.items_i18n.map( function ( key ) { return t( key, key ); } ); }
+			if ( 'certificate_line' === defaults.rich_preset ) { element.runs = materializeRichRunDefaults( [ { kind: 'text', text_i18n: 'richTextPrefix' }, { kind: 'token', token: 'recipient.name' } ] ); }
 			if ( defaults.style_preset ) { element.style = defaultTextStyle(); if ( 'list' === defaults.style_preset ) { element.style.align = 'start'; element.style.vertical_align = 'top'; element.style.overflow = 'wrap'; } }
 			if ( palette.requires_media ) { element.asset = assetReference || ''; }
 			return element;
@@ -800,6 +947,12 @@
 				node.classList.add( 'is-barcode' ); content.textContent = t( 'barcode', 'Barcode' ) + ' · ' + escapeText( element.source || 'credential.display_number' );
 			} else if ( 'asset' === preview ) {
 				node.classList.add( 'is-asset' ); content.textContent = elementTitle( element );
+			} else if ( 'rich_text' === preview ) {
+				node.classList.add( 'is-text', 'is-rich-text' ); var richBaseStyle = element.style || {}; var richVertical = richBaseStyle.vertical_align || 'middle';
+				content.style.justifyContent = 'top' === richVertical ? 'flex-start' : ( 'bottom' === richVertical ? 'flex-end' : 'center' ); content.style.textAlign = richBaseStyle.align || 'center';
+				if ( richBaseStyle.direction && 'auto' !== richBaseStyle.direction ) { content.style.direction = richBaseStyle.direction; content.removeAttribute( 'dir' ); } else { content.style.removeProperty( 'direction' ); content.setAttribute( 'dir', 'auto' ); }
+				content.style.color = richBaseStyle.color || '#000'; content.style.fontFamily = fontCss( richBaseStyle.font_family || 'sans-serif' ); content.style.fontWeight = String( richBaseStyle.font_weight || 400 ); content.style.fontStyle = richBaseStyle.italic ? 'italic' : 'normal'; content.style.lineHeight = String( richBaseStyle.line_height || 1.2 ); content.style.fontSize = px( Number( richBaseStyle.font_size_pt || 18 ) * 25.4 / 72, zoom ) + 'px'; content.style.letterSpacing = px( Number( richBaseStyle.letter_spacing_pt || 0 ) * 25.4 / 72, zoom ) + 'px'; content.style.whiteSpace = 'clip' === richBaseStyle.overflow ? 'pre' : 'pre-wrap'; content.style.overflow = 'hidden';
+				var richRuns = Array.isArray( element.runs ) ? element.runs : []; for ( var richIndex = 0; richIndex < richRuns.length; richIndex++ ) { var richRun = richRuns[ richIndex ]; var runSpan = document.createElement( 'span' ); runSpan.className = 'certloom-template-designer-rich-preview-run'; if ( 'token' === richRun.kind ) { runSpan.classList.add( 'is-token' ); runSpan.setAttribute( 'data-certloom-designer-rich-token', String( richRun.token || '' ) ); } runSpan.textContent = richRunText( richRun ); var inline = richRun.style || {}; if ( inline.font_family ) { runSpan.style.fontFamily = fontCss( inline.font_family ); } if ( null != inline.font_size_pt ) { runSpan.style.fontSize = px( Number( inline.font_size_pt ) * 25.4 / 72, zoom ) + 'px'; } if ( null != inline.font_weight ) { runSpan.style.fontWeight = String( inline.font_weight ); } if ( Object.prototype.hasOwnProperty.call( inline, 'italic' ) ) { runSpan.style.fontStyle = inline.italic ? 'italic' : 'normal'; } if ( inline.color ) { runSpan.style.color = inline.color; } if ( null != inline.letter_spacing_pt ) { runSpan.style.letterSpacing = px( Number( inline.letter_spacing_pt ) * 25.4 / 72, zoom ) + 'px'; } content.appendChild( runSpan ); }
 			} else if ( 'list' === preview ) {
 				node.classList.add( 'is-text', 'is-list' ); var listLines = []; var rawItems = Array.isArray( element.items ) ? element.items : [];
 				for ( var listIndex = 0; listIndex < rawItems.length; listIndex++ ) { listLines.push( ( 'decimal' === element.list_style ? String( listIndex + 1 ) + '. ' : '• ' ) + rawItems[ listIndex ] ); }
@@ -1278,6 +1431,7 @@
 			if ( 'Escape' === key && panToolActive ) { panToolActive = false; syncCanvasTools(); announce( t( 'panToolDisabled', 'Pan tool off.' ) ); event.preventDefault(); return; }
 			if ( 'Escape' === key && selectionIds().length ) { selectOnly( '' ); render(); announce( t( 'selectionCleared', 'Selection cleared.' ) ); event.preventDefault(); return; }
 			if ( 'Enter' === key && ! modifier && selected() && 'text' === selected().type ) { if ( startDirectTextEdit( selected().id ) ) { event.preventDefault(); } return; }
+			if ( 'Enter' === key && ! modifier && selected() && 'rich_text' === selected().type ) { focusRichTextEditor(); event.preventDefault(); return; }
 			if ( ( 'Delete' === key || 'Backspace' === key ) && selectionIds().length && ! selectionHasLocked() ) { event.preventDefault(); removeSelected(); return; }
 			if ( canvasFocused && ! modifier && ! event.altKey && ( '+' === key || '=' === key ) ) { event.preventDefault(); setZoomLevel( zoom + .1, true, true ); return; }
 			if ( canvasFocused && ! modifier && ! event.altKey && '-' === key ) { event.preventDefault(); setZoomLevel( zoom - .1, true, true ); return; }
@@ -1314,7 +1468,7 @@
 			if ( node ) { var id = node.getAttribute( 'data-certloom-designer-element' ); if ( isSelectedId( id ) && selectionIds().length > 1 ) { selectedId = id; } else { selectOnly( id ); } render(); return; }
 			selectOnly( '' ); render();
 		} );
-		pageEl.addEventListener( 'dblclick', function ( event ) { var node = event.target.closest( '[data-certloom-designer-element]' ); if ( node && startDirectTextEdit( node.getAttribute( 'data-certloom-designer-element' ) ) ) { event.preventDefault(); } } );
+		pageEl.addEventListener( 'dblclick', function ( event ) { var node = event.target.closest( '[data-certloom-designer-element]' ); if ( ! node ) { return; } var id = node.getAttribute( 'data-certloom-designer-element' ); var element = null; var list = elements(); for ( var itemIndex = 0; itemIndex < list.length; itemIndex++ ) { if ( list[ itemIndex ].id === id ) { element = list[ itemIndex ]; break; } } if ( element && 'rich_text' === element.type && ! isLocked( element ) ) { selectOnly( id ); render(); focusRichTextEditor(); event.preventDefault(); return; } if ( startDirectTextEdit( id ) ) { event.preventDefault(); } } );
 		pageEl.addEventListener( 'contextmenu', function ( event ) { var node = event.target.closest( '[data-certloom-designer-element]' ); if ( ! node || ! pageEl.contains( node ) ) { closeContextMenu(); return; } event.preventDefault(); var id = node.getAttribute( 'data-certloom-designer-element' ); if ( ! isSelectedId( id ) ) { selectOnly( id ); } else { selectedId = id; } render(); openContextMenuAt( event.clientX, event.clientY ); } );
 		document.addEventListener( 'pointerdown', function ( event ) { if ( contextMenu && ! contextMenu.hidden && ! contextMenu.contains( event.target ) ) { closeContextMenu(); } } );
 		workspace.addEventListener( 'scroll', closeContextMenu ); window.addEventListener( 'scroll', closeContextMenu, true ); window.addEventListener( 'resize', closeContextMenu );
@@ -1379,7 +1533,17 @@
 		for ( var styleIndex = 0; styleIndex < styleFields.length; styleIndex++ ) { styleFields[ styleIndex ].addEventListener( 'change', function () { applyStyleField( this ); } ); }
 		for ( var quickStyleIndex = 0; quickStyleIndex < quickStyleFields.length; quickStyleIndex++ ) { quickStyleFields[ quickStyleIndex ].addEventListener( 'change', function () { applyQuickStyleValue( this.getAttribute( 'data-certloom-designer-quick-style' ), this.value ); } ); }
 		if ( contextEditTextButton ) { contextEditTextButton.addEventListener( 'click', function () { var element = selected(); if ( element && 'text' === element.type && ! isLocked( element ) ) { startDirectTextEdit( element.id ); } } ); }
+		if ( contextRichTextButton ) { contextRichTextButton.addEventListener( 'click', function () { var element = selected(); if ( element && 'rich_text' === element.type && ! isLocked( element ) ) { focusRichTextEditor(); } } ); }
 		if ( contextTokenSelect ) { contextTokenSelect.addEventListener( 'change', function () { var element = selected(); if ( ! element || 'merge' !== element.type || isLocked( element ) ) { setInspector(); return; } var token = String( contextTokenSelect.value || '' ); if ( knownQuickTokens().indexOf( token ) === -1 && !/^[a-z][a-z0-9_.:-]{0,127}$/.test( token ) ) { setInspector(); return; } var before = snapshot(); var proposed = clone( element ); proposed.token = token; if ( updateElement( element.id, proposed, false ) ) { pushHistory( before ); render(); announce( t( 'dynamicFieldUpdated', 'Dynamic field updated.' ) ); } } ); }
+		for ( var richAddIndex = 0; richAddIndex < richAddButtons.length; richAddIndex++ ) { richAddButtons[ richAddIndex ].addEventListener( 'click', function () { addRichRun( this.getAttribute( 'data-certloom-designer-rich-add' ) ); } ); }
+		if ( richRunsContainer ) {
+			richRunsContainer.addEventListener( 'pointerdown', function ( event ) { if ( event.target.closest( '[data-certloom-designer-rich-insert-field]' ) ) { event.preventDefault(); } } );
+			richRunsContainer.addEventListener( 'click', function ( event ) {
+				var action = event.target.closest( '[data-certloom-designer-rich-action]' ); if ( action ) { richRunAction( String( action.getAttribute( 'data-certloom-designer-rich-action' ) || '' ), Number( action.getAttribute( 'data-certloom-designer-rich-index' ) ) ); return; }
+				var insert = event.target.closest( '[data-certloom-designer-rich-insert-field]' ); if ( insert ) { var index = Number( insert.getAttribute( 'data-certloom-designer-rich-insert-field' ) ); var row = insert.closest( '[data-certloom-designer-rich-run]' ); var textarea = row ? row.querySelector( 'textarea[data-certloom-designer-rich-value="text"]' ) : null; insertRichTokenAtCaret( index, textarea ); }
+			} );
+			richRunsContainer.addEventListener( 'change', function ( event ) { var value = event.target.closest( '[data-certloom-designer-rich-value]' ); if ( value ) { changeRichRunValue( value ); return; } var style = event.target.closest( '[data-certloom-designer-rich-style]' ); if ( style ) { changeRichRunStyle( style ); } } );
+		}
 		for ( var quickToggleIndex = 0; quickToggleIndex < quickToggleButtons.length; quickToggleIndex++ ) { quickToggleButtons[ quickToggleIndex ].addEventListener( 'click', function () { var key = this.getAttribute( 'data-certloom-designer-quick-toggle' ); if ( 'bold' === key ) { applyQuickStyleValue( 'font_weight', 'true' === this.getAttribute( 'aria-pressed' ) ? 400 : 700 ); } if ( 'italic' === key ) { applyQuickStyleValue( 'italic', 'true' !== this.getAttribute( 'aria-pressed' ) ); } } ); }
 		for ( var quickAlignIndex = 0; quickAlignIndex < quickTextAlignButtons.length; quickAlignIndex++ ) { quickTextAlignButtons[ quickAlignIndex ].addEventListener( 'click', function () { applyQuickStyleValue( 'align', this.getAttribute( 'data-certloom-designer-quick-text-align' ) ); } ); }
 		if ( colorPicker && colorTextField ) { colorPicker.addEventListener( 'change', function () { if ( colorPicker.disabled ) { return; } colorTextField.value = String( colorPicker.value || '#000000' ).toUpperCase(); applyStyleField( colorTextField ); } ); }

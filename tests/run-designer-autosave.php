@@ -23,6 +23,7 @@ final class Dsn7Wpdb {
 $pass=0;$fail=0; function dsn7($ok,$label){global$pass,$fail;if($ok){$pass++;echo"PASS  $label\n";}else{$fail++;echo"FAIL  $label\n";}} function dsn7has($s,$n,$l){dsn7(false!==strpos($s,$n),$l);} 
 
 $layout=TemplateDefaults::blank_a4_landscape();
+$layout['_meta']['schema_version']=LayoutSchema::VERSION_V3; // Explicit historical-revision recovery fixture; latest authoring schema may advance.
 $layout['elements'][]=array('id'=>'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','type'=>'text','x_mm'=>20,'y_mm'=>20,'width_mm'=>100,'height_mm'=>20,'z'=>1,'rotation_deg'=>0,'opacity'=>1,'text'=>'Base','style'=>array('font_family'=>'sans-serif','font_size_pt'=>18,'font_weight'=>400,'italic'=>false,'color'=>'#000000','align'=>'center','vertical_align'=>'middle','direction'=>'auto','line_height'=>1.2,'letter_spacing_pt'=>0,'overflow'=>'shrink'));
 $layout=(new LayoutValidator())->normalize($layout); $json=new CanonicalJson(); $layoutJson=$json->encode($layout); $sha=$json->hash($layout);
 $wpdb=new Dsn7Wpdb(); $GLOBALS['wpdb']=$wpdb;

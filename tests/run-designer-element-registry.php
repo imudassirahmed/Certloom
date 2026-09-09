@@ -12,16 +12,17 @@ function dsn8has($s,$n,$l){dsn8(false!==strpos($s,$n),$l);}
 
 $all=ElementRegistry::all();
 dsn8(1===ElementRegistry::CONTRACT_VERSION,'registry has an explicit portable contract version');
-dsn8(10===count($all),'registry contains exactly the ten canonical built-in element types');
-dsn8(array('text','merge','image','logo','signature','shape','line','qr','barcode','list')===array_keys($all),'registry order and canonical machine types are deterministic');
+dsn8(11===count($all),'registry contains the ten historical types plus additive schema-4 rich_text');
+dsn8(array('text','merge','rich_text','image','logo','signature','shape','line','qr','barcode','list')===array_keys($all),'registry order and canonical machine types are deterministic');
 dsn8(array('text','merge','image','logo','signature','shape','line','qr')===LayoutSchema::element_types(1),'layout v1 type inventory is derived from the registry without drift');
 dsn8(array('text','merge','image','logo','signature','shape','line','qr','barcode')===LayoutSchema::element_types(2),'layout v2 registry adds Code 128 only');
 dsn8(array('text','merge','image','logo','signature','shape','line','qr','barcode','list')===LayoutSchema::element_types(3),'layout v3 registry adds canonical lists only');
+dsn8(array('text','merge','rich_text','image','logo','signature','shape','line','qr','barcode','list')===LayoutSchema::element_types(4),'layout v4 registry adds rich_text without removing historical read types');
 dsn8(array()===LayoutSchema::element_types(999),'unsupported future schema cannot acquire registry types');
 
-$expected_min=array('text'=>1,'merge'=>1,'image'=>1,'logo'=>1,'signature'=>1,'shape'=>1,'line'=>1,'qr'=>1,'barcode'=>2,'list'=>3);
-$expected_resolver=array('text'=>'text','merge'=>'merge','image'=>'asset','logo'=>'asset','signature'=>'asset','shape'=>'passthrough','line'=>'passthrough','qr'=>'qr','barcode'=>'barcode','list'=>'list');
-$expected_render=array('text'=>'text','merge'=>'text','image'=>'image','logo'=>'image','signature'=>'image','shape'=>'shape','line'=>'line','qr'=>'qr','barcode'=>'barcode','list'=>'text');
+$expected_min=array('text'=>1,'merge'=>1,'rich_text'=>4,'image'=>1,'logo'=>1,'signature'=>1,'shape'=>1,'line'=>1,'qr'=>1,'barcode'=>2,'list'=>3);
+$expected_resolver=array('text'=>'text','merge'=>'merge','rich_text'=>'rich_text','image'=>'asset','logo'=>'asset','signature'=>'asset','shape'=>'passthrough','line'=>'passthrough','qr'=>'qr','barcode'=>'barcode','list'=>'list');
+$expected_render=array('text'=>'text','merge'=>'text','rich_text'=>'rich_text','image'=>'image','logo'=>'image','signature'=>'image','shape'=>'shape','line'=>'line','qr'=>'qr','barcode'=>'barcode','list'=>'text');
 foreach($all as $type=>$definition){
  dsn8($type===($definition['type']??null),"$type registry key matches machine type");
  dsn8($expected_min[$type]===($definition['min_schema_version']??null),"$type declares the correct minimum schema version");
@@ -39,16 +40,17 @@ dsn8('text'===$all['list']['render_operation']&&'list'===$all['list']['resolver'
 dsn8('text'===$all['merge']['render_operation']&&'merge'===$all['merge']['resolver'],'merge elements resolve centrally into the existing text renderer path');
 
 $palette=ElementRegistry::palette(); $kinds=array_column($palette,'kind');
-dsn8(13===count($palette)&&13===count(array_unique($kinds)),'registry owns thirteen unique Designer palette tools including semantic presets');
+dsn8(14===count($palette)&&14===count(array_unique($kinds)),'cross-schema registry owns fourteen unique palette definitions including legacy Merge and schema-4 Rich text');
 dsn8(in_array('seal',$kinds,true)&&in_array('background',$kinds,true),'seal/background remain typed palette presets rather than new persisted element types');
-$seal=null;$background=null;$barcode=null;$list=null;foreach($palette as $item){if('seal'===$item['kind'])$seal=$item;if('background'===$item['kind'])$background=$item;if('barcode'===$item['kind'])$barcode=$item;if('list'===$item['kind'])$list=$item;}
+$seal=null;$background=null;$barcode=null;$list=null;$merge=null;$rich=null;foreach($palette as $item){if('seal'===$item['kind'])$seal=$item;if('background'===$item['kind'])$background=$item;if('barcode'===$item['kind'])$barcode=$item;if('list'===$item['kind'])$list=$item;if('merge'===$item['kind'])$merge=$item;if('rich_text'===$item['kind'])$rich=$item;}
 dsn8('image'===($seal['type']??null),'Seal palette tool maps explicitly to canonical image type');
 dsn8('shape'===($background['type']??null)&&!empty($background['defaults']['full_page']),'Background palette tool maps explicitly to canonical full-page shape');
 dsn8(2===($barcode['min_schema_version']??null),'Barcode palette availability comes from v2 registry metadata');
 dsn8(3===($list['min_schema_version']??null),'List palette availability comes from v3 registry metadata');
+dsn8(3===($merge['max_schema_version']??null)&&4===($rich['min_schema_version']??null),'palette metadata retires normal standalone Merge after schema 3 and introduces Rich text at schema 4');
 
 $browser=ElementRegistry::browser_contract();
-dsn8(1===($browser['contract_version']??0)&&10===count($browser['types']??array())&&13===count($browser['palette']??array()),'browser registry is a bounded portable projection of the server contract');
+dsn8(1===($browser['contract_version']??0)&&11===count($browser['types']??array())&&14===count($browser['palette']??array()),'browser registry is a bounded portable cross-schema projection of the server contract');
 $encoded=json_encode($browser); dsn8(is_string($encoded)&&strlen($encoded)<20000,'browser registry remains compact and JSON-only');
 dsn8(false===stripos($encoded,'<script')&&false===stripos($encoded,'javascript:')&&false===stripos($encoded,'callback'),'browser contract carries no executable callback/HTML channel');
 

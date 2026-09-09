@@ -10,6 +10,7 @@ use InvalidArgumentException;
 final class LayoutValidator {
 	const MAX_ELEMENTS = 500;
 	const MAX_TEXT_BYTES = 20000;
+	const MAX_RICH_TEXT_RUNS = 256;
 	const MAX_ROTATION = 360.0;
 
 	/** @return array<string,mixed> */
@@ -141,6 +142,13 @@ final class LayoutValidator {
 				break;
 			case 'merge':
 				$out['token'] = $this->token( $element['token'] );
+				$out['style'] = $this->style( isset( $element['style'] ) ? $element['style'] : array() );
+				break;
+			case 'rich_text':
+				if ( (int) $schema_version < LayoutSchema::VERSION_V4 ) {
+					throw new InvalidArgumentException( 'Rich text elements require certloom-layout v4 or newer.' );
+				}
+				$out['runs'] = $this->rich_text_runs( $element['runs'] );
 				$out['style'] = $this->style( isset( $element['style'] ) ? $element['style'] : array() );
 				break;
 			case 'asset':
@@ -288,6 +296,82 @@ final class LayoutValidator {
 		return $out;
 	}
 
+
+
+	/** @return array<int,array<string,mixed>> */
+	private function rich_text_runs( $runs ) {
+		if ( ! is_array( $runs ) || empty( $runs ) || count( $runs ) > self::MAX_RICH_TEXT_RUNS ) {
+			throw new InvalidArgumentException( 'Rich text requires between 1 and 256 inline runs.' );
+		}
+		$out = array();
+		$total = 0;
+		foreach ( array_values( $runs ) as $run ) {
+			if ( ! is_array( $run ) ) {
+				throw new InvalidArgumentException( 'Rich text runs must be objects.' );
+			}
+			$kind = isset( $run['kind'] ) ? strtolower( trim( (string) $run['kind'] ) ) : '';
+			if ( 'text' === $kind ) {
+				$this->assert_keys( $run, array( 'kind', 'text', 'style' ), array( 'kind', 'text' ), 'rich text run' );
+				$value = $this->text( $run['text'], 'rich text run' );
+				if ( '' === $value ) {
+					throw new InvalidArgumentException( 'Rich text literal runs may not be empty.' );
+				}
+				$total += strlen( $value );
+				$normalized = array( 'kind' => 'text', 'text' => $value );
+			} elseif ( 'token' === $kind ) {
+				$this->assert_keys( $run, array( 'kind', 'token', 'style' ), array( 'kind', 'token' ), 'rich text run' );
+				$value = $this->token( $run['token'] );
+				$total += strlen( $value );
+				$normalized = array( 'kind' => 'token', 'token' => $value );
+			} else {
+				throw new InvalidArgumentException( 'Rich text run kind must be text or token.' );
+			}
+			if ( $total > self::MAX_TEXT_BYTES ) {
+				throw new InvalidArgumentException( 'Rich text source exceeds the canonical text budget.' );
+			}
+			if ( array_key_exists( 'style', $run ) ) {
+				$style = $this->rich_run_style( $run['style'] );
+				if ( ! empty( $style ) ) { $normalized['style'] = $style; }
+			}
+			$out[] = $normalized;
+		}
+		return $out;
+	}
+
+	/** @return array<string,mixed> */
+	private function rich_run_style( $style ) {
+		if ( ! is_array( $style ) ) {
+			throw new InvalidArgumentException( 'Rich text run style must be an object.' );
+		}
+		$allowed = array( 'font_family', 'font_size_pt', 'font_weight', 'italic', 'color', 'letter_spacing_pt' );
+		$this->assert_keys( $style, $allowed, array(), 'rich text run style' );
+		$out = array();
+		if ( array_key_exists( 'font_family', $style ) ) {
+			$value = trim( (string) $style['font_family'] );
+			if ( ! preg_match( '/^[a-z0-9][a-z0-9_-]{0,63}$/', $value ) ) {
+				throw new InvalidArgumentException( 'Rich text run font family must be a registered Certloom font key.' );
+			}
+			$out['font_family'] = $value;
+		}
+		if ( array_key_exists( 'font_size_pt', $style ) ) {
+			$value = $this->positive_number( $style['font_size_pt'], 'rich text run font size', false );
+			if ( $value < 1 || $value > 300 ) { throw new InvalidArgumentException( 'Rich text run font size is outside the supported range.' ); }
+			$out['font_size_pt'] = $value;
+		}
+		if ( array_key_exists( 'font_weight', $style ) ) {
+			$value = $this->integer( $style['font_weight'], 'rich text run font weight' );
+			if ( $value < 100 || $value > 900 || 0 !== $value % 100 ) { throw new InvalidArgumentException( 'Rich text run font weight must be 100 through 900 in 100-point increments.' ); }
+			$out['font_weight'] = $value;
+		}
+		if ( array_key_exists( 'italic', $style ) ) { $out['italic'] = $this->boolean( $style['italic'], 'rich text run italic' ); }
+		if ( array_key_exists( 'color', $style ) ) { $out['color'] = $this->color( $style['color'] ); }
+		if ( array_key_exists( 'letter_spacing_pt', $style ) ) {
+			$value = $this->number( $style['letter_spacing_pt'], 'rich text run letter spacing' );
+			if ( $value < -20 || $value > 50 ) { throw new InvalidArgumentException( 'Rich text run letter spacing is outside the supported range.' ); }
+			$out['letter_spacing_pt'] = $value;
+		}
+		return $out;
+	}
 
 	/** @return string[] */
 	private function list_items( $items ) {
