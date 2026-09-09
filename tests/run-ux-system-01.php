@@ -10,7 +10,7 @@ $render=uxsyssrc($root,'includes/class-ecapla-certverify-render.php'); $status=u
 $list=uxsyssrc($root,'admin/class-ecapla-certverify-list-table.php'); $bootstrap=uxsyssrc($root,'certloom.php'); $admin=uxsyssrc($root,'admin/class-ecapla-certverify-admin.php');
 $frontend=uxsyssrc($root,'admin/views/frontend-manager.php'); $dashboard=uxsyssrc($root,'admin/views/dashboard.php'); $reminder=uxsyssrc($root,'src/Infrastructure/Admin/SetupReadinessReminder.php');
 
-uxsys(false!==strpos($css,':root {') && false!==strpos($css,'--certloom-accent: #0f6e56'), 'Global tokens use the canonical PHP brand accent');
+uxsys(false!==strpos($css,':root {') && false!==strpos($css,'--certloom-accent: var(--cl-blue)') && false!==strpos($css,'--certloom-focus: var(--cl-focus)') && false!==strpos($css,'--certloom-radius-md: var(--cl-r-ctl)'), 'Legacy admin aliases resolve through the canonical 1.7 token authority');
 uxsys(false===strpos(uxsyssrc($root,'src/Infrastructure/Admin/ManualIssuanceAdmin.php'),'class="wrap certloom-shell'), 'Manual Issuance no longer uses undefined certloom-shell');
 uxsys(false===strpos(uxsyssrc($root,'src/Infrastructure/Admin/BulkIssuanceAdmin.php'),'class="wrap certloom-shell'), 'Bulk Issuance no longer uses undefined certloom-shell');
 uxsys(false===strpos(uxsyssrc($root,'src/Infrastructure/Admin/EmailDeliveryAdmin.php'),'class="wrap certloom-shell'), 'Email Delivery no longer uses undefined certloom-shell');
@@ -37,7 +37,7 @@ preg_match_all("/result\\(\\s*(?:true|false),\\s*'([a-z_]+)'/",$status,$m); $ver
 foreach($verdicts as $v){ uxsys(false!==strpos($public,'.cv-status-'.$v.' .cv-status-mark'), 'Public CSS covers StatusService verdict '.$v); }
 uxsys(false!==strpos($public,'.cv-status-unknown .cv-status-mark'), 'Unknown public verdict fails neutral explicitly');
 
-uxsys(0===substr_count(strtolower($css),'#126b55') && 1===substr_count(strtolower($css),'#2271b1'), 'Brand/current-state styling no longer bleeds WordPress blue; platform blue remains only the focus token');
+uxsys(0===substr_count(strtolower($css),'#126b55') && 0===substr_count(strtolower($css),'#0f6e56') && 0===substr_count(strtolower($css),'#2271b1') && false!==strpos($css,'var(--cl-blue)'), 'Brand/current-state styling uses the Certloom token authority; legacy forest and raw WordPress-blue anchors are absent from admin CSS');
 $css_lines=preg_split('/\R/',$css); $css_longest=0; foreach($css_lines as $line){$css_longest=max($css_longest,strlen($line));}
 uxsys($css_longest<=500, 'Admin CSS has no minified mega-lines longer than 500 characters');
 uxsys(false!==strpos($tpl,'Create from scratch, customize a built-in certificate, or import a Certloom design package.') && false!==strpos($tpl,'Clear filters') && false!==strpos($tpl,'certloom-empty-state-actions'), 'Design empty states always offer a next action and distinguish filtered-empty results');

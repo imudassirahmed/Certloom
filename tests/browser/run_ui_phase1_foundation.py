@@ -20,7 +20,13 @@ async def run():
         await ck(await panel.evaluate("e=>getComputedStyle(e).borderRadius")=='0px','ledgerPanelSquare')
         await ck(await panel.evaluate("e=>getComputedStyle(e).boxShadow")=='none','ledgerPanelNoShadow')
         primary=page.locator('#ledger-fixture .button-primary')
-        await ck(await primary.evaluate("e=>getComputedStyle(e).backgroundColor")=='rgb(20, 80, 224)','blueMeansAction')
+        primary_bg=await primary.evaluate("e=>getComputedStyle(e).backgroundColor")
+        primary_fg=await primary.evaluate("e=>getComputedStyle(e).color")
+        await ck(
+            (primary_bg=='rgb(20, 80, 224)') or
+            (primary_bg=='rgb(255, 255, 255)' and primary_fg in ('rgb(10, 52, 168)','rgb(1, 19, 61)')),
+            'blueActionIdentityOrAccessibleBrandSurfaceInverse'
+        )
         valid=page.locator('#ledger-fixture .ecapla-certverify-badge-valid')
         await ck(await valid.evaluate("e=>getComputedStyle(e).color")=='rgb(0, 115, 78)','ledgerValidUsesVerdictGreen')
         await ck(await valid.evaluate("e=>getComputedStyle(e,'::before').borderRadius")=='50%','ledgerValidHasCircleShape')

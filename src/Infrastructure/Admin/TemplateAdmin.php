@@ -580,10 +580,10 @@ final class TemplateAdmin {
 		$simple = AdminUiMode::is_simple();
 		$new_url = add_query_arg( array( 'page' => self::PAGE, 'design_view' => 'editor', 'library_action' => 'start_blank' ), admin_url( 'admin.php' ) ) . '#certloom-template-editor';
 		$library_url = add_query_arg( array( 'page' => self::PAGE, 'design_view' => 'library' ), admin_url( 'admin.php' ) );
-		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-template-admin"><div class="certloom-template-page-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Certificate design', 'certloom' ) . '</span><h1>' . esc_html__( 'Certificate designs', 'certloom' ) . '</h1><p class="description">' . esc_html__( 'Start from a built-in certificate, create your own, or move a design between Certloom sites. Where a design is used is managed separately in Design Rules.', 'certloom' ) . '</p></div><div class="certloom-template-page-actions">';
+		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-template-admin"><section class="certloom-page-hero certloom-template-page-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Certificate design', 'certloom' ) . '</span><h1>' . esc_html__( 'Certificate designs', 'certloom' ) . '</h1><p class="description">' . esc_html__( 'Start from a built-in certificate, create your own, or move a design between Certloom sites. Where a design is used is managed separately in Design Rules.', 'certloom' ) . '</p></div><div class="certloom-template-page-actions">';
 		if ( 'editor' === $view ) { echo '<a class="button" href="' . esc_url( $library_url ) . '">' . esc_html__( 'Back to library', 'certloom' ) . '</a>'; }
 		if ( 'editor' !== $view ) { echo '<button type="button" class="button" data-certloom-certificate-import-open>' . esc_html__( 'Import', 'certloom' ) . '</button>'; }
-		echo '<a class="button button-primary" href="' . esc_url( $new_url ) . '">' . esc_html__( 'New design', 'certloom' ) . '</a></div></div>';
+		echo '<a class="button button-primary" href="' . esc_url( $new_url ) . '">' . esc_html__( 'New design', 'certloom' ) . '</a></div></section>';
 		$this->notice();
 		if ( is_wp_error( $seed ) ) { echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'The built-in certificate library could not be repaired automatically. Your existing designs are unchanged.', 'certloom' ) . '</p></div>'; }
 		$this->design_nav( $view );

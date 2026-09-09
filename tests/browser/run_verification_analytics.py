@@ -30,7 +30,7 @@ async def run():
         await ck(await page.locator('.certloom-analytics-table-wrap').get_attribute('aria-label')=='Daily verification trend table','dailyTableAria')
         await ck(await page.locator('.certloom-analytics-bar').count()==30,'dailyBuckets')
         await ck(await page.locator('.certloom-analytics-chart').evaluate('(e)=>e.classList.contains("is-verification")'),'verificationSeriesClass')
-        await ck(await page.locator('.certloom-analytics-bar').first.evaluate('(e)=>getComputedStyle(e).backgroundColor')=='rgb(0, 158, 212)','verificationUsesLogoCyan')
+        await ck(await page.locator('.certloom-analytics-bar').first.evaluate('(e)=>getComputedStyle(e).backgroundColor')=='rgb(3, 205, 243)','verificationUsesLogoCyan')
         await ck(await page.locator('.certloom-analytics-metrics .is-success').evaluate('(e)=>getComputedStyle(e).borderTopColor')=='rgb(1, 193, 116)','successfulMetricUsesValidEmerald')
         await ck(await page.locator('.certloom-analytics-metrics .is-revoked').evaluate('(e)=>getComputedStyle(e).borderTopColor')=='rgb(150, 33, 74)','revokedMetricUsesRose')
         sources=await page.locator('.certloom-analytics-source-list').inner_text()

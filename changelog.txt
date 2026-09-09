@@ -1,3 +1,20 @@
+= 1.7.0-alpha.3 =
+* Add the in-progress Setup Wizard v2 review shell: Welcome → Profile → Organization → Credential fields → Appearance → First credential → Finish.
+* Keep Program, Batch, Issuer and Signer out of the required onboarding path while preserving contextual profile explanations for all nine approved usage profiles.
+* Add profile-aware recommended fields, organization identity/media controls, mutually exclusive Details only / uploaded image / Certloom Design appearance choices, and the complete current 42-design factory selection surface.
+* Prevent false Setup completion unless a real first credential ID exists; legacy walkthrough completion no longer counts as Setup v2 completion.
+* Add Setup dirty-state/unsaved-change protection, invalid-field/error focus behavior, media-control accessibility/focus-return semantics and responsive touch-target corrections.
+* Add the optional six-step per-user Dashboard guided tour over real Certloom controls, with resumable progress, permanent dismissal, WordPress Help replay, profile-aware Program guidance, reduced-motion/forced-colors coverage and no credential/setup authority mutation.
+* This alpha.3 package is a review checkpoint only. Generalized standalone issuance, real first-credential verification actions, real WordPress media-modal acceptance, final broad Phase 3 gates, under-three-minute usability acceptance and user approval remain open.
+
+= 1.7.0-alpha.2.2 =
+* Keep the six primary admin workspaces open in the alpha review build: normalized admin preview/storage is available for review while integration/cutover write-path authority and Data Tools remain separately gated.
+* Restore Credentials, Programs and Automations as real navigable workspaces instead of replacing primary sections with Protected workspace placeholders or Dashboard redirects during review.
+* Correct the substantial top-card treatment to the actual supplied-logo sequence: shield blue `#0048EF` → logo blue `#1369FC` → light blue `#679CFC` → cyan `#03CDF3` → emerald `#01C174`, with accessible on-brand text and inverse controls where required.
+* Return Setup Wizard to its earlier independent top-right Dashboard position rather than treating it as a third equal quick action.
+* Keep ordinary panels/metric cells flat below the top card, retain credential-verdict green only for real validity/status semantics, and use the logo-family blue/cyan/emerald graphic palette for Analytics with repeated-series stroke patterns after four series.
+* Restore internal scrolling for long quick-Program dialogs while keeping actions visible and the dialog viewport-bounded.
+
 = 1.7.0-alpha.2.1 =
 * Add UI Phase 2.1 as an explicit visual-review tranche before Setup Wizard work; nothing is frozen and user visual review remains a required unchecked gate.
 * Replace the legacy dark-green Dashboard hero and half-migrated page/workspace headers with flat ruled Certloom headers using navy ink, blue action semantics and deliberate compact spacing.

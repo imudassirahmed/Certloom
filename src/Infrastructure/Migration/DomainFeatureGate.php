@@ -20,6 +20,14 @@ final class DomainFeatureGate {
 			'admin_preview' => $gate->allows( 'admin_preview' ),
 			'data_tools' => $gate->allows( 'data_tools' ),
 		);
+		/*
+		 * Alpha review builds keep admin workspaces routable without claiming
+		 * production write-path/Data Tools authority. This is deliberately narrower
+		 * than the former QA_UNGATED bypass and must be removed before RC/final.
+		 */
+		if ( defined( 'CERTLOOM_REVIEW_ADMIN_PREVIEW' ) && true === CERTLOOM_REVIEW_ADMIN_PREVIEW ) {
+			self::$scopes['admin_preview'] = true;
+		}
 		return self::$scopes;
 	}
 

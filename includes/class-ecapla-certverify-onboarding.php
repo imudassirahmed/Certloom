@@ -6,23 +6,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 /** Premium, non-blocking first-run setup and WIZ-01 workflow state. */
 class Ecapla_CertVerify_Onboarding {
 	const OPTION_KEY = 'certverify_onboarding';
-	const VERSION    = 3;
+	const VERSION    = 4;
 
 	/** @return array<int,string> */
 	public static function wizard_steps() {
-		return array( 'purpose', 'organization', 'program', 'design', 'delivery', 'backup', 'review' );
+		return array( 'welcome', 'profile', 'organization', 'fields', 'appearance', 'issue', 'finish' );
 	}
 
 	/** @return array<string,string> */
 	public static function wizard_step_labels() {
 		return array(
-			'purpose'      => __( 'Purpose', 'certloom' ),
+			'welcome'      => __( 'Welcome', 'certloom' ),
+			'profile'      => __( 'Profile', 'certloom' ),
 			'organization' => __( 'Organization', 'certloom' ),
-			'program'      => __( 'First Program', 'certloom' ),
-			'design'       => __( 'Design', 'certloom' ),
-			'delivery'     => __( 'Delivery & Verification', 'certloom' ),
-			'backup'       => __( 'Backup & Finish', 'certloom' ),
-			'review'       => __( 'Review configuration', 'certloom' ),
+			'fields'       => __( 'Credential fields', 'certloom' ),
+			'appearance'   => __( 'Appearance', 'certloom' ),
+			'issue'        => __( 'First credential', 'certloom' ),
+			'finish'       => __( 'Finish', 'certloom' ),
 		);
 	}
 
@@ -33,7 +33,7 @@ class Ecapla_CertVerify_Onboarding {
 			'appearance_reviewed'    => false,
 			'verification_tested'    => false,
 			'completed_at'           => '', // Legacy checklist completion; retained for compatibility.
-			'wizard_step'            => 'purpose',
+			'wizard_step'            => 'welcome',
 			'wizard_completed_steps' => array(),
 			'wizard_skipped_steps'   => array(),
 			'wizard_started_at'      => '',
@@ -48,12 +48,17 @@ class Ecapla_CertVerify_Onboarding {
 	public static function get_state() {
 		$saved = get_option( self::OPTION_KEY, array() );
 		$saved = is_array( $saved ) ? $saved : array();
+		$saved_version = absint( $saved['version'] ?? 0 );
 		$state = wp_parse_args( $saved, self::defaults() );
 		$state['organization_name']       = self::limit_text( sanitize_text_field( (string) $state['organization_name'] ), 200 );
 		$state['verification_page_id']    = absint( $state['verification_page_id'] );
 		$state['appearance_reviewed']     = ! empty( $state['appearance_reviewed'] );
 		$state['verification_tested']     = ! empty( $state['verification_tested'] );
 		$state['completed_at']            = sanitize_text_field( (string) $state['completed_at'] );
+		$state['wizard_step']             = self::migrate_legacy_step( $state['wizard_step'] );
+		$state['wizard_completed_steps']  = array_map( array( __CLASS__, 'migrate_legacy_step' ), is_array( $state['wizard_completed_steps'] ) ? $state['wizard_completed_steps'] : array() );
+		$state['wizard_skipped_steps']    = array_map( array( __CLASS__, 'migrate_legacy_step' ), is_array( $state['wizard_skipped_steps'] ) ? $state['wizard_skipped_steps'] : array() );
+		$state['wizard_draft']            = self::migrate_legacy_draft( is_array( $state['wizard_draft'] ) ? $state['wizard_draft'] : array() );
 		$state['wizard_step']             = self::normalize_step( $state['wizard_step'] );
 		$state['wizard_completed_steps']  = self::normalize_step_list( $state['wizard_completed_steps'] );
 		$state['wizard_skipped_steps']    = self::normalize_step_list( $state['wizard_skipped_steps'] );
@@ -61,7 +66,11 @@ class Ecapla_CertVerify_Onboarding {
 		$state['wizard_last_seen_at']     = sanitize_text_field( (string) $state['wizard_last_seen_at'] );
 		$state['wizard_completed_at']     = sanitize_text_field( (string) $state['wizard_completed_at'] );
 		$state['wizard_rerun_count']      = min( 999, absint( $state['wizard_rerun_count'] ) );
-		$state['wizard_draft']            = self::sanitize_wizard_draft( is_array( $state['wizard_draft'] ) ? $state['wizard_draft'] : array() );
+		$state['wizard_draft']            = self::sanitize_wizard_draft( $state['wizard_draft'] );
+		if ( $saved_version < self::VERSION && empty( $state['wizard_draft']['first_credential_id'] ) ) {
+			// Pre-v4 walkthrough completion did not prove a real first credential.
+			$state['wizard_completed_at'] = '';
+		}
 		$state['version']                 = self::VERSION;
 		return $state;
 	}
@@ -114,18 +123,16 @@ class Ecapla_CertVerify_Onboarding {
 		$state = self::get_state();
 		$merged = array_merge( $state['wizard_draft'], $draft_patch );
 		$draft = self::sanitize_wizard_draft( $merged );
-		if ( 'purpose' === $step && ! $skipped ) {
-			$purpose = isset( $draft['purpose'] ) ? $draft['purpose'] : '';
-			$subcategory = isset( $draft['subcategory'] ) ? $draft['subcategory'] : '';
-			$preset = ( new \Certloom\Application\Setup\PurposePresetEngine() )->recommend( $purpose, $subcategory );
+		$valid = self::validate_step_draft( $step, $draft, $skipped );
+		if ( is_wp_error( $valid ) ) { return $valid; }
+		if ( 'profile' === $step && ! $skipped ) {
+			$profile = isset( $draft['usage_profile'] ) ? $draft['usage_profile'] : '';
+			$preset = ( new \Certloom\Application\Setup\PurposePresetEngine() )->recommend( $profile );
 			if ( is_wp_error( $preset ) ) { return $preset; }
-			// Seed only untouched review fields. A later purpose change must never
-			// overwrite an administrator's explicit Wizard choices.
-			if ( ! array_key_exists( 'numbering_mode', $state['wizard_draft'] ) && isset( $preset['numbering_mode'] ) ) {
-				$draft['numbering_mode'] = sanitize_key( (string) $preset['numbering_mode'] );
-			}
-			if ( ! array_key_exists( 'backup_schedule', $state['wizard_draft'] ) && isset( $preset['backup_schedule'] ) ) {
-				$draft['backup_schedule'] = sanitize_key( (string) $preset['backup_schedule'] );
+			// Seed recommended field keys only when the administrator has not already
+			// edited the fields step. A later profile change never overwrites choices.
+			if ( ! array_key_exists( 'selected_fields', $state['wizard_draft'] ) ) {
+				$draft['selected_fields'] = array_values( array_map( static function ( $field ) { return sanitize_key( (string) ( $field['key'] ?? '' ) ); }, (array) ( $preset['recommended_fields'] ?? array() ) ) );
 			}
 			$draft = self::sanitize_wizard_draft( $draft );
 		}
@@ -133,7 +140,7 @@ class Ecapla_CertVerify_Onboarding {
 		$now = current_time( 'mysql' );
 		if ( '' === $state['wizard_started_at'] ) { $state['wizard_started_at'] = $now; }
 		$state['wizard_last_seen_at'] = $now;
-		if ( 'review' !== $step ) {
+		if ( 'finish' !== $step ) {
 			$state['wizard_completed_steps'][] = $step;
 			$state['wizard_completed_steps'] = self::normalize_step_list( $state['wizard_completed_steps'] );
 			if ( $skipped ) {
@@ -152,7 +159,7 @@ class Ecapla_CertVerify_Onboarding {
 		$allowed = Ecapla_CertVerify_Backup::assert_writes_allowed();
 		if ( is_wp_error( $allowed ) ) { return $allowed; }
 		$state = self::get_state();
-		$state['wizard_step'] = 'purpose';
+		$state['wizard_step'] = 'welcome';
 		$state['wizard_completed_steps'] = array();
 		$state['wizard_skipped_steps'] = array();
 		$state['wizard_started_at'] = current_time( 'mysql' );
@@ -168,7 +175,10 @@ class Ecapla_CertVerify_Onboarding {
 		$allowed = Ecapla_CertVerify_Backup::assert_writes_allowed();
 		if ( is_wp_error( $allowed ) ) { return $allowed; }
 		$state = self::get_state();
-		$state['wizard_step'] = 'review';
+		if ( empty( $state['wizard_draft']['first_credential_id'] ) ) {
+			return new WP_Error( 'certloom_setup_first_credential_required', __( 'Issue the first real credential before completing Setup.', 'certloom' ) );
+		}
+		$state['wizard_step'] = 'finish';
 		$state['wizard_last_seen_at'] = current_time( 'mysql' );
 		$state['wizard_completed_at'] = $state['wizard_last_seen_at'];
 		return self::persist( $state );
@@ -289,7 +299,7 @@ class Ecapla_CertVerify_Onboarding {
 
 	private static function normalize_step( $step ) {
 		$step = sanitize_key( (string) $step );
-		return in_array( $step, self::wizard_steps(), true ) ? $step : 'purpose';
+		return in_array( $step, self::wizard_steps(), true ) ? $step : 'welcome';
 	}
 
 	/** @return array<int,string> */
@@ -307,42 +317,101 @@ class Ecapla_CertVerify_Onboarding {
 	private static function next_step( $step ) {
 		$steps = self::wizard_steps();
 		$index = array_search( $step, $steps, true );
-		return false !== $index && isset( $steps[ $index + 1 ] ) ? $steps[ $index + 1 ] : 'review';
+		return false !== $index && isset( $steps[ $index + 1 ] ) ? $steps[ $index + 1 ] : 'finish';
+	}
+
+	/** @return true|WP_Error */
+	private static function validate_step_draft( $step, array $draft, $skipped ) {
+		if ( $skipped ) { return true; }
+		switch ( $step ) {
+			case 'profile':
+				$preset = ( new \Certloom\Application\Setup\PurposePresetEngine() )->recommend( $draft['usage_profile'] ?? '' );
+				return is_wp_error( $preset ) ? $preset : true;
+			case 'organization':
+				return '' === trim( (string) ( $draft['organization_name'] ?? '' ) ) ? new WP_Error( 'certloom_setup_organization_required', __( 'Enter your organization name to continue.', 'certloom' ) ) : true;
+			case 'appearance':
+				$mode = sanitize_key( (string) ( $draft['presentation_mode'] ?? 'details_only' ) );
+				if ( 'image' === $mode && empty( $draft['certificate_image_id'] ) ) { return new WP_Error( 'certloom_setup_image_required', __( 'Choose a PNG or JPEG certificate image, or select another appearance.', 'certloom' ) ); }
+				if ( 'design' === $mode && empty( $draft['design_template_id'] ) ) { return new WP_Error( 'certloom_setup_design_required', __( 'Choose a published Certloom design, or select another appearance.', 'certloom' ) ); }
+				return true;
+			case 'issue':
+				if ( '' === trim( (string) ( $draft['first_recipient_name'] ?? '' ) ) ) { return new WP_Error( 'certloom_setup_recipient_required', __( 'Enter the recipient name to continue.', 'certloom' ) ); }
+				if ( '' === trim( (string) ( $draft['credential_title'] ?? '' ) ) ) { return new WP_Error( 'certloom_setup_title_required', __( 'Enter the credential title to continue.', 'certloom' ) ); }
+				if ( '' === trim( (string) ( $draft['issue_date'] ?? '' ) ) ) { return new WP_Error( 'certloom_setup_issue_date_required', __( 'Choose the issue date to continue.', 'certloom' ) ); }
+				$email = trim( (string) ( $draft['first_recipient_email'] ?? '' ) );
+				if ( '' !== $email && function_exists( 'is_email' ) && ! is_email( $email ) ) { return new WP_Error( 'certloom_setup_email_invalid', __( 'Enter a valid recipient email address or leave it blank.', 'certloom' ) ); }
+				return true;
+		}
+		return true;
+	}
+
+	private static function migrate_legacy_step( $step ) {
+		$step = sanitize_key( (string) $step );
+		$map = array(
+			'purpose' => 'profile',
+			'program' => 'fields',
+			'design' => 'appearance',
+			'delivery' => 'issue',
+			'backup' => 'finish',
+			'review' => 'finish',
+		);
+		return isset( $map[ $step ] ) ? $map[ $step ] : $step;
+	}
+
+	/** @return array<string,mixed> */
+	private static function migrate_legacy_draft( array $draft ) {
+		if ( ! isset( $draft['usage_profile'] ) && isset( $draft['purpose'] ) ) {
+			$draft['usage_profile'] = ( new \Certloom\Application\Setup\PurposePresetEngine() )->normalize_profile( $draft['purpose'] );
+		}
+		if ( ! isset( $draft['presentation_mode'] ) && ! empty( $draft['design_template_id'] ) ) {
+			$draft['presentation_mode'] = 'design';
+		}
+		unset( $draft['purpose'], $draft['subcategory'], $draft['scheme_reference'], $draft['program_title'], $draft['design_note'] );
+		return $draft;
 	}
 
 	/** @return array<string,mixed> */
 	private static function sanitize_wizard_draft( array $draft ) {
 		$out = array();
-		$text_limits = array(
-			'program_title' => 191,
-			'scheme_reference' => 120,
-			'design_note' => 240,
-		);
-		foreach ( $text_limits as $key => $limit ) {
-			if ( array_key_exists( $key, $draft ) ) { $out[ $key ] = self::limit_text( sanitize_text_field( (string) $draft[ $key ] ), $limit ); }
+		if ( array_key_exists( 'usage_profile', $draft ) ) {
+			$out['usage_profile'] = ( new \Certloom\Application\Setup\PurposePresetEngine() )->normalize_profile( $draft['usage_profile'] );
 		}
 		if ( array_key_exists( 'organization_name', $draft ) ) { $out['organization_name'] = self::limit_text( sanitize_text_field( (string) $draft['organization_name'] ), 200 ); }
-		if ( array_key_exists( 'verification_page_id', $draft ) ) { $out['verification_page_id'] = absint( $draft['verification_page_id'] ); }
-		if ( array_key_exists( 'purpose', $draft ) ) { $out['purpose'] = sanitize_key( (string) $draft['purpose'] ); }
-		if ( array_key_exists( 'subcategory', $draft ) ) { $out['subcategory'] = sanitize_key( (string) $draft['subcategory'] ); }
+		if ( array_key_exists( 'organization_logo_id', $draft ) ) { $out['organization_logo_id'] = absint( $draft['organization_logo_id'] ); }
+		if ( array_key_exists( 'organization_website', $draft ) ) { $out['organization_website'] = self::limit_text( sanitize_text_field( (string) $draft['organization_website'] ), 240 ); }
+		if ( array_key_exists( 'organization_contact', $draft ) ) { $out['organization_contact'] = self::limit_text( sanitize_text_field( (string) $draft['organization_contact'] ), 240 ); }
+
+		if ( array_key_exists( 'selected_fields', $draft ) ) {
+			$values = is_array( $draft['selected_fields'] ) ? $draft['selected_fields'] : array();
+			$out['selected_fields'] = array_values( array_unique( array_filter( array_map( 'sanitize_key', $values ) ) ) );
+		}
+		if ( array_key_exists( 'custom_fields', $draft ) ) {
+			$values = is_array( $draft['custom_fields'] ) ? $draft['custom_fields'] : array();
+			$clean = array();
+			foreach ( array_slice( $values, 0, 20 ) as $label ) {
+				$label = self::limit_text( sanitize_text_field( (string) $label ), 100 );
+				if ( '' !== $label && ! in_array( $label, $clean, true ) ) { $clean[] = $label; }
+			}
+			$out['custom_fields'] = $clean;
+		}
+
+		if ( array_key_exists( 'presentation_mode', $draft ) ) {
+			$mode = sanitize_key( (string) $draft['presentation_mode'] );
+			$out['presentation_mode'] = in_array( $mode, array( 'details_only', 'image', 'design' ), true ) ? $mode : 'details_only';
+		}
+		if ( array_key_exists( 'certificate_image_id', $draft ) ) { $out['certificate_image_id'] = absint( $draft['certificate_image_id'] ); }
 		if ( array_key_exists( 'design_template_id', $draft ) ) { $out['design_template_id'] = absint( $draft['design_template_id'] ); }
-		if ( array_key_exists( 'numbering_mode', $draft ) ) {
-			$value = sanitize_key( (string) $draft['numbering_mode'] );
-			$out['numbering_mode'] = in_array( $value, array( 'manual', 'sequential', 'random', 'uuid' ), true ) ? $value : 'manual';
+		if ( isset( $out['presentation_mode'] ) ) {
+			if ( 'image' === $out['presentation_mode'] ) { $out['design_template_id'] = 0; }
+			elseif ( 'design' === $out['presentation_mode'] ) { $out['certificate_image_id'] = 0; }
+			else { $out['certificate_image_id'] = 0; $out['design_template_id'] = 0; }
 		}
-		if ( array_key_exists( 'numbering_prefix', $draft ) ) { $out['numbering_prefix'] = self::limit_text( sanitize_text_field( (string) $draft['numbering_prefix'] ), 32 ); }
-		if ( array_key_exists( 'numbering_suffix', $draft ) ) { $out['numbering_suffix'] = self::limit_text( sanitize_text_field( (string) $draft['numbering_suffix'] ), 32 ); }
-		if ( array_key_exists( 'numbering_start', $draft ) ) { $out['numbering_start'] = min( 999999999999, max( 1, absint( $draft['numbering_start'] ) ) ); }
-		if ( array_key_exists( 'numbering_padding', $draft ) ) { $out['numbering_padding'] = min( 12, max( 1, absint( $draft['numbering_padding'] ) ) ); }
-		if ( array_key_exists( 'backup_schedule', $draft ) ) {
-			$value = sanitize_key( (string) $draft['backup_schedule'] );
-			$out['backup_schedule'] = in_array( $value, array( 'off', 'daily', 'weekly' ), true ) ? $value : 'off';
+
+		foreach ( array( 'first_recipient_name' => 200, 'first_recipient_email' => 254, 'credential_title' => 191, 'issue_date' => 20 ) as $key => $limit ) {
+			if ( array_key_exists( $key, $draft ) ) { $out[ $key ] = self::limit_text( sanitize_text_field( (string) $draft[ $key ] ), $limit ); }
 		}
-		if ( array_key_exists( 'backup_retention', $draft ) ) { $out['backup_retention'] = min( 60, max( 1, absint( $draft['backup_retention'] ) ) ); }
-		if ( array_key_exists( 'google_drive_retention', $draft ) ) { $out['google_drive_retention'] = min( 60, max( 1, absint( $draft['google_drive_retention'] ) ) ); }
-		foreach ( array( 'verification_qr_enabled', 'verification_barcode_enabled', 'appearance_reviewed', 'verification_tested', 'google_drive_enabled' ) as $key ) {
-			if ( array_key_exists( $key, $draft ) ) { $out[ $key ] = ! empty( $draft[ $key ] ); }
-		}
+		if ( array_key_exists( 'first_credential_id', $draft ) ) { $out['first_credential_id'] = absint( $draft['first_credential_id'] ); }
+		if ( array_key_exists( 'first_credential_url', $draft ) ) { $out['first_credential_url'] = self::limit_text( sanitize_text_field( (string) $draft['first_credential_url'] ), 500 ); }
 		return $out;
 	}
 

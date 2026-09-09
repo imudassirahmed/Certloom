@@ -18,16 +18,32 @@
   --cl-blue-wash: #EAF0FE;
   --cl-blue-bright: #1369FC;
 
-  /* Graphic-only brand colours */
+  /* Graphic-only brand colours sampled from the supplied Certloom logo.
+     These are the exact shield/check hues used for artwork and data-viz. */
+  --cl-brand-blue-dark: #0048EF;
+  --cl-brand-blue: #1369FC;
+  --cl-brand-blue-light: #679CFC;
   --cl-cyan: #03CDF3;
   --cl-cyan-deep: #009ED4;
+  --cl-brand-emerald: #01C174;
 
-  /* Analytics / data-viz series. Generic series avoid verdict colours.
-     Status-aware charts may opt into --cl-valid-mark / revoked / expired. */
-  --cl-chart-1: var(--cl-blue);
-  --cl-chart-2: var(--cl-cyan-deep);
-  --cl-chart-3: var(--cl-blue-bright);
-  --cl-chart-4: var(--cl-ink-soft);
+  /* Explicit user-directed top-card treatment. Phase 2.2 corrects the earlier
+     blue-heavy experiment: the card now follows the actual logo sequence —
+     shield blue -> logo blue -> light blue -> cyan -> emerald. */
+  --cl-on-brand: #FFFFFF;
+  --cl-on-brand-soft: rgba(255, 255, 255, .88);
+  --cl-on-brand-line: rgba(255, 255, 255, .72);
+  --cl-on-brand-wash: rgba(255, 255, 255, .94);
+  --cl-on-brand-wash-hover: #FFFFFF;
+  --cl-brand-hero: linear-gradient(112deg, var(--cl-brand-blue-dark) 0%, var(--cl-brand-blue) 28%, var(--cl-brand-blue-light) 52%, var(--cl-cyan) 74%, var(--cl-brand-emerald) 100%);
+
+  /* Analytics / data-viz series follow the logo family. The emerald is allowed
+     here as a graphic series colour only; generic admin success/status text
+     still does not use green. After four series, styles repeat with patterns. */
+  --cl-chart-1: var(--cl-brand-blue-dark);
+  --cl-chart-2: var(--cl-cyan);
+  --cl-chart-3: var(--cl-brand-blue);
+  --cl-chart-4: var(--cl-brand-emerald);
 
   /* Credential verdicts */
   --cl-valid: #00734E;

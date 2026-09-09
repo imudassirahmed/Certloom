@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Certloom – Certificate Verification
  * Description: Self-hosted credential issuance, verification and lifecycle management for WordPress.
- * Version: 1.7.0-alpha.2.1
+ * Version: 1.7.0-alpha.3
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.7.0-alpha.2.1' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.7.0-alpha.3' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
@@ -39,6 +39,17 @@ define( 'ECAPLA_CERTVERIFY_MINIMUM_ELEMENTOR_VERSION', '3.10.0' );
 define( 'CERTLOOM_VERSION', ECAPLA_CERTVERIFY_VERSION );
 define( 'CERTLOOM_PATH', ECAPLA_CERTVERIFY_PATH );
 define( 'CERTLOOM_URL', ECAPLA_CERTVERIFY_URL );
+
+/*
+ * 1.7 alpha review builds keep the normalized admin workspaces visible so the
+ * product can be reviewed screen-by-screen. This opens admin preview/storage
+ * only; integration/cutover write-path authority and Data Tools still require
+ * their normal release authority. Remove this review override before a release
+ * candidate is declared.
+ */
+if ( ! defined( 'CERTLOOM_REVIEW_ADMIN_PREVIEW' ) ) {
+	define( 'CERTLOOM_REVIEW_ADMIN_PREVIEW', true );
+}
 if ( ! defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) ) {
 	define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false );
 }
@@ -109,6 +120,7 @@ require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-system-s
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-dashboard.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-bulk-manager.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-onboarding.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-guided-tour.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-privacy.php';
 
 register_activation_hook( __FILE__, 'ecapla_certverify_activate' );

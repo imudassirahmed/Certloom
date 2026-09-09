@@ -31,7 +31,7 @@
 	padding: 14px 18px;
 	background: #fff;
 	border: 1px solid #dcdcde;
-	border-left: 4px solid #0f6e56;
+	border-left: 4px solid var(--cl-blue);
 	border-radius: 6px;
 }
 
@@ -139,7 +139,7 @@
 	font-weight: 700;
 }
 
-.ecapla-certverify-badge-valid { color: #17643f; background: #e9f8f0; }
+.ecapla-certverify-badge-valid { color: var(--cl-valid); background: var(--cl-valid-wash); }
 .ecapla-certverify-badge-suspended { color: #855f00; background: #fff5d8; }
 .ecapla-certverify-badge-withdrawn { color: #a22b2b; background: #fdecec; }
 .ecapla-certverify-badge-expired { color: #59635f; background: #eef1f0; }
@@ -313,7 +313,7 @@
 	font-size: 28px;
 	width: 28px;
 	height: 28px;
-	color: #0f6e56;
+	color: var(--cl-blue);
 }
 
 .ecapla-certverify-code-copy {
@@ -334,8 +334,8 @@
 }
 
 .ecapla-certverify-integration-status.is-ready {
-	background: #edfaef;
-	color: #14532d;
+	background: var(--cl-blue-wash);
+	color: var(--cl-blue-deep);
 }
 
 .ecapla-certverify-integration-status.is-warning {
@@ -498,7 +498,7 @@
 .ecapla-certverify-progress > span {
 	display: block;
 	height: 100%;
-	background: #0f6e56;
+	background: var(--cl-blue);
 	border-radius: inherit;
 	transition: width 180ms ease;
 }
@@ -514,23 +514,23 @@
  * Certloom premium administration foundation (1.6.x)
  * ---------------------------------------------------------------------- */
 :root {
-	--certloom-ink: #17221f;
-	--certloom-muted: #5f6f69;
-	--certloom-border: #dfe7e3;
-	--certloom-border-strong: #c8d2ce;
-	--certloom-surface: #ffffff;
-	--certloom-surface-soft: #f5f8f7;
-	--certloom-accent: #0f6e56;
-	--certloom-accent-strong: #0b5643;
-	--certloom-accent-soft: #e9f5f1;
-	--certloom-warning: #9a6500;
-	--certloom-warning-soft: #fff7df;
-	--certloom-danger: #a52a2a;
-	--certloom-danger-soft: #fff0ef;
-	--certloom-focus: #2271b1;
-	--certloom-radius-sm: 6px;
-	--certloom-radius-md: 10px;
-	--certloom-radius-lg: 14px;
+	--certloom-ink: var(--cl-ink);
+	--certloom-muted: var(--cl-ink-soft);
+	--certloom-border: var(--cl-rule);
+	--certloom-border-strong: var(--cl-rule-firm);
+	--certloom-surface: var(--cl-surface);
+	--certloom-surface-soft: var(--cl-paper);
+	--certloom-accent: var(--cl-blue);
+	--certloom-accent-strong: var(--cl-blue-deep);
+	--certloom-accent-soft: var(--cl-blue-wash);
+	--certloom-warning: var(--cl-expired);
+	--certloom-warning-soft: var(--cl-expired-wash);
+	--certloom-danger: var(--cl-error);
+	--certloom-danger-soft: var(--cl-revoked-wash);
+	--certloom-focus: var(--cl-focus);
+	--certloom-radius-sm: var(--cl-r-ctl);
+	--certloom-radius-md: var(--cl-r-ctl);
+	--certloom-radius-lg: var(--cl-r-lift);
 }
 .ecapla-certverify-admin-wrap { color: var(--certloom-ink); }
 
@@ -564,7 +564,7 @@
 }
 
 .ecapla-certverify-admin-brand-name {
-	color: var(--certloom-ink, #17221f);
+	color: var(--certloom-ink, var(--cl-ink));
 	font-size: 16px;
 	letter-spacing: -0.01em;
 }
@@ -575,91 +575,89 @@
 }
 
 .certloom-dashboard-hero {
+	position: relative;
 	display: flex;
 	align-items: flex-end;
 	justify-content: space-between;
-	gap: 28px;
-	margin: 20px 0 24px;
-	padding: 30px 32px;
-	background:
-		linear-gradient(120deg, rgba(18, 107, 85, 0.98), rgba(10, 72, 58, 0.96)),
-		var(--certloom-accent);
-	border-radius: 14px;
-	box-shadow: 0 12px 32px rgba(12, 67, 53, 0.12);
-	color: #fff;
+	gap: var(--cl-5);
+	margin: var(--cl-4) 0 var(--cl-5);
+	padding: var(--cl-7) var(--cl-5) var(--cl-5);
+	border: 1px solid var(--cl-brand-blue-dark);
+	border-radius: var(--cl-r-lift);
+	background: var(--cl-brand-hero);
+	box-shadow: var(--cl-lift);
+	color: var(--cl-on-brand);
 }
 
 .certloom-dashboard-hero h1 {
-	margin: 4px 0 8px;
-	color: #fff;
-	font-size: clamp(30px, 3vw, 42px);
+	margin: var(--cl-1) 0;
+	color: var(--cl-on-brand);
+	font-size: var(--cl-t-lg);
 	font-weight: 700;
-	line-height: 1.08;
-	letter-spacing: -0.035em;
+	line-height: 1.2;
+	letter-spacing: 0;
 }
 
 .certloom-dashboard-hero p {
-	max-width: 720px;
+	max-width: 72ch;
 	margin: 0;
-	color: rgba(255,255,255,.82);
-	font-size: 15px;
+	color: var(--cl-on-brand-soft);
+	font-size: var(--cl-t-sm);
 }
 
 .certloom-eyebrow {
 	display: block;
-	margin-bottom: 3px;
-	color: var(--certloom-accent);
-	font-size: 11px;
+	margin: 0 0 var(--cl-1);
+	color: var(--cl-ink-soft);
+	font-size: var(--cl-t-xs);
 	font-weight: 700;
-	letter-spacing: .09em;
-	text-transform: uppercase;
+	letter-spacing: 0;
+	text-transform: none;
 }
-
-.certloom-dashboard-hero .certloom-eyebrow {
-	color: rgba(255,255,255,.68);
-}
+.certloom-dashboard-hero .certloom-eyebrow { color: var(--cl-on-brand-soft); }
 
 .certloom-dashboard-actions {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 10px;
+	gap: var(--cl-2);
 }
 
 .certloom-dashboard-actions .button {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	gap: 7px;
-	min-height: 42px;
-	padding-inline: 16px;
-	border-radius: 7px;
+	gap: var(--cl-2);
+	min-height: 36px;
+	padding-inline: var(--cl-3);
+	border-radius: var(--cl-r-ctl);
 	font-weight: 600;
+	box-shadow: none;
 }
 
 .certloom-dashboard-actions .button-primary {
-	background: #fff;
-	border-color: #fff;
-	color: var(--certloom-accent-strong);
+	background: var(--cl-blue);
+	border-color: var(--cl-blue);
+	color: var(--cl-surface);
 }
 
 .certloom-dashboard-actions .button-primary:hover,
 .certloom-dashboard-actions .button-primary:focus {
-	background: #f5fbf9;
-	border-color: #f5fbf9;
-	color: var(--certloom-accent-strong);
+	background: var(--cl-blue-deep);
+	border-color: var(--cl-blue-deep);
+	color: var(--cl-surface);
 }
 
 .certloom-dashboard-actions .button-secondary {
-	background: rgba(255,255,255,.1);
-	border-color: rgba(255,255,255,.35);
-	color: #fff;
+	background: var(--cl-surface);
+	border-color: var(--cl-rule-firm);
+	color: var(--cl-blue);
 }
 
 .certloom-dashboard-actions .button-secondary:hover,
 .certloom-dashboard-actions .button-secondary:focus {
-	background: rgba(255,255,255,.16);
-	border-color: rgba(255,255,255,.6);
-	color: #fff;
+	background: var(--cl-blue-wash);
+	border-color: var(--cl-blue);
+	color: var(--cl-blue-deep);
 }
 
 .certloom-button-icon {
@@ -694,7 +692,7 @@
 	margin: 0 0 18px;
 	padding: 14px 16px;
 	border: 1px solid var(--certloom-border);
-	border-radius: 10px;
+	border-radius: var(--cl-r-ctl);
 	background: var(--certloom-surface);
 }
 
@@ -728,40 +726,43 @@
 .certloom-metric-card {
 	position: relative;
 	display: flex;
-	min-height: 146px;
+	min-height: 120px;
 	flex-direction: column;
-	padding: 17px;
-	border: 1px solid var(--certloom-border);
-	border-radius: 11px;
-	background: var(--certloom-surface);
-	box-shadow: 0 4px 15px rgba(23, 34, 31, 0.035);
-	color: var(--certloom-ink);
+	padding: var(--cl-3);
+	border: 1px solid var(--cl-rule);
+	border-block-start: 3px solid var(--cl-chart-1);
+	border-radius: var(--cl-r-none);
+	background: var(--cl-surface);
+	box-shadow: none;
+	color: var(--cl-ink);
 	text-decoration: none;
-	transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+	transition: border-color .16s ease, background-color .16s ease;
 }
 
-.certloom-metric-card:not(.is-static):hover {
-	border-color: #b6cbc4;
-	box-shadow: 0 7px 22px rgba(23, 34, 31, 0.08);
-	color: var(--certloom-ink);
-	transform: translateY(-1px);
+.certloom-metric-card:not(.is-static):hover,
+.certloom-metric-card:not(.is-static):focus-visible {
+	border-color: var(--cl-rule-firm);
+	background: var(--cl-blue-wash);
+	box-shadow: none;
+	color: var(--cl-ink);
+	transform: none;
 }
 
 .certloom-metric-card strong {
-	margin-top: 17px;
-	font-size: 30px;
+	margin-top: var(--cl-3);
+	font-size: var(--cl-t-lg);
 	line-height: 1;
-	letter-spacing: -0.035em;
+	letter-spacing: 0;
 }
 
 .certloom-metric-icon {
 	display: inline-grid;
-	width: 34px;
-	height: 34px;
+	width: 32px;
+	height: 32px;
 	place-items: center;
-	border-radius: 9px;
-	background: var(--certloom-accent-soft);
-	color: var(--certloom-accent);
+	border-radius: var(--cl-r-ctl);
+	background: var(--cl-blue-wash);
+	color: var(--cl-blue);
 }
 
 .certloom-metric-icon .dashicons {
@@ -770,25 +771,25 @@
 	font-size: 18px;
 }
 
-.certloom-metric-icon.is-valid { background: #e9f8f0; color: #17643f; }
-.certloom-metric-icon.is-suspended { background: #fff5d8; color: #855f00; }
-.certloom-metric-icon.is-withdrawn { background: #fdecec; color: #a22b2b; }
-.certloom-metric-icon.is-expired { background: #eef1f0; color: #59635f; }
-.certloom-metric-icon.is-expiring { background: #eef2ff; color: #4255a4; }
-.certloom-metric-icon.is-issued { background: #f3ecff; color: #6941a5; }
+.certloom-metric-icon.is-valid { background: var(--cl-valid-wash); color: var(--cl-valid); }
+.certloom-metric-icon.is-suspended { background: var(--cl-expired-wash); color: var(--cl-expired); }
+.certloom-metric-icon.is-withdrawn { background: var(--cl-revoked-wash); color: var(--cl-revoked); }
+.certloom-metric-icon.is-expired,
+.certloom-metric-icon.is-expiring { background: var(--cl-expired-wash); color: var(--cl-expired); }
+.certloom-metric-icon.is-issued { background: var(--cl-paper); color: var(--cl-ink-soft); }
 
 .certloom-metric-label {
-	margin-top: 12px;
-	color: var(--certloom-muted);
-	font-size: 12px;
+	margin-top: var(--cl-3);
+	color: var(--cl-ink-soft);
+	font-size: var(--cl-t-xs);
 	font-weight: 600;
 }
 
 .certloom-metric-meta {
 	margin-top: auto;
-	padding-top: 8px;
-	color: #78847f;
-	font-size: 11px;
+	padding-top: var(--cl-2);
+	color: var(--cl-ink-soft);
+	font-size: var(--cl-t-xs);
 }
 
 .certloom-dashboard-layout {
@@ -804,11 +805,11 @@
 }
 
 .certloom-panel {
-	padding: 22px;
-	border: 1px solid var(--certloom-border);
-	border-radius: 12px;
-	background: var(--certloom-surface);
-	box-shadow: 0 4px 15px rgba(23, 34, 31, 0.03);
+	padding: var(--cl-5);
+	border: 1px solid var(--cl-rule);
+	border-radius: var(--cl-r-none);
+	background: var(--cl-surface);
+	box-shadow: none;
 }
 
 .certloom-panel-header {
@@ -1048,8 +1049,8 @@
 	}
 
 	.certloom-dashboard-hero {
-		padding: 24px;
-		border-radius: 10px;
+		padding: var(--cl-3) 0;
+		border-radius: var(--cl-r-none);
 	}
 
 	.certloom-dashboard-actions {
@@ -1092,7 +1093,7 @@
 	}
 
 	.certloom-dashboard-hero {
-		padding: 20px;
+		padding: var(--cl-3) 0;
 	}
 }
 
@@ -1111,34 +1112,34 @@
 }
 
 .certloom-page-hero {
+	position: relative;
 	display: flex;
 	align-items: flex-end;
 	justify-content: space-between;
-	gap: 28px;
-	margin: 20px 0 22px;
-	padding: 26px 28px;
-	border: 1px solid var(--certloom-border);
-	border-radius: 13px;
-	background:
-		linear-gradient(135deg, rgba(233, 245, 241, .82), rgba(255, 255, 255, .96) 58%),
-		var(--certloom-surface);
-	box-shadow: 0 6px 22px rgba(23, 34, 31, .045);
+	gap: var(--cl-5);
+	margin: var(--cl-4) 0 var(--cl-5);
+	padding: var(--cl-5);
+	border: 1px solid var(--cl-brand-blue-dark);
+	border-radius: var(--cl-r-lift);
+	background: var(--cl-brand-hero);
+	box-shadow: var(--cl-lift);
+	color: var(--cl-on-brand);
 }
 
 .certloom-page-hero h1 {
-	margin: 3px 0 7px;
-	color: var(--certloom-ink);
-	font-size: clamp(29px, 3vw, 38px);
+	margin: var(--cl-1) 0;
+	color: var(--cl-on-brand);
+	font-size: var(--cl-t-lg);
 	font-weight: 700;
-	line-height: 1.08;
-	letter-spacing: -.035em;
+	line-height: 1.2;
+	letter-spacing: 0;
 }
 
 .certloom-page-hero p {
-	max-width: 760px;
+	max-width: 72ch;
 	margin: 0;
-	color: var(--certloom-muted);
-	font-size: 14px;
+	color: var(--cl-on-brand-soft);
+	font-size: var(--cl-t-sm);
 }
 
 .certloom-page-actions {
@@ -1151,10 +1152,10 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	gap: 7px;
-	min-height: 40px;
-	padding-inline: 15px;
-	border-radius: 7px;
+	gap: var(--cl-2);
+	min-height: 36px;
+	padding-inline: var(--cl-3);
+	border-radius: var(--cl-r-ctl);
 	font-weight: 600;
 }
 
@@ -1555,8 +1556,8 @@
 }
 
 .certloom-visibility-pill.is-public {
-	background: #e9f8f0;
-	color: #17643f;
+	background: var(--cl-blue-wash);
+	color: var(--cl-blue);
 }
 
 .certloom-visibility-pill.is-private {
@@ -1584,14 +1585,14 @@
 	display: flex;
 	align-items: center;
 	justify-content: flex-end;
-	gap: 9px;
-	margin-top: 18px;
-	padding: 13px 16px;
-	border: 1px solid var(--certloom-border);
-	border-radius: 10px;
-	background: rgba(255,255,255,.96);
-	box-shadow: 0 -4px 18px rgba(23,34,31,.06);
-	backdrop-filter: blur(8px);
+	gap: var(--cl-2);
+	margin-top: var(--cl-4);
+	padding: var(--cl-3) var(--cl-4);
+	border: 1px solid var(--cl-rule);
+	border-radius: var(--cl-r-none);
+	background: var(--cl-surface);
+	box-shadow: none;
+	backdrop-filter: none;
 }
 
 .certloom-editor-actions .button {
@@ -1781,8 +1782,8 @@
 .certloom-domain-subsection-head p {
 	max-width: 780px;
 	margin: 6px 0 0;
-	color: #646970;
-	font-size: 14px;
+	color: var(--cl-ink-soft);
+	font-size: var(--cl-t-sm);
 }
 
 .certloom-domain-preview-badge,
@@ -1825,21 +1826,21 @@
 
 .certloom-domain-metric {
 	display: grid;
-	gap: 5px;
-	padding: 16px 18px;
-	background: #fff;
-	border: 1px solid #dcdcde;
-	border-radius: 8px;
+	gap: var(--cl-1);
+	padding: var(--cl-3);
+	background: var(--cl-surface);
+	border: 1px solid var(--cl-rule);
+	border-radius: var(--cl-r-none);
 }
 
 .certloom-domain-metric strong {
-	font-size: 24px;
+	font-size: var(--cl-t-md);
 	line-height: 1;
 }
 
 .certloom-domain-metric span,
 .certloom-domain-muted {
-	color: #646970;
+	color: var(--cl-ink-soft);
 }
 
 .certloom-domain-search {
@@ -1867,8 +1868,8 @@
 }
 
 .certloom-domain-views a.is-current {
-	border-bottom-color: #0f6e56;
-	color: #0f6e56;
+	border-bottom-color: var(--cl-blue);
+	color: var(--cl-blue);
 	font-weight: 700;
 }
 
@@ -1918,8 +1919,8 @@
 }
 
 .certloom-domain-status.is-active {
-	background: #e9f8f0;
-	color: #17643f;
+	background: var(--cl-blue-wash);
+	color: var(--cl-blue);
 }
 
 .certloom-domain-status.is-inactive {
@@ -2088,12 +2089,12 @@
 .certloom-bulk-summary-grid span { display: block; color: #646970; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
 .certloom-bulk-summary-grid strong { display: block; margin-top: 4px; font-size: 24px; }
 .certloom-bulk-skipped { margin: 16px 0; }
-.certloom-setup-complete-badge { align-self: center; display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 999px; background: #edfaef; color: #1e6a2f; font-weight: 600; }
+.certloom-setup-complete-badge { align-self: center; display: inline-flex; align-items: center; gap: var(--cl-2); padding: var(--cl-2) var(--cl-3); border-radius: var(--cl-r-ctl); background: var(--cl-blue-wash); color: var(--cl-blue); font-weight: 600; }
 .certloom-setup-checklist { margin: 0; display: grid; gap: 14px; }
 .certloom-setup-checklist li { display: flex; gap: 12px; padding: 14px; margin: 0; border: 1px solid #dcdcde; border-radius: 10px; background: #fff; }
-.certloom-setup-checklist li.is-done { border-color: #b8dfc2; background: #f6fff8; }
+.certloom-setup-checklist li.is-done { border-color: var(--cl-blue); background: var(--cl-blue-wash); }
 .certloom-setup-checklist li .dashicons { color: #646970; }
-.certloom-setup-checklist li.is-done .dashicons { color: #1e6a2f; }
+.certloom-setup-checklist li.is-done .dashicons { color: var(--cl-blue); }
 .certloom-setup-checklist p { margin: 4px 0 0; }
 .certloom-setup-create-page { margin-top: 18px; padding-top: 18px; border-top: 1px solid #dcdcde; }
 .certloom-setup-finish { margin-top: 20px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
@@ -2282,7 +2283,7 @@
 	font-weight: 700;
 	white-space: nowrap;
 }
-.certloom-template-state-published { border-color: #68de7c; background: #edfaef; color: #005c12; }
+.certloom-template-state-published { border-color: var(--cl-blue); background: var(--cl-blue-wash); color: var(--cl-blue-deep); }
 .certloom-template-state-changes_pending { border-color: #dba617; background: #fcf9e8; color: #614200; }
 .certloom-template-state-archived { border-color: #a7aaad; background: #f0f0f1; color: #3c434a; }
 .certloom-template-editor {
@@ -2406,7 +2407,7 @@
 	letter-spacing: .02em;
 	text-transform: uppercase;
 }
-.certloom-template-preview-authority.is-accepted { border-color: #68de7c; background: #edfaef; color: #005c12; }
+.certloom-template-preview-authority.is-accepted { border-color: var(--cl-blue); background: var(--cl-blue-wash); color: var(--cl-blue-deep); }
 .certloom-template-preview-honesty { margin: 14px 0 18px !important; }
 .certloom-template-preview-controls {
 	display: grid;
@@ -2570,12 +2571,12 @@ background:#f0f0f1;
 color:#50575e;
 font-size:12px}
 .certloom-manual-steps li.is-complete{
-border-color:#b8d9c2;
-color:#1d5f32}
+border-color:var(--cl-blue);
+color:var(--cl-blue-deep)}
 .certloom-manual-steps li.is-complete:before{
 content:"✓";
-background:#dff2e4;
-color:#1d5f32}
+background:var(--cl-blue-wash);
+color:var(--cl-blue)}
 .certloom-manual-steps li.is-current{
 border-color:var(--certloom-accent);
 box-shadow:0 0 0 1px var(--certloom-accent);
@@ -2782,8 +2783,8 @@ align-items:center}
 .certloom-credential-views a:hover,
 .certloom-credential-views a:focus,
 .certloom-credential-views a.is-current {
-	border-bottom-color: #0f6e56;
-	color: #0f6e56;
+	border-bottom-color: var(--cl-blue);
+	color: var(--cl-blue);
 }
 
 .certloom-credential-views a.is-current { font-weight: 700; }
@@ -2862,33 +2863,35 @@ align-items:center}
 	font-size: 12px;
 	white-space: nowrap;
 }
-.certloom-credential-status.is-valid { background: #e9f8f0; color: #17643f; }
+.certloom-credential-status.is-valid { background: var(--cl-valid-wash); color: var(--cl-valid); }
 .certloom-credential-status.is-suspended,
 .certloom-credential-status.is-pending_review,
-.certloom-credential-status.is-not_yet_valid { background: #fff5d8; color: #745500; }
+.certloom-credential-status.is-not_yet_valid { background: var(--cl-expired-wash); color: var(--cl-expired); }
 .certloom-credential-status.is-revoked,
 .certloom-credential-status.is-voided,
-.certloom-credential-status.is-suspended_noncompliant { background: #fce8e6; color: #8a2424; }
-.certloom-credential-status.is-expired,
+.certloom-credential-status.is-suspended_noncompliant { background: var(--cl-revoked-wash); color: var(--cl-revoked); }
+.certloom-credential-status.is-expired { background: var(--cl-expired-wash); color: var(--cl-expired); }
 .certloom-credential-status.is-not_issued,
-.certloom-credential-status.is-unavailable { background: #f0f0f1; color: #646970; }
+.certloom-credential-status.is-unavailable { background: var(--cl-paper); color: var(--cl-ink-soft); }
 
 .certloom-credential-back { margin: 8px 0 12px; }
 .certloom-credential-hero {
+	position: relative;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 20px;
-	margin: 0 0 18px;
-	padding: 22px 24px;
-	background: #fff;
-	border: 1px solid #dcdcde;
-	border-radius: 10px;
-	box-shadow: 0 1px 1px rgba(0,0,0,.03);
+	gap: var(--cl-4);
+	margin: 0 0 var(--cl-4);
+	padding: var(--cl-3) 0 var(--cl-4);
+	background: transparent;
+	border: 0;
+	border-bottom: 1px solid var(--cl-rule);
+	border-radius: var(--cl-r-none);
+	box-shadow: none;
 }
-.certloom-credential-hero h2 { margin: 3px 0 5px; font-size: 25px; }
-.certloom-credential-eyebrow { color: #646970; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
-.certloom-credential-hero-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; color: #646970; }
+.certloom-credential-hero h2 { margin: var(--cl-1) 0; font-size: var(--cl-t-lg); }
+.certloom-credential-eyebrow { color: var(--cl-ink-soft); font-size: var(--cl-t-xs); font-weight: 600; text-transform: none; letter-spacing: 0; }
+.certloom-credential-hero-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cl-2); color: var(--cl-ink-soft); }
 
 .certloom-credential-tabs {
 	display: flex;
@@ -2899,11 +2902,11 @@ align-items:center}
 
 .certloom-credential-panel {
 	margin-top: 0;
-	padding: 24px;
-	background: #fff;
-	border: 1px solid #c3c4c7;
+	padding: var(--cl-4);
+	background: var(--cl-surface);
+	border: 1px solid var(--cl-rule);
 	border-top: 0;
-	border-radius: 0 0 10px 10px;
+	border-radius: var(--cl-r-none);
 }
 .certloom-credential-panel-head {
 	display: flex;
@@ -2994,11 +2997,11 @@ align-items:center}
 .certloom-credential-review form { margin-top: 16px; }
 
 .certloom-version-current {
-	margin-left: 5px;
-	padding: 3px 7px;
-	background: #e9f8f0;
-	color: #17643f;
-	font-size: 10px;
+	margin-left: var(--cl-1);
+	padding: var(--cl-1) var(--cl-2);
+	background: var(--cl-blue-wash);
+	color: var(--cl-blue-deep);
+	font-size: var(--cl-t-xs);
 }
 .certloom-domain-table tr.is-selected-version td { background: #f0f6fc; }
 
@@ -3099,7 +3102,7 @@ align-items:center}
 	letter-spacing: .02em;
 	text-transform: uppercase;
 }
-.certloom-bulk-status.is-succeeded { border-color: #9cc7ad; background: #edf8f1; color: #17643f; }
+.certloom-bulk-status.is-succeeded { border-color: var(--cl-blue); background: var(--cl-blue-wash); color: var(--cl-blue-deep); }
 .certloom-bulk-status.is-partially_succeeded { border-color: #dba617; background: #fff8df; color: #6e4d00; }
 .certloom-bulk-status.is-failed,
 .certloom-bulk-status.is-cancelled { border-color: #d8a3a3; background: #fcf0f1; color: #8a2424; }
@@ -3178,7 +3181,7 @@ align-items:center}
 	letter-spacing: .02em;
 	text-transform: uppercase;
 }
-.certloom-email-status.is-sent { border-color: #9cc7ad; background: #edf8f1; color: #17643f; }
+.certloom-email-status.is-sent { border-color: var(--cl-blue); background: var(--cl-blue-wash); color: var(--cl-blue-deep); }
 .certloom-email-status.is-failed { border-color: #d8a3a3; background: #fcf0f1; color: #8a2424; }
 .certloom-email-status.is-uncertain { border-color: #dba617; background: #fff8df; color: #6e4d00; }
 .certloom-email-status.is-queued,
@@ -3205,32 +3208,34 @@ align-items:center}
 .certloom-analytics-metrics .certloom-domain-metric{min-width:0}
 .certloom-analytics-layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,1fr);gap:20px;align-items:start}
 .certloom-analytics-sidebar{display:grid;gap:20px}
-.certloom-analytics-chart{height:160px;display:flex;align-items:end;gap:3px;padding:16px 12px 0;border:1px solid #dcdcde;border-radius:10px;background:#fff;overflow:hidden}
-.certloom-analytics-bar{flex:1 1 0;min-width:2px;max-width:18px;height:var(--certloom-analytics-height,2%);border-radius:3px 3px 0 0;background:var(--certloom-admin-accent,#0f6e56)}
+.certloom-analytics-chart{height:160px;display:flex;align-items:end;gap:3px;padding:var(--cl-4) var(--cl-3) 0;border:1px solid var(--cl-rule);border-radius:var(--cl-r-none);background:var(--cl-surface);overflow:hidden}
+.certloom-analytics-bar{flex:1 1 0;min-width:2px;max-width:18px;height:var(--certloom-analytics-height,2%);border-radius:var(--cl-r-ctl) var(--cl-r-ctl) 0 0;background:var(--cl-chart-1)}
+.certloom-analytics-chart.is-issuance .certloom-analytics-bar{background:var(--cl-chart-1)}
+.certloom-analytics-chart.is-verification .certloom-analytics-bar{background:var(--cl-chart-2)}
 .certloom-analytics-table-wrap{overflow:auto;max-width:100%;margin-top:16px}
 .certloom-analytics-table-wrap:focus{outline:2px solid var(--certloom-focus);outline-offset:2px}
 .certloom-analytics-source-list{display:grid;gap:10px;margin:0}
-.certloom-analytics-source-list>div{display:flex;justify-content:space-between;gap:16px;padding-bottom:8px;border-bottom:1px solid #eee}
+.certloom-analytics-source-list>div{display:flex;justify-content:space-between;gap:var(--cl-4);padding-bottom:var(--cl-2);border-bottom:1px solid var(--cl-rule)}
 .certloom-analytics-source-list dt{font-weight:600}.certloom-analytics-source-list dd{margin:0;font-variant-numeric:tabular-nums}
 .certloom-analytics-most{margin-top:20px}
 @media(max-width:1100px){.certloom-analytics-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.certloom-analytics-layout{grid-template-columns:1fr}}
 @media(max-width:640px){.certloom-analytics-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.certloom-analytics-chart{height:120px}.certloom-analytics-period{align-items:stretch}.certloom-analytics-period select,.certloom-analytics-period .button{width:100%}}
-@media(prefers-reduced-motion:reduce){.certloom-analytics *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+@media(prefers-reduced-motion:reduce){.certloom-analytics *{scroll-behavior:auto;transition:none;animation:none}}
 @media(forced-colors:active){.certloom-analytics-bar{background:CanvasText}.certloom-analytics-chart{border-color:CanvasText}}
 .certloom-analytics-tabs{margin:16px 0 18px}
 .certloom-issuance-dimension-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
 .certloom-issuance-dimension-grid h3{margin-top:0}
 .certloom-analytics-ranking{display:grid;gap:8px;margin:0;padding:0;list-style:none}
-.certloom-analytics-ranking li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #eee}
+.certloom-analytics-ranking li{display:flex;justify-content:space-between;gap:var(--cl-3);padding:var(--cl-2) 0;border-bottom:1px solid var(--cl-rule)}
 .certloom-analytics-ranking strong{font-variant-numeric:tabular-nums}
 .certloom-expiry-buckets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0 16px}
-.certloom-expiry-buckets article{padding:14px;border:1px solid #dcdcde;border-radius:10px;background:#fff}.certloom-expiry-buckets strong{display:block;font-size:1.5rem;font-variant-numeric:tabular-nums}.certloom-expiry-buckets span{display:block;margin-top:4px}
+.certloom-expiry-buckets article{padding:var(--cl-3);border:1px solid var(--cl-rule);border-radius:var(--cl-r-none);background:var(--cl-surface)}.certloom-expiry-buckets strong{display:block;font-size:var(--cl-t-md);font-variant-numeric:tabular-nums}.certloom-expiry-buckets span{display:block;margin-top:var(--cl-1)}
 @media(max-width:1100px){.certloom-issuance-dimension-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.certloom-issuance-dimension-grid,.certloom-expiry-buckets{grid-template-columns:1fr}.certloom-analytics-tabs{overflow-x:auto;white-space:nowrap}}
 @media(forced-colors:active){.certloom-analytics-ranking li,.certloom-expiry-buckets article{border-color:CanvasText}}
 .certloom-dashboard-analytics-preview{margin:20px 0}
 .certloom-dashboard-analytics-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.certloom-dashboard-analytics-grid article{padding:14px;border:1px solid #dcdcde;border-radius:10px;background:#fff}.certloom-dashboard-analytics-grid span,.certloom-dashboard-analytics-grid strong{display:block}.certloom-dashboard-analytics-grid strong{margin-top:4px;font-size:1.5rem;font-variant-numeric:tabular-nums}
+.certloom-dashboard-analytics-grid article{padding:var(--cl-3);border:1px solid var(--cl-rule);border-radius:var(--cl-r-none);background:var(--cl-surface)}.certloom-dashboard-analytics-grid span,.certloom-dashboard-analytics-grid strong{display:block}.certloom-dashboard-analytics-grid strong{margin-top:var(--cl-1);font-size:var(--cl-t-md);font-variant-numeric:tabular-nums}
 .certloom-dashboard-analytics-leaders{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}.certloom-dashboard-analytics-leaders p{margin:0;padding:10px 0}
 @media(max-width:900px){.certloom-dashboard-analytics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.certloom-dashboard-analytics-leaders{grid-template-columns:1fr}}
 @media(max-width:480px){.certloom-dashboard-analytics-grid{grid-template-columns:1fr}}
@@ -3249,18 +3254,20 @@ display:flex;
 align-items:end;
 gap:2px;
 padding:8px;
-border:1px solid #dcdcde;
-border-radius:8px;
-background:#fff;
+border:1px solid var(--cl-rule);
+border-radius:var(--cl-r-none);
+background:var(--cl-surface);
 overflow:hidden}
 .certloom-dashboard-mini-chart>span{
 flex:1 1 0;
 min-width:2px;
 height:var(--certloom-dashboard-chart-height,2%);
-background:var(--certloom-admin-accent,#0f6e56);
-border-radius:2px 2px 0 0}
+background:var(--cl-chart-1);
+border-radius:var(--cl-r-ctl) var(--cl-r-ctl) 0 0}
+.certloom-dashboard-mini-chart.is-issuance>span{background:var(--cl-chart-1)}
+.certloom-dashboard-mini-chart.is-verification>span{background:var(--cl-chart-2)}
 @media(max-width:700px){.certloom-dashboard-analytics-charts{grid-template-columns:1fr}}
-@media(prefers-reduced-motion:reduce){.certloom-dashboard-mini-chart>span{transition:none!important;animation:none!important}}
+@media(prefers-reduced-motion:reduce){.certloom-dashboard-mini-chart>span{transition:none;animation:none}}
 @media(forced-colors:active){.certloom-dashboard-mini-chart,.certloom-dashboard-mini-chart>span{border-color:CanvasText}.certloom-dashboard-mini-chart>span{background:CanvasText}}
 
 /* 1.6.73 UX-01 — compact presentation-only Simple/Advanced administration. */
@@ -3581,9 +3588,9 @@ align-items:center;
 min-height:24px;
 margin-inline-start:8px;
 padding:0 8px;
-border-radius:999px;
-background:#edfaef;
-color:#116329;
+border-radius:var(--cl-r-ctl);
+background:var(--cl-blue-wash);
+color:var(--cl-blue);
 font-size:12px;
 font-weight:600;
 white-space:nowrap}
@@ -3691,14 +3698,14 @@ outline:2px solid Highlight}
 /* 1.6.94 WIZ-01/02 — adaptive, resumable setup over canonical settings. */
 .certloom-adaptive-setup{max-width:1240px}
 .certloom-adaptive-setup .certloom-page-hero{align-items:flex-start}
-.certloom-setup-complete-badge{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 10px;border:1px solid #b8d9c4;border-radius:999px;background:#edfaef;color:#116329;font-weight:600;white-space:nowrap}
+.certloom-setup-complete-badge{display:inline-flex;align-items:center;gap:var(--cl-2);min-height:32px;padding:0 var(--cl-3);border:1px solid var(--cl-blue);border-radius:var(--cl-r-ctl);background:var(--cl-blue-wash);color:var(--cl-blue);font-weight:600;white-space:nowrap}
 .certloom-wizard-progress{display:flex;gap:6px;margin:0 0 16px;padding:6px;overflow-x:auto;scrollbar-gutter:stable;border:1px solid #dcdcde;border-radius:10px;background:#fff;contain:layout paint}
 .certloom-wizard-progress-step{position:relative;display:inline-flex;align-items:center;gap:8px;flex:1 0 142px;min-height:44px;padding:7px 10px;border-radius:7px;color:#50575e;font-weight:600;text-decoration:none}
 .certloom-wizard-progress-step>span{display:inline-grid;place-items:center;flex:0 0 26px;width:26px;height:26px;border:1px solid #c3c4c7;border-radius:50%;background:#f6f7f7;font-size:12px}
 .certloom-wizard-progress-step:hover{background:var(--certloom-surface-soft);color:var(--certloom-accent-strong)}
 .certloom-wizard-progress-step.is-current{background:#f0f6fc;color:#0a4b78}
 .certloom-wizard-progress-step.is-current>span{border-color:var(--certloom-accent);background:var(--certloom-accent);color:#fff}
-.certloom-wizard-progress-step.is-done:not(.is-skipped)>span{border-color:#2e8540;background:#edfaef;color:#116329}
+.certloom-wizard-progress-step.is-done:not(.is-skipped)>span{border-color:var(--cl-blue);background:var(--cl-blue-wash);color:var(--cl-blue)}
 .certloom-wizard-progress-step.is-skipped>span{border-style:dashed;background:#fff;color:#646970}
 .certloom-wizard-progress-step:focus-visible{outline:2px solid var(--certloom-focus);outline-offset:2px}
 .certloom-wizard-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(270px,340px);gap:16px;align-items:start}
@@ -3836,15 +3843,15 @@ color:#646970}
 .certloom-context-lookup{display:grid;gap:6px;min-width:0}.certloom-context-lookup__search,.certloom-context-lookup select{width:100%;max-width:none}.certloom-context-lookup__status{min-height:1.25em;color:#646970;font-size:12px;line-height:1.35}.certloom-context-lookup__search:disabled{background:#f0f0f1;color:#8c8f94}
 
 /* 1.6.98 UX-OPS-01 — compact setup, backup and integration ergonomics. */
-.certloom-dashboard-hero{position:relative;padding-top:54px}
-.certloom-dashboard-setup-link{position:absolute;top:18px;right:20px;display:inline-flex;align-items:center;gap:9px;min-height:34px;padding:0 11px;border:1px solid rgba(255,255,255,.34);border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-size:12px;font-weight:650;text-decoration:none}
-.certloom-dashboard-setup-link:hover,.certloom-dashboard-setup-link:focus{background:#fff;color:var(--certloom-accent-strong);border-color:#fff;text-decoration:none}
-.certloom-setup-reminder{display:flex;align-items:center;gap:10px;margin:0 0 18px;padding:9px 11px;border:1px solid rgba(15,110,86,.22);border-radius:8px;background:#f4fbf8;color:#17483c}
+.certloom-dashboard-hero{position:relative;padding-top:var(--cl-7)}
+.certloom-dashboard-setup-link{position:absolute;top:var(--cl-3);right:var(--cl-4);z-index:1;display:inline-flex;align-items:center;gap:var(--cl-2);min-height:32px;padding:0 var(--cl-3);border:1px solid var(--cl-on-brand-line);border-radius:var(--cl-r-ctl);background:var(--cl-on-brand-wash);color:var(--cl-on-brand);font-size:var(--cl-t-xs);font-weight:650;text-decoration:none}
+.certloom-dashboard-setup-link:hover,.certloom-dashboard-setup-link:focus{background:var(--cl-on-brand);color:var(--cl-blue-deep);border-color:var(--cl-on-brand);text-decoration:none}
+.certloom-setup-reminder{display:flex;align-items:center;gap:var(--cl-2);margin:0 0 var(--cl-4);padding:var(--cl-2) var(--cl-3);border:1px solid var(--cl-rule);border-radius:var(--cl-r-ctl);background:var(--cl-blue-wash);color:var(--cl-ink)}
 .certloom-setup-reminder .dashicons{
 width:18px;
 height:18px;
 font-size:18px;
-color:#0f6e56}
+color:var(--cl-blue)}
 .certloom-setup-reminder strong{
 font-size:13px}
 .certloom-setup-reminder>a{
@@ -3860,14 +3867,14 @@ width:30px;
 height:30px;
 padding:0;
 border:0;
-border-radius:6px;
-color:#42524d;
-font-size:22px;
+border-radius:var(--cl-r-ctl);
+color:var(--cl-ink-soft);
+font-size:var(--cl-t-md);
 line-height:1;
 cursor:pointer}
 .certloom-setup-reminder-dismiss .button-link:hover,.certloom-setup-reminder-dismiss .button-link:focus{
-background:#e4f3ed;
-color:#14231f}
+background:var(--cl-blue-wash);
+color:var(--cl-blue-deep)}
 .certloom-backup-settings-form{
 grid-template-columns:minmax(180px,280px) minmax(180px,240px) max-content;
 align-items:end;
@@ -3893,7 +3900,7 @@ padding:0}
 width:auto!important;
 min-width:0!important;
 white-space:nowrap}
-.certloom-google-advanced{max-width:760px;margin:12px 0;padding:10px 12px;border:1px solid #dcdcde;border-radius:8px;background:#fff}.certloom-google-advanced summary{cursor:pointer;font-weight:650;color:#1d4d40}.certloom-google-connect-row{display:flex;align-items:center;gap:10px}.certloom-google-popup-feedback{font-size:13px;color:#50575e}
+.certloom-google-advanced{max-width:760px;margin:var(--cl-3) 0;padding:var(--cl-2) var(--cl-3);border:1px solid var(--cl-rule);border-radius:var(--cl-r-ctl);background:var(--cl-surface)}.certloom-google-advanced summary{cursor:pointer;font-weight:650;color:var(--cl-ink)}.certloom-google-connect-row{display:flex;align-items:center;gap:10px}.certloom-google-popup-feedback{font-size:13px;color:#50575e}
 .certloom-wizard-template-preview{
 display:grid;
 grid-template-columns:minmax(180px,240px) minmax(0,1fr);
@@ -3930,10 +3937,10 @@ font-size:12px;
 font-weight:650;
 color:#5b6662}
 .certloom-numbering-example code{
-padding:5px 8px;
-border-radius:5px;
-background:#edf3f0;
-color:#15372f}
+padding:var(--cl-1) var(--cl-2);
+border-radius:var(--cl-r-ctl);
+background:var(--cl-paper);
+color:var(--cl-ink)}
 .certloom-wizard-google-card{
 padding:16px;
 border:1px solid #dbe5e1;
@@ -3960,25 +3967,22 @@ font-size:12px;
 font-weight:700;
 white-space:nowrap}
 .certloom-google-status.is-connected{
-background:#e6f5ed;
-color:#176c4b}
+background:var(--cl-blue-wash);
+color:var(--cl-blue-deep)}
 .certloom-google-status.is-disconnected{
 background:#f1f2f3;
 color:#5b6167}
 .certloom-google-connected-copy{
 display:flex;
 align-items:center;
-gap:7px;
-color:#176c4b;
+gap:var(--cl-2);
+color:var(--cl-blue-deep);
 font-weight:600}
 .certloom-google-backup-preferences{
 margin-top:14px}
 @media(max-width:782px){
 .certloom-dashboard-hero{
-padding-top:66px}
-.certloom-dashboard-setup-link{
-top:16px;
-right:16px}
+padding-top:var(--cl-7)}
 .certloom-setup-reminder{
 align-items:flex-start;
 flex-wrap:wrap}
@@ -4047,8 +4051,9 @@ border-radius:9px;
 background:#fbfdfc;
 cursor:pointer}
 .certloom-lifecycle-options>label:has(input:checked){
-border-color:#0f6e56;
-box-shadow:0 0 0 1px #0f6e56}
+border-color:var(--cl-blue);
+box-shadow:none;
+background:var(--cl-blue-wash)}
 .certloom-lifecycle-options>label.is-destructive:has(input:checked){
 border-color:#b32d2e;
 box-shadow:0 0 0 1px #b32d2e}
@@ -4096,9 +4101,9 @@ border:1px solid CanvasText}
 	gap: 18px;
 	margin: 16px 0 20px;
 	padding: 14px 16px;
-	border: 1px solid #9ccfbd;
-	border-radius: 10px;
-	background: #f1faf6;
+	border: 1px solid var(--cl-blue);
+	border-radius: var(--cl-r-ctl);
+	background: var(--cl-blue-wash);
 }
 .certloom-template-publish-callout > div { min-width: 0; flex: 1 1 auto; }
 .certloom-template-publish-callout p { margin: 4px 0 0; color: #50575e; }
@@ -4392,9 +4397,9 @@ height:8px;
 border-radius:50%;
 background:#9ca3af}
 .certloom-template-publish-state.is-published{
-color:#17643f}
+color:var(--cl-blue-deep)}
 .certloom-template-publish-state.is-published::before{
-background:#2d8a5d}
+background:var(--cl-blue)}
 .certloom-template-publish-state.is-draft{
 color:#6b5731}
 .certloom-template-publish-state.is-draft::before{
@@ -4425,7 +4430,7 @@ min-height:18px;
 margin-top:8px;
 font-size:12px}
 .certloom-template-card-feedback.is-success{
-color:#17643f}
+color:var(--cl-blue-deep)}
 .certloom-template-card-feedback.is-error{
 padding:8px 10px;
 border-radius:6px;
@@ -4444,7 +4449,7 @@ padding:42px 36px}
 width:46px;
 height:46px;
 font-size:46px;
-color:#17643f}
+color:var(--cl-blue)}
 .certloom-setup-completed-landing h2{
 font-size:26px;
 margin:14px 0 8px}
@@ -4468,34 +4473,36 @@ align-items:center}
 /* UX-CORE-01 — whole-product task flow. Dashboard + Field Manager visual DNA, quieter and more connected. */
 .certloom-flow-workspace,
 .certloom-program-workspace {
-	--certloom-flow-surface:#fff;
-	--certloom-flow-muted:#f6f9f8;
-	--certloom-flow-line:#dfe8e4;
-	--certloom-flow-ink:#17221f;
-	--certloom-flow-subtle:#60706a;
-	--certloom-flow-accent:var(--certloom-accent,#0f6e56);
-	--certloom-flow-accent-soft:#edf8f4;
+	--certloom-flow-surface:var(--cl-surface);
+	--certloom-flow-muted:var(--cl-paper);
+	--certloom-flow-line:var(--cl-rule);
+	--certloom-flow-ink:var(--cl-ink);
+	--certloom-flow-subtle:var(--cl-ink-soft);
+	--certloom-flow-accent:var(--cl-blue);
+	--certloom-flow-accent-soft:var(--cl-blue-wash);
 	max-width:1440px;
 }
 .certloom-workspace-hero {
+	position:relative;
 	display:flex;
 	align-items:flex-end;
 	justify-content:space-between;
-	gap:28px;
-	margin:20px 0 18px;
-	padding:28px 30px;
-	border:1px solid #dbe8e3;
-	border-radius:14px;
-	background:linear-gradient(135deg,#fff 0%,#f6fbf9 68%,#edf8f4 100%);
-	box-shadow:0 10px 28px rgba(23,34,31,.055);
+	gap:var(--cl-5);
+	margin:var(--cl-4) 0 var(--cl-5);
+	padding:var(--cl-5);
+	border:1px solid var(--cl-brand-blue-dark);
+	border-radius:var(--cl-r-lift);
+	background:var(--cl-brand-hero);
+	box-shadow:var(--cl-lift);
+	color:var(--cl-on-brand);
 }
-.certloom-workspace-hero-copy{max-width:780px}
-.certloom-workspace-hero h1{margin:4px 0 8px;color:var(--certloom-flow-ink);font-size:clamp(30px,3vw,40px);line-height:1.08;letter-spacing:-.032em}
-.certloom-workspace-hero p{margin:0;color:var(--certloom-flow-subtle);font-size:15px;line-height:1.55}
-.certloom-workspace-hero-actions{display:flex;gap:9px;flex-wrap:wrap}
-.certloom-workspace-hero-actions .button,.certloom-form-actions .button,.certloom-program-flow-actions .button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding-inline:16px;border-radius:8px;font-weight:650}
-.certloom-workspace-hero-actions .button-primary,.certloom-form-actions .button-primary,.certloom-program-flow-actions .button-primary{background:var(--certloom-flow-accent,#0f6e56);border-color:var(--certloom-flow-accent,#0f6e56);color:#fff}
-.certloom-workspace-hero-actions .button-primary:hover,.certloom-workspace-hero-actions .button-primary:focus,.certloom-form-actions .button-primary:hover,.certloom-form-actions .button-primary:focus,.certloom-program-flow-actions .button-primary:hover,.certloom-program-flow-actions .button-primary:focus{background:var(--certloom-accent-strong);border-color:var(--certloom-accent-strong);color:#fff}
+.certloom-workspace-hero-copy{max-width:72ch}
+.certloom-workspace-hero h1{margin:var(--cl-1) 0;color:var(--cl-on-brand);font-size:var(--cl-t-lg);line-height:1.2;letter-spacing:0}
+.certloom-workspace-hero p{margin:0;color:var(--cl-on-brand-soft);font-size:var(--cl-t-sm);line-height:1.5}
+.certloom-workspace-hero-actions{display:flex;gap:var(--cl-2);flex-wrap:wrap}
+.certloom-workspace-hero-actions .button,.certloom-form-actions .button,.certloom-program-flow-actions .button{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding-inline:var(--cl-3);border-radius:var(--cl-r-ctl);font-weight:650}
+.certloom-workspace-hero-actions .button-primary,.certloom-form-actions .button-primary,.certloom-program-flow-actions .button-primary{background:var(--cl-blue);border-color:var(--cl-blue);color:var(--cl-surface)}
+.certloom-workspace-hero-actions .button-primary:hover,.certloom-workspace-hero-actions .button-primary:focus,.certloom-form-actions .button-primary:hover,.certloom-form-actions .button-primary:focus,.certloom-program-flow-actions .button-primary:hover,.certloom-program-flow-actions .button-primary:focus{background:var(--cl-blue-deep);border-color:var(--cl-blue-deep);color:var(--cl-surface)}
 .certloom-flow-map{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;margin:0 0 18px;padding:16px;border:1px solid var(--certloom-flow-line);border-radius:12px;background:#fff}
 .certloom-flow-step{
 display:flex;
@@ -4585,7 +4592,7 @@ height:8px;
 border-radius:50%;
 background:#a7b0ad}
 .certloom-status-dot.is-on{
-background:#2d8a5d}
+background:var(--cl-blue)}
 .certloom-state-pill{
 display:inline-flex;
 align-items:center;
@@ -4597,8 +4604,8 @@ color:#59655f;
 font-size:11px;
 font-weight:700}
 .certloom-state-pill.is-success{
-background:#edf8f1;
-color:#17643f}
+background:var(--cl-blue-wash);
+color:var(--cl-blue-deep)}
 .certloom-source-mini-list{
 display:grid;
 margin-bottom:12px}
@@ -4791,7 +4798,7 @@ width:fit-content}
 .certloom-workspace-hero{
 align-items:flex-start;
 flex-direction:column;
-padding:22px}
+padding:0 0 var(--cl-3)}
 .certloom-workspace-hero-actions{
 width:100%}
 .certloom-workspace-hero-actions .button{
@@ -4990,9 +4997,9 @@ display:grid;
 gap:14px;
 margin:0 0 18px;
 padding:17px 18px;
-border:1px solid #acd7c8;
-border-radius:11px;
-background:#f4fbf8}
+border:1px solid var(--cl-blue);
+border-radius:var(--cl-r-ctl);
+background:var(--cl-blue-wash)}
 .certloom-one-time-secret h3{
 margin:3px 0 4px;
 font-size:16px;
@@ -5076,7 +5083,7 @@ opacity:.82}
 .certloom-choice-pills label{position:relative;cursor:pointer}
 .certloom-choice-pills input{position:absolute;inline-size:1px;block-size:1px;opacity:0;pointer-events:none}
 .certloom-choice-pills span{display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border:1px solid #d9e2de;border-radius:999px;background:#fff;color:#45534e;font-size:12px;font-weight:650;transition:border-color .12s ease,background-color .12s ease,color .12s ease}
-.certloom-choice-pills input:checked+span{border-color:#9bc9b8;background:#edf8f4;color:var(--certloom-flow-accent,var(--certloom-accent))}
+.certloom-choice-pills input:checked+span{border-color:var(--cl-blue);background:var(--cl-blue-wash);color:var(--cl-blue-deep)}
 .certloom-choice-pills input:focus-visible+span{outline:2px solid var(--certloom-focus);outline-offset:2px}
 .certloom-email-compose-actions{display:flex;align-items:center;gap:12px;margin-top:18px}
 .certloom-email-compose-actions>span{color:var(--certloom-flow-subtle,#63726d);font-size:12px}
@@ -5161,7 +5168,7 @@ align-items:flex-start}
 .ecapla-certverify-admin-wrap textarea{border:1px solid #c8d2ce;border-radius:6px;box-shadow:none}
 .ecapla-certverify-admin-wrap input:focus,
 .ecapla-certverify-admin-wrap select:focus,
-.ecapla-certverify-admin-wrap textarea:focus{border-color:#5c9c88;box-shadow:0 0 0 1px #5c9c88;outline:0}
+.ecapla-certverify-admin-wrap textarea:focus{border-color:var(--cl-focus);box-shadow:none;outline:2px solid var(--cl-focus);outline-offset:1px}
 .ecapla-certverify-admin-wrap label.is-invalid input,
 .ecapla-certverify-admin-wrap label.is-invalid select,
 .ecapla-certverify-admin-wrap label.is-invalid textarea,
@@ -5174,7 +5181,7 @@ align-items:flex-start}
 .certloom-recipient-mode-panel[hidden],
 .certloom-manual-recipient-search[hidden]{display:none!important}
 .certloom-recipient-name-details{margin-top:12px;padding-top:10px;border-top:1px solid #e6ece9}
-.certloom-recipient-name-details>summary{cursor:pointer;color:#335e51;font-size:12px;font-weight:700}
+.certloom-recipient-name-details>summary{cursor:pointer;color:var(--cl-blue);font-size:var(--cl-t-xs);font-weight:700}
 .certloom-manual-primary-field{display:grid;gap:6px}
 .certloom-manual-grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .certloom-manual-form .button-hero{min-height:40px!important;padding:0 16px!important;font-size:13px!important}
@@ -5322,8 +5329,8 @@ width:100%}
 border:1px solid CanvasText}
 }
 /* UX-CORE-03 — compact premium lists and forms after real-WordPress acceptance. */
-.certloom-premium-row-link{display:inline-flex;align-items:center;min-height:36px;padding:0 4px;color:#315f51;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap}
-.certloom-premium-row-link:hover,.certloom-premium-row-link:focus-visible{color:#0f6e56;text-decoration:underline;text-underline-offset:3px}
+.certloom-premium-row-link{display:inline-flex;align-items:center;min-height:36px;padding:0 var(--cl-1);color:var(--cl-blue);font-size:var(--cl-t-xs);font-weight:700;text-decoration:none;white-space:nowrap}
+.certloom-premium-row-link:hover,.certloom-premium-row-link:focus-visible{color:var(--cl-blue);text-decoration:underline;text-underline-offset:3px}
 .certloom-premium-row-link:focus-visible{outline:2px solid var(--certloom-focus);outline-offset:2px;border-radius:4px}
 .certloom-premium-list-actions .button-primary{box-shadow:none!important}
 .certloom-domain-search{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.certloom-domain-search input[type=search]{min-width:min(340px,100%);height:40px!important}.certloom-domain-search .button{min-height:40px!important;height:40px!important;line-height:38px!important;border-radius:6px!important}
@@ -5528,14 +5535,14 @@ padding:15px}
 .certloom-data-tools-workspace > h2 + table { border-bottom:1px solid var(--certloom-border); border-radius:0 0 var(--certloom-radius-md) var(--certloom-radius-md); }
 
 /* UX-SYSTEM: shared visual recipe for existing hero/card aliases.
- * Markup aliases remain temporarily for compatibility; their visual language is one system. */
+ * 1.7 keeps these aliases for compatibility while using flat, ruled geometry. */
 .certloom-page-hero,
 .certloom-workspace-hero,
 .certloom-dashboard-hero,
 .certloom-credential-hero {
-	border-color: var(--certloom-border);
-	border-radius: var(--certloom-radius-lg);
-	box-shadow: 0 8px 26px rgba(23, 34, 31, .05);
+	border-color: var(--cl-blue-deep);
+	border-radius: var(--cl-r-lift);
+	box-shadow: var(--cl-lift);
 }
 .certloom-panel,
 .certloom-workspace-card,
@@ -5543,10 +5550,10 @@ padding:15px}
 .certloom-bulk-card,
 .certloom-card,
 .ecapla-certverify-admin-card {
-	border-color: var(--certloom-border);
-	border-radius: var(--certloom-radius-md);
-	background: var(--certloom-surface);
-	box-shadow: 0 3px 14px rgba(23, 34, 31, .035);
+	border-color: var(--cl-rule);
+	border-radius: var(--cl-r-none);
+	background: var(--cl-surface);
+	box-shadow: none;
 }
 .certloom-panel-header,
 .certloom-workspace-card-head,
@@ -5556,7 +5563,7 @@ padding:15px}
 
 /* UX-CORE-04 — auditor visual merge + compact, scroll-safe creation surfaces. */
 .certloom-premium-dialog{
-	max-height:min(88vh,820px);
+	max-height:min(84vh,760px);
 	min-height:0;
 }
 .certloom-premium-dialog[open]{
@@ -5566,7 +5573,7 @@ padding:15px}
 .certloom-premium-dialog>form{
 	display:flex;
 	flex-direction:column;
-	max-height:min(88vh,820px);
+	max-height:min(84vh,760px);
 	min-height:0;
 	flex:1 1 auto;
 }
@@ -5713,12 +5720,12 @@ padding:15px}
 
 /* UX-CORE-05 — current Credential records use one form-like editor with locked issuance truth and inline audit evidence. */
 .certloom-credential-record-editor{display:grid;gap:14px}
-.certloom-credential-record-nav{position:sticky;top:32px;z-index:8;margin:0 0 2px;border:1px solid var(--certloom-border);border-radius:var(--certloom-radius-md);background:rgba(255,255,255,.97);box-shadow:0 6px 18px rgba(23,34,31,.04)}
+.certloom-credential-record-nav{position:sticky;top:32px;z-index:8;margin:0 0 2px;border:1px solid var(--cl-rule);border-radius:var(--cl-r-none);background:var(--cl-surface);box-shadow:none}
 .certloom-credential-record-nav a{display:inline-flex;align-items:center;min-height:40px}
-.certloom-credential-record-editor .certloom-credential-panel{margin:0;border:1px solid var(--certloom-border);border-radius:var(--certloom-radius-md);box-shadow:0 3px 14px rgba(23,34,31,.035)}
+.certloom-credential-record-editor .certloom-credential-panel{margin:0;border:1px solid var(--cl-rule);border-radius:var(--cl-r-none);box-shadow:none}
 .certloom-record-anchor{display:grid;gap:14px;scroll-margin-top:108px}
 .certloom-record-section{scroll-margin-top:108px}
-.certloom-locked-record-badge{display:inline-flex;align-items:center;gap:5px;min-height:28px;padding:4px 9px;border:1px solid #d9ddd9;border-radius:999px;background:#f5f7f5;color:#56615c;font-size:11px;font-weight:700;white-space:nowrap}
+.certloom-locked-record-badge{display:inline-flex;align-items:center;gap:var(--cl-1);min-height:28px;padding:var(--cl-1) var(--cl-2);border:1px solid var(--cl-rule);border-radius:var(--cl-r-ctl);background:var(--cl-paper);color:var(--cl-ink-soft);font-size:var(--cl-t-xs);font-weight:700;white-space:nowrap}
 .certloom-locked-record-badge .dashicons{width:15px;height:15px;font-size:15px}
 .certloom-locked-field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .certloom-locked-field{display:grid;gap:6px;min-width:0}
@@ -5750,7 +5757,7 @@ padding:15px}
 .certloom-credential-source-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0}
 .certloom-credential-source-line>strong{min-width:0}
 .certloom-credential-source{display:inline-flex;align-items:center;min-height:22px;padding:2px 8px;border:1px solid transparent;border-radius:999px;font-size:10px!important;font-weight:750!important;line-height:1.2!important;letter-spacing:.02em;white-space:nowrap;vertical-align:middle}
-.certloom-credential-source.is-credential{border-color:#c9e6db;background:#eef8f4;color:#0f6e56}
+.certloom-credential-source.is-credential{border-color:var(--cl-rule);background:var(--cl-paper);color:var(--cl-ink-soft)}
 .certloom-credential-source.is-legacy{border-color:#dedbd1;background:#f7f5ef;color:#665f4d}
 .certloom-credential-source-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:5px}
 .certloom-credential-hero-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
@@ -5777,14 +5784,14 @@ padding:15px}
 .certloom-settings-guidance-head p{max-width:760px;margin:0;color:#64736d;line-height:1.55}
 .certloom-settings-info-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 .certloom-settings-info-card{display:flex;align-items:flex-start;gap:12px;min-width:0;padding:17px;border:1px solid #dfe7e3;border-radius:12px;background:#fff;box-shadow:0 1px 2px rgba(16,45,35,.035);scroll-margin-top:42px}
-.certloom-settings-info-card>.dashicons{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border-radius:9px;background:#eef6f2;color:#176b57;font-size:19px;line-height:34px}
+.certloom-settings-info-card>.dashicons{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border-radius:var(--cl-r-ctl);background:var(--cl-blue-wash);color:var(--cl-blue);font-size:var(--cl-t-md);line-height:34px}
 .certloom-settings-info-card.is-caution>.dashicons{background:#fff7e7;color:#8a5c00}
 .certloom-settings-info-card.is-support>.dashicons{background:#eef4fb;color:#135e96}
 .certloom-settings-info-card h3{margin:1px 0 6px;font-size:15px;line-height:1.35}
 .certloom-settings-info-card p{margin:0;color:#5d6a65;font-size:12.5px;line-height:1.55}
 .certloom-settings-support-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
 .certloom-settings-support-actions .button{display:inline-flex;align-items:center;justify-content:center;min-height:36px;border-radius:6px}
-.certloom-settings-support-actions .button-primary{background:var(--certloom-flow-accent,#0f6e56);border-color:var(--certloom-flow-accent,#0f6e56);color:#fff}
+.certloom-settings-support-actions .button-primary{background:var(--cl-blue);border-color:var(--cl-blue);color:var(--cl-surface)}
 .certloom-batch-list-row .certloom-premium-list-main>span{white-space:normal;line-height:1.45}
 .certloom-signer-usage>p{max-width:900px;color:#64736d}
 @media(max-width:1100px){.certloom-settings-info-grid{grid-template-columns:1fr}.certloom-settings-info-card{min-height:0}}
@@ -5817,7 +5824,7 @@ color:var(--certloom-email-ink)}
 .certloom-email-authority-note>.dashicons{
 flex:0 0 20px;
 margin-top:1px;
-color:var(--certloom-flow-accent,#0f6e56)}
+color:var(--cl-blue)}
 
 .certloom-email-authority-note strong{
 display:block;

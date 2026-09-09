@@ -56,6 +56,7 @@ $certloom_fields_url      = admin_url( 'admin.php?page=certloom-fields' );
 			<h1 id="certloom-dashboard-title"><?php esc_html_e( 'Dashboard', 'certloom' ); ?></h1>
 			<p><?php esc_html_e( 'Monitor credential health, recent activity, delivery and verification from one operational workspace.', 'certloom' ); ?></p>
 		</div>
+		<a class="certloom-dashboard-setup-link" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-setup' ) ); ?>"><?php esc_html_e( 'Setup wizard', 'certloom' ); ?></a>
 		<div class="certloom-dashboard-actions" aria-label="<?php esc_attr_e( 'Quick actions', 'certloom' ); ?>">
 			<a class="button button-primary button-hero" href="<?php echo esc_url( $ecapla_certverify_create_url ); ?>">
 				<svg class="certloom-button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" /></svg>
@@ -65,7 +66,6 @@ $certloom_fields_url      = admin_url( 'admin.php?page=certloom-fields' );
 				<svg class="certloom-button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 15V5m0 0L8 9m4-4 4 4M5 14v5h14v-5" /></svg>
 				<?php $ecapla_certverify_normalized_issuance_ready ? esc_html_e( 'Open programs', 'certloom' ) : esc_html_e( 'Import certificates', 'certloom' ); ?>
 			</a>
-			<a class="button certloom-dashboard-setup-link" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-setup' ) ); ?>"><?php esc_html_e( 'Setup wizard', 'certloom' ); ?></a>
 		</div>
 	</section>
 
@@ -90,7 +90,7 @@ $certloom_fields_url      = admin_url( 'admin.php?page=certloom-fields' );
 		<div class="certloom-setup-reminder" role="status">
 			<span class="dashicons <?php echo $wizard_walkthrough_done ? 'dashicons-yes-alt' : 'dashicons-admin-generic'; ?>" aria-hidden="true"></span>
 			<strong><?php echo esc_html( sprintf( /* translators: %1$d: completed setup checks; %2$d: total setup checks. */ __( 'Setup: %1$d of %2$d checks complete', 'certloom' ), $setup_progress_completed, $setup_progress_total ) ); ?></strong>
-			<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-setup' . ( $wizard_walkthrough_done ? '&step=review' : '' ) ) ); ?>"><?php esc_html_e( 'Review setup', 'certloom' ); ?></a>
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-setup' . ( $wizard_walkthrough_done ? '&step=finish' : '' ) ) ); ?>"><?php esc_html_e( 'Review setup', 'certloom' ); ?></a>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="certloom-setup-reminder-dismiss">
 				<input type="hidden" name="action" value="certloom_dismiss_setup_reminder"><?php wp_nonce_field( 'certloom_dismiss_setup_reminder' ); ?>
 				<button type="submit" name="reminder_mode" value="snooze" class="button-link"><?php esc_html_e( 'Remind me in 3 days', 'certloom' ); ?></button>
@@ -381,5 +381,35 @@ $certloom_fields_url      = admin_url( 'admin.php?page=certloom-fields' );
 				</div>
 			</details>
 		</aside>
-	</div>
+\t</div>
+
+	<?php if ( ! empty( $guided_tour_steps ) && is_array( $guided_tour_steps ) ) : ?>
+		<div
+			class="certloom-guided-tour"
+			data-certloom-guided-tour
+			data-mode="<?php echo esc_attr( (string) ( $guided_tour_mode ?? '' ) ); ?>"
+			data-steps="<?php echo esc_attr( wp_json_encode( array_values( $guided_tour_steps ) ) ); ?>"
+			data-state="<?php echo esc_attr( wp_json_encode( is_array( $guided_tour_state ?? null ) ? $guided_tour_state : array() ) ); ?>"
+			data-nonce="<?php echo esc_attr( (string) ( $guided_tour_nonce ?? '' ) ); ?>"
+			data-progress-template="<?php echo esc_attr__( 'Step %1$d of %2$d', 'certloom' ); ?>"
+			data-next-label="<?php echo esc_attr__( 'Next', 'certloom' ); ?>"
+			data-finish-label="<?php echo esc_attr__( 'Finish tour', 'certloom' ); ?>"
+			hidden
+		>
+			<section class="certloom-guided-tour-card" role="region" aria-live="polite" aria-labelledby="certloom-guided-tour-title" aria-describedby="certloom-guided-tour-body">
+				<div class="certloom-guided-tour-head">
+					<span class="certloom-guided-tour-progress" data-certloom-tour-progress></span>
+					<button type="button" class="button-link certloom-guided-tour-dismiss" data-certloom-tour-dismiss aria-label="<?php esc_attr_e( 'Dismiss product tour', 'certloom' ); ?>"><?php esc_html_e( 'Dismiss tour', 'certloom' ); ?></button>
+				</div>
+				<h2 id="certloom-guided-tour-title" data-certloom-tour-title></h2>
+				<p id="certloom-guided-tour-body" data-certloom-tour-body></p>
+				<div class="certloom-guided-tour-actions">
+					<button type="button" class="button" data-certloom-tour-back><?php esc_html_e( 'Back', 'certloom' ); ?></button>
+					<a class="button" href="#" data-certloom-tour-open hidden><?php esc_html_e( 'Open this area', 'certloom' ); ?></a>
+					<button type="button" class="button button-primary" data-certloom-tour-next><?php esc_html_e( 'Next', 'certloom' ); ?></button>
+				</div>
+				<p class="certloom-guided-tour-help"><?php esc_html_e( 'The tour never blocks the Dashboard. Dismiss it permanently here, or replay it later from the WordPress Help tab.', 'certloom' ); ?></p>
+			</section>
+		</div>
+	<?php endif; ?>
 </div>

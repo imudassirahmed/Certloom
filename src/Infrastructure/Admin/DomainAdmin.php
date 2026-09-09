@@ -1991,14 +1991,14 @@ final class DomainAdmin {
 
 	/** @param array{label:string,url:string,secondary?:bool}|null $action @return void */
 	private function header( $title, $subtitle = '', ?array $action = null ) {
-		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-domain-screen"><div class="certloom-domain-title-row"><div><h1>' . esc_html( $title ) . '</h1>';
+		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-domain-screen"><section class="certloom-page-hero certloom-domain-title-row"><div><span class="certloom-eyebrow">' . esc_html__( 'Credential structure', 'certloom' ) . '</span><h1>' . esc_html( $title ) . '</h1>';
 		if ( '' !== (string) $subtitle ) { echo '<p class="certloom-domain-lead">' . esc_html( $subtitle ) . '</p>'; }
 		echo '</div><div class="certloom-domain-title-actions">';
 		if ( is_array( $action ) && ! empty( $action['label'] ) && ! empty( $action['url'] ) ) {
 			echo '<a class="button ' . ( empty( $action['secondary'] ) ? 'button-primary' : '' ) . '" href="' . esc_url( (string) $action['url'] ) . '">' . esc_html( (string) $action['label'] ) . '</a>';
 		}
 		if ( ! AdminUiMode::is_simple() ) { echo '<span class="certloom-domain-preview-badge">' . esc_html__( 'Acceptance preview', 'certloom' ) . '</span>'; }
-		echo '</div></div>';
+		echo '</div></section>';
 	}
 
 	/** @return void */

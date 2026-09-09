@@ -17,6 +17,7 @@ function add_query_arg( $args, $value = null, $url = null ){ if ( is_array( $arg
 function absint( $v ){ return abs( (int) $v ); }
 function sanitize_key( $v ){ return strtolower( preg_replace( '/[^a-z0-9_\-]/', '', (string) $v ) ); }
 function number_format_i18n( $v ){ return number_format( (int) $v ); }
+function wp_json_encode( $v ){ return json_encode( $v, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE ); }
 function wp_nonce_field( $action = -1, $name = '_wpnonce', $referer = true, $display = true ){ $html='<input type="hidden" name="'.htmlspecialchars((string)$name,ENT_QUOTES,'UTF-8').'" value="fixture-nonce">'; if($display){echo $html;} return $html; }
 
 function current_user_can( $cap ){ return true; }
@@ -78,6 +79,26 @@ if ( 'fresh' === $dashboard_state ) {
 } else {
 	$onboarding_summary = array( 'completed'=>true, 'wizard_completed'=>true, 'progress_completed'=>6, 'progress_total'=>6 );
 }
+$tour_mode = getenv( 'CERTLOOM_GUIDED_TOUR' ) ?: '';
+$guided_tour_steps = array();
+$guided_tour_state = array();
+$guided_tour_mode = '';
+$guided_tour_nonce = '';
+if ( in_array( $tour_mode, array( 'resume', 'restart', 'completed', 'dismissed' ), true ) ) {
+	$guided_tour_steps = array(
+		array( 'id'=>'issue','target'=>'.certloom-dashboard-actions .button-primary','title'=>'Issue a credential','body'=>'Start here when you need to issue one credential.','action'=>'Open issuance' ),
+		array( 'id'=>'fields','target'=>'.certloom-dashboard-quick-grid a[href*="page=certloom-fields"]','title'=>'Shape the credential data','body'=>'Manage Fields controls reusable credential data.','action'=>'Open fields' ),
+		array( 'id'=>'programs','target'=>'.certloom-dashboard-quick-grid a[href*="page=certloom-domain-programs"]','title'=>'Use Programs when structure helps','body'=>'Programs can represent a certification scheme for this profile.','action'=>'Open Programs' ),
+		array( 'id'=>'design','target'=>'.certloom-dashboard-quick-grid a[href*="page=certloom-templates"]','title'=>'Control presentation separately','body'=>'Designs control reusable certificate artwork.','action'=>'Open Designs' ),
+		array( 'id'=>'automations','target'=>'.certloom-dashboard-quick-grid a[href*="page=certloom-automations"]','title'=>'Automate repeatable issuance','body'=>'Automations connects provider events and issuance choices.','action'=>'Open Automations' ),
+		array( 'id'=>'analytics','target'=>'.certloom-dashboard-quick-grid a[href*="page=certloom-analytics"]','title'=>'Review what is happening','body'=>'Analytics summarizes issuance and verification activity.','action'=>'Open Analytics' ),
+	);
+	$guided_tour_state = array( 'status'=>'in_progress', 'last_step'=>2 );
+	$guided_tour_mode = in_array( $tour_mode, array( 'resume', 'restart' ), true ) ? $tour_mode : 'restart';
+	if ( 'completed' === $tour_mode ) { $guided_tour_state = array( 'status'=>'completed', 'last_step'=>5 ); }
+	if ( 'dismissed' === $tour_mode ) { $guided_tour_state = array( 'status'=>'dismissed', 'last_step'=>4 ); }
+	$guided_tour_nonce = 'fixture-tour-nonce';
+}
 $mode = getenv( 'CERTLOOM_DASHBOARD_ANALYTICS' ) ?: 'present';
 if ( 'present' === $mode ) {
 	$issuance_trend = array();
@@ -109,4 +130,4 @@ $foundation = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/certloom
 ob_start(); include dirname( __DIR__, 2 ) . '/admin/views/dashboard.php'; $view = ob_get_clean();
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
 html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}body{margin:0;background:#f0f0f1;color:#1d2327;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;line-height:1.5}.wrap{margin:20px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:0 12px;border:1px solid #2271b1;background:#f6f7f7;color:#2271b1;text-decoration:none}.button-primary{background:#2271b1;color:#fff}.widefat{width:100%;border-collapse:collapse;background:#fff}.widefat th,.widefat td{padding:9px;border-bottom:1px solid #dcdcde;text-align:left}.certloom-panel{background:#fff;border:1px solid #dcdcde;border-radius:10px;padding:16px}.screen-reader-text{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}.dashicons{display:inline-block}<?php echo $tokens, "\n", $css, "\n", $foundation; ?>
-</style></head><body><?php echo $view; ?></body></html>
+</style></head><body><?php echo $view; ?><?php if ( '' !== $tour_mode ) : ?><script>window.ajaxurl="https://example.test/wp-admin/admin-ajax.php";window.__certloomTourRequests=[];window.fetch=function(url,options){window.__certloomTourRequests.push(String(options&&options.body||""));return Promise.resolve({json:function(){return Promise.resolve({success:true,data:{}});}});};</script><script><?php echo file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.js' ); ?></script><?php endif; ?></body></html>

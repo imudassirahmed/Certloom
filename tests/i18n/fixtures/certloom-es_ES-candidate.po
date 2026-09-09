@@ -8,7 +8,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Domain: certloom\n"
 "X-Certloom-Pack-Schema: 1\n"
-"X-Certloom-POT-SHA256: ed1389a8134d54ad22b38d7342695bb55eb7e68c09587f2553cce04489073efb\n"
+"X-Certloom-POT-SHA256: 59fce4a8ffdac4058a77b7edc4d7ab1c0cdbed0424a69e674a4221fd047fd27b\n"
 "X-Certloom-Review-Status: candidate\n"
 "X-Certloom-Direction: ltr\n"
 

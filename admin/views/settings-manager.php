@@ -9,7 +9,9 @@ $certloom_show_diagnostics = current_user_can( 'manage_options' );
 ?>
 <div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-settings-workspace">
 	<?php include ECAPLA_CERTVERIFY_PATH . 'admin/views/partials/brand-bar.php'; ?>
-	<h1><?php esc_html_e( 'Settings', 'certloom' ); ?></h1>
+	<section class="certloom-page-hero certloom-settings-hero" aria-labelledby="certloom-settings-title">
+		<div><span class="certloom-eyebrow"><?php esc_html_e( 'Configuration', 'certloom' ); ?></span><h1 id="certloom-settings-title"><?php esc_html_e( 'Settings', 'certloom' ); ?></h1><p><?php esc_html_e( 'Control access, numbering, branding, verification, retention and operational guidance from one place.', 'certloom' ); ?></p></div>
+	</section>
 	<div class="certloom-settings-tools">
 		<label class="certloom-settings-search-label" for="certloom-settings-search"><span><?php esc_html_e( 'Find a setting', 'certloom' ); ?></span><input id="certloom-settings-search" type="search" autocomplete="off" placeholder="<?php esc_attr_e( 'Search settings sections', 'certloom' ); ?>" data-empty-label="<?php esc_attr_e( 'No settings sections match.', 'certloom' ); ?>" /></label>
 		<nav class="certloom-settings-local-nav" aria-label="<?php esc_attr_e( 'Settings sections', 'certloom' ); ?>">

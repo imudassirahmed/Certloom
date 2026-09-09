@@ -17,6 +17,7 @@ class Ecapla_CertVerify_Admin {
 		add_action( 'admin_menu', array( $this, 'add_menu' ) );
 		add_action( 'admin_post_certloom_set_ui_mode', array( $this, 'handle_ui_mode_switch' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
+		add_filter( 'admin_body_class', array( $this, 'admin_body_class' ) );
 		add_action( 'admin_init', array( $this, 'maybe_redirect_after_activation' ) );
 		add_action( 'admin_init', array( $this, 'handle_form_submission' ) );
 		add_action( 'admin_init', array( $this, 'handle_bulk_delete' ) );
@@ -64,6 +65,7 @@ class Ecapla_CertVerify_Admin {
 		add_action( 'admin_post_certloom_google_drive_delete', array( $this, 'handle_google_drive_delete' ) );
 		add_action( 'admin_post_certloom_dismiss_setup_reminder', array( $this, 'handle_dismiss_setup_reminder' ) );
 		add_action( 'wp_ajax_certloom_wizard_template_preview', array( $this, 'handle_setup_wizard_template_preview' ) );
+		add_action( 'wp_ajax_certloom_guided_tour_state', array( 'Ecapla_CertVerify_Guided_Tour', 'handle_ajax' ) );
 		add_action( 'admin_init', array( $this, 'handle_status_review_acknowledgement' ) );
 		add_action( 'admin_post_ecapla_certverify_delete_certificate', array( $this, 'handle_delete' ) );
 		add_action( 'admin_post_ecapla_certverify_delete_field', array( $this, 'handle_field_delete' ) );
@@ -85,7 +87,7 @@ class Ecapla_CertVerify_Admin {
 		Ecapla_CertVerify_Permissions::maybe_upgrade_capabilities();
 		$home_label = __( 'Home', 'certloom' );
 
-		add_menu_page(
+		$dashboard_hook = add_menu_page(
 			__( 'Certloom', 'certloom' ),
 			__( 'Certloom', 'certloom' ),
 			ECAPLA_CERTVERIFY_CAP,
@@ -94,6 +96,9 @@ class Ecapla_CertVerify_Admin {
 			'none',
 			30
 		);
+		if ( $dashboard_hook ) {
+			add_action( 'load-' . $dashboard_hook, array( $this, 'register_dashboard_help' ) );
+		}
 		add_submenu_page( self::DASHBOARD_PAGE, $home_label, $home_label, ECAPLA_CERTVERIFY_CAP, self::DASHBOARD_PAGE, array( $this, 'render_dashboard_screen' ) );
 		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
 			// The historical list slug remains a compatibility route while the unified
@@ -142,6 +147,24 @@ class Ecapla_CertVerify_Admin {
 		add_submenu_page( null, __( 'Setup', 'certloom' ), __( 'Setup', 'certloom' ), 'manage_options', 'certloom-setup', array( $this, 'render_onboarding_screen' ) );
 		add_submenu_page( null, __( 'Verification sample', 'certloom' ), __( 'Verification sample', 'certloom' ), 'manage_options', 'certloom-verification-sample', array( $this, 'render_verification_sample_screen' ) );
 		add_submenu_page( null, __( 'Review bulk change', 'certloom' ), __( 'Review bulk change', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-bulk-review', array( $this, 'render_bulk_review_screen' ) );
+	}
+
+
+	/** Adds a replay/resume entry to WordPress Help without blocking the Dashboard. */
+	public function register_dashboard_help() {
+		if ( ! Ecapla_CertVerify_Permissions::current_user_can_manage() || ! function_exists( 'get_current_screen' ) ) { return; }
+		$screen = get_current_screen();
+		if ( ! $screen || ! method_exists( $screen, 'add_help_tab' ) ) { return; }
+		$state = Ecapla_CertVerify_Guided_Tour::get_state();
+		$status = (string) ( $state['status'] ?? 'new' );
+		$resume_label = 'in_progress' === $status ? __( 'Resume product tour', 'certloom' ) : __( 'Start product tour', 'certloom' );
+		if ( in_array( $status, array( 'completed', 'dismissed' ), true ) ) { $resume_label = __( 'Replay product tour', 'certloom' ); }
+		$resume_mode = in_array( $status, array( 'completed', 'dismissed' ), true ) ? 'restart' : 'resume';
+		$resume_url = add_query_arg( array( 'page' => self::DASHBOARD_PAGE, 'certloom_tour' => $resume_mode ), admin_url( 'admin.php' ) );
+		$restart_url = add_query_arg( array( 'page' => self::DASHBOARD_PAGE, 'certloom_tour' => 'restart' ), admin_url( 'admin.php' ) );
+		$content = '<p>' . esc_html__( 'The six-step Certloom tour points to real Dashboard actions. It never blocks normal navigation and stores progress only for your administrator account.', 'certloom' ) . '</p>';
+		$content .= '<p><a class="button button-primary" href="' . esc_url( $resume_url ) . '">' . esc_html( $resume_label ) . '</a> <a class="button" href="' . esc_url( $restart_url ) . '">' . esc_html__( 'Restart from step 1', 'certloom' ) . '</a></p>';
+		$screen->add_help_tab( array( 'id' => 'certloom-guided-tour', 'title' => __( 'Product tour', 'certloom' ), 'content' => $content ) );
 	}
 
 
@@ -284,7 +307,14 @@ class Ecapla_CertVerify_Admin {
 			'deactivateVerificationWarning' => __( 'Deactivating Certloom stops public credential verification. Continue?', 'certloom' ),
 		) );
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Asset routing only.
-		if ( in_array( $page, array( 'certloom-domain-issuers', 'certloom-domain-signers', 'certloom-issuance' ), true ) ) { wp_enqueue_media(); }
+		if ( in_array( $page, array( 'certloom-domain-issuers', 'certloom-domain-signers', 'certloom-issuance', 'certloom-setup' ), true ) ) { wp_enqueue_media(); }
+	}
+
+
+	public function admin_body_class( $classes ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin presentation routing.
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+		return 'certloom-setup' === $page ? trim( (string) $classes . ' certloom-setup-v2-body' ) : $classes;
 	}
 
 
@@ -627,42 +657,37 @@ class Ecapla_CertVerify_Admin {
 	private function setup_wizard_draft_request( $step ) {
 		$step = sanitize_key( (string) $step );
 		switch ( $step ) {
-			case 'purpose':
+			case 'welcome':
+				return array();
+			case 'profile':
 				return array(
-					'purpose' => isset( $_POST['purpose'] ) ? sanitize_key( wp_unslash( $_POST['purpose'] ) ) : '',
-					'subcategory' => isset( $_POST['subcategory'] ) ? sanitize_key( wp_unslash( $_POST['subcategory'] ) ) : '',
-					'scheme_reference' => isset( $_POST['scheme_reference'] ) ? sanitize_text_field( wp_unslash( $_POST['scheme_reference'] ) ) : '',
+					'usage_profile' => isset( $_POST['usage_profile'] ) ? sanitize_key( wp_unslash( $_POST['usage_profile'] ) ) : '',
 				);
 			case 'organization':
 				return array(
 					'organization_name' => isset( $_POST['organization_name'] ) ? sanitize_text_field( wp_unslash( $_POST['organization_name'] ) ) : '',
-					'verification_page_id' => isset( $_POST['verification_page_id'] ) ? absint( $_POST['verification_page_id'] ) : 0,
+					'organization_logo_id' => isset( $_POST['organization_logo_id'] ) ? absint( $_POST['organization_logo_id'] ) : 0,
+					'organization_website' => isset( $_POST['organization_website'] ) ? sanitize_text_field( wp_unslash( $_POST['organization_website'] ) ) : '',
+					'organization_contact' => isset( $_POST['organization_contact'] ) ? sanitize_text_field( wp_unslash( $_POST['organization_contact'] ) ) : '',
 				);
-			case 'program':
-				return array( 'program_title' => isset( $_POST['program_title'] ) ? sanitize_text_field( wp_unslash( $_POST['program_title'] ) ) : '' );
-			case 'design':
+			case 'fields':
+				$selected = isset( $_POST['selected_fields'] ) && is_array( $_POST['selected_fields'] ) ? array_map( 'sanitize_key', wp_unslash( $_POST['selected_fields'] ) ) : array();
+				$custom = isset( $_POST['custom_fields'] ) && is_array( $_POST['custom_fields'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['custom_fields'] ) ) : array();
+				return array( 'selected_fields' => $selected, 'custom_fields' => $custom );
+			case 'appearance':
+				$mode = isset( $_POST['presentation_mode'] ) ? sanitize_key( wp_unslash( $_POST['presentation_mode'] ) ) : 'details_only';
+				$image_id = isset( $_POST['certificate_image_id'] ) ? absint( $_POST['certificate_image_id'] ) : 0;
+				$template_id = isset( $_POST['design_template_id'] ) ? absint( $_POST['design_template_id'] ) : 0;
+				if ( 'image' === $mode ) { $template_id = 0; }
+				elseif ( 'design' === $mode ) { $image_id = 0; }
+				else { $image_id = 0; $template_id = 0; }
+				return array( 'presentation_mode' => $mode, 'certificate_image_id' => $image_id, 'design_template_id' => $template_id );
+			case 'issue':
 				return array(
-					'design_template_id' => isset( $_POST['design_template_id'] ) ? absint( $_POST['design_template_id'] ) : 0,
-					'design_note' => isset( $_POST['design_note'] ) ? sanitize_text_field( wp_unslash( $_POST['design_note'] ) ) : '',
-				);
-			case 'delivery':
-				return array(
-					'numbering_mode' => isset( $_POST['numbering_mode'] ) ? sanitize_key( wp_unslash( $_POST['numbering_mode'] ) ) : 'manual',
-					'numbering_prefix' => isset( $_POST['numbering_prefix'] ) ? sanitize_text_field( wp_unslash( $_POST['numbering_prefix'] ) ) : '',
-					'numbering_suffix' => isset( $_POST['numbering_suffix'] ) ? sanitize_text_field( wp_unslash( $_POST['numbering_suffix'] ) ) : '',
-					'numbering_start' => isset( $_POST['numbering_start'] ) ? absint( $_POST['numbering_start'] ) : 1,
-					'numbering_padding' => isset( $_POST['numbering_padding'] ) ? absint( $_POST['numbering_padding'] ) : 6,
-					'verification_qr_enabled' => ! empty( $_POST['verification_qr_enabled'] ),
-					'verification_barcode_enabled' => ! empty( $_POST['verification_barcode_enabled'] ),
-					'appearance_reviewed' => ! empty( $_POST['appearance_reviewed'] ),
-					'verification_tested' => ! empty( $_POST['verification_tested'] ),
-				);
-			case 'backup':
-				return array(
-					'backup_schedule' => isset( $_POST['backup_schedule'] ) ? sanitize_key( wp_unslash( $_POST['backup_schedule'] ) ) : 'off',
-					'backup_retention' => isset( $_POST['backup_retention'] ) ? absint( $_POST['backup_retention'] ) : 14,
-					'google_drive_enabled' => ! empty( $_POST['google_drive_enabled'] ),
-					'google_drive_retention' => isset( $_POST['google_drive_retention'] ) ? absint( $_POST['google_drive_retention'] ) : 14,
+					'first_recipient_name' => isset( $_POST['first_recipient_name'] ) ? sanitize_text_field( wp_unslash( $_POST['first_recipient_name'] ) ) : '',
+					'first_recipient_email' => isset( $_POST['first_recipient_email'] ) ? sanitize_text_field( wp_unslash( $_POST['first_recipient_email'] ) ) : '',
+					'credential_title' => isset( $_POST['credential_title'] ) ? sanitize_text_field( wp_unslash( $_POST['credential_title'] ) ) : '',
+					'issue_date' => isset( $_POST['issue_date'] ) ? sanitize_text_field( wp_unslash( $_POST['issue_date'] ) ) : '',
 				);
 		}
 		return array();
@@ -1707,6 +1732,19 @@ class Ecapla_CertVerify_Admin {
 				$dashboard_analytics = array( 'verification' => $verification_analytics, 'issuance' => $issuance_analytics );
 			}
 		}
+		$guided_tour_state = Ecapla_CertVerify_Guided_Tour::get_state();
+		$guided_tour_profile = 'general_other';
+		if ( is_array( $onboarding_summary ) && ! empty( $onboarding_summary['state']['wizard_draft']['usage_profile'] ) ) {
+			$guided_tour_profile = sanitize_key( (string) $onboarding_summary['state']['wizard_draft']['usage_profile'] );
+		}
+		$guided_tour_steps = Ecapla_CertVerify_Guided_Tour::steps( $guided_tour_profile );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only request chooses whether to resume/restart the per-user tour; persistence uses AJAX nonce.
+		$guided_tour_request = isset( $_GET['certloom_tour'] ) ? sanitize_key( wp_unslash( $_GET['certloom_tour'] ) ) : '';
+		$guided_tour_mode = in_array( $guided_tour_request, array( 'resume', 'restart' ), true ) ? $guided_tour_request : '';
+		if ( '' === $guided_tour_mode && Ecapla_CertVerify_Guided_Tour::should_auto_start( $guided_tour_state, ! empty( $onboarding_summary['wizard_completed'] ) ) ) {
+			$guided_tour_mode = 'resume';
+		}
+		$guided_tour_nonce = wp_create_nonce( 'certloom_guided_tour' );
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/dashboard.php';
 	}
 
@@ -1787,54 +1825,59 @@ class Ecapla_CertVerify_Admin {
 		$wizard_state = $setup_summary['state'];
 		$wizard_steps = Ecapla_CertVerify_Onboarding::wizard_step_labels();
 		$wizard_step = isset( $_GET['step'] ) ? sanitize_key( wp_unslash( $_GET['step'] ) ) : (string) $wizard_state['wizard_step']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Wizard navigation.
-		if ( ! isset( $wizard_steps[ $wizard_step ] ) ) { $wizard_step = 'purpose'; }
+		if ( ! isset( $wizard_steps[ $wizard_step ] ) ) { $wizard_step = 'welcome'; }
 		$wizard_draft = is_array( $wizard_state['wizard_draft'] ) ? $wizard_state['wizard_draft'] : array();
-		$wizard_purpose = isset( $wizard_draft['purpose'] ) ? (string) $wizard_draft['purpose'] : 'custom_other';
-		$wizard_subcategory = isset( $wizard_draft['subcategory'] ) ? (string) $wizard_draft['subcategory'] : 'custom';
-		$wizard_recommendation = $wizard_engine->recommend( $wizard_purpose, $wizard_subcategory );
-		if ( is_wp_error( $wizard_recommendation ) ) { $wizard_recommendation = array(); }
-		$wizard_recommended_fields = array();
-		$wizard_field_catalog = class_exists( 'Ecapla_CertVerify_Fields' ) ? Ecapla_CertVerify_Fields::get_field_map() : array();
-		foreach ( (array) ( $wizard_recommendation['recommended_fields'] ?? array() ) as $field_key => $requirement ) {
-			$field_key = sanitize_key( (string) $field_key );
-			if ( '' === $field_key || ! isset( $wizard_field_catalog[ $field_key ] ) || ! is_array( $wizard_field_catalog[ $field_key ] ) ) { continue; }
-			$wizard_recommended_fields[] = array(
-				'key' => $field_key,
-				'label' => (string) ( $wizard_field_catalog[ $field_key ]['label'] ?? $field_key ),
-				'requirement' => 'required' === sanitize_key( (string) $requirement ) ? 'required' : 'optional',
-			);
-		}
-		$wizard_current_settings = Ecapla_CertVerify_Settings::get_all();
-		$wizard_backup_settings = \Certloom\Infrastructure\Backup\ScheduledBackup::settings();
-		$wizard_google_drive = \Certloom\Infrastructure\Backup\GoogleDriveBackup::state();
-		$wizard_google_client_ready = \Certloom\Infrastructure\Backup\GoogleDriveOAuth::has_client_credentials();
-		$wizard_domain_preview = \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready();
+		$wizard_profiles = $wizard_engine->profiles();
+		$wizard_profile = isset( $wizard_draft['usage_profile'] ) ? $wizard_engine->normalize_profile( $wizard_draft['usage_profile'] ) : 'general_other';
+		$wizard_recommendation = $wizard_engine->recommend( $wizard_profile );
+		if ( is_wp_error( $wizard_recommendation ) ) { $wizard_profile = 'general_other'; $wizard_recommendation = $wizard_engine->recommend( $wizard_profile ); }
+		$wizard_selected_fields = isset( $wizard_draft['selected_fields'] ) && is_array( $wizard_draft['selected_fields'] ) ? array_values( $wizard_draft['selected_fields'] ) : array_values( array_map( static function ( $field ) { return sanitize_key( (string) ( $field['key'] ?? '' ) ); }, (array) ( $wizard_recommendation['recommended_fields'] ?? array() ) ) );
+		$wizard_custom_fields = isset( $wizard_draft['custom_fields'] ) && is_array( $wizard_draft['custom_fields'] ) ? array_values( $wizard_draft['custom_fields'] ) : array();
+		$wizard_presentation_mode = isset( $wizard_draft['presentation_mode'] ) ? sanitize_key( (string) $wizard_draft['presentation_mode'] ) : 'details_only';
+		if ( ! in_array( $wizard_presentation_mode, array( 'details_only', 'image', 'design' ), true ) ) { $wizard_presentation_mode = 'details_only'; }
+		$wizard_certificate_image_id = absint( $wizard_draft['certificate_image_id'] ?? 0 );
+		$wizard_certificate_image_url = $wizard_certificate_image_id ? (string) wp_get_attachment_image_url( $wizard_certificate_image_id, 'medium' ) : '';
+		$wizard_organization_logo_id = absint( $wizard_draft['organization_logo_id'] ?? 0 );
+		$wizard_organization_logo_url = $wizard_organization_logo_id ? (string) wp_get_attachment_image_url( $wizard_organization_logo_id, 'thumbnail' ) : '';
 		$wizard_template_candidates = array();
-		$wizard_template_assignment = null;
 		$wizard_template = null;
 		$wizard_template_preview_html = '';
 		$wizard_template_preview_error = '';
-		$wizard_selected_template_id = isset( $wizard_draft['design_template_id'] ) ? absint( $wizard_draft['design_template_id'] ) : 0;
-		if ( $wizard_domain_preview ) {
+		$wizard_selected_template_id = absint( $wizard_draft['design_template_id'] ?? 0 );
+		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
 			$wizard_template_repo = new \Certloom\Infrastructure\Repository\TemplateRepository();
-			$wizard_template_assignment = $wizard_template_repo->get_assignment( 'global', 0 );
-			if ( ! isset( $wizard_draft['design_template_id'] ) && is_array( $wizard_template_assignment ) && ! empty( $wizard_template_assignment['active'] ) ) { $wizard_selected_template_id = absint( $wizard_template_assignment['template_id'] ?? 0 ); }
-			$wizard_template_candidates = $wizard_template_repo->search_published_candidates( '', 20 );
-			if ( is_wp_error( $wizard_template_candidates ) ) { $wizard_template_candidates = array(); }
+			$wizard_factory_candidates = $wizard_template_repo->search_published_candidates( 'certloom-preset-', 50 );
+			$wizard_all_candidates = $wizard_template_repo->search_published_candidates( '', 50 );
+			if ( is_wp_error( $wizard_factory_candidates ) ) { $wizard_factory_candidates = array(); }
+			if ( is_wp_error( $wizard_all_candidates ) ) { $wizard_all_candidates = array(); }
+			$wizard_template_candidates = array();
+			$wizard_candidate_ids = array();
+			foreach ( array_merge( $wizard_factory_candidates, $wizard_all_candidates ) as $wizard_candidate ) {
+				$wizard_candidate_id = absint( $wizard_candidate['id'] ?? 0 );
+				if ( ! $wizard_candidate_id || isset( $wizard_candidate_ids[ $wizard_candidate_id ] ) ) { continue; }
+				$wizard_candidate_ids[ $wizard_candidate_id ] = true;
+				$wizard_template_candidates[] = $wizard_candidate;
+			}
 			if ( $wizard_selected_template_id ) {
 				$wizard_template = $wizard_template_repo->find_published( $wizard_selected_template_id );
 				if ( is_wp_error( $wizard_template ) ) { $wizard_template_preview_error = $wizard_template->get_error_message(); $wizard_template = null; }
 				if ( is_array( $wizard_template ) ) {
-					$known = false; foreach ( $wizard_template_candidates as $candidate ) { if ( absint( $candidate['id'] ?? 0 ) === $wizard_selected_template_id ) { $known = true; break; } }
-					if ( ! $known ) { array_unshift( $wizard_template_candidates, array( 'id' => $wizard_selected_template_id, 'name' => (string) ( $wizard_template['name'] ?? '' ), 'machine_key' => (string) ( $wizard_template['machine_key'] ?? '' ), 'revision_number' => absint( $wizard_template['published_revision']['revision_number'] ?? 0 ) ) ); }
+					if ( ! isset( $wizard_candidate_ids[ $wizard_selected_template_id ] ) ) {
+						$wizard_template_candidates[] = array( 'id' => $wizard_selected_template_id, 'name' => (string) ( $wizard_template['name'] ?? __( 'Selected design', 'certloom' ) ), 'machine_key' => (string) ( $wizard_template['machine_key'] ?? '' ) );
+						$wizard_candidate_ids[ $wizard_selected_template_id ] = true;
+					}
 					$wizard_plan = ( new \Certloom\Infrastructure\Rendering\TemplatePreviewService() )->build( $wizard_template, 'published' );
 					if ( is_wp_error( $wizard_plan ) ) { $wizard_template_preview_error = $wizard_plan->get_error_message(); }
-					else { try { $wizard_preview = ( new \Certloom\Infrastructure\Rendering\RenderPlanHtmlPreview() )->present( $wizard_plan['render_plan'] ); $wizard_template_preview_html = (string) ( $wizard_preview['html'] ?? '' ); } catch ( \Throwable $error ) { $wizard_template_preview_error = __( 'Certloom could not build this Template preview.', 'certloom' ); } }
+					else {
+						try { $wizard_preview = ( new \Certloom\Infrastructure\Rendering\RenderPlanHtmlPreview() )->present( $wizard_plan['render_plan'] ); $wizard_template_preview_html = (string) ( $wizard_preview['html'] ?? '' ); }
+						catch ( \Throwable $error ) { $wizard_template_preview_error = __( 'Certloom could not build this design preview.', 'certloom' ); }
+					}
 				}
 			}
 		}
 		$wizard_template_preview_nonce = wp_create_nonce( 'certloom_setup_wizard_preview' );
-		$wizard_context_lookup_nonce = wp_create_nonce( \Certloom\Infrastructure\Admin\ScopedFieldAdminAjax::NONCE_ACTION );
+		$wizard_first_issuance_ready = false; // Generalized standalone issuance authority is intentionally scheduled after UI lock.
+		$wizard_first_issuance_reason = __( 'The Setup v2 first-credential screen is ready for review. Creating a standalone credential from this step remains disabled until the generalized issuance backend is implemented; Certloom will not create hidden Programs or Designs to fake completion.', 'certloom' );
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/setup-wizard.php';
 	}
 

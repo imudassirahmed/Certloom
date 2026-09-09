@@ -1,9 +1,9 @@
 <?php
-/** WIZ-01/02 adaptive setup contract and authority-boundary regression. */
+/** UI Phase 3 — Setup Wizard v2 profile/persistence/source contract. */
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 $GLOBALS['certloom_wiz_options'] = array();
 $GLOBALS['certloom_wiz_generation'] = 0;
-$GLOBALS['certloom_wiz_now'] = '2026-08-29 22:40:00';
+$GLOBALS['certloom_wiz_now'] = '2026-09-09 06:15:00';
 
 function __( $text ) { return $text; }
 function sanitize_key( $value ) { return strtolower( preg_replace( '/[^a-z0-9_\-]/', '', (string) $value ) ); }
@@ -14,86 +14,111 @@ function get_option( $key, $default = false ) { return array_key_exists( $key, $
 function update_option( $key, $value, $autoload = null ) { $GLOBALS['certloom_wiz_options'][ $key ] = $value; return true; }
 function current_time( $type ) { return $GLOBALS['certloom_wiz_now']; }
 function is_wp_error( $value ) { return $value instanceof WP_Error; }
+function is_email( $value ) { return false !== filter_var( $value, FILTER_VALIDATE_EMAIL ); }
 class WP_Error { private $code; private $message; public function __construct( $code = '', $message = '' ) { $this->code=$code; $this->message=$message; } public function get_error_code(){return $this->code;} public function get_error_message(){return $this->message;} }
 class Ecapla_CertVerify_Backup { public static function assert_writes_allowed(){ return true; } public static function reserve_mutation_generation(){ $GLOBALS['certloom_wiz_generation']++; return $GLOBALS['certloom_wiz_generation']; } }
-class Ecapla_CertVerify_Database { public static function get_registry_count(){ return 0; } public static function find_sample_cert_number(){ return ''; } }
+class Ecapla_CertVerify_Database { public static function get_registry_count(){ return 0; } public static function get_list(){ return array( 'items' => array() ); } }
 class Ecapla_CertVerify_Fields { public static function get_manageable_fields(){ return array(); } }
 function get_post( $id ){ return null; }
 function get_post_type( $id ){ return ''; }
 
-require dirname( __DIR__ ) . '/src/Application/Program/ProgramProfile.php';
 require dirname( __DIR__ ) . '/src/Application/Setup/PurposePresetEngine.php';
 require dirname( __DIR__ ) . '/includes/class-ecapla-certverify-onboarding.php';
 
-$checks=0; function wiz_check($ok,$label){global $checks;if(!$ok){throw new RuntimeException($label);} $checks++;}
+$checks=0;
+function wiz_check($ok,$label){ global $checks; if(!$ok){ throw new RuntimeException($label); } $checks++; }
 $engine = new \Certloom\Application\Setup\PurposePresetEngine();
-$purposes=$engine->purposes(); $subs=$engine->subcategories();
-wiz_check(7===count($purposes),'Wizard must reuse seven canonical Program purpose families.');
-wiz_check(isset($subs['training_courses']['online_course']) && isset($subs['certification_standards']['management_systems']),'Wizard subcategories must come from ProgramProfile taxonomy.');
-$cert=$engine->recommend('certification_standards','management_systems');
-wiz_check(!is_wp_error($cert) && 'sequential'===$cert['numbering_mode'],'Certification preset must recommend canonical sequential numbering, never a Wizard-only automatic value.');
-wiz_check(true===$cert['recommendation_only'] && false!==stripos($cert['notice'],'not legal'),'Preset must identify recommendations as non-authoritative advice.');
-$academic=$engine->recommend('academic_credentials','degree');
-wiz_check('degree'===$academic['credential_type'] && 'permanent'===$academic['validity'],'Academic degree preset must remain bounded and purpose-specific.');
-wiz_check(isset($academic['recommended_fields']['external_id']) && isset($academic['recommended_fields']['grade']) && 'optional'===$academic['recommended_fields']['grade'],'Academic field suggestions must remain recommendation-only Program-field starting points.');
-$training=$engine->recommend('training_courses','online_course');
-wiz_check(true===$training['integration_focus'] && 'enabled'===$training['portal'],'Training preset should emphasize existing Portal/integration capabilities without enabling them itself.');
-wiz_check(isset($training['recommended_fields']['grade']) && !isset($training['recommended_fields']['external_id']),'Training field suggestions stay bounded to common course needs rather than becoming generic metadata.');
-wiz_check(is_wp_error($engine->recommend('training_courses','degree')),'Cross-purpose subcategory mismatch must fail closed.');
-wiz_check(isset($engine->reference_examples('certification_standards')['iso_9001']) && array()===$engine->reference_examples('academic_credentials'),'Standard references must be examples only for certification/standards use.' );
+$profiles = $engine->profiles();
+wiz_check( 9 === count( $profiles ), 'Setup v2 must expose nine approved usage profiles.' );
+foreach ( array( 'training_lms','iso_management','government_licensing','school_results','corporate_compliance','membership_association','events_awards','product_inspection','general_other' ) as $key ) { wiz_check( isset( $profiles[$key] ), 'Missing approved usage profile: '.$key ); }
+wiz_check( array() === $engine->subcategories(), 'Setup v2 must remove the old required subcategory step.' );
+$iso = $engine->recommend( 'iso_management' );
+wiz_check( ! is_wp_error( $iso ) && 'ISO / Management Systems' === $iso['profile_label'], 'ISO profile recommendation must resolve.' );
+$iso_fields = array_column( $iso['recommended_fields'], 'key' );
+wiz_check( in_array( 'standard', $iso_fields, true ) && in_array( 'scope', $iso_fields, true ) && in_array( 'accreditation_reference', $iso_fields, true ), 'ISO profile must recommend Standard, Scope and accreditation reference.' );
+wiz_check( false !== stripos( $iso['hierarchy']['program'], 'certification scheme' ) && false !== stripos( $iso['hierarchy']['batch'], 'audit cycle' ), 'ISO hierarchy help must explain Program and Batch context.' );
+$government = $engine->recommend( 'government_licensing' );
+wiz_check( false !== stripos( $government['hierarchy']['program'], 'license' ) && false !== stripos( $government['hierarchy']['issuer'], 'ministry' ), 'Government hierarchy must be explicit.' );
+$school = $engine->recommend( 'school_results' );
+wiz_check( in_array( 'roll_number', array_column( $school['recommended_fields'], 'key' ), true ) && in_array( 'marks_percentage', array_column( $school['recommended_fields'], 'key' ), true ), 'School profile fields must cover result use cases.' );
+wiz_check( 'training_lms' === $engine->normalize_profile( 'training_courses' ) && 'iso_management' === $engine->normalize_profile( 'certification_standards' ), 'Legacy setup purpose keys must migrate to v2 profiles.' );
+wiz_check( is_wp_error( $engine->recommend( 'unknown_profile' ) ), 'Unknown profile must fail closed.' );
+foreach ( array_keys( $profiles ) as $profile_key ) {
+    $recommendation = $engine->recommend( $profile_key );
+    wiz_check( ! is_wp_error( $recommendation ) && count( (array) $recommendation['recommended_fields'] ) >= 4, 'Every profile must provide useful field recommendations: '.$profile_key );
+    wiz_check( 4 === count( (array) $recommendation['hierarchy'] ), 'Every profile must explain Issuer/Program/Batch/Signer: '.$profile_key );
+    wiz_check( 4 === count( (array) $recommendation['checklist'] ), 'Every profile must provide four next-step recommendations: '.$profile_key );
+}
 
-$defaults=Ecapla_CertVerify_Onboarding::get_state();
-wiz_check(3===$defaults['version'] && 'purpose'===$defaults['wizard_step'],'Onboarding state must upgrade in memory to version 3 and begin at Purpose.');
-wiz_check(array()===$defaults['wizard_draft'] && ''===$defaults['wizard_completed_at'],'Wizard draft/completion must start non-authoritative and incomplete.');
-$r=Ecapla_CertVerify_Onboarding::save_wizard_step('purpose',array('purpose'=>'certification_standards','subcategory'=>'management_systems','scheme_reference'=>'ISO 9001'),'organization',false);
-wiz_check(true===$r,'Valid Purpose step must persist.');
-$state=Ecapla_CertVerify_Onboarding::get_state();
-wiz_check('organization'===$state['wizard_step'] && in_array('purpose',$state['wizard_completed_steps'],true),'Purpose save must advance resumable progress.');
-wiz_check('sequential'===$state['wizard_draft']['numbering_mode'] && 'weekly'===$state['wizard_draft']['backup_schedule'],'Purpose save may seed untouched canonical recommendation defaults into draft only.');
-$r=Ecapla_CertVerify_Onboarding::save_wizard_step('delivery',array('numbering_mode'=>'uuid'),'backup',false); wiz_check(true===$r,'Explicit delivery choice must persist.');
-$r=Ecapla_CertVerify_Onboarding::save_wizard_step('purpose',array('purpose'=>'academic_credentials','subcategory'=>'degree'),'organization',false); wiz_check(true===$r,'Purpose may be revisited.');
-$state=Ecapla_CertVerify_Onboarding::get_state();
-wiz_check('uuid'===$state['wizard_draft']['numbering_mode'],'Changing purpose must not overwrite an administrator\'s explicit draft choice.');
-$r=Ecapla_CertVerify_Onboarding::save_wizard_step('backup',array('backup_schedule'=>'daily','backup_retention'=>999),'review',false); wiz_check(true===$r,'Backup draft should persist through canonical normalization.');
-$state=Ecapla_CertVerify_Onboarding::get_state(); wiz_check(60===$state['wizard_draft']['backup_retention'],'Wizard retention must share the canonical 1–60 bound.');
-$r=Ecapla_CertVerify_Onboarding::save_wizard_step('bogus',array(),'purpose',false); wiz_check(is_wp_error($r) && 'certloom_setup_step_invalid'===$r->get_error_code(),'Unknown Wizard step must fail closed.');
-$r=Ecapla_CertVerify_Onboarding::save_wizard_step('purpose',array('purpose'=>'custom_other','subcategory'=>'custom'),'bogus',false); wiz_check(is_wp_error($r) && 'certloom_setup_next_step_invalid'===$r->get_error_code(),'Unknown next step must fail closed.');
-$r=Ecapla_CertVerify_Onboarding::save_wizard_step('purpose',array('purpose'=>'training_courses','subcategory'=>'degree'),'organization',false); wiz_check(is_wp_error($r),'Invalid purpose/subcategory pair must not persist.');
-$r=Ecapla_CertVerify_Onboarding::save_wizard_step('design',array(),'delivery',true); wiz_check(true===$r,'Skippable Wizard step must persist without fabricating completion of the underlying product setting.');
-$state=Ecapla_CertVerify_Onboarding::get_state(); wiz_check(in_array('design',$state['wizard_skipped_steps'],true),'Skipped step must be separately recorded.');
-$r=Ecapla_CertVerify_Onboarding::complete_wizard(); wiz_check(true===$r && Ecapla_CertVerify_Onboarding::is_wizard_complete(),'Wizard walkthrough completion must be separate and explicit.');
-$summary=Ecapla_CertVerify_Onboarding::get_summary(); wiz_check(6===absint($summary['progress_completed']) && 6===absint($summary['progress_total']),'Completed Wizard summary must report complete progress even when optional verification-review flags were not checked.');
-wiz_check(!Ecapla_CertVerify_Onboarding::is_complete(),'Wizard completion must not fabricate legacy/full setup readiness.');
-$r=Ecapla_CertVerify_Onboarding::restart_wizard(); wiz_check(true===$r,'Completed Wizard must be rerunnable.');
-$state=Ecapla_CertVerify_Onboarding::get_state(); wiz_check('purpose'===$state['wizard_step'] && array()===$state['wizard_draft'] && 1===$state['wizard_rerun_count'],'Rerun must start a fresh draft without reusing previous intent.');
+$defaults = Ecapla_CertVerify_Onboarding::get_state();
+wiz_check( 4 === $defaults['version'] && 'welcome' === $defaults['wizard_step'], 'Onboarding state must be v4 and start at Welcome.' );
+wiz_check( array() === $defaults['wizard_draft'] && '' === $defaults['wizard_completed_at'], 'New setup must start without authoritative draft/completion.' );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'welcome', array(), 'profile', false );
+wiz_check( true === $r && 'profile' === Ecapla_CertVerify_Onboarding::get_state()['wizard_step'], 'Welcome must advance to Profile.' );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'profile', array( 'usage_profile'=>'iso_management' ), 'organization', false );
+wiz_check( true === $r, 'Valid usage profile must persist.' );
+$state = Ecapla_CertVerify_Onboarding::get_state();
+wiz_check( 'organization' === $state['wizard_step'] && 'iso_management' === $state['wizard_draft']['usage_profile'], 'Profile must advance resumably.' );
+wiz_check( in_array( 'standard', $state['wizard_draft']['selected_fields'], true ) && in_array( 'scope', $state['wizard_draft']['selected_fields'], true ), 'Profile save must seed recommended field keys into draft only.' );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'organization', array( 'organization_name'=>'' ), 'fields', false );
+wiz_check( is_wp_error( $r ) && 'certloom_setup_organization_required' === $r->get_error_code(), 'Organization name must be server-required.' );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'organization', array( 'organization_name'=>'Example Certification Body','organization_logo_id'=>55,'organization_website'=>'https://example.test','organization_contact'=>'info@example.test' ), 'fields', false );
+wiz_check( true === $r, 'Organization step must save identity draft.' );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'fields', array( 'selected_fields'=>array('standard','scope'),'custom_fields'=>array('Accreditation reference','Audit cycle') ), 'appearance', false );
+wiz_check( true === $r, 'Field intent must persist.' );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'profile', array( 'usage_profile'=>'school_results' ), 'organization', false );
+wiz_check( true === $r, 'Profile can be revisited.' );
+$state = Ecapla_CertVerify_Onboarding::get_state();
+wiz_check( array('standard','scope') === $state['wizard_draft']['selected_fields'], 'Changing profile must not overwrite field choices already edited by the administrator.' );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'appearance', array( 'presentation_mode'=>'image','certificate_image_id'=>0 ), 'issue', false );
+wiz_check( is_wp_error( $r ) && 'certloom_setup_image_required' === $r->get_error_code(), 'Image appearance must require an uploaded image.' );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'appearance', array( 'presentation_mode'=>'image','certificate_image_id'=>91,'design_template_id'=>44 ), 'issue', false );
+wiz_check( true === $r, 'Image appearance may persist when image exists.' );
+$state = Ecapla_CertVerify_Onboarding::get_state();
+wiz_check( 91 === $state['wizard_draft']['certificate_image_id'] && 0 === $state['wizard_draft']['design_template_id'], 'Image mode must clear competing design authority.' );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'appearance', array( 'presentation_mode'=>'design','design_template_id'=>44,'certificate_image_id'=>91 ), 'issue', false );
+wiz_check( true === $r, 'Design appearance may persist when design exists.' );
+$state = Ecapla_CertVerify_Onboarding::get_state();
+wiz_check( 44 === $state['wizard_draft']['design_template_id'] && 0 === $state['wizard_draft']['certificate_image_id'], 'Design mode must clear competing image authority.' );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'appearance', array( 'presentation_mode'=>'details_only','design_template_id'=>44,'certificate_image_id'=>91 ), 'issue', false );
+wiz_check( true === $r, 'Details-only must remain first-class.' );
+$state = Ecapla_CertVerify_Onboarding::get_state();
+wiz_check( 0 === $state['wizard_draft']['design_template_id'] && 0 === $state['wizard_draft']['certificate_image_id'], 'Details-only must clear both artifact inputs.' );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'issue', array( 'first_recipient_name'=>'','credential_title'=>'ISO 9001 Certification','issue_date'=>'2026-09-09' ), 'finish', false );
+wiz_check( is_wp_error( $r ) && 'certloom_setup_recipient_required' === $r->get_error_code(), 'First credential step must require Recipient.' );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'issue', array( 'first_recipient_name'=>'Acme Ltd','first_recipient_email'=>'not-an-email','credential_title'=>'ISO 9001 Certification','issue_date'=>'2026-09-09' ), 'finish', false );
+wiz_check( is_wp_error( $r ) && 'certloom_setup_email_invalid' === $r->get_error_code(), 'Optional email must still validate when supplied.' );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'issue', array( 'first_recipient_name'=>'Acme Ltd','first_recipient_email'=>'qa@example.test','credential_title'=>'ISO 9001 Certification','issue_date'=>'2026-09-09' ), 'finish', false );
+wiz_check( true === $r && 'finish' === Ecapla_CertVerify_Onboarding::get_state()['wizard_step'], 'Valid first-credential draft must reach Finish without fabricating issuance.' );
+$r = Ecapla_CertVerify_Onboarding::complete_wizard();
+wiz_check( is_wp_error( $r ) && 'certloom_setup_first_credential_required' === $r->get_error_code(), 'Setup v2 must not complete without a real first credential ID.' );
+wiz_check( ! Ecapla_CertVerify_Onboarding::is_wizard_complete(), 'Setup completion flag must stay false while first issuance is pending.' );
+$r = Ecapla_CertVerify_Onboarding::restart_wizard();
+wiz_check( true === $r && 'welcome' === Ecapla_CertVerify_Onboarding::get_state()['wizard_step'], 'Setup v2 must be replayable from Welcome.' );
 
-$root=dirname(__DIR__);
-$admin=file_get_contents($root.'/admin/class-ecapla-certverify-admin.php');
-$view=file_get_contents($root.'/admin/views/setup-wizard.php');
-$css=file_get_contents($root.'/admin/assets/admin.css');
-$js=file_get_contents($root.'/admin/assets/admin.js');
-$bootstrap=file_get_contents($root.'/certloom.php');
-$dashboard=file_get_contents($root.'/admin/views/dashboard.php');
-$ux_program=file_get_contents($root.'/docs/ux-product-simplification-program.md');
-foreach(array($admin,$view,$css,$js,$bootstrap,$dashboard,$ux_program) as $src){wiz_check(is_string($src)&&''!==$src,'Required Wizard source unavailable.');}
-wiz_check(false!==strpos($admin,'handle_setup_wizard_action') && false!==strpos($admin,"check_admin_referer( 'certloom_setup_wizard' )"),'Wizard mutations must be capability/nonce controlled.');
-wiz_check(false!==strpos($admin,'AdminUiMode::save_for_current_user') && false===strpos($admin,"update_option( 'wizard_mode'") && false===strpos($admin,"update_option( 'certloom_wizard_mode'"),'Wizard Simple/Advanced must reuse canonical per-admin UI mode.');
-wiz_check(false!==strpos($admin,'ScheduledBackup::save_settings') && false===strpos($admin,'wizard_backup_schedule'),'Wizard backup review must apply through ScheduledBackup authority, not a second runtime option.');
-wiz_check(false!==strpos($admin,'LocalBackupStore() )->test_storage()'),'Wizard must verify local backup storage before enabling automatic backups.');
-wiz_check(false!==strpos($admin,'Ecapla_CertVerify_Settings::save') && false!==strpos($admin,'Ecapla_CertVerify_Numbering::normalize_policy'),'Wizard review must use canonical settings/numbering validation.');
-wiz_check(false===strpos($admin,'ProgramRepository::create') && false===strpos($admin,'TemplateRepository::create'),'Wizard controller must not bypass gated Program/Template creation authority.');
-wiz_check(false!==strpos($view,'Program setup is not available yet') && false!==strpos($view,'will not create anything until Programs are available on this site'),'Wizard must explain unavailable Program setup in human language while remaining fail-closed.');
-wiz_check(false!==strpos($view,'Suggested credential fields') && false!==strpos($view,'Nothing is added automatically'),'Wizard may suggest Program fields but must not silently configure them.');
-wiz_check(false!==strpos($view,'Open Programs') && false===strpos($view,'Open canonical Program manager'),'Wizard must link to Programs without exposing internal authority terminology.');
-wiz_check(false!==strpos($view,'Apply reviewed settings') && false!==strpos($view,'Apply the reviewed setup changes now?'),'Review application must be explicit and confirmation-protected.');
-wiz_check(false!==strpos($view,'form="certloom-wizard-step-form"') && false!==strpos($admin,"wizard_finish_later"),'Save & finish later must submit and save the current draft rather than discard unsaved fields.');
-wiz_check(false!==strpos($js,'initAdaptiveSetupWizard') && false!==strpos($js,'data-certloom-wizard-summary-purpose'),'Purpose/subcategory changes must have an accessible live adaptive interaction layer.');
-wiz_check(false!==strpos($css,'1.6.94 WIZ-01/02') && false!==strpos($css,'@media(max-width:782px)') && false!==strpos($css,'forced-colors:active'),'Wizard must have dedicated responsive, reduced-motion and forced-colors styling.');
-wiz_check(false!==strpos($dashboard,'! $wizard_walkthrough_done && $readiness_incomplete') && false!==strpos($dashboard,'Setup: %1$d of %2$d checks complete'),'Dashboard may show progress only before Wizard completion; optional public-review checks cannot make completed Setup appear incomplete.');
-wiz_check(false!==strpos($dashboard,"'Setup wizard', 'certloom'") && false!==strpos($dashboard,'certloom-dashboard-setup-link'),'Dashboard must retain a permanent compact Setup Wizard entry rather than a large first-run invitation.');
-wiz_check(false!==strpos($ux_program,'professional license / membership') && false!==strpos($ux_program,'award / recognition') && false!==strpos($ux_program,'participation / attendance / speaker'),'Wizard planning taxonomy must stay synchronized to canonical ProgramProfile subcategories.');
-wiz_check(false!==strpos($bootstrap,"CERTLOOM_DOMAIN_WRITE_PATHS_READY', false") && false!==strpos($bootstrap,"CERTLOOM_DOMAIN_ADMIN_PREVIEW', false") && false!==strpos($bootstrap,"CERTLOOM_DOMAIN_DATA_TOOLS_READY', false"),'WIZ-01/02 must leave all normalized production gates closed.');
-wiz_check(!file_exists($root.'/resources/renderer/accepted.json'),'Wizard must not create renderer release authority.');
+// Legacy migration: old walkthrough completion must not count as v2 completion.
+$GLOBALS['certloom_wiz_options'][ Ecapla_CertVerify_Onboarding::OPTION_KEY ] = array( 'version'=>3,'wizard_step'=>'purpose','wizard_completed_steps'=>array('purpose','organization','design'),'wizard_completed_at'=>'2026-08-29 12:00:00','wizard_draft'=>array('purpose'=>'training_courses','subcategory'=>'online_course') );
+$legacy = Ecapla_CertVerify_Onboarding::get_state();
+wiz_check( 'profile' === $legacy['wizard_step'] && 'training_lms' === $legacy['wizard_draft']['usage_profile'], 'Legacy purpose state must migrate to Profile semantics.' );
+wiz_check( '' === $legacy['wizard_completed_at'], 'Pre-v4 walkthrough completion must be cleared when no real first credential exists.' );
 
-echo "PASS  WIZ-01/02 adaptive setup remains resumable, recommendation-only and canonical-authority safe\n";
-echo "PASS  purpose presets, strict step validation, rerun isolation, backup bounds and fail-closed Program/Template boundaries are enforced\n\n{$checks} checks, 0 failures\n";
+$root = dirname(__DIR__);
+$admin = file_get_contents($root.'/admin/class-ecapla-certverify-admin.php');
+$view = file_get_contents($root.'/admin/views/setup-wizard.php');
+$css = file_get_contents($root.'/admin/assets/certloom-foundation.css');
+$js = file_get_contents($root.'/admin/assets/admin.js');
+foreach(array($admin,$view,$css,$js) as $src){ wiz_check(is_string($src)&&''!==$src,'Required Setup v2 source unavailable.'); }
+wiz_check( false !== strpos($view,'Start setup') && false !== strpos($view,'What are you using Certloom for?') && false !== strpos($view,'Choose credential fields') && false !== strpos($view,'How should credentials appear?') && false !== strpos($view,'Prepare your first credential'), 'Setup v2 must expose the approved flow.' );
+wiz_check( false === strpos($view,'name="program_title"') && false === strpos($view,'name="numbering_mode"') && false === strpos($view,'backup_schedule'), 'Required Setup v2 path must not ask for Program, numbering or backups.' );
+wiz_check( false !== strpos($view,'value="details_only"') && false !== strpos($view,'value="image"') && false !== strpos($view,'value="design"'), 'Appearance must expose exactly the three approved presentation concepts.' );
+wiz_check( false !== strpos($view,'name="first_recipient_name"') && false !== strpos($view,'name="credential_title"') && false !== strpos($view,'name="issue_date"'), 'First credential must expose Recipient, title and issue date.' );
+wiz_check( false !== strpos($view,'data-certloom-media-control') && false !== strpos($admin,"'certloom-setup'" ) && false !== strpos($admin,'wp_enqueue_media'), 'Organization/image selection must use WordPress media infrastructure.' );
+wiz_check( false !== strpos($view,'How Certloom organizes this profile') && false !== strpos($view,'data-certloom-hierarchy="program"'), 'Profile-specific hierarchy help must be available without making hierarchy required.' );
+wiz_check( false !== strpos($css,'position: fixed') && false !== strpos($css,'.certloom-setup-v2') && false !== strpos($admin,'certloom-setup-v2-body'), 'Setup v2 must use a focused full-screen shell.' );
+wiz_check( false !== strpos($js,'data-certloom-custom-field-add') && false !== strpos($js,'data-certloom-presentation-panel') && false !== strpos($js,'data-hierarchy-'), 'Setup v2 interactions must cover custom fields, presentation exclusivity and live profile help.' );
+wiz_check( false !== strpos($js,'data-certloom-dirty') && false !== strpos($js,'beforeunload') && false !== strpos($js,"addEventListener( 'invalid'") , 'Setup v2 must track unsaved changes and focus invalid controls.' );
+wiz_check( false !== strpos($js,"aria-haspopup', 'dialog") && false !== strpos($js,"frame.on( 'close'") && false !== strpos($view,'aria-live="polite"'), 'Setup media controls must expose dialog/live-region semantics and restore focus after media closes.' );
+wiz_check( false !== strpos($admin,"search_published_candidates( 'certloom-preset-', 50 )") && false !== strpos($admin,"search_published_candidates( '', 50 )") && false !== strpos($view,'View all designs'), 'Setup Appearance must load the complete current factory-design set first while retaining View all.' );
+wiz_check( false !== strpos($view,'will not create hidden Programs or Designs') || false !== strpos($admin,'will not create hidden Programs or Designs'), 'Pending backend copy must explicitly reject fake hierarchy creation.' );
+
+printf("PASS  Setup Wizard v2 profile/persistence/source contract\n\n%d checks, 0 failures\n", $checks);

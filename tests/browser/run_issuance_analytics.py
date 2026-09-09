@@ -26,7 +26,7 @@ async def run():
         await ck('daily trend' in (await page.locator('.certloom-analytics-trend .certloom-eyebrow').inner_text()).lower(),'dailyTrend')
         await ck(await page.locator('.certloom-analytics-bar').count()==30,'dailyBuckets')
         await ck(await page.locator('.certloom-analytics-chart').evaluate('(e)=>e.classList.contains("is-issuance")'),'issuanceSeriesClass')
-        await ck(await page.locator('.certloom-analytics-bar').first.evaluate('(e)=>getComputedStyle(e).backgroundColor')=='rgb(20, 80, 224)','issuanceUsesLogoBlue')
+        await ck(await page.locator('.certloom-analytics-bar').first.evaluate('(e)=>getComputedStyle(e).backgroundColor')=='rgb(0, 72, 239)','issuanceUsesLogoBlue')
         source=await page.locator('.certloom-analytics-source-list').inner_text(); await ck(all(x in source for x in ['Manual','Bulk','Other','48','72','6']),'sourceBreakdown')
         await ck(await page.locator('.certloom-issuance-dimension-grid > section').count()==4,'fourDimensionPanels')
         dims=await page.locator('.certloom-issuance-dimensions').inner_text(); await ck(all(x in dims for x in ['Programs','Templates','Organizations','Batches','Leadership','Premium A4','Ecapla Academy','August Cohort']),'dimensionContent')

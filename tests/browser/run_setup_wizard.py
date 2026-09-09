@@ -1,143 +1,290 @@
 #!/usr/bin/env python3
-import asyncio, os, subprocess
+"""Chromium contract for UI Phase 3 — Setup Wizard v2."""
+import asyncio
+import os
+import subprocess
 from pathlib import Path
-from playwright.async_api import async_playwright
-ROOT=Path(__file__).resolve().parents[2]
 
-def fixture(state='purpose'):
-    env=os.environ.copy(); env['CERTLOOM_WIZ_STATE']=state
-    r=subprocess.run(['php',str(ROOT/'tests/browser/build_setup_wizard_fixture.php')],cwd=ROOT,env=env,capture_output=True,text=True)
-    if r.returncode: raise RuntimeError(r.stderr or r.stdout)
-    return r.stdout
+from playwright.async_api import async_playwright
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def fixture(state="welcome"):
+    env = os.environ.copy()
+    env["CERTLOOM_WIZ_STATE"] = state
+    result = subprocess.run(
+        ["php", str(ROOT / "tests/browser/build_setup_wizard_fixture.php")],
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode:
+        raise RuntimeError(result.stderr or result.stdout)
+    return result.stdout
+
 
 async def run():
-    checks=0; failed=[]
+    checks = 0
+    failed = []
+
     async with async_playwright() as p:
-        browser=await p.chromium.launch(headless=True,executable_path='/usr/bin/chromium',args=['--no-sandbox','--disable-dev-shm-usage','--disable-gpu'])
-        async def ck(ok,label):
-            nonlocal checks; checks+=1
-            if not ok: failed.append(label)
+        browser = await p.chromium.launch(
+            headless=True,
+            executable_path="/usr/bin/chromium",
+            args=["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
+        )
 
-        page=await browser.new_page(viewport={'width':1280,'height':900})
-        await page.set_content(fixture(),wait_until='load')
-        await ck(await page.locator('.certloom-wizard-progress-step').count()==7,'sevenSteps')
-        await ck('Purpose' in (await page.locator('.certloom-wizard-progress-step[aria-current="step"]').inner_text()),'purposeCurrent')
-        await ck(await page.locator('input[name="workspace_mode"]').count()==0,'noWorkspaceModeChoice')
-        await ck(await page.get_by_text('Start with the essentials',exact=True).is_visible(),'progressiveEssentialsGuidance')
-        await ck('More settings or Technical details' in await page.locator('.certloom-wizard-progressive-note').inner_text(),'specialistControlsStayInContext')
-        enabled=page.locator('#certloom-wizard-subcategory option:not([disabled])')
-        await ck(await enabled.count()==1 and await enabled.first.get_attribute('value')=='custom','customSubcategoryInitiallyBounded')
-        await ck(await page.locator('[data-certloom-scheme-field]').evaluate('(e)=>e.hidden'),'schemeHiddenForCustom')
-        await page.locator('#certloom-wizard-purpose').select_option('certification_standards'); await page.wait_for_timeout(30)
-        enabled=page.locator('#certloom-wizard-subcategory option:not([disabled])')
-        await ck(await enabled.count()==5,'certificationSubcategoryCount')
-        await ck(not await page.locator('[data-certloom-scheme-field]').evaluate('(e)=>e.hidden'),'schemeShownForStandards')
-        await ck(await page.locator('[data-certloom-wizard-summary-purpose]').inner_text()=='Certification & Standards','livePurposeSummary')
-        await ck(await page.locator('[data-certloom-wizard-summary-type]').inner_text()=='Management systems','liveTypeSummary')
-        await ck(await page.locator('[data-certloom-wizard-summary-terminology]').inner_text()=='Certification','liveTerminologySummary')
-        await ck(await page.locator('[data-certloom-wizard-summary-design]').inner_text()=='Formal certification','liveDesignSummary')
-        await page.locator('#certloom-wizard-purpose').select_option('training_courses'); await page.wait_for_timeout(30)
-        enabled=page.locator('#certloom-wizard-subcategory option:not([disabled])')
-        await ck(await enabled.count()==5 and await enabled.first.get_attribute('value')=='online_course','trainingSubcategoryBounded')
-        await ck(await page.locator('[data-certloom-scheme-field]').evaluate('(e)=>e.hidden'),'schemeHiddenOutsideStandards')
-        await ck(await page.locator('[data-certloom-wizard-summary-terminology]').inner_text()=='Course','trainingTerminologyLive')
-        await ck(await page.locator('#save-later').evaluate('(e)=>e.form && e.form.id==="certloom-wizard-step-form"'),'saveLaterSubmitsCurrentForm')
-        await ck(await page.locator('#save-later').get_attribute('name')=='wizard_finish_later','saveLaterHasServerIntent')
-        await ck(await page.get_by_text('Program creation remains protected').count()==1,'programGateDisclosure')
-        heights=await page.locator('.certloom-wizard-progress-step,.certloom-wizard-actions .button').evaluate_all('(els)=>els.map(e=>e.getBoundingClientRect().height)')
-        await ck(all(h>=40 for h in heights),'desktopTargetsUsable')
-        await ck(await page.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'desktopNoOverflow')
-        await page.close()
+        async def ck(ok, label):
+            nonlocal checks
+            checks += 1
+            if not ok:
+                failed.append(label)
 
-        design=await browser.new_page(viewport={'width':1100,'height':820})
-        await design.set_content(fixture('design'),wait_until='load')
-        await ck('Design' in (await design.locator('.certloom-wizard-progress-step[aria-current="step"]').inner_text()),'designCurrent')
-        await ck(await design.locator('#certloom-wizard-template option').count()==3,'designChoicesVisible')
-        await ck(await design.locator('#certloom-wizard-template option').first.inner_text()=='None — choose designs per Program later','designNoneOption')
-        await ck(await design.locator('[data-certloom-template-preview-name]').inner_text()=='Modern Executive','designPreviewName')
-        await ck('Landscape' in (await design.locator('[data-certloom-template-preview-description]').inner_text()),'designPreviewDetails')
-        await ck(await design.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'designNoOverflow')
-        await design.close()
+        # Welcome — focused, full-screen and free from legacy hierarchy setup.
+        welcome = await browser.new_page(viewport={"width": 1280, "height": 900})
+        await welcome.set_content(fixture("welcome"), wait_until="load")
+        root = welcome.locator("[data-certloom-setup-v2]")
+        await ck(await root.count() == 1, "setupV2Root")
+        await ck(await root.get_attribute("data-certloom-step") == "welcome", "welcomeState")
+        await ck(
+            await root.evaluate("e => getComputedStyle(e).position") == "fixed",
+            "focusedFixedShell",
+        )
+        await ck(
+            await root.evaluate("e => {const s=getComputedStyle(e); return s.inset==='0px' || (s.top==='0px'&&s.right==='0px'&&s.bottom==='0px'&&s.left==='0px');}"),
+            "focusedShellFillsViewport",
+        )
+        await ck(
+            await welcome.locator("body").evaluate("e => getComputedStyle(e).overflow") == "hidden",
+            "setupBodyDoesNotScroll",
+        )
+        await ck(
+            await welcome.get_by_text("Set up your first credential.", exact=True).is_visible(),
+            "welcomePromise",
+        )
+        await ck(
+            await welcome.get_by_text("Nothing is auto-created behind your back.", exact=False).is_visible(),
+            "welcomeNoHiddenRecords",
+        )
+        await ck(await welcome.get_by_role("button", name="Start setup").count() == 1, "startSetupAction")
+        await ck(await welcome.locator("input[name=program_id],input[name=batch_id],input[name=signer_id]").count() == 0, "welcomeNoHierarchyInputs")
+        await ck(await welcome.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "welcomeNoOverflow")
+        await welcome.close()
 
-        delivery=await browser.new_page(viewport={'width':1100,'height':820})
-        await delivery.set_content(fixture('delivery'),wait_until='load')
-        await ck(await delivery.locator('[data-certloom-numbering-example]').inner_text()=='CERT-001001-2026','numberingInitialExample')
-        await delivery.locator('[data-certloom-numbering-prefix]').fill('MEM-')
-        await delivery.locator('[data-certloom-numbering-start]').fill('42')
-        await delivery.locator('[data-certloom-numbering-padding]').fill('4')
-        await delivery.locator('[data-certloom-numbering-suffix]').fill('-A')
-        await delivery.wait_for_timeout(20)
-        await ck(await delivery.locator('[data-certloom-numbering-example]').inner_text()=='MEM-0042-A','numberingLiveExample')
-        await delivery.locator('[data-certloom-numbering-mode]').select_option('random'); await delivery.wait_for_timeout(20)
-        await ck('8K3M-2Q7P' in (await delivery.locator('[data-certloom-numbering-example]').inner_text()),'numberingRandomExample')
-        await ck(await delivery.locator('[data-certloom-sequential-only]').first.evaluate('(e)=>e.hidden'),'numberingSequentialFieldsHide')
-        await delivery.close()
+        # Profile — nine UX presets, live contextual hierarchy help, no subcategory detour.
+        profile = await browser.new_page(viewport={"width": 1280, "height": 900})
+        await profile.set_content(fixture("profile"), wait_until="load")
+        await ck(await profile.locator(".certloom-setup-v2-progress-step").count() == 6, "sixDecisionSteps")
+        await ck(
+            "Profile" in await profile.locator('.certloom-setup-v2-progress-step[aria-current="step"]').inner_text(),
+            "profileCurrent",
+        )
+        await ck(await profile.locator('input[name="usage_profile"]').count() == 9, "nineUsageProfiles")
+        await ck(await profile.locator("#certloom-wizard-subcategory").count() == 0, "noSubcategoryStep")
+        await ck(await profile.locator('input[name="workspace_mode"]').count() == 0, "noSimpleAdvancedMode")
+        await ck(await profile.locator(".certloom-setup-v2-model-help").count() == 1, "profileModelDisclosure")
+        iso = profile.locator('input[name="usage_profile"][value="iso_management"]')
+        await iso.check()
+        await profile.wait_for_timeout(20)
+        await ck(
+            "certification scheme" in (await profile.locator('[data-certloom-hierarchy="program"]').inner_text()).lower(),
+            "isoProgramMeaningLive",
+        )
+        await ck(
+            "audit cycle" in (await profile.locator('[data-certloom-hierarchy="batch"]').inner_text()).lower(),
+            "isoBatchMeaningLive",
+        )
+        government = profile.locator('input[name="usage_profile"][value="government_licensing"]')
+        await government.check()
+        await profile.wait_for_timeout(20)
+        await ck(
+            "license" in (await profile.locator('[data-certloom-hierarchy="program"]').inner_text()).lower(),
+            "governmentProgramMeaningLive",
+        )
+        profile_root = profile.locator("[data-certloom-setup-v2]")
+        await ck(await profile_root.get_attribute("data-certloom-dirty") == "1", "profileDirtyAfterChange")
+        targets = await profile.locator(
+            ".certloom-setup-v2-progress-step,.certloom-setup-v2-actions .button,.certloom-setup-v2-save-exit"
+        ).evaluate_all("els => els.map(e => e.getBoundingClientRect().height)")
+        await ck(all(h >= 40 for h in targets), "desktopTargetsUsable")
+        await ck(await profile.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "profileNoOverflow")
+        await profile.close()
 
-        backup=await browser.new_page(viewport={'width':1100,'height':820})
-        await backup.set_content(fixture('backup'),wait_until='load')
-        await ck(await backup.get_by_text('Google Drive copy',exact=True).is_visible(),'googleWizardCard')
-        await ck(await backup.get_by_text('Use your own Google app',exact=True).is_visible(),'googleSiteOwnedSetup')
-        await ck(not await backup.locator('.certloom-google-advanced').get_attribute('open'),'googleAdvancedClosedByDefault')
-        await ck(await backup.locator('button[name=google_connection_mode][value=relay]').is_visible(),'googleManagedConnectPrimary')
-        await backup.locator('.certloom-google-advanced summary').click(); await backup.wait_for_timeout(10)
-        await ck(await backup.locator('button[name=google_connection_mode][value=direct]').is_visible(),'googleDirectFallbackExplicit')
-        await ck(await backup.locator('input[name=google_client_id]').input_value()=='1234567890-example.apps.googleusercontent.com','googleDirectFallbackReusable')
-        await ck(await backup.locator('[data-certloom-google-enable]').is_disabled(),'googleAutomaticCopiesDisabledBeforeConnect')
-        await backup.evaluate("window.dispatchEvent(new MessageEvent('message',{origin:window.location.origin,data:{type:'certloom-google-drive-oauth',status:'connected',message:'Google Drive connected.'}}))")
-        await backup.wait_for_timeout(20)
-        await ck(await backup.locator('[data-certloom-google-status]').inner_text()=='Connected','googlePopupStatusUpdates')
-        await ck(not await backup.locator('[data-certloom-google-enable]').is_disabled(),'googleAutomaticCopiesEnabledAfterConnect')
-        disabled=await backup.locator('[data-certloom-google-connect]').evaluate_all('(els)=>els.map(e=>e.disabled)')
-        await ck(all(disabled),'googleConnectBecomesCompleted')
-        await ck(await backup.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'backupWizardNoOverflow')
-        await backup.close()
+        # Organization — default identity, WP media control, optional web/contact.
+        organization = await browser.new_page(viewport={"width": 1100, "height": 820})
+        await organization.set_content(fixture("organization"), wait_until="load")
+        await ck(
+            "Organization" in await organization.locator('.certloom-setup-v2-progress-step[aria-current="step"]').inner_text(),
+            "organizationCurrent",
+        )
+        await ck(await organization.locator('input[name="organization_name"][required]').count() == 1, "organizationNameRequired")
+        await ck(await organization.locator('[data-certloom-media-control] input[name="organization_logo_id"]').count() == 1, "organizationMediaControl")
+        await ck(await organization.locator('input[name="organization_website"]').count() == 1, "organizationWebsiteOptional")
+        await ck(await organization.locator('input[name="organization_contact"]').count() == 1, "organizationContactOptional")
+        await ck("Issuer" in await organization.locator(".certloom-setup-v2-heading").inner_text(), "organizationExplainsIssuerLater")
+        org_name = organization.locator('input[name="organization_name"]')
+        await org_name.fill("")
+        await organization.locator("#certloom-wizard-step-form").evaluate("f => f.reportValidity()")
+        await organization.wait_for_timeout(20)
+        await ck(await org_name.get_attribute("aria-invalid") == "true", "organizationInvalidMarked")
+        await ck(await organization.evaluate("document.activeElement && document.activeElement.name === 'organization_name'"), "organizationInvalidFocused")
+        await org_name.fill("Example Org")
+        await ck(await organization.locator("[data-certloom-setup-v2]").get_attribute("data-certloom-dirty") == "1", "organizationDirtyTracked")
+        await organization.evaluate("""() => {
+            window.__certloomMediaHandlers = {};
+            window.wp = {media: () => ({
+                on: (name, cb) => { window.__certloomMediaHandlers[name] = cb; },
+                state: () => ({get: () => ({first: () => ({toJSON: () => ({id:77,mime:'image/png',filename:'logo.png',url:'https://example.test/logo.png',sizes:{thumbnail:{url:'https://example.test/logo-thumb.png'}}})})})}),
+                open: () => { if (window.__certloomMediaHandlers.select) window.__certloomMediaHandlers.select(); if (window.__certloomMediaHandlers.close) window.__certloomMediaHandlers.close(); }
+            })};
+        }""")
+        choose_logo = organization.locator('[data-certloom-media-select]')
+        await ck(await choose_logo.get_attribute("aria-haspopup") == "dialog", "organizationMediaDialogSemantic")
+        await choose_logo.click()
+        await organization.wait_for_timeout(30)
+        await ck(await organization.locator('input[name="organization_logo_id"]').input_value() == "77", "organizationMediaSelected")
+        await ck(await organization.locator('[data-certloom-media-preview]').get_attribute("role") == "status", "organizationMediaLiveStatus")
+        await ck(await organization.evaluate("document.activeElement === document.querySelector('[data-certloom-media-select]')"), "organizationMediaFocusReturned")
+        await organization.locator('[data-certloom-media-clear]').click()
+        await ck(await organization.locator('input[name="organization_logo_id"]').input_value() == "", "organizationMediaCleared")
+        await ck(await organization.evaluate("document.activeElement === document.querySelector('[data-certloom-media-select]')"), "organizationMediaClearFocusReturned")
+        await ck(await organization.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "organizationNoOverflow")
+        await organization.close()
 
-        review=await browser.new_page(viewport={'width':1100,'height':780})
-        await review.set_content(fixture('review'),wait_until='load')
-        await ck(await review.locator('.certloom-wizard-review-table').count()==1,'reviewDiffTable')
-        await ck(await review.get_by_text('Authority stays fail-closed').count()==1,'reviewAuthorityDisclosure')
-        dialogs=[]
-        review.on('dialog',lambda d:(dialogs.append(d.message),asyncio.create_task(d.dismiss())))
-        await review.locator('#apply-review').click(); await review.wait_for_timeout(30)
-        await ck(len(dialogs)==1 and 'reviewed setup changes' in dialogs[0].lower(),'applyReviewConfirmation')
-        await review.close()
+        # Fields — recommendations remain editable and custom fields work without a separate settings trip.
+        fields = await browser.new_page(viewport={"width": 1100, "height": 820})
+        await fields.set_content(fixture("fields"), wait_until="load")
+        await ck(await fields.locator('input[name="selected_fields[]"]').count() == 4, "recommendedFieldsVisible")
+        await ck(await fields.locator('input[name="selected_fields[]"]:checked').count() == 2, "recommendedFieldsEditable")
+        fresh = fields.locator("[data-certloom-custom-field-new]")
+        await fresh.fill("Accreditation reference")
+        await fields.locator("[data-certloom-custom-field-add]").click()
+        await fields.wait_for_timeout(20)
+        custom = fields.locator('input[name="custom_fields[]"]')
+        await ck(await custom.count() == 1, "customFieldAdded")
+        await ck(await custom.input_value() == "Accreditation reference", "customFieldValuePreserved")
+        await fields.locator("[data-certloom-custom-field-remove]").click()
+        await ck(await custom.count() == 0, "customFieldRemoved")
+        await fresh.fill("Jurisdiction")
+        await fresh.press("Enter")
+        await ck(await fields.locator('input[name="custom_fields[]"]').count() == 1, "customFieldEnterShortcut")
+        await fields.close()
 
-        completed=await browser.new_page(viewport={'width':1000,'height':760})
-        await completed.set_content(fixture('completed'),wait_until='load')
-        await ck(await completed.get_by_text('Setup reviewed').count()==1,'completedBadge')
-        await ck(await completed.get_by_role('button',name='Review setup again').count()==1,'rerunAction')
-        await ck(await completed.locator('.certloom-wizard-progress-step.is-skipped').count()==1,'skippedProgressDistinct')
-        await completed.close()
+        # Appearance — three mutually exclusive modes and competing artifact state is cleared.
+        appearance = await browser.new_page(viewport={"width": 1100, "height": 840})
+        await appearance.set_content(fixture("appearance"), wait_until="load")
+        await ck(await appearance.locator('input[name="presentation_mode"]').count() == 3, "threePresentationModes")
+        image_panel = appearance.locator('[data-certloom-presentation-panel="image"]')
+        design_panel = appearance.locator('[data-certloom-presentation-panel="design"]')
+        image_id = appearance.locator('input[name="certificate_image_id"]')
+        design_select = appearance.locator('select[name="design_template_id"]')
+        await ck(not await image_panel.evaluate("e => e.hidden"), "imagePanelInitiallyVisible")
+        await ck(await design_panel.evaluate("e => e.hidden"), "designPanelInitiallyHidden")
+        await ck(await image_id.input_value() == "91", "imageArtifactInitiallySelected")
+        await ck(await appearance.locator('select[name="design_template_id"] option:not([value="0"])').count() == 42, "allFactoryDesignsReachable")
+        await ck(await appearance.get_by_text("View all designs", exact=True).count() == 1, "viewAllDesignsAvailable")
+        await appearance.locator('input[name="presentation_mode"][value="design"]').check()
+        await appearance.wait_for_timeout(20)
+        await ck(await image_panel.evaluate("e => e.hidden"), "imagePanelHiddenForDesign")
+        await ck(not await design_panel.evaluate("e => e.hidden"), "designPanelVisible")
+        await ck(await image_id.input_value() == "", "designClearsImageArtifact")
+        await design_select.select_option("44")
+        await ck(await design_select.input_value() == "44", "publishedDesignSelectable")
+        await appearance.locator('input[name="presentation_mode"][value="details_only"]').check()
+        await appearance.wait_for_timeout(20)
+        await ck(await image_panel.evaluate("e => e.hidden") and await design_panel.evaluate("e => e.hidden"), "detailsOnlyHidesArtifactPanels")
+        await ck(await design_select.input_value() == "0" and await image_id.input_value() == "", "detailsOnlyClearsCompetingArtifacts")
+        await appearance.locator('input[name="presentation_mode"][value="image"]').check()
+        await appearance.wait_for_timeout(20)
+        await ck(not await image_panel.evaluate("e => e.hidden"), "imageModeRestoresImagePanel")
+        await ck(await design_select.input_value() == "0", "imageModeKeepsDesignCleared")
+        await appearance.close()
 
-        mobile=await browser.new_page(viewport={'width':390,'height':820})
-        await mobile.set_content(fixture(),wait_until='load')
-        await ck(await mobile.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'mobileNoRootOverflow')
-        await ck(await mobile.locator('.certloom-wizard-progress').evaluate('(e)=>e.scrollWidth>e.clientWidth'),'mobileProgressContainedScrollable')
-        mobile_heights=await mobile.locator('.certloom-wizard-actions .button,#save-later,.certloom-wizard-progress-step').evaluate_all('(els)=>els.map(e=>e.getBoundingClientRect().height)')
-        await ck(all(h>=44 for h in mobile_heights),'mobileTargets44')
-        await ck(await mobile.locator('.certloom-wizard-layout').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").length==1'),'mobileOneColumn')
+        # First credential — essentials only; hierarchy stays out of required onboarding path.
+        issue = await browser.new_page(viewport={"width": 1050, "height": 800})
+        await issue.set_content(fixture("issue"), wait_until="load")
+        await ck(
+            "First credential" in await issue.locator('.certloom-setup-v2-progress-step[aria-current="step"]').inner_text(),
+            "firstCredentialCurrent",
+        )
+        await ck(await issue.locator('input[name="first_recipient_name"][required]').count() == 1, "recipientRequired")
+        await ck(await issue.locator('input[name="credential_title"][required]').count() == 1, "credentialTitleRequired")
+        await ck(await issue.locator('input[name="issue_date"][required]').count() == 1, "issueDateRequired")
+        await ck(await issue.locator('input[name="first_recipient_email"]').count() == 1, "recipientEmailOptional")
+        prohibited = await issue.locator(
+            '[name="program_id"],[name="program_title"],[name="batch_id"],[name="issuer_id"],[name="signer_id"],[name="numbering_mode"],[name="backup_mode"]'
+        ).count()
+        await ck(prohibited == 0, "noHierarchyOrLegacySetupFields")
+        await ck(
+            await issue.get_by_text("Standalone issuance connection is still being implemented", exact=False).count() == 1,
+            "issuanceBackendGapHonest",
+        )
+        await ck("stay out of the required path" in (await issue.locator(".certloom-setup-v2-heading").inner_text()).lower(), "hierarchyExplicitlyOptional")
+        await issue.close()
+
+        # Finish — cannot falsely claim completion before a real issued credential exists.
+        finish = await browser.new_page(viewport={"width": 1050, "height": 800})
+        await finish.set_content(fixture("finish"), wait_until="load")
+        await ck(await finish.get_by_text("One required step remains: issue the first real credential.", exact=True).count() == 1, "finishStatesRemainingRequirement")
+        await ck(await finish.get_by_text("Certloom has not created placeholder hierarchy records", exact=False).count() == 1, "finishNoPlaceholderRecords")
+        await ck(await finish.get_by_text("Setup complete", exact=False).count() == 0, "finishDoesNotClaimFalseCompletion")
+        await ck(await finish.locator(".certloom-setup-v2-next li").count() == 4, "profileChecklistVisible")
+        await ck(await finish.locator(".certloom-setup-v2-footer").count() == 0, "finishNoDraftFooter")
+        await finish.close()
+
+        # Mobile — contained progress, single-column forms and 44px core targets.
+        mobile = await browser.new_page(viewport={"width": 390, "height": 820})
+        await mobile.set_content(fixture("profile"), wait_until="load")
+        await ck(await mobile.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "mobileNoRootOverflow")
+        await ck(await mobile.locator(".certloom-setup-v2-progress").evaluate("e => e.scrollWidth > e.clientWidth"), "mobileProgressContainedScrollable")
+        mobile_heights = await mobile.locator(
+            ".certloom-setup-v2-progress-step,.certloom-setup-v2-actions .button,.certloom-setup-v2-exit"
+        ).evaluate_all("els => els.map(e => e.getBoundingClientRect().height)")
+        await ck(all(h >= 44 for h in mobile_heights), "mobileTargets44")
+        await ck(
+            await mobile.locator(".certloom-setup-v2-profile-grid").evaluate(
+                "e => getComputedStyle(e).gridTemplateColumns.trim().split(/\\s+/).length === 1"
+            ),
+            "mobileProfileOneColumn",
+        )
         await mobile.close()
 
-        rtl=await browser.new_page(viewport={'width':900,'height':760})
-        await rtl.set_content(fixture('rtl'),wait_until='load')
-        await ck(await rtl.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'rtlNoOverflow')
-        await ck(await rtl.locator('.certloom-wizard-progress').get_attribute('aria-label')=='Setup progress','rtlSemanticProgress')
+        # RTL — same flow, no horizontal root overflow.
+        rtl = await browser.new_page(viewport={"width": 900, "height": 760})
+        await rtl.set_content(fixture("rtl"), wait_until="load")
+        await ck(await rtl.locator("html").get_attribute("dir") == "rtl", "rtlDirection")
+        await ck(await rtl.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "rtlNoOverflow")
+        await ck(await rtl.locator(".certloom-setup-v2-progress").get_attribute("aria-label") == "Setup progress", "rtlSemanticProgress")
         await rtl.close()
 
-        reduced=await browser.new_page(viewport={'width':900,'height':700},reduced_motion='reduce')
-        await reduced.set_content(fixture(),wait_until='load')
-        duration=await reduced.locator('.certloom-wizard-progress-step').first.evaluate('(e)=>getComputedStyle(e).transitionDuration')
-        await ck(duration in ('0s','0.00001s','0.001s') or duration.startswith('0.00'),'reducedMotion')
+        # Reduced motion and forced colors remain usable.
+        reduced = await browser.new_page(viewport={"width": 900, "height": 700}, reduced_motion="reduce")
+        await reduced.set_content(fixture("profile"), wait_until="load")
+        duration = await reduced.locator(".certloom-setup-v2-profile-card").first.evaluate("e => getComputedStyle(e).transitionDuration")
+        await ck(duration in ("0s", "0.00001s", "0.001s") or duration.startswith("0.00"), "reducedMotion")
         await reduced.close()
 
-        forced=await browser.new_page(viewport={'width':900,'height':700},forced_colors='active')
-        await forced.set_content(fixture(),wait_until='load')
-        await ck(await forced.locator('.certloom-wizard-progress').count()==1,'forcedColorsProgress')
-        await ck(await forced.locator('.certloom-wizard-progressive-note').count()==1,'forcedColorsProgressiveGuidance')
-        await ck(await forced.locator('input[name="workspace_mode"]').count()==0,'forcedColorsNoModeChoices')
-        await forced.close(); await browser.close()
+        forced = await browser.new_page(viewport={"width": 900, "height": 700}, forced_colors="active")
+        await forced.set_content(fixture("profile"), wait_until="load")
+        await ck(await forced.locator(".certloom-setup-v2-progress").count() == 1, "forcedColorsProgress")
+        await forced.locator('input[name="usage_profile"][value="iso_management"]').check()
+        selected_border = await forced.locator('input[name="usage_profile"][value="iso_management"]').locator("xpath=..").evaluate("e => getComputedStyle(e).borderTopColor")
+        await ck(bool(selected_border), "forcedColorsSelectedProfileVisible")
+        await ck(await forced.locator(".certloom-setup-v2-model-help").count() == 1, "forcedColorsHierarchyHelp")
+        await forced.close()
+
+        await browser.close()
+
     if failed:
-        print('FAIL  WIZ-01/02 browser gate:', ', '.join(failed)); print(f'\n{checks-len(failed)} passed, {len(failed)} failures'); return 1
-    print('PASS  WIZ-01/02 browser gate: unified progressive setup, design preview, numbering format, Google connection state, review, mobile, RTL and accessibility media')
-    print(f'\n{checks} WIZ-01/02 browser checks, 0 failures'); return 0
+        print("FAIL  UI Phase 3 Setup Wizard v2 browser gate:", ", ".join(failed))
+        print(f"\n{checks-len(failed)} passed, {len(failed)} failures")
+        return 1
+
+    print("PASS  UI Phase 3 Setup Wizard v2 browser gate: focused shell, profiles, organization, field recommendations, mutually exclusive appearance, essential first-credential path, honest incomplete finish, mobile/RTL/accessibility")
+    print(f"\n{checks} UI Phase 3 browser checks, 0 failures")
+    return 0
+
+
 raise SystemExit(asyncio.run(run()))

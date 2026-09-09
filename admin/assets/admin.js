@@ -729,41 +729,101 @@
 	}
 
 	function initAdaptiveSetupWizard() {
-		var form = document.querySelector( '[data-certloom-purpose-form]' );
-		if ( ! form ) { return; }
-		var purpose = document.getElementById( 'certloom-wizard-purpose' );
-		var subcategory = document.getElementById( 'certloom-wizard-subcategory' );
-		var scheme = form.querySelector( '[data-certloom-scheme-field]' );
-		if ( ! purpose || ! subcategory ) { return; }
-		var summaryPurpose = document.querySelector( '[data-certloom-wizard-summary-purpose]' );
-		var summaryType = document.querySelector( '[data-certloom-wizard-summary-type]' );
-		var summaryTerminology = document.querySelector( '[data-certloom-wizard-summary-terminology]' );
-		var summaryDesign = document.querySelector( '[data-certloom-wizard-summary-design]' );
+		var root = document.querySelector( '[data-certloom-setup-v2]' );
+		if ( ! root ) { return; }
 
-		function update() {
-			var activePurpose = purpose.value;
-			var firstAllowed = null;
-			var currentAllowed = false;
-			Array.prototype.forEach.call( subcategory.options, function ( option ) {
-				var allowed = option.getAttribute( 'data-purpose' ) === activePurpose;
-				option.hidden = ! allowed;
-				option.disabled = ! allowed;
-				if ( allowed && ! firstAllowed ) { firstAllowed = option; }
-				if ( allowed && option.selected ) { currentAllowed = true; }
-			} );
-			if ( ! currentAllowed && firstAllowed ) { firstAllowed.selected = true; }
-			subcategory.disabled = ! firstAllowed;
-			var selected = subcategory.options[ subcategory.selectedIndex ];
-			var purposeOption = purpose.options[ purpose.selectedIndex ];
-			if ( scheme ) { scheme.hidden = 'certification_standards' !== activePurpose; }
-			if ( summaryPurpose && purposeOption ) { summaryPurpose.textContent = purposeOption.textContent; }
-			if ( summaryType && selected ) { summaryType.textContent = selected.textContent; }
-			if ( summaryTerminology && selected ) { summaryTerminology.textContent = selected.getAttribute( 'data-terminology' ) || certloomText( 'defaultCredentialTerm', 'Credential' ); }
-			if ( summaryDesign && selected ) { summaryDesign.textContent = selected.getAttribute( 'data-design' ) || certloomText( 'defaultDesignDescription', 'Clear and professional' ); }
+		var wizardForm = root.querySelector( '#certloom-wizard-step-form' );
+		var dirty = false;
+		function setDirty( value ) { dirty = !!value; root.setAttribute( 'data-certloom-dirty', dirty ? '1' : '0' ); }
+		if ( wizardForm ) {
+			wizardForm.addEventListener( 'input', function ( event ) { if ( event.target && event.target.name ) { setDirty( true ); event.target.removeAttribute( 'aria-invalid' ); } } );
+			wizardForm.addEventListener( 'change', function ( event ) { if ( event.target && event.target.name ) { setDirty( true ); event.target.removeAttribute( 'aria-invalid' ); } } );
+			wizardForm.addEventListener( 'submit', function () { setDirty( false ); } );
+			wizardForm.addEventListener( 'invalid', function ( event ) {
+				var control = event.target;
+				if ( control && control.setAttribute ) { control.setAttribute( 'aria-invalid', 'true' ); window.setTimeout( function () { if ( control.focus ) { control.focus(); } }, 0 ); }
+			}, true );
+			window.addEventListener( 'beforeunload', function ( event ) { if ( ! dirty ) { return; } event.preventDefault(); event.returnValue = ''; } );
 		}
-		purpose.addEventListener( 'change', update );
-		subcategory.addEventListener( 'change', update );
-		update();
+		var setupError = root.querySelector( '.certloom-setup-v2-notices .notice-error' );
+		if ( setupError ) { setupError.setAttribute( 'tabindex', '-1' ); window.setTimeout( function () { setupError.focus(); }, 0 ); }
+
+		var profileForm = root.querySelector( '[data-certloom-profile-form]' );
+		if ( profileForm ) {
+			var hierarchyTargets = {};
+			Array.prototype.forEach.call( profileForm.querySelectorAll( '[data-certloom-hierarchy]' ), function ( node ) {
+				hierarchyTargets[ node.getAttribute( 'data-certloom-hierarchy' ) ] = node;
+			} );
+			function syncProfileHelp() {
+				var selected = profileForm.querySelector( 'input[name="usage_profile"]:checked' );
+				var card = selected ? selected.closest( '[data-certloom-profile-card]' ) : null;
+				if ( ! card ) { return; }
+				[ 'issuer', 'program', 'batch', 'signer' ].forEach( function ( key ) {
+					if ( hierarchyTargets[ key ] ) { hierarchyTargets[ key ].textContent = card.getAttribute( 'data-hierarchy-' + key ) || ''; }
+				} );
+			}
+			Array.prototype.forEach.call( profileForm.querySelectorAll( 'input[name="usage_profile"]' ), function ( input ) { input.addEventListener( 'change', syncProfileHelp ); } );
+			syncProfileHelp();
+		}
+
+		var fieldsForm = root.querySelector( '[data-certloom-fields-form]' );
+		if ( fieldsForm ) {
+			var list = fieldsForm.querySelector( '[data-certloom-custom-field-list]' );
+			var fresh = fieldsForm.querySelector( '[data-certloom-custom-field-new]' );
+			var add = fieldsForm.querySelector( '[data-certloom-custom-field-add]' );
+			function addCustomField() {
+				if ( ! list || ! fresh ) { return; }
+				var value = String( fresh.value || '' ).trim();
+				if ( ! value ) { fresh.focus(); return; }
+				var row = document.createElement( 'div' ); row.className = 'certloom-setup-v2-custom-field';
+				var input = document.createElement( 'input' ); input.type = 'text'; input.name = 'custom_fields[]'; input.maxLength = 100; input.value = value;
+				var remove = document.createElement( 'button' ); remove.type = 'button'; remove.className = 'button-link'; remove.setAttribute( 'data-certloom-custom-field-remove', '' ); remove.textContent = certloomText( 'remove', 'Remove' );
+				row.appendChild( input ); row.appendChild( remove ); list.appendChild( row ); fresh.value = ''; input.focus();
+			}
+			if ( add ) { add.addEventListener( 'click', addCustomField ); }
+			if ( fresh ) { fresh.addEventListener( 'keydown', function ( event ) { if ( 'Enter' === event.key ) { event.preventDefault(); addCustomField(); } } ); }
+			fieldsForm.addEventListener( 'click', function ( event ) { var remove = event.target.closest( '[data-certloom-custom-field-remove]' ); if ( remove ) { var row = remove.closest( '.certloom-setup-v2-custom-field' ); if ( row ) { row.remove(); if ( fresh ) { fresh.focus(); } } } } );
+		}
+
+		var appearanceForm = root.querySelector( '[data-certloom-appearance-form]' );
+		if ( appearanceForm ) {
+			var panels = appearanceForm.querySelectorAll( '[data-certloom-presentation-panel]' );
+			var imageControl = appearanceForm.querySelector( '[data-certloom-presentation-panel="image"] [data-certloom-media-control]' );
+			var imageId = imageControl ? imageControl.querySelector( '[data-certloom-media-id]' ) : null;
+			var imagePreview = imageControl ? imageControl.querySelector( '[data-certloom-media-preview]' ) : null;
+			var imageClear = imageControl ? imageControl.querySelector( '[data-certloom-media-clear]' ) : null;
+			var designSelect = appearanceForm.querySelector( 'select[name="design_template_id"]' );
+			function syncPresentation() {
+				var selected = appearanceForm.querySelector( 'input[name="presentation_mode"]:checked' );
+				var mode = selected ? selected.value : 'details_only';
+				Array.prototype.forEach.call( panels, function ( panel ) { panel.hidden = panel.getAttribute( 'data-certloom-presentation-panel' ) !== mode; } );
+				if ( 'image' === mode ) {
+					if ( designSelect ) { designSelect.value = '0'; }
+				} else if ( 'design' === mode ) {
+					if ( imageId ) { imageId.value = ''; }
+					if ( imagePreview ) { imagePreview.innerHTML = '<span>' + escapeHtml( certloomText( 'noCertificateImage', 'No certificate image selected' ) ) + '</span>'; }
+					if ( imageClear ) { imageClear.hidden = true; }
+				} else {
+					if ( designSelect ) { designSelect.value = '0'; }
+					if ( imageId ) { imageId.value = ''; }
+					if ( imagePreview ) { imagePreview.innerHTML = '<span>' + escapeHtml( certloomText( 'noCertificateImage', 'No certificate image selected' ) ) + '</span>'; }
+					if ( imageClear ) { imageClear.hidden = true; }
+				}
+			}
+			Array.prototype.forEach.call( appearanceForm.querySelectorAll( 'input[name="presentation_mode"]' ), function ( input ) { input.addEventListener( 'change', syncPresentation ); } );
+			syncPresentation();
+		}
+
+		Array.prototype.forEach.call( root.querySelectorAll( '[data-copy-text]' ), function ( button ) {
+			button.addEventListener( 'click', function () {
+				var text = button.getAttribute( 'data-copy-text' ) || '';
+				if ( ! text ) { return; }
+				var original = button.textContent;
+				var done = function ( ok ) { button.textContent = ok ? certloomText( 'copied', 'Copied' ) : certloomText( 'copyFailed', 'Press Ctrl+C or Cmd+C to copy' ); window.setTimeout( function () { button.textContent = original; }, 1800 ); };
+				if ( navigator.clipboard && window.isSecureContext ) { navigator.clipboard.writeText( text ).then( function () { done( true ); }, function () { done( false ); } ); return; }
+				var scratch = document.createElement( 'textarea' ); scratch.value = text; scratch.setAttribute( 'readonly', '' ); scratch.style.position = 'fixed'; scratch.style.opacity = '0'; document.body.appendChild( scratch ); scratch.select(); var ok = false; try { ok = document.execCommand( 'copy' ); } catch ( error ) { ok = false; } scratch.remove(); done( ok );
+			} );
+		} );
 	}
 
 
@@ -1193,23 +1253,26 @@
 		document.querySelectorAll( '[data-certloom-media-control]' ).forEach( function ( control ) {
 			var id = control.querySelector( '[data-certloom-media-id]' ), preview = control.querySelector( '[data-certloom-media-preview]' ), choose = control.querySelector( '[data-certloom-media-select]' ), clear = control.querySelector( '[data-certloom-media-clear]' );
 			var allowedTypes = String( control.getAttribute( 'data-certloom-media-types' ) || '' ).split( ',' ).map( function ( value ) { return value.trim(); } ).filter( Boolean );
-			if ( choose ) { choose.addEventListener( 'click', function () {
+			if ( preview ) { preview.setAttribute( 'role', 'status' ); preview.setAttribute( 'aria-live', 'polite' ); }
+			if ( choose ) { choose.setAttribute( 'aria-haspopup', 'dialog' ); choose.addEventListener( 'click', function () {
 				if ( ! window.wp || ! wp.media ) { return; }
 				var frame = wp.media( { title:'Choose media', button:{ text:'Use this file' }, multiple:false, library:{ type:'image' } } );
 				frame.on( 'select', function () {
 					var attachment = frame.state().get( 'selection' ).first().toJSON();
 					if ( allowedTypes.length && allowedTypes.indexOf( String( attachment.mime || '' ) ) === -1 ) {
-						if ( preview ) { preview.innerHTML = '<span>' + escapeHtml( certloomText( 'certificateImageTypeInvalid', 'Choose a PNG or JPEG image.' ) ) + '</span>'; }
+						if ( preview ) { preview.setAttribute( 'role', 'alert' ); preview.innerHTML = '<span>' + escapeHtml( certloomText( 'certificateImageTypeInvalid', 'Choose a PNG or JPEG image.' ) ) + '</span>'; }
 						return;
 					}
+					if ( preview ) { preview.setAttribute( 'role', 'status' ); }
 					id.value = attachment.id || '';
 					var src = attachment.sizes && attachment.sizes.thumbnail ? attachment.sizes.thumbnail.url : attachment.url;
 					preview.innerHTML = ( src ? '<img src="' + escapeHtml( src ) + '" alt="">' : '' ) + '<span>' + escapeHtml( attachment.filename || attachment.title || certloomText( 'selectedFile', 'Selected file' ) ) + '</span>';
 					if ( clear ) { clear.hidden = false; }
 				} );
+				frame.on( 'close', function () { if ( choose ) { window.setTimeout( function () { choose.focus(); }, 0 ); } } );
 				frame.open();
 			} ); }
-			if ( clear ) { clear.addEventListener( 'click', function () { id.value = ''; preview.innerHTML = '<span>' + escapeHtml( control.classList.contains( 'certloom-certificate-image-control' ) ? certloomText( 'noCertificateImage', 'No certificate image selected' ) : certloomText( 'noFileSelected', 'No file selected' ) ) + '</span>'; clear.hidden = true; } ); }
+			if ( clear ) { clear.addEventListener( 'click', function () { id.value = ''; if ( preview ) { preview.setAttribute( 'role', 'status' ); preview.innerHTML = '<span>' + escapeHtml( control.classList.contains( 'certloom-certificate-image-control' ) ? certloomText( 'noCertificateImage', 'No certificate image selected' ) : certloomText( 'noFileSelected', 'No file selected' ) ) + '</span>'; } clear.hidden = true; if ( choose ) { choose.focus(); } } ); }
 		} );
 	}
 
@@ -1286,6 +1349,117 @@
 				if ( feedback ) { feedback.classList.remove( 'is-success' ); feedback.classList.add( 'is-error' ); feedback.textContent = error && error.message ? error.message : ( publishing ? certloomText( 'designPublishFailed', 'This design could not be published.' ) : certloomText( 'designDraftFailed', 'This design could not be moved to Draft.' ) ); }
 			} );
 		} );
+	}
+
+
+	function initGuidedDashboardTour() {
+		var root = document.querySelector( '[data-certloom-guided-tour]' );
+		if ( ! root ) { return; }
+		var mode = root.getAttribute( 'data-mode' ) || '';
+		if ( 'resume' !== mode && 'restart' !== mode ) { return; }
+		var steps = [];
+		var state = {};
+		try { steps = JSON.parse( root.getAttribute( 'data-steps' ) || '[]' ); } catch ( error ) { steps = []; }
+		try { state = JSON.parse( root.getAttribute( 'data-state' ) || '{}' ); } catch ( error ) { state = {}; }
+		if ( ! Array.isArray( steps ) || ! steps.length ) { return; }
+
+		var panel = root.querySelector( '.certloom-guided-tour-card' );
+		var progress = root.querySelector( '[data-certloom-tour-progress]' );
+		var title = root.querySelector( '[data-certloom-tour-title]' );
+		var body = root.querySelector( '[data-certloom-tour-body]' );
+		var back = root.querySelector( '[data-certloom-tour-back]' );
+		var next = root.querySelector( '[data-certloom-tour-next]' );
+		var open = root.querySelector( '[data-certloom-tour-open]' );
+		var dismiss = root.querySelector( '[data-certloom-tour-dismiss]' );
+		if ( ! panel || ! progress || ! title || ! body || ! back || ! next || ! open || ! dismiss ) { return; }
+
+		var current = 'restart' === mode ? 0 : Math.min( steps.length - 1, Math.max( 0, parseInt( state.last_step || 0, 10 ) || 0 ) );
+		if ( 'completed' === state.status || 'dismissed' === state.status ) { current = 0; }
+		var activeTarget = null;
+		var reduceMotion = window.matchMedia && window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;
+		var progressTemplate = root.getAttribute( 'data-progress-template' ) || 'Step %1$d of %2$d';
+		var nextLabel = root.getAttribute( 'data-next-label' ) || 'Next';
+		var finishLabel = root.getAttribute( 'data-finish-label' ) || 'Finish tour';
+		var nonce = root.getAttribute( 'data-nonce' ) || '';
+
+		function persist( eventName, stepIndex ) {
+			if ( ! nonce || ! window.ajaxurl || ! window.fetch ) { return Promise.resolve(); }
+			var payload = new URLSearchParams();
+			payload.set( 'action', 'certloom_guided_tour_state' );
+			payload.set( 'nonce', nonce );
+			payload.set( 'event', eventName );
+			payload.set( 'step', String( Math.max( 0, stepIndex || 0 ) ) );
+			return fetch( window.ajaxurl, {
+				method: 'POST',
+				credentials: 'same-origin',
+				keepalive: true,
+				headers: { 'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8' },
+				body: payload.toString()
+			} ).catch( function () { return null; } );
+		}
+
+		function clearTarget() {
+			if ( activeTarget ) { activeTarget.classList.remove( 'certloom-guided-tour-target' ); }
+			activeTarget = null;
+		}
+
+		function closeTour( permanently ) {
+			clearTarget();
+			root.hidden = true;
+			if ( permanently ) { persist( 'dismiss', current ); }
+			var heading = document.getElementById( 'certloom-dashboard-title' );
+			if ( heading && 'function' === typeof heading.focus ) {
+				heading.setAttribute( 'tabindex', '-1' );
+				heading.focus();
+			}
+		}
+
+		function renderStep() {
+			clearTarget();
+			var step = steps[ current ] || {};
+			var selector = 'string' === typeof step.target ? step.target : '';
+			activeTarget = selector ? document.querySelector( selector ) : null;
+			if ( activeTarget ) {
+				activeTarget.classList.add( 'certloom-guided-tour-target' );
+				var rect = activeTarget.getBoundingClientRect();
+				if ( rect.top < 0 || rect.bottom > window.innerHeight ) {
+					activeTarget.scrollIntoView( { block:'center', behavior:reduceMotion ? 'auto' : 'smooth' } );
+				}
+			}
+			progress.textContent = progressTemplate.replace( '%1$d', String( current + 1 ) ).replace( '%2$d', String( steps.length ) );
+			title.textContent = step.title || '';
+			body.textContent = step.body || '';
+			back.disabled = 0 === current;
+			next.textContent = current === steps.length - 1 ? finishLabel : nextLabel;
+			var targetLink = activeTarget && activeTarget.matches( 'a[href]' ) ? activeTarget : ( activeTarget ? activeTarget.closest( 'a[href]' ) : null );
+			if ( targetLink ) {
+				open.hidden = false;
+				open.href = targetLink.href;
+				open.textContent = step.action || open.textContent;
+			} else {
+				open.hidden = true;
+				open.removeAttribute( 'href' );
+			}
+			persist( 'progress', current );
+		}
+
+		back.addEventListener( 'click', function () {
+			if ( current > 0 ) { current--; renderStep(); }
+		} );
+		next.addEventListener( 'click', function () {
+			if ( current < steps.length - 1 ) { current++; renderStep(); return; }
+			persist( 'complete', current );
+			closeTour( false );
+		} );
+		dismiss.addEventListener( 'click', function () { closeTour( true ); } );
+		root.addEventListener( 'keydown', function ( event ) {
+			if ( 'Escape' === event.key ) { event.preventDefault(); closeTour( true ); }
+		} );
+
+		root.hidden = false;
+		persist( 'restart' === mode ? 'restart' : 'start', current );
+		renderStep();
+		window.setTimeout( function () { next.focus(); }, 0 );
 	}
 
 	function initPluginLifecycleDialog() {
@@ -1370,6 +1544,7 @@
 		initProductNoticeRail();
 		initRestoreAutoContinue();
 		initAdaptiveSetupWizard();
+		initGuidedDashboardTour();
 		initSetupNumberingPreview();
 		initWizardTemplatePreview();
 		initGoogleDrivePopupConnect();
