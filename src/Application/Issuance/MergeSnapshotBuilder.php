@@ -2,6 +2,7 @@
 namespace Certloom\Application\Issuance;
 
 use Certloom\Domain\Rendering\ElementRegistry;
+use Certloom\Domain\Rendering\TableDataContract;
 
 /**
  * Resolves the P0 issuance merge vocabulary exactly once before rendering.
@@ -16,7 +17,7 @@ final class MergeSnapshotBuilder {
 	 * @param array<string,mixed>|null $issuer Issuer snapshot.
 	 * @param array<string,mixed> $credential Credential identity/date facts.
 	 * @param array<string,mixed> $layout Published canonical layout.
-	 * @return array<string,string>|\WP_Error
+	 * @return array<string,mixed>|\WP_Error
 	 */
 	public function build( array $recipient, array $program, $issuer, array $credential, array $layout, array $custom_overrides = array(), $signer = null ) {
 		$issuer = is_array( $issuer ) ? $issuer : array();
@@ -37,6 +38,14 @@ final class MergeSnapshotBuilder {
 		$expiry_date = (string) ( $credential['expires_at'] ?? '' );
 		$verification_url = (string) ( $credential['verification_url'] ?? '' );
 		$grade = trim( (string) ( $credential['grade'] ?? '' ) );
+		$repeating = array();
+		try {
+			foreach ( array( TableDataContract::SUBJECTS => 'subjects', TableDataContract::RESULTS => 'results' ) as $source => $credential_key ) {
+				if ( array_key_exists( $credential_key, $credential ) ) { $repeating[ $source ] = TableDataContract::normalize_rows( $source, $credential[ $credential_key ] ); }
+			}
+		} catch ( \InvalidArgumentException $error ) {
+			return new \WP_Error( 'certloom_manual_issue_repeating_data_invalid', __( 'The repeating result/subject data is not valid for immutable credential issuance.', 'certloom' ) );
+		}
 
 		$values = array(
 			'recipient.name' => $display_name,
@@ -81,6 +90,7 @@ final class MergeSnapshotBuilder {
 			'verification_url' => $verification_url,
 		);
 		if ( $signer_signature_attachment_id ) { $values['signer.signature_asset'] = 'attachment:' . $signer_signature_attachment_id; }
+		foreach ( $repeating as $source => $rows ) { $values[ $source ] = $rows; }
 
 		foreach ( $custom as $key => $value ) {
 			$key = sanitize_key( (string) $key );
@@ -125,6 +135,10 @@ final class MergeSnapshotBuilder {
 			}
 			if ( 'signature' === $type && 'signer.signature' === (string) ( $element['source'] ?? '' ) ) {
 				$tokens[] = 'signer.signature_asset';
+			}
+			if ( 'data_table' === $type ) {
+				$source = trim( (string) ( $element['source'] ?? '' ) );
+				if ( '' !== $source ) { $tokens[] = $source; }
 			}
 			if ( 'rich_text' === $type && isset( $element['runs'] ) && is_array( $element['runs'] ) ) {
 				foreach ( $element['runs'] as $run ) {

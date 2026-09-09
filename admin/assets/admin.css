@@ -2725,10 +2725,104 @@ overflow-wrap:anywhere;
 white-space:normal}
 .certloom-manual-receipt-url small{
 color:#646970}
+
+.certloom-manual-repeating{
+margin:18px 0 4px;
+border:1px solid #dcdcde;
+border-radius:12px;
+background:#fbfbfc}
+.certloom-manual-repeating>summary{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:16px;
+padding:14px 16px;
+cursor:pointer;
+font-weight:700}
+.certloom-manual-repeating>summary small{
+font-weight:400;
+color:#646970}
+.certloom-manual-repeating-body{
+padding:0 16px 16px}
+.certloom-manual-rowset{
+margin-top:16px;
+padding:14px;
+border:1px solid #e2e4e7;
+border-radius:10px;
+background:#fff}
+.certloom-manual-rowset-head{
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+gap:14px;
+margin-bottom:12px}
+.certloom-manual-rowset-head h4,.certloom-manual-rowset-head p{
+margin:0}
+.certloom-manual-rowset-head p,.certloom-manual-rowset-limit{
+color:#646970;
+font-weight:400}
+.certloom-manual-rowset-rows{
+display:grid;
+gap:10px}
+.certloom-manual-repeating-row{
+display:flex;
+align-items:flex-end;
+gap:10px;
+padding:12px;
+border:1px solid #e2e4e7;
+border-radius:8px;
+background:#fbfbfc}
+.certloom-manual-repeating-fields{
+flex:1;
+min-width:0;
+display:grid;
+grid-template-columns:repeat(4,minmax(120px,1fr));
+gap:10px}
+.certloom-manual-repeating-row label{
+min-width:0}
+.certloom-manual-repeating-row input{
+width:100%;
+max-width:none;
+min-height:40px}
+.certloom-manual-repeating-remove{
+min-height:40px;
+padding:0 8px}
+.certloom-manual-rowset-limit{
+display:block;
+margin-top:10px}
+.certloom-manual-repeating-review{
+margin:16px 0;
+padding:14px;
+border:1px solid #e2e4e7;
+border-radius:10px;
+background:#fbfbfc}
+.certloom-manual-repeating-review h3{
+margin:0 0 4px}
+.certloom-manual-review-rowset{
+display:flex;
+justify-content:space-between;
+gap:12px;
+padding:8px 0;
+border-top:1px solid #e2e4e7}
+
 .certloom-text-danger{
 color:#b32d2e}
-@media (max-width:900px){.certloom-manual-grid-2,.certloom-manual-review-grid{grid-template-columns:1fr 1fr}.certloom-manual-steps{grid-template-columns:1fr 1fr}.certloom-manual-card-head,.certloom-manual-issuance .certloom-page-head{flex-direction:column}.certloom-manual-custom-row{grid-template-columns:1fr}}
-@media (max-width:620px){.certloom-manual-grid-2,.certloom-manual-review-grid,.certloom-manual-steps{grid-template-columns:1fr}.certloom-manual-card{padding:18px}.certloom-manual-choice-row{flex-direction:column;align-items:flex-start}.certloom-manual-confirm .button,.certloom-manual-actions .button{width:100%;text-align:center}}
+@media (max-width:900px){
+.certloom-manual-grid-2,.certloom-manual-review-grid{grid-template-columns:1fr 1fr}
+.certloom-manual-steps{grid-template-columns:1fr 1fr}
+.certloom-manual-card-head,.certloom-manual-issuance .certloom-page-head{flex-direction:column}
+.certloom-manual-custom-row{grid-template-columns:1fr}
+.certloom-manual-repeating-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:620px){
+.certloom-manual-grid-2,.certloom-manual-review-grid,.certloom-manual-steps{grid-template-columns:1fr}
+.certloom-manual-card{padding:18px}
+.certloom-manual-choice-row{flex-direction:column;align-items:flex-start}
+.certloom-manual-confirm .button,.certloom-manual-actions .button{width:100%;text-align:center}
+.certloom-manual-repeating>summary,.certloom-manual-rowset-head,.certloom-manual-repeating-row{flex-direction:column;align-items:stretch}
+.certloom-manual-repeating-fields{grid-template-columns:1fr}
+.certloom-manual-rowset-head .button,.certloom-manual-repeating-remove{min-height:44px;width:100%}
+}
 @media (prefers-reduced-motion:reduce){.certloom-manual-issuance *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 .certloom-manual-recipient-search{
 display:grid;
@@ -6348,3 +6442,5 @@ color:CanvasText}
 		outline-offset: 2px;
 	}
 }
+
+@media (forced-colors:active){.certloom-manual-repeating,.certloom-manual-rowset,.certloom-manual-repeating-row,.certloom-manual-repeating-review{border-color:CanvasText}}

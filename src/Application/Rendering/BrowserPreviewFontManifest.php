@@ -17,21 +17,30 @@ final class BrowserPreviewFontManifest {
 	public function for_document( array $resolved_document ) {
 		$families = array();
 		foreach ( isset( $resolved_document['elements'] ) && is_array( $resolved_document['elements'] ) ? $resolved_document['elements'] : array() as $element ) {
-			if ( ! is_array( $element ) || 'text' !== (string) ( $element['type'] ?? '' ) ) { continue; }
-			$style = isset( $element['style'] ) && is_array( $element['style'] ) ? $element['style'] : array();
-			$family = $this->catalog->normalize_key( $style['font_family'] ?? 'sans-serif' );
-			$weight = (int) ( $style['font_weight'] ?? 400 );
-			$variant = $weight . '-' . ( ! empty( $style['italic'] ) ? 'italic' : 'normal' );
-			$hash = hash( 'sha256', 'certloom-browser-preview-font-contract-v1|' . $family . '|' . $variant );
-			$families[ $family ][ $variant ] = array(
-				'faces' => array(
-					array(
-						'sha256' => $hash,
-						'format' => 'ttf',
-						'coverage' => array( 'U+0000-D7FF', 'U+E000-10FFFF' ),
-					),
-				),
-			);
+			if ( ! is_array( $element ) ) { continue; }
+			$type = (string) ( $element['type'] ?? '' );
+			$styles = array();
+			if ( 'text' === $type ) { $styles[] = isset( $element['style'] ) && is_array( $element['style'] ) ? $element['style'] : array(); }
+			elseif ( 'rich_text' === $type ) {
+				$base = isset( $element['style'] ) && is_array( $element['style'] ) ? $element['style'] : array();
+				$styles[] = $base;
+				foreach ( isset( $element['runs'] ) && is_array( $element['runs'] ) ? $element['runs'] : array() as $run ) { if ( is_array( $run ) ) { $styles[] = array_merge( $base, isset( $run['style'] ) && is_array( $run['style'] ) ? $run['style'] : array() ); } }
+			} elseif ( 'table' === $type || 'data_table' === $type ) {
+				$base = isset( $element['style'] ) && is_array( $element['style'] ) ? $element['style'] : array();
+				$styles[] = $base;
+				$header = $base;
+				$header['font_weight'] = (int) ( $element['style']['header_font_weight'] ?? 600 );
+				$styles[] = $header;
+			}
+			foreach ( $styles as $style ) {
+				$family = $this->catalog->normalize_key( $style['font_family'] ?? 'sans-serif' );
+				$weight = (int) ( $style['font_weight'] ?? 400 );
+				$variant = $weight . '-' . ( ! empty( $style['italic'] ) ? 'italic' : 'normal' );
+				$hash = hash( 'sha256', 'certloom-browser-preview-font-contract-v1|' . $family . '|' . $variant );
+				$families[ $family ][ $variant ] = array(
+					'faces' => array( array( 'sha256' => $hash, 'format' => 'ttf', 'coverage' => array( 'U+0000-D7FF', 'U+E000-10FFFF' ) ) ),
+				);
+			}
 		}
 		if ( empty( $families ) ) {
 			$families['sans-serif']['400-normal'] = array(

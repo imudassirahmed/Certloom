@@ -122,6 +122,9 @@ final class RenderPlanBuilder {
 				case 'barcode':
 					$operation['barcode'] = $this->barcode_operation( $element, $geometry );
 					break;
+				case 'table':
+					$operation['table'] = $this->table_operation( $element, $geometry, $font_manifest );
+					break;
 				default:
 					throw new InvalidArgumentException( 'Resolved render document contains an unsupported operation type.' );
 			}
@@ -407,6 +410,100 @@ final class RenderPlanBuilder {
 			'module_size_mm' => $this->clean_float( $module_mm ),
 			'dark_runs' => $runs,
 		);
+	}
+
+
+
+	/** @return array<string,mixed> */
+	private function table_operation( array $element, array $geometry, array $manifest ) {
+		$columns = isset( $element['columns'] ) && is_array( $element['columns'] ) ? array_values( $element['columns'] ) : array();
+		$rows = isset( $element['rows'] ) && is_array( $element['rows'] ) ? array_values( $element['rows'] ) : array();
+		if ( empty( $columns ) || count( $columns ) > 12 || count( $rows ) > 50 ) { throw new InvalidArgumentException( 'Render plan Table dimensions are outside the canonical contract.' ); }
+		$show_header = ! empty( $element['show_header'] );
+		$style = isset( $element['style'] ) && is_array( $element['style'] ) ? $element['style'] : array();
+		$text_style = $style;
+		$box = $geometry['box'];
+		$row_slots = isset( $element['row_slots'] ) ? (int) $element['row_slots'] : count( $rows );
+		if ( $row_slots < count( $rows ) || $row_slots > 50 ) { throw new InvalidArgumentException( 'Render plan Table row slots are invalid.' ); }
+		$visual_rows = $row_slots + ( $show_header ? 1 : 0 );
+		$row_height = $box['height_mm'] / max( 1, $visual_rows );
+		if ( $visual_rows > 0 && $row_height < 4.0 - 0.0001 ) { throw new InvalidArgumentException( 'Render plan Table rows are too dense for deterministic rendering.' ); }
+		$padding = $this->number( $style['cell_padding_mm'] ?? 1.5, 'table cell padding' );
+		$border_width = $this->number( $style['border_width_mm'] ?? 0.2, 'table border width' );
+		if ( $padding < 0 || $padding > 10 || $border_width < 0 || $border_width > 5 ) { throw new InvalidArgumentException( 'Render plan Table spacing is outside the canonical contract.' ); }
+
+		$normalized_columns = array(); $x = 0.0; $width_total = 0.0;
+		foreach ( $columns as $column ) {
+			if ( ! is_array( $column ) ) { throw new InvalidArgumentException( 'Render plan Table columns must be objects.' ); }
+			$key = (string) ( $column['key'] ?? '' );
+			$width_pct = $this->positive_number( $column['width_pct'] ?? null, 'table column width' );
+			$width_total += $width_pct;
+			$width_mm = $box['width_mm'] * ( $width_pct / 100.0 );
+			if ( $width_mm <= ( 2.0 * $padding ) + 0.1 ) { throw new InvalidArgumentException( 'Render plan Table column is too narrow for its configured cell padding.' ); }
+			$normalized_columns[] = array(
+				'key' => $key,
+				'label' => (string) ( $column['label'] ?? '' ),
+				'align' => (string) ( $column['align'] ?? 'left' ),
+				'width_pct' => $width_pct,
+				'x_mm' => $this->clean_float( $x ),
+				'width_mm' => $this->clean_float( $width_mm ),
+			);
+			$x += $width_mm;
+		}
+		if ( abs( $width_total - 100.0 ) > 0.01 ) { throw new InvalidArgumentException( 'Render plan Table column widths must total 100 percent.' ); }
+		if ( $visual_rows > 0 && $row_height <= ( 2.0 * $padding ) + 0.1 ) { throw new InvalidArgumentException( 'Render plan Table row is too short for its configured cell padding.' ); }
+
+		$render_rows = array(); $row_index = 0;
+		if ( $show_header ) {
+			$header_style = $text_style;
+			$header_style['font_weight'] = (int) ( $style['header_font_weight'] ?? 600 );
+			$header_style['color'] = (string) ( $style['header_color'] ?? '#111827' );
+			$render_rows[] = $this->table_plan_row( $normalized_columns, null, $row_index++, $row_height, $padding, $header_style, true, $manifest, (string) ( $style['header_fill'] ?? '#F3F4F6' ) );
+		}
+		foreach ( $rows as $data_index => $row ) {
+			if ( ! is_array( $row ) ) { throw new InvalidArgumentException( 'Render plan Table rows must be objects.' ); }
+			$fill = 0 === ( $data_index % 2 ) ? (string) ( $style['row_fill'] ?? '#FFFFFF' ) : (string) ( $style['alternate_row_fill'] ?? '#F9FAFB' );
+			$render_rows[] = $this->table_plan_row( $normalized_columns, $row, $row_index++, $row_height, $padding, $text_style, false, $manifest, $fill );
+		}
+		return array(
+			'columns' => $normalized_columns,
+			'rows' => $render_rows,
+			'show_header' => $show_header,
+			'grid' => array( 'border_color' => $this->color( $style['border_color'] ?? '#D1D5DB' ), 'border_width_mm' => $border_width ),
+			'cell_padding_mm' => $padding,
+			'row_height_mm' => $this->clean_float( $row_height ),
+			'row_slots' => $row_slots,
+		);
+	}
+
+	/** @return array<string,mixed> */
+	private function table_plan_row( array $columns, $row, $row_index, $row_height, $padding, array $base_style, $header, array $manifest, $fill ) {
+		$cells = array();
+		foreach ( $columns as $column ) {
+			$key = (string) $column['key'];
+			$value = $header ? (string) $column['label'] : (string) ( $row[ $key ] ?? '' );
+			$cell_style = $base_style;
+			$cell_style['align'] = (string) $column['align'];
+			$cell_style['vertical_align'] = 'middle';
+			$text = $this->text_operation( array( 'text' => $value, 'style' => $cell_style ), $manifest );
+			$cells[] = array(
+				'column_key' => $key,
+				'box' => array(
+					'x_mm' => $this->clean_float( (float) $column['x_mm'] ),
+					'y_mm' => $this->clean_float( (float) $row_index * $row_height ),
+					'width_mm' => $this->clean_float( (float) $column['width_mm'] ),
+					'height_mm' => $this->clean_float( $row_height ),
+				),
+				'content_box' => array(
+					'x_mm' => $this->clean_float( (float) $column['x_mm'] + $padding ),
+					'y_mm' => $this->clean_float( (float) $row_index * $row_height + $padding ),
+					'width_mm' => $this->clean_float( (float) $column['width_mm'] - ( 2.0 * $padding ) ),
+					'height_mm' => $this->clean_float( $row_height - ( 2.0 * $padding ) ),
+				),
+				'text' => $text,
+			);
+		}
+		return array( 'index' => (int) $row_index, 'header' => (bool) $header, 'fill' => $this->color( $fill ), 'cells' => $cells );
 	}
 
 

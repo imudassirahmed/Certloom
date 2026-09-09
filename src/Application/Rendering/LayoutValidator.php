@@ -4,6 +4,7 @@ namespace Certloom\Application\Rendering;
 use Certloom\Domain\Rendering\ElementId;
 use Certloom\Domain\Rendering\ElementRegistry;
 use Certloom\Domain\Rendering\LayoutSchema;
+use Certloom\Domain\Rendering\TableDataContract;
 use InvalidArgumentException;
 
 /** Strict schema validator/normalizer for immutable certificate layouts. */
@@ -242,6 +243,30 @@ final class LayoutValidator {
 				}
 				$out['style'] = $this->style( isset( $element['style'] ) ? $element['style'] : array() );
 				break;
+			case 'table':
+				if ( (int) $schema_version < LayoutSchema::VERSION_V4 ) {
+					throw new InvalidArgumentException( 'Table elements require certloom-layout v4 or newer.' );
+				}
+				$out['columns'] = $this->table_columns( $element['columns'], null );
+				$out['rows'] = $this->static_table_rows( $element['rows'], $out['columns'] );
+				$out['show_header'] = array_key_exists( 'show_header', $element ) ? $this->boolean( $element['show_header'], 'table show header' ) : true;
+				$out['style'] = $this->table_style( isset( $element['style'] ) ? $element['style'] : array() );
+				$this->assert_table_density( $height, count( $out['rows'] ), $out['show_header'], 'Table' );
+				break;
+			case 'data_table':
+				if ( (int) $schema_version < LayoutSchema::VERSION_V4 ) {
+					throw new InvalidArgumentException( 'Data Table elements require certloom-layout v4 or newer.' );
+				}
+				$out['source'] = TableDataContract::normalize_source( $element['source'] );
+				$out['columns'] = $this->table_columns( $element['columns'], $out['source'] );
+				$out['max_rows'] = isset( $element['max_rows'] ) ? $this->integer( $element['max_rows'], 'Data Table row limit' ) : 8;
+				if ( $out['max_rows'] < 1 || $out['max_rows'] > TableDataContract::MAX_ROWS ) {
+					throw new InvalidArgumentException( 'Data Table row limit must be between 1 and 50.' );
+				}
+				$out['show_header'] = array_key_exists( 'show_header', $element ) ? $this->boolean( $element['show_header'], 'Data Table show header' ) : true;
+				$out['style'] = $this->table_style( isset( $element['style'] ) ? $element['style'] : array() );
+				$this->assert_table_density( $height, $out['max_rows'], $out['show_header'], 'Data Table' );
+				break;
 		}
 		return $out;
 	}
@@ -395,6 +420,97 @@ final class LayoutValidator {
 			$out['letter_spacing_pt'] = $value;
 		}
 		return $out;
+	}
+
+	/** @return array<int,array<string,mixed>> */
+	private function table_columns( $columns, $source = null ) {
+		if ( ! is_array( $columns ) || empty( $columns ) || count( $columns ) > 12 ) {
+			throw new InvalidArgumentException( 'Tables require between 1 and 12 columns.' );
+		}
+		$allowed_fields = null === $source ? array() : TableDataContract::fields_for_source( $source );
+		$out = array(); $keys = array(); $width_total = 0.0;
+		foreach ( array_values( $columns ) as $column ) {
+			if ( ! is_array( $column ) ) { throw new InvalidArgumentException( 'Table columns must be objects.' ); }
+			$allowed = null === $source ? array( 'key', 'label', 'width_pct', 'align' ) : array( 'key', 'label', 'field', 'width_pct', 'align' );
+			$required = null === $source ? array( 'key', 'label', 'width_pct' ) : array( 'key', 'label', 'field', 'width_pct' );
+			$this->assert_keys( $column, $allowed, $required, 'table column' );
+			$key = strtolower( trim( (string) $column['key'] ) );
+			if ( ! preg_match( '/^[a-z][a-z0-9_]{0,31}$/', $key ) || isset( $keys[ $key ] ) ) { throw new InvalidArgumentException( 'Table column keys must be unique machine keys up to 32 characters.' ); }
+			$keys[ $key ] = true;
+			$label = $this->text( $column['label'], 'table column label' );
+			if ( '' === trim( $label ) || strlen( $label ) > 200 ) { throw new InvalidArgumentException( 'Table column labels must contain 1 to 200 bytes of text.' ); }
+			$width = $this->positive_number( $column['width_pct'], 'table column width', false );
+			if ( $width < 2.0 || $width > 100.0 ) { throw new InvalidArgumentException( 'Table column width must be between 2 and 100 percent.' ); }
+			$width_total += $width;
+			$align = isset( $column['align'] ) ? strtolower( trim( (string) $column['align'] ) ) : 'left';
+			if ( ! in_array( $align, array( 'left', 'center', 'right', 'start', 'end' ), true ) ) { throw new InvalidArgumentException( 'Unsupported table column alignment.' ); }
+			$normalized = array( 'key' => $key, 'label' => $label, 'width_pct' => $width, 'align' => $align );
+			if ( null !== $source ) {
+				$field = strtolower( trim( (string) $column['field'] ) );
+				if ( ! in_array( $field, $allowed_fields, true ) ) { throw new InvalidArgumentException( 'Data Table column field is not approved for its immutable source.' ); }
+				$normalized['field'] = $field;
+			}
+			$out[] = $normalized;
+		}
+		if ( abs( $width_total - 100.0 ) > 0.01 ) { throw new InvalidArgumentException( 'Table column widths must total exactly 100 percent.' ); }
+		return $out;
+	}
+
+	/** @return array<int,array<string,string>> */
+	private function static_table_rows( $rows, array $columns ) {
+		if ( ! is_array( $rows ) || empty( $rows ) || count( $rows ) > TableDataContract::MAX_ROWS ) {
+			throw new InvalidArgumentException( 'Fixed Tables require between 1 and 50 rows.' );
+		}
+		$keys = array(); foreach ( $columns as $column ) { $keys[] = (string) $column['key']; }
+		$out = array(); $total = 0;
+		foreach ( array_values( $rows ) as $row ) {
+			if ( ! is_array( $row ) || array_diff( array_keys( $row ), $keys ) ) { throw new InvalidArgumentException( 'Fixed Table rows may contain only declared column keys.' ); }
+			$normalized = array();
+			foreach ( $keys as $key ) {
+				$value = $this->text( array_key_exists( $key, $row ) ? $row[ $key ] : '', 'table cell' );
+				if ( strlen( $value ) > TableDataContract::MAX_CELL_BYTES ) { throw new InvalidArgumentException( 'A Table cell exceeds the 1,000-byte limit.' ); }
+				$total += strlen( $key ) + strlen( $value );
+				if ( $total > TableDataContract::MAX_TOTAL_BYTES ) { throw new InvalidArgumentException( 'Fixed Table content exceeds the canonical table budget.' ); }
+				$normalized[ $key ] = $value;
+			}
+			$out[] = $normalized;
+		}
+		return $out;
+	}
+
+	/** @return array<string,mixed> */
+	private function table_style( $style ) {
+		if ( ! is_array( $style ) ) { throw new InvalidArgumentException( 'Table style must be an object.' ); }
+		$allowed = array( 'font_family', 'font_size_pt', 'font_weight', 'italic', 'color', 'align', 'vertical_align', 'direction', 'line_height', 'letter_spacing_pt', 'overflow', 'header_fill', 'header_color', 'header_font_weight', 'row_fill', 'alternate_row_fill', 'border_color', 'border_width_mm', 'cell_padding_mm' );
+		$this->assert_keys( $style, $allowed, array(), 'table style' );
+		$text_input = array();
+		foreach ( array( 'font_family', 'font_size_pt', 'font_weight', 'italic', 'color', 'direction', 'line_height', 'letter_spacing_pt', 'overflow' ) as $key ) { if ( array_key_exists( $key, $style ) ) { $text_input[ $key ] = $style[ $key ]; } }
+		$text_input['align'] = 'left'; $text_input['vertical_align'] = 'middle';
+		$text = $this->style( $text_input );
+		$header_weight = isset( $style['header_font_weight'] ) ? $this->integer( $style['header_font_weight'], 'table header font weight' ) : 600;
+		if ( $header_weight < 100 || $header_weight > 900 || 0 !== $header_weight % 100 ) { throw new InvalidArgumentException( 'Table header font weight must be 100 through 900 in 100-point increments.' ); }
+		$border_width = isset( $style['border_width_mm'] ) ? $this->positive_number( $style['border_width_mm'], 'table border width', true ) : 0.2;
+		if ( $border_width > 5 ) { throw new InvalidArgumentException( 'Table border width is outside the supported range.' ); }
+		$padding = isset( $style['cell_padding_mm'] ) ? $this->positive_number( $style['cell_padding_mm'], 'table cell padding', true ) : 1.5;
+		if ( $padding > 10 ) { throw new InvalidArgumentException( 'Table cell padding is outside the supported range.' ); }
+		return array_merge( $text, array(
+			'header_fill' => $this->color( $style['header_fill'] ?? '#F3F4F6' ),
+			'header_color' => $this->color( $style['header_color'] ?? '#111827' ),
+			'header_font_weight' => $header_weight,
+			'row_fill' => $this->color( $style['row_fill'] ?? '#FFFFFF' ),
+			'alternate_row_fill' => $this->color( $style['alternate_row_fill'] ?? '#F9FAFB' ),
+			'border_color' => $this->color( $style['border_color'] ?? '#D1D5DB' ),
+			'border_width_mm' => $border_width,
+			'cell_padding_mm' => $padding,
+		) );
+	}
+
+	/** @return void */
+	private function assert_table_density( $height_mm, $rows, $show_header, $label ) {
+		$visual_rows = (int) $rows + ( $show_header ? 1 : 0 );
+		if ( $visual_rows < 1 || (float) $height_mm / $visual_rows < 4.0 ) {
+			throw new InvalidArgumentException( $label . ' geometry must provide at least 4 mm of height per visible row.' );
+		}
 	}
 
 	/** @return string[] */

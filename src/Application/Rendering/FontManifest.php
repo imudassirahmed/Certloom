@@ -127,7 +127,7 @@ final class FontManifest {
 	/** @return bool */
 	public function document_uses_text( array $resolved_document ) {
 		foreach ( isset( $resolved_document['elements'] ) && is_array( $resolved_document['elements'] ) ? $resolved_document['elements'] : array() as $element ) {
-			if ( is_array( $element ) && in_array( (string) ( $element['type'] ?? '' ), array( 'text', 'rich_text' ), true ) ) { return true; }
+			if ( is_array( $element ) && in_array( (string) ( $element['type'] ?? '' ), array( 'text', 'rich_text', 'table', 'data_table' ), true ) ) { return true; }
 		}
 		return false;
 	}
@@ -141,6 +141,26 @@ final class FontManifest {
 			$base_style = isset( $element['style'] ) && is_array( $element['style'] ) ? $element['style'] : array();
 			if ( 'text' === $type ) {
 				$out[] = array( 'text' => (string) ( $element['text'] ?? '' ), 'style' => $base_style );
+				continue;
+			}
+			if ( 'table' === $type || 'data_table' === $type ) {
+				$table_style = isset( $element['style'] ) && is_array( $element['style'] ) ? $element['style'] : array();
+				$header_style = $table_style;
+				if ( isset( $element['style']['header_font_weight'] ) ) { $header_style['font_weight'] = (int) $element['style']['header_font_weight']; }
+				if ( isset( $element['style']['header_color'] ) ) { $header_style['color'] = (string) $element['style']['header_color']; }
+				if ( ! empty( $element['show_header'] ) ) {
+					foreach ( isset( $element['columns'] ) && is_array( $element['columns'] ) ? $element['columns'] : array() as $column ) {
+						if ( is_array( $column ) ) { $out[] = array( 'text' => (string) ( $column['label'] ?? '' ), 'style' => $header_style ); }
+					}
+				}
+				foreach ( isset( $element['rows'] ) && is_array( $element['rows'] ) ? $element['rows'] : array() as $row ) {
+					if ( ! is_array( $row ) ) { continue; }
+					foreach ( isset( $element['columns'] ) && is_array( $element['columns'] ) ? $element['columns'] : array() as $column ) {
+						if ( ! is_array( $column ) ) { continue; }
+						$key = (string) ( $column['key'] ?? '' );
+						$out[] = array( 'text' => (string) ( $row[ $key ] ?? '' ), 'style' => $table_style );
+					}
+				}
 				continue;
 			}
 			if ( 'rich_text' !== $type || ! isset( $element['runs'] ) || ! is_array( $element['runs'] ) ) { continue; }

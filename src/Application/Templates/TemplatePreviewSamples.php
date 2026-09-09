@@ -32,7 +32,7 @@ final class TemplatePreviewSamples {
 		return array( 'default' => self::STANDARD, 'profiles' => $out );
 	}
 
-	/** @return array<string,string> */
+	/** @return array<string,mixed> */
 	public function snapshot_for_layout( array $layout, $profile = self::STANDARD ) {
 		$profile = in_array( (string) $profile, self::profiles(), true ) ? (string) $profile : self::STANDARD;
 		$known = $this->known_values( $profile );
@@ -53,6 +53,7 @@ final class TemplatePreviewSamples {
 			if ( 'merge' === $type ) { $token = (string) ( $element['token'] ?? '' ); }
 			elseif ( 'barcode' === $type ) { $token = (string) ( $element['source'] ?? '' ); }
 			elseif ( 'signature' === $type && 'signer.signature' === (string) ( $element['source'] ?? '' ) ) { $token = 'signer.signature_asset'; }
+			elseif ( 'data_table' === $type ) { $token = (string) ( $element['source'] ?? '' ); }
 			if ( '' === $token || array_key_exists( $token, $snapshot ) ) { continue; }
 			$snapshot[ $token ] = array_key_exists( $token, $known ) ? $known[ $token ] : $this->placeholder( $token, $profile );
 		}
@@ -66,7 +67,7 @@ final class TemplatePreviewSamples {
 		return 'https://example.invalid/certloom/verify/CL-PREVIEW-' . strtoupper( $profile );
 	}
 
-	/** @return array<string,string> */
+	/** @return array<string,mixed> */
 	private function known_values( $profile ) {
 		$standard = array(
 			'recipient.name' => 'Alexandria Noor Rahman',
@@ -85,6 +86,14 @@ final class TemplatePreviewSamples {
 			'credential.expiry_date' => '26 August 2028',
 			'credential.grade' => 'A',
 			'credential.status' => 'Valid',
+			'credential.subjects' => array(
+				array( 'subject' => 'Applied Communication', 'code' => 'COM-201', 'credits' => '3' ),
+				array( 'subject' => 'Professional Practice', 'code' => 'PRC-205', 'credits' => '4' ),
+			),
+			'credential.results' => array(
+				array( 'subject' => 'Applied Communication', 'code' => 'COM-201', 'score' => '91', 'max_score' => '100', 'percentage' => '91%', 'grade' => 'A', 'credits' => '3', 'status' => 'Pass' ),
+				array( 'subject' => 'Professional Practice', 'code' => 'PRC-205', 'score' => '94', 'max_score' => '100', 'percentage' => '94%', 'grade' => 'A+', 'credits' => '4', 'status' => 'Pass' ),
+			),
 			'batch.name' => 'August 2026 Cohort',
 		);
 		if ( self::LONG === $profile ) {
@@ -140,6 +149,18 @@ final class TemplatePreviewSamples {
 			$standard['program.title'] = $standard['program.name'];
 			$standard['issuer.name'] = 'Northbridge School and College';
 			$standard['credential.grade'] = 'A+ · 93.4% · Distinction';
+			$standard['credential.subjects'] = array(
+				array( 'subject' => 'English', 'code' => 'ENG-12', 'credits' => '1' ),
+				array( 'subject' => 'Mathematics', 'code' => 'MAT-12', 'credits' => '1' ),
+				array( 'subject' => 'Computer Science', 'code' => 'CSC-12', 'credits' => '1' ),
+				array( 'subject' => 'Physics', 'code' => 'PHY-12', 'credits' => '1' ),
+			);
+			$standard['credential.results'] = array(
+				array( 'subject' => 'English', 'code' => 'ENG-12', 'score' => '91', 'max_score' => '100', 'percentage' => '91%', 'grade' => 'A', 'credits' => '1', 'status' => 'Pass' ),
+				array( 'subject' => 'Mathematics', 'code' => 'MAT-12', 'score' => '98', 'max_score' => '100', 'percentage' => '98%', 'grade' => 'A+', 'credits' => '1', 'status' => 'Distinction' ),
+				array( 'subject' => 'Computer Science', 'code' => 'CSC-12', 'score' => '96', 'max_score' => '100', 'percentage' => '96%', 'grade' => 'A+', 'credits' => '1', 'status' => 'Distinction' ),
+				array( 'subject' => 'Physics', 'code' => 'PHY-12', 'score' => '92', 'max_score' => '100', 'percentage' => '92%', 'grade' => 'A', 'credits' => '1', 'status' => 'Pass' ),
+			);
 			$standard['batch.name'] = 'Class of 2026';
 			return $standard;
 		}

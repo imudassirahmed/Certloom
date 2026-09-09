@@ -161,6 +161,13 @@
 		var mediaButtons = root.querySelectorAll( '[data-certloom-designer-media], [data-certloom-designer-context-media]' );
 		var signatureSourceButtons = root.querySelectorAll( '[data-certloom-designer-signature-source]' );
 		var signatureSourceStatus = root.querySelector( '[data-certloom-designer-signature-status]' );
+		var tableColumnContainers = root.querySelectorAll( '[data-certloom-designer-table-columns]' );
+		var tableRowContainers = root.querySelectorAll( '[data-certloom-designer-table-rows]' );
+		var tableAddColumnButtons = root.querySelectorAll( '[data-certloom-designer-table-add-column]' );
+		var tableAddRowButtons = root.querySelectorAll( '[data-certloom-designer-table-add-row]' );
+		var tableSourceControls = root.querySelectorAll( '[data-certloom-designer-table-source]' );
+		var tableMaxRowsControls = root.querySelectorAll( '[data-certloom-designer-table-max-rows]' );
+		var tableHeaderControls = root.querySelectorAll( '[data-certloom-designer-table-header]' );
 		var recoveryField = root.querySelector( '[data-certloom-designer-recovery-json]' );
 		var recoveryStateField = root.querySelector( '[data-certloom-designer-recovery-state-json]' );
 		var autosaveStatusEl = root.querySelector( '[data-certloom-designer-autosave-status]' );
@@ -655,6 +662,49 @@
 				quickTextAlignButtons[ alignIndex ].disabled = ! element || locked; quickTextAlignButtons[ alignIndex ].setAttribute( 'aria-pressed', active ? 'true' : 'false' ); quickTextAlignButtons[ alignIndex ].classList.toggle( 'button-primary', active );
 			}
 		}
+		function tableRowCapacity( element, showHeader ) {
+			var slots = Math.floor( Number( element && element.height_mm || 0 ) / 4 ) - ( showHeader ? 1 : 0 );
+			return Math.max( 1, Math.min( 50, slots ) );
+		}
+		function commitTableElement( element, proposed, message ) {
+			if ( ! element || isLocked( element ) ) { setInspector(); return false; }
+			var before = snapshot(); if ( updateElement( element.id, proposed, false ) ) { pushHistory( before ); render(); announce( message || t( 'tableUpdated', 'Table updated.' ) ); return true; } return false;
+		}
+		function tableSourceRows( element ) {
+			if ( ! element ) { return []; }
+			if ( 'table' === element.type ) { return Array.isArray( element.rows ) ? element.rows : []; }
+			var profile = sampleProfileDefinition(); var values = profile && profile.values && 'object' === typeof profile.values ? profile.values : {}; var rows = values[ String( element.source || '' ) ];
+			return Array.isArray( rows ) ? rows.slice( 0, Number( element.max_rows || 8 ) ) : [];
+		}
+		function renderTableEditor( element ) {
+			var tableElement = element && ( 'table' === element.type || 'data_table' === element.type ) ? element : null; var locked = isLocked( tableElement );
+			for ( var c = 0; c < tableColumnContainers.length; c++ ) {
+				var container = tableColumnContainers[ c ]; container.innerHTML = ''; var section = container.closest( '[data-certloom-designer-content]' ); if ( ! tableElement || ! section || section.getAttribute( 'data-certloom-designer-content' ) !== tableElement.type ) { continue; }
+				var columns = Array.isArray( tableElement.columns ) ? tableElement.columns : [];
+				for ( var ci = 0; ci < columns.length; ci++ ) { ( function ( index ) {
+					var column = columns[ index ]; var row = document.createElement( 'div' ); row.className = 'certloom-template-designer-table-column'; row.setAttribute( 'data-certloom-designer-table-column', String( index ) );
+					var label = document.createElement( 'label' ); label.innerHTML = '<span>' + t( 'columnLabel', 'Label' ) + '</span>'; var labelInput = document.createElement( 'input' ); labelInput.type = 'text'; labelInput.maxLength = 200; labelInput.value = String( column.label || '' ); labelInput.disabled = locked; label.appendChild( labelInput ); row.appendChild( label );
+					if ( 'data_table' === tableElement.type ) { var fieldLabel = document.createElement( 'label' ); fieldLabel.innerHTML = '<span>' + t( 'dataField', 'Data field' ) + '</span>'; var fieldSelect = document.createElement( 'select' ); var fields = tableFieldsForSource( String( tableElement.source || 'credential.results' ) ); for ( var fi = 0; fi < fields.length; fi++ ) { var option = document.createElement( 'option' ); option.value = fields[ fi ]; option.textContent = fields[ fi ].replace( /_/g, ' ' ); fieldSelect.appendChild( option ); } fieldSelect.value = String( column.field || fields[ 0 ] || '' ); fieldSelect.disabled = locked; fieldLabel.appendChild( fieldSelect ); row.appendChild( fieldLabel ); fieldSelect.addEventListener( 'change', function () { var current = selected(); if ( ! current || current.id !== tableElement.id ) { return; } var proposed = clone( current ); proposed.columns[ index ].field = String( this.value || '' ); commitTableElement( current, proposed ); } ); }
+					var widthLabel = document.createElement( 'label' ); widthLabel.innerHTML = '<span>' + t( 'columnWidth', 'Width %' ) + '</span>'; var widthInput = document.createElement( 'input' ); widthInput.type = 'number'; widthInput.min = '2'; widthInput.max = '98'; widthInput.step = '1'; widthInput.value = String( column.width_pct || 0 ); widthInput.disabled = locked || columns.length < 2; widthLabel.appendChild( widthInput ); row.appendChild( widthLabel );
+					var alignLabel = document.createElement( 'label' ); alignLabel.innerHTML = '<span>' + t( 'columnAlign', 'Align' ) + '</span>'; var alignSelect = document.createElement( 'select' ); [ 'left', 'center', 'right', 'start', 'end' ].forEach( function ( value ) { var option = document.createElement( 'option' ); option.value = value; option.textContent = value; alignSelect.appendChild( option ); } ); alignSelect.value = String( column.align || 'left' ); alignSelect.disabled = locked; alignLabel.appendChild( alignSelect ); row.appendChild( alignLabel );
+					var remove = document.createElement( 'button' ); remove.type = 'button'; remove.className = 'button button-small'; remove.textContent = t( 'removeColumn', 'Remove' ); remove.disabled = locked || columns.length <= 1; row.appendChild( remove ); container.appendChild( row );
+					labelInput.addEventListener( 'change', function () { var current = selected(); var value = String( this.value || '' ).trim(); if ( ! current || current.id !== tableElement.id || ! value || directTextByteLength( value ) > 200 ) { setInspector(); return; } var proposed = clone( current ); proposed.columns[ index ].label = value; commitTableElement( current, proposed ); } );
+					alignSelect.addEventListener( 'change', function () { var current = selected(); if ( ! current || current.id !== tableElement.id ) { return; } var proposed = clone( current ); proposed.columns[ index ].align = String( this.value || 'left' ); commitTableElement( current, proposed ); } );
+					widthInput.addEventListener( 'change', function () { var current = selected(); var width = Number( this.value ); if ( ! current || current.id !== tableElement.id || ! isFinite( width ) || width < 2 || width > 98 || current.columns.length < 2 ) { setInspector(); return; } var proposed = clone( current ), others = proposed.columns.length - 1, remaining = 100 - width, used = 0; if ( remaining < 2 * others ) { setInspector(); return; } proposed.columns[ index ].width_pct = round( width, 3 ); for ( var wi = 0; wi < proposed.columns.length; wi++ ) { if ( wi === index ) { continue; } var share = wi === proposed.columns.length - 1 || ( index === proposed.columns.length - 1 && wi === proposed.columns.length - 2 ) ? round( remaining - used, 3 ) : round( remaining / others, 3 ); proposed.columns[ wi ].width_pct = share; used += share; } commitTableElement( current, proposed ); } );
+					remove.addEventListener( 'click', function () { var current = selected(); if ( ! current || current.id !== tableElement.id || ! Array.isArray( current.columns ) || current.columns.length <= 1 ) { return; } var proposed = clone( current ); var removedKey = proposed.columns[ index ].key; proposed.columns.splice( index, 1 ); rebalanceTableWidths( proposed.columns ); if ( 'table' === proposed.type && Array.isArray( proposed.rows ) ) { proposed.rows.forEach( function ( item ) { if ( item && 'object' === typeof item ) { delete item[ removedKey ]; } } ); } commitTableElement( current, proposed, t( 'tableColumnRemoved', 'Table column removed.' ) ); } );
+				} )( ci ); }
+			}
+			for ( var r = 0; r < tableRowContainers.length; r++ ) {
+				var rowsContainer = tableRowContainers[ r ]; rowsContainer.innerHTML = ''; var rowSection = rowsContainer.closest( '[data-certloom-designer-content]' ); if ( ! tableElement || 'table' !== tableElement.type || ! rowSection || 'table' !== rowSection.getAttribute( 'data-certloom-designer-content' ) ) { continue; }
+				var tableRows = Array.isArray( tableElement.rows ) ? tableElement.rows : [], tableColumns = Array.isArray( tableElement.columns ) ? tableElement.columns : [];
+				for ( var ri = 0; ri < tableRows.length; ri++ ) { ( function ( rowIndex ) { var rowData = tableRows[ rowIndex ]; var rowNode = document.createElement( 'div' ); rowNode.className = 'certloom-template-designer-table-row'; rowNode.setAttribute( 'data-certloom-designer-table-row', String( rowIndex ) ); for ( var coli = 0; coli < tableColumns.length; coli++ ) { ( function ( columnIndex ) { var col = tableColumns[ columnIndex ]; var label = document.createElement( 'label' ); label.innerHTML = '<span>' + escapeText( col.label || col.key ) + '</span>'; var input = document.createElement( 'input' ); input.type = 'text'; input.maxLength = 1000; input.value = String( rowData[ col.key ] || '' ); input.disabled = locked; label.appendChild( input ); rowNode.appendChild( label ); input.addEventListener( 'change', function () { var current = selected(); var value = String( this.value || '' ); if ( ! current || current.id !== tableElement.id || directTextByteLength( value ) > 1000 ) { setInspector(); return; } var proposed = clone( current ); proposed.rows[ rowIndex ][ col.key ] = value; commitTableElement( current, proposed ); } ); } )( coli ); } var removeRow = document.createElement( 'button' ); removeRow.type = 'button'; removeRow.className = 'button button-small'; removeRow.textContent = t( 'removeRow', 'Remove row' ); removeRow.disabled = locked || tableRows.length <= 1; rowNode.appendChild( removeRow ); rowsContainer.appendChild( rowNode ); removeRow.addEventListener( 'click', function () { var current = selected(); if ( ! current || current.id !== tableElement.id || current.rows.length <= 1 ) { return; } var proposed = clone( current ); proposed.rows.splice( rowIndex, 1 ); commitTableElement( current, proposed, t( 'tableRowRemoved', 'Table row removed.' ) ); } ); } )( ri ); }
+			}
+			for ( var i = 0; i < tableSourceControls.length; i++ ) { tableSourceControls[ i ].disabled = locked || ! tableElement || 'data_table' !== tableElement.type; if ( tableElement && 'data_table' === tableElement.type ) { tableSourceControls[ i ].value = String( tableElement.source || 'credential.results' ); } }
+			for ( var j = 0; j < tableMaxRowsControls.length; j++ ) { tableMaxRowsControls[ j ].disabled = locked || ! tableElement || 'data_table' !== tableElement.type; if ( tableElement && 'data_table' === tableElement.type ) { tableMaxRowsControls[ j ].value = String( tableElement.max_rows || 8 ); tableMaxRowsControls[ j ].max = String( tableRowCapacity( tableElement, !! tableElement.show_header ) ); } }
+			for ( var h = 0; h < tableHeaderControls.length; h++ ) { tableHeaderControls[ h ].disabled = locked || ! tableElement; if ( tableElement ) { tableHeaderControls[ h ].checked = !! tableElement.show_header; } }
+			for ( var ac = 0; ac < tableAddColumnButtons.length; ac++ ) { var acSection = tableAddColumnButtons[ ac ].closest( '[data-certloom-designer-content]' ); tableAddColumnButtons[ ac ].disabled = locked || ! tableElement || ! acSection || acSection.getAttribute( 'data-certloom-designer-content' ) !== tableElement.type || ( tableElement.columns || [] ).length >= 12; }
+			for ( var ar = 0; ar < tableAddRowButtons.length; ar++ ) { tableAddRowButtons[ ar ].disabled = locked || ! tableElement || 'table' !== tableElement.type || ( tableElement.rows || [] ).length >= tableRowCapacity( tableElement, !! tableElement.show_header ); }
+		}
 		function setInspector() {
 			var selection = selectedElements(); var element = selected();
 			for ( var sectionIndex = 0; sectionIndex < contentSections.length; sectionIndex++ ) { contentSections[ sectionIndex ].hidden = true; }
@@ -662,12 +712,12 @@
 			if ( selection.length > 1 ) {
 				if ( emptyInspector ) { emptyInspector.hidden = true; }
 				if ( fieldsInspector ) { fieldsInspector.hidden = true; }
-				syncProductivityControls(); return;
+				renderTableEditor( null ); syncProductivityControls(); return;
 			}
 			if ( ! element ) {
 				if ( emptyInspector ) { emptyInspector.hidden = false; }
 				if ( fieldsInspector ) { fieldsInspector.hidden = true; }
-				syncProductivityControls(); return;
+				renderTableEditor( null ); syncProductivityControls(); return;
 			}
 			var locked = isLocked( element );
 			if ( emptyInspector ) { emptyInspector.hidden = true; }
@@ -716,6 +766,7 @@
 			for ( var signatureSourceIndex = 0; signatureSourceIndex < signatureSourceButtons.length; signatureSourceIndex++ ) {
 				signatureSourceButtons[ signatureSourceIndex ].disabled = locked || 'signature' !== element.type || schemaVersion < 4;
 			}
+			renderTableEditor( element );
 			renderRichRunEditor( element );
 			syncQuickToken();
 			syncProductivityControls();
@@ -744,6 +795,21 @@
 		function defaultTextStyle() {
 			return { font_family: 'sans-serif', font_size_pt: 18, font_weight: 400, italic: false, color: '#000000', align: 'center', vertical_align: 'middle', direction: 'auto', line_height: 1.2, letter_spacing_pt: 0, overflow: 'shrink' };
 		}
+		function defaultTableStyle() {
+			return { font_family: 'sans-serif', font_size_pt: 10, font_weight: 400, italic: false, color: '#111827', align: 'left', vertical_align: 'middle', direction: 'auto', line_height: 1.2, letter_spacing_pt: 0, overflow: 'shrink', header_fill: '#F3F4F6', header_color: '#111827', header_font_weight: 600, row_fill: '#FFFFFF', alternate_row_fill: '#F9FAFB', border_color: '#D1D5DB', border_width_mm: 0.2, cell_padding_mm: 1.5 };
+		}
+		function tableFieldsForSource( source ) { return 'credential.subjects' === source ? [ 'subject', 'code', 'credits' ] : [ 'subject', 'code', 'score', 'max_score', 'percentage', 'grade', 'credits', 'status' ]; }
+		function tableColumnsForSource( source ) {
+			if ( 'credential.subjects' === source ) { return [ { key: 'subject', label: t( 'subject', 'Subject' ), field: 'subject', width_pct: 60, align: 'left' }, { key: 'code', label: t( 'code', 'Code' ), field: 'code', width_pct: 20, align: 'center' }, { key: 'credits', label: t( 'credits', 'Credits' ), field: 'credits', width_pct: 20, align: 'center' } ]; }
+			return [ { key: 'subject', label: t( 'subject', 'Subject' ), field: 'subject', width_pct: 50, align: 'left' }, { key: 'score', label: t( 'score', 'Score' ), field: 'score', width_pct: 25, align: 'center' }, { key: 'grade', label: t( 'grade', 'Grade' ), field: 'grade', width_pct: 25, align: 'center' } ];
+		}
+		function materializeTableDefaults( element, preset ) {
+			element.show_header = true; element.style = defaultTableStyle();
+			if ( 'data_table' === element.type ) { element.source = element.source || 'credential.results'; element.max_rows = Number( element.max_rows || 8 ); element.columns = tableColumnsForSource( element.source ); return; }
+			element.columns = [ { key: 'label', label: t( 'label', 'Label' ), width_pct: 40, align: 'left' }, { key: 'value', label: t( 'value', 'Value' ), width_pct: 60, align: 'left' } ];
+			element.rows = [ { label: t( 'item', 'Item' ), value: t( 'value', 'Value' ) } ];
+		}
+		function rebalanceTableWidths( columns ) { var count = columns.length || 1, used = 0; for ( var i = 0; i < columns.length; i++ ) { var width = i === columns.length - 1 ? round( 100 - used, 3 ) : round( 100 / count, 3 ); columns[ i ].width_pct = width; used += width; } return columns; }
 		function normalizeZOrder() {
 			var ordered = elements().slice().sort( function ( a, b ) { var diff = Number( a.z || 0 ) - Number( b.z || 0 ); return diff || String( a.id ).localeCompare( String( b.id ) ); } );
 			for ( var i = 0; i < ordered.length; i++ ) { ordered[ i ].z = i; }
@@ -768,12 +834,13 @@
 			else { geometry = geometryAtPoint( Number( palette.width_mm || 80 ), Number( palette.height_mm || 15 ), point ); }
 			var element = { id: id, type: palette.type, x_mm: geometry.x_mm, y_mm: geometry.y_mm, width_mm: geometry.width_mm, height_mm: geometry.height_mm, z: elements().length, rotation_deg: 0, opacity: 1 };
 			for ( var key in defaults ) {
-				if ( ! Object.prototype.hasOwnProperty.call( defaults, key ) || 'full_page' === key || 'text_i18n' === key || 'items_i18n' === key || 'style_preset' === key || 'rich_preset' === key ) { continue; }
+				if ( ! Object.prototype.hasOwnProperty.call( defaults, key ) || 'full_page' === key || 'text_i18n' === key || 'items_i18n' === key || 'style_preset' === key || 'rich_preset' === key || 'table_preset' === key ) { continue; }
 				element[ key ] = clone( defaults[ key ] );
 			}
 			if ( defaults.text_i18n ) { element.text = t( defaults.text_i18n, 'Text' ); }
 			if ( Array.isArray( defaults.items_i18n ) ) { element.items = defaults.items_i18n.map( function ( key ) { return t( key, key ); } ); }
 			if ( 'certificate_line' === defaults.rich_preset ) { element.runs = materializeRichRunDefaults( [ { kind: 'text', text_i18n: 'richTextPrefix' }, { kind: 'token', token: 'recipient.name' } ] ); }
+			if ( defaults.table_preset ) { materializeTableDefaults( element, defaults.table_preset ); }
 			if ( defaults.style_preset ) { element.style = defaultTextStyle(); if ( 'list' === defaults.style_preset ) { element.style.align = 'start'; element.style.vertical_align = 'top'; element.style.overflow = 'wrap'; } }
 			if ( palette.requires_media ) {
 				if ( 'signature' === palette.type && schemaVersion >= 4 && ! assetReference ) { element.source = 'signer.signature'; }
@@ -902,6 +969,7 @@
 		function styleValueForElement( element, key ) {
 			if ( 'opacity' === key ) { return null == element.opacity ? 1 : element.opacity; }
 			var definition = registryType( element.type ); if ( definition && 'text' === definition.style_group ) { return element.style && Object.prototype.hasOwnProperty.call( element.style, key ) ? element.style[ key ] : defaultTextStyle()[ key ]; }
+			if ( definition && 'table' === definition.style_group ) { return element.style && Object.prototype.hasOwnProperty.call( element.style, key ) ? element.style[ key ] : defaultTableStyle()[ key ]; }
 			return Object.prototype.hasOwnProperty.call( element, key ) ? element[ key ] : '';
 		}
 		function applyStyleField( input ) {
@@ -922,6 +990,15 @@
 				else if ( 'line_height' === key ) { value = Number( raw ); if ( ! isFinite( value ) || value < 0.5 || value > 5 ) { showError( t( 'invalidStyleValue', 'Invalid style value.' ) ); setInspector(); return; } proposed.style[ key ] = round( value, 3 ); }
 				else if ( 'letter_spacing_pt' === key ) { value = Number( raw ); if ( ! isFinite( value ) || value < -20 || value > 50 ) { showError( t( 'invalidStyleValue', 'Invalid style value.' ) ); setInspector(); return; } proposed.style[ key ] = round( value, 3 ); }
 				else if ( 'overflow' === key ) { if ( [ 'wrap', 'shrink', 'clip' ].indexOf( raw ) === -1 ) { setInspector(); return; } proposed.style[ key ] = raw; }
+				else { return; }
+			} else if ( registryType( element.type ) && 'table' === registryType( element.type ).style_group ) {
+				proposed.style = Object.assign( defaultTableStyle(), proposed.style || {} );
+				if ( 'font_family' === key ) { value = String( raw || '' ).toLowerCase(); if ( ! fontKeyAllowed( value ) ) { showError( t( 'invalidFontFamily', 'Choose a font from the controlled Certloom font list.' ) ); setInspector(); return; } proposed.style[ key ] = value; }
+				else if ( 'font_size_pt' === key ) { value = Number( raw ); if ( ! isFinite( value ) || value < 1 || value > 300 ) { showError( t( 'invalidStyleValue', 'Invalid style value.' ) ); setInspector(); return; } proposed.style[ key ] = round( value, 3 ); }
+				else if ( [ 'color', 'header_fill', 'header_color', 'row_fill', 'alternate_row_fill', 'border_color' ].indexOf( key ) !== -1 ) { value = canonicalColor( raw ); if ( ! value ) { showError( t( 'invalidColor', 'Colors must use #RRGGBB or #RRGGBBAA.' ) ); setInspector(); return; } proposed.style[ key ] = value; }
+				else if ( 'header_font_weight' === key ) { value = Number( raw ); if ( ! Number.isInteger( value ) || value < 100 || value > 900 || value % 100 ) { setInspector(); return; } proposed.style[ key ] = value; }
+				else if ( 'border_width_mm' === key ) { value = Number( raw ); if ( ! isFinite( value ) || value < 0 || value > 5 ) { setInspector(); return; } proposed.style[ key ] = round( value, 3 ); }
+				else if ( 'cell_padding_mm' === key ) { value = Number( raw ); if ( ! isFinite( value ) || value < 0 || value > 10 ) { setInspector(); return; } proposed.style[ key ] = round( value, 3 ); }
 				else { return; }
 			} else if ( registryType( element.type ) && [ 'shape', 'line' ].indexOf( registryType( element.type ).style_group ) !== -1 ) {
 				if ( 'fill' === key && 'shape' === element.type ) { value = canonicalColor( raw ); if ( ! value ) { showError( t( 'invalidColor', 'Colors must use #RRGGBB or #RRGGBBAA.' ) ); setInspector(); return; } proposed.fill = value; }
@@ -960,6 +1037,10 @@
 				node.classList.add( 'is-barcode' ); content.textContent = t( 'barcode', 'Barcode' ) + ' · ' + escapeText( element.source || 'credential.display_number' );
 			} else if ( 'asset' === preview ) {
 				node.classList.add( 'is-asset' ); content.textContent = elementTitle( element );
+			} else if ( 'table' === preview || 'data_table' === preview ) {
+				node.classList.add( 'is-table' ); content.classList.add( 'is-table-preview' ); content.textContent = ''; var table = document.createElement( 'table' ); var columns = Array.isArray( element.columns ) ? element.columns : []; var rows = tableSourceRows( element ); var ts = Object.assign( defaultTableStyle(), element.style || {} ); table.style.fontFamily = fontCss( ts.font_family ); table.style.fontSize = px( Number( ts.font_size_pt || 10 ) * 25.4 / 72, zoom ) + 'px'; table.style.color = ts.color || '#111827'; table.style.borderColor = ts.border_color || '#D1D5DB'; table.style.borderCollapse = 'collapse'; table.style.width = '100%'; table.style.height = '100%'; table.style.tableLayout = 'fixed';
+				if ( element.show_header ) { var thead = document.createElement( 'thead' ), trh = document.createElement( 'tr' ); for ( var hc = 0; hc < columns.length; hc++ ) { var th = document.createElement( 'th' ); th.textContent = String( columns[ hc ].label || '' ); th.style.width = Number( columns[ hc ].width_pct || 0 ) + '%'; th.style.textAlign = String( columns[ hc ].align || 'left' ); th.style.background = ts.header_fill; th.style.color = ts.header_color; th.style.fontWeight = String( ts.header_font_weight || 600 ); th.style.border = Math.max( 1, px( Number( ts.border_width_mm || 0.2 ), zoom ) ) + 'px solid ' + ts.border_color; th.style.padding = Math.max( 0, px( Number( ts.cell_padding_mm || 1.5 ), zoom ) ) + 'px'; trh.appendChild( th ); } thead.appendChild( trh ); table.appendChild( thead ); }
+				var tbody = document.createElement( 'tbody' ); for ( var tri = 0; tri < rows.length; tri++ ) { var tr = document.createElement( 'tr' ); for ( var tci = 0; tci < columns.length; tci++ ) { var tc = columns[ tci ], td = document.createElement( 'td' ); var key = 'data_table' === element.type ? String( tc.field || tc.key || '' ) : String( tc.key || '' ); td.textContent = String( rows[ tri ] && null != rows[ tri ][ key ] ? rows[ tri ][ key ] : '' ); td.style.textAlign = String( tc.align || 'left' ); td.style.background = 0 === tri % 2 ? ts.row_fill : ts.alternate_row_fill; td.style.border = Math.max( 1, px( Number( ts.border_width_mm || 0.2 ), zoom ) ) + 'px solid ' + ts.border_color; td.style.padding = Math.max( 0, px( Number( ts.cell_padding_mm || 1.5 ), zoom ) ) + 'px'; tr.appendChild( td ); } tbody.appendChild( tr ); } table.appendChild( tbody ); content.appendChild( table );
 			} else if ( 'rich_text' === preview ) {
 				node.classList.add( 'is-text', 'is-rich-text' ); var richBaseStyle = element.style || {}; var richVertical = richBaseStyle.vertical_align || 'middle';
 				content.style.justifyContent = 'top' === richVertical ? 'flex-start' : ( 'bottom' === richVertical ? 'flex-end' : 'center' ); content.style.textAlign = richBaseStyle.align || 'center';
@@ -1061,11 +1142,17 @@
 			}
 			renderSafeArea(); renderGuides(); renderSpacingGuides(); renderLayers(); syncControls(); setInspector(); syncDirty(); showError( '' );
 		}
+		function tableElementGeometryValid( element ) {
+			if ( ! element || ( 'table' !== element.type && 'data_table' !== element.type ) ) { return true; }
+			var rows = 'data_table' === element.type ? Number( element.max_rows || 0 ) : ( Array.isArray( element.rows ) ? element.rows.length : 0 ); var visual = rows + ( element.show_header ? 1 : 0 ); if ( rows < 1 || rows > 50 || Number( element.height_mm || 0 ) / Math.max( 1, visual ) < 4 - 0.0001 ) { return false; }
+			var style = Object.assign( defaultTableStyle(), element.style || {} ), padding = Number( style.cell_padding_mm || 0 ), rowHeight = Number( element.height_mm || 0 ) / Math.max( 1, visual ); if ( rowHeight <= 2 * padding + 0.1 ) { return false; }
+			var columns = Array.isArray( element.columns ) ? element.columns : []; if ( columns.length < 1 || columns.length > 12 ) { return false; } var total = 0; for ( var i = 0; i < columns.length; i++ ) { var pct = Number( columns[ i ].width_pct || 0 ); total += pct; if ( pct < 2 || Number( element.width_mm || 0 ) * pct / 100 <= 2 * padding + 0.1 ) { return false; } } return Math.abs( total - 100 ) <= 0.01;
+		}
 		function updateElement( id, proposed, mark ) {
 			var list = elements(); var p = page();
 			for ( var i = 0; i < list.length; i++ ) {
 				if ( list[ i ].id !== id ) { continue; }
-				if ( ! elementGeometryValid( proposed, p ) ) { return false; }
+				if ( ! elementGeometryValid( proposed, p ) || ! tableElementGeometryValid( proposed ) ) { return false; }
 				list[ i ] = proposed; if ( mark ) { syncDirty(); } render(); return true;
 			}
 			return false;
@@ -1074,7 +1161,7 @@
 			var list = elements(); var p = page(); var indexes = [];
 			for ( var i = 0; i < list.length; i++ ) {
 				if ( ! Object.prototype.hasOwnProperty.call( proposedById, list[ i ].id ) ) { continue; }
-				if ( ! elementGeometryValid( proposedById[ list[ i ].id ], p ) ) { return false; }
+				if ( ! elementGeometryValid( proposedById[ list[ i ].id ], p ) || ! tableElementGeometryValid( proposedById[ list[ i ].id ] ) ) { return false; }
 				indexes.push( i );
 			}
 			if ( ! indexes.length ) { return false; }
@@ -1544,6 +1631,11 @@
 		if ( quickTokenSelect && rawTokenInput ) { quickTokenSelect.addEventListener( 'change', function () { var value = String( quickTokenSelect.value || '' ); if ( '__custom__' === value ) { if ( customTokenWrap ) { customTokenWrap.classList.add( 'is-custom' ); } rawTokenInput.focus(); return; } if ( customTokenWrap ) { customTokenWrap.classList.remove( 'is-custom' ); } rawTokenInput.value = value; applyContentField( rawTokenInput ); } ); }
 		for ( var contentIndex = 0; contentIndex < contentFields.length; contentIndex++ ) { contentFields[ contentIndex ].addEventListener( 'change', function () { applyContentField( this ); } ); }
 		for ( var styleIndex = 0; styleIndex < styleFields.length; styleIndex++ ) { styleFields[ styleIndex ].addEventListener( 'change', function () { applyStyleField( this ); } ); }
+		for ( var tableSourceIndex = 0; tableSourceIndex < tableSourceControls.length; tableSourceIndex++ ) { tableSourceControls[ tableSourceIndex ].addEventListener( 'change', function () { var element = selected(); var source = String( this.value || '' ); if ( ! element || 'data_table' !== element.type || isLocked( element ) || [ 'credential.results', 'credential.subjects' ].indexOf( source ) === -1 ) { setInspector(); return; } var proposed = clone( element ); proposed.source = source; proposed.columns = tableColumnsForSource( source ); commitTableElement( element, proposed, t( 'dataTableSourceUpdated', 'Data Table source and columns updated.' ) ); } ); }
+		for ( var tableMaxIndex = 0; tableMaxIndex < tableMaxRowsControls.length; tableMaxIndex++ ) { tableMaxRowsControls[ tableMaxIndex ].addEventListener( 'change', function () { var element = selected(); var rows = Number( this.value ); if ( ! element || 'data_table' !== element.type || isLocked( element ) || ! Number.isInteger( rows ) || rows < 1 || rows > tableRowCapacity( element, !! element.show_header ) ) { showError( t( 'dataTableRowsInvalid', 'Maximum rows must fit the Table box with at least 4 mm per visible row.' ) ); setInspector(); return; } var proposed = clone( element ); proposed.max_rows = rows; commitTableElement( element, proposed, t( 'dataTableRowsUpdated', 'Data Table row limit updated.' ) ); } ); }
+		for ( var tableHeaderIndex = 0; tableHeaderIndex < tableHeaderControls.length; tableHeaderIndex++ ) { tableHeaderControls[ tableHeaderIndex ].addEventListener( 'change', function () { var element = selected(); if ( ! element || ( 'table' !== element.type && 'data_table' !== element.type ) || isLocked( element ) ) { setInspector(); return; } var proposed = clone( element ); proposed.show_header = !! this.checked; var rows = 'data_table' === proposed.type ? Number( proposed.max_rows || 0 ) : ( proposed.rows || [] ).length; if ( rows > tableRowCapacity( proposed, proposed.show_header ) ) { showError( t( 'tableHeaderNeedsSpace', 'The Table needs more height before a header can be shown with this many rows.' ) ); setInspector(); return; } commitTableElement( element, proposed, t( 'tableHeaderUpdated', 'Table header updated.' ) ); } ); }
+		for ( var tableColumnButtonIndex = 0; tableColumnButtonIndex < tableAddColumnButtons.length; tableColumnButtonIndex++ ) { tableAddColumnButtons[ tableColumnButtonIndex ].addEventListener( 'click', function () { var element = selected(); var section = this.closest( '[data-certloom-designer-content]' ); if ( ! element || isLocked( element ) || ! section || section.getAttribute( 'data-certloom-designer-content' ) !== element.type || [ 'table', 'data_table' ].indexOf( element.type ) === -1 || element.columns.length >= 12 ) { return; } var proposed = clone( element ), index = proposed.columns.length + 1, key = 'column_' + index; while ( proposed.columns.some( function ( c ) { return c.key === key; } ) ) { index++; key = 'column_' + index; } var column = { key: key, label: t( 'column', 'Column' ) + ' ' + index, width_pct: 10, align: 'left' }; if ( 'data_table' === proposed.type ) { var allowed = tableFieldsForSource( proposed.source ), used = proposed.columns.map( function ( item ) { return item.field; } ), field = allowed.find( function ( item ) { return used.indexOf( item ) === -1; } ); if ( ! field ) { showError( t( 'noMoreDataTableFields', 'All supported fields for this Data Table source are already in use.' ) ); return; } column.field = field; column.key = field; column.label = field.replace( /_/g, ' ' ); } proposed.columns.push( column ); rebalanceTableWidths( proposed.columns ); if ( 'table' === proposed.type ) { proposed.rows.forEach( function ( row ) { row[ column.key ] = ''; } ); } commitTableElement( element, proposed, t( 'tableColumnAdded', 'Table column added.' ) ); } ); }
+		for ( var tableRowButtonIndex = 0; tableRowButtonIndex < tableAddRowButtons.length; tableRowButtonIndex++ ) { tableAddRowButtons[ tableRowButtonIndex ].addEventListener( 'click', function () { var element = selected(); if ( ! element || 'table' !== element.type || isLocked( element ) || element.rows.length >= tableRowCapacity( element, !! element.show_header ) ) { return; } var proposed = clone( element ), row = {}; proposed.columns.forEach( function ( column ) { row[ column.key ] = ''; } ); proposed.rows.push( row ); commitTableElement( element, proposed, t( 'tableRowAdded', 'Table row added.' ) ); } ); }
 		for ( var quickStyleIndex = 0; quickStyleIndex < quickStyleFields.length; quickStyleIndex++ ) { quickStyleFields[ quickStyleIndex ].addEventListener( 'change', function () { applyQuickStyleValue( this.getAttribute( 'data-certloom-designer-quick-style' ), this.value ); } ); }
 		if ( contextEditTextButton ) { contextEditTextButton.addEventListener( 'click', function () { var element = selected(); if ( element && 'text' === element.type && ! isLocked( element ) ) { startDirectTextEdit( element.id ); } } ); }
 		if ( contextRichTextButton ) { contextRichTextButton.addEventListener( 'click', function () { var element = selected(); if ( element && 'rich_text' === element.type && ! isLocked( element ) ) { focusRichTextEditor(); } } ); }

@@ -12,6 +12,7 @@ use Certloom\Application\I18n\ProgramTemplateVariantResolver;
 use Certloom\Application\Fields\ScopedFieldContract;
 use Certloom\Application\Templates\TemplateFieldCompatibility;
 use Certloom\Domain\Credential\States;
+use Certloom\Domain\Rendering\TableDataContract;
 use Certloom\Infrastructure\Database\Transaction;
 use Certloom\Infrastructure\Issuance\ManualIssuanceNumberAllocator;
 use Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl;
@@ -30,7 +31,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 final class ManualIssuanceService {
 	const SOURCE_TYPE = 'manual_admin';
 	const SNAPSHOT_SCHEMA = 'certloom-credential-snapshot';
-	const SNAPSHOT_VERSION = 3;
+	const SNAPSHOT_VERSION = 4;
 	const MAX_NUMBER_RETRIES = 8;
 
 	/** @var ManualIssuanceRepositoryInterface */ private $repository;
@@ -250,6 +251,7 @@ final class ManualIssuanceService {
 					'score' => '',
 					'verification_url' => $verification_url,
 				);
+				foreach ( $current['request']['repeating_data'] as $key => $rows ) { $credential_facts[ $key ] = $rows; }
 				$merge = $this->merges->build( $recipient, $current['program'], $current['issuer'], $credential_facts, $current['template_revision']['layout'], $this->credential_custom_values( $current['field_contract'], $current['field_values'], $current['request']['custom_merge_fields'] ), $current['signer'] );
 				if ( is_wp_error( $merge ) ) { return $merge; }
 				$snapshot = $this->snapshot( $current, $recipient, $series, $credential_facts, $merge, $expected_review_fingerprint, $actor_user_id, $source_type, $source_ref, $source_context );
@@ -429,6 +431,7 @@ final class ManualIssuanceService {
 			'grade' => $request['grade'],
 			'verification_url' => 'https://example.invalid/certloom/pending',
 		);
+		foreach ( $request['repeating_data'] as $key => $rows ) { $probe_facts[ $key ] = $rows; }
 		$merge_probe = $this->merges->build( $recipient, $program, $issuer, $probe_facts, $revision['layout'], $this->credential_custom_values( $field_contract, $field_values, $request['custom_merge_fields'] ), $signer );
 		if ( is_wp_error( $merge_probe ) ) { return $merge_probe; }
 		$fingerprint_payload = array(
@@ -450,6 +453,7 @@ final class ManualIssuanceService {
 			'numbering_policy' => $this->numbers->policy_identity(),
 			'manual_display_number' => $this->numbers->is_automatic() ? '' : $request['display_number'],
 			'custom_merge_fields' => $request['custom_merge_fields'],
+			'repeating_data' => $request['repeating_data'],
 			'credential_locale' => $locale,
 			'template_locale_variant' => $template_locale_variant,
 		);
@@ -518,6 +522,8 @@ final class ManualIssuanceService {
 		$display_number = trim( sanitize_text_field( (string) ( $request['display_number'] ?? '' ) ) );
 		$custom_merge_fields = $this->scalar_map( $request['custom_merge_fields'] ?? array() );
 		if ( is_wp_error( $custom_merge_fields ) ) { return $custom_merge_fields; }
+		$repeating_data = $this->repeating_data( $request['repeating_data'] ?? null );
+		if ( is_wp_error( $repeating_data ) ) { return $repeating_data; }
 		return array(
 			'recipient_mode' => $mode,
 			'recipient_id' => $recipient_id,
@@ -532,7 +538,24 @@ final class ManualIssuanceService {
 			'grade' => $grade,
 			'display_number' => $this->numbers->is_automatic() ? '' : $display_number,
 			'custom_merge_fields' => $custom_merge_fields,
+			'repeating_data' => $repeating_data,
 		);
+	}
+
+	/** @return array<string,array<int,array<string,string>>>|\WP_Error */
+	private function repeating_data( $value ) {
+		if ( null === $value || '' === $value ) { return array(); }
+		if ( ! is_array( $value ) || array_diff( array_keys( $value ), array( 'subjects', 'results' ) ) ) {
+			return new \WP_Error( 'certloom_manual_issue_repeating_data_invalid', __( 'Repeating result/subject data must use the supported subjects/results rowsets only.', 'certloom' ) );
+		}
+		$out = array();
+		try {
+			if ( array_key_exists( 'subjects', $value ) ) { $out['subjects'] = TableDataContract::normalize_rows( TableDataContract::SUBJECTS, $value['subjects'] ); }
+			if ( array_key_exists( 'results', $value ) ) { $out['results'] = TableDataContract::normalize_rows( TableDataContract::RESULTS, $value['results'] ); }
+		} catch ( \InvalidArgumentException $error ) {
+			return new \WP_Error( 'certloom_manual_issue_repeating_data_invalid', __( 'Repeating result/subject data contains unsupported fields, values, or too many rows.', 'certloom' ) );
+		}
+		return $out;
 	}
 
 	/** @return array<string,array<string,mixed>> */
@@ -665,6 +688,7 @@ final class ManualIssuanceService {
 			'credential' => array(
 				'series_id' => absint( $series['id'] ?? 0 ), 'public_id' => (string) ( $series['public_id'] ?? '' ), 'display_number' => (string) $credential['display_number'],
 				'valid_from' => $credential['valid_from'], 'issued_at' => $credential['issued_at'], 'expires_at' => $credential['expires_at'], 'grade' => $credential['grade'],
+				'repeating_data' => isset( $review['request']['repeating_data'] ) && is_array( $review['request']['repeating_data'] ) ? $review['request']['repeating_data'] : array(),
 				'issuance_state' => States::ISSUANCE_ISSUED, 'administrative_state' => States::ADMIN_ACTIVE, 'verification_url' => (string) $credential['verification_url'],
 			),
 			'merge' => array( 'values' => $merge, 'sha256' => $merge_sha ),

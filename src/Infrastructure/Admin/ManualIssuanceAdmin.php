@@ -3,6 +3,7 @@ namespace Certloom\Infrastructure\Admin;
 
 use Certloom\Application\Issuance\ManualIssuanceService;
 use Certloom\Application\Fields\ScopedFieldContract;
+use Certloom\Domain\Rendering\TableDataContract;
 use Certloom\Infrastructure\Issuance\ManualIssuanceNumberAllocator;
 use Certloom\Infrastructure\Rendering\ManualIssuancePreviewService;
 use Certloom\Infrastructure\Rendering\RenderPlanHtmlPreview;
@@ -252,6 +253,8 @@ final class ManualIssuanceAdmin {
 
 		echo '<div data-certloom-grade-field>'; $this->text_input( 'grade', __( 'Grade / result (optional)', 'certloom' ), (string) ( $values['grade'] ?? '' ), 191 ); echo '</div></div>';
 
+		$this->render_repeating_data_editor( isset( $values['repeating_data'] ) && is_array( $values['repeating_data'] ) ? $values['repeating_data'] : array() );
+
 		if ( $numbering->is_automatic() ) {
 			echo '<div class="certloom-numbering-summary"><strong>' . esc_html__( 'Credential number', 'certloom' ) . '</strong><span>';
 			if ( is_wp_error( $number_preview ) ) { echo esc_html( $number_preview->get_error_message() ); }
@@ -454,6 +457,7 @@ final class ManualIssuanceAdmin {
 		$preview=(new ManualIssuancePreviewService())->build($review);
 		echo '<details class="certloom-technical-details certloom-manual-proof"><summary>' . esc_html__( 'Technical details', 'certloom' ) . '</summary><p class="description">' . esc_html__( 'Integrity identifiers are available for support and auditing. They are checked automatically and are not required for normal issuance.', 'certloom' ) . '</p><div class="certloom-template-preview-proof"><div><span>' . esc_html__( 'Review SHA-256', 'certloom' ) . '</span><code data-certloom-review-sha>' . esc_html( (string) $review['review_fingerprint'] ) . '</code></div><div><span>' . esc_html__( 'Layout schema', 'certloom' ) . '</span><strong>' . esc_html( (string) ( $revision['layout_schema'] ?? '' ) ) . ' v' . esc_html( (string) absint( $revision['layout_schema_version'] ?? 0 ) ) . '</strong></div><div><span>' . esc_html__( 'Published layout SHA-256', 'certloom' ) . '</span><code>' . esc_html( (string) ( $revision['layout_sha256'] ?? '' ) ) . '</code></div>' . ( is_wp_error( $preview ) ? '' : '<div><span>' . esc_html__( 'Render Plan SHA-256', 'certloom' ) . '</span><code>' . esc_html( (string) $preview['render_plan_sha256'] ) . '</code></div>' ) . '</div></details>';
 		if(is_wp_error($preview)){echo '<div class="notice notice-error inline"><p>'.esc_html($preview->get_error_message()).'</p></div>';}else{ try{$presented=(new RenderPlanHtmlPreview())->present($preview['render_plan']); echo '<div class="certloom-template-preview-card certloom-manual-preview"><div class="certloom-template-preview-head"><div><h3>'.esc_html__( 'Credential Preview', 'certloom' ).'</h3><p>'.esc_html__( 'Built from the selected published design and the exact recipient/credential details in this review.', 'certloom' ).'</p></div><span class="certloom-template-preview-authority">'.esc_html__( 'Browser preview', 'certloom' ).'</span></div>'.$presented['html'].'<p class="description">'.esc_html__( 'Certificate IDs and the final verification URL are created only when you issue. The browser preview may render fonts slightly differently from future downloadable certificate files.', 'certloom' ).'</p></div>'; }catch(\Throwable $e){echo '<div class="notice notice-error inline"><p>'.esc_html__( 'The credential preview could not be shown safely in the browser.', 'certloom' ).'</p></div>';}}
+		$this->render_repeating_data_review( isset( $request['repeating_data'] ) && is_array( $request['repeating_data'] ) ? $request['repeating_data'] : array() );
 		$custom=(array)($request['custom_merge_fields']??array()); if($custom){echo '<h3>'.esc_html__( 'Credential-specific custom merge values', 'certloom' ).'</h3><dl class="certloom-manual-merge-list">';foreach($custom as $k=>$v){echo '<div><dt><code>custom:'.esc_html((string)$k).'</code></dt><dd>'.esc_html((string)$v).'</dd></div>';}echo '</dl>';}
 		echo '<div class="notice notice-info inline"><p><strong>'.esc_html__( 'What Issue will do:', 'certloom' ).'</strong> '.esc_html__( 'Check this review again, assign the certificate number, create the recipient if needed, save the issued credential and its design/details, and record the issuance as one checked transaction.', 'certloom' ).'</p></div>';
 		echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'" class="certloom-manual-confirm"><input type="hidden" name="action" value="certloom_manual_issuance_issue"><input type="hidden" name="review_fingerprint" value="'.esc_attr((string)$review['review_fingerprint']).'">'; wp_nonce_field('certloom_manual_issuance_issue_'.(string)$review['review_fingerprint']); $this->hidden_request($request); echo '<a class="button button-secondary" href="'.esc_url(admin_url('admin.php?page='.self::PAGE)).'">'.esc_html__( 'Back to compose', 'certloom' ).'</a><button class="button button-primary button-hero" type="submit">'.esc_html__( 'Issue credential', 'certloom' ).'</button></form></section>';
@@ -498,6 +502,8 @@ final class ManualIssuanceAdmin {
 				$custom[ $key ] = (string) $value;
 			}
 		}
+		$repeating_data = $this->repeating_data_from_post( $post['repeating_data'] ?? array() );
+		if ( is_wp_error( $repeating_data ) ) { $this->request_error = $repeating_data; $repeating_data = array(); }
 		return array(
 			'recipient_mode' => isset( $post['recipient_mode'] ) ? (string) $post['recipient_mode'] : 'existing',
 			'recipient_id' => isset( $post['recipient_id'] ) ? $post['recipient_id'] : 0,
@@ -516,11 +522,112 @@ final class ManualIssuanceAdmin {
 			'grade' => isset( $post['grade'] ) ? (string) $post['grade'] : '',
 			'display_number' => isset( $post['display_number'] ) ? (string) $post['display_number'] : '',
 			'custom_merge_fields' => $custom,
+			'repeating_data' => $repeating_data,
 		);
 	}
 
+
+	/** Human-facing editor for immutable repeating rows used by Schema 4 Data Tables. @return void */
+	private function render_repeating_data_editor( array $data ) {
+		echo '<details class="certloom-manual-repeating" data-certloom-repeating-data><summary><span>' . esc_html__( 'Subjects & results', 'certloom' ) . '</span><small>' . esc_html__( 'Optional repeating rows for Data Tables', 'certloom' ) . '</small></summary><div class="certloom-manual-repeating-body">';
+		echo '<p class="description">' . esc_html__( 'Add only the rows needed by this credential. They are frozen into the issued version so a Data Table never reads changing Recipient, Program or LMS data later.', 'certloom' ) . '</p>';
+		$this->render_repeating_rowset( 'results', isset( $data['results'] ) && is_array( $data['results'] ) ? $data['results'] : array(), __( 'Results', 'certloom' ), __( 'Scores, grades and status for transcript-style certificates.', 'certloom' ) );
+		$this->render_repeating_rowset( 'subjects', isset( $data['subjects'] ) && is_array( $data['subjects'] ) ? $data['subjects'] : array(), __( 'Subjects', 'certloom' ), __( 'Subject/course lists when scores are not required.', 'certloom' ) );
+		echo '</div></details>';
+	}
+
 	/** @return void */
-	private function hidden_request( array $r ) { foreach(array('recipient_mode','recipient_id','credential_title','presentation_mode','certificate_image_id','issuer_id','signer_id','program_id','batch_id','template_id','valid_from','expiry_mode','expires_at','grade','display_number') as $k){echo '<input type="hidden" name="'.esc_attr($k).'" value="'.esc_attr((string)($r[$k]??'')).'">';} foreach((array)($r['new_recipient']??array()) as $k=>$v){if(!is_array($v)){echo '<input type="hidden" name="new_recipient['.esc_attr((string)$k).']" value="'.esc_attr((string)$v).'">';}} foreach((array)($r['custom_merge_fields']??array()) as $k=>$v){echo '<input type="hidden" name="custom_merge_fields['.esc_attr((string)$k).']" value="'.esc_attr((string)$v).'">';} }
+	private function render_repeating_rowset( $rowset, array $rows, $label, $help ) {
+		$source = 'results' === $rowset ? TableDataContract::RESULTS : TableDataContract::SUBJECTS;
+		$fields = TableDataContract::fields_for_source( $source );
+		$labels = array( 'subject' => __( 'Subject', 'certloom' ), 'code' => __( 'Code', 'certloom' ), 'score' => __( 'Score', 'certloom' ), 'max_score' => __( 'Max score', 'certloom' ), 'percentage' => __( 'Percentage', 'certloom' ), 'grade' => __( 'Grade', 'certloom' ), 'credits' => __( 'Credits', 'certloom' ), 'status' => __( 'Status', 'certloom' ) );
+		$rows = array_slice( array_values( $rows ), 0, TableDataContract::MAX_ROWS );
+		if ( ! $rows ) { $rows = array( array() ); }
+		echo '<section class="certloom-manual-rowset" data-certloom-repeating-rowset="' . esc_attr( $rowset ) . '" data-certloom-next-row="' . esc_attr( (string) count( $rows ) ) . '"><div class="certloom-manual-rowset-head"><div><h4>' . esc_html( $label ) . '</h4><p>' . esc_html( $help ) . '</p></div><button type="button" class="button" data-certloom-repeating-add>' . esc_html__( 'Add row', 'certloom' ) . '</button></div><div class="certloom-manual-rowset-rows" data-certloom-repeating-rows>';
+		foreach ( $rows as $index => $row ) { $this->render_repeating_row( $rowset, $index, $fields, $labels, is_array( $row ) ? $row : array() ); }
+		echo '</div><template data-certloom-repeating-template>';
+		$this->render_repeating_row( $rowset, '__INDEX__', $fields, $labels, array() );
+		echo '</template><small class="certloom-manual-rowset-limit">' . esc_html__( 'Maximum 50 non-empty rows. Empty rows are ignored.', 'certloom' ) . '</small></section>';
+	}
+
+	/** @return void */
+	private function render_repeating_row( $rowset, $index, array $fields, array $labels, array $row ) {
+		echo '<div class="certloom-manual-repeating-row" data-certloom-repeating-row><div class="certloom-manual-repeating-fields">';
+		foreach ( $fields as $field ) {
+			$value = isset( $row[ $field ] ) && ! is_array( $row[ $field ] ) ? (string) $row[ $field ] : '';
+			echo '<label><span>' . esc_html( $labels[ $field ] ?? $field ) . '</span><input type="text" maxlength="1000" name="repeating_data[' . esc_attr( $rowset ) . '][' . esc_attr( (string) $index ) . '][' . esc_attr( $field ) . ']" value="' . esc_attr( $value ) . '"></label>';
+		}
+		echo '</div><button type="button" class="button-link-delete certloom-manual-repeating-remove" data-certloom-repeating-remove aria-label="' . esc_attr__( 'Remove this repeating row', 'certloom' ) . '">' . esc_html__( 'Remove', 'certloom' ) . '</button></div>';
+	}
+
+	/** @return array<string,array<int,array<string,string>>>|\WP_Error */
+	private function repeating_data_from_post( $value ) {
+		if ( null === $value || '' === $value || array() === $value ) { return array(); }
+		if ( ! is_array( $value ) || array_diff( array_keys( $value ), array( 'subjects', 'results' ) ) ) {
+			return new \WP_Error( 'certloom_manual_issue_repeating_data_invalid', __( 'Subjects/results input contains an unsupported rowset.', 'certloom' ) );
+		}
+		$out = array();
+		foreach ( array( 'subjects' => TableDataContract::SUBJECTS, 'results' => TableDataContract::RESULTS ) as $rowset => $source ) {
+			if ( ! array_key_exists( $rowset, $value ) ) { continue; }
+			if ( ! is_array( $value[ $rowset ] ) || count( $value[ $rowset ] ) > TableDataContract::MAX_ROWS ) {
+				return new \WP_Error( 'certloom_manual_issue_repeating_data_invalid', __( 'Subjects/results input is limited to 50 rows per rowset.', 'certloom' ) );
+			}
+			$allowed = TableDataContract::fields_for_source( $source );
+			$clean_rows = array();
+			foreach ( array_values( $value[ $rowset ] ) as $row ) {
+				if ( ! is_array( $row ) || array_diff( array_keys( $row ), $allowed ) ) {
+					return new \WP_Error( 'certloom_manual_issue_repeating_data_invalid', __( 'A subjects/results row contains an unsupported field.', 'certloom' ) );
+				}
+				$clean = array(); $has_value = false;
+				foreach ( $allowed as $field ) {
+					$cell = $row[ $field ] ?? '';
+					if ( is_array( $cell ) || is_object( $cell ) ) { return new \WP_Error( 'certloom_manual_issue_repeating_data_invalid', __( 'Subjects/results cells must contain text values only.', 'certloom' ) ); }
+					$cell = sanitize_text_field( (string) $cell );
+					if ( '' !== trim( $cell ) ) { $has_value = true; }
+					$clean[ $field ] = $cell;
+				}
+				if ( $has_value ) { $clean_rows[] = $clean; }
+			}
+			if ( $clean_rows ) { $out[ $rowset ] = $clean_rows; }
+		}
+		return $out;
+	}
+
+	/** @return void */
+	private function render_repeating_data_review( array $data ) {
+		$nonempty = array_filter( array( 'results' => (array) ( $data['results'] ?? array() ), 'subjects' => (array) ( $data['subjects'] ?? array() ) ) );
+		if ( ! $nonempty ) { return; }
+		echo '<div class="certloom-manual-repeating-review"><h3>' . esc_html__( 'Subjects & results', 'certloom' ) . '</h3><p class="description">' . esc_html__( 'These rows will be frozen into this issued credential and can feed Schema 4 Data Tables.', 'certloom' ) . '</p>';
+		foreach ( $nonempty as $rowset => $rows ) {
+			$row_count = count( $rows );
+			$row_label = sprintf( /* translators: %d: number of immutable Subjects/Results rows. */ _n( '%d row', '%d rows', $row_count, 'certloom' ), $row_count );
+			echo '<div class="certloom-manual-review-rowset"><strong>' . esc_html( 'results' === $rowset ? __( 'Results', 'certloom' ) : __( 'Subjects', 'certloom' ) ) . '</strong><span>' . esc_html( $row_label ) . '</span></div>';
+		}
+		echo '</div>';
+	}
+
+	/** @return void */
+	private function hidden_request( array $r ) {
+		foreach ( array( 'recipient_mode', 'recipient_id', 'credential_title', 'presentation_mode', 'certificate_image_id', 'issuer_id', 'signer_id', 'program_id', 'batch_id', 'template_id', 'valid_from', 'expiry_mode', 'expires_at', 'grade', 'display_number' ) as $key ) {
+			echo '<input type="hidden" name="' . esc_attr( $key ) . '" value="' . esc_attr( (string) ( $r[ $key ] ?? '' ) ) . '">';
+		}
+		foreach ( (array) ( $r['new_recipient'] ?? array() ) as $key => $value ) {
+			if ( ! is_array( $value ) ) { echo '<input type="hidden" name="new_recipient[' . esc_attr( (string) $key ) . ']" value="' . esc_attr( (string) $value ) . '">'; }
+		}
+		foreach ( (array) ( $r['custom_merge_fields'] ?? array() ) as $key => $value ) {
+			echo '<input type="hidden" name="custom_merge_fields[' . esc_attr( (string) $key ) . ']" value="' . esc_attr( (string) $value ) . '">';
+		}
+		foreach ( (array) ( $r['repeating_data'] ?? array() ) as $rowset => $rows ) {
+			if ( ! in_array( $rowset, array( 'subjects', 'results' ), true ) || ! is_array( $rows ) ) { continue; }
+			foreach ( array_values( $rows ) as $index => $row ) {
+				if ( ! is_array( $row ) ) { continue; }
+				foreach ( $row as $field => $value ) {
+					echo '<input type="hidden" name="repeating_data[' . esc_attr( $rowset ) . '][' . esc_attr( (string) $index ) . '][' . esc_attr( (string) $field ) . ']" value="' . esc_attr( (string) $value ) . '">';
+				}
+			}
+		}
+	}
+
 	/** @return void */ private function review_fact($label,$value,$meta='',$code=false){echo '<div class="certloom-manual-review-fact"><span>'.esc_html($label).'</span>'.($code?'<code>'.esc_html($value).'</code>':'<strong>'.esc_html($value).'</strong>').(''!==(string)$meta?'<small>'.esc_html((string)$meta).'</small>':'').'</div>';}
 	/** @return void */ private function text_input($name,$label,$value,$max,$type='text',$required=false,$example=''){echo '<label><span>'.esc_html($label).'</span><input type="'.esc_attr($type).'" name="'.esc_attr($name).'" maxlength="'.esc_attr((string)$max).'" value="'.esc_attr($value).'"'.($required?' required':'').(''!==$example?' data-certloom-required-example="'.esc_attr($example).'"':'').'>'.(''!==$example?'<small>'.esc_html($example).'</small>':'').'</label>';}
 	/** @return void */ private function radio($name,$value,$label,$current){echo '<label><input type="radio" name="'.esc_attr($name).'" value="'.esc_attr($value).'" '.checked((string)$current,(string)$value,false).'> <span>'.esc_html($label).'</span></label>';}

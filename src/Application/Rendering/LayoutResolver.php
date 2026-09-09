@@ -5,6 +5,7 @@ use Certloom\Application\Contract\LocalAssetResolverInterface;
 use Certloom\Application\Contract\QrEncoderInterface;
 use Certloom\Application\Contract\BarcodeEncoderInterface;
 use Certloom\Domain\Rendering\ElementRegistry;
+use Certloom\Domain\Rendering\TableDataContract;
 use InvalidArgumentException;
 
 /** Resolves immutable merge/asset/QR inputs once before any renderer sees them. */
@@ -92,6 +93,35 @@ final class LayoutResolver {
 					unset( $element['items'], $element['list_style'] );
 					$element['style']['direction'] = $this->directions->resolve( $element['text'], $element['style']['direction'] );
 					break;
+				case 'table':
+					$element['style']['direction'] = $this->directions->resolve( $this->table_plain_text( $element ), $element['style']['direction'] );
+					break;
+				case 'data_table':
+					$source = (string) ( $element['source'] ?? '' );
+					if ( ! array_key_exists( $source, $merge_snapshot ) ) {
+						throw new InvalidArgumentException( 'Missing immutable Data Table rowset: ' . $source );
+					}
+					$source_rows = TableDataContract::normalize_rows( $source, $merge_snapshot[ $source ] );
+					$source_rows = array_slice( $source_rows, 0, (int) $element['max_rows'] );
+					$resolved_rows = array();
+					foreach ( $source_rows as $source_row ) {
+						$row = array();
+						foreach ( $element['columns'] as $column ) {
+							$key = (string) $column['key'];
+							$field = (string) $column['field'];
+							$row[ $key ] = $this->resolved_text( (string) ( $source_row[ $field ] ?? '' ) );
+						}
+						$resolved_rows[] = $row;
+					}
+					$columns = array();
+					foreach ( $element['columns'] as $column ) { unset( $column['field'] ); $columns[] = $column; }
+					$element['type'] = 'table';
+					$element['columns'] = $columns;
+					$element['rows'] = $resolved_rows;
+					$element['row_slots'] = (int) $element['max_rows'];
+					unset( $element['source'], $element['max_rows'] );
+					$element['style']['direction'] = $this->directions->resolve( $this->table_plain_text( $element ), $element['style']['direction'] );
+					break;
 				case 'asset':
 					$reference = $element['asset'];
 					$verified_asset = $this->assets->inspect( $assets->resolve( $reference ) );
@@ -156,6 +186,20 @@ final class LayoutResolver {
 		return $resolved;
 	}
 
+
+
+	/** @return string */
+	private function table_plain_text( array $element ) {
+		$parts = array();
+		foreach ( isset( $element['columns'] ) && is_array( $element['columns'] ) ? $element['columns'] : array() as $column ) {
+			if ( is_array( $column ) ) { $parts[] = (string) ( $column['label'] ?? '' ); }
+		}
+		foreach ( isset( $element['rows'] ) && is_array( $element['rows'] ) ? $element['rows'] : array() as $row ) {
+			if ( ! is_array( $row ) ) { continue; }
+			foreach ( $row as $value ) { if ( is_scalar( $value ) || null === $value ) { $parts[] = (string) $value; } }
+		}
+		return $this->resolved_text( implode( "\n", $parts ) );
+	}
 
 
 	/** @return array<int,int> */

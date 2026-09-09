@@ -1081,6 +1081,47 @@
 		} );
 	}
 
+
+	function initManualRepeatingData() {
+		document.querySelectorAll( '[data-certloom-repeating-rowset]' ).forEach( function ( rowset ) {
+			var host = rowset.querySelector( '[data-certloom-repeating-rows]' );
+			var template = rowset.querySelector( 'template[data-certloom-repeating-template]' );
+			var add = rowset.querySelector( '[data-certloom-repeating-add]' );
+			if ( ! host || ! template || ! add ) { return; }
+			function currentRows() { return Array.prototype.slice.call( host.querySelectorAll( ':scope > [data-certloom-repeating-row]' ) ); }
+			function syncLimit() {
+				var count = currentRows().length;
+				add.disabled = count >= 50;
+				add.setAttribute( 'aria-disabled', add.disabled ? 'true' : 'false' );
+			}
+			function nextIndex() {
+				var next = parseInt( rowset.getAttribute( 'data-certloom-next-row' ) || '0', 10 );
+				if ( ! Number.isFinite( next ) || next < 0 ) { next = currentRows().length; }
+				rowset.setAttribute( 'data-certloom-next-row', String( next + 1 ) );
+				return next;
+			}
+			add.addEventListener( 'click', function () {
+				if ( currentRows().length >= 50 ) { syncLimit(); return; }
+				var index = nextIndex();
+				var wrapper = document.createElement( 'div' );
+				wrapper.innerHTML = template.innerHTML.replace( /__INDEX__/g, String( index ) ).trim();
+				var row = wrapper.firstElementChild;
+				if ( ! row ) { return; }
+				host.appendChild( row );
+				syncLimit();
+				var first = row.querySelector( 'input,select,textarea' );
+				if ( first ) { first.focus(); }
+			} );
+			rowset.addEventListener( 'click', function ( event ) {
+				var remove = event.target && event.target.closest ? event.target.closest( '[data-certloom-repeating-remove]' ) : null;
+				if ( ! remove || ! rowset.contains( remove ) ) { return; }
+				var row = remove.closest( '[data-certloom-repeating-row]' );
+				if ( row ) { row.remove(); syncLimit(); add.focus(); }
+			} );
+			syncLimit();
+		} );
+	}
+
 	function initPremiumDialogs() {
 		function closeDialog( dialog ) { if ( ! dialog ) { return; } if ( dialog.open && 'function' === typeof dialog.close ) { dialog.close(); } else { dialog.removeAttribute( 'open' ); } }
 		function feedbackFor( form ) {
@@ -1528,6 +1569,7 @@
 		initPremiumDialogs();
 		initRecipientCompose();
 		initPhase2Issuance();
+		initManualRepeatingData();
 		initDomainEntityFormFeedback();
 		initDomainFormPersistence();
 		initDomainMediaAndColorControls();

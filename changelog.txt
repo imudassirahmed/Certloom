@@ -1,3 +1,12 @@
+= 1.7.0-alpha.4.8 =
+* Phase 4 Table/Data Table review candidate: add bounded Schema 4 fixed Table and immutable Data Table primitives only after their schema/validator/resolver/Render Plan architecture exists.
+* Restrict Data Tables to the closed `credential.results` and `credential.subjects` rowsets, with approved scalar fields, 50-row/64 KiB snapshot bounds, no arbitrary HTML/CSS/JSON callbacks and no live mutable record reads at render time.
+* Resolve Data Tables centrally from immutable credential merge evidence into deterministic renderer-independent Table operations with exact column percentages, row geometry, padding, header/body cell facts and reserved row capacity.
+* Add structured Table/Data Table Designer insertion, columns/rows, immutable source selection, header/max-row controls and bounded appearance editing through the existing canonical mutation, history, autosave and Save authorities; schemas 1–3 remain fail-closed for Table authoring.
+* Add Manual Issuance Subjects/Results entry with accessible add/remove rows, strict field/row validation, review-fingerprint participation, hidden Review → Issue preservation and credential snapshot schema v4 evidence.
+* Add dedicated Table architecture/UI and Manual Issuance repeating-data source + Chromium acceptance while preserving the sticky-middle Designer shell and Signer/rich-text compatibility gates.
+* Renderer/domain authority remains absent. Phase 4 remains in progress for final historical schema proof, full PHP/JS/PDF/raster renderer parity, final broad gates, user Designer approval and earlier-phase acceptance.
+
 = 1.7.0-alpha.4.7 =
 * Phase 4 Signer snapshot/signature-source review candidate: make Manual Issuance persist the resolved Signer instead of dropping the existing signer_id input, while reusing the established Signer assignment hierarchy rather than adding a second signer authority.
 * Resolve explicit Signer overrides or deterministic Batch → Program → Issuer → global assignments, bind Signer profile/assignment evidence into the review fingerprint, and freeze Signer identity plus signature attachment identity in credential snapshot schema v3.

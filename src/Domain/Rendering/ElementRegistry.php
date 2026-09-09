@@ -56,6 +56,12 @@ final class ElementRegistry {
 			'list' => self::definition( 'list', 3, array( 'items', 'list_style', 'style' ), array( 'items' ), 'list', 'list', 'list', 'text', 'list', array(), array( 'content' => 'list', 'style' => 'text', 'style_properties' => $text_style ), array(
 				self::palette_item( 'list', 'list', 110, 50, array( 'items_i18n' => array( 'firstListItem', 'secondListItem' ), 'list_style' => 'bullet', 'style_preset' => 'list' ) ),
 			), $common ),
+			'table' => self::definition( 'table', 4, array( 'columns', 'rows', 'show_header', 'style' ), array( 'columns', 'rows' ), 'table', 'table', 'table', 'table', 'table', array(), array( 'content' => 'table', 'style' => 'table', 'style_properties' => array( 'header_fill', 'header_color', 'header_font_weight', 'row_fill', 'alternate_row_fill', 'border_color', 'border_width_mm', 'cell_padding_mm' ) ), array(
+				self::palette_item( 'table', 'table', 150, 60, array( 'table_preset' => 'simple' ) ),
+			), $common ),
+			'data_table' => self::definition( 'data_table', 4, array( 'source', 'columns', 'max_rows', 'show_header', 'style' ), array( 'source', 'columns' ), 'data_table', 'data_table', 'data_table', 'table', 'dataTable', array(), array( 'content' => 'data_table', 'style' => 'table', 'style_properties' => array( 'header_fill', 'header_color', 'header_font_weight', 'row_fill', 'alternate_row_fill', 'border_color', 'border_width_mm', 'cell_padding_mm' ) ), array(
+				self::palette_item( 'data_table', 'dataTable', 150, 72, array( 'source' => 'credential.results', 'max_rows' => 8, 'table_preset' => 'results' ) ),
+			), $common ),
 		);
 	}
 

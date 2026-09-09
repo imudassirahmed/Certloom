@@ -1484,3 +1484,17 @@
 	.certloom-template-designer-rich-preview-run.is-token { outline: 1px solid Highlight; background: Canvas; color: CanvasText; box-shadow: none; }
 	.certloom-template-designer-rich-run { border-color: CanvasText; }
 }
+
+/* Phase 4.8 — structured Table/Data Table authoring. */
+.certloom-template-designer-table-editor{display:grid;gap:12px}
+.certloom-template-designer-table-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.certloom-template-designer-table-column,.certloom-template-designer-table-row{display:grid;grid-template-columns:minmax(110px,1.3fr) minmax(90px,1fr) minmax(76px,.7fr) minmax(82px,.8fr) auto;gap:8px;align-items:end;padding:10px;border:1px solid var(--certloom-border,#dcdcde);border-radius:8px;background:var(--certloom-surface,#fff)}
+.certloom-template-designer-table-row{grid-template-columns:repeat(auto-fit,minmax(96px,1fr)) auto}
+.certloom-template-designer-table-column label,.certloom-template-designer-table-row label{display:grid;gap:4px;min-width:0}
+.certloom-template-designer-table-column label>span,.certloom-template-designer-table-row label>span{font-size:11px;font-weight:600;color:var(--certloom-muted,#646970)}
+.certloom-template-designer-table-column input,.certloom-template-designer-table-column select,.certloom-template-designer-table-row input{width:100%;min-width:0}
+.certloom-template-designer-element.is-table .certloom-template-designer-content.is-table-preview{display:block;padding:0;overflow:hidden}
+.certloom-template-designer-element.is-table .certloom-template-designer-content.is-table-preview table{margin:0;border-spacing:0}
+.certloom-template-designer-element.is-table .certloom-template-designer-content.is-table-preview th,.certloom-template-designer-element.is-table .certloom-template-designer-content.is-table-preview td{box-sizing:border-box;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:782px){.certloom-template-designer-table-column,.certloom-template-designer-table-row{grid-template-columns:1fr}.certloom-template-designer-table-column .button,.certloom-template-designer-table-row .button,.certloom-template-designer-table-head .button{min-height:44px}}
+@media(forced-colors:active){.certloom-template-designer-table-column,.certloom-template-designer-table-row{border:1px solid CanvasText}.certloom-template-designer-element.is-table .certloom-template-designer-content.is-table-preview th,.certloom-template-designer-element.is-table .certloom-template-designer-content.is-table-preview td{border-color:CanvasText}}
