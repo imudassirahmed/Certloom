@@ -36,7 +36,7 @@ final class ElementRegistry {
 			'logo' => self::definition( 'logo', 1, array( 'asset', 'fit' ), array( 'asset' ), 'asset', 'asset', 'asset', 'image', 'asset', array(), array( 'content' => 'asset', 'style' => '', 'media' => true ), array(
 				self::palette_item( 'logo', 'logo', 60, 40, array( 'fit' => 'contain' ), true ),
 			), $common ),
-			'signature' => self::definition( 'signature', 1, array( 'asset', 'fit' ), array( 'asset' ), 'asset', 'asset', 'asset', 'image', 'asset', array(), array( 'content' => 'asset', 'style' => '', 'media' => true ), array(
+			'signature' => self::definition( 'signature', 1, array( 'asset', 'source', 'fit' ), array(), 'signature_asset', 'signature_asset', 'asset', 'image', 'signature', array(), array( 'content' => 'signature', 'style' => '', 'media' => true ), array(
 				self::palette_item( 'signature', 'signature', 70, 25, array( 'fit' => 'contain' ), true ),
 			), $common ),
 			'shape' => self::definition( 'shape', 1, array( 'shape', 'fill', 'stroke', 'stroke_width_mm' ), array( 'shape' ), 'shape', 'passthrough', 'shape', 'shape', 'shape', array(), array( 'content' => 'shape', 'style' => 'shape', 'style_properties' => array( 'fill', 'stroke', 'stroke_width_mm' ) ), array(

@@ -159,6 +159,8 @@
 		var colorPicker = root.querySelector( '[data-certloom-designer-color-picker]' );
 		var colorTextField = root.querySelector( '[data-certloom-designer-style-field="color"]' );
 		var mediaButtons = root.querySelectorAll( '[data-certloom-designer-media], [data-certloom-designer-context-media]' );
+		var signatureSourceButtons = root.querySelectorAll( '[data-certloom-designer-signature-source]' );
+		var signatureSourceStatus = root.querySelector( '[data-certloom-designer-signature-status]' );
 		var recoveryField = root.querySelector( '[data-certloom-designer-recovery-json]' );
 		var recoveryStateField = root.querySelector( '[data-certloom-designer-recovery-state-json]' );
 		var autosaveStatusEl = root.querySelector( '[data-certloom-designer-autosave-status]' );
@@ -706,6 +708,14 @@
 				colorPicker.disabled = locked || ! elementDefinition || 'text' !== elementDefinition.style_group;
 			}
 			for ( var mediaIndex = 0; mediaIndex < mediaButtons.length; mediaIndex++ ) { mediaButtons[ mediaIndex ].disabled = locked || ! elementDefinition || ! elementDefinition.media; }
+			if ( signatureSourceStatus ) {
+				signatureSourceStatus.textContent = 'signature' === element.type && 'signer.signature' === String( element.source || '' )
+					? t( 'signatureUsesSigner', 'Source: credential Signer snapshot. The issued credential must resolve a Signer with a signature image.' )
+					: ( 'signature' === element.type ? t( 'signatureUsesFixedAsset', 'Source: fixed WordPress Media Library image.' ) : '' );
+			}
+			for ( var signatureSourceIndex = 0; signatureSourceIndex < signatureSourceButtons.length; signatureSourceIndex++ ) {
+				signatureSourceButtons[ signatureSourceIndex ].disabled = locked || 'signature' !== element.type || schemaVersion < 4;
+			}
 			renderRichRunEditor( element );
 			syncQuickToken();
 			syncProductivityControls();
@@ -721,7 +731,7 @@
 			if ( 'list' === preview ) { return t( 'list', 'List' ) + ' · ' + ( Array.isArray( element.items ) ? element.items.length : 0 ) + ' ' + t( 'items', 'items' ); }
 			if ( 'shape' === preview ) { return escapeText( element.shape || t( 'shape', 'Shape' ) ); }
 			if ( 'line' === preview ) { return t( 'line', 'Line' ); }
-			if ( 'asset' === preview ) { return typeLabel( element.type ) + ' · ' + escapeText( element.asset ); }
+			if ( 'asset' === preview ) { return typeLabel( element.type ) + ' · ' + ( 'signature' === element.type && 'signer.signature' === String( element.source || '' ) ? t( 'credentialSigner', 'Credential Signer' ) : escapeText( element.asset || '' ) ); }
 			return escapeText( element.type );
 		}
 		function secureUuidV4() {
@@ -765,7 +775,10 @@
 			if ( Array.isArray( defaults.items_i18n ) ) { element.items = defaults.items_i18n.map( function ( key ) { return t( key, key ); } ); }
 			if ( 'certificate_line' === defaults.rich_preset ) { element.runs = materializeRichRunDefaults( [ { kind: 'text', text_i18n: 'richTextPrefix' }, { kind: 'token', token: 'recipient.name' } ] ); }
 			if ( defaults.style_preset ) { element.style = defaultTextStyle(); if ( 'list' === defaults.style_preset ) { element.style.align = 'start'; element.style.vertical_align = 'top'; element.style.overflow = 'wrap'; } }
-			if ( palette.requires_media ) { element.asset = assetReference || ''; }
+			if ( palette.requires_media ) {
+				if ( 'signature' === palette.type && schemaVersion >= 4 && ! assetReference ) { element.source = 'signer.signature'; }
+				else { element.asset = assetReference || ''; }
+			}
 			return element;
 		}
 		function appendElement( kind, assetReference, point ) {
@@ -832,7 +845,7 @@
 			var palette = paletteDefinition( kind );
 			if ( ! palette ) { showError( t( 'elementRegistryUnavailable', 'The Designer could not load its editing controls. Reload the page before editing this design.' ) ); return; }
 			if ( schemaVersion < Number( palette.min_schema_version || 1 ) ) { showError( t( 'elementRequiresSchemaUpgrade', 'This element needs a newer design format. Save or upgrade the design before adding it.' ) ); return; }
-			if ( palette.requires_media ) { mediaFrame( function ( reference ) { appendElement( kind, reference, point ); } ); return; }
+			if ( palette.requires_media && ! ( 'signature' === palette.type && schemaVersion >= 4 ) ) { mediaFrame( function ( reference ) { appendElement( kind, reference, point ); } ); return; }
 			appendElement( kind, '', point );
 		}
 		function applyContentField( input ) {
@@ -1547,7 +1560,13 @@
 		for ( var quickToggleIndex = 0; quickToggleIndex < quickToggleButtons.length; quickToggleIndex++ ) { quickToggleButtons[ quickToggleIndex ].addEventListener( 'click', function () { var key = this.getAttribute( 'data-certloom-designer-quick-toggle' ); if ( 'bold' === key ) { applyQuickStyleValue( 'font_weight', 'true' === this.getAttribute( 'aria-pressed' ) ? 400 : 700 ); } if ( 'italic' === key ) { applyQuickStyleValue( 'italic', 'true' !== this.getAttribute( 'aria-pressed' ) ); } } ); }
 		for ( var quickAlignIndex = 0; quickAlignIndex < quickTextAlignButtons.length; quickAlignIndex++ ) { quickTextAlignButtons[ quickAlignIndex ].addEventListener( 'click', function () { applyQuickStyleValue( 'align', this.getAttribute( 'data-certloom-designer-quick-text-align' ) ); } ); }
 		if ( colorPicker && colorTextField ) { colorPicker.addEventListener( 'change', function () { if ( colorPicker.disabled ) { return; } colorTextField.value = String( colorPicker.value || '#000000' ).toUpperCase(); applyStyleField( colorTextField ); } ); }
-		for ( var mediaButtonIndex = 0; mediaButtonIndex < mediaButtons.length; mediaButtonIndex++ ) { mediaButtons[ mediaButtonIndex ].addEventListener( 'click', function () { var element = selected(); if ( ! element || isLocked( element ) || [ 'image', 'logo', 'signature' ].indexOf( element.type ) === -1 ) { return; } mediaFrame( function ( reference ) { var current = selected(); if ( ! current || isLocked( current ) ) { return; } var before = snapshot(); var proposed = clone( current ); proposed.asset = reference; if ( updateElement( current.id, proposed, false ) ) { pushHistory( before ); render(); announce( t( 'assetUpdated', 'Image updated.' ) ); } } ); } ); }
+		for ( var mediaButtonIndex = 0; mediaButtonIndex < mediaButtons.length; mediaButtonIndex++ ) { mediaButtons[ mediaButtonIndex ].addEventListener( 'click', function () { var element = selected(); if ( ! element || isLocked( element ) || [ 'image', 'logo', 'signature' ].indexOf( element.type ) === -1 ) { return; } mediaFrame( function ( reference ) { var current = selected(); if ( ! current || isLocked( current ) ) { return; } var before = snapshot(); var proposed = clone( current ); proposed.asset = reference; if ( 'signature' === proposed.type ) { delete proposed.source; } if ( updateElement( current.id, proposed, false ) ) { pushHistory( before ); render(); announce( 'signature' === proposed.type ? t( 'signatureFixedAssetUpdated', 'Signature now uses the selected fixed image.' ) : t( 'assetUpdated', 'Image updated.' ) ); } } ); } ); }
+		for ( var signatureSourceIndex = 0; signatureSourceIndex < signatureSourceButtons.length; signatureSourceIndex++ ) { signatureSourceButtons[ signatureSourceIndex ].addEventListener( 'click', function () {
+			var element = selected(); if ( ! element || 'signature' !== element.type || isLocked( element ) ) { return; }
+			if ( schemaVersion < 4 ) { showError( t( 'signatureSourceRequiresSchema4', 'Credential Signer signatures require certloom-layout v4 or newer.' ) ); return; }
+			var before = snapshot(); var proposed = clone( element ); proposed.source = 'signer.signature'; delete proposed.asset;
+			if ( updateElement( element.id, proposed, false ) ) { pushHistory( before ); render(); announce( t( 'signatureSignerSourceUpdated', 'Signature now uses the immutable credential Signer snapshot.' ) ); }
+		} ); }
 		if ( sampleDataControl ) { sampleDataControl.addEventListener( 'change', function () {
 			var requested = String( sampleDataControl.value || '' ); if ( ! SAMPLE_DATA.profiles || ! SAMPLE_DATA.profiles[ requested ] ) { sampleDataControl.value = SAMPLE_DATA.default || 'standard'; requested = String( sampleDataControl.value || 'standard' ); }
 			activeSampleProfile = requested; render(); announce( t( 'sampleDataChanged', 'Designer sample data changed. Saved certificate data is unchanged.' ) );

@@ -12,13 +12,15 @@ final class ManualIssuanceRepository implements ManualIssuanceRepositoryInterfac
 	/** @var ProgramRepository */ private $programs;
 	/** @var BatchRepository */ private $batches;
 	/** @var IssuerRepository */ private $issuers;
+	/** @var SignerRepository */ private $signers;
 	/** @var TemplateRepository */ private $templates;
 	/** @var CredentialRepository */ private $credentials;
-	public function __construct( ?RecipientRepository $recipients = null, ?ProgramRepository $programs = null, ?IssuerRepository $issuers = null, ?TemplateRepository $templates = null, ?CredentialRepository $credentials = null, ?BatchRepository $batches = null ) {
+	public function __construct( ?RecipientRepository $recipients = null, ?ProgramRepository $programs = null, ?IssuerRepository $issuers = null, ?TemplateRepository $templates = null, ?CredentialRepository $credentials = null, ?BatchRepository $batches = null, ?SignerRepository $signers = null ) {
 		$this->recipients = $recipients ?: new RecipientRepository();
 		$this->programs = $programs ?: new ProgramRepository();
 		$this->batches = $batches ?: new BatchRepository();
 		$this->issuers = $issuers ?: new IssuerRepository();
+		$this->signers = $signers ?: new SignerRepository();
 		$this->templates = $templates ?: new TemplateRepository();
 		$this->credentials = $credentials ?: new CredentialRepository();
 	}
@@ -58,6 +60,8 @@ final class ManualIssuanceRepository implements ManualIssuanceRepositoryInterfac
 	public function find_program( $id ) { return $this->programs->find( $id ); }
 	public function find_batch( $id ) { return $this->batches->find( $id ); }
 	public function find_issuer( $id ) { return $this->issuers->find( $id ); }
+	public function find_signer( $id ) { return $this->signers->find( $id ); }
+	public function resolve_signers_for_context( $issuer_id, $program_id, $batch_id = 0, $role_type = 'signer' ) { return $this->signers->resolve_hierarchy( $issuer_id, $program_id, $batch_id, $role_type ); }
 	public function find_published_template( $id ) { return $this->templates->find_published( $id ); }
 	public function find_published_template_by_machine_key( $machine_key ) { return $this->templates->find_published_by_machine_key( $machine_key ); }
 	public function resolve_published_template_for_program( $program_id, $issuer_id = 0 ) { return $this->templates->resolve_published_assignment_details( array( 'issuer_id' => absint( $issuer_id ), 'program_id' => absint( $program_id ) ) ); }

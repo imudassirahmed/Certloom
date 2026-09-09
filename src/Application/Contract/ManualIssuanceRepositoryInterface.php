@@ -16,6 +16,10 @@ interface ManualIssuanceRepositoryInterface {
 	/** @return array<string,mixed>|null|\WP_Error */
 	public function find_issuer( $issuer_id );
 	/** @return array<string,mixed>|null|\WP_Error */
+	public function find_signer( $signer_id );
+	/** @return array<int,array<string,mixed>>|\WP_Error */
+	public function resolve_signers_for_context( $issuer_id, $program_id, $batch_id = 0, $role_type = 'signer' );
+	/** @return array<string,mixed>|null|\WP_Error */
 	public function find_published_template( $template_id );
 	/** @return array<string,mixed>|null|\WP_Error */
 	public function find_published_template_by_machine_key( $machine_key );

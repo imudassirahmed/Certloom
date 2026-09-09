@@ -30,7 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 final class ManualIssuanceService {
 	const SOURCE_TYPE = 'manual_admin';
 	const SNAPSHOT_SCHEMA = 'certloom-credential-snapshot';
-	const SNAPSHOT_VERSION = 2;
+	const SNAPSHOT_VERSION = 3;
 	const MAX_NUMBER_RETRIES = 8;
 
 	/** @var ManualIssuanceRepositoryInterface */ private $repository;
@@ -250,7 +250,7 @@ final class ManualIssuanceService {
 					'score' => '',
 					'verification_url' => $verification_url,
 				);
-				$merge = $this->merges->build( $recipient, $current['program'], $current['issuer'], $credential_facts, $current['template_revision']['layout'], $this->credential_custom_values( $current['field_contract'], $current['field_values'], $current['request']['custom_merge_fields'] ) );
+				$merge = $this->merges->build( $recipient, $current['program'], $current['issuer'], $credential_facts, $current['template_revision']['layout'], $this->credential_custom_values( $current['field_contract'], $current['field_values'], $current['request']['custom_merge_fields'] ), $current['signer'] );
 				if ( is_wp_error( $merge ) ) { return $merge; }
 				$snapshot = $this->snapshot( $current, $recipient, $series, $credential_facts, $merge, $expected_review_fingerprint, $actor_user_id, $source_type, $source_ref, $source_context );
 				if ( is_wp_error( $snapshot ) ) { return $snapshot; }
@@ -280,6 +280,9 @@ final class ManualIssuanceService {
 						'program_title' => (string) ( $current['program']['title'] ?? '' ),
 						'issuer_id' => absint( $current['issuer']['id'] ?? 0 ),
 						'issuer_name' => (string) ( $current['issuer']['name'] ?? '' ),
+						'signer_id' => ! empty( $current['signer']['id'] ) ? absint( $current['signer']['id'] ) : null,
+						'signer_name' => (string) ( $current['signer']['display_name'] ?? '' ),
+						'signer_resolution' => (string) ( $current['signer_resolution']['mode'] ?? 'none' ),
 						'batch_id' => ! empty( $series['batch_id'] ) ? absint( $series['batch_id'] ) : null,
 						'batch_name' => null,
 						'template_id' => absint( $current['template']['id'] ?? 0 ),
@@ -357,6 +360,9 @@ final class ManualIssuanceService {
 			if ( is_wp_error( $issuer ) ) { return $issuer; }
 			if ( ! is_array( $issuer ) ) { return new \WP_Error( 'certloom_manual_issue_issuer_missing', __( 'The program’s configured issuer no longer exists.', 'certloom' ) ); }
 		}
+		$signer_resolution = $this->resolve_signer( $request, $issuer, $program, $batch );
+		if ( is_wp_error( $signer_resolution ) ) { return $signer_resolution; }
+		$signer = isset( $signer_resolution['signer'] ) && is_array( $signer_resolution['signer'] ) ? $signer_resolution['signer'] : null;
 		$locale = ( new CredentialLocale() )->resolve( $program['profile']['credential_locale'] ?? CredentialLocale::SITE_DEFAULT );
 		if ( is_wp_error( $locale ) ) { return $locale; }
 		$template_resolution = 'explicit';
@@ -423,7 +429,7 @@ final class ManualIssuanceService {
 			'grade' => $request['grade'],
 			'verification_url' => 'https://example.invalid/certloom/pending',
 		);
-		$merge_probe = $this->merges->build( $recipient, $program, $issuer, $probe_facts, $revision['layout'], $this->credential_custom_values( $field_contract, $field_values, $request['custom_merge_fields'] ) );
+		$merge_probe = $this->merges->build( $recipient, $program, $issuer, $probe_facts, $revision['layout'], $this->credential_custom_values( $field_contract, $field_values, $request['custom_merge_fields'] ), $signer );
 		if ( is_wp_error( $merge_probe ) ) { return $merge_probe; }
 		$fingerprint_payload = array(
 			'contract' => 'certloom-manual-issuance-review',
@@ -435,6 +441,7 @@ final class ManualIssuanceService {
 			'field_contract' => $field_contract,
 			'field_values' => $field_values,
 			'issuer' => $this->issuer_fingerprint( $issuer ),
+			'signer' => $this->signer_fingerprint( $signer, $signer_resolution ),
 			'template' => $this->template_fingerprint( $template, $revision ),
 			'valid_from' => $request['valid_from'],
 			'expires_at' => $expires_at,
@@ -455,6 +462,8 @@ final class ManualIssuanceService {
 			'field_contract' => $field_contract,
 			'field_values' => $field_values,
 			'issuer' => $issuer,
+			'signer' => $signer,
+			'signer_resolution' => $signer_resolution,
 			'template' => $template,
 			'template_revision' => $revision,
 			'template_resolution' => $template_resolution,
@@ -483,6 +492,7 @@ final class ManualIssuanceService {
 		$program_id = absint( $request['program_id'] ?? 0 );
 		$batch_id = absint( $request['batch_id'] ?? 0 );
 		$template_id = absint( $request['template_id'] ?? 0 );
+		$signer_id = absint( $request['signer_id'] ?? 0 );
 		if ( ! $program_id ) { return new \WP_Error( 'certloom_manual_issue_program_required', __( 'Choose a credential program.', 'certloom' ) ); }
 		$valid_from = $this->date( $request['valid_from'] ?? '' );
 		if ( is_wp_error( $valid_from ) ) { return new \WP_Error( 'certloom_manual_issue_valid_from_invalid', __( 'Choose a valid credential issue/effective date.', 'certloom' ) ); }
@@ -515,6 +525,7 @@ final class ManualIssuanceService {
 			'program_id' => $program_id,
 			'batch_id' => $batch_id,
 			'template_id' => $template_id,
+			'signer_id' => $signer_id,
 			'valid_from' => $valid_from,
 			'expiry_mode' => $expiry_mode,
 			'expires_at' => $expires_at,
@@ -567,6 +578,47 @@ final class ManualIssuanceService {
 		$out = array(); foreach ( $rows as $row ) { if ( 'credential_custom' !== (string) ( $row['value_source'] ?? '' ) ) { continue; } $key = sanitize_key( (string) ( $row['key'] ?? '' ) ); if ( '' !== $key && array_key_exists( $key, $values ) ) { $out[ $key ] = (string) $values[ $key ]; } } ksort( $out, SORT_STRING ); return $out;
 	}
 
+	/** Resolve an explicit signer override or the deterministic Batch → Program → Issuer → global hierarchy. @return array<string,mixed>|\WP_Error */
+	private function resolve_signer( array $request, $issuer, array $program, $batch ) {
+		$explicit_id = absint( $request['signer_id'] ?? 0 );
+		if ( $explicit_id ) {
+			$signer = $this->repository->find_signer( $explicit_id );
+			if ( is_wp_error( $signer ) ) { return $signer; }
+			if ( ! is_array( $signer ) || empty( $signer['active'] ) ) {
+				return new \WP_Error( 'certloom_manual_issue_signer_unavailable', __( 'The selected Signer is no longer active or available. Review the credential again.', 'certloom' ) );
+			}
+			return array( 'mode' => 'explicit', 'signer' => $signer, 'scope_type' => null, 'scope_id' => null, 'assignment_id' => null, 'priority' => null, 'assignment_updated_at' => null );
+		}
+		$candidates = $this->repository->resolve_signers_for_context( absint( $issuer['id'] ?? 0 ), absint( $program['id'] ?? 0 ), absint( $batch['id'] ?? 0 ), 'signer' );
+		if ( is_wp_error( $candidates ) ) { return $candidates; }
+		if ( empty( $candidates ) ) {
+			return array( 'mode' => 'none', 'signer' => null, 'scope_type' => null, 'scope_id' => null, 'assignment_id' => null, 'priority' => null, 'assignment_updated_at' => null );
+		}
+		$row = reset( $candidates );
+		if ( ! is_array( $row ) || empty( $row['signer_id'] ) ) {
+			return new \WP_Error( 'certloom_manual_issue_signer_resolution_invalid', __( 'Certloom could not resolve the configured Signer hierarchy safely.', 'certloom' ) );
+		}
+		$signer = array(
+			'id' => absint( $row['signer_id'] ),
+			'display_name' => (string) ( $row['display_name'] ?? '' ),
+			'slug' => (string) ( $row['slug'] ?? '' ),
+			'title' => null === ( $row['title'] ?? null ) ? null : (string) $row['title'],
+			'email' => null === ( $row['email'] ?? null ) ? null : (string) $row['email'],
+			'signature_attachment_id' => ! empty( $row['signature_attachment_id'] ) ? absint( $row['signature_attachment_id'] ) : null,
+			'active' => true,
+			'updated_at' => (string) ( $row['signer_updated_at'] ?? '' ),
+		);
+		return array(
+			'mode' => 'hierarchy',
+			'signer' => $signer,
+			'scope_type' => (string) ( $row['scope_type'] ?? '' ),
+			'scope_id' => absint( $row['scope_id'] ?? 0 ),
+			'assignment_id' => absint( $row['id'] ?? 0 ),
+			'priority' => absint( $row['priority'] ?? 0 ),
+			'assignment_updated_at' => (string) ( $row['updated_at'] ?? '' ),
+		);
+	}
+
 	/** @return string|null|\WP_Error */
 	private function expiry_date( array $request, array $program ) {
 		if ( 'permanent' === $request['expiry_mode'] ) { return null; }
@@ -601,7 +653,7 @@ final class ManualIssuanceService {
 			'fields' => array( 'contract' => isset( $review['field_contract'] ) && is_array( $review['field_contract'] ) ? $review['field_contract'] : array(), 'values' => isset( $review['field_values'] ) && is_array( $review['field_values'] ) ? $review['field_values'] : array() ),
 			'locale' => isset( $review['credential_locale'] ) && is_array( $review['credential_locale'] ) ? $review['credential_locale'] : array(),
 			'issuer' => $this->issuer_snapshot( $review['issuer'] ),
-			'signer' => null,
+			'signer' => $this->signer_snapshot( $review['signer'] ?? null, $review['signer_resolution'] ?? null ),
 			'template' => array(
 				'id' => absint( $template['id'] ?? 0 ), 'machine_key' => (string) ( $template['machine_key'] ?? '' ), 'name' => (string) ( $template['name'] ?? '' ),
 				'resolution_scope' => (string) ( $review['template_resolution'] ?? 'explicit' ),
@@ -672,6 +724,34 @@ final class ManualIssuanceService {
 	/** @return array<string,mixed> */ private function program_fingerprint( array $p ) { return $this->program_snapshot( $p ) + array( 'updated_at' => (string) ( $p['updated_at'] ?? '' ) ); }
 	/** @return array<string,mixed>|null */ private function batch_fingerprint( $b ) { $out=$this->batch_snapshot($b); return is_array($out)?$out+array('updated_at'=>(string)($b['updated_at']??'')):null; }
 	/** @return array<string,mixed>|null */ private function issuer_fingerprint( $i ) { $out=$this->issuer_snapshot($i); return is_array($out)?$out+array('updated_at'=>(string)($i['updated_at']??'')):null; }
+	/** @return array<string,mixed>|null */
+	private function signer_fingerprint( $signer, $resolution ) {
+		$out = $this->signer_snapshot( $signer, $resolution );
+		if ( ! is_array( $out ) ) { return null; }
+		$out['profile_updated_at'] = is_array( $signer ) ? (string) ( $signer['updated_at'] ?? '' ) : '';
+		return $out;
+	}
+	/** @return array<string,mixed>|null */
+	private function signer_snapshot( $signer, $resolution ) {
+		if ( ! is_array( $signer ) ) { return null; }
+		$resolution = is_array( $resolution ) ? $resolution : array( 'mode' => 'none' );
+		return array(
+			'id' => absint( $signer['id'] ?? 0 ),
+			'display_name' => (string) ( $signer['display_name'] ?? '' ),
+			'slug' => (string) ( $signer['slug'] ?? '' ),
+			'title' => null === ( $signer['title'] ?? null ) ? null : (string) $signer['title'],
+			'email' => null === ( $signer['email'] ?? null ) ? null : (string) $signer['email'],
+			'signature_attachment_id' => ! empty( $signer['signature_attachment_id'] ) ? absint( $signer['signature_attachment_id'] ) : null,
+			'resolution' => array(
+				'mode' => (string) ( $resolution['mode'] ?? 'none' ),
+				'scope_type' => null === ( $resolution['scope_type'] ?? null ) ? null : (string) $resolution['scope_type'],
+				'scope_id' => ! empty( $resolution['scope_id'] ) ? absint( $resolution['scope_id'] ) : null,
+				'assignment_id' => ! empty( $resolution['assignment_id'] ) ? absint( $resolution['assignment_id'] ) : null,
+				'priority' => null === ( $resolution['priority'] ?? null ) ? null : absint( $resolution['priority'] ),
+				'assignment_updated_at' => null === ( $resolution['assignment_updated_at'] ?? null ) ? null : (string) $resolution['assignment_updated_at'],
+			),
+		);
+	}
 	/** @return array<string,mixed> */ private function template_fingerprint( array $t, array $r ) { return array( 'id'=>absint($t['id']??0),'machine_key'=>(string)($t['machine_key']??''),'name'=>(string)($t['name']??''),'updated_at'=>(string)($t['updated_at']??''),'published_revision_id'=>absint($r['id']??0),'revision_number'=>absint($r['revision_number']??0),'layout_schema'=>(string)($r['layout_schema']??''),'layout_schema_version'=>absint($r['layout_schema_version']??0),'layout_sha256'=>(string)($r['layout_sha256']??'') ); }
 	/** @return array<string,mixed> */ private function recipient_snapshot( array $r ) { return array( 'id'=>!empty($r['id'])?absint($r['id']):null,'display_name'=>(string)($r['display_name']??''),'first_name'=>$r['first_name']??null,'middle_name'=>$r['middle_name']??null,'last_name'=>$r['last_name']??null,'email'=>$r['email']??null,'external_id'=>$r['external_id']??null,'custom_fields'=>isset($r['custom_fields'])&&is_array($r['custom_fields'])?$r['custom_fields']:array() ); }
 	/** @return array<string,mixed> */ private function program_snapshot( array $p ) { return array( 'id'=>absint($p['id']??0),'code'=>$p['code']??null,'title'=>(string)($p['title']??''),'description'=>$p['description']??null,'issuer_id'=>!empty($p['issuer_id'])?absint($p['issuer_id']):null,'validity_days'=>null!==($p['validity_days']??null)?absint($p['validity_days']):null,'profile'=>isset($p['profile'])&&is_array($p['profile'])?$p['profile']:array(),'metadata'=>isset($p['metadata'])&&is_array($p['metadata'])?$p['metadata']:array() ); }

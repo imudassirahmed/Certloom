@@ -1,3 +1,12 @@
+= 1.7.0-alpha.4.7 =
+* Phase 4 Signer snapshot/signature-source review candidate: make Manual Issuance persist the resolved Signer instead of dropping the existing signer_id input, while reusing the established Signer assignment hierarchy rather than adding a second signer authority.
+* Resolve explicit Signer overrides or deterministic Batch → Program → Issuer → global assignments, bind Signer profile/assignment evidence into the review fingerprint, and freeze Signer identity plus signature attachment identity in credential snapshot schema v3.
+* Add signer.name, signer.title and signer.email to the immutable merge vocabulary and add signer.signature_asset only when the frozen Signer provides a local signature attachment; missing required signer signatures fail closed.
+* Extend Schema 4 signature authoring with the exact signer.signature source while preserving schema 1–3 static-signature canonical hashes; mixed fixed/dynamic or unsupported signature sources are rejected.
+* Make Schema 4 Insert → Signature default directly to Credential Signer, with fixed WordPress Media Library signature remaining a reversible alternative through the same canonical mutation/undo/autosave path.
+* Add deterministic preview-only signer signature data through a bundled local PNG and dedicated Template Preview resolver without weakening real issuance's WordPress-local asset boundary.
+* Add dedicated source + Chromium signer-source acceptance and preserve the sticky-middle Designer authority. Phase 4 remains in progress; Table/Data Table, final historical/render parity, broad completion gates, user approval and earlier-phase acceptance remain open.
+
 = 1.7.0-alpha.4.6 =
 * Phase 4 Schema 4 rich-inline-text review checkpoint: add one additive schema-version boundary for structured rich text while preserving schema 1–3 canonical history and legacy standalone Merge readability exactly.
 * Add bounded ordered rich-text runs containing only literal text or validated dynamic-field tokens, with sparse per-run typography overrides; reject HTML, arbitrary CSS, executable/nested structures and unsupported properties.

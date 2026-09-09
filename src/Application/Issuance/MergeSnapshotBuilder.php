@@ -18,8 +18,9 @@ final class MergeSnapshotBuilder {
 	 * @param array<string,mixed> $layout Published canonical layout.
 	 * @return array<string,string>|\WP_Error
 	 */
-	public function build( array $recipient, array $program, $issuer, array $credential, array $layout, array $custom_overrides = array() ) {
+	public function build( array $recipient, array $program, $issuer, array $credential, array $layout, array $custom_overrides = array(), $signer = null ) {
 		$issuer = is_array( $issuer ) ? $issuer : array();
+		$signer = is_array( $signer ) ? $signer : array();
 		$custom = isset( $recipient['custom_fields'] ) && is_array( $recipient['custom_fields'] ) ? $recipient['custom_fields'] : array();
 		$display_name = trim( (string) ( $recipient['display_name'] ?? '' ) );
 		$first_name = trim( (string) ( $recipient['first_name'] ?? '' ) );
@@ -27,6 +28,10 @@ final class MergeSnapshotBuilder {
 		$last_name = trim( (string) ( $recipient['last_name'] ?? '' ) );
 		$program_title = trim( (string) ( $program['title'] ?? '' ) );
 		$issuer_name = trim( (string) ( $issuer['name'] ?? '' ) );
+		$signer_name = trim( (string) ( $signer['display_name'] ?? '' ) );
+		$signer_title = trim( (string) ( $signer['title'] ?? '' ) );
+		$signer_email = trim( (string) ( $signer['email'] ?? '' ) );
+		$signer_signature_attachment_id = absint( $signer['signature_attachment_id'] ?? 0 );
 		$issuer_settings = isset( $issuer['settings'] ) && is_array( $issuer['settings'] ) ? $issuer['settings'] : array();
 		$issue_date = (string) ( $credential['valid_from'] ?? '' );
 		$expiry_date = (string) ( $credential['expires_at'] ?? '' );
@@ -45,6 +50,9 @@ final class MergeSnapshotBuilder {
 			'program.code' => trim( (string) ( $program['code'] ?? '' ) ),
 			'issuer.name' => $issuer_name,
 			'issuer.title' => trim( (string) ( $issuer_settings['title'] ?? '' ) ),
+			'signer.name' => $signer_name,
+			'signer.title' => $signer_title,
+			'signer.email' => $signer_email,
 			'credential.display_number' => trim( (string) ( $credential['display_number'] ?? '' ) ),
 			'credential.public_id' => trim( (string) ( $credential['public_id'] ?? '' ) ),
 			'credential.issue_date' => $issue_date,
@@ -65,11 +73,14 @@ final class MergeSnapshotBuilder {
 			'organization' => $issuer_name,
 			'issuer_name' => $issuer_name,
 			'issuer_title' => trim( (string) ( $issuer_settings['title'] ?? '' ) ),
+			'signer_name' => $signer_name,
+			'signer_title' => $signer_title,
 			'score' => trim( (string) ( $credential['score'] ?? '' ) ),
 			'grade' => $grade,
 			'site_name' => function_exists( 'get_bloginfo' ) ? trim( (string) get_bloginfo( 'name' ) ) : '',
 			'verification_url' => $verification_url,
 		);
+		if ( $signer_signature_attachment_id ) { $values['signer.signature_asset'] = 'attachment:' . $signer_signature_attachment_id; }
 
 		foreach ( $custom as $key => $value ) {
 			$key = sanitize_key( (string) $key );
@@ -111,6 +122,9 @@ final class MergeSnapshotBuilder {
 			if ( 'merge' === $type ) {
 				$token = trim( (string) ( $element['token'] ?? '' ) );
 				if ( '' !== $token ) { $tokens[] = $token; }
+			}
+			if ( 'signature' === $type && 'signer.signature' === (string) ( $element['source'] ?? '' ) ) {
+				$tokens[] = 'signer.signature_asset';
 			}
 			if ( 'rich_text' === $type && isset( $element['runs'] ) && is_array( $element['runs'] ) ) {
 				foreach ( $element['runs'] as $run ) {

@@ -158,6 +158,30 @@ final class LayoutValidator {
 					throw new InvalidArgumentException( 'Unsupported image fit mode.' );
 				}
 				break;
+			case 'signature_asset':
+				$source = isset( $element['source'] ) ? strtolower( trim( (string) $element['source'] ) ) : '';
+				if ( '' !== $source ) {
+					if ( (int) $schema_version < LayoutSchema::VERSION_V4 ) {
+						throw new InvalidArgumentException( 'Dynamic signer signatures require certloom-layout v4 or newer.' );
+					}
+					if ( 'signer.signature' !== $source ) {
+						throw new InvalidArgumentException( 'Unsupported signature source.' );
+					}
+					if ( isset( $element['asset'] ) && '' !== trim( (string) $element['asset'] ) ) {
+						throw new InvalidArgumentException( 'A signature must use either a fixed local asset or the immutable credential signer source, not both.' );
+					}
+					$out['source'] = $source;
+				} else {
+					if ( empty( $element['asset'] ) ) {
+						throw new InvalidArgumentException( 'A fixed signature requires a local asset reference.' );
+					}
+					$out['asset'] = $this->asset_reference( $element['asset'] );
+				}
+				$out['fit'] = isset( $element['fit'] ) ? strtolower( (string) $element['fit'] ) : 'contain';
+				if ( ! in_array( $out['fit'], array( 'contain', 'cover', 'fill' ), true ) ) {
+					throw new InvalidArgumentException( 'Unsupported image fit mode.' );
+				}
+				break;
 			case 'shape':
 				$out['shape'] = strtolower( (string) $element['shape'] );
 				if ( ! in_array( $out['shape'], array( 'rectangle', 'ellipse' ), true ) ) {

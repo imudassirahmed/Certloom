@@ -98,6 +98,19 @@ final class LayoutResolver {
 					$verified_asset['reference'] = $reference;
 					$element['asset'] = $verified_asset;
 					break;
+				case 'signature_asset':
+					$reference = isset( $element['source'] ) && 'signer.signature' === (string) $element['source']
+						? ( array_key_exists( 'signer.signature_asset', $merge_snapshot ) ? $merge_snapshot['signer.signature_asset'] : null )
+						: ( $element['asset'] ?? null );
+					if ( is_array( $reference ) || is_object( $reference ) || is_resource( $reference ) || null === $reference || '' === trim( (string) $reference ) ) {
+						throw new InvalidArgumentException( 'The immutable credential signer does not provide a usable signature asset.' );
+					}
+					$reference = trim( (string) $reference );
+					$verified_asset = $this->assets->inspect( $assets->resolve( $reference ) );
+					$verified_asset['reference'] = $reference;
+					$element['asset'] = $verified_asset;
+					unset( $element['source'] );
+					break;
 				case 'qr':
 					if ( null === $this->qr_encoder ) {
 						throw new InvalidArgumentException( 'A Certloom QR encoder is required before QR-bearing layouts can render.' );

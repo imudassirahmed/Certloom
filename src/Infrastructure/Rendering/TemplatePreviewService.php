@@ -23,7 +23,7 @@ final class TemplatePreviewService {
 		$this->plans = $plans ?: new RenderPlanBuilder();
 		$this->samples = $samples ?: new TemplatePreviewSamples();
 		$this->fonts = $fonts ?: new BrowserPreviewFontManifest();
-		$this->assets = $assets ?: new WordPressLocalAssetResolver();
+		$this->assets = $assets ?: new TemplatePreviewAssetResolver();
 	}
 
 	/** @return array<string,mixed>|\WP_Error */

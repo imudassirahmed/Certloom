@@ -52,6 +52,7 @@ final class TemplatePreviewSamples {
 			}
 			if ( 'merge' === $type ) { $token = (string) ( $element['token'] ?? '' ); }
 			elseif ( 'barcode' === $type ) { $token = (string) ( $element['source'] ?? '' ); }
+			elseif ( 'signature' === $type && 'signer.signature' === (string) ( $element['source'] ?? '' ) ) { $token = 'signer.signature_asset'; }
 			if ( '' === $token || array_key_exists( $token, $snapshot ) ) { continue; }
 			$snapshot[ $token ] = array_key_exists( $token, $known ) ? $known[ $token ] : $this->placeholder( $token, $profile );
 		}
@@ -74,6 +75,10 @@ final class TemplatePreviewSamples {
 			'program.name' => 'Professional Credential Program',
 			'program.title' => 'Professional Credential Program',
 			'issuer.name' => 'Northern Learning Institute',
+			'signer.name' => 'Dr. Maya Rahman',
+			'signer.title' => 'Authorized Signatory',
+			'signer.email' => 'maya.rahman@example.invalid',
+			'signer.signature_asset' => 'asset:certloom-preview-signer-signature',
 			'credential.display_number' => 'CERT-2026-001',
 			'credential.public_id' => '7M4K-2Q8D-F3XP',
 			'credential.issue_date' => '26 August 2026',

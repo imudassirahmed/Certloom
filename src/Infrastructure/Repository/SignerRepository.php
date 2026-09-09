@@ -359,7 +359,7 @@ final class SignerRepository {
 		global $wpdb;
 		$a   = SchemaManager::table( 'signer_assignments' );
 		$s   = SchemaManager::table( 'signers' );
-		$sql = 'SELECT a.*, s.display_name, s.slug, s.title, s.email, s.signature_attachment_id FROM %i a INNER JOIN %i s ON s.id=a.signer_id WHERE a.active=1 AND s.active=1 AND a.role_type=%s AND (' . implode( ' OR ', $conditions ) . ") ORDER BY CASE a.scope_type WHEN 'batch' THEN 1 WHEN 'program' THEN 2 WHEN 'issuer' THEN 3 ELSE 4 END, a.priority ASC, a.id ASC";
+		$sql = 'SELECT a.*, s.display_name, s.slug, s.title, s.email, s.signature_attachment_id, s.updated_at AS signer_updated_at FROM %i a INNER JOIN %i s ON s.id=a.signer_id WHERE a.active=1 AND s.active=1 AND a.role_type=%s AND (' . implode( ' OR ', $conditions ) . ") ORDER BY CASE a.scope_type WHEN 'batch' THEN 1 WHEN 'program' THEN 2 WHEN 'issuer' THEN 3 ELSE 4 END, a.priority ASC, a.id ASC";
 		$wpdb->last_error = '';
 		$rows = $wpdb->get_results(
 			$wpdb->prepare( $sql, array_merge( array( $a, $s, $role_type ), $args ) ),

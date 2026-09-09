@@ -248,7 +248,7 @@ final class ManualIssuanceAdmin {
 
 		echo '<label><span>' . esc_html__( 'Signer (optional)', 'certloom' ) . '</span><select name="signer_id" data-certloom-context-lookup="signer" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search active Signers…', 'certloom' ) . '"><option value="0">' . esc_html__( 'No explicit Signer', 'certloom' ) . '</option>';
 		foreach ( $signer_items as $signer ) { $signer_label = trim( (string) ( $signer['display_name'] ?? $signer['name'] ?? '' ) ); echo '<option value="' . esc_attr( (string) absint( $signer['id'] ?? 0 ) ) . '" ' . selected( $selected_signer_id, absint( $signer['id'] ?? 0 ), false ) . '>' . esc_html( '' !== $signer_label ? $signer_label : __( 'Signer', 'certloom' ) ) . '</option>'; }
-		echo '</select><small>' . esc_html__( 'Signer snapshot persistence is part of the later approved backend phase; selecting one here demonstrates the locked interaction model only.', 'certloom' ) . '</small></label>';
+		echo '</select><small>' . esc_html__( 'Choose a one-off Signer override, or leave this blank to use Certloom’s Batch → Program → Issuer → global signer hierarchy. The resolved Signer is frozen into the issued credential.', 'certloom' ) . '</small></label>';
 
 		echo '<div data-certloom-grade-field>'; $this->text_input( 'grade', __( 'Grade / result (optional)', 'certloom' ), (string) ( $values['grade'] ?? '' ), 191 ); echo '</div></div>';
 
@@ -423,6 +423,10 @@ final class ManualIssuanceAdmin {
 		$this->review_fact( __( 'Credential title', 'certloom' ), (string) ( $request['credential_title'] ?? '' ), __( '1.7 UI contract; persistence follows in the backend phase', 'certloom' ) );
 		$this->review_fact( __( 'Presentation', 'certloom' ), __( 'Certloom design', 'certloom' ), __( 'Existing alpha backend-compatible path', 'certloom' ) );
 		$this->review_fact( __( 'Program', 'certloom' ), (string) ( $program['title'] ?? '' ), ! empty( $program['code'] ) ? (string) $program['code'] : '' );
+		$signer = isset( $review['signer'] ) && is_array( $review['signer'] ) ? $review['signer'] : null;
+		$signer_resolution = isset( $review['signer_resolution'] ) && is_array( $review['signer_resolution'] ) ? $review['signer_resolution'] : array();
+		$signer_meta = 'explicit' === (string) ( $signer_resolution['mode'] ?? '' ) ? __( 'One-off Signer override', 'certloom' ) : ( 'hierarchy' === (string) ( $signer_resolution['mode'] ?? '' ) ? sprintf( /* translators: %s: signer assignment scope. */ __( 'Resolved from %s signer assignment', 'certloom' ), (string) ( $signer_resolution['scope_type'] ?? 'hierarchy' ) ) : __( 'No Signer resolved', 'certloom' ) );
+		$this->review_fact( __( 'Signer', 'certloom' ), is_array( $signer ) ? (string) ( $signer['display_name'] ?? '' ) : __( 'None', 'certloom' ), $signer_meta );
 		$locale = isset( $review['credential_locale'] ) && is_array( $review['credential_locale'] ) ? $review['credential_locale'] : array();
 		$locale_effective = (string) ( $locale['effective'] ?? '' );
 		$locale_configured = (string) ( $locale['configured'] ?? '' );

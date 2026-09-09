@@ -471,7 +471,7 @@ msgstr ""
 #: admin/class-ecapla-certverify-admin.php:215
 #: src/Infrastructure/Admin/TemplateAdmin.php:1053
 #: src/Infrastructure/Admin/TemplateAdmin.php:123
-#: src/Infrastructure/Admin/TemplateAdmin.php:1245
+#: src/Infrastructure/Admin/TemplateAdmin.php:1247
 msgid "Copy"
 msgstr ""
 
@@ -653,7 +653,7 @@ msgstr ""
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:425
 #: src/Infrastructure/Admin/ScopedFieldAdminAjax.php:244
 #: src/Infrastructure/Admin/TemplateAdmin.php:1069
-#: src/Infrastructure/Admin/TemplateAdmin.php:1116
+#: src/Infrastructure/Admin/TemplateAdmin.php:1117
 msgid "Program"
 msgstr ""
 
@@ -961,8 +961,8 @@ msgstr ""
 #: admin/views/email-designs.php:50
 #: admin/views/email-designs.php:64
 #: admin/views/integrations.php:315
-#: src/Infrastructure/Admin/TemplateAdmin.php:1210
-#: src/Infrastructure/Admin/TemplateAdmin.php:1252
+#: src/Infrastructure/Admin/TemplateAdmin.php:1212
+#: src/Infrastructure/Admin/TemplateAdmin.php:1254
 #: src/Infrastructure/Admin/TemplateAdmin.php:730
 #: src/Infrastructure/Admin/TemplateAdmin.php:843
 #: src/Infrastructure/Admin/TemplateAdmin.php:940
@@ -970,7 +970,7 @@ msgid "Published"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:295
-#: src/Infrastructure/Admin/TemplateAdmin.php:1251
+#: src/Infrastructure/Admin/TemplateAdmin.php:1253
 #: src/Infrastructure/Admin/TemplateAdmin.php:730
 #: src/Infrastructure/Admin/TemplateAdmin.php:843
 #: src/Infrastructure/Admin/TemplateAdmin.php:939
@@ -1044,7 +1044,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:403
 #: src/Infrastructure/Admin/DomainAdmin.php:2261
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:740
-#: src/Infrastructure/Admin/TemplateAdmin.php:1315
+#: src/Infrastructure/Admin/TemplateAdmin.php:1317
 #: src/Infrastructure/Admin/TemplateAdmin.php:863
 msgid "Close"
 msgstr ""
@@ -1171,6 +1171,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:1255
 #: src/Infrastructure/Admin/DomainAdmin.php:1715
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:692
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:429
 #: src/Infrastructure/Admin/TemplateAdmin.php:946
 #: src/Infrastructure/Admin/TemplateAdmin.php:967
 msgid "None"
@@ -1318,7 +1319,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:862
 #: src/Infrastructure/Admin/DomainAdmin.php:972
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:209
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:463
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:467
 msgid "No expiry"
 msgstr ""
 
@@ -1443,9 +1444,9 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:1641
 #: src/Infrastructure/Admin/DomainAdmin.php:665
 #: src/Infrastructure/Admin/DomainAdmin.php:859
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:448
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:463
-#: src/Infrastructure/Admin/TemplateAdmin.php:1121
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:452
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:467
+#: src/Infrastructure/Admin/TemplateAdmin.php:1123
 #: src/Infrastructure/Import/DomainImportCsvReader.php:70
 msgid "Certificate number"
 msgstr ""
@@ -1481,7 +1482,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:783
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:303
 #: src/Infrastructure/Admin/TemplateAdmin.php:1069
-#: src/Infrastructure/Admin/TemplateAdmin.php:1116
+#: src/Infrastructure/Admin/TemplateAdmin.php:1117
 #: src/Infrastructure/Import/DomainImportCsvReader.php:72
 msgid "Status"
 msgstr ""
@@ -2406,8 +2407,8 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:666
 #: src/Infrastructure/Admin/DomainAdmin.php:860
 #: src/Infrastructure/Admin/DomainAdmin.php:972
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:462
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:463
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:466
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:467
 msgid "Issued"
 msgstr ""
 
@@ -2807,7 +2808,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:388
 #: src/Infrastructure/Admin/DomainAdmin.php:565
 #: src/Infrastructure/Admin/DomainAdmin.php:948
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:455
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:459
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:62
 msgid "Issue credential"
 msgstr ""
@@ -3161,7 +3162,7 @@ msgstr ""
 #: elementor/class-ecapla-certverify-template-widgets.php:138
 #: elementor/class-ecapla-certverify-template-widgets.php:286
 #: elementor/class-ecapla-certverify-template-widgets.php:70
-#: src/Infrastructure/Admin/TemplateAdmin.php:1110
+#: src/Infrastructure/Admin/TemplateAdmin.php:1111
 msgid "Content"
 msgstr ""
 
@@ -3190,7 +3191,7 @@ msgstr ""
 #: admin/views/email-designer.php:19
 #: src/Infrastructure/Admin/EmailDesignAdmin.php:80
 #: src/Infrastructure/Admin/TemplateAdmin.php:1070
-#: src/Infrastructure/Admin/TemplateAdmin.php:1173
+#: src/Infrastructure/Admin/TemplateAdmin.php:1175
 #: src/Infrastructure/Admin/TemplateAdmin.php:92
 msgid "Image"
 msgstr ""
@@ -3209,7 +3210,7 @@ msgstr ""
 #: elementor/class-ecapla-certverify-elementor-widget.php:666
 #: src/Infrastructure/Admin/EmailDesignAdmin.php:78
 #: src/Infrastructure/Admin/TemplateAdmin.php:1069
-#: src/Infrastructure/Admin/TemplateAdmin.php:1173
+#: src/Infrastructure/Admin/TemplateAdmin.php:1175
 #: src/Infrastructure/Admin/TemplateAdmin.php:161
 #: src/Infrastructure/Admin/TemplateAdmin.php:205
 msgid "Text"
@@ -3238,7 +3239,7 @@ msgstr ""
 
 #: admin/views/email-designer.php:21
 #: src/Infrastructure/Admin/TemplateAdmin.php:1069
-#: src/Infrastructure/Admin/TemplateAdmin.php:1126
+#: src/Infrastructure/Admin/TemplateAdmin.php:1128
 msgid "Font"
 msgstr ""
 
@@ -3427,7 +3428,7 @@ msgid "Choose a Certloom email design package"
 msgstr ""
 
 #: admin/views/email-designs.php:87
-#: src/Infrastructure/Admin/TemplateAdmin.php:1298
+#: src/Infrastructure/Admin/TemplateAdmin.php:1300
 msgid "Import design"
 msgstr ""
 
@@ -3441,7 +3442,7 @@ msgid "Imported designs stay unpublished until you review them. Assignments are 
 msgstr ""
 
 #: admin/views/email-designs.php:87
-#: src/Infrastructure/Admin/TemplateAdmin.php:1315
+#: src/Infrastructure/Admin/TemplateAdmin.php:1317
 msgid "Portable design package"
 msgstr ""
 
@@ -3547,7 +3548,7 @@ msgstr ""
 #: admin/views/setup-wizard.php:110
 #: src/Infrastructure/Admin/DomainAdmin.php:2253
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:732
-#: src/Infrastructure/Admin/TemplateAdmin.php:1117
+#: src/Infrastructure/Admin/TemplateAdmin.php:1118
 #: src/Infrastructure/Admin/TemplateAdmin.php:208
 msgid "Add field"
 msgstr ""
@@ -5761,7 +5762,7 @@ msgstr ""
 #: elementor/class-ecapla-certverify-elementor-widget.php:851
 #: elementor/class-ecapla-certverify-template-widgets.php:221
 #: src/Infrastructure/Admin/TemplateAdmin.php:1069
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
 msgid "Center"
 msgstr ""
 
@@ -5775,8 +5776,8 @@ msgstr ""
 #: elementor/class-ecapla-certverify-template-widgets.php:220
 #: src/Infrastructure/Admin/TemplateAdmin.php:1065
 #: src/Infrastructure/Admin/TemplateAdmin.php:1069
-#: src/Infrastructure/Admin/TemplateAdmin.php:1077
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
+#: src/Infrastructure/Admin/TemplateAdmin.php:1078
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
 msgid "Left"
 msgstr ""
 
@@ -5786,8 +5787,8 @@ msgstr ""
 #: elementor/class-ecapla-certverify-template-widgets.php:222
 #: src/Infrastructure/Admin/TemplateAdmin.php:1065
 #: src/Infrastructure/Admin/TemplateAdmin.php:1069
-#: src/Infrastructure/Admin/TemplateAdmin.php:1077
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
+#: src/Infrastructure/Admin/TemplateAdmin.php:1078
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
 msgid "Right"
 msgstr ""
 
@@ -6861,7 +6862,7 @@ msgstr ""
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:238
 #: src/Infrastructure/Admin/ScopedFieldAdminAjax.php:241
 #: src/Infrastructure/Admin/TemplateAdmin.php:1069
-#: src/Infrastructure/Admin/TemplateAdmin.php:1116
+#: src/Infrastructure/Admin/TemplateAdmin.php:1117
 #: src/Infrastructure/Email/EmailDesignPresetCatalog.php:33
 msgid "Issuer"
 msgstr ""
@@ -6872,6 +6873,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:471
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:484
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:250
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:429
 msgid "Signer"
 msgstr ""
 
@@ -6898,7 +6900,7 @@ msgstr ""
 
 #: admin/views/setup-wizard.php:94
 #: src/Infrastructure/Admin/DomainAdmin.php:1606
-#: src/Infrastructure/Admin/TemplateAdmin.php:1174
+#: src/Infrastructure/Admin/TemplateAdmin.php:1176
 #: src/Infrastructure/Admin/TemplateAdmin.php:93
 msgid "Logo"
 msgstr ""
@@ -6951,8 +6953,8 @@ msgstr ""
 #: elementor/class-ecapla-certverify-elementor-widget.php:280
 #: elementor/class-ecapla-certverify-elementor-widget.php:93
 #: src/Infrastructure/Admin/DomainAdmin.php:1502
-#: src/Infrastructure/Admin/TemplateAdmin.php:1279
-#: src/Infrastructure/Admin/TemplateAdmin.php:1283
+#: src/Infrastructure/Admin/TemplateAdmin.php:1281
+#: src/Infrastructure/Admin/TemplateAdmin.php:1285
 msgid "Description"
 msgstr ""
 
@@ -7361,7 +7363,7 @@ msgstr ""
 #: elementor/class-ecapla-certverify-elementor-widget.php:407
 #: elementor/class-ecapla-certverify-elementor-widget.php:810
 #: src/Infrastructure/Admin/TemplateAdmin.php:1069
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
 msgid "Text color"
 msgstr ""
 
@@ -7387,7 +7389,7 @@ msgstr ""
 
 #: elementor/class-ecapla-certverify-elementor-widget.php:655
 #: elementor/class-ecapla-certverify-template-widgets.php:308
-#: src/Infrastructure/Admin/TemplateAdmin.php:1177
+#: src/Infrastructure/Admin/TemplateAdmin.php:1179
 #: src/Infrastructure/Admin/TemplateAdmin.php:163
 msgid "Background"
 msgstr ""
@@ -8842,7 +8844,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:863
 #: src/Infrastructure/Admin/EmailDesignAdmin.php:116
 #: src/Infrastructure/Admin/TemplateAdmin.php:1069
-#: src/Infrastructure/Admin/TemplateAdmin.php:1116
+#: src/Infrastructure/Admin/TemplateAdmin.php:1117
 msgid "Grade"
 msgstr ""
 
@@ -9243,7 +9245,7 @@ msgstr ""
 #: includes/class-ecapla-certverify-onboarding.php:21
 #: src/Infrastructure/Admin/DomainAdmin.php:2026
 #: src/Infrastructure/Admin/TemplateAdmin.php:1058
-#: src/Infrastructure/Admin/TemplateAdmin.php:1216
+#: src/Infrastructure/Admin/TemplateAdmin.php:1218
 msgid "Organization"
 msgstr ""
 
@@ -9264,7 +9266,7 @@ msgid "Add your organization name before completing setup."
 msgstr ""
 
 #: includes/class-ecapla-certverify-onboarding.php:23
-#: src/Infrastructure/Admin/TemplateAdmin.php:1124
+#: src/Infrastructure/Admin/TemplateAdmin.php:1126
 msgid "Appearance"
 msgstr ""
 
@@ -9310,7 +9312,7 @@ msgstr ""
 
 #: includes/class-ecapla-certverify-onboarding.php:342
 #: src/Infrastructure/Admin/DomainAdmin.php:1768
-#: src/Infrastructure/Repository/ManualIssuanceRepository.php:37
+#: src/Infrastructure/Repository/ManualIssuanceRepository.php:39
 msgid "Enter a valid recipient email address or leave it blank."
 msgstr ""
 
@@ -11079,7 +11081,7 @@ msgid "Choose a valid optional, required, or Batch-exclusion field rule."
 msgstr ""
 
 #: src/Application/I18n/CredentialLocale.php:32
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:434
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:438
 msgid "Site default"
 msgstr ""
 
@@ -11536,7 +11538,7 @@ msgid "Required credential field “%s” needs a custom:%s column in this Bulk 
 msgstr ""
 
 #: src/Application/Issuance/BulkIssuanceCoordinator.php:74
-#: src/Application/Issuance/ManualIssuanceService.php:538
+#: src/Application/Issuance/ManualIssuanceService.php:549
 msgid "Grade / result is not assigned to the selected Program/Batch credential-field contract."
 msgstr ""
 
@@ -11641,139 +11643,147 @@ msgstr ""
 msgid "The new credential identity could not be re-read safely. Issuance was rolled back."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:293
+#: src/Application/Issuance/ManualIssuanceService.php:296
 msgid "The issued credential could not be re-read safely. Issuance was rolled back."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:322
+#: src/Application/Issuance/ManualIssuanceService.php:325
 msgid "Certificate-number collisions continued while issuing. Nothing was duplicated; review the numbering policy and try again."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:332
+#: src/Application/Issuance/ManualIssuanceService.php:335
 msgid "Choose a recipient that still exists."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:340
+#: src/Application/Issuance/ManualIssuanceService.php:343
 msgid "Choose a program that still exists."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:341
+#: src/Application/Issuance/ManualIssuanceService.php:344
 msgid "Inactive programs cannot receive new credential issuances."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:346
+#: src/Application/Issuance/ManualIssuanceService.php:349
 msgid "Choose a Batch that still exists."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:347
+#: src/Application/Issuance/ManualIssuanceService.php:350
 msgid "Inactive Batches cannot receive new credential issuances."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:348
+#: src/Application/Issuance/ManualIssuanceService.php:351
 #: src/Infrastructure/Admin/IntegrationMappingTargetGuard.php:81
 msgid "The selected Batch belongs to a different Program."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:358
+#: src/Application/Issuance/ManualIssuanceService.php:361
 msgid "The program’s configured issuer no longer exists."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:380
-#: src/Application/Issuance/ManualIssuanceService.php:394
-#: src/Application/Issuance/ManualIssuanceService.php:398
+#: src/Application/Issuance/ManualIssuanceService.php:386
+#: src/Application/Issuance/ManualIssuanceService.php:400
+#: src/Application/Issuance/ManualIssuanceService.php:404
 msgid "The Program locale maps to a certificate design that is no longer published. Review the Program language variants before issuing."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:388
+#: src/Application/Issuance/ManualIssuanceService.php:394
 msgid "This credential does not resolve to a published certificate design. Configure the inheritance chain Global → Issuer → Program → Batch, or choose a one-off design before issuing."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:398
+#: src/Application/Issuance/ManualIssuanceService.php:404
 msgid "Choose an active published template."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:449
+#: src/Application/Issuance/ManualIssuanceService.php:456
 msgid "Certloom could not create a deterministic issuance review fingerprint."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:480
+#: src/Application/Issuance/ManualIssuanceService.php:489
 msgid "Choose an existing recipient or create a new recipient."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:482
+#: src/Application/Issuance/ManualIssuanceService.php:491
 msgid "Choose an existing recipient."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:486
+#: src/Application/Issuance/ManualIssuanceService.php:496
 msgid "Choose a credential program."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:488
+#: src/Application/Issuance/ManualIssuanceService.php:498
 msgid "Choose a valid credential issue/effective date."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:490
+#: src/Application/Issuance/ManualIssuanceService.php:500
 msgid "Choose the program default, a permanent credential, or a specific expiry date."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:494
+#: src/Application/Issuance/ManualIssuanceService.php:504
 msgid "Choose a valid credential expiry date."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:495
+#: src/Application/Issuance/ManualIssuanceService.php:505
 msgid "The expiry date cannot be earlier than the credential issue/effective date."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:498
+#: src/Application/Issuance/ManualIssuanceService.php:508
 msgid "Grade must be 191 characters or fewer."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:542
+#: src/Application/Issuance/ManualIssuanceService.php:553
 msgid "This Program uses a scoped credential-field contract and does not accept unassigned credential-specific fields."
 msgstr ""
 
 #. translators: %s: label.
-#: src/Application/Issuance/ManualIssuanceService.php:556
+#: src/Application/Issuance/ManualIssuanceService.php:567
 msgid "Complete required credential field “%s” before issuing."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:559
+#: src/Application/Issuance/ManualIssuanceService.php:570
 msgid "A credential-specific field was submitted that is not assigned to the selected Program/Batch field contract."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:577
+#: src/Application/Issuance/ManualIssuanceService.php:588
+msgid "The selected Signer is no longer active or available. Review the credential again."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:599
+msgid "Certloom could not resolve the configured Signer hierarchy safely."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:629
 msgid "Certloom could not calculate the program’s default credential expiry date."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:586
+#: src/Application/Issuance/ManualIssuanceService.php:638
 msgid "This recipient already has a Credential Series for the selected program. Manual Issuance will not create a duplicate; future correction/re-certification must add an immutable Version to the existing Series."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:594
+#: src/Application/Issuance/ManualIssuanceService.php:646
 msgid "Certloom could not create the immutable merge snapshot fingerprint. Issuance was rolled back."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:627
+#: src/Application/Issuance/ManualIssuanceService.php:679
 msgid "The issued Credential Series could not be loaded for its receipt."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:648
+#: src/Application/Issuance/ManualIssuanceService.php:700
 msgid "Use a valid YYYY-MM-DD date."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:653
+#: src/Application/Issuance/ManualIssuanceService.php:705
 msgid "Custom fields must be a bounded key/value list with at most 30 entries."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:659
+#: src/Application/Issuance/ManualIssuanceService.php:711
 msgid "Custom fields must use unique machine keys up to 64 characters and scalar values."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:662
+#: src/Application/Issuance/ManualIssuanceService.php:714
 msgid "Each custom field value must be 2,000 characters or fewer."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:664
+#: src/Application/Issuance/ManualIssuanceService.php:716
 msgid "The combined custom-field payload is too large for one Manual Issuance."
 msgstr ""
 
@@ -11782,7 +11792,7 @@ msgid "That Manual Issuance receipt could not be found."
 msgstr ""
 
 #. translators: %s: merge token.
-#: src/Application/Issuance/MergeSnapshotBuilder.php:97
+#: src/Application/Issuance/MergeSnapshotBuilder.php:108
 msgid "The published template requires merge field “%s”, but Manual Issuance cannot resolve it from the selected recipient/program context."
 msgstr ""
 
@@ -13384,10 +13394,10 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:439
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:469
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:280
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:451
-#: src/Infrastructure/Admin/TemplateAdmin.php:1233
-#: src/Infrastructure/Admin/TemplateAdmin.php:1245
-#: src/Infrastructure/Admin/TemplateAdmin.php:1280
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:455
+#: src/Infrastructure/Admin/TemplateAdmin.php:1235
+#: src/Infrastructure/Admin/TemplateAdmin.php:1247
+#: src/Infrastructure/Admin/TemplateAdmin.php:1282
 #: src/Infrastructure/Admin/TemplateAdmin.php:765
 msgid "Technical details"
 msgstr ""
@@ -13418,7 +13428,7 @@ msgid "Safe retries"
 msgstr ""
 
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:268
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:524
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:528
 msgid "You do not have permission to issue Certloom credentials."
 msgstr ""
 
@@ -14363,7 +14373,7 @@ msgid "Self-hosted verification"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1286
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:463
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:467
 msgid "Public credential ID"
 msgstr ""
 
@@ -15171,7 +15181,7 @@ msgid "Optional seal or emblem used by designs that include an issuer seal."
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:1607
-#: src/Infrastructure/Admin/TemplateAdmin.php:1174
+#: src/Infrastructure/Admin/TemplateAdmin.php:1176
 #: src/Infrastructure/Admin/TemplateAdmin.php:95
 msgid "Seal"
 msgstr ""
@@ -15510,7 +15520,7 @@ msgid "Add signer"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:2042
-#: src/Infrastructure/Admin/TemplateAdmin.php:1283
+#: src/Infrastructure/Admin/TemplateAdmin.php:1285
 msgid "Name"
 msgstr ""
 
@@ -16577,8 +16587,8 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:291
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:439
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:441
-#: src/Infrastructure/Admin/TemplateAdmin.php:1280
-#: src/Infrastructure/Admin/TemplateAdmin.php:1283
+#: src/Infrastructure/Admin/TemplateAdmin.php:1282
+#: src/Infrastructure/Admin/TemplateAdmin.php:1285
 #: src/Infrastructure/Admin/TemplateAdmin.php:765
 msgid "Machine key"
 msgstr ""
@@ -16776,11 +16786,13 @@ msgid "Example: Dr. Amina Khan"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:437
+#: src/Infrastructure/Admin/TemplateAdmin.php:1069
+#: src/Infrastructure/Admin/TemplateAdmin.php:1117
 msgid "Signer name"
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:439
-#: src/Infrastructure/Admin/TemplateAdmin.php:1280
+#: src/Infrastructure/Admin/TemplateAdmin.php:1282
 #: src/Infrastructure/Admin/TemplateAdmin.php:765
 msgid "Generated automatically when left blank"
 msgstr ""
@@ -17613,7 +17625,7 @@ msgid "Signer (optional)"
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:251
-msgid "Signer snapshot persistence is part of the later approved backend phase; selecting one here demonstrates the locked interaction model only."
+msgid "Choose a one-off Signer override, or leave this blank to use Certloom’s Batch → Program → Issuer → global signer hierarchy. The resolved Signer is frozen into the issued credential."
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:253
@@ -17819,187 +17831,200 @@ msgstr ""
 msgid "Existing alpha backend-compatible path"
 msgstr ""
 
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:428
+msgid "No Signer resolved"
+msgstr ""
+
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:428
+msgid "One-off Signer override"
+msgstr ""
+
+#. translators: %s: signer assignment scope.
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:428
+msgid "Resolved from %s signer assignment"
+msgstr ""
+
 #. translators: %s: locale configured.
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:432
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:436
 msgid "configured %s"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:434
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:438
 msgid "Credential language"
 msgstr ""
 
 #. translators: %1$d: revision number; %2$d: ID.
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:435
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:439
 msgid "Published revision #%1$d · ID %2$d"
 msgstr ""
 
 #. translators: %s: matched locale.
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:439
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:443
 msgid "language variant %s"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:441
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:445
 msgid "explicit reviewed override"
 msgstr ""
 
 #. translators: %s: resolution scope.
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:443
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:447
 msgid "Program design via %s"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:445
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:449
 msgid "Template"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:446
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:450
 msgid "Effective date"
 msgstr ""
 
 #. translators: %s: expires at.
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:446
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:463
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:450
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:467
 msgid "Expires %s"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:446
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:450
 msgid "Permanent / no expiry"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:448
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:452
 msgid "Allocated on Issue"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:448
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:452
 msgid "Manual number"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:448
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:452
 msgid "Number preview; not reserved"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:451
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:455
 msgid "Integrity identifiers are available for support and auditing. They are checked automatically and are not required for normal issuance."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:451
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:455
 msgid "Layout schema"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:451
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:455
 msgid "Published layout SHA-256"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:451
-#: src/Infrastructure/Admin/TemplateAdmin.php:1233
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:455
+#: src/Infrastructure/Admin/TemplateAdmin.php:1235
 msgid "Render Plan SHA-256"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:451
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:455
 msgid "Review SHA-256"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:452
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:456
 msgid "Browser preview"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:452
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:456
 msgid "Built from the selected published design and the exact recipient/credential details in this review."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:452
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:456
 msgid "Certificate IDs and the final verification URL are created only when you issue. The browser preview may render fonts slightly differently from future downloadable certificate files."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:452
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:456
 msgid "Credential Preview"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:452
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:456
 msgid "The credential preview could not be shown safely in the browser."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:453
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:457
 msgid "Credential-specific custom merge values"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:454
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:458
 msgid "Check this review again, assign the certificate number, create the recipient if needed, save the issued credential and its design/details, and record the issuance as one checked transaction."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:454
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:458
 msgid "What Issue will do:"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:455
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:459
 msgid "Back to compose"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:462
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:466
 msgid "Issuance receipt"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:462
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:466
 msgid "Step 4"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:463
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:467
 msgid "Credential Series"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:463
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:467
 msgid "Credential Version"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:463
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:467
 msgid "Human-facing credential number"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:463
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:467
 msgid "Saved issuance details"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:463
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:467
 msgid "Secure generated identity"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:463
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:467
 msgid "Stable credential lineage"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:464
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:468
 msgid "Download status:"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:464
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:468
 msgid "Email this credential"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:464
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:468
 msgid "Issue another credential"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:464
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:468
 msgid "Saved with the issued credential, but public verification from the new credential store is not enabled in this build yet."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:464
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:468
 msgid "Self-hosted verification URL"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:464
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:468
 msgid "The credential is issued, but PDF/PNG/JPEG downloads are not enabled until the certificate renderer passes its production approval checks."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:475
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:479
 msgid "Credential-specific custom merge input is limited to 100 submitted rows and 30 saved values."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:481
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:491
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:485
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:495
 msgid "Each credential-specific custom field must use a unique field key."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:523
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:527
 msgid "Manual Issuance progress"
 msgstr ""
 
@@ -18246,42 +18271,42 @@ msgid "Zoom"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1057
-#: src/Infrastructure/Admin/TemplateAdmin.php:1215
+#: src/Infrastructure/Admin/TemplateAdmin.php:1217
 msgid "Sample data"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1058
-#: src/Infrastructure/Admin/TemplateAdmin.php:1216
+#: src/Infrastructure/Admin/TemplateAdmin.php:1218
 msgid "Long ISO scope"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1058
-#: src/Infrastructure/Admin/TemplateAdmin.php:1216
+#: src/Infrastructure/Admin/TemplateAdmin.php:1218
 msgid "Long name"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1058
-#: src/Infrastructure/Admin/TemplateAdmin.php:1216
+#: src/Infrastructure/Admin/TemplateAdmin.php:1218
 msgid "Long organization"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1058
-#: src/Infrastructure/Admin/TemplateAdmin.php:1216
+#: src/Infrastructure/Admin/TemplateAdmin.php:1218
 msgid "Normal person"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1058
-#: src/Infrastructure/Admin/TemplateAdmin.php:1216
+#: src/Infrastructure/Admin/TemplateAdmin.php:1218
 msgid "RTL person"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1058
-#: src/Infrastructure/Admin/TemplateAdmin.php:1216
+#: src/Infrastructure/Admin/TemplateAdmin.php:1218
 msgid "School result"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1058
-#: src/Infrastructure/Admin/TemplateAdmin.php:1216
+#: src/Infrastructure/Admin/TemplateAdmin.php:1218
 msgid "Very long name"
 msgstr ""
 
@@ -18311,7 +18336,9 @@ msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1061
 #: src/Infrastructure/Admin/TemplateAdmin.php:1070
-#: src/Infrastructure/Admin/TemplateAdmin.php:1118
+#: src/Infrastructure/Admin/TemplateAdmin.php:1071
+#: src/Infrastructure/Admin/TemplateAdmin.php:1119
+#: src/Infrastructure/Admin/TemplateAdmin.php:1120
 msgid "Fit"
 msgstr ""
 
@@ -18340,7 +18367,7 @@ msgid "Safe area"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1061
-#: src/Infrastructure/Admin/TemplateAdmin.php:1132
+#: src/Infrastructure/Admin/TemplateAdmin.php:1134
 msgid "Save design"
 msgstr ""
 
@@ -18373,29 +18400,29 @@ msgid "Shift/Ctrl/Cmd-click to select multiple"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1065
-#: src/Infrastructure/Admin/TemplateAdmin.php:1077
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
+#: src/Infrastructure/Admin/TemplateAdmin.php:1078
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
 msgid "Bottom"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1065
-#: src/Infrastructure/Admin/TemplateAdmin.php:1077
+#: src/Infrastructure/Admin/TemplateAdmin.php:1078
 msgid "Center horizontally"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1065
-#: src/Infrastructure/Admin/TemplateAdmin.php:1077
+#: src/Infrastructure/Admin/TemplateAdmin.php:1078
 msgid "Center vertically"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1065
-#: src/Infrastructure/Admin/TemplateAdmin.php:1077
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
+#: src/Infrastructure/Admin/TemplateAdmin.php:1078
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
 msgid "Top"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1068
-#: src/Infrastructure/Admin/TemplateAdmin.php:1080
+#: src/Infrastructure/Admin/TemplateAdmin.php:1081
 msgid "Distribute"
 msgstr ""
 
@@ -18404,12 +18431,12 @@ msgid "Select 3 or more elements to equalize spacing."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1068
-#: src/Infrastructure/Admin/TemplateAdmin.php:1080
+#: src/Infrastructure/Admin/TemplateAdmin.php:1081
 msgid "Space horizontally"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1068
-#: src/Infrastructure/Admin/TemplateAdmin.php:1080
+#: src/Infrastructure/Admin/TemplateAdmin.php:1081
 msgid "Space vertically"
 msgstr ""
 
@@ -18418,12 +18445,12 @@ msgid "Bold"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1069
-#: src/Infrastructure/Admin/TemplateAdmin.php:1116
+#: src/Infrastructure/Admin/TemplateAdmin.php:1117
 msgid "Certificate Number"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1069
-#: src/Infrastructure/Admin/TemplateAdmin.php:1116
+#: src/Infrastructure/Admin/TemplateAdmin.php:1117
 msgid "Dynamic field"
 msgstr ""
 
@@ -18437,42 +18464,52 @@ msgid "Edit text"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1069
-#: src/Infrastructure/Admin/TemplateAdmin.php:1116
+#: src/Infrastructure/Admin/TemplateAdmin.php:1117
 msgid "Expiry Date"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1069
-#: src/Infrastructure/Admin/TemplateAdmin.php:1116
+#: src/Infrastructure/Admin/TemplateAdmin.php:1117
 msgid "Issue Date"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1069
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
 msgid "Italic"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1069
-#: src/Infrastructure/Admin/TemplateAdmin.php:1126
+#: src/Infrastructure/Admin/TemplateAdmin.php:1128
 msgid "Monospace"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1069
-#: src/Infrastructure/Admin/TemplateAdmin.php:1116
+#: src/Infrastructure/Admin/TemplateAdmin.php:1117
 msgid "Recipient Name"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1069
-#: src/Infrastructure/Admin/TemplateAdmin.php:1126
+#: src/Infrastructure/Admin/TemplateAdmin.php:1128
 msgid "Sans Serif"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1069
-#: src/Infrastructure/Admin/TemplateAdmin.php:1126
+#: src/Infrastructure/Admin/TemplateAdmin.php:1128
 msgid "Serif"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1069
-#: src/Infrastructure/Admin/TemplateAdmin.php:1126
+#: src/Infrastructure/Admin/TemplateAdmin.php:1117
+msgid "Signer email"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1069
+#: src/Infrastructure/Admin/TemplateAdmin.php:1117
+msgid "Signer title"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1069
+#: src/Infrastructure/Admin/TemplateAdmin.php:1128
 msgid "Size (pt)"
 msgstr ""
 
@@ -18489,19 +18526,25 @@ msgid "Locked"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1070
-#: src/Infrastructure/Admin/TemplateAdmin.php:1118
+#: src/Infrastructure/Admin/TemplateAdmin.php:1071
+#: src/Infrastructure/Admin/TemplateAdmin.php:1119
+#: src/Infrastructure/Admin/TemplateAdmin.php:1120
 msgid "Contain"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1070
-#: src/Infrastructure/Admin/TemplateAdmin.php:1118
+#: src/Infrastructure/Admin/TemplateAdmin.php:1071
+#: src/Infrastructure/Admin/TemplateAdmin.php:1119
+#: src/Infrastructure/Admin/TemplateAdmin.php:1120
 msgid "Cover"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1070
 #: src/Infrastructure/Admin/TemplateAdmin.php:1071
-#: src/Infrastructure/Admin/TemplateAdmin.php:1118
-#: src/Infrastructure/Admin/TemplateAdmin.php:1129
+#: src/Infrastructure/Admin/TemplateAdmin.php:1072
+#: src/Infrastructure/Admin/TemplateAdmin.php:1119
+#: src/Infrastructure/Admin/TemplateAdmin.php:1120
+#: src/Infrastructure/Admin/TemplateAdmin.php:1131
 msgid "Fill"
 msgstr ""
 
@@ -18510,70 +18553,84 @@ msgid "Replace media"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1071
-#: src/Infrastructure/Admin/TemplateAdmin.php:1100
-#: src/Infrastructure/Admin/TemplateAdmin.php:1119
-#: src/Infrastructure/Admin/TemplateAdmin.php:1177
+msgid "Choose fixed image"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1071
+#: src/Infrastructure/Admin/TemplateAdmin.php:1176
+#: src/Infrastructure/Admin/TemplateAdmin.php:94
+msgid "Signature"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1071
+msgid "Use credential Signer"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1072
+#: src/Infrastructure/Admin/TemplateAdmin.php:1101
+#: src/Infrastructure/Admin/TemplateAdmin.php:1121
+#: src/Infrastructure/Admin/TemplateAdmin.php:1179
 #: src/Infrastructure/Admin/TemplateAdmin.php:90
 msgid "Shape"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1071
 #: src/Infrastructure/Admin/TemplateAdmin.php:1072
-#: src/Infrastructure/Admin/TemplateAdmin.php:1129
-#: src/Infrastructure/Admin/TemplateAdmin.php:1130
+#: src/Infrastructure/Admin/TemplateAdmin.php:1073
+#: src/Infrastructure/Admin/TemplateAdmin.php:1131
+#: src/Infrastructure/Admin/TemplateAdmin.php:1132
 msgid "Stroke"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1071
 #: src/Infrastructure/Admin/TemplateAdmin.php:1072
-#: src/Infrastructure/Admin/TemplateAdmin.php:1129
-#: src/Infrastructure/Admin/TemplateAdmin.php:1130
+#: src/Infrastructure/Admin/TemplateAdmin.php:1073
+#: src/Infrastructure/Admin/TemplateAdmin.php:1131
+#: src/Infrastructure/Admin/TemplateAdmin.php:1132
 msgid "Stroke width (mm)"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1072
-#: src/Infrastructure/Admin/TemplateAdmin.php:1176
+#: src/Infrastructure/Admin/TemplateAdmin.php:1073
+#: src/Infrastructure/Admin/TemplateAdmin.php:1178
 #: src/Infrastructure/Admin/TemplateAdmin.php:91
 msgid "Line"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1073
-#: src/Infrastructure/Admin/TemplateAdmin.php:1120
+#: src/Infrastructure/Admin/TemplateAdmin.php:1074
+#: src/Infrastructure/Admin/TemplateAdmin.php:1122
 msgid "Error correction"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1073
-#: src/Infrastructure/Admin/TemplateAdmin.php:1175
+#: src/Infrastructure/Admin/TemplateAdmin.php:1074
+#: src/Infrastructure/Admin/TemplateAdmin.php:1177
 #: src/Infrastructure/Admin/TemplateAdmin.php:89
 msgid "QR"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1073
 #: src/Infrastructure/Admin/TemplateAdmin.php:1074
-#: src/Infrastructure/Admin/TemplateAdmin.php:1120
-#: src/Infrastructure/Admin/TemplateAdmin.php:1121
+#: src/Infrastructure/Admin/TemplateAdmin.php:1075
+#: src/Infrastructure/Admin/TemplateAdmin.php:1122
+#: src/Infrastructure/Admin/TemplateAdmin.php:1123
 msgid "Quiet zone (modules)"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1073
+#: src/Infrastructure/Admin/TemplateAdmin.php:1074
 msgid "Verification URL is the canonical source."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1074
-#: src/Infrastructure/Admin/TemplateAdmin.php:1175
+#: src/Infrastructure/Admin/TemplateAdmin.php:1075
+#: src/Infrastructure/Admin/TemplateAdmin.php:1177
 #: src/Infrastructure/Admin/TemplateAdmin.php:178
 msgid "Barcode"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1074
+#: src/Infrastructure/Admin/TemplateAdmin.php:1075
 msgid "Code 128 · certificate number"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1076
+#: src/Infrastructure/Admin/TemplateAdmin.php:1077
 msgid "Align"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1076
+#: src/Infrastructure/Admin/TemplateAdmin.php:1077
 msgid "Selected element alignment and layer controls"
 msgstr ""
 
@@ -18581,56 +18638,56 @@ msgstr ""
 msgid "locked"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1081
+#: src/Infrastructure/Admin/TemplateAdmin.php:1082
 msgid "Layer"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1083
+#: src/Infrastructure/Admin/TemplateAdmin.php:1084
 #: src/Infrastructure/Admin/TemplateAdmin.php:118
 msgid "Bring forward"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1083
+#: src/Infrastructure/Admin/TemplateAdmin.php:1084
 #: src/Infrastructure/Admin/TemplateAdmin.php:117
 msgid "Bring to front"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1083
+#: src/Infrastructure/Admin/TemplateAdmin.php:1084
 #: src/Infrastructure/Admin/TemplateAdmin.php:119
 msgid "Send backward"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1083
+#: src/Infrastructure/Admin/TemplateAdmin.php:1084
 #: src/Infrastructure/Admin/TemplateAdmin.php:120
 msgid "Send to back"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1086
+#: src/Infrastructure/Admin/TemplateAdmin.php:1087
 #: src/Infrastructure/Admin/TemplateAdmin.php:86
 msgid "Lock element"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1087
+#: src/Infrastructure/Admin/TemplateAdmin.php:1088
 msgid "Click or drag onto canvas"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1087
+#: src/Infrastructure/Admin/TemplateAdmin.php:1088
 msgid "Front → back"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1087
+#: src/Infrastructure/Admin/TemplateAdmin.php:1088
 msgid "Insert"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1087
+#: src/Infrastructure/Admin/TemplateAdmin.php:1088
 msgid "Insert or remove Designer elements"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1087
+#: src/Infrastructure/Admin/TemplateAdmin.php:1088
 msgid "Layers"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1087
+#: src/Infrastructure/Admin/TemplateAdmin.php:1088
 msgid "Layers and insert elements"
 msgstr ""
 
@@ -18639,7 +18696,7 @@ msgid "Designer needs a valid page setup before editing can continue."
 msgstr ""
 
 #. translators: %d: minimum schema version.
-#: src/Infrastructure/Admin/TemplateAdmin.php:1097
+#: src/Infrastructure/Admin/TemplateAdmin.php:1098
 msgid "Upgrade this draft to certloom-layout v%d before adding this element."
 msgstr ""
 
@@ -18647,80 +18704,80 @@ msgstr ""
 msgid "Locked element selected."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1100
+#: src/Infrastructure/Admin/TemplateAdmin.php:1101
 msgid "Dynamic Field"
 msgstr ""
 
 #. translators: %s: element name.
-#: src/Infrastructure/Admin/TemplateAdmin.php:1102
+#: src/Infrastructure/Admin/TemplateAdmin.php:1103
 msgid "Add %s"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1104
+#: src/Infrastructure/Admin/TemplateAdmin.php:1105
 msgid "Delete selected"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1104
+#: src/Infrastructure/Admin/TemplateAdmin.php:1105
 msgid "Delete selected (Delete/Backspace)"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1104
+#: src/Infrastructure/Admin/TemplateAdmin.php:1105
 msgid "Duplicate selected"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1104
+#: src/Infrastructure/Admin/TemplateAdmin.php:1105
 msgid "Duplicate selected (Ctrl/Cmd+D)"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1105
+#: src/Infrastructure/Admin/TemplateAdmin.php:1106
 msgid "Certificate Designer canvas workspace"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1105
+#: src/Infrastructure/Admin/TemplateAdmin.php:1106
 msgid "Certificate page canvas"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1106
+#: src/Infrastructure/Admin/TemplateAdmin.php:1107
 msgid "Designer properties"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1106
+#: src/Infrastructure/Admin/TemplateAdmin.php:1107
 msgid "Position & size"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1106
+#: src/Infrastructure/Admin/TemplateAdmin.php:1107
 msgid "Properties"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1106
+#: src/Infrastructure/Admin/TemplateAdmin.php:1107
 msgid "Select an element to edit its content, appearance and exact geometry."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1106
+#: src/Infrastructure/Admin/TemplateAdmin.php:1107
 msgid "Selection"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1106
+#: src/Infrastructure/Admin/TemplateAdmin.php:1107
 msgid "elements selected. Drag the selection together or use Align and Distribute. Click one item without a modifier to return to its individual properties."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1107
+#: src/Infrastructure/Admin/TemplateAdmin.php:1108
 msgid "Height (mm)"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1107
+#: src/Infrastructure/Admin/TemplateAdmin.php:1108
 msgid "Rotation (°)"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1107
+#: src/Infrastructure/Admin/TemplateAdmin.php:1108
 msgid "Width (mm)"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1107
+#: src/Infrastructure/Admin/TemplateAdmin.php:1108
 msgid "X (mm)"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1107
+#: src/Infrastructure/Admin/TemplateAdmin.php:1108
 msgid "Y (mm)"
 msgstr ""
 
@@ -18728,62 +18785,50 @@ msgstr ""
 msgid "This page change would place an element outside the page. No change was applied."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1111
+#: src/Infrastructure/Admin/TemplateAdmin.php:1112
 msgid "Text content"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1114
+#: src/Infrastructure/Admin/TemplateAdmin.php:1115
 msgid "Technical custom field…"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1115
+#: src/Infrastructure/Admin/TemplateAdmin.php:1116
 msgid "Technical field token"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1115
+#: src/Infrastructure/Admin/TemplateAdmin.php:1116
 msgid "Use this only when the field you need is not listed above."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1116
+#: src/Infrastructure/Admin/TemplateAdmin.php:1117
 msgid "Choose information that should be filled automatically when the credential is issued."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1117
+#: src/Infrastructure/Admin/TemplateAdmin.php:1118
 #: src/Infrastructure/Admin/TemplateAdmin.php:207
 msgid "Add text"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1117
+#: src/Infrastructure/Admin/TemplateAdmin.php:1118
 msgid "Combine literal text and dynamic fields without HTML. Inline styles inherit from Appearance unless you override them here."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1117
+#: src/Infrastructure/Admin/TemplateAdmin.php:1118
 msgid "Each run stays structured and bounded. Dynamic fields resolve from the immutable credential snapshot when issued."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1117
+#: src/Infrastructure/Admin/TemplateAdmin.php:1118
 #: src/Infrastructure/Admin/TemplateAdmin.php:204
 msgid "Inline content"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1118
+#: src/Infrastructure/Admin/TemplateAdmin.php:1119
 msgid "Choose from Media Library"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1118
+#: src/Infrastructure/Admin/TemplateAdmin.php:1119
 msgid "Local asset reference"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1119
-#: src/Infrastructure/Admin/TemplateAdmin.php:1176
-#: src/Infrastructure/Admin/TemplateAdmin.php:97
-msgid "Ellipse"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1119
-#: src/Infrastructure/Admin/TemplateAdmin.php:1176
-#: src/Infrastructure/Admin/TemplateAdmin.php:96
-msgid "Rectangle"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:112
@@ -18791,150 +18836,174 @@ msgid "Selected element aligned to page."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1120
+msgid "Choose fixed signature image"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1120
+msgid "Credential Signer uses the immutable Signer snapshot captured when the credential is issued. Fixed image keeps the selected WordPress Media Library asset."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1120
+msgid "Use credential Signer signature"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1121
+#: src/Infrastructure/Admin/TemplateAdmin.php:1178
+#: src/Infrastructure/Admin/TemplateAdmin.php:97
+msgid "Ellipse"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1121
+#: src/Infrastructure/Admin/TemplateAdmin.php:1178
+#: src/Infrastructure/Admin/TemplateAdmin.php:96
+msgid "Rectangle"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1122
 msgid "The QR code always uses the credential’s verification link."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1121
+#: src/Infrastructure/Admin/TemplateAdmin.php:1123
 msgid "Barcode format"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1121
+#: src/Infrastructure/Admin/TemplateAdmin.php:1123
 msgid "The barcode represents the credential’s certificate number."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1121
+#: src/Infrastructure/Admin/TemplateAdmin.php:1123
 msgid "Uses"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1122
+#: src/Infrastructure/Admin/TemplateAdmin.php:1124
 msgid "Bullets"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1122
+#: src/Infrastructure/Admin/TemplateAdmin.php:1124
 msgid "Each non-empty line becomes one list item. Certloom keeps wrapping and spacing consistent across preview and downloadable files."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1122
+#: src/Infrastructure/Admin/TemplateAdmin.php:1124
 msgid "List items"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1122
+#: src/Infrastructure/Admin/TemplateAdmin.php:1124
 msgid "Marker style"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1122
+#: src/Infrastructure/Admin/TemplateAdmin.php:1124
 msgid "Numbered"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1123
+#: src/Infrastructure/Admin/TemplateAdmin.php:1125
 msgid "Adjust the line’s appearance below."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1124
+#: src/Infrastructure/Admin/TemplateAdmin.php:1126
 msgid "Controlled styles"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1125
+#: src/Infrastructure/Admin/TemplateAdmin.php:1127
 msgid "Opacity"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1126
+#: src/Infrastructure/Admin/TemplateAdmin.php:1128
 msgid "Weight"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
-msgid "Auto"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
-msgid "Choose from Certloom’s supported local font families. The same supported font choice is kept for preview and downloadable files."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
-msgid "Choose text color"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
-msgid "Clip"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
-msgid "Direction"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
-msgid "End"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
-msgid "Font choices use stable controlled local/browser family keys only. No remote font URL or arbitrary CSS family is accepted; production artifacts still fail closed unless the exact renderer FontManifest provides the selected family, weight and style bytes."
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
-msgid "Horizontal align"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
-msgid "Letter spacing (pt)"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
-msgid "Line height"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
-msgid "Middle"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
-msgid "Overflow"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
-msgid "Shrink"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
-msgid "Start"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
-msgid "Vertical align"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1128
-msgid "Wrap"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:113
 msgid "Layer order updated."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1131
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
+msgid "Auto"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
+msgid "Choose from Certloom’s supported local font families. The same supported font choice is kept for preview and downloadable files."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
+msgid "Choose text color"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
+msgid "Clip"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
+msgid "Direction"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
+msgid "End"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
+msgid "Font choices use stable controlled local/browser family keys only. No remote font URL or arbitrary CSS family is accepted; production artifacts still fail closed unless the exact renderer FontManifest provides the selected family, weight and style bytes."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
+msgid "Horizontal align"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
+msgid "Letter spacing (pt)"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
+msgid "Line height"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
+msgid "Middle"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
+msgid "Overflow"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
+msgid "Shrink"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
+msgid "Start"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
+msgid "Vertical align"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1130
+msgid "Wrap"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1133
 msgid "Arrow keys nudge 1 mm, Shift+Arrow 5 mm and Alt/Option+Arrow 0.1 mm. Space + drag temporarily pans the canvas; Shift+F10 opens element actions for the selection. Ctrl/Cmd+Z undoes; Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y redoes. Locked elements remain selectable but cannot be transformed, reordered, removed or content-edited."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1132
+#: src/Infrastructure/Admin/TemplateAdmin.php:1134
 msgid "Manual save remains the only authoritative revision write."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1132
+#: src/Infrastructure/Admin/TemplateAdmin.php:1134
 msgid "Recovery autosave ready"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1132
+#: src/Infrastructure/Admin/TemplateAdmin.php:1134
 msgid "Save Designer revision"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1134
+#: src/Infrastructure/Admin/TemplateAdmin.php:1136
 msgid "DSN-08 is a closed built-in registry: no WordPress filter, arbitrary HTML/CSS callback or unversioned third-party type can mutate the canonical element contract. Future extensions must first earn an explicit layout-schema version plus validator/resolver/renderer support. Manual save and publication authority remain unchanged."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1134
+#: src/Infrastructure/Admin/TemplateAdmin.php:1136
 msgid "Designer boundary:"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1134
+#: src/Infrastructure/Admin/TemplateAdmin.php:1136
 msgid "Technical integrity"
 msgstr ""
 
@@ -18946,16 +19015,16 @@ msgstr ""
 msgid "Select layer. Shift/Ctrl/Cmd-click adds it to the selection."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1150
+#: src/Infrastructure/Admin/TemplateAdmin.php:1152
 msgid "Credential field"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1150
+#: src/Infrastructure/Admin/TemplateAdmin.php:1152
 msgid "Recipient field"
 msgstr ""
 
 #. translators: 1: field ownership, 2: field label.
-#: src/Infrastructure/Admin/TemplateAdmin.php:1151
+#: src/Infrastructure/Admin/TemplateAdmin.php:1153
 msgid "%1$s · %2$s"
 msgstr ""
 
@@ -18963,141 +19032,136 @@ msgstr ""
 msgid "Layer actions"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1173
+#: src/Infrastructure/Admin/TemplateAdmin.php:1175
 #: src/Infrastructure/Admin/TemplateAdmin.php:162
 msgid "Merge field"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1174
-#: src/Infrastructure/Admin/TemplateAdmin.php:94
-msgid "Signature"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1175
+#: src/Infrastructure/Admin/TemplateAdmin.php:1177
 #: src/Infrastructure/Admin/TemplateAdmin.php:98
 msgid "List"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1175
+#: src/Infrastructure/Admin/TemplateAdmin.php:1177
 #: src/Infrastructure/Admin/TemplateAdmin.php:201
 msgid "Rich text"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1177
+#: src/Infrastructure/Admin/TemplateAdmin.php:1179
 msgid "Image asset"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1199
+#: src/Infrastructure/Admin/TemplateAdmin.php:1201
 msgid "On-screen preview"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1199
+#: src/Infrastructure/Admin/TemplateAdmin.php:1201
 msgid "Read-only on-screen sample of this certificate design."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1199
+#: src/Infrastructure/Admin/TemplateAdmin.php:1201
 msgid "Shared layout preview"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1199
+#: src/Infrastructure/Admin/TemplateAdmin.php:1201
 msgid "Template Preview"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1201
+#: src/Infrastructure/Admin/TemplateAdmin.php:1203
 msgid "Production rendering ready"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1203
+#: src/Infrastructure/Admin/TemplateAdmin.php:1205
 msgid "Production downloads unavailable"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1206
+#: src/Infrastructure/Admin/TemplateAdmin.php:1208
 msgid "Preview only:"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1206
+#: src/Infrastructure/Admin/TemplateAdmin.php:1208
 msgid "This screen shows layout, direction, QR, colors and element composition for review. PDF, PNG and JPEG downloads remain unavailable until production rendering checks pass."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1207
+#: src/Infrastructure/Admin/TemplateAdmin.php:1209
 msgid "Canonical Render Plan evidence remains available here for support and release verification. Artifact authority pending means PDF-04 exact renderer/font acceptance has not been approved; this screen never manufactures production artifact authority."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1207
+#: src/Infrastructure/Admin/TemplateAdmin.php:1209
 msgid "Rendering details"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1209
-#: src/Infrastructure/Admin/TemplateAdmin.php:1233
+#: src/Infrastructure/Admin/TemplateAdmin.php:1211
+#: src/Infrastructure/Admin/TemplateAdmin.php:1235
 msgid "Revision"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1209
+#: src/Infrastructure/Admin/TemplateAdmin.php:1211
 msgid "Template Preview revision"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1210
+#: src/Infrastructure/Admin/TemplateAdmin.php:1212
 msgid "Current draft"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1215
+#: src/Infrastructure/Admin/TemplateAdmin.php:1217
 msgid "Template Preview sample data"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1229
+#: src/Infrastructure/Admin/TemplateAdmin.php:1231
 msgid "The canonical Render Plan passed preparation but could not be presented safely in the browser."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1229
+#: src/Infrastructure/Admin/TemplateAdmin.php:1231
 msgid "The design preview could not be shown safely in this browser."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1233
+#: src/Infrastructure/Admin/TemplateAdmin.php:1235
 msgid "Layout SHA-256"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1233
+#: src/Infrastructure/Admin/TemplateAdmin.php:1235
 msgid "Revision and integrity identifiers are available for support and auditing. They are checked automatically when Certloom uses this design."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1236
+#: src/Infrastructure/Admin/TemplateAdmin.php:1238
 msgid "Sample preview data never uses real Recipient records. Use the sample profiles to stress names, organizations, RTL text, long scopes and school results before issuing."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1236
+#: src/Infrastructure/Admin/TemplateAdmin.php:1238
 msgid "Synthetic Preview values never read or mutate credential records. Use the sample profiles to stress names, organizations, RTL text, long scopes and school results without reading real recipient data."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1244
+#: src/Infrastructure/Admin/TemplateAdmin.php:1246
 msgid "Create a separate draft copy of this design. The copy starts unpublished and is not assigned to any Program."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1244
+#: src/Infrastructure/Admin/TemplateAdmin.php:1246
 msgid "Duplicate as a new draft"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1244
+#: src/Infrastructure/Admin/TemplateAdmin.php:1246
 msgid "Duplication copies only the reviewed current revision. It creates a fresh template identity with no published state and no assignments."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1245
+#: src/Infrastructure/Admin/TemplateAdmin.php:1247
 msgid "Create duplicate draft"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1245
+#: src/Infrastructure/Admin/TemplateAdmin.php:1247
 msgid "New machine key"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1245
+#: src/Infrastructure/Admin/TemplateAdmin.php:1247
 msgid "New name"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1253
+#: src/Infrastructure/Admin/TemplateAdmin.php:1255
 #: src/Infrastructure/Admin/TemplateAdmin.php:941
 msgid "Changes pending"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1254
+#: src/Infrastructure/Admin/TemplateAdmin.php:1256
 #: src/Infrastructure/Admin/TemplateAdmin.php:792
 #: src/Infrastructure/Admin/TemplateAdmin.php:840
 #: src/Infrastructure/Admin/TemplateAdmin.php:843
@@ -19110,12 +19174,12 @@ msgstr ""
 msgid "Selection copied."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1266
+#: src/Infrastructure/Admin/TemplateAdmin.php:1268
 msgid "Premium factory designs"
 msgstr ""
 
 #. translators: %1$d: families; %2$d: variants; %3$d: catalog; %4$d: curated; %5$d: curated.
-#: src/Infrastructure/Admin/TemplateAdmin.php:1267
+#: src/Infrastructure/Admin/TemplateAdmin.php:1269
 msgid "%1$d historical design families × %2$d compatibility variants = %3$d preserved layouts, plus %4$d additive curated premium concepts. Total factory drafts after synchronization: %5$d. Factory layouts remain local drafts until the production renderer gate is accepted."
 msgstr ""
 
@@ -19123,36 +19187,36 @@ msgstr ""
 msgid "Selection cut to Designer clipboard."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1271
+#: src/Infrastructure/Admin/TemplateAdmin.php:1273
 msgid "Install / synchronize factory drafts"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1279
-#: src/Infrastructure/Admin/TemplateAdmin.php:764
-msgid "Design name"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1279
-msgid "Optional note about when to use this design"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:128
 msgid "Designer clipboard pasted."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1280
+#: src/Infrastructure/Admin/TemplateAdmin.php:1281
+#: src/Infrastructure/Admin/TemplateAdmin.php:764
+msgid "Design name"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1281
+msgid "Optional note about when to use this design"
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1282
 msgid "Factory design identity is permanent."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1280
+#: src/Infrastructure/Admin/TemplateAdmin.php:1282
 msgid "Stable internal identity used by inheritance, imports and integrations. Leave blank on a new design to generate one automatically."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1283
+#: src/Infrastructure/Admin/TemplateAdmin.php:1285
 msgid "Factory template identity is permanent. Duplicate/export the design for a separately named template."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1283
+#: src/Infrastructure/Admin/TemplateAdmin.php:1285
 msgid "Stable lowercase key used by assignments, imports and future integrations."
 msgstr ""
 
@@ -19160,26 +19224,26 @@ msgstr ""
 msgid "Rename layer"
 msgstr ""
 
+#: src/Infrastructure/Admin/TemplateAdmin.php:130
+msgid "Layer name"
+msgstr ""
+
 #. translators: %s: maximum upload size for this site.
-#: src/Infrastructure/Admin/TemplateAdmin.php:1298
+#: src/Infrastructure/Admin/TemplateAdmin.php:1300
 msgid "Certloom JSON package · up to %s"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1298
+#: src/Infrastructure/Admin/TemplateAdmin.php:1300
 msgid "Choose design package"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1298
+#: src/Infrastructure/Admin/TemplateAdmin.php:1300
 msgid "Import a validated Certloom certificate design package. The imported design is created as a draft and is not assigned anywhere automatically."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1298
-#: src/Infrastructure/Admin/TemplateAdmin.php:1315
+#: src/Infrastructure/Admin/TemplateAdmin.php:1300
+#: src/Infrastructure/Admin/TemplateAdmin.php:1317
 msgid "Import certificate design"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:130
-msgid "Layer name"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:131
@@ -19194,15 +19258,15 @@ msgstr ""
 msgid "Layer name updated for this editor."
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1338
-msgid "Template changes were saved."
-msgstr ""
-
 #: src/Infrastructure/Admin/TemplateAdmin.php:134
 msgid "Hide in editor"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1346
+#: src/Infrastructure/Admin/TemplateAdmin.php:1340
+msgid "Template changes were saved."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1348
 msgid "You are not allowed to manage Certloom templates."
 msgstr ""
 
@@ -23988,24 +24052,24 @@ msgstr ""
 msgid "Certloom could not read the next legacy migration batch."
 msgstr ""
 
-#: src/Infrastructure/Repository/ManualIssuanceRepository.php:29
+#: src/Infrastructure/Repository/ManualIssuanceRepository.php:31
 msgid "Enter a recipient display name up to 255 characters."
 msgstr ""
 
-#: src/Infrastructure/Repository/ManualIssuanceRepository.php:33
+#: src/Infrastructure/Repository/ManualIssuanceRepository.php:35
 #: src/Infrastructure/Repository/RecipientRepository.php:244
 msgid "Recipient names and external IDs must be 191 characters or fewer."
 msgstr ""
 
-#: src/Infrastructure/Repository/ManualIssuanceRepository.php:42
+#: src/Infrastructure/Repository/ManualIssuanceRepository.php:44
 msgid "The selected WordPress account no longer exists."
 msgstr ""
 
-#: src/Infrastructure/Repository/ManualIssuanceRepository.php:47
+#: src/Infrastructure/Repository/ManualIssuanceRepository.php:49
 msgid "That WordPress account is already linked to another Recipient. Choose the existing Recipient instead."
 msgstr ""
 
-#: src/Infrastructure/Repository/ManualIssuanceRepository.php:52
+#: src/Infrastructure/Repository/ManualIssuanceRepository.php:54
 #: src/Infrastructure/Repository/RecipientRepository.php:265
 msgid "Recipient custom fields could not be encoded safely."
 msgstr ""

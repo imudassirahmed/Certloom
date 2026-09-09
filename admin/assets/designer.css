@@ -393,6 +393,9 @@
 	.certloom-template-designer-palette { align-items: stretch; }
 	.certloom-template-designer-palette .button { flex: 1 1 auto; justify-content: center; }
 	.certloom-template-designer-palette-spacer { display: none; }
+	.certloom-template-designer-content-editor .button,
+	.certloom-template-designer-content-editor input,
+	.certloom-template-designer-content-editor select { min-height: 44px; }
 }
 
 
