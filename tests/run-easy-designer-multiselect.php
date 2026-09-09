@@ -7,7 +7,7 @@ use Certloom\Domain\Rendering\ElementRegistry;
 $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'); $js=file_get_contents($root.'/admin/assets/designer.js'); $css=file_get_contents($root.'/admin/assets/designer.css'); $plugin=file_get_contents($root.'/certloom.php');
 $pass=0;$fail=0; function dsx02b($ok,$label){global$pass,$fail;if($ok){$pass++;echo"PASS  $label\n";}else{$fail++;echo"FAIL  $label\n";}}
 
-dsx02b(is_string($admin)&&strpos($admin,'certloom-template-designer-kicker')!==false&&strpos($admin,">' . esc_html__( 'Easy Designer', 'certloom' )")!==false,'Template admin presents customer-facing Easy Designer without an internal milestone label');
+dsx02b(is_string($admin)&&strpos($admin,'certloom-template-designer-v2')!==false&&strpos($admin,'certloom-template-designer-kicker')===false&&strpos($admin,'Easy Designer')===false,'Template admin presents the unified Designer v2 shell without retired Easy Designer/kicker branding');
 dsx02b(strpos($admin,'Shift/Ctrl/Cmd-click to select multiple')!==false,'Easy Designer teaches bounded additive multi-selection');
 dsx02b(strpos($admin,'data-certloom-designer-distribute="horizontal"')!==false&&strpos($admin,'data-certloom-designer-distribute="vertical"')!==false,'Easy Designer exposes deterministic horizontal and vertical distribution');
 dsx02b(strpos($admin,'data-certloom-designer-selection-status')!==false&&strpos($admin,'data-certloom-designer-spacing-status')!==false,'selection count and spacing feedback are visible presentation state');

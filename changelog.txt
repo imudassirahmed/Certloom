@@ -1,3 +1,17 @@
+= 1.7.0-alpha.4 =
+* Start the in-progress Certificate Designer v2 review line with one unified Designer surface; retire customer-facing Quick/Easy/Pro mode switching while preserving the same canonical layout, revision, autosave and renderer authority boundaries.
+* Add the first fixed-shell tranche: compact top toolbar, always-visible Layers/Insert left rail, centre canvas, contextual Properties right rail, internal desktop scrolling and mobile stacking.
+* Keep the proven direct drag/resize/rotate, direct text editing, Smart Guides, multi-select, undo/redo, local Media Library and immutable revision concurrency engines intact behind the rebuilt shell.
+* Adapt legacy Designer regression assertions from retired mode branding to the unified v2 contract without weakening the underlying DSN/DSX capability and safety checks.
+* This alpha.4 package is a **Phase 4 shell review checkpoint only**. Keyboard-shortcut completion, full Layers v2 behavior, remaining canvas interactions, contextual tool coverage, sample-data controls, Schema 4 rich text, signer/Table architecture, real wp-admin no-body-scroll acceptance and user approval remain open. Phase 3 real-world acceptance items also remain open.
+
+= 1.7.0-alpha.3.1 =
+* Replace the WordPress Certloom side-panel mark with the exact user-supplied SVG asset and render it through the native sidebar `currentColor` mask behavior; focused source/browser icon contracts remain green.
+* Keep all six primary Certloom workspaces open for continuous UI review while unsafe authority remains guarded at the action/write boundary.
+* Make completed Setup v2 reopen on the Finish landing with an explicit Run setup again action instead of returning administrators to stale onboarding steps.
+* Update the whole-product first-use Chromium journey to the approved Setup v2 profile-first contract rather than the retired Purpose control.
+* This alpha.3.1 package remains an in-progress review checkpoint. Real standalone first issuance, real WordPress media-modal acceptance, under-three-minute usability acceptance, Phase 2.2 visual approval and user approval remain open.
+
 = 1.7.0-alpha.3 =
 * Add the in-progress Setup Wizard v2 review shell: Welcome → Profile → Organization → Credential fields → Appearance → First credential → Finish.
 * Keep Program, Batch, Issuer and Signer out of the required onboarding path while preserving contextual profile explanations for all nine approved usage profiles.

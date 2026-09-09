@@ -122,6 +122,7 @@
 		var duplicateButton = root.querySelector( '[data-certloom-designer-duplicate]' );
 		var modeButtons = root.querySelectorAll( '[data-certloom-designer-mode-button]' );
 		var previewScrollButton = root.querySelector( '[data-certloom-designer-preview-scroll]' );
+		var insertFocusButton = root.querySelector( '[data-certloom-designer-insert-focus]' );
 		var publicationScrollButton = root.querySelector( '[data-certloom-designer-publication-scroll]' );
 		var layersToggle = root.querySelector( '[data-certloom-designer-layers-toggle]' );
 		var quickTokenSelect = root.querySelector( '[data-certloom-designer-quick-token]' );
@@ -1062,6 +1063,7 @@
 		if ( removeButton ) { removeButton.addEventListener( 'click', removeSelected ); }
 		if ( duplicateButton ) { duplicateButton.addEventListener( 'click', duplicateSelected ); }
 		for ( var modeIndex = 0; modeIndex < modeButtons.length; modeIndex++ ) { modeButtons[ modeIndex ].addEventListener( 'click', function () { applyDesignerMode( this.getAttribute( 'data-certloom-designer-mode-button' ), true ); } ); }
+		if ( insertFocusButton ) { insertFocusButton.addEventListener( 'click', function () { var firstInsert = root.querySelector( '[data-certloom-designer-add]:not([disabled])' ); if ( firstInsert ) { firstInsert.focus(); } } ); }
 		if ( previewScrollButton ) { previewScrollButton.addEventListener( 'click', function () { scrollDesignerTarget( '.certloom-template-preview-card' ); } ); }
 		if ( publicationScrollButton ) { publicationScrollButton.addEventListener( 'click', function () { scrollDesignerTarget( '.certloom-template-publication-card' ); } ); }
 		if ( layersToggle ) { layersToggle.addEventListener( 'click', function () { root.classList.toggle( 'show-quick-layers' ); layersToggle.setAttribute( 'aria-expanded', root.classList.contains( 'show-quick-layers' ) ? 'true' : 'false' ); } ); }

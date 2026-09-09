@@ -65,9 +65,9 @@ u3( false !== strpos( $email, 'certloom-email-review-meta' ) && false !== strpos
 u3( false !== strpos( $template, 'certloom-template-preview-technical' ) && false !== strpos( $template, "'Layout SHA-256', 'certloom'" ) && false !== strpos( $template, "'Render Plan SHA-256', 'certloom'" ), 'Template Preview moves revision/hash evidence into collapsed Technical details' );
 u3( false !== strpos( $css, '.certloom-technical-details' ) && false !== strpos( $css, '.certloom-technical-details>summary:focus-visible' ), 'Technical-details disclosures have an explicit keyboard-visible presentation contract' );
 
-// 8. Completed Wizard is actually complete and restarts explicitly.
-u3( false !== strpos( $wizard, "'Setup complete', 'certloom'" ) && false !== strpos( $wizard, "'Run setup again', 'certloom'" ), 'Completed Setup opens a finished landing with an explicit restart action' );
-u3( false !== strpos( $wizard, '<?php return; endif; ?>' ), 'Completed Setup returns before rendering the seven-step progress/editor again' );
+// 8. Completed Setup v2 defaults to the Finish landing and restarts explicitly without replaying stale required steps.
+u3( false !== strpos( $wizard, "'Setup complete', 'certloom'" ) && false !== strpos( $wizard, "'Run setup again', 'certloom'" ) && false !== strpos( $wizard, 'name="certloom_setup_wizard_action" value="restart"' ), 'Completed Setup v2 opens a finished landing with an explicit restart action' );
+u3( false !== strpos( $admin, "! empty( \$wizard_state['wizard_completed_at'] )" ) && false !== strpos( $admin, "\$wizard_step = 'finish';" ), 'Completed Setup v2 defaults back to Finish unless the administrator explicitly navigates/restarts' );
 
 // Entity pages are list-first and creation is an explicit top-right action.
 foreach ( array( 'Add recipient','Add program','Add issuer' ) as $label ) { u3( false !== strpos( $domain, $label ), 'Domain list provides explicit top-right action: ' . $label ); }

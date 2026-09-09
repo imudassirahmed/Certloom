@@ -9,9 +9,9 @@ use Certloom\Domain\Rendering\ElementRegistry;
 $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'); $js=file_get_contents($root.'/admin/assets/designer.js'); $css=file_get_contents($root.'/admin/assets/designer.css'); $plugin=file_get_contents($root.'/certloom.php');
 $pass=0;$fail=0; function dsx02($ok,$label){global$pass,$fail;if($ok){$pass++;echo"PASS  $label\n";}else{$fail++;echo"FAIL  $label\n";}}
 
-dsx02(is_string($admin)&&strpos($admin,'Easy Designer')!==false,'Template admin retains the Easy Designer product surface');
-dsx02(strpos($admin,'Add or drag content onto the canvas')!==false&&strpos($admin,'edit text directly')!==false&&strpos($admin,'Smart Guides')!==false,'Easy Designer retains direct placement and direct text editing while using customer-facing language');
-dsx02(strpos($admin,'data-designer-default-mode="quick"')!==false&&strpos($admin,'data-designer-safe-margin-mm="10"')!==false,'Easy Designer defaults to Quick with an explicit presentation-only safe margin');
+dsx02(is_string($admin)&&strpos($admin,'certloom-template-designer-v2')!==false&&strpos($admin,'Certificate Designer')!==false&&strpos($admin,'Easy Designer')===false,'Template admin presents the unified Designer v2 product surface without retired Easy Designer branding');
+dsx02(strpos($admin,'Click or drag onto canvas')!==false&&strpos($admin,'data-certloom-designer-content-field="text"')!==false&&strpos($admin,'Smart Guides')!==false,'Designer v2 retains direct placement, direct text editing and Smart Guides in the unified surface');
+dsx02(strpos($admin,'data-designer-default-mode="pro"')!==false&&strpos($admin,'data-designer-safe-margin-mm="10"')!==false&&strpos($admin,'data-certloom-designer-mode-button=')===false,'Designer v2 defaults to the unified precise editor with the existing presentation-only safe margin and no customer mode switch');
 dsx02(strpos($admin,'Smart Guides')!==false&&strpos($admin,'Sticky alignment')!==false&&strpos($admin,'data-certloom-designer-snap')!==false,'Smart Guides are promoted into the Easy Designer toolbar');
 dsx02(strpos($admin,'data-certloom-designer-quick-align')!==false&&substr_count($admin,'data-certloom-designer-align=')>=1,'Quick alignment toolbar reuses canonical page-alignment actions');
 foreach(array('text','image','logo','merge','qr','rectangle','line') as $kind){dsx02(strpos($admin,'data-certloom-designer-add="\' . esc_attr( $kind )')===false || strpos($admin,"draggable=\"true\"")!==false,"Quick $kind can participate in drag placement");}

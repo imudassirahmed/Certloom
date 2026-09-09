@@ -12,6 +12,7 @@ $files = array(
 	'tokens' => $root . '/assets/css/certloom-tokens.css',
 	'foundation' => $root . '/admin/assets/certloom-foundation.css',
 	'menu' => $root . '/admin/assets/menu-icon.css',
+	'menu_asset' => $root . '/admin/assets/certloom-menu-icon.svg',
 	'artifact' => $root . '/public/assets/certloom-artifact-foundation.css',
 	'admin' => $root . '/admin/class-ecapla-certverify-admin.php',
 	'shortcode' => $root . '/includes/class-ecapla-certverify-shortcode.php',
@@ -38,7 +39,9 @@ phase1_assert( false === strpos( $source['artifact'], '!important' ), 'New artif
 phase1_assert( ! preg_match( '/#[0-9a-fA-F]{3,8}\b/', $source['foundation'] ), 'New admin foundation must use tokens instead of raw hex colours.' );
 phase1_assert( ! preg_match( '/#[0-9a-fA-F]{3,8}\b/', $source['artifact'] ), 'New public artifact foundation must use tokens instead of raw hex colours.' );
 phase1_assert( false !== strpos( $source['admin'], "'none',\n\t\t\t30" ) && false === strpos( $source['admin'], "'dashicons-awards',\n\t\t\t30" ), 'WordPress top-level menu must use the Certloom mark rather than the generic award Dashicon.' );
-phase1_assert( false !== strpos( $source['menu'], '#toplevel_page_certloom .wp-menu-image::before' ) && false !== strpos( $source['menu'], 'mask:' ), 'Menu CSS must provide the monochrome Certloom shield/check mask.' );
+phase1_assert( false !== strpos( $source['menu'], '#toplevel_page_certloom .wp-menu-image::before' ) && false !== strpos( $source['menu'], 'mask:' ), 'Menu CSS must provide the Certloom shield/check mask.' );
+phase1_assert( false !== strpos( $source['menu'], 'certloom-menu-icon.svg' ), 'Menu CSS must use the user-supplied Certloom sidebar SVG asset.' );
+phase1_assert( hash( 'sha256', $source['menu_asset'] ) === '24ecb3b540c17a5b1328013819d84bc82facd93c10c4030333ec37bdff57db30', 'WordPress sidebar SVG must match the user-supplied asset bytes.' );
 phase1_assert( false !== strpos( $source['admin'], "'certloom-tokens'" ) && false !== strpos( $source['admin'], "'certloom-admin-foundation'" ), 'Admin must load tokens first and the Phase 1 foundation after legacy admin CSS.' );
 phase1_assert( false !== strpos( $source['shortcode'], "'certloom-artifact-foundation'" ) && false !== strpos( $source['shortcode'], "array( 'certloom-tokens' )" ), 'Public assets must load the token authority and artifact foundation.' );
 phase1_assert( false !== strpos( $source['render'], 'certloom-verdict' ) && false !== strpos( $source['render'], 'certloom-recipient-name' ), 'Public artifact markup must expose verdict and recipient typography roles.' );
@@ -61,4 +64,4 @@ foreach ( $forbidden_manifests as $manifest ) {
 }
 
 echo "PASS  Certloom 1.7 UI Phase 1 design-system contract\n";
-echo "\n24 checks, 0 failures\n";
+echo "\n26 checks, 0 failures\n";

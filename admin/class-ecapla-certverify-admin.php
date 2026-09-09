@@ -1824,7 +1824,9 @@ class Ecapla_CertVerify_Admin {
 		$wizard_engine = new \Certloom\Application\Setup\PurposePresetEngine();
 		$wizard_state = $setup_summary['state'];
 		$wizard_steps = Ecapla_CertVerify_Onboarding::wizard_step_labels();
-		$wizard_step = isset( $_GET['step'] ) ? sanitize_key( wp_unslash( $_GET['step'] ) ) : (string) $wizard_state['wizard_step']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Wizard navigation.
+		$wizard_has_explicit_step = isset( $_GET['step'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Wizard navigation.
+		$wizard_step = $wizard_has_explicit_step ? sanitize_key( wp_unslash( $_GET['step'] ) ) : (string) $wizard_state['wizard_step']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Wizard navigation.
+		if ( ! $wizard_has_explicit_step && ! empty( $wizard_state['wizard_completed_at'] ) ) { $wizard_step = 'finish'; }
 		if ( ! isset( $wizard_steps[ $wizard_step ] ) ) { $wizard_step = 'welcome'; }
 		$wizard_draft = is_array( $wizard_state['wizard_draft'] ) ? $wizard_state['wizard_draft'] : array();
 		$wizard_profiles = $wizard_engine->profiles();

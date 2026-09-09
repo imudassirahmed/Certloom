@@ -48,7 +48,7 @@ plx_check( false !== strpos( $designer_js, 'supported text limit') && false === 
 
 plx_check( false !== strpos( $integrations, 'Only a successfully issued Certloom credential can be published to a destination.' ), 'destination UX describes the issuance boundary in customer language' );
 plx_check( false !== strpos( $integrations, 'Open Credly to review this publication before trying again.') && false !== strpos( $integrations, 'Review reason:' ), 'Credly history gives Simple guidance while preserving Advanced reason evidence' );
-plx_check( false !== strpos( $setup, 'Specialist options stay connected' ) && false !== strpos( $setup, 'More settings or Technical details' ) && false === strpos( $setup, 'Advanced choices stay canonical' ), 'Setup explains progressive disclosure without resurrecting an Advanced workspace' );
+plx_check( false !== strpos( $setup, 'Programs, Batches and Signers are optional power tools, not setup requirements.' ) && false !== strpos( $setup, 'You can change advanced settings later.' ) && false !== strpos( $setup, 'How Certloom organizes this profile' ) && false === strpos( $setup, 'Simple mode' ) && false === strpos( $setup, 'Advanced mode' ), 'Setup v2 explains optional power tools and contextual help without resurrecting a Simple/Advanced workspace split' );
 plx_check( false !== strpos( $scoped, 'Credential field changes are not available on this site yet.' ) && false === strpos( $scoped, 'normalized write authority is ready' ), 'quick field creation reports availability without write-authority jargon' );
 
 $is_qa_flavor = false !== strpos( $plugin, "define( 'CERTLOOM_QA_UNGATED', true )" );

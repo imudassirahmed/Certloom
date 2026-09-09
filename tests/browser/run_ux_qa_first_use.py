@@ -36,16 +36,21 @@ async def main():
         await ck(await page.evaluate('document.documentElement.scrollWidth<=window.innerWidth+1'),'freshDesktopNoOverflow')
         await page.close()
 
-        # 2. Adaptive Wizard: unified essentials-first setup, editable recommendations, protected Program gate.
+        # 2. Setup Wizard v2: profile-first, hierarchy-optional, real-credential path with no hidden records.
         wiz=await b.new_page(viewport={'width':1100,'height':820})
-        await wiz.set_content(build('build_setup_wizard_fixture.php'),wait_until='load')
-        await ck(await wiz.locator('.certloom-wizard-progress-step').count()==7,'wizardSevenSteps')
+        await wiz.set_content(build('build_setup_wizard_fixture.php',{'CERTLOOM_WIZ_STATE':'profile'}),wait_until='load')
+        await ck(await wiz.locator('[data-certloom-setup-v2]').count()==1,'wizardSetupV2Root')
+        await ck(await wiz.locator('.certloom-setup-v2-progress-step').count()==6,'wizardSixDecisionSteps')
         await ck(await wiz.locator('input[name="workspace_mode"]').count()==0,'wizardNoWorkspaceModeChoice')
-        await ck(await wiz.get_by_text('Start with the essentials',exact=True).is_visible(),'wizardEssentialsFirst')
-        await wiz.locator('#certloom-wizard-purpose').select_option('training_courses'); await wiz.wait_for_timeout(30)
-        await ck(await wiz.locator('[data-certloom-wizard-summary-terminology]').inner_text()=='Course','wizardLiveRecommendation')
-        await ck(await wiz.get_by_text('Program creation remains protected',exact=True).is_visible(),'wizardHonestProgramGate')
-        await ck(await wiz.get_by_text('Recommendations are editable starting points, not compliance claims.',exact=True).is_visible(),'wizardNoComplianceClaim')
+        await ck(await wiz.locator('input[name="usage_profile"]').count()==9,'wizardNineProfiles')
+        await ck(await wiz.locator('#certloom-wizard-subcategory').count()==0,'wizardNoSubcategoryDetour')
+        await ck(await wiz.locator('.certloom-setup-v2-model-help').count()==1,'wizardHierarchyHelpAvailable')
+        await wiz.locator('input[name="usage_profile"][value="training_lms"]').check(); await wiz.wait_for_timeout(30)
+        await ck('course' in (await wiz.locator('[data-certloom-hierarchy="program"]').inner_text()).lower(),'wizardTrainingProgramMeaning')
+        await ck('cohort' in (await wiz.locator('[data-certloom-hierarchy="batch"]').inner_text()).lower(),'wizardTrainingBatchMeaning')
+        body=(await wiz.locator('body').inner_text()).lower()
+        await ck('program creation remains protected' not in body,'wizardNoLegacyProgramGateCopy')
+        await ck(await wiz.locator('input[name="program_id"],input[name="batch_id"],input[name="signer_id"]').count()==0,'wizardNoRequiredHierarchyInputs')
         await wiz.close()
 
         # 3. Post-Wizard Dashboard: transactional Wizard completion is the setup completion boundary; optional review checks cannot contradict it.
