@@ -39,7 +39,7 @@ async def main():
         for e in layout['elements']: bytype.setdefault(e['type'],e['id'])
         dock=page.locator('[data-certloom-designer-context-dock]')
         h0=await dock.evaluate('e=>e.getBoundingClientRect().height')
-        await ck(await dock.is_visible() and h0>=140,'contextDockVisibleAndStable')
+        await ck(await dock.is_visible() and 44<=h0<=60,'contextDockVisibleAndCompact')
         await ck(await page.locator('[data-certloom-designer-context-hint]').is_visible(),'contextHintInitiallyVisible')
 
         # text context + canonical style mirror + direct text edit
@@ -132,7 +132,7 @@ async def main():
         await ck(await page.locator('[data-certloom-designer-property-section="geometry"]').is_visible(),'geometryPropertiesVisible')
         await ck(await page.locator('[data-certloom-designer-property-section="content"]').is_visible(),'contentPropertiesVisible')
         await ck(await page.locator('[data-certloom-designer-property-section="appearance"]').is_visible(),'appearancePropertiesVisible')
-        h1=await dock.evaluate('e=>e.getBoundingClientRect().height'); await ck(abs(h1-h0)<3,'contextDockFootprintStable')
+        h1=await dock.evaluate('e=>e.getBoundingClientRect().height'); await ck(abs(h1-h0)<3,'contextDockCompactFootprintStable')
         await ck(await page.locator('[data-certloom-designer-context-group="table"]').count()==0,'tableContextNotFabricated')
 
         mobile=await browser.new_page(viewport={'width':390,'height':844}); mobile.set_default_timeout(4000); await mobile.set_content(html,wait_until='load'); await mobile.wait_for_timeout(180)

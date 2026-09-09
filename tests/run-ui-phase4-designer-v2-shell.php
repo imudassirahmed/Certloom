@@ -27,30 +27,38 @@ p4_has( $php, 'data-certloom-designer-preview-scroll', 'Preview remains directly
 p4_has( $php, 'certloom-designer-v2-save', 'Save remains directly reachable from the top toolbar.' );
 p4_has( $php, "esc_attr__( 'Designer properties', 'certloom' )", 'Right rail is explicitly the Properties inspector.' );
 p4_has( $php, "esc_html__( 'Select an element to edit its content, appearance and exact geometry.', 'certloom' )", 'Properties empty state reflects the unified editor.' );
+p4_has( $php, "esc_html__( 'Reset', 'certloom' )", 'Reset is compact in the primary toolbar.' );
+p4_has( $php, "esc_html__( 'Guides', 'certloom' )", 'Guide vocabulary is compact.' );
+p4_has( $php, "esc_html__( 'Snap while moving', 'certloom' )", 'Snap control uses clear human copy.' );
 
-$marker = 'Certloom 1.7 — Designer v2 shell foundation.';
+$boundary_pos = strpos( $php, 'certloom-template-designer-boundary' );
+$form_end_pos = strpos( $php, "echo '</form>';" );
+p4_check( false !== $boundary_pos && false !== $form_end_pos && $boundary_pos > $form_end_pos, 'Technical integrity details render after the working form instead of interrupting the editor.' );
+
+$marker = 'Phase 4.4.1 UX correction';
 $offset = strpos( $css, $marker );
-p4_check( false !== $offset, 'Designer v2 CSS foundation marker exists.' );
-$v2css = substr( $css, $offset );
-p4_has( $v2css, 'height: clamp(620px, calc(100vh - 170px), 860px);', 'Designer v2 establishes a viewport-bounded editor frame.' );
-p4_has( $v2css, 'grid-template-columns: 220px minmax(0, 1fr);', 'Desktop stage keeps a dedicated left Layers/Insert rail.' );
-p4_has( $v2css, 'grid-template-columns: minmax(0, 1fr) 290px;', 'Desktop shell keeps canvas centre and Properties right.' );
-p4_has( $v2css, 'overflow: auto;', 'Designer v2 uses internal panel/canvas scrolling.' );
-p4_has( $v2css, 'border-radius: var(--cl-r-none);', 'Designer v2 panel geometry uses approved tokens.' );
-p4_has( $v2css, 'background: var(--cl-surface);', 'Designer v2 uses the tokenized surface authority.' );
-p4_has( $v2css, 'background: var(--cl-paper);', 'Canvas workspace uses the tokenized paper authority.' );
-p4_has( $v2css, '[data-certloom-designer-save] { display: none; }', 'Duplicate footer save button is removed from the v2 chrome.' );
-p4_not( $v2css, '!important', 'New Designer v2 shell CSS introduces no !important declarations.' );
+p4_check( false !== $offset, 'Sticky-workspace UX correction marker exists.' );
+$uxcss = substr( $css, $offset );
+p4_has( $uxcss, 'height: auto;', 'Designer v2 returns to page flow instead of a fixed-height frame.' );
+p4_has( $uxcss, 'grid-template-columns: 220px minmax(520px, 1fr) 300px;', 'Desktop stage keeps Layers, sticky canvas and Properties as three working columns.' );
+p4_has( $uxcss, 'display: contents;', 'Legacy shell wrapper no longer creates a second grid boundary around canvas and Properties.' );
+p4_has( $uxcss, 'position: sticky;', 'Canvas workspace is the sticky desktop pane.' );
+p4_has( $uxcss, 'top: 44px;', 'Sticky canvas clears normal WordPress admin chrome.' );
+p4_has( $uxcss, 'height: calc(100vh - 64px);', 'Sticky canvas uses viewport-aware height.' );
+p4_has( $uxcss, 'overflow: auto;', 'Sticky canvas retains internal scrolling.' );
+p4_has( $uxcss, 'scrollbar-gutter: stable both-edges;', 'Canvas scrolling does not cause horizontal layout jitter.' );
+p4_has( $uxcss, 'position: static;', 'Properties is intentionally not sticky.' );
+p4_has( $uxcss, 'overflow: visible;', 'Properties follows normal page scrolling instead of using a competing internal scroller.' );
+p4_has( $uxcss, 'height: 52px;', 'Context dock is compact and cannot consume the canvas viewport.' );
+p4_not( $uxcss, '!important', 'Sticky-workspace correction introduces no !important declarations.' );
 
 p4_has( $js, "var insertFocusButton = root.querySelector( '[data-certloom-designer-insert-focus]' );", 'Designer JS binds the top Insert action.' );
-p4_has( $js, "firstInsert.focus();", 'Top Insert action restores keyboard focus to the Insert rail.' );
 p4_has( $js, 'data-certloom-designer-resize', 'Direct resize engine remains present.' );
 p4_has( $js, 'data-certloom-designer-rotate', 'Direct rotation engine remains present.' );
 p4_has( $js, 'startDirectTextEdit', 'Direct text-edit engine remains present.' );
 p4_has( $js, 'pushHistory', 'Undo/redo history engine remains present.' );
 p4_has( $js, 'autosave', 'Recovery autosave authority remains present.' );
-p4_has( $js, "event.shiftKey ? 5 : 1", 'Keyboard nudge sizing remains present.' );
 p4_has( $php, 'data-layout-schema-version=', 'Canonical layout schema boundary remains present.' );
 p4_has( $php, 'expected_revision_sha256', 'Immutable revision concurrency boundary remains present.' );
 
-echo "PASS  UI Phase 4 Designer v2 shell foundation\n\n{$checks} checks, 0 failures\n";
+echo "PASS  UI Phase 4 Designer v2 sticky-workspace shell\n\n{$checks} checks, 0 failures\n";

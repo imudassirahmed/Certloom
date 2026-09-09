@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.7.0-alpha.4.4
+Stable tag: 1.7.0-alpha.4.4.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,9 +12,9 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> **UI Phase 4 is IN PROGRESS and nothing is frozen.** This installable checkpoint reviews the unified Certificate Designer v2 through its contextual-toolbar + structured-Properties tranche while all unchecked Phase 4 and earlier-phase acceptance items remain open. Phase 2.2 visual approval and Phase 3 real-world acceptance remain deferred/open rather than accepted.
+> **UI Phase 4 is IN PROGRESS and nothing is frozen.** This installable checkpoint corrects the Certificate Designer workspace after direct user review rejected the fixed-height shell. The centre certificate canvas is now the sticky, internally scrollable working pane; Layers and Properties follow normal page flow, and the contextual dock is compact so the canvas cannot be crushed by editor chrome. All unchecked Phase 4 and earlier-phase acceptance items remain open.
 
-> **1.7.0 ALPHA 4.3 — CERTIFICATE DESIGNER V2 CONTEXTUAL TOOLBAR / PROPERTIES REVIEW CHECKPOINT — NOT FOR PRODUCTION.** The unified Designer now mirrors safe high-frequency type-aware controls in one contextual dock while keeping Position & size → Content → Appearance in the canonical Properties inspector. Both surfaces reuse the same element validators, mutation paths, undo history and autosave fingerprint; no second editing, publication, database or renderer authority is introduced. Table/Data Table, remaining Insert/sample-data/canvas work, Schema 4, signer snapshots, final renderer parity and user approval remain open.
+> **1.7.0 ALPHA 4.4.1 — CERTIFICATE DESIGNER STICKY-WORKSPACE REVIEW CHECKPOINT — NOT FOR PRODUCTION.** This patch keeps the alpha.4.4 Insert/sample-data capabilities but replaces the rejected viewport-bounded Designer frame with an Email-Designer-inspired three-column workbench: normal-flow Layers, a sticky centre canvas with its own scrolling, and normal-flow Properties. Technical Integrity is moved below the working form, the empty contextual dock is reduced to a compact lane, and primary toolbar copy is tightened. No artifact, publication, database or renderer authority changes are introduced.
 
 
 > Release note for 1.6.98: UX-CORE turns the accumulated 1.6.98 staging findings into a whole-product workflow redesign rather than another isolated admin patch. Certloom now uses one task-based workspace (Home → Credentials → Programs → Design → Automations → Settings) with progressive disclosure for technical and specialist controls. The normalized Recipient → Program → Credential model, public Credential Profiles, reusable Certificate designs, first-class Email designs, automatic delivery and integrations form one human journey. Certificate designs and Email designs resolve independently through **Global → Issuer → Program → Batch**; Email designs also resolve independently per message purpose. Automations remain downstream delivery rules (when/who/scope/source/timing) and do not own reusable certificate or email appearance. Credential issued is the certified automatic email purpose in this tranche; additional lifecycle purposes can be designed and inherited without being falsely presented as live triggers. Manual, Bulk, Tutor LMS, LearnDash, WooCommerce, Coursera xAPI and generic Webhook/API act as qualification sources that converge on Certloom's canonical issuance service; Email and Credly are post-issuance destinations. Google Drive normally connects through the narrow Ecapla OAuth relay, while a site-owned Google app remains available through specialist configuration. Normalized-domain and renderer production authority remain closed pending the genuine DBAUTH/PDF-04 ceremonies.

@@ -1,3 +1,11 @@
+= 1.7.0-alpha.4.4.1 =
+* User-review correction for Certificate Designer v2: replace the rejected fixed-height editor frame that could crush the real canvas after toolbar/context growth.
+* Make the centre certificate workspace the sticky desktop pane with its own internal scrolling; Layers and Properties now follow normal page flow instead of competing internal/sticky panes.
+* Collapse the empty contextual selection dock to a compact 52px lane, tighten toolbar copy, and move the Technical Integrity disclosure below the working form so advanced diagnostics no longer interrupt the editor.
+* Preserve the existing canonical layout/revision/autosave/renderer boundaries and all alpha.4.4 Insert/sample-data behavior; this is a shell/UX correction, not a schema or publication-authority change.
+* Replace the old fixed-screen/no-body-scroll acceptance with a direct sticky-workspace browser gate at the user-reported 1650×778 viewport, while retaining mobile stacking, accessibility media and previous Designer interaction regressions.
+* Phase 4 remains in progress and user approval remains open. Canvas interaction boxes, Schema 4, signer snapshots, Table/Data Table, final historical/render parity and earlier-phase acceptance are still unresolved.
+
 = 1.7.0-alpha.4.4 =
 * Phase 4 Designer-v2 review checkpoint: complete the Insert experience for every currently supported closed-registry primitive and add the approved eight-profile synthetic sample-data selector directly to the Designer toolbar.
 * Expand deterministic preview stress cases to Normal person, Long name, Very long name, RTL person, Organization, Long organization, Long ISO scope and School result; sample switching is presentation-only and does not mutate certloom-layout, Designer authoring state, undo history, autosave fingerprints or credential data.

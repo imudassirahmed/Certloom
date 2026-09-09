@@ -1224,3 +1224,113 @@
 	.certloom-template-designer-v2 .certloom-template-designer-sample-data select,
 	.certloom-template-designer-v2 [data-certloom-designer-palette-item] { border-color: CanvasText; }
 }
+
+/* Phase 4.4.1 UX correction — page-flow rails with a sticky, internally scrollable canvas.
+ * User review rejected the fixed-height shell because toolbar/context chrome could crush the
+ * certificate workspace. The canvas is now the sticky working surface; Layers/Properties
+ * participate in normal page flow and the contextual dock stays compact. */
+@media (min-width: 901px) {
+	.certloom-template-designer-v2 {
+		height: auto;
+		min-height: 0;
+		overflow: visible;
+	}
+	.certloom-template-designer-v2 [data-certloom-designer-form] {
+		display: block;
+		min-height: 0;
+	}
+	.certloom-template-designer-v2 .certloom-template-designer-toolbar {
+		gap: 6px;
+		margin-top: var(--cl-1);
+		padding: 6px 8px;
+	}
+	.certloom-template-designer-v2 .certloom-template-designer-toolbar select { min-width: 108px; }
+	.certloom-template-designer-v2 .certloom-template-designer-zoom { min-width: 180px; }
+	.certloom-template-designer-v2 .certloom-template-designer-zoom input { width: 136px; }
+	.certloom-template-designer-v2 .certloom-template-designer-snap { min-width: 120px; }
+	.certloom-template-designer-v2 .certloom-template-designer-sample-data { grid-template-columns: auto minmax(120px, 170px); }
+	.certloom-template-designer-v2 .certloom-template-designer-sample-data select { max-width: 170px; }
+	.certloom-template-designer-v2 .certloom-template-designer-context-dock {
+		display: grid;
+		grid-template-rows: minmax(44px, auto);
+		min-height: 52px;
+		height: 52px;
+		margin: var(--cl-2) 0 0;
+		padding: 4px;
+		gap: 0;
+		overflow: hidden;
+	}
+	.certloom-template-designer-v2 .certloom-template-designer-context-hint {
+		grid-row: 1;
+		flex-direction: row;
+		align-items: center;
+		justify-content: flex-start;
+		gap: var(--cl-2);
+		padding: 7px 10px;
+		border: 0;
+		background: transparent;
+		text-align: left;
+	}
+	.certloom-template-designer-v2 .certloom-template-designer-context-hint span {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.certloom-template-designer-v2 .certloom-template-designer-context-dock > .certloom-template-designer-quick-align,
+	.certloom-template-designer-v2 .certloom-template-designer-context-dock > .certloom-template-designer-quick-text,
+	.certloom-template-designer-v2 .certloom-template-designer-context-dock > .certloom-template-designer-context-controls {
+		grid-row: 1;
+		height: 100%;
+		padding: 5px 7px;
+		align-items: center;
+	}
+	.certloom-template-designer-v2 .certloom-template-designer-productivity {
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		overflow-y: hidden;
+		overscroll-behavior-inline: contain;
+		scrollbar-width: thin;
+	}
+	.certloom-template-designer-v2.is-pro-mode .certloom-template-designer-stage {
+		display: grid;
+		grid-template-columns: 220px minmax(520px, 1fr) 300px;
+		align-items: start;
+		gap: var(--cl-2);
+		min-height: 0;
+		padding-top: var(--cl-2);
+	}
+	.certloom-template-designer-v2.is-pro-mode .certloom-template-designer-add-panel {
+		grid-column: 1;
+		max-height: none;
+		overflow: visible;
+	}
+	.certloom-template-designer-v2 .certloom-template-designer-shell {
+		display: contents;
+	}
+	.certloom-template-designer-v2 .certloom-template-designer-workspace {
+		grid-column: 2;
+		position: sticky;
+		top: 44px;
+		align-self: start;
+		box-sizing: border-box;
+		height: calc(100vh - 64px);
+		min-height: 520px;
+		max-height: 840px;
+		overflow: auto;
+		overscroll-behavior: contain;
+		scrollbar-gutter: stable both-edges;
+		z-index: 2;
+	}
+	.certloom-template-designer-v2 .certloom-template-designer-inspector {
+		grid-column: 3;
+		position: static;
+		align-self: start;
+		max-height: none;
+		overflow: visible;
+	}
+}
+@media (min-width: 901px) and (max-width: 1180px) {
+	.certloom-template-designer-v2.is-pro-mode .certloom-template-designer-stage {
+		grid-template-columns: 190px minmax(420px, 1fr) 250px;
+	}
+}

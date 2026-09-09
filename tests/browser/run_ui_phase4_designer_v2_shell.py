@@ -46,20 +46,25 @@ async def main():
           const props=document.querySelector('.certloom-template-designer-inspector').getBoundingClientRect();
           const stage=getComputedStyle(document.querySelector('.certloom-template-designer-stage'));
           const shell=getComputedStyle(document.querySelector('.certloom-template-designer-shell'));
-          return {rootTop:r.top,rootBottom:r.bottom,viewport:innerHeight,docH:document.documentElement.scrollHeight,clientH:document.documentElement.clientHeight,
-            leftX:left.x,canvasX:canvas.x,propsX:props.x,stageCols:stage.gridTemplateColumns,shellCols:shell.gridTemplateColumns,
-            leftOverflow:getComputedStyle(document.querySelector('.certloom-template-designer-add-panel')).overflowY,
-            canvasOverflow:getComputedStyle(document.querySelector('[data-certloom-designer-workspace]')).overflowY,
-            propsOverflow:getComputedStyle(document.querySelector('.certloom-template-designer-inspector')).overflowY};
+          const canvasStyle=getComputedStyle(document.querySelector('[data-certloom-designer-workspace]'));
+          const propsStyle=getComputedStyle(document.querySelector('.certloom-template-designer-inspector'));
+          const leftStyle=getComputedStyle(document.querySelector('.certloom-template-designer-add-panel'));
+          return {rootTop:r.top,rootBottom:r.bottom,rootH:r.height,viewport:innerHeight,docH:document.documentElement.scrollHeight,clientH:document.documentElement.clientHeight,
+            leftX:left.x,canvasX:canvas.x,propsX:props.x,stageCols:stage.gridTemplateColumns,shellDisplay:shell.display,
+            leftOverflow:leftStyle.overflowY,canvasOverflow:canvasStyle.overflowY,propsOverflow:propsStyle.overflowY,
+            canvasPosition:canvasStyle.position,propsPosition:propsStyle.position,canvasHeight:canvas.height};
         }""")
-        await ck(layout['rootBottom'] <= layout['viewport'] + 1, 'desktopShellFitsViewport')
-        await ck(layout['docH'] <= layout['clientH'] + 1, 'desktopFixtureNoBodyScroll')
+        await ck(layout['rootH'] > layout['viewport'], 'desktopDesignerUsesPageFlow')
+        await ck(layout['docH'] > layout['clientH'], 'desktopFixtureAllowsPageScroll')
         await ck(layout['leftX'] < layout['canvasX'] < layout['propsX'], 'leftCanvasPropertiesOrder')
-        await ck(len(layout['stageCols'].split()) >= 2, 'desktopStageColumns')
-        await ck(len(layout['shellCols'].split()) >= 2, 'desktopCanvasPropertiesColumns')
-        await ck(layout['leftOverflow'] in ('auto','scroll'), 'layersInternalScroll')
+        await ck(len(layout['stageCols'].split()) >= 3, 'desktopThreeWorkingColumns')
+        await ck(layout['shellDisplay'] == 'contents', 'legacyShellDoesNotCreateNestedGrid')
+        await ck(layout['leftOverflow'] == 'visible', 'layersFollowPageFlow')
         await ck(layout['canvasOverflow'] in ('auto','scroll'), 'canvasInternalScroll')
-        await ck(layout['propsOverflow'] in ('auto','scroll'), 'propertiesInternalScroll')
+        await ck(layout['propsOverflow'] == 'visible', 'propertiesFollowPageFlow')
+        await ck(layout['canvasPosition'] == 'sticky', 'canvasIsStickyPane')
+        await ck(layout['propsPosition'] == 'static', 'propertiesIsNotStickyPane')
+        await ck(layout['canvasHeight'] >= 700, 'desktopCanvasCannotBeCrushedByToolbarChrome')
 
         first_insert = page.locator('[data-certloom-designer-add]:not([disabled])').first
         await page.locator('[data-certloom-designer-insert-focus]').click(); await page.wait_for_timeout(30)
@@ -112,7 +117,7 @@ async def main():
         print('FAIL  UI Phase 4 Designer v2 shell Chromium: '+', '.join(sorted(set(failed))))
         print(f'\n{checks} checks, {len(set(failed))} failures')
         return 1
-    print('PASS  UI Phase 4 Designer v2 shell Chromium')
+    print('PASS  UI Phase 4 Designer v2 sticky-workspace shell Chromium')
     print(f'\n{checks} checks, 0 failures')
     return 0
 
