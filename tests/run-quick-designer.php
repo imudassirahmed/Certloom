@@ -20,7 +20,7 @@ dsx(strpos($admin,'data-certloom-designer-custom-token')!==false,'custom merge-t
 dsx(strpos($css,'.is-quick-mode .certloom-designer-token-advanced')!==false&&strpos($css,'.certloom-designer-token-advanced.is-custom')!==false&&strpos($css,'.is-pro-mode .certloom-designer-token-advanced')!==false,'Technical field token is progressively disclosed in Quick mode and available in Pro precision controls');
 dsx(strpos($admin,'Choose from Media Library')!==false,'image editing still uses WordPress Media Library');
 dsx(strpos($admin,'certloom-template-designer-layers-primary')!==false&&strpos($admin,'data-certloom-designer-layers-toggle')===false,'Layers are always visible in the Designer v2 left rail');
-dsx(strpos($admin,'certloom-template-designer-geometry-grid certloom-designer-pro-only')!==false&&strpos($admin,"'x' => __( 'X (mm)'")!==false,'exact geometry remains available in the unified Designer v2 Properties inspector');
+dsx(strpos($admin,'data-certloom-designer-property-section="geometry"')!==false&&strpos($admin,'Position & size')!==false&&strpos($admin,'certloom-template-designer-geometry-grid')!==false&&strpos($admin,"'x' => __( 'X (mm)'")!==false,'exact geometry remains available in the unified Designer v2 Properties inspector');
 dsx(strpos($admin,'Controlled styles')!==false&&strpos($admin,'DSN-08 is a closed built-in registry')!==false,'customer styling label is plain-language while the collapsed technical boundary still records DSN-08 integrity');
 dsx(strpos($admin,'certloom_template_revision')!==false&&strpos($admin,'data-certloom-designer-json')!==false,'Quick Designer saves through immutable Template revision action');
 

@@ -10,7 +10,7 @@ $pass=0;$fail=0; function dqa($ok,$label){global$pass,$fail;if($ok){$pass++;echo
 
 dqa(is_string($admin)&&strpos($admin,'Technical integrity')!==false&&strpos($admin,'<details class="certloom-template-designer-boundary"')!==false,'technical registry/authority material is preserved but collapsed by default');
 dqa(strpos($admin,'DSN-08 is a closed built-in registry')!==false,'closed typed registry boundary remains explicit inside technical disclosure');
-dqa(strpos($admin,'data-certloom-designer-quick-align')!==false&&strpos($admin,'Quick alignment and distribution controls')!==false&&strpos($admin,'role="toolbar"')!==false,'Quick Arrange surface remains a dedicated accessible toolbar');
+dqa(strpos($admin,'data-certloom-designer-context-dock')!==false&&strpos($admin,'data-certloom-designer-quick-align')!==false&&strpos($admin,'Context alignment and distribution controls')!==false&&strpos($admin,'role="toolbar"')!==false&&strpos($admin,'Arrange')!==false,'Arrange remains an accessible toolbar inside the unified Designer context dock');
 dqa(strpos($admin,'data-certloom-designer-quick-align role="toolbar"')!==false&&strpos($admin,'data-certloom-designer-quick-align role="toolbar" aria-label=')!==false&&strpos($admin,' hidden>')!==false,'Quick Arrange is initially hidden until a meaningful selection exists');
 dqa(strpos($admin,'data-certloom-designer-distribute-group hidden')!==false,'distribution controls are progressively disclosed instead of occupying idle Quick Designer space');
 dqa(strpos($admin,'Certificate Designer canvas workspace')!==false&&strpos($admin,'Certificate page canvas')!==false,'canvas workspace and page have explicit accessible names');

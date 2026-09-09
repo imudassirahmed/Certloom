@@ -1,3 +1,10 @@
+= 1.7.0-alpha.4.3 =
+* Phase 4 Designer-v2 review checkpoint: expose one stable contextual toolbar for the current element registry while preserving the right Properties inspector as Position & size → Content → Appearance.
+* Mirror text, merge-field, asset, shape, line, QR and barcode high-frequency controls through the same canonical content/style setters, validators, undo history and autosave fingerprint; locked selections disable mutation and ambiguous multi-selection suppresses type-specific context.
+* Keep Replace media on the existing WordPress-local media boundary, direct text editing on the established canvas editor, and QR/barcode source authority fixed; no parallel editor, artifact or renderer authority is added.
+* Add dedicated Phase 4.3 source + Chromium acceptance and correct the Edit-text helper wiring plus fixed-shell contextual-dock shrink behavior found by those gates.
+* This remains a Phase 4 review checkpoint, not Phase 4 completion. Insert/sample-data, remaining canvas requirements, Schema 4 inline fields, signer snapshots, Table/Data Table, final historical/render parity and user approval remain open.
+
 = 1.7.0-alpha.4.2 =
 * Phase 4 Designer-v2 review checkpoint: adds inline layer rename, editor-only layer visibility, and internal multi-selection Copy/Cut/Paste with keyboard and non-keyboard equivalents.
 * Expands non-artifact Designer authoring state to v2 for locks, editor-hidden ids, bounded layer labels, and snapping while keeping certificate layout/render authority unchanged.

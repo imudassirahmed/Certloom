@@ -780,7 +780,8 @@
 .certloom-template-designer-context-hint strong { color: #2c3338; }
 .certloom-template-designer-context-hint[hidden] { display: none !important; }
 .certloom-template-designer-context-dock > .certloom-template-designer-quick-align,
-.certloom-template-designer-context-dock > .certloom-template-designer-quick-text {
+.certloom-template-designer-context-dock > .certloom-template-designer-quick-text,
+.certloom-template-designer-context-dock > .certloom-template-designer-context-controls {
 	min-width: 0;
 	min-height: 0;
 	margin: 0;
@@ -797,9 +798,11 @@
 	-webkit-overflow-scrolling: touch;
 }
 .certloom-template-designer-context-dock > .certloom-template-designer-quick-align { grid-row: 1; }
-.certloom-template-designer-context-dock > .certloom-template-designer-quick-text { grid-row: 2; }
+.certloom-template-designer-context-dock > .certloom-template-designer-quick-text,
+.certloom-template-designer-context-dock > .certloom-template-designer-context-controls { grid-row: 2; }
 .certloom-template-designer-context-dock > .certloom-template-designer-quick-align > *,
-.certloom-template-designer-context-dock > .certloom-template-designer-quick-text > * { flex: 0 0 auto; }
+.certloom-template-designer-context-dock > .certloom-template-designer-quick-text > *,
+.certloom-template-designer-context-dock > .certloom-template-designer-context-controls > * { flex: 0 0 auto; }
 @media (max-width: 782px) {
 	.certloom-template-designer-context-dock { height: 170px; grid-template-rows: repeat(2, 74px); }
 	.certloom-template-designer-context-dock > .certloom-template-designer-quick-align,
@@ -1115,4 +1118,68 @@
 	grid-column: 1 / -1;
 	min-width: 0;
 	position: relative;
+}
+
+/* Certloom 1.7 Phase 4.3 — unified contextual toolbar + structured Properties. */
+.certloom-template-designer-v2 .certloom-template-designer-context-controls {
+	grid-row: 2;
+	display: flex;
+	align-items: center;
+	gap: var(--cl-s-2);
+	min-width: 0;
+	min-height: 0;
+	margin: 0;
+	padding: var(--cl-s-2);
+	border: 1px solid var(--cl-rule);
+	background: var(--cl-surface);
+	overflow-x: auto;
+	overflow-y: hidden;
+	contain: layout paint;
+	overscroll-behavior-inline: contain;
+}
+.certloom-template-designer-v2 .certloom-template-designer-context-controls[hidden] { display: none; }
+.certloom-template-designer-v2 .certloom-template-designer-context-controls > * { flex: 0 0 auto; }
+.certloom-template-designer-v2 .certloom-template-designer-context-controls label {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--cl-s-1);
+	white-space: nowrap;
+}
+.certloom-template-designer-v2 .certloom-template-designer-context-controls input[type="text"] { width: 108px; }
+.certloom-template-designer-v2 .certloom-template-designer-context-controls input[type="number"] { width: 82px; }
+.certloom-template-designer-v2 .certloom-template-designer-context-controls .description {
+	color: var(--cl-ink-soft);
+	white-space: nowrap;
+}
+.certloom-template-designer-v2 .certloom-template-designer-property-section {
+	padding-block: var(--cl-s-3);
+	border-bottom: 1px solid var(--cl-rule);
+}
+.certloom-template-designer-v2 .certloom-template-designer-property-section:last-of-type { border-bottom: 0; }
+.certloom-template-designer-v2 .certloom-template-designer-property-section > h4,
+.certloom-template-designer-v2 .certloom-template-designer-property-section .certloom-template-designer-style-head h4 {
+	margin: 0 0 var(--cl-s-2);
+	color: var(--cl-ink);
+	font-size: var(--cl-t-sm);
+}
+@media (max-width: 782px) {
+	.certloom-template-designer-v2 .certloom-template-designer-context-controls .button,
+	.certloom-template-designer-v2 .certloom-template-designer-context-controls select,
+	.certloom-template-designer-v2 .certloom-template-designer-context-controls input { min-height: 44px; }
+}
+@media (forced-colors: active) {
+	.certloom-template-designer-v2 .certloom-template-designer-context-controls,
+	.certloom-template-designer-v2 .certloom-template-designer-property-section { border-color: CanvasText; }
+}
+
+/* Phase 4.3 fixed-shell safety: the contextual dock keeps its reserved footprint. */
+.certloom-template-designer-v2 .certloom-template-designer-context-dock {
+	flex: 0 0 150px;
+	height: 150px;
+}
+@media (max-width: 782px) {
+	.certloom-template-designer-v2 .certloom-template-designer-context-dock {
+		flex-basis: 170px;
+		height: 170px;
+	}
 }

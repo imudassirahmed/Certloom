@@ -136,6 +136,10 @@
 		var distributeButtons = root.querySelectorAll( '[data-certloom-designer-distribute]' );
 		var quickArrangeBar = root.querySelector( '[data-certloom-designer-quick-align]' );
 		var contextHint = root.querySelector( '[data-certloom-designer-context-hint]' );
+		var contextGroups = root.querySelectorAll( '[data-certloom-designer-context-group]' );
+		var contextEditTextButton = root.querySelector( '[data-certloom-designer-context-edit-text]' );
+		var contextTokenWrap = root.querySelector( '[data-certloom-designer-context-token-wrap]' );
+		var contextTokenSelect = root.querySelector( '[data-certloom-designer-context-token]' );
 		var distributionGroup = root.querySelector( '[data-certloom-designer-distribute-group]' );
 		var selectionStatus = root.querySelector( '[data-certloom-designer-selection-status]' );
 		var spacingStatus = root.querySelector( '[data-certloom-designer-spacing-status]' );
@@ -147,7 +151,7 @@
 		var quickTextAlignButtons = root.querySelectorAll( '[data-certloom-designer-quick-text-align]' );
 		var colorPicker = root.querySelector( '[data-certloom-designer-color-picker]' );
 		var colorTextField = root.querySelector( '[data-certloom-designer-style-field="color"]' );
-		var mediaButton = root.querySelector( '[data-certloom-designer-media]' );
+		var mediaButtons = root.querySelectorAll( '[data-certloom-designer-media], [data-certloom-designer-context-media]' );
 		var recoveryField = root.querySelector( '[data-certloom-designer-recovery-json]' );
 		var recoveryStateField = root.querySelector( '[data-certloom-designer-recovery-state-json]' );
 		var autosaveStatusEl = root.querySelector( '[data-certloom-designer-autosave-status]' );
@@ -435,7 +439,7 @@
 			if ( copyButton ) { copyButton.disabled = ! selection.length; }
 			if ( cutButton ) { cutButton.disabled = ! selection.length || groupLocked; }
 			if ( pasteButton ) { pasteButton.disabled = ! designerClipboard.length || elements().length + designerClipboard.length > 500; }
-			syncSelectionStatus(); syncQuickTextControls();
+			syncSelectionStatus(); syncQuickTextControls(); syncContextGroups();
 		}
 		function contentGroup( element ) {
 			var definition = element ? registryType( element.type ) : null;
@@ -456,6 +460,17 @@
 			var selection = selectedElements(); if ( 1 !== selection.length ) { return null; }
 			var definition = registryType( selection[ 0 ].type ); return definition && 'text' === definition.style_group ? selection[ 0 ] : null;
 		}
+		function syncContextGroups() {
+			var selection = selectedElements(); var element = selected(); var locked = isLocked( element );
+			for ( var i = 0; i < contextGroups.length; i++ ) { contextGroups[ i ].hidden = true; }
+			if ( contextEditTextButton ) { contextEditTextButton.hidden = ! element || 'text' !== element.type; contextEditTextButton.disabled = ! element || locked || 'text' !== element.type; }
+			if ( contextTokenWrap ) { contextTokenWrap.hidden = ! element || 'merge' !== element.type; }
+			if ( contextTokenSelect ) { contextTokenSelect.disabled = ! element || locked || 'merge' !== element.type; if ( element && 'merge' === element.type ) { var token = String( element.token || 'recipient.name' ); var option = contextTokenSelect.querySelector( 'option[value="' + token.replace( /"/g, '\\"' ) + '"]' ); contextTokenSelect.value = option ? token : 'recipient.name'; } }
+			if ( 1 !== selection.length || ! element ) { return; }
+			var group = contentGroup( element );
+			for ( var j = 0; j < contextGroups.length; j++ ) { if ( contextGroups[ j ].getAttribute( 'data-certloom-designer-context-group' ) === group ) { contextGroups[ j ].hidden = false; } }
+		}
+
 		function syncQuickTextControls() {
 			if ( ! quickTextBar ) { return; }
 			var element = textStyleElement(); var locked = isLocked( element ); quickTextBar.hidden = ! element;
@@ -526,7 +541,7 @@
 				colorPicker.value = inspectorColor ? inspectorColor.slice( 0, 7 ) : '#000000';
 				colorPicker.disabled = locked || ! elementDefinition || 'text' !== elementDefinition.style_group;
 			}
-			if ( mediaButton ) { mediaButton.disabled = locked || ! elementDefinition || ! elementDefinition.media; }
+			for ( var mediaIndex = 0; mediaIndex < mediaButtons.length; mediaIndex++ ) { mediaButtons[ mediaIndex ].disabled = locked || ! elementDefinition || ! elementDefinition.media; }
 			syncQuickToken();
 			syncProductivityControls();
 		}
@@ -1211,10 +1226,12 @@
 		for ( var contentIndex = 0; contentIndex < contentFields.length; contentIndex++ ) { contentFields[ contentIndex ].addEventListener( 'change', function () { applyContentField( this ); } ); }
 		for ( var styleIndex = 0; styleIndex < styleFields.length; styleIndex++ ) { styleFields[ styleIndex ].addEventListener( 'change', function () { applyStyleField( this ); } ); }
 		for ( var quickStyleIndex = 0; quickStyleIndex < quickStyleFields.length; quickStyleIndex++ ) { quickStyleFields[ quickStyleIndex ].addEventListener( 'change', function () { applyQuickStyleValue( this.getAttribute( 'data-certloom-designer-quick-style' ), this.value ); } ); }
+		if ( contextEditTextButton ) { contextEditTextButton.addEventListener( 'click', function () { var element = selected(); if ( element && 'text' === element.type && ! isLocked( element ) ) { startDirectTextEdit( element.id ); } } ); }
+		if ( contextTokenSelect ) { contextTokenSelect.addEventListener( 'change', function () { var element = selected(); if ( ! element || 'merge' !== element.type || isLocked( element ) ) { setInspector(); return; } var token = String( contextTokenSelect.value || '' ); if ( knownQuickTokens().indexOf( token ) === -1 && !/^[a-z][a-z0-9_.:-]{0,127}$/.test( token ) ) { setInspector(); return; } var before = snapshot(); var proposed = clone( element ); proposed.token = token; if ( updateElement( element.id, proposed, false ) ) { pushHistory( before ); render(); announce( t( 'dynamicFieldUpdated', 'Dynamic field updated.' ) ); } } ); }
 		for ( var quickToggleIndex = 0; quickToggleIndex < quickToggleButtons.length; quickToggleIndex++ ) { quickToggleButtons[ quickToggleIndex ].addEventListener( 'click', function () { var key = this.getAttribute( 'data-certloom-designer-quick-toggle' ); if ( 'bold' === key ) { applyQuickStyleValue( 'font_weight', 'true' === this.getAttribute( 'aria-pressed' ) ? 400 : 700 ); } if ( 'italic' === key ) { applyQuickStyleValue( 'italic', 'true' !== this.getAttribute( 'aria-pressed' ) ); } } ); }
 		for ( var quickAlignIndex = 0; quickAlignIndex < quickTextAlignButtons.length; quickAlignIndex++ ) { quickTextAlignButtons[ quickAlignIndex ].addEventListener( 'click', function () { applyQuickStyleValue( 'align', this.getAttribute( 'data-certloom-designer-quick-text-align' ) ); } ); }
 		if ( colorPicker && colorTextField ) { colorPicker.addEventListener( 'change', function () { if ( colorPicker.disabled ) { return; } colorTextField.value = String( colorPicker.value || '#000000' ).toUpperCase(); applyStyleField( colorTextField ); } ); }
-		if ( mediaButton ) { mediaButton.addEventListener( 'click', function () { var element = selected(); if ( ! element || isLocked( element ) || [ 'image', 'logo', 'signature' ].indexOf( element.type ) === -1 ) { return; } mediaFrame( function ( reference ) { var current = selected(); if ( ! current || isLocked( current ) ) { return; } var before = snapshot(); var proposed = clone( current ); proposed.asset = reference; if ( updateElement( current.id, proposed, false ) ) { pushHistory( before ); render(); announce( t( 'assetUpdated', 'Image updated.' ) ); } } ); } ); }
+		for ( var mediaButtonIndex = 0; mediaButtonIndex < mediaButtons.length; mediaButtonIndex++ ) { mediaButtons[ mediaButtonIndex ].addEventListener( 'click', function () { var element = selected(); if ( ! element || isLocked( element ) || [ 'image', 'logo', 'signature' ].indexOf( element.type ) === -1 ) { return; } mediaFrame( function ( reference ) { var current = selected(); if ( ! current || isLocked( current ) ) { return; } var before = snapshot(); var proposed = clone( current ); proposed.asset = reference; if ( updateElement( current.id, proposed, false ) ) { pushHistory( before ); render(); announce( t( 'assetUpdated', 'Image updated.' ) ); } } ); } ); }
 		if ( resetButton ) { resetButton.addEventListener( 'click', function () { if ( directTextEditor ) { closeDirectTextEditor( false ); } layout = clone( savedLayout ); designerState = clone( savedState ); selectOnly( '' ); history = []; future = []; activeGuides = { x: null, y: null }; render(); fitWorkspace( true ); discardAutosave( false ); announce( t( 'unsavedChangesReset', 'Unsaved design changes reset.' ) ); } ); }
 		if ( autosaveDiscardButton ) { autosaveDiscardButton.addEventListener( 'click', function () { discardAutosave( true ); } ); }
 		for ( var fieldIndex = 0; fieldIndex < fieldInputs.length; fieldIndex++ ) {
