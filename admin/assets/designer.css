@@ -1183,3 +1183,44 @@
 		height: 170px;
 	}
 }
+
+/* Phase 4.4 — compact Insert palette + non-artifact sample-data selector. */
+.certloom-template-designer-v2 .certloom-template-designer-sample-data {
+	display: grid;
+	grid-template-columns: auto minmax(130px, 190px);
+	align-items: center;
+	gap: 2px 7px;
+	min-width: 0;
+}
+.certloom-template-designer-v2 .certloom-template-designer-sample-data > span {
+	font-size: var(--cl-t-xs);
+	font-weight: 700;
+	color: var(--cl-ink-soft);
+}
+.certloom-template-designer-v2 .certloom-template-designer-sample-data select { min-width: 0; max-width: 190px; }
+.certloom-template-designer-v2 .certloom-template-designer-sample-data small {
+	grid-column: 2;
+	font-size: 10px;
+	line-height: 1.2;
+	color: var(--cl-ink-soft);
+}
+.certloom-template-designer-v2.is-pro-mode .certloom-template-designer-palette {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.certloom-template-designer-v2.is-pro-mode .certloom-template-designer-palette .button[data-certloom-designer-palette-item] {
+	min-width: 0;
+	white-space: normal;
+	line-height: 1.2;
+}
+.certloom-template-designer-v2 [data-certloom-designer-palette-item][draggable="true"] { cursor: grab; }
+.certloom-template-designer-v2 [data-certloom-designer-palette-item][draggable="true"]:active { cursor: grabbing; }
+@media (max-width: 782px) {
+	.certloom-template-designer-v2 .certloom-template-designer-sample-data { grid-template-columns: 1fr; }
+	.certloom-template-designer-v2 .certloom-template-designer-sample-data small { grid-column: 1; }
+	.certloom-template-designer-v2 .certloom-template-designer-sample-data select { min-height: 44px; max-width: none; width: 100%; }
+	.certloom-template-designer-v2.is-pro-mode .certloom-template-designer-palette .button[data-certloom-designer-palette-item] { min-height: 44px; }
+}
+@media (forced-colors: active) {
+	.certloom-template-designer-v2 .certloom-template-designer-sample-data select,
+	.certloom-template-designer-v2 [data-certloom-designer-palette-item] { border-color: CanvasText; }
+}

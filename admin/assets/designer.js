@@ -14,6 +14,7 @@
 	function deepFreeze( value ) { if ( ! value || 'object' !== typeof value || Object.isFrozen( value ) ) { return value; } Object.freeze( value ); Object.keys( value ).forEach( function ( key ) { deepFreeze( value[ key ] ); } ); return value; }
 	var ELEMENT_REGISTRY = deepFreeze( registrySnapshot( window.certloomTemplateElementRegistry ) );
 	var FONT_CATALOG = deepFreeze( registrySnapshot( window.certloomTemplateFontCatalog ) );
+	var SAMPLE_DATA = deepFreeze( registrySnapshot( window.certloomTemplateDesignerSamples ) );
 	var PAGE_DIMENSIONS = {
 		A4: { portrait: [ 210, 297 ], landscape: [ 297, 210 ] },
 		Letter: { portrait: [ 215.9, 279.4 ], landscape: [ 279.4, 215.9 ] }
@@ -97,6 +98,7 @@
 		var orientationControl = root.querySelector( '[data-certloom-designer-orientation]' );
 		var zoomControl = root.querySelector( '[data-certloom-designer-zoom]' );
 		var zoomOutput = root.querySelector( '[data-certloom-designer-zoom-output]' );
+		var sampleDataControl = root.querySelector( '[data-certloom-designer-sample-data]' );
 		var fitButton = root.querySelector( '[data-certloom-designer-fit]' );
 		var trueSizeButton = root.querySelector( '[data-certloom-designer-true-size]' );
 		var resetButton = root.querySelector( '[data-certloom-designer-reset]' );
@@ -197,6 +199,7 @@
 		var designerClipboard = [];
 		var designerClipboardLabels = {};
 		var renamingLayerId = '';
+		var activeSampleProfile = sampleDataControl && sampleDataControl.value ? String( sampleDataControl.value ) : ( SAMPLE_DATA.default || 'standard' );
 
 		function rememberedDesignerMode() {
 			var fallback = root.getAttribute( 'data-designer-default-mode' ) || 'pro';
@@ -446,9 +449,12 @@
 			return definition && definition.content_group ? definition.content_group : '';
 		}
 		function knownQuickTokens() { return [ 'recipient.name', 'credential.display_number', 'program.name', 'credential.issue_date', 'credential.expiry_date', 'credential.grade', 'issuer.name', 'credential.status' ]; }
+		function sampleProfileDefinition() { return SAMPLE_DATA && SAMPLE_DATA.profiles && SAMPLE_DATA.profiles[ activeSampleProfile ] ? SAMPLE_DATA.profiles[ activeSampleProfile ] : ( SAMPLE_DATA && SAMPLE_DATA.profiles ? SAMPLE_DATA.profiles[ SAMPLE_DATA.default || 'standard' ] : null ); }
 		function dynamicFieldSample( token ) {
-			var samples = { 'recipient.name': t( 'sampleRecipientName', 'Alexandria Noor Rahman' ), 'credential.display_number': t( 'sampleCertificateNumber', 'CERT-2026-001' ), 'program.name': t( 'sampleProgramName', 'Professional Credential Program' ), 'credential.issue_date': t( 'sampleIssueDate', '28 August 2026' ), 'credential.expiry_date': t( 'sampleExpiryDate', '28 August 2027' ), 'credential.grade': t( 'sampleGrade', 'A' ), 'issuer.name': t( 'sampleIssuerName', 'Northstar Learning Institute' ), 'credential.status': t( 'sampleStatus', 'Valid' ) };
-			return Object.prototype.hasOwnProperty.call( samples, token ) ? samples[ token ] : '{{ ' + escapeText( token ) + ' }}';
+			var profile = sampleProfileDefinition(); var samples = profile && profile.values && 'object' === typeof profile.values ? profile.values : {};
+			if ( Object.prototype.hasOwnProperty.call( samples, token ) ) { return String( samples[ token ] ); }
+			var label = String( token || '' ).replace( /[^a-z0-9]+/gi, ' ' ).replace( /\s+/g, ' ' ).trim();
+			return t( 'sampleFallbackPrefix', 'Sample' ) + ( label ? ' · ' + label : '' );
 		}
 		function syncQuickToken() {
 			if ( ! quickTokenSelect || ! rawTokenInput ) { return; }
@@ -549,9 +555,9 @@
 		function elementTitle( element ) {
 			var preview = previewKind( element );
 			if ( 'text' === preview ) { return escapeText( element.text ); }
-			if ( 'merge' === preview ) { return 'quick' === designerMode ? dynamicFieldSample( String( element.token || '' ) ) : '{{ ' + escapeText( element.token ) + ' }}'; }
+			if ( 'merge' === preview ) { return dynamicFieldSample( String( element.token || '' ) ); }
 			if ( 'qr' === preview ) { return t( 'qr', 'QR' ); }
-			if ( 'barcode' === preview ) { return t( 'barcode', 'Barcode' ) + ' · ' + escapeText( element.source || 'credential.display_number' ); }
+			if ( 'barcode' === preview ) { return t( 'barcode', 'Barcode' ) + ' · ' + dynamicFieldSample( String( element.source || 'credential.display_number' ) ); }
 			if ( 'list' === preview ) { return t( 'list', 'List' ) + ' · ' + ( Array.isArray( element.items ) ? element.items.length : 0 ) + ' ' + t( 'items', 'items' ); }
 			if ( 'shape' === preview ) { return escapeText( element.shape || t( 'shape', 'Shape' ) ); }
 			if ( 'line' === preview ) { return t( 'line', 'Line' ); }
@@ -1232,6 +1238,10 @@
 		for ( var quickAlignIndex = 0; quickAlignIndex < quickTextAlignButtons.length; quickAlignIndex++ ) { quickTextAlignButtons[ quickAlignIndex ].addEventListener( 'click', function () { applyQuickStyleValue( 'align', this.getAttribute( 'data-certloom-designer-quick-text-align' ) ); } ); }
 		if ( colorPicker && colorTextField ) { colorPicker.addEventListener( 'change', function () { if ( colorPicker.disabled ) { return; } colorTextField.value = String( colorPicker.value || '#000000' ).toUpperCase(); applyStyleField( colorTextField ); } ); }
 		for ( var mediaButtonIndex = 0; mediaButtonIndex < mediaButtons.length; mediaButtonIndex++ ) { mediaButtons[ mediaButtonIndex ].addEventListener( 'click', function () { var element = selected(); if ( ! element || isLocked( element ) || [ 'image', 'logo', 'signature' ].indexOf( element.type ) === -1 ) { return; } mediaFrame( function ( reference ) { var current = selected(); if ( ! current || isLocked( current ) ) { return; } var before = snapshot(); var proposed = clone( current ); proposed.asset = reference; if ( updateElement( current.id, proposed, false ) ) { pushHistory( before ); render(); announce( t( 'assetUpdated', 'Image updated.' ) ); } } ); } ); }
+		if ( sampleDataControl ) { sampleDataControl.addEventListener( 'change', function () {
+			var requested = String( sampleDataControl.value || '' ); if ( ! SAMPLE_DATA.profiles || ! SAMPLE_DATA.profiles[ requested ] ) { sampleDataControl.value = SAMPLE_DATA.default || 'standard'; requested = String( sampleDataControl.value || 'standard' ); }
+			activeSampleProfile = requested; render(); announce( t( 'sampleDataChanged', 'Designer sample data changed. Saved certificate data is unchanged.' ) );
+		} ); }
 		if ( resetButton ) { resetButton.addEventListener( 'click', function () { if ( directTextEditor ) { closeDirectTextEditor( false ); } layout = clone( savedLayout ); designerState = clone( savedState ); selectOnly( '' ); history = []; future = []; activeGuides = { x: null, y: null }; render(); fitWorkspace( true ); discardAutosave( false ); announce( t( 'unsavedChangesReset', 'Unsaved design changes reset.' ) ); } ); }
 		if ( autosaveDiscardButton ) { autosaveDiscardButton.addEventListener( 'click', function () { discardAutosave( true ); } ); }
 		for ( var fieldIndex = 0; fieldIndex < fieldInputs.length; fieldIndex++ ) {

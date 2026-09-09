@@ -1,3 +1,11 @@
+= 1.7.0-alpha.4.4 =
+* Phase 4 Designer-v2 review checkpoint: complete the Insert experience for every currently supported closed-registry primitive and add the approved eight-profile synthetic sample-data selector directly to the Designer toolbar.
+* Expand deterministic preview stress cases to Normal person, Long name, Very long name, RTL person, Organization, Long organization, Long ISO scope and School result; sample switching is presentation-only and does not mutate certloom-layout, Designer authoring state, undo history, autosave fingerprints or credential data.
+* Allow click/drag placement for all schema-supported current registry primitives while preserving schema gates, the 500-element ceiling, WordPress-local PNG/JPEG Media Library identity and the existing canonical element mutation/validation path.
+* Keep Table/Data Table absent until its separate schema/validator/resolver/renderer architecture exists; this checkpoint does not fabricate a Table type or production renderer/domain authority.
+* Add dedicated Phase 4.4 source + Chromium acceptance and update the legacy Template Preview certification from the retired three-profile wording to the eight-profile deterministic stress contract.
+* Phase 4 remains in progress. Remaining canvas interactions, Schema 4 rich inline fields, signer snapshots, Table/Data Table, final historical/render parity and user approval remain open.
+
 = 1.7.0-alpha.4.3 =
 * Phase 4 Designer-v2 review checkpoint: expose one stable contextual toolbar for the current element registry while preserving the right Properties inspector as Position & size → Content → Appearance.
 * Mirror text, merge-field, asset, shape, line, QR and barcode high-frequency controls through the same canonical content/style setters, validators, undo history and autosave fingerprint; locked selections disable mutation and ambiguous multi-selection suppresses type-specific context.

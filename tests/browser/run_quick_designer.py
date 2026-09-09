@@ -74,7 +74,7 @@ async def main():
         raw_layout=json.loads(await page.locator('[data-certloom-designer-json]').input_value())
         # Hidden field serializes on submit only, so inspect selected quick text and raw input now.
         await ck((await raw.input_value())=='custom.grade','customTokenInput')
-        await ck('{{ custom.grade }}' in ((await page.locator('[data-certloom-designer-element].is-selected').text_content()) or ''),'customFallbackPresentation')
+        await ck('Sample · custom grade' in ((await page.locator('[data-certloom-designer-element].is-selected').text_content()) or ''),'customFallbackPresentation')
 
         # Duplicate retains canonical data but gets a secure new id and remains undoable.
         selected_id=await page.locator('[data-certloom-designer-element].is-selected').get_attribute('data-certloom-designer-element')
@@ -102,7 +102,7 @@ async def main():
         await ck(not await page.locator('[data-certloom-designer-preview-scroll]').is_visible(),'quickPreviewHiddenPro')
         # Pro representation exposes technical token without losing it.
         pro_text=(await page.locator('[data-certloom-designer-element].is-selected').text_content()) or ''
-        await ck('{{ custom.grade }}' in pro_text,'proTechnicalToken')
+        await ck('Sample · custom grade' in pro_text,'proSamplePresentation')
 
         # Return to Quick and verify compact scroll actions are wired to existing surfaces.
         await page.locator('[data-certloom-designer-mode-button="quick"]').click(); await page.wait_for_timeout(50)

@@ -6,6 +6,7 @@ require_once dirname(__DIR__) . '/bootstrap-autoload.php';
 use Certloom\Application\Rendering\CanonicalJson;
 use Certloom\Application\Rendering\DesignerFontCatalog;
 use Certloom\Application\Templates\PresetCatalog;
+use Certloom\Application\Templates\TemplatePreviewSamples;
 use Certloom\Domain\Rendering\ElementRegistry;
 $requested_schema_version = (int) getenv( 'CERTLOOM_DESIGNER_SCHEMA_VERSION' );
 $schema_version = in_array( $requested_schema_version, array( 1, 2, 3 ), true ) ? $requested_schema_version : 1;
@@ -30,6 +31,7 @@ $fixture_labels = array( 'text'=>'Text','mergeField'=>'Merge field','image'=>'Im
 if ( '1' === (string) getenv( 'CERTLOOM_DESIGNER_REGISTRY_CORRUPT' ) ) { $registry['contract_version'] = 999; }
 $registry_json = json_encode( $registry, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 $font_catalog_json = json_encode( ( new DesignerFontCatalog() )->browser_contract(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+$sample_data_json = json_encode( ( new TemplatePreviewSamples() )->browser_contract(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 if ( ! is_string( $registry_json ) ) { throw new RuntimeException( 'Designer registry fixture is unavailable.' ); }
 $extra = 'body{margin:0;padding:16px;background:#f6f7f7;font-family:system-ui,sans-serif}.button{display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:4px 10px;border:1px solid #2271b1;border-radius:4px;background:#fff;color:#0a4b78}.button-primary{background:#2271b1;color:#fff}.button:disabled{opacity:.5}.notice{padding:8px 12px}.description{color:#646970}select,input{min-height:30px}.screen-reader-text{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}';
 ?><!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style><?php echo $extra . $css; ?></style></head><body>
@@ -44,7 +46,7 @@ $extra = 'body{margin:0;padding:16px;background:#f6f7f7;font-family:system-ui,sa
 <pre id="certloom-browser-result"></pre>
 <script>window.wp={media:function(){var handlers={};return{on:function(name,cb){handlers[name]=cb;},open:function(){if(handlers.select){handlers.select();}},state:function(){return{get:function(){return{first:function(){return{toJSON:function(){return{id:321,type:'image',mime:(window.__certloomMediaMime||'image/png')};}};}};}};}};}};</script>
 <script>window.__certloomAutosaveRequests=[];window.__certloomAutosaveMode='success';window.fetch=function(url,opts){var entries={};if(opts&&opts.body&&opts.body.forEach){opts.body.forEach(function(v,k){entries[k]=v;});}window.__certloomAutosaveRequests.push(entries);var conflict='conflict'===window.__certloomAutosaveMode&&'certloom_template_designer_autosave'===entries.action;var payload=conflict?{success:false,data:{code:'certloom_designer_autosave_conflict',message:'conflict'}}:{success:true,data:{status:'saved',saved_at_gmt:'2026-08-27 00:00:00'}};return Promise.resolve({status:conflict?409:200,json:function(){return Promise.resolve(payload);}});};</script>
-<script>window.certloomTemplateElementRegistry=<?php echo $registry_json; ?>;window.certloomTemplateFontCatalog=<?php echo $font_catalog_json; ?>;</script>
+<script>window.certloomTemplateElementRegistry=<?php echo $registry_json; ?>;window.certloomTemplateFontCatalog=<?php echo $font_catalog_json; ?>;window.certloomTemplateDesignerSamples=<?php echo $sample_data_json; ?>;</script>
 <script><?php echo $js; ?></script>
 <script>document.addEventListener('DOMContentLoaded',function(){document.querySelector('[data-certloom-designer-form]').addEventListener('submit',function(e){e.preventDefault();document.body.dataset.submitted='1';});});</script>
 </body></html>

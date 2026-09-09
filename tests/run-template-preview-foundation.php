@@ -106,8 +106,11 @@ p55has($src['font'],'must never be handed to ArtifactRenderCoordinator','preview
 p55has($src['admin'],'Template Preview','Templates admin exposes the planned Preview product surface');
 p55has($src['admin'],'Current draft','Preview can inspect the current immutable revision');
 p55has($src['admin'],'Published','Preview can independently inspect the published immutable revision');
-p55has($src['admin'],'Long content','Preview has overflow stress data');
-p55has($src['admin'],'RTL / Urdu','Preview has RTL stress data');
+p55has($src['admin'],'Very long name','Preview has extreme-name stress data');
+p55has($src['admin'],'Long organization','Preview has organization overflow stress data');
+p55has($src['admin'],'Long ISO scope','Preview has long-scope stress data');
+p55has($src['admin'],'RTL person','Preview has RTL stress data');
+p55has($src['admin'],'School result','Preview has school-result stress data');
 p55has($src['admin'],'Shared layout preview','Preview default badge uses customer language');
 p55has($src['admin'],'Rendering details','technical renderer evidence is available behind a disclosure');
 p55has($src['admin'],'Canonical Render Plan evidence remains available here for support and release verification.','collapsed technical details preserve the shared composition contract');
@@ -122,5 +125,5 @@ p55has($src['css'],'prefers-reduced-motion','Preview respects reduced motion');
 p55(!file_exists($root.'/resources/renderer/accepted.json'),'1.6.55 development tree does not manufacture renderer authority');
 
 echo "PASS  1.6.55 Template Preview uses the canonical LayoutResolver → RenderPlanBuilder path without a second QR/layout engine\n";
-echo "PASS  current/published revision selection, deterministic Standard/Long/RTL samples, proof hashes, local-only assets and renderer-honest browser presentation are covered\n\n";
+echo "PASS  current/published revision selection, deterministic eight-profile sample stress cases, proof hashes, local-only assets and renderer-honest browser presentation are covered\n\n";
 echo $checks . " checks, 0 failures\n";
