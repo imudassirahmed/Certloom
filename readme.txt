@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.7.0-alpha.4
+Stable tag: 1.7.0-alpha.4.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,9 +12,9 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> **UI Phase 4 is IN PROGRESS and nothing is frozen.** This installable checkpoint is for reviewing the first Certificate Designer v2 shell tranche while all unchecked Phase 4 and Phase 3 plan items remain open. Phase 2.2 visual approval is still deferred rather than accepted.
+> **UI Phase 4 is IN PROGRESS and nothing is frozen.** This installable checkpoint is for reviewing the Certificate Designer v2 shell + first interaction tranche while all unchecked Phase 4 and Phase 3 plan items remain open. Phase 2.2 visual approval is still deferred rather than accepted.
 
-> **1.7.0 ALPHA 4 — CERTIFICATE DESIGNER V2 SHELL REVIEW CHECKPOINT — NOT FOR PRODUCTION.** The Certificate Designer now uses one unified editing surface with a compact top toolbar, always-visible Layers/Insert rail, centre canvas and contextual Properties inspector while preserving the existing canonical layout/revision/autosave authority. This is not Designer v2 completion.
+> **1.7.0 ALPHA 4.1 — CERTIFICATE DESIGNER V2 INTERACTION REVIEW CHECKPOINT — NOT FOR PRODUCTION.** The Certificate Designer now uses one unified editing surface with a compact top toolbar, always-visible Layers/Insert rail, centre canvas and contextual Properties inspector, plus the first direct Layers/keyboard/zoom interaction tranche, while preserving the existing canonical layout/revision/autosave authority. This is not Designer v2 completion.
 
 
 > Release note for 1.6.98: UX-CORE turns the accumulated 1.6.98 staging findings into a whole-product workflow redesign rather than another isolated admin patch. Certloom now uses one task-based workspace (Home → Credentials → Programs → Design → Automations → Settings) with progressive disclosure for technical and specialist controls. The normalized Recipient → Program → Credential model, public Credential Profiles, reusable Certificate designs, first-class Email designs, automatic delivery and integrations form one human journey. Certificate designs and Email designs resolve independently through **Global → Issuer → Program → Batch**; Email designs also resolve independently per message purpose. Automations remain downstream delivery rules (when/who/scope/source/timing) and do not own reusable certificate or email appearance. Credential issued is the certified automatic email purpose in this tranche; additional lifecycle purposes can be designed and inherited without being falsely presented as live triggers. Manual, Bulk, Tutor LMS, LearnDash, WooCommerce, Coursera xAPI and generic Webhook/API act as qualification sources that converge on Certloom's canonical issuance service; Email and Credly are post-issuance destinations. Google Drive normally connects through the narrow Ecapla OAuth relay, while a site-owned Google app remains available through specialist configuration. Normalized-domain and renderer production authority remain closed pending the genuine DBAUTH/PDF-04 ceremonies.

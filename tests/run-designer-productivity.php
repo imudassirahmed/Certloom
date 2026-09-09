@@ -42,7 +42,7 @@ dsn2(strpos($js,'function alignSelected')!==false&&strpos($js,"'center-x'")!==fa
 dsn2(strpos($js,'function reorderSelected')!==false&&strpos($js,'order[ j ].z = j')!==false,'layer actions re-canonicalize unique deterministic z-order values');
 dsn2(strpos($js,'function toggleLock')!==false&&strpos($js,'isLocked( element )')!==false,'locks block transformations while keeping elements selectable');
 dsn2(strpos($js,"event.altKey ? 0.1 : ( event.shiftKey ? 5 : 1 )")!==false,'keyboard nudging provides fine/default/coarse deterministic millimetre steps');
-dsn2(strpos($js,"'z' === event.key.toLowerCase()")!==false&&strpos($js,"'y' === event.key.toLowerCase()")!==false,'standard keyboard history shortcuts are wired');
+dsn2(strpos($js,"'z' === lower")!==false&&strpos($js,"'y' === lower")!==false&&strpos($js,"modifier && ! event.altKey")!==false,'standard keyboard history shortcuts are wired through the normalized Designer key boundary');
 dsn2(strpos($js,'stateField.value = JSON.stringify( designerState )')!==false&&strpos($js,'jsonField.value = JSON.stringify( layout )')!==false,'submit serializes authoring state and canonical layout through separate fields');
 dsn2(strpos($js,'localStorage')===false&&strpos($js,'sessionStorage')===false,'DSN-02 introduces no browser-local persistence');
 dsn2(strpos($js,'fetch(')!==false&&strpos($admin,"admin_url( 'admin-ajax.php' )")!==false&&strpos($js,'XMLHttpRequest')===false&&strpos($js,'https://')===false&&substr_count($js,'http://')===1,'Designer uses only same-origin WordPress AJAX for recovery autosave and introduces no remote dependency');

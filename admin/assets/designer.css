@@ -1037,3 +1037,45 @@
 	.certloom-template-designer-v2 .certloom-template-designer-workspace { min-height: 460px; }
 	.certloom-template-designer-v2 .certloom-template-designer-inspector { max-height: none; }
 }
+
+
+/* Phase 4 interaction tranche — compact layer actions and drag target semantics. */
+.certloom-template-designer-v2 .certloom-template-designer-layer {
+	grid-template-columns: minmax(0, 1fr);
+	border-color: var(--cl-rule);
+	border-radius: var(--cl-r-none);
+	background: var(--cl-surface);
+	box-shadow: none;
+	overflow: visible;
+}
+.certloom-template-designer-v2 .certloom-template-designer-layer.is-selected { border-color: var(--cl-blue); box-shadow: inset 3px 0 0 var(--cl-blue); }
+.certloom-template-designer-v2 .certloom-template-designer-layer.is-locked { background: var(--cl-blue-wash); }
+.certloom-template-designer-v2 .certloom-template-designer-layer.is-dragging { opacity: .55; }
+.certloom-template-designer-v2 .certloom-template-designer-layer.is-layer-drop-target { outline: 2px solid var(--cl-focus); outline-offset: -2px; }
+.certloom-template-designer-v2 .certloom-template-designer-layer-select {
+	width: 100%;
+	padding: var(--cl-2);
+	color: var(--cl-ink);
+	background: transparent;
+	text-align: start;
+}
+.certloom-template-designer-v2 .certloom-template-designer-layer-select small { color: var(--cl-ink-soft); }
+.certloom-template-designer-v2 .certloom-template-designer-layer-actions {
+	display: flex;
+	gap: 1px;
+	padding: 0 var(--cl-1) var(--cl-1);
+	overflow-x: auto;
+	overscroll-behavior-inline: contain;
+}
+.certloom-template-designer-v2 .certloom-template-designer-layer-action {
+	flex: 0 0 auto;
+	min-width: 30px;
+	min-height: 30px;
+	padding: 0 var(--cl-1);
+	border-radius: var(--cl-r-ctl);
+}
+.certloom-template-designer-v2 .certloom-template-designer-layer-action:focus-visible,
+.certloom-template-designer-v2 .certloom-template-designer-layer-select:focus-visible { outline: 2px solid var(--cl-focus); outline-offset: -2px; }
+@media (max-width: 900px) {
+	.certloom-template-designer-v2 .certloom-template-designer-layer-action { min-width: 44px; min-height: 44px; }
+}

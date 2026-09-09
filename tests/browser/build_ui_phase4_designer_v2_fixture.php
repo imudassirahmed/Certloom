@@ -26,7 +26,7 @@ $html = str_replace('<label><span>Page size</span><select data-certloom-designer
 $html = str_replace('<label><span>Orientation</span><select data-certloom-designer-orientation>', '<label class="certloom-designer-pro-only"><span>Orientation</span><select data-certloom-designer-orientation>', $html);
 $html = str_replace(
     '<button type="button" class="button" data-certloom-designer-fit>Fit workspace</button><button type="button" class="button" data-certloom-designer-reset>Reset unsaved changes</button>',
-    '<button type="button" class="button" data-certloom-designer-fit>Fit</button><button type="button" class="button" data-certloom-designer-preview-scroll>Preview</button><button type="submit" class="button button-primary certloom-designer-v2-save" data-certloom-designer-quick-save>Save design</button><button type="button" class="button certloom-designer-pro-only" data-certloom-designer-reset>Reset unsaved changes</button>',
+    '<button type="button" class="button" data-certloom-designer-fit title="Fit canvas (0)">Fit</button><button type="button" class="button" data-certloom-designer-true-size title="Actual size / 100% (1)">1:1</button><button type="button" class="button" data-certloom-designer-preview-scroll>Preview</button><button type="submit" class="button button-primary certloom-designer-v2-save" data-certloom-designer-quick-save title="Save design (Ctrl/Cmd+S)">Save design</button><button type="button" class="button certloom-designer-pro-only" data-certloom-designer-reset>Reset unsaved changes</button>',
     $html
 );
 $html = str_replace('<div class="certloom-template-designer-productivity">', '<div class="certloom-template-designer-productivity certloom-designer-pro-only" data-certloom-designer-productivity>', $html);
@@ -38,7 +38,7 @@ $html = str_replace(
 );
 $html = str_replace(
     '<button type="button" class="button" data-certloom-designer-remove disabled>Remove selected</button></div>',
-    '<button type="button" class="button" data-certloom-designer-duplicate disabled>Duplicate selected</button><button type="button" class="button" data-certloom-designer-remove disabled>Delete selected</button></div>',
+    '<button type="button" class="button" data-certloom-designer-duplicate disabled title="Duplicate selected (Ctrl/Cmd+D)">Duplicate selected</button><button type="button" class="button" data-certloom-designer-remove disabled title="Delete selected (Delete/Backspace)">Delete selected</button></div>',
     $html
 );
 $html = str_replace('<div class="certloom-template-designer-shell">', '</aside><div class="certloom-template-designer-shell">', $html);

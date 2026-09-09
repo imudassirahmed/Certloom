@@ -26,7 +26,8 @@ async def main():
         page=await browser.new_page(viewport={'width':1440,'height':1000})
         await page.set_content(html,wait_until='load'); await page.wait_for_timeout(220)
         root=page.locator('[data-certloom-designer]'); canvas=page.locator('[data-certloom-designer-page]')
-        await ck(((await page.locator('.certloom-template-designer-kicker').text_content()) or '').strip() == 'Easy Designer','easyDesignerHeader')
+        await ck(((await page.locator('.certloom-template-designer-kicker').text_content()) or '').strip() == 'Easy Designer','legacyEasyDesignerFixture')
+        await ck(await page.locator('[data-certloom-designer-mode-button]').count()==2,'legacyModeCompatibilityControlsPresent')
         await ck(await page.locator('[data-certloom-designer-distribute="horizontal"]').count()==1,'horizontalDistributePresent')
         await ck(await page.locator('[data-certloom-designer-distribute="vertical"]').count()==1,'verticalDistributePresent')
         await ck(await page.locator('[data-certloom-designer-quick-align]').is_hidden(),'arrangeHiddenWithoutSelection')
@@ -124,7 +125,7 @@ async def main():
         nudges=[post_nudge[i]['x']-pre_nudge[i]['x'] for i in range(3)]
         await ck(max(nudges)-min(nudges)<=1.2 and min(nudges)>0,'groupKeyboardNudge')
         await page.keyboard.press('Escape'); await page.wait_for_timeout(50)
-        await ck(await page.locator('[data-certloom-designer-element][aria-pressed="true"]').count()==1,'escapeCollapsesMulti')
+        await ck(await page.locator('[data-certloom-designer-element][aria-pressed="true"]').count()==0,'escapeClearsSelection')
 
         # Compact text controls proxy canonical style fields, update canvas immediately, and stay single-selection only.
         text=page.locator('.certloom-template-designer-element.is-text').nth(1)
@@ -148,7 +149,7 @@ async def main():
         # Locked mixed selections fail closed for arrangement/removal and do not move.
         text_id=await page.locator('.certloom-template-designer-element.is-selected').get_attribute('data-certloom-designer-element')
         await page.locator('[data-certloom-designer-layers-toggle]').click(); await page.wait_for_timeout(40)
-        await page.locator(f'[data-certloom-designer-layer-lock="{text_id}"]').click(); await page.wait_for_timeout(60)
+        await page.locator(f'[data-certloom-designer-layer-row-action="lock"][data-certloom-designer-layer-id="{text_id}"]').click(); await page.wait_for_timeout(60)
         await page.locator(f'[data-certloom-designer-element="{new_ids[0]}"]').click(modifiers=['Shift']); await page.locator(f'[data-certloom-designer-element="{new_ids[1]}"]').click(modifiers=['Shift']); await page.wait_for_timeout(60)
         await ck(await page.locator('[data-certloom-designer-remove]').is_disabled(),'removeDisabledMixedLocked')
         await ck(await page.locator('[data-certloom-designer-distribute="horizontal"]').is_disabled(),'distributeDisabledMixedLocked')

@@ -27,7 +27,7 @@ uxsys(false!==strpos($tpl,'certloom-template-library-filter-advanced'), 'Templat
 uxsys(false!==strpos($css,'.certloom-template-state-draft'), 'Draft lifecycle state has explicit styling');
 uxsys(false!==strpos($tplcss,'.certloom-design-nav .is-current') && false!==strpos($tplcss,'border-bottom-color:var(--certloom-accent)') && false!==strpos($css,'.certloom-domain-pagination'), 'Template Library current state and shared pagination contracts use the design system');
 uxsys(false===strpos($designer,"certloom-template-designer-element-' +") && false!==strpos($designcss,'.is-barcode') && false!==strpos($designcss,'.is-shape') && false!==strpos($designcss,'.is-list'), 'Designer elements have deliberate type semantics without dead dynamic classes');
-uxsys(false!==strpos($designer,"'s' === event.key.toLowerCase()") && false!==strpos($designer,"'Delete' === event.key"), 'Designer includes save and delete keyboard shortcuts in addition to existing history/nudge controls');
+uxsys(false!==strpos($designer,"'s' === lower") && false!==strpos($designer,"'Delete' === key") && false!==strpos($designer,"'Backspace' === key"), 'Designer includes save and delete keyboard shortcuts in addition to existing history/nudge controls');
 uxsys(false!==strpos($render,'certloom-verification-label') && false!==strpos($render,'I have a verification code') && false!==strpos($render,'certloom-verification-code-disclosure'), 'Public verification uses visible labels and optional-code disclosure');
 uxsys(false!==strpos($css,'.certloom-bulk-status.is-paused'), 'Paused bulk job has explicit status styling');
 uxsys(false!==strpos($public,'status--voided') && false!==strpos($public,'status--not_issued'), 'Portal voided/not-issued states have explicit status styling');

@@ -23,7 +23,7 @@ dsx02b(strpos($js,'function distributeSelection')!==false&&strpos($js,"gap = ( s
 dsx02b(strpos($js,'distributionOverlap')!==false,'distribution fails closed when non-overlapping equal gaps are impossible');
 dsx02b(strpos($js,'selectionHasLocked()')!==false&&strpos($js,'unlockSelectionBeforeMove')!==false,'mixed locked selections fail closed before movement');
 dsx02b(strpos($js,'pushHistory( groupBefore )')!==false&&strpos($js,'pushHistory( before )')!==false,'group arrange operations remain atomic Undo transactions');
-dsx02b(strpos($js,"'Escape' === event.key && selectionIds().length > 1")!==false&&strpos($js,'function focusSelectedCanvasElement')!==false,'keyboard nudge preserves focus so Escape can return to single-selection');
+dsx02b(strpos($js,"'Escape' === key && selectionIds().length")!==false&&strpos($js,'function focusSelectedCanvasElement')!==false,'keyboard focus is preserved while Escape follows the unified Designer-v2 deselection contract');
 dsx02b(strpos($js,'function textStyleElement()')!==false&&strpos($js,'1 !== selection.length')!==false,'compact text controls refuse ambiguous multi-selection styling');
 dsx02b(strpos($js,'function applyQuickStyleValue')!==false&&strpos($js,'applyStyleField( field )')!==false,'compact text controls proxy the existing canonical style mutation path');
 dsx02b(strpos($js,"if ( ( resize || rotate ) && selectionIds().length > 1 )")!==false,'resize/rotate explicitly collapse to a single primary element');

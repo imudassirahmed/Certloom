@@ -1,3 +1,11 @@
+= 1.7.0-alpha.4.1 =
+* Continue the in-progress Certificate Designer v2 review line after the alpha.4 shell checkpoint; Phase 4 remains open and user-reviewable.
+* Add direct Layers controls for reorder, lock/unlock, duplicate and delete, plus real drag reordering and synchronized canvas/layer selection behavior.
+* Add Designer-v2 keyboard interaction coverage for duplicate, layer forward/back/front/back, canvas select-all and Escape deselection, while preserving non-keyboard equivalents.
+* Add visible and keyboard Fit / 1:1 canvas controls and preserve canvas focus across zoom re-rendering so subsequent keyboard commands remain usable.
+* Add dedicated Phase 4 interaction contracts alongside the fixed-shell acceptance; keep rename, show/hide, clipboard shortcuts, complete contextual toolbar/Insert coverage, sample data, Schema 4 rich text, signer snapshots and Table/Data Table architecture open.
+* This alpha.4.1 package is a Phase 4 interaction review checkpoint only. It does not freeze, lock, browser-certify the whole release, renderer-certify, or imply user approval; Phase 3 real-world acceptance and Phase 2.2 visual approval remain open.
+
 = 1.7.0-alpha.4 =
 * Start the in-progress Certificate Designer v2 review line with one unified Designer surface; retire customer-facing Quick/Easy/Pro mode switching while preserving the same canonical layout, revision, autosave and renderer authority boundaries.
 * Add the first fixed-shell tranche: compact top toolbar, always-visible Layers/Insert left rail, centre canvas, contextual Properties right rail, internal desktop scrolling and mobile stacking.
