@@ -232,7 +232,7 @@ final class CertloomProductionAcceptanceEvidenceBuilder {
 
 	private function publish_json_file( $path, array $value ) {
 		$path = (string) $path;
-		if ( '' === trim( $path ) || false !== strpos( $path, "\0" ) || file_exists( $path ) || is_link( $path ) || preg_match( '/(^|[\\\/])\.\.?(?:[\\\/]|$)/', $path ) ) {
+		if ( '' === trim( $path ) || false !== strpos( $path, "\0" ) || file_exists( $path ) || is_link( $path ) || preg_match( '~(^|[\\\\/])\.\.?([\\\\/]|$)~', $path ) ) {
 			throw new InvalidArgumentException( 'Renderer acceptance output must be a new, unambiguous non-symbolic file path.' );
 		}
 		$parent_path = dirname( $path );

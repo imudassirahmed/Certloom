@@ -563,11 +563,23 @@
 		margin-left: -10px;
 	}
 	.certloom-designer-toolbar {
-		align-items: flex-start;
+		align-items: stretch;
 		flex-direction: column;
+	}
+	.certloom-designer-toolbar__identity {
+		width: 100%;
+		min-width: 0;
+	}
+	.certloom-designer-toolbar__identity > div {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+	.certloom-designer-toolbar__identity strong {
+		max-width: 100%;
 	}
 	.certloom-designer-toolbar__actions {
 		width: 100%;
+		min-width: 0;
 		overflow-x: auto;
 	}
 	.certloom-message-settings {
@@ -581,14 +593,14 @@
 		border-bottom: 1px solid var(--certloom-email-border);
 	}
 	.certloom-block-palette {
-		grid-template-columns: repeat(3,1fr);
+		grid-template-columns: repeat(3,minmax(0,1fr));
 	}
 	.certloom-designer-stage {
 		padding: 18px;
 	}
 	.certloom-token-list {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: repeat(2,minmax(0,1fr));
 	}
 }
 @media (prefers-reduced-motion:reduce) {

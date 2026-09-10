@@ -114,7 +114,7 @@ if ( $expect_renderer_authority ) {
 	try {
 		$validated_authority = ( new CertloomAuthorizedReleaseAuthority( $root ) )->validate_manifest_file( $renderer_manifest_path );
 		$renderer_authority_ok = isset( $validated_authority['plugin_version'], $validated_authority['runtime_payload'] )
-			&& '1.7.0-alpha.4.15' === (string) $validated_authority['plugin_version'];
+			&& '1.7.0-alpha.4.16' === (string) $validated_authority['plugin_version'];
 	} catch ( Throwable $error ) {
 		$renderer_authority_ok = false;
 	}

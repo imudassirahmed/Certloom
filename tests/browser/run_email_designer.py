@@ -74,7 +74,24 @@ async def run():
         await empty.close()
         mobile=await browser.new_page(viewport={'width':390,'height':820})
         await mobile.set_content(fixture(),wait_until='load')
-        await ck(await mobile.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'mobileNoOverflow')
+        async def mobile_overflow_snapshot():
+            return await mobile.evaluate('''() => ({
+                viewport: window.innerWidth,
+                scrollWidth: document.documentElement.scrollWidth,
+                offenders: [...document.querySelectorAll('*')].map((el) => {
+                    const r = el.getBoundingClientRect();
+                    return { tag: el.tagName, cls: String(el.className || ''), left: r.left, right: r.right, width: r.width };
+                }).filter((x) => x.right > window.innerWidth + 1 || x.left < -11).slice(0, 8)
+            })''')
+        baseline_overflow=await mobile_overflow_snapshot()
+        await ck(baseline_overflow['scrollWidth'] <= baseline_overflow['viewport'] + 1,'mobileNoOverflow')
+        # Stress the toolbar with deliberately wider glyph metrics so responsive containment
+        # cannot depend on whichever system UI font happens to exist on the host.
+        await mobile.add_style_tag(content='body{font-family:monospace!important}')
+        wide_font_overflow=await mobile_overflow_snapshot()
+        await ck(wide_font_overflow['scrollWidth'] <= wide_font_overflow['viewport'] + 1,'mobileWideFontNoOverflow')
+        if baseline_overflow['scrollWidth'] > baseline_overflow['viewport'] + 1 or wide_font_overflow['scrollWidth'] > wide_font_overflow['viewport'] + 1:
+            print('EMAIL DESIGNER MOBILE OVERFLOW DIAGNOSTIC', {'baseline': baseline_overflow, 'wideFont': wide_font_overflow})
         box=await mobile.locator('[data-certloom-add-block="heading"]').bounding_box()
         await ck(bool(box and box['height']>=44),'mobileTouchTarget')
         await mobile.close();await browser.close()

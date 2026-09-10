@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-import asyncio, subprocess
+import asyncio, os, subprocess
 from pathlib import Path
 from playwright.async_api import async_playwright
 ROOT=Path(__file__).resolve().parents[2]
+ARTIFACT_DIR=Path(os.environ.get('CERTLOOM_BROWSER_ARTIFACT_DIR', str(ROOT/'build'/'browser-artifacts')))
 def fixture():
     r=subprocess.run(['php',str(ROOT/'tests/browser/build_ui_phase2_1_visual_fixture.php')],cwd=ROOT,capture_output=True,text=True)
     if r.returncode: raise RuntimeError(r.stderr or r.stdout)
@@ -58,7 +59,8 @@ async def run():
         await ck(await series.nth(3).evaluate("e=>getComputedStyle(e).stroke")=='rgb(1, 193, 116)','seriesFourLogoEmerald')
         await ck(await series.nth(4).evaluate("e=>getComputedStyle(e).strokeDasharray")!='none','seriesFiveRepeatsWithPattern')
         await ck(await page.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'desktopNoOverflow')
-        await page.screenshot(path='/mnt/data/certloom-phase2-2-logo-gradient-review.png',full_page=True)
+        ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+        await page.screenshot(path=str(ARTIFACT_DIR/'certloom-phase2-2-logo-gradient-review.png'),full_page=True)
         await page.close()
         mobile=await browser.new_page(viewport={'width':390,'height':900})
         await mobile.set_content(fixture(),wait_until='load')

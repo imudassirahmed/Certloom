@@ -1,3 +1,8 @@
+= 1.7.0-alpha.4.16 =
+* Harden the dedicated Email Designer mobile toolbar against system-font metric variance by constraining the identity row and intrinsic grid tracks to the viewport instead of permitting max-content expansion.
+* Preserve the alpha.4.15 QR shared-boundary raster correction and renderer identities unchanged: GD `1.0.0+certloom.6`, mPDF `8.3.1+certloom.5`.
+* Make final Chromium certification collect every browser-runner failure before stopping so host-specific UX regressions are diagnosed in one pass instead of one-at-a-time reruns.
+
 = 1.7.0-alpha.4.15 =
 * Fix GD QR rasterization at fractional 96-DPI module widths by quantizing each dark run to shared round-to-nearest module boundaries instead of independently expanding run starts/ends with floor/ceil; this preserves white modules that scanners require.
 * Real-host aggregate p414 evidence proves every non-QR acceptance metric green (66/66) and isolates the remaining blocker to native PNG/JPEG QR decode; PDF QR decodes correctly and all visual/foreground/current-oracle metrics already pass.

@@ -66,6 +66,24 @@ rab_check(false!==strpos($verifier,'structural_metric')&&false!==strpos($verifie
 rab_check(false!==strpos($verifier,'ArtifactReceipt v4')&&false!==strpos($verifier,'verify-receipt.php'),'Production bundle must require ArtifactReceipt v4 for every artifact.');
 rab_check(false!==strpos($verifier,"qualification != 'production-candidate'"),'Verifier must reject development-reference bundles in production mode.');
 
+require_once __DIR__ . '/renderer-candidate/acceptance-evidence-lib.php';
+$path_builder = new CertloomProductionAcceptanceEvidenceBuilder( dirname( __DIR__ ) );
+$path_method = new ReflectionMethod( CertloomProductionAcceptanceEvidenceBuilder::class, 'publish_json_file' );
+$path_method->setAccessible( true );
+$path_tmp = sys_get_temp_dir() . '/certloom-rab-output-path-' . bin2hex( random_bytes( 5 ) );
+mkdir( $path_tmp, 0700, true );
+$prior_error_handler = set_error_handler( function ( $severity, $message, $file, $line ) { throw new ErrorException( $message, 0, $severity, $file, $line ); } );
+try {
+    $valid_output = $path_tmp . '/acceptance.json';
+    $path_method->invoke( $path_builder, $valid_output, array( 'ok' => true ) );
+    rab_check( is_file( $valid_output ), 'Acceptance evidence publisher must accept a new safe output path without emitting PHP regex warnings.' );
+    rab_check( rab_throws( function () use ( $path_method, $path_builder, $path_tmp ) { $path_method->invoke( $path_builder, $path_tmp . '/../escape.json', array( 'ok' => true ) ); } ), 'Acceptance evidence publisher must reject dot-segment output paths without regex warnings.' );
+} finally {
+    restore_error_handler();
+    @unlink( $path_tmp . '/acceptance.json' );
+    @rmdir( $path_tmp );
+}
+
 $golden_manifest=file_get_contents(__DIR__.'/fixtures/rendering/reference/manifest.json');
 rab_check('fb5a3db32dbf24b1f7554bfab6f12a3a274f314226f5bb6501733f51adc4cb6f'===hash('sha256',$golden_manifest),'Three-format golden manifest must remain frozen by exact SHA-256.');
 
