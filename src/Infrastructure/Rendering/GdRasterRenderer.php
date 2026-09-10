@@ -263,7 +263,7 @@ final class GdRasterRenderer implements RendererInterface {
 				$x2 = $this->mm_px_float( (float) $outer['x_mm'] + (float) ( $cell_box['x_mm'] ?? 0 ) + (float) ( $cell_box['width_mm'] ?? 0 ) + $ox ); $y2 = $this->mm_px_float( (float) $outer['y_mm'] + (float) ( $cell_box['y_mm'] ?? 0 ) + (float) ( $cell_box['height_mm'] ?? 0 ) + $oy );
 				$fill_color = $this->driver->allocate_color( $canvas, $fill, (float) $op['opacity'] ); $border_color = $this->driver->allocate_color( $canvas, $border, (float) $op['opacity'] );
 				$this->driver->filled_rectangle( $canvas, (int) floor( $x1 ), (int) floor( $y1 ), max( (int) floor( $x1 ), (int) ceil( $x2 ) - 1 ), max( (int) floor( $y1 ), (int) ceil( $y2 ) - 1 ), $fill_color );
-				if ( (float) ( $grid['border_width_mm'] ?? 0 ) > 0 ) { $this->driver->rectangle( $canvas, $x1, $y1, $x2, $y2, $border_color, $thickness ); }
+				if ( (float) ( $grid['border_width_mm'] ?? 0 ) > 0 ) { $this->driver->rectangle( $canvas, (int) $x1, (int) $y1, (int) $x2, (int) $y2, $border_color, $thickness ); }
 				$text_op = array( 'type' => 'text', 'opacity' => $op['opacity'], 'geometry' => array( 'box' => array( 'x_mm' => (float) $outer['x_mm'] + (float) ( $content['x_mm'] ?? 0 ), 'y_mm' => (float) $outer['y_mm'] + (float) ( $content['y_mm'] ?? 0 ), 'width_mm' => (float) ( $content['width_mm'] ?? 0 ), 'height_mm' => (float) ( $content['height_mm'] ?? 0 ) ) ), 'text' => (array) ( $cell['text'] ?? array() ) );
 				$this->draw_text( $canvas, $plan, $text_op, $ox, $oy );
 			}
