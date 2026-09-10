@@ -106,7 +106,23 @@ foreach ( (array) ( $reference_manifest['fixtures'] ?? array() ) as $name => $fi
 }
 p4hist( $reference_ok, 'the seven permanent renderer reference layouts remain historical schema-1 fixtures' );
 
-p4hist( ! file_exists( $root . '/resources/renderer/accepted.json' ) && ! file_exists( $root . '/resources/domain/accepted.json' ), 'historical proof does not manufacture renderer/domain acceptance authority' );
+$expect_renderer_authority = '1' === (string) getenv( 'CERTLOOM_HISTORICAL_EXPECT_RENDERER_AUTHORITY' );
+$renderer_manifest_path = $root . '/resources/renderer/accepted.json';
+if ( $expect_renderer_authority ) {
+	require_once __DIR__ . '/renderer-candidate/authorized-release-lib.php';
+	$renderer_authority_ok = false;
+	try {
+		$validated_authority = ( new CertloomAuthorizedReleaseAuthority( $root ) )->validate_manifest_file( $renderer_manifest_path );
+		$renderer_authority_ok = isset( $validated_authority['plugin_version'], $validated_authority['runtime_payload'] )
+			&& '1.7.0-alpha.4.10' === (string) $validated_authority['plugin_version'];
+	} catch ( Throwable $error ) {
+		$renderer_authority_ok = false;
+	}
+	p4hist( $renderer_authority_ok, 'final accepted-byte mode requires valid renderer authority bound to this exact completion runtime payload' );
+} else {
+	p4hist( ! file_exists( $renderer_manifest_path ), 'development/checkpoint historical proof does not manufacture renderer acceptance authority' );
+}
+p4hist( ! file_exists( $root . '/resources/domain/accepted.json' ), 'Phase 4 historical proof does not manufacture normalized-domain acceptance authority' );
 
 echo "\n{$pass} Phase 4 historical-immutability checks, {$fail} failures\n";
 exit( $fail ? 1 : 0 );
