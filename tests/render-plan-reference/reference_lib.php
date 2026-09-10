@@ -137,3 +137,100 @@ function certloom_render_plan_reference_manifest() {
 function certloom_render_plan_reference_json() {
 	return ( new CanonicalJson() )->encode( certloom_render_plan_reference_manifest() ) . "\n";
 }
+
+
+/** Local assets used only by the expanded production-acceptance fixture suite. */
+final class CertloomRenderPlanAcceptanceAssetResolver implements LocalAssetResolverInterface {
+	private $primitive_path;
+	private $signer_path;
+	public function __construct( $primitive_path, $signer_path ) { $this->primitive_path = (string) $primitive_path; $this->signer_path = (string) $signer_path; }
+	public function resolve( $reference ) {
+		$reference = (string) $reference;
+		$path = 'asset:primitives' === $reference ? $this->primitive_path : ( 'attachment:77' === $reference ? $this->signer_path : '' );
+		if ( '' === $path || ! is_file( $path ) ) {
+			throw new InvalidArgumentException( 'Renderer acceptance fixture references an unknown local raster asset: ' . $reference );
+		}
+		return array( 'path' => $path, 'sha256' => hash_file( 'sha256', $path ), 'mime' => 'image/png', 'size' => (int) filesize( $path ) );
+	}
+}
+
+/** @return array<string,mixed> */
+function certloom_render_plan_acceptance_setup() {
+	$legacy = certloom_render_plan_reference_setup();
+	$font_manifest = $legacy['font_manifest'];
+	$schema4 = array( 'schema4-rich-text', 'schema4-signer', 'schema4-table', 'schema4-data-table' );
+	return array_merge( $legacy, array(
+		'font_manifest' => $font_manifest,
+		'legacy_names' => $legacy['names'],
+		'schema4_names' => $schema4,
+		'names' => array_merge( $legacy['names'], $schema4 ),
+		'signer_asset_path' => $legacy['root'] . '/admin/assets/certloom-preview-signer-signature.png',
+		'merge_values' => array_merge( $legacy['merge_values'], array(
+			'schema4-rich-text' => array( 'recipient.name' => 'Alexandria Noor Rahman' ),
+			'schema4-signer' => array( 'signer.signature_asset' => 'attachment:77' ),
+			'schema4-data-table' => array( 'credential.results' => array(
+				array( 'subject' => 'Mathematics', 'score' => '98', 'grade' => 'A+' ),
+				array( 'subject' => 'Physics', 'score' => '92', 'grade' => 'A' ),
+				array( 'subject' => 'Computer Science', 'score' => '96', 'grade' => 'A+' ),
+				array( 'subject' => 'English', 'score' => '91', 'grade' => 'A' ),
+			) ),
+		) ),
+	) );
+}
+
+/** @return array<string,array<string,mixed>> */
+function certloom_render_plan_acceptance_cases() {
+	$setup = certloom_render_plan_acceptance_setup();
+	$validator = new LayoutValidator();
+	$resolver = new LayoutResolver( null, null, null, new LocalQrEncoder() );
+	$plans = new RenderPlanBuilder();
+	$fingerprints = new RenderRequestFingerprint();
+	$assets = new CertloomRenderPlanAcceptanceAssetResolver( $setup['primitive_asset_path'], $setup['signer_asset_path'] );
+	$cases = array();
+	foreach ( $setup['names'] as $name ) {
+		$layout_path = $setup['fixtures_root'] . '/' . $name . '.json';
+		$layout = json_decode( (string) file_get_contents( $layout_path ), true );
+		if ( ! is_array( $layout ) ) { throw new RuntimeException( 'Invalid renderer acceptance fixture: ' . $name ); }
+		$layout_hash = $validator->hash( $layout );
+		$resolved = $resolver->resolve( $layout, isset( $setup['merge_values'][ $name ] ) ? $setup['merge_values'][ $name ] : array(), $setup['verification_url'], $assets );
+		$request_hash = $fingerprints->hash( $layout_hash, $resolved );
+		$plan = $plans->build( $resolved, array( 'font_manifest' => $setup['font_manifest'] ) );
+		$plan_hash = $plans->hash( $plan );
+		$operation_types = array();
+		foreach ( $plan['operations'] as $operation ) { $operation_types[] = (string) ( $operation['type'] ?? '' ); }
+		$cases[ $name ] = array(
+			'name' => $name, 'layout' => $layout, 'layout_schema_version' => (int) ( $layout['_meta']['schema_version'] ?? 0 ),
+			'layout_sha256' => $layout_hash, 'resolved_document' => $resolved, 'render_request_sha256' => $request_hash,
+			'render_plan' => $plan, 'render_plan_sha256' => $plan_hash, 'operations' => count( $plan['operations'] ),
+			'operation_types' => $operation_types, 'page' => $plan['page'],
+		);
+	}
+	return $cases;
+}
+
+/** @return array<string,mixed> */
+function certloom_render_plan_acceptance_manifest() {
+	$setup = certloom_render_plan_acceptance_setup();
+	$cases = certloom_render_plan_acceptance_cases();
+	$legacy_path = $setup['fixtures_root'] . '/render-plan-manifest.json';
+	$results = array();
+	foreach ( $setup['names'] as $name ) {
+		$case = $cases[ $name ];
+		$results[ $name ] = array(
+			'layout_schema_version' => $case['layout_schema_version'], 'layout_sha256' => $case['layout_sha256'],
+			'render_request_sha256' => $case['render_request_sha256'], 'render_plan_sha256' => $case['render_plan_sha256'],
+			'operations' => $case['operations'], 'operation_types' => $case['operation_types'], 'page' => $case['page'],
+		);
+	}
+	return array(
+		'schema' => 'certloom-render-plan-acceptance', 'version' => 1,
+		'legacy_render_plan_manifest_sha256' => hash_file( 'sha256', $legacy_path ),
+		'layout_schema' => array( 'name' => 'certloom-layout', 'versions' => array( 1, 4 ) ),
+		'render_plan_schema' => array( 'name' => RenderPlanBuilder::SCHEMA, 'version' => RenderPlanBuilder::VERSION ),
+		'font_face_sha256' => $setup['font_face_sha256'], 'verification_url' => $setup['verification_url'],
+		'legacy_fixtures' => $setup['legacy_names'], 'schema4_fixtures' => $setup['schema4_names'], 'fixtures' => $results,
+	);
+}
+
+function certloom_render_plan_acceptance_json() { return ( new CanonicalJson() )->encode( certloom_render_plan_acceptance_manifest() ) . "\n"; }
+

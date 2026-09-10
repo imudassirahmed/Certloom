@@ -6,7 +6,7 @@ use InvalidArgumentException;
 /** Strict normalized result produced by Certloom's independent PDF-04 verifier. */
 final class RendererVerificationReport {
 	const SCHEMA = 'certloom-renderer-bundle-verification';
-	const VERSION = 5;
+	const VERSION = 6;
 	const CROSS_FORMAT_MAX_MAE = 1.0;
 	const CROSS_FORMAT_MAX_CHANGED = 0.02;
 	const GOLDEN_MIN_PRECISION = 0.92;
@@ -14,7 +14,7 @@ final class RendererVerificationReport {
 
 	/** @return array<string,mixed> */
 	public function normalize( array $report ) {
-		$keys = array( 'schema', 'version', 'verified', 'qualification', 'qualifies_pdf04', 'bundle_manifest_sha256', 'fixture_manifest_sha256', 'render_plan_manifest_sha256', 'verifier_environment_sha256', 'candidate_provenance_rechecked', 'artifact_receipts_rechecked', 'deterministic_runs', 'pdf_geometry', 'png_geometry', 'jpeg_geometry', 'qr_pdf_decode', 'qr_png_decode', 'qr_jpeg_decode', 'pdf_png_visual_parity', 'png_jpeg_visual_parity', 'golden_visual_parity', 'primitive_capability_coverage', 'renderers', 'fixtures', 'parity', 'golden_parity' );
+		$keys = array( 'schema', 'version', 'verified', 'qualification', 'qualifies_pdf04', 'bundle_manifest_sha256', 'fixture_manifest_sha256', 'render_plan_manifest_sha256', 'verifier_environment_sha256', 'candidate_provenance_rechecked', 'artifact_receipts_rechecked', 'deterministic_runs', 'pdf_geometry', 'png_geometry', 'jpeg_geometry', 'qr_pdf_decode', 'qr_png_decode', 'qr_jpeg_decode', 'pdf_png_visual_parity', 'png_jpeg_visual_parity', 'golden_visual_parity', 'primitive_capability_coverage', 'schema4_rich_text', 'schema4_signer_signature', 'schema4_fixed_table', 'schema4_data_table', 'renderers', 'fixtures', 'parity', 'golden_parity' );
 		$this->assert_shape( $report, $keys, $keys, 'renderer verification report' );
 		if ( self::SCHEMA !== (string) $report['schema'] || ! is_int( $report['version'] ) || self::VERSION !== $report['version'] ) { throw new InvalidArgumentException( 'Renderer verification report schema/version is unsupported.' ); }
 		$qualification = (string) $report['qualification'];
@@ -28,7 +28,7 @@ final class RendererVerificationReport {
 			if ( ! $this->is_sha256( $value ) ) { throw new InvalidArgumentException( 'Renderer verification report contains an invalid SHA-256 binding.' ); }
 			$hashes[ $key ] = $value;
 		}
-		$proof_keys = array( 'candidate_provenance_rechecked', 'artifact_receipts_rechecked', 'deterministic_runs', 'pdf_geometry', 'png_geometry', 'jpeg_geometry', 'qr_pdf_decode', 'qr_png_decode', 'qr_jpeg_decode', 'pdf_png_visual_parity', 'png_jpeg_visual_parity', 'golden_visual_parity', 'primitive_capability_coverage' );
+		$proof_keys = array( 'candidate_provenance_rechecked', 'artifact_receipts_rechecked', 'deterministic_runs', 'pdf_geometry', 'png_geometry', 'jpeg_geometry', 'qr_pdf_decode', 'qr_png_decode', 'qr_jpeg_decode', 'pdf_png_visual_parity', 'png_jpeg_visual_parity', 'golden_visual_parity', 'primitive_capability_coverage', 'schema4_rich_text', 'schema4_signer_signature', 'schema4_fixed_table', 'schema4_data_table' );
 		$proof = array();
 		foreach ( $proof_keys as $key ) {
 			if ( ! is_bool( $report[ $key ] ) ) { throw new InvalidArgumentException( 'Renderer verification report proof flags must be booleans.' ); }
@@ -38,7 +38,7 @@ final class RendererVerificationReport {
 			foreach ( $proof as $value ) { if ( true !== $value ) { throw new InvalidArgumentException( 'Production renderer verification must re-prove every mandatory bundle property.' ); } }
 		} else {
 			if ( true === $proof['candidate_provenance_rechecked'] || true === $proof['artifact_receipts_rechecked'] ) { throw new InvalidArgumentException( 'Development references may not claim production provenance/receipt verification.' ); }
-			foreach ( array( 'deterministic_runs', 'pdf_geometry', 'png_geometry', 'jpeg_geometry', 'qr_pdf_decode', 'qr_png_decode', 'qr_jpeg_decode', 'pdf_png_visual_parity', 'png_jpeg_visual_parity', 'golden_visual_parity', 'primitive_capability_coverage' ) as $key ) { if ( true !== $proof[ $key ] ) { throw new InvalidArgumentException( 'Development verifier references must still prove visual/deterministic checks.' ); } }
+			foreach ( array( 'deterministic_runs', 'pdf_geometry', 'png_geometry', 'jpeg_geometry', 'qr_pdf_decode', 'qr_png_decode', 'qr_jpeg_decode', 'pdf_png_visual_parity', 'png_jpeg_visual_parity', 'golden_visual_parity', 'primitive_capability_coverage', 'schema4_rich_text', 'schema4_signer_signature', 'schema4_fixed_table', 'schema4_data_table' ) as $key ) { if ( true !== $proof[ $key ] ) { throw new InvalidArgumentException( 'Development verifier references must still prove visual/deterministic checks.' ); } }
 		}
 		$renderers = $this->normalize_renderers( $report['renderers'] );
 		$fixtures = $this->normalize_fixtures( $report['fixtures'] );

@@ -152,7 +152,7 @@ $text_plan_b = $builder->build( $text_runtime_b, array( 'font_manifest' => $mani
 rpsame( $builder->hash( $text_plan_a ), $builder->hash( $text_plan_b ), 'Render-plan hash must be portable across local font paths.' );
 
 // Acceptance evidence is versioned so old proof cannot certify the shared-plan architecture.
-rpsame(7,RendererAcceptanceContract::VERSION,'Renderer acceptance evidence must advance to v7 for direct PDF QR proof.');
+rpsame(8,RendererAcceptanceContract::VERSION,'Renderer acceptance evidence must advance to v8 for mandatory Schema-4 renderer coverage.');
 rpcheck(in_array('shared_render_plan',RendererAcceptanceContract::required_checks(),true),'PDF-04 must require proof that both backends use the shared render plan.');
 rpcheck(in_array('primitive_capability_coverage',RendererAcceptanceContract::required_checks(),true),'PDF-04 must require coverage of the current non-text Render Plan primitive surface.');
 $reference_manifest = file_get_contents(__DIR__.'/fixtures/rendering/render-plan-manifest.json');

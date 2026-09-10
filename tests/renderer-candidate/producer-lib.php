@@ -57,7 +57,7 @@ final class CertloomCandidateEvaluationAuthorityGate implements ArtifactAuthorit
 
 final class CertloomProductionCandidateBundleProducer {
 	const BUNDLE_SCHEMA = 'certloom-renderer-acceptance-bundle';
-	const BUNDLE_VERSION = 3;
+	const BUNDLE_VERSION = 4;
 	const MAX_PROVENANCE_BYTES = 104857600; // 100 MiB per source/lock evidence file.
 	const PRODUCTION_ACK = 'CERTLOOM_PDF04_PRODUCTION_CANDIDATE';
 
@@ -91,10 +91,10 @@ final class CertloomProductionCandidateBundleProducer {
 		$this->assert_config_shape( $config );
 		list( $target_output, $output ) = $this->prepare_staging_output( $output_dir );
 		try {
-			$setup = certloom_render_plan_reference_setup();
-		$cases = certloom_render_plan_reference_cases();
-		$plan_manifest_path = $this->root . '/tests/fixtures/rendering/render-plan-manifest.json';
-		$golden_manifest_path = $this->root . '/tests/fixtures/rendering/reference/manifest.json';
+			$setup = certloom_render_plan_acceptance_setup();
+		$cases = certloom_render_plan_acceptance_cases();
+		$plan_manifest_path = $this->root . '/tests/fixtures/rendering/render-plan-acceptance-manifest.json';
+		$golden_manifest_path = $this->root . '/tests/fixtures/rendering/reference/acceptance-manifest.json';
 		$this->copy_exact( $golden_manifest_path, $output . '/manifests/golden.json' );
 		$this->copy_exact( $plan_manifest_path, $output . '/manifests/render-plan.json' );
 		$plan_manifest = $this->decode_json_file( $plan_manifest_path, 1048576, 'frozen render-plan manifest' );

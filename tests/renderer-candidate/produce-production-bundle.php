@@ -1,5 +1,5 @@
 <?php
-/** Produce a two-run seven-fixture PDF-04 production-candidate bundle. */
+/** Produce a two-run eleven-fixture PDF-04 production-candidate bundle. */
 require_once __DIR__ . '/producer-lib.php';
 
 if ( 3 !== $argc ) {

@@ -20,7 +20,7 @@ final class RcpGoldenReplayRenderer implements RendererInterface {
     public function requirements(){ return $this->requirements; }
     public function context(){ return $this->context; }
     public function render( array $plan, $format ) {
-        $hash=$this->plans->hash($plan); $manifest=json_decode(file_get_contents($this->root.'/tests/fixtures/rendering/render-plan-manifest.json'),true); $name='';
+        $hash=$this->plans->hash($plan); $manifest=json_decode(file_get_contents($this->root.'/tests/fixtures/rendering/render-plan-acceptance-manifest.json'),true); $name='';
         foreach($manifest['fixtures'] as $fixture=>$facts){ if(hash_equals($facts['render_plan_sha256'],$hash)){ $name=$fixture; break; } }
         if(''===$name){ throw new RuntimeException('Golden replay test renderer received an unknown plan.'); }
         $path=$this->root.'/tests/fixtures/rendering/reference/'.$name.'/reference.'.strtolower($format);
@@ -112,9 +112,9 @@ try {
     $acceptance_path=$tmp.'/acceptance.json';
     $build_lines=array(); $build_rc=0;
     exec('php '.escapeshellarg($acceptance_builder).' '.escapeshellarg($prod_out).' '.escapeshellarg($verify_out.'/verification-report.json').' '.escapeshellarg($verify_out.'/verifier-environment.json').' '.escapeshellarg($verify_out.'/verification-index.json').' '.escapeshellarg($acceptance_path).' 2>&1',$build_lines,$build_rc);
-    rcp_check(0===$build_rc&&is_file($acceptance_path),'Canonical acceptance-evidence builder must derive acceptance-v7 directly from the verified production bundle.');
+    rcp_check(0===$build_rc&&is_file($acceptance_path),'Canonical acceptance-evidence builder must derive acceptance-v8 directly from the verified production bundle.');
     $acceptance_data=json_decode(file_get_contents($acceptance_path),true);
-    rcp_check(is_array($acceptance_data)&&7===$acceptance_data['version']&&hash_equals(hash_file('sha256',$prod_out.'/bundle.json'),$acceptance_data['bundle_manifest_sha256']),'Derived acceptance evidence must bind the exact independently verified production bundle.');
+    rcp_check(is_array($acceptance_data)&&8===$acceptance_data['version']&&hash_equals(hash_file('sha256',$prod_out.'/bundle.json'),$acceptance_data['bundle_manifest_sha256']),'Derived acceptance evidence must bind the exact independently verified production bundle.');
     rcp_check(0600===(fileperms($acceptance_path)&0777)&&empty(glob($tmp.'/.certloom-acceptance-*.json')?:array()),'Acceptance evidence must be owner-only and atomically published without staging residue.');
 
     $finalize_entry=__DIR__.'/renderer-candidate/finalize-production-acceptance.php';

@@ -40,8 +40,8 @@ $evidence=array(
     'checks'=>$checks_map,'fixtures'=>$fixtures,
 );
 $acceptance=new RendererAcceptanceContract();
-rab_check(7===RendererAcceptanceContract::VERSION,'Acceptance evidence must be v7 for direct PDF/PNG/JPEG QR proof.');
-rab_check(5===RendererVerificationReport::VERSION,'Independent verifier report must be v5 for direct PDF QR proof.');
+rab_check(8===RendererAcceptanceContract::VERSION,'Acceptance evidence must be v8 for mandatory Schema-4 renderer proof.');
+rab_check(6===RendererVerificationReport::VERSION,'Independent verifier report must be v6 for Schema-4 proof flags.');
 rab_check(3===RendererReleaseManifest::VERSION,'Release authority manifest must be v3 for exact production-payload binding.');
 rab_check(array('pdf','png','jpeg')===RendererAcceptanceContract::required_formats(),'PDF-04 must require PDF, PNG and JPEG.');
 rab_check(in_array('golden_visual_parity',RendererAcceptanceContract::required_checks(),true),'Acceptance must require candidate-to-golden visual parity.');

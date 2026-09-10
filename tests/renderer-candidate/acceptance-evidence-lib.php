@@ -2,7 +2,7 @@
 /**
  * Source-only PDF-04 acceptance-evidence builder.
  *
- * Derives RendererAcceptanceContract v7 from a production-candidate bundle and
+ * Derives RendererAcceptanceContract v8 from a production-candidate bundle and
  * the exact independently published verification evidence. No acceptance hash,
  * renderer identity or mandatory check is copied by an operator by hand.
  */
@@ -16,7 +16,7 @@ use Certloom\Application\Rendering\RendererVerifierEnvironment;
 
 final class CertloomProductionAcceptanceEvidenceBuilder {
 	const BUNDLE_SCHEMA = 'certloom-renderer-acceptance-bundle';
-	const BUNDLE_VERSION = 3;
+	const BUNDLE_VERSION = 4;
 	const VERIFICATION_INDEX_SCHEMA = 'certloom-renderer-verification-index';
 	const VERIFICATION_INDEX_VERSION = 1;
 	const MAX_JSON_BYTES = 2097152;

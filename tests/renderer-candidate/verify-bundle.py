@@ -15,7 +15,10 @@ import cv2
 import numpy as np
 from PIL import Image
 
-FIXTURES = ('english','urdu-rtl','mixed-script','long-name-shrink','rotation','qr','primitives')
+LEGACY_FIXTURES = ('english','urdu-rtl','mixed-script','long-name-shrink','rotation','qr','primitives')
+SCHEMA4_FIXTURES = ('schema4-rich-text','schema4-signer','schema4-table','schema4-data-table')
+FIXTURES = LEGACY_FIXTURES + SCHEMA4_FIXTURES
+EXPECTED_SCHEMA4_OPS = {'schema4-rich-text':['rich_text'],'schema4-signer':['signature'],'schema4-table':['table'],'schema4-data-table':['table']}
 FORMATS = ('pdf','png','jpeg')
 MM_TO_PT = 72.0 / 25.4
 CROSS_FORMAT_MAX_MAE = 1.0
@@ -210,7 +213,7 @@ def verify(bundle_dir: Path, require_production: bool, environment_report: Path 
     bundle_path = safe_file(root, 'bundle.json', MAX_BUNDLE_JSON_BYTES, 'bundle manifest')
     manifest = json.loads(bundle_path.read_text(encoding='utf-8'))
     check_shape(manifest, ('schema','version','qualification','plugin_version','fixture_manifest','render_plan_manifest','raster_dpi','renderers','runs'), 'bundle manifest')
-    if manifest['schema'] != 'certloom-renderer-acceptance-bundle' or manifest['version'] != 3:
+    if manifest['schema'] != 'certloom-renderer-acceptance-bundle' or manifest['version'] != 4:
         raise RuntimeError('unsupported acceptance-bundle schema/version')
     qualification = manifest['qualification']
     if qualification not in ('development-reference','production-candidate'):
@@ -232,18 +235,22 @@ def verify(bundle_dir: Path, require_production: bool, environment_report: Path 
     plan_path = safe_file(root, manifest['render_plan_manifest']['path'], MAX_MANIFEST_BYTES, 'render-plan manifest')
     source_root = Path(__file__).resolve().parents[2]
     source_reference = source_root / 'tests' / 'fixtures' / 'rendering' / 'reference'
-    source_golden = source_reference / 'manifest.json'
-    source_plan = source_root / 'tests' / 'fixtures' / 'rendering' / 'render-plan-manifest.json'
+    source_golden = source_reference / 'acceptance-manifest.json'
+    source_plan = source_root / 'tests' / 'fixtures' / 'rendering' / 'render-plan-acceptance-manifest.json'
     if golden_path.read_bytes() != source_golden.read_bytes() or plan_path.read_bytes() != source_plan.read_bytes():
         raise RuntimeError('bundle fixture/render-plan manifests do not match the frozen source-tree acceptance state')
     golden = json.loads(golden_path.read_text(encoding='utf-8'))
     plan = json.loads(plan_path.read_text(encoding='utf-8'))
-    if golden.get('version') != 4:
-        raise RuntimeError('frozen golden manifest does not contain the PDF/PNG/JPEG v3 contract')
+    if golden.get('version') != 5:
+        raise RuntimeError('combined golden manifest does not contain the renderer acceptance v5 contract')
     if dpi != golden.get('raster_dpi'):
         raise RuntimeError('bundle raster DPI does not match the frozen acceptance DPI')
     if set(plan.get('fixtures', {})) != set(FIXTURES) or set(golden.get('fixtures', {})) != set(FIXTURES):
-        raise RuntimeError('bundle manifests do not contain the seven permanent fixtures')
+        raise RuntimeError('bundle manifests do not contain the complete eleven-fixture acceptance set')
+    for name, expected_ops in EXPECTED_SCHEMA4_OPS.items():
+        item = plan['fixtures'].get(name, {})
+        if item.get('layout_schema_version') != 4 or item.get('operation_types') != expected_ops:
+            raise RuntimeError(f'{name} does not prove the required Schema-4 render operation path')
 
     golden_rgb = {}
     for name in FIXTURES:
@@ -380,7 +387,7 @@ def verify(bundle_dir: Path, require_production: bool, environment_report: Path 
             raise RuntimeError(f'QR fixture does not decode from the actual {fmt.upper()} artifact to the frozen verification URL')
 
     report = {
-        'schema':'certloom-renderer-bundle-verification','version':5,
+        'schema':'certloom-renderer-bundle-verification','version':6,
         'verified':True,
         'qualification':qualification,
         'qualifies_pdf04': qualification == 'production-candidate',
@@ -400,6 +407,7 @@ def verify(bundle_dir: Path, require_production: bool, environment_report: Path 
         'pdf_png_visual_parity':True,
         'png_jpeg_visual_parity':True,
         'golden_visual_parity':True,'primitive_capability_coverage':True,
+        'schema4_rich_text':True,'schema4_signer_signature':True,'schema4_fixed_table':True,'schema4_data_table':True,
         'renderers': {fmt: {'id': renderers[fmt]['id'], 'version': renderers[fmt]['version'], 'candidate_manifest_sha256': renderers[fmt]['candidate_manifest']['sha256']} for fmt in FORMATS},
         'fixtures': {name: {'render_plan_sha256': plan['fixtures'][name]['render_plan_sha256'], 'pdf_sha256': facts['a'][name]['pdf'][1], 'png_sha256': facts['a'][name]['png'][1], 'jpeg_sha256': facts['a'][name]['jpeg'][1]} for name in FIXTURES},
         'parity':parity,
@@ -418,7 +426,7 @@ def main() -> int:
     try:
         _manifest, report = verify(Path(args.bundle_dir), args.require_production, Path(args.environment_report) if args.environment_report else None)
     except Exception as error:
-        print(json.dumps({'schema':'certloom-renderer-bundle-verification','version':5,'verified':False,'error':str(error)}, sort_keys=True, separators=(',', ':')), file=sys.stderr)
+        print(json.dumps({'schema':'certloom-renderer-bundle-verification','version':6,'verified':False,'error':str(error)}, sort_keys=True, separators=(',', ':')), file=sys.stderr)
         return 1
     text = json.dumps(report, ensure_ascii=False, sort_keys=True, separators=(',', ':')) + '\n'
     if args.report:

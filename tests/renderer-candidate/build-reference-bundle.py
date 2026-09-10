@@ -12,8 +12,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 FIX = ROOT / 'tests' / 'fixtures' / 'rendering'
 REF = FIX / 'reference'
-PLAN = FIX / 'render-plan-manifest.json'
-FIXTURES = ('english','urdu-rtl','mixed-script','long-name-shrink','rotation','qr','primitives')
+PLAN = FIX / 'render-plan-acceptance-manifest.json'
+FIXTURES = ('english','urdu-rtl','mixed-script','long-name-shrink','rotation','qr','primitives','schema4-rich-text','schema4-signer','schema4-table','schema4-data-table')
 FORMATS = ('pdf','png','jpeg')
 
 
@@ -41,7 +41,7 @@ def main() -> int:
     for run in ('a','b'):
         (out / 'artifacts' / run).mkdir(parents=True)
 
-    shutil.copy2(REF / 'manifest.json', out / 'manifests' / 'golden.json')
+    shutil.copy2(REF / 'acceptance-manifest.json', out / 'manifests' / 'golden.json')
     shutil.copy2(PLAN, out / 'manifests' / 'render-plan.json')
     plan = json.loads(PLAN.read_text(encoding='utf-8'))
 
@@ -88,7 +88,7 @@ def main() -> int:
         }
 
     manifest = {
-        'schema':'certloom-renderer-acceptance-bundle','version':3,
+        'schema':'certloom-renderer-acceptance-bundle','version':4,
         'qualification':'development-reference',
         'plugin_version':version_match.group(1),
         'fixture_manifest': {'path':'manifests/golden.json','sha256':sha(out/'manifests'/'golden.json')},

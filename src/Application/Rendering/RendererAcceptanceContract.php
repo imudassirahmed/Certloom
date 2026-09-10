@@ -12,12 +12,16 @@ use InvalidArgumentException;
  */
 final class RendererAcceptanceContract {
 	const SCHEMA = 'certloom-renderer-acceptance';
-	const VERSION = 7;
+	const VERSION = 8;
 
 	/** @return string[] */
-	public static function required_fixtures() {
-		return array( 'english', 'urdu-rtl', 'mixed-script', 'long-name-shrink', 'rotation', 'qr', 'primitives' );
-	}
+	public static function legacy_fixtures() { return array( 'english', 'urdu-rtl', 'mixed-script', 'long-name-shrink', 'rotation', 'qr', 'primitives' ); }
+
+	/** @return string[] */
+	public static function schema4_fixtures() { return array( 'schema4-rich-text', 'schema4-signer', 'schema4-table', 'schema4-data-table' ); }
+
+	/** @return string[] */
+	public static function required_fixtures() { return array_merge( self::legacy_fixtures(), self::schema4_fixtures() ); }
 
 	/** @return string[] */
 	public static function required_formats() {
@@ -45,6 +49,10 @@ final class RendererAcceptanceContract {
 			'png_jpeg_visual_parity',
 			'golden_visual_parity',
 			'primitive_capability_coverage',
+			'schema4_rich_text',
+			'schema4_signer_signature',
+			'schema4_fixed_table',
+			'schema4_data_table',
 			'local_assets_only',
 			'no_remote_fetch',
 			'missing_dependencies_fail_soft',

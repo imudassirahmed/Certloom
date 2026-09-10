@@ -1,3 +1,12 @@
+= 1.7.0-alpha.4.10 =
+* Phase 4 renderer-acceptance coverage hardening checkpoint candidate: expand the production acceptance contract from the frozen seven legacy renderer fixtures to an explicit eleven-fixture suite that also requires Schema 4 Rich text, credential-Signer signature, fixed Table and immutable Data Table evidence.
+* Preserve the original seven-fixture golden/reference manifests byte-for-byte as historical authority while adding separate combined acceptance manifests and four independently generated Schema 4 oracle fixtures.
+* Advance the production acceptance contract to v8, verification report to v6 and production bundle contract to v4; require explicit Schema 4 proof flags so a legacy seven-fixture report cannot qualify as current production acceptance.
+* Bind the producer, independent verifier, evidence builder, finalizer and authorized-release validation chain to the same eleven-fixture contract, with deterministic fixture/source/font/signature provenance and development-reference end-to-end verification.
+* Add source regression coverage preventing future removal of any Schema 4 acceptance fixture, proof flag, bundle/report version or combined-manifest binding while retaining all legacy renderer-reference tests unchanged.
+* This checkpoint DOES NOT confer production renderer authority. The genuine external eleven-fixture PDF/PNG/JPEG ceremony still requires the exact frozen dependency-prefixed mPDF and GD/mbstring runtime; accepted renderer/domain manifests remain absent until that real evidence is reviewed.
+* Phase 4 remains in progress for genuine external renderer acceptance, final accepted-byte historical proof and regression/package ceremony, user Designer approval and carried earlier/unseen master-plan requirements. Phase 5 remains closed.
+
 = 1.7.0-alpha.4.9 =
 * Phase 4 renderer-parity implementation checkpoint candidate: extend the existing shared Render Plan and existing browser/mPDF/GD adapters for Schema 4 Rich text and Table/Data Table without introducing a second renderer authority.
 * Freeze resolved Rich-text runs, exact content-addressed font facts and deterministic Table cell geometry in Render Plan before adapter execution; credential-Signer signatures continue to resolve into the existing local image operation.

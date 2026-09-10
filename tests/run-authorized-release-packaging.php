@@ -50,7 +50,7 @@ foreach ( RendererAcceptanceContract::required_fixtures() as $name ) {
 $report = array(
     'schema'=>RendererVerificationReport::SCHEMA,'version'=>RendererVerificationReport::VERSION,'verified'=>true,'qualification'=>'production-candidate','qualifies_pdf04'=>true,
     'bundle_manifest_sha256'=>str_repeat('d',64),'fixture_manifest_sha256'=>str_repeat('e',64),'render_plan_manifest_sha256'=>str_repeat('f',64),'verifier_environment_sha256'=>$env_hash,
-    'candidate_provenance_rechecked'=>true,'artifact_receipts_rechecked'=>true,'deterministic_runs'=>true,'pdf_geometry'=>true,'png_geometry'=>true,'jpeg_geometry'=>true,'qr_pdf_decode'=>true,'qr_png_decode'=>true,'qr_jpeg_decode'=>true,'pdf_png_visual_parity'=>true,'png_jpeg_visual_parity'=>true,'golden_visual_parity'=>true,'primitive_capability_coverage'=>true,
+    'candidate_provenance_rechecked'=>true,'artifact_receipts_rechecked'=>true,'deterministic_runs'=>true,'pdf_geometry'=>true,'png_geometry'=>true,'jpeg_geometry'=>true,'qr_pdf_decode'=>true,'qr_png_decode'=>true,'qr_jpeg_decode'=>true,'pdf_png_visual_parity'=>true,'png_jpeg_visual_parity'=>true,'golden_visual_parity'=>true,'primitive_capability_coverage'=>true,'schema4_rich_text'=>true,'schema4_signer_signature'=>true,'schema4_fixed_table'=>true,'schema4_data_table'=>true,
     'renderers'=>$renderers,'fixtures'=>$fixtures,'parity'=>$parity,'golden_parity'=>$golden,
 );
 $report_contract = new RendererVerificationReport(); $report_hash = $report_contract->hash( $report );
