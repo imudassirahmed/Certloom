@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Certloom Phase 2 Browser Resilience</title>
+<link rel="stylesheet" href="../../public/assets/certloom-public.css">
+<style>
+/* Deliberately common hostile theme rules loaded after Certloom. */
+html,body{margin:0;padding:0}
+#primary{float:left;width:42%;max-width:360px;margin-left:30px}
+button{width:100%;font-size:28px;line-height:2;text-transform:uppercase;letter-spacing:.2em;box-shadow:0 0 0 8px red}
+input{width:32px!important;font-size:10px;line-height:1;background:#ffc!important}
+a{font-size:24px;text-decoration:underline;color:purple}
+dl,dd,dt,p,h1,h2,h3{margin:28px;padding:4px}
+*{box-sizing:content-box}
+.browser-fixture{padding:12px}
+#certloom-browser-result{display:none}
+</style>
+</head>
+<body>
+<a class="certloom-skip-link screen-reader-text" href="#certloom-route-content">Skip to credential content</a>
+<main id="primary" class="certloom-route-main certloom-route-credential is-certloom-branded" style="--certloom-brand-accent:#0f6e56;--certloom-brand-surface:#ffffff;--certloom-brand-text:#17201d">
+<div id="certloom-route-content" class="certloom-route-shell" tabindex="-1">
+<section class="certloom-route-brand" aria-label="Credential issuer"><div class="certloom-route-brand-copy"><strong class="certloom-route-brand-name">Example Institute</strong><span class="certloom-route-brand-tagline">Professional credentials</span></div></section>
+<div class="browser-fixture">
+<div class="ecapla-certverify-widget cv-widget" data-endpoint="about:blank">
+  <div class="cv-search-card">
+    <form class="cv-search-form"><label class="screen-reader-text" for="cv-test">Certificate number</label><input id="cv-test" class="cv-search-input" type="text" value="Urdu / Batch ۱" dir="auto" autocomplete="off" autocapitalize="off" spellcheck="false"><input class="cv-search-input certloom-secondary-code-input" type="text" value="0123-4567-89AB-CDEF" autocomplete="one-time-code" autocapitalize="off" spellcheck="false"><button class="cv-search-btn" type="button"><span class="cv-btn-text">Verify</span><span class="cv-arrow" aria-hidden="true">→</span></button></form>
+    <div class="cv-result" role="region" aria-label="Verification result"><div class="cv-result-card cv-status-suspended"><div class="cv-result-summary"><span class="cv-status-mark" aria-hidden="true">!</span><div><p class="cv-result-success">Suspended</p></div></div><dl class="cv-result-list"><div class="cv-result-row"><dt>Certificate holder</dt><dd dir="auto">محمد علی VeryLongUnbrokenCredentialValueThatMustNeverOverflowTheContainer1234567890</dd></div></dl><figure class="cv-verification-qr certloom-verification-qr"><div class="certloom-verification-qr-code" role="img" aria-label="Verification QR code"><svg class="certloom-qr-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" width="176" height="176" aria-hidden="true" focusable="false"><rect width="29" height="29" fill="#fff"/><path d="M4 4h7v7h-7z M18 4h7v7h-7z M4 18h7v7h-7z M13 13h2v2h-2z M17 14h2v2h-2z M13 18h3v3h-3z M19 19h5v5h-5z" fill="#111"/><rect class="certloom-qr-logo-background" x="12" y="12" width="5" height="5" rx="1" fill="#fff"/><image class="certloom-qr-logo-image" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAIAAABt+uBvAAABT0lEQVR42u3c23HDIBAF0HjHBaS7lJFaUka6cwdKA7HMQ4yBPfdfGvbMYgFj6XYcx4c8TyAABAgQIECAds29/xaf318zV/j4+e25/Na8UJzc5SqpFqDlaHqYIpVOw/gjlU5DFZFNp7aWSKhTVVHk1CmvK9LqFFYXmXVKarTV6JhiGdrnZaU6yG6+L0/3YuPmV+f2etxT5d+B6SBTDBAgQIAAAQIkgFpyn3BMU50i6CBAgAABAgQIECBZZiVde6o/dOWtgwABAgQIECBAgATQLlsNh/amGCBAAggQIECArKRb0vNX/MtX4ToIECBAgAABAgRIALXk7ANLed6bP9nf6CBTbBzQ0BfcVzk/0EF9UyxDE53XGJ3X761TOsV2NSqpKy681346dT/SOxmV1xKD7ruHTstjfnWj2vH7GvAwoFWk3vY9aStpAQQIECBAk+cPv2RoV+73cU8AAAAASUVORK5CYII=" x="13" y="13" width="3" height="3" preserveAspectRatio="xMidYMid meet"/></svg></div><figcaption>Scan to open this credential verification page.</figcaption></figure><figure class="cv-verification-barcode certloom-verification-barcode"><div class="certloom-verification-barcode-code" role="img" aria-label="Code 128 certificate barcode"><svg class="certloom-barcode-svg" xmlns="http://www.w3.org/2000/svg" width="440" height="88" viewBox="0 0 198 40" preserveAspectRatio="none" aria-hidden="true" focusable="false" shape-rendering="crispEdges"><rect width="198" height="40" fill="#fff"/><path d="M10 0h2v40h-2zM13 0h1v40h-1zM16 0h1v40h-1zM21 0h1v40h-1zM25 0h1v40h-1zM29 0h2v40h-2zM32 0h1v40h-1zM36 0h2v40h-2zM39 0h1v40h-1zM43 0h2v40h-2zM48 0h1v40h-1zM50 0h3v40h-3zM54 0h2v40h-2zM57 0h3v40h-3zM63 0h1v40h-1zM65 0h1v40h-1zM68 0h2v40h-2zM71 0h3v40h-3zM76 0h2v40h-2zM80 0h3v40h-3zM85 0h1v40h-1zM87 0h1v40h-1zM90 0h3v40h-3zM94 0h2v40h-2zM98 0h2v40h-2zM102 0h3v40h-3zM107 0h1v40h-1zM109 0h2v40h-2zM113 0h3v40h-3zM117 0h1v40h-1zM120 0h1v40h-1zM123 0h2v40h-2zM126 0h3v40h-3zM131 0h1v40h-1zM133 0h3v40h-3zM137 0h4v40h-4zM142 0h2v40h-2zM145 0h2v40h-2zM149 0h2v40h-2zM153 0h2v40h-2zM157 0h2v40h-2zM160 0h2v40h-2zM164 0h2v40h-2zM168 0h1v40h-1zM173 0h1v40h-1zM175 0h2v40h-2zM180 0h3v40h-3zM184 0h1v40h-1zM186 0h2v40h-2z" fill="#111"/></svg></div><figcaption>Code 128 representation of the certificate number. <code>CERT-2026-0001</code></figcaption></figure><div class="cv-result-actions"><button type="button" class="certloom-result-action certloom-copy-link">Copy verification link</button><a class="certloom-result-action" href="#profile">View credential profile</a><button type="button" class="certloom-result-action certloom-print">Print</button><span class="certloom-action-feedback" aria-live="polite"></span></div></div></div>
+    <div class="certloom-live-status" role="status" aria-live="polite" aria-atomic="true"></div>
+  </div>
+</div>
+<div class="ecapla-certverify-template cvx-widget cvx-template-meridian"><section class="cvx-shell" aria-label="Certificate verification search"><div class="cvx-copy"><h2 class="cvx-heading">Verify a credential</h2></div><div class="cvx-action"><form class="cvx-search-form"><div class="cvx-input-wrap"><span class="cvx-input-icon" aria-hidden="true"></span><input class="cvx-search-input" type="text" value="CERT-2026-0001" dir="auto"></div><div class="cvx-input-wrap certloom-secondary-code-wrap"><span class="cvx-input-icon certloom-code-icon" aria-hidden="true"></span><input class="cvx-search-input certloom-secondary-code-input" type="text" value="0123-4567-89AB-CDEF"></div><button class="cvx-search-btn" type="button"><span class="cvx-btn-text">Verify</span><span class="cvx-arrow" aria-hidden="true">→</span></button></form><div class="cvx-result" role="region" aria-label="Verification result"><div class="cvx-result-card cvx-status-expired"><div class="cvx-result-summary"><span class="cvx-status-mark" aria-hidden="true">○</span><div><p class="cvx-result-success">Expired</p></div></div><dl class="cvx-result-list"><div class="cvx-result-row"><dt>Holder</dt><dd dir="auto">Ada Lovelace</dd></div></dl></div></div><div class="certloom-live-status" role="status" aria-live="polite"></div></div></section></div>
+<section id="profile" class="certloom-credential-profile cvp-widget" aria-labelledby="profile-heading"><header class="cvp-header"><p class="cvp-eyebrow">Verified credential</p><h2 id="profile-heading" class="cvp-heading">Credential profile</h2></header><div class="cvp-result" role="region" aria-labelledby="profile-heading"><div class="cvp-result-card cvp-status-valid"><div class="cvp-result-summary"><span class="cvp-status-mark" aria-hidden="true">✓</span><div><p class="cvp-result-success">Valid</p></div></div><dl class="cvp-result-list"><div class="cvp-result-row"><dt>Certificate number</dt><dd dir="auto">CERT-2026-0001</dd></div></dl></div></div><div class="certloom-live-status" role="status" aria-live="polite"></div></section>
+</div>
+</div>
+</main>
+<pre id="certloom-browser-result"></pre>
+<script>
+(function(){
+ function all(sel){return Array.prototype.slice.call(document.querySelectorAll(sel));}
+ function minHeight(sel,n){return all(sel).length>0 && all(sel).every(function(el){return el.getBoundingClientRect().height>=n;});}
+ var main=document.querySelector('.certloom-route-main#primary');
+ var route=document.querySelector('.certloom-route-shell');
+ var skip=document.querySelector('.certloom-skip-link');
+ skip.focus();
+ var skipBox=skip.getBoundingClientRect();
+ var checks={
+   noHorizontalOverflow: document.documentElement.scrollWidth <= window.innerWidth + 1,
+   routeNeutralizesThemeColumn: main && main.getBoundingClientRect().width >= window.innerWidth - 1 && getComputedStyle(main).float === 'none',
+   searchTargetsAtLeast44: minHeight('.cv-search-input,.cv-search-btn,.cvx-input-wrap,.cvx-search-btn',44),
+   resultActionsAtLeast44: minHeight('.certloom-result-action',44),
+   noInteractiveInsideStatusRole: document.querySelectorAll('[role="status"] a,[role="status"] button,[role="status"] input').length===0,
+   embeddedProfileUsesH2: !!document.querySelector('.cvp-widget > .cvp-header > h2.cvp-heading'),
+   bidiValuesUsePlaintext: all('.cv-result-row dd,.cvx-result-row dd,.cvp-result-row dd').every(function(el){return getComputedStyle(el).unicodeBidi==='plaintext';}),
+   skipLinkVisibleOnFocus: skipBox.width>10 && skipBox.height>10,
+   routeTargetIsFocusable: route && route.getAttribute('tabindex')==='-1',
+   actionThemeReset: all('.certloom-result-action').every(function(el){var c=getComputedStyle(el);return c.textTransform==='none' && c.letterSpacing==='normal' && c.boxShadow==='none';}),
+   brandContained: (function(){var b=document.querySelector('.certloom-route-brand'); return !!b && b.getBoundingClientRect().right <= window.innerWidth + 1 && b.getBoundingClientRect().left >= -1;})(),
+   qrContained: (function(){var q=document.querySelector('.certloom-verification-qr');var card=document.querySelector('.cv-result-card');if(!q||!card){return false;}var qb=q.getBoundingClientRect(),cb=card.getBoundingClientRect();return qb.left>=cb.left-1 && qb.right<=cb.right+1 && qb.right<=window.innerWidth+1;})(),
+   qrIsSquare: (function(){var q=document.querySelector('.certloom-verification-qr-code');if(!q){return false;}var b=q.getBoundingClientRect();return Math.abs(b.width-b.height)<=1;})(),
+   qrReadableSize: (function(){var q=document.querySelector('.certloom-verification-qr-code');if(!q){return false;}var b=q.getBoundingClientRect();return b.width>=144 && b.width<=177;})(),
+   qrSvgFixedColors: (function(){var svg=document.querySelector('.certloom-qr-svg');if(!svg){return false;}var rect=svg.querySelector('rect'),path=svg.querySelector('path');return rect&&path&&rect.getAttribute('fill')==='#fff'&&path.getAttribute('fill')==='#111';})(),
+   qrHasAccessibleName: !!document.querySelector('.certloom-verification-qr-code[role="img"][aria-label]'),
+   qrLogoBounded: (function(){var svg=document.querySelector('.certloom-qr-svg'),logo=document.querySelector('.certloom-qr-logo-image');if(!svg||!logo){return false;}var x=parseFloat(logo.getAttribute('x')),y=parseFloat(logo.getAttribute('y')),w=parseFloat(logo.getAttribute('width')),h=parseFloat(logo.getAttribute('height'));return x>=0&&y>=0&&w>0&&h>0&&x+w<=29&&y+h<=29;})(),
+   barcodeContained: (function(){var b=document.querySelector('.certloom-verification-barcode'),card=document.querySelector('.cv-result-card');if(!b||!card){return false;}var bb=b.getBoundingClientRect(),cb=card.getBoundingClientRect();return bb.left>=cb.left-1&&bb.right<=cb.right+1&&bb.right<=window.innerWidth+1;})(),
+   barcodeScrollContained: (function(){var c=document.querySelector('.certloom-verification-barcode-code');return !!c&&c.scrollWidth>=c.clientWidth&&c.getBoundingClientRect().right<=window.innerWidth+1;})(),
+   barcodeSvgFixedColors: (function(){var svg=document.querySelector('.certloom-barcode-svg');if(!svg){return false;}var rect=svg.querySelector('rect'),path=svg.querySelector('path');return rect&&path&&rect.getAttribute('fill')==='#fff'&&path.getAttribute('fill')==='#111';})(),
+   barcodeHasAccessibleName: !!document.querySelector('.certloom-verification-barcode-code[role="img"][aria-label]')
+ };
+ var passed=Object.keys(checks).every(function(k){return checks[k];});
+ var out=document.getElementById('certloom-browser-result');
+ out.setAttribute('data-pass',passed?'1':'0');
+ out.textContent=JSON.stringify({viewport:[window.innerWidth,window.innerHeight],checks:checks});
+})();
+</script>
+</body>
+</html>

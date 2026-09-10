@@ -106,17 +106,18 @@ final class MpdfPdfRenderer implements RendererInterface {
 		$runtime = isset( $plan['_runtime']['fonts'] ) && is_array( $plan['_runtime']['fonts'] ) ? $plan['_runtime']['fonts'] : array();
 		$data = array(); $dirs = array(); $aliases = array();
 		foreach ( $plan['operations'] as $operation ) {
-			if ( 'text' !== (string) ( $operation['type'] ?? '' ) ) { continue; }
-			$faces = (array) ( $operation['text']['font']['faces'] ?? array() );
-			if ( 1 !== count( $faces ) ) { throw new RuntimeException( 'Initial mPDF candidate requires one exact proven face per text operation; multi-face fallback awaits shaped font runs.' ); }
-			$hash = strtolower( (string) $faces[0]['sha256'] );
-			if ( empty( $runtime[ $hash ]['path'] ) || ! is_file( $runtime[ $hash ]['path'] ) ) { throw new RuntimeException( 'mPDF candidate is missing an exact runtime font path.' ); }
-			$path = realpath( $runtime[ $hash ]['path'] );
-			if ( false === $path ) { throw new RuntimeException( 'mPDF exact runtime font path cannot be resolved.' ); }
-			$alias = 'clf' . substr( $hash, 0, 20 );
-			$aliases[ $hash ] = $alias;
-			$data[ $alias ] = array( 'R' => basename( $path ), 'useOTL' => 0xFF );
-			$dirs[ dirname( $path ) ] = dirname( $path );
+			foreach ( $this->operation_fonts( is_array( $operation ) ? $operation : array() ) as $font ) {
+				$faces = isset( $font['faces'] ) && is_array( $font['faces'] ) ? array_values( $font['faces'] ) : array();
+				if ( 1 !== count( $faces ) ) { throw new RuntimeException( 'mPDF candidate requires one exact proven face per text run; multi-face fallback awaits shaped font runs.' ); }
+				$hash = strtolower( (string) ( $faces[0]['sha256'] ?? '' ) );
+				if ( empty( $runtime[ $hash ]['path'] ) || ! is_file( $runtime[ $hash ]['path'] ) ) { throw new RuntimeException( 'mPDF candidate is missing an exact runtime font path.' ); }
+				$path = realpath( $runtime[ $hash ]['path'] );
+				if ( false === $path ) { throw new RuntimeException( 'mPDF exact runtime font path cannot be resolved.' ); }
+				$alias = 'clf' . substr( $hash, 0, 20 );
+				$aliases[ $hash ] = $alias;
+				$data[ $alias ] = array( 'R' => basename( $path ), 'useOTL' => 0xFF );
+				$dirs[ dirname( $path ) ] = dirname( $path );
+			}
 		}
 		ksort( $data, SORT_STRING ); ksort( $dirs, SORT_STRING ); ksort( $aliases, SORT_STRING );
 		return array( $data, array_values( $dirs ), $aliases );
@@ -127,6 +128,8 @@ final class MpdfPdfRenderer implements RendererInterface {
 		if ( method_exists( $mpdf, 'SetAlpha' ) ) { $mpdf->SetAlpha( $opacity ); }
 		switch ( (string) $op['type'] ) {
 			case 'text': $this->draw_text( $mpdf, $op, $font_aliases ); break;
+			case 'rich_text': $this->draw_rich_text( $mpdf, $op, $font_aliases ); break;
+			case 'table': $this->draw_table( $mpdf, $op, $font_aliases ); break;
 			case 'qr': $this->draw_machine_code( $mpdf, $op, 'qr' ); break;
 			case 'barcode': $this->draw_machine_code( $mpdf, $op, 'barcode' ); break;
 			case 'shape': $this->draw_shape( $mpdf, $op ); break;
@@ -136,6 +139,116 @@ final class MpdfPdfRenderer implements RendererInterface {
 		}
 		if ( method_exists( $mpdf, 'SetAlpha' ) ) { $mpdf->SetAlpha( 1.0 ); }
 	}
+
+
+	/** @return array<int,array<string,mixed>> */
+	private function operation_fonts( array $operation ) {
+		$type = (string) ( $operation['type'] ?? '' );
+		if ( 'text' === $type ) { return array( (array) ( $operation['text']['font'] ?? array() ) ); }
+		if ( 'rich_text' === $type ) {
+			$fonts = array( (array) ( $operation['rich_text']['base_font'] ?? array() ) );
+			foreach ( (array) ( $operation['rich_text']['runs'] ?? array() ) as $run ) { if ( is_array( $run ) ) { $fonts[] = (array) ( $run['font'] ?? array() ); } }
+			return $fonts;
+		}
+		if ( 'table' === $type ) {
+			$fonts = array();
+			foreach ( (array) ( $operation['table']['rows'] ?? array() ) as $row ) {
+				foreach ( is_array( $row ) ? (array) ( $row['cells'] ?? array() ) : array() as $cell ) {
+					if ( is_array( $cell ) ) { $fonts[] = (array) ( $cell['text']['font'] ?? array() ); }
+				}
+			}
+			return $fonts;
+		}
+		return array();
+	}
+
+	private function font_alias( array $font, array $aliases ) {
+		$faces = isset( $font['faces'] ) && is_array( $font['faces'] ) ? array_values( $font['faces'] ) : array();
+		if ( 1 !== count( $faces ) ) { throw new RuntimeException( 'mPDF text run requires one exact proven font face.' ); }
+		$hash = strtolower( (string) ( $faces[0]['sha256'] ?? '' ) );
+		if ( '' === $hash || empty( $aliases[ $hash ] ) ) { throw new RuntimeException( 'mPDF candidate cannot map the exact font face.' ); }
+		return (string) $aliases[ $hash ];
+	}
+
+	private function html_text_style( array $text, array $aliases ) {
+		$font = (array) ( $text['font'] ?? array() );
+		$alias = $this->font_alias( $font, $aliases );
+		$color = (array) ( $text['color'] ?? array() );
+		return 'font-family:' . $alias . ';font-size:' . $this->num( $font['size_pt'] ?? 0 ) . 'pt;line-height:' . $this->num( $font['line_height'] ?? 1.2 ) . ';letter-spacing:' . $this->num( $font['letter_spacing_pt'] ?? 0 ) . 'pt;color:rgb(' . (int) ( $color['r'] ?? 0 ) . ',' . (int) ( $color['g'] ?? 0 ) . ',' . (int) ( $color['b'] ?? 0 ) . ');';
+	}
+
+	private function draw_rich_text( $mpdf, array $op, array $aliases ) {
+		$rich = isset( $op['rich_text'] ) && is_array( $op['rich_text'] ) ? $op['rich_text'] : array();
+		$box = (array) ( $op['geometry']['box'] ?? array() );
+		$base = array( 'font' => (array) ( $rich['base_font'] ?? array() ), 'color' => (array) ( $rich['base_color'] ?? array() ) );
+		$body = '';
+		foreach ( (array) ( $rich['runs'] ?? array() ) as $run ) {
+			if ( ! is_array( $run ) ) { continue; }
+			$run_text = array( 'font' => (array) ( $run['font'] ?? array() ), 'color' => (array) ( $run['color'] ?? array() ) );
+			$body .= '<span style="' . $this->html_text_style( $run_text, $aliases ) . '">' . htmlspecialchars( (string) ( $run['value'] ?? '' ), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' ) . '</span>';
+		}
+		$direction = (string) ( $rich['direction'] ?? 'ltr' );
+		$align = (string) ( $rich['align'] ?? 'center' );
+		$vertical = (string) ( $rich['vertical_align'] ?? 'middle' );
+		$style = $this->html_text_style( $base, $aliases ) . 'text-align:' . $align . ';direction:' . $direction . ';unicode-bidi:plaintext;margin:0;padding:0;white-space:pre-wrap;';
+		$html = '<table cellspacing="0" cellpadding="0" style="border-collapse:collapse;width:100%;height:100%;margin:0;padding:0"><tr><td dir="' . $direction . '" align="' . $align . '" valign="' . $vertical . '" style="' . $style . '">' . $body . '</td></tr></table>';
+		$overflow = 'shrink' === (string) ( $rich['overflow'] ?? 'shrink' ) ? 'auto' : 'hidden';
+		$this->with_rotation( $mpdf, $op, function () use ( $mpdf, $html, $box, $overflow ) {
+			$mpdf->WriteFixedPosHTML( $html, $box['x_mm'], $box['y_mm'], $box['width_mm'], $box['height_mm'], $overflow );
+		} );
+	}
+
+	private function draw_table( $mpdf, array $op, array $aliases ) {
+		$table = isset( $op['table'] ) && is_array( $op['table'] ) ? $op['table'] : array();
+		$outer = (array) ( $op['geometry']['box'] ?? array() );
+		$grid = isset( $table['grid'] ) && is_array( $table['grid'] ) ? $table['grid'] : array();
+		$border_color = (array) ( $grid['border_color'] ?? array() );
+		$border_width = max( 0.0, (float) ( $grid['border_width_mm'] ?? 0 ) );
+		$opacity = max( 0.0, min( 1.0, (float) ( $op['opacity'] ?? 1.0 ) ) );
+		$this->with_rotation( $mpdf, $op, function () use ( $mpdf, $table, $outer, $border_color, $border_width, $opacity, $aliases ) {
+			foreach ( (array) ( $table['rows'] ?? array() ) as $row ) {
+				if ( ! is_array( $row ) ) { continue; }
+				$fill = (array) ( $row['fill'] ?? array() );
+				foreach ( (array) ( $row['cells'] ?? array() ) as $cell ) {
+					if ( ! is_array( $cell ) ) { continue; }
+					$cell_box = (array) ( $cell['box'] ?? array() );
+					$content = (array) ( $cell['content_box'] ?? array() );
+					$x = (float) $outer['x_mm'] + (float) ( $cell_box['x_mm'] ?? 0 ); $y = (float) $outer['y_mm'] + (float) ( $cell_box['y_mm'] ?? 0 );
+					$w = (float) ( $cell_box['width_mm'] ?? 0 ); $h = (float) ( $cell_box['height_mm'] ?? 0 );
+					if ( method_exists( $mpdf, 'SetAlpha' ) ) { $mpdf->SetAlpha( $opacity * (float) ( $fill['alpha_unit'] ?? 1.0 ) ); }
+					$mpdf->SetFillColor( (int) ( $fill['r'] ?? 255 ), (int) ( $fill['g'] ?? 255 ), (int) ( $fill['b'] ?? 255 ) );
+					$mpdf->Rect( $x, $y, $w, $h, 'F' );
+					if ( $border_width > 0 ) {
+						if ( method_exists( $mpdf, 'SetAlpha' ) ) { $mpdf->SetAlpha( $opacity * (float) ( $border_color['alpha_unit'] ?? 1.0 ) ); }
+						$mpdf->SetDrawColor( (int) ( $border_color['r'] ?? 0 ), (int) ( $border_color['g'] ?? 0 ), (int) ( $border_color['b'] ?? 0 ) );
+						$mpdf->SetLineWidth( $border_width ); $mpdf->Rect( $x, $y, $w, $h, 'D' );
+					}
+					if ( method_exists( $mpdf, 'SetAlpha' ) ) { $mpdf->SetAlpha( $opacity ); }
+					$text = (array) ( $cell['text'] ?? array() );
+					$cx = (float) $outer['x_mm'] + (float) ( $content['x_mm'] ?? 0 ); $cy = (float) $outer['y_mm'] + (float) ( $content['y_mm'] ?? 0 );
+					$cw = (float) ( $content['width_mm'] ?? 0 ); $ch = (float) ( $content['height_mm'] ?? 0 );
+					$escaped = htmlspecialchars( (string) ( $text['value'] ?? '' ), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' );
+					$direction = (string) ( $text['direction'] ?? 'ltr' ); $align = (string) ( $text['align'] ?? 'left' ); $vertical = (string) ( $text['vertical_align'] ?? 'middle' );
+					$style = $this->html_text_style( $text, $aliases ) . 'text-align:' . $align . ';direction:' . $direction . ';unicode-bidi:plaintext;margin:0;padding:0;';
+					$html = '<table cellspacing="0" cellpadding="0" style="border-collapse:collapse;width:100%;height:100%;margin:0;padding:0"><tr><td dir="' . $direction . '" align="' . $align . '" valign="' . $vertical . '" style="' . $style . '">' . $escaped . '</td></tr></table>';
+					$mpdf->WriteFixedPosHTML( $html, $cx, $cy, $cw, $ch, 'shrink' === (string) ( $text['overflow'] ?? 'shrink' ) ? 'auto' : 'hidden' );
+				}
+			}
+		} );
+	}
+
+	private function with_rotation( $mpdf, array $op, callable $draw ) {
+		$rotation = (float) ( $op['geometry']['rotation_deg'] ?? 0.0 );
+		if ( abs( $rotation ) < 0.0001 ) { $draw(); return; }
+		if ( ! method_exists( $mpdf, 'StartTransform' ) || ! method_exists( $mpdf, 'Rotate' ) || ! method_exists( $mpdf, 'StopTransform' ) ) {
+			throw new RuntimeException( 'mPDF candidate cannot apply the shared Render Plan rotation to this complex operation.' );
+		}
+		$center = (array) ( $op['geometry']['center'] ?? array() );
+		$mpdf->StartTransform();
+		try { $mpdf->Rotate( $rotation, (float) ( $center['x_mm'] ?? 0 ), (float) ( $center['y_mm'] ?? 0 ) ); $draw(); }
+		finally { $mpdf->StopTransform(); }
+	}
+
 
 	private function draw_text( $mpdf, array $op, array $aliases ) {
 		$text = $op['text']; $box = $op['geometry']['box']; $rotation = (float) $op['geometry']['rotation_deg'];

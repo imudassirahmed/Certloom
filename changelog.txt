@@ -1,3 +1,12 @@
+= 1.7.0-alpha.4.9 =
+* Phase 4 renderer-parity implementation checkpoint candidate: extend the existing shared Render Plan and existing browser/mPDF/GD adapters for Schema 4 Rich text and Table/Data Table without introducing a second renderer authority.
+* Freeze resolved Rich-text runs, exact content-addressed font facts and deterministic Table cell geometry in Render Plan before adapter execution; credential-Signer signatures continue to resolve into the existing local image operation.
+* Add browser Render-Plan Table preview, mPDF Rich-text/Table rendering with exact face aliases and shared-centre rotation, and GD Rich-text/Table rendering with isolated clipping/rotation plus deterministic grapheme-run letter spacing.
+* Advance renderer-candidate provenance identities to `certloom-mpdf-pdf` `8.3.1+certloom.3` and `certloom-gd-raster` `1.0.0+certloom.3` so materially changed adapter bytes cannot reuse the prior candidate identity.
+* Add a frozen alpha.4.8 historical-immutability baseline proving seven schema/validator/resolver/registry/preset authority files remain byte-identical and 144 factory-layout artifacts across schemas 1–3 retain their exact canonical hashes; the seven permanent renderer reference layouts remain schema-1 fixtures.
+* Keep production renderer/domain authority absent. The real PDF/PNG/JPEG verifier ceremony remains open because this build environment lacks ext-gd, ext-mbstring and the frozen prefixed mPDF runtime; no accepted manifest is manufactured from stub/candidate tests.
+* Phase 4 remains in progress for genuine external renderer acceptance, final completion-candidate gates, user Designer approval and carried earlier/unseen master-plan requirements. Phase 5 remains closed.
+
 = 1.7.0-alpha.4.8 =
 * Phase 4 Table/Data Table review candidate: add bounded Schema 4 fixed Table and immutable Data Table primitives only after their schema/validator/resolver/Render Plan architecture exists.
 * Restrict Data Tables to the closed `credential.results` and `credential.subjects` rowsets, with approved scalar fields, 50-row/64 KiB snapshot bounds, no arbitrary HTML/CSS/JSON callbacks and no live mutable record reads at render time.

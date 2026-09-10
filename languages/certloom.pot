@@ -23653,20 +23653,20 @@ msgstr ""
 msgid "The reviewed credential could not build its canonical browser Preview: %s"
 msgstr ""
 
-#: src/Infrastructure/Rendering/RenderPlanHtmlPreview.php:152
+#: src/Infrastructure/Rendering/RenderPlanHtmlPreview.php:179
 msgid "A local image could not be embedded in the browser preview; artifact rendering remains fail-closed."
 msgstr ""
 
-#: src/Infrastructure/Rendering/RenderPlanHtmlPreview.php:152
+#: src/Infrastructure/Rendering/RenderPlanHtmlPreview.php:179
 msgid "A local image is larger than the 2 MiB inline browser-preview limit; artifact rendering remains unaffected."
 msgstr ""
 
-#: src/Infrastructure/Rendering/RenderPlanHtmlPreview.php:153
-#: src/Infrastructure/Rendering/RenderPlanHtmlPreview.php:158
+#: src/Infrastructure/Rendering/RenderPlanHtmlPreview.php:180
+#: src/Infrastructure/Rendering/RenderPlanHtmlPreview.php:185
 msgid "Local image"
 msgstr ""
 
-#: src/Infrastructure/Rendering/RenderPlanHtmlPreview.php:157
+#: src/Infrastructure/Rendering/RenderPlanHtmlPreview.php:184
 msgid "A local image could not be read completely for browser Preview."
 msgstr ""
 

@@ -81,13 +81,18 @@ final class GdRasterRenderer implements RendererInterface {
 
 	private function draw_operation( $canvas, array $plan, array $op ) {
 		$rotation = (float) ( $op['geometry']['rotation_deg'] ?? 0.0 );
-		if ( abs( $rotation ) < 0.0001 ) { $this->draw_unrotated( $canvas, $plan, $op, 0.0, 0.0 ); return; }
+		$type = (string) ( $op['type'] ?? '' );
+		if ( abs( $rotation ) < 0.0001 && ! in_array( $type, array( 'rich_text', 'table' ), true ) ) { $this->draw_unrotated( $canvas, $plan, $op, 0.0, 0.0 ); return; }
 		$box = $op['geometry']['box'];
 		$local_w = max( 1, $this->mm_px( $box['width_mm'] ) );
 		$local_h = max( 1, $this->mm_px( $box['height_mm'] ) );
 		$local = $this->driver->create_transparent_canvas( $local_w, $local_h );
 		try {
 			$this->draw_unrotated( $local, $plan, $op, -1.0 * (float) $box['x_mm'], -1.0 * (float) $box['y_mm'] );
+			if ( abs( $rotation ) < 0.0001 ) {
+				$this->driver->copy( $canvas, $local, (int) round( $this->mm_px_float( $box['x_mm'] ) ), (int) round( $this->mm_px_float( $box['y_mm'] ) ) );
+				return;
+			}
 			$rotated = $this->driver->rotate( $local, $rotation );
 			try {
 				list( $rw, $rh ) = $this->driver->image_size( $rotated );
@@ -101,6 +106,8 @@ final class GdRasterRenderer implements RendererInterface {
 	private function draw_unrotated( $canvas, array $plan, array $op, $offset_x_mm, $offset_y_mm ) {
 		switch ( (string) $op['type'] ) {
 			case 'text': $this->draw_text( $canvas, $plan, $op, $offset_x_mm, $offset_y_mm ); break;
+			case 'rich_text': $this->draw_rich_text( $canvas, $plan, $op, $offset_x_mm, $offset_y_mm ); break;
+			case 'table': $this->draw_table( $canvas, $plan, $op, $offset_x_mm, $offset_y_mm ); break;
 			case 'qr': $this->draw_machine_code( $canvas, $op, 'qr', $offset_x_mm, $offset_y_mm ); break;
 			case 'barcode': $this->draw_machine_code( $canvas, $op, 'barcode', $offset_x_mm, $offset_y_mm ); break;
 			case 'shape': $this->draw_shape( $canvas, $op, $offset_x_mm, $offset_y_mm ); break;
@@ -112,7 +119,6 @@ final class GdRasterRenderer implements RendererInterface {
 
 	private function draw_text( $canvas, array $plan, array $op, $ox, $oy ) {
 		$text = $op['text']; $font = $text['font'];
-		if ( abs( (float) $font['letter_spacing_pt'] ) > 0.0001 ) { throw new RuntimeException( 'Initial GD candidate fails closed for non-zero letter spacing until glyph-run spacing is centralized.' ); }
 		$faces = (array) $font['faces'];
 		if ( 1 !== count( $faces ) ) { throw new RuntimeException( 'Initial GD candidate requires one exact proven face per text operation; multi-face fallback awaits shaped font runs.' ); }
 		$hash = strtolower( (string) $faces[0]['sha256'] );
@@ -123,7 +129,8 @@ final class GdRasterRenderer implements RendererInterface {
 		$x = $this->mm_px_float( $box['x_mm'] + $ox ); $y = $this->mm_px_float( $box['y_mm'] + $oy );
 		$w = $this->mm_px_float( $box['width_mm'] ); $h = $this->mm_px_float( $box['height_mm'] );
 		$size = (float) $font['size_pt'];
-		$lines = $this->layout_lines( (string) $text['value'], (string) $text['direction'], (string) $text['overflow'], $font_path, $size, $w, $h, (float) $font['line_height'] );
+		$spacing_pt = (float) ( $font['letter_spacing_pt'] ?? 0.0 );
+		$lines = $this->layout_lines( (string) $text['value'], (string) $text['direction'], (string) $text['overflow'], $font_path, $size, $w, $h, (float) $font['line_height'], $spacing_pt );
 		$size = $lines['size_pt']; $rows = $lines['lines'];
 		$line_px = $size * self::DPI / 72.0 * (float) $font['line_height'];
 		$total_h = count( $rows ) * $line_px;
@@ -133,24 +140,120 @@ final class GdRasterRenderer implements RendererInterface {
 		$color = $this->driver->allocate_color( $canvas, $text['color'], (float) $op['opacity'] );
 		foreach ( $rows as $index => $row ) {
 			$visual = $this->visual_text( $row, (string) $text['direction'] );
-			$metrics = $this->bbox_metrics( $this->driver->text_box( $size, 0.0, $font_path, $visual ) );
+			$metrics = $this->text_metrics( $visual, $font_path, $size, $spacing_pt );
 			$draw_x = $x - $metrics['min_x'];
 			if ( 'center' === $text['align'] ) { $draw_x = $x + ( $w - $metrics['width'] ) / 2.0 - $metrics['min_x']; }
 			elseif ( 'right' === $text['align'] ) { $draw_x = $x + $w - $metrics['width'] - $metrics['min_x']; }
 			$line_top = $top + $index * $line_px;
 			$baseline = $line_top - $metrics['min_y'] + max( 0.0, ( $line_px - $metrics['height'] ) / 2.0 );
-			$this->driver->text( $canvas, $size, 0.0, $draw_x, $baseline, $color, $font_path, $visual );
+			$this->draw_visual_text( $canvas, $size, $draw_x, $baseline, $color, $font_path, $visual, $spacing_pt );
+		}
+	}
+
+
+	private function draw_rich_text( $canvas, array $plan, array $op, $ox, $oy ) {
+		$rich = isset( $op['rich_text'] ) && is_array( $op['rich_text'] ) ? $op['rich_text'] : array();
+		$runs = isset( $rich['runs'] ) && is_array( $rich['runs'] ) ? array_values( $rich['runs'] ) : array();
+		if ( empty( $runs ) ) { return; }
+		$prepared = array();
+		foreach ( $runs as $run ) {
+			if ( ! is_array( $run ) ) { continue; }
+			$font = (array) ( $run['font'] ?? array() );
+			$faces = isset( $font['faces'] ) && is_array( $font['faces'] ) ? array_values( $font['faces'] ) : array();
+			if ( 1 !== count( $faces ) ) { throw new RuntimeException( 'GD rich-text parity requires one exact proven face per inline run.' ); }
+			$hash = strtolower( (string) ( $faces[0]['sha256'] ?? '' ) );
+			$path = $plan['_runtime']['fonts'][ $hash ]['path'] ?? '';
+			if ( '' === $path || ! is_file( $path ) ) { throw new RuntimeException( 'GD rich-text parity is missing an exact runtime font path.' ); }
+			$value = (string) ( $run['value'] ?? '' );
+			$this->assert_supported_text( $value );
+			$prepared[] = array( 'value' => $value, 'font' => $font, 'path' => $path, 'color' => (array) ( $run['color'] ?? array() ), 'spacing_pt' => (float) ( $font['letter_spacing_pt'] ?? 0.0 ) );
+		}
+		if ( empty( $prepared ) ) { return; }
+		$box = (array) ( $op['geometry']['box'] ?? array() );
+		$x = $this->mm_px_float( (float) $box['x_mm'] + $ox ); $y = $this->mm_px_float( (float) $box['y_mm'] + $oy );
+		$w = $this->mm_px_float( (float) $box['width_mm'] ); $h = $this->mm_px_float( (float) $box['height_mm'] );
+		$direction = (string) ( $rich['direction'] ?? 'ltr' ); $overflow = (string) ( $rich['overflow'] ?? 'shrink' );
+		$base_font = (array) ( $rich['base_font'] ?? array() ); $line_height = (float) ( $base_font['line_height'] ?? 1.2 );
+		$scale = 1.0; $layout = $this->rich_layout( $prepared, $direction, $overflow, $scale, $w, $line_height );
+		if ( 'shrink' === $overflow ) {
+			$base_size = max( 1.0, (float) ( $base_font['size_pt'] ?? 12.0 ) ); $min_scale = min( 1.0, 5.0 / $base_size );
+			while ( $scale > $min_scale + 0.0001 && ( $layout['max_width'] > $w + 0.01 || $layout['height'] > $h + 0.01 ) ) {
+				$scale = max( $min_scale, $scale - 0.02 ); $layout = $this->rich_layout( $prepared, $direction, $overflow, $scale, $w, $line_height );
+			}
+		}
+		$total_h = (float) $layout['height']; $top = $y;
+		if ( 'middle' === (string) ( $rich['vertical_align'] ?? 'middle' ) ) { $top = $y + ( $h - $total_h ) / 2.0; }
+		elseif ( 'bottom' === (string) ( $rich['vertical_align'] ?? 'middle' ) ) { $top = $y + $h - $total_h; }
+		$line_top = $top;
+		foreach ( $layout['lines'] as $line ) {
+			$line_w = (float) $line['width']; $cursor = $x;
+			if ( 'center' === (string) ( $rich['align'] ?? 'center' ) ) { $cursor = $x + ( $w - $line_w ) / 2.0; }
+			elseif ( 'right' === (string) ( $rich['align'] ?? 'center' ) ) { $cursor = $x + $w - $line_w; }
+			$fragments = 'rtl' === $direction ? array_reverse( $line['fragments'] ) : $line['fragments'];
+			foreach ( $fragments as $fragment ) {
+				$size = (float) $fragment['size_pt']; $visual = (string) $fragment['visual']; $metrics = $fragment['metrics'];
+				$baseline = $line_top - (float) $metrics['min_y'] + max( 0.0, ( (float) $line['height'] - (float) $metrics['height'] ) / 2.0 );
+				$color = $this->driver->allocate_color( $canvas, (array) $fragment['color'], (float) $op['opacity'] );
+				$this->draw_visual_text( $canvas, $size, $cursor - (float) $metrics['min_x'], $baseline, $color, (string) $fragment['path'], $visual, (float) ( $fragment['spacing_pt'] ?? 0.0 ) );
+				$cursor += (float) $fragment['width'];
+			}
+			$line_top += (float) $line['height'];
+			if ( $line_top > $y + $h + 0.01 ) { break; }
+		}
+	}
+
+	/** @return array{lines:array<int,array<string,mixed>>,height:float,max_width:float} */
+	private function rich_layout( array $runs, $direction, $overflow, $scale, $width_px, $line_height ) {
+		$lines = array(); $current = array(); $current_width = 0.0; $current_height = 0.0; $max_width = 0.0;
+		$flush = function () use ( &$lines, &$current, &$current_width, &$current_height, &$max_width ) {
+			$height = max( 1.0, $current_height ); $lines[] = array( 'fragments' => $current, 'width' => $current_width, 'height' => $height ); $max_width = max( $max_width, $current_width ); $current = array(); $current_width = 0.0; $current_height = 0.0;
+		};
+		foreach ( $runs as $run ) {
+			$parts = preg_split( '/(\\R|[ \\t]+)/u', (string) $run['value'], -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
+			if ( false === $parts ) { $parts = array( (string) $run['value'] ); }
+			foreach ( $parts as $part ) {
+				if ( 1 === preg_match( '/^\\R$/u', $part ) ) { $flush(); continue; }
+				$size = max( 1.0, (float) ( $run['font']['size_pt'] ?? 12.0 ) * $scale );
+				$visual = $this->visual_text( $part, $direction ); $spacing_pt = (float) ( $run['spacing_pt'] ?? 0.0 ) * $scale; $metrics = $this->text_metrics( $visual, (string) $run['path'], $size, $spacing_pt ); $fragment_width = (float) $metrics['width'];
+				$is_space = 1 === preg_match( '/^[ \\t]+$/u', $part );
+				if ( 'wrap' === $overflow && ! empty( $current ) && ! $is_space && $current_width + $fragment_width > $width_px + 0.01 ) { $flush(); }
+				if ( 'wrap' === $overflow && empty( $current ) && $is_space ) { continue; }
+				$fragment_height = max( 1.0, $size * self::DPI / 72.0 * $line_height );
+				$current[] = array( 'visual' => $visual, 'path' => $run['path'], 'size_pt' => $size, 'color' => $run['color'], 'metrics' => $metrics, 'width' => $fragment_width, 'spacing_pt' => $spacing_pt );
+				$current_width += $fragment_width; $current_height = max( $current_height, $fragment_height );
+			}
+		}
+		if ( ! empty( $current ) || empty( $lines ) ) { $flush(); }
+		$height = 0.0; foreach ( $lines as $line ) { $height += (float) $line['height']; }
+		return array( 'lines' => $lines, 'height' => $height, 'max_width' => $max_width );
+	}
+
+	private function draw_table( $canvas, array $plan, array $op, $ox, $oy ) {
+		$table = isset( $op['table'] ) && is_array( $op['table'] ) ? $op['table'] : array(); $outer = (array) ( $op['geometry']['box'] ?? array() );
+		$grid = isset( $table['grid'] ) && is_array( $table['grid'] ) ? $table['grid'] : array(); $border = (array) ( $grid['border_color'] ?? array() ); $thickness = max( 1, (int) round( $this->mm_px_float( (float) ( $grid['border_width_mm'] ?? 0 ) ) ) );
+		foreach ( (array) ( $table['rows'] ?? array() ) as $row ) {
+			if ( ! is_array( $row ) ) { continue; } $fill = (array) ( $row['fill'] ?? array() );
+			foreach ( (array) ( $row['cells'] ?? array() ) as $cell ) {
+				if ( ! is_array( $cell ) ) { continue; } $cell_box = (array) ( $cell['box'] ?? array() ); $content = (array) ( $cell['content_box'] ?? array() );
+				$x1 = $this->mm_px_float( (float) $outer['x_mm'] + (float) ( $cell_box['x_mm'] ?? 0 ) + $ox ); $y1 = $this->mm_px_float( (float) $outer['y_mm'] + (float) ( $cell_box['y_mm'] ?? 0 ) + $oy );
+				$x2 = $this->mm_px_float( (float) $outer['x_mm'] + (float) ( $cell_box['x_mm'] ?? 0 ) + (float) ( $cell_box['width_mm'] ?? 0 ) + $ox ); $y2 = $this->mm_px_float( (float) $outer['y_mm'] + (float) ( $cell_box['y_mm'] ?? 0 ) + (float) ( $cell_box['height_mm'] ?? 0 ) + $oy );
+				$fill_color = $this->driver->allocate_color( $canvas, $fill, (float) $op['opacity'] ); $border_color = $this->driver->allocate_color( $canvas, $border, (float) $op['opacity'] );
+				$this->driver->filled_rectangle( $canvas, (int) floor( $x1 ), (int) floor( $y1 ), max( (int) floor( $x1 ), (int) ceil( $x2 ) - 1 ), max( (int) floor( $y1 ), (int) ceil( $y2 ) - 1 ), $fill_color );
+				if ( (float) ( $grid['border_width_mm'] ?? 0 ) > 0 ) { $this->driver->rectangle( $canvas, $x1, $y1, $x2, $y2, $border_color, $thickness ); }
+				$text_op = array( 'type' => 'text', 'opacity' => $op['opacity'], 'geometry' => array( 'box' => array( 'x_mm' => (float) $outer['x_mm'] + (float) ( $content['x_mm'] ?? 0 ), 'y_mm' => (float) $outer['y_mm'] + (float) ( $content['y_mm'] ?? 0 ), 'width_mm' => (float) ( $content['width_mm'] ?? 0 ), 'height_mm' => (float) ( $content['height_mm'] ?? 0 ) ) ), 'text' => (array) ( $cell['text'] ?? array() ) );
+				$this->draw_text( $canvas, $plan, $text_op, $ox, $oy );
+			}
 		}
 	}
 
 	/** @return array{size_pt:float,lines:string[]} */
-	private function layout_lines( $value, $direction, $overflow, $font_path, $size, $width_px, $height_px, $line_height ) {
+	private function layout_lines( $value, $direction, $overflow, $font_path, $size, $width_px, $height_px, $line_height, $spacing_pt = 0.0 ) {
 		$min = 5.0;
-		if ( 'wrap' === $overflow ) { return array( 'size_pt' => $size, 'lines' => $this->wrap_lines( $value, $direction, $font_path, $size, $width_px ) ); }
+		if ( 'wrap' === $overflow ) { return array( 'size_pt' => $size, 'lines' => $this->wrap_lines( $value, $direction, $font_path, $size, $width_px, $spacing_pt ) ); }
 		$lines = preg_split( '/\R/u', $value ); if ( false === $lines || empty( $lines ) ) { $lines = array( $value ); }
 		if ( 'shrink' === $overflow ) {
 			while ( $size > $min ) {
-				$max = 0.0; foreach ( $lines as $line ) { $max = max( $max, $this->measure_width( $this->visual_text( $line, $direction ), $font_path, $size ) ); }
+				$max = 0.0; foreach ( $lines as $line ) { $max = max( $max, $this->measure_width( $this->visual_text( $line, $direction ), $font_path, $size, $spacing_pt ) ); }
 				$total = count( $lines ) * $size * self::DPI / 72.0 * $line_height;
 				if ( $max <= $width_px + 0.01 && $total <= $height_px + 0.01 ) { break; }
 				$size = max( $min, $size - 0.25 );
@@ -160,7 +263,7 @@ final class GdRasterRenderer implements RendererInterface {
 	}
 
 	/** @return string[] */
-	private function wrap_lines( $value, $direction, $font_path, $size, $width_px ) {
+	private function wrap_lines( $value, $direction, $font_path, $size, $width_px, $spacing_pt = 0.0 ) {
 		$paragraphs = preg_split( '/\R/u', $value ); if ( false === $paragraphs ) { return array( $value ); }
 		$out = array();
 		foreach ( $paragraphs as $paragraph ) {
@@ -168,7 +271,7 @@ final class GdRasterRenderer implements RendererInterface {
 			$line = '';
 			foreach ( $words as $word ) {
 				$candidate = '' === $line ? $word : $line . ' ' . $word;
-				if ( '' !== $line && $this->measure_width( $this->visual_text( $candidate, $direction ), $font_path, $size ) > $width_px ) { $out[] = $line; $line = $word; }
+				if ( '' !== $line && $this->measure_width( $this->visual_text( $candidate, $direction ), $font_path, $size, $spacing_pt ) > $width_px ) { $out[] = $line; $line = $word; }
 				else { $line = $candidate; }
 			}
 			$out[] = $line;
@@ -177,7 +280,36 @@ final class GdRasterRenderer implements RendererInterface {
 	}
 
 	private function visual_text( $value, $direction ) { return $this->contains_arabic( $value ) ? $this->shaper->visual_text( $value, $direction ) : $value; }
-	private function measure_width( $visual, $font_path, $size ) { $m=$this->bbox_metrics($this->driver->text_box($size,0.0,$font_path,$visual)); return $m['width']; }
+	private function measure_width( $visual, $font_path, $size, $spacing_pt = 0.0 ) { $m = $this->text_metrics( $visual, $font_path, $size, $spacing_pt ); return $m['width']; }
+	private function text_metrics( $visual, $font_path, $size, $spacing_pt = 0.0 ) {
+		$spacing_pt = (float) $spacing_pt;
+		if ( abs( $spacing_pt ) < 0.0001 ) { return $this->bbox_metrics( $this->driver->text_box( $size, 0.0, $font_path, $visual ) ); }
+		$clusters = $this->grapheme_clusters( $visual );
+		if ( empty( $clusters ) ) { return array( 'min_x'=>0.0,'max_x'=>0.0,'min_y'=>0.0,'max_y'=>0.0,'width'=>0.0,'height'=>0.0 ); }
+		$spacing_px = $spacing_pt * self::DPI / 72.0; $width = 0.0; $min_y = 0.0; $max_y = 0.0; $first = true;
+		foreach ( $clusters as $cluster ) {
+			$m = $this->bbox_metrics( $this->driver->text_box( $size, 0.0, $font_path, $cluster ) );
+			$width += (float) $m['width']; if ( ! $first ) { $width += $spacing_px; }
+			$min_y = $first ? (float) $m['min_y'] : min( $min_y, (float) $m['min_y'] ); $max_y = $first ? (float) $m['max_y'] : max( $max_y, (float) $m['max_y'] ); $first = false;
+		}
+		return array( 'min_x'=>0.0,'max_x'=>$width,'min_y'=>$min_y,'max_y'=>$max_y,'width'=>$width,'height'=>$max_y-$min_y );
+	}
+	private function draw_visual_text( $canvas, $size, $x, $baseline, $color, $font_path, $visual, $spacing_pt = 0.0 ) {
+		$spacing_pt = (float) $spacing_pt;
+		if ( abs( $spacing_pt ) < 0.0001 ) { $this->driver->text( $canvas, $size, 0.0, $x, $baseline, $color, $font_path, $visual ); return; }
+		$cursor = (float) $x; $spacing_px = $spacing_pt * self::DPI / 72.0;
+		foreach ( $this->grapheme_clusters( $visual ) as $cluster ) {
+			$m = $this->bbox_metrics( $this->driver->text_box( $size, 0.0, $font_path, $cluster ) );
+			$this->driver->text( $canvas, $size, 0.0, $cursor - (float) $m['min_x'], $baseline, $color, $font_path, $cluster );
+			$cursor += (float) $m['width'] + $spacing_px;
+		}
+	}
+	/** @return string[] */
+	private function grapheme_clusters( $value ) {
+		if ( '' === (string) $value ) { return array(); }
+		if ( 1 === preg_match_all( '/\X/u', (string) $value, $matches ) && ! empty( $matches[0] ) ) { return array_values( $matches[0] ); }
+		$chars = preg_split( '//u', (string) $value, -1, PREG_SPLIT_NO_EMPTY ); return false === $chars ? array( (string) $value ) : array_values( $chars );
+	}
 	/** @return array<string,float> */
 	private function bbox_metrics( array $box ) { $xs=array($box[0],$box[2],$box[4],$box[6]); $ys=array($box[1],$box[3],$box[5],$box[7]); $minx=min($xs);$maxx=max($xs);$miny=min($ys);$maxy=max($ys); return array('min_x'=>(float)$minx,'max_x'=>(float)$maxx,'min_y'=>(float)$miny,'max_y'=>(float)$maxy,'width'=>(float)($maxx-$minx),'height'=>(float)($maxy-$miny)); }
 

@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "textdomain": "certloom",
+  "source_pot_sha256": "6a9d26b203dd2b1be7d8ab186720724006682e2e6adef9fb9e522d6f2411b9a4",
+  "targets": [
+    {
+      "locale": "es_ES",
+      "language_name": "Spanish QA fixture",
+      "direction": "ltr",
+      "status": "candidate",
+      "po": "tests/i18n/fixtures/certloom-es_ES-candidate.po",
+      "mo": "tests/i18n/fixtures/generated/certloom-es_ES.mo"
+    },
+    {
+      "locale": "ar",
+      "language_name": "Arabic QA fixture",
+      "direction": "rtl",
+      "status": "candidate",
+      "po": "tests/i18n/fixtures/certloom-ar-candidate.po",
+      "mo": "tests/i18n/fixtures/generated/certloom-ar.mo"
+    }
+  ]
+}

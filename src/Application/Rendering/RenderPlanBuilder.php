@@ -54,11 +54,6 @@ final class RenderPlanBuilder {
 		$width = (float) $expected_width;
 		$height = (float) $expected_height;
 		$elements = isset( $resolved_document['elements'] ) && is_array( $resolved_document['elements'] ) ? array_values( $resolved_document['elements'] ) : array();
-		foreach ( $elements as $element ) {
-			if ( is_array( $element ) && 'rich_text' === strtolower( trim( (string) ( $element['type'] ?? '' ) ) ) ) {
-				throw new InvalidArgumentException( 'Schema 4 rich-text render-plan parity is not accepted yet; artifact rendering fails closed.' );
-			}
-		}
 		$operations = array();
 		$seen_ids = array();
 		$seen_z = array();
@@ -102,6 +97,9 @@ final class RenderPlanBuilder {
 			switch ( $render_operation ) {
 				case 'text':
 					$operation['text'] = $this->text_operation( $element, $font_manifest );
+					break;
+				case 'rich_text':
+					$operation['rich_text'] = $this->rich_text_operation( $element, $font_manifest );
 					break;
 				case 'image':
 					$image = $this->image_operation( $element, $geometry );
@@ -261,6 +259,43 @@ final class RenderPlanBuilder {
 			'color' => $this->color( $style['color'] ?? '#000000' ),
 		);
 	}
+
+	/** @return array<string,mixed> */
+	private function rich_text_operation( array $element, array $manifest ) {
+		$runs = isset( $element['runs'] ) && is_array( $element['runs'] ) ? array_values( $element['runs'] ) : array();
+		if ( empty( $runs ) || count( $runs ) > LayoutValidator::MAX_RICH_TEXT_RUNS ) {
+			throw new InvalidArgumentException( 'Render plan rich text requires bounded resolved runs.' );
+		}
+		$plain = '';
+		foreach ( $runs as $run ) {
+			if ( ! is_array( $run ) || 'text' !== (string) ( $run['kind'] ?? '' ) || ! array_key_exists( 'text', $run ) ) {
+				throw new InvalidArgumentException( 'Render plan rich text accepts only fully resolved text runs.' );
+			}
+			$plain .= (string) $run['text'];
+		}
+		$base_style = isset( $element['style'] ) && is_array( $element['style'] ) ? $element['style'] : array();
+		$base = $this->text_operation( array( 'text' => $plain, 'style' => $base_style ), $manifest );
+		$render_runs = array();
+		foreach ( $runs as $run ) {
+			$run_style = isset( $run['style'] ) && is_array( $run['style'] ) ? array_merge( $base_style, $run['style'] ) : $base_style;
+			$resolved = $this->text_operation( array( 'text' => (string) $run['text'], 'style' => $run_style ), $manifest );
+			$render_runs[] = array(
+				'value' => $resolved['value'],
+				'font' => $resolved['font'],
+				'color' => $resolved['color'],
+			);
+		}
+		return array(
+			'direction' => $base['direction'],
+			'align' => $base['align'],
+			'vertical_align' => $base['vertical_align'],
+			'overflow' => $base['overflow'],
+			'base_font' => $base['font'],
+			'base_color' => $base['color'],
+			'runs' => $render_runs,
+		);
+	}
+
 
 	/** @return array<string,mixed> */
 	private function image_operation( array $element, array $geometry ) {

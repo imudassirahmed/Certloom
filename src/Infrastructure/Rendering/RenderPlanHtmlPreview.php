@@ -53,6 +53,8 @@ final class RenderPlanHtmlPreview {
 				return '<div class="' . esc_attr( $classes ) . '" style="' . esc_attr( $style . $this->text_style( (array) ( $operation['text'] ?? array() ) ) ) . '"><span>' . esc_html( (string) ( $operation['text']['value'] ?? '' ) ) . '</span></div>';
 			case 'rich_text':
 				return $this->rich_text( $operation, $style, $classes );
+			case 'table':
+				return $this->table( $operation, $style, $classes );
 			case 'shape':
 				$shape = (array) ( $operation['shape'] ?? array() );
 				$fill = $this->css_color( (array) ( $shape['fill'] ?? array() ) );
@@ -113,6 +115,31 @@ final class RenderPlanHtmlPreview {
 		}
 		return '<div class="' . esc_attr( $classes ) . '" style="' . esc_attr( $style . $this->text_style( $base ) . 'white-space:pre-wrap;' ) . '"><span>' . $spans . '</span></div>';
 	}
+
+	/** @return string */
+	private function table( array $operation, $style, $classes ) {
+		$table = isset( $operation['table'] ) && is_array( $operation['table'] ) ? $operation['table'] : array();
+		$grid = isset( $table['grid'] ) && is_array( $table['grid'] ) ? $table['grid'] : array();
+		$border = max( 0.0, $this->px( (float) ( $grid['border_width_mm'] ?? 0 ) ) );
+		$border_color = $this->css_color( (array) ( $grid['border_color'] ?? array() ) );
+		$rows_html = '';
+		foreach ( isset( $table['rows'] ) && is_array( $table['rows'] ) ? $table['rows'] : array() as $row ) {
+			if ( ! is_array( $row ) ) { continue; }
+			$fill = $this->css_color( (array) ( $row['fill'] ?? array() ) );
+			foreach ( isset( $row['cells'] ) && is_array( $row['cells'] ) ? $row['cells'] : array() as $cell ) {
+				if ( ! is_array( $cell ) ) { continue; }
+				$box = isset( $cell['box'] ) && is_array( $cell['box'] ) ? $cell['box'] : array();
+				$content = isset( $cell['content_box'] ) && is_array( $cell['content_box'] ) ? $cell['content_box'] : array();
+				$text = isset( $cell['text'] ) && is_array( $cell['text'] ) ? $cell['text'] : array();
+				if ( ! isset( $box['x_mm'], $box['y_mm'], $box['width_mm'], $box['height_mm'], $content['x_mm'], $content['y_mm'], $content['width_mm'], $content['height_mm'] ) ) { continue; }
+				$cell_style = 'position:absolute;left:' . $this->num( $this->px( (float) $box['x_mm'] ) ) . 'px;top:' . $this->num( $this->px( (float) $box['y_mm'] ) ) . 'px;width:' . $this->num( $this->px( (float) $box['width_mm'] ) ) . 'px;height:' . $this->num( $this->px( (float) $box['height_mm'] ) ) . 'px;background:' . $fill . ';border:' . $this->num( $border ) . 'px solid ' . $border_color . ';box-sizing:border-box;overflow:hidden;';
+				$content_style = 'position:absolute;left:' . $this->num( $this->px( (float) $content['x_mm'] ) ) . 'px;top:' . $this->num( $this->px( (float) $content['y_mm'] ) ) . 'px;width:' . $this->num( $this->px( (float) $content['width_mm'] ) ) . 'px;height:' . $this->num( $this->px( (float) $content['height_mm'] ) ) . 'px;' . $this->text_style( $text );
+				$rows_html .= '<div class="certloom-template-preview-table-cell" style="' . esc_attr( $cell_style ) . '"></div><div class="certloom-template-preview-table-text" style="' . esc_attr( $content_style ) . '"><span>' . esc_html( (string) ( $text['value'] ?? '' ) ) . '</span></div>';
+			}
+		}
+		return '<div class="' . esc_attr( $classes ) . '" style="' . esc_attr( $style . 'overflow:hidden;box-sizing:border-box;' ) . '">' . $rows_html . '</div>';
+	}
+
 
 	/** @return string */
 	private function line( array $operation, $style, $classes ) {
