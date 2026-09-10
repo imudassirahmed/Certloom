@@ -32,10 +32,10 @@ final class NativeGdDriver implements GdDriverInterface {
 	}
 
 	public function fill( $image, $x, $y, $color ) { imagefill( $image, (int) $x, (int) $y, $color ); }
-	public function filled_rectangle( $image, $x1, $y1, $x2, $y2, $color ) { imagefilledrectangle( $image, (int) $x1, (int) $y1, (int) $x2, (int) $y2, $color ); }
-	public function rectangle( $image, $x1, $y1, $x2, $y2, $color, $thickness = 1 ) { imagesetthickness( $image, max( 1, (int) $thickness ) ); imagerectangle( $image, (int) $x1, (int) $y1, (int) $x2, (int) $y2, $color ); imagesetthickness( $image, 1 ); }
-	public function filled_ellipse( $image, $cx, $cy, $width, $height, $color ) { imagefilledellipse( $image, (int) $cx, (int) $cy, max( 1, (int) $width ), max( 1, (int) $height ), $color ); }
-	public function ellipse( $image, $cx, $cy, $width, $height, $color, $thickness = 1 ) { imagesetthickness( $image, max( 1, (int) $thickness ) ); imageellipse( $image, (int) $cx, (int) $cy, max( 1, (int) $width ), max( 1, (int) $height ), $color ); imagesetthickness( $image, 1 ); }
+	public function filled_rectangle( $image, $x1, $y1, $x2, $y2, $color ) { imagefilledrectangle( $image, (int) round( $x1 ), (int) round( $y1 ), (int) round( $x2 ), (int) round( $y2 ), $color ); }
+	public function rectangle( $image, $x1, $y1, $x2, $y2, $color, $thickness = 1 ) { imagesetthickness( $image, max( 1, (int) $thickness ) ); imagerectangle( $image, (int) round( $x1 ), (int) round( $y1 ), (int) round( $x2 ), (int) round( $y2 ), $color ); imagesetthickness( $image, 1 ); }
+	public function filled_ellipse( $image, $cx, $cy, $width, $height, $color ) { imagefilledellipse( $image, (int) round( $cx ), (int) round( $cy ), max( 1, (int) round( $width ) ), max( 1, (int) round( $height ) ), $color ); }
+	public function ellipse( $image, $cx, $cy, $width, $height, $color, $thickness = 1 ) { imagesetthickness( $image, max( 1, (int) $thickness ) ); imageellipse( $image, (int) round( $cx ), (int) round( $cy ), max( 1, (int) round( $width ) ), max( 1, (int) round( $height ) ), $color ); imagesetthickness( $image, 1 ); }
 	public function line( $image, $x1, $y1, $x2, $y2, $color, $thickness = 1 ) { imagesetthickness( $image, max( 1, (int) $thickness ) ); imageline( $image, (int) $x1, (int) $y1, (int) $x2, (int) $y2, $color ); imagesetthickness( $image, 1 ); }
 
 	public function text_box( $size_pt, $angle_deg, $font_path, $text ) {
@@ -56,8 +56,29 @@ final class NativeGdDriver implements GdDriverInterface {
 		return $image;
 	}
 	public function image_size( $image ) { return array( imagesx( $image ), imagesy( $image ) ); }
+	public function multiply_opacity( $image, $opacity ) {
+		$opacity = max( 0.0, min( 1.0, (float) $opacity ) );
+		if ( $opacity >= 0.999999 ) { return; }
+		if ( function_exists( 'imageistruecolor' ) && ! imageistruecolor( $image ) ) {
+			if ( ! function_exists( 'imagepalettetotruecolor' ) || ! imagepalettetotruecolor( $image ) ) { throw new RuntimeException( 'GD could not normalize a palette image before applying operation opacity.' ); }
+		}
+		imagealphablending( $image, false ); imagesavealpha( $image, true );
+		$width = imagesx( $image ); $height = imagesy( $image );
+		for ( $y = 0; $y < $height; $y++ ) {
+			for ( $x = 0; $x < $width; $x++ ) {
+				$rgba = imagecolorat( $image, $x, $y );
+				$old_alpha = ( $rgba >> 24 ) & 0x7F;
+				$old_coverage = ( 127 - $old_alpha ) / 127.0;
+				$new_alpha = 127 - (int) round( 127 * $old_coverage * $opacity );
+				$new_alpha = max( 0, min( 127, $new_alpha ) );
+				$rgb = $rgba & 0x00FFFFFF;
+				imagesetpixel( $image, $x, $y, $rgb | ( $new_alpha << 24 ) );
+			}
+		}
+		imagealphablending( $image, true ); imagesavealpha( $image, true );
+	}
 	public function copy_resampled( $destination, $source, $dst_x, $dst_y, $dst_w, $dst_h, $src_x, $src_y, $src_w, $src_h ) {
-		if ( ! imagecopyresampled( $destination, $source, (int) $dst_x, (int) $dst_y, (int) $src_x, (int) $src_y, max( 1, (int) $dst_w ), max( 1, (int) $dst_h ), max( 1, (int) $src_w ), max( 1, (int) $src_h ) ) ) { throw new RuntimeException( 'GD could not place a verified local image.' ); }
+		if ( ! imagecopyresampled( $destination, $source, (int) round( $dst_x ), (int) round( $dst_y ), (int) $src_x, (int) $src_y, max( 1, (int) round( $dst_w ) ), max( 1, (int) round( $dst_h ) ), max( 1, (int) $src_w ), max( 1, (int) $src_h ) ) ) { throw new RuntimeException( 'GD could not place a verified local image.' ); }
 	}
 	public function rotate( $image, $angle_deg ) {
 		$transparent = imagecolorallocatealpha( $image, 255, 255, 255, 127 );

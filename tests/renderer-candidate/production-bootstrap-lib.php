@@ -61,7 +61,7 @@ final class CertloomProductionCandidateBootstrapFactory {
 
 		$font_root = $this->real_directory( $input['font_root'], 'Exact font root', false );
 		$mpdf_temp = $this->real_directory( $input['mpdf_temp_dir'], 'mPDF temporary directory', true );
-		$setup = certloom_render_plan_reference_setup();
+		$setup = certloom_render_plan_acceptance_setup();
 		if ( realpath( (string) $setup['root'] ) !== $this->root ) {
 			throw new RuntimeException( 'Frozen Render Plan fixture setup belongs to a different Certloom source tree.' );
 		}

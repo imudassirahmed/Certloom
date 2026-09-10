@@ -84,6 +84,7 @@ final class PrcFakeGdDriver implements GdDriverInterface {
 	public function text($image,$size,$angle,$x,$y,$color,$font,$text){$this->calls[]=array('text',$size,$angle,$x,$y,$text);}
 	public function load_image($path,$mime){$this->calls[]=array('load-image',$path,$mime);return $this->image(100,50);}
 	public function image_size($image){return array($image->w,$image->h);}
+	public function multiply_opacity($image,$opacity){$this->calls[]=array('opacity',(float)$opacity);}
 	public function copy_resampled($destination,$source,$dx,$dy,$dw,$dh,$sx,$sy,$sw,$sh){$this->calls[]=array('resample',$dx,$dy,$dw,$dh,$sx,$sy,$sw,$sh);}
 	public function rotate($image,$angle){$this->calls[]=array('rotate',$angle);return $this->image($image->h+10,$image->w+10);}
 	public function copy($destination,$source,$x,$y){$this->calls[]=array('copy',$x,$y);}
@@ -172,8 +173,10 @@ prc_check(array('gd')===$gd->requirements()['extensions']&&in_array('imagettftex
 $png=$gd->render(prc_plan($font),'png');$jpg=$gd->render(prc_plan($font,'محمد علی','rtl'),'jpeg');
 $primitive_png=$gd->render($primitive_plan,'png');
 prc_check(0===strpos($primitive_png,"\x89PNG"),'GD candidate must accept the permanent primitive-coverage Render Plan.');
-$seen_resample=false;$seen_primitive_rotate=false;foreach($driver->calls as $call){if('resample'===$call[0]){$seen_resample=true;}if('rotate'===$call[0]&&(abs($call[1]-8.0)<0.001||abs($call[1]-5.0)<0.001||abs($call[1]+4.0)<0.001)){$seen_primitive_rotate=true;}}
+$seen_resample=false;$seen_primitive_rotate=false;$seen_opacity=false;$seen_supersample=false;foreach($driver->calls as $call){if('resample'===$call[0]){$seen_resample=true;}if('rotate'===$call[0]&&(abs($call[1]-8.0)<0.001||abs($call[1]-5.0)<0.001||abs($call[1]+4.0)<0.001)){$seen_primitive_rotate=true;}if('opacity'===$call[0]&&$call[1]<0.999999){$seen_opacity=true;}if('transparent'===$call[0]&&($call[1]>500||$call[2]>500)){$seen_supersample=true;}}
 prc_check($seen_resample&&$seen_primitive_rotate,'GD candidate must exercise local image placement and rotated non-text primitive composition.');
+prc_check($seen_opacity,'GD candidate must multiply image/logo/signature source alpha by Render Plan operation opacity before composition.');
+prc_check($seen_supersample,'GD candidate must supersample rotated raster/shape operation canvases before deterministic downsampling.');
 $schema4_driver=new PrcFakeGdDriver();$schema4_gd=new GdRasterRenderer('1.0.0',$candidate_hash,$manifest,$schema4_driver);$schema4_png=$schema4_gd->render(prc_schema4_plan($font),'png');$schema4_text=0;$schema4_grid=false;$schema4_asset=false;$schema4_rich_rotate=false;$schema4_table_rotate=false;foreach($schema4_driver->calls as $call){if('text'===$call[0]){$schema4_text++;}if('rect'===$call[0]){$schema4_grid=true;}if('resample'===$call[0]){$schema4_asset=true;}if('rotate'===$call[0]&&abs($call[1]-7.5)<0.001){$schema4_rich_rotate=true;}if('rotate'===$call[0]&&abs($call[1]+4.0)<0.001){$schema4_table_rotate=true;}}prc_check(0===strpos($schema4_png,"\x89PNG")&&$schema4_text>4&&$schema4_grid&&$schema4_asset&&$schema4_rich_rotate&&$schema4_table_rotate,'GD candidate consumes Schema-4 rich runs with spacing, deterministic Table cells, local signature image and arbitrary operation rotation.');
 prc_check(0===strpos($png,"\x89PNG")&&0===strpos($jpg,"\xFF\xD8"),'GD candidate must produce requested raster formats through its driver.');
 $seen_text=false;$seen_qr=false;foreach($driver->calls as $call){if('text'===$call[0]){$seen_text=true;}if('filled-rect'===$call[0]){$seen_qr=true;}}

@@ -23,6 +23,8 @@ interface GdDriverInterface {
 	public function load_image( $path, $mime );
 	/** @return array{0:int,1:int} */
 	public function image_size( $image );
+	/** Multiply source per-pixel alpha by operation opacity. */
+	public function multiply_opacity( $image, $opacity );
 	public function copy_resampled( $destination, $source, $dst_x, $dst_y, $dst_w, $dst_h, $src_x, $src_y, $src_w, $src_h );
 	public function rotate( $image, $angle_deg );
 	public function copy( $destination, $source, $dst_x, $dst_y );

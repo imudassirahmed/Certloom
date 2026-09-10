@@ -22,6 +22,10 @@ final class GdRasterRenderer implements RendererInterface {
 	private $font_manifest;
 	private $driver;
 	private $shaper;
+	const ROTATED_PRIMITIVE_SUPERSAMPLE = 4.0;
+
+	/** Internal scale for an isolated operation canvas; the final page remains 96 DPI. */
+	private $pixel_scale = 1.0;
 
 	public function __construct( $version, $candidate_manifest_sha256, array $font_manifest, ?GdDriverInterface $driver = null, ?ArabicPresentationShaper $shaper = null ) {
 		$version = trim( (string) $version );
@@ -84,23 +88,43 @@ final class GdRasterRenderer implements RendererInterface {
 		$type = (string) ( $op['type'] ?? '' );
 		if ( abs( $rotation ) < 0.0001 && ! in_array( $type, array( 'rich_text', 'table' ), true ) ) { $this->draw_unrotated( $canvas, $plan, $op, 0.0, 0.0 ); return; }
 		$box = $op['geometry']['box'];
-		$local_w = max( 1, $this->mm_px( $box['width_mm'] ) );
-		$local_h = max( 1, $this->mm_px( $box['height_mm'] ) );
-		$local = $this->driver->create_transparent_canvas( $local_w, $local_h );
+		$supersample = abs( $rotation ) >= 0.0001 && in_array( $type, array( 'shape', 'image', 'logo', 'signature' ), true ) ? self::ROTATED_PRIMITIVE_SUPERSAMPLE : 1.0;
+		$previous_scale = $this->pixel_scale;
+		$this->pixel_scale = $supersample;
+		$local = null; $rotated = null;
 		try {
+			$local_w = max( 1, $this->mm_px( $box['width_mm'] ) );
+			$local_h = max( 1, $this->mm_px( $box['height_mm'] ) );
+			$local = $this->driver->create_transparent_canvas( $local_w, $local_h );
 			$this->draw_unrotated( $local, $plan, $op, -1.0 * (float) $box['x_mm'], -1.0 * (float) $box['y_mm'] );
 			if ( abs( $rotation ) < 0.0001 ) {
+				$this->pixel_scale = $previous_scale;
 				$this->driver->copy( $canvas, $local, (int) round( $this->mm_px_float( $box['x_mm'] ) ), (int) round( $this->mm_px_float( $box['y_mm'] ) ) );
 				return;
 			}
 			$rotated = $this->driver->rotate( $local, $rotation );
-			try {
-				list( $rw, $rh ) = $this->driver->image_size( $rotated );
+		} finally {
+			$this->pixel_scale = $previous_scale;
+			if ( null !== $local ) { $this->driver->destroy( $local ); }
+		}
+		try {
+			list( $hi_w, $hi_h ) = $this->driver->image_size( $rotated );
+			if ( $supersample <= 1.0001 ) {
 				$cx = $this->mm_px_float( $op['geometry']['center']['x_mm'] );
 				$cy = $this->mm_px_float( $op['geometry']['center']['y_mm'] );
-				$this->driver->copy( $canvas, $rotated, (int) round( $cx - $rw / 2.0 ), (int) round( $cy - $rh / 2.0 ) );
-			} finally { $this->driver->destroy( $rotated ); }
-		} finally { $this->driver->destroy( $local ); }
+				$this->driver->copy( $canvas, $rotated, (int) round( $cx - $hi_w / 2.0 ), (int) round( $cy - $hi_h / 2.0 ) );
+				return;
+			}
+			$target_w = max( 1, (int) round( $hi_w / $supersample ) );
+			$target_h = max( 1, (int) round( $hi_h / $supersample ) );
+			$down = $this->driver->create_transparent_canvas( $target_w, $target_h );
+			try {
+				$this->driver->copy_resampled( $down, $rotated, 0, 0, $target_w, $target_h, 0, 0, $hi_w, $hi_h );
+				$cx = $this->mm_px_float( $op['geometry']['center']['x_mm'] );
+				$cy = $this->mm_px_float( $op['geometry']['center']['y_mm'] );
+				$this->driver->copy( $canvas, $down, (int) round( $cx - $target_w / 2.0 ), (int) round( $cy - $target_h / 2.0 ) );
+			} finally { $this->driver->destroy( $down ); }
+		} finally { if ( null !== $rotated ) { $this->driver->destroy( $rotated ); } }
 	}
 
 	private function draw_unrotated( $canvas, array $plan, array $op, $offset_x_mm, $offset_y_mm ) {
@@ -337,7 +361,7 @@ final class GdRasterRenderer implements RendererInterface {
 	private function draw_line( $canvas, array $op, $ox, $oy ) { $l=$op['line'];$c=$this->driver->allocate_color($canvas,$l['stroke'],(float)$op['opacity']);$th=max(1,(int)round($this->mm_px_float($l['stroke_width_mm'])));$this->driver->line($canvas,$this->mm_px_float($l['from']['x_mm']+$ox),$this->mm_px_float($l['from']['y_mm']+$oy),$this->mm_px_float($l['to']['x_mm']+$ox),$this->mm_px_float($l['to']['y_mm']+$oy),$c,$th); }
 	private function draw_image( $canvas, array $plan, array $op, $ox, $oy ) {
 		$asset=$op['image']['asset'];$hash=(string)$asset['sha256'];$path=$plan['_runtime']['assets'][$hash]['path']??'';$this->assert_exact_image_file($path,$asset);$src=$this->driver->load_image($path,$asset['mime']);
-		try{list($sw,$sh)=$this->driver->image_size($src);$p=$op['image']['placement'];$d=$p['destination'];$crop=$p['source_crop'];$dx=$this->mm_px_float($d['x_mm']+$ox);$dy=$this->mm_px_float($d['y_mm']+$oy);$dw=$this->mm_px_float($d['width_mm']);$dh=$this->mm_px_float($d['height_mm']);$sx=$crop['x']*$sw;$sy=$crop['y']*$sh;$cw=$crop['width']*$sw;$ch=$crop['height']*$sh;$this->driver->copy_resampled($canvas,$src,$dx,$dy,$dw,$dh,$sx,$sy,$cw,$ch);}finally{$this->driver->destroy($src);}
+		try{$opacity=max(0.0,min(1.0,(float)($op['opacity']??1.0)));if($opacity<0.999999){$this->driver->multiply_opacity($src,$opacity);}list($sw,$sh)=$this->driver->image_size($src);$p=$op['image']['placement'];$d=$p['destination'];$crop=$p['source_crop'];$dx=$this->mm_px_float($d['x_mm']+$ox);$dy=$this->mm_px_float($d['y_mm']+$oy);$dw=$this->mm_px_float($d['width_mm']);$dh=$this->mm_px_float($d['height_mm']);$sx=$crop['x']*$sw;$sy=$crop['y']*$sh;$cw=$crop['width']*$sw;$ch=$crop['height']*$sh;$this->driver->copy_resampled($canvas,$src,$dx,$dy,$dw,$dh,$sx,$sy,$cw,$ch);}finally{$this->driver->destroy($src);}
 	}
 
 	private function assert_exact_image_file( $path, array $asset ) {
@@ -354,5 +378,5 @@ final class GdRasterRenderer implements RendererInterface {
 	private function contains_arabic( $text ) { return 1 === preg_match( '/[\x{0600}-\x{06FF}]/u', $text ); }
 	private function codepoint($char){$b=array_values(unpack('C*',$char));$x=$b[0];if($x<=0x7F)return$x;if(($x&0xE0)===0xC0)return(($x&0x1F)<<6)|($b[1]&0x3F);if(($x&0xF0)===0xE0)return(($x&0x0F)<<12)|(($b[1]&0x3F)<<6)|($b[2]&0x3F);return(($x&0x07)<<18)|(($b[1]&0x3F)<<12)|(($b[2]&0x3F)<<6)|($b[3]&0x3F);}
 	private function mm_px( $mm ) { return max( 1, (int) round( $this->mm_px_float( $mm ) ) ); }
-	private function mm_px_float( $mm ) { return (float) $mm / 25.4 * self::DPI; }
+	private function mm_px_float( $mm ) { return (float) $mm / 25.4 * self::DPI * (float) $this->pixel_scale; }
 }

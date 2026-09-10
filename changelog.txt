@@ -1,3 +1,9 @@
+= 1.7.0-alpha.4.13 =
+* Fix GD raster image/logo/signature opacity semantics by multiplying source per-pixel alpha by the Render Plan operation opacity before placement; this preserves existing source alpha and matches the production PDF adapter.
+* Improve real-host PDF/PNG visual parity for rotated shape/media primitives with deterministic 4x operation-local supersampling and downsampling while keeping the 96-DPI page contract, text/Rich Text/Table/QR paths, and acceptance thresholds unchanged.
+* Normalize destination and primitive geometry through nearest-pixel rounding at the native GD boundary, matching the real-host profile that passed the strict primitives visual contract.
+* Advance only the changed GD renderer candidate identity to `certloom-gd-raster` `1.0.0+certloom.4`; mPDF remains `certloom-mpdf-pdf` `8.3.1+certloom.5`. Renderer authority remains fail-closed until genuine alpha.4.13 production evidence passes and is separately reviewed.
+
 = 1.7.0-alpha.4.12 =
 * Formalize the real-host native mPDF Render Plan bridge proven across all 11 PDF/PNG acceptance fixtures: exact-font text geometry, mixed-script wrapping, bounded shrink correction, rotation, QR/shapes/lines, local image/signature placement, Table/Data Table text, and Schema-4 Rich Text.
 * Keep GD at `certloom-gd-raster` `1.0.0+certloom.3`; advance only the changed PDF adapter to `certloom-mpdf-pdf` `8.3.1+certloom.5`.
