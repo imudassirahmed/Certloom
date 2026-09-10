@@ -48,7 +48,7 @@ try{
     $gd=(new RendererCandidateManifest())->normalize(rcf_json($gdout.'/candidate.json'));
     rcf_check('certloom-native'===$gd['implementation']['provenance_mode']&&0===strpos($gd['implementation']['namespace_prefix'],'Certloom\\'),'Native GD provenance uses its real Certloom namespace instead of a fictitious CertloomVendor prefix.');
     rcf_check('certloom/gd-raster'===$gd['implementation']['package']&&array('jpeg','png')===$gd['formats'],'Native GD freeze binds stable package identity and both raster formats.');
-    rcf_check('1.0.0+certloom.5'===$gd['renderer_version']&&'1.0.0+certloom.5'===$gd['implementation']['package_version'],'Native GD freeze advances exact renderer/package identity for scoped Table/Data Table border quantization parity.');
+    rcf_check('1.0.0+certloom.6'===$gd['renderer_version']&&'1.0.0+certloom.6'===$gd['implementation']['package_version'],'Native GD freeze advances exact renderer/package identity for scanner-safe shared-boundary QR rasterization parity.');
 
     $inside=$root.'/tests/.forbidden-freeze-output';@rmdir($inside);list($ic,$io)=rcf_cmd(array('python3',$tool,'--recipe',$pdf_recipe,'--candidate-root',$candidate,'--dependency-lock',$lock_path,'--output',$inside));rcf_check(0!==$ic&&!file_exists($inside),'Freezer refuses to publish provenance inside the Certloom source tree.');
     $candidate_link=$tmp.'/prepared-link';symlink($candidate,$candidate_link);list($clc,$clo)=rcf_cmd(array('python3',$tool,'--recipe',$pdf_recipe,'--candidate-root',$candidate_link,'--dependency-lock',$lock_path,'--output',$tmp.'/candidate-link-out'));rcf_check(0!==$clc&&!file_exists($tmp.'/candidate-link-out'),'Freezer rejects a symbolic candidate-root argument before canonicalization.');unlink($candidate_link);

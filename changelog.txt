@@ -1,3 +1,9 @@
+= 1.7.0-alpha.4.15 =
+* Fix GD QR rasterization at fractional 96-DPI module widths by quantizing each dark run to shared round-to-nearest module boundaries instead of independently expanding run starts/ends with floor/ceil; this preserves white modules that scanners require.
+* Real-host aggregate p414 evidence proves every non-QR acceptance metric green (66/66) and isolates the remaining blocker to native PNG/JPEG QR decode; PDF QR decodes correctly and all visual/foreground/current-oracle metrics already pass.
+* Preserve alpha.4.13 media opacity/4x rotated-operation supersampling and alpha.4.14 scoped Table/Data Table border quantization unchanged. Code 128 retains its existing rasterization path.
+* Keep acceptance contract/report v9/v7 and every threshold unchanged. Advance only the changed GD renderer identity to `certloom-gd-raster` `1.0.0+certloom.6`; mPDF remains `certloom-mpdf-pdf` `8.3.1+certloom.5`. Renderer authority remains fail-closed pending one consolidated genuine alpha.4.15 host ceremony and separate review.
+
 = 1.7.0-alpha.4.14 =
 * Scope the real-host Table/Data Table grid-border parity correction to the table adapter: truncate only Table border endpoints to deterministic integer pixels before the native GD rectangle call.
 * Preserve alpha.4.13 multiplicative media opacity and 4x operation-local supersampling unchanged; the selected real-host profile keeps the passing primitives PNG byte-identical while restoring both Schema-4 Table/Data Table raster outputs to their pre-regression bytes.

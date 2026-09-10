@@ -350,6 +350,17 @@ final class GdRasterRenderer implements RendererInterface {
 		foreach ( isset( $payload['dark_runs'] ) && is_array( $payload['dark_runs'] ) ? $payload['dark_runs'] : array() as $run ) {
 			if ( ! is_array( $run ) || ! isset( $run['x_mm'], $run['y_mm'], $run['width_mm'], $run['height_mm'] ) ) { continue; }
 			$rx1=$this->mm_px_float($run['x_mm']+$ox);$ry1=$this->mm_px_float($run['y_mm']+$oy);$rx2=$this->mm_px_float($run['x_mm']+$run['width_mm']+$ox);$ry2=$this->mm_px_float($run['y_mm']+$run['height_mm']+$oy);
+			if ( 'qr' === $payload_key ) {
+				/* Quantize shared QR module boundaries once, rather than expanding every
+				 * dark run with floor/ceil. Independent expansion can consume narrow
+				 * white modules at fractional 96-DPI module widths and make an otherwise
+				 * correct matrix undecodable. Round-to-nearest preserves the shared
+				 * lattice boundary for adjacent dark/white modules. */
+				$left=(int)round($rx1);$top=(int)round($ry1);$right=(int)round($rx2)-1;$bottom=(int)round($ry2)-1;
+				if($right<$left||$bottom<$top){throw new RuntimeException('GD QR module grid is below the raster-resolution boundary.');}
+				$this->driver->filled_rectangle($canvas,$left,$top,$right,$bottom,$black);
+				continue;
+			}
 			$this->driver->filled_rectangle($canvas,(int)floor($rx1),(int)floor($ry1),(int)ceil($rx2)-1,(int)ceil($ry2)-1,$black);
 		}
 	}

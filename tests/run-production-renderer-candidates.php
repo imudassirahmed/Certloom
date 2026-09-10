@@ -170,7 +170,10 @@ prc_check(false===strpos(file_get_contents(__DIR__.'/../src/Infrastructure/Rende
 $driver=new PrcFakeGdDriver();$gd=new GdRasterRenderer('1.0.0',$candidate_hash,$manifest,$driver);
 prc_check(GdRasterRenderer::ID===$gd->id()&&array('png','jpeg')===$gd->formats(),'GD candidate identity/formats must be stable.');
 prc_check(array('gd')===$gd->requirements()['extensions']&&in_array('imagettftext',$gd->requirements()['functions'],true),'GD candidate must declare exact raster/FreeType runtime requirements.');
-$png=$gd->render(prc_plan($font),'png');$jpg=$gd->render(prc_plan($font,'محمد علی','rtl'),'jpeg');
+$png=$gd->render(prc_plan($font),'png');
+$seen_qr_shared_boundary=false;foreach($driver->calls as $call){if('filled-rect'===$call[0]&&620===$call[1]&&393===$call[2]&&630===$call[3]&&396===$call[4]){$seen_qr_shared_boundary=true;break;}}
+prc_check($seen_qr_shared_boundary,'GD QR rasterization must round shared module-grid boundaries instead of independently expanding dark runs into adjacent white modules.');
+$jpg=$gd->render(prc_plan($font,'محمد علی','rtl'),'jpeg');
 $primitive_png=$gd->render($primitive_plan,'png');
 prc_check(0===strpos($primitive_png,"\x89PNG"),'GD candidate must accept the permanent primitive-coverage Render Plan.');
 $seen_resample=false;$seen_primitive_rotate=false;$seen_opacity=false;$seen_supersample=false;foreach($driver->calls as $call){if('resample'===$call[0]){$seen_resample=true;}if('rotate'===$call[0]&&(abs($call[1]-8.0)<0.001||abs($call[1]-5.0)<0.001||abs($call[1]+4.0)<0.001)){$seen_primitive_rotate=true;}if('opacity'===$call[0]&&$call[1]<0.999999){$seen_opacity=true;}if('transparent'===$call[0]&&($call[1]>500||$call[2]>500)){$seen_supersample=true;}}
