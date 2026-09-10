@@ -1,3 +1,9 @@
+= 1.7.0-alpha.4.12 =
+* Formalize the real-host native mPDF Render Plan bridge proven across all 11 PDF/PNG acceptance fixtures: exact-font text geometry, mixed-script wrapping, bounded shrink correction, rotation, QR/shapes/lines, local image/signature placement, Table/Data Table text, and Schema-4 Rich Text.
+* Keep GD at `certloom-gd-raster` `1.0.0+certloom.3`; advance only the changed PDF adapter to `certloom-mpdf-pdf` `8.3.1+certloom.5`.
+* Preserve every legacy golden byte while introducing a versioned current-oracle v2 for the two diagnosed legacy-oracle defects (weight-aware English and Schema-4 Rich Text).
+* Strengthen independent renderer verification with foreground PDF↔PNG structural parity so mostly-white pages cannot hide gross placement failures. Renderer authority remains fail-closed until genuine alpha.4.12 production evidence passes and is separately reviewed.
+
 = 1.7.0-alpha.4.11 =
 * Fix the production mPDF adapter after real renderer-host execution: create the PDF page before any Render Plan operation so graphics-state commands cannot precede the `%PDF-` header.
 * Preserve the frozen mPDF candidate's bundled parser/default font configuration for graphics-only Render Plans instead of replacing it with empty font arrays; exact content-addressed Certloom fonts remain mandatory for text-bearing plans.

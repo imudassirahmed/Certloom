@@ -12,7 +12,7 @@ use InvalidArgumentException;
  */
 final class RendererAcceptanceContract {
 	const SCHEMA = 'certloom-renderer-acceptance';
-	const VERSION = 8;
+	const VERSION = 9;
 
 	/** @return string[] */
 	public static function legacy_fixtures() { return array( 'english', 'urdu-rtl', 'mixed-script', 'long-name-shrink', 'rotation', 'qr', 'primitives' ); }
@@ -46,8 +46,10 @@ final class RendererAcceptanceContract {
 			'qr_png_decode',
 			'qr_jpeg_decode',
 			'pdf_png_visual_parity',
+			'pdf_png_foreground_parity',
 			'png_jpeg_visual_parity',
 			'golden_visual_parity',
+			'current_oracle_v2',
 			'primitive_capability_coverage',
 			'schema4_rich_text',
 			'schema4_signer_signature',
@@ -66,7 +68,7 @@ final class RendererAcceptanceContract {
 
 	/** @return array<string,mixed> */
 	public function normalize( array $evidence ) {
-		$allowed = array( 'schema', 'version', 'qualification', 'plugin_version', 'fixture_manifest_sha256', 'render_plan_manifest_sha256', 'bundle_manifest_sha256', 'verification_report_sha256', 'verifier_environment_sha256', 'renderers', 'checks', 'fixtures' );
+		$allowed = array( 'schema', 'version', 'qualification', 'plugin_version', 'fixture_manifest_sha256', 'render_plan_manifest_sha256', 'current_oracle_manifest_sha256', 'bundle_manifest_sha256', 'verification_report_sha256', 'verifier_environment_sha256', 'renderers', 'checks', 'fixtures' );
 		$this->assert_shape( $evidence, $allowed, $allowed, 'renderer acceptance evidence' );
 		if ( self::SCHEMA !== (string) $evidence['schema'] || ! is_int( $evidence['version'] ) || self::VERSION !== $evidence['version'] ) {
 			throw new InvalidArgumentException( 'Renderer acceptance evidence schema/version is unsupported.' );
@@ -86,6 +88,11 @@ final class RendererAcceptanceContract {
 		$render_plan_manifest_hash = strtolower( trim( (string) $evidence['render_plan_manifest_sha256'] ) );
 		if ( ! $this->is_sha256( $render_plan_manifest_hash ) ) {
 			throw new InvalidArgumentException( 'Renderer acceptance evidence must bind the shared render-plan manifest by SHA-256.' );
+		}
+
+		$current_oracle_manifest_hash = strtolower( trim( (string) $evidence['current_oracle_manifest_sha256'] ) );
+		if ( ! $this->is_sha256( $current_oracle_manifest_hash ) ) {
+			throw new InvalidArgumentException( 'Renderer acceptance evidence must bind the versioned current renderer oracle by SHA-256.' );
 		}
 
 		$bundle_manifest_hash = strtolower( trim( (string) $evidence['bundle_manifest_sha256'] ) );
@@ -114,6 +121,7 @@ final class RendererAcceptanceContract {
 			'plugin_version' => $plugin_version,
 			'fixture_manifest_sha256' => $fixture_hash,
 			'render_plan_manifest_sha256' => $render_plan_manifest_hash,
+			'current_oracle_manifest_sha256' => $current_oracle_manifest_hash,
 			'bundle_manifest_sha256' => $bundle_manifest_hash,
 			'verification_report_sha256' => $verification_report_hash,
 			'verifier_environment_sha256' => $verifier_environment_hash,

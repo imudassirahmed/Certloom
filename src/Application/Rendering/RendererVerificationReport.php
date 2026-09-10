@@ -6,7 +6,7 @@ use InvalidArgumentException;
 /** Strict normalized result produced by Certloom's independent PDF-04 verifier. */
 final class RendererVerificationReport {
 	const SCHEMA = 'certloom-renderer-bundle-verification';
-	const VERSION = 6;
+	const VERSION = 7;
 	const CROSS_FORMAT_MAX_MAE = 1.0;
 	const CROSS_FORMAT_MAX_CHANGED = 0.02;
 	const GOLDEN_MIN_PRECISION = 0.92;
@@ -14,7 +14,7 @@ final class RendererVerificationReport {
 
 	/** @return array<string,mixed> */
 	public function normalize( array $report ) {
-		$keys = array( 'schema', 'version', 'verified', 'qualification', 'qualifies_pdf04', 'bundle_manifest_sha256', 'fixture_manifest_sha256', 'render_plan_manifest_sha256', 'verifier_environment_sha256', 'candidate_provenance_rechecked', 'artifact_receipts_rechecked', 'deterministic_runs', 'pdf_geometry', 'png_geometry', 'jpeg_geometry', 'qr_pdf_decode', 'qr_png_decode', 'qr_jpeg_decode', 'pdf_png_visual_parity', 'png_jpeg_visual_parity', 'golden_visual_parity', 'primitive_capability_coverage', 'schema4_rich_text', 'schema4_signer_signature', 'schema4_fixed_table', 'schema4_data_table', 'renderers', 'fixtures', 'parity', 'golden_parity' );
+		$keys = array( 'schema', 'version', 'verified', 'qualification', 'qualifies_pdf04', 'bundle_manifest_sha256', 'fixture_manifest_sha256', 'render_plan_manifest_sha256', 'current_oracle_manifest_sha256', 'verifier_environment_sha256', 'candidate_provenance_rechecked', 'artifact_receipts_rechecked', 'deterministic_runs', 'pdf_geometry', 'png_geometry', 'jpeg_geometry', 'qr_pdf_decode', 'qr_png_decode', 'qr_jpeg_decode', 'pdf_png_visual_parity', 'pdf_png_foreground_parity', 'png_jpeg_visual_parity', 'golden_visual_parity', 'current_oracle_v2', 'primitive_capability_coverage', 'schema4_rich_text', 'schema4_signer_signature', 'schema4_fixed_table', 'schema4_data_table', 'renderers', 'fixtures', 'parity', 'foreground_parity', 'golden_parity' );
 		$this->assert_shape( $report, $keys, $keys, 'renderer verification report' );
 		if ( self::SCHEMA !== (string) $report['schema'] || ! is_int( $report['version'] ) || self::VERSION !== $report['version'] ) { throw new InvalidArgumentException( 'Renderer verification report schema/version is unsupported.' ); }
 		$qualification = (string) $report['qualification'];
@@ -23,12 +23,12 @@ final class RendererVerificationReport {
 		$qualifies = true === $report['qualifies_pdf04'];
 		if ( ( 'production-candidate' === $qualification ) !== $qualifies ) { throw new InvalidArgumentException( 'Renderer verification report qualification result is inconsistent.' ); }
 		$hashes = array();
-		foreach ( array( 'bundle_manifest_sha256', 'fixture_manifest_sha256', 'render_plan_manifest_sha256', 'verifier_environment_sha256' ) as $key ) {
+		foreach ( array( 'bundle_manifest_sha256', 'fixture_manifest_sha256', 'render_plan_manifest_sha256', 'current_oracle_manifest_sha256', 'verifier_environment_sha256' ) as $key ) {
 			$value = strtolower( trim( (string) $report[ $key ] ) );
 			if ( ! $this->is_sha256( $value ) ) { throw new InvalidArgumentException( 'Renderer verification report contains an invalid SHA-256 binding.' ); }
 			$hashes[ $key ] = $value;
 		}
-		$proof_keys = array( 'candidate_provenance_rechecked', 'artifact_receipts_rechecked', 'deterministic_runs', 'pdf_geometry', 'png_geometry', 'jpeg_geometry', 'qr_pdf_decode', 'qr_png_decode', 'qr_jpeg_decode', 'pdf_png_visual_parity', 'png_jpeg_visual_parity', 'golden_visual_parity', 'primitive_capability_coverage', 'schema4_rich_text', 'schema4_signer_signature', 'schema4_fixed_table', 'schema4_data_table' );
+		$proof_keys = array( 'candidate_provenance_rechecked', 'artifact_receipts_rechecked', 'deterministic_runs', 'pdf_geometry', 'png_geometry', 'jpeg_geometry', 'qr_pdf_decode', 'qr_png_decode', 'qr_jpeg_decode', 'pdf_png_visual_parity', 'pdf_png_foreground_parity', 'png_jpeg_visual_parity', 'golden_visual_parity', 'current_oracle_v2', 'primitive_capability_coverage', 'schema4_rich_text', 'schema4_signer_signature', 'schema4_fixed_table', 'schema4_data_table' );
 		$proof = array();
 		foreach ( $proof_keys as $key ) {
 			if ( ! is_bool( $report[ $key ] ) ) { throw new InvalidArgumentException( 'Renderer verification report proof flags must be booleans.' ); }
@@ -38,13 +38,14 @@ final class RendererVerificationReport {
 			foreach ( $proof as $value ) { if ( true !== $value ) { throw new InvalidArgumentException( 'Production renderer verification must re-prove every mandatory bundle property.' ); } }
 		} else {
 			if ( true === $proof['candidate_provenance_rechecked'] || true === $proof['artifact_receipts_rechecked'] ) { throw new InvalidArgumentException( 'Development references may not claim production provenance/receipt verification.' ); }
-			foreach ( array( 'deterministic_runs', 'pdf_geometry', 'png_geometry', 'jpeg_geometry', 'qr_pdf_decode', 'qr_png_decode', 'qr_jpeg_decode', 'pdf_png_visual_parity', 'png_jpeg_visual_parity', 'golden_visual_parity', 'primitive_capability_coverage', 'schema4_rich_text', 'schema4_signer_signature', 'schema4_fixed_table', 'schema4_data_table' ) as $key ) { if ( true !== $proof[ $key ] ) { throw new InvalidArgumentException( 'Development verifier references must still prove visual/deterministic checks.' ); } }
+			foreach ( array( 'deterministic_runs', 'pdf_geometry', 'png_geometry', 'jpeg_geometry', 'qr_pdf_decode', 'qr_png_decode', 'qr_jpeg_decode', 'pdf_png_visual_parity', 'pdf_png_foreground_parity', 'png_jpeg_visual_parity', 'golden_visual_parity', 'current_oracle_v2', 'primitive_capability_coverage', 'schema4_rich_text', 'schema4_signer_signature', 'schema4_fixed_table', 'schema4_data_table' ) as $key ) { if ( true !== $proof[ $key ] ) { throw new InvalidArgumentException( 'Development verifier references must still prove visual/deterministic checks.' ); } }
 		}
 		$renderers = $this->normalize_renderers( $report['renderers'] );
 		$fixtures = $this->normalize_fixtures( $report['fixtures'] );
 		$parity = $this->normalize_parity( $report['parity'] );
+		$foreground_parity = $this->normalize_foreground_parity( $report['foreground_parity'] );
 		$golden_parity = $this->normalize_golden_parity( $report['golden_parity'] );
-		return array_merge( array( 'schema' => self::SCHEMA, 'version' => self::VERSION, 'verified' => true, 'qualification' => $qualification, 'qualifies_pdf04' => $qualifies ), $hashes, $proof, array( 'renderers' => $renderers, 'fixtures' => $fixtures, 'parity' => $parity, 'golden_parity' => $golden_parity ) );
+		return array_merge( array( 'schema' => self::SCHEMA, 'version' => self::VERSION, 'verified' => true, 'qualification' => $qualification, 'qualifies_pdf04' => $qualifies ), $hashes, $proof, array( 'renderers' => $renderers, 'fixtures' => $fixtures, 'parity' => $parity, 'foreground_parity' => $foreground_parity, 'golden_parity' => $golden_parity ) );
 	}
 
 	/** @return string */
@@ -102,6 +103,28 @@ final class RendererVerificationReport {
 		return array( 'mean_abs_error' => (float) $mae, 'fraction_channels_delta_gt_10' => (float) $changed );
 	}
 
+
+	private function normalize_foreground_parity( $parity ) {
+		$required = RendererAcceptanceContract::required_fixtures();
+		$this->assert_shape( $parity, $required, $required, 'renderer foreground parity' );
+		$out = array();
+		foreach ( $required as $name ) {
+			$item = $parity[ $name ];
+			$this->assert_shape( $item, array( 'pdf_png' ), array( 'pdf_png' ), 'renderer foreground parity row' );
+			$out[ $name ] = array( 'pdf_png' => $this->normalize_structural_metric( $item['pdf_png'], 'Renderer PDF/PNG foreground parity' ) );
+		}
+		return $out;
+	}
+
+	private function normalize_structural_metric( $metric, $label ) {
+		$this->assert_shape( $metric, array( 'foreground_precision', 'foreground_recall' ), array( 'foreground_precision', 'foreground_recall' ), 'renderer structural parity metric' );
+		$precision = $metric['foreground_precision']; $recall = $metric['foreground_recall'];
+		if ( ! is_numeric( $precision ) || ! is_numeric( $recall ) || ! is_finite( (float) $precision ) || ! is_finite( (float) $recall ) || (float) $precision < self::GOLDEN_MIN_PRECISION || (float) $recall < self::GOLDEN_MIN_RECALL || (float) $precision > 1 || (float) $recall > 1 ) {
+			throw new InvalidArgumentException( $label . ' does not satisfy the structural-parity threshold.' );
+		}
+		return array( 'foreground_precision' => (float) $precision, 'foreground_recall' => (float) $recall );
+	}
+
 	private function normalize_golden_parity( $parity ) {
 		$required = RendererAcceptanceContract::required_fixtures();
 		$this->assert_shape( $parity, $required, $required, 'renderer golden parity' );
@@ -111,11 +134,7 @@ final class RendererVerificationReport {
 			$this->assert_shape( $item, array( 'pdf', 'png', 'jpeg' ), array( 'pdf', 'png', 'jpeg' ), 'renderer golden parity row' );
 			$out[ $name ] = array();
 			foreach ( array( 'pdf', 'png', 'jpeg' ) as $format ) {
-				$metric = $item[ $format ];
-				$this->assert_shape( $metric, array( 'foreground_precision', 'foreground_recall' ), array( 'foreground_precision', 'foreground_recall' ), 'renderer golden parity metric' );
-				$precision = $metric['foreground_precision']; $recall = $metric['foreground_recall'];
-				if ( ! is_numeric( $precision ) || ! is_numeric( $recall ) || ! is_finite( (float) $precision ) || ! is_finite( (float) $recall ) || (float) $precision < self::GOLDEN_MIN_PRECISION || (float) $recall < self::GOLDEN_MIN_RECALL || (float) $precision > 1 || (float) $recall > 1 ) { throw new InvalidArgumentException( 'Renderer output does not satisfy the frozen golden structural-parity threshold.' ); }
-				$out[ $name ][ $format ] = array( 'foreground_precision' => (float) $precision, 'foreground_recall' => (float) $recall );
+				$out[ $name ][ $format ] = $this->normalize_structural_metric( $item[ $format ], 'Renderer output/current-oracle parity' );
 			}
 		}
 		return $out;

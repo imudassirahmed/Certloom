@@ -33,7 +33,7 @@ final class RendererAcceptanceImporter {
 		if ( 'production-candidate' !== $verified['qualification'] || true !== $verified['qualifies_pdf04'] || $env['plugin_version'] !== $accepted['plugin_version'] ) {
 			throw new InvalidArgumentException( 'Renderer verifier qualification/plugin version does not match acceptance evidence.' );
 		}
-		foreach ( array( 'bundle_manifest_sha256', 'fixture_manifest_sha256', 'render_plan_manifest_sha256' ) as $key ) {
+		foreach ( array( 'bundle_manifest_sha256', 'fixture_manifest_sha256', 'render_plan_manifest_sha256', 'current_oracle_manifest_sha256' ) as $key ) {
 			if ( ! hash_equals( $accepted[ $key ], $verified[ $key ] ) ) { throw new InvalidArgumentException( 'Renderer verifier report does not match the accepted frozen bundle/manifest identity.' ); }
 		}
 		foreach ( RendererAcceptanceContract::required_formats() as $format ) {
