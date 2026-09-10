@@ -162,7 +162,9 @@ release_list="$OUT/release-files.txt"
   find . -type f -print | LC_ALL=C sort > "$release_list"
 )
 
-if comm -13 "$source_list" "$release_list" | grep -q .; then
+LC_ALL=C sort -c "$source_list"
+LC_ALL=C sort -c "$release_list"
+if LC_ALL=C comm -13 "$source_list" "$release_list" | grep -q .; then
   echo "Production archive contains files absent from source." >&2
   exit 3
 fi
