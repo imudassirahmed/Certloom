@@ -78,16 +78,19 @@ final class MpdfPdfRenderer implements RendererInterface {
 			'margin_bottom' => 0,
 			'margin_header' => 0,
 			'margin_footer' => 0,
-			'fontDir' => $font_dirs,
-			'fontdata' => $font_data,
 		);
-		if ( ! empty( $font_aliases ) ) { $config['default_font'] = reset( $font_aliases ); }
+		if ( ! empty( $font_data ) ) {
+			$config['fontDir'] = $font_dirs;
+			$config['fontdata'] = $font_data;
+			$config['default_font'] = reset( $font_aliases );
+		}
 		if ( '' !== $this->temp_dir ) { $config['tempDir'] = $this->temp_dir; }
 		$mpdf = new $class( $config );
 		if ( property_exists( $mpdf, 'autoScriptToLang' ) ) { $mpdf->autoScriptToLang = false; }
 		if ( property_exists( $mpdf, 'autoLangToFont' ) ) { $mpdf->autoLangToFont = false; }
 		if ( property_exists( $mpdf, 'useSubstitutions' ) ) { $mpdf->useSubstitutions = false; }
 		if ( method_exists( $mpdf, 'SetCreator' ) ) { $mpdf->SetCreator( 'Certloom' ); }
+		$mpdf->AddPage();
 		foreach ( $render_plan['operations'] as $operation ) { $this->draw_operation( $mpdf, $render_plan, $operation, $font_aliases ); }
 		$bytes = $mpdf->Output( '', 'S' );
 		if ( ! is_string( $bytes ) || 0 !== strpos( $bytes, '%PDF-' ) ) { throw new RuntimeException( 'mPDF candidate did not return PDF bytes.' ); }

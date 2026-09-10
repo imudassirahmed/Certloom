@@ -1,3 +1,9 @@
+= 1.7.0-alpha.4.11 =
+* Fix the production mPDF adapter after real renderer-host execution: create the PDF page before any Render Plan operation so graphics-state commands cannot precede the `%PDF-` header.
+* Preserve the frozen mPDF candidate's bundled parser/default font configuration for graphics-only Render Plans instead of replacing it with empty font arrays; exact content-addressed Certloom fonts remain mandatory for text-bearing plans.
+* Advance only the mPDF renderer candidate identity to `certloom-mpdf-pdf` `8.3.1+certloom.4`; GD remains `1.0.0+certloom.3` because its adapter bytes are unchanged.
+* Real-host diagnostic evidence: all 11 mandatory acceptance fixtures rendered successfully across PDF, PNG and JPEG with the two corrected mPDF adapter behaviors before formalization.
+
 = 1.7.0-alpha.4.10 =
 * Phase 4 renderer-acceptance coverage hardening checkpoint candidate: expand the production acceptance contract from the frozen seven legacy renderer fixtures to an explicit eleven-fixture suite that also requires Schema 4 Rich text, credential-Signer signature, fixed Table and immutable Data Table evidence.
 * Preserve the original seven-fixture golden/reference manifests byte-for-byte as historical authority while adding separate combined acceptance manifests and four independently generated Schema 4 oracle fixtures.

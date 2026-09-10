@@ -1,3 +1,0 @@
-<?php
-if(PHP_SAPI!=='cli'){fwrite(STDERR,"CLI only.\n");exit(2);} require_once __DIR__.'/domain-acceptance-bundle-lib.php';
-if($argc!==3){fwrite(STDERR,"Usage: php build-base-gate-index.php <gate-dir> <run-id>\n");exit(2);} try{$index=certloom_db_build_base_gate_index($argv[1],__DIR__,strtolower(trim($argv[2])));$target=rtrim($argv[1],'/\\').'/base-gate-index.json';$json=certloom_db_canonical_json($index)."\n";if(false===file_put_contents($target,$json,LOCK_EX)){throw new RuntimeException('Could not write base-gate index.');}chmod($target,0600);echo hash('sha256',$json)."  base-gate-index.json\n";}catch(Throwable $e){fwrite(STDERR,'FAIL  '.$e->getMessage()."\n");exit(1);}
