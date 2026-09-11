@@ -1686,8 +1686,8 @@ body.certloom-setup-v2-body { overflow: hidden; }
   display: grid;
   place-items: center;
   flex: 0 0 24px;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border: 1px solid var(--cl-rule-firm);
   border-radius: 50%;
   background: var(--cl-surface);
@@ -1946,10 +1946,9 @@ body.certloom-setup-v2-body { overflow: hidden; }
   .certloom-tour-target { outline-color: Highlight; }
 }
 
-/* alpha.4.25 — contextual navigation belongs to the workspace it controls.
-   AdminProductNavigation is emitted early by WordPress, then moved directly
-   below the Certloom hero by admin.js. The fallback (no hero / no JS) keeps
-   the original safe top position. */
+/* Contextual navigation sits directly below the workspace hero. Pages upgraded
+   in alpha.4.27 render it there in initial HTML; the JS relocation path remains
+   only for older callbacks that have not yet adopted page-owned placement. */
 .certloom-product-subnav.is-below-hero {
   width: 100%;
   box-sizing: border-box;
@@ -1959,24 +1958,28 @@ body.certloom-setup-v2-body { overflow: hidden; }
 .certloom-admin-shell > .certloom-page-hero + .certloom-product-subnav.is-below-hero,
 .certloom-admin-shell > .certloom-dashboard-hero + .certloom-product-subnav.is-below-hero,
 .certloom-admin-shell > .certloom-workspace-hero + .certloom-product-subnav.is-below-hero {
-  margin-top: 12px;
+  margin-top: 8px;
 }
 
-/* Credentials overview: the contextual subnav already owns import/file intake;
-   keep the page body focused on status, filtering and the registry itself. */
+/* alpha.4.27 — contextual navigation is rendered in its final server-side
+   position immediately after the workspace hero. admin.js remains a legacy
+   fallback only, so these screens do not flash navigation above the hero. */
+
+/* Credentials overview: keep search and Program context in one compact toolbar. */
 .certloom-domain-screen .certloom-credential-filters {
   display: grid;
-  grid-template-columns: minmax(280px, 1fr) minmax(220px, 280px) auto;
+  grid-template-columns: minmax(320px, 1fr) minmax(390px, 470px) auto;
   align-items: end;
-  gap: 10px 12px;
+  gap: 8px 10px;
+  padding: 12px 14px;
 }
-.certloom-domain-screen .certloom-credential-filters > label:first-of-type {
+.certloom-domain-screen .certloom-credential-filters > label {
   min-width: 0;
 }
 .certloom-domain-screen .certloom-credential-search-filter,
 .certloom-domain-screen .certloom-credential-program-filter {
   display: grid;
-  gap: 6px;
+  gap: 5px;
   min-width: 0;
 }
 .certloom-domain-screen .certloom-credential-search-filter .certloom-filter-label,
@@ -1987,21 +1990,76 @@ body.certloom-setup-v2-body { overflow: hidden; }
   line-height: 1.2;
 }
 .certloom-domain-screen .certloom-credential-program-filter .certloom-context-lookup {
+  grid-template-columns: minmax(155px, .9fr) minmax(175px, 1.1fr);
+  grid-template-areas:
+    "search select"
+    "status status";
+  gap: 3px 8px;
   min-width: 0;
+  align-items: center;
+}
+.certloom-domain-screen .certloom-credential-program-filter .certloom-context-lookup__search { grid-area: search; }
+.certloom-domain-screen .certloom-credential-program-filter .certloom-context-lookup select { grid-area: select; }
+.certloom-domain-screen .certloom-credential-program-filter .certloom-context-lookup__status {
+  grid-area: status;
+  min-height: 0;
+  line-height: 1.2;
+}
+.certloom-domain-screen .certloom-credential-filters > button[type="submit"] {
+  min-width: 70px;
 }
 .certloom-domain-screen .certloom-credential-filters > .button-link {
   grid-column: 1 / -1;
   justify-self: start;
+  margin-top: -2px;
 }
 .certloom-domain-screen .certloom-domain-gate-notice-deferred {
   margin-top: 16px;
 }
+
+/* Registry sorting stays discoverable without making the already dense table noisy. */
+.certloom-domain-screen .certloom-credential-table thead th {
+  vertical-align: middle;
+}
+.certloom-domain-screen .certloom-sort-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  color: var(--cl-ink);
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+}
+.certloom-domain-screen .certloom-sort-link:hover,
+.certloom-domain-screen .certloom-sort-link:focus-visible,
+.certloom-domain-screen .certloom-sort-link.is-current {
+  color: var(--cl-brand-blue);
+}
+.certloom-domain-screen .certloom-sort-indicator {
+  flex: 0 0 auto;
+  color: var(--cl-ink-soft);
+  font-size: 11px;
+  font-weight: 700;
+}
+.certloom-domain-screen .certloom-sort-link.is-current .certloom-sort-indicator {
+  color: currentColor;
+}
+
+@media (max-width: 1120px) {
+  .certloom-domain-screen .certloom-credential-filters {
+    grid-template-columns: minmax(280px, 1fr) minmax(330px, 420px) auto;
+  }
+}
 @media (max-width: 960px) {
   .certloom-domain-screen .certloom-credential-filters {
-    grid-template-columns: 1fr minmax(220px, 300px);
+    grid-template-columns: 1fr auto;
   }
-  .certloom-domain-screen .certloom-credential-filters > button[type="submit"] {
-    grid-column: 2;
+  .certloom-domain-screen .certloom-credential-search-filter {
+    grid-column: 1 / -1;
+  }
+  .certloom-domain-screen .certloom-credential-program-filter {
+    grid-column: 1;
   }
 }
 @media (max-width: 782px) {
@@ -2011,14 +2069,23 @@ body.certloom-setup-v2-body { overflow: hidden; }
   }
   .certloom-domain-screen .certloom-credential-filters {
     grid-template-columns: 1fr;
+    padding: 12px;
   }
+  .certloom-domain-screen .certloom-credential-search-filter,
+  .certloom-domain-screen .certloom-credential-program-filter,
   .certloom-domain-screen .certloom-credential-filters > button[type="submit"] {
     grid-column: auto;
+  }
+  .certloom-domain-screen .certloom-credential-program-filter .certloom-context-lookup {
+    grid-template-columns: 1fr;
+    grid-template-areas: "search" "select" "status";
+  }
+  .certloom-domain-screen .certloom-credential-filters > button[type="submit"] {
     width: 100%;
   }
 }
 
-/* alpha.4.26 — Issue Credential visual hierarchy.
+/* alpha.4.27 — Issue Credential compact visual hierarchy.
    Keep the task operational: hero → contextual nav → progress → compose.
    Release-engineering details remain available, but no longer interrupt the form. */
 .certloom-manual-issuance {
@@ -2040,7 +2107,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
 .certloom-manual-issuance > .certloom-manual-card,
 .certloom-manual-issuance > .certloom-duplicate-guidance,
 .certloom-manual-issuance > .certloom-issue-technical-status {
-  width: min(1180px, 100%);
+  width: min(1140px, 100%);
   margin-inline: auto;
 }
 
@@ -2056,16 +2123,16 @@ body.certloom-setup-v2-body { overflow: hidden; }
 .certloom-manual-issuance .certloom-manual-steps {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0;
-  margin-top: 18px;
-  margin-bottom: 18px;
+  margin-top: 12px;
+  margin-bottom: 12px;
   counter-reset: certloom-manual;
 }
 
 .certloom-manual-issuance .certloom-manual-steps li {
   position: relative;
   min-width: 0;
-  min-height: 48px;
-  padding: 13px 12px 9px;
+  min-height: 40px;
+  padding: 9px 10px 6px;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -2132,14 +2199,14 @@ body.certloom-setup-v2-body { overflow: hidden; }
 /* The compose surface should fill the available task area without turning every
    control into a page-wide field. */
 .certloom-manual-issuance .certloom-issue-v2-card {
-  max-width: 1180px;
+  max-width: 1140px;
   overflow: hidden;
   border-radius: 10px;
 }
 
 .certloom-issue-v2-card .certloom-manual-card-head {
   margin: 0;
-  padding: 22px 24px 18px;
+  padding: 16px 20px 14px;
   border-bottom: 1px solid var(--cl-rule);
   background: var(--cl-surface);
 }
@@ -2157,18 +2224,18 @@ body.certloom-setup-v2-body { overflow: hidden; }
 
 .certloom-issue-v2-card .certloom-manual-card-head p {
   max-width: 72ch;
-  margin-top: 6px;
+  margin-top: 4px;
   color: var(--cl-ink-soft);
 }
 
 .certloom-issue-v2-form > .certloom-manual-fieldset {
-  padding: 20px 24px 22px;
+  padding: 14px 20px 16px;
   border-top: 0;
   border-bottom: 1px solid var(--cl-rule);
 }
 
 .certloom-issue-v2-form > .certloom-manual-fieldset:first-of-type {
-  padding-top: 20px;
+  padding-top: 14px;
 }
 
 .certloom-issue-v2-form > .certloom-manual-fieldset legend {
@@ -2181,7 +2248,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
 
 .certloom-issue-v2-form .certloom-manual-fieldset-intro {
   max-width: 68ch;
-  margin: 0 0 14px;
+  margin: 0 0 9px;
   color: var(--cl-ink-soft);
 }
 
@@ -2195,7 +2262,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
   grid-template-areas:
     "search select"
     "status status";
-  gap: 7px 12px;
+  gap: 4px 10px;
   align-items: center;
 }
 
@@ -2212,11 +2279,11 @@ body.certloom-setup-v2-body { overflow: hidden; }
 }
 
 .certloom-issue-v2-form .certloom-manual-grid-2 {
-  gap: 14px 18px;
+  gap: 10px 14px;
 }
 
 .certloom-issue-v2-form .certloom-manual-expiry {
-  margin: 16px 0 4px;
+  margin: 10px 0 2px;
 }
 
 .certloom-issue-v2-form .certloom-presentation-choices {
@@ -2225,8 +2292,8 @@ body.certloom-setup-v2-body { overflow: hidden; }
 }
 
 .certloom-issue-v2-form .certloom-presentation-choice {
-  min-height: 92px;
-  padding: 14px;
+  min-height: 76px;
+  padding: 11px 12px;
   border-radius: 8px;
 }
 
@@ -2240,7 +2307,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
 }
 
 .certloom-issue-v2-form > .certloom-additional-details {
-  margin: 16px 24px 20px;
+  margin: 12px 20px 14px;
   padding: 0;
   border: 1px solid var(--cl-rule);
   border-radius: 8px;
@@ -2248,8 +2315,8 @@ body.certloom-setup-v2-body { overflow: hidden; }
 }
 
 .certloom-issue-v2-form > .certloom-additional-details > summary {
-  min-height: 48px;
-  padding: 12px 14px;
+  min-height: 42px;
+  padding: 9px 12px;
 }
 
 .certloom-issue-v2-form > .certloom-additional-details[open] > summary {
@@ -2258,16 +2325,16 @@ body.certloom-setup-v2-body { overflow: hidden; }
 }
 
 .certloom-issue-v2-form .certloom-additional-details-body {
-  padding: 4px 16px 18px;
+  padding: 4px 14px 14px;
 }
 
 /* The only visible gate copy is actionable. Engineering detail lives below. */
 .certloom-issue-v2-form .certloom-issue-actions {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   margin: 0;
-  padding: 18px 24px 20px;
+  padding: 13px 20px 15px;
   border-top: 0;
   background: var(--cl-paper);
 }
@@ -2296,14 +2363,14 @@ body.certloom-setup-v2-body { overflow: hidden; }
 
 .certloom-issue-technical-status {
   margin-top: 4px;
-  margin-bottom: 22px;
+  margin-bottom: 16px;
   border: 1px solid var(--cl-rule);
   border-radius: 8px;
   background: var(--cl-surface);
 }
 
 .certloom-issue-technical-status > summary {
-  padding: 11px 14px;
+  padding: 9px 12px;
   color: var(--cl-ink-soft);
   font-size: var(--cl-t-sm);
   font-weight: 600;
@@ -2311,7 +2378,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
 }
 
 .certloom-issue-technical-body {
-  padding: 0 14px 14px;
+  padding: 0 12px 12px;
   color: var(--cl-ink-soft);
   font-size: var(--cl-t-sm);
 }
@@ -2370,5 +2437,32 @@ body.certloom-setup-v2-body { overflow: hidden; }
   .certloom-manual-issuance .certloom-manual-steps li.is-current::after,
   .certloom-manual-issuance .certloom-manual-steps li.is-complete::after {
     background: Highlight;
+  }
+}
+
+/* alpha.4.27 compact issuance pass: reduce vertical travel without changing the
+   approved brand artwork, field set, or review/issue semantics. */
+.certloom-manual-issuance .certloom-issue-hero {
+  min-height: 146px;
+  margin-bottom: 12px;
+  padding: 42px var(--cl-5) 18px;
+}
+.certloom-manual-issuance .certloom-issue-hero::before {
+  top: var(--cl-5);
+  left: var(--cl-5);
+}
+.certloom-issue-v2-form .certloom-presentation-choices {
+  margin-top: 8px;
+}
+.certloom-domain-screen .certloom-credential-program-filter .certloom-context-lookup__status:empty {
+  display: none;
+}
+@media (max-width: 782px) {
+  .certloom-manual-issuance .certloom-issue-hero {
+    min-height: 0;
+    padding: 50px var(--cl-4) var(--cl-4);
+  }
+  .certloom-manual-issuance .certloom-issue-hero::before {
+    left: var(--cl-4);
   }
 }

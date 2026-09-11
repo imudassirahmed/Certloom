@@ -1578,7 +1578,7 @@
 		if ( ! shell ) { return; }
 		var hero = shell.querySelector( ':scope > .certloom-page-hero, :scope > .certloom-dashboard-hero, :scope > .certloom-workspace-hero' );
 		if ( ! hero ) { return; }
-		hero.insertAdjacentElement( 'afterend', nav );
+		if ( nav.previousElementSibling !== hero ) { hero.insertAdjacentElement( 'afterend', nav ); }
 		nav.classList.add( 'is-below-hero' );
 	}
 

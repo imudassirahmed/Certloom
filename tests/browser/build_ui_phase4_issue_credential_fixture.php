@@ -1,5 +1,5 @@
 <?php
-/** Browser fixture for alpha.4.26 Issue Credential visual hierarchy. */
+/** Browser fixture for alpha.4.27 Issue Credential compact hierarchy. */
 $root = dirname( __DIR__, 2 );
 $tokens = file_get_contents( $root . '/assets/css/certloom-tokens.css' );
 $admin = file_get_contents( $root . '/admin/assets/admin.css' );
@@ -9,9 +9,9 @@ $js = file_get_contents( $root . '/admin/assets/admin.js' );
 html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}body{margin:0;background:#f0f0f1;color:#071a43;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;line-height:1.5}.wrap{margin:20px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0 12px;border:1px solid #1450e0;border-radius:4px;background:#fff;color:#1450e0;text-decoration:none}.button-primary{background:#1450e0;color:#fff}.screen-reader-text{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
 <?php echo $tokens, "\n", $admin, "\n", $foundation; ?>
 </style><script>window.ajaxurl='';window.certloomAdminL10n={phase2DetailsPending:'Choose “Use a Certloom design” to review this credential in the current build.',phase2ImagePending:'Uploaded-image credentials can be prepared here, but review is not available for this path in the current build.',phase2StandalonePending:'Select a Program to review a credential that uses a Certloom design in the current build.',phase2CompleteCore:'Choose a recipient and enter a credential title to continue to review.',phase2Compatible:'Ready to review. Nothing is issued until you confirm on the next step.',noCertificateImage:'No certificate image selected'};</script><script><?php echo $js; ?></script></head><body>
-<nav class="certloom-product-subnav" data-certloom-product-subnav aria-label="Credential sections"><a>Credentials</a><a class="is-current">Issue credential</a><a>Recipients</a><a>Import / issue from file</a><a>Email delivery</a></nav>
 <main class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-manual-issuance">
 <section class="certloom-page-hero certloom-issue-hero" aria-labelledby="certloom-issue-title"><div><span class="certloom-eyebrow">Credential operations</span><h1 id="certloom-issue-title">Issue credential</h1><p>Create one credential, review it, then issue only when everything is correct. Recipient, title and issue date form the fast path; organization, Program, Batch, Signer and artwork stay optional.</p></div></section>
+<nav class="certloom-product-subnav is-below-hero" data-certloom-product-subnav aria-label="Credential sections"><a>Credentials</a><a class="is-current">Issue credential</a><a>Recipients</a><a>Import / issue from file</a><a>Email delivery</a></nav>
 <ol class="certloom-manual-steps" aria-label="Manual Issuance progress"><li class="is-current" aria-current="step"><span>Compose</span></li><li><span>Review</span></li><li><span>Issue</span></li><li><span>Receipt</span></li></ol>
 <section class="certloom-manual-card certloom-issue-v2-card"><div class="certloom-manual-card-head"><div><span class="certloom-eyebrow">Step 1 of 4</span><h2>Compose credential</h2><p>Start with the recipient and credential details. Add hierarchy or artwork only when this credential needs it.</p></div></div>
 <form class="certloom-manual-form certloom-issue-v2-form" data-certloom-phase2-issuance>

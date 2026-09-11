@@ -549,10 +549,14 @@ final class DomainAdmin {
 		$page       = $this->page_value();
 		$status     = isset( $_GET['credential_status'] ) ? sanitize_key( wp_unslash( $_GET['credential_status'] ) ) : 'all'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter.
 		$program_id = isset( $_GET['program_id'] ) ? absint( $_GET['program_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter.
+		$orderby    = isset( $_GET['orderby'] ) ? sanitize_key( wp_unslash( $_GET['orderby'] ) ) : 'recent'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only sorting.
+		$order      = isset( $_GET['order'] ) && 'asc' === strtolower( sanitize_key( wp_unslash( $_GET['order'] ) ) ) ? 'ASC' : 'DESC'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only sorting.
 		$allowed    = array( 'all', 'valid', 'suspended', 'revoked', 'expired', 'not_yet_valid', 'pending_review', 'noncompliant', 'voided', 'not_issued' );
 		$status     = in_array( $status, $allowed, true ) ? $status : 'all';
+		$sort_columns = array( 'recent', 'credential', 'recipient', 'program', 'issue_date', 'expiry_date', 'status', 'version', 'added' );
+		$orderby    = in_array( $orderby, $sort_columns, true ) ? $orderby : 'recent';
 		$repo       = new UnifiedCredentialRegistry();
-		$result     = $repo->list_page( $search, $page, 50, $status, $program_id );
+		$result     = $repo->list_page( $search, $page, 50, $status, $program_id, $orderby, $order );
 		$summary    = $repo->summary();
 		$programs   = ( new ScopedContextChoices() )->programs( $program_id, 'all' );
 		$status_service = new StatusService();
@@ -583,16 +587,25 @@ final class DomainAdmin {
 				)
 			);
 		}
-		$this->credential_views( $status, $search, $program_id, is_wp_error( $summary ) ? array() : $summary );
-		$this->credential_filters( $search, $status, $program_id, is_wp_error( $programs ) ? array() : $programs );
+		$this->credential_views( $status, $search, $program_id, is_wp_error( $summary ) ? array() : $summary, $orderby, $order );
+		$this->credential_filters( $search, $status, $program_id, is_wp_error( $programs ) ? array() : $programs, $orderby, $order );
 		if ( is_wp_error( $result ) ) {
 			$this->error( $result->get_error_message() );
 		} elseif ( ! $detailed_registry ) {
 			$this->simple_credential_list( (array) $result['items'], $status_service );
-			$this->pagination( self::CREDENTIALS_PAGE, $page, (int) $result['total'], 50, $search, array( 'credential_status' => $status, 'program_id' => $program_id ) );
+			$this->pagination( self::CREDENTIALS_PAGE, $page, (int) $result['total'], 50, $search, array( 'credential_status' => $status, 'program_id' => $program_id, 'orderby' => $orderby, 'order' => strtolower( $order ) ) );
 		} else {
 			$url_builder = new \Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl();
-			echo '<div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-table certloom-credential-table"><thead><tr><th>' . esc_html__( 'Credential', 'certloom' ) . '</th><th>' . esc_html__( 'Recipient', 'certloom' ) . '</th><th>' . esc_html__( 'Program / batch', 'certloom' ) . '</th><th>' . esc_html__( 'Issue date', 'certloom' ) . '</th><th>' . esc_html__( 'Expiry date', 'certloom' ) . '</th><th>' . esc_html__( 'Credential status', 'certloom' ) . '</th><th>' . esc_html__( 'Record version', 'certloom' ) . '</th><th>' . esc_html__( 'Added to Certloom', 'certloom' ) . '</th></tr></thead><tbody>';
+			echo '<div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-table certloom-credential-table"><thead><tr>'
+				. $this->credential_sort_header( __( 'Credential', 'certloom' ), 'credential', $orderby, $order, $search, $status, $program_id )
+				. $this->credential_sort_header( __( 'Recipient', 'certloom' ), 'recipient', $orderby, $order, $search, $status, $program_id )
+				. $this->credential_sort_header( __( 'Program / batch', 'certloom' ), 'program', $orderby, $order, $search, $status, $program_id )
+				. $this->credential_sort_header( __( 'Issue date', 'certloom' ), 'issue_date', $orderby, $order, $search, $status, $program_id )
+				. $this->credential_sort_header( __( 'Expiry date', 'certloom' ), 'expiry_date', $orderby, $order, $search, $status, $program_id )
+				. $this->credential_sort_header( __( 'Credential status', 'certloom' ), 'status', $orderby, $order, $search, $status, $program_id )
+				. $this->credential_sort_header( __( 'Record version', 'certloom' ), 'version', $orderby, $order, $search, $status, $program_id )
+				. $this->credential_sort_header( __( 'Added to Certloom', 'certloom' ), 'added', $orderby, $order, $search, $status, $program_id )
+				. '</tr></thead><tbody>';
 			foreach ( $result['items'] as $item ) {
 				$is_historical = 'historical' === (string) ( $item['_credential_source'] ?? '' );
 				$source_label = (string) ( $item['_credential_source_label'] ?? ( $is_historical ? __( 'Legacy', 'certloom' ) : __( 'Credential', 'certloom' ) ) );
@@ -633,7 +646,7 @@ final class DomainAdmin {
 				echo '<tr><td colspan="8"><div class="certloom-domain-empty"><strong>' . esc_html__( 'No credentials match these filters.', 'certloom' ) . '</strong><span>' . esc_html__( 'Adjust the search, status, or Program filter. Issue credential creates new records here.', 'certloom' ) . '</span></div></td></tr>';
 			}
 			echo '</tbody></table></div>';
-			$this->pagination( self::CREDENTIALS_PAGE, $page, (int) $result['total'], 50, $search, array( 'credential_status' => $status, 'program_id' => $program_id ) );
+			$this->pagination( self::CREDENTIALS_PAGE, $page, (int) $result['total'], 50, $search, array( 'credential_status' => $status, 'program_id' => $program_id, 'orderby' => $orderby, 'order' => strtolower( $order ) ) );
 		}
 		$this->technical_status_notice();
 		$this->footer();
@@ -902,7 +915,7 @@ final class DomainAdmin {
 	}
 
 	/** @return void */
-	private function credential_views( $current, $search, $program_id, array $summary ) {
+	private function credential_views( $current, $search, $program_id, array $summary, $orderby = 'recent', $order = 'DESC' ) {
 		$views = array(
 			'all'            => __( 'All', 'certloom' ),
 			'valid'          => __( 'Valid', 'certloom' ),
@@ -920,6 +933,10 @@ final class DomainAdmin {
 			$args = array( 'page' => self::CREDENTIALS_PAGE, 'credential_status' => $key );
 			if ( '' !== $search ) { $args['s'] = $search; }
 			if ( $program_id ) { $args['program_id'] = $program_id; }
+			if ( 'recent' !== $orderby ) {
+				$args['orderby'] = $orderby;
+				$args['order']   = strtolower( $order );
+			}
 			$count_key = 'all' === $key ? 'total' : $key;
 			$count = array_key_exists( $count_key, $summary ) ? '<span>' . esc_html( (string) absint( $summary[ $count_key ] ) ) . '</span>' : '';
 			echo '<a class="' . ( $key === $current ? 'is-current' : '' ) . '" href="' . esc_url( add_query_arg( $args, admin_url( 'admin.php' ) ) ) . '">' . esc_html( $label ) . $count . '</a>';
@@ -928,21 +945,48 @@ final class DomainAdmin {
 	}
 
 	/** @param array<int,array<string,mixed>> $programs @return void */
-	private function credential_filters( $search, $status, $program_id, array $programs ) {
+	private function credential_filters( $search, $status, $program_id, array $programs, $orderby = 'recent', $order = 'DESC' ) {
 		$simple = AdminUiMode::is_simple();
 		$search_placeholder = $simple ? __( 'Certificate number, recipient, email, Program, or batch', 'certloom' ) : __( 'Certificate, recipient, email, Program, batch, or public ID', 'certloom' );
-		echo '<form method="get" class="certloom-domain-search certloom-credential-filters"><input type="hidden" name="page" value="' . esc_attr( self::CREDENTIALS_PAGE ) . '"><input type="hidden" name="credential_status" value="' . esc_attr( $status ) . '">';
+		echo '<form method="get" class="certloom-domain-search certloom-credential-filters"><input type="hidden" name="page" value="' . esc_attr( self::CREDENTIALS_PAGE ) . '"><input type="hidden" name="credential_status" value="' . esc_attr( $status ) . '"><input type="hidden" name="orderby" value="' . esc_attr( $orderby ) . '"><input type="hidden" name="order" value="' . esc_attr( strtolower( $order ) ) . '">';
 		echo '<label class="certloom-credential-search-filter"><span class="certloom-filter-label">' . esc_html__( 'Search', 'certloom' ) . '</span><input type="search" name="s" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr( $search_placeholder ) . '"></label>';
 		$context_nonce = wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION );
-		echo '<label class="certloom-credential-program-filter"><span class="certloom-filter-label">' . esc_html__( 'Program', 'certloom' ) . '</span><select name="program_id" data-certloom-context-lookup="program" data-certloom-context-program-status="all" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search all Programs…', 'certloom' ) . '"><option value="0">' . esc_html__( 'All Programs', 'certloom' ) . '</option>';
+		echo '<label class="certloom-credential-program-filter"><span class="certloom-filter-label">' . esc_html__( 'Program', 'certloom' ) . '</span><select name="program_id" data-certloom-context-lookup="program" data-certloom-context-compact="1" data-certloom-context-program-status="all" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search all Programs…', 'certloom' ) . '"><option value="0">' . esc_html__( 'All Programs', 'certloom' ) . '</option>';
 		foreach ( $programs as $program ) {
 			echo '<option value="' . esc_attr( (string) absint( $program['id'] ?? 0 ) ) . '" ' . selected( $program_id, absint( $program['id'] ?? 0 ), false ) . '>' . esc_html( (string) ( $program['title'] ?? '' ) ) . ( ! empty( $program['code'] ) ? ' — ' . esc_html( (string) $program['code'] ) : '' ) . '</option>';
 		}
 		echo '</select></label><button type="submit" class="button">' . esc_html__( 'Filter', 'certloom' ) . '</button>';
 		if ( '' !== $search || $program_id ) {
-			echo '<a class="button-link" href="' . esc_url( add_query_arg( array( 'page' => self::CREDENTIALS_PAGE, 'credential_status' => $status ), admin_url( 'admin.php' ) ) ) . '">' . esc_html__( 'Clear search/filter', 'certloom' ) . '</a>';
+			$clear_args = array( 'page' => self::CREDENTIALS_PAGE, 'credential_status' => $status );
+			if ( 'recent' !== $orderby ) {
+				$clear_args['orderby'] = $orderby;
+				$clear_args['order']   = strtolower( $order );
+			}
+			echo '<a class="button-link" href="' . esc_url( add_query_arg( $clear_args, admin_url( 'admin.php' ) ) ) . '">' . esc_html__( 'Clear search/filter', 'certloom' ) . '</a>';
 		}
 		echo '</form>';
+	}
+
+	/** @return string */
+	private function credential_sort_header( $label, $column, $current, $order, $search, $status, $program_id ) {
+		$is_current = $column === $current;
+		$date_like  = in_array( $column, array( 'issue_date', 'expiry_date', 'version', 'added' ), true );
+		$next_order = $is_current ? ( 'ASC' === $order ? 'desc' : 'asc' ) : ( $date_like ? 'desc' : 'asc' );
+		$args       = array(
+			'page'              => self::CREDENTIALS_PAGE,
+			'credential_status' => $status,
+			'orderby'           => $column,
+			'order'             => $next_order,
+		);
+		if ( '' !== $search ) { $args['s'] = $search; }
+		if ( $program_id ) { $args['program_id'] = $program_id; }
+
+		$indicator = $is_current ? ( 'ASC' === $order ? '↑' : '↓' ) : '↕';
+		$aria_sort = $is_current ? ( 'ASC' === $order ? 'ascending' : 'descending' ) : 'none';
+		$direction = 'asc' === $next_order ? __( 'ascending', 'certloom' ) : __( 'descending', 'certloom' );
+		$title     = sprintf( __( 'Sort %1$s %2$s', 'certloom' ), $label, $direction );
+
+		return '<th scope="col" aria-sort="' . esc_attr( $aria_sort ) . '"><a class="certloom-sort-link' . ( $is_current ? ' is-current' : '' ) . '" href="' . esc_url( add_query_arg( $args, admin_url( 'admin.php' ) ) ) . '" title="' . esc_attr( $title ) . '"><span>' . esc_html( $label ) . '</span><span class="certloom-sort-indicator" aria-hidden="true">' . esc_html( $indicator ) . '</span></a></th>';
 	}
 
 	/** Compact Simple-mode credential list with direct public-view continuity. @return void */
@@ -2002,6 +2046,7 @@ final class DomainAdmin {
 		}
 		if ( ! AdminUiMode::is_simple() ) { echo '<span class="certloom-domain-preview-badge">' . esc_html__( 'Acceptance preview', 'certloom' ) . '</span>'; }
 		echo '</div></section>';
+		( new AdminProductNavigation() )->render_current_subnav();
 	}
 
 	/** @return void */

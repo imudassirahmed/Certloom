@@ -62,17 +62,63 @@ final class AdminProductNavigation {
 	}
 
 	public function render_subnav() {
-		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$page = $this->current_page();
 		if ( '' === $page || 0 !== strpos( $page, 'certloom' ) || ! is_user_logged_in() ) { return; }
+
+		/*
+		 * Workspaces with a shared Certloom hero render their contextual navigation
+		 * inside the page callback, immediately after the hero. Rendering those links
+		 * from admin_notices first and moving them in footer JavaScript caused a
+		 * visible top-of-page flash/layout shift on real WordPress screens. Keep the
+		 * admin_notices path only as the compatibility fallback for older workspaces.
+		 */
+		if ( $this->page_renders_own_subnav( $page ) ) { return; }
+		$this->render_for_page( $page, false );
+	}
+
+	/** Render contextual navigation at the page-owned location (normally after its hero). */
+	public function render_current_subnav() {
+		$page = $this->current_page();
+		if ( '' === $page || 0 !== strpos( $page, 'certloom' ) || ! is_user_logged_in() ) { return; }
+		$this->render_for_page( $page, true );
+	}
+
+	/** @return void */
+	private function render_for_page( $page, $below_hero ) {
 		$links = $this->links_for_section( $this->section_for_page( $page ) );
 		if ( empty( $links ) ) { return; }
-		echo '<nav class="certloom-product-subnav" data-certloom-product-subnav aria-label="' . esc_attr__( 'Certloom section navigation', 'certloom' ) . '">';
+		$classes = 'certloom-product-subnav' . ( $below_hero ? ' is-below-hero' : '' );
+		echo '<nav class="' . esc_attr( $classes ) . '" data-certloom-product-subnav aria-label="' . esc_attr__( 'Certloom section navigation', 'certloom' ) . '">';
 		foreach ( $links as $link ) {
 			if ( ! $this->can_access_link( $link ) ) { continue; }
 			$current = in_array( $page, $link['pages'], true );
 			echo '<a href="' . esc_url( add_query_arg( 'page', $link['page'], admin_url( 'admin.php' ) ) ) . '" class="' . ( $current ? 'is-current' : '' ) . '"' . ( $current ? ' aria-current="page"' : '' ) . '>' . esc_html( $link['label'] ) . '</a>';
 		}
 		echo '</nav>';
+	}
+
+	/** @return string */
+	private function current_page() {
+		return isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	}
+
+	/**
+	 * These callbacks already own a shared hero and can therefore emit navigation
+	 * in its final DOM position without JavaScript relocation.
+	 *
+	 * @return bool
+	 */
+	private function page_renders_own_subnav( $page ) {
+		return in_array( $page, array(
+			'certloom-domain-credentials',
+			'certloom-domain-recipients',
+			'certloom-domain-programs',
+			'certloom-domain-issuers',
+			'certloom-domain-batches',
+			'certloom-domain-signers',
+			'certloom-domain-data-tools',
+			'certloom-issuance',
+		), true );
 	}
 
 	private function section_for_page( $page ) {

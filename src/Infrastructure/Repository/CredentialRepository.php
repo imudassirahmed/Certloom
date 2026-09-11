@@ -524,7 +524,7 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 	 *
 	 * @return array{items:array<int,array<string,mixed>>,total:int}|\WP_Error
 	 */
-	public function list_management_page( $search = '', $page = 1, $per_page = 20, $status = 'all', $program_id = 0, $exclude_source_type = '' ) {
+	public function list_management_page( $search = '', $page = 1, $per_page = 20, $status = 'all', $program_id = 0, $exclude_source_type = '', $orderby = 'recent', $order = 'DESC' ) {
 		global $wpdb;
 		$page       = max( 1, absint( $page ) );
 		$per_page   = max( 1, min( 100, absint( $per_page ) ) );
@@ -573,9 +573,50 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 			return new \WP_Error( 'certloom_credential_management_count_failed', __( 'Certloom could not count the credential registry safely.', 'certloom' ) );
 		}
 
-		$sql = 'SELECT s.id AS series_id, s.public_id, s.recipient_id, s.program_id, s.batch_id, s.issuer_id, s.current_version_id, s.administrative_state, s.compliance_state, s.visibility, s.created_at AS series_created_at, s.updated_at AS series_updated_at, r.display_name, r.email AS recipient_email, p.title AS program_title, p.code AS program_code, b.name AS batch_name, b.code AS batch_code, i.name AS issuer_name, v.id AS version_id, v.version_number, v.previous_version_id, v.display_number, v.issuance_state, v.legacy_expired, v.valid_from, v.issued_at, v.expires_at, v.grade, v.source_type, v.source_idempotency_key, v.updated_at AS version_updated_at' . $joins . $where_sql . ' ORDER BY s.updated_at DESC, s.id DESC LIMIT %d OFFSET %d';
+		$orderby = sanitize_key( (string) $orderby );
+		$order   = 'ASC' === strtoupper( (string) $order ) ? 'ASC' : 'DESC';
+		$order_clause = 's.updated_at DESC, s.id DESC';
+		switch ( $orderby ) {
+			case 'credential':
+				$order_clause = "COALESCE(NULLIF(v.display_number,''),s.public_id) {$order}, s.id {$order}";
+				break;
+			case 'recipient':
+				$order_clause = "r.display_name {$order}, s.id {$order}";
+				break;
+			case 'program':
+				$order_clause = "COALESCE(p.title,'') {$order}, COALESCE(b.name,'') {$order}, s.id {$order}";
+				break;
+			case 'issue_date':
+				$order_clause = "v.issued_at {$order}, s.id {$order}";
+				break;
+			case 'expiry_date':
+				$order_clause = "CASE WHEN v.expires_at IS NULL OR v.expires_at='' THEN 1 ELSE 0 END ASC, v.expires_at {$order}, s.id {$order}";
+				break;
+			case 'status':
+				$today = esc_sql( gmdate( 'Y-m-d' ) );
+				$order_clause = "CASE
+					WHEN v.issuance_state='voided' THEN 'voided'
+					WHEN v.issuance_state='draft' THEN 'not_issued'
+					WHEN s.administrative_state='revoked' THEN 'revoked'
+					WHEN s.administrative_state='suspended' THEN 'suspended'
+					WHEN v.legacy_expired=1 THEN 'expired'
+					WHEN v.valid_from IS NOT NULL AND v.valid_from>'{$today}' THEN 'not_yet_valid'
+					WHEN v.expires_at IS NOT NULL AND v.expires_at<'{$today}' THEN 'expired'
+					WHEN s.compliance_state='pending' THEN 'pending_review'
+					WHEN s.compliance_state='noncompliant' THEN 'suspended_noncompliant'
+					ELSE 'valid' END {$order}, s.id {$order}";
+				break;
+			case 'version':
+				$order_clause = "COALESCE(v.version_number,0) {$order}, s.id {$order}";
+				break;
+			case 'added':
+				$order_clause = "s.created_at {$order}, s.id {$order}";
+				break;
+		}
+
+		$sql = 'SELECT s.id AS series_id, s.public_id, s.recipient_id, s.program_id, s.batch_id, s.issuer_id, s.current_version_id, s.administrative_state, s.compliance_state, s.visibility, s.created_at AS series_created_at, s.updated_at AS series_updated_at, r.display_name, r.email AS recipient_email, p.title AS program_title, p.code AS program_code, b.name AS batch_name, b.code AS batch_code, i.name AS issuer_name, v.id AS version_id, v.version_number, v.previous_version_id, v.display_number, v.issuance_state, v.legacy_expired, v.valid_from, v.issued_at, v.expires_at, v.grade, v.source_type, v.source_idempotency_key, v.updated_at AS version_updated_at' . $joins . $where_sql . ' ORDER BY ' . $order_clause . ' LIMIT %d OFFSET %d';
 		$wpdb->last_error = '';
-		$items = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( $base_args, $args, array( $per_page, $offset ) ) ), ARRAY_A );
+		$items = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( $base_args, $args, array( $per_page, $offset ) ) ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- ORDER BY is assembled exclusively from a strict switch over internal column expressions and ASC/DESC.
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $items ) ) {
 			return new \WP_Error( 'certloom_credential_management_list_failed', __( 'Certloom could not load the credential registry safely.', 'certloom' ) );
 		}

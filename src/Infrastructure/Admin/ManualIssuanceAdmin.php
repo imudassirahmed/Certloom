@@ -62,6 +62,7 @@ final class ManualIssuanceAdmin {
 		$current_stage = $receipt_version ? 'receipt' : ( is_array( $review ) ? 'review' : 'compose' );
 		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-manual-issuance">';
 		echo '<section class="certloom-page-hero certloom-issue-hero" aria-labelledby="certloom-issue-title"><div><span class="certloom-eyebrow">' . esc_html__( 'Credential operations', 'certloom' ) . '</span><h1 id="certloom-issue-title">' . esc_html__( 'Issue credential', 'certloom' ) . '</h1><p>' . esc_html__( 'Create one credential, review it, then issue only when everything is correct. Recipient, title and issue date form the fast path; organization, Program, Batch, Signer and artwork stay optional.', 'certloom' ) . '</p></div></section>';
+		( new AdminProductNavigation() )->render_current_subnav();
 		$this->notice();
 		$this->steps( $current_stage );
 
