@@ -437,7 +437,7 @@
 			function optionLabel( choice ) { return String( choice && choice.label ? choice.label : '' ); }
 			function selectedSnapshot() {
 				var selected = select.options[ select.selectedIndex ];
-				return selected && select.value && select.value !== defaultValue ? { id: String( select.value ), label: selected.textContent } : null;
+				return selected && select.value && select.value !== defaultValue ? { id: String( select.value ), label: selected.textContent, title: selected.getAttribute( 'data-program-title' ) || '' } : null;
 			}
 			function programId() {
 				if ( 'batch' !== kind || ! form ) { return 0; }
@@ -462,12 +462,14 @@
 					option.value = value;
 					option.textContent = optionLabel( choice );
 					if ( 'batch' === kind && choice.program_id ) { option.setAttribute( 'data-program-id', String( choice.program_id ) ); }
+					if ( 'program' === kind && choice.title ) { option.setAttribute( 'data-program-title', String( choice.title ) ); }
 					select.appendChild( option );
 				} );
 				if ( previous && ! seen[ previous.id ] ) {
 					var keep = document.createElement( 'option' );
 					keep.value = previous.id;
 					keep.textContent = previous.label;
+					if ( 'program' === kind && previous.title ) { keep.setAttribute( 'data-program-title', previous.title ); }
 					if ( 'batch' === kind && programId() ) { keep.setAttribute( 'data-program-id', String( programId() ) ); }
 					select.appendChild( keep );
 				}
@@ -1227,6 +1229,12 @@
 			var imagePreview = form.querySelector( '.certloom-certificate-image-control [data-certloom-media-preview]' );
 			var imageClear = form.querySelector( '.certloom-certificate-image-control [data-certloom-media-clear]' );
 			var program = form.querySelector( 'select[name="program_id"]' );
+			var basisRadios = Array.prototype.slice.call( form.querySelectorAll( 'input[name="credential_basis"]' ) );
+			var programPanel = form.querySelector( '[data-certloom-program-basis-panel]' );
+			var titleSourceRadios = Array.prototype.slice.call( form.querySelectorAll( 'input[name="title_source"]' ) );
+			var titlePolicy = form.querySelector( '[data-certloom-title-policy]' );
+			var inheritedTitle = form.querySelector( '[data-certloom-inherited-title]' );
+			var customTitlePanel = form.querySelector( '[data-certloom-custom-title-panel]' );
 			var designSources = Array.prototype.slice.call( form.querySelectorAll( 'input[name="design_source"]' ) );
 			var title = form.querySelector( 'input[name="credential_title"]' );
 			var expiryRadios = Array.prototype.slice.call( form.querySelectorAll( 'input[name="expiry_mode"]' ) );
@@ -1235,6 +1243,14 @@
 			var review = form.querySelector( '[data-certloom-manual-review]' );
 			var message = form.querySelector( '[data-certloom-phase2-compatibility-message]' );
 			function presentationMode() { var checked = presentationRadios.find( function ( radio ) { return radio.checked; } ); return checked ? checked.value : 'details_only'; }
+			function credentialBasis() { var checked = basisRadios.find( function ( radio ) { return radio.checked; } ); return checked ? checked.value : ( program && program.value && '0' !== program.value ? 'program' : 'independent' ); }
+			function titleSource() { var checked = titleSourceRadios.find( function ( radio ) { return radio.checked; } ); return checked ? checked.value : ( 'program' === credentialBasis() ? 'program' : 'custom' ); }
+			function programTitle() {
+				if ( ! program || ! program.value || '0' === program.value ) { return ''; }
+				var option = program.options[ program.selectedIndex ];
+				if ( ! option ) { return ''; }
+				return ( option.getAttribute( 'data-program-title' ) || option.textContent || '' ).trim();
+			}
 			function recipientReady() {
 				var mode = form.querySelector( 'input[name="recipient_mode"]:checked' );
 				if ( ! mode || 'existing' === mode.value ) { var select = form.querySelector( '[data-certloom-recipient-existing-select]' ); return !! ( select && select.value ); }
@@ -1243,19 +1259,46 @@
 			function clearImage() { if ( imageId ) { imageId.value = ''; } if ( imagePreview ) { imagePreview.innerHTML = '<span>' + escapeHtml( certloomText( 'noCertificateImage', 'No certificate image selected' ) ) + '</span>'; } if ( imageClear ) { imageClear.hidden = true; } }
 			function syncCompatibility() {
 				if ( ! review ) { return; }
-				var mode = presentationMode(); var hasTitle = !! ( title && title.value.trim() ); var hasRecipient = recipientReady();
+				var mode = presentationMode(); var basis = credentialBasis(); var selectedProgram = !! ( program && program.value && '0' !== program.value ); var source = titleSource();
+				var hasTitle = 'program' === basis && 'program' === source ? selectedProgram : !! ( title && title.value.trim() ); var hasRecipient = recipientReady();
 				var designSource = designSources.find( function ( radio ) { return radio.checked; } ); designSource = designSource ? designSource.value : 'inherited';
 				var hasDesign = 'inherited' === designSource || !! ( template && template.value && '0' !== template.value );
 				var hasImage = !! ( imageId && imageId.value && '0' !== imageId.value );
-				var compatible = hasTitle && hasRecipient && ( 'details_only' === mode || ( 'image' === mode && hasImage ) || ( 'design' === mode && hasDesign ) );
+				var basisReady = 'independent' === basis || selectedProgram;
+				var compatible = basisReady && hasTitle && hasRecipient && ( 'details_only' === mode || ( 'image' === mode && hasImage ) || ( 'design' === mode && hasDesign ) );
 				review.disabled = ! compatible;
 				if ( ! message ) { return; }
-				if ( ! hasTitle || ! hasRecipient ) { message.textContent = certloomText( 'phase2CompleteCore', 'Choose a recipient and enter a credential title to continue to review.' ); }
+				if ( ! hasRecipient ) { message.textContent = certloomText( 'phase2ChooseRecipient', 'Choose or create a recipient to continue.' ); }
+				else if ( 'program' === basis && ! selectedProgram ) { message.textContent = certloomText( 'phase2ChooseProgram', 'Choose a Program, or switch to Independent credential.' ); }
+				else if ( ! hasTitle ) { message.textContent = certloomText( 'phase2EnterTitle', 'Enter the custom credential title to continue.' ); }
 				else if ( 'image' === mode && ! hasImage ) { message.textContent = certloomText( 'phase2ChooseImage', 'Choose a PNG or JPEG certificate image to continue.' ); }
 				else if ( 'design' === mode && ! hasDesign ) { message.textContent = certloomText( 'phase2ChooseDesign', 'Choose a published assigned design, or use the inherited design.' ); }
 				else if ( 'details_only' === mode ) { message.textContent = certloomText( 'phase2DetailsReady', 'Ready to review without certificate artwork.' ); }
 				else if ( 'image' === mode ) { message.textContent = certloomText( 'phase2ImageReady', 'Ready to review with the selected certificate image.' ); }
 				else { message.textContent = certloomText( 'phase2Compatible', 'Ready to review with the selected Certloom design.' ); }
+			}
+			function setCheckedValue( radios, value ) { radios.forEach( function ( radio ) { radio.checked = radio.value === value; } ); }
+			function syncCredentialBasis( programJustChosen ) {
+				var basis = credentialBasis();
+				var usesProgram = 'program' === basis;
+				if ( programPanel ) { programPanel.hidden = ! usesProgram; }
+				if ( program ) { program.disabled = ! usesProgram; program.required = usesProgram; program.setAttribute( 'aria-required', usesProgram ? 'true' : 'false' ); }
+				if ( titlePolicy ) { titlePolicy.hidden = ! usesProgram; }
+				if ( ! usesProgram ) {
+					if ( program ) { program.value = '0'; previousProgramValue = '0'; }
+					setCheckedValue( titleSourceRadios, 'custom' );
+					var programValidityOff = expiryRadios.find( function ( radio ) { return 'program' === radio.value && radio.checked; } );
+					if ( programValidityOff ) { var permanent = expiryRadios.find( function ( radio ) { return 'permanent' === radio.value; } ); if ( permanent ) { permanent.checked = true; } }
+				} else if ( programJustChosen ) {
+					setCheckedValue( titleSourceRadios, 'program' );
+					var programValidity = expiryRadios.find( function ( radio ) { return 'program' === radio.value; } );
+					if ( programValidity ) { programValidity.checked = true; }
+				}
+				var source = titleSource();
+				if ( inheritedTitle ) { inheritedTitle.textContent = programTitle() || certloomText( 'chooseProgramForTitle', 'Choose a Program to inherit its title.' ); }
+				var customVisible = ! usesProgram || 'custom' === source;
+				if ( customTitlePanel ) { customTitlePanel.hidden = ! customVisible; }
+				if ( title ) { title.required = customVisible; title.disabled = ! customVisible; title.setAttribute( 'aria-required', customVisible ? 'true' : 'false' ); }
 			}
 			function syncPresentation( changed ) {
 				var mode = presentationMode();
@@ -1276,14 +1319,24 @@
 			}
 			presentationRadios.forEach( function ( radio ) { radio.addEventListener( 'change', function () { syncPresentation( true ); } ); } );
 			designSources.forEach( function ( radio ) { radio.addEventListener( 'change', syncCompatibility ); } );
+			basisRadios.forEach( function ( radio ) { radio.addEventListener( 'change', function () { syncCredentialBasis( false ); syncExpiry(); syncCompatibility(); } ); } );
+			titleSourceRadios.forEach( function ( radio ) { radio.addEventListener( 'change', function () { syncCredentialBasis( false ); syncCompatibility(); } ); } );
 			if ( template ) { template.addEventListener( 'change', syncCompatibility ); }
 			if ( imageId ) { imageId.addEventListener( 'change', syncCompatibility ); }
 			expiryRadios.forEach( function ( radio ) { radio.addEventListener( 'change', syncExpiry ); } );
-			if ( program ) { program.addEventListener( 'change', function () { syncExpiry(); syncCompatibility(); } ); }
+			if ( program ) {
+				var previousProgramValue = String( program.value || '0' );
+				program.addEventListener( 'change', function () {
+					var nextProgramValue = String( program.value || '0' );
+					var programJustChosen = ( ! previousProgramValue || '0' === previousProgramValue ) && nextProgramValue && '0' !== nextProgramValue;
+					previousProgramValue = nextProgramValue;
+					syncCredentialBasis( programJustChosen ); syncExpiry(); syncCompatibility();
+				} );
+			}
 			if ( title ) { title.addEventListener( 'input', syncCompatibility ); }
 			form.addEventListener( 'change', function ( event ) { if ( event.target && ( event.target.name === 'recipient_id' || event.target.name === 'recipient_mode' ) ) { syncCompatibility(); } } );
 			form.addEventListener( 'input', function ( event ) { if ( event.target && event.target.name === 'new_recipient[display_name]' ) { syncCompatibility(); } } );
-			syncPresentation( false ); syncExpiry(); syncCompatibility();
+			syncCredentialBasis( false ); syncPresentation( false ); syncExpiry(); syncCompatibility();
 		} );
 	}
 
@@ -1338,8 +1391,8 @@
 			return feedback;
 		}
 		function setQuickFeedback( form, message, error ) { var feedback = feedbackFor( form ); feedback.textContent = message || ''; feedback.classList.toggle( 'is-visible', !! message ); feedback.classList.toggle( 'is-error', !! error ); feedback.classList.toggle( 'is-success', !! message && ! error ); }
-		function addOption( select, value, label, programId ) {
-			if ( ! select || ! value ) { return; } var option = select.querySelector( 'option[value="' + escapeSelector( String( value ) ) + '"]' ); if ( ! option ) { option = document.createElement( 'option' ); option.value = String( value ); select.appendChild( option ); } option.textContent = label || String( value ); if ( programId ) { option.setAttribute( 'data-program-id', String( programId ) ); }
+		function addOption( select, value, label, programId, programTitle ) {
+			if ( ! select || ! value ) { return; } var option = select.querySelector( 'option[value="' + escapeSelector( String( value ) ) + '"]' ); if ( ! option ) { option = document.createElement( 'option' ); option.value = String( value ); select.appendChild( option ); } option.textContent = label || String( value ); if ( programId ) { option.setAttribute( 'data-program-id', String( programId ) ); } if ( programTitle ) { option.setAttribute( 'data-program-title', String( programTitle ) ); }
 		}
 		document.addEventListener( 'click', function ( event ) {
 			var open = event.target.closest( '[data-certloom-dialog-open]' );
@@ -1370,8 +1423,8 @@
 			var data = new FormData( form );
 			fetch( window.ajaxurl || '', { method:'POST', credentials:'same-origin', body:data } ).then( function ( response ) { return response.json(); } ).then( function ( response ) {
 				if ( ! response || ! response.success || ! response.data || ! response.data.id ) { throw new Error( response && response.data && response.data.message ? response.data.message : certloomText( 'itemAddFailed', 'This item could not be added.' ) ); }
-				var kind = form.getAttribute( 'data-certloom-quick-create' ); var targetSelector = form.getAttribute( 'data-certloom-quick-target' ); var target = targetSelector ? document.querySelector( targetSelector ) : null; addOption( target, response.data.id, response.data.label || '', response.data.program_id || 0 ); if ( target ) { target.value = String( response.data.id ); target.dispatchEvent( new Event( 'change', { bubbles:true } ) ); }
-				if ( 'program' === kind ) { document.querySelectorAll( 'select[data-certloom-quick-program-mirror], #certloom-quick-batch-dialog select[name="program_id"]' ).forEach( function ( select ) { addOption( select, response.data.id, response.data.label || '' ); } ); }
+				var kind = form.getAttribute( 'data-certloom-quick-create' ); var targetSelector = form.getAttribute( 'data-certloom-quick-target' ); var target = targetSelector ? document.querySelector( targetSelector ) : null; addOption( target, response.data.id, response.data.label || '', response.data.program_id || 0, 'program' === kind ? ( response.data.title || response.data.label || '' ) : '' ); if ( target ) { target.value = String( response.data.id ); target.dispatchEvent( new Event( 'change', { bubbles:true } ) ); }
+				if ( 'program' === kind ) { document.querySelectorAll( 'select[data-certloom-quick-program-mirror], #certloom-quick-batch-dialog select[name="program_id"]' ).forEach( function ( select ) { addOption( select, response.data.id, response.data.label || '', 0, response.data.title || response.data.label || '' ); } ); }
 				setQuickFeedback( form, response.data.message || certloomText( 'added', 'Added.' ), false );
 				var review = document.querySelector( '[data-certloom-manual-review]' ); if ( review && ! review.closest( 'form[data-certloom-phase2-issuance]' ) ) { var program = document.querySelector( 'select[name="program_id"]' ); review.disabled = ! ( program && program.value ) || '1' !== review.getAttribute( 'data-certloom-has-templates' ); }
 				window.setTimeout( function () { closeDialog( form.closest( 'dialog' ) ); if ( 'program' === kind ) { var title = form.querySelector( '[name="program_title"]' ), code = form.querySelector( '[name="program_code"]' ); if ( title ) { title.value = ''; } if ( code ) { code.value = ''; } } else if ( 'batch' === kind ) { var name = form.querySelector( '[name="batch_name"]' ), batchCode = form.querySelector( '[name="batch_code"]' ); if ( name ) { name.value = ''; } if ( batchCode ) { batchCode.value = ''; } } }, 350 );

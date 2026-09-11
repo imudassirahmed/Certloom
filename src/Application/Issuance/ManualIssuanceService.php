@@ -248,6 +248,7 @@ final class ManualIssuanceService {
 					'expires_at' => $current['expires_at'],
 					'issued_at' => $issued_at,
 					'grade' => $current['request']['grade'],
+					'title' => (string) ( $current['request']['credential_title'] ?? '' ),
 					'score' => '',
 					'verification_url' => $verification_url,
 				);
@@ -350,6 +351,11 @@ final class ManualIssuanceService {
 			if ( ! is_array( $program ) ) { return new \WP_Error( 'certloom_manual_issue_program_missing', __( 'Choose a Program that still exists, or leave Program blank for standalone issuance.', 'certloom' ) ); }
 			if ( empty( $program['active'] ) ) { return new \WP_Error( 'certloom_manual_issue_program_inactive', __( 'Inactive Programs cannot receive new credential issuances.', 'certloom' ) ); }
 		}
+		$title_resolution = ( new EffectiveCredentialTitleResolver() )->resolve( (string) $request['title_source'], (string) $request['credential_title'], $program );
+		if ( is_wp_error( $title_resolution ) ) { return $title_resolution; }
+		$request['credential_title'] = (string) $title_resolution['title'];
+		$request['title_source'] = (string) $title_resolution['source'];
+		$request['title_program_id'] = absint( $title_resolution['program_id'] ?? 0 );
 		$batch = null;
 		if ( ! empty( $request['batch_id'] ) ) {
 			$batch = $this->repository->find_batch( $request['batch_id'] );
@@ -453,6 +459,7 @@ final class ManualIssuanceService {
 			'valid_from' => $request['valid_from'],
 			'expires_at' => $expires_at,
 			'grade' => $request['grade'],
+			'title' => (string) $request['credential_title'],
 			'verification_url' => 'https://example.invalid/certloom/pending',
 		);
 		foreach ( $request['repeating_data'] as $key => $rows ) { $probe_facts[ $key ] = $rows; }
@@ -472,6 +479,8 @@ final class ManualIssuanceService {
 			'signer' => $this->signer_fingerprint( $signer, $signer_resolution ),
 			'presentation_mode' => (string) $request['presentation_mode'],
 			'certificate_image_id' => absint( $request['certificate_image_id'] ?? 0 ),
+			'credential_basis' => (string) ( $request['credential_basis'] ?? ( ! empty( $program ) ? 'program' : 'independent' ) ),
+			'title_source' => (string) ( $request['title_source'] ?? 'custom' ),
 			'credential_title' => (string) $request['credential_title'],
 			'template' => 'design' === (string) $request['presentation_mode'] ? $this->template_fingerprint( $template, $revision ) : null,
 			'design_source' => (string) ( $request['design_source'] ?? 'inherited' ),
@@ -525,8 +534,16 @@ final class ManualIssuanceService {
 		if ( ! in_array( $mode, array( 'existing', 'new' ), true ) ) { return new \WP_Error( 'certloom_manual_issue_recipient_mode_invalid', __( 'Choose an existing recipient or create a new recipient.', 'certloom' ) ); }
 		$recipient_id = 'existing' === $mode ? absint( $request['recipient_id'] ?? 0 ) : 0;
 		if ( 'existing' === $mode && ! $recipient_id ) { return new \WP_Error( 'certloom_manual_issue_recipient_required', __( 'Choose an existing recipient.', 'certloom' ) ); }
+		$program_id = absint( $request['program_id'] ?? 0 );
+		$credential_basis = sanitize_key( (string) ( $request['credential_basis'] ?? ( $program_id ? 'program' : 'independent' ) ) );
+		if ( ! in_array( $credential_basis, array( 'program', 'independent' ), true ) ) { return new \WP_Error( 'certloom_manual_issue_basis_invalid', __( 'Choose a Program credential or an independent credential.', 'certloom' ) ); }
+		if ( 'program' === $credential_basis && ! $program_id ) { return new \WP_Error( 'certloom_manual_issue_program_required', __( 'Choose a Program, or switch to Independent credential.', 'certloom' ) ); }
+		if ( 'independent' === $credential_basis ) { $program_id = 0; }
 		$credential_title = trim( sanitize_text_field( (string) ( $request['credential_title'] ?? '' ) ) );
 		if ( $this->length( $credential_title ) > 255 ) { return new \WP_Error( 'certloom_manual_issue_title_too_long', __( 'Credential title must be 255 characters or fewer.', 'certloom' ) ); }
+		$title_source = sanitize_key( (string) ( $request['title_source'] ?? ( $program_id && '' === $credential_title ? 'program' : 'custom' ) ) );
+		if ( ! in_array( $title_source, array( 'program', 'custom' ), true ) ) { return new \WP_Error( 'certloom_manual_issue_title_source_invalid', __( 'Choose whether to inherit the Program title or use a custom credential title.', 'certloom' ) ); }
+		if ( ! $program_id ) { $title_source = 'custom'; }
 		// The service predates the 1.7 appearance selector and historically always
 		// issued through a published design. Keep that default for durable workers
 		// and integrations that have not yet started sending presentation_mode.
@@ -534,7 +551,6 @@ final class ManualIssuanceService {
 		if ( ! in_array( $presentation_mode, array( 'details_only', 'image', 'design' ), true ) ) { return new \WP_Error( 'certloom_manual_issue_presentation_invalid', __( 'Choose a supported credential appearance.', 'certloom' ) ); }
 		$certificate_image_id = absint( $request['certificate_image_id'] ?? 0 );
 		if ( 'image' === $presentation_mode && ! $certificate_image_id ) { return new \WP_Error( 'certloom_manual_issue_image_required', __( 'Choose a PNG or JPEG certificate image.', 'certloom' ) ); }
-		$program_id = absint( $request['program_id'] ?? 0 );
 		$batch_id = absint( $request['batch_id'] ?? 0 );
 		$issuer_id = absint( $request['issuer_id'] ?? 0 );
 		$template_id = absint( $request['template_id'] ?? 0 );
@@ -580,6 +596,8 @@ final class ManualIssuanceService {
 			'recipient_mode' => $mode,
 			'recipient_id' => $recipient_id,
 			'new_recipient' => $new,
+			'credential_basis' => $credential_basis,
+			'title_source' => $title_source,
 			'credential_title' => $credential_title,
 			'presentation_mode' => $presentation_mode,
 			'certificate_image_id' => $certificate_image_id,
@@ -750,7 +768,7 @@ final class ManualIssuanceService {
 				'layout_sha256' => (string) ( $revision['layout_sha256'] ?? '' ), 'layout' => $revision['layout'],
 			),
 			'credential' => array(
-				'series_id' => absint( $series['id'] ?? 0 ), 'public_id' => (string) ( $series['public_id'] ?? '' ), 'display_number' => (string) $credential['display_number'], 'title' => (string) ( $review['request']['credential_title'] ?? '' ),
+				'series_id' => absint( $series['id'] ?? 0 ), 'public_id' => (string) ( $series['public_id'] ?? '' ), 'display_number' => (string) $credential['display_number'], 'title' => (string) ( $review['request']['credential_title'] ?? '' ), 'title_source' => (string) ( $review['request']['title_source'] ?? 'custom' ), 'title_program_id' => absint( $review['request']['title_program_id'] ?? 0 ),
 				'valid_from' => $credential['valid_from'], 'issued_at' => $credential['issued_at'], 'expires_at' => $credential['expires_at'], 'grade' => $credential['grade'],
 				'repeating_data' => isset( $review['request']['repeating_data'] ) && is_array( $review['request']['repeating_data'] ) ? $review['request']['repeating_data'] : array(),
 				'issuance_state' => States::ISSUANCE_ISSUED, 'administrative_state' => States::ADMIN_ACTIVE, 'verification_url' => (string) $credential['verification_url'],

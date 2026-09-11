@@ -38,6 +38,7 @@ final class MergeSnapshotBuilder {
 		$expiry_date = (string) ( $credential['expires_at'] ?? '' );
 		$verification_url = (string) ( $credential['verification_url'] ?? '' );
 		$grade = trim( (string) ( $credential['grade'] ?? '' ) );
+		$credential_title = trim( (string) ( $credential['title'] ?? '' ) );
 		$repeating = array();
 		try {
 			foreach ( array( TableDataContract::SUBJECTS => 'subjects', TableDataContract::RESULTS => 'results' ) as $source => $credential_key ) {
@@ -63,6 +64,7 @@ final class MergeSnapshotBuilder {
 			'signer.title' => $signer_title,
 			'signer.email' => $signer_email,
 			'credential.display_number' => trim( (string) ( $credential['display_number'] ?? '' ) ),
+			'credential.title' => $credential_title,
 			'credential.public_id' => trim( (string) ( $credential['public_id'] ?? '' ) ),
 			'credential.issue_date' => $issue_date,
 			'credential.expiry_date' => $expiry_date,
@@ -74,6 +76,7 @@ final class MergeSnapshotBuilder {
 			'first_name' => $first_name,
 			'last_name' => $last_name,
 			'certificate_number' => trim( (string) ( $credential['display_number'] ?? '' ) ),
+			'credential_title' => $credential_title,
 			'certificate_status' => 'issued',
 			'course_name' => $program_title,
 			'program_name' => $program_title,

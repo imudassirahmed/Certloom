@@ -440,6 +440,7 @@ class Ecapla_CertVerify_Render {
 			'certificate_number' => 'CERT-EXAMPLE-0001',
 			'profile' => array(
 				'recipient_name' => __( 'Amina Khan', 'certloom' ),
+				'credential_title' => __( 'Example Professional Certificate', 'certloom' ),
 				'program_title' => __( 'Example Professional Certificate', 'certloom' ),
 				'program_description' => __( 'Sample public presentation used only during setup.', 'certloom' ),
 				'issuer_name' => $site_name,
@@ -466,6 +467,8 @@ class Ecapla_CertVerify_Render {
 		$profile = isset( $presentation['profile'] ) && is_array( $presentation['profile'] ) ? $presentation['profile'] : array();
 		$recipient = trim( (string) ( $profile['recipient_name'] ?? '' ) );
 		$program = trim( (string) ( $profile['program_title'] ?? '' ) );
+		$credential_title = trim( (string) ( $profile['credential_title'] ?? $program ) );
+		if ( '' === $credential_title ) { $credential_title = $program; }
 		$program_desc = trim( (string) ( $profile['program_description'] ?? '' ) );
 		$batch = trim( (string) ( $profile['batch_name'] ?? '' ) );
 		$issuer = trim( (string) ( $profile['issuer_name'] ?? ( $presentation['issuer'] ?? '' ) ) );
@@ -474,7 +477,7 @@ class Ecapla_CertVerify_Render {
 
 		$hero = '<div class="cvp-profile-hero"><div class="cvp-profile-status-row"><span class="cvp-status-mark" aria-hidden="true">' . esc_html( self::status_icon( $status_key ) ) . '</span><div><span class="cvp-profile-status-label certloom-verdict">' . esc_html( $status_label ) . '</span>' . ( '' !== $status_desc ? '<p>' . esc_html( $status_desc ) . '</p>' : '' ) . '</div></div>';
 		if ( '' !== $recipient ) { $hero .= '<h2 class="cvp-profile-recipient certloom-recipient-name" dir="auto">' . esc_html( $recipient ) . '</h2>'; }
-		if ( '' !== $program ) { $hero .= '<p class="cvp-profile-program" dir="auto">' . esc_html( $program ) . '</p>'; }
+		if ( '' !== $credential_title ) { $hero .= '<p class="cvp-profile-program" dir="auto">' . esc_html( $credential_title ) . '</p>'; }
 		if ( '' !== $program_desc ) { $hero .= '<p class="cvp-profile-program-description" dir="auto">' . esc_html( $program_desc ) . '</p>'; }
 		$hero .= '</div>';
 
@@ -486,6 +489,7 @@ class Ecapla_CertVerify_Render {
 			$value = trim( (string) ( $field['value'] ?? '' ) );
 			if ( '' !== $label && '' !== $value ) { $facts[] = array( $label, $value ); }
 		}
+		if ( '' !== $program && $program !== $credential_title ) { $facts[] = array( __( 'Program', 'certloom' ), $program ); }
 		if ( '' !== $batch ) { $facts[] = array( __( 'Cohort / batch', 'certloom' ), $batch ); }
 		if ( '' !== $issuer ) { $facts[] = array( __( 'Issued by', 'certloom' ), $issuer ); }
 		$facts_html = '';

@@ -44,9 +44,10 @@ async def run():
         form=issue.locator('.certloom-issue-v2-form')
         await ck(len((await form.evaluate('(e)=>getComputedStyle(e).gridTemplateColumns')).split())==2,'issueComposeUsesTwoColumnDesktopLayout')
         recipient=await issue.locator('.certloom-recipient-compose').bounding_box(); presentation=await issue.locator('.certloom-presentation-fieldset').bounding_box()
-        core=await issue.locator('.certloom-issue-core').bounding_box()
+        basis=await issue.locator('.certloom-credential-basis').bounding_box(); core=await issue.locator('.certloom-issue-core').bounding_box()
         await ck(recipient and presentation and presentation['x']>recipient['x']+recipient['width']-2,'presentationOccupiesRightTaskColumn')
-        await ck(recipient and core and core['y']-(recipient['y']+recipient['height'])<=2,'credentialFieldsFollowRecipientWithoutTallGridGap')
+        await ck(recipient and basis and basis['y']-(recipient['y']+recipient['height'])<=2,'programBasisFollowsRecipientWithoutTallGridGap')
+        await ck(basis and core and core['y']-(basis['y']+basis['height'])<=2,'credentialFieldsFollowProgramBasisWithoutTallGridGap')
         await ck(await issue.locator('.certloom-issue-v2-card .certloom-manual-card-head .certloom-eyebrow').count()==0,'duplicateStepEyebrowRemoved')
         await ck(await issue.locator('.certloom-issue-v2-form > fieldset > legend:not(.screen-reader-text)').count()==0,'redundantSectionLegendsVisuallyRemoved')
         await ck(len((await issue.locator('.certloom-issue-essential-fields').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns')).split())==1,'credentialEssentialsStackInOneColumn')
@@ -68,12 +69,14 @@ async def run():
         cbox=await canvas.bounding_box(); pbox=await issue.locator('.certloom-template-preview-page').bounding_box()
         await ck(cbox and pbox and pbox['width']<=cbox['width']+1 and pbox['height']<=cbox['height']+1,'certificatePreviewFitsInsideSmallWindow')
         await issue.locator('select[name="recipient_id"]').select_option('42')
+        await issue.locator('input[name="credential_basis"][value="independent"]').check(force=True)
         await issue.locator('input[name="credential_title"]').fill('Standalone credential')
         await issue.wait_for_timeout(40)
-        await ck(not await issue.locator('[data-certloom-manual-review]').is_disabled(),'programOptionalAllowsStandaloneReview')
-        await issue.locator('.certloom-additional-details').evaluate('(e)=>e.open=true')
+        await ck(not await issue.locator('[data-certloom-manual-review]').is_disabled(),'independentModeAllowsStandaloneReviewWithExplicitTitle')
+        await issue.locator('input[name="credential_basis"][value="program"]').check(force=True)
         await issue.locator('select[name="program_id"]').select_option('11')
         await issue.wait_for_timeout(120)
+        await ck(await issue.locator('[data-certloom-inherited-title]').inner_text()=='ISO 9001 Lead Auditor','programSelectionInheritsProgramCredentialTitle')
         await ck(await source_note.inner_text()=='Inherited from Program “ISO 9001”','inheritedPreviewShowsProgramProvenance')
         pcalls=await issue.evaluate('window.__previewCalls')
         await ck(any('/admin/template-preview' in c['url'] and 'mode=inherited' in c['url'] and 'program_id=11' in c['url'] for c in pcalls),'inheritedPreviewReloadsForProgramContext')
@@ -98,7 +101,7 @@ async def run():
         await ck(color=='rgb(192, 39, 31)','dashboardExpiryDotUsesErrorRed')
         await dash.close(); await browser.close()
     if failed:
-        print('FAIL  alpha.4.29 standalone/inherited-design browser gate:',', '.join(failed)); print(f'\n{checks-len(failed)} passed, {len(failed)} failures'); return 1
-    print('PASS  alpha.4.29 standalone/inherited-design browser gate: REST search, optional Program review, inherited/assigned source choices, provenance and fit-to-window preview')
-    print(f'\n{checks} alpha.4.29 browser checks, 0 failures'); return 0
+        print('FAIL  alpha.4.32 Program-title/live-search browser gate:',', '.join(failed)); print(f'\n{checks-len(failed)} passed, {len(failed)} failures'); return 1
+    print('PASS  alpha.4.32 Program-title/live-search browser gate: REST search, explicit Independent review, Program-title inheritance, inherited/assigned source choices, provenance and fit-to-window preview')
+    print(f'\n{checks} alpha.4.32 browser checks, 0 failures'); return 0
 raise SystemExit(asyncio.run(run()))

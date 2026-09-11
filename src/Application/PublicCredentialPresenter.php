@@ -54,13 +54,18 @@ final class PublicCredentialPresenter {
 		$public_fields = $this->fields->public_fields( $snapshot, $effective_context );
 		$profile = array();
 		if ( 'profile' === $effective_context ) {
-			$recipient = is_array( $snapshot['recipient'] ?? null ) ? $snapshot['recipient'] : array();
-			$program   = is_array( $snapshot['program'] ?? null ) ? $snapshot['program'] : array();
-			$batch     = is_array( $snapshot['batch'] ?? null ) ? $snapshot['batch'] : array();
-			$issuer    = is_array( $snapshot['issuer'] ?? null ) ? $snapshot['issuer'] : array();
+			$recipient  = is_array( $snapshot['recipient'] ?? null ) ? $snapshot['recipient'] : array();
+			$program    = is_array( $snapshot['program'] ?? null ) ? $snapshot['program'] : array();
+			$credential_snapshot = is_array( $snapshot['credential'] ?? null ) ? $snapshot['credential'] : array();
+			$batch      = is_array( $snapshot['batch'] ?? null ) ? $snapshot['batch'] : array();
+			$issuer     = is_array( $snapshot['issuer'] ?? null ) ? $snapshot['issuer'] : array();
+			$program_title = self::bounded_text( $program['title'] ?? '', 255 );
+			$credential_title = self::bounded_text( $credential_snapshot['title'] ?? '', 255 );
+			if ( '' === $credential_title ) { $credential_title = $program_title; }
 			$profile = array(
 				'recipient_name'      => self::bounded_text( $recipient['display_name'] ?? '', 255 ),
-				'program_title'       => self::bounded_text( $program['title'] ?? '', 255 ),
+				'credential_title'     => $credential_title,
+				'program_title'       => $program_title,
 				'program_description' => self::bounded_text( $program['description'] ?? '', 1000 ),
 				'batch_name'          => self::bounded_text( $batch['name'] ?? '', 255 ),
 				'issuer_name'         => self::bounded_text( $issuer['name'] ?? '', 255 ),

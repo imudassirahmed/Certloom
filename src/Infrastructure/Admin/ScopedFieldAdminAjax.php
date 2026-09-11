@@ -183,7 +183,7 @@ final class ScopedFieldAdminAjax {
 				$label = trim( (string) ( $row['display_name'] ?? '' ) );
 				if ( ! empty( $row['email'] ) ) { $label .= ( '' !== $label ? ' · ' : '' ) . (string) $row['email']; }
 				if ( '' === $label && ! empty( $row['external_id'] ) ) { $label = (string) $row['external_id']; }
-				$choices[] = array( 'id' => absint( $row['id'] ?? 0 ), 'label' => $label );
+				$choices[] = array( 'id' => absint( $row['id'] ?? 0 ), 'label' => $label, 'title' => (string) ( $row['title'] ?? '' ) );
 			}
 		} elseif ( 'program' === $kind ) {
 			$result = ( new ProgramRepository() )->list_page( $query, 1, 20, $program_status );

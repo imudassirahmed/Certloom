@@ -81,6 +81,7 @@ final class TemplatePreviewSamples {
 			'signer.email' => 'maya.rahman@example.invalid',
 			'signer.signature_asset' => 'asset:certloom-preview-signer-signature',
 			'credential.display_number' => 'CERT-2026-001',
+			'credential.title' => 'Professional Credential Program',
 			'credential.public_id' => '7M4K-2Q8D-F3XP',
 			'credential.issue_date' => '26 August 2026',
 			'credential.expiry_date' => '26 August 2028',
@@ -100,6 +101,7 @@ final class TemplatePreviewSamples {
 			$standard['recipient.name'] = 'Alexandria Noor Fatima Montgomery-Washington';
 			$standard['program.name'] = 'Advanced Professional Credentialing and Applied Leadership Programme';
 			$standard['program.title'] = $standard['program.name'];
+			$standard['credential.title'] = $standard['program.title'];
 			$standard['issuer.name'] = 'Northern International Institute for Professional Learning and Certification';
 			return $standard;
 		}
@@ -115,6 +117,7 @@ final class TemplatePreviewSamples {
 			$standard['recipient.last_name'] = 'رحمان';
 			$standard['program.name'] = 'پیشہ ورانہ اسناد پروگرام';
 			$standard['program.title'] = $standard['program.name'];
+			$standard['credential.title'] = $standard['program.title'];
 			$standard['issuer.name'] = 'شمالی تعلیمی ادارہ';
 			$standard['credential.status'] = 'درست';
 			return $standard;
@@ -125,6 +128,7 @@ final class TemplatePreviewSamples {
 			$standard['recipient.last_name'] = 'Pvt. Limited';
 			$standard['program.name'] = 'Organization Compliance Credential';
 			$standard['program.title'] = $standard['program.name'];
+			$standard['credential.title'] = $standard['program.title'];
 			return $standard;
 		}
 		if ( self::LONG_ORGANIZATION === $profile ) {
@@ -133,12 +137,14 @@ final class TemplatePreviewSamples {
 			$standard['recipient.last_name'] = 'Sustainable Manufacturing, Quality Assurance and Applied Technology';
 			$standard['program.name'] = 'Organization Compliance Credential';
 			$standard['program.title'] = $standard['program.name'];
+			$standard['credential.title'] = $standard['program.title'];
 			return $standard;
 		}
 		if ( self::LONG_ISO_SCOPE === $profile ) {
 			$standard['recipient.name'] = 'Apex Precision Systems';
 			$standard['program.name'] = 'ISO/IEC 27001:2022 Information Security Management System — design, development, support and managed operation of cloud-hosted business applications and associated customer support services';
 			$standard['program.title'] = $standard['program.name'];
+			$standard['credential.title'] = $standard['program.title'];
 			$standard['credential.grade'] = 'Scope: design, development, support and managed operation of cloud-hosted business applications and associated customer support services';
 			$standard['credential.iso_scope'] = $standard['credential.grade'];
 			return $standard;
@@ -147,6 +153,7 @@ final class TemplatePreviewSamples {
 			$standard['recipient.name'] = 'Sara Ahmed Khan';
 			$standard['program.name'] = 'Higher Secondary School Certificate';
 			$standard['program.title'] = $standard['program.name'];
+			$standard['credential.title'] = $standard['program.title'];
 			$standard['issuer.name'] = 'Northbridge School and College';
 			$standard['credential.grade'] = 'A+ · 93.4% · Distinction';
 			$standard['credential.subjects'] = array(
