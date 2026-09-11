@@ -1,5 +1,5 @@
 <?php
-/** Source contract for 1.7 UI Phase 2.2 exact logo-gradient correction. */
+/** Source contract for 1.7 UI Phase 2.2 light brand-glass top-card correction. */
 $root = dirname( __DIR__ );
 $tokens = file_get_contents( $root . '/assets/css/certloom-tokens.css' );
 $foundation = file_get_contents( $root . '/admin/assets/certloom-foundation.css' );
@@ -30,10 +30,13 @@ p22_check( false !== strpos( $hero_line, 'var(--cl-brand-blue-light) 52%' ), 'he
 p22_check( false !== strpos( $hero_line, 'var(--cl-cyan) 74%' ), 'hero gradient carries logo cyan' );
 p22_check( false !== strpos( $hero_line, 'var(--cl-brand-emerald) 100%' ), 'hero gradient ends in logo emerald' );
 p22_check( false === strpos( $hero_line, 'var(--cl-ink)' ) && false === strpos( $hero_line, 'var(--cl-blue-deep)' ), 'blue-heavy navy/deep-blue experiment is absent from hero gradient' );
-p22_check( false !== strpos( $foundation, 'UI PHASE 2.2 LOGO-GRADIENT CORRECTION' ), 'phase2.2 correction is explicit in foundation authority' );
-p22_check( false !== strpos( $foundation, 'background: var(--cl-brand-hero);' ) && false !== strpos( $admin_css, 'background: var(--cl-brand-hero);' ), 'shared and direct source hero rules use one gradient token' );
-p22_check( false !== strpos( $foundation, 'border: 1px solid var(--cl-brand-blue-dark);' ), 'hero border is anchored to logo shield blue' );
-p22_check( false !== strpos( $foundation, 'background: var(--cl-on-brand-wash);' ) && false !== strpos( $foundation, 'color: var(--cl-ink);' ), 'secondary/top-right controls use light surfaces and dark text over bright gradient end' );
+p22_check( false !== strpos( $foundation, 'UI PHASE 2.2 LIGHT BRAND-GLASS TOP CARDS' ), 'phase2.2 light brand-glass correction is explicit in foundation authority' );
+p22_check( false === strpos( strstr( $foundation, 'UI PHASE 2.2 LIGHT BRAND-GLASS TOP CARDS' ), 'background: var(--cl-brand-hero);' ) && false !== strpos( $foundation, 'rgba(255, 255, 255, .92)' ) && false !== strpos( $foundation, 'backdrop-filter: blur(16px)' ), 'current shared hero authority uses the requested light glass surface rather than a full gradient fill' );
+p22_check( false !== strpos( $foundation, 'border: 1px solid rgba(185, 194, 210, .58);' ) && false !== strpos( $foundation, 'border-radius: 18px;' ), 'hero border is soft and card radius matches the light reference direction' );
+p22_check( false !== strpos( $foundation, 'background: rgba(255, 255, 255, .78);' ) && false !== strpos( $foundation, 'color: var(--cl-ink);' ), 'secondary/top-right controls use quiet light surfaces and dark text' );
+p22_check( is_file( $root . '/admin/assets/certloom-brand-mark.png' ) && hash_file( 'sha256', $root . '/admin/assets/certloom-brand-mark.png' ) === '1173edd257e9f0808dee4ad2733caca251fc709c69753687f6b37151935c6450', 'bundled hero watermark is byte-identical to the supplied Certloom logo PNG' );
+p22_check( false !== strpos( $foundation, 'background: url("certloom-brand-mark.png") center / contain no-repeat;' ) && false !== strpos( $foundation, 'opacity: .115;' ), 'shared top cards render the supplied mark as a subtle right-side watermark' );
+p22_check( false !== strpos( $foundation, 'width: 132px;' ) && false !== strpos( $foundation, 'height: 4px;' ) && false !== strpos( $foundation, 'linear-gradient(90deg, var(--cl-brand-emerald)' ), 'shared top cards retain only a compact logo-spectrum rail' );
 p22_check( false !== strpos( $tokens, '--cl-chart-1: var(--cl-brand-blue-dark);' ), 'chart series 1 uses logo shield blue' );
 p22_check( false !== strpos( $tokens, '--cl-chart-2: var(--cl-cyan);' ), 'chart series 2 uses logo cyan' );
 p22_check( false !== strpos( $tokens, '--cl-chart-3: var(--cl-brand-blue);' ), 'chart series 3 uses logo blue' );
@@ -48,9 +51,9 @@ p22_check( false !== strpos( $automations, 'certloom-workspace-hero' ), 'Automat
 p22_check( false !== strpos( $settings, 'certloom-page-hero certloom-settings-hero' ), 'Settings uses shared top card' );
 p22_check( false === stripos( $admin_css, '#0f6e56' ), 'retired forest-green admin anchor stays absent' );
 if ( $failures ) {
-    echo "FAIL  UI Phase 2.2 logo-gradient source contract: " . implode( ', ', $failures ) . "\n\n";
+    echo "FAIL  UI Phase 2.2 light brand-glass source contract: " . implode( ', ', $failures ) . "\n\n";
     echo ( $checks - count( $failures ) ) . " passed, " . count( $failures ) . " failures\n";
     exit( 1 );
 }
-echo "PASS  UI Phase 2.2 logo-gradient source contract\n\n";
+echo "PASS  UI Phase 2.2 light brand-glass source contract\n\n";
 echo $checks . " checks, 0 failures\n";

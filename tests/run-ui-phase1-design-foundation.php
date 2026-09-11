@@ -41,6 +41,7 @@ phase1_assert( ! preg_match( '/#[0-9a-fA-F]{3,8}\b/', $source['artifact'] ), 'Ne
 phase1_assert( false !== strpos( $source['admin'], "'none',\n\t\t\t30" ) && false === strpos( $source['admin'], "'dashicons-awards',\n\t\t\t30" ), 'WordPress top-level menu must use the Certloom mark rather than the generic award Dashicon.' );
 phase1_assert( false !== strpos( $source['menu'], '#toplevel_page_certloom .wp-menu-image::before' ) && false !== strpos( $source['menu'], 'mask:' ), 'Menu CSS must provide the Certloom shield/check mask.' );
 phase1_assert( false !== strpos( $source['menu'], 'certloom-menu-icon.svg' ), 'Menu CSS must use the user-supplied Certloom sidebar SVG asset.' );
+phase1_assert( false !== strpos( $source['menu'], 'width: 18px;' ) && false !== strpos( $source['menu'], 'height: 20px;' ) && false !== strpos( $source['menu'], 'top: 50%;' ) && false !== strpos( $source['menu'], 'left: 50%;' ) && false !== strpos( $source['menu'], 'transform: translate(-50%, -50%);' ), 'Menu CSS must center the mark and render it ten percent smaller than the prior 20x22 slot size.' );
 phase1_assert( hash( 'sha256', $source['menu_asset'] ) === '24ecb3b540c17a5b1328013819d84bc82facd93c10c4030333ec37bdff57db30', 'WordPress sidebar SVG must match the user-supplied asset bytes.' );
 phase1_assert( false !== strpos( $source['admin'], "'certloom-tokens'" ) && false !== strpos( $source['admin'], "'certloom-admin-foundation'" ), 'Admin must load tokens first and the Phase 1 foundation after legacy admin CSS.' );
 phase1_assert( false !== strpos( $source['shortcode'], "'certloom-artifact-foundation'" ) && false !== strpos( $source['shortcode'], "array( 'certloom-tokens' )" ), 'Public assets must load the token authority and artifact foundation.' );
@@ -64,4 +65,4 @@ foreach ( $forbidden_manifests as $manifest ) {
 }
 
 echo "PASS  Certloom 1.7 UI Phase 1 design-system contract\n";
-echo "\n26 checks, 0 failures\n";
+echo "\n27 checks, 0 failures\n";

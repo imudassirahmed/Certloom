@@ -1,3 +1,9 @@
+= 1.7.0-alpha.4.17 =
+* Replace the dark logo-gradient admin top cards with the requested light brand-glass treatment: white translucent surface, subtle logo-color glow, short Certloom spectrum rail, dark navy typography, and the exact supplied Certloom mark as a low-opacity right-side watermark.
+* Apply the light top-card treatment consistently across Dashboard, primary page, workspace, credential and Email Design hero surfaces while preserving existing actions, Setup placement, responsive stacking, reduced-motion behavior and forced-colors fallback.
+* Center the Certloom WordPress admin side-panel SVG inside the native menu slot and reduce its rendered dimensions by 10 percent (20×22 px to 18×20 px).
+* This is a visual-development checkpoint derived from the fully authorized alpha.4.16 baseline. Renderer implementation bytes are unchanged, but renderer authority is intentionally absent because the plugin runtime payload changed and has not yet been rebound at this visual iteration checkpoint.
+
 = 1.7.0-alpha.4.16 =
 * Harden the dedicated Email Designer mobile toolbar against system-font metric variance by constraining the identity row and intrinsic grid tracks to the viewport instead of permitting max-content expansion.
 * Preserve the alpha.4.15 QR shared-boundary raster correction and renderer identities unchanged: GD `1.0.0+certloom.6`, mPDF `8.3.1+certloom.5`.

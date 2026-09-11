@@ -30,9 +30,11 @@ async def run():
         probe = page.locator('#asset-probe')
         await ck(await probe.evaluate('e=>e.complete && e.naturalWidth>0 && e.naturalHeight>0'), 'uploadedSvgDecodesInChromium')
         icon = page.locator('#toplevel_page_certloom .wp-menu-image')
-        before = await icon.evaluate("e=>{const s=getComputedStyle(e,'::before');return {content:s.content,width:s.width,height:s.height,bg:s.backgroundColor,mask:s.maskImage,webkit:s.webkitMaskImage}}")
+        before = await icon.evaluate("e=>{const s=getComputedStyle(e,'::before');return {content:s.content,width:s.width,height:s.height,top:s.top,left:s.left,margin:s.margin,transform:s.transform,bg:s.backgroundColor,mask:s.maskImage,webkit:s.webkitMaskImage}}")
         await ck(before['content'] not in ('none','normal',''), 'pseudoElementExists')
-        await ck(before['width']=='20px' and before['height']=='22px', 'sidebarIconUsesCompactDimensions')
+        await ck(before['width']=='18px' and before['height']=='20px', 'sidebarIconIsTenPercentSmaller')
+        await ck(before['top']=='17px' and before['left']=='18px' and before['margin']=='0px', 'sidebarIconCenteredInWordPressSlot')
+        await ck(before['transform']!='none', 'sidebarIconUsesCenteringTransform')
         await ck('data:image/svg+xml;base64,' in (before['mask'] or before['webkit']), 'sidebarMaskUsesUploadedSvg')
         await ck(before['bg'] == 'rgb(167, 170, 173)', 'sidebarIconFollowsCurrentColor')
         await page.locator('#toplevel_page_certloom').hover()
@@ -45,7 +47,7 @@ async def run():
         print('FAIL  WordPress Certloom menu icon:', ', '.join(failed))
         print(f'\n{checks-len(failed)} passed, {len(failed)} failures')
         return 1
-    print('PASS  WordPress Certloom menu icon: user-supplied SVG decodes and follows WordPress currentColor states')
+    print('PASS  WordPress Certloom menu icon: user-supplied SVG is centered, ten-percent smaller and follows WordPress currentColor states')
     print(f'\n{checks} menu-icon browser checks, 0 failures')
     return 0
 

@@ -1,10 +1,18 @@
 /* Certloom 1.7 WordPress menu mark: user-supplied shield/check asset. */
+#toplevel_page_certloom .wp-menu-image {
+  position: relative;
+}
+
 #toplevel_page_certloom .wp-menu-image::before {
   content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
   display: block;
-  width: 20px;
-  height: 22px;
-  margin: 5px auto 0;
+  width: 18px;
+  height: 20px;
+  margin: 0;
+  transform: translate(-50%, -50%);
   background: currentColor;
   -webkit-mask: url("certloom-menu-icon.svg") center / contain no-repeat;
   mask: url("certloom-menu-icon.svg") center / contain no-repeat;

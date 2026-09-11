@@ -20,12 +20,13 @@ function p21_check( $ok, $label ) {
 	if ( ! $ok ) { $failures[] = $label; }
 }
 $p21 = strstr( $foundation, 'CERTLOOM 1.7 · UI PHASE 2.1 VISUAL CONSISTENCY' );
-$p21_user = strstr( $foundation, 'CERTLOOM 1.7 · UI PHASE 2.2 LOGO-GRADIENT CORRECTION' );
+$p21_user = strstr( $foundation, 'CERTLOOM 1.7 · UI PHASE 2.2 LIGHT BRAND-GLASS TOP CARDS' );
 p21_check( false !== $p21 && false !== $p21_user, 'phase2.1 foundation plus current user-directed top-card authority exist' );
-p21_check( false !== strpos( $p21_user, 'background: var(--cl-brand-hero);' ) && false !== strpos( $p21_user, 'box-shadow: var(--cl-lift);' ) && false !== strpos( $p21_user, 'border-radius: var(--cl-r-lift);' ), 'user-approved top sections are substantial logo-theme gradient cards' );
+p21_check( false !== strpos( $p21_user, 'rgba(255, 255, 255, .92)' ) && false !== strpos( $p21_user, 'backdrop-filter: blur(16px)' ) && false !== strpos( $p21_user, 'border-radius: 18px;' ), 'user-directed top sections are light brand-glass cards' );
 p21_check( false !== strpos( $p21_user, '.certloom-admin-shell .certloom-page-hero' ) && false !== strpos( $p21_user, '.certloom-admin-shell .certloom-workspace-hero' ) && false !== strpos( $p21_user, '.certloom-admin-shell .certloom-credential-hero' ) && false !== strpos( $p21_user, '.certloom-admin-shell .certloom-email-hero' ), 'shared top-level card treatment covers dashboard/page/workspace/credential/email families' );
-p21_check( false !== strpos( $tokens, '--cl-brand-hero: linear-gradient(' ) && false !== strpos( $tokens, '--cl-on-brand-soft:' ), 'top-card gradient and on-brand contrast values live in the token authority' );
-p21_check( false !== strpos( $p21_user, 'content: none;' ), 'old 3px brand rail is superseded rather than layered on top of the gradient card' );
+p21_check( false !== strpos( $tokens, '--cl-brand-emerald:' ) && false !== strpos( $tokens, '--cl-cyan:' ) && false !== strpos( $tokens, '--cl-brand-blue:' ), 'top-card accent spectrum continues to use the canonical brand colour tokens' );
+p21_check( false !== strpos( $p21_user, 'width: 132px;' ) && false !== strpos( $p21_user, 'height: 4px;' ) && false !== strpos( $p21_user, 'var(--cl-brand-emerald)' ) && false !== strpos( $p21_user, 'var(--cl-cyan)' ) && false !== strpos( $p21_user, 'var(--cl-brand-blue)' ), 'top cards use a short logo-spectrum brand rail' );
+p21_check( false !== strpos( $p21_user, 'background: url("certloom-brand-mark.png") center / contain no-repeat;' ) && false !== strpos( $p21_user, 'opacity: .115;' ), 'top cards use the exact supplied Certloom mark as a subtle watermark' );
 p21_check( false !== strpos( $dashboard, 'class="certloom-dashboard-setup-link"' ) && strpos( $dashboard, 'class="certloom-dashboard-setup-link"' ) < strpos( $dashboard, 'class="certloom-dashboard-actions"' ), 'Setup Wizard is restored to its earlier independent top-right position before the action group' );
 p21_check( false !== strpos( $p21_user, 'position: absolute;' ) && false !== strpos( $p21_user, '.certloom-dashboard-setup-link' ), 'Setup Wizard top-right positioning is restored in the shared authority' );
 p21_check( false !== strpos( $p21, '.certloom-admin-shell .certloom-metric-card' ) && false !== strpos( $p21, 'border-radius: var(--cl-r-none);' ), 'dashboard metric cards remain compact data cells beneath the top card' );
@@ -44,7 +45,7 @@ p21_check( false !== strpos( $p21, '.certloom-chart-series:nth-child(n + 5)' ) &
 p21_check( false !== strpos( $p21, '.certloom-analytics-metrics .is-success' ) && false !== strpos( $p21, 'var(--cl-valid-mark)' ) && false !== strpos( $p21, '.certloom-analytics-metrics .is-revoked' ) && false !== strpos( $p21, 'var(--cl-revoked)' ), 'status analytics use verdict colours only for true status semantics' );
 p21_check( false === stripos( $admin_css, '#0f6e56' ), 'normal admin source no longer contains the retired forest-green anchor' );
 p21_check( false === stripos( $admin_css, 'backdrop-filter: blur' ), 'normal admin source no longer carries active glass/blur chrome' );
-p21_check( false !== strpos( $admin_css, 'background: var(--cl-brand-hero);' ) && false === strpos( $admin_css, 'rgba(18, 107, 85' ), 'top-card gradient is the tokenized Certloom logo theme, not the retired green hero' );
+p21_check( false === strpos( $p21_user, 'background: var(--cl-brand-hero);' ) && false === strpos( $admin_css, 'rgba(18, 107, 85' ), 'current top-card authority is light/glass and the retired green hero stays absent' );
 p21_check( false !== strpos( $plugin, "define( 'CERTLOOM_REVIEW_ADMIN_PREVIEW', true );" ) && false !== strpos( $domain_gate, "self::\$scopes['admin_preview'] = true;" ), 'alpha review build keeps admin workspaces open without claiming write-path/Data Tools authority' );
 p21_check( false !== strpos( $navigation, "'certloom-domain-credentials' => 'Credentials'" ) && false !== strpos( $navigation, "'certloom-automations'         => 'Automations'" ), 'Credentials and Automations remain primary six-section navigation entries' );
 p21_check( false !== strpos( $admin, "add_submenu_page( self::DASHBOARD_PAGE, __( 'Automations'" ) && false !== strpos( $admin, "render_automations_screen" ), 'Automations route remains registered to the real screen' );

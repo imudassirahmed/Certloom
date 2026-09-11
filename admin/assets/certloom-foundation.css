@@ -1048,10 +1048,11 @@
 }
 
 /* ============================================================================
-   CERTLOOM 1.7 · UI PHASE 2.2 LOGO-GRADIENT CORRECTION
-   The user explicitly requested the actual Certloom logo colours in the
-   gradient-filled top-card area. This supersedes the blue-heavy Phase 2.1
-   experiment. Ordinary panels remain flat; Setup Wizard stays top-right.
+   CERTLOOM 1.7 · UI PHASE 2.2 LIGHT BRAND-GLASS TOP CARDS
+   The top workspace card follows the supplied visual direction: a quiet white
+   glass surface, a short Certloom spectrum rail, strong navy type, and the
+   supplied Certloom mark as a low-opacity cropped watermark on the right.
+   Ordinary panels remain flat; Setup Wizard stays top-right.
    ============================================================================ */
 .certloom-admin-shell .certloom-page-hero,
 .certloom-admin-shell .certloom-workspace-hero,
@@ -1059,31 +1060,80 @@
 .certloom-admin-shell .certloom-credential-hero,
 .certloom-admin-shell .certloom-email-hero {
   position: relative;
+  isolation: isolate;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--cl-5);
+  min-height: 176px;
   margin: var(--cl-4) 0 var(--cl-5);
-  padding: var(--cl-5);
-  border: 1px solid var(--cl-brand-blue-dark);
-  border-radius: var(--cl-r-lift);
-  background: var(--cl-brand-hero);
-  box-shadow: var(--cl-lift);
-  color: var(--cl-on-brand);
+  padding: 64px var(--cl-6) var(--cl-6);
+  border: 1px solid rgba(185, 194, 210, .58);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 88% 30%, rgba(103, 156, 252, .11) 0, rgba(103, 156, 252, 0) 28%),
+    radial-gradient(circle at 94% 74%, rgba(3, 205, 243, .08) 0, rgba(3, 205, 243, 0) 30%),
+    rgba(255, 255, 255, .92);
+  box-shadow: 0 14px 42px rgba(1, 19, 61, .07), inset 0 1px 0 rgba(255, 255, 255, .92);
+  color: var(--cl-ink);
   overflow: hidden;
+  -webkit-backdrop-filter: blur(16px) saturate(118%);
+  backdrop-filter: blur(16px) saturate(118%);
 }
 
-/* The previous 3px rail is superseded by the explicitly requested card fill. */
+/* Short brand spectrum rail, matching the supplied top-card reference. */
 .certloom-admin-shell .certloom-page-hero::before,
 .certloom-admin-shell .certloom-workspace-hero::before,
 .certloom-admin-shell .certloom-dashboard-hero::before,
 .certloom-admin-shell .certloom-credential-hero::before,
 .certloom-admin-shell .certloom-email-hero::before {
-  content: none;
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: var(--cl-6);
+  left: var(--cl-6);
+  width: 132px;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--cl-brand-emerald) 0%, var(--cl-cyan) 46%, var(--cl-brand-blue) 100%);
+  pointer-events: none;
 }
 
-.certloom-admin-shell .certloom-dashboard-hero {
-  padding-top: var(--cl-7);
+/* The supplied Certloom mark is artwork, not a second interactive element. */
+.certloom-admin-shell .certloom-page-hero::after,
+.certloom-admin-shell .certloom-workspace-hero::after,
+.certloom-admin-shell .certloom-dashboard-hero::after,
+.certloom-admin-shell .certloom-credential-hero::after,
+.certloom-admin-shell .certloom-email-hero::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  right: -34px;
+  width: clamp(190px, 22vw, 310px);
+  aspect-ratio: 459 / 462;
+  background: url("certloom-brand-mark.png") center / contain no-repeat;
+  opacity: .115;
+  transform: translateY(-48%);
+  pointer-events: none;
+}
+
+.certloom-admin-shell .certloom-page-hero > *,
+.certloom-admin-shell .certloom-workspace-hero > *,
+.certloom-admin-shell .certloom-dashboard-hero > *,
+.certloom-admin-shell .certloom-credential-hero > *,
+.certloom-admin-shell .certloom-email-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.certloom-admin-shell .certloom-page-hero > :first-child,
+.certloom-admin-shell .certloom-workspace-hero-copy,
+.certloom-admin-shell .certloom-dashboard-hero-copy,
+.certloom-admin-shell .certloom-credential-hero > :first-child,
+.certloom-admin-shell .certloom-email-hero > :first-child {
+  min-width: 0;
+  max-width: min(72ch, calc(100% - 240px));
 }
 
 .certloom-admin-shell .certloom-page-hero h1,
@@ -1096,30 +1146,40 @@
 .certloom-admin-shell .certloom-dashboard-hero h2,
 .certloom-admin-shell .certloom-credential-hero h2,
 .certloom-admin-shell .certloom-email-hero h2 {
-  color: var(--cl-on-brand);
+  color: var(--cl-ink);
+}
+
+.certloom-admin-shell .certloom-dashboard-hero h1 {
+  font-size: var(--cl-t-2xl);
+  line-height: 1.08;
+  letter-spacing: -.025em;
 }
 
 .certloom-admin-shell .certloom-page-hero p,
 .certloom-admin-shell .certloom-workspace-hero p,
 .certloom-admin-shell .certloom-dashboard-hero p,
 .certloom-admin-shell .certloom-credential-hero p,
-.certloom-admin-shell .certloom-email-hero p,
+.certloom-admin-shell .certloom-email-hero p {
+  color: var(--cl-ink-soft);
+}
+
 .certloom-admin-shell .certloom-page-hero .certloom-eyebrow,
 .certloom-admin-shell .certloom-workspace-hero .certloom-eyebrow,
 .certloom-admin-shell .certloom-dashboard-hero .certloom-eyebrow,
 .certloom-admin-shell .certloom-credential-hero .certloom-eyebrow,
 .certloom-admin-shell .certloom-email-hero .certloom-eyebrow {
-  color: var(--cl-on-brand-soft);
+  color: var(--cl-blue-deep);
 }
 
 .certloom-admin-shell .certloom-dashboard-actions .button-primary,
 .certloom-admin-shell .certloom-page-actions .button-primary,
 .certloom-admin-shell .certloom-workspace-hero-actions .button-primary,
 .certloom-admin-shell .certloom-credential-hero-actions .button-primary,
-.certloom-admin-shell .certloom-template-page-actions .button-primary {
-  border-color: var(--cl-on-brand);
-  background: var(--cl-on-brand);
-  color: var(--cl-blue-deep);
+.certloom-admin-shell .certloom-template-page-actions .button-primary,
+.certloom-admin-shell .certloom-email-hero__actions .button-primary {
+  border-color: var(--cl-blue);
+  background: var(--cl-blue);
+  color: var(--cl-surface);
 }
 
 .certloom-admin-shell .certloom-dashboard-actions .button-primary:hover,
@@ -1131,19 +1191,22 @@
 .certloom-admin-shell .certloom-credential-hero-actions .button-primary:hover,
 .certloom-admin-shell .certloom-credential-hero-actions .button-primary:focus,
 .certloom-admin-shell .certloom-template-page-actions .button-primary:hover,
-.certloom-admin-shell .certloom-template-page-actions .button-primary:focus {
-  border-color: var(--cl-on-brand);
-  background: var(--cl-blue-wash);
-  color: var(--cl-blue-deep);
+.certloom-admin-shell .certloom-template-page-actions .button-primary:focus,
+.certloom-admin-shell .certloom-email-hero__actions .button-primary:hover,
+.certloom-admin-shell .certloom-email-hero__actions .button-primary:focus {
+  border-color: var(--cl-blue-deep);
+  background: var(--cl-blue-deep);
+  color: var(--cl-surface);
 }
 
 .certloom-admin-shell .certloom-dashboard-actions .button-secondary,
 .certloom-admin-shell .certloom-page-actions .button:not(.button-primary),
 .certloom-admin-shell .certloom-workspace-hero-actions .button:not(.button-primary),
 .certloom-admin-shell .certloom-credential-hero-actions .button:not(.button-primary),
-.certloom-admin-shell .certloom-template-page-actions .button:not(.button-primary) {
-  border-color: var(--cl-on-brand-line);
-  background: var(--cl-on-brand-wash);
+.certloom-admin-shell .certloom-template-page-actions .button:not(.button-primary),
+.certloom-admin-shell .certloom-email-hero__actions .button:not(.button-primary) {
+  border-color: var(--cl-rule-firm);
+  background: rgba(255, 255, 255, .82);
   color: var(--cl-ink);
 }
 
@@ -1156,33 +1219,36 @@
 .certloom-admin-shell .certloom-credential-hero-actions .button:not(.button-primary):hover,
 .certloom-admin-shell .certloom-credential-hero-actions .button:not(.button-primary):focus,
 .certloom-admin-shell .certloom-template-page-actions .button:not(.button-primary):hover,
-.certloom-admin-shell .certloom-template-page-actions .button:not(.button-primary):focus {
-  border-color: var(--cl-on-brand);
-  background: var(--cl-on-brand-wash-hover);
+.certloom-admin-shell .certloom-template-page-actions .button:not(.button-primary):focus,
+.certloom-admin-shell .certloom-email-hero__actions .button:not(.button-primary):hover,
+.certloom-admin-shell .certloom-email-hero__actions .button:not(.button-primary):focus {
+  border-color: var(--cl-blue);
+  background: var(--cl-blue-wash);
   color: var(--cl-blue-deep);
 }
 
-/* Restore the earlier setup position instead of treating Setup as a third
-   equal-weight Dashboard action. */
+/* Setup remains a quiet utility action in the upper-right corner. */
 .certloom-admin-shell .certloom-dashboard-setup-link {
   position: absolute;
-  top: var(--cl-3);
-  right: var(--cl-4);
-  z-index: 1;
+  top: var(--cl-4);
+  right: var(--cl-5);
+  z-index: 2;
   min-height: 32px;
   padding: 0 var(--cl-3);
-  border: 1px solid var(--cl-on-brand-line);
+  border: 1px solid rgba(185, 194, 210, .76);
   border-radius: var(--cl-r-ctl);
-  background: var(--cl-on-brand-wash);
+  background: rgba(255, 255, 255, .78);
   color: var(--cl-ink);
   font-size: var(--cl-t-xs);
   font-weight: 650;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 
 .certloom-admin-shell .certloom-dashboard-setup-link:hover,
 .certloom-admin-shell .certloom-dashboard-setup-link:focus {
-  border-color: var(--cl-on-brand);
-  background: var(--cl-on-brand);
+  border-color: var(--cl-blue);
+  background: var(--cl-blue-wash);
   color: var(--cl-blue-deep);
 }
 
@@ -1195,11 +1261,41 @@
     align-items: flex-start;
     flex-direction: column;
     gap: var(--cl-4);
-    padding: var(--cl-4);
+    min-height: 0;
+    padding: 58px var(--cl-4) var(--cl-4);
+    border-radius: 14px;
   }
 
-  .certloom-admin-shell .certloom-dashboard-hero {
-    padding-top: var(--cl-7);
+  .certloom-admin-shell .certloom-page-hero::before,
+  .certloom-admin-shell .certloom-workspace-hero::before,
+  .certloom-admin-shell .certloom-dashboard-hero::before,
+  .certloom-admin-shell .certloom-credential-hero::before,
+  .certloom-admin-shell .certloom-email-hero::before {
+    top: var(--cl-5);
+    left: var(--cl-4);
+    width: 104px;
+  }
+
+  .certloom-admin-shell .certloom-page-hero::after,
+  .certloom-admin-shell .certloom-workspace-hero::after,
+  .certloom-admin-shell .certloom-dashboard-hero::after,
+  .certloom-admin-shell .certloom-credential-hero::after,
+  .certloom-admin-shell .certloom-email-hero::after {
+    right: -34px;
+    width: 172px;
+    opacity: .07;
+  }
+
+  .certloom-admin-shell .certloom-page-hero > :first-child,
+  .certloom-admin-shell .certloom-workspace-hero-copy,
+  .certloom-admin-shell .certloom-dashboard-hero-copy,
+  .certloom-admin-shell .certloom-credential-hero > :first-child,
+  .certloom-admin-shell .certloom-email-hero > :first-child {
+    max-width: 100%;
+  }
+
+  .certloom-admin-shell .certloom-dashboard-hero h1 {
+    font-size: var(--cl-t-xl);
   }
 
   .certloom-admin-shell .certloom-dashboard-setup-link {
@@ -1220,18 +1316,42 @@
     box-shadow: none;
   }
 
+  .certloom-admin-shell .certloom-page-hero::before,
+  .certloom-admin-shell .certloom-workspace-hero::before,
+  .certloom-admin-shell .certloom-dashboard-hero::before,
+  .certloom-admin-shell .certloom-credential-hero::before,
+  .certloom-admin-shell .certloom-email-hero::before {
+    background: CanvasText;
+  }
+
+  .certloom-admin-shell .certloom-page-hero::after,
+  .certloom-admin-shell .certloom-workspace-hero::after,
+  .certloom-admin-shell .certloom-dashboard-hero::after,
+  .certloom-admin-shell .certloom-credential-hero::after,
+  .certloom-admin-shell .certloom-email-hero::after {
+    content: none;
+  }
+
   .certloom-admin-shell .certloom-page-hero h1,
   .certloom-admin-shell .certloom-workspace-hero h1,
   .certloom-admin-shell .certloom-dashboard-hero h1,
   .certloom-admin-shell .certloom-credential-hero h1,
+  .certloom-admin-shell .certloom-email-hero h1,
+  .certloom-admin-shell .certloom-page-hero h2,
+  .certloom-admin-shell .certloom-workspace-hero h2,
+  .certloom-admin-shell .certloom-dashboard-hero h2,
+  .certloom-admin-shell .certloom-credential-hero h2,
+  .certloom-admin-shell .certloom-email-hero h2,
   .certloom-admin-shell .certloom-page-hero p,
   .certloom-admin-shell .certloom-workspace-hero p,
   .certloom-admin-shell .certloom-dashboard-hero p,
   .certloom-admin-shell .certloom-credential-hero p,
+  .certloom-admin-shell .certloom-email-hero p,
   .certloom-admin-shell .certloom-page-hero .certloom-eyebrow,
   .certloom-admin-shell .certloom-workspace-hero .certloom-eyebrow,
   .certloom-admin-shell .certloom-dashboard-hero .certloom-eyebrow,
-  .certloom-admin-shell .certloom-credential-hero .certloom-eyebrow {
+  .certloom-admin-shell .certloom-credential-hero .certloom-eyebrow,
+  .certloom-admin-shell .certloom-email-hero .certloom-eyebrow {
     color: CanvasText;
   }
 }
