@@ -16,6 +16,8 @@ npr( strpos( $router, '^certloom/credential/id/' ) < strpos( $router, '^certloom
 npr( false !== strpos( $router, "array( 'verify', 'credential', 'series' )" ), 'public router recognizes normalized profile route explicitly' );
 npr( false !== strpos( $route, "if ( 'series' === \$route )" ) && false !== strpos( $route, 'normalized_credential_profile' ), 'front-end route delegates normalized IDs to the normalized profile renderer' );
 npr( false !== strpos( $render, 'new \\Certloom\\Infrastructure\\Verification\\PublicVerificationGate()' ), 'normalized profile cannot bypass the public cutover gate' );
+npr( false !== strpos( $render, 'normalized_admin_preview_allowed' ) && false !== strpos( $render, 'DomainFeatureGate::admin_preview_ready()' ) && false !== strpos( $render, 'CAP_VIEW_CREDENTIALS' ), 'review build permits only authenticated credential viewers to inspect the normalized profile before public cutover' );
+npr( false !== strpos( $render, "'Credential preview'" ) && false !== strpos( $render, "'Admin preview'" ) && false !== strpos( $render, 'does not make public verification available to visitors' ), 'pre-cutover admin preview is visibly distinguished from verified public authority' );
 npr( false !== strpos( $render, 'new \\Certloom\\Application\\CredentialVerificationService' ) && false !== strpos( $render, "->present( \$result, 'profile' )" ), 'normalized profile reuses canonical verification service and presenter' );
 npr( false !== strpos( $render, 'normalized_profile_card_html( $presentation, \'cvp\' )' ) && false !== strpos( $render, "'verification_url' =>" ), 'normalized profile uses the human Recipient-led QR/print credential presentation' );
 npr( false !== strpos( $presenter, 'MODE_PROFILE === $visibility_mode' ) && false !== strpos( $presenter, '$effective_context' ), 'profile URL cannot widen summary/unlisted credential visibility' );
@@ -32,4 +34,4 @@ $public_css = file_get_contents( $root . '/public/assets/certloom-public.css' );
 npr( false !== strpos( $preview, 'data-certloom-preview-width' ), 'render-plan browser output exposes bounded natural geometry so the public certificate can scale responsively' );
 npr( false !== strpos( $public_js, 'fitCertificatePreview' ) && false !== strpos( $public_css, 'certloom-certificate-preview-stage' ), 'public certificate preview has responsive fit behavior rather than forcing a broken horizontal certificate canvas' );
 npr( false !== strpos( $public_js, "not_yet_valid: '◷'" ) && false !== strpos( $public_js, "pending_review: '…'" ) && false !== strpos( $public_js, "voided: '×'" ) && false !== strpos( $public_js, "not_issued: '—'" ), 'REST-rendered public results mirror normalized lifecycle status marks instead of falling back to an ambiguous bullet' );
-echo "\n20 normalized public profile alignment checks, 0 failures\n";
+echo "\n22 normalized public profile alignment checks, 0 failures\n";

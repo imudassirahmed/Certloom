@@ -341,9 +341,13 @@ class Ecapla_CertVerify_Render {
 		$content = '';
 
 		$gate = new \Certloom\Infrastructure\Verification\PublicVerificationGate();
-		if ( ! $gate->is_ready() ) {
+		$public_ready = $gate->is_ready();
+		$admin_preview = ! $public_ready && self::normalized_admin_preview_allowed();
+		$is_verified_view = $public_ready;
+		$eyebrow = $is_verified_view ? __( 'Verified credential', 'certloom' ) : __( 'Credential preview', 'certloom' );
+		if ( ! $public_ready && ! $admin_preview ) {
 			$content = self::message_html( 'cvp', __( 'Credential verification is temporarily unavailable while Certloom completes its protected data transition.', 'certloom' ) );
-		} elseif ( class_exists( 'Ecapla_CertVerify_REST' ) && Ecapla_CertVerify_REST::is_rate_limited( 'credential_verify', true ) ) {
+		} elseif ( $public_ready && class_exists( 'Ecapla_CertVerify_REST' ) && Ecapla_CertVerify_REST::is_rate_limited( 'credential_verify', true ) ) {
 			$content = self::message_html( 'cvp', __( 'Too many verification requests. Please wait a minute and try again.', 'certloom' ) );
 		} else {
 			$repo = new \Certloom\Infrastructure\Repository\CredentialRepository();
@@ -383,19 +387,40 @@ class Ecapla_CertVerify_Render {
 						'fields' => $fields,
 						'issuer' => $issuer,
 						'snapshot' => $snapshot,
-						'verified_at' => current_time( 'mysql' ),
-						'verification_url' => is_wp_error( $url ) ? '' : (string) $url,
-						'actions' => is_wp_error( $url ) ? array( array( 'type' => 'print', 'label' => __( 'Print', 'certloom' ) ) ) : array(
+						'verified_at' => $is_verified_view ? current_time( 'mysql' ) : '',
+						'verification_url' => $is_verified_view && ! is_wp_error( $url ) ? (string) $url : '',
+						'actions' => $is_verified_view && ! is_wp_error( $url ) ? array(
 							array( 'type' => 'copy', 'label' => __( 'Copy link', 'certloom' ), 'url' => (string) $url ),
 							array( 'type' => 'print', 'label' => __( 'Print', 'certloom' ) ),
-						),
+						) : array( array( 'type' => 'print', 'label' => __( 'Print preview', 'certloom' ) ) ),
 					);
-					$content = self::normalized_profile_card_html( $presentation, 'cvp' );
+					$content = self::normalized_profile_card_html( $presentation, 'cvp', $is_verified_view );
+					if ( $admin_preview ) {
+						$content = '<div class="cvp-profile-preview-banner" role="status"><strong>' . esc_html__( 'Admin preview', 'certloom' ) . '</strong><span>' . esc_html__( 'You can inspect this credential because you are signed in to Certloom. Public verification for visitors remains closed until this site completes its protected credential-data cutover.', 'certloom' ) . '</span></div>' . $content;
+					}
 				}
 			}
 		}
 
-		return '<section id="' . esc_attr( $instance_id ) . '" class="certloom-public certloom-credential-profile cvp-widget cvp-widget--normalized" aria-labelledby="' . esc_attr( $heading_id ) . '" data-copy-success-text="' . esc_attr__( 'Verification link copied.', 'certloom' ) . '" data-copy-error-text="' . esc_attr__( 'Copy the verification link from your browser.', 'certloom' ) . '"><header class="cvp-header"><p class="cvp-eyebrow">' . esc_html__( 'Verified credential', 'certloom' ) . '</p><' . $heading_tag . ' id="' . esc_attr( $heading_id ) . '" class="cvp-heading">' . esc_html( $heading ) . '</' . $heading_tag . '></header><div class="cvp-result" role="region" aria-labelledby="' . esc_attr( $heading_id ) . '">' . $content . '</div><div class="screen-reader-text certloom-live-status" role="status" aria-live="polite" aria-atomic="true"></div></section>';
+		return '<section id="' . esc_attr( $instance_id ) . '" class="certloom-public certloom-credential-profile cvp-widget cvp-widget--normalized' . ( $admin_preview ? ' is-admin-preview' : '' ) . '" aria-labelledby="' . esc_attr( $heading_id ) . '" data-copy-success-text="' . esc_attr__( 'Verification link copied.', 'certloom' ) . '" data-copy-error-text="' . esc_attr__( 'Copy the verification link from your browser.', 'certloom' ) . '"><header class="cvp-header"><p class="cvp-eyebrow">' . esc_html( $eyebrow ) . '</p><' . $heading_tag . ' id="' . esc_attr( $heading_id ) . '" class="cvp-heading">' . esc_html( $heading ) . '</' . $heading_tag . '></header><div class="cvp-result" role="region" aria-labelledby="' . esc_attr( $heading_id ) . '">' . $content . '</div><div class="screen-reader-text certloom-live-status" role="status" aria-live="polite" aria-atomic="true"></div></section>';
+	}
+
+	/**
+	 * Review builds may expose the normalized profile to an authenticated Certloom
+	 * credential manager without weakening the anonymous public-verification gate.
+	 * This is inspection-only: it never turns a preview into public authority.
+	 *
+	 * @return bool
+	 */
+	private static function normalized_admin_preview_allowed() {
+		if ( ! class_exists( '\Certloom\Infrastructure\Migration\DomainFeatureGate' ) || ! \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
+			return false;
+		}
+		if ( ! function_exists( 'is_user_logged_in' ) || ! is_user_logged_in() || ! function_exists( 'current_user_can' ) ) {
+			return false;
+		}
+		$capability = class_exists( 'Ecapla_CertVerify_Permissions' ) ? Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS : 'manage_options';
+		return current_user_can( $capability );
 	}
 
 	/**
@@ -433,7 +458,7 @@ class Ecapla_CertVerify_Render {
 	}
 
 	/** Premium human-facing normalized credential profile. @return string */
-	private static function normalized_profile_card_html( array $presentation, $prefix ) {
+	private static function normalized_profile_card_html( array $presentation, $prefix, $verified_view = true ) {
 		$status = isset( $presentation['status'] ) && is_array( $presentation['status'] ) ? $presentation['status'] : array();
 		$status_key = sanitize_key( (string) ( $status['key'] ?? 'unknown' ) );
 		$status_label = (string) ( $status['label'] ?? __( 'Credential status', 'certloom' ) );
@@ -474,8 +499,12 @@ class Ecapla_CertVerify_Render {
 		$certificate_preview = self::normalized_certificate_preview_html( $snapshot );
 		$qr = class_exists( 'Ecapla_CertVerify_QR' ) && ! empty( $presentation['verification_url'] ) ? Ecapla_CertVerify_QR::figure_html( (string) $presentation['verification_url'], $prefix ) : '';
 		$barcode = class_exists( 'Ecapla_CertVerify_Barcode' ) && '' !== $number ? Ecapla_CertVerify_Barcode::figure_html( $number, $prefix ) : '';
-		$verified = ! empty( $presentation['verified_at'] ) ? '<p class="cvp-profile-verified">' . esc_html__( 'Verified from the issuer’s Certloom registry', 'certloom' ) . ' · <time datetime="' . esc_attr( (string) $presentation['verified_at'] ) . '">' . esc_html( self::format_verified_at( $presentation['verified_at'] ) ) . '</time></p>' : '';
-		$proof = '<section class="cvp-profile-proof" aria-label="' . esc_attr__( 'Credential verification', 'certloom' ) . '"><div class="cvp-profile-proof-copy"><span class="cvp-eyebrow">' . esc_html__( 'Verification', 'certloom' ) . '</span><h3>' . esc_html__( 'Authentic credential record', 'certloom' ) . '</h3><p>' . esc_html__( 'This page is generated from the credential’s current verified record. Use the QR code or copy this page link to verify it again.', 'certloom' ) . '</p>' . $verified;
+		$verified = $verified_view && ! empty( $presentation['verified_at'] ) ? '<p class="cvp-profile-verified">' . esc_html__( 'Verified from the issuer’s Certloom registry', 'certloom' ) . ' · <time datetime="' . esc_attr( (string) $presentation['verified_at'] ) . '">' . esc_html( self::format_verified_at( $presentation['verified_at'] ) ) . '</time></p>' : '';
+		$proof_label = $verified_view ? __( 'Credential verification', 'certloom' ) : __( 'Credential preview information', 'certloom' );
+		$proof_eyebrow = $verified_view ? __( 'Verification', 'certloom' ) : __( 'Preview', 'certloom' );
+		$proof_heading = $verified_view ? __( 'Authentic credential record', 'certloom' ) : __( 'Current credential record', 'certloom' );
+		$proof_copy = $verified_view ? __( 'This page is generated from the credential’s current verified record. Use the QR code or copy this page link to verify it again.', 'certloom' ) : __( 'This signed-in preview is generated from the credential’s current saved record. It does not make public verification available to visitors.', 'certloom' );
+		$proof = '<section class="cvp-profile-proof' . ( $verified_view ? '' : ' is-preview' ) . '" aria-label="' . esc_attr( $proof_label ) . '"><div class="cvp-profile-proof-copy"><span class="cvp-eyebrow">' . esc_html( $proof_eyebrow ) . '</span><h3>' . esc_html( $proof_heading ) . '</h3><p>' . esc_html( $proof_copy ) . '</p>' . $verified;
 		if ( '' !== $credential_id ) { $proof .= '<details class="cvp-profile-technical"><summary>' . esc_html__( 'Credential ID', 'certloom' ) . '</summary><code>' . esc_html( $credential_id ) . '</code></details>'; }
 		$proof .= '</div>' . ( '' !== $qr ? '<div class="cvp-profile-qr">' . $qr . '</div>' : '' ) . '</section>';
 		$actions = self::actions_html( (array) ( $presentation['actions'] ?? array() ), $prefix );

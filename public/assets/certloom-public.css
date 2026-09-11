@@ -1975,3 +1975,11 @@
 @media(max-width:640px){.certloom-my-credentials__button,.certloom-credential-profile.cvp-widget .cvp-result-actions a,.certloom-credential-profile.cvp-widget .cvp-result-actions button,.certloom-credential-profile.cvp-widget summary{min-height:44px}.certloom-my-credentials__filters select{min-height:44px}.certloom-my-credential-card__actions{align-items:stretch}.certloom-my-credential-card__actions .certloom-my-credentials__button{flex:1 1 180px}}
 @media(prefers-reduced-motion:reduce){:is(.ecapla-certverify-widget.cv-widget,.ecapla-certverify-template.cvx-widget,.certloom-credential-profile.cvp-widget,.certloom-my-credentials) *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 @media(forced-colors:active){:is(.ecapla-certverify-widget.cv-widget,.ecapla-certverify-template.cvx-widget,.certloom-credential-profile.cvp-widget,.certloom-my-credentials) :is(a,button,input,select,textarea,summary){forced-color-adjust:auto}}
+
+/* Alpha 4.31 — authenticated credential-profile preview while public authority stays closed. */
+.cvp-profile-preview-banner{display:flex;gap:10px;align-items:flex-start;margin:0 0 14px;padding:13px 15px;border:1px solid #bdd7f4;border-radius:12px;background:#f2f8ff;color:#29435f;font-size:12.5px;line-height:1.5}
+.cvp-profile-preview-banner strong{flex:0 0 auto;color:#123b70;font-size:12px;font-weight:800;letter-spacing:.02em;text-transform:uppercase}
+.cvp-profile-proof.is-preview{border-color:#cbd9e9;background:#f7faff}
+.cvp-profile-proof.is-preview .cvp-eyebrow{color:#315e91}
+@media(max-width:640px){.cvp-profile-preview-banner{flex-direction:column;gap:4px}}
+@media(forced-colors:active){.cvp-profile-preview-banner,.cvp-profile-proof.is-preview{border-color:CanvasText;background:Canvas;color:CanvasText}.cvp-profile-preview-banner strong{color:CanvasText}}

@@ -1489,7 +1489,7 @@ msgstr ""
 #: includes/class-ecapla-certverify-fields.php:388
 #: includes/class-ecapla-certverify-render.php:134
 #: includes/class-ecapla-certverify-render.php:232
-#: includes/class-ecapla-certverify-render.php:362
+#: includes/class-ecapla-certverify-render.php:366
 #: src/Application/Setup/PurposePresetEngine.php:123
 #: src/Infrastructure/Admin/DomainAdmin.php:1198
 #: src/Infrastructure/Admin/DomainAdmin.php:1237
@@ -1790,7 +1790,7 @@ msgstr ""
 #: admin/views/import-mapping.php:12
 #: admin/views/issuance-analytics.php:9
 #: admin/views/settings-manager.php:21
-#: includes/class-ecapla-certverify-render.php:478
+#: includes/class-ecapla-certverify-render.php:504
 #: src/Infrastructure/Admin/DomainAdmin.php:1123
 #: src/Infrastructure/Admin/DomainAdmin.php:1153
 #: src/Infrastructure/Admin/DomainAdmin.php:898
@@ -2458,8 +2458,8 @@ msgstr ""
 #: admin/views/issuance-analytics.php:53
 #: includes/class-ecapla-certverify-recipient-portal.php:192
 #: includes/class-ecapla-certverify-recipient-portal.php:222
-#: includes/class-ecapla-certverify-render.php:363
-#: includes/class-ecapla-certverify-render.php:423
+#: includes/class-ecapla-certverify-render.php:367
+#: includes/class-ecapla-certverify-render.php:448
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:253
 #: src/Infrastructure/Admin/DomainAdmin.php:1069
 #: src/Infrastructure/Admin/DomainAdmin.php:1199
@@ -2562,7 +2562,7 @@ msgstr ""
 #: admin/views/dashboard.php:228
 #: includes/class-ecapla-certverify-recipient-portal.php:138
 #: includes/class-ecapla-certverify-recipient-portal.php:309
-#: includes/class-ecapla-certverify-render.php:529
+#: includes/class-ecapla-certverify-render.php:558
 #: src/Infrastructure/Admin/DomainAdmin.php:1088
 #: src/Infrastructure/Admin/DomainAdmin.php:975
 msgid "Not yet valid"
@@ -2571,7 +2571,7 @@ msgstr ""
 #: admin/views/dashboard.php:229
 #: includes/class-ecapla-certverify-recipient-portal.php:139
 #: includes/class-ecapla-certverify-recipient-portal.php:310
-#: includes/class-ecapla-certverify-render.php:530
+#: includes/class-ecapla-certverify-render.php:559
 #: src/Infrastructure/Admin/DomainAdmin.php:1089
 #: src/Infrastructure/Admin/DomainAdmin.php:976
 msgid "Pending review"
@@ -2594,7 +2594,7 @@ msgstr ""
 
 #: admin/views/dashboard.php:232
 #: includes/class-ecapla-certverify-recipient-portal.php:313
-#: includes/class-ecapla-certverify-render.php:533
+#: includes/class-ecapla-certverify-render.php:562
 #: src/Infrastructure/Admin/DomainAdmin.php:1092
 #: src/Infrastructure/Admin/DomainAdmin.php:979
 msgid "Not issued"
@@ -2685,7 +2685,7 @@ msgstr ""
 #: admin/views/dashboard.php:308
 #: includes/class-ecapla-certverify-recipient-portal.php:193
 #: includes/class-ecapla-certverify-recipient-portal.php:222
-#: includes/class-ecapla-certverify-render.php:364
+#: includes/class-ecapla-certverify-render.php:368
 #: src/Infrastructure/Admin/DomainAdmin.php:1200
 #: src/Infrastructure/Admin/DomainAdmin.php:1239
 #: src/Infrastructure/Admin/DomainAdmin.php:1341
@@ -2711,8 +2711,8 @@ msgstr ""
 
 #: admin/views/dashboard.php:329
 #: includes/class-ecapla-certverify-recipient-portal.php:191
-#: includes/class-ecapla-certverify-render.php:513
-#: includes/class-ecapla-certverify-render.php:518
+#: includes/class-ecapla-certverify-render.php:542
+#: includes/class-ecapla-certverify-render.php:547
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:129
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:402
 #: src/Infrastructure/Admin/DomainAdmin.php:1611
@@ -3151,6 +3151,7 @@ msgstr ""
 
 #: admin/views/email-designer.php:13
 #: admin/views/email-designs.php:68
+#: includes/class-ecapla-certverify-render.php:504
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:267
 #: src/Infrastructure/Admin/TemplateAdmin.php:1061
 #: src/Infrastructure/Admin/TemplateAdmin.php:740
@@ -4059,7 +4060,7 @@ msgstr ""
 #: admin/views/import-upload.php:201
 #: admin/views/import-upload.php:218
 #: includes/class-ecapla-certverify-public-presentation.php:142
-#: includes/class-ecapla-certverify-render.php:613
+#: includes/class-ecapla-certverify-render.php:642
 msgid "Verified"
 msgstr ""
 
@@ -6794,7 +6795,7 @@ msgstr ""
 
 #: admin/views/setup-wizard.php:155
 #: includes/class-ecapla-certverify-public-policy.php:101
-#: includes/class-ecapla-certverify-render.php:389
+#: includes/class-ecapla-certverify-render.php:393
 msgid "Copy link"
 msgstr ""
 
@@ -7168,7 +7169,7 @@ msgstr ""
 #: includes/class-ecapla-certverify-block.php:155
 #: includes/class-ecapla-certverify-public-router.php:147
 #: includes/class-ecapla-certverify-render.php:331
-#: includes/class-ecapla-certverify-render.php:566
+#: includes/class-ecapla-certverify-render.php:595
 #: includes/class-ecapla-certverify-shortcode.php:155
 msgid "Credential profile"
 msgstr ""
@@ -7177,7 +7178,7 @@ msgstr ""
 #: elementor/class-ecapla-certverify-credential-widget.php:19
 #: includes/class-ecapla-certverify-block.php:155
 #: includes/class-ecapla-certverify-render.php:332
-#: includes/class-ecapla-certverify-render.php:567
+#: includes/class-ecapla-certverify-render.php:596
 #: includes/class-ecapla-certverify-shortcode.php:157
 msgid "This credential could not be found or is not available."
 msgstr ""
@@ -9478,8 +9479,8 @@ msgid "View this verified credential"
 msgstr ""
 
 #: includes/class-ecapla-certverify-public-policy.php:113
-#: includes/class-ecapla-certverify-render.php:398
-#: includes/class-ecapla-certverify-render.php:589
+#: includes/class-ecapla-certverify-render.php:347
+#: includes/class-ecapla-certverify-render.php:618
 #: src/Application/Recipient/RecipientPortalService.php:174
 msgid "Verified credential"
 msgstr ""
@@ -9511,13 +9512,12 @@ msgstr ""
 
 #: includes/class-ecapla-certverify-public-policy.php:132
 #: includes/class-ecapla-certverify-recipient-portal.php:262
-#: includes/class-ecapla-certverify-render.php:641
+#: includes/class-ecapla-certverify-render.php:670
 msgid "Copy URL"
 msgstr ""
 
 #: includes/class-ecapla-certverify-public-policy.php:138
-#: includes/class-ecapla-certverify-render.php:388
-#: includes/class-ecapla-certverify-render.php:390
+#: includes/class-ecapla-certverify-render.php:394
 msgid "Print"
 msgstr ""
 
@@ -9526,8 +9526,8 @@ msgid "Public profile"
 msgstr ""
 
 #: includes/class-ecapla-certverify-public-presentation.php:141
-#: includes/class-ecapla-certverify-render.php:465
-#: includes/class-ecapla-certverify-render.php:612
+#: includes/class-ecapla-certverify-render.php:490
+#: includes/class-ecapla-certverify-render.php:641
 #: src/Infrastructure/Admin/DomainAdmin.php:931
 msgid "Issued by"
 msgstr ""
@@ -9539,7 +9539,7 @@ msgid "Certificate verification is temporarily unavailable. Please try again lat
 msgstr ""
 
 #: includes/class-ecapla-certverify-public-presentation.php:47
-#: includes/class-ecapla-certverify-render.php:347
+#: includes/class-ecapla-certverify-render.php:351
 #: includes/class-ecapla-certverify-rest.php:182
 msgid "Too many verification requests. Please wait a minute and try again."
 msgstr ""
@@ -9752,15 +9752,15 @@ msgstr ""
 
 #: includes/class-ecapla-certverify-render.php:125
 #: includes/class-ecapla-certverify-render.php:221
-#: includes/class-ecapla-certverify-render.php:398
-#: includes/class-ecapla-certverify-render.php:589
+#: includes/class-ecapla-certverify-render.php:405
+#: includes/class-ecapla-certverify-render.php:618
 msgid "Verification link copied."
 msgstr ""
 
 #: includes/class-ecapla-certverify-render.php:126
 #: includes/class-ecapla-certverify-render.php:222
-#: includes/class-ecapla-certverify-render.php:398
-#: includes/class-ecapla-certverify-render.php:589
+#: includes/class-ecapla-certverify-render.php:405
+#: includes/class-ecapla-certverify-render.php:618
 msgid "Copy the verification link from your browser."
 msgstr ""
 
@@ -9792,51 +9792,68 @@ msgstr ""
 msgid "Certificate verification search"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:345
+#: includes/class-ecapla-certverify-render.php:347
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:74
+msgid "Credential preview"
+msgstr ""
+
+#: includes/class-ecapla-certverify-render.php:349
 msgid "Credential verification is temporarily unavailable while Certloom completes its protected data transition."
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:352
-#: includes/class-ecapla-certverify-render.php:582
+#: includes/class-ecapla-certverify-render.php:356
+#: includes/class-ecapla-certverify-render.php:611
 #: includes/class-ecapla-certverify-rest.php:193
 msgid "Credential verification is temporarily unavailable. Please try again later."
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:410
+#: includes/class-ecapla-certverify-render.php:395
+msgid "Print preview"
+msgstr ""
+
+#: includes/class-ecapla-certverify-render.php:399
+msgid "Admin preview"
+msgstr ""
+
+#: includes/class-ecapla-certverify-render.php:399
+msgid "You can inspect this credential because you are signed in to Certloom. Public verification for visitors remains closed until this site completes its protected credential-data cutover."
+msgstr ""
+
+#: includes/class-ecapla-certverify-render.php:435
 msgid "Example Organization"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:413
+#: includes/class-ecapla-certverify-render.php:438
 msgid "Sample status: this is how a valid issued credential is presented to a verifier."
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:413
-#: includes/class-ecapla-certverify-render.php:525
+#: includes/class-ecapla-certverify-render.php:438
+#: includes/class-ecapla-certverify-render.php:554
 msgid "Valid credential"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:417
+#: includes/class-ecapla-certverify-render.php:442
 msgid "Amina Khan"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:418
+#: includes/class-ecapla-certverify-render.php:443
 msgid "Example Professional Certificate"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:419
+#: includes/class-ecapla-certverify-render.php:444
 msgid "Sample public presentation used only during setup."
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:432
+#: includes/class-ecapla-certverify-render.php:457
 msgid "Sample credential verification result"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:432
+#: includes/class-ecapla-certverify-render.php:457
 msgid "Sample preview — not a real credential"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:439
-#: includes/class-ecapla-certverify-render.php:535
+#: includes/class-ecapla-certverify-render.php:464
+#: includes/class-ecapla-certverify-render.php:564
 #: src/Infrastructure/Admin/DomainAdmin.php:1335
 #: src/Infrastructure/Admin/DomainAdmin.php:1798
 #: src/Infrastructure/Admin/DomainAdmin.php:658
@@ -9844,103 +9861,111 @@ msgstr ""
 msgid "Credential status"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:457
+#: includes/class-ecapla-certverify-render.php:482
 #: src/Application/Setup/PurposePresetEngine.php:238
 #: src/Infrastructure/Admin/EmailDesignAdmin.php:113
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:264
 msgid "Credential number"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:464
+#: includes/class-ecapla-certverify-render.php:489
 msgid "Cohort / batch"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:477
+#: includes/class-ecapla-certverify-render.php:502
 msgid "Verified from the issuer’s Certloom registry"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:478
-msgid "Authentic credential record"
+#: includes/class-ecapla-certverify-render.php:503
+msgid "Credential preview information"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:478
+#: includes/class-ecapla-certverify-render.php:503
 msgid "Credential verification"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:478
+#: includes/class-ecapla-certverify-render.php:505
+msgid "Authentic credential record"
+msgstr ""
+
+#: includes/class-ecapla-certverify-render.php:505
+msgid "Current credential record"
+msgstr ""
+
+#: includes/class-ecapla-certverify-render.php:506
 msgid "This page is generated from the credential’s current verified record. Use the QR code or copy this page link to verify it again."
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:479
+#: includes/class-ecapla-certverify-render.php:506
+msgid "This signed-in preview is generated from the credential’s current saved record. It does not make public verification available to visitors."
+msgstr ""
+
+#: includes/class-ecapla-certverify-render.php:508
 msgid "Credential ID"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:513
+#: includes/class-ecapla-certverify-render.php:542
 msgid "The credential record is valid, but its visual certificate could not be displayed in this browser."
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:518
+#: includes/class-ecapla-certverify-render.php:547
 msgid "Issued certificate"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:526
+#: includes/class-ecapla-certverify-render.php:555
 msgid "Suspended credential"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:527
+#: includes/class-ecapla-certverify-render.php:556
 msgid "Revoked credential"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:528
+#: includes/class-ecapla-certverify-render.php:557
 msgid "Expired credential"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:531
+#: includes/class-ecapla-certverify-render.php:560
 msgid "Requirements not met"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:532
+#: includes/class-ecapla-certverify-render.php:561
 msgid "Voided credential"
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:541
+#: includes/class-ecapla-certverify-render.php:570
 msgid "This credential currently satisfies its issuance, administrative, validity and compliance requirements."
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:542
+#: includes/class-ecapla-certverify-render.php:571
 msgid "This credential has been administratively suspended."
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:543
+#: includes/class-ecapla-certverify-render.php:572
 msgid "This credential has been revoked."
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:544
+#: includes/class-ecapla-certverify-render.php:573
 msgid "This credential is outside its validity period."
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:545
+#: includes/class-ecapla-certverify-render.php:574
 msgid "This credential’s validity period has not started yet."
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:546
+#: includes/class-ecapla-certverify-render.php:575
 msgid "This credential is awaiting a required review."
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:547
+#: includes/class-ecapla-certverify-render.php:576
 msgid "This credential does not currently satisfy its compliance requirements."
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:548
+#: includes/class-ecapla-certverify-render.php:577
 msgid "This credential was voided and is not valid."
 msgstr ""
 
-#: includes/class-ecapla-certverify-render.php:549
+#: includes/class-ecapla-certverify-render.php:578
 msgid "This credential has not reached the issued state."
-msgstr ""
-
-#: includes/class-ecapla-certverify-render.php:596
-msgid "Certificate found"
 msgstr ""
 
 #: includes/class-ecapla-certverify-render.php:61
@@ -9949,6 +9974,10 @@ msgstr ""
 
 #: includes/class-ecapla-certverify-render.php:62
 msgid "Verify a certificate with confidence"
+msgstr ""
+
+#: includes/class-ecapla-certverify-render.php:625
+msgid "Certificate found"
 msgstr ""
 
 #: includes/class-ecapla-certverify-render.php:63
@@ -13652,10 +13681,6 @@ msgstr ""
 
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:63
 msgid "1.7 will converge these paths on one reusable profile-aware mapper. This UI does not pretend that backend convergence is already complete."
-msgstr ""
-
-#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:74
-msgid "Credential preview"
 msgstr ""
 
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:74

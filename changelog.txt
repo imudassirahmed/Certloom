@@ -1,3 +1,9 @@
+= 1.7.0-alpha.4.31 =
+* Make normalized Credential Profile links usable during Phase 4 review for signed-in Certloom users who can view credentials, while preserving the anonymous PublicVerificationGate fail-closed boundary.
+* Clearly label the pre-cutover surface as `Credential preview` / `Admin preview`, suppress verified-registry claims, QR/copy-link sharing and verification timestamps, and retain only a safe Print preview action until public authority is accepted.
+* Keep guest visibility/privacy projection through PublicCredentialPresenter and preserve the normal fully verified profile unchanged once the per-site public verification gate is ready.
+* Add runtime and Chromium regression gates for anonymous non-disclosure, capability enforcement, preview semantics, responsive containment, forced colors and the accepted public-verification path.
+
 = 1.7.0-alpha.4.26 =
 * Rebuild the Issue credential screen around the shared Certloom hero and contextual-subtab hierarchy so the page no longer starts as a raw WordPress form.
 * Replace the four boxed issuance steps with the compact Certloom blue/cyan/green progress language, widen and center the compose task surface, and compact the existing-Recipient lookup into one deliberate desktop row with a mobile stack.
