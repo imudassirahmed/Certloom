@@ -265,7 +265,11 @@ $certloom_fields_url      = admin_url( 'admin.php?page=certloom-fields' );
 							$view_url = '';
 							if ( $is_historical && class_exists( 'Ecapla_CertVerify_Public_Router' ) && '' !== $number ) {
 								$view_url = Ecapla_CertVerify_Public_Router::profile_url( $number );
-							} elseif ( '' !== $public_id && class_exists( '\\Certloom\\Infrastructure\\Verification\\PublicVerificationGate' ) && ( new \Certloom\Infrastructure\Verification\PublicVerificationGate() )->is_ready() ) {
+							} elseif ( '' !== $public_id && class_exists( '\Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl' ) ) {
+								// Match the credential workspace: expose the stable public View URL whenever
+								// the normalized credential has a public ID. Runtime routing still owns
+								// whether that URL can be served; the Dashboard must not silently hide
+								// the View action simply because a visual-development gate is closed.
 								$view_result = ( new \Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl() )->verification_url( $public_id );
 								if ( ! is_wp_error( $view_result ) ) { $view_url = (string) $view_result; }
 							}

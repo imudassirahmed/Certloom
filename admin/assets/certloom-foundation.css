@@ -1433,27 +1433,37 @@
 }
 
 .certloom-admin-shell .certloom-dashboard-recent-table {
-  width: 100%;
-  min-width: 0;
+  box-sizing: border-box;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100%;
   table-layout: fixed;
 }
 
 .certloom-admin-shell .certloom-dashboard-recent-table th,
 .certloom-admin-shell .certloom-dashboard-recent-table td {
+  box-sizing: border-box;
   min-width: 0;
-  padding-inline: 12px;
+  padding-inline: 9px;
   white-space: normal;
   overflow-wrap: anywhere;
 }
 
-.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(1) { width: 21%; }
-.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(2) { width: 24%; }
-.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(3) { width: 18%; }
-.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(4) { width: 21%; }
-.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(5) { width: 16%; }
+/* Dashboard owns a compact five-column summary. The full Credentials registry
+   keeps its wider 1120px contract; this scoped layout must never inherit it. */
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(1) { width: 18%; }
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(2) { width: 35%; }
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(3) { width: 14%; }
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(4) { width: 20%; }
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(5) { width: 13%; }
 
 .certloom-admin-shell .certloom-dashboard-recent-table .certloom-credential-status {
   max-width: 100%;
+}
+
+.certloom-admin-shell .certloom-dashboard-recent-table .certloom-credential-row-actions {
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .certloom-admin-shell .certloom-dashboard-recent-table .certloom-dashboard-date-cell {

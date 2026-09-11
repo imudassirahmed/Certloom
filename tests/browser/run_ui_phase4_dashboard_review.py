@@ -14,7 +14,7 @@ async def run():
     checks=0; failed=[]
     async with async_playwright() as p:
         browser=await p.chromium.launch(headless=True,executable_path='/usr/bin/chromium',args=['--no-sandbox','--disable-dev-shm-usage','--disable-gpu'])
-        desktop=await browser.new_page(viewport={'width':1665,'height':900})
+        desktop=await browser.new_page(viewport={'width':1365,'height':900})
         await desktop.set_content(fixture(),wait_until='load')
         async def ck(ok,label):
             nonlocal checks
@@ -37,11 +37,15 @@ async def run():
         table=desktop.locator('.certloom-dashboard-recent-table')
         tr=await table.bounding_box(); panel=await desktop.locator('.certloom-panel').first.bounding_box()
         await ck(tr is not None and panel is not None and tr['width'] <= panel['width'] + 1,'desktopRecentTableFitsPanel')
+        await ck(await table.evaluate("e=>getComputedStyle(e).minWidth")=='0px','desktopRecentTableCancelsRegistryMinWidth')
+        status_cell=await desktop.locator('.certloom-dashboard-recent-table tbody td:nth-child(5)').first.bounding_box()
+        await ck(status_cell is not None and panel is not None and status_cell['x'] + status_cell['width'] <= panel['x'] + panel['width'] + 1,'desktopStatusColumnVisibleInsidePanel')
         await ck(await desktop.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'desktopHasNoHorizontalOverflow')
         await ck(await desktop.locator('.certloom-dashboard-recent-table thead th').count()==5,'dashboardTableUsesFiveCompactColumns')
         headers=[x.strip() for x in await desktop.locator('.certloom-dashboard-recent-table thead th').all_inner_texts()]
         await ck(headers==['Credential','Recipient','Program / batch','Dates','Status'],'dashboardCompactHeaders')
         await ck(await desktop.locator('.certloom-dashboard-date-line').count()==4,'dashboardDatesStackIssuedAndExpiry')
+        await ck(await desktop.get_by_role('link',name='View').count()==2,'dashboardCurrentCredentialsExposeView')
         await ck(await desktop.get_by_role('link',name='Edit').count()==2,'dashboardCurrentCredentialsExposeEdit')
         await ck('certloom-brand-mark.png' in await hero.evaluate("e=>getComputedStyle(e,'::after').backgroundImage"),'watermarkStillPresent')
         await ck(abs(float(await hero.evaluate("e=>getComputedStyle(e,'::after').opacity"))-.115)<.002,'watermarkOpacityUnchanged')

@@ -1,3 +1,9 @@
+= 1.7.0-alpha.4.23 =
+* Fix the real Dashboard Recent credentials clipping root cause: the compact table now hard-overrides the full registry's 1120px minimum width, stays at 100% of the left Dashboard panel, and uses tighter five-column proportions/padding so Status remains visible beside the sidebar.
+* Keep the compact Credential, Recipient, Program / batch, Dates and Status structure; no Quick actions or surrounding Dashboard redesign is included.
+* Restore View alongside Edit for current normalized credentials whenever their stable public credential URL can be built, matching the credential workspace; legacy rows keep View / Manage.
+* Strengthen the browser gate with a realistic narrow Dashboard-left-column fixture, explicit computed min-width verification and a right-edge Status visibility assertion. Renderer/domain authority remain intentionally absent during Phase 4 visual iteration.
+
 = 1.7.0-alpha.4.22 =
 * Correct only the Dashboard Recent credentials list after staging review: combine issue and expiry into one compact Dates column, render date-only values without timestamps, and keep Status visible within the available panel width.
 * Restore a clear Edit action for current normalized credentials while preserving View/Manage behavior for historical credentials; public View remains available for current credentials whenever verification routing is ready.
