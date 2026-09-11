@@ -6434,6 +6434,7 @@ color:CanvasText}
 	line-height: 1.25;
 }
 
+.certloom-dashboard-recent-table { width:100% !important; min-width:0 !important; max-width:100%; table-layout:fixed; }
 .certloom-dashboard-recent-table-wrap {
 	margin-top: 2px;
 }

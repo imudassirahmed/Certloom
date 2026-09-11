@@ -59,16 +59,11 @@ final class ManualIssuanceAdmin {
 		}
 
 		$simple = AdminUiMode::is_simple();
+		$current_stage = $receipt_version ? 'receipt' : ( is_array( $review ) ? 'review' : 'compose' );
 		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-manual-issuance">';
-		echo '<div class="certloom-page-head certloom-issue-page-head"><div><h1>' . esc_html__( 'Issue credential', 'certloom' ) . '</h1><p>' . esc_html__( 'Create one verified credential with only the details you need. Organization, Program, Batch, Signer and certificate artwork are optional in the approved 1.7 flow.', 'certloom' ) . '</p></div></div>';
+		echo '<section class="certloom-page-hero certloom-issue-hero" aria-labelledby="certloom-issue-title"><div><span class="certloom-eyebrow">' . esc_html__( 'Credential operations', 'certloom' ) . '</span><h1 id="certloom-issue-title">' . esc_html__( 'Issue credential', 'certloom' ) . '</h1><p>' . esc_html__( 'Create one credential, review it, then issue only when everything is correct. Recipient, title and issue date form the fast path; organization, Program, Batch, Signer and artwork stay optional.', 'certloom' ) . '</p></div></section>';
 		$this->notice();
-		if ( $simple ) {
-			echo '<div class="notice notice-info inline certloom-manual-issuance-authority"><p>' . esc_html__( 'Online verification or downloadable certificate files may be unavailable until this site finishes its release setup. You can still prepare and review the credential here.', 'certloom' ) . '</p></div>';
-			echo '<details class="certloom-technical-details certloom-manual-issuance-technical-status"><summary>' . esc_html__( 'Technical status', 'certloom' ) . '</summary><p>' . esc_html__( 'Manual Issuance is available in the credential-management preview. The existing registry still powers public verification in this build, and PDF/PNG/JPEG exports remain unavailable until the certificate renderer is approved.', 'certloom' ) . '</p></details>';
-		} else {
-			echo '<div class="notice notice-warning inline certloom-manual-issuance-authority"><p><strong>' . esc_html__( 'Availability:', 'certloom' ) . '</strong> ' . esc_html__( 'Manual Issuance is available in the credential-management preview. The existing registry still powers public verification in this build, and PDF/PNG/JPEG exports remain unavailable until the certificate renderer is approved.', 'certloom' ) . '</p></div>';
-		}
-		$this->steps( $receipt_version ? 'receipt' : ( is_array( $review ) ? 'review' : 'compose' ) );
+		$this->steps( $current_stage );
 
 		if ( $receipt_version ) {
 			$this->render_receipt( $receipt_version );
@@ -80,6 +75,7 @@ final class ManualIssuanceAdmin {
 		} else {
 			$this->render_compose( array() );
 		}
+		$this->render_technical_status( $simple, $current_stage );
 		echo '</div>';
 	}
 
@@ -176,8 +172,7 @@ final class ManualIssuanceAdmin {
 		$numbering = new ManualIssuanceNumberAllocator();
 		$number_preview = $numbering->is_automatic() ? $numbering->review( '' ) : null;
 
-		echo '<section class="certloom-manual-card certloom-issue-v2-card"><div class="certloom-manual-card-head"><div><h2>' . esc_html__( 'Compose credential', 'certloom' ) . '</h2><p>' . esc_html__( 'Recipient, credential title and issue date are the only required concepts in the 1.7 workflow. Everything else is optional context or presentation.', 'certloom' ) . '</p></div><span class="certloom-ui-contract-badge">' . esc_html__( '1.7 UI contract', 'certloom' ) . '</span></div>';
-		echo '<div class="notice notice-info inline certloom-phase2-backend-boundary"><p><strong>' . esc_html__( 'Alpha boundary:', 'certloom' ) . '</strong> ' . esc_html__( 'This screen locks the new standalone credential flow before its data-model migration. In alpha.2, the proven issuance engine can still commit only the Program + Certloom design path. Details-only, uploaded-image, standalone title, Issuer and Signer persistence remain visibly gated until the approved backend phase.', 'certloom' ) . '</p></div>';
+		echo '<section class="certloom-manual-card certloom-issue-v2-card"><div class="certloom-manual-card-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Step 1 of 4', 'certloom' ) . '</span><h2>' . esc_html__( 'Compose credential', 'certloom' ) . '</h2><p>' . esc_html__( 'Start with the recipient and credential details. Add hierarchy or artwork only when this credential needs it.', 'certloom' ) . '</p></div></div>';
 
 		$task_label = __( 'Issue a credential', 'certloom' );
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin.php?page=' . self::PAGE ) ) . '" aria-label="' . esc_attr( $task_label ) . '" class="certloom-manual-form certloom-issue-v2-form" data-certloom-human-form data-certloom-phase2-issuance data-certloom-scoped-fields-form data-certloom-scoped-fields-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '" data-certloom-invalid-message="' . esc_attr__( 'Please complete the highlighted field before reviewing this credential.', 'certloom' ) . '">';
@@ -270,12 +265,24 @@ final class ManualIssuanceAdmin {
 		$rows = max( 4, min( 10, count( $custom ) + 2 ) ); $keys=array_keys($custom); for($i=0;$i<$rows;$i++){ $key=$keys[$i]??''; $val=''!==$key?(string)$custom[$key]:''; echo '<div class="certloom-manual-custom-row"><label><span>'.esc_html__( 'Field key', 'certloom' ).'</span><input type="text" name="custom_merge_key[]" maxlength="64" value="'.esc_attr($key).'" placeholder="membership_level"></label><label><span>'.esc_html__( 'Value', 'certloom' ).'</span><input type="text" name="custom_merge_value[]" maxlength="2000" value="'.esc_attr($val).'"></label></div>'; }
 		echo '</div></details></div></div></details>';
 
-		echo '<div class="certloom-phase2-compatibility" data-certloom-phase2-compatibility role="status" aria-live="polite"><strong>' . esc_html__( 'Current alpha engine:', 'certloom' ) . '</strong> <span data-certloom-phase2-compatibility-message>' . esc_html__( 'Choose “Use a Certloom design” and a Program to exercise the existing issuance backend. Other approved presentation paths are UI-only until the backend phase.', 'certloom' ) . '</span></div>';
-		echo '<div class="certloom-manual-actions"><button type="submit" class="button button-primary" data-certloom-manual-review data-certloom-has-templates="' . esc_attr( empty( $template_items ) ? '0' : '1' ) . '">' . esc_html__( 'Review credential', 'certloom' ) . '</button><span>' . esc_html__( 'Review is read-only and never reserves a credential number.', 'certloom' ) . '</span></div></form></section>';
+		echo '<div class="certloom-manual-actions certloom-issue-actions"><button type="submit" class="button button-primary" data-certloom-manual-review data-certloom-has-templates="' . esc_attr( empty( $template_items ) ? '0' : '1' ) . '">' . esc_html__( 'Review credential', 'certloom' ) . '</button><div class="certloom-review-action-copy"><span class="certloom-review-readiness" data-certloom-phase2-compatibility-message role="status" aria-live="polite">' . esc_html__( 'Choose “Use a Certloom design” to review this credential in the current build.', 'certloom' ) . '</span><small>' . esc_html__( 'Review is read-only and never reserves a credential number.', 'certloom' ) . '</small></div></div></form></section>';
 		$this->render_quick_context_dialogs( $selected_program_id );
 	}
 
 
+	/** Keeps release/development constraints available without interrupting the issuance task. */
+	private function render_technical_status( $simple, $current_stage ) {
+		echo '<details class="certloom-technical-details certloom-manual-issuance-technical-status certloom-issue-technical-status"><summary>' . esc_html__( 'Technical status', 'certloom' ) . '</summary><div class="certloom-issue-technical-body">';
+		if ( $simple ) {
+			echo '<p>' . esc_html__( 'Online verification or downloadable certificate files may be unavailable until this site finishes its release setup. You can still prepare and review credentials here.', 'certloom' ) . '</p>';
+		} else {
+			echo '<p><strong>' . esc_html__( 'Availability:', 'certloom' ) . '</strong> ' . esc_html__( 'Manual Issuance is available in the credential-management preview. The existing registry still powers public verification in this build, and PDF/PNG/JPEG exports remain unavailable until the certificate renderer is approved.', 'certloom' ) . '</p>';
+		}
+		if ( 'compose' === $current_stage ) {
+			echo '<p><strong>' . esc_html__( 'Development boundary:', 'certloom' ) . '</strong> ' . esc_html__( 'This alpha interface already exposes the approved standalone credential model, but the proven issuance engine can currently commit only the Program + Certloom design path. Details-only, uploaded-image, standalone title, Issuer and Signer persistence remain fail-closed until the approved backend phase.', 'certloom' ) . '</p>';
+		}
+		echo '</div></details>';
+	}
 
 	/** Compact contextual hierarchy copy; canonical entity names remain stable. */
 	private function profile_context_row( $profile, $meaning ) {

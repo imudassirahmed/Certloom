@@ -1096,11 +1096,11 @@
 				var compatible = 'design' === mode && hasProgram && hasTitle && hasRecipient;
 				review.disabled = ! compatible;
 				if ( ! message ) { return; }
-				if ( 'details_only' === mode ) { message.textContent = certloomText( 'phase2DetailsPending', 'Details-only presentation is locked in the UI; persistence follows in the backend phase.' ); }
-				else if ( 'image' === mode ) { message.textContent = certloomText( 'phase2ImagePending', 'PNG/JPEG presentation is locked in the UI; artifact snapshot/provenance persistence follows in the backend phase.' ); }
-				else if ( ! hasProgram ) { message.textContent = certloomText( 'phase2StandalonePending', 'Standalone issuance is locked in the UI; alpha.2 still needs a Program to exercise the existing backend.' ); }
-				else if ( ! hasTitle || ! hasRecipient ) { message.textContent = certloomText( 'phase2CompleteCore', 'Complete Recipient and credential title to review the backend-compatible design path.' ); }
-				else { message.textContent = certloomText( 'phase2Compatible', 'Backend-compatible alpha path ready: Program + Certloom design. Review remains mutation-free.' ); }
+				if ( 'details_only' === mode ) { message.textContent = certloomText( 'phase2DetailsPending', 'Choose “Use a Certloom design” to review this credential in the current build.' ); }
+				else if ( 'image' === mode ) { message.textContent = certloomText( 'phase2ImagePending', 'Uploaded-image credentials can be prepared here, but review is not available for this path in the current build.' ); }
+				else if ( ! hasProgram ) { message.textContent = certloomText( 'phase2StandalonePending', 'Select a Program to review a credential that uses a Certloom design in the current build.' ); }
+				else if ( ! hasTitle || ! hasRecipient ) { message.textContent = certloomText( 'phase2CompleteCore', 'Choose a recipient and enter a credential title to continue to review.' ); }
+				else { message.textContent = certloomText( 'phase2Compatible', 'Ready to review. Nothing is issued until you confirm on the next step.' ); }
 			}
 			function syncPresentation( changed ) {
 				var mode = presentationMode();

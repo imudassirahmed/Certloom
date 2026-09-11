@@ -1434,8 +1434,8 @@
 
 .certloom-admin-shell .certloom-dashboard-recent-table {
   box-sizing: border-box;
-  width: 100% !important;
-  min-width: 0 !important;
+  width: 100%;
+  min-width: 0;
   max-width: 100%;
   table-layout: fixed;
 }
@@ -1981,7 +1981,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
 }
 .certloom-domain-screen .certloom-credential-search-filter .certloom-filter-label,
 .certloom-domain-screen .certloom-credential-program-filter .certloom-filter-label {
-  color: var(--cl-ink-soft, #50575e);
+  color: var(--cl-ink-soft);
   font-size: 12px;
   font-weight: 700;
   line-height: 1.2;
@@ -2015,5 +2015,360 @@ body.certloom-setup-v2-body { overflow: hidden; }
   .certloom-domain-screen .certloom-credential-filters > button[type="submit"] {
     grid-column: auto;
     width: 100%;
+  }
+}
+
+/* alpha.4.26 — Issue Credential visual hierarchy.
+   Keep the task operational: hero → contextual nav → progress → compose.
+   Release-engineering details remain available, but no longer interrupt the form. */
+.certloom-manual-issuance {
+  max-width: none;
+}
+
+.certloom-manual-issuance > .certloom-page-hero,
+.certloom-manual-issuance > .certloom-product-subnav,
+.certloom-manual-issuance > .notice,
+.certloom-manual-issuance > .certloom-manual-steps,
+.certloom-manual-issuance > .certloom-manual-card,
+.certloom-manual-issuance > .certloom-duplicate-guidance,
+.certloom-manual-issuance > .certloom-issue-technical-status {
+  box-sizing: border-box;
+}
+
+.certloom-manual-issuance > .notice,
+.certloom-manual-issuance > .certloom-manual-steps,
+.certloom-manual-issuance > .certloom-manual-card,
+.certloom-manual-issuance > .certloom-duplicate-guidance,
+.certloom-manual-issuance > .certloom-issue-technical-status {
+  width: min(1180px, 100%);
+  margin-inline: auto;
+}
+
+.certloom-issue-hero {
+  margin-top: 8px;
+}
+
+.certloom-issue-hero > div:first-child {
+  max-width: 760px;
+}
+
+/* Compact branded workflow progress, aligned with the setup-wizard language. */
+.certloom-manual-issuance .certloom-manual-steps {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  margin-top: 18px;
+  margin-bottom: 18px;
+  counter-reset: certloom-manual;
+}
+
+.certloom-manual-issuance .certloom-manual-steps li {
+  position: relative;
+  min-width: 0;
+  min-height: 48px;
+  padding: 13px 12px 9px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--cl-ink-soft);
+}
+
+.certloom-manual-issuance .certloom-manual-steps li::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--cl-rule);
+}
+
+.certloom-manual-issuance .certloom-manual-steps li.is-complete::after {
+  background: linear-gradient(90deg, var(--cl-brand-blue), var(--cl-cyan));
+}
+
+.certloom-manual-issuance .certloom-manual-steps li.is-current::after {
+  background: linear-gradient(90deg, var(--cl-cyan), var(--cl-brand-emerald));
+}
+
+.certloom-manual-issuance .certloom-manual-steps li::before {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--cl-rule-firm);
+  background: var(--cl-surface);
+  color: var(--cl-ink-soft);
+  box-shadow: none;
+}
+
+.certloom-manual-issuance .certloom-manual-steps li.is-complete {
+  border-color: transparent;
+  color: var(--cl-blue-deep);
+}
+
+.certloom-manual-issuance .certloom-manual-steps li.is-complete::before {
+  border-color: var(--cl-brand-blue);
+  background: var(--cl-brand-blue);
+  color: var(--cl-surface);
+}
+
+.certloom-manual-issuance .certloom-manual-steps li.is-current {
+  border-color: transparent;
+  background: transparent;
+  color: var(--cl-ink);
+  box-shadow: none;
+}
+
+.certloom-manual-issuance .certloom-manual-steps li.is-current::before {
+  border-color: var(--cl-brand-emerald);
+  background: var(--cl-brand-emerald);
+  color: var(--cl-surface);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--cl-brand-emerald) 12%, transparent);
+}
+
+.certloom-manual-issuance .certloom-manual-steps li span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The compose surface should fill the available task area without turning every
+   control into a page-wide field. */
+.certloom-manual-issuance .certloom-issue-v2-card {
+  max-width: 1180px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.certloom-issue-v2-card .certloom-manual-card-head {
+  margin: 0;
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--cl-rule);
+  background: var(--cl-surface);
+}
+
+.certloom-issue-v2-card .certloom-manual-card-head .certloom-eyebrow {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--cl-blue-deep);
+}
+
+.certloom-issue-v2-card .certloom-manual-card-head h2 {
+  margin: 0;
+  font-size: clamp(21px, 2vw, 25px);
+}
+
+.certloom-issue-v2-card .certloom-manual-card-head p {
+  max-width: 72ch;
+  margin-top: 6px;
+  color: var(--cl-ink-soft);
+}
+
+.certloom-issue-v2-form > .certloom-manual-fieldset {
+  padding: 20px 24px 22px;
+  border-top: 0;
+  border-bottom: 1px solid var(--cl-rule);
+}
+
+.certloom-issue-v2-form > .certloom-manual-fieldset:first-of-type {
+  padding-top: 20px;
+}
+
+.certloom-issue-v2-form > .certloom-manual-fieldset legend {
+  margin: 0 0 6px;
+  padding: 0;
+  color: var(--cl-ink);
+  font-size: var(--cl-t-md);
+  line-height: 1.3;
+}
+
+.certloom-issue-v2-form .certloom-manual-fieldset-intro {
+  max-width: 68ch;
+  margin: 0 0 14px;
+  color: var(--cl-ink-soft);
+}
+
+/* Recipient search is one task, not two full-width stacked bars. */
+.certloom-issue-v2-form .certloom-recipient-compose .certloom-manual-primary-field {
+  max-width: 940px;
+}
+
+.certloom-issue-v2-form .certloom-recipient-compose .certloom-context-lookup {
+  grid-template-columns: minmax(240px, .8fr) minmax(320px, 1.2fr);
+  grid-template-areas:
+    "search select"
+    "status status";
+  gap: 7px 12px;
+  align-items: center;
+}
+
+.certloom-issue-v2-form .certloom-recipient-compose .certloom-context-lookup__search {
+  grid-area: search;
+}
+
+.certloom-issue-v2-form .certloom-recipient-compose .certloom-context-lookup select {
+  grid-area: select;
+}
+
+.certloom-issue-v2-form .certloom-recipient-compose .certloom-context-lookup__status {
+  grid-area: status;
+}
+
+.certloom-issue-v2-form .certloom-manual-grid-2 {
+  gap: 14px 18px;
+}
+
+.certloom-issue-v2-form .certloom-manual-expiry {
+  margin: 16px 0 4px;
+}
+
+.certloom-issue-v2-form .certloom-presentation-choices {
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.certloom-issue-v2-form .certloom-presentation-choice {
+  min-height: 92px;
+  padding: 14px;
+  border-radius: 8px;
+}
+
+.certloom-issue-v2-form .certloom-presentation-choice:has(input:checked) {
+  border-color: var(--cl-brand-emerald);
+  background: color-mix(in srgb, var(--cl-brand-emerald) 7%, var(--cl-surface));
+}
+
+.certloom-issue-v2-form .certloom-presentation-choice:has(input:checked) strong {
+  color: var(--cl-ink);
+}
+
+.certloom-issue-v2-form > .certloom-additional-details {
+  margin: 16px 24px 20px;
+  padding: 0;
+  border: 1px solid var(--cl-rule);
+  border-radius: 8px;
+  background: var(--cl-surface);
+}
+
+.certloom-issue-v2-form > .certloom-additional-details > summary {
+  min-height: 48px;
+  padding: 12px 14px;
+}
+
+.certloom-issue-v2-form > .certloom-additional-details[open] > summary {
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--cl-rule);
+}
+
+.certloom-issue-v2-form .certloom-additional-details-body {
+  padding: 4px 16px 18px;
+}
+
+/* The only visible gate copy is actionable. Engineering detail lives below. */
+.certloom-issue-v2-form .certloom-issue-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  padding: 18px 24px 20px;
+  border-top: 0;
+  background: var(--cl-paper);
+}
+
+.certloom-issue-v2-form .certloom-issue-actions .button {
+  flex: 0 0 auto;
+  min-height: 40px;
+}
+
+.certloom-review-action-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.certloom-review-readiness {
+  color: var(--cl-ink);
+  font-size: var(--cl-t-sm);
+  font-weight: 600;
+}
+
+.certloom-review-action-copy small {
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-xs);
+}
+
+.certloom-issue-technical-status {
+  margin-top: 4px;
+  margin-bottom: 22px;
+  border: 1px solid var(--cl-rule);
+  border-radius: 8px;
+  background: var(--cl-surface);
+}
+
+.certloom-issue-technical-status > summary {
+  padding: 11px 14px;
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.certloom-issue-technical-body {
+  padding: 0 14px 14px;
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-sm);
+}
+
+.certloom-issue-technical-body p {
+  margin: 8px 0 0;
+}
+
+@media (max-width: 900px) {
+  .certloom-issue-v2-form .certloom-recipient-compose .certloom-context-lookup {
+    grid-template-columns: 1fr;
+    grid-template-areas: "search" "select" "status";
+  }
+}
+
+@media (max-width: 620px) {
+  .certloom-manual-issuance .certloom-manual-steps {
+    grid-template-columns: repeat(4, minmax(118px, 1fr));
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+  }
+
+  .certloom-issue-v2-card .certloom-manual-card-head,
+  .certloom-issue-v2-form > .certloom-manual-fieldset,
+  .certloom-issue-v2-form .certloom-issue-actions {
+    padding-inline: 16px;
+  }
+
+  .certloom-issue-v2-form > .certloom-additional-details {
+    margin-inline: 16px;
+  }
+
+  .certloom-issue-v2-form .certloom-issue-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .certloom-issue-v2-form .certloom-issue-actions .button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (forced-colors: active) {
+  .certloom-manual-issuance .certloom-manual-steps li.is-current::before,
+  .certloom-manual-issuance .certloom-manual-steps li.is-complete::before,
+  .certloom-issue-v2-form .certloom-presentation-choice:has(input:checked) {
+    border-color: Highlight;
+  }
+
+  .certloom-manual-issuance .certloom-manual-steps li::after {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+
+  .certloom-manual-issuance .certloom-manual-steps li.is-current::after,
+  .certloom-manual-issuance .certloom-manual-steps li.is-complete::after {
+    background: Highlight;
   }
 }

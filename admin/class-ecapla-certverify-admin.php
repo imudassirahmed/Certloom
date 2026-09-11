@@ -299,11 +299,11 @@ class Ecapla_CertVerify_Admin {
 			'selectedFile' => __( 'Selected file', 'certloom' ),
 			'noFileSelected' => __( 'No file selected', 'certloom' ),
 			'noCertificateImage' => __( 'No certificate image selected', 'certloom' ),
-			'phase2DetailsPending' => __( 'Details-only presentation is locked in the UI; persistence follows in the backend phase.', 'certloom' ),
-			'phase2ImagePending' => __( 'PNG/JPEG presentation is locked in the UI; artifact snapshot/provenance persistence follows in the backend phase.', 'certloom' ),
-			'phase2StandalonePending' => __( 'Standalone issuance is locked in the UI; alpha.2 still needs a Program to exercise the existing backend.', 'certloom' ),
-			'phase2CompleteCore' => __( 'Complete Recipient and credential title to review the backend-compatible design path.', 'certloom' ),
-			'phase2Compatible' => __( 'Backend-compatible alpha path ready: Program + Certloom design. Review remains mutation-free.', 'certloom' ),
+			'phase2DetailsPending' => __( 'Choose “Use a Certloom design” to review this credential in the current build.', 'certloom' ),
+			'phase2ImagePending' => __( 'Uploaded-image credentials can be prepared here, but review is not available for this path in the current build.', 'certloom' ),
+			'phase2StandalonePending' => __( 'Select a Program to review a credential that uses a Certloom design in the current build.', 'certloom' ),
+			'phase2CompleteCore' => __( 'Choose a recipient and enter a credential title to continue to review.', 'certloom' ),
+			'phase2Compatible' => __( 'Ready to review. Nothing is issued until you confirm on the next step.', 'certloom' ),
 			'deactivateVerificationWarning' => __( 'Deactivating Certloom stops public credential verification. Continue?', 'certloom' ),
 		) );
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Asset routing only.

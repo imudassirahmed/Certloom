@@ -1,3 +1,9 @@
+= 1.7.0-alpha.4.26 =
+* Rebuild the Issue credential screen around the shared Certloom hero and contextual-subtab hierarchy so the page no longer starts as a raw WordPress form.
+* Replace the four boxed issuance steps with the compact Certloom blue/cyan/green progress language, widen and center the compose task surface, and compact the existing-Recipient lookup into one deliberate desktop row with a mobile stack.
+* Remove customer-facing `1.7 UI contract`, `Alpha boundary` and `Current alpha engine` chrome from the primary flow; keep release/development constraints available under collapsed Technical status while presenting only concise actionable readiness beside Review credential.
+* Refine Recipient, Credential, Presentation and Additional details spacing without changing issuance authority, backend semantics or renderer output. Preserve the alpha.4.25 Credentials overview hierarchy and all prior Dashboard/Setup visual decisions.
+
 = 1.7.0-alpha.4.25 =
 * Phase 4 Credentials workspace hierarchy refinement: contextual subtabs now settle directly below the hero, the duplicate import CTA is removed from the Credentials overview, operational notices stay prominent while technical gate detail is deferred below the registry, and filter grouping is clearer.
 * Current Credential rows now expose the same stable public-view continuity used by the Dashboard whenever a normalized public ID can produce a URL.
