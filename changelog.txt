@@ -1,3 +1,16 @@
+= 1.7.0-alpha.4.20 =
+* Rework Setup Wizard branding to use the exact supplied Certloom mark and wordmark pixels instead of the generic shield/system-font lockup.
+* Make current/completed/skipped setup states explicit with Certloom green and blue/cyan/green progress treatments.
+* Compact and align the Organization logo chooser, add step-level Skip/Do this later actions, align the wizard footer to the form card, and integrate the saved-progress notice.
+* Introduce 10 premium starter designs for onboarding with authority-safe default publication: only untouched factory presets auto-publish and only when exact renderer publication authority is accepted.
+* Fit Step 4 certificate previews by both width and height into a bounded no-scroll preview stage; explain Design Center publishing and custom Certloom Designer creation.
+* Preserve the user-approved Dashboard watermark and explicitly leave broad Setup page whitespace unchanged per user direction. Renderer/domain authority remain absent in this visual checkpoint.
+
+= 1.7.0-alpha.4.19 =
+* Correct the Certloom admin footer company spelling to canonical `Ecapla` with capital E outside translator control.
+* Make System Health semantic: ready/good is green, review/warning is amber, action-required/bad is red, with matching panel edge treatment; unexpected values fail to warning.
+* Preserve all alpha.4.18 Dashboard review fixes and the approved large/cropped watermark. Renderer/domain authority remain intentionally absent.
+
 = 1.7.0-alpha.4.18 =
 * Preserve the user-approved alpha.4.17 light brand-glass hero and supplied Certloom watermark exactly while continuing Phase 4 visual review.
 * Clear WordPress native Help/Screen Options floats before the Certloom admin shell so Dashboard and shared workspaces use the full available admin width instead of wrapping beside the Help tab.

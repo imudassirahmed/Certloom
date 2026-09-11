@@ -62,6 +62,10 @@ wiz_check( 'organization' === $state['wizard_step'] && 'iso_management' === $sta
 wiz_check( in_array( 'standard', $state['wizard_draft']['selected_fields'], true ) && in_array( 'scope', $state['wizard_draft']['selected_fields'], true ), 'Profile save must seed recommended field keys into draft only.' );
 $r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'organization', array( 'organization_name'=>'' ), 'fields', false );
 wiz_check( is_wp_error( $r ) && 'certloom_setup_organization_required' === $r->get_error_code(), 'Organization name must be server-required.' );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'organization', array(), 'fields', true );
+wiz_check( true === $r, 'Organization may be explicitly skipped for later without bypassing the saved skip state.' );
+$state = Ecapla_CertVerify_Onboarding::get_state();
+wiz_check( in_array( 'organization', $state['wizard_skipped_steps'], true ) && 'fields' === $state['wizard_step'], 'Skipped setup steps must be recorded and advance resumably.' );
 $r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'organization', array( 'organization_name'=>'Example Certification Body','organization_logo_id'=>55,'organization_website'=>'https://example.test','organization_contact'=>'info@example.test' ), 'fields', false );
 wiz_check( true === $r, 'Organization step must save identity draft.' );
 $r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'fields', array( 'selected_fields'=>array('standard','scope'),'custom_fields'=>array('Accreditation reference','Audit cycle') ), 'appearance', false );
@@ -118,7 +122,14 @@ wiz_check( false !== strpos($css,'position: fixed') && false !== strpos($css,'.c
 wiz_check( false !== strpos($js,'data-certloom-custom-field-add') && false !== strpos($js,'data-certloom-presentation-panel') && false !== strpos($js,'data-hierarchy-'), 'Setup v2 interactions must cover custom fields, presentation exclusivity and live profile help.' );
 wiz_check( false !== strpos($js,'data-certloom-dirty') && false !== strpos($js,'beforeunload') && false !== strpos($js,"addEventListener( 'invalid'") , 'Setup v2 must track unsaved changes and focus invalid controls.' );
 wiz_check( false !== strpos($js,"aria-haspopup', 'dialog") && false !== strpos($js,"frame.on( 'close'") && false !== strpos($view,'aria-live="polite"'), 'Setup media controls must expose dialog/live-region semantics and restore focus after media closes.' );
-wiz_check( false !== strpos($admin,"search_published_candidates( 'certloom-preset-', 50 )") && false !== strpos($admin,"search_published_candidates( '', 50 )") && false !== strpos($view,'View all designs'), 'Setup Appearance must load the complete current factory-design set first while retaining View all.' );
+wiz_check( false !== strpos($admin,"ensure_starter_publications( get_current_user_id(), 10 )") && false !== strpos($admin,"search_published_candidates( 'certloom-preset-', 50 )") && false !== strpos($view,'Open Design Center'), 'Setup Appearance must seed the ten starter designs through the authority-gated publication path and keep Design Center discoverable.' );
+wiz_check( false !== strpos($view,'10 starter designs') && false !== strpos($view,'create your own certificate design with Certloom Designer'), 'Appearance helper copy must explain starter designs, Design Center publication and custom design creation.' );
+wiz_check( 5 === substr_count($view,'value="skip_step"') && 5 === substr_count($view,'formnovalidate'), 'Each actionable setup step must expose an explicit skip/do-later action without browser validation blocking it.' );
+wiz_check( false !== strpos($view,'certloom-brand-mark.png') && false !== strpos($view,'certloom-brand-wordmark.png') && false === strpos($view,'exact supplied full-colour Certloom lockup will replace'), 'Setup branding must use the supplied Certloom mark/wordmark assets with no stale placeholder note.' );
+wiz_check( false !== strpos($view,'wizard_skipped_steps') && false !== strpos($view,'is-skipped'), 'Progress must distinguish skipped steps from completed/current steps.' );
+wiz_check( false !== strpos($css,'var(--cl-brand-emerald)') && false !== strpos($css,'linear-gradient(90deg, var(--cl-cyan), var(--cl-brand-emerald))'), 'Current/progress states must use the Certloom green and brand gradient.' );
+wiz_check( false !== strpos($css,'.certloom-setup-v2-organization-logo') && false !== strpos($css,'.certloom-setup-v2-media-actions'), 'Organization logo control must use the compact aligned media-action layout.' );
+wiz_check( false !== strpos($js,'fitWizardTemplatePreview') && false !== strpos($js,"availableHeight / naturalHeight") && false !== strpos(file_get_contents($root.'/admin/assets/admin.css'),'certloom-wizard-template-preview-stage'), 'Setup certificate previews must fit by both width and height inside a bounded no-scroll stage.' );
 wiz_check( false !== strpos($view,'will not create hidden Programs or Designs') || false !== strpos($admin,'will not create hidden Programs or Designs'), 'Pending backend copy must explicitly reject fake hierarchy creation.' );
 
 printf("PASS  Setup Wizard v2 profile/persistence/source contract\n\n%d checks, 0 failures\n", $checks);

@@ -113,8 +113,10 @@ if ( $expect_renderer_authority ) {
 	$renderer_authority_ok = false;
 	try {
 		$validated_authority = ( new CertloomAuthorizedReleaseAuthority( $root ) )->validate_manifest_file( $renderer_manifest_path );
+		$bootstrap = (string) file_get_contents( $root . '/certloom.php' );
+		$current_version = preg_match( "/define\( 'ECAPLA_CERTVERIFY_VERSION', '([^']+)' \);/", $bootstrap, $version_match ) ? (string) $version_match[1] : '';
 		$renderer_authority_ok = isset( $validated_authority['plugin_version'], $validated_authority['runtime_payload'] )
-			&& '1.7.0-alpha.4.19' === (string) $validated_authority['plugin_version'];
+			&& '' !== $current_version && hash_equals( $current_version, (string) $validated_authority['plugin_version'] );
 	} catch ( Throwable $error ) {
 		$renderer_authority_ok = false;
 	}

@@ -1848,6 +1848,8 @@ class Ecapla_CertVerify_Admin {
 		$wizard_selected_template_id = absint( $wizard_draft['design_template_id'] ?? 0 );
 		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
 			$wizard_template_repo = new \Certloom\Infrastructure\Repository\TemplateRepository();
+			$wizard_factory_service = new \Certloom\Application\Templates\FactoryPresetService( $wizard_template_repo );
+			$wizard_starter_publication = $wizard_factory_service->ensure_starter_publications( get_current_user_id(), 10 );
 			$wizard_factory_candidates = $wizard_template_repo->search_published_candidates( 'certloom-preset-', 50 );
 			$wizard_all_candidates = $wizard_template_repo->search_published_candidates( '', 50 );
 			if ( is_wp_error( $wizard_factory_candidates ) ) { $wizard_factory_candidates = array(); }

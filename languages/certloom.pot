@@ -80,7 +80,7 @@ msgid "That import session expired during processing. Upload the file again."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:121
-#: admin/class-ecapla-certverify-admin.php:1975
+#: admin/class-ecapla-certverify-admin.php:1977
 #: src/Infrastructure/Admin/AdminProductNavigation.php:99
 #: src/Infrastructure/Admin/DomainAdmin.php:343
 #: src/Infrastructure/Admin/DomainAdmin.php:356
@@ -95,7 +95,7 @@ msgid "The settings could not be saved. Role access was not changed."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:122
-#: admin/class-ecapla-certverify-admin.php:1981
+#: admin/class-ecapla-certverify-admin.php:1983
 #: admin/views/dashboard.php:159
 #: admin/views/dashboard.php:349
 #: admin/views/issuance-analytics.php:63
@@ -117,7 +117,7 @@ msgid "Design"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:124
-#: admin/class-ecapla-certverify-admin.php:1993
+#: admin/class-ecapla-certverify-admin.php:1995
 #: admin/views/analytics.php:10
 #: admin/views/issuance-analytics.php:10
 #: src/Infrastructure/Admin/DomainAdmin.php:1121
@@ -290,26 +290,26 @@ msgstr ""
 msgid "This is sample data only. Use it to review the public credential hierarchy, spacing and verification presentation before you have issued a real credential."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1868
+#: admin/class-ecapla-certverify-admin.php:1870
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:611
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:747
 msgid "Selected design"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1875
+#: admin/class-ecapla-certverify-admin.php:1877
 msgid "Certloom could not build this design preview."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1882
+#: admin/class-ecapla-certverify-admin.php:1884
 msgid "The Setup v2 first-credential screen is ready for review. Creating a standalone credential from this step remains disabled until the generalized issuance backend is implemented; Certloom will not create hidden Programs or Designs to fake completion."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1890
+#: admin/class-ecapla-certverify-admin.php:1892
 msgid "Automations become available with Certloom’s Program-based credential workflow."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1923
-#: admin/class-ecapla-certverify-admin.php:1944
+#: admin/class-ecapla-certverify-admin.php:1925
+#: admin/class-ecapla-certverify-admin.php:1946
 #: admin/class-ecapla-certverify-admin.php:272
 #: admin/views/import-upload.php:189
 #: admin/views/integrations.php:131
@@ -319,21 +319,21 @@ msgstr ""
 msgid "Connected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1923
+#: admin/class-ecapla-certverify-admin.php:1925
 #: admin/views/integrations.php:153
 #: admin/views/integrations.php:265
 msgid "Credly"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1923
-#: admin/class-ecapla-certverify-admin.php:1944
+#: admin/class-ecapla-certverify-admin.php:1925
+#: admin/class-ecapla-certverify-admin.php:1946
 #: admin/views/integrations.php:152
 #: admin/views/integrations.php:210
 #: admin/views/integrations.php:266
 msgid "Not connected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1927
+#: admin/class-ecapla-certverify-admin.php:1929
 #: admin/views/automations.php:20
 #: admin/views/integrations.php:113
 #: admin/views/integrations.php:162
@@ -342,20 +342,20 @@ msgstr ""
 msgid "Tutor LMS"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1929
-#: admin/class-ecapla-certverify-admin.php:1934
-#: admin/class-ecapla-certverify-admin.php:1939
+#: admin/class-ecapla-certverify-admin.php:1931
+#: admin/class-ecapla-certverify-admin.php:1936
+#: admin/class-ecapla-certverify-admin.php:1941
 msgid "Available on this site"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1929
-#: admin/class-ecapla-certverify-admin.php:1934
-#: admin/class-ecapla-certverify-admin.php:1939
+#: admin/class-ecapla-certverify-admin.php:1931
+#: admin/class-ecapla-certverify-admin.php:1936
+#: admin/class-ecapla-certverify-admin.php:1941
 #: admin/views/integrations.php:123
 msgid "Not detected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1932
+#: admin/class-ecapla-certverify-admin.php:1934
 #: admin/views/automations.php:20
 #: admin/views/integrations.php:114
 #: admin/views/integrations.php:178
@@ -364,7 +364,7 @@ msgstr ""
 msgid "LearnDash"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1937
+#: admin/class-ecapla-certverify-admin.php:1939
 #: admin/views/automations.php:20
 #: admin/views/integrations.php:115
 #: admin/views/integrations.php:194
@@ -373,7 +373,7 @@ msgstr ""
 msgid "WooCommerce"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1942
+#: admin/class-ecapla-certverify-admin.php:1944
 #: admin/views/automations.php:20
 #: admin/views/integrations.php:132
 #: admin/views/integrations.php:210
@@ -382,90 +382,86 @@ msgstr ""
 msgid "Coursera"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1976
-#: admin/class-ecapla-certverify-admin.php:1982
+#: admin/class-ecapla-certverify-admin.php:1978
+#: admin/class-ecapla-certverify-admin.php:1984
 msgid "Protected workspace"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1977
+#: admin/class-ecapla-certverify-admin.php:1979
 msgid "Recipient management is prepared but not available in this build yet. Certloom keeps this workspace locked until the underlying credential data transition completes its final safety checks. Existing certificate operations remain unchanged."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1978
-#: admin/class-ecapla-certverify-admin.php:1984
+#: admin/class-ecapla-certverify-admin.php:1980
+#: admin/class-ecapla-certverify-admin.php:1986
 msgid "Protected until final data safety checks complete"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1983
+#: admin/class-ecapla-certverify-admin.php:1985
 msgid "Program management is prepared but not available in this build yet. Certloom keeps Program relationships locked until the underlying credential data transition completes its final safety checks rather than storing a misleading substitute."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1987
+#: admin/class-ecapla-certverify-admin.php:1989
 #: admin/views/issuance-analytics.php:63
 #: src/Infrastructure/Admin/TemplateAdmin.php:233
 msgid "Templates"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1988
+#: admin/class-ecapla-certverify-admin.php:1990
 msgid "Design availability"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1989
+#: admin/class-ecapla-certverify-admin.php:1991
 msgid "The Template Library and Designer are available through Design. Downloadable PDF and image publication stays protected until its final rendering safety checks are approved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1990
+#: admin/class-ecapla-certverify-admin.php:1992
 msgid "Design tools available · downloadable publication protected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1994
+#: admin/class-ecapla-certverify-admin.php:1996
 msgid "Issuance availability"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1995
+#: admin/class-ecapla-certverify-admin.php:1997
 msgid "Certloom’s existing certificate, import, delivery, sharing and analytics workflows remain available. Program-based issuance and downloadable PDF or image publication stay protected until their final data and rendering safety checks are approved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1996
+#: admin/class-ecapla-certverify-admin.php:1998
 msgid "Current credential workflows available · publication authority protected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2001
+#: admin/class-ecapla-certverify-admin.php:2003
 msgid "That Certloom workspace is not available."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2020
+#: admin/class-ecapla-certverify-admin.php:2022
 msgid "That certificate does not exist."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2037
+#: admin/class-ecapla-certverify-admin.php:2039
 msgid "Those import results expired. Run the import again to generate a new report."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2046
+#: admin/class-ecapla-certverify-admin.php:2048
 msgid "That backup restore process expired. Upload the backup again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2055
-#: admin/class-ecapla-certverify-admin.php:2064
+#: admin/class-ecapla-certverify-admin.php:2057
+#: admin/class-ecapla-certverify-admin.php:2066
 msgid "That import session expired. Upload the CSV again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2079
+#: admin/class-ecapla-certverify-admin.php:2081
 #: includes/class-ecapla-certverify-backup.php:440
 msgid "That backup review session expired. Upload the backup again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2093
+#: admin/class-ecapla-certverify-admin.php:2095
 msgid "You do not have permission to view Certloom analytics."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2131
+#: admin/class-ecapla-certverify-admin.php:2133
 msgid "The review acknowledgement could not be saved."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:2149
-msgid "A complete Certloom restore is in progress. Certificate and configuration changes are temporarily paused; public verification remains available."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:215
@@ -475,30 +471,34 @@ msgstr ""
 msgid "Copy"
 msgstr ""
 
+#: admin/class-ecapla-certverify-admin.php:2151
+msgid "A complete Certloom restore is in progress. Certificate and configuration changes are temporarily paused; public verification remains available."
+msgstr ""
+
 #: admin/class-ecapla-certverify-admin.php:216
 msgid "Copied"
 msgstr ""
-
-#. translators: 1: number of legacy records, 2: review URL.
-#: admin/class-ecapla-certverify-admin.php:2169
-msgid "%1$d legacy Expired certificate needs review. <a href=\"%2$s\">Review it now</a>. It will remain Expired until an administrator deliberately chooses a workflow status."
-msgid_plural "%1$d legacy Expired certificates need review. <a href=\"%2$s\">Review them now</a>. They will remain Expired until an administrator deliberately chooses a workflow status."
-msgstr[0] ""
-msgstr[1] ""
 
 #: admin/class-ecapla-certverify-admin.php:217
 msgid "Press Ctrl+C or Cmd+C to copy"
 msgstr ""
 
+#. translators: 1: number of legacy records, 2: review URL.
+#: admin/class-ecapla-certverify-admin.php:2171
+msgid "%1$d legacy Expired certificate needs review. <a href=\"%2$s\">Review it now</a>. It will remain Expired until an administrator deliberately chooses a workflow status."
+msgid_plural "%1$d legacy Expired certificates need review. <a href=\"%2$s\">Review them now</a>. They will remain Expired until an administrator deliberately chooses a workflow status."
+msgstr[0] ""
+msgstr[1] ""
+
 #: admin/class-ecapla-certverify-admin.php:218
 msgid "Search Batches…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2182
+#: admin/class-ecapla-certverify-admin.php:2184
 msgid "Certloom 1.3.0 briefly contained an unsafe legacy-status migration. If that version ran on this site, compare certificate statuses with a pre-1.3.0 backup before launch. The current release does not guess or silently rewrite those records."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2185
+#: admin/class-ecapla-certverify-admin.php:2187
 msgid "I have reviewed this"
 msgstr ""
 
@@ -510,7 +510,7 @@ msgid "Search published Templates…"
 msgstr ""
 
 #. translators: %s: Ecapla website link.
-#: admin/class-ecapla-certverify-admin.php:2197
+#: admin/class-ecapla-certverify-admin.php:2199
 msgid "Certloom is developed and maintained by %s."
 msgstr ""
 
@@ -518,7 +518,7 @@ msgstr ""
 msgid "Search choices…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2207
+#: admin/class-ecapla-certverify-admin.php:2209
 msgid "You do not have permission to manage certificates."
 msgstr ""
 
@@ -526,7 +526,7 @@ msgstr ""
 msgid "Manage published designs"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2213
+#: admin/class-ecapla-certverify-admin.php:2215
 msgid "You do not have permission to manage these settings."
 msgstr ""
 
@@ -601,7 +601,7 @@ msgid "Credential fields loaded from the selected Program + Batch."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:238
-#: admin/views/setup-wizard.php:82
+#: admin/views/setup-wizard.php:84
 #: src/Application/Templates/TemplateAssignmentPolicy.php:65
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:373
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:773
@@ -626,7 +626,7 @@ msgstr ""
 #: admin/views/integrations.php:245
 #: admin/views/integrations.php:259
 #: admin/views/issuance-analytics.php:69
-#: admin/views/setup-wizard.php:81
+#: admin/views/setup-wizard.php:83
 #: src/Application/Templates/TemplateAssignmentPolicy.php:66
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:372
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:772
@@ -667,8 +667,8 @@ msgid "Required"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:241
-#: admin/views/setup-wizard.php:140
-#: admin/views/setup-wizard.php:95
+#: admin/views/setup-wizard.php:142
+#: admin/views/setup-wizard.php:97
 #: src/Infrastructure/Admin/DomainAdmin.php:1523
 #: src/Infrastructure/Admin/DomainAdmin.php:2254
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:363
@@ -919,9 +919,9 @@ msgstr ""
 #: admin/views/integrations.php:245
 #: admin/views/integrations.php:259
 #: admin/views/integrations.php:310
-#: admin/views/setup-wizard.php:109
-#: admin/views/setup-wizard.php:126
-#: admin/views/setup-wizard.php:94
+#: admin/views/setup-wizard.php:111
+#: admin/views/setup-wizard.php:128
+#: admin/views/setup-wizard.php:96
 #: src/Infrastructure/Admin/DomainAdmin.php:1552
 #: src/Infrastructure/Admin/DomainAdmin.php:1556
 #: src/Infrastructure/Admin/DomainAdmin.php:2230
@@ -1002,7 +1002,7 @@ msgid "No file selected"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:301
-#: admin/views/setup-wizard.php:126
+#: admin/views/setup-wizard.php:128
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:221
 msgid "No certificate image selected"
 msgstr ""
@@ -1487,7 +1487,7 @@ msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:79
 #: admin/views/list-certificates.php:126
-#: admin/views/setup-wizard.php:142
+#: admin/views/setup-wizard.php:144
 #: includes/class-ecapla-certverify-fields.php:393
 #: src/Application/Setup/PurposePresetEngine.php:124
 #: src/Application/Setup/PurposePresetEngine.php:143
@@ -2544,7 +2544,7 @@ msgstr ""
 #: admin/views/edit-certificate.php:105
 #: admin/views/edit-certificate.php:82
 #: admin/views/import-mapping.php:9
-#: admin/views/setup-wizard.php:139
+#: admin/views/setup-wizard.php:141
 #: src/Infrastructure/Admin/DomainAdmin.php:1023
 #: src/Infrastructure/Admin/DomainAdmin.php:1053
 #: src/Infrastructure/Admin/DomainAdmin.php:1107
@@ -2766,7 +2766,7 @@ msgid "Dismiss tour"
 msgstr ""
 
 #: admin/views/dashboard.php:408
-#: admin/views/setup-wizard.php:165
+#: admin/views/setup-wizard.php:167
 msgid "Back"
 msgstr ""
 
@@ -3538,7 +3538,7 @@ msgid "Type"
 msgstr ""
 
 #: admin/views/fields-manager.php:152
-#: admin/views/setup-wizard.php:110
+#: admin/views/setup-wizard.php:112
 #: src/Infrastructure/Admin/DomainAdmin.php:2253
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:732
 #: src/Infrastructure/Admin/TemplateAdmin.php:1120
@@ -3827,7 +3827,7 @@ msgid "Administrative"
 msgstr ""
 
 #: admin/views/import-mapping.php:20
-#: admin/views/setup-wizard.php:108
+#: admin/views/setup-wizard.php:110
 msgid "Custom fields"
 msgstr ""
 
@@ -6533,203 +6533,214 @@ msgstr ""
 msgid "This does not override shortcode or Elementor design settings."
 msgstr ""
 
-#: admin/views/setup-wizard.php:102
+#: admin/views/setup-wizard.php:104
 msgid "Choose credential fields"
 msgstr ""
 
 #. translators: %s: profile name.
-#: admin/views/setup-wizard.php:102
+#: admin/views/setup-wizard.php:104
 msgid "Recommended for %s. Uncheck anything you do not need, or add your own field."
 msgstr ""
 
-#: admin/views/setup-wizard.php:102
+#: admin/views/setup-wizard.php:104
 msgid "Step 3 of 6"
 msgstr ""
 
-#: admin/views/setup-wizard.php:102
+#: admin/views/setup-wizard.php:104
 msgid "this profile"
 msgstr ""
 
-#: admin/views/setup-wizard.php:110
+#: admin/views/setup-wizard.php:112
 msgid "e.g. Accreditation reference"
 msgstr ""
 
-#: admin/views/setup-wizard.php:111
+#: admin/views/setup-wizard.php:113
 msgid "Setup saves this as field intent for now. Field-definition persistence is completed with the Setup v2 backend phase."
 msgstr ""
 
-#: admin/views/setup-wizard.php:113
-#: admin/views/setup-wizard.php:131
-#: admin/views/setup-wizard.php:85
-#: admin/views/setup-wizard.php:96
+#: admin/views/setup-wizard.php:115
+#: admin/views/setup-wizard.php:133
+#: admin/views/setup-wizard.php:87
+#: admin/views/setup-wizard.php:98
 msgid "Continue"
 msgstr ""
 
-#: admin/views/setup-wizard.php:119
+#: admin/views/setup-wizard.php:115
+#: admin/views/setup-wizard.php:133
+#: admin/views/setup-wizard.php:87
+#: admin/views/setup-wizard.php:98
+msgid "Skip for now"
+msgstr ""
+
+#: admin/views/setup-wizard.php:121
 msgid "Certificate artwork is optional. A details-only credential is still a real, verifiable credential."
 msgstr ""
 
-#: admin/views/setup-wizard.php:119
+#: admin/views/setup-wizard.php:121
 msgid "How should credentials appear?"
 msgstr ""
 
-#: admin/views/setup-wizard.php:119
+#: admin/views/setup-wizard.php:121
 msgid "Step 4 of 6"
 msgstr ""
 
-#: admin/views/setup-wizard.php:122
-#: admin/views/setup-wizard.php:143
+#: admin/views/setup-wizard.php:124
+#: admin/views/setup-wizard.php:145
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:216
 msgid "Details only"
 msgstr ""
 
-#: admin/views/setup-wizard.php:122
+#: admin/views/setup-wizard.php:124
 msgid "Show credential details, verification and status without certificate artwork."
 msgstr ""
 
-#: admin/views/setup-wizard.php:123
+#: admin/views/setup-wizard.php:125
 msgid "Upload a certificate image"
 msgstr ""
 
-#: admin/views/setup-wizard.php:123
+#: admin/views/setup-wizard.php:125
 msgid "Use a ready-made PNG or JPEG instead of a reusable Certloom design."
 msgstr ""
 
-#: admin/views/setup-wizard.php:124
+#: admin/views/setup-wizard.php:126
 msgid "Choose a reusable published design and customize it later if needed."
 msgstr ""
 
-#: admin/views/setup-wizard.php:124
+#: admin/views/setup-wizard.php:126
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:218
 msgid "Use a Certloom design"
 msgstr ""
 
-#: admin/views/setup-wizard.php:126
-#: admin/views/setup-wizard.php:143
+#: admin/views/setup-wizard.php:128
+#: admin/views/setup-wizard.php:145
 msgid "Certificate image"
 msgstr ""
 
-#: admin/views/setup-wizard.php:126
+#: admin/views/setup-wizard.php:128
 msgid "Certificate image selected"
 msgstr ""
 
-#: admin/views/setup-wizard.php:126
+#: admin/views/setup-wizard.php:128
 msgid "Choose PNG/JPEG"
 msgstr ""
 
-#: admin/views/setup-wizard.php:127
-msgid "Choose a design"
-msgstr ""
-
-#: admin/views/setup-wizard.php:127
-msgid "Recommended designs appear first; all current factory designs remain available in 1.7."
-msgstr ""
-
-#: admin/views/setup-wizard.php:127
-msgid "View all designs"
-msgstr ""
-
-#: admin/views/setup-wizard.php:128
-msgid "Choose a published design"
-msgstr ""
-
-#: admin/views/setup-wizard.php:128
-msgid "No published designs are available yet. You can continue with Details only or upload an image."
-msgstr ""
-
-#: admin/views/setup-wizard.php:128
-msgid "Untitled design"
+#: admin/views/setup-wizard.php:129
+msgid "Certloom includes 10 starter designs for setup. More designs may be available in Design Center; publish any design there to use it here later. You can also create your own certificate design with Certloom Designer."
 msgstr ""
 
 #: admin/views/setup-wizard.php:129
+msgid "Choose a design"
+msgstr ""
+
+#: admin/views/setup-wizard.php:129
+msgid "Open Design Center"
+msgstr ""
+
+#: admin/views/setup-wizard.php:130
+msgid "Choose a published design"
+msgstr ""
+
+#: admin/views/setup-wizard.php:130
+msgid "No published starter designs are available in this review build yet. You can continue with Details only or upload an image, then publish a design from Design Center later."
+msgstr ""
+
+#: admin/views/setup-wizard.php:130
+msgid "Untitled design"
+msgstr ""
+
+#: admin/views/setup-wizard.php:131
 msgid "No design selected"
 msgstr ""
 
-#: admin/views/setup-wizard.php:137
+#: admin/views/setup-wizard.php:139
 msgid "Only the essentials are required here. Programs, Batches, Issuers and Signers stay out of the required first-run path."
 msgstr ""
 
-#: admin/views/setup-wizard.php:137
+#: admin/views/setup-wizard.php:139
 msgid "Prepare your first credential"
 msgstr ""
 
-#: admin/views/setup-wizard.php:137
+#: admin/views/setup-wizard.php:139
 msgid "Step 5 of 6"
 msgstr ""
 
-#: admin/views/setup-wizard.php:139
+#: admin/views/setup-wizard.php:141
 msgid "Person or organization name"
 msgstr ""
 
-#: admin/views/setup-wizard.php:140
+#: admin/views/setup-wizard.php:142
 #: src/Infrastructure/Import/DomainImportCsvReader.php:75
 msgid "Recipient email"
 msgstr ""
 
-#: admin/views/setup-wizard.php:141
+#: admin/views/setup-wizard.php:143
 #: src/Application/Setup/PurposePresetEngine.php:235
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:207
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:426
 msgid "Credential title"
 msgstr ""
 
-#: admin/views/setup-wizard.php:141
+#: admin/views/setup-wizard.php:143
 msgid "e.g. ISO 9001 Certification"
 msgstr ""
 
-#: admin/views/setup-wizard.php:143
+#: admin/views/setup-wizard.php:145
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:427
 msgid "Certloom design"
 msgstr ""
 
-#: admin/views/setup-wizard.php:143
+#: admin/views/setup-wizard.php:145
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:215
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:427
 msgid "Presentation"
 msgstr ""
 
-#: admin/views/setup-wizard.php:143
+#: admin/views/setup-wizard.php:145
 #: includes/class-ecapla-certverify-onboarding.php:20
 #: src/Infrastructure/Admin/DomainAdmin.php:376
 msgid "Profile"
 msgstr ""
 
-#: admin/views/setup-wizard.php:144
+#: admin/views/setup-wizard.php:146
 msgid "Open the full Issue credential screen"
 msgstr ""
 
-#: admin/views/setup-wizard.php:144
+#: admin/views/setup-wizard.php:146
 msgid "Standalone issuance connection is still being implemented"
 msgstr ""
 
-#: admin/views/setup-wizard.php:145
+#: admin/views/setup-wizard.php:147
+msgid "Do this later"
+msgstr ""
+
+#: admin/views/setup-wizard.php:147
 msgid "Save first credential draft"
 msgstr ""
 
-#: admin/views/setup-wizard.php:152
+#: admin/views/setup-wizard.php:154
 msgid "Setup complete"
 msgstr ""
 
-#: admin/views/setup-wizard.php:152
+#: admin/views/setup-wizard.php:154
 msgid "The credential record is authoritative. Continue with the next setup tasks that matter for your profile."
 msgstr ""
 
-#: admin/views/setup-wizard.php:152
+#: admin/views/setup-wizard.php:154
 msgid "Your first credential is ready."
 msgstr ""
 
-#: admin/views/setup-wizard.php:153
+#: admin/views/setup-wizard.php:155
 #: includes/class-ecapla-certverify-public-policy.php:101
 #: includes/class-ecapla-certverify-render.php:389
 msgid "Copy link"
 msgstr ""
 
-#: admin/views/setup-wizard.php:153
+#: admin/views/setup-wizard.php:155
 #: src/Infrastructure/Admin/EmailDesignAdmin.php:117
 msgid "Verification URL"
 msgstr ""
 
-#: admin/views/setup-wizard.php:153
+#: admin/views/setup-wizard.php:155
 #: src/Infrastructure/Admin/DomainAdmin.php:620
 #: src/Infrastructure/Admin/DomainAdmin.php:659
 #: src/Infrastructure/Admin/DomainAdmin.php:770
@@ -6738,111 +6749,107 @@ msgstr ""
 msgid "View credential"
 msgstr ""
 
-#: admin/views/setup-wizard.php:154
+#: admin/views/setup-wizard.php:156
 msgid "Run setup again"
 msgstr ""
 
-#: admin/views/setup-wizard.php:156
+#: admin/views/setup-wizard.php:158
 msgid "Back to first credential"
 msgstr ""
 
-#: admin/views/setup-wizard.php:156
+#: admin/views/setup-wizard.php:158
 msgid "Continue to Dashboard for now"
 msgstr ""
 
-#: admin/views/setup-wizard.php:156
+#: admin/views/setup-wizard.php:158
 msgid "One required step remains: issue the first real credential."
 msgstr ""
 
-#: admin/views/setup-wizard.php:156
+#: admin/views/setup-wizard.php:158
 msgid "Setup draft saved"
 msgstr ""
 
-#: admin/views/setup-wizard.php:156
+#: admin/views/setup-wizard.php:158
 msgid "Why one required step remains"
 msgstr ""
 
-#: admin/views/setup-wizard.php:156
+#: admin/views/setup-wizard.php:158
 msgid "Your profile, organization, fields, appearance and first-credential draft are saved. Certloom has not created placeholder hierarchy records or recorded onboarding as finished."
 msgstr ""
 
-#: admin/views/setup-wizard.php:158
+#: admin/views/setup-wizard.php:160
 msgid "Recommended next steps"
 msgstr ""
 
-#: admin/views/setup-wizard.php:166
+#: admin/views/setup-wizard.php:168
 msgid "Save & finish later"
 msgstr ""
 
-#: admin/views/setup-wizard.php:29
+#: admin/views/setup-wizard.php:30
 msgid "Certloom Dashboard"
 msgstr ""
 
-#: admin/views/setup-wizard.php:33
+#: admin/views/setup-wizard.php:34
 msgid "Exit setup"
 msgstr ""
 
-#: admin/views/setup-wizard.php:37
+#: admin/views/setup-wizard.php:38
 msgid "Setup progress"
 msgstr ""
 
-#: admin/views/setup-wizard.php:51
+#: admin/views/setup-wizard.php:54
 msgid "Setup notices"
 msgstr ""
 
-#: admin/views/setup-wizard.php:52
+#: admin/views/setup-wizard.php:55
 msgid "Setup progress saved."
 msgstr ""
 
-#: admin/views/setup-wizard.php:60
+#: admin/views/setup-wizard.php:63
 msgid "Certloom setup"
 msgstr ""
 
-#: admin/views/setup-wizard.php:61
+#: admin/views/setup-wizard.php:64
 msgid "Set up your first credential."
 msgstr ""
 
-#: admin/views/setup-wizard.php:62
+#: admin/views/setup-wizard.php:65
 msgid "Choose how you use Certloom, pick the fields and appearance you need, then prepare your first real credential. Programs, Batches and Signers are optional power tools, not setup requirements."
 msgstr ""
 
-#: admin/views/setup-wizard.php:64
+#: admin/views/setup-wizard.php:67
 msgid "Your choices are resumable."
 msgstr ""
 
-#: admin/views/setup-wizard.php:65
+#: admin/views/setup-wizard.php:68
 msgid "Nothing is auto-created behind your back."
 msgstr ""
 
-#: admin/views/setup-wizard.php:66
+#: admin/views/setup-wizard.php:69
 msgid "You can change advanced settings later."
 msgstr ""
 
-#: admin/views/setup-wizard.php:68
+#: admin/views/setup-wizard.php:71
 msgid "Start setup"
 msgstr ""
 
-#: admin/views/setup-wizard.php:69
-msgid "The exact supplied full-colour Certloom lockup will replace this in-product mark when that source asset is available in the implementation package."
-msgstr ""
-
-#: admin/views/setup-wizard.php:74
+#: admin/views/setup-wizard.php:76
 msgid "Step 1 of 6"
 msgstr ""
 
-#: admin/views/setup-wizard.php:74
+#: admin/views/setup-wizard.php:76
 msgid "This changes recommended fields, examples and help. It does not create a different product mode or hide any capability."
 msgstr ""
 
-#: admin/views/setup-wizard.php:74
+#: admin/views/setup-wizard.php:76
 msgid "What are you using Certloom for?"
 msgstr ""
 
-#: admin/views/setup-wizard.php:79
+#: admin/views/setup-wizard.php:81
 msgid "How Certloom organizes this profile"
 msgstr ""
 
-#: admin/views/setup-wizard.php:80
+#: admin/views/setup-wizard.php:82
 #: src/Application/Templates/TemplateAssignmentPolicy.php:67
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:371
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:771
@@ -6862,7 +6869,7 @@ msgstr ""
 msgid "Issuer"
 msgstr ""
 
-#: admin/views/setup-wizard.php:83
+#: admin/views/setup-wizard.php:85
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:285
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:291
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:471
@@ -6872,47 +6879,47 @@ msgstr ""
 msgid "Signer"
 msgstr ""
 
-#: admin/views/setup-wizard.php:91
+#: admin/views/setup-wizard.php:93
 msgid "Step 2 of 6"
 msgstr ""
 
-#: admin/views/setup-wizard.php:91
+#: admin/views/setup-wizard.php:93
 msgid "This becomes your default organization identity. You can add separate Issuers later."
 msgstr ""
 
-#: admin/views/setup-wizard.php:91
+#: admin/views/setup-wizard.php:93
 msgid "Your organization"
 msgstr ""
 
-#: admin/views/setup-wizard.php:93
+#: admin/views/setup-wizard.php:95
 #: src/Infrastructure/Admin/DomainAdmin.php:2031
 msgid "Organization name"
 msgstr ""
 
-#: admin/views/setup-wizard.php:94
+#: admin/views/setup-wizard.php:96
 msgid "Choose logo"
 msgstr ""
 
-#: admin/views/setup-wizard.php:94
+#: admin/views/setup-wizard.php:96
 #: src/Infrastructure/Admin/DomainAdmin.php:1606
 #: src/Infrastructure/Admin/TemplateAdmin.php:1182
 #: src/Infrastructure/Admin/TemplateAdmin.php:93
 msgid "Logo"
 msgstr ""
 
-#: admin/views/setup-wizard.php:94
+#: admin/views/setup-wizard.php:96
 msgid "No logo selected"
 msgstr ""
 
-#: admin/views/setup-wizard.php:94
+#: admin/views/setup-wizard.php:96
 msgid "Organization logo selected"
 msgstr ""
 
-#: admin/views/setup-wizard.php:95
+#: admin/views/setup-wizard.php:97
 msgid "Contact"
 msgstr ""
 
-#: admin/views/setup-wizard.php:95
+#: admin/views/setup-wizard.php:97
 #: src/Infrastructure/Admin/DomainAdmin.php:1600
 msgid "Website"
 msgstr ""
@@ -12881,36 +12888,36 @@ msgstr ""
 msgid "Curated design"
 msgstr ""
 
-#: src/Application/Templates/FactoryPresetService.php:101
-msgid "This template changed after you opened it. Reload before restoring the factory design."
-msgstr ""
-
-#: src/Application/Templates/FactoryPresetService.php:125
-msgid "Certloom created a factory template but could not verify its immutable revision pointer."
-msgstr ""
-
-#: src/Application/Templates/FactoryPresetService.php:129
-msgid "A factory template is missing its current immutable revision."
-msgstr ""
-
-#: src/Application/Templates/FactoryPresetService.php:146
-msgid "A factory template claims preset provenance but its current revision does not match a known Certloom preset version."
-msgstr ""
-
-#: src/Application/Templates/FactoryPresetService.php:149
-msgid "A factory template revision is newer than the installed preset catalog."
-msgstr ""
-
-#: src/Application/Templates/FactoryPresetService.php:94
+#: src/Application/Templates/FactoryPresetService.php:153
 msgid "The factory template no longer exists."
 msgstr ""
 
-#: src/Application/Templates/FactoryPresetService.php:96
+#: src/Application/Templates/FactoryPresetService.php:155
 msgid "This template is not a Certloom factory preset."
 msgstr ""
 
-#: src/Application/Templates/FactoryPresetService.php:98
+#: src/Application/Templates/FactoryPresetService.php:157
 msgid "This factory preset is not available in the installed Certloom version."
+msgstr ""
+
+#: src/Application/Templates/FactoryPresetService.php:160
+msgid "This template changed after you opened it. Reload before restoring the factory design."
+msgstr ""
+
+#: src/Application/Templates/FactoryPresetService.php:184
+msgid "Certloom created a factory template but could not verify its immutable revision pointer."
+msgstr ""
+
+#: src/Application/Templates/FactoryPresetService.php:188
+msgid "A factory template is missing its current immutable revision."
+msgstr ""
+
+#: src/Application/Templates/FactoryPresetService.php:205
+msgid "A factory template claims preset provenance but its current revision does not match a known Certloom preset version."
+msgstr ""
+
+#: src/Application/Templates/FactoryPresetService.php:208
+msgid "A factory template revision is newer than the installed preset catalog."
 msgstr ""
 
 #: src/Application/Templates/TemplateAssignmentPolicy.php:50

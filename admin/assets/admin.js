@@ -803,6 +803,8 @@
 					if ( imageId ) { imageId.value = ''; }
 					if ( imagePreview ) { imagePreview.innerHTML = '<span>' + escapeHtml( certloomText( 'noCertificateImage', 'No certificate image selected' ) ) + '</span>'; }
 					if ( imageClear ) { imageClear.hidden = true; }
+					var previewPanel = appearanceForm.querySelector( '[data-certloom-wizard-template-preview]' );
+					if ( previewPanel ) { window.requestAnimationFrame( function () { fitWizardTemplatePreview( previewPanel ); } ); }
 				} else {
 					if ( designSelect ) { designSelect.value = '0'; }
 					if ( imageId ) { imageId.value = ''; }
@@ -856,10 +858,55 @@
 		update();
 	}
 
+	var wizardPreviewObservers = typeof WeakMap === 'function' ? new WeakMap() : null;
+
+	function fitWizardTemplatePreview( panel ) {
+		if ( ! panel || ! panel.querySelector ) { return; }
+		var canvas = panel.querySelector( '[data-certloom-template-preview-canvas]' );
+		var scroll = canvas ? canvas.querySelector( '.certloom-template-preview-scroll' ) : null;
+		var page = scroll ? scroll.querySelector( '.certloom-template-preview-page' ) : null;
+		if ( ! canvas || ! scroll || ! page || canvas.clientWidth < 1 ) { return; }
+		var naturalWidth = parseFloat( scroll.getAttribute( 'data-certloom-preview-width' ) || '' ) || parseFloat( page.style.width || '' );
+		var naturalHeight = parseFloat( scroll.getAttribute( 'data-certloom-preview-height' ) || '' ) || parseFloat( page.style.height || '' );
+		if ( ! naturalWidth || ! naturalHeight ) { return; }
+		var stage = page.parentNode && page.parentNode.classList && page.parentNode.classList.contains( 'certloom-wizard-template-preview-stage' ) ? page.parentNode : null;
+		if ( ! stage ) {
+			stage = document.createElement( 'div' );
+			stage.className = 'certloom-wizard-template-preview-stage';
+			page.parentNode.insertBefore( stage, page );
+			stage.appendChild( page );
+		}
+		var scrollStyle = window.getComputedStyle ? window.getComputedStyle( scroll ) : null;
+		var horizontalPadding = scrollStyle ? ( parseFloat( scrollStyle.paddingLeft || 0 ) + parseFloat( scrollStyle.paddingRight || 0 ) ) : 0;
+		var verticalPadding = scrollStyle ? ( parseFloat( scrollStyle.paddingTop || 0 ) + parseFloat( scrollStyle.paddingBottom || 0 ) ) : 0;
+		var availableWidth = Math.max( 1, scroll.clientWidth - horizontalPadding );
+		var availableHeight = Math.max( 1, scroll.clientHeight - verticalPadding );
+		var scale = Math.min( 1, availableWidth / naturalWidth, availableHeight / naturalHeight );
+		page.style.transformOrigin = 'top left';
+		page.style.transform = 'scale(' + scale.toFixed( 6 ) + ')';
+		stage.style.width = Math.max( 1, naturalWidth * scale ) + 'px';
+		stage.style.height = Math.max( 1, naturalHeight * scale ) + 'px';
+		stage.style.margin = 'auto';
+		scroll.setAttribute( 'data-certloom-preview-fitted', '1' );
+	}
+
+	function observeWizardTemplatePreview( panel ) {
+		if ( ! panel || panel.getAttribute( 'data-certloom-preview-observed' ) === '1' ) { return; }
+		panel.setAttribute( 'data-certloom-preview-observed', '1' );
+		fitWizardTemplatePreview( panel );
+		if ( typeof ResizeObserver === 'function' ) {
+			var observer = new ResizeObserver( function () { fitWizardTemplatePreview( panel ); } );
+			var canvas = panel.querySelector( '[data-certloom-template-preview-canvas]' );
+			if ( canvas ) { observer.observe( canvas ); if ( wizardPreviewObservers ) { wizardPreviewObservers.set( panel, observer ); } }
+		} else { window.addEventListener( 'resize', function () { fitWizardTemplatePreview( panel ); } ); }
+	}
+
 	function initWizardTemplatePreview() {
 		var select = document.getElementById( 'certloom-wizard-template' );
 		var panel = document.querySelector( '[data-certloom-wizard-template-preview]' );
-		if ( ! select || ! panel || 'undefined' === typeof window.ajaxurl ) { return; }
+		if ( ! select || ! panel ) { return; }
+		observeWizardTemplatePreview( panel );
+		if ( 'undefined' === typeof window.ajaxurl ) { return; }
 		var name = panel.querySelector( '[data-certloom-template-preview-name]' );
 		var description = panel.querySelector( '[data-certloom-template-preview-description]' );
 		var canvas = panel.querySelector( '[data-certloom-template-preview-canvas]' );
@@ -881,6 +928,7 @@
 				if ( description ) { description.textContent = response.data.description || ''; }
 				if ( canvas ) { canvas.innerHTML = response.data.html || ''; }
 				panel.setAttribute( 'aria-busy', 'false' );
+				window.requestAnimationFrame( function () { fitWizardTemplatePreview( panel ); } );
 			} ).catch( function ( error ) {
 				if ( request !== sequence ) { return; }
 				if ( name ) { name.textContent = certloomText( 'previewUnavailable', 'Preview unavailable' ); }

@@ -2,6 +2,7 @@
 namespace Certloom\Application\Templates;
 
 use Certloom\Infrastructure\Repository\TemplateRepository;
+use Certloom\Infrastructure\Rendering\RendererAuthorityGate;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -78,6 +79,64 @@ final class FactoryPresetService {
 			}
 			$result[ $status['status'] ]++;
 			$result['items'][] = $status;
+		}
+		return $result;
+	}
+
+	/**
+	 * Return the premium starter set used by first-run setup. The stable order is
+	 * deliberately sourced from the curated catalog, not from database sorting.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function starter_definitions( $limit = 10 ) {
+		$limit = max( 1, min( 10, absint( $limit ) ) );
+		return array_slice( $this->curated_catalog->all(), 0, $limit );
+	}
+
+	/** @return array<int,string> */
+	public function starter_machine_keys( $limit = 10 ) {
+		return array_values( array_map( static function ( $definition ) {
+			return (string) ( $definition['machine_key'] ?? '' );
+		}, $this->starter_definitions( $limit ) ) );
+	}
+
+	/**
+	 * Publish the initial premium starter set when, and only when, the exact
+	 * installed production payload carries accepted renderer publication
+	 * authority. Existing customer edits and later unpublished changes are never
+	 * auto-published. Visual-development builds therefore defer safely.
+	 *
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public function ensure_starter_publications( $actor_user_id = 0, $limit = 10 ) {
+		$seed = $this->ensure_current( $actor_user_id );
+		if ( is_wp_error( $seed ) ) { return $seed; }
+
+		$authority = ( new RendererAuthorityGate() )->publication_status();
+		if ( empty( $authority['accepted'] ) ) {
+			return array( 'published' => 0, 'already_published' => 0, 'skipped_customized' => 0, 'deferred' => true, 'reason' => (string) ( $authority['reason'] ?? 'renderer_authority_unavailable' ) );
+		}
+
+		$result = array( 'published' => 0, 'already_published' => 0, 'skipped_customized' => 0, 'deferred' => false, 'reason' => 'publication_authorized' );
+		foreach ( $this->starter_definitions( $limit ) as $definition ) {
+			$template = $this->templates->find_by_machine_key( (string) $definition['machine_key'] );
+			if ( is_wp_error( $template ) ) { return $template; }
+			if ( ! is_array( $template ) || ! is_array( $template['current_revision'] ?? null ) ) { continue; }
+			$current = $template['current_revision'];
+			$current_id = absint( $template['current_revision_id'] ?? 0 );
+			$published_id = absint( $template['published_revision_id'] ?? 0 );
+			if ( $published_id ) {
+				$result['already_published']++;
+				continue;
+			}
+			if ( TemplateRepository::SOURCE_PRESET !== (string) ( $current['source_type'] ?? '' ) || ! hash_equals( (string) $definition['layout_sha256'], (string) ( $current['layout_sha256'] ?? '' ) ) ) {
+				$result['skipped_customized']++;
+				continue;
+			}
+			$published = $this->templates->publish( absint( $template['id'] ?? 0 ), $current_id, (string) ( $current['layout_sha256'] ?? '' ) );
+			if ( is_wp_error( $published ) ) { return $published; }
+			$result['published']++;
 		}
 		return $result;
 	}
