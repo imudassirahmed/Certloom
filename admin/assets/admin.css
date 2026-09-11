@@ -931,28 +931,34 @@
 }
 
 .certloom-health-panel {
-	border-top: 3px solid var(--certloom-accent);
+	border-top: 3px solid var(--cl-expired);
 }
 
-.certloom-health-panel.is-warning { border-top-color: #c98b16; }
-.certloom-health-panel.is-bad { border-top-color: #cc3d3d; }
+.certloom-health-panel.is-good { border-top-color: var(--cl-valid-mark); }
+.certloom-health-panel.is-warning { border-top-color: var(--cl-expired); }
+.certloom-health-panel.is-bad { border-top-color: var(--cl-error); }
 
 .certloom-health-dot {
 	width: 10px;
 	height: 10px;
 	border-radius: 999px;
-	background: var(--certloom-accent);
-	box-shadow: 0 0 0 5px var(--certloom-accent-soft);
+	background: var(--cl-expired);
+	box-shadow: 0 0 0 5px var(--cl-expired-wash);
+}
+
+.certloom-health-panel.is-good .certloom-health-dot {
+	background: var(--cl-valid-mark);
+	box-shadow: 0 0 0 5px var(--cl-valid-wash);
 }
 
 .certloom-health-panel.is-warning .certloom-health-dot {
-	background: #c98b16;
-	box-shadow: 0 0 0 5px #fff4dc;
+	background: var(--cl-expired);
+	box-shadow: 0 0 0 5px var(--cl-expired-wash);
 }
 
 .certloom-health-panel.is-bad .certloom-health-dot {
-	background: #cc3d3d;
-	box-shadow: 0 0 0 5px #fde9e8;
+	background: var(--cl-error);
+	box-shadow: 0 0 0 5px var(--cl-revoked-wash);
 }
 
 .certloom-health-panel > p,

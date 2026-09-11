@@ -9,6 +9,9 @@ $health  = isset( $dashboard['health'] ) && is_array( $dashboard['health'] ) ? $
 $review  = max( 0, (int) ( $dashboard['legacy_review_count'] ?? 0 ) );
 $statuses = Ecapla_CertVerify_Fields::get_statuses();
 $health_overall = isset( $health['overall'] ) ? sanitize_key( (string) $health['overall'] ) : 'warning';
+if ( ! in_array( $health_overall, array( 'good', 'warning', 'bad' ), true ) ) {
+	$health_overall = 'warning';
+}
 $health_label = 'good' === $health_overall ? __( 'Ready for current operations', 'certloom' ) : ( 'bad' === $health_overall ? __( 'Action required', 'certloom' ) : __( 'Review recommended', 'certloom' ) );
 $ecapla_certverify_normalized_issuance_ready = class_exists( '\\Certloom\\Infrastructure\\Migration\\DomainFeatureGate' )
 	&& \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready()

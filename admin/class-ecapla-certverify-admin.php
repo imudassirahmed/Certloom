@@ -2195,7 +2195,7 @@ class Ecapla_CertVerify_Admin {
 				sprintf(
 					/* translators: %s: Ecapla website link. */
 					__( 'Certloom is developed and maintained by %s.', 'certloom' ),
-					'<a href="https://ecapla.com" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Ecapla', 'certloom' ) . '</a>'
+					'<a href="https://ecapla.com" target="_blank" rel="noopener noreferrer">' . esc_html( 'Ecapla' ) . '</a>'
 				)
 			);
 		}
