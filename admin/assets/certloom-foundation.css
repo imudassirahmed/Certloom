@@ -2768,3 +2768,83 @@ body.certloom-setup-v2-body { overflow: hidden; }
 .certloom-domain-screen .certloom-credential-program-filter .certloom-context-lookup__status:not(:empty) {
   margin-top: 2px;
 }
+
+/* alpha.4.29 — explicit inherited vs assigned certificate design source. */
+.certloom-issue-v2-form .certloom-issue-design-source {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.certloom-issue-v2-form .certloom-issue-design-source-choice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  padding: 8px 9px;
+  border: 1px solid var(--cl-rule);
+  border-radius: 8px;
+  background: var(--cl-paper);
+  cursor: pointer;
+}
+.certloom-issue-v2-form .certloom-issue-design-source-choice:has(input:checked) {
+  border-color: color-mix(in srgb, var(--cl-brand-emerald) 62%, var(--cl-rule));
+  background: color-mix(in srgb, var(--cl-brand-emerald) 7%, var(--cl-paper));
+}
+.certloom-issue-v2-form .certloom-issue-design-source-choice input {
+  margin-top: 2px;
+}
+.certloom-issue-v2-form [data-certloom-assigned-design-field][hidden] {
+  display: none;
+}
+.certloom-issue-v2-form .certloom-issue-design-source-choice span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.certloom-issue-v2-form .certloom-issue-design-source-choice strong {
+  color: var(--cl-ink);
+  font-size: var(--cl-t-sm);
+}
+.certloom-issue-v2-form .certloom-issue-design-source-choice small,
+.certloom-issue-design-preview-meta .certloom-issue-design-source-note {
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-xs);
+  line-height: 1.35;
+}
+.certloom-issue-design-preview-meta .certloom-issue-design-source-note:not([hidden]) {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 3px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--cl-brand-emerald) 10%, var(--cl-paper));
+  color: color-mix(in srgb, var(--cl-brand-emerald) 72%, var(--cl-ink));
+  font-weight: 650;
+}
+@media (max-width: 782px) {
+  .certloom-issue-v2-form .certloom-issue-design-source {
+    grid-template-columns: 1fr;
+  }
+}
+.certloom-bulk-design-source {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+}
+.certloom-bulk-design-source .certloom-bulk-design-label {
+  color: var(--cl-ink);
+  font-weight: 600;
+}
+.certloom-bulk-design-source > small {
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-xs);
+  line-height: 1.35;
+}
+.certloom-bulk-design-source [data-certloom-bulk-assigned-design] {
+  display: grid;
+  gap: 4px;
+}
+.certloom-bulk-design-source [data-certloom-bulk-assigned-design][hidden] {
+  display: none;
+}

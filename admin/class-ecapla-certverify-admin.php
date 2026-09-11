@@ -271,6 +271,8 @@ class Ecapla_CertVerify_Admin {
 			'noDefaultDesign' => __( 'No default design selected', 'certloom' ),
 			'previewUnavailable' => __( 'Preview unavailable', 'certloom' ),
 			'inheritedDesign' => __( 'Inherited design', 'certloom' ),
+			'assignedDesign' => __( 'Assigned design', 'certloom' ),
+			'chooseAssignedDesignPreview' => __( 'Choose a published design to preview it here.', 'certloom' ),
 			'choosePublishedDesignPreview' => __( 'Choose a published design to preview a one-off override.', 'certloom' ),
 			'previewFitHint' => __( 'Preview fits automatically in this window.', 'certloom' ),
 			'googleWaiting' => __( 'Waiting for Google…', 'certloom' ),
@@ -311,9 +313,13 @@ class Ecapla_CertVerify_Admin {
 			'noCertificateImage' => __( 'No certificate image selected', 'certloom' ),
 			'phase2DetailsPending' => __( 'Choose “Use a Certloom design” to review this credential in the current build.', 'certloom' ),
 			'phase2ImagePending' => __( 'Uploaded-image credentials can be prepared here, but review is not available for this path in the current build.', 'certloom' ),
-			'phase2StandalonePending' => __( 'Select a Program to review a credential that uses a Certloom design in the current build.', 'certloom' ),
+			'phase2StandalonePending' => __( 'Program is optional for standalone credentials.', 'certloom' ),
+			'phase2ChooseDesign' => __( 'Choose a published assigned design, or use the inherited design.', 'certloom' ),
 			'phase2CompleteCore' => __( 'Choose a recipient and enter a credential title to continue to review.', 'certloom' ),
 			'phase2Compatible' => __( 'Ready to review. Nothing is issued until you confirm on the next step.', 'certloom' ),
+			'bulkAssignedDesignHint' => __( 'The selected published design overrides inheritance only for this bulk job.', 'certloom' ),
+			'bulkInheritedDesignHint' => __( 'Inherited design follows Global → Issuer → Program → Batch. Choose a Program to see the effective source.', 'certloom' ),
+			'resolvingInheritedDesign' => __( 'Resolving inherited design…', 'certloom' ),
 			'deactivateVerificationWarning' => __( 'Deactivating Certloom stops public credential verification. Continue?', 'certloom' ),
 		) );
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Asset routing only.
