@@ -40,7 +40,23 @@ async def run():
         await ck(len((await lookup.evaluate('(e)=>getComputedStyle(e).gridTemplateColumns')).split())==2,'recipientLookupCompactDesktop')
         presentation=page.locator('.certloom-presentation-choice').first
         pbox=await presentation.bounding_box(); await ck(pbox and pbox['height']<92,'presentationCardsCompact')
-        await ck(await page.locator('.certloom-review-readiness').is_visible(),'actionableReadinessVisible')
+        review=page.locator('[data-certloom-manual-review]')
+        readiness=page.locator('[data-certloom-phase2-compatibility-message]')
+        await ck(await readiness.is_visible(),'actionableReadinessVisible')
+        await ck(await review.is_disabled(),'detailsOnlyInitiallyWaitsForCoreDetails')
+        await ck('Choose a recipient' in (await readiness.text_content()),'missingCoreReadinessIsSpecific')
+        await page.locator('select[name="recipient_id"]').select_option('42')
+        await page.locator('input[name="credential_title"]').fill('ISO HALAL')
+        await ck(not await review.is_disabled(),'detailsOnlyCanReviewWhenCoreDetailsComplete')
+        await ck((await readiness.text_content())=='Ready to review without certificate artwork.','detailsOnlyReadyCopyIsExplicit')
+        footer=page.locator('.certloom-issue-actions')
+        copy=page.locator('.certloom-review-action-copy')
+        fbox=await footer.bounding_box(); cbox=await copy.bounding_box(); rbox=await review.bounding_box()
+        await ck(bool(fbox and cbox and rbox and cbox['x'] < rbox['x'] and rbox['x']+rbox['width'] <= fbox['x']+fbox['width']+1),'reviewActionCopyAndButtonHaveDeliberateDesktopOrder')
+        pfield=page.locator('.certloom-presentation-fieldset')
+        await page.locator('.certloom-additional-details summary').click()
+        pfbox=await pfield.bounding_box(); formbox=await page.locator('.certloom-issue-v2-form').bounding_box()
+        await ck(bool(pfbox and formbox and pfbox['height'] < formbox['height']*.75),'appearancePanelDoesNotStretchWithExpandedDetails')
         technical=page.locator('.certloom-issue-technical-status')
         await ck(await technical.count()==1 and not await technical.get_attribute('open'),'technicalStatusCollapsed')
         await ck(await technical.evaluate('(e)=>e.compareDocumentPosition(document.querySelector(".certloom-issue-v2-card")) & Node.DOCUMENT_POSITION_PRECEDING')!=0,'technicalStatusAfterCompose')
@@ -57,7 +73,7 @@ async def run():
         await ck(await mobile.locator('.certloom-issue-actions .button').evaluate('(e)=>Math.round(e.getBoundingClientRect().width)')>300,'mobilePrimaryActionFullWidth')
         await mobile.close(); await browser.close()
     if failed:
-        print('FAIL  alpha.4.27 Issue Credential browser gate:',', '.join(failed)); print(f'\n{checks-len(failed)} passed, {len(failed)} failures'); return 1
-    print('PASS  alpha.4.27 Issue Credential browser gate: initial hero/subnav hierarchy, compact branded progress, tighter compose rhythm, compact Recipient lookup, deferred technical detail and responsive containment')
-    print(f'\n{checks} alpha.4.27 Issue Credential browser checks, 0 failures'); return 0
+        print('FAIL  alpha.4.30 Issue Credential browser gate:',', '.join(failed)); print(f'\n{checks-len(failed)} passed, {len(failed)} failures'); return 1
+    print('PASS  alpha.4.30 Issue Credential browser gate: compact hierarchy, details-only readiness, deliberate review action footer, task-sized appearance panel and responsive containment')
+    print(f'\n{checks} alpha.4.30 Issue Credential browser checks, 0 failures'); return 0
 raise SystemExit(asyncio.run(run()))

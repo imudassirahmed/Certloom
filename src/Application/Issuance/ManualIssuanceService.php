@@ -252,7 +252,8 @@ final class ManualIssuanceService {
 					'verification_url' => $verification_url,
 				);
 				foreach ( $current['request']['repeating_data'] as $key => $rows ) { $credential_facts[ $key ] = $rows; }
-				$merge = $this->merges->build( $recipient, $current['program'], $current['issuer'], $credential_facts, $current['template_revision']['layout'], $this->credential_custom_values( $current['field_contract'], $current['field_values'], $current['request']['custom_merge_fields'] ), $current['signer'] );
+				$layout = isset( $current['template_revision']['layout'] ) && is_array( $current['template_revision']['layout'] ) ? $current['template_revision']['layout'] : array();
+				$merge = $this->merges->build( $recipient, $current['program'], $current['issuer'], $credential_facts, $layout, $this->credential_custom_values( $current['field_contract'], $current['field_values'], $current['request']['custom_merge_fields'] ), $current['signer'] );
 				if ( is_wp_error( $merge ) ) { return $merge; }
 				$snapshot = $this->snapshot( $current, $recipient, $series, $credential_facts, $merge, $expected_review_fingerprint, $actor_user_id, $source_type, $source_ref, $source_context );
 				if ( is_wp_error( $snapshot ) ) { return $snapshot; }
@@ -290,6 +291,8 @@ final class ManualIssuanceService {
 						'template_id' => absint( $current['template']['id'] ?? 0 ),
 						'template_name' => (string) ( $current['template']['name'] ?? '' ),
 						'template_revision_id' => absint( $current['template_revision']['id'] ?? 0 ),
+						'presentation_mode' => (string) ( $current['request']['presentation_mode'] ?? 'details_only' ),
+						'certificate_image_id' => absint( $current['request']['certificate_image_id'] ?? 0 ),
 					),
 				) );
 				if ( is_wp_error( $transition ) ) { return $transition; }
@@ -376,10 +379,13 @@ final class ManualIssuanceService {
 		$signer = isset( $signer_resolution['signer'] ) && is_array( $signer_resolution['signer'] ) ? $signer_resolution['signer'] : null;
 		$locale = ( new CredentialLocale() )->resolve( ! empty( $program ) ? ( $program['profile']['credential_locale'] ?? CredentialLocale::SITE_DEFAULT ) : CredentialLocale::SITE_DEFAULT );
 		if ( is_wp_error( $locale ) ) { return $locale; }
-		$template_resolution = 'explicit';
+		$template = array();
+		$revision = array( 'layout' => array() );
+		$template_resolution = 'design' === (string) $request['presentation_mode'] ? 'explicit' : 'none';
 		$template_resolution_details = null;
 		$template_locale_variant = null;
-		if ( empty( $request['template_id'] ) ) {
+		if ( 'design' === (string) $request['presentation_mode'] && empty( $request['template_id'] ) ) {
+			$template_resolution = 'explicit';
 			// Canonical design precedence is:
 			// Global → Issuer → Program → Batch, with the most-specific direct
 			// assignment winning. Program locale variants live at Program scope,
@@ -413,22 +419,24 @@ final class ManualIssuanceService {
 				}
 			}
 		}
-		$template = $this->repository->find_published_template( $request['template_id'] );
-		if ( is_wp_error( $template ) ) {
-			if ( null !== $template_locale_variant ) { return new \WP_Error( 'certloom_manual_issue_locale_template_unavailable', __( 'The Program locale maps to a certificate design that is no longer published. Review the Program language variants before issuing.', 'certloom' ) ); }
-			return $template;
+		if ( 'design' === (string) $request['presentation_mode'] ) {
+			$template = $this->repository->find_published_template( $request['template_id'] );
+			if ( is_wp_error( $template ) ) {
+				if ( null !== $template_locale_variant ) { return new \WP_Error( 'certloom_manual_issue_locale_template_unavailable', __( 'The Program locale maps to a certificate design that is no longer published. Review the Program language variants before issuing.', 'certloom' ) ); }
+				return $template;
+			}
+			if ( ! is_array( $template ) || ! empty( $template['archived_at'] ) || empty( $template['published_revision'] ) ) {
+				return new \WP_Error( null !== $template_locale_variant ? 'certloom_manual_issue_locale_template_unavailable' : 'certloom_manual_issue_template_unavailable', null !== $template_locale_variant ? __( 'The Program locale maps to a certificate design that is no longer published. Review the Program language variants before issuing.', 'certloom' ) : __( 'Choose an active published template.', 'certloom' ) );
+			}
+			$revision = $template['published_revision'];
+			$template_fields = ( new TemplateFieldCompatibility() )->validate(
+				(array) ( $revision['layout'] ?? array() ),
+				is_array( $program['field_contract'] ?? null ) ? $program['field_contract'] : ScopedFieldContract::empty_program(),
+				is_array( $batch ) && is_array( $batch['field_contract'] ?? null ) ? $batch['field_contract'] : null,
+				$this->field_catalog()
+			);
+			if ( is_wp_error( $template_fields ) ) { return $template_fields; }
 		}
-		if ( ! is_array( $template ) || ! empty( $template['archived_at'] ) || empty( $template['published_revision'] ) ) {
-			return new \WP_Error( null !== $template_locale_variant ? 'certloom_manual_issue_locale_template_unavailable' : 'certloom_manual_issue_template_unavailable', null !== $template_locale_variant ? __( 'The Program locale maps to a certificate design that is no longer published. Review the Program language variants before issuing.', 'certloom' ) : __( 'Choose an active published template.', 'certloom' ) );
-		}
-		$revision = $template['published_revision'];
-		$template_fields = ( new TemplateFieldCompatibility() )->validate(
-			(array) ( $revision['layout'] ?? array() ),
-			is_array( $program['field_contract'] ?? null ) ? $program['field_contract'] : ScopedFieldContract::empty_program(),
-			is_array( $batch ) && is_array( $batch['field_contract'] ?? null ) ? $batch['field_contract'] : null,
-			$this->field_catalog()
-		);
-		if ( is_wp_error( $template_fields ) ) { return $template_fields; }
 		$expires_at = $this->expiry_date( $request, $program );
 		if ( is_wp_error( $expires_at ) ) { return $expires_at; }
 		$numbering = null;
@@ -448,7 +456,8 @@ final class ManualIssuanceService {
 			'verification_url' => 'https://example.invalid/certloom/pending',
 		);
 		foreach ( $request['repeating_data'] as $key => $rows ) { $probe_facts[ $key ] = $rows; }
-		$merge_probe = $this->merges->build( $recipient, $program, $issuer, $probe_facts, $revision['layout'], $this->credential_custom_values( $field_contract, $field_values, $request['custom_merge_fields'] ), $signer );
+		$layout = isset( $revision['layout'] ) && is_array( $revision['layout'] ) ? $revision['layout'] : array();
+		$merge_probe = $this->merges->build( $recipient, $program, $issuer, $probe_facts, $layout, $this->credential_custom_values( $field_contract, $field_values, $request['custom_merge_fields'] ), $signer );
 		if ( is_wp_error( $merge_probe ) ) { return $merge_probe; }
 		$fingerprint_payload = array(
 			'contract' => 'certloom-manual-issuance-review',
@@ -461,7 +470,10 @@ final class ManualIssuanceService {
 			'field_values' => $field_values,
 			'issuer' => $this->issuer_fingerprint( $issuer ),
 			'signer' => $this->signer_fingerprint( $signer, $signer_resolution ),
-			'template' => $this->template_fingerprint( $template, $revision ),
+			'presentation_mode' => (string) $request['presentation_mode'],
+			'certificate_image_id' => absint( $request['certificate_image_id'] ?? 0 ),
+			'credential_title' => (string) $request['credential_title'],
+			'template' => 'design' === (string) $request['presentation_mode'] ? $this->template_fingerprint( $template, $revision ) : null,
 			'design_source' => (string) ( $request['design_source'] ?? 'inherited' ),
 			'template_resolution' => $template_resolution,
 			'template_resolution_scope_id' => is_array( $template_resolution_details ) ? absint( $template_resolution_details['scope_id'] ?? 0 ) : 0,
@@ -496,7 +508,7 @@ final class ManualIssuanceService {
 			'valid_from' => $request['valid_from'],
 			'expires_at' => $expires_at,
 			'numbering' => $numbering,
-			'required_merge_tokens' => $this->merges->required_tokens( $revision['layout'] ),
+			'required_merge_tokens' => $this->merges->required_tokens( $layout ),
 			'preview_merge_values' => $merge_probe,
 			'review_fingerprint' => $fingerprint,
 		);
@@ -513,15 +525,29 @@ final class ManualIssuanceService {
 		if ( ! in_array( $mode, array( 'existing', 'new' ), true ) ) { return new \WP_Error( 'certloom_manual_issue_recipient_mode_invalid', __( 'Choose an existing recipient or create a new recipient.', 'certloom' ) ); }
 		$recipient_id = 'existing' === $mode ? absint( $request['recipient_id'] ?? 0 ) : 0;
 		if ( 'existing' === $mode && ! $recipient_id ) { return new \WP_Error( 'certloom_manual_issue_recipient_required', __( 'Choose an existing recipient.', 'certloom' ) ); }
+		$credential_title = trim( sanitize_text_field( (string) ( $request['credential_title'] ?? '' ) ) );
+		if ( $this->length( $credential_title ) > 255 ) { return new \WP_Error( 'certloom_manual_issue_title_too_long', __( 'Credential title must be 255 characters or fewer.', 'certloom' ) ); }
+		// The service predates the 1.7 appearance selector and historically always
+		// issued through a published design. Keep that default for durable workers
+		// and integrations that have not yet started sending presentation_mode.
+		$presentation_mode = sanitize_key( (string) ( $request['presentation_mode'] ?? 'design' ) );
+		if ( ! in_array( $presentation_mode, array( 'details_only', 'image', 'design' ), true ) ) { return new \WP_Error( 'certloom_manual_issue_presentation_invalid', __( 'Choose a supported credential appearance.', 'certloom' ) ); }
+		$certificate_image_id = absint( $request['certificate_image_id'] ?? 0 );
+		if ( 'image' === $presentation_mode && ! $certificate_image_id ) { return new \WP_Error( 'certloom_manual_issue_image_required', __( 'Choose a PNG or JPEG certificate image.', 'certloom' ) ); }
 		$program_id = absint( $request['program_id'] ?? 0 );
 		$batch_id = absint( $request['batch_id'] ?? 0 );
 		$issuer_id = absint( $request['issuer_id'] ?? 0 );
 		$template_id = absint( $request['template_id'] ?? 0 );
 		$signer_id = absint( $request['signer_id'] ?? 0 );
-		$design_source = sanitize_key( (string) ( $request['design_source'] ?? ( $template_id ? 'assigned' : 'inherited' ) ) );
-		if ( ! in_array( $design_source, array( 'inherited', 'assigned' ), true ) ) { return new \WP_Error( 'certloom_manual_issue_design_source_invalid', __( 'Choose whether to use the inherited design or an assigned design.', 'certloom' ) ); }
-		if ( 'assigned' === $design_source && ! $template_id ) { return new \WP_Error( 'certloom_manual_issue_template_required', __( 'Choose a published design for this credential.', 'certloom' ) ); }
-		if ( 'inherited' === $design_source ) { $template_id = 0; }
+		$design_source = 'none';
+		if ( 'design' === $presentation_mode ) {
+			$design_source = sanitize_key( (string) ( $request['design_source'] ?? ( $template_id ? 'assigned' : 'inherited' ) ) );
+			if ( ! in_array( $design_source, array( 'inherited', 'assigned' ), true ) ) { return new \WP_Error( 'certloom_manual_issue_design_source_invalid', __( 'Choose whether to use the inherited design or an assigned design.', 'certloom' ) ); }
+			if ( 'assigned' === $design_source && ! $template_id ) { return new \WP_Error( 'certloom_manual_issue_template_required', __( 'Choose a published design for this credential.', 'certloom' ) ); }
+			if ( 'inherited' === $design_source ) { $template_id = 0; }
+		} else {
+			$template_id = 0;
+		}
 		if ( $batch_id && ! $program_id ) { return new \WP_Error( 'certloom_manual_issue_batch_program_required', __( 'Choose the Program that owns the selected Batch, or clear the Batch for standalone issuance.', 'certloom' ) ); }
 		$valid_from = $this->date( $request['valid_from'] ?? '' );
 		if ( is_wp_error( $valid_from ) ) { return new \WP_Error( 'certloom_manual_issue_valid_from_invalid', __( 'Choose a valid credential issue/effective date.', 'certloom' ) ); }
@@ -554,6 +580,9 @@ final class ManualIssuanceService {
 			'recipient_mode' => $mode,
 			'recipient_id' => $recipient_id,
 			'new_recipient' => $new,
+			'credential_title' => $credential_title,
+			'presentation_mode' => $presentation_mode,
+			'certificate_image_id' => $certificate_image_id,
 			'program_id' => $program_id,
 			'batch_id' => $batch_id,
 			'issuer_id' => $issuer_id,
@@ -696,10 +725,15 @@ final class ManualIssuanceService {
 	/** @return array<string,mixed>|\WP_Error */
 	private function snapshot( array $review, array $recipient, array $series, array $credential, array $merge, $fingerprint, $actor_user_id, $source_type = self::SOURCE_TYPE, $source_ref = null, $source_context = null ) {
 		$template = $review['template']; $revision = $review['template_revision'];
+		$presentation_mode = (string) ( $review['request']['presentation_mode'] ?? 'details_only' );
 		try { $merge_sha = $this->json->hash( $merge ); } catch ( \Throwable $error ) { return new \WP_Error( 'certloom_manual_issue_merge_hash_failed', __( 'Certloom could not create the immutable merge snapshot fingerprint. Issuance was rolled back.', 'certloom' ) ); }
 		return array(
 			'_meta' => array( 'schema' => self::SNAPSHOT_SCHEMA, 'schema_version' => self::SNAPSHOT_VERSION ),
-			'issuance' => array( 'source' => (string) $source_type, 'source_ref' => null === $source_ref ? null : (string) $source_ref, 'actor_user_id' => absint( $actor_user_id ), 'review_fingerprint' => (string) $fingerprint, 'design_source' => (string) ( $review['request']['design_source'] ?? 'inherited' ), 'custom_merge_fields' => $review['request']['custom_merge_fields'], 'integration_context_sha256' => is_array( $source_context ) ? (string) ( $source_context['sha256'] ?? '' ) : null, 'integration_context' => is_array( $source_context ) && isset( $source_context['context'] ) && is_array( $source_context['context'] ) ? $source_context['context'] : null ),
+			'issuance' => array( 'source' => (string) $source_type, 'source_ref' => null === $source_ref ? null : (string) $source_ref, 'actor_user_id' => absint( $actor_user_id ), 'review_fingerprint' => (string) $fingerprint, 'design_source' => (string) ( $review['request']['design_source'] ?? 'none' ), 'custom_merge_fields' => $review['request']['custom_merge_fields'], 'integration_context_sha256' => is_array( $source_context ) ? (string) ( $source_context['sha256'] ?? '' ) : null, 'integration_context' => is_array( $source_context ) && isset( $source_context['context'] ) && is_array( $source_context['context'] ) ? $source_context['context'] : null ),
+			'presentation' => array(
+				'mode' => $presentation_mode,
+				'certificate_image_id' => 'image' === $presentation_mode ? absint( $review['request']['certificate_image_id'] ?? 0 ) : null,
+			),
 			'recipient' => $this->recipient_snapshot( $recipient ),
 			'program' => $this->program_snapshot( $review['program'] ),
 			'batch' => $this->batch_snapshot( $review['batch'] ?? null ),
@@ -716,13 +750,13 @@ final class ManualIssuanceService {
 				'layout_sha256' => (string) ( $revision['layout_sha256'] ?? '' ), 'layout' => $revision['layout'],
 			),
 			'credential' => array(
-				'series_id' => absint( $series['id'] ?? 0 ), 'public_id' => (string) ( $series['public_id'] ?? '' ), 'display_number' => (string) $credential['display_number'],
+				'series_id' => absint( $series['id'] ?? 0 ), 'public_id' => (string) ( $series['public_id'] ?? '' ), 'display_number' => (string) $credential['display_number'], 'title' => (string) ( $review['request']['credential_title'] ?? '' ),
 				'valid_from' => $credential['valid_from'], 'issued_at' => $credential['issued_at'], 'expires_at' => $credential['expires_at'], 'grade' => $credential['grade'],
 				'repeating_data' => isset( $review['request']['repeating_data'] ) && is_array( $review['request']['repeating_data'] ) ? $review['request']['repeating_data'] : array(),
 				'issuance_state' => States::ISSUANCE_ISSUED, 'administrative_state' => States::ADMIN_ACTIVE, 'verification_url' => (string) $credential['verification_url'],
 			),
 			'merge' => array( 'values' => $merge, 'sha256' => $merge_sha ),
-			'artifact' => array( 'authority' => 'gated', 'renderer_receipt' => null ),
+			'artifact' => array( 'authority' => 'design' === $presentation_mode ? 'gated' : ( 'image' === $presentation_mode ? 'uploaded_image' : 'not_applicable' ), 'renderer_receipt' => null ),
 		);
 	}
 

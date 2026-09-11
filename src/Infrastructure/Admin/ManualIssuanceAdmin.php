@@ -275,7 +275,7 @@ final class ManualIssuanceAdmin {
 		$rows = max( 4, min( 10, count( $custom ) + 2 ) ); $keys=array_keys($custom); for($i=0;$i<$rows;$i++){ $key=$keys[$i]??''; $val=''!==$key?(string)$custom[$key]:''; echo '<div class="certloom-manual-custom-row"><label><span>'.esc_html__( 'Field key', 'certloom' ).'</span><input type="text" name="custom_merge_key[]" maxlength="64" value="'.esc_attr($key).'" placeholder="membership_level"></label><label><span>'.esc_html__( 'Value', 'certloom' ).'</span><input type="text" name="custom_merge_value[]" maxlength="2000" value="'.esc_attr($val).'"></label></div>'; }
 		echo '</div></details></div></div></details>';
 
-		echo '<div class="certloom-manual-actions certloom-issue-actions"><button type="submit" class="button button-primary" data-certloom-manual-review data-certloom-has-templates="' . esc_attr( empty( $template_items ) ? '0' : '1' ) . '">' . esc_html__( 'Review credential', 'certloom' ) . '</button><div class="certloom-review-action-copy"><span class="certloom-review-readiness" data-certloom-phase2-compatibility-message role="status" aria-live="polite">' . esc_html__( 'Choose a recipient, credential title and Certloom design to continue.', 'certloom' ) . '</span><small>' . esc_html__( 'Review is read-only and never reserves a credential number.', 'certloom' ) . '</small></div></div></form></section>';
+		echo '<div class="certloom-manual-actions certloom-issue-actions"><div class="certloom-review-action-copy"><span class="certloom-review-readiness" data-certloom-phase2-compatibility-message role="status" aria-live="polite">' . esc_html__( 'Complete the required credential details to continue.', 'certloom' ) . '</span><small>' . esc_html__( 'Review is read-only. Nothing is issued and no credential number is reserved until you confirm the next step.', 'certloom' ) . '</small></div><button type="submit" class="button button-primary" data-certloom-manual-review data-certloom-has-templates="' . esc_attr( empty( $template_items ) ? '0' : '1' ) . '">' . esc_html__( 'Review credential', 'certloom' ) . '</button></div></form></section>';
 		$this->render_quick_context_dialogs( $selected_program_id );
 	}
 
@@ -289,7 +289,7 @@ final class ManualIssuanceAdmin {
 			echo '<p><strong>' . esc_html__( 'Availability:', 'certloom' ) . '</strong> ' . esc_html__( 'Manual Issuance is available in the credential-management preview. The existing registry still powers public verification in this build, and PDF/PNG/JPEG exports remain unavailable until the certificate renderer is approved.', 'certloom' ) . '</p>';
 		}
 		if ( 'compose' === $current_stage ) {
-			echo '<p><strong>' . esc_html__( 'Development boundary:', 'certloom' ) . '</strong> ' . esc_html__( 'The Certloom-design issuance path supports standalone credentials as well as optional Issuer, Program, Batch and Signer context. Details-only and uploaded-image presentation modes remain fail-closed until their backend authority is approved.', 'certloom' ) . '</p>';
+			echo '<p><strong>' . esc_html__( 'Appearance behavior:', 'certloom' ) . '</strong> ' . esc_html__( 'Details-only credentials can be reviewed and issued without certificate artwork. Certloom-design credentials freeze the resolved published design. Uploaded-image credentials require a selected PNG or JPEG.', 'certloom' ) . '</p>';
 		}
 		echo '</div></details>';
 	}
@@ -317,8 +317,11 @@ final class ManualIssuanceAdmin {
 			return new \WP_Error( 'certloom_phase2_title_required', __( 'Enter a credential title before reviewing this credential.', 'certloom' ) );
 		}
 		$presentation = sanitize_key( (string) ( $request['presentation_mode'] ?? 'details_only' ) );
-		if ( 'design' !== $presentation ) {
-			return new \WP_Error( 'certloom_phase2_presentation_backend_pending', __( 'That presentation mode is part of the approved 1.7 interface, but alpha.2 does not yet persist standalone details-only or uploaded-image presentation authority. No credential was issued. Choose “Use a Certloom design” to exercise the existing backend, or keep this alpha for UI review only.', 'certloom' ) );
+		if ( ! in_array( $presentation, array( 'details_only', 'image', 'design' ), true ) ) {
+			return new \WP_Error( 'certloom_phase2_presentation_invalid', __( 'Choose a supported credential appearance before reviewing.', 'certloom' ) );
+		}
+		if ( 'image' === $presentation && empty( $request['certificate_image_id'] ) ) {
+			return new \WP_Error( 'certloom_phase2_image_required', __( 'Choose a PNG or JPEG certificate image before reviewing.', 'certloom' ) );
 		}
 		return true;
 	}
@@ -434,11 +437,14 @@ final class ManualIssuanceAdmin {
 	/** @return void */
 	private function render_review( array $review ) {
 		$request = array_merge( (array) $review['request'], isset( $review['phase2_ui_request'] ) && is_array( $review['phase2_ui_request'] ) ? $review['phase2_ui_request'] : array() ); $recipient=(array)$review['recipient']; $program=(array)$review['program']; $template=(array)$review['template']; $revision=(array)$review['template_revision'];
+		$presentation_mode = sanitize_key( (string) ( $request['presentation_mode'] ?? 'details_only' ) );
+		$presentation_label = 'image' === $presentation_mode ? __( 'Certificate image', 'certloom' ) : ( 'design' === $presentation_mode ? __( 'Certloom design', 'certloom' ) : __( 'Details only', 'certloom' ) );
+		$presentation_meta = 'image' === $presentation_mode ? __( 'Uploaded artwork is frozen as the credential appearance choice', 'certloom' ) : ( 'design' === $presentation_mode ? __( 'Published design frozen into this credential', 'certloom' ) : __( 'No certificate artwork; verification details remain authoritative', 'certloom' ) );
 		echo '<section class="certloom-manual-card"><div class="certloom-manual-card-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Step 2', 'certloom' ) . '</span><h2>' . esc_html__( 'Review credential', 'certloom' ) . '</h2></div><span class="certloom-template-state certloom-template-state-published">' . esc_html__( 'Ready to issue', 'certloom' ) . '</span></div>';
 		echo '<div class="certloom-manual-review-grid">';
 		$this->review_fact( __( 'Recipient', 'certloom' ), (string) ( $recipient['display_name'] ?? '' ), ! empty( $recipient['email'] ) ? (string) $recipient['email'] : '' );
 		$this->review_fact( __( 'Credential title', 'certloom' ), (string) ( $request['credential_title'] ?? '' ), __( 'Credential-specific title for this issuance', 'certloom' ) );
-		$this->review_fact( __( 'Presentation', 'certloom' ), __( 'Certloom design', 'certloom' ), __( 'Published design frozen into this credential', 'certloom' ) );
+		$this->review_fact( __( 'Presentation', 'certloom' ), $presentation_label, $presentation_meta );
 		$this->review_fact( __( 'Program', 'certloom' ), ! empty( $program['id'] ) ? (string) ( $program['title'] ?? '' ) : __( 'None — standalone credential', 'certloom' ), ! empty( $program['code'] ) ? (string) $program['code'] : '' );
 		$signer = isset( $review['signer'] ) && is_array( $review['signer'] ) ? $review['signer'] : null;
 		$signer_resolution = isset( $review['signer_resolution'] ) && is_array( $review['signer_resolution'] ) ? $review['signer_resolution'] : array();
@@ -453,29 +459,45 @@ final class ManualIssuanceAdmin {
 			$locale_meta .= ' · ' . sprintf( /* translators: %s: locale configured. */ __( 'configured %s', 'certloom' ), $locale_configured );
 		}
 		$this->review_fact( __( 'Credential language', 'certloom' ), '' !== $locale_effective ? $locale_effective : __( 'Site default', 'certloom' ), $locale_meta );
-		$template_meta = sprintf( /* translators: %1$d: revision number; %2$d: ID. */ __( 'Published revision #%1$d · ID %2$d', 'certloom' ), absint( $revision['revision_number'] ?? 0 ), absint( $revision['id'] ?? 0 ) );
-		$resolution_scope = (string) ( $review['template_resolution'] ?? 'explicit' );
-		$variant = isset( $review['template_locale_variant'] ) && is_array( $review['template_locale_variant'] ) ? $review['template_locale_variant'] : array();
-		if ( ! empty( $variant['matched_locale'] ) ) {
-			$template_meta .= ' · ' . sprintf( /* translators: %s: matched locale. */ __( 'language variant %s', 'certloom' ), (string) $variant['matched_locale'] );
-		} elseif ( 'explicit' === $resolution_scope ) {
-			$template_meta .= ' · ' . __( 'explicit reviewed override', 'certloom' );
-		} else {
-			$details = isset( $review['template_resolution_details'] ) && is_array( $review['template_resolution_details'] ) ? $review['template_resolution_details'] : array();
-			$scope_id = absint( $details['scope_id'] ?? 0 );
-			$template_meta .= ' · ' . $this->inherited_design_source_label( $resolution_scope, $scope_id, $program, isset( $review['issuer'] ) && is_array( $review['issuer'] ) ? $review['issuer'] : null, isset( $review['batch'] ) && is_array( $review['batch'] ) ? $review['batch'] : null );
+		if ( 'design' === $presentation_mode ) {
+			$template_meta = sprintf( /* translators: %1$d: revision number; %2$d: ID. */ __( 'Published revision #%1$d · ID %2$d', 'certloom' ), absint( $revision['revision_number'] ?? 0 ), absint( $revision['id'] ?? 0 ) );
+			$resolution_scope = (string) ( $review['template_resolution'] ?? 'explicit' );
+			$variant = isset( $review['template_locale_variant'] ) && is_array( $review['template_locale_variant'] ) ? $review['template_locale_variant'] : array();
+			if ( ! empty( $variant['matched_locale'] ) ) {
+				$template_meta .= ' · ' . sprintf( /* translators: %s: matched locale. */ __( 'language variant %s', 'certloom' ), (string) $variant['matched_locale'] );
+			} elseif ( 'explicit' === $resolution_scope ) {
+				$template_meta .= ' · ' . __( 'explicit reviewed override', 'certloom' );
+			} else {
+				$details = isset( $review['template_resolution_details'] ) && is_array( $review['template_resolution_details'] ) ? $review['template_resolution_details'] : array();
+				$scope_id = absint( $details['scope_id'] ?? 0 );
+				$template_meta .= ' · ' . $this->inherited_design_source_label( $resolution_scope, $scope_id, $program, isset( $review['issuer'] ) && is_array( $review['issuer'] ) ? $review['issuer'] : null, isset( $review['batch'] ) && is_array( $review['batch'] ) ? $review['batch'] : null );
+			}
+			$this->review_fact( __( 'Template', 'certloom' ), (string) ( $template['name'] ?? '' ), $template_meta );
+		} elseif ( 'image' === $presentation_mode ) {
+			$this->review_fact( __( 'Certificate image', 'certloom' ), '#' . absint( $request['certificate_image_id'] ?? 0 ), __( 'Selected WordPress Media attachment', 'certloom' ) );
 		}
-		$this->review_fact( __( 'Template', 'certloom' ), (string) ( $template['name'] ?? '' ), $template_meta );
 		$this->review_fact( __( 'Effective date', 'certloom' ), (string) $review['valid_from'], null === $review['expires_at'] ? __( 'Permanent / no expiry', 'certloom' ) : sprintf( /* translators: %s: expires at. */ __( 'Expires %s', 'certloom' ), (string) $review['expires_at'] ) );
 		$number = is_array( $review['numbering'] ?? null ) ? (string) ( $review['numbering']['certificate_number'] ?? '' ) : (string) ( $request['display_number'] ?? '' );
 		$this->review_fact( __( 'Certificate number', 'certloom' ), '' !== $number ? $number : __( 'Allocated on Issue', 'certloom' ), \Ecapla_CertVerify_Numbering::is_enabled() ? __( 'Number preview; not reserved', 'certloom' ) : __( 'Manual number', 'certloom' ) );
 		echo '</div>';
-		$preview=(new ManualIssuancePreviewService())->build($review);
-		echo '<details class="certloom-technical-details certloom-manual-proof"><summary>' . esc_html__( 'Technical details', 'certloom' ) . '</summary><p class="description">' . esc_html__( 'Integrity identifiers are available for support and auditing. They are checked automatically and are not required for normal issuance.', 'certloom' ) . '</p><div class="certloom-template-preview-proof"><div><span>' . esc_html__( 'Review SHA-256', 'certloom' ) . '</span><code data-certloom-review-sha>' . esc_html( (string) $review['review_fingerprint'] ) . '</code></div><div><span>' . esc_html__( 'Layout schema', 'certloom' ) . '</span><strong>' . esc_html( (string) ( $revision['layout_schema'] ?? '' ) ) . ' v' . esc_html( (string) absint( $revision['layout_schema_version'] ?? 0 ) ) . '</strong></div><div><span>' . esc_html__( 'Published layout SHA-256', 'certloom' ) . '</span><code>' . esc_html( (string) ( $revision['layout_sha256'] ?? '' ) ) . '</code></div>' . ( is_wp_error( $preview ) ? '' : '<div><span>' . esc_html__( 'Render Plan SHA-256', 'certloom' ) . '</span><code>' . esc_html( (string) $preview['render_plan_sha256'] ) . '</code></div>' ) . '</div></details>';
-		if(is_wp_error($preview)){echo '<div class="notice notice-error inline"><p>'.esc_html($preview->get_error_message()).'</p></div>';}else{ try{$presented=(new RenderPlanHtmlPreview())->present($preview['render_plan']); echo '<div class="certloom-template-preview-card certloom-manual-preview"><div class="certloom-template-preview-head"><div><h3>'.esc_html__( 'Credential Preview', 'certloom' ).'</h3><p>'.esc_html__( 'Built from the selected published design and the exact recipient/credential details in this review.', 'certloom' ).'</p></div><span class="certloom-template-preview-authority">'.esc_html__( 'Browser preview', 'certloom' ).'</span></div>'.$presented['html'].'<p class="description">'.esc_html__( 'Certificate IDs and the final verification URL are created only when you issue. The browser preview may render fonts slightly differently from future downloadable certificate files.', 'certloom' ).'</p></div>'; }catch(\Throwable $e){echo '<div class="notice notice-error inline"><p>'.esc_html__( 'The credential preview could not be shown safely in the browser.', 'certloom' ).'</p></div>';}}
+		$preview = 'design' === $presentation_mode ? ( new ManualIssuancePreviewService() )->build( $review ) : null;
+		echo '<details class="certloom-technical-details certloom-manual-proof"><summary>' . esc_html__( 'Technical details', 'certloom' ) . '</summary><p class="description">' . esc_html__( 'Integrity identifiers are available for support and auditing. They are checked automatically and are not required for normal issuance.', 'certloom' ) . '</p><div class="certloom-template-preview-proof"><div><span>' . esc_html__( 'Review SHA-256', 'certloom' ) . '</span><code data-certloom-review-sha>' . esc_html( (string) $review['review_fingerprint'] ) . '</code></div>';
+		if ( 'design' === $presentation_mode ) {
+			echo '<div><span>' . esc_html__( 'Layout schema', 'certloom' ) . '</span><strong>' . esc_html( (string) ( $revision['layout_schema'] ?? '' ) ) . ' v' . esc_html( (string) absint( $revision['layout_schema_version'] ?? 0 ) ) . '</strong></div><div><span>' . esc_html__( 'Published layout SHA-256', 'certloom' ) . '</span><code>' . esc_html( (string) ( $revision['layout_sha256'] ?? '' ) ) . '</code></div>' . ( is_wp_error( $preview ) ? '' : '<div><span>' . esc_html__( 'Render Plan SHA-256', 'certloom' ) . '</span><code>' . esc_html( (string) $preview['render_plan_sha256'] ) . '</code></div>' );
+		}
+		echo '</div></details>';
+		if ( 'design' === $presentation_mode ) {
+			if ( is_wp_error( $preview ) ) { echo '<div class="notice notice-error inline"><p>' . esc_html( $preview->get_error_message() ) . '</p></div>'; }
+			else { try { $presented = ( new RenderPlanHtmlPreview() )->present( $preview['render_plan'] ); echo '<div class="certloom-template-preview-card certloom-manual-preview"><div class="certloom-template-preview-head"><div><h3>' . esc_html__( 'Credential Preview', 'certloom' ) . '</h3><p>' . esc_html__( 'Built from the selected published design and the exact recipient/credential details in this review.', 'certloom' ) . '</p></div><span class="certloom-template-preview-authority">' . esc_html__( 'Browser preview', 'certloom' ) . '</span></div>' . $presented['html'] . '<p class="description">' . esc_html__( 'Certificate IDs and the final verification URL are created only when you issue. The browser preview may render fonts slightly differently from future downloadable certificate files.', 'certloom' ) . '</p></div>'; } catch ( \Throwable $e ) { echo '<div class="notice notice-error inline"><p>' . esc_html__( 'The credential preview could not be shown safely in the browser.', 'certloom' ) . '</p></div>'; } }
+		} elseif ( 'details_only' === $presentation_mode ) {
+			echo '<div class="certloom-review-appearance-note"><strong>' . esc_html__( 'No certificate artwork', 'certloom' ) . '</strong><span>' . esc_html__( 'This credential will use its verification page, status, proof and saved details without a generated certificate design.', 'certloom' ) . '</span></div>';
+		} else {
+			$image_html = function_exists( 'wp_get_attachment_image' ) ? wp_get_attachment_image( absint( $request['certificate_image_id'] ?? 0 ), 'medium', false, array( 'class' => 'certloom-review-certificate-image' ) ) : '';
+			echo '<div class="certloom-review-appearance-note certloom-review-image-note"><strong>' . esc_html__( 'Uploaded certificate image', 'certloom' ) . '</strong>' . $image_html . '<span>' . esc_html__( 'The selected image is saved as this credential’s certificate appearance.', 'certloom' ) . '</span></div>';
+		}
 		$this->render_repeating_data_review( isset( $request['repeating_data'] ) && is_array( $request['repeating_data'] ) ? $request['repeating_data'] : array() );
 		$custom=(array)($request['custom_merge_fields']??array()); if($custom){echo '<h3>'.esc_html__( 'Credential-specific custom merge values', 'certloom' ).'</h3><dl class="certloom-manual-merge-list">';foreach($custom as $k=>$v){echo '<div><dt><code>custom:'.esc_html((string)$k).'</code></dt><dd>'.esc_html((string)$v).'</dd></div>';}echo '</dl>';}
-		echo '<div class="notice notice-info inline"><p><strong>'.esc_html__( 'What Issue will do:', 'certloom' ).'</strong> '.esc_html__( 'Check this review again, assign the certificate number, create the recipient if needed, save the issued credential and its design/details, and record the issuance as one checked transaction.', 'certloom' ).'</p></div>';
+		echo '<div class="notice notice-info inline"><p><strong>'.esc_html__( 'What Issue will do:', 'certloom' ).'</strong> '.esc_html__( 'Check this review again, assign the certificate number, create the recipient if needed, save the issued credential and its selected appearance/details, and record the issuance as one checked transaction.', 'certloom' ).'</p></div>';
 		echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'" class="certloom-manual-confirm"><input type="hidden" name="action" value="certloom_manual_issuance_issue"><input type="hidden" name="review_fingerprint" value="'.esc_attr((string)$review['review_fingerprint']).'">'; wp_nonce_field('certloom_manual_issuance_issue_'.(string)$review['review_fingerprint']); $this->hidden_request($request); echo '<a class="button button-secondary" href="'.esc_url(admin_url('admin.php?page='.self::PAGE)).'">'.esc_html__( 'Back to compose', 'certloom' ).'</a><button class="button button-primary button-hero" type="submit">'.esc_html__( 'Issue credential', 'certloom' ).'</button></form></section>';
 	}
 

@@ -1246,14 +1246,16 @@
 				var mode = presentationMode(); var hasTitle = !! ( title && title.value.trim() ); var hasRecipient = recipientReady();
 				var designSource = designSources.find( function ( radio ) { return radio.checked; } ); designSource = designSource ? designSource.value : 'inherited';
 				var hasDesign = 'inherited' === designSource || !! ( template && template.value && '0' !== template.value );
-				var compatible = 'design' === mode && hasDesign && hasTitle && hasRecipient;
+				var hasImage = !! ( imageId && imageId.value && '0' !== imageId.value );
+				var compatible = hasTitle && hasRecipient && ( 'details_only' === mode || ( 'image' === mode && hasImage ) || ( 'design' === mode && hasDesign ) );
 				review.disabled = ! compatible;
 				if ( ! message ) { return; }
-				if ( 'details_only' === mode ) { message.textContent = certloomText( 'phase2DetailsPending', 'Choose “Use a Certloom design” to review this credential in the current build.' ); }
-				else if ( 'image' === mode ) { message.textContent = certloomText( 'phase2ImagePending', 'Uploaded-image credentials can be prepared here, but review is not available for this path in the current build.' ); }
-				else if ( ! hasDesign ) { message.textContent = certloomText( 'phase2ChooseDesign', 'Choose a published assigned design, or use the inherited design.' ); }
-				else if ( ! hasTitle || ! hasRecipient ) { message.textContent = certloomText( 'phase2CompleteCore', 'Choose a recipient and enter a credential title to continue to review.' ); }
-				else { message.textContent = certloomText( 'phase2Compatible', 'Ready to review. Nothing is issued until you confirm on the next step.' ); }
+				if ( ! hasTitle || ! hasRecipient ) { message.textContent = certloomText( 'phase2CompleteCore', 'Choose a recipient and enter a credential title to continue to review.' ); }
+				else if ( 'image' === mode && ! hasImage ) { message.textContent = certloomText( 'phase2ChooseImage', 'Choose a PNG or JPEG certificate image to continue.' ); }
+				else if ( 'design' === mode && ! hasDesign ) { message.textContent = certloomText( 'phase2ChooseDesign', 'Choose a published assigned design, or use the inherited design.' ); }
+				else if ( 'details_only' === mode ) { message.textContent = certloomText( 'phase2DetailsReady', 'Ready to review without certificate artwork.' ); }
+				else if ( 'image' === mode ) { message.textContent = certloomText( 'phase2ImageReady', 'Ready to review with the selected certificate image.' ); }
+				else { message.textContent = certloomText( 'phase2Compatible', 'Ready to review with the selected Certloom design.' ); }
 			}
 			function syncPresentation( changed ) {
 				var mode = presentationMode();
@@ -1275,6 +1277,7 @@
 			presentationRadios.forEach( function ( radio ) { radio.addEventListener( 'change', function () { syncPresentation( true ); } ); } );
 			designSources.forEach( function ( radio ) { radio.addEventListener( 'change', syncCompatibility ); } );
 			if ( template ) { template.addEventListener( 'change', syncCompatibility ); }
+			if ( imageId ) { imageId.addEventListener( 'change', syncCompatibility ); }
 			expiryRadios.forEach( function ( radio ) { radio.addEventListener( 'change', syncExpiry ); } );
 			if ( program ) { program.addEventListener( 'change', function () { syncExpiry(); syncCompatibility(); } ); }
 			if ( title ) { title.addEventListener( 'input', syncCompatibility ); }
@@ -1512,11 +1515,12 @@
 					var src = attachment.sizes && attachment.sizes.thumbnail ? attachment.sizes.thumbnail.url : attachment.url;
 					preview.innerHTML = ( src ? '<img src="' + escapeHtml( src ) + '" alt="">' : '' ) + '<span>' + escapeHtml( attachment.filename || attachment.title || certloomText( 'selectedFile', 'Selected file' ) ) + '</span>';
 					if ( clear ) { clear.hidden = false; }
+					if ( id && typeof window.Event === 'function' ) { id.dispatchEvent( new Event( 'change', { bubbles:true } ) ); }
 				} );
 				frame.on( 'close', function () { if ( choose ) { window.setTimeout( function () { choose.focus(); }, 0 ); } } );
 				frame.open();
 			} ); }
-			if ( clear ) { clear.addEventListener( 'click', function () { id.value = ''; if ( preview ) { preview.setAttribute( 'role', 'status' ); preview.innerHTML = '<span>' + escapeHtml( control.classList.contains( 'certloom-certificate-image-control' ) ? certloomText( 'noCertificateImage', 'No certificate image selected' ) : certloomText( 'noFileSelected', 'No file selected' ) ) + '</span>'; } clear.hidden = true; if ( choose ) { choose.focus(); } } ); }
+			if ( clear ) { clear.addEventListener( 'click', function () { id.value = ''; if ( preview ) { preview.setAttribute( 'role', 'status' ); preview.innerHTML = '<span>' + escapeHtml( control.classList.contains( 'certloom-certificate-image-control' ) ? certloomText( 'noCertificateImage', 'No certificate image selected' ) : certloomText( 'noFileSelected', 'No file selected' ) ) + '</span>'; } clear.hidden = true; if ( id && typeof window.Event === 'function' ) { id.dispatchEvent( new Event( 'change', { bubbles:true } ) ); } if ( choose ) { choose.focus(); } } ); }
 		} );
 	}
 
