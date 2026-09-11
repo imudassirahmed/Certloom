@@ -6468,3 +6468,19 @@ color:CanvasText}
 }
 
 @media (forced-colors:active){.certloom-manual-repeating,.certloom-manual-rowset,.certloom-manual-repeating-row,.certloom-manual-repeating-review{border-color:CanvasText}}
+
+/* alpha.4.28 conflict-layer alignment for the Credentials live filter toolbar.
+   Legacy UX-CORE search buttons use !important; keep that compatibility here,
+   not in the modern foundation layer. */
+.certloom-domain-screen .certloom-credential-filters > .button[type="submit"] {
+  min-height: 42px !important;
+  height: 42px !important;
+  line-height: 40px !important;
+}
+@media (max-width:782px) {
+  .certloom-domain-screen .certloom-credential-filters > .button[type="submit"] {
+    min-height: 44px !important;
+    height: 44px !important;
+    line-height: 42px !important;
+  }
+}

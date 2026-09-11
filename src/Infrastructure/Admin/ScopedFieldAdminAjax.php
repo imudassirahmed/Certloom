@@ -132,9 +132,8 @@ final class ScopedFieldAdminAjax {
 		wp_send_json_success( array( 'field' => array_merge( $field, array( 'sensitivity_label' => (string) $sensitivity_options[ $sensitivity ], 'public_exposure_label' => (string) $exposure_options[ $public_exposure ] ) ), 'message' => __( 'Field created and added. You can manage its policy later in Settings → Fields.', 'certloom' ) ) );
 	}
 
-	/** Read-only bounded Program/Batch lookup for relationship selectors. @return void */
-	public function lookup() {
-		$allowed = false;
+	/** Whether the current authenticated administrator may use bounded relationship search. */
+	public static function can_lookup() {
 		foreach ( array(
 			\Ecapla_CertVerify_Permissions::CAP_VIEW_CREDENTIALS,
 			\Ecapla_CertVerify_Permissions::CAP_ISSUE_CREDENTIALS,
@@ -144,16 +143,42 @@ final class ScopedFieldAdminAjax {
 			\Ecapla_CertVerify_Permissions::CAP_MANAGE_BATCHES,
 			\Ecapla_CertVerify_Permissions::CAP_MANAGE_TEMPLATES,
 			\Ecapla_CertVerify_Permissions::CAP_MANAGE_INTEGRATIONS,
-		) as $capability ) { if ( current_user_can( $capability ) ) { $allowed = true; break; } }
-		if ( ! $allowed ) { wp_send_json_error( array( 'message' => __( 'You do not have permission to search Certloom relationship choices.', 'certloom' ) ), 403 ); }
+		) as $capability ) {
+			if ( current_user_can( $capability ) ) { return true; }
+		}
+		return false;
+	}
+
+	/** Read-only bounded Program/Batch lookup for relationship selectors. @return void */
+	public function lookup() {
+		if ( ! self::can_lookup() ) { wp_send_json_error( array( 'message' => __( 'You do not have permission to search Certloom relationship choices.', 'certloom' ) ), 403 ); }
 		check_ajax_referer( self::NONCE_ACTION, 'nonce' );
 		$kind = isset( $_POST['kind'] ) ? sanitize_key( wp_unslash( $_POST['kind'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
 		$query = isset( $_POST['query'] ) ? sanitize_text_field( wp_unslash( $_POST['query'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
+		$program_id = isset( $_POST['program_id'] ) ? absint( $_POST['program_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
+		$program_status = isset( $_POST['program_status'] ) ? sanitize_key( wp_unslash( $_POST['program_status'] ) ) : 'active'; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
+		$choices = $this->choices( $kind, $query, $program_id, $program_status );
+		if ( is_wp_error( $choices ) ) { wp_send_json_error( array( 'message' => $choices->get_error_message() ), (int) ( $choices->get_error_data( 'status' ) ?: 400 ) ); }
+		wp_send_json_success( array( 'choices' => $choices, 'limit' => 20 ) );
+	}
+
+	/**
+	 * Shared bounded relationship search used by both the legacy admin-ajax
+	 * fallback and the authenticated REST search surface.
+	 *
+	 * @return array<int,array<string,mixed>>|\WP_Error
+	 */
+	public function choices( $kind, $query = '', $program_id = 0, $program_status = 'active' ) {
+		$kind = sanitize_key( (string) $kind );
+		$query = sanitize_text_field( (string) $query );
 		$query = function_exists( 'mb_substr' ) ? mb_substr( $query, 0, 120, 'UTF-8' ) : substr( $query, 0, 120 );
+		$program_id = absint( $program_id );
+		$program_status = sanitize_key( (string) $program_status );
+		$program_status = in_array( $program_status, array( 'active', 'inactive', 'all' ), true ) ? $program_status : 'active';
 		$choices = array();
 		if ( 'recipient' === $kind ) {
 			$result = ( new RecipientRepository() )->list_page( $query, 1, 20 );
-			if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'message' => $result->get_error_message() ), 500 ); }
+			if ( is_wp_error( $result ) ) { return $result; }
 			foreach ( (array) ( $result['items'] ?? array() ) as $row ) {
 				$label = trim( (string) ( $row['display_name'] ?? '' ) );
 				if ( ! empty( $row['email'] ) ) { $label .= ( '' !== $label ? ' · ' : '' ) . (string) $row['email']; }
@@ -161,46 +186,42 @@ final class ScopedFieldAdminAjax {
 				$choices[] = array( 'id' => absint( $row['id'] ?? 0 ), 'label' => $label );
 			}
 		} elseif ( 'program' === $kind ) {
-			$program_status = isset( $_POST['program_status'] ) ? sanitize_key( wp_unslash( $_POST['program_status'] ) ) : 'active'; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
-			$program_status = in_array( $program_status, array( 'active', 'inactive', 'all' ), true ) ? $program_status : 'active';
 			$result = ( new ProgramRepository() )->list_page( $query, 1, 20, $program_status );
-			if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'message' => $result->get_error_message() ), 500 ); }
+			if ( is_wp_error( $result ) ) { return $result; }
 			foreach ( (array) ( $result['items'] ?? array() ) as $row ) {
 				$label = (string) ( $row['title'] ?? '' ); if ( ! empty( $row['code'] ) ) { $label .= ' · ' . (string) $row['code']; }
 				$choices[] = array( 'id' => absint( $row['id'] ?? 0 ), 'label' => $label );
 			}
 		} elseif ( 'batch' === $kind ) {
-			$program_id = isset( $_POST['program_id'] ) ? absint( $_POST['program_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
 			$result = ( new BatchRepository() )->search_active_for_program( $program_id, $query, 20 );
-			if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'message' => $result->get_error_message() ), 500 ); }
+			if ( is_wp_error( $result ) ) { return $result; }
 			foreach ( (array) $result as $row ) {
 				$label = (string) ( $row['name'] ?? '' ); if ( ! empty( $row['code'] ) ) { $label .= ' · ' . (string) $row['code']; }
 				$choices[] = array( 'id' => absint( $row['id'] ?? 0 ), 'label' => $label, 'program_id' => absint( $row['program_id'] ?? 0 ) );
 			}
 		} elseif ( 'template' === $kind ) {
 			$result = ( new TemplateRepository() )->search_published_candidates( $query, 20 );
-			if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'message' => $result->get_error_message() ), 500 ); }
+			if ( is_wp_error( $result ) ) { return $result; }
 			foreach ( (array) $result as $row ) {
-				$label = ScopedContextChoices::template_label( $row );
-				$choices[] = array( 'id' => absint( $row['id'] ?? 0 ), 'label' => $label );
+				$choices[] = array( 'id' => absint( $row['id'] ?? 0 ), 'label' => ScopedContextChoices::template_label( $row ) );
 			}
 		} elseif ( 'issuer' === $kind ) {
 			$result = ( new IssuerRepository() )->list_page( $query, 1, 20 );
-			if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'message' => $result->get_error_message() ), 500 ); }
+			if ( is_wp_error( $result ) ) { return $result; }
 			foreach ( (array) ( $result['items'] ?? array() ) as $row ) {
 				$label = (string) ( $row['name'] ?? '' ); if ( ! empty( $row['slug'] ) ) { $label .= ' · ' . (string) $row['slug']; }
 				$choices[] = array( 'id' => absint( $row['id'] ?? 0 ), 'label' => $label );
 			}
 		} elseif ( 'signer' === $kind ) {
 			$result = ( new SignerRepository() )->list_page( $query, 1, 20, 'active' );
-			if ( is_wp_error( $result ) ) { wp_send_json_error( array( 'message' => $result->get_error_message() ), 500 ); }
+			if ( is_wp_error( $result ) ) { return $result; }
 			foreach ( (array) ( $result['items'] ?? array() ) as $row ) {
 				$label = (string) ( $row['display_name'] ?? '' ); if ( ! empty( $row['title'] ) ) { $label .= ' · ' . (string) $row['title']; }
 				$choices[] = array( 'id' => absint( $row['id'] ?? 0 ), 'label' => $label );
 			}
 		} elseif ( 'signer_scope' === $kind ) {
 			$choices = $this->signer_scope_choices( $query );
-			if ( is_wp_error( $choices ) ) { wp_send_json_error( array( 'message' => $choices->get_error_message() ), 500 ); }
+			if ( is_wp_error( $choices ) ) { return $choices; }
 		} elseif ( 'wp_user' === $kind ) {
 			$args = array(
 				'number'  => 20,
@@ -225,9 +246,9 @@ final class ScopedFieldAdminAjax {
 		} elseif ( 'learndash_course' === $kind ) {
 			$choices = $this->course_choices( LearnDashAdapter::is_available() ? LearnDashAdapter::course_post_type() : '', $query );
 		} else {
-			wp_send_json_error( array( 'message' => __( 'Choose a valid Certloom lookup type.', 'certloom' ) ), 400 );
+			return new \WP_Error( 'certloom_lookup_kind_invalid', __( 'Choose a valid Certloom lookup type.', 'certloom' ), array( 'status' => 400 ) );
 		}
-		wp_send_json_success( array( 'choices' => $choices, 'limit' => 20 ) );
+		return $choices;
 	}
 
 	/** @return array<int,array<string,mixed>>|\WP_Error */

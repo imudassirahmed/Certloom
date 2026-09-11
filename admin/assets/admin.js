@@ -400,7 +400,7 @@
 			if ( '1' === select.getAttribute( 'data-certloom-context-ready' ) ) { return; }
 			var kind = select.getAttribute( 'data-certloom-context-lookup' );
 			var nonce = select.getAttribute( 'data-certloom-context-nonce' ) || '';
-			if ( [ 'recipient', 'program', 'batch', 'template', 'issuer', 'signer', 'signer_scope', 'wp_user', 'tutor_course', 'learndash_course' ].indexOf( kind ) === -1 || ! nonce || 'undefined' === typeof window.ajaxurl ) { return; }
+			if ( [ 'recipient', 'program', 'batch', 'template', 'issuer', 'signer', 'signer_scope', 'wp_user', 'tutor_course', 'learndash_course' ].indexOf( kind ) === -1 || ! nonce || ( ! certloomL10n.restContextUrl && 'undefined' === typeof window.ajaxurl ) ) { return; }
 			select.setAttribute( 'data-certloom-context-ready', '1' );
 
 			var wrapper = document.createElement( 'div' );
@@ -485,27 +485,37 @@
 				requestSequence++;
 				var sequence = requestSequence;
 				status.textContent = certloomText( 'contextSearching', 'Searching…' );
-				var body = new FormData();
-				body.append( 'action', 'certloom_lookup_scoped_context' );
-				body.append( 'nonce', nonce );
-				body.append( 'kind', kind );
-				body.append( 'query', String( query || '' ) );
-				if ( 'program' === kind ) {
-					var programStatus = select.getAttribute( 'data-certloom-context-program-status' ) || 'active';
-					if ( [ 'active', 'inactive', 'all' ].indexOf( programStatus ) === -1 ) { programStatus = 'active'; }
-					body.append( 'program_status', programStatus );
-				}
-				if ( 'batch' === kind ) { body.append( 'program_id', String( programId() ) ); }
-				fetch( window.ajaxurl, { method: 'POST', credentials: 'same-origin', body: body } )
-					.then( function ( response ) { return response.json(); } )
-					.then( function ( response ) {
-						if ( sequence !== requestSequence ) { return; }
+				var programStatus = select.getAttribute( 'data-certloom-context-program-status' ) || 'active';
+				if ( [ 'active', 'inactive', 'all' ].indexOf( programStatus ) === -1 ) { programStatus = 'active'; }
+				var requestPromise;
+				if ( certloomL10n.restContextUrl ) {
+					var restUrl = new URL( certloomL10n.restContextUrl );
+					restUrl.searchParams.set( 'kind', kind );
+					restUrl.searchParams.set( 'query', String( query || '' ) );
+					if ( 'program' === kind ) { restUrl.searchParams.set( 'program_status', programStatus ); }
+					if ( 'batch' === kind ) { restUrl.searchParams.set( 'program_id', String( programId() ) ); }
+					requestPromise = fetch( restUrl.toString(), {
+						method: 'GET', credentials: 'same-origin', headers: certloomL10n.restNonce ? { 'X-WP-Nonce': certloomL10n.restNonce } : {}
+					} ).then( function ( response ) { return response.json().then( function ( payload ) { if ( ! response.ok ) { throw new Error( payload && payload.message ? payload.message : certloomText( 'contextSearchFailed', 'Search failed.' ) ); } return payload; } ); } );
+				} else {
+					var body = new FormData();
+					body.append( 'action', 'certloom_lookup_scoped_context' );
+					body.append( 'nonce', nonce );
+					body.append( 'kind', kind );
+					body.append( 'query', String( query || '' ) );
+					if ( 'program' === kind ) { body.append( 'program_status', programStatus ); }
+					if ( 'batch' === kind ) { body.append( 'program_id', String( programId() ) ); }
+					requestPromise = fetch( window.ajaxurl, { method: 'POST', credentials: 'same-origin', body: body } ).then( function ( response ) { return response.json(); } ).then( function ( response ) {
 						if ( ! response || ! response.success || ! response.data ) { throw new Error( response && response.data && response.data.message ? response.data.message : certloomText( 'contextSearchFailed', 'Search failed.' ) ); }
-						var choices = Array.isArray( response.data.choices ) ? response.data.choices : [];
-						replaceChoices( choices );
-						status.textContent = choices.length ? certloomCountText( choices.length ) : ( 'template' === kind ? certloomText( 'contextNoPublishedDesigns', 'No published designs match. Publish a design in Design first.' ) : certloomText( 'contextNoChoices', 'No matching choices.' ) );
-					} )
-					.catch( function ( error ) { if ( sequence === requestSequence ) { status.textContent = error && error.message ? error.message : certloomText( 'contextSearchFailed', 'Search failed.' ); } } );
+						return response.data;
+					} );
+				}
+				requestPromise.then( function ( data ) {
+					if ( sequence !== requestSequence ) { return; }
+					var choices = data && Array.isArray( data.choices ) ? data.choices : [];
+					replaceChoices( choices );
+					status.textContent = choices.length ? certloomCountText( choices.length ) : ( 'template' === kind ? certloomText( 'contextNoPublishedDesigns', 'No published designs match. Publish a design in Design first.' ) : certloomText( 'contextNoChoices', 'No matching choices.' ) );
+				} ).catch( function ( error ) { if ( sequence === requestSequence ) { status.textContent = error && error.message ? error.message : certloomText( 'contextSearchFailed', 'Search failed.' ); } } );
 			}
 			function schedule() {
 				if ( timer ) { window.clearTimeout( timer ); }
@@ -1068,6 +1078,69 @@
 	}
 
 
+
+	function initIssueDesignPreview() {
+		var select = document.querySelector( '[data-certloom-issue-template-select]' );
+		var panel = document.querySelector( '[data-certloom-issue-design-preview]' );
+		if ( ! select || ! panel ) { return; }
+		observeWizardTemplatePreview( panel );
+		var name = panel.querySelector( '[data-certloom-template-preview-name]' );
+		var description = panel.querySelector( '[data-certloom-template-preview-description]' );
+		var canvas = panel.querySelector( '[data-certloom-template-preview-canvas]' );
+		var sequence = 0;
+		var controller = null;
+		function emptyPreview( title, copy ) {
+			if ( name ) { name.textContent = title; }
+			if ( description ) { description.textContent = copy; }
+			if ( canvas ) { canvas.innerHTML = '<span class="certloom-issue-design-preview-empty">' + escapeHtml( certloomText( 'previewFitHint', 'Preview fits automatically in this window.' ) ) + '</span>'; }
+			panel.removeAttribute( 'aria-busy' );
+		}
+		function loadPreview() {
+			var templateId = parseInt( select.value || '0', 10 ) || 0;
+			sequence++;
+			var requestId = sequence;
+			if ( controller && controller.abort ) { controller.abort(); }
+			controller = 'undefined' !== typeof AbortController ? new AbortController() : null;
+			if ( ! templateId ) {
+				emptyPreview( certloomText( 'inheritedDesign', 'Inherited design' ), certloomText( 'choosePublishedDesignPreview', 'Choose a published design to preview a one-off override.' ) );
+				return;
+			}
+			if ( ! certloomL10n.restTemplatePreviewUrl ) {
+				emptyPreview( certloomText( 'previewUnavailable', 'Preview unavailable' ), certloomText( 'previewLoadFailed', 'Template preview could not be loaded.' ) );
+				return;
+			}
+			panel.setAttribute( 'aria-busy', 'true' );
+			if ( name ) { name.textContent = certloomText( 'loadingPreview', 'Loading preview…' ); }
+			if ( description ) { description.textContent = ''; }
+			if ( canvas ) { canvas.innerHTML = ''; }
+			var url = new URL( certloomL10n.restTemplatePreviewUrl );
+			url.searchParams.set( 'template_id', String( templateId ) );
+			fetch( url.toString(), {
+				method: 'GET', credentials: 'same-origin',
+				headers: certloomL10n.restNonce ? { 'X-WP-Nonce': certloomL10n.restNonce } : {},
+				signal: controller ? controller.signal : undefined
+			} ).then( function ( response ) {
+				return response.json().then( function ( payload ) {
+					if ( ! response.ok ) { throw new Error( payload && payload.message ? payload.message : certloomText( 'previewLoadFailed', 'Template preview could not be loaded.' ) ); }
+					return payload;
+				} );
+			} ).then( function ( payload ) {
+				if ( requestId !== sequence ) { return; }
+				if ( name ) { name.textContent = payload && payload.name ? payload.name : certloomText( 'previewUnavailable', 'Preview unavailable' ); }
+				if ( description ) { description.textContent = payload && payload.description ? payload.description : ''; }
+				if ( canvas ) { canvas.innerHTML = payload && payload.html ? payload.html : ''; }
+				panel.removeAttribute( 'aria-busy' );
+				window.requestAnimationFrame( function () { fitWizardTemplatePreview( panel ); } );
+			} ).catch( function ( error ) {
+				if ( error && 'AbortError' === error.name ) { return; }
+				if ( requestId !== sequence ) { return; }
+				emptyPreview( certloomText( 'previewUnavailable', 'Preview unavailable' ), error && error.message ? error.message : certloomText( 'previewLoadFailed', 'Template preview could not be loaded.' ) );
+			} );
+		}
+		select.addEventListener( 'change', loadPreview );
+		loadPreview();
+	}
+
 	function initPhase2Issuance() {
 		document.querySelectorAll( 'form[data-certloom-phase2-issuance]' ).forEach( function ( form ) {
 			var presentationRadios = Array.prototype.slice.call( form.querySelectorAll( 'input[name="presentation_mode"]' ) );
@@ -1571,6 +1644,113 @@
 	}
 
 
+	function initCredentialLiveSearch() {
+		var form = document.querySelector( 'form[data-certloom-credential-live-filter]' );
+		var results = document.querySelector( '[data-certloom-credential-results]' );
+		var status = document.querySelector( '[data-certloom-credential-live-status]' );
+		if ( ! form || ! results || ! certloomL10n.restCredentialsUrl ) { return; }
+		var search = form.querySelector( 'input[name="s"]' );
+		var program = form.querySelector( 'select[name="program_id"]' );
+		var statusInput = form.querySelector( 'input[name="credential_status"]' );
+		var orderby = form.querySelector( 'input[name="orderby"]' );
+		var order = form.querySelector( 'input[name="order"]' );
+		var timer = null;
+		var sequence = 0;
+		var controller = null;
+
+		function setStatus( message ) { if ( status ) { status.textContent = message || ''; } }
+		function currentParams( overrides ) {
+			var params = {
+				s: search ? search.value.trim() : '',
+				credential_status: statusInput ? statusInput.value : 'all',
+				program_id: program ? program.value || '0' : '0',
+				orderby: orderby ? orderby.value || 'recent' : 'recent',
+				order: order ? order.value || 'desc' : 'desc',
+				paged: '1'
+			};
+			Object.keys( overrides || {} ).forEach( function ( key ) { params[ key ] = String( overrides[ key ] ); } );
+			return params;
+		}
+		function updateBrowserUrl( params ) {
+			var url = new URL( window.location.href );
+			[ 's', 'credential_status', 'program_id', 'orderby', 'order', 'paged' ].forEach( function ( key ) { url.searchParams.delete( key ); } );
+			url.searchParams.set( 'page', 'certloom-domain-credentials' );
+			if ( params.s ) { url.searchParams.set( 's', params.s ); }
+			if ( params.credential_status && 'all' !== params.credential_status ) { url.searchParams.set( 'credential_status', params.credential_status ); }
+			if ( params.program_id && '0' !== params.program_id ) { url.searchParams.set( 'program_id', params.program_id ); }
+			if ( params.orderby && 'recent' !== params.orderby ) { url.searchParams.set( 'orderby', params.orderby ); url.searchParams.set( 'order', params.order || 'desc' ); }
+			if ( params.paged && '1' !== params.paged ) { url.searchParams.set( 'paged', params.paged ); }
+			window.history.replaceState( {}, '', url.toString() );
+		}
+		function request( overrides ) {
+			var params = currentParams( overrides );
+			sequence++;
+			var requestId = sequence;
+			if ( controller && controller.abort ) { controller.abort(); }
+			controller = 'undefined' !== typeof AbortController ? new AbortController() : null;
+			var url = new URL( certloomL10n.restCredentialsUrl );
+			Object.keys( params ).forEach( function ( key ) { url.searchParams.set( key, params[ key ] ); } );
+			results.setAttribute( 'aria-busy', 'true' );
+			setStatus( certloomText( 'liveSearchUpdating', 'Updating results…' ) );
+			fetch( url.toString(), {
+				method: 'GET', credentials: 'same-origin',
+				headers: certloomL10n.restNonce ? { 'X-WP-Nonce': certloomL10n.restNonce } : {},
+				signal: controller ? controller.signal : undefined
+			} ).then( function ( response ) {
+				return response.json().then( function ( payload ) {
+					if ( ! response.ok ) { throw new Error( payload && payload.message ? payload.message : certloomText( 'liveSearchFailed', 'Live search was unavailable. Use Filter to reload the page.' ) ); }
+					return payload;
+				} );
+			} ).then( function ( payload ) {
+				if ( requestId !== sequence ) { return; }
+				if ( ! payload || 'string' !== typeof payload.html ) { throw new Error( certloomText( 'liveSearchFailed', 'Live search was unavailable. Use Filter to reload the page.' ) ); }
+				results.innerHTML = payload.html;
+				results.removeAttribute( 'aria-busy' );
+				if ( orderby ) { orderby.value = payload.orderby || params.orderby; }
+				if ( order ) { order.value = payload.order || params.order; }
+				updateBrowserUrl( params );
+				setStatus( certloomText( 'liveSearchUpdated', 'Results updated.' ) );
+			} ).catch( function ( error ) {
+				if ( error && 'AbortError' === error.name ) { return; }
+				if ( requestId !== sequence ) { return; }
+				results.removeAttribute( 'aria-busy' );
+				setStatus( error && error.message ? error.message : certloomText( 'liveSearchFailed', 'Live search was unavailable. Use Filter to reload the page.' ) );
+			} );
+		}
+		function schedule() {
+			if ( timer ) { window.clearTimeout( timer ); }
+			timer = window.setTimeout( function () { request( { paged: '1' } ); }, 260 );
+		}
+		if ( search ) { search.addEventListener( 'input', schedule ); }
+		if ( program ) { program.addEventListener( 'change', function () { request( { paged: '1' } ); } ); }
+		form.addEventListener( 'submit', function ( event ) { event.preventDefault(); request( { paged: '1' } ); } );
+		var clear = form.querySelector( '.button-link' );
+		if ( clear ) {
+			clear.addEventListener( 'click', function ( event ) {
+				event.preventDefault();
+				if ( search ) { search.value = ''; }
+				if ( program ) { program.value = '0'; program.dispatchEvent( new Event( 'change', { bubbles: true } ) ); }
+				else { request( { paged: '1', s: '', program_id: '0' } ); }
+			} );
+		}
+		results.addEventListener( 'click', function ( event ) {
+			var link = event.target.closest( '.certloom-sort-link, .tablenav-pages a' );
+			if ( ! link || event.defaultPrevented || event.button > 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey ) { return; }
+			var target = new URL( link.href, window.location.origin );
+			if ( 'certloom-domain-credentials' !== target.searchParams.get( 'page' ) ) { return; }
+			event.preventDefault();
+			var next = {
+				paged: target.searchParams.get( 'paged' ) || '1',
+				orderby: target.searchParams.get( 'orderby' ) || 'recent',
+				order: target.searchParams.get( 'order' ) || 'desc'
+			};
+			if ( orderby ) { orderby.value = next.orderby; }
+			if ( order ) { order.value = next.order; }
+			request( next );
+		} );
+	}
+
+
 	function initProductSubnavPlacement() {
 		var nav = document.querySelector( '.certloom-product-subnav[data-certloom-product-subnav]' );
 		if ( ! nav ) { return; }
@@ -1653,6 +1833,8 @@
 		initGoogleDrivePopupConnect();
 		initPluginLifecycleDialog();
 		initScopedContextLookups();
+		initIssueDesignPreview();
+		initCredentialLiveSearch();
 		initProgramBatchSelectors();
 		initScopedFieldForms();
 	} );

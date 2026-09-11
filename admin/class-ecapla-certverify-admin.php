@@ -212,6 +212,13 @@ class Ecapla_CertVerify_Admin {
 		wp_enqueue_style( 'certloom-admin-foundation', ECAPLA_CERTVERIFY_URL . 'admin/assets/certloom-foundation.css', array( 'ecapla-certverify-admin' ), ECAPLA_CERTVERIFY_VERSION );
 		wp_enqueue_script( 'ecapla-certverify-admin', ECAPLA_CERTVERIFY_URL . 'admin/assets/admin.js', array(), ECAPLA_CERTVERIFY_VERSION, true );
 		wp_localize_script( 'ecapla-certverify-admin', 'certloomAdminL10n', array(
+			'restNonce' => wp_create_nonce( 'wp_rest' ),
+			'restContextUrl' => rest_url( 'certloom/v1/admin/context' ),
+			'restCredentialsUrl' => rest_url( 'certloom/v1/admin/credentials' ),
+			'restTemplatePreviewUrl' => rest_url( 'certloom/v1/admin/template-preview' ),
+			'liveSearchUpdating' => __( 'Updating results…', 'certloom' ),
+			'liveSearchUpdated' => __( 'Results updated.', 'certloom' ),
+			'liveSearchFailed' => __( 'Live search was unavailable. Use Filter to reload the page.', 'certloom' ),
 			'copy' => __( 'Copy', 'certloom' ),
 			'copied' => __( 'Copied', 'certloom' ),
 			'copyFailed' => __( 'Press Ctrl+C or Cmd+C to copy', 'certloom' ),
@@ -263,6 +270,9 @@ class Ecapla_CertVerify_Admin {
 			'previewLoadFailed' => __( 'Template preview could not be loaded.', 'certloom' ),
 			'noDefaultDesign' => __( 'No default design selected', 'certloom' ),
 			'previewUnavailable' => __( 'Preview unavailable', 'certloom' ),
+			'inheritedDesign' => __( 'Inherited design', 'certloom' ),
+			'choosePublishedDesignPreview' => __( 'Choose a published design to preview a one-off override.', 'certloom' ),
+			'previewFitHint' => __( 'Preview fits automatically in this window.', 'certloom' ),
 			'googleWaiting' => __( 'Waiting for Google…', 'certloom' ),
 			'googleOpening' => __( 'Opening Google…', 'certloom' ),
 			'googleCompletePermission' => __( 'Complete permission in the Google window.', 'certloom' ),

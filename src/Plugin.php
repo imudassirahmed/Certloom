@@ -84,6 +84,9 @@ final class Plugin {
 			( new \Certloom\Infrastructure\Email\EmailAutomationListener( self::$job_runtime->email_delivery() ) )->register();
 			( new \Certloom\Infrastructure\Integration\CredlyPublishingListener( self::$job_runtime->queue() ) )->register();
 		}
+		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
+			( new \Certloom\Infrastructure\Admin\AdminSearchRest() )->register();
+		}
 		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() && is_admin() ) {
 			( new \Certloom\Infrastructure\Admin\DomainAdmin() )->register();
 			( new \Certloom\Infrastructure\Admin\DomainStructureAdmin() )->register();

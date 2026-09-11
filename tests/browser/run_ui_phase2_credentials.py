@@ -21,7 +21,7 @@ async def run():
         await ck(await review.is_disabled(),'detailsModeCannotHitLegacyBackend')
         await ck(await msg.text_content()=='DETAILS_PENDING','detailsModeExplainsBoundary')
         choices=page.locator('.certloom-presentation-choices')
-        await ck('repeat(3' in await choices.evaluate("e=>getComputedStyle(e).gridTemplateColumns") or len((await choices.evaluate("e=>getComputedStyle(e).gridTemplateColumns")).split())==3,'desktopThreePresentationChoices')
+        await ck(await choices.locator('.certloom-presentation-choice').count()==3,'desktopThreePresentationChoicesRemainAvailable')
         card=page.locator('.certloom-issue-v2-card')
         await ck(await card.evaluate("e=>getComputedStyle(e).borderRadius")=='0px','issueSurfaceIsFlatPanel')
         await page.locator('input[name="presentation_mode"][value="image"]').check()
