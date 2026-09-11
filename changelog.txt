@@ -1,3 +1,8 @@
+= 1.7.0-alpha.4.24 =
+* Fine-tune only the Dashboard Recent credentials column balance after staging review: slightly reduce Credential and Recipient width, give Dates more room, and increase Status headroom while keeping the same compact five-column structure.
+* Add deliberate internal breathing room between Program / batch and Dates so the two summaries no longer read as one crowded block; no Quick actions or surrounding Dashboard changes are included.
+* Preserve View / Edit for current credentials, View / Manage for legacy rows, date-only Issued/Expires summaries, and the alpha.4.23 root min-width override. Renderer/domain authority remain intentionally absent during Phase 4 visual iteration.
+
 = 1.7.0-alpha.4.23 =
 * Fix the real Dashboard Recent credentials clipping root cause: the compact table now hard-overrides the full registry's 1120px minimum width, stays at 100% of the left Dashboard panel, and uses tighter five-column proportions/padding so Status remains visible beside the sidebar.
 * Keep the compact Credential, Recipient, Program / batch, Dates and Status structure; no Quick actions or surrounding Dashboard redesign is included.

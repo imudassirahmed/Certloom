@@ -44,6 +44,13 @@ async def run():
         await ck(await desktop.locator('.certloom-dashboard-recent-table thead th').count()==5,'dashboardTableUsesFiveCompactColumns')
         headers=[x.strip() for x in await desktop.locator('.certloom-dashboard-recent-table thead th').all_inner_texts()]
         await ck(headers==['Credential','Recipient','Program / batch','Dates','Status'],'dashboardCompactHeaders')
+        recipient_width=float((await desktop.locator('.certloom-dashboard-recent-table thead th').nth(1).evaluate("e=>getComputedStyle(e).width")).replace('px',''))
+        program_width=float((await desktop.locator('.certloom-dashboard-recent-table thead th').nth(2).evaluate("e=>getComputedStyle(e).width")).replace('px',''))
+        dates_width=float((await desktop.locator('.certloom-dashboard-recent-table thead th').nth(3).evaluate("e=>getComputedStyle(e).width")).replace('px',''))
+        status_width=float((await desktop.locator('.certloom-dashboard-recent-table thead th').nth(4).evaluate("e=>getComputedStyle(e).width")).replace('px',''))
+        await ck(recipient_width > dates_width and recipient_width < tr['width']*.33,'recipientColumnReducedButStillPrimary')
+        await ck(dates_width > program_width and status_width > program_width,'datesAndStatusReceiveMoreRoomThanProgram')
+        await ck(float((await desktop.locator('.certloom-dashboard-recent-table thead th').nth(3).evaluate("e=>getComputedStyle(e).paddingLeft")).replace('px','')) >= 16,'datesColumnHasBreathingRoomAfterProgram')
         await ck(await desktop.locator('.certloom-dashboard-date-line').count()==4,'dashboardDatesStackIssuedAndExpiry')
         await ck(await desktop.get_by_role('link',name='View').count()==2,'dashboardCurrentCredentialsExposeView')
         await ck(await desktop.get_by_role('link',name='Edit').count()==2,'dashboardCurrentCredentialsExposeEdit')

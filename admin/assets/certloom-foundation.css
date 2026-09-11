@@ -1451,11 +1451,24 @@
 
 /* Dashboard owns a compact five-column summary. The full Credentials registry
    keeps its wider 1120px contract; this scoped layout must never inherit it. */
-.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(1) { width: 18%; }
-.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(2) { width: 35%; }
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(1) { width: 17%; }
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(2) { width: 31%; }
 .certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(3) { width: 14%; }
-.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(4) { width: 20%; }
-.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(5) { width: 13%; }
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(4) { width: 22%; }
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(5) { width: 16%; }
+
+/* Keep Program / batch and Dates visually separate without widening the table.
+   The extra breathing room is internal to the two cells, so Status keeps its
+   guaranteed share of the Dashboard panel. */
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(3),
+.certloom-admin-shell .certloom-dashboard-recent-table td:nth-child(3) {
+  padding-inline-end: 14px;
+}
+
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(4),
+.certloom-admin-shell .certloom-dashboard-recent-table td:nth-child(4) {
+  padding-inline-start: 16px;
+}
 
 .certloom-admin-shell .certloom-dashboard-recent-table .certloom-credential-status {
   max-width: 100%;
