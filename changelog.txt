@@ -1,3 +1,11 @@
+= 1.7.0-alpha.4.18 =
+* Preserve the user-approved alpha.4.17 light brand-glass hero and supplied Certloom watermark exactly while continuing Phase 4 visual review.
+* Clear WordPress native Help/Screen Options floats before the Certloom admin shell so Dashboard and shared workspaces use the full available admin width instead of wrapping beside the Help tab.
+* Repair the Dashboard setup reminder: long snooze/dismiss actions now remain readable, responsive text controls instead of collapsing into 30px square columns.
+* Remove a literal `\t` markup leak from the Dashboard output.
+* Simplify Recent Credentials into a dashboard-appropriate five-column activity summary, combine issue/expiry into Validity, remove registry-only version/added-at columns from Home, and provide a no-horizontal-scroll mobile labeled-row layout.
+* Add targeted Phase 4 dashboard source/browser regression gates. Renderer implementation is unchanged; renderer/domain authority remain intentionally absent until the visual tree stabilizes.
+
 = 1.7.0-alpha.4.17 =
 * Replace the dark logo-gradient admin top cards with the requested light brand-glass treatment: white translucent surface, subtle logo-color glow, short Certloom spectrum rail, dark navy typography, and the exact supplied Certloom mark as a low-opacity right-side watermark.
 * Apply the light top-card treatment consistently across Dashboard, primary page, workspace, credential and Email Design hero surfaces while preserving existing actions, Setup placement, responsive stacking, reduced-motion behavior and forced-colors fallback.

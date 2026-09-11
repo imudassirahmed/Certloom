@@ -33,9 +33,9 @@ async def run():
         await ck(await recent.count()==1,'normalizedRecentTable')
         await ck(await recent.locator('tbody tr').count()==2,'normalizedRecentRows')
         headers=[x.strip() for x in await recent.locator('thead th').all_inner_texts()]
-        await ck(headers==['Credential','Recipient','Program / batch','Issue date','Expiry date','Credential status','Record version','Added to Certloom'],'recentRegistryColumns')
+        await ck(headers==['Credential','Recipient','Program / batch','Validity','Credential status'],'recentRegistryColumns')
         first_text=await recent.locator('tbody tr').nth(0).inner_text()
-        await ck(all(x in first_text for x in ['CERT-171-001','Ada Example','ada@example.test','Leadership','August 2026','2026-08-26','2027-08-26','Valid','v2']),'recentFirstRowData')
+        await ck(all(x in first_text for x in ['CERT-171-001','Ada Example','ada@example.test','Leadership','August 2026','2026-08-26','Expires 2027-08-26','Valid']),'recentFirstRowData')
         await ck(await recent.get_by_role('link',name='View').count()==2 and await recent.get_by_role('link',name='Manage').count()==2,'recentRowActions')
         quick=page.locator('.certloom-dashboard-quick-grid')
         await ck(await quick.count()==1,'quickActionKeypad')

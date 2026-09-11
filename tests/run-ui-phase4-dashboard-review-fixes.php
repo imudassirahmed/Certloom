@@ -1,0 +1,38 @@
+<?php
+/** Source contract for Phase 4 dashboard visual-review corrections. */
+$root       = dirname( __DIR__ );
+$foundation = file_get_contents( $root . '/admin/assets/certloom-foundation.css' );
+$dashboard  = file_get_contents( $root . '/admin/views/dashboard.php' );
+
+$checks   = 0;
+$failures = array();
+function p4dash_check( $ok, $label ) {
+	global $checks, $failures;
+	++$checks;
+	if ( ! $ok ) {
+		$failures[] = $label;
+	}
+}
+
+p4dash_check( false !== strpos( $foundation, 'clear: both;' ), 'Certloom admin shell clears native WordPress Help/Screen Options floats' );
+p4dash_check( false !== strpos( $dashboard, 'certloom-setup-reminder-actions' ), 'setup reminder owns a dedicated responsive action group' );
+p4dash_check( false !== strpos( $dashboard, 'certloom-setup-reminder-review' ), 'setup reminder review action has an explicit semantic hook' );
+p4dash_check( false !== strpos( $foundation, '.certloom-admin-shell .certloom-setup-reminder-actions' ), 'setup reminder action group is styled by current foundation authority' );
+p4dash_check( false !== strpos( $foundation, '.certloom-admin-shell .certloom-setup-reminder-dismiss .button-link' ) && false !== strpos( $foundation, 'width: auto;' ) && false !== strpos( $foundation, 'white-space: nowrap;' ), 'long reminder actions are no longer forced into 30px square controls' );
+p4dash_check( false === strpos( $dashboard, '\\t</div>' ), 'literal backslash-t output is absent from dashboard markup' );
+p4dash_check( 1 === substr_count( $dashboard, "esc_html_e( 'Validity', 'certloom' )" ), 'dashboard recent-activity table uses one compact Validity column' );
+p4dash_check( false === strpos( $dashboard, "<th scope=\"col\"><?php esc_html_e( 'Record version', 'certloom' ); ?></th>" ), 'dashboard summary no longer duplicates deep record-version metadata' );
+p4dash_check( false === strpos( $dashboard, "<th scope=\"col\"><?php esc_html_e( 'Added to Certloom', 'certloom' ); ?></th>" ), 'dashboard summary no longer duplicates deep added-at metadata' );
+p4dash_check( false !== strpos( $foundation, '.certloom-admin-shell .certloom-dashboard-recent-table' ) && false !== strpos( $foundation, 'min-width: 0 !important;' ) && false !== strpos( $foundation, 'table-layout: fixed;' ), 'desktop dashboard table overrides registry min-width and fits its panel' );
+p4dash_check( false !== strpos( $foundation, '.certloom-admin-shell .certloom-dashboard-recent-table td::before' ) && false !== strpos( $foundation, 'content: attr(data-col);' ), 'mobile dashboard activity rows expose accessible compact labels without horizontal scrolling' );
+p4dash_check( is_file( $root . '/admin/assets/certloom-brand-mark.png' ) && hash_file( 'sha256', $root . '/admin/assets/certloom-brand-mark.png' ) === '1173edd257e9f0808dee4ad2733caca251fc709c69753687f6b37151935c6450', 'user-approved Certloom watermark asset remains byte-identical' );
+p4dash_check( false !== strpos( $foundation, 'opacity: .115;' ) && false !== strpos( $foundation, 'right: -34px;' ), 'user-approved watermark scale/crop treatment remains unchanged' );
+
+if ( $failures ) {
+	echo 'FAIL  Phase 4 dashboard review source contract: ' . implode( ', ', $failures ) . "\n\n";
+	echo ( $checks - count( $failures ) ) . ' passed, ' . count( $failures ) . " failures\n";
+	exit( 1 );
+}
+
+echo "PASS  Phase 4 dashboard review source contract\n\n";
+echo $checks . " checks, 0 failures\n";
