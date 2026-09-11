@@ -1945,3 +1945,75 @@ body.certloom-setup-v2-body { overflow: hidden; }
   .certloom-guided-tour-card { border-color: CanvasText; }
   .certloom-tour-target { outline-color: Highlight; }
 }
+
+/* alpha.4.25 — contextual navigation belongs to the workspace it controls.
+   AdminProductNavigation is emitted early by WordPress, then moved directly
+   below the Certloom hero by admin.js. The fallback (no hero / no JS) keeps
+   the original safe top position. */
+.certloom-product-subnav.is-below-hero {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 12px 0 16px;
+  padding-inline: 14px;
+}
+.certloom-admin-shell > .certloom-page-hero + .certloom-product-subnav.is-below-hero,
+.certloom-admin-shell > .certloom-dashboard-hero + .certloom-product-subnav.is-below-hero,
+.certloom-admin-shell > .certloom-workspace-hero + .certloom-product-subnav.is-below-hero {
+  margin-top: 12px;
+}
+
+/* Credentials overview: the contextual subnav already owns import/file intake;
+   keep the page body focused on status, filtering and the registry itself. */
+.certloom-domain-screen .certloom-credential-filters {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(220px, 280px) auto;
+  align-items: end;
+  gap: 10px 12px;
+}
+.certloom-domain-screen .certloom-credential-filters > label:first-of-type {
+  min-width: 0;
+}
+.certloom-domain-screen .certloom-credential-search-filter,
+.certloom-domain-screen .certloom-credential-program-filter {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.certloom-domain-screen .certloom-credential-search-filter .certloom-filter-label,
+.certloom-domain-screen .certloom-credential-program-filter .certloom-filter-label {
+  color: var(--cl-ink-soft, #50575e);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.certloom-domain-screen .certloom-credential-program-filter .certloom-context-lookup {
+  min-width: 0;
+}
+.certloom-domain-screen .certloom-credential-filters > .button-link {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+.certloom-domain-screen .certloom-domain-gate-notice-deferred {
+  margin-top: 16px;
+}
+@media (max-width: 960px) {
+  .certloom-domain-screen .certloom-credential-filters {
+    grid-template-columns: 1fr minmax(220px, 300px);
+  }
+  .certloom-domain-screen .certloom-credential-filters > button[type="submit"] {
+    grid-column: 2;
+  }
+}
+@media (max-width: 782px) {
+  .certloom-product-subnav.is-below-hero {
+    width: 100%;
+    margin: 10px 0 14px;
+  }
+  .certloom-domain-screen .certloom-credential-filters {
+    grid-template-columns: 1fr;
+  }
+  .certloom-domain-screen .certloom-credential-filters > button[type="submit"] {
+    grid-column: auto;
+    width: 100%;
+  }
+}

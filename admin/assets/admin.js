@@ -1570,8 +1570,20 @@
 		dialog.addEventListener( 'click', function ( event ) { if ( event.target === dialog ) { dialog.close(); } } );
 	}
 
+
+	function initProductSubnavPlacement() {
+		var nav = document.querySelector( '.certloom-product-subnav[data-certloom-product-subnav]' );
+		if ( ! nav ) { return; }
+		var shell = document.querySelector( '.ecapla-certverify-admin-wrap.certloom-admin-shell, .certloom-admin-shell, .ecapla-certverify-admin-wrap' );
+		if ( ! shell ) { return; }
+		var hero = shell.querySelector( ':scope > .certloom-page-hero, :scope > .certloom-dashboard-hero, :scope > .certloom-workspace-hero' );
+		if ( ! hero ) { return; }
+		hero.insertAdjacentElement( 'afterend', nav );
+		nav.classList.add( 'is-below-hero' );
+	}
+
 	function initDescriptionAssociations() {
-		var descriptions = document.querySelectorAll( '.ecapla-certverify-admin-wrap p.description, .certloom-product-subnav + .wrap p.description' );
+		var descriptions = document.querySelectorAll( '.ecapla-certverify-admin-wrap p.description, .certloom-admin-shell p.description' );
 		var serial = 0;
 		Array.prototype.forEach.call( descriptions, function ( description ) {
 			var container = description.closest( 'td, label, fieldset, .certloom-domain-field, .certloom-form-field, .certloom-manual-fieldset, .certloom-premium-dialog, .ecapla-certverify-admin-card' );
@@ -1611,6 +1623,7 @@
 
 	document.addEventListener( 'DOMContentLoaded', function () {
 		initCopyBlocks();
+		initProductSubnavPlacement();
 		initDescriptionAssociations();
 		initCertloomWordPressMenuState();
 		initHumanFormValidation();

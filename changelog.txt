@@ -1,3 +1,7 @@
+= 1.7.0-alpha.4.25 =
+* Phase 4 Credentials workspace hierarchy refinement: contextual subtabs now settle directly below the hero, the duplicate import CTA is removed from the Credentials overview, operational notices stay prominent while technical gate detail is deferred below the registry, and filter grouping is clearer.
+* Current Credential rows now expose the same stable public-view continuity used by the Dashboard whenever a normalized public ID can produce a URL.
+
 = 1.7.0-alpha.4.24 =
 * Fine-tune only the Dashboard Recent credentials column balance after staging review: slightly reduce Credential and Recipient width, give Dates more room, and increase Status headroom while keeping the same compact five-column structure.
 * Add deliberate internal breathing room between Program / batch and Dates so the two summaries no longer read as one crowded block; no Quick actions or surrounding Dashboard changes are included.

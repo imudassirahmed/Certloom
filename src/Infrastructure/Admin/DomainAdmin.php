@@ -569,10 +569,9 @@ final class DomainAdmin {
 			$simple ? __( 'See who received each credential, open the public view, or continue managing it without navigating through internal record structures.', 'certloom' ) : __( 'Inspect continuing Credential Series, immutable Version lineage, effective status, verification identity, and reviewed lifecycle actions from one premium workspace.', 'certloom' ),
 			$issue_action
 		);
-		if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS ) ) {
-			echo '<p class="certloom-registry-secondary-actions"><a class="button" href="' . esc_url( add_query_arg( 'page', BulkIssuanceAdmin::INTAKE_PAGE, admin_url( 'admin.php' ) ) ) . '">' . esc_html__( 'Import / issue from file', 'certloom' ) . '</a></p>';
-		}
-		$this->notice();
+		// Import / issue from file already exists in the Credentials contextual subnav.
+		// Keep the overview focused on one primary hero action instead of repeating it.
+		$this->notice( false );
 		if ( ! is_wp_error( $summary ) ) {
 			$this->metric_grid(
 				array(
@@ -592,8 +591,7 @@ final class DomainAdmin {
 			$this->simple_credential_list( (array) $result['items'], $status_service );
 			$this->pagination( self::CREDENTIALS_PAGE, $page, (int) $result['total'], 50, $search, array( 'credential_status' => $status, 'program_id' => $program_id ) );
 		} else {
-			$public_ready = ( new \Certloom\Infrastructure\Verification\PublicVerificationGate() )->is_ready();
-			$url_builder  = new \Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl();
+			$url_builder = new \Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl();
 			echo '<div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-table certloom-credential-table"><thead><tr><th>' . esc_html__( 'Credential', 'certloom' ) . '</th><th>' . esc_html__( 'Recipient', 'certloom' ) . '</th><th>' . esc_html__( 'Program / batch', 'certloom' ) . '</th><th>' . esc_html__( 'Issue date', 'certloom' ) . '</th><th>' . esc_html__( 'Expiry date', 'certloom' ) . '</th><th>' . esc_html__( 'Credential status', 'certloom' ) . '</th><th>' . esc_html__( 'Record version', 'certloom' ) . '</th><th>' . esc_html__( 'Added to Certloom', 'certloom' ) . '</th></tr></thead><tbody>';
 			foreach ( $result['items'] as $item ) {
 				$is_historical = 'historical' === (string) ( $item['_credential_source'] ?? '' );
@@ -608,9 +606,13 @@ final class DomainAdmin {
 				$credential_title = trim( (string) ( $item['credential_title'] ?? $item['title'] ?? '' ) );
 				$program = trim( (string) ( $item['program_title'] ?? '' ) );
 				$batch = trim( (string) ( $item['batch_name'] ?? '' ) );
-				$public_url = $is_historical
-					? ( class_exists( 'Ecapla_CertVerify_Public_Router' ) && '' !== $number ? \Ecapla_CertVerify_Public_Router::profile_url( $number ) : '' )
-					: ( $public_ready ? $url_builder->verification_url( (string) ( $item['public_id'] ?? '' ) ) : null );
+				$public_url = '';
+				if ( $is_historical ) {
+					$public_url = class_exists( 'Ecapla_CertVerify_Public_Router' ) && '' !== $number ? \Ecapla_CertVerify_Public_Router::profile_url( $number ) : '';
+				} elseif ( ! empty( $item['public_id'] ) ) {
+					$public_result = $url_builder->verification_url( (string) $item['public_id'] );
+					if ( ! is_wp_error( $public_result ) ) { $public_url = (string) $public_result; }
+				}
 				$entry_date = trim( (string) ( $item['entry_created_at'] ?? $item['series_created_at'] ?? '' ) );
 				echo '<tr>';
 				$primary_label = '' !== $credential_title ? $credential_title : ( '' !== $number ? $number : __( 'Credential', 'certloom' ) );
@@ -633,6 +635,7 @@ final class DomainAdmin {
 			echo '</tbody></table></div>';
 			$this->pagination( self::CREDENTIALS_PAGE, $page, (int) $result['total'], 50, $search, array( 'credential_status' => $status, 'program_id' => $program_id ) );
 		}
+		$this->technical_status_notice();
 		$this->footer();
 	}
 
@@ -929,9 +932,9 @@ final class DomainAdmin {
 		$simple = AdminUiMode::is_simple();
 		$search_placeholder = $simple ? __( 'Certificate number, recipient, email, Program, or batch', 'certloom' ) : __( 'Certificate, recipient, email, Program, batch, or public ID', 'certloom' );
 		echo '<form method="get" class="certloom-domain-search certloom-credential-filters"><input type="hidden" name="page" value="' . esc_attr( self::CREDENTIALS_PAGE ) . '"><input type="hidden" name="credential_status" value="' . esc_attr( $status ) . '">';
-		echo '<label><span class="screen-reader-text">' . esc_html__( 'Search credentials', 'certloom' ) . '</span><input type="search" name="s" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr( $search_placeholder ) . '"></label>';
+		echo '<label class="certloom-credential-search-filter"><span class="certloom-filter-label">' . esc_html__( 'Search', 'certloom' ) . '</span><input type="search" name="s" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr( $search_placeholder ) . '"></label>';
 		$context_nonce = wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION );
-		echo '<label><span class="screen-reader-text">' . esc_html__( 'Filter by Program', 'certloom' ) . '</span><select name="program_id" data-certloom-context-lookup="program" data-certloom-context-program-status="all" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search all Programs…', 'certloom' ) . '"><option value="0">' . esc_html__( 'All Programs', 'certloom' ) . '</option>';
+		echo '<label class="certloom-credential-program-filter"><span class="certloom-filter-label">' . esc_html__( 'Program', 'certloom' ) . '</span><select name="program_id" data-certloom-context-lookup="program" data-certloom-context-program-status="all" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search all Programs…', 'certloom' ) . '"><option value="0">' . esc_html__( 'All Programs', 'certloom' ) . '</option>';
 		foreach ( $programs as $program ) {
 			echo '<option value="' . esc_attr( (string) absint( $program['id'] ?? 0 ) ) . '" ' . selected( $program_id, absint( $program['id'] ?? 0 ), false ) . '>' . esc_html( (string) ( $program['title'] ?? '' ) ) . ( ! empty( $program['code'] ) ? ' — ' . esc_html( (string) $program['code'] ) : '' ) . '</option>';
 		}
@@ -2070,13 +2073,19 @@ final class DomainAdmin {
 		exit;
 	}
 
-	/** @return void */
-	private function notice() {
+
+	/** Keep preview/authority detail available without interrupting the operational workspace. @return void */
+	private function technical_status_notice() {
 		if ( AdminUiMode::is_simple() ) {
-			echo '<details class="certloom-technical-details certloom-domain-gate-notice"><summary>' . esc_html__( 'Technical status', 'certloom' ) . '</summary><p><strong>' . esc_html__( 'Safety gate active.', 'certloom' ) . '</strong> ' . esc_html__( 'These normalized-domain screens are available only when the explicit admin-preview gate is enabled. The proven historical credential store remains production authority until real migration, restore, cutover, and database acceptance pass.', 'certloom' ) . '</p></details>';
+			echo '<details class="certloom-technical-details certloom-domain-gate-notice certloom-domain-gate-notice-deferred"><summary>' . esc_html__( 'Technical status', 'certloom' ) . '</summary><p><strong>' . esc_html__( 'Safety gate active.', 'certloom' ) . '</strong> ' . esc_html__( 'These normalized-domain screens are available only when the explicit admin-preview gate is enabled. The proven historical credential store remains production authority until real migration, restore, cutover, and database acceptance pass.', 'certloom' ) . '</p></details>';
 		} else {
-			echo '<div class="notice notice-warning inline certloom-domain-gate-notice"><p><strong>' . esc_html__( 'Safety gate active.', 'certloom' ) . '</strong> ' . esc_html__( 'These normalized-domain screens are available only when the explicit admin-preview gate is enabled. The proven historical credential store remains production authority until real migration, restore, cutover, and database acceptance pass.', 'certloom' ) . '</p></div>';
+			echo '<div class="notice notice-warning inline certloom-domain-gate-notice certloom-domain-gate-notice-deferred"><p><strong>' . esc_html__( 'Safety gate active.', 'certloom' ) . '</strong> ' . esc_html__( 'These normalized-domain screens are available only when the explicit admin-preview gate is enabled. The proven historical credential store remains production authority until real migration, restore, cutover, and database acceptance pass.', 'certloom' ) . '</p></div>';
 		}
+	}
+
+	/** @return void */
+	private function notice( $include_technical = true ) {
+		if ( $include_technical ) { $this->technical_status_notice(); }
 		if ( isset( $_GET['certloom_error'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Redirected admin notice only.
 			$this->error( sanitize_text_field( wp_unslash( $_GET['certloom_error'] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		}

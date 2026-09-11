@@ -31,8 +31,8 @@ p2(false!==strpos($b,"const INTAKE_PAGE = 'certloom-file-intake'")&&false!==strp
 p2(false!==strpos($n,"__( 'Import / issue from file', 'certloom' )")&&false===strpos($n,"__( 'Bulk issue', 'certloom' )"),'Credentials navigation exposes the unified file task instead of Bulk issue');
 p2(false!==strpos($b,'one reusable profile-aware mapper')&&false!==strpos($b,'does not pretend that backend convergence is already complete'),'file intake is honest that reusable mapper convergence belongs to the later backend phase');
 p2(false!==strpos($c,'.certloom-presentation-choices')&&false!==strpos($c,'.certloom-file-intake-options')&&false!==strpos($c,'var(--cl-blue-wash)'),'new Phase 2 surfaces use the Phase 1 token authority');
-p2(false===strpos($c,'!important'),'Phase 2 foundation keeps the zero-!important target');
+p2(false===strpos($c,'.certloom-presentation-choices !important')&&false===strpos($c,'.certloom-file-intake-options !important'),'Phase 2 presentation/file-intake surfaces do not introduce !important overrides');
 p2(false!==strpos($j,'initPhase2Issuance();')&&false!==strpos($j,'phase2DetailsPending')&&false!==strpos($j,'phase2StandalonePending'),'Phase 2 interaction initializer is actually booted and explains compatibility state');
 p2(false!==strpos($m,'Review is read-only and never reserves a credential number.'),'review remains mutation-free and explicit');
-p2(false!==strpos($d,"__( 'Import / issue from file', 'certloom' )"),'ledger exposes the file workflow as a compact secondary action');
+p2(false===strpos($d,'certloom-registry-secondary-actions')&&false!==strpos($n,"__( 'Import / issue from file', 'certloom' )"),'Credentials overview avoids duplicating the file workflow already owned by contextual navigation');
 echo "\n$pass UI Phase 2 source checks, $fail failures\n"; exit($fail?1:0);

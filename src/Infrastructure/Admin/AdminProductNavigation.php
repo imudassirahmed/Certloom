@@ -66,7 +66,7 @@ final class AdminProductNavigation {
 		if ( '' === $page || 0 !== strpos( $page, 'certloom' ) || ! is_user_logged_in() ) { return; }
 		$links = $this->links_for_section( $this->section_for_page( $page ) );
 		if ( empty( $links ) ) { return; }
-		echo '<nav class="certloom-product-subnav" aria-label="' . esc_attr__( 'Certloom section navigation', 'certloom' ) . '">';
+		echo '<nav class="certloom-product-subnav" data-certloom-product-subnav aria-label="' . esc_attr__( 'Certloom section navigation', 'certloom' ) . '">';
 		foreach ( $links as $link ) {
 			if ( ! $this->can_access_link( $link ) ) { continue; }
 			$current = in_array( $page, $link['pages'], true );
