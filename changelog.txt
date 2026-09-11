@@ -1,3 +1,8 @@
+= 1.7.0-alpha.4.22 =
+* Correct only the Dashboard Recent credentials list after staging review: combine issue and expiry into one compact Dates column, render date-only values without timestamps, and keep Status visible within the available panel width.
+* Restore a clear Edit action for current normalized credentials while preserving View/Manage behavior for historical credentials; public View remains available for current credentials whenever verification routing is ready.
+* Keep Quick actions and every surrounding Dashboard component unchanged. Renderer/domain authority remain intentionally absent during Phase 4 visual iteration.
+
 = 1.7.0-alpha.4.21 =
 * Correct only the Dashboard Recent credentials list: restore separate Issue date and Expiry date columns alongside Credential, Recipient, Program / batch and Credential status, replacing the overly sparse combined Validity presentation.
 * Keep Dashboard shortcuts, System Health, Data Safety, hero, analytics and approved watermark unchanged.

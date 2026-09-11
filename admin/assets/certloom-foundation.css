@@ -1446,20 +1446,54 @@
   overflow-wrap: anywhere;
 }
 
-.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(1) { width: 18%; }
-.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(2) { width: 21%; }
-.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(3) { width: 17%; }
-.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(4) { width: 15%; }
-.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(5) { width: 14%; }
-.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(6) { width: 15%; }
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(1) { width: 21%; }
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(2) { width: 24%; }
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(3) { width: 18%; }
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(4) { width: 21%; }
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(5) { width: 16%; }
 
 .certloom-admin-shell .certloom-dashboard-recent-table .certloom-credential-status {
   max-width: 100%;
 }
 
 .certloom-admin-shell .certloom-dashboard-recent-table .certloom-dashboard-date-cell {
-  white-space: nowrap;
+  white-space: normal;
   overflow-wrap: normal;
+}
+
+.certloom-admin-shell .certloom-dashboard-date-line {
+  display: grid;
+  grid-template-columns: 7px 44px minmax(0, 1fr);
+  gap: 5px;
+  align-items: center;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.certloom-admin-shell .certloom-dashboard-date-line + .certloom-dashboard-date-line {
+  margin-top: 4px;
+}
+
+.certloom-admin-shell .certloom-dashboard-date-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cl-brand-blue);
+}
+
+.certloom-admin-shell .certloom-dashboard-date-line.is-expiry .certloom-dashboard-date-dot {
+  background: var(--cl-brand-emerald);
+}
+
+.certloom-admin-shell .certloom-dashboard-date-label {
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-xs);
+  font-weight: 600;
+}
+
+.certloom-admin-shell .certloom-dashboard-date-value {
+  min-width: 0;
+  white-space: nowrap;
 }
 
 @media (max-width: 980px) {

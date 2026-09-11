@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.7.0-alpha.4.21
+Stable tag: 1.7.0-alpha.4.22
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> **1.7.0 ALPHA 4.21 — DASHBOARD RECENT-CREDENTIALS LIST CORRECTION — NOT FOR PRODUCTION.** This checkpoint changes only the Dashboard Recent credentials list from the overly sparse combined Validity layout to a compact six-column operational summary: Credential, Recipient, Program / batch, Issue date, Expiry date and Credential status. Dashboard shortcuts and surrounding cards remain unchanged. Renderer/domain authority remain absent while Phase 4 visual acceptance continues.
+> **1.7.0 ALPHA 4.22 — DASHBOARD RECENT-CREDENTIALS FIT CORRECTION — NOT FOR PRODUCTION.** This checkpoint changes only the Dashboard Recent credentials list after staging review: issue and expiry are combined into one compact Dates column with date-only values, Status stays visible, and current credentials expose a clear Edit action while historical credentials retain Manage. Dashboard shortcuts and surrounding cards remain unchanged. Renderer/domain authority remain absent while Phase 4 visual acceptance continues.
 
 > **1.7.0 ALPHA 4.18 — DASHBOARD VISUAL-REVIEW CORRECTION CHECKPOINT — NOT FOR PRODUCTION.** This checkpoint keeps the approved alpha.4.17 light brand-glass hero and exact supplied watermark unchanged while fixing WordPress Help-tab float interference, the broken setup-reminder action layout, a literal `\t` output leak, and Dashboard Recent Credentials overflow. Recent activity is now a five-column scan summary with responsive mobile labels; full record/version detail remains in Credentials. Renderer and normalized-domain authority remain absent while Phase 4 visual acceptance continues.
 

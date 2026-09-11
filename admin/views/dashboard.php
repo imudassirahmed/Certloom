@@ -232,6 +232,12 @@ $certloom_fields_url      = admin_url( 'admin.php?page=certloom-fields' );
 						'not_issued'             => __( 'Not issued', 'certloom' ),
 					);
 					$certloom_dashboard_status_service = class_exists( '\\Certloom\\Domain\\Credential\\StatusService' ) ? new \Certloom\Domain\Credential\StatusService() : null;
+					$certloom_dashboard_date_only = static function ( $value ) {
+						$value = trim( (string) $value );
+						if ( '' === $value ) { return ''; }
+						if ( preg_match( '/^(\d{4}-\d{2}-\d{2})/', $value, $matches ) ) { return $matches[1]; }
+						return $value;
+					};
 				?>
 					<div class="certloom-domain-table-wrap certloom-dashboard-recent-table-wrap">
 					<table class="widefat striped certloom-domain-table certloom-credential-table certloom-dashboard-recent-table">
@@ -239,9 +245,8 @@ $certloom_fields_url      = admin_url( 'admin.php?page=certloom-fields' );
 							<th scope="col"><?php esc_html_e( 'Credential', 'certloom' ); ?></th>
 							<th scope="col"><?php esc_html_e( 'Recipient', 'certloom' ); ?></th>
 							<th scope="col"><?php esc_html_e( 'Program / batch', 'certloom' ); ?></th>
-							<th scope="col"><?php esc_html_e( 'Issue date', 'certloom' ); ?></th>
-							<th scope="col"><?php esc_html_e( 'Expiry date', 'certloom' ); ?></th>
-							<th scope="col"><?php esc_html_e( 'Credential status', 'certloom' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Dates', 'certloom' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Status', 'certloom' ); ?></th>
 						</tr></thead>
 						<tbody>
 						<?php foreach ( $certloom_normalized_recent as $credential ) :
@@ -287,14 +292,18 @@ $certloom_fields_url      = admin_url( 'admin.php?page=certloom-fields' );
 							<tr>
 								<td data-col="<?php esc_attr_e( 'Credential', 'certloom' ); ?>">
 									<strong class="certloom-credential-title"><a href="<?php echo esc_url( $manage_url ); ?>"><?php echo esc_html( '' !== $number ? $number : __( 'Unnumbered credential', 'certloom' ) ); ?></a></strong>
-									<div class="certloom-credential-row-actions" aria-label="<?php esc_attr_e( 'Credential actions', 'certloom' ); ?>"><?php if ( '' !== $view_url ) : ?><a href="<?php echo esc_url( $view_url ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'View', 'certloom' ); ?></a><?php endif; ?><a href="<?php echo esc_url( $manage_url ); ?>"><?php esc_html_e( 'Manage', 'certloom' ); ?></a></div>
+									<div class="certloom-credential-row-actions" aria-label="<?php esc_attr_e( 'Credential actions', 'certloom' ); ?>"><?php if ( '' !== $view_url ) : ?><a href="<?php echo esc_url( $view_url ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'View', 'certloom' ); ?></a><?php endif; ?><a href="<?php echo esc_url( $manage_url ); ?>"><?php echo esc_html( $is_historical ? __( 'Manage', 'certloom' ) : __( 'Edit', 'certloom' ) ); ?></a></div>
 									<div class="certloom-credential-secondary certloom-credential-source-meta"><span class="certloom-credential-source <?php echo esc_attr( $source_class ); ?>"><?php echo esc_html( $source_label ); ?></span></div>
 								</td>
 								<td data-col="<?php esc_attr_e( 'Recipient', 'certloom' ); ?>"><strong><?php echo esc_html( (string) ( $credential['display_name'] ?: '—' ) ); ?></strong><?php if ( ! empty( $credential['recipient_email'] ) ) : ?><div class="certloom-credential-secondary"><?php echo esc_html( (string) $credential['recipient_email'] ); ?></div><?php endif; ?></td>
 								<td data-col="<?php esc_attr_e( 'Program / batch', 'certloom' ); ?>"><?php echo esc_html( '' !== $program ? $program : '—' ); ?><?php if ( '' !== $batch ) : ?><div class="certloom-credential-secondary"><?php echo esc_html( $batch ); ?></div><?php endif; ?></td>
-								<td data-col="<?php esc_attr_e( 'Issue date', 'certloom' ); ?>" class="certloom-dashboard-date-cell"><?php echo esc_html( ! empty( $credential['issued_at'] ) ? (string) $credential['issued_at'] : '—' ); ?></td>
-								<td data-col="<?php esc_attr_e( 'Expiry date', 'certloom' ); ?>" class="certloom-dashboard-date-cell"><?php echo esc_html( ! empty( $credential['expires_at'] ) ? (string) $credential['expires_at'] : __( 'No expiry', 'certloom' ) ); ?></td>
-								<td data-col="<?php esc_attr_e( 'Credential status', 'certloom' ); ?>"><span class="certloom-credential-status is-<?php echo esc_attr( $status_code ); ?>"><?php echo esc_html( $status_label ); ?></span></td>
+								<td data-col="<?php esc_attr_e( 'Dates', 'certloom' ); ?>" class="certloom-dashboard-date-cell">
+									<?php $certloom_issue_date = $certloom_dashboard_date_only( $credential['issued_at'] ?? $credential['valid_from'] ?? '' ); ?>
+									<div class="certloom-dashboard-date-line is-issued"><span class="certloom-dashboard-date-dot" aria-hidden="true"></span><span class="certloom-dashboard-date-label"><?php esc_html_e( 'Issued', 'certloom' ); ?></span><span class="certloom-dashboard-date-value"><?php echo esc_html( '' !== $certloom_issue_date ? $certloom_issue_date : '—' ); ?></span></div>
+									<?php $certloom_expiry_date = $certloom_dashboard_date_only( $credential['expires_at'] ?? '' ); ?>
+									<div class="certloom-dashboard-date-line is-expiry"><span class="certloom-dashboard-date-dot" aria-hidden="true"></span><span class="certloom-dashboard-date-label"><?php esc_html_e( 'Expires', 'certloom' ); ?></span><span class="certloom-dashboard-date-value"><?php echo esc_html( '' !== $certloom_expiry_date ? $certloom_expiry_date : __( 'No expiry', 'certloom' ) ); ?></span></div>
+								</td>
+								<td data-col="<?php esc_attr_e( 'Status', 'certloom' ); ?>"><span class="certloom-credential-status is-<?php echo esc_attr( $status_code ); ?>"><?php echo esc_html( $status_label ); ?></span></td>
 							</tr>
 						<?php endforeach; ?>
 						</tbody>
