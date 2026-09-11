@@ -1426,7 +1426,8 @@
 }
 
 /* Dashboard is a scan surface, not the full registry. Keep the latest-activity
-   table compact and show the deeper record/version metadata on Credentials. */
+   table compact while preserving the operational dates and status users expect.
+   Deep record/version metadata remains on Credentials. */
 .certloom-admin-shell .certloom-dashboard-recent-table-wrap {
   overflow: visible;
 }
@@ -1445,21 +1446,20 @@
   overflow-wrap: anywhere;
 }
 
-.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(1) { width: 20%; }
-.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(2) { width: 25%; }
-.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(3) { width: 20%; }
-.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(4) { width: 21%; }
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(1) { width: 18%; }
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(2) { width: 21%; }
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(3) { width: 17%; }
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(4) { width: 15%; }
 .certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(5) { width: 14%; }
+.certloom-admin-shell .certloom-dashboard-recent-table th:nth-child(6) { width: 15%; }
 
 .certloom-admin-shell .certloom-dashboard-recent-table .certloom-credential-status {
   max-width: 100%;
 }
 
-.certloom-admin-shell .certloom-dashboard-validity-date {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.35;
+.certloom-admin-shell .certloom-dashboard-recent-table .certloom-dashboard-date-cell {
+  white-space: nowrap;
+  overflow-wrap: normal;
 }
 
 @media (max-width: 980px) {

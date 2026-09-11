@@ -38,7 +38,7 @@ async def run():
         tr=await table.bounding_box(); panel=await desktop.locator('.certloom-panel').first.bounding_box()
         await ck(tr is not None and panel is not None and tr['width'] <= panel['width'] + 1,'desktopRecentTableFitsPanel')
         await ck(await desktop.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'desktopHasNoHorizontalOverflow')
-        await ck(await desktop.locator('.certloom-dashboard-recent-table thead th').count()==5,'dashboardTableUsesFiveSummaryColumns')
+        await ck(await desktop.locator('.certloom-dashboard-recent-table thead th').count()==6,'dashboardTableUsesSixOperationalColumns')
         await ck('certloom-brand-mark.png' in await hero.evaluate("e=>getComputedStyle(e,'::after').backgroundImage"),'watermarkStillPresent')
         await ck(abs(float(await hero.evaluate("e=>getComputedStyle(e,'::after').opacity"))-.115)<.002,'watermarkOpacityUnchanged')
         good_dot=desktop.locator('[data-health="good"] .certloom-health-dot')

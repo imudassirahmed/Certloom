@@ -1,3 +1,8 @@
+= 1.7.0-alpha.4.21 =
+* Correct only the Dashboard Recent credentials list: restore separate Issue date and Expiry date columns alongside Credential, Recipient, Program / batch and Credential status, replacing the overly sparse combined Validity presentation.
+* Keep Dashboard shortcuts, System Health, Data Safety, hero, analytics and approved watermark unchanged.
+* Preserve the no-horizontal-scroll desktop fit and labeled mobile-row behavior; full Record version and Added to Certloom metadata remain in the Credentials workspace. Renderer/domain authority remain intentionally absent during Phase 4 visual iteration.
+
 = 1.7.0-alpha.4.20 =
 * Rework Setup Wizard branding to use the exact supplied Certloom mark and wordmark pixels instead of the generic shield/system-font lockup.
 * Make current/completed/skipped setup states explicit with Certloom green and blue/cyan/green progress treatments.
