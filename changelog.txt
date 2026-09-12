@@ -1,3 +1,10 @@
+= 1.7.0-alpha.4.34 =
+* Fix live Issue Credential preview authentication by keeping the Manual Issuance action nonce out of REST request parameters and using the dedicated WordPress REST nonce header; stale REST sessions now show actionable refresh guidance instead of raw “Cookie check failed” text.
+* Move specialist Technical custom fields out of the primary Credential details surface and under Additional details, preserving the modern Program/Batch scoped-field and Independent credential-detail flows as the primary path.
+* Reflow Subjects & results rows to respect the actual Issue Credential left-column width, keep Remove actions inside their cards, and prevent nested repeating controls from overflowing the compose surface.
+* Restore deliberate spacing in the automatic Credential number summary so its label and allocation preview no longer run together.
+* Preserve alpha.4.33 lifecycle/repeat-policy and real-data design-readiness behavior unchanged; renderer/domain authority remain intentionally absent while Phase 4 staging acceptance continues.
+
 = 1.7.0-alpha.4.33 =
 * Rationalize Program credential lifecycle into one typed policy: permanent, duration in days/months/years, or decide at issuance; pair it with explicit renewal behavior and repeat issuance policy while preserving legacy validity_days compatibility until a Program is saved.
 * Apply the same lifecycle contract to Manual and Bulk Issuance, including calendar-aware month/year expiry, renewal-required safeguards, per-Batch repeat boundaries, and deliberate separate-credential issuance without a schema migration.

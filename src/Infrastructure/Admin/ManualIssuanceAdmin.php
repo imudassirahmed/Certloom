@@ -264,9 +264,7 @@ final class ManualIssuanceAdmin {
 		echo '</select></label><button type="button" class="button" data-certloom-independent-detail-add>' . esc_html__( 'Add detail', 'certloom' ) . '</button></div><div class="certloom-independent-detail-inputs" data-certloom-independent-detail-inputs></div><p class="description">' . esc_html__( 'These values belong to this issued credential only. Recipient-profile facts such as name and email are edited on the Recipient profile instead.', 'certloom' ) . '</p></div>';
 		echo '<script type="application/json" data-certloom-independent-field-catalog>' . wp_json_encode( $independent_field_choices, $json_flags ) . '</script>';
 		echo '<script type="application/json" data-certloom-scoped-existing-values>' . wp_json_encode( $custom, $json_flags ) . '</script>';
-		echo '<div data-certloom-legacy-custom-fields' . ( 'independent' === $credential_basis ? ' hidden' : '' ) . '><details class="certloom-technical-details certloom-manual-custom-fields-technical"><summary>' . esc_html__( 'Technical custom fields', 'certloom' ) . '</summary><p class="description">' . esc_html__( 'Use short field keys only for a specialist legacy workflow. Program/Batch field contracts take precedence when configured.', 'certloom' ) . '</p><div class="certloom-manual-custom-grid">';
-		$rows = max( 4, min( 10, count( $custom ) + 2 ) ); $keys=array_keys($custom); for($i=0;$i<$rows;$i++){ $key=$keys[$i]??''; $val=''!==$key?(string)$custom[$key]:''; $disabled='independent' === $credential_basis ? ' disabled' : ''; echo '<div class="certloom-manual-custom-row"><label><span>'.esc_html__( 'Field key', 'certloom' ).'</span><input type="text" name="custom_merge_key[]" maxlength="64" value="'.esc_attr($key).'" placeholder="membership_level"'.$disabled.'></label><label><span>'.esc_html__( 'Value', 'certloom' ).'</span><input type="text" name="custom_merge_value[]" maxlength="2000" value="'.esc_attr($val).'"'.$disabled.'></label></div>'; }
-		echo '</div></details></div></section>';
+		echo '</section>';
 		echo '</div>';
 
 		echo '<fieldset class="certloom-manual-fieldset certloom-presentation-fieldset"><legend class="screen-reader-text">' . esc_html__( 'Presentation', 'certloom' ) . '</legend><p class="certloom-manual-fieldset-intro certloom-presentation-intro">' . esc_html__( 'Certificate appearance', 'certloom' ) . '</p><div class="certloom-presentation-choices">';
@@ -310,6 +308,20 @@ final class ManualIssuanceAdmin {
 		echo '</select><small>' . esc_html__( 'Choose a one-off Signer override, or leave this blank to use Certloom’s Batch → Program → Issuer → global signer hierarchy. The resolved Signer is frozen into the issued credential.', 'certloom' ) . '</small></label>';
 
 		echo '</div>';
+
+		// Legacy free-form custom merge keys are deliberately kept under Additional details.
+		// Normal Program/Batch Credential fields and Independent credential details stay in the
+		// main compose flow; this specialist escape hatch should not compete with them.
+		echo '<div data-certloom-legacy-custom-fields' . ( 'independent' === $credential_basis ? ' hidden' : '' ) . '><details class="certloom-technical-details certloom-manual-custom-fields-technical"><summary>' . esc_html__( 'Technical custom fields', 'certloom' ) . '</summary><p class="description">' . esc_html__( 'Use short field keys only for a specialist legacy workflow. Program/Batch field contracts take precedence when configured.', 'certloom' ) . '</p><div class="certloom-manual-custom-grid">';
+		$rows = max( 4, min( 10, count( $custom ) + 2 ) );
+		$keys = array_keys( $custom );
+		for ( $i = 0; $i < $rows; $i++ ) {
+			$key = $keys[ $i ] ?? '';
+			$val = '' !== $key ? (string) $custom[ $key ] : '';
+			$disabled = 'independent' === $credential_basis ? ' disabled' : '';
+			echo '<div class="certloom-manual-custom-row"><label><span>' . esc_html__( 'Field key', 'certloom' ) . '</span><input type="text" name="custom_merge_key[]" maxlength="64" value="' . esc_attr( $key ) . '" placeholder="membership_level"' . $disabled . '></label><label><span>' . esc_html__( 'Value', 'certloom' ) . '</span><input type="text" name="custom_merge_value[]" maxlength="2000" value="' . esc_attr( $val ) . '"' . $disabled . '></label></div>';
+		}
+		echo '</div></details></div>';
 
 		$this->render_repeating_data_editor( isset( $values['repeating_data'] ) && is_array( $values['repeating_data'] ) ? $values['repeating_data'] : array() );
 

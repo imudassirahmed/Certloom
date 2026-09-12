@@ -1,5 +1,5 @@
 <?php
-/** Alpha.4.33 Issue Credential data-readiness / real-preview contract. */
+/** Alpha.4.34 Issue Credential staging-correction contract. */
 $root=dirname(__DIR__);
 $m=file_get_contents($root.'/src/Infrastructure/Admin/ManualIssuanceAdmin.php');
 $n=file_get_contents($root.'/src/Infrastructure/Admin/AdminProductNavigation.php');
@@ -34,4 +34,8 @@ i427(false!==strpos($a,"'restIssuancePreviewUrl' => rest_url( 'certloom/v1/admin
 i427(false!==strpos($c,'.certloom-issue-v2-form > .certloom-presentation-fieldset')&&false!==strpos($c,'position: sticky;')&&false!==strpos($c,'max-height: calc(100vh - 58px);'),'desktop Certificate appearance stays available while the credential-data column scrolls');
 i427(false!==strpos($m,'data-certloom-additional-details')&&false===strpos($m,'<details class="certloom-additional-details" open'),'preselected Issuer/Batch/Signer no longer force Additional details open on page load');
 i427(false!==strpos($j,'certloom:add-credential-detail')&&false!==strpos($j,'designDataEditRecipient')&&false!==strpos($j,'designDataAddValue'),'missing design fields provide owner-aware actions for Recipient data and credential-specific values');
-echo "\n$pass alpha.4.33 Issue Credential source checks, $fail failures\n"; exit($fail?1:0);
+i427(false!==strpos($j,"if ( '_wpnonce' === key || '_wp_http_referer' === key ) { return; }")&&false!==strpos($j,"'X-WP-Nonce': certloomL10n.restNonce"),'live issuance preview keeps the Manual action nonce out of REST cookie authentication and uses the dedicated REST nonce header');
+i427(false!==strpos($a,"'previewSessionExpired'")&&false!==strpos($j,"'rest_cookie_invalid_nonce' === payload.code"),'expired REST preview sessions receive actionable refresh copy instead of raw WordPress cookie-check text');
+i427(strpos($m,'data-certloom-legacy-custom-fields')>strpos($m,'data-certloom-additional-details')&&strpos($m,'data-certloom-legacy-custom-fields')<strpos($m,'render_repeating_data_editor'),'Technical custom fields live below Additional details and before the repeating Subjects/results editor');
+i427(false!==strpos($c,'/* alpha.4.34 — Manual Issuance screenshot corrections.')&&false!==strpos($c,'grid-template-columns: repeat(4, minmax(0, 1fr));')&&false!==strpos($c,'.certloom-issue-v2-form .certloom-numbering-summary'),'screenshot correction layer bounds repeating rows and restores deliberate Credential-number spacing');
+echo "\n$pass alpha.4.34 Issue Credential source checks, $fail failures\n"; exit($fail?1:0);

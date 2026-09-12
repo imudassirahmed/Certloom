@@ -270,6 +270,7 @@ class Ecapla_CertVerify_Admin {
 			'enteredWhenIssuing' => __( 'Entered when issuing', 'certloom' ),
 			'loadingPreview' => __( 'Loading preview…', 'certloom' ),
 			'previewLoadFailed' => __( 'Template preview could not be loaded.', 'certloom' ),
+			'previewSessionExpired' => __( 'The preview session expired. Refresh this page and try again.', 'certloom' ),
 			'noDefaultDesign' => __( 'No default design selected', 'certloom' ),
 			'previewUnavailable' => __( 'Preview unavailable', 'certloom' ),
 			'inheritedDesign' => __( 'Inherited design', 'certloom' ),

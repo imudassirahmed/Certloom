@@ -3277,3 +3277,68 @@ body.certloom-setup-v2-body { overflow: hidden; }
     text-align: left;
   }
 }
+
+/* alpha.4.34 — Manual Issuance screenshot corrections.
+   Keep specialist legacy custom keys inside Additional details and make the
+   repeating Subjects/Results editor obey the actual left-column width. */
+.certloom-issue-v2-form .certloom-additional-details-body,
+.certloom-issue-v2-form .certloom-manual-repeating,
+.certloom-issue-v2-form .certloom-manual-repeating-body,
+.certloom-issue-v2-form .certloom-manual-rowset,
+.certloom-issue-v2-form .certloom-manual-rowset-rows,
+.certloom-issue-v2-form .certloom-manual-repeating-row,
+.certloom-issue-v2-form .certloom-manual-repeating-fields {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
+.certloom-issue-v2-form .certloom-manual-custom-fields-technical {
+  margin-top: 14px;
+  padding-top: 2px;
+  border-top: 1px solid var(--cl-rule);
+}
+.certloom-issue-v2-form .certloom-manual-custom-fields-technical > summary {
+  padding-top: 12px;
+}
+.certloom-issue-v2-form .certloom-manual-repeating-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px;
+}
+.certloom-issue-v2-form .certloom-manual-repeating-fields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.certloom-issue-v2-form .certloom-manual-repeating-row label,
+.certloom-issue-v2-form .certloom-manual-repeating-row input {
+  min-width: 0;
+}
+.certloom-issue-v2-form .certloom-manual-repeating-remove {
+  align-self: end;
+  white-space: nowrap;
+}
+.certloom-issue-v2-form .certloom-numbering-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+}
+.certloom-issue-v2-form .certloom-numbering-summary > strong,
+.certloom-issue-v2-form .certloom-numbering-summary > span {
+  min-width: 0;
+}
+@media (max-width: 1180px) {
+  .certloom-issue-v2-form .certloom-manual-repeating-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 782px) {
+  .certloom-issue-v2-form .certloom-manual-repeating-row {
+    grid-template-columns: 1fr;
+  }
+  .certloom-issue-v2-form .certloom-manual-repeating-remove {
+    justify-self: start;
+  }
+}

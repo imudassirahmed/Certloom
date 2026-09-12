@@ -101,7 +101,7 @@ async def run():
         await ck(await review.is_disabled(),'perBatchRepeatBlocksReviewWithoutBatch')
         additional=page.locator('.certloom-additional-details')
         await ck(not await additional.get_attribute('open'),'optionalContextDoesNotAutoExpandWhenProgramChanges')
-        await additional.locator('summary').click()
+        await additional.locator(':scope > summary').click()
         await batch.select_option('22')
         await ck(not await review.is_disabled(),'perBatchRepeatCanReviewWithMatchingBatch')
         await program.select_option('14')
@@ -110,13 +110,24 @@ async def run():
         await ck(await page.locator('input[name="expiry_mode"][value="program"]').is_checked(),'renewalRequiredFallsBackToProgramExpiryWhenPermanentWasSelected')
         await ck(not await batch.get_attribute('required'),'switchingAwayFromPerBatchClearsBatchRequirement')
         await ck(await page.locator('.certloom-additional-details select[name="program_id"]').count()==0,'additionalDetailsDoesNotDuplicateProgramChoice')
+        technical_custom=page.locator('[data-certloom-legacy-custom-fields]')
+        await ck(await technical_custom.count()==1 and await technical_custom.evaluate('(e)=>!!e.closest(".certloom-additional-details")'),'technicalCustomFieldsLiveInsideAdditionalDetails')
+        await ck(await page.locator('[data-certloom-credential-data] [data-certloom-legacy-custom-fields]').count()==0,'technicalCustomFieldsDoNotCompeteWithPrimaryCredentialDetails')
+        repeating_row=page.locator('.certloom-manual-repeating-row').first
+        row_box=await repeating_row.bounding_box(); details_body_box=await page.locator('.certloom-additional-details-body').bounding_box()
+        await ck(bool(row_box and details_body_box and row_box['x'] >= details_body_box['x']-1 and row_box['x']+row_box['width'] <= details_body_box['x']+details_body_box['width']+1),'subjectsResultsRowStaysInsideAdditionalDetails')
+        remove_box=await repeating_row.locator('[data-certloom-repeating-remove]').bounding_box()
+        await ck(bool(remove_box and row_box and remove_box['x']+remove_box['width'] <= row_box['x']+row_box['width']+1),'subjectsResultsRemoveActionDoesNotOverflow')
+        number=page.locator('.certloom-numbering-summary'); number_label=number.locator('strong'); number_value=number.locator('span')
+        nlabel=await number_label.bounding_box(); nvalue=await number_value.bounding_box()
+        await ck(bool(nlabel and nvalue and nvalue['x'] >= nlabel['x']+nlabel['width']+3),'credentialNumberLabelAndValueHaveVisibleSeparation')
         footer=page.locator('.certloom-issue-actions')
         copy=page.locator('.certloom-review-action-copy')
         fbox=await footer.bounding_box(); cbox=await copy.bounding_box(); rbox=await review.bounding_box()
         await ck(bool(fbox and cbox and rbox and cbox['x'] < rbox['x'] and rbox['x']+rbox['width'] <= fbox['x']+fbox['width']+1),'reviewActionCopyAndButtonHaveDeliberateDesktopOrder')
         pfield=page.locator('.certloom-presentation-fieldset')
         if not await page.locator('.certloom-additional-details').get_attribute('open'):
-            await page.locator('.certloom-additional-details summary').click()
+            await page.locator('.certloom-additional-details > summary').click()
         pfbox=await pfield.bounding_box(); formbox=await page.locator('.certloom-issue-v2-form').bounding_box()
         await ck(bool(pfbox and formbox and pfbox['height'] < formbox['height']*.75),'appearancePanelDoesNotStretchWithExpandedDetails')
         technical=page.locator('.certloom-issue-technical-status')
@@ -127,6 +138,11 @@ async def run():
         selected=page.locator('.certloom-presentation-choice:has(input[value="design"])')
         await ck('rgb(1, 193, 116)' in await selected.evaluate('(e)=>getComputedStyle(e).borderColor'),'selectedPresentationUsesBrandEmerald')
         await page.wait_for_function("document.querySelector('[data-certloom-design-data-summary]') && document.querySelector('[data-certloom-design-data-summary]').textContent.indexOf('1 design field') !== -1")
+        issuance_call=await page.evaluate("window.__previewCalls.filter(function(c){return c.url.indexOf('/admin/issuance-preview')!==-1;}).slice(-1)[0]")
+        issuance_body=(issuance_call or {}).get('options',{}).get('body','') if isinstance(issuance_call,dict) else ''
+        issuance_headers=(issuance_call or {}).get('options',{}).get('headers',{}) if isinstance(issuance_call,dict) else {}
+        await ck('_wpnonce=' not in issuance_body and '_wp_http_referer=' not in issuance_body,'livePreviewDoesNotLeakManualActionNonceIntoRestAuthentication')
+        await ck(issuance_headers.get('X-WP-Nonce')=='fixture-rest','livePreviewUsesDedicatedRestNonceHeader')
         await ck(await page.locator('[data-certloom-design-data-check]').is_visible(),'selectedDesignShowsDataReadinessBesidePreview')
         await ck('Amina Khan' in (await page.locator('[data-certloom-template-preview-canvas]').text_content()),'liveDesignPreviewUsesSelectedRecipientData')
         await ck(await review.is_disabled(),'missingDesignFieldBlocksFinalReview')
@@ -165,7 +181,7 @@ async def run():
         await ck(await mobile.locator('.certloom-issue-actions .button').evaluate('(e)=>Math.round(e.getBoundingClientRect().width)')>300,'mobilePrimaryActionFullWidth')
         await mobile.close(); await browser.close()
     if failed:
-        print('FAIL  alpha.4.33 Issue Credential browser gate:',', '.join(failed)); print(f'\n{checks-len(failed)} passed, {len(failed)} failures'); return 1
-    print('PASS  alpha.4.33 Issue Credential browser gate: lifecycle-aware Program/Independent issuance, live real-data design preview, missing-field readiness actions and Details-only credential data')
-    print(f'\n{checks} alpha.4.33 Issue Credential browser checks, 0 failures'); return 0
+        print('FAIL  alpha.4.34 Issue Credential browser gate:',', '.join(failed)); print(f'\n{checks-len(failed)} passed, {len(failed)} failures'); return 1
+    print('PASS  alpha.4.34 Issue Credential browser gate: lifecycle-aware Program/Independent issuance, REST-authenticated real-data design preview, bounded Subjects/Results layout and Additional-details technical fields')
+    print(f'\n{checks} alpha.4.34 Issue Credential browser checks, 0 failures'); return 0
 raise SystemExit(asyncio.run(run()))

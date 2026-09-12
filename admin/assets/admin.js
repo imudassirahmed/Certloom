@@ -1428,7 +1428,13 @@
 		function bodyFromForm() {
 			var body = new URLSearchParams();
 			var data = new FormData( form );
-			data.forEach( function ( value, key ) { if ( 'string' === typeof value ) { body.append( key, value ); } } );
+			data.forEach( function ( value, key ) {
+				// The Manual Issuance form has its own action nonce. Never send that nonce
+				// to the REST endpoint: WordPress REST cookie authentication prefers a
+				// request _wpnonce over X-WP-Nonce and would reject the valid REST nonce.
+				if ( '_wpnonce' === key || '_wp_http_referer' === key ) { return; }
+				if ( 'string' === typeof value ) { body.append( key, value ); }
+			} );
 			return body;
 		}
 		function loadPreview() {
@@ -1443,7 +1449,14 @@
 			setReadinessState( 'pending', certloomText( 'designDataChecking', 'Checking design data…' ) );
 			panel.setAttribute( 'aria-busy', 'true' ); if ( name ) { name.textContent = certloomText( 'loadingPreview', 'Loading preview…' ); } if ( description ) { description.textContent = ''; } if ( source ) { source.textContent = ''; source.hidden = true; } if ( canvas ) { canvas.innerHTML = ''; }
 			fetch( certloomL10n.restIssuancePreviewUrl, { method: 'POST', credentials: 'same-origin', headers: Object.assign( { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }, certloomL10n.restNonce ? { 'X-WP-Nonce': certloomL10n.restNonce } : {} ), body: bodyFromForm().toString(), signal: controller ? controller.signal : undefined } )
-				.then( function ( response ) { return response.json().then( function ( payload ) { if ( ! response.ok ) { throw new Error( payload && payload.message ? payload.message : certloomText( 'previewLoadFailed', 'Template preview could not be loaded.' ) ); } return payload; } ); } )
+				.then( function ( response ) { return response.json().then( function ( payload ) {
+					if ( ! response.ok ) {
+						var previewError = payload && payload.message ? payload.message : certloomText( 'previewLoadFailed', 'Template preview could not be loaded.' );
+						if ( payload && 'rest_cookie_invalid_nonce' === payload.code ) { previewError = certloomText( 'previewSessionExpired', 'The preview session expired. Refresh this page and try again.' ); }
+						throw new Error( previewError );
+					}
+					return payload;
+				} ); } )
 				.then( function ( payload ) { if ( requestId !== sequence ) { return; } if ( name ) { name.textContent = payload && payload.name ? payload.name : certloomText( 'previewUnavailable', 'Preview unavailable' ); } if ( description ) { description.textContent = payload && payload.description ? payload.description : ''; } if ( source ) { source.textContent = payload && payload.source_label ? payload.source_label : ''; source.hidden = ! source.textContent; } if ( canvas ) { canvas.innerHTML = payload && payload.html ? payload.html : ''; } renderReadiness( payload ); panel.removeAttribute( 'aria-busy' ); window.requestAnimationFrame( function () { fitWizardTemplatePreview( panel ); } ); } )
 				.catch( function ( error ) { if ( error && 'AbortError' === error.name ) { return; } if ( requestId !== sequence ) { return; } var message = error && error.message ? error.message : certloomText( 'previewLoadFailed', 'Template preview could not be loaded.' ); setReadinessState( '0', message ); emptyPreview( 'inherited' === mode ? certloomText( 'inheritedDesign', 'Inherited design' ) : certloomText( 'previewUnavailable', 'Preview unavailable' ), message, '' ); if ( readinessSummary ) { readinessSummary.textContent = message; } } );
 		}
