@@ -60,8 +60,8 @@ cm(false!==strpos($registry,"'entry_created_at'")&&false!==strpos($registry,"'cr
 cm(false!==strpos($css,'.certloom-credential-row-actions')&&false!==strpos($css,'.certloom-credential-table th { white-space: nowrap; }'),'credential list row actions and explicit date/status columns have dedicated compact styling');
 cm(false!==strpos($css,'.certloom-credential-card-grid')&&false!==strpos($css,'@media (max-width: 720px)'),'Credential Management has dedicated responsive premium styling');
 cm(false!==strpos($admin,'Immutable issuance snapshot evidence')&&false!==strpos($admin,'Template SHA-256')&&false!==strpos($admin,'Merge SHA-256'),'workspace surfaces immutable snapshot provenance without raw history editing');
-cm(false!==strpos($admin,'Normalized endpoint')&&false!==strpos($admin,'Production authority')&&false!==strpos($admin,'Gated'),'verification panel is honest about normalized authority gate');
-cm(false!==strpos($plugin,"define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false )")&&false!==strpos($plugin,"define( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW', false )")&&false!==strpos($plugin,"define( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY', false )"),'normalized-domain authority gates remain closed');
+cm(false!==strpos($admin,'Normalized endpoint')&&false!==strpos($admin,'Online verification')&&false!==strpos($admin,'View public credential')&&false===strpos($admin,'Production authority')&&false===strpos($admin,'Authority remains closed.'),'verification panel exposes healthy normalized public verification without an artificial authority barrier');
+cm(false!==strpos($plugin,"define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false )")&&false!==strpos($plugin,"define( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW', false )")&&false!==strpos($plugin,"define( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY', false )"),'legacy compatibility constants remain conservative without manufacturing release authority');
 cm(!file_exists($root.'/resources/renderer/accepted.json'),'Credential Management does not manufacture renderer authority');
 
 echo "\n$pass Credential Management checks, $fail failures\n"; exit($fail?1:0);

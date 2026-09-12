@@ -1372,21 +1372,27 @@ final class DomainAdmin {
 			$ready = ( new \Certloom\Infrastructure\Verification\PublicVerificationGate() )->is_ready();
 			$url = ( new \Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl() )->verification_url( (string) $series['public_id'] );
 			echo '<section class="certloom-credential-panel"><div class="certloom-credential-panel-head"><div><h3>' . esc_html__( 'View & verify', 'certloom' ) . '</h3><p>' . esc_html__( 'Open the public credential page that recipients and verifiers can use.', 'certloom' ) . '</p></div></div>';
-			$this->credential_info_card( __( 'Public credential', 'certloom' ), array( __( 'Certificate number', 'certloom' ) => esc_html( is_array( $version ) ? (string) $version['display_number'] : '—' ), __( 'Online verification', 'certloom' ) => '<strong>' . esc_html( $ready ? __( 'Available', 'certloom' ) : __( 'Not available yet', 'certloom' ) ) . '</strong>' ) );
+			$this->credential_info_card( __( 'Public credential', 'certloom' ), array( __( 'Certificate number', 'certloom' ) => esc_html( is_array( $version ) ? (string) $version['display_number'] : '—' ), __( 'Online verification', 'certloom' ) => '<strong>' . esc_html( $ready ? __( 'Available', 'certloom' ) : __( 'Temporarily unavailable', 'certloom' ) ) . '</strong>' ) );
 			if ( $ready && ! is_wp_error( $url ) ) { echo '<p class="certloom-credential-panel-actions"><a class="button button-primary" href="' . esc_url( (string) $url ) . '" target="_blank" rel="noopener">' . esc_html__( 'View public credential', 'certloom' ) . ' <span aria-hidden="true">↗</span></a></p>'; }
 			else { echo '<div class="certloom-context-note"><span class="dashicons dashicons-info-outline" aria-hidden="true"></span><p>' . esc_html__( 'Online verification is not available for this credential yet. You can still manage and deliver the credential from Certloom.', 'certloom' ) . '</p></div>'; }
 			echo '</section>';
 			return;
 		}
-		echo '<section class="certloom-credential-panel"><div class="certloom-credential-panel-head"><div><h3>' . esc_html__( 'Verification identity', 'certloom' ) . '</h3><p>' . esc_html__( 'The non-enumerable public credential ID is separate from the human certificate number. Production normalized verification remains gated until final database cutover acceptance.', 'certloom' ) . '</p></div></div>';
+		$ready = ( new \Certloom\Infrastructure\Verification\PublicVerificationGate() )->is_ready();
 		$url = ( new \Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl() )->verification_url( (string) $series['public_id'] );
+		echo '<section class="certloom-credential-panel"><div class="certloom-credential-panel-head"><div><h3>' . esc_html__( 'Verification identity', 'certloom' ) . '</h3><p>' . esc_html__( 'The non-enumerable public credential ID is separate from the human certificate number. Public verification is available whenever the credential store is healthy and the credential visibility policy allows it.', 'certloom' ) . '</p></div></div>';
 		$this->credential_info_card( __( 'Self-hosted verification', 'certloom' ), array(
 			__( 'Public credential ID', 'certloom' ) => '<code>' . esc_html( (string) $series['public_id'] ) . '</code>',
 			__( 'Certificate number', 'certloom' ) => esc_html( is_array( $version ) ? (string) $version['display_number'] : '—' ),
 			__( 'Normalized endpoint', 'certloom' ) => is_wp_error( $url ) ? esc_html( $url->get_error_message() ) : '<code>' . esc_html( (string) $url ) . '</code>',
-			__( 'Production authority', 'certloom' ) => '<strong>' . esc_html__( 'Gated', 'certloom' ) . '</strong>',
+			__( 'Online verification', 'certloom' ) => '<strong>' . esc_html( $ready ? __( 'Available', 'certloom' ) : __( 'Temporarily unavailable', 'certloom' ) ) . '</strong>',
 		) );
-		echo '<div class="notice notice-warning inline"><p><strong>' . esc_html__( 'Authority remains closed.', 'certloom' ) . '</strong> ' . esc_html__( 'Credential Management may inspect normalized verification identity, but it does not enable the normalized public verifier or create renderer authority.', 'certloom' ) . '</p></div></section>';
+		if ( $ready && ! is_wp_error( $url ) ) {
+			echo '<p class="certloom-credential-panel-actions"><a class="button button-primary" href="' . esc_url( (string) $url ) . '" target="_blank" rel="noopener">' . esc_html__( 'View public credential', 'certloom' ) . ' <span aria-hidden="true">↗</span></a></p>';
+		} else {
+			echo '<div class="certloom-context-note"><span class="dashicons dashicons-info-outline" aria-hidden="true"></span><p>' . esc_html__( 'Online verification is temporarily unavailable because the credential store is not ready. Credential management remains available.', 'certloom' ) . '</p></div>';
+		}
+		echo '</section>';
 	}
 
 	/** @param array<int,array<string,mixed>> $versions @return void */
@@ -2112,7 +2118,6 @@ final class DomainAdmin {
 		if ( is_array( $action ) && ! empty( $action['label'] ) && ! empty( $action['url'] ) ) {
 			echo '<a class="button ' . ( empty( $action['secondary'] ) ? 'button-primary' : '' ) . '" href="' . esc_url( (string) $action['url'] ) . '">' . esc_html( (string) $action['label'] ) . '</a>';
 		}
-		if ( ! AdminUiMode::is_simple() ) { echo '<span class="certloom-domain-preview-badge">' . esc_html__( 'Acceptance preview', 'certloom' ) . '</span>'; }
 		echo '</div></section>';
 		( new AdminProductNavigation() )->render_current_subnav();
 	}
@@ -2187,12 +2192,15 @@ final class DomainAdmin {
 	}
 
 
-	/** Keep preview/authority detail available without interrupting the operational workspace. @return void */
+	/** Report only genuine credential-store unavailability; release ceremony is not a product blocker. @return void */
 	private function technical_status_notice() {
+		$verification = new \Certloom\Infrastructure\Verification\PublicVerificationGate();
+		if ( $verification->is_ready() ) { return; }
+		$message = __( 'Credential storage is temporarily unavailable or under maintenance. Public verification and credential changes remain fail-closed until storage health recovers.', 'certloom' );
 		if ( AdminUiMode::is_simple() ) {
-			echo '<details class="certloom-technical-details certloom-domain-gate-notice certloom-domain-gate-notice-deferred"><summary>' . esc_html__( 'Technical status', 'certloom' ) . '</summary><p><strong>' . esc_html__( 'Safety gate active.', 'certloom' ) . '</strong> ' . esc_html__( 'These normalized-domain screens are available only when the explicit admin-preview gate is enabled. The proven historical credential store remains production authority until real migration, restore, cutover, and database acceptance pass.', 'certloom' ) . '</p></details>';
+			echo '<details class="certloom-technical-details certloom-domain-gate-notice certloom-domain-gate-notice-deferred"><summary>' . esc_html__( 'Technical status', 'certloom' ) . '</summary><p>' . esc_html( $message ) . '</p></details>';
 		} else {
-			echo '<div class="notice notice-warning inline certloom-domain-gate-notice certloom-domain-gate-notice-deferred"><p><strong>' . esc_html__( 'Safety gate active.', 'certloom' ) . '</strong> ' . esc_html__( 'These normalized-domain screens are available only when the explicit admin-preview gate is enabled. The proven historical credential store remains production authority until real migration, restore, cutover, and database acceptance pass.', 'certloom' ) . '</p></div>';
+			echo '<div class="notice notice-warning inline certloom-domain-gate-notice certloom-domain-gate-notice-deferred"><p>' . esc_html( $message ) . '</p></div>';
 		}
 	}
 

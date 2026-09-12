@@ -116,7 +116,7 @@ Ecapla_CertVerify_Database_Proof::$result = null;
 $report = Ecapla_CertVerify_System_Status::get_text_report();
 ss_assert( false === strpos( $report, 'wp_certverify_certificates' ), 'Support report must not disclose table names.' );
 ss_assert( false === strpos( $report, '/var/' ) && false === strpos( $report, 'http://' ) && false === strpos( $report, 'https://' ), 'Support report must not disclose paths or URLs.' );
-ss_assert( false !== strpos( $report, 'Proven 1.5 registry' ), 'Support report should state current authority.' );
+ss_assert( false !== strpos( $report, 'Legacy registry preserved' ), 'Support report should describe legacy migration lineage without presenting it as a product-verification barrier.' );
 ss_assert( 0 === $GLOBALS['system_status_db_writes'], 'Generating the text report must remain read-only.' );
 
 echo "PASS  System Status is read-only, privacy-conscious and authority-aware\n";

@@ -389,8 +389,8 @@ $certloom_fields_url      = admin_url( 'admin.php?page=certloom-fields' );
 			<details class="certloom-panel certloom-engine-panel certloom-dashboard-data-safety certloom-technical-details">
 				<summary><span><span class="certloom-eyebrow"><?php esc_html_e( 'Data safety', 'certloom' ); ?></span><strong><?php esc_html_e( 'Credential authority and storage', 'certloom' ); ?></strong></span></summary>
 				<div class="certloom-dashboard-data-safety-body">
-					<p><?php esc_html_e( 'Certloom keeps credential authority fail-closed and does not silently change storage authority while safety gates remain pending.', 'certloom' ); ?></p>
-					<div class="certloom-engine-status"><span class="dashicons dashicons-lock" aria-hidden="true"></span><?php esc_html_e( 'No automatic authority changes', 'certloom' ); ?></div>
+					<p><?php esc_html_e( 'Certloom preserves immutable credential history and pauses sensitive operations only when storage maintenance or health requires it.', 'certloom' ); ?></p>
+					<div class="certloom-engine-status"><span class="dashicons dashicons-lock" aria-hidden="true"></span><?php esc_html_e( 'Immutable history protected', 'certloom' ); ?></div>
 				</div>
 			</details>
 		</aside>

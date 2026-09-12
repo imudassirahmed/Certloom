@@ -136,10 +136,8 @@ class Ecapla_CertVerify_REST {
 	}
 
 	/**
-	 * Gated public verification adapter for the new Credential Series model.
-	 *
-	 * The endpoint exists in 1.5.2 code but stays unavailable until the explicit
-	 * schema + complete legacy-migration cutover gate has been enabled.
+	 * Public verification adapter for the normalized Credential Series model.
+	 * Availability follows live credential-store readiness, not release ceremony.
 	 */
 
 	/** Privacy-safe source attribution for ANL-01. */
@@ -169,7 +167,7 @@ class Ecapla_CertVerify_REST {
 			$response = new WP_REST_Response(
 				array(
 					'code'    => 'certloom_series_verification_not_ready',
-					'message' => __( 'Credential verification is temporarily unavailable while Certloom completes its in-place data upgrade.', 'certloom' ),
+					'message' => __( 'Credential verification is temporarily unavailable because the credential store is not ready. Please try again shortly.', 'certloom' ),
 				),
 				503
 			);

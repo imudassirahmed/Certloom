@@ -23,7 +23,7 @@ uxqa_check( false !== strpos( $program, '`UX-QA-01` | Product-wide usability/acc
 uxqa_check( false !== strpos( $program, 'desktop/mobile/keyboard/RTL/mixed-direction/forced-colors/reduced-motion' ), 'UX-QA-01 keeps its complete accessibility/responsive media contract' );
 uxqa_check( false !== strpos( $program, 'end-to-end first-credential task and advanced-admin task' ), 'UX-QA-01 requires both customer journeys' );
 
-uxqa_check( false !== strpos( $dashboard, "'Data safety', 'certloom'" ) && false !== strpos( $dashboard, "'Credential authority and storage', 'certloom'" ) && false !== strpos( $dashboard, "'No automatic authority changes', 'certloom'" ), 'Dashboard explains storage safety in present-tense customer language' );
+uxqa_check( false !== strpos( $dashboard, "'Data safety', 'certloom'" ) && false !== strpos( $dashboard, "'Credential authority and storage', 'certloom'" ) && false !== strpos( $dashboard, "'Immutable history protected', 'certloom'" ), 'Dashboard explains storage safety in present-tense customer language without implying an artificial product gate' );
 foreach ( array( 'Proven registry is authoritative', 'current 1.5 registry', 'Credential Series migration infrastructure', 'data-store switch' ) as $obsolete ) {
 	uxqa_check( false === strpos( $dashboard, $obsolete ), 'Dashboard excludes obsolete migration copy: ' . $obsolete );
 }

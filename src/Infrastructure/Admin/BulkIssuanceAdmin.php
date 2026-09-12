@@ -74,10 +74,10 @@ final class BulkIssuanceAdmin {
 		$job_key = isset( $_GET['bulk_job'] ) ? strtolower( sanitize_text_field( wp_unslash( $_GET['bulk_job'] ) ) ) : '';
 
 		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-bulk-issuance">';
-		echo '<div class="certloom-page-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Premium issuance workflow', 'certloom' ) . '</span><h1>' . esc_html__( 'Bulk Issuance', 'certloom' ) . '</h1><p>' . esc_html__( 'Review the entire CSV before any credential is created, then issue only the accepted rows through the same checks used for individual issuance.', 'certloom' ) . '</p></div><span class="certloom-domain-preview-badge">' . esc_html__( 'Credential preview', 'certloom' ) . '</span></div>';
+		echo '<div class="certloom-page-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Premium issuance workflow', 'certloom' ) . '</span><h1>' . esc_html__( 'Bulk Issuance', 'certloom' ) . '</h1><p>' . esc_html__( 'Review the entire CSV before any credential is created, then issue only the accepted rows through the same checks used for individual issuance.', 'certloom' ) . '</p></div><span class="certloom-domain-preview-badge">' . esc_html__( 'Bulk issuance', 'certloom' ) . '</span></div>';
 
 		$this->notice();
-		echo '<div class="notice notice-warning inline"><p><strong>' . esc_html__( 'Availability:', 'certloom' ) . '</strong> ' . esc_html__( 'Bulk Issuance is available in the credential-management preview. Public verification from the new credential store and PDF/PNG/JPEG exports are not enabled in this build yet.', 'certloom' ) . '</p></div>';
+		echo '<div class="notice notice-warning inline"><p><strong>' . esc_html__( 'Availability:', 'certloom' ) . '</strong> ' . esc_html__( 'Bulk Issuance and normalized public verification are operational when the credential store is healthy. PDF/PNG/JPEG exports remain unavailable until the certificate renderer is approved.', 'certloom' ) . '</p></div>';
 
 		if ( '' === $job_key ) {
 			$this->form();

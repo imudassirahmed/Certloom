@@ -1,10 +1,9 @@
 <?php
-/** Pure option-state tests for the hard public Series-verification cutover gate. */
+/** Operational-readiness tests for normalized public Credential Series verification. */
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'DAY_IN_SECONDS', 86400 );
 define( 'MINUTE_IN_SECONDS', 60 );
 $GLOBALS['vg_options'] = array();
-$GLOBALS['vg_mutate_gate_once'] = false;
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error { private $code; private $message; public function __construct($c='',$m=''){ $this->code=$c; $this->message=$m; } public function get_error_code(){return $this->code;} public function get_error_message(){return $this->message;} }
 }
@@ -13,59 +12,52 @@ function __( $t ) { return $t; }
 function absint( $v ) { return abs((int)$v); }
 function sanitize_key( $k ) { return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$k)); }
 function get_option( $k, $d=false ) { return array_key_exists($k,$GLOBALS['vg_options']) ? $GLOBALS['vg_options'][$k] : $d; }
-function update_option( $k, $v ) { if ( 'certloom_series_public_verification_ready' === $k && $GLOBALS['vg_mutate_gate_once'] ) { $GLOBALS['vg_mutate_gate_once']=false; $v=2; } $GLOBALS['vg_options'][$k]=$v; return true; }
+function update_option( $k, $v ) { $GLOBALS['vg_options'][$k]=$v; return true; }
 function delete_option( $k ) { if (array_key_exists($k,$GLOBALS['vg_options'])) { unset($GLOBALS['vg_options'][$k]); return true; } return false; }
 
 require_once __DIR__ . '/bootstrap-autoload.php';
-use Certloom\Application\Migration\DomainCutoverState;
-use Certloom\Application\Migration\LegacyMigrationState;
 use Certloom\Infrastructure\Data\DomainMaintenanceLock;
 use Certloom\Infrastructure\Database\SchemaManager;
 use Certloom\Infrastructure\Verification\PublicVerificationGate;
 
 function vg_same($e,$a,$m=''){ if($e!==$a){ throw new RuntimeException(($m?$m.': ':'').'Expected '.var_export($e,true).', got '.var_export($a,true)); } }
 $schema_checks=0;
-$gate = new PublicVerificationGate(function() use (&$schema_checks){ $schema_checks++; return true; });
-vg_same(false,$gate->is_ready(),'gate off by default');
-$result = $gate->enable();
-vg_same('certloom_series_verification_migration_incomplete',$result->get_error_code());
+$schema_result=true;
+$gate = new PublicVerificationGate(function($refresh=true) use (&$schema_checks,&$schema_result){ $schema_checks++; return $schema_result; });
 
-$GLOBALS['vg_options'][LegacyMigrationState::OPTION] = array('status'=>LegacyMigrationState::COMPLETE,'source_count'=>3,'source_max_id'=>7,'source_generation'=>'g');
+vg_same(false,$gate->is_ready(),'missing normalized schema is a real public-read blocker');
+$result=$gate->enable();
+vg_same('certloom_series_verification_schema_incomplete',$result->get_error_code(),'readiness probe explains missing schema');
+
 $GLOBALS['vg_options'][SchemaManager::SCHEMA_OPTION] = SchemaManager::SCHEMA_VERSION;
 $GLOBALS['vg_options'][SchemaManager::HEALTH_OPTION] = array('version'=>SchemaManager::SCHEMA_VERSION,'checked_at'=>time());
-$result = $gate->enable();
-vg_same('certloom_series_verification_write_authority_legacy',$result->get_error_code());
+vg_same(true,$gate->is_ready(),'healthy current schema opens public verification without migration/cutover ceremony');
+vg_same(0,$schema_checks,'fresh health marker avoids unnecessary live schema probe');
 
-$GLOBALS['vg_options'][DomainCutoverState::OPTION] = 'broken';
-$result = $gate->enable();
-vg_same('certloom_series_verification_authority_corrupt',$result->get_error_code(),'corrupt authority blocks Series gate');
-$GLOBALS['vg_options'][DomainCutoverState::OPTION] = DomainCutoverState::DOMAIN;
-$result = $gate->enable();
-vg_same('certloom_series_verification_cutover_receipt_missing',$result->get_error_code(),'manual authority option is not enough');
-$GLOBALS['vg_options'][DomainCutoverState::RECEIPT_OPTION] = array(
-	'state'=>'committed','authority'=>DomainCutoverState::DOMAIN,'prepared_at'=>time()-1,'completed_at'=>time(),
-	'source_count'=>3,'source_max_id'=>7,'source_generation'=>'g','schema_version'=>SchemaManager::SCHEMA_VERSION,
-);
-$GLOBALS['vg_options'][DomainCutoverState::RECEIPT_OPTION]['source_generation']='wrong';
-$result=$gate->enable();
-vg_same('certloom_series_verification_cutover_receipt_missing',$result->get_error_code(),'receipt must match completed migration boundary');
-$GLOBALS['vg_options'][DomainCutoverState::RECEIPT_OPTION]['source_generation']='g';
-$GLOBALS['vg_mutate_gate_once']=true;
-$result=$gate->enable();
-vg_same('certloom_series_verification_gate_save_failed',$result->get_error_code(),'public gate requires exact persisted marker');
+/* Historical marker no longer grants or revokes public read availability. */
 $GLOBALS['vg_options'][PublicVerificationGate::OPTION]=0;
-vg_same(true,$gate->enable(),'official cutover receipt permits enable');
-vg_same(2,$schema_checks,'enable performs a live schema check for each enable attempt');
-vg_same(true,$gate->is_ready());
+vg_same(true,$gate->is_ready(),'legacy public-ready option cannot close healthy verification');
+vg_same(true,$gate->disable(),'retired marker can be cleaned up');
+vg_same(true,$gate->is_ready(),'removing retired marker still does not close healthy verification');
 
-/* Maintenance makes public domain verification fail closed even after cutover. */
+/* Stale/missing health is re-proved live. */
+$GLOBALS['vg_options'][SchemaManager::HEALTH_OPTION] = array('version'=>SchemaManager::SCHEMA_VERSION,'checked_at'=>1);
+vg_same(true,$gate->is_ready(),'stale marker triggers live health proof and remains available when healthy');
+vg_same(1,$schema_checks,'one live schema proof executed');
+$schema_result = new WP_Error('schema_bad','bad');
+vg_same(false,$gate->is_ready(),'failed live schema proof closes public verification');
+vg_same(2,$schema_checks,'failed proof was actually executed');
+$schema_result = true;
+vg_same(true,$gate->enable(),'compatibility readiness probe succeeds without migration/cutover authority');
+vg_same(3,$schema_checks,'enable performs a live schema proof');
+
+/* Maintenance remains a genuine fail-closed boundary. */
 $GLOBALS['vg_options'][DomainMaintenanceLock::OPTION] = 'corrupt-maintenance-payload';
-vg_same(false,$gate->is_ready(),'corrupt/active maintenance lock disables public domain verification');
+vg_same(false,$gate->is_ready(),'active/corrupt maintenance disables public verification');
 $result=$gate->enable();
-vg_same('certloom_series_verification_maintenance_active',$result->get_error_code(),'cannot enable while maintenance active');
+vg_same('certloom_series_verification_maintenance_active',$result->get_error_code(),'readiness probe refuses active maintenance');
 unset($GLOBALS['vg_options'][DomainMaintenanceLock::OPTION]);
-vg_same(true,$gate->is_ready(),'verification recovers after maintenance boundary clears');
+$GLOBALS['vg_options'][SchemaManager::HEALTH_OPTION] = array('version'=>SchemaManager::SCHEMA_VERSION,'checked_at'=>time());
+vg_same(true,$gate->is_ready(),'verification recovers automatically when maintenance clears');
 
-vg_same(true,$gate->disable());
-vg_same(false,$gate->is_ready());
-echo "PASS  public Series verification requires committed cutover + live schema proof and fails closed during maintenance\n\n1 tests, 0 failures\n";
+echo "PASS  public Series verification follows real credential-store readiness and no longer waits for migration/cutover ceremony\n\n1 tests, 0 failures\n";

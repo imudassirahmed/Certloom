@@ -21,12 +21,14 @@ final class DomainFeatureGate {
 			'data_tools' => $gate->allows( 'data_tools' ),
 		);
 		/*
-		 * Alpha review builds keep admin workspaces routable without claiming
-		 * production write-path/Data Tools authority. This is deliberately narrower
-		 * than the former QA_UNGATED bypass and must be removed before RC/final.
+		 * Alpha review builds expose implemented product workflows so they can be
+		 * exercised end to end on staging. Admin workspaces and normalized write
+		 * paths are operational in review builds; destructive migration/restore/
+		 * cutover Data Tools still require exact release authority.
 		 */
 		if ( defined( 'CERTLOOM_REVIEW_ADMIN_PREVIEW' ) && true === CERTLOOM_REVIEW_ADMIN_PREVIEW ) {
 			self::$scopes['admin_preview'] = true;
+			self::$scopes['write_paths'] = true;
 		}
 		return self::$scopes;
 	}

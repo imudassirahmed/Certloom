@@ -748,8 +748,8 @@ class Ecapla_CertVerify_Admin {
 	 */
 	private function issue_setup_wizard_first_credential( $base ) {
 		$issue_url = add_query_arg( 'step', 'issue', $base );
-		if ( ! \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
-			$this->redirect_error( __( 'Credential issuance is temporarily unavailable while Certloom finishes the protected credential-data transition.', 'certloom' ), $issue_url );
+		if ( ! \Certloom\Infrastructure\Migration\DomainFeatureGate::write_paths_ready() ) {
+			$this->redirect_error( __( 'Credential issuance is temporarily unavailable because the credential store is not ready.', 'certloom' ), $issue_url );
 		}
 
 		$patch = $this->setup_wizard_draft_request( 'issue' );
@@ -2044,10 +2044,10 @@ class Ecapla_CertVerify_Admin {
 			}
 		}
 		$wizard_template_preview_nonce = wp_create_nonce( 'certloom_setup_wizard_preview' );
-		$wizard_first_issuance_ready = \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready();
+		$wizard_first_issuance_ready = \Certloom\Infrastructure\Migration\DomainFeatureGate::write_paths_ready();
 		$wizard_first_issuance_reason = $wizard_first_issuance_ready
 			? __( 'This quick first credential uses the canonical Independent credential workflow. No Program, Batch or hidden hierarchy record is created.', 'certloom' )
-			: __( 'Credential issuance is temporarily unavailable while Certloom finishes the protected credential-data transition.', 'certloom' );
+			: __( 'Credential issuance is temporarily unavailable because the credential store is not ready.', 'certloom' );
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/setup-wizard.php';
 	}
 

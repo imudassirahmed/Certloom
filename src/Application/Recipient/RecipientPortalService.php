@@ -65,13 +65,12 @@ final class RecipientPortalService {
 	}
 
 	/**
-	 * Runtime availability stays fail-closed until accepted normalized authority.
-	 * The existing domain admin-preview gate is accepted only as a development /
-	 * staging preview mechanism and never creates public verification authority.
+	 * The authenticated portal follows the same real credential-store readiness
+	 * contract as public verification. Review builds do not need a separate
+	 * authority bypass once normalized credential storage is healthy.
 	 */
 	public function runtime_available() {
-		return $this->verification_gate->is_ready()
-			|| \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready();
+		return $this->verification_gate->is_ready();
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
@@ -81,7 +80,7 @@ final class RecipientPortalService {
 			return new \WP_Error( 'certloom_recipient_portal_login_required', __( 'Sign in to view your Certloom credentials.', 'certloom' ) );
 		}
 		if ( ! $this->runtime_available() ) {
-			return new \WP_Error( 'certloom_recipient_portal_authority_closed', __( 'My Credentials is not available until Certloom’s normalized credential authority has completed its acceptance gate.', 'certloom' ) );
+			return new \WP_Error( 'certloom_recipient_portal_store_unavailable', __( 'My Credentials is temporarily unavailable because the credential store is not ready. Please try again shortly.', 'certloom' ) );
 		}
 
 		$recipient = $this->recipients->find_by_wp_user_id( $wp_user_id );

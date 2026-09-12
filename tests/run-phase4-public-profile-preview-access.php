@@ -1,9 +1,7 @@
 <?php
-/** Alpha 4.31 public-profile accessibility: authenticated review preview without anonymous gate bypass. */
+/** Alpha 4.42 public-profile access: healthy normalized credentials verify publicly without preview ceremony. */
 namespace {
 	define( 'ABSPATH', __DIR__ . '/fake-wp/' );
-	$GLOBALS['pp_logged_in'] = false;
-	$GLOBALS['pp_can_view'] = false;
 	function __( $text, $domain = null ) { return $text; }
 	function _x( $text, $context, $domain = null ) { return $text; }
 	function esc_html__( $text, $domain = null ) { return $text; }
@@ -19,21 +17,15 @@ namespace {
 	function absint( $value ) { return abs( (int) $value ); }
 	function wp_unique_id( $prefix = '' ) { static $n = 0; return $prefix . ++$n; }
 	function is_wp_error( $value ) { return $value instanceof WP_Error; }
-	function current_time( $type ) { return '2026-09-12 00:00:00'; }
+	function current_time( $type ) { return '2026-09-13 00:00:00'; }
 	function wp_date( $format, $timestamp = null ) { return gmdate( $format, $timestamp ?: time() ); }
 	function get_option( $key, $default = false ) { if ( 'date_format' === $key ) return 'Y-m-d'; if ( 'time_format' === $key ) return 'H:i'; return $default; }
-	function is_user_logged_in() { return (bool) $GLOBALS['pp_logged_in']; }
-	function current_user_can( $capability ) { return (bool) $GLOBALS['pp_can_view'] && 'certloom_view_credentials' === $capability; }
 	function home_url( $path = '/' ) { return 'https://example.test' . $path; }
 	class WP_Error { private $code; private $message; public function __construct( $code = '', $message = '' ) { $this->code=$code; $this->message=$message; } public function get_error_code(){ return $this->code; } public function get_error_message(){ return $this->message; } }
 	class Ecapla_CertVerify_Shortcode { public static function enqueue_assets() {} }
-	class Ecapla_CertVerify_Permissions { const CAP_VIEW_CREDENTIALS = 'certloom_view_credentials'; }
 }
 namespace Certloom\Infrastructure\Verification {
 	final class PublicVerificationGate { public static $ready = false; public function is_ready(){ return (bool) self::$ready; } }
-}
-namespace Certloom\Infrastructure\Migration {
-	final class DomainFeatureGate { public static $preview = false; public static function admin_preview_ready(){ return (bool) self::$preview; } }
 }
 namespace Certloom\Infrastructure\Repository { final class CredentialRepository {} }
 namespace Certloom\Application {
@@ -49,31 +41,18 @@ namespace {
 	function pp_check( $condition, $message ) { if ( ! $condition ) { throw new RuntimeException( 'FAIL  ' . $message ); } echo "PASS  {$message}\n"; }
 
 	\Certloom\Infrastructure\Verification\PublicVerificationGate::$ready = false;
-	\Certloom\Infrastructure\Migration\DomainFeatureGate::$preview = true;
-	$GLOBALS['pp_logged_in'] = false; $GLOBALS['pp_can_view'] = false;
-	$guest = \Ecapla_CertVerify_Render::normalized_credential_profile( 'ABCD-EFGH' );
-	pp_check( false !== strpos( $guest, 'temporarily unavailable' ), 'anonymous visitor remains fail-closed before public cutover' );
-	pp_check( false === strpos( $guest, 'Amina Khan' ), 'closed anonymous route does not disclose credential profile data' );
-
-	$GLOBALS['pp_logged_in'] = true; $GLOBALS['pp_can_view'] = true;
-	$preview = \Ecapla_CertVerify_Render::normalized_credential_profile( 'ABCD-EFGH' );
-	pp_check( false !== strpos( $preview, 'Credential preview' ), 'authorized reviewer gets explicit preview eyebrow' );
-	pp_check( false !== strpos( $preview, 'Admin preview' ) && false !== strpos( $preview, 'Amina Khan' ), 'authorized reviewer can inspect the normalized credential profile' );
-	pp_check( false !== strpos( $preview, 'Current credential record' ) && false !== strpos( $preview, 'does not make public verification available to visitors' ), 'preview never claims public verification authority' );
-	pp_check( false === strpos( $preview, 'Verified from the issuer' ) && false === strpos( $preview, 'Copy link' ), 'preview suppresses verified timestamp and public sharing action' );
-	pp_check( false !== strpos( $preview, 'Print preview' ), 'preview keeps a safe local print action' );
-
-	$GLOBALS['pp_can_view'] = false;
-	$no_cap = \Ecapla_CertVerify_Render::normalized_credential_profile( 'ABCD-EFGH' );
-	pp_check( false !== strpos( $no_cap, 'temporarily unavailable' ) && false === strpos( $no_cap, 'Amina Khan' ), 'logged-in user without credential-view capability cannot use preview bypass' );
+	$closed = \Ecapla_CertVerify_Render::normalized_credential_profile( 'ABCD-EFGH' );
+	pp_check( false !== strpos( $closed, 'credential store is not ready' ), 'genuinely unavailable credential storage remains fail-closed' );
+	pp_check( false === strpos( $closed, 'Amina Khan' ), 'storage failure does not disclose credential data' );
+	pp_check( false === strpos( $closed, 'Admin preview' ), 'there is no authenticated preview bypass/banner anymore' );
 
 	\Certloom\Infrastructure\Verification\PublicVerificationGate::$ready = true;
-	\Certloom\Infrastructure\Migration\DomainFeatureGate::$preview = false;
-	$GLOBALS['pp_logged_in'] = false;
 	$verified = \Ecapla_CertVerify_Render::normalized_credential_profile( 'ABCD-EFGH' );
-	pp_check( false !== strpos( $verified, 'Verified credential' ) && false !== strpos( $verified, 'Authentic credential record' ), 'accepted public gate renders the normal verified profile' );
-	pp_check( false !== strpos( $verified, 'Verified from the issuer') && false !== strpos( $verified, 'Copy link' ), 'verified profile retains verification timestamp and shareable canonical link' );
-	pp_check( false === strpos( $verified, 'Admin preview' ), 'verified public profile contains no review-only banner' );
+	pp_check( false !== strpos( $verified, 'Verified credential' ) && false !== strpos( $verified, 'Authentic credential record' ), 'healthy normalized credential renders as normal verified public profile' );
+	pp_check( false !== strpos( $verified, 'Amina Khan' ), 'verified public profile exposes only presenter-approved credential data' );
+	pp_check( false !== strpos( $verified, 'Verified from the issuer') && false !== strpos( $verified, 'Copy link' ), 'verified profile retains verification timestamp and canonical sharing action' );
+	pp_check( false !== strpos( $verified, 'Print' ), 'verified profile remains printable' );
+	pp_check( false === strpos( $verified, 'Admin preview' ) && false === strpos( $verified, 'Credential preview' ), 'verified profile contains no development-only preview language' );
 
-	echo "\n11 public-profile preview-access checks, 0 failures\n";
+	echo "\n8 public-profile operational-access checks, 0 failures\n";
 }

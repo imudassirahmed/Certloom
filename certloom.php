@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Certloom – Certificate Verification
  * Description: Self-hosted credential issuance, verification and lifecycle management for WordPress.
- * Version: 1.7.0-alpha.4.41
+ * Version: 1.7.0-alpha.4.42
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.7.0-alpha.4.41' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.7.0-alpha.4.42' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
@@ -41,11 +41,12 @@ define( 'CERTLOOM_PATH', ECAPLA_CERTVERIFY_PATH );
 define( 'CERTLOOM_URL', ECAPLA_CERTVERIFY_URL );
 
 /*
- * 1.7 alpha review builds keep the normalized admin workspaces visible so the
- * product can be reviewed screen-by-screen. This opens admin preview/storage
- * only; integration/cutover write-path authority and Data Tools still require
- * their normal release authority. Remove this review override before a release
- * candidate is declared.
+ * 1.7 alpha review builds keep implemented normalized product workflows open
+ * for end-to-end staging verification. This includes admin workspaces and
+ * ordinary credential write paths such as integrations/field changes. Destructive
+ * migration/restore/cutover Data Tools remain release-authority gated, as do
+ * renderer-dependent production downloads. Remove this review override before a
+ * release candidate is declared.
  */
 if ( ! defined( 'CERTLOOM_REVIEW_ADMIN_PREVIEW' ) ) {
 	define( 'CERTLOOM_REVIEW_ADMIN_PREVIEW', true );

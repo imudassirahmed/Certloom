@@ -61,7 +61,7 @@ soc( false!==strpos($css,'.certloom-share-menu') && false!==strpos($css,'@media 
 soc( false!==strpos($portal,'allows_public_sharing') && false!==strpos($portal,"'share_url']"), 'Recipient Portal sharing is derived from guest-verifiable normalized URLs only' );
 soc( false!==strpos($portal_ui,'share_controls') && false!==strpos($portal_ui,'Copy URL'), 'Recipient Portal renders SOC-01 platform and copy controls' );
 soc( false===strpos($portal_ui,'recipient_only') && false===strpos($portal_ui,'organization_member'), 'browser renderer does not make independent visibility decisions' );
-soc( false!==strpos($main,"CERTLOOM_DOMAIN_WRITE_PATHS_READY', false") && false!==strpos($main,"CERTLOOM_DOMAIN_ADMIN_PREVIEW', false"), 'normalized authority defaults remain closed' );
+soc( false!==strpos($main,"CERTLOOM_DOMAIN_WRITE_PATHS_READY', false") && false!==strpos($main,"CERTLOOM_DOMAIN_ADMIN_PREVIEW', false"), 'legacy compatibility constants remain conservative while healthy public verification is runtime-driven' );
 soc( ! file_exists(dirname(__DIR__).'/resources/renderer/accepted.json'), 'SOC-01 does not open renderer authority or OG-image generation' );
 soc( false===strpos($policy,'OpenGraph') && false===strpos($policy,'og:image'), 'SOC-01 does not silently absorb separate OG-01 work' );
 

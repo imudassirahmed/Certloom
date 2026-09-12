@@ -757,12 +757,11 @@ final class DomainStructureAdmin {
 		if ( is_array( $action ) && ! empty( $action['label'] ) && ! empty( $action['url'] ) ) {
 			echo '<a class="button ' . ( empty( $action['secondary'] ) ? 'button-primary' : '' ) . '" href="' . esc_url( (string) $action['url'] ) . '">' . esc_html( (string) $action['label'] ) . '</a>';
 		}
-		echo '<span class="certloom-domain-preview-badge">' . esc_html__( 'Acceptance preview', 'certloom' ) . '</span></div></div>';
+		echo '</div></div>';
 	}
 
 	/** @return void */
 	private function notice() {
-		echo '<div class="notice notice-warning inline certloom-domain-gate-notice"><p><strong>' . esc_html__( 'Safety gate active.', 'certloom' ) . '</strong> ' . esc_html__( 'These normalized-domain screens remain unavailable in production until the real database, migration, restore, and cutover acceptance gates pass.', 'certloom' ) . '</p></div>';
 		if ( isset( $_GET['certloom_error'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Redirected admin notice only.
 			$this->error( sanitize_text_field( wp_unslash( $_GET['certloom_error'] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		}

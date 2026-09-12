@@ -58,11 +58,7 @@ final class Ecapla_CertVerify_Recipient_Portal {
 			array( 'status' => $status, 'sort' => $sort, 'page' => $page, 'per_page' => $per_page )
 		);
 		if ( is_wp_error( $result ) ) {
-			$message = $result->get_error_message();
-			if ( 'certloom_recipient_portal_authority_closed' === $result->get_error_code() ) {
-				$message = __( 'My Credentials is installed but remains unavailable until Certloom’s normalized credential authority passes its final acceptance gate.', 'certloom' );
-			}
-			return self::notice( $message );
+			return self::notice( $result->get_error_message() );
 		}
 		if ( empty( $result['linked'] ) ) {
 			return self::notice( __( 'Your WordPress account is not linked to a Certloom recipient yet. Contact the credential issuer if you expected credentials here.', 'certloom' ) );

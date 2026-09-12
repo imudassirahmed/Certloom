@@ -46,7 +46,7 @@ $certloom_bulk_statuses = Ecapla_CertVerify_Fields::get_editable_statuses();
 							<option value="set_custom_field"><?php esc_html_e( 'Set custom-field value', 'certloom' ); ?></option>
 							<option value="clear_custom_field"><?php esc_html_e( 'Clear custom-field value', 'certloom' ); ?></option>
 						</select>
-						<p class="description"><?php esc_html_e( 'Program and batch assignment stay unavailable until the normalized-domain acceptance gate is approved; Certloom will not emulate those relationships in legacy custom fields.', 'certloom' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Program and Batch relationship changes use Credential Management’s reviewed successor-Version workflow so immutable issuance history is preserved.', 'certloom' ); ?></p>
 					</div>
 
 					<div class="certloom-bulk-operation-fields" data-certloom-bulk-fields="set_status">

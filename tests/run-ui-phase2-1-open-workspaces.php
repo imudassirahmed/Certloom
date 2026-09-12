@@ -13,8 +13,8 @@ namespace {
 	function p21open( $ok, $label ) { global $checks, $failures; $checks++; if ( ! $ok ) { $failures[] = $label; } }
 	\Certloom\Infrastructure\Migration\DomainFeatureGate::reset_cache();
 	p21open( \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready(), 'review admin preview opens without accepted manifest' );
-	p21open( ! \Certloom\Infrastructure\Migration\DomainFeatureGate::write_paths_ready(), 'review admin preview does not claim integration/cutover write-path authority' );
-	p21open( ! \Certloom\Infrastructure\Migration\DomainFeatureGate::data_tools_ready(), 'review admin preview does not claim Data Tools authority' );
+	p21open( \Certloom\Infrastructure\Migration\DomainFeatureGate::write_paths_ready(), 'review build opens implemented credential write paths for end-to-end staging verification' );
+	p21open( ! \Certloom\Infrastructure\Migration\DomainFeatureGate::data_tools_ready(), 'review build keeps destructive Data Tools authority closed' );
 	$plugin = file_get_contents( $root . '/src/Plugin.php' );
 	$admin = file_get_contents( $root . '/admin/class-ecapla-certverify-admin.php' );
 	$nav = file_get_contents( $root . '/src/Infrastructure/Admin/AdminProductNavigation.php' );

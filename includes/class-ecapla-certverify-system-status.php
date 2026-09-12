@@ -32,14 +32,17 @@ class Ecapla_CertVerify_System_Status {
 		if ( null !== $staging_cutover ) { $checks[] = $staging_cutover; }
 		$checks[] = self::legacy_table_check( $wpdb );
 		$checks[] = self::authority_check();
+		$review_operational = defined( 'CERTLOOM_REVIEW_ADMIN_PREVIEW' ) && true === CERTLOOM_REVIEW_ADMIN_PREVIEW;
 		$checks[] = self::check(
 			'domain_feature_gates',
-			__( 'Next-domain feature gates', 'certloom' ),
-			self::all_domain_gates_off() ? 'good' : 'warning',
-			self::domain_gate_summary(),
-			self::all_domain_gates_off()
-				? __( 'Normalized-domain release authority is closed, so ordinary activation does not require those protected tables.', 'certloom' )
-				: __( 'One or more development gates are enabled. The next-domain schema becomes a required dependency.', 'certloom' )
+			__( 'Credential workflow readiness', 'certloom' ),
+			self::all_domain_gates_off() || $review_operational ? 'good' : 'warning',
+			$review_operational ? __( 'Operational review', 'certloom' ) : self::domain_gate_summary(),
+			$review_operational
+				? __( 'Implemented admin and credential-writing workflows are open for staging verification. Destructive migration/restore/cutover tools remain protected.', 'certloom' )
+				: ( self::all_domain_gates_off()
+					? __( 'No normalized-domain release scopes are active.', 'certloom' )
+					: __( 'One or more normalized-domain release scopes are active.', 'certloom' ) )
 		);
 		$checks[] = self::maintenance_check();
 		$checks[] = self::domain_maintenance_check();
@@ -321,12 +324,12 @@ class Ecapla_CertVerify_System_Status {
 	private static function authority_check() {
 		$value = get_option( 'certloom_domain_write_authority', null );
 		if ( null === $value || false === $value || '' === $value || 'legacy' === $value ) {
-			return self::check( 'authority', __( 'Credential authority', 'certloom' ), 'good', __( 'Proven 1.5 registry (expected)', 'certloom' ), __( 'The live 1.5 registry remains authoritative while the next domain is still gated.', 'certloom' ) );
+			return self::check( 'authority', __( 'Legacy migration lineage', 'certloom' ), 'good', __( 'Legacy registry preserved', 'certloom' ), __( 'Historical legacy data remains preserved for migration and recovery. Healthy normalized credential workflows and public verification do not wait on this legacy marker.', 'certloom' ) );
 		}
 		if ( 'domain' === $value ) {
-			return self::check( 'authority', __( 'Credential authority', 'certloom' ), 'warning', __( 'Next domain', 'certloom' ), __( 'The next domain is marked authoritative. Its committed cutover receipt and runtime gates must also be valid.', 'certloom' ) );
+			return self::check( 'authority', __( 'Legacy migration lineage', 'certloom' ), 'warning', __( 'Domain cutover marker present', 'certloom' ), __( 'A legacy migration cutover marker is present. Migration and recovery tools will validate its receipt before performing protected transition work.', 'certloom' ) );
 		}
-		return self::check( 'authority', __( 'Credential authority', 'certloom' ), 'bad', __( 'Corrupt protected state', 'certloom' ), __( 'Certloom intentionally blocks legacy writes and Series public verification when the authority option is non-empty but invalid. Repair it only from known-good migration/cutover recovery evidence.', 'certloom' ) );
+		return self::check( 'authority', __( 'Legacy migration lineage', 'certloom' ), 'bad', __( 'Corrupt protected state', 'certloom' ), __( 'Certloom blocks migration and cutover-sensitive operations when this protected legacy marker is invalid. Repair it only from known-good migration or recovery evidence.', 'certloom' ) );
 	}
 
 	private static function maintenance_check() {
