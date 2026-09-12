@@ -333,8 +333,10 @@ final class DomainStructureAdmin {
 		$this->text_field( 'name', __( 'Batch name', 'certloom' ), $is_edit ? (string) $editing['name'] : '', true, 'text', '', '', __( 'Example: Spring 2026 Cohort', 'certloom' ) );
 		$this->text_field( 'start_date', __( 'Start date', 'certloom' ), $is_edit ? (string) $editing['start_date'] : '', false, 'date' );
 		$this->text_field( 'end_date', __( 'End date', 'certloom' ), $is_edit ? (string) $editing['end_date'] : '', false, 'date' );
-		$this->signer_select( 'instructor_signer_id', __( 'Instructor signer profile', 'certloom' ), $is_edit ? $editing['instructor_signer_id'] : 0 );
-		$this->text_field( 'instructor_name', __( 'Instructor display fallback', 'certloom' ), $is_edit ? (string) $editing['instructor_name'] : '', false, 'text', __( 'Optional display fallback when no reusable signer profile is assigned.', 'certloom' ) );
+		$this->signer_select( 'instructor_signer_id', __( 'Signer / instructor profile', 'certloom' ), $is_edit ? $editing['instructor_signer_id'] : 0 );
+		if ( $is_edit && empty( $editing['instructor_signer_id'] ) && '' !== trim( (string) ( $editing['instructor_name'] ?? '' ) ) ) {
+			echo '<div class="certloom-domain-field certloom-domain-field-wide"><div class="notice notice-warning inline"><p>' . esc_html( sprintf( /* translators: %s: legacy instructor display name. */ __( 'Legacy instructor label preserved: %s. Choose a reusable Signer / instructor profile above when you want to replace it; Certloom will not create new duplicate instructor identities.', 'certloom' ), (string) $editing['instructor_name'] ) ) . '</p></div></div>';
+		}
 		echo '<div class="certloom-domain-field"><label><input type="checkbox" name="active" value="1" ' . checked( $is_edit ? ! empty( $editing['active'] ) : true, true, false ) . '> <strong>' . esc_html__( 'Active batch', 'certloom' ) . '</strong></label></div></div>';
 
 		echo '<div class="certloom-domain-subsection certloom-batch-field-contract"><div class="certloom-domain-subsection-head"><div><h3>' . esc_html__( 'Credential field changes', 'certloom' ) . '</h3><p>' . esc_html__( 'Choose only the fields this Batch adds, tightens or excludes. Program-required fields remain required automatically; technical metadata stays out of this setup.', 'certloom' ) . '</p></div></div>';
@@ -440,7 +442,7 @@ final class DomainStructureAdmin {
 		} else {
 			$this->text_field( 'slug', __( 'Machine key', 'certloom' ), $is_edit ? (string) $editing['slug'] : '', true, 'text', __( 'Stable machine identity used by restore, hierarchy assignment, integrations, and future APIs.', 'certloom' ), '', __( 'Example: amina-khan', 'certloom' ) );
 		}
-		$this->text_field( 'title', __( 'Title / role', 'certloom' ), $is_edit ? (string) $editing['title'] : '' );
+		$this->text_field( 'title', __( 'Position / designation', 'certloom' ), $is_edit ? (string) $editing['title'] : '', false, 'text', __( 'The person’s professional title or designation. Their contextual use as Signer or Instructor is assigned separately below.', 'certloom' ) );
 		$this->text_field( 'email', __( 'Email', 'certloom' ), $is_edit ? (string) $editing['email'] : '', false, 'email' );
 		$this->media_field( 'signature_attachment_id', __( 'Signature image', 'certloom' ), $is_edit ? absint( $editing['signature_attachment_id'] ?? 0 ) : 0, __( 'Choose or upload the signer signature image from WordPress Media.', 'certloom' ) );
 		echo '<div class="certloom-domain-field"><label><input type="checkbox" name="active" value="1" ' . checked( $is_edit ? ! empty( $editing['active'] ) : true, true, false ) . '> <strong>' . esc_html__( 'Active signer', 'certloom' ) . '</strong></label></div></div>';
@@ -462,7 +464,7 @@ final class DomainStructureAdmin {
 			return;
 		}
 
-		echo '<div class="certloom-domain-table-wrap"><table class="widefat striped"><thead><tr><th>' . esc_html__( 'Used for', 'certloom' ) . '</th><th>' . esc_html__( 'Role', 'certloom' ) . '</th>' . ( $simple ? '' : '<th>' . esc_html__( 'Priority', 'certloom' ) . '</th>' ) . '<th>' . esc_html__( 'Action', 'certloom' ) . '</th></tr></thead><tbody>';
+		echo '<div class="certloom-domain-table-wrap"><table class="widefat striped"><thead><tr><th>' . esc_html__( 'Used for', 'certloom' ) . '</th><th>' . esc_html__( 'Use as', 'certloom' ) . '</th>' . ( $simple ? '' : '<th>' . esc_html__( 'Priority', 'certloom' ) . '</th>' ) . '<th>' . esc_html__( 'Action', 'certloom' ) . '</th></tr></thead><tbody>';
 		foreach ( $rows as $row ) {
 			$scope_cell = esc_html( (string) $row['scope_label'] );
 			if ( $simple ) {
@@ -481,7 +483,7 @@ final class DomainStructureAdmin {
 		wp_nonce_field( 'certloom_domain_signer_assignment_' . $signer_id );
 		echo '<input type="hidden" name="action" value="certloom_domain_signer_assignment"><input type="hidden" name="assignment_action" value="add"><input type="hidden" name="signer_id" value="' . esc_attr( $signer_id ) . '"><label><strong>' . esc_html( $simple ? __( 'Use for', 'certloom' ) : __( 'Scope', 'certloom' ) ) . '</strong> ';
 		$this->scope_select();
-		echo '</label> <label><strong>' . esc_html__( 'Role', 'certloom' ) . '</strong> <select name="role_type"><option value="signer">' . esc_html__( 'Signer', 'certloom' ) . '</option><option value="instructor">' . esc_html__( 'Instructor', 'certloom' ) . '</option></select></label> ';
+		echo '</label> <label><strong>' . esc_html__( 'Use as', 'certloom' ) . '</strong> <select name="role_type"><option value="signer">' . esc_html__( 'Signer', 'certloom' ) . '</option><option value="instructor">' . esc_html__( 'Instructor', 'certloom' ) . '</option></select></label> ';
 		if ( $simple ) {
 			echo '<details class="certloom-technical-details certloom-signer-priority-control"><summary>' . esc_html__( 'Technical options', 'certloom' ) . '</summary><label><strong>' . esc_html__( 'Priority', 'certloom' ) . '</strong> <input type="number" min="0" max="1000" name="priority" value="100" style="width:90px"><small>' . esc_html__( 'Keep 100 for normal use. Lower numbers win only when two signer rules apply at the same hierarchy level.', 'certloom' ) . '</small></label></details> ';
 		} else {
@@ -515,7 +517,9 @@ final class DomainStructureAdmin {
 			'name'                 => isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '',
 			'start_date'           => isset( $_POST['start_date'] ) ? sanitize_text_field( wp_unslash( $_POST['start_date'] ) ) : '',
 			'end_date'             => isset( $_POST['end_date'] ) ? sanitize_text_field( wp_unslash( $_POST['end_date'] ) ) : '',
-			'instructor_name'      => isset( $_POST['instructor_name'] ) ? sanitize_text_field( wp_unslash( $_POST['instructor_name'] ) ) : '',
+			// Free-form instructor identity is legacy-only. Preserve an existing fallback
+			// until a reusable Signer is deliberately selected, then clear the duplicate.
+			'instructor_name'      => $signer_id ? '' : ( null !== $existing ? (string) ( $existing['instructor_name'] ?? '' ) : '' ),
 			'instructor_signer_id' => $signer_id,
 			'active'               => isset( $_POST['active'] ),
 		);

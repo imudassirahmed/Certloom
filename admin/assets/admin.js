@@ -547,14 +547,17 @@
 					program_validity_available: option.getAttribute( 'data-program-validity-available' ),
 					validity_summary: option.getAttribute( 'data-validity-summary' ) || '',
 					renewal: option.getAttribute( 'data-renewal-policy' ) || 'not_applicable',
-					repeat_policy: option.getAttribute( 'data-repeat-policy' ) || 'lifecycle'
+					repeat_policy: option.getAttribute( 'data-repeat-policy' ) || 'lifecycle',
+					issuer_id: option.getAttribute( 'data-program-issuer-id' ) || '0',
+					issuer_name: option.getAttribute( 'data-program-issuer-name' ) || ''
 				};
 			}
 			function applyProgramMetadata( option, choice ) {
 				if ( ! option || ! choice ) { return; }
 				var map = {
 					title: 'data-program-title', validity_mode: 'data-validity-mode', validity_value: 'data-validity-value', validity_unit: 'data-validity-unit',
-					program_validity_available: 'data-program-validity-available', validity_summary: 'data-validity-summary', renewal: 'data-renewal-policy', repeat_policy: 'data-repeat-policy'
+					program_validity_available: 'data-program-validity-available', validity_summary: 'data-validity-summary', renewal: 'data-renewal-policy', repeat_policy: 'data-repeat-policy',
+					issuer_id: 'data-program-issuer-id', issuer_name: 'data-program-issuer-name'
 				};
 				Object.keys( map ).forEach( function ( key ) {
 					if ( choice[ key ] === undefined || choice[ key ] === null ) { return; }
@@ -1634,6 +1637,8 @@
 			var expirySummary = form.querySelector( '[data-certloom-program-validity-summary]' );
 			var batch = form.querySelector( 'select[name="batch_id"]' );
 			var batchPolicy = form.querySelector( '[data-certloom-manual-batch-policy]' );
+			var issuer = form.querySelector( 'select[name="issuer_id"]' );
+			var issuerPolicy = form.querySelector( '[data-certloom-manual-issuer-policy]' );
 			var review = form.querySelector( '[data-certloom-manual-review]' );
 			var message = form.querySelector( '[data-certloom-phase2-compatibility-message]' );
 			var appearanceTouched = '1' === form.getAttribute( 'data-certloom-presentation-explicit' );
@@ -1658,6 +1663,29 @@
 			function programRenewalPolicy() { var option = selectedProgramOption(); return option ? ( option.getAttribute( 'data-renewal-policy' ) || 'not_applicable' ) : 'not_applicable'; }
 			function programRepeatPolicy() { var option = selectedProgramOption(); return option ? ( option.getAttribute( 'data-repeat-policy' ) || 'lifecycle' ) : 'lifecycle'; }
 			function programValiditySummary() { var option = selectedProgramOption(); return option ? ( option.getAttribute( 'data-validity-summary' ) || '' ).trim() : ''; }
+			function programIssuerId() { var option = selectedProgramOption(); return option ? ( parseInt( option.getAttribute( 'data-program-issuer-id' ) || '0', 10 ) || 0 ) : 0; }
+			function programIssuerName() { var option = selectedProgramOption(); return option ? ( option.getAttribute( 'data-program-issuer-name' ) || '' ).trim() : ''; }
+			function ensureIssuerOption( id, label ) {
+				if ( ! issuer || ! id ) { return; }
+				var option = issuer.querySelector( 'option[value="' + escapeSelector( String( id ) ) + '"]' );
+				if ( ! option ) { option = document.createElement( 'option' ); option.value = String( id ); option.textContent = label || certloomText( 'issuerInheritedFallback', 'Program Issuer' ); issuer.appendChild( option ); }
+			}
+			function syncIssuerPolicy() {
+				if ( ! issuer ) { return; }
+				var inheritedId = 'program' === credentialBasis() ? programIssuerId() : 0;
+				if ( inheritedId ) {
+					var inheritedName = programIssuerName() || certloomText( 'issuerInheritedFallback', 'Program Issuer' );
+					ensureIssuerOption( inheritedId, inheritedName );
+					issuer.value = String( inheritedId );
+					issuer.disabled = true;
+					if ( issuerPolicy ) { issuerPolicy.textContent = certloomText( 'issuerInheritedPrefix', 'Inherited from the selected Program:' ) + ' ' + inheritedName + '. ' + certloomText( 'issuerInheritedChangeProgram', 'Change the Program to change this Issuer.' ); }
+				} else {
+					var wasDisabled = issuer.disabled;
+					issuer.disabled = false;
+					if ( wasDisabled ) { issuer.value = '0'; }
+					if ( issuerPolicy ) { issuerPolicy.textContent = certloomText( 'issuerOptionalHelp', 'Optional for an Independent credential or a Program without an assigned Issuer.' ); }
+				}
+			}
 			function recipientReady() {
 				var mode = form.querySelector( 'input[name="recipient_mode"]:checked' );
 				if ( ! mode || 'existing' === mode.value ) { var select = form.querySelector( '[data-certloom-recipient-existing-select]' ); return !! ( select && select.value ); }
@@ -1744,6 +1772,7 @@
 					if ( programValidityAvailable() ) { if ( programValidity ) { programValidity.checked = true; } }
 					else { expiryRadios.forEach( function ( radio ) { radio.checked = false; } ); }
 				}
+				syncIssuerPolicy();
 				var source = titleSource();
 				if ( inheritedTitle ) { inheritedTitle.textContent = programTitle() || certloomText( 'chooseProgramForTitle', 'Choose a Program to inherit its title.' ); }
 				var customVisible = ! usesProgram || 'custom' === source;
@@ -1792,7 +1821,7 @@
 					var nextProgramValue = String( program.value || '0' );
 					var programJustChosen = ( ! previousProgramValue || '0' === previousProgramValue ) && nextProgramValue && '0' !== nextProgramValue;
 					previousProgramValue = nextProgramValue;
-					syncCredentialBasis( programJustChosen ); syncExpiry(); syncCompatibility();
+					syncCredentialBasis( programJustChosen ); syncIssuerPolicy(); syncExpiry(); syncCompatibility();
 					if ( nextProgramValue && '0' !== nextProgramValue ) { autoApplyInheritedDesign( nextProgramValue ); }
 				} );
 			}
@@ -1801,7 +1830,7 @@
 			form.addEventListener( 'change', function ( event ) { if ( event.target && ( event.target.name === 'recipient_id' || event.target.name === 'recipient_mode' ) ) { syncCompatibility(); } } );
 			form.addEventListener( 'input', function ( event ) { if ( event.target && event.target.name === 'new_recipient[display_name]' ) { syncCompatibility(); } } );
 			form.addEventListener( 'certloom:design-readiness', syncCompatibility );
-			syncCredentialBasis( false ); syncPresentation( false ); syncExpiry(); syncCompatibility();
+			syncCredentialBasis( false ); syncIssuerPolicy(); syncPresentation( false ); syncExpiry(); syncCompatibility();
 			if ( program && program.value && '0' !== program.value && ! appearanceTouched ) { autoApplyInheritedDesign( program.value ); }
 		} );
 	}

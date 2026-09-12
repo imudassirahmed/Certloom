@@ -63,7 +63,7 @@ final class ManualIssuanceAdmin {
 		$simple = AdminUiMode::is_simple();
 		$current_stage = $receipt_version ? 'receipt' : ( is_array( $review ) ? 'review' : 'compose' );
 		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-manual-issuance">';
-		echo '<section class="certloom-page-hero certloom-issue-hero" aria-labelledby="certloom-issue-title"><div><span class="certloom-eyebrow">' . esc_html__( 'Credential operations', 'certloom' ) . '</span><h1 id="certloom-issue-title">' . esc_html__( 'Issue credential', 'certloom' ) . '</h1><p>' . esc_html__( 'Create one credential, review it, then issue only when everything is correct. Recipient, title and issue date form the fast path; organization, Program, Batch, Signer and artwork stay optional.', 'certloom' ) . '</p></div></section>';
+		echo '<section class="certloom-page-hero certloom-issue-hero" aria-labelledby="certloom-issue-title"><div><span class="certloom-eyebrow">' . esc_html__( 'Credential operations', 'certloom' ) . '</span><h1 id="certloom-issue-title">' . esc_html__( 'Issue credential', 'certloom' ) . '</h1><p>' . esc_html__( 'Create one credential, review it, then issue only when everything is correct. Recipient, title and effective date form the fast path; organization, Program, Batch, Signer and artwork stay optional.', 'certloom' ) . '</p></div></section>';
 		( new AdminProductNavigation() )->render_current_subnav();
 		$this->notice();
 		$this->steps( $current_stage );
@@ -132,6 +132,19 @@ final class ManualIssuanceAdmin {
 
 		$context_choices = new ScopedContextChoices();
 		$programs  = $context_choices->programs( $selected_program_id );
+		$program_issuer_id = 0;
+		$program_issuer_name = '';
+		if ( ! is_wp_error( $programs ) && $selected_program_id ) {
+			foreach ( (array) $programs as $program_choice ) {
+				if ( $selected_program_id !== absint( $program_choice['id'] ?? 0 ) ) { continue; }
+				$program_issuer_id = absint( $program_choice['issuer_id'] ?? 0 );
+				$program_issuer_name = trim( (string) ( $program_choice['issuer_name'] ?? '' ) );
+				break;
+			}
+		}
+		// The Program-owned Issuer is authoritative. Do not ask the operator to
+		// make a contradictory second relationship choice during issuance.
+		if ( $program_issuer_id ) { $selected_issuer_id = $program_issuer_id; $values['issuer_id'] = $program_issuer_id; }
 		$batches   = $context_choices->batches( $selected_program_id, $selected_batch_id );
 		$issuers   = $context_choices->issuers( $selected_issuer_id );
 		$signers   = $context_choices->signers( $selected_signer_id );
@@ -236,7 +249,7 @@ final class ManualIssuanceAdmin {
 		$this->radio( 'credential_basis', 'independent', __( 'Independent credential', 'certloom' ), $credential_basis );
 		echo '</div><div class="certloom-program-primary-panel" data-certloom-program-basis-panel' . ( 'program' === $credential_basis ? '' : ' hidden' ) . '><label class="certloom-manual-primary-field"><span>' . esc_html__( 'Program', 'certloom' ) . '</span><select name="program_id" data-certloom-context-lookup="program" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search active Programs…', 'certloom' ) . '" data-certloom-required-example="' . esc_attr__( 'Choose the Program this credential belongs to, or switch to Independent credential.', 'certloom' ) . '"><option value="0">' . esc_html__( 'Choose Program…', 'certloom' ) . '</option>';
 		foreach ( $program_items as $program ) {
-			echo '<option value="' . esc_attr( (string) absint( $program['id'] ?? 0 ) ) . '" data-program-title="' . esc_attr( (string) ( $program['title'] ?? '' ) ) . '" data-validity-mode="' . esc_attr( (string) ( $program['validity_mode'] ?? '' ) ) . '" data-validity-value="' . esc_attr( (string) absint( $program['validity_value'] ?? 0 ) ) . '" data-validity-unit="' . esc_attr( (string) ( $program['validity_unit'] ?? 'days' ) ) . '" data-program-validity-available="' . esc_attr( ! empty( $program['program_default_available'] ) ? '1' : '0' ) . '" data-validity-summary="' . esc_attr( (string) ( $program['validity_summary'] ?? '' ) ) . '" data-renewal-policy="' . esc_attr( (string) ( $program['renewal'] ?? 'not_applicable' ) ) . '" data-repeat-policy="' . esc_attr( (string) ( $program['repeat_policy'] ?? ProgramLifecyclePolicy::REPEAT_LIFECYCLE ) ) . '" ' . selected( $selected_program_id, absint( $program['id'] ?? 0 ), false ) . '>' . esc_html( ScopedContextChoices::program_label( $program ) ) . '</option>';
+			echo '<option value="' . esc_attr( (string) absint( $program['id'] ?? 0 ) ) . '" data-program-title="' . esc_attr( (string) ( $program['title'] ?? '' ) ) . '" data-program-issuer-id="' . esc_attr( (string) absint( $program['issuer_id'] ?? 0 ) ) . '" data-program-issuer-name="' . esc_attr( (string) ( $program['issuer_name'] ?? '' ) ) . '" data-validity-mode="' . esc_attr( (string) ( $program['validity_mode'] ?? '' ) ) . '" data-validity-value="' . esc_attr( (string) absint( $program['validity_value'] ?? 0 ) ) . '" data-validity-unit="' . esc_attr( (string) ( $program['validity_unit'] ?? 'days' ) ) . '" data-program-validity-available="' . esc_attr( ! empty( $program['program_default_available'] ) ? '1' : '0' ) . '" data-validity-summary="' . esc_attr( (string) ( $program['validity_summary'] ?? '' ) ) . '" data-renewal-policy="' . esc_attr( (string) ( $program['renewal'] ?? 'not_applicable' ) ) . '" data-repeat-policy="' . esc_attr( (string) ( $program['repeat_policy'] ?? ProgramLifecyclePolicy::REPEAT_LIFECYCLE ) ) . '" ' . selected( $selected_program_id, absint( $program['id'] ?? 0 ), false ) . '>' . esc_html( ScopedContextChoices::program_label( $program ) ) . '</option>';
 		}
 		echo '</select><small>' . esc_html__( 'Programs define reusable credential semantics such as title, validity, Issuer, fields and inherited design. Choose Independent only for a one-off credential that should not belong to a Program.', 'certloom' ) . '</small></label><div class="certloom-context-inline-actions"><button type="button" class="button-link" data-certloom-dialog-open="certloom-quick-program-dialog">' . esc_html__( 'Add new Program', 'certloom' ) . '</button></div></div></fieldset>';
 
@@ -248,7 +261,7 @@ final class ManualIssuanceAdmin {
 		echo '<div class="certloom-credential-custom-title" data-certloom-custom-title-panel' . ( 'independent' === $credential_basis || 'custom' === $title_source ? '' : ' hidden' ) . '>';
 		$this->text_input( 'credential_title', __( 'Credential title', 'certloom' ), $credential_title, 255, 'text', 'independent' === $credential_basis || 'custom' === $title_source, __( 'Enter the exact title to freeze on this credential.', 'certloom' ) );
 		echo '</div><div class="certloom-manual-grid certloom-manual-grid-2 certloom-issue-essential-fields">';
-		$this->text_input( 'valid_from', __( 'Issue date', 'certloom' ), $valid_from, 10, 'date', true, __( 'The date this credential takes effect.', 'certloom' ) );
+		$this->text_input( 'valid_from', __( 'Effective date', 'certloom' ), $valid_from, 10, 'date', true, __( 'The date this credential becomes effective. Certloom records the actual issuance timestamp separately when you issue it.', 'certloom' ) );
 		echo '</div><div class="certloom-manual-choice-row certloom-manual-expiry">';
 		$this->radio( 'expiry_mode', 'permanent', __( 'No expiry', 'certloom' ), $expiry_mode );
 		$this->radio( 'expiry_mode', 'date', __( 'Specific expiry date', 'certloom' ), $expiry_mode );
@@ -289,9 +302,9 @@ final class ManualIssuanceAdmin {
 		echo '<details class="certloom-additional-details" data-certloom-additional-details><summary><span>' . esc_html__( 'Additional details', 'certloom' ) . '</span><small>' . esc_html__( 'Optional relationship and profile fields', 'certloom' ) . '</small></summary><div class="certloom-additional-details-body">';
 		echo '<div class="certloom-manual-grid certloom-manual-grid-2">';
 
-		echo '<label><span>' . esc_html__( 'Issuer (optional)', 'certloom' ) . '</span><select name="issuer_id" data-certloom-context-lookup="issuer" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search Issuers…', 'certloom' ) . '"><option value="0">' . esc_html__( 'No explicit Issuer', 'certloom' ) . '</option>';
+		echo '<label data-certloom-manual-issuer-field><span>' . esc_html__( 'Issuer', 'certloom' ) . '</span><select name="issuer_id" data-certloom-context-lookup="issuer" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search Issuers…', 'certloom' ) . '"' . ( $program_issuer_id ? ' disabled' : '' ) . '><option value="0">' . esc_html__( 'No explicit Issuer', 'certloom' ) . '</option>';
 		foreach ( $issuer_items as $issuer ) { echo '<option value="' . esc_attr( (string) absint( $issuer['id'] ?? 0 ) ) . '" ' . selected( $selected_issuer_id, absint( $issuer['id'] ?? 0 ), false ) . '>' . esc_html( (string) ( $issuer['name'] ?? __( 'Issuer', 'certloom' ) ) ) . '</option>'; }
-		echo '</select><small>' . esc_html__( 'This can be an organization, certification body, authority, school or employer. If a selected Program already has an Issuer, that Program relationship remains authoritative.', 'certloom' ) . '</small></label>';
+		echo '</select><small data-certloom-manual-issuer-policy>' . esc_html( $program_issuer_id ? sprintf( /* translators: %s: inherited Issuer name. */ __( 'Inherited from the selected Program: %s. Change the Program to change this Issuer.', 'certloom' ), '' !== $program_issuer_name ? $program_issuer_name : __( 'Program Issuer', 'certloom' ) ) : __( 'Optional for an Independent credential or a Program without an assigned Issuer.', 'certloom' ) ) . '</small></label>';
 
 		echo '<label><span>' . esc_html__( 'Batch', 'certloom' ) . '</span><select name="batch_id" data-certloom-context-lookup="batch" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search Batches in this Program…', 'certloom' ) . '"><option value="0">' . esc_html__( 'No Batch', 'certloom' ) . '</option>';
 		foreach ( $batch_items as $batch ) { echo '<option value="' . esc_attr( (string) absint( $batch['id'] ?? 0 ) ) . '" data-program-id="' . esc_attr( (string) absint( $batch['program_id'] ?? 0 ) ) . '" ' . selected( $selected_batch_id, absint( $batch['id'] ?? 0 ), false ) . '>' . esc_html( ScopedContextChoices::batch_label( $batch ) ) . '</option>'; }

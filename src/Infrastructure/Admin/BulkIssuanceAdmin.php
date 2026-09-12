@@ -185,7 +185,7 @@ final class BulkIssuanceAdmin {
 			echo '<option value="' . esc_attr( (string) absint( $template['id'] ?? 0 ) ) . '">' . esc_html( ScopedContextChoices::template_label( $template ) ) . '</option>';
 		}
 		echo '</select></label><small data-certloom-bulk-design-source-status>' . esc_html__( 'Inherited design follows Global → Issuer → Program → Batch. Certloom will show the effective source after you choose a Program.', 'certloom' ) . '</small></div>';
-		echo '<label><span>' . esc_html__( 'Issue / effective date', 'certloom' ) . '</span><input type="date" name="valid_from" required value="' . esc_attr( gmdate( 'Y-m-d' ) ) . '"></label>';
+		echo '<label><span>' . esc_html__( 'Effective date', 'certloom' ) . '</span><input type="date" name="valid_from" required value="' . esc_attr( gmdate( 'Y-m-d' ) ) . '"></label>';
 		echo '<label><span>' . esc_html__( 'Default grade (optional)', 'certloom' ) . '</span><input type="text" maxlength="191" name="grade"></label>';
 		echo '</div>';
 

@@ -621,7 +621,7 @@ final class ManualIssuanceService {
 		}
 		if ( $batch_id && ! $program_id ) { return new \WP_Error( 'certloom_manual_issue_batch_program_required', __( 'Choose the Program that owns the selected Batch, or clear the Batch for standalone issuance.', 'certloom' ) ); }
 		$valid_from = $this->date( $request['valid_from'] ?? '' );
-		if ( is_wp_error( $valid_from ) ) { return new \WP_Error( 'certloom_manual_issue_valid_from_invalid', __( 'Choose a valid credential issue/effective date.', 'certloom' ) ); }
+		if ( is_wp_error( $valid_from ) ) { return new \WP_Error( 'certloom_manual_issue_valid_from_invalid', __( 'Choose a valid credential effective date.', 'certloom' ) ); }
 		$expiry_mode = sanitize_key( (string) ( $request['expiry_mode'] ?? ( $program_id ? 'program' : 'permanent' ) ) );
 		if ( ! in_array( $expiry_mode, array( 'program', 'permanent', 'date' ), true ) ) { return new \WP_Error( 'certloom_manual_issue_expiry_mode_invalid', __( 'Choose the Program default, a permanent credential, or a specific expiry date.', 'certloom' ) ); }
 		if ( 'program' === $expiry_mode && ! $program_id ) { return new \WP_Error( 'certloom_manual_issue_program_expiry_requires_program', __( 'Program validity can only be used when a Program is selected. Choose No expiry or a specific expiry date for standalone credentials.', 'certloom' ) ); }
@@ -629,7 +629,7 @@ final class ManualIssuanceService {
 		if ( 'date' === $expiry_mode ) {
 			$expires_at = $this->date( $request['expires_at'] ?? '' );
 			if ( is_wp_error( $expires_at ) ) { return new \WP_Error( 'certloom_manual_issue_expiry_invalid', __( 'Choose a valid credential expiry date.', 'certloom' ) ); }
-			if ( $expires_at < $valid_from ) { return new \WP_Error( 'certloom_manual_issue_expiry_before_start', __( 'The expiry date cannot be earlier than the credential issue/effective date.', 'certloom' ) ); }
+			if ( $expires_at < $valid_from ) { return new \WP_Error( 'certloom_manual_issue_expiry_before_start', __( 'The expiry date cannot be earlier than the credential effective date.', 'certloom' ) ); }
 		}
 		$grade = trim( sanitize_text_field( (string) ( $request['grade'] ?? '' ) ) );
 		if ( $this->length( $grade ) > 191 ) { return new \WP_Error( 'certloom_manual_issue_grade_too_long', __( 'Grade must be 191 characters or fewer.', 'certloom' ) ); }

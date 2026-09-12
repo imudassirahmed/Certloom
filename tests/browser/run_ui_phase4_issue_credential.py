@@ -62,6 +62,10 @@ async def run():
         await ck('Choose a Program' in (await readiness.text_content()),'programBasisExplicitlyRequestsProgram')
         await program.select_option('11')
         await ck((await inherited_title.text_content()).strip()=='ISO 9001 Lead Auditor','selectedProgramDisplaysExactInheritedCredentialTitle')
+        issuer=page.locator('select[name="issuer_id"]')
+        issuer_policy=page.locator('[data-certloom-manual-issuer-policy]')
+        await ck(await issuer.input_value()=='5' and await issuer.is_disabled(),'programOwnedIssuerIsAutomaticallyInheritedAndLocked')
+        await ck('Example Issuer' in (await issuer_policy.text_content()),'programOwnedIssuerPolicyNamesInheritedAuthority')
         await ck(await page.locator('input[name="title_source"][value="program"]').is_checked(),'programTitleAutomaticallySelected')
         await ck(await page.locator('input[name="expiry_mode"][value="program"]').is_checked(),'programValidityAutomaticallySelectedOnFirstProgramChoice')
         await ck(not await custom_title_panel.is_visible(),'inheritedProgramTitleKeepsCustomTitleHidden')
@@ -103,6 +107,7 @@ async def run():
         await ck(await custom_title_panel.is_visible(),'independentCredentialShowsTitleField')
         await ck(await program.input_value()=='0' and await program.is_disabled(),'independentCredentialClearsAndDisablesProgram')
         await ck(await page.locator('input[name="title_source"][value="custom"]').is_checked(),'independentCredentialForcesCustomTitleSource')
+        await ck(not await issuer.is_disabled() and await issuer.input_value()=='0','independentCredentialReleasesInheritedIssuerControl')
         await page.locator('input[name="credential_title"]').fill('Independent Professional Recognition')
         await ck(not await review.is_disabled(),'independentCredentialCanReviewWithExplicitTitle')
         await basis_program.check(force=True)
@@ -118,6 +123,7 @@ async def run():
         await ck(not await batch.get_attribute('required'),'ordinaryLifecycleDoesNotRequireBatch')
         await program.select_option('12')
         await page.wait_for_timeout(350)
+        await ck(not await issuer.is_disabled(),'programWithoutIssuerKeepsExplicitIssuerAvailable')
         await ck(await page.locator('input[name="presentation_mode"][value="details_only"]').is_checked(),'explicitAppearanceChoiceSurvivesLaterProgramChanges')
         await ck(await page.locator('input[name="expiry_mode"][value="program"]').is_disabled(),'decideAtIssuanceDisablesProgramDefaultValidity')
         await ck(not await page.locator('input[name="expiry_mode"]:checked').count(),'decideAtIssuanceDoesNotSilentlyChoosePermanent')
@@ -126,6 +132,7 @@ async def run():
         await page.locator('input[name="expiry_mode"][value="permanent"]').check()
         await ck(not await review.is_disabled(),'decideAtIssuanceAllowsExplicitPermanentChoice')
         await program.select_option('13')
+        await ck(await issuer.input_value()=='6' and await issuer.is_disabled(),'laterProgramChangeRebindsItsAuthoritativeIssuer')
         await ck(await batch.get_attribute('required') is not None,'perBatchRepeatMarksBatchRequired')
         await ck('Required:' in (await batch_policy.text_content()),'perBatchRepeatExplainsBatchRequirement')
         await ck(await review.is_disabled(),'perBatchRepeatBlocksReviewWithoutBatch')
@@ -231,7 +238,7 @@ async def run():
         await ck(await mobile.locator('.certloom-issue-actions .button').evaluate('(e)=>Math.round(e.getBoundingClientRect().width)')>300,'mobilePrimaryActionFullWidth')
         await mobile.close(); await browser.close()
     if failed:
-        print('FAIL  alpha.4.37 Issue Credential browser gate:',', '.join(failed)); print(f'\n{checks-len(failed)} passed, {len(failed)} failures'); return 1
-    print('PASS  alpha.4.37 Issue Credential browser gate: lifecycle-aware Program/Independent issuance, REST-authenticated real-data design preview, normal-page certificate appearance, bounded Subjects/Results layout and Additional-details technical fields')
-    print(f'\n{checks} alpha.4.37 Issue Credential browser checks, 0 failures'); return 0
+        print('FAIL  alpha.4.39 Issue Credential browser gate:',', '.join(failed)); print(f'\n{checks-len(failed)} passed, {len(failed)} failures'); return 1
+    print('PASS  alpha.4.39 Issue Credential browser gate: lifecycle-aware Program/Independent issuance, REST-authenticated real-data design preview, normal-page certificate appearance, bounded Subjects/Results layout and Additional-details technical fields')
+    print(f'\n{checks} alpha.4.39 Issue Credential browser checks, 0 failures'); return 0
 raise SystemExit(asyncio.run(run()))

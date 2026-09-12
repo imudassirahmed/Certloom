@@ -925,7 +925,7 @@ final class DomainAdmin {
 		echo '<div class="certloom-locked-field-grid">';
 		$this->credential_locked_field( __( 'Certificate number', 'certloom' ), is_array( $version ) ? (string) ( $version['display_number'] ?? '' ) : '' );
 		$this->credential_locked_field( __( 'Issued', 'certloom' ), is_array( $version ) ? (string) ( $version['issued_at'] ?? '' ) : '' );
-		$this->credential_locked_field( __( 'Valid from', 'certloom' ), is_array( $version ) ? (string) ( $version['valid_from'] ?? '' ) : '' );
+		$this->credential_locked_field( __( 'Effective date', 'certloom' ), is_array( $version ) ? (string) ( $version['valid_from'] ?? '' ) : '' );
 		$this->credential_locked_field( __( 'Expires', 'certloom' ), is_array( $version ) && ! empty( $version['expires_at'] ) ? (string) $version['expires_at'] : __( 'No expiry', 'certloom' ) );
 		$this->credential_locked_field( __( 'Grade', 'certloom' ), is_array( $version ) ? (string) ( $version['grade'] ?? '' ) : '' );
 		$this->credential_locked_field( __( 'Design used', 'certloom' ), (string) ( $template['name'] ?? '' ) );
@@ -1719,7 +1719,6 @@ final class DomainAdmin {
 		$this->text_field( 'website', __( 'Website', 'certloom' ), (string) ( $settings['website'] ?? '' ), false, '', 'url' );
 		$this->text_field( 'contact_name', __( 'Contact name', 'certloom' ), (string) ( $settings['contact_name'] ?? '' ) );
 		$this->text_field( 'contact_email', __( 'Contact email', 'certloom' ), (string) ( $settings['contact_email'] ?? '' ), false, '', 'email' );
-		$this->text_field( 'certificate_prefix', __( 'Certificate prefix', 'certloom' ), (string) ( $settings['certificate_prefix'] ?? '' ), false, __( 'A future numbering policy may use this as an issuer default; it does not rewrite existing numbers.', 'certloom' ) );
 		$this->color_field( 'primary_color', __( 'Primary color', 'certloom' ), (string) ( $settings['primary_color'] ?? '' ), __( 'Used as the main issuer brand color where a design inherits issuer branding.', 'certloom' ) );
 		$this->color_field( 'accent_color', __( 'Accent color', 'certloom' ), (string) ( $settings['accent_color'] ?? '' ), __( 'Optional secondary issuer brand color for designs that support it.', 'certloom' ) );
 		$this->media_field( 'logo_attachment_id', __( 'Logo', 'certloom' ), $is_edit ? absint( $editing['logo_attachment_id'] ?? 0 ) : 0, __( 'Choose or upload the issuer logo from WordPress Media.', 'certloom' ) );
@@ -2021,15 +2020,11 @@ final class DomainAdmin {
 
 		$address = isset( $_POST['address'] ) ? sanitize_textarea_field( wp_unslash( $_POST['address'] ) ) : '';
 		$contact_name = isset( $_POST['contact_name'] ) ? sanitize_text_field( wp_unslash( $_POST['contact_name'] ) ) : '';
-		$certificate_prefix = isset( $_POST['certificate_prefix'] ) ? sanitize_text_field( wp_unslash( $_POST['certificate_prefix'] ) ) : '';
 		if ( $this->string_length( $address ) > 2000 ) {
 			return new \WP_Error( 'certloom_issuer_address_too_long', __( 'Issuer address must be 2,000 characters or fewer.', 'certloom' ) );
 		}
 		if ( $this->string_length( $contact_name ) > 255 ) {
 			return new \WP_Error( 'certloom_issuer_contact_name_too_long', __( 'Issuer contact name must be 255 characters or fewer.', 'certloom' ) );
-		}
-		if ( $this->string_length( $certificate_prefix ) > 100 ) {
-			return new \WP_Error( 'certloom_issuer_prefix_too_long', __( 'Issuer certificate prefix must be 100 characters or fewer.', 'certloom' ) );
 		}
 
 		$known = array(
@@ -2039,7 +2034,6 @@ final class DomainAdmin {
 			'contact_email' => $email,
 			'primary_color' => $primary,
 			'accent_color' => $accent,
-			'certificate_prefix' => $certificate_prefix,
 		);
 		$settings = null !== $existing && isset( $existing['settings'] ) && is_array( $existing['settings'] ) ? $existing['settings'] : array();
 		foreach ( $known as $key => $value ) { if ( '' === $value ) { unset( $settings[ $key ] ); } else { $settings[ $key ] = $value; } }

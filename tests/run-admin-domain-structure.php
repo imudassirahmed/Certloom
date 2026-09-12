@@ -77,7 +77,7 @@ p1e_has( $src['issuers'], 'Issuer slug is required and must be 191 characters or
 p1e_has( $src['issuers'], 'certloom_issuer_list_failed', 'Issuer list reads must fail closed.' );
 p1e_has( $src['domain_admin'], 'certloom_issuer_website_invalid', 'Issuer website must reject malformed non-empty values.' );
 p1e_has( $src['domain_admin'], "array( 'http', 'https' )", 'Issuer website must remain HTTP/HTTPS only.' );
-p1e_has( $src['domain_admin'], 'certificate_prefix', 'Issuer brand UI must expose certificate prefix.' );
+p1e_check( false === strpos( $src['domain_admin'], "text_field( 'certificate_prefix'" ), 'Issuer brand UI must not expose a future-only certificate prefix that has no runtime effect.' );
 p1e_has( $src['domain_admin'], 'logo_attachment_id', 'Issuer brand UI must expose local logo attachment identity.' );
 p1e_has( $src['domain_admin'], 'seal_attachment_id', 'Issuer brand UI must expose local seal attachment identity.' );
 

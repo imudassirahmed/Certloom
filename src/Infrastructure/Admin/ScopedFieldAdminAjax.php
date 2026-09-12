@@ -190,7 +190,7 @@ final class ScopedFieldAdminAjax {
 			if ( is_wp_error( $result ) ) { return $result; }
 			foreach ( (array) ( $result['items'] ?? array() ) as $row ) {
 				$label = (string) ( $row['title'] ?? '' ); if ( ! empty( $row['code'] ) ) { $label .= ' · ' . (string) $row['code']; }
-				$choices[] = array( 'id' => absint( $row['id'] ?? 0 ), 'label' => $label, 'title' => (string) ( $row['title'] ?? '' ), 'validity_mode' => (string) ( $row['validity_mode'] ?? '' ), 'validity_value' => absint( $row['validity_value'] ?? 0 ), 'validity_unit' => (string) ( $row['validity_unit'] ?? 'days' ), 'program_validity_available' => ! empty( $row['program_default_available'] ), 'validity_summary' => (string) ( $row['validity_summary'] ?? '' ), 'renewal' => (string) ( $row['renewal'] ?? 'not_applicable' ), 'repeat_policy' => (string) ( $row['repeat_policy'] ?? 'lifecycle' ) );
+				$choices[] = array( 'id' => absint( $row['id'] ?? 0 ), 'label' => $label, 'title' => (string) ( $row['title'] ?? '' ), 'issuer_id' => absint( $row['issuer_id'] ?? 0 ), 'issuer_name' => (string) ( $row['issuer_name'] ?? '' ), 'validity_mode' => (string) ( $row['validity_mode'] ?? '' ), 'validity_value' => absint( $row['validity_value'] ?? 0 ), 'validity_unit' => (string) ( $row['validity_unit'] ?? 'days' ), 'program_validity_available' => ! empty( $row['program_default_available'] ), 'validity_summary' => (string) ( $row['validity_summary'] ?? '' ), 'renewal' => (string) ( $row['renewal'] ?? 'not_applicable' ), 'repeat_policy' => (string) ( $row['repeat_policy'] ?? 'lifecycle' ) );
 			}
 		} elseif ( 'batch' === $kind ) {
 			$result = ( new BatchRepository() )->search_active_for_program( $program_id, $query, 20 );
