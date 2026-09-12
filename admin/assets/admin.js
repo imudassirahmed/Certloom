@@ -247,8 +247,30 @@
 			refreshFallback();
 		}
 
+		var validityMode = document.querySelector( '[data-certloom-program-validity-mode]' );
+		var durationField = document.querySelector( '[data-certloom-program-validity-duration]' );
+		var renewalField = document.querySelector( '[data-certloom-program-renewal-field]' );
+		var renewal = document.querySelector( '[data-certloom-program-renewal]' );
+		function syncLifecyclePolicy() {
+			if ( ! validityMode ) { return; }
+			var mode = validityMode.value || 'permanent';
+			var duration = 'duration' === mode;
+			var permanent = 'permanent' === mode;
+			if ( durationField ) {
+				durationField.hidden = ! duration;
+				Array.prototype.forEach.call( durationField.querySelectorAll( 'input,select' ), function ( field ) { field.disabled = ! duration; } );
+			}
+			if ( renewalField ) { renewalField.hidden = permanent; }
+			if ( renewal ) {
+				if ( permanent ) { renewal.value = 'not_applicable'; }
+				renewal.disabled = permanent;
+			}
+		}
+
 		purpose.addEventListener( 'change', updateSubcategories );
+		if ( validityMode ) { validityMode.addEventListener( 'change', syncLifecyclePolicy ); }
 		updateSubcategories();
+		syncLifecyclePolicy();
 		initLocaleVariants();
 	}
 
@@ -435,9 +457,38 @@
 			var defaultLabel = select.options.length ? select.options[ 0 ].textContent : ( 'batch' === kind ? certloomText( 'contextNoBatch', 'No Batch' ) : certloomText( 'contextChooseProgram', 'Choose Program…' ) );
 
 			function optionLabel( choice ) { return String( choice && choice.label ? choice.label : '' ); }
+			function programMetadataFromOption( option ) {
+				if ( ! option ) { return {}; }
+				return {
+					title: option.getAttribute( 'data-program-title' ) || '',
+					validity_mode: option.getAttribute( 'data-validity-mode' ) || '',
+					validity_value: option.getAttribute( 'data-validity-value' ) || '0',
+					validity_unit: option.getAttribute( 'data-validity-unit' ) || 'days',
+					program_validity_available: option.getAttribute( 'data-program-validity-available' ),
+					validity_summary: option.getAttribute( 'data-validity-summary' ) || '',
+					renewal: option.getAttribute( 'data-renewal-policy' ) || 'not_applicable',
+					repeat_policy: option.getAttribute( 'data-repeat-policy' ) || 'lifecycle'
+				};
+			}
+			function applyProgramMetadata( option, choice ) {
+				if ( ! option || ! choice ) { return; }
+				var map = {
+					title: 'data-program-title', validity_mode: 'data-validity-mode', validity_value: 'data-validity-value', validity_unit: 'data-validity-unit',
+					program_validity_available: 'data-program-validity-available', validity_summary: 'data-validity-summary', renewal: 'data-renewal-policy', repeat_policy: 'data-repeat-policy'
+				};
+				Object.keys( map ).forEach( function ( key ) {
+					if ( choice[ key ] === undefined || choice[ key ] === null ) { return; }
+					var value = choice[ key ];
+					if ( 'program_validity_available' === key ) { value = value === true || value === 1 || value === '1' ? '1' : '0'; }
+					option.setAttribute( map[ key ], String( value ) );
+				} );
+			}
 			function selectedSnapshot() {
 				var selected = select.options[ select.selectedIndex ];
-				return selected && select.value && select.value !== defaultValue ? { id: String( select.value ), label: selected.textContent, title: selected.getAttribute( 'data-program-title' ) || '' } : null;
+				if ( ! selected || ! select.value || select.value === defaultValue ) { return null; }
+				var snapshot = { id: String( select.value ), label: selected.textContent };
+				if ( 'program' === kind ) { Object.assign( snapshot, programMetadataFromOption( selected ) ); }
+				return snapshot;
 			}
 			function programId() {
 				if ( 'batch' !== kind || ! form ) { return 0; }
@@ -462,14 +513,14 @@
 					option.value = value;
 					option.textContent = optionLabel( choice );
 					if ( 'batch' === kind && choice.program_id ) { option.setAttribute( 'data-program-id', String( choice.program_id ) ); }
-					if ( 'program' === kind && choice.title ) { option.setAttribute( 'data-program-title', String( choice.title ) ); }
+					if ( 'program' === kind ) { applyProgramMetadata( option, choice ); }
 					select.appendChild( option );
 				} );
 				if ( previous && ! seen[ previous.id ] ) {
 					var keep = document.createElement( 'option' );
 					keep.value = previous.id;
 					keep.textContent = previous.label;
-					if ( 'program' === kind && previous.title ) { keep.setAttribute( 'data-program-title', previous.title ); }
+					if ( 'program' === kind ) { applyProgramMetadata( keep, previous ); }
 					if ( 'batch' === kind && programId() ) { keep.setAttribute( 'data-program-id', String( programId() ) ); }
 					select.appendChild( keep );
 				}
@@ -581,14 +632,26 @@
 			var legacy = form.querySelector( '[data-certloom-legacy-custom-fields]' );
 			var bulkSchema = form.querySelector( '[data-certloom-bulk-field-schema-body]' );
 			var existingScript = form.querySelector( '[data-certloom-scoped-existing-values]' );
+			var independentScript = form.querySelector( '[data-certloom-independent-field-catalog]' );
+			var independent = form.querySelector( '[data-certloom-independent-details]' );
+			var independentInputs = form.querySelector( '[data-certloom-independent-detail-inputs]' );
+			var independentSelect = form.querySelector( '[data-certloom-independent-detail-select]' );
+			var independentAdd = form.querySelector( '[data-certloom-independent-detail-add]' );
+			var detailsHelp = form.querySelector( '[data-certloom-credential-details-help]' );
+			var basisRadios = Array.prototype.slice.call( form.querySelectorAll( 'input[name="credential_basis"]' ) );
 			var values = {};
+			var independentCatalog = [];
 			var requestSequence = 0;
 			try { values = existingScript ? JSON.parse( existingScript.textContent || '{}' ) : {}; } catch ( error ) { values = {}; }
+			try { independentCatalog = independentScript ? JSON.parse( independentScript.textContent || '[]' ) : []; } catch ( error ) { independentCatalog = []; }
+			var independentCatalogByKey = {};
+			independentCatalog.forEach( function ( field ) { if ( field && field.key ) { independentCatalogByKey[ field.key ] = field; } } );
 
 			function cacheCurrentValues() {
 				if ( ! container ) { return; }
-				Array.prototype.forEach.call( container.querySelectorAll( '[data-certloom-scoped-value-key]' ), function ( input ) {
-					values[ input.getAttribute( 'data-certloom-scoped-value-key' ) ] = input.value;
+				Array.prototype.forEach.call( form.querySelectorAll( '[data-certloom-scoped-value-key],[data-certloom-independent-value-key]' ), function ( input ) {
+					var key = input.getAttribute( 'data-certloom-scoped-value-key' ) || input.getAttribute( 'data-certloom-independent-value-key' );
+					if ( key ) { values[ key ] = input.value; }
 				} );
 			}
 
@@ -614,6 +677,65 @@
 					var input = form.querySelector( '[name="new_recipient[' + field.key.replace( /[^a-z0-9_-]/g, '' ) + ']"]' );
 					if ( input ) { input.required = true; input.setAttribute( 'data-certloom-field-contract-required', '1' ); }
 				} );
+			}
+
+			function credentialBasis() {
+				var checked = basisRadios.filter( function ( radio ) { return radio.checked; } )[ 0 ];
+				return checked ? checked.value : ( program.value && '0' !== program.value ? 'program' : 'independent' );
+			}
+
+			function independentFieldDefinition( key, fallbackLabel ) {
+				if ( independentCatalogByKey[ key ] ) { return independentCatalogByKey[ key ]; }
+				return { key: key, label: fallbackLabel || key.replace( /[_\-.]+/g, ' ' ).replace( /\b\w/g, function ( char ) { return char.toUpperCase(); } ), type: 'text', sensitivity: 'personal', public_exposure: 'private' };
+			}
+
+			function renderIndependentField( key, focus, fallbackLabel ) {
+				if ( ! independentInputs || ! key ) { return null; }
+				var existing = independentInputs.querySelector( '[data-certloom-independent-field="' + key.replace( /[^a-z0-9_-]/g, '' ) + '"]' );
+				if ( existing ) { var existingInput = existing.querySelector( '[data-certloom-independent-value-key]' ); if ( focus && existingInput ) { existingInput.focus(); } return existingInput; }
+				var field = independentFieldDefinition( key, fallbackLabel );
+				var row = document.createElement( 'div' ); row.className = 'certloom-independent-detail-row'; row.setAttribute( 'data-certloom-independent-field', key );
+				var heading = document.createElement( 'div' ); heading.className = 'certloom-independent-detail-row__head';
+				var label = document.createElement( 'strong' ); label.textContent = field.label || key; heading.appendChild( label );
+				var remove = document.createElement( 'button' ); remove.type = 'button'; remove.className = 'button-link-delete'; remove.textContent = certloomText( 'remove', 'Remove' ); heading.appendChild( remove ); row.appendChild( heading );
+				var input;
+				if ( 'textarea' === field.type ) { input = document.createElement( 'textarea' ); input.rows = 3; }
+				else { input = document.createElement( 'input' ); input.type = 'date' === field.type ? 'date' : ( 'number' === field.type ? 'number' : 'text' ); if ( 'number' === field.type ) { input.step = 'any'; } }
+				input.name = 'custom_merge_fields[' + key + ']'; input.maxLength = 2000; input.setAttribute( 'data-certloom-independent-value-key', key ); input.value = Object.prototype.hasOwnProperty.call( values, key ) ? String( values[ key ] ) : ''; input.setAttribute( 'aria-label', field.label || key ); row.appendChild( input );
+				var privacy = document.createElement( 'small' ); privacy.className = 'description'; privacy.textContent = certloomText( 'privacyPrefix', 'Privacy:' ) + ' ' + certloomFieldPrivacyText( 'exposure', field.public_exposure || 'private' ) + ' · ' + certloomFieldPrivacyText( 'sensitivity', field.sensitivity || 'personal' ); row.appendChild( privacy );
+				remove.addEventListener( 'click', function () { delete values[ key ]; row.remove(); renderIndependentEmpty(); form.dispatchEvent( new CustomEvent( 'certloom:issuance-data-changed', { bubbles: true } ) ); } );
+				input.addEventListener( 'input', function () { values[ key ] = input.value; } );
+				independentInputs.appendChild( row );
+				if ( focus ) { input.focus(); }
+				return input;
+			}
+
+			function renderIndependentEmpty() {
+				if ( ! independentInputs ) { return; }
+				var empty = independentInputs.querySelector( '[data-certloom-independent-empty]' );
+				var hasRows = !! independentInputs.querySelector( '[data-certloom-independent-field]' );
+				if ( hasRows && empty ) { empty.remove(); return; }
+				if ( ! hasRows && ! empty ) { empty = document.createElement( 'p' ); empty.className = 'description certloom-independent-empty'; empty.setAttribute( 'data-certloom-independent-empty', '' ); empty.textContent = certloomText( 'noIndependentDetails', 'No extra credential details added yet.' ); independentInputs.appendChild( empty ); }
+			}
+
+			function renderIndependent() {
+				if ( ! independentInputs ) { return; }
+				independentInputs.innerHTML = '';
+				Object.keys( values ).sort().forEach( function ( key ) { if ( key ) { renderIndependentField( key, false, '' ); } } );
+				renderIndependentEmpty();
+			}
+
+			function setIndependentMode( enabled ) {
+				if ( independent ) { independent.hidden = ! enabled; }
+				if ( detailsHelp ) { detailsHelp.textContent = enabled ? certloomText( 'credentialDetailsIndependent', 'Add the credential-specific facts you want to store with this independent credential.' ) : certloomText( 'credentialDetailsProgram', 'Program and Batch field rules appear here. These values are frozen into the issued credential.' ); }
+				if ( enabled ) {
+					setLegacyEnabled( false ); resetRecipientRequirements();
+					if ( container ) { container.innerHTML = ''; }
+					if ( status ) { status.textContent = certloomText( 'credentialDetailsIndependent', 'Add the credential-specific facts you want to store with this independent credential.' ); }
+					var gradeInput = form.querySelector( 'input[name="grade"]' ); var gradeWrap = form.querySelector( '[data-certloom-grade-field]' );
+					if ( gradeWrap ) { gradeWrap.hidden = false; } if ( gradeInput ) { gradeInput.disabled = false; gradeInput.required = false; }
+					renderIndependent();
+				}
 			}
 
 			function renderManual( payload ) {
@@ -712,7 +834,13 @@
 				cacheCurrentValues();
 				requestSequence++;
 				var sequence = requestSequence;
-				if ( ! program.value ) {
+				if ( 'independent' === credentialBasis() ) {
+					setIndependentMode( true );
+					renderBulkSchema( { configured: false, fields: [] } );
+					return;
+				}
+				setIndependentMode( false );
+				if ( ! program.value || '0' === program.value ) {
 					renderManual( { configured: false, fields: [] } );
 					renderBulkSchema( { configured: false, fields: [] } );
 					if ( status ) { status.textContent = certloomText( 'chooseProgramLoadFields', 'Choose a Program to load its credential fields.' ); }
@@ -737,9 +865,10 @@
 
 			program.addEventListener( 'change', resolve );
 			if ( batch ) { batch.addEventListener( 'change', resolve ); }
-			Array.prototype.forEach.call( form.querySelectorAll( 'input[name="recipient_mode"]' ), function ( input ) {
-				input.addEventListener( 'change', resolve );
-			} );
+			basisRadios.forEach( function ( input ) { input.addEventListener( 'change', resolve ); } );
+			Array.prototype.forEach.call( form.querySelectorAll( 'input[name="recipient_mode"]' ), function ( input ) { input.addEventListener( 'change', resolve ); } );
+			if ( independentAdd ) { independentAdd.addEventListener( 'click', function () { var key = independentSelect ? independentSelect.value : ''; if ( ! key ) { if ( independentSelect ) { independentSelect.focus(); } return; } renderIndependentField( key, true, '' ); renderIndependentEmpty(); if ( independentSelect ) { independentSelect.value = ''; } form.dispatchEvent( new CustomEvent( 'certloom:issuance-data-changed', { bubbles: true } ) ); } ); }
+			form.addEventListener( 'certloom:add-credential-detail', function ( event ) { if ( 'independent' !== credentialBasis() ) { return; } var detail = event.detail || {}; var key = String( detail.fieldKey || '' ).replace( /[^a-z0-9_-]/g, '' ); if ( key ) { renderIndependentField( key, true, detail.label || '' ); renderIndependentEmpty(); } } );
 			resolve();
 		} );
 	}
@@ -1128,6 +1257,66 @@
 		} );
 	}
 
+	function initBulkLifecycle() {
+		document.querySelectorAll( 'form[data-certloom-bulk-lifecycle]' ).forEach( function ( form ) {
+			var program = form.querySelector( 'select[name="program_id"]' );
+			var batch = form.querySelector( 'select[name="batch_id"]' );
+			var batchPolicy = form.querySelector( '[data-certloom-bulk-batch-policy]' );
+			var radios = Array.prototype.slice.call( form.querySelectorAll( 'input[name="expiry_mode"]' ) );
+			var programRadio = form.querySelector( 'input[name="expiry_mode"][value="program"]' );
+			var permanentRadio = form.querySelector( 'input[name="expiry_mode"][value="permanent"]' );
+			var dateRadio = form.querySelector( 'input[name="expiry_mode"][value="date"]' );
+			var dateField = form.querySelector( 'input[name="expires_at"]' );
+			var summary = form.querySelector( '[data-certloom-bulk-validity-summary]' );
+			if ( ! program || ! radios.length ) { return; }
+
+			function selectedProgram() { return program.options[ program.selectedIndex ] || null; }
+			function text( key, fallback ) { return certloomText( key, fallback ); }
+			function formatOne( template, value ) { return String( template || '%s' ).replace( '%s', String( value || '' ) ); }
+			function syncDate() {
+				var specific = !! ( dateRadio && dateRadio.checked );
+				if ( dateField ) { dateField.required = specific; dateField.disabled = ! specific; }
+			}
+			function sync() {
+				var option = selectedProgram();
+				var hasProgram = !! ( option && program.value && '0' !== program.value );
+				var validityAvailable = ! hasProgram || '0' !== option.getAttribute( 'data-program-validity-available' );
+				var renewal = hasProgram ? ( option.getAttribute( 'data-renewal-policy' ) || 'not_applicable' ) : 'not_applicable';
+				var repeat = hasProgram ? ( option.getAttribute( 'data-repeat-policy' ) || 'lifecycle' ) : 'lifecycle';
+				var validitySummary = hasProgram ? ( option.getAttribute( 'data-validity-summary' ) || '' ) : '';
+
+				if ( programRadio ) { programRadio.disabled = hasProgram && ! validityAvailable; }
+				if ( permanentRadio ) { permanentRadio.disabled = hasProgram && 'required' === renewal; }
+				if ( programRadio && programRadio.disabled && programRadio.checked ) { programRadio.checked = false; }
+				if ( permanentRadio && permanentRadio.disabled && permanentRadio.checked ) { permanentRadio.checked = false; }
+
+				if ( hasProgram && validityAvailable && ! radios.some( function ( radio ) { return radio.checked && ! radio.disabled; } ) && programRadio ) { programRadio.checked = true; }
+				radios.forEach( function ( radio ) { radio.required = ! radio.disabled; } );
+
+				if ( batch ) { batch.required = hasProgram && 'batch' === repeat; }
+				if ( batchPolicy ) {
+					batchPolicy.textContent = hasProgram && 'batch' === repeat
+						? text( 'bulkBatchRequired', 'Required: this Program issues one credential per Batch or session.' )
+						: text( 'bulkBatchOptional', 'Optional. Search is limited to the selected Program; Batch field and design overrides are revalidated for every row.' );
+				}
+
+				if ( summary ) {
+					if ( ! hasProgram ) { summary.textContent = text( 'bulkChooseProgramLifecycle', 'Choose a Program to confirm its default validity and repeat-issuance policy.' ); }
+					else if ( ! validityAvailable ) { summary.textContent = text( 'bulkDecideValidity', 'This Program decides validity at issuance. Choose Permanent or a specific expiry date for this bulk job.' ); }
+					else {
+						summary.textContent = formatOne( text( 'bulkProgramValidity', 'Program default: %s.' ), validitySummary || text( 'defaultCredentialTerm', 'Credential' ) );
+						if ( 'required' === renewal ) { summary.textContent += text( 'bulkRenewalRequired', ' Renewal is required after expiry.' ); }
+					}
+				}
+				syncDate();
+			}
+
+			program.addEventListener( 'change', sync );
+			radios.forEach( function ( radio ) { radio.addEventListener( 'change', syncDate ); } );
+			sync();
+		} );
+	}
+
 	function initIssueDesignPreview() {
 		var panel = document.querySelector( '[data-certloom-issue-design-preview]' );
 		var form = panel ? panel.closest( 'form[data-certloom-phase2-issuance]' ) : null;
@@ -1135,20 +1324,40 @@
 		var select = form.querySelector( '[data-certloom-issue-template-select]' );
 		var assignedField = form.querySelector( '[data-certloom-assigned-design-field]' );
 		var sourceRadios = Array.prototype.slice.call( form.querySelectorAll( 'input[name="design_source"]' ) );
-		var issuer = form.querySelector( 'select[name="issuer_id"]' );
-		var program = form.querySelector( 'select[name="program_id"]' );
-		var batch = form.querySelector( 'select[name="batch_id"]' );
+		var presentationRadios = Array.prototype.slice.call( form.querySelectorAll( 'input[name="presentation_mode"]' ) );
 		if ( ! select || ! sourceRadios.length ) { return; }
 		observeWizardTemplatePreview( panel );
 		var name = panel.querySelector( '[data-certloom-template-preview-name]' );
 		var description = panel.querySelector( '[data-certloom-template-preview-description]' );
 		var source = panel.querySelector( '[data-certloom-template-preview-source]' );
 		var canvas = panel.querySelector( '[data-certloom-template-preview-canvas]' );
+		var readiness = panel.querySelector( '[data-certloom-design-data-check]' );
+		var readinessSummary = panel.querySelector( '[data-certloom-design-data-summary]' );
+		var readinessFields = panel.querySelector( '[data-certloom-design-data-fields]' );
+		var additional = form.querySelector( '[data-certloom-additional-details]' );
 		var sequence = 0;
 		var controller = null;
-		function sourceMode() {
-			var checked = sourceRadios.find( function ( radio ) { return radio.checked; } );
-			return checked ? checked.value : 'inherited';
+		var timer = null;
+
+		function presentationMode() { var checked = presentationRadios.find( function ( radio ) { return radio.checked; } ); return checked ? checked.value : 'details_only'; }
+		function sourceMode() { var checked = sourceRadios.find( function ( radio ) { return radio.checked; } ); return checked ? checked.value : 'inherited'; }
+		function recipientReady() {
+			var mode = form.querySelector( 'input[name="recipient_mode"]:checked' );
+			if ( ! mode || 'existing' === mode.value ) { var recipient = form.querySelector( '[data-certloom-recipient-existing-select]' ); return !! ( recipient && recipient.value ); }
+			var newName = form.querySelector( 'input[name="new_recipient[display_name]"]' ); return !! ( newName && newName.value.trim() );
+		}
+		function basicsReady() {
+			if ( ! recipientReady() ) { return false; }
+			var basis = form.querySelector( 'input[name="credential_basis"]:checked' ); basis = basis ? basis.value : 'program';
+			var program = form.querySelector( 'select[name="program_id"]' );
+			if ( 'program' === basis && ( ! program || ! program.value || '0' === program.value ) ) { return false; }
+			var titleSource = form.querySelector( 'input[name="title_source"]:checked' ); titleSource = titleSource ? titleSource.value : ( 'program' === basis ? 'program' : 'custom' );
+			var title = form.querySelector( 'input[name="credential_title"]' );
+			if ( ( 'independent' === basis || 'custom' === titleSource ) && ( ! title || ! title.value.trim() ) ) { return false; }
+			var validFrom = form.querySelector( 'input[name="valid_from"]' ); if ( ! validFrom || ! validFrom.value ) { return false; }
+			var expiry = form.querySelector( 'input[name="expiry_mode"]:checked' ); if ( ! expiry || expiry.disabled ) { return false; }
+			if ( 'date' === expiry.value ) { var expiryDate = form.querySelector( 'input[name="expires_at"]' ); if ( ! expiryDate || ! expiryDate.value ) { return false; } }
+			return true;
 		}
 		function emptyPreview( title, copy, provenance ) {
 			if ( name ) { name.textContent = title; }
@@ -1157,66 +1366,92 @@
 			if ( canvas ) { canvas.innerHTML = '<span class="certloom-issue-design-preview-empty">' + escapeHtml( certloomText( 'previewFitHint', 'Preview fits automatically in this window.' ) ) + '</span>'; }
 			panel.removeAttribute( 'aria-busy' );
 		}
+		function setReadinessState( state, message ) {
+			form.setAttribute( 'data-certloom-design-data-ready', state );
+			form.setAttribute( 'data-certloom-design-data-message', message || '' );
+			form.dispatchEvent( new CustomEvent( 'certloom:design-readiness', { bubbles: true, detail: { state: state, message: message || '' } } ) );
+		}
 		function syncSourceControls() {
 			var assigned = 'assigned' === sourceMode();
 			if ( assignedField ) { assignedField.hidden = ! assigned; }
-			select.disabled = ! assigned;
-			select.required = assigned;
-			select.setAttribute( 'aria-required', assigned ? 'true' : 'false' );
+			select.disabled = ! assigned || 'design' !== presentationMode();
+			select.required = assigned && 'design' === presentationMode();
+			select.setAttribute( 'aria-required', select.required ? 'true' : 'false' );
+		}
+		function openAdditional( selector ) {
+			if ( additional ) { additional.open = true; additional.scrollIntoView( { behavior: 'smooth', block: 'start' } ); }
+			if ( selector ) { var target = form.querySelector( selector ); if ( target ) { window.setTimeout( function () { target.focus(); }, 250 ); } }
+		}
+		function readinessAction( field ) {
+			var action = String( field.action || '' );
+			var button = document.createElement( 'button' ); button.type = 'button'; button.className = 'button-link certloom-design-data-action';
+			if ( 'recipient' === action ) {
+				button.textContent = certloomText( 'designDataEditRecipient', 'Edit recipient' );
+				button.addEventListener( 'click', function () {
+					var mode = form.querySelector( 'input[name="recipient_mode"]:checked' );
+					if ( mode && 'new' === mode.value ) { var dialogButton = form.querySelector( '[data-certloom-dialog-open="certloom-new-recipient-dialog"]' ); if ( dialogButton ) { dialogButton.click(); } return; }
+					var recipient = form.querySelector( '[data-certloom-recipient-existing-select]' );
+					if ( recipient && recipient.value && certloomL10n.recipientEditBase ) { window.open( certloomL10n.recipientEditBase + encodeURIComponent( recipient.value ), '_blank', 'noopener' ); }
+				} ); return button;
+			}
+			if ( 'credential_detail' === action ) {
+				button.textContent = certloomText( 'designDataAddValue', 'Add value' );
+				button.addEventListener( 'click', function () { form.dispatchEvent( new CustomEvent( 'certloom:add-credential-detail', { bubbles: true, detail: { fieldKey: field.field_key || '', label: field.label || '' } } ) ); var card = form.querySelector( '[data-certloom-credential-data]' ); if ( card ) { card.scrollIntoView( { behavior: 'smooth', block: 'center' } ); } } ); return button;
+			}
+			if ( 'grade' === action ) { button.textContent = certloomText( 'designDataAddValue', 'Add value' ); button.addEventListener( 'click', function () { var grade = form.querySelector( 'input[name="grade"]' ); if ( grade ) { grade.scrollIntoView( { behavior: 'smooth', block: 'center' } ); grade.focus(); } } ); return button; }
+			if ( 'program' === action ) { button.textContent = certloomText( 'designDataChooseProgram', 'Choose Program' ); button.addEventListener( 'click', function () { var programBasis = form.querySelector( 'input[name="credential_basis"][value="program"]' ); if ( programBasis ) { programBasis.focus(); } var basis = form.querySelector( '[data-certloom-credential-basis]' ); if ( basis ) { basis.scrollIntoView( { behavior: 'smooth', block: 'center' } ); } } ); return button; }
+			if ( 'repeating' === action ) { button.textContent = certloomText( 'designDataOpenDetails', 'Open details' ); button.addEventListener( 'click', function () { if ( additional ) { additional.open = true; } var repeating = form.querySelector( '[data-certloom-repeating-data]' ); if ( repeating ) { repeating.open = true; repeating.scrollIntoView( { behavior: 'smooth', block: 'center' } ); } } ); return button; }
+			if ( 'context' === action ) { button.textContent = certloomText( 'designDataOpenDetails', 'Open details' ); button.addEventListener( 'click', function () { openAdditional( '' ); } ); return button; }
+			return null;
+		}
+		function renderReadiness( payload ) {
+			payload = payload && payload.data_readiness ? payload.data_readiness : { ready: true, fields: [], missing_count: 0 };
+			var fields = Array.isArray( payload.fields ) ? payload.fields : [];
+			var missingCount = parseInt( payload.missing_count || '0', 10 ) || 0;
+			var summaryText = ! missingCount ? certloomText( 'designDataReady', 'All design fields are ready.' ) : ( 1 === missingCount ? certloomText( 'designDataMissingOne', '1 design field still needs a value.' ) : String( certloomText( 'designDataMissingMany', '%d design fields still need values.' ) ).replace( '%d', String( missingCount ) ) );
+			if ( readiness ) { readiness.classList.toggle( 'has-missing', missingCount > 0 ); readiness.classList.toggle( 'is-ready', 0 === missingCount ); }
+			if ( readinessSummary ) { readinessSummary.textContent = summaryText; }
+			if ( readinessFields ) {
+				readinessFields.innerHTML = '';
+				fields.forEach( function ( field ) {
+					var row = document.createElement( 'div' ); row.className = 'certloom-design-data-row is-' + ( field.status || 'missing' );
+					var text = document.createElement( 'div' ); text.className = 'certloom-design-data-row__text';
+					var strong = document.createElement( 'strong' ); strong.textContent = field.label || field.token || ''; text.appendChild( strong );
+					var meta = document.createElement( 'small' ); meta.textContent = ( field.source || '' ) + ( field.value_hint ? ' · ' + field.value_hint : '' ); text.appendChild( meta ); row.appendChild( text );
+					var badge = document.createElement( 'span' ); badge.className = 'certloom-design-data-badge is-' + ( field.status || 'missing' ); badge.textContent = 'generated' === field.status ? certloomText( 'designDataGenerated', 'Created when issued' ) : ( 'ready' === field.status ? certloomText( 'designDataReadyBadge', 'Ready' ) : certloomText( 'designDataMissingBadge', 'Needs value' ) ); row.appendChild( badge );
+					if ( 'missing' === field.status ) { var action = readinessAction( field ); if ( action ) { row.appendChild( action ); } }
+					readinessFields.appendChild( row );
+				} );
+			}
+			setReadinessState( missingCount ? '0' : '1', summaryText );
+		}
+		function bodyFromForm() {
+			var body = new URLSearchParams();
+			var data = new FormData( form );
+			data.forEach( function ( value, key ) { if ( 'string' === typeof value ) { body.append( key, value ); } } );
+			return body;
 		}
 		function loadPreview() {
 			syncSourceControls();
-			var mode = sourceMode();
-			var templateId = parseInt( select.value || '0', 10 ) || 0;
-			sequence++;
-			var requestId = sequence;
-			if ( controller && controller.abort ) { controller.abort(); }
-			controller = 'undefined' !== typeof AbortController ? new AbortController() : null;
-			if ( 'assigned' === mode && ! templateId ) {
-				emptyPreview( certloomText( 'assignedDesign', 'Assigned design' ), certloomText( 'chooseAssignedDesignPreview', 'Choose a published design to preview it here.' ), '' );
-				return;
-			}
-			if ( ! certloomL10n.restTemplatePreviewUrl ) {
-				emptyPreview( certloomText( 'previewUnavailable', 'Preview unavailable' ), certloomText( 'previewLoadFailed', 'Template preview could not be loaded.' ), '' );
-				return;
-			}
-			panel.setAttribute( 'aria-busy', 'true' );
-			if ( name ) { name.textContent = certloomText( 'loadingPreview', 'Loading preview…' ); }
-			if ( description ) { description.textContent = ''; }
-			if ( source ) { source.textContent = ''; source.hidden = true; }
-			if ( canvas ) { canvas.innerHTML = ''; }
-			var url = new URL( certloomL10n.restTemplatePreviewUrl );
-			url.searchParams.set( 'mode', mode );
-			url.searchParams.set( 'template_id', String( templateId ) );
-			url.searchParams.set( 'issuer_id', issuer ? ( issuer.value || '0' ) : '0' );
-			url.searchParams.set( 'program_id', program ? ( program.value || '0' ) : '0' );
-			url.searchParams.set( 'batch_id', batch ? ( batch.value || '0' ) : '0' );
-			fetch( url.toString(), {
-				method: 'GET', credentials: 'same-origin',
-				headers: certloomL10n.restNonce ? { 'X-WP-Nonce': certloomL10n.restNonce } : {},
-				signal: controller ? controller.signal : undefined
-			} ).then( function ( response ) {
-				return response.json().then( function ( payload ) {
-					if ( ! response.ok ) { throw new Error( payload && payload.message ? payload.message : certloomText( 'previewLoadFailed', 'Template preview could not be loaded.' ) ); }
-					return payload;
-				} );
-			} ).then( function ( payload ) {
-				if ( requestId !== sequence ) { return; }
-				if ( name ) { name.textContent = payload && payload.name ? payload.name : certloomText( 'previewUnavailable', 'Preview unavailable' ); }
-				if ( description ) { description.textContent = payload && payload.description ? payload.description : ''; }
-				if ( source ) { source.textContent = payload && payload.source_label ? payload.source_label : ''; source.hidden = ! source.textContent; }
-				if ( canvas ) { canvas.innerHTML = payload && payload.html ? payload.html : ''; }
-				panel.removeAttribute( 'aria-busy' );
-				window.requestAnimationFrame( function () { fitWizardTemplatePreview( panel ); } );
-			} ).catch( function ( error ) {
-				if ( error && 'AbortError' === error.name ) { return; }
-				if ( requestId !== sequence ) { return; }
-				emptyPreview( 'inherited' === mode ? certloomText( 'inheritedDesign', 'Inherited design' ) : certloomText( 'previewUnavailable', 'Preview unavailable' ), error && error.message ? error.message : certloomText( 'previewLoadFailed', 'Template preview could not be loaded.' ), '' );
-			} );
+			if ( 'design' !== presentationMode() ) { setReadinessState( '1', '' ); return; }
+			var mode = sourceMode(); var templateId = parseInt( select.value || '0', 10 ) || 0;
+			if ( 'assigned' === mode && ! templateId ) { setReadinessState( '0', certloomText( 'phase2ChooseDesign', 'Choose a published assigned design, or use the inherited design.' ) ); emptyPreview( certloomText( 'assignedDesign', 'Assigned design' ), certloomText( 'chooseAssignedDesignPreview', 'Choose a published design to preview it here.' ), '' ); return; }
+			if ( ! basicsReady() ) { setReadinessState( '0', certloomText( 'issuancePreviewCompleteCore', 'Choose a recipient and complete the credential basics to preview real issuance data.' ) ); emptyPreview( certloomText( 'inheritedDesign', 'Design preview' ), certloomText( 'issuancePreviewCompleteCore', 'Choose a recipient and complete the credential basics to preview real issuance data.' ), '' ); return; }
+			if ( ! certloomL10n.restIssuancePreviewUrl ) { setReadinessState( '0', certloomText( 'previewLoadFailed', 'Template preview could not be loaded.' ) ); emptyPreview( certloomText( 'previewUnavailable', 'Preview unavailable' ), certloomText( 'previewLoadFailed', 'Template preview could not be loaded.' ), '' ); return; }
+			sequence++; var requestId = sequence;
+			if ( controller && controller.abort ) { controller.abort(); } controller = 'undefined' !== typeof AbortController ? new AbortController() : null;
+			setReadinessState( 'pending', certloomText( 'designDataChecking', 'Checking design data…' ) );
+			panel.setAttribute( 'aria-busy', 'true' ); if ( name ) { name.textContent = certloomText( 'loadingPreview', 'Loading preview…' ); } if ( description ) { description.textContent = ''; } if ( source ) { source.textContent = ''; source.hidden = true; } if ( canvas ) { canvas.innerHTML = ''; }
+			fetch( certloomL10n.restIssuancePreviewUrl, { method: 'POST', credentials: 'same-origin', headers: Object.assign( { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }, certloomL10n.restNonce ? { 'X-WP-Nonce': certloomL10n.restNonce } : {} ), body: bodyFromForm().toString(), signal: controller ? controller.signal : undefined } )
+				.then( function ( response ) { return response.json().then( function ( payload ) { if ( ! response.ok ) { throw new Error( payload && payload.message ? payload.message : certloomText( 'previewLoadFailed', 'Template preview could not be loaded.' ) ); } return payload; } ); } )
+				.then( function ( payload ) { if ( requestId !== sequence ) { return; } if ( name ) { name.textContent = payload && payload.name ? payload.name : certloomText( 'previewUnavailable', 'Preview unavailable' ); } if ( description ) { description.textContent = payload && payload.description ? payload.description : ''; } if ( source ) { source.textContent = payload && payload.source_label ? payload.source_label : ''; source.hidden = ! source.textContent; } if ( canvas ) { canvas.innerHTML = payload && payload.html ? payload.html : ''; } renderReadiness( payload ); panel.removeAttribute( 'aria-busy' ); window.requestAnimationFrame( function () { fitWizardTemplatePreview( panel ); } ); } )
+				.catch( function ( error ) { if ( error && 'AbortError' === error.name ) { return; } if ( requestId !== sequence ) { return; } var message = error && error.message ? error.message : certloomText( 'previewLoadFailed', 'Template preview could not be loaded.' ); setReadinessState( '0', message ); emptyPreview( 'inherited' === mode ? certloomText( 'inheritedDesign', 'Inherited design' ) : certloomText( 'previewUnavailable', 'Preview unavailable' ), message, '' ); if ( readinessSummary ) { readinessSummary.textContent = message; } } );
 		}
-		sourceRadios.forEach( function ( radio ) { radio.addEventListener( 'change', loadPreview ); } );
-		select.addEventListener( 'change', loadPreview );
-		[ issuer, program, batch ].forEach( function ( control ) { if ( control ) { control.addEventListener( 'change', function () { if ( 'inherited' === sourceMode() ) { loadPreview(); } } ); } } );
+		function schedule() { if ( timer ) { window.clearTimeout( timer ); } timer = window.setTimeout( loadPreview, 260 ); }
+		sourceRadios.forEach( function ( radio ) { radio.addEventListener( 'change', schedule ); } ); select.addEventListener( 'change', schedule ); presentationRadios.forEach( function ( radio ) { radio.addEventListener( 'change', schedule ); } );
+		form.addEventListener( 'change', function ( event ) { if ( event.target && event.target.name && 'certloom_manual_issuance_step' !== event.target.name ) { schedule(); } } );
+		form.addEventListener( 'input', function ( event ) { if ( event.target && event.target.name ) { schedule(); } } );
+		form.addEventListener( 'certloom:issuance-data-changed', schedule );
 		loadPreview();
 	}
 
@@ -1240,6 +1475,9 @@
 			var expiryRadios = Array.prototype.slice.call( form.querySelectorAll( 'input[name="expiry_mode"]' ) );
 			var expiryPanel = form.querySelector( '[data-certloom-expiry-date-panel]' );
 			var expiryDate = form.querySelector( 'input[name="expires_at"]' );
+			var expirySummary = form.querySelector( '[data-certloom-program-validity-summary]' );
+			var batch = form.querySelector( 'select[name="batch_id"]' );
+			var batchPolicy = form.querySelector( '[data-certloom-manual-batch-policy]' );
 			var review = form.querySelector( '[data-certloom-manual-review]' );
 			var message = form.querySelector( '[data-certloom-phase2-compatibility-message]' );
 			function presentationMode() { var checked = presentationRadios.find( function ( radio ) { return radio.checked; } ); return checked ? checked.value : 'details_only'; }
@@ -1251,28 +1489,56 @@
 				if ( ! option ) { return ''; }
 				return ( option.getAttribute( 'data-program-title' ) || option.textContent || '' ).trim();
 			}
+			function selectedProgramOption() { return program && program.value && '0' !== program.value ? program.options[ program.selectedIndex ] : null; }
+			function programValidityAvailable() {
+				var option = selectedProgramOption(); if ( ! option ) { return false; }
+				var value = option.getAttribute( 'data-program-validity-available' );
+				return null === value ? true : '1' === value;
+			}
+			function programRenewalPolicy() { var option = selectedProgramOption(); return option ? ( option.getAttribute( 'data-renewal-policy' ) || 'not_applicable' ) : 'not_applicable'; }
+			function programRepeatPolicy() { var option = selectedProgramOption(); return option ? ( option.getAttribute( 'data-repeat-policy' ) || 'lifecycle' ) : 'lifecycle'; }
+			function programValiditySummary() { var option = selectedProgramOption(); return option ? ( option.getAttribute( 'data-validity-summary' ) || '' ).trim() : ''; }
 			function recipientReady() {
 				var mode = form.querySelector( 'input[name="recipient_mode"]:checked' );
 				if ( ! mode || 'existing' === mode.value ) { var select = form.querySelector( '[data-certloom-recipient-existing-select]' ); return !! ( select && select.value ); }
 				var name = form.querySelector( 'input[name="new_recipient[display_name]"]' ); return !! ( name && name.value.trim() );
 			}
 			function clearImage() { if ( imageId ) { imageId.value = ''; } if ( imagePreview ) { imagePreview.innerHTML = '<span>' + escapeHtml( certloomText( 'noCertificateImage', 'No certificate image selected' ) ) + '</span>'; } if ( imageClear ) { imageClear.hidden = true; } }
+			function syncBatchPolicy() {
+				if ( ! batch ) { return; }
+				var required = 'program' === credentialBasis() && !! selectedProgramOption() && 'batch' === programRepeatPolicy();
+				batch.required = required;
+				batch.setAttribute( 'aria-required', required ? 'true' : 'false' );
+				if ( batchPolicy ) {
+					batchPolicy.textContent = required
+						? certloomText( 'manualBatchRequired', 'Required: this Program issues one credential per Batch or session.' )
+						: certloomText( 'manualBatchOptional', 'Optional unless the selected Program issues one credential per Batch or session. When selected, Batch must belong to the Program.' );
+				}
+			}
 			function syncCompatibility() {
 				if ( ! review ) { return; }
+				syncBatchPolicy();
 				var mode = presentationMode(); var basis = credentialBasis(); var selectedProgram = !! ( program && program.value && '0' !== program.value ); var source = titleSource();
 				var hasTitle = 'program' === basis && 'program' === source ? selectedProgram : !! ( title && title.value.trim() ); var hasRecipient = recipientReady();
 				var designSource = designSources.find( function ( radio ) { return radio.checked; } ); designSource = designSource ? designSource.value : 'inherited';
 				var hasDesign = 'inherited' === designSource || !! ( template && template.value && '0' !== template.value );
 				var hasImage = !! ( imageId && imageId.value && '0' !== imageId.value );
 				var basisReady = 'independent' === basis || selectedProgram;
-				var compatible = basisReady && hasTitle && hasRecipient && ( 'details_only' === mode || ( 'image' === mode && hasImage ) || ( 'design' === mode && hasDesign ) );
+				var selectedExpiry = expiryRadios.find( function ( radio ) { return radio.checked && ! radio.disabled; } );
+				var expiryReady = !! selectedExpiry && ( 'date' !== selectedExpiry.value || !! ( expiryDate && expiryDate.value ) );
+				var batchReady = ! ( 'program' === basis && selectedProgram && 'batch' === programRepeatPolicy() ) || !! ( batch && batch.value && '0' !== batch.value );
+				var designDataReady = 'design' !== mode || '1' === form.getAttribute( 'data-certloom-design-data-ready' );
+				var compatible = basisReady && hasTitle && hasRecipient && expiryReady && batchReady && designDataReady && ( 'details_only' === mode || ( 'image' === mode && hasImage ) || ( 'design' === mode && hasDesign ) );
 				review.disabled = ! compatible;
 				if ( ! message ) { return; }
 				if ( ! hasRecipient ) { message.textContent = certloomText( 'phase2ChooseRecipient', 'Choose or create a recipient to continue.' ); }
 				else if ( 'program' === basis && ! selectedProgram ) { message.textContent = certloomText( 'phase2ChooseProgram', 'Choose a Program, or switch to Independent credential.' ); }
 				else if ( ! hasTitle ) { message.textContent = certloomText( 'phase2EnterTitle', 'Enter the custom credential title to continue.' ); }
+				else if ( ! expiryReady ) { message.textContent = certloomText( 'phase2ChooseValidity', 'Choose how long this credential should remain valid.' ); }
+				else if ( ! batchReady ) { message.textContent = certloomText( 'phase2ChooseBatchForRepeat', 'This Program issues one credential per Batch or session. Choose a Batch in Additional details.' ); }
 				else if ( 'image' === mode && ! hasImage ) { message.textContent = certloomText( 'phase2ChooseImage', 'Choose a PNG or JPEG certificate image to continue.' ); }
 				else if ( 'design' === mode && ! hasDesign ) { message.textContent = certloomText( 'phase2ChooseDesign', 'Choose a published assigned design, or use the inherited design.' ); }
+				else if ( 'design' === mode && ! designDataReady ) { message.textContent = form.getAttribute( 'data-certloom-design-data-message' ) || certloomText( 'designDataChecking', 'Checking design data…' ); }
 				else if ( 'details_only' === mode ) { message.textContent = certloomText( 'phase2DetailsReady', 'Ready to review without certificate artwork.' ); }
 				else if ( 'image' === mode ) { message.textContent = certloomText( 'phase2ImageReady', 'Ready to review with the selected certificate image.' ); }
 				else { message.textContent = certloomText( 'phase2Compatible', 'Ready to review with the selected Certloom design.' ); }
@@ -1292,7 +1558,8 @@
 				} else if ( programJustChosen ) {
 					setCheckedValue( titleSourceRadios, 'program' );
 					var programValidity = expiryRadios.find( function ( radio ) { return 'program' === radio.value; } );
-					if ( programValidity ) { programValidity.checked = true; }
+					if ( programValidityAvailable() ) { if ( programValidity ) { programValidity.checked = true; } }
+					else { expiryRadios.forEach( function ( radio ) { radio.checked = false; } ); }
 				}
 				var source = titleSource();
 				if ( inheritedTitle ) { inheritedTitle.textContent = programTitle() || certloomText( 'chooseProgramForTitle', 'Choose a Program to inherit its title.' ); }
@@ -1308,14 +1575,26 @@
 				syncCompatibility();
 			}
 			function syncExpiry() {
-				var selected = expiryRadios.find( function ( radio ) { return radio.checked; } ); var isDate = selected && 'date' === selected.value;
+				var usesProgram = 'program' === credentialBasis() && !! selectedProgramOption();
+				var programValidity = expiryRadios.find( function ( radio ) { return 'program' === radio.value; } );
+				var permanent = expiryRadios.find( function ( radio ) { return 'permanent' === radio.value; } );
+				if ( programValidity ) {
+					programValidity.disabled = ! usesProgram || ! programValidityAvailable();
+					if ( programValidity.checked && programValidity.disabled ) { programValidity.checked = false; }
+				}
+				if ( permanent ) {
+					permanent.disabled = usesProgram && 'required' === programRenewalPolicy();
+					if ( permanent.checked && permanent.disabled ) { permanent.checked = false; if ( programValidity && ! programValidity.disabled ) { programValidity.checked = true; } }
+				}
+				var selected = expiryRadios.find( function ( radio ) { return radio.checked && ! radio.disabled; } ); var isDate = selected && 'date' === selected.value;
 				if ( expiryPanel ) { expiryPanel.hidden = ! isDate; }
 				if ( expiryDate ) { expiryDate.disabled = ! isDate; expiryDate.required = !! isDate; }
-				var programValidity = expiryRadios.find( function ( radio ) { return 'program' === radio.value; } );
-				if ( programValidity ) {
-					programValidity.disabled = ! ( program && program.value && '0' !== program.value );
-					if ( programValidity.checked && programValidity.disabled ) { var permanent = expiryRadios.find( function ( radio ) { return 'permanent' === radio.value; } ); if ( permanent ) { permanent.checked = true; syncExpiry(); return; } }
+				if ( expirySummary ) {
+					if ( ! usesProgram ) { expirySummary.textContent = certloomText( 'chooseProgramValidity', 'Choose a Program to use its validity default.' ); }
+					else if ( programValidityAvailable() ) { expirySummary.textContent = certloomText( 'programDefaultPrefix', 'Program default:' ) + ' ' + ( programValiditySummary() || certloomText( 'programValidityConfigured', 'Configured validity' ) ); }
+					else { expirySummary.textContent = certloomText( 'programValidityAtIssuance', 'This Program decides validity at issuance. Choose No expiry or a specific expiry date.' ); }
 				}
+				syncCompatibility();
 			}
 			presentationRadios.forEach( function ( radio ) { radio.addEventListener( 'change', function () { syncPresentation( true ); } ); } );
 			designSources.forEach( function ( radio ) { radio.addEventListener( 'change', syncCompatibility ); } );
@@ -1334,8 +1613,10 @@
 				} );
 			}
 			if ( title ) { title.addEventListener( 'input', syncCompatibility ); }
+			if ( batch ) { batch.addEventListener( 'change', syncCompatibility ); }
 			form.addEventListener( 'change', function ( event ) { if ( event.target && ( event.target.name === 'recipient_id' || event.target.name === 'recipient_mode' ) ) { syncCompatibility(); } } );
 			form.addEventListener( 'input', function ( event ) { if ( event.target && event.target.name === 'new_recipient[display_name]' ) { syncCompatibility(); } } );
+			form.addEventListener( 'certloom:design-readiness', syncCompatibility );
 			syncCredentialBasis( false ); syncPresentation( false ); syncExpiry(); syncCompatibility();
 		} );
 	}
@@ -1391,8 +1672,12 @@
 			return feedback;
 		}
 		function setQuickFeedback( form, message, error ) { var feedback = feedbackFor( form ); feedback.textContent = message || ''; feedback.classList.toggle( 'is-visible', !! message ); feedback.classList.toggle( 'is-error', !! error ); feedback.classList.toggle( 'is-success', !! message && ! error ); }
-		function addOption( select, value, label, programId, programTitle ) {
+		function addOption( select, value, label, programId, programTitle, programMeta ) {
 			if ( ! select || ! value ) { return; } var option = select.querySelector( 'option[value="' + escapeSelector( String( value ) ) + '"]' ); if ( ! option ) { option = document.createElement( 'option' ); option.value = String( value ); select.appendChild( option ); } option.textContent = label || String( value ); if ( programId ) { option.setAttribute( 'data-program-id', String( programId ) ); } if ( programTitle ) { option.setAttribute( 'data-program-title', String( programTitle ) ); }
+			if ( programMeta ) {
+				var map = { validity_mode:'data-validity-mode', validity_value:'data-validity-value', validity_unit:'data-validity-unit', program_validity_available:'data-program-validity-available', validity_summary:'data-validity-summary', renewal:'data-renewal-policy', repeat_policy:'data-repeat-policy' };
+				Object.keys( map ).forEach( function ( key ) { if ( programMeta[ key ] === undefined || programMeta[ key ] === null ) { return; } var metaValue = programMeta[ key ]; if ( 'program_validity_available' === key ) { metaValue = metaValue === true || metaValue === 1 || metaValue === '1' ? '1' : '0'; } option.setAttribute( map[ key ], String( metaValue ) ); } );
+			}
 		}
 		document.addEventListener( 'click', function ( event ) {
 			var open = event.target.closest( '[data-certloom-dialog-open]' );
@@ -1423,8 +1708,8 @@
 			var data = new FormData( form );
 			fetch( window.ajaxurl || '', { method:'POST', credentials:'same-origin', body:data } ).then( function ( response ) { return response.json(); } ).then( function ( response ) {
 				if ( ! response || ! response.success || ! response.data || ! response.data.id ) { throw new Error( response && response.data && response.data.message ? response.data.message : certloomText( 'itemAddFailed', 'This item could not be added.' ) ); }
-				var kind = form.getAttribute( 'data-certloom-quick-create' ); var targetSelector = form.getAttribute( 'data-certloom-quick-target' ); var target = targetSelector ? document.querySelector( targetSelector ) : null; addOption( target, response.data.id, response.data.label || '', response.data.program_id || 0, 'program' === kind ? ( response.data.title || response.data.label || '' ) : '' ); if ( target ) { target.value = String( response.data.id ); target.dispatchEvent( new Event( 'change', { bubbles:true } ) ); }
-				if ( 'program' === kind ) { document.querySelectorAll( 'select[data-certloom-quick-program-mirror], #certloom-quick-batch-dialog select[name="program_id"]' ).forEach( function ( select ) { addOption( select, response.data.id, response.data.label || '', 0, response.data.title || response.data.label || '' ); } ); }
+				var kind = form.getAttribute( 'data-certloom-quick-create' ); var targetSelector = form.getAttribute( 'data-certloom-quick-target' ); var target = targetSelector ? document.querySelector( targetSelector ) : null; addOption( target, response.data.id, response.data.label || '', response.data.program_id || 0, 'program' === kind ? ( response.data.title || response.data.label || '' ) : '', 'program' === kind ? response.data : null ); if ( target ) { target.value = String( response.data.id ); target.dispatchEvent( new Event( 'change', { bubbles:true } ) ); }
+				if ( 'program' === kind ) { document.querySelectorAll( 'select[data-certloom-quick-program-mirror], #certloom-quick-batch-dialog select[name="program_id"]' ).forEach( function ( select ) { addOption( select, response.data.id, response.data.label || '', 0, response.data.title || response.data.label || '', response.data ); } ); }
 				setQuickFeedback( form, response.data.message || certloomText( 'added', 'Added.' ), false );
 				var review = document.querySelector( '[data-certloom-manual-review]' ); if ( review && ! review.closest( 'form[data-certloom-phase2-issuance]' ) ) { var program = document.querySelector( 'select[name="program_id"]' ); review.disabled = ! ( program && program.value ) || '1' !== review.getAttribute( 'data-certloom-has-templates' ); }
 				window.setTimeout( function () { closeDialog( form.closest( 'dialog' ) ); if ( 'program' === kind ) { var title = form.querySelector( '[name="program_title"]' ), code = form.querySelector( '[name="program_code"]' ); if ( title ) { title.value = ''; } if ( code ) { code.value = ''; } } else if ( 'batch' === kind ) { var name = form.querySelector( '[name="batch_name"]' ), batchCode = form.querySelector( '[name="batch_code"]' ); if ( name ) { name.value = ''; } if ( batchCode ) { batchCode.value = ''; } } }, 350 );
@@ -1972,10 +2257,11 @@
 		initGoogleDrivePopupConnect();
 		initPluginLifecycleDialog();
 		initScopedContextLookups();
-		initIssueDesignPreview();
-		initBulkDesignSource();
-		initCredentialLiveSearch();
 		initProgramBatchSelectors();
 		initScopedFieldForms();
+		initIssueDesignPreview();
+		initBulkLifecycle();
+		initBulkDesignSource();
+		initCredentialLiveSearch();
 	} );
 } )();

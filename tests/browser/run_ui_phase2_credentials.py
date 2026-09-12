@@ -44,6 +44,7 @@ async def run():
         await ck(await page.locator('input[name="design_source"][value="inherited"]').is_checked(),'inheritedDesignIsDefaultInDesignMode')
         await ck(await page.locator('select[name="template_id"]').is_disabled(),'assignedDesignSelectorStaysDisabledForInheritedSource')
         await ck(await page.locator('[data-certloom-assigned-design-field]').is_hidden(),'assignedDesignFieldStaysHiddenForInheritedSource')
+        await page.wait_for_function("document.querySelector('[data-certloom-phase2-compatibility-message]').textContent === 'COMPATIBLE'")
         await ck(await msg.text_content()=='COMPATIBLE','programInheritedDesignReadyWithoutTitleRetyping')
         await ck(await page.locator('.certloom-additional-details').get_attribute('open') is None,'additionalDetailsProgressivelyCollapsed')
         await ck(not await review.is_disabled(),'programDesignPathCanReviewWithInheritedTitle')

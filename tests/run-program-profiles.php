@@ -5,11 +5,12 @@ if ( ! class_exists( 'WP_Error' ) ) { class WP_Error { private $c,$m; public fun
 function is_wp_error($v){return $v instanceof WP_Error;} function __($v){return $v;} function absint($v){return abs((int)$v);} function sanitize_key($v){return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$v));} function sanitize_text_field($v){$v=(string)$v;$v=preg_replace('/[\r\n\t]+/',' ',$v);return trim(strip_tags($v));}
 require_once __DIR__ . '/bootstrap-autoload.php';
 use Certloom\Application\Program\ProgramProfile;
+use Certloom\Application\Program\ProgramLifecyclePolicy;
 
 $pass=0;$fail=0; function pp($ok,$label){global$pass,$fail;if($ok){$pass++;echo"PASS  $label\n";}else{$fail++;echo"FAIL  $label\n";}}
 $p=new ProgramProfile();
 $d=ProgramProfile::defaults();
-pp(2===($d['schema_version']??0),'Program Profile uses explicit schema version 2 for locale variants');
+pp(3===($d['schema_version']??0),'Program Profile uses explicit schema version 3 for lifecycle and locale variants');
 pp('custom_other'===($d['purpose']??''),'Program Profile has bounded safe default purpose');
 pp('inherit'===($d['verification_visibility']??''),'Program Profile preserves the current safe verification visibility by default');
 pp(isset(ProgramProfile::purpose_labels()['training_courses']),'approved purpose taxonomy includes Training & Courses');
@@ -23,6 +24,10 @@ pp('ar'===($valid['credential_locale']??''),'locale is stored independently from
 pp(array('ar'=>'arabic-certificate','en_US'=>'english-certificate')===($valid['template_variants']??array()),'locale Template variants normalize into a bounded deterministic map');
 pp('en_US'===($valid['template_variant_fallback']??''),'declared locale fallback is stored only when that variant exists');
 pp('required'===($valid['renewal']??''),'renewal relevance is explicit');
+$lifecycleProfile=$p->normalize(array('purpose'=>'professional_license_membership','subcategory'=>'professional_license','validity_mode'=>'duration','validity_value'=>2,'validity_unit'=>'years','renewal'=>'required','repeat_policy'=>'lifecycle'));
+pp(!is_wp_error($lifecycleProfile)&&'duration'===($lifecycleProfile['validity_mode']??'')&&2===($lifecycleProfile['validity_value']??0)&&'years'===($lifecycleProfile['validity_unit']??''),'Program Profile stores typed validity duration instead of a disconnected day count');
+pp(!is_wp_error($lifecycleProfile)&&'required'===($lifecycleProfile['renewal']??'')&&'lifecycle'===($lifecycleProfile['repeat_policy']??''),'Program Profile couples after-expiry and repeat-issuance policy into the typed lifecycle contract');
+pp(is_wp_error($p->normalize(array('validity_mode'=>'permanent','renewal'=>'required'))),'non-expiring Program cannot declare an after-expiry renewal workflow');
 pp('recipient_only'===($valid['verification_visibility']??''),'verification visibility default is explicit');
 pp(!is_wp_error($p->normalize(array('verification_visibility'=>'verification_summary')))&&!is_wp_error($p->normalize(array('verification_visibility'=>'unlisted'))),'Program Profile can represent existing bounded verification visibility semantics');
 pp('enabled'===($valid['portal']??'')&&'disabled'===($valid['sharing']??'')&&'enabled'===($valid['email_delivery']??''),'Portal/share/email defaults are bounded tri-state values');
@@ -33,7 +38,7 @@ pp(is_wp_error($p->normalize(array('credential_type'=>'future_magic'))),'unknown
 pp(is_wp_error($p->normalize(array('eligibility_context'=>str_repeat('x',501)))),'oversized eligibility context fails closed');
 pp(is_wp_error($p->from_metadata(array(ProgramProfile::STORAGE_KEY=>'not-an-array'))),'malformed stored Program Profile envelope fails closed');
 pp(is_wp_error($p->from_metadata(array(ProgramProfile::STORAGE_KEY=>array('schema_version'=>99)))),'unsupported stored Program Profile schema fails closed');
-$legacy=$p->from_metadata(array(ProgramProfile::STORAGE_KEY=>array('schema_version'=>1,'purpose'=>'training_courses','subcategory'=>'online_course','credential_locale'=>'en_US')));pp(!is_wp_error($legacy)&&2===($legacy['schema_version']??0)&&array()===($legacy['template_variants']??null),'stored v1 Program Profile upgrades in memory without inventing locale variants');
+$legacy=$p->from_metadata(array(ProgramProfile::STORAGE_KEY=>array('schema_version'=>1,'purpose'=>'training_courses','subcategory'=>'online_course','credential_locale'=>'en_US')));pp(!is_wp_error($legacy)&&3===($legacy['schema_version']??0)&&ProgramLifecyclePolicy::VALIDITY_LEGACY===($legacy['validity_mode']??'')&&ProgramLifecyclePolicy::REPEAT_LIFECYCLE===($legacy['repeat_policy']??'')&&array()===($legacy['template_variants']??null),'stored v1 Program Profile upgrades in memory with migration-safe legacy lifecycle semantics');
 pp(is_wp_error($p->normalize(array('template_variants'=>array('en_US'=>'one','en-US'=>'two')))),'duplicate locale variants after normalization fail closed');
 pp(is_wp_error($p->normalize(array('template_variants'=>array('fr_FR'=>'french-certificate'),'template_variant_fallback'=>'ar'))),'declared fallback must name a configured locale variant');
 $meta=array('legacy_key'=>'preserve-me');$combined=$p->with_metadata($meta,$valid);pp(!is_wp_error($combined)&&'preserve-me'===($combined['legacy_key']??''),'typed profile preserves unrelated Program metadata');
@@ -51,8 +56,10 @@ pp(false!==strpos($adminjs,'function initProgramProfile()')&&false!==strpos($adm
 pp(false!==strpos($assignment,'resolve_published_assignment_details')&&false!==strpos($assignment,'resolve_published_assignment_details'),'existing assignment hierarchy remains canonical design source');
 pp(false!==strpos($svc,'resolve_published_template_for_context')&&false!==strpos($svc,'certloom_manual_issue_program_design_missing'),'Manual Issuance resolves Program + optional Batch design context and fails closed if no published design exists');
 pp(false!==strpos($svc,"'resolution_scope'")&&false!==strpos($svc,"'profile'=>isset(\$p['profile'])"),'issued snapshots freeze Program Profile and design-resolution provenance');
-pp(false!==strpos($manual,'Global → Issuer → Program → Batch')&&false!==strpos($manual,'one-off override'),'Manual Issuance defaults to canonical hierarchy resolution and keeps explicit one-off override separate');
+pp(false!==strpos($manual,'Global → Issuer → Program → Batch')&&false!==strpos($manual,'one-off Signer override'),'Manual Issuance defaults to canonical hierarchy resolution and keeps explicit one-off overrides separate');
 pp(false!==strpos($bulk,'Global → Issuer → Program → Batch')&&false!==strpos($bulk,'one-off design override'),'Bulk Issuance defaults to canonical hierarchy resolution and keeps explicit one-off override separate');
+pp(false!==strpos($admin,'Credential lifecycle')&&false!==strpos($admin,'Repeat issuance')&&false!==strpos($admin,'ProgramLifecyclePolicy::repeat_labels'),'Program admin presents validity, renewal and repeat issuance as one lifecycle contract');
+pp(false!==strpos($svc,'ProgramLifecyclePolicy')&&false!==strpos($svc,'find_existing_series_for_batch')&&false!==strpos($svc,'REPEAT_SEPARATE'),'Manual Issuance enforces the Program repeat policy instead of hard-coding Recipient + Program uniqueness');
 pp(false!==strpos($restore,'ProgramProfile')&&false!==strpos($restore,'certloom_domain_restore_program_profile_invalid'),'restore preflight validates typed Program Profile metadata');
 pp(false===strpos($admin,'if language == Urdu'),'Program Profile does not hard-code Urdu as the RTL model');
 pp(!file_exists($root.'/resources/renderer/accepted.json'),'PRG-02 does not manufacture renderer authority');

@@ -4,6 +4,7 @@ namespace Certloom\Infrastructure\Repository;
 use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Application\Data\SafeJson;
 use Certloom\Application\Program\ProgramProfile;
+use Certloom\Application\Program\ProgramLifecyclePolicy;
 use Certloom\Application\Fields\ScopedFieldContract;
 use Certloom\Infrastructure\Database\SchemaManager;
 
@@ -92,10 +93,19 @@ final class ProgramRepository {
 			$item['validity_days'] = null !== ( $item['validity_days'] ?? null ) ? absint( $item['validity_days'] ) : null;
 			$item['active'] = ! empty( $item['active'] );
 			$item['credential_count'] = absint( $item['credential_count'] ?? 0 );
-			$profile_summary = $this->profile_summary( $item['metadata_json'] ?? null );
+			$profile_summary = $this->profile_summary( $item['metadata_json'] ?? null, $item['validity_days'] );
 			$item['purpose'] = (string) ( $profile_summary['purpose'] ?? '' );
 			$item['purpose_label'] = (string) ( $profile_summary['label'] ?? '' );
 			$item['profile_error'] = ! empty( $profile_summary['error'] );
+			$item['validity_mode'] = (string) ( $profile_summary['validity_mode'] ?? '' );
+			$item['validity_value'] = absint( $profile_summary['validity_value'] ?? 0 );
+			$item['validity_unit'] = (string) ( $profile_summary['validity_unit'] ?? 'days' );
+			$item['validity_summary'] = (string) ( $profile_summary['validity_summary'] ?? '' );
+			$item['program_default_available'] = ! empty( $profile_summary['program_default_available'] );
+			$item['renewal'] = (string) ( $profile_summary['renewal'] ?? 'not_applicable' );
+			$item['repeat_policy'] = (string) ( $profile_summary['repeat_policy'] ?? ProgramLifecyclePolicy::REPEAT_LIFECYCLE );
+			$item['lifecycle_legacy'] = ! empty( $profile_summary['legacy'] );
+			$item['lifecycle_warning'] = ! empty( $profile_summary['coherence_warning'] );
 			unset( $item['metadata_json'] );
 		}
 		unset( $item );
@@ -161,15 +171,25 @@ final class ProgramRepository {
 	}
 
 
-	/** @return array{purpose:string,label:string,error:bool} */
-	private function profile_summary( $metadata_json ) {
+	/** @return array<string,mixed> */
+	private function profile_summary( $metadata_json, $validity_days = null ) {
 		$metadata = ( new SafeJson() )->decode_array( $metadata_json, 'certloom_program_metadata_corrupt', __( 'Stored program metadata is invalid JSON.', 'certloom' ) );
 		if ( is_wp_error( $metadata ) ) { return array( 'purpose' => '', 'label' => __( 'Needs review', 'certloom' ), 'error' => true ); }
 		$profile = ( new ProgramProfile() )->from_metadata( $metadata );
 		if ( is_wp_error( $profile ) ) { return array( 'purpose' => '', 'label' => __( 'Needs review', 'certloom' ), 'error' => true ); }
+		$policy = ( new ProgramLifecyclePolicy() )->resolve( array( 'profile' => $profile, 'validity_days' => $validity_days ) );
+		if ( is_wp_error( $policy ) ) { return array( 'purpose' => '', 'label' => __( 'Needs review', 'certloom' ), 'error' => true ); }
 		$purpose = (string) ( $profile['purpose'] ?? '' );
 		$labels = ProgramProfile::purpose_labels();
-		return array( 'purpose' => $purpose, 'label' => (string) ( $labels[ $purpose ] ?? __( 'Custom / Other', 'certloom' ) ), 'error' => false );
+		return array_merge(
+			array(
+				'purpose' => $purpose,
+				'label' => (string) ( $labels[ $purpose ] ?? __( 'Custom / Other', 'certloom' ) ),
+				'error' => false,
+				'validity_summary' => ( new ProgramLifecyclePolicy() )->validity_summary( $policy ),
+			),
+			$policy
+		);
 	}
 
 	/** @return array<string,mixed>|null|\WP_Error */
@@ -195,6 +215,17 @@ final class ProgramRepository {
 		$row['metadata'] = $metadata;
 		$row['profile'] = $profile;
 		$row['field_contract'] = $field_contract;
+		$lifecycle = ( new ProgramLifecyclePolicy() )->resolve( $row );
+		if ( is_wp_error( $lifecycle ) ) { return $lifecycle; }
+		$row['validity_mode'] = (string) $lifecycle['validity_mode'];
+		$row['validity_value'] = absint( $lifecycle['validity_value'] );
+		$row['validity_unit'] = (string) $lifecycle['validity_unit'];
+		$row['validity_summary'] = ( new ProgramLifecyclePolicy() )->validity_summary( $lifecycle );
+		$row['program_default_available'] = ! empty( $lifecycle['program_default_available'] );
+		$row['renewal'] = (string) $lifecycle['renewal'];
+		$row['repeat_policy'] = (string) $lifecycle['repeat_policy'];
+		$row['lifecycle_legacy'] = ! empty( $lifecycle['legacy'] );
+		$row['lifecycle_warning'] = ! empty( $lifecycle['coherence_warning'] );
 		return $row;
 	}
 

@@ -1,3 +1,11 @@
+= 1.7.0-alpha.4.33 =
+* Rationalize Program credential lifecycle into one typed policy: permanent, duration in days/months/years, or decide at issuance; pair it with explicit renewal behavior and repeat issuance policy while preserving legacy validity_days compatibility until a Program is saved.
+* Apply the same lifecycle contract to Manual and Bulk Issuance, including calendar-aware month/year expiry, renewal-required safeguards, per-Batch repeat boundaries, and deliberate separate-credential issuance without a schema migration.
+* Make selected Certloom designs preview the actual draft credential data instead of sample data, and add a Design data check that identifies ready, generated, and missing template fields before Review.
+* Add a first-class Credential details surface for Independent and Details-only issuance; missing design data routes to the owning Recipient profile, credential detail, Program/context, grade, or Subjects/Results surface instead of silently issuing incomplete artwork.
+* Keep draft preview mutation-free while final Review remains fail-closed when a published design still has unresolved required data; keep Additional details collapsed unless the operator opens it.
+* Preserve alpha.4.32 Program/Independent title semantics and all historical immutable snapshots. Renderer/domain authority remain intentionally absent while Phase 4 product acceptance continues.
+
 = 1.7.0-alpha.4.32 =
 * Make Program versus Independent credential an explicit primary issuance decision instead of hiding Program under Additional details.
 * Program-backed credentials inherit the selected Program title by default; users may deliberately override the title for a single issuance, while Independent credentials require their own explicit title.

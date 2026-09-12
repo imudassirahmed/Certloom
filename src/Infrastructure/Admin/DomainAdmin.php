@@ -5,6 +5,7 @@ use Certloom\Application\CredentialLifecycleService;
 use Certloom\Application\CredentialLifecycleReviewService;
 use Certloom\Application\CredentialRelationshipBulkService;
 use Certloom\Application\Program\ProgramProfile;
+use Certloom\Application\Program\ProgramLifecyclePolicy;
 use Certloom\Application\I18n\CredentialLocale;
 use Certloom\Application\Fields\ScopedFieldContract;
 use Certloom\Application\Templates\TemplateAssignmentPolicy;
@@ -452,10 +453,10 @@ final class DomainAdmin {
 			$this->simple_program_list( (array) $result['items'] );
 			$this->pagination( self::PROGRAMS_PAGE, $page, (int) $result['total'], 50, $search, array( 'program_status' => $status ) );
 		} else {
-			echo '<div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-table"><thead><tr><th>' . esc_html__( 'Program', 'certloom' ) . '</th><th>' . esc_html__( 'Purpose', 'certloom' ) . '</th><th>' . esc_html__( 'Code', 'certloom' ) . '</th><th>' . esc_html__( 'Issuer', 'certloom' ) . '</th><th>' . esc_html__( 'Default validity', 'certloom' ) . '</th><th>' . esc_html__( 'Credentials', 'certloom' ) . '</th><th>' . esc_html__( 'Status', 'certloom' ) . '</th><th>' . esc_html__( 'Actions', 'certloom' ) . '</th></tr></thead><tbody>';
+			echo '<div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-table"><thead><tr><th>' . esc_html__( 'Program', 'certloom' ) . '</th><th>' . esc_html__( 'Purpose', 'certloom' ) . '</th><th>' . esc_html__( 'Code', 'certloom' ) . '</th><th>' . esc_html__( 'Issuer', 'certloom' ) . '</th><th>' . esc_html__( 'Validity', 'certloom' ) . '</th><th>' . esc_html__( 'Credentials', 'certloom' ) . '</th><th>' . esc_html__( 'Status', 'certloom' ) . '</th><th>' . esc_html__( 'Actions', 'certloom' ) . '</th></tr></thead><tbody>';
 			foreach ( $result['items'] as $item ) {
 				$edit_url = add_query_arg( array( 'page' => self::PROGRAMS_PAGE, 'program_id' => absint( $item['id'] ) ), admin_url( 'admin.php' ) );
-				$validity = null === $item['validity_days'] ? __( 'No default', 'certloom' ) : sprintf( /* translators: %d: days. */ _n( '%d day', '%d days', absint( $item['validity_days'] ), 'certloom' ), absint( $item['validity_days'] ) );
+				$validity = (string) ( $item['validity_summary'] ?? __( 'Needs review', 'certloom' ) );
 				echo '<tr><td><strong><a href="' . esc_url( $edit_url ) . '">' . esc_html( (string) $item['title'] ) . '</a></strong></td><td><span class="certloom-program-purpose' . ( ! empty( $item['profile_error'] ) ? ' is-review' : '' ) . '">' . esc_html( (string) ( $item['purpose_label'] ?: '—' ) ) . '</span></td><td>' . ( $item['code'] ? '<code>' . esc_html( (string) $item['code'] ) . '</code>' : '—' ) . '</td><td>' . esc_html( (string) ( $item['issuer_name'] ?: '—' ) ) . '</td><td>' . esc_html( $validity ) . '</td><td><span class="certloom-domain-count">' . esc_html( (string) absint( $item['credential_count'] ) ) . '</span></td><td><span class="certloom-domain-status ' . ( $item['active'] ? 'is-active' : 'is-inactive' ) . '">' . esc_html( $item['active'] ? _x( 'Active', 'entity status', 'certloom' ) : _x( 'Inactive', 'entity status', 'certloom' ) ) . '</span></td><td><a class="button button-small" href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Open', 'certloom' ) . '</a></td></tr>';
 			}
 			if ( empty( $result['items'] ) ) { echo '<tr><td colspan="8"><div class="certloom-domain-empty"><strong>' . esc_html__( 'No programs found.', 'certloom' ) . '</strong><span>' . esc_html__( 'Add a program or adjust the filters.', 'certloom' ) . '</span></div></td></tr>'; }
@@ -1034,7 +1035,7 @@ final class DomainAdmin {
 		$indicator = $is_current ? ( 'ASC' === $order ? '↑' : '↓' ) : '↕';
 		$aria_sort = $is_current ? ( 'ASC' === $order ? 'ascending' : 'descending' ) : 'none';
 		$direction = 'asc' === $next_order ? __( 'ascending', 'certloom' ) : __( 'descending', 'certloom' );
-		$title     = sprintf( __( 'Sort %1$s %2$s', 'certloom' ), $label, $direction );
+		$title     = sprintf( /* translators: 1: column label, 2: sort direction. */ __( 'Sort %1$s %2$s', 'certloom' ), $label, $direction );
 
 		return '<th scope="col" aria-sort="' . esc_attr( $aria_sort ) . '"><a class="certloom-sort-link' . ( $is_current ? ' is-current' : '' ) . '" href="' . esc_url( add_query_arg( $args, admin_url( 'admin.php' ) ) ) . '" title="' . esc_attr( $title ) . '"><span>' . esc_html( $label ) . '</span><span class="certloom-sort-indicator" aria-hidden="true">' . esc_html( $indicator ) . '</span></a></th>';
 	}
@@ -1553,6 +1554,16 @@ final class DomainAdmin {
 		$metadata = $is_edit && isset( $editing['metadata'] ) && is_array( $editing['metadata'] ) ? $editing['metadata'] : array();
 		$metadata_editable = $this->is_scalar_map( $metadata );
 		$profile = $is_edit && isset( $editing['profile'] ) && is_array( $editing['profile'] ) ? $editing['profile'] : ProgramProfile::defaults();
+		$lifecycle = ( new ProgramLifecyclePolicy() )->resolve( array( 'profile' => $profile, 'validity_days' => $is_edit ? ( $editing['validity_days'] ?? null ) : null ) );
+		if ( is_wp_error( $lifecycle ) ) { $lifecycle = array( 'validity_mode' => ProgramLifecyclePolicy::VALIDITY_PERMANENT, 'validity_value' => 0, 'validity_unit' => 'days', 'renewal' => 'not_applicable', 'repeat_policy' => ProgramLifecyclePolicy::REPEAT_LIFECYCLE, 'legacy' => false, 'coherence_warning' => false ); }
+		// The edit form makes legacy validity explicit. Saving the Program therefore migrates
+		// the old validity_days meaning into the typed v3 Program Profile without changing
+		// any previously issued credential Version.
+		$profile['validity_mode'] = (string) ( $lifecycle['validity_mode'] ?? ProgramLifecyclePolicy::VALIDITY_PERMANENT );
+		$profile['validity_value'] = absint( $lifecycle['validity_value'] ?? 0 );
+		$profile['validity_unit'] = (string) ( $lifecycle['validity_unit'] ?? 'days' );
+		$profile['renewal'] = (string) ( $lifecycle['renewal'] ?? 'not_applicable' );
+		$profile['repeat_policy'] = (string) ( $lifecycle['repeat_policy'] ?? ProgramLifecyclePolicy::REPEAT_LIFECYCLE );
 		$field_contract = $is_edit && isset( $editing['field_contract'] ) && is_array( $editing['field_contract'] ) ? $editing['field_contract'] : ScopedFieldContract::empty_program();
 		$scopable_fields = \Ecapla_CertVerify_Fields::get_scopable_fields();
 		$template_repo = new TemplateRepository();
@@ -1594,7 +1605,6 @@ final class DomainAdmin {
 		echo '<div class="certloom-domain-form-grid">';
 		$this->text_field( 'title', __( 'Program title', 'certloom' ), $is_edit ? (string) $editing['title'] : '', true, __( 'The human-readable credential program or course name.', 'certloom' ), 'text', '', __( 'Example: Internal Auditor Certification', 'certloom' ) );
 		$this->text_field( 'code', $simple ? __( 'Short code', 'certloom' ) : __( 'Program code', 'certloom' ), $is_edit ? (string) $editing['code'] : '', false, $simple ? __( 'Optional. A short label such as BSC-CS or SAFETY-101 can make Programs easier to recognize.', 'certloom' ) : __( 'Optional unique machine-friendly code used in imports and future automation.', 'certloom' ) );
-		$this->text_field( 'validity_days', __( 'Default validity (days)', 'certloom' ), $is_edit && null !== $editing['validity_days'] ? (string) $editing['validity_days'] : '', false, __( 'Leave blank when the program has no default expiry. Issuance may override this later.', 'certloom' ), 'number', 'min="0" step="1"' );
 		$this->issuer_field( $is_edit ? ( $editing['issuer_id'] ?? null ) : null );
 		echo '<div class="certloom-domain-field certloom-domain-field-wide"><label for="certloom-program-description"><strong>' . esc_html__( 'Description', 'certloom' ) . '</strong></label><textarea id="certloom-program-description" class="large-text" rows="5" name="description">' . esc_textarea( $is_edit ? (string) $editing['description'] : '' ) . '</textarea><p class="description">' . esc_html( $simple ? __( 'Optional internal note to help administrators understand this Program.', 'certloom' ) : __( 'Internal program context. Public credential copy will use explicit presentation fields rather than exposing this automatically.', 'certloom' ) ) . '</p></div>';
 		echo '<div class="certloom-domain-field"><label><input type="checkbox" name="active" value="1" ' . checked( $is_edit ? ! empty( $editing['active'] ) : true, true, false ) . '> <strong>' . esc_html__( 'Active program', 'certloom' ) . '</strong></label><p class="description">' . esc_html__( 'Inactive programs remain in historical credentials but should not be offered for new issuance.', 'certloom' ) . '</p></div>';
@@ -1611,14 +1621,26 @@ final class DomainAdmin {
 		foreach ( array( 'certificate' => __( 'Certificate', 'certloom' ), 'certification' => __( 'Certification', 'certloom' ), 'degree' => __( 'Degree', 'certloom' ), 'diploma' => __( 'Diploma', 'certloom' ), 'license' => __( 'License', 'certloom' ), 'membership' => __( 'Membership', 'certloom' ), 'award' => __( 'Award', 'certloom' ), 'participation' => __( 'Participation', 'certloom' ), 'custom' => __( 'Custom', 'certloom' ) ) as $value => $label ) { echo '<option value="' . esc_attr( $value ) . '" ' . selected( (string) ( $profile['credential_type'] ?? 'certificate' ), $value, false ) . '>' . esc_html( $label ) . '</option>'; }
 		echo '</select></div>';
 		$this->text_field( 'profile[eligibility_context]', $simple ? __( 'Who qualifies?', 'certloom' ) : __( 'Eligibility context', 'certloom' ), (string) ( $profile['eligibility_context'] ?? '' ), false, $simple ? __( 'Optional short note such as “Complete all modules” or “Pass the final assessment”.', 'certloom' ) : __( 'Optional concise administrator-owned rule/context. LMS adapters later map qualifying attempts to this Program; this field is not a compliance assertion.', 'certloom' ) );
+		echo '<div class="certloom-domain-field certloom-domain-field-wide certloom-program-lifecycle" data-certloom-program-lifecycle><div class="certloom-domain-subsection-head"><div><h4>' . esc_html__( 'Credential lifecycle', 'certloom' ) . '</h4><p>' . esc_html__( 'Define how long credentials for this Program normally remain valid, what happens after expiry, and how repeat issuance should be interpreted.', 'certloom' ) . '</p></div></div><div class="certloom-domain-form-grid">';
+		echo '<div class="certloom-domain-field"><label for="certloom-program-validity-mode"><strong>' . esc_html__( 'Validity', 'certloom' ) . '</strong></label><select id="certloom-program-validity-mode" name="profile[validity_mode]" data-certloom-program-validity-mode>';
+		foreach ( ProgramLifecyclePolicy::validity_labels() as $value => $label ) { echo '<option value="' . esc_attr( $value ) . '" ' . selected( (string) ( $profile['validity_mode'] ?? ProgramLifecyclePolicy::VALIDITY_PERMANENT ), $value, false ) . '>' . esc_html( $label ) . '</option>'; }
+		echo '</select><p class="description">' . esc_html__( 'Program validity is the default. The operator can still use an allowed one-off override during issuance.', 'certloom' ) . '</p></div>';
+		echo '<div class="certloom-domain-field" data-certloom-program-validity-duration><label for="certloom-program-validity-value"><strong>' . esc_html__( 'Validity duration', 'certloom' ) . '</strong></label><div class="certloom-inline-fields"><input id="certloom-program-validity-value" type="number" min="1" step="1" name="profile[validity_value]" value="' . esc_attr( (string) max( 1, absint( $profile['validity_value'] ?? 1 ) ) ) . '"><select name="profile[validity_unit]" aria-label="' . esc_attr__( 'Validity unit', 'certloom' ) . '">';
+		foreach ( ProgramLifecyclePolicy::unit_labels() as $value => $label ) { echo '<option value="' . esc_attr( $value ) . '" ' . selected( (string) ( $profile['validity_unit'] ?? 'days' ), $value, false ) . '>' . esc_html( $label ) . '</option>'; }
+		echo '</select></div></div>';
+		echo '<div class="certloom-domain-field" data-certloom-program-renewal-field><label for="certloom-program-renewal"><strong>' . esc_html__( 'After expiry', 'certloom' ) . '</strong></label><select id="certloom-program-renewal" name="profile[renewal]" data-certloom-program-renewal>';
+		foreach ( ProgramLifecyclePolicy::renewal_labels() as $value => $label ) { echo '<option value="' . esc_attr( $value ) . '" ' . selected( (string) ( $profile['renewal'] ?? 'not_applicable' ), $value, false ) . '>' . esc_html( $label ) . '</option>'; }
+		echo '</select><p class="description">' . esc_html__( 'For non-expiring credentials, renewal is automatically not applicable.', 'certloom' ) . '</p></div>';
+		echo '<div class="certloom-domain-field"><label for="certloom-program-repeat-policy"><strong>' . esc_html__( 'Repeat issuance', 'certloom' ) . '</strong></label><select id="certloom-program-repeat-policy" name="profile[repeat_policy]">';
+		foreach ( ProgramLifecyclePolicy::repeat_labels() as $value => $label ) { echo '<option value="' . esc_attr( $value ) . '" ' . selected( (string) ( $profile['repeat_policy'] ?? ProgramLifecyclePolicy::REPEAT_LIFECYCLE ), $value, false ) . '>' . esc_html( $label ) . '</option>'; }
+		echo '</select><p class="description">' . esc_html__( 'One lifecycle is best for certifications, licences and memberships; per Batch/session fits courses and cohorts; separate credentials fits awards, events and recognitions.', 'certloom' ) . '</p></div>';
+		if ( ! empty( $lifecycle['coherence_warning'] ) ) { echo '<div class="notice notice-warning inline certloom-domain-field-wide"><p>' . esc_html__( 'This older Program has a renewal setting that conflicts with its non-expiring validity. Choose a coherent lifecycle before saving.', 'certloom' ) . '</p></div>'; }
+		echo '</div></div>';
 		if ( $simple ) {
-			echo '<div class="certloom-domain-field certloom-domain-field-wide certloom-program-more-options"><details class="certloom-create-drawer"><summary><span class="dashicons dashicons-admin-settings" aria-hidden="true"></span>' . esc_html__( 'More Program options', 'certloom' ) . '</summary><div class="certloom-create-drawer-body"><p class="description">' . esc_html__( 'Language, renewal, visibility and delivery defaults are optional. Most Programs can keep the site defaults.', 'certloom' ) . '</p><div class="certloom-domain-form-grid">';
+			echo '<div class="certloom-domain-field certloom-domain-field-wide certloom-program-more-options"><details class="certloom-create-drawer"><summary><span class="dashicons dashicons-admin-settings" aria-hidden="true"></span>' . esc_html__( 'More Program options', 'certloom' ) . '</summary><div class="certloom-create-drawer-body"><p class="description">' . esc_html__( 'Language, visibility and delivery defaults are optional. Most Programs can keep the site defaults.', 'certloom' ) . '</p><div class="certloom-domain-form-grid">';
 		}
 		$this->credential_locale_field( 'profile[credential_locale]', (string) ( $profile['credential_locale'] ?? CredentialLocale::SITE_DEFAULT ) );
 		if ( ! $simple && ! is_wp_error( $locale_preview ) ) { echo '<div class="certloom-domain-field certloom-program-locale-summary"><span><strong>' . esc_html__( 'Credential direction', 'certloom' ) . '</strong></span><div class="certloom-program-readonly-value">' . esc_html( strtoupper( (string) ( $locale_preview['direction'] ?? 'ltr' ) ) ) . '</div><p class="description">' . esc_html( sprintf( /* translators: %1$s: effective. */ __( 'Effective locale: %1$s. Element direction remains Auto / LTR / RTL, so mixed-script certificates can override individual elements.', 'certloom' ), (string) ( $locale_preview['effective'] ?? '' ) ) ) . '</p></div>'; }
-		echo '<div class="certloom-domain-field"><label for="certloom-program-renewal"><strong>' . esc_html__( 'Renewal relevance', 'certloom' ) . '</strong></label><select id="certloom-program-renewal" name="profile[renewal]">';
-		foreach ( array( 'not_applicable' => __( 'Not applicable', 'certloom' ), 'optional' => __( 'Optional', 'certloom' ), 'required' => __( 'Required', 'certloom' ) ) as $value => $label ) { echo '<option value="' . esc_attr( $value ) . '" ' . selected( (string) ( $profile['renewal'] ?? '' ), $value, false ) . '>' . esc_html( $label ) . '</option>'; }
-		echo '</select></div>';
 		echo '<div class="certloom-domain-field"><label for="certloom-program-verification-visibility"><strong>' . esc_html__( 'Verification visibility default', 'certloom' ) . '</strong></label><select id="certloom-program-verification-visibility" name="profile[verification_visibility]">';
 		foreach ( array( 'inherit' => __( 'Inherit current safe issuance default', 'certloom' ), 'verification_summary' => __( 'Verification summary', 'certloom' ), 'public' => __( 'Public', 'certloom' ), 'unlisted' => __( 'Unlisted', 'certloom' ), 'recipient_only' => __( 'Recipient only', 'certloom' ), 'organization_member' => __( 'Organization member', 'certloom' ), 'private' => __( 'Private', 'certloom' ) ) as $value => $label ) { echo '<option value="' . esc_attr( $value ) . '" ' . selected( (string) ( $profile['verification_visibility'] ?? '' ), $value, false ) . '>' . esc_html( $label ) . '</option>'; }
 		echo '</select><p class="description">' . esc_html( $simple ? __( 'Choose who should normally be able to view credentials issued for this Program.', 'certloom' ) : __( 'Stored as the Program default contract. Inherit preserves Certloom’s current verification-summary issuance behavior; future activation must remain explicit and review-bound.', 'certloom' ) ) . '</p></div>';
@@ -1900,7 +1922,6 @@ final class DomainAdmin {
 			'title'         => isset( $_POST['title'] ) ? sanitize_text_field( wp_unslash( $_POST['title'] ) ) : '',
 			'description'   => isset( $_POST['description'] ) ? sanitize_textarea_field( wp_unslash( $_POST['description'] ) ) : '',
 			'issuer_id'     => $issuer_id,
-			'validity_days' => isset( $_POST['validity_days'] ) && '' !== trim( (string) $_POST['validity_days'] ) ? absint( $_POST['validity_days'] ) : null,
 			'active'        => isset( $_POST['active'] ),
 		);
 		$metadata = null !== $existing && isset( $existing['metadata'] ) && is_array( $existing['metadata'] ) ? $existing['metadata'] : array();
@@ -1928,6 +1949,9 @@ final class DomainAdmin {
 		$raw_profile['template_variant_fallback'] = isset( $_POST['profile_template_variant_fallback'] ) ? sanitize_text_field( wp_unslash( $_POST['profile_template_variant_fallback'] ) ) : 'program_default';
 		$profile = ( new ProgramProfile() )->normalize( $raw_profile );
 		if ( is_wp_error( $profile ) ) { return $profile; }
+		$lifecycle = ( new ProgramLifecyclePolicy() )->resolve( array( 'profile' => $profile, 'validity_days' => null !== $existing ? ( $existing['validity_days'] ?? null ) : null ) );
+		if ( is_wp_error( $lifecycle ) ) { return $lifecycle; }
+		$data['validity_days'] = $lifecycle['validity_days'];
 		$combined = ( new ProgramProfile() )->with_metadata( $metadata, $profile );
 		if ( is_wp_error( $combined ) ) { return $combined; }
 		$raw_field_rules = isset( $_POST['program_field_requirement'] ) && is_array( $_POST['program_field_requirement'] ) ? wp_unslash( $_POST['program_field_requirement'] ) : array();

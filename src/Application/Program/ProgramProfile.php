@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
  */
 final class ProgramProfile {
 	const STORAGE_KEY = 'certloom_profile_v1';
-	const VERSION = 2;
+	const VERSION = 3;
 	const MAX_TEMPLATE_VARIANTS = 30;
 
 	/** @return array<string,string> */
@@ -81,7 +81,11 @@ final class ProgramProfile {
 			'credential_locale' => CredentialLocale::SITE_DEFAULT,
 			'template_variants' => array(),
 			'template_variant_fallback' => 'program_default',
+			'validity_mode' => ProgramLifecyclePolicy::VALIDITY_LEGACY,
+			'validity_value' => 0,
+			'validity_unit' => 'days',
 			'renewal' => 'not_applicable',
+			'repeat_policy' => ProgramLifecyclePolicy::REPEAT_LIFECYCLE,
 			'verification_visibility' => 'inherit',
 			'portal' => 'inherit',
 			'sharing' => 'inherit',
@@ -129,8 +133,19 @@ final class ProgramProfile {
 		if ( $this->length( $eligibility ) > 500 ) { return new \WP_Error( 'certloom_program_profile_eligibility_too_long', __( 'Eligibility context must be 500 characters or fewer.', 'certloom' ) ); }
 		$out['eligibility_context'] = $eligibility;
 
+		$out['validity_mode'] = $this->choice( $input['validity_mode'] ?? ProgramLifecyclePolicy::VALIDITY_LEGACY, array( ProgramLifecyclePolicy::VALIDITY_LEGACY, ProgramLifecyclePolicy::VALIDITY_PERMANENT, ProgramLifecyclePolicy::VALIDITY_DURATION, ProgramLifecyclePolicy::VALIDITY_ISSUANCE ), 'certloom_program_profile_validity_mode_invalid', __( 'Choose a valid credential validity policy.', 'certloom' ) );
+		if ( is_wp_error( $out['validity_mode'] ) ) { return $out['validity_mode']; }
+		$out['validity_unit'] = $this->choice( $input['validity_unit'] ?? 'days', array( 'days', 'months', 'years' ), 'certloom_program_profile_validity_unit_invalid', __( 'Choose days, months or years for the Program validity duration.', 'certloom' ) );
+		if ( is_wp_error( $out['validity_unit'] ) ) { return $out['validity_unit']; }
+		$out['validity_value'] = absint( $input['validity_value'] ?? 0 );
+		if ( ProgramLifecyclePolicy::VALIDITY_DURATION === $out['validity_mode'] && $out['validity_value'] < 1 ) { return new \WP_Error( 'certloom_program_profile_validity_value_required', __( 'Enter a positive validity duration for this Program.', 'certloom' ) ); }
+		if ( ProgramLifecyclePolicy::VALIDITY_DURATION !== $out['validity_mode'] ) { $out['validity_value'] = 0; }
+
 		$out['renewal'] = $this->choice( $input['renewal'] ?? 'not_applicable', array( 'not_applicable', 'optional', 'required' ), 'certloom_program_profile_renewal_invalid', __( 'Choose a valid renewal policy.', 'certloom' ) );
 		if ( is_wp_error( $out['renewal'] ) ) { return $out['renewal']; }
+		if ( ProgramLifecyclePolicy::VALIDITY_PERMANENT === $out['validity_mode'] && 'not_applicable' !== $out['renewal'] ) { return new \WP_Error( 'certloom_program_profile_permanent_renewal_conflict', __( 'A credential that does not expire cannot use an after-expiry renewal workflow.', 'certloom' ) ); }
+		$out['repeat_policy'] = $this->choice( $input['repeat_policy'] ?? ProgramLifecyclePolicy::REPEAT_LIFECYCLE, array( ProgramLifecyclePolicy::REPEAT_LIFECYCLE, ProgramLifecyclePolicy::REPEAT_BATCH, ProgramLifecyclePolicy::REPEAT_SEPARATE ), 'certloom_program_profile_repeat_policy_invalid', __( 'Choose a valid repeat-issuance policy.', 'certloom' ) );
+		if ( is_wp_error( $out['repeat_policy'] ) ) { return $out['repeat_policy']; }
 		$out['verification_visibility'] = $this->choice( $input['verification_visibility'] ?? 'inherit', array( 'inherit', 'verification_summary', 'public', 'unlisted', 'recipient_only', 'organization_member', 'private' ), 'certloom_program_profile_visibility_invalid', __( 'Choose a valid verification visibility default.', 'certloom' ) );
 		if ( is_wp_error( $out['verification_visibility'] ) ) { return $out['verification_visibility']; }
 		foreach ( array( 'portal', 'sharing', 'email_delivery' ) as $field ) {
@@ -153,14 +168,22 @@ final class ProgramProfile {
 		}
 		$raw = is_array( $stored ) ? $stored : array();
 		$stored_version = isset( $raw['schema_version'] ) ? absint( $raw['schema_version'] ) : 1;
-		if ( ! in_array( $stored_version, array( 1, self::VERSION ), true ) ) {
+		if ( ! in_array( $stored_version, array( 1, 2, self::VERSION ), true ) ) {
 			return new \WP_Error( 'certloom_program_profile_version_unsupported', __( 'Stored Program Profile configuration uses an unsupported schema version.', 'certloom' ) );
 		}
-		// Version 1 upgrades in memory without mutating storage. Saving the Program writes v2.
+		// Older profiles upgrade in memory without mutating storage. Lifecycle is
+		// intentionally marked legacy so ProgramLifecyclePolicy can continue using
+		// the historical programs.validity_days column until the Program is saved.
 		if ( 1 === $stored_version ) {
-			$raw['schema_version'] = self::VERSION;
 			$raw['template_variants'] = array();
 			$raw['template_variant_fallback'] = 'program_default';
+		}
+		if ( $stored_version < self::VERSION ) {
+			$raw['schema_version'] = self::VERSION;
+			$raw['validity_mode'] = ProgramLifecyclePolicy::VALIDITY_LEGACY;
+			$raw['validity_value'] = 0;
+			$raw['validity_unit'] = 'days';
+			$raw['repeat_policy'] = ProgramLifecyclePolicy::REPEAT_LIFECYCLE;
 		}
 		return $this->normalize( $raw );
 	}

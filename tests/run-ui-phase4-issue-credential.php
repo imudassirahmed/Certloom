@@ -1,5 +1,5 @@
 <?php
-/** Alpha.4.30 Issue Credential details-only readiness/action-footer contract. */
+/** Alpha.4.33 Issue Credential data-readiness / real-preview contract. */
 $root=dirname(__DIR__);
 $m=file_get_contents($root.'/src/Infrastructure/Admin/ManualIssuanceAdmin.php');
 $n=file_get_contents($root.'/src/Infrastructure/Admin/AdminProductNavigation.php');
@@ -26,4 +26,12 @@ i427(false!==strpos($m,'certloom-review-action-copy')&&strpos($m,'certloom-revie
 i427(false!==strpos($c,'/* alpha.4.30 — usable details-only review and a deliberate review-action footer.')&&false!==strpos($c,'grid-template-columns: minmax(0, 1fr) auto;')&&false!==strpos($c,'justify-self: end;'),'alpha.4.30 aligns review copy and primary action as a deliberate footer');
 i427(false!==strpos($c,'/* alpha.4.30 — keep certificate appearance task-sized')&&false!==strpos($c,'align-self: start;'),'appearance column no longer stretches into a blank panel when optional details expand');
 i427(false===strpos($c,'.certloom-manual-issuance .certloom-manual-steps li.is-current !important'),'new compact layer adds no !important override');
-echo "\n$pass alpha.4.30 Issue Credential source checks, $fail failures\n"; exit($fail?1:0);
+
+i427(false!==strpos($m,'data-certloom-credential-data')&&false!==strpos($m,"__( 'Credential details', 'certloom' )")&&false!==strpos($m,'data-certloom-independent-details'),'Details-only and Independent issuance expose a first-class Credential details surface');
+i427(false!==strpos($m,'data-certloom-design-data-check')&&false!==strpos($m,"__( 'Design data check', 'certloom' )"),'selected Certloom design exposes an explicit data-readiness surface beside the real preview');
+i427(false!==strpos($j,'restIssuancePreviewUrl')&&false!==strpos($j,'bodyFromForm')&&false!==strpos($j,"method: 'POST'")&&false!==strpos($j,'certloom:design-readiness'),'design preview posts the exact current issuance form and feeds readiness back into Review state');
+i427(false!==strpos($a,"'restIssuancePreviewUrl' => rest_url( 'certloom/v1/admin/issuance-preview' )")&&false!==strpos($a,"'recipientEditBase'"),'admin localization exposes the mutation-free issuance preview route and Recipient edit target');
+i427(false!==strpos($c,'.certloom-issue-v2-form > .certloom-presentation-fieldset')&&false!==strpos($c,'position: sticky;')&&false!==strpos($c,'max-height: calc(100vh - 58px);'),'desktop Certificate appearance stays available while the credential-data column scrolls');
+i427(false!==strpos($m,'data-certloom-additional-details')&&false===strpos($m,'<details class="certloom-additional-details" open'),'preselected Issuer/Batch/Signer no longer force Additional details open on page load');
+i427(false!==strpos($j,'certloom:add-credential-detail')&&false!==strpos($j,'designDataEditRecipient')&&false!==strpos($j,'designDataAddValue'),'missing design fields provide owner-aware actions for Recipient data and credential-specific values');
+echo "\n$pass alpha.4.33 Issue Credential source checks, $fail failures\n"; exit($fail?1:0);

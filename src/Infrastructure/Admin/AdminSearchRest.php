@@ -56,6 +56,16 @@ final class AdminSearchRest {
 
 		register_rest_route(
 			self::NAMESPACE,
+			'/admin/issuance-preview',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'issuance_preview' ),
+				'permission_callback' => array( $this, 'template_preview_permission' ),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
 			'/admin/credentials',
 			array(
 				'methods'             => \WP_REST_Server::READABLE,
@@ -202,6 +212,90 @@ final class AdminSearchRest {
 			'source_id'    => $source_id,
 			'source_label' => $source_label,
 		) );
+	}
+
+	/**
+	 * Live compose preview built from the exact current Manual Issuance form.
+	 * POST is intentional so Recipient/profile data never appears in preview URLs.
+	 * The operation is mutation-free and final Review/Issue still revalidates it.
+	 *
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function issuance_preview( \WP_REST_Request $request ) {
+		$input = $request->get_body_params();
+		$input = is_array( $input ) ? $input : array();
+		$input = $this->normalize_issuance_preview_request( $input );
+		$review = ( new \Certloom\Application\Issuance\ManualIssuanceService() )->draft_preview( $input );
+		if ( is_wp_error( $review ) ) {
+			$data = $review->get_error_data();
+			if ( ! is_array( $data ) ) { $data = array(); }
+			if ( empty( $data['status'] ) ) { $data['status'] = 400; }
+			return new \WP_Error( $review->get_error_code(), $review->get_error_message(), $data );
+		}
+
+		$response = array(
+			'presentation_mode' => (string) ( $review['request']['presentation_mode'] ?? 'details_only' ),
+			'data_readiness'    => isset( $review['data_readiness'] ) && is_array( $review['data_readiness'] ) ? $review['data_readiness'] : array( 'ready' => true, 'fields' => array(), 'missing_count' => 0 ),
+			'html'              => '',
+			'name'              => '',
+			'description'       => '',
+			'source_label'      => '',
+		);
+
+		if ( 'design' === $response['presentation_mode'] ) {
+			$preview = ( new \Certloom\Infrastructure\Rendering\ManualIssuancePreviewService() )->build( $review );
+			if ( is_wp_error( $preview ) ) { return new \WP_Error( $preview->get_error_code(), $preview->get_error_message(), array( 'status' => 400 ) ); }
+			try {
+				$presented = ( new \Certloom\Infrastructure\Rendering\RenderPlanHtmlPreview() )->present( $preview['render_plan'] );
+			} catch ( \Throwable $error ) {
+				return new \WP_Error( 'certloom_issuance_preview_failed', __( 'Certloom could not build the live credential preview.', 'certloom' ), array( 'status' => 400 ) );
+			}
+			$template = isset( $review['template'] ) && is_array( $review['template'] ) ? $review['template'] : array();
+			$response['html'] = (string) ( $presented['html'] ?? '' );
+			$response['name'] = (string) ( $template['name'] ?? '' );
+			$response['description'] = (string) ( $template['description'] ?? '' );
+			$response['source_label'] = $this->issuance_preview_source_label( $review );
+		}
+
+		return rest_ensure_response( $response );
+	}
+
+	/** @return array<string,mixed> */
+	private function normalize_issuance_preview_request( array $input ) {
+		$custom = isset( $input['custom_merge_fields'] ) && is_array( $input['custom_merge_fields'] ) ? $input['custom_merge_fields'] : array();
+		$keys = isset( $input['custom_merge_key'] ) && is_array( $input['custom_merge_key'] ) ? array_values( $input['custom_merge_key'] ) : array();
+		$values = isset( $input['custom_merge_value'] ) && is_array( $input['custom_merge_value'] ) ? array_values( $input['custom_merge_value'] ) : array();
+		foreach ( array_slice( $keys, 0, 100 ) as $index => $raw_key ) {
+			$key = sanitize_key( (string) $raw_key );
+			if ( '' === $key || array_key_exists( $key, $custom ) ) { continue; }
+			$custom[ $key ] = isset( $values[ $index ] ) && ! is_array( $values[ $index ] ) ? (string) $values[ $index ] : '';
+		}
+		$input['custom_merge_fields'] = $custom;
+		unset( $input['custom_merge_key'], $input['custom_merge_value'], $input['certloom_manual_issuance_step'], $input['_wpnonce'], $input['_wp_http_referer'] );
+		return $input;
+	}
+
+	/** @return string */
+	private function issuance_preview_source_label( array $review ) {
+		$request = isset( $review['request'] ) && is_array( $review['request'] ) ? $review['request'] : array();
+		if ( 'assigned' === (string) ( $request['design_source'] ?? '' ) && ! empty( $request['template_id'] ) ) {
+			return __( 'Assigned for this credential only', 'certloom' );
+		}
+		$scope = sanitize_key( (string) ( $review['template_resolution'] ?? 'global' ) );
+		$details = isset( $review['template_resolution_details'] ) && is_array( $review['template_resolution_details'] ) ? $review['template_resolution_details'] : array();
+		$scope_id = absint( $details['scope_id'] ?? 0 );
+		if ( 0 === strpos( $scope, 'program_locale' ) ) {
+			$program = isset( $review['program'] ) && is_array( $review['program'] ) ? $review['program'] : array();
+			$variant = isset( $review['template_locale_variant'] ) && is_array( $review['template_locale_variant'] ) ? $review['template_locale_variant'] : array();
+			return sprintf( /* translators: %1$s: Program title, %2$s: locale. */ __( 'Inherited from Program “%1$s” language variant (%2$s)', 'certloom' ), (string) ( $program['title'] ?? '' ), (string) ( $variant['matched_locale'] ?? '' ) );
+		}
+		return $this->template_preview_source_label(
+			$scope,
+			$scope_id,
+			isset( $review['program'] ) && is_array( $review['program'] ) ? $review['program'] : null,
+			isset( $review['issuer'] ) && is_array( $review['issuer'] ) ? $review['issuer'] : null,
+			isset( $review['batch'] ) && is_array( $review['batch'] ) ? $review['batch'] : null
+		);
 	}
 
 	/** @return string */

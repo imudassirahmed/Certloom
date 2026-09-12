@@ -1,9 +1,12 @@
 <?php
 namespace Certloom\Infrastructure\Admin;
 
+use Certloom\Application\Program\ProgramLifecyclePolicy;
 use Certloom\Domain\Job\JobStates;
 use Certloom\Domain\Job\JobTypes;
 use Certloom\Infrastructure\Job\JobRuntime;
+use Certloom\Infrastructure\Repository\BatchRepository;
+use Certloom\Infrastructure\Repository\ProgramRepository;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -120,6 +123,10 @@ final class BulkIssuanceAdmin {
 			'expires_at'  => isset( $_POST['expires_at'] ) ? wp_unslash( $_POST['expires_at'] ) : '',
 			'grade'       => isset( $_POST['grade'] ) ? wp_unslash( $_POST['grade'] ) : '',
 		);
+		$shared_policy = $this->validate_shared_lifecycle( $shared );
+		if ( is_wp_error( $shared_policy ) ) {
+			$this->fail( $shared_policy->get_error_message() );
+		}
 
 		$key = $this->runtime->bulk_issuance()->enqueue_preflight(
 			$tmp,
@@ -161,17 +168,17 @@ final class BulkIssuanceAdmin {
 
 		echo '<section class="certloom-manual-card certloom-bulk-card"><div class="certloom-manual-card-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Step 1', 'certloom' ) . '</span><h2>' . esc_html__( 'Upload & define shared issuance context', 'certloom' ) . '</h2></div><span class="certloom-template-state">' . esc_html__( 'Review before issuing', 'certloom' ) . '</span></div>';
 		echo '<p>' . esc_html__( 'Choose the Program, optional Batch, dates and expiry policy. The normal design resolves through Global → Issuer → Program → Batch; you can still choose a one-off design override for this bulk job. Certloom validates the same field and design context again for every CSV row.', 'certloom' ) . '</p>';
-		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" enctype="multipart/form-data" class="certloom-manual-form" data-certloom-scoped-fields-form data-certloom-scoped-fields-nonce="' . esc_attr( $context_nonce ) . '"><input type="hidden" name="action" value="certloom_bulk_issuance_upload">';
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" enctype="multipart/form-data" class="certloom-manual-form" data-certloom-scoped-fields-form data-certloom-scoped-fields-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-bulk-lifecycle><input type="hidden" name="action" value="certloom_bulk_issuance_upload">';
 		wp_nonce_field( 'certloom_bulk_issuance_upload' );
 
 		echo '<div class="certloom-manual-grid certloom-manual-grid-2">';
 		echo '<label><span>' . esc_html__( 'Active Program', 'certloom' ) . '</span><select name="program_id" required data-certloom-context-lookup="program" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search active Programs…', 'certloom' ) . '"><option value="">' . esc_html__( 'Choose Program', 'certloom' ) . '</option>';
 		foreach ( $p as $program ) {
-			echo '<option value="' . esc_attr( (string) absint( $program['id'] ?? 0 ) ) . '">' . esc_html( ScopedContextChoices::program_label( $program ) ) . '</option>';
+			echo '<option value="' . esc_attr( (string) absint( $program['id'] ?? 0 ) ) . '" data-program-title="' . esc_attr( (string) ( $program['title'] ?? '' ) ) . '" data-validity-mode="' . esc_attr( (string) ( $program['validity_mode'] ?? '' ) ) . '" data-validity-value="' . esc_attr( (string) absint( $program['validity_value'] ?? 0 ) ) . '" data-validity-unit="' . esc_attr( (string) ( $program['validity_unit'] ?? 'days' ) ) . '" data-program-validity-available="' . esc_attr( ! empty( $program['program_default_available'] ) ? '1' : '0' ) . '" data-validity-summary="' . esc_attr( (string) ( $program['validity_summary'] ?? '' ) ) . '" data-renewal-policy="' . esc_attr( (string) ( $program['renewal'] ?? 'not_applicable' ) ) . '" data-repeat-policy="' . esc_attr( (string) ( $program['repeat_policy'] ?? ProgramLifecyclePolicy::REPEAT_LIFECYCLE ) ) . '">' . esc_html( ScopedContextChoices::program_label( $program ) ) . '</option>';
 		}
 		echo '</select><small>' . esc_html__( 'Searches the complete active Program registry without loading every Program into this page.', 'certloom' ) . '</small></label>';
 
-		echo '<label><span>' . esc_html__( 'Batch / cohort (optional)', 'certloom' ) . '</span><select name="batch_id" data-certloom-context-lookup="batch" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search Batches in this Program…', 'certloom' ) . '"><option value="0">' . esc_html__( 'No Batch', 'certloom' ) . '</option></select><small>' . esc_html__( 'Optional. Search is limited to the selected Program. Batch field overrides and Batch-specific design choices are revalidated for every row.', 'certloom' ) . '</small></label>';
+		echo '<label><span>' . esc_html__( 'Batch / cohort', 'certloom' ) . '</span><select name="batch_id" data-certloom-context-lookup="batch" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search Batches in this Program…', 'certloom' ) . '"><option value="0">' . esc_html__( 'No Batch', 'certloom' ) . '</option></select><small data-certloom-bulk-batch-policy>' . esc_html__( 'Optional unless the selected Program issues one credential per Batch or session. Search is limited to the selected Program.', 'certloom' ) . '</small></label>';
 
 		echo '<div class="certloom-bulk-design-source" data-certloom-bulk-design-source><span class="certloom-bulk-design-label">' . esc_html__( 'Certificate design', 'certloom' ) . '</span><div class="certloom-manual-choice-row"><label><input type="radio" name="bulk_design_source" value="inherited" checked> ' . esc_html__( 'Use inherited design', 'certloom' ) . '</label><label><input type="radio" name="bulk_design_source" value="assigned"> ' . esc_html__( 'Use assigned design', 'certloom' ) . '</label></div><label data-certloom-bulk-assigned-design hidden><span>' . esc_html__( 'Assigned design', 'certloom' ) . '</span><select name="template_id" data-certloom-context-lookup="template" data-certloom-context-empty-value="0" data-certloom-context-nonce="' . esc_attr( $context_nonce ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search published Templates…', 'certloom' ) . '"><option value="0">' . esc_html__( 'Choose published design…', 'certloom' ) . '</option>';
 		foreach ( $t as $template ) {
@@ -182,16 +189,52 @@ final class BulkIssuanceAdmin {
 		echo '<label><span>' . esc_html__( 'Default grade (optional)', 'certloom' ) . '</span><input type="text" maxlength="191" name="grade"></label>';
 		echo '</div>';
 
-		echo '<div class="certloom-manual-choice-row">';
-		echo '<label><input type="radio" name="expiry_mode" value="program" checked> ' . esc_html__( 'Use Program validity', 'certloom' ) . '</label>';
+		echo '<div class="certloom-manual-choice-row" data-certloom-bulk-expiry-policy>';
+		echo '<label><input type="radio" name="expiry_mode" value="program" checked required> ' . esc_html__( 'Use Program validity', 'certloom' ) . '</label>';
 		echo '<label><input type="radio" name="expiry_mode" value="permanent"> ' . esc_html__( 'Permanent', 'certloom' ) . '</label>';
 		echo '<label><input type="radio" name="expiry_mode" value="date"> ' . esc_html__( 'Specific expiry', 'certloom' ) . '</label>';
 		echo '</div>';
+		echo '<p class="description" data-certloom-bulk-validity-summary>' . esc_html__( 'Choose a Program to confirm its default validity and repeat-issuance policy.', 'certloom' ) . '</p>';
 		echo '<label class="certloom-bulk-expiry"><span>' . esc_html__( 'Specific expiry date', 'certloom' ) . '</span><input type="date" name="expires_at"></label>';
 
 		echo '<div class="certloom-bulk-csv"><label><span>' . esc_html__( 'Bulk Issuance CSV', 'certloom' ) . '</span><input type="file" name="bulk_csv" accept=".csv,text/csv" required></label><div class="certloom-bulk-schema" data-certloom-bulk-field-schema><strong>' . esc_html__( 'Accepted columns', 'certloom' ) . '</strong><div data-certloom-bulk-field-schema-body><code>recipient_id</code> <em>' . esc_html__( 'or', 'certloom' ) . '</em> <code>display_name</code> + <code>email</code>/<code>external_id</code>, <code>first_name</code>, <code>middle_name</code>, <code>last_name</code>, <code>grade</code>, <code>certificate_number</code>, <code>custom:machine_key</code>.</div><small>' . esc_html__( 'Choose a Program and optional Batch to see the exact credential-field columns before uploading.', 'certloom' ) . '</small></div></div>';
 		echo '<div class="certloom-manual-actions"><button class="button button-primary button-hero" type="submit" ' . ( empty( $p ) ? 'disabled' : '' ) . '>' . esc_html__( 'Review CSV', 'certloom' ) . '</button><span>' . esc_html__( 'Certloom reviews the file in the background. No credentials are created during review.', 'certloom' ) . '</span></div>';
 		echo '</form></section>';
+	}
+
+	/** Fail fast on shared Program lifecycle choices before queueing a CSV review. @return true|\WP_Error */
+	private function validate_shared_lifecycle( array $shared ) {
+		$program_id = absint( $shared['program_id'] ?? 0 );
+		if ( ! $program_id ) { return new \WP_Error( 'certloom_bulk_program_required', __( 'Choose an active Program before reviewing the CSV.', 'certloom' ) ); }
+		$program = ( new ProgramRepository() )->find( $program_id );
+		if ( is_wp_error( $program ) ) { return $program; }
+		if ( ! is_array( $program ) || empty( $program['active'] ) ) { return new \WP_Error( 'certloom_bulk_program_unavailable', __( 'Choose an active Program that still exists.', 'certloom' ) ); }
+		$policy = ( new ProgramLifecyclePolicy() )->resolve( $program );
+		if ( is_wp_error( $policy ) ) { return $policy; }
+
+		$batch_id = absint( $shared['batch_id'] ?? 0 );
+		if ( ProgramLifecyclePolicy::REPEAT_BATCH === (string) ( $policy['repeat_policy'] ?? '' ) && ! $batch_id ) {
+			return new \WP_Error( 'certloom_bulk_repeat_batch_required', __( 'This Program issues one credential per Batch or session. Choose a Batch before reviewing the CSV.', 'certloom' ) );
+		}
+		if ( $batch_id ) {
+			$batch = ( new BatchRepository() )->find( $batch_id );
+			if ( is_wp_error( $batch ) ) { return $batch; }
+			if ( ! is_array( $batch ) || empty( $batch['active'] ) || $program_id !== absint( $batch['program_id'] ?? 0 ) ) {
+				return new \WP_Error( 'certloom_bulk_batch_program_mismatch', __( 'Choose an active Batch that belongs to the selected Program.', 'certloom' ) );
+			}
+		}
+
+		$expiry_mode = sanitize_key( (string) ( $shared['expiry_mode'] ?? '' ) );
+		if ( ! in_array( $expiry_mode, array( 'program', 'permanent', 'date' ), true ) ) {
+			return new \WP_Error( 'certloom_bulk_expiry_required', __( 'Choose how expiry should be set for this bulk issuance.', 'certloom' ) );
+		}
+		if ( 'program' === $expiry_mode && empty( $policy['program_default_available'] ) ) {
+			return new \WP_Error( 'certloom_bulk_program_expiry_unavailable', __( 'This Program decides validity at issuance. Choose Permanent or a specific expiry date for this bulk job.', 'certloom' ) );
+		}
+		if ( 'permanent' === $expiry_mode && 'required' === (string) ( $policy['renewal'] ?? '' ) ) {
+			return new \WP_Error( 'certloom_bulk_renewal_requires_expiry', __( 'This Program requires renewal after expiry, so the bulk job must use the Program expiry or a specific expiry date.', 'certloom' ) );
+		}
+		return true;
 	}
 
 	private function job( array $job ) {

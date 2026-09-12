@@ -19,7 +19,7 @@ final class MergeSnapshotBuilder {
 	 * @param array<string,mixed> $layout Published canonical layout.
 	 * @return array<string,mixed>|\WP_Error
 	 */
-	public function build( array $recipient, array $program, $issuer, array $credential, array $layout, array $custom_overrides = array(), $signer = null ) {
+	public function build( array $recipient, array $program, $issuer, array $credential, array $layout, array $custom_overrides = array(), $signer = null, $allow_missing_required = false ) {
 		$issuer = is_array( $issuer ) ? $issuer : array();
 		$signer = is_array( $signer ) ? $signer : array();
 		$custom = isset( $recipient['custom_fields'] ) && is_array( $recipient['custom_fields'] ) ? $recipient['custom_fields'] : array();
@@ -74,6 +74,7 @@ final class MergeSnapshotBuilder {
 			// Product-roadmap aliases retained as first-class P0 merge vocabulary.
 			'recipient_name' => $display_name,
 			'first_name' => $first_name,
+			'middle_name' => $middle_name,
 			'last_name' => $last_name,
 			'certificate_number' => trim( (string) ( $credential['display_number'] ?? '' ) ),
 			'credential_title' => $credential_title,
@@ -118,6 +119,7 @@ final class MergeSnapshotBuilder {
 		$required = $this->required_tokens( $layout );
 		foreach ( $required as $token ) {
 			if ( ! array_key_exists( $token, $values ) ) {
+				if ( $allow_missing_required ) { $values[ $token ] = ''; continue; }
 				return new \WP_Error( 'certloom_manual_issue_merge_missing', sprintf( /* translators: %s: merge token. */ __( 'The published template requires merge field “%s”, but Manual Issuance cannot resolve it from the selected recipient/program context.', 'certloom' ), $token ) );
 			}
 		}

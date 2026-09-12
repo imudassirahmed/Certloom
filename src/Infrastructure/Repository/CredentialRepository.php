@@ -846,6 +846,35 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		return is_array( $row ) ? self::decode_series( $row ) : null;
 	}
 
+
+	/**
+	 * Duplicate-prevention lookup for Programs configured as one credential per
+	 * Batch/session. The same recipient may therefore hold separate Series for
+	 * different Batches of the same Program, but never two for the same Batch.
+	 *
+	 * @return array<string,mixed>|null|\WP_Error
+	 */
+	public function find_series_for_recipient_program_batch( $recipient_id, $program_id, $batch_id ) {
+		global $wpdb;
+		$recipient_id = absint( $recipient_id );
+		$program_id = absint( $program_id );
+		$batch_id = absint( $batch_id );
+		if ( ! $recipient_id || ! $program_id || ! $batch_id ) { return null; }
+		$wpdb->last_error = '';
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				'SELECT * FROM %i WHERE recipient_id=%d AND program_id=%d AND batch_id=%d ORDER BY id ASC LIMIT 1',
+				SchemaManager::table( 'credential_series' ),
+				$recipient_id,
+				$program_id,
+				$batch_id
+			),
+			ARRAY_A
+		);
+		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_series_batch_duplicate_check_failed', __( 'Certloom could not check for an existing credential for this recipient, Program and Batch.', 'certloom' ) ); }
+		return is_array( $row ) ? self::decode_series( $row ) : null;
+	}
+
 	/** @return array<string,mixed>|null|\WP_Error */
 	public function find_series_by_display_number( $display_number ) {
 		global $wpdb;

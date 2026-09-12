@@ -35,6 +35,17 @@ async def main():
             if await page.locator('#'+target).count()!=1:
                 label_ok=False; break
         await ck(label_ok,'labelsResolveToControls')
+        await ck(await page.get_by_role('heading',name='Credential lifecycle').count()==1,'lifecycleHeading')
+        await ck(await page.locator('#certloom-program-validity-mode').input_value()=='duration','durationPolicyCurrent')
+        await ck(await page.locator('#certloom-program-renewal').input_value()=='required','renewalPolicyCurrent')
+        await ck(await page.locator('#certloom-program-repeat-policy').input_value()=='lifecycle','repeatPolicyCurrent')
+        inline_cols=await page.locator('.certloom-inline-fields').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").length')
+        await ck(inline_cols==2,'durationAmountAndUnitStayCompactOnDesktop')
+        await page.locator('#certloom-program-validity-mode').select_option('permanent')
+        await ck(await page.locator('[data-certloom-program-validity-duration]').is_hidden(),'permanentHidesDuration')
+        await ck(await page.locator('#certloom-program-renewal').is_disabled() and await page.locator('#certloom-program-renewal').input_value()=='not_applicable','permanentDisablesRenewalCoherently')
+        await page.locator('#certloom-program-validity-mode').select_option('duration')
+        await ck(await page.locator('[data-certloom-program-validity-duration]').is_visible() and not await page.locator('#certloom-program-renewal').is_disabled(),'durationRestoresLifecycleControls')
         await ck(await page.get_by_text('Verification summary',exact=True).count()==1,'safeVisibilitySemanticsVisible')
         await ck(await page.get_by_text('Sequential',exact=True).count()==1,'numberingInheritanceVisible')
         await ck(await page.get_by_text('Academic Formal Landscape',exact=True).count()==1,'resolvedDesignVisible')
@@ -53,6 +64,8 @@ async def main():
         grid_children=mobile.locator('.certloom-program-profile .certloom-domain-form-grid > .certloom-domain-field')
         first_box=await grid_children.nth(0).bounding_box(); second_box=await grid_children.nth(1).bounding_box()
         await ck(bool(first_box and second_box and abs(first_box['x']-second_box['x'])<1),'mobileSingleColumnGrid')
+        inline_mobile=await mobile.locator('.certloom-inline-fields').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").length')
+        await ck(inline_mobile==1,'mobileDurationControlsStack')
         await ck(await mobile.get_by_role('heading',name='Published certificate design').is_visible(),'mobileDesignVisible')
         await mobile.close()
 
