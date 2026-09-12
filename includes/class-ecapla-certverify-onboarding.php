@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /** Premium, non-blocking first-run setup and WIZ-01 workflow state. */
 class Ecapla_CertVerify_Onboarding {
 	const OPTION_KEY = 'certverify_onboarding';
-	const VERSION    = 4;
+	const VERSION    = 5;
 
 	/** @return array<int,string> */
 	public static function wizard_steps() {
@@ -67,8 +67,9 @@ class Ecapla_CertVerify_Onboarding {
 		$state['wizard_completed_at']     = sanitize_text_field( (string) $state['wizard_completed_at'] );
 		$state['wizard_rerun_count']      = min( 999, absint( $state['wizard_rerun_count'] ) );
 		$state['wizard_draft']            = self::sanitize_wizard_draft( $state['wizard_draft'] );
-		if ( $saved_version < self::VERSION && empty( $state['wizard_draft']['first_credential_id'] ) ) {
-			// Pre-v4 walkthrough completion did not prove a real first credential.
+		if ( $saved_version > 0 && $saved_version < 4 ) {
+			// Retired pre-v4 walkthrough completion did not represent the current
+			// profile/appearance/first-credential Wizard contract.
 			$state['wizard_completed_at'] = '';
 		}
 		$state['version']                 = self::VERSION;
@@ -151,6 +152,42 @@ class Ecapla_CertVerify_Onboarding {
 			$state['wizard_skipped_steps'] = self::normalize_step_list( $state['wizard_skipped_steps'] );
 		}
 		$state['wizard_step'] = '' !== $next_step ? self::normalize_step( $next_step ) : self::next_step( $step );
+		if ( 'issue' === $step && $skipped && 'finish' === $state['wizard_step'] ) {
+			$state['wizard_completed_at'] = $now;
+		}
+		return self::persist( $state );
+	}
+
+	/** Mutation-free validation for a Wizard step against the current resumable draft. @return true|WP_Error */
+	public static function validate_wizard_draft( $step, array $draft_patch, $skipped = false ) {
+		$step = sanitize_key( (string) $step );
+		if ( ! in_array( $step, self::wizard_steps(), true ) ) {
+			return new WP_Error( 'certloom_setup_step_invalid', __( 'Certloom could not identify that setup step.', 'certloom' ) );
+		}
+		$state = self::get_state();
+		$draft = self::sanitize_wizard_draft( array_merge( $state['wizard_draft'], $draft_patch ) );
+		return self::validate_step_draft( $step, $draft, (bool) $skipped );
+	}
+
+	/**
+	 * Saves resumable Wizard draft values without completing or advancing a step.
+	 * Used by Save & finish later on the first-credential screen so saving a
+	 * draft can never accidentally issue a credential.
+	 *
+	 * @param string $step
+	 * @param array<string,mixed> $draft_patch
+	 * @return true|WP_Error
+	 */
+	public static function save_wizard_draft_only( $step, array $draft_patch ) {
+		$allowed = Ecapla_CertVerify_Backup::assert_writes_allowed();
+		if ( is_wp_error( $allowed ) ) { return $allowed; }
+		$step = self::normalize_step( sanitize_key( (string) $step ) );
+		$state = self::get_state();
+		$state['wizard_draft'] = self::sanitize_wizard_draft( array_merge( $state['wizard_draft'], $draft_patch ) );
+		$now = current_time( 'mysql' );
+		if ( '' === $state['wizard_started_at'] ) { $state['wizard_started_at'] = $now; }
+		$state['wizard_last_seen_at'] = $now;
+		$state['wizard_step'] = $step;
 		return self::persist( $state );
 	}
 
@@ -175,9 +212,44 @@ class Ecapla_CertVerify_Onboarding {
 		$allowed = Ecapla_CertVerify_Backup::assert_writes_allowed();
 		if ( is_wp_error( $allowed ) ) { return $allowed; }
 		$state = self::get_state();
-		if ( empty( $state['wizard_draft']['first_credential_id'] ) ) {
-			return new WP_Error( 'certloom_setup_first_credential_required', __( 'Issue the first real credential before completing Setup.', 'certloom' ) );
+		$state['wizard_step'] = 'finish';
+		$state['wizard_last_seen_at'] = current_time( 'mysql' );
+		$state['wizard_completed_at'] = $state['wizard_last_seen_at'];
+		return self::persist( $state );
+	}
+
+	/**
+	 * Records the real credential issued from Setup and completes the Wizard.
+	 * The issuance itself is committed by ManualIssuanceService before this
+	 * resumable onboarding state is written. Retrying the same reviewed request
+	 * is idempotent, so a failed onboarding write cannot manufacture a duplicate.
+	 *
+	 * @param array<string,mixed> $draft_patch
+	 * @param array<string,mixed> $receipt
+	 * @return true|WP_Error
+	 */
+	public static function record_first_credential( array $draft_patch, array $receipt ) {
+		$allowed = Ecapla_CertVerify_Backup::assert_writes_allowed();
+		if ( is_wp_error( $allowed ) ) { return $allowed; }
+		$version_id = absint( $receipt['version_id'] ?? 0 );
+		$series_id = absint( $receipt['series_id'] ?? 0 );
+		$url = trim( (string) ( $receipt['verification_url'] ?? '' ) );
+		if ( ! $version_id || ! $series_id || '' === $url ) {
+			return new WP_Error( 'certloom_setup_first_credential_receipt_invalid', __( 'The first credential was issued, but Certloom could not record its Setup receipt safely.', 'certloom' ) );
 		}
+
+		$state = self::get_state();
+		$draft = self::sanitize_wizard_draft( array_merge( $state['wizard_draft'], $draft_patch ) );
+		$valid = self::validate_step_draft( 'issue', $draft, false );
+		if ( is_wp_error( $valid ) ) { return $valid; }
+		$draft['first_credential_id'] = $version_id;
+		$draft['first_credential_series_id'] = $series_id;
+		$draft['first_credential_url'] = self::limit_text( sanitize_text_field( $url ), 500 );
+		$state['wizard_draft'] = self::sanitize_wizard_draft( $draft );
+		$state['wizard_completed_steps'][] = 'issue';
+		$state['wizard_completed_steps'] = self::normalize_step_list( $state['wizard_completed_steps'] );
+		$state['wizard_skipped_steps'] = array_values( array_diff( $state['wizard_skipped_steps'], array( 'issue' ) ) );
+		$state['wizard_skipped_steps'] = self::normalize_step_list( $state['wizard_skipped_steps'] );
 		$state['wizard_step'] = 'finish';
 		$state['wizard_last_seen_at'] = current_time( 'mysql' );
 		$state['wizard_completed_at'] = $state['wizard_last_seen_at'];
@@ -411,6 +483,7 @@ class Ecapla_CertVerify_Onboarding {
 			if ( array_key_exists( $key, $draft ) ) { $out[ $key ] = self::limit_text( sanitize_text_field( (string) $draft[ $key ] ), $limit ); }
 		}
 		if ( array_key_exists( 'first_credential_id', $draft ) ) { $out['first_credential_id'] = absint( $draft['first_credential_id'] ); }
+		if ( array_key_exists( 'first_credential_series_id', $draft ) ) { $out['first_credential_series_id'] = absint( $draft['first_credential_series_id'] ); }
 		if ( array_key_exists( 'first_credential_url', $draft ) ) { $out['first_credential_url'] = self::limit_text( sanitize_text_field( (string) $draft['first_credential_url'] ), 500 ); }
 		return $out;
 	}

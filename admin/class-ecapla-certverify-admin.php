@@ -689,9 +689,35 @@ class Ecapla_CertVerify_Admin {
 		if ( in_array( $action, array( 'save_step', 'skip_step' ), true ) ) {
 			$step = isset( $_POST['wizard_step'] ) ? sanitize_key( wp_unslash( $_POST['wizard_step'] ) ) : '';
 			$next = isset( $_POST['wizard_next_step'] ) ? sanitize_key( wp_unslash( $_POST['wizard_next_step'] ) ) : '';
+			if ( 'save_step' === $action && 'issue' === $step ) {
+				$patch = $this->setup_wizard_draft_request( $step );
+				if ( ! empty( $_POST['wizard_finish_later'] ) ) {
+					$result = Ecapla_CertVerify_Onboarding::save_wizard_draft_only( 'issue', $patch );
+					if ( is_wp_error( $result ) ) { $this->redirect_error( $result->get_error_message(), $base ); }
+					wp_safe_redirect( add_query_arg( 'certloom_wizard_saved', '1', admin_url( 'admin.php?page=' . self::DASHBOARD_PAGE ) ) );
+					exit;
+				}
+				$this->issue_setup_wizard_first_credential( $base );
+			}
 			$patch = 'skip_step' === $action ? array() : $this->setup_wizard_draft_request( $step );
+			$onboarding_before = ( 'profile' === $step && 'skip_step' !== $action ) ? Ecapla_CertVerify_Onboarding::snapshot() : null;
 			$result = Ecapla_CertVerify_Onboarding::save_wizard_step( $step, $patch, $next, 'skip_step' === $action );
 			if ( is_wp_error( $result ) ) { $this->redirect_error( $result->get_error_message(), $base ); }
+			if ( 'profile' === $step && 'skip_step' !== $action ) {
+				$engine = new \Certloom\Application\Setup\PurposePresetEngine();
+				$profile = $engine->normalize_profile( (string) ( $patch['usage_profile'] ?? '' ) );
+				$profiles = $engine->profiles();
+				if ( ! isset( $profiles[ $profile ] ) ) {
+					if ( is_array( $onboarding_before ) ) { Ecapla_CertVerify_Onboarding::restore_snapshot( $onboarding_before ); }
+					$this->redirect_error( __( 'Choose a valid Certloom usage profile.', 'certloom' ), $base );
+				}
+				$settings = Ecapla_CertVerify_Settings::get_all();
+				$settings['usage_profile'] = $profile;
+				if ( ! Ecapla_CertVerify_Settings::save( $settings ) ) {
+					if ( is_array( $onboarding_before ) ) { Ecapla_CertVerify_Onboarding::restore_snapshot( $onboarding_before ); }
+					$this->redirect_error( __( 'Certloom could not activate that usage profile, so the Setup step was not kept.', 'certloom' ), $base );
+				}
+			}
 			$state = Ecapla_CertVerify_Onboarding::get_state();
 			if ( ! empty( $_POST['wizard_finish_later'] ) && 'skip_step' !== $action ) {
 				wp_safe_redirect( add_query_arg( 'certloom_wizard_saved', '1', admin_url( 'admin.php?page=' . self::DASHBOARD_PAGE ) ) );
@@ -709,6 +735,79 @@ class Ecapla_CertVerify_Admin {
 		}
 
 		$this->redirect_error( __( 'Certloom could not identify that setup action.', 'certloom' ), $base );
+	}
+
+	/**
+	 * Issues the Wizard's first credential through the same canonical service as
+	 * the full Issue Credential workspace. The quick Setup path deliberately
+	 * creates an Independent credential so Program/Batch hierarchy remains
+	 * optional during onboarding.
+	 *
+	 * @return void
+	 */
+	private function issue_setup_wizard_first_credential( $base ) {
+		$issue_url = add_query_arg( 'step', 'issue', $base );
+		if ( ! \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
+			$this->redirect_error( __( 'Credential issuance is temporarily unavailable while Certloom finishes the protected credential-data transition.', 'certloom' ), $issue_url );
+		}
+
+		$patch = $this->setup_wizard_draft_request( 'issue' );
+		$valid = Ecapla_CertVerify_Onboarding::validate_wizard_draft( 'issue', $patch, false );
+		if ( is_wp_error( $valid ) ) {
+			$this->redirect_error( $valid->get_error_message(), $issue_url );
+		}
+		$state = Ecapla_CertVerify_Onboarding::get_state();
+		$draft = is_array( $state['wizard_draft'] ?? null ) ? array_merge( $state['wizard_draft'], $patch ) : $patch;
+		$presentation = isset( $draft['presentation_mode'] ) ? sanitize_key( (string) $draft['presentation_mode'] ) : 'details_only';
+		if ( ! in_array( $presentation, array( 'details_only', 'image', 'design' ), true ) ) { $presentation = 'details_only'; }
+		$template_id = 'design' === $presentation ? absint( $draft['design_template_id'] ?? 0 ) : 0;
+		$image_id = 'image' === $presentation ? absint( $draft['certificate_image_id'] ?? 0 ) : 0;
+
+		$request = array(
+			'recipient_mode' => 'new',
+			'recipient_id' => 0,
+			'new_recipient' => array(
+				'display_name' => sanitize_text_field( (string) ( $patch['first_recipient_name'] ?? '' ) ),
+				'email' => sanitize_email( (string) ( $patch['first_recipient_email'] ?? '' ) ),
+			),
+			'credential_basis' => 'independent',
+			'title_source' => 'custom',
+			'credential_title' => sanitize_text_field( (string) ( $patch['credential_title'] ?? '' ) ),
+			'presentation_mode' => $presentation,
+			'certificate_image_id' => $image_id,
+			'issuer_id' => 0,
+			'signer_id' => 0,
+			'program_id' => 0,
+			'batch_id' => 0,
+			'template_id' => $template_id,
+			'design_source' => $template_id ? 'assigned' : 'inherited',
+			'valid_from' => sanitize_text_field( (string) ( $patch['issue_date'] ?? '' ) ),
+			'expiry_mode' => 'permanent',
+			'expires_at' => '',
+			'grade' => '',
+			'display_number' => '',
+			'custom_merge_fields' => array(),
+			'design_field_aliases' => array(),
+			'repeating_data' => array(),
+		);
+
+		$service = new \Certloom\Application\Issuance\ManualIssuanceService();
+		$review = $service->review( $request );
+		if ( is_wp_error( $review ) ) {
+			$this->redirect_error( $review->get_error_message(), $issue_url );
+		}
+		$receipt = $service->issue( $request, (string) ( $review['review_fingerprint'] ?? '' ), get_current_user_id() );
+		if ( is_wp_error( $receipt ) ) {
+			$this->redirect_error( $receipt->get_error_message(), $issue_url );
+		}
+
+		$recorded = Ecapla_CertVerify_Onboarding::record_first_credential( $patch, $receipt );
+		if ( is_wp_error( $recorded ) ) {
+			$this->redirect_error( sprintf( /* translators: %s: Setup state error after a credential was issued. */ __( 'The credential was issued, but Setup could not save its completion state: %s. Re-submit the same first credential to recover without issuing a duplicate.', 'certloom' ), $recorded->get_error_message() ), $issue_url );
+		}
+
+		wp_safe_redirect( add_query_arg( array( 'certloom_wizard_issued' => '1', 'step' => 'finish' ), $base ) );
+		exit;
 	}
 
 	/** @return array<string,mixed> */
@@ -1944,8 +2043,10 @@ class Ecapla_CertVerify_Admin {
 			}
 		}
 		$wizard_template_preview_nonce = wp_create_nonce( 'certloom_setup_wizard_preview' );
-		$wizard_first_issuance_ready = false; // Generalized standalone issuance authority is intentionally scheduled after UI lock.
-		$wizard_first_issuance_reason = __( 'The Setup v2 first-credential screen is ready for review. Creating a standalone credential from this step remains disabled until the generalized issuance backend is implemented; Certloom will not create hidden Programs or Designs to fake completion.', 'certloom' );
+		$wizard_first_issuance_ready = \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready();
+		$wizard_first_issuance_reason = $wizard_first_issuance_ready
+			? __( 'This quick first credential uses the canonical Independent credential workflow. No Program, Batch or hidden hierarchy record is created.', 'certloom' )
+			: __( 'Credential issuance is temporarily unavailable while Certloom finishes the protected credential-data transition.', 'certloom' );
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/setup-wizard.php';
 	}
 

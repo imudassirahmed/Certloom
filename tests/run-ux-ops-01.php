@@ -44,8 +44,8 @@ uxops_check( false !== strpos( $admin_js, 'Your browser blocked the popup' ) && 
 uxops_check( false !== strpos( $drive, 'restore_settings_snapshot' ), 'Google settings retain rollback support without making Setup v2 own the provider connection' );
 
 // 4. Setup v2 completion remains honest and returns administrators to normal product navigation without manufacturing hierarchy/design authority.
-uxops_check( false !== strpos( $onboarding, "empty( \$state['wizard_draft']['first_credential_id'] )" ) && false !== strpos( $onboarding, "'wizard_completed_at'" ), 'Setup v2 cannot record completion without a real first credential' );
-uxops_check( false !== strpos( $wizard, "'Continue to Dashboard for now', 'certloom'" ) && false !== strpos( $wizard, "'Exit setup', 'certloom'" ), 'Setup v2 always provides a normal route back to Dashboard' );
+uxops_check( false !== strpos( $onboarding, 'record_first_credential' ) && false !== strpos( $onboarding, "'first_credential_series_id'" ) && false !== strpos( $onboarding, "'wizard_completed_at'" ), 'Setup v2 records authoritative first-credential identity when issued and keeps completion state separate from optional issuance' );
+uxops_check( false !== strpos( $wizard, "'Go to Dashboard', 'certloom'" ) && false !== strpos( $wizard, "'Exit setup', 'certloom'" ), 'Setup v2 always provides a normal route back to Dashboard' );
 uxops_check( false === strpos( $wizard, 'assign( $template_id' ) && false === strpos( $wizard, 'program_id' ) && false === strpos( $wizard, 'batch_id' ), 'Setup v2 does not manufacture hierarchy or Global Design assignment authority' );
 
 // 5. Hidden contextual routes keep the correct visible WordPress parent active.

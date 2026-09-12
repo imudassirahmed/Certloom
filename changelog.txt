@@ -1,3 +1,16 @@
+= 1.7.0-alpha.4.38 =
+* Replace the obsolete Setup Wizard “generalized issuance backend” blocker with a real quick Independent-credential issuance path backed by the canonical ManualIssuanceService; successful setup issuance records the real immutable Credential Version, Series and verification URL without creating hidden Program or Batch records.
+* Make Step 5 genuinely optional as previously specified: “Do this later” completes Setup without fabricating a credential, while “Save & finish later” saves a resumable draft and can never issue accidentally.
+* Activate the selected Setup usage profile immediately in Certloom runtime settings so profile-aware terminology and hero status follow onboarding selection instead of waiting for a legacy/dead review action.
+* Replace the stale finish-state “one required step remains” blocker with an honest completed state when first issuance is deferred; retain real capability/authority closures elsewhere rather than masking them.
+* Preserve alpha.4.37 design-field binding, alpha.4.36 profile-aware issuance, lifecycle/repeat policy and historical immutability. Renderer artifact and normalized-domain release authority remain intentionally absent while Phase 4 continues.
+
+= 1.7.0-alpha.4.37 =
+* Connect Design data check to Add credential detail: missing credential-owned design requirements now surface as one-click + Add suggestions and can alternatively bind to an existing compatible credential detail.
+* Preserve design-field bindings through draft preview, Review and Issue; include them in the review fingerprint and freeze exact mapping provenance into the immutable Credential Version snapshot.
+* Keep Recipient/Program/Batch-owned data authoritative, prevent self/duplicate mapping, and let explicit target values override issuance-local aliases.
+* Preserve alpha.4.36 profile-aware terminology and automatic design inheritance. Renderer artifact and normalized-domain release authority remain intentionally absent while Phase 4 continues.
+
 = 1.7.0-alpha.4.36 =
 * Make selected certificate designs drive issuance data readiness: missing credential-owned design fields now appear directly below Add credential detail as one-click + Add suggestions, while Recipient/Program-owned fields route to their authoritative editors instead of creating duplicates.
 * Make Program selection resolve the authoritative Global → Issuer → Program → Batch published-design hierarchy automatically and adopt the inherited design when the operator has not made an explicit appearance choice; deliberate Details only, image or assigned-design choices remain protected.

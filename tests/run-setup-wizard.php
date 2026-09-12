@@ -51,7 +51,7 @@ foreach ( array_keys( $profiles ) as $profile_key ) {
 }
 
 $defaults = Ecapla_CertVerify_Onboarding::get_state();
-wiz_check( 4 === $defaults['version'] && 'welcome' === $defaults['wizard_step'], 'Onboarding state must be v4 and start at Welcome.' );
+wiz_check( 5 === $defaults['version'] && 'welcome' === $defaults['wizard_step'], 'Onboarding state must be v5 and start at Welcome.' );
 wiz_check( array() === $defaults['wizard_draft'] && '' === $defaults['wizard_completed_at'], 'New setup must start without authoritative draft/completion.' );
 $r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'welcome', array(), 'profile', false );
 wiz_check( true === $r && 'profile' === Ecapla_CertVerify_Onboarding::get_state()['wizard_step'], 'Welcome must advance to Profile.' );
@@ -89,22 +89,31 @@ wiz_check( true === $r, 'Details-only must remain first-class.' );
 $state = Ecapla_CertVerify_Onboarding::get_state();
 wiz_check( 0 === $state['wizard_draft']['design_template_id'] && 0 === $state['wizard_draft']['certificate_image_id'], 'Details-only must clear both artifact inputs.' );
 $r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'issue', array( 'first_recipient_name'=>'','credential_title'=>'ISO 9001 Certification','issue_date'=>'2026-09-09' ), 'finish', false );
-wiz_check( is_wp_error( $r ) && 'certloom_setup_recipient_required' === $r->get_error_code(), 'First credential step must require Recipient.' );
+wiz_check( is_wp_error( $r ) && 'certloom_setup_recipient_required' === $r->get_error_code(), 'First credential step must require Recipient when the administrator chooses to issue now.' );
 $r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'issue', array( 'first_recipient_name'=>'Acme Ltd','first_recipient_email'=>'not-an-email','credential_title'=>'ISO 9001 Certification','issue_date'=>'2026-09-09' ), 'finish', false );
 wiz_check( is_wp_error( $r ) && 'certloom_setup_email_invalid' === $r->get_error_code(), 'Optional email must still validate when supplied.' );
-$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'issue', array( 'first_recipient_name'=>'Acme Ltd','first_recipient_email'=>'qa@example.test','credential_title'=>'ISO 9001 Certification','issue_date'=>'2026-09-09' ), 'finish', false );
-wiz_check( true === $r && 'finish' === Ecapla_CertVerify_Onboarding::get_state()['wizard_step'], 'Valid first-credential draft must reach Finish without fabricating issuance.' );
-$r = Ecapla_CertVerify_Onboarding::complete_wizard();
-wiz_check( is_wp_error( $r ) && 'certloom_setup_first_credential_required' === $r->get_error_code(), 'Setup v2 must not complete without a real first credential ID.' );
-wiz_check( ! Ecapla_CertVerify_Onboarding::is_wizard_complete(), 'Setup completion flag must stay false while first issuance is pending.' );
+$first_patch = array( 'first_recipient_name'=>'Acme Ltd','first_recipient_email'=>'qa@example.test','credential_title'=>'ISO 9001 Certification','issue_date'=>'2026-09-09' );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_draft_only( 'issue', $first_patch );
+wiz_check( true === $r && 'issue' === Ecapla_CertVerify_Onboarding::get_state()['wizard_step'], 'Save & finish later must preserve the first-credential draft without advancing or issuing.' );
+$r = Ecapla_CertVerify_Onboarding::record_first_credential( $first_patch, array( 'version_id'=>101, 'series_id'=>55, 'verification_url'=>'https://example.test/credential/abc' ) );
+wiz_check( true === $r, 'A real first-credential receipt must complete Setup.' );
+$issued_state = Ecapla_CertVerify_Onboarding::get_state();
+wiz_check( 101 === $issued_state['wizard_draft']['first_credential_id'] && 55 === $issued_state['wizard_draft']['first_credential_series_id'], 'Setup must freeze the real first Credential Version and Series identifiers.' );
+wiz_check( 'https://example.test/credential/abc' === $issued_state['wizard_draft']['first_credential_url'] && Ecapla_CertVerify_Onboarding::is_wizard_complete(), 'Setup must retain the verification URL and complete after real issuance.' );
 $r = Ecapla_CertVerify_Onboarding::restart_wizard();
 wiz_check( true === $r && 'welcome' === Ecapla_CertVerify_Onboarding::get_state()['wizard_step'], 'Setup v2 must be replayable from Welcome.' );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'issue', array(), 'finish', true );
+wiz_check( true === $r && Ecapla_CertVerify_Onboarding::is_wizard_complete(), 'Doing the first credential later must complete Setup without fabricating a credential.' );
+$skipped_state = Ecapla_CertVerify_Onboarding::get_state();
+wiz_check( empty( $skipped_state['wizard_draft']['first_credential_id'] ) && in_array( 'issue', $skipped_state['wizard_skipped_steps'], true ), 'Skipped first issuance must remain explicitly recorded as deferred, not fake-issued.' );
+$r = Ecapla_CertVerify_Onboarding::restart_wizard();
+wiz_check( true === $r && 'welcome' === Ecapla_CertVerify_Onboarding::get_state()['wizard_step'], 'Setup v2 restart must remain available after a deferred first credential.' );
 
 // Legacy migration: old walkthrough completion must not count as v2 completion.
 $GLOBALS['certloom_wiz_options'][ Ecapla_CertVerify_Onboarding::OPTION_KEY ] = array( 'version'=>3,'wizard_step'=>'purpose','wizard_completed_steps'=>array('purpose','organization','design'),'wizard_completed_at'=>'2026-08-29 12:00:00','wizard_draft'=>array('purpose'=>'training_courses','subcategory'=>'online_course') );
 $legacy = Ecapla_CertVerify_Onboarding::get_state();
 wiz_check( 'profile' === $legacy['wizard_step'] && 'training_lms' === $legacy['wizard_draft']['usage_profile'], 'Legacy purpose state must migrate to Profile semantics.' );
-wiz_check( '' === $legacy['wizard_completed_at'], 'Pre-v4 walkthrough completion must be cleared when no real first credential exists.' );
+wiz_check( '' === $legacy['wizard_completed_at'], 'Retired pre-v4 walkthrough completion must be cleared because it predates the current Setup contract.' );
 
 $root = dirname(__DIR__);
 $admin = file_get_contents($root.'/admin/class-ecapla-certverify-admin.php');
@@ -112,7 +121,7 @@ $view = file_get_contents($root.'/admin/views/setup-wizard.php');
 $css = file_get_contents($root.'/admin/assets/certloom-foundation.css');
 $js = file_get_contents($root.'/admin/assets/admin.js');
 foreach(array($admin,$view,$css,$js) as $src){ wiz_check(is_string($src)&&''!==$src,'Required Setup v2 source unavailable.'); }
-wiz_check( false !== strpos($view,'Start setup') && false !== strpos($view,'What are you using Certloom for?') && false !== strpos($view,'Choose credential fields') && false !== strpos($view,'How should credentials appear?') && false !== strpos($view,'Prepare your first credential'), 'Setup v2 must expose the approved flow.' );
+wiz_check( false !== strpos($view,'Start setup') && false !== strpos($view,'What are you using Certloom for?') && false !== strpos($view,'Choose credential fields') && false !== strpos($view,'How should credentials appear?') && false !== strpos($view,'Issue your first credential'), 'Setup v2 must expose the approved flow.' );
 wiz_check( false === strpos($view,'name="program_title"') && false === strpos($view,'name="numbering_mode"') && false === strpos($view,'backup_schedule'), 'Required Setup v2 path must not ask for Program, numbering or backups.' );
 wiz_check( false !== strpos($view,'value="details_only"') && false !== strpos($view,'value="image"') && false !== strpos($view,'value="design"'), 'Appearance must expose exactly the three approved presentation concepts.' );
 wiz_check( false !== strpos($view,'name="first_recipient_name"') && false !== strpos($view,'name="credential_title"') && false !== strpos($view,'name="issue_date"'), 'First credential must expose Recipient, title and issue date.' );
@@ -130,6 +139,8 @@ wiz_check( false !== strpos($view,'wizard_skipped_steps') && false !== strpos($v
 wiz_check( false !== strpos($css,'var(--cl-brand-emerald)') && false !== strpos($css,'linear-gradient(90deg, var(--cl-cyan), var(--cl-brand-emerald))'), 'Current/progress states must use the Certloom green and brand gradient.' );
 wiz_check( false !== strpos($css,'.certloom-setup-v2-organization-logo') && false !== strpos($css,'.certloom-setup-v2-media-actions'), 'Organization logo control must use the compact aligned media-action layout.' );
 wiz_check( false !== strpos($js,'fitWizardTemplatePreview') && false !== strpos($js,"availableHeight / naturalHeight") && false !== strpos(file_get_contents($root.'/admin/assets/admin.css'),'certloom-wizard-template-preview-stage'), 'Setup certificate previews must fit by both width and height inside a bounded no-scroll stage.' );
-wiz_check( false !== strpos($view,'will not create hidden Programs or Designs') || false !== strpos($admin,'will not create hidden Programs or Designs'), 'Pending backend copy must explicitly reject fake hierarchy creation.' );
+wiz_check( false === strpos($view,'generalized issuance backend') && false === strpos($admin,'generalized issuance backend') && false === strpos($view,'One required step remains'), 'Setup must not retain obsolete pending-backend or required-first-credential blockers.' );
+wiz_check( false !== strpos($admin,'issue_setup_wizard_first_credential') && false !== strpos($admin,'ManualIssuanceService') && false !== strpos($view,'Issue first credential'), 'Setup first issuance must use the canonical Manual Issuance service and expose a real issue action.' );
+wiz_check( false !== strpos($view,'Independent credential') && false !== strpos($view,'Program-backed or advanced issuance'), 'Setup first issuance must explicitly harmonize with canonical Independent/Program semantics.' );
 
 printf("PASS  Setup Wizard v2 profile/persistence/source contract\n\n%d checks, 0 failures\n", $checks);

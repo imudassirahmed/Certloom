@@ -14,7 +14,7 @@ $checks=0;$fail=0;
 function a436($ok,$label){global$checks,$fail;$checks++;if($ok){echo "PASS  $label\n";}else{$fail++;echo "FAIL  $label\n";}}
 foreach(array('settings'=>$settings,'presentation'=>$presentation,'admin'=>$admin,'manual'=>$manual,'readiness'=>$readiness,'merge'=>$merge,'js'=>$js,'css'=>$css,'settings_view'=>$settings_view) as $name=>$source){a436(is_string($source)&&''!==$source,'source '.$name.' available');}
 a436(false!==strpos($settings,"'usage_profile'              => 'general_other'")&&false!==strpos($settings,"array_key_exists( 'usage_profile', \$raw_data )"),'usage profile is canonical site configuration and unrelated setting saves preserve it');
-a436(false!==strpos($admin, "\$next_settings['usage_profile'] = \$profile"),'Setup Wizard review promotes the selected profile into runtime settings');
+a436(false!==strpos($admin, "\$settings['usage_profile'] = \$profile")&&false!==strpos($admin,'Ecapla_CertVerify_Settings::save( $settings )')&&false!==strpos($admin, "\$next_settings['usage_profile'] = \$profile"),'Setup Wizard activates the selected profile immediately and the legacy review path preserves the same runtime setting');
 foreach(array(
     'training_lms'=>array('Provider','Course / certification','Cohort / session','Trainer / authorized academic authority'),
     'iso_management'=>array('Certification body','Scheme / standard / service line','Audit / issuance cycle','Authorized certification authority'),

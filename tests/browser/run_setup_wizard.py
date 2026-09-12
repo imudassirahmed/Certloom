@@ -245,18 +245,22 @@ async def run():
         ).count()
         await ck(prohibited == 0, "noHierarchyOrLegacySetupFields")
         await ck(
-            await issue.get_by_text("Standalone issuance connection is still being implemented", exact=False).count() == 1,
-            "issuanceBackendGapHonest",
+            await issue.get_by_text("Quick first credential", exact=True).count() == 1,
+            "canonicalQuickIssuanceVisible",
         )
-        await ck("stay out of the required path" in (await issue.locator(".certloom-setup-v2-heading").inner_text()).lower(), "hierarchyExplicitlyOptional")
+        await ck(await issue.get_by_text("Independent credential", exact=True).count() == 1, "independentBasisExplicit")
+        await ck(await issue.get_by_text("Issue first credential", exact=True).count() == 1, "realIssueActionVisible")
+        await ck(await issue.get_by_text("Standalone issuance connection is still being implemented", exact=False).count() == 0, "noObsoleteBackendGap")
+        await ck("remain optional during setup" in (await issue.locator(".certloom-setup-v2-heading").inner_text()).lower(), "hierarchyExplicitlyOptional")
         await issue.close()
 
-        # Finish — cannot falsely claim completion before a real issued credential exists.
+        # Finish — explicit do-later is a complete setup state, not a fake requirement.
         finish = await browser.new_page(viewport={"width": 1050, "height": 800})
         await finish.set_content(fixture("finish"), wait_until="load")
-        await ck(await finish.get_by_text("One required step remains: issue the first real credential.", exact=True).count() == 1, "finishStatesRemainingRequirement")
-        await ck(await finish.get_by_text("Certloom has not created placeholder hierarchy records", exact=False).count() == 1, "finishNoPlaceholderRecords")
-        await ck(await finish.get_by_text("Setup complete", exact=False).count() == 0, "finishDoesNotClaimFalseCompletion")
+        await ck(await finish.get_by_text("Setup complete", exact=True).count() == 1, "finishStatesSetupComplete")
+        await ck(await finish.get_by_text("Certloom is ready. Issue your first credential when you are ready.", exact=True).count() == 1, "finishIssuanceDeferredHonestly")
+        await ck(await finish.get_by_text("no placeholder Program, Batch or credential was created", exact=False).count() == 1, "finishNoPlaceholderRecords")
+        await ck(await finish.get_by_text("One required step remains", exact=False).count() == 0, "finishNoObsoleteRequirement")
         await ck(await finish.locator(".certloom-setup-v2-next li").count() == 4, "profileChecklistVisible")
         await ck(await finish.locator(".certloom-setup-v2-footer").count() == 0, "finishNoDraftFooter")
         await finish.close()
@@ -309,7 +313,7 @@ async def run():
         print(f"\n{checks-len(failed)} passed, {len(failed)} failures")
         return 1
 
-    print("PASS  UI Phase 3 Setup Wizard v2 browser gate: focused shell, profiles, organization, field recommendations, mutually exclusive appearance, essential first-credential path, honest incomplete finish, mobile/RTL/accessibility")
+    print("PASS  UI Phase 3 Setup Wizard v2 browser gate: focused shell, profiles, organization, field recommendations, mutually exclusive appearance, real optional first-credential issuance path, honest deferred finish, mobile/RTL/accessibility")
     print(f"\n{checks} UI Phase 3 browser checks, 0 failures")
     return 0
 
