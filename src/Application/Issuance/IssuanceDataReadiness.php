@@ -198,7 +198,7 @@ final class IssuanceDataReadiness {
 		if ( $field_key && isset( $catalog[ $field_key ]['label'] ) ) { return (string) $catalog[ $field_key ]['label']; }
 		$map = array(
 			'credential.title' => __( 'Credential title', 'certloom' ), 'credential_title' => __( 'Credential title', 'certloom' ),
-			'credential.issue_date' => __( 'Issue date', 'certloom' ), 'issue_date' => __( 'Issue date', 'certloom' ),
+			'credential.issue_date' => __( 'Effective date', 'certloom' ), 'issue_date' => __( 'Effective date', 'certloom' ),
 			'credential.expiry_date' => __( 'Expiry date', 'certloom' ), 'expiry_date' => __( 'Expiry date', 'certloom' ),
 			'program.name' => __( 'Program', 'certloom' ), 'program.title' => __( 'Program title', 'certloom' ), 'program.code' => __( 'Program code', 'certloom' ),
 			'course_name' => __( 'Program title', 'certloom' ), 'program_name' => __( 'Program title', 'certloom' ),

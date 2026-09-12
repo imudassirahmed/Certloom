@@ -378,10 +378,10 @@ final class ManualIssuanceAdmin {
 	 * @return true|\WP_Error
 	 */
 	private function phase2_backend_compatibility_error( array $request ) {
-		$title = trim( sanitize_text_field( (string) ( $request['credential_title'] ?? '' ) ) );
-		if ( '' === $title ) {
-			return new \WP_Error( 'certloom_phase2_title_required', __( 'Enter a credential title before reviewing this credential.', 'certloom' ) );
-		}
+		// Title validity is domain logic, not a UI compatibility concern. Program-backed
+		// issuance may intentionally submit no explicit credential_title because the
+		// canonical EffectiveCredentialTitleResolver inherits the selected Program title.
+		// Independent/custom issuance is still rejected fail-closed by that resolver.
 		$presentation = sanitize_key( (string) ( $request['presentation_mode'] ?? 'details_only' ) );
 		if ( ! in_array( $presentation, array( 'details_only', 'image', 'design' ), true ) ) {
 			return new \WP_Error( 'certloom_phase2_presentation_invalid', __( 'Choose a supported credential appearance before reviewing.', 'certloom' ) );
@@ -520,7 +520,7 @@ final class ManualIssuanceAdmin {
 
 	/** @return void */
 	private function render_review( array $review ) {
-		$request = array_merge( (array) $review['request'], isset( $review['phase2_ui_request'] ) && is_array( $review['phase2_ui_request'] ) ? $review['phase2_ui_request'] : array() ); $recipient=(array)$review['recipient']; $program=(array)$review['program']; $template=(array)$review['template']; $revision=(array)$review['template_revision'];
+		$request = array_merge( isset( $review['phase2_ui_request'] ) && is_array( $review['phase2_ui_request'] ) ? $review['phase2_ui_request'] : array(), (array) $review['request'] ); $recipient=(array)$review['recipient']; $program=(array)$review['program']; $template=(array)$review['template']; $revision=(array)$review['template_revision'];
 		$presentation_mode = sanitize_key( (string) ( $request['presentation_mode'] ?? 'details_only' ) );
 		$presentation_label = 'image' === $presentation_mode ? __( 'Certificate image', 'certloom' ) : ( 'design' === $presentation_mode ? __( 'Certloom design', 'certloom' ) : __( 'Details only', 'certloom' ) );
 		$presentation_meta = 'image' === $presentation_mode ? __( 'Uploaded artwork is frozen as the credential appearance choice', 'certloom' ) : ( 'design' === $presentation_mode ? __( 'Published design frozen into this credential', 'certloom' ) : __( 'No certificate artwork; verification details remain authoritative', 'certloom' ) );

@@ -38,6 +38,9 @@ p432(false!==strpos($samples,"'credential.title' => 'Professional Credential Pro
 p432(false!==strpos($css,'.certloom-credential-basis')&&false!==strpos($css,'.certloom-program-primary-panel'),'Program-first credential semantics have dedicated premium layout styles');
 p432(false!==strpos($css,'.certloom-credential-custom-title[hidden]'),'conditional title panel has a fail-safe hidden-state rule');
 p432(false!==strpos($admin,"Inherited from the selected Program")&&false!==strpos($admin,"Custom title for this credential"),'Review screen communicates effective title provenance instead of hiding inheritance');
+
+p432(false===strpos($admin,'certloom_phase2_title_required')&&false===strpos($admin,'Enter a credential title before reviewing this credential.'),'admin compatibility layer no longer rejects a blank explicit title before the canonical Program-title resolver runs');
+p432(false!==strpos($admin,"array_merge( isset( \$review['phase2_ui_request'] )")&&false!==strpos($admin,", (array) \$review['request'] );"),'review presentation gives the canonical resolved request precedence over raw compose values');
 p432(false!==strpos($presenter, "'credential_title'")&&false!==strpos($presenter, '$credential_snapshot[\'title\']')&&false!==strpos($presenter, '$credential_title = $program_title'),'public profile presents the immutable credential title with Program-title fallback for older snapshots');
 p432(false!==strpos($render, '$profile[\'credential_title\']')&&false!==strpos($render, "__( 'Program', 'certloom' )"),'public credential hero uses the exact credential title and preserves a distinct Program fact when titles differ');
 echo "\n$pass alpha.4.32 Program/title source checks, $fail failures\n"; exit($fail?1:0);

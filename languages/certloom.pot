@@ -1744,7 +1744,6 @@ msgstr ""
 #: admin/views/list-certificates.php:126
 #: admin/views/setup-wizard.php:144
 #: includes/class-ecapla-certverify-fields.php:393
-#: src/Application/Issuance/IssuanceDataReadiness.php:201
 #: src/Application/Setup/PurposePresetEngine.php:124
 #: src/Application/Setup/PurposePresetEngine.php:143
 #: src/Application/Setup/PurposePresetEngine.php:236
@@ -11934,6 +11933,14 @@ msgstr ""
 msgid "Credential context"
 msgstr ""
 
+#: src/Application/Issuance/IssuanceDataReadiness.php:201
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:188
+#: src/Infrastructure/Admin/DomainAdmin.php:928
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:264
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:563
+msgid "Effective date"
+msgstr ""
+
 #: src/Application/Issuance/IssuanceDataReadiness.php:203
 #: src/Infrastructure/Admin/DomainAdmin.php:1607
 msgid "Program code"
@@ -13980,13 +13987,6 @@ msgstr ""
 
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:187
 msgid "Inherited design follows Global → Issuer → Program → Batch. Certloom will show the effective source after you choose a Program."
-msgstr ""
-
-#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:188
-#: src/Infrastructure/Admin/DomainAdmin.php:928
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:264
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:563
-msgid "Effective date"
 msgstr ""
 
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:189
@@ -18423,10 +18423,6 @@ msgstr ""
 msgid "Details-only credentials can be reviewed and issued without certificate artwork. Certloom-design credentials freeze the resolved published design. Uploaded-image credentials require a selected PNG or JPEG."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:383
-msgid "Enter a credential title before reviewing this credential."
-msgstr ""
-
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:387
 msgid "Choose a supported credential appearance before reviewing."
 msgstr ""
@@ -19332,12 +19328,12 @@ msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1067
 #: src/Infrastructure/Admin/TemplateAdmin.php:1117
-msgid "Expiry Date"
+msgid "Effective Date"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1067
 #: src/Infrastructure/Admin/TemplateAdmin.php:1117
-msgid "Issue Date"
+msgid "Expiry Date"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1067
