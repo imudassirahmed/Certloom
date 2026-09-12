@@ -86,6 +86,15 @@ iss(1===count($plainAddress)&&'missing'===($plainAddress[0]['status']??'')&&'cre
 $plainTokenRequest=base_request();$plainTokenRequest['custom_merge_fields']['address']='21 Clifton Road';$plainTokenReview=$plainTokenSvc->review($plainTokenRequest);
 iss(!is_wp_error($plainTokenReview)&&'21 Clifton Road'===($plainTokenReview['preview_merge_values']['address']??''),'one-off credential detail satisfies an explicitly required legacy plain design token');
 
+$recipientAliasStore=new IssFixtureStore();
+$recipientAliasStore->templates[4]['published_revision']['layout']['elements']=array_values(array_filter($recipientAliasStore->templates[4]['published_revision']['layout']['elements'],static function($element){return 'custom:membership_level'!==($element['token']??'');}));
+$recipientAliasStore->templates[4]['published_revision']['layout']['elements'][]=array('id'=>'98989898-9898-4989-8989-989898989898','type'=>'merge','x_mm'=>20,'y_mm'=>92,'width_mm'=>100,'height_mm'=>10,'z'=>4,'rotation_deg'=>0,'opacity'=>1,'token'=>'recipient.address','style'=>array('font_family'=>'sans-serif','font_size_pt'=>10,'font_weight'=>400,'italic'=>false,'color'=>'#000000','align'=>'left','vertical_align'=>'middle','direction'=>'auto','line_height'=>1.2,'letter_spacing_pt'=>0,'overflow'=>'shrink'));
+$recipientAliasSvc=service($recipientAliasStore,new IssNumbers());$recipientAliasMissing=base_request();unset($recipientAliasMissing['custom_merge_fields']['address']);
+$recipientAliasPreview=$recipientAliasSvc->draft_preview($recipientAliasMissing);$recipientAliasRows=is_wp_error($recipientAliasPreview)?array():($recipientAliasPreview['data_readiness']['fields']??array());$recipientAddress=array_values(array_filter($recipientAliasRows,static function($row){return is_array($row)&&'recipient.address'===($row['token']??'');}));
+iss(1===count($recipientAddress)&&'Credential details'===($recipientAddress[0]['source']??'')&&'credential_detail'===($recipientAddress[0]['action']??'')&&'address'===($recipientAddress[0]['field_key']??''),'unknown recipient.<key> Designer token is repaired into an actionable issued-only credential detail instead of dead-end context');
+$recipientAliasRequest=base_request();$recipientAliasRequest['custom_merge_fields']['address']='21 Clifton Road';$recipientAliasReview=$recipientAliasSvc->review($recipientAliasRequest);
+iss(!is_wp_error($recipientAliasReview)&&'21 Clifton Road'===($recipientAliasReview['preview_merge_values']['recipient.address']??''),'one-off credential detail satisfies the exact required legacy recipient.<key> token without changing Recipient profile');
+
 $credentialTokenStore=new IssFixtureStore();
 $credentialTokenStore->programs[2]['field_contract']=\Certloom\Application\Fields\ScopedFieldContract::empty_program(true);
 $credentialTokenStore->templates[4]['published_revision']['layout']['elements']=array_values(array_filter($credentialTokenStore->templates[4]['published_revision']['layout']['elements'],static function($element){return 'custom:membership_level'!==($element['token']??'');}));

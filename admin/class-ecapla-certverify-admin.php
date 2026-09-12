@@ -297,6 +297,7 @@ class Ecapla_CertVerify_Admin {
 			'designDataOpenDetails' => __( 'Open details', 'certloom' ),
 			'designDataChooseProgram' => __( 'Choose Program', 'certloom' ),
 			'designDataAddValue' => __( 'Add value', 'certloom' ),
+			'designDataCredentialDetails' => __( 'Credential details', 'certloom' ),
 			'credentialDetailsIndependent' => __( 'Add the credential-specific facts you want to store with this independent credential.', 'certloom' ),
 			'credentialDetailsProgram' => __( 'Program and Batch field rules appear here. Add one-off credential details below when this issuance or its design needs them.', 'certloom' ),
 			'addCredentialDetail' => __( 'Add detail', 'certloom' ),

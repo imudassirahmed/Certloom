@@ -10,6 +10,33 @@
 		return certloomText( 'contextMatches', '%d matches.' ).replace( '%d', String( count ) );
 	}
 
+	function certloomDesignCredentialDetailKey( field ) {
+		field = field && 'object' === typeof field ? field : {};
+		var explicit = String( field.field_key || '' ).toLowerCase().replace( /[^a-z0-9_-]/g, '' );
+		if ( explicit ) { return explicit; }
+		var token = String( field.token || '' ).trim().toLowerCase();
+		var match = token.match( /^credential\.custom\.([a-z][a-z0-9_-]{0,63})$/ ) || token.match( /^credential:([a-z][a-z0-9_-]{0,63})$/ ) || token.match( /^custom\.([a-z][a-z0-9_-]{0,63})$/ ) || token.match( /^credential\.([a-z][a-z0-9_-]{0,63})$/ ) || token.match( /^([a-z][a-z0-9_-]{0,63})$/ );
+		if ( match ) { return match[ 1 ]; }
+		match = token.match( /^recipient\.([a-z][a-z0-9_-]{0,63})$/ );
+		if ( match && [ 'name', 'first_name', 'middle_name', 'last_name', 'email', 'external_id' ].indexOf( match[ 1 ] ) === -1 ) { return match[ 1 ]; }
+		return '';
+	}
+
+	function certloomNormalizeDesignReadinessField( field ) {
+		var normalized = Object.assign( {}, field || {} );
+		if ( 'missing' !== String( normalized.status || '' ) ) { return normalized; }
+		var key = certloomDesignCredentialDetailKey( normalized );
+		if ( ! key ) { return normalized; }
+		var action = String( normalized.action || '' );
+		var source = String( normalized.source || '' );
+		if ( 'credential_detail' === action || 'context' === action || 'Credential context' === source ) {
+			normalized.action = 'credential_detail';
+			normalized.field_key = key;
+			normalized.source = certloomText( 'designDataCredentialDetails', 'Credential details' );
+		}
+		return normalized;
+	}
+
 	function initUsageProfilePresentation() {
 		var terms = certloomL10n.usageTerms && 'object' === typeof certloomL10n.usageTerms ? certloomL10n.usageTerms : {};
 		var profileLabel = String( certloomL10n.usageProfileLabel || '' ).trim();
@@ -813,6 +840,22 @@
 			}
 
 			function designAliasInput( targetKey ) { return form.querySelector( 'input[data-certloom-design-field-alias="' + targetKey + '"]' ); }
+			function credentialDetailMappingCandidates( targetKey ) {
+				var found = {};
+				independentCatalog.forEach( function ( candidate ) {
+					if ( ! candidate || ! candidate.key || candidate.key === targetKey ) { return; }
+					found[ candidate.key ] = { key: candidate.key, label: candidate.label || candidate.key };
+				} );
+				Array.prototype.forEach.call( form.querySelectorAll( '[data-certloom-scoped-value-key],[data-certloom-independent-value-key]' ), function ( input ) {
+					var key = String( input.getAttribute( 'data-certloom-scoped-value-key' ) || input.getAttribute( 'data-certloom-independent-value-key' ) || '' ).replace( /[^a-z0-9_-]/g, '' );
+					if ( ! key || key === targetKey ) { return; }
+					var row = input.closest( '[data-certloom-independent-field], .certloom-scoped-field-row' );
+					var labelNode = row ? row.querySelector( 'strong' ) : null;
+					var definition = independentCatalogByKey[ key ] || {};
+					found[ key ] = { key: key, label: String( ( labelNode && labelNode.textContent ) || definition.label || key ).replace( /\s*\*\s*$/, '' ) };
+				} );
+				return Object.keys( found ).sort( function ( a, b ) { return String( found[ a ].label ).localeCompare( String( found[ b ].label ) ); } ).map( function ( key ) { return found[ key ]; } );
+			}
 			function designAliasValue( targetKey ) { var input = designAliasInput( targetKey ); return input ? String( input.value || '' ) : ''; }
 			function setDesignAlias( targetKey, sourceKey ) {
 				var input = designAliasInput( targetKey );
@@ -846,7 +889,7 @@
 					button.addEventListener( 'click', function () { setDesignAlias( field._safeFieldKey, '' ); renderIndependentField( field._safeFieldKey, true, field.label || '' ); renderIndependentEmpty(); renderDesignDetailSuggestions( candidates ); form.dispatchEvent( new CustomEvent( 'certloom:issuance-data-changed', { bubbles: true } ) ); } );
 					actions.appendChild( button );
 
-					var mapCandidates = independentCatalog.filter( function ( candidate ) { return candidate && candidate.key && candidate.key !== field._safeFieldKey; } );
+					var mapCandidates = credentialDetailMappingCandidates( field._safeFieldKey );
 					if ( mapCandidates.length ) {
 						var mapping = document.createElement( 'label' ); mapping.className = 'certloom-design-required-detail__mapping';
 						var mapLabel = document.createElement( 'span' ); mapLabel.textContent = certloomText( 'designSuggestedMap', 'Assign existing detail' ); mapping.appendChild( mapLabel );
@@ -1551,7 +1594,7 @@
 		}
 		function renderReadiness( payload ) {
 			payload = payload && payload.data_readiness ? payload.data_readiness : { ready: true, fields: [], missing_count: 0 };
-			var fields = Array.isArray( payload.fields ) ? payload.fields : [];
+			var fields = Array.isArray( payload.fields ) ? payload.fields.map( certloomNormalizeDesignReadinessField ) : [];
 			var missingCount = parseInt( payload.missing_count || '0', 10 ) || 0;
 			var summaryText = ! missingCount ? certloomText( 'designDataReady', 'All design fields are ready.' ) : ( 1 === missingCount ? certloomText( 'designDataMissingOne', '1 design field still needs a value.' ) : String( certloomText( 'designDataMissingMany', '%d design fields still need values.' ) ).replace( '%d', String( missingCount ) ) );
 			if ( readiness ) { readiness.classList.toggle( 'has-missing', missingCount > 0 ); readiness.classList.toggle( 'is-ready', 0 === missingCount ); }

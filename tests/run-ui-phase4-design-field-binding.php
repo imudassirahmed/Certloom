@@ -24,6 +24,10 @@ a437( false !== strpos( $service, "'design_field_aliases' => \$request['design_f
 a437( false !== strpos( $service, 'array_key_exists( $target, $out )' ) && false !== strpos( $service, '$out[ $target ] = (string) $out[ $source ]' ), 'mapping cannot overwrite an explicitly supplied target value' );
 a437( false !== strpos( $service, '$base_count = count( $rows )' ) && false !== strpos( $service, "\$contract['_meta']['one_off'] = true" ), 'issued-only field contract records one-off extension without mutating reusable Program/Batch configuration' );
 a437( false !== strpos( $css, '.certloom-design-required-detail' ) && false !== strpos( $css, '.certloom-design-required-detail__mapping' ), 'design-required field actions have a dedicated responsive presentation contract' );
-a437( false !== strpos( $js, "candidate.key !== field._safeFieldKey") && false !== strpos( $js, 'renderIndependentField( sourceKey, true' ), 'Assign existing detail excludes self-mapping and exposes/focuses the chosen source field' );
+a437( false !== strpos( $js, 'credentialDetailMappingCandidates( field._safeFieldKey )' ) && false !== strpos( $js, 'key === targetKey' ) && false !== strpos( $js, 'renderIndependentField( sourceKey, true' ), 'Assign existing detail excludes self-mapping and exposes/focuses catalog, scoped and already-added credential details' );
+
+a437( false !== strpos( $manual, 'data-certloom-independent-detail-inputs') && strpos( $manual, 'data-certloom-independent-detail-inputs') < strpos( $manual, 'data-certloom-independent-detail-suggestions'), 'design-required suggestions render after the empty/current credential-detail list as requested' );
+a437( false !== strpos( $readiness, "0 === strpos( \$token, 'recipient.' )") && false !== strpos( $merge, "'recipient.' . \$key"), 'legacy unknown recipient.<key> design tokens become issued-only actionable details without mutating Recipient profile' );
+a437( false !== strpos( $js, 'certloomNormalizeDesignReadinessField') && false !== strpos( $js, "'Credential context' === source"), 'browser repairs legacy preview payloads that still report an addable custom design field as generic Credential context' );
 echo "\n" . ( $checks - $fail ) . " alpha.4.37 design-field binding source checks, $fail failures\n";
 exit( $fail ? 1 : 0 );

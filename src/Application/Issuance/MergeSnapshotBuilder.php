@@ -129,6 +129,12 @@ final class MergeSnapshotBuilder {
 			// every built-in credential.* key already created above.
 			$credential_token = 'credential.' . $key;
 			if ( in_array( $credential_token, $required, true ) && ! array_key_exists( $credential_token, $values ) ) { $values[ $credential_token ] = $scalar; }
+			// Historical/custom Designer tokens may use alternate bounded namespaces.
+			// Satisfy only the exact token explicitly required by this layout so a
+			// one-off issuance value cannot shadow canonical Recipient/Credential facts.
+			foreach ( array( 'recipient.' . $key, 'custom.' . $key, 'credential:' . $key, 'credential.custom.' . $key ) as $legacy_token ) {
+				if ( in_array( $legacy_token, $required, true ) && ! array_key_exists( $legacy_token, $values ) ) { $values[ $legacy_token ] = $scalar; }
+			}
 		}
 
 		foreach ( $required as $token ) {

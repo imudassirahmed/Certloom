@@ -88,6 +88,23 @@ final class IssuanceDataReadiness {
 				'field_key' => $field_key,
 			);
 		}
+		// Older/custom Designer layouts sometimes used recipient.<key> for a fact
+		// that was never part of Certloom's canonical Recipient vocabulary. Do not
+		// leave those requirements as a dead-end "Credential context" warning:
+		// treat the unknown key as an issued-only credential detail. Canonical
+		// Recipient tokens above continue to route to the Recipient profile.
+		if ( 0 === strpos( $token, 'recipient.' ) ) {
+			$field_key = sanitize_key( substr( $token, 10 ) );
+			if ( '' !== $field_key && preg_match( '/^[a-z][a-z0-9_-]{0,63}$/', $field_key ) ) {
+				$field = isset( $catalog[ $field_key ] ) && is_array( $catalog[ $field_key ] ) ? $catalog[ $field_key ] : array();
+				return array(
+					'label' => (string) ( $field['label'] ?? $this->humanize( $field_key ) ),
+					'source' => __( 'Credential details', 'certloom' ),
+					'action' => 'credential_detail',
+					'field_key' => $field_key,
+				);
+			}
+		}
 
 		$program = array( 'program.name', 'program.title', 'program.code', 'course_name', 'program_name' );
 		if ( in_array( $token, $program, true ) ) {
@@ -120,6 +137,21 @@ final class IssuanceDataReadiness {
 					'field_key' => $field_key,
 				);
 			}
+		}
+		// Accept bounded historical/custom credential-detail namespaces used by
+		// Designer power users. They all resolve to one issued-only field key and
+		// are frozen with the Credential Version; no mutable Recipient row is changed.
+		foreach ( array( 'credential.custom.' => 18, 'credential:' => 11, 'custom.' => 7 ) as $prefix => $offset ) {
+			if ( 0 !== strpos( $token, $prefix ) ) { continue; }
+			$field_key = sanitize_key( substr( $token, $offset ) );
+			if ( '' === $field_key || ! preg_match( '/^[a-z][a-z0-9_-]{0,63}$/', $field_key ) ) { continue; }
+			$field = isset( $catalog[ $field_key ] ) && is_array( $catalog[ $field_key ] ) ? $catalog[ $field_key ] : array();
+			return array(
+				'label' => (string) ( $field['label'] ?? $this->humanize( $field_key ) ),
+				'source' => __( 'Credential details', 'certloom' ),
+				'action' => 'credential_detail',
+				'field_key' => $field_key,
+			);
 		}
 		if ( 'score' === $token && isset( $catalog['score'] ) && is_array( $catalog['score'] ) ) {
 			return array( 'label' => (string) ( $catalog['score']['label'] ?? __( 'Score', 'certloom' ) ), 'source' => __( 'Credential details', 'certloom' ), 'action' => 'credential_detail', 'field_key' => 'score' );
