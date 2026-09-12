@@ -93,9 +93,9 @@ $repo_source=file_get_contents(dirname(__DIR__).'/src/Infrastructure/Repository/
 $admin_source=file_get_contents(dirname(__DIR__).'/src/Infrastructure/Admin/TemplateAdmin.php');
 $status_source=file_get_contents(dirname(__DIR__).'/includes/class-ecapla-certverify-system-status.php');
 $coordinator_source=file_get_contents(dirname(__DIR__).'/src/Infrastructure/Rendering/ArtifactRenderCoordinator.php');
-rag_check(false!==strpos($repo_source,'RendererAuthorityGate')&&false!==strpos($repo_source,'publication_status()'),'Template publication must consult release-bound renderer authority.');
+rag_check(false===strpos($repo_source,'publication_status()')&&false===strpos($repo_source,'certloom_template_publish_renderer_gate'),'Template publication is decoupled from artifact renderer authority.');
 rag_check(false!==strpos($repo_source,'published_revision_id')&&false!==strpos($repo_source,'certloom_template_stale_revision'),'Accepted publication must advance only reviewed immutable current revision.');
-rag_check(false!==strpos($admin_source,'admin_post_certloom_template_publish')&&false!==strpos($admin_source,'expected_revision_id')&&false!==strpos($admin_source,'expected_revision_sha256'),'Gated Template admin must carry exact revision ID + hash proof into publication.');
+rag_check(false!==strpos($admin_source,'admin_post_certloom_template_publish')&&false!==strpos($admin_source,'expected_revision_id')&&false!==strpos($admin_source,'expected_revision_sha256'),'Template admin must carry exact revision ID + hash proof into publication.');
 rag_check(false!==strpos($status_source,'renderer_authority_check')&&false!==strpos($status_source,'no WordPress option can bypass'),'System Status must expose renderer authority without mutable bypass.');
 rag_check(false!==strpos($coordinator_source,'ArtifactAuthorityGateInterface')&&false!==strpos($coordinator_source,'artifact_status( $format, $this->registry )'),'Artifact coordinator must enforce runtime authority before renderer execution.');
 rag_check(is_file(dirname(__DIR__).'/resources/renderer/README.txt'),'Production package must document immutable authority.');

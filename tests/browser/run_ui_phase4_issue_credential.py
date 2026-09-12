@@ -130,6 +130,8 @@ async def run():
             await page.locator('.certloom-additional-details > summary').click()
         pfbox=await pfield.bounding_box(); formbox=await page.locator('.certloom-issue-v2-form').bounding_box()
         await ck(bool(pfbox and formbox and pfbox['height'] < formbox['height']*.75),'appearancePanelDoesNotStretchWithExpandedDetails')
+        pstyle=await pfield.evaluate('(e)=>({position:getComputedStyle(e).position,overflowY:getComputedStyle(e).overflowY,maxHeight:getComputedStyle(e).maxHeight})')
+        await ck(pstyle['position']=='static' and pstyle['overflowY']=='visible' and pstyle['maxHeight']=='none','appearancePanelUsesPageScrollWithoutNestedScrollbar')
         technical=page.locator('.certloom-issue-technical-status')
         await ck(await technical.count()==1 and not await technical.get_attribute('open'),'technicalStatusCollapsed')
         await ck(await technical.evaluate('(e)=>e.compareDocumentPosition(document.querySelector(".certloom-issue-v2-card")) & Node.DOCUMENT_POSITION_PRECEDING')!=0,'technicalStatusAfterCompose')
@@ -181,7 +183,7 @@ async def run():
         await ck(await mobile.locator('.certloom-issue-actions .button').evaluate('(e)=>Math.round(e.getBoundingClientRect().width)')>300,'mobilePrimaryActionFullWidth')
         await mobile.close(); await browser.close()
     if failed:
-        print('FAIL  alpha.4.34 Issue Credential browser gate:',', '.join(failed)); print(f'\n{checks-len(failed)} passed, {len(failed)} failures'); return 1
-    print('PASS  alpha.4.34 Issue Credential browser gate: lifecycle-aware Program/Independent issuance, REST-authenticated real-data design preview, bounded Subjects/Results layout and Additional-details technical fields')
-    print(f'\n{checks} alpha.4.34 Issue Credential browser checks, 0 failures'); return 0
+        print('FAIL  alpha.4.35 Issue Credential browser gate:',', '.join(failed)); print(f'\n{checks-len(failed)} passed, {len(failed)} failures'); return 1
+    print('PASS  alpha.4.35 Issue Credential browser gate: lifecycle-aware Program/Independent issuance, REST-authenticated real-data design preview, normal-page certificate appearance, bounded Subjects/Results layout and Additional-details technical fields')
+    print(f'\n{checks} alpha.4.35 Issue Credential browser checks, 0 failures'); return 0
 raise SystemExit(asyncio.run(run()))

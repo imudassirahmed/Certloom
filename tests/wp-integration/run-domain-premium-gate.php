@@ -89,7 +89,10 @@ try {
 	cl_pg_assert($first_revision===$second_revision,'Unchanged template draft created an unnecessary immutable revision.');
 	$stale=$template_repo->save_revision($template,TemplateDefaults::blank_a4_landscape(),get_current_user_id(),$first_revision+999);
 	cl_pg_assert(is_wp_error($stale) && 'certloom_template_stale_revision'===$stale->get_error_code(),'Stale template revision proof was not rejected.');
-	$publish=$template_repo->publish($template); cl_pg_assert(is_wp_error($publish) && 'certloom_template_publish_renderer_gate'===$publish->get_error_code(),'Template publishing bypassed the renderer gate.');
+	$publish_without_review=$template_repo->publish($template); cl_pg_assert(is_wp_error($publish_without_review) && 'certloom_template_publish_review_required'===$publish_without_review->get_error_code(),'Template publishing accepted a request without exact revision review proof.');
+	$publish=cl_pg_ok($template_repo->publish($template,$first_revision,(string)$template_row['current_revision']['layout_sha256']),'Template publication failed without artifact authority');
+	$published_row=cl_pg_ok($template_repo->find($template),'Published Template read failed');
+	cl_pg_assert((int)$published_row['published_revision_id']===$first_revision,'Template publication did not advance the reviewed immutable revision.');
 	$issuer=cl_pg_ok($issuer_repo->create(array('name'=>'Premium Gate '.$suffix,'slug'=>'premium-gate-'.$suffix)),'Issuer create failed'); $cleanup['issuer']=$issuer;
 	$recipient=cl_pg_ok($recipient_repo->create(array('display_name'=>'Premium Gate Recipient '.$suffix)),'Recipient create failed'); $cleanup['recipient']=$recipient;
 	$program=cl_pg_ok($program_repo->create(array('issuer_id'=>$issuer,'code'=>'PG-'.strtoupper($suffix),'title'=>'Premium Gate Program')),'Program create failed'); $cleanup['program']=$program;
@@ -142,7 +145,7 @@ try {
 	echo "PASS  all next-generation tables use InnoDB\n";
 	echo "PASS  recipient privacy identity storage is present and private to normalized storage\n";
 	echo "PASS  critical unique/non-unique indexes match the domain contract\n";
-	echo "PASS  template identity/revision storage, assignment hierarchy/concurrency and renderer publication gate\n";
+	echo "PASS  template identity/revision storage, assignment hierarchy/concurrency and reviewed publication\n";
 	echo "PASS  Transaction wrapper performs a real database rollback\n";
 	echo "PASS  certificate-number ownership and Version lineage constraints\n";
 	echo "PASS  invalid immutable snapshot is side-effect free\n";

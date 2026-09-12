@@ -14,14 +14,13 @@ use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Infrastructure\Database\SchemaManager;
 use Certloom\Infrastructure\Database\Transaction;
 use Certloom\Application\Contract\TransactionInterface;
-use Certloom\Infrastructure\Rendering\RendererAuthorityGate;
 use Certloom\Infrastructure\Media\PortableDesignAssets;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/** Versioned template persistence. Published authority remains renderer-gated. */
+/** Versioned template persistence. Publication controls design availability; artifact rendering is gated separately. */
 final class TemplateRepository {
 	const SOURCE_MANUAL = 'manual';
 	const SOURCE_IMPORT = 'import';
@@ -30,13 +29,11 @@ final class TemplateRepository {
 	/** @var LayoutValidator */ private $layouts;
 	/** @var CanonicalJson */ private $json;
 	/** @var TransactionInterface */ private $transaction;
-	/** @var RendererAuthorityGate */ private $renderer_authority;
 
-	public function __construct( ?LayoutValidator $layouts = null, ?CanonicalJson $json = null, ?TransactionInterface $transaction = null, ?RendererAuthorityGate $renderer_authority = null ) {
+	public function __construct( ?LayoutValidator $layouts = null, ?CanonicalJson $json = null, ?TransactionInterface $transaction = null, $legacy_renderer_authority = null ) {
 		$this->layouts             = $layouts ?: new LayoutValidator();
 		$this->json                = $json ?: new CanonicalJson();
 		$this->transaction         = $transaction ?: new Transaction();
-		$this->renderer_authority  = $renderer_authority ?: new RendererAuthorityGate();
 	}
 
 	/** @param array<string,mixed> $data @return int|\WP_Error */
@@ -223,10 +220,6 @@ final class TemplateRepository {
 	public function publish( $template_id, $expected_revision_id = 0, $expected_revision_sha256 = '' ) {
 		$template_id = absint( $template_id );
 		if ( ! $template_id ) { return new \WP_Error( 'certloom_template_id_required', __( 'A valid template is required.', 'certloom' ) ); }
-		$authority = $this->renderer_authority->publication_status();
-		if ( empty( $authority['accepted'] ) ) {
-			return new \WP_Error( 'certloom_template_publish_renderer_gate', __( 'Template publishing remains disabled until this Certloom release ships with accepted production-renderer authority.', 'certloom' ), array( 'template_id' => $template_id, 'renderer_authority_reason' => (string) ( $authority['reason'] ?? 'unknown' ) ) );
-		}
 		$expected_revision_id = absint( $expected_revision_id );
 		$expected_revision_sha256 = strtolower( trim( (string) $expected_revision_sha256 ) );
 		if ( ! $expected_revision_id || ! preg_match( '/\A[a-f0-9]{64}\z/', $expected_revision_sha256 ) ) {

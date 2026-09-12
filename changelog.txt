@@ -1,3 +1,10 @@
+= 1.7.0-alpha.4.35 =
+* Remove the nested scrollbar from Issue Credential's Certificate appearance column; the full compose surface now follows the normal WordPress page scroll while retaining responsive containment.
+* Decouple certificate-design publication from production artifact-renderer authority: a reviewed immutable design revision can be published for Program/issuance selection even while PDF/PNG/JPEG downloads remain separately fail-closed behind renderer authority.
+* Publish the untouched first ten starter designs for first-use selection without waiting for artifact authority, while continuing to preserve customer-customized drafts and exact revision/SHA publication proof.
+* Fix a Designer recovery-autosave/manual-save race that could leave a freshly saved design showing a stale “Recovery checkpoint not applied” warning after adding a field; late autosaves now re-check their immutable base and discard only their own stale recovery session.
+* Preserve alpha.4.34 issuance readiness/authentication/layout corrections and all alpha.4.33 lifecycle/repeat-policy behavior; renderer artifact authority and normalized-domain authority remain intentionally absent while Phase 4 continues.
+
 = 1.7.0-alpha.4.34 =
 * Fix live Issue Credential preview authentication by keeping the Manual Issuance action nonce out of REST request parameters and using the dedicated WordPress REST nonce header; stale REST sessions now show actionable refresh guidance instead of raw “Cookie check failed” text.
 * Move specialist Technical custom fields out of the primary Credential details surface and under Additional details, preserving the modern Program/Batch scoped-field and Independent credential-detail flows as the primary path.

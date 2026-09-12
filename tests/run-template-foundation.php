@@ -61,12 +61,12 @@ tpl_has($files['schema'],'UNIQUE KEY template_revision (template_id,revision_num
 tpl_has($files['schema'],'UNIQUE KEY scope_assignment (scope_type,scope_id)','one deterministic assignment per scope');
 tpl_has($files['repo'],'FOR UPDATE','template draft updates use row locking');
 tpl_has($files['repo'],'certloom_template_stale_revision','stale revision saves fail closed');
-tpl_has($files['repo'],'certloom_template_publish_renderer_gate','publishing remains renderer-gated');
+tpl_check(false===strpos($files['repo'],'certloom_template_publish_renderer_gate'),'design publication is not blocked by artifact renderer authority');
 tpl_has($files['repo'],'TemplateAssignmentPolicy','template repository delegates assignment hierarchy to the shared policy');
 tpl_has($files['assignment_policy'],"array( self::SCOPE_BATCH, self::SCOPE_PROGRAM, self::SCOPE_ISSUER )",'shared assignment policy preserves batch/program/issuer precedence');
 tpl_has($files['admin'],'expected_revision_id','admin carries optimistic revision proof');
-tpl_has($files['admin'],'publication_status()','admin consults renderer publication authority before exposing Publish');
-tpl_has($files['admin'],'Publish design','admin exposes one customer-facing publish path while keeping renderer authority');
+tpl_has($files['admin'],'Publish design','admin exposes publication from a valid immutable revision independently of artifact rendering');
+tpl_has($files['admin'],'Production downloads unavailable','admin may still communicate artifact/download authority separately from design publication');
 tpl_has($files['plugin'],'TemplateAdmin','gated template admin is wired');
 tpl_has($files['backup'],'const VERSION = 4','template-aware backup is v4');
 tpl_has($files['backup'],'const PRIVACY_VERSION = 3','v3 backups remain explicitly supported');
@@ -79,6 +79,6 @@ tpl_has($files['uninstall'],'certloom_template_assignments','uninstall owns temp
 tpl_has($files['uninstall'],'certloom_template_revisions','uninstall owns revisions');
 tpl_has($files['uninstall'],'certloom_templates','uninstall owns templates');
 
-echo "PASS  TPL-01 versioned template foundation is deterministic, portable and renderer-gated\n";
+echo "PASS  TPL-01 versioned template foundation is deterministic, portable and publication/artifact boundaries are separated\n";
 echo "PASS  template revisions, restore ownership, backup compatibility and stale-edit safety remain fail-closed\n\n";
 echo $checks . " checks, 0 failures\n";

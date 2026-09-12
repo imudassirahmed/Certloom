@@ -33,9 +33,9 @@ $files=array(
 );
 foreach($files as $key=>$source){ t54(is_string($source)&&''!==$source,'source '.$key.' available'); }
 
-// Publication authority is exact-review-bound and still renderer-gated.
-t54has($files['repo'],'publication_status()','publication still consults immutable renderer release authority');
-t54has($files['repo'],'certloom_template_publish_renderer_gate','renderer authority remains fail-closed');
+// Publication is exact-review-bound; artifact generation remains renderer-gated elsewhere.
+t54not($files['repo'],'certloom_template_publish_renderer_gate','design publication is not blocked by renderer artifact authority');
+t54not($files['repo'],'publication_status()','Template repository does not conflate design availability with renderer release authority');
 t54has($files['repo'],'$expected_revision_sha256','publication accepts exact reviewed layout hash');
 t54has($files['repo'],'certloom_template_publish_review_required','direct publication callers cannot omit review proof');
 t54has($files['repo'],'certloom_template_publish_review_stale','hash drift/stale review fails closed');
@@ -44,8 +44,8 @@ t54has($files['repo'],'hash_equals( strtolower( (string) $verified[\'layout_sha2
 t54has($files['admin'],'expected_revision_sha256','admin carries exact revision hash into publication');
 t54has($files['admin'],'Publish design','admin exposes a single plain-language publish action');
 t54not($files['admin'],'Publish reviewed revision','technical review wording is not the primary customer publish action');
-t54has($files['admin'],'publication_status()','admin cannot bypass missing renderer authority');
-t54has($files['admin'],'Publishing is unavailable until renderer authority is available.','admin explains a closed renderer publication boundary without faking success');
+t54not($files['admin'],'Publishing is unavailable until renderer authority is available.','admin no longer blocks design publication because production artifacts are not yet authorized');
+t54has($files['admin'],'Save a valid design revision before publishing.','admin only disables publication when there is no valid revision to publish');
 
 // Published revision is loaded independently and integrity checked.
 t54has($files['repo'],'public function find_published','published-only read boundary exists');
@@ -89,6 +89,6 @@ t54has($files['css'],'focus-visible','new controls retain visible keyboard focus
 t54has($files['css'],'@media (max-width: 782px)','new lifecycle UI has mobile rules');
 t54has($files['css'],'prefers-reduced-motion','new lifecycle UI respects reduced motion');
 
-echo "PASS  1.6.54 Template lifecycle is explicit, non-destructive and renderer-honest\n";
+echo "PASS  1.6.54 Template lifecycle is explicit, non-destructive and separates publication from artifact authority\n";
 echo "PASS  publication is revision+SHA reviewed, duplicates are fresh drafts, archived Templates are read-only, and issuance has a published-only resolver\n\n";
 echo $checks . " checks, 0 failures\n";

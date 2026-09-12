@@ -86,6 +86,15 @@ final class TemplateDesignerAutosave {
 		if ( ! is_string( $stored ) || ! hash_equals( hash( 'sha256', $encoded ), hash( 'sha256', $stored ) ) ) {
 			return new \WP_Error( 'certloom_designer_autosave_store_failed', __( 'Designer autosave could not verify the stored recovery checkpoint.', 'certloom' ) );
 		}
+		// A manual save can advance the immutable revision while an already-started
+		// autosave request is finishing. Re-check the exact base after storage so
+		// that late request cannot leave a stale recovery warning on the freshly
+		// saved Designer screen. Discard only this editing session's checkpoint.
+		$still_current = $this->current_base( $template_id, $expected_revision_id, $expected_revision_sha256 );
+		if ( is_wp_error( $still_current ) ) {
+			$this->discard( $template_id, $user_id, $session_id );
+			return $still_current;
+		}
 		return array( 'status' => 'saved', 'layout_sha256' => $layout_sha256, 'saved_at_gmt' => $record['saved_at_gmt'], 'base_revision_id' => $expected_revision_id );
 	}
 

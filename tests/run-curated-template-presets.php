@@ -49,7 +49,7 @@ $root=dirname(__DIR__);$service=file_get_contents($root.'/src/Application/Templa
 c76(false!==strpos($service,'array_merge( $this->catalog->all(), $this->curated_catalog->all() )'),'factory synchronization includes legacy plus curated catalogs');
 c76(false!==strpos($service,'definition_for_key'),'factory reset resolves both historical and curated stable identities');
 c76(false!==strpos($service,'starter_definitions') && false!==strpos($service,'array_slice( $this->curated_catalog->all(), 0, $limit )'),'starter setup set is the first ten stable premium curated designs');
-c76(false!==strpos($service,'ensure_starter_publications') && false!==strpos($service,'RendererAuthorityGate') && false!==strpos($service,"'deferred' => true"),'starter publication is fail-closed behind exact renderer authority');
+c76(false!==strpos($service,'ensure_starter_publications') && false===strpos($service,'RendererAuthorityGate') && false!==strpos($service,"'starter_publication_ready'"),'starter designs publish for first-use selection independently of production artifact authority');
 c76(false!==strpos($service,'TemplateRepository::SOURCE_PRESET') && false!==strpos($service,"'skipped_customized'"),'starter auto-publication protects customer-customized revisions');
 c76(false!==strpos($admin,'Certificate library') && false!==strpos($admin,'Built-in Certloom collection') && false===strpos($admin,'TPLUX-02'),'Design workspace uses the approved customer-facing certificate-library identity without milestone-code leakage');
 

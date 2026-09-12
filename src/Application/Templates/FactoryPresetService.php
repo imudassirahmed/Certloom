@@ -2,7 +2,6 @@
 namespace Certloom\Application\Templates;
 
 use Certloom\Infrastructure\Repository\TemplateRepository;
-use Certloom\Infrastructure\Rendering\RendererAuthorityGate;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -102,10 +101,11 @@ final class FactoryPresetService {
 	}
 
 	/**
-	 * Publish the initial premium starter set when, and only when, the exact
-	 * installed production payload carries accepted renderer publication
-	 * authority. Existing customer edits and later unpublished changes are never
-	 * auto-published. Visual-development builds therefore defer safely.
+	 * Publish the initial premium starter set so first-use Program and issuance
+	 * selectors are useful immediately. Publication only controls design
+	 * availability; production PDF/PNG/JPEG artifact authority remains a
+	 * separate fail-closed renderer concern. Existing customer edits and later
+	 * unpublished changes are never auto-published.
 	 *
 	 * @return array<string,mixed>|\WP_Error
 	 */
@@ -113,12 +113,7 @@ final class FactoryPresetService {
 		$seed = $this->ensure_current( $actor_user_id );
 		if ( is_wp_error( $seed ) ) { return $seed; }
 
-		$authority = ( new RendererAuthorityGate() )->publication_status();
-		if ( empty( $authority['accepted'] ) ) {
-			return array( 'published' => 0, 'already_published' => 0, 'skipped_customized' => 0, 'deferred' => true, 'reason' => (string) ( $authority['reason'] ?? 'renderer_authority_unavailable' ) );
-		}
-
-		$result = array( 'published' => 0, 'already_published' => 0, 'skipped_customized' => 0, 'deferred' => false, 'reason' => 'publication_authorized' );
+		$result = array( 'published' => 0, 'already_published' => 0, 'skipped_customized' => 0, 'deferred' => false, 'reason' => 'starter_publication_ready' );
 		foreach ( $this->starter_definitions( $limit ) as $definition ) {
 			$template = $this->templates->find_by_machine_key( (string) $definition['machine_key'] );
 			if ( is_wp_error( $template ) ) { return $template; }
