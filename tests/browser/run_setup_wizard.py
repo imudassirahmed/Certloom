@@ -79,7 +79,7 @@ async def run():
         # Profile — nine UX presets, live contextual hierarchy help, no subcategory detour.
         profile = await browser.new_page(viewport={"width": 1280, "height": 900})
         await profile.set_content(fixture("profile"), wait_until="load")
-        await ck(await profile.locator(".certloom-setup-v2-progress-step").count() == 6, "sixDecisionSteps")
+        await ck(await profile.locator(".certloom-setup-v2-progress-step").count() == 7, "sevenDecisionSteps")
         await ck(
             "Profile" in await profile.locator('.certloom-setup-v2-progress-step[aria-current="step"]').inner_text(),
             "profileCurrent",
@@ -228,7 +228,32 @@ async def run():
         await ck(await design_select.input_value() == "0", "imageModeKeepsDesignCleared")
         await appearance.close()
 
-        # First credential — essentials only; hierarchy stays out of required onboarding path.
+        # Context & data — design requirements and active profile terminology drive onboarding.
+        context = await browser.new_page(viewport={"width": 1050, "height": 900})
+        await context.set_content(fixture("context"), wait_until="load")
+        await ck(
+            "Context & data" in await context.locator('.certloom-setup-v2-progress-step[aria-current="step"]').inner_text(),
+            "contextCurrent",
+        )
+        await ck(await context.get_by_text("Active profile · ISO / Management Systems", exact=True).count() == 1, "contextProfileVisible")
+        await ck(await context.get_by_text("Certification body", exact=True).count() >= 1, "isoIssuerVocabulary")
+        await ck(await context.get_by_text("Scheme / standard / service line", exact=True).count() >= 1, "isoProgramVocabulary")
+        await ck(await context.get_by_text("Audit / issuance cycle", exact=True).count() >= 1, "isoBatchVocabulary")
+        await ck(await context.get_by_text("Authorized certification authority", exact=True).count() >= 1, "isoSignerVocabulary")
+        await ck(await context.locator('input[name="setup_credential_values[address]"][required]').count() == 1, "designAddressOnboardingField")
+        await ck(await context.get_by_text("Required by design", exact=True).count() >= 3, "designRequiredBadges")
+        await ck(await context.get_by_text("Collected with the recipient on the next step", exact=True).count() == 1, "recipientRequirementsDeferredCorrectly")
+        program = context.locator('[data-certloom-setup-program]')
+        batch = context.locator('[data-certloom-setup-batch]')
+        await program.select_option("11")
+        await context.wait_for_timeout(20)
+        await ck(await context.locator('select[name="setup_issuer_id"]').input_value() == "5", "programAutoSelectsIssuer")
+        await ck(not await batch.locator('option[value="21"]').is_disabled(), "matchingBatchAvailable")
+        await ck(await batch.locator('option[value="22"]').is_disabled(), "otherProgramBatchDisabled")
+        await ck(await context.locator('button[value="skip_step"][formnovalidate]').count() == 1, "contextSkipLater")
+        await context.close()
+
+        # First credential — recipient facts and effective date complete the real issuance.
         issue = await browser.new_page(viewport={"width": 1050, "height": 800})
         await issue.set_content(fixture("issue"), wait_until="load")
         await ck(
@@ -236,22 +261,20 @@ async def run():
             "firstCredentialCurrent",
         )
         await ck(await issue.locator('input[name="first_recipient_name"][required]').count() == 1, "recipientRequired")
-        await ck(await issue.locator('input[name="credential_title"][required]').count() == 1, "credentialTitleRequired")
-        await ck(await issue.locator('input[name="issue_date"][required]').count() == 1, "issueDateRequired")
-        await ck(await issue.locator('input[name="first_recipient_email"]').count() == 1, "recipientEmailOptional")
+        await ck(await issue.locator('input[name="credential_title"][required]').count() == 1, "independentCredentialTitleRequired")
+        await ck(await issue.locator('input[name="issue_date"][required]').count() == 1, "effectiveDateRequired")
+        await ck(await issue.get_by_text("Effective date", exact=True).count() == 1, "effectiveDateTerminology")
+        await ck(await issue.locator('input[name="first_recipient_email"]').count() == 1, "recipientEmailAvailable")
+        await ck(await issue.locator('input[name="first_recipient_external_id"][required]').count() == 1, "designRecipientRequirementCollected")
         await ck(await issue.locator('button[value="skip_step"][formnovalidate]').count() == 1, "issueDoLater")
-        prohibited = await issue.locator(
-            '[name="program_id"],[name="program_title"],[name="batch_id"],[name="issuer_id"],[name="signer_id"],[name="numbering_mode"],[name="backup_mode"]'
-        ).count()
-        await ck(prohibited == 0, "noHierarchyOrLegacySetupFields")
-        await ck(
-            await issue.get_by_text("Quick first credential", exact=True).count() == 1,
-            "canonicalQuickIssuanceVisible",
-        )
+        prohibited = await issue.locator('[name="numbering_mode"],[name="backup_mode"]').count()
+        await ck(prohibited == 0, "noLegacyPolicyFields")
+        await ck(await issue.get_by_text("Ready for a real credential", exact=True).count() == 1, "canonicalIssuanceVisible")
         await ck(await issue.get_by_text("Independent credential", exact=True).count() == 1, "independentBasisExplicit")
         await ck(await issue.get_by_text("Issue first credential", exact=True).count() == 1, "realIssueActionVisible")
+        await ck(await issue.get_by_text("Review context & data", exact=True).count() == 1, "contextReviewLinkVisible")
+        await ck(await issue.get_by_text("Active profile · ISO / Management Systems", exact=True).count() == 1, "issueProfileVisible")
         await ck(await issue.get_by_text("Standalone issuance connection is still being implemented", exact=False).count() == 0, "noObsoleteBackendGap")
-        await ck("remain optional during setup" in (await issue.locator(".certloom-setup-v2-heading").inner_text()).lower(), "hierarchyExplicitlyOptional")
         await issue.close()
 
         # Finish — explicit do-later is a complete setup state, not a fake requirement.
@@ -313,7 +336,7 @@ async def run():
         print(f"\n{checks-len(failed)} passed, {len(failed)} failures")
         return 1
 
-    print("PASS  UI Phase 3 Setup Wizard v2 browser gate: focused shell, profiles, organization, field recommendations, mutually exclusive appearance, real optional first-credential issuance path, honest deferred finish, mobile/RTL/accessibility")
+    print("PASS  UI Phase 3 Setup Wizard v2 browser gate: focused shell, profiles, organization, field recommendations, mutually exclusive appearance, design-driven context/data, real optional first-credential issuance, honest deferred finish, mobile/RTL/accessibility")
     print(f"\n{checks} UI Phase 3 browser checks, 0 failures")
     return 0
 

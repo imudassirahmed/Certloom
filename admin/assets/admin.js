@@ -1149,6 +1149,33 @@
 			syncPresentation();
 		}
 
+
+		var contextForm = root.querySelector( '[data-certloom-setup-context]' );
+		if ( contextForm ) {
+			var programSelect = contextForm.querySelector( '[data-certloom-setup-program]' );
+			var batchSelect = contextForm.querySelector( '[data-certloom-setup-batch]' );
+			var issuerSelect = contextForm.querySelector( 'select[name="setup_issuer_id"]' );
+			function syncSetupContext() {
+				var programId = programSelect ? String( programSelect.value || '' ) : '';
+				if ( batchSelect ) {
+					Array.prototype.forEach.call( batchSelect.options, function ( option ) {
+						if ( ! option.value ) { option.hidden = false; option.disabled = false; return; }
+						var belongs = !!programId && option.getAttribute( 'data-program-id' ) === programId;
+						option.hidden = !belongs; option.disabled = !belongs;
+					} );
+					var selectedBatch = batchSelect.options[ batchSelect.selectedIndex ];
+					if ( selectedBatch && selectedBatch.value && selectedBatch.disabled ) { batchSelect.value = '0'; }
+				}
+				if ( programSelect && issuerSelect ) {
+					var selected = programSelect.options[ programSelect.selectedIndex ];
+					var programIssuer = selected ? String( selected.getAttribute( 'data-issuer-id' ) || '' ) : '';
+					if ( programIssuer ) { Array.prototype.some.call( issuerSelect.options, function ( option ) { if ( option.value === programIssuer ) { issuerSelect.value = programIssuer; return true; } return false; } ); }
+				}
+			}
+			if ( programSelect ) { programSelect.addEventListener( 'change', syncSetupContext ); }
+			syncSetupContext();
+		}
+
 		Array.prototype.forEach.call( root.querySelectorAll( '[data-copy-text]' ), function ( button ) {
 			button.addEventListener( 'click', function () {
 				var text = button.getAttribute( 'data-copy-text' ) || '';

@@ -690,6 +690,19 @@ class Ecapla_CertVerify_Admin {
 		if ( in_array( $action, array( 'save_step', 'skip_step' ), true ) ) {
 			$step = isset( $_POST['wizard_step'] ) ? sanitize_key( wp_unslash( $_POST['wizard_step'] ) ) : '';
 			$next = isset( $_POST['wizard_next_step'] ) ? sanitize_key( wp_unslash( $_POST['wizard_next_step'] ) ) : '';
+			if ( 'save_step' === $action && 'context' === $step ) {
+				$patch = $this->setup_wizard_draft_request( $step );
+				if ( ! empty( $_POST['wizard_finish_later'] ) ) {
+					$result = Ecapla_CertVerify_Onboarding::save_wizard_draft_only( 'context', $patch );
+					if ( is_wp_error( $result ) ) { $this->redirect_error( $result->get_error_message(), $base ); }
+					wp_safe_redirect( add_query_arg( 'certloom_wizard_saved', '1', admin_url( 'admin.php?page=' . self::DASHBOARD_PAGE ) ) );
+					exit;
+				}
+				$state = Ecapla_CertVerify_Onboarding::get_state();
+				$merged = array_merge( is_array( $state['wizard_draft'] ?? null ) ? $state['wizard_draft'] : array(), $patch );
+				$required = $this->validate_setup_wizard_context_requirements( $merged );
+				if ( is_wp_error( $required ) ) { $this->redirect_error( $required->get_error_message(), add_query_arg( 'step', 'context', $base ) ); }
+			}
 			if ( 'save_step' === $action && 'issue' === $step ) {
 				$patch = $this->setup_wizard_draft_request( $step );
 				if ( ! empty( $_POST['wizard_finish_later'] ) ) {
@@ -738,11 +751,236 @@ class Ecapla_CertVerify_Admin {
 		$this->redirect_error( __( 'Certloom could not identify that setup action.', 'certloom' ), $base );
 	}
 
+	/** @return array<string,mixed> */
+	private function setup_wizard_first_credential_plan( array $draft ) {
+		$template = null;
+		if ( 'design' === sanitize_key( (string) ( $draft['presentation_mode'] ?? '' ) ) && ! empty( $draft['design_template_id'] ) ) {
+			$template = ( new \Certloom\Infrastructure\Repository\TemplateRepository() )->find_published( absint( $draft['design_template_id'] ) );
+			if ( is_wp_error( $template ) || ! is_array( $template ) ) { $template = null; }
+		}
+		return ( new \Certloom\Application\Setup\FirstCredentialSetupPlan() )->build(
+			$template,
+			is_array( $draft['selected_fields'] ?? null ) ? $draft['selected_fields'] : array(),
+			Ecapla_CertVerify_Fields::get_field_map(),
+			is_array( $draft['custom_fields'] ?? null ) ? $draft['custom_fields'] : array()
+		);
+	}
+
+	/** @return true|\WP_Error */
+	private function validate_setup_wizard_context_requirements( array $draft ) {
+		$plan = $this->setup_wizard_first_credential_plan( $draft );
+		$terms = \Certloom\Infrastructure\Admin\UsageProfilePresentation::terms( (string) ( $draft['usage_profile'] ?? 'general_other' ) );
+		$context = is_array( $plan['context_required'] ?? null ) ? $plan['context_required'] : array();
+		$context_fields = is_array( $plan['context_fields'] ?? null ) ? $plan['context_fields'] : array();
+		$program_id = absint( $draft['setup_program_id'] ?? 0 );
+		$new_program = trim( (string) ( $draft['setup_new_program_title'] ?? '' ) );
+		$issuer_id = absint( $draft['setup_issuer_id'] ?? 0 );
+		$new_issuer = trim( (string) ( $draft['setup_new_issuer_name'] ?? '' ) );
+		$batch_id = absint( $draft['setup_batch_id'] ?? 0 );
+		$new_batch = trim( (string) ( $draft['setup_new_batch_name'] ?? '' ) );
+		$signer_id = absint( $draft['setup_signer_id'] ?? 0 );
+		$new_signer = trim( (string) ( $draft['setup_new_signer_name'] ?? '' ) );
+
+		$program_repo = new \Certloom\Infrastructure\Repository\ProgramRepository();
+		$issuer_repo = new \Certloom\Infrastructure\Repository\IssuerRepository();
+		$batch_repo = new \Certloom\Infrastructure\Repository\BatchRepository();
+		$signer_repo = new \Certloom\Infrastructure\Repository\SignerRepository();
+
+		$program = null;
+		if ( $program_id ) {
+			$program = $program_repo->find( $program_id );
+			if ( is_wp_error( $program ) ) { return $program; }
+			if ( ! is_array( $program ) ) { return new \WP_Error( 'certloom_setup_program_missing', __( 'The selected Program is no longer available.', 'certloom' ) ); }
+		}
+		if ( ! empty( $context['program'] ) && ! $program_id && '' === $new_program ) {
+			return new \WP_Error( 'certloom_setup_design_program_required', sprintf( __( 'The selected design needs %s information. Choose an existing one or add it here.', 'certloom' ), (string) ( $terms['program']['singular'] ?? __( 'Program', 'certloom' ) ) ) );
+		}
+
+		$program_issuer_id = is_array( $program ) ? absint( $program['issuer_id'] ?? 0 ) : 0;
+		$effective_issuer_id = $program_issuer_id ?: $issuer_id;
+		$issuer = null;
+		if ( $effective_issuer_id ) {
+			$issuer = $issuer_repo->find( $effective_issuer_id );
+			if ( is_wp_error( $issuer ) ) { return $issuer; }
+			if ( ! is_array( $issuer ) ) { return new \WP_Error( 'certloom_setup_issuer_missing', __( 'The selected Issuer is no longer available.', 'certloom' ) ); }
+		}
+		if ( ! empty( $context['issuer'] ) && ! $effective_issuer_id && '' === $new_issuer ) {
+			return new \WP_Error( 'certloom_setup_design_issuer_required', sprintf( __( 'The selected design needs %s information. Choose an existing one or add it here.', 'certloom' ), (string) ( $terms['issuer']['singular'] ?? __( 'Issuer', 'certloom' ) ) ) );
+		}
+
+		$batch = null;
+		if ( $batch_id ) {
+			$batch = $batch_repo->find( $batch_id );
+			if ( is_wp_error( $batch ) ) { return $batch; }
+			if ( ! is_array( $batch ) ) { return new \WP_Error( 'certloom_setup_batch_missing', __( 'The selected Batch or cycle is no longer available.', 'certloom' ) ); }
+			if ( $program_id && absint( $batch['program_id'] ?? 0 ) !== $program_id ) { return new \WP_Error( 'certloom_setup_batch_program_mismatch', __( 'Choose a Batch or cycle that belongs to the selected Program context.', 'certloom' ) ); }
+		}
+		if ( ! empty( $context['batch'] ) && ! $batch_id && '' === $new_batch ) {
+			return new \WP_Error( 'certloom_setup_design_batch_required', sprintf( __( 'The selected design needs %s information. Choose an existing one or add it here.', 'certloom' ), (string) ( $terms['batch']['singular'] ?? __( 'Batch', 'certloom' ) ) ) );
+		}
+
+		$signer = null;
+		if ( $signer_id ) {
+			$signer = $signer_repo->find( $signer_id );
+			if ( is_wp_error( $signer ) ) { return $signer; }
+			if ( ! is_array( $signer ) ) { return new \WP_Error( 'certloom_setup_signer_missing', __( 'The selected Signer is no longer available.', 'certloom' ) ); }
+		}
+		if ( ! empty( $context['signer'] ) && ! $signer_id && '' === $new_signer ) {
+			return new \WP_Error( 'certloom_setup_design_signer_required', sprintf( __( 'The selected design needs %s information. Choose an existing one or add it here.', 'certloom' ), (string) ( $terms['signer']['singular'] ?? __( 'Signer', 'certloom' ) ) ) );
+		}
+
+		// Validate the exact sub-fields required by the published design, rather
+		// than treating an entity selection as proof that all of its merge data exists.
+		$issuer_fields = is_array( $context_fields['issuer'] ?? null ) ? $context_fields['issuer'] : array();
+		if ( ! empty( $issuer_fields['title'] ) ) {
+			$issuer_title = is_array( $issuer ) ? trim( (string) ( $issuer['settings']['title'] ?? '' ) ) : trim( (string) ( $draft['setup_new_issuer_title'] ?? '' ) );
+			if ( '' === $issuer_title ) { return new \WP_Error( 'certloom_setup_design_issuer_title_required', sprintf( __( 'The selected design uses the %s title. Add that title to the selected record or create a new one with a title.', 'certloom' ), (string) ( $terms['issuer']['singular'] ?? __( 'Issuer', 'certloom' ) ) ) ); }
+		}
+		$program_fields = is_array( $context_fields['program'] ?? null ) ? $context_fields['program'] : array();
+		if ( ! empty( $program_fields['code'] ) ) {
+			$program_code = is_array( $program ) ? trim( (string) ( $program['code'] ?? '' ) ) : trim( (string) ( $draft['setup_new_program_code'] ?? '' ) );
+			if ( '' === $program_code ) { return new \WP_Error( 'certloom_setup_design_program_code_required', sprintf( __( 'The selected design uses the %s code. Enter a code before continuing.', 'certloom' ), (string) ( $terms['program']['singular'] ?? __( 'Program', 'certloom' ) ) ) ); }
+		}
+		$batch_fields = is_array( $context_fields['batch'] ?? null ) ? $context_fields['batch'] : array();
+		if ( ! empty( $batch_fields['code'] ) ) {
+			$batch_code = is_array( $batch ) ? trim( (string) ( $batch['code'] ?? '' ) ) : trim( (string) ( $draft['setup_new_batch_code'] ?? '' ) );
+			if ( '' === $batch_code ) { return new \WP_Error( 'certloom_setup_design_batch_code_required', sprintf( __( 'The selected design uses the %s code. Enter a code before continuing.', 'certloom' ), (string) ( $terms['batch']['singular'] ?? __( 'Batch', 'certloom' ) ) ) ); }
+		}
+		$signer_fields = is_array( $context_fields['signer'] ?? null ) ? $context_fields['signer'] : array();
+		$signer_checks = array(
+			'title' => array( is_array( $signer ) ? trim( (string) ( $signer['title'] ?? '' ) ) : trim( (string) ( $draft['setup_new_signer_title'] ?? '' ) ), __( 'position / designation', 'certloom' ) ),
+			'email' => array( is_array( $signer ) ? trim( (string) ( $signer['email'] ?? '' ) ) : trim( (string) ( $draft['setup_new_signer_email'] ?? '' ) ), __( 'email', 'certloom' ) ),
+			'signature' => array( is_array( $signer ) ? absint( $signer['signature_attachment_id'] ?? 0 ) : absint( $draft['setup_new_signer_signature_id'] ?? 0 ), __( 'signature image', 'certloom' ) ),
+		);
+		foreach ( $signer_checks as $field_key => $check ) {
+			if ( empty( $signer_fields[ $field_key ] ) || ! empty( $check[0] ) ) { continue; }
+			return new \WP_Error( 'certloom_setup_design_signer_field_required', sprintf( __( 'The selected design uses the %1$s %2$s. Add that value before continuing.', 'certloom' ), (string) ( $terms['signer']['singular'] ?? __( 'Signer', 'certloom' ) ), (string) $check[1] ) );
+		}
+
+		$values = is_array( $draft['setup_credential_values'] ?? null ) ? $draft['setup_credential_values'] : array();
+		foreach ( (array) ( $plan['credential_fields'] ?? array() ) as $field ) {
+			if ( empty( $field['required_by_design'] ) ) { continue; }
+			$key = sanitize_key( (string) ( $field['key'] ?? '' ) );
+			if ( '' !== $key && '' === trim( (string) ( $values[ $key ] ?? '' ) ) ) {
+				return new \WP_Error( 'certloom_setup_design_field_required', sprintf( __( 'Enter %s because the selected design uses this field.', 'certloom' ), (string) ( $field['label'] ?? $key ) ) );
+			}
+		}
+		if ( ! empty( $plan['grade_required'] ) && '' === trim( (string) ( $draft['first_grade'] ?? '' ) ) ) {
+			return new \WP_Error( 'certloom_setup_design_grade_required', __( 'Enter the grade because the selected design uses it.', 'certloom' ) );
+		}
+		$repeat = is_array( $draft['setup_repeating_data'] ?? null ) ? $draft['setup_repeating_data'] : array();
+		foreach ( array( 'subjects', 'results' ) as $rowset ) {
+			if ( ! empty( $plan['repeating'][ $rowset ] ) && empty( $repeat[ $rowset ] ) ) {
+				return new \WP_Error( 'certloom_setup_design_repeating_required', sprintf( __( 'Add at least one %s row because the selected design uses that Data Table.', 'certloom' ), 'results' === $rowset ? __( 'result', 'certloom' ) : __( 'subject', 'certloom' ) ) );
+			}
+		}
+		return true;
+	}
+
+	/** @return array<string,mixed>|\WP_Error */
+	private function materialize_setup_wizard_context( array $draft ) {
+		$issuer_id = absint( $draft['setup_issuer_id'] ?? 0 );
+		$program_id = absint( $draft['setup_program_id'] ?? 0 );
+		$batch_id = absint( $draft['setup_batch_id'] ?? 0 );
+		$signer_id = absint( $draft['setup_signer_id'] ?? 0 );
+
+		$issuer_repo = new \Certloom\Infrastructure\Repository\IssuerRepository();
+		$program_repo = new \Certloom\Infrastructure\Repository\ProgramRepository();
+		$batch_repo = new \Certloom\Infrastructure\Repository\BatchRepository();
+		$signer_repo = new \Certloom\Infrastructure\Repository\SignerRepository();
+
+		if ( ! $issuer_id && '' !== trim( (string) ( $draft['setup_new_issuer_name'] ?? '' ) ) ) {
+			$name = trim( (string) $draft['setup_new_issuer_name'] );
+			$base_slug = sanitize_title( $name );
+			$created = null;
+			for ( $attempt = 0; $attempt < 10; $attempt++ ) {
+				$slug = 0 === $attempt ? $base_slug : $base_slug . '-' . ( $attempt + 1 );
+				$issuer_settings = array();
+				$issuer_title = trim( (string) ( $draft['setup_new_issuer_title'] ?? '' ) );
+				if ( '' !== $issuer_title ) { $issuer_settings['title'] = $issuer_title; }
+				$created = $issuer_repo->create( array( 'name' => $name, 'slug' => $slug, 'settings' => $issuer_settings ) );
+				if ( ! is_wp_error( $created ) || 'certloom_issuer_slug_duplicate' !== $created->get_error_code() ) { break; }
+			}
+			if ( is_wp_error( $created ) ) { return $created; }
+			$issuer_id = absint( $created );
+		}
+
+		$program = null;
+		if ( $program_id ) {
+			$program = $program_repo->find( $program_id );
+			if ( is_wp_error( $program ) ) { return $program; }
+			if ( ! is_array( $program ) ) { return new \WP_Error( 'certloom_setup_program_missing', __( 'The selected Program is no longer available.', 'certloom' ) ); }
+			if ( ! empty( $program['issuer_id'] ) ) { $issuer_id = absint( $program['issuer_id'] ); }
+		} elseif ( '' !== trim( (string) ( $draft['setup_new_program_title'] ?? '' ) ) ) {
+			$program_id = $program_repo->create( array(
+				'title' => trim( (string) $draft['setup_new_program_title'] ),
+				'code' => trim( (string) ( $draft['setup_new_program_code'] ?? '' ) ),
+				'issuer_id' => $issuer_id ?: null,
+				'validity_days' => null,
+				'active' => true,
+			) );
+			if ( is_wp_error( $program_id ) ) { return $program_id; }
+			$program = $program_repo->find( $program_id );
+			if ( is_wp_error( $program ) ) { return $program; }
+		}
+
+		if ( $batch_id ) {
+			$batch = $batch_repo->find( $batch_id );
+			if ( is_wp_error( $batch ) ) { return $batch; }
+			if ( ! is_array( $batch ) || ! $program_id || absint( $batch['program_id'] ?? 0 ) !== $program_id ) { return new \WP_Error( 'certloom_setup_batch_program_mismatch', __( 'Choose a Batch or cycle that belongs to the selected Program context.', 'certloom' ) ); }
+		} elseif ( '' !== trim( (string) ( $draft['setup_new_batch_name'] ?? '' ) ) ) {
+			if ( ! $program_id ) { return new \WP_Error( 'certloom_setup_batch_program_required', __( 'Choose or add the Program context before adding a Batch or cycle.', 'certloom' ) ); }
+			$batch_id = $batch_repo->create( array(
+				'program_id' => $program_id,
+				'name' => trim( (string) $draft['setup_new_batch_name'] ),
+				'code' => trim( (string) $draft['setup_new_batch_code'] ),
+				'active' => true,
+			) );
+			if ( is_wp_error( $batch_id ) ) { return $batch_id; }
+		}
+
+		$new_signer = false;
+		if ( ! $signer_id && '' !== trim( (string) ( $draft['setup_new_signer_name'] ?? '' ) ) ) {
+			$name = trim( (string) $draft['setup_new_signer_name'] );
+			$base_slug = sanitize_key( sanitize_title( $name ) );
+			if ( '' === $base_slug ) { $base_slug = 'signer'; }
+			$created = null;
+			for ( $attempt = 0; $attempt < 10; $attempt++ ) {
+				$slug = 0 === $attempt ? $base_slug : $base_slug . '-' . ( $attempt + 1 );
+				$created = $signer_repo->create( array(
+					'display_name' => $name,
+					'slug' => $slug,
+					'title' => trim( (string) ( $draft['setup_new_signer_title'] ?? '' ) ),
+					'email' => trim( (string) ( $draft['setup_new_signer_email'] ?? '' ) ),
+					'signature_attachment_id' => absint( $draft['setup_new_signer_signature_id'] ?? 0 ),
+					'active' => true,
+				) );
+				if ( ! is_wp_error( $created ) || 'certloom_signer_slug_duplicate' !== $created->get_error_code() ) { break; }
+			}
+			if ( is_wp_error( $created ) ) { return $created; }
+			$signer_id = absint( $created );
+			$new_signer = true;
+		}
+		if ( $new_signer && $signer_id ) {
+			$scope = $batch_id ? 'batch' : ( $program_id ? 'program' : ( $issuer_id ? 'issuer' : 'global' ) );
+			$scope_id = $batch_id ?: ( $program_id ?: ( $issuer_id ?: 0 ) );
+			$assignment = $signer_repo->add_assignment( $signer_id, $scope, $scope_id, 'signer', 100 );
+			if ( is_wp_error( $assignment ) && 'certloom_signer_assignment_duplicate' !== $assignment->get_error_code() ) { return $assignment; }
+		}
+
+		return array(
+			'setup_issuer_id' => $issuer_id,
+			'setup_program_id' => $program_id,
+			'setup_batch_id' => $batch_id,
+			'setup_signer_id' => $signer_id,
+		);
+	}
+
 	/**
 	 * Issues the Wizard's first credential through the same canonical service as
-	 * the full Issue Credential workspace. The quick Setup path deliberately
-	 * creates an Independent credential so Program/Batch hierarchy remains
-	 * optional during onboarding.
+	 * the full Issue Credential workspace. The quick Setup path remains
+	 * Independent when no Program context is chosen, or becomes Program-backed
+	 * when the administrator deliberately selected/created Program context.
 	 *
 	 * @return void
 	 */
@@ -754,55 +992,73 @@ class Ecapla_CertVerify_Admin {
 
 		$patch = $this->setup_wizard_draft_request( 'issue' );
 		$valid = Ecapla_CertVerify_Onboarding::validate_wizard_draft( 'issue', $patch, false );
-		if ( is_wp_error( $valid ) ) {
-			$this->redirect_error( $valid->get_error_message(), $issue_url );
-		}
+		if ( is_wp_error( $valid ) ) { $this->redirect_error( $valid->get_error_message(), $issue_url ); }
 		$state = Ecapla_CertVerify_Onboarding::get_state();
 		$draft = is_array( $state['wizard_draft'] ?? null ) ? array_merge( $state['wizard_draft'], $patch ) : $patch;
+		$context_valid = $this->validate_setup_wizard_context_requirements( $draft );
+		if ( is_wp_error( $context_valid ) ) { $this->redirect_error( $context_valid->get_error_message(), add_query_arg( 'step', 'context', $base ) ); }
+
+		$materialized = $this->materialize_setup_wizard_context( $draft );
+		if ( is_wp_error( $materialized ) ) { $this->redirect_error( $materialized->get_error_message(), add_query_arg( 'step', 'context', $base ) ); }
+		$draft = array_merge( $draft, $materialized );
+		$saved_context = Ecapla_CertVerify_Onboarding::save_wizard_draft_only( 'issue', $materialized );
+		if ( is_wp_error( $saved_context ) ) { $this->redirect_error( $saved_context->get_error_message(), $issue_url ); }
+
 		$presentation = isset( $draft['presentation_mode'] ) ? sanitize_key( (string) $draft['presentation_mode'] ) : 'details_only';
 		if ( ! in_array( $presentation, array( 'details_only', 'image', 'design' ), true ) ) { $presentation = 'details_only'; }
 		$template_id = 'design' === $presentation ? absint( $draft['design_template_id'] ?? 0 ) : 0;
 		$image_id = 'image' === $presentation ? absint( $draft['certificate_image_id'] ?? 0 ) : 0;
+		$program_id = absint( $draft['setup_program_id'] ?? 0 );
+		$program = null;
+		$expiry_mode = 'permanent';
+		if ( $program_id ) {
+			$program = ( new \Certloom\Infrastructure\Repository\ProgramRepository() )->find( $program_id );
+			if ( is_wp_error( $program ) ) { $this->redirect_error( $program->get_error_message(), $issue_url ); }
+			if ( is_array( $program ) && ! empty( $program['program_default_available'] ) ) { $expiry_mode = 'program'; }
+		}
 
+		$recipient_custom = is_array( $draft['first_recipient_custom'] ?? null ) ? $draft['first_recipient_custom'] : array();
+		$new_recipient = array(
+			'display_name' => sanitize_text_field( (string) ( $patch['first_recipient_name'] ?? '' ) ),
+			'email' => sanitize_email( (string) ( $patch['first_recipient_email'] ?? '' ) ),
+			'first_name' => sanitize_text_field( (string) ( $patch['first_recipient_first_name'] ?? '' ) ),
+			'middle_name' => sanitize_text_field( (string) ( $patch['first_recipient_middle_name'] ?? '' ) ),
+			'last_name' => sanitize_text_field( (string) ( $patch['first_recipient_last_name'] ?? '' ) ),
+			'external_id' => sanitize_text_field( (string) ( $patch['first_recipient_external_id'] ?? '' ) ),
+			'custom_fields' => $recipient_custom,
+		);
 		$request = array(
 			'recipient_mode' => 'new',
 			'recipient_id' => 0,
-			'new_recipient' => array(
-				'display_name' => sanitize_text_field( (string) ( $patch['first_recipient_name'] ?? '' ) ),
-				'email' => sanitize_email( (string) ( $patch['first_recipient_email'] ?? '' ) ),
-			),
-			'credential_basis' => 'independent',
-			'title_source' => 'custom',
-			'credential_title' => sanitize_text_field( (string) ( $patch['credential_title'] ?? '' ) ),
+			'new_recipient' => $new_recipient,
+			'credential_basis' => $program_id ? 'program' : 'independent',
+			'title_source' => $program_id ? 'program' : 'custom',
+			'credential_title' => $program_id ? '' : sanitize_text_field( (string) ( $patch['credential_title'] ?? '' ) ),
 			'presentation_mode' => $presentation,
 			'certificate_image_id' => $image_id,
-			'issuer_id' => 0,
-			'signer_id' => 0,
-			'program_id' => 0,
-			'batch_id' => 0,
+			'issuer_id' => absint( $draft['setup_issuer_id'] ?? 0 ),
+			'signer_id' => absint( $draft['setup_signer_id'] ?? 0 ),
+			'program_id' => $program_id,
+			'batch_id' => absint( $draft['setup_batch_id'] ?? 0 ),
 			'template_id' => $template_id,
 			'design_source' => $template_id ? 'assigned' : 'inherited',
 			'valid_from' => sanitize_text_field( (string) ( $patch['issue_date'] ?? '' ) ),
-			'expiry_mode' => 'permanent',
+			'expiry_mode' => $expiry_mode,
 			'expires_at' => '',
-			'grade' => '',
+			'grade' => sanitize_text_field( (string) ( $draft['first_grade'] ?? '' ) ),
 			'display_number' => '',
-			'custom_merge_fields' => array(),
+			'custom_merge_fields' => is_array( $draft['setup_credential_values'] ?? null ) ? $draft['setup_credential_values'] : array(),
 			'design_field_aliases' => array(),
-			'repeating_data' => array(),
+			'repeating_data' => is_array( $draft['setup_repeating_data'] ?? null ) ? $draft['setup_repeating_data'] : array(),
 		);
 
 		$service = new \Certloom\Application\Issuance\ManualIssuanceService();
 		$review = $service->review( $request );
-		if ( is_wp_error( $review ) ) {
-			$this->redirect_error( $review->get_error_message(), $issue_url );
-		}
+		if ( is_wp_error( $review ) ) { $this->redirect_error( $review->get_error_message(), $issue_url ); }
 		$receipt = $service->issue( $request, (string) ( $review['review_fingerprint'] ?? '' ), get_current_user_id() );
-		if ( is_wp_error( $receipt ) ) {
-			$this->redirect_error( $receipt->get_error_message(), $issue_url );
-		}
+		if ( is_wp_error( $receipt ) ) { $this->redirect_error( $receipt->get_error_message(), $issue_url ); }
 
-		$recorded = Ecapla_CertVerify_Onboarding::record_first_credential( $patch, $receipt );
+		$recorded = Ecapla_CertVerify_Onboarding::record_first_credential( array_merge( $patch, $materialized ), $receipt );
 		if ( is_wp_error( $recorded ) ) {
 			$this->redirect_error( sprintf( /* translators: %s: Setup state error after a credential was issued. */ __( 'The credential was issued, but Setup could not save its completion state: %s. Re-submit the same first credential to recover without issuing a duplicate.', 'certloom' ), $recorded->get_error_message() ), $issue_url );
 		}
@@ -840,10 +1096,38 @@ class Ecapla_CertVerify_Admin {
 				elseif ( 'design' === $mode ) { $image_id = 0; }
 				else { $image_id = 0; $template_id = 0; }
 				return array( 'presentation_mode' => $mode, 'certificate_image_id' => $image_id, 'design_template_id' => $template_id );
+			case 'context':
+				$credential_values = isset( $_POST['setup_credential_values'] ) && is_array( $_POST['setup_credential_values'] ) ? wp_unslash( $_POST['setup_credential_values'] ) : array();
+				$repeating = isset( $_POST['setup_repeating_data'] ) && is_array( $_POST['setup_repeating_data'] ) ? wp_unslash( $_POST['setup_repeating_data'] ) : array();
+				return array(
+					'setup_issuer_id' => isset( $_POST['setup_issuer_id'] ) ? absint( $_POST['setup_issuer_id'] ) : 0,
+					'setup_program_id' => isset( $_POST['setup_program_id'] ) ? absint( $_POST['setup_program_id'] ) : 0,
+					'setup_batch_id' => isset( $_POST['setup_batch_id'] ) ? absint( $_POST['setup_batch_id'] ) : 0,
+					'setup_signer_id' => isset( $_POST['setup_signer_id'] ) ? absint( $_POST['setup_signer_id'] ) : 0,
+					'setup_new_issuer_name' => isset( $_POST['setup_new_issuer_name'] ) ? sanitize_text_field( wp_unslash( $_POST['setup_new_issuer_name'] ) ) : '',
+					'setup_new_issuer_title' => isset( $_POST['setup_new_issuer_title'] ) ? sanitize_text_field( wp_unslash( $_POST['setup_new_issuer_title'] ) ) : '',
+					'setup_new_program_title' => isset( $_POST['setup_new_program_title'] ) ? sanitize_text_field( wp_unslash( $_POST['setup_new_program_title'] ) ) : '',
+					'setup_new_program_code' => isset( $_POST['setup_new_program_code'] ) ? sanitize_text_field( wp_unslash( $_POST['setup_new_program_code'] ) ) : '',
+					'setup_new_batch_name' => isset( $_POST['setup_new_batch_name'] ) ? sanitize_text_field( wp_unslash( $_POST['setup_new_batch_name'] ) ) : '',
+					'setup_new_batch_code' => isset( $_POST['setup_new_batch_code'] ) ? sanitize_text_field( wp_unslash( $_POST['setup_new_batch_code'] ) ) : '',
+					'setup_new_signer_name' => isset( $_POST['setup_new_signer_name'] ) ? sanitize_text_field( wp_unslash( $_POST['setup_new_signer_name'] ) ) : '',
+					'setup_new_signer_title' => isset( $_POST['setup_new_signer_title'] ) ? sanitize_text_field( wp_unslash( $_POST['setup_new_signer_title'] ) ) : '',
+					'setup_new_signer_email' => isset( $_POST['setup_new_signer_email'] ) ? sanitize_text_field( wp_unslash( $_POST['setup_new_signer_email'] ) ) : '',
+					'setup_new_signer_signature_id' => isset( $_POST['setup_new_signer_signature_id'] ) ? absint( $_POST['setup_new_signer_signature_id'] ) : 0,
+					'setup_credential_values' => $credential_values,
+					'first_grade' => isset( $_POST['first_grade'] ) ? sanitize_text_field( wp_unslash( $_POST['first_grade'] ) ) : '',
+					'setup_repeating_data' => $repeating,
+				);
 			case 'issue':
+				$recipient_custom = isset( $_POST['first_recipient_custom'] ) && is_array( $_POST['first_recipient_custom'] ) ? wp_unslash( $_POST['first_recipient_custom'] ) : array();
 				return array(
 					'first_recipient_name' => isset( $_POST['first_recipient_name'] ) ? sanitize_text_field( wp_unslash( $_POST['first_recipient_name'] ) ) : '',
 					'first_recipient_email' => isset( $_POST['first_recipient_email'] ) ? sanitize_text_field( wp_unslash( $_POST['first_recipient_email'] ) ) : '',
+					'first_recipient_first_name' => isset( $_POST['first_recipient_first_name'] ) ? sanitize_text_field( wp_unslash( $_POST['first_recipient_first_name'] ) ) : '',
+					'first_recipient_middle_name' => isset( $_POST['first_recipient_middle_name'] ) ? sanitize_text_field( wp_unslash( $_POST['first_recipient_middle_name'] ) ) : '',
+					'first_recipient_last_name' => isset( $_POST['first_recipient_last_name'] ) ? sanitize_text_field( wp_unslash( $_POST['first_recipient_last_name'] ) ) : '',
+					'first_recipient_external_id' => isset( $_POST['first_recipient_external_id'] ) ? sanitize_text_field( wp_unslash( $_POST['first_recipient_external_id'] ) ) : '',
+					'first_recipient_custom' => $recipient_custom,
 					'credential_title' => isset( $_POST['credential_title'] ) ? sanitize_text_field( wp_unslash( $_POST['credential_title'] ) ) : '',
 					'issue_date' => isset( $_POST['issue_date'] ) ? sanitize_text_field( wp_unslash( $_POST['issue_date'] ) ) : '',
 				);
@@ -2044,9 +2328,38 @@ class Ecapla_CertVerify_Admin {
 			}
 		}
 		$wizard_template_preview_nonce = wp_create_nonce( 'certloom_setup_wizard_preview' );
+		$wizard_profile_terms = \Certloom\Infrastructure\Admin\UsageProfilePresentation::terms( $wizard_profile );
+		$wizard_profile_label = (string) ( $wizard_profiles[ $wizard_profile ]['label'] ?? __( 'General / Other', 'certloom' ) );
+		$wizard_first_plan = ( new \Certloom\Application\Setup\FirstCredentialSetupPlan() )->build(
+			is_array( $wizard_template ) ? $wizard_template : null,
+			$wizard_selected_fields,
+			Ecapla_CertVerify_Fields::get_field_map(),
+			$wizard_custom_fields
+		);
+		$wizard_issuer_repo = new \Certloom\Infrastructure\Repository\IssuerRepository();
+		$wizard_program_repo = new \Certloom\Infrastructure\Repository\ProgramRepository();
+		$wizard_batch_repo = new \Certloom\Infrastructure\Repository\BatchRepository();
+		$wizard_signer_repo = new \Certloom\Infrastructure\Repository\SignerRepository();
+		$wizard_issuers_result = $wizard_issuer_repo->list_page( '', 1, 100 );
+		$wizard_programs_result = $wizard_program_repo->list_page( '', 1, 100, 'active' );
+		$wizard_batches_result = $wizard_batch_repo->list_page( '', 1, 100, 'active' );
+		$wizard_signers_result = $wizard_signer_repo->list_page( '', 1, 100, 'active' );
+		$wizard_issuer_candidates = is_wp_error( $wizard_issuers_result ) ? array() : (array) ( $wizard_issuers_result['items'] ?? array() );
+		$wizard_program_candidates = is_wp_error( $wizard_programs_result ) ? array() : (array) ( $wizard_programs_result['items'] ?? array() );
+		$wizard_batch_candidates = is_wp_error( $wizard_batches_result ) ? array() : (array) ( $wizard_batches_result['items'] ?? array() );
+		$wizard_signer_candidates = is_wp_error( $wizard_signers_result ) ? array() : (array) ( $wizard_signers_result['items'] ?? array() );
+		$wizard_context_ids = array(
+			'issuer' => absint( $wizard_draft['setup_issuer_id'] ?? 0 ),
+			'program' => absint( $wizard_draft['setup_program_id'] ?? 0 ),
+			'batch' => absint( $wizard_draft['setup_batch_id'] ?? 0 ),
+			'signer' => absint( $wizard_draft['setup_signer_id'] ?? 0 ),
+		);
+		$wizard_selected_program = $wizard_context_ids['program'] ? $wizard_program_repo->find( $wizard_context_ids['program'] ) : null;
+		if ( is_wp_error( $wizard_selected_program ) ) { $wizard_selected_program = null; }
+		$wizard_program_title = is_array( $wizard_selected_program ) ? (string) ( $wizard_selected_program['title'] ?? '' ) : trim( (string) ( $wizard_draft['setup_new_program_title'] ?? '' ) );
 		$wizard_first_issuance_ready = \Certloom\Infrastructure\Migration\DomainFeatureGate::write_paths_ready();
 		$wizard_first_issuance_reason = $wizard_first_issuance_ready
-			? __( 'This quick first credential uses the canonical Independent credential workflow. No Program, Batch or hidden hierarchy record is created.', 'certloom' )
+			? __( 'The first credential uses the same canonical issuance workflow as the main Credential workspace, including the context and design-required data collected during Setup.', 'certloom' )
 			: __( 'Credential issuance is temporarily unavailable because the credential store is not ready.', 'certloom' );
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/setup-wizard.php';
 	}

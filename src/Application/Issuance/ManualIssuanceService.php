@@ -266,7 +266,7 @@ final class ManualIssuanceService {
 				);
 				foreach ( $current['request']['repeating_data'] as $key => $rows ) { $credential_facts[ $key ] = $rows; }
 				$layout = isset( $current['template_revision']['layout'] ) && is_array( $current['template_revision']['layout'] ) ? $current['template_revision']['layout'] : array();
-				$merge = $this->merges->build( $recipient, $current['program'], $current['issuer'], $credential_facts, $layout, $this->credential_custom_values( $current['field_contract'], $current['field_values'], $current['request']['custom_merge_fields'], $current['request']['design_field_aliases'] ?? array() ), $current['signer'] );
+				$merge = $this->merges->build( $recipient, $current['program'], $current['issuer'], $credential_facts, $layout, $this->credential_custom_values( $current['field_contract'], $current['field_values'], $current['request']['custom_merge_fields'], $current['request']['design_field_aliases'] ?? array() ), $current['signer'], false, $current['batch'] ?? null );
 				if ( is_wp_error( $merge ) ) { return $merge; }
 				$snapshot = $this->snapshot( $current, $recipient, $series, $credential_facts, $merge, $expected_review_fingerprint, $actor_user_id, $source_type, $source_ref, $source_context );
 				if ( is_wp_error( $snapshot ) ) { return $snapshot; }
@@ -493,7 +493,7 @@ final class ManualIssuanceService {
 		);
 		foreach ( $request['repeating_data'] as $key => $rows ) { $probe_facts[ $key ] = $rows; }
 		$layout = isset( $revision['layout'] ) && is_array( $revision['layout'] ) ? $revision['layout'] : array();
-		$merge_probe = $this->merges->build( $recipient, $program, $issuer, $probe_facts, $layout, $this->credential_custom_values( $field_contract, $field_values, $request['custom_merge_fields'], $request['design_field_aliases'] ?? array() ), $signer, 'design' === (string) $request['presentation_mode'] );
+		$merge_probe = $this->merges->build( $recipient, $program, $issuer, $probe_facts, $layout, $this->credential_custom_values( $field_contract, $field_values, $request['custom_merge_fields'], $request['design_field_aliases'] ?? array() ), $signer, 'design' === (string) $request['presentation_mode'], $batch );
 		if ( is_wp_error( $merge_probe ) ) { return $merge_probe; }
 		$required_merge_tokens = $this->merges->required_tokens( $layout );
 		$data_readiness = ( new IssuanceDataReadiness() )->inspect(

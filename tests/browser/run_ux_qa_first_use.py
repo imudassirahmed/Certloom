@@ -40,7 +40,7 @@ async def main():
         wiz=await b.new_page(viewport={'width':1100,'height':820})
         await wiz.set_content(build('build_setup_wizard_fixture.php',{'CERTLOOM_WIZ_STATE':'profile'}),wait_until='load')
         await ck(await wiz.locator('[data-certloom-setup-v2]').count()==1,'wizardSetupV2Root')
-        await ck(await wiz.locator('.certloom-setup-v2-progress-step').count()==6,'wizardSixDecisionSteps')
+        await ck(await wiz.locator('.certloom-setup-v2-progress-step').count()==7,'wizardSevenDecisionSteps')
         await ck(await wiz.locator('input[name="workspace_mode"]').count()==0,'wizardNoWorkspaceModeChoice')
         await ck(await wiz.locator('input[name="usage_profile"]').count()==9,'wizardNineProfiles')
         await ck(await wiz.locator('#certloom-wizard-subcategory').count()==0,'wizardNoSubcategoryDetour')

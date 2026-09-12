@@ -19,9 +19,10 @@ final class MergeSnapshotBuilder {
 	 * @param array<string,mixed> $layout Published canonical layout.
 	 * @return array<string,mixed>|\WP_Error
 	 */
-	public function build( array $recipient, array $program, $issuer, array $credential, array $layout, array $custom_overrides = array(), $signer = null, $allow_missing_required = false ) {
+	public function build( array $recipient, array $program, $issuer, array $credential, array $layout, array $custom_overrides = array(), $signer = null, $allow_missing_required = false, $batch = null ) {
 		$issuer = is_array( $issuer ) ? $issuer : array();
 		$signer = is_array( $signer ) ? $signer : array();
+		$batch = is_array( $batch ) ? $batch : array();
 		$custom = isset( $recipient['custom_fields'] ) && is_array( $recipient['custom_fields'] ) ? $recipient['custom_fields'] : array();
 		$display_name = trim( (string) ( $recipient['display_name'] ?? '' ) );
 		$first_name = trim( (string) ( $recipient['first_name'] ?? '' ) );
@@ -93,6 +94,15 @@ final class MergeSnapshotBuilder {
 			'site_name' => function_exists( 'get_bloginfo' ) ? trim( (string) get_bloginfo( 'name' ) ) : '',
 			'verification_url' => $verification_url,
 		);
+		if ( ! empty( $batch ) ) {
+			$batch_name = trim( (string) ( $batch['name'] ?? '' ) );
+			$batch_code = trim( (string) ( $batch['code'] ?? '' ) );
+			$values['batch.name'] = $batch_name;
+			$values['batch.code'] = $batch_code;
+			$values['batch_name'] = $batch_name;
+			$values['batch_code'] = $batch_code;
+			$values['cohort_name'] = $batch_name;
+		}
 		if ( $signer_signature_attachment_id ) { $values['signer.signature_asset'] = 'attachment:' . $signer_signature_attachment_id; }
 		foreach ( $repeating as $source => $rows ) { $values[ $source ] = $rows; }
 		$required = $this->required_tokens( $layout );

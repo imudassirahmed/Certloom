@@ -8,6 +8,7 @@ $GLOBALS['certloom_wiz_now'] = '2026-09-09 06:15:00';
 function __( $text ) { return $text; }
 function sanitize_key( $value ) { return strtolower( preg_replace( '/[^a-z0-9_\-]/', '', (string) $value ) ); }
 function sanitize_text_field( $value ) { return trim( strip_tags( (string) $value ) ); }
+function sanitize_textarea_field( $value ) { return trim( strip_tags( (string) $value ) ); }
 function absint( $value ) { return abs( (int) $value ); }
 function wp_parse_args( $args, $defaults ) { return array_merge( $defaults, is_array( $args ) ? $args : array() ); }
 function get_option( $key, $default = false ) { return array_key_exists( $key, $GLOBALS['certloom_wiz_options'] ) ? $GLOBALS['certloom_wiz_options'][ $key ] : $default; }
@@ -51,7 +52,7 @@ foreach ( array_keys( $profiles ) as $profile_key ) {
 }
 
 $defaults = Ecapla_CertVerify_Onboarding::get_state();
-wiz_check( 5 === $defaults['version'] && 'welcome' === $defaults['wizard_step'], 'Onboarding state must be v5 and start at Welcome.' );
+wiz_check( 6 === $defaults['version'] && 'welcome' === $defaults['wizard_step'], 'Onboarding state must be v6 and start at Welcome.' );
 wiz_check( array() === $defaults['wizard_draft'] && '' === $defaults['wizard_completed_at'], 'New setup must start without authoritative draft/completion.' );
 $r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'welcome', array(), 'profile', false );
 wiz_check( true === $r && 'profile' === Ecapla_CertVerify_Onboarding::get_state()['wizard_step'], 'Welcome must advance to Profile.' );
@@ -74,20 +75,24 @@ $r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'profile', array( 'usage_pr
 wiz_check( true === $r, 'Profile can be revisited.' );
 $state = Ecapla_CertVerify_Onboarding::get_state();
 wiz_check( array('standard','scope') === $state['wizard_draft']['selected_fields'], 'Changing profile must not overwrite field choices already edited by the administrator.' );
-$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'appearance', array( 'presentation_mode'=>'image','certificate_image_id'=>0 ), 'issue', false );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'appearance', array( 'presentation_mode'=>'image','certificate_image_id'=>0 ), 'context', false );
 wiz_check( is_wp_error( $r ) && 'certloom_setup_image_required' === $r->get_error_code(), 'Image appearance must require an uploaded image.' );
-$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'appearance', array( 'presentation_mode'=>'image','certificate_image_id'=>91,'design_template_id'=>44 ), 'issue', false );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'appearance', array( 'presentation_mode'=>'image','certificate_image_id'=>91,'design_template_id'=>44 ), 'context', false );
 wiz_check( true === $r, 'Image appearance may persist when image exists.' );
 $state = Ecapla_CertVerify_Onboarding::get_state();
 wiz_check( 91 === $state['wizard_draft']['certificate_image_id'] && 0 === $state['wizard_draft']['design_template_id'], 'Image mode must clear competing design authority.' );
-$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'appearance', array( 'presentation_mode'=>'design','design_template_id'=>44,'certificate_image_id'=>91 ), 'issue', false );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'appearance', array( 'presentation_mode'=>'design','design_template_id'=>44,'certificate_image_id'=>91 ), 'context', false );
 wiz_check( true === $r, 'Design appearance may persist when design exists.' );
 $state = Ecapla_CertVerify_Onboarding::get_state();
 wiz_check( 44 === $state['wizard_draft']['design_template_id'] && 0 === $state['wizard_draft']['certificate_image_id'], 'Design mode must clear competing image authority.' );
-$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'appearance', array( 'presentation_mode'=>'details_only','design_template_id'=>44,'certificate_image_id'=>91 ), 'issue', false );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'appearance', array( 'presentation_mode'=>'details_only','design_template_id'=>44,'certificate_image_id'=>91 ), 'context', false );
 wiz_check( true === $r, 'Details-only must remain first-class.' );
 $state = Ecapla_CertVerify_Onboarding::get_state();
 wiz_check( 0 === $state['wizard_draft']['design_template_id'] && 0 === $state['wizard_draft']['certificate_image_id'], 'Details-only must clear both artifact inputs.' );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'context', array( 'setup_new_batch_name'=>'September cycle','setup_new_batch_code'=>'SEP-26' ), 'issue', false );
+wiz_check( is_wp_error( $r ) && 'certloom_setup_batch_program_required' === $r->get_error_code(), 'A new Batch/cycle must have Program context without introducing Recipient membership semantics.' );
+$r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'context', array( 'setup_new_issuer_name'=>'Example Authority','setup_new_program_title'=>'ISO 9001','setup_new_program_code'=>'ISO-9001','setup_new_batch_name'=>'September cycle','setup_new_batch_code'=>'SEP-26','setup_new_signer_name'=>'A. Signer','setup_new_signer_email'=>'signer@example.test','setup_credential_values'=>array('standard'=>'ISO 9001') ), 'issue', false );
+wiz_check( true === $r && 'issue' === Ecapla_CertVerify_Onboarding::get_state()['wizard_step'], 'Context & data step must preserve compact hierarchy and credential values for first issuance.' );
 $r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'issue', array( 'first_recipient_name'=>'','credential_title'=>'ISO 9001 Certification','issue_date'=>'2026-09-09' ), 'finish', false );
 wiz_check( is_wp_error( $r ) && 'certloom_setup_recipient_required' === $r->get_error_code(), 'First credential step must require Recipient when the administrator chooses to issue now.' );
 $r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'issue', array( 'first_recipient_name'=>'Acme Ltd','first_recipient_email'=>'not-an-email','credential_title'=>'ISO 9001 Certification','issue_date'=>'2026-09-09' ), 'finish', false );
@@ -121,10 +126,10 @@ $view = file_get_contents($root.'/admin/views/setup-wizard.php');
 $css = file_get_contents($root.'/admin/assets/certloom-foundation.css');
 $js = file_get_contents($root.'/admin/assets/admin.js');
 foreach(array($admin,$view,$css,$js) as $src){ wiz_check(is_string($src)&&''!==$src,'Required Setup v2 source unavailable.'); }
-wiz_check( false !== strpos($view,'Start setup') && false !== strpos($view,'What are you using Certloom for?') && false !== strpos($view,'Choose credential fields') && false !== strpos($view,'How should credentials appear?') && false !== strpos($view,'Issue your first credential'), 'Setup v2 must expose the approved flow.' );
-wiz_check( false === strpos($view,'name="program_title"') && false === strpos($view,'name="numbering_mode"') && false === strpos($view,'backup_schedule'), 'Required Setup v2 path must not ask for Program, numbering or backups.' );
+wiz_check( false !== strpos($view,'Start setup') && false !== strpos($view,'What are you using Certloom for?') && false !== strpos($view,'Choose credential fields') && false !== strpos($view,'How should credentials appear?') && false !== strpos($view,'Complete the credential context') && false !== strpos($view,'Issue your first credential'), 'Setup v2 must expose the approved flow.' );
+wiz_check( false === strpos($view,'name="numbering_mode"') && false === strpos($view,'backup_schedule'), 'Required Setup v2 path must not ask for numbering or backup policy during onboarding.' );
 wiz_check( false !== strpos($view,'value="details_only"') && false !== strpos($view,'value="image"') && false !== strpos($view,'value="design"'), 'Appearance must expose exactly the three approved presentation concepts.' );
-wiz_check( false !== strpos($view,'name="first_recipient_name"') && false !== strpos($view,'name="credential_title"') && false !== strpos($view,'name="issue_date"'), 'First credential must expose Recipient, title and issue date.' );
+wiz_check( false !== strpos($view,'name="first_recipient_name"') && false !== strpos($view,'name="credential_title"') && false !== strpos($view,'name="issue_date"'), 'First credential must expose Recipient, Independent title fallback and effective date.' );
 wiz_check( false !== strpos($view,'data-certloom-media-control') && false !== strpos($admin,"'certloom-setup'" ) && false !== strpos($admin,'wp_enqueue_media'), 'Organization/image selection must use WordPress media infrastructure.' );
 wiz_check( false !== strpos($view,'How Certloom organizes this profile') && false !== strpos($view,'data-certloom-hierarchy="program"'), 'Profile-specific hierarchy help must be available without making hierarchy required.' );
 wiz_check( false !== strpos($css,'position: fixed') && false !== strpos($css,'.certloom-setup-v2') && false !== strpos($admin,'certloom-setup-v2-body'), 'Setup v2 must use a focused full-screen shell.' );
@@ -133,7 +138,7 @@ wiz_check( false !== strpos($js,'data-certloom-dirty') && false !== strpos($js,'
 wiz_check( false !== strpos($js,"aria-haspopup', 'dialog") && false !== strpos($js,"frame.on( 'close'") && false !== strpos($view,'aria-live="polite"'), 'Setup media controls must expose dialog/live-region semantics and restore focus after media closes.' );
 wiz_check( false !== strpos($admin,"ensure_starter_publications( get_current_user_id(), 10 )") && false !== strpos($admin,"search_published_candidates( 'certloom-preset-', 50 )") && false !== strpos($view,'Open Design Center'), 'Setup Appearance must seed the ten starter designs for immediate selection and keep Design Center discoverable.' );
 wiz_check( false !== strpos($view,'10 starter designs') && false !== strpos($view,'create your own certificate design with Certloom Designer'), 'Appearance helper copy must explain starter designs, Design Center publication and custom design creation.' );
-wiz_check( 5 === substr_count($view,'value="skip_step"') && 5 === substr_count($view,'formnovalidate'), 'Each actionable setup step must expose an explicit skip/do-later action without browser validation blocking it.' );
+wiz_check( 6 === substr_count($view,'value="skip_step"') && 6 === substr_count($view,'formnovalidate'), 'Each actionable setup step must expose an explicit skip/do-later action without browser validation blocking it.' );
 wiz_check( false !== strpos($view,'certloom-brand-mark.png') && false !== strpos($view,'certloom-brand-wordmark.png') && false === strpos($view,'exact supplied full-colour Certloom lockup will replace'), 'Setup branding must use the supplied Certloom mark/wordmark assets with no stale placeholder note.' );
 wiz_check( false !== strpos($view,'wizard_skipped_steps') && false !== strpos($view,'is-skipped'), 'Progress must distinguish skipped steps from completed/current steps.' );
 wiz_check( false !== strpos($css,'var(--cl-brand-emerald)') && false !== strpos($css,'linear-gradient(90deg, var(--cl-cyan), var(--cl-brand-emerald))'), 'Current/progress states must use the Certloom green and brand gradient.' );
@@ -141,6 +146,11 @@ wiz_check( false !== strpos($css,'.certloom-setup-v2-organization-logo') && fals
 wiz_check( false !== strpos($js,'fitWizardTemplatePreview') && false !== strpos($js,"availableHeight / naturalHeight") && false !== strpos(file_get_contents($root.'/admin/assets/admin.css'),'certloom-wizard-template-preview-stage'), 'Setup certificate previews must fit by both width and height inside a bounded no-scroll stage.' );
 wiz_check( false === strpos($view,'generalized issuance backend') && false === strpos($admin,'generalized issuance backend') && false === strpos($view,'One required step remains'), 'Setup must not retain obsolete pending-backend or required-first-credential blockers.' );
 wiz_check( false !== strpos($admin,'issue_setup_wizard_first_credential') && false !== strpos($admin,'ManualIssuanceService') && false !== strpos($view,'Issue first credential'), 'Setup first issuance must use the canonical Manual Issuance service and expose a real issue action.' );
-wiz_check( false !== strpos($view,'Independent credential') && false !== strpos($view,'Program-backed or advanced issuance'), 'Setup first issuance must explicitly harmonize with canonical Independent/Program semantics.' );
+wiz_check( false !== strpos($view,'Independent credential') && false !== strpos($view,'Inherited from') && false !== strpos($view,'Review context & data'), 'Setup first issuance must harmonize with canonical Independent/Program title semantics and the new context step.' );
+
+wiz_check( false !== strpos($view,'data-certloom-setup-context') && false !== strpos($view,'setup_issuer_id') && false !== strpos($view,'setup_program_id') && false !== strpos($view,'setup_batch_id') && false !== strpos($view,'setup_signer_id'), 'Context step must allow profile-aware Issuer/Program/Batch/Signer selection without a separate roster system.' );
+wiz_check( false !== strpos($view,'Required by design') && false !== strpos($view,'setup_credential_values[') && false !== strpos($view,'Collected with the recipient on the next step'), 'Selected design requirements must become actual onboarding fields rather than a later failure notice.' );
+wiz_check( false !== strpos($admin,'FirstCredentialSetupPlan') && false !== strpos($admin,'validate_setup_wizard_context_requirements') && false !== strpos($admin,'materialize_setup_wizard_context'), 'Setup backend must plan, validate and materialize the selected design context through canonical repositories.' );
+wiz_check( false !== strpos($js,'data-certloom-setup-context') && false !== strpos($js,'data-certloom-setup-batch'), 'Setup JavaScript must keep Program/Batch context coherent while the administrator fills the compact context step.' );
 
 printf("PASS  Setup Wizard v2 profile/persistence/source contract\n\n%d checks, 0 failures\n", $checks);

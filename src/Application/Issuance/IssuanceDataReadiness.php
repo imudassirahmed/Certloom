@@ -113,6 +113,9 @@ final class IssuanceDataReadiness {
 		if ( 0 === strpos( $token, 'issuer.' ) || in_array( $token, array( 'organization', 'issuer_name', 'issuer_title' ), true ) ) {
 			return array( 'label' => $this->label( $token, $catalog ), 'source' => __( 'Issuer', 'certloom' ), 'action' => 'context', 'field_key' => '' );
 		}
+		if ( 0 === strpos( $token, 'batch.' ) || in_array( $token, array( 'batch_name', 'batch_code', 'cohort_name' ), true ) ) {
+			return array( 'label' => $this->label( $token, $catalog ), 'source' => ! empty( $context['batch_id'] ) ? __( 'Batch', 'certloom' ) : __( 'Batch — none selected', 'certloom' ), 'action' => 'context', 'field_key' => '' );
+		}
 		if ( 0 === strpos( $token, 'signer.' ) || in_array( $token, array( 'signer_name', 'signer_title' ), true ) ) {
 			return array( 'label' => $this->label( $token, $catalog ), 'source' => __( 'Signer', 'certloom' ), 'action' => 'context', 'field_key' => '' );
 		}
@@ -202,6 +205,7 @@ final class IssuanceDataReadiness {
 			'credential.expiry_date' => __( 'Expiry date', 'certloom' ), 'expiry_date' => __( 'Expiry date', 'certloom' ),
 			'program.name' => __( 'Program', 'certloom' ), 'program.title' => __( 'Program title', 'certloom' ), 'program.code' => __( 'Program code', 'certloom' ),
 			'course_name' => __( 'Program title', 'certloom' ), 'program_name' => __( 'Program title', 'certloom' ),
+			'batch.name' => __( 'Batch', 'certloom' ), 'batch.code' => __( 'Batch code', 'certloom' ), 'batch_name' => __( 'Batch', 'certloom' ), 'batch_code' => __( 'Batch code', 'certloom' ), 'cohort_name' => __( 'Batch', 'certloom' ),
 			'issuer.name' => __( 'Issuer name', 'certloom' ), 'issuer.title' => __( 'Issuer title', 'certloom' ), 'organization' => __( 'Issuer name', 'certloom' ), 'issuer_name' => __( 'Issuer name', 'certloom' ), 'issuer_title' => __( 'Issuer title', 'certloom' ),
 			'signer.name' => __( 'Signer name', 'certloom' ), 'signer.title' => __( 'Signer position / designation', 'certloom' ), 'signer.email' => __( 'Signer email', 'certloom' ), 'signer.signature_asset' => __( 'Signer signature', 'certloom' ), 'signer_name' => __( 'Signer name', 'certloom' ), 'signer_title' => __( 'Signer position / designation', 'certloom' ),
 			'site_name' => __( 'Site name', 'certloom' ),
@@ -226,7 +230,7 @@ final class IssuanceDataReadiness {
 
 	/** @return string */
 	private function humanize( $value ) {
-		$value = preg_replace( '/^(recipient|credential|program|issuer|signer)\./', '', (string) $value );
+		$value = preg_replace( '/^(recipient|credential|program|batch|issuer|signer)\./', '', (string) $value );
 		$value = str_replace( array( 'custom:', '.', '_', '-' ), ' ', $value );
 		return ucwords( trim( preg_replace( '/\s+/', ' ', $value ) ) );
 	}

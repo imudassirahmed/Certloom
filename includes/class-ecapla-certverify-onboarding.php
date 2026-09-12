@@ -6,11 +6,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 /** Premium, non-blocking first-run setup and WIZ-01 workflow state. */
 class Ecapla_CertVerify_Onboarding {
 	const OPTION_KEY = 'certverify_onboarding';
-	const VERSION    = 5;
+	const VERSION    = 6;
 
 	/** @return array<int,string> */
 	public static function wizard_steps() {
-		return array( 'welcome', 'profile', 'organization', 'fields', 'appearance', 'issue', 'finish' );
+		return array( 'welcome', 'profile', 'organization', 'fields', 'appearance', 'context', 'issue', 'finish' );
 	}
 
 	/** @return array<string,string> */
@@ -21,6 +21,7 @@ class Ecapla_CertVerify_Onboarding {
 			'organization' => __( 'Organization', 'certloom' ),
 			'fields'       => __( 'Credential fields', 'certloom' ),
 			'appearance'   => __( 'Appearance', 'certloom' ),
+			'context'      => __( 'Context & data', 'certloom' ),
 			'issue'        => __( 'First credential', 'certloom' ),
 			'finish'       => __( 'Finish', 'certloom' ),
 		);
@@ -406,10 +407,21 @@ class Ecapla_CertVerify_Onboarding {
 				if ( 'image' === $mode && empty( $draft['certificate_image_id'] ) ) { return new WP_Error( 'certloom_setup_image_required', __( 'Choose a PNG or JPEG certificate image, or select another appearance.', 'certloom' ) ); }
 				if ( 'design' === $mode && empty( $draft['design_template_id'] ) ) { return new WP_Error( 'certloom_setup_design_required', __( 'Choose a published Certloom design, or select another appearance.', 'certloom' ) ); }
 				return true;
+			case 'context':
+				$program_id = absint( $draft['setup_program_id'] ?? 0 );
+				$new_program = trim( (string) ( $draft['setup_new_program_title'] ?? '' ) );
+				$batch_id = absint( $draft['setup_batch_id'] ?? 0 );
+				$new_batch = trim( (string) ( $draft['setup_new_batch_name'] ?? '' ) );
+				if ( ( $batch_id || '' !== $new_batch ) && ! $program_id && '' === $new_program ) { return new WP_Error( 'certloom_setup_batch_program_required', __( 'Choose or add the Program context before adding a Batch or cycle.', 'certloom' ) ); }
+				if ( '' !== $new_batch && '' === trim( (string) ( $draft['setup_new_batch_code'] ?? '' ) ) ) { return new WP_Error( 'certloom_setup_batch_code_required', __( 'Enter a short code for the new Batch or cycle.', 'certloom' ) ); }
+				$signer_email = trim( (string) ( $draft['setup_new_signer_email'] ?? '' ) );
+				if ( '' !== $signer_email && function_exists( 'is_email' ) && ! is_email( $signer_email ) ) { return new WP_Error( 'certloom_setup_signer_email_invalid', __( 'Enter a valid email address for the new signer or leave it blank.', 'certloom' ) ); }
+				return true;
 			case 'issue':
 				if ( '' === trim( (string) ( $draft['first_recipient_name'] ?? '' ) ) ) { return new WP_Error( 'certloom_setup_recipient_required', __( 'Enter the recipient name to continue.', 'certloom' ) ); }
-				if ( '' === trim( (string) ( $draft['credential_title'] ?? '' ) ) ) { return new WP_Error( 'certloom_setup_title_required', __( 'Enter the credential title to continue.', 'certloom' ) ); }
-				if ( '' === trim( (string) ( $draft['issue_date'] ?? '' ) ) ) { return new WP_Error( 'certloom_setup_issue_date_required', __( 'Choose the issue date to continue.', 'certloom' ) ); }
+				$has_program = ! empty( $draft['setup_program_id'] ) || '' !== trim( (string) ( $draft['setup_new_program_title'] ?? '' ) );
+				if ( ! $has_program && '' === trim( (string) ( $draft['credential_title'] ?? '' ) ) ) { return new WP_Error( 'certloom_setup_title_required', __( 'Enter the credential title to continue.', 'certloom' ) ); }
+				if ( '' === trim( (string) ( $draft['issue_date'] ?? '' ) ) ) { return new WP_Error( 'certloom_setup_issue_date_required', __( 'Choose the effective date to continue.', 'certloom' ) ); }
 				$email = trim( (string) ( $draft['first_recipient_email'] ?? '' ) );
 				if ( '' !== $email && function_exists( 'is_email' ) && ! is_email( $email ) ) { return new WP_Error( 'certloom_setup_email_invalid', __( 'Enter a valid recipient email address or leave it blank.', 'certloom' ) ); }
 				return true;
@@ -477,6 +489,49 @@ class Ecapla_CertVerify_Onboarding {
 			if ( 'image' === $out['presentation_mode'] ) { $out['design_template_id'] = 0; }
 			elseif ( 'design' === $out['presentation_mode'] ) { $out['certificate_image_id'] = 0; }
 			else { $out['certificate_image_id'] = 0; $out['design_template_id'] = 0; }
+		}
+
+		foreach ( array( 'setup_issuer_id', 'setup_program_id', 'setup_batch_id', 'setup_signer_id' ) as $key ) {
+			if ( array_key_exists( $key, $draft ) ) { $out[ $key ] = absint( $draft[ $key ] ); }
+		}
+		foreach ( array(
+			'setup_new_issuer_name' => 255, 'setup_new_issuer_title' => 191, 'setup_new_program_title' => 255, 'setup_new_program_code' => 100,
+			'setup_new_batch_name' => 255, 'setup_new_batch_code' => 100, 'setup_new_signer_name' => 255,
+			'setup_new_signer_title' => 191, 'setup_new_signer_email' => 254, 'first_grade' => 191,
+			'first_recipient_first_name' => 200, 'first_recipient_middle_name' => 200, 'first_recipient_last_name' => 200,
+			'first_recipient_external_id' => 191,
+		) as $key => $limit ) {
+			if ( array_key_exists( $key, $draft ) ) { $out[ $key ] = self::limit_text( sanitize_text_field( (string) $draft[ $key ] ), $limit ); }
+		}
+		if ( array_key_exists( 'setup_new_signer_signature_id', $draft ) ) { $out['setup_new_signer_signature_id'] = absint( $draft['setup_new_signer_signature_id'] ); }
+		foreach ( array( 'setup_credential_values', 'first_recipient_custom' ) as $map_key ) {
+			if ( array_key_exists( $map_key, $draft ) ) {
+				$raw = is_array( $draft[ $map_key ] ) ? $draft[ $map_key ] : array();
+				$clean = array();
+				foreach ( array_slice( $raw, 0, 80, true ) as $field_key => $value ) {
+					$field_key = sanitize_key( (string) $field_key );
+					if ( '' === $field_key || is_array( $value ) || is_object( $value ) ) { continue; }
+					$clean[ $field_key ] = self::limit_text( sanitize_textarea_field( (string) $value ), 4000 );
+				}
+				$out[ $map_key ] = $clean;
+			}
+		}
+		if ( array_key_exists( 'setup_repeating_data', $draft ) ) {
+			$repeat = is_array( $draft['setup_repeating_data'] ) ? $draft['setup_repeating_data'] : array();
+			$clean_repeat = array();
+			$allowed_rows = array( 'subjects' => array( 'subject', 'code', 'credits' ), 'results' => array( 'subject', 'code', 'score', 'max_score', 'percentage', 'grade', 'credits', 'status' ) );
+			foreach ( $allowed_rows as $rowset => $keys ) {
+				if ( empty( $repeat[ $rowset ] ) || ! is_array( $repeat[ $rowset ] ) ) { continue; }
+				$rows = array();
+				foreach ( array_slice( $repeat[ $rowset ], 0, 50 ) as $row ) {
+					if ( ! is_array( $row ) ) { continue; }
+					$clean_row = array(); $has = false;
+					foreach ( $keys as $key ) { $value = self::limit_text( sanitize_text_field( (string) ( $row[ $key ] ?? '' ) ), 500 ); $clean_row[ $key ] = $value; if ( '' !== $value ) { $has = true; } }
+					if ( $has ) { $rows[] = $clean_row; }
+				}
+				if ( $rows ) { $clean_repeat[ $rowset ] = $rows; }
+			}
+			$out['setup_repeating_data'] = $clean_repeat;
 		}
 
 		foreach ( array( 'first_recipient_name' => 200, 'first_recipient_email' => 254, 'credential_title' => 191, 'issue_date' => 20 ) as $key => $limit ) {
