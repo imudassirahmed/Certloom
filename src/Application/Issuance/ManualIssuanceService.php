@@ -266,7 +266,7 @@ final class ManualIssuanceService {
 				);
 				foreach ( $current['request']['repeating_data'] as $key => $rows ) { $credential_facts[ $key ] = $rows; }
 				$layout = isset( $current['template_revision']['layout'] ) && is_array( $current['template_revision']['layout'] ) ? $current['template_revision']['layout'] : array();
-				$merge = $this->merges->build( $recipient, $current['program'], $current['issuer'], $credential_facts, $layout, $this->credential_custom_values( $current['field_contract'], $current['field_values'], $current['request']['custom_merge_fields'] ), $current['signer'] );
+				$merge = $this->merges->build( $recipient, $current['program'], $current['issuer'], $credential_facts, $layout, $this->credential_custom_values( $current['field_contract'], $current['field_values'], $current['request']['custom_merge_fields'], $current['request']['design_field_aliases'] ?? array() ), $current['signer'] );
 				if ( is_wp_error( $merge ) ) { return $merge; }
 				$snapshot = $this->snapshot( $current, $recipient, $series, $credential_facts, $merge, $expected_review_fingerprint, $actor_user_id, $source_type, $source_ref, $source_context );
 				if ( is_wp_error( $snapshot ) ) { return $snapshot; }
@@ -386,7 +386,11 @@ final class ManualIssuanceService {
 		}
 		$field_contract = ( new ScopedFieldContract() )->resolve( is_array( $program['field_contract'] ?? null ) ? $program['field_contract'] : ScopedFieldContract::empty_program(), is_array( $batch ) && is_array( $batch['field_contract'] ?? null ) ? $batch['field_contract'] : null, $this->field_catalog() );
 		if ( is_wp_error( $field_contract ) ) { return $field_contract; }
-		if ( empty( $program['id'] ) ) { $field_contract = $this->independent_field_contract( $field_contract, $request ); }
+		// Program/Batch contracts define reusable fields, but an individual issued
+		// credential may still carry genuine one-off catalog-backed facts required
+		// by its selected design. Add those facts to the immutable issuance contract
+		// without mutating the reusable Program/Batch configuration.
+		$field_contract = $this->issuance_field_contract( $field_contract, $request, empty( $program['id'] ) );
 		$field_values = $this->resolve_field_values( $field_contract, $recipient, $request, $allow_missing_required_fields );
 		if ( is_wp_error( $field_values ) ) { return $field_values; }
 		$issuer = null;
@@ -489,7 +493,7 @@ final class ManualIssuanceService {
 		);
 		foreach ( $request['repeating_data'] as $key => $rows ) { $probe_facts[ $key ] = $rows; }
 		$layout = isset( $revision['layout'] ) && is_array( $revision['layout'] ) ? $revision['layout'] : array();
-		$merge_probe = $this->merges->build( $recipient, $program, $issuer, $probe_facts, $layout, $this->credential_custom_values( $field_contract, $field_values, $request['custom_merge_fields'] ), $signer, 'design' === (string) $request['presentation_mode'] );
+		$merge_probe = $this->merges->build( $recipient, $program, $issuer, $probe_facts, $layout, $this->credential_custom_values( $field_contract, $field_values, $request['custom_merge_fields'], $request['design_field_aliases'] ?? array() ), $signer, 'design' === (string) $request['presentation_mode'] );
 		if ( is_wp_error( $merge_probe ) ) { return $merge_probe; }
 		$required_merge_tokens = $this->merges->required_tokens( $layout );
 		$data_readiness = ( new IssuanceDataReadiness() )->inspect(
@@ -541,6 +545,7 @@ final class ManualIssuanceService {
 			'numbering_policy' => $this->numbers->policy_identity(),
 			'manual_display_number' => $this->numbers->is_automatic() ? '' : $request['display_number'],
 			'custom_merge_fields' => $request['custom_merge_fields'],
+			'design_field_aliases' => $request['design_field_aliases'],
 			'repeating_data' => $request['repeating_data'],
 			'credential_locale' => $locale,
 			'template_locale_variant' => $template_locale_variant,
@@ -640,6 +645,8 @@ final class ManualIssuanceService {
 		$display_number = trim( sanitize_text_field( (string) ( $request['display_number'] ?? '' ) ) );
 		$custom_merge_fields = $this->scalar_map( $request['custom_merge_fields'] ?? array() );
 		if ( is_wp_error( $custom_merge_fields ) ) { return $custom_merge_fields; }
+		$design_field_aliases = $this->design_field_alias_map( $request['design_field_aliases'] ?? array() );
+		if ( is_wp_error( $design_field_aliases ) ) { return $design_field_aliases; }
 		$repeating_data = $this->repeating_data( $request['repeating_data'] ?? null );
 		if ( is_wp_error( $repeating_data ) ) { return $repeating_data; }
 		return array(
@@ -663,6 +670,7 @@ final class ManualIssuanceService {
 			'grade' => $grade,
 			'display_number' => $this->numbers->is_automatic() ? '' : $display_number,
 			'custom_merge_fields' => $custom_merge_fields,
+			'design_field_aliases' => $design_field_aliases,
 			'repeating_data' => $repeating_data,
 		);
 	}
@@ -696,12 +704,7 @@ final class ManualIssuanceService {
 		if ( $configured && '' !== trim( (string) ( $request['grade'] ?? '' ) ) && ! isset( $assigned['grade'] ) ) {
 			return new \WP_Error( 'certloom_manual_issue_unassigned_grade', __( 'Grade / result is not assigned to the selected Program/Batch credential-field contract.', 'certloom' ) );
 		}
-		if ( empty( $rows ) ) {
-			if ( $configured && ! empty( $submitted ) ) {
-				return new \WP_Error( 'certloom_manual_issue_unassigned_field', __( 'This Program uses a scoped credential-field contract and does not accept unassigned credential-specific fields.', 'certloom' ) );
-			}
-			return array();
-		}
+		if ( empty( $rows ) ) { return array(); }
 		$catalog = $this->field_catalog();
 		$allowed_custom = array(); $values = array();
 		foreach ( $rows as $row ) {
@@ -715,17 +718,25 @@ final class ManualIssuanceService {
 			if ( ! $allow_missing_required && ! empty( $row['required'] ) && '' === trim( (string) $clean ) ) { return new \WP_Error( 'certloom_manual_issue_required_field_missing', sprintf( /* translators: %s: label. */ __( 'Complete required credential field “%s” before issuing.', 'certloom' ), (string) ( $row['label'] ?? $key ) ) ); }
 			$values[ $key ] = (string) $clean;
 		}
-		foreach ( $submitted as $raw_key => $unused ) { $key = sanitize_key( (string) $raw_key ); if ( $configured && '' !== $key && ! isset( $allowed_custom[ $key ] ) ) { return new \WP_Error( 'certloom_manual_issue_unassigned_field', __( 'A credential-specific field was submitted that is not assigned to the selected Program/Batch field contract.', 'certloom' ) ); } }
 		ksort( $values, SORT_STRING ); return $values;
 	}
 
-	/** Preserve legacy free custom merge rows only for Programs that have not opted into FLD-02 yet. @return array<string,string> */
-	private function credential_custom_values( array $contract, array $values, array $legacy ) {
+	/** Merge reusable contract values with issued-only credential details. @return array<string,string> */
+	private function credential_custom_values( array $contract, array $values, array $one_off, array $aliases = array() ) {
 		$rows = isset( $contract['fields'] ) && is_array( $contract['fields'] ) ? $contract['fields'] : array();
-		$configured = ! empty( $contract['_meta']['configured'] );
-		if ( empty( $rows ) ) { return $configured ? array() : $legacy; }
-		$out = $configured ? array() : $legacy;
-		foreach ( $rows as $row ) { if ( 'credential_custom' !== (string) ( $row['value_source'] ?? '' ) ) { continue; } $key = sanitize_key( (string) ( $row['key'] ?? '' ) ); if ( '' !== $key && array_key_exists( $key, $values ) ) { $out[ $key ] = (string) $values[ $key ]; } }
+		// One-off values are valid even when a Program has adopted FLD-02. They are
+		// frozen only on this Credential Version and never mutate the reusable contract.
+		$out = $one_off;
+		foreach ( $rows as $row ) {
+			if ( 'credential_custom' !== (string) ( $row['value_source'] ?? '' ) ) { continue; }
+			$key = sanitize_key( (string) ( $row['key'] ?? '' ) );
+			if ( '' !== $key && array_key_exists( $key, $values ) ) { $out[ $key ] = (string) $values[ $key ]; }
+		}
+		foreach ( $aliases as $target => $source ) {
+			$target = sanitize_key( (string) $target ); $source = sanitize_key( (string) $source );
+			if ( '' === $target || '' === $source || ! array_key_exists( $source, $out ) || array_key_exists( $target, $out ) ) { continue; }
+			$out[ $target ] = (string) $out[ $source ];
+		}
 		ksort( $out, SORT_STRING ); return $out;
 	}
 
@@ -738,15 +749,16 @@ final class ManualIssuanceService {
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function independent_field_contract( array $contract, array $request ) {
+	private function issuance_field_contract( array $contract, array $request, $independent = false ) {
 		$catalog = $this->field_catalog();
 		$submitted = isset( $request['custom_merge_fields'] ) && is_array( $request['custom_merge_fields'] ) ? $request['custom_merge_fields'] : array();
-		$keys = array_keys( $submitted );
-		if ( '' !== trim( (string) ( $request['grade'] ?? '' ) ) ) { $keys[] = 'grade'; }
-		$rows = array();
-		foreach ( array_values( array_unique( $keys ) ) as $raw_key ) {
+		$rows = isset( $contract['fields'] ) && is_array( $contract['fields'] ) ? array_values( $contract['fields'] ) : array();
+		$base_count = count( $rows );
+		$existing = array();
+		foreach ( $rows as $row ) { if ( is_array( $row ) ) { $key = sanitize_key( (string) ( $row['key'] ?? '' ) ); if ( '' !== $key ) { $existing[ $key ] = true; } } }
+		foreach ( array_keys( $submitted ) as $raw_key ) {
 			$key = sanitize_key( (string) $raw_key );
-			if ( '' === $key || ! isset( $catalog[ $key ] ) || ! is_array( $catalog[ $key ] ) || ! ScopedFieldContract::is_scopable_definition( $catalog[ $key ] ) ) { continue; }
+			if ( '' === $key || isset( $existing[ $key ] ) || ! isset( $catalog[ $key ] ) || ! is_array( $catalog[ $key ] ) || ! ScopedFieldContract::is_scopable_definition( $catalog[ $key ] ) || 'credential_custom' !== ScopedFieldContract::value_source( $key ) ) { continue; }
 			$field = $catalog[ $key ];
 			$rows[] = array(
 				'key' => $key,
@@ -757,13 +769,28 @@ final class ManualIssuanceService {
 				'required' => false,
 				'requirement' => 'optional',
 				'origin' => 'credential',
-				'value_source' => ScopedFieldContract::value_source( $key ),
+				'value_source' => 'credential_custom',
 			);
+			$existing[ $key ] = true;
 		}
 		$contract['fields'] = $rows;
 		if ( ! isset( $contract['_meta'] ) || ! is_array( $contract['_meta'] ) ) { $contract['_meta'] = array(); }
-		$contract['_meta']['independent'] = true;
+		if ( $independent ) { $contract['_meta']['independent'] = true; }
+		if ( count( $rows ) > $base_count ) { $contract['_meta']['one_off'] = true; }
 		return $contract;
+	}
+
+	/** @return array<string,string>|\WP_Error */
+	private function design_field_alias_map( $value ) {
+		if ( null === $value || '' === $value ) { return array(); }
+		if ( ! is_array( $value ) || count( $value ) > 30 ) { return new \WP_Error( 'certloom_manual_issue_design_field_aliases_invalid', __( 'Design field mappings must be a bounded list.', 'certloom' ) ); }
+		$out = array();
+		foreach ( $value as $target => $source ) {
+			$target = sanitize_key( (string) $target ); $source = sanitize_key( (string) $source );
+			if ( '' === $target || '' === $source || strlen( $target ) > 64 || strlen( $source ) > 64 ) { return new \WP_Error( 'certloom_manual_issue_design_field_aliases_invalid', __( 'Design field mappings contain an invalid field key.', 'certloom' ) ); }
+			$out[ $target ] = $source;
+		}
+		ksort( $out, SORT_STRING ); return $out;
 	}
 
 	/** Resolve an explicit signer override or the deterministic Batch → Program → Issuer → global hierarchy. @return array<string,mixed>|\WP_Error */
@@ -854,7 +881,7 @@ final class ManualIssuanceService {
 		try { $merge_sha = $this->json->hash( $merge ); } catch ( \Throwable $error ) { return new \WP_Error( 'certloom_manual_issue_merge_hash_failed', __( 'Certloom could not create the immutable merge snapshot fingerprint. Issuance was rolled back.', 'certloom' ) ); }
 		return array(
 			'_meta' => array( 'schema' => self::SNAPSHOT_SCHEMA, 'schema_version' => self::SNAPSHOT_VERSION ),
-			'issuance' => array( 'source' => (string) $source_type, 'source_ref' => null === $source_ref ? null : (string) $source_ref, 'actor_user_id' => absint( $actor_user_id ), 'review_fingerprint' => (string) $fingerprint, 'design_source' => (string) ( $review['request']['design_source'] ?? 'none' ), 'custom_merge_fields' => $review['request']['custom_merge_fields'], 'integration_context_sha256' => is_array( $source_context ) ? (string) ( $source_context['sha256'] ?? '' ) : null, 'integration_context' => is_array( $source_context ) && isset( $source_context['context'] ) && is_array( $source_context['context'] ) ? $source_context['context'] : null ),
+			'issuance' => array( 'source' => (string) $source_type, 'source_ref' => null === $source_ref ? null : (string) $source_ref, 'actor_user_id' => absint( $actor_user_id ), 'review_fingerprint' => (string) $fingerprint, 'design_source' => (string) ( $review['request']['design_source'] ?? 'none' ), 'custom_merge_fields' => $review['request']['custom_merge_fields'], 'design_field_aliases' => $review['request']['design_field_aliases'] ?? array(), 'integration_context_sha256' => is_array( $source_context ) ? (string) ( $source_context['sha256'] ?? '' ) : null, 'integration_context' => is_array( $source_context ) && isset( $source_context['context'] ) && is_array( $source_context['context'] ) ? $source_context['context'] : null ),
 			'presentation' => array(
 				'mode' => $presentation_mode,
 				'certificate_image_id' => 'image' === $presentation_mode ? absint( $review['request']['certificate_image_id'] ?? 0 ) : null,

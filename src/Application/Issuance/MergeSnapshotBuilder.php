@@ -124,6 +124,11 @@ final class MergeSnapshotBuilder {
 			// One-off credential values can satisfy an explicitly-required legacy
 			// plain token without allowing them to override canonical merge keys.
 			if ( in_array( $key, $required, true ) && ! array_key_exists( $key, $values ) ) { $values[ $key ] = $scalar; }
+			// The Designer may use a credential.<key> token for an issued-only fact.
+			// Expose the value under that exact required namespace while protecting
+			// every built-in credential.* key already created above.
+			$credential_token = 'credential.' . $key;
+			if ( in_array( $credential_token, $required, true ) && ! array_key_exists( $credential_token, $values ) ) { $values[ $credential_token ] = $scalar; }
 		}
 
 		foreach ( $required as $token ) {

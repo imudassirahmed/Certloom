@@ -611,6 +611,19 @@ final class ManualIssuanceAdmin {
 				$custom[ $key ] = (string) $value;
 			}
 		}
+		$design_field_aliases = array();
+		if ( isset( $post['design_field_aliases'] ) && is_array( $post['design_field_aliases'] ) ) {
+			if ( count( $post['design_field_aliases'] ) > 30 ) {
+				$this->request_error = new \WP_Error( 'certloom_manual_issue_design_field_aliases_too_many', __( 'Design field assignments are limited to 30 per credential.', 'certloom' ) );
+			}
+			foreach ( array_slice( $post['design_field_aliases'], 0, 30, true ) as $raw_target => $raw_source ) {
+				if ( is_array( $raw_source ) ) { continue; }
+				$target = sanitize_key( (string) $raw_target );
+				$source = sanitize_key( (string) $raw_source );
+				if ( '' === $target || '' === $source ) { continue; }
+				$design_field_aliases[ $target ] = $source;
+			}
+		}
 		$repeating_data = $this->repeating_data_from_post( $post['repeating_data'] ?? array() );
 		if ( is_wp_error( $repeating_data ) ) { $this->request_error = $repeating_data; $repeating_data = array(); }
 		return array(
@@ -634,6 +647,7 @@ final class ManualIssuanceAdmin {
 			'grade' => isset( $post['grade'] ) ? (string) $post['grade'] : '',
 			'display_number' => isset( $post['display_number'] ) ? (string) $post['display_number'] : '',
 			'custom_merge_fields' => $custom,
+			'design_field_aliases' => $design_field_aliases,
 			'repeating_data' => $repeating_data,
 		);
 	}
@@ -728,6 +742,9 @@ final class ManualIssuanceAdmin {
 		}
 		foreach ( (array) ( $r['custom_merge_fields'] ?? array() ) as $key => $value ) {
 			echo '<input type="hidden" name="custom_merge_fields[' . esc_attr( (string) $key ) . ']" value="' . esc_attr( (string) $value ) . '">';
+		}
+		foreach ( (array) ( $r['design_field_aliases'] ?? array() ) as $target => $source ) {
+			echo '<input type="hidden" name="design_field_aliases[' . esc_attr( (string) $target ) . ']" value="' . esc_attr( (string) $source ) . '">';
 		}
 		foreach ( (array) ( $r['repeating_data'] ?? array() ) as $rowset => $rows ) {
 			if ( ! in_array( $rowset, array( 'subjects', 'results' ), true ) || ! is_array( $rows ) ) { continue; }

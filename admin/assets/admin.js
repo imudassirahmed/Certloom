@@ -809,8 +809,17 @@
 				renderIndependentEmpty();
 			}
 
+			function designAliasInput( targetKey ) { return form.querySelector( 'input[data-certloom-design-field-alias="' + targetKey + '"]' ); }
+			function designAliasValue( targetKey ) { var input = designAliasInput( targetKey ); return input ? String( input.value || '' ) : ''; }
+			function setDesignAlias( targetKey, sourceKey ) {
+				var input = designAliasInput( targetKey );
+				if ( ! sourceKey ) { if ( input ) { input.remove(); } return; }
+				if ( ! input ) { input = document.createElement( 'input' ); input.type = 'hidden'; input.setAttribute( 'data-certloom-design-field-alias', targetKey ); input.name = 'design_field_aliases[' + targetKey + ']'; form.appendChild( input ); }
+				input.value = sourceKey;
+			}
+
 			function renderDesignDetailSuggestions( fields ) {
-				if ( ! independentSuggestions ) { return; }
+				if ( ! independentSuggestions || ! independentInputs ) { return; }
 				independentSuggestions.innerHTML = '';
 				var seen = {};
 				var candidates = ( Array.isArray( fields ) ? fields : [] ).filter( function ( field ) {
@@ -822,12 +831,34 @@
 				if ( ! candidates.length ) { independentSuggestions.hidden = true; return; }
 				var label = document.createElement( 'span' ); label.className = 'certloom-independent-detail-suggestions__label'; label.textContent = certloomText( 'designSuggestedDetails', 'Needed by the selected design' ); independentSuggestions.appendChild( label );
 				candidates.forEach( function ( field ) {
+					var row = document.createElement( 'div' ); row.className = 'certloom-design-required-detail'; row.setAttribute( 'data-certloom-design-required-detail', field._safeFieldKey );
+					var copy = document.createElement( 'div' ); copy.className = 'certloom-design-required-detail__copy';
+					var strong = document.createElement( 'strong' ); strong.textContent = String( field.label || field._safeFieldKey ); copy.appendChild( strong );
+					var meta = document.createElement( 'small' ); meta.textContent = certloomText( 'designSuggestedMissing', 'Required by the selected design and not filled yet.' ); copy.appendChild( meta ); row.appendChild( copy );
+					var actions = document.createElement( 'div' ); actions.className = 'certloom-design-required-detail__actions';
 					var button = document.createElement( 'button' ); button.type = 'button'; button.className = 'button certloom-independent-detail-suggestion';
 					button.setAttribute( 'data-certloom-suggested-field', field._safeFieldKey );
 					var text = String( certloomText( 'designSuggestedAdd', 'Add %s' ) ).replace( '%s', String( field.label || field._safeFieldKey ) );
 					button.innerHTML = '<span aria-hidden="true">+</span> ' + escapeHtml( text );
-					button.addEventListener( 'click', function () { renderIndependentField( field._safeFieldKey, true, field.label || '' ); renderIndependentEmpty(); renderDesignDetailSuggestions( candidates ); form.dispatchEvent( new CustomEvent( 'certloom:issuance-data-changed', { bubbles: true } ) ); } );
-					independentSuggestions.appendChild( button );
+					button.addEventListener( 'click', function () { setDesignAlias( field._safeFieldKey, '' ); renderIndependentField( field._safeFieldKey, true, field.label || '' ); renderIndependentEmpty(); renderDesignDetailSuggestions( candidates ); form.dispatchEvent( new CustomEvent( 'certloom:issuance-data-changed', { bubbles: true } ) ); } );
+					actions.appendChild( button );
+
+					var mapCandidates = independentCatalog.filter( function ( candidate ) { return candidate && candidate.key && candidate.key !== field._safeFieldKey; } );
+					if ( mapCandidates.length ) {
+						var mapping = document.createElement( 'label' ); mapping.className = 'certloom-design-required-detail__mapping';
+						var mapLabel = document.createElement( 'span' ); mapLabel.textContent = certloomText( 'designSuggestedMap', 'Assign existing detail' ); mapping.appendChild( mapLabel );
+						var mapSelect = document.createElement( 'select' ); mapSelect.setAttribute( 'data-certloom-design-field-map', field._safeFieldKey );
+						var placeholder = document.createElement( 'option' ); placeholder.value = ''; placeholder.textContent = certloomText( 'designSuggestedChooseExisting', 'Choose an existing credential detail…' ); mapSelect.appendChild( placeholder );
+						mapCandidates.forEach( function ( candidate ) { var option = document.createElement( 'option' ); option.value = candidate.key; option.textContent = candidate.label || candidate.key; mapSelect.appendChild( option ); } );
+						mapSelect.value = designAliasValue( field._safeFieldKey );
+						mapSelect.addEventListener( 'change', function () {
+							var sourceKey = String( mapSelect.value || '' ).replace( /[^a-z0-9_-]/g, '' ); setDesignAlias( field._safeFieldKey, sourceKey );
+							if ( sourceKey ) { var sourceDefinition = independentCatalogByKey[ sourceKey ] || {}; renderIndependentField( sourceKey, true, sourceDefinition.label || sourceKey ); renderIndependentEmpty(); }
+							form.dispatchEvent( new CustomEvent( 'certloom:issuance-data-changed', { bubbles: true } ) );
+						} );
+						mapping.appendChild( mapSelect ); actions.appendChild( mapping );
+					}
+					row.appendChild( actions ); independentSuggestions.appendChild( row );
 				} );
 				independentSuggestions.hidden = false;
 			}

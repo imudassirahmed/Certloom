@@ -105,6 +105,22 @@ final class IssuanceDataReadiness {
 		if ( in_array( $token, array( 'credential.grade', 'grade' ), true ) ) {
 			return array( 'label' => __( 'Grade / result', 'certloom' ), 'source' => __( 'Credential details', 'certloom' ), 'action' => 'grade', 'field_key' => 'grade' );
 		}
+		// Designer tokens in the credential.<key> namespace are one-off issued
+		// credential facts unless they are one of the first-class credential
+		// tokens handled above. This keeps custom Designer fields actionable
+		// instead of falling through to the vague Credential context bucket.
+		if ( 0 === strpos( $token, 'credential.' ) ) {
+			$field_key = sanitize_key( substr( $token, 11 ) );
+			if ( '' !== $field_key && preg_match( '/^[a-z][a-z0-9_-]{0,63}$/', $field_key ) ) {
+				$field = isset( $catalog[ $field_key ] ) && is_array( $catalog[ $field_key ] ) ? $catalog[ $field_key ] : array();
+				return array(
+					'label' => (string) ( $field['label'] ?? $this->humanize( $field_key ) ),
+					'source' => __( 'Credential details', 'certloom' ),
+					'action' => 'credential_detail',
+					'field_key' => $field_key,
+				);
+			}
+		}
 		if ( 'score' === $token && isset( $catalog['score'] ) && is_array( $catalog['score'] ) ) {
 			return array( 'label' => (string) ( $catalog['score']['label'] ?? __( 'Score', 'certloom' ) ), 'source' => __( 'Credential details', 'certloom' ), 'action' => 'credential_detail', 'field_key' => 'score' );
 		}

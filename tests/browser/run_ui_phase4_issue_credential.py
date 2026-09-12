@@ -70,7 +70,19 @@ async def run():
         await page.wait_for_function("document.querySelector('[data-certloom-design-data-summary]') && document.querySelector('[data-certloom-design-data-summary]').textContent.indexOf('1 design field') !== -1")
         await ck(await review.is_disabled(),'automaticProgramDesignStillFailsClosedOnMissingDesignData')
         suggested=page.locator('[data-certloom-independent-detail-suggestions] [data-certloom-suggested-field="address"]')
-        await ck(await suggested.is_visible() and 'Add Address' in (await suggested.text_content()),'missingDesignFieldIsSuggestedDirectlyBelowAddCredentialDetail')
+        await ck(await suggested.is_visible() and 'Add Address' in (await suggested.text_content()),'missingNamespacedDesignFieldIsSuggestedDirectlyBelowAddCredentialDetail')
+        mapping=page.locator('[data-certloom-design-field-map="address"]')
+        await ck(await mapping.is_visible() and 'Membership level' in (await mapping.text_content()),'missingDesignFieldCanBeAssignedToAnExistingCredentialDetail')
+        await mapping.select_option('membership_level')
+        mapped_input=page.locator('[data-certloom-independent-value-key="membership_level"]')
+        await ck(await mapped_input.is_visible(),'assignExistingDetailCreatesOrFocusesTheMappedInput')
+        await mapped_input.fill('Mapped address value')
+        await page.wait_for_function("document.querySelector('[data-certloom-design-data-summary]') && document.querySelector('[data-certloom-design-data-summary]').textContent.indexOf('All design fields are ready') !== -1")
+        await ck(not await review.is_disabled(),'mappedExistingCredentialDetailCanSatisfyDesignRequirement')
+        await mapped_input.fill('')
+        await mapping.select_option('')
+        await page.wait_for_function("document.querySelector('[data-certloom-design-data-summary]') && document.querySelector('[data-certloom-design-data-summary]').textContent.indexOf('1 design field') !== -1")
+        suggested=page.locator('[data-certloom-independent-detail-suggestions] [data-certloom-suggested-field="address"]')
         await suggested.click()
         program_address=page.locator('[data-certloom-independent-value-key="address"]')
         await ck(await program_address.is_visible(),'suggestedDesignFieldCreatesOneOffCredentialInput')
@@ -219,7 +231,7 @@ async def run():
         await ck(await mobile.locator('.certloom-issue-actions .button').evaluate('(e)=>Math.round(e.getBoundingClientRect().width)')>300,'mobilePrimaryActionFullWidth')
         await mobile.close(); await browser.close()
     if failed:
-        print('FAIL  alpha.4.36 Issue Credential browser gate:',', '.join(failed)); print(f'\n{checks-len(failed)} passed, {len(failed)} failures'); return 1
-    print('PASS  alpha.4.36 Issue Credential browser gate: lifecycle-aware Program/Independent issuance, REST-authenticated real-data design preview, normal-page certificate appearance, bounded Subjects/Results layout and Additional-details technical fields')
-    print(f'\n{checks} alpha.4.36 Issue Credential browser checks, 0 failures'); return 0
+        print('FAIL  alpha.4.37 Issue Credential browser gate:',', '.join(failed)); print(f'\n{checks-len(failed)} passed, {len(failed)} failures'); return 1
+    print('PASS  alpha.4.37 Issue Credential browser gate: lifecycle-aware Program/Independent issuance, REST-authenticated real-data design preview, normal-page certificate appearance, bounded Subjects/Results layout and Additional-details technical fields')
+    print(f'\n{checks} alpha.4.37 Issue Credential browser checks, 0 failures'); return 0
 raise SystemExit(asyncio.run(run()))
