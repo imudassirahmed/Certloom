@@ -211,7 +211,13 @@ class Ecapla_CertVerify_Admin {
 		wp_enqueue_style( 'ecapla-certverify-admin', ECAPLA_CERTVERIFY_URL . 'admin/assets/admin.css', array( 'certloom-tokens' ), ECAPLA_CERTVERIFY_VERSION );
 		wp_enqueue_style( 'certloom-admin-foundation', ECAPLA_CERTVERIFY_URL . 'admin/assets/certloom-foundation.css', array( 'ecapla-certverify-admin' ), ECAPLA_CERTVERIFY_VERSION );
 		wp_enqueue_script( 'ecapla-certverify-admin', ECAPLA_CERTVERIFY_URL . 'admin/assets/admin.js', array(), ECAPLA_CERTVERIFY_VERSION, true );
+		$usage_profile = \Certloom\Infrastructure\Admin\UsageProfilePresentation::active_profile();
+		$usage_terms = \Certloom\Infrastructure\Admin\UsageProfilePresentation::terms( $usage_profile );
 		wp_localize_script( 'ecapla-certverify-admin', 'certloomAdminL10n', array(
+			'usageProfile' => $usage_profile,
+			'usageProfileLabel' => \Certloom\Infrastructure\Admin\UsageProfilePresentation::profile_label(),
+			'activeProfileLabel' => __( 'Active profile', 'certloom' ),
+			'usageTerms' => $usage_terms,
 			'restNonce' => wp_create_nonce( 'wp_rest' ),
 			'restContextUrl' => rest_url( 'certloom/v1/admin/context' ),
 			'restCredentialsUrl' => rest_url( 'certloom/v1/admin/credentials' ),
@@ -292,10 +298,13 @@ class Ecapla_CertVerify_Admin {
 			'designDataChooseProgram' => __( 'Choose Program', 'certloom' ),
 			'designDataAddValue' => __( 'Add value', 'certloom' ),
 			'credentialDetailsIndependent' => __( 'Add the credential-specific facts you want to store with this independent credential.', 'certloom' ),
-			'credentialDetailsProgram' => __( 'Program and Batch field rules appear here. These values are frozen into the issued credential.', 'certloom' ),
+			'credentialDetailsProgram' => __( 'Program and Batch field rules appear here. Add one-off credential details below when this issuance or its design needs them.', 'certloom' ),
 			'addCredentialDetail' => __( 'Add detail', 'certloom' ),
 			'chooseCredentialDetail' => __( 'Choose a detail…', 'certloom' ),
 			'noIndependentDetails' => __( 'No extra credential details added yet.', 'certloom' ),
+			'designSuggestedDetails' => __( 'Needed by the selected design', 'certloom' ),
+			'designSuggestedAdd' => __( 'Add %s', 'certloom' ),
+			'designAutoApplied' => __( 'The selected Program has a published inherited design, so Certloom selected it automatically.', 'certloom' ),
 			'googleWaiting' => __( 'Waiting for Google…', 'certloom' ),
 			'googleOpening' => __( 'Opening Google…', 'certloom' ),
 			'googleCompletePermission' => __( 'Complete permission in the Google window.', 'certloom' ),
@@ -751,6 +760,11 @@ class Ecapla_CertVerify_Admin {
 		$draft = isset( $state['wizard_draft'] ) && is_array( $state['wizard_draft'] ) ? $state['wizard_draft'] : array();
 		$current_settings = Ecapla_CertVerify_Settings::get_all();
 		$next_settings = $current_settings;
+		if ( array_key_exists( 'usage_profile', $draft ) ) {
+			$engine = new \Certloom\Application\Setup\PurposePresetEngine();
+			$profile = $engine->normalize_profile( $draft['usage_profile'] );
+			if ( isset( $engine->profiles()[ $profile ] ) ) { $next_settings['usage_profile'] = $profile; }
+		}
 		foreach ( array( 'numbering_mode', 'numbering_prefix', 'numbering_suffix', 'numbering_start', 'numbering_padding' ) as $key ) {
 			if ( array_key_exists( $key, $draft ) ) { $next_settings[ $key ] = $draft[ $key ]; }
 		}
@@ -1240,6 +1254,7 @@ class Ecapla_CertVerify_Admin {
 			'numbering_suffix'           => isset( $_POST['numbering_suffix'] ) ? sanitize_text_field( wp_unslash( $_POST['numbering_suffix'] ) ) : '',
 			'numbering_start'            => isset( $_POST['numbering_start'] ) ? sanitize_text_field( wp_unslash( $_POST['numbering_start'] ) ) : '1',
 			'numbering_padding'          => isset( $_POST['numbering_padding'] ) ? sanitize_text_field( wp_unslash( $_POST['numbering_padding'] ) ) : '6',
+			'usage_profile'              => isset( $_POST['usage_profile'] ) ? sanitize_key( wp_unslash( $_POST['usage_profile'] ) ) : (string) Ecapla_CertVerify_Settings::get( 'usage_profile', 'general_other' ),
 			'status_desc'              => array(),
 		);
 		if ( isset( $_POST['status_desc'] ) && is_array( $_POST['status_desc'] ) ) {

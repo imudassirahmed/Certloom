@@ -3334,3 +3334,64 @@ body.certloom-setup-v2-body { overflow: hidden; }
     justify-self: start;
   }
 }
+
+/* Phase 4.36 — one compact active-profile status in every Certloom hero. */
+.certloom-active-profile-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cl-2);
+  width: fit-content;
+  margin-top: var(--cl-3);
+  padding: 5px 10px;
+  border: 1px solid var(--cl-rule);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--cl-surface) 86%, var(--cl-brand-emerald) 14%);
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-xs);
+  line-height: 1.35;
+}
+.certloom-active-profile-badge strong { color: var(--cl-ink); font-weight: 700; }
+.certloom-eyebrow .certloom-active-profile-badge.is-eyebrow-status {
+  margin-top: 0;
+  margin-left: var(--cl-2);
+  padding: 1px 7px;
+  vertical-align: middle;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Phase 4.36 — design-required credential details are actionable at the entry point. */
+.certloom-independent-detail-suggestions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--cl-2);
+  margin-top: var(--cl-2);
+  padding: var(--cl-3);
+  border: 1px solid var(--cl-rule);
+  border-radius: var(--cl-r-lift);
+  background: var(--cl-paper);
+}
+.certloom-independent-detail-suggestions[hidden] { display: none; }
+.certloom-independent-detail-suggestions__label {
+  flex: 1 1 100%;
+  color: var(--cl-ink-soft);
+  font-size: var(--cl-t-xs);
+  font-weight: 650;
+}
+.certloom-independent-detail-suggestion.button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cl-1);
+  min-height: 34px;
+  border-color: var(--cl-brand-emerald);
+  color: var(--cl-ink);
+  background: var(--cl-surface);
+}
+.certloom-independent-detail-suggestion.button > span {
+  color: var(--cl-valid);
+  font-size: 1.15em;
+  font-weight: 800;
+  line-height: 1;
+}

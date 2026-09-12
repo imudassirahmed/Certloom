@@ -36,6 +36,7 @@ class Ecapla_CertVerify_Settings {
 			'numbering_suffix'           => '',
 			'numbering_start'            => 1,
 			'numbering_padding'          => 6,
+			'usage_profile'              => 'general_other',
 		);
 	}
 
@@ -62,8 +63,17 @@ class Ecapla_CertVerify_Settings {
 		if ( is_wp_error( Ecapla_CertVerify_Backup::assert_writes_allowed() ) ) {
 			return false;
 		}
-		$data  = wp_parse_args( is_array( $data ) ? $data : array(), self::defaults() );
+		$raw_data = is_array( $data ) ? $data : array();
+		$stored_profile = sanitize_key( (string) self::get( 'usage_profile', 'general_other' ) );
+		$data  = wp_parse_args( $raw_data, self::defaults() );
 		$clean = self::defaults();
+		$profile = array_key_exists( 'usage_profile', $raw_data ) ? sanitize_key( (string) $raw_data['usage_profile'] ) : $stored_profile;
+		if ( class_exists( '\Certloom\Application\Setup\PurposePresetEngine' ) ) {
+			$engine = new \Certloom\Application\Setup\PurposePresetEngine();
+			$profile = $engine->normalize_profile( $profile );
+			if ( ! isset( $engine->profiles()[ $profile ] ) ) { $profile = 'general_other'; }
+		} else { $profile = 'general_other'; }
+		$clean['usage_profile'] = $profile;
 
 		$accent                 = sanitize_hex_color( (string) $data['accent_color'] );
 		$clean['accent_color']  = $accent ? $accent : '#1450e0';

@@ -95,6 +95,7 @@ final class MergeSnapshotBuilder {
 		);
 		if ( $signer_signature_attachment_id ) { $values['signer.signature_asset'] = 'attachment:' . $signer_signature_attachment_id; }
 		foreach ( $repeating as $source => $rows ) { $values[ $source ] = $rows; }
+		$required = $this->required_tokens( $layout );
 
 		foreach ( $custom as $key => $value ) {
 			$key = sanitize_key( (string) $key );
@@ -102,7 +103,13 @@ final class MergeSnapshotBuilder {
 			$scalar = null === $value ? '' : ( is_bool( $value ) ? ( $value ? '1' : '0' ) : (string) $value );
 			$values[ 'custom:' . $key ] = $scalar;
 			$values[ 'recipient.custom.' . $key ] = $scalar;
+			// Historical/custom designs sometimes used a plain token (for example
+			// `address`) before namespaced custom tokens were standardized. Expose the
+			// one-off credential value under that exact token only when this layout
+			// explicitly requires it and it does not collide with a canonical value.
+			if ( in_array( $key, $required, true ) && ! array_key_exists( $key, $values ) ) { $values[ $key ] = $scalar; }
 		}
+
 
 		// Manual Issuance may supply credential-specific values only for the
 		// namespaced custom merge vocabulary. These values are snapshotted on the
@@ -114,9 +121,11 @@ final class MergeSnapshotBuilder {
 			$scalar = null === $value ? '' : ( is_bool( $value ) ? ( $value ? '1' : '0' ) : (string) $value );
 			$values[ 'custom:' . $key ] = $scalar;
 			$values[ 'recipient.custom.' . $key ] = $scalar;
+			// One-off credential values can satisfy an explicitly-required legacy
+			// plain token without allowing them to override canonical merge keys.
+			if ( in_array( $key, $required, true ) && ! array_key_exists( $key, $values ) ) { $values[ $key ] = $scalar; }
 		}
 
-		$required = $this->required_tokens( $layout );
 		foreach ( $required as $token ) {
 			if ( ! array_key_exists( $token, $values ) ) {
 				if ( $allow_missing_required ) { $values[ $token ] = ''; continue; }

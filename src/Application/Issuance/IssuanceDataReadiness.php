@@ -120,6 +120,14 @@ final class IssuanceDataReadiness {
 			);
 		}
 
+		// A plain, non-reserved Designer token can be supplied as a one-off
+		// credential detail for an Independent credential. This keeps legacy/custom
+		// designs usable without pretending the value belongs to Recipient/Program.
+		if ( preg_match( '/^[a-z][a-z0-9_-]{0,63}$/', $token ) ) {
+			$field_key = sanitize_key( $token );
+			return array( 'label' => $this->label( $token, $catalog ), 'source' => __( 'Credential details', 'certloom' ), 'action' => 'credential_detail', 'field_key' => $field_key );
+		}
+
 		return array( 'label' => $this->label( $token, $catalog ), 'source' => __( 'Credential context', 'certloom' ), 'action' => 'context', 'field_key' => '' );
 	}
 

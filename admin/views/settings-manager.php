@@ -16,6 +16,7 @@ $certloom_show_diagnostics = current_user_can( 'manage_options' );
 		<label class="certloom-settings-search-label" for="certloom-settings-search"><span><?php esc_html_e( 'Find a setting', 'certloom' ); ?></span><input id="certloom-settings-search" type="search" autocomplete="off" placeholder="<?php esc_attr_e( 'Search settings sections', 'certloom' ); ?>" data-empty-label="<?php esc_attr_e( 'No settings sections match.', 'certloom' ); ?>" /></label>
 		<nav class="certloom-settings-local-nav" aria-label="<?php esc_attr_e( 'Settings sections', 'certloom' ); ?>">
 			<a href="#certloom-settings-access"><?php esc_html_e( 'Access', 'certloom' ); ?></a>
+			<a href="#certloom-settings-profile"><?php esc_html_e( 'Profile', 'certloom' ); ?></a>
 			<a href="#certloom-settings-numbering"><?php esc_html_e( 'Numbering', 'certloom' ); ?></a>
 			<a href="#certloom-settings-branding"><?php esc_html_e( 'Brand', 'certloom' ); ?></a>
 			<a href="#certloom-settings-verification"><?php esc_html_e( 'Verification', 'certloom' ); ?></a>
@@ -92,6 +93,12 @@ $certloom_show_diagnostics = current_user_can( 'manage_options' );
 			<tr><th scope="row"><?php esc_html_e( 'Non-mutating preview', 'certloom' ); ?></th><td><?php if ( ! $certloom_numbering_generated ) : ?><span class="description"><?php esc_html_e( 'Manual mode does not generate a preview.', 'certloom' ); ?></span><?php elseif ( is_wp_error( $certloom_numbering_preview ) ) : ?><strong class="certloom-text-danger"><?php echo esc_html( $certloom_numbering_preview->get_error_message() ); ?></strong><?php else : ?><code><?php echo esc_html( (string) $certloom_numbering_preview['certificate_number'] ); ?></code><?php if ( ! empty( $certloom_numbering_preview['skipped_collisions'] ) ) : ?> <span class="description"><?php echo esc_html( sprintf( /* translators: %d: skipped collisions. */ _n( '%d existing collision would be skipped.', '%d existing collisions would be skipped.', absint( $certloom_numbering_preview['skipped_collisions'] ), 'certloom' ), absint( $certloom_numbering_preview['skipped_collisions'] ) ) ); ?></span><?php endif; ?><?php endif; ?><p class="description"><?php esc_html_e( 'Preview never reserves a number. Sequential previews may advance before save; Random and UUID previews are samples and the saved credential receives a freshly generated value.', 'certloom' ); ?></p></td></tr>
 		</table>
 		<div class="notice notice-info inline"><p><strong><?php esc_html_e( 'Program and template sequences remain gated.', 'certloom' ); ?></strong> <?php esc_html_e( 'Historical credential records do not own accepted Program or Template relationships, so Certloom will not simulate scoped sequences with custom fields. The allocator contract is designed so those scopes can be added after their authoritative relationships are accepted.', 'certloom' ); ?></p></div>
+
+		<h2 id="certloom-settings-profile"><?php esc_html_e( 'Usage profile', 'certloom' ); ?></h2>
+		<?php $certloom_profile_engine = new \Certloom\Application\Setup\PurposePresetEngine(); $certloom_active_profile = (string) Ecapla_CertVerify_Settings::get( 'usage_profile', 'general_other' ); ?>
+		<table class="form-table" role="presentation">
+			<tr><th scope="row"><label for="usage_profile"><?php esc_html_e( 'Active profile', 'certloom' ); ?></label></th><td><select name="usage_profile" id="usage_profile"><?php foreach ( $certloom_profile_engine->profiles() as $certloom_profile_key => $certloom_profile_row ) : ?><option value="<?php echo esc_attr( $certloom_profile_key ); ?>" <?php selected( $certloom_active_profile, $certloom_profile_key ); ?>><?php echo esc_html( $certloom_profile_row['label'] ); ?></option><?php endforeach; ?></select><p class="description"><?php esc_html_e( 'Changes human-facing Issuer, Program, Batch and Signer terminology across Certloom forms. Storage, APIs and credential history keep the canonical entity model.', 'certloom' ); ?></p></td></tr>
+		</table>
 
 		<h2 id="certloom-settings-branding"><?php esc_html_e( 'Branding', 'certloom' ); ?></h2>
 		<table class="form-table" role="presentation">

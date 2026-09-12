@@ -1,3 +1,10 @@
+= 1.7.0-alpha.4.36 =
+* Make selected certificate designs drive issuance data readiness: missing credential-owned design fields now appear directly below Add credential detail as one-click + Add suggestions, while Recipient/Program-owned fields route to their authoritative editors instead of creating duplicates.
+* Make Program selection resolve the authoritative Global → Issuer → Program → Batch published-design hierarchy automatically and adopt the inherited design when the operator has not made an explicit appearance choice; deliberate Details only, image or assigned-design choices remain protected.
+* Promote Setup Wizard purpose/profile into a persistent site usage profile and adapt human-facing Issuer/Program/Batch/Signer labels, search placeholders and selector language across Certloom forms for Training/LMS, ISO/Management Systems, Government/Licensing and School/Results without renaming canonical storage, APIs or immutable history.
+* Replace the repeated cross-profile terminology key in Issue Credential with one compact Active profile status in Certloom hero surfaces, and expose the active profile in Settings so administrators can change it later.
+* Preserve alpha.4.35 publication/Designer fixes, alpha.4.34 issuance layout/authentication corrections and alpha.4.33 lifecycle/repeat-policy behavior; renderer artifact authority and normalized-domain authority remain intentionally absent while Phase 4 continues.
+
 = 1.7.0-alpha.4.35 =
 * Remove the nested scrollbar from Issue Credential's Certificate appearance column; the full compose surface now follows the normal WordPress page scroll while retaining responsive containment.
 * Decouple certificate-design publication from production artifact-renderer authority: a reviewed immutable design revision can be published for Program/issuance selection even while PDF/PNG/JPEG downloads remain separately fail-closed behind renderer authority.
