@@ -188,6 +188,8 @@
 		var autosaveStatusEl = root.querySelector( '[data-certloom-designer-autosave-status]' );
 		var autosaveDiscardButton = root.querySelector( '[data-certloom-designer-autosave-discard]' );
 		var autosaveSessionField = root.querySelector( '[data-certloom-designer-autosave-session-field]' );
+		var saveIntentField = root.querySelector( '[data-certloom-designer-save-intent-field]' );
+		var studioWorkspaceShell = root.closest ? root.closest( '.certloom-template-admin.is-designer-workspace' ) : null;
 		var conflictBanner = root.querySelector( '[data-certloom-designer-conflict-banner]' );
 		var conflictReviewButton = conflictBanner ? conflictBanner.querySelector( '[data-certloom-designer-conflict-review]' ) : null;
 		var conflictReloadButton = conflictBanner ? conflictBanner.querySelector( '[data-certloom-designer-conflict-reload]' ) : null;
@@ -458,6 +460,26 @@
 			if ( dirtyBadge ) { dirtyBadge.textContent = label; dirtyBadge.classList.toggle( 'is-dirty', 'blocked' === state ); dirtyBadge.classList.toggle( 'is-saving', 'saving' === state ); }
 			for ( var i = 0; i < saveButtons.length; i++ ) { saveButtons[ i ].disabled = !!disabled; if ( disabled ) { saveButtons[ i ].setAttribute( 'aria-busy', 'true' ); } else { saveButtons[ i ].removeAttribute( 'aria-busy' ); } }
 		}
+		function setSaveIntent( intent ) {
+			intent = 'publish' === String( intent || '' ) ? 'publish' : 'draft';
+			if ( saveIntentField ) { saveIntentField.value = intent; }
+			return intent;
+		}
+		function saveIntentFromSubmitter( submitter ) {
+			if ( ! submitter ) { return saveIntentField ? String( saveIntentField.value || 'draft' ) : 'draft'; }
+			var intent = submitter.getAttribute ? submitter.getAttribute( 'data-certloom-designer-save-intent' ) : '';
+			if ( ! intent && submitter.name === 'studio_intent' ) { intent = submitter.value; }
+			return setSaveIntent( intent );
+		}
+		function syncStudioViewportHeight() {
+			if ( ! studioWorkspaceShell ) { return; }
+			if ( window.matchMedia && ! window.matchMedia( '(min-width: 901px)' ).matches ) { studioWorkspaceShell.style.removeProperty( '--certloom-studio-viewport-height' ); return; }
+			var rect = studioWorkspaceShell.getBoundingClientRect();
+			var viewportHeight = window.visualViewport && isFinite( window.visualViewport.height ) ? Number( window.visualViewport.height ) : Number( window.innerHeight || document.documentElement.clientHeight || 0 );
+			var viewportTop = window.visualViewport && isFinite( window.visualViewport.offsetTop ) ? Number( window.visualViewport.offsetTop ) : 0;
+			var available = Math.floor( viewportTop + viewportHeight - rect.top );
+			if ( isFinite( available ) && available > 320 ) { studioWorkspaceShell.style.setProperty( '--certloom-studio-viewport-height', available + 'px' ); }
+		}
 		function blockSave( message ) {
 			showError( message ); setSaveFeedback( t( 'saveBlocked', 'Save blocked' ), 'blocked', false ); announce( message );
 			if ( error && error.scrollIntoView ) { error.scrollIntoView( { behavior: 'smooth', block: 'nearest' } ); }
@@ -531,10 +553,16 @@
 			if ( undoButton ) { undoButton.disabled = ! history.length; }
 			if ( redoButton ) { redoButton.disabled = ! future.length; }
 		}
+		function cleanSaveLabel() {
+			var publicationState = String( root.getAttribute( 'data-publication-state' ) || 'draft' );
+			if ( 'published' === publicationState ) { return t( 'savedPublished', 'Published' ); }
+			if ( 'changes_pending' === publicationState ) { return t( 'savedPendingChanges', 'Draft changes saved' ); }
+			return t( 'savedDraft', 'Saved draft' );
+		}
 		function syncDirty() {
 			var dirty = stable( savedLayout ) !== stable( layout ) || stable( savedState ) !== stable( designerState );
 			if ( dirtyBadge ) {
-				dirtyBadge.textContent = autosaveConflict ? t( 'autosaveConflictShort', 'Save conflict' ) : ( dirty ? t( 'unsavedChanges', 'Unsaved changes' ) : t( 'savedDraft', 'Saved draft' ) );
+				dirtyBadge.textContent = autosaveConflict ? t( 'autosaveConflictShort', 'Save conflict' ) : ( dirty ? t( 'unsavedChanges', 'Unsaved changes' ) : cleanSaveLabel() );
 				dirtyBadge.classList.toggle( 'is-dirty', dirty || autosaveConflict );
 			}
 			root.classList.toggle( 'has-unsaved-changes', dirty );
@@ -1986,6 +2014,9 @@
 		}
 		syncStudioProfileSummary();
 		if ( studioToast && ! studioToast.hidden && String( studioToast.textContent || '' ).trim() ) { window.setTimeout( function () { if ( studioToast ) { studioToast.hidden = true; } }, 3200 ); }
+		for ( var saveIntentIndex = 0; saveIntentIndex < saveButtons.length; saveIntentIndex++ ) {
+			saveButtons[ saveIntentIndex ].addEventListener( 'click', function () { setSaveIntent( this.getAttribute( 'data-certloom-designer-save-intent' ) || ( this.name === 'studio_intent' ? this.value : 'draft' ) ); } );
+		}
 		if ( resetButton ) { resetButton.addEventListener( 'click', function () { if ( root.classList.contains( 'has-unsaved-changes' ) && ! window.confirm( t( 'restoreConfirm', 'Discard current unsaved changes and restore the last saved design?' ) ) ) { return; } if ( directTextEditor ) { closeDirectTextEditor( false ); } layout = clone( savedLayout ); designerState = clone( savedState ); selectOnly( '' ); history = []; future = []; activeGuides = { x: null, y: null }; activeSpacingGuides = []; safeAreaVisible = false; panToolActive = false; spacePanHeld = false; closeContextMenu(); render(); fitWorkspace(); discardAutosave( false ); announce( t( 'unsavedChangesReset', 'Unsaved design changes reset.' ) ); } ); }
 		if ( autosaveDiscardButton ) { autosaveDiscardButton.addEventListener( 'click', function () { discardAutosave( true ); } ); }
 		for ( var fieldIndex = 0; fieldIndex < fieldInputs.length; fieldIndex++ ) {
@@ -2004,6 +2035,7 @@
 		} ); }
 		document.addEventListener( 'keydown', keyboard, true ); document.addEventListener( 'keyup', keyboardUp, true );
 		form.addEventListener( 'submit', function ( event ) {
+			saveIntentFromSubmitter( event.submitter || null );
 			showError( '' );
 			if ( directTextEditor ) { closeDirectTextEditor( true ); if ( directTextEditor ) { event.preventDefault(); blockSave( t( 'directTextInvalid', 'Direct text must stay within the canonical 20,000-byte text limit.' ) ); return; } }
 			if ( autosaveTimer ) { window.clearTimeout( autosaveTimer ); autosaveTimer = null; }
@@ -2015,6 +2047,9 @@
 
 		enhancePropertySections();
 		applyDesignerMode( rememberedDesignerMode(), false );
+		syncStudioViewportHeight();
+		window.addEventListener( 'resize', syncStudioViewportHeight );
+		if ( window.visualViewport && window.visualViewport.addEventListener ) { window.visualViewport.addEventListener( 'resize', syncStudioViewportHeight ); }
 		if ( 'ResizeObserver' in window ) { var studioResizeObserver = new ResizeObserver( function () { if ( Math.abs( relativeZoomPercent() - 100 ) <= 1 ) { fitWorkspace(); } } ); studioResizeObserver.observe( workspace ); }
 		syncPreviewModeButtons(); render(); if ( recovered ) { setAutosaveStatus( t( 'autosaveRecovered', 'Recovered unsaved Designer changes from your latest safe checkpoint.' ), 'recovered' ); announce( t( 'autosaveRecovered', 'Recovered unsaved Designer changes from your latest safe checkpoint.' ) ); } else if ( autosaveNeedsCleanup ) { setAutosaveStatus( t( 'savedDraft', 'Saved draft' ), 'clean' ); window.setTimeout( function () { discardAutosave( false ); }, 0 ); } window.setTimeout( function () { fitWorkspace(); }, 0 );
 	}

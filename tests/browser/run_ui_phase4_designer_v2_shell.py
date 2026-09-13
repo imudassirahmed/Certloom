@@ -433,11 +433,33 @@ async def main():
         await ck(not await page.locator('[data-certloom-studio-import-dialog]').evaluate('el => el.open === true || el.hasAttribute("open")'), 'studioImportDialogCloses')
         await ck(await page.locator('text=Export JSON').count() == 0 and await page.locator('text=Export template').count() == 0, 'studioHasNoExportManagementClutter')
 
-        # Canonical save remains a form submit despite the polished Studio shell.
-        await page.evaluate("document.body.removeAttribute('data-submitted')")
+        # The focused shell must consume the exact remaining viewport even when WordPress/admin chrome
+        # places Studio below y=0. This protects staging from a dead strip below the three-pane workspace.
+        viewport_fit = await page.evaluate("""() => {
+          const shell=document.querySelector('.certloom-template-admin.is-designer-workspace');
+          shell.style.setProperty('margin-top','43px','important');
+          window.dispatchEvent(new Event('resize'));
+          return true;
+        }""")
+        await page.wait_for_timeout(80)
+        viewport_geometry = await page.evaluate("""() => {
+          const shell=document.querySelector('.certloom-template-admin.is-designer-workspace').getBoundingClientRect();
+          const stage=document.querySelector('.certloom-template-designer-stage').getBoundingClientRect();
+          return {shellTop:shell.top,shellBottom:shell.bottom,stageBottom:stage.bottom,viewport:window.innerHeight};
+        }""")
+        await ck(viewport_fit and viewport_geometry['shellTop'] >= 42, 'studioViewportOffsetFixtureApplied')
+        await ck(abs(viewport_geometry['shellBottom']-viewport_geometry['viewport']) <= 1.5, 'studioFillsRemainingViewportFromLiveOffset')
+        await ck(abs(viewport_geometry['stageBottom']-viewport_geometry['shellBottom']) <= 1.5, 'studioThreePaneStageReachesViewportBottom')
+
+        # Canonical save remains a form submit and Publish survives external-submit-button serialization.
+        # A hidden fallback intent is synchronized before submit so a missing submitter field can never
+        # silently degrade Publish into Draft on WordPress staging.
+        await page.evaluate("document.body.removeAttribute('data-submitted');document.body.removeAttribute('data-submit-intent');document.body.removeAttribute('data-submit-button-intent')")
         await page.locator('.certloom-studio-primary').click()
         await page.wait_for_timeout(40)
         await ck(await page.locator('body').get_attribute('data-submitted') == '1', 'publishUsesCanonicalFormSubmission')
+        await ck(await page.locator('body').get_attribute('data-submit-button-intent') == 'publish', 'publishButtonCarriesExplicitIntent')
+        await ck(await page.locator('body').get_attribute('data-submit-intent') == 'publish', 'publishIntentFallbackSerializedBeforeSubmit')
 
         await page.screenshot(path=str(SCREENSHOT), full_page=True)
 

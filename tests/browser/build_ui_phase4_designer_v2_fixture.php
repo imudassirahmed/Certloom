@@ -28,7 +28,7 @@ $html = str_replace(
 );
 $html = str_replace(
     'data-template-id="77"',
-    'data-template-id="77" data-template-updated-at="2026-09-13 10:00:00" data-studio-metadata-nonce="fixture-studio-metadata-nonce"',
+    'data-template-id="77" data-publication-state="draft" data-template-updated-at="2026-09-13 10:00:00" data-studio-metadata-nonce="fixture-studio-metadata-nonce"',
     $html
 );
 
@@ -57,14 +57,14 @@ $header = <<<'HTML'
     </details>
   </div>
   <div class="certloom-studio-save-state"><span class="certloom-studio-save-dot" aria-hidden="true"></span><span data-certloom-designer-dirty>Saved draft</span><small data-certloom-designer-autosave-status>Recovery ready</small></div>
-  <div class="certloom-studio-actions"><button type="submit" form="certloom-studio-fixture-form" class="button certloom-studio-draft" data-certloom-designer-save>Draft</button><button type="submit" form="certloom-studio-fixture-form" class="button button-primary certloom-studio-primary" data-certloom-designer-primary-save data-certloom-designer-quick-save>Publish</button></div>
+  <div class="certloom-studio-actions"><button type="submit" form="certloom-studio-fixture-form" class="button certloom-studio-draft" name="studio_intent" value="draft" data-certloom-designer-save data-certloom-designer-save-intent="draft">Draft</button><button type="submit" form="certloom-studio-fixture-form" class="button button-primary certloom-studio-primary" name="studio_intent" value="publish" data-certloom-designer-save-intent="publish" data-certloom-designer-primary-save data-certloom-designer-quick-save>Publish</button></div>
 </header>
 <div class="certloom-studio-toast" role="status" data-certloom-studio-toast hidden><span></span></div>
 <div class="certloom-studio-conflict" data-certloom-designer-conflict-banner hidden role="alert"><div><strong>Template changed in another session</strong><span>Your current browser edits are still here. Recovery autosave has paused so it cannot overwrite the newer saved revision.</span></div><div class="certloom-studio-conflict-actions"><button type="button" class="button button-small" data-certloom-designer-conflict-review>Keep reviewing</button><button type="button" class="button button-small" data-certloom-designer-conflict-reload>Reload saved version</button></div></div>
 HTML;
 $html = studio_replace_between( $html, '<div class="certloom-template-designer-head">', '<form data-certloom-designer-form>', $header );
-$html = str_replace( '<form data-certloom-designer-form>', '<form id="certloom-studio-fixture-form" data-certloom-designer-form novalidate>', $html );
-$html = str_replace( '</body>', '<script>document.addEventListener("submit",function(e){if(e.target&&e.target.id==="certloom-studio-fixture-form"){e.preventDefault();document.body.setAttribute("data-submitted","1");}});</script></body>', $html );
+$html = str_replace( '<form data-certloom-designer-form>', '<form id="certloom-studio-fixture-form" data-certloom-designer-form novalidate><input type="hidden" name="studio_intent_fallback" value="draft" data-certloom-designer-save-intent-field>', $html );
+$html = str_replace( '</body>', '<script>document.addEventListener("submit",function(e){if(e.target&&e.target.id==="certloom-studio-fixture-form"){e.preventDefault();document.body.setAttribute("data-submitted","1");var f=e.target.querySelector("[data-certloom-designer-save-intent-field]");document.body.setAttribute("data-submit-intent",f?f.value:"");document.body.setAttribute("data-submit-button-intent",e.submitter&&e.submitter.value?e.submitter.value:"");}});</script></body>', $html );
 
 $docbar = <<<'HTML'
 <div class="certloom-studio-documentbar" role="toolbar" aria-label="Studio document and canvas controls">

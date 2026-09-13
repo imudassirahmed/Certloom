@@ -1,3 +1,9 @@
+= 1.7.0-alpha.4.55 =
+* Preserve the clicked Studio save intent inside the authoritative revision form so an external Publish/Save submitter cannot degrade to Draft when browser form submission omits the submit button name/value.
+* Make the clean Studio save-state label lifecycle-aware: published Templates report Published, Templates with an already-published revision plus saved draft changes report Draft changes saved, and unpublished work remains Saved draft.
+* Fill the focused desktop Studio to the actual visual viewport bottom by measuring from the live WordPress content offset, eliminating the remaining lower dead strip without hard-coding another admin-shell height.
+* Extend Gamma-02R source and Chromium regressions for Publish intent serialization and non-zero-offset viewport fill. Gamma-02 remains open for real staging acceptance; Gamma-03 remains blocked.
+
 = 1.7.0-alpha.4.53 =
 * Fix the remaining Studio recovery loop where an obsolete checkpoint could fail retirement because the full recovery JSON was nested into a second diagnostic JSON record and expanded past the bounded user-meta size.
 * Replace retired full-checkpoint copies with compact SHA-256/size/base/session diagnostic receipts; clearing the obsolete active recovery slot is now the safety-critical operation and diagnostic preservation is best-effort.

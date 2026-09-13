@@ -2835,3 +2835,25 @@
 	.certloom-studio-brand { gap: 8px; font-size: 15px; line-height: 1; }
 	.certloom-studio-brand img { width: 32px; height: 32px; }
 }
+
+/* Phase 4 Gamma-02R — authoritative Studio viewport fill: measure from the live WordPress content offset to the visual viewport bottom. */
+@media (min-width: 901px) {
+	body.certloom-designer-workspace-page #wpcontent,
+	body.certloom-designer-workspace-page #wpbody,
+	body.certloom-designer-workspace-page #wpbody-content {
+		height: auto !important;
+		min-height: 0 !important;
+		overflow: visible !important;
+	}
+	body.certloom-designer-workspace-page .certloom-template-admin.is-designer-workspace {
+		height: var(--certloom-studio-viewport-height, calc(100dvh - 32px)) !important;
+		min-height: 0 !important;
+		margin-bottom: 0 !important;
+	}
+	.is-designer-workspace .certloom-template-editor-focused,
+	.is-designer-workspace .certloom-template-designer-v2,
+	.is-designer-workspace .certloom-template-designer-v2 [data-certloom-designer-form],
+	.is-designer-workspace .certloom-template-designer-v2.is-pro-mode .certloom-template-designer-stage {
+		min-height: 0 !important;
+	}
+}

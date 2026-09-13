@@ -94,6 +94,8 @@ final class TemplateAdmin {
 				'designerChangeRedone' => __( 'Designer change redone.', 'certloom' ),
 				'unsavedChanges' => __( 'Unsaved changes', 'certloom' ),
 				'savedDraft' => __( 'Saved draft', 'certloom' ),
+				'savedPublished' => __( 'Published', 'certloom' ),
+				'savedPendingChanges' => __( 'Draft changes saved', 'certloom' ),
 				'savingRevision' => __( 'Saving revision…', 'certloom' ),
 				'saveBlocked' => __( 'Save blocked', 'certloom' ),
 				'elementCountSingular' => __( 'element', 'certloom' ),
@@ -336,8 +338,9 @@ final class TemplateAdmin {
 		$this->require_capability();
 		$id = isset( $_POST['template_id'] ) ? absint( $_POST['template_id'] ) : 0;
 		check_admin_referer( 'certloom_template_revision_' . $id );
-		$intent = isset( $_POST['studio_intent'] ) ? sanitize_key( wp_unslash( $_POST['studio_intent'] ) ) : 'draft';
-		$intent = in_array( $intent, array( 'draft', 'publish' ), true ) ? $intent : 'draft';
+		$button_intent = isset( $_POST['studio_intent'] ) ? sanitize_key( wp_unslash( $_POST['studio_intent'] ) ) : '';
+		$fallback_intent = isset( $_POST['studio_intent_fallback'] ) ? sanitize_key( wp_unslash( $_POST['studio_intent_fallback'] ) ) : '';
+		$intent = in_array( $button_intent, array( 'draft', 'publish' ), true ) ? $button_intent : ( in_array( $fallback_intent, array( 'draft', 'publish' ), true ) ? $fallback_intent : 'draft' );
 		$raw = isset( $_POST['layout_json'] ) ? wp_unslash( $_POST['layout_json'] ) : '';
 		$layout = json_decode( (string) $raw, true );
 		if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $layout ) ) {
@@ -1225,6 +1228,7 @@ final class TemplateAdmin {
 		$manage_url = add_query_arg( array( 'page' => self::PAGE, 'design_view' => 'manage', 'template_id' => $id ), admin_url( 'admin.php' ) );
 		$state = (string) ( $editing['lifecycle_state'] ?? TemplateLifecycle::state( $editing ) );
 		$has_published = absint( $editing['published_revision_id'] ?? 0 ) > 0;
+		$clean_save_label = TemplateLifecycle::PUBLISHED === $state ? __( 'Published', 'certloom' ) : ( TemplateLifecycle::CHANGES_PENDING === $state ? __( 'Draft changes saved', 'certloom' ) : __( 'Saved draft', 'certloom' ) );
 		$form_id = 'certloom-studio-form-' . $id;
 		$recommendations = new TemplateRecommendationRepository();
 		$recommended_profiles = $recommendations->get( $id );
@@ -1238,7 +1242,7 @@ final class TemplateAdmin {
 		}
 		$studio_metadata_nonce = wp_create_nonce( 'certloom_template_studio_metadata_' . $id );
 
-		echo '<section id="certloom-template-designer" class="certloom-template-designer certloom-template-designer-v2" data-certloom-designer data-designer-default-mode="pro" data-designer-safe-margin-mm="10" data-layout-schema-version="' . esc_attr( (string) $schema_version ) . '" data-template-id="' . esc_attr( (string) $id ) . '" data-template-updated-at="' . esc_attr( (string) ( $editing['updated_at'] ?? '' ) ) . '" data-studio-metadata-nonce="' . esc_attr( $studio_metadata_nonce ) . '" data-saved-revision="' . esc_attr( (string) $current_id ) . '" data-saved-sha256="' . esc_attr( $current_sha256 ) . '" data-autosave-status="' . esc_attr( $autosave_status ) . '" data-autosave-session="' . esc_attr( $autosave_session ) . '" data-autosave-nonce="' . esc_attr( $autosave_nonce ) . '" data-ajax-url="' . esc_url( admin_url( 'admin-ajax.php' ) ) . '">';
+		echo '<section id="certloom-template-designer" class="certloom-template-designer certloom-template-designer-v2" data-certloom-designer data-designer-default-mode="pro" data-designer-safe-margin-mm="10" data-layout-schema-version="' . esc_attr( (string) $schema_version ) . '" data-template-id="' . esc_attr( (string) $id ) . '" data-publication-state="' . esc_attr( $state ) . '" data-template-updated-at="' . esc_attr( (string) ( $editing['updated_at'] ?? '' ) ) . '" data-studio-metadata-nonce="' . esc_attr( $studio_metadata_nonce ) . '" data-saved-revision="' . esc_attr( (string) $current_id ) . '" data-saved-sha256="' . esc_attr( $current_sha256 ) . '" data-autosave-status="' . esc_attr( $autosave_status ) . '" data-autosave-session="' . esc_attr( $autosave_session ) . '" data-autosave-nonce="' . esc_attr( $autosave_nonce ) . '" data-ajax-url="' . esc_url( admin_url( 'admin-ajax.php' ) ) . '">';
 		echo '<header class="certloom-studio-header">';
 		echo '<p class="screen-reader-text">' . esc_html__( 'Manual save remains the only authoritative revision write. Recovery autosave never publishes or replaces an immutable template revision.', 'certloom' ) . '</p>';
 		echo '<div class="certloom-studio-brand"><img src="' . esc_url( CERTLOOM_URL . 'admin/assets/certloom-brand-mark.png' ) . '" alt=""><span>' . esc_html__( 'Certloom Studio', 'certloom' ) . '</span></div>';
@@ -1252,8 +1256,8 @@ final class TemplateAdmin {
 			echo '<label><input type="checkbox" value="' . esc_attr( $profile_key ) . '" data-certloom-studio-profile ' . checked( in_array( $profile_key, $recommended_profiles, true ), true, false ) . '><span>' . esc_html( $profile_label ) . '</span></label>';
 		}
 		echo '</div><small data-certloom-studio-profile-status aria-live="polite"></small></div></details></div>';
-		echo '<div class="certloom-studio-save-state"><span class="certloom-studio-save-dot" aria-hidden="true"></span><span data-certloom-designer-dirty>' . esc_html__( 'Saved draft', 'certloom' ) . '</span><small data-certloom-designer-autosave-status>' . esc_html__( 'Recovery ready', 'certloom' ) . '</small></div>';
-		echo '<div class="certloom-studio-actions"><button type="submit" form="' . esc_attr( $form_id ) . '" class="button certloom-studio-draft" name="studio_intent" value="draft" data-certloom-designer-save>' . esc_html__( 'Draft', 'certloom' ) . '</button><button type="submit" form="' . esc_attr( $form_id ) . '" class="button button-primary certloom-studio-primary" name="studio_intent" value="publish" data-certloom-designer-primary-save data-certloom-designer-quick-save>' . esc_html( $has_published ? __( 'Save', 'certloom' ) : __( 'Publish', 'certloom' ) ) . '</button></div>';
+		echo '<div class="certloom-studio-save-state"><span class="certloom-studio-save-dot" aria-hidden="true"></span><span data-certloom-designer-dirty>' . esc_html( $clean_save_label ) . '</span><small data-certloom-designer-autosave-status>' . esc_html__( 'Recovery ready', 'certloom' ) . '</small></div>';
+		echo '<div class="certloom-studio-actions"><button type="submit" form="' . esc_attr( $form_id ) . '" class="button certloom-studio-draft" name="studio_intent" value="draft" data-certloom-designer-save data-certloom-designer-save-intent="draft">' . esc_html__( 'Draft', 'certloom' ) . '</button><button type="submit" form="' . esc_attr( $form_id ) . '" class="button button-primary certloom-studio-primary" name="studio_intent" value="publish" data-certloom-designer-save-intent="publish" data-certloom-designer-primary-save data-certloom-designer-quick-save>' . esc_html( $has_published ? __( 'Save', 'certloom' ) : __( 'Publish', 'certloom' ) ) . '</button></div>';
 		echo '</header>';
 		echo '<div class="certloom-studio-conflict" data-certloom-designer-conflict-banner hidden role="alert"><div><strong>' . esc_html__( 'Template changed in another session', 'certloom' ) . '</strong><span>' . esc_html__( 'Your current browser edits are still here. Recovery autosave has paused so it cannot overwrite the newer saved revision.', 'certloom' ) . '</span></div><div class="certloom-studio-conflict-actions"><button type="button" class="button button-small" data-certloom-designer-conflict-review>' . esc_html__( 'Keep reviewing', 'certloom' ) . '</button><button type="button" class="button button-small" data-certloom-designer-conflict-reload>' . esc_html__( 'Reload saved version', 'certloom' ) . '</button></div></div>';
 		if ( isset( $_GET['certloom_notice'] ) && 'revision_saved' === sanitize_key( wp_unslash( $_GET['certloom_notice'] ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Redirect status only.
@@ -1266,7 +1270,7 @@ final class TemplateAdmin {
 		wp_nonce_field( 'certloom_template_revision_' . $id );
 		echo '<textarea hidden name="layout_json" data-certloom-designer-json>' . esc_textarea( (string) $layout_json ) . '</textarea>';
 		echo '<textarea hidden name="designer_state_json" data-certloom-designer-state-json>' . esc_textarea( $designer_state_json ) . '</textarea>';
-		echo '<input type="hidden" name="designer_autosave_session_id" value="" data-certloom-designer-autosave-session-field>';
+		echo '<input type="hidden" name="studio_intent_fallback" value="draft" data-certloom-designer-save-intent-field><input type="hidden" name="designer_autosave_session_id" value="" data-certloom-designer-autosave-session-field>';
 		if ( '' !== $recovery_layout_json ) { echo '<textarea hidden data-certloom-designer-recovery-json>' . esc_textarea( $recovery_layout_json ) . '</textarea><textarea hidden data-certloom-designer-recovery-state-json>' . esc_textarea( $recovery_state_json ) . '</textarea>'; }
 		if ( 'cleanup_failed' === $autosave_status ) { echo '<div class="certloom-studio-recovery-warning" role="status"><strong>' . esc_html__( 'Recovery cleanup needs attention.', 'certloom' ) . '</strong><span>' . esc_html__( 'The saved design is authoritative, but Certloom could not clear an obsolete personal recovery checkpoint. Manual save remains available.', 'certloom' ) . '</span><button type="button" class="button button-small" data-certloom-designer-autosave-discard>' . esc_html__( 'Clear recovery state', 'certloom' ) . '</button></div>'; }
 		echo '<div class="certloom-studio-documentbar" role="toolbar" aria-label="' . esc_attr__( 'Studio document and canvas controls', 'certloom' ) . '">';
