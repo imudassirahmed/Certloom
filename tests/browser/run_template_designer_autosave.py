@@ -4,8 +4,9 @@ from pathlib import Path
 from playwright.async_api import async_playwright
 ROOT=Path(__file__).resolve().parents[2]
 
-def fixture_html(recovery=False):
+def fixture_html(recovery=False, autosave_status=''):
     env=os.environ.copy(); env['CERTLOOM_DESIGNER_SCHEMA_VERSION']='3'; env['CERTLOOM_DESIGNER_RECOVERY']='1' if recovery else '0'
+    if autosave_status: env['CERTLOOM_DESIGNER_AUTOSAVE_STATUS']=autosave_status
     r=subprocess.run(['php',str(ROOT/'tests/browser/build_template_designer_fixture.php')],cwd=ROOT,env=env,capture_output=True,text=True)
     if r.returncode: raise RuntimeError(r.stderr or r.stdout)
     return r.stdout
@@ -43,6 +44,15 @@ async def run():
         requests=await page.evaluate('window.__certloomAutosaveRequests')
         await ck(any(x.get('action')=='certloom_template_designer_autosave_discard' for x in requests),'resetDiscardsServerCheckpoint')
         await page.close()
+
+        stale=await browser.new_page(viewport={'width':1200,'height':900})
+        await stale.set_content(fixture_html(False,'stale'),wait_until='load'); await stale.wait_for_timeout(150)
+        await ck(not await stale.locator('[data-certloom-designer-conflict-banner]').is_visible(),'staleCheckpointDoesNotMasqueradeAsLiveConflict')
+        await ck(not await stale.locator('[data-certloom-designer]').evaluate('(e)=>e.classList.contains("has-autosave-conflict")'),'staleCheckpointDoesNotEnterConflictState')
+        stale_requests=await stale.evaluate('window.__certloomAutosaveRequests')
+        await ck(any(x.get('action')=='certloom_template_designer_autosave_discard' for x in stale_requests),'staleCheckpointCleanupRequested')
+        await ck('Save conflict' not in (await stale.locator('[data-certloom-designer-dirty]').text_content() or ''),'staleCheckpointDoesNotPolluteHeaderState')
+        await stale.close()
 
         conflict=await browser.new_page(viewport={'width':1200,'height':900})
         await conflict.set_content(fixture_html(False),wait_until='load'); await conflict.evaluate("window.__certloomAutosaveMode='conflict'")

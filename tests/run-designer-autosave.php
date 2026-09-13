@@ -46,12 +46,17 @@ $new=$layout; $new['elements'][0]['text']='Newer authoritative save'; $newJson=$
 $wpdb->template['current_revision_id']=12; $wpdb->revision=array('id'=>12,'template_id'=>7,'revision_number'=>4,'parent_revision_id'=>11,'layout_schema'=>LayoutSchema::NAME,'layout_schema_version'=>3,'layout_json'=>$newJson,'layout_sha256'=>$newSha,'source_type'=>'manual','created_by_user_id'=>9,'created_at'=>'2026-08-27 00:01:00');
 $stale=$service->inspect(7,5); dsn7('stale'===($stale['status']??''),'checkpoint is never auto-merged after current revision changes');
 $conflict=$service->save(7,5,11,$sha,$session,$changed,$state); dsn7(is_wp_error($conflict)&&'certloom_designer_autosave_conflict'===$conflict->get_error_code(),'stale autosave fails closed instead of overwriting another session');
-$service->discard(7,5,$session); dsn7(''===get_user_meta(5,$key,true),'owning session can discard its personal recovery checkpoint');
+$prepared=$service->prepare_for_editor(7,5); dsn7('none'===($prepared['status']??'')&&'stale'===($prepared['retired_status']??'')&&''===get_user_meta(5,$key,true),'editor open retires an obsolete checkpoint instead of surfacing it as a live conflict');
+$retired=json_decode(get_user_meta(5,TemplateDesignerAutosave::retired_meta_key(7),true),true); dsn7('stale'===($retired['reason']??'')&&!empty($retired['checkpoint_raw']),'retired stale recovery remains bounded in a diagnostic slot instead of blocking Studio');
+$newSession='33333333-3333-4333-8333-333333333333'; $newRecovery=$new; $newRecovery['elements'][0]['text']='Unsaved against newer base';
+$fresh=$service->save(7,5,12,$newSha,$newSession,$newRecovery,$state); dsn7(!is_wp_error($fresh)&&'saved'===($fresh['status']??''),'new Studio session can autosave immediately after stale checkpoint retirement');
+$service->discard(7,5,$newSession); dsn7(''===get_user_meta(5,$key,true),'owning current session can still discard its personal recovery checkpoint');
 
 // Integrity tamper should not recover.
 $wpdb->template['current_revision_id']=11; $wpdb->revision=array('id'=>11,'template_id'=>7,'revision_number'=>3,'parent_revision_id'=>10,'layout_schema'=>LayoutSchema::NAME,'layout_schema_version'=>3,'layout_json'=>$layoutJson,'layout_sha256'=>$sha,'source_type'=>'manual','created_by_user_id'=>5,'created_at'=>'2026-08-27 00:00:00');
 $service->save(7,5,11,$sha,$session,$changed,$state); $tampered=json_decode(get_user_meta(5,$key,true),true); $tampered['layout_sha256']=str_repeat('0',64); update_user_meta(5,$key,json_encode($tampered));
 dsn7('invalid'===($service->inspect(7,5)['status']??''),'tampered recovery layout/hash fails closed');
+$invalidPrepared=$service->prepare_for_editor(7,5); dsn7('none'===($invalidPrepared['status']??'')&&'invalid'===($invalidPrepared['retired_status']??'')&&''===get_user_meta(5,$key,true),'invalid recovery is retired before Studio opens instead of repeating a warning on every reload');
 
 $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'); $repo=file_get_contents($root.'/src/Infrastructure/Repository/TemplateRepository.php'); $js=file_get_contents($root.'/admin/assets/designer.js'); $autosave=file_get_contents($root.'/src/Infrastructure/Admin/TemplateDesignerAutosave.php'); $uninstall=file_get_contents($root.'/uninstall.php');
 dsn7has($admin,"wp_ajax_certloom_template_designer_autosave",'authenticated AJAX autosave endpoint is explicitly registered');
@@ -62,6 +67,9 @@ dsn7has($repo,'certloom_template_stale_revision_hash','manual revision save also
 dsn7has($autosave,'MAX_BYTES = 2097152','recovery checkpoint storage is explicitly bounded');
 dsn7has($autosave,"'base_revision_id'",'recovery record persists its exact concurrency base');
 dsn7has($autosave,"'session_id'",'recovery record binds one browser editing session to prevent same-user tab races');
+dsn7has($autosave,'prepare_for_editor','Studio preparation retires stale or invalid recovery before rendering');
+dsn7has($autosave,'retired_meta_key','obsolete recovery is preserved outside the active autosave slot');
+dsn7has($admin,'prepare_for_editor( $id, get_current_user_id() )','Designer render and successful manual save clean obsolete recovery state');
 dsn7(false===strpos($autosave,'$wpdb->update')&&false===strpos($autosave,'$wpdb->insert'),'autosave store cannot mutate Template authority tables');
 dsn7has($js,'AUTOSAVE_DELAY_MS = 1800','browser autosave is debounced rather than writing on every pointer movement');
 dsn7has($js,'certloom_designer_autosave_conflict','browser enters a fail-closed conflict state when another session wins');

@@ -1,3 +1,10 @@
+= 1.7.0-alpha.4.52 =
+* Fix repeated false Studio recovery/conflict warnings caused by obsolete per-user Designer recovery checkpoints surviving after a newer authoritative Template revision exists.
+* Retire stale or invalid checkpoints out of the active autosave slot before Studio opens, preserving one bounded diagnostic copy while allowing a clean new recovery session.
+* Keep real multi-tab concurrency fail-closed: only an actual 409 revision/session conflict shows the orange “Template changed in another session” banner; stale startup recovery no longer masquerades as a live conflict.
+* After a successful manual Draft/Save/Publish, clean any remaining obsolete recovery state so it cannot reappear on the redirect or block later autosave.
+* Preserve all Gamma-02R Studio layout, keyboard, Layers, Inspector, template metadata and portable-package behavior; Gamma-03 remains blocked pending real Studio acceptance.
+
 = 1.7.0-alpha.4.38 =
 * Replace the obsolete Setup Wizard “generalized issuance backend” blocker with a real quick Independent-credential issuance path backed by the canonical ManualIssuanceService; successful setup issuance records the real immutable Credential Version, Series and verification URL without creating hidden Program or Batch records.
 * Make Step 5 genuinely optional as previously specified: “Do this later” completes Setup without fabricating a credential, while “Save & finish later” saves a resumable draft and can never issue accidentally.

@@ -285,8 +285,9 @@
 		var autosaveTimer = null;
 		var autosavePending = false;
 		var autosaveQueued = false;
-		var autosaveConflict = 'stale' === autosaveStatus || 'invalid' === autosaveStatus;
-		var hasServerAutosave = 'ready' === autosaveStatus;
+		var autosaveNeedsCleanup = 'stale' === autosaveStatus || 'invalid' === autosaveStatus || 'cleanup_failed' === autosaveStatus;
+		var autosaveConflict = false;
+		var hasServerAutosave = 'ready' === autosaveStatus || autosaveNeedsCleanup;
 		var templateId = Number( root.getAttribute( 'data-template-id' ) || 0 );
 		var baseRevisionId = Number( root.getAttribute( 'data-saved-revision' ) || 0 );
 		var baseRevisionSha256 = root.getAttribute( 'data-saved-sha256' ) || '';
@@ -1987,7 +1988,7 @@
 		enhancePropertySections();
 		applyDesignerMode( rememberedDesignerMode(), false );
 		if ( 'ResizeObserver' in window ) { var studioResizeObserver = new ResizeObserver( function () { if ( Math.abs( relativeZoomPercent() - 100 ) <= 1 ) { fitWorkspace(); } } ); studioResizeObserver.observe( workspace ); }
-		syncPreviewModeButtons(); render(); if ( autosaveConflict ) { setAutosaveStatus( t( 'autosaveConflict', 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.' ), 'conflict' ); } else if ( recovered ) { setAutosaveStatus( t( 'autosaveRecovered', 'Recovered unsaved Designer changes from your latest safe checkpoint.' ), 'recovered' ); announce( t( 'autosaveRecovered', 'Recovered unsaved Designer changes from your latest safe checkpoint.' ) ); } window.setTimeout( function () { fitWorkspace(); }, 0 );
+		syncPreviewModeButtons(); render(); if ( recovered ) { setAutosaveStatus( t( 'autosaveRecovered', 'Recovered unsaved Designer changes from your latest safe checkpoint.' ), 'recovered' ); announce( t( 'autosaveRecovered', 'Recovered unsaved Designer changes from your latest safe checkpoint.' ) ); } else if ( autosaveNeedsCleanup ) { setAutosaveStatus( t( 'savedDraft', 'Saved draft' ), 'clean' ); window.setTimeout( function () { discardAutosave( false ); }, 0 ); } window.setTimeout( function () { fitWorkspace(); }, 0 );
 	}
 
 	document.addEventListener( 'DOMContentLoaded', function () {

@@ -355,7 +355,13 @@ final class TemplateAdmin {
 					$state = ( new TemplateDesignerState() )->decode( (string) wp_unslash( $_POST['designer_state_json'] ), $layout );
 					update_user_meta( get_current_user_id(), $this->designer_state_key( $id ), wp_json_encode( $state ) );
 				}
-				if ( isset( $_POST['designer_autosave_session_id'] ) ) { ( new TemplateDesignerAutosave() )->discard( $id, get_current_user_id(), sanitize_text_field( wp_unslash( $_POST['designer_autosave_session_id'] ) ) ); }
+				$autosaves = new TemplateDesignerAutosave();
+				if ( isset( $_POST['designer_autosave_session_id'] ) ) { $autosaves->discard( $id, get_current_user_id(), sanitize_text_field( wp_unslash( $_POST['designer_autosave_session_id'] ) ) ); }
+				// The successful manual revision is authoritative. Any recovery record left
+				// behind by another tab/session is now based on an older immutable revision.
+				// Retire that obsolete checkpoint so it cannot repeatedly surface as a false
+				// live conflict or block recovery autosave in the newly opened Studio.
+				$autosaves->prepare_for_editor( $id, get_current_user_id() );
 				if ( 'publish' === $intent ) {
 					$template = $repo->find( $id );
 					if ( is_wp_error( $template ) || ! is_array( $template ) ) {
@@ -1197,7 +1203,7 @@ final class TemplateAdmin {
 		$designer_state_json = wp_json_encode( $designer_state );
 		if ( ! is_string( $designer_state_json ) ) { $designer_state_json = '{"version":2,"locked_ids":[],"hidden_ids":[],"layer_labels":{},"snap_enabled":true}'; }
 		$current_sha256 = strtolower( (string) ( $editing['current_revision']['layout_sha256'] ?? '' ) );
-		$autosave = ( new TemplateDesignerAutosave() )->inspect( $id, get_current_user_id() );
+		$autosave = ( new TemplateDesignerAutosave() )->prepare_for_editor( $id, get_current_user_id() );
 		$autosave_status = (string) ( $autosave['status'] ?? 'none' );
 		$recovery_layout_json = '';
 		$recovery_state_json = '';
@@ -1255,7 +1261,7 @@ final class TemplateAdmin {
 		echo '<textarea hidden name="designer_state_json" data-certloom-designer-state-json>' . esc_textarea( $designer_state_json ) . '</textarea>';
 		echo '<input type="hidden" name="designer_autosave_session_id" value="" data-certloom-designer-autosave-session-field>';
 		if ( '' !== $recovery_layout_json ) { echo '<textarea hidden data-certloom-designer-recovery-json>' . esc_textarea( $recovery_layout_json ) . '</textarea><textarea hidden data-certloom-designer-recovery-state-json>' . esc_textarea( $recovery_state_json ) . '</textarea>'; }
-		if ( 'stale' === $autosave_status || 'invalid' === $autosave_status ) { echo '<div class="certloom-studio-recovery-warning" role="status"><strong>' . esc_html__( 'Recovery checkpoint not applied.', 'certloom' ) . '</strong><span>' . esc_html__( 'The stored recovery copy is stale or invalid; the current saved revision remains authoritative.', 'certloom' ) . '</span><button type="button" class="button button-small" data-certloom-designer-autosave-discard>' . esc_html__( 'Discard recovery', 'certloom' ) . '</button></div>'; }
+		if ( 'cleanup_failed' === $autosave_status ) { echo '<div class="certloom-studio-recovery-warning" role="status"><strong>' . esc_html__( 'Recovery cleanup needs attention.', 'certloom' ) . '</strong><span>' . esc_html__( 'The saved design is authoritative, but Certloom could not clear an obsolete personal recovery checkpoint. Manual save remains available.', 'certloom' ) . '</span><button type="button" class="button button-small" data-certloom-designer-autosave-discard>' . esc_html__( 'Clear recovery state', 'certloom' ) . '</button></div>'; }
 		echo '<div class="certloom-studio-documentbar" role="toolbar" aria-label="' . esc_attr__( 'Studio document and canvas controls', 'certloom' ) . '">';
 		echo '<label class="certloom-studio-select"><span class="screen-reader-text">' . esc_html__( 'Page size', 'certloom' ) . '</span><select data-certloom-designer-page-size aria-label="' . esc_attr__( 'Page size', 'certloom' ) . '"><option value="A4">A4</option><option value="Letter">' . esc_html__( 'Letter', 'certloom' ) . '</option><option value="Custom">' . esc_html__( 'Custom', 'certloom' ) . '</option></select></label>';
 		echo '<label class="certloom-studio-select"><span class="screen-reader-text">' . esc_html__( 'Orientation', 'certloom' ) . '</span><select data-certloom-designer-orientation aria-label="' . esc_attr__( 'Orientation', 'certloom' ) . '"><option value="landscape">' . esc_html__( 'Landscape', 'certloom' ) . '</option><option value="portrait">' . esc_html__( 'Portrait', 'certloom' ) . '</option></select></label>';

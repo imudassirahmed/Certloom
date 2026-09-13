@@ -5,6 +5,7 @@ $admin = file_get_contents( $root . '/src/Infrastructure/Admin/TemplateAdmin.php
 $nav   = file_get_contents( $root . '/src/Infrastructure/Admin/AdminProductNavigation.php' );
 $js    = file_get_contents( $root . '/admin/assets/designer.js' );
 $css   = file_get_contents( $root . '/admin/assets/designer.css' );
+$autosave = file_get_contents( $root . '/src/Infrastructure/Admin/TemplateDesignerAutosave.php' );
 $checks = 0;
 $failures = 0;
 function g02rsp_check( $condition, $label ) {
@@ -14,7 +15,7 @@ function g02rsp_check( $condition, $label ) {
 	$failures++;
 	echo "FAIL  {$label}\n";
 }
-foreach ( array( 'admin' => $admin, 'navigation' => $nav, 'runtime' => $js, 'styles' => $css ) as $name => $source ) {
+foreach ( array( 'admin' => $admin, 'navigation' => $nav, 'runtime' => $js, 'styles' => $css, 'autosave' => $autosave ) as $name => $source ) {
 	g02rsp_check( is_string( $source ) && '' !== $source, $name . ' source available' );
 }
 g02rsp_check( false !== strpos( $css, 'body.certloom-designer-workspace-page #wpfooter' ) && false !== strpos( $css, 'overflow: hidden !important;' ), 'desktop Studio owns the viewport instead of leaving trailing WordPress page scroll' );
@@ -44,6 +45,8 @@ g02rsp_check( false !== strpos( $css, '.certloom-studio-select {' ) && false !==
 g02rsp_check( false !== strpos( $css, '.certloom-studio-title-button::after' ) && false !== strpos( $css, "content: '\\270E'" ), 'inline Template rename has a subtle hover/focus edit affordance' );
 g02rsp_check( false !== strpos( $js, 'function rotateHandlePlacement( element )' ) && false !== strpos( $js, "data-certloom-designer-rotate-placement" ), 'rotation handle can move sideways when nearby artwork occupies its normal top clearance' );
 g02rsp_check( false !== strpos( $js, "dirtyBadge.textContent = autosaveConflict ? t( 'autosaveConflictShort', 'Save conflict' )" ) && false !== strpos( $css, '.certloom-studio-save-state small[data-state="conflict"] { display: none; }' ), 'conflict status is represented once in the header while details stay in the dedicated banner' );
+g02rsp_check( false !== strpos( $admin, 'prepare_for_editor( $id, get_current_user_id() )' ) && false !== strpos( $autosave, 'retire_active' ), 'stale or invalid recovery is retired before Studio render instead of repeating warnings on every reload' );
+g02rsp_check( false !== strpos( $js, "var autosaveConflict = false;" ) && false !== strpos( $js, 'autosaveNeedsCleanup' ), 'stale recovery state is no longer misclassified as a live multi-session conflict in the browser' );
 g02rsp_check( false !== strpos( $js, "if ( ! body.hidden ) { return; }" ) && false !== strpos( $js, 'openInspectorSection( key )' ) && false !== strpos( $js, 'inspectorSectionFor[ element.id ]' ), 'Inspector uses an exclusive one-open accordion contract and does not collapse the active pane to zero' );
 g02rsp_check( false === strpos( $js, 'localStorage' ) && false === strpos( $js, 'sessionStorage' ), 'staging polish creates no browser-local design authority' );
 g02rsp_check( false === strpos( $admin, 'wp_remote_' ) && false === strpos( $js, 'fetch("http' ) && false === strpos( $js, "fetch('http" ), 'staging polish adds no remote content path' );

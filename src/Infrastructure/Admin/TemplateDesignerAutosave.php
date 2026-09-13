@@ -40,6 +40,11 @@ final class TemplateDesignerAutosave {
 		return self::META_PREFIX . get_current_blog_id() . '_' . absint( $template_id );
 	}
 
+	/** @return string */
+	public static function retired_meta_key( $template_id ) {
+		return self::meta_key( $template_id ) . '_retired';
+	}
+
 	/** @return array<string,mixed>|\WP_Error */
 	public function save( $template_id, $user_id, $expected_revision_id, $expected_revision_sha256, $session_id, $layout, $designer_state ) {
 		$template_id = absint( $template_id );
@@ -129,6 +134,53 @@ final class TemplateDesignerAutosave {
 		$record['layout'] = $layout;
 		$record['designer_state'] = $this->state->normalize( isset( $record['designer_state'] ) && is_array( $record['designer_state'] ) ? $record['designer_state'] : array(), $layout );
 		return array( 'status' => 'ready', 'record' => $record );
+	}
+
+
+	/**
+	 * Prepare one recovery checkpoint for an editor open. Stale/invalid checkpoints
+	 * are not actionable against the authoritative revision, so move them out of
+	 * the active autosave slot before Studio starts. This preserves one bounded
+	 * diagnostic copy without letting obsolete recovery state block a new session
+	 * or masquerade as a live multi-tab conflict.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function prepare_for_editor( $template_id, $user_id ) {
+		$inspection = $this->inspect( $template_id, $user_id );
+		$status = (string) ( $inspection['status'] ?? 'none' );
+		if ( ! in_array( $status, array( 'stale', 'invalid' ), true ) ) { return $inspection; }
+		$retired = $this->retire_active( $template_id, $user_id, $status );
+		if ( is_wp_error( $retired ) ) {
+			return array( 'status' => 'cleanup_failed', 'reason' => $status, 'error' => $retired );
+		}
+		return array( 'status' => 'none', 'retired_status' => $status );
+	}
+
+	/** @return true|\WP_Error */
+	public function retire_active( $template_id, $user_id, $reason = 'stale' ) {
+		$template_id = absint( $template_id ); $user_id = absint( $user_id ); $reason = sanitize_key( (string) $reason );
+		if ( ! $template_id || ! $user_id ) { return new \WP_Error( 'certloom_designer_autosave_retire_invalid', __( 'A valid Template and user are required to retire Designer recovery state.', 'certloom' ) ); }
+		$raw = get_user_meta( $user_id, self::meta_key( $template_id ), true );
+		if ( ! is_string( $raw ) || '' === trim( $raw ) ) { return true; }
+		$record = array(
+			'version' => 1,
+			'template_id' => $template_id,
+			'reason' => in_array( $reason, array( 'stale', 'invalid' ), true ) ? $reason : 'stale',
+			'retired_at_gmt' => gmdate( 'Y-m-d H:i:s' ),
+			'checkpoint_raw' => $raw,
+		);
+		$encoded = wp_json_encode( $record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+		if ( ! is_string( $encoded ) || strlen( $encoded ) > self::MAX_BYTES + 262144 ) {
+			return new \WP_Error( 'certloom_designer_autosave_retire_encode_failed', __( 'Certloom could not preserve the obsolete Designer recovery checkpoint.', 'certloom' ) );
+		}
+		update_user_meta( $user_id, self::retired_meta_key( $template_id ), $encoded );
+		$stored = get_user_meta( $user_id, self::retired_meta_key( $template_id ), true );
+		if ( ! is_string( $stored ) || ! hash_equals( hash( 'sha256', $encoded ), hash( 'sha256', $stored ) ) ) {
+			return new \WP_Error( 'certloom_designer_autosave_retire_store_failed', __( 'Certloom could not verify the preserved obsolete Designer recovery checkpoint.', 'certloom' ) );
+		}
+		delete_user_meta( $user_id, self::meta_key( $template_id ) );
+		return true;
 	}
 
 	/** @return true|\WP_Error */
