@@ -42,17 +42,26 @@ final class RenderPlanBuilder {
 		$size = (string) $page['size'];
 		$orientation = strtolower( (string) $page['orientation'] );
 		$dimensions = LayoutSchema::page_dimensions();
-		if ( ! isset( $dimensions[ $size ][ $orientation ] ) ) {
-			throw new InvalidArgumentException( 'Render plan page size/orientation is unsupported.' );
-		}
 		$width = $this->positive_number( $page['width_mm'], 'page width' );
 		$height = $this->positive_number( $page['height_mm'], 'page height' );
-		list( $expected_width, $expected_height ) = $dimensions[ $size ][ $orientation ];
-		if ( abs( $width - $expected_width ) > 0.01 || abs( $height - $expected_height ) > 0.01 ) {
-			throw new InvalidArgumentException( 'Render plan page geometry does not match its canonical standard size/orientation.' );
+		if ( LayoutSchema::PAGE_CUSTOM === $size ) {
+			if ( ! in_array( $orientation, array( LayoutSchema::ORIENTATION_PORTRAIT, LayoutSchema::ORIENTATION_LANDSCAPE ), true ) ) {
+				throw new InvalidArgumentException( 'Render plan custom page orientation is unsupported.' );
+			}
+			if ( $width < LayoutSchema::CUSTOM_PAGE_MIN_MM || $height < LayoutSchema::CUSTOM_PAGE_MIN_MM || $width > LayoutSchema::CUSTOM_PAGE_MAX_MM || $height > LayoutSchema::CUSTOM_PAGE_MAX_MM ) {
+				throw new InvalidArgumentException( 'Render plan custom page geometry is outside the supported range.' );
+			}
+		} else {
+			if ( ! isset( $dimensions[ $size ][ $orientation ] ) ) {
+				throw new InvalidArgumentException( 'Render plan page size/orientation is unsupported.' );
+			}
+			list( $expected_width, $expected_height ) = $dimensions[ $size ][ $orientation ];
+			if ( abs( $width - $expected_width ) > 0.01 || abs( $height - $expected_height ) > 0.01 ) {
+				throw new InvalidArgumentException( 'Render plan page geometry does not match its canonical standard size/orientation.' );
+			}
+			$width = (float) $expected_width;
+			$height = (float) $expected_height;
 		}
-		$width = (float) $expected_width;
-		$height = (float) $expected_height;
 		$elements = isset( $resolved_document['elements'] ) && is_array( $resolved_document['elements'] ) ? array_values( $resolved_document['elements'] ) : array();
 		$operations = array();
 		$seen_ids = array();

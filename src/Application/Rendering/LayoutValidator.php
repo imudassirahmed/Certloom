@@ -80,11 +80,20 @@ final class LayoutValidator {
 		$size = (string) $page['size'];
 		$orientation = strtolower( (string) $page['orientation'] );
 		$dimensions = LayoutSchema::page_dimensions();
+		$width = $this->number( $page['width_mm'], 'page width' );
+		$height = $this->number( $page['height_mm'], 'page height' );
+		if ( LayoutSchema::PAGE_CUSTOM === $size ) {
+			if ( ! in_array( $orientation, array( LayoutSchema::ORIENTATION_PORTRAIT, LayoutSchema::ORIENTATION_LANDSCAPE ), true ) ) {
+				throw new InvalidArgumentException( 'Unsupported custom page orientation.' );
+			}
+			if ( $width < LayoutSchema::CUSTOM_PAGE_MIN_MM || $height < LayoutSchema::CUSTOM_PAGE_MIN_MM || $width > LayoutSchema::CUSTOM_PAGE_MAX_MM || $height > LayoutSchema::CUSTOM_PAGE_MAX_MM ) {
+				throw new InvalidArgumentException( 'Custom page dimensions are outside the supported range.' );
+			}
+			return array( 'size' => $size, 'orientation' => $orientation, 'width_mm' => $width, 'height_mm' => $height );
+		}
 		if ( ! isset( $dimensions[ $size ][ $orientation ] ) ) {
 			throw new InvalidArgumentException( 'Unsupported page size or orientation.' );
 		}
-		$width = $this->number( $page['width_mm'], 'page width' );
-		$height = $this->number( $page['height_mm'], 'page height' );
 		list( $expected_width, $expected_height ) = $dimensions[ $size ][ $orientation ];
 		if ( abs( $width - $expected_width ) > 0.01 || abs( $height - $expected_height ) > 0.01 ) {
 			throw new InvalidArgumentException( 'Page dimensions do not match the selected standard size/orientation.' );

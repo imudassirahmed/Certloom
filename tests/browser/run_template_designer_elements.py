@@ -24,7 +24,7 @@ async def run():
 
         elements=page.locator('[data-certloom-designer-element]')
         await ck(await elements.count()==14,'initialCount')
-        await ck(await page.locator('[data-certloom-designer-add]').count()==16 and await page.locator('[data-certloom-designer-add="rich_text"]').is_disabled() and await page.locator('[data-certloom-designer-add="table"]').is_disabled() and await page.locator('[data-certloom-designer-add="data_table"]').is_disabled(),'schema1PaletteIncludesLaterSchemaTypesFailClosed')
+        await ck(await page.locator('[data-certloom-designer-add]').count()==19 and await page.locator('[data-certloom-designer-add="dynamic_field"]').is_disabled() and await page.locator('[data-certloom-designer-add="rich_text"]').is_disabled() and await page.locator('[data-certloom-designer-add="list"]').is_disabled() and await page.locator('[data-certloom-designer-add="table"]').is_disabled() and await page.locator('[data-certloom-designer-add="data_table"]').is_disabled(),'schema1PaletteIncludesLaterSchemaTypesFailClosed')
         await ck(await page.locator('[data-certloom-designer-add="barcode"]').is_disabled(),'barcodeDisabledOnV1')
 
         # Text creation/content editing, canonical UUIDv4, undo/redo.

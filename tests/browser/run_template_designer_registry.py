@@ -23,11 +23,11 @@ async def run():
         contract=await page.evaluate('window.certloomTemplateElementRegistry')
         await ck(contract.get('contract_version')==1,'contractVersion')
         await ck(len(contract.get('types',{}))==13,'crossSchemaCanonicalTypes')
-        await ck(len(contract.get('palette',[]))==16,'crossSchemaPaletteDefinitions')
+        await ck(len(contract.get('palette',[]))==19,'crossSchemaPaletteDefinitions')
         dom_kinds=await page.locator('[data-certloom-designer-add]').evaluate_all('(els)=>els.map(e=>e.dataset.certloomDesignerAdd)')
         registry_kinds=[x['kind'] for x in contract['palette']]
         await ck(dom_kinds==registry_kinds,'domPaletteMatchesServerRegistryOrder')
-        await ck(await page.locator('[data-certloom-designer-add]:disabled').count()==3 and await page.locator('[data-certloom-designer-add="rich_text"]').is_disabled() and await page.locator('[data-certloom-designer-add="table"]').is_disabled() and await page.locator('[data-certloom-designer-add="data_table"]').is_disabled() and not await page.locator('[data-certloom-designer-add="merge"]').is_disabled(),'schema3KeepsMergeAndFailsClosedLaterSchemaTypes')
+        await ck(await page.locator('[data-certloom-designer-add]:disabled').count()==4 and await page.locator('[data-certloom-designer-add="dynamic_field"]').is_disabled() and await page.locator('[data-certloom-designer-add="rich_text"]').is_disabled() and await page.locator('[data-certloom-designer-add="table"]').is_disabled() and await page.locator('[data-certloom-designer-add="data_table"]').is_disabled() and not await page.locator('[data-certloom-designer-add="merge"]').is_disabled(),'schema3KeepsMergeAndFailsClosedLaterSchemaTypes')
 
         # Mutating the public global after Designer boot must not alter its frozen snapshot.
         await page.evaluate('window.certloomTemplateElementRegistry.palette=[]; window.certloomTemplateElementRegistry.types={};')
@@ -63,7 +63,7 @@ async def run():
 
         schema4=await browser.new_page(viewport={'width':1100,'height':760})
         await schema4.set_content(fixture_html(False,4),wait_until='load'); await schema4.wait_for_timeout(100)
-        await ck(await schema4.locator('[data-certloom-designer-add]').count()==15 and await schema4.locator('[data-certloom-designer-add="merge"]').count()==0 and not await schema4.locator('[data-certloom-designer-add="rich_text"]').is_disabled() and not await schema4.locator('[data-certloom-designer-add="table"]').is_disabled() and not await schema4.locator('[data-certloom-designer-add="data_table"]').is_disabled(),'schema4NormalPaletteReplacesLegacyMergeAndEnablesTables')
+        await ck(await schema4.locator('[data-certloom-designer-add]').count()==18 and await schema4.locator('[data-certloom-designer-add="merge"]').count()==0 and not await schema4.locator('[data-certloom-designer-add="rich_text"]').is_disabled() and not await schema4.locator('[data-certloom-designer-add="table"]').is_disabled() and not await schema4.locator('[data-certloom-designer-add="data_table"]').is_disabled(),'schema4NormalPaletteReplacesLegacyMergeAndEnablesTables')
         await schema4.close()
 
         corrupt=await browser.new_page(viewport={'width':900,'height':700})
@@ -76,7 +76,7 @@ async def run():
         reduced=await browser.new_page(viewport={'width':360,'height':760}, reduced_motion='reduce')
         await reduced.set_content(fixture_html(False),wait_until='load'); await reduced.wait_for_timeout(80)
         await ck((await reduced.locator('[data-certloom-designer-workspace]').evaluate('(e)=>getComputedStyle(e).overflowX')) in ('auto','scroll'),'registryDesignerRemainsResponsive')
-        await ck(await reduced.locator('[data-certloom-designer-add]').count()==16 and await reduced.locator('[data-certloom-designer-add="rich_text"]').is_disabled() and await reduced.locator('[data-certloom-designer-add="table"]').is_disabled() and await reduced.locator('[data-certloom-designer-add="data_table"]').is_disabled(),'registryPaletteSurvivesReducedMotionViewport')
+        await ck(await reduced.locator('[data-certloom-designer-add]').count()==19 and await reduced.locator('[data-certloom-designer-add="dynamic_field"]').is_disabled() and await reduced.locator('[data-certloom-designer-add="rich_text"]').is_disabled() and await reduced.locator('[data-certloom-designer-add="table"]').is_disabled() and await reduced.locator('[data-certloom-designer-add="data_table"]').is_disabled(),'registryPaletteSurvivesReducedMotionViewport')
         await reduced.close(); await browser.close()
     if failed:
         print('FAIL  DSN-08 typed Element Registry browser gate:', ', '.join(failed)); return 1

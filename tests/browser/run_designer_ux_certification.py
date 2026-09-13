@@ -89,23 +89,23 @@ async def main():
         await ck('selection_ids' not in state and 'selected_ids' not in state,'selectionNotSerializedState')
         await page.close()
 
-        # Narrow phone: default is a comfortable locally-scrollable canvas; Fit still means true fit.
+        # Narrow phone: Studio keeps the newly approved 100% whole-page auto-fit baseline.
+        # The viewport itself must not overflow; the left/right editing regions may scroll internally
+        # only when their own content exceeds available space. Fit/Ctrl+0 returns to the same baseline.
         mobile=await browser.new_page(viewport={'width':390,'height':844})
         await mobile.set_content(html,wait_until='load'); await mobile.wait_for_timeout(260)
         zoom_text=(await mobile.locator('[data-certloom-designer-zoom-output]').text_content()) or ''
-        metrics=await mobile.evaluate("""() => {const w=document.querySelector('[data-certloom-designer-workspace]'),p=document.querySelector('[data-certloom-designer-page]');return {docOk:document.documentElement.scrollWidth<=document.documentElement.clientWidth+1,zoom:document.querySelector('[data-certloom-designer-zoom-output]').textContent,pageW:p.getBoundingClientRect().width,workW:w.clientWidth,scrollW:w.scrollWidth,scrollLeft:w.scrollLeft,arrange:!document.querySelector('[data-certloom-designer-quick-align]').hidden};}""")
-        await ck(zoom_text=='40%','mobileComfortableZoom40')
+        metrics=await mobile.evaluate("""() => {const w=document.querySelector('[data-certloom-designer-workspace]'),p=document.querySelector('[data-certloom-designer-page]');return {docOk:document.documentElement.scrollWidth<=document.documentElement.clientWidth+1,zoom:document.querySelector('[data-certloom-designer-zoom-output]').textContent,pageW:p.getBoundingClientRect().width,pageH:p.getBoundingClientRect().height,workW:w.clientWidth,workH:w.clientHeight,scrollW:w.scrollWidth,scrollH:w.scrollHeight,arrange:!document.querySelector('[data-certloom-designer-quick-align]').hidden};}""")
+        await ck(zoom_text=='100%','mobileStartsAtFitted100')
         await ck(metrics['docOk'],'mobileNoPageOverflow')
-        await ck(metrics['pageW']>metrics['workW'] and metrics['scrollW']>metrics['workW'],'mobileCanvasUsesLocalScroll')
-        await ck(metrics['scrollLeft']>0,'mobileComfortableCanvasCentered')
+        await ck(metrics['pageW']<=metrics['workW']+1 and metrics['pageH']<=metrics['workH']+1,'mobileWholePageFitsWorkspace')
         await ck(not metrics['arrange'],'mobileIdleArrangeHidden')
-        palette=await mobile.evaluate("""() => {const p=document.querySelector('.certloom-template-designer-palette'),b=[...p.querySelectorAll('.button')].filter(x=>getComputedStyle(x).display!=='none');const pr=p.getBoundingClientRect();return {cols:getComputedStyle(p).gridTemplateColumns,height:pr.height,firstY:b[0]?.getBoundingClientRect().y,lastY:b[b.length-1]?.getBoundingClientRect().y};}""")
+        palette=await mobile.evaluate("""() => {const p=document.querySelector('.certloom-template-designer-palette');return {cols:getComputedStyle(p).gridTemplateColumns,display:getComputedStyle(p).display};}""")
         await ck(len([x for x in palette['cols'].split(' ') if x])==2,'mobileAddPaletteTwoColumns')
-        await ck(palette['height']<330,'mobileAddPaletteCompact')
         await mobile.locator('[data-certloom-designer-fit]').click(); await mobile.wait_for_timeout(90)
-        fit=await mobile.evaluate("""() => {const w=document.querySelector('[data-certloom-designer-workspace]'),p=document.querySelector('[data-certloom-designer-page]');return {zoom:document.querySelector('[data-certloom-designer-zoom-output]').textContent,pageW:p.getBoundingClientRect().width,workW:w.clientWidth,scrollW:w.scrollWidth};}""")
-        await ck(fit['zoom']=='25%','mobileFitReturnsTrueFit')
-        await ck(fit['pageW']<=fit['workW']+1 and fit['scrollW']<=fit['workW']+1,'mobileFitRemovesLocalHorizontalNeed')
+        fit=await mobile.evaluate("""() => {const w=document.querySelector('[data-certloom-designer-workspace]'),p=document.querySelector('[data-certloom-designer-page]');return {zoom:document.querySelector('[data-certloom-designer-zoom-output]').textContent,pageW:p.getBoundingClientRect().width,pageH:p.getBoundingClientRect().height,workW:w.clientWidth,workH:w.clientHeight};}""")
+        await ck(fit['zoom']=='100%','mobileFitReturnsFitted100')
+        await ck(fit['pageW']<=fit['workW']+1 and fit['pageH']<=fit['workH']+1,'mobileFitKeepsWholePageVisible')
         controls=await mobile.evaluate("""() => [...document.querySelectorAll('.is-quick-mode .certloom-template-designer-mode-switch .button,.is-quick-mode .certloom-template-designer-toolbar .button,.is-quick-mode .certloom-template-designer-palette .button,.is-quick-mode .certloom-template-designer-quick-align .button,.is-quick-mode [data-certloom-designer-layers-toggle],.is-quick-mode [data-certloom-designer-color-picker]')].filter(x=>getComputedStyle(x).display!=='none'&&x.getBoundingClientRect().height>0).map(x=>x.getBoundingClientRect().height)""")
         await ck(min(controls)>=43.5,'mobileVisibleControls44')
         await mobile.close()

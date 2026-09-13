@@ -8,13 +8,13 @@ $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admi
 $pass=0;$fail=0; function dsx02b($ok,$label){global$pass,$fail;if($ok){$pass++;echo"PASS  $label\n";}else{$fail++;echo"FAIL  $label\n";}}
 
 dsx02b(is_string($admin)&&strpos($admin,'certloom-template-designer-v2')!==false&&strpos($admin,'certloom-template-designer-kicker')===false&&strpos($admin,'Easy Designer')===false,'Template admin presents the unified Designer v2 shell without retired Easy Designer/kicker branding');
-dsx02b(strpos($admin,'Shift/Ctrl/Cmd-click to select multiple')!==false,'Easy Designer teaches bounded additive multi-selection');
-dsx02b(strpos($admin,'data-certloom-designer-distribute="horizontal"')!==false&&strpos($admin,'data-certloom-designer-distribute="vertical"')!==false,'Easy Designer exposes deterministic horizontal and vertical distribution');
-dsx02b(strpos($admin,'data-certloom-designer-selection-status')!==false&&strpos($admin,'data-certloom-designer-spacing-status')!==false,'selection count and spacing feedback are visible presentation state');
-dsx02b(strpos($admin,'data-certloom-designer-group')!==false&&strpos($admin,'Drag the selection together or use Align and Distribute')!==false,'multi-selection receives a dedicated non-destructive inspector');
-foreach(array('font_family','font_size_pt','color') as $key){dsx02b(strpos($admin,'data-certloom-designer-quick-style="'.$key.'"')!==false,"compact text toolbar exposes canonical $key proxy");}
-dsx02b(strpos($admin,'data-certloom-designer-quick-toggle="bold"')!==false&&strpos($admin,'data-certloom-designer-quick-toggle="italic"')!==false,'compact text toolbar exposes bounded bold and italic proxies');
-dsx02b(substr_count($admin,'data-certloom-designer-quick-text-align=')>=3,'compact text toolbar exposes left/center/right canonical alignment');
+dsx02b(strpos($admin,'Shift/Ctrl/Cmd-click to add or remove elements')!==false,'Certloom Studio teaches bounded additive multi-selection in the Selection inspector');
+dsx02b(strpos($admin,'data-certloom-designer-distribute="horizontal"')!==false&&strpos($admin,'data-certloom-designer-distribute="vertical"')!==false&&strpos($admin,'certloom-studio-distribute-actions')!==false,'Certloom Studio preserves deterministic horizontal and vertical distribution inside Arrange');
+dsx02b(strpos($admin,'data-certloom-designer-selection-status')!==false&&strpos($admin,'data-certloom-designer-spacing-status')!==false&&strpos($admin,'certloom-studio-selection-feedback')!==false,'selection count and spacing feedback remain compact visible presentation state');
+dsx02b(strpos($admin,'data-certloom-designer-group')!==false&&strpos($admin,'drag the selection together')!==false&&strpos($admin,'Arrange for alignment and equal spacing')!==false,'multi-selection receives a dedicated non-destructive Studio inspector');
+foreach(array('font_family','font_size_pt','color') as $key){dsx02b(strpos($admin,'data-certloom-designer-style-field="'.$key.'"')!==false,"Studio Properties exposes canonical $key text control");}
+dsx02b(strpos($admin,'data-certloom-designer-style-field="font_weight"')!==false&&strpos($admin,'data-certloom-designer-style-field="italic"')!==false,'Studio Properties exposes bounded weight and italic controls');
+dsx02b(strpos($admin,'data-certloom-designer-style-field="align"')!==false&&strpos($admin,'<option value="left">')!==false&&strpos($admin,'<option value="center">')!==false&&strpos($admin,'<option value="right">')!==false,'Studio Properties exposes left/center/right canonical text alignment');
 
 dsx02b(is_string($js)&&strpos($js,'var selectedIds = []')!==false&&strpos($js,'function selectionIds()')!==false,'multi-selection is explicit transient editor state');
 dsx02b(strpos($js,'function combinedBounds')!==false&&strpos($js,'function clampSelectionMap')!==false,'group movement is bounded as a combined rotated selection');

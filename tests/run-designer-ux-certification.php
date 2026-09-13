@@ -10,21 +10,21 @@ $pass=0;$fail=0; function dqa($ok,$label){global$pass,$fail;if($ok){$pass++;echo
 
 dqa(is_string($admin)&&strpos($admin,'Technical integrity')!==false&&strpos($admin,'<details class="certloom-template-designer-boundary"')!==false,'technical registry/authority material is preserved but collapsed by default');
 dqa(strpos($admin,'DSN-08 is a closed built-in registry')!==false,'closed typed registry boundary remains explicit inside technical disclosure');
-dqa(strpos($admin,'data-certloom-designer-context-dock')!==false&&strpos($admin,'data-certloom-designer-quick-align')!==false&&strpos($admin,'Context alignment and distribution controls')!==false&&strpos($admin,'role="toolbar"')!==false&&strpos($admin,'Arrange')!==false,'Arrange remains an accessible toolbar inside the unified Designer context dock');
-dqa(strpos($admin,'data-certloom-designer-quick-align role="toolbar"')!==false&&strpos($admin,'data-certloom-designer-quick-align role="toolbar" aria-label=')!==false&&strpos($admin,' hidden>')!==false,'Quick Arrange is initially hidden until a meaningful selection exists');
-dqa(strpos($admin,'data-certloom-designer-distribute-group hidden')!==false,'distribution controls are progressively disclosed instead of occupying idle Quick Designer space');
+dqa(strpos($admin,'data-certloom-designer-property-section="arrange"')!==false&&strpos($admin,'certloom-studio-arrange-grid')!==false&&strpos($admin,'certloom-studio-distribute-actions')!==false,'Arrange is owned by the contextual Studio inspector rather than the retired horizontal dock');
+dqa(strpos($admin,'data-certloom-designer-align=')!==false&&strpos($admin,'data-certloom-designer-distribute="horizontal"')!==false&&strpos($admin,'data-certloom-designer-distribute="vertical"')!==false,'Inspector exposes alignment and equal-spacing controls for multi-selection');
+dqa(strpos($admin,'data-certloom-designer-selection-status')!==false&&strpos($admin,'data-certloom-designer-spacing-status')!==false,'selection and spacing feedback remain available in the Inspector');
 dqa(strpos($admin,'Certificate Designer canvas workspace')!==false&&strpos($admin,'Certificate page canvas')!==false,'canvas workspace and page have explicit accessible names');
-dqa(strpos($admin,'Click or drag onto canvas')!==false,'Add panel retains both click and drag instructions');
-dqa(strpos($admin,'data-certloom-designer-quick-save')!==false&&strpos($admin,'data-certloom-designer-save')!==false,'Quick and end-of-form authoritative save affordances remain available');
+dqa(strpos($admin,'data-certloom-designer-palette-item')!==false&&strpos($admin,'draggable="true"')!==false&&strpos($admin,"'Add %s'")!==false,'Insert drawer retains both click and drag affordances with accessible titles');
+dqa(strpos($admin,'certloom-studio-draft')!==false&&strpos($admin,'certloom-studio-primary')!==false&&strpos($admin,'data-certloom-designer-save')!==false&&strpos($admin,'data-certloom-designer-primary-save')!==false,'authoritative Draft and Publish/Save Studio actions remain available');
 
-dqa(is_string($js)&&strpos($js,"var quickArrangeBar = root.querySelector( '[data-certloom-designer-quick-align]' )")!==false,'runtime owns contextual Arrange disclosure');
-dqa(strpos($js,"var distributionGroup = root.querySelector( '[data-certloom-designer-distribute-group]' )")!==false,'runtime owns contextual Distribution disclosure');
-dqa(strpos($js,'quickArrangeBar.hidden = 0 === count')!==false&&strpos($js,'distributionGroup.hidden = count < 3')!==false,'selection count deterministically controls Arrange/Distribution visibility');
+dqa(is_string($js)&&strpos($js,"var alignButtons = root.querySelectorAll( '[data-certloom-designer-align]' )")!==false,'runtime owns Inspector alignment controls');
+dqa(strpos($js,"var distributeButtons = root.querySelectorAll( '[data-certloom-designer-distribute]' )")!==false,'runtime owns Inspector equal-spacing controls');
+dqa(strpos($js,'alignButtons[ i ].disabled = ! selection.length || groupLocked')!==false&&strpos($js,'distributeButtons[ distributeIndex ].disabled = selection.length < 3 || groupLocked')!==false,'selection state deterministically enables alignment and distribution actions');
 dqa(strpos($js,'1 element selected · Shift/Ctrl/Cmd-click to add more')!==false,'single-selection state teaches additive selection without permanent toolbar clutter');
-dqa(strpos($js,'function fitWorkspace( comfortableEditing )')!==false&&strpos($js,'minimumPercent')!==false&&strpos($js,'workspace.clientWidth < 520 ? 40 : 25')!==false,'narrow Quick Designer receives a 40% comfortable editing floor');
-dqa(strpos($js,"fitButton.addEventListener( 'click', function () { fitWorkspace( false ); }")!==false,'explicit Fit remains a true whole-page fit rather than forcing the comfortable-edit floor');
-dqa(strpos($js,'workspace.scrollLeft = Math.max( 0, ( workspace.scrollWidth - workspace.clientWidth ) / 2 )')!==false,'comfortable mobile edit view centers its local horizontal workspace');
-dqa(strpos($js,"window.setTimeout( function () { fitWorkspace( true ); }, 0 )")!==false,'initial Quick Designer render uses the comfortable editing fit');
+dqa(strpos($js,'function fitWorkspace()')!==false&&strpos($js,'availableW / ( p.width_mm * BASE_PX_PER_MM )')!==false&&strpos($js,'availableH / ( p.height_mm * BASE_PX_PER_MM )')!==false,'Studio 100% is a whole-page auto-fit constrained by the available canvas viewport');
+dqa(strpos($js,"fitButton.addEventListener( 'click', fitWorkspace )")!==false,'explicit Fit returns directly to the 100% whole-page fit baseline');
+dqa(strpos($js,'workspace.scrollLeft = 0; workspace.scrollTop = 0;')!==false,'fitted Studio view resets local canvas scrolling after centering the page');
+dqa(strpos($js,"window.setTimeout( function () { fitWorkspace(); }, 0 )")!==false,'initial Studio render uses the fitted 100% baseline');
 dqa(strpos($js,'localStorage')===false&&strpos($js,'sessionStorage')===false,'usability polish creates no browser-local design authority');
 dqa(strpos($js,'selection_ids')===false&&strpos($js,'selected_ids')===false,'selection convenience remains outside persisted canonical layout/state keys');
 dqa(strpos($js,'https://')===false&&substr_count($js,'http://')===1,'Designer certification adds no remote content/network path');
@@ -32,9 +32,9 @@ dqa(strpos($js,'eval(')===false&&strpos($js,'new Function')===false,'Designer ce
 
 dqa(is_string($css)&&strpos($css,'DSX-QA-01: Designer usability/accessibility certification polish')!==false,'certification polish has an explicit scoped presentation boundary');
 dqa(strpos($css,'.certloom-template-designer-boundary summary')!==false,'collapsed technical disclosure has a clear interactive summary style');
-dqa(strpos($css,'.certloom-template-designer-distribute-group[hidden]')!==false&&strpos($css,'.certloom-template-designer-quick-align[hidden]')!==false,'progressive disclosure cannot be defeated by component display rules');
-dqa(strpos($css,'overscroll-behavior: contain')!==false,'mobile editing keeps overflow local to the Designer workspace');
-dqa(strpos($css,'grid-template-columns: repeat(2,minmax(0,1fr))')!==false&&strpos($css,'@media (max-width: 480px) {\n\t.certloom-template-designer.is-quick-mode .certloom-template-designer-palette { grid-template-columns: 1fr; }')===false,'phone Add palette stays compact in two columns instead of pushing the canvas far below the fold');
+dqa(strpos($css,'.certloom-studio-distribute-actions')!==false&&strpos($css,'.certloom-studio-arrange-grid')!==false,'Inspector Arrange and distribution groups have scoped compact presentation');
+dqa(strpos($css,'overscroll-behavior: contain')!==false,'Studio keeps overflow local to its internal editing regions');
+dqa(strpos($css,'.certloom-studio-insert-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));')!==false,'Insert drawer stays compact in a two-column element grid on desktop');
 dqa(strpos($css,'forced-colors: active')!==false&&strpos($css,'prefers-reduced-motion: reduce')!==false,'existing forced-colors and reduced-motion contracts remain present');
 
 $catalog=new PresetCatalog(); $validator=new LayoutValidator(); $layout=$catalog->get('classic-a4-landscape')['layout'];

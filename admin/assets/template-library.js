@@ -104,6 +104,21 @@
 		dialog.addEventListener('close',function(){open.focus();});
 	}
 
-	function init() { initBackground(); initPreview(); initImport(); }
+	function initPackExport() {
+		var button = q('[data-certloom-pack-export]');
+		var boxes = qa('[data-certloom-pack-select]');
+		if (!button || !boxes.length) { return; }
+		function sync() {
+			var count = boxes.filter(function (box) { return !!box.checked; }).length;
+			var emptyLabel = button.getAttribute('data-label-empty') || 'Export selected package';
+			var selectedLabel = button.getAttribute('data-label-selected') || 'Export selected package (%d)';
+			button.disabled = count < 1;
+			button.textContent = count ? selectedLabel.replace('%d', String(count)) : emptyLabel;
+		}
+		boxes.forEach(function (box) { box.addEventListener('change', sync); });
+		sync();
+	}
+
+	function init() { initBackground(); initPreview(); initImport(); initPackExport(); }
 	if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
 }());

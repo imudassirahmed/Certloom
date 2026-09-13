@@ -40,7 +40,8 @@ dsn8('text'===$all['list']['render_operation']&&'list'===$all['list']['resolver'
 dsn8('text'===$all['merge']['render_operation']&&'merge'===$all['merge']['resolver'],'merge elements resolve centrally into the existing text renderer path');
 
 $palette=ElementRegistry::palette(); $kinds=array_column($palette,'kind');
-dsn8(16===count($palette)&&16===count(array_unique($kinds)),'cross-schema registry owns sixteen unique palette definitions including legacy Merge plus schema-4 Rich text, Table and Data Table');
+dsn8(19===count($palette)&&19===count(array_unique($kinds)),'cross-schema registry owns nineteen unique palette definitions including Studio Heading, Field, Dynamic Field, legacy Merge and schema-4 Rich text/Table/Data Table');
+dsn8(in_array('heading',$kinds,true)&&in_array('field',$kinds,true)&&in_array('dynamic_field',$kinds,true),'Studio authoring palette exposes Heading, Field and Dynamic Field as typed canonical presets');
 dsn8(in_array('seal',$kinds,true)&&in_array('background',$kinds,true),'seal/background remain typed palette presets rather than new persisted element types');
 $seal=null;$background=null;$barcode=null;$list=null;$merge=null;$rich=null;foreach($palette as $item){if('seal'===$item['kind'])$seal=$item;if('background'===$item['kind'])$background=$item;if('barcode'===$item['kind'])$barcode=$item;if('list'===$item['kind'])$list=$item;if('merge'===$item['kind'])$merge=$item;if('rich_text'===$item['kind'])$rich=$item;}
 dsn8('image'===($seal['type']??null),'Seal palette tool maps explicitly to canonical image type');
@@ -50,7 +51,7 @@ dsn8(3===($list['min_schema_version']??null),'List palette availability comes fr
 dsn8(3===($merge['max_schema_version']??null)&&4===($rich['min_schema_version']??null),'palette metadata retires normal standalone Merge after schema 3 and introduces Rich text at schema 4');
 
 $browser=ElementRegistry::browser_contract();
-dsn8(1===($browser['contract_version']??0)&&13===count($browser['types']??array())&&16===count($browser['palette']??array()),'browser registry is a bounded portable cross-schema projection of the server contract');
+dsn8(1===($browser['contract_version']??0)&&13===count($browser['types']??array())&&19===count($browser['palette']??array()),'browser registry is a bounded portable cross-schema projection of the expanded Studio palette and server contract');
 $encoded=json_encode($browser); dsn8(is_string($encoded)&&strlen($encoded)<20000,'browser registry remains compact and JSON-only');
 dsn8(false===stripos($encoded,'<script')&&false===stripos($encoded,'javascript:')&&false===stripos($encoded,'callback'),'browser contract carries no executable callback/HTML channel');
 

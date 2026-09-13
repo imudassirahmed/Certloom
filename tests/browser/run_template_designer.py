@@ -62,20 +62,22 @@ async def run():
 
         # DSN-01 geometry interactions remain live under the DSN-02 productivity layer.
         selected=page.locator('[data-certloom-designer-element].is-selected')
-        resize=selected.locator('[data-certloom-designer-resize="se"]')
+        resize=selected.locator('[data-certloom-designer-resize="se"]'); await resize.scroll_into_view_if_needed(); await page.wait_for_timeout(30)
         rb=await resize.bounding_box(); width_before=float(await page.locator('[data-certloom-designer-field="width"]').input_value())
         if not rb:
             failed.append('resizeHandle')
         else:
-            await page.mouse.move(rb['x']+5,rb['y']+5); await page.mouse.down(); await page.mouse.move(rb['x']+22,rb['y']+14,steps=5); await page.mouse.up(); await page.wait_for_timeout(35)
+            await page.mouse.move(rb['x']+rb['width']/2,rb['y']+rb['height']/2); await page.mouse.down(); await page.mouse.move(rb['x']+rb['width']/2+32,rb['y']+rb['height']/2+20,steps=6); await page.mouse.up(); await page.wait_for_timeout(35)
             width_after=float(await page.locator('[data-certloom-designer-field="width"]').input_value())
             await ck(abs(width_after-width_before)>0.1,'resize')
-        rotate=page.locator('[data-certloom-designer-element].is-selected [data-certloom-designer-rotate]')
+        rotate=page.locator('[data-certloom-designer-element].is-selected [data-certloom-designer-rotate]'); await rotate.scroll_into_view_if_needed(); await page.wait_for_timeout(30)
         rotb=await rotate.bounding_box(); rot_before=float(await page.locator('[data-certloom-designer-field="rotation"]').input_value())
         if not rotb:
             failed.append('rotateHandle')
         else:
-            await page.mouse.move(rotb['x']+5,rotb['y']+5); await page.mouse.down(); await page.mouse.move(rotb['x']+34,rotb['y']+25,steps=6); await page.mouse.up(); await page.wait_for_timeout(35)
+            selected_box=await page.locator('[data-certloom-designer-element].is-selected').bounding_box()
+            await page.mouse.move(rotb['x']+rotb['width']/2,rotb['y']+rotb['height']/2); await page.mouse.down()
+            await page.mouse.move(selected_box['x']+selected_box['width']+35,selected_box['y']+selected_box['height']/2,steps=8); await page.mouse.up(); await page.wait_for_timeout(50)
             rot_after=float(await page.locator('[data-certloom-designer-field="rotation"]').input_value())
             await ck(abs(rot_after-rot_before)>0.1,'rotate')
         await page.locator('[data-certloom-designer-orientation]').select_option('portrait'); await page.wait_for_timeout(40)
@@ -87,13 +89,15 @@ async def run():
         await page.locator('[data-certloom-designer-zoom]').fill('100'); await page.locator('[data-certloom-designer-zoom]').dispatch_event('input'); await page.wait_for_timeout(25)
         await ck((await page.locator('[data-certloom-designer-zoom-output]').text_content())=='100%','zoom')
 
-        # Layer ordering persists through canonical z values.
-        layer_meta_before=await page.locator('.certloom-template-designer-layer.is-selected small').text_content()
+        # Layer ordering persists through canonical z values while compact rows avoid metadata clutter.
+        selected_layer=page.locator('.certloom-template-designer-layer.is-selected')
+        selected_layer_id=await selected_layer.get_attribute('data-certloom-designer-layer-row')
+        order_before=await page.locator('[data-certloom-designer-layer-row]').evaluate_all("els=>els.map(e=>e.dataset.certloomDesignerLayerRow)")
         await page.locator('[data-certloom-designer-layer-action="front"]').click(); await page.wait_for_timeout(30)
         selected_layer=page.locator('.certloom-template-designer-layer.is-selected')
         await ck(await selected_layer.count()==1,'layerSelectionPersists')
-        layer_meta_after=await selected_layer.locator('small').text_content()
-        await ck(layer_meta_before!=layer_meta_after and 'z 13' in (layer_meta_after or ''),'bringFront')
+        order_after=await page.locator('[data-certloom-designer-layer-row]').evaluate_all("els=>els.map(e=>e.dataset.certloomDesignerLayerRow)")
+        await ck(selected_layer_id in order_after and order_after.index(selected_layer_id)<=order_before.index(selected_layer_id),'bringFront')
 
         # Personal authoring locks block geometry, layer and keyboard transforms but remain selectable.
         await page.locator('[data-certloom-designer-lock]').click(); await page.wait_for_timeout(30)
@@ -138,8 +142,9 @@ async def run():
         await ck(saved_state.get('version')==2 and saved_state.get('snap_enabled') is False and len(saved_state.get('locked_ids',[]))==1 and saved_state.get('hidden_ids',[])==[] and isinstance(saved_state.get('layer_labels',{}),dict),'authoringStateSerialization')
         await ck(all(key not in saved_layout for key in ('locked_ids','hidden_ids','layer_labels','snap_enabled')),'authoringStateOutsideArtifact')
 
-        # Reset returns both canonical layout and personal workspace state to saved values and clears history.
-        await page.locator('[data-certloom-designer-reset]').click(); await page.wait_for_timeout(30)
+        # Restore-last-saved is destructive only with explicit confirmation, then clears history/state.
+        page.once('dialog', lambda dialog: asyncio.create_task(dialog.accept()))
+        await page.locator('[data-certloom-designer-reset]').click(); await page.wait_for_timeout(50)
         await ck(await page.locator('[data-certloom-designer-snap]').is_checked(),'resetState')
         await ck(await page.locator('[data-certloom-designer-undo]').is_disabled(),'resetHistory')
         readout=await page.locator('[data-certloom-designer-page-readout]').text_content()

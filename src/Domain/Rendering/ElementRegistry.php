@@ -20,13 +20,16 @@ final class ElementRegistry {
 		$text_style = array( 'font_family', 'font_size_pt', 'font_weight', 'italic', 'color', 'align', 'vertical_align', 'direction', 'line_height', 'letter_spacing_pt', 'overflow' );
 		return array(
 			'text' => self::definition( 'text', 1, array( 'text', 'style' ), array( 'text' ), 'text', 'text', 'text', 'text', 'text', array(), array( 'content' => 'text', 'style' => 'text', 'style_properties' => $text_style ), array(
-				self::palette_item( 'text', 'text', 80, 15, array( 'text_i18n' => 'text', 'style_preset' => 'text' ) ),
+				self::palette_item( 'heading', 'heading', 120, 18, array( 'text_i18n' => 'heading', 'style_preset' => 'heading' ) ),
+				self::palette_item( 'text', 'text', 90, 18, array( 'text_i18n' => 'text', 'style_preset' => 'text' ) ),
+				self::palette_item( 'field', 'field', 90, 18, array( 'text_i18n' => 'field', 'style_preset' => 'field' ) ),
 			), $common ),
 			'merge' => self::definition( 'merge', 1, array( 'token', 'style' ), array( 'token' ), 'merge', 'merge', 'merge', 'text', 'merge', array( 'dynamic_token' ), array( 'content' => 'merge', 'style' => 'text', 'style_properties' => $text_style ), array(
 				// Legacy standalone merge boxes remain readable forever, but schema 4 moves normal authoring to inline rich-text runs.
 				self::palette_item( 'merge', 'mergeField', 80, 15, array( 'token' => 'recipient.name', 'style_preset' => 'text' ), false, 3 ),
 			), $common ),
 			'rich_text' => self::definition( 'rich_text', 4, array( 'runs', 'style' ), array( 'runs' ), 'rich_text', 'rich_text', 'rich_text', 'rich_text', 'richText', array( 'inline_dynamic_tokens' ), array( 'content' => 'rich_text', 'style' => 'text', 'style_properties' => $text_style ), array(
+				self::palette_item( 'dynamic_field', 'dynamicField', 90, 18, array( 'rich_preset' => 'dynamic_field', 'style_preset' => 'text' ) ),
 				self::palette_item( 'rich_text', 'richText', 110, 24, array( 'rich_preset' => 'certificate_line', 'style_preset' => 'text' ) ),
 			), $common ),
 			'image' => self::definition( 'image', 1, array( 'asset', 'fit' ), array( 'asset' ), 'asset', 'asset', 'asset', 'image', 'asset', array(), array( 'content' => 'asset', 'style' => '', 'media' => true ), array(

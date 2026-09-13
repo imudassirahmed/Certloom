@@ -104,13 +104,13 @@ async def main():
         pro_text=(await page.locator('[data-certloom-designer-element].is-selected').text_content()) or ''
         await ck('Sample · custom grade' in pro_text,'proSamplePresentation')
 
-        # Return to Quick and verify compact scroll actions are wired to existing surfaces.
+        # Return to Quick compatibility mode and verify retired Preview/publication scroll shortcuts
+        # do not reappear inside Studio. Draft plus Publish/Save are the only save lifecycle actions here.
         await page.locator('[data-certloom-designer-mode-button="quick"]').click(); await page.wait_for_timeout(50)
-        await page.evaluate("""() => { window.__quickScroll=[]; Element.prototype.scrollIntoView=function(){ window.__quickScroll.push(this.className); }; }""")
-        await page.locator('[data-certloom-designer-preview-scroll]').click(); await page.locator('[data-certloom-designer-publication-scroll]').click()
-        scrolls=await page.evaluate('window.__quickScroll')
-        await ck(any('certloom-template-preview-card' in str(x) for x in scrolls),'previewTargetsCanonicalPanel')
-        await ck(any('certloom-template-publication-card' in str(x) for x in scrolls),'publishTargetsCanonicalPanel')
+        await ck(await page.locator('[data-certloom-designer-preview-scroll]').count()==0 or not await page.locator('[data-certloom-designer-preview-scroll]').is_visible(),'previewScrollRetiredFromStudio')
+        await ck(await page.locator('[data-certloom-designer-publication-scroll]').count()==0 or not await page.locator('[data-certloom-designer-publication-scroll]').is_visible(),'publicationScrollRetiredFromStudio')
+        await ck(await page.locator('[data-certloom-designer-save]').count()>=1,'draftSaveAvailableInStudio')
+        await ck(await page.locator('[data-certloom-designer-primary-save]').count()>=1,'primaryPublishSaveAvailableInStudio')
 
         desktop=await page.evaluate("""() => {const shell=document.querySelector('.certloom-template-designer-shell');const workspace=document.querySelector('[data-certloom-designer-workspace]');return {doc:document.documentElement.scrollWidth,client:document.documentElement.clientWidth,stage:getComputedStyle(document.querySelector('.certloom-template-designer-stage')).gridTemplateColumns,workspaceBg:getComputedStyle(workspace).backgroundImage,shellParent:shell.parentElement.className,workspaceWidth:workspace.getBoundingClientRect().width};}""")
         await ck(desktop['doc']<=desktop['client']+1,'desktopNoOverflow')

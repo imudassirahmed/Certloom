@@ -76,7 +76,7 @@ dsn7('rich_text'===$contract['types']['rich_text']['render_operation'],'registry
 
 $root=dirname(__DIR__); $admin=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php'); $js=file_get_contents($root.'/admin/assets/designer.js'); $plan=file_get_contents($root.'/src/Application/Rendering/RenderPlanBuilder.php');
 dsn7(false!==strpos($admin,'$maximum = absint')&&false!==strpos($admin,'$schema_version > $maximum'),'admin palette hides retired merge authoring on schema 4');
-dsn7(false!==strpos($admin,'data-certloom-designer-rich-runs')&&false!==strpos($admin,'data-certloom-designer-context-rich-text'),'Designer exposes structured inline-run editor without raw HTML editor');
+dsn7(false!==strpos($admin,'data-certloom-designer-rich-runs')&&false!==strpos($admin,'without HTML')&&false===strpos($admin,'data-certloom-designer-context-rich-text'),'Studio Inspector exposes structured inline-run editing without restoring the retired horizontal rich-text toolbar or raw HTML editor');
 dsn7(false!==strpos($js,'insertRichTokenAtCaret')&&false!==strpos($js,"textContent = richRunText"),'browser authoring supports caret token insertion and textContent-only preview');
 dsn7(false===strpos($js,'content.innerHTML = richTextPlain')&&false===strpos($js,'runSpan.innerHTML'),'rich preview never injects run content through innerHTML');
 dsn7(false!==strpos($plan,"case 'rich_text'")&&false!==strpos($plan,'rich_text_operation'),'Render Plan source implements the shared rich-text operation without adapter-specific layout authority');

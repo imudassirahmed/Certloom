@@ -26,7 +26,7 @@ $html = str_replace('<label class="certloom-template-designer-snap">', '<label c
 $html = str_replace('<button type="button" class="button" data-certloom-designer-reset>', '<button type="button" class="button certloom-designer-pro-only" data-certloom-designer-reset>', $html);
 $html = str_replace(
     '<button type="button" class="button" data-certloom-designer-fit>Fit workspace</button><button type="button" class="button certloom-designer-pro-only" data-certloom-designer-reset>',
-    '<button type="button" class="button" data-certloom-designer-fit>Fit</button><button type="button" class="button certloom-designer-quick-only" data-certloom-designer-preview-scroll>Preview</button><button type="button" class="button certloom-designer-quick-only" data-certloom-designer-publication-scroll>Publish</button><button type="submit" class="button button-primary certloom-designer-quick-only" data-certloom-designer-quick-save>Save</button><button type="button" class="button certloom-designer-pro-only" data-certloom-designer-reset>',
+    '<button type="button" class="button" data-certloom-designer-fit>Fit</button><button type="submit" class="button certloom-studio-draft" data-certloom-designer-save>Draft</button><button type="submit" class="button button-primary certloom-studio-primary" data-certloom-designer-primary-save data-certloom-designer-quick-save>Publish</button><button type="button" class="button certloom-designer-pro-only" data-certloom-designer-reset>',
     $html
 );
 $html = str_replace('<div class="certloom-template-designer-productivity">', '<div class="certloom-template-designer-productivity certloom-designer-pro-only" data-certloom-designer-productivity>', $html);

@@ -22,6 +22,9 @@ final class LayoutSchema {
 
 	const PAGE_A4 = 'A4';
 	const PAGE_LETTER = 'Letter';
+	const PAGE_CUSTOM = 'Custom';
+	const CUSTOM_PAGE_MIN_MM = 25.0;
+	const CUSTOM_PAGE_MAX_MM = 1200.0;
 
 	const ORIENTATION_PORTRAIT = 'portrait';
 	const ORIENTATION_LANDSCAPE = 'landscape';
