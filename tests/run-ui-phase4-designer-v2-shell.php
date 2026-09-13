@@ -24,7 +24,7 @@ sth($php,'data-certloom-designer-layers','left rail includes Layers');
 sth($php,'data-certloom-designer-reset','left utility strip includes restore-last-saved');
 sth($php,'certloom-template-designer-workspace','center owns dedicated canvas viewport');
 sth($php,'certloom-template-designer-inspector','right owns dedicated Inspector');
-sth($css,'grid-template-columns: 248px minmax(420px, 1fr) 294px','desktop Studio is a three-pane editor');
+st(false!==strpos($css,'grid-template-columns: 274px minmax(420px, 1fr) 302px') || false!==strpos($css,'grid-template-columns: 248px minmax(420px, 1fr) 294px'),'desktop Studio is a three-pane editor');
 sth($css,'overflow: hidden','focused desktop shell prevents page-workspace spill');
 sth($css,'certloom-studio-insert-drawer','Insert drawer has dedicated layering/styling');
 sth($css,'z-index: 4','Insert drawer uses bounded left-rail layering without covering Layers/canvas chrome');
@@ -50,7 +50,8 @@ sth($js,"return token ? '{{' + token + '}}' : '{{field}}'",'token preview expose
 sth($js,'function focusSelectedCanvasElement()','canvas selection deliberately receives keyboard focus');
 sth($js,'passiveDocumentTarget && selectionIds().length > 0','selected canvas elements keep keyboard ownership if browser focus falls back to the document');
 sth($js,"var step = event.altKey ? 0.1 : ( event.shiftKey ? 5 : 1 )",'keyboard nudge precision is 1 mm / 5 mm / 0.1 mm');
-sth($js,"if ( nudgeSelected( event ) ) { event.preventDefault(); }",'nudge prevents browser page scrolling');
+sth($js,"event.preventDefault(); if ( nudgeSelected( event ) )",'nudge prevents browser page scrolling');
+sth($js,"document.addEventListener( 'keydown', keyboard, true )",'Studio editing shortcuts are captured before WordPress/browser handlers');
 stn($js,'localStorage','Studio view mode does not create browser-local authority');
 stn($js,'sessionStorage','Studio view mode does not create session-local authority');
 sth($css,'body.certloom-designer-workspace-page','focused Studio has an outer document scroll-lock contract');

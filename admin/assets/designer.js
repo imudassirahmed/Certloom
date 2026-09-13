@@ -1451,22 +1451,28 @@
 			if ( ! panGesture || ( null != event.pointerId && panGesture.pointerId !== event.pointerId ) ) { return false; }
 			var moved = panGesture.moved; panGesture = null; workspace.classList.remove( 'is-panning' ); if ( moved ) { suppressCanvasClick = true; } syncCanvasTools(); return true;
 		}
-		function closeContextMenu() { if ( contextMenu ) { contextMenu.hidden = true; contextMenu.removeAttribute( 'data-open' ); } }
-		function contextMenuActionButton( action, label ) { var button = document.createElement( 'button' ); button.type = 'button'; button.setAttribute( 'role', 'menuitem' ); button.setAttribute( 'data-certloom-designer-context-action', action ); button.textContent = label; return button; }
+		var contextMenuSurface = 'canvas';
+		function closeContextMenu() { if ( contextMenu ) { contextMenu.hidden = true; contextMenu.removeAttribute( 'data-open' ); contextMenu.removeAttribute( 'data-surface' ); } contextMenuSurface = 'canvas'; }
+		function contextMenuActionButton( action, label, surface ) { var button = document.createElement( 'button' ); button.type = 'button'; button.setAttribute( 'role', 'menuitem' ); button.setAttribute( 'data-certloom-designer-context-action', action ); if ( surface ) { button.setAttribute( 'data-certloom-context-surface', surface ); } button.textContent = label; return button; }
 		function ensureContextMenu() {
 			if ( contextMenu ) { return contextMenu; } contextMenu = document.createElement( 'div' ); contextMenu.className = 'certloom-template-designer-context-menu'; contextMenu.setAttribute( 'data-certloom-designer-context-menu', '' ); contextMenu.setAttribute( 'role', 'menu' ); contextMenu.setAttribute( 'aria-label', t( 'elementActions', 'Element actions' ) ); contextMenu.hidden = true;
-			contextMenu.appendChild( contextMenuActionButton( 'copy', t( 'copy', 'Copy' ) ) ); contextMenu.appendChild( contextMenuActionButton( 'cut', t( 'cut', 'Cut' ) ) ); contextMenu.appendChild( contextMenuActionButton( 'duplicate', t( 'duplicate', 'Duplicate' ) ) ); contextMenu.appendChild( contextMenuActionButton( 'front', t( 'bringToFront', 'Bring to front' ) ) ); contextMenu.appendChild( contextMenuActionButton( 'back', t( 'sendToBack', 'Send to back' ) ) ); contextMenu.appendChild( contextMenuActionButton( 'lock', t( 'lock', 'Lock' ) ) ); contextMenu.appendChild( contextMenuActionButton( 'delete', t( 'delete', 'Delete' ) ) ); root.appendChild( contextMenu );
-			contextMenu.addEventListener( 'click', function ( event ) { var button = event.target.closest( '[data-certloom-designer-context-action]' ); if ( ! button || button.disabled ) { return; } var action = button.getAttribute( 'data-certloom-designer-context-action' ); closeContextMenu(); if ( 'copy' === action ) { copySelectionToDesignerClipboard( false ); } else if ( 'cut' === action ) { copySelectionToDesignerClipboard( true ); } else if ( 'duplicate' === action ) { duplicateSelected(); } else if ( 'front' === action || 'back' === action ) { reorderSelected( action ); } else if ( 'lock' === action ) { if ( selectedId ) { toggleLock( selectedId ); } } else if ( 'delete' === action ) { removeSelected(); } } ); return contextMenu;
+			contextMenu.appendChild( contextMenuActionButton( 'visibility', t( 'hideInEditor', 'Hide in editor' ), 'layer' ) ); contextMenu.appendChild( contextMenuActionButton( 'copy', t( 'copy', 'Copy' ), 'canvas' ) ); contextMenu.appendChild( contextMenuActionButton( 'cut', t( 'cut', 'Cut' ), 'canvas' ) ); contextMenu.appendChild( contextMenuActionButton( 'duplicate', t( 'duplicate', 'Duplicate' ) ) ); contextMenu.appendChild( contextMenuActionButton( 'front', t( 'bringToFront', 'Bring to front' ) ) ); contextMenu.appendChild( contextMenuActionButton( 'forward', t( 'bringForward', 'Bring forward' ), 'layer' ) ); contextMenu.appendChild( contextMenuActionButton( 'backward', t( 'sendBackward', 'Send backward' ), 'layer' ) ); contextMenu.appendChild( contextMenuActionButton( 'back', t( 'sendToBack', 'Send to back' ) ) ); contextMenu.appendChild( contextMenuActionButton( 'lock', t( 'lock', 'Lock' ) ) ); contextMenu.appendChild( contextMenuActionButton( 'delete', t( 'delete', 'Delete' ) ) ); root.appendChild( contextMenu );
+			contextMenu.addEventListener( 'click', function ( event ) { var button = event.target.closest( '[data-certloom-designer-context-action]' ); if ( ! button || button.disabled ) { return; } var action = button.getAttribute( 'data-certloom-designer-context-action' ); closeContextMenu(); if ( 'visibility' === action ) { if ( selectedId ) { toggleEditorVisibility( selectedId ); } } else if ( 'copy' === action ) { copySelectionToDesignerClipboard( false ); } else if ( 'cut' === action ) { copySelectionToDesignerClipboard( true ); } else if ( 'duplicate' === action ) { duplicateSelected(); } else if ( [ 'front', 'forward', 'backward', 'back' ].indexOf( action ) !== -1 ) { reorderSelected( action ); } else if ( 'lock' === action ) { if ( selectedId ) { toggleLock( selectedId ); } } else if ( 'delete' === action ) { removeSelected(); } } ); return contextMenu;
 		}
 		function syncContextMenu() {
 			var menu = ensureContextMenu(); var selection = selectedElements(); var element = selected(); var locked = selectionHasLocked(); var multi = selection.length > 1; var buttons = menu.querySelectorAll( '[data-certloom-designer-context-action]' );
-			for ( var i = 0; i < buttons.length; i++ ) { var action = buttons[ i ].getAttribute( 'data-certloom-designer-context-action' ); buttons[ i ].disabled = ! selection.length || ( [ 'cut', 'delete' ].indexOf( action ) !== -1 && locked ) || ( [ 'duplicate', 'front', 'back', 'lock' ].indexOf( action ) !== -1 && ( multi || ! element || isLocked( element ) && 'lock' !== action ) ); if ( 'lock' === action ) { buttons[ i ].textContent = element && isLocked( element ) ? t( 'unlock', 'Unlock' ) : t( 'lock', 'Lock' ); buttons[ i ].disabled = multi || ! element; } }
+			for ( var i = 0; i < buttons.length; i++ ) {
+				var action = buttons[ i ].getAttribute( 'data-certloom-designer-context-action' ); var surface = buttons[ i ].getAttribute( 'data-certloom-context-surface' ); buttons[ i ].hidden = !! surface && surface !== contextMenuSurface;
+				buttons[ i ].disabled = ! selection.length || ( [ 'cut', 'delete' ].indexOf( action ) !== -1 && locked ) || ( [ 'duplicate', 'front', 'forward', 'backward', 'back', 'lock', 'visibility' ].indexOf( action ) !== -1 && ( multi || ! element || isLocked( element ) && [ 'lock', 'visibility' ].indexOf( action ) === -1 ) );
+				if ( 'lock' === action ) { buttons[ i ].textContent = element && isLocked( element ) ? t( 'unlock', 'Unlock' ) : t( 'lock', 'Lock' ); buttons[ i ].disabled = multi || ! element; }
+				if ( 'visibility' === action ) { buttons[ i ].textContent = element && isHiddenId( element.id ) ? t( 'showInEditor', 'Show in editor' ) : t( 'hideInEditor', 'Hide in editor' ); buttons[ i ].disabled = multi || ! element; }
+							}
 		}
-		function openContextMenuAt( clientX, clientY ) {
-			if ( ! selectionIds().length ) { return; } var menu = ensureContextMenu(); syncContextMenu(); menu.hidden = false; menu.setAttribute( 'data-open', 'true' ); menu.style.left = '0px'; menu.style.top = '0px'; var rect = menu.getBoundingClientRect(); var left = clamp( Number( clientX ), 8, Math.max( 8, window.innerWidth - rect.width - 8 ) ); var top = clamp( Number( clientY ), 8, Math.max( 8, window.innerHeight - rect.height - 8 ) ); menu.style.left = Math.round( left ) + 'px'; menu.style.top = Math.round( top ) + 'px'; var first = menu.querySelector( '[role="menuitem"]:not([disabled])' ); if ( first ) { try { first.focus( { preventScroll: true } ); } catch ( ignore ) { first.focus(); } }
+		function openContextMenuAt( clientX, clientY, surface ) {
+			if ( ! selectionIds().length ) { return; } contextMenuSurface = surface || 'canvas'; var menu = ensureContextMenu(); menu.setAttribute( 'data-surface', contextMenuSurface ); syncContextMenu(); menu.hidden = false; menu.setAttribute( 'data-open', 'true' ); menu.style.left = '0px'; menu.style.top = '0px'; var rect = menu.getBoundingClientRect(); var left = clamp( Number( clientX ), 8, Math.max( 8, window.innerWidth - rect.width - 8 ) ); var top = clamp( Number( clientY ), 8, Math.max( 8, window.innerHeight - rect.height - 8 ) ); menu.style.left = Math.round( left ) + 'px'; menu.style.top = Math.round( top ) + 'px'; var first = menu.querySelector( '[role="menuitem"]:not([hidden]):not([disabled])' ); if ( first ) { try { first.focus( { preventScroll: true } ); } catch ( ignore ) { first.focus(); } }
 		}
 		function openContextMenuForSelection() {
-			if ( ! selectedId ) { return; } var node = pageEl.querySelector( '[data-certloom-designer-element="' + selectedId + '"]' ); if ( ! node ) { return; } var rect = node.getBoundingClientRect(); openContextMenuAt( rect.left + rect.width / 2, rect.top + rect.height / 2 );
+			if ( ! selectedId ) { return; } var node = pageEl.querySelector( '[data-certloom-designer-element="' + selectedId + '"]' ); if ( ! node ) { return; } var rect = node.getBoundingClientRect(); openContextMenuAt( rect.left + rect.width / 2, rect.top + rect.height / 2, 'canvas' );
 		}
 		function canvasPointerMove( event ) { if ( moveCanvasPan( event ) ) { return; } if ( moveMarqueeSelection( event ) ) { return; } pointerMove( event ); }
 		function canvasPointerEnd( event ) { if ( endCanvasPan( event ) ) { return; } if ( endMarqueeSelection( event ) ) { return; } pointerEnd(); }
@@ -1478,7 +1484,7 @@
 			if ( ! isSelectedId( id ) ) { selectOnly( id ); } else { selectedId = id; }
 			var resize = event.target.getAttribute( 'data-certloom-designer-resize' ); var rotate = event.target.getAttribute( 'data-certloom-designer-rotate' );
 			if ( ( resize || rotate ) && selectionIds().length > 1 ) { selectOnly( id ); }
-			render();
+			render(); focusSelectedCanvasElement();
 			var element = selected(); if ( ! element || isLocked( element ) ) { event.preventDefault(); announce( t( 'lockedElementSelected', 'Locked element selected.' ) ); return; }
 			if ( 'drag' !== ( rotate ? 'rotate' : ( resize ? 'resize' : 'drag' ) ) && selectionHasLocked() ) { selectOnly( id ); }
 			if ( ! resize && ! rotate && selectionIds().length > 1 && selectionHasLocked() ) { event.preventDefault(); announce( t( 'unlockSelectionBeforeMove', 'Unlock the selected elements before moving the selection.' ) ); return; }
@@ -1690,7 +1696,7 @@
 			if ( canvasFocused && ! event.altKey && ( '+' === key || '=' === key ) ) { event.preventDefault(); setZoomLevel( relativeZoomPercent() + 10, true, true ); return; }
 			if ( canvasFocused && ! event.altKey && '-' === key ) { event.preventDefault(); setZoomLevel( relativeZoomPercent() - 10, true, true ); return; }
 			if ( canvasFocused && modifier && ! event.altKey && '0' === key ) { event.preventDefault(); fitWorkspace(); focusSelectedCanvasElement(); return; }
-			if ( nudgeSelected( event ) ) { event.preventDefault(); }
+			if ( [ 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown' ].indexOf( key ) !== -1 && selectionIds().length && ! isFormControl( event.target ) ) { event.preventDefault(); if ( nudgeSelected( event ) ) { return; } return; }
 		}
 
 		function keyboardUp( event ) {
@@ -1732,7 +1738,7 @@
 			selectOnly( '' ); render();
 		} );
 		pageEl.addEventListener( 'dblclick', function ( event ) { var node = event.target.closest( '[data-certloom-designer-element]' ); if ( ! node ) { return; } var id = node.getAttribute( 'data-certloom-designer-element' ); var element = null; var list = elements(); for ( var itemIndex = 0; itemIndex < list.length; itemIndex++ ) { if ( list[ itemIndex ].id === id ) { element = list[ itemIndex ]; break; } } if ( element && 'rich_text' === element.type && ! isLocked( element ) ) { selectOnly( id ); render(); focusRichTextEditor(); event.preventDefault(); return; } if ( startDirectTextEdit( id ) ) { event.preventDefault(); } } );
-		pageEl.addEventListener( 'contextmenu', function ( event ) { var node = event.target.closest( '[data-certloom-designer-element]' ); if ( ! node || ! pageEl.contains( node ) ) { closeContextMenu(); return; } event.preventDefault(); var id = node.getAttribute( 'data-certloom-designer-element' ); if ( ! isSelectedId( id ) ) { selectOnly( id ); } else { selectedId = id; } render(); openContextMenuAt( event.clientX, event.clientY ); } );
+		pageEl.addEventListener( 'contextmenu', function ( event ) { var node = event.target.closest( '[data-certloom-designer-element]' ); if ( ! node || ! pageEl.contains( node ) ) { closeContextMenu(); return; } event.preventDefault(); var id = node.getAttribute( 'data-certloom-designer-element' ); if ( ! isSelectedId( id ) ) { selectOnly( id ); } else { selectedId = id; } render(); openContextMenuAt( event.clientX, event.clientY, 'canvas' ); } );
 		document.addEventListener( 'pointerdown', function ( event ) { if ( contextMenu && ! contextMenu.hidden && ! contextMenu.contains( event.target ) ) { closeContextMenu(); } var insideLeftRail = !! ( event.target && event.target.closest && event.target.closest( '.certloom-studio-left' ) ); if ( insertPanel && ! insertPanel.hidden && ! insideLeftRail && ! insertPanel.contains( event.target ) && ( ! insertFocusButton || ! insertFocusButton.contains( event.target ) ) ) { closeInsertPanel(); } } );
 		workspace.addEventListener( 'scroll', closeContextMenu ); window.addEventListener( 'scroll', closeContextMenu, true ); window.addEventListener( 'resize', closeContextMenu );
 		pageEl.addEventListener( 'dragover', function ( event ) { if ( ! draggedPaletteKind ) { return; } event.preventDefault(); if ( event.dataTransfer ) { event.dataTransfer.dropEffect = 'copy'; } pageEl.classList.add( 'is-drop-target' ); } );
@@ -1750,6 +1756,9 @@
 				var action = event.target.closest( '[data-certloom-designer-layer-row-action]' );
 				if ( action ) { var actionId = action.getAttribute( 'data-certloom-designer-layer-id' ); var mode = action.getAttribute( 'data-certloom-designer-layer-row-action' ); selectOnly( actionId ); if ( 'visibility' === mode ) { toggleEditorVisibility( actionId ); } else if ( 'rename' === mode ) { renamingLayerId = actionId; render(); } else if ( 'lock' === mode ) { toggleLock( actionId ); } else if ( 'duplicate' === mode ) { duplicateSelected(); } else if ( 'delete' === mode ) { removeSelected(); } else { reorderSelected( mode ); } return; }
 				var select = event.target.closest( '[data-certloom-designer-layer-select]' ); if ( select ) { var id = select.getAttribute( 'data-certloom-designer-layer-select' ); if ( event.shiftKey || event.ctrlKey || event.metaKey ) { toggleSelection( id ); } else { selectOnly( id ); } render(); focusSelectedCanvasElement(); }
+			} );
+			layersContainer.addEventListener( 'contextmenu', function ( event ) {
+				var row = event.target.closest( '[data-certloom-designer-layer-row]' ); if ( ! row ) { return; } event.preventDefault(); var id = row.getAttribute( 'data-certloom-designer-layer-row' ); if ( ! id ) { return; } if ( ! isSelectedId( id ) || selectionIds().length !== 1 ) { selectOnly( id ); render(); } else { selectedId = id; } openContextMenuAt( event.clientX, event.clientY, 'layer' );
 			} );
 			layersContainer.addEventListener( 'keydown', function ( event ) {
 				var input = event.target.closest( '[data-certloom-designer-layer-rename-input]' ); if ( ! input ) { return; }
@@ -1859,7 +1868,7 @@
 			if ( window.confirm && ! window.confirm( warning ) ) { return; }
 			isSubmitting = true; window.location.reload();
 		} ); }
-		document.addEventListener( 'keydown', keyboard ); document.addEventListener( 'keyup', keyboardUp );
+		document.addEventListener( 'keydown', keyboard, true ); document.addEventListener( 'keyup', keyboardUp, true );
 		form.addEventListener( 'submit', function ( event ) {
 			showError( '' );
 			if ( directTextEditor ) { closeDirectTextEditor( true ); if ( directTextEditor ) { event.preventDefault(); blockSave( t( 'directTextInvalid', 'Direct text must stay within the canonical 20,000-byte text limit.' ) ); return; } }

@@ -219,6 +219,68 @@ async def main():
         shifted_box = await page.locator(f'[data-certloom-designer-element="{selected_id}"]').bounding_box()
         await ck(shifted_box and shifted_box['y'] > before_y + 2, 'shiftArrowUsesLargerNudge')
 
+        # Real click-to-keyboard ownership: clicking an element must return focus to the canvas
+        # without tests manually focusing it first, and arrows must still edit rather than scroll.
+        clicked_canvas = page.locator(f'[data-certloom-designer-element="{selected_id}"]')
+        await clicked_canvas.click(position={"x": 8, "y": 8}, force=True)
+        await page.wait_for_timeout(50)
+        active_selected = await page.evaluate("id => document.activeElement && document.activeElement.getAttribute('data-certloom-designer-element') === id", selected_id)
+        await ck(active_selected, 'canvasClickReturnsKeyboardFocusToSelectedElement')
+        click_before = await page.locator(f'[data-certloom-designer-element="{selected_id}"]').bounding_box()
+        click_scroll_before = await page.evaluate('() => window.scrollY')
+        await page.keyboard.press('ArrowLeft')
+        await page.wait_for_timeout(70)
+        click_after = await page.locator(f'[data-certloom-designer-element="{selected_id}"]').bounding_box()
+        click_scroll_after = await page.evaluate('() => window.scrollY')
+        await ck(click_before and click_after and click_after['x'] < click_before['x'] - 0.5, 'arrowWorksImmediatelyAfterCanvasClick')
+        await ck(click_scroll_after == click_scroll_before, 'canvasArrowNeverFallsThroughToPageScroll')
+
+        # Core editing shortcuts work from the canvas selection, not only through toolbar buttons.
+        count_before_shortcuts = await page.locator('[data-certloom-designer-element]').count()
+        await page.keyboard.press('Control+d')
+        await page.wait_for_timeout(60)
+        await ck(await page.locator('[data-certloom-designer-element]').count() == count_before_shortcuts + 1, 'ctrlDDuplicatesCanvasSelection')
+        await page.keyboard.press('Control+z')
+        await page.wait_for_timeout(60)
+        await ck(await page.locator('[data-certloom-designer-element]').count() == count_before_shortcuts, 'ctrlZUndoesKeyboardDuplicate')
+        await page.keyboard.press('Control+c')
+        await page.keyboard.press('Control+v')
+        await page.wait_for_timeout(60)
+        await ck(await page.locator('[data-certloom-designer-element]').count() == count_before_shortcuts + 1, 'ctrlCopyPasteDuplicatesCanvasSelection')
+        await page.keyboard.press('Control+z')
+        await page.wait_for_timeout(60)
+        await ck(await page.locator('[data-certloom-designer-element]').count() == count_before_shortcuts, 'ctrlZUndoesKeyboardPaste')
+        await page.keyboard.press('Delete')
+        await page.wait_for_timeout(60)
+        await ck(await page.locator('[data-certloom-designer-element]').count() == count_before_shortcuts - 1, 'deleteKeyRemovesCanvasSelection')
+        await page.keyboard.press('Control+z')
+        await page.wait_for_timeout(60)
+        await ck(await page.locator('[data-certloom-designer-element]').count() == count_before_shortcuts, 'ctrlZRestoresKeyboardDelete')
+
+        # Layers are a compact, horizontally bounded editor list and own their own vertical scroll.
+        left_rail = page.locator('.certloom-studio-left')
+        layer_list = page.locator('[data-certloom-designer-layers]')
+        rail_metrics = await left_rail.evaluate('el => ({cw:el.clientWidth, sw:el.scrollWidth, ch:el.clientHeight, sh:el.scrollHeight})')
+        list_metrics = await layer_list.evaluate('el => ({cw:el.clientWidth, sw:el.scrollWidth, ch:el.clientHeight, sh:el.scrollHeight})')
+        await ck(rail_metrics['sw'] <= rail_metrics['cw'] + 1, 'leftRailHasNoHorizontalScroll')
+        await ck(rail_metrics['sh'] <= rail_metrics['ch'] + 1, 'leftRailDoesNotBecomeSecondVerticalScrollbar')
+        await ck(list_metrics['sw'] <= list_metrics['cw'] + 1, 'layersListHasNoHorizontalScroll')
+        first_layer_box = await page.locator('[data-certloom-designer-layer-row]').first.bounding_box()
+        await ck(bool(first_layer_box and first_layer_box['height'] <= 30.5), 'layerRowsStayCompactSingleLine')
+
+        # Right-click on a Layer exposes its direct editing actions.
+        selected_row = page.locator(f'[data-certloom-designer-layer-row="{selected_id}"]')
+        await selected_row.click(button='right', position={"x": 24, "y": 12})
+        await page.wait_for_timeout(30)
+        layer_menu = page.locator('[data-certloom-designer-context-menu][data-surface="layer"]')
+        await ck(await layer_menu.is_visible(), 'layerRightClickOpensContextMenu')
+        for action, label in [('visibility','layerContextVisibility'),('lock','layerContextLock'),('duplicate','layerContextDuplicate'),('delete','layerContextDelete')]:
+            item = layer_menu.locator(f'[data-certloom-designer-context-action="{action}"]')
+            await ck(await item.count() == 1 and await item.is_visible(), label)
+        await page.keyboard.press('Escape')
+        await page.wait_for_timeout(20)
+        await ck(not await layer_menu.is_visible(), 'escapeClosesLayerContextMenu')
+
         # Technical IDs are removed from the normal inspector header and retained under Advanced.
         await ck(not await page.locator('.certloom-template-designer-element-meta code').is_visible(), 'rawElementIdHiddenFromNormalInspectorHeader')
         advanced = page.locator('[data-certloom-designer-property-section="advanced"]')

@@ -49,7 +49,7 @@ p45( strpos( $js, 'reorderSelected( action )' ) !== false, 'context layer action
 p45( strpos( $js, 'toggleLock( selectedId )' ) !== false, 'context Lock reuses canonical authoring-state path' );
 p45( strpos( $js, 'removeSelected()' ) !== false, 'context Delete reuses canonical remove path' );
 p45( strpos( $js, "[ 'cut', 'delete' ].indexOf( action )" ) !== false, 'locked selection disables destructive context actions' );
-p45( strpos( $js, "[ 'duplicate', 'front', 'back', 'lock' ].indexOf( action )" ) !== false, 'ambiguous multi-selection context actions fail closed' );
+p45( strpos( $js, "[ 'duplicate', 'front', 'forward', 'backward', 'back', 'lock', 'visibility' ].indexOf( action )" ) !== false, 'ambiguous multi-selection context actions fail closed' );
 p45( strpos( $js, "'Escape' === key && contextMenu && ! contextMenu.hidden" ) !== false, 'Escape closes open context menu before form-control early return' );
 p45( strpos( $js, 'first.focus( { preventScroll: true } )' ) !== false && strpos( $js, 'catch ( ignore ) { first.focus(); }' ) !== false, 'context menu focuses first action with browser-compatible fallback' );
 p45( strpos( $js, "workspace.addEventListener( 'scroll', closeContextMenu )" ) !== false, 'context menu closes when sticky workspace scrolls' );
