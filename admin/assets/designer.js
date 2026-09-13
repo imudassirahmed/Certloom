@@ -471,34 +471,34 @@
 			if ( ! intent && submitter.name === 'studio_intent' ) { intent = submitter.value; }
 			return setSaveIntent( intent );
 		}
-		var studioViewportSettleTimers = [];
-		function clearStudioViewportSettleTimers() {
-			while ( studioViewportSettleTimers.length ) { window.clearTimeout( studioViewportSettleTimers.pop() ); }
+		var studioViewportFrameTimers = [];
+		function clearStudioViewportFrameTimers() {
+			while ( studioViewportFrameTimers.length ) { window.clearTimeout( studioViewportFrameTimers.pop() ); }
 		}
-		function syncStudioViewportHeight() {
+		function syncStudioViewportFrame() {
 			if ( ! studioWorkspaceShell ) { return; }
 			if ( window.matchMedia && ! window.matchMedia( '(min-width: 901px)' ).matches ) {
-				studioWorkspaceShell.style.removeProperty( '--certloom-studio-viewport-height' );
-				studioWorkspaceShell.style.removeProperty( '--certloom-studio-viewport-top' );
+				studioWorkspaceShell.style.removeProperty( '--certloom-studio-frame-top' );
+				studioWorkspaceShell.style.removeProperty( '--certloom-studio-frame-left' );
+				studioWorkspaceShell.style.removeProperty( '--certloom-studio-frame-right' );
 				return;
 			}
-			var rect = studioWorkspaceShell.getBoundingClientRect();
-			var viewportBottom = Number( window.innerHeight || document.documentElement.clientHeight || 0 );
-			if ( ( ! isFinite( viewportBottom ) || viewportBottom <= 0 ) && window.visualViewport && isFinite( window.visualViewport.height ) ) {
-				viewportBottom = Number( window.visualViewport.offsetTop || 0 ) + Number( window.visualViewport.height );
-			}
-			var available = Math.floor( viewportBottom - rect.top );
-			if ( isFinite( available ) && available > 320 ) {
-				studioWorkspaceShell.style.setProperty( '--certloom-studio-viewport-top', Math.max( 0, Math.round( rect.top ) ) + 'px' );
-				studioWorkspaceShell.style.setProperty( '--certloom-studio-viewport-height', available + 'px' );
-			}
+			var anchor = document.getElementById( 'wpbody-content' ) || document.getElementById( 'wpcontent' );
+			var rect = anchor ? anchor.getBoundingClientRect() : studioWorkspaceShell.getBoundingClientRect();
+			var viewportWidth = Number( document.documentElement.clientWidth || window.innerWidth || 0 );
+			var top = Math.max( 0, Math.round( Number( rect.top || 0 ) ) );
+			var left = Math.max( 0, Math.round( Number( rect.left || 0 ) ) );
+			var right = Math.max( 0, Math.round( viewportWidth - Number( rect.right || viewportWidth ) ) );
+			studioWorkspaceShell.style.setProperty( '--certloom-studio-frame-top', top + 'px' );
+			studioWorkspaceShell.style.setProperty( '--certloom-studio-frame-left', left + 'px' );
+			studioWorkspaceShell.style.setProperty( '--certloom-studio-frame-right', right + 'px' );
 		}
-		function settleStudioViewportHeight() {
+		function settleStudioViewportFrame() {
 			if ( ! studioWorkspaceShell ) { return; }
-			clearStudioViewportSettleTimers();
-			syncStudioViewportHeight();
+			clearStudioViewportFrameTimers();
+			syncStudioViewportFrame();
 			[ 0, 60, 180, 420, 900, 1500 ].forEach( function ( delay ) {
-				studioViewportSettleTimers.push( window.setTimeout( syncStudioViewportHeight, delay ) );
+				studioViewportFrameTimers.push( window.setTimeout( syncStudioViewportFrame, delay ) );
 			} );
 		}
 		function blockSave( message ) {
@@ -2068,10 +2068,12 @@
 
 		enhancePropertySections();
 		applyDesignerMode( rememberedDesignerMode(), false );
-		settleStudioViewportHeight();
-		window.addEventListener( 'resize', settleStudioViewportHeight );
-		window.addEventListener( 'load', settleStudioViewportHeight );
-		if ( window.visualViewport && window.visualViewport.addEventListener ) { window.visualViewport.addEventListener( 'resize', settleStudioViewportHeight ); }
+		settleStudioViewportFrame();
+		window.addEventListener( 'resize', settleStudioViewportFrame );
+		window.addEventListener( 'load', settleStudioViewportFrame );
+		if ( window.visualViewport && window.visualViewport.addEventListener ) { window.visualViewport.addEventListener( 'resize', settleStudioViewportFrame ); }
+		var studioFrameAnchor = document.getElementById( 'wpbody-content' ) || document.getElementById( 'wpcontent' );
+		if ( studioFrameAnchor && 'ResizeObserver' in window ) { var studioFrameObserver = new ResizeObserver( settleStudioViewportFrame ); studioFrameObserver.observe( studioFrameAnchor ); }
 		if ( 'ResizeObserver' in window ) { var studioResizeObserver = new ResizeObserver( function () { if ( Math.abs( relativeZoomPercent() - 100 ) <= 1 ) { fitWorkspace(); } } ); studioResizeObserver.observe( workspace ); }
 		syncPreviewModeButtons(); render(); if ( recovered ) { setAutosaveStatus( t( 'autosaveRecovered', 'Recovered unsaved Designer changes from your latest safe checkpoint.' ), 'recovered' ); announce( t( 'autosaveRecovered', 'Recovered unsaved Designer changes from your latest safe checkpoint.' ) ); } else if ( autosaveNeedsCleanup ) { setAutosaveStatus( t( 'savedDraft', 'Saved draft' ), 'clean' ); window.setTimeout( function () { discardAutosave( false ); }, 0 ); } window.setTimeout( function () { fitWorkspace(); }, 0 );
 	}

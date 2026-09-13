@@ -259,6 +259,24 @@ async def main():
         await text_el.click(position={'x': 3, 'y': 3})
         await page.wait_for_timeout(80)
         await ck(await page.locator('[data-certloom-designer-fields]').is_visible(), 'inspectorAppearsForSelection')
+        selected_geometry = await page.evaluate("""() => {
+          const shell=document.querySelector('.certloom-template-admin.is-designer-workspace').getBoundingClientRect();
+          const stage=document.querySelector('.certloom-template-designer-stage').getBoundingClientRect();
+          const inspector=document.querySelector('.certloom-template-designer-inspector').getBoundingClientRect();
+          const fields=document.querySelector('[data-certloom-designer-fields]').getBoundingClientRect();
+          const visibleSections=[...document.querySelectorAll('[data-certloom-designer-property-section]')].filter(el => getComputedStyle(el).display !== 'none').map(el => el.getBoundingClientRect());
+          return {
+            shellBottom:shell.bottom, stageTop:stage.top, stageBottom:stage.bottom, stageHeight:stage.height,
+            inspectorLeft:inspector.left, inspectorRight:inspector.right, inspectorBottom:inspector.bottom,
+            fieldsLeft:fields.left, fieldsRight:fields.right,
+            sectionsInside:visibleSections.every(r => r.left >= inspector.left - 1 && r.right <= inspector.right + 1),
+            docH:document.documentElement.scrollHeight, viewport:window.innerHeight
+          };
+        }""")
+        await ck(selected_geometry['stageHeight'] > 400 and abs(selected_geometry['stageBottom'] - selected_geometry['shellBottom']) <= 1.5, 'selectedInspectorCannotCollapseThreePaneStage')
+        await ck(selected_geometry['fieldsLeft'] >= selected_geometry['inspectorLeft'] - 1 and selected_geometry['fieldsRight'] <= selected_geometry['inspectorRight'] + 1 and selected_geometry['sectionsInside'], 'selectedInspectorSectionsRemainContainedInRightRail')
+        await ck(abs(selected_geometry['inspectorBottom'] - selected_geometry['shellBottom']) <= 1.5, 'selectedInspectorRailReachesStudioBottom')
+        await ck(selected_geometry['docH'] <= selected_geometry['viewport'] + 1, 'selectedInspectorCannotCreatePageLevelOverflow')
         await ck(await page.locator('[data-certloom-designer-empty]').is_hidden(), 'emptyInspectorHidesForSelection')
         await ck(await page.locator('[data-certloom-designer-selection-toolbar]').is_visible(), 'floatingSelectedElementToolbarVisible')
         await ck(await page.locator('[data-certloom-designer-selection-action]').count() == 4, 'floatingToolbarCompactActions')
@@ -475,31 +493,51 @@ async def main():
 
         await page.screenshot(path=str(SCREENSHOT), full_page=True)
 
-        # Real WordPress can move the focused shell upward after Designer initialization when
-        # admin chrome/notices settle. Reproduce that late shift without dispatching resize: the
-        # Studio's bounded settling pass must remeasure itself and still land on the viewport bottom.
-        late_html = html.replace(
+        # Reproduce the real WordPress desktop frame instead of testing only a direct-body fixture:
+        # wpbody-content starts below the admin bar and to the right of the admin menu. Selecting
+        # an element must not collapse the stage, and a late admin-chrome top shift must be
+        # remeasured without relying on page-level document height.
+        wp_html = html.replace(
             '<body class="certloom-designer-workspace-page" style="margin:0;padding:0"><div class="certloom-template-admin is-designer-workspace">',
-            '<body class="certloom-designer-workspace-page" style="margin:0;padding:0"><div id="certloom-late-admin-offset" style="height:56px"></div><div class="certloom-template-admin is-designer-workspace">',
+            '<body class="certloom-designer-workspace-page" style="margin:0;padding:0"><div id="wpcontent" style="position:absolute;top:32px;left:160px;right:0"><div id="wpbody"><div id="wpbody-content"><div class="certloom-template-admin is-designer-workspace">',
             1,
         ).replace(
-            '</body>',
-            '<script>window.setTimeout(function(){var n=document.getElementById("certloom-late-admin-offset");if(n){n.remove();}},110);</script></body>',
+            '<script>document.addEventListener("submit"',
+            '</div></div></div><script>document.addEventListener("submit"',
             1,
         )
-        late = await browser.new_page(viewport={'width': 1600, 'height': 980})
-        await late.set_content(late_html, wait_until='load')
-        await late.wait_for_timeout(520)
-        late_geometry = await late.evaluate("""() => {
+        wp_page = await browser.new_page(viewport={'width': 1702, 'height': 892})
+        await wp_page.set_content(wp_html, wait_until='load')
+        await wp_page.wait_for_timeout(520)
+        await wp_page.locator('[data-certloom-designer-layer-select]').first.click()
+        await wp_page.wait_for_timeout(80)
+        wp_geometry = await wp_page.evaluate("""() => {
           const shell=document.querySelector('.certloom-template-admin.is-designer-workspace').getBoundingClientRect();
           const stage=document.querySelector('.certloom-template-designer-stage').getBoundingClientRect();
-          const root=document.querySelector('[data-certloom-designer]').getBoundingClientRect();
-          return {shellTop:shell.top,shellBottom:shell.bottom,rootBottom:root.bottom,stageBottom:stage.bottom,viewport:window.innerHeight};
+          const inspector=document.querySelector('.certloom-template-designer-inspector').getBoundingClientRect();
+          const fields=document.querySelector('[data-certloom-designer-fields]').getBoundingClientRect();
+          const anchor=document.getElementById('wpbody-content').getBoundingClientRect();
+          return {
+            anchorTop:anchor.top, anchorLeft:anchor.left, shellTop:shell.top, shellLeft:shell.left,
+            shellBottom:shell.bottom, stageHeight:stage.height, stageBottom:stage.bottom,
+            inspectorLeft:inspector.left, inspectorRight:inspector.right, inspectorBottom:inspector.bottom,
+            fieldsLeft:fields.left, fieldsRight:fields.right, viewport:window.innerHeight, docH:document.documentElement.scrollHeight
+          };
         }""")
-        await ck(abs(late_geometry['shellTop']) <= 1.5, 'studioRemeasuresAfterLateWordPressTopShift')
-        await ck(abs(late_geometry['shellBottom']-late_geometry['viewport']) <= 1.5, 'lateShiftStillClosesViewportBottom')
-        await ck(abs(late_geometry['rootBottom']-late_geometry['shellBottom']) <= 1.5 and abs(late_geometry['stageBottom']-late_geometry['shellBottom']) <= 1.5, 'lateShiftPropagatesExactHeightThroughStudioStage')
-        await late.close()
+        await ck(abs(wp_geometry['shellTop'] - wp_geometry['anchorTop']) <= 1.5 and abs(wp_geometry['shellLeft'] - wp_geometry['anchorLeft']) <= 1.5, 'studioFrameTracksWordPressContentBox')
+        await ck(abs(wp_geometry['shellBottom'] - wp_geometry['viewport']) <= 1.5 and abs(wp_geometry['stageBottom'] - wp_geometry['viewport']) <= 1.5, 'wordPressFrameAndStageCloseViewportBottom')
+        await ck(wp_geometry['stageHeight'] > 500 and wp_geometry['fieldsLeft'] >= wp_geometry['inspectorLeft'] - 1 and wp_geometry['fieldsRight'] <= wp_geometry['inspectorRight'] + 1, 'selectedInspectorStaysContainedInRealisticWordPressFrame')
+        await ck(abs(wp_geometry['inspectorBottom'] - wp_geometry['viewport']) <= 1.5 and wp_geometry['docH'] <= wp_geometry['viewport'] + 1, 'selectedInspectorCannotRecreateBottomDeadStripOrPageScroll')
+        await wp_page.evaluate("document.getElementById('wpcontent').style.top='0px'")
+        await wp_page.wait_for_timeout(520)
+        wp_shift = await wp_page.evaluate("""() => {
+          const shell=document.querySelector('.certloom-template-admin.is-designer-workspace').getBoundingClientRect();
+          const stage=document.querySelector('.certloom-template-designer-stage').getBoundingClientRect();
+          return {shellTop:shell.top,shellBottom:shell.bottom,stageBottom:stage.bottom,viewport:window.innerHeight};
+        }""")
+        await ck(abs(wp_shift['shellTop']) <= 1.5, 'studioRemeasuresAfterLateWordPressTopShift')
+        await ck(abs(wp_shift['shellBottom']-wp_shift['viewport']) <= 1.5 and abs(wp_shift['stageBottom']-wp_shift['viewport']) <= 1.5, 'lateWordPressShiftKeepsStageFlushToViewportBottom')
+        await wp_page.close()
 
         # Mobile deliberately returns to natural document flow.
         mobile = await browser.new_page(viewport={'width': 390, 'height': 844})

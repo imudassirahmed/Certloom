@@ -1,3 +1,10 @@
+= 1.7.0-alpha.4.57 =
+* Emergency Gamma-02T staging recovery after alpha.4.56 exposed a selected-element layout regression: tall Inspector content can no longer collapse the three-pane Studio stage or spill property sections across the page.
+* Replace content-sized viewport propagation with a viewport-fixed Studio frame measured from WordPress wpbody-content; the shell is pinned to the live content left/top/right boundaries and directly to the viewport bottom.
+* Use zero-basis bounded flex rows for the authoritative Studio form and three-pane stage, keeping selected Inspector content inside its own scroll rail while preserving Draft/Publish behavior from alpha.4.55.
+* Keep the Layers rail itself non-scrolling, remove the inherited hidden scrollbar gutter, remove the extra Layers right padding, and leave the Layers list as the sole vertical scroller.
+* Add Chromium regression coverage that selects a real element and proves the stage remains full-height, every Inspector section stays inside the right rail, and selection cannot create page-level overflow. Gamma-02 remains open for real staging acceptance; Gamma-03 remains blocked.
+
 = 1.7.0-alpha.4.56 =
 * Make desktop Studio viewport sizing self-settling after WordPress/admin layout shifts, so a late upward move of the focused workspace cannot leave the old measured height and recreate a lower dead strip.
 * Strengthen the focused height chain with one exact measured shell height and flex-filled editor/form/stage descendants instead of relying on nested percentage-height inheritance.

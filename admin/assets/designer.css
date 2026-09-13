@@ -2836,7 +2836,13 @@
 	.certloom-studio-brand img { width: 32px; height: 32px; }
 }
 
-/* Phase 4 Gamma-02R — authoritative Studio viewport fill: measure from the live WordPress content offset to the visual viewport bottom. */
+/* Phase 4 Gamma-02T — staging recovery: viewport frame + selected-Inspector containment.
+ *
+ * Real WordPress staging proved that making the whole editor chain content-sized
+ * could collapse the three-pane stage when an element exposed a tall Inspector.
+ * The focused Studio is therefore framed directly to the live wpbody-content box
+ * and its internal flex items use a zero basis, so Inspector content scrolls inside
+ * its rail instead of changing the Studio's vertical geometry. */
 @media (min-width: 901px) {
 	body.certloom-designer-workspace-page #wpcontent,
 	body.certloom-designer-workspace-page #wpbody,
@@ -2846,63 +2852,90 @@
 		overflow: visible !important;
 	}
 	body.certloom-designer-workspace-page .certloom-template-admin.is-designer-workspace {
-		height: var(--certloom-studio-viewport-height, calc(100dvh - 32px)) !important;
+		position: fixed !important;
+		top: var(--certloom-studio-frame-top, 0px) !important;
+		left: var(--certloom-studio-frame-left, 0px) !important;
+		right: var(--certloom-studio-frame-right, 0px) !important;
+		bottom: 0 !important;
+		display: block !important;
+		box-sizing: border-box !important;
+		width: auto !important;
+		height: auto !important;
 		min-height: 0 !important;
-		margin-bottom: 0 !important;
-	}
-	.is-designer-workspace .certloom-template-editor-focused,
-	.is-designer-workspace .certloom-template-designer-v2,
-	.is-designer-workspace .certloom-template-designer-v2 [data-certloom-designer-form],
-	.is-designer-workspace .certloom-template-designer-v2.is-pro-mode .certloom-template-designer-stage {
-		min-height: 0 !important;
-	}
-}
-
-/* Phase 4 Gamma-02S — viewport closure + Layers gutter hardening after real staging. */
-@media (min-width: 901px) {
-	body.certloom-designer-workspace-page .certloom-template-admin.is-designer-workspace {
-		display: flex !important;
-		flex-direction: column;
-		height: var(--certloom-studio-viewport-height, calc(100dvh - 32px)) !important;
-		min-height: var(--certloom-studio-viewport-height, calc(100dvh - 32px)) !important;
-		max-height: var(--certloom-studio-viewport-height, calc(100dvh - 32px)) !important;
+		max-height: none !important;
+		margin: 0 !important;
 		overflow: hidden !important;
 	}
 	body.certloom-designer-workspace-page .certloom-template-editor-focused {
-		display: flex !important;
-		flex: 1 1 auto !important;
-		flex-direction: column;
-		height: auto !important;
+		display: block !important;
+		box-sizing: border-box !important;
+		width: 100% !important;
+		height: 100% !important;
 		min-height: 0 !important;
 		overflow: hidden !important;
 	}
 	.is-designer-workspace .certloom-template-designer-v2 {
-		flex: 1 1 auto !important;
-		height: auto !important;
+		display: flex !important;
+		flex-direction: column !important;
+		width: 100% !important;
+		height: 100% !important;
 		min-height: 0 !important;
+		overflow: hidden !important;
 	}
-	.is-designer-workspace .certloom-template-designer-v2 [data-certloom-designer-form],
+	.is-designer-workspace .certloom-template-designer-v2 > .certloom-studio-header,
+	.is-designer-workspace .certloom-template-designer-v2 > .certloom-studio-conflict {
+		flex: 0 0 auto !important;
+	}
+	.is-designer-workspace .certloom-template-designer-v2 [data-certloom-designer-form] {
+		display: flex !important;
+		flex: 1 1 0 !important;
+		flex-direction: column !important;
+		width: 100% !important;
+		height: 0 !important;
+		min-height: 0 !important;
+		overflow: hidden !important;
+	}
+	.is-designer-workspace .certloom-studio-documentbar {
+		flex: 0 0 auto !important;
+	}
 	.is-designer-workspace .certloom-template-designer-v2.is-pro-mode .certloom-template-designer-stage {
-		flex: 1 1 auto !important;
-		height: auto !important;
+		display: grid !important;
+		flex: 1 1 0 !important;
+		height: 0 !important;
 		min-height: 0 !important;
+		overflow: hidden !important;
 	}
-	/* The left rail inherits scrollbar-gutter:stable from the legacy add-panel selector even
-	 * though the rail itself no longer scrolls. Remove that invisible reserved column; the
-	 * Layers list remains the sole vertical scroller and keeps the same optical inset on both sides. */
+	/* The rail itself must never own a hidden scrollbar gutter. Insert and Layers
+	 * own their own scrolling; the Layers scrollbar sits at the same optical inset
+	 * as the left edge instead of reserving an extra right-side column. */
 	.is-designer-workspace .certloom-studio-left {
+		overflow: hidden !important;
 		scrollbar-gutter: auto !important;
 	}
 	.is-designer-workspace .certloom-template-designer-layers-primary {
 		display: flex !important;
 		flex: 1 1 0 !important;
-		flex-direction: column;
+		flex-direction: column !important;
 		min-height: 0 !important;
 	}
 	.is-designer-workspace .certloom-studio-layer-list {
-		flex: 1 1 auto;
+		flex: 1 1 0 !important;
+		width: 100% !important;
 		max-height: none !important;
 		min-height: 0 !important;
+		padding-right: 0 !important;
+		overflow-y: auto !important;
+		overflow-x: hidden !important;
 		scrollbar-gutter: auto !important;
+	}
+	.is-designer-workspace .certloom-template-designer-inspector {
+		min-width: 0 !important;
+		min-height: 0 !important;
+		overflow-y: auto !important;
+		overflow-x: hidden !important;
+	}
+	.is-designer-workspace .certloom-template-designer-v2 [data-certloom-designer-fields] {
+		min-width: 0 !important;
+		max-width: 100% !important;
 	}
 }
