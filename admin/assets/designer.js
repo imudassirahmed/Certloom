@@ -126,9 +126,7 @@
 		var removeButton = root.querySelector( '[data-certloom-designer-remove]' );
 		var duplicateButton = root.querySelector( '[data-certloom-designer-duplicate]' );
 		var modeButtons = root.querySelectorAll( '[data-certloom-designer-mode-button]' );
-		var previewScrollButton = root.querySelector( '[data-certloom-designer-preview-scroll]' );
 		var insertFocusButton = root.querySelector( '[data-certloom-designer-insert-focus]' );
-		var publicationScrollButton = root.querySelector( '[data-certloom-designer-publication-scroll]' );
 		var layersToggle = root.querySelector( '[data-certloom-designer-layers-toggle]' );
 		var quickTokenSelect = root.querySelector( '[data-certloom-designer-quick-token]' );
 		var customTokenWrap = root.querySelector( '[data-certloom-designer-custom-token]' );
@@ -239,7 +237,6 @@
 			if ( speak ) { announce( 'quick' === designerMode ? t( 'quickDesignerEnabled', 'Quick Designer enabled.' ) : t( 'proDesignerEnabled', 'Pro Designer enabled.' ) ); }
 			window.setTimeout( function () { fitWorkspace( true ); }, 0 );
 		}
-		function scrollDesignerTarget( selector ) { var target = document.querySelector( selector ); if ( target && target.scrollIntoView ) { target.scrollIntoView( { behavior: 'smooth', block: 'start' } ); } }
 		var isSubmitting = false;
 		var autosaveTimer = null;
 		var autosavePending = false;
@@ -1625,8 +1622,6 @@
 		if ( pasteButton ) { pasteButton.addEventListener( 'click', pasteDesignerClipboard ); }
 		for ( var modeIndex = 0; modeIndex < modeButtons.length; modeIndex++ ) { modeButtons[ modeIndex ].addEventListener( 'click', function () { applyDesignerMode( this.getAttribute( 'data-certloom-designer-mode-button' ), true ); } ); }
 		if ( insertFocusButton ) { insertFocusButton.addEventListener( 'click', function () { var firstInsert = root.querySelector( '[data-certloom-designer-add]:not([disabled])' ); if ( firstInsert ) { firstInsert.focus(); } } ); }
-		if ( previewScrollButton ) { previewScrollButton.addEventListener( 'click', function () { scrollDesignerTarget( '.certloom-template-preview-card' ); } ); }
-		if ( publicationScrollButton ) { publicationScrollButton.addEventListener( 'click', function () { scrollDesignerTarget( '.certloom-template-publication-card' ); } ); }
 		if ( layersToggle ) { layersToggle.addEventListener( 'click', function () { root.classList.toggle( 'show-quick-layers' ); layersToggle.setAttribute( 'aria-expanded', root.classList.contains( 'show-quick-layers' ) ? 'true' : 'false' ); } ); }
 		if ( quickTokenSelect && rawTokenInput ) { quickTokenSelect.addEventListener( 'change', function () { var value = String( quickTokenSelect.value || '' ); if ( '__custom__' === value ) { if ( customTokenWrap ) { customTokenWrap.classList.add( 'is-custom' ); } rawTokenInput.focus(); return; } if ( customTokenWrap ) { customTokenWrap.classList.remove( 'is-custom' ); } rawTokenInput.value = value; applyContentField( rawTokenInput ); } ); }
 		for ( var contentIndex = 0; contentIndex < contentFields.length; contentIndex++ ) { contentFields[ contentIndex ].addEventListener( 'change', function () { applyContentField( this ); } ); }

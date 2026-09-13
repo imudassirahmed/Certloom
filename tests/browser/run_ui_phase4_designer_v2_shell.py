@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Chromium acceptance for UI Phase 4 Designer v2 shell checkpoint."""
+"""Chromium acceptance for Phase 4 Gamma-02 Studio focused Designer workspace."""
 import asyncio, os, subprocess
 from pathlib import Path
 from playwright.async_api import async_playwright
@@ -29,10 +29,12 @@ async def main():
         await ck('is-pro-mode' in (await root.get_attribute('class') or ''), 'unifiedPreciseClass')
         await ck((await root.get_attribute('data-designer-mode')) == 'pro', 'unifiedPreciseData')
         await ck(await page.locator('[data-certloom-designer-mode-button]').count() == 0, 'noCustomerModeSwitch')
+        await ck(await page.locator('.certloom-designer-workspace-back').is_visible(), 'designCenterBackVisible')
+        await ck(await page.locator('a[href="#manage-design"]').is_visible(), 'manageDesignVisible')
+        await ck(await page.locator('[data-certloom-designer-preview-scroll]').count() == 0, 'noEmbeddedPreviewAction')
         await ck(await page.locator('[data-certloom-designer-insert-focus]').is_visible(), 'insertVisible')
         await ck(await page.locator('[data-certloom-designer-undo]').is_visible(), 'undoVisible')
         await ck(await page.locator('[data-certloom-designer-redo]').is_visible(), 'redoVisible')
-        await ck(await page.locator('[data-certloom-designer-preview-scroll]').is_visible(), 'previewVisible')
         await ck(await page.locator('.certloom-designer-v2-save').is_visible(), 'saveVisible')
         await ck(await page.locator('.certloom-template-designer-layers-primary').is_visible(), 'layersVisible')
         await ck(await page.locator('.certloom-template-designer-inspector').is_visible(), 'propertiesVisible')
@@ -40,6 +42,7 @@ async def main():
         await ck(await page.locator('[data-certloom-designer-layers]').count() == 1, 'singleLayersAuthority')
 
         layout = await page.evaluate("""() => {
+          const wrapper=document.querySelector('.certloom-template-admin.is-designer-workspace').getBoundingClientRect();
           const r=document.querySelector('[data-certloom-designer]').getBoundingClientRect();
           const left=document.querySelector('.certloom-template-designer-add-panel').getBoundingClientRect();
           const canvas=document.querySelector('[data-certloom-designer-workspace]').getBoundingClientRect();
@@ -49,22 +52,22 @@ async def main():
           const canvasStyle=getComputedStyle(document.querySelector('[data-certloom-designer-workspace]'));
           const propsStyle=getComputedStyle(document.querySelector('.certloom-template-designer-inspector'));
           const leftStyle=getComputedStyle(document.querySelector('.certloom-template-designer-add-panel'));
-          return {rootTop:r.top,rootBottom:r.bottom,rootH:r.height,viewport:innerHeight,docH:document.documentElement.scrollHeight,clientH:document.documentElement.clientHeight,
+          return {wrapperH:wrapper.height,rootTop:r.top,rootBottom:r.bottom,rootH:r.height,viewport:innerHeight,docH:document.documentElement.scrollHeight,clientH:document.documentElement.clientHeight,
             leftX:left.x,canvasX:canvas.x,propsX:props.x,stageCols:stage.gridTemplateColumns,shellDisplay:shell.display,
             leftOverflow:leftStyle.overflowY,canvasOverflow:canvasStyle.overflowY,propsOverflow:propsStyle.overflowY,
-            canvasPosition:canvasStyle.position,propsPosition:propsStyle.position,canvasHeight:canvas.height};
+            canvasPosition:canvasStyle.position,propsPosition:propsStyle.position,leftH:left.height,canvasH:canvas.height,propsH:props.height};
         }""")
-        await ck(layout['rootH'] > layout['viewport'], 'desktopDesignerUsesPageFlow')
-        await ck(layout['docH'] > layout['clientH'], 'desktopFixtureAllowsPageScroll')
+        await ck(layout['rootH'] <= layout['wrapperH'] + 1, 'designerBoundedToWorkspace')
+        await ck(layout['docH'] <= layout['clientH'] + 1, 'desktopNoPageLevelScroll')
         await ck(layout['leftX'] < layout['canvasX'] < layout['propsX'], 'leftCanvasPropertiesOrder')
         await ck(len(layout['stageCols'].split()) >= 3, 'desktopThreeWorkingColumns')
         await ck(layout['shellDisplay'] == 'contents', 'legacyShellDoesNotCreateNestedGrid')
-        await ck(layout['leftOverflow'] == 'visible', 'layersFollowPageFlow')
-        await ck(layout['canvasOverflow'] in ('auto','scroll'), 'canvasInternalScroll')
-        await ck(layout['propsOverflow'] == 'visible', 'propertiesFollowPageFlow')
-        await ck(layout['canvasPosition'] == 'sticky', 'canvasIsStickyPane')
-        await ck(layout['propsPosition'] == 'static', 'propertiesIsNotStickyPane')
-        await ck(layout['canvasHeight'] >= 700, 'desktopCanvasCannotBeCrushedByToolbarChrome')
+        await ck(layout['leftOverflow'] in ('auto','scroll'), 'layersOwnInternalScroll')
+        await ck(layout['canvasOverflow'] in ('auto','scroll'), 'canvasOwnInternalScroll')
+        await ck(layout['propsOverflow'] in ('auto','scroll'), 'propertiesOwnInternalScroll')
+        await ck(layout['canvasPosition'] == 'relative', 'canvasNoLongerStickyPagePane')
+        await ck(layout['propsPosition'] == 'static', 'propertiesStaticInsideBoundedGrid')
+        await ck(min(layout['leftH'],layout['canvasH'],layout['propsH']) >= 300, 'desktopWorkingRailsRemainUsable')
 
         first_insert = page.locator('[data-certloom-designer-add]:not([disabled])').first
         await page.locator('[data-certloom-designer-insert-focus]').click(); await page.wait_for_timeout(30)
@@ -81,10 +84,6 @@ async def main():
         await ck(await page.locator('[data-certloom-designer-redo]').is_enabled(), 'redoEnabled')
         await page.locator('[data-certloom-designer-redo]').click(); await page.wait_for_timeout(40)
         await ck(await page.locator('[data-certloom-designer]').evaluate("el=>el.classList.contains('has-unsaved-changes')"), 'redoRestoresDirtyState')
-
-        await page.evaluate("""() => { window.__previewScroll=0; const p=document.querySelector('.certloom-template-preview-card'); p.scrollIntoView=function(){window.__previewScroll++;}; }""")
-        await page.locator('[data-certloom-designer-preview-scroll]').click(); await page.wait_for_timeout(20)
-        await ck(await page.evaluate('window.__previewScroll') == 1, 'previewTargetsExistingPreview')
         await page.locator('.certloom-designer-v2-save').click(); await page.wait_for_timeout(20)
         await ck(await page.locator('body').get_attribute('data-submitted') == '1', 'topSaveSubmitsCanonicalForm')
 
@@ -95,11 +94,12 @@ async def main():
           const stage=getComputedStyle(document.querySelector('.certloom-template-designer-stage'));
           const shell=getComputedStyle(document.querySelector('.certloom-template-designer-shell'));
           const visible=[...root.querySelectorAll('.certloom-template-designer-toolbar .button,.certloom-template-designer-productivity .button,.certloom-template-designer-palette .button')].filter(b=>getComputedStyle(b).display!=='none'&&b.getBoundingClientRect().height>0);
-          return {overflow:document.documentElement.scrollWidth<=document.documentElement.clientWidth+1,rootH:getComputedStyle(root).height,stage:stage.gridTemplateColumns,shell:shell.gridTemplateColumns,min:Math.min(...visible.map(b=>b.getBoundingClientRect().height))};
+          return {overflow:document.documentElement.scrollWidth<=document.documentElement.clientWidth+1,docScrollable:document.documentElement.scrollHeight>document.documentElement.clientHeight,stage:stage.gridTemplateColumns,shell:shell.gridTemplateColumns,min:Math.min(...visible.map(b=>b.getBoundingClientRect().height))};
         }""")
         await ck(m['overflow'], 'mobileNoHorizontalOverflow')
-        await ck(m['stage'].split().__len__() == 1, 'mobileStageSingleColumn')
-        await ck(m['shell'].split().__len__() == 1, 'mobilePropertiesStack')
+        await ck(m['docScrollable'], 'mobileReturnsToNaturalPageFlow')
+        await ck(len(m['stage'].split()) == 1, 'mobileStageSingleColumn')
+        await ck(len(m['shell'].split()) == 1, 'mobilePropertiesStack')
         await ck(m['min'] >= 43.5, 'mobileTargets44')
         await mobile.close()
 
@@ -114,10 +114,10 @@ async def main():
             await ck(True,'forcedColorsUnsupported')
         await forced.close(); await page.close(); await browser.close()
     if failed:
-        print('FAIL  UI Phase 4 Designer v2 shell Chromium: '+', '.join(sorted(set(failed))))
+        print('FAIL  UI Phase 4 Gamma-02 Studio Chromium: '+', '.join(sorted(set(failed))))
         print(f'\n{checks} checks, {len(set(failed))} failures')
         return 1
-    print('PASS  UI Phase 4 Designer v2 sticky-workspace shell Chromium')
+    print('PASS  UI Phase 4 Gamma-02 Studio focused Designer Chromium')
     print(f'\n{checks} checks, 0 failures')
     return 0
 

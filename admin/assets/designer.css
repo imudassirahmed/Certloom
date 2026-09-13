@@ -1498,3 +1498,143 @@
 .certloom-template-designer-element.is-table .certloom-template-designer-content.is-table-preview th,.certloom-template-designer-element.is-table .certloom-template-designer-content.is-table-preview td{box-sizing:border-box;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:782px){.certloom-template-designer-table-column,.certloom-template-designer-table-row{grid-template-columns:1fr}.certloom-template-designer-table-column .button,.certloom-template-designer-table-row .button,.certloom-template-designer-table-head .button{min-height:44px}}
 @media(forced-colors:active){.certloom-template-designer-table-column,.certloom-template-designer-table-row{border:1px solid CanvasText}.certloom-template-designer-element.is-table .certloom-template-designer-content.is-table-preview th,.certloom-template-designer-element.is-table .certloom-template-designer-content.is-table-preview td{border-color:CanvasText}}
+
+/* Phase 4 Gamma-02 Studio — focused, bounded Certificate Designer workspace.
+ * On desktop the WordPress page itself does not become the editing scrollbar:
+ * Layers, canvas and Properties own their internal overflow independently. */
+.certloom-template-manage-head-actions,
+.certloom-designer-workspace-head-actions {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--cl-2);
+	flex-wrap: wrap;
+}
+.certloom-designer-workspace-identity {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--cl-3);
+	min-width: 0;
+}
+.certloom-designer-workspace-identity > div { min-width: 0; }
+.certloom-designer-workspace-back {
+	flex: 0 0 auto;
+	margin-top: 4px;
+	text-decoration: none;
+	font-weight: 600;
+}
+.certloom-template-designer-head h1 {
+	margin: 2px 0 4px;
+	font-size: 22px;
+	line-height: 1.2;
+}
+.certloom-designer-workspace-head-actions .certloom-template-designer-state {
+	min-width: 118px;
+	padding: 7px 9px;
+}
+
+@media (min-width: 901px) {
+	body.certloom-designer-workspace-page #wpbody-content { padding-bottom: 0; }
+	body.certloom-designer-workspace-page #wpfooter { display: none; }
+	.certloom-template-admin.is-designer-workspace {
+		box-sizing: border-box;
+		height: calc(100dvh - 50px);
+		margin: 8px 20px 0 0;
+		overflow: hidden;
+	}
+	.is-designer-workspace .certloom-template-editor-focused {
+		height: 100%;
+		margin: 0;
+		overflow: hidden;
+	}
+	.is-designer-workspace .certloom-template-designer-v2 {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		min-height: 0;
+		margin: 0;
+		padding: 10px 12px;
+		overflow: hidden;
+	}
+	.is-designer-workspace .certloom-template-designer-head {
+		flex: 0 0 auto;
+		align-items: center;
+		gap: var(--cl-2);
+	}
+	.is-designer-workspace .certloom-template-designer-head p {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.is-designer-workspace .certloom-template-designer-v2 [data-certloom-designer-form] {
+		display: flex;
+		flex: 1 1 auto;
+		flex-direction: column;
+		min-height: 0;
+		overflow: hidden;
+	}
+	.is-designer-workspace .certloom-template-designer-v2 .certloom-template-designer-toolbar {
+		flex: 0 0 auto;
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		overflow-y: hidden;
+		margin: 6px 0 0;
+		scrollbar-width: thin;
+	}
+	.is-designer-workspace .certloom-template-designer-v2 .certloom-template-designer-context-dock,
+	.is-designer-workspace .certloom-template-designer-v2 .certloom-template-designer-productivity,
+	.is-designer-workspace .certloom-template-designer-v2 .certloom-template-designer-footer {
+		flex: 0 0 auto;
+	}
+	.is-designer-workspace .certloom-template-designer-v2.is-pro-mode .certloom-template-designer-stage {
+		display: grid;
+		flex: 1 1 auto;
+		grid-template-columns: 220px minmax(420px, 1fr) 300px;
+		align-items: stretch;
+		min-height: 0;
+		overflow: hidden;
+	}
+	.is-designer-workspace .certloom-template-designer-v2.is-pro-mode .certloom-template-designer-add-panel,
+	.is-designer-workspace .certloom-template-designer-v2 .certloom-template-designer-inspector {
+		position: static;
+		align-self: stretch;
+		min-height: 0;
+		max-height: none;
+		overflow: auto;
+		overscroll-behavior: contain;
+		scrollbar-gutter: stable;
+	}
+	.is-designer-workspace .certloom-template-designer-v2 .certloom-template-designer-shell { display: contents; }
+	.is-designer-workspace .certloom-template-designer-v2 .certloom-template-designer-workspace {
+		position: relative;
+		top: auto;
+		align-self: stretch;
+		height: auto;
+		min-height: 0;
+		max-height: none;
+		overflow: auto;
+		overscroll-behavior: contain;
+		scrollbar-gutter: stable both-edges;
+	}
+	.is-designer-workspace .certloom-template-designer-v2 .certloom-template-designer-footer {
+		margin-top: 6px;
+		padding-top: 6px;
+	}
+	.is-designer-workspace .certloom-designer-save-notice,
+	.is-designer-workspace .certloom-template-autosave-warning {
+		flex: 0 0 auto;
+		margin: 5px 0;
+	}
+}
+@media (min-width: 901px) and (max-width: 1180px) {
+	.is-designer-workspace .certloom-template-designer-v2.is-pro-mode .certloom-template-designer-stage {
+		grid-template-columns: 190px minmax(360px, 1fr) 250px;
+	}
+}
+@media (max-width: 900px) {
+	.certloom-template-admin.is-designer-workspace,
+	.is-designer-workspace .certloom-template-editor-focused,
+	.is-designer-workspace .certloom-template-designer-v2 { height: auto; overflow: visible; }
+	.certloom-designer-workspace-identity { display: grid; }
+	.certloom-designer-workspace-head-actions { justify-content: flex-start; }
+}

@@ -14,7 +14,7 @@ dsx(strpos($admin,'certloom-designer-pro-only')!==false&&strpos($admin,'certloom
 dsx(strpos($admin,'certloom-template-designer-stage')!==false&&strpos($admin,'certloom-template-designer-add-panel')!==false,'Designer v2 has Layers/Insert plus canvas/properties stage');
 foreach(array('Text','Image','Logo','Dynamic Field','QR','Shape','Line') as $label){ dsx(strpos($admin,"__( '$label', 'certloom' )")!==false||strpos($admin,"esc_html__( '$label', 'certloom' )")!==false,"Quick Add exposes $label"); }
 dsx(strpos($admin,'Duplicate selected')!==false&&strpos($admin,'Delete selected')!==false,'direct duplicate/delete actions exist');
-dsx(strpos($admin,'data-certloom-designer-preview-scroll')!==false&&strpos($admin,'data-certloom-designer-quick-save')!==false&&strpos($admin,'Save design')!==false,'compact Designer v2 exposes Preview and explicit Save while publication stays in the design publication workflow');
+dsx(strpos($admin,'data-certloom-designer-preview-scroll')===false&&strpos($admin,'data-certloom-designer-quick-save')!==false&&strpos($admin,'Save design')!==false&&strpos($admin,"esc_html__( 'Manage design', 'certloom' )")!==false,'Studio Designer keeps explicit Save while Preview/publication move to Design Center management');
 dsx(strpos($admin,'Dynamic field')!==false&&strpos($admin,'Recipient Name')!==false&&strpos($admin,'Certificate Number')!==false&&strpos($admin,'Grade')!==false&&strpos($admin,'designer_catalog_field_options')!==false&&strpos($admin,'Technical custom field…')!==false&&strpos($admin,'Technical field token')!==false,'human-readable dynamic field chooser includes catalog-backed fields with an explicit Technical custom-field escape hatch');
 dsx(strpos($admin,'data-certloom-designer-custom-token')!==false,'custom merge-token escape hatch remains available');
 dsx(strpos($css,'.is-quick-mode .certloom-designer-token-advanced')!==false&&strpos($css,'.certloom-designer-token-advanced.is-custom')!==false&&strpos($css,'.is-pro-mode .certloom-designer-token-advanced')!==false,'Technical field token is progressively disclosed in Quick mode and available in Pro precision controls');
@@ -33,8 +33,8 @@ dsx(strpos($js,'copy.id = id')!==false&&strpos($js,'clampDragged( copy )')!==fal
 dsx(strpos($js,'dynamicFieldSample')!==false&&strpos($js,"'recipient.name'")!==false,'Quick canvas uses human sample content for dynamic fields');
 dsx(strpos($js,'syncQuickToken')!==false&&strpos($js,"'__custom__'")!==false,'Quick chooser and custom-field fallback stay synchronized');
 dsx(strpos($js,'applyContentField( rawTokenInput )')!==false,'human field selection writes the existing canonical merge token property');
-dsx(strpos($js,"scrollDesignerTarget( '.certloom-template-preview-card' )")!==false,'Preview control reuses existing canonical Preview surface');
-dsx(strpos($js,"scrollDesignerTarget( '.certloom-template-publication-card' )")!==false,'Publish control delegates to existing publication review surface');
+dsx(strpos($admin,'$this->preview_panel( $editing );')!==false,'canonical Preview remains available on the Design Center management surface');
+dsx(strpos($admin,"esc_html__( 'Publish design', 'certloom' )")!==false,'publication remains available on the Design Center management surface');
 dsx(strpos($js,'JSON.stringify( layout )')!==false&&strpos($js,'layout.elements')!==false,'Designer v2 edits the same canonical layout document');
 dsx(strpos($js,'eval(')===false&&strpos($js,'new Function')===false,'Designer v2 adds no dynamic code execution');
 

@@ -7,6 +7,7 @@ if ( ! is_string( $html ) || '' === $html ) { throw new RuntimeException( 'Base 
 $tokens = file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/certloom-tokens.css' );
 if ( ! is_string( $tokens ) ) { throw new RuntimeException( 'Certloom tokens are unavailable.' ); }
 $html = str_replace( '<style>', '<style>' . $tokens, $html );
+$html = str_replace( '<body>', '<body class="certloom-designer-workspace-page"><div class="certloom-template-admin is-designer-workspace"><div class="certloom-template-editor-focused">', $html );
 $html = str_replace(
     '<section class="certloom-template-designer" data-certloom-designer ',
     '<section class="certloom-template-designer certloom-template-designer-v2" data-certloom-designer data-designer-default-mode="pro" data-designer-safe-margin-mm="10" ',
@@ -14,9 +15,10 @@ $html = str_replace(
 );
 $html = str_replace(
     '<div class="certloom-template-designer-head"><div><span class="certloom-template-designer-kicker">DSN-08</span><h3>Certificate Designer</h3><p>Fixture</p></div>',
-    '<div class="certloom-template-designer-head"><div><h3>Certificate Designer</h3><p>Edit the certificate directly on the canvas. Layers stay on the left; properties update on the right.</p></div>',
+    '<div class="certloom-template-designer-head"><div class="certloom-designer-workspace-identity"><a class="certloom-designer-workspace-back" href="#design-center">← Design Center</a><div><span class="certloom-eyebrow">Certificate Designer</span><h1>Executive Certificate</h1><p>Edit the artwork in a focused workspace. Layers and Properties scroll independently while the certificate canvas stays available.</p></div></div><div class="certloom-designer-workspace-head-actions"><a class="button" href="#manage-design">Manage design</a>',
     $html
 );
+$html = str_replace("</div></div>\n<form data-certloom-designer-form>", "</div></div></div>\n<form data-certloom-designer-form>", $html);
 $html = str_replace(
     '<div class="certloom-template-designer-toolbar">',
     '<div class="certloom-template-designer-toolbar" role="toolbar" aria-label="Certificate Designer tools"><button type="button" class="button certloom-designer-v2-insert" data-certloom-designer-insert-focus>+ Insert</button>',
@@ -26,7 +28,7 @@ $html = str_replace('<label><span>Page size</span><select data-certloom-designer
 $html = str_replace('<label><span>Orientation</span><select data-certloom-designer-orientation>', '<label class="certloom-designer-pro-only"><span>Orientation</span><select data-certloom-designer-orientation>', $html);
 $html = str_replace(
     '<button type="button" class="button" data-certloom-designer-fit>Fit workspace</button><button type="button" class="button" data-certloom-designer-reset>Reset unsaved changes</button>',
-    '<button type="button" class="button" data-certloom-designer-fit title="Fit canvas (0)">Fit</button><button type="button" class="button" data-certloom-designer-true-size title="Actual size / 100% (1)">1:1</button><button type="button" class="button" data-certloom-designer-preview-scroll>Preview</button><button type="submit" class="button button-primary certloom-designer-v2-save" data-certloom-designer-quick-save title="Save design (Ctrl/Cmd+S)">Save design</button><button type="button" class="button certloom-designer-pro-only" data-certloom-designer-reset>Reset unsaved changes</button>',
+    '<button type="button" class="button" data-certloom-designer-fit title="Fit canvas (0)">Fit</button><button type="button" class="button" data-certloom-designer-true-size title="Actual size / 100% (1)">1:1</button><button type="submit" class="button button-primary certloom-designer-v2-save" data-certloom-designer-quick-save title="Save design (Ctrl/Cmd+S)">Save design</button><button type="button" class="button certloom-designer-pro-only" data-certloom-designer-reset>Reset unsaved changes</button>',
     $html
 );
 $html = str_replace('<div class="certloom-template-designer-productivity">', '<div class="certloom-template-designer-productivity certloom-designer-pro-only" data-certloom-designer-productivity>', $html);
@@ -46,11 +48,7 @@ $html = str_replace('<aside class="certloom-template-designer-inspector">', '<as
 $html = str_replace('<div data-certloom-designer-empty><h4>Element geometry</h4></div>', '<div data-certloom-designer-empty><h4>Properties</h4><p>Select an element to edit its content, appearance and exact geometry.</p></div>', $html);
 $html = str_replace('<div class="certloom-template-designer-layers"><div class="certloom-template-designer-layers-head"><h4>Layers</h4><span>Front → back</span></div><div data-certloom-designer-layers></div></div>', '', $html);
 $html = str_replace("</aside></div>\n<div class=\"certloom-template-designer-footer\">", "</aside></div></div>\n<div class=\"certloom-template-designer-footer\">", $html);
-$html = str_replace(
-    '<pre id="certloom-browser-result"></pre>',
-    '<section class="certloom-template-preview-card" style="position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden" tabindex="-1"><h3>Preview target</h3></section><pre id="certloom-browser-result"></pre>',
-    $html
-);
+$html = str_replace('<pre id="certloom-browser-result"></pre>', '</div></div><pre id="certloom-browser-result" style="display:none"></pre>', $html);
 if ( false === strpos( $html, 'certloom-template-designer-v2' ) || 1 !== substr_count( $html, 'data-certloom-designer-layers></div>' ) || false === strpos( $html, 'data-certloom-designer-insert-focus' ) ) {
     throw new RuntimeException( 'Designer v2 fixture transformation is incomplete.' );
 }
