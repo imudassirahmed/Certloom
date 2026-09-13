@@ -261,6 +261,9 @@ async def main():
         await ck(await page.locator('[data-certloom-designer-fields]').is_visible(), 'inspectorAppearsForSelection')
         selected_geometry = await page.evaluate("""() => {
           const shell=document.querySelector('.certloom-template-admin.is-designer-workspace').getBoundingClientRect();
+          const editor=document.querySelector('.certloom-template-editor-focused').getBoundingClientRect();
+          const designer=document.querySelector('.certloom-template-designer-v2').getBoundingClientRect();
+          const form=document.querySelector('[data-certloom-designer-form]').getBoundingClientRect();
           const stage=document.querySelector('.certloom-template-designer-stage').getBoundingClientRect();
           const inspector=document.querySelector('.certloom-template-designer-inspector').getBoundingClientRect();
           const fields=document.querySelector('[data-certloom-designer-fields]').getBoundingClientRect();
@@ -465,20 +468,24 @@ async def main():
         # places Studio below y=0. This protects staging from a dead strip below the three-pane workspace.
         viewport_fit = await page.evaluate("""() => {
           const shell=document.querySelector('.certloom-template-admin.is-designer-workspace');
-          shell.style.setProperty('margin-top','43px','important');
-          window.dispatchEvent(new Event('resize'));
+          shell.style.setProperty('--certloom-studio-frame-top','43px');
+          shell.style.setProperty('--certloom-studio-frame-height',(window.innerHeight-43)+'px');
           return true;
         }""")
-        await page.wait_for_timeout(80)
+        await page.wait_for_timeout(40)
         viewport_geometry = await page.evaluate("""() => {
-          const shell=document.querySelector('.certloom-template-admin.is-designer-workspace').getBoundingClientRect();
-          const stage=document.querySelector('.certloom-template-designer-stage').getBoundingClientRect();
-          return {shellTop:shell.top,shellBottom:shell.bottom,stageBottom:stage.bottom,viewport:window.innerHeight};
+          const q=s=>document.querySelector(s).getBoundingClientRect();
+          const shell=q('.certloom-template-admin.is-designer-workspace');
+          const editor=q('.certloom-template-editor-focused');
+          const designer=q('.certloom-template-designer-v2');
+          const form=q('[data-certloom-designer-form]');
+          const stage=q('.certloom-template-designer-stage');
+          return {shellTop:shell.top,shellBottom:shell.bottom,editorBottom:editor.bottom,designerBottom:designer.bottom,formBottom:form.bottom,stageBottom:stage.bottom,viewport:window.innerHeight};
         }""")
         await ck(viewport_fit and viewport_geometry['shellTop'] >= 42, 'studioViewportOffsetFixtureApplied')
         await ck(abs(viewport_geometry['shellBottom']-viewport_geometry['viewport']) <= 1.5, 'studioFillsRemainingViewportFromLiveOffset')
-        await ck(abs(viewport_geometry['stageBottom']-viewport_geometry['shellBottom']) <= 1.5, 'studioThreePaneStageReachesViewportBottom')
-        await page.evaluate("() => { const shell=document.querySelector('.certloom-template-admin.is-designer-workspace'); shell.style.removeProperty('margin-top'); window.dispatchEvent(new Event('resize')); }")
+        await ck(all(abs(viewport_geometry[k]-viewport_geometry['viewport']) <= 1.5 for k in ['editorBottom','designerBottom','formBottom','stageBottom']), 'studioFullHeightChainReachesViewportBottom')
+        await page.evaluate("() => { const shell=document.querySelector('.certloom-template-admin.is-designer-workspace'); shell.style.removeProperty('--certloom-studio-frame-top'); shell.style.removeProperty('--certloom-studio-frame-height'); window.dispatchEvent(new Event('resize')); }")
         await page.wait_for_timeout(80)
 
         # Canonical save remains a form submit and Publish survives external-submit-button serialization.
@@ -499,7 +506,7 @@ async def main():
         # remeasured without relying on page-level document height.
         wp_html = html.replace(
             '<body class="certloom-designer-workspace-page" style="margin:0;padding:0"><div class="certloom-template-admin is-designer-workspace">',
-            '<body class="certloom-designer-workspace-page" style="margin:0;padding:0"><div id="wpcontent" style="position:absolute;top:32px;left:160px;right:0"><div id="wpbody"><div id="wpbody-content"><div class="certloom-template-admin is-designer-workspace">',
+            '<body class="certloom-designer-workspace-page" style="margin:0;padding:0"><div id="wpcontent" style="position:absolute;top:32px;left:160px;right:0"><div id="wpbody"><div id="wpbody-content" style="padding-bottom:65px"><div class="certloom-template-admin is-designer-workspace">',
             1,
         ).replace(
             '<script>document.addEventListener("submit"',
@@ -513,19 +520,24 @@ async def main():
         await wp_page.wait_for_timeout(80)
         wp_geometry = await wp_page.evaluate("""() => {
           const shell=document.querySelector('.certloom-template-admin.is-designer-workspace').getBoundingClientRect();
+          const editor=document.querySelector('.certloom-template-editor-focused').getBoundingClientRect();
+          const designer=document.querySelector('.certloom-template-designer-v2').getBoundingClientRect();
+          const form=document.querySelector('[data-certloom-designer-form]').getBoundingClientRect();
           const stage=document.querySelector('.certloom-template-designer-stage').getBoundingClientRect();
           const inspector=document.querySelector('.certloom-template-designer-inspector').getBoundingClientRect();
           const fields=document.querySelector('[data-certloom-designer-fields]').getBoundingClientRect();
           const anchor=document.getElementById('wpbody-content').getBoundingClientRect();
           return {
             anchorTop:anchor.top, anchorLeft:anchor.left, shellTop:shell.top, shellLeft:shell.left,
-            shellBottom:shell.bottom, stageHeight:stage.height, stageBottom:stage.bottom,
+            shellBottom:shell.bottom, editorBottom:editor.bottom, designerBottom:designer.bottom, formBottom:form.bottom, stageHeight:stage.height, stageBottom:stage.bottom,
             inspectorLeft:inspector.left, inspectorRight:inspector.right, inspectorBottom:inspector.bottom,
-            fieldsLeft:fields.left, fieldsRight:fields.right, viewport:window.innerHeight, docH:document.documentElement.scrollHeight
+            fieldsLeft:fields.left, fieldsRight:fields.right, viewport:window.innerHeight, docH:document.documentElement.scrollHeight,
+            wpPaddingBottom:getComputedStyle(document.getElementById('wpbody-content')).paddingBottom, frameHeight:getComputedStyle(document.querySelector('.certloom-template-admin.is-designer-workspace')).getPropertyValue('--certloom-studio-frame-height').trim()
           };
         }""")
         await ck(abs(wp_geometry['shellTop'] - wp_geometry['anchorTop']) <= 1.5 and abs(wp_geometry['shellLeft'] - wp_geometry['anchorLeft']) <= 1.5, 'studioFrameTracksWordPressContentBox')
-        await ck(abs(wp_geometry['shellBottom'] - wp_geometry['viewport']) <= 1.5 and abs(wp_geometry['stageBottom'] - wp_geometry['viewport']) <= 1.5, 'wordPressFrameAndStageCloseViewportBottom')
+        await ck(abs(wp_geometry['shellBottom'] - wp_geometry['viewport']) <= 1.5 and all(abs(wp_geometry[k]-wp_geometry['viewport']) <= 1.5 for k in ['editorBottom','designerBottom','formBottom','stageBottom']), 'wordPressFullStudioChainClosesViewportBottom')
+        await ck(wp_geometry['wpPaddingBottom'] == '0px' and wp_geometry['frameHeight'] not in ('', '0px'), 'wordPressFooterReservationCannotShortenStudioFrame')
         await ck(wp_geometry['stageHeight'] > 500 and wp_geometry['fieldsLeft'] >= wp_geometry['inspectorLeft'] - 1 and wp_geometry['fieldsRight'] <= wp_geometry['inspectorRight'] + 1, 'selectedInspectorStaysContainedInRealisticWordPressFrame')
         await ck(abs(wp_geometry['inspectorBottom'] - wp_geometry['viewport']) <= 1.5 and wp_geometry['docH'] <= wp_geometry['viewport'] + 1, 'selectedInspectorCannotRecreateBottomDeadStripOrPageScroll')
         await wp_page.evaluate("document.getElementById('wpcontent').style.top='0px'")

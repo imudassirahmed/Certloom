@@ -1,3 +1,10 @@
+= 1.7.0-alpha.4.58 =
+* Close the remaining focused Studio bottom strip by giving the viewport-fixed root an explicit measured height from the live WordPress content top to the visual viewport bottom instead of relying on percentage-height descendants of an auto-height fixed box.
+* Keep WordPress footer reservation out of the focused Studio contract: #wpbody-content bottom padding is forced to zero and #wpfooter remains hidden on the Studio route.
+* Preserve the alpha.4.57 zero-basis form/stage containment, selected Inspector scrolling, alpha.4.55 Publish/Save lifecycle correction, and alpha.4.56 Layers gutter cleanup.
+* Extend the Studio Chromium fixture with a WordPress-like 65px wpbody-content footer reservation and require the shell, editor, designer, authoritative form and three-pane stage all to terminate at the real viewport bottom.
+* Gamma-02 remains open for real staging acceptance; Gamma-03 remains blocked.
+
 = 1.7.0-alpha.4.57 =
 * Emergency Gamma-02T staging recovery after alpha.4.56 exposed a selected-element layout regression: tall Inspector content can no longer collapse the three-pane Studio stage or spill property sections across the page.
 * Replace content-sized viewport propagation with a viewport-fixed Studio frame measured from WordPress wpbody-content; the shell is pinned to the live content left/top/right boundaries and directly to the viewport bottom.

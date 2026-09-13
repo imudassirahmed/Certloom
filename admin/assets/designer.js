@@ -481,17 +481,24 @@
 				studioWorkspaceShell.style.removeProperty( '--certloom-studio-frame-top' );
 				studioWorkspaceShell.style.removeProperty( '--certloom-studio-frame-left' );
 				studioWorkspaceShell.style.removeProperty( '--certloom-studio-frame-right' );
+				studioWorkspaceShell.style.removeProperty( '--certloom-studio-frame-height' );
 				return;
 			}
 			var anchor = document.getElementById( 'wpbody-content' ) || document.getElementById( 'wpcontent' );
 			var rect = anchor ? anchor.getBoundingClientRect() : studioWorkspaceShell.getBoundingClientRect();
 			var viewportWidth = Number( document.documentElement.clientWidth || window.innerWidth || 0 );
+			var viewportHeight = Number( document.documentElement.clientHeight || window.innerHeight || 0 );
+			if ( window.visualViewport && Number( window.visualViewport.height || 0 ) > 0 ) {
+				viewportHeight = Math.min( viewportHeight || Number( window.visualViewport.height ), Number( window.visualViewport.height ) );
+			}
 			var top = Math.max( 0, Math.round( Number( rect.top || 0 ) ) );
 			var left = Math.max( 0, Math.round( Number( rect.left || 0 ) ) );
 			var right = Math.max( 0, Math.round( viewportWidth - Number( rect.right || viewportWidth ) ) );
+			var height = Math.max( 0, Math.round( viewportHeight - top ) );
 			studioWorkspaceShell.style.setProperty( '--certloom-studio-frame-top', top + 'px' );
 			studioWorkspaceShell.style.setProperty( '--certloom-studio-frame-left', left + 'px' );
 			studioWorkspaceShell.style.setProperty( '--certloom-studio-frame-right', right + 'px' );
+			studioWorkspaceShell.style.setProperty( '--certloom-studio-frame-height', height + 'px' );
 		}
 		function settleStudioViewportFrame() {
 			if ( ! studioWorkspaceShell ) { return; }
