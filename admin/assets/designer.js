@@ -400,10 +400,21 @@
 		function discardAutosave( announceResult ) {
 			if ( autosaveTimer ) { window.clearTimeout( autosaveTimer ); autosaveTimer = null; }
 			if ( ! hasServerAutosave && ! autosaveConflict ) { return; }
-			autosaveRequest( 'certloom_template_designer_autosave_discard', autosaveSessionId ? { session_id: autosaveSessionId } : null, false ).then( function ( payload ) {
-				if ( payload && payload.success ) { hasServerAutosave = false; autosaveConflict = false; lastAutosaveFingerprint = ''; setAutosaveStatus( t( 'savedDraft', 'Saved draft' ), 'clean' ); if ( autosaveDiscardButton ) { autosaveDiscardButton.disabled = true; } if ( announceResult ) { announce( t( 'autosaveDiscarded', 'Recovery checkpoint discarded.' ) ); } }
-				else { setAutosaveStatus( t( 'autosaveConflict', 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.' ), 'conflict' ); if ( announceResult ) { showError( t( 'autosaveConflict', 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.' ) ); } }
-			} ).catch( function () { if ( announceResult ) { showError( t( 'autosaveFailed', 'Recovery autosave is temporarily unavailable. Manual save remains available.' ) ); } } );
+			var cleanupBody = autosaveNeedsCleanup ? null : ( autosaveSessionId ? { session_id: autosaveSessionId } : null );
+			autosaveRequest( 'certloom_template_designer_autosave_discard', cleanupBody, false ).then( function ( payload ) {
+				if ( payload && payload.success ) {
+					hasServerAutosave = false; autosaveNeedsCleanup = false; autosaveConflict = false; lastAutosaveFingerprint = ''; setAutosaveStatus( t( 'savedDraft', 'Saved draft' ), 'clean' ); if ( autosaveDiscardButton ) { autosaveDiscardButton.disabled = true; } if ( announceResult ) { announce( t( 'autosaveDiscarded', 'Recovery checkpoint discarded.' ) ); }
+					return;
+				}
+				var code = payload && payload.data ? String( payload.data.code || '' ) : '';
+				if ( 'certloom_designer_autosave_session_conflict' === code || 'certloom_designer_autosave_conflict' === code ) {
+					setAutosaveStatus( t( 'autosaveConflict', 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.' ), 'conflict' );
+					if ( announceResult ) { showError( t( 'autosaveConflict', 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.' ) ); }
+				} else {
+					setAutosaveStatus( t( 'autosaveCleanupFailed', 'Recovery cleanup is temporarily unavailable. Manual save remains available.' ), 'error' );
+					if ( announceResult ) { showError( t( 'autosaveCleanupFailed', 'Recovery cleanup is temporarily unavailable. Manual save remains available.' ) ); }
+				}
+			} ).catch( function () { setAutosaveStatus( t( 'autosaveCleanupFailed', 'Recovery cleanup is temporarily unavailable. Manual save remains available.' ), 'error' ); if ( announceResult ) { showError( t( 'autosaveCleanupFailed', 'Recovery cleanup is temporarily unavailable. Manual save remains available.' ) ); } } );
 		}
 		function runAutosave() {
 			if ( autosaveConflict || isSubmitting || ! root.classList.contains( 'has-unsaved-changes' ) ) { return; }

@@ -198,6 +198,7 @@ final class TemplateAdmin {
 				'autosaving' => __( 'Saving recovery checkpoint…', 'certloom' ),
 				'autosaved' => __( 'Recovery checkpoint saved', 'certloom' ),
 				'autosaveFailed' => __( 'Recovery autosave is temporarily unavailable. Manual save remains available.', 'certloom' ),
+				'autosaveCleanupFailed' => __( 'Recovery cleanup is temporarily unavailable. Manual save remains available.', 'certloom' ),
 				'autosaveConflict' => __( 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.', 'certloom' ),
 				'autosaveRecovered' => __( 'Recovered unsaved Designer changes from your latest safe checkpoint.', 'certloom' ),
 				'autosaveDiscarded' => __( 'Recovery checkpoint discarded.', 'certloom' ),

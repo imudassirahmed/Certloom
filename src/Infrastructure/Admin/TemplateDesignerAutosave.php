@@ -161,25 +161,43 @@ final class TemplateDesignerAutosave {
 	public function retire_active( $template_id, $user_id, $reason = 'stale' ) {
 		$template_id = absint( $template_id ); $user_id = absint( $user_id ); $reason = sanitize_key( (string) $reason );
 		if ( ! $template_id || ! $user_id ) { return new \WP_Error( 'certloom_designer_autosave_retire_invalid', __( 'A valid Template and user are required to retire Designer recovery state.', 'certloom' ) ); }
-		$raw = get_user_meta( $user_id, self::meta_key( $template_id ), true );
+		$key = self::meta_key( $template_id );
+		$raw = get_user_meta( $user_id, $key, true );
 		if ( ! is_string( $raw ) || '' === trim( $raw ) ) { return true; }
+
+		// An obsolete recovery checkpoint is not Template authority and cannot be
+		// applied to the current immutable revision. Keep only a compact forensic
+		// receipt rather than nesting the full (up to 2 MB) checkpoint inside a
+		// second user-meta JSON document. The old full-copy approach could expand
+		// beyond the bounded meta size simply through JSON escaping and then leave
+		// the stale active checkpoint in place forever.
+		$decoded = json_decode( $raw, true );
 		$record = array(
-			'version' => 1,
+			'version' => 2,
 			'template_id' => $template_id,
 			'reason' => in_array( $reason, array( 'stale', 'invalid' ), true ) ? $reason : 'stale',
 			'retired_at_gmt' => gmdate( 'Y-m-d H:i:s' ),
-			'checkpoint_raw' => $raw,
+			'checkpoint_sha256' => hash( 'sha256', $raw ),
+			'checkpoint_bytes' => strlen( $raw ),
+			'base_revision_id' => is_array( $decoded ) ? absint( $decoded['base_revision_id'] ?? 0 ) : 0,
+			'base_revision_sha256' => is_array( $decoded ) ? strtolower( trim( (string) ( $decoded['base_revision_sha256'] ?? '' ) ) ) : '',
+			'session_id' => is_array( $decoded ) ? strtolower( trim( (string) ( $decoded['session_id'] ?? '' ) ) ) : '',
+			'saved_at_gmt' => is_array( $decoded ) ? substr( trim( (string) ( $decoded['saved_at_gmt'] ?? '' ) ), 0, 64 ) : '',
 		);
+
+		// Clearing the active slot is the safety-critical operation. Verify it
+		// independently from best-effort diagnostic preservation so a harmless
+		// logging failure can never keep Studio trapped in a stale-recovery loop.
+		delete_user_meta( $user_id, $key );
+		$remaining = get_user_meta( $user_id, $key, true );
+		if ( is_string( $remaining ) && '' !== trim( $remaining ) ) {
+			return new \WP_Error( 'certloom_designer_autosave_retire_delete_failed', __( 'Certloom could not clear the obsolete Designer recovery checkpoint.', 'certloom' ) );
+		}
+
 		$encoded = wp_json_encode( $record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
-		if ( ! is_string( $encoded ) || strlen( $encoded ) > self::MAX_BYTES + 262144 ) {
-			return new \WP_Error( 'certloom_designer_autosave_retire_encode_failed', __( 'Certloom could not preserve the obsolete Designer recovery checkpoint.', 'certloom' ) );
+		if ( is_string( $encoded ) && strlen( $encoded ) <= 16384 ) {
+			update_user_meta( $user_id, self::retired_meta_key( $template_id ), $encoded );
 		}
-		update_user_meta( $user_id, self::retired_meta_key( $template_id ), $encoded );
-		$stored = get_user_meta( $user_id, self::retired_meta_key( $template_id ), true );
-		if ( ! is_string( $stored ) || ! hash_equals( hash( 'sha256', $encoded ), hash( 'sha256', $stored ) ) ) {
-			return new \WP_Error( 'certloom_designer_autosave_retire_store_failed', __( 'Certloom could not verify the preserved obsolete Designer recovery checkpoint.', 'certloom' ) );
-		}
-		delete_user_meta( $user_id, self::meta_key( $template_id ) );
 		return true;
 	}
 
@@ -189,12 +207,24 @@ final class TemplateDesignerAutosave {
 		if ( ! $template_id || ! $user_id ) { return new \WP_Error( 'certloom_designer_autosave_discard_invalid', __( 'A valid Template and user are required to discard Designer recovery state.', 'certloom' ) ); }
 		$raw = get_user_meta( $user_id, self::meta_key( $template_id ), true );
 		if ( ! is_string( $raw ) || '' === trim( $raw ) ) { return true; }
-		if ( '' !== $session_id ) {
-			if ( ! preg_match( '/\A[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\z/', $session_id ) ) { return new \WP_Error( 'certloom_designer_autosave_session_invalid', __( 'The Designer recovery session identifier is invalid.', 'certloom' ) ); }
-			$record = json_decode( $raw, true ); $stored_session = is_array( $record ) ? strtolower( trim( (string) ( $record['session_id'] ?? '' ) ) ) : '';
-			if ( '' === $stored_session || ! hash_equals( $stored_session, $session_id ) ) { return new \WP_Error( 'certloom_designer_autosave_session_conflict', __( 'Another Designer session owns this recovery checkpoint, so Certloom did not discard it.', 'certloom' ) ); }
+
+		// Stale/invalid checkpoints have no live ownership claim because they can
+		// no longer be applied to the authoritative revision. Allow Studio cleanup
+		// without a session token, but retain strict session ownership for a ready
+		// checkpoint so a second tab still cannot discard recoverable work.
+		$inspection = $this->inspect( $template_id, $user_id );
+		$status = (string) ( $inspection['status'] ?? 'invalid' );
+		if ( in_array( $status, array( 'stale', 'invalid' ), true ) ) {
+			return $this->retire_active( $template_id, $user_id, $status );
 		}
+		if ( 'ready' !== $status ) { return true; }
+		if ( '' === $session_id ) { return new \WP_Error( 'certloom_designer_autosave_session_required', __( 'The owning Designer session is required to discard a current recovery checkpoint.', 'certloom' ) ); }
+		if ( ! preg_match( '/\A[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\z/', $session_id ) ) { return new \WP_Error( 'certloom_designer_autosave_session_invalid', __( 'The Designer recovery session identifier is invalid.', 'certloom' ) ); }
+		$record = json_decode( $raw, true ); $stored_session = is_array( $record ) ? strtolower( trim( (string) ( $record['session_id'] ?? '' ) ) ) : '';
+		if ( '' === $stored_session || ! hash_equals( $stored_session, $session_id ) ) { return new \WP_Error( 'certloom_designer_autosave_session_conflict', __( 'Another Designer session owns this recovery checkpoint, so Certloom did not discard it.', 'certloom' ) ); }
 		delete_user_meta( $user_id, self::meta_key( $template_id ) );
+		$remaining = get_user_meta( $user_id, self::meta_key( $template_id ), true );
+		if ( is_string( $remaining ) && '' !== trim( $remaining ) ) { return new \WP_Error( 'certloom_designer_autosave_discard_failed', __( 'Certloom could not clear the Designer recovery checkpoint.', 'certloom' ) ); }
 		return true;
 	}
 
