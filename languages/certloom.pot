@@ -16,12 +16,12 @@ msgstr ""
 "X-Domain: certloom\n"
 
 #. translators: %s: Setup state error after a credential was issued.
-#: admin/class-ecapla-certverify-admin.php:1063
+#: admin/class-ecapla-certverify-admin.php:1068
 msgid "The credential was issued, but Setup could not save its completion state: %s. Re-submit the same first credential to recover without issuing a duplicate."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:108
 #: admin/class-ecapla-certverify-admin.php:110
+#: admin/class-ecapla-certverify-admin.php:112
 #: src/Infrastructure/Admin/AdminProductNavigation.php:141
 #: src/Infrastructure/Admin/AdminProductNavigation.php:143
 #: src/Infrastructure/Admin/AdminProductNavigation.php:60
@@ -36,24 +36,28 @@ msgstr ""
 msgid "Credentials"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1177
+#: admin/class-ecapla-certverify-admin.php:1182
 msgid "Connect Google Drive before enabling automatic Drive copies in Setup."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1183
+#: admin/class-ecapla-certverify-admin.php:1188
 msgid "The selected verification page is no longer available."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1191
+#: admin/class-ecapla-certverify-admin.php:1196
 msgid "The selected default design cannot be applied until Template administration is available."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1199
+#: admin/class-ecapla-certverify-admin.php:1204
 msgid "The selected default design is no longer available."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:121
-#: admin/class-ecapla-certverify-admin.php:2456
+#: admin/class-ecapla-certverify-admin.php:1227
+msgid "Previous Certloom settings could not be restored."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:123
+#: admin/class-ecapla-certverify-admin.php:2504
 #: src/Infrastructure/Admin/AdminProductNavigation.php:145
 #: src/Infrastructure/Admin/DomainAdmin.php:344
 #: src/Infrastructure/Admin/DomainAdmin.php:357
@@ -63,8 +67,12 @@ msgstr ""
 msgid "Recipients"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:122
-#: admin/class-ecapla-certverify-admin.php:2462
+#: admin/class-ecapla-certverify-admin.php:1232
+msgid "Certloom could not apply the reviewed delivery and verification settings."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:124
+#: admin/class-ecapla-certverify-admin.php:2510
 #: admin/views/dashboard.php:159
 #: admin/views/dashboard.php:361
 #: admin/views/issuance-analytics.php:63
@@ -79,23 +87,23 @@ msgstr ""
 msgid "Programs"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1222
-msgid "Previous Certloom settings could not be restored."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1227
-msgid "Certloom could not apply the reviewed delivery and verification settings."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:123
+#: admin/class-ecapla-certverify-admin.php:125
 #: admin/views/dashboard.php:362
 #: blocks/certloom/index.js:65
 #: src/Infrastructure/Admin/AdminProductNavigation.php:60
 msgid "Design"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:124
-#: admin/class-ecapla-certverify-admin.php:2474
+#: admin/class-ecapla-certverify-admin.php:1255
+msgid "Certloom could not complete the reviewed setup, so it restored the previous configuration."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1256
+msgid "Some rollback checks also need administrator review."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:126
+#: admin/class-ecapla-certverify-admin.php:2522
 #: admin/views/analytics.php:10
 #: admin/views/issuance-analytics.php:10
 #: src/Infrastructure/Admin/DomainAdmin.php:1219
@@ -105,23 +113,36 @@ msgstr ""
 msgid "Issuance"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1250
-msgid "Certloom could not complete the reviewed setup, so it restored the previous configuration."
+#: admin/class-ecapla-certverify-admin.php:1275
+msgid "You do not have permission to save this Setup draft."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1251
-msgid "Some rollback checks also need administrator review."
+#: admin/class-ecapla-certverify-admin.php:1289
+#: admin/class-ecapla-certverify-admin.php:329
+msgid "Draft saved"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1270
+#: admin/class-ecapla-certverify-admin.php:1307
+msgid "Return to Setup"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1307
+msgid "Setup draft active."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1307
+msgid "Your unfinished Setup choices are saved to your administrator account."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1313
 msgid "Template Preview is not available while Template administration is protected."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1272
+#: admin/class-ecapla-certverify-admin.php:1315
 msgid "Choose designs per Program, Batch or Issuer later."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1272
+#: admin/class-ecapla-certverify-admin.php:1315
 #: src/Infrastructure/Admin/DomainAdmin.php:1353
 #: src/Infrastructure/Admin/DomainAdmin.php:1839
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:696
@@ -131,45 +152,41 @@ msgstr ""
 msgid "None"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1275
+#: admin/class-ecapla-certverify-admin.php:1318
 msgid "That published Template is no longer available."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1279
+#: admin/class-ecapla-certverify-admin.php:1322
 msgid "Certloom could not build that Template preview."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1294
+#: admin/class-ecapla-certverify-admin.php:1337
 msgid "Registry column preferences could not be saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1338
-msgid "The field order, labels, and visibility could not be saved."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:135
+#: admin/class-ecapla-certverify-admin.php:137
 #: admin/views/dashboard.php:367
 #: src/Infrastructure/Admin/AdminProductNavigation.php:160
 msgid "Analytics"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1353
-#: src/Infrastructure/Admin/ScopedFieldAdminAjax.php:107
-msgid "Give the new field a label."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:136
+#: admin/class-ecapla-certverify-admin.php:138
 #: admin/views/settings-manager.php:13
 #: src/Infrastructure/Admin/AdminProductNavigation.php:162
 #: src/Infrastructure/Admin/AdminProductNavigation.php:60
 msgid "Settings"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1388
-msgid "The custom field could not be added because the field schema was not saved."
+#: admin/class-ecapla-certverify-admin.php:1381
+msgid "The field order, labels, and visibility could not be saved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:139
+#: admin/class-ecapla-certverify-admin.php:1396
+#: src/Infrastructure/Admin/ScopedFieldAdminAjax.php:107
+msgid "Give the new field a label."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:141
 #: admin/views/automations.php:24
 #: admin/views/dashboard.php:363
 #: src/Infrastructure/Admin/AdminProductNavigation.php:160
@@ -177,13 +194,31 @@ msgstr ""
 msgid "Automations"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1400
+#: admin/class-ecapla-certverify-admin.php:1431
+msgid "The custom field could not be added because the field schema was not saved."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:144
+#: admin/views/dashboard.php:365
+#: admin/views/integrations.php:90
+#: src/Infrastructure/Admin/AdminProductNavigation.php:160
+msgid "Integrations"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1443
 msgid "Core certificate fields cannot be removed. You can relabel, reorder, or hide them from public results."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:145
+#: admin/views/dashboard.php:366
+#: admin/views/import-upload.php:11
+#: src/Infrastructure/Admin/AdminProductNavigation.php:162
+msgid "Backup & Restore"
 msgstr ""
 
 #. translators: %d: number of Programs belonging to the Issuer.
 #. translators: %d: program count.
-#: admin/class-ecapla-certverify-admin.php:1408
+#: admin/class-ecapla-certverify-admin.php:1451
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:198
 #: src/Infrastructure/Admin/DomainAdmin.php:510
 msgid "%d Program"
@@ -192,334 +227,332 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: batch count.
-#: admin/class-ecapla-certverify-admin.php:1409
+#: admin/class-ecapla-certverify-admin.php:1452
 msgid "%d Batch override"
 msgid_plural "%d Batch overrides"
 msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: template count.
-#: admin/class-ecapla-certverify-admin.php:1410
+#: admin/class-ecapla-certverify-admin.php:1453
 msgid "%d active Template"
 msgid_plural "%d active Templates"
 msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %1$s: label; %2$s: parts.
-#: admin/class-ecapla-certverify-admin.php:1411
+#: admin/class-ecapla-certverify-admin.php:1454
 msgid "“%1$s” is still used by %2$s. Remove those active assignments/references before retiring the field. Existing issued credential history will remain protected."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1414
+#: admin/class-ecapla-certverify-admin.php:1457
 msgid "The field could not be retired safely. No field was removed."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:142
-#: admin/views/dashboard.php:365
-#: admin/views/integrations.php:90
-#: src/Infrastructure/Admin/AdminProductNavigation.php:160
-msgid "Integrations"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1426
-msgid "The active field layout could not be updated, and the temporary retired marker could not be rolled back. Review the field registry before continuing."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1428
-msgid "The active field layout could not be updated. No field was removed."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:143
-#: admin/views/dashboard.php:366
-#: admin/views/import-upload.php:11
-#: src/Infrastructure/Admin/AdminProductNavigation.php:162
-msgid "Backup & Restore"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:144
+#: admin/class-ecapla-certverify-admin.php:146
 msgid "Add Certificate"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1443
-msgid "That retired field cannot be restored."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:145
-msgid "Field Manager"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:146
-msgid "Appearance & Embed"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1463
-msgid "The retired field could not be restored."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:1467
-msgid "The retired marker could not be cleared, and the restored field could not be rolled back. Review the active and retired field registries before continuing."
-msgstr ""
-
 #: admin/class-ecapla-certverify-admin.php:1469
-msgid "The retired field could not be restored safely. The active field layout was rolled back."
+msgid "The active field layout could not be updated, and the temporary retired marker could not be rolled back. Review the field registry before continuing."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:147
+msgid "Field Manager"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1471
+msgid "The active field layout could not be updated. No field was removed."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:148
+msgid "Appearance & Embed"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1486
+msgid "That retired field cannot be restored."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:149
 #: src/Infrastructure/Admin/AdminProductNavigation.php:162
 msgid "Setup"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:148
+#: admin/class-ecapla-certverify-admin.php:150
 msgid "Verification sample"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1481
-msgid "Core field labels could not be reset for the current site language."
+#: admin/class-ecapla-certverify-admin.php:1506
+msgid "The retired field could not be restored."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:149
+#: admin/class-ecapla-certverify-admin.php:151
 #: admin/views/bulk-review.php:15
 msgid "Review bulk change"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1494
+#: admin/class-ecapla-certverify-admin.php:1510
+msgid "The retired marker could not be cleared, and the restored field could not be rolled back. Review the active and retired field registries before continuing."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1512
+msgid "The retired field could not be restored safely. The active field layout was rolled back."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1524
+msgid "Core field labels could not be reset for the current site language."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1537
 msgid "That retired field cannot be purged."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1509
+#: admin/class-ecapla-certverify-admin.php:1552
 msgid "Stored values were purged, but the retired registry could not be updated. The reserved key remains safe; run Purge again to retry the final registry cleanup."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1523
+#: admin/class-ecapla-certverify-admin.php:1566
 msgid "Choose a CSV file to upload."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1529
+#: admin/class-ecapla-certverify-admin.php:1572
 msgid "Upload a valid .csv file."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1533
+#: admin/class-ecapla-certverify-admin.php:1576
 msgid "The CSV file is larger than the 5 MB import limit."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1553
+#: admin/class-ecapla-certverify-admin.php:1596
 msgid "That import session expired. Upload the file again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1564
+#: admin/class-ecapla-certverify-admin.php:1607
 msgid "Only an administrator can enable Historical restore mode."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1586
-msgid "That import session expired during processing. Upload the file again."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:160
+#: admin/class-ecapla-certverify-admin.php:162
 msgid "Resume product tour"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:160
+#: admin/class-ecapla-certverify-admin.php:162
 msgid "Start product tour"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:161
+#: admin/class-ecapla-certverify-admin.php:1629
+msgid "That import session expired during processing. Upload the file again."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:163
 msgid "Replay product tour"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:165
+#: admin/class-ecapla-certverify-admin.php:167
 msgid "The six-step Certloom tour points to real Dashboard actions. It never blocks normal navigation and stores progress only for your administrator account."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:166
+#: admin/class-ecapla-certverify-admin.php:168
 msgid "Restart from step 1"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1664
-msgid "The settings could not be saved. Role access was not changed."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:167
+#: admin/class-ecapla-certverify-admin.php:169
 msgid "Product tour"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1698
+#: admin/class-ecapla-certverify-admin.php:1707
+msgid "The settings could not be saved. Role access was not changed."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:1741
 msgid "The general settings were saved, but one or more role changes failed and could not be fully rolled back. Review role access before continuing."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1699
+#: admin/class-ecapla-certverify-admin.php:1742
 msgid "The general settings were saved, but role access could not be updated. The previous role access was restored."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:174
+#: admin/class-ecapla-certverify-admin.php:176
 msgid "You must be signed in to change the Certloom workspace mode."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1825
+#: admin/class-ecapla-certverify-admin.php:1868
 msgid "The Certificate Manager role could not be created or updated."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1891
+#: admin/class-ecapla-certverify-admin.php:1934
 msgid "The verified private backup could not be opened for download."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1960
+#: admin/class-ecapla-certverify-admin.php:2003
 msgid "Add this site’s Google OAuth client ID and secret before using the site-owned connection."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1983
+#: admin/class-ecapla-certverify-admin.php:2026
 msgid "Google Drive connection was cancelled or refused."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:1993
-#: admin/class-ecapla-certverify-admin.php:2016
-#: admin/class-ecapla-certverify-admin.php:316
+#: admin/class-ecapla-certverify-admin.php:2036
+#: admin/class-ecapla-certverify-admin.php:2059
+#: admin/class-ecapla-certverify-admin.php:318
 msgid "Google Drive connected."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2006
+#: admin/class-ecapla-certverify-admin.php:2049
 msgid "Google Drive connection was cancelled or could not be completed."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2029
+#: admin/class-ecapla-certverify-admin.php:2072
 msgid "Google Drive connected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2029
+#: admin/class-ecapla-certverify-admin.php:2072
 msgid "Google Drive connection"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2029
+#: admin/class-ecapla-certverify-admin.php:2072
 msgid "Google Drive was not connected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2029
+#: admin/class-ecapla-certverify-admin.php:2072
 msgid "This window can be closed."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2090
+#: admin/class-ecapla-certverify-admin.php:2133
 msgid "Choose a Certloom backup file."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2096
+#: admin/class-ecapla-certverify-admin.php:2139
 msgid "Upload a valid .cvbackup or legacy .json Certloom backup."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:219
+#: admin/class-ecapla-certverify-admin.php:221
 #: admin/views/settings-manager.php:100
 msgid "Active profile"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2261
-msgid "Back to setup"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:2261
-msgid "Sample verification result"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:2261
-msgid "Setup preview"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:2261
-msgid "This is sample data only. Use it to review the public credential hierarchy, spacing and verification presentation before you have issued a real credential."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:227
+#: admin/class-ecapla-certverify-admin.php:229
 msgid "Updating results…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:228
+#: admin/class-ecapla-certverify-admin.php:230
 msgid "Results updated."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:229
+#: admin/class-ecapla-certverify-admin.php:2304
+msgid "Back to setup"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:2304
+msgid "Sample verification result"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:2304
+msgid "Setup preview"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:2304
+msgid "This is sample data only. Use it to review the public credential hierarchy, spacing and verification presentation before you have issued a real credential."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:231
 msgid "Live search was unavailable. Use Filter to reload the page."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:230
+#: admin/class-ecapla-certverify-admin.php:232
 #: src/Infrastructure/Admin/TemplateAdmin.php:1051
 #: src/Infrastructure/Admin/TemplateAdmin.php:123
 #: src/Infrastructure/Admin/TemplateAdmin.php:1251
 msgid "Copy"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:231
+#: admin/class-ecapla-certverify-admin.php:233
 msgid "Copied"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2318
-#: src/Infrastructure/Admin/DesignRulesAdmin.php:611
-#: src/Infrastructure/Admin/DesignRulesAdmin.php:747
-msgid "Selected design"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:232
+#: admin/class-ecapla-certverify-admin.php:234
 msgid "Press Ctrl+C or Cmd+C to copy"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2325
-msgid "Certloom could not build this design preview."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:233
+#: admin/class-ecapla-certverify-admin.php:235
 #: src/Infrastructure/Admin/UsageProfilePresentation.php:40
 msgid "Search Batches…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2332
-#: src/Application/Setup/PurposePresetEngine.php:59
-#: src/Infrastructure/Admin/UsageProfilePresentation.php:31
-msgid "General / Other"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:234
+#: admin/class-ecapla-certverify-admin.php:236
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:183
 #: src/Infrastructure/Admin/DomainAdmin.php:1671
 #: src/Infrastructure/Admin/DomainAdmin.php:1681
 msgid "Search published Templates…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:235
-msgid "Search choices…"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:236
-msgid "Manage published designs"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:2362
-msgid "The first credential uses the same canonical issuance workflow as the main Credential workspace, including the context and design-required data collected during Setup."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:2363
-#: admin/class-ecapla-certverify-admin.php:990
-msgid "Credential issuance is temporarily unavailable because the credential store is not ready."
+#: admin/class-ecapla-certverify-admin.php:2366
+#: src/Infrastructure/Admin/DesignRulesAdmin.php:611
+#: src/Infrastructure/Admin/DesignRulesAdmin.php:747
+msgid "Selected design"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:237
-msgid "Choose a Program first."
+msgid "Search choices…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2371
-msgid "Automations become available with Certloom’s Program-based credential workflow."
+#: admin/class-ecapla-certverify-admin.php:2373
+msgid "Certloom could not build this design preview."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:238
-msgid "Searching…"
+msgid "Manage published designs"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:2380
+#: src/Application/Setup/PurposePresetEngine.php:59
+#: src/Infrastructure/Admin/UsageProfilePresentation.php:31
+msgid "General / Other"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:239
-msgid "Search failed."
+msgid "Choose a Program first."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:240
+msgid "Searching…"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:241
+msgid "Search failed."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:2410
+msgid "The first credential uses the same canonical issuance workflow as the main Credential workspace, including the context and design-required data collected during Setup."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:2411
+#: admin/class-ecapla-certverify-admin.php:995
+msgid "Credential issuance is temporarily unavailable because the credential store is not ready."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:2419
+msgid "Automations become available with Certloom’s Program-based credential workflow."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:242
 msgid "1 match."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2404
-#: admin/class-ecapla-certverify-admin.php:2425
-#: admin/class-ecapla-certverify-admin.php:318
+#: admin/class-ecapla-certverify-admin.php:243
+msgid "%d matches."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:244
+msgid "No published designs match. Publish a design in Design first."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:245
+msgid "No matching choices."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:2452
+#: admin/class-ecapla-certverify-admin.php:2473
+#: admin/class-ecapla-certverify-admin.php:320
 #: admin/views/import-upload.php:189
 #: admin/views/integrations.php:131
 #: admin/views/integrations.php:152
@@ -528,21 +561,21 @@ msgstr ""
 msgid "Connected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2404
+#: admin/class-ecapla-certverify-admin.php:2452
 #: admin/views/integrations.php:153
 #: admin/views/integrations.php:265
 msgid "Credly"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2404
-#: admin/class-ecapla-certverify-admin.php:2425
+#: admin/class-ecapla-certverify-admin.php:2452
+#: admin/class-ecapla-certverify-admin.php:2473
 #: admin/views/integrations.php:152
 #: admin/views/integrations.php:210
 #: admin/views/integrations.php:266
 msgid "Not connected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2408
+#: admin/class-ecapla-certverify-admin.php:2456
 #: admin/views/automations.php:20
 #: admin/views/integrations.php:113
 #: admin/views/integrations.php:162
@@ -551,24 +584,26 @@ msgstr ""
 msgid "Tutor LMS"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:241
-msgid "%d matches."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:2410
-#: admin/class-ecapla-certverify-admin.php:2415
-#: admin/class-ecapla-certverify-admin.php:2420
+#: admin/class-ecapla-certverify-admin.php:2458
+#: admin/class-ecapla-certverify-admin.php:2463
+#: admin/class-ecapla-certverify-admin.php:2468
 msgid "Available on this site"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2410
-#: admin/class-ecapla-certverify-admin.php:2415
-#: admin/class-ecapla-certverify-admin.php:2420
+#: admin/class-ecapla-certverify-admin.php:2458
+#: admin/class-ecapla-certverify-admin.php:2463
+#: admin/class-ecapla-certverify-admin.php:2468
 #: admin/views/integrations.php:123
 msgid "Not detected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2413
+#: admin/class-ecapla-certverify-admin.php:246
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:181
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:309
+msgid "No Batch"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:2461
 #: admin/views/automations.php:20
 #: admin/views/integrations.php:114
 #: admin/views/integrations.php:178
@@ -577,7 +612,7 @@ msgstr ""
 msgid "LearnDash"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2418
+#: admin/class-ecapla-certverify-admin.php:2466
 #: admin/views/automations.php:20
 #: admin/views/integrations.php:115
 #: admin/views/integrations.php:194
@@ -586,30 +621,7 @@ msgstr ""
 msgid "WooCommerce"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:242
-msgid "No published designs match. Publish a design in Design first."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:2423
-#: admin/views/automations.php:20
-#: admin/views/integrations.php:132
-#: admin/views/integrations.php:210
-#: src/Infrastructure/Admin/IntegrationConfigurationDependencyGuard.php:222
-#: src/Infrastructure/Integration/CourseraXapiAdapter.php:15
-msgid "Coursera"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:243
-msgid "No matching choices."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:244
-#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:181
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:309
-msgid "No Batch"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:245
+#: admin/class-ecapla-certverify-admin.php:247
 #: src/Infrastructure/Admin/DomainAdmin.php:1323
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:682
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:250
@@ -618,102 +630,103 @@ msgstr ""
 msgid "Choose Program…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2457
-#: admin/class-ecapla-certverify-admin.php:2463
-msgid "Protected workspace"
+#: admin/class-ecapla-certverify-admin.php:2471
+#: admin/views/automations.php:20
+#: admin/views/integrations.php:132
+#: admin/views/integrations.php:210
+#: src/Infrastructure/Admin/IntegrationConfigurationDependencyGuard.php:222
+#: src/Infrastructure/Integration/CourseraXapiAdapter.php:15
+msgid "Coursera"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2458
-msgid "Recipient management is prepared but not available in this build yet. Certloom keeps this workspace locked until the underlying credential data transition completes its final safety checks. Existing certificate operations remain unchanged."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:2459
-#: admin/class-ecapla-certverify-admin.php:2465
-msgid "Protected until final data safety checks complete"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:246
+#: admin/class-ecapla-certverify-admin.php:248
 #: src/Infrastructure/Admin/DomainAdmin.php:1682
 msgid "Program default design"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2464
+#: admin/class-ecapla-certverify-admin.php:249
+msgid "Step 2: choose the Certloom backup you want to review."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:250
+msgid "Step 2: choose the CSV file you want to review."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:2505
+#: admin/class-ecapla-certverify-admin.php:2511
+msgid "Protected workspace"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:2506
+msgid "Recipient management is prepared but not available in this build yet. Certloom keeps this workspace locked until the underlying credential data transition completes its final safety checks. Existing certificate operations remain unchanged."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:2507
+#: admin/class-ecapla-certverify-admin.php:2513
+msgid "Protected until final data safety checks complete"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:251
+msgid "Legacy Program field mode — optional free custom keys remain available until this Program adopts Credential fields."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:2512
 msgid "Program management is prepared but not available in this build yet. Certloom keeps Program relationships locked until the underlying credential data transition completes its final safety checks rather than storing a misleading substitute."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2468
+#: admin/class-ecapla-certverify-admin.php:2516
 #: admin/views/issuance-analytics.php:63
 #: src/Infrastructure/Admin/TemplateAdmin.php:233
 msgid "Templates"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2469
+#: admin/class-ecapla-certverify-admin.php:2517
 msgid "Design availability"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:247
-msgid "Step 2: choose the Certloom backup you want to review."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:2470
+#: admin/class-ecapla-certverify-admin.php:2518
 msgid "The Template Library and Designer are available through Design. Downloadable PDF and image publication stays protected until its final rendering safety checks are approved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2471
+#: admin/class-ecapla-certverify-admin.php:2519
 msgid "Design tools available · downloadable publication protected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2475
-msgid "Issuance availability"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:2476
-msgid "Certloom’s existing certificate, import, delivery, sharing and analytics workflows remain available. Program-based issuance and downloadable PDF or image publication stay protected until their final data and rendering safety checks are approved."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:2477
-msgid "Current credential workflows available · publication authority protected"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:248
-msgid "Step 2: choose the CSV file you want to review."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:2482
-msgid "That Certloom workspace is not available."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:249
-msgid "Legacy Program field mode — optional free custom keys remain available until this Program adopts Credential fields."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:250
+#: admin/class-ecapla-certverify-admin.php:252
 msgid "This Program uses Credential fields but currently assigns no additional fields."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2501
-msgid "That certificate does not exist."
+#: admin/class-ecapla-certverify-admin.php:2523
+msgid "Issuance availability"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:251
-msgid "Credential fields loaded from the selected Program."
+#: admin/class-ecapla-certverify-admin.php:2524
+msgid "Certloom’s existing certificate, import, delivery, sharing and analytics workflows remain available. Program-based issuance and downloadable PDF or image publication stay protected until their final data and rendering safety checks are approved."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2518
-msgid "Those import results expired. Run the import again to generate a new report."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:252
-msgid "Credential fields loaded from the selected Program + Batch."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:2527
-msgid "That backup restore process expired. Upload the backup again."
+#: admin/class-ecapla-certverify-admin.php:2525
+msgid "Current credential workflows available · publication authority protected"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:253
-#: admin/class-ecapla-certverify-admin.php:819
-#: admin/class-ecapla-certverify-admin.php:847
+msgid "Credential fields loaded from the selected Program."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:2530
+msgid "That Certloom workspace is not available."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:254
+msgid "Credential fields loaded from the selected Program + Batch."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:2549
+msgid "That certificate does not exist."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:255
+#: admin/class-ecapla-certverify-admin.php:824
+#: admin/class-ecapla-certverify-admin.php:852
 #: admin/views/setup-wizard.php:84
 #: src/Application/Issuance/IssuanceDataReadiness.php:117
 #: src/Application/Issuance/IssuanceDataReadiness.php:208
@@ -734,14 +747,9 @@ msgstr ""
 msgid "Batch"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2536
-#: admin/class-ecapla-certverify-admin.php:2545
-msgid "That import session expired. Upload the CSV again."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:254
-#: admin/class-ecapla-certverify-admin.php:796
-#: admin/class-ecapla-certverify-admin.php:842
+#: admin/class-ecapla-certverify-admin.php:256
+#: admin/class-ecapla-certverify-admin.php:801
+#: admin/class-ecapla-certverify-admin.php:847
 #: admin/views/edit-certificate.php:112
 #: admin/views/edit-certificate.php:83
 #: admin/views/integrations.php:171
@@ -782,7 +790,11 @@ msgstr ""
 msgid "Program"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:255
+#: admin/class-ecapla-certverify-admin.php:2566
+msgid "Those import results expired. Run the import again to generate a new report."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:257
 #: src/Infrastructure/Admin/DomainAdmin.php:2342
 #: src/Infrastructure/Admin/DomainAdmin.php:2384
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:365
@@ -794,7 +806,11 @@ msgstr ""
 msgid "Required"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:256
+#: admin/class-ecapla-certverify-admin.php:2575
+msgid "That backup restore process expired. Upload the backup again."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:258
 #: admin/views/setup-wizard.php:152
 #: admin/views/setup-wizard.php:155
 #: admin/views/setup-wizard.php:158
@@ -808,28 +824,29 @@ msgstr ""
 msgid "Optional"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2560
+#: admin/class-ecapla-certverify-admin.php:2584
+#: admin/class-ecapla-certverify-admin.php:2593
+msgid "That import session expired. Upload the CSV again."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:259
+msgid "Value comes from the Recipient profile and is frozen into the issued credential."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:260
+msgid "Use the Grade / result field above."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:2608
 #: includes/class-ecapla-certverify-backup.php:440
 msgid "That backup review session expired. Upload the backup again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:257
-msgid "Value comes from the Recipient profile and is frozen into the issued credential."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:2574
-msgid "You do not have permission to view Certloom analytics."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:258
-msgid "Use the Grade / result field above."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:259
+#: admin/class-ecapla-certverify-admin.php:261
 msgid "Privacy:"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:260
+#: admin/class-ecapla-certverify-admin.php:262
 #: admin/views/partials/certificate-field.php:24
 #: includes/class-ecapla-certverify-fields.php:333
 #: includes/class-ecapla-certverify-public-policy.php:27
@@ -837,108 +854,112 @@ msgstr ""
 msgid "Private"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:261
+#: admin/class-ecapla-certverify-admin.php:2622
+msgid "You do not have permission to view Certloom analytics."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:263
 #: admin/views/partials/certificate-field.php:22
 #: includes/class-ecapla-certverify-fields.php:334
 #: includes/class-ecapla-certverify-public-policy.php:26
 msgid "Verification only"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2612
-msgid "The review acknowledgement could not be saved."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:262
+#: admin/class-ecapla-certverify-admin.php:264
 #: admin/views/partials/certificate-field.php:22
 #: includes/class-ecapla-certverify-fields.php:335
 msgid "Profile only"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:263
+#: admin/class-ecapla-certverify-admin.php:265
 #: admin/views/partials/certificate-field.php:22
 #: includes/class-ecapla-certverify-fields.php:336
 msgid "Verification + profile"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2630
-msgid "A complete Certloom restore is in progress. Certificate and configuration changes are temporarily paused; public verification remains available."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:264
+#: admin/class-ecapla-certverify-admin.php:266
 #: includes/class-ecapla-certverify-fields.php:323
 msgid "Public-safe"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:265
+#: admin/class-ecapla-certverify-admin.php:2660
+msgid "The review acknowledgement could not be saved."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:267
 #: includes/class-ecapla-certverify-fields.php:324
 msgid "Personal"
 msgstr ""
 
+#: admin/class-ecapla-certverify-admin.php:2678
+msgid "A complete Certloom restore is in progress. Certificate and configuration changes are temporarily paused; public verification remains available."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:268
+#: includes/class-ecapla-certverify-fields.php:325
+msgid "Sensitive"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:269
+#: includes/class-ecapla-certverify-fields.php:326
+msgid "Internal"
+msgstr ""
+
 #. translators: 1: number of legacy records, 2: review URL.
-#: admin/class-ecapla-certverify-admin.php:2650
+#: admin/class-ecapla-certverify-admin.php:2698
 msgid "%1$d legacy Expired certificate needs review. <a href=\"%2$s\">Review it now</a>. It will remain Expired until an administrator deliberately chooses a workflow status."
 msgid_plural "%1$d legacy Expired certificates need review. <a href=\"%2$s\">Review them now</a>. They will remain Expired until an administrator deliberately chooses a workflow status."
 msgstr[0] ""
 msgstr[1] ""
 
-#: admin/class-ecapla-certverify-admin.php:266
-#: includes/class-ecapla-certverify-fields.php:325
-msgid "Sensitive"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:2663
-msgid "Certloom 1.3.0 briefly contained an unsafe legacy-status migration. If that version ran on this site, compare certificate statuses with a pre-1.3.0 backup before launch. The current release does not guess or silently rewrite those records."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:2666
-msgid "I have reviewed this"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:267
-#: includes/class-ecapla-certverify-fields.php:326
-msgid "Internal"
-msgstr ""
-
-#. translators: %s: Ecapla website link.
-#: admin/class-ecapla-certverify-admin.php:2678
-msgid "Certloom is developed and maintained by %s."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:268
+#: admin/class-ecapla-certverify-admin.php:270
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:200
 msgid "or"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2688
-msgid "You do not have permission to manage certificates."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:269
+#: admin/class-ecapla-certverify-admin.php:271
 msgid "required"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:2694
-msgid "You do not have permission to manage these settings."
+#: admin/class-ecapla-certverify-admin.php:2711
+msgid "Certloom 1.3.0 briefly contained an unsafe legacy-status migration. If that version ran on this site, compare certificate statuses with a pre-1.3.0 backup before launch. The current release does not guess or silently rewrite those records."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:270
+#: admin/class-ecapla-certverify-admin.php:2714
+msgid "I have reviewed this"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:272
 msgid "Credential fields could not be loaded. The server will still validate before issuance."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:271
+#. translators: %s: Ecapla website link.
+#: admin/class-ecapla-certverify-admin.php:2726
+msgid "Certloom is developed and maintained by %s."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:273
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:275
 msgid "Choose a Program to load its credential fields."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:272
-msgid "Loading credential fields…"
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:273
-msgid "Invalid response"
+#: admin/class-ecapla-certverify-admin.php:2736
+msgid "You do not have permission to manage certificates."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:274
+msgid "Loading credential fields…"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:2742
+msgid "You do not have permission to manage these settings."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:275
+msgid "Invalid response"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:276
 #: admin/views/dashboard.php:245
 #: admin/views/dashboard.php:254
 #: admin/views/dashboard.php:297
@@ -967,91 +988,91 @@ msgstr ""
 msgid "Credential"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:275
+#: admin/class-ecapla-certverify-admin.php:277
 msgid "Clear and professional"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:276
+#: admin/class-ecapla-certverify-admin.php:278
 msgid "Entered when issuing"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:277
+#: admin/class-ecapla-certverify-admin.php:279
 msgid "Loading preview…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:278
+#: admin/class-ecapla-certverify-admin.php:280
 msgid "Template preview could not be loaded."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:279
+#: admin/class-ecapla-certverify-admin.php:281
 msgid "The preview session expired. Refresh this page and try again."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:280
+#: admin/class-ecapla-certverify-admin.php:282
 msgid "No default design selected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:281
+#: admin/class-ecapla-certverify-admin.php:283
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:68
 #: src/Infrastructure/Admin/TemplateAdmin.php:752
 #: src/Infrastructure/Admin/TemplateAdmin.php:753
 msgid "Preview unavailable"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:282
+#: admin/class-ecapla-certverify-admin.php:284
 #: src/Infrastructure/Admin/IntegrationMappingTargetGuard.php:176
 msgid "Inherited design"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:283
+#: admin/class-ecapla-certverify-admin.php:285
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:183
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:297
 msgid "Assigned design"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:284
+#: admin/class-ecapla-certverify-admin.php:286
 msgid "Choose a published design to preview it here."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:285
-msgid "Choose a published design to preview a one-off override."
-msgstr ""
-
-#: admin/class-ecapla-certverify-admin.php:286
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:300
-msgid "Preview fits automatically in this window."
-msgstr ""
-
 #: admin/class-ecapla-certverify-admin.php:287
-msgid "Choose a recipient and complete the credential basics to preview real issuance data."
+msgid "Choose a published design to preview a one-off override."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:288
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:300
-msgid "Design data check"
+msgid "Preview fits automatically in this window."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:289
-msgid "Checking design data…"
+msgid "Choose a recipient and complete the credential basics to preview real issuance data."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:290
-msgid "All design fields are ready."
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:300
+msgid "Design data check"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:291
-msgid "1 design field still needs a value."
+msgid "Checking design data…"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:292
-msgid "%d design fields still need values."
+msgid "All design fields are ready."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:293
-msgid "Created when issued"
+msgid "1 design field still needs a value."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:294
+msgid "%d design fields still need values."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:295
+msgid "Created when issued"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:296
 #: admin/views/integrations.php:138
 #: admin/views/settings-manager.php:169
 #: includes/class-ecapla-certverify-system-status.php:162
@@ -1059,28 +1080,28 @@ msgstr ""
 msgid "Ready"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:295
+#: admin/class-ecapla-certverify-admin.php:297
 msgid "Needs value"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:296
+#: admin/class-ecapla-certverify-admin.php:298
 msgid "Edit recipient"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:297
+#: admin/class-ecapla-certverify-admin.php:299
 msgid "Open details"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:298
+#: admin/class-ecapla-certverify-admin.php:300
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:175
 msgid "Choose Program"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:299
+#: admin/class-ecapla-certverify-admin.php:301
 msgid "Add value"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:300
+#: admin/class-ecapla-certverify-admin.php:302
 #: admin/views/edit-certificate.php:56
 #: includes/class-ecapla-certverify-recipient-portal.php:193
 #: includes/class-ecapla-certverify-recipient-portal.php:194
@@ -1095,150 +1116,158 @@ msgstr ""
 msgid "Credential details"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:301
+#: admin/class-ecapla-certverify-admin.php:303
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:273
 msgid "Add the credential-specific facts you want to store with this independent credential."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:302
+#: admin/class-ecapla-certverify-admin.php:304
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:273
 msgid "Program and Batch field rules appear here. Add one-off credential details below when this issuance or its design needs them."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:303
+#: admin/class-ecapla-certverify-admin.php:305
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:278
 msgid "Add detail"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:304
+#: admin/class-ecapla-certverify-admin.php:306
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:276
 msgid "Choose a detail…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:305
+#: admin/class-ecapla-certverify-admin.php:307
 msgid "No extra credential details added yet."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:306
+#: admin/class-ecapla-certverify-admin.php:308
 msgid "Needed by the selected design"
 msgstr ""
 
 #. translators: %s: element name.
-#: admin/class-ecapla-certverify-admin.php:307
+#: admin/class-ecapla-certverify-admin.php:309
 #: src/Infrastructure/Admin/TemplateAdmin.php:1103
 msgid "Add %s"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:308
+#: admin/class-ecapla-certverify-admin.php:310
 msgid "Required by the selected design and not filled yet."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:309
+#: admin/class-ecapla-certverify-admin.php:311
 msgid "Assign existing detail"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:310
+#: admin/class-ecapla-certverify-admin.php:312
 msgid "Choose an existing credential detail…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:311
+#: admin/class-ecapla-certverify-admin.php:313
 msgid "The selected Program has a published inherited design, so Certloom selected it automatically."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:312
+#: admin/class-ecapla-certverify-admin.php:314
 msgid "Waiting for Google…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:313
+#: admin/class-ecapla-certverify-admin.php:315
 msgid "Opening Google…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:314
+#: admin/class-ecapla-certverify-admin.php:316
 msgid "Complete permission in the Google window."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:315
+#: admin/class-ecapla-certverify-admin.php:317
 msgid "Your browser blocked the popup, so Google will open in this tab."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:317
+#: admin/class-ecapla-certverify-admin.php:319
 msgid "Google Drive was not connected."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:319
+#: admin/class-ecapla-certverify-admin.php:321
 msgid "Please fill in this required field."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:320
+#: admin/class-ecapla-certverify-admin.php:322
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:243
 msgid "New Recipient profile"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:321
+#: admin/class-ecapla-certverify-admin.php:323
 msgid "Complete the highlighted required field."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:322
+#: admin/class-ecapla-certverify-admin.php:324
 msgid "Adding…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:323
+#: admin/class-ecapla-certverify-admin.php:325
 msgid "This item could not be added."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:324
+#: admin/class-ecapla-certverify-admin.php:326
 msgid "Added."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:325
+#: admin/class-ecapla-certverify-admin.php:327
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:77
 msgid "Saving…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:326
+#: admin/class-ecapla-certverify-admin.php:328
+msgid "Saving draft…"
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:330
+msgid "Draft could not be saved. Keep this page open and try again."
+msgstr ""
+
+#: admin/class-ecapla-certverify-admin.php:331
 #: src/Infrastructure/Admin/DomainAdmin.php:2353
 msgid "Default"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:327
+#: admin/class-ecapla-certverify-admin.php:332
 msgid "Enter a field label."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:328
+#: admin/class-ecapla-certverify-admin.php:333
 msgid "Creating field…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:329
+#: admin/class-ecapla-certverify-admin.php:334
 msgid "Field could not be created."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:330
+#: admin/class-ecapla-certverify-admin.php:335
 msgid "Field created."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:331
+#: admin/class-ecapla-certverify-admin.php:336
 #: src/Infrastructure/Admin/DomainAdmin.php:2384
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:365
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:453
 msgid "Not used"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:332
+#: admin/class-ecapla-certverify-admin.php:337
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:737
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:466
 msgid "Inherit Program"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:333
+#: admin/class-ecapla-certverify-admin.php:338
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:737
 msgid "Exclude"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:334
+#: admin/class-ecapla-certverify-admin.php:339
 msgid "Field rule"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:335
+#: admin/class-ecapla-certverify-admin.php:340
 #: admin/views/automations.php:32
 #: admin/views/integrations.php:171
 #: admin/views/integrations.php:187
@@ -1265,23 +1294,23 @@ msgstr ""
 msgid "Remove"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:336
+#: admin/class-ecapla-certverify-admin.php:341
 msgid "This design could not be published."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:337
+#: admin/class-ecapla-certverify-admin.php:342
 msgid "This design could not be moved to Draft."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:338
+#: admin/class-ecapla-certverify-admin.php:343
 msgid "Design published."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:339
+#: admin/class-ecapla-certverify-admin.php:344
 msgid "Design moved to Draft."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:340
+#: admin/class-ecapla-certverify-admin.php:345
 #: admin/views/email-designer.php:12
 #: admin/views/email-designs.php:50
 #: admin/views/email-designs.php:64
@@ -1294,7 +1323,7 @@ msgstr ""
 msgid "Published"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:341
+#: admin/class-ecapla-certverify-admin.php:346
 #: src/Infrastructure/Admin/TemplateAdmin.php:1257
 #: src/Infrastructure/Admin/TemplateAdmin.php:730
 #: src/Infrastructure/Admin/TemplateAdmin.php:842
@@ -1303,119 +1332,119 @@ msgstr ""
 msgid "Draft"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:342
+#: admin/class-ecapla-certverify-admin.php:347
 #: src/Infrastructure/Admin/TemplateAdmin.php:732
 #: src/Infrastructure/Admin/TemplateAdmin.php:846
 msgid "Move published design back to Draft"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:343
+#: admin/class-ecapla-certverify-admin.php:348
 #: src/Infrastructure/Admin/TemplateAdmin.php:734
 #: src/Infrastructure/Admin/TemplateAdmin.php:848
 msgid "Publish this draft design"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:344
+#: admin/class-ecapla-certverify-admin.php:349
 msgid "Choose a PNG or JPEG image."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:345
+#: admin/class-ecapla-certverify-admin.php:350
 msgid "Selected file"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:346
+#: admin/class-ecapla-certverify-admin.php:351
 #: src/Infrastructure/Admin/DomainAdmin.php:2359
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:728
 msgid "No file selected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:347
+#: admin/class-ecapla-certverify-admin.php:352
 #: admin/views/setup-wizard.php:128
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:291
 msgid "No certificate image selected"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:348
+#: admin/class-ecapla-certverify-admin.php:353
 msgid "Ready to review without certificate artwork."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:349
+#: admin/class-ecapla-certverify-admin.php:354
 msgid "Choose a PNG or JPEG certificate image to continue."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:350
+#: admin/class-ecapla-certverify-admin.php:355
 msgid "Ready to review with the selected certificate image."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:351
+#: admin/class-ecapla-certverify-admin.php:356
 msgid "Program is optional for standalone credentials."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:352
+#: admin/class-ecapla-certverify-admin.php:357
 msgid "Choose a published assigned design, or use the inherited design."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:353
+#: admin/class-ecapla-certverify-admin.php:358
 msgid "Choose a recipient and enter a credential title to continue to review."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:354
+#: admin/class-ecapla-certverify-admin.php:359
 msgid "Ready to review with the selected Certloom design."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:355
+#: admin/class-ecapla-certverify-admin.php:360
 msgid "The selected published design overrides inheritance only for this bulk job."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:356
+#: admin/class-ecapla-certverify-admin.php:361
 msgid "Inherited design follows Global → Issuer → Program → Batch. Choose a Program to see the effective source."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:357
+#: admin/class-ecapla-certverify-admin.php:362
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:197
 msgid "Choose a Program to confirm its default validity and repeat-issuance policy."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:358
+#: admin/class-ecapla-certverify-admin.php:363
 msgid "Program default: %s."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:359
+#: admin/class-ecapla-certverify-admin.php:364
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:232
 msgid "This Program decides validity at issuance. Choose Permanent or a specific expiry date for this bulk job."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:360
+#: admin/class-ecapla-certverify-admin.php:365
 msgid " Renewal is required after expiry."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:361
-#: admin/class-ecapla-certverify-admin.php:363
+#: admin/class-ecapla-certverify-admin.php:366
+#: admin/class-ecapla-certverify-admin.php:368
 msgid "Required: this Program issues one credential per Batch or session."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:362
+#: admin/class-ecapla-certverify-admin.php:367
 msgid "Optional. Search is limited to the selected Program; Batch field and design overrides are revalidated for every row."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:364
+#: admin/class-ecapla-certverify-admin.php:369
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:311
 msgid "Optional unless the selected Program issues one credential per Batch or session. When selected, Batch must belong to the Program."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:365
+#: admin/class-ecapla-certverify-admin.php:370
 msgid "Resolving inherited design…"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:366
+#: admin/class-ecapla-certverify-admin.php:371
 msgid "Deactivating Certloom stops public credential verification. Continue?"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:393
+#: admin/class-ecapla-certverify-admin.php:398
 msgid "Before deactivating Certloom"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:393
+#: admin/class-ecapla-certverify-admin.php:398
 #: admin/views/email-designer.php:24
 #: admin/views/email-designs.php:86
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:403
@@ -1426,35 +1455,35 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:393
+#: admin/class-ecapla-certverify-admin.php:398
 msgid "Data & verification"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:394
+#: admin/class-ecapla-certverify-admin.php:399
 msgid "Public verification pages, credential QR destinations and the recipient portal stop working while Certloom is inactive."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:395
+#: admin/class-ecapla-certverify-admin.php:400
 msgid "WordPress can only delete a plugin after it is inactive, when Certloom code is no longer running. Choose now what should happen if you later delete the plugin."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:397
+#: admin/class-ecapla-certverify-admin.php:402
 msgid "Keep certificate data"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:397
+#: admin/class-ecapla-certverify-admin.php:402
 msgid "Recommended. Data stays in WordPress so reinstalling Certloom can restore service. Verification still remains unavailable while the plugin is inactive."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:398
+#: admin/class-ecapla-certverify-admin.php:403
 msgid "Delete Certloom data if the plugin is deleted"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:398
+#: admin/class-ecapla-certverify-admin.php:403
 msgid "Permanently removes Certloom certificate data and settings during WordPress plugin deletion. This cannot be undone without a backup."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:400
+#: admin/class-ecapla-certverify-admin.php:405
 #: admin/views/bulk-review.php:19
 #: admin/views/edit-certificate.php:169
 #: admin/views/email-designs.php:87
@@ -1472,66 +1501,66 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:400
+#: admin/class-ecapla-certverify-admin.php:405
 msgid "Save choice & deactivate"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:407
+#: admin/class-ecapla-certverify-admin.php:412
 msgid "You do not have permission to deactivate plugins."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:412
+#: admin/class-ecapla-certverify-admin.php:417
 msgid "You do not have permission to change a network-wide Certloom deletion policy."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:415
+#: admin/class-ecapla-certverify-admin.php:420
 msgid "Certloom could not save the network-wide uninstall data choice. The plugin was not deactivated."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:419
+#: admin/class-ecapla-certverify-admin.php:424
 msgid "Certloom could not save the uninstall data choice. The plugin was not deactivated."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:424
+#: admin/class-ecapla-certverify-admin.php:429
 msgid "Certloom refused an invalid plugin deactivation destination."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:450
+#: admin/class-ecapla-certverify-admin.php:455
 msgid "The certificate you tried to update no longer exists."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:726
+#: admin/class-ecapla-certverify-admin.php:731
 msgid "Choose a valid Certloom usage profile."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:732
+#: admin/class-ecapla-certverify-admin.php:737
 msgid "Certloom could not activate that usage profile, so the Setup step was not kept."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:751
+#: admin/class-ecapla-certverify-admin.php:756
 msgid "Certloom could not identify that setup action."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:793
-#: admin/class-ecapla-certverify-admin.php:912
+#: admin/class-ecapla-certverify-admin.php:798
+#: admin/class-ecapla-certverify-admin.php:917
 #: src/Infrastructure/Admin/AdminSearchRest.php:142
 msgid "The selected Program is no longer available."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:796
-#: admin/class-ecapla-certverify-admin.php:808
-#: admin/class-ecapla-certverify-admin.php:819
-#: admin/class-ecapla-certverify-admin.php:829
+#: admin/class-ecapla-certverify-admin.php:801
+#: admin/class-ecapla-certverify-admin.php:813
+#: admin/class-ecapla-certverify-admin.php:824
+#: admin/class-ecapla-certverify-admin.php:834
 msgid "The selected design needs %s information. Choose an existing one or add it here."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:805
+#: admin/class-ecapla-certverify-admin.php:810
 #: src/Infrastructure/Admin/AdminSearchRest.php:156
 msgid "The selected Issuer is no longer available."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:808
-#: admin/class-ecapla-certverify-admin.php:837
+#: admin/class-ecapla-certverify-admin.php:813
+#: admin/class-ecapla-certverify-admin.php:842
 #: admin/views/setup-wizard.php:82
 #: src/Application/Issuance/IssuanceDataReadiness.php:114
 #: src/Application/Templates/TemplateAssignmentPolicy.php:67
@@ -1555,21 +1584,21 @@ msgstr ""
 msgid "Issuer"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:815
+#: admin/class-ecapla-certverify-admin.php:820
 msgid "The selected Batch or cycle is no longer available."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:816
-#: admin/class-ecapla-certverify-admin.php:930
+#: admin/class-ecapla-certverify-admin.php:821
+#: admin/class-ecapla-certverify-admin.php:935
 msgid "Choose a Batch or cycle that belongs to the selected Program context."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:826
+#: admin/class-ecapla-certverify-admin.php:831
 msgid "The selected Signer is no longer available."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:829
-#: admin/class-ecapla-certverify-admin.php:857
+#: admin/class-ecapla-certverify-admin.php:834
+#: admin/class-ecapla-certverify-admin.php:862
 #: admin/views/setup-wizard.php:85
 #: src/Application/Issuance/IssuanceDataReadiness.php:120
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:285
@@ -1582,65 +1611,65 @@ msgstr ""
 msgid "Signer"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:837
+#: admin/class-ecapla-certverify-admin.php:842
 msgid "The selected design uses the %s title. Add that title to the selected record or create a new one with a title."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:842
 #: admin/class-ecapla-certverify-admin.php:847
+#: admin/class-ecapla-certverify-admin.php:852
 msgid "The selected design uses the %s code. Enter a code before continuing."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:851
+#: admin/class-ecapla-certverify-admin.php:856
 msgid "position / designation"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:852
+#: admin/class-ecapla-certverify-admin.php:857
 msgid "email"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:853
+#: admin/class-ecapla-certverify-admin.php:858
 msgid "signature image"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:857
+#: admin/class-ecapla-certverify-admin.php:862
 msgid "The selected design uses the %1$s %2$s. Add that value before continuing."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:865
+#: admin/class-ecapla-certverify-admin.php:870
 msgid "Enter %s because the selected design uses this field."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:869
+#: admin/class-ecapla-certverify-admin.php:874
 msgid "Enter the grade because the selected design uses it."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:874
+#: admin/class-ecapla-certverify-admin.php:879
 msgid "Add at least one %s row because the selected design uses that Data Table."
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:874
+#: admin/class-ecapla-certverify-admin.php:879
 msgid "result"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:874
+#: admin/class-ecapla-certverify-admin.php:879
 msgid "subject"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:88
+#: admin/class-ecapla-certverify-admin.php:90
 #: src/Infrastructure/Admin/AdminProductNavigation.php:60
 msgid "Home"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:91
-#: admin/class-ecapla-certverify-admin.php:92
+#: admin/class-ecapla-certverify-admin.php:93
+#: admin/class-ecapla-certverify-admin.php:94
 #: admin/views/partials/brand-bar.php:7
 #: elementor/class-ecapla-certverify-elementor-widget.php:26
 msgid "Certloom"
 msgstr ""
 
-#: admin/class-ecapla-certverify-admin.php:932
-#: includes/class-ecapla-certverify-onboarding.php:415
+#: admin/class-ecapla-certverify-admin.php:937
+#: includes/class-ecapla-certverify-onboarding.php:505
 msgid "Choose or add the Program context before adding a Batch or cycle."
 msgstr ""
 
@@ -7346,6 +7375,10 @@ msgid "Recommended next steps"
 msgstr ""
 
 #: admin/views/setup-wizard.php:219
+msgid "Draft saved automatically"
+msgstr ""
+
+#: admin/views/setup-wizard.php:219
 msgid "Save & finish later"
 msgstr ""
 
@@ -7549,7 +7582,7 @@ msgid "Certificate search"
 msgstr ""
 
 #: blocks/certloom/index.js:48
-#: includes/class-ecapla-certverify-onboarding.php:280
+#: includes/class-ecapla-certverify-onboarding.php:326
 #: includes/class-ecapla-certverify-public-router.php:150
 #: includes/class-ecapla-certverify-render.php:31
 msgid "Verify a Certificate"
@@ -9744,12 +9777,12 @@ msgstr ""
 msgid "Sequence length must be a whole number from 1 to 12 digits."
 msgstr ""
 
-#: includes/class-ecapla-certverify-onboarding.php:119
-#: includes/class-ecapla-certverify-onboarding.php:166
+#: includes/class-ecapla-certverify-onboarding.php:120
+#: includes/class-ecapla-certverify-onboarding.php:167
 msgid "Certloom could not identify that setup step."
 msgstr ""
 
-#: includes/class-ecapla-certverify-onboarding.php:123
+#: includes/class-ecapla-certverify-onboarding.php:124
 msgid "Certloom could not identify the next setup step."
 msgstr ""
 
@@ -9777,10 +9810,6 @@ msgstr ""
 msgid "Appearance"
 msgstr ""
 
-#: includes/class-ecapla-certverify-onboarding.php:239
-msgid "The first credential was issued, but Certloom could not record its Setup receipt safely."
-msgstr ""
-
 #: includes/class-ecapla-certverify-onboarding.php:24
 msgid "Context & data"
 msgstr ""
@@ -9793,65 +9822,69 @@ msgstr ""
 msgid "Finish"
 msgstr ""
 
-#: includes/class-ecapla-certverify-onboarding.php:291
+#: includes/class-ecapla-certverify-onboarding.php:285
+msgid "The first credential was issued, but Certloom could not record its Setup receipt safely."
+msgstr ""
+
+#: includes/class-ecapla-certverify-onboarding.php:337
 msgid "The verification page was created, but Certloom could not save its setup link or remove the unlinked page. Review Pages before continuing."
 msgstr ""
 
-#: includes/class-ecapla-certverify-onboarding.php:302
+#: includes/class-ecapla-certverify-onboarding.php:348
 msgid "Add your organization name before completing setup."
 msgstr ""
 
-#: includes/class-ecapla-certverify-onboarding.php:305
+#: includes/class-ecapla-certverify-onboarding.php:351
 msgid "Choose or create a verification page before completing setup."
 msgstr ""
 
-#: includes/class-ecapla-certverify-onboarding.php:368
+#: includes/class-ecapla-certverify-onboarding.php:416
 msgid "Certloom could not save the setup progress."
 msgstr ""
 
-#: includes/class-ecapla-certverify-onboarding.php:404
+#: includes/class-ecapla-certverify-onboarding.php:494
 msgid "Enter your organization name to continue."
 msgstr ""
 
-#: includes/class-ecapla-certverify-onboarding.php:407
+#: includes/class-ecapla-certverify-onboarding.php:497
 msgid "Choose a PNG or JPEG certificate image, or select another appearance."
 msgstr ""
 
-#: includes/class-ecapla-certverify-onboarding.php:408
+#: includes/class-ecapla-certverify-onboarding.php:498
 msgid "Choose a published Certloom design, or select another appearance."
 msgstr ""
 
-#: includes/class-ecapla-certverify-onboarding.php:416
+#: includes/class-ecapla-certverify-onboarding.php:506
 msgid "Enter a short code for the new Batch or cycle."
 msgstr ""
 
-#: includes/class-ecapla-certverify-onboarding.php:418
+#: includes/class-ecapla-certverify-onboarding.php:508
 msgid "Enter a valid email address for the new signer or leave it blank."
 msgstr ""
 
-#: includes/class-ecapla-certverify-onboarding.php:421
+#: includes/class-ecapla-certverify-onboarding.php:511
 msgid "Enter the recipient name to continue."
 msgstr ""
 
-#: includes/class-ecapla-certverify-onboarding.php:423
+#: includes/class-ecapla-certverify-onboarding.php:513
 msgid "Enter the credential title to continue."
 msgstr ""
 
-#: includes/class-ecapla-certverify-onboarding.php:424
+#: includes/class-ecapla-certverify-onboarding.php:514
 msgid "Choose the effective date to continue."
 msgstr ""
 
-#: includes/class-ecapla-certverify-onboarding.php:426
+#: includes/class-ecapla-certverify-onboarding.php:516
 #: src/Infrastructure/Admin/DomainAdmin.php:1892
 #: src/Infrastructure/Repository/ManualIssuanceRepository.php:39
 msgid "Enter a valid recipient email address or leave it blank."
 msgstr ""
 
-#: includes/class-ecapla-certverify-onboarding.php:88
+#: includes/class-ecapla-certverify-onboarding.php:89
 msgid "Enter the organization name shown in your setup profile."
 msgstr ""
 
-#: includes/class-ecapla-certverify-onboarding.php:93
+#: includes/class-ecapla-certverify-onboarding.php:94
 msgid "Choose a valid WordPress page for certificate verification."
 msgstr ""
 
@@ -11072,6 +11105,19 @@ msgstr ""
 
 #: public/views/credential-route.php:52
 msgid "Credential issuer"
+msgstr ""
+
+#: src/Application/Admin/DraftWorkspace.php:37
+msgid "Certloom could not identify the administrator draft workspace."
+msgstr ""
+
+#: src/Application/Admin/DraftWorkspace.php:64
+msgid "Certloom could not autosave the administrator draft."
+msgstr ""
+
+#: src/Application/Admin/DraftWorkspace.php:87
+#: src/Application/Admin/DraftWorkspace.php:90
+msgid "Certloom could not clear the administrator draft."
 msgstr ""
 
 #: src/Application/Analytics/IssuanceAnalyticsService.php:112

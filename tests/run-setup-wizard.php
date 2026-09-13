@@ -4,6 +4,9 @@ define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 $GLOBALS['certloom_wiz_options'] = array();
 $GLOBALS['certloom_wiz_generation'] = 0;
 $GLOBALS['certloom_wiz_now'] = '2026-09-09 06:15:00';
+$GLOBALS['certloom_wiz_user_meta'] = array();
+$GLOBALS['certloom_wiz_user_id'] = 17;
+$GLOBALS['certloom_wiz_uuid'] = 0;
 
 function __( $text ) { return $text; }
 function sanitize_key( $value ) { return strtolower( preg_replace( '/[^a-z0-9_\-]/', '', (string) $value ) ); }
@@ -22,8 +25,14 @@ class Ecapla_CertVerify_Database { public static function get_registry_count(){ 
 class Ecapla_CertVerify_Fields { public static function get_manageable_fields(){ return array(); } }
 function get_post( $id ){ return null; }
 function get_post_type( $id ){ return ''; }
+function get_current_user_id(){ return (int) $GLOBALS['certloom_wiz_user_id']; }
+function get_user_meta( $user_id, $key, $single = false ){ return $GLOBALS['certloom_wiz_user_meta'][ $user_id ][ $key ] ?? ( $single ? '' : array() ); }
+function update_user_meta( $user_id, $key, $value ){ $GLOBALS['certloom_wiz_user_meta'][ $user_id ][ $key ] = $value; return 1; }
+function delete_user_meta( $user_id, $key ){ unset( $GLOBALS['certloom_wiz_user_meta'][ $user_id ][ $key ] ); return true; }
+function wp_generate_uuid4(){ $GLOBALS['certloom_wiz_uuid']++; return '00000000-0000-4000-8000-' . str_pad( (string) $GLOBALS['certloom_wiz_uuid'], 12, '0', STR_PAD_LEFT ); }
 
 require dirname( __DIR__ ) . '/src/Application/Setup/PurposePresetEngine.php';
+require dirname( __DIR__ ) . '/src/Application/Admin/DraftWorkspace.php';
 require dirname( __DIR__ ) . '/includes/class-ecapla-certverify-onboarding.php';
 
 $checks=0;
@@ -52,8 +61,18 @@ foreach ( array_keys( $profiles ) as $profile_key ) {
 }
 
 $defaults = Ecapla_CertVerify_Onboarding::get_state();
-wiz_check( 6 === $defaults['version'] && 'welcome' === $defaults['wizard_step'], 'Onboarding state must be v6 and start at Welcome.' );
+wiz_check( 7 === $defaults['version'] && 'welcome' === $defaults['wizard_step'], 'Onboarding state must be v7 and start at Welcome.' );
 wiz_check( array() === $defaults['wizard_draft'] && '' === $defaults['wizard_completed_at'], 'New setup must start without authoritative draft/completion.' );
+$autosaved = Ecapla_CertVerify_Onboarding::autosave_wizard_draft( 'organization', array( 'organization_name'=>'Unsaved Organization','organization_contact'=>'draft@example.test' ), 1000 );
+wiz_check( is_array( $autosaved ) && ! empty( $autosaved['run_id'] ), 'Lightweight Setup autosave must create a per-administrator resumable run.' );
+$autosaved_state = Ecapla_CertVerify_Onboarding::get_state();
+wiz_check( 'organization' === $autosaved_state['wizard_step'] && 'Unsaved Organization' === $autosaved_state['wizard_draft']['organization_name'], 'Reloading Setup state must restore the latest autosaved administrator draft.' );
+$GLOBALS['certloom_wiz_user_id'] = 18;
+$other_admin_state = Ecapla_CertVerify_Onboarding::get_state();
+wiz_check( empty( $other_admin_state['wizard_draft']['organization_name'] ), 'One administrator must not inherit another administrator’s unfinished Setup fields.' );
+$GLOBALS['certloom_wiz_user_id'] = 17;
+$r = Ecapla_CertVerify_Onboarding::restart_wizard();
+wiz_check( true === $r && 'welcome' === Ecapla_CertVerify_Onboarding::get_state()['wizard_step'], 'Explicit Start new setup must clear the autosaved run before the normal wizard journey begins.' );
 $r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'welcome', array(), 'profile', false );
 wiz_check( true === $r && 'profile' === Ecapla_CertVerify_Onboarding::get_state()['wizard_step'], 'Welcome must advance to Profile.' );
 $r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'profile', array( 'usage_profile'=>'iso_management' ), 'organization', false );
@@ -115,6 +134,7 @@ $r = Ecapla_CertVerify_Onboarding::restart_wizard();
 wiz_check( true === $r && 'welcome' === Ecapla_CertVerify_Onboarding::get_state()['wizard_step'], 'Setup v2 restart must remain available after a deferred first credential.' );
 
 // Legacy migration: old walkthrough completion must not count as v2 completion.
+$GLOBALS['certloom_wiz_user_meta'] = array();
 $GLOBALS['certloom_wiz_options'][ Ecapla_CertVerify_Onboarding::OPTION_KEY ] = array( 'version'=>3,'wizard_step'=>'purpose','wizard_completed_steps'=>array('purpose','organization','design'),'wizard_completed_at'=>'2026-08-29 12:00:00','wizard_draft'=>array('purpose'=>'training_courses','subcategory'=>'online_course') );
 $legacy = Ecapla_CertVerify_Onboarding::get_state();
 wiz_check( 'profile' === $legacy['wizard_step'] && 'training_lms' === $legacy['wizard_draft']['usage_profile'], 'Legacy purpose state must migrate to Profile semantics.' );
@@ -134,7 +154,7 @@ wiz_check( false !== strpos($view,'data-certloom-media-control') && false !== st
 wiz_check( false !== strpos($view,'How Certloom organizes this profile') && false !== strpos($view,'data-certloom-hierarchy="program"'), 'Profile-specific hierarchy help must be available without making hierarchy required.' );
 wiz_check( false !== strpos($css,'position: fixed') && false !== strpos($css,'.certloom-setup-v2') && false !== strpos($admin,'certloom-setup-v2-body'), 'Setup v2 must use a focused full-screen shell.' );
 wiz_check( false !== strpos($js,'data-certloom-custom-field-add') && false !== strpos($js,'data-certloom-presentation-panel') && false !== strpos($js,'data-hierarchy-'), 'Setup v2 interactions must cover custom fields, presentation exclusivity and live profile help.' );
-wiz_check( false !== strpos($js,'data-certloom-dirty') && false !== strpos($js,'beforeunload') && false !== strpos($js,"addEventListener( 'invalid'") , 'Setup v2 must track unsaved changes and focus invalid controls.' );
+wiz_check( false !== strpos($js,'certloom_setup_draft_autosave') && false !== strpos($js,'data-certloom-dirty') && false !== strpos($js,"addEventListener( 'invalid'") , 'Setup v2 must autosave unfinished changes and focus invalid controls.' );
 wiz_check( false !== strpos($js,"aria-haspopup', 'dialog") && false !== strpos($js,"frame.on( 'close'") && false !== strpos($view,'aria-live="polite"'), 'Setup media controls must expose dialog/live-region semantics and restore focus after media closes.' );
 wiz_check( false !== strpos($admin,"ensure_starter_publications( get_current_user_id(), 10 )") && false !== strpos($admin,"search_published_candidates( 'certloom-preset-', 50 )") && false !== strpos($view,'Open Design Center'), 'Setup Appearance must seed the ten starter designs for immediate selection and keep Design Center discoverable.' );
 wiz_check( false !== strpos($view,'10 starter designs') && false !== strpos($view,'create your own certificate design with Certloom Designer'), 'Appearance helper copy must explain starter designs, Design Center publication and custom design creation.' );

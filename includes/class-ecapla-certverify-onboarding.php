@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /** Premium, non-blocking first-run setup and WIZ-01 workflow state. */
 class Ecapla_CertVerify_Onboarding {
 	const OPTION_KEY = 'certverify_onboarding';
-	const VERSION    = 6;
+	const VERSION    = 7;
 
 	/** @return array<int,string> */
 	public static function wizard_steps() {
@@ -68,6 +68,7 @@ class Ecapla_CertVerify_Onboarding {
 		$state['wizard_completed_at']     = sanitize_text_field( (string) $state['wizard_completed_at'] );
 		$state['wizard_rerun_count']      = min( 999, absint( $state['wizard_rerun_count'] ) );
 		$state['wizard_draft']            = self::sanitize_wizard_draft( $state['wizard_draft'] );
+		$state = self::apply_user_draft_workspace( $state, $saved_version );
 		if ( $saved_version > 0 && $saved_version < 4 ) {
 			// Retired pre-v4 walkthrough completion did not represent the current
 			// profile/appearance/first-credential Wizard contract.
@@ -192,10 +193,55 @@ class Ecapla_CertVerify_Onboarding {
 		return self::persist( $state );
 	}
 
+	/**
+	 * Lightweight per-administrator autosave. This intentionally does not touch
+	 * site configuration or backup mutation generations: unfinished form intent
+	 * is not product authority.
+	 *
+	 * @return array<string,mixed>|WP_Error
+	 */
+	public static function autosave_wizard_draft( $step, array $draft_patch, $client_revision = 0 ) {
+		$allowed = Ecapla_CertVerify_Backup::assert_writes_allowed();
+		if ( is_wp_error( $allowed ) ) { return $allowed; }
+		$step = self::normalize_step( sanitize_key( (string) $step ) );
+		$state = self::get_state();
+		$state['wizard_draft'] = self::sanitize_wizard_draft( array_merge( $state['wizard_draft'], $draft_patch ) );
+		$now = current_time( 'mysql' );
+		if ( '' === $state['wizard_started_at'] ) { $state['wizard_started_at'] = $now; }
+		$state['wizard_last_seen_at'] = $now;
+		$state['wizard_step'] = $step;
+		$saved = self::save_user_draft_workspace( $state, max( 0, (int) $client_revision ) );
+		if ( is_wp_error( $saved ) ) { return $saved; }
+		return array(
+			'run_id'     => (string) ( $saved['run_id'] ?? '' ),
+			'step'       => $step,
+			'updated_at' => (string) ( $saved['updated_at'] ?? $now ),
+		);
+	}
+
+	/** @return array<string,mixed>|WP_Error */
+	public static function ensure_wizard_workspace( $step = '' ) {
+		$existing = \Certloom\Application\Admin\DraftWorkspace::get( 'setup' );
+		if ( ! empty( $existing ) ) { return $existing; }
+		$state = self::get_state();
+		if ( '' !== $step ) { $state['wizard_step'] = self::normalize_step( $step ); }
+		$payload = array(
+			'wizard_draft'           => self::sanitize_wizard_draft( is_array( $state['wizard_draft'] ?? null ) ? $state['wizard_draft'] : array() ),
+			'wizard_completed_steps' => self::normalize_step_list( $state['wizard_completed_steps'] ?? array() ),
+			'wizard_skipped_steps'   => self::normalize_step_list( $state['wizard_skipped_steps'] ?? array() ),
+			'wizard_started_at'      => sanitize_text_field( (string) ( $state['wizard_started_at'] ?? '' ) ),
+		);
+		return \Certloom\Application\Admin\DraftWorkspace::start_new( 'setup', $payload, array( 'step' => self::normalize_step( $state['wizard_step'] ?? 'welcome' ), 'status' => '' !== trim( (string) ( $state['wizard_completed_at'] ?? '' ) ) ? 'complete' : 'active' ) );
+	}
+
+	/** @return array<string,mixed> */
+	public static function get_wizard_workspace() { return \Certloom\Application\Admin\DraftWorkspace::get( 'setup' ); }
+
 	/** @return true|WP_Error */
 	public static function restart_wizard() {
 		$allowed = Ecapla_CertVerify_Backup::assert_writes_allowed();
 		if ( is_wp_error( $allowed ) ) { return $allowed; }
+		\Certloom\Application\Admin\DraftWorkspace::clear( 'setup' );
 		$state = self::get_state();
 		$state['wizard_step'] = 'welcome';
 		$state['wizard_completed_steps'] = array();
@@ -359,6 +405,8 @@ class Ecapla_CertVerify_Onboarding {
 		$state['wizard_completed_steps'] = self::normalize_step_list( $state['wizard_completed_steps'] );
 		$state['wizard_skipped_steps'] = self::normalize_step_list( $state['wizard_skipped_steps'] );
 		$state['wizard_draft'] = self::sanitize_wizard_draft( is_array( $state['wizard_draft'] ) ? $state['wizard_draft'] : array() );
+		$workspace = self::save_user_draft_workspace( $state );
+		if ( is_wp_error( $workspace ) ) { return $workspace; }
 		$stored = get_option( self::OPTION_KEY, array() );
 		if ( $state === $stored ) { return true; }
 		$generation = Ecapla_CertVerify_Backup::reserve_mutation_generation();
@@ -368,6 +416,48 @@ class Ecapla_CertVerify_Onboarding {
 			return new WP_Error( 'ecapla_certverify_onboarding_save_failed', __( 'Certloom could not save the setup progress.', 'certloom' ) );
 		}
 		return true;
+	}
+
+
+	/** @return array<string,mixed> */
+	private static function apply_user_draft_workspace( array $state, $saved_version = 0 ) {
+		if ( ! function_exists( 'get_current_user_id' ) || absint( get_current_user_id() ) < 1 ) { return $state; }
+		$workspace = \Certloom\Application\Admin\DraftWorkspace::get( 'setup' );
+		if ( empty( $workspace ) || ! in_array( (string) ( $workspace['status'] ?? 'active' ), array( 'active', 'complete' ), true ) ) {
+			// Version 7 moved unfinished Wizard intent out of the site-wide option.
+			// A pre-v7 draft is imported once by the first administrator who resumes
+			// it; later administrators begin with their own clean working draft.
+			if ( absint( $saved_version ) >= 7 ) {
+				$state['wizard_draft'] = array();
+				$state['wizard_completed_steps'] = array();
+				$state['wizard_skipped_steps'] = array();
+				$state['wizard_step'] = '' !== trim( (string) ( $state['wizard_completed_at'] ?? '' ) ) ? 'finish' : 'welcome';
+				$state['wizard_started_at'] = '';
+				$state['wizard_last_seen_at'] = '';
+			}
+			return $state;
+		}
+		$payload = isset( $workspace['payload'] ) && is_array( $workspace['payload'] ) ? $workspace['payload'] : array();
+		if ( isset( $payload['wizard_draft'] ) && is_array( $payload['wizard_draft'] ) ) { $state['wizard_draft'] = self::sanitize_wizard_draft( $payload['wizard_draft'] ); }
+		if ( isset( $payload['wizard_completed_steps'] ) ) { $state['wizard_completed_steps'] = self::normalize_step_list( $payload['wizard_completed_steps'] ); }
+		if ( isset( $payload['wizard_skipped_steps'] ) ) { $state['wizard_skipped_steps'] = self::normalize_step_list( $payload['wizard_skipped_steps'] ); }
+		if ( ! empty( $workspace['step'] ) ) { $state['wizard_step'] = self::normalize_step( $workspace['step'] ); }
+		if ( ! empty( $payload['wizard_started_at'] ) ) { $state['wizard_started_at'] = sanitize_text_field( (string) $payload['wizard_started_at'] ); }
+		if ( ! empty( $workspace['updated_at'] ) ) { $state['wizard_last_seen_at'] = sanitize_text_field( (string) $workspace['updated_at'] ); }
+		return $state;
+	}
+
+	/** @return array<string,mixed>|WP_Error */
+	private static function save_user_draft_workspace( array $state, $client_revision = 0 ) {
+		if ( ! function_exists( 'get_current_user_id' ) || absint( get_current_user_id() ) < 1 ) { return array(); }
+		$payload = array(
+			'wizard_draft'           => self::sanitize_wizard_draft( is_array( $state['wizard_draft'] ?? null ) ? $state['wizard_draft'] : array() ),
+			'wizard_completed_steps' => self::normalize_step_list( $state['wizard_completed_steps'] ?? array() ),
+			'wizard_skipped_steps'   => self::normalize_step_list( $state['wizard_skipped_steps'] ?? array() ),
+			'wizard_started_at'      => sanitize_text_field( (string) ( $state['wizard_started_at'] ?? '' ) ),
+		);
+		$status = '' !== trim( (string) ( $state['wizard_completed_at'] ?? '' ) ) ? 'complete' : 'active';
+		return \Certloom\Application\Admin\DraftWorkspace::save( 'setup', $payload, array( 'step' => self::normalize_step( $state['wizard_step'] ?? 'welcome' ), 'status' => $status, 'client_revision' => max( 0, (int) $client_revision ) ) );
 	}
 
 	private static function normalize_step( $step ) {

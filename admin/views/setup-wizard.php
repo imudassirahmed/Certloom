@@ -25,7 +25,7 @@ $certloom_skipped_steps = is_array( $wizard_state['wizard_skipped_steps'] ?? nul
 $certloom_dashboard_url = admin_url( 'admin.php?page=' . Ecapla_CertVerify_Admin::DASHBOARD_PAGE );
 $certloom_issue_url = admin_url( 'admin.php?page=certloom-issuance' );
 ?>
-<div class="certloom-setup-v2 certloom-admin-shell" data-certloom-setup-v2 data-certloom-step="<?php echo esc_attr( $wizard_step ); ?>">
+<div class="certloom-setup-v2 certloom-admin-shell" data-certloom-setup-v2 data-certloom-step="<?php echo esc_attr( $wizard_step ); ?>" data-certloom-draft-run="<?php echo esc_attr( is_array( $wizard_workspace ?? null ) ? (string) ( $wizard_workspace['run_id'] ?? '' ) : '' ); ?>">
 	<header class="certloom-setup-v2-topbar">
 		<a class="certloom-setup-v2-brand" href="<?php echo esc_url( $certloom_dashboard_url ); ?>" aria-label="<?php esc_attr_e( 'Certloom Dashboard', 'certloom' ); ?>">
 			<img class="certloom-setup-v2-brand-symbol" src="<?php echo esc_url( ECAPLA_CERTVERIFY_URL . 'admin/assets/certloom-brand-mark.png' ); ?>" alt="">
@@ -216,7 +216,7 @@ $certloom_issue_url = admin_url( 'admin.php?page=certloom-issuance' );
 	<?php if ( ! in_array( $wizard_step, array( 'welcome', 'finish' ), true ) ) : ?>
 		<footer class="certloom-setup-v2-footer">
 			<div><?php if ( $certloom_prev_step ) : ?><a class="button" href="<?php echo esc_url( $certloom_step_url( $certloom_prev_step ) ); ?>"><?php esc_html_e( 'Back', 'certloom' ); ?></a><?php endif; ?></div>
-			<button type="submit" class="button-link certloom-setup-v2-save-exit" form="certloom-wizard-step-form" name="wizard_finish_later" value="1"><?php esc_html_e( 'Save & finish later', 'certloom' ); ?></button>
+			<div class="certloom-setup-v2-draft-actions"><span class="certloom-setup-v2-draft-status" data-certloom-draft-status data-state="saved" aria-live="polite"><?php esc_html_e( 'Draft saved automatically', 'certloom' ); ?></span><button type="submit" class="button-link certloom-setup-v2-save-exit" form="certloom-wizard-step-form" name="wizard_finish_later" value="1"><?php esc_html_e( 'Save & finish later', 'certloom' ); ?></button></div>
 		</footer>
 	<?php endif; ?>
 </div>

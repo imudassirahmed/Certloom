@@ -64,8 +64,10 @@ class Ecapla_CertVerify_Admin {
 		add_action( 'admin_post_certloom_google_drive_download_local', array( $this, 'handle_google_drive_download_local' ) );
 		add_action( 'admin_post_certloom_google_drive_delete', array( $this, 'handle_google_drive_delete' ) );
 		add_action( 'admin_post_certloom_dismiss_setup_reminder', array( $this, 'handle_dismiss_setup_reminder' ) );
+		add_action( 'wp_ajax_certloom_setup_draft_autosave', array( $this, 'handle_setup_wizard_draft_autosave' ) );
 		add_action( 'wp_ajax_certloom_wizard_template_preview', array( $this, 'handle_setup_wizard_template_preview' ) );
 		add_action( 'wp_ajax_certloom_guided_tour_state', array( 'Ecapla_CertVerify_Guided_Tour', 'handle_ajax' ) );
+		add_action( 'admin_notices', array( $this, 'render_active_setup_draft_notice' ) );
 		add_action( 'admin_init', array( $this, 'handle_status_review_acknowledgement' ) );
 		add_action( 'admin_post_ecapla_certverify_delete_certificate', array( $this, 'handle_delete' ) );
 		add_action( 'admin_post_ecapla_certverify_delete_field', array( $this, 'handle_field_delete' ) );
@@ -323,6 +325,9 @@ class Ecapla_CertVerify_Admin {
 			'itemAddFailed' => __( 'This item could not be added.', 'certloom' ),
 			'added' => __( 'Added.', 'certloom' ),
 			'saving' => __( 'Saving…', 'certloom' ),
+			'setupDraftSaving' => __( 'Saving draft…', 'certloom' ),
+			'setupDraftSaved' => __( 'Draft saved', 'certloom' ),
+			'setupDraftFailed' => __( 'Draft could not be saved. Keep this page open and try again.', 'certloom' ),
 			'defaultLabel' => __( 'Default', 'certloom' ),
 			'enterFieldLabel' => __( 'Enter a field label.', 'certloom' ),
 			'creatingField' => __( 'Creating field…', 'certloom' ),
@@ -1262,6 +1267,44 @@ class Ecapla_CertVerify_Admin {
 		$result = \Certloom\Infrastructure\Admin\SetupReadinessReminder::dismiss( 0, 'dismiss' === $mode );
 		if ( is_wp_error( $result ) ) { $this->redirect_error( $result->get_error_message(), admin_url( 'admin.php?page=' . self::DASHBOARD_PAGE ) ); }
 		wp_safe_redirect( admin_url( 'admin.php?page=' . self::DASHBOARD_PAGE ) ); exit;
+	}
+
+	/** Autosaves unfinished Setup intent without advancing or applying configuration. */
+	public function handle_setup_wizard_draft_autosave() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'You do not have permission to save this Setup draft.', 'certloom' ) ), 403 );
+		}
+		check_ajax_referer( 'certloom_setup_wizard' );
+		$step = isset( $_POST['wizard_step'] ) ? sanitize_key( wp_unslash( $_POST['wizard_step'] ) ) : '';
+		$client_revision = isset( $_POST['certloom_draft_revision'] ) ? max( 0, (int) wp_unslash( $_POST['certloom_draft_revision'] ) ) : 0;
+		$patch = $this->setup_wizard_draft_request( $step );
+		$result = Ecapla_CertVerify_Onboarding::autosave_wizard_draft( $step, $patch, $client_revision );
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ), 409 );
+		}
+		wp_send_json_success( array(
+			'run_id'     => (string) ( $result['run_id'] ?? '' ),
+			'step'       => (string) ( $result['step'] ?? $step ),
+			'updated_at' => (string) ( $result['updated_at'] ?? '' ),
+			'message'    => __( 'Draft saved', 'certloom' ),
+		) );
+	}
+
+	/** Keeps an in-progress Setup draft reachable after visiting another Certloom workspace. */
+	public function render_active_setup_draft_notice() {
+		if ( ! current_user_can( 'manage_options' ) ) { return; }
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only page routing.
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		if ( 'certloom-setup' === $page || 0 !== strpos( $page, 'certloom' ) ) { return; }
+		$workspace = Ecapla_CertVerify_Onboarding::get_wizard_workspace();
+		if ( empty( $workspace ) || 'active' !== (string) ( $workspace['status'] ?? '' ) ) { return; }
+		$payload = isset( $workspace['payload'] ) && is_array( $workspace['payload'] ) ? $workspace['payload'] : array();
+		$draft = isset( $payload['wizard_draft'] ) && is_array( $payload['wizard_draft'] ) ? $payload['wizard_draft'] : array();
+		if ( empty( $draft ) && 'welcome' === (string) ( $workspace['step'] ?? 'welcome' ) ) { return; }
+		$step = sanitize_key( (string) ( $workspace['step'] ?? 'welcome' ) );
+		$return_url = add_query_arg( array( 'page' => 'certloom-setup', 'step' => $step ), admin_url( 'admin.php' ) );
+		echo '<div class="notice notice-info certloom-active-draft-notice"><p><strong>' . esc_html__( 'Setup draft active.', 'certloom' ) . '</strong> ' . esc_html__( 'Your unfinished Setup choices are saved to your administrator account.', 'certloom' ) . ' <a class="button button-small" href="' . esc_url( $return_url ) . '">' . esc_html__( 'Return to Setup', 'certloom' ) . '</a></p></div>';
 	}
 
 	public function handle_setup_wizard_template_preview() {
@@ -2276,6 +2319,11 @@ class Ecapla_CertVerify_Admin {
 		$wizard_step = $wizard_has_explicit_step ? sanitize_key( wp_unslash( $_GET['step'] ) ) : (string) $wizard_state['wizard_step']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Wizard navigation.
 		if ( ! $wizard_has_explicit_step && ! empty( $wizard_state['wizard_completed_at'] ) ) { $wizard_step = 'finish'; }
 		if ( ! isset( $wizard_steps[ $wizard_step ] ) ) { $wizard_step = 'welcome'; }
+		$wizard_workspace = Ecapla_CertVerify_Onboarding::ensure_wizard_workspace( $wizard_step );
+		if ( is_wp_error( $wizard_workspace ) ) { $this->redirect_error( $wizard_workspace->get_error_message(), admin_url( 'admin.php?page=' . self::DASHBOARD_PAGE ) ); }
+		$setup_summary = Ecapla_CertVerify_Onboarding::get_summary();
+		if ( is_wp_error( $setup_summary ) ) { $this->redirect_error( $setup_summary->get_error_message(), admin_url( 'admin.php?page=' . self::DASHBOARD_PAGE ) ); }
+		$wizard_state = $setup_summary['state'];
 		$wizard_draft = is_array( $wizard_state['wizard_draft'] ) ? $wizard_state['wizard_draft'] : array();
 		$wizard_profiles = $wizard_engine->profiles();
 		$wizard_profile = isset( $wizard_draft['usage_profile'] ) ? $wizard_engine->normalize_profile( $wizard_draft['usage_profile'] ) : 'general_other';

@@ -1066,17 +1066,70 @@
 		if ( ! root ) { return; }
 
 		var wizardForm = root.querySelector( '#certloom-wizard-step-form' );
+		var draftStatus = root.querySelector( '[data-certloom-draft-status]' );
 		var dirty = false;
+		var autosaveTimer = null;
+		var autosaveFailed = false;
+		var autosaveInFlight = null;
 		function setDirty( value ) { dirty = !!value; root.setAttribute( 'data-certloom-dirty', dirty ? '1' : '0' ); }
+		function setDraftStatus( message, state ) {
+			if ( ! draftStatus ) { return; }
+			draftStatus.textContent = message || '';
+			draftStatus.setAttribute( 'data-state', state || '' );
+		}
+		function setupDraftBody() {
+			if ( ! wizardForm ) { return null; }
+			var body = new FormData( wizardForm );
+			body.set( 'action', 'certloom_setup_draft_autosave' );
+			body.set( 'wizard_step', root.getAttribute( 'data-certloom-step' ) || body.get( 'wizard_step' ) || '' );
+			body.set( 'certloom_draft_revision', String( Date.now() ) );
+			return body;
+		}
+		function saveSetupDraft( keepalive ) {
+			if ( ! wizardForm ) { return Promise.resolve( true ); }
+			if ( autosaveTimer ) { window.clearTimeout( autosaveTimer ); autosaveTimer = null; }
+			var body = setupDraftBody();
+			if ( ! body ) { return Promise.resolve( true ); }
+			setDraftStatus( certloomText( 'setupDraftSaving', 'Saving draft…' ), 'saving' );
+			autosaveInFlight = window.fetch( window.ajaxurl || '/wp-admin/admin-ajax.php', { method: 'POST', credentials: 'same-origin', body: body, keepalive: !!keepalive } )
+				.then( function ( response ) { if ( ! response.ok ) { throw new Error( 'HTTP ' + response.status ); } return response.json(); } )
+				.then( function ( response ) {
+					if ( ! response || ! response.success ) { throw new Error( response && response.data && response.data.message ? response.data.message : 'Draft save failed' ); }
+					autosaveFailed = false; setDirty( false );
+					if ( response.data && response.data.run_id ) { root.setAttribute( 'data-certloom-draft-run', response.data.run_id ); }
+					setDraftStatus( response.data && response.data.message ? response.data.message : certloomText( 'setupDraftSaved', 'Draft saved' ), 'saved' );
+					return true;
+				} )
+				.catch( function () { autosaveFailed = true; setDraftStatus( certloomText( 'setupDraftFailed', 'Draft could not be saved. Keep this page open and try again.' ), 'error' ); return false; } )
+				.then( function ( result ) { autosaveInFlight = null; return result; } );
+			return autosaveInFlight;
+		}
+		function scheduleSetupDraftSave() {
+			if ( autosaveTimer ) { window.clearTimeout( autosaveTimer ); }
+			autosaveTimer = window.setTimeout( function () { saveSetupDraft( false ); }, 450 );
+		}
 		if ( wizardForm ) {
-			wizardForm.addEventListener( 'input', function ( event ) { if ( event.target && event.target.name ) { setDirty( true ); event.target.removeAttribute( 'aria-invalid' ); } } );
-			wizardForm.addEventListener( 'change', function ( event ) { if ( event.target && event.target.name ) { setDirty( true ); event.target.removeAttribute( 'aria-invalid' ); } } );
-			wizardForm.addEventListener( 'submit', function () { setDirty( false ); } );
+			wizardForm.addEventListener( 'input', function ( event ) { if ( event.target && event.target.name ) { setDirty( true ); event.target.removeAttribute( 'aria-invalid' ); scheduleSetupDraftSave(); } } );
+			wizardForm.addEventListener( 'change', function ( event ) { if ( event.target && event.target.name ) { setDirty( true ); event.target.removeAttribute( 'aria-invalid' ); saveSetupDraft( false ); } } );
+			wizardForm.addEventListener( 'submit', function () { if ( autosaveTimer ) { window.clearTimeout( autosaveTimer ); autosaveTimer = null; } setDirty( false ); } );
 			wizardForm.addEventListener( 'invalid', function ( event ) {
 				var control = event.target;
 				if ( control && control.setAttribute ) { control.setAttribute( 'aria-invalid', 'true' ); window.setTimeout( function () { if ( control.focus ) { control.focus(); } }, 0 ); }
 			}, true );
-			window.addEventListener( 'beforeunload', function ( event ) { if ( ! dirty ) { return; } event.preventDefault(); event.returnValue = ''; } );
+			root.addEventListener( 'click', function ( event ) {
+				var link = event.target && event.target.closest ? event.target.closest( 'a[href]' ) : null;
+				if ( ! link || link.target === '_blank' || link.hasAttribute( 'download' ) || ! dirty ) { return; }
+				var href = link.getAttribute( 'href' ) || '';
+				if ( ! href || '#' === href.charAt( 0 ) || 0 === href.indexOf( 'javascript:' ) ) { return; }
+				event.preventDefault();
+				saveSetupDraft( true ).then( function () { window.location.assign( link.href ); } );
+			} );
+			window.addEventListener( 'pagehide', function () {
+				if ( ! dirty || ! window.navigator || ! window.navigator.sendBeacon ) { return; }
+				var body = setupDraftBody();
+				if ( body ) { try { window.navigator.sendBeacon( window.ajaxurl || '/wp-admin/admin-ajax.php', body ); } catch ( error ) {} }
+			} );
+			window.addEventListener( 'beforeunload', function ( event ) { if ( ! autosaveFailed ) { return; } event.preventDefault(); event.returnValue = ''; } );
 		}
 		var setupError = root.querySelector( '.certloom-setup-v2-notices .notice-error' );
 		if ( setupError ) { setupError.setAttribute( 'tabindex', '-1' ); window.setTimeout( function () { setupError.focus(); }, 0 ); }
@@ -1111,11 +1164,11 @@
 				var row = document.createElement( 'div' ); row.className = 'certloom-setup-v2-custom-field';
 				var input = document.createElement( 'input' ); input.type = 'text'; input.name = 'custom_fields[]'; input.maxLength = 100; input.value = value;
 				var remove = document.createElement( 'button' ); remove.type = 'button'; remove.className = 'button-link'; remove.setAttribute( 'data-certloom-custom-field-remove', '' ); remove.textContent = certloomText( 'remove', 'Remove' );
-				row.appendChild( input ); row.appendChild( remove ); list.appendChild( row ); fresh.value = ''; input.focus();
+				row.appendChild( input ); row.appendChild( remove ); list.appendChild( row ); fresh.value = ''; input.focus(); setDirty( true ); saveSetupDraft( false );
 			}
 			if ( add ) { add.addEventListener( 'click', addCustomField ); }
 			if ( fresh ) { fresh.addEventListener( 'keydown', function ( event ) { if ( 'Enter' === event.key ) { event.preventDefault(); addCustomField(); } } ); }
-			fieldsForm.addEventListener( 'click', function ( event ) { var remove = event.target.closest( '[data-certloom-custom-field-remove]' ); if ( remove ) { var row = remove.closest( '.certloom-setup-v2-custom-field' ); if ( row ) { row.remove(); if ( fresh ) { fresh.focus(); } } } } );
+			fieldsForm.addEventListener( 'click', function ( event ) { var remove = event.target.closest( '[data-certloom-custom-field-remove]' ); if ( remove ) { var row = remove.closest( '.certloom-setup-v2-custom-field' ); if ( row ) { row.remove(); if ( fresh ) { fresh.focus(); } setDirty( true ); saveSetupDraft( false ); } } } );
 		}
 
 		var appearanceForm = root.querySelector( '[data-certloom-appearance-form]' );
