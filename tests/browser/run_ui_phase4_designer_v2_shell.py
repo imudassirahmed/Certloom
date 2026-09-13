@@ -202,6 +202,13 @@ async def main():
         first_children = await first_row.evaluate("el => [...el.children].map(c => c.getAttribute('data-certloom-designer-layer-row-action') || c.className)")
         await ck(first_children and first_children[0] == 'visibility', 'visibilityOccupiesFormerDragSlot')
         await ck('duplicate' not in layer_actions, 'duplicateRemovedFromPermanentLayerRow')
+        layer_hit_targets = await first_row.evaluate("""el => {
+          const eye=el.querySelector('[data-certloom-designer-layer-row-action=\"visibility\"]');
+          const lock=el.querySelector('[data-certloom-designer-layer-row-action=\"lock\"]');
+          const del=el.querySelector('[data-certloom-designer-layer-row-action=\"delete\"]');
+          return [eye,lock,del].map(node => node ? node.getBoundingClientRect().width : 0);
+        }""")
+        await ck(all(width >= 24 for width in layer_hit_targets), 'compactLayerIconsKeepPracticalHitTargets')
         long_names = await page.locator('.certloom-studio-layer-name').all_inner_texts()
         await ck(any(name.endswith('....') for name in long_names), 'longLayerNamesUseFourDotCharacterLimit')
         layer_overflow = await page.locator('[data-certloom-designer-layers]').evaluate("el => el.scrollWidth <= el.clientWidth + 1")
@@ -238,6 +245,9 @@ async def main():
             await page.wait_for_timeout(20)
         await ck('is-open' not in (await content_section.get_attribute('class') or ''), 'openingAccordionClosesSibling')
         await ck('is-open' in (await appearance_section.get_attribute('class') or ''), 'inspectorKeepsOnlyOneAccordionOpen')
+        await appearance_section.locator('.certloom-studio-accordion-trigger').click()
+        await page.wait_for_timeout(20)
+        await ck('is-open' in (await appearance_section.get_attribute('class') or ''), 'activeAccordionCannotCollapseSelectionInspectorToZero')
         await ck(await page.locator('[data-certloom-designer-field="rotation"]').count() == 1, 'rotationPrecisionControlRetained')
         await ck(await page.locator('[data-certloom-designer-style-field="font_family"]').count() == 1, 'fontControlRetained')
         await ck(await page.locator('[data-certloom-designer-style-field="font_size_pt"]').count() == 1, 'fontSizeControlRetained')

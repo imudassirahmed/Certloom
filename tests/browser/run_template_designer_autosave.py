@@ -48,8 +48,8 @@ async def run():
         await conflict.set_content(fixture_html(False),wait_until='load'); await conflict.evaluate("window.__certloomAutosaveMode='conflict'")
         await conflict.locator('[data-certloom-designer-add="text"]').click(); await conflict.wait_for_timeout(2200)
         await ck(await conflict.locator('[data-certloom-designer]').evaluate('(e)=>e.classList.contains("has-autosave-conflict")'),'conflictStateFailsClosed')
-        await ck('Save conflict' in (await conflict.locator('[data-certloom-designer-autosave-status]').text_content() or '') and await conflict.locator('[data-certloom-designer-conflict-banner]').is_visible() and 'Template changed in another session' in (await conflict.locator('[data-certloom-designer-conflict-banner]').text_content() or ''),'conflictMessageVisible')
-        await ck('Unsaved' in (await conflict.locator('[data-certloom-designer-dirty]').text_content() or ''),'conflictPreservesBrowserChanges')
+        await ck((await conflict.locator('[data-certloom-designer-autosave-status]').text_content() or '').strip()=='' and await conflict.locator('[data-certloom-designer-conflict-banner]').is_visible() and 'Template changed in another session' in (await conflict.locator('[data-certloom-designer-conflict-banner]').text_content() or ''),'conflictMessageVisible')
+        await ck('Save conflict' in (await conflict.locator('[data-certloom-designer-dirty]').text_content() or ''),'conflictPreservesBrowserChanges')
         await conflict.close(); await browser.close()
     if failed:
         print('FAIL  DSN-07 Designer autosave browser gate:', ', '.join(failed)); return 1

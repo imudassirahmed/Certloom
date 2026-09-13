@@ -331,11 +331,12 @@
 		if ( recovered ) { designerState = normalizeState( designerState ); lastAutosaveFingerprint = stable( { layout: layout, state: designerState } ); }
 
 		function setAutosaveStatus( message, state ) {
-			var statusMessage = message || '';
-			if ( 'conflict' === state ) { statusMessage = t( 'autosaveConflictShort', 'Save conflict' ); }
+			var statusMessage = 'conflict' === state ? '' : ( message || '' );
 			if ( autosaveStatusEl ) { autosaveStatusEl.textContent = statusMessage; autosaveStatusEl.setAttribute( 'data-state', state || '' ); }
 			if ( conflictBanner ) { conflictBanner.hidden = 'conflict' !== state; }
-			root.classList.toggle( 'has-autosave-conflict', 'conflict' === state );
+			autosaveConflict = 'conflict' === state;
+			root.classList.toggle( 'has-autosave-conflict', autosaveConflict );
+			if ( dirtyBadge && autosaveConflict ) { dirtyBadge.textContent = t( 'autosaveConflictShort', 'Save conflict' ); dirtyBadge.classList.add( 'is-dirty' ); }
 		}
 		function autosaveFingerprint() { return stable( { layout: layout, state: designerState } ); }
 		function autosaveRequest( action, body, keepalive ) {
@@ -514,7 +515,10 @@
 		}
 		function syncDirty() {
 			var dirty = stable( savedLayout ) !== stable( layout ) || stable( savedState ) !== stable( designerState );
-			if ( dirtyBadge ) { dirtyBadge.textContent = dirty ? t( 'unsavedChanges', 'Unsaved changes' ) : t( 'savedDraft', 'Saved draft' ); dirtyBadge.classList.toggle( 'is-dirty', dirty ); }
+			if ( dirtyBadge ) {
+				dirtyBadge.textContent = autosaveConflict ? t( 'autosaveConflictShort', 'Save conflict' ) : ( dirty ? t( 'unsavedChanges', 'Unsaved changes' ) : t( 'savedDraft', 'Saved draft' ) );
+				dirtyBadge.classList.toggle( 'is-dirty', dirty || autosaveConflict );
+			}
 			root.classList.toggle( 'has-unsaved-changes', dirty );
 			if ( dirty ) { scheduleAutosave(); } else if ( hasServerAutosave && ! autosavePending ) { discardAutosave( false ); }
 		}
@@ -524,8 +528,7 @@
 			root.classList.toggle( 'is-pan-tool-active', panToolActive ); workspace.classList.toggle( 'is-pan-ready', panToolActive || spacePanHeld );
 		}
 		function relativeZoomPercent() { return Math.round( ( zoom / Math.max( 0.0001, fitZoom ) ) * 100 ); }
-		var inspectorOpenedFor = {};
-		var lastInspectorElementId = '';
+		var inspectorSectionFor = {};
 		function enhancePropertySections() {
 			for ( var i = 0; i < propertySections.length; i++ ) {
 				( function ( section ) {
@@ -536,16 +539,18 @@
 					var trigger = document.createElement( 'button' ); trigger.type = 'button'; trigger.className = 'certloom-studio-accordion-trigger'; trigger.setAttribute( 'aria-expanded', 'false' ); trigger.innerHTML = '<span>' + escapeText( title ) + '</span><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span>';
 					section.classList.add( 'certloom-studio-accordion' ); section.appendChild( trigger ); section.appendChild( body ); body.hidden = true;
 					trigger.addEventListener( 'click', function () {
-						var open = body.hidden;
-						if ( open ) { closeInspectorSections(); body.hidden = false; section.classList.add( 'is-open' ); trigger.setAttribute( 'aria-expanded', 'true' ); }
-						else { body.hidden = true; section.classList.remove( 'is-open' ); trigger.setAttribute( 'aria-expanded', 'false' ); }
+						/* A selected element always keeps one Inspector pane open. Clicking the
+						 * active pane therefore leaves it open; choosing another pane closes it. */
+						if ( ! body.hidden ) { return; }
+						var key = String( section.getAttribute( 'data-certloom-designer-property-section' ) || '' );
+						openInspectorSection( key );
 					} );
 				} )( propertySections[ i ] );
 			}
 		}
 		function openInspectorSection( key ) {
 			closeInspectorSections();
-			for ( var i = 0; i < propertySections.length; i++ ) { var section = propertySections[ i ]; if ( section.getAttribute( 'data-certloom-designer-property-section' ) !== key ) { continue; } var body = section.querySelector( '.certloom-studio-accordion-body' ); var trigger = section.querySelector( '.certloom-studio-accordion-trigger' ); if ( body ) { body.hidden = false; } section.classList.add( 'is-open' ); if ( trigger ) { trigger.setAttribute( 'aria-expanded', 'true' ); } break; }
+			for ( var i = 0; i < propertySections.length; i++ ) { var section = propertySections[ i ]; if ( section.getAttribute( 'data-certloom-designer-property-section' ) !== key ) { continue; } var body = section.querySelector( '.certloom-studio-accordion-body' ); var trigger = section.querySelector( '.certloom-studio-accordion-trigger' ); if ( body ) { body.hidden = false; } section.classList.add( 'is-open' ); if ( trigger ) { trigger.setAttribute( 'aria-expanded', 'true' ); } if ( selectedId ) { inspectorSectionFor[ selectedId ] = key; } break; }
 		}
 		function closeInspectorSections() {
 			for ( var i = 0; i < propertySections.length; i++ ) { var section = propertySections[ i ]; var body = section.querySelector( '.certloom-studio-accordion-body' ); var trigger = section.querySelector( '.certloom-studio-accordion-trigger' ); if ( body ) { body.hidden = true; } section.classList.remove( 'is-open' ); if ( trigger ) { trigger.setAttribute( 'aria-expanded', 'false' ); } }
@@ -562,9 +567,12 @@
 		function openPreferredInspectorSection( element ) {
 			if ( ! element ) { return; }
 			orderInspectorSections( element );
-			if ( lastInspectorElementId === element.id && inspectorOpenedFor[ element.id ] ) { return; }
-			lastInspectorElementId = element.id; inspectorOpenedFor[ element.id ] = true; closeInspectorSections();
-			var type = String( element.type || '' ); var key = [ 'shape', 'line' ].indexOf( type ) !== -1 ? 'appearance' : ( [ 'text', 'merge', 'rich_text', 'list', 'image', 'logo', 'seal', 'signature', 'qr', 'barcode', 'table', 'data_table', 'dynamic_field', 'field' ].indexOf( type ) !== -1 ? 'content' : 'geometry' ); openInspectorSection( key );
+			var type = String( element.type || '' );
+			var preferred = [ 'shape', 'line' ].indexOf( type ) !== -1 ? 'appearance' : ( [ 'text', 'merge', 'rich_text', 'list', 'image', 'logo', 'seal', 'signature', 'qr', 'barcode', 'table', 'data_table', 'dynamic_field', 'field' ].indexOf( type ) !== -1 ? 'content' : 'geometry' );
+			var key = inspectorSectionFor[ element.id ] || preferred;
+			var current = null;
+			for ( var i = 0; i < propertySections.length; i++ ) { if ( propertySections[ i ].classList.contains( 'is-open' ) ) { current = String( propertySections[ i ].getAttribute( 'data-certloom-designer-property-section' ) || '' ); break; } }
+			if ( current !== key ) { openInspectorSection( key ); }
 		}
 		function closeInsertPanel() {
 			if ( ! insertPanel || insertPanel.hidden ) { return; }
@@ -1194,6 +1202,23 @@
 			var before = snapshot(); if ( updateElement( element.id, proposed, false ) ) { pushHistory( before ); render(); announce( t( 'styleUpdated', 'Element styling updated.' ) ); }
 		}
 
+		function rotateHandlePlacement( element ) {
+			var bounds = rotatedBounds( element ); var p = page(); if ( ! bounds || ! p ) { return 'top'; }
+			var reach = Math.max( 4, 32 / Math.max( 0.01, BASE_PX_PER_MM * zoom ) );
+			function occupied( zone ) {
+				var list = elements();
+				for ( var i = 0; i < list.length; i++ ) { if ( list[ i ].id === element.id || isHiddenId( list[ i ].id ) ) { continue; } if ( boundsIntersect( zone, rotatedBounds( list[ i ] ) ) ) { return true; } }
+				return false;
+			}
+			var centerX = ( bounds.minX + bounds.maxX ) / 2; var centerY = ( bounds.minY + bounds.maxY ) / 2;
+			var topZone = { minX: centerX - reach, maxX: centerX + reach, minY: bounds.minY - reach, maxY: bounds.minY };
+			if ( topZone.minY >= 0 && ! occupied( topZone ) ) { return 'top'; }
+			var rightZone = { minX: bounds.maxX, maxX: bounds.maxX + reach, minY: centerY - reach, maxY: centerY + reach };
+			if ( rightZone.maxX <= Number( p.width_mm ) && ! occupied( rightZone ) ) { return 'right'; }
+			var leftZone = { minX: bounds.minX - reach, maxX: bounds.minX, minY: centerY - reach, maxY: centerY + reach };
+			if ( leftZone.minX >= 0 && ! occupied( leftZone ) ) { return 'left'; }
+			return 'top';
+		}
 		function addHandles( node, element ) {
 			if ( isLocked( element ) ) { return; }
 			var handles = [ 'nw', 'ne', 'sw', 'se' ];
@@ -1204,7 +1229,8 @@
 				handle.setAttribute( 'aria-hidden', 'true' ); node.appendChild( handle );
 			}
 			var rotate = document.createElement( 'span' );
-			rotate.className = 'certloom-template-designer-rotate'; rotate.setAttribute( 'data-certloom-designer-rotate', '1' ); rotate.setAttribute( 'aria-hidden', 'true' ); node.appendChild( rotate );
+			var rotatePlacement = rotateHandlePlacement( element );
+			rotate.className = 'certloom-template-designer-rotate is-' + rotatePlacement; rotate.setAttribute( 'data-certloom-designer-rotate', '1' ); rotate.setAttribute( 'data-certloom-designer-rotate-placement', rotatePlacement ); rotate.setAttribute( 'aria-hidden', 'true' ); node.appendChild( rotate );
 		}
 		function styleContent( node, element ) {
 			var preview = previewKind( element );

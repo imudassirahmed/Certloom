@@ -16,9 +16,9 @@ p43(false!==strpos($admin,'data-certloom-designer-content="asset"')&&false!==str
 p43(false!==strpos($admin,'data-certloom-designer-style-field="font_family"')&&false!==strpos($admin,'data-certloom-designer-style-field="font_size_pt"')&&false!==strpos($admin,'data-certloom-designer-style-field="font_weight"'),'text appearance exposes font family/size/weight');
 p43(false!==strpos($admin,'data-certloom-designer-style-field="overflow"')&&false!==strpos($admin,'data-certloom-designer-style-field="line_height"'),'text wrapping/overflow and line height remain available');
 p43(false!==strpos($js,'function enhancePropertySections()')&&false!==strpos($js,"section.classList.add( 'certloom-studio-accordion' )"),'runtime upgrades Inspector sections into Studio accordions');
-p43(false!==strpos($js,"body.hidden = ! open")&&false===strpos($js,'closeOtherInspector'),'accordion toggling does not force other sections closed');
+p43(false!==strpos($js,"if ( ! body.hidden ) { return; }")&&false!==strpos($js,'openInspectorSection( key )'),'active Inspector pane stays open while choosing another pane closes its sibling');
 p43(false!==strpos($js,'function openPreferredInspectorSection')&&false!==strpos($js,"? 'content' :") ,'first interaction opens the contextually important section');
-p43(false!==strpos($js,'inspectorOpenedFor[ element.id ]'),'preferred section auto-open runs once per element instead of fighting the operator');
+p43(false!==strpos($js,'inspectorSectionFor[ element.id ]')&&false!==strpos($js,'var key = inspectorSectionFor[ element.id ] || preferred'),'Inspector remembers the chosen single-open pane per element while preserving contextual defaults');
 p43(false!==strpos($js,'function applyContentField')&&false!==strpos($js,'updateElement( element.id, proposed, false )'),'Inspector content reuses canonical mutation path');
 p43(false!==strpos($js,'function applyStyleField')&&false!==strpos($js,'styleValueForElement'),'Inspector style reuses canonical style mutation path');
 p43(false!==strpos($js,'commitTableElement'),'Table/Data Table editing remains on the certified canonical mutation path');

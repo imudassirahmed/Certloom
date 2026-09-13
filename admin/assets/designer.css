@@ -2725,3 +2725,96 @@
 	.certloom-template-designer-layer-actions { grid-template-columns: repeat(2, 32px); width: 66px; min-width: 66px; }
 	.certloom-template-designer-layer > .certloom-studio-layer-icon[data-certloom-designer-layer-row-action="visibility"] { width: 32px !important; min-width: 32px !important; height: 32px !important; }
 }
+
+/* Phase 4 Gamma-02R identity/Inspector polish — one open pane, discoverable rename, larger compact hit targets. */
+.certloom-studio-title-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+}
+.certloom-studio-title-button::after {
+	content: '\270E';
+	flex: 0 0 auto;
+	font-size: 11px;
+	font-weight: 400;
+	line-height: 1;
+	color: #748197;
+	opacity: 0;
+	transform: translateY(-1px);
+	transition: opacity .12s ease;
+}
+.certloom-studio-title-button:hover::after,
+.certloom-studio-title-button:focus-visible::after { opacity: .9; }
+
+/* Keep row density while making icon controls easier to hit. */
+.certloom-template-designer-layer {
+	grid-template-columns: 24px minmax(0, 1fr) 50px !important;
+	height: 28px !important;
+	min-height: 28px !important;
+}
+.certloom-template-designer-layer > .certloom-studio-layer-icon[data-certloom-designer-layer-row-action="visibility"] {
+	width: 24px !important;
+	min-width: 24px !important;
+	height: 26px !important;
+}
+.certloom-template-designer-layer-actions {
+	grid-template-columns: repeat(2, 24px) !important;
+	width: 50px !important;
+	min-width: 50px !important;
+}
+.certloom-template-designer-layer-actions .certloom-studio-layer-icon {
+	width: 24px !important;
+	min-width: 24px !important;
+	height: 26px !important;
+}
+.certloom-template-designer-layer .certloom-studio-layer-icon:focus-visible {
+	outline: 2px solid var(--studio-blue);
+	outline-offset: -2px;
+}
+
+/* Conflict details live in the banner; avoid repeating the same state below the header label. */
+.certloom-studio-save-state small[data-state="conflict"] { display: none; }
+.has-autosave-conflict .certloom-studio-save-dot {
+	background: #e8901f;
+	box-shadow: 0 0 0 3px rgba(232,144,31,.12);
+}
+
+/* Move the rotate affordance sideways when nearby artwork occupies the normal top clearance. */
+.certloom-template-designer-rotate.is-right {
+	left: auto;
+	right: -27px;
+	top: calc(50% - 6px);
+}
+.certloom-template-designer-rotate.is-right::after {
+	left: -15px;
+	top: 3px;
+	width: 15px;
+	height: 1px;
+}
+.certloom-template-designer-rotate.is-left {
+	left: -27px;
+	right: auto;
+	top: calc(50% - 6px);
+}
+.certloom-template-designer-rotate.is-left::after {
+	left: 9px;
+	top: 3px;
+	width: 15px;
+	height: 1px;
+}
+
+@media (max-width: 900px) {
+	.certloom-template-designer-layer {
+		grid-template-columns: 32px minmax(0,1fr) 66px !important;
+		height: auto !important;
+		min-height: 38px !important;
+	}
+	.certloom-template-designer-layer-actions { grid-template-columns: repeat(2, 32px) !important; width: 66px !important; min-width: 66px !important; }
+	.certloom-template-designer-layer > .certloom-studio-layer-icon[data-certloom-designer-layer-row-action="visibility"] { width: 32px !important; min-width: 32px !important; height: 32px !important; }
+	.certloom-template-designer-layer-actions .certloom-studio-layer-icon { width: 32px !important; min-width: 32px !important; height: 32px !important; }
+}
+/* Keep compact Layer controls in their intended grid columns; override the legacy safety span. */
+.certloom-template-designer-layer > .certloom-studio-layer-icon[data-certloom-designer-layer-row-action="visibility"] { grid-column: 1; }
+.certloom-template-designer-layer-select { grid-column: 2; }
+.certloom-template-designer-layer-actions { grid-column: 3 !important; overflow: visible !important; }
+.certloom-studio-title-button[hidden] { display: none !important; }
