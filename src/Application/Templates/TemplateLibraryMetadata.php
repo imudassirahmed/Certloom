@@ -58,6 +58,7 @@ final class TemplateLibraryMetadata {
 		$factory_map = $this->factory_map();
 		$known = $family && isset( $factory_map[ $family ] ) ? $factory_map[ $family ] : null;
 		$page = isset( $layout['page'] ) && is_array( $layout['page'] ) ? $layout['page'] : array();
+		$recommended_profiles = TemplateRecommendationProfiles::normalize( isset( $template['recommended_profiles'] ) && is_array( $template['recommended_profiles'] ) ? $template['recommended_profiles'] : array() );
 
 		return array(
 			'factory' => $factory,
@@ -66,6 +67,7 @@ final class TemplateLibraryMetadata {
 			'style' => $known ? (string) $known['style'] : 'custom',
 			'color' => $known ? (string) $known['color'] : 'custom',
 			'purposes' => $known ? array_values( $known['purposes'] ) : array( 'custom_other' ),
+			'profiles' => $recommended_profiles,
 			'language' => $known ? 'en_base' : 'custom',
 			'rtl' => $this->rtl_readiness( $layout ),
 			'page_size' => (string) ( $page['size'] ?? '' ),
@@ -92,6 +94,9 @@ final class TemplateLibraryMetadata {
 
 	/** @return array<string,string> */
 	public static function purpose_labels() { return ProgramProfile::purpose_labels(); }
+
+	/** @return array<string,string> */
+	public static function profile_labels() { return TemplateRecommendationProfiles::labels(); }
 
 	/** @return string */
 	private function factory_family( $machine_key ) {

@@ -191,6 +191,14 @@
 		var conflictBanner = root.querySelector( '[data-certloom-designer-conflict-banner]' );
 		var conflictReviewButton = conflictBanner ? conflictBanner.querySelector( '[data-certloom-designer-conflict-review]' ) : null;
 		var conflictReloadButton = conflictBanner ? conflictBanner.querySelector( '[data-certloom-designer-conflict-reload]' ) : null;
+		var studioNameDisplay = root.querySelector( '[data-certloom-studio-name-display]' );
+		var studioNameText = root.querySelector( '[data-certloom-studio-name-text]' );
+		var studioNameInput = root.querySelector( '[data-certloom-studio-name-input]' );
+		var studioProfilePicker = root.querySelector( '[data-certloom-studio-profile-picker]' );
+		var studioProfileInputs = root.querySelectorAll( '[data-certloom-studio-profile]' );
+		var studioProfileSummary = root.querySelector( '[data-certloom-studio-profile-summary]' );
+		var studioProfileStatus = root.querySelector( '[data-certloom-studio-profile-status]' );
+		var studioToast = root.querySelector( '[data-certloom-studio-toast]' );
 		var copyButton = root.querySelector( '[data-certloom-designer-copy]' );
 		var cutButton = root.querySelector( '[data-certloom-designer-cut]' );
 		var pasteButton = root.querySelector( '[data-certloom-designer-paste]' );
@@ -285,6 +293,14 @@
 		var autosaveNonce = root.getAttribute( 'data-autosave-nonce' ) || '';
 		var autosaveSessionId = root.getAttribute( 'data-autosave-session' ) || secureUuidV4();
 		var ajaxUrl = root.getAttribute( 'data-ajax-url' ) || '';
+		var studioMetadataNonce = root.getAttribute( 'data-studio-metadata-nonce' ) || '';
+		var studioUpdatedAt = root.getAttribute( 'data-template-updated-at' ) || '';
+		var studioNameSaving = false;
+		var studioProfileSaving = false;
+		var studioProfilePending = false;
+		var studioProfileTimer = null;
+		var studioSavedProfiles = [];
+		for ( var studioProfileInitialIndex = 0; studioProfileInitialIndex < studioProfileInputs.length; studioProfileInitialIndex++ ) { if ( studioProfileInputs[ studioProfileInitialIndex ].checked ) { studioSavedProfiles.push( String( studioProfileInputs[ studioProfileInitialIndex ].value || '' ) ); } }
 		var lastAutosaveFingerprint = recovered ? stable( { layout: layout, state: designerState } ) : '';
 		if ( autosaveSessionField ) { autosaveSessionField.value = autosaveSessionId; }
 
@@ -329,6 +345,55 @@
 			return window.fetch( ajaxUrl, { method: 'POST', credentials: 'same-origin', body: data, keepalive: !! keepalive } ).then( function ( response ) {
 				return response.json().catch( function () { return { success: false, data: { code: 'invalid-json' } }; } ).then( function ( payload ) { payload.httpStatus = response.status; return payload; } );
 			} );
+		}
+		function studioMetadataRequest( key, body ) {
+			if ( ! ajaxUrl || ! studioMetadataNonce || ! templateId ) { return Promise.reject( new Error( 'studio-metadata-unavailable' ) ); }
+			var data = new FormData(); data.append( 'action', 'certloom_template_studio_metadata' ); data.append( 'nonce', studioMetadataNonce ); data.append( 'template_id', String( templateId ) ); data.append( 'metadata_key', key );
+			if ( body ) { for ( var field in body ) { if ( ! Object.prototype.hasOwnProperty.call( body, field ) ) { continue; } var value = body[ field ]; if ( Array.isArray( value ) ) { for ( var i = 0; i < value.length; i++ ) { data.append( field + '[]', value[ i ] ); } } else { data.append( field, value ); } } }
+			return window.fetch( ajaxUrl, { method: 'POST', credentials: 'same-origin', body: data } ).then( function ( response ) {
+				return response.json().catch( function () { return { success: false, data: { code: 'invalid-json', message: t( 'studioMetadataInvalidResponse', 'Certloom could not read the metadata save response.' ) } }; } ).then( function ( payload ) { payload.httpStatus = response.status; return payload; } );
+			} );
+		}
+		function showStudioToast( message, state ) {
+			if ( ! studioToast ) { announce( message ); return; }
+			studioToast.textContent = message || ''; studioToast.hidden = ! message; studioToast.classList.toggle( 'is-error', 'error' === state ); studioToast.classList.toggle( 'is-success', 'error' !== state );
+			if ( message ) { window.clearTimeout( showStudioToast.timer ); showStudioToast.timer = window.setTimeout( function () { if ( studioToast ) { studioToast.hidden = true; } }, 3200 ); }
+			announce( message );
+		}
+		function studioProfileValues() {
+			var values = []; for ( var i = 0; i < studioProfileInputs.length; i++ ) { if ( studioProfileInputs[ i ].checked ) { values.push( String( studioProfileInputs[ i ].value || '' ) ); } } return values;
+		}
+		function studioProfileSummaryText() {
+			var labels = []; for ( var i = 0; i < studioProfileInputs.length; i++ ) { if ( ! studioProfileInputs[ i ].checked ) { continue; } var label = studioProfileInputs[ i ].closest( 'label' ); var span = label ? label.querySelector( 'span' ) : null; labels.push( span ? String( span.textContent || '' ).trim() : String( studioProfileInputs[ i ].value || '' ) ); }
+			if ( ! labels.length ) { return t( 'studioProfiles', 'Profiles' ); }
+			return labels.length > 1 ? labels[ 0 ] + ' +' + String( labels.length - 1 ) : labels[ 0 ];
+		}
+		function syncStudioProfileSummary() { if ( studioProfileSummary ) { studioProfileSummary.textContent = studioProfileSummaryText(); } }
+		function restoreStudioProfileSelection() { for ( var i = 0; i < studioProfileInputs.length; i++ ) { studioProfileInputs[ i ].checked = studioSavedProfiles.indexOf( String( studioProfileInputs[ i ].value || '' ) ) !== -1; } syncStudioProfileSummary(); }
+		function saveStudioProfiles() {
+			if ( studioProfileSaving ) { studioProfilePending = true; return; }
+			studioProfileSaving = true; studioProfilePending = false; var values = studioProfileValues(); if ( studioProfileStatus ) { studioProfileStatus.textContent = t( 'studioProfilesSaving', 'Saving…' ); }
+			studioMetadataRequest( 'recommended_profiles', { recommended_profiles: values } ).then( function ( payload ) {
+				if ( payload && payload.success ) { studioSavedProfiles = payload.data && Array.isArray( payload.data.recommended_profiles ) ? payload.data.recommended_profiles.slice() : values.slice(); if ( payload.data && payload.data.updated_at ) { studioUpdatedAt = String( payload.data.updated_at ); root.setAttribute( 'data-template-updated-at', studioUpdatedAt ); } if ( studioProfileStatus ) { studioProfileStatus.textContent = t( 'studioProfilesSaved', 'Saved' ); } syncStudioProfileSummary(); }
+				else { restoreStudioProfileSelection(); if ( studioProfileStatus ) { studioProfileStatus.textContent = t( 'studioProfilesSaveFailed', 'Could not save profiles' ); } showStudioToast( payload && payload.data && payload.data.message ? payload.data.message : t( 'studioProfilesSaveFailed', 'Could not save recommended profiles.' ), 'error' ); }
+			} ).catch( function () { restoreStudioProfileSelection(); if ( studioProfileStatus ) { studioProfileStatus.textContent = t( 'studioProfilesSaveFailed', 'Could not save profiles' ); } showStudioToast( t( 'studioProfilesSaveFailed', 'Could not save recommended profiles.' ), 'error' ); } ).then( function () { studioProfileSaving = false; if ( studioProfilePending ) { studioProfilePending = false; saveStudioProfiles(); } } );
+		}
+		function beginStudioRename() {
+			if ( ! studioNameDisplay || ! studioNameInput || studioNameSaving ) { return; }
+			studioNameInput.value = studioNameText ? String( studioNameText.textContent || '' ).trim() : String( studioNameInput.value || '' ); studioNameDisplay.hidden = true; studioNameInput.hidden = false; studioNameInput.focus(); studioNameInput.select();
+		}
+		function finishStudioRename( commit ) {
+			if ( ! studioNameDisplay || ! studioNameInput || studioNameInput.hidden ) { return; }
+			var original = studioNameText ? String( studioNameText.textContent || '' ).trim() : ''; var value = String( studioNameInput.value || '' ).trim();
+			studioNameInput.hidden = true; studioNameDisplay.hidden = false;
+			if ( ! commit ) { studioNameInput.value = original; return; }
+			if ( ! value ) { studioNameInput.value = original; showStudioToast( t( 'studioNameRequired', 'Enter a certificate design name.' ), 'error' ); return; }
+			if ( value === original ) { studioNameInput.value = original; return; }
+			studioNameSaving = true; studioNameDisplay.disabled = true;
+			studioMetadataRequest( 'name', { name: value, expected_updated_at: studioUpdatedAt } ).then( function ( payload ) {
+				if ( payload && payload.success ) { if ( studioNameText ) { studioNameText.textContent = String( payload.data && payload.data.name ? payload.data.name : value ); } studioNameInput.value = studioNameText ? studioNameText.textContent : value; if ( payload.data && payload.data.updated_at ) { studioUpdatedAt = String( payload.data.updated_at ); root.setAttribute( 'data-template-updated-at', studioUpdatedAt ); } showStudioToast( t( 'studioNameSaved', 'Design name updated.' ), 'success' ); }
+				else { studioNameInput.value = original; if ( 409 === ( payload && payload.httpStatus ) && conflictBanner ) { conflictBanner.hidden = false; root.classList.add( 'has-autosave-conflict' ); } showStudioToast( payload && payload.data && payload.data.message ? payload.data.message : t( 'studioNameSaveFailed', 'Could not rename this design.' ), 'error' ); }
+			} ).catch( function () { studioNameInput.value = original; showStudioToast( t( 'studioNameSaveFailed', 'Could not rename this design.' ), 'error' ); } ).then( function () { studioNameSaving = false; if ( studioNameDisplay ) { studioNameDisplay.disabled = false; } } );
 		}
 		function discardAutosave( announceResult ) {
 			if ( autosaveTimer ) { window.clearTimeout( autosaveTimer ); autosaveTimer = null; }
@@ -1856,6 +1921,16 @@
 			previewModeButtons[ previewModeIndex ].addEventListener( 'click', function () { setPreviewMode( String( this.getAttribute( 'data-certloom-designer-preview-mode' ) || 'sample' ), true ); } );
 		}
 		syncPreviewModeButtons();
+		if ( studioNameDisplay ) { studioNameDisplay.addEventListener( 'click', beginStudioRename ); }
+		if ( studioNameInput ) {
+			studioNameInput.addEventListener( 'keydown', function ( event ) { if ( 'Enter' === event.key ) { event.preventDefault(); finishStudioRename( true ); } else if ( 'Escape' === event.key ) { event.preventDefault(); finishStudioRename( false ); } } );
+			studioNameInput.addEventListener( 'blur', function () { window.setTimeout( function () { finishStudioRename( true ); }, 0 ); } );
+		}
+		for ( var studioProfileIndex = 0; studioProfileIndex < studioProfileInputs.length; studioProfileIndex++ ) {
+			studioProfileInputs[ studioProfileIndex ].addEventListener( 'change', function () { syncStudioProfileSummary(); if ( studioProfileStatus ) { studioProfileStatus.textContent = t( 'studioProfilesPending', 'Not saved yet' ); } if ( studioProfileTimer ) { window.clearTimeout( studioProfileTimer ); } studioProfileTimer = window.setTimeout( function () { studioProfileTimer = null; saveStudioProfiles(); }, 260 ); } );
+		}
+		syncStudioProfileSummary();
+		if ( studioToast && ! studioToast.hidden && String( studioToast.textContent || '' ).trim() ) { window.setTimeout( function () { if ( studioToast ) { studioToast.hidden = true; } }, 3200 ); }
 		if ( resetButton ) { resetButton.addEventListener( 'click', function () { if ( root.classList.contains( 'has-unsaved-changes' ) && ! window.confirm( t( 'restoreConfirm', 'Discard current unsaved changes and restore the last saved design?' ) ) ) { return; } if ( directTextEditor ) { closeDirectTextEditor( false ); } layout = clone( savedLayout ); designerState = clone( savedState ); selectOnly( '' ); history = []; future = []; activeGuides = { x: null, y: null }; activeSpacingGuides = []; safeAreaVisible = false; panToolActive = false; spacePanHeld = false; closeContextMenu(); render(); fitWorkspace(); discardAutosave( false ); announce( t( 'unsavedChangesReset', 'Unsaved design changes reset.' ) ); } ); }
 		if ( autosaveDiscardButton ) { autosaveDiscardButton.addEventListener( 'click', function () { discardAutosave( true ); } ); }
 		for ( var fieldIndex = 0; fieldIndex < fieldInputs.length; fieldIndex++ ) {

@@ -368,6 +368,15 @@ function ecapla_certverify_uninstall_site() {
 	delete_option( 'certloom_google_drive_retention' );
 	delete_option( 'certloom_remote_backup_catalog' );
 
+	/* Presentation-only Template recommendation tags follow Template data retention. */
+	$wpdb->query(
+		$wpdb->prepare(
+			'DELETE FROM %i WHERE option_name LIKE %s',
+			$wpdb->options,
+			$wpdb->esc_like( 'certloom_template_recommendations_' ) . '%'
+		)
+	); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Explicit opt-in cleanup of Certloom-owned Template recommendation metadata.
+
 	/* Explicit delete-data choice removes durable migration/cutover lineage too. */
 	foreach ( array(
 		'certloom_legacy_domain_migration_state', 'certloom_domain_write_authority', 'certloom_domain_cutover_receipt',

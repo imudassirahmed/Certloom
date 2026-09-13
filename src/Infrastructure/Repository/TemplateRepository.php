@@ -329,7 +329,12 @@ final class TemplateRepository {
 		$current_id = absint( $template['current_revision_id'] ?? 0 );
 		if ( ! absint( $expected_revision_id ) || $current_id !== absint( $expected_revision_id ) ) { return new \WP_Error( 'certloom_template_stale_revision', __( 'The source template changed after you opened it. Reload before duplicating.', 'certloom' ) ); }
 		$identity['layout'] = $template['current_revision']['layout'];
-		return $this->create( $identity, $actor_user_id, self::SOURCE_MANUAL );
+		$created = $this->create( $identity, $actor_user_id, self::SOURCE_MANUAL );
+		if ( is_wp_error( $created ) ) { return $created; }
+		$profiles = ( new TemplateRecommendationRepository() )->get( $template_id );
+		/* Recommendation tags are presentation metadata; a copy must never become an orphaned failure after the canonical Template was created. */
+		( new TemplateRecommendationRepository() )->save( $created, $profiles );
+		return $created;
 	}
 
 	/** @return string */
@@ -516,6 +521,7 @@ final class TemplateRepository {
 
 		$revision = $template['current_revision'];
 		$revision['layout'] = $portable['layout'];
+		$template['recommended_profiles'] = ( new TemplateRecommendationRepository() )->get( $template_id );
 		return ( new TemplatePackage( $this->layouts, $this->json ) )->build(
 			$template,
 			$revision,
@@ -541,11 +547,15 @@ final class TemplateRepository {
 		}
 
 		$decoded['layout'] = $installed['layout'];
-		unset( $decoded['assets'], $decoded['layout_sha256'] );
+		$recommended_profiles = isset( $decoded['recommended_profiles'] ) && is_array( $decoded['recommended_profiles'] ) ? $decoded['recommended_profiles'] : array();
+		unset( $decoded['assets'], $decoded['layout_sha256'], $decoded['recommended_profiles'] );
 		$created = $this->create( $decoded, $actor_user_id, self::SOURCE_IMPORT );
 		if ( is_wp_error( $created ) ) {
 			$media->cleanup( $installed['created_ids'] );
+			return $created;
 		}
+		/* Recommendation tags are non-authoritative. Never delete imported media after the canonical Template has already been created. */
+		( new TemplateRecommendationRepository() )->save( $created, $recommended_profiles );
 		return $created;
 	}
 

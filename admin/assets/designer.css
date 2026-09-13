@@ -1698,9 +1698,77 @@
 .certloom-studio-back { display: inline-flex; align-items: center; gap: 4px; color: var(--studio-text); text-decoration: none; font-weight: 600; white-space: nowrap; }
 .certloom-studio-back:hover { color: var(--studio-blue); }
 .certloom-studio-divider { width: 1px; height: 24px; background: var(--studio-line); }
-.certloom-studio-document { display: flex; min-width: 0; align-items: center; gap: 8px; }
+.certloom-studio-document { display: flex; min-width: 0; align-items: center; gap: 7px; }
 .certloom-studio-document strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
+.certloom-studio-title-button {
+	min-width: 0;
+	max-width: min(38vw, 430px);
+	padding: 3px 4px;
+	border: 1px solid transparent;
+	border-radius: 5px;
+	background: transparent;
+	color: var(--studio-text);
+	font-size: 15px !important;
+	font-weight: 700;
+	line-height: 1.35;
+	text-align: left;
+	cursor: text;
+}
+.certloom-studio-title-button span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.certloom-studio-title-button:hover,
+.certloom-studio-title-button:focus-visible { border-color: var(--studio-line-strong); background: #f8faff; outline: 0; }
+.certloom-studio-title-input {
+	width: min(38vw, 430px);
+	min-width: 180px;
+	min-height: 31px !important;
+	height: 31px;
+	padding: 4px 7px !important;
+	font-size: 14px !important;
+	font-weight: 650;
+}
+.certloom-studio-title-input[hidden] { display: none !important; }
 .certloom-studio-document .certloom-template-state { flex: 0 0 auto; padding: 3px 7px; font-size: 11px; border-radius: 999px; }
+.certloom-studio-profile-picker { position: relative; flex: 0 1 auto; min-width: 0; }
+.certloom-studio-profile-picker > summary {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	max-width: 180px;
+	min-height: 28px;
+	padding: 3px 7px;
+	border: 1px solid var(--studio-line);
+	border-radius: 999px;
+	background: #fbfcfe;
+	color: #53627a;
+	font-size: 10px;
+	font-weight: 650;
+	list-style: none;
+	cursor: pointer;
+}
+.certloom-studio-profile-picker > summary::-webkit-details-marker { display: none; }
+.certloom-studio-profile-picker > summary:hover,
+.certloom-studio-profile-picker[open] > summary { border-color: #a9bfe5; background: var(--studio-blue-soft); color: #155eef; }
+.certloom-studio-profile-picker > summary .dashicons { flex: 0 0 13px; width: 13px; height: 13px; font-size: 13px; }
+.certloom-studio-profile-picker > summary span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.certloom-studio-profile-popover {
+	position: absolute;
+	top: calc(100% + 7px);
+	left: 0;
+	z-index: 400520;
+	width: min(330px, calc(100vw - 36px));
+	padding: 11px;
+	border: 1px solid var(--studio-line-strong);
+	border-radius: 9px;
+	background: #fff;
+	box-shadow: var(--studio-shadow);
+}
+.certloom-studio-profile-popover > strong { display: block; margin-bottom: 3px; font-size: 12px; }
+.certloom-studio-profile-popover > p { margin: 0 0 9px; color: var(--studio-muted); font-size: 10px; line-height: 1.4; }
+.certloom-studio-profile-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 8px; }
+.certloom-studio-profile-options label { display: flex; align-items: flex-start; gap: 6px; min-width: 0; color: #34435a; font-size: 10px; line-height: 1.35; }
+.certloom-studio-profile-options input { margin: 1px 0 0; }
+.certloom-studio-profile-options span { min-width: 0; }
+.certloom-studio-profile-popover small { display: block; min-height: 14px; margin-top: 8px; color: #6f7d91; font-size: 9px; }
 .certloom-studio-save-state { display: grid; grid-template-columns: 8px auto; align-items: center; column-gap: 6px; justify-self: end; color: var(--studio-muted); white-space: nowrap; }
 .certloom-studio-save-state small { grid-column: 2; color: #8892a4; font-size: 10px; line-height: 1.1; }
 .certloom-studio-save-dot { width: 7px; height: 7px; border-radius: 50%; background: #2bb673; box-shadow: 0 0 0 3px rgba(43,182,115,.1); }
@@ -1709,6 +1777,24 @@
 .certloom-studio-actions .button { min-height: 36px; padding: 0 16px; border-radius: 8px; font-weight: 600; }
 .certloom-studio-actions .certloom-studio-draft { background: #fff; border-color: #b9c5d8; color: #26354d; }
 .certloom-studio-actions .certloom-studio-primary { background: var(--studio-blue); border-color: var(--studio-blue); color: #fff; }
+
+.certloom-studio-toast {
+	position: absolute;
+	top: 64px;
+	right: 18px;
+	z-index: 400650;
+	max-width: min(360px, calc(100% - 36px));
+	padding: 8px 10px;
+	border: 1px solid #b9d8c9;
+	border-radius: 7px;
+	background: #f2fbf6;
+	box-shadow: 0 8px 22px rgba(22,35,58,.11);
+	color: #245b3d;
+	font-size: 11px;
+	font-weight: 600;
+}
+.certloom-studio-toast[hidden] { display: none; }
+.certloom-studio-toast.is-error { border-color: #e8b7b7; background: #fff6f6; color: #8b2d2d; }
 
 .certloom-studio-documentbar {
 	display: flex;
@@ -2081,6 +2167,9 @@
 	.certloom-studio-brand, .certloom-studio-divider, .certloom-studio-save-state { display: none; }
 	.certloom-studio-back { grid-column: 1; }
 	.certloom-studio-document { grid-column: 2; }
+	.certloom-studio-title-button { max-width: 36vw; }
+	.certloom-studio-title-input { width: 36vw; min-width: 130px; }
+	.certloom-studio-profile-picker { display: none; }
 	.certloom-studio-actions { grid-column: 3; }
 	.certloom-studio-documentbar { justify-content: flex-start; overflow-x: auto; }
 	.certloom-template-designer-stage { display: grid !important; grid-template-columns: 1fr !important; }

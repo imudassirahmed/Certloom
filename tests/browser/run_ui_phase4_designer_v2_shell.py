@@ -60,6 +60,44 @@ async def main():
         await ck(await page.locator('[data-certloom-designer-test-print]').is_visible(), 'testPrintOnlyProofAction')
         await ck(await page.locator('[data-certloom-studio-import-open]').is_visible(), 'directSingleTemplateImportVisible')
 
+        # Template identity can be edited in-place; recommendation profiles are guidance metadata,
+        # not canvas authority and must not create design dirty/undo state.
+        await ck((await root.get_attribute('data-studio-metadata-nonce')) == 'fixture-studio-metadata-nonce', 'studioMetadataNonceBoundToDesigner')
+        title_display = page.locator('[data-certloom-studio-name-display]')
+        title_input = page.locator('[data-certloom-studio-name-input]')
+        await ck(await title_display.is_visible() and await title_input.is_hidden(), 'templateNameStartsAsInlineDisplay')
+        await title_display.click()
+        await ck(await title_input.is_visible() and await title_display.is_hidden(), 'clickTemplateNameStartsInlineRename')
+        await title_input.fill('Academic — Renamed Studio')
+        await title_input.press('ArrowLeft')
+        await ck(await title_input.evaluate("el => document.activeElement === el"), 'renameInputOwnsTextEditingKeys')
+        await title_input.press('Enter')
+        await page.wait_for_timeout(80)
+        await ck((await page.locator('[data-certloom-studio-name-text]').inner_text()).strip() == 'Academic — Renamed Studio', 'enterCommitsInlineTemplateRename')
+        metadata_requests = await page.evaluate('() => window.__certloomMetadataRequests.slice()')
+        await ck(any(r.get('metadata_key') == 'name' and r.get('name') == 'Academic — Renamed Studio' for r in metadata_requests), 'inlineRenameUsesStudioMetadataEndpoint')
+        await ck('has-unsaved-changes' not in (await root.get_attribute('class') or ''), 'inlineRenameDoesNotDirtyCanvasRevision')
+
+        profile_picker = page.locator('[data-certloom-studio-profile-picker]')
+        await ck(await profile_picker.is_visible(), 'recommendedProfilesPickerVisibleInStudio')
+        await ck(await page.locator('[data-certloom-studio-profile]').count() == 9, 'recommendedProfilesUsesNineSetupProfiles')
+        await profile_picker.locator('summary').click()
+        await page.locator('[data-certloom-studio-profile][value="training_lms"]').check()
+        await page.locator('[data-certloom-studio-profile][value="iso_management"]').check()
+        await ck((await page.locator('[data-certloom-studio-profile-summary]').inner_text()).strip() == 'Training / LMS +1', 'profileSummaryShowsFirstProfileAndAdditionalCount')
+        await page.wait_for_timeout(420)
+        metadata_requests = await page.evaluate('() => window.__certloomMetadataRequests.slice()')
+        profile_requests = [r for r in metadata_requests if r.get('metadata_key') == 'recommended_profiles']
+        await ck(bool(profile_requests), 'recommendedProfilesPersistThroughStudioMetadataEndpoint')
+        if profile_requests:
+            await ck(profile_requests[-1].get('recommended_profiles') == ['training_lms', 'iso_management'], 'recommendedProfilesPersistNormalizedSelection')
+        else:
+            await ck(False, 'recommendedProfilesPersistNormalizedSelection')
+        await ck((await page.locator('[data-certloom-studio-profile-status]').inner_text()).strip() == 'Saved', 'profilePickerReportsSavedState')
+        await ck('has-unsaved-changes' not in (await root.get_attribute('class') or ''), 'profileGuidanceDoesNotDirtyCanvasRevision')
+        await profile_picker.locator('summary').click()
+        await ck(not await profile_picker.get_attribute('open'), 'profilePickerClosesWithoutBlockingStudioToolbar')
+
         # Document controls and fitted-100% semantics.
         sizes = await page.locator('[data-certloom-designer-page-size] option').all_text_contents()
         await ck(sizes == ['A4', 'Letter', 'Custom'], 'pageSizesIncludeCustom')

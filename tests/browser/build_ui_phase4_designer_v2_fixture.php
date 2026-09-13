@@ -26,16 +26,40 @@ $html = str_replace(
     '<section class="certloom-template-designer certloom-template-designer-v2 is-pro-mode" data-certloom-designer data-designer-default-mode="pro" data-designer-mode="pro" data-designer-safe-margin-mm="10" ',
     $html
 );
+$html = str_replace(
+    'data-template-id="77"',
+    'data-template-id="77" data-template-updated-at="2026-09-13 10:00:00" data-studio-metadata-nonce="fixture-studio-metadata-nonce"',
+    $html
+);
 
 $header = <<<'HTML'
 <header class="certloom-studio-header">
   <div class="certloom-studio-brand"><span aria-hidden="true">✓</span><span>Certloom Studio</span></div>
   <a class="certloom-studio-back" href="#templates"><span aria-hidden="true">←</span> Templates</a>
   <span class="certloom-studio-divider" aria-hidden="true"></span>
-  <div class="certloom-studio-document"><strong>Academic — A4 Landscape</strong><span class="certloom-template-state">Draft</span></div>
-  <div class="certloom-studio-save-state"><span class="certloom-studio-save-dot" aria-hidden="true"></span><span data-certloom-designer-dirty>Saved draft</span><small data-certloom-designer-autosave-status>Recovery autosave ready</small></div>
+  <div class="certloom-studio-document">
+    <button type="button" class="certloom-studio-title-button" data-certloom-studio-name-display aria-label="Rename certificate design" title="Click to rename"><span data-certloom-studio-name-text>Academic — A4 Landscape</span></button>
+    <input type="text" class="certloom-studio-title-input" maxlength="255" value="Academic — A4 Landscape" data-certloom-studio-name-input hidden aria-label="Certificate design name">
+    <span class="certloom-template-state">Draft</span>
+    <details class="certloom-studio-profile-picker" data-certloom-studio-profile-picker>
+      <summary title="Choose the usage profiles this design is recommended for"><span aria-hidden="true">◫</span><span data-certloom-studio-profile-summary>Profiles</span></summary>
+      <div class="certloom-studio-profile-popover"><strong>Recommended profiles</strong><p>These tags guide Templates and Setup recommendations. They never prevent another profile from using this design.</p><div class="certloom-studio-profile-options">
+        <label><input type="checkbox" value="training_lms" data-certloom-studio-profile><span>Training / LMS</span></label>
+        <label><input type="checkbox" value="iso_management" data-certloom-studio-profile><span>ISO / Management Systems</span></label>
+        <label><input type="checkbox" value="government_licensing" data-certloom-studio-profile><span>Government / Licensing</span></label>
+        <label><input type="checkbox" value="school_results" data-certloom-studio-profile><span>School / Results</span></label>
+        <label><input type="checkbox" value="corporate_compliance" data-certloom-studio-profile><span>Corporate / Compliance</span></label>
+        <label><input type="checkbox" value="membership_association" data-certloom-studio-profile><span>Membership / Association</span></label>
+        <label><input type="checkbox" value="events_awards" data-certloom-studio-profile><span>Events / Awards</span></label>
+        <label><input type="checkbox" value="product_inspection" data-certloom-studio-profile><span>Product / Inspection</span></label>
+        <label><input type="checkbox" value="general_other" data-certloom-studio-profile><span>General / Other</span></label>
+      </div><small data-certloom-studio-profile-status aria-live="polite"></small></div>
+    </details>
+  </div>
+  <div class="certloom-studio-save-state"><span class="certloom-studio-save-dot" aria-hidden="true"></span><span data-certloom-designer-dirty>Saved draft</span><small data-certloom-designer-autosave-status>Recovery ready</small></div>
   <div class="certloom-studio-actions"><button type="submit" form="certloom-studio-fixture-form" class="button certloom-studio-draft" data-certloom-designer-save>Draft</button><button type="submit" form="certloom-studio-fixture-form" class="button button-primary certloom-studio-primary" data-certloom-designer-primary-save data-certloom-designer-quick-save>Publish</button></div>
 </header>
+<div class="certloom-studio-toast" role="status" data-certloom-studio-toast hidden><span></span></div>
 <div class="certloom-studio-conflict" data-certloom-designer-conflict-banner hidden role="alert"><div><strong>Template changed in another session</strong><span>Your current browser edits are still here. Recovery autosave has paused so it cannot overwrite the newer saved revision.</span></div><div class="certloom-studio-conflict-actions"><button type="button" class="button button-small" data-certloom-designer-conflict-review>Keep reviewing</button><button type="button" class="button button-small" data-certloom-designer-conflict-reload>Reload saved version</button></div></div>
 HTML;
 $html = studio_replace_between( $html, '<div class="certloom-template-designer-head">', '<form data-certloom-designer-form>', $header );

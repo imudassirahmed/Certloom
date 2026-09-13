@@ -72,15 +72,20 @@ final class TemplatePackage {
 			return $reference_check;
 		}
 
+		$recommended_profiles = TemplateRecommendationProfiles::normalize( isset( $template['recommended_profiles'] ) && is_array( $template['recommended_profiles'] ) ? $template['recommended_profiles'] : array() );
+
+		$identity = array(
+			'machine_key' => $machine_key,
+			'name'        => $name,
+			'description' => $description,
+		);
+		if ( ! empty( $recommended_profiles ) ) { $identity['recommended_profiles'] = $recommended_profiles; }
+
 		return array(
 			'format'         => self::FORMAT,
 			'format_version' => self::VERSION,
 			'plugin_version' => (string) $plugin_version,
-			'template'       => array(
-				'machine_key' => $machine_key,
-				'name'        => $name,
-				'description' => $description,
-			),
+			'template'       => $identity,
 			'revision'       => array(
 				'layout_schema'         => LayoutSchema::NAME,
 				'layout_schema_version' => (int) $layout['_meta']['schema_version'],
@@ -190,8 +195,12 @@ final class TemplatePackage {
 		$rkeys = array_keys( $revision );
 		sort( $tkeys, SORT_STRING );
 		sort( $rkeys, SORT_STRING );
+		$valid_template_keys = array(
+			array( 'description', 'machine_key', 'name' ),
+			array( 'description', 'machine_key', 'name', 'recommended_profiles' ),
+		);
 		if (
-			array( 'description', 'machine_key', 'name' ) !== $tkeys ||
+			! in_array( $tkeys, $valid_template_keys, true ) ||
 			array( 'layout', 'layout_schema', 'layout_schema_version', 'layout_sha256' ) !== $rkeys
 		) {
 			return new \WP_Error( 'certloom_template_import_contract_invalid', __( 'The design package contains unsupported or missing fields.', 'certloom' ) );
@@ -238,6 +247,7 @@ final class TemplatePackage {
 			'machine_key'   => $machine_key,
 			'name'          => $name,
 			'description'   => $description,
+			'recommended_profiles' => TemplateRecommendationProfiles::normalize( isset( $template['recommended_profiles'] ) && is_array( $template['recommended_profiles'] ) ? $template['recommended_profiles'] : array() ),
 			'layout'        => $layout,
 			'layout_sha256' => $hash,
 		);
