@@ -121,6 +121,9 @@ async def main():
           const leftStyle=getComputedStyle(document.querySelector('.certloom-studio-left'));
           const workspaceStyle=getComputedStyle(document.querySelector('[data-certloom-designer-workspace]'));
           const propsStyle=getComputedStyle(document.querySelector('.certloom-template-designer-inspector'));
+          const layersPrimary=document.querySelector('.certloom-template-designer-layers-primary').getBoundingClientRect();
+          const layersList=document.querySelector('.certloom-studio-layer-list').getBoundingClientRect();
+          const layersListStyle=getComputedStyle(document.querySelector('.certloom-studio-layer-list'));
           return {
             docH:document.documentElement.scrollHeight, clientH:document.documentElement.clientHeight,
             docW:document.documentElement.scrollWidth, clientW:document.documentElement.clientWidth,
@@ -130,7 +133,11 @@ async def main():
             pageX:page.x, pageY:page.y, pageW:page.width, pageH:page.height,
             workX:workspace.x, workY:workspace.y, workW:workspace.width, workH:workspace.height,
             stageCols:stageStyle.gridTemplateColumns,
-            leftOverflow:leftStyle.overflowY, workspaceOverflow:workspaceStyle.overflowY, propsOverflow:propsStyle.overflowY,
+            leftOverflow:leftStyle.overflowY, leftScrollbarGutter:leftStyle.scrollbarGutter,
+            workspaceOverflow:workspaceStyle.overflowY, propsOverflow:propsStyle.overflowY,
+            layersPrimaryRight:layersPrimary.right, layersPrimaryBottom:layersPrimary.bottom,
+            layersListRight:layersList.right, layersListBottom:layersList.bottom,
+            layersListMaxHeight:layersListStyle.maxHeight,
             display:workspaceStyle.display
           };
         }""")
@@ -141,6 +148,9 @@ async def main():
         await ck(layout['workspaceOverflow'] in ('auto', 'scroll'), 'canvasOwnsOverflow')
         await ck(layout['propsOverflow'] in ('auto', 'scroll'), 'inspectorOwnsOverflow')
         await ck(layout['leftH'] > 500 and layout['workspaceH'] > 500 and layout['propsH'] > 500, 'fullHeightWorkingRails')
+        await ck(layout['leftScrollbarGutter'] == 'auto', 'leftRailDoesNotReserveHiddenScrollbarGutter')
+        await ck(abs(layout['layersListRight'] - layout['layersPrimaryRight']) <= 1.5, 'layersScrollerUsesFullRailContentWidth')
+        await ck(layout['layersListMaxHeight'] == 'none' and abs(layout['layersListBottom'] - layout['layersPrimaryBottom']) <= 1.5, 'layersScrollerFillsAvailableRailHeight')
         await ck(layout['pageX'] >= layout['workX'] and layout['pageX'] + layout['pageW'] <= layout['workX'] + layout['workW'] + 1, 'fittedPageInsideCanvasWidth')
         await ck(layout['pageY'] >= layout['workY'] and layout['pageY'] + layout['pageH'] <= layout['workY'] + layout['workH'] + 1, 'fittedPageInsideCanvasHeight')
         await ck(layout['display'] == 'block', 'rulerDoesNotBecomeFlexSiblingOfCanvas')
@@ -450,6 +460,8 @@ async def main():
         await ck(viewport_fit and viewport_geometry['shellTop'] >= 42, 'studioViewportOffsetFixtureApplied')
         await ck(abs(viewport_geometry['shellBottom']-viewport_geometry['viewport']) <= 1.5, 'studioFillsRemainingViewportFromLiveOffset')
         await ck(abs(viewport_geometry['stageBottom']-viewport_geometry['shellBottom']) <= 1.5, 'studioThreePaneStageReachesViewportBottom')
+        await page.evaluate("() => { const shell=document.querySelector('.certloom-template-admin.is-designer-workspace'); shell.style.removeProperty('margin-top'); window.dispatchEvent(new Event('resize')); }")
+        await page.wait_for_timeout(80)
 
         # Canonical save remains a form submit and Publish survives external-submit-button serialization.
         # A hidden fallback intent is synchronized before submit so a missing submitter field can never
@@ -462,6 +474,32 @@ async def main():
         await ck(await page.locator('body').get_attribute('data-submit-intent') == 'publish', 'publishIntentFallbackSerializedBeforeSubmit')
 
         await page.screenshot(path=str(SCREENSHOT), full_page=True)
+
+        # Real WordPress can move the focused shell upward after Designer initialization when
+        # admin chrome/notices settle. Reproduce that late shift without dispatching resize: the
+        # Studio's bounded settling pass must remeasure itself and still land on the viewport bottom.
+        late_html = html.replace(
+            '<body class="certloom-designer-workspace-page" style="margin:0;padding:0"><div class="certloom-template-admin is-designer-workspace">',
+            '<body class="certloom-designer-workspace-page" style="margin:0;padding:0"><div id="certloom-late-admin-offset" style="height:56px"></div><div class="certloom-template-admin is-designer-workspace">',
+            1,
+        ).replace(
+            '</body>',
+            '<script>window.setTimeout(function(){var n=document.getElementById("certloom-late-admin-offset");if(n){n.remove();}},110);</script></body>',
+            1,
+        )
+        late = await browser.new_page(viewport={'width': 1600, 'height': 980})
+        await late.set_content(late_html, wait_until='load')
+        await late.wait_for_timeout(520)
+        late_geometry = await late.evaluate("""() => {
+          const shell=document.querySelector('.certloom-template-admin.is-designer-workspace').getBoundingClientRect();
+          const stage=document.querySelector('.certloom-template-designer-stage').getBoundingClientRect();
+          const root=document.querySelector('[data-certloom-designer]').getBoundingClientRect();
+          return {shellTop:shell.top,shellBottom:shell.bottom,rootBottom:root.bottom,stageBottom:stage.bottom,viewport:window.innerHeight};
+        }""")
+        await ck(abs(late_geometry['shellTop']) <= 1.5, 'studioRemeasuresAfterLateWordPressTopShift')
+        await ck(abs(late_geometry['shellBottom']-late_geometry['viewport']) <= 1.5, 'lateShiftStillClosesViewportBottom')
+        await ck(abs(late_geometry['rootBottom']-late_geometry['shellBottom']) <= 1.5 and abs(late_geometry['stageBottom']-late_geometry['shellBottom']) <= 1.5, 'lateShiftPropagatesExactHeightThroughStudioStage')
+        await late.close()
 
         # Mobile deliberately returns to natural document flow.
         mobile = await browser.new_page(viewport={'width': 390, 'height': 844})

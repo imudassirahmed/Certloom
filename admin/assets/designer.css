@@ -2857,3 +2857,52 @@
 		min-height: 0 !important;
 	}
 }
+
+/* Phase 4 Gamma-02S — viewport closure + Layers gutter hardening after real staging. */
+@media (min-width: 901px) {
+	body.certloom-designer-workspace-page .certloom-template-admin.is-designer-workspace {
+		display: flex !important;
+		flex-direction: column;
+		height: var(--certloom-studio-viewport-height, calc(100dvh - 32px)) !important;
+		min-height: var(--certloom-studio-viewport-height, calc(100dvh - 32px)) !important;
+		max-height: var(--certloom-studio-viewport-height, calc(100dvh - 32px)) !important;
+		overflow: hidden !important;
+	}
+	body.certloom-designer-workspace-page .certloom-template-editor-focused {
+		display: flex !important;
+		flex: 1 1 auto !important;
+		flex-direction: column;
+		height: auto !important;
+		min-height: 0 !important;
+		overflow: hidden !important;
+	}
+	.is-designer-workspace .certloom-template-designer-v2 {
+		flex: 1 1 auto !important;
+		height: auto !important;
+		min-height: 0 !important;
+	}
+	.is-designer-workspace .certloom-template-designer-v2 [data-certloom-designer-form],
+	.is-designer-workspace .certloom-template-designer-v2.is-pro-mode .certloom-template-designer-stage {
+		flex: 1 1 auto !important;
+		height: auto !important;
+		min-height: 0 !important;
+	}
+	/* The left rail inherits scrollbar-gutter:stable from the legacy add-panel selector even
+	 * though the rail itself no longer scrolls. Remove that invisible reserved column; the
+	 * Layers list remains the sole vertical scroller and keeps the same optical inset on both sides. */
+	.is-designer-workspace .certloom-studio-left {
+		scrollbar-gutter: auto !important;
+	}
+	.is-designer-workspace .certloom-template-designer-layers-primary {
+		display: flex !important;
+		flex: 1 1 0 !important;
+		flex-direction: column;
+		min-height: 0 !important;
+	}
+	.is-designer-workspace .certloom-studio-layer-list {
+		flex: 1 1 auto;
+		max-height: none !important;
+		min-height: 0 !important;
+		scrollbar-gutter: auto !important;
+	}
+}

@@ -471,14 +471,35 @@
 			if ( ! intent && submitter.name === 'studio_intent' ) { intent = submitter.value; }
 			return setSaveIntent( intent );
 		}
+		var studioViewportSettleTimers = [];
+		function clearStudioViewportSettleTimers() {
+			while ( studioViewportSettleTimers.length ) { window.clearTimeout( studioViewportSettleTimers.pop() ); }
+		}
 		function syncStudioViewportHeight() {
 			if ( ! studioWorkspaceShell ) { return; }
-			if ( window.matchMedia && ! window.matchMedia( '(min-width: 901px)' ).matches ) { studioWorkspaceShell.style.removeProperty( '--certloom-studio-viewport-height' ); return; }
+			if ( window.matchMedia && ! window.matchMedia( '(min-width: 901px)' ).matches ) {
+				studioWorkspaceShell.style.removeProperty( '--certloom-studio-viewport-height' );
+				studioWorkspaceShell.style.removeProperty( '--certloom-studio-viewport-top' );
+				return;
+			}
 			var rect = studioWorkspaceShell.getBoundingClientRect();
-			var viewportHeight = window.visualViewport && isFinite( window.visualViewport.height ) ? Number( window.visualViewport.height ) : Number( window.innerHeight || document.documentElement.clientHeight || 0 );
-			var viewportTop = window.visualViewport && isFinite( window.visualViewport.offsetTop ) ? Number( window.visualViewport.offsetTop ) : 0;
-			var available = Math.floor( viewportTop + viewportHeight - rect.top );
-			if ( isFinite( available ) && available > 320 ) { studioWorkspaceShell.style.setProperty( '--certloom-studio-viewport-height', available + 'px' ); }
+			var viewportBottom = Number( window.innerHeight || document.documentElement.clientHeight || 0 );
+			if ( ( ! isFinite( viewportBottom ) || viewportBottom <= 0 ) && window.visualViewport && isFinite( window.visualViewport.height ) ) {
+				viewportBottom = Number( window.visualViewport.offsetTop || 0 ) + Number( window.visualViewport.height );
+			}
+			var available = Math.floor( viewportBottom - rect.top );
+			if ( isFinite( available ) && available > 320 ) {
+				studioWorkspaceShell.style.setProperty( '--certloom-studio-viewport-top', Math.max( 0, Math.round( rect.top ) ) + 'px' );
+				studioWorkspaceShell.style.setProperty( '--certloom-studio-viewport-height', available + 'px' );
+			}
+		}
+		function settleStudioViewportHeight() {
+			if ( ! studioWorkspaceShell ) { return; }
+			clearStudioViewportSettleTimers();
+			syncStudioViewportHeight();
+			[ 0, 60, 180, 420, 900, 1500 ].forEach( function ( delay ) {
+				studioViewportSettleTimers.push( window.setTimeout( syncStudioViewportHeight, delay ) );
+			} );
 		}
 		function blockSave( message ) {
 			showError( message ); setSaveFeedback( t( 'saveBlocked', 'Save blocked' ), 'blocked', false ); announce( message );
@@ -2047,9 +2068,10 @@
 
 		enhancePropertySections();
 		applyDesignerMode( rememberedDesignerMode(), false );
-		syncStudioViewportHeight();
-		window.addEventListener( 'resize', syncStudioViewportHeight );
-		if ( window.visualViewport && window.visualViewport.addEventListener ) { window.visualViewport.addEventListener( 'resize', syncStudioViewportHeight ); }
+		settleStudioViewportHeight();
+		window.addEventListener( 'resize', settleStudioViewportHeight );
+		window.addEventListener( 'load', settleStudioViewportHeight );
+		if ( window.visualViewport && window.visualViewport.addEventListener ) { window.visualViewport.addEventListener( 'resize', settleStudioViewportHeight ); }
 		if ( 'ResizeObserver' in window ) { var studioResizeObserver = new ResizeObserver( function () { if ( Math.abs( relativeZoomPercent() - 100 ) <= 1 ) { fitWorkspace(); } } ); studioResizeObserver.observe( workspace ); }
 		syncPreviewModeButtons(); render(); if ( recovered ) { setAutosaveStatus( t( 'autosaveRecovered', 'Recovered unsaved Designer changes from your latest safe checkpoint.' ), 'recovered' ); announce( t( 'autosaveRecovered', 'Recovered unsaved Designer changes from your latest safe checkpoint.' ) ); } else if ( autosaveNeedsCleanup ) { setAutosaveStatus( t( 'savedDraft', 'Saved draft' ), 'clean' ); window.setTimeout( function () { discardAutosave( false ); }, 0 ); } window.setTimeout( function () { fitWorkspace(); }, 0 );
 	}

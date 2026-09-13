@@ -1,3 +1,9 @@
+= 1.7.0-alpha.4.56 =
+* Make desktop Studio viewport sizing self-settling after WordPress/admin layout shifts, so a late upward move of the focused workspace cannot leave the old measured height and recreate a lower dead strip.
+* Strengthen the focused height chain with one exact measured shell height and flex-filled editor/form/stage descendants instead of relying on nested percentage-height inheritance.
+* Remove the hidden stable scrollbar gutter inherited by the left Studio rail and let the Layers list flex to the available pane height, placing its scrollbar at the same optical inset as the left edge instead of leaving an extra right-side void.
+* Extend Gamma-02R source and Chromium regressions for late top-offset settling, exact nested bottom alignment and Layers gutter geometry. Gamma-02 remains open for real staging acceptance; Gamma-03 remains blocked.
+
 = 1.7.0-alpha.4.55 =
 * Preserve the clicked Studio save intent inside the authoritative revision form so an external Publish/Save submitter cannot degrade to Draft when browser form submission omits the submit button name/value.
 * Make the clean Studio save-state label lifecycle-aware: published Templates report Published, Templates with an already-published revision plus saved draft changes report Draft changes saved, and unpublished work remains Saved draft.
