@@ -39,7 +39,7 @@ p44(strpos($js,"if ( 'barcode' === preview ) { return t( 'barcode'")!==false&&st
 
 $palette=ElementRegistry::palette();
 $by_kind=array();foreach($palette as $entry){$by_kind[(string)$entry['kind']]=$entry;}
-p44(count($palette)===16&&isset($by_kind['merge'],$by_kind['rich_text'])&&(int)($by_kind['merge']['max_schema_version']??0)===3&&(int)($by_kind['rich_text']['min_schema_version']??0)===4,'registry retains legacy Merge through schema 3 while Schema 4 replaces normal Merge authoring with rich text');
+p44(count($palette)===19&&isset($by_kind['field'],$by_kind['dynamic_field'],$by_kind['merge'],$by_kind['rich_text'])&&(int)($by_kind['merge']['max_schema_version']??0)===3&&(int)($by_kind['rich_text']['min_schema_version']??0)===4,'registry exposes the approved 19-item Studio palette while legacy Merge remains schema-3 read/authoring compatibility');
 foreach($palette as $item){$kind=(string)$item['kind'];p44(strpos($admin,'data-certloom-designer-add="\' . esc_attr( $kind )')===false || strpos($admin,'data-certloom-designer-palette-item')!==false,'palette '.$kind.' is emitted through unified semantic Insert item');}
 p44(strpos($admin, "! \$disabled ? 'draggable=\"true\" '")!==false,'every enabled current registry primitive participates in drag placement');
 p44(strpos($admin,'data-certloom-designer-palette-category')!==false,'Insert items carry bounded presentation categories');

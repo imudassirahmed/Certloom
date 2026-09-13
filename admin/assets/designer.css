@@ -2156,3 +2156,231 @@
 @media (max-width: 900px) {
 	.certloom-studio-layer-icon { width: 32px; height: 32px; }
 }
+
+/* Phase 4 Gamma-02R acceptance polish — focused viewport, compact rails and preview modes. */
+.certloom-studio-preview-toggle {
+	display: inline-flex;
+	align-items: center;
+	height: 34px;
+	padding: 2px;
+	border: 1px solid var(--studio-line-strong);
+	border-radius: 8px;
+	background: #fff;
+}
+.certloom-studio-preview-toggle button {
+	height: 28px;
+	padding: 0 9px;
+	border: 0;
+	border-radius: 6px;
+	background: transparent;
+	color: #66758b;
+	font-size: 11px;
+	font-weight: 650;
+	cursor: pointer;
+}
+.certloom-studio-preview-toggle button:hover { color: var(--studio-blue); background: #f5f8ff; }
+.certloom-studio-preview-toggle button.is-active {
+	background: var(--studio-blue-soft);
+	color: var(--studio-blue);
+	box-shadow: inset 0 0 0 1px rgba(21,94,239,.16);
+}
+.certloom-studio-conflict {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 14px;
+	padding: 8px 12px;
+	border-bottom: 1px solid #f4c7a1;
+	background: #fff8ed;
+	color: #704b20;
+	font-size: 11px;
+	line-height: 1.35;
+}
+.certloom-studio-conflict[hidden] { display: none; }
+.certloom-studio-conflict > div:first-child { display: flex; min-width: 0; align-items: baseline; gap: 8px; }
+.certloom-studio-conflict strong { flex: 0 0 auto; color: #8b4b12; }
+.certloom-studio-conflict span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.certloom-studio-conflict-actions { display: flex; flex: 0 0 auto; gap: 6px; }
+.certloom-studio-save-state { max-width: 170px; }
+.certloom-studio-save-state span,
+.certloom-studio-save-state small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.certloom-studio-save-state small[data-state="conflict"] { color: #a44a18; font-weight: 700; }
+
+.certloom-template-designer-v2 [data-certloom-designer-fields] {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+}
+.certloom-template-designer-v2 [data-certloom-designer-fields][hidden] { display: none; }
+.certloom-template-designer-element-meta code,
+.certloom-template-designer-element-meta em { display: none !important; }
+.certloom-template-designer-element-meta span { font-size: 12px; text-transform: capitalize; }
+.certloom-studio-advanced { order: 90; }
+.certloom-studio-technical-id { display: grid; gap: 5px; margin-top: 9px; }
+.certloom-studio-technical-id > span { font-size: 10px; font-weight: 700; color: #69768b; }
+.certloom-studio-technical-id code {
+	display: block;
+	max-width: 100%;
+	overflow: hidden;
+	padding: 7px 8px;
+	border: 1px solid var(--studio-line);
+	border-radius: 6px;
+	background: #f8faff;
+	color: #5e6b80;
+	font-size: 9px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.certloom-template-designer-layer {
+	grid-template-columns: 14px minmax(0,1fr) auto !important;
+	gap: 3px !important;
+	min-height: 32px !important;
+	margin-bottom: 2px !important;
+	padding: 2px 3px !important;
+}
+.certloom-studio-layer-drag { width: 13px; height: 13px; font-size: 13px; }
+.certloom-template-designer-layer-select {
+	gap: 4px !important;
+	min-height: 26px !important;
+	font-size: 11px !important;
+}
+.certloom-template-designer-layer-select .dashicons { flex-basis: 13px; width: 13px; height: 13px; font-size: 13px; }
+.certloom-template-designer-layer-actions { gap: 0 !important; }
+.certloom-studio-layer-icon { width: 21px; height: 24px; }
+.certloom-studio-layer-icon .dashicons { width: 13px; height: 13px; font-size: 13px; }
+
+.certloom-template-designer-workspace {
+	background:
+		linear-gradient(#dde4ee 1px, transparent 1px) 0 27px/100% 1px no-repeat,
+		linear-gradient(90deg, #dde4ee 1px, transparent 1px) 37px 0/1px 100% no-repeat,
+		#eef2f7 !important;
+}
+.certloom-template-designer-page { box-shadow: 0 14px 34px rgba(27,39,61,.14) !important; }
+
+@media (min-width: 901px) {
+	body.certloom-designer-workspace-page {
+		height: 100dvh !important;
+		min-height: 0 !important;
+		overflow: hidden !important;
+	}
+	body.certloom-designer-workspace-page #wpwrap {
+		height: 100dvh !important;
+		min-height: 0 !important;
+		overflow: hidden !important;
+	}
+	body.certloom-designer-workspace-page #wpcontent {
+		height: calc(100dvh - 32px) !important;
+		min-height: 0 !important;
+		overflow: hidden !important;
+	}
+	body.certloom-designer-workspace-page #wpbody {
+		height: 100% !important;
+		min-height: 0 !important;
+		overflow: hidden !important;
+	}
+	body.certloom-designer-workspace-page #wpbody-content {
+		height: 100% !important;
+		min-height: 0 !important;
+		padding-bottom: 0 !important;
+		overflow: hidden !important;
+	}
+	body.certloom-designer-workspace-page .certloom-template-admin.is-designer-workspace {
+		height: 100% !important;
+		min-height: 0 !important;
+		margin: 0 20px 0 0 !important;
+		overflow: hidden !important;
+	}
+	body.certloom-designer-workspace-page .certloom-product-subnav { display: none !important; }
+	.is-designer-workspace .certloom-template-editor-focused,
+	.is-designer-workspace .certloom-template-designer-v2 { min-height: 0 !important; height: 100% !important; }
+	.is-designer-workspace .certloom-template-designer-v2.is-pro-mode .certloom-template-designer-stage {
+		grid-template-columns: 258px minmax(420px, 1fr) 302px !important;
+	}
+	.is-designer-workspace .certloom-studio-left,
+	.is-designer-workspace .certloom-template-designer-inspector { overflow-y: auto !important; overflow-x: hidden !important; }
+}
+
+@media (min-width: 901px) and (max-width: 1280px) {
+	.is-designer-workspace .certloom-template-designer-v2.is-pro-mode .certloom-template-designer-stage {
+		grid-template-columns: 224px minmax(360px, 1fr) 270px !important;
+	}
+	.certloom-studio-save-state { display: none; }
+	.certloom-studio-preview-toggle button { padding-inline: 6px; }
+}
+
+/* Gamma-02R Studio rulers: viewport-pinned millimetre guides that never become canvas siblings. */
+.certloom-template-designer-v2 .certloom-template-designer-workspace::before,
+.certloom-template-designer-v2 .certloom-template-designer-workspace::after { content: none !important; }
+.certloom-studio-ruler {
+	position: absolute;
+	z-index: 400100;
+	pointer-events: none;
+	overflow: hidden;
+	color: #7b8799;
+	font-size: 9px;
+	line-height: 1;
+	background: rgba(246,248,251,.96);
+}
+.certloom-studio-ruler-x {
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 27px;
+	border-bottom: 1px solid #dfe5ee;
+}
+.certloom-studio-ruler-y {
+	top: 27px;
+	bottom: 0;
+	left: 0;
+	width: 37px;
+	border-right: 1px solid #dfe5ee;
+}
+.certloom-studio-ruler-mark { position: absolute; display: block; }
+.certloom-studio-ruler-x .certloom-studio-ruler-mark { top: 0; height: 27px; }
+.certloom-studio-ruler-x .certloom-studio-ruler-mark i {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	width: 1px;
+	height: 8px;
+	background: #9eabba;
+}
+.certloom-studio-ruler-x .certloom-studio-ruler-mark b {
+	position: absolute;
+	left: 4px;
+	top: 5px;
+	font-size: 9px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+.certloom-studio-ruler-y .certloom-studio-ruler-mark { left: 0; width: 37px; }
+.certloom-studio-ruler-y .certloom-studio-ruler-mark i {
+	position: absolute;
+	right: 0;
+	top: 0;
+	width: 8px;
+	height: 1px;
+	background: #9eabba;
+}
+.certloom-studio-ruler-y .certloom-studio-ruler-mark b {
+	position: absolute;
+	right: 12px;
+	top: -4px;
+	font-size: 9px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+	.certloom-studio-layer-icon { width: 32px !important; height: 32px !important; }
+	.certloom-template-designer-layer { min-height: 38px !important; }
+	.certloom-studio-ruler { display: none; }
+}
+
+/* Legacy Quick-mode compatibility keeps its intentionally plain stage outside focused Studio. */
+.certloom-template-designer.is-quick-mode .certloom-template-designer-workspace {
+	background: #eef0f2 !important;
+	background-image: none !important;
+}
+.certloom-template-designer.is-quick-mode .certloom-studio-ruler { display: none !important; }

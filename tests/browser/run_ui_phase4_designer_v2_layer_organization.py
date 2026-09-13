@@ -81,6 +81,9 @@ async def main():
         await lock_row.locator('[data-certloom-designer-layer-row-action="lock"]').click(); await page.wait_for_timeout(40)
 
         # Form controls retain native clipboard path rather than triggering Designer paste.
+        geometry=page.locator('[data-certloom-designer-property-section="geometry"]')
+        if 'is-open' not in (await geometry.get_attribute('class') or ''):
+            await geometry.locator('.certloom-studio-accordion-trigger').click(); await page.wait_for_timeout(20)
         text_input=page.locator('[data-certloom-designer-field="x"]'); await text_input.focus(); before=await page.locator('[data-certloom-designer-element]').count(); await page.keyboard.press('Control+v'); await page.wait_for_timeout(30)
         await ck(await page.locator('[data-certloom-designer-element]').count()==before,'formControlPasteNotHijacked')
 

@@ -64,6 +64,8 @@ final class AdminProductNavigation {
 	public function render_subnav() {
 		$page = $this->current_page();
 		if ( '' === $page || 0 !== strpos( $page, 'certloom' ) || ! is_user_logged_in() ) { return; }
+		$design_view = isset( $_GET['design_view'] ) ? sanitize_key( wp_unslash( $_GET['design_view'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin routing.
+		if ( 'certloom-templates' === $page && 'editor' === $design_view ) { return; }
 
 		/*
 		 * Workspaces with a shared Certloom hero render their contextual navigation

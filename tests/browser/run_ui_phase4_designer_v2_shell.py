@@ -66,6 +66,12 @@ async def main():
         await ck((await page.locator('[data-certloom-designer-zoom-output]').inner_text()).strip() == '100%', 'initialFitIs100')
         await ck(await page.locator('[data-certloom-designer-fit]').is_visible(), 'fitAlwaysVisible')
         await ck(await page.locator('[data-certloom-designer-zoom-in]').is_visible() and await page.locator('[data-certloom-designer-zoom-out]').is_visible(), 'compactZoomControlsVisible')
+        await ck(await page.locator('[data-certloom-designer-preview-mode]').count() == 2, 'sampleTokensToggleVisible')
+        await ck((await page.locator('[data-certloom-designer-preview-mode="sample"]').get_attribute('aria-pressed')) == 'true', 'samplePreviewDefault')
+        await ck(await page.locator('[data-certloom-designer-ruler="x"]').is_visible(), 'horizontalMillimetreRulerVisible')
+        await ck(await page.locator('[data-certloom-designer-ruler="y"]').is_visible(), 'verticalMillimetreRulerVisible')
+        await ck(await page.locator('[data-certloom-designer-ruler="x"] .certloom-studio-ruler-mark').count() >= 10, 'horizontalRulerHasLabelledTicks')
+        await ck('layout v' not in (await page.locator('[data-certloom-designer-page-readout]').inner_text()).lower(), 'studioReadoutHidesTechnicalSchemaVersion')
 
         layout = await page.evaluate("""() => {
           const designer=document.querySelector('[data-certloom-designer]').getBoundingClientRect();
@@ -137,6 +143,10 @@ async def main():
         await page.locator('[data-certloom-designer-add="ellipse"]').click()
         await page.wait_for_timeout(80)
         await ck(await page.locator('[data-certloom-designer-element]').count() == before + 1, 'insertAddsCanonicalElement')
+        shape_appearance = page.locator('[data-certloom-designer-property-section="appearance"]')
+        shape_content = page.locator('[data-certloom-designer-property-section="content"]')
+        await ck('is-open' in (await shape_appearance.get_attribute('class') or ''), 'shapeOpensAppearanceInspectorFirst')
+        await ck('is-open' not in (await shape_content.get_attribute('class') or ''), 'shapeDoesNotOpenContentInspectorFirst')
         await ck(await drawer.is_hidden(), 'insertDrawerClosesAfterInsert')
         await ck((await trigger.get_attribute('aria-expanded')) == 'false', 'insertStateClosesAfterInsert')
 
@@ -186,6 +196,41 @@ async def main():
         await ck(await page.locator('[data-certloom-designer-style-field="font_weight"]').count() == 1, 'fontWeightControlRetained')
         await ck(await page.locator('[data-certloom-designer-style-field="overflow"]').count() == 1, 'textWrappingOverflowControlRetained')
 
+        # Canvas selection owns keyboard arrows instead of scrolling the WordPress document.
+        selected_id = await text_el.get_attribute('data-certloom-designer-element')
+        selected_row = page.locator(f'[data-certloom-designer-layer-row="{selected_id}"]')
+        await ck('is-selected' in (await selected_row.get_attribute('class') or ''), 'canvasSelectionHighlightsMatchingLayer')
+        layer_visibility = await selected_row.evaluate("""el => { const list=el.closest('[data-certloom-designer-layers]'); const r=el.getBoundingClientRect(), l=list.getBoundingClientRect(); return r.top >= l.top-1 && r.bottom <= l.bottom+1; }""")
+        await ck(layer_visibility, 'selectedLayerAutoScrollsIntoLayersViewport')
+        selected_canvas = page.locator(f'[data-certloom-designer-element="{selected_id}"]')
+        await selected_canvas.focus()
+        await page.wait_for_timeout(20)
+        before_box = await selected_canvas.bounding_box()
+        before_scroll = await page.evaluate('() => window.scrollY')
+        await page.keyboard.press('ArrowRight')
+        await page.wait_for_timeout(70)
+        after_box = await page.locator(f'[data-certloom-designer-element="{selected_id}"]').bounding_box()
+        after_scroll = await page.evaluate('() => window.scrollY')
+        await ck(after_box and before_box and after_box['x'] > before_box['x'] + 0.5, 'arrowKeyNudgesSelectedElement')
+        await ck(after_scroll == before_scroll, 'arrowKeyDoesNotScrollOuterPage')
+        before_y = after_box['y'] if after_box else 0
+        await page.keyboard.press('Shift+ArrowDown')
+        await page.wait_for_timeout(70)
+        shifted_box = await page.locator(f'[data-certloom-designer-element="{selected_id}"]').bounding_box()
+        await ck(shifted_box and shifted_box['y'] > before_y + 2, 'shiftArrowUsesLargerNudge')
+
+        # Technical IDs are removed from the normal inspector header and retained under Advanced.
+        await ck(not await page.locator('.certloom-template-designer-element-meta code').is_visible(), 'rawElementIdHiddenFromNormalInspectorHeader')
+        advanced = page.locator('[data-certloom-designer-property-section="advanced"]')
+        if 'is-open' not in (await advanced.get_attribute('class') or ''):
+            await advanced.locator('.certloom-studio-accordion-trigger').click()
+            await page.wait_for_timeout(20)
+        await ck((await page.locator('[data-certloom-designer-advanced-id]').inner_text()).strip() == selected_id, 'advancedInspectorShowsSelectedElementId')
+
+        toolbar_bounds = await page.locator('[data-certloom-designer-selection-toolbar]').bounding_box()
+        page_bounds = await page.locator('[data-certloom-designer-page]').bounding_box()
+        await ck(bool(toolbar_bounds and page_bounds and toolbar_bounds['y'] >= page_bounds['y'] - 1 and toolbar_bounds['y'] + toolbar_bounds['height'] <= page_bounds['y'] + page_bounds['height'] + 1), 'floatingToolbarStaysInsideCanvasViewport')
+
         # Undo / redo / restore-last-saved are the only left history controls.
         await ck(await page.locator('.certloom-studio-history > button').count() == 3, 'historyStripIsThreeCompactIcons')
         await ck(await page.locator('[data-certloom-designer-undo]').is_enabled(), 'undoEnabledAfterChange')
@@ -200,6 +245,20 @@ async def main():
         await page.wait_for_timeout(80)
         await ck(not await root.evaluate("el => el.classList.contains('has-unsaved-changes')"), 'restoreReturnsToLastSavedState')
         await ck(await page.locator('[data-certloom-designer-element]').count() == before, 'restoreRemovesUnsavedInsertedElement')
+
+        # Sample/Tokens is a view-only live preview mode and never dirties the design.
+        recipient_merge = page.locator('[data-certloom-designer-element]').filter(has_text='Alexandria Noor Rahman').first
+        await ck(await recipient_merge.count() == 1, 'samplePreviewShowsRecipientSampleValue')
+        await page.locator('[data-certloom-designer-preview-mode="tokens"]').click()
+        await page.wait_for_timeout(50)
+        await ck(await page.locator('[data-certloom-designer-element]').filter(has_text='{{recipient.name}}').count() >= 1, 'tokenPreviewShowsCanonicalRecipientToken')
+        await ck((await page.locator('[data-certloom-designer-preview-mode="tokens"]').get_attribute('aria-pressed')) == 'true', 'tokenPreviewPressedState')
+        await ck(not await root.evaluate("el => el.classList.contains('has-unsaved-changes')"), 'tokenPreviewDoesNotDirtyDesign')
+        await ck(await page.locator('[data-certloom-designer-undo]').is_disabled(), 'tokenPreviewDoesNotCreateUndoHistory')
+        await page.locator('[data-certloom-designer-preview-mode="sample"]').click()
+        await page.wait_for_timeout(50)
+        await ck(await page.locator('[data-certloom-designer-element]').filter(has_text='Alexandria Noor Rahman').count() >= 1, 'samplePreviewRestoresSampleValue')
+        await ck(not await root.evaluate("el => el.classList.contains('has-unsaved-changes')"), 'samplePreviewReturnStillClean')
 
         # Relative zoom and Ctrl/Cmd+0 fitted baseline.
         await page.locator('[data-certloom-designer-zoom-in]').click()

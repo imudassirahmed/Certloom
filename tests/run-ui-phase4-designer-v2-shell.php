@@ -1,6 +1,6 @@
 <?php
 /** Phase 4 Gamma-02R Certloom Studio source shell contract. */
-$root=dirname(__DIR__);$php=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php');$css=file_get_contents($root.'/admin/assets/designer.css');$js=file_get_contents($root.'/admin/assets/designer.js');
+$root=dirname(__DIR__);$php=file_get_contents($root.'/src/Infrastructure/Admin/TemplateAdmin.php');$nav=file_get_contents($root.'/src/Infrastructure/Admin/AdminProductNavigation.php');$css=file_get_contents($root.'/admin/assets/designer.css');$js=file_get_contents($root.'/admin/assets/designer.js');
 $checks=0; function st($ok,$m){global$checks;$checks++;if(!$ok){fwrite(STDERR,"FAIL  $m\n");exit(1);}} function sth($h,$n,$m){st(false!==strpos($h,$n),$m);} function stn($h,$n,$m){st(false===strpos($h,$n),$m);}
 sth($php,'Certloom Studio','workspace is named Certloom Studio');
 sth($php,"esc_html__( 'Templates', 'certloom' )",'Studio returns to Templates');
@@ -38,4 +38,29 @@ sth($js,'data-certloom-designer-rotate','direct rotate handle remains');
 sth($js,'startDirectTextEdit','direct text editing remains');
 sth($js,'autosave','recovery autosave remains intact');
 sth($php,'Manual save remains the only authoritative revision write.','autosave/revision authority boundary is documented without visible clutter');
+sth($php,'data-certloom-designer-preview-mode="sample"','Studio exposes Sample dynamic-field preview mode');
+sth($php,'data-certloom-designer-preview-mode="tokens"','Studio exposes Tokens dynamic-field preview mode');
+sth($php,'data-certloom-designer-conflict-banner','autosave concurrency conflict has a compact Studio banner');
+sth($php,'data-certloom-designer-conflict-reload','conflict banner exposes deliberate reload action');
+sth($php,'data-certloom-designer-property-section="advanced"','technical identifiers live in Advanced inspector section');
+sth($php,'data-certloom-designer-advanced-id','Advanced inspector owns the technical element identifier');
+sth($nav,"'certloom-templates' === \$page && 'editor' === \$design_view",'focused Studio suppresses legacy product sub-navigation');
+sth($js,"if ( 'tokens' === activePreviewMode )",'token preview swaps dynamic values without changing bindings');
+sth($js,"return token ? '{{' + token + '}}' : '{{field}}'",'token preview exposes canonical token text on canvas');
+sth($js,'function focusSelectedCanvasElement()','canvas selection deliberately receives keyboard focus');
+sth($js,'passiveDocumentTarget && selectionIds().length > 0','selected canvas elements keep keyboard ownership if browser focus falls back to the document');
+sth($js,"var step = event.altKey ? 0.1 : ( event.shiftKey ? 5 : 1 )",'keyboard nudge precision is 1 mm / 5 mm / 0.1 mm');
+sth($js,"if ( nudgeSelected( event ) ) { event.preventDefault(); }",'nudge prevents browser page scrolling');
+stn($js,'localStorage','Studio view mode does not create browser-local authority');
+stn($js,'sessionStorage','Studio view mode does not create session-local authority');
+sth($css,'body.certloom-designer-workspace-page','focused Studio has an outer document scroll-lock contract');
+sth($css,'overflow: hidden !important','focused desktop Studio prevents trailing WordPress page scrolling');
+sth($css,'.certloom-studio-preview-toggle','Sample/Tokens control has compact Studio styling');
+sth($css,'.certloom-studio-conflict','concurrency warning is styled outside the document title row');
+sth($css,'.certloom-template-designer-element-meta code','raw technical ID is hidden from the normal inspector header');
+sth($js,'function renderStudioRulers()','Studio renders labelled millimetre rulers without changing canvas structure');
+sth($js,"data-certloom-designer-ruler",'Studio rulers are discoverable for browser acceptance');
+sth($css,'.certloom-studio-ruler-x','horizontal Studio ruler is styled');
+sth($css,'.certloom-studio-ruler-y','vertical Studio ruler is styled');
+sth($js,"root.classList.contains( 'certloom-template-designer-v2' ) ? publicReadout",'Studio hides technical layout schema version from normal document readout');
 echo "PASS  Phase 4 Gamma-02R Certloom Studio shell\n\n$checks checks, 0 failures\n";

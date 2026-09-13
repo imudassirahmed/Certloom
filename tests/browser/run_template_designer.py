@@ -82,10 +82,10 @@ async def run():
             await ck(abs(rot_after-rot_before)>0.1,'rotate')
         await page.locator('[data-certloom-designer-orientation]').select_option('portrait'); await page.wait_for_timeout(40)
         portrait_readout=await page.locator('[data-certloom-designer-page-readout]').text_content()
-        await ck(bool(portrait_readout and 'portrait' in portrait_readout and '210 × 297' in portrait_readout),'pageSwitch')
+        await ck(bool(portrait_readout and 'portrait' in portrait_readout.lower() and '210 × 297' in portrait_readout),'pageSwitch')
         await page.locator('[data-certloom-designer-undo]').click(); await page.wait_for_timeout(35)
         landscape_readout=await page.locator('[data-certloom-designer-page-readout]').text_content()
-        await ck(bool(landscape_readout and 'landscape' in landscape_readout),'pageSwitchUndo')
+        await ck(bool(landscape_readout and 'landscape' in landscape_readout.lower()),'pageSwitchUndo')
         await page.locator('[data-certloom-designer-zoom]').fill('100'); await page.locator('[data-certloom-designer-zoom]').dispatch_event('input'); await page.wait_for_timeout(25)
         await ck((await page.locator('[data-certloom-designer-zoom-output]').text_content())=='100%','zoom')
 
@@ -148,7 +148,7 @@ async def run():
         await ck(await page.locator('[data-certloom-designer-snap]').is_checked(),'resetState')
         await ck(await page.locator('[data-certloom-designer-undo]').is_disabled(),'resetHistory')
         readout=await page.locator('[data-certloom-designer-page-readout]').text_content()
-        await ck(bool(readout and 'A4 · landscape' in readout),'resetLayout')
+        await ck(bool(readout and 'a4 · landscape' in readout.lower()),'resetLayout')
 
         # Responsive/reduced-motion + keyboard accessible layer controls.
         media=await browser.new_page(viewport={'width':768,'height':900}); await media.emulate_media(reduced_motion='reduce'); await media.set_content(html,wait_until='load'); await media.wait_for_timeout(100)

@@ -94,6 +94,7 @@
 		var stateField = root.querySelector( '[data-certloom-designer-state-json]' );
 		var pageEl = root.querySelector( '[data-certloom-designer-page]' );
 		var workspace = root.querySelector( '[data-certloom-designer-workspace]' );
+		var rulerX = null, rulerY = null;
 		var sizeControl = root.querySelector( '[data-certloom-designer-page-size]' );
 		var orientationControl = root.querySelector( '[data-certloom-designer-orientation]' );
 		var customSizeWrap = root.querySelector( '[data-certloom-designer-custom-size]' );
@@ -112,6 +113,7 @@
 		var paletteItems = root.querySelectorAll( '[data-certloom-designer-palette-item]' );
 		var paletteCategories = root.querySelectorAll( '[data-certloom-insert-category]' );
 		var sampleDataControl = root.querySelector( '[data-certloom-designer-sample-data]' );
+		var previewModeButtons = root.querySelectorAll( '[data-certloom-designer-preview-mode]' );
 		var fitButton = root.querySelector( '[data-certloom-designer-fit]' );
 		var trueSizeButton = root.querySelector( '[data-certloom-designer-true-size]' );
 		var resetButton = root.querySelector( '[data-certloom-designer-reset]' );
@@ -131,6 +133,7 @@
 		var fieldsInspector = root.querySelector( '[data-certloom-designer-fields]' );
 		var typeOutput = root.querySelector( '[data-certloom-designer-type]' );
 		var idOutput = root.querySelector( '[data-certloom-designer-id]' );
+		var advancedIdOutput = root.querySelector( '[data-certloom-designer-advanced-id]' );
 		var lockStatus = root.querySelector( '[data-certloom-designer-lock-status]' );
 		var liveRegion = root.querySelector( '[data-certloom-designer-live]' );
 		var error = root.querySelector( '[data-certloom-designer-error]' );
@@ -185,6 +188,9 @@
 		var autosaveStatusEl = root.querySelector( '[data-certloom-designer-autosave-status]' );
 		var autosaveDiscardButton = root.querySelector( '[data-certloom-designer-autosave-discard]' );
 		var autosaveSessionField = root.querySelector( '[data-certloom-designer-autosave-session-field]' );
+		var conflictBanner = root.querySelector( '[data-certloom-designer-conflict-banner]' );
+		var conflictReviewButton = conflictBanner ? conflictBanner.querySelector( '[data-certloom-designer-conflict-review]' ) : null;
+		var conflictReloadButton = conflictBanner ? conflictBanner.querySelector( '[data-certloom-designer-conflict-reload]' ) : null;
 		var copyButton = root.querySelector( '[data-certloom-designer-copy]' );
 		var cutButton = root.querySelector( '[data-certloom-designer-cut]' );
 		var pasteButton = root.querySelector( '[data-certloom-designer-paste]' );
@@ -235,6 +241,21 @@
 		var activeSpacingGuides = [];
 		var contextMenu = null;
 		var activeSampleProfile = sampleDataControl && sampleDataControl.value ? String( sampleDataControl.value ) : ( SAMPLE_DATA.default || 'standard' );
+		var activePreviewMode = 'sample';
+		function syncPreviewModeButtons() {
+			for ( var previewButtonIndex = 0; previewButtonIndex < previewModeButtons.length; previewButtonIndex++ ) {
+				var previewMode = String( previewModeButtons[ previewButtonIndex ].getAttribute( 'data-certloom-designer-preview-mode' ) || 'sample' );
+				var previewActive = previewMode === activePreviewMode;
+				previewModeButtons[ previewButtonIndex ].classList.toggle( 'is-active', previewActive );
+				previewModeButtons[ previewButtonIndex ].setAttribute( 'aria-pressed', previewActive ? 'true' : 'false' );
+			}
+		}
+		function setPreviewMode( mode, speak ) {
+			activePreviewMode = 'tokens' === mode ? 'tokens' : 'sample';
+			syncPreviewModeButtons();
+			render();
+			if ( speak ) { announce( 'tokens' === activePreviewMode ? t( 'tokenPreviewEnabled', 'Token preview enabled. Template data was not changed.' ) : t( 'samplePreviewEnabled', 'Sample preview enabled. Template data was not changed.' ) ); }
+		}
 
 		function rememberedDesignerMode() {
 			var fallback = root.getAttribute( 'data-designer-default-mode' ) || 'pro';
@@ -294,7 +315,11 @@
 		if ( recovered ) { designerState = normalizeState( designerState ); lastAutosaveFingerprint = stable( { layout: layout, state: designerState } ); }
 
 		function setAutosaveStatus( message, state ) {
-			if ( autosaveStatusEl ) { autosaveStatusEl.textContent = message || ''; autosaveStatusEl.setAttribute( 'data-state', state || '' ); }
+			var statusMessage = message || '';
+			if ( 'conflict' === state ) { statusMessage = t( 'autosaveConflictShort', 'Save conflict' ); }
+			if ( autosaveStatusEl ) { autosaveStatusEl.textContent = statusMessage; autosaveStatusEl.setAttribute( 'data-state', state || '' ); }
+			if ( conflictBanner ) { conflictBanner.hidden = 'conflict' !== state; }
+			root.classList.toggle( 'has-autosave-conflict', 'conflict' === state );
 		}
 		function autosaveFingerprint() { return stable( { layout: layout, state: designerState } ); }
 		function autosaveRequest( action, body, keepalive ) {
@@ -327,7 +352,7 @@
 					lastAutosaveFingerprint = fingerprint; hasServerAutosave = true; setAutosaveStatus( t( 'autosaved', 'Recovery checkpoint saved' ), 'saved' );
 				} else {
 					var code = payload && payload.data ? payload.data.code : '';
-					if ( 409 === payload.httpStatus || 'certloom_designer_autosave_conflict' === code || 'certloom_designer_autosave_session_conflict' === code ) { autosaveConflict = true; root.classList.add( 'has-autosave-conflict' ); setAutosaveStatus( t( 'autosaveConflict', 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.' ), 'conflict' ); showError( t( 'autosaveConflict', 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.' ) ); }
+					if ( 409 === payload.httpStatus || 'certloom_designer_autosave_conflict' === code || 'certloom_designer_autosave_session_conflict' === code ) { autosaveConflict = true; setAutosaveStatus( t( 'autosaveConflict', 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.' ), 'conflict' ); }
 					else { setAutosaveStatus( t( 'autosaveFailed', 'Recovery autosave is temporarily unavailable. Manual save remains available.' ), 'error' ); }
 				}
 			} ).catch( function () { setAutosaveStatus( t( 'autosaveFailed', 'Recovery autosave is temporarily unavailable. Manual save remains available.' ), 'error' ); window.setTimeout( function () { scheduleAutosave(); }, AUTOSAVE_RETRY_MS ); } ).then( function () {
@@ -434,6 +459,7 @@
 		}
 		function relativeZoomPercent() { return Math.round( ( zoom / Math.max( 0.0001, fitZoom ) ) * 100 ); }
 		var inspectorOpenedFor = {};
+		var lastInspectorElementId = '';
 		function enhancePropertySections() {
 			for ( var i = 0; i < propertySections.length; i++ ) {
 				( function ( section ) {
@@ -450,9 +476,24 @@
 		function openInspectorSection( key ) {
 			for ( var i = 0; i < propertySections.length; i++ ) { var section = propertySections[ i ]; if ( section.getAttribute( 'data-certloom-designer-property-section' ) !== key ) { continue; } var body = section.querySelector( '.certloom-studio-accordion-body' ); var trigger = section.querySelector( '.certloom-studio-accordion-trigger' ); if ( body ) { body.hidden = false; } section.classList.add( 'is-open' ); if ( trigger ) { trigger.setAttribute( 'aria-expanded', 'true' ); } break; }
 		}
+		function closeInspectorSections() {
+			for ( var i = 0; i < propertySections.length; i++ ) { var section = propertySections[ i ]; var body = section.querySelector( '.certloom-studio-accordion-body' ); var trigger = section.querySelector( '.certloom-studio-accordion-trigger' ); if ( body ) { body.hidden = true; } section.classList.remove( 'is-open' ); if ( trigger ) { trigger.setAttribute( 'aria-expanded', 'false' ); } }
+		}
+		function orderInspectorSections( element ) {
+			if ( ! element ) { return; }
+			var type = String( element.type || '' ); var order;
+			if ( [ 'shape', 'line' ].indexOf( type ) !== -1 ) { order = [ 'appearance', 'geometry', 'transform', 'arrange', 'layer', 'content', 'advanced' ]; }
+			else if ( [ 'qr', 'barcode', 'merge', 'dynamic_field', 'field' ].indexOf( type ) !== -1 ) { order = [ 'content', 'appearance', 'geometry', 'transform', 'arrange', 'layer', 'advanced' ]; }
+			else if ( [ 'image', 'logo', 'seal', 'signature' ].indexOf( type ) !== -1 ) { order = [ 'content', 'appearance', 'geometry', 'transform', 'arrange', 'layer', 'advanced' ]; }
+			else { order = [ 'content', 'appearance', 'geometry', 'transform', 'arrange', 'layer', 'advanced' ]; }
+			for ( var i = 0; i < propertySections.length; i++ ) { var key = String( propertySections[ i ].getAttribute( 'data-certloom-designer-property-section' ) || '' ); var at = order.indexOf( key ); propertySections[ i ].style.order = String( at === -1 ? 90 : at + 1 ); }
+		}
 		function openPreferredInspectorSection( element ) {
-			if ( ! element || inspectorOpenedFor[ element.id ] ) { return; } inspectorOpenedFor[ element.id ] = true;
-			var type = String( element.type || '' ); var key = [ 'text', 'merge', 'rich_text', 'list', 'image', 'logo', 'signature', 'qr', 'barcode', 'table', 'data_table' ].indexOf( type ) !== -1 ? 'content' : ( [ 'shape', 'line' ].indexOf( type ) !== -1 ? 'appearance' : 'geometry' ); openInspectorSection( key );
+			if ( ! element ) { return; }
+			orderInspectorSections( element );
+			if ( lastInspectorElementId === element.id && inspectorOpenedFor[ element.id ] ) { return; }
+			lastInspectorElementId = element.id; inspectorOpenedFor[ element.id ] = true; closeInspectorSections();
+			var type = String( element.type || '' ); var key = [ 'shape', 'line' ].indexOf( type ) !== -1 ? 'appearance' : ( [ 'text', 'merge', 'rich_text', 'list', 'image', 'logo', 'seal', 'signature', 'qr', 'barcode', 'table', 'data_table', 'dynamic_field', 'field' ].indexOf( type ) !== -1 ? 'content' : 'geometry' ); openInspectorSection( key );
 		}
 		function closeInsertPanel() {
 			if ( ! insertPanel || insertPanel.hidden ) { return; }
@@ -460,6 +501,22 @@
 			root.classList.remove( 'is-insert-open' );
 			if ( insertFocusButton ) { insertFocusButton.setAttribute( 'aria-expanded', 'false' ); }
 		}
+		function ensureStudioRulers() {
+			if ( ! root.classList.contains( 'certloom-template-designer-v2' ) ) { return false; }
+			if ( ! rulerX ) { rulerX = document.createElement( 'div' ); rulerX.className = 'certloom-studio-ruler certloom-studio-ruler-x'; rulerX.setAttribute( 'data-certloom-designer-ruler', 'x' ); rulerX.setAttribute( 'aria-hidden', 'true' ); workspace.appendChild( rulerX ); }
+			if ( ! rulerY ) { rulerY = document.createElement( 'div' ); rulerY.className = 'certloom-studio-ruler certloom-studio-ruler-y'; rulerY.setAttribute( 'data-certloom-designer-ruler', 'y' ); rulerY.setAttribute( 'aria-hidden', 'true' ); workspace.appendChild( rulerY ); }
+			return true;
+		}
+		function rulerStepMm() { var ten = px( 10, zoom ); return ten >= 24 ? 10 : ( ten >= 12 ? 20 : 50 ); }
+		function renderStudioRulers() {
+			if ( ! ensureStudioRulers() ) { return; } var p = page(); if ( ! p ) { return; }
+			var scrollLeft = Number( workspace.scrollLeft || 0 ), scrollTop = Number( workspace.scrollTop || 0 ); var step = rulerStepMm(); var left = Number( pageEl.offsetLeft || 0 ) - scrollLeft; var top = Number( pageEl.offsetTop || 0 ) - scrollTop;
+			rulerX.style.transform = 'translate(' + scrollLeft + 'px,' + scrollTop + 'px)'; rulerY.style.transform = 'translate(' + scrollLeft + 'px,' + scrollTop + 'px)';
+			rulerX.innerHTML = ''; rulerY.innerHTML = '';
+			for ( var x = 0; x <= Number( p.width_mm ) + 0.001; x += step ) { var markX = document.createElement( 'span' ); markX.className = 'certloom-studio-ruler-mark'; markX.style.left = ( left + px( x, zoom ) ) + 'px'; markX.innerHTML = '<i></i><b>' + escapeText( String( round( x, 1 ) ) ) + '</b>'; rulerX.appendChild( markX ); }
+			for ( var y = 0; y <= Number( p.height_mm ) + 0.001; y += step ) { var markY = document.createElement( 'span' ); markY.className = 'certloom-studio-ruler-mark'; markY.style.top = ( top + px( y, zoom ) ) + 'px'; markY.innerHTML = '<i></i><b>' + escapeText( String( round( y, 1 ) ) ) + '</b>'; rulerY.appendChild( markY ); }
+		}
+
 		function syncControls() {
 			var p = page(); if ( ! p ) { return; }
 			if ( sizeControl ) { sizeControl.value = p.size; }
@@ -471,7 +528,7 @@
 			if ( zoomControl ) { zoomControl.value = String( displayedZoom ); }
 			if ( zoomOutput ) { zoomOutput.textContent = displayedZoom + '%'; }
 			if ( snapControl ) { snapControl.checked = !! designerState.snap_enabled; }
-			if ( pageReadout ) { pageReadout.textContent = 'layout v' + schemaVersion + ' · ' + p.size + ' · ' + p.orientation + ' · ' + round( p.width_mm, 1 ) + ' × ' + round( p.height_mm, 1 ) + ' mm · ' + elements().length + ' ' + ( 1 === elements().length ? t( 'elementCountSingular', 'element' ) : t( 'elementCountPlural', 'elements' ) ); }
+			if ( pageReadout ) { var publicReadout = p.size + ' · ' + String( p.orientation || '' ).replace( /^./, function ( first ) { return first.toUpperCase(); } ) + ' · ' + round( p.width_mm, 1 ) + ' × ' + round( p.height_mm, 1 ) + ' mm · ' + elements().length + ' ' + ( 1 === elements().length ? t( 'elementCountSingular', 'element' ) : t( 'elementCountPlural', 'elements' ) ); pageReadout.textContent = root.classList.contains( 'certloom-template-designer-v2' ) ? publicReadout : 'layout v' + schemaVersion + ' · ' + publicReadout; }
 			syncHistoryButtons(); syncCanvasTools();
 		}
 		function combinedBounds( list ) {
@@ -525,9 +582,11 @@
 		function knownQuickTokens() { return [ 'recipient.name', 'credential.display_number', 'program.name', 'credential.issue_date', 'credential.expiry_date', 'credential.grade', 'issuer.name', 'credential.status' ]; }
 		function sampleProfileDefinition() { return SAMPLE_DATA && SAMPLE_DATA.profiles && SAMPLE_DATA.profiles[ activeSampleProfile ] ? SAMPLE_DATA.profiles[ activeSampleProfile ] : ( SAMPLE_DATA && SAMPLE_DATA.profiles ? SAMPLE_DATA.profiles[ SAMPLE_DATA.default || 'standard' ] : null ); }
 		function dynamicFieldSample( token ) {
+			token = String( token || '' );
+			if ( 'tokens' === activePreviewMode ) { return token ? '{{' + token + '}}' : '{{field}}'; }
 			var profile = sampleProfileDefinition(); var samples = profile && profile.values && 'object' === typeof profile.values ? profile.values : {};
 			if ( Object.prototype.hasOwnProperty.call( samples, token ) ) { return String( samples[ token ] ); }
-			var label = String( token || '' ).replace( /[^a-z0-9]+/gi, ' ' ).replace( /\s+/g, ' ' ).trim();
+			var label = token.replace( /[^a-z0-9]+/gi, ' ' ).replace( /\s+/g, ' ' ).trim();
 			return t( 'sampleFallbackPrefix', 'Sample' ) + ( label ? ' · ' + label : '' );
 		}
 		function richRunText( run ) {
@@ -772,6 +831,7 @@
 			openPreferredInspectorSection( element );
 			if ( typeOutput ) { typeOutput.textContent = typeLabel( element.type ).toUpperCase(); }
 			if ( idOutput ) { idOutput.textContent = element.id || ''; }
+			if ( advancedIdOutput ) { advancedIdOutput.textContent = element.id || ''; }
 			if ( lockStatus ) { lockStatus.textContent = locked ? t( 'lockedForAuthor', 'Locked for this author' ) : t( 'editable', 'Editable' ); lockStatus.classList.toggle( 'is-locked', locked ); }
 			for ( var i = 0; i < fieldInputs.length; i++ ) {
 				var key = fieldInputs[ i ].getAttribute( 'data-certloom-designer-field' );
@@ -1153,6 +1213,13 @@
 			editor.appendChild( input ); editor.appendChild( save ); editor.appendChild( cancel ); row.appendChild( editor );
 			window.setTimeout( function () { input.focus(); input.select(); }, 0 );
 		}
+		function ensureSelectedLayerVisible() {
+			if ( ! layersContainer || ! selectedId ) { return; }
+			var row = layersContainer.querySelector( '[data-certloom-designer-layer-row="' + selectedId + '"]' ); if ( ! row ) { return; }
+			var top = row.offsetTop, bottom = top + row.offsetHeight, viewTop = layersContainer.scrollTop, viewBottom = viewTop + layersContainer.clientHeight;
+			if ( top < viewTop ) { layersContainer.scrollTop = top; }
+			else if ( bottom > viewBottom ) { layersContainer.scrollTop = Math.max( 0, bottom - layersContainer.clientHeight ); }
+		}
 		function renderLayers() {
 			if ( ! layersContainer ) { return; }
 			layersContainer.innerHTML = '';
@@ -1173,6 +1240,7 @@
 					row.appendChild( actions ); layersContainer.appendChild( row );
 				} )( list[ i ] );
 			}
+			ensureSelectedLayerVisible();
 		}
 
 		function selectionToolbarButton( action, label, iconClass, disabled ) {
@@ -1187,7 +1255,11 @@
 			toolbar.appendChild( selectionToolbarButton( 'lock', isLocked( element ) ? t( 'unlock', 'Unlock' ) : t( 'lock', 'Lock' ), isLocked( element ) ? 'dashicons-lock' : 'dashicons-unlock', false ) );
 			toolbar.appendChild( selectionToolbarButton( 'delete', t( 'delete', 'Delete' ), 'dashicons-trash', isLocked( element ) ) );
 			toolbar.appendChild( selectionToolbarButton( 'more', t( 'moreActions', 'More actions' ), 'dashicons-ellipsis', false ) );
-			var x = clamp( px( bounds.centerX, zoom ), 72, Math.max( 72, pageWidthPx - 72 ) ); var above = px( bounds.minY, zoom ) - 70; var y = above >= 4 ? above : px( bounds.maxY, zoom ) + 10;
+			var pageHeightPx = px( Number( page().height_mm ), zoom ); var toolbarHeight = 34;
+			var x = clamp( px( bounds.centerX, zoom ), 72, Math.max( 72, pageWidthPx - 72 ) ); var below = px( bounds.maxY, zoom ) + 10; var above = px( bounds.minY, zoom ) - toolbarHeight - 30; var y;
+			/* Prefer below so the always-on rotate handle above the selection remains unobstructed.
+			 * When there is no room below, leave a larger clearance above for the rotate stem/handle. */
+			if ( below + toolbarHeight <= pageHeightPx - 8 ) { y = below; } else if ( above >= 8 ) { y = above; } else { y = Math.max( 8, Math.min( pageHeightPx - toolbarHeight - 8, px( bounds.minY, zoom ) - toolbarHeight - 30 ) ); }
 			toolbar.style.left = x + 'px'; toolbar.style.top = y + 'px'; pageEl.appendChild( toolbar );
 		}
 
@@ -1199,7 +1271,7 @@
 			for ( var i = 0; i < list.length; i++ ) {
 				var element = list[ i ]; if ( isHiddenId( element.id ) ) { continue; } var node = document.createElement( 'button' ); node.type = 'button';
 				node.className = 'certloom-template-designer-element';
-				node.setAttribute( 'data-certloom-designer-element', element.id ); node.setAttribute( 'aria-label', typeLabel( element.type ) + ': ' + elementTitle( element ) + ( isLocked( element ) ? ' (' + t( 'lockedSuffix', 'locked' ) + ')' : '' ) );
+				node.setAttribute( 'data-certloom-designer-element', element.id ); node.setAttribute( 'tabindex', '-1' ); node.setAttribute( 'aria-label', typeLabel( element.type ) + ': ' + elementTitle( element ) + ( isLocked( element ) ? ' (' + t( 'lockedSuffix', 'locked' ) + ')' : '' ) );
 				node.style.left = px( element.x_mm, zoom ) + 'px'; node.style.top = px( element.y_mm, zoom ) + 'px'; node.style.width = px( element.width_mm, zoom ) + 'px'; node.style.height = px( element.height_mm, zoom ) + 'px'; node.style.zIndex = String( 100001 + Number( element.z || 0 ) ); node.style.opacity = String( null == element.opacity ? 1 : element.opacity ); node.style.transform = 'rotate(' + Number( element.rotation_deg || 0 ) + 'deg)';
 				node.setAttribute( 'aria-pressed', isSelectedId( element.id ) ? 'true' : 'false' );
 				if ( isSelectedId( element.id ) ) { node.classList.add( 'is-multi-selected' ); }
@@ -1207,7 +1279,7 @@
 				if ( isLocked( element ) ) { node.classList.add( 'is-locked' ); }
 				styleContent( node, element ); addHandles( node, element ); pageEl.appendChild( node );
 			}
-			renderSafeArea(); renderGuides(); renderSpacingGuides(); renderSelectionToolbar(); renderLayers(); syncControls(); setInspector(); syncDirty(); showError( '' );
+			renderSafeArea(); renderGuides(); renderSpacingGuides(); renderSelectionToolbar(); renderLayers(); syncControls(); setInspector(); renderStudioRulers(); syncDirty(); showError( '' );
 		}
 		function tableElementGeometryValid( element ) {
 			if ( ! element || ( 'table' !== element.type && 'data_table' !== element.type ) ) { return true; }
@@ -1439,7 +1511,10 @@
 		}
 		function pointerEnd() {
 			if ( ! pointer ) { return; }
-			var before = pointer.before; var completed = pointer; pointer = null; activeGuides = { x: null, y: null }; activeSpacingGuides = []; if ( 'drag' === completed.mode && ! completed.moved ) { lastElementPointer = { id: completed.id, at: Date.now() }; } else { lastElementPointer = { id: '', at: 0 }; } pushHistory( before ); render();
+			var before = pointer.before; var completed = pointer; pointer = null; activeGuides = { x: null, y: null }; activeSpacingGuides = [];
+			if ( completed.moved ) { suppressCanvasClick = true; }
+			if ( 'drag' === completed.mode && ! completed.moved ) { lastElementPointer = { id: completed.id, at: Date.now() }; } else { lastElementPointer = { id: '', at: 0 }; }
+			pushHistory( before ); render();
 		}
 		function pageChange() {
 			var p = page(); if ( ! p ) { return; }
@@ -1578,7 +1653,7 @@
 		}
 		function isFormControl( target ) { return !! target && ( /^(INPUT|SELECT|TEXTAREA)$/.test( target.tagName ) || ( 'BUTTON' === target.tagName && ! target.hasAttribute( 'data-certloom-designer-element' ) ) ); }
 		function keyboard( event ) {
-			var modifier = event.ctrlKey || event.metaKey; var inside = root.contains( event.target ); var key = String( event.key || '' ); var lower = key.toLowerCase(); var canvasFocused = event.target === workspace || pageEl.contains( event.target );
+			var modifier = event.ctrlKey || event.metaKey; var inside = root.contains( event.target ); var key = String( event.key || '' ); var lower = key.toLowerCase(); var passiveDocumentTarget = event.target === document.body || event.target === document.documentElement; var canvasFocused = event.target === workspace || pageEl.contains( event.target ) || ( passiveDocumentTarget && selectionIds().length > 0 );
 			if ( 'Escape' === key && contextMenu && ! contextMenu.hidden ) { closeContextMenu(); focusSelectedCanvasElement(); event.preventDefault(); return; }
 			if ( modifier && ! event.altKey && 's' === lower ) {
 				if ( ! inside || isFormControl( event.target ) && ! root.contains( event.target ) ) { return; }
@@ -1591,7 +1666,7 @@
 				if ( 'y' === lower || event.shiftKey ) { redo(); } else { undo(); }
 				event.preventDefault(); return;
 			}
-			if ( ! inside || isFormControl( event.target ) ) { return; }
+			if ( ( ! inside && ! passiveDocumentTarget ) || isFormControl( event.target ) ) { return; }
 			if ( canvasFocused && ! modifier && ! event.altKey && ( ' ' === key || 'Spacebar' === key ) ) { spacePanHeld = true; syncCanvasTools(); event.preventDefault(); return; }
 			if ( canvasFocused && selectionIds().length && ( 'ContextMenu' === key || ( event.shiftKey && 'F10' === key ) ) ) { event.preventDefault(); openContextMenuForSelection(); return; }
 			if ( modifier && ! event.altKey && 'c' === lower ) { event.preventDefault(); copySelectionToDesignerClipboard( false ); return; }
@@ -1614,7 +1689,7 @@
 			if ( ( 'Delete' === key || 'Backspace' === key ) && selectionIds().length && ! selectionHasLocked() ) { event.preventDefault(); removeSelected(); return; }
 			if ( canvasFocused && ! event.altKey && ( '+' === key || '=' === key ) ) { event.preventDefault(); setZoomLevel( relativeZoomPercent() + 10, true, true ); return; }
 			if ( canvasFocused && ! event.altKey && '-' === key ) { event.preventDefault(); setZoomLevel( relativeZoomPercent() - 10, true, true ); return; }
-			if ( canvasFocused && ! event.altKey && '0' === key ) { event.preventDefault(); fitWorkspace(); if ( modifier ) { focusSelectedCanvasElement(); } return; }
+			if ( canvasFocused && modifier && ! event.altKey && '0' === key ) { event.preventDefault(); fitWorkspace(); focusSelectedCanvasElement(); return; }
 			if ( nudgeSelected( event ) ) { event.preventDefault(); }
 		}
 
@@ -1637,6 +1712,7 @@
 			if ( previous.id === id && now - previous.at <= 500 ) { var list = elements(); var element = null; for ( var i = 0; i < list.length; i++ ) { if ( list[ i ].id === id ) { element = list[ i ]; break; } } if ( element && 'text' === element.type && ! isLocked( element ) ) { event.preventDefault(); event.stopPropagation(); lastElementPointer = { id: '', at: 0 }; startDirectTextEdit( id ); } }
 		}, true );
 		workspace.addEventListener( 'pointerdown', function ( event ) { startCanvasPan( event ); }, true );
+		workspace.addEventListener( 'scroll', renderStudioRulers, { passive: true } );
 		pageEl.addEventListener( 'pointerdown', function ( event ) { startMarqueeSelection( event ); } );
 		pageEl.addEventListener( 'pointerdown', pointerStart ); window.addEventListener( 'pointermove', canvasPointerMove ); window.addEventListener( 'pointerup', canvasPointerEnd ); window.addEventListener( 'pointercancel', canvasPointerEnd );
 		pageEl.addEventListener( 'click', function ( event ) {
@@ -1652,7 +1728,7 @@
 			}
 			var node = event.target.closest( '[data-certloom-designer-element]' );
 			if ( event.shiftKey || event.ctrlKey || event.metaKey ) { return; }
-			if ( node ) { var id = node.getAttribute( 'data-certloom-designer-element' ); if ( isSelectedId( id ) && selectionIds().length > 1 ) { selectedId = id; } else { selectOnly( id ); } render(); return; }
+			if ( node ) { var id = node.getAttribute( 'data-certloom-designer-element' ); if ( isSelectedId( id ) && selectionIds().length > 1 ) { selectedId = id; } else { selectOnly( id ); } render(); focusSelectedCanvasElement(); return; }
 			selectOnly( '' ); render();
 		} );
 		pageEl.addEventListener( 'dblclick', function ( event ) { var node = event.target.closest( '[data-certloom-designer-element]' ); if ( ! node ) { return; } var id = node.getAttribute( 'data-certloom-designer-element' ); var element = null; var list = elements(); for ( var itemIndex = 0; itemIndex < list.length; itemIndex++ ) { if ( list[ itemIndex ].id === id ) { element = list[ itemIndex ]; break; } } if ( element && 'rich_text' === element.type && ! isLocked( element ) ) { selectOnly( id ); render(); focusRichTextEditor(); event.preventDefault(); return; } if ( startDirectTextEdit( id ) ) { event.preventDefault(); } } );
@@ -1673,7 +1749,7 @@
 				if ( renameCancel ) { renamingLayerId = ''; render(); return; }
 				var action = event.target.closest( '[data-certloom-designer-layer-row-action]' );
 				if ( action ) { var actionId = action.getAttribute( 'data-certloom-designer-layer-id' ); var mode = action.getAttribute( 'data-certloom-designer-layer-row-action' ); selectOnly( actionId ); if ( 'visibility' === mode ) { toggleEditorVisibility( actionId ); } else if ( 'rename' === mode ) { renamingLayerId = actionId; render(); } else if ( 'lock' === mode ) { toggleLock( actionId ); } else if ( 'duplicate' === mode ) { duplicateSelected(); } else if ( 'delete' === mode ) { removeSelected(); } else { reorderSelected( mode ); } return; }
-				var select = event.target.closest( '[data-certloom-designer-layer-select]' ); if ( select ) { var id = select.getAttribute( 'data-certloom-designer-layer-select' ); if ( event.shiftKey || event.ctrlKey || event.metaKey ) { toggleSelection( id ); } else { selectOnly( id ); } render(); }
+				var select = event.target.closest( '[data-certloom-designer-layer-select]' ); if ( select ) { var id = select.getAttribute( 'data-certloom-designer-layer-select' ); if ( event.shiftKey || event.ctrlKey || event.metaKey ) { toggleSelection( id ); } else { selectOnly( id ); } render(); focusSelectedCanvasElement(); }
 			} );
 			layersContainer.addEventListener( 'keydown', function ( event ) {
 				var input = event.target.closest( '[data-certloom-designer-layer-rename-input]' ); if ( ! input ) { return; }
@@ -1763,6 +1839,10 @@
 			var requested = String( sampleDataControl.value || '' ); if ( ! SAMPLE_DATA.profiles || ! SAMPLE_DATA.profiles[ requested ] ) { sampleDataControl.value = SAMPLE_DATA.default || 'standard'; requested = String( sampleDataControl.value || 'standard' ); }
 			activeSampleProfile = requested; render(); announce( t( 'sampleDataChanged', 'Designer sample data changed. Saved certificate data is unchanged.' ) );
 		} ); }
+		for ( var previewModeIndex = 0; previewModeIndex < previewModeButtons.length; previewModeIndex++ ) {
+			previewModeButtons[ previewModeIndex ].addEventListener( 'click', function () { setPreviewMode( String( this.getAttribute( 'data-certloom-designer-preview-mode' ) || 'sample' ), true ); } );
+		}
+		syncPreviewModeButtons();
 		if ( resetButton ) { resetButton.addEventListener( 'click', function () { if ( root.classList.contains( 'has-unsaved-changes' ) && ! window.confirm( t( 'restoreConfirm', 'Discard current unsaved changes and restore the last saved design?' ) ) ) { return; } if ( directTextEditor ) { closeDirectTextEditor( false ); } layout = clone( savedLayout ); designerState = clone( savedState ); selectOnly( '' ); history = []; future = []; activeGuides = { x: null, y: null }; activeSpacingGuides = []; safeAreaVisible = false; panToolActive = false; spacePanHeld = false; closeContextMenu(); render(); fitWorkspace(); discardAutosave( false ); announce( t( 'unsavedChangesReset', 'Unsaved design changes reset.' ) ); } ); }
 		if ( autosaveDiscardButton ) { autosaveDiscardButton.addEventListener( 'click', function () { discardAutosave( true ); } ); }
 		for ( var fieldIndex = 0; fieldIndex < fieldInputs.length; fieldIndex++ ) {
@@ -1773,6 +1853,12 @@
 				if ( updateElement( element.id, proposed, false ) ) { pushHistory( before ); render(); } else { showError( t( 'geometryBoundary', 'That geometry would violate the canonical page boundary. The previous value was kept.' ) ); setInspector(); }
 			} );
 		}
+		if ( conflictReviewButton ) { conflictReviewButton.addEventListener( 'click', function () { if ( conflictBanner ) { conflictBanner.hidden = true; } focusSelectedCanvasElement(); } ); }
+		if ( conflictReloadButton ) { conflictReloadButton.addEventListener( 'click', function () {
+			var warning = t( 'reloadConflictConfirm', 'Reload the saved template and discard the current browser edits? This cannot be undone.' );
+			if ( window.confirm && ! window.confirm( warning ) ) { return; }
+			isSubmitting = true; window.location.reload();
+		} ); }
 		document.addEventListener( 'keydown', keyboard ); document.addEventListener( 'keyup', keyboardUp );
 		form.addEventListener( 'submit', function ( event ) {
 			showError( '' );
@@ -1787,7 +1873,7 @@
 		enhancePropertySections();
 		applyDesignerMode( rememberedDesignerMode(), false );
 		if ( 'ResizeObserver' in window ) { var studioResizeObserver = new ResizeObserver( function () { if ( Math.abs( relativeZoomPercent() - 100 ) <= 1 ) { fitWorkspace(); } } ); studioResizeObserver.observe( workspace ); }
-		render(); if ( recovered ) { setAutosaveStatus( t( 'autosaveRecovered', 'Recovered unsaved Designer changes from your latest safe checkpoint.' ), 'recovered' ); announce( t( 'autosaveRecovered', 'Recovered unsaved Designer changes from your latest safe checkpoint.' ) ); } window.setTimeout( function () { fitWorkspace(); }, 0 );
+		syncPreviewModeButtons(); render(); if ( autosaveConflict ) { setAutosaveStatus( t( 'autosaveConflict', 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.' ), 'conflict' ); } else if ( recovered ) { setAutosaveStatus( t( 'autosaveRecovered', 'Recovered unsaved Designer changes from your latest safe checkpoint.' ), 'recovered' ); announce( t( 'autosaveRecovered', 'Recovered unsaved Designer changes from your latest safe checkpoint.' ) ); } window.setTimeout( function () { fitWorkspace(); }, 0 );
 	}
 
 	document.addEventListener( 'DOMContentLoaded', function () {

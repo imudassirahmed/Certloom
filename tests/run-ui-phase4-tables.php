@@ -35,15 +35,15 @@ p48(false!==strpos($admin,'data-certloom-designer-table-columns'),'Properties ex
 p48(false!==strpos($admin,'data-certloom-designer-table-rows'),'fixed Table Properties exposes structured row editor host');
 p48(false!==strpos($admin,'data-certloom-designer-table-add-column'),'Properties exposes non-keyboard Add column action');
 p48(false!==strpos($admin,'data-certloom-designer-table-add-row'),'fixed Table exposes non-keyboard Add row action');
-p48(false!==strpos($admin,'data-certloom-designer-context-group="table"'),'context dock covers fixed Table');
-p48(false!==strpos($admin,'data-certloom-designer-context-group="data_table"'),'context dock covers Data Table');
+p48(false!==strpos($admin,'data-certloom-designer-property-section="content"')&&false!==strpos($admin,'data-certloom-designer-content="table"'),'contextual Content & data inspector covers fixed Table');
+p48(false!==strpos($admin,'data-certloom-designer-property-section="content"')&&false!==strpos($admin,'data-certloom-designer-content="data_table"'),'contextual Content & data inspector covers Data Table');
 p48(false!==strpos($admin,'data-certloom-designer-style="table"'),'Appearance inspector covers Table-specific style group');
 foreach(['header_fill','header_color','header_font_weight','row_fill','alternate_row_fill','border_color','border_width_mm','cell_padding_mm'] as $key){p48(false!==strpos($admin,'data-certloom-designer-style-field="'.$key.'"'),'Table Appearance exposes '.$key);}
 p48(false!==strpos($css,'.certloom-template-designer-table-column'),'structured Table editor has dedicated styling');
 p48(false!==strpos($css,'.certloom-template-designer-element.is-table'),'canvas Table preview has dedicated styling');
 p48(false!==strpos($css,'@media(max-width:782px)')&&false!==strpos($css,'min-height:44px'),'Table controls preserve mobile 44px action targets');
 p48(false!==strpos($css,'@media(forced-colors:active)'),'Table UI preserves forced-colors treatment');
-p48(false!==strpos($admin,"array( 'text', 'merge', 'rich_text', 'list', 'table', 'data_table' )"),'Table/Data Table palette items are categorized as content');
+p48(false!==strpos($admin,"'structured' => array( 'label' => __( 'Structured data', 'certloom' ), 'kinds' => array( 'table', 'data_table' ) )"),'Table/Data Table palette items are grouped under Structured data in Studio Insert');
 p48(false!==strpos($js,"'table_preset' === key"),'registry-only Table presets never leak into canonical layout JSON');
 p48(false!==strpos($js,'commitTableElement'),'all Table Properties mutations reuse canonical update/history/autosave paths');
 p48(false!==strpos($js,'pushHistory( before )'),'Table updates participate in existing Undo authority');
