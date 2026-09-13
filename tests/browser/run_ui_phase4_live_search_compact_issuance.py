@@ -1,0 +1,112 @@
+#!/usr/bin/env python3
+import asyncio, subprocess
+from pathlib import Path
+from playwright.async_api import async_playwright
+ROOT=Path(__file__).resolve().parents[2]
+def fixture(name):
+    r=subprocess.run(['php',str(ROOT/'tests/browser'/name)],cwd=ROOT,capture_output=True,text=True)
+    if r.returncode: raise RuntimeError(r.stderr or r.stdout)
+    return r.stdout
+async def run():
+    checks=0; failed=[]
+    async with async_playwright() as p:
+        browser=await p.chromium.launch(headless=True,executable_path='/usr/bin/chromium',args=['--no-sandbox','--disable-dev-shm-usage','--disable-gpu'])
+        async def ck(ok,label):
+            nonlocal checks; checks+=1
+            if not ok: failed.append(label)
+
+        page=await browser.new_page(viewport={'width':1414,'height':900})
+        await page.set_content(fixture('build_ui_phase4_credentials_overview_fixture.php'),wait_until='load')
+        await page.wait_for_timeout(80)
+        main=page.locator('.certloom-credential-search-filter input[type="search"]')
+        psearch=page.locator('.certloom-credential-program-filter .certloom-context-lookup__search')
+        pselect=page.locator('.certloom-credential-program-filter select')
+        button=page.locator('.certloom-credential-filters > button[type="submit"]')
+        heights=[await x.evaluate('(e)=>Math.round(e.getBoundingClientRect().height)') for x in [main,psearch,pselect,button]]
+        await ck(max(heights)-min(heights)<=1 and heights[0]==42,'credentialFilterControlsShare42pxLine')
+        tops=[await x.evaluate('(e)=>Math.round(e.getBoundingClientRect().top)') for x in [main,psearch,pselect,button]]
+        await ck(max(tops)-min(tops)<=1,'credentialFilterControlsAlignVertically')
+        await main.fill('amina')
+        await page.wait_for_timeout(340)
+        await ck(await page.locator('.fixture-live-result').count()==1,'credentialTypingUpdatesResultsWithoutReload')
+        calls=await page.evaluate('window.__restCalls')
+        await ck(any('/admin/credentials' in c['url'] and 's=amina' in c['url'] for c in calls),'credentialSearchUsesAuthenticatedRestEndpoint')
+        await psearch.fill('mba')
+        await page.wait_for_timeout(300)
+        calls=await page.evaluate('window.__restCalls')
+        await ck(any('/admin/context' in c['url'] and 'kind=program' in c['url'] and 'query=mba' in c['url'] for c in calls),'programLookupUsesSharedRestEndpoint')
+        await ck(all(c['options'].get('headers',{}).get('X-WP-Nonce')=='fixture-rest' for c in calls if '/wp-json/' in c['url']),'restRequestsCarryWpNonce')
+        await page.close()
+
+        issue=await browser.new_page(viewport={'width':1440,'height':1000})
+        await issue.set_content(fixture('build_ui_phase4_issue_credential_fixture.php'),wait_until='load')
+        await issue.wait_for_timeout(100)
+        form=issue.locator('.certloom-issue-v2-form')
+        await ck(len((await form.evaluate('(e)=>getComputedStyle(e).gridTemplateColumns')).split())==2,'issueComposeUsesTwoColumnDesktopLayout')
+        recipient=await issue.locator('.certloom-recipient-compose').bounding_box(); presentation=await issue.locator('.certloom-presentation-fieldset').bounding_box()
+        basis=await issue.locator('.certloom-credential-basis').bounding_box(); core=await issue.locator('.certloom-issue-core').bounding_box()
+        await ck(recipient and presentation and presentation['x']>recipient['x']+recipient['width']-2,'presentationOccupiesRightTaskColumn')
+        await ck(recipient and basis and basis['y']-(recipient['y']+recipient['height'])<=2,'programBasisFollowsRecipientWithoutTallGridGap')
+        await ck(basis and core and core['y']-(basis['y']+basis['height'])<=2,'credentialFieldsFollowProgramBasisWithoutTallGridGap')
+        await ck(await issue.locator('.certloom-issue-v2-card .certloom-manual-card-head .certloom-eyebrow').count()==0,'duplicateStepEyebrowRemoved')
+        await ck(await issue.locator('.certloom-issue-v2-form > fieldset > legend:not(.screen-reader-text)').count()==0,'redundantSectionLegendsVisuallyRemoved')
+        await ck(len((await issue.locator('.certloom-issue-essential-fields').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns')).split())==1,'credentialEssentialsStackInOneColumn')
+        await issue.locator('input[name="presentation_mode"][value="design"]').check()
+        await issue.wait_for_timeout(120)
+        preview=issue.locator('[data-certloom-issue-design-preview]')
+        canvas=issue.locator('.certloom-issue-design-preview-canvas')
+        inherited=issue.locator('input[name="design_source"][value="inherited"]')
+        assigned=issue.locator('input[name="design_source"][value="assigned"]')
+        assigned_field=issue.locator('[data-certloom-assigned-design-field]')
+        source_note=issue.locator('[data-certloom-template-preview-source]')
+        await ck(await inherited.is_checked(),'inheritedDesignIsDefaultSource')
+        await ck(await assigned_field.is_hidden(),'assignedDesignDropdownHiddenUntilChosen')
+        await ck(await preview.is_visible(),'designSelectionShowsLivePreview')
+        await issue.wait_for_timeout(340)
+        await ck(await issue.locator('[data-certloom-template-preview-name]').inner_text()=='Inherited design','designPreviewWaitsForCredentialBasicsInsteadOfShowingSampleData')
+        await ck('complete the credential basics' in (await issue.locator('[data-certloom-template-preview-description]').inner_text()).lower(),'previewExplainsWhyRealDataIsNotReadyYet')
+        await issue.locator('select[name="recipient_id"]').select_option('42')
+        await issue.locator('input[name="credential_basis"][value="independent"]').check(force=True)
+        await issue.locator('input[name="credential_title"]').fill('Standalone credential')
+        await issue.wait_for_function("document.querySelector('[data-certloom-design-data-summary]').textContent.indexOf('1 design field') !== -1")
+        await ck(await issue.locator('[data-certloom-manual-review]').is_disabled(),'independentDesignWaitsForItsMissingTemplateData')
+        await issue.locator('input[name="presentation_mode"][value="details_only"]').check()
+        await ck(not await issue.locator('[data-certloom-manual-review]').is_disabled(),'independentDetailsOnlyAllowsStandaloneReviewWithExplicitTitle')
+        await issue.locator('input[name="presentation_mode"][value="design"]').check()
+        await issue.locator('input[name="credential_basis"][value="program"]').check(force=True)
+        await issue.locator('select[name="program_id"]').select_option('11')
+        await issue.wait_for_function("document.querySelector('[data-certloom-template-preview-source]').textContent.indexOf('Inherited from Program') !== -1")
+        await ck(await issue.locator('[data-certloom-inherited-title]').inner_text()=='ISO 9001 Lead Auditor','programSelectionInheritsProgramCredentialTitle')
+        await ck(await source_note.inner_text()=='Inherited from Program “ISO 9001 Lead Auditor”','inheritedPreviewShowsProgramProvenance')
+        await ck(await issue.locator('.certloom-template-preview-page').count()==1,'realDataPreviewRestPayloadRendered')
+        await ck(await canvas.evaluate('(e)=>e.scrollWidth<=e.clientWidth+1 && e.scrollHeight<=e.clientHeight+1'),'previewWindowHasNoScrollbars')
+        cbox=await canvas.bounding_box(); pbox=await issue.locator('.certloom-template-preview-page').bounding_box()
+        await ck(cbox and pbox and pbox['width']<=cbox['width']+1 and pbox['height']<=cbox['height']+1,'certificatePreviewFitsInsideSmallWindow')
+        pcalls=await issue.evaluate('window.__previewCalls')
+        await ck(any('/admin/issuance-preview' in c['url'] and 'program_id=11' in c.get('options',{}).get('body','') and 'design_source=inherited' in c.get('options',{}).get('body','') for c in pcalls),'inheritedPreviewReloadsForProgramContext')
+        await assigned.check()
+        await assigned_field.wait_for(state='visible')
+        await ck(await assigned_field.is_visible(),'assignedDesignDropdownShownWhenAssignedChosen')
+        await issue.locator('#certloom-issue-template').select_option('7')
+        await issue.wait_for_function("document.querySelector('[data-certloom-template-preview-source]').textContent === 'Assigned for this credential only'")
+        await ck(await issue.locator('[data-certloom-template-preview-name]').inner_text()=='Academic — A4 Portrait','assignedPreviewShowsSelectedDesignName')
+        await ck(await source_note.inner_text()=='Assigned for this credential only','assignedPreviewShowsOneOffProvenance')
+        details=await issue.locator('.certloom-additional-details').bounding_box(); actions=await issue.locator('.certloom-issue-actions').bounding_box()
+        await ck(details and presentation and details['x']+details['width']<=presentation['x']+1,'additionalDetailsStayInMainColumnBesidePreview')
+        await ck(actions and presentation and actions['x']+actions['width']<=presentation['x']+1,'reviewActionsStayInMainColumnBesidePreview')
+        pcalls=await issue.evaluate('window.__previewCalls')
+        await ck(any('/admin/issuance-preview' in c['url'] and 'design_source=assigned' in c.get('options',{}).get('body','') and 'template_id=7' in c.get('options',{}).get('body','') for c in pcalls),'assignedDesignPreviewUsesRealIssuanceRestEndpoint')
+        await issue.close()
+
+        dash=await browser.new_page(viewport={'width':1280,'height':800})
+        # Minimal page uses real CSS to validate semantic expiry dot color.
+        css=(ROOT/'assets/css/certloom-tokens.css').read_text()+"\n"+(ROOT/'admin/assets/certloom-foundation.css').read_text()
+        await dash.set_content('<style>'+css+'</style><div class="certloom-admin-shell"><div class="certloom-dashboard-date-line is-expiry"><span class="certloom-dashboard-date-dot"></span></div></div>')
+        color=await dash.locator('.certloom-dashboard-date-dot').evaluate('(e)=>getComputedStyle(e).backgroundColor')
+        await ck(color=='rgb(192, 39, 31)','dashboardExpiryDotUsesErrorRed')
+        await dash.close(); await browser.close()
+    if failed:
+        print('FAIL  alpha.4.32 Program-title/live-search browser gate:',', '.join(failed)); print(f'\n{checks-len(failed)} passed, {len(failed)} failures'); return 1
+    print('PASS  alpha.4.32 Program-title/live-search browser gate: REST search, explicit Independent review, Program-title inheritance, inherited/assigned source choices, provenance and fit-to-window preview')
+    print(f'\n{checks} alpha.4.32 browser checks, 0 failures'); return 0
+raise SystemExit(asyncio.run(run()))

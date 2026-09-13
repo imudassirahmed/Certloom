@@ -287,6 +287,7 @@
 		var autosaveQueued = false;
 		var autosaveNeedsCleanup = 'stale' === autosaveStatus || 'invalid' === autosaveStatus || 'cleanup_failed' === autosaveStatus;
 		var autosaveConflict = false;
+		var autosaveRecoverySessionBlocked = false;
 		var hasServerAutosave = 'ready' === autosaveStatus || autosaveNeedsCleanup;
 		var templateId = Number( root.getAttribute( 'data-template-id' ) || 0 );
 		var baseRevisionId = Number( root.getAttribute( 'data-saved-revision' ) || 0 );
@@ -407,9 +408,13 @@
 					return;
 				}
 				var code = payload && payload.data ? String( payload.data.code || '' ) : '';
-				if ( 'certloom_designer_autosave_session_conflict' === code || 'certloom_designer_autosave_conflict' === code ) {
+				if ( 'certloom_designer_autosave_conflict' === code ) {
 					setAutosaveStatus( t( 'autosaveConflict', 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.' ), 'conflict' );
 					if ( announceResult ) { showError( t( 'autosaveConflict', 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.' ) ); }
+				} else if ( 'certloom_designer_autosave_session_conflict' === code ) {
+					autosaveRecoverySessionBlocked = true;
+					setAutosaveStatus( t( 'autosaveSessionPaused', 'Recovery autosave is paused because another Studio session owns the current recovery checkpoint. Draft/Save is still available.' ), 'session' );
+					if ( announceResult ) { showError( t( 'autosaveSessionPaused', 'Recovery autosave is paused because another Studio session owns the current recovery checkpoint. Draft/Save is still available.' ) ); }
 				} else {
 					setAutosaveStatus( t( 'autosaveCleanupFailed', 'Recovery cleanup is temporarily unavailable. Manual save remains available.' ), 'error' );
 					if ( announceResult ) { showError( t( 'autosaveCleanupFailed', 'Recovery cleanup is temporarily unavailable. Manual save remains available.' ) ); }
@@ -417,7 +422,7 @@
 			} ).catch( function () { setAutosaveStatus( t( 'autosaveCleanupFailed', 'Recovery cleanup is temporarily unavailable. Manual save remains available.' ), 'error' ); if ( announceResult ) { showError( t( 'autosaveCleanupFailed', 'Recovery cleanup is temporarily unavailable. Manual save remains available.' ) ); } } );
 		}
 		function runAutosave() {
-			if ( autosaveConflict || isSubmitting || ! root.classList.contains( 'has-unsaved-changes' ) ) { return; }
+			if ( autosaveConflict || autosaveRecoverySessionBlocked || isSubmitting || ! root.classList.contains( 'has-unsaved-changes' ) ) { return; }
 			var fingerprint = autosaveFingerprint();
 			if ( fingerprint === lastAutosaveFingerprint ) { return; }
 			if ( autosavePending ) { autosaveQueued = true; return; }
@@ -430,7 +435,8 @@
 					lastAutosaveFingerprint = fingerprint; hasServerAutosave = true; setAutosaveStatus( t( 'autosaved', 'Recovery checkpoint saved' ), 'saved' );
 				} else {
 					var code = payload && payload.data ? payload.data.code : '';
-					if ( 409 === payload.httpStatus || 'certloom_designer_autosave_conflict' === code || 'certloom_designer_autosave_session_conflict' === code ) { autosaveConflict = true; setAutosaveStatus( t( 'autosaveConflict', 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.' ), 'conflict' ); }
+					if ( 'certloom_designer_autosave_conflict' === code ) { autosaveConflict = true; setAutosaveStatus( t( 'autosaveConflict', 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.' ), 'conflict' ); }
+					else if ( 'certloom_designer_autosave_session_conflict' === code ) { autosaveRecoverySessionBlocked = true; setAutosaveStatus( t( 'autosaveSessionPaused', 'Recovery autosave is paused because another Studio session owns the current recovery checkpoint. Draft/Save is still available.' ), 'session' ); }
 					else { setAutosaveStatus( t( 'autosaveFailed', 'Recovery autosave is temporarily unavailable. Manual save remains available.' ), 'error' ); }
 				}
 			} ).catch( function () { setAutosaveStatus( t( 'autosaveFailed', 'Recovery autosave is temporarily unavailable. Manual save remains available.' ), 'error' ); window.setTimeout( function () { scheduleAutosave(); }, AUTOSAVE_RETRY_MS ); } ).then( function () {
@@ -438,7 +444,7 @@
 			} );
 		}
 		function scheduleAutosave() {
-			if ( autosaveConflict || isSubmitting ) { return; }
+			if ( autosaveConflict || autosaveRecoverySessionBlocked || isSubmitting ) { return; }
 			if ( autosaveTimer ) { window.clearTimeout( autosaveTimer ); }
 			autosaveTimer = window.setTimeout( function () { autosaveTimer = null; runAutosave(); }, AUTOSAVE_DELAY_MS );
 		}
@@ -904,7 +910,11 @@
 		}
 		function setInspector() {
 			var selection = selectedElements(); var element = selected();
-			for ( var sectionIndex = 0; sectionIndex < contentSections.length; sectionIndex++ ) { contentSections[ sectionIndex ].hidden = true; }
+			for ( var sectionIndex = 0; sectionIndex < contentSections.length; sectionIndex++ ) {
+				contentSections[ sectionIndex ].hidden = true;
+				var inactiveControls = contentSections[ sectionIndex ].querySelectorAll( 'input, select, textarea, button' );
+				for ( var inactiveIndex = 0; inactiveIndex < inactiveControls.length; inactiveIndex++ ) { inactiveControls[ inactiveIndex ].disabled = true; }
+			}
 			if ( groupInspector ) { groupInspector.hidden = selection.length < 2; }
 			if ( selection.length > 1 ) {
 				if ( emptyInspector ) { emptyInspector.hidden = true; }
@@ -931,11 +941,18 @@
 			}
 			var group = contentGroup( element );
 			for ( var section = 0; section < contentSections.length; section++ ) {
-				if ( contentSections[ section ].getAttribute( 'data-certloom-designer-content' ) === group ) { contentSections[ section ].hidden = false; }
+				if ( contentSections[ section ].getAttribute( 'data-certloom-designer-content' ) === group ) {
+					contentSections[ section ].hidden = false;
+					var activeControls = contentSections[ section ].querySelectorAll( 'input, select, textarea, button' );
+					for ( var activeIndex = 0; activeIndex < activeControls.length; activeIndex++ ) { activeControls[ activeIndex ].disabled = locked; }
+				}
 			}
 			for ( var field = 0; field < contentFields.length; field++ ) {
 				var contentKey = contentFields[ field ].getAttribute( 'data-certloom-designer-content-field' );
 				if ( null == contentKey ) { continue; }
+				var ownerSection = contentFields[ field ].closest( '[data-certloom-designer-content]' );
+				var activeField = !! ownerSection && ownerSection.getAttribute( 'data-certloom-designer-content' ) === group && ! ownerSection.hidden;
+				if ( ! activeField ) { contentFields[ field ].disabled = true; continue; }
 				var value = null == element[ contentKey ] ? '' : element[ contentKey ];
 				if ( 'items' === contentKey && Array.isArray( value ) ) { value = value.join( '\n' ); }
 				contentFields[ field ].value = String( value ); contentFields[ field ].disabled = locked;

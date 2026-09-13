@@ -2818,3 +2818,20 @@
 .certloom-template-designer-layer-select { grid-column: 2; }
 .certloom-template-designer-layer-actions { grid-column: 3 !important; overflow: visible !important; }
 .certloom-studio-title-button[hidden] { display: none !important; }
+
+
+/* Phase 4 Gamma-02R — Studio saveability + viewport fit hardening. */
+@media (min-width: 901px) {
+	body.certloom-designer-workspace-page .certloom-template-editor-focused {
+		box-sizing: border-box !important;
+		height: 100% !important;
+		margin: 0 !important;
+		padding: 0 !important;
+		border: 0 !important;
+		border-radius: 0 !important;
+		background: #fff !important;
+		overflow: hidden !important;
+	}
+	.certloom-studio-brand { gap: 8px; font-size: 15px; line-height: 1; }
+	.certloom-studio-brand img { width: 32px; height: 32px; }
+}

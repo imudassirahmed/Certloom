@@ -199,6 +199,7 @@ final class TemplateAdmin {
 				'autosaved' => __( 'Recovery checkpoint saved', 'certloom' ),
 				'autosaveFailed' => __( 'Recovery autosave is temporarily unavailable. Manual save remains available.', 'certloom' ),
 				'autosaveCleanupFailed' => __( 'Recovery cleanup is temporarily unavailable. Manual save remains available.', 'certloom' ),
+				'autosaveSessionPaused' => __( 'Recovery autosave is paused because another Studio session owns the current recovery checkpoint. Draft/Save is still available.', 'certloom' ),
 				'autosaveConflict' => __( 'Autosave stopped because this Template changed in another session. Your browser changes were not overwritten; reload only after preserving anything you still need.', 'certloom' ),
 				'autosaveRecovered' => __( 'Recovered unsaved Designer changes from your latest safe checkpoint.', 'certloom' ),
 				'autosaveDiscarded' => __( 'Recovery checkpoint discarded.', 'certloom' ),
@@ -407,8 +408,13 @@ final class TemplateAdmin {
 			is_array( $state ) ? $state : array()
 		);
 		if ( is_wp_error( $result ) ) {
-			$status = in_array( $result->get_error_code(), array( 'certloom_designer_autosave_conflict', 'certloom_designer_autosave_session_conflict' ), true ) ? 409 : 400;
-			wp_send_json_error( array( 'code' => $result->get_error_code(), 'message' => $result->get_error_message(), 'data' => $result->get_error_data() ), $status );
+			$code = $result->get_error_code();
+			// A stale immutable revision is an actual HTTP conflict. A recovery-session
+			// ownership collision is a controlled autosave pause: keep it in the JSON
+			// contract without turning an otherwise saveable Studio page into a noisy
+			// browser/network 409. Manual Draft/Save remains authoritative.
+			$status = 'certloom_designer_autosave_conflict' === $code ? 409 : ( 'certloom_designer_autosave_session_conflict' === $code ? 200 : 400 );
+			wp_send_json_error( array( 'code' => $code, 'message' => $result->get_error_message(), 'data' => $result->get_error_data() ), $status );
 		}
 		wp_send_json_success( $result );
 	}
@@ -1256,7 +1262,7 @@ final class TemplateAdmin {
 			if ( ! $message ) { $message = $is_error ? __( 'Studio changes were not saved.', 'certloom' ) : __( 'Studio changes were saved.', 'certloom' ); }
 			echo '<div class="certloom-studio-toast ' . ( $is_error ? 'is-error' : 'is-success' ) . '" role="status" data-certloom-studio-toast><span>' . esc_html( $message ) . '</span></div>';
 		}
-		echo '<form id="' . esc_attr( $form_id ) . '" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" data-certloom-designer-form><input type="hidden" name="action" value="certloom_template_revision"><input type="hidden" name="template_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="expected_revision_id" value="' . esc_attr( (string) $current_id ) . '"><input type="hidden" name="expected_revision_sha256" value="' . esc_attr( $current_sha256 ) . '">';
+		echo '<form id="' . esc_attr( $form_id ) . '" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" data-certloom-designer-form novalidate><input type="hidden" name="action" value="certloom_template_revision"><input type="hidden" name="template_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="expected_revision_id" value="' . esc_attr( (string) $current_id ) . '"><input type="hidden" name="expected_revision_sha256" value="' . esc_attr( $current_sha256 ) . '">';
 		wp_nonce_field( 'certloom_template_revision_' . $id );
 		echo '<textarea hidden name="layout_json" data-certloom-designer-json>' . esc_textarea( (string) $layout_json ) . '</textarea>';
 		echo '<textarea hidden name="designer_state_json" data-certloom-designer-state-json>' . esc_textarea( $designer_state_json ) . '</textarea>';
