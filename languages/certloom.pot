@@ -19876,6 +19876,14 @@ msgid "Upgrade this draft to certloom-layout v%d before adding this element."
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1237
+msgid "Drag layers up or down to change their position. Layers nearer the top appear in front."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1237
+msgid "Front to back layer order. Drag a layer up or down to change its position. The first layer is shown in front."
+msgstr ""
+
+#: src/Infrastructure/Admin/TemplateAdmin.php:1237
 msgid "Front → back"
 msgstr ""
 

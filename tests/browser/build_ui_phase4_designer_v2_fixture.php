@@ -90,7 +90,7 @@ $left = <<<'HTML'
       <button type="button" class="certloom-studio-insert-item" data-certloom-designer-add="background" data-certloom-designer-palette-item data-certloom-designer-palette-category="shapes" data-certloom-palette-label="background"><span>▨</span><span>Background</span></button>
     </div></section>
   </div>
-  <div class="certloom-template-designer-layers certloom-template-designer-layers-panel certloom-template-designer-layers-primary"><div class="certloom-template-designer-layers-head"><h4>Layers</h4><span>Front → back</span></div><div class="certloom-studio-layer-list" data-certloom-designer-layers></div></div>
+  <div class="certloom-template-designer-layers certloom-template-designer-layers-panel certloom-template-designer-layers-primary"><div class="certloom-template-designer-layers-head"><h4>Layers</h4><span class="certloom-studio-layer-order-hint" tabindex="0" aria-label="Front to back layer order. Drag a layer up or down to change its position. The first layer is shown in front."><span class="certloom-studio-layer-order-alert" aria-hidden="true">!</span><span>Front → back</span><span class="certloom-studio-layer-order-tooltip" role="tooltip">Drag layers up or down to change their position. Layers nearer the top appear in front.</span></span></div><div class="certloom-studio-layer-list" data-certloom-designer-layers></div></div>
 </aside><div class="certloom-template-designer-shell">
 HTML;
 $html = studio_replace_between( $html, '<div class="certloom-template-designer-palette">', '<div class="certloom-template-designer-shell">', $left );
@@ -101,7 +101,7 @@ $html = str_replace( $legacy_layers, '', $html );
 $html = str_replace( '<aside class="certloom-template-designer-inspector">', '<aside class="certloom-template-designer-inspector" aria-label="Selected layer properties">', $html );
 $html = str_replace( '<div data-certloom-designer-empty><h4>Element geometry</h4></div>', '<div data-certloom-designer-empty><h4>Properties</h4><p>Select an element to edit it. Shift+F10 opens element actions.</p></div>', $html );
 
-// Divide the old flat inspector into the new multi-open accordion contract.
+// Divide the old flat inspector into the Studio single-open accordion contract.
 $html = str_replace(
     '<div class="certloom-template-designer-geometry-grid">',
     '<section class="certloom-template-designer-property-section" data-certloom-designer-property-section="geometry"><h4>Position &amp; size</h4><div class="certloom-template-designer-geometry-grid">',

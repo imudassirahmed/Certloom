@@ -421,6 +421,7 @@
 		function isHiddenId( id ) { return designerState.hidden_ids.indexOf( id ) !== -1; }
 		function layerLabel( id ) { return designerState.layer_labels && designerState.layer_labels[ id ] ? designerState.layer_labels[ id ] : ''; }
 		function layerDisplayName( element ) { return layerLabel( element.id ) || elementTitle( element ) || typeLabel( element.type ); }
+		function compactLayerDisplayName( element ) { var full = String( layerDisplayName( element ) || '' ); var max = 26; return full.length > max ? full.slice( 0, max ).replace( /\s+$/, '' ) + '....' : full; }
 		function normalizeLayerLabel( value ) { return String( value || '' ).replace( /[\u0000-\u001F\u007F]/g, '' ).trim().slice( 0, 80 ); }
 		function snapshot() { return { layout: clone( layout ), state: clone( designerState ), selectedId: selectedId, selectedIds: selectionIds() }; }
 		function snapshotChanged( before ) { return stable( before.layout ) !== stable( layout ) || stable( before.state ) !== stable( designerState ); }
@@ -469,11 +470,16 @@
 					while ( section.firstChild ) { body.appendChild( section.firstChild ); }
 					var trigger = document.createElement( 'button' ); trigger.type = 'button'; trigger.className = 'certloom-studio-accordion-trigger'; trigger.setAttribute( 'aria-expanded', 'false' ); trigger.innerHTML = '<span>' + escapeText( title ) + '</span><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span>';
 					section.classList.add( 'certloom-studio-accordion' ); section.appendChild( trigger ); section.appendChild( body ); body.hidden = true;
-					trigger.addEventListener( 'click', function () { var open = body.hidden; body.hidden = ! open; section.classList.toggle( 'is-open', open ); trigger.setAttribute( 'aria-expanded', open ? 'true' : 'false' ); } );
+					trigger.addEventListener( 'click', function () {
+						var open = body.hidden;
+						if ( open ) { closeInspectorSections(); body.hidden = false; section.classList.add( 'is-open' ); trigger.setAttribute( 'aria-expanded', 'true' ); }
+						else { body.hidden = true; section.classList.remove( 'is-open' ); trigger.setAttribute( 'aria-expanded', 'false' ); }
+					} );
 				} )( propertySections[ i ] );
 			}
 		}
 		function openInspectorSection( key ) {
+			closeInspectorSections();
 			for ( var i = 0; i < propertySections.length; i++ ) { var section = propertySections[ i ]; if ( section.getAttribute( 'data-certloom-designer-property-section' ) !== key ) { continue; } var body = section.querySelector( '.certloom-studio-accordion-body' ); var trigger = section.querySelector( '.certloom-studio-accordion-trigger' ); if ( body ) { body.hidden = false; } section.classList.add( 'is-open' ); if ( trigger ) { trigger.setAttribute( 'aria-expanded', 'true' ); } break; }
 		}
 		function closeInspectorSections() {
@@ -1227,15 +1233,13 @@
 			for ( var i = 0; i < list.length; i++ ) {
 				( function ( element ) {
 					var locked = isLocked( element ); var hidden = isHiddenId( element.id );
-					var row = document.createElement( 'div' ); row.className = 'certloom-template-designer-layer'; row.classList.toggle( 'is-selected', isSelectedId( element.id ) ); row.classList.toggle( 'is-primary-selected', element.id === selectedId ); row.classList.toggle( 'is-locked', locked ); row.classList.toggle( 'is-hidden-in-editor', hidden ); row.setAttribute( 'data-certloom-designer-layer-row', element.id ); row.setAttribute( 'draggable', locked ? 'false' : 'true' );
-					var drag = document.createElement( 'span' ); drag.className = 'certloom-studio-layer-drag dashicons dashicons-menu'; drag.setAttribute( 'aria-hidden', 'true' ); drag.setAttribute( 'title', t( 'dragLayer', 'Drag to reorder layer' ) ); row.appendChild( drag );
-					var select = document.createElement( 'button' ); select.type = 'button'; select.className = 'certloom-template-designer-layer-select'; select.setAttribute( 'data-certloom-designer-layer-select', element.id ); select.setAttribute( 'aria-pressed', isSelectedId( element.id ) ? 'true' : 'false' ); select.setAttribute( 'title', t( 'layerSelectHint', 'Select layer. Shift/Ctrl/Cmd-click adds it to the selection.' ) );
+					var row = document.createElement( 'div' ); row.className = 'certloom-template-designer-layer'; row.classList.toggle( 'is-selected', isSelectedId( element.id ) ); row.classList.toggle( 'is-primary-selected', element.id === selectedId ); row.classList.toggle( 'is-locked', locked ); row.classList.toggle( 'is-hidden-in-editor', hidden ); row.setAttribute( 'data-certloom-designer-layer-row', element.id ); row.setAttribute( 'draggable', locked ? 'false' : 'true' ); row.setAttribute( 'title', layerDisplayName( element ) );
+					row.appendChild( layerActionButton( element, 'visibility', hidden ? t( 'showInEditor', 'Show in editor' ) : t( 'hideInEditor', 'Hide in editor' ), '', false ) );
+					var select = document.createElement( 'button' ); select.type = 'button'; select.className = 'certloom-template-designer-layer-select'; select.setAttribute( 'data-certloom-designer-layer-select', element.id ); select.setAttribute( 'aria-pressed', isSelectedId( element.id ) ? 'true' : 'false' ); select.setAttribute( 'title', layerDisplayName( element ) + ' — ' + t( 'layerSelectHint', 'Select layer. Shift/Ctrl/Cmd-click adds it to the selection.' ) );
 					var typeIcon = document.createElement( 'span' ); typeIcon.className = 'dashicons dashicons-' + ( 'image' === element.type || 'logo' === element.type || 'signature' === element.type ? 'format-image' : ( 'qr' === element.type ? 'screenoptions' : ( 'text' === element.type || 'rich_text' === element.type || 'merge' === element.type ? 'editor-textcolor' : 'admin-generic' ) ) ); typeIcon.setAttribute( 'aria-hidden', 'true' ); select.appendChild( typeIcon );
-					var name = document.createElement( 'span' ); name.className = 'certloom-studio-layer-name'; name.textContent = layerDisplayName( element ); select.appendChild( name ); row.appendChild( select );
+					var name = document.createElement( 'span' ); name.className = 'certloom-studio-layer-name'; name.textContent = compactLayerDisplayName( element ); select.appendChild( name ); row.appendChild( select );
 					var actions = document.createElement( 'div' ); actions.className = 'certloom-template-designer-layer-actions'; actions.setAttribute( 'role', 'group' ); actions.setAttribute( 'aria-label', t( 'layerActions', 'Layer actions' ) );
-					actions.appendChild( layerActionButton( element, 'visibility', hidden ? t( 'showInEditor', 'Show in editor' ) : t( 'hideInEditor', 'Hide in editor' ), '', false ) );
 					var lock = layerActionButton( element, 'lock', locked ? t( 'unlock', 'Unlock' ) : t( 'lock', 'Lock' ), '', false ); lock.setAttribute( 'aria-pressed', locked ? 'true' : 'false' ); actions.appendChild( lock );
-					actions.appendChild( layerActionButton( element, 'duplicate', t( 'duplicate', 'Duplicate' ), '', locked || elements().length >= 500 ) );
 					actions.appendChild( layerActionButton( element, 'delete', t( 'delete', 'Delete' ), '', locked ) );
 					row.appendChild( actions ); layersContainer.appendChild( row );
 				} )( list[ i ] );

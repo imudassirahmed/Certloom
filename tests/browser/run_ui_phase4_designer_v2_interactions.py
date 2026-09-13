@@ -28,7 +28,7 @@ async def main():
         rows = page.locator('[data-certloom-designer-layer-row]')
         initial = await rows.count()
         await ck(initial >= 10, 'fixtureHasLayerDepth')
-        await ck(await page.locator('[data-certloom-designer-layer-row-action]').count() == initial * 4, 'fourCompactIconActionsPerLayer')
+        await ck(await page.locator('[data-certloom-designer-layer-row-action]').count() == initial * 3, 'threeCompactIconActionsPerLayer')
         await ck((await rows.first.get_attribute('draggable')) == 'true', 'unlockedLayerDraggable')
         await ck(await page.locator('[data-certloom-designer-fit]').is_visible(), 'fitControlVisible')
 
@@ -44,18 +44,22 @@ async def main():
         await row.locator('[data-certloom-designer-layer-row-action="lock"]').click(); await page.wait_for_timeout(50)
         row = page.locator(f'[data-certloom-designer-layer-row="{moved_id}"]')
         await ck((await row.get_attribute('draggable')) == 'false', 'lockedLayerNotDraggable')
-        await ck(await row.locator('[data-certloom-designer-layer-row-action="duplicate"]').is_disabled(), 'lockedLayerDuplicateDisabled')
         await ck(await row.locator('[data-certloom-designer-layer-row-action="delete"]').is_disabled(), 'lockedLayerDeleteDisabled')
         await ck((await row.locator('[data-certloom-designer-layer-row-action="lock"]').get_attribute('aria-pressed')) == 'true', 'lockStateExposed')
         await row.locator('[data-certloom-designer-layer-row-action="lock"]').click(); await page.wait_for_timeout(50)
         row = page.locator(f'[data-certloom-designer-layer-row="{moved_id}"]')
         await ck((await row.get_attribute('draggable')) == 'true', 'unlockRestoresDrag')
 
-        # Row duplicate/delete are the compact non-keyboard equivalents and preserve history.
+        # Duplicate stays available from the Layer context menu without permanent row clutter.
         count_before = await page.locator('[data-certloom-designer-element]').count()
-        await row.locator('[data-certloom-designer-layer-row-action="duplicate"]').click(); await page.wait_for_timeout(60)
-        await ck(await page.locator('[data-certloom-designer-element]').count() == count_before + 1, 'rowDuplicateAddsOne')
-        await ck(await page.locator('[data-certloom-designer-undo]').is_enabled(), 'rowDuplicateIsUndoable')
+        await row.click(button='right'); await page.wait_for_timeout(40)
+        layer_menu = page.locator('[data-certloom-designer-context-menu][data-surface="layer"]')
+        await ck(await layer_menu.is_visible(), 'layerRightClickMenuVisible')
+        duplicate_action = layer_menu.locator('[data-certloom-designer-context-action="duplicate"]')
+        await ck(await duplicate_action.is_enabled(), 'layerRightClickDuplicateAvailable')
+        await duplicate_action.click(); await page.wait_for_timeout(60)
+        await ck(await page.locator('[data-certloom-designer-element]').count() == count_before + 1, 'contextDuplicateAddsOne')
+        await ck(await page.locator('[data-certloom-designer-undo]').is_enabled(), 'contextDuplicateIsUndoable')
         first_after_duplicate = page.locator('[data-certloom-designer-layer-row]').first
         await first_after_duplicate.locator('[data-certloom-designer-layer-row-action="delete"]').click(); await page.wait_for_timeout(60)
         await ck(await page.locator('[data-certloom-designer-element]').count() == count_before, 'rowDeleteRemovesDuplicate')

@@ -24,7 +24,7 @@ $checks=0;
 function arc_ok($ok,$label){global$checks;if(!$ok){throw new RuntimeException($label);} $checks++;}
 function arc_error($value,$code,$label){arc_ok(is_wp_error($value)&&$code===$value->get_error_code(),$label.' got '.(is_wp_error($value)?$value->get_error_code():gettype($value)));}
 function arc_package($key,$name){
-	$built=(new TemplatePackage())->build(array('machine_key'=>$key,'name'=>$name,'description'=>'Portable Studio template'),array('layout'=>TemplateDefaults::blank_a4_landscape()),'1.7.0-alpha.4.48-dev');
+	$built=(new TemplatePackage())->build(array('machine_key'=>$key,'name'=>$name,'description'=>'Portable Studio template'),array('layout'=>TemplateDefaults::blank_a4_landscape()),'1.7.0-alpha.4.49-dev');
 	if(is_wp_error($built)){throw new RuntimeException($built->get_error_message());}
 	return $built;
 }
@@ -46,7 +46,7 @@ arc_ok('gamma-studio-one'===($read['packages'][0]['template']['machine_key']??''
 $phar=new PharData($single);
 arc_ok(isset($phar['manifest.json'])&&isset($phar['design.json']),'single archive separates manifest and canonical design JSON');
 
-$result=$archive->write_pack(array($one,$two),$pack,'1.7.0-alpha.4.48-dev');
+$result=$archive->write_pack(array($one,$two),$pack,'1.7.0-alpha.4.49-dev');
 arc_ok(true===$result&&is_file($pack),'multi-template .certloom-pack writes');
 $read=$archive->read($pack);
 arc_ok(is_array($read)&&'pack'===($read['type']??''),'package archive is classified correctly');
