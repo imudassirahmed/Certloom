@@ -1315,7 +1315,7 @@ msgid "Design moved to Draft."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:345
-#: admin/views/email-designer.php:12
+#: admin/views/email-designer.php:24
 #: admin/views/email-designs.php:50
 #: admin/views/email-designs.php:64
 #: admin/views/integrations.php:315
@@ -1452,7 +1452,7 @@ msgid "Before deactivating Certloom"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:398
-#: admin/views/email-designer.php:24
+#: admin/views/email-designer.php:138
 #: admin/views/email-designs.php:86
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:403
 #: src/Infrastructure/Admin/DomainAdmin.php:2391
@@ -3485,7 +3485,72 @@ msgstr ""
 msgid "Credential identity & dates"
 msgstr ""
 
-#: admin/views/email-designer.php:12
+#: admin/views/email-designer.php:100
+msgid "Width"
+msgstr ""
+
+#: admin/views/email-designer.php:101
+msgid "Corners"
+msgstr ""
+
+#: admin/views/email-designer.php:104
+#: admin/views/email-designer.php:105
+msgid "Plain-text fallback"
+msgstr ""
+
+#: admin/views/email-designer.php:106
+msgid "Optional. Leave blank to let Certloom derive plain text from the message blocks."
+msgstr ""
+
+#: admin/views/email-designer.php:113
+msgid "Preview data"
+msgstr ""
+
+#: admin/views/email-designer.php:114
+#: src/Infrastructure/Admin/TemplateAdmin.php:1282
+#: src/Infrastructure/Admin/TemplateAdmin.php:229
+msgid "Sample"
+msgstr ""
+
+#: admin/views/email-designer.php:115
+#: src/Infrastructure/Admin/TemplateAdmin.php:1282
+msgid "Tokens"
+msgstr ""
+
+#: admin/views/email-designer.php:117
+msgid "%d block"
+msgid_plural "%d blocks"
+msgstr[0] ""
+msgstr[1] ""
+
+#: admin/views/email-designer.php:121
+msgid "Email content blocks"
+msgstr ""
+
+#: admin/views/email-designer.php:126
+#: admin/views/email-designer.php:128
+#: src/Infrastructure/Admin/TemplateAdmin.php:1325
+msgid "Properties"
+msgstr ""
+
+#: admin/views/email-designer.php:129
+msgid "Block settings"
+msgstr ""
+
+#: admin/views/email-designer.php:132
+msgid "Select a block on the canvas to edit its content and layout."
+msgstr ""
+
+#: admin/views/email-designer.php:138
+msgid "Email preview"
+msgstr ""
+
+#: admin/views/email-designer.php:15
+#: admin/views/email-designer.php:17
+msgid "Certloom Email Studio"
+msgstr ""
+
+#: admin/views/email-designer.php:20
 #: admin/views/email-designs.php:27
 #: src/Infrastructure/Admin/AdminProductNavigation.php:158
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:110
@@ -3495,20 +3560,29 @@ msgstr ""
 msgid "Email designs"
 msgstr ""
 
-#: admin/views/email-designer.php:12
+#: admin/views/email-designer.php:24
+#: admin/views/email-designs.php:50
+msgid "Unpublished"
+msgstr ""
+
+#: admin/views/email-designer.php:25
 #: src/Infrastructure/Admin/TemplateAdmin.php:211
 msgid "Saved"
 msgstr ""
 
-#: admin/views/email-designer.php:13
+#: admin/views/email-designer.php:29
+msgid "Preview size"
+msgstr ""
+
+#: admin/views/email-designer.php:30
 msgid "Desktop"
 msgstr ""
 
-#: admin/views/email-designer.php:13
+#: admin/views/email-designer.php:31
 msgid "Mobile"
 msgstr ""
 
-#: admin/views/email-designer.php:13
+#: admin/views/email-designer.php:33
 #: admin/views/email-designs.php:68
 #: includes/class-ecapla-certverify-render.php:485
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:267
@@ -3517,76 +3591,73 @@ msgstr ""
 msgid "Preview"
 msgstr ""
 
-#: admin/views/email-designer.php:13
-msgid "Preview size"
-msgstr ""
-
-#: admin/views/email-designer.php:13
-#: src/Infrastructure/Admin/TemplateAdmin.php:1260
-msgid "Publish"
-msgstr ""
-
-#: admin/views/email-designer.php:13
+#: admin/views/email-designer.php:34
 #: src/Infrastructure/Admin/TemplateAdmin.php:1260
 msgid "Save"
 msgstr ""
 
-#: admin/views/email-designer.php:13
+#: admin/views/email-designer.php:36
+#: src/Infrastructure/Admin/TemplateAdmin.php:1260
+msgid "Publish"
+msgstr ""
+
+#: admin/views/email-designer.php:38
 msgid "Update"
 msgstr ""
 
-#: admin/views/email-designer.php:16
-msgid "Preheader"
+#: admin/views/email-designer.php:46
+msgid "Email message settings"
 msgstr ""
 
-#: admin/views/email-designer.php:16
+#: admin/views/email-designer.php:47
+msgid "Template name"
+msgstr ""
+
+#: admin/views/email-designer.php:48
 #: admin/views/email-designs.php:49
 #: src/Infrastructure/Admin/DomainAdmin.php:456
 #: src/Infrastructure/Admin/TemplateAdmin.php:873
 msgid "Purpose"
 msgstr ""
 
-#: admin/views/email-designer.php:16
+#: admin/views/email-designer.php:49
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:277
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:682
 msgid "Subject"
 msgstr ""
 
-#: admin/views/email-designer.php:16
-msgid "Template name"
+#: admin/views/email-designer.php:50
+msgid "Preheader"
 msgstr ""
 
-#: admin/views/email-designer.php:19
-msgid "Add blocks"
+#: admin/views/email-designer.php:56
+#: admin/views/email-designer.php:57
+msgid "Email builder tools"
 msgstr ""
 
-#: admin/views/email-designer.php:19
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:79
-msgid "Button"
+#: admin/views/email-designer.php:58
+#: src/Infrastructure/Admin/TemplateAdmin.php:1292
+msgid "Insert"
 msgstr ""
 
-#: admin/views/email-designer.php:19
-msgid "Click a field first, then insert the data it needs."
+#: admin/views/email-designer.php:59
+#: admin/views/email-designer.php:78
+msgid "Structure"
 msgstr ""
 
-#: admin/views/email-designer.php:19
-#: blocks/certloom/index.js:94
-#: elementor/class-ecapla-certverify-template-widgets.php:138
-#: elementor/class-ecapla-certverify-template-widgets.php:286
-#: elementor/class-ecapla-certverify-template-widgets.php:70
-msgid "Content"
+#: admin/views/email-designer.php:60
+msgid "Data"
 msgstr ""
 
-#: admin/views/email-designer.php:19
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:81
-msgid "Divider"
+#: admin/views/email-designer.php:61
+msgid "Styles"
 msgstr ""
 
-#: admin/views/email-designer.php:19
-msgid "Dynamic data"
+#: admin/views/email-designer.php:65
+msgid "Content blocks"
 msgstr ""
 
-#: admin/views/email-designer.php:19
+#: admin/views/email-designer.php:67
 #: blocks/certloom/index.js:98
 #: blocks/credential/index.js:40
 #: blocks/my-credentials/index.js:46
@@ -3600,23 +3671,8 @@ msgstr ""
 msgid "Heading"
 msgstr ""
 
-#: admin/views/email-designer.php:19
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:80
-#: src/Infrastructure/Admin/TemplateAdmin.php:110
-#: src/Infrastructure/Admin/TemplateAdmin.php:1417
-msgid "Image"
-msgstr ""
-
-#: admin/views/email-designer.php:19
-msgid "Insert data"
-msgstr ""
-
-#: admin/views/email-designer.php:19
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:82
-msgid "Spacer"
-msgstr ""
-
-#: admin/views/email-designer.php:19
+#: admin/views/email-designer.php:68
+#: admin/views/email-designer.php:96
 #: admin/views/fields-manager.php:150
 #: elementor/class-ecapla-certverify-elementor-widget.php:666
 #: src/Infrastructure/Admin/EmailDesignAdmin.php:78
@@ -3627,51 +3683,104 @@ msgstr ""
 msgid "Text"
 msgstr ""
 
-#: admin/views/email-designer.php:19
+#: admin/views/email-designer.php:69
+#: admin/views/email-designer.php:96
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:79
+msgid "Button"
+msgstr ""
+
+#: admin/views/email-designer.php:70
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:80
+#: src/Infrastructure/Admin/TemplateAdmin.php:110
+#: src/Infrastructure/Admin/TemplateAdmin.php:1417
+msgid "Image"
+msgstr ""
+
+#: admin/views/email-designer.php:71
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:81
+msgid "Divider"
+msgstr ""
+
+#: admin/views/email-designer.php:72
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:82
+msgid "Spacer"
+msgstr ""
+
+#: admin/views/email-designer.php:73
 #: src/Infrastructure/Admin/EmailDesignAdmin.php:83
 msgid "Two columns"
 msgstr ""
 
-#: admin/views/email-designer.php:20
-msgid "Email content blocks"
+#: admin/views/email-designer.php:78
+#: src/Infrastructure/Admin/DesignRulesAdmin.php:131
+#: src/Infrastructure/Admin/DesignRulesAdmin.php:154
+#: src/Infrastructure/Admin/DesignRulesAdmin.php:405
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:268
+#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:303
+msgid "Message"
 msgstr ""
 
-#: admin/views/email-designer.php:21
-msgid "Block settings"
+#: admin/views/email-designer.php:80
+msgid "Select a block here to edit it on the canvas."
 msgstr ""
 
-#: admin/views/email-designer.php:21
-msgid "Corners"
+#: admin/views/email-designer.php:85
+msgid "Dynamic data"
 msgstr ""
 
-#: admin/views/email-designer.php:21
+#: admin/views/email-designer.php:86
+msgid "Insert data"
+msgstr ""
+
+#: admin/views/email-designer.php:88
+msgid "Click a field first, then insert the data it needs."
+msgstr ""
+
+#: admin/views/email-designer.php:93
+#: src/Application/Templates/TemplateAssignmentPolicy.php:68
+#: src/Infrastructure/Admin/DesignRulesAdmin.php:770
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:706
+#: src/Infrastructure/Admin/ScopedFieldAdminAjax.php:257
+#: src/Infrastructure/Admin/ScopedFieldAdminAjax.php:258
+#: src/Infrastructure/Repository/SignerRepository.php:568
+msgid "Global"
+msgstr ""
+
+#: admin/views/email-designer.php:94
 msgid "Email style"
 msgstr ""
 
-#: admin/views/email-designer.php:21
+#: admin/views/email-designer.php:96
+#: blocks/certloom/index.js:102
+#: elementor/class-ecapla-certverify-elementor-widget.php:111
+#: elementor/class-ecapla-certverify-template-widgets.php:169
+msgid "Button text"
+msgstr ""
+
+#: admin/views/email-designer.php:96
+#: blocks/certloom/index.js:94
+#: elementor/class-ecapla-certverify-template-widgets.php:138
+#: elementor/class-ecapla-certverify-template-widgets.php:286
+#: elementor/class-ecapla-certverify-template-widgets.php:70
+msgid "Content"
+msgstr ""
+
+#: admin/views/email-designer.php:96
+msgid "Headings"
+msgstr ""
+
+#: admin/views/email-designer.php:96
+msgid "Links"
+msgstr ""
+
+#: admin/views/email-designer.php:96
+msgid "Page"
+msgstr ""
+
+#: admin/views/email-designer.php:99
 #: src/Infrastructure/Admin/TemplateAdmin.php:1348
 #: src/Infrastructure/Admin/TemplateAdmin.php:1353
 msgid "Font"
-msgstr ""
-
-#: admin/views/email-designer.php:21
-msgid "Optional. Leave blank to let Certloom derive plain text from the message blocks."
-msgstr ""
-
-#: admin/views/email-designer.php:21
-msgid "Plain-text fallback"
-msgstr ""
-
-#: admin/views/email-designer.php:21
-msgid "Select a block on the canvas to edit its content and layout."
-msgstr ""
-
-#: admin/views/email-designer.php:21
-msgid "Width"
-msgstr ""
-
-#: admin/views/email-designer.php:24
-msgid "Email preview"
 msgstr ""
 
 #: admin/views/email-designs.php:13
@@ -3743,10 +3852,6 @@ msgstr ""
 #: includes/class-ecapla-certverify-recipient-portal.php:129
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:786
 msgid "All statuses"
-msgstr ""
-
-#: admin/views/email-designs.php:50
-msgid "Unpublished"
 msgstr ""
 
 #: admin/views/email-designs.php:51
@@ -7526,12 +7631,6 @@ msgstr ""
 
 #: blocks/certloom/index.js:101
 msgid "Search placeholder"
-msgstr ""
-
-#: blocks/certloom/index.js:102
-#: elementor/class-ecapla-certverify-elementor-widget.php:111
-#: elementor/class-ecapla-certverify-template-widgets.php:169
-msgid "Button text"
 msgstr ""
 
 #: blocks/certloom/index.js:103
@@ -13927,15 +14026,6 @@ msgstr ""
 msgid "Choose a valid record for this template assignment scope."
 msgstr ""
 
-#: src/Application/Templates/TemplateAssignmentPolicy.php:68
-#: src/Infrastructure/Admin/DesignRulesAdmin.php:770
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:706
-#: src/Infrastructure/Admin/ScopedFieldAdminAjax.php:257
-#: src/Infrastructure/Admin/ScopedFieldAdminAjax.php:258
-#: src/Infrastructure/Repository/SignerRepository.php:568
-msgid "Global"
-msgstr ""
-
 #. translators: %s: field label.
 #: src/Application/Templates/TemplateFieldCompatibility.php:67
 msgid "This design uses credential field “%s”, but that field is not available in the selected Program/Batch contract. Add the field to Credential fields or remove it from the design before assigning this Template."
@@ -14733,14 +14823,6 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:131
 msgid "Global email design"
-msgstr ""
-
-#: src/Infrastructure/Admin/DesignRulesAdmin.php:131
-#: src/Infrastructure/Admin/DesignRulesAdmin.php:154
-#: src/Infrastructure/Admin/DesignRulesAdmin.php:405
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:268
-#: src/Infrastructure/Admin/EmailDeliveryAdmin.php:303
-msgid "Message"
 msgstr ""
 
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:131
@@ -19829,20 +19911,11 @@ msgid "Dynamic field preview"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1282
-#: src/Infrastructure/Admin/TemplateAdmin.php:229
-msgid "Sample"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1282
 msgid "Show dynamic field tokens on the canvas"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1282
 msgid "Show sample values for dynamic fields"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1282
-msgid "Tokens"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1283
@@ -19950,10 +20023,6 @@ msgstr ""
 msgid "Undo (Ctrl/Cmd+Z)"
 msgstr ""
 
-#: src/Infrastructure/Admin/TemplateAdmin.php:1292
-msgid "Insert"
-msgstr ""
-
 #: src/Infrastructure/Admin/TemplateAdmin.php:1293
 msgid "Search elements…"
 msgstr ""
@@ -20025,10 +20094,6 @@ msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1325
 msgid "Position & size"
-msgstr ""
-
-#: src/Infrastructure/Admin/TemplateAdmin.php:1325
-msgid "Properties"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1325

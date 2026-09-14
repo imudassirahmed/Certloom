@@ -1,3 +1,10 @@
+= 1.7.0-alpha.4.61 =
+* Introduce the first Certloom Email Studio foundation: a bounded three-pane workspace, fixed center email canvas, shared Studio-style identity and compact message settings without changing email-delivery authority.
+* Split the left builder rail into Insert, Structure, Data and Styles tools; mirror the semantic block model into Structure and keep dynamic tokens and global email style controls inside dedicated scroll-owned panels.
+* Rebuild the Properties rail as a contextual, internally scrolling inspector with grouped Content/Layout/Block actions while preserving Media Library image selection, pointer/keyboard block reordering and server-side email compilation.
+* Add Sample/Tokens preview modes, a desktop/mobile canvas frame, focused WordPress-footer suppression only on the Email Studio route, and regression coverage for viewport ownership, structure parity and responsive containment.
+* Freeze the Certificate Studio layout after staging: the remaining lower viewport strip is explicitly deferred rather than treated as resolved; Phase 4 continues with Gamma-03A Email Studio before Gallery.
+
 = 1.7.0-alpha.4.60 =
 * Gamma-02W emergency Studio recovery: corrected malformed production Inspector HTML that closed the selected-fields container before Arrange/Layer/Advanced.
 * Keeps all contextual property sections inside the Properties rail so they cannot spill across the page or collapse the three-pane workspace.

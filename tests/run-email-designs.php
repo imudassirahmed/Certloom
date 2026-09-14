@@ -132,6 +132,19 @@ ed_has($css,'@media (max-width:1100px)','designer has responsive layout');
 ed_has($css,'prefers-reduced-motion','designer respects reduced motion');
 ed_has($css,'forced-colors','designer supports forced-colors mode');
 
+ed_has($designer,'Certloom Email Studio','designer uses the shared Studio product identity');
+ed_has($designer,'data-certloom-sidebar-tab="insert"','designer exposes an Insert tool tab');
+ed_has($designer,'data-certloom-sidebar-tab="structure"','designer exposes a Structure tool tab');
+ed_has($designer,'data-certloom-sidebar-tab="data"','designer exposes a Data tool tab');
+ed_has($designer,'data-certloom-sidebar-tab="styles"','designer exposes a Styles tool tab');
+ed_has($designer,'data-certloom-email-stage-viewport','designer exposes an independent fixed canvas viewport');
+ed_has($designer,'data-certloom-data-mode="sample"','designer exposes sample-data preview mode');
+ed_has($designer,'data-certloom-data-mode="tokens"','designer exposes token preview mode');
+ed_has($js,'renderStructure()','designer mirrors the block model into the Structure panel');
+ed_has($js,'certloom-email-studio-active','designer activates focused Email Studio viewport ownership only on the designer route');
+ed_has($css,'body.certloom-email-studio-active #wpfooter','designer suppresses the WordPress footer only while the focused Email Studio is active');
+ed_has($css,'flex: 1 1 0','designer gives the three-pane workspace bounded remaining-height ownership');
+
 ed_has($repo_source,'certloom_email_design_assigned_pause_blocked','assigned designs cannot be silently unpublished');
 ed_has($repo_source,'certloom_email_design_assigned_purpose_blocked','assigned designs cannot silently change purpose');
 ed_has($repo_source,'certloom_email_design_in_use','assigned designs cannot be deleted');

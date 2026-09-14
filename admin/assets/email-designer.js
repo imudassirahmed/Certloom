@@ -48,6 +48,8 @@
 			return;
 		}
 
+		document.body.classList.add( 'certloom-email-studio-active' );
+
 		const hidden = q( '[data-certloom-blocks-json]', form );
 		const canvas = q( '[data-certloom-email-canvas]' );
 		const inspector = q( '[data-certloom-email-inspector]' );
@@ -55,6 +57,11 @@
 		const title = q( '[data-certloom-designer-title]' );
 		const nameInput = q( '[data-certloom-template-name]' );
 		const feedback = q( '[data-certloom-designer-feedback]' );
+		const structureList = q( '[data-certloom-structure-list]' );
+		const structureCount = q( '[data-certloom-structure-count]' );
+		const inspectorHeading = q( '[data-certloom-inspector-heading]' );
+		const stageMeta = q( '[data-certloom-stage-meta]' );
+		const canvasFrame = q( '[data-certloom-canvas-frame]' );
 
 		let blocks = [];
 		try {
@@ -70,6 +77,7 @@
 		let dirty = false;
 		let lastTokenField = null;
 		let dragIndex = -1;
+		let sampleMode = true;
 
 		function sync() {
 			if ( hidden ) {
@@ -115,6 +123,9 @@
 		}
 
 		function sample( value ) {
+			if ( ! sampleMode ) {
+				return String( value || '' );
+			}
 			const replacements = {
 				'{{recipient_name}}': L.sampleRecipient || 'Sara Khan',
 				'{{program_title}}': L.sampleProgram || 'Professional Leadership Program',
@@ -154,6 +165,73 @@
 				default:
 					return '';
 			}
+		}
+
+		function blockLabel( block ) {
+			const labels = {
+				heading: L.addHeading || 'Heading',
+				text: L.addText || 'Text',
+				button: L.addButton || 'Button',
+				image: L.addImage || 'Image',
+				divider: L.addDivider || 'Divider',
+				spacer: L.addSpacer || 'Spacer',
+				columns: L.addColumns || 'Two columns',
+			};
+			return labels[ block?.type ] || 'Block';
+		}
+
+		function blockSummary( block ) {
+			if ( ! block ) {
+				return '';
+			}
+			if ( block.type === 'heading' ) {
+				return sample( block.text || '' );
+			}
+			if ( block.type === 'text' ) {
+				const holder = document.createElement( 'div' );
+				holder.innerHTML = sample( block.html || '' );
+				return ( holder.textContent || '' ).trim();
+			}
+			if ( block.type === 'button' ) {
+				return sample( block.text || '' );
+			}
+			if ( block.type === 'image' ) {
+				return block.alt || ( block.url ? 'Image' : 'Choose image' );
+			}
+			if ( block.type === 'spacer' ) {
+				return `${ Number( block.height ) || 24 }px`;
+			}
+			if ( block.type === 'columns' ) {
+				return L.leftColumn && L.rightColumn ? `${ L.leftColumn } + ${ L.rightColumn }` : 'Two columns';
+			}
+			return blockLabel( block );
+		}
+
+		function renderStructure() {
+			if ( structureCount ) {
+				structureCount.textContent = String( blocks.length );
+			}
+			if ( ! structureList ) {
+				return;
+			}
+			structureList.innerHTML = '';
+			if ( ! blocks.length ) {
+				structureList.innerHTML = `<div class="certloom-inspector-empty"><p>${ esc( L.emptyContent || 'Add a content block to start the message.' ) }</p></div>`;
+				return;
+			}
+			blocks.forEach( ( block, index ) => {
+				const button = document.createElement( 'button' );
+				button.type = 'button';
+				button.className = 'certloom-email-structure-item' + ( index === selected ? ' is-selected' : '' );
+				button.dataset.structureIndex = String( index );
+				button.innerHTML = `<span class="certloom-email-structure-item__index">${ index + 1 }</span><span class="certloom-email-structure-item__copy"><strong>${ esc( blockLabel( block ) ) }</strong><small>${ esc( blockSummary( block ) ) }</small></span>`;
+				button.addEventListener( 'click', () => {
+					selected = index;
+					render();
+					q( `.certloom-canvas-block[data-index="${ index }"]`, canvas )?.focus( { preventScroll: true } );
+				} );
+				structureList.appendChild( button );
+			} );
 		}
 
 		function render() {
@@ -249,6 +327,7 @@
 				canvas.appendChild( element );
 			} );
 
+			renderStructure();
 			renderInspector();
 			applyTheme();
 		}
@@ -329,48 +408,71 @@
 			return `<label><span>${ esc( label ) }</span><input type="${ type }" data-field="${ key }" value="${ esc( block[ key ] ?? '' ) }" data-certloom-token-input></label>`;
 		}
 
+		function inspectorSection( titleText, contents, open = true ) {
+			return `<details class="certloom-inspector-section" ${ open ? 'open' : '' }><summary>${ esc( titleText ) }</summary><div class="certloom-inspector-section__body">${ contents }</div></details>`;
+		}
+
 		function renderInspector() {
 			if ( selected < 0 || ! blocks[ selected ] ) {
-				inspector.innerHTML = `<div class="certloom-inspector-empty"><h2>Block settings</h2><p>${ esc( L.selectBlock || 'Select a block on the canvas to edit it.' ) }</p></div>`;
+				if ( inspectorHeading ) {
+					inspectorHeading.textContent = 'Block settings';
+				}
+				inspector.innerHTML = `<div class="certloom-inspector-empty"><p>${ esc( L.selectBlock || 'Select a block on the canvas to edit it.' ) }</p></div>`;
 				return;
 			}
 
 			const block = blocks[ selected ];
-			let body = `<div class="certloom-inspector-form"><h2>${ esc( ( block.type || 'block' ).replace( /^./, ( character ) => character.toUpperCase() ) ) }</h2>`;
+			const titleText = blockLabel( block );
+			if ( inspectorHeading ) {
+				inspectorHeading.textContent = titleText;
+			}
+			let contentFields = '';
+			let layoutFields = '';
 
 			if ( block.type === 'heading' ) {
-				body += field( 'Text', 'text' );
-				body += field( L.headingLevel || 'Heading level', 'level', 'select', [ [ 1, 'H1' ], [ 2, 'H2' ], [ 3, 'H3' ] ] );
+				contentFields += field( 'Text', 'text' );
+				contentFields += field( L.headingLevel || 'Heading level', 'level', 'select', [ [ 1, 'H1' ], [ 2, 'H2' ], [ 3, 'H3' ] ] );
 			}
 			if ( block.type === 'text' ) {
-				body += field( 'Content', 'html', 'textarea' );
+				contentFields += field( 'Content', 'html', 'textarea' );
 			}
 			if ( block.type === 'button' ) {
-				body += field( 'Button text', 'text' );
-				body += field( L.urlLabel || 'URL', 'url' );
-				body += field( 'Alignment', 'align', 'select', [ [ 'left', 'Left' ], [ 'center', 'Center' ], [ 'right', 'Right' ] ] );
+				contentFields += field( 'Button text', 'text' );
+				contentFields += field( L.urlLabel || 'URL', 'url' );
+				layoutFields += field( 'Alignment', 'align', 'select', [ [ 'left', 'Left' ], [ 'center', 'Center' ], [ 'right', 'Right' ] ] );
 			}
 			if ( block.type === 'image' ) {
-				body += field( L.urlLabel || 'URL', 'url' );
-				body += field( L.altText || 'Alternative text', 'alt' );
-				body += '<button type="button" class="button" data-choose-image>' + esc( L.chooseImage || 'Choose image' ) + '</button>';
+				contentFields += field( L.urlLabel || 'URL', 'url' );
+				contentFields += field( L.altText || 'Alternative text', 'alt' );
+				contentFields += '<button type="button" class="button" data-choose-image>' + esc( L.chooseImage || 'Choose image' ) + '</button>';
 			}
 			if ( block.type === 'spacer' ) {
-				body += field( L.spacingPixels || 'Spacing', 'height', 'number' );
+				layoutFields += field( L.spacingPixels || 'Spacing', 'height', 'number' );
 			}
 			if ( block.type === 'columns' ) {
-				body += field( L.leftColumn || 'Left column', 'left_html', 'textarea' );
-				body += field( L.rightColumn || 'Right column', 'right_html', 'textarea' );
+				contentFields += field( L.leftColumn || 'Left column', 'left_html', 'textarea' );
+				contentFields += field( L.rightColumn || 'Right column', 'right_html', 'textarea' );
+			}
+			if ( block.type === 'divider' ) {
+				contentFields = `<p class="description">${ esc( L.dividerDescription || 'A divider separates sections of your email.' ) }</p>`;
 			}
 
-			body += `
-				<div class="certloom-inspector-actions">
-					<button type="button" class="button" data-inspector-up>${ esc( L.moveUp || 'Move up' ) }</button>
-					<button type="button" class="button" data-inspector-down>${ esc( L.moveDown || 'Move down' ) }</button>
-					<button type="button" class="button" data-inspector-copy>${ esc( L.duplicate || 'Duplicate' ) }</button>
-					<button type="button" class="button is-destructive" data-inspector-remove>${ esc( L.remove || 'Remove' ) }</button>
-				</div>
+			const actions = `<div class="certloom-inspector-actions">
+				<button type="button" class="button" data-inspector-up>${ esc( L.moveUp || 'Move up' ) }</button>
+				<button type="button" class="button" data-inspector-down>${ esc( L.moveDown || 'Move down' ) }</button>
+				<button type="button" class="button" data-inspector-copy>${ esc( L.duplicate || 'Duplicate' ) }</button>
+				<button type="button" class="button is-destructive" data-inspector-remove>${ esc( L.remove || 'Remove' ) }</button>
 			</div>`;
+
+			let body = '<div class="certloom-inspector-form">';
+			if ( contentFields ) {
+				body += inspectorSection( L.contentSection || 'Content', contentFields, true );
+			}
+			if ( layoutFields ) {
+				body += inspectorSection( L.layoutSection || 'Layout', layoutFields, true );
+			}
+			body += inspectorSection( L.blockActions || 'Block actions', actions, true );
+			body += '</div>';
 			inspector.innerHTML = body;
 
 			qa( '[data-field]', inspector ).forEach( ( input ) => {
@@ -385,6 +487,7 @@
 					blocks[ selected ][ input.dataset.field ] = value;
 					markDirty();
 					renderCanvasOnly();
+					renderStructure();
 				} );
 			} );
 
@@ -435,7 +538,15 @@
 			canvas.style.color = values.text_color || '#24322e';
 			canvas.style.fontFamily = values.font_family || 'Arial, Helvetica, sans-serif';
 			canvas.style.borderRadius = ( parseInt( values.border_radius || '12', 10 ) ) + 'px';
-			canvas.style.maxWidth = ( parseInt( values.email_width || '640', 10 ) ) + 'px';
+			const emailWidth = parseInt( values.email_width || '640', 10 );
+			canvas.style.maxWidth = emailWidth + 'px';
+			canvas.style.setProperty( '--certloom-email-heading-color', values.heading_color || '#173f34' );
+			canvas.style.setProperty( '--certloom-email-button-bg', values.button_background || '#0f6e56' );
+			canvas.style.setProperty( '--certloom-email-button-text', values.button_text || '#ffffff' );
+			canvasFrame?.style.setProperty( '--certloom-email-width', emailWidth + 'px' );
+			if ( stageMeta ) {
+				stageMeta.textContent = emailWidth + 'px · ' + blocks.length + ( blocks.length === 1 ? ' block' : ' blocks' );
+			}
 			qa( 'h1,h2,h3', canvas ).forEach( ( heading ) => {
 				heading.style.color = values.heading_color || '#173f34';
 			} );
@@ -445,6 +556,34 @@
 			input.addEventListener( 'input', () => {
 				markDirty();
 				applyTheme();
+			} );
+		} );
+
+		qa( '[data-certloom-sidebar-tab]' ).forEach( ( button ) => {
+			button.addEventListener( 'click', () => {
+				const target = button.dataset.certloomSidebarTab;
+				qa( '[data-certloom-sidebar-tab]' ).forEach( ( item ) => {
+					const active = item === button;
+					item.classList.toggle( 'is-active', active );
+					item.setAttribute( 'aria-selected', active ? 'true' : 'false' );
+				} );
+				qa( '[data-certloom-sidebar-panel]' ).forEach( ( panel ) => {
+					const active = panel.dataset.certloomSidebarPanel === target;
+					panel.classList.toggle( 'is-active', active );
+					panel.hidden = ! active;
+				} );
+			} );
+		} );
+
+		qa( '[data-certloom-data-mode]' ).forEach( ( button ) => {
+			button.addEventListener( 'click', () => {
+				sampleMode = button.dataset.certloomDataMode !== 'tokens';
+				qa( '[data-certloom-data-mode]' ).forEach( ( item ) => {
+					const active = item === button;
+					item.classList.toggle( 'is-active', active );
+					item.setAttribute( 'aria-pressed', active ? 'true' : 'false' );
+				} );
+				render();
 			} );
 		} );
 
@@ -488,8 +627,12 @@
 		qa( '[name=subject],[name=preheader],[name=purpose],[name=text_body]', form ).forEach( ( input ) => input.addEventListener( 'input', markDirty ) );
 		qa( '[data-certloom-device]' ).forEach( ( button ) => {
 			button.addEventListener( 'click', () => {
-				qa( '[data-certloom-device]' ).forEach( ( item ) => item.classList.toggle( 'is-active', item === button ) );
-				q( '[data-certloom-canvas-frame]' )?.classList.toggle( 'is-mobile', button.dataset.certloomDevice === 'mobile' );
+				qa( '[data-certloom-device]' ).forEach( ( item ) => {
+					const active = item === button;
+					item.classList.toggle( 'is-active', active );
+					item.setAttribute( 'aria-pressed', active ? 'true' : 'false' );
+				} );
+				canvasFrame?.classList.toggle( 'is-mobile', button.dataset.certloomDevice === 'mobile' );
 			} );
 		} );
 
