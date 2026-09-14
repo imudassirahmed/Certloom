@@ -51,43 +51,39 @@
 		document.body.classList.add( 'certloom-email-studio-active' );
 
 		const studioRoot = q( '[data-certloom-email-studio]' );
-		const workspaceShell = q( '.certloom-designer-shell', form );
-		const workspaceAnchor = q( '[data-certloom-email-workspace-anchor]', form );
+		const studioHost = document.getElementById( 'wpbody-content' ) || studioRoot?.parentElement;
 		let viewportSyncFrame = 0;
-		function clearWorkspacePin() {
-			if ( ! workspaceShell ) {
+		let studioTop = null;
+		function clearStudioFrame() {
+			if ( ! studioRoot ) {
 				return;
 			}
-			workspaceShell.classList.remove( 'is-viewport-pinned' );
-			workspaceShell.style.removeProperty( '--certloom-email-workspace-top' );
-			workspaceShell.style.removeProperty( '--certloom-email-workspace-left' );
-			workspaceShell.style.removeProperty( '--certloom-email-workspace-right' );
+			studioRoot.classList.remove( 'is-viewport-framed' );
+			studioRoot.style.removeProperty( '--certloom-email-studio-top' );
+			studioRoot.style.removeProperty( '--certloom-email-studio-left' );
+			studioRoot.style.removeProperty( '--certloom-email-studio-right' );
+			studioTop = null;
 		}
 		function syncStudioViewport() {
 			if ( ! studioRoot ) {
 				return;
 			}
 			if ( window.matchMedia( '(max-width: 960px)' ).matches ) {
-				studioRoot.style.removeProperty( '--certloom-email-studio-height' );
-				clearWorkspacePin();
+				clearStudioFrame();
 				return;
 			}
 
-			const rootTop = Math.max( 0, studioRoot.getBoundingClientRect().top );
-			const rootHeight = Math.max( 420, Math.floor( window.innerHeight - rootTop ) );
-			studioRoot.style.setProperty( '--certloom-email-studio-height', `${ rootHeight }px` );
-
-			if ( ! workspaceShell || ! workspaceAnchor ) {
-				return;
+			if ( studioTop === null || ! studioRoot.classList.contains( 'is-viewport-framed' ) ) {
+				studioTop = Math.max( 0, Math.round( studioRoot.getBoundingClientRect().top ) );
 			}
-			const anchorRect = workspaceAnchor.getBoundingClientRect();
-			const top = Math.max( 0, Math.round( anchorRect.top ) );
-			const left = Math.max( 0, Math.round( anchorRect.left ) );
-			const right = Math.max( 0, Math.round( window.innerWidth - anchorRect.right ) );
-			workspaceShell.style.setProperty( '--certloom-email-workspace-top', `${ top }px` );
-			workspaceShell.style.setProperty( '--certloom-email-workspace-left', `${ left }px` );
-			workspaceShell.style.setProperty( '--certloom-email-workspace-right', `${ right }px` );
-			workspaceShell.classList.add( 'is-viewport-pinned' );
+			const hostRect = studioHost?.getBoundingClientRect();
+			const currentRect = studioRoot.getBoundingClientRect();
+			const left = Math.max( 0, Math.round( hostRect?.left ?? currentRect.left ) );
+			const right = Math.max( 0, Math.round( window.innerWidth - ( hostRect?.right ?? currentRect.right ) ) );
+			studioRoot.style.setProperty( '--certloom-email-studio-top', `${ studioTop }px` );
+			studioRoot.style.setProperty( '--certloom-email-studio-left', `${ left }px` );
+			studioRoot.style.setProperty( '--certloom-email-studio-right', `${ right }px` );
+			studioRoot.classList.add( 'is-viewport-framed' );
 		}
 		function scheduleStudioViewportSync() {
 			if ( viewportSyncFrame ) {
@@ -105,10 +101,9 @@
 		window.addEventListener( 'orientationchange', scheduleStudioViewportSync );
 		window.addEventListener( 'load', scheduleStudioViewportSync, { once: true } );
 		[ 120, 360, 900 ].forEach( ( delay ) => window.setTimeout( scheduleStudioViewportSync, delay ) );
-		if ( 'ResizeObserver' in window && workspaceAnchor ) {
-			const workspaceViewportObserver = new ResizeObserver( scheduleStudioViewportSync );
-			workspaceViewportObserver.observe( studioRoot );
-			workspaceViewportObserver.observe( workspaceAnchor );
+		if ( 'ResizeObserver' in window && studioHost ) {
+			const studioViewportObserver = new ResizeObserver( scheduleStudioViewportSync );
+			studioViewportObserver.observe( studioHost );
 		}
 
 		const hidden = q( '[data-certloom-blocks-json]', form );
@@ -123,6 +118,41 @@
 		const inspectorHeading = q( '[data-certloom-inspector-heading]' );
 		const stageMeta = q( '[data-certloom-stage-meta]' );
 		const canvasFrame = q( '[data-certloom-canvas-frame]' );
+		const stageViewport = q( '[data-certloom-email-stage-viewport]' );
+		let canvasFitFrame = 0;
+		function syncCanvasFit() {
+			if ( ! stageViewport || ! canvasFrame ) {
+				return;
+			}
+			if ( window.matchMedia( '(max-width: 960px)' ).matches ) {
+				canvasFrame.style.removeProperty( '--certloom-email-fit-scale' );
+				canvasFrame.removeAttribute( 'data-certloom-fit-scale' );
+				return;
+			}
+			const availableWidth = Math.max( 1, stageViewport.clientWidth - 48 );
+			const availableHeight = Math.max( 1, stageViewport.clientHeight - 48 );
+			const naturalWidth = Math.max( 1, canvasFrame.offsetWidth );
+			const naturalHeight = Math.max( 1, canvasFrame.offsetHeight );
+			const scale = Math.min( 1, availableWidth / naturalWidth, availableHeight / naturalHeight );
+			const safeScale = Math.max( 0.1, Math.floor( scale * 1000 ) / 1000 );
+			canvasFrame.style.setProperty( '--certloom-email-fit-scale', String( safeScale ) );
+			canvasFrame.setAttribute( 'data-certloom-fit-scale', String( safeScale ) );
+		}
+		function scheduleCanvasFit() {
+			if ( canvasFitFrame ) {
+				cancelAnimationFrame( canvasFitFrame );
+			}
+			canvasFitFrame = requestAnimationFrame( () => {
+				canvasFitFrame = 0;
+				syncCanvasFit();
+			} );
+		}
+		if ( 'ResizeObserver' in window && stageViewport ) {
+			const canvasFitObserver = new ResizeObserver( scheduleCanvasFit );
+			canvasFitObserver.observe( stageViewport );
+			canvasFitObserver.observe( canvasFrame );
+		}
+		window.addEventListener( 'resize', scheduleCanvasFit );
 
 		let blocks = [];
 		try {
@@ -391,6 +421,7 @@
 			renderStructure();
 			renderInspector();
 			applyTheme();
+			scheduleCanvasFit();
 		}
 
 		function defaultBlock( type ) {
@@ -567,6 +598,7 @@
 				}
 			} );
 			applyTheme();
+			scheduleCanvasFit();
 		}
 
 		function chooseImage() {
@@ -611,6 +643,7 @@
 			qa( 'h1,h2,h3', canvas ).forEach( ( heading ) => {
 				heading.style.color = values.heading_color || '#173f34';
 			} );
+			scheduleCanvasFit();
 		}
 
 		qa( '[data-certloom-theme]', form ).forEach( ( input ) => {
@@ -694,6 +727,7 @@
 					item.setAttribute( 'aria-pressed', active ? 'true' : 'false' );
 				} );
 				canvasFrame?.classList.toggle( 'is-mobile', button.dataset.certloomDevice === 'mobile' );
+				scheduleCanvasFit();
 			} );
 		} );
 

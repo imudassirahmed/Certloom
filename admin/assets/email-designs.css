@@ -259,6 +259,9 @@
 	padding: 0 20px 20px;
 }
 /* Dedicated Email Studio */
+body.certloom-email-studio-active {
+	overflow: hidden;
+}
 body.certloom-email-studio-active #wpbody-content {
 	padding-bottom: 0 !important;
 	overflow: hidden;
@@ -268,14 +271,25 @@ body.certloom-email-studio-active .certloom-product-subnav[data-certloom-product
 	display: none !important;
 }
 .certloom-email-designer-wrap {
-	--certloom-email-studio-top: var(--wp-admin--admin-bar--height, 32px);
-	--certloom-email-studio-height: calc(100dvh - var(--certloom-email-studio-top));
 	max-width: none;
-	height: var(--certloom-email-studio-height);
-	max-height: var(--certloom-email-studio-height);
+	padding: 0 !important;
 	margin: 0 0 0 -10px;
 	overflow: hidden;
 	background: #f2f5f7;
+}
+@media (min-width:961px) {
+	body.certloom-email-studio-active .certloom-email-designer-wrap.is-viewport-framed {
+		position: fixed;
+		top: var(--certloom-email-studio-top);
+		left: var(--certloom-email-studio-left);
+		right: var(--certloom-email-studio-right);
+		bottom: 0;
+		z-index: 20;
+		width: auto;
+		height: auto;
+		max-height: none;
+		margin: 0;
+	}
 }
 .certloom-email-designer-wrap > form {
 	display: flex;
@@ -418,36 +432,15 @@ body.certloom-email-studio-active .certloom-product-subnav[data-certloom-product
 	outline: 2px solid #2271b1;
 	outline-offset: 2px;
 }
-.certloom-email-workspace-anchor {
-	display: block;
-	width: 100%;
-	height: 0;
-	min-height: 0;
-	pointer-events: none;
-}
 .certloom-designer-shell {
 	display: grid;
 	grid-template-columns: 268px minmax(420px,1fr) 322px;
 	grid-template-rows: minmax(0,1fr);
 	flex: 1 1 0;
-	height: 0;
 	min-height: 0;
+	height: auto;
 	overflow: hidden;
 	background: #edf2f6;
-}
-@media (min-width:961px) {
-	body.certloom-email-studio-active .certloom-designer-shell.is-viewport-pinned {
-		position: fixed;
-		top: var(--certloom-email-workspace-top);
-		left: var(--certloom-email-workspace-left);
-		right: var(--certloom-email-workspace-right);
-		bottom: 0;
-		z-index: 30;
-		width: auto;
-		height: auto;
-		max-height: none;
-		margin: 0;
-	}
 }
 .certloom-designer-palette,
 .certloom-designer-inspector {
@@ -747,20 +740,31 @@ body.certloom-email-studio-active .certloom-product-subnav[data-certloom-product
 	font-weight: 600;
 }
 .certloom-email-stage-viewport {
+	position: relative;
 	flex: 1 1 0;
 	min-height: 0;
-	overflow: auto;
-	padding: 28px 32px 36px;
-	scrollbar-gutter: stable both-edges;
+	overflow: hidden;
+	padding: 24px;
 }
 .certloom-canvas-frame {
 	--certloom-email-width: 640px;
-	width: min(100%, calc(var(--certloom-email-width) + 2px));
-	margin: 0 auto;
-	transition: width .2s ease, max-width .2s ease;
+	--certloom-email-fit-scale: 1;
+	width: var(--certloom-email-width);
+	max-width: none;
+	margin: 0;
+	transition: width .2s ease, transform .14s ease;
 }
 .certloom-canvas-frame.is-mobile {
-	width: min(390px,100%);
+	width: 390px;
+}
+@media (min-width:961px) {
+	.certloom-canvas-frame {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%,-50%) scale(var(--certloom-email-fit-scale));
+		transform-origin: center center;
+	}
 }
 .certloom-email-canvas {
 	box-sizing: border-box;
@@ -971,10 +975,10 @@ body.certloom-email-studio-active .certloom-product-subnav[data-certloom-product
 	}
 }
 @media (max-width:960px) {
+	body.certloom-email-studio-active { overflow: visible; }
 	body.certloom-email-studio-active #wpfooter { display: block !important; }
 	body.certloom-email-studio-active #wpbody-content { padding-bottom: 65px !important; }
 	.certloom-email-designer-wrap {
-		--certloom-email-studio-height: auto;
 		height: auto;
 		min-height: 0;
 		overflow: visible;
@@ -1027,7 +1031,9 @@ body.certloom-email-studio-active .certloom-product-subnav[data-certloom-product
 	.certloom-email-sidebar-panel { max-height: none; overflow: visible; }
 	.certloom-block-palette { grid-template-columns: repeat(3,minmax(0,1fr)); }
 	.certloom-designer-stage { min-height: 620px; }
-	.certloom-email-stage-viewport { padding: 18px 12px 32px; }
+	.certloom-email-stage-viewport { overflow: auto; padding: 18px 12px 32px; }
+	.certloom-canvas-frame { position: static; width: min(100%,var(--certloom-email-width)); margin: 0 auto; transform: none !important; }
+	.certloom-canvas-frame.is-mobile { width: min(390px,100%); }
 	.certloom-email-canvas { padding: 26px 22px; }
 	.certloom-email-inspector-scroll { max-height: none; overflow: visible; }
 }

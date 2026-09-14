@@ -1,3 +1,8 @@
+= 1.7.0-alpha.4.64 =
+* Email Studio: replace the hard-pinned three-pane shell with one bounded editor frame; left tools and right Properties remain normal panes with independent internal scrolling.
+* Email Studio: make the center email canvas the fixed visual focus and continuously fit the complete desktop/mobile email at the 100% stage baseline with no center or page vertical scrolling.
+* Email Studio: preserve focused header/message settings, block authority, Save/Publish, Structure/Data/Styles and responsive mobile document flow.
+
 = 1.7.0-alpha.4.63 =
 * Email Studio: pin the shared three-pane workspace directly to the browser viewport bottom on desktop, independent of WordPress/root height calculations.
 * Email Studio: keep a zero-height in-flow anchor so top/left/right geometry can resync without moving the form controls out of their authoritative form.

@@ -145,12 +145,17 @@ ed_has($js,'certloom-email-studio-active','designer activates focused Email Stud
 ed_has($css,'body.certloom-email-studio-active #wpfooter','designer suppresses the WordPress footer only while the focused Email Studio is active');
 ed_has($css,'flex: 1 1 0','designer gives the three-pane workspace bounded remaining-height ownership');
 ed_has($css,'.certloom-product-subnav[data-certloom-product-subnav]','focused Email Studio hides the redundant Design product tabs');
-ed_has($css,'--certloom-email-studio-height','focused Email Studio owns one explicit bounded desktop height');
-ed_has($designer,'data-certloom-email-workspace-anchor','focused Email Studio emits an in-flow workspace geometry anchor');
-ed_has($css,'.certloom-designer-shell.is-viewport-pinned','desktop Email Studio can pin the shared workspace directly to the browser viewport');
-ed_has($js,"workspaceShell.classList.add( 'is-viewport-pinned' )",'focused Email Studio hard-pins the shared workspace after measuring its in-flow anchor');
-ed_has($js,'syncStudioViewport()','focused Email Studio resynchronizes viewport geometry from the live WordPress layout');
-ed_has($js,"window.addEventListener( 'resize', scheduleStudioViewportSync )",'focused Email Studio resyncs its bounded height on viewport resize');
+ed_has($css,'.certloom-email-designer-wrap.is-viewport-framed','focused Email Studio bounds one editor frame to the remaining desktop viewport');
+ed_has($js,"studioRoot.classList.add( 'is-viewport-framed' )",'focused Email Studio frames the editor root instead of pinning the three panes');
+ed_lacks($designer,'data-certloom-email-workspace-anchor','Email Studio no longer needs a separate hard-pin workspace anchor');
+ed_lacks($css,'.certloom-designer-shell.is-viewport-pinned','Email Studio does not fixed-position the shared three-pane shell');
+ed_has($css,'.certloom-email-sidebar-panel','left tool content owns its own internal scroll region');
+ed_has($css,'.certloom-email-inspector-scroll','right Properties content owns its own internal scroll region');
+ed_has($css,'--certloom-email-fit-scale','center email canvas has an explicit fit-to-stage scale');
+ed_has($js,'syncCanvasFit()','Email Studio recomputes the 100% fit canvas scale from the available center stage');
+ed_has($js,'scheduleCanvasFit()','Email Studio reschedules fit after content and viewport changes');
+ed_has($js,'syncStudioViewport()','focused Email Studio resynchronizes the bounded editor frame from the live WordPress layout');
+ed_has($js,"window.addEventListener( 'resize', scheduleStudioViewportSync )",'focused Email Studio resyncs its bounded frame on viewport resize');
 
 ed_has($repo_source,'certloom_email_design_assigned_pause_blocked','assigned designs cannot be silently unpublished');
 ed_has($repo_source,'certloom_email_design_assigned_purpose_blocked','assigned designs cannot silently change purpose');
