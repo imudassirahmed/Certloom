@@ -47,6 +47,10 @@ async def run():
         shape=page.locator('[data-certloom-designer-element].certloom-template-designer-element.is-shape').first; await shape.evaluate('(n)=>n.click()'); await page.wait_for_timeout(15)
         await ck(await page.locator('[data-certloom-designer-style="shape"]').is_visible(),'shapeStyleVisible'); await ck(await page.locator('[data-certloom-designer-style="text"]').is_hidden(),'textStyleHiddenForShape')
         visible_shape=lambda key: page.locator(f'[data-certloom-designer-style="shape"] [data-certloom-designer-style-field="{key}"]')
+        fill_picker=page.locator('[data-certloom-designer-style="shape"] [data-certloom-designer-color-picker-for="fill"]')
+        await ck(await fill_picker.count()==1 and not await fill_picker.is_disabled(),'shapeFillColorPicker')
+        await fill_picker.evaluate("n=>{n.value='#a1b2c3';n.dispatchEvent(new Event('input',{bubbles:true}))}"); await page.wait_for_timeout(10)
+        await ck((await visible_shape('fill').input_value()).upper()=='#A1B2C3','shapeFillPickerSyncsHex')
         await visible_shape('fill').fill('#ABCDEF80'); await visible_shape('fill').dispatch_event('change'); await visible_shape('stroke').fill('#102030'); await visible_shape('stroke').dispatch_event('change'); await visible_shape('stroke_width_mm').fill('0'); await visible_shape('stroke_width_mm').dispatch_event('change'); await change('[data-certloom-designer-style-field="opacity"]',0.4)
         await page.wait_for_timeout(20); selected=page.locator('[data-certloom-designer-element].is-selected'); await ck('rgba' in (await selected.evaluate('(n)=>n.style.background')) or '#' in (await selected.evaluate('(n)=>n.style.background')),'shapeFillCanvas'); await ck(abs(float(await selected.evaluate('(n)=>n.style.opacity'))-.4)<.001,'shapeOpacityCanvas')
         # Line keeps positive width; zero is rejected.

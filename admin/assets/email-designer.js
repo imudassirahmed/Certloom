@@ -235,14 +235,55 @@
 			return output;
 		}
 
+		function blockStyle( block ) {
+			return block && block.style && typeof block.style === 'object' ? block.style : {};
+		}
+
+		function safeColor( value, fallback ) {
+			const color = String( value || '' ).trim();
+			return /^#[0-9A-Fa-f]{6}$/.test( color ) ? color : fallback;
+		}
+
+		function safeFont( value ) {
+			const allowed = [
+				'Arial, Helvetica, sans-serif',
+				'Georgia, Times New Roman, serif',
+				'Verdana, Geneva, sans-serif',
+				'Trebuchet MS, Arial, sans-serif',
+			];
+			return allowed.includes( value ) ? value : '';
+		}
+
+		function typographyStyle( block, kind ) {
+			const style = blockStyle( block );
+			const parts = [];
+			const font = safeFont( style.font_family );
+			if ( font ) { parts.push( `font-family:${ font }` ); }
+			if ( style.font_size ) { parts.push( `font-size:${ Math.max( 1, Number( style.font_size ) || 0 ) }px` ); }
+			if ( style.font_weight ) { parts.push( `font-weight:${ Number( style.font_weight ) || ( kind === 'heading' ? 700 : 400 ) }` ); }
+			if ( style.italic ) { parts.push( 'font-style:italic' ); }
+			if ( style.underline ) { parts.push( 'text-decoration:underline' ); }
+			if ( style.color ) { parts.push( `color:${ safeColor( style.color, kind === 'heading' ? 'var(--certloom-email-heading-color,#173f34)' : 'inherit' ) }` ); }
+			if ( style.align ) { parts.push( `text-align:${ [ 'left', 'center', 'right' ].includes( style.align ) ? style.align : 'left' }` ); }
+			if ( style.line_height ) { parts.push( `line-height:${ Math.max( 1, Math.min( 2.5, Number( style.line_height ) || 1.5 ) ) }` ); }
+			return parts.join( ';' );
+		}
+
 		function blockHtml( block ) {
+			const style = blockStyle( block );
 			switch ( block.type ) {
 				case 'heading':
-					return `<h${ block.level || 2 }>${ esc( sample( block.text ) ) }</h${ block.level || 2 }>`;
+					return `<h${ block.level || 2 } style="${ esc( typographyStyle( block, 'heading' ) ) }">${ esc( sample( block.text ) ) }</h${ block.level || 2 }>`;
 				case 'text':
-					return `<div>${ sample( block.html || '' ) }</div>`;
-				case 'button':
-					return `<div style="text-align:${ esc( block.align || 'left' ) }"><span class="button button-primary">${ esc( sample( block.text ) ) }</span></div>`;
+					return `<div style="${ esc( typographyStyle( block, 'text' ) ) }">${ sample( block.html || '' ) }</div>`;
+				case 'button': {
+					const buttonStyles = typographyStyle( block, 'button' ).split( ';' ).filter( Boolean );
+					buttonStyles.push( `background:${ safeColor( style.background_color, 'var(--certloom-email-button-bg,#0f6e56)' ) }` );
+					buttonStyles.push( `color:${ safeColor( style.color, 'var(--certloom-email-button-text,#ffffff)' ) }` );
+					if ( style.border_radius !== undefined && style.border_radius !== '' ) { buttonStyles.push( `border-radius:${ Math.max( 0, Number( style.border_radius ) || 0 ) }px` ); }
+					if ( style.padding_x !== undefined || style.padding_y !== undefined ) { buttonStyles.push( `padding:${ Math.max( 6, Number( style.padding_y ) || 13 ) }px ${ Math.max( 8, Number( style.padding_x ) || 20 ) }px` ); }
+					return `<div style="text-align:${ esc( block.align || 'left' ) }"><span class="button button-primary" style="${ esc( buttonStyles.join( ';' ) ) }">${ esc( sample( block.text ) ) }</span></div>`;
+				}
 				case 'image':
 					return block.url
 						? `<img src="${ esc( block.url ) }" alt="${ esc( block.alt || '' ) }" style="max-width:100%;height:auto">`
@@ -500,6 +541,32 @@
 			return `<label><span>${ esc( label ) }</span><input type="${ type }" data-field="${ key }" value="${ esc( block[ key ] ?? '' ) }" data-certloom-token-input></label>`;
 		}
 
+		function styleField( label, key, type = 'text', options = [], attrs = '' ) {
+			const style = blockStyle( blocks[ selected ] || {} );
+			if ( type === 'select' ) {
+				const optionHtml = options.map( ( option ) => {
+					const isSelected = String( style[ key ] ?? '' ) === String( option[ 0 ] );
+					return `<option value="${ esc( option[ 0 ] ) }" ${ isSelected ? 'selected' : '' }>${ esc( option[ 1 ] ) }</option>`;
+				} ).join( '' );
+				return `<label><span>${ esc( label ) }</span><select data-style-field="${ key }">${ optionHtml }</select></label>`;
+			}
+			if ( type === 'checkbox' ) {
+				return `<label class="certloom-email-toggle-field"><input type="checkbox" data-style-field="${ key }" ${ style[ key ] ? 'checked' : '' }><span>${ esc( label ) }</span></label>`;
+			}
+			return `<label><span>${ esc( label ) }</span><input type="${ type }" ${ attrs } data-style-field="${ key }" value="${ esc( style[ key ] ?? '' ) }"></label>`;
+		}
+
+		function colorStyleField( label, key, fallback ) {
+			const style = blockStyle( blocks[ selected ] || {} );
+			const value = safeColor( style[ key ], fallback );
+			return `<label class="certloom-email-color-field"><span>${ esc( label ) }</span><span class="certloom-email-color-control"><input type="color" value="${ esc( value ) }" data-style-color-picker="${ key }" aria-label="${ esc( label ) }"><input type="text" maxlength="7" pattern="#[0-9A-Fa-f]{6}" value="${ esc( style[ key ] || '' ) }" placeholder="${ esc( fallback ) }" data-style-field="${ key }"></span></label>`;
+		}
+
+		function richTextField() {
+			const block = blocks[ selected ] || {};
+			return `<div class="certloom-email-rich-field"><span class="certloom-email-rich-label">${ esc( L.contentLabel || 'Content' ) }</span><div class="certloom-email-rich-toolbar" role="toolbar" aria-label="${ esc( L.textFormatting || 'Text formatting' ) }"><button type="button" data-rich-command="bold" aria-label="${ esc( L.bold || 'Bold' ) }"><strong>B</strong></button><button type="button" data-rich-command="italic" aria-label="${ esc( L.italic || 'Italic' ) }"><em>I</em></button><button type="button" data-rich-command="underline" aria-label="${ esc( L.underline || 'Underline' ) }"><u>U</u></button><button type="button" data-rich-command="insertUnorderedList" aria-label="${ esc( L.bulletedList || 'Bulleted list' ) }">•≡</button></div><div class="certloom-email-rich-editor" contenteditable="true" role="textbox" aria-multiline="true" data-rich-text-editor data-certloom-token-input>${ block.html || '' }</div></div>`;
+		}
+
 		function inspectorSection( titleText, contents, open = true ) {
 			return `<details class="certloom-inspector-section" ${ open ? 'open' : '' }><summary>${ esc( titleText ) }</summary><div class="certloom-inspector-section__body">${ contents }</div></details>`;
 		}
@@ -519,19 +586,56 @@
 				inspectorHeading.textContent = titleText;
 			}
 			let contentFields = '';
+			let typographyFields = '';
+			let colorFields = '';
 			let layoutFields = '';
+			let spacingFields = '';
+			const fontOptions = [
+				[ '', L.inheritGlobal || 'Global email font' ],
+				[ 'Arial, Helvetica, sans-serif', 'Arial' ],
+				[ 'Georgia, Times New Roman, serif', 'Georgia' ],
+				[ 'Verdana, Geneva, sans-serif', 'Verdana' ],
+				[ 'Trebuchet MS, Arial, sans-serif', 'Trebuchet MS' ],
+			];
+			const weightOptions = [ [ '', L.inheritGlobal || 'Default' ], [ 400, 'Regular' ], [ 500, 'Medium' ], [ 600, 'Semi-bold' ], [ 700, 'Bold' ], [ 800, 'Extra bold' ], [ 900, 'Black' ] ];
 
 			if ( block.type === 'heading' ) {
-				contentFields += field( 'Text', 'text' );
+				contentFields += field( L.textLabel || 'Text', 'text' );
 				contentFields += field( L.headingLevel || 'Heading level', 'level', 'select', [ [ 1, 'H1' ], [ 2, 'H2' ], [ 3, 'H3' ] ] );
+				typographyFields += styleField( L.fontFamily || 'Font family', 'font_family', 'select', fontOptions );
+				typographyFields += styleField( L.fontSize || 'Font size', 'font_size', 'number', [], 'min="12" max="72" step="1"' );
+				typographyFields += styleField( L.fontWeight || 'Font weight', 'font_weight', 'select', weightOptions );
+				typographyFields += styleField( L.italic || 'Italic', 'italic', 'checkbox' );
+				typographyFields += styleField( L.underline || 'Underline', 'underline', 'checkbox' );
+				typographyFields += styleField( L.lineHeight || 'Line height', 'line_height', 'number', [], 'min="1" max="2.5" step="0.05"' );
+				colorFields += colorStyleField( L.textColor || 'Text color', 'color', '#173f34' );
+				layoutFields += styleField( L.alignment || 'Alignment', 'align', 'select', [ [ '', L.inheritGlobal || 'Default' ], [ 'left', 'Left' ], [ 'center', 'Center' ], [ 'right', 'Right' ] ] );
 			}
 			if ( block.type === 'text' ) {
-				contentFields += field( 'Content', 'html', 'textarea' );
+				contentFields += richTextField();
+				typographyFields += styleField( L.fontFamily || 'Font family', 'font_family', 'select', fontOptions );
+				typographyFields += styleField( L.fontSize || 'Font size', 'font_size', 'number', [], 'min="10" max="32" step="1"' );
+				typographyFields += styleField( L.fontWeight || 'Font weight', 'font_weight', 'select', weightOptions );
+				typographyFields += styleField( L.italic || 'Italic', 'italic', 'checkbox' );
+				typographyFields += styleField( L.underline || 'Underline', 'underline', 'checkbox' );
+				typographyFields += styleField( L.lineHeight || 'Line height', 'line_height', 'number', [], 'min="1" max="2.5" step="0.05"' );
+				colorFields += colorStyleField( L.textColor || 'Text color', 'color', '#24322e' );
+				layoutFields += styleField( L.alignment || 'Alignment', 'align', 'select', [ [ '', L.inheritGlobal || 'Default' ], [ 'left', 'Left' ], [ 'center', 'Center' ], [ 'right', 'Right' ] ] );
 			}
 			if ( block.type === 'button' ) {
-				contentFields += field( 'Button text', 'text' );
+				contentFields += field( L.buttonTextLabel || 'Button text', 'text' );
 				contentFields += field( L.urlLabel || 'URL', 'url' );
-				layoutFields += field( 'Alignment', 'align', 'select', [ [ 'left', 'Left' ], [ 'center', 'Center' ], [ 'right', 'Right' ] ] );
+				typographyFields += styleField( L.fontFamily || 'Font family', 'font_family', 'select', fontOptions );
+				typographyFields += styleField( L.fontSize || 'Font size', 'font_size', 'number', [], 'min="10" max="28" step="1"' );
+				typographyFields += styleField( L.fontWeight || 'Font weight', 'font_weight', 'select', weightOptions );
+				typographyFields += styleField( L.italic || 'Italic', 'italic', 'checkbox' );
+				typographyFields += styleField( L.underline || 'Underline', 'underline', 'checkbox' );
+				colorFields += colorStyleField( L.textColor || 'Text color', 'color', '#ffffff' );
+				colorFields += colorStyleField( L.backgroundColor || 'Background color', 'background_color', '#0f6e56' );
+				layoutFields += field( L.alignment || 'Alignment', 'align', 'select', [ [ 'left', 'Left' ], [ 'center', 'Center' ], [ 'right', 'Right' ] ] );
+				spacingFields += styleField( L.horizontalPadding || 'Horizontal padding', 'padding_x', 'number', [], 'min="8" max="40" step="1"' );
+				spacingFields += styleField( L.verticalPadding || 'Vertical padding', 'padding_y', 'number', [], 'min="6" max="24" step="1"' );
+				spacingFields += styleField( L.cornerRadius || 'Corner radius', 'border_radius', 'number', [], 'min="0" max="32" step="1"' );
 			}
 			if ( block.type === 'image' ) {
 				contentFields += field( L.urlLabel || 'URL', 'url' );
@@ -560,8 +664,17 @@
 			if ( contentFields ) {
 				body += inspectorSection( L.contentSection || 'Content', contentFields, true );
 			}
+			if ( typographyFields ) {
+				body += inspectorSection( L.typographySection || 'Typography', typographyFields, true );
+			}
+			if ( colorFields ) {
+				body += inspectorSection( L.colorsSection || 'Colors', colorFields, true );
+			}
 			if ( layoutFields ) {
 				body += inspectorSection( L.layoutSection || 'Layout', layoutFields, true );
+			}
+			if ( spacingFields ) {
+				body += inspectorSection( L.spacingSection || 'Spacing', spacingFields, false );
 			}
 			body += inspectorSection( L.blockActions || 'Block actions', actions, true );
 			body += '</div>';
@@ -582,6 +695,53 @@
 					renderStructure();
 				} );
 			} );
+
+			qa( '[data-style-field]', inspector ).forEach( ( input ) => {
+				input.addEventListener( 'input', () => {
+					const blockStyleState = blockStyle( blocks[ selected ] );
+					blocks[ selected ].style = blockStyleState;
+					let value = input.type === 'checkbox' ? input.checked : input.value;
+					if ( input.type === 'number' ) { value = input.value === '' ? '' : Number( input.value ); }
+					if ( value === '' || value === false ) { delete blockStyleState[ input.dataset.styleField ]; } else { blockStyleState[ input.dataset.styleField ] = value; }
+					const picker = q( `[data-style-color-picker="${ input.dataset.styleField }"]`, inspector );
+					if ( picker && /^#[0-9A-Fa-f]{6}$/.test( String( value ) ) ) { picker.value = String( value ); }
+					markDirty();
+					renderCanvasOnly();
+				} );
+			} );
+
+			qa( '[data-style-color-picker]', inspector ).forEach( ( picker ) => {
+				picker.addEventListener( 'input', () => {
+					const key = picker.dataset.styleColorPicker;
+					const fieldNode = q( `[data-style-field="${ key }"]`, inspector );
+					if ( fieldNode ) {
+						fieldNode.value = picker.value.toUpperCase();
+						fieldNode.dispatchEvent( new Event( 'input', { bubbles: true } ) );
+					}
+				} );
+			} );
+
+			const richEditor = q( '[data-rich-text-editor]', inspector );
+			if ( richEditor ) {
+				lastTokenField = richEditor;
+				richEditor.addEventListener( 'focus', () => { lastTokenField = richEditor; } );
+				richEditor.addEventListener( 'input', () => {
+					blocks[ selected ].html = richEditor.innerHTML;
+					markDirty();
+					renderCanvasOnly();
+					renderStructure();
+				} );
+				qa( '[data-rich-command]', inspector ).forEach( ( button ) => {
+					button.addEventListener( 'mousedown', ( event ) => event.preventDefault() );
+					button.addEventListener( 'click', () => {
+						richEditor.focus();
+						document.execCommand( button.dataset.richCommand, false, null );
+						blocks[ selected ].html = richEditor.innerHTML;
+						markDirty();
+						renderCanvasOnly();
+					} );
+				} );
+			}
 
 			q( '[data-inspector-up]', inspector )?.addEventListener( 'click', () => move( selected, -1 ) );
 			q( '[data-inspector-down]', inspector )?.addEventListener( 'click', () => move( selected, 1 ) );
@@ -640,9 +800,6 @@
 			if ( stageMeta ) {
 				stageMeta.textContent = emailWidth + 'px · ' + blocks.length + ( blocks.length === 1 ? ' block' : ' blocks' );
 			}
-			qa( 'h1,h2,h3', canvas ).forEach( ( heading ) => {
-				heading.style.color = values.heading_color || '#173f34';
-			} );
 			scheduleCanvasFit();
 		}
 
@@ -702,6 +859,12 @@
 		function insertToken( token ) {
 			const input = lastTokenField || q( '[data-field]', inspector ) || q( '[name=subject]', form );
 			if ( ! input ) {
+				return;
+			}
+			if ( input.isContentEditable ) {
+				input.focus();
+				document.execCommand( 'insertText', false, token );
+				input.dispatchEvent( new Event( 'input', { bubbles: true } ) );
 				return;
 			}
 			const start = input.selectionStart ?? input.value.length;

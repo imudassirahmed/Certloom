@@ -171,8 +171,7 @@
 		var quickStyleFields = root.querySelectorAll( '[data-certloom-designer-quick-style]' );
 		var quickToggleButtons = root.querySelectorAll( '[data-certloom-designer-quick-toggle]' );
 		var quickTextAlignButtons = root.querySelectorAll( '[data-certloom-designer-quick-text-align]' );
-		var colorPicker = root.querySelector( '[data-certloom-designer-color-picker]' );
-		var colorTextField = root.querySelector( '[data-certloom-designer-style-field="color"]' );
+		var colorPickers = root.querySelectorAll( '[data-certloom-designer-color-picker-for]' );
 		var mediaButtons = root.querySelectorAll( '[data-certloom-designer-media], [data-certloom-designer-context-media]' );
 		var signatureSourceButtons = root.querySelectorAll( '[data-certloom-designer-signature-source]' );
 		var signatureSourceStatus = root.querySelector( '[data-certloom-designer-signature-status]' );
@@ -1049,10 +1048,13 @@
 				if ( 'checkbox' === styleFields[ styleField ].type ) { styleFields[ styleField ].checked = !! styleValue; } else { styleFields[ styleField ].value = null == styleValue ? '' : String( styleValue ); }
 				styleFields[ styleField ].disabled = locked || ( 'font_family' === styleKey && ! fontDefinition( String( styleFields[ styleField ].value || '' ) || 'sans-serif' ) && ! fontDefinition( 'sans-serif' ) );
 			}
-			if ( colorPicker ) {
-				var inspectorColor = canonicalColor( styleValueForElement( element, 'color' ) );
-				colorPicker.value = inspectorColor ? inspectorColor.slice( 0, 7 ) : '#000000';
-				colorPicker.disabled = locked || ! elementDefinition || 'text' !== elementDefinition.style_group;
+			for ( var colorIndex = 0; colorIndex < colorPickers.length; colorIndex++ ) {
+				var pickerKey = colorPickers[ colorIndex ].getAttribute( 'data-certloom-designer-color-picker-for' );
+				var inspectorColor = canonicalColor( styleValueForElement( element, pickerKey ) );
+				colorPickers[ colorIndex ].value = inspectorColor ? inspectorColor.slice( 0, 7 ) : '#000000';
+				var pickerOwner = colorPickers[ colorIndex ].closest( '[data-certloom-designer-style]' );
+				var pickerGroup = pickerOwner ? pickerOwner.getAttribute( 'data-certloom-designer-style' ) : '';
+				colorPickers[ colorIndex ].disabled = locked || ( 'general' !== pickerGroup && pickerGroup !== styleGroup );
 			}
 			for ( var mediaIndex = 0; mediaIndex < mediaButtons.length; mediaIndex++ ) { mediaButtons[ mediaIndex ].disabled = locked || ! elementDefinition || ! elementDefinition.media; }
 			if ( signatureSourceStatus ) {
@@ -2041,7 +2043,19 @@
 		}
 		for ( var quickToggleIndex = 0; quickToggleIndex < quickToggleButtons.length; quickToggleIndex++ ) { quickToggleButtons[ quickToggleIndex ].addEventListener( 'click', function () { var key = this.getAttribute( 'data-certloom-designer-quick-toggle' ); if ( 'bold' === key ) { applyQuickStyleValue( 'font_weight', 'true' === this.getAttribute( 'aria-pressed' ) ? 400 : 700 ); } if ( 'italic' === key ) { applyQuickStyleValue( 'italic', 'true' !== this.getAttribute( 'aria-pressed' ) ); } } ); }
 		for ( var quickAlignIndex = 0; quickAlignIndex < quickTextAlignButtons.length; quickAlignIndex++ ) { quickTextAlignButtons[ quickAlignIndex ].addEventListener( 'click', function () { applyQuickStyleValue( 'align', this.getAttribute( 'data-certloom-designer-quick-text-align' ) ); } ); }
-		if ( colorPicker && colorTextField ) { colorPicker.addEventListener( 'change', function () { if ( colorPicker.disabled ) { return; } colorTextField.value = String( colorPicker.value || '#000000' ).toUpperCase(); applyStyleField( colorTextField ); } ); }
+		for ( var colorPickerIndex = 0; colorPickerIndex < colorPickers.length; colorPickerIndex++ ) {
+			( function ( picker ) {
+				picker.addEventListener( 'input', function () {
+					if ( picker.disabled ) { return; }
+					var key = picker.getAttribute( 'data-certloom-designer-color-picker-for' );
+					var owner = picker.closest( '[data-certloom-designer-style]' );
+					var textField = owner ? owner.querySelector( '[data-certloom-designer-style-field="' + key + '"]' ) : root.querySelector( '[data-certloom-designer-style-field="' + key + '"]' );
+					if ( ! textField || textField.disabled ) { return; }
+					textField.value = String( picker.value || '#000000' ).toUpperCase();
+					applyStyleField( textField );
+				} );
+			} )( colorPickers[ colorPickerIndex ] );
+		}
 		for ( var mediaButtonIndex = 0; mediaButtonIndex < mediaButtons.length; mediaButtonIndex++ ) { mediaButtons[ mediaButtonIndex ].addEventListener( 'click', function () { var element = selected(); if ( ! element || isLocked( element ) || [ 'image', 'logo', 'signature' ].indexOf( element.type ) === -1 ) { return; } mediaFrame( function ( reference ) { var current = selected(); if ( ! current || isLocked( current ) ) { return; } var before = snapshot(); var proposed = clone( current ); proposed.asset = reference; if ( 'signature' === proposed.type ) { delete proposed.source; } if ( updateElement( current.id, proposed, false ) ) { pushHistory( before ); render(); announce( 'signature' === proposed.type ? t( 'signatureFixedAssetUpdated', 'Signature now uses the selected fixed image.' ) : t( 'assetUpdated', 'Image updated.' ) ); } } ); } ); }
 		for ( var signatureSourceIndex = 0; signatureSourceIndex < signatureSourceButtons.length; signatureSourceIndex++ ) { signatureSourceButtons[ signatureSourceIndex ].addEventListener( 'click', function () {
 			var element = selected(); if ( ! element || 'signature' !== element.type || isLocked( element ) ) { return; }

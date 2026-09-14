@@ -8,11 +8,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Server-side compiler for Certloom's structured email builder.
  *
- * The builder stores semantic blocks and theme values. Delivery always uses the
- * server-compiled HTML/text, never browser-authored executable markup.
+ * The builder stores semantic blocks and bounded style values. Delivery always
+ * uses server-compiled HTML/text, never browser-authored executable markup.
  */
 final class EmailDesignCompiler {
 	const MAX_BLOCKS = 40;
+
+	/** @return array<int,string> */
+	private static function allowed_fonts() {
+		return array(
+			'Arial, Helvetica, sans-serif',
+			'Georgia, Times New Roman, serif',
+			'Verdana, Geneva, sans-serif',
+			'Trebuchet MS, Arial, sans-serif',
+		);
+	}
 
 	/** @return array<string,mixed> */
 	public static function default_theme() {
@@ -51,16 +61,54 @@ final class EmailDesignCompiler {
 				if ( $hex ) { $out[ $key ] = $hex; }
 			}
 		}
-		$allowed_fonts = array(
-			'Arial, Helvetica, sans-serif',
-			'Georgia, Times New Roman, serif',
-			'Verdana, Geneva, sans-serif',
-			'Trebuchet MS, Arial, sans-serif',
-		);
 		$font = isset( $theme['font_family'] ) ? (string) $theme['font_family'] : '';
-		if ( in_array( $font, $allowed_fonts, true ) ) { $out['font_family'] = $font; }
+		if ( in_array( $font, self::allowed_fonts(), true ) ) { $out['font_family'] = $font; }
 		$out['email_width']   = max( 480, min( 760, absint( $theme['email_width'] ?? $out['email_width'] ) ) );
 		$out['border_radius'] = max( 0, min( 32, absint( $theme['border_radius'] ?? $out['border_radius'] ) ) );
+		return $out;
+	}
+
+	/** @return array<string,mixed> */
+	private function sanitize_block_style( $block, $type ) {
+		$style = is_array( $block['style'] ?? null ) ? $block['style'] : array();
+		$out   = array();
+
+		$font = isset( $style['font_family'] ) ? (string) $style['font_family'] : '';
+		if ( in_array( $font, self::allowed_fonts(), true ) ) { $out['font_family'] = $font; }
+
+		$size_bounds = 'heading' === $type ? array( 12, 72 ) : ( 'button' === $type ? array( 10, 28 ) : array( 10, 32 ) );
+		if ( isset( $style['font_size'] ) && '' !== (string) $style['font_size'] ) {
+			$out['font_size'] = max( $size_bounds[0], min( $size_bounds[1], absint( $style['font_size'] ) ) );
+		}
+
+		if ( isset( $style['font_weight'] ) && '' !== (string) $style['font_weight'] ) {
+			$weight = absint( $style['font_weight'] );
+			if ( in_array( $weight, array( 400, 500, 600, 700, 800, 900 ), true ) ) { $out['font_weight'] = $weight; }
+		}
+		if ( ! empty( $style['italic'] ) ) { $out['italic'] = true; }
+		if ( ! empty( $style['underline'] ) ) { $out['underline'] = true; }
+
+		foreach ( array( 'color', 'background_color' ) as $key ) {
+			if ( isset( $style[ $key ] ) ) {
+				$hex = sanitize_hex_color( (string) $style[ $key ] );
+				if ( $hex ) { $out[ $key ] = $hex; }
+			}
+		}
+
+		if ( in_array( $type, array( 'heading', 'text' ), true ) ) {
+			$align = (string) ( $style['align'] ?? '' );
+			if ( in_array( $align, array( 'left', 'center', 'right' ), true ) ) { $out['align'] = $align; }
+			if ( isset( $style['line_height'] ) && is_numeric( $style['line_height'] ) ) {
+				$out['line_height'] = max( 1.0, min( 2.5, round( (float) $style['line_height'], 2 ) ) );
+			}
+		}
+
+		if ( 'button' === $type ) {
+			if ( isset( $style['border_radius'] ) ) { $out['border_radius'] = max( 0, min( 32, absint( $style['border_radius'] ) ) ); }
+			if ( isset( $style['padding_x'] ) ) { $out['padding_x'] = max( 8, min( 40, absint( $style['padding_x'] ) ) ); }
+			if ( isset( $style['padding_y'] ) ) { $out['padding_y'] = max( 6, min( 24, absint( $style['padding_y'] ) ) ); }
+		}
+
 		return $out;
 	}
 
@@ -74,16 +122,31 @@ final class EmailDesignCompiler {
 			switch ( $type ) {
 				case 'heading':
 					$text = sanitize_text_field( (string) ( $block['text'] ?? '' ) );
-					if ( '' !== $text ) { $out[] = array( 'type' => 'heading', 'text' => $text, 'level' => max( 1, min( 3, absint( $block['level'] ?? 2 ) ) ) ); }
+					if ( '' !== $text ) {
+						$row = array( 'type' => 'heading', 'text' => $text, 'level' => max( 1, min( 3, absint( $block['level'] ?? 2 ) ) ) );
+						$style = $this->sanitize_block_style( $block, $type );
+						if ( $style ) { $row['style'] = $style; }
+						$out[] = $row;
+					}
 					break;
 				case 'text':
 					$html = wp_kses_post( (string) ( $block['html'] ?? '' ) );
-					if ( '' !== trim( wp_strip_all_tags( $html ) ) || false !== strpos( $html, '{{' ) ) { $out[] = array( 'type' => 'text', 'html' => $html ); }
+					if ( '' !== trim( wp_strip_all_tags( $html ) ) || false !== strpos( $html, '{{' ) ) {
+						$row = array( 'type' => 'text', 'html' => $html );
+						$style = $this->sanitize_block_style( $block, $type );
+						if ( $style ) { $row['style'] = $style; }
+						$out[] = $row;
+					}
 					break;
 				case 'button':
 					$text = sanitize_text_field( (string) ( $block['text'] ?? '' ) );
 					$url  = $this->sanitize_url_or_token( $block['url'] ?? '' );
-					if ( '' !== $text && '' !== $url ) { $out[] = array( 'type' => 'button', 'text' => $text, 'url' => $url, 'align' => in_array( (string) ( $block['align'] ?? '' ), array( 'left', 'center', 'right' ), true ) ? (string) $block['align'] : 'left' ); }
+					if ( '' !== $text && '' !== $url ) {
+						$row = array( 'type' => 'button', 'text' => $text, 'url' => $url, 'align' => in_array( (string) ( $block['align'] ?? '' ), array( 'left', 'center', 'right' ), true ) ? (string) $block['align'] : 'left' );
+						$style = $this->sanitize_block_style( $block, $type );
+						if ( $style ) { $row['style'] = $style; }
+						$out[] = $row;
+					}
 					break;
 				case 'image':
 					$url = esc_url_raw( (string) ( $block['url'] ?? '' ) );
@@ -105,11 +168,31 @@ final class EmailDesignCompiler {
 		return $out;
 	}
 
-
 	/** @return array<int,array<string,mixed>> */
 	public function normalize_blocks( $blocks ) {
 		$normalized = $this->sanitize_blocks( $blocks );
 		return $normalized ?: self::default_blocks();
+	}
+
+	/** @return string */
+	private function style_value( array $style, $key, $fallback ) {
+		return isset( $style[ $key ] ) && '' !== (string) $style[ $key ] ? (string) $style[ $key ] : (string) $fallback;
+	}
+
+	/** @return string */
+	private function text_style( array $style, array $theme, $kind ) {
+		$default_size = 'heading' === $kind ? 24 : 16;
+		$default_weight = 'heading' === $kind ? 700 : 400;
+		$default_color = 'heading' === $kind ? $theme['heading_color'] : $theme['text_color'];
+		$family = $this->style_value( $style, 'font_family', $theme['font_family'] );
+		$size = absint( $this->style_value( $style, 'font_size', $default_size ) );
+		$weight = absint( $this->style_value( $style, 'font_weight', $default_weight ) );
+		$color = $this->style_value( $style, 'color', $default_color );
+		$align = $this->style_value( $style, 'align', 'left' );
+		$line_height = $this->style_value( $style, 'line_height', 'heading' === $kind ? 1.25 : 1.65 );
+		$font_style = ! empty( $style['italic'] ) ? 'italic' : 'normal';
+		$text_decoration = ! empty( $style['underline'] ) ? 'underline' : 'none';
+		return 'color:' . esc_attr( $color ) . ';font-family:' . esc_attr( $family ) . ';font-size:' . $size . 'px;font-weight:' . $weight . ';font-style:' . $font_style . ';text-decoration:' . $text_decoration . ';text-align:' . esc_attr( $align ) . ';line-height:' . esc_attr( $line_height ) . ';';
 	}
 
 	/** @return array{html_body:string,text_body:string,theme:array<string,mixed>,blocks:array<int,array<string,mixed>>} */
@@ -119,18 +202,30 @@ final class EmailDesignCompiler {
 		$body   = '';
 		$text   = array();
 		foreach ( $blocks as $block ) {
+			$style = is_array( $block['style'] ?? null ) ? $block['style'] : array();
 			switch ( $block['type'] ) {
 				case 'heading':
-					$size = 1 === $block['level'] ? 30 : ( 2 === $block['level'] ? 24 : 19 );
-					$body .= '<h' . absint( $block['level'] ) . ' style="margin:0 0 18px;color:' . esc_attr( $theme['heading_color'] ) . ';font-family:' . esc_attr( $theme['font_family'] ) . ';font-size:' . $size . 'px;line-height:1.25;">' . esc_html( $block['text'] ) . '</h' . absint( $block['level'] ) . '>';
+					$default_size = 1 === $block['level'] ? 30 : ( 2 === $block['level'] ? 24 : 19 );
+					if ( ! isset( $style['font_size'] ) ) { $style['font_size'] = $default_size; }
+					$body .= '<h' . absint( $block['level'] ) . ' style="margin:0 0 18px;' . $this->text_style( $style, $theme, 'heading' ) . '">' . esc_html( $block['text'] ) . '</h' . absint( $block['level'] ) . '>';
 					$text[] = (string) $block['text'];
 					break;
 				case 'text':
-					$body .= '<div style="margin:0 0 18px;color:' . esc_attr( $theme['text_color'] ) . ';font-family:' . esc_attr( $theme['font_family'] ) . ';font-size:16px;line-height:1.65;">' . wp_kses_post( $block['html'] ) . '</div>';
+					$body .= '<div style="margin:0 0 18px;' . $this->text_style( $style, $theme, 'text' ) . '">' . wp_kses_post( $block['html'] ) . '</div>';
 					$text[] = trim( wp_strip_all_tags( str_replace( array( '</p>', '<br>', '<br/>', '<br />' ), "\n", $block['html'] ) ) );
 					break;
 				case 'button':
-					$body .= '<div style="margin:4px 0 22px;text-align:' . esc_attr( $block['align'] ) . ';"><a href="' . esc_attr( $block['url'] ) . '" style="display:inline-block;background:' . esc_attr( $theme['button_background'] ) . ';color:' . esc_attr( $theme['button_text'] ) . ';font-family:' . esc_attr( $theme['font_family'] ) . ';font-size:16px;font-weight:700;line-height:1.2;text-decoration:none;padding:13px 20px;border-radius:' . absint( $theme['border_radius'] ) . 'px;">' . esc_html( $block['text'] ) . '</a></div>';
+					$family = $this->style_value( $style, 'font_family', $theme['font_family'] );
+					$size = absint( $this->style_value( $style, 'font_size', 16 ) );
+					$weight = absint( $this->style_value( $style, 'font_weight', 700 ) );
+					$color = $this->style_value( $style, 'color', $theme['button_text'] );
+					$background = $this->style_value( $style, 'background_color', $theme['button_background'] );
+					$radius = absint( $this->style_value( $style, 'border_radius', $theme['border_radius'] ) );
+					$padding_x = absint( $this->style_value( $style, 'padding_x', 20 ) );
+					$padding_y = absint( $this->style_value( $style, 'padding_y', 13 ) );
+					$font_style = ! empty( $style['italic'] ) ? 'italic' : 'normal';
+					$text_decoration = ! empty( $style['underline'] ) ? 'underline' : 'none';
+					$body .= '<div style="margin:4px 0 22px;text-align:' . esc_attr( $block['align'] ) . ';"><a href="' . esc_attr( $block['url'] ) . '" style="display:inline-block;background:' . esc_attr( $background ) . ';color:' . esc_attr( $color ) . ';font-family:' . esc_attr( $family ) . ';font-size:' . $size . 'px;font-weight:' . $weight . ';font-style:' . $font_style . ';line-height:1.2;text-decoration:' . $text_decoration . ';padding:' . $padding_y . 'px ' . $padding_x . 'px;border-radius:' . $radius . 'px;">' . esc_html( $block['text'] ) . '</a></div>';
 					$text[] = (string) $block['text'] . ': ' . (string) $block['url'];
 					break;
 				case 'image':

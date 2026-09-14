@@ -1,3 +1,10 @@
+= 1.7.0-alpha.4.65 =
+* Email Studio: add visual rich-text authoring for Text blocks with Bold, Italic, Underline and bulleted-list controls instead of raw-HTML-only editing.
+* Email Studio: add contextual Typography, Colors, Layout and Spacing controls for Heading/Text/Button blocks, including bounded font family/size/weight, block alignment, line height, button padding/radius and native color selectors.
+* Email delivery: preserve the new bounded block-style keys through server sanitization, compilation and portable email-design packages; delivered HTML remains server-compiled and fail-closed.
+* Certificate Studio: replace remaining shape, line and table hex-only color fields with paired native color pickers plus canonical hex inputs, including alpha-capable hex fallback where the layout schema permits it.
+* Regression coverage: prove Email Studio rich formatting/color persistence and Certificate Studio picker-to-hex synchronization without changing the existing fit-canvas/independent-rails viewport model.
+
 = 1.7.0-alpha.4.64 =
 * Email Studio: replace the hard-pinned three-pane shell with one bounded editor frame; left tools and right Properties remain normal panes with independent internal scrolling.
 * Email Studio: make the center email canvas the fixed visual focus and continuously fit the complete desktop/mobile email at the 100% stage baseline with no center or page vertical scrolling.

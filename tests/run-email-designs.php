@@ -46,6 +46,21 @@ foreach($presets as $preset){
 }
 ed_same(EmailDesignPurposes::all(),array_values(array_filter(EmailDesignPurposes::all(),fn($p)=>isset($purposes[$p]))),'every purpose is represented');
 
+$styled=$compiler->compile(array(
+	array('type'=>'heading','text'=>'Styled heading','level'=>1,'style'=>array('font_family'=>'Georgia, Times New Roman, serif','font_size'=>38,'font_weight'=>800,'italic'=>1,'underline'=>1,'color'=>'#123456','align'=>'center','line_height'=>1.4)),
+	array('type'=>'text','html'=>'<p><strong>Rich</strong> <em>message</em></p>','style'=>array('font_size'=>18,'font_weight'=>500,'color'=>'#334455','align'=>'right','line_height'=>1.8)),
+	array('type'=>'button','text'=>'Open','url'=>'{{verification_url}}','align'=>'center','style'=>array('font_size'=>17,'font_weight'=>600,'italic'=>1,'color'=>'#ffffff','background_color'=>'#2255aa','border_radius'=>18,'padding_x'=>28,'padding_y'=>14)),
+), EmailDesignCompiler::default_theme());
+ed_same('#123456',$styled['blocks'][0]['style']['color'],'heading block color survives canonical sanitization');
+ed_same(800,$styled['blocks'][0]['style']['font_weight'],'heading font weight survives canonical sanitization');
+ed_same(18,$styled['blocks'][1]['style']['font_size'],'text block font size survives canonical sanitization');
+ed_same('#2255aa',$styled['blocks'][2]['style']['background_color'],'button background survives canonical sanitization');
+ed_has($styled['html_body'],'font-size:38px','compiled heading applies block font size');
+ed_has($styled['html_body'],'font-style:italic','compiled styled blocks support italic');
+ed_has($styled['html_body'],'text-decoration:underline','compiled styled blocks support underline');
+ed_has($styled['html_body'],'background:#2255aa','compiled button applies block background color');
+ed_has($styled['html_body'],'<strong>Rich</strong>','compiled text keeps safe rich-text markup');
+
 $sample=$presets[0];$sample['id']='private-id';$sample['source']='customer';$sample['active']=1;$sample['assignment']=array('scope_type'=>'program','scope_id'=>9);
 $package=(new EmailDesignPackage($compiler))->build($sample,'1.6.99-qa.23');
 ed_same(EmailDesignPackage::FORMAT,$package['format'],'package format identity');
@@ -60,6 +75,12 @@ ed_same(0,$decoded['active'],'import is deliberately Unpublished');
 ed_same('import',$decoded['source'],'import source is explicit');
 ed_same($sample['purpose'],$decoded['purpose'],'purpose survives package round-trip');
 ed_same($sample['subject'],$decoded['subject'],'subject survives package round-trip');
+$styled_design=$sample;
+$styled_design['blocks']=array(array('type'=>'heading','text'=>'Portable styled heading','level'=>1,'style'=>array('font_size'=>36,'font_weight'=>800,'color'=>'#234567','align'=>'center')));
+$styled_package=(new EmailDesignPackage($compiler))->build($styled_design,'1.7.0-alpha.4.65');
+$styled_decoded=(new EmailDesignPackage($compiler))->decode(json_encode($styled_package));
+ed_same(36,$styled_decoded['blocks'][0]['style']['font_size'],'block typography survives email design package round-trip');
+ed_same('#234567',$styled_decoded['blocks'][0]['style']['color'],'block color survives email design package round-trip');
 
 $tampered=$package;$tampered['design']['subject']='Tampered';$bad=(new EmailDesignPackage($compiler))->decode(json_encode($tampered));
 ed_ok(is_wp_error($bad)&&'certloom_email_design_package_integrity'===$bad->get_error_code(),'tampered package fails integrity check');
@@ -156,6 +177,16 @@ ed_has($js,'syncCanvasFit()','Email Studio recomputes the 100% fit canvas scale 
 ed_has($js,'scheduleCanvasFit()','Email Studio reschedules fit after content and viewport changes');
 ed_has($js,'syncStudioViewport()','focused Email Studio resynchronizes the bounded editor frame from the live WordPress layout');
 ed_has($js,"window.addEventListener( 'resize', scheduleStudioViewportSync )",'focused Email Studio resyncs its bounded frame on viewport resize');
+ed_has($js,'data-rich-command="bold"','text blocks expose direct bold formatting controls');
+ed_has($js,'data-rich-command="italic"','text blocks expose direct italic formatting controls');
+ed_has($js,'data-rich-command="underline"','text blocks expose direct underline formatting controls');
+ed_has($js,'data-rich-text-editor','text blocks use a visual rich-text editor rather than raw HTML-only editing');
+ed_has($js,'data-style-color-picker','block-level colors expose native color pickers paired with canonical hex values');
+ed_has($js,"L.typographySection || 'Typography'",'contextual inspector exposes Typography');
+ed_has($js,"L.colorsSection || 'Colors'",'contextual inspector exposes Colors');
+ed_has($js,"L.spacingSection || 'Spacing'",'contextual inspector exposes Spacing');
+ed_has($css,'.certloom-email-rich-toolbar','Email Studio styles the rich-text formatting toolbar');
+ed_has($css,'.certloom-email-color-control','Email Studio styles paired color picker and hex controls');
 
 ed_has($repo_source,'certloom_email_design_assigned_pause_blocked','assigned designs cannot be silently unpublished');
 ed_has($repo_source,'certloom_email_design_assigned_purpose_blocked','assigned designs cannot silently change purpose');

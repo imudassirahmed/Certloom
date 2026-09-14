@@ -1070,3 +1070,100 @@ body.certloom-email-studio-active .certloom-product-subnav[data-certloom-product
 		box-shadow: none;
 	}
 }
+
+/* Gamma-03A editing controls: bounded rich text + block typography/colors. */
+.certloom-email-rich-field {
+	display: grid;
+	gap: 7px;
+}
+.certloom-email-rich-label {
+	font-size: 11px;
+	font-weight: 700;
+	color: #344054;
+}
+.certloom-email-rich-toolbar {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 5px;
+	border: 1px solid #d8e0ec;
+	border-bottom: 0;
+	border-radius: 8px 8px 0 0;
+	background: #f8faff;
+}
+.certloom-email-rich-toolbar button {
+	display: inline-grid;
+	place-items: center;
+	width: 32px;
+	height: 30px;
+	padding: 0;
+	border: 1px solid transparent;
+	border-radius: 6px;
+	background: transparent;
+	color: #344054;
+	font: inherit;
+	cursor: pointer;
+}
+.certloom-email-rich-toolbar button:hover,
+.certloom-email-rich-toolbar button:focus-visible {
+	border-color: #b9cdf2;
+	background: #fff;
+	color: #155eef;
+	outline: none;
+}
+.certloom-email-rich-editor {
+	min-height: 128px;
+	max-height: 260px;
+	overflow: auto;
+	padding: 10px 11px;
+	border: 1px solid #d8e0ec;
+	border-radius: 0 0 8px 8px;
+	background: #fff;
+	color: #17233c;
+	font-size: 13px;
+	line-height: 1.55;
+}
+.certloom-email-rich-editor:focus {
+	border-color: #82aef5;
+	box-shadow: 0 0 0 1px #82aef5;
+	outline: none;
+}
+.certloom-email-rich-editor p:first-child { margin-top: 0; }
+.certloom-email-rich-editor p:last-child { margin-bottom: 0; }
+.certloom-email-color-field { grid-column: 1 / -1; }
+.certloom-email-color-control {
+	display: grid;
+	grid-template-columns: 42px minmax(0,1fr);
+	gap: 7px;
+	align-items: center;
+}
+.certloom-email-color-control input[type="color"] {
+	width: 42px;
+	min-width: 42px;
+	height: 36px;
+	padding: 2px;
+	border-radius: 7px;
+	cursor: pointer;
+}
+.certloom-inspector-form label.certloom-email-toggle-field {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 8px;
+	min-height: 34px;
+	padding: 7px 9px;
+	border: 1px solid #e4e9f1;
+	border-radius: 7px;
+	background: #fbfcfe;
+}
+.certloom-inspector-form label.certloom-email-toggle-field input {
+	width: 16px;
+	height: 16px;
+	min-height: 0;
+	margin: 0;
+}
+.certloom-inspector-form label.certloom-email-toggle-field span {
+	font-size: 11px;
+	font-weight: 650;
+	color: #344054;
+}
