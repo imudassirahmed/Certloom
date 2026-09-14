@@ -146,7 +146,10 @@ ed_has($css,'body.certloom-email-studio-active #wpfooter','designer suppresses t
 ed_has($css,'flex: 1 1 0','designer gives the three-pane workspace bounded remaining-height ownership');
 ed_has($css,'.certloom-product-subnav[data-certloom-product-subnav]','focused Email Studio hides the redundant Design product tabs');
 ed_has($css,'--certloom-email-studio-height','focused Email Studio owns one explicit bounded desktop height');
-ed_has($js,'syncStudioViewport()','focused Email Studio measures remaining viewport height from its live top edge');
+ed_has($designer,'data-certloom-email-workspace-anchor','focused Email Studio emits an in-flow workspace geometry anchor');
+ed_has($css,'.certloom-designer-shell.is-viewport-pinned','desktop Email Studio can pin the shared workspace directly to the browser viewport');
+ed_has($js,"workspaceShell.classList.add( 'is-viewport-pinned' )",'focused Email Studio hard-pins the shared workspace after measuring its in-flow anchor');
+ed_has($js,'syncStudioViewport()','focused Email Studio resynchronizes viewport geometry from the live WordPress layout');
 ed_has($js,"window.addEventListener( 'resize', scheduleStudioViewportSync )",'focused Email Studio resyncs its bounded height on viewport resize');
 
 ed_has($repo_source,'certloom_email_design_assigned_pause_blocked','assigned designs cannot be silently unpublished');

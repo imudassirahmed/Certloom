@@ -52,6 +52,7 @@ $brand_mark = CERTLOOM_URL . 'admin/assets/certloom-brand-mark.png';
 
 <div class="certloom-designer-feedback" data-certloom-designer-feedback role="alert" tabindex="-1" hidden></div>
 
+<div class="certloom-email-workspace-anchor" data-certloom-email-workspace-anchor aria-hidden="true"></div>
 <div class="certloom-designer-shell">
 	<aside class="certloom-designer-palette" aria-label="<?php esc_attr_e( 'Email builder tools', 'certloom' ); ?>">
 		<div class="certloom-email-sidebar-tabs" role="tablist" aria-label="<?php esc_attr_e( 'Email builder tools', 'certloom' ); ?>">

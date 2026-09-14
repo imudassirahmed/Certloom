@@ -51,18 +51,43 @@
 		document.body.classList.add( 'certloom-email-studio-active' );
 
 		const studioRoot = q( '[data-certloom-email-studio]' );
+		const workspaceShell = q( '.certloom-designer-shell', form );
+		const workspaceAnchor = q( '[data-certloom-email-workspace-anchor]', form );
 		let viewportSyncFrame = 0;
+		function clearWorkspacePin() {
+			if ( ! workspaceShell ) {
+				return;
+			}
+			workspaceShell.classList.remove( 'is-viewport-pinned' );
+			workspaceShell.style.removeProperty( '--certloom-email-workspace-top' );
+			workspaceShell.style.removeProperty( '--certloom-email-workspace-left' );
+			workspaceShell.style.removeProperty( '--certloom-email-workspace-right' );
+		}
 		function syncStudioViewport() {
 			if ( ! studioRoot ) {
 				return;
 			}
 			if ( window.matchMedia( '(max-width: 960px)' ).matches ) {
 				studioRoot.style.removeProperty( '--certloom-email-studio-height' );
+				clearWorkspacePin();
 				return;
 			}
-			const top = Math.max( 0, studioRoot.getBoundingClientRect().top );
-			const height = Math.max( 420, Math.floor( window.innerHeight - top ) );
-			studioRoot.style.setProperty( '--certloom-email-studio-height', `${ height }px` );
+
+			const rootTop = Math.max( 0, studioRoot.getBoundingClientRect().top );
+			const rootHeight = Math.max( 420, Math.floor( window.innerHeight - rootTop ) );
+			studioRoot.style.setProperty( '--certloom-email-studio-height', `${ rootHeight }px` );
+
+			if ( ! workspaceShell || ! workspaceAnchor ) {
+				return;
+			}
+			const anchorRect = workspaceAnchor.getBoundingClientRect();
+			const top = Math.max( 0, Math.round( anchorRect.top ) );
+			const left = Math.max( 0, Math.round( anchorRect.left ) );
+			const right = Math.max( 0, Math.round( window.innerWidth - anchorRect.right ) );
+			workspaceShell.style.setProperty( '--certloom-email-workspace-top', `${ top }px` );
+			workspaceShell.style.setProperty( '--certloom-email-workspace-left', `${ left }px` );
+			workspaceShell.style.setProperty( '--certloom-email-workspace-right', `${ right }px` );
+			workspaceShell.classList.add( 'is-viewport-pinned' );
 		}
 		function scheduleStudioViewportSync() {
 			if ( viewportSyncFrame ) {
@@ -79,6 +104,12 @@
 		window.addEventListener( 'resize', scheduleStudioViewportSync );
 		window.addEventListener( 'orientationchange', scheduleStudioViewportSync );
 		window.addEventListener( 'load', scheduleStudioViewportSync, { once: true } );
+		[ 120, 360, 900 ].forEach( ( delay ) => window.setTimeout( scheduleStudioViewportSync, delay ) );
+		if ( 'ResizeObserver' in window && workspaceAnchor ) {
+			const workspaceViewportObserver = new ResizeObserver( scheduleStudioViewportSync );
+			workspaceViewportObserver.observe( studioRoot );
+			workspaceViewportObserver.observe( workspaceAnchor );
+		}
 
 		const hidden = q( '[data-certloom-blocks-json]', form );
 		const canvas = q( '[data-certloom-email-canvas]' );

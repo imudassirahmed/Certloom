@@ -76,6 +76,16 @@ async def run():
         await ck(bool(studio_box and abs((studio_box['y']+studio_box['height'])-1050)<=2),'desktopStudioFillsViewport')
         pane_bottoms=await page.evaluate('''() => ['.certloom-designer-palette','.certloom-designer-stage','.certloom-designer-inspector'].map((s)=>document.querySelector(s).getBoundingClientRect().bottom)''')
         await ck(max(pane_bottoms)-min(pane_bottoms)<=1.5 and abs(max(pane_bottoms)-1050)<=2,'threePanesShareViewportBottom')
+        await ck(await page.locator('.certloom-designer-shell').evaluate("n=>n.classList.contains('is-viewport-pinned') && getComputedStyle(n).position==='fixed'"),'workspaceUsesHardViewportPin')
+        # Reproduce the staging failure mode: even if a WordPress/root height becomes too short,
+        # the shared three-pane workspace must still terminate at the real browser viewport bottom.
+        await page.locator('[data-certloom-email-studio]').evaluate("n=>{n.style.height='620px';n.style.maxHeight='620px'}")
+        await page.wait_for_timeout(40)
+        short_root_shell=await page.locator('.certloom-designer-shell').bounding_box()
+        await ck(bool(short_root_shell and abs((short_root_shell['y']+short_root_shell['height'])-1050)<=2),'workspaceBottomIndependentOfRootHeight')
+        await page.locator('[data-certloom-email-studio]').evaluate("n=>{n.style.removeProperty('height');n.style.removeProperty('max-height')}")
+        await page.evaluate("window.dispatchEvent(new Event('resize'))")
+        await page.wait_for_timeout(40)
         await ck(await page.locator('[data-certloom-email-stage-viewport]').evaluate('(n)=>n.scrollHeight >= n.clientHeight'),'fixedCanvasViewport')
         await page.set_viewport_size({'width':1440,'height':880})
         await page.wait_for_timeout(80)

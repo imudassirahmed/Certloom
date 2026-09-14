@@ -418,6 +418,13 @@ body.certloom-email-studio-active .certloom-product-subnav[data-certloom-product
 	outline: 2px solid #2271b1;
 	outline-offset: 2px;
 }
+.certloom-email-workspace-anchor {
+	display: block;
+	width: 100%;
+	height: 0;
+	min-height: 0;
+	pointer-events: none;
+}
 .certloom-designer-shell {
 	display: grid;
 	grid-template-columns: 268px minmax(420px,1fr) 322px;
@@ -427,6 +434,20 @@ body.certloom-email-studio-active .certloom-product-subnav[data-certloom-product
 	min-height: 0;
 	overflow: hidden;
 	background: #edf2f6;
+}
+@media (min-width:961px) {
+	body.certloom-email-studio-active .certloom-designer-shell.is-viewport-pinned {
+		position: fixed;
+		top: var(--certloom-email-workspace-top);
+		left: var(--certloom-email-workspace-left);
+		right: var(--certloom-email-workspace-right);
+		bottom: 0;
+		z-index: 30;
+		width: auto;
+		height: auto;
+		max-height: none;
+		margin: 0;
+	}
 }
 .certloom-designer-palette,
 .certloom-designer-inspector {

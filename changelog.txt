@@ -1,3 +1,8 @@
+= 1.7.0-alpha.4.63 =
+* Email Studio: pin the shared three-pane workspace directly to the browser viewport bottom on desktop, independent of WordPress/root height calculations.
+* Email Studio: keep a zero-height in-flow anchor so top/left/right geometry can resync without moving the form controls out of their authoritative form.
+* Email Studio: add late-layout and ResizeObserver resyncs while preserving normal document flow below 961px.
+
 = 1.7.0-alpha.4.62 =
 * Make focused Certloom Email Studio consume the exact remaining desktop viewport from its live top edge to the browser bottom, eliminating the large lower dead area seen on real WordPress staging.
 * Hide the redundant Design product subnavigation and WordPress footer only while Email Studio is active, leaving the Studio header as the focused editor navigation authority.
