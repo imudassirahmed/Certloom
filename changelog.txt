@@ -1,3 +1,8 @@
+= 1.7.0-alpha.4.60 =
+* Gamma-02W emergency Studio recovery: corrected malformed production Inspector HTML that closed the selected-fields container before Arrange/Layer/Advanced.
+* Keeps all contextual property sections inside the Properties rail so they cannot spill across the page or collapse the three-pane workspace.
+* Adds a production-source guard for the exact Appearance/style-editor closure boundary while preserving the 4.59 viewport-host fix for revalidation.
+
 = 1.7.0-alpha.4.59 =
 * Replace the remaining ancestor-dependent Studio viewport sizing with a desktop viewport host: the focused Studio shell is temporarily portaled to document.body while its top/left/right offsets still follow the live WordPress content box.
 * Hard-pin the focused shell from its live WordPress top offset to browser viewport bottom with CSS bottom:0; remove JavaScript/visualViewport height as a layout authority so stale or host-specific height math cannot leave another lower dead strip.
