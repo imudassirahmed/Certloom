@@ -109,6 +109,20 @@ final class EmailDesignCompiler {
 			if ( isset( $style['padding_y'] ) ) { $out['padding_y'] = max( 6, min( 24, absint( $style['padding_y'] ) ) ); }
 		}
 
+		if ( 'image' === $type ) {
+			$align = (string) ( $style['align'] ?? '' );
+			if ( in_array( $align, array( 'left', 'center', 'right' ), true ) ) { $out['align'] = $align; }
+			if ( isset( $style['width'] ) ) { $out['width'] = max( 10, min( 100, absint( $style['width'] ) ) ); }
+			if ( isset( $style['border_radius'] ) ) { $out['border_radius'] = max( 0, min( 32, absint( $style['border_radius'] ) ) ); }
+		}
+
+		if ( 'divider' === $type ) {
+			if ( isset( $style['color'] ) ) { $hex = sanitize_hex_color( (string) $style['color'] ); if ( $hex ) { $out['color'] = $hex; } }
+			if ( isset( $style['width'] ) ) { $out['width'] = max( 10, min( 100, absint( $style['width'] ) ) ); }
+			if ( isset( $style['thickness'] ) ) { $out['thickness'] = max( 1, min( 8, absint( $style['thickness'] ) ) ); }
+			if ( isset( $style['margin_y'] ) ) { $out['margin_y'] = max( 4, min( 60, absint( $style['margin_y'] ) ) ); }
+		}
+
 		return $out;
 	}
 
@@ -150,10 +164,10 @@ final class EmailDesignCompiler {
 					break;
 				case 'image':
 					$url = esc_url_raw( (string) ( $block['url'] ?? '' ) );
-					if ( '' !== $url ) { $out[] = array( 'type' => 'image', 'url' => $url, 'alt' => sanitize_text_field( (string) ( $block['alt'] ?? '' ) ) ); }
+					if ( '' !== $url ) { $row = array( 'type' => 'image', 'url' => $url, 'alt' => sanitize_text_field( (string) ( $block['alt'] ?? '' ) ) ); $style = $this->sanitize_block_style( $block, $type ); if ( $style ) { $row['style'] = $style; } $out[] = $row; }
 					break;
 				case 'divider':
-					$out[] = array( 'type' => 'divider' );
+					$row = array( 'type' => 'divider' ); $style = $this->sanitize_block_style( $block, $type ); if ( $style ) { $row['style'] = $style; } $out[] = $row;
 					break;
 				case 'spacer':
 					$out[] = array( 'type' => 'spacer', 'height' => max( 8, min( 80, absint( $block['height'] ?? 24 ) ) ) );
@@ -229,10 +243,17 @@ final class EmailDesignCompiler {
 					$text[] = (string) $block['text'] . ': ' . (string) $block['url'];
 					break;
 				case 'image':
-					$body .= '<div style="margin:0 0 20px;"><img src="' . esc_url( $block['url'] ) . '" alt="' . esc_attr( $block['alt'] ) . '" style="display:block;max-width:100%;height:auto;border:0;"></div>';
+					$align = $this->style_value( $style, 'align', 'left' );
+					$width = absint( $this->style_value( $style, 'width', 100 ) );
+					$radius = absint( $this->style_value( $style, 'border_radius', 0 ) );
+					$body .= '<div style="margin:0 0 20px;text-align:' . esc_attr( $align ) . ';"><img src="' . esc_url( $block['url'] ) . '" alt="' . esc_attr( $block['alt'] ) . '" style="display:inline-block;width:' . $width . '%;max-width:100%;height:auto;border:0;border-radius:' . $radius . 'px;"></div>';
 					break;
 				case 'divider':
-					$body .= '<div style="border-top:1px solid #dce6e1;margin:24px 0;"></div>';
+					$divider_color = $this->style_value( $style, 'color', '#dce6e1' );
+					$divider_width = absint( $this->style_value( $style, 'width', 100 ) );
+					$divider_thickness = absint( $this->style_value( $style, 'thickness', 1 ) );
+					$divider_margin = absint( $this->style_value( $style, 'margin_y', 24 ) );
+					$body .= '<div style="border-top:' . $divider_thickness . 'px solid ' . esc_attr( $divider_color ) . ';width:' . $divider_width . '%;margin:' . $divider_margin . 'px auto;"></div>';
 					break;
 				case 'spacer':
 					$body .= '<div style="height:' . absint( $block['height'] ) . 'px;line-height:' . absint( $block['height'] ) . 'px;font-size:1px;">&nbsp;</div>';

@@ -50,6 +50,8 @@ $styled=$compiler->compile(array(
 	array('type'=>'heading','text'=>'Styled heading','level'=>1,'style'=>array('font_family'=>'Georgia, Times New Roman, serif','font_size'=>38,'font_weight'=>800,'italic'=>1,'underline'=>1,'color'=>'#123456','align'=>'center','line_height'=>1.4)),
 	array('type'=>'text','html'=>'<p><strong>Rich</strong> <em>message</em></p>','style'=>array('font_size'=>18,'font_weight'=>500,'color'=>'#334455','align'=>'right','line_height'=>1.8)),
 	array('type'=>'button','text'=>'Open','url'=>'{{verification_url}}','align'=>'center','style'=>array('font_size'=>17,'font_weight'=>600,'italic'=>1,'color'=>'#ffffff','background_color'=>'#2255aa','border_radius'=>18,'padding_x'=>28,'padding_y'=>14)),
+	array('type'=>'image','url'=>'https://example.test/badge.png','alt'=>'Badge','style'=>array('align'=>'center','width'=>72,'border_radius'=>14)),
+	array('type'=>'divider','style'=>array('color'=>'#778899','width'=>68,'thickness'=>3,'margin_y'=>18)),
 ), EmailDesignCompiler::default_theme());
 ed_same('#123456',$styled['blocks'][0]['style']['color'],'heading block color survives canonical sanitization');
 ed_same(800,$styled['blocks'][0]['style']['font_weight'],'heading font weight survives canonical sanitization');
@@ -60,6 +62,11 @@ ed_has($styled['html_body'],'font-style:italic','compiled styled blocks support 
 ed_has($styled['html_body'],'text-decoration:underline','compiled styled blocks support underline');
 ed_has($styled['html_body'],'background:#2255aa','compiled button applies block background color');
 ed_has($styled['html_body'],'<strong>Rich</strong>','compiled text keeps safe rich-text markup');
+ed_same(72,$styled['blocks'][3]['style']['width'],'image width survives canonical sanitization');
+ed_same(14,$styled['blocks'][3]['style']['border_radius'],'image radius survives canonical sanitization');
+ed_same('#778899',$styled['blocks'][4]['style']['color'],'divider color survives canonical sanitization');
+ed_has($styled['html_body'],'width:72%','compiled image applies bounded width');
+ed_has($styled['html_body'],'border-top:3px solid #778899','compiled divider applies visual style');
 
 $sample=$presets[0];$sample['id']='private-id';$sample['source']='customer';$sample['active']=1;$sample['assignment']=array('scope_type'=>'program','scope_id'=>9);
 $package=(new EmailDesignPackage($compiler))->build($sample,'1.6.99-qa.23');
@@ -77,7 +84,7 @@ ed_same($sample['purpose'],$decoded['purpose'],'purpose survives package round-t
 ed_same($sample['subject'],$decoded['subject'],'subject survives package round-trip');
 $styled_design=$sample;
 $styled_design['blocks']=array(array('type'=>'heading','text'=>'Portable styled heading','level'=>1,'style'=>array('font_size'=>36,'font_weight'=>800,'color'=>'#234567','align'=>'center')));
-$styled_package=(new EmailDesignPackage($compiler))->build($styled_design,'1.7.0-alpha.4.65');
+$styled_package=(new EmailDesignPackage($compiler))->build($styled_design,'1.7.0-alpha.4.66');
 $styled_decoded=(new EmailDesignPackage($compiler))->decode(json_encode($styled_package));
 ed_same(36,$styled_decoded['blocks'][0]['style']['font_size'],'block typography survives email design package round-trip');
 ed_same('#234567',$styled_decoded['blocks'][0]['style']['color'],'block color survives email design package round-trip');

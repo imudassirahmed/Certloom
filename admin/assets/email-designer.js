@@ -280,16 +280,21 @@
 					const buttonStyles = typographyStyle( block, 'button' ).split( ';' ).filter( Boolean );
 					buttonStyles.push( `background:${ safeColor( style.background_color, 'var(--certloom-email-button-bg,#0f6e56)' ) }` );
 					buttonStyles.push( `color:${ safeColor( style.color, 'var(--certloom-email-button-text,#ffffff)' ) }` );
-					if ( style.border_radius !== undefined && style.border_radius !== '' ) { buttonStyles.push( `border-radius:${ Math.max( 0, Number( style.border_radius ) || 0 ) }px` ); }
-					if ( style.padding_x !== undefined || style.padding_y !== undefined ) { buttonStyles.push( `padding:${ Math.max( 6, Number( style.padding_y ) || 13 ) }px ${ Math.max( 8, Number( style.padding_x ) || 20 ) }px` ); }
+					buttonStyles.push( `display:inline-block` );
+					buttonStyles.push( `border:0` );
+					buttonStyles.push( `text-decoration:${ style.underline ? 'underline' : 'none' }` );
+					buttonStyles.push( `border-radius:${ Math.max( 0, Number( style.border_radius ?? 12 ) || 0 ) }px` );
+					buttonStyles.push( `padding:${ Math.max( 6, Number( style.padding_y ?? 13 ) || 13 ) }px ${ Math.max( 8, Number( style.padding_x ?? 20 ) || 20 ) }px` );
 					return `<div style="text-align:${ esc( block.align || 'left' ) }"><span class="button button-primary" style="${ esc( buttonStyles.join( ';' ) ) }">${ esc( sample( block.text ) ) }</span></div>`;
 				}
-				case 'image':
-					return block.url
-						? `<img src="${ esc( block.url ) }" alt="${ esc( block.alt || '' ) }" style="max-width:100%;height:auto">`
-						: '<div class="certloom-email-empty">Image</div>';
-				case 'divider':
-					return '<hr>';
+				case 'image': {
+					const width = Math.max( 10, Math.min( 100, Number( style.width ) || 100 ) ); const radius = Math.max( 0, Number( style.border_radius ) || 0 ); const align = [ 'left', 'center', 'right' ].includes( style.align ) ? style.align : 'left';
+					return block.url ? `<div style="text-align:${ align }"><img src="${ esc( block.url ) }" alt="${ esc( block.alt || '' ) }" style="display:inline-block;width:${ width }%;max-width:100%;height:auto;border-radius:${ radius }px"></div>` : '<div class="certloom-email-empty">Image</div>';
+				}
+				case 'divider': {
+					const color = safeColor( style.color, '#dce6e1' ); const width = Math.max( 10, Math.min( 100, Number( style.width ) || 100 ) ); const thickness = Math.max( 1, Math.min( 8, Number( style.thickness ) || 1 ) ); const margin = Math.max( 4, Math.min( 60, Number( style.margin_y ) || 24 ) );
+					return `<div style="border-top:${ thickness }px solid ${ color };width:${ width }%;margin:${ margin }px auto"></div>`;
+				}
 				case 'spacer':
 					return `<div style="height:${ Number( block.height ) || 24 }px"></div>`;
 				case 'columns':
@@ -541,213 +546,168 @@
 			return `<label><span>${ esc( label ) }</span><input type="${ type }" data-field="${ key }" value="${ esc( block[ key ] ?? '' ) }" data-certloom-token-input></label>`;
 		}
 
-		function styleField( label, key, type = 'text', options = [], attrs = '' ) {
+		function styleField( label, key, type = 'text', options = [], attrs = '', className = '' ) {
 			const style = blockStyle( blocks[ selected ] || {} );
 			if ( type === 'select' ) {
 				const optionHtml = options.map( ( option ) => {
 					const isSelected = String( style[ key ] ?? '' ) === String( option[ 0 ] );
 					return `<option value="${ esc( option[ 0 ] ) }" ${ isSelected ? 'selected' : '' }>${ esc( option[ 1 ] ) }</option>`;
 				} ).join( '' );
-				return `<label><span>${ esc( label ) }</span><select data-style-field="${ key }">${ optionHtml }</select></label>`;
+				return `<label class="${ esc( className ) }"><span>${ esc( label ) }</span><select data-style-field="${ key }">${ optionHtml }</select></label>`;
 			}
-			if ( type === 'checkbox' ) {
-				return `<label class="certloom-email-toggle-field"><input type="checkbox" data-style-field="${ key }" ${ style[ key ] ? 'checked' : '' }><span>${ esc( label ) }</span></label>`;
-			}
-			return `<label><span>${ esc( label ) }</span><input type="${ type }" ${ attrs } data-style-field="${ key }" value="${ esc( style[ key ] ?? '' ) }"></label>`;
+			return `<label class="${ esc( className ) }"><span>${ esc( label ) }</span><input type="${ type }" ${ attrs } data-style-field="${ key }" value="${ esc( style[ key ] ?? '' ) }"></label>`;
+		}
+
+		function numberStyleField( label, key, min, max, step = 1, unit = 'px' ) {
+			const style = blockStyle( blocks[ selected ] || {} );
+			return `<label class="certloom-email-number-field"><span>${ esc( label ) }</span><span class="certloom-email-number-control"><input type="number" min="${ min }" max="${ max }" step="${ step }" data-style-field="${ key }" value="${ esc( style[ key ] ?? '' ) }"><span>${ esc( unit ) }</span></span></label>`;
+		}
+
+		function segmentedStyleField( label, key, options ) {
+			const style = blockStyle( blocks[ selected ] || {} );
+			const current = String( style[ key ] || '' );
+			const buttons = options.map( ( option ) => `<button type="button" class="${ current === String( option[ 0 ] ) ? 'is-active' : '' }" data-style-choice="${ key }" data-style-value="${ esc( option[ 0 ] ) }" aria-pressed="${ current === String( option[ 0 ] ) ? 'true' : 'false' }" title="${ esc( option[ 1 ] ) }">${ option[ 2 ] || esc( option[ 1 ] ) }</button>` ).join( '' );
+			return `<div class="certloom-email-segmented-field"><span>${ esc( label ) }</span><div class="certloom-email-segmented" role="group" aria-label="${ esc( label ) }">${ buttons }</div></div>`;
+		}
+
+		function segmentedBlockField( label, key, options ) {
+			const block = blocks[ selected ] || {};
+			const current = String( block[ key ] || '' );
+			const buttons = options.map( ( option ) => `<button type="button" class="${ current === String( option[ 0 ] ) ? 'is-active' : '' }" data-block-choice="${ key }" data-block-value="${ esc( option[ 0 ] ) }" aria-pressed="${ current === String( option[ 0 ] ) ? 'true' : 'false' }" title="${ esc( option[ 1 ] ) }">${ option[ 2 ] || esc( option[ 1 ] ) }</button>` ).join( '' );
+			return `<div class="certloom-email-segmented-field"><span>${ esc( label ) }</span><div class="certloom-email-segmented" role="group" aria-label="${ esc( label ) }">${ buttons }</div></div>`;
+		}
+
+		function toggleStyleButtons( options ) {
+			const style = blockStyle( blocks[ selected ] || {} );
+			return `<div class="certloom-email-inline-toggles" role="group">${ options.map( ( option ) => `<button type="button" class="${ style[ option[ 0 ] ] ? 'is-active' : '' }" data-style-toggle="${ option[ 0 ] }" aria-pressed="${ style[ option[ 0 ] ] ? 'true' : 'false' }" title="${ esc( option[ 1 ] ) }">${ option[ 2 ] }</button>` ).join( '' ) }</div>`;
 		}
 
 		function colorStyleField( label, key, fallback ) {
 			const style = blockStyle( blocks[ selected ] || {} );
 			const value = safeColor( style[ key ], fallback );
-			return `<label class="certloom-email-color-field"><span>${ esc( label ) }</span><span class="certloom-email-color-control"><input type="color" value="${ esc( value ) }" data-style-color-picker="${ key }" aria-label="${ esc( label ) }"><input type="text" maxlength="7" pattern="#[0-9A-Fa-f]{6}" value="${ esc( style[ key ] || '' ) }" placeholder="${ esc( fallback ) }" data-style-field="${ key }"></span></label>`;
+			return `<label class="certloom-email-color-field"><span>${ esc( label ) }</span><span class="certloom-email-color-control"><input type="color" value="${ esc( value ) }" data-style-color-picker="${ key }" aria-label="${ esc( label ) }"><input type="text" maxlength="7" pattern="#[0-9A-Fa-f]{6}" value="${ esc( style[ key ] || '' ) }" placeholder="${ esc( fallback ) }" data-style-field="${ key }"><button type="button" class="certloom-email-color-reset" data-style-reset="${ key }" title="${ esc( L.reset || 'Reset' ) }" aria-label="${ esc( ( L.reset || 'Reset' ) + ' ' + label ) }">&#8634;</button></span></label>`;
 		}
 
 		function richTextField() {
 			const block = blocks[ selected ] || {};
-			return `<div class="certloom-email-rich-field"><span class="certloom-email-rich-label">${ esc( L.contentLabel || 'Content' ) }</span><div class="certloom-email-rich-toolbar" role="toolbar" aria-label="${ esc( L.textFormatting || 'Text formatting' ) }"><button type="button" data-rich-command="bold" aria-label="${ esc( L.bold || 'Bold' ) }"><strong>B</strong></button><button type="button" data-rich-command="italic" aria-label="${ esc( L.italic || 'Italic' ) }"><em>I</em></button><button type="button" data-rich-command="underline" aria-label="${ esc( L.underline || 'Underline' ) }"><u>U</u></button><button type="button" data-rich-command="insertUnorderedList" aria-label="${ esc( L.bulletedList || 'Bulleted list' ) }">•≡</button></div><div class="certloom-email-rich-editor" contenteditable="true" role="textbox" aria-multiline="true" data-rich-text-editor data-certloom-token-input>${ block.html || '' }</div></div>`;
+			return `<div class="certloom-email-rich-field"><span class="certloom-email-rich-label">${ esc( L.contentLabel || 'Content' ) }</span><div class="certloom-email-rich-toolbar" role="toolbar" aria-label="${ esc( L.textFormatting || 'Text formatting' ) }"><button type="button" data-rich-command="bold" aria-label="${ esc( L.bold || 'Bold' ) }" title="${ esc( L.bold || 'Bold' ) }"><strong>B</strong></button><button type="button" data-rich-command="italic" aria-label="${ esc( L.italic || 'Italic' ) }" title="${ esc( L.italic || 'Italic' ) }"><em>I</em></button><button type="button" data-rich-command="underline" aria-label="${ esc( L.underline || 'Underline' ) }" title="${ esc( L.underline || 'Underline' ) }"><u>U</u></button><span class="certloom-email-rich-toolbar__divider"></span><button type="button" data-rich-command="insertUnorderedList" aria-label="${ esc( L.bulletedList || 'Bulleted list' ) }" title="${ esc( L.bulletedList || 'Bulleted list' ) }">&bull;&#8801;</button><button type="button" data-rich-command="insertOrderedList" aria-label="${ esc( L.numberedList || 'Numbered list' ) }" title="${ esc( L.numberedList || 'Numbered list' ) }">1&#8801;</button><span class="certloom-email-rich-toolbar__divider"></span><button type="button" data-rich-link="add" aria-label="${ esc( L.addLink || 'Add link' ) }" title="${ esc( L.addLink || 'Add link' ) }">&#8599;</button><button type="button" data-rich-link="remove" aria-label="${ esc( L.removeLink || 'Remove link' ) }" title="${ esc( L.removeLink || 'Remove link' ) }">Ã&#8599;</button><button type="button" data-rich-token-picker aria-label="${ esc( L.insertData || 'Insert data' ) }" title="${ esc( L.insertData || 'Insert data' ) }">{{}}</button></div><div class="certloom-email-rich-editor" contenteditable="true" role="textbox" aria-multiline="true" data-rich-text-editor data-certloom-token-input>${ block.html || '' }</div></div>`;
 		}
 
 		function inspectorSection( titleText, contents, open = true ) {
-			return `<details class="certloom-inspector-section" ${ open ? 'open' : '' }><summary>${ esc( titleText ) }</summary><div class="certloom-inspector-section__body">${ contents }</div></details>`;
+			return `<details class="certloom-inspector-section" ${ open ? 'open' : '' }><summary><span>${ esc( titleText ) }</span></summary><div class="certloom-inspector-section__body">${ contents }</div></details>`;
 		}
 
 		function renderInspector() {
 			if ( selected < 0 || ! blocks[ selected ] ) {
-				if ( inspectorHeading ) {
-					inspectorHeading.textContent = 'Block settings';
-				}
+				if ( inspectorHeading ) { inspectorHeading.textContent = 'Block settings'; }
 				inspector.innerHTML = `<div class="certloom-inspector-empty"><p>${ esc( L.selectBlock || 'Select a block on the canvas to edit it.' ) }</p></div>`;
 				return;
 			}
 
 			const block = blocks[ selected ];
-			const titleText = blockLabel( block );
-			if ( inspectorHeading ) {
-				inspectorHeading.textContent = titleText;
-			}
-			let contentFields = '';
-			let typographyFields = '';
-			let colorFields = '';
-			let layoutFields = '';
-			let spacingFields = '';
-			const fontOptions = [
-				[ '', L.inheritGlobal || 'Global email font' ],
-				[ 'Arial, Helvetica, sans-serif', 'Arial' ],
-				[ 'Georgia, Times New Roman, serif', 'Georgia' ],
-				[ 'Verdana, Geneva, sans-serif', 'Verdana' ],
-				[ 'Trebuchet MS, Arial, sans-serif', 'Trebuchet MS' ],
-			];
+			if ( inspectorHeading ) { inspectorHeading.textContent = blockLabel( block ); }
+			let contentFields = '', typographyFields = '', colorFields = '', layoutFields = '', spacingFields = '';
+			const fontOptions = [ [ '', L.inheritGlobal || 'Use email default' ], [ 'Arial, Helvetica, sans-serif', 'Arial' ], [ 'Georgia, Times New Roman, serif', 'Georgia' ], [ 'Verdana, Geneva, sans-serif', 'Verdana' ], [ 'Trebuchet MS, Arial, sans-serif', 'Trebuchet MS' ] ];
 			const weightOptions = [ [ '', L.inheritGlobal || 'Default' ], [ 400, 'Regular' ], [ 500, 'Medium' ], [ 600, 'Semi-bold' ], [ 700, 'Bold' ], [ 800, 'Extra bold' ], [ 900, 'Black' ] ];
+			const alignOptions = [ [ 'left', 'Align left', 'L' ], [ 'center', 'Align center', 'C' ], [ 'right', 'Align right', 'R' ] ];
+			const textToggles = [ [ 'italic', L.italic || 'Italic', '<em>I</em>' ], [ 'underline', L.underline || 'Underline', '<u>U</u>' ] ];
 
 			if ( block.type === 'heading' ) {
-				contentFields += field( L.textLabel || 'Text', 'text' );
-				contentFields += field( L.headingLevel || 'Heading level', 'level', 'select', [ [ 1, 'H1' ], [ 2, 'H2' ], [ 3, 'H3' ] ] );
-				typographyFields += styleField( L.fontFamily || 'Font family', 'font_family', 'select', fontOptions );
-				typographyFields += styleField( L.fontSize || 'Font size', 'font_size', 'number', [], 'min="12" max="72" step="1"' );
-				typographyFields += styleField( L.fontWeight || 'Font weight', 'font_weight', 'select', weightOptions );
-				typographyFields += styleField( L.italic || 'Italic', 'italic', 'checkbox' );
-				typographyFields += styleField( L.underline || 'Underline', 'underline', 'checkbox' );
-				typographyFields += styleField( L.lineHeight || 'Line height', 'line_height', 'number', [], 'min="1" max="2.5" step="0.05"' );
+				contentFields += `<div class="certloom-inspector-grid certloom-inspector-grid--content">${ field( L.textLabel || 'Text', 'text' ) }${ field( L.headingLevel || 'Heading level', 'level', 'select', [ [ 1, 'H1' ], [ 2, 'H2' ], [ 3, 'H3' ] ] ) }</div>`;
+				typographyFields += `<div class="certloom-inspector-grid certloom-inspector-grid--2">${ styleField( L.fontFamily || 'Font family', 'font_family', 'select', fontOptions, '', 'is-wide' ) }${ numberStyleField( L.fontSize || 'Font size', 'font_size', 12, 72 ) }${ styleField( L.fontWeight || 'Font weight', 'font_weight', 'select', weightOptions ) }${ numberStyleField( L.lineHeight || 'Line height', 'line_height', 1, 2.5, .05, 'x' ) }</div>${ toggleStyleButtons( textToggles ) }${ segmentedStyleField( L.alignment || 'Alignment', 'align', alignOptions ) }`;
 				colorFields += colorStyleField( L.textColor || 'Text color', 'color', '#173f34' );
-				layoutFields += styleField( L.alignment || 'Alignment', 'align', 'select', [ [ '', L.inheritGlobal || 'Default' ], [ 'left', 'Left' ], [ 'center', 'Center' ], [ 'right', 'Right' ] ] );
 			}
 			if ( block.type === 'text' ) {
 				contentFields += richTextField();
-				typographyFields += styleField( L.fontFamily || 'Font family', 'font_family', 'select', fontOptions );
-				typographyFields += styleField( L.fontSize || 'Font size', 'font_size', 'number', [], 'min="10" max="32" step="1"' );
-				typographyFields += styleField( L.fontWeight || 'Font weight', 'font_weight', 'select', weightOptions );
-				typographyFields += styleField( L.italic || 'Italic', 'italic', 'checkbox' );
-				typographyFields += styleField( L.underline || 'Underline', 'underline', 'checkbox' );
-				typographyFields += styleField( L.lineHeight || 'Line height', 'line_height', 'number', [], 'min="1" max="2.5" step="0.05"' );
+				typographyFields += `<div class="certloom-inspector-grid certloom-inspector-grid--2">${ styleField( L.fontFamily || 'Font family', 'font_family', 'select', fontOptions, '', 'is-wide' ) }${ numberStyleField( L.fontSize || 'Font size', 'font_size', 10, 32 ) }${ styleField( L.fontWeight || 'Font weight', 'font_weight', 'select', weightOptions ) }${ numberStyleField( L.lineHeight || 'Line height', 'line_height', 1, 2.5, .05, 'x' ) }</div>${ toggleStyleButtons( textToggles ) }${ segmentedStyleField( L.alignment || 'Alignment', 'align', alignOptions ) }`;
 				colorFields += colorStyleField( L.textColor || 'Text color', 'color', '#24322e' );
-				layoutFields += styleField( L.alignment || 'Alignment', 'align', 'select', [ [ '', L.inheritGlobal || 'Default' ], [ 'left', 'Left' ], [ 'center', 'Center' ], [ 'right', 'Right' ] ] );
 			}
 			if ( block.type === 'button' ) {
-				contentFields += field( L.buttonTextLabel || 'Button text', 'text' );
-				contentFields += field( L.urlLabel || 'URL', 'url' );
-				typographyFields += styleField( L.fontFamily || 'Font family', 'font_family', 'select', fontOptions );
-				typographyFields += styleField( L.fontSize || 'Font size', 'font_size', 'number', [], 'min="10" max="28" step="1"' );
-				typographyFields += styleField( L.fontWeight || 'Font weight', 'font_weight', 'select', weightOptions );
-				typographyFields += styleField( L.italic || 'Italic', 'italic', 'checkbox' );
-				typographyFields += styleField( L.underline || 'Underline', 'underline', 'checkbox' );
-				colorFields += colorStyleField( L.textColor || 'Text color', 'color', '#ffffff' );
-				colorFields += colorStyleField( L.backgroundColor || 'Background color', 'background_color', '#0f6e56' );
-				layoutFields += field( L.alignment || 'Alignment', 'align', 'select', [ [ 'left', 'Left' ], [ 'center', 'Center' ], [ 'right', 'Right' ] ] );
-				spacingFields += styleField( L.horizontalPadding || 'Horizontal padding', 'padding_x', 'number', [], 'min="8" max="40" step="1"' );
-				spacingFields += styleField( L.verticalPadding || 'Vertical padding', 'padding_y', 'number', [], 'min="6" max="24" step="1"' );
-				spacingFields += styleField( L.cornerRadius || 'Corner radius', 'border_radius', 'number', [], 'min="0" max="32" step="1"' );
+				contentFields += `<div class="certloom-inspector-grid certloom-inspector-grid--content">${ field( L.buttonTextLabel || 'Button text', 'text' ) }${ field( L.urlLabel || 'URL', 'url' ) }</div>`;
+				typographyFields += `<div class="certloom-inspector-grid certloom-inspector-grid--2">${ styleField( L.fontFamily || 'Font family', 'font_family', 'select', fontOptions, '', 'is-wide' ) }${ numberStyleField( L.fontSize || 'Font size', 'font_size', 10, 28 ) }${ styleField( L.fontWeight || 'Font weight', 'font_weight', 'select', weightOptions ) }</div>${ toggleStyleButtons( textToggles ) }`;
+				colorFields += `<div class="certloom-inspector-grid certloom-inspector-grid--colors">${ colorStyleField( L.textColor || 'Text color', 'color', '#ffffff' ) }${ colorStyleField( L.backgroundColor || 'Background color', 'background_color', '#0f6e56' ) }</div>`;
+				layoutFields += segmentedBlockField( L.alignment || 'Alignment', 'align', alignOptions );
+				spacingFields += `<div class="certloom-inspector-grid certloom-inspector-grid--3">${ numberStyleField( L.horizontalPadding || 'Horizontal', 'padding_x', 8, 40 ) }${ numberStyleField( L.verticalPadding || 'Vertical', 'padding_y', 6, 24 ) }${ numberStyleField( L.cornerRadius || 'Radius', 'border_radius', 0, 32 ) }</div>`;
 			}
 			if ( block.type === 'image' ) {
-				contentFields += field( L.urlLabel || 'URL', 'url' );
-				contentFields += field( L.altText || 'Alternative text', 'alt' );
-				contentFields += '<button type="button" class="button" data-choose-image>' + esc( L.chooseImage || 'Choose image' ) + '</button>';
+				contentFields += `<div class="certloom-inspector-stack">${ field( L.urlLabel || 'URL', 'url' ) }${ field( L.altText || 'Alternative text', 'alt' ) }<button type="button" class="button certloom-inspector-media-button" data-choose-image>${ esc( L.chooseImage || 'Choose image' ) }</button></div>`;
+				layoutFields += segmentedStyleField( L.alignment || 'Alignment', 'align', alignOptions );
+				spacingFields += `<div class="certloom-inspector-grid certloom-inspector-grid--2">${ numberStyleField( L.imageWidth || 'Image width', 'width', 10, 100, 1, '%' ) }${ numberStyleField( L.cornerRadius || 'Corner radius', 'border_radius', 0, 32 ) }</div>`;
 			}
-			if ( block.type === 'spacer' ) {
-				layoutFields += field( L.spacingPixels || 'Spacing', 'height', 'number' );
-			}
-			if ( block.type === 'columns' ) {
-				contentFields += field( L.leftColumn || 'Left column', 'left_html', 'textarea' );
-				contentFields += field( L.rightColumn || 'Right column', 'right_html', 'textarea' );
-			}
+			if ( block.type === 'spacer' ) { layoutFields += field( L.spacingPixels || 'Spacing', 'height', 'number' ); }
+			if ( block.type === 'columns' ) { contentFields += `<div class="certloom-inspector-stack">${ field( L.leftColumn || 'Left column', 'left_html', 'textarea' ) }${ field( L.rightColumn || 'Right column', 'right_html', 'textarea' ) }</div>`; }
 			if ( block.type === 'divider' ) {
-				contentFields = `<p class="description">${ esc( L.dividerDescription || 'A divider separates sections of your email.' ) }</p>`;
+				colorFields += colorStyleField( L.dividerColor || 'Divider color', 'color', '#dce6e1' );
+				layoutFields += `<div class="certloom-inspector-grid certloom-inspector-grid--2">${ numberStyleField( L.dividerWidth || 'Divider width', 'width', 10, 100, 1, '%' ) }${ numberStyleField( L.dividerThickness || 'Thickness', 'thickness', 1, 8 ) }</div>`;
+				spacingFields += numberStyleField( L.verticalSpacing || 'Vertical spacing', 'margin_y', 4, 60 );
 			}
 
-			const actions = `<div class="certloom-inspector-actions">
-				<button type="button" class="button" data-inspector-up>${ esc( L.moveUp || 'Move up' ) }</button>
-				<button type="button" class="button" data-inspector-down>${ esc( L.moveDown || 'Move down' ) }</button>
-				<button type="button" class="button" data-inspector-copy>${ esc( L.duplicate || 'Duplicate' ) }</button>
-				<button type="button" class="button is-destructive" data-inspector-remove>${ esc( L.remove || 'Remove' ) }</button>
-			</div>`;
+			const actions = `<div class="certloom-inspector-actions certloom-inspector-actions--compact"><button type="button" class="button" data-inspector-up title="${ esc( L.moveUp || 'Move up' ) }" aria-label="${ esc( L.moveUp || 'Move up' ) }"> &uarr;</button><button type="button" class="button" data-inspector-down title="${ esc( L.moveDown || 'Move down' ) }" aria-label="${ esc( L.moveDown || 'Move down' ) }"> &darr;</button><button type="button" class="button" data-inspector-copy title="${ esc( L.duplicate || 'Duplicate' ) }" aria-label="${ esc( L.duplicate || 'Duplicate' ) }"> &#10697;</button><button type="button" class="button is-destructive" data-inspector-remove title="${ esc( L.remove || 'Remove' ) }" aria-label="${ esc( L.remove || 'Remove' ) }"> &#9003;</button></div>`;
 
 			let body = '<div class="certloom-inspector-form">';
-			if ( contentFields ) {
-				body += inspectorSection( L.contentSection || 'Content', contentFields, true );
-			}
-			if ( typographyFields ) {
-				body += inspectorSection( L.typographySection || 'Typography', typographyFields, true );
-			}
-			if ( colorFields ) {
-				body += inspectorSection( L.colorsSection || 'Colors', colorFields, true );
-			}
-			if ( layoutFields ) {
-				body += inspectorSection( L.layoutSection || 'Layout', layoutFields, true );
-			}
-			if ( spacingFields ) {
-				body += inspectorSection( L.spacingSection || 'Spacing', spacingFields, false );
-			}
-			body += inspectorSection( L.blockActions || 'Block actions', actions, true );
-			body += '</div>';
+			if ( contentFields ) { body += inspectorSection( L.contentSection || 'Content', contentFields, true ); }
+			if ( typographyFields ) { body += inspectorSection( L.typographySection || 'Typography', typographyFields, true ); }
+			if ( colorFields ) { body += inspectorSection( L.colorsSection || 'Colors', colorFields, true ); }
+			if ( layoutFields ) { body += inspectorSection( L.layoutSection || 'Layout', layoutFields, true ); }
+			if ( spacingFields ) { body += inspectorSection( L.spacingSection || 'Spacing', spacingFields, false ); }
+			body += inspectorSection( L.blockActions || 'Block actions', actions, false ) + '</div>';
 			inspector.innerHTML = body;
 
 			qa( '[data-field]', inspector ).forEach( ( input ) => {
-				input.addEventListener( 'focus', () => {
-					lastTokenField = input;
-				} );
+				input.addEventListener( 'focus', () => { lastTokenField = input; } );
 				input.addEventListener( 'input', () => {
 					let value = input.value;
-					if ( input.type === 'number' ) {
-						value = parseInt( value || '0', 10 );
-					}
+					if ( input.type === 'number' ) { value = parseInt( value || '0', 10 ); }
 					blocks[ selected ][ input.dataset.field ] = value;
-					markDirty();
-					renderCanvasOnly();
-					renderStructure();
+					markDirty(); renderCanvasOnly(); renderStructure();
 				} );
 			} );
 
 			qa( '[data-style-field]', inspector ).forEach( ( input ) => {
 				input.addEventListener( 'input', () => {
-					const blockStyleState = blockStyle( blocks[ selected ] );
-					blocks[ selected ].style = blockStyleState;
-					let value = input.type === 'checkbox' ? input.checked : input.value;
-					if ( input.type === 'number' ) { value = input.value === '' ? '' : Number( input.value ); }
-					if ( value === '' || value === false ) { delete blockStyleState[ input.dataset.styleField ]; } else { blockStyleState[ input.dataset.styleField ] = value; }
-					const picker = q( `[data-style-color-picker="${ input.dataset.styleField }"]`, inspector );
-					if ( picker && /^#[0-9A-Fa-f]{6}$/.test( String( value ) ) ) { picker.value = String( value ); }
-					markDirty();
-					renderCanvasOnly();
+					const state = blockStyle( blocks[ selected ] ); blocks[ selected ].style = state;
+					let value = input.value; if ( input.type === 'number' ) { value = input.value === '' ? '' : Number( input.value ); }
+					if ( value === '' ) { delete state[ input.dataset.styleField ]; } else { state[ input.dataset.styleField ] = value; }
+					const picker = q( `[data-style-color-picker="${ input.dataset.styleField }"]`, inspector ); if ( picker && /^#[0-9A-Fa-f]{6}$/.test( String( value ) ) ) { picker.value = String( value ); }
+					markDirty(); renderCanvasOnly();
 				} );
 			} );
 
-			qa( '[data-style-color-picker]', inspector ).forEach( ( picker ) => {
-				picker.addEventListener( 'input', () => {
-					const key = picker.dataset.styleColorPicker;
-					const fieldNode = q( `[data-style-field="${ key }"]`, inspector );
-					if ( fieldNode ) {
-						fieldNode.value = picker.value.toUpperCase();
-						fieldNode.dispatchEvent( new Event( 'input', { bubbles: true } ) );
-					}
-				} );
-			} );
+			qa( '[data-style-choice]', inspector ).forEach( ( button ) => button.addEventListener( 'click', () => {
+				const state = blockStyle( blocks[ selected ] ); blocks[ selected ].style = state;
+				state[ button.dataset.styleChoice ] = button.dataset.styleValue;
+				button.parentElement.querySelectorAll( 'button' ).forEach( ( item ) => { const active = item === button; item.classList.toggle( 'is-active', active ); item.setAttribute( 'aria-pressed', active ? 'true' : 'false' ); } );
+				markDirty(); renderCanvasOnly();
+			} ) );
+			qa( '[data-block-choice]', inspector ).forEach( ( button ) => button.addEventListener( 'click', () => {
+				blocks[ selected ][ button.dataset.blockChoice ] = button.dataset.blockValue;
+				button.parentElement.querySelectorAll( 'button' ).forEach( ( item ) => { const active = item === button; item.classList.toggle( 'is-active', active ); item.setAttribute( 'aria-pressed', active ? 'true' : 'false' ); } );
+				markDirty(); renderCanvasOnly();
+			} ) );
+			qa( '[data-style-toggle]', inspector ).forEach( ( button ) => button.addEventListener( 'click', () => {
+				const state = blockStyle( blocks[ selected ] ); blocks[ selected ].style = state; const key = button.dataset.styleToggle;
+				if ( state[ key ] ) { delete state[ key ]; } else { state[ key ] = true; }
+				const active = !! state[ key ]; button.classList.toggle( 'is-active', active ); button.setAttribute( 'aria-pressed', active ? 'true' : 'false' ); markDirty(); renderCanvasOnly();
+			} ) );
+
+			qa( '[data-style-color-picker]', inspector ).forEach( ( picker ) => picker.addEventListener( 'input', () => {
+				const key = picker.dataset.styleColorPicker; const fieldNode = q( `[data-style-field="${ key }"]`, inspector ); if ( fieldNode ) { fieldNode.value = picker.value.toUpperCase(); fieldNode.dispatchEvent( new Event( 'input', { bubbles: true } ) ); }
+			} ) );
+			qa( '[data-style-reset]', inspector ).forEach( ( button ) => button.addEventListener( 'click', () => {
+				const state = blockStyle( blocks[ selected ] ); delete state[ button.dataset.styleReset ]; blocks[ selected ].style = state; markDirty(); renderCanvasOnly(); renderInspector();
+			} ) );
 
 			const richEditor = q( '[data-rich-text-editor]', inspector );
 			if ( richEditor ) {
 				lastTokenField = richEditor;
-				richEditor.addEventListener( 'focus', () => { lastTokenField = richEditor; } );
-				richEditor.addEventListener( 'input', () => {
-					blocks[ selected ].html = richEditor.innerHTML;
-					markDirty();
-					renderCanvasOnly();
-					renderStructure();
-				} );
-				qa( '[data-rich-command]', inspector ).forEach( ( button ) => {
-					button.addEventListener( 'mousedown', ( event ) => event.preventDefault() );
-					button.addEventListener( 'click', () => {
-						richEditor.focus();
-						document.execCommand( button.dataset.richCommand, false, null );
-						blocks[ selected ].html = richEditor.innerHTML;
-						markDirty();
-						renderCanvasOnly();
-					} );
-				} );
+				const syncRich = () => { blocks[ selected ].html = richEditor.innerHTML; markDirty(); renderCanvasOnly(); renderStructure(); };
+				richEditor.addEventListener( 'focus', () => { lastTokenField = richEditor; } ); richEditor.addEventListener( 'input', syncRich );
+				qa( '[data-rich-command]', inspector ).forEach( ( button ) => { button.addEventListener( 'mousedown', ( event ) => event.preventDefault() ); button.addEventListener( 'click', () => { richEditor.focus(); document.execCommand( button.dataset.richCommand, false, null ); syncRich(); } ); } );
+				qa( '[data-rich-link]', inspector ).forEach( ( button ) => { button.addEventListener( 'mousedown', ( event ) => event.preventDefault() ); button.addEventListener( 'click', () => { richEditor.focus(); if ( button.dataset.richLink === 'remove' ) { document.execCommand( 'unlink', false, null ); } else { const url = window.prompt( L.urlLabel || 'URL', 'https://' ); if ( url ) { document.execCommand( 'createLink', false, url ); } } syncRich(); } ); } );
+				q( '[data-rich-token-picker]', inspector )?.addEventListener( 'click', () => { lastTokenField = richEditor; q( '[data-certloom-sidebar-tab="data"]' )?.click(); } );
 			}
 
-			q( '[data-inspector-up]', inspector )?.addEventListener( 'click', () => move( selected, -1 ) );
-			q( '[data-inspector-down]', inspector )?.addEventListener( 'click', () => move( selected, 1 ) );
-			q( '[data-inspector-copy]', inspector )?.addEventListener( 'click', () => copy( selected ) );
-			q( '[data-inspector-remove]', inspector )?.addEventListener( 'click', () => remove( selected ) );
-			q( '[data-choose-image]', inspector )?.addEventListener( 'click', chooseImage );
+			q( '[data-inspector-up]', inspector )?.addEventListener( 'click', () => move( selected, -1 ) ); q( '[data-inspector-down]', inspector )?.addEventListener( 'click', () => move( selected, 1 ) ); q( '[data-inspector-copy]', inspector )?.addEventListener( 'click', () => copy( selected ) ); q( '[data-inspector-remove]', inspector )?.addEventListener( 'click', () => remove( selected ) ); q( '[data-choose-image]', inspector )?.addEventListener( 'click', chooseImage );
 		}
 
 		function renderCanvasOnly() {
@@ -784,7 +744,14 @@
 
 		function applyTheme() {
 			const values = {};
-			qa( '[data-certloom-theme]', form ).forEach( ( input ) => {
+			qa( '[data-certloom-theme-color]', form ).forEach( ( picker ) => {
+			picker.addEventListener( 'input', () => { const hex = q( `[data-certloom-theme-hex="${ picker.dataset.certloomThemeColor }"]`, form ); if ( hex ) { hex.value = picker.value.toUpperCase(); } } );
+		} );
+		qa( '[data-certloom-theme-hex]', form ).forEach( ( hex ) => {
+			hex.addEventListener( 'input', () => { const value = String( hex.value || '' ).trim(); if ( /^#[0-9A-Fa-f]{6}$/.test( value ) ) { const picker = q( `[data-certloom-theme-color="${ hex.dataset.certloomThemeHex }"]`, form ); if ( picker ) { picker.value = value; picker.dispatchEvent( new Event( 'input', { bubbles: true } ) ); } } } );
+		} );
+
+		qa( '[data-certloom-theme]', form ).forEach( ( input ) => {
 				values[ input.name.replace( 'theme_', '' ) ] = input.value;
 			} );
 			canvas.style.background = values.content_background || '#fff';
@@ -796,6 +763,7 @@
 			canvas.style.setProperty( '--certloom-email-heading-color', values.heading_color || '#173f34' );
 			canvas.style.setProperty( '--certloom-email-button-bg', values.button_background || '#0f6e56' );
 			canvas.style.setProperty( '--certloom-email-button-text', values.button_text || '#ffffff' );
+			canvas.style.setProperty( '--certloom-email-link-color', values.link_color || '#0f6e56' );
 			canvasFrame?.style.setProperty( '--certloom-email-width', emailWidth + 'px' );
 			if ( stageMeta ) {
 				stageMeta.textContent = emailWidth + 'px · ' + blocks.length + ( blocks.length === 1 ? ' block' : ' blocks' );
@@ -896,8 +864,11 @@
 
 		function fullHtml() {
 			const styles = getComputedStyle( canvas );
+			const values = {}; qa( '[data-certloom-theme]', form ).forEach( ( input ) => { values[ input.name.replace( 'theme_', '' ) ] = input.value; } );
 			const body = blocks.map( blockHtml ).join( '' );
-			return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: https: http:; style-src 'unsafe-inline';"></head><body style="margin:0;background:#eef2f0;padding:28px"><div style="box-sizing:border-box;max-width:${ esc( canvas.style.maxWidth || '640px' ) };margin:auto;padding:36px;background:${ esc( canvas.style.background || '#fff' ) };color:${ esc( styles.color ) };font-family:${ esc( styles.fontFamily ) };border-radius:${ esc( canvas.style.borderRadius || '12px' ) }">${ body }</div></body></html>`;
+			const pageBackground = values.background || '#f4f7f6'; const contentBackground = values.content_background || '#ffffff'; const heading = values.heading_color || '#173f34'; const buttonBg = values.button_background || '#0f6e56'; const buttonText = values.button_text || '#ffffff'; const link = values.link_color || '#0f6e56';
+			const css = `*{box-sizing:border-box}body{margin:0;background:${ esc( pageBackground ) };padding:28px 14px}h1,h2,h3{margin:0 0 18px;color:var(--certloom-email-heading-color);line-height:1.25}h1{font-size:30px}h2{font-size:24px}h3{font-size:19px}p{margin:0 0 12px;line-height:1.65}a{color:var(--certloom-email-link-color)}hr{border:0;border-top:1px solid #dce6e1;margin:24px 0}.button-primary{background:var(--certloom-email-button-bg);color:var(--certloom-email-button-text)}`;
+			return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: https: http:; style-src 'unsafe-inline';"><style>${ css }</style></head><body><div style="--certloom-email-heading-color:${ esc( heading ) };--certloom-email-button-bg:${ esc( buttonBg ) };--certloom-email-button-text:${ esc( buttonText ) };--certloom-email-link-color:${ esc( link ) };box-sizing:border-box;max-width:${ esc( canvas.style.maxWidth || '640px' ) };margin:auto;padding:36px;background:${ esc( contentBackground ) };color:${ esc( styles.color ) };font-family:${ esc( styles.fontFamily ) };border-radius:${ esc( canvas.style.borderRadius || '12px' ) }">${ body }</div></body></html>`;
 		}
 
 		const previewDialog = q( '[data-certloom-designer-preview-dialog]' );
@@ -909,6 +880,7 @@
 			previewDialog?.showModal();
 		} );
 		q( '[data-certloom-preview-close]' )?.addEventListener( 'click', () => previewDialog?.close() );
+		qa( '[data-certloom-preview-device]' ).forEach( ( button ) => button.addEventListener( 'click', () => { qa( '[data-certloom-preview-device]' ).forEach( ( item ) => { const active = item === button; item.classList.toggle( 'is-active', active ); item.setAttribute( 'aria-pressed', active ? 'true' : 'false' ); } ); previewFrame?.classList.toggle( 'is-mobile', button.dataset.certloomPreviewDevice === 'mobile' ); } ) );
 		previewDialog?.addEventListener( 'click', ( event ) => {
 			if ( event.target === previewDialog ) {
 				previewDialog.close();

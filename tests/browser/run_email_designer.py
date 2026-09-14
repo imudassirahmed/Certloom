@@ -15,6 +15,7 @@ async def run():
             nonlocal checks; checks+=1
             if not ok: failed.append(label)
         page=await browser.new_page(viewport={'width':1440,'height':1050})
+        page.set_default_timeout(5000)
         await page.set_content(fixture(),wait_until='load')
         await ck(await page.get_by_role('link',name='Email designs').count()==1,'backToLibrary')
         await ck(await page.get_by_text('Certloom Email Studio',exact=True).count()>=1,'emailStudioIdentity')
@@ -36,6 +37,8 @@ async def run():
         editor=page.locator('[data-certloom-email-inspector] [data-rich-text-editor]')
         await ck(await editor.count()==1,'contextualRichTextInspector')
         await ck(await page.get_by_role('button',name='Bold',exact=True).count()==1 and await page.get_by_role('button',name='Italic',exact=True).count()==1 and await page.get_by_role('button',name='Underline',exact=True).count()==1,'richTextFormattingToolbar')
+        await ck(await page.get_by_role('button',name='Numbered list',exact=True).count()==1 and await page.get_by_role('button',name='Add link',exact=True).count()==1 and await page.get_by_role('button',name='Insert data',exact=True).count()==1,'polishedRichTextToolbar')
+        await ck(await page.locator('.certloom-inspector-grid').count()>=1 and await page.locator('.certloom-email-segmented').count()>=1,'compactInspectorControlSystem')
         await editor.fill('Hello ')
         await editor.focus(); await editor.press('Control+A')
         await page.get_by_role('button',name='Bold',exact=True).click()
@@ -61,6 +64,9 @@ async def run():
         # Add and duplicate without leaving the designer.
         await page.locator('[data-certloom-add-block="heading"]').click()
         await ck(await page.locator('.certloom-canvas-block').count()==initial+1,'addBlock')
+        actions_section=page.locator('.certloom-inspector-section').filter(has_text='Block actions')
+        if not await actions_section.get_attribute('open'):
+            await actions_section.locator('summary').click()
         await page.locator('[data-certloom-email-inspector] [data-inspector-copy]').click()
         await ck(await page.locator('.certloom-canvas-block').count()==initial+2,'duplicateBlock')
         # Pointer drag-and-drop reorders the same structured block model.
@@ -79,6 +85,9 @@ async def run():
         frame=page.locator('iframe[data-certloom-preview-frame][sandbox=""]')
         await ck(await frame.count()==1,'sandboxedFullPreview')
         await ck(await page.locator('[data-certloom-designer-preview-dialog]').evaluate('(d)=>d.open'),'previewDialogOpen')
+        preview_html=await frame.get_attribute('srcdoc')
+        await ck('display:inline-block' in (preview_html or '') and 'padding:13px 20px' in (preview_html or ''),'previewRetainsButtonTreatment')
+        await ck(await page.locator('[data-certloom-preview-device]').count()==2,'previewHasDesktopMobileSwitch')
         await page.get_by_role('button',name='Close',exact=True).click()
         await ck(await page.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'desktopNoOverflow')
         studio_box=await page.locator('[data-certloom-email-studio]').bounding_box()
@@ -112,9 +121,13 @@ async def run():
         await page.close()
         # Empty-content save stays on the page and focuses a clear inline explanation.
         empty=await browser.new_page(viewport={'width':1100,'height':900})
+        empty.set_default_timeout(5000)
         await empty.set_content(fixture(),wait_until='load')
         while await empty.locator('.certloom-canvas-block').count():
             await empty.locator('.certloom-canvas-block').first.click()
+            empty_actions=empty.locator('.certloom-inspector-section').filter(has_text='Block actions')
+            if not await empty_actions.get_attribute('open'):
+                await empty_actions.locator('summary').click()
             await empty.locator('[data-certloom-email-inspector] [data-inspector-remove]').click()
         await ck(await empty.locator('.certloom-email-empty').count()>=1,'emptyCanvasState')
         await empty.get_by_role('button',name='Save',exact=True).click()
@@ -125,6 +138,7 @@ async def run():
         await ck(await feedback.is_hidden(),'validationClearsAfterRepair')
         await empty.close()
         mobile=await browser.new_page(viewport={'width':390,'height':820})
+        mobile.set_default_timeout(5000)
         await mobile.set_content(fixture(),wait_until='load')
         async def mobile_overflow_snapshot():
             return await mobile.evaluate('''() => ({

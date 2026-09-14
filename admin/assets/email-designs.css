@@ -1167,3 +1167,61 @@ body.certloom-email-studio-active .certloom-product-subnav[data-certloom-product
 	font-weight: 650;
 	color: #344054;
 }
+
+
+/* Gamma-03A inspector + preview fidelity refinement. */
+.certloom-inspector-form { gap: 0; }
+.certloom-inspector-section { border-bottom-color: #edf0f4; }
+.certloom-inspector-section summary { display:flex;align-items:center;gap:6px;padding:10px 0;font-size:11px;color:#344054; }
+.certloom-inspector-section summary span { flex:1; }
+.certloom-inspector-section__body { gap:9px;padding:1px 0 14px; }
+.certloom-inspector-grid { display:grid;gap:8px;min-width:0; }
+.certloom-inspector-grid--2 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.certloom-inspector-grid--3 { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.certloom-inspector-grid--colors { grid-template-columns:1fr; }
+.certloom-inspector-grid .is-wide { grid-column:1/-1; }
+.certloom-inspector-stack { display:grid;gap:8px; }
+.certloom-inspector-form label { gap:4px;font-size:10px; }
+.certloom-inspector-form input,.certloom-inspector-form textarea,.certloom-inspector-form select { min-height:34px;padding-top:4px;padding-bottom:4px;border-color:#d8dee8;border-radius:7px;box-shadow:none; }
+.certloom-inspector-form input:focus,.certloom-inspector-form textarea:focus,.certloom-inspector-form select:focus { border-color:#84adff;box-shadow:0 0 0 1px #84adff; }
+.certloom-email-number-control { display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;border:1px solid #d8dee8;border-radius:7px;background:#fff;overflow:hidden; }
+.certloom-email-number-control:focus-within { border-color:#84adff;box-shadow:0 0 0 1px #84adff; }
+.certloom-email-number-control input { min-width:0!important;border:0!important;border-radius:0!important;box-shadow:none!important; }
+.certloom-email-number-control > span { padding:0 8px;color:#667085;font-size:10px;font-weight:650;border-left:1px solid #edf0f4; }
+.certloom-email-segmented-field { display:grid;gap:4px; }
+.certloom-email-segmented-field > span { color:#475467;font-size:10px;font-weight:700; }
+.certloom-email-segmented,.certloom-email-inline-toggles { display:inline-flex;width:max-content;max-width:100%;padding:2px;border:1px solid #d8dee8;border-radius:8px;background:#f8fafc; }
+.certloom-email-segmented button,.certloom-email-inline-toggles button { display:grid;place-items:center;min-width:34px;height:30px;padding:0 9px;border:0;border-radius:6px;background:transparent;color:#667085;font-size:12px;cursor:pointer; }
+.certloom-email-segmented button.is-active,.certloom-email-inline-toggles button.is-active { background:#fff;color:#155eef;box-shadow:0 1px 3px rgba(16,24,40,.10); }
+.certloom-email-inline-toggles { margin-top:1px; }
+.certloom-email-color-control { grid-template-columns:36px minmax(0,1fr) 30px;gap:6px; }
+.certloom-email-color-control input[type=color] { width:36px;min-width:36px;height:34px; }
+.certloom-email-color-reset { width:30px;height:34px;padding:0;border:1px solid #d8dee8;border-radius:7px;background:#fff;color:#667085;cursor:pointer; }
+.certloom-email-color-reset:hover { color:#155eef;border-color:#84adff; }
+.certloom-inspector-actions--compact { grid-template-columns:repeat(4,1fr);gap:5px; }
+.certloom-inspector-actions--compact .button { min-height:32px;padding:0;font-size:15px; }
+.certloom-inspector-media-button { justify-self:start;min-height:34px!important; }
+.certloom-email-rich-toolbar { gap:2px;padding:4px; }
+.certloom-email-rich-toolbar button { width:29px;height:28px;border-radius:5px; }
+.certloom-email-rich-toolbar__divider { width:1px;height:18px;margin:0 2px;background:#dde3ec; }
+.certloom-email-rich-toolbar button.is-active { background:#eaf2ff;color:#155eef; }
+.certloom-email-rich-editor { min-height:116px;max-height:220px;padding:10px;font-size:12px; }
+.certloom-theme-grid { grid-template-columns:1fr;gap:7px; }
+.certloom-theme-grid label { padding:0; }
+.certloom-theme-grid label.is-wide { grid-column:auto; }
+.certloom-theme-color-control { display:grid;grid-template-columns:38px minmax(0,1fr);gap:6px; }
+.certloom-theme-color-control input[type=color] { width:38px;min-width:38px;height:34px;padding:2px; }
+.certloom-theme-color-control input[type=text] { min-width:0;height:34px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;text-transform:uppercase; }
+.certloom-theme-grid > label:not(.certloom-theme-color-field) { display:grid;grid-template-columns:88px minmax(0,1fr);align-items:center;gap:8px; }
+.certloom-theme-grid > label:not(.certloom-theme-color-field) > span { margin:0; }
+.certloom-email-canvas a:not(.button):not(.button-primary) { color:var(--certloom-email-link-color,#0f6e56); }
+.certloom-designer-preview { width:min(1040px,calc(100vw - 36px));max-width:1040px;padding:0;border:0;border-radius:14px;overflow:hidden;box-shadow:0 24px 80px rgba(16,24,40,.26); }
+.certloom-designer-preview .certloom-email-dialog__bar { min-height:64px;padding:10px 14px; }
+.certloom-designer-preview .certloom-email-dialog__bar > div:first-child { display:grid;gap:1px; }
+.certloom-designer-preview .certloom-email-dialog__bar small { color:#667085;font-size:10px;font-weight:500; }
+.certloom-preview-dialog-actions { display:flex;align-items:center;gap:8px; }
+.certloom-preview-device-switch button { min-height:32px;padding:4px 9px;font-size:11px; }
+.certloom-preview-dialog-stage { display:flex;justify-content:center;height:min(76vh,760px);padding:24px;background:#edf2f1;overflow:auto; }
+.certloom-designer-preview iframe { width:min(760px,100%);height:100%;min-height:560px;border:1px solid #dde4e9;border-radius:10px;background:#f4f7f6;box-shadow:0 12px 36px rgba(16,24,40,.10);transition:width .18s ease; }
+.certloom-designer-preview iframe.is-mobile { width:min(390px,100%); }
+@media(max-width:1100px){.certloom-inspector-grid--3{grid-template-columns:repeat(2,minmax(0,1fr))}}

@@ -1917,7 +1917,7 @@ msgstr ""
 #: src/Application/Setup/PurposePresetEngine.php:236
 #: src/Infrastructure/Admin/DomainAdmin.php:657
 #: src/Infrastructure/Admin/DomainAdmin.php:692
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:138
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:148
 #: src/Infrastructure/Import/DomainImportCsvReader.php:73
 msgid "Issue date"
 msgstr ""
@@ -1930,7 +1930,7 @@ msgstr ""
 #: src/Application/Issuance/IssuanceDataReadiness.php:60
 #: src/Infrastructure/Admin/DomainAdmin.php:658
 #: src/Infrastructure/Admin/DomainAdmin.php:693
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:139
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:149
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:269
 #: src/Infrastructure/Import/DomainImportCsvReader.php:74
 msgid "Expiry date"
@@ -3542,7 +3542,26 @@ msgid "Select a block on the canvas to edit its content and layout."
 msgstr ""
 
 #: admin/views/email-designer.php:138
+#: admin/views/email-designer.php:30
+msgid "Desktop"
+msgstr ""
+
+#: admin/views/email-designer.php:138
 msgid "Email preview"
+msgstr ""
+
+#: admin/views/email-designer.php:138
+msgid "Final rendered message"
+msgstr ""
+
+#: admin/views/email-designer.php:138
+#: admin/views/email-designer.php:31
+msgid "Mobile"
+msgstr ""
+
+#: admin/views/email-designer.php:138
+#: admin/views/email-designer.php:29
+msgid "Preview size"
 msgstr ""
 
 #: admin/views/email-designer.php:15
@@ -3568,18 +3587,6 @@ msgstr ""
 #: admin/views/email-designer.php:25
 #: src/Infrastructure/Admin/TemplateAdmin.php:211
 msgid "Saved"
-msgstr ""
-
-#: admin/views/email-designer.php:29
-msgid "Preview size"
-msgstr ""
-
-#: admin/views/email-designer.php:30
-msgid "Desktop"
-msgstr ""
-
-#: admin/views/email-designer.php:31
-msgid "Mobile"
 msgstr ""
 
 #: admin/views/email-designer.php:33
@@ -3730,6 +3737,7 @@ msgid "Dynamic data"
 msgstr ""
 
 #: admin/views/email-designer.php:86
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:112
 msgid "Insert data"
 msgstr ""
 
@@ -3780,6 +3788,10 @@ msgstr ""
 msgid "Page"
 msgstr ""
 
+#: admin/views/email-designer.php:97
+msgid "%s hex color"
+msgstr ""
+
 #: admin/views/email-designer.php:99
 #: src/Infrastructure/Admin/TemplateAdmin.php:1348
 #: src/Infrastructure/Admin/TemplateAdmin.php:1353
@@ -3788,14 +3800,14 @@ msgstr ""
 
 #: admin/views/email-designs.php:13
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:735
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:128
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:138
 msgid "Distinction"
 msgstr ""
 
 #: admin/views/email-designs.php:15
 #: src/Application/Email/EmailTemplateService.php:54
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:737
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:129
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:139
 msgid "Verify this credential"
 msgstr ""
 
@@ -3897,7 +3909,7 @@ msgstr ""
 
 #: admin/views/email-designs.php:7
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:729
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:125
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:135
 msgid "Sara Khan"
 msgstr ""
 
@@ -3938,7 +3950,7 @@ msgstr ""
 
 #: admin/views/email-designs.php:8
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:730
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:126
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:136
 msgid "Professional Leadership Program"
 msgstr ""
 
@@ -3966,7 +3978,7 @@ msgstr ""
 
 #: admin/views/email-designs.php:9
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:731
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:127
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:137
 msgid "Example Institute"
 msgstr ""
 
@@ -7306,7 +7318,7 @@ msgstr ""
 #: includes/class-ecapla-certverify-recipient-portal.php:190
 #: src/Application/Setup/PurposePresetEngine.php:159
 #: src/Infrastructure/Admin/DomainAdmin.php:930
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:140
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:150
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:682
 #: src/Infrastructure/Admin/TemplateAdmin.php:1335
 msgid "Grade"
@@ -7441,7 +7453,7 @@ msgid "Copy link"
 msgstr ""
 
 #: admin/views/setup-wizard.php:206
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:141
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:151
 msgid "Verification URL"
 msgstr ""
 
@@ -7718,7 +7730,7 @@ msgstr ""
 #: blocks/certloom/index.js:63
 #: blocks/my-credentials/index.js:36
 #: elementor/class-ecapla-certverify-elementor-widget.php:873
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:122
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:132
 msgid "Layout"
 msgstr ""
 
@@ -7960,7 +7972,7 @@ msgid "Show credit line"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-elementor-widget.php:196
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:121
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:131
 msgid "Colors"
 msgstr ""
 
@@ -7992,7 +8004,7 @@ msgstr ""
 #: elementor/class-ecapla-certverify-elementor-widget.php:461
 #: elementor/class-ecapla-certverify-elementor-widget.php:630
 #: elementor/class-ecapla-certverify-template-widgets.php:283
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:120
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:130
 msgid "Typography"
 msgstr ""
 
@@ -8013,7 +8025,7 @@ msgstr ""
 #: elementor/class-ecapla-certverify-elementor-widget.php:493
 #: elementor/class-ecapla-certverify-elementor-widget.php:607
 #: elementor/class-ecapla-certverify-elementor-widget.php:755
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:118
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:122
 msgid "Corner radius"
 msgstr ""
 
@@ -8030,13 +8042,13 @@ msgstr ""
 
 #: elementor/class-ecapla-certverify-elementor-widget.php:396
 #: elementor/class-ecapla-certverify-elementor-widget.php:481
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:114
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:118
 msgid "Background color"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-elementor-widget.php:407
 #: elementor/class-ecapla-certverify-elementor-widget.php:810
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:113
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:117
 #: src/Infrastructure/Admin/TemplateAdmin.php:1350
 #: src/Infrastructure/Admin/TemplateAdmin.php:1353
 msgid "Text color"
@@ -8098,12 +8110,12 @@ msgid "Description typography"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-elementor-widget.php:821
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:110
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:114
 msgid "Font size"
 msgstr ""
 
 #: elementor/class-ecapla-certverify-elementor-widget.php:843
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:115
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:119
 msgid "Alignment"
 msgstr ""
 
@@ -10443,7 +10455,7 @@ msgstr ""
 
 #: includes/class-ecapla-certverify-render.php:462
 #: src/Application/Setup/PurposePresetEngine.php:238
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:137
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:147
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:336
 msgid "Credential number"
 msgstr ""
@@ -11695,12 +11707,12 @@ msgid "Only an issued credential Version can be delivered by email."
 msgstr ""
 
 #: src/Application/Email/EmailTemplateService.php:26
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:194
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:204
 msgid "Your {{program_title}} credential"
 msgstr ""
 
 #: src/Application/Email/EmailTemplateService.php:27
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:192
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:202
 msgid "Your credential is ready to view and verify."
 msgstr ""
 
@@ -12336,7 +12348,7 @@ msgstr ""
 #: src/Application/Issuance/IssuanceDataReadiness.php:207
 #: src/Infrastructure/Admin/DomainAdmin.php:1612
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:362
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:135
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:145
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:449
 msgid "Program title"
 msgstr ""
@@ -12349,7 +12361,7 @@ msgstr ""
 
 #: src/Application/Issuance/IssuanceDataReadiness.php:209
 #: src/Infrastructure/Admin/DomainAdmin.php:2152
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:136
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:146
 msgid "Issuer name"
 msgstr ""
 
@@ -12390,7 +12402,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: src/Application/Issuance/IssuanceDataReadiness.php:72
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:134
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:144
 msgid "Recipient name"
 msgstr ""
 
@@ -18400,103 +18412,139 @@ msgid "Bulleted list"
 msgstr ""
 
 #: src/Infrastructure/Admin/EmailDesignAdmin.php:109
-msgid "Font family"
+msgid "Numbered list"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:110
+msgid "Add link"
 msgstr ""
 
 #: src/Infrastructure/Admin/EmailDesignAdmin.php:111
+msgid "Remove link"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:113
+msgid "Font family"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:115
 msgid "Font weight"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:112
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:116
 #: src/Infrastructure/Admin/TemplateAdmin.php:1350
 msgid "Line height"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:116
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:120
 msgid "Horizontal padding"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:117
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:121
 msgid "Vertical padding"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:119
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:123
+msgid "Image width"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:124
+msgid "Divider color"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:125
+msgid "Thickness"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:126
+msgid "Divider width"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:127
+msgid "Vertical spacing"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:128
+msgid "Reset"
+msgstr ""
+
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:129
 msgid "Use email default"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:123
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:133
 #: src/Infrastructure/Admin/EmailDesignAdmin.php:99
 msgid "Spacing"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:124
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:134
 msgid "Block actions"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:130
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:262
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:140
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:272
 msgid "Add at least one usable content block before saving this email design."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:131
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:141
 msgid "Add a content block to start the message."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:132
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:142
 msgid "Select a block on the canvas to edit it."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:142
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:152
 msgid "Verification link"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:176
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:186
 msgid "Built-in email designs are customized by creating your own copy."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:190
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:200
 msgid "Untitled email"
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:301
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:317
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:311
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:327
 msgid "Email design published."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:301
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:311
 msgid "Email design saved."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:317
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:327
 msgid "Email design unpublished."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:331
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:341
 msgid "Email design copy created."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:344
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:354
 msgid "Email design deleted."
 msgstr ""
 
 #. translators: %s: maximum upload size for this site.
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:373
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:383
 msgid "Choose a Certloom email design package no larger than %s."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:389
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:399
 msgid "Email design imported as unpublished."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:437
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:447
 msgid "Design rule updated."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:448
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:458
 msgid "Design inheritance restored."
 msgstr ""
 
-#: src/Infrastructure/Admin/EmailDesignAdmin.php:489
+#: src/Infrastructure/Admin/EmailDesignAdmin.php:499
 msgid "You do not have permission to manage Certloom email designs."
 msgstr ""
 
