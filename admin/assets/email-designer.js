@@ -50,6 +50,36 @@
 
 		document.body.classList.add( 'certloom-email-studio-active' );
 
+		const studioRoot = q( '[data-certloom-email-studio]' );
+		let viewportSyncFrame = 0;
+		function syncStudioViewport() {
+			if ( ! studioRoot ) {
+				return;
+			}
+			if ( window.matchMedia( '(max-width: 960px)' ).matches ) {
+				studioRoot.style.removeProperty( '--certloom-email-studio-height' );
+				return;
+			}
+			const top = Math.max( 0, studioRoot.getBoundingClientRect().top );
+			const height = Math.max( 420, Math.floor( window.innerHeight - top ) );
+			studioRoot.style.setProperty( '--certloom-email-studio-height', `${ height }px` );
+		}
+		function scheduleStudioViewportSync() {
+			if ( viewportSyncFrame ) {
+				cancelAnimationFrame( viewportSyncFrame );
+			}
+			viewportSyncFrame = requestAnimationFrame( () => {
+				viewportSyncFrame = requestAnimationFrame( () => {
+					viewportSyncFrame = 0;
+					syncStudioViewport();
+				} );
+			} );
+		}
+		scheduleStudioViewportSync();
+		window.addEventListener( 'resize', scheduleStudioViewportSync );
+		window.addEventListener( 'orientationchange', scheduleStudioViewportSync );
+		window.addEventListener( 'load', scheduleStudioViewportSync, { once: true } );
+
 		const hidden = q( '[data-certloom-blocks-json]', form );
 		const canvas = q( '[data-certloom-email-canvas]' );
 		const inspector = q( '[data-certloom-email-inspector]' );

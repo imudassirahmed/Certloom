@@ -1,3 +1,9 @@
+= 1.7.0-alpha.4.62 =
+* Make focused Certloom Email Studio consume the exact remaining desktop viewport from its live top edge to the browser bottom, eliminating the large lower dead area seen on real WordPress staging.
+* Hide the redundant Design product subnavigation and WordPress footer only while Email Studio is active, leaving the Studio header as the focused editor navigation authority.
+* Bound the three-pane grid to one zero-basis remaining-height row so Insert/Structure/Data/Styles, the email stage and Properties all terminate at the same viewport bottom and keep their own internal scrolling.
+* Add realistic WordPress browser-fixture coverage for legacy Design tabs/footer suppression, shared three-pane bottom alignment and viewport resynchronization after resize; no email compilation, hierarchy or delivery authority changes.
+
 = 1.7.0-alpha.4.61 =
 * Introduce the first Certloom Email Studio foundation: a bounded three-pane workspace, fixed center email canvas, shared Studio-style identity and compact message settings without changing email-delivery authority.
 * Split the left builder rail into Insert, Structure, Data and Styles tools; mirror the semantic block model into Structure and keep dynamic tokens and global email style controls inside dedicated scroll-owned panels.

@@ -144,6 +144,10 @@ ed_has($js,'renderStructure()','designer mirrors the block model into the Struct
 ed_has($js,'certloom-email-studio-active','designer activates focused Email Studio viewport ownership only on the designer route');
 ed_has($css,'body.certloom-email-studio-active #wpfooter','designer suppresses the WordPress footer only while the focused Email Studio is active');
 ed_has($css,'flex: 1 1 0','designer gives the three-pane workspace bounded remaining-height ownership');
+ed_has($css,'.certloom-product-subnav[data-certloom-product-subnav]','focused Email Studio hides the redundant Design product tabs');
+ed_has($css,'--certloom-email-studio-height','focused Email Studio owns one explicit bounded desktop height');
+ed_has($js,'syncStudioViewport()','focused Email Studio measures remaining viewport height from its live top edge');
+ed_has($js,"window.addEventListener( 'resize', scheduleStudioViewportSync )",'focused Email Studio resyncs its bounded height on viewport resize');
 
 ed_has($repo_source,'certloom_email_design_assigned_pause_blocked','assigned designs cannot be silently unpublished');
 ed_has($repo_source,'certloom_email_design_assigned_purpose_blocked','assigned designs cannot silently change purpose');

@@ -261,14 +261,18 @@
 /* Dedicated Email Studio */
 body.certloom-email-studio-active #wpbody-content {
 	padding-bottom: 0 !important;
+	overflow: hidden;
 }
-body.certloom-email-studio-active #wpfooter {
+body.certloom-email-studio-active #wpfooter,
+body.certloom-email-studio-active .certloom-product-subnav[data-certloom-product-subnav] {
 	display: none !important;
 }
 .certloom-email-designer-wrap {
 	--certloom-email-studio-top: var(--wp-admin--admin-bar--height, 32px);
+	--certloom-email-studio-height: calc(100dvh - var(--certloom-email-studio-top));
 	max-width: none;
-	height: calc(100vh - var(--certloom-email-studio-top));
+	height: var(--certloom-email-studio-height);
+	max-height: var(--certloom-email-studio-height);
 	margin: 0 0 0 -10px;
 	overflow: hidden;
 	background: #f2f5f7;
@@ -278,6 +282,7 @@ body.certloom-email-studio-active #wpfooter {
 	flex-direction: column;
 	height: 100%;
 	min-height: 0;
+	overflow: hidden;
 }
 .certloom-email-studio-toolbar {
 	position: relative;
@@ -416,8 +421,11 @@ body.certloom-email-studio-active #wpfooter {
 .certloom-designer-shell {
 	display: grid;
 	grid-template-columns: 268px minmax(420px,1fr) 322px;
+	grid-template-rows: minmax(0,1fr);
 	flex: 1 1 0;
+	height: 0;
 	min-height: 0;
+	overflow: hidden;
 	background: #edf2f6;
 }
 .certloom-designer-palette,
@@ -437,6 +445,12 @@ body.certloom-email-studio-active #wpfooter {
 	flex-direction: column;
 	border-left: 1px solid #dfe5ea;
 	overflow: hidden;
+}
+.certloom-designer-palette,
+.certloom-designer-stage,
+.certloom-designer-inspector {
+	height: 100%;
+	max-height: 100%;
 }
 .certloom-email-sidebar-tabs {
 	display: grid;
@@ -519,12 +533,12 @@ body.certloom-email-studio-active #wpfooter {
 }
 .certloom-block-palette button {
 	display: flex;
-	min-height: 66px;
+	min-height: 60px;
 	flex-direction: column;
 	align-items: flex-start;
 	justify-content: center;
 	gap: 5px;
-	padding: 10px 11px;
+	padding: 9px 10px;
 	border: 1px solid #dce3e8;
 	border-radius: 9px;
 	background: #fff;
@@ -715,7 +729,7 @@ body.certloom-email-studio-active #wpfooter {
 	flex: 1 1 0;
 	min-height: 0;
 	overflow: auto;
-	padding: 26px 32px 42px;
+	padding: 28px 32px 36px;
 	scrollbar-gutter: stable both-edges;
 }
 .certloom-canvas-frame {
@@ -939,6 +953,7 @@ body.certloom-email-studio-active #wpfooter {
 	body.certloom-email-studio-active #wpfooter { display: block !important; }
 	body.certloom-email-studio-active #wpbody-content { padding-bottom: 65px !important; }
 	.certloom-email-designer-wrap {
+		--certloom-email-studio-height: auto;
 		height: auto;
 		min-height: 0;
 		overflow: visible;
