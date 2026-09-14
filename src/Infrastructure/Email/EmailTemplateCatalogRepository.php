@@ -208,11 +208,13 @@ final class EmailTemplateCatalogRepository {
 		$media = new PortableDesignAssets();
 		$installed = $media->install_email_assets(
 			(array) ( $design['blocks'] ?? array() ),
-			(array) ( $design['assets'] ?? array() )
+			(array) ( $design['assets'] ?? array() ),
+			(array) ( $design['theme'] ?? array() )
 		);
 		if ( is_wp_error( $installed ) ) { return $installed; }
 
 		$design['blocks'] = $installed['blocks'];
+		if ( isset( $installed['theme'] ) && is_array( $installed['theme'] ) ) { $design['theme'] = $installed['theme']; }
 		unset( $design['assets'] );
 
 		$saved = $this->save( $design );
@@ -259,6 +261,12 @@ final class EmailTemplateCatalogRepository {
 			$blocks  = is_array( $decoded ) ? $decoded : null;
 		}
 		$theme = $template['theme'] ?? array();
+		$attachments = $template['attachments'] ?? array();
+		if ( is_string( $attachments ) && '' !== trim( $attachments ) ) {
+			$decoded = json_decode( $attachments, true );
+			$attachments = is_array( $decoded ) ? $decoded : array();
+		}
+		$attachments = array_values( array_slice( array_unique( array_filter( array_map( 'absint', is_array( $attachments ) ? $attachments : array() ) ) ), 0, EmailTemplateService::MAX_STATIC_ATTACHMENTS ) );
 		if ( is_string( $theme ) && '' !== trim( $theme ) ) {
 			$decoded = json_decode( $theme, true );
 			$theme   = is_array( $decoded ) ? $decoded : array();
@@ -279,6 +287,7 @@ final class EmailTemplateCatalogRepository {
 		}
 
 		$template['preheader'] = $preheader;
+		$template['attachments'] = $attachments;
 		$content = $this->service->normalize_template( $template );
 		if ( is_wp_error( $content ) ) { return $content; }
 		$source = sanitize_key( (string) ( $template['source'] ?? ( self::DEFAULT_ID === $id ? 'legacy' : 'customer' ) ) );
@@ -297,6 +306,7 @@ final class EmailTemplateCatalogRepository {
 			'text_body'      => (string) $content['text_body'],
 			'blocks'         => $blocks,
 			'theme'          => $theme,
+			'attachments'    => $attachments,
 			'updated_at'     => $this->valid_timestamp( $template['updated_at'] ?? '' ) ? (string) $template['updated_at'] : current_time( 'mysql', true ),
 			'source'         => $source,
 			'factory_version'=> 'factory' === $source ? max( 1, absint( $template['factory_version'] ?? 1 ) ) : 0,

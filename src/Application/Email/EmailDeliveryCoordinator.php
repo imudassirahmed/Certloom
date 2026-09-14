@@ -131,6 +131,8 @@ final class EmailDeliveryCoordinator {
 					'credential_number'          => sanitize_text_field( (string) ( $review['snapshot']['credential']['display_number'] ?? '' ) ),
 					'verification_authoritative' => (bool) $composed['verification_authoritative'],
 					'attachment_status'          => (string) $composed['attachment_status'],
+					'static_attachment_count'     => absint( $composed['static_attachment_count'] ?? 0 ),
+					'static_attachment_sha256'    => (string) ( $composed['static_attachment_sha256'] ?? '' ),
 					'requested_by'               => absint( $owner_user_id ),
 					'selection_intent'            => (string) $review['selection_intent'],
 					'resolution_scope'            => (string) $review['resolution_scope'],
@@ -152,7 +154,7 @@ final class EmailDeliveryCoordinator {
 			'subject'            => $composed['subject'],
 			'html_body'          => $composed['html_body'],
 			'text_body'          => $composed['text_body'],
-			'attachments'        => array(),
+			'attachments'        => is_array( $composed['attachments'] ?? null ) ? array_values( $composed['attachments'] ) : array(),
 			'composition_sha256' => $composed['composition_sha256'],
 			'destination_sha256' => $review['destination_sha256'],
 		);

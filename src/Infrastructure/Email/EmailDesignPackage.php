@@ -27,8 +27,12 @@ final class EmailDesignPackage {
 
 	/** @return array<string,mixed>|\WP_Error */
 	public function build( array $design, $plugin_version = '' ) {
+		if ( ! empty( $design['attachments'] ) ) {
+			return new \WP_Error( 'certloom_email_design_package_static_attachments', __( 'Static delivery attachments are site-local. Remove them before exporting this email design.', 'certloom' ) );
+		}
 		$blocks = $this->compiler->sanitize_blocks( $design['blocks'] ?? array() );
-		$portable = ( new PortableDesignAssets( $this->assets ) )->prepare_email_export( $blocks );
+		$theme = $this->compiler->normalize_theme( $design['theme'] ?? array() );
+		$portable = ( new PortableDesignAssets( $this->assets ) )->prepare_email_export( $blocks, $theme );
 		if ( is_wp_error( $portable ) ) {
 			return $portable;
 		}
@@ -47,7 +51,7 @@ final class EmailDesignPackage {
 				'subject'   => (string) ( $design['subject'] ?? '' ),
 				'text_body' => (string) ( $design['text_body'] ?? '' ),
 				'blocks'    => $portable['blocks'],
-				'theme'     => $this->compiler->normalize_theme( $design['theme'] ?? array() ),
+				'theme'     => $portable['theme'],
 			),
 			'assets'         => $portable['assets'],
 		);
@@ -124,7 +128,7 @@ final class EmailDesignPackage {
 			return $design;
 		}
 
-		$references = $this->email_asset_references( $design['blocks'] );
+		$references = $this->email_asset_references( $design['blocks'], $design['theme'] );
 		$asset_keys = array_keys( $assets );
 		sort( $references, SORT_STRING );
 		sort( $asset_keys, SORT_STRING );
@@ -195,6 +199,12 @@ final class EmailDesignPackage {
 			return new \WP_Error( 'certloom_email_design_package_blocks', __( 'This email design package does not contain usable content blocks.', 'certloom' ) );
 		}
 
+		$theme_input = is_array( $design['theme'] ?? null ) ? $design['theme'] : array();
+		$portable_theme_assets = array();
+		foreach ( array( 'background_image', 'content_background_image' ) as $key ) { if ( $allow_package_assets && 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', (string) ( $theme_input[ $key ] ?? '' ) ) ) { $portable_theme_assets[ $key ] = (string) $theme_input[ $key ]; $theme_input[ $key ] = ''; } }
+		$normalized_theme = $this->compiler->normalize_theme( $theme_input );
+		foreach ( $portable_theme_assets as $key => $value ) { $normalized_theme[ $key ] = $value; }
+
 		return array(
 			'name'      => $name,
 			'purpose'   => $purpose,
@@ -202,7 +212,7 @@ final class EmailDesignPackage {
 			'subject'   => sanitize_text_field( (string) ( $design['subject'] ?? '' ) ),
 			'text_body' => sanitize_textarea_field( (string) ( $design['text_body'] ?? '' ) ),
 			'blocks'    => $blocks,
-			'theme'     => $this->compiler->normalize_theme( $design['theme'] ?? array() ),
+			'theme'     => $normalized_theme,
 			'active'    => 0,
 			'source'    => 'import',
 		);
@@ -211,40 +221,35 @@ final class EmailDesignPackage {
 	/** @return array<int,array<string,mixed>>|\WP_Error */
 	private function sanitize_portable_blocks( $blocks ) {
 		$blocks = is_array( $blocks ) ? array_slice( $blocks, 0, EmailDesignCompiler::MAX_BLOCKS ) : array();
-		$out    = array();
+		$out = array();
 		foreach ( $blocks as $block ) {
-			if ( ! is_array( $block ) ) {
-				continue;
+			if ( ! is_array( $block ) ) { continue; }
+			$asset_urls = array();
+			if ( 'image' === (string) ( $block['type'] ?? '' ) && 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', (string) ( $block['url'] ?? '' ) ) ) { $asset_urls['block'] = (string) $block['url']; $block['url'] = 'https://certloom.invalid/portable-image'; }
+			if ( 'columns' === (string) ( $block['type'] ?? '' ) && is_array( $block['columns'] ?? null ) ) {
+				foreach ( $block['columns'] as $index => $column ) { if ( is_array( $column ) && 'image' === (string) ( $column['kind'] ?? '' ) && 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', (string) ( $column['url'] ?? '' ) ) ) { $asset_urls['column:' . $index] = (string) $column['url']; $block['columns'][ $index ]['url'] = 'https://certloom.invalid/portable-image'; } }
 			}
-			$type = sanitize_key( (string) ( $block['type'] ?? '' ) );
-			if ( 'image' === $type && 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', (string) ( $block['url'] ?? '' ) ) ) {
-				$out[] = array(
-					'type' => 'image',
-					'url'  => (string) $block['url'],
-					'alt'  => sanitize_text_field( (string) ( $block['alt'] ?? '' ) ),
-				);
-				continue;
-			}
-
 			$sanitized = $this->compiler->sanitize_blocks( array( $block ) );
-			if ( ! empty( $sanitized ) ) {
-				$out[] = $sanitized[0];
-			}
+			if ( empty( $sanitized ) ) { continue; }
+			$row = $sanitized[0];
+			if ( isset( $asset_urls['block'] ) ) { $row['url'] = $asset_urls['block']; }
+			foreach ( $asset_urls as $key => $url ) { if ( 0 === strpos( $key, 'column:' ) ) { $index = absint( substr( $key, 7 ) ); if ( isset( $row['columns'][ $index ] ) ) { $row['columns'][ $index ]['url'] = $url; } } }
+			$out[] = $row;
 		}
 		return $out;
 	}
 
 	/** @return string[] */
-	private function email_asset_references( array $blocks ) {
+	private function email_asset_references( array $blocks, array $theme = array() ) {
 		$references = array();
+		$collect = static function( $url ) use ( &$references ) { if ( 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', (string) $url, $match ) ) { $references[ $match[1] ] = true; } };
 		foreach ( $blocks as $block ) {
-			if ( ! is_array( $block ) || 'image' !== (string) ( $block['type'] ?? '' ) ) {
-				continue;
-			}
-			if ( 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', (string) ( $block['url'] ?? '' ), $match ) ) {
-				$references[ $match[1] ] = true;
-			}
+			if ( ! is_array( $block ) ) { continue; }
+			if ( 'image' === (string) ( $block['type'] ?? '' ) ) { $collect( $block['url'] ?? '' ); }
+			if ( 'columns' === (string) ( $block['type'] ?? '' ) && is_array( $block['columns'] ?? null ) ) { foreach ( $block['columns'] as $column ) { if ( is_array( $column ) && 'image' === (string) ( $column['kind'] ?? '' ) ) { $collect( $column['url'] ?? '' ); } } }
 		}
+		$collect( $theme['background_image'] ?? '' );
+		$collect( $theme['content_background_image'] ?? '' );
 		return array_keys( $references );
 	}
 

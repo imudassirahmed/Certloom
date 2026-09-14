@@ -12,17 +12,27 @@ function sanitize_text_field($v){return trim(strip_tags((string)$v));} function 
 function sanitize_hex_color($v){return preg_match('/^#[0-9a-fA-F]{6}$/',(string)$v)?strtolower((string)$v):null;}
 function esc_url_raw($v){$v=trim((string)$v);return preg_match('#^(https?://|\{\{verification_url\}\})#',$v)?$v:'';} function esc_url($v){return esc_url_raw($v);}
 function esc_attr($v){return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');} function esc_html($v){return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');}
-function wp_kses_post($v){return (string)$v;} function wp_strip_all_tags($v,$remove_breaks=false){return strip_tags((string)$v);} function wp_json_encode($v,$flags=0){return json_encode($v,$flags);}
+function wp_kses_post($v){return preg_replace('#<script\b[^>]*>.*?</script>#is','',(string)$v);} function wp_kses($v,$allowed=array()){ $v=preg_replace('#<script\b[^>]*>.*?</script>#is','',(string)$v); $v=preg_replace('/\son[a-z]+=(?:"[^"]*"|\'[^\']*\')/i','',$v); return $v; } function wp_strip_all_tags($v,$remove_breaks=false){return strip_tags((string)$v);} function wp_json_encode($v,$flags=0){return json_encode($v,$flags);}
 function get_bloginfo($key){return 'UTF-8';} function current_time($type,$gmt=false){return '2026-09-04 01:02:03';}
 function get_option($key,$default=false){return array_key_exists($key,$GLOBALS['certloom_test_options'])?$GLOBALS['certloom_test_options'][$key]:$default;}
 function update_option($key,$value,$autoload=null){$GLOBALS['certloom_test_options'][$key]=$value;return true;}
 function wp_generate_password($length=12,$special=true,$extra=false){return substr(str_repeat('abcdef',$length),0,$length);}
+
+class Ecapla_CertVerify_Fields {
+	public static function get_manageable_fields(){ return array(
+		array('key'=>'address','label'=>'Postal address','type'=>'text'),
+		array('key'=>'department','label'=>'Department','type'=>'text'),
+		array('key'=>'grade','label'=>'Grade','type'=>'text'),
+		array('key'=>'internal_notes','label'=>'Internal notes','type'=>'textarea','system_only'=>1),
+	); }
+}
 require_once __DIR__ . '/bootstrap-autoload.php';
 
 use Certloom\Infrastructure\Email\EmailDesignCompiler;
 use Certloom\Infrastructure\Email\EmailDesignPackage;
 use Certloom\Infrastructure\Email\EmailDesignPresetCatalog;
 use Certloom\Infrastructure\Email\EmailDesignPurposes;
+use Certloom\Infrastructure\Email\EmailMergeTokenCatalog;
 use Certloom\Infrastructure\Email\EmailTemplateCatalogRepository;
 
 $checks=0;
@@ -32,6 +42,17 @@ function ed_has($source,$needle,$message){ed_ok(false!==strpos($source,$needle),
 function ed_lacks($source,$needle,$message){ed_ok(false===strpos($source,$needle),$message);}
 
 $compiler=new EmailDesignCompiler();
+$token_catalog=new EmailMergeTokenCatalog();
+$token_groups=$token_catalog->groups();
+ed_ok(isset($token_groups['recipient']['tokens']['recipient.name']),'Data catalog exposes canonical Recipient fields');
+ed_ok(isset($token_groups['credential']['tokens']['credential.display_number']),'Data catalog exposes canonical Credential fields');
+ed_ok(isset($token_groups['program']['tokens']['batch.name']),'Data catalog exposes Program and Batch fields');
+ed_ok(isset($token_groups['issuer']['tokens']['signer.email']),'Data catalog exposes Issuer and Signer fields');
+ed_ok(isset($token_groups['verification']['tokens']['verification.url']),'Data catalog exposes verification fields');
+ed_same('Postal address',$token_groups['custom']['tokens']['custom:address'],'Data catalog derives configured custom fields');
+ed_same('Department',$token_groups['custom']['tokens']['custom:department'],'Data catalog derives every configured non-system custom field');
+ed_ok(!isset($token_groups['custom']['tokens']['custom:internal_notes']),'system-only fields are not exposed to email merge UI');
+ed_ok(in_array('custom:address',\Certloom\Application\Email\EmailTemplateService::tokens(),true),'Email Template Service accepts the same dynamic custom-field vocabulary exposed by Studio');
 $presets=(new EmailDesignPresetCatalog())->all();
 ed_same(count(EmailDesignPurposes::all()),count($presets),'one calm starter exists for every supported message purpose');
 $ids=[];$purposes=[];
@@ -68,6 +89,24 @@ ed_same('#778899',$styled['blocks'][4]['style']['color'],'divider color survives
 ed_has($styled['html_body'],'width:72%','compiled image applies bounded width');
 ed_has($styled['html_body'],'border-top:3px solid #778899','compiled divider applies visual style');
 
+$advanced=$compiler->compile(array(
+	array('type'=>'html','html'=>'<table role="presentation"><tr><td style="padding:8px">{{custom:address}}</td></tr></table><script>alert(1)</script>'),
+	array('type'=>'columns','count'=>3,'ratio'=>'25-50-25','gap'=>18,'columns'=>array(
+		array('kind'=>'image','url'=>'https://example.test/photo.png','alt'=>'Portrait','link'=>'{{verification.url}}','width'=>80,'align'=>'center'),
+		array('kind'=>'text','html'=>'<p><strong>Main text</strong></p>'),
+		array('kind'=>'html','html'=>'<p style="text-align:right">Custom HTML</p>'),
+	)),
+),array_merge(EmailDesignCompiler::default_theme(),array('background_image'=>'https://example.test/page.jpg','content_background_image'=>'https://example.test/card.jpg','background_size'=>'cover','content_background_size'=>'contain')));
+ed_same('html',$advanced['blocks'][0]['type'],'Custom HTML survives canonical block normalization');
+ed_lacks($advanced['html_body'],'<script','Custom HTML strips executable script content');
+ed_same(3,$advanced['blocks'][1]['count'],'Columns supports a three-column composition');
+ed_same('25-50-25',$advanced['blocks'][1]['ratio'],'Columns preserves a supported three-column ratio');
+ed_same('image',$advanced['blocks'][1]['columns'][0]['kind'],'Columns can carry image content beside text');
+ed_same('html',$advanced['blocks'][1]['columns'][2]['kind'],'Columns can carry Custom HTML beside visual content');
+ed_has($advanced['html_body'],'width="25%"','compiled three-column email uses the selected proportion');
+ed_has($advanced['html_body'],'background="https://example.test/page.jpg"','page background image compiles with an email fallback attribute');
+ed_has($advanced['html_body'],'background="https://example.test/card.jpg"','content background image compiles with an email fallback attribute');
+
 $sample=$presets[0];$sample['id']='private-id';$sample['source']='customer';$sample['active']=1;$sample['assignment']=array('scope_type'=>'program','scope_id'=>9);
 $package=(new EmailDesignPackage($compiler))->build($sample,'1.6.99-qa.23');
 ed_same(EmailDesignPackage::FORMAT,$package['format'],'package format identity');
@@ -84,10 +123,12 @@ ed_same($sample['purpose'],$decoded['purpose'],'purpose survives package round-t
 ed_same($sample['subject'],$decoded['subject'],'subject survives package round-trip');
 $styled_design=$sample;
 $styled_design['blocks']=array(array('type'=>'heading','text'=>'Portable styled heading','level'=>1,'style'=>array('font_size'=>36,'font_weight'=>800,'color'=>'#234567','align'=>'center')));
-$styled_package=(new EmailDesignPackage($compiler))->build($styled_design,'1.7.0-alpha.4.66');
+$styled_package=(new EmailDesignPackage($compiler))->build($styled_design,'1.7.0-alpha.4.67');
 $styled_decoded=(new EmailDesignPackage($compiler))->decode(json_encode($styled_package));
 ed_same(36,$styled_decoded['blocks'][0]['style']['font_size'],'block typography survives email design package round-trip');
 ed_same('#234567',$styled_decoded['blocks'][0]['style']['color'],'block color survives email design package round-trip');
+$with_attachment=$sample;$with_attachment['attachments']=array(42);$blocked_package=(new EmailDesignPackage($compiler))->build($with_attachment,'1.7.0-alpha.4.67');
+ed_ok(is_wp_error($blocked_package)&&'certloom_email_design_package_static_attachments'===$blocked_package->get_error_code(),'site-local static attachments are explicitly excluded from portable design packages');
 
 $tampered=$package;$tampered['design']['subject']='Tampered';$bad=(new EmailDesignPackage($compiler))->decode(json_encode($tampered));
 ed_ok(is_wp_error($bad)&&'certloom_email_design_package_integrity'===$bad->get_error_code(),'tampered package fails integrity check');
@@ -123,9 +164,11 @@ $designer=file_get_contents($root.'/admin/views/email-designer.php');
 $admin=file_get_contents($root.'/src/Infrastructure/Admin/EmailDesignAdmin.php');
 $repo_source=file_get_contents($root.'/src/Infrastructure/Email/EmailTemplateCatalogRepository.php');
 $package_source=file_get_contents($root.'/src/Infrastructure/Email/EmailDesignPackage.php');
+$token_catalog_source=file_get_contents($root.'/src/Infrastructure/Email/EmailMergeTokenCatalog.php');
+$template_service_source=file_get_contents($root.'/src/Application/Email/EmailTemplateService.php');
 $js=file_get_contents($root.'/admin/assets/email-designer.js');
 $css=file_get_contents($root.'/admin/assets/email-designs.css');
-foreach(compact('view','designer','admin','repo_source','package_source','js','css') as $name=>$source){ed_ok(is_string($source)&&''!==$source,'source '.$name.' available');}
+foreach(compact('view','designer','admin','repo_source','package_source','token_catalog_source','template_service_source','js','css') as $name=>$source){ed_ok(is_string($source)&&''!==$source,'source '.$name.' available');}
 
 ed_has($view,"'Library'",'Email Designs has Library subtab');
 ed_has($view,"'My Templates'",'Email Designs has My Templates subtab');
@@ -194,6 +237,21 @@ ed_has($js,"L.colorsSection || 'Colors'",'contextual inspector exposes Colors');
 ed_has($js,"L.spacingSection || 'Spacing'",'contextual inspector exposes Spacing');
 ed_has($css,'.certloom-email-rich-toolbar','Email Studio styles the rich-text formatting toolbar');
 ed_has($css,'.certloom-email-color-control','Email Studio styles paired color picker and hex controls');
+ed_has($designer,'data-certloom-name-edit','Email Studio renames the design inline in the document header');
+ed_lacks($designer,"Template name', 'certloom'",'redundant Template name field is removed from the message metadata strip');
+ed_has($designer,'certloom-message-settings--compact','Purpose, Subject and Preheader use the compact metadata row');
+ed_has($designer,'data-certloom-token-search','Data browser supports field search');
+ed_has($designer,'data-certloom-attachments-manager','Data panel exposes site-local email attachments');
+ed_has($designer,'data-certloom-add-block="html"','Insert exposes a Custom HTML block');
+ed_has($designer,'data-certloom-theme-media-card','Email style exposes page/content background image controls');
+ed_has($js,'sanitizeCustomHtml(','Custom HTML has a client-side safe-preview boundary');
+ed_has($js,'sampleHtml(','dynamic sample values are escaped before insertion into HTML previews');
+ed_has($js,'data-columns-count','Columns support 2/3-column composition');
+ed_has($js,'data-column-image','Columns support image content beside text/HTML');
+ed_has($js,'renderTokenBrowser(','Data browser is grouped/searchable instead of a fixed token list');
+ed_has($template_service_source,"snapshot['merge']['values']",'Email composition resolves the immutable issued merge map');
+ed_has($template_service_source,'validate_static_attachment_ids','static attachments are validated before Email Studio accepts them');
+ed_has($token_catalog_source,"'custom:' . \$key",'dynamic custom fields are generated from the configured field catalog');
 
 ed_has($repo_source,'certloom_email_design_assigned_pause_blocked','assigned designs cannot be silently unpublished');
 ed_has($repo_source,'certloom_email_design_assigned_purpose_blocked','assigned designs cannot silently change purpose');

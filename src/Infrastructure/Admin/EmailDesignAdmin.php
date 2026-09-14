@@ -1,10 +1,12 @@
 <?php
 namespace Certloom\Infrastructure\Admin;
 
+use Certloom\Application\Email\EmailTemplateService;
 use Certloom\Infrastructure\Email\EmailDesignAssignmentRepository;
 use Certloom\Infrastructure\Email\EmailDesignCompiler;
 use Certloom\Infrastructure\Email\EmailDesignPackage;
 use Certloom\Infrastructure\Email\EmailDesignPurposes;
+use Certloom\Infrastructure\Email\EmailMergeTokenCatalog;
 use Certloom\Infrastructure\Email\EmailTemplateCatalogRepository;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -70,6 +72,8 @@ final class EmailDesignAdmin {
 			CERTLOOM_VERSION,
 			true
 		);
+		$merge_tokens = new EmailMergeTokenCatalog();
+
 		wp_localize_script(
 			'certloom-email-designer',
 			'certloomEmailDesignerL10n',
@@ -80,7 +84,22 @@ final class EmailDesignAdmin {
 				'addImage'              => __( 'Image', 'certloom' ),
 				'addDivider'            => __( 'Divider', 'certloom' ),
 				'addSpacer'             => __( 'Spacer', 'certloom' ),
-				'addColumns'            => __( 'Two columns', 'certloom' ),
+				'addColumns'            => __( 'Columns', 'certloom' ),
+				'addHtml'               => __( 'Custom HTML', 'certloom' ),
+				'htmlLabel'             => __( 'HTML', 'certloom' ),
+				'columnType'            => __( 'Content type', 'certloom' ),
+				'columnCount'           => __( 'Columns', 'certloom' ),
+				'columnLayout'          => __( 'Layout', 'certloom' ),
+				'columnGap'             => __( 'Column gap', 'certloom' ),
+				'searchFields'          => __( 'Search fields', 'certloom' ),
+				'attachments'           => __( 'Attachments', 'certloom' ),
+				'addAttachments'        => __( 'Add attachments', 'certloom' ),
+				'chooseAttachments'     => __( 'Choose email attachments', 'certloom' ),
+				'useAttachments'        => __( 'Attach selected files', 'certloom' ),
+				'pageBackgroundImage'   => __( 'Page background image', 'certloom' ),
+				'contentBackgroundImage'=> __( 'Content background image', 'certloom' ),
+				'chooseBackground'      => __( 'Choose background image', 'certloom' ),
+				'removeBackground'      => __( 'Remove background', 'certloom' ),
 				'headingPlaceholder'    => __( 'Your credential is ready', 'certloom' ),
 				'textPlaceholder'       => __( 'Write the message recipients should receive.', 'certloom' ),
 				'buttonText'            => __( 'View credential', 'certloom' ),
@@ -140,17 +159,9 @@ final class EmailDesignAdmin {
 				'contentBlocksRequired' => __( 'Add at least one usable content block before saving this email design.', 'certloom' ),
 				'emptyContent'          => __( 'Add a content block to start the message.', 'certloom' ),
 				'selectBlock'           => __( 'Select a block on the canvas to edit it.', 'certloom' ),
-				'tokens'                => array(
-					'recipient_name'    => __( 'Recipient name', 'certloom' ),
-					'program_title'     => __( 'Program title', 'certloom' ),
-					'issuer_name'       => __( 'Issuer name', 'certloom' ),
-					'credential_number' => __( 'Credential number', 'certloom' ),
-					'issue_date'        => __( 'Issue date', 'certloom' ),
-					'expiry_date'       => __( 'Expiry date', 'certloom' ),
-					'grade'             => __( 'Grade', 'certloom' ),
-					'verification_url'  => __( 'Verification URL', 'certloom' ),
-					'verification_link' => __( 'Verification link', 'certloom' ),
-				),
+				'tokens'                => $merge_tokens->flat(),
+				'tokenGroups'           => $merge_tokens->groups(),
+				'tokenSamples'          => $merge_tokens->sample_values(),
 			)
 		);
 	}
@@ -278,6 +289,14 @@ final class EmailDesignAdmin {
 		$theme = array(
 			'background'        => $_POST['theme_background'] ?? '',
 			'content_background'=> $_POST['theme_content_background'] ?? '',
+			'background_image' => isset( $_POST['theme_background_image'] ) ? esc_url_raw( wp_unslash( $_POST['theme_background_image'] ) ) : '',
+			'background_size' => isset( $_POST['theme_background_size'] ) ? sanitize_key( wp_unslash( $_POST['theme_background_size'] ) ) : 'cover',
+			'background_position' => isset( $_POST['theme_background_position'] ) ? sanitize_key( wp_unslash( $_POST['theme_background_position'] ) ) : 'center',
+			'background_repeat' => isset( $_POST['theme_background_repeat'] ) ? sanitize_key( wp_unslash( $_POST['theme_background_repeat'] ) ) : 'no-repeat',
+			'content_background_image' => isset( $_POST['theme_content_background_image'] ) ? esc_url_raw( wp_unslash( $_POST['theme_content_background_image'] ) ) : '',
+			'content_background_size' => isset( $_POST['theme_content_background_size'] ) ? sanitize_key( wp_unslash( $_POST['theme_content_background_size'] ) ) : 'cover',
+			'content_background_position' => isset( $_POST['theme_content_background_position'] ) ? sanitize_key( wp_unslash( $_POST['theme_content_background_position'] ) ) : 'center',
+			'content_background_repeat' => isset( $_POST['theme_content_background_repeat'] ) ? sanitize_key( wp_unslash( $_POST['theme_content_background_repeat'] ) ) : 'no-repeat',
 			'text_color'        => $_POST['theme_text_color'] ?? '',
 			'heading_color'     => $_POST['theme_heading_color'] ?? '',
 			'button_background' => $_POST['theme_button_background'] ?? '',
@@ -287,6 +306,12 @@ final class EmailDesignAdmin {
 			'email_width'       => absint( $_POST['theme_email_width'] ?? 640 ),
 			'border_radius'     => absint( $_POST['theme_border_radius'] ?? 12 ),
 		);
+		$attachments_raw = isset( $_POST['attachments_json'] ) ? (string) wp_unslash( $_POST['attachments_json'] ) : '[]';
+		$attachments = json_decode( $attachments_raw, true );
+		$attachments = is_array( $attachments ) ? $attachments : array();
+		$attachments = ( new EmailTemplateService() )->validate_static_attachment_ids( $attachments );
+		if ( is_wp_error( $attachments ) ) { $this->redirect( $attachments, '', '', 'designer' ); }
+
 		$id = isset( $_POST['design_id'] ) ? sanitize_key( wp_unslash( $_POST['design_id'] ) ) : '';
 		$catalog = new EmailTemplateCatalogRepository();
 		$existing = '' !== $id ? $catalog->get( $id ) : null;
@@ -304,6 +329,7 @@ final class EmailDesignAdmin {
 				'text_body' => isset( $_POST['text_body'] ) ? sanitize_textarea_field( wp_unslash( $_POST['text_body'] ) ) : '',
 				'blocks'    => $blocks,
 				'theme'     => $theme,
+				'attachments' => $attachments,
 			)
 		);
 		$this->redirect(

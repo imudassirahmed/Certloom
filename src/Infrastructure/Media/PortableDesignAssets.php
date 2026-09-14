@@ -48,45 +48,54 @@ final class PortableDesignAssets {
 	 * @param array<int,array<string,mixed>> $blocks
 	 * @return array{blocks:array<int,array<string,mixed>>,assets:array<string,array<string,mixed>>}|\WP_Error
 	 */
-	public function prepare_email_export( array $blocks ) {
+	public function prepare_email_export( array $blocks, array $theme = array() ) {
 		$assets = array();
 		$out    = array();
-
 		foreach ( $blocks as $block ) {
-			if ( ! is_array( $block ) ) {
-				continue;
-			}
-			if ( 'image' !== (string) ( $block['type'] ?? '' ) ) {
-				$out[] = $block;
-				continue;
-			}
-
-			$url = (string) ( $block['url'] ?? '' );
-			$id  = function_exists( 'attachment_url_to_postid' ) ? absint( attachment_url_to_postid( $url ) ) : 0;
-			if ( ! $id ) {
-				$out[] = $block;
-				continue;
-			}
-
-			$asset = $this->collect_attachment( $id );
-			if ( is_wp_error( $asset ) ) {
-				return $asset;
-			}
-			$key            = (string) $asset['key'];
-			$assets[ $key ] = $asset['descriptor'];
-			$block['url']   = 'asset:' . $key;
-			$out[]          = $block;
+			if ( ! is_array( $block ) ) { continue; }
+			$rewritten = $this->rewrite_email_block_for_export( $block, $assets );
+			if ( is_wp_error( $rewritten ) ) { return $rewritten; }
+			$out[] = $rewritten;
 		}
-
+		foreach ( array( 'background_image', 'content_background_image' ) as $key ) {
+			if ( empty( $theme[ $key ] ) ) { continue; }
+			$rewritten = $this->portable_email_url( (string) $theme[ $key ], $assets );
+			if ( is_wp_error( $rewritten ) ) { return $rewritten; }
+			$theme[ $key ] = $rewritten;
+		}
 		$validated = $this->manifest->validate( $assets );
-		if ( is_wp_error( $validated ) ) {
-			return $validated;
-		}
+		if ( is_wp_error( $validated ) ) { return $validated; }
+		return array( 'blocks' => array_values( $out ), 'theme' => $theme, 'assets' => $validated );
+	}
 
-		return array(
-			'blocks' => array_values( $out ),
-			'assets' => $validated,
-		);
+	/** @return array<string,mixed>|\WP_Error */
+	private function rewrite_email_block_for_export( array $block, array &$assets ) {
+		if ( 'image' === (string) ( $block['type'] ?? '' ) && ! empty( $block['url'] ) ) {
+			$url = $this->portable_email_url( (string) $block['url'], $assets );
+			if ( is_wp_error( $url ) ) { return $url; }
+			$block['url'] = $url;
+		}
+		if ( 'columns' === (string) ( $block['type'] ?? '' ) && is_array( $block['columns'] ?? null ) ) {
+			foreach ( $block['columns'] as $index => $column ) {
+				if ( ! is_array( $column ) || 'image' !== (string) ( $column['kind'] ?? '' ) || empty( $column['url'] ) ) { continue; }
+				$url = $this->portable_email_url( (string) $column['url'], $assets );
+				if ( is_wp_error( $url ) ) { return $url; }
+				$block['columns'][ $index ]['url'] = $url;
+			}
+		}
+		return $block;
+	}
+
+	/** @return string|\WP_Error */
+	private function portable_email_url( $url, array &$assets ) {
+		$url = (string) $url;
+		$id = function_exists( 'attachment_url_to_postid' ) ? absint( attachment_url_to_postid( $url ) ) : 0;
+		if ( ! $id ) { return $url; }
+		$asset = $this->collect_attachment( $id );
+		if ( is_wp_error( $asset ) ) { return $asset; }
+		$key = (string) $asset['key'];
+		$assets[ $key ] = $asset['descriptor'];
+		return 'asset:' . $key;
 	}
 
 	/**
@@ -124,54 +133,61 @@ final class PortableDesignAssets {
 	 * @param array<string,mixed> $assets
 	 * @return array{blocks:array<int,array<string,mixed>>,created_ids:array<int,int>}|\WP_Error
 	 */
-	public function install_email_assets( array $blocks, array $assets ) {
+	public function install_email_assets( array $blocks, array $assets, array $theme = array() ) {
 		$references = array();
-		foreach ( $blocks as $block ) {
-			if ( ! is_array( $block ) || 'image' !== (string) ( $block['type'] ?? '' ) ) {
-				continue;
-			}
-			$url = (string) ( $block['url'] ?? '' );
-			if ( 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', $url, $match ) ) {
-				$references[ $match[1] ] = true;
-			}
+		foreach ( $blocks as $block ) { if ( is_array( $block ) ) { $this->collect_email_block_references( $block, $references ); } }
+		foreach ( array( 'background_image', 'content_background_image' ) as $key ) {
+			if ( 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', (string) ( $theme[ $key ] ?? '' ), $match ) ) { $references[ $match[1] ] = true; }
 		}
-
 		$prepared = $this->prepare_import( $assets, $references );
-		if ( is_wp_error( $prepared ) ) {
-			return $prepared;
-		}
-
+		if ( is_wp_error( $prepared ) ) { return $prepared; }
 		$installed = $this->install_assets( $prepared );
-		if ( is_wp_error( $installed ) ) {
-			return $installed;
-		}
-
+		if ( is_wp_error( $installed ) ) { return $installed; }
 		$out = array();
 		foreach ( $blocks as $block ) {
-			if ( ! is_array( $block ) ) {
-				continue;
-			}
-			if ( 'image' === (string) ( $block['type'] ?? '' ) ) {
-				$url = (string) ( $block['url'] ?? '' );
-				if ( 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', $url, $match ) ) {
-					$key = $match[1];
-					if ( empty( $installed['urls'][ $key ] ) ) {
-						$this->cleanup( $installed['created_ids'] );
-						return new \WP_Error(
-							'certloom_email_design_asset_url_missing',
-							__( 'Certloom imported an image but could not create a usable Media Library URL for it.', 'certloom' )
-						);
-					}
-					$block['url'] = $installed['urls'][ $key ];
-				}
-			}
-			$out[] = $block;
+			if ( ! is_array( $block ) ) { continue; }
+			$rewritten = $this->rewrite_email_block_for_import( $block, $installed['urls'] );
+			if ( is_wp_error( $rewritten ) ) { $this->cleanup( $installed['created_ids'] ); return $rewritten; }
+			$out[] = $rewritten;
 		}
+		foreach ( array( 'background_image', 'content_background_image' ) as $key ) {
+			if ( 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', (string) ( $theme[ $key ] ?? '' ), $match ) ) {
+				if ( empty( $installed['urls'][ $match[1] ] ) ) { $this->cleanup( $installed['created_ids'] ); return new \WP_Error( 'certloom_email_design_asset_url_missing', __( 'Certloom imported an image but could not create a usable Media Library URL for it.', 'certloom' ) ); }
+				$theme[ $key ] = $installed['urls'][ $match[1] ];
+			}
+		}
+		return array( 'blocks' => array_values( $out ), 'theme' => $theme, 'created_ids' => $installed['created_ids'] );
+	}
 
-		return array(
-			'blocks'      => array_values( $out ),
-			'created_ids' => $installed['created_ids'],
-		);
+	private function collect_email_block_references( array $block, array &$references ) {
+		if ( 'image' === (string) ( $block['type'] ?? '' ) && 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', (string) ( $block['url'] ?? '' ), $match ) ) { $references[ $match[1] ] = true; }
+		if ( 'columns' === (string) ( $block['type'] ?? '' ) && is_array( $block['columns'] ?? null ) ) {
+			foreach ( $block['columns'] as $column ) { if ( is_array( $column ) && 'image' === (string) ( $column['kind'] ?? '' ) && 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', (string) ( $column['url'] ?? '' ), $match ) ) { $references[ $match[1] ] = true; } }
+		}
+	}
+
+	/** @return array<string,mixed>|\WP_Error */
+	private function rewrite_email_block_for_import( array $block, array $urls ) {
+		if ( 'image' === (string) ( $block['type'] ?? '' ) ) {
+			$block['url'] = $this->installed_email_url( (string) ( $block['url'] ?? '' ), $urls );
+			if ( is_wp_error( $block['url'] ) ) { return $block['url']; }
+		}
+		if ( 'columns' === (string) ( $block['type'] ?? '' ) && is_array( $block['columns'] ?? null ) ) {
+			foreach ( $block['columns'] as $index => $column ) {
+				if ( ! is_array( $column ) || 'image' !== (string) ( $column['kind'] ?? '' ) ) { continue; }
+				$url = $this->installed_email_url( (string) ( $column['url'] ?? '' ), $urls );
+				if ( is_wp_error( $url ) ) { return $url; }
+				$block['columns'][ $index ]['url'] = $url;
+			}
+		}
+		return $block;
+	}
+
+	/** @return string|\WP_Error */
+	private function installed_email_url( $url, array $urls ) {
+		if ( 1 !== preg_match( '/^asset:(media-[a-f0-9]{24})$/', $url, $match ) ) { return $url; }
+		if ( empty( $urls[ $match[1] ] ) ) { return new \WP_Error( 'certloom_email_design_asset_url_missing', __( 'Certloom imported an image but could not create a usable Media Library URL for it.', 'certloom' ) ); }
+		return (string) $urls[ $match[1] ];
 	}
 
 	/** @param array<int,int> $attachment_ids */

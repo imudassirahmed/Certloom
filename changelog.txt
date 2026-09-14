@@ -1,3 +1,10 @@
+= 1.7.0-alpha.4.67 =
+* Email Studio: derive the Data browser from the canonical merge-token catalog, group/search Recipient, Credential, Program/Batch, Issuer/Signer, Verification and configured custom fields, and resolve delivery primarily from immutable issued snapshot merge values.
+* Email Studio: replace the redundant Template name field with inline document renaming and compact the Purpose/Subject/Preheader row without changing the fitted-canvas/independent-rail viewport contract.
+* Advanced composition: add safe Custom HTML blocks, 2/3-column mixed Text/Image/HTML layouts, page/content background images with fallbacks, and portable embedded design assets for background/column media.
+* Email delivery: add bounded static Media Library attachments with fail-closed file validation, private-envelope transport and privacy-minimized attachment count/SHA-256 evidence; site-local attachments are intentionally excluded from portable design packages.
+* Regression coverage: prove grouped custom-field tokens, token search, HTML safety/rendering, 3-column composition, background-image controls, static attachments, deterministic packaging and responsive library containment.
+
 = 1.7.0-alpha.4.65 =
 * Email Studio: add visual rich-text authoring for Text blocks with Bold, Italic, Underline and bulleted-list controls instead of raw-HTML-only editing.
 * Email Studio: add contextual Typography, Colors, Layout and Spacing controls for Heading/Text/Button blocks, including bounded font family/size/weight, block alignment, line height, button padding/radius and native color selectors.

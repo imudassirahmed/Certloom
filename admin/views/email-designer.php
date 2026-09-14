@@ -8,7 +8,7 @@ $brand_mark = CERTLOOM_URL . 'admin/assets/certloom-brand-mark.png';
 ?>
 <div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-email-designer-wrap" data-certloom-email-designer-root data-certloom-email-studio>
 <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" data-certloom-email-designer>
-<input type="hidden" name="action" value="certloom_email_design_save"><input type="hidden" name="design_id" value="<?php echo esc_attr( (string) ( $editing['id'] ?? '' ) ); ?>"><input type="hidden" name="blocks_json" value="<?php echo esc_attr( wp_json_encode( $blocks ) ); ?>" data-certloom-blocks-json><?php wp_nonce_field( 'certloom_email_design_save' ); ?>
+<input type="hidden" name="action" value="certloom_email_design_save"><input type="hidden" name="design_id" value="<?php echo esc_attr( (string) ( $editing['id'] ?? '' ) ); ?>"><input type="hidden" name="name" value="<?php echo esc_attr( (string) ( $editing['name'] ?? '' ) ); ?>" data-certloom-template-name><input type="hidden" name="blocks_json" value="<?php echo esc_attr( wp_json_encode( $blocks ) ); ?>" data-certloom-blocks-json><input type="hidden" name="attachments_json" value="<?php echo esc_attr( wp_json_encode( array_values( (array) ( $editing['attachments'] ?? array() ) ) ) ); ?>" data-certloom-attachments-json><?php wp_nonce_field( 'certloom_email_design_save' ); ?>
 
 <header class="certloom-email-studio-toolbar">
 	<div class="certloom-email-studio-toolbar__identity">
@@ -20,7 +20,8 @@ $brand_mark = CERTLOOM_URL . 'admin/assets/certloom-brand-mark.png';
 		<a class="certloom-designer-back" href="<?php echo esc_url( add_query_arg( array( 'email_view' => 'mine' ), $base_url ) ); ?>">← <?php esc_html_e( 'Email designs', 'certloom' ); ?></a>
 		<span class="certloom-email-studio-toolbar__divider" aria-hidden="true"></span>
 		<div class="certloom-email-studio-document">
-			<strong data-certloom-designer-title><?php echo esc_html( (string) ( $editing['name'] ?? '' ) ); ?></strong>
+			<button type="button" class="certloom-email-document-name" data-certloom-name-edit aria-label="<?php esc_attr_e( 'Rename email design', 'certloom' ); ?>"><strong data-certloom-designer-title><?php echo esc_html( (string) ( $editing['name'] ?? '' ) ); ?></strong></button>
+			<input type="text" class="certloom-email-document-name-input" value="<?php echo esc_attr( (string) ( $editing['name'] ?? '' ) ); ?>" maxlength="120" data-certloom-name-input hidden aria-label="<?php esc_attr_e( 'Email design name', 'certloom' ); ?>">
 			<span class="certloom-status <?php echo $is_published ? 'is-published' : 'is-unpublished'; ?>"><?php echo $is_published ? esc_html__( 'Published', 'certloom' ) : esc_html__( 'Unpublished', 'certloom' ); ?></span>
 			<small data-certloom-save-state><?php esc_html_e( 'Saved', 'certloom' ); ?></small>
 		</div>
@@ -43,11 +44,10 @@ $brand_mark = CERTLOOM_URL . 'admin/assets/certloom-brand-mark.png';
 <?php if ( ! empty( $notice ) ) : ?><div class="notice notice-success is-dismissible"><p><?php echo esc_html( $notice ); ?></p></div><?php endif; ?>
 <?php if ( ! empty( $error ) ) : ?><div class="notice notice-error"><p><?php echo esc_html( $error ); ?></p></div><?php endif; ?>
 
-<section class="certloom-message-settings" aria-label="<?php esc_attr_e( 'Email message settings', 'certloom' ); ?>">
-	<label><span><?php esc_html_e( 'Template name', 'certloom' ); ?></span><input type="text" name="name" value="<?php echo esc_attr( (string) ( $editing['name'] ?? '' ) ); ?>" required data-certloom-template-name></label>
-	<label><span><?php esc_html_e( 'Purpose', 'certloom' ); ?></span><select name="purpose" required><?php foreach ( $purposes as $key => $label ) : ?><option value="<?php echo esc_attr( $key ); ?>" <?php selected( (string) ( $editing['purpose'] ?? '' ), $key ); ?>><?php echo esc_html( $label ); ?></option><?php endforeach; ?></select></label>
-	<label class="is-wide"><span><?php esc_html_e( 'Subject', 'certloom' ); ?></span><input type="text" name="subject" value="<?php echo esc_attr( (string) ( $editing['subject'] ?? '' ) ); ?>" required data-certloom-token-input></label>
-	<label class="is-wide"><span><?php esc_html_e( 'Preheader', 'certloom' ); ?></span><input type="text" name="preheader" value="<?php echo esc_attr( (string) ( $editing['preheader'] ?? '' ) ); ?>" data-certloom-token-input></label>
+<section class="certloom-message-settings certloom-message-settings--compact" aria-label="<?php esc_attr_e( 'Email message settings', 'certloom' ); ?>">
+	<label class="is-purpose"><span><?php esc_html_e( 'Purpose', 'certloom' ); ?></span><select name="purpose" required><?php foreach ( $purposes as $key => $label ) : ?><option value="<?php echo esc_attr( $key ); ?>" <?php selected( (string) ( $editing['purpose'] ?? '' ), $key ); ?>><?php echo esc_html( $label ); ?></option><?php endforeach; ?></select></label>
+	<label class="is-subject"><span><?php esc_html_e( 'Subject', 'certloom' ); ?></span><input type="text" name="subject" value="<?php echo esc_attr( (string) ( $editing['subject'] ?? '' ) ); ?>" required data-certloom-token-input></label>
+	<label class="is-preheader"><span><?php esc_html_e( 'Preheader', 'certloom' ); ?></span><input type="text" name="preheader" value="<?php echo esc_attr( (string) ( $editing['preheader'] ?? '' ) ); ?>" data-certloom-token-input></label>
 </section>
 
 <div class="certloom-designer-feedback" data-certloom-designer-feedback role="alert" tabindex="-1" hidden></div>
@@ -70,7 +70,8 @@ $brand_mark = CERTLOOM_URL . 'admin/assets/certloom-brand-mark.png';
 				<button type="button" data-certloom-add-block="image"><b aria-hidden="true">▧</b><span><?php esc_html_e( 'Image', 'certloom' ); ?></span></button>
 				<button type="button" data-certloom-add-block="divider"><b aria-hidden="true">—</b><span><?php esc_html_e( 'Divider', 'certloom' ); ?></span></button>
 				<button type="button" data-certloom-add-block="spacer"><b aria-hidden="true">↕</b><span><?php esc_html_e( 'Spacer', 'certloom' ); ?></span></button>
-				<button type="button" data-certloom-add-block="columns"><b aria-hidden="true">▥</b><span><?php esc_html_e( 'Two columns', 'certloom' ); ?></span></button>
+				<button type="button" data-certloom-add-block="columns"><b aria-hidden="true">▥</b><span><?php esc_html_e( 'Columns', 'certloom' ); ?></span></button>
+				<button type="button" data-certloom-add-block="html"><b aria-hidden="true">&lt;/&gt;</b><span><?php esc_html_e( 'Custom HTML', 'certloom' ); ?></span></button>
 			</div>
 		</div>
 
@@ -84,9 +85,16 @@ $brand_mark = CERTLOOM_URL . 'admin/assets/certloom-brand-mark.png';
 			<div class="certloom-token-browser">
 				<p class="certloom-eyebrow"><?php esc_html_e( 'Dynamic data', 'certloom' ); ?></p>
 				<h2><?php esc_html_e( 'Insert data', 'certloom' ); ?></h2>
+				<label class="certloom-token-search"><span class="screen-reader-text"><?php esc_html_e( 'Search fields', 'certloom' ); ?></span><input type="search" placeholder="<?php esc_attr_e( 'Search fields…', 'certloom' ); ?>" data-certloom-token-search></label>
 				<div data-certloom-token-list></div>
 				<p class="description"><?php esc_html_e( 'Click a field first, then insert the data it needs.', 'certloom' ); ?></p>
 			</div>
+			<section class="certloom-email-attachments" data-certloom-attachments-manager>
+				<div class="certloom-email-sidebar-heading"><div><p class="certloom-eyebrow"><?php esc_html_e( 'Delivery', 'certloom' ); ?></p><h2><?php esc_html_e( 'Attachments', 'certloom' ); ?></h2></div><span data-certloom-attachment-count></span></div>
+				<div class="certloom-email-attachment-list" data-certloom-attachment-list></div>
+				<button type="button" class="button" data-certloom-add-attachments><?php esc_html_e( 'Add attachments', 'certloom' ); ?></button>
+				<p class="description"><?php esc_html_e( 'Up to 5 Media Library files. Static attachments stay site-local and are intentionally excluded from portable design exports.', 'certloom' ); ?></p>
+			</section>
 		</div>
 
 		<div class="certloom-email-sidebar-panel" role="tabpanel" data-certloom-sidebar-panel="styles" hidden>
@@ -99,6 +107,16 @@ $brand_mark = CERTLOOM_URL . 'admin/assets/certloom-brand-mark.png';
 				<label class="is-wide"><span><?php esc_html_e( 'Font', 'certloom' ); ?></span><select name="theme_font_family" data-certloom-theme><?php foreach ( array( 'Arial, Helvetica, sans-serif', 'Georgia, Times New Roman, serif', 'Verdana, Geneva, sans-serif', 'Trebuchet MS, Arial, sans-serif' ) as $font ) : ?><option value="<?php echo esc_attr( $font ); ?>" <?php selected( (string) ( $theme['font_family'] ?? '' ), $font ); ?>><?php echo esc_html( $font ); ?></option><?php endforeach; ?></select></label>
 				<label><span><?php esc_html_e( 'Width', 'certloom' ); ?></span><input type="number" min="480" max="760" step="10" name="theme_email_width" value="<?php echo esc_attr( absint( $theme['email_width'] ?? 640 ) ); ?>" data-certloom-theme></label>
 				<label><span><?php esc_html_e( 'Corners', 'certloom' ); ?></span><input type="number" min="0" max="32" name="theme_border_radius" value="<?php echo esc_attr( absint( $theme['border_radius'] ?? 12 ) ); ?>" data-certloom-theme></label>
+			</div>
+			<div class="certloom-theme-backgrounds">
+				<?php foreach ( array( 'background' => __( 'Page background image', 'certloom' ), 'content_background' => __( 'Content background image', 'certloom' ) ) as $bg_key => $bg_label ) : $image_key = $bg_key . '_image'; ?>
+					<div class="certloom-theme-background-card" data-certloom-theme-media-card="<?php echo esc_attr( $image_key ); ?>">
+						<div><strong><?php echo esc_html( $bg_label ); ?></strong><small data-certloom-theme-media-name><?php echo ! empty( $theme[ $image_key ] ) ? esc_html( wp_basename( (string) $theme[ $image_key ] ) ) : esc_html__( 'No image', 'certloom' ); ?></small></div>
+						<input type="hidden" name="theme_<?php echo esc_attr( $image_key ); ?>" value="<?php echo esc_attr( (string) ( $theme[ $image_key ] ?? '' ) ); ?>" data-certloom-theme data-certloom-theme-media="<?php echo esc_attr( $image_key ); ?>">
+						<div class="certloom-theme-background-actions"><button type="button" class="button" data-certloom-choose-theme-media="<?php echo esc_attr( $image_key ); ?>"><?php esc_html_e( 'Choose', 'certloom' ); ?></button><button type="button" class="button" data-certloom-remove-theme-media="<?php echo esc_attr( $image_key ); ?>"><?php esc_html_e( 'Remove', 'certloom' ); ?></button></div>
+						<div class="certloom-theme-background-options"><label><span><?php esc_html_e( 'Size', 'certloom' ); ?></span><select name="theme_<?php echo esc_attr( $bg_key ); ?>_size" data-certloom-theme><?php foreach ( array( 'cover' => __( 'Cover', 'certloom' ), 'contain' => __( 'Contain', 'certloom' ), 'auto' => __( 'Auto', 'certloom' ) ) as $value => $label ) : ?><option value="<?php echo esc_attr( $value ); ?>" <?php selected( (string) ( $theme[ $bg_key . '_size' ] ?? 'cover' ), $value ); ?>><?php echo esc_html( $label ); ?></option><?php endforeach; ?></select></label><label><span><?php esc_html_e( 'Position', 'certloom' ); ?></span><select name="theme_<?php echo esc_attr( $bg_key ); ?>_position" data-certloom-theme><?php foreach ( array( 'center' => __( 'Center', 'certloom' ), 'top' => __( 'Top', 'certloom' ), 'bottom' => __( 'Bottom', 'certloom' ), 'left' => __( 'Left', 'certloom' ), 'right' => __( 'Right', 'certloom' ) ) as $value => $label ) : ?><option value="<?php echo esc_attr( $value ); ?>" <?php selected( (string) ( $theme[ $bg_key . '_position' ] ?? 'center' ), $value ); ?>><?php echo esc_html( $label ); ?></option><?php endforeach; ?></select></label><label><span><?php esc_html_e( 'Repeat', 'certloom' ); ?></span><select name="theme_<?php echo esc_attr( $bg_key ); ?>_repeat" data-certloom-theme><?php foreach ( array( 'no-repeat' => __( 'No repeat', 'certloom' ), 'repeat' => __( 'Repeat', 'certloom' ), 'repeat-x' => __( 'Horizontal', 'certloom' ), 'repeat-y' => __( 'Vertical', 'certloom' ) ) as $value => $label ) : ?><option value="<?php echo esc_attr( $value ); ?>" <?php selected( (string) ( $theme[ $bg_key . '_repeat' ] ?? 'no-repeat' ), $value ); ?>><?php echo esc_html( $label ); ?></option><?php endforeach; ?></select></label></div>
+					</div>
+				<?php endforeach; ?>
 			</div>
 			<details class="certloom-plain-text">
 				<summary><?php esc_html_e( 'Plain-text fallback', 'certloom' ); ?></summary>
