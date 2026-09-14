@@ -1,3 +1,10 @@
+= 1.7.0-alpha.4.59 =
+* Replace the remaining ancestor-dependent Studio viewport sizing with a desktop viewport host: the focused Studio shell is temporarily portaled to document.body while its top/left/right offsets still follow the live WordPress content box.
+* Hard-pin the focused shell from its live WordPress top offset to browser viewport bottom with CSS bottom:0; remove JavaScript/visualViewport height as a layout authority so stale or host-specific height math cannot leave another lower dead strip.
+* Keep the editor, Designer root, authoritative form and three-pane stage on zero-basis flex fill with internal Layers/Properties scrolling, preserving the alpha.4.57 selection containment and alpha.4.56 Layers-gutter correction.
+* Extend Chromium coverage with a transformed/contained WordPress host that would redefine position:fixed if Studio stayed nested; require the shell to escape to the body host and the complete Studio chain to terminate at the real viewport bottom.
+* Gamma-02 remains open for real staging acceptance; Gamma-03 remains blocked.
+
 = 1.7.0-alpha.4.58 =
 * Close the remaining focused Studio bottom strip by giving the viewport-fixed root an explicit measured height from the live WordPress content top to the visual viewport bottom instead of relying on percentage-height descendants of an auto-height fixed box.
 * Keep WordPress footer reservation out of the focused Studio contract: #wpbody-content bottom padding is forced to zero and #wpfooter remains hidden on the Studio route.

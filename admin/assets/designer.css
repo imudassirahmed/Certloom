@@ -2856,29 +2856,34 @@
 		top: var(--certloom-studio-frame-top, 0px) !important;
 		left: var(--certloom-studio-frame-left, 0px) !important;
 		right: var(--certloom-studio-frame-right, 0px) !important;
-		bottom: auto !important;
-		display: block !important;
+		bottom: 0 !important;
+		display: flex !important;
+		flex-direction: column !important;
 		box-sizing: border-box !important;
 		width: auto !important;
-		height: var(--certloom-studio-frame-height, calc(100dvh - var(--certloom-studio-frame-top, 0px))) !important;
+		height: auto !important;
+		z-index: 9900 !important;
 		min-height: 0 !important;
 		max-height: none !important;
 		margin: 0 !important;
 		overflow: hidden !important;
 	}
 	body.certloom-designer-workspace-page .certloom-template-editor-focused {
-		display: block !important;
+		display: flex !important;
+		flex: 1 1 0 !important;
+		flex-direction: column !important;
 		box-sizing: border-box !important;
 		width: 100% !important;
-		height: 100% !important;
+		height: auto !important;
 		min-height: 0 !important;
 		overflow: hidden !important;
 	}
 	.is-designer-workspace .certloom-template-designer-v2 {
 		display: flex !important;
+		flex: 1 1 0 !important;
 		flex-direction: column !important;
 		width: 100% !important;
-		height: 100% !important;
+		height: auto !important;
 		min-height: 0 !important;
 		overflow: hidden !important;
 	}
@@ -2891,7 +2896,7 @@
 		flex: 1 1 0 !important;
 		flex-direction: column !important;
 		width: 100% !important;
-		height: 0 !important;
+		height: auto !important;
 		min-height: 0 !important;
 		overflow: hidden !important;
 	}
@@ -2901,7 +2906,7 @@
 	.is-designer-workspace .certloom-template-designer-v2.is-pro-mode .certloom-template-designer-stage {
 		display: grid !important;
 		flex: 1 1 0 !important;
-		height: 0 !important;
+		height: auto !important;
 		min-height: 0 !important;
 		overflow: hidden !important;
 	}
@@ -2941,12 +2946,13 @@
 }
 
 
-/* Phase 4 Gamma-02U — final desktop viewport-bottom closure.
- * WordPress reserves footer space in #wpbody-content on ordinary admin screens.
- * Studio is a focused workspace, so that reservation must never participate in
- * its frame. The root frame also receives an explicit measured height rather
- * than asking a percentage-height descendant to resolve through an auto-height
- * fixed containing block. */
+/* Phase 4 Gamma-02V — viewport-host escape + hard bottom pin.
+ * Real staging kept a lower dead strip even after explicit frame-height math.
+ * The focused shell is now portaled to the document body on desktop so transformed or
+ * contained WordPress/admin ancestors cannot redefine position:fixed. Its
+ * vertical contract is simply live WordPress top -> browser viewport bottom;
+ * the inner editor/form/stage chain uses zero-basis flex rather than percentage
+ * or JavaScript-measured heights. */
 @media (min-width: 901px) {
 	body.certloom-designer-workspace-page #wpbody-content { padding-bottom: 0 !important; }
 	body.certloom-designer-workspace-page #wpfooter { display: none !important; }

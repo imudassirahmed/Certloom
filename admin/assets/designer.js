@@ -190,6 +190,7 @@
 		var autosaveSessionField = root.querySelector( '[data-certloom-designer-autosave-session-field]' );
 		var saveIntentField = root.querySelector( '[data-certloom-designer-save-intent-field]' );
 		var studioWorkspaceShell = root.closest ? root.closest( '.certloom-template-admin.is-designer-workspace' ) : null;
+		var studioWorkspaceHomeMarker = null;
 		var conflictBanner = root.querySelector( '[data-certloom-designer-conflict-banner]' );
 		var conflictReviewButton = conflictBanner ? conflictBanner.querySelector( '[data-certloom-designer-conflict-review]' ) : null;
 		var conflictReloadButton = conflictBanner ? conflictBanner.querySelector( '[data-certloom-designer-conflict-reload]' ) : null;
@@ -475,30 +476,54 @@
 		function clearStudioViewportFrameTimers() {
 			while ( studioViewportFrameTimers.length ) { window.clearTimeout( studioViewportFrameTimers.pop() ); }
 		}
+		function studioDesktopViewport() {
+			return ! window.matchMedia || window.matchMedia( '(min-width: 901px)' ).matches;
+		}
+		function syncStudioViewportHost() {
+			if ( ! studioWorkspaceShell ) { return; }
+			if ( studioDesktopViewport() ) {
+				/* A transformed/contained WordPress or host-admin ancestor can become the
+				 * containing block for position:fixed and silently reserve footer space.
+				 * Portal only the focused Studio shell to body on desktop so fixed bottom:0
+				 * is always the real browser viewport, while the live wpbody-content rect
+				 * still supplies the intended top/left/right admin offsets. */
+				if ( studioWorkspaceShell.parentNode !== document.body ) {
+					if ( ! studioWorkspaceHomeMarker ) {
+						studioWorkspaceHomeMarker = document.createComment( 'certloom-studio-home' );
+						studioWorkspaceShell.parentNode.insertBefore( studioWorkspaceHomeMarker, studioWorkspaceShell );
+					}
+					document.body.appendChild( studioWorkspaceShell );
+				}
+				studioWorkspaceShell.setAttribute( 'data-certloom-studio-viewport-host', 'body' );
+				return;
+			}
+			if ( studioWorkspaceHomeMarker && studioWorkspaceHomeMarker.parentNode ) {
+				studioWorkspaceHomeMarker.parentNode.insertBefore( studioWorkspaceShell, studioWorkspaceHomeMarker.nextSibling );
+				studioWorkspaceHomeMarker.parentNode.removeChild( studioWorkspaceHomeMarker );
+				studioWorkspaceHomeMarker = null;
+			}
+			studioWorkspaceShell.removeAttribute( 'data-certloom-studio-viewport-host' );
+		}
 		function syncStudioViewportFrame() {
 			if ( ! studioWorkspaceShell ) { return; }
-			if ( window.matchMedia && ! window.matchMedia( '(min-width: 901px)' ).matches ) {
+			var anchor = document.getElementById( 'wpbody-content' ) || document.getElementById( 'wpcontent' );
+			var anchorRect = anchor ? anchor.getBoundingClientRect() : studioWorkspaceShell.getBoundingClientRect();
+			syncStudioViewportHost();
+			if ( ! studioDesktopViewport() ) {
 				studioWorkspaceShell.style.removeProperty( '--certloom-studio-frame-top' );
 				studioWorkspaceShell.style.removeProperty( '--certloom-studio-frame-left' );
 				studioWorkspaceShell.style.removeProperty( '--certloom-studio-frame-right' );
 				studioWorkspaceShell.style.removeProperty( '--certloom-studio-frame-height' );
 				return;
 			}
-			var anchor = document.getElementById( 'wpbody-content' ) || document.getElementById( 'wpcontent' );
-			var rect = anchor ? anchor.getBoundingClientRect() : studioWorkspaceShell.getBoundingClientRect();
 			var viewportWidth = Number( document.documentElement.clientWidth || window.innerWidth || 0 );
-			var viewportHeight = Number( document.documentElement.clientHeight || window.innerHeight || 0 );
-			if ( window.visualViewport && Number( window.visualViewport.height || 0 ) > 0 ) {
-				viewportHeight = Math.min( viewportHeight || Number( window.visualViewport.height ), Number( window.visualViewport.height ) );
-			}
-			var top = Math.max( 0, Math.round( Number( rect.top || 0 ) ) );
-			var left = Math.max( 0, Math.round( Number( rect.left || 0 ) ) );
-			var right = Math.max( 0, Math.round( viewportWidth - Number( rect.right || viewportWidth ) ) );
-			var height = Math.max( 0, Math.round( viewportHeight - top ) );
+			var top = Math.max( 0, Math.round( Number( anchorRect.top || 0 ) ) );
+			var left = Math.max( 0, Math.round( Number( anchorRect.left || 0 ) ) );
+			var right = Math.max( 0, Math.round( viewportWidth - Number( anchorRect.right || viewportWidth ) ) );
 			studioWorkspaceShell.style.setProperty( '--certloom-studio-frame-top', top + 'px' );
 			studioWorkspaceShell.style.setProperty( '--certloom-studio-frame-left', left + 'px' );
 			studioWorkspaceShell.style.setProperty( '--certloom-studio-frame-right', right + 'px' );
-			studioWorkspaceShell.style.setProperty( '--certloom-studio-frame-height', height + 'px' );
+			studioWorkspaceShell.style.removeProperty( '--certloom-studio-frame-height' );
 		}
 		function settleStudioViewportFrame() {
 			if ( ! studioWorkspaceShell ) { return; }

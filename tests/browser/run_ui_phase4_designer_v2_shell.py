@@ -469,7 +469,7 @@ async def main():
         viewport_fit = await page.evaluate("""() => {
           const shell=document.querySelector('.certloom-template-admin.is-designer-workspace');
           shell.style.setProperty('--certloom-studio-frame-top','43px');
-          shell.style.setProperty('--certloom-studio-frame-height',(window.innerHeight-43)+'px');
+          shell.style.setProperty('--certloom-studio-frame-height','111px'); // stale legacy value must be ignored.
           return true;
         }""")
         await page.wait_for_timeout(40)
@@ -506,7 +506,7 @@ async def main():
         # remeasured without relying on page-level document height.
         wp_html = html.replace(
             '<body class="certloom-designer-workspace-page" style="margin:0;padding:0"><div class="certloom-template-admin is-designer-workspace">',
-            '<body class="certloom-designer-workspace-page" style="margin:0;padding:0"><div id="wpcontent" style="position:absolute;top:32px;left:160px;right:0"><div id="wpbody"><div id="wpbody-content" style="padding-bottom:65px"><div class="certloom-template-admin is-designer-workspace">',
+            '<body class="certloom-designer-workspace-page" style="margin:0;padding:0"><div id="wpcontent" style="position:absolute;top:32px;left:160px;right:0;height:760px;transform:translateZ(0);contain:paint"><div id="wpbody"><div id="wpbody-content" style="padding-bottom:65px"><div class="certloom-template-admin is-designer-workspace">',
             1,
         ).replace(
             '<script>document.addEventListener("submit"',
@@ -532,12 +532,16 @@ async def main():
             shellBottom:shell.bottom, editorBottom:editor.bottom, designerBottom:designer.bottom, formBottom:form.bottom, stageHeight:stage.height, stageBottom:stage.bottom,
             inspectorLeft:inspector.left, inspectorRight:inspector.right, inspectorBottom:inspector.bottom,
             fieldsLeft:fields.left, fieldsRight:fields.right, viewport:window.innerHeight, docH:document.documentElement.scrollHeight,
-            wpPaddingBottom:getComputedStyle(document.getElementById('wpbody-content')).paddingBottom, frameHeight:getComputedStyle(document.querySelector('.certloom-template-admin.is-designer-workspace')).getPropertyValue('--certloom-studio-frame-height').trim()
+            wpPaddingBottom:getComputedStyle(document.getElementById('wpbody-content')).paddingBottom,
+            frameHeight:getComputedStyle(document.querySelector('.certloom-template-admin.is-designer-workspace')).getPropertyValue('--certloom-studio-frame-height').trim(),
+            shellParent:document.querySelector('.certloom-template-admin.is-designer-workspace').parentElement === document.body,
+            viewportHost:document.querySelector('.certloom-template-admin.is-designer-workspace').getAttribute('data-certloom-studio-viewport-host')
           };
         }""")
         await ck(abs(wp_geometry['shellTop'] - wp_geometry['anchorTop']) <= 1.5 and abs(wp_geometry['shellLeft'] - wp_geometry['anchorLeft']) <= 1.5, 'studioFrameTracksWordPressContentBox')
         await ck(abs(wp_geometry['shellBottom'] - wp_geometry['viewport']) <= 1.5 and all(abs(wp_geometry[k]-wp_geometry['viewport']) <= 1.5 for k in ['editorBottom','designerBottom','formBottom','stageBottom']), 'wordPressFullStudioChainClosesViewportBottom')
-        await ck(wp_geometry['wpPaddingBottom'] == '0px' and wp_geometry['frameHeight'] not in ('', '0px'), 'wordPressFooterReservationCannotShortenStudioFrame')
+        await ck(wp_geometry['wpPaddingBottom'] == '0px' and wp_geometry['frameHeight'] in ('', '0px'), 'wordPressFooterReservationCannotShortenStudioFrame')
+        await ck(wp_geometry['shellParent'] and wp_geometry['viewportHost'] == 'body', 'studioEscapesTransformedWordPressContainingBlock')
         await ck(wp_geometry['stageHeight'] > 500 and wp_geometry['fieldsLeft'] >= wp_geometry['inspectorLeft'] - 1 and wp_geometry['fieldsRight'] <= wp_geometry['inspectorRight'] + 1, 'selectedInspectorStaysContainedInRealisticWordPressFrame')
         await ck(abs(wp_geometry['inspectorBottom'] - wp_geometry['viewport']) <= 1.5 and wp_geometry['docH'] <= wp_geometry['viewport'] + 1, 'selectedInspectorCannotRecreateBottomDeadStripOrPageScroll')
         await wp_page.evaluate("document.getElementById('wpcontent').style.top='0px'")
