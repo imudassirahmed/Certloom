@@ -76,11 +76,11 @@ $brand_mark = CERTLOOM_URL . 'admin/assets/certloom-brand-mark.png';
 			<div class="certloom-container-presets" aria-label="<?php esc_attr_e( 'Container layout presets', 'certloom' ); ?>">
 				<span><?php esc_html_e( 'Container presets', 'certloom' ); ?></span>
 				<div>
-					<button type="button" data-certloom-container-preset="single" aria-label="<?php esc_attr_e( 'Single container', 'certloom' ); ?>"><i>1</i></button>
-					<button type="button" data-certloom-container-preset="50-50" aria-label="<?php esc_attr_e( 'Two equal columns', 'certloom' ); ?>"><i>1/2</i><i>1/2</i></button>
-					<button type="button" data-certloom-container-preset="33-67" aria-label="<?php esc_attr_e( 'One third and two thirds', 'certloom' ); ?>"><i>1/3</i><i>2/3</i></button>
-					<button type="button" data-certloom-container-preset="67-33" aria-label="<?php esc_attr_e( 'Two thirds and one third', 'certloom' ); ?>"><i>2/3</i><i>1/3</i></button>
-					<button type="button" data-certloom-container-preset="thirds" aria-label="<?php esc_attr_e( 'Three equal columns', 'certloom' ); ?>"><i>1/3</i><i>1/3</i><i>1/3</i></button>
+					<button type="button" data-certloom-container-preset="single" aria-label="<?php esc_attr_e( 'Single container', 'certloom' ); ?>"><span class="certloom-container-preset__preview"><i></i></span><small>1</small></button>
+					<button type="button" data-certloom-container-preset="50-50" aria-label="<?php esc_attr_e( 'Two equal columns', 'certloom' ); ?>"><span class="certloom-container-preset__preview"><i></i><i></i></span><small>50 / 50</small></button>
+					<button type="button" data-certloom-container-preset="33-67" aria-label="<?php esc_attr_e( 'One third and two thirds', 'certloom' ); ?>"><span class="certloom-container-preset__preview is-33-67"><i></i><i></i></span><small>33 / 67</small></button>
+					<button type="button" data-certloom-container-preset="67-33" aria-label="<?php esc_attr_e( 'Two thirds and one third', 'certloom' ); ?>"><span class="certloom-container-preset__preview is-67-33"><i></i><i></i></span><small>67 / 33</small></button>
+					<button type="button" data-certloom-container-preset="thirds" aria-label="<?php esc_attr_e( 'Three equal columns', 'certloom' ); ?>"><span class="certloom-container-preset__preview"><i></i><i></i><i></i></span><small><?php esc_html_e( 'Thirds', 'certloom' ); ?></small></button>
 				</div>
 			</div>
 		</div>
@@ -182,6 +182,7 @@ $brand_mark = CERTLOOM_URL . 'admin/assets/certloom-brand-mark.png';
 		<div class="certloom-email-inspector-heading">
 			<p class="certloom-eyebrow"><?php esc_html_e( 'Properties', 'certloom' ); ?></p>
 			<h2 data-certloom-inspector-heading><?php esc_html_e( 'Block settings', 'certloom' ); ?></h2>
+			<small class="certloom-email-inspector-path" data-certloom-inspector-path hidden></small>
 		</div>
 		<div class="certloom-email-inspector-scroll" data-certloom-email-inspector>
 			<div class="certloom-inspector-empty"><p><?php esc_html_e( 'Select a block on the canvas to edit its content and layout.', 'certloom' ); ?></p></div>

@@ -296,6 +296,14 @@ ed_has($js,'legacyColumnsToContainer(','legacy Columns are migrated into normal 
 ed_has($js,'data-container-background-image','Container inspector exposes background media');
 ed_has($js,'data-container-padding','Container inspector exposes per-side padding');
 ed_has($js,'containsBlock(source,block)','nested drag/drop guards against moving a Container into itself');
+ed_has($js,'wrap.style.flex=`${basis} 1 0px`','horizontal Container children use proportional shrinkable flex tracks so gaps and extra children cannot push content outside the parent');
+ed_has($js,"event.stopPropagation();if(event.target.closest('[data-up]'))",'nested block action controls stop at the selected block instead of bubbling into ancestor Containers');
+ed_has($css,'.certloom-email-container-children { display:flex;width:100%;max-width:100%;min-width:0','Container child tracks are bounded to their parent width in the Studio canvas');
+ed_has($designer,'certloom-container-preset__preview','Container presets use readable visual layout previews instead of tiny fractional text-only controls');
+ed_has($js,'certloom-email-container-empty__add','empty Containers expose a direct Add block action while remaining bounded drop targets');
+ed_has($js,'inspectorPathText(','selected nested blocks expose their hierarchy path in Properties');
+ed_has($css,'.certloom-container-background-settings','Container background image size/position/repeat controls use a compact grouped control row');
+ed_has($css,'.certloom-container-subsection','Container Background and Border controls are visually grouped into compact subsections');
 ed_has($js,'renderTokenBrowser(','Data browser is grouped/searchable instead of a fixed token list');
 ed_has($template_service_source,"snapshot['merge']['values']",'Email composition resolves the immutable issued merge map');
 ed_has($template_service_source,'validate_static_attachment_ids','static attachments are validated before Email Studio accepts them');

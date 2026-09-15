@@ -221,6 +221,7 @@
 		const structureList = q( '[data-certloom-structure-list]' );
 		const structureCount = q( '[data-certloom-structure-count]' );
 		const inspectorHeading = q( '[data-certloom-inspector-heading]' );
+		const inspectorPath = q( '[data-certloom-inspector-path]' );
 		const stageMeta = q( '[data-certloom-stage-meta]' );
 		const canvasFrame = q( '[data-certloom-canvas-frame]' );
 		const stageViewport = q( '[data-certloom-email-stage-viewport]' );
@@ -495,6 +496,18 @@
 			const parent = getBlockAtPath( path.slice( 0, -1 ) ); return parent?.type === 'container' && Array.isArray( parent.children ) ? parent.children : null;
 		}
 		function selectedBlock() { return getBlockAtPath( selectedPath ); }
+		function inspectorPathText( path ) {
+			if ( ! Array.isArray( path ) || ! path.length ) { return ''; }
+			let list = blocks;
+			const parts = [ L.emailRoot || 'Email' ];
+			path.forEach( ( index ) => {
+				const block = Array.isArray( list ) ? list[ index ] : null;
+				if ( ! block ) { return; }
+				parts.push( `${ blockLabel( block ) } ${ Number( index ) + 1 }` );
+				list = block.type === 'container' && Array.isArray( block.children ) ? block.children : [];
+			} );
+			return parts.join( ' › ' );
+		}
 		function findPathByIdentity( target, list = blocks, prefix = [] ) {
 			for ( let index = 0; index < list.length; index++ ) { const block=list[index];const path=[...prefix,index];if(block===target){return path;}if(block?.type==='container'&&Array.isArray(block.children)){const found=findPathByIdentity(target,block.children,path);if(found){return found;}} } return null;
 		}
@@ -572,7 +585,7 @@
 					const alignItems = { top:'flex-start', middle:'center', bottom:'flex-end' }[ block.valign ] || 'flex-start';
 					const justifyContent = { left:'flex-start', center:'center', right:'flex-end' }[ block.align ] || 'flex-start';
 					const children = Array.isArray( block.children ) ? block.children : [];
-					return `<div class="certloom-email-container-preview is-${ direction }${ block.stack_mobile !== false ? ' is-stack-mobile' : '' }" style="display:flex;flex-direction:${ direction };gap:${ Math.max(0,Number(block.gap)||0) }px;align-items:${ alignItems };justify-content:${ justifyContent };${ esc( containerPreviewStyle( block ) ) }">${ children.map( ( child ) => `<div style="${ direction==='row' ? `flex:0 0 ${Math.max(5,Math.min(100,Number(child.basis)||100))}%` : 'width:100%' }">${ blockHtml( child ) }</div>` ).join('') }</div>`;
+					return `<div class="certloom-email-container-preview is-${ direction }${ block.stack_mobile !== false ? ' is-stack-mobile' : '' }" style="display:flex;flex-direction:${ direction };gap:${ Math.max(0,Number(block.gap)||0) }px;align-items:${ alignItems };justify-content:${ justifyContent };${ esc( containerPreviewStyle( block ) ) }">${ children.map( ( child ) => { const basis=Math.max(5,Math.min(100,Number(child.basis)||100)); return `<div style="${ direction==='row' ? `flex:${basis} 1 0px;min-width:0;max-width:100%` : 'width:100%;min-width:0;max-width:100%' }">${ blockHtml( child ) }</div>`; } ).join('') }</div>`;
 				}
 				default:
 					return '';
@@ -651,16 +664,22 @@
 			const element=document.createElement('div'); element.className='certloom-canvas-block'+(samePath(path,selectedPath)?' is-selected':'')+(block.type==='container'?' certloom-canvas-container':''); element.setAttribute('role','listitem');element.tabIndex=0;element.dataset.path=pathKey(path);
 			if ( block.type === 'container' ) {
 				const surface=document.createElement('div');surface.className='certloom-email-container-surface '+(block.direction==='horizontal'?'is-horizontal':'is-vertical');surface.setAttribute('style',containerPreviewStyle(block));
+				const badge=document.createElement('span');badge.className='certloom-email-container-badge';badge.textContent=`${L.container||'Container'} · ${block.direction==='horizontal'?(L.horizontal||'Horizontal'):(L.vertical||'Vertical')}`;surface.appendChild(badge);
 				const children=document.createElement('div');children.className='certloom-email-container-children '+(block.direction==='horizontal'?'is-horizontal':'is-vertical')+(block.stack_mobile!==false?' is-stack-mobile':'');children.style.gap=`${Math.max(0,Number(block.gap)||0)}px`;
 				const childList=Array.isArray(block.children)?block.children:[];
-				childList.forEach((child,index)=>{const wrap=document.createElement('div');wrap.className='certloom-email-container-child';if(block.direction==='horizontal'){wrap.style.flex=`0 0 ${Math.max(5,Math.min(100,Number(child.basis)||100))}%`;}else{wrap.style.width='100%';}wrap.appendChild(renderBlockNode(child,[...path,index]));children.appendChild(wrap);});
-				if(!childList.length){const empty=document.createElement('div');empty.className='certloom-email-container-empty';empty.textContent='Drop blocks here or add a block while this Container is selected.';children.appendChild(empty);}
+				childList.forEach((child,index)=>{const wrap=document.createElement('div');wrap.className='certloom-email-container-child';if(block.direction==='horizontal'){const basis=Math.max(5,Math.min(100,Number(child.basis)||100));wrap.style.flex=`${basis} 1 0px`;}else{wrap.style.width='100%';}wrap.appendChild(renderBlockNode(child,[...path,index]));children.appendChild(wrap);});
+				if(!childList.length){
+					const empty=document.createElement('div');empty.className='certloom-email-container-empty';
+					empty.innerHTML=`<span class="certloom-email-container-empty__copy"><strong>${esc(L.emptyContainer||'Empty container')}</strong><small>${esc(L.dropBlocksHere||'Drop blocks here')}</small></span><button type="button" class="certloom-email-container-empty__add">+ ${esc(L.addBlock||'Add block')}</button>`;
+					q('.certloom-email-container-empty__add',empty)?.addEventListener('click',(event)=>{event.preventDefault();event.stopPropagation();selectedPath=path;render();requestAnimationFrame(()=>{q('[data-certloom-sidebar-tab="insert"]')?.click();q('[data-certloom-add-block]')?.focus();});});
+					children.appendChild(empty);
+				}
 				surface.appendChild(children);element.innerHTML=blockControlsHtml();element.appendChild(surface);
 				surface.addEventListener('dragover',(event)=>{const source=getBlockAtPath(dragPath);const targetPath=findPathByIdentity(block);if(!source||source===block||containsBlock(source,block)||!targetPath||!canPlaceAtDepth(source,blockDepth(targetPath)+1)){return;}event.preventDefault();surface.classList.add('is-drop-target');if(event.dataTransfer){event.dataTransfer.dropEffect='move';}});
 				surface.addEventListener('dragleave',(event)=>{if(!surface.contains(event.relatedTarget)){surface.classList.remove('is-drop-target');}});
 				surface.addEventListener('drop',(event)=>{const source=getBlockAtPath(dragPath);const containerPath=findPathByIdentity(block);if(!source||source===block||containsBlock(source,block)||!containerPath||!canPlaceAtDepth(source,blockDepth(containerPath)+1)){placementError(L.containerDepthLimit||'Container nesting has reached the supported depth.');return;}event.preventDefault();event.stopPropagation();const sourcePath=findPathByIdentity(source);const sourceList=getParentList(sourcePath);if(!sourceList){return;}sourceList.splice(sourcePath[sourcePath.length-1],1);block.children=Array.isArray(block.children)?block.children:[];block.children.push(source);selectedPath=[...containerPath,block.children.length-1];dragPath=null;clearFeedback();markDirty();render();});
 			} else { element.innerHTML=blockControlsHtml()+`<div>${blockHtml(block)}</div>`; }
-			element.addEventListener('click',(event)=>{if(event.target.closest('[data-up]')){move(path,-1);}else if(event.target.closest('[data-down]')){move(path,1);}else if(event.target.closest('[data-copy]')){copy(path);}else if(event.target.closest('[data-remove]')){remove(path);}else if(!event.target.closest('.certloom-canvas-drag-handle')){event.stopPropagation();selectedPath=path;render();}});
+			element.addEventListener('click',(event)=>{event.stopPropagation();if(event.target.closest('[data-up]')){move(path,-1);}else if(event.target.closest('[data-down]')){move(path,1);}else if(event.target.closest('[data-copy]')){copy(path);}else if(event.target.closest('[data-remove]')){remove(path);}else if(!event.target.closest('.certloom-canvas-drag-handle')){selectedPath=path;render();}});
 			element.addEventListener('keydown',(event)=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();selectedPath=path;render();}});
 			const handle=q('.certloom-canvas-drag-handle',element);handle?.addEventListener('dragstart',(event)=>{dragPath=path;element.classList.add('is-dragging');if(event.dataTransfer){event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',pathKey(path));}});handle?.addEventListener('dragend',()=>{dragPath=null;qa('.certloom-canvas-block',canvas).forEach((node)=>node.classList.remove('is-dragging','is-drop-target'));qa('.certloom-email-container-surface',canvas).forEach((node)=>node.classList.remove('is-drop-target'));});
 			element.addEventListener('dragover',(event)=>{const source=getBlockAtPath(dragPath);const targetPath=findPathByIdentity(block);if(!source||source===block||containsBlock(source,block)||!targetPath||!canPlaceAtDepth(source,blockDepth(targetPath))){return;}event.preventDefault();event.stopPropagation();element.classList.add('is-drop-target');});
@@ -694,6 +713,10 @@
 				const depth = blockDepth( selectedPath ) + 1;
 				if ( ! canPlaceAtDepth( block, depth ) ) { return placementError( L.containerDepthLimit || 'Container nesting has reached the supported depth.' ); }
 				selected.children = Array.isArray( selected.children ) ? selected.children : [];
+				if ( selected.direction === 'horizontal' ) {
+					const siblingBasis = selected.children.map( ( child ) => Math.max( 5, Math.min( 100, Number( child?.basis ) || 100 ) ) );
+					block.basis = siblingBasis.length ? Math.max( 5, Math.min( 100, Math.round( siblingBasis.reduce( ( total, value ) => total + value, 0 ) / siblingBasis.length ) ) ) : 100;
+				}
 				selected.children.push( block );
 				selectedPath = [ ...selectedPath, selected.children.length - 1 ];
 			} else if ( selectedPath ) {
@@ -794,28 +817,36 @@
 		function containerNumberField( label, key, min, max, unit='px' ) { const block=selectedBlock()||{};return `<label class="certloom-email-number-field"><span>${esc(label)}</span><span class="certloom-email-number-control"><input type="number" min="${min}" max="${max}" step="1" data-container-field="${esc(key)}" value="${esc(block[key]??'')}"><span>${esc(unit)}</span></span></label>`; }
 		function containerRangeField( label, key, fallback=100 ) { const block=selectedBlock()||{};const value=block[key]===undefined||block[key]===''?fallback:Number(block[key]);return `<label class="certloom-email-range-field"><span>${esc(label)}</span><span class="certloom-email-range-control"><input type="range" min="0" max="100" step="1" data-container-field="${esc(key)}" value="${esc(value)}"><output>${esc(value)}%</output></span></label>`; }
 		function containerColorField( label, key, fallback='#ffffff' ) { const block=selectedBlock()||{};const value=safeColor(block[key],fallback);return `<label class="certloom-email-color-field"><span>${esc(label)}</span><span class="certloom-email-color-control"><input type="color" value="${esc(value)}" data-container-color-picker="${esc(key)}" aria-label="${esc(label)}"><input type="text" maxlength="7" pattern="#[0-9A-Fa-f]{6}" value="${esc(block[key]||'')}" placeholder="${esc(fallback)}" data-container-field="${esc(key)}"><button type="button" class="certloom-email-color-reset" data-container-reset="${esc(key)}" aria-label="${esc((L.reset||'Reset')+' '+label)}">&#8634;</button></span></label>`; }
+		function containerCompactSelectField( label, key, options ) {
+			const block=selectedBlock()||{};
+			return `<label class="certloom-container-compact-select"><span>${esc(label)}</span><select data-container-field="${esc(key)}">${options.map((option)=>`<option value="${esc(option[0])}" ${String(block[key]??'')===String(option[0])?'selected':''}>${esc(option[1])}</option>`).join('')}</select></label>`;
+		}
+
 		function containerInspectorFields( block ) {
-			const direction=containerSelectField(L.containerDirection||'Direction','direction',[['vertical','Vertical'],['horizontal','Horizontal']]);
+			const direction=containerSelectField(L.containerDirection||'Direction','direction',[['vertical',L.vertical||'Vertical'],['horizontal',L.horizontal||'Horizontal']]);
 			const basis=selectedPath&&selectedPath.length>1?containerNumberField(L.containerBasis||'Width','basis',5,100,'%'):'';
 			const layout=`<div class="certloom-inspector-grid certloom-inspector-grid--2">${direction}${basis}${containerNumberField(L.containerGap||'Gap','gap',0,48)}${containerNumberField('Minimum height','min_height',0,800)}</div><div class="certloom-inspector-grid certloom-inspector-grid--2">${containerSelectField('Vertical alignment','valign',[['top','Top'],['middle','Middle'],['bottom','Bottom']])}${containerSelectField('Content alignment','align',[['left','Left'],['center','Center'],['right','Right']])}</div><label class="certloom-email-toggle-row"><input type="checkbox" data-container-toggle="stack_mobile" ${block.stack_mobile!==false?'checked':''}><span>Stack horizontal items on mobile</span></label>`;
 			const pad={top:0,right:0,bottom:0,left:0,...(block.padding||{})};
 			const spacing=`<div class="certloom-container-padding-grid">${['top','right','bottom','left'].map((edge)=>`<label><span>${edge[0].toUpperCase()+edge.slice(1)}</span><span class="certloom-email-number-control"><input type="number" min="0" max="80" value="${esc(pad[edge]||0)}" data-container-padding="${edge}"><span>px</span></span></label>`).join('')}</div>`;
 			const bgThumb=block.background_image?`<div class="certloom-container-background-preview"><img src="${esc(block.background_image)}" alt=""><span>${esc(block.background_image.split('/').pop()||'Background image')}</span></div>`:'';
-			const colors=`${containerColorField(L.backgroundColor || 'Background color','background_color','#ffffff')}${containerRangeField(L.backgroundColorOpacity || 'Background color opacity','background_opacity',100)}<div class="certloom-container-background-media">${bgThumb}<div class="certloom-theme-background-actions"><button type="button" class="button" data-container-background-image>${esc(block.background_image?'Replace image':(L.chooseBackground||'Choose background image'))}</button>${block.background_image?`<button type="button" class="button" data-container-background-remove>${esc(L.removeBackground||'Remove background')}</button>`:''}</div></div><div class="certloom-inspector-grid certloom-inspector-grid--3">${containerSelectField('Size','background_size',[['cover','Cover'],['contain','Contain'],['auto','Auto']])}${containerSelectField('Position','background_position',[['center','Center'],['top','Top'],['bottom','Bottom'],['left','Left'],['right','Right']])}${containerSelectField('Repeat','background_repeat',[['no-repeat','No repeat'],['repeat','Repeat'],['repeat-x','Repeat X'],['repeat-y','Repeat Y']])}</div>${containerColorField(L.overlayColor || 'Overlay color','overlay_color','#000000')}${containerRangeField(L.overlayOpacity || 'Overlay opacity','overlay_opacity',0)}`;
-			const border=`<div class="certloom-inspector-grid certloom-inspector-grid--2">${containerColorField(L.borderColor || 'Border color','border_color','#d8dee8')}${containerNumberField(L.borderWidth || 'Border width','border_width',0,8)}${containerSelectField(L.borderStyle || 'Border style','border_style',[['solid',L.solid || 'Solid'],['dashed',L.dashed || 'Dashed'],['dotted',L.dotted || 'Dotted']])}${containerNumberField('Corner radius','border_radius',0,40)}</div>`;
-			const content=`<p class="certloom-container-help">${esc((Array.isArray(block.children)?block.children.length:0)+' items. Add a block while this Container is selected, or drag blocks into it on the canvas.')}</p>`;
-			return { content, layout, spacing, colors:colors+border };
+			const background=`<div class="certloom-container-subsection certloom-container-background-panel"><div class="certloom-container-subsection__heading"><strong>${esc(L.background||'Background')}</strong><small>${esc(L.containerBackground||'Container background')}</small></div>${containerColorField(L.backgroundColor || 'Background color','background_color','#ffffff')}${containerRangeField(L.backgroundColorOpacity || 'Background color opacity','background_opacity',100)}<div class="certloom-container-background-media"><div class="certloom-container-background-media__label">${esc(L.backgroundImage||'Background image')}</div>${bgThumb}<div class="certloom-theme-background-actions"><button type="button" class="button" data-container-background-image>${esc(block.background_image?'Replace image':(L.chooseBackground||'Choose background image'))}</button>${block.background_image?`<button type="button" class="button" data-container-background-remove>${esc(L.removeBackground||'Remove background')}</button>`:''}</div></div><div class="certloom-container-background-settings">${containerCompactSelectField('Size','background_size',[['cover','Cover'],['contain','Contain'],['auto','Auto']])}${containerCompactSelectField('Position','background_position',[['center','Center'],['top','Top'],['bottom','Bottom'],['left','Left'],['right','Right']])}${containerCompactSelectField('Repeat','background_repeat',[['no-repeat','No repeat'],['repeat','Repeat'],['repeat-x','Repeat X'],['repeat-y','Repeat Y']])}</div><div class="certloom-container-overlay-settings ${block.background_image?'':'is-muted'}">${containerColorField(L.overlayColor || 'Overlay color','overlay_color','#000000')}${containerRangeField(L.overlayOpacity || 'Overlay opacity','overlay_opacity',0)}</div></div>`;
+			const border=`<div class="certloom-container-subsection"><div class="certloom-container-subsection__heading"><strong>${esc(L.border||'Border')}</strong></div><div class="certloom-inspector-grid certloom-inspector-grid--2">${containerColorField(L.borderColor || 'Border color','border_color','#d8dee8')}${containerNumberField(L.borderWidth || 'Border width','border_width',0,8)}${containerSelectField(L.borderStyle || 'Border style','border_style',[['solid',L.solid || 'Solid'],['dashed',L.dashed || 'Dashed'],['dotted',L.dotted || 'Dotted']])}${containerNumberField('Corner radius','border_radius',0,40)}</div></div>`;
+			const count=Array.isArray(block.children)?block.children.length:0;
+			const content=`<div class="certloom-container-summary"><span class="certloom-container-summary__icon">▥</span><span><strong>${esc(count+' '+(count===1?'item':'items'))}</strong><small>${esc(L.containerAddHelp||'Add blocks from Insert or drag existing blocks into this Container.')}</small></span></div>`;
+			return { content, layout, spacing, colors:background+border };
 		}
 
 		function renderInspector() {
 			if ( ! selectedBlock() ) {
 				if ( inspectorHeading ) { inspectorHeading.textContent = 'Block settings'; }
+				if ( inspectorPath ) { inspectorPath.hidden = true; inspectorPath.textContent = ''; }
 				inspector.innerHTML = `<div class="certloom-inspector-empty"><p>${ esc( L.selectBlock || 'Select a block on the canvas to edit it.' ) }</p></div>`;
 				return;
 			}
 
 			const block = selectedBlock();
 			if ( inspectorHeading ) { inspectorHeading.textContent = blockLabel( block ); }
+			if ( inspectorPath ) { inspectorPath.textContent = inspectorPathText( selectedPath ); inspectorPath.hidden = false; }
 			let contentFields = '', typographyFields = '', colorFields = '', layoutFields = '', spacingFields = '';
 			const weightOptions = [ [ '', L.inheritGlobal || 'Default' ], [ 400, 'Regular' ], [ 500, 'Medium' ], [ 600, 'Semi-bold' ], [ 700, 'Bold' ], [ 800, 'Extra bold' ], [ 900, 'Black' ] ];
 			const alignOptions = [ [ 'left', 'Align left', 'L' ], [ 'center', 'Align center', 'C' ], [ 'right', 'Align right', 'R' ] ];

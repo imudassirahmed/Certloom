@@ -1,3 +1,17 @@
+= 1.7.0-alpha.4.70 =
+* Email Studio: polish Container presets into larger visual layout cards with usable hit areas while preserving the generic Container data model.
+* Email Studio: replace the crude empty Container placeholder with a bounded drop state, direct Add block action and selected-Container identity badge; Properties now shows the selected hierarchy path and Structure mirrors nested selection.
+* Email Studio: compact and group Container Background/Border properties, including denser size/position/repeat selectors, while keeping background media, opacity and overlay controls intact.
+* Email Studio: reduce Properties rail spacing/control height without changing the locked fitted-canvas or independently scrolling side-rail viewport architecture.
+* Regression coverage: prove preset hit areas, bounded empty states, Container hierarchy identity, compact Background controls and the prior 4.69 horizontal containment correction.
+
+= 1.7.0-alpha.4.69 =
+* Email Studio: fix horizontal Container containment so child tracks share the actual available width after gaps instead of using non-shrinking percentage tracks that could push newly added Containers outside the 640px email canvas.
+* Email Studio: bound Container surfaces/child wrappers to their parent width and use proportional shrinkable tracks in both the authoring canvas and rendered Studio preview while preserving saved basis ratios and email-safe table compilation.
+* Email Studio: when a block is inserted into an existing horizontal Container, inherit a sane sibling basis weight so new children remain proportionate rather than defaulting to an oversized 100-weight track.
+* Nested editing: stop Move/Duplicate/Remove/select click events at the selected nested block so actions no longer bubble into ancestor Containers.
+* Regression coverage: reproduce adding a third Container to a 50/50 parent, require every child bounding box to remain inside the parent surface, and verify nested action cleanup leaves the parent intact.
+
 = 1.7.0-alpha.4.68 =
 * Shared fonts: unify Certificate Studio and Email Studio on the expanded local/system DesignerFontCatalog, including WordPress/theme-local families and permission-based Local Font Access discovery without remote font downloads or automatic uploads.
 * Email Studio: replace author-facing fixed Columns with bounded nested Containers, horizontal/vertical direction, layout presets, child basis, gaps, alignment, padding, borders/radius, mobile stacking, nested Structure and drag/move between Containers; legacy Columns normalize safely and outgoing layouts compile to email-safe nested tables.

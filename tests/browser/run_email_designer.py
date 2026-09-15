@@ -100,7 +100,28 @@ async def run():
         await ck(await html_canvas.locator('script,iframe').count()==0,'customHtmlDangerousElementsRemoved')
         await ck('position:fixed' not in (await html_canvas.inner_html()).replace(' ',''),'customHtmlDangerousCssRemoved')
         await page.locator('[data-certloom-container-preset="50-50"]').click()
+        # Regression: adding another Container to an existing horizontal Container must stay inside the email canvas.
+        horizontal_parent=page.locator('[data-certloom-email-canvas] > .certloom-canvas-container.is-selected').first
+        horizontal_path=await horizontal_parent.get_attribute('data-path')
+        horizontal_parent=page.locator(f'[data-certloom-email-canvas] > .certloom-canvas-container[data-path="{horizontal_path}"]')
+        parent_surface=horizontal_parent.locator(':scope > .certloom-email-container-surface').first
+        await page.locator('[data-certloom-add-block="container"]').click()
+        horizontal_children=parent_surface.locator(':scope > .certloom-email-container-children > .certloom-email-container-child')
+        await ck(await horizontal_children.count()==3,'horizontalContainerAcceptsThirdChild')
+        surface_box=await parent_surface.bounding_box()
+        child_boxes=[await horizontal_children.nth(i).bounding_box() for i in range(await horizontal_children.count())]
+        contained=bool(surface_box) and all(box and box['x'] >= surface_box['x']-1 and box['x']+box['width'] <= surface_box['x']+surface_box['width']+1 for box in child_boxes)
+        await ck(contained,'horizontalContainerChildrenStayInsideParent')
+        third_container=horizontal_children.nth(2).locator(':scope > .certloom-canvas-container')
+        await third_container.locator(':scope > .certloom-canvas-block__controls > [data-remove]').click()
+        await ck(await parent_surface.locator(':scope > .certloom-email-container-children > .certloom-email-container-child').count()==2,'horizontalContainerRegressionCleanup')
+        await horizontal_parent.click()
         await ck(await page.locator('[data-container-field="direction"]').count()==1,'containerInspector')
+        await ck(await page.locator('[data-certloom-inspector-path]').is_visible() and 'Email' in await page.locator('[data-certloom-inspector-path]').inner_text() and 'Container' in await page.locator('[data-certloom-inspector-path]').inner_text(),'containerInspectorShowsHierarchyPath')
+        await ck(await page.locator('.certloom-container-subsection').count()>=2,'containerAppearanceControlsGrouped')
+        await ck(await page.locator('.certloom-container-background-settings .certloom-container-compact-select').count()==3,'containerBackgroundControlsCompact')
+        compact_heights=[await page.locator('.certloom-container-background-settings select').nth(i).evaluate('n=>parseFloat(getComputedStyle(n).height)') for i in range(await page.locator('.certloom-container-background-settings select').count())]
+        await ck(bool(compact_heights) and max(compact_heights)<=32,'containerBackgroundSelectsStayDense')
         await ck(await page.locator('[data-container-background-image]').count()==1,'containerBackgroundImageControl')
         await ck(await page.locator('[data-container-field="background_opacity"]').count()==1 and await page.locator('[data-container-field="overlay_opacity"]').count()==1,'containerOpacityControls')
         await ck(await page.locator('[data-container-color-picker="overlay_color"]').count()==1,'containerOverlayColorControl')
@@ -114,7 +135,14 @@ async def run():
         child_selector=':scope > .certloom-email-container-surface > .certloom-email-container-children > .certloom-email-container-child > .certloom-canvas-container'
         child_containers=preset_parent.locator(child_selector)
         await ck(await child_containers.count()==2,'containerPresetCreatesNestedChildren')
+        preset_buttons=page.locator('[data-certloom-container-preset]')
+        await ck(await preset_buttons.count()==5 and min([await preset_buttons.nth(i).evaluate('n=>n.getBoundingClientRect().height') for i in range(await preset_buttons.count())])>=48,'containerPresetsHaveUsableHitAreas')
+        await ck(await preset_parent.locator('.certloom-email-container-empty__add').count()==2,'emptyContainersExposeAddBlockActions')
         await child_containers.nth(0).click()
+        await ck(await child_containers.nth(0).locator(':scope > .certloom-email-container-surface > .certloom-email-container-badge').is_visible(),'selectedContainerHasCanvasIdentityBadge')
+        await page.get_by_role('tab',name='Structure',exact=True).click()
+        await ck(await page.locator('.certloom-email-structure-item.is-selected').count()==1 and 'Container' in await page.locator('.certloom-email-structure-item.is-selected').inner_text(),'structureMirrorsNestedContainerSelection')
+        await page.get_by_role('tab',name='Insert',exact=True).click()
         await page.locator('[data-certloom-add-block="image"]').click()
         await ck(await preset_parent.locator('img').count()==0 and await preset_parent.locator('.certloom-email-empty').count()>=1,'imageBlockCanLiveInsideContainerBeforeMediaSelection')
         await ck(await page.locator('[data-certloom-email-inspector] [data-style-field="opacity"]').count()==1,'imageOpacityControl')
