@@ -34,6 +34,6 @@ p2(false!==strpos($b,'one reusable profile-aware mapper')&&false!==strpos($b,'do
 p2(false!==strpos($c,'.certloom-presentation-choices')&&false!==strpos($c,'.certloom-file-intake-options')&&false!==strpos($c,'var(--cl-blue-wash)'),'new Phase 2 surfaces use the Phase 1 token authority');
 p2(false===strpos($c,'.certloom-presentation-choices !important')&&false===strpos($c,'.certloom-file-intake-options !important'),'Phase 2 presentation/file-intake surfaces do not introduce !important overrides');
 p2(false!==strpos($j,'initPhase2Issuance();')&&false!==strpos($j,'phase2DetailsReady')&&false!==strpos($j,'phase2ChooseImage')&&false!==strpos($j,'phase2ChooseDesign'),'Phase 2 interaction initializer is actually booted and explains each appearance readiness state');
-p2(false!==strpos($m,'Review is read-only. Nothing is issued and no credential number is reserved until you confirm the next step.'),'review remains mutation-free and explicit');
+p2(false!==strpos($m,'Review is read-only. Nothing is issued until you confirm the next step.'),'review remains mutation-free and explicit');
 p2(false===strpos($d,'certloom-registry-secondary-actions')&&false!==strpos($n,"__( 'Import / issue from file', 'certloom' )"),'Credentials overview avoids duplicating the file workflow already owned by contextual navigation');
 echo "\n$pass UI Phase 2 source checks, $fail failures\n"; exit($fail?1:0);

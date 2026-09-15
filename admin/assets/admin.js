@@ -1766,6 +1766,13 @@
 			var issuerPolicy = form.querySelector( '[data-certloom-manual-issuer-policy]' );
 			var review = form.querySelector( '[data-certloom-manual-review]' );
 			var message = form.querySelector( '[data-certloom-phase2-compatibility-message]' );
+			var effectiveDate = form.querySelector( 'input[name="valid_from"]' );
+			var summaryRecipient = form.querySelector( '[data-certloom-issue-summary-recipient]' );
+			var summaryProgram = form.querySelector( '[data-certloom-issue-summary-program]' );
+			var summaryTitle = form.querySelector( '[data-certloom-issue-summary-title]' );
+			var summaryEffective = form.querySelector( '[data-certloom-issue-summary-effective]' );
+			var summaryValidity = form.querySelector( '[data-certloom-issue-summary-validity]' );
+			var summaryAppearance = form.querySelector( '[data-certloom-issue-summary-appearance]' );
 			var appearanceTouched = '1' === form.getAttribute( 'data-certloom-presentation-explicit' );
 			var autoDesignSequence = 0;
 			var autoDesignController = null;
@@ -1780,6 +1787,40 @@
 				return ( option.getAttribute( 'data-program-title' ) || option.textContent || '' ).trim();
 			}
 			function selectedProgramOption() { return program && program.value && '0' !== program.value ? program.options[ program.selectedIndex ] : null; }
+			function selectedOptionText( select ) {
+				if ( ! select || ! select.value || '0' === select.value ) { return ''; }
+				var option = select.options[ select.selectedIndex ];
+				return option ? String( option.textContent || '' ).trim() : '';
+			}
+			function recipientSummaryText() {
+				var mode = form.querySelector( 'input[name="recipient_mode"]:checked' );
+				if ( mode && 'new' === mode.value ) { var name = form.querySelector( 'input[name="new_recipient[display_name]"]' ); return name && name.value.trim() ? name.value.trim() : certloomText( 'notSelected', 'Not selected' ); }
+				var select = form.querySelector( '[data-certloom-recipient-existing-select]' );
+				return selectedOptionText( select ) || certloomText( 'notSelected', 'Not selected' );
+			}
+			function syncIssueSummary() {
+				var basis = credentialBasis();
+				var source = titleSource();
+				var selectedExpiry = expiryRadios.find( function ( radio ) { return radio.checked && ! radio.disabled; } );
+				var mode = presentationMode();
+				if ( summaryRecipient ) { summaryRecipient.textContent = recipientSummaryText(); }
+				if ( summaryProgram ) { summaryProgram.textContent = 'independent' === basis ? certloomText( 'independentCredential', 'Independent credential' ) : ( selectedOptionText( program ) || certloomText( 'notSelected', 'Not selected' ) ); }
+				if ( summaryTitle ) { summaryTitle.textContent = ( 'program' === basis && 'program' === source ? programTitle() : ( title && title.value.trim() ? title.value.trim() : '' ) ) || certloomText( 'notSet', 'Not set' ); }
+				if ( summaryEffective ) { summaryEffective.textContent = effectiveDate && effectiveDate.value ? effectiveDate.value : certloomText( 'notSet', 'Not set' ); }
+				if ( summaryValidity ) {
+					var validity = certloomText( 'notSet', 'Not set' );
+					if ( selectedExpiry ) {
+						if ( 'permanent' === selectedExpiry.value ) { validity = certloomText( 'noExpiry', 'No expiry' ); }
+						else if ( 'date' === selectedExpiry.value ) { validity = expiryDate && expiryDate.value ? expiryDate.value : certloomText( 'specificExpiryDate', 'Specific expiry date' ); }
+						else if ( 'program' === selectedExpiry.value ) { validity = programValiditySummary() || certloomText( 'programValidityConfigured', 'Program validity' ); }
+					}
+					summaryValidity.textContent = validity;
+				}
+				if ( summaryAppearance ) {
+					var appearance = 'image' === mode ? certloomText( 'uploadCertificateImage', 'Uploaded image' ) : ( 'design' === mode ? certloomText( 'certloomDesign', 'Certloom design' ) : certloomText( 'detailsOnly', 'Details only' ) );
+					summaryAppearance.textContent = appearance;
+				}
+			}
 			function programValidityAvailable() {
 				var option = selectedProgramOption(); if ( ! option ) { return false; }
 				var value = option.getAttribute( 'data-program-validity-available' );
@@ -1855,6 +1896,7 @@
 				else if ( 'details_only' === mode ) { message.textContent = certloomText( 'phase2DetailsReady', 'Ready to review without certificate artwork.' ); }
 				else if ( 'image' === mode ) { message.textContent = certloomText( 'phase2ImageReady', 'Ready to review with the selected certificate image.' ); }
 				else { message.textContent = certloomText( 'phase2Compatible', 'Ready to review with the selected Certloom design.' ); }
+				syncIssueSummary();
 			}
 			function setCheckedValue( radios, value ) { radios.forEach( function ( radio ) { radio.checked = radio.value === value; } ); }
 			function autoApplyInheritedDesign( programId ) {
@@ -1955,7 +1997,9 @@
 			form.addEventListener( 'change', function ( event ) { if ( event.target && ( event.target.name === 'recipient_id' || event.target.name === 'recipient_mode' ) ) { syncCompatibility(); } } );
 			form.addEventListener( 'input', function ( event ) { if ( event.target && event.target.name === 'new_recipient[display_name]' ) { syncCompatibility(); } } );
 			form.addEventListener( 'certloom:design-readiness', syncCompatibility );
-			syncCredentialBasis( false ); syncIssuerPolicy(); syncPresentation( false ); syncExpiry(); syncCompatibility();
+			form.addEventListener( 'change', syncIssueSummary );
+			form.addEventListener( 'input', syncIssueSummary );
+			syncCredentialBasis( false ); syncIssuerPolicy(); syncPresentation( false ); syncExpiry(); syncCompatibility(); syncIssueSummary();
 			if ( program && program.value && '0' !== program.value && ! appearanceTouched ) { autoApplyInheritedDesign( program.value ); }
 		} );
 	}
@@ -1966,12 +2010,16 @@
 			var host = rowset.querySelector( '[data-certloom-repeating-rows]' );
 			var template = rowset.querySelector( 'template[data-certloom-repeating-template]' );
 			var add = rowset.querySelector( '[data-certloom-repeating-add]' );
+			var countLabel = rowset.querySelector( '[data-certloom-repeating-count]' );
+			var empty = rowset.querySelector( '[data-certloom-repeating-empty]' );
 			if ( ! host || ! template || ! add ) { return; }
 			function currentRows() { return Array.prototype.slice.call( host.querySelectorAll( ':scope > [data-certloom-repeating-row]' ) ); }
 			function syncLimit() {
 				var count = currentRows().length;
 				add.disabled = count >= 50;
 				add.setAttribute( 'aria-disabled', add.disabled ? 'true' : 'false' );
+				if ( countLabel ) { countLabel.textContent = 1 === count ? '1 row' : String( count ) + ' rows'; }
+				if ( empty ) { empty.hidden = count > 0; }
 			}
 			function nextIndex() {
 				var next = parseInt( rowset.getAttribute( 'data-certloom-next-row' ) || '0', 10 );

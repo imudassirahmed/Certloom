@@ -36,9 +36,9 @@ async def run():
         await ck('rgb(1, 193, 116)' in await current.evaluate('(e)=>getComputedStyle(e,"::before").backgroundColor'),'currentStepUsesBrandEmerald')
         await ck(await current.evaluate('(e)=>getComputedStyle(e).boxShadow')=='none','currentStepNotBoxed')
         card=page.locator('.certloom-issue-v2-card')
-        box=await card.bounding_box(); await ck(box and box['width']>1000 and box['width']<=1142,'composeSurfaceUsesCompactTaskWidth')
+        box=await card.bounding_box(); await ck(box and box['width']>1200 and box['width']<=1362,'composeSurfaceUsesAvailableDesktopWidth')
         await ck(abs((box['x']+box['width']/2)-720)<5,'composeSurfaceCentered')
-        fieldset=page.locator('.certloom-issue-v2-form > .certloom-manual-fieldset').first
+        fieldset=page.locator('.certloom-issue-left-column > .certloom-manual-fieldset').first
         pad_top=float((await fieldset.evaluate('(e)=>getComputedStyle(e).paddingTop')).replace('px',''))
         await ck(pad_top<=14.5,'fieldsetVerticalPaddingReduced')
         lookup=page.locator('.certloom-recipient-compose .certloom-context-lookup')
@@ -159,25 +159,32 @@ async def run():
         technical_custom=page.locator('[data-certloom-legacy-custom-fields]')
         await ck(await technical_custom.count()==1 and await technical_custom.evaluate('(e)=>!!e.closest(".certloom-additional-details")'),'technicalCustomFieldsLiveInsideAdditionalDetails')
         await ck(await page.locator('[data-certloom-credential-data] [data-certloom-legacy-custom-fields]').count()==0,'technicalCustomFieldsDoNotCompeteWithPrimaryCredentialDetails')
-        repeating_row=page.locator('.certloom-manual-repeating-row').first
-        row_box=await repeating_row.bounding_box(); details_body_box=await page.locator('.certloom-additional-details-body').bounding_box()
-        await ck(bool(row_box and details_body_box and row_box['x'] >= details_body_box['x']-1 and row_box['x']+row_box['width'] <= details_body_box['x']+details_body_box['width']+1),'subjectsResultsRowStaysInsideAdditionalDetails')
-        remove_box=await repeating_row.locator('[data-certloom-repeating-remove]').bounding_box()
-        await ck(bool(remove_box and row_box and remove_box['x']+remove_box['width'] <= row_box['x']+row_box['width']+1),'subjectsResultsRemoveActionDoesNotOverflow')
+        await ck(await page.locator('[data-certloom-repeating-data]').count()==0,'trainingProfileDoesNotRenderAcademicSubjectsResults')
+        details_body_box=await page.locator('.certloom-additional-details-body').bounding_box()
+        left_box=await page.locator('.certloom-issue-left-column').bounding_box()
+        await ck(bool(details_body_box and left_box and details_body_box['width'] > left_box['width']*.85),'additionalDetailsUsesMainColumnWidth')
         number=page.locator('.certloom-numbering-summary'); number_label=number.locator('strong'); number_value=number.locator('span')
         nlabel=await number_label.bounding_box(); nvalue=await number_value.bounding_box()
         await ck(bool(nlabel and nvalue and nvalue['x'] >= nlabel['x']+nlabel['width']+3),'credentialNumberLabelAndValueHaveVisibleSeparation')
         footer=page.locator('.certloom-issue-actions')
         copy=page.locator('.certloom-review-action-copy')
-        fbox=await footer.bounding_box(); cbox=await copy.bounding_box(); rbox=await review.bounding_box()
-        await ck(bool(fbox and cbox and rbox and cbox['x'] < rbox['x'] and rbox['x']+rbox['width'] <= fbox['x']+fbox['width']+1),'reviewActionCopyAndButtonHaveDeliberateDesktopOrder')
+        rail=page.locator('[data-certloom-issue-context-rail]')
+        summary=page.locator('.certloom-issue-summary')
+        fbox=await footer.bounding_box(); cbox=await copy.bounding_box(); rbox=await review.bounding_box(); railbox=await rail.bounding_box()
+        await ck(bool(fbox and cbox and rbox and rbox['width'] >= fbox['width']*.85),'reviewActionIsFullWidthInContextRail')
+        await ck(await rail.count()==1 and await summary.count()==1,'desktopContextRailCombinesAppearanceSummaryAndReview')
+        railstyle=await rail.evaluate('(e)=>({position:getComputedStyle(e).position,top:getComputedStyle(e).top})')
+        await ck(railstyle['position']=='sticky','contextRailStaysAvailableWhileComposing')
+        await ck(bool(railbox and box and railbox['x'] > box['x']+box['width']*.65),'contextRailUsesPreviouslyEmptyRightSide')
+        await ck('Amina Khan' in (await page.locator('[data-certloom-issue-summary-recipient]').text_content()),'credentialSummaryTracksRecipient')
+        await ck((await page.locator('[data-certloom-issue-summary-program]').text_content()).strip() not in ('', 'Not selected'),'credentialSummaryTracksProgram')
         pfield=page.locator('.certloom-presentation-fieldset')
         if not await page.locator('.certloom-additional-details').get_attribute('open'):
             await page.locator('.certloom-additional-details > summary').click()
         pfbox=await pfield.bounding_box(); formbox=await page.locator('.certloom-issue-v2-form').bounding_box()
         await ck(bool(pfbox and formbox and pfbox['height'] < formbox['height']*.75),'appearancePanelDoesNotStretchWithExpandedDetails')
         pstyle=await pfield.evaluate('(e)=>({position:getComputedStyle(e).position,overflowY:getComputedStyle(e).overflowY,maxHeight:getComputedStyle(e).maxHeight})')
-        await ck(pstyle['position']=='static' and pstyle['overflowY']=='visible' and pstyle['maxHeight']=='none','appearancePanelUsesPageScrollWithoutNestedScrollbar')
+        await ck(pstyle['position']=='static' and pstyle['overflowY']=='visible','appearanceFieldsetItselfHasNoNestedScrollbar')
         technical=page.locator('.certloom-issue-technical-status')
         await ck(await technical.count()==1 and not await technical.get_attribute('open'),'technicalStatusCollapsed')
         await ck(await technical.evaluate('(e)=>e.compareDocumentPosition(document.querySelector(".certloom-issue-v2-card")) & Node.DOCUMENT_POSITION_PRECEDING')!=0,'technicalStatusAfterCompose')
@@ -243,7 +250,7 @@ async def run():
         await ck(await mobile.locator('.certloom-issue-actions .button').evaluate('(e)=>Math.round(e.getBoundingClientRect().width)')>300,'mobilePrimaryActionFullWidth')
         await mobile.close(); await browser.close()
     if failed:
-        print('FAIL  alpha.4.39 Issue Credential browser gate:',', '.join(failed)); print(f'\n{checks-len(failed)} passed, {len(failed)} failures'); return 1
-    print('PASS  alpha.4.39 Issue Credential browser gate: lifecycle-aware Program/Independent issuance, REST-authenticated real-data design preview, normal-page certificate appearance, bounded Subjects/Results layout and Additional-details technical fields')
-    print(f'\n{checks} alpha.4.39 Issue Credential browser checks, 0 failures'); return 0
+        print('FAIL  alpha.4.73 Issue Credential browser gate:',', '.join(failed)); print(f'\n{checks-len(failed)} passed, {len(failed)} failures'); return 1
+    print('PASS  alpha.4.73 Issue Credential browser gate: profile-adaptive Compose layout, sticky context/review rail, compact optional details, and profile-gated academic rowsets')
+    print(f'\n{checks} alpha.4.73 Issue Credential browser checks, 0 failures'); return 0
 raise SystemExit(asyncio.run(run()))

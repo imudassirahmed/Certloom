@@ -13,8 +13,10 @@ function row_markup( $rowset, $index, array $fields, array $values = array() ) {
 	echo '</div><button type="button" class="button-link-delete certloom-manual-repeating-remove" data-certloom-repeating-remove>Remove</button></div>';
 }
 function rowset_markup( $rowset, array $fields, $label ) {
-	echo '<section class="certloom-manual-rowset" data-certloom-repeating-rowset="' . cl_h( $rowset ) . '" data-certloom-next-row="1"><div class="certloom-manual-rowset-head"><div><h4>' . cl_h( $label ) . '</h4><p>Immutable issued rows.</p></div><button type="button" class="button" data-certloom-repeating-add>Add row</button></div><div class="certloom-manual-rowset-rows" data-certloom-repeating-rows>';
-	row_markup( $rowset, '0', $fields, 'results' === $rowset ? array( 'subject' => 'Mathematics', 'score' => '88', 'grade' => 'A' ) : array() );
+	$has_initial = 'results' === $rowset;
+	$count = $has_initial ? 1 : 0;
+	echo '<section class="certloom-manual-rowset" data-certloom-repeating-rowset="' . cl_h( $rowset ) . '" data-certloom-next-row="' . $count . '"><div class="certloom-manual-rowset-head"><div><div class="certloom-manual-rowset-title"><h4>' . cl_h( $label ) . '</h4><span data-certloom-repeating-count>' . $count . ( 1 === $count ? ' row' : ' rows' ) . '</span></div><p>Immutable issued rows.</p></div><button type="button" class="button" data-certloom-repeating-add>Add row</button></div><p class="certloom-manual-rowset-empty" data-certloom-repeating-empty' . ( $has_initial ? ' hidden' : '' ) . '>No rows added.</p><div class="certloom-manual-rowset-rows" data-certloom-repeating-rows>';
+	if ( $has_initial ) { row_markup( $rowset, '0', $fields, array( 'subject' => 'Mathematics', 'score' => '88', 'grade' => 'A' ) ); }
 	echo '</div><template data-certloom-repeating-template>';
 	row_markup( $rowset, '__INDEX__', $fields );
 	echo '</template><small class="certloom-manual-rowset-limit">Maximum 50 non-empty rows. Empty rows are ignored.</small></section>';

@@ -38,4 +38,11 @@ i427(false!==strpos($j,"if ( '_wpnonce' === key || '_wp_http_referer' === key ) 
 i427(false!==strpos($a,"'previewSessionExpired'")&&false!==strpos($j,"'rest_cookie_invalid_nonce' === payload.code"),'expired REST preview sessions receive actionable refresh copy instead of raw WordPress cookie-check text');
 i427(strpos($m,'data-certloom-legacy-custom-fields')>strpos($m,'data-certloom-additional-details')&&strpos($m,'data-certloom-legacy-custom-fields')<strpos($m,'render_repeating_data_editor'),'Technical custom fields live below Additional details and before the repeating Subjects/results editor');
 i427(false!==strpos($c,'/* alpha.4.34 — Manual Issuance screenshot corrections.')&&false!==strpos($c,'grid-template-columns: repeat(4, minmax(0, 1fr));')&&false!==strpos($c,'.certloom-issue-v2-form .certloom-numbering-summary'),'screenshot correction layer bounds repeating rows and restores deliberate Credential-number spacing');
-echo "\n$pass alpha.4.35 Issue Credential source checks, $fail failures\n"; exit($fail?1:0);
+
+i427(false!==strpos($m,'certloom-issue-context-rail')&&false!==strpos($m,'certloom-issue-summary')&&false!==strpos($m,'data-certloom-issue-summary-recipient'),'alpha.4.73 uses the formerly empty right side for a live appearance/summary/review rail');
+i427(strpos($m,'data-certloom-additional-details')<strpos($m,'certloom-issue-context-rail'),'Additional details now stays in the wide main compose column before the context rail');
+i427(false!==strpos($c,'/* alpha.4.73 — Profile-adaptive Compose layout.')&&false!==strpos($c,'grid-template-areas: "main rail"')&&false!==strpos($c,'position: sticky;'),'alpha.4.73 establishes a sticky desktop context rail without changing issuance authority');
+i427(false!==strpos($j,'syncIssueSummary')&&false!==strpos($j,'data-certloom-issue-summary-validity'),'live credential summary follows recipient, Program, title, validity and appearance changes');
+i427(false!==strpos($m,'data-certloom-repeating-empty')&&false===strpos($m,'if ( ! $rows ) { $rows = array( array() ); }'),'academic Subjects/results no longer render a permanent empty row editor');
+
+echo "\n$pass alpha.4.73 Issue Credential source checks, $fail failures\n"; exit($fail?1:0);

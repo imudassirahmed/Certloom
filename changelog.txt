@@ -1,3 +1,10 @@
+= 1.7.0-alpha.4.73 =
+* Manual Issuance Compose: use the full desktop workspace with a wide primary form column and one sticky context rail containing Certificate appearance, a live credential summary and the Review action.
+* Progressive disclosure: move Additional details into the main working column, keep optional context collapsed by default, and stop academic Subjects/Results from rendering a permanent empty row editor; rows appear only after Add row and only for profiles that allow them.
+* Density: compact recipient/program/title/validity/appearance surfaces and reduce persistent helper copy while preserving field authority, validation and profile-driven terminology.
+* Review accessibility: keep readiness and Review credential available in the context rail while the main form scrolls, with live recipient, Program/profile term, title, effective date, validity, appearance and credential-number context.
+* Regression coverage: expand Issue Credential source/Chromium gates for the sticky context rail, main-column Additional details, profile-gated academic rows and on-demand repeating editors without changing immutable issuance authority.
+
 = 1.7.0-alpha.4.72 =
 * Profile-driven issuance: make Manual Issue Credential derive its visible relationship terminology, contextual copy and optional sections from the active Certloom usage profile while preserving canonical Program/Batch/Issuer/Signer storage and immutable issuance authority.
 * Results relevance: show the generic Grade/result helper only for profiles that use it by default, render transcript-style Subjects & Results only for School / Results, and reject stale/manipulated repeating rowsets for profiles where they are not allowed; explicit Program field contracts may still opt in a grade field.
