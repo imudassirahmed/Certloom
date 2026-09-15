@@ -749,6 +749,8 @@
 			var independentAdd = form.querySelector( '[data-certloom-independent-detail-add]' );
 			var independentSuggestions = form.querySelector( '[data-certloom-independent-detail-suggestions]' );
 			var detailsHelp = form.querySelector( '[data-certloom-credential-details-help]' );
+			var issuanceProfile = certloomL10n.usageIssuance && 'object' === typeof certloomL10n.usageIssuance ? certloomL10n.usageIssuance : {};
+			var profileGradeDefault = !! issuanceProfile.grade_default;
 			var basisRadios = Array.prototype.slice.call( form.querySelectorAll( 'input[name="credential_basis"]' ) );
 			var values = {};
 			var independentCatalog = [];
@@ -914,13 +916,13 @@
 				// Independent issuance. Program field-contract inputs remain authoritative
 				// when the same key is already scoped by the selected Program/Batch.
 				if ( independent ) { independent.hidden = false; }
-				if ( detailsHelp ) { detailsHelp.textContent = enabled ? certloomText( 'credentialDetailsIndependent', 'Add the credential-specific facts you want to store with this independent credential.' ) : certloomText( 'credentialDetailsProgram', 'Program and Batch field rules appear here. Add one-off credential details below when this issuance or its design needs them.' ); }
+				if ( detailsHelp ) { detailsHelp.textContent = enabled ? String( issuanceProfile.credential_details_independent || certloomText( 'credentialDetailsIndependent', 'Add the credential-specific facts you want to store with this independent credential.' ) ) : String( issuanceProfile.credential_details_program || certloomText( 'credentialDetailsProgram', 'Program and Batch field rules appear here. Add one-off credential details below when this issuance or its design needs them.' ) ); }
 				if ( enabled ) {
 					setLegacyEnabled( false ); resetRecipientRequirements();
 					if ( container ) { container.innerHTML = ''; }
 					if ( status ) { status.textContent = certloomText( 'credentialDetailsIndependent', 'Add the credential-specific facts you want to store with this independent credential.' ); }
 					var gradeInput = form.querySelector( 'input[name="grade"]' ); var gradeWrap = form.querySelector( '[data-certloom-grade-field]' );
-					if ( gradeWrap ) { gradeWrap.hidden = false; } if ( gradeInput ) { gradeInput.disabled = false; gradeInput.required = false; }
+					if ( gradeWrap ) { gradeWrap.hidden = ! profileGradeDefault; } if ( gradeInput ) { gradeInput.disabled = ! profileGradeDefault; gradeInput.required = false; }
 				}
 				renderIndependent();
 			}
@@ -936,7 +938,7 @@
 				var gradeWrap = form.querySelector( '[data-certloom-grade-field]' );
 				if ( gradeInput ) { gradeInput.required = false; gradeInput.removeAttribute( 'data-certloom-field-contract-required' ); gradeInput.disabled = false; }
 				var gradeField = fields.filter( function ( field ) { return 'grade' === field.key; } )[ 0 ];
-				var gradeAvailable = ! payload.configured || !! gradeField;
+				var gradeAvailable = !! gradeField || ( profileGradeDefault && ! payload.configured );
 				if ( gradeWrap ) { gradeWrap.hidden = ! gradeAvailable; }
 				if ( gradeInput ) { gradeInput.disabled = ! gradeAvailable; }
 				if ( gradeInput && gradeField && gradeField.required ) { gradeInput.required = true; gradeInput.setAttribute( 'data-certloom-field-contract-required', '1' ); }

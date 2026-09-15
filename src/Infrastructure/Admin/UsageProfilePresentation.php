@@ -70,9 +70,118 @@ final class UsageProfilePresentation {
 					'batch'   => array( 'singular' => __( 'Session / semester / cohort', 'certloom' ), 'plural' => __( 'Sessions / semesters / cohorts', 'certloom' ), 'search' => __( 'Search sessions, semesters or cohorts…', 'certloom' ), 'choose' => __( 'Choose session, semester or cohort…', 'certloom' ) ),
 					'signer'  => array( 'singular' => __( 'Principal / registrar / controller / dean', 'certloom' ), 'plural' => __( 'Principals / registrars / controllers / deans', 'certloom' ), 'search' => __( 'Search principals, registrars, controllers or deans…', 'certloom' ), 'choose' => __( 'Choose principal, registrar, controller or dean…', 'certloom' ) ),
 				);
+			case 'corporate_compliance':
+				return array(
+					'issuer'  => array( 'singular' => __( 'Organization / employer', 'certloom' ), 'plural' => __( 'Organizations / employers', 'certloom' ), 'search' => __( 'Search organizations or employers…', 'certloom' ), 'choose' => __( 'Choose organization or employer…', 'certloom' ) ),
+					'program' => array( 'singular' => __( 'Compliance / competency pathway', 'certloom' ), 'plural' => __( 'Compliance / competency pathways', 'certloom' ), 'search' => __( 'Search compliance or competency pathways…', 'certloom' ), 'choose' => __( 'Choose compliance or competency pathway…', 'certloom' ) ),
+					'batch'   => array( 'singular' => __( 'Campaign / training cycle', 'certloom' ), 'plural' => __( 'Campaigns / training cycles', 'certloom' ), 'search' => __( 'Search campaigns or training cycles…', 'certloom' ), 'choose' => __( 'Choose campaign or training cycle…', 'certloom' ) ),
+					'signer'  => array( 'singular' => __( 'Authorized compliance officer', 'certloom' ), 'plural' => __( 'Authorized compliance officers', 'certloom' ), 'search' => __( 'Search authorized compliance officers…', 'certloom' ), 'choose' => __( 'Choose authorized compliance officer…', 'certloom' ) ),
+				);
+			case 'membership_association':
+				return array(
+					'issuer'  => array( 'singular' => __( 'Association / professional body', 'certloom' ), 'plural' => __( 'Associations / professional bodies', 'certloom' ), 'search' => __( 'Search associations or professional bodies…', 'certloom' ), 'choose' => __( 'Choose association or professional body…', 'certloom' ) ),
+					'program' => array( 'singular' => __( 'Membership / fellowship / registration category', 'certloom' ), 'plural' => __( 'Membership / fellowship / registration categories', 'certloom' ), 'search' => __( 'Search membership, fellowship or registration categories…', 'certloom' ), 'choose' => __( 'Choose membership, fellowship or registration category…', 'certloom' ) ),
+					'batch'   => array( 'singular' => __( 'Intake / renewal cycle', 'certloom' ), 'plural' => __( 'Intakes / renewal cycles', 'certloom' ), 'search' => __( 'Search intakes or renewal cycles…', 'certloom' ), 'choose' => __( 'Choose intake or renewal cycle…', 'certloom' ) ),
+					'signer'  => array( 'singular' => __( 'Authorized membership officer / registrar', 'certloom' ), 'plural' => __( 'Authorized membership officers / registrars', 'certloom' ), 'search' => __( 'Search authorized membership officers or registrars…', 'certloom' ), 'choose' => __( 'Choose authorized membership officer or registrar…', 'certloom' ) ),
+				);
+			case 'events_awards':
+				return array(
+					'issuer'  => array( 'singular' => __( 'Organizer / awarding body', 'certloom' ), 'plural' => __( 'Organizers / awarding bodies', 'certloom' ), 'search' => __( 'Search organizers or awarding bodies…', 'certloom' ), 'choose' => __( 'Choose organizer or awarding body…', 'certloom' ) ),
+					'program' => array( 'singular' => __( 'Event / award / recognition category', 'certloom' ), 'plural' => __( 'Events / awards / recognition categories', 'certloom' ), 'search' => __( 'Search events, awards or recognition categories…', 'certloom' ), 'choose' => __( 'Choose event, award or recognition category…', 'certloom' ) ),
+					'batch'   => array( 'singular' => __( 'Edition / round', 'certloom' ), 'plural' => __( 'Editions / rounds', 'certloom' ), 'search' => __( 'Search editions or rounds…', 'certloom' ), 'choose' => __( 'Choose edition or round…', 'certloom' ) ),
+					'signer'  => array( 'singular' => __( 'Authorized award authority', 'certloom' ), 'plural' => __( 'Authorized award authorities', 'certloom' ), 'search' => __( 'Search authorized award authorities…', 'certloom' ), 'choose' => __( 'Choose authorized award authority…', 'certloom' ) ),
+				);
+			case 'product_inspection':
+				return array(
+					'issuer'  => array( 'singular' => __( 'Inspection / certification body', 'certloom' ), 'plural' => __( 'Inspection / certification bodies', 'certloom' ), 'search' => __( 'Search inspection or certification bodies…', 'certloom' ), 'choose' => __( 'Choose inspection or certification body…', 'certloom' ) ),
+					'program' => array( 'singular' => __( 'Inspection / conformity / product scheme', 'certloom' ), 'plural' => __( 'Inspection / conformity / product schemes', 'certloom' ), 'search' => __( 'Search inspection, conformity or product schemes…', 'certloom' ), 'choose' => __( 'Choose inspection, conformity or product scheme…', 'certloom' ) ),
+					'batch'   => array( 'singular' => __( 'Lot / testing batch', 'certloom' ), 'plural' => __( 'Lots / testing batches', 'certloom' ), 'search' => __( 'Search lots or testing batches…', 'certloom' ), 'choose' => __( 'Choose lot or testing batch…', 'certloom' ) ),
+					'signer'  => array( 'singular' => __( 'Authorized technical authority / inspector', 'certloom' ), 'plural' => __( 'Authorized technical authorities / inspectors', 'certloom' ), 'search' => __( 'Search authorized technical authorities or inspectors…', 'certloom' ), 'choose' => __( 'Choose authorized technical authority or inspector…', 'certloom' ) ),
+				);
 			default:
 				return $default;
 		}
+	}
+
+
+	/**
+	 * Profile-driven Manual Issuance presentation contract.
+	 *
+	 * This remains a UX contract only: storage and immutable credential authority
+	 * stay canonical. A selected Program may add explicitly configured Credential
+	 * fields, while profile-inappropriate generic helpers stay out of the form.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public static function issuance_contract( $profile = '' ) {
+		$engine = new PurposePresetEngine();
+		$profile = '' === $profile ? self::active_profile() : $engine->normalize_profile( $profile );
+		if ( ! isset( $engine->profiles()[ $profile ] ) ) { $profile = 'general_other'; }
+		$terms = self::terms( $profile );
+		$program = (string) ( $terms['program']['singular'] ?? __( 'Program', 'certloom' ) );
+		$issuer = (string) ( $terms['issuer']['singular'] ?? __( 'Issuer', 'certloom' ) );
+		$batch = (string) ( $terms['batch']['singular'] ?? __( 'Batch', 'certloom' ) );
+		$signer = (string) ( $terms['signer']['singular'] ?? __( 'Signer', 'certloom' ) );
+		$contract = array(
+			'profile' => $profile,
+			'grade_default' => false,
+			'repeating_rowsets' => array(),
+			'basis_prompt' => __( 'What should this credential be based on?', 'certloom' ),
+			'context_title' => __( 'Additional details', 'certloom' ),
+			'context_help' => __( 'Optional relationship and profile fields', 'certloom' ),
+			'credential_details_program' => sprintf( /* translators: %s: profile-aware Program term. */ __( '%s field rules appear here. Add one-off credential details below when this issuance or its design needs them.', 'certloom' ), $program ),
+			'credential_details_independent' => __( 'Add the credential-specific facts you want to store with this independent credential.', 'certloom' ),
+			'issuer' => $issuer,
+			'program' => $program,
+			'batch' => $batch,
+			'signer' => $signer,
+		);
+		switch ( $profile ) {
+			case 'training_lms':
+				$contract['grade_default'] = true;
+				$contract['basis_prompt'] = __( 'Which course, certification or learning pathway is this credential based on?', 'certloom' );
+				$contract['context_title'] = __( 'Training context', 'certloom' );
+				$contract['context_help'] = __( 'Optional provider, cohort/session and training-authority context', 'certloom' );
+				break;
+			case 'iso_management':
+				$contract['basis_prompt'] = __( 'Which scheme, standard or service line is this credential based on?', 'certloom' );
+				$contract['context_title'] = __( 'Certification context', 'certloom' );
+				$contract['context_help'] = __( 'Certification body, audit/issuance cycle and authorized authority', 'certloom' );
+				break;
+			case 'government_licensing':
+				$contract['basis_prompt'] = __( 'Which license, permit or registration scheme is this credential based on?', 'certloom' );
+				$contract['context_title'] = __( 'Licensing context', 'certloom' );
+				$contract['context_help'] = __( 'Regulator, application/issuance cycle and authorized officer context', 'certloom' );
+				break;
+			case 'school_results':
+				$contract['grade_default'] = true;
+				$contract['repeating_rowsets'] = array( 'results', 'subjects' );
+				$contract['basis_prompt'] = __( 'Which class, course, exam or qualification is this credential based on?', 'certloom' );
+				$contract['context_title'] = __( 'Academic context', 'certloom' );
+				$contract['context_help'] = __( 'Institution, session/semester/cohort, academic authority and result rows', 'certloom' );
+				break;
+			case 'corporate_compliance':
+				$contract['basis_prompt'] = __( 'Which compliance, competency or internal training program is this credential based on?', 'certloom' );
+				$contract['context_title'] = __( 'Compliance context', 'certloom' );
+				$contract['context_help'] = __( 'Organization, campaign/session and authorized compliance context', 'certloom' );
+				break;
+			case 'membership_association':
+				$contract['basis_prompt'] = __( 'Which membership, fellowship or registration category is this credential based on?', 'certloom' );
+				$contract['context_title'] = __( 'Membership context', 'certloom' );
+				$contract['context_help'] = __( 'Association, intake/renewal cycle and authorized officer context', 'certloom' );
+				break;
+			case 'events_awards':
+				$contract['basis_prompt'] = __( 'Which event, award program or recognition category is this credential based on?', 'certloom' );
+				$contract['context_title'] = __( 'Event / award context', 'certloom' );
+				$contract['context_help'] = __( 'Organizer, edition/round and authorized award authority', 'certloom' );
+				break;
+			case 'product_inspection':
+				$contract['basis_prompt'] = __( 'Which inspection, conformity or product-certification scheme is this credential based on?', 'certloom' );
+				$contract['context_title'] = __( 'Inspection context', 'certloom' );
+				$contract['context_help'] = __( 'Inspection body, lot/testing batch and authorized technical authority', 'certloom' );
+				break;
+		}
+		return $contract;
 	}
 
 	/** @return string */

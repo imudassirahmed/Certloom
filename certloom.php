@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Certloom – Certificate Verification
  * Description: Self-hosted credential issuance, verification and lifecycle management for WordPress.
- * Version: 1.7.0-alpha.4.71
+ * Version: 1.7.0-alpha.4.72
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.7.0-alpha.4.71' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.7.0-alpha.4.72' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );

@@ -1,3 +1,10 @@
+= 1.7.0-alpha.4.72 =
+* Profile-driven issuance: make Manual Issue Credential derive its visible relationship terminology, contextual copy and optional sections from the active Certloom usage profile while preserving canonical Program/Batch/Issuer/Signer storage and immutable issuance authority.
+* Results relevance: show the generic Grade/result helper only for profiles that use it by default, render transcript-style Subjects & Results only for School / Results, and reject stale/manipulated repeating rowsets for profiles where they are not allowed; explicit Program field contracts may still opt in a grade field.
+* Profile terminology: extend relationship vocabulary across Training/LMS, ISO/Management Systems, Government/Licensing, School/Results, Corporate/Compliance, Membership/Association, Events/Awards and Product/Inspection, including Compose, quick-create dialogs, lookup placeholders, validation/readiness copy and Review.
+* ISO / Management Systems: remove academic result UI by default and focus issuance wording on schemes/standards/service lines, certification bodies, audit/issuance cycles and authorized certification authorities.
+* Regression coverage: add a dedicated profile-driven issuance contract gate and retain the existing Manual Issuance, profile-aware issuance and Issue Credential browser authorities.
+
 = 1.7.0-alpha.4.71 =
 * Email Studio: change the product-default credential CTA to the canonical Certloom logo blue #1369FC with white #FFFFFF button text in the canvas, Preview and compiled outgoing email.
 * Compatibility: migrate only the exact former Certloom default pairs (forest-green/white and emerald/navy) to blue/white while preserving deliberate custom button colors.
