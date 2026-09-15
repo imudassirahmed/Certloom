@@ -1,3 +1,11 @@
+= 1.7.0-alpha.4.68 =
+* Shared fonts: unify Certificate Studio and Email Studio on the expanded local/system DesignerFontCatalog, including WordPress/theme-local families and permission-based Local Font Access discovery without remote font downloads or automatic uploads.
+* Email Studio: replace author-facing fixed Columns with bounded nested Containers, horizontal/vertical direction, layout presets, child basis, gaps, alignment, padding, borders/radius, mobile stacking, nested Structure and drag/move between Containers; legacy Columns normalize safely and outgoing layouts compile to email-safe nested tables.
+* Email Studio: add page/content/Container background media with fallback colors, sizing/position/repeat, background-color opacity and image overlay color/opacity; deepen typography, Button, Image and Divider controls while preserving Custom HTML, attachments, full Data-token browsing and the fitted-canvas/independent-rail viewport contract.
+* Certificate Studio: add visual color-opacity sliders to alpha-capable picker/hex controls while preserving canonical #RRGGBBAA values and exact renderer/font authority.
+* Gamma-02: retain the qualified Studio shell/save/selection/Layers hardening and record the previously observed lower viewport strip as an explicit deferred staging exception rather than claiming it fixed.
+* Regression coverage: expand source/browser gates for nested Containers, cross-container movement, recursive portable media, advanced opacity/depth controls, Certificate color-alpha synchronization, shared local fonts and existing delivery/studio authority boundaries.
+
 = 1.7.0-alpha.4.67 =
 * Email Studio: derive the Data browser from the canonical merge-token catalog, group/search Recipient, Credential, Program/Batch, Issuer/Signer, Verification and configured custom fields, and resolve delivery primarily from immutable issued snapshot merge values.
 * Email Studio: replace the redundant Template name field with inline document renaming and compact the Purpose/Subject/Preheader row without changing the fitted-canvas/independent-rail viewport contract.

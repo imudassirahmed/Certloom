@@ -70,9 +70,9 @@ ed_same(EmailDesignPurposes::all(),array_values(array_filter(EmailDesignPurposes
 $styled=$compiler->compile(array(
 	array('type'=>'heading','text'=>'Styled heading','level'=>1,'style'=>array('font_family'=>'Georgia, Times New Roman, serif','font_size'=>38,'font_weight'=>800,'italic'=>1,'underline'=>1,'color'=>'#123456','align'=>'center','line_height'=>1.4)),
 	array('type'=>'text','html'=>'<p><strong>Rich</strong> <em>message</em></p>','style'=>array('font_size'=>18,'font_weight'=>500,'color'=>'#334455','align'=>'right','line_height'=>1.8)),
-	array('type'=>'button','text'=>'Open','url'=>'{{verification_url}}','align'=>'center','style'=>array('font_size'=>17,'font_weight'=>600,'italic'=>1,'color'=>'#ffffff','background_color'=>'#2255aa','border_radius'=>18,'padding_x'=>28,'padding_y'=>14)),
-	array('type'=>'image','url'=>'https://example.test/badge.png','alt'=>'Badge','style'=>array('align'=>'center','width'=>72,'border_radius'=>14)),
-	array('type'=>'divider','style'=>array('color'=>'#778899','width'=>68,'thickness'=>3,'margin_y'=>18)),
+	array('type'=>'button','text'=>'Open','url'=>'{{verification_url}}','align'=>'center','style'=>array('font_size'=>17,'font_weight'=>600,'italic'=>1,'color'=>'#ffffff','background_color'=>'#2255aa','background_opacity'=>65,'border_radius'=>18,'padding_x'=>28,'padding_y'=>14,'margin_y'=>10,'border_color'=>'#112233','border_width'=>2,'border_style'=>'dashed','full_width'=>1,'letter_spacing'=>1.5,'text_transform'=>'uppercase')),
+	array('type'=>'image','url'=>'https://example.test/badge.png','alt'=>'Badge','style'=>array('align'=>'center','width'=>72,'border_radius'=>14,'opacity'=>45,'border_color'=>'#445566','border_width'=>2,'border_style'=>'dotted')),
+	array('type'=>'divider','style'=>array('color'=>'#778899','width'=>68,'thickness'=>3,'margin_y'=>18,'line_style'=>'dashed','align'=>'right')),
 ), EmailDesignCompiler::default_theme());
 ed_same('#123456',$styled['blocks'][0]['style']['color'],'heading block color survives canonical sanitization');
 ed_same(800,$styled['blocks'][0]['style']['font_weight'],'heading font weight survives canonical sanitization');
@@ -82,12 +82,22 @@ ed_has($styled['html_body'],'font-size:38px','compiled heading applies block fon
 ed_has($styled['html_body'],'font-style:italic','compiled styled blocks support italic');
 ed_has($styled['html_body'],'text-decoration:underline','compiled styled blocks support underline');
 ed_has($styled['html_body'],'background:#2255aa','compiled button applies block background color');
+ed_same(65,$styled['blocks'][2]['style']['background_opacity'],'button background opacity survives canonical sanitization');
+ed_same(true,$styled['blocks'][2]['style']['full_width'],'button full-width mode survives canonical sanitization');
+ed_same('uppercase',$styled['blocks'][2]['style']['text_transform'],'button text transform survives canonical sanitization');
+ed_has($styled['html_body'],'background-color:rgba(','compiled button applies background opacity without fading foreground content');
+ed_has($styled['html_body'],'border:2px dashed #112233','compiled button applies advanced border');
+ed_has($styled['html_body'],'width:100%;box-sizing:border-box','compiled full-width button remains bounded');
 ed_has($styled['html_body'],'<strong>Rich</strong>','compiled text keeps safe rich-text markup');
 ed_same(72,$styled['blocks'][3]['style']['width'],'image width survives canonical sanitization');
 ed_same(14,$styled['blocks'][3]['style']['border_radius'],'image radius survives canonical sanitization');
+ed_same(45,$styled['blocks'][3]['style']['opacity'],'image opacity survives canonical sanitization');
+ed_has($styled['html_body'],'opacity:0.45','compiled image applies bounded opacity');
+ed_has($styled['html_body'],'border:2px dotted #445566','compiled image applies advanced border');
 ed_same('#778899',$styled['blocks'][4]['style']['color'],'divider color survives canonical sanitization');
 ed_has($styled['html_body'],'width:72%','compiled image applies bounded width');
-ed_has($styled['html_body'],'border-top:3px solid #778899','compiled divider applies visual style');
+ed_has($styled['html_body'],'border-top:3px dashed #778899','compiled divider applies visual style');
+ed_has($styled['html_body'],'margin:18px auto 0','compiled divider supports right alignment');
 
 $advanced=$compiler->compile(array(
 	array('type'=>'html','html'=>'<table role="presentation"><tr><td style="padding:8px">{{custom:address}}</td></tr></table><script>alert(1)</script>'),
@@ -96,16 +106,50 @@ $advanced=$compiler->compile(array(
 		array('kind'=>'text','html'=>'<p><strong>Main text</strong></p>'),
 		array('kind'=>'html','html'=>'<p style="text-align:right">Custom HTML</p>'),
 	)),
-),array_merge(EmailDesignCompiler::default_theme(),array('background_image'=>'https://example.test/page.jpg','content_background_image'=>'https://example.test/card.jpg','background_size'=>'cover','content_background_size'=>'contain')));
+),array_merge(EmailDesignCompiler::default_theme(),array('background_image'=>'https://example.test/page.jpg','content_background_image'=>'https://example.test/card.jpg','background_size'=>'cover','content_background_size'=>'contain','background_opacity'=>80,'background_overlay_color'=>'#102030','background_overlay_opacity'=>35,'content_background_opacity'=>90,'content_background_overlay_color'=>'#405060','content_background_overlay_opacity'=>25)));
 ed_same('html',$advanced['blocks'][0]['type'],'Custom HTML survives canonical block normalization');
 ed_lacks($advanced['html_body'],'<script','Custom HTML strips executable script content');
-ed_same(3,$advanced['blocks'][1]['count'],'Columns supports a three-column composition');
-ed_same('25-50-25',$advanced['blocks'][1]['ratio'],'Columns preserves a supported three-column ratio');
-ed_same('image',$advanced['blocks'][1]['columns'][0]['kind'],'Columns can carry image content beside text');
-ed_same('html',$advanced['blocks'][1]['columns'][2]['kind'],'Columns can carry Custom HTML beside visual content');
-ed_has($advanced['html_body'],'width="25%"','compiled three-column email uses the selected proportion');
+ed_same('container',$advanced['blocks'][1]['type'],'Legacy Columns normalize into the generic Container model');
+ed_same('horizontal',$advanced['blocks'][1]['direction'],'Legacy multi-column layout becomes a horizontal Container');
+ed_same(3,count($advanced['blocks'][1]['children']),'Legacy three-column composition keeps three child Containers');
+ed_same(25,$advanced['blocks'][1]['children'][0]['basis'],'Legacy 25/50/25 ratio migrates into child width/basis');
+ed_same('image',$advanced['blocks'][1]['children'][0]['children'][0]['type'],'Legacy image column migrates into a normal Image block');
+ed_same('html',$advanced['blocks'][1]['children'][2]['children'][0]['type'],'Legacy HTML column migrates into a normal Custom HTML block');
+ed_has($advanced['html_body'],'width="25%"','compiled migrated Container uses the selected child proportion');
 ed_has($advanced['html_body'],'background="https://example.test/page.jpg"','page background image compiles with an email fallback attribute');
 ed_has($advanced['html_body'],'background="https://example.test/card.jpg"','content background image compiles with an email fallback attribute');
+ed_has($advanced['html_body'],'linear-gradient(rgba(','page/content overlay compiles independently from foreground content');
+ed_same(35,$advanced['theme']['background_overlay_opacity'],'page overlay opacity survives canonical theme normalization');
+ed_same(25,$advanced['theme']['content_background_overlay_opacity'],'content overlay opacity survives canonical theme normalization');
+
+$containers=$compiler->compile(array(
+	array('type'=>'container','direction'=>'horizontal','gap'=>12,'stack_mobile'=>1,'background_color'=>'#f7f9fb','background_opacity'=>72,'background_image'=>'https://example.test/hero.jpg','overlay_color'=>'#112233','overlay_opacity'=>28,'background_size'=>'cover','background_position'=>'center','background_repeat'=>'no-repeat','border_color'=>'#ccddee','border_width'=>1,'border_style'=>'solid','border_radius'=>12,'padding'=>array('top'=>16,'right'=>18,'bottom'=>16,'left'=>18),'children'=>array(
+		array('type'=>'container','direction'=>'vertical','basis'=>40,'children'=>array(array('type'=>'image','url'=>'https://example.test/photo.png','alt'=>'Photo'))),
+		array('type'=>'container','direction'=>'vertical','basis'=>60,'children'=>array(array('type'=>'heading','text'=>'Nested title','level'=>2),array('type'=>'text','html'=>'<p>Nested body</p>'))),
+	)),
+),EmailDesignCompiler::default_theme());
+ed_same('container',$containers['blocks'][0]['type'],'generic Container survives canonical normalization');
+ed_same(2,count($containers['blocks'][0]['children']),'generic Container supports nested child Containers');
+ed_same(40,$containers['blocks'][0]['children'][0]['basis'],'child basis survives canonical normalization');
+ed_same('https://example.test/hero.jpg',$containers['blocks'][0]['background_image'],'Container background image survives canonical normalization');
+ed_same(72,$containers['blocks'][0]['background_opacity'],'Container background color opacity survives canonical normalization');
+ed_same(28,$containers['blocks'][0]['overlay_opacity'],'Container image overlay opacity survives canonical normalization');
+ed_has($containers['html_body'],'background="https://example.test/hero.jpg"','Container background image compiles with an email fallback attribute');
+ed_has($containers['html_body'],'background-image:linear-gradient(rgba(','Container image overlay compiles without whole-container opacity');
+ed_has($containers['html_body'],'certloom-email-stack-cell','horizontal Container emits bounded mobile-stack table cells');
+ed_has($containers['html_body'],'<table role="presentation"','Container composition compiles to email-safe presentation tables');
+
+$deep=array('type'=>'text','html'=>'<p>Too deep</p>');
+for($i=0;$i<7;$i++){$deep=array('type'=>'container','direction'=>'vertical','children'=>array($deep));}
+$bounded_depth=$compiler->sanitize_blocks(array($deep));
+$cursor=$bounded_depth[0]??array();$container_levels=0;
+while(is_array($cursor)&&'container'===($cursor['type']??'')){$container_levels++;$cursor=$cursor['children'][0]??null;}
+ed_same(EmailDesignCompiler::MAX_CONTAINER_DEPTH+1,$container_levels,'Container nesting is bounded consistently from top-level depth zero');
+ed_ok(null===$cursor,'content beyond the supported Container nesting depth is discarded fail-closed');
+
+$many_children=array();for($i=0;$i<100;$i++){$many_children[]=array('type'=>'divider');}
+$bounded_count=$compiler->sanitize_blocks(array(array('type'=>'container','children'=>$many_children)));
+ed_same(EmailDesignCompiler::MAX_BLOCKS-1,count($bounded_count[0]['children']??array()),'Container reserves its own block slot before recursively enforcing the global block limit');
 
 $sample=$presets[0];$sample['id']='private-id';$sample['source']='customer';$sample['active']=1;$sample['assignment']=array('scope_type'=>'program','scope_id'=>9);
 $package=(new EmailDesignPackage($compiler))->build($sample,'1.6.99-qa.23');
@@ -123,11 +167,11 @@ ed_same($sample['purpose'],$decoded['purpose'],'purpose survives package round-t
 ed_same($sample['subject'],$decoded['subject'],'subject survives package round-trip');
 $styled_design=$sample;
 $styled_design['blocks']=array(array('type'=>'heading','text'=>'Portable styled heading','level'=>1,'style'=>array('font_size'=>36,'font_weight'=>800,'color'=>'#234567','align'=>'center')));
-$styled_package=(new EmailDesignPackage($compiler))->build($styled_design,'1.7.0-alpha.4.67');
+$styled_package=(new EmailDesignPackage($compiler))->build($styled_design,'1.7.0-alpha.4.68');
 $styled_decoded=(new EmailDesignPackage($compiler))->decode(json_encode($styled_package));
 ed_same(36,$styled_decoded['blocks'][0]['style']['font_size'],'block typography survives email design package round-trip');
 ed_same('#234567',$styled_decoded['blocks'][0]['style']['color'],'block color survives email design package round-trip');
-$with_attachment=$sample;$with_attachment['attachments']=array(42);$blocked_package=(new EmailDesignPackage($compiler))->build($with_attachment,'1.7.0-alpha.4.67');
+$with_attachment=$sample;$with_attachment['attachments']=array(42);$blocked_package=(new EmailDesignPackage($compiler))->build($with_attachment,'1.7.0-alpha.4.68');
 ed_ok(is_wp_error($blocked_package)&&'certloom_email_design_package_static_attachments'===$blocked_package->get_error_code(),'site-local static attachments are explicitly excluded from portable design packages');
 
 $tampered=$package;$tampered['design']['subject']='Tampered';$bad=(new EmailDesignPackage($compiler))->decode(json_encode($tampered));
@@ -246,8 +290,12 @@ ed_has($designer,'data-certloom-add-block="html"','Insert exposes a Custom HTML 
 ed_has($designer,'data-certloom-theme-media-card','Email style exposes page/content background image controls');
 ed_has($js,'sanitizeCustomHtml(','Custom HTML has a client-side safe-preview boundary');
 ed_has($js,'sampleHtml(','dynamic sample values are escaped before insertion into HTML previews');
-ed_has($js,'data-columns-count','Columns support 2/3-column composition');
-ed_has($js,'data-column-image','Columns support image content beside text/HTML');
+ed_has($designer,'data-certloom-add-block="container"','Insert exposes generic Container authoring instead of fixed Columns');
+ed_has($designer,'data-certloom-container-preset="50-50"','Container presets provide fast 50/50 composition');
+ed_has($js,'legacyColumnsToContainer(','legacy Columns are migrated into normal nested Containers in Studio');
+ed_has($js,'data-container-background-image','Container inspector exposes background media');
+ed_has($js,'data-container-padding','Container inspector exposes per-side padding');
+ed_has($js,'containsBlock(source,block)','nested drag/drop guards against moving a Container into itself');
 ed_has($js,'renderTokenBrowser(','Data browser is grouped/searchable instead of a fixed token list');
 ed_has($template_service_source,"snapshot['merge']['values']",'Email composition resolves the immutable issued merge map');
 ed_has($template_service_source,'validate_static_attachment_ids','static attachments are validated before Email Studio accepts them');

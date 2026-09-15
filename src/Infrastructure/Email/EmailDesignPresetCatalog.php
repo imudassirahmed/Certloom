@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 /** Calm, email-client-safe starter designs. Factory designs are customized by duplication, not in-place mutation. */
 final class EmailDesignPresetCatalog {
 	const PREFIX = 'certloom-email-preset-';
-	const VERSION = 1;
+	const VERSION = 2;
 
 	/** @return array<int,array<string,mixed>> */
 	public function all() {
@@ -30,7 +30,13 @@ final class EmailDesignPresetCatalog {
 					array( 'type' => 'text', 'html' => '<p>' . esc_html__( 'Hello {{recipient_name}},', 'certloom' ) . '</p><p>' . esc_html( $copy[4] ) . '</p>' ),
 					array( 'type' => 'button', 'text' => $copy[5], 'url' => '{{verification_url}}', 'align' => 'left' ),
 					array( 'type' => 'divider' ),
-					array( 'type' => 'columns', 'left_html' => '<strong>' . esc_html__( 'Credential', 'certloom' ) . '</strong><br>{{credential_number}}', 'right_html' => '<strong>' . esc_html__( 'Issuer', 'certloom' ) . '</strong><br>{{issuer_name}}' ),
+					array(
+						'type' => 'container', 'direction' => 'horizontal', 'gap' => 20, 'stack_mobile' => true,
+						'children' => array(
+							array( 'type' => 'container', 'direction' => 'vertical', 'basis' => 50, 'children' => array( array( 'type' => 'text', 'html' => '<p><strong>' . esc_html__( 'Credential', 'certloom' ) . '</strong><br>{{credential_number}}</p>' ) ) ),
+							array( 'type' => 'container', 'direction' => 'vertical', 'basis' => 50, 'children' => array( array( 'type' => 'text', 'html' => '<p><strong>' . esc_html__( 'Issuer', 'certloom' ) . '</strong><br>{{issuer_name}}</p>' ) ) ),
+						),
+					),
 				),
 				'theme' => EmailDesignCompiler::default_theme(),
 			);

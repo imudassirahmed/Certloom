@@ -149,13 +149,22 @@ $email_design=array(
 	'blocks'=>array(
 		array('type'=>'heading','text'=>'Credential ready','level'=>1),
 		array('type'=>'image','url'=>'https://source.test/uploads/source.png','alt'=>'Credential seal'),
+		array(
+			'type'=>'container','direction'=>'horizontal','gap'=>12,'background_image'=>'https://source.test/uploads/source.png',
+			'children'=>array(
+				array('type'=>'container','direction'=>'vertical','basis'=>45,'children'=>array(array('type'=>'image','url'=>'https://source.test/uploads/source.png','alt'=>'Nested seal'))),
+				array('type'=>'container','direction'=>'vertical','basis'=>55,'children'=>array(array('type'=>'text','html'=>'<p>Nested portable content</p>'))),
+			),
+		),
 	),
 	'theme'=>EmailDesignCompiler::default_theme(),'active'=>1,'source'=>'customer',
 );
 $email_package=(new EmailDesignPackage($compiler,$manifest))->build($email_design,'1.6.99-qa.23');
 pm_ok(is_array($email_package),'email local media exports');
-pm_same(1,count($email_package['assets']),'email package embeds one local Media Library image');
+pm_same(1,count($email_package['assets']),'email package deduplicates top-level, nested and Container-background references to one local Media Library image');
 pm_ok(0===strpos((string)$email_package['design']['blocks'][1]['url'],'asset:media-'),'email package replaces source-site URL with content-addressed asset reference');
+pm_ok(0===strpos((string)$email_package['design']['blocks'][2]['background_image'],'asset:media-'),'email package rewrites Container background image as a portable asset');
+pm_ok(0===strpos((string)$email_package['design']['blocks'][2]['children'][0]['children'][0]['url'],'asset:media-'),'email package rewrites recursively nested image assets');
 pm_ok(false===strpos(wp_json_encode($email_package),'https://source.test/uploads/source.png'),'email package contains no source-site Media Library URL');
 
 $GLOBALS['certloom_test_options']=array();
@@ -173,6 +182,10 @@ pm_ok(false===strpos((string)($email_image['url']??''),'source.test'),'email imp
 $dest_id=attachment_url_to_postid((string)$email_image['url']);
 pm_ok($dest_id>=1001,'rewritten email image resolves to a newly installed destination attachment');
 pm_ok(!in_array($dest_id,$GLOBALS['certloom_media']['deleted'],true),'successful email import retains its installed Media Library asset');
+$email_container=array_values(array_filter($imported['blocks'],fn($b)=>'container'===($b['type']??'')))[0]??array();
+pm_ok(0===strpos((string)($email_container['background_image']??''),'https://dest.test/uploads/'),'email import rewrites Container background to destination Media Library URL');
+pm_same((string)$email_image['url'],(string)($email_container['background_image']??''),'duplicate media references resolve to the same destination URL');
+pm_same((string)$email_image['url'],(string)($email_container['children'][0]['children'][0]['url']??''),'nested Container image resolves to the same installed destination asset');
 
 // Persistence failure must clean up media installed earlier in the import transaction.
 $GLOBALS['certloom_test_options']=array();

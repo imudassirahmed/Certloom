@@ -2973,3 +2973,10 @@
 .certloom-local-font-discovery .button{min-height:28px;padding:0 9px;font-size:11px;line-height:26px}
 .certloom-local-font-discovery__status{display:block;color:#64748b;font-size:10px;line-height:1.35;max-width:100%}
 .certloom-template-designer-style-grid optgroup{font-weight:700;color:#334155}
+
+/* Phase 4.68 visual alpha controls for canonical #RRGGBBAA colors. */
+.certloom-template-designer-color-opacity-control{display:flex;flex-direction:column;gap:4px;margin-top:5px;min-width:0}
+.certloom-template-designer-color-opacity-label{font-size:10px;line-height:1.2;color:var(--cl-ink-soft,#64748b)}
+.certloom-template-designer-color-opacity-input{display:grid;grid-template-columns:minmax(0,1fr) 38px;align-items:center;gap:7px;min-width:0}
+.certloom-template-designer-color-opacity-input input[type="range"]{width:100%;min-width:0;margin:0}
+.certloom-template-designer-color-opacity-input output{font-size:10px;line-height:1;color:var(--cl-ink-soft,#64748b);text-align:right;font-variant-numeric:tabular-nums}

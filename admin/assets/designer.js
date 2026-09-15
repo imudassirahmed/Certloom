@@ -295,6 +295,18 @@
 		var quickToggleButtons = root.querySelectorAll( '[data-certloom-designer-quick-toggle]' );
 		var quickTextAlignButtons = root.querySelectorAll( '[data-certloom-designer-quick-text-align]' );
 		var colorPickers = root.querySelectorAll( '[data-certloom-designer-color-picker-for]' );
+		for ( var colorEnhanceIndex = 0; colorEnhanceIndex < colorPickers.length; colorEnhanceIndex++ ) {
+			var colorEnhancePicker = colorPickers[ colorEnhanceIndex ];
+			var colorEnhanceControl = colorEnhancePicker.closest( '.certloom-template-designer-color-control' );
+			var colorEnhanceKey = colorEnhancePicker.getAttribute( 'data-certloom-designer-color-picker-for' );
+			if ( colorEnhanceControl && colorEnhanceKey && ! colorEnhanceControl.parentNode.querySelector( '[data-certloom-designer-color-opacity-for="' + colorEnhanceKey + '"]' ) ) {
+				var colorOpacityControl = document.createElement( 'span' );
+				colorOpacityControl.className = 'certloom-template-designer-color-opacity-control';
+				colorOpacityControl.innerHTML = '<span class="certloom-template-designer-color-opacity-label">' + escapeText( t( 'colorOpacity', 'Color opacity' ) ) + '</span><span class="certloom-template-designer-color-opacity-input"><input type="range" min="0" max="100" step="1" value="100" data-certloom-designer-color-opacity-for="' + escapeText( colorEnhanceKey ) + '" aria-label="' + escapeText( t( 'colorOpacity', 'Color opacity' ) ) + '"><output>100%</output></span>';
+				colorEnhanceControl.parentNode.appendChild( colorOpacityControl );
+			}
+		}
+		var colorOpacitySliders = root.querySelectorAll( '[data-certloom-designer-color-opacity-for]' );
 		var mediaButtons = root.querySelectorAll( '[data-certloom-designer-media], [data-certloom-designer-context-media]' );
 		var signatureSourceButtons = root.querySelectorAll( '[data-certloom-designer-signature-source]' );
 		var signatureSourceStatus = root.querySelector( '[data-certloom-designer-signature-status]' );
@@ -1187,6 +1199,17 @@
 				var pickerGroup = pickerOwner ? pickerOwner.getAttribute( 'data-certloom-designer-style' ) : '';
 				colorPickers[ colorIndex ].disabled = locked || ( 'general' !== pickerGroup && pickerGroup !== styleGroup );
 			}
+			for ( var colorOpacityIndex = 0; colorOpacityIndex < colorOpacitySliders.length; colorOpacityIndex++ ) {
+				var opacityKey = colorOpacitySliders[ colorOpacityIndex ].getAttribute( 'data-certloom-designer-color-opacity-for' );
+				var opacityColor = canonicalColor( styleValueForElement( element, opacityKey ) );
+				var opacityValue = colorOpacityPercent( opacityColor );
+				colorOpacitySliders[ colorOpacityIndex ].value = String( opacityValue );
+				var opacityOutput = colorOpacitySliders[ colorOpacityIndex ].parentNode ? colorOpacitySliders[ colorOpacityIndex ].parentNode.querySelector( 'output' ) : null;
+				if ( opacityOutput ) { opacityOutput.textContent = opacityValue + '%'; }
+				var opacityOwner = colorOpacitySliders[ colorOpacityIndex ].closest( '[data-certloom-designer-style]' );
+				var opacityGroup = opacityOwner ? opacityOwner.getAttribute( 'data-certloom-designer-style' ) : '';
+				colorOpacitySliders[ colorOpacityIndex ].disabled = locked || ( 'general' !== opacityGroup && opacityGroup !== styleGroup );
+			}
 			for ( var mediaIndex = 0; mediaIndex < mediaButtons.length; mediaIndex++ ) { mediaButtons[ mediaIndex ].disabled = locked || ! elementDefinition || ! elementDefinition.media; }
 			if ( signatureSourceStatus ) {
 				signatureSourceStatus.textContent = 'signature' === element.type && 'signer.signature' === String( element.source || '' )
@@ -1401,6 +1424,18 @@
 		function canonicalColor( raw ) {
 			raw = String( raw || '' ).trim().toUpperCase();
 			return /^#[0-9A-F]{6}(?:[0-9A-F]{2})?$/.test( raw ) ? raw : '';
+		}
+		function colorOpacityPercent( color ) {
+			color = canonicalColor( color );
+			if ( ! color || 9 !== color.length ) { return 100; }
+			return Math.round( parseInt( color.slice( 7, 9 ), 16 ) * 100 / 255 );
+		}
+		function colorWithOpacity( color, percent ) {
+			color = canonicalColor( color ) || '#000000';
+			var rgb = color.slice( 0, 7 );
+			var alphaValue = Math.max( 0, Math.min( 255, Math.round( Math.max( 0, Math.min( 100, Number( percent ) || 0 ) ) * 255 / 100 ) ) );
+			var alpha = alphaValue.toString( 16 ).toUpperCase();
+			return rgb + ( alpha.length < 2 ? '0' + alpha : alpha );
 		}
 		function styleValueForElement( element, key ) {
 			if ( 'opacity' === key ) { return null == element.opacity ? 1 : element.opacity; }
@@ -2182,10 +2217,29 @@
 					var owner = picker.closest( '[data-certloom-designer-style]' );
 					var textField = owner ? owner.querySelector( '[data-certloom-designer-style-field="' + key + '"]' ) : root.querySelector( '[data-certloom-designer-style-field="' + key + '"]' );
 					if ( ! textField || textField.disabled ) { return; }
-					textField.value = String( picker.value || '#000000' ).toUpperCase();
+					var previousColor = canonicalColor( textField.value );
+					var alphaSuffix = previousColor && 9 === previousColor.length ? previousColor.slice( 7, 9 ) : '';
+					textField.value = String( picker.value || '#000000' ).toUpperCase() + alphaSuffix;
 					applyStyleField( textField );
 				} );
 			} )( colorPickers[ colorPickerIndex ] );
+		}
+		for ( var colorOpacityEventIndex = 0; colorOpacityEventIndex < colorOpacitySliders.length; colorOpacityEventIndex++ ) {
+			( function ( slider ) {
+				slider.addEventListener( 'input', function () {
+					if ( slider.disabled ) { return; }
+					var key = slider.getAttribute( 'data-certloom-designer-color-opacity-for' );
+					var owner = slider.closest( '[data-certloom-designer-style]' );
+					var textField = owner ? owner.querySelector( '[data-certloom-designer-style-field="' + key + '"]' ) : root.querySelector( '[data-certloom-designer-style-field="' + key + '"]' );
+					if ( ! textField || textField.disabled ) { return; }
+					var picker = owner ? owner.querySelector( '[data-certloom-designer-color-picker-for="' + key + '"]' ) : root.querySelector( '[data-certloom-designer-color-picker-for="' + key + '"]' );
+					var baseColor = canonicalColor( textField.value ) || ( picker ? canonicalColor( picker.value ) : '' ) || '#000000';
+					textField.value = colorWithOpacity( baseColor, slider.value );
+					var output = slider.parentNode ? slider.parentNode.querySelector( 'output' ) : null;
+					if ( output ) { output.textContent = slider.value + '%'; }
+					applyStyleField( textField );
+				} );
+			} )( colorOpacitySliders[ colorOpacityEventIndex ] );
 		}
 		for ( var mediaButtonIndex = 0; mediaButtonIndex < mediaButtons.length; mediaButtonIndex++ ) { mediaButtons[ mediaButtonIndex ].addEventListener( 'click', function () { var element = selected(); if ( ! element || isLocked( element ) || [ 'image', 'logo', 'signature' ].indexOf( element.type ) === -1 ) { return; } mediaFrame( function ( reference ) { var current = selected(); if ( ! current || isLocked( current ) ) { return; } var before = snapshot(); var proposed = clone( current ); proposed.asset = reference; if ( 'signature' === proposed.type ) { delete proposed.source; } if ( updateElement( current.id, proposed, false ) ) { pushHistory( before ); render(); announce( 'signature' === proposed.type ? t( 'signatureFixedAssetUpdated', 'Signature now uses the selected fixed image.' ) : t( 'assetUpdated', 'Image updated.' ) ); } } ); } ); }
 		for ( var signatureSourceIndex = 0; signatureSourceIndex < signatureSourceButtons.length; signatureSourceIndex++ ) { signatureSourceButtons[ signatureSourceIndex ].addEventListener( 'click', function () {

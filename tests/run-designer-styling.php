@@ -24,6 +24,8 @@ dsn4(strpos($admin,'DSN-08 is a closed built-in registry')!==false,'typed regist
 dsn4(is_string($js)&&strpos($js,'function applyStyleField')!==false&&strpos($js,'function styleValueForElement')!==false,'Designer has an explicit canonical style mutation path');
 dsn4(strpos($js,'function canonicalColor')!==false&&strpos($js,"/^#[0-9A-F]{6}(?:[0-9A-F]{2})?$/")!==false,'Designer color validation mirrors #RRGGBB/#RRGGBBAA server syntax');
 dsn4(strpos($js,"querySelectorAll( '[data-certloom-designer-color-picker-for]' )")!==false&&strpos($js,"data-certloom-designer-color-picker-for")!==false,'Designer synchronizes all Studio color selectors through their canonical style keys');
+dsn4(strpos($js,'data-certloom-designer-color-opacity-for')!==false&&strpos($js,'function colorWithOpacity')!==false,'Studio exposes visual color-opacity controls that write canonical alpha');
+dsn4(strpos($js,'alphaSuffix')!==false&&strpos($js,'previousColor.slice( 7, 9 )')!==false,'native RGB color selection preserves an existing canonical alpha channel');
 dsn4(strpos($js,"value < 0 || value > 1")!==false,'opacity remains bounded to canonical zero-through-one range');
 dsn4(strpos($js,"value < 1 || value > 300")!==false&&strpos($js,"value < 0.5 || value > 5")!==false&&strpos($js,"value < -20 || value > 50")!==false,'text numeric style bounds mirror server ranges');
 dsn4(strpos($js,"value < 100 || value > 900 || 0 !== value % 100")!==false,'font weights remain exact 100-point variants');

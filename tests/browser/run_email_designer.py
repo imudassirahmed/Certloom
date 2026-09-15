@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import asyncio, subprocess
+import asyncio, json, subprocess
 from pathlib import Path
 from playwright.async_api import async_playwright
 ROOT=Path(__file__).resolve().parents[2]
@@ -58,6 +58,8 @@ async def run():
         await ck('<strong>' in (await editor.inner_html()).lower() or '<b>' in (await editor.inner_html()).lower(),'boldFormattingApplies')
         color_picker=page.locator('[data-certloom-email-inspector] [data-style-color-picker="color"]')
         await ck(await color_picker.count()==1,'blockColorPicker')
+        await ck(await page.locator('[data-certloom-email-inspector] [data-style-field="letter_spacing"]').count()==1,'textLetterSpacingControl')
+        await ck(await page.locator('[data-certloom-email-inspector] [data-style-field="text_transform"]').count()==1,'textTransformControl')
         await color_picker.fill('#334455')
         await color_picker.dispatch_event('input')
         await ck('#334455' in (await page.locator('[data-certloom-blocks-json]').input_value()).lower(),'blockColorPersistsToModel')
@@ -80,37 +82,77 @@ async def run():
         await page.get_by_role('tab',name='Structure',exact=True).click()
         await ck(await page.locator('.certloom-email-structure-item').count()==initial,'structureMirrorsBlocks')
         await page.get_by_role('tab',name='Insert',exact=True).click()
-        # Advanced composition primitives: safe Custom HTML and 2/3-column mixed content.
+        # Advanced button depth is author-facing, not compiler-only.
+        await page.locator('[data-certloom-add-block="button"]').click()
+        await ck(await page.locator('[data-certloom-email-inspector] [data-style-field="background_opacity"]').count()==1,'buttonBackgroundOpacityControl')
+        await ck(await page.locator('[data-certloom-email-inspector] [data-style-field="border_width"]').count()==1 and await page.locator('[data-certloom-email-inspector] [data-style-field="border_style"]').count()==1,'buttonBorderControls')
+        await ck(await page.locator('[data-certloom-email-inspector] [data-style-boolean="full_width"]').count()==1,'buttonFullWidthControl')
+        await page.locator('[data-certloom-email-inspector] [data-style-field="background_opacity"]').fill('64')
+        await page.locator('[data-certloom-email-inspector] [data-style-boolean="full_width"]').check()
+        await ck('"background_opacity":64' in await page.locator('[data-certloom-blocks-json]').input_value() and '"full_width":true' in await page.locator('[data-certloom-blocks-json]').input_value(),'buttonAdvancedControlsPersistToModel')
+        # Advanced composition primitives: safe Custom HTML plus nested generic Containers.
         await page.locator('[data-certloom-add-block="html"]').click()
         html_editor=page.locator('[data-certloom-email-inspector] [data-field="html"]')
         await ck(await html_editor.count()==1,'customHtmlInspector')
         await html_editor.fill('<table><tr><td style="position:fixed;color:#123456">Advanced HTML</td></tr></table><script>alert(1)</script><iframe src="https://bad.invalid"></iframe>')
-        html_canvas=page.locator('.certloom-canvas-block').nth(-1)
+        html_canvas=page.locator('.certloom-canvas-block').filter(has_text='Advanced HTML').first
         await ck('Advanced HTML' in await html_canvas.inner_text(),'customHtmlRendersOnCanvas')
         await ck(await html_canvas.locator('script,iframe').count()==0,'customHtmlDangerousElementsRemoved')
         await ck('position:fixed' not in (await html_canvas.inner_html()).replace(' ',''),'customHtmlDangerousCssRemoved')
-        await page.locator('[data-certloom-add-block="columns"]').click()
-        await ck(await page.locator('[data-columns-count]').count()==1,'columnsInspector')
-        await page.locator('[data-columns-count]').select_option('3')
-        await ck(await page.locator('.certloom-email-column-editor').count()==3,'threeColumnComposition')
-        kinds=page.locator('[data-column-kind]')
-        await kinds.nth(0).select_option('image')
-        await ck(await page.locator('[data-column-image="0"]').count()==1,'columnImageMode')
-        await kinds.nth(1).select_option('html')
-        column_html=page.locator('[data-column-field="html"][data-column-index="1"]')
-        await column_html.fill('<strong>Column HTML</strong>')
-        await ck('Column HTML' in await page.locator('.certloom-canvas-block').nth(-1).inner_text(),'columnHtmlRenders')
+        await page.locator('[data-certloom-container-preset="50-50"]').click()
+        await ck(await page.locator('[data-container-field="direction"]').count()==1,'containerInspector')
+        await ck(await page.locator('[data-container-background-image]').count()==1,'containerBackgroundImageControl')
+        await ck(await page.locator('[data-container-field="background_opacity"]').count()==1 and await page.locator('[data-container-field="overlay_opacity"]').count()==1,'containerOpacityControls')
+        await ck(await page.locator('[data-container-color-picker="overlay_color"]').count()==1,'containerOverlayColorControl')
+        await ck(await page.locator('[data-container-padding]').count()==4,'containerPerSidePaddingControls')
+        await page.locator('[data-container-field="background_opacity"]').fill('72')
+        await page.locator('[data-container-field="overlay_opacity"]').fill('28')
+        await ck('"background_opacity":72' in await page.locator('[data-certloom-blocks-json]').input_value() and '"overlay_opacity":28' in await page.locator('[data-certloom-blocks-json]').input_value(),'containerOpacityPersistsToModel')
+        selected_parent=page.locator('[data-certloom-email-canvas] > .certloom-canvas-container.is-selected').first
+        preset_path=await selected_parent.get_attribute('data-path')
+        preset_parent=page.locator(f'[data-certloom-email-canvas] > .certloom-canvas-container[data-path="{preset_path}"]')
+        child_selector=':scope > .certloom-email-container-surface > .certloom-email-container-children > .certloom-email-container-child > .certloom-canvas-container'
+        child_containers=preset_parent.locator(child_selector)
+        await ck(await child_containers.count()==2,'containerPresetCreatesNestedChildren')
+        await child_containers.nth(0).click()
+        await page.locator('[data-certloom-add-block="image"]').click()
+        await ck(await preset_parent.locator('img').count()==0 and await preset_parent.locator('.certloom-email-empty').count()>=1,'imageBlockCanLiveInsideContainerBeforeMediaSelection')
+        await ck(await page.locator('[data-certloom-email-inspector] [data-style-field="opacity"]').count()==1,'imageOpacityControl')
+        await ck(await page.locator('[data-certloom-email-inspector] [data-style-field="border_width"]').count()==1 and await page.locator('[data-certloom-email-inspector] [data-style-field="border_style"]').count()==1,'imageBorderControls')
+        await child_containers.nth(1).click()
+        await page.locator('[data-certloom-add-block="text"]').click()
+        await ck(await preset_parent.locator('[data-rich-text-editor]').count()==0,'nestedTextUsesContextualInspectorOnly')
+        model=await page.locator('[data-certloom-blocks-json]').input_value()
+        await ck('"type":"container"' in model and '"direction":"horizontal"' in model and '"basis":50' in model,'nestedContainerModelPersists')
+        await ck('"type":"columns"' not in model,'authoringModelNoLongerPersistsFixedColumns')
+        # Blocks can move between nested Containers, not merely reorder in one flat list.
+        image_block=child_containers.nth(0).locator(':scope > .certloom-email-container-surface > .certloom-email-container-children > .certloom-email-container-child > .certloom-canvas-block').first
+        await image_block.click()
+        image_block=child_containers.nth(0).locator(':scope > .certloom-email-container-surface > .certloom-email-container-children > .certloom-email-container-child > .certloom-canvas-block').first
+        second_surface=child_containers.nth(1).locator(':scope > .certloom-email-container-surface').first
+        await image_block.locator(':scope > .certloom-canvas-block__controls > .certloom-canvas-drag-handle').drag_to(second_surface)
+        moved=json.loads(await page.locator('[data-certloom-blocks-json]').input_value())
+        parents=[b for b in moved if b.get('type')=='container' and b.get('direction')=='horizontal' and len(b.get('children',[]))==2]
+        parent=next((b for b in parents if any(c.get('children') for c in b.get('children',[]))), parents[-1] if parents else None)
+        await ck(bool(parent and len(parent['children'][0].get('children',[]))==0 and sorted(b.get('type') for b in parent['children'][1].get('children',[]))==['image','text']),'dragMovesBlockBetweenContainers')
         await page.get_by_role('tab',name='Styles',exact=True).click()
         await ck(await page.locator('[data-certloom-theme-media-card]').count()==2,'pageAndContentBackgroundMediaControls')
+        await ck(await page.locator('[name="theme_background_opacity"]').count()==1 and await page.locator('[name="theme_content_background_opacity"]').count()==1,'globalBackgroundOpacityControls')
+        await ck(await page.locator('[name="theme_background_overlay_opacity"]').count()==1 and await page.locator('[name="theme_content_background_overlay_opacity"]').count()==1,'globalOverlayOpacityControls')
+        await ck(await page.locator('[name="theme_background_overlay_color"]').count()==1 and await page.locator('[name="theme_content_background_overlay_color"]').count()==1,'globalOverlayColorControls')
         await page.get_by_role('tab',name='Insert',exact=True).click()
+        await page.locator('[data-certloom-add-block="divider"]').click()
+        await ck(await page.locator('[data-certloom-email-inspector] [data-style-field="line_style"]').count()==1,'dividerLineStyleControl')
+        await ck(await page.locator('[data-certloom-email-inspector] [data-style-choice="align"]').count()==3,'dividerAlignmentControl')
         # Add and duplicate without leaving the designer.
+        before_add=await page.locator('.certloom-canvas-block').count()
         await page.locator('[data-certloom-add-block="heading"]').click()
-        await ck(await page.locator('.certloom-canvas-block').count()==initial+3,'addBlock')
+        await ck(await page.locator('.certloom-canvas-block').count()==before_add+1,'addBlock')
         actions_section=page.locator('.certloom-inspector-section').filter(has_text='Block actions')
         if not await actions_section.get_attribute('open'):
             await actions_section.locator('summary').click()
         await page.locator('[data-certloom-email-inspector] [data-inspector-copy]').click()
-        await ck(await page.locator('.certloom-canvas-block').count()==initial+4,'duplicateBlock')
+        await ck(await page.locator('.certloom-canvas-block').count()==before_add+2,'duplicateBlock')
         # Pointer drag-and-drop reorders the same structured block model.
         await page.locator('.certloom-canvas-block').nth(0).click()
         first_handle=page.locator('.certloom-canvas-block').nth(0).locator('.certloom-canvas-drag-handle')

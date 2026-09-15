@@ -224,30 +224,49 @@ final class EmailDesignPackage {
 		$out = array();
 		foreach ( $blocks as $block ) {
 			if ( ! is_array( $block ) ) { continue; }
-			$asset_urls = array();
-			if ( 'image' === (string) ( $block['type'] ?? '' ) && 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', (string) ( $block['url'] ?? '' ) ) ) { $asset_urls['block'] = (string) $block['url']; $block['url'] = 'https://certloom.invalid/portable-image'; }
-			if ( 'columns' === (string) ( $block['type'] ?? '' ) && is_array( $block['columns'] ?? null ) ) {
-				foreach ( $block['columns'] as $index => $column ) { if ( is_array( $column ) && 'image' === (string) ( $column['kind'] ?? '' ) && 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', (string) ( $column['url'] ?? '' ) ) ) { $asset_urls['column:' . $index] = (string) $column['url']; $block['columns'][ $index ]['url'] = 'https://certloom.invalid/portable-image'; } }
-			}
-			$sanitized = $this->compiler->sanitize_blocks( array( $block ) );
+			$asset_map = array();
+			$placeholder = $this->replace_portable_asset_refs( $block, $asset_map );
+			$sanitized = $this->compiler->sanitize_blocks( array( $placeholder ) );
 			if ( empty( $sanitized ) ) { continue; }
-			$row = $sanitized[0];
-			if ( isset( $asset_urls['block'] ) ) { $row['url'] = $asset_urls['block']; }
-			foreach ( $asset_urls as $key => $url ) { if ( 0 === strpos( $key, 'column:' ) ) { $index = absint( substr( $key, 7 ) ); if ( isset( $row['columns'][ $index ] ) ) { $row['columns'][ $index ]['url'] = $url; } } }
-			$out[] = $row;
+			$out[] = $this->restore_portable_asset_refs( $sanitized[0], $asset_map );
 		}
 		return $out;
+	}
+
+	/** @return mixed */
+	private function replace_portable_asset_refs( $value, array &$asset_map ) {
+		if ( is_array( $value ) ) {
+			$out = array();
+			foreach ( $value as $key => $item ) { $out[ $key ] = $this->replace_portable_asset_refs( $item, $asset_map ); }
+			return $out;
+		}
+		if ( is_string( $value ) && 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', $value, $match ) ) {
+			$placeholder = 'https://certloom.invalid/portable-image/' . $match[1];
+			$asset_map[ $placeholder ] = $value;
+			return $placeholder;
+		}
+		return $value;
+	}
+
+	/** @return mixed */
+	private function restore_portable_asset_refs( $value, array $asset_map ) {
+		if ( is_array( $value ) ) {
+			$out = array();
+			foreach ( $value as $key => $item ) { $out[ $key ] = $this->restore_portable_asset_refs( $item, $asset_map ); }
+			return $out;
+		}
+		return is_string( $value ) && isset( $asset_map[ $value ] ) ? $asset_map[ $value ] : $value;
 	}
 
 	/** @return string[] */
 	private function email_asset_references( array $blocks, array $theme = array() ) {
 		$references = array();
-		$collect = static function( $url ) use ( &$references ) { if ( 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', (string) $url, $match ) ) { $references[ $match[1] ] = true; } };
-		foreach ( $blocks as $block ) {
-			if ( ! is_array( $block ) ) { continue; }
-			if ( 'image' === (string) ( $block['type'] ?? '' ) ) { $collect( $block['url'] ?? '' ); }
-			if ( 'columns' === (string) ( $block['type'] ?? '' ) && is_array( $block['columns'] ?? null ) ) { foreach ( $block['columns'] as $column ) { if ( is_array( $column ) && 'image' === (string) ( $column['kind'] ?? '' ) ) { $collect( $column['url'] ?? '' ); } } }
-		}
+		$collect    = null;
+		$collect    = static function( $value ) use ( &$references, &$collect ) {
+			if ( is_array( $value ) ) { foreach ( $value as $item ) { $collect( $item ); } return; }
+			if ( is_string( $value ) && 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', $value, $match ) ) { $references[ $match[1] ] = true; }
+		};
+		$collect( $blocks );
 		$collect( $theme['background_image'] ?? '' );
 		$collect( $theme['content_background_image'] ?? '' );
 		return array_keys( $references );

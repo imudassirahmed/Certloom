@@ -70,17 +70,25 @@ final class PortableDesignAssets {
 
 	/** @return array<string,mixed>|\WP_Error */
 	private function rewrite_email_block_for_export( array $block, array &$assets ) {
-		if ( 'image' === (string) ( $block['type'] ?? '' ) && ! empty( $block['url'] ) ) {
+		$type = (string) ( $block['type'] ?? '' );
+		if ( 'image' === $type && ! empty( $block['url'] ) ) {
 			$url = $this->portable_email_url( (string) $block['url'], $assets );
 			if ( is_wp_error( $url ) ) { return $url; }
 			$block['url'] = $url;
 		}
-		if ( 'columns' === (string) ( $block['type'] ?? '' ) && is_array( $block['columns'] ?? null ) ) {
-			foreach ( $block['columns'] as $index => $column ) {
-				if ( ! is_array( $column ) || 'image' !== (string) ( $column['kind'] ?? '' ) || empty( $column['url'] ) ) { continue; }
-				$url = $this->portable_email_url( (string) $column['url'], $assets );
+		if ( 'container' === $type ) {
+			if ( ! empty( $block['background_image'] ) ) {
+				$url = $this->portable_email_url( (string) $block['background_image'], $assets );
 				if ( is_wp_error( $url ) ) { return $url; }
-				$block['columns'][ $index ]['url'] = $url;
+				$block['background_image'] = $url;
+			}
+			if ( is_array( $block['children'] ?? null ) ) {
+				foreach ( $block['children'] as $index => $child ) {
+					if ( ! is_array( $child ) ) { continue; }
+					$rewritten = $this->rewrite_email_block_for_export( $child, $assets );
+					if ( is_wp_error( $rewritten ) ) { return $rewritten; }
+					$block['children'][ $index ] = $rewritten;
+				}
 			}
 		}
 		return $block;
@@ -160,24 +168,31 @@ final class PortableDesignAssets {
 	}
 
 	private function collect_email_block_references( array $block, array &$references ) {
-		if ( 'image' === (string) ( $block['type'] ?? '' ) && 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', (string) ( $block['url'] ?? '' ), $match ) ) { $references[ $match[1] ] = true; }
-		if ( 'columns' === (string) ( $block['type'] ?? '' ) && is_array( $block['columns'] ?? null ) ) {
-			foreach ( $block['columns'] as $column ) { if ( is_array( $column ) && 'image' === (string) ( $column['kind'] ?? '' ) && 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', (string) ( $column['url'] ?? '' ), $match ) ) { $references[ $match[1] ] = true; } }
+		$type = (string) ( $block['type'] ?? '' );
+		if ( 'image' === $type && 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', (string) ( $block['url'] ?? '' ), $match ) ) { $references[ $match[1] ] = true; }
+		if ( 'container' === $type ) {
+			if ( 1 === preg_match( '/^asset:(media-[a-f0-9]{24})$/', (string) ( $block['background_image'] ?? '' ), $match ) ) { $references[ $match[1] ] = true; }
+			foreach ( is_array( $block['children'] ?? null ) ? $block['children'] : array() as $child ) { if ( is_array( $child ) ) { $this->collect_email_block_references( $child, $references ); } }
 		}
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
 	private function rewrite_email_block_for_import( array $block, array $urls ) {
-		if ( 'image' === (string) ( $block['type'] ?? '' ) ) {
+		$type = (string) ( $block['type'] ?? '' );
+		if ( 'image' === $type ) {
 			$block['url'] = $this->installed_email_url( (string) ( $block['url'] ?? '' ), $urls );
 			if ( is_wp_error( $block['url'] ) ) { return $block['url']; }
 		}
-		if ( 'columns' === (string) ( $block['type'] ?? '' ) && is_array( $block['columns'] ?? null ) ) {
-			foreach ( $block['columns'] as $index => $column ) {
-				if ( ! is_array( $column ) || 'image' !== (string) ( $column['kind'] ?? '' ) ) { continue; }
-				$url = $this->installed_email_url( (string) ( $column['url'] ?? '' ), $urls );
-				if ( is_wp_error( $url ) ) { return $url; }
-				$block['columns'][ $index ]['url'] = $url;
+		if ( 'container' === $type ) {
+			$block['background_image'] = $this->installed_email_url( (string) ( $block['background_image'] ?? '' ), $urls );
+			if ( is_wp_error( $block['background_image'] ) ) { return $block['background_image']; }
+			if ( is_array( $block['children'] ?? null ) ) {
+				foreach ( $block['children'] as $index => $child ) {
+					if ( ! is_array( $child ) ) { continue; }
+					$rewritten = $this->rewrite_email_block_for_import( $child, $urls );
+					if ( is_wp_error( $rewritten ) ) { return $rewritten; }
+					$block['children'][ $index ] = $rewritten;
+				}
 			}
 		}
 		return $block;

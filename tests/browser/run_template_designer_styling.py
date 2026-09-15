@@ -49,8 +49,14 @@ async def run():
         visible_shape=lambda key: page.locator(f'[data-certloom-designer-style="shape"] [data-certloom-designer-style-field="{key}"]')
         fill_picker=page.locator('[data-certloom-designer-style="shape"] [data-certloom-designer-color-picker-for="fill"]')
         await ck(await fill_picker.count()==1 and not await fill_picker.is_disabled(),'shapeFillColorPicker')
+        before_picker=(await visible_shape('fill').input_value()).upper(); before_alpha=before_picker[7:9] if len(before_picker)==9 else ''
         await fill_picker.evaluate("n=>{n.value='#a1b2c3';n.dispatchEvent(new Event('input',{bubbles:true}))}"); await page.wait_for_timeout(10)
-        await ck((await visible_shape('fill').input_value()).upper()=='#A1B2C3','shapeFillPickerSyncsHex')
+        expected_picker='#A1B2C3'+before_alpha
+        await ck((await visible_shape('fill').input_value()).upper()==expected_picker,'shapeFillPickerPreservesAlpha')
+        fill_alpha=page.locator('[data-certloom-designer-style="shape"] [data-certloom-designer-color-opacity-for="fill"]')
+        await ck(await fill_alpha.count()==1 and not await fill_alpha.is_disabled(),'shapeFillOpacitySlider')
+        await fill_alpha.fill('50'); await page.wait_for_timeout(15)
+        alpha_value=(await visible_shape('fill').input_value()).upper(); await ck(alpha_value.startswith('#A1B2C3') and alpha_value.endswith('80'),'shapeFillOpacitySliderWritesCanonicalAlpha')
         await visible_shape('fill').fill('#ABCDEF80'); await visible_shape('fill').dispatch_event('change'); await visible_shape('stroke').fill('#102030'); await visible_shape('stroke').dispatch_event('change'); await visible_shape('stroke_width_mm').fill('0'); await visible_shape('stroke_width_mm').dispatch_event('change'); await change('[data-certloom-designer-style-field="opacity"]',0.4)
         await page.wait_for_timeout(20); selected=page.locator('[data-certloom-designer-element].is-selected'); await ck('rgba' in (await selected.evaluate('(n)=>n.style.background')) or '#' in (await selected.evaluate('(n)=>n.style.background')),'shapeFillCanvas'); await ck(abs(float(await selected.evaluate('(n)=>n.style.opacity'))-.4)<.001,'shapeOpacityCanvas')
         # Line keeps positive width; zero is rejected.
