@@ -104,7 +104,29 @@ $brand_mark = CERTLOOM_URL . 'admin/assets/certloom-brand-mark.png';
 				<?php $colors = array( 'background' => __( 'Page', 'certloom' ), 'content_background' => __( 'Content', 'certloom' ), 'text_color' => __( 'Text', 'certloom' ), 'heading_color' => __( 'Headings', 'certloom' ), 'button_background' => __( 'Button', 'certloom' ), 'button_text' => __( 'Button text', 'certloom' ), 'link_color' => __( 'Links', 'certloom' ) ); foreach ( $colors as $key => $label ) : $color_value = (string) ( $theme[ $key ] ?? '#ffffff' ); ?>
 					<label class="certloom-theme-color-field"><span><?php echo esc_html( $label ); ?></span><span class="certloom-theme-color-control"><input type="color" name="theme_<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( $color_value ); ?>" data-certloom-theme data-certloom-theme-color="<?php echo esc_attr( $key ); ?>" aria-label="<?php echo esc_attr( $label ); ?>"><input type="text" value="<?php echo esc_attr( strtoupper( $color_value ) ); ?>" maxlength="7" pattern="#[0-9A-Fa-f]{6}" data-certloom-theme-hex="<?php echo esc_attr( $key ); ?>" aria-label="<?php echo esc_attr( sprintf( __( '%s hex color', 'certloom' ), $label ) ); ?>"></span></label>
 				<?php endforeach; ?>
-				<label class="is-wide"><span><?php esc_html_e( 'Font', 'certloom' ); ?></span><select name="theme_font_family" data-certloom-theme><?php foreach ( array( 'Arial, Helvetica, sans-serif', 'Georgia, Times New Roman, serif', 'Verdana, Geneva, sans-serif', 'Trebuchet MS, Arial, sans-serif' ) as $font ) : ?><option value="<?php echo esc_attr( $font ); ?>" <?php selected( (string) ( $theme['font_family'] ?? '' ), $font ); ?>><?php echo esc_html( $font ); ?></option><?php endforeach; ?></select></label>
+				<label class="is-wide certloom-font-picker-field"><span><?php esc_html_e( 'Font', 'certloom' ); ?></span><select name="theme_font_family" data-certloom-theme data-certloom-email-font-select>
+					<?php
+					$current_theme_font = (string) ( $theme['font_family'] ?? '' );
+					$font_group = '';
+					$font_matched = false;
+					foreach ( (array) ( $email_font_definitions ?? array() ) as $font_key => $font_definition ) :
+						$next_group = (string) ( $font_definition['group'] ?? __( 'Other', 'certloom' ) );
+						if ( $next_group !== $font_group ) :
+							if ( '' !== $font_group ) : ?></optgroup><?php endif;
+							$font_group = $next_group; ?><optgroup label="<?php echo esc_attr( $font_group ); ?>"><?php
+						endif;
+						$font_css = (string) ( $font_definition['css'] ?? '' );
+						$font_matched = $font_matched || $current_theme_font === $font_css;
+						?><option value="<?php echo esc_attr( $font_css ); ?>" data-font-key="<?php echo esc_attr( (string) $font_key ); ?>" data-font-label="<?php echo esc_attr( (string) ( $font_definition['label'] ?? $font_key ) ); ?>" <?php selected( $current_theme_font, $font_css ); ?>><?php echo esc_html( (string) ( $font_definition['label'] ?? $font_key ) ); ?></option><?php
+					endforeach;
+					if ( '' !== $font_group ) : ?></optgroup><?php endif;
+					if ( '' !== $current_theme_font && ! $font_matched ) :
+						$font_parts = explode( ',', $current_theme_font );
+						$font_label = trim( (string) ( $font_parts[0] ?? $current_theme_font ), " \t\n\r\0\x0B\"'" );
+						?><optgroup label="<?php esc_attr_e( 'Local device fonts', 'certloom' ); ?>"><option value="<?php echo esc_attr( $current_theme_font ); ?>" selected data-font-label="<?php echo esc_attr( $font_label ); ?>"><?php echo esc_html( $font_label . ' · ' . __( 'saved local font', 'certloom' ) ); ?></option></optgroup><?php
+					endif;
+					?>
+				</select><small class="certloom-font-availability-note" data-certloom-email-font-note><?php esc_html_e( 'Local/system fonts only. Installed fonts are detected on this device; outgoing email keeps a safe fallback stack.', 'certloom' ); ?></small></label>
 				<label><span><?php esc_html_e( 'Width', 'certloom' ); ?></span><input type="number" min="480" max="760" step="10" name="theme_email_width" value="<?php echo esc_attr( absint( $theme['email_width'] ?? 640 ) ); ?>" data-certloom-theme></label>
 				<label><span><?php esc_html_e( 'Corners', 'certloom' ); ?></span><input type="number" min="0" max="32" name="theme_border_radius" value="<?php echo esc_attr( absint( $theme['border_radius'] ?? 12 ) ); ?>" data-certloom-theme></label>
 			</div>

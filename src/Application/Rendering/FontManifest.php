@@ -35,7 +35,7 @@ final class FontManifest {
 		$families = array();
 		foreach ( $manifest['families'] as $family => $variants ) {
 			$family = strtolower( trim( (string) $family ) );
-			if ( ! preg_match( '/^[a-z0-9][a-z0-9_-]{0,63}$/', $family ) || ! is_array( $variants ) || empty( $variants ) ) {
+			if ( ! preg_match( '/^[a-z0-9][a-z0-9_-]{0,127}$/', $family ) || ! is_array( $variants ) || empty( $variants ) ) {
 				throw new InvalidArgumentException( 'Font manifest contains an invalid family or empty variant set.' );
 			}
 			$normalized_variants = array();

@@ -5,6 +5,105 @@
 	const q = ( selector, context = document ) => context.querySelector( selector );
 	const qa = ( selector, context = document ) => Array.from( context.querySelectorAll( selector ) );
 
+	const FONT_CATALOG = L.fontCatalog && typeof L.fontCatalog === 'object' ? L.fontCatalog : {};
+	const FONT_AVAILABILITY = {};
+
+	function fontCatalogEntries() {
+		return Object.entries( FONT_CATALOG ).filter( ( entry ) => entry[ 1 ] && typeof entry[ 1 ].css === 'string' && entry[ 1 ].css );
+	}
+
+	function refreshFontAvailabilityLabels( context = document ) {
+		qa( '[data-certloom-email-font-select] option[data-font-key]', context ).forEach( ( option ) => {
+			const key = option.dataset.fontKey || '';
+			const definition = FONT_CATALOG[ key ] || {};
+			const base = option.dataset.fontLabel || definition.label || option.textContent.replace( /^✓\s*/, '' );
+			option.dataset.fontLabel = base;
+			if ( FONT_AVAILABILITY[ key ] === true ) { option.textContent = `✓ ${ base }`; option.dataset.fontAvailable = '1'; }
+			else { option.textContent = base; option.dataset.fontAvailable = '0'; }
+		} );
+	}
+
+	async function probeLocalFontAvailability() {
+		const entries = fontCatalogEntries();
+		for ( const entry of entries ) {
+			const key = entry[ 0 ];
+			const definition = entry[ 1 ] || {};
+			if ( definition.generic ) { FONT_AVAILABILITY[ key ] = true; continue; }
+			FONT_AVAILABILITY[ key ] = false;
+			const names = Array.isArray( definition.local_names ) ? definition.local_names : [];
+			if ( typeof FontFace !== 'function' || ! names.length ) { continue; }
+			for ( const name of names ) {
+				try {
+					const family = `__certloom_local_probe_${ key.replace( /[^a-z0-9_-]/gi, '_' ) }`;
+					const escaped = String( name ).replace( /[\"\\]/g, '\\$&' );
+					const face = new FontFace( family, `local("${ escaped }")` );
+					await face.load();
+					FONT_AVAILABILITY[ key ] = true;
+					break;
+				} catch ( error ) {}
+			}
+		}
+		refreshFontAvailabilityLabels();
+	}
+
+	function base32LocalFontName( name ) {
+		if ( typeof TextEncoder !== 'function' ) { return ''; }
+		const bytes = new TextEncoder().encode( String( name || '' ).trim() );
+		if ( ! bytes.length || bytes.length > 76 ) { return ''; }
+		const alphabet = 'abcdefghijklmnopqrstuvwxyz234567'; let out = '', buffer = 0, bits = 0;
+		for ( const byte of bytes ) {
+			buffer = ( buffer << 8 ) | byte; bits += 8;
+			while ( bits >= 5 ) { bits -= 5; out += alphabet[ ( buffer >> bits ) & 31 ]; }
+			buffer &= ( 1 << bits ) - 1;
+		}
+		if ( bits > 0 ) { out += alphabet[ ( buffer << ( 5 - bits ) ) & 31 ]; }
+		return out ? `local-${ out }` : '';
+	}
+
+	function addLocalFontToCatalog( family ) {
+		family = String( family || '' ).trim(); const key = base32LocalFontName( family );
+		if ( ! key ) { return ''; }
+		if ( ! FONT_CATALOG[ key ] ) {
+			const escaped = family.replace( /[\"\\]/g, '\\$&' );
+			FONT_CATALOG[ key ] = { label: family, css: `"${ escaped }",Arial,sans-serif`, group: L.localDeviceFonts || 'Local device fonts', local_names: [ family ], local_device: true };
+		}
+		FONT_AVAILABILITY[ key ] = true; return key;
+	}
+
+	function syncEmailLocalFontOptions( context = document ) {
+		const localEntries = fontCatalogEntries().filter( ( entry ) => entry[ 1 ].local_device ).sort( ( a, b ) => String( a[ 1 ].label ).localeCompare( String( b[ 1 ].label ) ) );
+		qa( '[data-certloom-email-font-select]', context ).forEach( ( select ) => {
+			const current = select.value; let group = select.querySelector( 'optgroup[data-certloom-local-font-group]' );
+			if ( ! group ) { group = document.createElement( 'optgroup' ); group.label = L.localDeviceFonts || 'Local device fonts'; group.dataset.certloomLocalFontGroup = '1'; select.appendChild( group ); }
+			group.textContent = '';
+			localEntries.forEach( ( [ key, definition ] ) => { const option = document.createElement( 'option' ); option.value = definition.css; option.dataset.fontKey = key; option.dataset.fontLabel = definition.label; option.textContent = definition.label; group.appendChild( option ); } );
+			if ( current ) { select.value = current; }
+		} );
+		refreshFontAvailabilityLabels( context );
+	}
+
+	async function scanLocalDeviceFonts( root, button, status ) {
+		if ( typeof window.queryLocalFonts !== 'function' ) { status.textContent = L.localFontUnsupported || 'This browser cannot list every installed font. WordPress local fonts and the built-in system catalog remain available.'; return; }
+		button.disabled = true; status.textContent = L.localFontScanning || 'Checking fonts installed on this device…';
+		try {
+			const faces = await window.queryLocalFonts(); const families = new Set();
+			faces.forEach( ( face ) => { const family = String( face?.family || '' ).trim(); if ( family ) { families.add( family ); } } );
+			families.forEach( addLocalFontToCatalog ); syncEmailLocalFontOptions( root );
+			status.textContent = families.size ? `${ families.size } ${ L.localFontsFound || 'local font families available.' }` : ( L.localFontsNone || 'No additional local fonts were returned by the browser.' );
+		} catch ( error ) {
+			status.textContent = String( error?.name || '' ) === 'NotAllowedError' ? ( L.localFontPermission || 'Local font access was not allowed. You can grant permission and scan again.' ) : ( L.localFontScanFailed || 'Local fonts could not be read. The built-in and WordPress-local font lists are still available.' );
+		}
+		button.disabled = false;
+	}
+
+	function installEmailLocalFontScanControl( root ) {
+		const first = q( '[data-certloom-email-font-select]', root ); if ( ! first || q( '[data-certloom-email-local-font-scan]', root ) ) { return; }
+		const wrap = document.createElement( 'div' ); wrap.className = 'certloom-email-font-discovery';
+		const button = document.createElement( 'button' ); button.type = 'button'; button.className = 'button button-small'; button.dataset.certloomEmailLocalFontScan = '1'; button.textContent = L.scanLocalFonts || 'Scan local fonts';
+		const status = document.createElement( 'small' ); status.className = 'certloom-email-font-discovery__status'; status.textContent = L.localFontScanHelp || 'Optional: allow your browser to list fonts installed on this device. No font files are uploaded.';
+		wrap.append( button, status ); first.parentNode.appendChild( wrap ); button.addEventListener( 'click', () => scanLocalDeviceFonts( root, button, status ) );
+	}
+
 	function initDialogs() {
 		const preview = q( '[data-certloom-email-preview-dialog]' );
 		const target = q( '[data-certloom-email-preview-target]' );
@@ -49,6 +148,9 @@
 		}
 
 		document.body.classList.add( 'certloom-email-studio-active' );
+		refreshFontAvailabilityLabels();
+		probeLocalFontAvailability();
+		installEmailLocalFontScanControl( form );
 
 		const studioRoot = q( '[data-certloom-email-studio]' );
 		const studioHost = document.getElementById( 'wpbody-content' ) || studioRoot?.parentElement;
@@ -233,19 +335,42 @@
 			return block && block.style && typeof block.style === 'object' ? block.style : {};
 		}
 
+		function fontStyleField( label, key ) {
+			const style = blockStyle( blocks[ selected ] || {} );
+			const current = String( style[ key ] || '' );
+			let html = `<option value="">${ esc( L.inheritGlobal || 'Use email default' ) }</option>`;
+			let group = '', matched = false;
+			fontCatalogEntries().forEach( ( entry ) => {
+				const fontKey = entry[ 0 ];
+				const definition = entry[ 1 ];
+				const nextGroup = definition.group || 'Other';
+				if ( nextGroup !== group ) {
+					if ( group ) { html += '</optgroup>'; }
+					group = nextGroup;
+					html += `<optgroup label="${ esc( group ) }">`;
+				}
+				const selectedAttr = current === String( definition.css ) ? ' selected' : '';
+				if ( selectedAttr ) { matched = true; }
+				html += `<option value="${ esc( definition.css ) }" data-font-key="${ esc( fontKey ) }" data-font-label="${ esc( definition.label || fontKey ) }"${ selectedAttr }>${ esc( definition.label || fontKey ) }</option>`;
+			} );
+			if ( group ) { html += '</optgroup>'; }
+			if ( current && ! matched && safeFont( current ) ) {
+				const localLabel = current.split( ',' )[ 0 ].replace( /^[\s"']+|[\s"']+$/g, '' ) || current;
+				html += `<optgroup label="${ esc( L.localDeviceFonts || 'Local device fonts' ) }"><option value="${ esc( current ) }" data-font-label="${ esc( localLabel ) }" selected>${ esc( localLabel ) } · ${ esc( L.savedLocalFont || 'saved local font' ) }</option></optgroup>`;
+			}
+			return `<label class="is-wide certloom-font-picker-field"><span>${ esc( label ) }</span><select data-style-field="${ esc( key ) }" data-certloom-email-font-select>${ html }</select><small class="certloom-font-availability-note">${ esc( L.fontAvailabilityHelp || 'Local/system fonts only. A check mark means the primary font is installed on this device; email recipients can fall back safely.' ) }</small></label>`;
+		}
+
 		function safeColor( value, fallback ) {
 			const color = String( value || '' ).trim();
 			return /^#[0-9A-Fa-f]{6}$/.test( color ) ? color : fallback;
 		}
 
 		function safeFont( value ) {
-			const allowed = [
-				'Arial, Helvetica, sans-serif',
-				'Georgia, Times New Roman, serif',
-				'Verdana, Geneva, sans-serif',
-				'Trebuchet MS, Arial, sans-serif',
-			];
-			return allowed.includes( value ) ? value : '';
+			value = String( value || '' ).trim();
+			if ( ! value ) { return ''; }
+			if ( fontCatalogEntries().some( ( entry ) => String( entry[ 1 ].css ) === value ) ) { return value; }
+			return value.length <= 240 && /^[\p{L}\p{N}\p{M}\s,._\-"'&+()\/]+$/u.test( value ) && ! /(?:url|expression|var)\s*\(/i.test( value ) ? value : '';
 		}
 
 		function typographyStyle( block, kind ) {
@@ -348,7 +473,7 @@
 					return `<div class="certloom-email-custom-html">${ sampleHtml( block.html || '' ) }</div>`;
 				case 'button': {
 					const buttonStyles = typographyStyle( block, 'button' ).split( ';' ).filter( Boolean );
-					buttonStyles.push( `background:${ safeColor( style.background_color, 'var(--certloom-email-button-bg,#0f6e56)' ) }` );
+					buttonStyles.push( `background:${ safeColor( style.background_color, 'var(--certloom-email-button-bg,#01c174)' ) }` );
 					buttonStyles.push( `color:${ safeColor( style.color, 'var(--certloom-email-button-text,#ffffff)' ) }` );
 					buttonStyles.push( `display:inline-block` );
 					buttonStyles.push( `border:0` );
@@ -704,25 +829,24 @@
 			const block = blocks[ selected ];
 			if ( inspectorHeading ) { inspectorHeading.textContent = blockLabel( block ); }
 			let contentFields = '', typographyFields = '', colorFields = '', layoutFields = '', spacingFields = '';
-			const fontOptions = [ [ '', L.inheritGlobal || 'Use email default' ], [ 'Arial, Helvetica, sans-serif', 'Arial' ], [ 'Georgia, Times New Roman, serif', 'Georgia' ], [ 'Verdana, Geneva, sans-serif', 'Verdana' ], [ 'Trebuchet MS, Arial, sans-serif', 'Trebuchet MS' ] ];
 			const weightOptions = [ [ '', L.inheritGlobal || 'Default' ], [ 400, 'Regular' ], [ 500, 'Medium' ], [ 600, 'Semi-bold' ], [ 700, 'Bold' ], [ 800, 'Extra bold' ], [ 900, 'Black' ] ];
 			const alignOptions = [ [ 'left', 'Align left', 'L' ], [ 'center', 'Align center', 'C' ], [ 'right', 'Align right', 'R' ] ];
 			const textToggles = [ [ 'italic', L.italic || 'Italic', '<em>I</em>' ], [ 'underline', L.underline || 'Underline', '<u>U</u>' ] ];
 
 			if ( block.type === 'heading' ) {
 				contentFields += `<div class="certloom-inspector-grid certloom-inspector-grid--content">${ field( L.textLabel || 'Text', 'text' ) }${ field( L.headingLevel || 'Heading level', 'level', 'select', [ [ 1, 'H1' ], [ 2, 'H2' ], [ 3, 'H3' ] ] ) }</div>`;
-				typographyFields += `<div class="certloom-inspector-grid certloom-inspector-grid--2">${ styleField( L.fontFamily || 'Font family', 'font_family', 'select', fontOptions, '', 'is-wide' ) }${ numberStyleField( L.fontSize || 'Font size', 'font_size', 12, 72 ) }${ styleField( L.fontWeight || 'Font weight', 'font_weight', 'select', weightOptions ) }${ numberStyleField( L.lineHeight || 'Line height', 'line_height', 1, 2.5, .05, 'x' ) }</div>${ toggleStyleButtons( textToggles ) }${ segmentedStyleField( L.alignment || 'Alignment', 'align', alignOptions ) }`;
+				typographyFields += `<div class="certloom-inspector-grid certloom-inspector-grid--2">${ fontStyleField( L.fontFamily || 'Font family', 'font_family' ) }${ numberStyleField( L.fontSize || 'Font size', 'font_size', 12, 72 ) }${ styleField( L.fontWeight || 'Font weight', 'font_weight', 'select', weightOptions ) }${ numberStyleField( L.lineHeight || 'Line height', 'line_height', 1, 2.5, .05, 'x' ) }</div>${ toggleStyleButtons( textToggles ) }${ segmentedStyleField( L.alignment || 'Alignment', 'align', alignOptions ) }`;
 				colorFields += colorStyleField( L.textColor || 'Text color', 'color', '#173f34' );
 			}
 			if ( block.type === 'text' ) {
 				contentFields += richTextField();
-				typographyFields += `<div class="certloom-inspector-grid certloom-inspector-grid--2">${ styleField( L.fontFamily || 'Font family', 'font_family', 'select', fontOptions, '', 'is-wide' ) }${ numberStyleField( L.fontSize || 'Font size', 'font_size', 10, 32 ) }${ styleField( L.fontWeight || 'Font weight', 'font_weight', 'select', weightOptions ) }${ numberStyleField( L.lineHeight || 'Line height', 'line_height', 1, 2.5, .05, 'x' ) }</div>${ toggleStyleButtons( textToggles ) }${ segmentedStyleField( L.alignment || 'Alignment', 'align', alignOptions ) }`;
+				typographyFields += `<div class="certloom-inspector-grid certloom-inspector-grid--2">${ fontStyleField( L.fontFamily || 'Font family', 'font_family' ) }${ numberStyleField( L.fontSize || 'Font size', 'font_size', 10, 32 ) }${ styleField( L.fontWeight || 'Font weight', 'font_weight', 'select', weightOptions ) }${ numberStyleField( L.lineHeight || 'Line height', 'line_height', 1, 2.5, .05, 'x' ) }</div>${ toggleStyleButtons( textToggles ) }${ segmentedStyleField( L.alignment || 'Alignment', 'align', alignOptions ) }`;
 				colorFields += colorStyleField( L.textColor || 'Text color', 'color', '#24322e' );
 			}
 			if ( block.type === 'button' ) {
 				contentFields += `<div class="certloom-inspector-grid certloom-inspector-grid--content">${ field( L.buttonTextLabel || 'Button text', 'text' ) }${ field( L.urlLabel || 'URL', 'url' ) }</div>`;
-				typographyFields += `<div class="certloom-inspector-grid certloom-inspector-grid--2">${ styleField( L.fontFamily || 'Font family', 'font_family', 'select', fontOptions, '', 'is-wide' ) }${ numberStyleField( L.fontSize || 'Font size', 'font_size', 10, 28 ) }${ styleField( L.fontWeight || 'Font weight', 'font_weight', 'select', weightOptions ) }</div>${ toggleStyleButtons( textToggles ) }`;
-				colorFields += `<div class="certloom-inspector-grid certloom-inspector-grid--colors">${ colorStyleField( L.textColor || 'Text color', 'color', '#ffffff' ) }${ colorStyleField( L.backgroundColor || 'Background color', 'background_color', '#0f6e56' ) }</div>`;
+				typographyFields += `<div class="certloom-inspector-grid certloom-inspector-grid--2">${ fontStyleField( L.fontFamily || 'Font family', 'font_family' ) }${ numberStyleField( L.fontSize || 'Font size', 'font_size', 10, 28 ) }${ styleField( L.fontWeight || 'Font weight', 'font_weight', 'select', weightOptions ) }</div>${ toggleStyleButtons( textToggles ) }`;
+				colorFields += `<div class="certloom-inspector-grid certloom-inspector-grid--colors">${ colorStyleField( L.textColor || 'Text color', 'color', '#ffffff' ) }${ colorStyleField( L.backgroundColor || 'Background color', 'background_color', '#01c174' ) }</div>`;
 				layoutFields += segmentedBlockField( L.alignment || 'Alignment', 'align', alignOptions );
 				spacingFields += `<div class="certloom-inspector-grid certloom-inspector-grid--3">${ numberStyleField( L.horizontalPadding || 'Horizontal', 'padding_x', 8, 40 ) }${ numberStyleField( L.verticalPadding || 'Vertical', 'padding_y', 6, 24 ) }${ numberStyleField( L.cornerRadius || 'Radius', 'border_radius', 0, 32 ) }</div>`;
 			}
@@ -750,6 +874,7 @@
 			if ( spacingFields ) { body += inspectorSection( L.spacingSection || 'Spacing', spacingFields, false ); }
 			body += inspectorSection( L.blockActions || 'Block actions', actions, false ) + '</div>';
 			inspector.innerHTML = body;
+			refreshFontAvailabilityLabels( inspector );
 
 			qa( '[data-field]', inspector ).forEach( ( input ) => {
 				input.addEventListener( 'focus', () => { lastTokenField = input; } );
@@ -875,7 +1000,7 @@
 			const emailWidth = parseInt( values.email_width || '640', 10 );
 			canvas.style.maxWidth = emailWidth + 'px';
 			canvas.style.setProperty( '--certloom-email-heading-color', values.heading_color || '#173f34' );
-			canvas.style.setProperty( '--certloom-email-button-bg', values.button_background || '#0f6e56' );
+			canvas.style.setProperty( '--certloom-email-button-bg', values.button_background || '#01c174' );
 			canvas.style.setProperty( '--certloom-email-button-text', values.button_text || '#ffffff' );
 			canvas.style.setProperty( '--certloom-email-link-color', values.link_color || '#0f6e56' );
 			canvasFrame?.style.setProperty( '--certloom-email-width', emailWidth + 'px' );
@@ -1044,7 +1169,7 @@
 			const styles = getComputedStyle( canvas );
 			const values = {}; qa( '[data-certloom-theme]', form ).forEach( ( input ) => { values[ input.name.replace( 'theme_', '' ) ] = input.value; } );
 			const body = blocks.map( blockHtml ).join( '' );
-			const pageBackground = values.background || '#f4f7f6'; const contentBackground = values.content_background || '#ffffff'; const heading = values.heading_color || '#173f34'; const buttonBg = values.button_background || '#0f6e56'; const buttonText = values.button_text || '#ffffff'; const link = values.link_color || '#0f6e56';
+			const pageBackground = values.background || '#f4f7f6'; const contentBackground = values.content_background || '#ffffff'; const heading = values.heading_color || '#173f34'; const buttonBg = values.button_background || '#01c174'; const buttonText = values.button_text || '#ffffff'; const link = values.link_color || '#0f6e56';
 			const pageBgImage = values.background_image ? `background-image:url('${ esc( values.background_image ) }');background-size:${ esc( values.background_size || 'cover' ) };background-position:${ esc( values.background_position || 'center' ) };background-repeat:${ esc( values.background_repeat || 'no-repeat' ) };` : '';
 			const contentBgImage = values.content_background_image ? `background-image:url('${ esc( values.content_background_image ) }');background-size:${ esc( values.content_background_size || 'cover' ) };background-position:${ esc( values.content_background_position || 'center' ) };background-repeat:${ esc( values.content_background_repeat || 'no-repeat' ) };` : '';
 			const css = `*{box-sizing:border-box}body{margin:0;background-color:${ esc( pageBackground ) };${ pageBgImage }padding:28px 14px}h1,h2,h3{margin:0 0 18px;color:var(--certloom-email-heading-color);line-height:1.25}h1{font-size:30px}h2{font-size:24px}h3{font-size:19px}p{margin:0 0 12px;line-height:1.65}a{color:var(--certloom-email-link-color)}hr{border:0;border-top:1px solid #dce6e1;margin:24px 0}.button-primary{background:var(--certloom-email-button-bg);color:var(--certloom-email-button-text)}`;

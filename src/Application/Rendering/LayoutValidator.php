@@ -324,7 +324,7 @@ final class LayoutValidator {
 			'letter_spacing_pt' => isset( $style['letter_spacing_pt'] ) ? $this->number( $style['letter_spacing_pt'], 'letter spacing' ) : 0.0,
 			'overflow' => isset( $style['overflow'] ) ? strtolower( (string) $style['overflow'] ) : LayoutSchema::OVERFLOW_SHRINK,
 		);
-		if ( ! preg_match( '/^[a-z0-9][a-z0-9_-]{0,63}$/', $out['font_family'] ) ) {
+		if ( ! preg_match( '/^[a-z0-9][a-z0-9_-]{0,127}$/', $out['font_family'] ) ) {
 			throw new InvalidArgumentException( 'Font family must be a registered Certloom font key.' );
 		}
 		if ( $out['font_size_pt'] < 1 || $out['font_size_pt'] > 300 ) {
@@ -406,7 +406,7 @@ final class LayoutValidator {
 		$out = array();
 		if ( array_key_exists( 'font_family', $style ) ) {
 			$value = trim( (string) $style['font_family'] );
-			if ( ! preg_match( '/^[a-z0-9][a-z0-9_-]{0,63}$/', $value ) ) {
+			if ( ! preg_match( '/^[a-z0-9][a-z0-9_-]{0,127}$/', $value ) ) {
 				throw new InvalidArgumentException( 'Rich text run font family must be a registered Certloom font key.' );
 			}
 			$out['font_family'] = $value;

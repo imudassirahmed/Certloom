@@ -792,8 +792,8 @@ body.certloom-email-studio-active .certloom-product-subnav[data-certloom-product
 	line-height: 1.65;
 }
 .certloom-email-canvas .button-primary {
-	border-color: var(--certloom-email-button-bg,#0f6e56);
-	background: var(--certloom-email-button-bg,#0f6e56);
+	border-color: var(--certloom-email-button-bg,#01c174);
+	background: var(--certloom-email-button-bg,#01c174);
 	color: var(--certloom-email-button-text,#fff);
 }
 .certloom-canvas-block {
@@ -1496,3 +1496,12 @@ body.certloom-email-studio-active .certloom-product-subnav[data-certloom-product
 		width: 100%;
 	}
 }
+
+/* Local/system font catalog */
+.certloom-font-picker-field{display:grid;gap:5px}.certloom-font-picker-field select{min-width:0}.certloom-font-availability-note{display:block;color:#667085;font-size:10px;line-height:1.35;font-weight:500}.certloom-font-picker-field optgroup{font-weight:700}
+
+/* FONT-04 local-device font discovery. Local Font Access is optional and permission-bound. */
+.certloom-email-font-discovery{display:flex;flex-direction:column;align-items:flex-start;gap:5px;margin-top:7px}
+.certloom-email-font-discovery .button{min-height:28px;padding:0 9px;font-size:11px;line-height:26px}
+.certloom-email-font-discovery__status{display:block;color:#64748b;font-size:10px;line-height:1.35}
+.certloom-font-picker-field optgroup{font-weight:700;color:#334155}

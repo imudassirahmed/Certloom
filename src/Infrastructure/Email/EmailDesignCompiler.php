@@ -1,6 +1,8 @@
 <?php
 namespace Certloom\Infrastructure\Email;
 
+use Certloom\Application\Rendering\DesignerFontCatalog;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -16,12 +18,18 @@ final class EmailDesignCompiler {
 
 	/** @return array<int,string> */
 	private static function allowed_fonts() {
-		return array(
-			'Arial, Helvetica, sans-serif',
-			'Georgia, Times New Roman, serif',
-			'Verdana, Geneva, sans-serif',
-			'Trebuchet MS, Arial, sans-serif',
-		);
+		return ( new DesignerFontCatalog() )->css_values();
+	}
+
+	/** @return string */
+	private static function normalize_font_stack( $font ) {
+		$font = trim( (string) $font );
+		if ( '' === $font ) { return ''; }
+		if ( in_array( $font, self::allowed_fonts(), true ) ) { return $font; }
+		// Local Font Access can discover device families unknown to PHP. Accept only
+		// inert font-family syntax; remote URLs, CSS variables and declarations are
+		// rejected by DesignerFontCatalog::safe_css_stack().
+		return ( new DesignerFontCatalog() )->safe_css_stack( $font );
 	}
 
 	/** @return array<string,mixed> */
@@ -39,8 +47,8 @@ final class EmailDesignCompiler {
 			'content_background_repeat'   => 'no-repeat',
 			'text_color'              => '#24322e',
 			'heading_color'           => '#173f34',
-			'button_background'       => '#0f6e56',
-			'button_text'             => '#ffffff',
+			'button_background'       => '#01c174',
+			'button_text'             => '#01133d',
 			'link_color'              => '#0f6e56',
 			'font_family'             => 'Arial, Helvetica, sans-serif',
 			'email_width'             => 640,
@@ -78,6 +86,10 @@ final class EmailDesignCompiler {
 				if ( $hex ) { $out[ $key ] = $hex; }
 			}
 		}
+		if ( '#0f6e56' === strtolower( (string) $out['button_background'] ) ) {
+			$out['button_background'] = '#01c174';
+			if ( '#ffffff' === strtolower( (string) $out['button_text'] ) ) { $out['button_text'] = '#01133d'; }
+		}
 		foreach ( array( 'background_image', 'content_background_image' ) as $key ) {
 			if ( isset( $theme[ $key ] ) ) { $out[ $key ] = esc_url_raw( (string) $theme[ $key ] ); }
 		}
@@ -93,8 +105,8 @@ final class EmailDesignCompiler {
 			$value = sanitize_key( (string) ( $theme[ $key ] ?? $out[ $key ] ) );
 			if ( in_array( $value, array( 'no-repeat', 'repeat', 'repeat-x', 'repeat-y' ), true ) ) { $out[ $key ] = $value; }
 		}
-		$font = isset( $theme['font_family'] ) ? (string) $theme['font_family'] : '';
-		if ( in_array( $font, self::allowed_fonts(), true ) ) { $out['font_family'] = $font; }
+		$font = self::normalize_font_stack( $theme['font_family'] ?? '' );
+		if ( '' !== $font ) { $out['font_family'] = $font; }
 		$out['email_width']   = max( 480, min( 760, absint( $theme['email_width'] ?? $out['email_width'] ) ) );
 		$out['border_radius'] = max( 0, min( 32, absint( $theme['border_radius'] ?? $out['border_radius'] ) ) );
 		return $out;
@@ -104,8 +116,8 @@ final class EmailDesignCompiler {
 	private function sanitize_block_style( $block, $type ) {
 		$style = is_array( $block['style'] ?? null ) ? $block['style'] : array();
 		$out   = array();
-		$font = isset( $style['font_family'] ) ? (string) $style['font_family'] : '';
-		if ( in_array( $font, self::allowed_fonts(), true ) ) { $out['font_family'] = $font; }
+		$font = self::normalize_font_stack( $style['font_family'] ?? '' );
+		if ( '' !== $font ) { $out['font_family'] = $font; }
 		$size_bounds = 'heading' === $type ? array( 12, 72 ) : ( 'button' === $type ? array( 10, 28 ) : array( 10, 32 ) );
 		if ( isset( $style['font_size'] ) && '' !== (string) $style['font_size'] ) { $out['font_size'] = max( $size_bounds[0], min( $size_bounds[1], absint( $style['font_size'] ) ) ); }
 		if ( isset( $style['font_weight'] ) && '' !== (string) $style['font_weight'] ) {

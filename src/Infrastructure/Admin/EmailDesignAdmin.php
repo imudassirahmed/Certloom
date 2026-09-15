@@ -2,6 +2,7 @@
 namespace Certloom\Infrastructure\Admin;
 
 use Certloom\Application\Email\EmailTemplateService;
+use Certloom\Application\Rendering\DesignerFontCatalog;
 use Certloom\Infrastructure\Email\EmailDesignAssignmentRepository;
 use Certloom\Infrastructure\Email\EmailDesignCompiler;
 use Certloom\Infrastructure\Email\EmailDesignPackage;
@@ -26,6 +27,7 @@ final class EmailDesignAdmin {
 	public function register() {
 		add_action( 'admin_menu', array( $this, 'menu' ), 53 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'assets' ) );
+		add_action( 'admin_head', array( $this, 'print_local_font_faces' ) );
 		add_action( 'admin_post_certloom_email_design_save', array( $this, 'save' ) );
 		add_action( 'admin_post_certloom_email_design_delete', array( $this, 'delete' ) );
 		add_action( 'admin_post_certloom_email_design_publish', array( $this, 'publish' ) );
@@ -36,6 +38,13 @@ final class EmailDesignAdmin {
 		// Backward-compatible mutation routes. The current UI does not expose them.
 		add_action( 'admin_post_certloom_email_design_assign', array( $this, 'assign' ) );
 		add_action( 'admin_post_certloom_email_design_inherit', array( $this, 'inherit' ) );
+	}
+
+	/** Print WordPress/theme local font faces inside Email Studio. @return void */
+	public function print_local_font_faces() {
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin routing.
+		if ( self::PAGE !== $page || ! function_exists( 'wp_print_font_faces' ) ) { return; }
+		wp_print_font_faces();
 	}
 
 	/** @return void */
@@ -73,6 +82,7 @@ final class EmailDesignAdmin {
 			true
 		);
 		$merge_tokens = new EmailMergeTokenCatalog();
+		$font_catalog = new DesignerFontCatalog();
 
 		wp_localize_script(
 			'certloom-email-designer',
@@ -162,6 +172,20 @@ final class EmailDesignAdmin {
 				'tokens'                => $merge_tokens->flat(),
 				'tokenGroups'           => $merge_tokens->groups(),
 				'tokenSamples'          => $merge_tokens->sample_values(),
+				'fontCatalog'           => $font_catalog->browser_contract(),
+				'fontLocalLabel'        => __( 'Installed locally', 'certloom' ),
+				'fontFallbackLabel'     => __( 'Uses fallback on this device', 'certloom' ),
+				'fontAvailabilityHelp'   => __( 'Local/system fonts only. A check mark means the primary font is installed on this device; email recipients can fall back safely.', 'certloom' ),
+				'scanLocalFonts'          => __( 'Scan local fonts', 'certloom' ),
+				'localDeviceFonts'        => __( 'Local device fonts', 'certloom' ),
+				'savedLocalFont'          => __( 'saved local font', 'certloom' ),
+				'localFontScanHelp'       => __( 'Optional: allow your browser to list fonts installed on this device. No font files are uploaded.', 'certloom' ),
+				'localFontScanning'       => __( 'Checking fonts installed on this device…', 'certloom' ),
+				'localFontsFound'         => __( 'local font families available.', 'certloom' ),
+				'localFontsNone'          => __( 'No additional local fonts were returned by the browser.', 'certloom' ),
+				'localFontPermission'     => __( 'Local font access was not allowed. You can grant permission and scan again.', 'certloom' ),
+				'localFontUnsupported'    => __( 'This browser cannot list every installed font. WordPress local fonts and the built-in system catalog remain available.', 'certloom' ),
+				'localFontScanFailed'     => __( 'Local fonts could not be read. The built-in and WordPress-local font lists are still available.', 'certloom' ),
 			)
 		);
 	}
@@ -220,6 +244,7 @@ final class EmailDesignAdmin {
 				);
 			}
 
+			$email_font_definitions = ( new DesignerFontCatalog() )->definitions();
 			include CERTLOOM_PATH . 'admin/views/email-designer.php';
 			return;
 		}

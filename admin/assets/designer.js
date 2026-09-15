@@ -13,7 +13,127 @@
 	function registrySnapshot( value ) { try { return JSON.parse( JSON.stringify( value || {} ) ); } catch ( error ) { return {}; } }
 	function deepFreeze( value ) { if ( ! value || 'object' !== typeof value || Object.isFrozen( value ) ) { return value; } Object.freeze( value ); Object.keys( value ).forEach( function ( key ) { deepFreeze( value[ key ] ); } ); return value; }
 	var ELEMENT_REGISTRY = deepFreeze( registrySnapshot( window.certloomTemplateElementRegistry ) );
-	var FONT_CATALOG = deepFreeze( registrySnapshot( window.certloomTemplateFontCatalog ) );
+	var FONT_CATALOG = registrySnapshot( window.certloomTemplateFontCatalog );
+	var FONT_AVAILABILITY = {};
+	var LOCAL_FONT_GROUP = 'Local device fonts';
+	function refreshFontAvailabilityLabels( context ) {
+		context = context || document;
+		var options = context.querySelectorAll( '[data-certloom-font-select] option[data-font-key]' );
+		for ( var i = 0; i < options.length; i++ ) {
+			var option = options[ i ]; var key = String( option.getAttribute( 'data-font-key' ) || '' ); var definition = FONT_CATALOG[ key ] || {}; var base = String( option.getAttribute( 'data-font-label' ) || definition.label || option.textContent || key ).replace( /^✓\s*/, '' );
+			option.setAttribute( 'data-font-label', base );
+			if ( true === FONT_AVAILABILITY[ key ] ) { option.textContent = '✓ ' + base; option.setAttribute( 'data-font-available', '1' ); } else { option.textContent = base; option.setAttribute( 'data-font-available', '0' ); }
+		}
+	}
+	function probeLocalFontAvailability() {
+		Object.keys( FONT_CATALOG || {} ).forEach( function ( key ) {
+			var definition = FONT_CATALOG[ key ] || {};
+			if ( definition.generic ) { FONT_AVAILABILITY[ key ] = true; refreshFontAvailabilityLabels(); return; }
+			FONT_AVAILABILITY[ key ] = false; var names = Array.isArray( definition.local_names ) ? definition.local_names.slice() : [];
+			if ( 'function' !== typeof FontFace || ! names.length ) { return; }
+			var probeNext = function () {
+				if ( ! names.length || true === FONT_AVAILABILITY[ key ] ) { refreshFontAvailabilityLabels(); return; }
+				var name = String( names.shift() || '' ); var escaped = name.replace( /["\\]/g, '\\$&' );
+				try {
+					var face = new FontFace( '__certloom_local_probe_' + key.replace( /[^a-z0-9_-]/gi, '_' ), 'local("' + escaped + '")' );
+					face.load().then( function () { FONT_AVAILABILITY[ key ] = true; refreshFontAvailabilityLabels(); }, probeNext );
+				} catch ( error ) { probeNext(); }
+			};
+			probeNext();
+		} );
+	}
+
+	function base32LocalFontName( name ) {
+		if ( 'function' !== typeof TextEncoder ) { return ''; }
+		var bytes = new TextEncoder().encode( String( name || '' ).trim() );
+		if ( ! bytes.length || bytes.length > 76 ) { return ''; }
+		var alphabet = 'abcdefghijklmnopqrstuvwxyz234567', out = '', buffer = 0, bits = 0;
+		for ( var i = 0; i < bytes.length; i++ ) {
+			buffer = ( buffer << 8 ) | bytes[ i ]; bits += 8;
+			while ( bits >= 5 ) { bits -= 5; out += alphabet[ ( buffer >> bits ) & 31 ]; }
+			buffer &= ( 1 << bits ) - 1;
+		}
+		if ( bits > 0 ) { out += alphabet[ ( buffer << ( 5 - bits ) ) & 31 ]; }
+		return out ? 'local-' + out : '';
+	}
+
+	function addLocalFontToCatalog( family ) {
+		family = String( family || '' ).trim(); var key = base32LocalFontName( family );
+		if ( ! key ) { return ''; }
+		if ( ! FONT_CATALOG[ key ] ) {
+			var escaped = family.replace( /["\\]/g, '\\$&' );
+			FONT_CATALOG[ key ] = { label: family, css: '"' + escaped + '",Arial,sans-serif', group: LOCAL_FONT_GROUP, local_names: [ family ], local_device: true };
+		}
+		FONT_AVAILABILITY[ key ] = true;
+		return key;
+	}
+
+	function localFontNameFromKey( key ) {
+		key = String( key || '' ).toLowerCase(); if ( 0 !== key.indexOf( 'local-' ) ) { return ''; }
+		var encoded = key.slice( 6 ), alphabet = 'abcdefghijklmnopqrstuvwxyz234567', bytes = [], buffer = 0, bits = 0;
+		if ( ! encoded || ! /^[a-z2-7]+$/.test( encoded ) ) { return ''; }
+		for ( var i = 0; i < encoded.length; i++ ) {
+			var value = alphabet.indexOf( encoded.charAt( i ) ); if ( value < 0 ) { return ''; }
+			buffer = ( buffer << 5 ) | value; bits += 5;
+			if ( bits >= 8 ) { bits -= 8; bytes.push( ( buffer >> bits ) & 255 ); buffer &= ( 1 << bits ) - 1; }
+		}
+		if ( bits > 0 && 0 !== buffer ) { return ''; }
+		try { return 'function' === typeof TextDecoder ? new TextDecoder().decode( new Uint8Array( bytes ) ).trim() : ''; } catch ( error ) { return ''; }
+	}
+
+	function registerLocalFontsFromLayout( layout ) {
+		if ( ! layout || ! Array.isArray( layout.elements ) ) { return; }
+		var inspectStyle = function ( style ) {
+			var key = style && style.font_family ? String( style.font_family ) : ''; var family = localFontNameFromKey( key );
+			if ( family ) { var registered = addLocalFontToCatalog( family ); if ( registered && registered !== key.toLowerCase() ) { FONT_CATALOG[ key.toLowerCase() ] = FONT_CATALOG[ registered ]; FONT_AVAILABILITY[ key.toLowerCase() ] = true; } }
+		};
+		layout.elements.forEach( function ( element ) {
+			if ( ! element || 'object' !== typeof element ) { return; } inspectStyle( element.style );
+			if ( Array.isArray( element.runs ) ) { element.runs.forEach( function ( run ) { if ( run && 'object' === typeof run ) { inspectStyle( run.style ); } } ); }
+		} );
+	}
+
+	function syncLocalFontOptions( context ) {
+		context = context || document;
+		var localEntries = Object.keys( FONT_CATALOG ).filter( function ( key ) { return FONT_CATALOG[ key ] && FONT_CATALOG[ key ].local_device; } ).sort( function ( a, b ) { return String( FONT_CATALOG[ a ].label ).localeCompare( String( FONT_CATALOG[ b ].label ) ); } );
+		var selects = context.querySelectorAll( '[data-certloom-font-select]' );
+		for ( var i = 0; i < selects.length; i++ ) {
+			var select = selects[ i ], current = select.value, group = select.querySelector( 'optgroup[data-certloom-local-font-group]' );
+			if ( ! group ) { group = document.createElement( 'optgroup' ); group.label = t( 'localDeviceFonts', LOCAL_FONT_GROUP ); group.setAttribute( 'data-certloom-local-font-group', '1' ); select.appendChild( group ); }
+			group.textContent = '';
+			for ( var j = 0; j < localEntries.length; j++ ) {
+				var key = localEntries[ j ], definition = FONT_CATALOG[ key ], option = document.createElement( 'option' ); option.value = key; option.setAttribute( 'data-font-key', key ); option.setAttribute( 'data-font-label', definition.label ); option.textContent = definition.label; group.appendChild( option );
+			}
+			if ( current ) { select.value = current; }
+		}
+		refreshFontAvailabilityLabels( context );
+	}
+
+	async function scanLocalDeviceFonts( root, button, status ) {
+		if ( 'function' !== typeof window.queryLocalFonts ) {
+			if ( status ) { status.textContent = t( 'localFontUnsupported', 'This browser cannot list every installed font. WordPress local fonts and the built-in system catalog remain available.' ); }
+			return;
+		}
+		button.disabled = true; if ( status ) { status.textContent = t( 'localFontScanning', 'Checking fonts installed on this device…' ); }
+		try {
+			var faces = await window.queryLocalFonts(); var families = {};
+			for ( var i = 0; i < faces.length; i++ ) { var family = String( faces[ i ] && faces[ i ].family || '' ).trim(); if ( family ) { families[ family ] = true; } }
+			Object.keys( families ).forEach( addLocalFontToCatalog ); syncLocalFontOptions( root );
+			if ( status ) { status.textContent = Object.keys( families ).length ? Object.keys( families ).length + ' ' + t( 'localFontsFound', 'local font families available.') : t( 'localFontsNone', 'No additional local fonts were returned by the browser.' ); }
+		} catch ( error ) {
+			if ( status ) { status.textContent = 'NotAllowedError' === String( error && error.name ) ? t( 'localFontPermission', 'Local font access was not allowed. You can grant permission and scan again.') : t( 'localFontScanFailed', 'Local fonts could not be read. The built-in and WordPress-local font lists are still available.' ); }
+		}
+		button.disabled = false;
+	}
+
+	function installLocalFontScanControls( root ) {
+		var firstSelect = root.querySelector( '[data-certloom-font-select]' ); if ( ! firstSelect || root.querySelector( '[data-certloom-local-font-scan]' ) ) { return; }
+		var wrap = document.createElement( 'div' ); wrap.className = 'certloom-local-font-discovery';
+		var button = document.createElement( 'button' ); button.type = 'button'; button.className = 'button button-small'; button.setAttribute( 'data-certloom-local-font-scan', '1' ); button.textContent = t( 'scanLocalFonts', 'Scan local fonts' );
+		var status = document.createElement( 'small' ); status.className = 'certloom-local-font-discovery__status'; status.setAttribute( 'data-certloom-local-font-status', '1' ); status.textContent = t( 'localFontScanHelp', 'Optional: allow your browser to list fonts installed on this device. No font files are uploaded.' );
+		wrap.appendChild( button ); wrap.appendChild( status ); firstSelect.parentNode.appendChild( wrap );
+		button.addEventListener( 'click', function () { scanLocalDeviceFonts( root, button, status ); } );
+	}
 	var SAMPLE_DATA = deepFreeze( registrySnapshot( window.certloomTemplateDesignerSamples ) );
 	var PAGE_DIMENSIONS = {
 		A4: { portrait: [ 210, 297 ], landscape: [ 297, 210 ] },
@@ -90,6 +210,9 @@
 
 	function initDesigner( root ) {
 		var form = root.querySelector( '[data-certloom-designer-form]' );
+		refreshFontAvailabilityLabels( root );
+		probeLocalFontAvailability();
+		installLocalFontScanControls( root );
 		var jsonField = root.querySelector( '[data-certloom-designer-json]' );
 		var stateField = root.querySelector( '[data-certloom-designer-state-json]' );
 		var pageEl = root.querySelector( '[data-certloom-designer-page]' );
@@ -214,6 +337,8 @@
 			try { savedState = normalizeState( JSON.parse( stateField.value ) ); } catch ( stateError ) { savedState = normalizeState( savedState ); }
 		}
 		var layout = clone( savedLayout );
+		registerLocalFontsFromLayout( layout );
+		syncLocalFontOptions( root );
 		var designerState = clone( savedState );
 		var autosaveStatus = root.getAttribute( 'data-autosave-status' ) || 'none';
 		var recovered = false;
@@ -224,6 +349,8 @@
 				recovered = true;
 			} catch ( recoveryError ) { layout = clone( savedLayout ); designerState = clone( savedState ); recovered = false; }
 		}
+		registerLocalFontsFromLayout( layout );
+		syncLocalFontOptions( root );
 		var schemaVersion = Number( layout && layout._meta ? layout._meta.schema_version : root.getAttribute( 'data-layout-schema-version' ) || 0 );
 		var fitZoom = 1;
 		var zoom = 1;
@@ -824,10 +951,14 @@
 		}
 		function richStyleSelect( key, value, label ) {
 			var select = document.createElement( 'select' ); select.setAttribute( 'data-certloom-designer-rich-style', key ); select.setAttribute( 'aria-label', label ); var inherit = document.createElement( 'option' ); inherit.value = ''; inherit.textContent = t( 'inherit', 'Inherit' ); select.appendChild( inherit );
-			if ( 'font_family' === key ) { Object.keys( FONT_CATALOG || {} ).sort().forEach( function ( family ) { var option = document.createElement( 'option' ); option.value = family; option.textContent = ( FONT_CATALOG[ family ] && FONT_CATALOG[ family ].label ) ? FONT_CATALOG[ family ].label : family; select.appendChild( option ); } ); }
+			if ( 'font_family' === key ) {
+				select.setAttribute( 'data-certloom-font-select', '1' ); var groups = {}; var groupOrder = [];
+				Object.keys( FONT_CATALOG || {} ).forEach( function ( family ) { var definition = FONT_CATALOG[ family ] || {}; var group = String( definition.group || 'Other' ); if ( ! groups[ group ] ) { groups[ group ] = []; groupOrder.push( group ); } groups[ group ].push( family ); } );
+				groupOrder.forEach( function ( group ) { var optgroup = document.createElement( 'optgroup' ); optgroup.label = group; groups[ group ].forEach( function ( family ) { var definition = FONT_CATALOG[ family ] || {}; var option = document.createElement( 'option' ); option.value = family; option.textContent = definition.label || family; option.setAttribute( 'data-font-key', family ); option.setAttribute( 'data-font-label', definition.label || family ); optgroup.appendChild( option ); } ); select.appendChild( optgroup ); } );
+			}
 			else if ( 'font_weight' === key ) { for ( var weight = 100; weight <= 900; weight += 100 ) { var weightOption = document.createElement( 'option' ); weightOption.value = String( weight ); weightOption.textContent = String( weight ); select.appendChild( weightOption ); } }
 			else if ( 'italic' === key ) { var italic = document.createElement( 'option' ); italic.value = 'true'; italic.textContent = t( 'italic', 'Italic' ); select.appendChild( italic ); var normal = document.createElement( 'option' ); normal.value = 'false'; normal.textContent = t( 'normal', 'Normal' ); select.appendChild( normal ); }
-			select.value = null == value ? '' : String( value ); return select;
+			select.value = null == value ? '' : String( value ); if ( 'font_family' === key ) { refreshFontAvailabilityLabels( select ); } return select;
 		}
 		function renderRichRunEditor( element ) {
 			if ( ! richRunsContainer ) { return; } richRunsContainer.innerHTML = '';
