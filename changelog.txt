@@ -1,3 +1,8 @@
+= 1.7.0-alpha.4.71 =
+* Email Studio: change the product-default credential CTA to the canonical Certloom logo blue #1369FC with white #FFFFFF button text in the canvas, Preview and compiled outgoing email.
+* Compatibility: migrate only the exact former Certloom default pairs (forest-green/white and emerald/navy) to blue/white while preserving deliberate custom button colors.
+* Regression coverage: lock the new default and legacy-default migration contract without changing Container geometry, the fitted-canvas viewport model or delivery authority.
+
 = 1.7.0-alpha.4.70 =
 * Email Studio: polish Container presets into larger visual layout cards with usable hit areas while preserving the generic Container data model.
 * Email Studio: replace the crude empty Container placeholder with a bounded drop state, direct Add block action and selected-Container identity badge; Properties now shows the selected hierarchy path and Structure mirrors nested selection.

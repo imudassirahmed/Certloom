@@ -43,6 +43,9 @@ async def run():
         await page.get_by_role('tab',name='Insert',exact=True).click()
         initial=await page.locator('.certloom-canvas-block').count()
         await ck(initial>=3,'defaultBlocksLoaded')
+        await ck((await page.locator('[name="theme_button_background"]').input_value()).lower()=='#1369fc' and (await page.locator('[name="theme_button_text"]').input_value()).lower()=='#ffffff','certloomBlueDefaultCtaTheme')
+        default_cta=page.locator('.certloom-canvas-block .button-primary').first
+        await ck(await default_cta.evaluate("n=>getComputedStyle(n).backgroundColor==='rgb(19, 105, 252)' && getComputedStyle(n).color==='rgb(255, 255, 255)'"),'certloomBlueDefaultCtaCanvas')
         await ck(await page.locator('.certloom-canvas-drag-handle[draggable="true"]').count()==initial,'dragHandlesPresent')
         # Select the text block, use the visual rich-text tools and insert dynamic data.
         text_block=page.locator('.certloom-canvas-block').nth(1)

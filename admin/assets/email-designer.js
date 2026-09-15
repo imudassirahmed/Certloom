@@ -547,14 +547,14 @@
 					return `<div class="certloom-email-custom-html">${ sampleHtml( block.html || '' ) }</div>`;
 				case 'button': {
 					const buttonStyles = typographyStyle( block, 'button' ).split( ';' ).filter( Boolean );
-					const bg = safeColor( style.background_color, '#01c174' );
-					buttonStyles.push( `background:${ rgbaColor( bg, style.background_opacity ?? 100, '#01c174' ) }` );
-					buttonStyles.push( `color:${ safeColor( style.color, '#01133d' ) }` );
+					const bg = safeColor( style.background_color, '#1369fc' );
+					buttonStyles.push( `background:${ rgbaColor( bg, style.background_opacity ?? 100, '#1369fc' ) }` );
+					buttonStyles.push( `color:${ safeColor( style.color, '#ffffff' ) }` );
 					buttonStyles.push( `display:${ style.full_width ? 'block' : 'inline-block' }` );
 					if ( style.full_width ) { buttonStyles.push( 'width:100%', 'box-sizing:border-box', 'text-align:center' ); }
 					const borderWidth = Math.max( 0, Math.min( 8, Number( style.border_width ) || 0 ) );
 					const borderStyle = [ 'solid', 'dashed', 'dotted' ].includes( style.border_style ) ? style.border_style : 'solid';
-					buttonStyles.push( borderWidth && style.border_color ? `border:${ borderWidth }px ${ borderStyle } ${ safeColor( style.border_color, '#01133d' ) }` : 'border:0' );
+					buttonStyles.push( borderWidth && style.border_color ? `border:${ borderWidth }px ${ borderStyle } ${ safeColor( style.border_color, '#1369fc' ) }` : 'border:0' );
 					buttonStyles.push( `text-decoration:${ style.underline ? 'underline' : 'none' }` );
 					buttonStyles.push( `border-radius:${ Math.max( 0, Number( style.border_radius ?? 12 ) || 0 ) }px` );
 					buttonStyles.push( `padding:${ Math.max( 6, Number( style.padding_y ?? 13 ) || 13 ) }px ${ Math.max( 8, Number( style.padding_x ?? 20 ) || 20 ) }px` );
@@ -865,7 +865,7 @@
 			if ( block.type === 'button' ) {
 				contentFields += `<div class="certloom-inspector-grid certloom-inspector-grid--content">${ field( L.buttonTextLabel || 'Button text', 'text' ) }${ field( L.urlLabel || 'URL', 'url' ) }</div>`;
 				typographyFields += `<div class="certloom-inspector-grid certloom-inspector-grid--2">${ fontStyleField( L.fontFamily || 'Font family', 'font_family' ) }${ numberStyleField( L.fontSize || 'Font size', 'font_size', 10, 28 ) }${ styleField( L.fontWeight || 'Font weight', 'font_weight', 'select', weightOptions ) }${ numberStyleField( L.letterSpacing || 'Letter spacing', 'letter_spacing', -5, 20, .1, 'px' ) }${ styleField( L.textTransform || 'Text transform', 'text_transform', 'select', [ [ 'none', L.none || 'None' ], [ 'uppercase', L.uppercase || 'Uppercase' ], [ 'lowercase', L.lowercase || 'Lowercase' ], [ 'capitalize', L.capitalize || 'Capitalize' ] ] ) }</div>${ toggleStyleButtons( textToggles ) }`;
-				colorFields += `<div class="certloom-inspector-grid certloom-inspector-grid--colors">${ colorStyleField( L.textColor || 'Text color', 'color', '#01133d' ) }${ colorStyleField( L.backgroundColor || 'Background color', 'background_color', '#01c174' ) }${ rangeStyleField( L.backgroundOpacity || 'Background opacity', 'background_opacity', 0, 100, 1, 100 ) }${ colorStyleField( L.borderColor || 'Border color', 'border_color', '#01133d' ) }</div>`;
+				colorFields += `<div class="certloom-inspector-grid certloom-inspector-grid--colors">${ colorStyleField( L.textColor || 'Text color', 'color', '#ffffff' ) }${ colorStyleField( L.backgroundColor || 'Background color', 'background_color', '#1369fc' ) }${ rangeStyleField( L.backgroundOpacity || 'Background opacity', 'background_opacity', 0, 100, 1, 100 ) }${ colorStyleField( L.borderColor || 'Border color', 'border_color', '#1369fc' ) }</div>`;
 				layoutFields += segmentedBlockField( L.alignment || 'Alignment', 'align', alignOptions ) + `<label class="certloom-email-toggle-row"><input type="checkbox" data-style-boolean="full_width" ${ blockStyle( block ).full_width ? 'checked' : '' }><span>${esc(L.fullWidthButton || 'Full width button')}</span></label>`;
 				spacingFields += `<div class="certloom-inspector-grid certloom-inspector-grid--3">${ numberStyleField( L.horizontalPadding || 'Horizontal', 'padding_x', 8, 48 ) }${ numberStyleField( L.verticalPadding || 'Vertical', 'padding_y', 6, 32 ) }${ numberStyleField( L.cornerRadius || 'Radius', 'border_radius', 0, 32 ) }${ numberStyleField( L.verticalMargin || 'Vertical margin', 'margin_y', 0, 60 ) }${ numberStyleField( L.borderWidth || 'Border width', 'border_width', 0, 8 ) }${ styleField( L.borderStyle || 'Border style', 'border_style', 'select', [ [ 'solid', L.solid || 'Solid' ], [ 'dashed', L.dashed || 'Dashed' ], [ 'dotted', L.dotted || 'Dotted' ] ] ) }</div>`;
 			}
@@ -1007,8 +1007,8 @@
 			const emailWidth = parseInt( values.email_width || '640', 10 );
 			canvas.style.maxWidth = emailWidth + 'px';
 			canvas.style.setProperty( '--certloom-email-heading-color', values.heading_color || '#173f34' );
-			canvas.style.setProperty( '--certloom-email-button-bg', values.button_background || '#01c174' );
-			canvas.style.setProperty( '--certloom-email-button-text', values.button_text || '#01133d' );
+			canvas.style.setProperty( '--certloom-email-button-bg', values.button_background || '#1369fc' );
+			canvas.style.setProperty( '--certloom-email-button-text', values.button_text || '#ffffff' );
 			canvas.style.setProperty( '--certloom-email-link-color', values.link_color || '#0f6e56' );
 			canvasFrame?.style.setProperty( '--certloom-email-width', emailWidth + 'px' );
 			if ( stageMeta ) {
@@ -1177,7 +1177,7 @@
 			const styles = getComputedStyle( canvas );
 			const values = {}; qa( '[data-certloom-theme]', form ).forEach( ( input ) => { values[ input.name.replace( 'theme_', '' ) ] = input.value; } );
 			const body = blocks.map( blockHtml ).join( '' );
-			const pageBackground = values.background || '#f4f7f6'; const contentBackground = values.content_background || '#ffffff'; const heading = values.heading_color || '#173f34'; const buttonBg = values.button_background || '#01c174'; const buttonText = values.button_text || '#01133d'; const link = values.link_color || '#0f6e56';
+			const pageBackground = values.background || '#f4f7f6'; const contentBackground = values.content_background || '#ffffff'; const heading = values.heading_color || '#173f34'; const buttonBg = values.button_background || '#1369fc'; const buttonText = values.button_text || '#ffffff'; const link = values.link_color || '#0f6e56';
 			const pageBgImage = values.background_image ? `background-image:url('${ esc( values.background_image ) }');background-size:${ esc( values.background_size || 'cover' ) };background-position:${ esc( values.background_position || 'center' ) };background-repeat:${ esc( values.background_repeat || 'no-repeat' ) };` : '';
 			const contentBgImage = values.content_background_image ? `background-image:url('${ esc( values.content_background_image ) }');background-size:${ esc( values.content_background_size || 'cover' ) };background-position:${ esc( values.content_background_position || 'center' ) };background-repeat:${ esc( values.content_background_repeat || 'no-repeat' ) };` : '';
 			const css = `*{box-sizing:border-box}body{margin:0;background-color:${ esc( pageBackground ) };${ pageBgImage }padding:28px 14px}h1,h2,h3{margin:0 0 18px;color:var(--certloom-email-heading-color);line-height:1.25}h1{font-size:30px}h2{font-size:24px}h3{font-size:19px}p{margin:0 0 12px;line-height:1.65}a{color:var(--certloom-email-link-color)}hr{border:0;border-top:1px solid #dce6e1;margin:24px 0}.button-primary{background:var(--certloom-email-button-bg);color:var(--certloom-email-button-text)}@media(max-width:600px){.certloom-email-container-preview.is-row.is-stack-mobile{flex-direction:column!important}.certloom-email-container-preview.is-row.is-stack-mobile>div{width:100%!important;flex-basis:auto!important}}`;

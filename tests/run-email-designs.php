@@ -42,6 +42,17 @@ function ed_has($source,$needle,$message){ed_ok(false!==strpos($source,$needle),
 function ed_lacks($source,$needle,$message){ed_ok(false===strpos($source,$needle),$message);}
 
 $compiler=new EmailDesignCompiler();
+$default_theme=EmailDesignCompiler::default_theme();
+ed_same('#1369fc',$default_theme['button_background'],'default email CTA uses canonical Certloom logo blue');
+ed_same('#ffffff',$default_theme['button_text'],'default email CTA uses white text');
+$legacy_emerald=$compiler->normalize_theme(array('button_background'=>'#01C174','button_text'=>'#01133D'));
+ed_same('#1369fc',$legacy_emerald['button_background'],'former emerald/navy product default migrates to Certloom blue');
+ed_same('#ffffff',$legacy_emerald['button_text'],'former emerald/navy product default migrates to white text');
+$legacy_forest=$compiler->normalize_theme(array('button_background'=>'#0F6E56','button_text'=>'#FFFFFF'));
+ed_same('#1369fc',$legacy_forest['button_background'],'former forest/white product default migrates to Certloom blue');
+ed_same('#ffffff',$legacy_forest['button_text'],'former forest/white product default keeps white text');
+$custom_emerald=$compiler->normalize_theme(array('button_background'=>'#01C174','button_text'=>'#FFFFFF'));
+ed_same('#01c174',$custom_emerald['button_background'],'deliberate custom emerald/white button remains unchanged');
 $token_catalog=new EmailMergeTokenCatalog();
 $token_groups=$token_catalog->groups();
 ed_ok(isset($token_groups['recipient']['tokens']['recipient.name']),'Data catalog exposes canonical Recipient fields');

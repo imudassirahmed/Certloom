@@ -60,8 +60,8 @@ final class EmailDesignCompiler {
 			'content_background_overlay_opacity' => 0,
 			'text_color'                  => '#24322e',
 			'heading_color'               => '#173f34',
-			'button_background'           => '#01c174',
-			'button_text'                 => '#01133d',
+			'button_background'           => '#1369fc',
+			'button_text'                 => '#ffffff',
 			'link_color'                  => '#0f6e56',
 			'font_family'                 => 'Arial, Helvetica, sans-serif',
 			'email_width'                 => 640,
@@ -165,13 +165,16 @@ final class EmailDesignCompiler {
 			}
 		}
 
-		// Migrate only the exact former product default. Deliberate customer
-		// colors remain untouched.
-		if ( '#0f6e56' === strtolower( (string) $out['button_background'] ) ) {
-			$out['button_background'] = '#01c174';
-			if ( '#ffffff' === strtolower( (string) $out['button_text'] ) ) {
-				$out['button_text'] = '#01133d';
-			}
+		// Migrate only exact former product-default color pairs. Deliberate
+		// customer colors remain untouched.
+		$button_background = strtolower( (string) $out['button_background'] );
+		$button_text       = strtolower( (string) $out['button_text'] );
+		if (
+			( '#0f6e56' === $button_background && '#ffffff' === $button_text ) ||
+			( '#01c174' === $button_background && '#01133d' === $button_text )
+		) {
+			$out['button_background'] = '#1369fc';
+			$out['button_text']       = '#ffffff';
 		}
 
 		foreach ( array( 'background_image', 'content_background_image' ) as $key ) {

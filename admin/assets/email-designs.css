@@ -792,8 +792,8 @@ body.certloom-email-studio-active .certloom-product-subnav[data-certloom-product
 	line-height: 1.65;
 }
 .certloom-email-canvas .button-primary {
-	border-color: var(--certloom-email-button-bg,#01c174);
-	background: var(--certloom-email-button-bg,#01c174);
+	border-color: var(--certloom-email-button-bg,#1369fc);
+	background: var(--certloom-email-button-bg,#1369fc);
 	color: var(--certloom-email-button-text,#fff);
 }
 .certloom-canvas-block {
