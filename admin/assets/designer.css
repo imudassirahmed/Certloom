@@ -2163,6 +2163,12 @@
 	.certloom-studio-page-readout { display: none; }
 }
 @media (max-width: 900px) {
+	.certloom-template-designer-v2 .certloom-studio-insert-item,
+	.certloom-template-designer-v2 .certloom-studio-view-popover select,
+	.certloom-template-designer-v2 .certloom-template-designer-inspector .certloom-studio-accordion-trigger,
+	.certloom-template-designer-v2 .certloom-template-designer-inspector input:not([type="hidden"]),
+	.certloom-template-designer-v2 .certloom-template-designer-inspector select,
+	.certloom-template-designer-v2 .certloom-template-designer-inspector .button { min-height: 44px; }
 	.certloom-studio-header { grid-template-columns: auto 1fr auto; }
 	.certloom-studio-brand, .certloom-studio-divider, .certloom-studio-save-state { display: none; }
 	.certloom-studio-back { grid-column: 1; }

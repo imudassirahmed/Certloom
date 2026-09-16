@@ -28,6 +28,7 @@ async def main():
         browser=await p.chromium.launch(headless=True,executable_path='/usr/bin/chromium',args=['--no-sandbox','--disable-dev-shm-usage','--disable-gpu'])
         page=await browser.new_page(viewport={'width':1650,'height':900}); page.set_default_timeout(5000)
         await page.set_content(html4,wait_until='load'); await page.wait_for_timeout(220)
+        await page.locator('[data-certloom-designer-insert-focus]').click(); await page.wait_for_timeout(30)
         sig_add=page.locator('[data-certloom-designer-add="signature"]')
         await ck(await sig_add.count()==1 and not await sig_add.is_disabled(),'schema4SignatureInsertAvailable')
         before=await snapshot(page); before_count=len(before['elements'])
@@ -39,14 +40,14 @@ async def main():
         await ck(await selected.count()==1 and await selected.get_attribute('aria-pressed')=='true','newSignerSignatureSelected')
         status=page.locator('[data-certloom-designer-signature-status]')
         await ck(await status.is_visible() and 'credential Signer snapshot' in ((await status.inner_text()) or ''),'propertiesTruthfullyShowsSignerSnapshotSource')
-        context=page.locator('[data-certloom-designer-context-group="signature"]')
-        await ck(await context.is_visible(),'signatureContextToolbarVisible')
+        context=page.locator('[data-certloom-designer-content="signature"]')
+        await ck(await context.is_visible(),'signatureInspectorVisible')
         await ck(await page.locator('[data-certloom-designer-content="signature"]').is_visible(),'signaturePropertiesGroupVisible')
         title=(await selected.inner_text()) or ''
         await ck('Credential Signer' in title,'canvasPreviewLabelsDynamicSignerSource')
 
         canonical_before=json.dumps(saved,sort_keys=True,separators=(',',':'))
-        await page.locator('[data-certloom-designer-sample-data]').select_option('rtl'); await page.wait_for_timeout(80)
+        await page.locator('.certloom-studio-view-menu summary').click(); await page.wait_for_timeout(30); await page.locator('[data-certloom-designer-sample-data]').select_option('rtl'); await page.wait_for_timeout(80)
         sample_after=await snapshot(page)
         await ck(json.dumps(sample_after,sort_keys=True,separators=(',',':'))==canonical_before,'sampleProfileNeverMutatesSignerSourceLayout')
 
@@ -79,7 +80,7 @@ async def main():
 
         old=await browser.new_page(viewport={'width':1280,'height':800}); old.set_default_timeout(5000)
         await old.set_content(html3,wait_until='load'); await old.wait_for_timeout(190)
-        old_add=old.locator('[data-certloom-designer-add="signature"]'); await old_add.click(); await old.wait_for_timeout(100)
+        await old.locator('[data-certloom-designer-insert-focus]').click(); await old.wait_for_timeout(20); old_add=old.locator('[data-certloom-designer-add="signature"]'); await old_add.click(); await old.wait_for_timeout(100)
         old_saved=await snapshot(old); old_sig=old_saved['elements'][-1]
         await ck(old_sig.get('type')=='signature' and old_sig.get('asset')=='attachment:321' and 'source' not in old_sig,'schema3SignatureInsertPreservesFixedMediaBehavior')
         old_source=old.locator('[data-certloom-designer-content="signature"] [data-certloom-designer-signature-source="signer"]')
@@ -88,7 +89,7 @@ async def main():
         await old.close()
 
         mobile=await browser.new_page(viewport={'width':390,'height':844}); mobile.set_default_timeout(5000)
-        await mobile.set_content(html4,wait_until='load'); await mobile.wait_for_timeout(190); await mobile.locator('[data-certloom-designer-add="signature"]').click(); await mobile.wait_for_timeout(80)
+        await mobile.set_content(html4,wait_until='load'); await mobile.wait_for_timeout(190); await mobile.locator('[data-certloom-designer-insert-focus]').click(); await mobile.wait_for_timeout(20); await mobile.locator('[data-certloom-designer-add="signature"]').click(); await mobile.wait_for_timeout(80)
         msource=mobile.locator('[data-certloom-designer-content="signature"] [data-certloom-designer-signature-source="signer"]')
         mmedia=mobile.locator('[data-certloom-designer-content="signature"] [data-certloom-designer-media]')
         sh=await msource.evaluate("e=>parseFloat(getComputedStyle(e).minHeight)||e.getBoundingClientRect().height")

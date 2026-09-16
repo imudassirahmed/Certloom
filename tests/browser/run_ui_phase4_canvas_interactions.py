@@ -43,6 +43,7 @@ async def main():
         browser=await p.chromium.launch(headless=True,executable_path='/usr/bin/chromium',args=['--no-sandbox','--disable-dev-shm-usage','--disable-gpu'])
         page=await browser.new_page(viewport={'width':1650,'height':900}); page.set_default_timeout(5000)
         await page.set_content(html,wait_until='load'); await page.wait_for_timeout(250)
+        view=page.locator('.certloom-studio-view-menu'); await view.locator('summary').click(); await page.wait_for_timeout(30)
         safe=page.locator('[data-certloom-designer-safe-area]'); pan=page.locator('[data-certloom-designer-pan-tool]')
         await ck(await safe.is_visible() and await safe.get_attribute('aria-pressed')=='false','safeAreaControlVisibleOff')
         await ck(await pan.is_visible() and await pan.get_attribute('aria-pressed')=='false','panControlVisibleOff')
@@ -72,7 +73,7 @@ async def main():
         await page.locator(f'[data-certloom-designer-layer-select="{IDS["b"]}"]').click(); await page.wait_for_timeout(40); await bnode.click(button='right'); await page.wait_for_timeout(50)
         menu=page.locator('[data-certloom-designer-context-menu]')
         await ck(await menu.is_visible() and await menu.get_attribute('role')=='menu','rightClickOpensAriaContextMenu')
-        actions=await menu.locator('[data-certloom-designer-context-action]').evaluate_all("els=>els.map(e=>e.dataset.certloomDesignerContextAction)")
+        actions=await menu.locator('[data-certloom-designer-context-action]').evaluate_all("els=>els.filter(e=>!e.hidden).map(e=>e.dataset.certloomDesignerContextAction)")
         await ck(actions==['copy','cut','duplicate','front','back','lock','delete'],'contextMenuHasBoundedActions')
         focused=await page.evaluate("document.activeElement && document.activeElement.getAttribute('data-certloom-designer-context-action')")
         await ck(focused=='copy','contextMenuFocusesFirstEnabledAction')
@@ -87,7 +88,7 @@ async def main():
         await ck('is-locked' not in ((await bnode.get_attribute('class')) or ''),'contextLockIsUndoable')
 
         # Explicit Pan and temporary Space+drag alter only the sticky workspace viewport.
-        zoom=page.locator('[data-certloom-designer-zoom]'); await zoom.fill('200'); await page.wait_for_timeout(100)
+        zoom=page.locator('[data-certloom-designer-zoom]'); await zoom.evaluate("(e)=>{e.value='200';e.dispatchEvent(new Event('input',{bubbles:true}))}"); await page.wait_for_timeout(100)
         workspace=page.locator('[data-certloom-designer-workspace]')
         dims=await workspace.evaluate('e=>({cw:e.clientWidth,ch:e.clientHeight,sw:e.scrollWidth,sh:e.scrollHeight})')
         await ck(dims['sw']>dims['cw'] and dims['sh']>dims['ch'],'zoomCreatesLocalPanRange')
@@ -104,7 +105,7 @@ async def main():
         await ck(sc2['l']>=80 and sc2['t']>=45 and await pan.get_attribute('aria-pressed')=='false','spaceDragTemporarilyPans')
 
         # Equal-spacing smart snap: C between B and D becomes 30/30 mm gaps at x=120.
-        await zoom.fill('100'); await workspace.evaluate('e=>{e.scrollLeft=0;e.scrollTop=0}'); await page.wait_for_timeout(90)
+        await zoom.evaluate("(e)=>{e.value='100';e.dispatchEvent(new Event('input',{bubbles:true}))}"); await workspace.evaluate('e=>{e.scrollLeft=0;e.scrollTop=0}'); await page.wait_for_timeout(90)
         cnode=page.locator(f'[data-certloom-designer-element="{IDS["c"]}"]'); cb=await cnode.bounding_box(); cx=cb['x']+cb['width']/2; cy=cb['y']+cb['height']/2
         await page.mouse.move(cx,cy); await page.mouse.down(); await page.mouse.move(cx-25,cy,steps=4); await page.wait_for_timeout(35)
         guides=page.locator('.certloom-template-designer-spacing-guide')
@@ -139,7 +140,7 @@ async def main():
         mobile_a=mobile.locator(f'[data-certloom-designer-element="{IDS["a"]}"]'); await mobile_a.focus(); await mobile_a.press('Shift+F10'); await mobile.wait_for_timeout(30)
         mh=await mobile.locator('[data-certloom-designer-context-action="copy"]').evaluate('e=>parseFloat(getComputedStyle(e).minHeight)||0')
         await ck(mh>=43.5,'mobileContextMenuTarget44')
-        await mobile.emulate_media(forced_colors='active'); await mobile.locator('[data-certloom-designer-safe-area]').click(); await mobile.wait_for_timeout(30)
+        await mobile.emulate_media(forced_colors='active'); await mobile.locator('.certloom-studio-view-menu summary').click(); await mobile.wait_for_timeout(30); await mobile.locator('[data-certloom-designer-safe-area]').click(); await mobile.wait_for_timeout(30)
         await ck(await mobile.locator('[data-certloom-designer-safe-area-overlay]').count()==1,'forcedColorsSafeAreaStillVisible')
         await mobile.close(); await browser.close()
     if failed:

@@ -23,6 +23,7 @@ async def main():
         browser=await p.chromium.launch(headless=True,executable_path='/usr/bin/chromium',args=['--no-sandbox','--disable-dev-shm-usage','--disable-gpu'])
         page=await browser.new_page(viewport={'width':1650,'height':900}); page.set_default_timeout(6000)
         await page.set_content(html4,wait_until='load'); await page.wait_for_timeout(240)
+        await page.locator('[data-certloom-designer-insert-focus]').click(); await page.wait_for_timeout(30)
         table_add=page.locator('[data-certloom-designer-add="table"]'); data_add=page.locator('[data-certloom-designer-add="data_table"]')
         await ck(await table_add.count()==1 and not await table_add.is_disabled(),'schema4TableInsertAvailable')
         await ck(await data_add.count()==1 and not await data_add.is_disabled(),'schema4DataTableInsertAvailable')
@@ -33,7 +34,7 @@ async def main():
         await ck(abs(sum(float(c['width_pct']) for c in table['columns'])-100)<.001,'fixedTableDefaultWidthsTotal100')
         await ck('table_preset' not in table and table.get('show_header') is True and isinstance(table.get('style'),dict),'registryPresetNeverLeaksIntoCanonicalTable')
         await ck(await page.locator('[data-certloom-designer-content="table"]').is_visible(),'fixedTableStructuredPropertiesVisible')
-        await ck(await page.locator('[data-certloom-designer-context-group="table"]').is_visible(),'fixedTableContextVisible')
+        await ck(await page.locator('[data-certloom-designer-style="table"]').count()==1 and await page.locator('[data-certloom-designer-property-section="appearance"] .certloom-studio-accordion-trigger').is_visible(),'fixedTableAppearanceAvailableInAccordion')
         await ck(await page.locator('[data-certloom-designer-table-column]').count()==2,'fixedTableRendersStructuredColumnRows')
         await ck(await page.locator('[data-certloom-designer-table-row]').count()==1,'fixedTableRendersStructuredCellRow')
         preview=page.locator(f'[data-certloom-designer-element="{tid}"] table')
@@ -53,19 +54,24 @@ async def main():
         await first_cell.fill('Credential ID'); await first_cell.dispatch_event('change'); await page.wait_for_timeout(70); edited=await snap(page); et=next(e for e in edited['elements'] if e['id']==tid)
         await ck('Credential ID' in list(et['rows'][0].values()),'fixedTableCellEditPersistsLiteralText')
         # Appearance uses same style authority.
+        appearance=page.locator('[data-certloom-designer-property-section="appearance"]')
+        if 'is-open' not in ((await appearance.get_attribute('class')) or ''):
+            await appearance.locator('.certloom-studio-accordion-trigger').click(); await page.wait_for_timeout(30)
         header_fill=page.locator('[data-certloom-designer-style="table"] [data-certloom-designer-style-field="header_fill"]'); await header_fill.fill('#EAF0FF'); await header_fill.dispatch_event('change'); await page.wait_for_timeout(70)
         styled=await snap(page); await ck(next(e for e in styled['elements'] if e['id']==tid)['style']['header_fill']=='#EAF0FF','tableAppearanceMutationPersistsCanonically')
-        # Data Table.
+        # Data Table. Insert drawer intentionally closes after an insertion.
+        await page.locator('[data-certloom-designer-insert-focus]').click(); await page.wait_for_timeout(30)
         await data_add.click(); await page.wait_for_timeout(100); dynamic=await snap(page); dt=dynamic['elements'][-1]; did=dt['id']
         await ck(dt.get('type')=='data_table' and dt.get('source')=='credential.results' and dt.get('max_rows')==8,'dataTableInsertDefaultsToImmutableResults')
         await ck([c.get('field') for c in dt['columns']]==['subject','score','grade'],'dataTableDefaultColumnsUseClosedResultFields')
         await ck('rows' not in dt,'dataTableCanonicalBytesDoNotEmbedSyntheticPreviewRows')
         await ck(await page.locator('[data-certloom-designer-content="data_table"]').is_visible(),'dataTablePropertiesVisible')
-        await ck(await page.locator('[data-certloom-designer-context-group="data_table"]').is_visible(),'dataTableContextVisible')
+        await ck(await page.locator('[data-certloom-designer-content="data_table"] [data-certloom-designer-table-source]').is_visible(),'dataTableSourceVisible')
         dpreview=page.locator(f'[data-certloom-designer-element="{did}"] table')
         await ck(await dpreview.count()==1 and await dpreview.locator('tbody tr').count()>=1,'dataTableCanvasUsesSyntheticProfileRows')
         canonical_before=json.dumps(dynamic,sort_keys=True,separators=(',',':'))
-        await page.locator('[data-certloom-designer-sample-data]').select_option('school-result'); await page.wait_for_timeout(90); sample_after=await snap(page)
+        await page.locator('.certloom-studio-view-menu summary').click(); await page.wait_for_timeout(30)
+        await page.locator('[data-certloom-designer-sample-data]').select_option('school-result'); await page.wait_for_timeout(90); sample_after=await snap(page); await page.locator('.certloom-studio-view-menu summary').click(); await page.wait_for_timeout(20)
         await ck(json.dumps(sample_after,sort_keys=True,separators=(',',':'))==canonical_before,'sampleProfileDoesNotMutateDataTableCanonicalBytes')
         await ck(await dpreview.locator('tbody tr').count()==4,'schoolResultPreviewShowsFourSyntheticResultRows')
         # Source switch atomically resets field-compatible columns.
@@ -75,6 +81,9 @@ async def main():
         maxrows=page.locator('[data-certloom-designer-content="data_table"] [data-certloom-designer-table-max-rows]'); await maxrows.fill('5'); await maxrows.dispatch_event('change'); await page.wait_for_timeout(70); limited=await snap(page); await ck(next(e for e in limited['elements'] if e['id']==did)['max_rows']==5,'dataTableMaxRowsCanonical')
         header=page.locator('[data-certloom-designer-content="data_table"] [data-certloom-designer-table-header]'); await header.uncheck(); await header.dispatch_event('change'); await page.wait_for_timeout(70); nohead=await snap(page); await ck(next(e for e in nohead['elements'] if e['id']==did)['show_header'] is False,'dataTableHeaderToggleCanonical')
         # Geometry guard rejects too-short height for 5 rows.
+        geometry=page.locator('[data-certloom-designer-property-section="geometry"]')
+        if 'is-open' not in ((await geometry.get_attribute('class')) or ''):
+            await geometry.locator('.certloom-studio-accordion-trigger').click(); await page.wait_for_timeout(30)
         height=page.locator('[data-certloom-designer-field="height"]'); prior=float(await height.input_value()); await height.fill('12'); await height.dispatch_event('change'); await page.wait_for_timeout(60); guarded=await snap(page); gd=next(e for e in guarded['elements'] if e['id']==did)
         await ck(float(gd['height_mm'])==prior,'browserRejectsDataTableGeometryBelow4mmPerRow')
         # Lock protects structured content.
@@ -87,7 +96,7 @@ async def main():
         await ck(await old.locator('[data-certloom-designer-add="table"]').is_disabled(),'schema3TableInsertDisabled')
         await ck(await old.locator('[data-certloom-designer-add="data_table"]').is_disabled(),'schema3DataTableInsertDisabled'); await old.close()
         # Mobile/forced colors.
-        mobile=await browser.new_page(viewport={'width':390,'height':844}); mobile.set_default_timeout(5000); await mobile.set_content(html4,wait_until='load'); await mobile.wait_for_timeout(180); await mobile.locator('[data-certloom-designer-add="table"]').click(); await mobile.wait_for_timeout(80)
+        mobile=await browser.new_page(viewport={'width':390,'height':844}); mobile.set_default_timeout(5000); await mobile.set_content(html4,wait_until='load'); await mobile.wait_for_timeout(180); await mobile.locator('[data-certloom-designer-insert-focus]').click(); await mobile.wait_for_timeout(20); await mobile.locator('[data-certloom-designer-add="table"]').click(); await mobile.wait_for_timeout(80)
         addrow=mobile.locator('[data-certloom-designer-content="table"] [data-certloom-designer-table-add-row]'); addcol=mobile.locator('[data-certloom-designer-content="table"] [data-certloom-designer-table-add-column]')
         rh=await addrow.evaluate("e=>Math.max(parseFloat(getComputedStyle(e).minHeight)||0,e.getBoundingClientRect().height)"); ch=await addcol.evaluate("e=>Math.max(parseFloat(getComputedStyle(e).minHeight)||0,e.getBoundingClientRect().height)")
         await ck(rh>=43.5 and ch>=43.5,'mobileTableActionsMeet44pxContract')

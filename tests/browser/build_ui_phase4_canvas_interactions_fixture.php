@@ -5,14 +5,10 @@ require __DIR__ . '/build_ui_phase4_sticky_workspace_fixture.php';
 $html = ob_get_clean();
 if ( ! is_string( $html ) || '' === $html ) { throw new RuntimeException( 'Sticky Designer fixture did not render.' ); }
 
-/* The permanent browser fixture predates the two new canvas-view buttons; add their production contract. */
-$marker = '<button type="button" class="button" data-certloom-designer-true-size title="Actual size / 100% (1)">1:1</button>';
-$controls = $marker
-	. '<button type="button" class="button" data-certloom-designer-safe-area aria-pressed="false" title="Show or hide the 10 mm safe area">Safe area</button>'
-	. '<button type="button" class="button" data-certloom-designer-pan-tool aria-pressed="false" title="Pan canvas (Space + drag)">Pan</button>';
-if ( false === strpos( $html, $marker ) ) { throw new RuntimeException( 'Canvas controls insertion marker missing.' ); }
-$html = str_replace( $marker, $controls, $html, $count );
-if ( 1 !== $count ) { throw new RuntimeException( 'Canvas controls insertion was ambiguous.' ); }
+/* Safe-area and pan controls are native to the current View menu. */
+if ( false === strpos( $html, 'data-certloom-designer-safe-area' ) || false === strpos( $html, 'data-certloom-designer-pan-tool' ) ) {
+	throw new RuntimeException( 'Current canvas view controls are missing.' );
+}
 
 $ids = array(
 	'a' => '11111111-1111-4111-8111-111111111111',

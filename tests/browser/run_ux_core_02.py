@@ -22,7 +22,7 @@ async def run():
         newpanel=page.locator('[data-certloom-recipient-new-panel]')
         await ck(not await existing.is_hidden(),'existingRecipientStartsVisible')
         await ck(await newpanel.is_hidden(),'newRecipientSummaryStartsHidden')
-        await ck(not await page.locator('input[name="grade"]').is_disabled(),'credentialGradeExistsForExistingRecipient')
+        await ck(await page.locator('input[name="grade"]').is_disabled(),'credentialGradeWaitsForSelectedProgramFieldContract')
 
         # Quick Program creation must preserve the compose form and activate Program/field contract.
         await page.get_by_role('button',name='Add new Program').first.click()

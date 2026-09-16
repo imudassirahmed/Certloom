@@ -93,7 +93,7 @@ async def run():
         await ck(await source_note.inner_text()=='Assigned for this credential only','assignedPreviewShowsOneOffProvenance')
         details=await issue.locator('.certloom-additional-details').bounding_box(); actions=await issue.locator('.certloom-issue-actions').bounding_box()
         await ck(details and presentation and details['x']+details['width']<=presentation['x']+1,'additionalDetailsStayInMainColumnBesidePreview')
-        await ck(actions and presentation and actions['x']+actions['width']<=presentation['x']+1,'reviewActionsStayInMainColumnBesidePreview')
+        await ck(actions and presentation and actions['x']>=presentation['x']-1 and actions['x']+actions['width']<=presentation['x']+presentation['width']+1,'reviewActionsStayInStickyContextRailWithPreview')
         pcalls=await issue.evaluate('window.__previewCalls')
         await ck(any('/admin/issuance-preview' in c['url'] and 'design_source=assigned' in c.get('options',{}).get('body','') and 'template_id=7' in c.get('options',{}).get('body','') for c in pcalls),'assignedDesignPreviewUsesRealIssuanceRestEndpoint')
         await issue.close()

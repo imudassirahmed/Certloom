@@ -3,6 +3,7 @@ import asyncio
 from pathlib import Path
 from playwright.async_api import async_playwright
 ROOT=Path(__file__).resolve().parents[2]
+TOKENS=(ROOT/'assets/css/certloom-tokens.css').read_text()
 CSS=(ROOT/'public/assets/certloom-public.css').read_text()
 ADMIN_CSS=(ROOT/'admin/assets/admin.css').read_text()
 HTML='''<!doctype html><html><head><style>%s</style><style>%s</style></head><body>
@@ -19,7 +20,7 @@ HTML='''<!doctype html><html><head><style>%s</style><style>%s</style></head><bod
 <article class="certloom-embed-design-card certloom-embed-design-halo"><div class="certloom-embed-design-preview"><span class="certloom-embed-preview-title">Verify a credential</span></div></article>
 <article class="certloom-embed-design-card certloom-embed-design-forge"><div class="certloom-embed-design-preview"><span class="certloom-embed-preview-title">Verify a credential</span></div></article>
 </div></div>
-</body></html>''' % (CSS, ADMIN_CSS)
+</body></html>''' % (TOKENS + '\n' + CSS, ADMIN_CSS)
 async def run():
     checks=0; failed=[]
     async with async_playwright() as p:
@@ -50,9 +51,9 @@ async def run():
         await page.set_viewport_size({'width':900,'height':700}); await page.wait_for_timeout(20)
         await ck(await page.locator('.certloom-embed-design-grid').is_visible(),'appearanceDesignGridVisible')
         await ck(await page.locator('.certloom-embed-design-card').count()>=3,'appearanceDesignCardsRendered')
-        halo_bg=await page.locator('.certloom-embed-design-halo .certloom-embed-design-preview').evaluate("e=>getComputedStyle(e).backgroundColor")
-        forge_bg=await page.locator('.certloom-embed-design-forge .certloom-embed-design-preview').evaluate("e=>getComputedStyle(e).backgroundColor")
-        await ck(halo_bg!=forge_bg,'appearanceDesignsHaveDistinctVisualTreatments')
+        halo_treatment=await page.locator('.certloom-embed-design-halo .certloom-embed-design-preview').evaluate("e=>{const s=getComputedStyle(e);return [s.backgroundColor,s.borderRadius,s.borderTopWidth,s.borderLeftWidth]}")
+        forge_treatment=await page.locator('.certloom-embed-design-forge .certloom-embed-design-preview').evaluate("e=>{const s=getComputedStyle(e);return [s.backgroundColor,s.borderRadius,s.borderTopWidth,s.borderLeftWidth]}")
+        await ck(halo_treatment!=forge_treatment,'appearanceDesignsHaveDistinctVisualTreatments')
         await b.close()
     if failed:
         print('FAIL  UX-SYSTEM-01 browser gate:', ', '.join(failed)); return 1

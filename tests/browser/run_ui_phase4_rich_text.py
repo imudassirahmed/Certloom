@@ -35,7 +35,8 @@ async def main():
         rich_add=page.locator('[data-certloom-designer-add="rich_text"]')
         await ck(await rich_add.count()==1 and not await rich_add.is_disabled(),'schema4RichInsertVisibleEnabled')
         await ck(await page.locator('[data-certloom-designer-add="merge"]').count()==0,'schema4LegacyMergeHiddenFromNormalInsert')
-        await ck(await page.locator('[data-certloom-designer-add]').count()==15 and await page.locator('[data-certloom-designer-add="table"]').count()==1 and not await page.locator('[data-certloom-designer-add="table"]').is_disabled() and await page.locator('[data-certloom-designer-add="data_table"]').count()==1 and not await page.locator('[data-certloom-designer-add="data_table"]').is_disabled(),'schema4PaletteReplacesMergeAndIncludesCertifiedTables')
+        await ck(await page.locator('[data-certloom-designer-add]').count()==18 and await page.locator('[data-certloom-designer-add="table"]').count()==1 and not await page.locator('[data-certloom-designer-add="table"]').is_disabled() and await page.locator('[data-certloom-designer-add="data_table"]').count()==1 and not await page.locator('[data-certloom-designer-add="data_table"]').is_disabled(),'schema4PaletteReplacesMergeAndIncludesCertifiedTables')
+        await page.locator('[data-certloom-designer-insert-focus]').click(); await page.wait_for_timeout(30)
         await rich_add.click(); await page.wait_for_timeout(100)
         selected=page.locator('[data-certloom-designer-element][aria-pressed="true"]')
         await ck(await selected.count()==1,'richInsertSelectsNewElement')
@@ -50,7 +51,7 @@ async def main():
         await ck((await page.locator('[data-certloom-designer-rich-value="token"]').first.input_value())=='recipient.name','richDefaultTokenMachineKey')
         token_preview=page.locator(f'[data-certloom-designer-element="{rid}"] [data-certloom-designer-rich-token="recipient.name"]')
         await ck(await token_preview.count()==1 and 'Alexandria' in ((await token_preview.inner_text()) or ''),'richTokenUsesSyntheticSampleOnCanvas')
-        await ck(await page.locator('[data-certloom-designer-context-rich-text]').is_visible(),'richContextEditControlVisible')
+        await ck(await page.locator('[data-certloom-designer-content="rich_text"]').is_visible(),'richStructuredInspectorVisible')
 
         # Caret workflow: split literal at caret and insert a structured field run.
         first_text=page.locator('[data-certloom-designer-rich-value="text"]').first
@@ -89,13 +90,13 @@ async def main():
         await ck('rich_preset' not in rich_el and 'html' not in rich_el,'saveContainsNoPresetOrHtmlAuthority')
         await ck(any(r.get('token')=='program.name' for r in rich_el['runs']),'savePreservesMachineTokenNotSampleText')
         serialized_before=json.dumps(saved,sort_keys=True,separators=(',',':'))
-        sample=page.locator('[data-certloom-designer-sample-data]'); await sample.select_option('rtl'); await page.wait_for_timeout(70)
+        await page.locator('.certloom-studio-view-menu summary').click(); await page.wait_for_timeout(30); sample=page.locator('[data-certloom-designer-sample-data]'); await sample.select_option('rtl'); await page.wait_for_timeout(70)
         saved_after=await submit_snapshot(page); await ck(json.dumps(saved_after,sort_keys=True,separators=(',',':'))==serialized_before,'sampleProfileDoesNotMutateRichLayout')
 
         # Lock safety in the real Layers authority.
         lock=page.locator(f'[data-certloom-designer-layer-row="{rid}"] [data-certloom-designer-layer-row-action="lock"]'); await lock.click(); await page.wait_for_timeout(70)
         await ck(await page.locator('[data-certloom-designer-rich-value]').first.is_disabled(),'lockedRichRunsAreReadOnly')
-        await ck(await page.locator('[data-certloom-designer-context-rich-text]').is_disabled(),'lockedRichContextActionDisabled')
+        await ck(await page.locator('[data-certloom-designer-rich-add="text"]').is_disabled(),'lockedRichInspectorActionDisabled')
         unlock=page.locator(f'[data-certloom-designer-layer-row="{rid}"] [data-certloom-designer-layer-row-action="lock"]'); await unlock.click(); await page.wait_for_timeout(50)
         await ck(not await page.locator('[data-certloom-designer-rich-value]').first.is_disabled(),'unlockRestoresRichEditing')
         await page.close()
@@ -106,6 +107,7 @@ async def main():
         await old.close()
 
         mobile=await browser.new_page(viewport={'width':390,'height':844}); mobile.set_default_timeout(5000); await mobile.set_content(rich_html,wait_until='load'); await mobile.wait_for_timeout(170)
+        await mobile.locator('[data-certloom-designer-insert-focus]').click(); await mobile.wait_for_timeout(20)
         await mobile.locator('[data-certloom-designer-add="rich_text"]').click(); await mobile.wait_for_timeout(70)
         add_h=await mobile.locator('[data-certloom-designer-rich-add="text"]').evaluate("e=>parseFloat(getComputedStyle(e).minHeight)||0")
         insert_h=await mobile.locator('[data-certloom-designer-rich-insert-field]').first.evaluate("e=>parseFloat(getComputedStyle(e).minHeight)||0")

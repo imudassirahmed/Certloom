@@ -296,8 +296,8 @@ async def main():
         await page.wait_for_timeout(20)
         await ck('is-open' in (await appearance_section.get_attribute('class') or ''), 'activeAccordionCannotCollapseSelectionInspectorToZero')
         await ck(await page.locator('[data-certloom-designer-field="rotation"]').count() == 1, 'rotationPrecisionControlRetained')
-        await ck(await page.locator('[data-certloom-designer-style-field="font_family"]').count() == 1, 'fontControlRetained')
-        await ck(await page.locator('[data-certloom-designer-style-field="font_size_pt"]').count() == 1, 'fontSizeControlRetained')
+        await ck(await page.locator('[data-certloom-designer-style="text"] [data-certloom-designer-style-field="font_family"]').count() == 1, 'fontControlRetained')
+        await ck(await page.locator('[data-certloom-designer-style="text"] [data-certloom-designer-style-field="font_size_pt"]').count() == 1, 'fontSizeControlRetained')
         await ck(await page.locator('[data-certloom-designer-style-field="font_weight"]').count() == 1, 'fontWeightControlRetained')
         await ck(await page.locator('[data-certloom-designer-style-field="overflow"]').count() == 1, 'textWrappingOverflowControlRetained')
 

@@ -82,41 +82,56 @@ $docbar = <<<'HTML'
 </div>
 HTML;
 $html = studio_replace_between( $html, '<div class="certloom-template-designer-toolbar">', '<div class="certloom-template-designer-productivity">', $docbar );
+$samples = ( new \Certloom\Application\Templates\TemplatePreviewSamples() )->browser_contract();
+$samples_json = json_encode( $samples, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+if ( ! is_string( $samples_json ) ) { throw new RuntimeException( 'Sample data fixture contract unavailable.' ); }
+$sample_options = '<option value="standard">Normal person</option><option value="long">Long name</option><option value="very-long-name">Very long name</option><option value="rtl">RTL person</option><option value="organization">Organization</option><option value="long-organization">Long organization</option><option value="long-iso-scope">Long ISO scope</option><option value="school-result">School result</option>';
+$html = preg_replace( '#(<select data-certloom-designer-sample-data>).*?(</select>)#s', '$1' . $sample_options . '$2', $html, 1, $sample_select_count );
+if ( 1 !== $sample_select_count ) { throw new RuntimeException( 'Current Sample data selector was not found exactly once.' ); }
+$registry_marker = '<script>window.certloomTemplateElementRegistry=';
+if ( false === strpos( $html, $registry_marker ) ) { throw new RuntimeException( 'Designer registry script marker missing.' ); }
+$html = str_replace( $registry_marker, '<script>window.certloomTemplateDesignerSamples=' . $samples_json . ';</script>' . $registry_marker, $html, $sample_contract_count );
+if ( 1 !== $sample_contract_count ) { throw new RuntimeException( 'Sample browser contract injection was ambiguous.' ); }
 $html = studio_replace_between( $html, '<div class="certloom-template-designer-productivity">', '<div class="certloom-template-designer-palette">', '' );
 
-$left = <<<'HTML'
-<div class="certloom-template-designer-stage"><aside class="certloom-template-designer-add-panel certloom-studio-left" aria-label="Insert and layers">
-  <div class="certloom-studio-history" role="toolbar" aria-label="History"><button type="button" class="certloom-studio-icon-button" data-certloom-designer-undo disabled title="Undo">↶</button><button type="button" class="certloom-studio-icon-button" data-certloom-designer-redo disabled title="Redo">↷</button><button type="button" class="certloom-studio-icon-button" data-certloom-designer-reset title="Restore last saved state">⟳</button></div>
-  <button type="button" class="certloom-studio-insert-trigger" data-certloom-designer-insert-focus aria-expanded="false"><span>＋</span><span>Insert</span><span class="certloom-studio-insert-caret">⌄</span></button>
-  <div class="certloom-studio-insert-drawer" data-certloom-designer-insert-panel hidden>
-    <div class="certloom-studio-insert-search"><span>⌕</span><input type="search" placeholder="Search elements…" data-certloom-designer-palette-search aria-label="Search insert elements"></div>
-    <section class="certloom-studio-insert-category" data-certloom-insert-category="data"><h4>Data &amp; dynamic</h4><div class="certloom-studio-insert-grid">
-      <button type="button" class="certloom-studio-insert-item" data-certloom-designer-add="qr" data-certloom-designer-palette-item data-certloom-designer-palette-category="data" data-certloom-palette-label="qr code"><span>▦</span><span>QR Code</span></button>
-      <button type="button" class="certloom-studio-insert-item" data-certloom-designer-add="barcode" data-certloom-designer-palette-item data-certloom-designer-palette-category="data" data-certloom-palette-label="barcode"><span>▥</span><span>Barcode</span></button>
-      <button type="button" class="certloom-studio-insert-item" data-certloom-designer-add="field" data-certloom-designer-palette-item data-certloom-designer-palette-category="data" data-certloom-palette-label="field"><span>▤</span><span>Field</span></button>
-      <button type="button" class="certloom-studio-insert-item" data-certloom-designer-add="dynamic_field" data-certloom-designer-palette-item data-certloom-designer-palette-category="data" data-certloom-palette-label="dynamic field"><span>◇</span><span>Dynamic Field</span></button>
-    </div></section>
-    <section class="certloom-studio-insert-category" data-certloom-insert-category="text"><h4>Text</h4><div class="certloom-studio-insert-grid">
-      <button type="button" class="certloom-studio-insert-item" data-certloom-designer-add="heading" data-certloom-designer-palette-item data-certloom-designer-palette-category="text" data-certloom-palette-label="heading"><span>H</span><span>Heading</span></button>
-      <button type="button" class="certloom-studio-insert-item" data-certloom-designer-add="text" data-certloom-designer-palette-item data-certloom-designer-palette-category="text" data-certloom-palette-label="text"><span>T</span><span>Text</span></button>
-      <button type="button" class="certloom-studio-insert-item" data-certloom-designer-add="list" data-certloom-designer-palette-item data-certloom-designer-palette-category="text" data-certloom-palette-label="list"><span>≡</span><span>List</span></button>
-    </div></section>
-    <section class="certloom-studio-insert-category" data-certloom-insert-category="branding"><h4>Branding &amp; media</h4><div class="certloom-studio-insert-grid">
-      <button type="button" class="certloom-studio-insert-item" data-certloom-designer-add="image" data-certloom-designer-palette-item data-certloom-designer-palette-category="branding" data-certloom-palette-label="image"><span>▧</span><span>Image</span></button>
-      <button type="button" class="certloom-studio-insert-item" data-certloom-designer-add="logo" data-certloom-designer-palette-item data-certloom-designer-palette-category="branding" data-certloom-palette-label="logo"><span>◈</span><span>Logo</span></button>
-      <button type="button" class="certloom-studio-insert-item" data-certloom-designer-add="seal" data-certloom-designer-palette-item data-certloom-designer-palette-category="branding" data-certloom-palette-label="seal"><span>◎</span><span>Seal</span></button>
-      <button type="button" class="certloom-studio-insert-item" data-certloom-designer-add="signature" data-certloom-designer-palette-item data-certloom-designer-palette-category="branding" data-certloom-palette-label="signature"><span>✎</span><span>Signature</span></button>
-    </div></section>
-    <section class="certloom-studio-insert-category" data-certloom-insert-category="shapes"><h4>Shapes &amp; layout</h4><div class="certloom-studio-insert-grid">
-      <button type="button" class="certloom-studio-insert-item" data-certloom-designer-add="line" data-certloom-designer-palette-item data-certloom-designer-palette-category="shapes" data-certloom-palette-label="line"><span>╱</span><span>Line</span></button>
-      <button type="button" class="certloom-studio-insert-item" data-certloom-designer-add="rectangle" data-certloom-designer-palette-item data-certloom-designer-palette-category="shapes" data-certloom-palette-label="rectangle"><span>□</span><span>Rectangle</span></button>
-      <button type="button" class="certloom-studio-insert-item" data-certloom-designer-add="ellipse" data-certloom-designer-palette-item data-certloom-designer-palette-category="shapes" data-certloom-palette-label="ellipse"><span>○</span><span>Ellipse</span></button>
-      <button type="button" class="certloom-studio-insert-item" data-certloom-designer-add="background" data-certloom-designer-palette-item data-certloom-designer-palette-category="shapes" data-certloom-palette-label="background"><span>▨</span><span>Background</span></button>
-    </div></section>
-  </div>
-  <div class="certloom-template-designer-layers certloom-template-designer-layers-panel certloom-template-designer-layers-primary"><div class="certloom-template-designer-layers-head"><h4>Layers</h4><span class="certloom-studio-layer-order-hint" tabindex="0" aria-label="Front to back layer order. Drag a layer up or down to change its position. The first layer is shown in front."><span class="certloom-studio-layer-order-alert" aria-hidden="true">!</span><span>Front → back</span><span class="certloom-studio-layer-order-tooltip" role="tooltip">Drag layers up or down to change their position. Layers nearer the top appear in front.</span></span></div><div class="certloom-studio-layer-list" data-certloom-designer-layers></div></div>
-</aside><div class="certloom-template-designer-shell">
-HTML;
+$registry_labels = array(
+    'qr' => 'QR Code', 'barcode' => 'Barcode', 'field' => 'Field', 'dynamicField' => 'Dynamic Field', 'mergeField' => 'Merge Field',
+    'heading' => 'Heading', 'text' => 'Text', 'richText' => 'Rich Text', 'list' => 'List',
+    'image' => 'Image', 'logo' => 'Logo', 'seal' => 'Seal', 'signature' => 'Signature',
+    'line' => 'Line', 'rectangle' => 'Rectangle', 'ellipse' => 'Ellipse', 'background' => 'Background',
+    'table' => 'Table', 'dataTable' => 'Data Table',
+);
+$palette_categories = array(
+    'data' => array( 'label' => 'Data & dynamic', 'kinds' => array( 'qr', 'barcode', 'field', 'dynamic_field', 'merge' ) ),
+    'text' => array( 'label' => 'Text', 'kinds' => array( 'heading', 'text', 'rich_text', 'list' ) ),
+    'media' => array( 'label' => 'Branding & media', 'kinds' => array( 'image', 'logo', 'seal', 'signature' ) ),
+    'layout' => array( 'label' => 'Shapes & layout', 'kinds' => array( 'line', 'rectangle', 'ellipse', 'background' ) ),
+    'structured' => array( 'label' => 'Structured data', 'kinds' => array( 'table', 'data_table' ) ),
+);
+$palette_by_kind = array();
+foreach ( \Certloom\Domain\Rendering\ElementRegistry::palette() as $palette_item ) { $palette_by_kind[ (string) $palette_item['kind'] ] = $palette_item; }
+$palette_html = '';
+foreach ( $palette_categories as $category_key => $category ) {
+    $items = '';
+    foreach ( $category['kinds'] as $kind ) {
+        if ( ! isset( $palette_by_kind[ $kind ] ) ) { continue; }
+        $item = $palette_by_kind[ $kind ];
+        $maximum = (int) ( $item['max_schema_version'] ?? 0 );
+        if ( $maximum && $schema_version > $maximum ) { continue; }
+        $minimum = (int) ( $item['min_schema_version'] ?? 1 );
+        $disabled = $schema_version < $minimum;
+        $label_key = (string) ( $item['label_key'] ?? $kind );
+        $label = (string) ( $registry_labels[ $label_key ] ?? $kind );
+        $items .= '<button type="button" class="certloom-studio-insert-item" data-certloom-designer-add="' . esc_attr( $kind ) . '" data-certloom-designer-palette-item data-certloom-designer-palette-category="' . esc_attr( $category_key ) . '" data-certloom-palette-label="' . esc_attr( strtolower( $label ) ) . '"' . ( $disabled ? ' disabled aria-disabled="true"' : ' draggable="true"' ) . '><span>' . esc_attr( $label ) . '</span></button>';
+    }
+    if ( '' !== $items ) { $palette_html .= '<section class="certloom-studio-insert-category" data-certloom-insert-category="' . esc_attr( $category_key ) . '"><h4>' . esc_attr( $category['label'] ) . '</h4><div class="certloom-studio-insert-grid">' . $items . '</div></section>'; }
+}
+$left = '<div class="certloom-template-designer-stage"><aside class="certloom-template-designer-add-panel certloom-studio-left" aria-label="Insert and layers">'
+  . '<div class="certloom-studio-history" role="toolbar" aria-label="History"><button type="button" class="certloom-studio-icon-button" data-certloom-designer-undo disabled title="Undo">↶</button><button type="button" class="certloom-studio-icon-button" data-certloom-designer-redo disabled title="Redo">↷</button><button type="button" class="certloom-studio-icon-button" data-certloom-designer-reset title="Restore last saved state">⟳</button></div>'
+  . '<button type="button" class="certloom-studio-insert-trigger" data-certloom-designer-insert-focus aria-expanded="false"><span>＋</span><span>Insert</span><span class="certloom-studio-insert-caret">⌄</span></button>'
+  . '<div class="certloom-studio-insert-drawer" data-certloom-designer-insert-panel hidden><div class="certloom-studio-insert-search"><span>⌕</span><input type="search" placeholder="Search elements…" data-certloom-designer-palette-search aria-label="Search insert elements"></div>' . $palette_html . '</div>'
+  . '<div class="certloom-template-designer-layers certloom-template-designer-layers-panel certloom-template-designer-layers-primary"><div class="certloom-template-designer-layers-head"><h4>Layers</h4><span class="certloom-studio-layer-order-hint" tabindex="0" aria-label="Front to back layer order. Drag a layer up or down to change its position. The first layer is shown in front."><span class="certloom-studio-layer-order-alert" aria-hidden="true">!</span><span>Front → back</span><span class="certloom-studio-layer-order-tooltip" role="tooltip">Drag layers up or down to change their position. Layers nearer the top appear in front.</span></span></div><div class="certloom-studio-layer-list" data-certloom-designer-layers></div></div>'
+  . '</aside><div class="certloom-template-designer-shell">';
 $html = studio_replace_between( $html, '<div class="certloom-template-designer-palette">', '<div class="certloom-template-designer-shell">', $left );
 
 // Remove the legacy inspector-owned Layers block so the left rail is the only layer authority.
@@ -124,6 +139,7 @@ $legacy_layers = '<div class="certloom-template-designer-layers"><div class="cer
 $html = str_replace( $legacy_layers, '', $html );
 $html = str_replace( '<aside class="certloom-template-designer-inspector">', '<aside class="certloom-template-designer-inspector" aria-label="Selected layer properties">', $html );
 $html = str_replace( '<div data-certloom-designer-empty><h4>Element geometry</h4></div>', '<div data-certloom-designer-empty><h4>Properties</h4><p>Select an element to edit it. Shift+F10 opens element actions.</p></div>', $html );
+$html = str_replace( '<div hidden data-certloom-designer-fields><div class="certloom-template-designer-element-meta">', '<div hidden data-certloom-designer-group><h4>Selection</h4><p><strong data-certloom-designer-group-count>0</strong> elements selected.</p><div class="certloom-studio-selection-feedback"><span data-certloom-designer-selection-status></span><span data-certloom-designer-spacing-status></span></div></div><div hidden data-certloom-designer-fields><div class="certloom-template-designer-element-meta">', $html );
 
 // Divide the old flat inspector into the Studio single-open accordion contract.
 $html = str_replace(
@@ -141,6 +157,16 @@ $html = str_replace(
     '</div></section><section class="certloom-template-designer-property-section" data-certloom-designer-property-section="appearance"><h4>Appearance</h4><div class="certloom-template-designer-style-editor" data-certloom-designer-style-editor>',
     $html
 );
+
+/* Mirror current production Inspector groups that were added after the legacy base fixture. */
+$asset_group = '<div hidden data-certloom-designer-content="asset"><input data-certloom-designer-content-field="asset"><select data-certloom-designer-content-field="fit"><option value="contain">Contain</option><option value="cover">Cover</option><option value="fill">Fill</option></select><button type="button" class="button" data-certloom-designer-media>Media</button></div>';
+$current_asset_group = '<div hidden data-certloom-designer-content="asset"><p class="description" data-certloom-designer-issuer-media-status></p><input data-certloom-designer-content-field="asset"><select data-certloom-designer-content-field="fit"><option value="contain">Contain</option><option value="cover">Cover</option><option value="fill">Fill</option></select><button type="button" class="button" data-certloom-designer-issuer-media-source="logo">Use credential Issuer logo</button><button type="button" class="button" data-certloom-designer-issuer-media-source="seal">Use credential Issuer seal</button><button type="button" class="button" data-certloom-designer-media>Choose from Media Library</button></div>';
+$signature_group = '<div hidden data-certloom-designer-content="signature"><p class="description" data-certloom-designer-signature-status></p><select data-certloom-designer-content-field="fit"><option value="contain">Contain</option><option value="cover">Cover</option><option value="fill">Fill</option></select><button type="button" class="button" data-certloom-designer-signature-source="signer">Use credential Signer signature</button><button type="button" class="button" data-certloom-designer-media>Choose fixed signature image</button></div>';
+if ( false !== strpos( $html, $asset_group ) ) { $html = str_replace( $asset_group, $current_asset_group . $signature_group, $html, $asset_count ); if ( 1 !== $asset_count ) { throw new RuntimeException( 'Current asset/signature Inspector injection was ambiguous.' ); } }
+
+$line_group = '<div hidden data-certloom-designer-content="line"></div>';
+$table_groups = '<div hidden data-certloom-designer-content="table" class="certloom-template-designer-table-editor"><div class="certloom-template-designer-table-head"><strong>Columns</strong><button type="button" class="button" data-certloom-designer-table-add-column>Add column</button></div><div data-certloom-designer-table-columns></div><div class="certloom-template-designer-table-head"><strong>Rows</strong><button type="button" class="button" data-certloom-designer-table-add-row>Add row</button></div><div data-certloom-designer-table-rows></div><input type="checkbox" data-certloom-designer-table-header></div><div hidden data-certloom-designer-content="data_table" class="certloom-template-designer-table-editor"><select data-certloom-designer-table-source><option value="credential.results">Credential results</option><option value="credential.subjects">Credential subjects</option></select><input type="number" min="1" max="50" data-certloom-designer-table-max-rows><input type="checkbox" data-certloom-designer-table-header><button type="button" class="button" data-certloom-designer-table-add-column>Add column</button><div data-certloom-designer-table-columns></div></div>';
+if ( false !== strpos( $html, $line_group ) ) { $html = str_replace( $line_group, $table_groups . $line_group, $html, $table_group_count ); if ( 1 !== $table_group_count ) { throw new RuntimeException( 'Current table Inspector injection was ambiguous.' ); } }
 // Close Appearance, append the remaining Studio accordions, then close fields/inspector/shell/stage.
 $footer_marker = "\n<div class=\"certloom-template-designer-footer\">";
 $footer_pos = strpos( $html, $footer_marker );
@@ -148,7 +174,8 @@ if ( false === $footer_pos ) { throw new RuntimeException( 'Studio footer marker
 $closing = '</div></div></aside></div>';
 $close_pos = strrpos( substr( $html, 0, $footer_pos ), $closing );
 if ( false === $close_pos ) { throw new RuntimeException( 'Studio inspector closing marker missing.' ); }
-$extras = '</div></section><section class="certloom-template-designer-property-section" data-certloom-designer-property-section="transform"><h4>Rotate &amp; transform</h4><p class="description">Use the canvas handles to move, resize and rotate the selected element.</p></section><section class="certloom-template-designer-property-section" data-certloom-designer-property-section="arrange"><h4>Arrange</h4><div class="certloom-studio-arrange-grid"><button type="button" data-certloom-designer-align="left" disabled>Left</button><button type="button" data-certloom-designer-align="center-x" disabled>Center</button><button type="button" data-certloom-designer-align="right" disabled>Right</button></div><div class="certloom-studio-arrange-actions"><button type="button" class="button" data-certloom-designer-layer-action="front" disabled>To front</button><button type="button" class="button" data-certloom-designer-layer-action="back" disabled>To back</button></div></section><section class="certloom-template-designer-property-section" data-certloom-designer-property-section="layer"><h4>Layer</h4><div class="certloom-studio-layer-inspector-actions"><button type="button" class="certloom-studio-inspector-icon" data-certloom-designer-lock disabled aria-pressed="false"><span>Lock</span></button><button type="button" class="certloom-studio-inspector-icon" data-certloom-designer-duplicate disabled><span>Duplicate</span></button><button type="button" class="certloom-studio-inspector-icon certloom-studio-danger" data-certloom-designer-remove disabled><span>Delete</span></button></div></section><section class="certloom-template-designer-property-section certloom-studio-advanced" data-certloom-designer-property-section="advanced"><h4>Advanced</h4><p class="description">Technical identifiers are available here for support.</p><div class="certloom-studio-technical-id"><span>Element ID</span><code data-certloom-designer-advanced-id></code></div></section><p class="certloom-studio-shortcuts">Arrow keys nudge 1 mm · Shift+Arrow 5 mm · Alt/Option+Arrow 0.1 mm · Space+drag pans · Shift+F10 actions · Ctrl/Cmd+0 fits · Ctrl/Cmd+Z undo</p></div></aside></div></div>';
+$table_style = '<div class="certloom-template-designer-style-group" hidden data-certloom-designer-style="table"><div class="certloom-template-designer-style-grid"><select data-certloom-designer-style-field="font_family"><option value="sans-serif">sans</option><option value="serif">serif</option><option value="monospace">mono</option></select><input type="number" data-certloom-designer-style-field="font_size_pt"><input type="text" data-certloom-designer-style-field="color"><input type="text" data-certloom-designer-style-field="header_fill"><input type="text" data-certloom-designer-style-field="header_color"><select data-certloom-designer-style-field="header_font_weight"><option value="400">400</option><option value="600">600</option><option value="700">700</option></select><input type="text" data-certloom-designer-style-field="row_fill"><input type="text" data-certloom-designer-style-field="alternate_row_fill"><input type="text" data-certloom-designer-style-field="border_color"><input type="number" data-certloom-designer-style-field="border_width_mm"><input type="number" data-certloom-designer-style-field="cell_padding_mm"></div></div>';
+$extras = $table_style . '</div></section><section class="certloom-template-designer-property-section" data-certloom-designer-property-section="transform"><h4>Rotate &amp; transform</h4><p class="description">Use the canvas handles to move, resize and rotate the selected element.</p></section><section class="certloom-template-designer-property-section" data-certloom-designer-property-section="arrange"><h4>Arrange</h4><div class="certloom-studio-arrange-grid"><button type="button" data-certloom-designer-align="left" disabled>Left</button><button type="button" data-certloom-designer-align="center-x" disabled>Center</button><button type="button" data-certloom-designer-align="right" disabled>Right</button></div><div class="certloom-studio-arrange-actions"><button type="button" class="button" data-certloom-designer-layer-action="front" disabled>To front</button><button type="button" class="button" data-certloom-designer-layer-action="back" disabled>To back</button></div></section><section class="certloom-template-designer-property-section" data-certloom-designer-property-section="layer"><h4>Layer</h4><div class="certloom-studio-layer-inspector-actions"><button type="button" class="certloom-studio-inspector-icon" data-certloom-designer-lock disabled aria-pressed="false"><span>Lock</span></button><button type="button" class="certloom-studio-inspector-icon" data-certloom-designer-duplicate disabled><span>Duplicate</span></button><button type="button" class="certloom-studio-inspector-icon certloom-studio-danger" data-certloom-designer-remove disabled><span>Delete</span></button></div></section><section class="certloom-template-designer-property-section certloom-studio-advanced" data-certloom-designer-property-section="advanced"><h4>Advanced</h4><p class="description">Technical identifiers are available here for support.</p><div class="certloom-studio-technical-id"><span>Element ID</span><code data-certloom-designer-advanced-id></code></div></section><p class="certloom-studio-shortcuts">Arrow keys nudge 1 mm · Shift+Arrow 5 mm · Alt/Option+Arrow 0.1 mm · Space+drag pans · Shift+F10 actions · Ctrl/Cmd+0 fits · Ctrl/Cmd+Z undo</p></div></aside></div></div>';
 $html = substr( $html, 0, $close_pos ) . $extras . substr( $html, $close_pos + strlen( $closing ) );
 
 // Footer save is redundant in Studio; leave hidden recovery state but no third visible save action.
