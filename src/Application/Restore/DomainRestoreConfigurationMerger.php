@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Restore;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * Conservative configuration policy for Merge restore.
  *

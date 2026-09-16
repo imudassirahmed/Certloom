@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Rendering;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use InvalidArgumentException;
 
 /** Validates that renderer bytes actually match the requested artifact format. */

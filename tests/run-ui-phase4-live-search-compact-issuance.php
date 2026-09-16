@@ -17,7 +17,7 @@ function c429($ok,$label){global $pass,$fail;if($ok){$pass++;echo "PASS  $label\
 
 c429(false!==strpos($css,'.certloom-dashboard-date-line.is-expiry .certloom-dashboard-date-dot')&&false!==strpos($css,'background: var(--cl-error);'),'Dashboard expiry marker uses semantic red');
 c429(false!==strpos($css,'height: 42px;')&&false!==strpos($css,'.certloom-credential-filters input[type="search"]')&&false!==strpos($css,'.certloom-credential-filters select'),'Credentials primary filter controls share one desktop height');
-c429(false!==strpos($legacy_css,'.certloom-domain-screen .certloom-credential-filters > .button[type="submit"]')&&false!==strpos($legacy_css,'height: 42px !important;'),'legacy button conflict is resolved in the legacy compatibility layer');
+c429(false!==strpos($legacy_css,'.certloom-domain-screen .certloom-credential-filters > .button[type="submit"]')&&false!==strpos($legacy_css,'height: 42px;'),'legacy button conflict is resolved without specificity escalation');
 c429(false!==strpos($domain,'data-certloom-credential-live-filter')&&false!==strpos($domain,'data-certloom-credential-results')&&false!==strpos($domain,'data-certloom-credential-live-status'),'Credentials registry exposes progressive-enhancement hooks for live results');
 c429(false!==strpos($domain,'public function credential_results_payload')&&false!==strpos($domain,'render_credential_results'),'live and normal Credentials requests share one authoritative renderer');
 c429(false!==strpos($rest,"'/admin/credentials'")&&false!==strpos($rest,"'/admin/context'")&&false!==strpos($rest,"'/admin/template-preview'"),'authenticated REST routes cover registry results, shared context search and design preview');

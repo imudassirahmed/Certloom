@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Backup;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * Creates one current-authority safety snapshot before a reviewed destructive
  * operation. Receipts are short-lived process state and never credential truth.

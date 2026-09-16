@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Backup;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Google Drive orchestration around verified local Certloom backups. */
 final class GoogleDriveBackup {
 	const RETENTION_OPTION   = 'certloom_google_drive_retention';

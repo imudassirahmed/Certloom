@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Restore;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Backup\DomainBackupReader;
 use Certloom\Application\Backup\DomainBackupFormat;
 use Certloom\Domain\Credential\PublicCredentialId;
@@ -41,7 +45,7 @@ final class DomainRestorePreflightService {
 		$order_map = array_flip( $order );
 		$current_order = -1;
 		$ids = array_fill_keys( $order, array() );
-		$issuer_slugs = array(); $program_codes = array(); $recipient_wp_users = array(); $signer_slugs = array(); $batch_codes = array(); $batch_members = array(); $signer_assignments = array();
+		$issuer_slugs = array(); $program_codes = array(); $program_issuers = array(); $recipient_wp_users = array(); $signer_slugs = array(); $batch_codes = array(); $batch_members = array(); $signer_assignments = array();
 		$template_keys = array(); $template_revision_keys = array(); $template_assignment_keys = array(); $template_revision_owner = array(); $template_current = array(); $template_published = array(); $template_revision_parent = array();
 		$public_ids = array(); $display_numbers = array(); $series_versions = array(); $source_keys = array();
 		$version_series = array(); $series_current = array(); $number_first_versions = array(); $version_previous = array();
@@ -106,6 +110,7 @@ final class DomainRestorePreflightService {
 				case 'programs':
 					if ( '' === trim( (string) ( $row['title'] ?? '' ) ) ) { $this->error( $errors, $line_no, 'program_invalid', 'Program title is required.' ); }
 					$issuer_id = absint( $row['issuer_id'] ?? 0 ); if ( $issuer_id && ! isset( $ids['issuers'][ $issuer_id ] ) ) { $this->error( $errors, $line_no, 'program_issuer_missing', 'Program refers to a missing issuer.' ); }
+					$program_issuers[ $id ] = $issuer_id;
 					$code = trim( (string) ( $row['code'] ?? '' ) ); if ( '' !== $code ) { if ( isset( $program_codes[ $code ] ) ) { $this->error( $errors, $line_no, 'program_code_duplicate', 'Duplicate program code inside backup.' ); } else { $program_codes[ $code ] = $id; } }
 					break;
 				case 'recipients':
@@ -165,6 +170,7 @@ final class DomainRestorePreflightService {
 					$program_id = absint( $row['program_id'] ?? 0 ); if ( $program_id && ! isset( $ids['programs'][ $program_id ] ) ) { $this->error( $errors, $line_no, 'series_program_missing', 'Credential Series refers to a missing program.' ); }
 					$batch_id = absint( $row['batch_id'] ?? 0 ); if ( $batch_id && ! isset( $ids['batches'][ $batch_id ] ) ) { $this->error( $errors, $line_no, 'series_batch_missing', 'Credential Series refers to a missing batch.' ); }
 					$issuer_id = absint( $row['issuer_id'] ?? 0 ); if ( $issuer_id && ! isset( $ids['issuers'][ $issuer_id ] ) ) { $this->error( $errors, $line_no, 'series_issuer_missing', 'Credential Series refers to a missing issuer.' ); }
+					if ( $program_id && ! empty( $program_issuers[ $program_id ] ) && $issuer_id !== absint( $program_issuers[ $program_id ] ) ) { $this->error( $errors, $line_no, 'series_program_issuer_mismatch', 'Credential Series issuer disagrees with its Program issuer.' ); }
 					$admin = (string) ( $row['administrative_state'] ?? '' ); if ( ! in_array( $admin, States::administrative_values(), true ) ) { $this->error( $errors, $line_no, 'series_state_invalid', 'Credential Series contains an unsupported administrative state.' ); }
 					$compliance = (string) ( $row['compliance_state'] ?? '' ); if ( ! in_array( $compliance, States::compliance_values(), true ) ) { $this->error( $errors, $line_no, 'series_compliance_state_invalid', 'Credential Series contains an unsupported compliance state.' ); }
 					$current = absint( $row['current_version_id'] ?? 0 ); if ( $current ) { $series_current[ $id ] = $current; }

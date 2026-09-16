@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Backup;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Persistent private storage for current-authority Certloom backup packages.
  *

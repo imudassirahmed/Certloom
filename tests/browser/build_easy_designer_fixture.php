@@ -24,7 +24,7 @@ foreach ( array('left'=>'Left','center-x'=>'Center horizontally','right'=>'Right
 }
 $quick_align .= '</div>';
 $html = str_replace('<div class="certloom-template-designer-productivity certloom-designer-pro-only"', $quick_align . '<div class="certloom-template-designer-productivity certloom-designer-pro-only"', $html);
-$html = str_replace('<label><span>Color</span><input type="text" data-certloom-designer-style-field="color"></label>', '<label><span>Color</span><span class="certloom-template-designer-color-control"><input type="color" value="#000000" data-certloom-designer-color-picker aria-label="Choose text color"><input type="text" data-certloom-designer-style-field="color"></span></label>', $html);
+$html = str_replace('<label><span>Color</span><input type="text" data-certloom-designer-style-field="color"></label>', '<label><span>Color</span><span class="certloom-template-designer-color-control"><input type="color" value="#000000" data-certloom-designer-color-picker data-certloom-designer-color-picker-for="color" aria-label="Choose text color"><input type="text" data-certloom-designer-style-field="color"></span></label>', $html);
 
 if ( false === strpos( $html, 'DSX-02A · Easy Designer' ) || false === strpos( $html, 'data-certloom-designer-color-picker' ) || false === strpos( $html, 'data-designer-safe-margin-mm="10"' ) ) {
     throw new RuntimeException( 'Easy Designer fixture transformation is incomplete.' );

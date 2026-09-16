@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Backup;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Infrastructure\Database\SchemaManager;
 

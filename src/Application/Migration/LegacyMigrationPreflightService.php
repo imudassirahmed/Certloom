@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Migration;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Domain\Credential\States;
 use Certloom\Domain\Credential\StatusService;
 use InvalidArgumentException;

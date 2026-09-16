@@ -1,6 +1,8 @@
 <?php
 namespace Certloom\Infrastructure\Email;
 
+use Certloom\Application\Issuance\MergeTokenCatalog;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -15,60 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class EmailMergeTokenCatalog {
 	/** @return array<string,array{label:string,tokens:array<string,string>}> */
 	public function groups() {
-		$groups = array(
-			'recipient' => array(
-				'label' => __( 'Recipient', 'certloom' ),
-				'tokens' => array(
-					'recipient.name'        => __( 'Recipient name', 'certloom' ),
-					'recipient.first_name'  => __( 'First name', 'certloom' ),
-					'recipient.middle_name' => __( 'Middle name', 'certloom' ),
-					'recipient.last_name'   => __( 'Last name', 'certloom' ),
-					'recipient.email'       => __( 'Email', 'certloom' ),
-					'recipient.external_id' => __( 'External ID', 'certloom' ),
-				),
-			),
-			'credential' => array(
-				'label' => __( 'Credential', 'certloom' ),
-				'tokens' => array(
-					'credential.display_number' => __( 'Credential number', 'certloom' ),
-					'credential.title'          => __( 'Credential title', 'certloom' ),
-					'credential.public_id'      => __( 'Public ID', 'certloom' ),
-					'credential.issue_date'     => __( 'Issue date', 'certloom' ),
-					'credential.expiry_date'    => __( 'Expiry date', 'certloom' ),
-					'credential.status'         => __( 'Credential status', 'certloom' ),
-					'credential.grade'          => __( 'Grade', 'certloom' ),
-					'score'                     => __( 'Score', 'certloom' ),
-				),
-			),
-			'program' => array(
-				'label' => __( 'Program & Batch', 'certloom' ),
-				'tokens' => array(
-					'program.title' => __( 'Program title', 'certloom' ),
-					'program.name'  => __( 'Program name', 'certloom' ),
-					'program.code'  => __( 'Program code', 'certloom' ),
-					'batch.name'    => __( 'Batch name', 'certloom' ),
-					'batch.code'    => __( 'Batch code', 'certloom' ),
-				),
-			),
-			'issuer' => array(
-				'label' => __( 'Issuer & Signer', 'certloom' ),
-				'tokens' => array(
-					'issuer.name'  => __( 'Issuer name', 'certloom' ),
-					'issuer.title' => __( 'Issuer title', 'certloom' ),
-					'signer.name'  => __( 'Signer name', 'certloom' ),
-					'signer.title' => __( 'Signer title', 'certloom' ),
-					'signer.email' => __( 'Signer email', 'certloom' ),
-				),
-			),
-			'verification' => array(
-				'label' => __( 'Verification & Site', 'certloom' ),
-				'tokens' => array(
-					'verification.url'  => __( 'Verification URL', 'certloom' ),
-					'verification_link' => __( 'Verification link', 'certloom' ),
-					'site_name'         => __( 'Site name', 'certloom' ),
-				),
-			),
-		);
+		$groups = MergeTokenCatalog::groups();
 
 		$custom = array();
 		if ( class_exists( '\\Ecapla_CertVerify_Fields' ) && is_callable( array( '\\Ecapla_CertVerify_Fields', 'get_manageable_fields' ) ) ) {
@@ -82,7 +31,7 @@ final class EmailMergeTokenCatalog {
 				$key = sanitize_key( (string) ( $field['key'] ?? '' ) );
 				if ( '' === $key || in_array( $key, $canonical_keys, true ) ) { continue; }
 				$label = trim( (string) ( $field['label'] ?? '' ) );
-				$custom[ 'custom:' . $key ] = '' !== $label ? $label : ucwords( str_replace( '_', ' ', $key ) );
+				$custom[ 'credential.custom.' . $key ] = '' !== $label ? $label : ucwords( str_replace( '_', ' ', $key ) );
 			}
 		}
 		if ( $custom ) {
@@ -117,6 +66,7 @@ final class EmailMergeTokenCatalog {
 				'expiry_date'       => __( 'Expiry date (legacy)', 'certloom' ),
 				'grade'             => __( 'Grade (legacy)', 'certloom' ),
 				'verification_url'  => __( 'Verification URL (legacy)', 'certloom' ),
+				'verification_link' => __( 'Verification link (legacy)', 'certloom' ),
 			),
 		);
 

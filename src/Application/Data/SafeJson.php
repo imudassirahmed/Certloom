@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Data;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Small fail-closed JSON boundary for structured domain payloads. */
 final class SafeJson {
 	/** @return string|\WP_Error */

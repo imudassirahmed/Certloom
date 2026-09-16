@@ -1,12 +1,13 @@
 <?php
 /** Browser-only FLD-02 dynamic issuance-field fixture using production admin JS/CSS. */
-$css = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' );
+$css = file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' );
 $js  = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.js' );
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
 html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}body{margin:0;padding:24px;background:#f0f0f1;color:#1d2327;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;line-height:1.5}.wrap{max-width:1080px;margin:auto}.fixture-card{background:#fff;border:1px solid #dcdcde;border-radius:12px;padding:20px;margin-bottom:18px}.fixture-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.fixture-grid label{display:grid;gap:6px}.fixture-card input,.fixture-card textarea,.fixture-card select{width:100%;max-width:none}.fixture-recipient{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.description{color:#50575e}@media(max-width:640px){body{padding:12px}.fixture-grid,.fixture-recipient{grid-template-columns:1fr}}
 <?php echo $css; ?>
 </style><script>
 window.ajaxurl='/wp-admin/admin-ajax.php';
+window.certloomAdminL10n={usageIssuance:{grade_default:true}};
 window.__fieldCalls=[];
 window.fetch=function(url,options){var d={};if(options&&options.body&&options.body.forEach){options.body.forEach(function(v,k){d[k]=String(v);});}window.__fieldCalls.push(d);var action=d.action||'';
  if(action==='certloom_resolve_scoped_fields'){

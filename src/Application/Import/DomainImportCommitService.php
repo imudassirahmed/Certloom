@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Import;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Contract\DomainImportTargetInterface;
 
 /** Bounded deterministic import commit with exact result accounting. */

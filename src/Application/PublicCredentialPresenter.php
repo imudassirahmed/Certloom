@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Domain\Credential\PublicCredentialId;
 use Certloom\Application\Fields\ScopedFieldPresentation;
 

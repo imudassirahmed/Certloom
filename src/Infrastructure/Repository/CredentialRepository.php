@@ -53,6 +53,14 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 			$program_exists = $this->reference_exists( 'programs', $program_id );
 			if ( is_wp_error( $program_exists ) ) { return $program_exists; }
 			if ( ! $program_exists ) { return new \WP_Error( 'certloom_series_program_missing', __( 'The selected credential program does not exist.', 'certloom' ) ); }
+			$program_issuer_id = $this->program_issuer_id( $program_id );
+			if ( is_wp_error( $program_issuer_id ) ) { return $program_issuer_id; }
+			if ( $program_issuer_id ) {
+				if ( $issuer_id && $issuer_id !== $program_issuer_id ) {
+					return new \WP_Error( 'certloom_series_issuer_program_mismatch', __( 'The credential Series Issuer must match the selected Program’s Issuer.', 'certloom' ) );
+				}
+				$issuer_id = $program_issuer_id;
+			}
 		}
 		if ( $batch_id ) {
 			$batch_program_id = $this->batch_program_id( $batch_id );
@@ -1015,6 +1023,15 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		$found = $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM %i WHERE id=%d LIMIT 1', SchemaManager::table( $entity ), absint( $id ) ) );
 		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_series_reference_read_failed', __( 'Certloom could not validate a related credential record.', 'certloom' ) ); }
 		return ! empty( $found );
+	}
+
+	/** @return int|\WP_Error */
+	private function program_issuer_id( $program_id ) {
+		global $wpdb;
+		$wpdb->last_error = '';
+		$issuer_id = $wpdb->get_var( $wpdb->prepare( 'SELECT issuer_id FROM %i WHERE id=%d LIMIT 1', SchemaManager::table( 'programs' ), absint( $program_id ) ) );
+		if ( '' !== (string) $wpdb->last_error ) { return new \WP_Error( 'certloom_series_program_read_failed', __( 'Certloom could not validate the credential Program issuer.', 'certloom' ) ); }
+		return absint( $issuer_id );
 	}
 
 	/** @return int|\WP_Error */

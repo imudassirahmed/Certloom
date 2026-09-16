@@ -1,6 +1,6 @@
 <?php
 $root = dirname( __DIR__, 2 );
-$admin_css = file_get_contents( $root . '/admin/assets/admin.css' );
+$admin_css = file_get_contents( $root . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( $root . '/admin/assets/admin.css' );
 $library_css = file_get_contents( $root . '/admin/assets/template-library.css' );
 $admin_js = file_get_contents( $root . '/admin/assets/admin.js' );
 ?><!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>

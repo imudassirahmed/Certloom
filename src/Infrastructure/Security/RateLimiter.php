@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Security;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Shared operation-scoped public abuse limiter for verification, claims, PDF and future APIs. */
 final class RateLimiter {
 	const DEFAULT_LIMIT = 30;

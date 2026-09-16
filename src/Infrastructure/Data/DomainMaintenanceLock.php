@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Data;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * Owner-matched maintenance lock shared by domain restore/cutover and legacy write guards.
  *

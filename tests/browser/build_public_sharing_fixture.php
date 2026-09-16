@@ -6,7 +6,7 @@ use Certloom\Application\Sharing\ShareLinkBuilder;
 $state = getenv( 'CERTLOOM_SOC_STATE' );
 $allowed = array( 'public', 'summary', 'private', 'portal_ready', 'portal_closed' );
 if ( ! in_array( $state, $allowed, true ) ) { $state = 'public'; }
-$css = file_get_contents( dirname( __DIR__, 2 ) . '/public/assets/certloom-public.css' );
+$css = file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/public/assets/certloom-public.css' );
 $js  = file_get_contents( dirname( __DIR__, 2 ) . '/public/assets/certloom-public.js' );
 function sh( $v ){ return htmlspecialchars( (string) $v, ENT_QUOTES, 'UTF-8' ); }
 function share_menu( $url ) {

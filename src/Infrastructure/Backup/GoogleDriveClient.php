@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Backup;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Minimal Google Drive API v3 client for Certloom-owned backup files only. */
 class GoogleDriveClient {
 	const API_BASE    = 'https://www.googleapis.com/drive/v3';

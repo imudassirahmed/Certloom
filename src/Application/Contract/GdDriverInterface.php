@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Contract;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * Narrow GD boundary used by the production raster candidate.
  *

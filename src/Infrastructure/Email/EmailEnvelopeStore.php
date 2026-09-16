@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Email;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Infrastructure\Files\PrivateJobFileStore;
 
 /** Protected short-lived envelope containing destination and rendered message bodies. */

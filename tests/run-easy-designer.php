@@ -16,7 +16,7 @@ dsx02(strpos($admin,"esc_html__( 'Snap while moving', 'certloom' )")!==false&&st
 dsx02(strpos($admin,'data-certloom-designer-quick-align')===false&&substr_count($admin,'data-certloom-designer-align=')>=1&&strpos($admin,'data-certloom-designer-property-section="arrange"')!==false,'Studio moves canonical page-alignment actions into the compact Arrange inspector instead of a horizontal toolbar');
 foreach(array('text','image','logo','merge','qr','rectangle','line') as $kind){dsx02(strpos($admin,'data-certloom-designer-add="\' . esc_attr( $kind )')===false || strpos($admin,"draggable=\"true\"")!==false,"Quick $kind can participate in drag placement");}
 dsx02(strpos($admin,'data-certloom-designer-color-picker')!==false&&strpos($admin,'data-certloom-designer-style-field="color"')!==false,'text color has both accessible visual picker and exact canonical hex input');
-dsx02(strpos($admin,'data-certloom-designer-style-field="font_family"')!==false&&strpos($admin,'<option value="serif">')!==false&&strpos($admin,'<option value="monospace">')!==false,'Easy Designer exposes the bounded FONT-02A family picker without free-text CSS');
+dsx02(strpos($admin,'data-certloom-designer-style-field="font_family"')!==false&&strpos($admin,'data-certloom-font-select')!==false&&strpos($admin,'$font_options_html')!==false,'Easy Designer exposes the shared bounded FONT-02A family picker without free-text CSS');
 dsx02(strpos($admin,'directTextEditStarted')!==false&&strpos($admin,'directTextEditSaved')!==false&&strpos($admin,'directTextEditCancelled')!==false,'direct text editing owns explicit accessible announcements');
 
 dsx02(is_string($js)&&strpos($js,'function geometryAtPoint')!==false&&strpos($js,"addEventListener( 'dragstart'")!==false&&strpos($js,"addEventListener( 'drop'")!==false,'runtime implements palette-to-canvas placement');
@@ -26,7 +26,7 @@ dsx02(strpos($js,'new Blob')!==false&&strpos($js,'20000')!==false&&strpos($js,"v
 dsx02(strpos($js,'function safeMarginMm')!==false&&strpos($js,'DEFAULT_SAFE_MARGIN_MM = 10')!==false&&strpos($js,'extent - margin')!==false,'Smart Guides include safe-margin snap targets');
 dsx02(strpos($js,'function snapDragged( element, bypass )')!==false&&strpos($js,'!! event.altKey')!==false,'Alt/Option temporarily bypasses snapping during a drag');
 dsx02(strpos($js,'rotatedBounds')!==false&&strpos($js,'elementGeometryValid( candidate, page() )')!==false,'Smart snapping remains guarded by rotated page bounds');
-dsx02(strpos($js,'colorPicker.addEventListener')!==false&&strpos($js,'colorTextField.value')!==false,'visual color picker synchronizes through the existing canonical color field');
+dsx02(strpos($js,"data-certloom-designer-color-picker-for")!==false&&strpos($js,"picker.addEventListener( 'input'")!==false&&strpos($js,'textField.value')!==false&&strpos($js,'applyStyleField( textField )')!==false,'visual color picker synchronizes through the existing canonical color field while preserving alpha');
 dsx02(strpos($js,'mediaFrame')!==false&&strpos($js,"'attachment:' + Number( data.id )")!==false,'dragged Image/Logo placement still resolves only to local WordPress attachment identity');
 dsx02(strpos($js,'localStorage')===false&&strpos($js,'sessionStorage')===false,'Easy Designer creates no browser-local design authority');
 dsx02(strpos($js,'https://')===false&&substr_count($js,'http://')===1,'Easy Designer adds no remote network/content path');

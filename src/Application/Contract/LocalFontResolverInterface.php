@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Contract;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * Resolves one exact content-addressed font face to a local file.
  *

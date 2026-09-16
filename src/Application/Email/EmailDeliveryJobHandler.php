@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Email;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Contract\EmailDeliveryRepositoryInterface;
 use Certloom\Application\Contract\JobHandlerInterface;
 use Certloom\Application\Contract\MailGatewayInterface;

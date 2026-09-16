@@ -3,6 +3,7 @@
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'MB_IN_BYTES', 1024 * 1024 );
 define( 'MINUTE_IN_SECONDS', 60 );
+define( 'DAY_IN_SECONDS', 24 * 60 * 60 );
 define( 'ARRAY_A', 'ARRAY_A' );
 define( 'ECAPLA_CERTVERIFY_VERSION', '1.6.0-test' );
 define( 'ECAPLA_CERTVERIFY_TABLE', 'certverify_certificates' );
@@ -29,6 +30,11 @@ class SystemStatusWpdb {
     public function prepare( $sql, ...$args ) { return array( 'sql' => $sql, 'args' => $args ); }
     public function esc_like( $v ) { return (string) $v; }
     public function get_row( $prepared, $format = null ) { return array( 'Engine' => 'InnoDB' ); }
+    public function get_var( $prepared ) {
+        if ( is_array( $prepared ) && false !== strpos( (string) ( $prepared['sql'] ?? '' ), 'SHOW TABLES LIKE' ) ) { return (string) ( $prepared['args'][0] ?? '' ); }
+        if ( is_array( $prepared ) && false !== strpos( (string) ( $prepared['sql'] ?? '' ), 'SELECT COUNT(*)' ) ) { return 0; }
+        return null;
+    }
     public function db_server_info() { return 'MariaDB 10.11-test'; }
     public function query() { $GLOBALS['system_status_db_writes']++; return 1; }
     public function insert() { $GLOBALS['system_status_db_writes']++; return 1; }

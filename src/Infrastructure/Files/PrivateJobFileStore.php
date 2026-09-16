@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Files;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /** Private randomized storage for resumable import/export/backup job files. */
 final class PrivateJobFileStore {
 	/** @return string|\WP_Error */

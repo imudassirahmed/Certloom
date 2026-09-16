@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Rendering;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Contract\LocalAssetResolverInterface;
 use Certloom\Application\Contract\QrEncoderInterface;
 use Certloom\Application\Contract\BarcodeEncoderInterface;
@@ -123,10 +127,22 @@ final class LayoutResolver {
 					$element['style']['direction'] = $this->directions->resolve( $this->table_plain_text( $element ), $element['style']['direction'] );
 					break;
 				case 'asset':
-					$reference = $element['asset'];
+					$source = isset( $element['source'] ) ? (string) $element['source'] : '';
+					if ( '' !== $source ) {
+						$source_map = array( 'issuer.logo' => 'issuer.logo_asset', 'issuer.seal' => 'issuer.seal_asset' );
+						$key = $source_map[ $source ] ?? '';
+						$reference = '' !== $key && array_key_exists( $key, $merge_snapshot ) ? $merge_snapshot[ $key ] : null;
+						if ( is_array( $reference ) || is_object( $reference ) || is_resource( $reference ) || null === $reference || '' === trim( (string) $reference ) ) {
+							throw new InvalidArgumentException( 'The immutable credential issuer does not provide the media required by this template.' );
+						}
+						$reference = trim( (string) $reference );
+					} else {
+						$reference = $element['asset'];
+					}
 					$verified_asset = $this->assets->inspect( $assets->resolve( $reference ) );
 					$verified_asset['reference'] = $reference;
 					$element['asset'] = $verified_asset;
+					unset( $element['source'] );
 					break;
 				case 'signature_asset':
 					$reference = isset( $element['source'] ) && 'signer.signature' === (string) $element['source']

@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Domain\Rendering;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Stable UUIDv4 IDs for canonical layout elements. */
 final class ElementId {
 	/** @return string */

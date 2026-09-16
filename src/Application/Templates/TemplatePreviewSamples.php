@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Templates;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * Deterministic, non-production merge samples for Template Preview.
  *
@@ -53,6 +57,8 @@ final class TemplatePreviewSamples {
 			if ( 'merge' === $type ) { $token = (string) ( $element['token'] ?? '' ); }
 			elseif ( 'barcode' === $type ) { $token = (string) ( $element['source'] ?? '' ); }
 			elseif ( 'signature' === $type && 'signer.signature' === (string) ( $element['source'] ?? '' ) ) { $token = 'signer.signature_asset'; }
+			elseif ( in_array( $type, array( 'image', 'logo' ), true ) && 'issuer.logo' === (string) ( $element['source'] ?? '' ) ) { $token = 'issuer.logo_asset'; }
+			elseif ( in_array( $type, array( 'image', 'logo' ), true ) && 'issuer.seal' === (string) ( $element['source'] ?? '' ) ) { $token = 'issuer.seal_asset'; }
 			elseif ( 'data_table' === $type ) { $token = (string) ( $element['source'] ?? '' ); }
 			if ( '' === $token || array_key_exists( $token, $snapshot ) ) { continue; }
 			$snapshot[ $token ] = array_key_exists( $token, $known ) ? $known[ $token ] : $this->placeholder( $token, $profile );
@@ -72,14 +78,21 @@ final class TemplatePreviewSamples {
 		$standard = array(
 			'recipient.name' => 'Alexandria Noor Rahman',
 			'recipient.first_name' => 'Alexandria',
+			'recipient.middle_name' => 'Noor',
 			'recipient.last_name' => 'Rahman',
+			'recipient.email' => 'alexandria.rahman@example.invalid',
+			'recipient.external_id' => 'REC-1042',
 			'program.name' => 'Professional Credential Program',
 			'program.title' => 'Professional Credential Program',
+			'program.code' => 'PCP-2026',
 			'issuer.name' => 'Northern Learning Institute',
+			'issuer.title' => 'Credentialing Office',
 			'signer.name' => 'Dr. Maya Rahman',
 			'signer.title' => 'Authorized Signatory',
 			'signer.email' => 'maya.rahman@example.invalid',
 			'signer.signature_asset' => 'asset:certloom-preview-signer-signature',
+			'issuer.logo_asset' => 'asset:certloom-preview-issuer-logo',
+			'issuer.seal_asset' => 'asset:certloom-preview-issuer-seal',
 			'credential.display_number' => 'CERT-2026-001',
 			'credential.title' => 'Professional Credential Program',
 			'credential.public_id' => '7M4K-2Q8D-F3XP',
@@ -87,6 +100,9 @@ final class TemplatePreviewSamples {
 			'credential.expiry_date' => '26 August 2028',
 			'credential.grade' => 'A',
 			'credential.status' => 'Valid',
+			'score' => '92',
+			'verification.url' => 'https://example.invalid/certloom/verify/CL-PREVIEW-STANDARD',
+			'site_name' => 'Northern Learning Institute',
 			'credential.subjects' => array(
 				array( 'subject' => 'Applied Communication', 'code' => 'COM-201', 'credits' => '3' ),
 				array( 'subject' => 'Professional Practice', 'code' => 'PRC-205', 'credits' => '4' ),
@@ -96,6 +112,7 @@ final class TemplatePreviewSamples {
 				array( 'subject' => 'Professional Practice', 'code' => 'PRC-205', 'score' => '94', 'max_score' => '100', 'percentage' => '94%', 'grade' => 'A+', 'credits' => '4', 'status' => 'Pass' ),
 			),
 			'batch.name' => 'August 2026 Cohort',
+			'batch.code' => 'AUG-2026',
 		);
 		if ( self::LONG === $profile ) {
 			$standard['recipient.name'] = 'Alexandria Noor Fatima Montgomery-Washington';

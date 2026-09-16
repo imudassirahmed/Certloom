@@ -75,7 +75,7 @@ class Ecapla_CertVerify_Public_Policy {
 
 $certificate = null;
 $fields = Ecapla_CertVerify_Fields::fields();
-$css = file_get_contents( ECAPLA_CERTVERIFY_PATH . 'admin/assets/admin.css' );
+$css = file_get_contents( ECAPLA_CERTVERIFY_PATH . 'assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( ECAPLA_CERTVERIFY_PATH . 'admin/assets/admin.css' );
 ob_start(); include ECAPLA_CERTVERIFY_PATH . 'admin/views/edit-certificate.php'; $view = ob_get_clean();
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
 html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}body{margin:0;background:#f0f0f1;color:#1d2327;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;line-height:1.5}.wrap{margin:20px}.dashicons{display:inline-block}.button{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0 12px;border:1px solid #2271b1;border-radius:4px;background:#f6f7f7;color:#2271b1;text-decoration:none}.button-primary{background:#2271b1;color:#fff}.regular-text,.large-text,select,input[type=date],input[type=text],textarea{max-width:100%;font:inherit}

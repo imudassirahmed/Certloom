@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Domain\Rendering;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use InvalidArgumentException;
 
 /**
@@ -32,11 +36,11 @@ final class ElementRegistry {
 				self::palette_item( 'dynamic_field', 'dynamicField', 90, 18, array( 'rich_preset' => 'dynamic_field', 'style_preset' => 'text' ) ),
 				self::palette_item( 'rich_text', 'richText', 110, 24, array( 'rich_preset' => 'certificate_line', 'style_preset' => 'text' ) ),
 			), $common ),
-			'image' => self::definition( 'image', 1, array( 'asset', 'fit' ), array( 'asset' ), 'asset', 'asset', 'asset', 'image', 'asset', array(), array( 'content' => 'asset', 'style' => '', 'media' => true ), array(
+			'image' => self::definition( 'image', 1, array( 'asset', 'source', 'fit' ), array(), 'asset', 'asset', 'asset', 'image', 'asset', array(), array( 'content' => 'asset', 'style' => '', 'media' => true ), array(
 				self::palette_item( 'image', 'image', 60, 40, array( 'fit' => 'contain' ), true ),
 				self::palette_item( 'seal', 'seal', 40, 40, array( 'fit' => 'contain' ), true ),
 			), $common ),
-			'logo' => self::definition( 'logo', 1, array( 'asset', 'fit' ), array( 'asset' ), 'asset', 'asset', 'asset', 'image', 'asset', array(), array( 'content' => 'asset', 'style' => '', 'media' => true ), array(
+			'logo' => self::definition( 'logo', 1, array( 'asset', 'source', 'fit' ), array(), 'asset', 'asset', 'asset', 'image', 'asset', array(), array( 'content' => 'asset', 'style' => '', 'media' => true ), array(
 				self::palette_item( 'logo', 'logo', 60, 40, array( 'fit' => 'contain' ), true ),
 			), $common ),
 			'signature' => self::definition( 'signature', 1, array( 'asset', 'source', 'fit' ), array(), 'signature_asset', 'signature_asset', 'asset', 'image', 'signature', array(), array( 'content' => 'signature', 'style' => '', 'media' => true ), array(

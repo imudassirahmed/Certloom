@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Integration;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * Canonical LMS attempt eligibility policy.
  *

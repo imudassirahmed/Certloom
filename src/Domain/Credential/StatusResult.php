@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Domain\Credential;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * Immutable structured output of the Core Status Service.
  */

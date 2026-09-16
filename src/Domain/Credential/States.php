@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Domain\Credential;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * Stable machine values for credential lifecycle dimensions.
  *

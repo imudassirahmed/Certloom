@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Import;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Infrastructure\Files\PrivateJobFileStore;
 
 /**

@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Backup;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Google OAuth 2.0 web-server flow for the least-privilege Drive file scope. */
 final class GoogleDriveOAuth {
 	const CONFIG_OPTION  = 'certloom_google_drive_config';

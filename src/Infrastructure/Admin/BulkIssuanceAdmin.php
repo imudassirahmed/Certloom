@@ -110,7 +110,7 @@ final class BulkIssuanceAdmin {
 		}
 
 		$tmp = (string) ( $file['tmp_name'] ?? '' );
-		if ( '' === $tmp || ! is_file( $tmp ) ) {
+		if ( '' === $tmp || ! is_uploaded_file( $tmp ) || ! is_file( $tmp ) ) {
 			$this->fail( __( 'The temporary Bulk Issuance upload is unavailable.', 'certloom' ) );
 		}
 

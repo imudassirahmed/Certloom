@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Rendering;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * Preview-only font contract used to let the browser consume the canonical
  * RenderPlan composition before PDF-04 exact font bytes are release-authorized.

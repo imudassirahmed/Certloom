@@ -55,7 +55,7 @@ sth($js,"document.addEventListener( 'keydown', keyboard, true )",'Studio editing
 stn($js,'localStorage','Studio view mode does not create browser-local authority');
 stn($js,'sessionStorage','Studio view mode does not create session-local authority');
 sth($css,'body.certloom-designer-workspace-page','focused Studio has an outer document scroll-lock contract');
-sth($css,'overflow: hidden !important','focused desktop Studio prevents trailing WordPress page scrolling');
+st(false!==strpos($css,'body.certloom-designer-workspace-page {') && false!==strpos($css,'overflow: hidden;') && false===strpos($css,'body.certloom-designer-workspace-page { overflow: hidden !important;'),'focused desktop Studio prevents trailing WordPress page scrolling without a specificity override');
 sth($css,'.certloom-studio-preview-toggle','Sample/Tokens control has compact Studio styling');
 sth($css,'.certloom-studio-conflict','concurrency warning is styled outside the document title row');
 sth($css,'.certloom-template-designer-element-meta code','raw technical ID is hidden from the normal inspector header');

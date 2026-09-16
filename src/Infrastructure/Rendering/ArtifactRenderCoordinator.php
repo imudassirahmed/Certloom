@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Rendering;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Rendering\ArtifactInspector;
 use Certloom\Application\Rendering\ArtifactReceipt;
 use Certloom\Application\Contract\LocalFontResolverInterface;

@@ -246,7 +246,7 @@
 }
 
 .certloom-registry-screen .ecapla-certverify-badge-valid::before {
-  border-radius: 50%;
+  border-radius: var(--cl-r-round);
 }
 
 .certloom-registry-screen .ecapla-certverify-badge-withdrawn,
@@ -1072,12 +1072,12 @@
   margin: var(--cl-4) 0 var(--cl-5);
   padding: 64px var(--cl-6) var(--cl-6);
   border: 1px solid rgba(185, 194, 210, .58);
-  border-radius: 18px;
+  border-radius: var(--cl-r-hero);
   background:
     radial-gradient(circle at 88% 30%, rgba(103, 156, 252, .11) 0, rgba(103, 156, 252, 0) 28%),
     radial-gradient(circle at 94% 74%, rgba(3, 205, 243, .08) 0, rgba(3, 205, 243, 0) 30%),
     rgba(255, 255, 255, .92);
-  box-shadow: 0 14px 42px rgba(1, 19, 61, .07), inset 0 1px 0 rgba(255, 255, 255, .92);
+  box-shadow: var(--cl-lift);
   color: var(--cl-ink);
   overflow: hidden;
   -webkit-backdrop-filter: blur(16px) saturate(118%);
@@ -1097,7 +1097,7 @@
   left: var(--cl-6);
   width: 132px;
   height: 4px;
-  border-radius: 999px;
+  border-radius: var(--cl-r-pill);
   background: linear-gradient(90deg, var(--cl-brand-emerald) 0%, var(--cl-cyan) 46%, var(--cl-brand-blue) 100%);
   pointer-events: none;
 }
@@ -1266,7 +1266,7 @@
     gap: var(--cl-4);
     min-height: 0;
     padding: 58px var(--cl-4) var(--cl-4);
-    border-radius: 14px;
+    border-radius: var(--cl-r-dialog);
   }
 
   .certloom-admin-shell .certloom-page-hero::before,
@@ -1500,7 +1500,7 @@
 .certloom-admin-shell .certloom-dashboard-date-dot {
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  border-radius: var(--cl-r-round);
   background: var(--cl-brand-blue);
 }
 
@@ -1689,7 +1689,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
   width: 22px;
   height: 22px;
   border: 1px solid var(--cl-rule-firm);
-  border-radius: 50%;
+  border-radius: var(--cl-r-round);
   background: var(--cl-surface);
   font-size: var(--cl-t-xs);
   font-weight: 700;
@@ -1716,9 +1716,9 @@ body.certloom-setup-v2-body { overflow: hidden; }
   margin-inline: auto;
   padding: var(--cl-5);
   border: 1px solid var(--cl-rule);
-  border-radius: 10px;
+  border-radius: var(--cl-r-panel);
   background: var(--cl-surface);
-  box-shadow: 0 8px 28px rgb(15 35 75 / 5%);
+  box-shadow: var(--cl-shadow-popover);
 }
 .certloom-setup-v2-step::before {
   content: "";
@@ -1817,7 +1817,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
 .certloom-setup-v2-design-picker select { width: 100%; }
 .certloom-setup-v2-empty-inline { margin: 0; padding: var(--cl-3); border-left: 3px solid var(--cl-blue); background: var(--cl-blue-wash); }
 
-.certloom-setup-v2-profile-status { display: inline-flex; align-items: center; min-height: 24px; margin-top: var(--cl-3); padding: 3px 9px; border-radius: 999px; background: color-mix(in srgb, var(--cl-brand-emerald) 10%, var(--cl-surface)); color: var(--cl-valid); font-size: var(--cl-t-xs); font-weight: 700; }
+.certloom-setup-v2-profile-status { display: inline-flex; align-items: center; min-height: 24px; margin-top: var(--cl-3); padding: 3px 9px; border-radius: var(--cl-r-pill); background: color-mix(in srgb, var(--cl-brand-emerald) 10%, var(--cl-surface)); color: var(--cl-valid); font-size: var(--cl-t-xs); font-weight: 700; }
 .certloom-setup-v2-context-form { gap: var(--cl-5); }
 .certloom-setup-v2-context-section { display: grid; gap: var(--cl-3); padding: var(--cl-4); border: 1px solid var(--cl-rule); border-radius: var(--cl-r-ctl); background: var(--cl-paper); }
 .certloom-setup-v2-context-section .certloom-setup-v2-panel-head { margin: 0; }
@@ -1827,7 +1827,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
 .certloom-setup-v2-context-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--cl-2); color: var(--cl-ink-soft); font-size: var(--cl-t-xs); }
 .certloom-setup-v2-context-card-head strong { color: var(--cl-ink); font-size: var(--cl-t-sm); }
 .certloom-setup-v2-context-card > select { width: 100%; min-height: 40px; margin: 0; border-color: var(--cl-rule-firm); border-radius: var(--cl-r-ctl); }
-.certloom-setup-v2-required-chip { display: inline-flex; align-items: center; min-height: 22px; padding: 2px 8px; border-radius: 999px; background: var(--cl-amber-wash); color: var(--cl-warning); font-weight: 700; }
+.certloom-setup-v2-required-chip { display: inline-flex; align-items: center; min-height: 22px; padding: 2px 8px; border-radius: var(--cl-r-pill); background: var(--cl-amber-wash); color: var(--cl-warning); font-weight: 700; }
 .certloom-setup-v2-add-inline { border-top: 1px solid var(--cl-rule); padding-top: var(--cl-2); }
 .certloom-setup-v2-add-inline > summary { cursor: pointer; color: var(--cl-blue-deep); font-weight: 600; }
 .certloom-setup-v2-add-inline[open] > summary { margin-bottom: var(--cl-3); }
@@ -1839,7 +1839,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
 .certloom-setup-v2-rowset { display: grid; gap: var(--cl-3); padding-top: var(--cl-3); border-top: 1px solid var(--cl-rule); }
 .certloom-setup-v2-next-fields { display: grid; gap: var(--cl-2); padding: var(--cl-3); border: 1px dashed var(--cl-rule-firm); border-radius: var(--cl-r-ctl); background: var(--cl-surface); }
 .certloom-setup-v2-next-fields > div { display: flex; flex-wrap: wrap; gap: var(--cl-2); }
-.certloom-setup-v2-next-fields span { padding: 3px 8px; border-radius: 999px; background: var(--cl-blue-wash); color: var(--cl-blue-deep); font-size: var(--cl-t-xs); }
+.certloom-setup-v2-next-fields span { padding: 3px 8px; border-radius: var(--cl-r-pill); background: var(--cl-blue-wash); color: var(--cl-blue-deep); font-size: var(--cl-t-xs); }
 .certloom-setup-v2-inherited-title { display: grid; gap: var(--cl-1); padding: var(--cl-3); border: 1px solid color-mix(in srgb, var(--cl-brand-emerald) 30%, var(--cl-rule)); border-radius: var(--cl-r-ctl); background: color-mix(in srgb, var(--cl-brand-emerald) 7%, var(--cl-surface)); }
 .certloom-setup-v2-inherited-title > span, .certloom-setup-v2-inherited-title small { color: var(--cl-ink-soft); font-size: var(--cl-t-xs); }
 .certloom-setup-v2-inherited-title strong { color: var(--cl-ink); font-size: var(--cl-t-base); }
@@ -1852,7 +1852,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
 .certloom-setup-v2-backend-note { margin: 0; }
 .certloom-setup-v2-welcome { max-width: 760px; margin: 8vh auto 0; padding: var(--cl-6); text-align: center; }
 .certloom-setup-v2-welcome-mark,
-.certloom-setup-v2-finish-mark { display: grid; place-items: center; width: 72px; height: 72px; margin: 0 auto var(--cl-4); border: 1px solid var(--cl-rule); border-radius: 50%; background: var(--cl-surface); color: var(--cl-blue); }
+.certloom-setup-v2-finish-mark { display: grid; place-items: center; width: 72px; height: 72px; margin: 0 auto var(--cl-4); border: 1px solid var(--cl-rule); border-radius: var(--cl-r-round); background: var(--cl-surface); color: var(--cl-blue); }
 .certloom-setup-v2-welcome-mark img { display: block; width: 50px; height: 50px; object-fit: contain; }
 .certloom-setup-v2-welcome-points { display: inline-grid; gap: var(--cl-2); margin: var(--cl-5) auto; padding: 0; text-align: left; list-style: none; }
 .certloom-setup-v2-welcome-points li { display: flex; align-items: center; gap: var(--cl-2); margin: 0; }
@@ -2173,7 +2173,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
   min-height: 40px;
   padding: 9px 10px 6px;
   border: 0;
-  border-radius: 0;
+  border-radius: var(--cl-r-none);
   background: transparent;
   box-shadow: none;
   color: var(--cl-ink-soft);
@@ -2240,7 +2240,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
 .certloom-manual-issuance .certloom-issue-v2-card {
   max-width: 1140px;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: var(--cl-r-panel);
 }
 
 .certloom-issue-v2-card .certloom-manual-card-head {
@@ -2333,7 +2333,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
 .certloom-issue-v2-form .certloom-presentation-choice {
   min-height: 76px;
   padding: 11px 12px;
-  border-radius: 8px;
+  border-radius: var(--cl-r-lift);
 }
 
 .certloom-issue-v2-form .certloom-presentation-choice:has(input:checked) {
@@ -2349,7 +2349,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
   margin: 12px 20px 14px;
   padding: 0;
   border: 1px solid var(--cl-rule);
-  border-radius: 8px;
+  border-radius: var(--cl-r-lift);
   background: var(--cl-surface);
 }
 
@@ -2404,7 +2404,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
   margin-top: 4px;
   margin-bottom: 16px;
   border: 1px solid var(--cl-rule);
-  border-radius: 8px;
+  border-radius: var(--cl-r-lift);
   background: var(--cl-surface);
 }
 
@@ -2663,7 +2663,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
   gap: 6px;
   padding: 8px;
   border: 1px solid var(--cl-rule);
-  border-radius: 8px;
+  border-radius: var(--cl-r-lift);
   background: var(--cl-paper);
 }
 .certloom-issue-design-preview[aria-busy="true"] {
@@ -2689,7 +2689,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
   min-height: 210px;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--cl-rule) 86%, transparent);
-  border-radius: 6px;
+  border-radius: var(--cl-r-sm);
   background: color-mix(in srgb, var(--cl-paper) 88%, var(--cl-surface));
 }
 .certloom-issue-design-preview-canvas .certloom-template-preview-scroll {
@@ -2821,7 +2821,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
   gap: 8px;
   padding: 8px 9px;
   border: 1px solid var(--cl-rule);
-  border-radius: 8px;
+  border-radius: var(--cl-r-lift);
   background: var(--cl-paper);
   cursor: pointer;
 }
@@ -2855,7 +2855,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
   width: fit-content;
   margin-top: 3px;
   padding: 3px 7px;
-  border-radius: 999px;
+  border-radius: var(--cl-r-pill);
   background: color-mix(in srgb, var(--cl-brand-emerald) 10%, var(--cl-paper));
   color: color-mix(in srgb, var(--cl-brand-emerald) 72%, var(--cl-ink));
   font-weight: 650;
@@ -2917,7 +2917,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
   margin: 14px 20px;
   padding: 12px 14px;
   border: 1px solid var(--cl-rule);
-  border-radius: 8px;
+  border-radius: var(--cl-r-lift);
   background: color-mix(in srgb, var(--cl-brand-emerald) 5%, var(--cl-paper));
 }
 .certloom-review-appearance-note strong {
@@ -2935,7 +2935,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
   object-fit: contain;
   margin: 6px 0;
   border: 1px solid var(--cl-rule);
-  border-radius: 6px;
+  border-radius: var(--cl-r-sm);
   background: var(--cl-paper);
 }
 @media (max-width: 782px) {
@@ -2965,7 +2965,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
   margin-top: 9px;
   padding: 10px;
   border: 1px solid var(--cl-rule);
-  border-radius: 8px;
+  border-radius: var(--cl-r-lift);
   background: color-mix(in srgb, var(--cl-cyan) 3%, var(--cl-paper));
 }
 .certloom-program-primary-panel[hidden],
@@ -2990,7 +2990,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
   margin-bottom: 9px;
   padding: 9px 10px;
   border: 1px solid var(--cl-rule);
-  border-radius: 8px;
+  border-radius: var(--cl-r-lift);
   background: color-mix(in srgb, var(--cl-brand-emerald) 4%, var(--cl-paper));
 }
 .certloom-credential-title-policy__head {
@@ -3108,7 +3108,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
 .certloom-credential-data-badge {
   flex: 0 0 auto;
   padding: 3px 7px;
-  border-radius: 999px;
+  border-radius: var(--cl-r-pill);
   background: color-mix(in srgb, var(--cl-brand-emerald) 9%, var(--cl-paper));
   color: color-mix(in srgb, var(--cl-brand-emerald) 72%, var(--cl-ink));
   font-size: 11px;
@@ -3150,7 +3150,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
   gap: 5px;
   padding: 9px;
   border: 1px solid var(--cl-rule);
-  border-radius: 8px;
+  border-radius: var(--cl-r-lift);
   background: var(--cl-paper);
 }
 .certloom-independent-detail-row__head {
@@ -3172,14 +3172,14 @@ body.certloom-setup-v2-body { overflow: hidden; }
   margin: 0;
   padding: 8px 9px;
   border: 1px dashed var(--cl-rule);
-  border-radius: 8px;
+  border-radius: var(--cl-r-lift);
 }
 .certloom-details-only-preview {
   display: grid;
   gap: 5px;
   padding: 11px;
   border: 1px solid var(--cl-rule);
-  border-radius: 8px;
+  border-radius: var(--cl-r-lift);
   background: color-mix(in srgb, var(--cl-cyan) 4%, var(--cl-paper));
 }
 .certloom-details-only-preview strong {
@@ -3233,7 +3233,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
   align-items: center;
   padding: 6px 7px;
   border: 1px solid color-mix(in srgb, var(--cl-rule) 88%, transparent);
-  border-radius: 7px;
+  border-radius: var(--cl-r-compact);
   background: var(--cl-paper);
 }
 .certloom-design-data-row.is-missing {
@@ -3263,7 +3263,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
 .certloom-design-data-badge {
   justify-self: end;
   padding: 2px 6px;
-  border-radius: 999px;
+  border-radius: var(--cl-r-pill);
   background: var(--cl-surface-soft);
   color: var(--cl-ink-soft);
   font-size: 10px;
@@ -3383,7 +3383,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
   margin-top: var(--cl-3);
   padding: 5px 10px;
   border: 1px solid var(--cl-rule);
-  border-radius: 999px;
+  border-radius: var(--cl-r-pill);
   background: color-mix(in srgb, var(--cl-surface) 86%, var(--cl-brand-emerald) 14%);
   color: var(--cl-ink-soft);
   font-size: var(--cl-t-xs);
@@ -3519,7 +3519,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
   margin: 10px 16px 14px;
   padding: 0;
   border: 1px solid var(--cl-rule);
-  border-radius: 8px;
+  border-radius: var(--cl-r-lift);
   background: var(--cl-surface);
 }
 .certloom-issue-v2-form > .certloom-issue-left-column > .certloom-additional-details > summary {
@@ -3626,7 +3626,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
 }
 .certloom-issue-summary-head span {
   padding: 2px 7px;
-  border-radius: 999px;
+  border-radius: var(--cl-r-pill);
   background: color-mix(in srgb, var(--cl-blue) 8%, var(--cl-paper));
   color: var(--cl-blue-deep);
   font-size: 10px;
@@ -3638,7 +3638,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
   gap: 0;
   margin: 0;
   border: 1px solid var(--cl-rule);
-  border-radius: 8px;
+  border-radius: var(--cl-r-lift);
   background: var(--cl-paper);
 }
 .certloom-issue-summary dl > div {
@@ -3726,7 +3726,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
   margin: 7px 0 0;
   padding: 8px 9px;
   border: 1px dashed var(--cl-rule);
-  border-radius: 7px;
+  border-radius: var(--cl-r-compact);
   color: var(--cl-ink-soft);
   font-size: 11px;
   background: color-mix(in srgb, var(--cl-surface-soft) 72%, var(--cl-paper));

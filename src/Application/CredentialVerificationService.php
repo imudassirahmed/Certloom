@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Contract\CredentialQueryRepositoryInterface;
 use Certloom\Domain\Credential\PublicCredentialId;
 use Certloom\Domain\Credential\States;

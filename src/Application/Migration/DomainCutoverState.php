@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Migration;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * Durable authority/receipt state for the legacy -> Series/Version cutover.
  *

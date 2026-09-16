@@ -1,7 +1,7 @@
 <?php
 /** Browser fixture for alpha.4.27 Credentials overview hierarchy. */
 $root = dirname( __DIR__, 2 );
-$admin_css = file_get_contents( $root . '/admin/assets/admin.css' );
+$admin_css = file_get_contents( $root . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( $root . '/admin/assets/admin.css' );
 $foundation = file_get_contents( $root . '/admin/assets/certloom-foundation.css' );
 $js = file_get_contents( $root . '/admin/assets/admin.js' );
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>

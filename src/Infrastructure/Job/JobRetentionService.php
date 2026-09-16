@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Job;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Domain\Job\JobTypes;
 use Certloom\Infrastructure\Files\PrivateJobFileStore;
 use Certloom\Infrastructure\Import\DomainImportStageRepository;

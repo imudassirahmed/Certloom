@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Restore;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\VisibilityPolicy;
 use Certloom\Application\Fields\ScopedFieldContract;
 use Certloom\Application\Program\ProgramProfile;

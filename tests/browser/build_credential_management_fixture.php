@@ -2,7 +2,7 @@
 /** Browser-only Credential Management administration layout fixture. */
 $state = getenv( 'CERTLOOM_CREDENTIAL_MANAGEMENT_STATE' );
 if ( ! in_array( $state, array( 'registry', 'detail', 'historical', 'lifecycle_review', 'relationship_review' ), true ) ) { $state = 'registry'; }
-$css = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' );
+$css = file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' );
 function cmh( $value ) { return htmlspecialchars( (string) $value, ENT_QUOTES, 'UTF-8' ); }
 function cmtabs( $current ) {
 	$tabs = array( 'overview'=>'Overview','recipient'=>'Recipient','program'=>'Program','status'=>'Status','verification'=>'Verification','versions'=>'Versions','activity'=>'Activity','actions'=>'Actions' );

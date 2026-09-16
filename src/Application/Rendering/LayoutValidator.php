@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Rendering;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Domain\Rendering\ElementId;
 use Certloom\Domain\Rendering\ElementRegistry;
 use Certloom\Domain\Rendering\LayoutSchema;
@@ -162,7 +166,24 @@ final class LayoutValidator {
 				$out['style'] = $this->style( isset( $element['style'] ) ? $element['style'] : array() );
 				break;
 			case 'asset':
-				$out['asset'] = $this->asset_reference( $element['asset'] );
+				$source = isset( $element['source'] ) ? strtolower( trim( (string) $element['source'] ) ) : '';
+				if ( '' !== $source ) {
+					if ( (int) $schema_version < LayoutSchema::VERSION_V4 ) {
+						throw new InvalidArgumentException( 'Dynamic issuer media requires certloom-layout v4 or newer.' );
+					}
+					if ( ! in_array( $source, array( 'issuer.logo', 'issuer.seal' ), true ) ) {
+						throw new InvalidArgumentException( 'Unsupported issuer media source.' );
+					}
+					if ( isset( $element['asset'] ) && '' !== trim( (string) $element['asset'] ) ) {
+						throw new InvalidArgumentException( 'An image must use either a fixed local asset or an immutable issuer media source, not both.' );
+					}
+					$out['source'] = $source;
+				} else {
+					if ( empty( $element['asset'] ) ) {
+						throw new InvalidArgumentException( 'A fixed image requires a local asset reference.' );
+					}
+					$out['asset'] = $this->asset_reference( $element['asset'] );
+				}
 				$out['fit'] = isset( $element['fit'] ) ? strtolower( (string) $element['fit'] ) : 'contain';
 				if ( ! in_array( $out['fit'], array( 'contain', 'cover', 'fill' ), true ) ) {
 					throw new InvalidArgumentException( 'Unsupported image fit mode.' );

@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Contract;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Persistence operations required by lifecycle commands. */
 interface CredentialRepositoryInterface {
 	/** @return array<string,mixed>|null|\WP_Error */

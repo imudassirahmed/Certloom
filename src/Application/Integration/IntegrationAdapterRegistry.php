@@ -1,14 +1,19 @@
 <?php
 namespace Certloom\Application\Integration;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Contract\IntegrationAdapterInterface;
 
 /**
- * Closed registry for Certloom-owned adapters.
+ * Contract-validating registry for integration adapters.
  *
- * There is intentionally no WordPress filter/action registration surface here.
- * Concrete adapter releases are added by Certloom code and tested against the
- * same normalized contract before they become available to administrators.
+ * Core adapters are supplied by Certloom. Third-party code may contribute an
+ * adapter through the documented WordPress filter, but every contributed value
+ * still has to implement IntegrationAdapterInterface and pass the same key/label
+ * validation before it becomes available.
  */
 final class IntegrationAdapterRegistry {
 	/** @var array<string,IntegrationAdapterInterface> */ private $adapters = array();
@@ -16,6 +21,14 @@ final class IntegrationAdapterRegistry {
 
 	/** @param IntegrationAdapterInterface[] $adapters */
 	public function __construct( array $adapters = array() ) {
+		if ( function_exists( 'apply_filters' ) ) {
+			$filtered = apply_filters( 'certloom_integration_adapters', $adapters );
+			if ( ! is_array( $filtered ) ) {
+				$this->error = new \WP_Error( 'certloom_integration_adapter_registry_invalid', __( 'Certloom refused an invalid integration adapter registry extension.', 'certloom' ) );
+				return;
+			}
+			$adapters = $filtered;
+		}
 		foreach ( $adapters as $adapter ) {
 			$result = $this->add_internal( $adapter );
 			if ( is_wp_error( $result ) ) { $this->adapters = array(); $this->error = $result; break; }

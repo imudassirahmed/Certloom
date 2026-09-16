@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Rendering;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use InvalidArgumentException;
 use RuntimeException;
 

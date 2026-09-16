@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Import;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Contract\DomainImportTargetInterface;
 use Certloom\Domain\Credential\States;
 use Certloom\Infrastructure\Database\Transaction;

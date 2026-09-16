@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Contract;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 interface LocalAssetResolverInterface {
 	/**
 	 * @param string $reference Canonical attachment:ID or asset:key reference.

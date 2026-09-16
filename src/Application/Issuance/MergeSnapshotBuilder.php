@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Issuance;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Domain\Rendering\ElementRegistry;
 use Certloom\Domain\Rendering\TableDataContract;
 
@@ -103,6 +107,10 @@ final class MergeSnapshotBuilder {
 			$values['batch_code'] = $batch_code;
 			$values['cohort_name'] = $batch_name;
 		}
+		$issuer_logo_attachment_id = absint( $issuer['logo_attachment_id'] ?? 0 );
+		$issuer_seal_attachment_id = absint( $issuer['seal_attachment_id'] ?? 0 );
+		if ( $issuer_logo_attachment_id ) { $values['issuer.logo_asset'] = 'attachment:' . $issuer_logo_attachment_id; }
+		if ( $issuer_seal_attachment_id ) { $values['issuer.seal_asset'] = 'attachment:' . $issuer_seal_attachment_id; }
 		if ( $signer_signature_attachment_id ) { $values['signer.signature_asset'] = 'attachment:' . $signer_signature_attachment_id; }
 		foreach ( $repeating as $source => $rows ) { $values[ $source ] = $rows; }
 		$required = $this->required_tokens( $layout );
@@ -111,6 +119,7 @@ final class MergeSnapshotBuilder {
 			$key = sanitize_key( (string) $key );
 			if ( '' === $key || is_array( $value ) || is_object( $value ) || is_resource( $value ) ) { continue; }
 			$scalar = null === $value ? '' : ( is_bool( $value ) ? ( $value ? '1' : '0' ) : (string) $value );
+			$values[ 'credential.custom.' . $key ] = $scalar;
 			$values[ 'custom:' . $key ] = $scalar;
 			$values[ 'recipient.custom.' . $key ] = $scalar;
 			// Historical/custom designs sometimes used a plain token (for example
@@ -129,6 +138,7 @@ final class MergeSnapshotBuilder {
 			$key = sanitize_key( (string) $key );
 			if ( '' === $key || is_array( $value ) || is_object( $value ) || is_resource( $value ) ) { continue; }
 			$scalar = null === $value ? '' : ( is_bool( $value ) ? ( $value ? '1' : '0' ) : (string) $value );
+			$values[ 'credential.custom.' . $key ] = $scalar;
 			$values[ 'custom:' . $key ] = $scalar;
 			$values[ 'recipient.custom.' . $key ] = $scalar;
 			// One-off credential values can satisfy an explicitly-required legacy
@@ -170,6 +180,11 @@ final class MergeSnapshotBuilder {
 			}
 			if ( 'signature' === $type && 'signer.signature' === (string) ( $element['source'] ?? '' ) ) {
 				$tokens[] = 'signer.signature_asset';
+			}
+			if ( in_array( $type, array( 'image', 'logo' ), true ) ) {
+				$media_source = (string) ( $element['source'] ?? '' );
+				if ( 'issuer.logo' === $media_source ) { $tokens[] = 'issuer.logo_asset'; }
+				if ( 'issuer.seal' === $media_source ) { $tokens[] = 'issuer.seal_asset'; }
 			}
 			if ( 'data_table' === $type ) {
 				$source = trim( (string) ( $element['source'] ?? '' ) );

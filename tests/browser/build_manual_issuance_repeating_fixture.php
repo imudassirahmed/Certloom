@@ -1,7 +1,7 @@
 <?php
 /** Browser-only focused fixture for Manual Issuance immutable repeating row entry. */
 $root = dirname( __DIR__, 2 );
-$css = file_get_contents( $root . '/admin/assets/admin.css' );
+$css = file_get_contents( $root . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( $root . '/admin/assets/admin.css' );
 $js = file_get_contents( $root . '/admin/assets/admin.js' );
 function cl_h( $value ) { return htmlspecialchars( (string) $value, ENT_QUOTES, 'UTF-8' ); }
 function row_markup( $rowset, $index, array $fields, array $values = array() ) {

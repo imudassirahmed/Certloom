@@ -2,6 +2,7 @@
 namespace Certloom\Infrastructure\Repository;
 
 use Certloom\Application\Data\SafeJson;
+use Certloom\Application\Fields\ScopedFieldContract;
 use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Infrastructure\Database\SchemaManager;
 
@@ -222,7 +223,13 @@ final class IssuerRepository {
 		$row['seal_attachment_id'] = ! empty( $row['seal_attachment_id'] ) ? absint( $row['seal_attachment_id'] ) : null;
 		$row['settings']           = ( new SafeJson() )->decode_array( $row['settings_json'] ?? null, 'certloom_issuer_settings_corrupt', __( 'Stored issuer settings are invalid JSON.', 'certloom' ) );
 		unset( $row['settings_json'] );
-		return is_wp_error( $row['settings'] ) ? $row['settings'] : $row;
+		if ( is_wp_error( $row['settings'] ) ) { return $row['settings']; }
+		$catalog = class_exists( '\Ecapla_CertVerify_Fields' ) ? \Ecapla_CertVerify_Fields::get_field_map() : array();
+		$field_contract = ( new ScopedFieldContract() )->from_scope_metadata( $row['settings'], 'issuer', $catalog );
+		if ( is_wp_error( $field_contract ) ) { return $field_contract; }
+		unset( $row['settings'][ ScopedFieldContract::STORAGE_KEY ] );
+		$row['field_contract'] = $field_contract;
+		return $row;
 	}
 
 	/** @return int */

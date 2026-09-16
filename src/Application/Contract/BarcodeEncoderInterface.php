@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Contract;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * Renderer-independent one-dimensional barcode encoder boundary.
  *

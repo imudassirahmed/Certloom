@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Contract;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 interface DomainBackupBuilderInterface {
 	/** @return array<string,mixed>|\WP_Error */
 	public function start( $job_key, $plugin_version );

@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Email;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Contract\MailGatewayInterface;
 
 /** Delegates transport to wp_mail() so normal WordPress SMTP plugins continue to work. */

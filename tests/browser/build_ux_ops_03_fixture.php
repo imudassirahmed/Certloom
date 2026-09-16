@@ -1,6 +1,6 @@
 <?php
 /** Browser fixture for UX-OPS-03 admin coherence interactions. */
-$css = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' );
+$css = file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' );
 $rules_css = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/design-rules.css' );
 $js  = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.js' );
 $retry = '1' === getenv( 'CERTLOOM_UXOPS_FIXTURE_RETRY' );

@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Email;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Rendering\CanonicalJson;
 use Certloom\Infrastructure\Email\EmailMergeTokenCatalog;
 

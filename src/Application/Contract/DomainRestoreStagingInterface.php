@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Contract;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Resumable restore loader/commit boundary used by the shared job engine. */
 interface DomainRestoreStagingInterface {
 	/** @return array<string,mixed>|\WP_Error */

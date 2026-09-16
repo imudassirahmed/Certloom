@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * Central public visibility policy for native Credential Series.
  *

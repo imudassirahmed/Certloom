@@ -1,6 +1,6 @@
 <?php
 /** Browser fixture for UX-OPS-01 plugin lifecycle dialog. */
-$css=file_get_contents(dirname(__DIR__,2).'/admin/assets/admin.css');
+$css=file_get_contents(dirname(__DIR__,2).'/assets/css/certloom-tokens.css') . "\n" . file_get_contents(dirname(__DIR__,2).'/admin/assets/admin.css');
 $js=file_get_contents(dirname(__DIR__,2).'/admin/assets/admin.js');
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
 html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}body{margin:0;background:#f0f0f1;color:#1d2327;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{padding:20px}.widefat{width:100%;background:#fff;border-collapse:collapse}.widefat td{padding:12px;border-bottom:1px solid #dcdcde}.button{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0 12px;border:1px solid #2271b1;background:#fff;color:#2271b1}.button-primary{background:#2271b1;color:#fff}.button-link{border:0;background:transparent}<?php echo $css; ?>

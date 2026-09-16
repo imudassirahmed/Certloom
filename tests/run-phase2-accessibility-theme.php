@@ -34,7 +34,7 @@ $checks = array(
     'reduced motion covers legacy and modern loading indicators' => fn()=>a11yq(false!==strpos($files['css'],'prefers-reduced-motion: reduce') && false!==strpos($files['css'],'.cv-search-btn.cv-loading .cv-arrow') && false!==strpos($files['css'],'animation:none!important'),'reduced motion'),
     'forced colors policy exists' => fn()=>a11yq(false!==strpos($files['css'],'forced-colors: active') && false!==strpos($files['css'],'CanvasText') && false!==strpos($files['css'],'Highlight'),'forced colors'),
     'higher contrast preference strengthens borders' => fn()=>a11yq(false!==strpos($files['css'],'prefers-contrast: more') && false!==strpos($files['css'],'border-width:2px'),'contrast'),
-    'live status hiding does not depend on theme screen-reader utility' => fn()=>a11yq(false!==strpos($files['css'],'.certloom-live-status{') && false!==strpos($files['css'],'clip:rect(0,0,0,0)!important'),'sr utility'),
+    'live status hiding does not depend on theme screen-reader utility' => fn()=>a11yq(false!==strpos($files['css'],'.certloom-live-status{') && false!==strpos($files['css'],'clip:rect(0,0,0,0)'),'sr utility'),
     'result action reset resists common theme button styles' => fn()=>a11yq(false!==strpos($files['css'],'.certloom-result-action{-webkit-appearance:none;appearance:none;') && false!==strpos($files['css'],'text-transform:none;letter-spacing:normal;box-shadow:none;'),'action reset'),
 );
 $failed=0;foreach($checks as $name=>$fn){try{$fn();echo "PASS  $name\n";}catch(Throwable $e){$failed++;echo "FAIL  $name\n      {$e->getMessage()}\n";}}

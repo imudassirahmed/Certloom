@@ -4,6 +4,8 @@ namespace Certloom\Infrastructure\Admin;
 use Certloom\Application\Fields\ScopedFieldContract;
 use Certloom\Application\Templates\TemplateFieldCompatibility;
 use Certloom\Infrastructure\Repository\BatchRepository;
+use Certloom\Infrastructure\Repository\IssuerRepository;
+use Certloom\Infrastructure\Repository\ScopedFieldGlobalRepository;
 use Certloom\Infrastructure\Repository\TemplateRepository;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
@@ -32,18 +34,20 @@ final class ScopedFieldConfigurationGuard {
 	/** @return true|\WP_Error */
 	public function validate_program_change( $program_id, array $program_contract, array $profile, $issuer_id = 0 ) {
 		$catalog = $this->catalog();
-		$base = ( new ScopedFieldContract() )->resolve( $program_contract, null, $catalog );
+		$parents = $this->parent_contracts( $issuer_id, $catalog );
+		if ( is_wp_error( $parents ) ) { return $parents; }
+		$base = ( new ScopedFieldContract() )->resolve_hierarchy( $parents['global'], $parents['issuer'], $program_contract, null, $catalog );
 		if ( is_wp_error( $base ) ) { return $base; }
 		$variants = $this->variant_templates( $profile );
 		if ( is_wp_error( $variants ) ) { return $variants; }
-		$valid = $this->validate_templates( $variants, $program_contract, null, $catalog );
+		$valid = $this->validate_templates( $variants, $program_contract, null, $catalog, $parents['global'], $parents['issuer'] );
 		if ( is_wp_error( $valid ) ) { return $valid; }
 
 		$program_id = absint( $program_id );
 		// New Programs already inherit Issuer/Global design assignments, so validate
 		// that fallback chain before a durable Program id exists. Existing Programs
 		// additionally validate their direct assignment and every dependent Batch.
-		$valid = $this->validate_resolved_assignment( $program_id, 0, absint( $issuer_id ), $program_contract, null, $catalog );
+		$valid = $this->validate_resolved_assignment( $program_id, 0, absint( $issuer_id ), $program_contract, null, $catalog, $parents['global'], $parents['issuer'] );
 		if ( is_wp_error( $valid ) ) { return $valid; }
 		if ( ! $program_id ) { return true; }
 
@@ -54,7 +58,7 @@ final class ScopedFieldConfigurationGuard {
 			foreach ( $rows as $batch ) {
 				$after = max( $after, absint( $batch['id'] ?? 0 ) );
 				$batch_contract = is_array( $batch['field_contract'] ?? null ) ? $batch['field_contract'] : ScopedFieldContract::empty_batch();
-				$effective = ( new ScopedFieldContract() )->resolve( $program_contract, $batch_contract, $catalog );
+				$effective = ( new ScopedFieldContract() )->resolve_hierarchy( $parents['global'], $parents['issuer'], $program_contract, $batch_contract, $catalog );
 				if ( is_wp_error( $effective ) ) {
 					return new \WP_Error( 'certloom_program_field_contract_breaks_batch', sprintf( /* translators: %s: Batch name. */ __( 'This Program field change conflicts with existing Batch “%s”. Update that Batch override first.', 'certloom' ), (string) ( $batch['name'] ?? ( '#' . absint( $batch['id'] ?? 0 ) ) ) ), array( 'batch_id' => absint( $batch['id'] ?? 0 ), 'reason' => $effective->get_error_code() ) );
 				}
@@ -65,10 +69,10 @@ final class ScopedFieldConfigurationGuard {
 				$direct_batch = $this->has_active_direct_assignment( 'batch', absint( $batch['id'] ?? 0 ) );
 				if ( is_wp_error( $direct_batch ) ) { return $this->with_batch_context( $direct_batch, $batch ); }
 				if ( ! $direct_batch ) {
-					$valid = $this->validate_templates( $variants, $program_contract, $batch_contract, $catalog );
+					$valid = $this->validate_templates( $variants, $program_contract, $batch_contract, $catalog, $parents['global'], $parents['issuer'] );
 					if ( is_wp_error( $valid ) ) { return $this->with_batch_context( $valid, $batch ); }
 				}
-				$valid = $this->validate_resolved_assignment( $program_id, absint( $batch['id'] ?? 0 ), absint( $issuer_id ), $program_contract, $batch_contract, $catalog );
+				$valid = $this->validate_resolved_assignment( $program_id, absint( $batch['id'] ?? 0 ), absint( $issuer_id ), $program_contract, $batch_contract, $catalog, $parents['global'], $parents['issuer'] );
 				if ( is_wp_error( $valid ) ) { return $this->with_batch_context( $valid, $batch ); }
 			}
 		} while ( count( $rows ) === self::BATCH_CHUNK );
@@ -79,18 +83,20 @@ final class ScopedFieldConfigurationGuard {
 	/** @return true|\WP_Error */
 	public function validate_batch_change( array $program, $batch_id, array $batch_contract ) {
 		$catalog = $this->catalog();
+		$parents = $this->parent_contracts( absint( $program['issuer_id'] ?? 0 ), $catalog );
+		if ( is_wp_error( $parents ) ) { return $parents; }
 		$program_contract = is_array( $program['field_contract'] ?? null ) ? $program['field_contract'] : ScopedFieldContract::empty_program();
-		$effective = ( new ScopedFieldContract() )->resolve( $program_contract, $batch_contract, $catalog );
+		$effective = ( new ScopedFieldContract() )->resolve_hierarchy( $parents['global'], $parents['issuer'], $program_contract, $batch_contract, $catalog );
 		if ( is_wp_error( $effective ) ) { return $effective; }
 		$variants = $this->variant_templates( is_array( $program['profile'] ?? null ) ? $program['profile'] : array() );
 		if ( is_wp_error( $variants ) ) { return $variants; }
 		$direct_batch = $this->has_active_direct_assignment( 'batch', absint( $batch_id ) );
 		if ( is_wp_error( $direct_batch ) ) { return $direct_batch; }
 		if ( ! $direct_batch ) {
-			$valid = $this->validate_templates( $variants, $program_contract, $batch_contract, $catalog );
+			$valid = $this->validate_templates( $variants, $program_contract, $batch_contract, $catalog, $parents['global'], $parents['issuer'] );
 			if ( is_wp_error( $valid ) ) { return $valid; }
 		}
-		$design = $this->validate_resolved_assignment( absint( $program['id'] ?? 0 ), absint( $batch_id ), absint( $program['issuer_id'] ?? 0 ), $program_contract, $batch_contract, $catalog );
+		$design = $this->validate_resolved_assignment( absint( $program['id'] ?? 0 ), absint( $batch_id ), absint( $program['issuer_id'] ?? 0 ), $program_contract, $batch_contract, $catalog, $parents['global'], $parents['issuer'] );
 		if ( is_wp_error( $design ) ) { return $design; }
 		$integration = ( new IntegrationConfigurationDependencyGuard() )->validate_batch_field_change( $program, absint( $batch_id ), $batch_contract );
 		return is_wp_error( $integration ) ? $integration : true;
@@ -113,16 +119,16 @@ final class ScopedFieldConfigurationGuard {
 	}
 
 	/** @return true|\WP_Error */
-	private function validate_templates( array $templates, array $program_contract, ?array $batch_contract, array $catalog ) {
+	private function validate_templates( array $templates, array $program_contract, ?array $batch_contract, array $catalog, ?array $global_contract = null, ?array $issuer_contract = null ) {
 		foreach ( $templates as $template ) {
-			$valid = $this->compatibility->validate( (array) ( $template['published_revision']['layout'] ?? array() ), $program_contract, $batch_contract, $catalog );
+			$valid = $this->compatibility->validate( (array) ( $template['published_revision']['layout'] ?? array() ), $program_contract, $batch_contract, $catalog, $global_contract, $issuer_contract );
 			if ( is_wp_error( $valid ) ) { return $valid; }
 		}
 		return true;
 	}
 
 	/** @return true|\WP_Error */
-	private function validate_resolved_assignment( $program_id, $batch_id, $issuer_id, array $program_contract, ?array $batch_contract, array $catalog ) {
+	private function validate_resolved_assignment( $program_id, $batch_id, $issuer_id, array $program_contract, ?array $batch_contract, array $catalog, ?array $global_contract = null, ?array $issuer_contract = null ) {
 		$resolved = $this->templates->resolve_published_assignment_details( array( 'issuer_id' => absint( $issuer_id ), 'program_id' => absint( $program_id ), 'batch_id' => absint( $batch_id ) ) );
 		if ( is_wp_error( $resolved ) ) {
 			// A draft design must not block Program/Batch structure changes. Publication and
@@ -134,7 +140,7 @@ final class ScopedFieldConfigurationGuard {
 		if ( empty( $resolved['published_layout'] ) || ! is_array( $resolved['published_layout'] ) ) {
 			return new \WP_Error( 'certloom_scoped_field_template_unavailable', __( 'The currently assigned certificate design is no longer published.', 'certloom' ) );
 		}
-		return $this->compatibility->validate( (array) $resolved['published_layout'], $program_contract, $batch_contract, $catalog );
+		return $this->compatibility->validate( (array) $resolved['published_layout'], $program_contract, $batch_contract, $catalog, $global_contract, $issuer_contract );
 	}
 
 
@@ -145,6 +151,19 @@ final class ScopedFieldConfigurationGuard {
 		$assignment = $this->templates->get_assignment( $scope_type, $scope_id );
 		if ( is_wp_error( $assignment ) ) { return $assignment; }
 		return is_array( $assignment ) && ! empty( $assignment['active'] );
+	}
+
+	/** @return array{global:array<string,mixed>,issuer:array<string,mixed>}|\WP_Error */
+	private function parent_contracts( $issuer_id, array $catalog ) {
+		$global = ( new ScopedFieldGlobalRepository() )->get( $catalog );
+		if ( is_wp_error( $global ) ) { return $global; }
+		$issuer = ScopedFieldContract::empty_issuer( false );
+		if ( absint( $issuer_id ) ) {
+			$row = ( new IssuerRepository() )->find( absint( $issuer_id ) );
+			if ( is_wp_error( $row ) ) { return $row; }
+			if ( is_array( $row ) && is_array( $row['field_contract'] ?? null ) ) { $issuer = $row['field_contract']; }
+		}
+		return array( 'global' => $global, 'issuer' => $issuer );
 	}
 
 	/** @return array<string,array<string,mixed>> */

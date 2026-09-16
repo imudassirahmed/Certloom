@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Templates;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * Non-artifact authoring preferences for the visual Template Designer.
  *

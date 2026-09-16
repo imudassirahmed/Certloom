@@ -4,11 +4,11 @@ namespace Certloom\Application\Fields;
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 /**
- * FLD-02 canonical Program + Batch field-requirement contract.
+ * FLD-02 canonical Global → Issuer → Program → Batch field-requirement contract.
  *
  * Field definitions remain global in Ecapla_CertVerify_Fields. This contract
- * stores only where those definitions apply. Program is the base requirement
- * set; Batch may add/tighten fields or exclude only optional Program fields.
+ * stores only where those definitions apply. Global and Issuer provide reusable
+ * defaults; Program and Batch may add/tighten fields or exclude inherited optional fields.
  * Issued credential truth is never read from this mutable contract after issue:
  * ManualIssuanceService freezes the resolved contract on the immutable Version.
  */
@@ -17,67 +17,95 @@ final class ScopedFieldContract {
 	const SCHEMA = 'certloom-scoped-fields';
 	const VERSION = 1;
 	const MAX_FIELDS = 50;
+	const SCOPES = array( 'global', 'issuer', 'program', 'batch' );
+
+	/** @return array<string,mixed> */
+	public static function empty_global( $configured = false ) {
+		return self::empty_scope( 'global', $configured );
+	}
+
+	/** @return array<string,mixed> */
+	public static function empty_issuer( $configured = false ) {
+		return self::empty_scope( 'issuer', $configured );
+	}
+
+	/** @return array<string,mixed> */
+	private static function empty_scope( $scope, $configured = false ) {
+		return array( '_meta' => array( 'schema' => self::SCHEMA, 'schema_version' => self::VERSION, 'scope' => (string) $scope, 'configured' => (bool) $configured ), 'fields' => array() );
+	}
 
 	/** @return array<string,mixed> */
 	public static function empty_program( $configured = false ) {
-		return array( '_meta' => array( 'schema' => self::SCHEMA, 'schema_version' => self::VERSION, 'scope' => 'program', 'configured' => (bool) $configured ), 'fields' => array() );
+		return self::empty_scope( 'program', $configured );
 	}
 
 	/** @return array<string,mixed> */
 	public static function empty_batch( $configured = false ) {
-		return array( '_meta' => array( 'schema' => self::SCHEMA, 'schema_version' => self::VERSION, 'scope' => 'batch', 'configured' => (bool) $configured ), 'fields' => array() );
+		return self::empty_scope( 'batch', $configured );
+	}
+
+	/** @return array<string,mixed>|\WP_Error */
+	public function from_scope_metadata( array $metadata, $scope, array $catalog ) {
+		$scope = sanitize_key( (string) $scope );
+		if ( ! in_array( $scope, self::SCOPES, true ) ) {
+			return new \WP_Error( 'certloom_scoped_field_scope_invalid', __( 'Choose a valid credential-field scope.', 'certloom' ) );
+		}
+		$stored = $metadata[ self::STORAGE_KEY ] ?? null;
+		if ( null === $stored ) { return self::empty_scope( $scope, false ); }
+		$stored = $this->validate_stored_envelope( $stored, $scope );
+		if ( is_wp_error( $stored ) ) { return $stored; }
+		$normalized = $this->normalize_scope( $scope, $stored['fields'], $catalog );
+		if ( ! is_wp_error( $normalized ) ) { $normalized['_meta']['configured'] = true; }
+		return $normalized;
+	}
+
+	/** @return array<string,mixed>|\WP_Error */
+	public function with_scope_metadata( array $metadata, $scope, $input, array $catalog ) {
+		$normalized = $this->normalize_scope( $scope, $input, $catalog );
+		if ( is_wp_error( $normalized ) ) { return $normalized; }
+		$metadata[ self::STORAGE_KEY ] = $normalized;
+		return $metadata;
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
 	public function from_program_metadata( array $metadata, array $catalog ) {
-		$stored = $metadata[ self::STORAGE_KEY ] ?? null;
-		if ( null === $stored ) { return self::empty_program( false ); }
-		$stored = $this->validate_stored_envelope( $stored, 'program' );
-		if ( is_wp_error( $stored ) ) { return $stored; }
-		$normalized = $this->normalize_program( $stored['fields'], $catalog );
-		if ( ! is_wp_error( $normalized ) ) { $normalized['_meta']['configured'] = true; }
-		return $normalized;
+		return $this->from_scope_metadata( $metadata, 'program', $catalog );
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
 	public function from_batch_metadata( array $metadata, array $catalog ) {
-		$stored = $metadata[ self::STORAGE_KEY ] ?? null;
-		if ( null === $stored ) { return self::empty_batch( false ); }
-		$stored = $this->validate_stored_envelope( $stored, 'batch' );
-		if ( is_wp_error( $stored ) ) { return $stored; }
-		$normalized = $this->normalize_batch( $stored['fields'], $catalog );
-		if ( ! is_wp_error( $normalized ) ) { $normalized['_meta']['configured'] = true; }
-		return $normalized;
+		return $this->from_scope_metadata( $metadata, 'batch', $catalog );
+	}
+
+	/** @return array<string,mixed>|\WP_Error */
+	public function normalize_scope( $scope, $input, array $catalog ) {
+		$scope = sanitize_key( (string) $scope );
+		if ( ! in_array( $scope, self::SCOPES, true ) ) {
+			return new \WP_Error( 'certloom_scoped_field_scope_invalid', __( 'Choose a valid credential-field scope.', 'certloom' ) );
+		}
+		$fields = $this->normalize_map( $input, $catalog, $scope );
+		if ( is_wp_error( $fields ) ) { return $fields; }
+		return array( '_meta' => array( 'schema' => self::SCHEMA, 'schema_version' => self::VERSION, 'scope' => $scope, 'configured' => true ), 'fields' => $fields );
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
 	public function normalize_program( $input, array $catalog ) {
-		$fields = $this->normalize_map( $input, $catalog, false );
-		if ( is_wp_error( $fields ) ) { return $fields; }
-		return array( '_meta' => array( 'schema' => self::SCHEMA, 'schema_version' => self::VERSION, 'scope' => 'program', 'configured' => true ), 'fields' => $fields );
+		return $this->normalize_scope( 'program', $input, $catalog );
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
 	public function normalize_batch( $input, array $catalog ) {
-		$fields = $this->normalize_map( $input, $catalog, true );
-		if ( is_wp_error( $fields ) ) { return $fields; }
-		return array( '_meta' => array( 'schema' => self::SCHEMA, 'schema_version' => self::VERSION, 'scope' => 'batch', 'configured' => true ), 'fields' => $fields );
+		return $this->normalize_scope( 'batch', $input, $catalog );
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
 	public function with_program_metadata( array $metadata, $input, array $catalog ) {
-		$normalized = $this->normalize_program( $input, $catalog );
-		if ( is_wp_error( $normalized ) ) { return $normalized; }
-		$metadata[ self::STORAGE_KEY ] = $normalized;
-		return $metadata;
+		return $this->with_scope_metadata( $metadata, 'program', $input, $catalog );
 	}
 
 	/** @return array<string,mixed>|\WP_Error */
 	public function with_batch_metadata( array $metadata, $input, array $catalog ) {
-		$normalized = $this->normalize_batch( $input, $catalog );
-		if ( is_wp_error( $normalized ) ) { return $normalized; }
-		$metadata[ self::STORAGE_KEY ] = $normalized;
-		return $metadata;
+		return $this->with_scope_metadata( $metadata, 'batch', $input, $catalog );
 	}
 
 	/**
@@ -88,34 +116,44 @@ final class ScopedFieldContract {
 	 * @return array<string,mixed>|\WP_Error
 	 */
 	public function resolve( array $program_contract, ?array $batch_contract, array $catalog ) {
-		$program_configured = ! empty( $program_contract['_meta']['configured'] );
-		$batch_configured = is_array( $batch_contract ) && ! empty( $batch_contract['_meta']['configured'] );
-		$program = $this->normalize_program( $program_contract['fields'] ?? array(), $catalog );
-		if ( is_wp_error( $program ) ) { return $program; }
-		$batch = null;
-		if ( is_array( $batch_contract ) ) {
-			$batch = $this->normalize_batch( $batch_contract['fields'] ?? array(), $catalog );
-			if ( is_wp_error( $batch ) ) { return $batch; }
+		$result = $this->resolve_hierarchy( null, null, $program_contract, $batch_contract, $catalog );
+		if ( is_wp_error( $result ) && 'certloom_scoped_field_cannot_exclude_required' === $result->get_error_code() ) {
+			return new \WP_Error( 'certloom_batch_field_cannot_exclude_required', $result->get_error_message() );
 		}
+		return $result;
+	}
 
+	/**
+	 * Resolves Global → Issuer → Program → Batch into one exact issuance schema.
+	 * Descendants may add or tighten requirements. Issuer/Program/Batch may
+	 * exclude only inherited optional fields; a required ancestor is immutable.
+	 *
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public function resolve_hierarchy( ?array $global_contract, ?array $issuer_contract, array $program_contract, ?array $batch_contract, array $catalog ) {
+		$contracts = array(
+			'global'  => $global_contract,
+			'issuer'  => $issuer_contract,
+			'program' => $program_contract,
+			'batch'   => $batch_contract,
+		);
 		$resolved = array();
-		foreach ( $program['fields'] as $key => $requirement ) {
-			$resolved[ $key ] = array( 'key' => $key, 'requirement' => $requirement, 'origin' => 'program' );
-		}
-		if ( is_array( $batch ) ) {
-			foreach ( $batch['fields'] as $key => $mode ) {
+		$configured = array();
+		foreach ( $contracts as $scope => $contract ) {
+			if ( ! is_array( $contract ) ) { $configured[ $scope ] = false; continue; }
+			$configured[ $scope ] = ! empty( $contract['_meta']['configured'] );
+			$normalized = $this->normalize_scope( $scope, $contract['fields'] ?? array(), $catalog );
+			if ( is_wp_error( $normalized ) ) { return $normalized; }
+			foreach ( $normalized['fields'] as $key => $mode ) {
 				if ( 'exclude' === $mode ) {
 					if ( isset( $resolved[ $key ] ) && 'required' === $resolved[ $key ]['requirement'] ) {
-						return new \WP_Error( 'certloom_batch_field_cannot_exclude_required', sprintf( /* translators: %s: field label. */ __( 'The Batch cannot exclude Program-required field “%s”. Change the Program requirement or the Batch override.', 'certloom' ), (string) ( $catalog[ $key ]['label'] ?? $key ) ) );
+						return new \WP_Error( 'certloom_scoped_field_cannot_exclude_required', sprintf( /* translators: %s: field label. */ __( 'A child scope cannot exclude required field “%s”. Change the parent requirement first.', 'certloom' ), (string) ( $catalog[ $key ]['label'] ?? $key ) ) );
 					}
 					unset( $resolved[ $key ] );
 					continue;
 				}
-				if ( isset( $resolved[ $key ] ) && 'required' === $resolved[ $key ]['requirement'] && 'optional' === $mode ) {
-					// Never downgrade a Program requirement.
-					$mode = 'required';
-				}
-				$resolved[ $key ] = array( 'key' => $key, 'requirement' => $mode, 'origin' => 'batch' );
+				if ( isset( $resolved[ $key ] ) && 'required' === $resolved[ $key ]['requirement'] && 'optional' === $mode ) { $mode = 'required'; }
+				$resolved[ $key ] = array( 'key' => $key, 'requirement' => $mode, 'origin' => $scope );
 			}
 		}
 
@@ -136,7 +174,11 @@ final class ScopedFieldContract {
 			);
 		}
 		return array(
-			'_meta' => array( 'schema' => self::SCHEMA, 'schema_version' => self::VERSION, 'scope' => 'resolved', 'configured' => $program_configured, 'batch_configured' => $batch_configured ),
+			'_meta' => array(
+				'schema' => self::SCHEMA, 'schema_version' => self::VERSION, 'scope' => 'resolved',
+				'global_configured' => ! empty( $configured['global'] ), 'issuer_configured' => ! empty( $configured['issuer'] ),
+				'configured' => ! empty( $configured['program'] ), 'batch_configured' => ! empty( $configured['batch'] ),
+			),
 			'fields' => $out,
 		);
 	}
@@ -152,7 +194,7 @@ final class ScopedFieldContract {
 	 *
 	 * Requirement scope and value ownership are deliberately separate. Recipient
 	 * identity fields therefore use recipient.* tokens, Grade uses the canonical
-	 * credential token, and administrator-created credential values use custom:*.
+	 * credential token, and administrator-created credential values use credential.custom.<key>.
 	 * This prevents the Designer from accidentally treating Recipient-owned facts
 	 * as mutable credential custom data.
 	 *
@@ -167,7 +209,7 @@ final class ScopedFieldContract {
 			case 'email': return 'recipient.email';
 			case 'external_id': return 'recipient.external_id';
 			case 'grade': return 'credential.grade';
-			default: return '' === $key ? '' : 'custom:' . $key;
+			default: return '' === $key ? '' : 'credential.custom.' . $key;
 		}
 	}
 
@@ -193,6 +235,10 @@ final class ScopedFieldContract {
 			'grade' => 'grade',
 		);
 		if ( isset( $map[ $token ] ) ) { return $map[ $token ]; }
+		if ( 0 === strpos( $token, 'credential.custom.' ) ) {
+			$key = sanitize_key( substr( $token, 18 ) );
+			return '' === $key ? null : $key;
+		}
 		if ( 0 === strpos( $token, 'custom:' ) ) {
 			$key = sanitize_key( substr( $token, 7 ) );
 			return '' === $key ? null : $key;
@@ -215,7 +261,7 @@ final class ScopedFieldContract {
 	 */
 	public function validate_stored_envelope( $stored, $scope ) {
 		$scope = sanitize_key( (string) $scope );
-		if ( ! in_array( $scope, array( 'program', 'batch' ), true ) || ! is_array( $stored ) || ! isset( $stored['_meta'] ) || ! is_array( $stored['_meta'] ) || ! array_key_exists( 'fields', $stored ) || ! is_array( $stored['fields'] ) ) {
+		if ( ! in_array( $scope, self::SCOPES, true ) || ! is_array( $stored ) || ! isset( $stored['_meta'] ) || ! is_array( $stored['_meta'] ) || ! array_key_exists( 'fields', $stored ) || ! is_array( $stored['fields'] ) ) {
 			return new \WP_Error( 'certloom_scoped_field_storage_invalid', __( 'Stored scoped field requirements are structurally invalid.', 'certloom' ) );
 		}
 		$meta = $stored['_meta'];
@@ -225,7 +271,7 @@ final class ScopedFieldContract {
 		if ( count( $stored['fields'] ) > self::MAX_FIELDS ) {
 			return new \WP_Error( 'certloom_scoped_field_contract_invalid', __( 'Scoped field requirements must be a bounded field map.', 'certloom' ) );
 		}
-		$allowed = 'batch' === $scope ? array( 'optional', 'required', 'exclude' ) : array( 'optional', 'required' );
+		$allowed = 'global' === $scope ? array( 'optional', 'required' ) : array( 'optional', 'required', 'exclude' );
 		foreach ( $stored['fields'] as $raw_key => $raw_mode ) {
 			$key = (string) $raw_key; $mode = (string) $raw_mode;
 			if ( '' === $key || sanitize_key( $key ) !== $key || ! in_array( $mode, $allowed, true ) ) {
@@ -236,7 +282,7 @@ final class ScopedFieldContract {
 	}
 
 	/** @return array<string,string>|\WP_Error */
-	private function normalize_map( $input, array $catalog, $batch ) {
+	private function normalize_map( $input, array $catalog, $scope ) {
 		if ( null === $input || '' === $input ) { return array(); }
 		if ( ! is_array( $input ) || count( $input ) > self::MAX_FIELDS ) {
 			return new \WP_Error( 'certloom_scoped_field_contract_invalid', __( 'Scoped field requirements must be a bounded field map.', 'certloom' ) );
@@ -246,11 +292,11 @@ final class ScopedFieldContract {
 			$key = sanitize_key( (string) $raw_key );
 			$mode = sanitize_key( (string) $raw_mode );
 			if ( '' === $key || ! isset( $catalog[ $key ] ) || ! self::is_scopable_definition( $catalog[ $key ] ) ) {
-				return new \WP_Error( 'certloom_scoped_field_unknown', __( 'A scoped field requirement references a field that is unavailable for Program/Batch assignment.', 'certloom' ) );
+				return new \WP_Error( 'certloom_scoped_field_unknown', __( 'A scoped field requirement references a field that is unavailable for scoped credential-field assignment.', 'certloom' ) );
 			}
-			$allowed = $batch ? array( 'optional', 'required', 'exclude' ) : array( 'optional', 'required' );
+			$allowed = 'global' === (string) $scope ? array( 'optional', 'required' ) : array( 'optional', 'required', 'exclude' );
 			if ( ! in_array( $mode, $allowed, true ) ) {
-				return new \WP_Error( 'certloom_scoped_field_requirement_invalid', __( 'Choose a valid optional, required, or Batch-exclusion field rule.', 'certloom' ) );
+				return new \WP_Error( 'certloom_scoped_field_requirement_invalid', __( 'Choose a valid optional, required, or inherited-field exclusion rule.', 'certloom' ) );
 			}
 			$out[ $key ] = $mode;
 		}

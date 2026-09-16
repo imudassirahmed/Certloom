@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Rendering;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Contract\LocalAssetResolverInterface;
 use InvalidArgumentException;
 

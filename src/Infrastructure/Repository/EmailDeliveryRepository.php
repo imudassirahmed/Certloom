@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Repository;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Contract\EmailDeliveryRepositoryInterface;
 use Certloom\Application\Data\SafeJson;
 use Certloom\Infrastructure\Database\SchemaManager;

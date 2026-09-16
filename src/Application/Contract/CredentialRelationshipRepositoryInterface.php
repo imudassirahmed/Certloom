@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Contract;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Persistence boundary for immutable Program/Batch relationship corrections. */
 interface CredentialRelationshipRepositoryInterface {
 	/** @return array<string,mixed>|null|\WP_Error */

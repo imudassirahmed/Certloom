@@ -18,6 +18,7 @@ use Certloom\Infrastructure\Database\Transaction;
 use Certloom\Infrastructure\Issuance\ManualIssuanceNumberAllocator;
 use Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl;
 use Certloom\Infrastructure\Repository\ManualIssuanceRepository;
+use Certloom\Infrastructure\Repository\ScopedFieldGlobalRepository;
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -384,15 +385,6 @@ final class ManualIssuanceService {
 		if ( is_array( $program_lifecycle ) && ProgramLifecyclePolicy::REPEAT_BATCH === (string) ( $program_lifecycle['repeat_policy'] ?? '' ) && ! is_array( $batch ) ) {
 			return new \WP_Error( 'certloom_manual_issue_repeat_batch_required', __( 'This Program issues one credential per Batch or session. Choose a Batch before reviewing the credential.', 'certloom' ) );
 		}
-		$field_contract = ( new ScopedFieldContract() )->resolve( is_array( $program['field_contract'] ?? null ) ? $program['field_contract'] : ScopedFieldContract::empty_program(), is_array( $batch ) && is_array( $batch['field_contract'] ?? null ) ? $batch['field_contract'] : null, $this->field_catalog() );
-		if ( is_wp_error( $field_contract ) ) { return $field_contract; }
-		// Program/Batch contracts define reusable fields, but an individual issued
-		// credential may still carry genuine one-off catalog-backed facts required
-		// by its selected design. Add those facts to the immutable issuance contract
-		// without mutating the reusable Program/Batch configuration.
-		$field_contract = $this->issuance_field_contract( $field_contract, $request, empty( $program['id'] ) );
-		$field_values = $this->resolve_field_values( $field_contract, $recipient, $request, $allow_missing_required_fields );
-		if ( is_wp_error( $field_values ) ) { return $field_values; }
 		$issuer = null;
 		$program_issuer_id = absint( $program['issuer_id'] ?? 0 );
 		$explicit_issuer_id = absint( $request['issuer_id'] ?? 0 );
@@ -405,6 +397,27 @@ final class ManualIssuanceService {
 			if ( is_wp_error( $issuer ) ) { return $issuer; }
 			if ( ! is_array( $issuer ) ) { return new \WP_Error( 'certloom_manual_issue_issuer_missing', __( 'The selected Issuer no longer exists.', 'certloom' ) ); }
 		}
+
+		$catalog = $this->field_catalog();
+		$global_contract = ( new ScopedFieldGlobalRepository() )->get( $catalog );
+		if ( is_wp_error( $global_contract ) ) { return $global_contract; }
+		$issuer_contract = is_array( $issuer ) && is_array( $issuer['field_contract'] ?? null ) ? $issuer['field_contract'] : null;
+		$field_contract = ( new ScopedFieldContract() )->resolve_hierarchy(
+			$global_contract,
+			$issuer_contract,
+			is_array( $program['field_contract'] ?? null ) ? $program['field_contract'] : ScopedFieldContract::empty_program(),
+			is_array( $batch ) && is_array( $batch['field_contract'] ?? null ) ? $batch['field_contract'] : null,
+			$catalog
+		);
+		if ( is_wp_error( $field_contract ) ) { return $field_contract; }
+		// Hierarchy contracts define reusable fields, but an individual issued
+		// credential may still carry genuine one-off catalog-backed facts required
+		// by its selected design. Add those facts to the immutable issuance contract
+		// without mutating Global/Issuer/Program/Batch configuration.
+		$field_contract = $this->issuance_field_contract( $field_contract, $request, empty( $program['id'] ) );
+		$field_values = $this->resolve_field_values( $field_contract, $recipient, $request, $allow_missing_required_fields );
+		if ( is_wp_error( $field_values ) ) { return $field_values; }
+
 		$signer_resolution = $this->resolve_signer( $request, $issuer, $program, $batch );
 		if ( is_wp_error( $signer_resolution ) ) { return $signer_resolution; }
 		$signer = isset( $signer_resolution['signer'] ) && is_array( $signer_resolution['signer'] ) ? $signer_resolution['signer'] : null;

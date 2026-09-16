@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Contract;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 interface EmailDeliveryRepositoryInterface {
 	/** @return array<string,mixed>|null|\WP_Error */
 	public function find_version( $version_id );

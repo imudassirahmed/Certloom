@@ -310,6 +310,8 @@
 		var mediaButtons = root.querySelectorAll( '[data-certloom-designer-media], [data-certloom-designer-context-media]' );
 		var signatureSourceButtons = root.querySelectorAll( '[data-certloom-designer-signature-source]' );
 		var signatureSourceStatus = root.querySelector( '[data-certloom-designer-signature-status]' );
+		var issuerMediaSourceButtons = root.querySelectorAll( '[data-certloom-designer-issuer-media-source]' );
+		var issuerMediaSourceStatus = root.querySelector( '[data-certloom-designer-issuer-media-status]' );
 		var tableColumnContainers = root.querySelectorAll( '[data-certloom-designer-table-columns]' );
 		var tableRowContainers = root.querySelectorAll( '[data-certloom-designer-table-rows]' );
 		var tableAddColumnButtons = root.querySelectorAll( '[data-certloom-designer-table-add-column]' );
@@ -1219,6 +1221,16 @@
 			for ( var signatureSourceIndex = 0; signatureSourceIndex < signatureSourceButtons.length; signatureSourceIndex++ ) {
 				signatureSourceButtons[ signatureSourceIndex ].disabled = locked || 'signature' !== element.type || schemaVersion < 4;
 			}
+			if ( issuerMediaSourceStatus ) {
+				var issuerMediaSource = String( element.source || '' );
+				issuerMediaSourceStatus.textContent = 'issuer.logo' === issuerMediaSource
+					? t( 'issuerLogoSource', 'Source: credential Issuer logo snapshot.' )
+					: ( 'issuer.seal' === issuerMediaSource ? t( 'issuerSealSource', 'Source: credential Issuer seal snapshot.' ) : ( [ 'image', 'logo' ].indexOf( element.type ) !== -1 ? t( 'issuerMediaFixed', 'Source: fixed WordPress Media Library image.' ) : '' ) );
+			}
+			for ( var issuerMediaIndex = 0; issuerMediaIndex < issuerMediaSourceButtons.length; issuerMediaIndex++ ) {
+				var issuerKind = issuerMediaSourceButtons[ issuerMediaIndex ].getAttribute( 'data-certloom-designer-issuer-media-source' );
+				issuerMediaSourceButtons[ issuerMediaIndex ].disabled = locked || [ 'image', 'logo' ].indexOf( element.type ) === -1 || schemaVersion < 4 || ( 'logo' === element.type && 'seal' === issuerKind );
+			}
 			renderTableEditor( element );
 			renderRichRunEditor( element );
 			syncQuickToken();
@@ -1235,7 +1247,7 @@
 			if ( 'list' === preview ) { return t( 'list', 'List' ) + ' · ' + ( Array.isArray( element.items ) ? element.items.length : 0 ) + ' ' + t( 'items', 'items' ); }
 			if ( 'shape' === preview ) { return escapeText( element.shape || t( 'shape', 'Shape' ) ); }
 			if ( 'line' === preview ) { return t( 'line', 'Line' ); }
-			if ( 'asset' === preview ) { return typeLabel( element.type ) + ' · ' + ( 'signature' === element.type && 'signer.signature' === String( element.source || '' ) ? t( 'credentialSigner', 'Credential Signer' ) : escapeText( element.asset || '' ) ); }
+			if ( 'asset' === preview ) { var dynamicMedia = { 'signer.signature': t( 'credentialSigner', 'Credential Signer' ), 'issuer.logo': t( 'credentialIssuerLogo', 'Credential Issuer logo' ), 'issuer.seal': t( 'credentialIssuerSeal', 'Credential Issuer seal' ) }; return typeLabel( element.type ) + ' · ' + ( dynamicMedia[ String( element.source || '' ) ] || escapeText( element.asset || '' ) ); }
 			return escapeText( element.type );
 		}
 		function secureUuidV4() {
@@ -2241,7 +2253,14 @@
 				} );
 			} )( colorOpacitySliders[ colorOpacityEventIndex ] );
 		}
-		for ( var mediaButtonIndex = 0; mediaButtonIndex < mediaButtons.length; mediaButtonIndex++ ) { mediaButtons[ mediaButtonIndex ].addEventListener( 'click', function () { var element = selected(); if ( ! element || isLocked( element ) || [ 'image', 'logo', 'signature' ].indexOf( element.type ) === -1 ) { return; } mediaFrame( function ( reference ) { var current = selected(); if ( ! current || isLocked( current ) ) { return; } var before = snapshot(); var proposed = clone( current ); proposed.asset = reference; if ( 'signature' === proposed.type ) { delete proposed.source; } if ( updateElement( current.id, proposed, false ) ) { pushHistory( before ); render(); announce( 'signature' === proposed.type ? t( 'signatureFixedAssetUpdated', 'Signature now uses the selected fixed image.' ) : t( 'assetUpdated', 'Image updated.' ) ); } } ); } ); }
+		for ( var mediaButtonIndex = 0; mediaButtonIndex < mediaButtons.length; mediaButtonIndex++ ) { mediaButtons[ mediaButtonIndex ].addEventListener( 'click', function () { var element = selected(); if ( ! element || isLocked( element ) || [ 'image', 'logo', 'signature' ].indexOf( element.type ) === -1 ) { return; } mediaFrame( function ( reference ) { var current = selected(); if ( ! current || isLocked( current ) ) { return; } var before = snapshot(); var proposed = clone( current ); proposed.asset = reference; if ( [ 'signature', 'image', 'logo' ].indexOf( proposed.type ) !== -1 ) { delete proposed.source; } if ( updateElement( current.id, proposed, false ) ) { pushHistory( before ); render(); announce( 'signature' === proposed.type ? t( 'signatureFixedAssetUpdated', 'Signature now uses the selected fixed image.' ) : t( 'assetUpdated', 'Image updated.' ) ); } } ); } ); }
+		for ( var issuerMediaSourceIndex = 0; issuerMediaSourceIndex < issuerMediaSourceButtons.length; issuerMediaSourceIndex++ ) { issuerMediaSourceButtons[ issuerMediaSourceIndex ].addEventListener( 'click', function () {
+			var element = selected(); if ( ! element || isLocked( element ) || [ 'image', 'logo' ].indexOf( element.type ) === -1 ) { return; }
+			if ( schemaVersion < 4 ) { showError( t( 'issuerMediaRequiresSchema4', 'Credential Issuer media requires certloom-layout v4 or newer.' ) ); return; }
+			var kind = String( this.getAttribute( 'data-certloom-designer-issuer-media-source' ) || '' ); if ( [ 'logo', 'seal' ].indexOf( kind ) === -1 || ( 'logo' === element.type && 'seal' === kind ) ) { return; }
+			var before = snapshot(); var proposed = clone( element ); proposed.source = 'issuer.' + kind; delete proposed.asset;
+			if ( updateElement( element.id, proposed, false ) ) { pushHistory( before ); render(); announce( 'logo' === kind ? t( 'issuerLogoSelected', 'Image now uses the immutable credential Issuer logo.' ) : t( 'issuerSealSelected', 'Image now uses the immutable credential Issuer seal.' ) ); }
+		} ); }
 		for ( var signatureSourceIndex = 0; signatureSourceIndex < signatureSourceButtons.length; signatureSourceIndex++ ) { signatureSourceButtons[ signatureSourceIndex ].addEventListener( 'click', function () {
 			var element = selected(); if ( ! element || 'signature' !== element.type || isLocked( element ) ) { return; }
 			if ( schemaVersion < 4 ) { showError( t( 'signatureSourceRequiresSchema4', 'Credential Signer signatures require certloom-layout v4 or newer.' ) ); return; }

@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Contract;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 interface RendererInterface {
 	/** @return string Stable machine identifier. */
 	public function id();

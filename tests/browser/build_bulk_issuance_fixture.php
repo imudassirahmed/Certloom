@@ -2,7 +2,7 @@
 /** Browser-only Bulk Issuance administration layout fixture. */
 $state = getenv( 'CERTLOOM_BULK_ISSUANCE_STATE' );
 if ( ! in_array( $state, array( 'upload', 'review', 'progress', 'results' ), true ) ) { $state = 'upload'; }
-$css = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/certloom-foundation.css' );
+$css = file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/certloom-foundation.css' );
 $js = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.js' );
 function h( $value ) { return htmlspecialchars( (string) $value, ENT_QUOTES, 'UTF-8' ); }
 function metric( $label, $value ) { echo '<div><span>' . h( $label ) . '</span><strong>' . h( $value ) . '</strong></div>'; }

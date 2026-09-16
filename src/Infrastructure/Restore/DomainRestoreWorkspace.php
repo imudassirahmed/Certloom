@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Restore;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Contract\DomainRestoreWorkspaceInterface;
 use Certloom\Infrastructure\Backup\DomainBackupRepository;
 use Certloom\Infrastructure\Data\DomainGeneration;
@@ -181,6 +185,7 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 			'series_program_missing' => array( "SELECT COUNT(*) FROM %i s LEFT JOIN %i p ON p.id=s.program_id WHERE s.program_id IS NOT NULL AND p.id IS NULL", array( $t['credential_series'], $t['programs'] ) ),
 			'series_batch_missing' => array( "SELECT COUNT(*) FROM %i s LEFT JOIN %i b ON b.id=s.batch_id WHERE s.batch_id IS NOT NULL AND b.id IS NULL", array( $t['credential_series'], $t['batches'] ) ),
 			'series_issuer_missing' => array( "SELECT COUNT(*) FROM %i s LEFT JOIN %i i ON i.id=s.issuer_id WHERE s.issuer_id IS NOT NULL AND i.id IS NULL", array( $t['credential_series'], $t['issuers'] ) ),
+			'series_program_issuer_mismatch' => array( "SELECT COUNT(*) FROM %i s INNER JOIN %i p ON p.id=s.program_id WHERE p.issuer_id IS NOT NULL AND (s.issuer_id IS NULL OR s.issuer_id<>p.issuer_id)", array( $t['credential_series'], $t['programs'] ) ),
 			'number_series_missing' => array( "SELECT COUNT(*) FROM %i n LEFT JOIN %i s ON s.id=n.series_id WHERE s.id IS NULL", array( $t['credential_numbers'], $t['credential_series'] ) ),
 			'version_series_missing' => array( "SELECT COUNT(*) FROM %i v LEFT JOIN %i s ON s.id=v.series_id WHERE s.id IS NULL", array( $t['credential_versions'], $t['credential_series'] ) ),
 			'version_number_assignment_missing' => array( "SELECT COUNT(*) FROM %i v LEFT JOIN %i n ON n.display_number=v.display_number AND n.series_id=v.series_id WHERE n.id IS NULL", array( $t['credential_versions'], $t['credential_numbers'] ) ),

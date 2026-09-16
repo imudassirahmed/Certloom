@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Backup;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Non-destructive restore-readiness evidence for one verified local backup. */
 final class RestoreTest {
 	const OPTION       = 'certloom_backup_restore_test_evidence';

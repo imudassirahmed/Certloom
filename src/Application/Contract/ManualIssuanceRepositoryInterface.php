@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Contract;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Narrow persistence boundary required by one-at-a-time administrator issuance. */
 interface ManualIssuanceRepositoryInterface {
 	/** @return array<string,mixed>|null|\WP_Error */

@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Rendering;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Domain\Rendering\ElementId;
 use Certloom\Domain\Rendering\ElementRegistry;
 use Certloom\Domain\Rendering\LayoutSchema;

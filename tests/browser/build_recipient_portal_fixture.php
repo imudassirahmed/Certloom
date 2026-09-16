@@ -3,7 +3,7 @@
 $state = getenv( 'CERTLOOM_RECIPIENT_PORTAL_STATE' );
 $allowed = array( 'cards', 'grid', 'table', 'logged_out', 'unlinked', 'authority_ready', 'empty' );
 if ( ! in_array( $state, $allowed, true ) ) { $state = 'cards'; }
-$css = file_get_contents( dirname( __DIR__, 2 ) . '/public/assets/certloom-public.css' );
+$css = file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/public/assets/certloom-public.css' );
 $js  = file_get_contents( dirname( __DIR__, 2 ) . '/public/assets/certloom-public.js' );
 function rph( $value ) { return htmlspecialchars( (string) $value, ENT_QUOTES, 'UTF-8' ); }
 function rp_card( $program, $number, $status, $expiring = false, $verify = false, $share_url = '' ) {

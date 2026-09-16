@@ -1,6 +1,6 @@
 <?php
 /** Browser fixture for the current Backup & Restore workspace. */
-$css = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' );
+$css = file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' );
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
 html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}body{margin:0;background:#f0f0f1;color:#1d2327;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{max-width:1080px;margin:0 auto;padding:20px}.ecapla-certverify-admin-card{background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:20px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0 12px;border:1px solid #2271b1;border-radius:4px;background:#fff;color:#2271b1;text-decoration:none}.button-primary{background:#2271b1;color:#fff}.button-small{min-height:30px}.widefat{width:100%;border-collapse:collapse}.widefat th,.widefat td{padding:9px 10px;border-bottom:1px solid #dcdcde;text-align:left}.notice{padding:8px 12px;border-left:4px solid #dba617;background:#fff}.description{color:#646970}.ul-disc{list-style:disc}.submit{margin:0;padding:0}select,input{font:inherit}
 <?php echo $css; ?>

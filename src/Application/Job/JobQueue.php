@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Job;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Contract\JobSchedulerInterface;
 
 /** Creates durable jobs and immediately requests their first local WP-Cron slice. */

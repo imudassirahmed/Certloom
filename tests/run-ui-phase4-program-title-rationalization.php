@@ -7,6 +7,7 @@ $merge = file_get_contents( $root . '/src/Application/Issuance/MergeSnapshotBuil
 $admin = file_get_contents( $root . '/src/Infrastructure/Admin/ManualIssuanceAdmin.php' );
 $choices = file_get_contents( $root . '/src/Infrastructure/Admin/ScopedFieldAdminAjax.php' );
 $template = file_get_contents( $root . '/src/Infrastructure/Admin/TemplateAdmin.php' );
+$catalog = file_get_contents( $root . '/src/Application/Issuance/MergeTokenCatalog.php' );
 $samples = file_get_contents( $root . '/src/Application/Templates/TemplatePreviewSamples.php' );
 $js = file_get_contents( $root . '/admin/assets/admin.js' );
 $css = file_get_contents( $root . '/admin/assets/certloom-foundation.css' );
@@ -21,10 +22,10 @@ p432(false!==strpos($service,'new EffectiveCredentialTitleResolver()')&&false!==
 p432(false!==strpos($service,"'title_source' => (string)")&&false!==strpos($service,"'title_program_id' => absint"),'immutable snapshot freezes title source and Program provenance');
 p432(false!==strpos($merge,'\'credential.title\' => $credential_title')&&false!==strpos($merge,'\'credential_title\' => $credential_title'),'merge snapshot exposes canonical credential.title and compatibility alias');
 p432(false!==strpos($service,'\'title\' => (string) ( $current[\'request\'][\'credential_title\'] ?? \'\' )'),'commit-time merge facts include resolved credential title');
-p432(false!==strpos($admin,"__( 'Use a Program', 'certloom' )")&&false!==strpos($admin,"__( 'Independent credential', 'certloom' )"),'Issue Credential exposes Program versus Independent choice in the primary path');
-p432(false!==strpos($admin,'data-certloom-program-basis-panel')&&false!==strpos($admin,"__( 'Program', 'certloom' )"),'Program selector is rendered in the primary issuance path');
+p432(false!==strpos($admin,'$use_program_label')&&false!==strpos($admin,"__( 'Use %s', 'certloom' )")&&false!==strpos($admin,"__( 'Independent credential', 'certloom' )"),'Issue Credential exposes profile-aware Program versus Independent choice in the primary path');
+p432(false!==strpos($admin,'data-certloom-program-basis-panel')&&false!==strpos($admin,'$program_term'),'profile-aware Program selector is rendered in the primary issuance path');
 p432(false===strpos($admin,"__( 'Program (optional)', 'certloom' )"),'Additional details no longer duplicates the Program selector');
-p432(false!==strpos($admin,"__( 'Use Program title', 'certloom' )")&&false!==strpos($admin,"__( 'Use a custom title', 'certloom' )"),'Program-backed credential exposes inherited title plus deliberate one-off override');
+p432(false!==strpos($admin,"__( 'Use %s title', 'certloom' )")&&false!==strpos($admin,"__( 'Use a custom title', 'certloom' )"),'Program-backed credential exposes profile-aware inherited title plus deliberate one-off override');
 p432(false!==strpos($admin,'data-certloom-custom-title-panel')&&false!==strpos($admin,'\'independent\' === $credential_basis || \'custom\' === $title_source'),'explicit title field is conditional on Independent/custom title semantics');
 p432(false!==strpos($admin,'data-program-title=')&&false!==strpos($choices,"'title' =>"),'Program choices transport an exact title separately from display label');
 p432(false!==strpos($admin,'\'title\' => $title')&&false!==strpos($js,'response.data.title'),'quick-created Programs preserve exact title metadata for immediate inheritance');
@@ -33,11 +34,11 @@ p432(false!==strpos($js,"var programValidity = expiryRadios.find")&&false!==strp
 p432(false!==strpos($js,"setCheckedValue( titleSourceRadios, 'custom' )")&&false!==strpos($js,"program.value = '0'"),'Independent mode clears Program context and switches to explicit title');
 p432(false!==strpos($js,'title.required = customVisible')&&false!==strpos($js,'title.disabled = ! customVisible'),'hidden inherited title input cannot accidentally remain required or submit stale data');
 p432(false!==strpos($js,'previousProgramValue')&&false!==strpos($js,"previousProgramValue = '0'"),'switching Independent then back to Program re-applies Program defaults on fresh selection');
-p432(substr_count($template,'credential.title')>=3,'Certificate Designer exposes credential.title across quick/context token surfaces');
+p432(false!==strpos($template,'MergeTokenCatalog::groups()')&&false!==strpos($catalog,"'credential.title'"),'Certificate Designer exposes credential.title through the canonical merge catalog across quick/context token surfaces');
 p432(false!==strpos($samples,"'credential.title' => 'Professional Credential Program'")&&false!==strpos($samples,'$standard[\'credential.title\'] = $standard[\'program.title\']'),'designer preview samples model credential title independently while following Program title by default');
 p432(false!==strpos($css,'.certloom-credential-basis')&&false!==strpos($css,'.certloom-program-primary-panel'),'Program-first credential semantics have dedicated premium layout styles');
 p432(false!==strpos($css,'.certloom-credential-custom-title[hidden]'),'conditional title panel has a fail-safe hidden-state rule');
-p432(false!==strpos($admin,"Inherited from the selected Program")&&false!==strpos($admin,"Custom title for this credential"),'Review screen communicates effective title provenance instead of hiding inheritance');
+p432(false!==strpos($admin,"__( 'Inherited from the selected %s', 'certloom' )")&&false!==strpos($admin,"Custom title for this credential"),'Review screen communicates profile-aware effective title provenance instead of hiding inheritance');
 
 p432(false===strpos($admin,'certloom_phase2_title_required')&&false===strpos($admin,'Enter a credential title before reviewing this credential.'),'admin compatibility layer no longer rejects a blank explicit title before the canonical Program-title resolver runs');
 p432(false!==strpos($admin,"array_merge( isset( \$review['phase2_ui_request'] )")&&false!==strpos($admin,", (array) \$review['request'] );"),'review presentation gives the canonical resolved request precedence over raw compose values');

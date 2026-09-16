@@ -37,7 +37,7 @@ u4( false !== strpos( $admin_js, "body.set( 'sensitivity'" ) && false !== strpos
 u4( false !== strpos( $admin_js, "exposureInput.disabled = internal" ), 'Quick-create immediately explains/enforces Internal → Private in the browser' );
 u4( false !== strpos( $domain, "'Recipient profile', 'certloom'" ) && false !== strpos( $domain, "'Credential record', 'certloom'" ), 'Field ownership uses Recipient profile versus Credential record language' );
 u4( false !== strpos( $domain, 'Recipient profile fields (such as name, email and external ID) are reused for that person.' ), 'Program field editor explains what Recipient profile ownership means' );
-u4( false !== strpos( $admin_css, '.certloom-quick-field-grid' ) && 1 === preg_match( '/width\s*:\s*min\(760px/', $admin_css ) && 1 === preg_match( '/\.certloom-quick-field-field\s*>\s*label\s*\{[^}]*display\s*:\s*block\s*!important/s', $admin_css ), 'Quick field dialog has a deliberate responsive layout instead of the broken narrow row' );
+u4( false !== strpos( $admin_css, '.certloom-quick-field-grid' ) && 1 === preg_match( '/width\s*:\s*min\(760px/', $admin_css ) && 1 === preg_match( '/\.certloom-quick-field-field\s*>\s*label\s*\{[^}]*display\s*:\s*block/s', $admin_css ), 'Quick field dialog has a deliberate responsive layout without specificity escalation' );
 
 // 4. Draft artwork does not block structural Batch/Program configuration, but issuance remains fail-closed.
 u4( false !== strpos( $guard, "'certloom_template_not_published' === \$resolved->get_error_code()" ), 'Draft design assignment is treated as non-blocking for Program/Batch configuration only' );
@@ -49,7 +49,7 @@ u4( false !== strpos( $template, "'savingRevision' => __( 'Saving revision…'" 
 u4( false !== strpos( $designer_js, 'setSaveFeedback' ) && false !== strpos( $designer_js, "t( 'savingRevision', 'Saving revision…' )" ), 'Both Designer save actions enter a visible busy state before submission' );
 u4( false !== strpos( $designer_js, 'blockSave' ) && false !== strpos( $designer_js, 'error.scrollIntoView' ), 'Client-side save validation surfaces and focuses the exact blocking feedback' );
 u4( false !== strpos( $template, "'revision_saved'" ) && false !== strpos( $template, "'certloom-template-designer'" ), 'Revision save redirects back to the Designer itself rather than losing the user at page top' );
-u4( false !== strpos( $template, 'certloom-designer-save-notice' ) && false !== strpos( $template, "'Saved.', 'certloom'" ), 'Designer renders an inline post-save confirmation at the interaction point' );
+u4( false !== strpos( $template, 'data-certloom-studio-toast' ) && false !== strpos( $designer_js, 'studioToast' ), 'Designer renders lifecycle-aware inline post-save feedback at the interaction point' );
 
 // 6. Certificate Library filtering is design-focused; hierarchy assignment moved to Design Rules.
 u4( false === strpos( $template, 'library_program_id' ) && false === strpos( $template, 'certloom-template-library-program-filter' ), 'Certificate Library no longer mixes Program assignment context into design discovery' );
@@ -61,7 +61,7 @@ u4( false !== strpos( $library_css, '@media (max-width:782px)' ) && false !== st
 
 // 7. Recipient is a reusable first-class identity and the ordinary create path
 // must not silently bypass it once normalized issuance is available.
-u4( false !== strpos( $manual, 'Who is receiving this credential?' ) && false !== strpos( $manual, 'Reuse one Recipient profile for the same person or organization.' ) && false !== strpos( $manual, 'Profile information is reusable across future credentials.' ), 'Issuance explains the reusable Recipient concept through concise contextual guidance' );
+u4( false !== strpos( $manual, 'Who is receiving this credential?' ) && false !== strpos( $manual, 'Create the Recipient profile once. Credential-specific facts remain on this issued record.' ) && false !== strpos( $manual, 'Profile information is reusable across future credentials.' ), 'Issuance explains the reusable Recipient concept through concise contextual guidance' );
 u4( false !== strpos( $manual, "isset( \$_GET['recipient_id'] )" ) && false !== strpos( $manual, 'array_unshift( $recipient_items, $selected_recipient )' ), 'Recipient profile deep-link preselection survives the bounded recipient search window' );
 u4( false !== strpos( $domain, "ManualIssuanceAdmin::PAGE, 'recipient_id'" ) && false !== strpos( $domain, "'Issue credential to this recipient', 'certloom'" ), 'Recipient profiles provide a direct Recipient-preselected Issue credential action' );
 u4( false !== strpos( $domain, 'data-certloom-context-lookup="wp_user"' ) && false !== strpos( $domain, "'WordPress account', 'certloom'" ) && false === strpos( $domain, "'WordPress user ID', 'certloom'" ), 'Recipient editor uses a searchable WordPress account selector instead of a raw numeric user ID' );

@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Import;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Infrastructure\Backup\DomainBackupRepository;
 use Certloom\Infrastructure\Data\DomainGeneration;
 

@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Migration;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Rendering\CanonicalJson;
 use Certloom\Application\Rendering\RuntimePayloadFingerprint;
 use InvalidArgumentException;

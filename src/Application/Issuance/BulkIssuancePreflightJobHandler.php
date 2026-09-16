@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Issuance;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Contract\BulkRecipientResolverInterface;
 use Certloom\Application\Contract\JobHandlerInterface;
 use Certloom\Application\Job\JobSliceResult;

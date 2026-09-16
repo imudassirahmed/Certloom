@@ -37,7 +37,9 @@ async def run():
         await ck(await page.locator('.certloom-qr-svg').evaluate('(e)=>{let r=e.querySelector("rect"),p=e.querySelector("path");return r.getAttribute("fill")==="#fff"&&p.getAttribute("fill")==="#111"}') ,'qrFixedScanColors')
         await ck(await page.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'desktopNoOverflow')
         shadow=await page.locator('.cvp-result-card').evaluate('(e)=>getComputedStyle(e).boxShadow')
-        await ck('rgba' in shadow and '18px' in shadow,'restrainedShadow')
+        # FEUX-01 intentionally uses the shared soft elevation, not the older canvas shadow.
+        shadow_parts=[float(part.replace('px','')) for part in shadow.replace(',', ' ').split() if part.endswith('px') and part.replace('px','').replace('.','',1).replace('-','',1).isdigit()]
+        await ck('rgba' in shadow and shadow_parts and max(abs(v) for v in shadow_parts)<=3.1,'restrainedShadow')
         await page.close()
 
         mobile=await browser.new_page(viewport={'width':390,'height':820})

@@ -335,7 +335,7 @@ final class DomainStructureAdmin {
 		$this->text_field( 'end_date', __( 'End date', 'certloom' ), $is_edit ? (string) $editing['end_date'] : '', false, 'date' );
 		$this->signer_select( 'instructor_signer_id', __( 'Signer / instructor profile', 'certloom' ), $is_edit ? $editing['instructor_signer_id'] : 0 );
 		if ( $is_edit && empty( $editing['instructor_signer_id'] ) && '' !== trim( (string) ( $editing['instructor_name'] ?? '' ) ) ) {
-			echo '<div class="certloom-domain-field certloom-domain-field-wide"><div class="notice notice-warning inline"><p>' . esc_html( sprintf( /* translators: %s: legacy instructor display name. */ __( 'Legacy instructor label preserved: %s. Choose a reusable Signer / instructor profile above when you want to replace it; Certloom will not create new duplicate instructor identities.', 'certloom' ), (string) $editing['instructor_name'] ) ) . '</p></div></div>';
+			echo '<div class="certloom-domain-field certloom-domain-field-wide"><div class="notice notice-warning inline"><p>' . esc_html( sprintf( /* translators: %s: legacy instructor display name. */ __( 'Legacy instructor label preserved: %s. Saving this Batch will reuse an exact-name Signer when one exists or create one lightweight Signer profile, then record the canonical Batch instructor assignment.', 'certloom' ), (string) $editing['instructor_name'] ) ) . '</p></div></div>';
 		}
 		echo '<div class="certloom-domain-field"><label><input type="checkbox" name="active" value="1" ' . checked( $is_edit ? ! empty( $editing['active'] ) : true, true, false ) . '> <strong>' . esc_html__( 'Active batch', 'certloom' ) . '</strong></label></div></div>';
 

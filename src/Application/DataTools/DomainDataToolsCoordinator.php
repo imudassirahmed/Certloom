@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\DataTools;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Backup\DomainBackupFormat;
 use Certloom\Application\Contract\JobRepositoryInterface;
 use Certloom\Application\Job\JobQueue;

@@ -632,45 +632,15 @@ class Ecapla_CertVerify_Elementor_Widget extends \Elementor\Widget_Base {
 			)
 		);
 
-		$statuses = array(
-			'valid'     => __( 'Valid', 'certloom' ),
-			'suspended' => __( 'Suspended', 'certloom' ),
-			'withdrawn' => __( 'Withdrawn', 'certloom' ),
-			'expired'   => __( 'Expired', 'certloom' ),
+
+		$this->add_control(
+			'status_color_authority_note',
+			array(
+				'type' => \Elementor\Controls_Manager::RAW_HTML,
+				'raw' => __( 'Credential verdict colors are semantic and controlled by Certloom so a revoked, withdrawn, suspended, or expired credential cannot be restyled to look valid. You can still customize badge spacing, shape and typography.', 'certloom' ),
+				'content_classes' => 'elementor-panel-alert elementor-panel-alert-info',
+			)
 		);
-
-		foreach ( $statuses as $key => $label ) {
-			$this->add_control(
-				'heading_' . $key . '_colors',
-				array(
-					'label'     => $label,
-					'type'      => \Elementor\Controls_Manager::HEADING,
-					'separator' => 'before',
-				)
-			);
-
-			$this->add_control(
-				$key . '_bg_color',
-				array(
-					'label'     => __( 'Background', 'certloom' ),
-					'type'      => \Elementor\Controls_Manager::COLOR,
-					'selectors' => array(
-						'{{WRAPPER}} .cv-widget' => '--cv-' . $key . '-bg: {{VALUE}};',
-					),
-				)
-			);
-
-			$this->add_control(
-				$key . '_text_color',
-				array(
-					'label'     => __( 'Text', 'certloom' ),
-					'type'      => \Elementor\Controls_Manager::COLOR,
-					'selectors' => array(
-						'{{WRAPPER}} .cv-widget' => '--cv-' . $key . '-text: {{VALUE}};',
-					),
-				)
-			);
-		}
 
 		$this->end_controls_section();
 	}

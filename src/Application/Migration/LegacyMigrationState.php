@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Migration;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * Durable migration/cutover state for the in-place 1.5 registry migration.
  *

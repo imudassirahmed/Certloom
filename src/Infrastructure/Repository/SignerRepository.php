@@ -258,6 +258,186 @@ final class SignerRepository {
 		return (int) $wpdb->insert_id;
 	}
 
+	/**
+	 * Idempotently ensures one assignment exists. Used by legacy compatibility
+	 * projections (for example Batch.instructor_signer_id) so signer_assignments
+	 * remains the canonical relationship authority without manufacturing duplicates.
+	 *
+	 * @return int|\WP_Error Assignment id.
+	 */
+	public function ensure_assignment( $signer_id, $scope_type, $scope_id, $role_type = 'signer', $priority = 100 ) {
+		$signer_id = absint( $signer_id );
+		$scope_type = sanitize_key( (string) $scope_type );
+		$scope_id = absint( $scope_id );
+		$role_type = sanitize_key( (string) $role_type );
+		global $wpdb;
+		$wpdb->last_error = '';
+		$existing = $wpdb->get_var(
+			$wpdb->prepare(
+				'SELECT id FROM %i WHERE signer_id=%d AND scope_type=%s AND scope_id=%d AND role_type=%s LIMIT 1',
+				SchemaManager::table( 'signer_assignments' ), $signer_id, $scope_type, $scope_id, $role_type
+			)
+		);
+		if ( '' !== (string) $wpdb->last_error ) {
+			return new \WP_Error( 'certloom_signer_assignment_read_failed', __( 'Certloom could not validate the signer assignment.', 'certloom' ) );
+		}
+		if ( $existing ) { return absint( $existing ); }
+		return $this->add_assignment( $signer_id, $scope_type, $scope_id, $role_type, $priority );
+	}
+
+	/**
+	 * Synchronizes the compatibility projection for a single primary scope/role
+	 * assignment. Priority zero is reserved for this projection; additional
+	 * manually managed signers at other priorities remain untouched.
+	 *
+	 * Passing signer id zero removes only the priority-zero projection.
+	 *
+	 * @return true|\WP_Error
+	 */
+	public function sync_primary_assignment( $signer_id, $scope_type, $scope_id, $role_type = 'signer' ) {
+		$signer_id  = absint( $signer_id );
+		$scope_type = sanitize_key( (string) $scope_type );
+		$scope_id   = absint( $scope_id );
+		$role_type  = sanitize_key( (string) $role_type );
+
+		if ( ! in_array( $scope_type, self::SCOPES, true ) || ! in_array( $role_type, self::ROLES, true ) ) {
+			return new \WP_Error( 'certloom_signer_assignment_invalid', __( 'Choose a valid signer scope and role.', 'certloom' ) );
+		}
+		if ( 'global' === $scope_type ) {
+			$scope_id = 0;
+		} elseif ( ! $scope_id ) {
+			return new \WP_Error( 'certloom_signer_assignment_scope_missing', __( 'The selected signer scope no longer exists.', 'certloom' ) );
+		} else {
+			$scope_exists = $this->scope_exists( $scope_type, $scope_id );
+			if ( is_wp_error( $scope_exists ) ) { return $scope_exists; }
+			if ( ! $scope_exists ) {
+				return new \WP_Error( 'certloom_signer_assignment_scope_missing', __( 'The selected signer scope no longer exists.', 'certloom' ) );
+			}
+		}
+
+		if ( $signer_id ) {
+			$signer = $this->find( $signer_id );
+			if ( is_wp_error( $signer ) ) { return $signer; }
+			if ( ! is_array( $signer ) ) {
+				return new \WP_Error( 'certloom_signer_assignment_signer_missing', __( 'The signer profile does not exist.', 'certloom' ) );
+			}
+		}
+
+		$generation = ( new DomainGeneration() )->mark_before_mutation();
+		if ( is_wp_error( $generation ) ) { return $generation; }
+
+		global $wpdb;
+		$table = SchemaManager::table( 'signer_assignments' );
+		$wpdb->last_error = '';
+
+		// Remove only the projection slot. Other instructor/signature assignments
+		// remain independent and keep their authored priority.
+		if ( $signer_id ) {
+			$result = $wpdb->query(
+				$wpdb->prepare(
+					'DELETE FROM %i WHERE scope_type=%s AND scope_id=%d AND role_type=%s AND priority=0 AND signer_id<>%d',
+					$table, $scope_type, $scope_id, $role_type, $signer_id
+				)
+			);
+		} else {
+			$result = $wpdb->query(
+				$wpdb->prepare(
+					'DELETE FROM %i WHERE scope_type=%s AND scope_id=%d AND role_type=%s AND priority=0',
+					$table, $scope_type, $scope_id, $role_type
+				)
+			);
+		}
+		if ( false === $result || '' !== (string) $wpdb->last_error ) {
+			return new \WP_Error( 'certloom_signer_assignment_delete_failed', __( 'Certloom could not synchronize the signer assignment.', 'certloom' ) );
+		}
+		if ( ! $signer_id ) { return true; }
+
+		$wpdb->last_error = '';
+		$existing = $wpdb->get_var(
+			$wpdb->prepare(
+				'SELECT id FROM %i WHERE signer_id=%d AND scope_type=%s AND scope_id=%d AND role_type=%s LIMIT 1',
+				$table, $signer_id, $scope_type, $scope_id, $role_type
+			)
+		);
+		if ( '' !== (string) $wpdb->last_error ) {
+			return new \WP_Error( 'certloom_signer_assignment_read_failed', __( 'Certloom could not validate the signer assignment.', 'certloom' ) );
+		}
+
+		$now = current_time( 'mysql', true );
+		if ( $existing ) {
+			$wpdb->last_error = '';
+			$updated = $wpdb->update(
+				$table,
+				array( 'priority' => 0, 'active' => 1, 'updated_at' => $now ),
+				array( 'id' => absint( $existing ) )
+			);
+			if ( false === $updated || '' !== (string) $wpdb->last_error ) {
+				return new \WP_Error( 'certloom_signer_assignment_update_failed', __( 'Certloom could not synchronize the signer assignment.', 'certloom' ) );
+			}
+			return true;
+		}
+
+		$wpdb->last_error = '';
+		$inserted = $wpdb->insert(
+			$table,
+			array(
+				'signer_id' => $signer_id,
+				'scope_type' => $scope_type,
+				'scope_id' => $scope_id,
+				'role_type' => $role_type,
+				'priority' => 0,
+				'active' => 1,
+				'created_at' => $now,
+				'updated_at' => $now,
+			)
+		);
+		if ( false === $inserted || '' !== (string) $wpdb->last_error ) {
+			return new \WP_Error( 'certloom_signer_assignment_create_failed', __( 'Certloom could not synchronize the signer assignment.', 'certloom' ) );
+		}
+		return true;
+	}
+
+	/**
+	 * Converts a historical free-text instructor label into one reusable Signer.
+	 * Exact-name reuse is deliberate: legacy labels did not carry another stable
+	 * identity. New records should select a Signer profile explicitly.
+	 *
+	 * @return int|\WP_Error
+	 */
+	public function find_or_create_lightweight_instructor( $display_name ) {
+		$display_name = trim( (string) $display_name );
+		if ( '' === $display_name || $this->length( $display_name ) > 255 ) {
+			return new \WP_Error( 'certloom_signer_name_invalid', __( 'Instructor name is required and must be 255 characters or fewer.', 'certloom' ) );
+		}
+		global $wpdb;
+		$wpdb->last_error = '';
+		$existing = $wpdb->get_var(
+			$wpdb->prepare( 'SELECT id FROM %i WHERE display_name=%s ORDER BY active DESC,id ASC LIMIT 1', SchemaManager::table( 'signers' ), $display_name )
+		);
+		if ( '' !== (string) $wpdb->last_error ) {
+			return new \WP_Error( 'certloom_signer_read_failed', __( 'Certloom could not search signer profiles.', 'certloom' ) );
+		}
+		if ( $existing ) { return absint( $existing ); }
+
+		$base = sanitize_key( sanitize_title( $display_name ) );
+		if ( '' === $base ) { $base = 'instructor'; }
+		$base = substr( $base, 0, 170 );
+		for ( $attempt = 0; $attempt < 25; $attempt++ ) {
+			$slug = 0 === $attempt ? $base : $base . '-' . ( $attempt + 1 );
+			$created = $this->create(
+				array(
+					'display_name' => $display_name,
+					'slug' => $slug,
+					'active' => 1,
+					'metadata' => array( 'legacy_lightweight_instructor' => true ),
+				)
+			);
+			if ( ! is_wp_error( $created ) ) { return absint( $created ); }
+			if ( 'certloom_signer_slug_duplicate' !== $created->get_error_code() ) { return $created; }
+		}
+		return new \WP_Error( 'certloom_signer_slug_duplicate', __( 'Certloom could not allocate a unique signer key for the legacy instructor.', 'certloom' ) );
+	}
+
 	/** @return true|\WP_Error */
 	public function remove_assignment( $signer_id, $assignment_id ) {
 		$signer_id    = absint( $signer_id );

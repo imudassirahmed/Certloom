@@ -112,7 +112,7 @@ $brand_mark = CERTLOOM_URL . 'admin/assets/certloom-brand-mark.png';
 			<h2><?php esc_html_e( 'Email style', 'certloom' ); ?></h2>
 			<div class="certloom-theme-grid">
 				<?php $colors = array( 'background' => __( 'Page', 'certloom' ), 'content_background' => __( 'Content', 'certloom' ), 'text_color' => __( 'Text', 'certloom' ), 'heading_color' => __( 'Headings', 'certloom' ), 'button_background' => __( 'Button', 'certloom' ), 'button_text' => __( 'Button text', 'certloom' ), 'link_color' => __( 'Links', 'certloom' ) ); foreach ( $colors as $key => $label ) : $color_value = (string) ( $theme[ $key ] ?? '#ffffff' ); ?>
-					<label class="certloom-theme-color-field"><span><?php echo esc_html( $label ); ?></span><span class="certloom-theme-color-control"><input type="color" name="theme_<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( $color_value ); ?>" data-certloom-theme data-certloom-theme-color="<?php echo esc_attr( $key ); ?>" aria-label="<?php echo esc_attr( $label ); ?>"><input type="text" value="<?php echo esc_attr( strtoupper( $color_value ) ); ?>" maxlength="7" pattern="#[0-9A-Fa-f]{6}" data-certloom-theme-hex="<?php echo esc_attr( $key ); ?>" aria-label="<?php echo esc_attr( sprintf( __( '%s hex color', 'certloom' ), $label ) ); ?>"></span></label>
+					<label class="certloom-theme-color-field"><span><?php echo esc_html( $label ); ?></span><span class="certloom-theme-color-control"><input type="color" name="theme_<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( $color_value ); ?>" data-certloom-theme data-certloom-theme-color="<?php echo esc_attr( $key ); ?>" aria-label="<?php echo esc_attr( $label ); ?>"><input type="text" value="<?php echo esc_attr( strtoupper( $color_value ) ); ?>" maxlength="7" pattern="#[0-9A-Fa-f]{6}" data-certloom-theme-hex="<?php echo esc_attr( $key ); ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: email color setting label. */ __( '%s hex color', 'certloom' ), $label ) ); ?>"></span></label>
 				<?php endforeach; ?>
 				<label class="is-wide certloom-font-picker-field"><span><?php esc_html_e( 'Font', 'certloom' ); ?></span><select name="theme_font_family" data-certloom-theme data-certloom-email-font-select>
 					<?php
@@ -169,7 +169,7 @@ $brand_mark = CERTLOOM_URL . 'admin/assets/certloom-brand-mark.png';
 				<button type="button" class="is-active" aria-pressed="true" data-certloom-data-mode="sample"><?php esc_html_e( 'Sample', 'certloom' ); ?></button>
 				<button type="button" aria-pressed="false" data-certloom-data-mode="tokens"><?php esc_html_e( 'Tokens', 'certloom' ); ?></button>
 			</div>
-			<span class="certloom-email-stage-meta" data-certloom-stage-meta><?php echo esc_html( absint( $theme['email_width'] ?? 640 ) ); ?>px · <?php echo esc_html( sprintf( _n( '%d block', '%d blocks', count( $blocks ), 'certloom' ), count( $blocks ) ) ); ?></span>
+			<span class="certloom-email-stage-meta" data-certloom-stage-meta><?php echo esc_html( absint( $theme['email_width'] ?? 640 ) ); ?>px · <?php echo esc_html( sprintf( /* translators: %d: number of email content blocks. */ _n( '%d block', '%d blocks', count( $blocks ), 'certloom' ), count( $blocks ) ) ); ?></span>
 		</div>
 		<div class="certloom-email-stage-viewport" data-certloom-email-stage-viewport>
 			<div class="certloom-canvas-frame" data-certloom-canvas-frame>

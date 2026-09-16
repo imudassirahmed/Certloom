@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Rendering;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Contract\RendererInterface;
 
 /** Fail-soft renderer runtime capability check for System Status and adapters. */

@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Restore;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Data\SafeJson;
 use Certloom\Infrastructure\Database\SchemaManager;
 

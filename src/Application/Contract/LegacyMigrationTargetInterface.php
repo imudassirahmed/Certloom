@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Contract;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Atomic target operation for one already-mapped legacy certificate row. */
 interface LegacyMigrationTargetInterface {
 	/**

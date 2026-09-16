@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Contract;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Human certificate-number policy boundary for Manual Issuance. */
 interface ManualIssuanceNumberAllocatorInterface {
 	/** @return array<string,mixed>|\WP_Error */

@@ -25,6 +25,17 @@ sf('optional'===($by['project_title']['requirement']??'')&&'batch'===($by['proje
 sf('recipient'===($by['first_name']['value_source']??''),'recipient identity field declares Recipient value source');
 sf('credential'===($by['grade']['value_source']??''),'Grade declares issued-credential value source');
 sf('credential_custom'===($by['project_title']['value_source']??''),'custom field declares issued-credential custom value source');
+
+$g=$c->normalize_scope('global',array('project_title'=>'optional'),$catalog);sf(!is_wp_error($g),'Global field contract normalizes');
+$i=$c->normalize_scope('issuer',array('project_title'=>'required','first_name'=>'optional'),$catalog);sf(!is_wp_error($i),'Issuer field contract normalizes');
+$hp=$c->normalize_program(array('grade'=>'required'),$catalog);$hb=$c->normalize_batch(array('first_name'=>'required'),$catalog);
+$hr=$c->resolve_hierarchy($g,$i,$hp,$hb,$catalog);$hby=array();if(!is_wp_error($hr)){foreach($hr['fields'] as $row){$hby[$row['key']]=$row;}}
+sf(!is_wp_error($hr),'Global → Issuer → Program → Batch hierarchy resolves');
+sf('issuer'===($hby['project_title']['origin']??'')&&true===($hby['project_title']['required']??false),'Issuer can tighten a Global optional field');
+sf('program'===($hby['grade']['origin']??'')&&true===($hby['grade']['required']??false),'Program remains a hierarchy scope');
+sf('batch'===($hby['first_name']['origin']??'')&&true===($hby['first_name']['required']??false),'Batch remains the most-specific hierarchy scope');
+$blocked=$c->resolve_hierarchy($g,$i,array('_meta'=>array('configured'=>true),'fields'=>array('project_title'=>'exclude')),null,$catalog);sf(is_wp_error($blocked)&&'certloom_scoped_field_cannot_exclude_required'===$blocked->get_error_code(),'Child scope cannot exclude an ancestor-required field');
+
 $bad=$c->resolve($p,array('_meta'=>array(),'fields'=>array('grade'=>'exclude')),$catalog);sf(is_wp_error($bad)&&'certloom_batch_field_cannot_exclude_required'===$bad->get_error_code(),'Batch cannot exclude Program-required field');
 $downgrade=$c->resolve($p,array('_meta'=>array(),'fields'=>array('grade'=>'optional')),$catalog);$d=array();if(!is_wp_error($downgrade)){foreach($downgrade['fields'] as $row){$d[$row['key']]=$row;}}sf(true===($d['grade']['required']??false),'Batch cannot downgrade Program-required field');
 $exclude=$c->resolve($p,array('_meta'=>array(),'fields'=>array('first_name'=>'exclude')),$catalog);$keys=array();if(!is_wp_error($exclude)){$keys=array_column($exclude['fields'],'key');}sf(!in_array('first_name',$keys,true),'Batch may exclude Program-optional field');
@@ -33,7 +44,7 @@ sf(is_wp_error($c->normalize_batch(array('missing_field'=>'optional'),$catalog))
 $meta=array('unrelated'=>'keep');$with=$c->with_program_metadata($meta,array('grade'=>'required'),$catalog);sf(!is_wp_error($with)&&'keep'===($with['unrelated']??''),'Program field envelope preserves unrelated metadata');
 $round=$c->from_program_metadata($with,$catalog);sf(!is_wp_error($round)&&array('grade'=>'required')===($round['fields']??array()),'Program field envelope round-trips');
 sf('recipient'===ScopedFieldContract::value_source('email')&&'credential'===ScopedFieldContract::value_source('grade'),'canonical value-source rules are explicit');
-sf('recipient.first_name'===ScopedFieldContract::merge_token('first_name')&&'credential.grade'===ScopedFieldContract::merge_token('grade')&&'custom:project_title'===ScopedFieldContract::merge_token('project_title'),'canonical merge tokens preserve field ownership');
+sf('recipient.first_name'===ScopedFieldContract::merge_token('first_name')&&'credential.grade'===ScopedFieldContract::merge_token('grade')&&'credential.custom.project_title'===ScopedFieldContract::merge_token('project_title'),'canonical merge tokens preserve field ownership');
 sf('first_name'===ScopedFieldContract::field_key_from_merge_token('recipient.first_name')&&'grade'===ScopedFieldContract::field_key_from_merge_token('credential.grade')&&'project_title'===ScopedFieldContract::field_key_from_merge_token('custom:project_title'),'merge tokens round-trip to scoped field keys');
 $corrupt=$with;$corrupt[ScopedFieldContract::STORAGE_KEY]['_meta']['scope']='batch';$corruptRead=$c->from_program_metadata($corrupt,$catalog);sf(is_wp_error($corruptRead)&&'certloom_scoped_field_storage_schema_invalid'===$corruptRead->get_error_code(),'typed Program storage rejects a mismatched envelope scope');
 $corrupt=$with;unset($corrupt[ScopedFieldContract::STORAGE_KEY]['_meta']);$corruptRead=$c->from_program_metadata($corrupt,$catalog);sf(is_wp_error($corruptRead)&&'certloom_scoped_field_storage_invalid'===$corruptRead->get_error_code(),'typed Program storage rejects a missing envelope marker');

@@ -47,7 +47,7 @@ async def run():
         await ck(await form.locator('input[name="automation_name"]').get_attribute('aria-invalid')=='true','automationRequiredGetsAriaInvalid')
         await ck(await form.locator('.certloom-inline-field-error').count()==1,'automationRequiredGetsInlineError')
         await ck('Example: Send course completion email' in await form.locator('.certloom-inline-field-error').inner_text(),'automationInlineErrorUsesExample')
-        await ck('rgb(179, 45, 46)' in await form.locator('input[name="automation_name"]').evaluate("el=>getComputedStyle(el).borderTopColor"),'automationInvalidBorderIsRed')
+        await ck(await form.locator('input[name="automation_name"]').evaluate("el=>{const p=document.createElement('span');p.style.color='var(--cl-error)';document.body.appendChild(p);const expected=getComputedStyle(p).color;const actual=getComputedStyle(el).borderTopColor;p.remove();return actual===expected}"),'automationInvalidBorderUsesSemanticError')
         await form.locator('input[name="automation_name"]').fill('Completion email')
         await ck(await form.locator('.certloom-inline-field-error').count()==0,'automationErrorClearsWhenFixed')
 
@@ -57,7 +57,7 @@ async def run():
         await page.wait_for_timeout(50)
         await ck(await dform.locator('input[name="title"]').get_attribute('aria-invalid')=='true','entityRequiredGetsAriaInvalid')
         await ck('Example: Workplace Safety Certificate' in await dform.locator('.certloom-inline-field-error').inner_text(),'entityInlineErrorUsesExample')
-        await ck('rgb(179, 45, 46)' in await dform.locator('input[name="title"]').evaluate("el=>getComputedStyle(el).borderTopColor"),'entityInvalidBorderIsRed')
+        await ck(await dform.locator('input[name="title"]').evaluate("el=>{const p=document.createElement('span');p.style.color='var(--cl-error)';document.body.appendChild(p);const expected=getComputedStyle(p).color;const actual=getComputedStyle(el).borderTopColor;p.remove();return actual===expected}"),'entityInvalidBorderUsesSemanticError')
 
         dialog=page.locator('#quick')
         await ck(round((await dialog.locator('input').bounding_box())['height'])==40,'desktopDialogInput40')

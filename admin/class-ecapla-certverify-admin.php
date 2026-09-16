@@ -813,7 +813,7 @@ class Ecapla_CertVerify_Admin {
 			if ( ! is_array( $program ) ) { return new \WP_Error( 'certloom_setup_program_missing', __( 'The selected Program is no longer available.', 'certloom' ) ); }
 		}
 		if ( ! empty( $context['program'] ) && ! $program_id && '' === $new_program ) {
-			return new \WP_Error( 'certloom_setup_design_program_required', sprintf( __( 'The selected design needs %s information. Choose an existing one or add it here.', 'certloom' ), (string) ( $terms['program']['singular'] ?? __( 'Program', 'certloom' ) ) ) );
+			return new \WP_Error( 'certloom_setup_design_program_required', sprintf( /* translators: %s: profile-specific Program-equivalent relationship label. */ __( 'The selected design needs %s information. Choose an existing one or add it here.', 'certloom' ), (string) ( $terms['program']['singular'] ?? __( 'Program', 'certloom' ) ) ) );
 		}
 
 		$program_issuer_id = is_array( $program ) ? absint( $program['issuer_id'] ?? 0 ) : 0;
@@ -825,7 +825,7 @@ class Ecapla_CertVerify_Admin {
 			if ( ! is_array( $issuer ) ) { return new \WP_Error( 'certloom_setup_issuer_missing', __( 'The selected Issuer is no longer available.', 'certloom' ) ); }
 		}
 		if ( ! empty( $context['issuer'] ) && ! $effective_issuer_id && '' === $new_issuer ) {
-			return new \WP_Error( 'certloom_setup_design_issuer_required', sprintf( __( 'The selected design needs %s information. Choose an existing one or add it here.', 'certloom' ), (string) ( $terms['issuer']['singular'] ?? __( 'Issuer', 'certloom' ) ) ) );
+			return new \WP_Error( 'certloom_setup_design_issuer_required', sprintf( /* translators: %s: profile-specific Program-equivalent relationship label. */ __( 'The selected design needs %s information. Choose an existing one or add it here.', 'certloom' ), (string) ( $terms['issuer']['singular'] ?? __( 'Issuer', 'certloom' ) ) ) );
 		}
 
 		$batch = null;
@@ -836,7 +836,7 @@ class Ecapla_CertVerify_Admin {
 			if ( $program_id && absint( $batch['program_id'] ?? 0 ) !== $program_id ) { return new \WP_Error( 'certloom_setup_batch_program_mismatch', __( 'Choose a Batch or cycle that belongs to the selected Program context.', 'certloom' ) ); }
 		}
 		if ( ! empty( $context['batch'] ) && ! $batch_id && '' === $new_batch ) {
-			return new \WP_Error( 'certloom_setup_design_batch_required', sprintf( __( 'The selected design needs %s information. Choose an existing one or add it here.', 'certloom' ), (string) ( $terms['batch']['singular'] ?? __( 'Batch', 'certloom' ) ) ) );
+			return new \WP_Error( 'certloom_setup_design_batch_required', sprintf( /* translators: %s: profile-specific Program-equivalent relationship label. */ __( 'The selected design needs %s information. Choose an existing one or add it here.', 'certloom' ), (string) ( $terms['batch']['singular'] ?? __( 'Batch', 'certloom' ) ) ) );
 		}
 
 		$signer = null;
@@ -846,7 +846,7 @@ class Ecapla_CertVerify_Admin {
 			if ( ! is_array( $signer ) ) { return new \WP_Error( 'certloom_setup_signer_missing', __( 'The selected Signer is no longer available.', 'certloom' ) ); }
 		}
 		if ( ! empty( $context['signer'] ) && ! $signer_id && '' === $new_signer ) {
-			return new \WP_Error( 'certloom_setup_design_signer_required', sprintf( __( 'The selected design needs %s information. Choose an existing one or add it here.', 'certloom' ), (string) ( $terms['signer']['singular'] ?? __( 'Signer', 'certloom' ) ) ) );
+			return new \WP_Error( 'certloom_setup_design_signer_required', sprintf( /* translators: %s: profile-specific Program-equivalent relationship label. */ __( 'The selected design needs %s information. Choose an existing one or add it here.', 'certloom' ), (string) ( $terms['signer']['singular'] ?? __( 'Signer', 'certloom' ) ) ) );
 		}
 
 		// Validate the exact sub-fields required by the published design, rather
@@ -854,17 +854,17 @@ class Ecapla_CertVerify_Admin {
 		$issuer_fields = is_array( $context_fields['issuer'] ?? null ) ? $context_fields['issuer'] : array();
 		if ( ! empty( $issuer_fields['title'] ) ) {
 			$issuer_title = is_array( $issuer ) ? trim( (string) ( $issuer['settings']['title'] ?? '' ) ) : trim( (string) ( $draft['setup_new_issuer_title'] ?? '' ) );
-			if ( '' === $issuer_title ) { return new \WP_Error( 'certloom_setup_design_issuer_title_required', sprintf( __( 'The selected design uses the %s title. Add that title to the selected record or create a new one with a title.', 'certloom' ), (string) ( $terms['issuer']['singular'] ?? __( 'Issuer', 'certloom' ) ) ) ); }
+			if ( '' === $issuer_title ) { return new \WP_Error( 'certloom_setup_design_issuer_title_required', sprintf( /* translators: %s: profile-specific Issuer-equivalent relationship label. */ __( 'The selected design uses the %s title. Add that title to the selected record or create a new one with a title.', 'certloom' ), (string) ( $terms['issuer']['singular'] ?? __( 'Issuer', 'certloom' ) ) ) ); }
 		}
 		$program_fields = is_array( $context_fields['program'] ?? null ) ? $context_fields['program'] : array();
 		if ( ! empty( $program_fields['code'] ) ) {
 			$program_code = is_array( $program ) ? trim( (string) ( $program['code'] ?? '' ) ) : trim( (string) ( $draft['setup_new_program_code'] ?? '' ) );
-			if ( '' === $program_code ) { return new \WP_Error( 'certloom_setup_design_program_code_required', sprintf( __( 'The selected design uses the %s code. Enter a code before continuing.', 'certloom' ), (string) ( $terms['program']['singular'] ?? __( 'Program', 'certloom' ) ) ) ); }
+			if ( '' === $program_code ) { return new \WP_Error( 'certloom_setup_design_program_code_required', sprintf( /* translators: %s: profile-specific Program- or Batch-equivalent relationship label. */ __( 'The selected design uses the %s code. Enter a code before continuing.', 'certloom' ), (string) ( $terms['program']['singular'] ?? __( 'Program', 'certloom' ) ) ) ); }
 		}
 		$batch_fields = is_array( $context_fields['batch'] ?? null ) ? $context_fields['batch'] : array();
 		if ( ! empty( $batch_fields['code'] ) ) {
 			$batch_code = is_array( $batch ) ? trim( (string) ( $batch['code'] ?? '' ) ) : trim( (string) ( $draft['setup_new_batch_code'] ?? '' ) );
-			if ( '' === $batch_code ) { return new \WP_Error( 'certloom_setup_design_batch_code_required', sprintf( __( 'The selected design uses the %s code. Enter a code before continuing.', 'certloom' ), (string) ( $terms['batch']['singular'] ?? __( 'Batch', 'certloom' ) ) ) ); }
+			if ( '' === $batch_code ) { return new \WP_Error( 'certloom_setup_design_batch_code_required', sprintf( /* translators: %s: profile-specific Program- or Batch-equivalent relationship label. */ __( 'The selected design uses the %s code. Enter a code before continuing.', 'certloom' ), (string) ( $terms['batch']['singular'] ?? __( 'Batch', 'certloom' ) ) ) ); }
 		}
 		$signer_fields = is_array( $context_fields['signer'] ?? null ) ? $context_fields['signer'] : array();
 		$signer_checks = array(
@@ -874,7 +874,7 @@ class Ecapla_CertVerify_Admin {
 		);
 		foreach ( $signer_checks as $field_key => $check ) {
 			if ( empty( $signer_fields[ $field_key ] ) || ! empty( $check[0] ) ) { continue; }
-			return new \WP_Error( 'certloom_setup_design_signer_field_required', sprintf( __( 'The selected design uses the %1$s %2$s. Add that value before continuing.', 'certloom' ), (string) ( $terms['signer']['singular'] ?? __( 'Signer', 'certloom' ) ), (string) $check[1] ) );
+			return new \WP_Error( 'certloom_setup_design_signer_field_required', sprintf( /* translators: 1: profile-specific relationship label; 2: required field label. */ __( 'The selected design uses the %1$s %2$s. Add that value before continuing.', 'certloom' ), (string) ( $terms['signer']['singular'] ?? __( 'Signer', 'certloom' ) ), (string) $check[1] ) );
 		}
 
 		$values = is_array( $draft['setup_credential_values'] ?? null ) ? $draft['setup_credential_values'] : array();
@@ -882,7 +882,7 @@ class Ecapla_CertVerify_Admin {
 			if ( empty( $field['required_by_design'] ) ) { continue; }
 			$key = sanitize_key( (string) ( $field['key'] ?? '' ) );
 			if ( '' !== $key && '' === trim( (string) ( $values[ $key ] ?? '' ) ) ) {
-				return new \WP_Error( 'certloom_setup_design_field_required', sprintf( __( 'Enter %s because the selected design uses this field.', 'certloom' ), (string) ( $field['label'] ?? $key ) ) );
+				return new \WP_Error( 'certloom_setup_design_field_required', sprintf( /* translators: %s: required credential field label. */ __( 'Enter %s because the selected design uses this field.', 'certloom' ), (string) ( $field['label'] ?? $key ) ) );
 			}
 		}
 		if ( ! empty( $plan['grade_required'] ) && '' === trim( (string) ( $draft['first_grade'] ?? '' ) ) ) {
@@ -891,7 +891,7 @@ class Ecapla_CertVerify_Admin {
 		$repeat = is_array( $draft['setup_repeating_data'] ?? null ) ? $draft['setup_repeating_data'] : array();
 		foreach ( array( 'subjects', 'results' ) as $rowset ) {
 			if ( ! empty( $plan['repeating'][ $rowset ] ) && empty( $repeat[ $rowset ] ) ) {
-				return new \WP_Error( 'certloom_setup_design_repeating_required', sprintf( __( 'Add at least one %s row because the selected design uses that Data Table.', 'certloom' ), 'results' === $rowset ? __( 'result', 'certloom' ) : __( 'subject', 'certloom' ) ) );
+				return new \WP_Error( 'certloom_setup_design_repeating_required', sprintf( /* translators: %s: repeating Data Table label, such as Subjects or Results. */ __( 'Add at least one %s row because the selected design uses that Data Table.', 'certloom' ), 'results' === $rowset ? __( 'result', 'certloom' ) : __( 'subject', 'certloom' ) ) );
 			}
 		}
 		return true;
@@ -1356,6 +1356,22 @@ class Ecapla_CertVerify_Admin {
 	}
 
 	public function handle_fields_save() {
+		if ( isset( $_POST['certloom_save_global_field_scope'] ) ) {
+			$this->require_manage_permission();
+			check_admin_referer( 'certloom_save_global_field_scope' );
+			$this->require_writes_available( admin_url( 'admin.php?page=certloom-fields' ) );
+			$raw = isset( $_POST['global_field_requirement'] ) && is_array( $_POST['global_field_requirement'] ) ? wp_unslash( $_POST['global_field_requirement'] ) : array();
+			$rules = array();
+			foreach ( $raw as $raw_key => $raw_rule ) {
+				$key = sanitize_key( (string) $raw_key );
+				$rule = sanitize_key( (string) $raw_rule );
+				if ( '' !== $key && in_array( $rule, array( 'optional', 'required' ), true ) ) { $rules[ $key ] = $rule; }
+			}
+			$saved = ( new \Certloom\Infrastructure\Repository\ScopedFieldGlobalRepository() )->save( $rules, Ecapla_CertVerify_Fields::get_field_map() );
+			if ( is_wp_error( $saved ) ) { $this->redirect_error( $saved->get_error_message(), admin_url( 'admin.php?page=certloom-fields' ) ); }
+			wp_safe_redirect( add_query_arg( 'certloom_global_field_scope_saved', '1', admin_url( 'admin.php?page=certloom-fields' ) ) );
+			exit;
+		}
 		if ( ! isset( $_POST['certverify_save_fields'] ) ) {
 			return;
 		}

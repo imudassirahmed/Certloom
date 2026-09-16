@@ -40,7 +40,7 @@ drc_has( $src['structure'], "isset( \$_POST['batch_template_id'] ) ? absint( \$_
 
 // Quick creation inherits; design assignment is a separate job.
 drc_has( $src['manual'], 'Designs inherit automatically', 'Quick Program creation must explain automatic inheritance.' );
-drc_has( $src['manual'], 'Program Designs card or Design Rules', 'Quick Program creation must point to the dedicated design workflow.' );
+drc_has( $src['manual'], 'its Designs card or Design Rules', 'Quick profile-aware Program creation must point to the dedicated design workflow.' );
 drc_lacks( $src['manual'], 'name="program_template_id"', 'Quick issuance Program creation must not mix design assignment into entity creation.' );
 
 // The popup writes through the same manager and preserves untouched dimensions.

@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Import;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Contract\DomainImportStageInterface;
 use Certloom\Domain\Credential\StatusService;
 

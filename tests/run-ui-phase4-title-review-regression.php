@@ -6,6 +6,7 @@ $service = file_get_contents( $root . '/src/Application/Issuance/ManualIssuanceS
 $resolver = file_get_contents( $root . '/src/Application/Issuance/EffectiveCredentialTitleResolver.php' );
 $readiness = file_get_contents( $root . '/src/Application/Issuance/IssuanceDataReadiness.php' );
 $template = file_get_contents( $root . '/src/Infrastructure/Admin/TemplateAdmin.php' );
+$catalog = file_get_contents( $root . '/src/Application/Issuance/MergeTokenCatalog.php' );
 $checks = 0; $failures = 0;
 function a441( $ok, $label ) { global $checks, $failures; $checks++; if ( $ok ) { echo "PASS  {$label}\n"; } else { $failures++; echo "FAIL  {$label}\n"; } }
 a441( is_string( $admin ) && is_string( $service ) && is_string( $resolver ), 'title-review sources are readable' );
@@ -13,9 +14,9 @@ a441( false !== strpos( $service, 'new EffectiveCredentialTitleResolver()' ) && 
 a441( false !== strpos( $resolver, "if ( 'program' === \$source )" ) && false !== strpos( $resolver, "\$program['title']" ), 'Program title resolver inherits the authoritative Program title' );
 a441( false === strpos( $admin, 'certloom_phase2_title_required' ) && false === strpos( $admin, 'Enter a credential title before reviewing this credential.' ), 'admin compatibility layer does not require a redundant explicit Program title' );
 a441( false !== strpos( $admin, "array_merge( isset( \$review['phase2_ui_request'] )" ) && false !== strpos( $admin, ", (array) \$review['request'] );" ), 'canonical resolved review request wins over raw compose values' );
-a441( false !== strpos( $admin, "'program' === (string) ( \$request['title_source'] ?? '' ) ? __( 'Inherited from the selected Program', 'certloom' )" ), 'review explicitly communicates Program-title provenance' );
+a441( false !== strpos( $admin, "'program' === (string) ( \$request['title_source'] ?? '' ) ? sprintf" ) && false !== strpos( $admin, "__( 'Inherited from the selected %s', 'certloom' )" ), 'review explicitly communicates profile-aware Program-title provenance' );
 a441( false !== strpos( $admin, "foreach ( array( 'recipient_mode', 'recipient_id', 'credential_basis', 'title_source', 'credential_title'" ), 'resolved title/source are preserved into the final Issue confirmation form' );
 a441( false !== strpos( $readiness, "'credential.issue_date' => __( 'Effective date', 'certloom' )" ) && false !== strpos( $readiness, "'issue_date' => __( 'Effective date', 'certloom' )" ), 'design readiness presents valid_from compatibility tokens as Effective date' );
-a441( substr_count( $template, "credential.issue_date\">' . esc_html__( 'Effective Date', 'certloom' )" ) >= 2, 'Certificate Designer labels credential.issue_date as Effective Date while retaining the compatibility token' );
+a441( false !== strpos( $template, 'MergeTokenCatalog::groups()' ) && false !== strpos( $catalog, "'credential.issue_date' => __( 'Effective date', 'certloom' )" ), 'Certificate Designer obtains credential.issue_date = Effective date from the canonical merge catalog' );
 echo "\n" . ( $checks - $failures ) . " alpha.4.41 title-review regression checks, {$failures} failures\n";
 exit( $failures ? 1 : 0 );

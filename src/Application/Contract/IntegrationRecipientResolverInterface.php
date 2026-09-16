@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Contract;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Explicit WordPress-user → Recipient identity bridge. */
 interface IntegrationRecipientResolverInterface {
 	/** @return array<string,mixed>|null|\WP_Error */

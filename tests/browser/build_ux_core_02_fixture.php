@@ -1,6 +1,6 @@
 <?php
 $root = dirname( __DIR__, 2 );
-$css = file_get_contents( $root . '/admin/assets/admin.css' );
+$css = file_get_contents( $root . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( $root . '/admin/assets/admin.css' );
 $js  = file_get_contents( $root . '/admin/assets/admin.js' );
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <style>html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}body{margin:0;padding:24px;background:#f0f0f1;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 14px;border:1px solid #2271b1;border-radius:6px;background:#fff;color:#2271b1}.button-primary{background:#2271b1;color:#fff}.button-link{border:0;background:none;color:#2271b1;min-height:44px}.screen-reader-text{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}<?php echo $css; ?></style>

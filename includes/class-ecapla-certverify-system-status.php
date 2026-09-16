@@ -32,6 +32,7 @@ class Ecapla_CertVerify_System_Status {
 		if ( null !== $staging_cutover ) { $checks[] = $staging_cutover; }
 		$checks[] = self::legacy_table_check( $wpdb );
 		$checks[] = self::authority_check();
+		$checks[] = self::series_program_issuer_integrity_check( $wpdb );
 		$review_operational = defined( 'CERTLOOM_REVIEW_ADMIN_PREVIEW' ) && true === CERTLOOM_REVIEW_ADMIN_PREVIEW;
 		$checks[] = self::check(
 			'domain_feature_gates',
@@ -102,6 +103,34 @@ class Ecapla_CertVerify_System_Status {
 	}
 
 
+
+
+	private static function series_program_issuer_integrity_check( $wpdb ) {
+		if ( ! class_exists( '\Certloom\Infrastructure\Database\SchemaManager' ) ) {
+			return self::check( 'series_program_issuer_integrity', __( 'Credential Series issuer consistency', 'certloom' ), 'warning', __( 'Domain schema unavailable', 'certloom' ) );
+		}
+		$series = \Certloom\Infrastructure\Database\SchemaManager::table( 'credential_series' );
+		$programs = \Certloom\Infrastructure\Database\SchemaManager::table( 'programs' );
+		$wpdb->last_error = '';
+		$series_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $series ) ) );
+		$programs_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $programs ) ) );
+		if ( '' !== (string) $wpdb->last_error || $series !== (string) $series_exists || $programs !== (string) $programs_exists ) {
+			return self::check( 'series_program_issuer_integrity', __( 'Credential Series issuer consistency', 'certloom' ), 'warning', __( 'Not available', 'certloom' ), __( 'The normalized credential-domain tables are not currently available for this read-only relationship check.', 'certloom' ) );
+		}
+		$wpdb->last_error = '';
+		$count = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i s INNER JOIN %i p ON p.id=s.program_id WHERE p.issuer_id IS NOT NULL AND (s.issuer_id IS NULL OR s.issuer_id<>p.issuer_id)', $series, $programs ) );
+		if ( '' !== (string) $wpdb->last_error ) {
+			return self::check( 'series_program_issuer_integrity', __( 'Credential Series issuer consistency', 'certloom' ), 'warning', __( 'Check failed', 'certloom' ), __( 'Certloom could not complete the read-only Program/Issuer relationship check.', 'certloom' ) );
+		}
+		$count = absint( $count );
+		return self::check(
+			'series_program_issuer_integrity',
+			__( 'Credential Series issuer consistency', 'certloom' ),
+			0 === $count ? 'good' : 'bad',
+			0 === $count ? __( 'Consistent', 'certloom' ) : sprintf( /* translators: %d: inconsistent credential Series rows. */ _n( '%d mismatch', '%d mismatches', $count, 'certloom' ), $count ),
+			0 === $count ? __( 'Every Program-bound Credential Series agrees with its Program’s Issuer.', 'certloom' ) : __( 'One or more Credential Series rows disagree with their Program Issuer and should be repaired before relying on issuer-scoped reporting or restore.', 'certloom' )
+		);
+	}
 
 	private static function local_qr_check() {
 		if ( ! class_exists( 'Ecapla_CertVerify_QR' ) ) {

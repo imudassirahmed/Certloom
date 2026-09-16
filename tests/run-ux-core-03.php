@@ -31,8 +31,8 @@ ux3( false !== strpos( $css, '.certloom-my-design-card-grid' ), 'Visual design g
 ux3( false !== strpos( $css, '.certloom-premium-row-link' ), 'List continuations use quiet row links instead of redundant boxed Open buttons' );
 ux3( false !== strpos( $domain, "esc_html__( 'Issue', 'certloom' )" ) && false !== strpos( $domain, 'certloom-premium-row-link' ), 'High-value list actions retain one clear primary action plus quiet continuations' );
 
-ux3( false !== strpos( $css, 'min-height:40px' ) && false !== strpos( $css, 'border:1px solid #c8d2ce' ) && false !== strpos( $css, 'border-radius:6px' ), 'Ordinary desktop controls share the 40px/1px/6px form rhythm' );
-ux3( false !== strpos( $css, 'label.is-invalid input' ) && false !== strpos( $css, '.certloom-inline-field-error' ) && false !== strpos( $css, '#b32d2e' ), 'Invalid fields have a persistent red field and inline-error presentation' );
+ux3( false !== strpos( $css, 'min-height:40px' ) && false !== strpos( $css, 'border:1px solid var(--cl-rule)' ) && false !== strpos( $css, 'border-radius:var(--cl-r-sm)' ), 'Ordinary desktop controls share the 40px form rhythm through shared border/radius tokens' );
+ux3( false !== strpos( $css, 'label.is-invalid input' ) && false !== strpos( $css, '.certloom-inline-field-error' ) && false !== strpos( $css, 'var(--cl-error)' ), 'Invalid fields have a persistent semantic-error field and inline-error presentation' );
 ux3( false !== strpos( $js, "control.getAttribute( 'data-certloom-required-example' )" ) && false !== strpos( $js, 'Please fill in this required field.' ), 'Required-field validation prefers an appropriate example and has a clear fallback' );
 ux3( false !== strpos( $js, 'initDomainEntityFormFeedback' ) && false !== strpos( $js, 'initHumanFormValidation' ), 'Entity forms and connected human forms share explicit browser validation feedback' );
 ux3( 1 === preg_match( '/@media\s*\(max-width\s*:\s*782px\)/', $css ) && 1 === preg_match( '/\.certloom-premium-row-link\s*\{[^}]*min-height\s*:\s*44px/s', $css ), 'Compact desktop UI preserves 44px mobile interaction targets' );
@@ -42,12 +42,12 @@ ux3( false !== strpos( $manual, 'data-certloom-context-lookup="recipient"' ) && 
 ux3( false !== strpos( $manual, 'certloom-new-recipient-dialog' ) && false !== strpos( $manual, 'Complete recipient profile' ), 'New Recipient retains the complete profile popup' );
 ux3( 1 === preg_match( '/\.certloom-premium-dialog input:not\(\[type=checkbox\]\):not\(\[type=radio\]\)\s*,\s*\.certloom-premium-dialog select\s*\{[^}]*height\s*:\s*40px/s', $css ), 'Quick-create dialogs use the same compact desktop control height' );
 
-ux3( false !== strpos( $css, '.certloom-automations-workspace .certloom-context-lookup__search' ) && false !== strpos( $css, 'height:40px!important' ), 'Automation enhanced selectors align with ordinary 40px fields' );
+ux3( false !== strpos( $css, '.certloom-automations-workspace .certloom-context-lookup__search' ) && false !== strpos( $css, 'height:40px;' ) && false === strpos( $css, 'height:40px!important' ), 'Automation enhanced selectors align with ordinary 40px fields without a specificity override' );
 ux3( false !== strpos( $automations, 'data-certloom-human-form' ) && false !== strpos( $automations, 'data-certloom-invalid-message' ), 'Automation forms participate in explicit required-field feedback' );
 ux3( false !== strpos( $email_designer, 'Optional. Leave blank to let Certloom derive plain text from the message blocks.' ), 'Email Designer explains the automatic plain-text fallback without creating a second content authority' );
 
 ux3( false !== strpos( $structure, 'data-certloom-required-example="' ) && false !== strpos( $structure, 'Choose the Program this Batch belongs to.' ), 'Required Batch→Program selection provides an appropriate inline example' );
-ux3( false !== strpos( $css, '.certloom-domain-search input[type=search]' ) && false !== strpos( $css, 'height:40px!important' ), 'Entity search controls follow the same compact form rhythm' );
+ux3( false !== strpos( $css, '.certloom-domain-search input[type=search]' ) && false !== strpos( $css, 'height:40px' ) && false === strpos( $css, '.certloom-domain-search input[type=search]{min-width:min(340px,100%);height:40px!important' ), 'Entity search controls follow the same compact form rhythm without a specificity override' );
 ux3( false !== strpos( $css, '@media(forced-colors:active)' ) && false !== strpos( $css, '.certloom-premium-row-link{color:LinkText}' ), 'New compact list interactions preserve forced-colors visibility' );
 
 printf( "\n%d UX-CORE-03 source checks, %d failures\n", $pass + $fail, $fail );

@@ -1,6 +1,6 @@
 <?php
 /** Browser-only FLD-02 bounded Program/Batch lookup fixture using production admin JS/CSS. */
-$css = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' );
+$css = file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' );
 $js  = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.js' );
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
 html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}body{margin:0;padding:24px;background:#f0f0f1;color:#1d2327;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;line-height:1.5}.wrap{max-width:980px;margin:0 auto}.fixture-card{background:#fff;border:1px solid #dcdcde;border-radius:12px;padding:20px}.fixture-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.fixture-grid label{display:grid;gap:6px}.fixture-grid select,.fixture-grid input{width:100%;max-width:none}.screen-reader-text{border:0;clip:rect(1px,1px,1px,1px);clip-path:inset(50%);height:1px;margin:-1px;overflow:hidden;padding:0;position:absolute!important;width:1px;word-wrap:normal!important}@media(max-width:640px){body{padding:12px}.fixture-grid{grid-template-columns:1fr}}

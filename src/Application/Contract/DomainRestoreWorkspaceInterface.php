@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Contract;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Persistence boundary for resumable complete-domain restore staging. */
 interface DomainRestoreWorkspaceInterface {
 	/** @return array<string,mixed>|\WP_Error */

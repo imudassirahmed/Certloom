@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Issuance;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Contract\JobRepositoryInterface;
 use Certloom\Application\Job\JobQueue;
 use Certloom\Domain\Job\JobStates;
@@ -10,6 +14,8 @@ use Certloom\Infrastructure\Issuance\BulkIssuanceCsvReader;
 use Certloom\Application\Fields\ScopedFieldContract;
 use Certloom\Infrastructure\Repository\ProgramRepository;
 use Certloom\Infrastructure\Repository\BatchRepository;
+use Certloom\Infrastructure\Repository\IssuerRepository;
+use Certloom\Infrastructure\Repository\ScopedFieldGlobalRepository;
 
 /** Application boundary for reviewed Bulk Issuance preflight/commit jobs. */
 final class BulkIssuanceCoordinator {
@@ -47,8 +53,23 @@ final class BulkIssuanceCoordinator {
 				return new \WP_Error( 'certloom_bulk_batch_program_mismatch', __( 'Choose an active Batch that belongs to the selected Program.', 'certloom' ) );
 			}
 		}
-		$catalog = class_exists( '\\Ecapla_CertVerify_Fields' ) ? \Ecapla_CertVerify_Fields::get_field_map() : array();
-		$contract = ( new ScopedFieldContract() )->resolve( (array) ( $program['field_contract'] ?? ScopedFieldContract::empty_program() ), is_array( $batch ) ? (array) ( $batch['field_contract'] ?? ScopedFieldContract::empty_batch() ) : null, $catalog );
+		$catalog = class_exists( '\Ecapla_CertVerify_Fields' ) ? \Ecapla_CertVerify_Fields::get_field_map() : array();
+		$issuer = null;
+		$issuer_id = absint( $program['issuer_id'] ?? 0 ) ?: absint( $shared['issuer_id'] ?? 0 );
+		if ( $issuer_id ) {
+			$issuer = ( new IssuerRepository() )->find( $issuer_id );
+			if ( is_wp_error( $issuer ) ) { return $issuer; }
+			if ( ! is_array( $issuer ) ) { return new \WP_Error( 'certloom_bulk_issuer_unavailable', __( 'The selected Issuer is no longer available for Bulk Issuance.', 'certloom' ) ); }
+		}
+		$global_contract = ( new ScopedFieldGlobalRepository() )->get( $catalog );
+		if ( is_wp_error( $global_contract ) ) { return $global_contract; }
+		$contract = ( new ScopedFieldContract() )->resolve_hierarchy(
+			$global_contract,
+			is_array( $issuer ) && is_array( $issuer['field_contract'] ?? null ) ? $issuer['field_contract'] : null,
+			(array) ( $program['field_contract'] ?? ScopedFieldContract::empty_program() ),
+			is_array( $batch ) ? (array) ( $batch['field_contract'] ?? ScopedFieldContract::empty_batch() ) : null,
+			$catalog
+		);
 		if ( is_wp_error( $contract ) ) { return $contract; }
 		if ( empty( $contract['_meta']['configured'] ) ) { return true; }
 

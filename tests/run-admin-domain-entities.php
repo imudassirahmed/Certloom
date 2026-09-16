@@ -15,7 +15,7 @@ function ade_check( $condition, $message ) { global $checks; ade_assert( $condit
 
 ade_check( false !== strpos( $admin, "__( 'Recipients', 'certloom' )" ), 'Recipients screen must use the premium production label.' );
 ade_check( false !== strpos( $admin, "__( 'Programs', 'certloom' )" ), 'Programs screen must use the premium production label.' );
-ade_check( false !== strpos( $admin, 'Acceptance preview' ) && false !== strpos( $admin, 'Safety gate active.' ), 'Acceptance-gated state must remain explicit in the preview UI.' );
+ade_check( false === strpos( $admin, 'Acceptance preview' ) && false === strpos( $admin, 'Safety gate active.' ), 'Retired acceptance-preview copy must not leak into the production admin UI.' );
 ade_check( false !== strpos( $admin, "'first_name'" ) && false !== strpos( $admin, "'middle_name'" ) && false !== strpos( $admin, "'last_name'" ), 'REC-01 identity fields must be editable.' );
 ade_check( false !== strpos( $admin, "'wp_user_id'" ) && false !== strpos( $admin, 'get_userdata' ), 'REC-01 WordPress-user association must be editable and validated.' );
 ade_check( false !== strpos( $admin, 'recipient_custom_fields_present' ) && false !== strpos( $admin, 'parse_key_value_request' ), 'REC-01 custom fields must have a structured editor.' );

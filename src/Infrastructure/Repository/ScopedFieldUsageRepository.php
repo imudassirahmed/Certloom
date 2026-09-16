@@ -11,8 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 /**
  * FLD-02 active usage index for safe field retirement and admin visibility.
  *
- * Only mutable consumers block retirement: Program requirements, Batch
- * overrides, and active Template revisions. Historical Credential Version
+ * Only mutable consumers block retirement: Global defaults, Issuer/Program
+ * requirements, Batch overrides, and active Template revisions. Historical Credential Version
  * snapshots deliberately do not: retiring a field must preserve history while
  * preventing dangling requirements/designs from being created going forward.
  */
@@ -28,6 +28,10 @@ final class ScopedFieldUsageRepository {
 		$contracts = new ScopedFieldContract();
 		$json = new SafeJson();
 
+		$global = $this->scan_global( $usage, $catalog );
+		if ( is_wp_error( $global ) ) { return $this->cache = $global; }
+		$issuers = $this->scan_issuers( $usage, $catalog, $contracts, $json );
+		if ( is_wp_error( $issuers ) ) { return $this->cache = $issuers; }
 		$programs = $this->scan_programs( $usage, $catalog, $contracts, $json );
 		if ( is_wp_error( $programs ) ) { return $this->cache = $programs; }
 		$batches = $this->scan_batches( $usage, $catalog, $contracts, $json );
@@ -44,6 +48,37 @@ final class ScopedFieldUsageRepository {
 		$all = $this->all_usage();
 		if ( is_wp_error( $all ) ) { return $all; }
 		return $all[ $key ] ?? $this->empty_usage( $key );
+	}
+
+	/** @return true|\WP_Error */
+	private function scan_global( array &$usage, array $catalog ) {
+		$contract = ( new ScopedFieldGlobalRepository() )->get( $catalog );
+		if ( is_wp_error( $contract ) ) { return $contract; }
+		if ( empty( $contract['_meta']['configured'] ) ) { return true; }
+		foreach ( array_keys( (array) ( $contract['fields'] ?? array() ) ) as $key ) {
+			$this->record( $usage, $key, 'global', 0, __( 'Global defaults', 'certloom' ) );
+		}
+		return true;
+	}
+
+	/** @return true|\WP_Error */
+	private function scan_issuers( array &$usage, array $catalog, ScopedFieldContract $contracts, SafeJson $json ) {
+		global $wpdb; $last = 0;
+		do {
+			$wpdb->last_error = '';
+			$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT id,name,settings_json FROM %i WHERE id>%d ORDER BY id ASC LIMIT %d', SchemaManager::table( 'issuers' ), $last, self::CHUNK ), ARRAY_A );
+			if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) { return new \WP_Error( 'certloom_field_usage_issuer_read_failed', __( 'Certloom could not verify Issuer field usage. No field can be retired safely until this check succeeds.', 'certloom' ) ); }
+			foreach ( $rows as $row ) {
+				$last = max( $last, absint( $row['id'] ?? 0 ) );
+				$settings = $json->decode_array( $row['settings_json'] ?? '', 'certloom_field_usage_issuer_settings_invalid', __( 'An Issuer has invalid field settings. No field can be retired safely until it is repaired.', 'certloom' ) );
+				if ( is_wp_error( $settings ) ) { return $settings; }
+				$contract = $contracts->from_scope_metadata( $settings, 'issuer', $catalog );
+				if ( is_wp_error( $contract ) ) { return $contract; }
+				if ( empty( $contract['_meta']['configured'] ) ) { continue; }
+				foreach ( array_keys( (array) ( $contract['fields'] ?? array() ) ) as $key ) { $this->record( $usage, $key, 'issuer', absint( $row['id'] ?? 0 ), (string) ( $row['name'] ?? '' ) ); }
+			}
+		} while ( count( $rows ) === self::CHUNK );
+		return true;
 	}
 
 	/** @return true|\WP_Error */
@@ -126,5 +161,5 @@ final class ScopedFieldUsageRepository {
 	}
 
 	/** @return array<string,mixed> */
-	private function empty_usage( $key ) { return array( 'key' => sanitize_key( (string) $key ), 'referenced' => false, 'program_count' => 0, 'batch_count' => 0, 'template_count' => 0, 'programs' => array(), 'batches' => array(), 'templates' => array() ); }
+	private function empty_usage( $key ) { return array( 'key' => sanitize_key( (string) $key ), 'referenced' => false, 'global_count' => 0, 'issuer_count' => 0, 'program_count' => 0, 'batch_count' => 0, 'template_count' => 0, 'globals' => array(), 'issuers' => array(), 'programs' => array(), 'batches' => array(), 'templates' => array() ); }
 }

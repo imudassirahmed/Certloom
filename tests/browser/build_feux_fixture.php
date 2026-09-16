@@ -1,6 +1,6 @@
 <?php
 /** Browser fixture for FEUX-01 compact public verification/profile hierarchy. */
-$css = file_get_contents( dirname( __DIR__, 2 ) . '/public/assets/certloom-public.css' );
+$css = file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/public/assets/certloom-public.css' );
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
 html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}body{margin:0;background:#f7f8fa;color:#1f2933;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.certloom-route-main{min-height:100vh}.fixture-motion{transition:opacity 1.5s ease}
 <?php echo $css; ?>

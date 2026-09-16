@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Domain\Job;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Stable machine states for all resumable Certloom background work. */
 final class JobStates {
 	const QUEUED              = 'queued';

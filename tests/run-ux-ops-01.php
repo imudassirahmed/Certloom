@@ -46,7 +46,7 @@ uxops_check( false !== strpos( $drive, 'restore_settings_snapshot' ), 'Google se
 // 4. Setup v2 completion remains honest and returns administrators to normal product navigation without manufacturing hierarchy/design authority.
 uxops_check( false !== strpos( $onboarding, 'record_first_credential' ) && false !== strpos( $onboarding, "'first_credential_series_id'" ) && false !== strpos( $onboarding, "'wizard_completed_at'" ), 'Setup v2 records authoritative first-credential identity when issued and keeps completion state separate from optional issuance' );
 uxops_check( false !== strpos( $wizard, "'Go to Dashboard', 'certloom'" ) && false !== strpos( $wizard, "'Exit setup', 'certloom'" ), 'Setup v2 always provides a normal route back to Dashboard' );
-uxops_check( false === strpos( $wizard, 'assign( $template_id' ) && false === strpos( $wizard, 'program_id' ) && false === strpos( $wizard, 'batch_id' ), 'Setup v2 does not manufacture hierarchy or Global Design assignment authority' );
+uxops_check( false === strpos( $wizard, 'assign( $template_id' ) && false !== strpos( $wizard, 'name="setup_program_id"' ) && false !== strpos( $wizard, 'name="setup_batch_id"' ) && false === strpos( $wizard, 'name="program_id"' ) && false === strpos( $wizard, 'name="batch_id"' ), 'Setup v2 keeps optional relationship context explicitly scoped to setup and does not silently assign Global Design authority' );
 
 // 5. Hidden contextual routes keep the correct visible WordPress parent active.
 uxops_check( false !== strpos( $nav, "add_filter( 'parent_file'" ) && false !== strpos( $nav, '? \'certloom\' : $parent_file' ), 'Hidden Certloom routes keep the Certloom WordPress parent menu highlighted' );
@@ -54,7 +54,7 @@ uxops_check( false !== strpos( $nav, "add_filter( 'submenu_file'" ) && false !==
 
 // 6/8/9. Backup alignment and compact Dashboard readiness/setup actions.
 uxops_check( false !== strpos( $backup, 'certloom-backup-setting' ) && false !== strpos( $backup, 'certloom-backup-settings-actions' ), 'Automatic backup fields and save action use the compact aligned layout contract' );
-uxops_check( false !== strpos( $admin_css, 'grid-template-columns:minmax(180px,280px) minmax(180px,240px) max-content' ) && false !== strpos( $admin_css, 'width:auto!important' ), 'Backup save action is content-sized rather than stretched across the card' );
+uxops_check( false !== strpos( $admin_css, 'grid-template-columns:minmax(180px,280px) minmax(180px,240px) max-content' ) && false !== strpos( $admin_css, '.certloom-backup-settings-actions .button{' ) && false !== strpos( $admin_css, 'width:auto;' ) && false === strpos( $admin_css, '.certloom-backup-settings-actions .button{width:auto!important' ), 'Backup save action is content-sized without a specificity override' );
 uxops_check( false !== strpos( $dashboard, "'Setup: %1\$d of %2\$d checks complete', 'certloom'" ) && false !== strpos( $dashboard, "'Remind me in 3 days', 'certloom'" ) && false !== strpos( $dashboard, "'Do not remind me again', 'certloom'" ), 'Dashboard uses a compact readiness count with snooze and permanent-dismiss actions' );
 uxops_check( false !== strpos( $foundation_css, '.certloom-admin-shell .certloom-dashboard-setup-link' ) && false !== strpos( $foundation_css, 'position: absolute;' ) && false !== strpos( $foundation_css, 'right: var(--cl-5);' ) && false !== strpos( $dashboard, 'class="certloom-dashboard-setup-link"' ), 'Setup Wizard remains a compact permanent Dashboard action in the user-restored top-right position' );
 
@@ -65,7 +65,7 @@ uxops_check( false !== strpos( uxops_src( $root, 'src/Infrastructure/Admin/Setup
 uxops_check( false !== strpos( $editor, 'Legacy credential issued before the current Program and Batch model' ) && false !== strpos( $editor, "'Open Credential Management', 'certloom'" ), 'Legacy credential view explains why Program/Batch assignment is absent and points to normalized Credential Management' );
 
 // 11. Public actions share one strong action palette and consistent focus/hover treatment.
-uxops_check( false !== strpos( $public_css, '.certloom-result-action,.certloom-result-action.is-secondary{color:#0f6e56' ) && false !== strpos( $public_css, '.certloom-result-action:hover,.certloom-result-action:focus-visible' ), 'Copy/Profile/Share/Print actions share one strong Certloom action color and hover/focus treatment' );
+uxops_check( false !== strpos( $public_css, '.certloom-result-action,.certloom-result-action.is-secondary{color:var(--cl-blue);' ) && false !== strpos( $public_css, 'background:var(--cl-blue-wash);' ) && false !== strpos( $public_css, '.certloom-result-action:hover,.certloom-result-action:focus-visible' ), 'Copy/Profile/Share/Print actions use Certloom action blue while validity green remains semantic' );
 
 // 12. Deactivation-before-delete lifecycle decision, keep default, destructive warning, multisite consistency.
 uxops_check( false !== strpos( $admin, "'Before deactivating Certloom', 'certloom'" ) && false !== strpos( $admin, "'Keep certificate data', 'certloom'" ) && false !== strpos( $admin, "'Delete Certloom data if the plugin is deleted', 'certloom'" ), 'Plugin lifecycle dialog explains keep/delete choices before Certloom becomes inactive' );

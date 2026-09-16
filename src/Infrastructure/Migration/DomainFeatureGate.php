@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Migration;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Single production-facing API for effective normalized-domain release authority. */
 final class DomainFeatureGate {
 	/** @var array<string,bool>|null */

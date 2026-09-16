@@ -3,6 +3,14 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PLUGIN_VERSION="$(sed -n 's/^[[:space:]]*\* Version:[[:space:]]*//p' "$ROOT/certloom.php" | head -n 1 | tr -d '\r')"
+README_STABLE_TAG="$(sed -n 's/^Stable tag:[[:space:]]*//p' "$ROOT/readme.txt" | head -n 1 | tr -d '\r')"
+if [[ -z "$PLUGIN_VERSION" || "$README_STABLE_TAG" != "$PLUGIN_VERSION" ]]; then
+  echo "Certloom release identity mismatch: plugin=$PLUGIN_VERSION readme=$README_STABLE_TAG" >&2
+  exit 2
+fi
+# Release-hygiene ratchets are cheap enough to enforce on every package build.
+php "$ROOT/tests/run-css-design-system-ratchet.php" >/dev/null
+php "$ROOT/tests/run-runtime-guards.php" >/dev/null
 VERSION="${CERTLOOM_BUILD_VERSION:-$PLUGIN_VERSION}"
 if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+][A-Za-z0-9.-]+)?$ ]]; then
   echo "Invalid Certloom build version: $VERSION" >&2

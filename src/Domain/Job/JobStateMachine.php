@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Domain\Job;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Explicit transitions prevent job state from becoming another overloaded status field. */
 final class JobStateMachine {
 	/** @return bool */

@@ -1,6 +1,6 @@
 <?php
 /** UX-C03 browser fixture using production admin CSS/JS. */
-$css=file_get_contents(dirname(__DIR__,2).'/admin/assets/admin.css');
+$css=file_get_contents(dirname(__DIR__,2).'/assets/css/certloom-tokens.css') . "\n" . file_get_contents(dirname(__DIR__,2).'/admin/assets/admin.css');
 $js=file_get_contents(dirname(__DIR__,2).'/admin/assets/admin.js');
 ?><!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
 html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}body{margin:0;background:#f0f0f1;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{margin:20px}.button{min-height:36px;padding:0 12px}.ecapla-certverify-admin-card{background:#fff;border:1px solid #dcdcde;padding:20px;max-width:760px}.description{color:#646970}<?php echo $css; ?>

@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Job;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Contract\JobRepositoryInterface;
 use Certloom\Domain\Job\JobStateMachine;
 use Certloom\Domain\Job\JobStates;

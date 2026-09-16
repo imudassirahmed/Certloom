@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Migration;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Migration\DomainReleaseManifest;
 use Certloom\Application\Rendering\RuntimePayloadFingerprint;
 

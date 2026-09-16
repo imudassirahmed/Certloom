@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Rendering;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Contract\LocalAssetResolverInterface;
 use InvalidArgumentException;
 
@@ -10,6 +14,8 @@ use InvalidArgumentException;
  */
 final class TemplatePreviewAssetResolver implements LocalAssetResolverInterface {
 	const SIGNER_SIGNATURE = 'asset:certloom-preview-signer-signature';
+	const ISSUER_LOGO = 'asset:certloom-preview-issuer-logo';
+	const ISSUER_SEAL = 'asset:certloom-preview-issuer-seal';
 	private $wordpress;
 
 	public function __construct( ?LocalAssetResolverInterface $wordpress = null ) {
@@ -19,24 +25,29 @@ final class TemplatePreviewAssetResolver implements LocalAssetResolverInterface 
 	/** @return array{path:string,sha256:string,mime:string,size:int} */
 	public function resolve( $reference ) {
 		$reference = trim( (string) $reference );
-		if ( self::SIGNER_SIGNATURE !== $reference ) {
+		$preview_assets = array(
+			self::SIGNER_SIGNATURE => 'certloom-preview-signer-signature.png',
+			self::ISSUER_LOGO => 'certloom-brand-wordmark.png',
+			self::ISSUER_SEAL => 'certloom-brand-mark.png',
+		);
+		if ( ! isset( $preview_assets[ $reference ] ) ) {
 			return $this->wordpress->resolve( $reference );
 		}
 
 		$root = defined( 'CERTLOOM_PATH' ) ? rtrim( (string) CERTLOOM_PATH, '/\\' ) : dirname( __DIR__, 3 );
-		$path = $root . DIRECTORY_SEPARATOR . 'admin' . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'certloom-preview-signer-signature.png';
+		$path = $root . DIRECTORY_SEPARATOR . 'admin' . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . $preview_assets[ $reference ];
 		$real = realpath( $path );
 		$root_real = realpath( $root );
 		if ( false === $real || false === $root_real || ! is_file( $real ) || ! is_readable( $real ) || is_link( $path ) ) {
-			throw new InvalidArgumentException( 'The bundled Signer signature Preview asset is unavailable.' );
+			throw new InvalidArgumentException( 'The bundled Certloom Preview media asset is unavailable.' );
 		}
 		$root_prefix = rtrim( $root_real, DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR;
 		if ( 0 !== strpos( $real, $root_prefix ) ) {
-			throw new InvalidArgumentException( 'The bundled Signer signature Preview asset resolved outside Certloom.' );
+			throw new InvalidArgumentException( 'The bundled Certloom Preview media asset resolved outside Certloom.' );
 		}
 		$size = filesize( $real );
 		if ( false === $size || $size < 1 ) {
-			throw new InvalidArgumentException( 'The bundled Signer signature Preview asset is empty.' );
+			throw new InvalidArgumentException( 'The bundled Certloom Preview media asset is empty.' );
 		}
 		return array(
 			'path' => $real,

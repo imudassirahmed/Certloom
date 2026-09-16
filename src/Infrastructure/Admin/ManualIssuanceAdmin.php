@@ -271,7 +271,7 @@ final class ManualIssuanceAdmin {
 		echo '<div class="certloom-credential-custom-title" data-certloom-custom-title-panel' . ( 'independent' === $credential_basis || 'custom' === $title_source ? '' : ' hidden' ) . '>';
 		$this->text_input( 'credential_title', __( 'Credential title', 'certloom' ), $credential_title, 255, 'text', 'independent' === $credential_basis || 'custom' === $title_source, __( 'Enter the exact title to freeze on this credential.', 'certloom' ) );
 		echo '</div><div class="certloom-manual-grid certloom-manual-grid-2 certloom-issue-essential-fields">';
-		$this->text_input( 'valid_from', __( 'Effective date', 'certloom' ), $valid_from, 10, 'date', true, __( 'The date this credential becomes effective.', 'certloom' ) );
+		$this->text_input( 'valid_from', __( 'Effective date', 'certloom' ), $valid_from, 10, 'date', true, __( 'The date this credential becomes effective; Certloom records the actual issuance timestamp separately when you issue.', 'certloom' ) );
 		echo '</div><div class="certloom-manual-choice-row certloom-manual-expiry">';
 		$this->radio( 'expiry_mode', 'permanent', __( 'No expiry', 'certloom' ), $expiry_mode );
 		$this->radio( 'expiry_mode', 'date', __( 'Specific expiry date', 'certloom' ), $expiry_mode );
@@ -371,7 +371,7 @@ final class ManualIssuanceAdmin {
 	private function render_technical_status( $simple, $current_stage ) {
 		echo '<details class="certloom-technical-details certloom-manual-issuance-technical-status certloom-issue-technical-status"><summary>' . esc_html__( 'Technical status', 'certloom' ) . '</summary><div class="certloom-issue-technical-body">';
 		if ( $simple ) {
-			echo '<p>' . esc_html__( 'Online verification is available whenever the credential store is healthy. Downloadable PDF/PNG/JPEG certificate files remain unavailable until the renderer is production-ready.', 'certloom' ) . '</p>';
+			echo '<p>' . esc_html__( 'Online verification is available whenever the credential store is healthy. Downloadable PDF/PNG/JPEG certificate files are not available yet.', 'certloom' ) . '</p>';
 		} else {
 			echo '<p><strong>' . esc_html__( 'Availability:', 'certloom' ) . '</strong> ' . esc_html__( 'Manual Issuance and normalized public verification are operational when the credential store is healthy. PDF/PNG/JPEG exports remain unavailable until the certificate renderer is approved.', 'certloom' ) . '</p>';
 		}
@@ -715,7 +715,7 @@ final class ManualIssuanceAdmin {
 		$fields = TableDataContract::fields_for_source( $source );
 		$labels = array( 'subject' => __( 'Subject', 'certloom' ), 'code' => __( 'Code', 'certloom' ), 'score' => __( 'Score', 'certloom' ), 'max_score' => __( 'Max score', 'certloom' ), 'percentage' => __( 'Percentage', 'certloom' ), 'grade' => __( 'Grade', 'certloom' ), 'credits' => __( 'Credits', 'certloom' ), 'status' => __( 'Status', 'certloom' ) );
 		$rows = array_slice( array_values( $rows ), 0, TableDataContract::MAX_ROWS );
-		echo '<section class="certloom-manual-rowset" data-certloom-repeating-rowset="' . esc_attr( $rowset ) . '" data-certloom-next-row="' . esc_attr( (string) count( $rows ) ) . '"><div class="certloom-manual-rowset-head"><div><div class="certloom-manual-rowset-title"><h4>' . esc_html( $label ) . '</h4><span data-certloom-repeating-count>' . esc_html( sprintf( _n( '%d row', '%d rows', count( $rows ), 'certloom' ), count( $rows ) ) ) . '</span></div><p>' . esc_html( $help ) . '</p></div><button type="button" class="button" data-certloom-repeating-add>' . esc_html__( 'Add row', 'certloom' ) . '</button></div><p class="certloom-manual-rowset-empty" data-certloom-repeating-empty' . ( $rows ? ' hidden' : '' ) . '>' . esc_html__( 'No rows added.', 'certloom' ) . '</p><div class="certloom-manual-rowset-rows" data-certloom-repeating-rows>';
+		echo '<section class="certloom-manual-rowset" data-certloom-repeating-rowset="' . esc_attr( $rowset ) . '" data-certloom-next-row="' . esc_attr( (string) count( $rows ) ) . '"><div class="certloom-manual-rowset-head"><div><div class="certloom-manual-rowset-title"><h4>' . esc_html( $label ) . '</h4><span data-certloom-repeating-count>' . esc_html( sprintf( /* translators: %d: number of subject/result rows. */ _n( '%d row', '%d rows', count( $rows ), 'certloom' ), count( $rows ) ) ) . '</span></div><p>' . esc_html( $help ) . '</p></div><button type="button" class="button" data-certloom-repeating-add>' . esc_html__( 'Add row', 'certloom' ) . '</button></div><p class="certloom-manual-rowset-empty" data-certloom-repeating-empty' . ( $rows ? ' hidden' : '' ) . '>' . esc_html__( 'No rows added.', 'certloom' ) . '</p><div class="certloom-manual-rowset-rows" data-certloom-repeating-rows>';
 		foreach ( $rows as $index => $row ) { $this->render_repeating_row( $rowset, $index, $fields, $labels, is_array( $row ) ? $row : array() ); }
 		echo '</div><template data-certloom-repeating-template>';
 		$this->render_repeating_row( $rowset, '__INDEX__', $fields, $labels, array() );

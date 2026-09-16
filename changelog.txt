@@ -1,3 +1,13 @@
+= 1.7.0-alpha.4.74 =
+* Audit hardening: synchronize plugin header/runtime/readme release identity with a fail-closed build assertion, default the review admin preview off, require is_uploaded_file() for Bulk CSV uploads, and extend direct-access guards across browser-executable production PHP.
+* Credential rendering: add immutable issuer.logo / issuer.seal sources for schema-v4 Image/Logo elements with fail-closed media resolution so multi-issuer branding can render without weakening artifact authority.
+* Merge vocabulary: drive both Studio token pickers from one canonical catalog, expose batch.code and credential.custom.<key>, and add a defined → resolved → offered → preview token-chain regression.
+* Domain integrity: reject Series/Program Issuer contradictions, surface diagnostics for historical mismatches, consolidate Batch instructor writes onto canonical signer_assignments with legacy-label convergence, and extend scoped credential-field resolution to Global → Issuer → Program → Batch across Manual/Bulk issuance and configuration surfaces.
+* Design-system sweep: collapse raw component colours onto Certloom semantic tokens, reduce specificity overrides, introduce shared radius/elevation tokens, and add build ratchets so raw colour/!important/radius/shadow drift cannot silently accelerate again.
+* Public semantics: remove Elementor controls that could visually contradict verified/revoked/expired credential verdicts while retaining layout-safe integration controls.
+* Extension seams: expose contract-validated integration-adapter registration and post-commit credential-revoked notification without adding licence, Pro, remote-backup, standards or commercial gating architecture.
+* Roadmap discipline: keep the eight-step onboarding reduction assigned to Gamma-04 Pathway; Open Badges 3.0, CLR, remote destinations, external credential publishing, additional LMS breadth and Free/Pro architecture remain deliberately deferred until Gamma and Phases 5–7 are complete.
+
 = 1.7.0-alpha.4.73 =
 * Manual Issuance Compose: use the full desktop workspace with a wide primary form column and one sticky context rail containing Certificate appearance, a live credential summary and the Review action.
 * Progressive disclosure: move Additional details into the main working column, keep optional context collapsed by default, and stop academic Subjects/Results from rendering a permanent empty row editor; rows appear only after Add row and only for profiles that allow them.

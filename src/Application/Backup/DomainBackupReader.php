@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Backup;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Streaming validator/preflight reader for the versioned domain backup format. */
 final class DomainBackupReader {
 	private $format;

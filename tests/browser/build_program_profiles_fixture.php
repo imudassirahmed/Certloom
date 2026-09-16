@@ -1,6 +1,6 @@
 <?php
 /** Browser-only PRG-02 Program Profiles fixture using production admin CSS/JS. */
-$css = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/certloom-foundation.css' );
+$css = file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/certloom-foundation.css' );
 $js  = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.js' );
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
 html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}body{margin:0;background:#f0f0f1;color:#1d2327;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;line-height:1.5}.wrap{margin:20px}.ecapla-certverify-admin-card{background:#fff;border:1px solid #dcdcde;border-radius:10px;padding:18px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 12px;border:1px solid #2271b1;border-radius:4px;background:#fff;color:#2271b1;text-decoration:none}.description{color:#646970}.regular-text,select{font:inherit}<?php echo $css; ?>

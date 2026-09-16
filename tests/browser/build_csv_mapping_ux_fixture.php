@@ -25,7 +25,7 @@ $preview = array(
 	array('Omar Ali','Omar','Ali','omar@example.test','B+','CERT-1002','Arts','y'),
 );
 $token='fixture-token';
-$css=file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' );
+$css=file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' );
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
 html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}body{margin:0;padding:20px;background:#f0f0f1;color:#1d2327;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{margin:0}.brand-bar{display:none}.widefat{width:100%;border-collapse:collapse;background:#fff}.widefat th,.widefat td{padding:10px;border:1px solid #dcdcde;text-align:left;vertical-align:top}.ecapla-certverify-table-scroll{overflow:auto}.button{min-height:44px;padding:0 14px}.screen-reader-text{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}select{min-height:44px;max-width:100%}@media(max-width:782px){body{padding:10px}.widefat{min-width:760px}}
 <?php echo $css; ?>

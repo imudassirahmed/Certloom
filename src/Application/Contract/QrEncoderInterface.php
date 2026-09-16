@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Contract;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Renderer-independent QR encoder. Renderers receive the exact same module matrix. */
 interface QrEncoderInterface {
 	/**

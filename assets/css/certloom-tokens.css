@@ -61,11 +61,36 @@
   /* Radius: rows/panels, controls, genuinely floating surfaces */
   --cl-r-none: 0;
   --cl-r-ctl: 4px;
+  --cl-r-sm: 6px;
+  --cl-r-compact: 7px;
   --cl-r-lift: 8px;
+  --cl-r-panel: 10px;
+  --cl-r-card: 12px;
+  --cl-r-dialog: 14px;
+  --cl-r-float: 16px;
+  --cl-r-hero: 18px;
+  --cl-r-pill: 999px;
+  --cl-r-round: 50%;
 
   /* Elevation: shadow means "floats" */
+  --cl-shadow-hairline: 0 1px 2px rgba(0, 0, 0, .04);
+  --cl-shadow-soft: 0 1px 3px rgba(16, 24, 40, .08);
+  --cl-shadow-popover: 0 8px 22px rgba(22, 35, 58, .11);
+  --cl-shadow-rule: 0 0 0 1px var(--cl-rule-firm);
   --cl-lift: 0 2px 8px rgba(1, 19, 61, .10), 0 0 0 1px var(--cl-rule);
   --cl-float: 0 12px 32px rgba(1, 19, 61, .18);
+  --cl-shadow-dialog: 0 24px 70px rgba(1, 19, 61, .24);
+  --cl-shadow-canvas: 0 18px 48px rgba(1, 19, 61, .14);
+  --cl-ring-focus: 0 0 0 2px color-mix(in srgb, var(--cl-blue) 14%, transparent);
+  --cl-ring-focus-soft: 0 0 0 1px color-mix(in srgb, var(--cl-blue) 12%, transparent);
+  --cl-ring-success: 0 0 0 3px color-mix(in srgb, var(--cl-success) 14%, transparent);
+  --cl-ring-warning: 0 0 0 3px color-mix(in srgb, var(--cl-warning) 16%, transparent);
+  --cl-ring-on-dark: 0 0 0 1px rgb(255 255 255 / 82%);
+  --cl-ring-on-dark-strong: 0 0 0 2px rgb(255 255 255 / 90%);
+  --cl-ring-current: 0 0 0 2px currentColor;
+  --cl-ring-canvas-text: 0 0 0 1px CanvasText;
+  --cl-inset-focus: inset 0 0 0 1px color-mix(in srgb, var(--cl-blue) 14%, transparent);
+  --cl-inset-highlight: inset 3px 0 0 Highlight;
 
   /* Type. Approved font binaries are bundled separately when supplied. */
   --cl-sans: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;

@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Data;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Monotonic/randomized marker used to reject mixed-state domain backups/exports. */
 final class DomainGeneration {
 	const OPTION = 'certloom_domain_data_generation';

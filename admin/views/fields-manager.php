@@ -8,6 +8,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 $certloom_field_usage = ( new \Certloom\Infrastructure\Repository\ScopedFieldUsageRepository() )->all_usage();
 $certloom_field_usage_error = is_wp_error( $certloom_field_usage ) ? $certloom_field_usage : null;
 if ( $certloom_field_usage_error ) { $certloom_field_usage = array(); }
+$certloom_global_contract = ( new \Certloom\Infrastructure\Repository\ScopedFieldGlobalRepository() )->get( Ecapla_CertVerify_Fields::get_field_map() );
+$certloom_global_contract_error = is_wp_error( $certloom_global_contract ) ? $certloom_global_contract : null;
+if ( $certloom_global_contract_error ) { $certloom_global_contract = \Certloom\Application\Fields\ScopedFieldContract::empty_global( false ); }
+$certloom_global_rules = is_array( $certloom_global_contract['fields'] ?? null ) ? $certloom_global_contract['fields'] : array();
+$certloom_scopable_fields = Ecapla_CertVerify_Fields::get_scopable_fields();
 ?>
 <div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-fields-screen">
 	<section class="certloom-page-hero" aria-labelledby="certloom-fields-title">
@@ -21,7 +26,7 @@ if ( $certloom_field_usage_error ) { $certloom_field_usage = array(); }
 		</div>
 	</section>
 
-	<?php foreach ( array( 'ecapla_certverify_fields_saved' => __( 'Field order, labels, and visibility saved.', 'certloom' ), 'ecapla_certverify_field_added' => __( 'Field added.', 'certloom' ), 'ecapla_certverify_field_deleted' => __( 'Custom field retired. Existing stored values remain protected and the key cannot be reused.', 'certloom' ), 'ecapla_certverify_field_restored' => __( 'Retired field restored as private. Review it before enabling public visibility.', 'certloom' ), 'ecapla_certverify_fields_retranslated' => __( 'Core field labels were reset for the current site language.', 'certloom' ) ) as $flag => $message ) : ?>
+	<?php foreach ( array( 'ecapla_certverify_fields_saved' => __( 'Field order, labels, and visibility saved.', 'certloom' ), 'certloom_global_field_scope_saved' => __( 'Global credential-field defaults saved.', 'certloom' ), 'ecapla_certverify_field_added' => __( 'Field added.', 'certloom' ), 'ecapla_certverify_field_deleted' => __( 'Custom field retired. Existing stored values remain protected and the key cannot be reused.', 'certloom' ), 'ecapla_certverify_field_restored' => __( 'Retired field restored as private. Review it before enabling public visibility.', 'certloom' ), 'ecapla_certverify_fields_retranslated' => __( 'Core field labels were reset for the current site language.', 'certloom' ) ) as $flag => $message ) : ?>
 		<?php if ( isset( $_GET[ $flag ] ) ) : ?><div class="notice notice-success is-dismissible"><p><?php echo esc_html( $message ); ?></p></div><?php endif; ?>
 	<?php endforeach; ?>
 	<?php if ( isset( $_GET['ecapla_certverify_field_purged'] ) ) : ?>
@@ -63,6 +68,22 @@ if ( $certloom_field_usage_error ) { $certloom_field_usage = array(); }
 		<div class="notice notice-error"><p><?php echo esc_html( $certloom_field_usage_error->get_error_message() ); ?> <?php esc_html_e( 'Field retirement is disabled until usage can be verified safely.', 'certloom' ); ?></p></div>
 	<?php endif; ?>
 
+	<section class="certloom-panel certloom-fields-panel" aria-labelledby="certloom-global-field-defaults-title">
+		<div class="certloom-panel-header"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Issuance defaults', 'certloom' ); ?></span><h2 id="certloom-global-field-defaults-title"><?php esc_html_e( 'Global credential-field defaults', 'certloom' ); ?></h2></div></div>
+		<p class="certloom-section-intro"><?php esc_html_e( 'Choose credential fields that apply by default across Certloom. Issuers, Programs and Batches can inherit or tighten these rules without duplicating the field catalog.', 'certloom' ); ?></p>
+		<?php if ( $certloom_global_contract_error ) : ?><div class="notice notice-error inline"><p><?php echo esc_html( $certloom_global_contract_error->get_error_message() ); ?></p></div><?php endif; ?>
+		<form method="post" action="" class="certloom-scoped-field-editor" data-certloom-scope-field-editor="global">
+			<?php wp_nonce_field( 'certloom_save_global_field_scope' ); ?>
+			<div class="certloom-scoped-field-toolbar"><label><span><?php esc_html_e( 'Add an existing field', 'certloom' ); ?></span><select data-certloom-scope-field-picker><option value=""><?php esc_html_e( 'Choose field…', 'certloom' ); ?></option><?php foreach ( $certloom_scopable_fields as $field ) : $key = sanitize_key( (string) ( $field['key'] ?? '' ) ); if ( '' === $key || ! empty( $certloom_global_rules[ $key ] ) ) { continue; } ?><option value="<?php echo esc_attr( $key ); ?>"><?php echo esc_html( (string) ( $field['label'] ?? $key ) ); ?></option><?php endforeach; ?></select></label><button type="button" class="button" data-certloom-scope-field-add><?php esc_html_e( 'Add field', 'certloom' ); ?></button></div>
+			<div class="certloom-scoped-field-list" data-certloom-scope-field-list>
+			<?php foreach ( $certloom_scopable_fields as $field ) : $key = sanitize_key( (string) ( $field['key'] ?? '' ) ); if ( '' === $key ) { continue; } $rule = (string) ( $certloom_global_rules[ $key ] ?? '' ); ?>
+				<div class="certloom-scoped-field-row" data-certloom-scope-field-row="<?php echo esc_attr( $key ); ?>"<?php echo '' === $rule ? ' hidden' : ''; ?>><div><strong data-certloom-scope-field-label><?php echo esc_html( (string) ( $field['label'] ?? $key ) ); ?></strong><span class="certloom-scoped-field-meta"><?php echo esc_html( (string) ( $field['type'] ?? 'text' ) ); ?> · <?php echo esc_html( (string) ( $field['public_exposure'] ?? 'private' ) ); ?></span></div><label><span class="screen-reader-text"><?php echo esc_html( sprintf( /* translators: %s: credential field label. */ __( 'Global rule for %s', 'certloom' ), (string) ( $field['label'] ?? $key ) ) ); ?></span><select name="global_field_requirement[<?php echo esc_attr( $key ); ?>]" data-certloom-scope-field-rule><option value="" <?php selected( $rule, '' ); ?>><?php esc_html_e( 'Not used', 'certloom' ); ?></option><option value="optional" <?php selected( $rule, 'optional' ); ?>><?php esc_html_e( 'Optional', 'certloom' ); ?></option><option value="required" <?php selected( $rule, 'required' ); ?>><?php esc_html_e( 'Required', 'certloom' ); ?></option></select></label><button type="button" class="button-link-delete" data-certloom-scope-field-remove><?php esc_html_e( 'Remove', 'certloom' ); ?></button></div>
+			<?php endforeach; ?>
+			</div><p class="certloom-scoped-field-empty" data-certloom-scope-field-empty<?php echo array_filter( $certloom_global_rules ) ? ' hidden' : ''; ?>><?php esc_html_e( 'No Global credential-field defaults are configured.', 'certloom' ); ?></p>
+			<?php submit_button( __( 'Save Global defaults', 'certloom' ), 'secondary', 'certloom_save_global_field_scope' ); ?>
+		</form>
+	</section>
+
 	<section class="certloom-panel certloom-fields-panel" aria-labelledby="certloom-active-fields-title">
 		<div class="certloom-panel-header">
 			<div><span class="certloom-eyebrow"><?php esc_html_e( 'Active schema', 'certloom' ); ?></span><h2 id="certloom-active-fields-title"><?php esc_html_e( 'Certificate fields', 'certloom' ); ?></h2></div>
@@ -87,9 +108,9 @@ if ( $certloom_field_usage_error ) { $certloom_field_usage = array(); }
 							<label class="screen-reader-text" for="certloom-field-label-<?php echo esc_attr( $index ); ?>"><?php echo esc_html( sprintf( /* translators: %s: field key. */ __( 'Label for %s', 'certloom' ), $field['key'] ) ); ?></label>
 							<input id="certloom-field-label-<?php echo esc_attr( $index ); ?>" type="text" name="fields[<?php echo esc_attr( $index ); ?>][label]" value="<?php echo esc_attr( $field['label'] ); ?>" class="ecapla-certverify-field-label regular-text" />
 							<code><?php echo esc_html( $field['key'] ); ?></code>
-							<?php $certloom_usage = $certloom_field_usage[ $field['key'] ] ?? array( 'program_count' => 0, 'batch_count' => 0, 'template_count' => 0, 'referenced' => false ); ?>
+							<?php $certloom_usage = $certloom_field_usage[ $field['key'] ] ?? array( 'global_count' => 0, 'issuer_count' => 0, 'program_count' => 0, 'batch_count' => 0, 'template_count' => 0, 'referenced' => false ); ?>
 							<?php if ( ! empty( $certloom_usage['referenced'] ) ) : ?>
-								<small class="description certloom-field-usage"><?php echo esc_html( sprintf( /* translators: %1$d: program count; %2$d: batch count; %3$d: template count. */ __( 'In use: %1$d Programs · %2$d Batch overrides · %3$d Templates', 'certloom' ), absint( $certloom_usage['program_count'] ?? 0 ), absint( $certloom_usage['batch_count'] ?? 0 ), absint( $certloom_usage['template_count'] ?? 0 ) ) ); ?></small>
+								<small class="description certloom-field-usage"><?php echo esc_html( sprintf( /* translators: 1: Global count; 2: Issuer count; 3: Program count; 4: Batch count; 5: Template count. */ __( 'In use: %1$d Global · %2$d Issuers · %3$d Programs · %4$d Batch overrides · %5$d Templates', 'certloom' ), absint( $certloom_usage['global_count'] ?? 0 ), absint( $certloom_usage['issuer_count'] ?? 0 ), absint( $certloom_usage['program_count'] ?? 0 ), absint( $certloom_usage['batch_count'] ?? 0 ), absint( $certloom_usage['template_count'] ?? 0 ) ) ); ?></small>
 							<?php endif; ?>
 						</div>
 						<span class="ecapla-certverify-field-type"><?php echo esc_html( $field['type'] ); ?></span>

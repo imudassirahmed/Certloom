@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Job;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Structured result from one bounded background-job handler slice. */
 final class JobSliceResult {
 	const PROGRESS  = 'progress';

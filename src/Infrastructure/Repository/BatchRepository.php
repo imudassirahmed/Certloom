@@ -38,7 +38,13 @@ final class BatchRepository {
 			return new \WP_Error( 'certloom_batch_create_failed', __( 'Certloom could not create the batch.', 'certloom' ) );
 		}
 
-		return (int) $wpdb->insert_id;
+		$batch_id = (int) $wpdb->insert_id;
+		$assignment = $this->ensure_instructor_assignment( $batch_id, $validated['instructor_signer_id'] ?? null );
+		if ( is_wp_error( $assignment ) ) {
+			$wpdb->delete( SchemaManager::table( 'batches' ), array( 'id' => $batch_id ) );
+			return $assignment;
+		}
+		return $batch_id;
 	}
 
 	/** @param int $id @param array<string,mixed> $data @return true|\WP_Error */
@@ -62,6 +68,10 @@ final class BatchRepository {
 		}
 		$validated['updated_at'] = current_time( 'mysql', true );
 
+		$previous_signer_id = absint( $existing['instructor_signer_id'] ?? 0 );
+		$assignment = $this->ensure_instructor_assignment( $id, $validated['instructor_signer_id'] ?? null );
+		if ( is_wp_error( $assignment ) ) { return $assignment; }
+
 		$generation = ( new DomainGeneration() )->mark_before_mutation();
 		if ( is_wp_error( $generation ) ) {
 			return $generation;
@@ -71,7 +81,12 @@ final class BatchRepository {
 		$wpdb->last_error = '';
 		$result            = $wpdb->update( SchemaManager::table( 'batches' ), $validated, array( 'id' => $id ) );
 		if ( false === $result || '' !== (string) $wpdb->last_error ) {
-			if ( false !== stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
+			$write_error = (string) $wpdb->last_error;
+			// The primary assignment is synchronized before the row write so the
+			// compatibility projection never points at an unassigned signer. Restore
+			// the previous projection on a failed row update.
+			$this->ensure_instructor_assignment( $id, $previous_signer_id );
+			if ( false !== stripos( $write_error, 'duplicate' ) ) {
 				return new \WP_Error( 'certloom_batch_code_duplicate', __( 'That batch code is already in use.', 'certloom' ) );
 			}
 			return new \WP_Error( 'certloom_batch_update_failed', __( 'Certloom could not update the batch.', 'certloom' ) );
@@ -462,11 +477,19 @@ final class BatchRepository {
 		}
 
 		$signer_id = ! empty( $data['instructor_signer_id'] ) ? absint( $data['instructor_signer_id'] ) : null;
+		$instructor = trim( (string) ( $data['instructor_name'] ?? '' ) );
+		if ( $this->text_length( $instructor ) > 255 ) {
+			return new \WP_Error( 'certloom_batch_instructor_invalid', __( 'Instructor name must be 255 characters or fewer.', 'certloom' ) );
+		}
+		if ( ! $signer_id && '' !== $instructor ) {
+			$resolved = ( new SignerRepository() )->find_or_create_lightweight_instructor( $instructor );
+			if ( is_wp_error( $resolved ) ) { return $resolved; }
+			$signer_id = absint( $resolved );
+			$instructor = '';
+		}
 		if ( $signer_id ) {
 			$signer_exists = $this->exists( 'signers', $signer_id );
-			if ( is_wp_error( $signer_exists ) ) {
-				return $signer_exists;
-			}
+			if ( is_wp_error( $signer_exists ) ) { return $signer_exists; }
 			if ( ! $signer_exists ) {
 				return new \WP_Error( 'certloom_batch_instructor_signer_missing', __( 'The selected instructor signer does not exist.', 'certloom' ) );
 			}
@@ -476,11 +499,6 @@ final class BatchRepository {
 		$encoded = ( new SafeJson() )->encode_array( $meta, 'certloom_batch_metadata_invalid', __( 'Batch metadata could not be encoded safely.', 'certloom' ) );
 		if ( is_wp_error( $encoded ) ) {
 			return $encoded;
-		}
-
-		$instructor = trim( (string) ( $data['instructor_name'] ?? '' ) );
-		if ( $this->text_length( $instructor ) > 255 ) {
-			return new \WP_Error( 'certloom_batch_instructor_invalid', __( 'Instructor name must be 255 characters or fewer.', 'certloom' ) );
 		}
 
 		return array(
@@ -520,6 +538,15 @@ final class BatchRepository {
 			unset( $row['metadata_json'] );
 		}
 		return $row;
+	}
+
+	/** @return true|\WP_Error */
+	private function ensure_instructor_assignment( $batch_id, $signer_id ) {
+		$batch_id = absint( $batch_id );
+		$signer_id = absint( $signer_id );
+		if ( ! $batch_id ) { return true; }
+		$result = ( new SignerRepository() )->sync_primary_assignment( $signer_id, 'batch', $batch_id, 'instructor' );
+		return is_wp_error( $result ) ? $result : true;
 	}
 
 	/** @return bool|\WP_Error */

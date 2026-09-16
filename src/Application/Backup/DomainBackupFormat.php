@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Backup;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Versioned line-oriented backup format whose chained hash can resume across requests. */
 final class DomainBackupFormat {
 	const FORMAT = 'certloom-domain-backup';

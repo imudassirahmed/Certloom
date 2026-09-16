@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Contract;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Read model required by public credential verification. */
 interface CredentialQueryRepositoryInterface {
 	/**

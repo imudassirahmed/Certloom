@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Contract;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Provider-neutral remote destination for already-verified Certloom backup bytes. */
 interface BackupDestinationInterface {
 	/** @return string Stable provider key. */

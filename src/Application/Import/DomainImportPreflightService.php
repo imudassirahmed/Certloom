@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Import;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Domain\Credential\StatusService;
 
 /** Complete-file/chunk preflight helper for new-domain imports. Performs no writes. */

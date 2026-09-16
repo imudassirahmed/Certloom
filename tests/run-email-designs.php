@@ -58,12 +58,12 @@ $token_groups=$token_catalog->groups();
 ed_ok(isset($token_groups['recipient']['tokens']['recipient.name']),'Data catalog exposes canonical Recipient fields');
 ed_ok(isset($token_groups['credential']['tokens']['credential.display_number']),'Data catalog exposes canonical Credential fields');
 ed_ok(isset($token_groups['program']['tokens']['batch.name']),'Data catalog exposes Program and Batch fields');
-ed_ok(isset($token_groups['issuer']['tokens']['signer.email']),'Data catalog exposes Issuer and Signer fields');
+ed_ok(isset($token_groups['authority']['tokens']['signer.email']),'Data catalog exposes Issuer and Signer fields');
 ed_ok(isset($token_groups['verification']['tokens']['verification.url']),'Data catalog exposes verification fields');
-ed_same('Postal address',$token_groups['custom']['tokens']['custom:address'],'Data catalog derives configured custom fields');
-ed_same('Department',$token_groups['custom']['tokens']['custom:department'],'Data catalog derives every configured non-system custom field');
-ed_ok(!isset($token_groups['custom']['tokens']['custom:internal_notes']),'system-only fields are not exposed to email merge UI');
-ed_ok(in_array('custom:address',\Certloom\Application\Email\EmailTemplateService::tokens(),true),'Email Template Service accepts the same dynamic custom-field vocabulary exposed by Studio');
+ed_same('Postal address',$token_groups['custom']['tokens']['credential.custom.address'],'Data catalog derives configured custom fields');
+ed_same('Department',$token_groups['custom']['tokens']['credential.custom.department'],'Data catalog derives every configured non-system custom field');
+ed_ok(!isset($token_groups['custom']['tokens']['credential.custom.internal_notes']),'system-only fields are not exposed to email merge UI');
+ed_ok(in_array('credential.custom.address',\Certloom\Application\Email\EmailTemplateService::tokens(),true),'Email Template Service accepts the same dynamic custom-field vocabulary exposed by Studio');
 $presets=(new EmailDesignPresetCatalog())->all();
 ed_same(count(EmailDesignPurposes::all()),count($presets),'one calm starter exists for every supported message purpose');
 $ids=[];$purposes=[];
@@ -111,7 +111,7 @@ ed_has($styled['html_body'],'border-top:3px dashed #778899','compiled divider ap
 ed_has($styled['html_body'],'margin:18px auto 0','compiled divider supports right alignment');
 
 $advanced=$compiler->compile(array(
-	array('type'=>'html','html'=>'<table role="presentation"><tr><td style="padding:8px">{{custom:address}}</td></tr></table><script>alert(1)</script>'),
+	array('type'=>'html','html'=>'<table role="presentation"><tr><td style="padding:8px">{{credential.custom.address}}</td></tr></table><script>alert(1)</script>'),
 	array('type'=>'columns','count'=>3,'ratio'=>'25-50-25','gap'=>18,'columns'=>array(
 		array('kind'=>'image','url'=>'https://example.test/photo.png','alt'=>'Portrait','link'=>'{{verification.url}}','width'=>80,'align'=>'center'),
 		array('kind'=>'text','html'=>'<p><strong>Main text</strong></p>'),
@@ -318,7 +318,7 @@ ed_has($css,'.certloom-container-subsection','Container Background and Border co
 ed_has($js,'renderTokenBrowser(','Data browser is grouped/searchable instead of a fixed token list');
 ed_has($template_service_source,"snapshot['merge']['values']",'Email composition resolves the immutable issued merge map');
 ed_has($template_service_source,'validate_static_attachment_ids','static attachments are validated before Email Studio accepts them');
-ed_has($token_catalog_source,"'custom:' . \$key",'dynamic custom fields are generated from the configured field catalog');
+ed_has($token_catalog_source,"'credential.custom.' . \$key",'dynamic custom fields are generated from the configured field catalog under the canonical credential namespace');
 
 ed_has($repo_source,'certloom_email_design_assigned_pause_blocked','assigned designs cannot be silently unpublished');
 ed_has($repo_source,'certloom_email_design_assigned_purpose_blocked','assigned designs cannot silently change purpose');

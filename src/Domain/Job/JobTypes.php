@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Domain\Job;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Stable machine identifiers for background work implemented by Certloom. */
 final class JobTypes {
 	const DOMAIN_BACKUP            = 'domain_backup';

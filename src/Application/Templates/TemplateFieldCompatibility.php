@@ -33,12 +33,12 @@ final class TemplateFieldCompatibility {
 	 * @param array<string,array<string,mixed>> $catalog
 	 * @return true|\WP_Error
 	 */
-	public function validate( array $layout, array $program_contract, ?array $batch_contract, array $catalog ) {
-		$resolved = $this->contracts->resolve( $program_contract, $batch_contract, $catalog );
+	public function validate( array $layout, array $program_contract, ?array $batch_contract, array $catalog, ?array $global_contract = null, ?array $issuer_contract = null ) {
+		$resolved = $this->contracts->resolve_hierarchy( $global_contract, $issuer_contract, $program_contract, $batch_contract, $catalog );
 		if ( is_wp_error( $resolved ) ) { return $resolved; }
 
 		// A Program that has never adopted FLD-02 remains in legacy free-token mode.
-		if ( empty( $resolved['_meta']['configured'] ) ) { return true; }
+		if ( empty( $resolved['_meta']['configured'] ) && empty( $resolved['_meta']['issuer_configured'] ) && empty( $resolved['_meta']['global_configured'] ) ) { return true; }
 
 		$available = array();
 		foreach ( (array) ( $resolved['fields'] ?? array() ) as $row ) {
@@ -64,8 +64,8 @@ final class TemplateFieldCompatibility {
 		$labels = array_values( array_map( static function ( $row ) { return (string) $row['label']; }, $missing ) );
 		$preview = array_slice( $labels, 0, 3 );
 		$message = count( $preview ) === 1
-			? sprintf( /* translators: %s: field label. */ __( 'This design uses credential field “%s”, but that field is not available in the selected Program/Batch contract. Add the field to Credential fields or remove it from the design before assigning this Template.', 'certloom' ), $preview[0] )
-			: sprintf( /* translators: %s: comma-separated field labels. */ __( 'This design uses credential fields that are not available in the selected Program/Batch contract: %s. Add them to Credential fields or remove them from the design before assigning this Template.', 'certloom' ), implode( ', ', $preview ) );
+			? sprintf( /* translators: %s: field label. */ __( 'This design uses credential field “%s”, but that field is not available in the selected Global/Issuer/Program/Batch contract. Add the field to Credential fields or remove it from the design before assigning this Template.', 'certloom' ), $preview[0] )
+			: sprintf( /* translators: %s: comma-separated field labels. */ __( 'This design uses credential fields that are not available in the selected Global/Issuer/Program/Batch contract: %s. Add them to Credential fields or remove them from the design before assigning this Template.', 'certloom' ), implode( ', ', $preview ) );
 		if ( count( $labels ) > count( $preview ) ) {
 			$message .= ' ' . sprintf( /* translators: %d: additional incompatible fields. */ _n( '%d additional field is also incompatible.', '%d additional fields are also incompatible.', count( $labels ) - count( $preview ), 'certloom' ), count( $labels ) - count( $preview ) );
 		}

@@ -46,7 +46,7 @@ foreach ( $cases as $case ) {
     $rendered = $presenter->present( $preview['render_plan'] );
     $body .= '<section class="fixture" data-preset="' . esc_attr( $preset_key ) . '" data-sample="' . esc_attr( $sample ) . '"><h2>' . esc_html( $preset_key . ' / ' . $sample ) . '</h2>' . $rendered['html'] . '</section>';
 }
-$css = file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' );
+$css = file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/certloom-tokens.css' ) . "\n" . file_get_contents( dirname( __DIR__, 2 ) . '/admin/assets/admin.css' );
 if ( ! is_string( $css ) ) { throw new RuntimeException( 'Cannot read admin CSS.' ); }
 $extra = 'body{margin:0;padding:20px;background:#f6f7f7;font-family:system-ui,sans-serif}.fixture{margin:0 0 30px}.fixture h2{font-size:14px}.fixture .certloom-template-preview-scroll{max-width:calc(100vw - 42px)}#certloom-browser-result{white-space:pre-wrap}';
 $script = <<<'JS'

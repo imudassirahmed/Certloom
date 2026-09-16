@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Rendering;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Hashes the canonical layout plus resolved immutable values and asset bytes. */
 final class RenderRequestFingerprint {
 	private $canonical;

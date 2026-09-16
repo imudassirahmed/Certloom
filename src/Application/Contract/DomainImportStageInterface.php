@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Contract;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /** Durable staging boundary used to carry validated import plans across requests. */
 interface DomainImportStageInterface {
 	/** @return array<string,mixed>|\WP_Error */

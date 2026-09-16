@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Job;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Backup\DomainBackupBuilder;
 use Certloom\Application\Backup\DomainBackupJobHandler;
 use Certloom\Application\DataTools\DomainDataToolsCoordinator;

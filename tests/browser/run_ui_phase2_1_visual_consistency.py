@@ -56,7 +56,7 @@ async def run():
         await ck(await quick.evaluate("e=>getComputedStyle(e).minHeight")=='72px','quickActionCompactHeight')
         editor=page.locator('#header-family .certloom-editor-actions')
         await ck(await editor.evaluate("e=>getComputedStyle(e).backdropFilter")=='none','editorActionBarNoGlass')
-        email_toolbar=page.locator('#email-surface .certloom-designer-toolbar')
+        email_toolbar=page.locator('#email-surface .certloom-email-studio-toolbar')
         await ck(await email_toolbar.evaluate("e=>getComputedStyle(e).backdropFilter")=='none','emailToolbarNoGlass')
         await ck(await email_toolbar.evaluate("e=>getComputedStyle(e).backgroundColor")=='rgb(255, 255, 255)','emailToolbarOpaque')
         await ck(await page.locator('#email-surface').evaluate("e=>getComputedStyle(e).getPropertyValue('--cl-ink').trim()")=='#01133D','emailDoesNotOverrideGlobalInkToken')

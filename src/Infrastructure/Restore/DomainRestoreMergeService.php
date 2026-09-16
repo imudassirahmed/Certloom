@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Restore;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Restore\DomainRestoreConfigurationMerger;
 use Certloom\Application\Contract\TransactionInterface;
 use Certloom\Infrastructure\Backup\DomainBackupRepository;

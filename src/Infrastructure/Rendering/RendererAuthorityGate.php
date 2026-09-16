@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Rendering;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Rendering\RendererRegistry;
 use Certloom\Application\Contract\ArtifactAuthorityGateInterface;
 use Certloom\Application\Rendering\RendererReleaseManifest;

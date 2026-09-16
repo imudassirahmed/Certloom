@@ -83,7 +83,11 @@ final class CredentialLifecycleService {
 
 	/** @return true|\WP_Error */
 	public function revoke( $series_id, array $context = array() ) {
-		return $this->administrative_transition( 'credential.revoked', 'revoke', $series_id, $context );
+		$result = $this->administrative_transition( 'credential.revoked', 'revoke', $series_id, $context );
+		if ( true === $result && function_exists( 'do_action' ) ) {
+			do_action( 'certloom_credential_revoked', absint( $series_id ), $context );
+		}
+		return $result;
 	}
 
 	/** @return true|\WP_Error */

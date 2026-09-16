@@ -78,7 +78,7 @@
 .certloom-public .cvp-status-valid .cvp-status-mark {
   color: var(--cl-valid);
   background: var(--cl-valid-wash);
-  border-radius: 50%;
+  border-radius: var(--cl-r-round);
 }
 
 .certloom-public .cvp-status-revoked .cvp-status-mark,

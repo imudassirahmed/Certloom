@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Contract;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 interface JobRepositoryInterface {
 	/** @return string|\WP_Error */
 	public function create( array $data );

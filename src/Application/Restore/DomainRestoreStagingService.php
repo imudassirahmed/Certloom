@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Application\Restore;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Backup\DomainBackupFormat;
 use Certloom\Application\Contract\DomainRestoreStagingInterface;
 use Certloom\Application\Contract\DomainRestoreWorkspaceInterface;

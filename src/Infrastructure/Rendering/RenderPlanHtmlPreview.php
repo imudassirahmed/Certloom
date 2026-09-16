@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Rendering;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 use Certloom\Application\Rendering\RenderPlanBuilder;
 use Certloom\Application\Rendering\DesignerFontCatalog;
 use InvalidArgumentException;

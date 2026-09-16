@@ -1,6 +1,10 @@
 <?php
 namespace Certloom\Infrastructure\Integration;
 
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 /**
  * Authenticated-encryption boundary for third-party integration credentials.
  *
