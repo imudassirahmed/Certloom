@@ -2474,10 +2474,14 @@ class Ecapla_CertVerify_Admin {
 		$automation_issuer_names  = is_wp_error( $automation_issuer_names ) ? array() : $automation_issuer_names;
 		$automation_program_names = is_wp_error( $automation_program_names ) ? array() : $automation_program_names;
 		$automation_batch_names   = is_wp_error( $automation_batch_names ) ? array() : $automation_batch_names;
+		$automation_runs = new \Certloom\Infrastructure\Email\EmailAutomationRunRepository();
+		$automation_latest_runs = array();
+		foreach ( $email_rules as $rule ) { if ( is_array( $rule ) && ! empty( $rule['id'] ) ) { $automation_latest_runs[ (string) $rule['id'] ] = $automation_runs->latest_for_rule( (string) $rule['id'] ); } }
 
 		$tutor     = ( new \Certloom\Infrastructure\Admin\TutorLmsIntegrationAdmin() )->screen_data();
 		$learndash = ( new \Certloom\Infrastructure\Admin\LearnDashIntegrationAdmin() )->screen_data();
 		$coursera  = ( new \Certloom\Infrastructure\Admin\CourseraIntegrationAdmin() )->screen_data();
+		$webhooks  = ( new \Certloom\Infrastructure\Admin\WebhookIntegrationAdmin() )->screen_data();
 		$credly    = ( new \Certloom\Infrastructure\Admin\CredlyIntegrationAdmin() )->screen_data();
 		$destination_status = array(
 			array( 'label' => __( 'Credly', 'certloom' ), 'icon' => 'dashicons-awards', 'status' => ! empty( $credly['connection']['configured'] ) ? __( 'Connected', 'certloom' ) : __( 'Not connected', 'certloom' ) ),
@@ -2497,6 +2501,12 @@ class Ecapla_CertVerify_Admin {
 				'label'  => __( 'WooCommerce', 'certloom' ),
 				'icon'   => 'dashicons-cart',
 				'status' => class_exists( 'WooCommerce' ) ? __( 'Available on this site', 'certloom' ) : __( 'Not detected', 'certloom' ),
+			),
+
+			array(
+				'label'  => __( 'Webhook / API', 'certloom' ),
+				'icon'   => 'dashicons-rest-api',
+				'status' => ! empty( $webhooks['sources'] ) ? sprintf( /* translators: %d: number of active webhook/API sources. */ _n( '%d active source', '%d active sources', count( array_filter( (array) $webhooks['sources'], static function ( $row ) { return is_array( $row ) && ! empty( $row['active'] ); } ) ), 'certloom' ), count( array_filter( (array) $webhooks['sources'], static function ( $row ) { return is_array( $row ) && ! empty( $row['active'] ); } ) ) ) : __( 'No active sources', 'certloom' ),
 			),
 			array(
 				'label'  => __( 'Coursera', 'certloom' ),

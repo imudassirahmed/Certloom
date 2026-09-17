@@ -46,18 +46,24 @@ final class WooCommerceBridge {
 		}
 		$store = new WooCommerceMappingStore();
 		$items = method_exists( $order, 'get_items' ) ? (array) $order->get_items( 'line_item' ) : array();
-		$processed = 0;
+		$mapped_products = array();
 		foreach ( $items as $item ) {
-			if ( $processed >= self::MAX_MAPPED_ITEMS || ! is_object( $item ) ) { break; }
+			if ( ! is_object( $item ) ) { continue; }
 			$product_id = method_exists( $item, 'get_product_id' ) ? absint( $item->get_product_id() ) : 0;
 			if ( $product_id < 1 ) { continue; }
 			$mapping = $store->find( $product_id );
 			if ( ! is_array( $mapping ) || empty( $mapping['active'] ) ) { continue; }
-			$processed++;
-			if ( ! self::authority_ready() ) {
-				self::record_result( 'blocked', $order_id, $product_id, 'certloom_woocommerce_authority_closed' );
-				continue;
-			}
+			$mapped_products[] = $product_id;
+		}
+		if ( count( $mapped_products ) > self::MAX_MAPPED_ITEMS ) {
+			self::record_result( 'blocked', $order_id, 0, 'certloom_woocommerce_mapped_item_limit' );
+			return;
+		}
+		if ( ! self::authority_ready() && $mapped_products ) {
+			self::record_result( 'blocked', $order_id, (int) $mapped_products[0], 'certloom_woocommerce_authority_closed' );
+			return;
+		}
+		foreach ( $mapped_products as $product_id ) {
 			self::issue_mapped_product( $order, $order_id, $product_id, $user_id, $store );
 		}
 	}

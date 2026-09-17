@@ -254,6 +254,7 @@ $certloom_fields_url      = admin_url( 'admin.php?page=certloom-fields' );
 							$source_label = (string) ( $credential['_credential_source_label'] ?? ( $is_historical ? __( 'Legacy', 'certloom' ) : __( 'Credential', 'certloom' ) ) );
 							$is_legacy = $is_historical || ! empty( $credential['_credential_historical_origin'] );
 							$source_class = $is_legacy ? 'is-legacy' : 'is-credential';
+									$issuance_source_label = trim( (string) ( $credential['_credential_issuance_source_label'] ?? '' ) );
 							$series_id  = absint( $credential['series_id'] ?? 0 );
 							$public_id  = (string) ( $credential['public_id'] ?? '' );
 							$number     = trim( (string) ( $credential['display_number'] ?? '' ) );
@@ -297,7 +298,7 @@ $certloom_fields_url      = admin_url( 'admin.php?page=certloom-fields' );
 								<td data-col="<?php esc_attr_e( 'Credential', 'certloom' ); ?>">
 									<strong class="certloom-credential-title"><a href="<?php echo esc_url( $manage_url ); ?>"><?php echo esc_html( '' !== $number ? $number : __( 'Unnumbered credential', 'certloom' ) ); ?></a></strong>
 									<div class="certloom-credential-row-actions" aria-label="<?php esc_attr_e( 'Credential actions', 'certloom' ); ?>"><?php if ( '' !== $view_url ) : ?><a href="<?php echo esc_url( $view_url ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'View', 'certloom' ); ?></a><?php endif; ?><a href="<?php echo esc_url( $manage_url ); ?>"><?php echo esc_html( $is_historical ? __( 'Manage', 'certloom' ) : __( 'Edit', 'certloom' ) ); ?></a></div>
-									<div class="certloom-credential-secondary certloom-credential-source-meta"><span class="certloom-credential-source <?php echo esc_attr( $source_class ); ?>"><?php echo esc_html( $source_label ); ?></span></div>
+									<div class="certloom-credential-secondary certloom-credential-source-meta"><span class="certloom-credential-source <?php echo esc_attr( $source_class ); ?>"><?php echo esc_html( $source_label ); ?></span><?php if ( '' !== $issuance_source_label ) : ?><span class="certloom-credential-source is-origin"><?php echo esc_html( $issuance_source_label ); ?></span><?php endif; ?></div>
 								</td>
 								<td data-col="<?php esc_attr_e( 'Recipient', 'certloom' ); ?>"><strong><?php echo esc_html( (string) ( $credential['display_name'] ?: '—' ) ); ?></strong><?php if ( ! empty( $credential['recipient_email'] ) ) : ?><div class="certloom-credential-secondary"><?php echo esc_html( (string) $credential['recipient_email'] ); ?></div><?php endif; ?></td>
 								<td data-col="<?php esc_attr_e( 'Program / batch', 'certloom' ); ?>"><?php echo esc_html( '' !== $program ? $program : '—' ); ?><?php if ( '' !== $batch ) : ?><div class="certloom-credential-secondary"><?php echo esc_html( $batch ); ?></div><?php endif; ?></td>

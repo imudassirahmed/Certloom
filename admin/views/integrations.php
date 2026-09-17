@@ -82,6 +82,29 @@ $credly_connection   = is_array( $credly['connection'] ?? null ) ? $credly['conn
 $credly_configured   = ! empty( $credly_connection['configured'] );
 $credly_mappings     = (array) ( $credly['mappings'] ?? array() );
 $credly_recent       = (array) ( $credly['recent'] ?? array() );
+$certloom_last_event = static function ( $status ) {
+	$last = is_array( $status['last_result'] ?? null ) ? $status['last_result'] : array();
+	if ( ! $last ) { return array( 'label' => __( 'No activity recorded yet', 'certloom' ), 'code' => '', 'time' => '' ); }
+	$key = sanitize_key( (string) ( $last['status'] ?? '' ) );
+	$labels = array(
+		'issued' => __( 'Issued', 'certloom' ),
+		'replayed' => __( 'Already issued', 'certloom' ),
+		'blocked' => __( 'Blocked', 'certloom' ),
+		'failed' => __( 'Failed', 'certloom' ),
+	);
+	return array(
+		'label' => $labels[ $key ] ?? __( 'Recorded', 'certloom' ),
+		'code' => sanitize_key( (string) ( $last['error_code'] ?? '' ) ),
+		'time' => sanitize_text_field( (string) ( $last['finished_at'] ?? '' ) ),
+	);
+};
+$certloom_render_last_event = static function ( $status ) use ( $certloom_last_event ) {
+	$event = $certloom_last_event( is_array( $status ) ? $status : array() );
+	echo '<div class="certloom-integration-last-event"><span>' . esc_html__( 'Last event', 'certloom' ) . '</span><strong>' . esc_html( (string) $event['label'] ) . '</strong>';
+	if ( '' !== (string) $event['code'] ) { echo '<code>' . esc_html( (string) $event['code'] ) . '</code>'; }
+	if ( '' !== (string) $event['time'] ) { echo '<small>' . esc_html( (string) $event['time'] ) . '</small>'; }
+	echo '</div>';
+};
 ?>
 <div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-flow-workspace certloom-integrations-workspace">
 	<section class="certloom-workspace-hero" aria-labelledby="certloom-integrations-title">
@@ -122,7 +145,7 @@ $credly_recent       = (array) ( $credly['recent'] ?? array() );
 		<article class="certloom-integration-source-card <?php echo $available ? 'is-available' : ''; ?>">
 			<div class="certloom-integration-source-card-top"><span class="certloom-source-icon dashicons <?php echo esc_attr( $source['icon'] ); ?>" aria-hidden="true"></span><span class="certloom-state-pill <?php echo $available ? 'is-success' : ''; ?>"><?php echo $available ? esc_html__( 'Available', 'certloom' ) : esc_html__( 'Not detected', 'certloom' ); ?></span></div>
 			<h2><?php echo esc_html( $source['label'] ); ?></h2><p><?php echo esc_html( $source['desc'] ); ?></p>
-			<div class="certloom-integration-source-meta"><strong><?php echo esc_html( number_format_i18n( $count ) ); ?></strong><span><?php esc_html_e( 'active mappings', 'certloom' ); ?></span></div>
+			<div class="certloom-integration-source-meta"><strong><?php echo esc_html( number_format_i18n( $count ) ); ?></strong><span><?php esc_html_e( 'active mappings', 'certloom' ); ?></span></div><?php $certloom_render_last_event( $status ); ?>
 			<?php if ( $available ) : ?><a class="certloom-inline-link" href="#certloom-<?php echo esc_attr( $source_key ); ?>-setup"><?php esc_html_e( 'Configure', 'certloom' ); ?> <span aria-hidden="true">→</span></a><?php else : ?><span class="certloom-muted-link"><?php esc_html_e( 'Install or activate the source plugin to connect it.', 'certloom' ); ?></span><?php endif; ?>
 		</article>
 		<?php endforeach; ?>
@@ -130,14 +153,14 @@ $credly_recent       = (array) ( $credly['recent'] ?? array() );
 		<article class="certloom-integration-source-card <?php echo $coursera_configured ? 'is-available' : 'is-external'; ?>">
 			<div class="certloom-integration-source-card-top"><span class="certloom-source-icon dashicons dashicons-cloud" aria-hidden="true"></span><span class="certloom-state-pill <?php echo $coursera_configured ? 'is-success' : ''; ?>"><?php echo $coursera_configured ? esc_html__( 'Connected', 'certloom' ) : esc_html__( 'Set up connection', 'certloom' ); ?></span></div>
 			<h2><?php esc_html_e( 'Coursera', 'certloom' ); ?></h2><p><?php esc_html_e( 'Receive verified course-completion xAPI events and link learners through their explicit External ID.', 'certloom' ); ?></p>
-			<div class="certloom-integration-source-meta"><strong><?php echo esc_html( number_format_i18n( count( $coursera_mappings ) ) ); ?></strong><span><?php esc_html_e( 'course mappings', 'certloom' ); ?></span></div>
+			<div class="certloom-integration-source-meta"><strong><?php echo esc_html( number_format_i18n( count( $coursera_mappings ) ) ); ?></strong><span><?php esc_html_e( 'course mappings', 'certloom' ); ?></span></div><?php $certloom_render_last_event( (array) ( $coursera['status'] ?? array() ) ); ?>
 			<a class="certloom-inline-link" href="#certloom-coursera-setup"><?php esc_html_e( 'Configure', 'certloom' ); ?> <span aria-hidden="true">→</span></a>
 		</article>
 
 		<article class="certloom-integration-source-card <?php echo $webhook_sources ? 'is-available' : 'is-external'; ?>">
 			<div class="certloom-integration-source-card-top"><span class="certloom-source-icon dashicons dashicons-rest-api" aria-hidden="true"></span><span class="certloom-state-pill <?php echo $webhook_sources ? 'is-success' : ''; ?>"><?php echo $webhook_sources ? esc_html__( 'Ready', 'certloom' ) : esc_html__( 'Create endpoint', 'certloom' ); ?></span></div>
 			<h2><?php esc_html_e( 'Webhook / API', 'certloom' ); ?></h2><p><?php esc_html_e( 'Connect another trusted system with a signed completion webhook. The sender provides only an event ID, Recipient External ID and completion time.', 'certloom' ); ?></p>
-			<div class="certloom-integration-source-meta"><strong><?php echo esc_html( number_format_i18n( count( $webhook_sources ) ) ); ?></strong><span><?php esc_html_e( 'endpoints', 'certloom' ); ?></span></div>
+			<div class="certloom-integration-source-meta"><strong><?php echo esc_html( number_format_i18n( count( $webhook_sources ) ) ); ?></strong><span><?php esc_html_e( 'endpoints', 'certloom' ); ?></span></div><?php $certloom_render_last_event( (array) ( $webhooks['status'] ?? array() ) ); ?>
 			<a class="certloom-inline-link" href="#certloom-webhook-setup"><?php esc_html_e( 'Configure', 'certloom' ); ?> <span aria-hidden="true">→</span></a>
 		</article>
 

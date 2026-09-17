@@ -16,15 +16,19 @@ final class EmailAutomationListener {
 	private $rules;
 	/** @var EmailDeliveryRepository */
 	private $repository;
+	/** @var EmailAutomationRunRepository */
+	private $runs;
 
 	public function __construct(
 		EmailDeliveryCoordinator $delivery,
 		?EmailAutomationRuleRepository $rules = null,
-		?EmailDeliveryRepository $repository = null
+		?EmailDeliveryRepository $repository = null,
+		?EmailAutomationRunRepository $runs = null
 	) {
 		$this->delivery   = $delivery;
 		$this->rules      = $rules ?: new EmailAutomationRuleRepository();
 		$this->repository = $repository ?: new EmailDeliveryRepository();
+		$this->runs       = $runs ?: new EmailAutomationRunRepository();
 	}
 
 	/** @return void */
@@ -46,15 +50,14 @@ final class EmailAutomationListener {
 		$issuer_id  = absint( $snapshot['issuer']['id'] ?? 0 );
 		$program_id = absint( $snapshot['program']['id'] ?? 0 );
 		$batch_id   = absint( $snapshot['batch']['id'] ?? 0 );
-		if ( ! $program_id ) { return; }
+		$rule = $this->rules->best_matching( $issuer_id, $program_id, $batch_id, $source_type );
+		if ( ! is_array( $rule ) ) { return; }
 		$destination = sanitize_email( (string) ( $snapshot['recipient']['email'] ?? '' ) );
 		if ( '' === $destination ) {
+			$this->runs->record( (string) $rule['id'], absint( $version_id ), (string) $source_type, 'skipped', 'recipient_email_missing' );
 			do_action( 'certloom_email_automation_skipped', 'recipient_email_missing', absint( $version_id ), (string) $source_type );
 			return;
 		}
-
-		$rule = $this->rules->best_matching( $issuer_id, $program_id, $batch_id, $source_type );
-		if ( ! is_array( $rule ) ) { return; }
 
 		$result = $this->delivery->enqueue(
 			absint( $version_id ),
@@ -75,9 +78,11 @@ final class EmailAutomationListener {
 			);
 		}
 		if ( is_wp_error( $result ) ) {
+			$this->runs->record( (string) $rule['id'], absint( $version_id ), (string) $source_type, 'failed', (string) $result->get_error_code() );
 			do_action( 'certloom_email_automation_failed', (string) $rule['id'], $result, absint( $version_id ), (string) $source_ref );
 			return;
 		}
+		$this->runs->record( (string) $rule['id'], absint( $version_id ), (string) $source_type, 'queued', '' );
 		do_action( 'certloom_email_automation_queued', (string) $rule['id'], (string) $result, absint( $version_id ) );
 	}
 }

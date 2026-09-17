@@ -130,6 +130,10 @@ final class EmailAutomationRuleRepository {
 		if ( ! in_array( $source_type, $allowed, true ) ) {
 			return new \WP_Error( 'certloom_email_rule_source_invalid', __( 'Choose a supported issuance source.', 'certloom' ) );
 		}
+		$updated_at = trim( (string) ( $rule['updated_at'] ?? '' ) );
+		if ( $generate_id || ! preg_match( '/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $updated_at ) ) {
+			$updated_at = current_time( 'mysql', true );
+		}
 		return array(
 			'id'          => $id,
 			'name'        => $name,
@@ -140,7 +144,7 @@ final class EmailAutomationRuleRepository {
 			'batch_id'    => absint( $rule['batch_id'] ?? 0 ),
 			'legacy_template_id' => $legacy_template_id,
 			'source_type' => $source_type,
-			'updated_at'  => current_time( 'mysql', true ),
+			'updated_at'  => $updated_at,
 		);
 	}
 }

@@ -1,3 +1,6 @@
+= 1.7.0-alpha.4.76 =
+* Audit hardening: show immutable original issuance provenance in credential lists, add privacy-safe integration/automation operational evidence, preserve automation timestamps on reads, support global automation for independent credentials, and fail closed before oversized WooCommerce mapped-order issuance.
+
 = 1.7.0-alpha.4.74 =
 * Audit hardening: synchronize plugin header/runtime/readme release identity with a fail-closed build assertion, default the review admin preview off, require is_uploaded_file() for Bulk CSV uploads, and extend direct-access guards across browser-executable production PHP.
 * Credential rendering: add immutable issuer.logo / issuer.seal sources for schema-v4 Image/Logo elements with fail-closed media resolution so multi-issuer branding can render without weakening artifact authority.

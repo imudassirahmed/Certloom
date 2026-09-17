@@ -571,9 +571,9 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 		$programs   = SchemaManager::table( 'programs' );
 		$batches    = SchemaManager::table( 'batches' );
 		$issuers    = SchemaManager::table( 'issuers' );
-		$joins      = ' FROM %i s LEFT JOIN %i v ON v.id=s.current_version_id AND v.series_id=s.id LEFT JOIN %i r ON r.id=s.recipient_id LEFT JOIN %i p ON p.id=s.program_id LEFT JOIN %i b ON b.id=s.batch_id LEFT JOIN %i i ON i.id=s.issuer_id';
+		$joins      = ' FROM %i s LEFT JOIN %i v ON v.id=s.current_version_id AND v.series_id=s.id LEFT JOIN %i ov ON ov.series_id=s.id AND ov.version_number=1 LEFT JOIN %i r ON r.id=s.recipient_id LEFT JOIN %i p ON p.id=s.program_id LEFT JOIN %i b ON b.id=s.batch_id LEFT JOIN %i i ON i.id=s.issuer_id';
 		$where_sql  = $where ? ' WHERE ' . implode( ' AND ', $where ) : '';
-		$base_args  = array( $series, $versions, $recipients, $programs, $batches, $issuers );
+		$base_args  = array( $series, $versions, $versions, $recipients, $programs, $batches, $issuers );
 
 		$wpdb->last_error = '';
 		$total = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*)' . $joins . $where_sql, array_merge( $base_args, $args ) ) );
@@ -622,7 +622,7 @@ final class CredentialRepository implements CredentialRepositoryInterface, Crede
 				break;
 		}
 
-		$sql = 'SELECT s.id AS series_id, s.public_id, s.recipient_id, s.program_id, s.batch_id, s.issuer_id, s.current_version_id, s.administrative_state, s.compliance_state, s.visibility, s.created_at AS series_created_at, s.updated_at AS series_updated_at, r.display_name, r.email AS recipient_email, p.title AS program_title, p.code AS program_code, b.name AS batch_name, b.code AS batch_code, i.name AS issuer_name, v.id AS version_id, v.version_number, v.previous_version_id, v.display_number, v.issuance_state, v.legacy_expired, v.valid_from, v.issued_at, v.expires_at, v.grade, v.source_type, v.source_idempotency_key, v.updated_at AS version_updated_at' . $joins . $where_sql . ' ORDER BY ' . $order_clause . ' LIMIT %d OFFSET %d';
+		$sql = 'SELECT s.id AS series_id, s.public_id, s.recipient_id, s.program_id, s.batch_id, s.issuer_id, s.current_version_id, s.administrative_state, s.compliance_state, s.visibility, s.created_at AS series_created_at, s.updated_at AS series_updated_at, r.display_name, r.email AS recipient_email, p.title AS program_title, p.code AS program_code, b.name AS batch_name, b.code AS batch_code, i.name AS issuer_name, v.id AS version_id, v.version_number, v.previous_version_id, v.display_number, v.issuance_state, v.legacy_expired, v.valid_from, v.issued_at, v.expires_at, v.grade, v.source_type, v.source_ref, v.source_idempotency_key, v.updated_at AS version_updated_at, ov.source_type AS origin_source_type, ov.source_ref AS origin_source_ref, ov.source_idempotency_key AS origin_source_idempotency_key' . $joins . $where_sql . ' ORDER BY ' . $order_clause . ' LIMIT %d OFFSET %d';
 		$wpdb->last_error = '';
 		$items = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( $base_args, $args, array( $per_page, $offset ) ) ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- ORDER BY is assembled exclusively from a strict switch over internal column expressions and ASC/DESC.
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $items ) ) {

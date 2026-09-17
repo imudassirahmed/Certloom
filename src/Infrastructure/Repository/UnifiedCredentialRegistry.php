@@ -39,9 +39,13 @@ final class UnifiedCredentialRegistry {
 		if ( is_wp_error( $current ) ) { return $current; }
 		$current_items = array();
 		foreach ( (array) ( $current['items'] ?? array() ) as $row ) {
-			$migrated_historical = 'certloom_legacy' === (string) ( $row['source_type'] ?? '' );
+			$origin_source = (string) ( $row['origin_source_type'] ?? $row['source_type'] ?? '' );
+			$origin_ref    = (string) ( $row['origin_source_ref'] ?? $row['source_ref'] ?? '' );
+			$migrated_historical = 'certloom_legacy' === $origin_source;
 			$row['_credential_source']       = 'current';
 			$row['_credential_source_label'] = $migrated_historical ? __( 'Legacy', 'certloom' ) : __( 'Credential', 'certloom' );
+			$row['_credential_issuance_source_key'] = $this->issuance_source_key( $origin_source, $origin_ref );
+			$row['_credential_issuance_source_label'] = $this->issuance_source_label( $origin_source, $origin_ref );
 			$row['_credential_historical_origin'] = $migrated_historical;
 			$row['_credential_sort_at']      = $this->sort_value( (string) ( $row['series_updated_at'] ?? $row['version_updated_at'] ?? '' ), (string) ( $row['issued_at'] ?? '' ) );
 			$row['entry_created_at']          = (string) ( $row['series_created_at'] ?? '' );
@@ -61,6 +65,8 @@ final class UnifiedCredentialRegistry {
 			$legacy_item = array(
 				'_credential_source'       => 'historical',
 				'_credential_source_label' => __( 'Legacy', 'certloom' ),
+				'_credential_issuance_source_key' => 'legacy',
+				'_credential_issuance_source_label' => __( 'Legacy import', 'certloom' ),
 				'_credential_sort_at'      => $this->sort_value( (string) ( $row['created_at'] ?? '' ), (string) ( $row['issue_date'] ?? '' ) ),
 				'legacy_id'                => absint( $row['id'] ?? 0 ),
 				'series_id'                => 0,
@@ -147,6 +153,37 @@ final class UnifiedCredentialRegistry {
 			$page++;
 		} while ( count( $items ) < $needed && count( $items ) < $total && ! empty( $rows ) );
 		return array( 'items' => array_slice( $items, 0, $needed ), 'total' => absint( $total ) );
+	}
+
+	/** @return string */
+	private function issuance_source_key( $source_type, $source_ref ) {
+		$source_type = sanitize_key( (string) $source_type );
+		$source_ref  = trim( (string) $source_ref );
+		if ( 'lms_integration' === $source_type && preg_match( '/^([a-z][a-z0-9_-]*):/', $source_ref, $m ) ) { return sanitize_key( $m[1] ); }
+		$map = array( 'manual_admin' => 'manual', 'bulk_admin' => 'bulk', 'certloom_csv' => 'csv', 'certloom_legacy' => 'legacy' );
+		return isset( $map[ $source_type ] ) ? $map[ $source_type ] : ( '' !== $source_type ? $source_type : 'unknown' );
+	}
+
+	/** @return string */
+	private function issuance_source_label( $source_type, $source_ref ) {
+		$key = $this->issuance_source_key( $source_type, $source_ref );
+		$labels = array(
+			'tutor_lms' => __( 'Tutor LMS', 'certloom' ),
+			'learndash' => __( 'LearnDash', 'certloom' ),
+			'woocommerce' => __( 'WooCommerce', 'certloom' ),
+			'coursera' => __( 'Coursera', 'certloom' ),
+			'webhook' => __( 'Webhook / API', 'certloom' ),
+			'manual' => __( 'Manual', 'certloom' ),
+			'bulk' => __( 'Bulk', 'certloom' ),
+			'csv' => __( 'CSV import', 'certloom' ),
+			'legacy' => __( 'Legacy import', 'certloom' ),
+		);
+		if ( isset( $labels[ $key ] ) ) { return $labels[ $key ]; }
+		if ( 'unknown' === $key ) { return __( 'Unknown source', 'certloom' ); }
+		$human = ucwords( str_replace( array( '_', '-' ), ' ', $key ) );
+		$human = preg_replace( '/\bLms\b/', 'LMS', $human );
+		$human = preg_replace( '/\bApi\b/', 'API', $human );
+		return trim( (string) $human );
 	}
 
 	/** @return string */
