@@ -136,7 +136,7 @@ $brand_mark = CERTLOOM_URL . 'admin/assets/certloom-brand-mark.png';
 						?><optgroup label="<?php esc_attr_e( 'Local device fonts', 'certloom' ); ?>"><option value="<?php echo esc_attr( $current_theme_font ); ?>" selected data-font-label="<?php echo esc_attr( $font_label ); ?>"><?php echo esc_html( $font_label . ' · ' . __( 'saved local font', 'certloom' ) ); ?></option></optgroup><?php
 					endif;
 					?>
-				</select><small class="certloom-font-availability-note" data-certloom-email-font-note><?php esc_html_e( 'Local/system fonts only. Installed fonts are detected on this device; outgoing email keeps a safe fallback stack.', 'certloom' ); ?></small></label>
+				</select><small class="certloom-font-availability-note" data-certloom-email-font-note><?php esc_html_e( 'Local/system and site-local custom fonts. Custom web fonts are included only when used; unsupported email clients keep the safe fallback stack.', 'certloom' ); ?></small></label>
 				<label><span><?php esc_html_e( 'Width', 'certloom' ); ?></span><input type="number" min="480" max="760" step="10" name="theme_email_width" value="<?php echo esc_attr( absint( $theme['email_width'] ?? 640 ) ); ?>" data-certloom-theme></label>
 				<label><span><?php esc_html_e( 'Corners', 'certloom' ); ?></span><input type="number" min="0" max="32" name="theme_border_radius" value="<?php echo esc_attr( absint( $theme['border_radius'] ?? 12 ) ); ?>" data-certloom-theme></label>
 			</div>

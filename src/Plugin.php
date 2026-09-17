@@ -90,6 +90,7 @@ final class Plugin {
 		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() && is_admin() ) {
 			( new \Certloom\Infrastructure\Admin\DomainAdmin() )->register();
 			( new \Certloom\Infrastructure\Admin\DomainStructureAdmin() )->register();
+			( new \Certloom\Infrastructure\Admin\CustomFontAdmin() )->register();
 			( new \Certloom\Infrastructure\Admin\TemplateAdmin() )->register();
 			( new \Certloom\Infrastructure\Admin\EmailDesignAdmin() )->register();
 			( new \Certloom\Infrastructure\Admin\DesignRulesAdmin() )->register();

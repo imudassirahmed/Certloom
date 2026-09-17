@@ -682,6 +682,48 @@ final class EmailDesignCompiler {
 		return $normalized ? $normalized : self::default_blocks();
 	}
 
+	/** Collect custom font stacks actually referenced by the normalized design. @return array<string,bool> */
+	private function used_font_stacks( array $theme, array $blocks ) {
+		$used = array();
+		if ( ! empty( $theme['font_family'] ) ) { $used[ (string) $theme['font_family'] ] = true; }
+		$walk = function( array $items ) use ( &$walk, &$used ) {
+			foreach ( $items as $block ) {
+				if ( ! is_array( $block ) ) { continue; }
+				$style = isset( $block['style'] ) && is_array( $block['style'] ) ? $block['style'] : array();
+				if ( ! empty( $style['font_family'] ) ) { $used[ (string) $style['font_family'] ] = true; }
+				if ( 'container' === (string) ( $block['type'] ?? '' ) && ! empty( $block['children'] ) && is_array( $block['children'] ) ) { $walk( $block['children'] ); }
+			}
+		};
+		$walk( $blocks );
+		return $used;
+	}
+
+	/**
+	 * Emit only the site-local custom faces the current email actually uses.
+	 * Unsupported mail clients keep the existing safe fallback stack.
+	 * @return string
+	 */
+	private function custom_font_face_css( array $theme, array $blocks ) {
+		$used = $this->used_font_stacks( $theme, $blocks );
+		if ( empty( $used ) || ! class_exists( DesignerFontCatalog::class ) ) { return ''; }
+		$rules = array();
+		foreach ( ( new DesignerFontCatalog() )->definitions() as $definition ) {
+			if ( empty( $definition['custom'] ) || empty( $definition['css'] ) || empty( $definition['preview_family'] ) || empty( $definition['faces'] ) || ! isset( $used[ (string) $definition['css'] ] ) ) { continue; }
+			$family = (string) $definition['preview_family'];
+			if ( ! preg_match( '/^[A-Za-z0-9_\-]{1,96}$/', $family ) ) { continue; }
+			foreach ( (array) $definition['faces'] as $face ) {
+				$format = strtolower( (string) ( $face['format'] ?? '' ) );
+				$url = esc_url( (string) ( $face['url'] ?? '' ) );
+				$weight = (int) ( $face['weight'] ?? 400 );
+				$style = 'italic' === (string) ( $face['style'] ?? '' ) ? 'italic' : 'normal';
+				if ( '' === $url || ! in_array( $format, array( 'ttf', 'otf' ), true ) || $weight < 100 || $weight > 900 || 0 !== $weight % 100 ) { continue; }
+				$format_label = 'otf' === $format ? 'opentype' : 'truetype';
+				$rules[] = '@font-face{font-family:"' . $family . '";src:url("' . $url . '") format("' . $format_label . '");font-weight:' . $weight . ';font-style:' . $style . ';font-display:swap;}';
+			}
+		}
+		return implode( '', $rules );
+	}
+
 	/** @return string */
 	private function rgba_color( $hex, $opacity ) {
 		$hex = sanitize_hex_color( (string) $hex );
@@ -922,7 +964,8 @@ final class EmailDesignCompiler {
 			$content_bg .= 'background-image:' . $content_image . ';background-size:' . esc_attr( $theme['content_background_size'] ) . ';background-position:' . esc_attr( $theme['content_background_position'] ) . ';background-repeat:' . esc_attr( $theme['content_background_repeat'] ) . ';';
 		}
 
-		$responsive = '<style>@media only screen and (max-width:600px){.certloom-email-stack-cell{display:block!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;}}</style>';
+		$custom_font_css = $this->custom_font_face_css( $theme, $blocks );
+		$responsive = '<style>' . $custom_font_css . '@media only screen and (max-width:600px){.certloom-email-stack-cell{display:block!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;}}</style>';
 		$html       = $responsive
 			. '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"' . $page_attr . ' style="width:100%;' . $page_bg . 'margin:0;padding:0;">'
 			. '<tr><td align="center" style="padding:28px 14px;">'

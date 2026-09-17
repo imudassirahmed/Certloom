@@ -42,6 +42,6 @@ $exact=new FontManifest();
 $manifest=array('schema'=>FontManifest::SCHEMA,'version'=>FontManifest::VERSION,'families'=>array('sans-serif'=>array('400-normal'=>array('faces'=>array(array('sha256'=>str_repeat('a',64),'format'=>'ttf','coverage'=>array('U+0000-024F')))))));
 $resolved=array('elements'=>array(array('type'=>'text','text'=>'Certificate','style'=>array('font_family'=>'serif','font_weight'=>400,'italic'=>false))));
 $blocked=false; try{$exact->assert_document_supported($resolved,$manifest);}catch(Throwable $e){$blocked=true;} f02($blocked,'artifact FontManifest still fails closed when selected family exact bytes are not declared');
-f02(strpos($admin,'No remote font URL is accepted')!==false&&strpos($admin,'Installed fonts are detected in the browser')!==false,'administrator copy states the local-only and exact-renderer font boundary');
+f02(strpos($admin,'site-local custom TTF/OTF uploads')!==false&&strpos($admin,'Production certificate artifacts still fail closed')!==false,'administrator copy states custom-font authoring and exact-renderer boundaries');
 f02(strpos($js,'https://')===false,'Designer font authoring adds no remote URL dependency');
 echo "\n{$checks} FONT-02A checks, {$fail} failures\n"; exit($fail?1:0);

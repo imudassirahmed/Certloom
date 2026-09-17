@@ -68,7 +68,9 @@ final class DesignerFontCatalog {
 			'rockwell' => array( 'label' => 'Rockwell', 'css' => 'Rockwell,"Courier New",serif', 'group' => 'Display', 'local_names' => array( 'Rockwell' ) ),
 		);
 
-		return $this->with_wordpress_fonts( $definitions );
+		$definitions = $this->with_wordpress_fonts( $definitions );
+		if ( class_exists( CustomFontLibrary::class ) ) { foreach ( ( new CustomFontLibrary() )->designer_definitions() as $key => $definition ) { $definitions[ $key ] = $definition; } }
+		return $definitions;
 	}
 
 	/**

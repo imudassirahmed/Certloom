@@ -13,7 +13,8 @@
 	function registrySnapshot( value ) { try { return JSON.parse( JSON.stringify( value || {} ) ); } catch ( error ) { return {}; } }
 	function deepFreeze( value ) { if ( ! value || 'object' !== typeof value || Object.isFrozen( value ) ) { return value; } Object.freeze( value ); Object.keys( value ).forEach( function ( key ) { deepFreeze( value[ key ] ); } ); return value; }
 	var ELEMENT_REGISTRY = deepFreeze( registrySnapshot( window.certloomTemplateElementRegistry ) );
-	var FONT_CATALOG = registrySnapshot( window.certloomTemplateFontCatalog );
+	var FONT_CATALOG = window.certloomTemplateFontCatalog && 'object' === typeof window.certloomTemplateFontCatalog ? window.certloomTemplateFontCatalog : {};
+	window.certloomTemplateFontCatalog = FONT_CATALOG;
 	var FONT_AVAILABILITY = {};
 	var LOCAL_FONT_GROUP = 'Local device fonts';
 	function refreshFontAvailabilityLabels( context ) {
@@ -26,22 +27,29 @@
 		}
 	}
 	function probeLocalFontAvailability() {
-		Object.keys( FONT_CATALOG || {} ).forEach( function ( key ) {
-			var definition = FONT_CATALOG[ key ] || {};
-			if ( definition.generic ) { FONT_AVAILABILITY[ key ] = true; refreshFontAvailabilityLabels(); return; }
-			FONT_AVAILABILITY[ key ] = false; var names = Array.isArray( definition.local_names ) ? definition.local_names.slice() : [];
-			if ( 'function' !== typeof FontFace || ! names.length ) { return; }
-			var probeNext = function () {
-				if ( ! names.length || true === FONT_AVAILABILITY[ key ] ) { refreshFontAvailabilityLabels(); return; }
-				var name = String( names.shift() || '' ); var escaped = name.replace( /["\\]/g, '\\$&' );
-				try {
-					var face = new FontFace( '__certloom_local_probe_' + key.replace( /[^a-z0-9_-]/gi, '_' ), 'local("' + escaped + '")' );
-					face.load().then( function () { FONT_AVAILABILITY[ key ] = true; refreshFontAvailabilityLabels(); }, probeNext );
-				} catch ( error ) { probeNext(); }
-			};
-			probeNext();
-		} );
+		var queue = Object.keys( FONT_CATALOG || {} );
+		var schedule = 'function' === typeof window.requestIdleCallback ? function ( cb ) { window.requestIdleCallback( cb, { timeout: 700 } ); } : function ( cb ) { window.setTimeout( function () { cb( { timeRemaining: function () { return 8; } } ); }, 60 ); };
+		var work = function ( deadline ) {
+			var budget = 3;
+			while ( queue.length && budget-- > 0 && ( ! deadline || 'function' !== typeof deadline.timeRemaining || deadline.timeRemaining() > 2 ) ) {
+				( function ( key ) {
+					var definition = FONT_CATALOG[ key ] || {};
+					if ( definition.generic || definition.custom ) { FONT_AVAILABILITY[ key ] = true; return; }
+					var names = Array.isArray( definition.local_names ) ? definition.local_names.slice( 0, 2 ) : [];
+					if ( 'function' !== typeof FontFace || ! names.length ) { FONT_AVAILABILITY[ key ] = false; return; }
+					var name = String( names[ 0 ] || '' ), escaped = name.replace( /["\\]/g, '\\$&' );
+					try {
+						var face = new FontFace( '__certloom_local_probe_' + key.replace( /[^a-z0-9_-]/gi, '_' ), 'local("' + escaped + '")' );
+						face.load().then( function () { FONT_AVAILABILITY[ key ] = true; refreshFontAvailabilityLabels(); }, function () { FONT_AVAILABILITY[ key ] = false; } );
+					} catch ( error ) { FONT_AVAILABILITY[ key ] = false; }
+				} )( queue.shift() );
+			}
+			refreshFontAvailabilityLabels();
+			if ( queue.length ) { schedule( work ); }
+		};
+		schedule( work );
 	}
+
 
 	function base32LocalFontName( name ) {
 		if ( 'function' !== typeof TextEncoder ) { return ''; }
@@ -93,6 +101,14 @@
 		} );
 	}
 
+	function ensureCustomFontsFromLayout( layout ) {
+		if ( ! layout || ! Array.isArray( layout.elements ) || ! window.CertloomFontPicker ) { return; }
+		var used = {};
+		var inspect = function ( style ) { var key = style && style.font_family ? String( style.font_family ).toLowerCase() : ''; if ( key && FONT_CATALOG[ key ] && FONT_CATALOG[ key ].custom ) { used[ key ] = true; } };
+		layout.elements.forEach( function ( element ) { if ( ! element || 'object' !== typeof element ) { return; } inspect( element.style ); if ( Array.isArray( element.runs ) ) { element.runs.forEach( function ( run ) { if ( run && 'object' === typeof run ) { inspect( run.style ); } } ); } } );
+		Object.keys( used ).forEach( function ( key ) { window.CertloomFontPicker.loadCustom( FONT_CATALOG[ key ], key ); } );
+	}
+
 	function syncLocalFontOptions( context ) {
 		context = context || document;
 		var localEntries = Object.keys( FONT_CATALOG ).filter( function ( key ) { return FONT_CATALOG[ key ] && FONT_CATALOG[ key ].local_device; } ).sort( function ( a, b ) { return String( FONT_CATALOG[ a ].label ).localeCompare( String( FONT_CATALOG[ b ].label ) ); } );
@@ -118,7 +134,7 @@
 		try {
 			var faces = await window.queryLocalFonts(); var families = {};
 			for ( var i = 0; i < faces.length; i++ ) { var family = String( faces[ i ] && faces[ i ].family || '' ).trim(); if ( family ) { families[ family ] = true; } }
-			Object.keys( families ).forEach( addLocalFontToCatalog ); syncLocalFontOptions( root );
+			Object.keys( families ).forEach( addLocalFontToCatalog ); syncLocalFontOptions( root ); document.dispatchEvent( new CustomEvent( 'certloom:fonts-updated' ) );
 			if ( status ) { status.textContent = Object.keys( families ).length ? Object.keys( families ).length + ' ' + t( 'localFontsFound', 'local font families available.') : t( 'localFontsNone', 'No additional local fonts were returned by the browser.' ); }
 		} catch ( error ) {
 			if ( status ) { status.textContent = 'NotAllowedError' === String( error && error.name ) ? t( 'localFontPermission', 'Local font access was not allowed. You can grant permission and scan again.') : t( 'localFontScanFailed', 'Local fonts could not be read. The built-in and WordPress-local font lists are still available.' ); }
@@ -352,6 +368,7 @@
 		}
 		var layout = clone( savedLayout );
 		registerLocalFontsFromLayout( layout );
+		ensureCustomFontsFromLayout( layout );
 		syncLocalFontOptions( root );
 		var designerState = clone( savedState );
 		var autosaveStatus = root.getAttribute( 'data-autosave-status' ) || 'none';
@@ -364,6 +381,7 @@
 			} catch ( recoveryError ) { layout = clone( savedLayout ); designerState = clone( savedState ); recovered = false; }
 		}
 		registerLocalFontsFromLayout( layout );
+		ensureCustomFontsFromLayout( layout );
 		syncLocalFontOptions( root );
 		var schemaVersion = Number( layout && layout._meta ? layout._meta.schema_version : root.getAttribute( 'data-layout-schema-version' ) || 0 );
 		var fitZoom = 1;

@@ -68,19 +68,22 @@ final class EmailDesignAdmin {
 		}
 
 		wp_enqueue_media();
+		wp_enqueue_style( 'certloom-font-picker', CERTLOOM_URL . 'admin/assets/font-picker.css', array( 'ecapla-certverify-admin' ), CERTLOOM_VERSION );
+		wp_enqueue_script( 'certloom-font-picker', CERTLOOM_URL . 'admin/assets/font-picker.js', array(), CERTLOOM_VERSION, true );
 		wp_enqueue_style(
 			'certloom-email-designs',
 			CERTLOOM_URL . 'admin/assets/email-designs.css',
-			array( 'ecapla-certverify-admin' ),
+			array( 'ecapla-certverify-admin', 'certloom-font-picker' ),
 			CERTLOOM_VERSION
 		);
 		wp_enqueue_script(
 			'certloom-email-designer',
 			CERTLOOM_URL . 'admin/assets/email-designer.js',
-			array(),
+			array( 'certloom-font-picker' ),
 			CERTLOOM_VERSION,
 			true
 		);
+		wp_localize_script( 'certloom-font-picker', 'certloomFontPickerConfig', $this->font_picker_config() );
 		$merge_tokens = new EmailMergeTokenCatalog();
 		$font_catalog = new DesignerFontCatalog();
 
@@ -208,7 +211,7 @@ final class EmailDesignAdmin {
 				'fontCatalog'           => $font_catalog->browser_contract(),
 				'fontLocalLabel'        => __( 'Installed locally', 'certloom' ),
 				'fontFallbackLabel'     => __( 'Uses fallback on this device', 'certloom' ),
-				'fontAvailabilityHelp'   => __( 'Local/system fonts only. A check mark means the primary font is installed on this device; email recipients can fall back safely.', 'certloom' ),
+				'fontAvailabilityHelp'   => __( 'Local/system and site-local custom fonts. Custom web fonts are emitted only when used; email clients that block web fonts fall back safely.', 'certloom' ),
 				'scanLocalFonts'          => __( 'Scan local fonts', 'certloom' ),
 				'localDeviceFonts'        => __( 'Local device fonts', 'certloom' ),
 				'savedLocalFont'          => __( 'saved local font', 'certloom' ),
@@ -220,6 +223,20 @@ final class EmailDesignAdmin {
 				'localFontUnsupported'    => __( 'This browser cannot list every installed font. WordPress local fonts and the built-in system catalog remain available.', 'certloom' ),
 				'localFontScanFailed'     => __( 'Local fonts could not be read. The built-in and WordPress-local font lists are still available.', 'certloom' ),
 			)
+		);
+	}
+
+
+	/** Shared visual/custom font picker configuration. @return array<string,mixed> */
+	private function font_picker_config() {
+		return array(
+			'ajaxUrl' => admin_url( 'admin-ajax.php' ), 'nonce' => wp_create_nonce( 'certloom_custom_font_upload' ),
+			'chooseFont' => __( 'Choose font', 'certloom' ), 'searchFonts' => __( 'Search fonts', 'certloom' ),
+			'addCustomFont' => __( 'Upload custom font', 'certloom' ), 'customFonts' => __( 'Custom fonts', 'certloom' ),
+			'familyName' => __( 'Family name', 'certloom' ), 'weight' => __( 'Weight', 'certloom' ), 'style' => __( 'Style', 'certloom' ),
+			'normal' => __( 'Normal', 'certloom' ), 'italic' => __( 'Italic', 'certloom' ), 'fontFile' => __( 'Font file', 'certloom' ),
+			'upload' => __( 'Upload font', 'certloom' ), 'uploading' => __( 'Uploading…', 'certloom' ),
+			'uploadIncomplete' => __( 'Choose a font file and enter its family name.', 'certloom' ), 'uploadFailed' => __( 'Custom font upload failed.', 'certloom' ),
 		);
 	}
 

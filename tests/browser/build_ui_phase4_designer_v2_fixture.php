@@ -88,10 +88,9 @@ if ( ! is_string( $samples_json ) ) { throw new RuntimeException( 'Sample data f
 $sample_options = '<option value="standard">Normal person</option><option value="long">Long name</option><option value="very-long-name">Very long name</option><option value="rtl">RTL person</option><option value="organization">Organization</option><option value="long-organization">Long organization</option><option value="long-iso-scope">Long ISO scope</option><option value="school-result">School result</option>';
 $html = preg_replace( '#(<select data-certloom-designer-sample-data>).*?(</select>)#s', '$1' . $sample_options . '$2', $html, 1, $sample_select_count );
 if ( 1 !== $sample_select_count ) { throw new RuntimeException( 'Current Sample data selector was not found exactly once.' ); }
-$registry_marker = '<script>window.certloomTemplateElementRegistry=';
+$registry_marker = 'window.certloomTemplateElementRegistry=';
 if ( false === strpos( $html, $registry_marker ) ) { throw new RuntimeException( 'Designer registry script marker missing.' ); }
-$html = str_replace( $registry_marker, '<script>window.certloomTemplateDesignerSamples=' . $samples_json . ';</script>' . $registry_marker, $html, $sample_contract_count );
-if ( 1 !== $sample_contract_count ) { throw new RuntimeException( 'Sample browser contract injection was ambiguous.' ); }
+if ( false === strpos( $html, 'window.certloomTemplateDesignerSamples=' ) ) { throw new RuntimeException( 'Sample browser contract marker missing.' ); }
 $html = studio_replace_between( $html, '<div class="certloom-template-designer-productivity">', '<div class="certloom-template-designer-palette">', '' );
 
 $registry_labels = array(

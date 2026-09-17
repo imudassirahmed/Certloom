@@ -23,28 +23,28 @@
 		} );
 	}
 
-	async function probeLocalFontAvailability() {
-		const entries = fontCatalogEntries();
-		for ( const entry of entries ) {
-			const key = entry[ 0 ];
-			const definition = entry[ 1 ] || {};
-			if ( definition.generic ) { FONT_AVAILABILITY[ key ] = true; continue; }
-			FONT_AVAILABILITY[ key ] = false;
-			const names = Array.isArray( definition.local_names ) ? definition.local_names : [];
-			if ( typeof FontFace !== 'function' || ! names.length ) { continue; }
-			for ( const name of names ) {
+	function probeLocalFontAvailability() {
+		const queue = fontCatalogEntries().slice();
+		const schedule = typeof window.requestIdleCallback === 'function' ? ( cb ) => window.requestIdleCallback( cb, { timeout: 700 } ) : ( cb ) => window.setTimeout( () => cb( { timeRemaining: () => 8 } ), 60 );
+		const work = ( deadline ) => {
+			let budget = 3;
+			while ( queue.length && budget-- > 0 && ( !deadline || typeof deadline.timeRemaining !== 'function' || deadline.timeRemaining() > 2 ) ) {
+				const [ key, definition = {} ] = queue.shift();
+				if ( definition.generic || definition.custom ) { FONT_AVAILABILITY[ key ] = true; continue; }
+				const names = Array.isArray( definition.local_names ) ? definition.local_names.slice( 0, 2 ) : [];
+				if ( typeof FontFace !== 'function' || ! names.length ) { FONT_AVAILABILITY[ key ] = false; continue; }
+				const escaped = String( names[ 0 ] ).replace( /["\\]/g, '\\$&' );
 				try {
-					const family = `__certloom_local_probe_${ key.replace( /[^a-z0-9_-]/gi, '_' ) }`;
-					const escaped = String( name ).replace( /[\"\\]/g, '\\$&' );
-					const face = new FontFace( family, `local("${ escaped }")` );
-					await face.load();
-					FONT_AVAILABILITY[ key ] = true;
-					break;
-				} catch ( error ) {}
+					const face = new FontFace( `__certloom_local_probe_${ key.replace( /[^a-z0-9_-]/gi, '_' ) }`, `local("${ escaped }")` );
+					face.load().then( () => { FONT_AVAILABILITY[ key ] = true; refreshFontAvailabilityLabels(); }, () => { FONT_AVAILABILITY[ key ] = false; } );
+				} catch ( error ) { FONT_AVAILABILITY[ key ] = false; }
 			}
-		}
-		refreshFontAvailabilityLabels();
+			refreshFontAvailabilityLabels();
+			if ( queue.length ) { schedule( work ); }
+		};
+		schedule( work );
 	}
+
 
 	function base32LocalFontName( name ) {
 		if ( typeof TextEncoder !== 'function' ) { return ''; }
@@ -88,7 +88,7 @@
 		try {
 			const faces = await window.queryLocalFonts(); const families = new Set();
 			faces.forEach( ( face ) => { const family = String( face?.family || '' ).trim(); if ( family ) { families.add( family ); } } );
-			families.forEach( addLocalFontToCatalog ); syncEmailLocalFontOptions( root );
+			families.forEach( addLocalFontToCatalog ); syncEmailLocalFontOptions( root ); document.dispatchEvent( new CustomEvent( 'certloom:fonts-updated' ) );
 			status.textContent = families.size ? `${ families.size } ${ L.localFontsFound || 'local font families available.' }` : ( L.localFontsNone || 'No additional local fonts were returned by the browser.' );
 		} catch ( error ) {
 			status.textContent = String( error?.name || '' ) === 'NotAllowedError' ? ( L.localFontPermission || 'Local font access was not allowed. You can grant permission and scan again.' ) : ( L.localFontScanFailed || 'Local fonts could not be read. The built-in and WordPress-local font lists are still available.' );
@@ -270,6 +270,17 @@
 			blocks = [];
 		}
 		blocks = normalizeClientBlocks( blocks );
+
+		function usedCustomFontDefinitions() {
+			const serialized = JSON.stringify( blocks );
+			const themeValues = qa( '[data-certloom-theme]', form ).map( ( input ) => String( input.value || '' ) ).join( '\n' );
+			return fontCatalogEntries().filter( ( [ key, definition ] ) => definition.custom && ( serialized.includes( String( definition.css ) ) || themeValues.includes( String( definition.css ) ) ) );
+		}
+		function ensureUsedCustomFontsLoaded() {
+			if ( ! window.CertloomFontPicker ) { return; }
+			usedCustomFontDefinitions().forEach( ( [ key, definition ] ) => window.CertloomFontPicker.loadCustom( definition, key ) );
+		}
+		ensureUsedCustomFontsLoaded();
 		let attachments = [];
 		try { attachments = JSON.parse( attachmentsHidden?.value || '[]' ); } catch ( error ) { attachments = []; }
 		if ( ! Array.isArray( attachments ) ) { attachments = []; }
@@ -362,7 +373,7 @@
 				const localLabel = current.split( ',' )[ 0 ].replace( /^[\s"']+|[\s"']+$/g, '' ) || current;
 				html += `<optgroup label="${ esc( L.localDeviceFonts || 'Local device fonts' ) }"><option value="${ esc( current ) }" data-font-label="${ esc( localLabel ) }" selected>${ esc( localLabel ) } · ${ esc( L.savedLocalFont || 'saved local font' ) }</option></optgroup>`;
 			}
-			return `<label class="is-wide certloom-font-picker-field"><span>${ esc( label ) }</span><select data-style-field="${ esc( key ) }" data-certloom-email-font-select>${ html }</select><small class="certloom-font-availability-note">${ esc( L.fontAvailabilityHelp || 'Local/system fonts only. A check mark means the primary font is installed on this device; email recipients can fall back safely.' ) }</small></label>`;
+			return `<label class="is-wide certloom-font-picker-field"><span>${ esc( label ) }</span><select data-style-field="${ esc( key ) }" data-certloom-email-font-select>${ html }</select><small class="certloom-font-availability-note">${ esc( L.fontAvailabilityHelp || 'Local/system and site-local custom fonts. Custom web fonts are emitted only when used; email clients that block web fonts fall back safely.' ) }</small></label>`;
 		}
 
 		function safeColor( value, fallback ) {
@@ -1173,6 +1184,17 @@
 			} );
 		} );
 
+		function usedCustomFontFaceCss() {
+			return usedCustomFontDefinitions().map( ( [ key, definition ] ) => {
+				const family = String( definition.preview_family || '' ).replace( /["\\]/g, '' );
+				return ( Array.isArray( definition.faces ) ? definition.faces : [] ).map( ( face ) => {
+					const url = String( face.url || '' ).replace( /["\\]/g, '\\$&' );
+					const format = face.format === 'otf' ? 'opentype' : 'truetype';
+					return `@font-face{font-family:"${ family }";src:url("${ url }") format("${ format }");font-weight:${ Number( face.weight ) || 400 };font-style:${ face.style === 'italic' ? 'italic' : 'normal' };font-display:swap}`;
+				} ).join( '' );
+			} ).join( '' );
+		}
+
 		function fullHtml() {
 			const styles = getComputedStyle( canvas );
 			const values = {}; qa( '[data-certloom-theme]', form ).forEach( ( input ) => { values[ input.name.replace( 'theme_', '' ) ] = input.value; } );
@@ -1180,8 +1202,8 @@
 			const pageBackground = values.background || '#f4f7f6'; const contentBackground = values.content_background || '#ffffff'; const heading = values.heading_color || '#173f34'; const buttonBg = values.button_background || '#1369fc'; const buttonText = values.button_text || '#ffffff'; const link = values.link_color || '#0f6e56';
 			const pageBgImage = values.background_image ? `background-image:url('${ esc( values.background_image ) }');background-size:${ esc( values.background_size || 'cover' ) };background-position:${ esc( values.background_position || 'center' ) };background-repeat:${ esc( values.background_repeat || 'no-repeat' ) };` : '';
 			const contentBgImage = values.content_background_image ? `background-image:url('${ esc( values.content_background_image ) }');background-size:${ esc( values.content_background_size || 'cover' ) };background-position:${ esc( values.content_background_position || 'center' ) };background-repeat:${ esc( values.content_background_repeat || 'no-repeat' ) };` : '';
-			const css = `*{box-sizing:border-box}body{margin:0;background-color:${ esc( pageBackground ) };${ pageBgImage }padding:28px 14px}h1,h2,h3{margin:0 0 18px;color:var(--certloom-email-heading-color);line-height:1.25}h1{font-size:30px}h2{font-size:24px}h3{font-size:19px}p{margin:0 0 12px;line-height:1.65}a{color:var(--certloom-email-link-color)}hr{border:0;border-top:1px solid #dce6e1;margin:24px 0}.button-primary{background:var(--certloom-email-button-bg);color:var(--certloom-email-button-text)}@media(max-width:600px){.certloom-email-container-preview.is-row.is-stack-mobile{flex-direction:column!important}.certloom-email-container-preview.is-row.is-stack-mobile>div{width:100%!important;flex-basis:auto!important}}`;
-			return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: https: http:; style-src 'unsafe-inline';"><style>${ css }</style></head><body><div style="--certloom-email-heading-color:${ esc( heading ) };--certloom-email-button-bg:${ esc( buttonBg ) };--certloom-email-button-text:${ esc( buttonText ) };--certloom-email-link-color:${ esc( link ) };box-sizing:border-box;max-width:${ esc( canvas.style.maxWidth || '640px' ) };margin:auto;padding:36px;background-color:${ esc( contentBackground ) };${ contentBgImage }color:${ esc( styles.color ) };font-family:${ esc( styles.fontFamily ) };border-radius:${ esc( canvas.style.borderRadius || '12px' ) }">${ body }</div></body></html>`;
+			const css = `${ usedCustomFontFaceCss() }*{box-sizing:border-box}body{margin:0;background-color:${ esc( pageBackground ) };${ pageBgImage }padding:28px 14px}h1,h2,h3{margin:0 0 18px;color:var(--certloom-email-heading-color);line-height:1.25}h1{font-size:30px}h2{font-size:24px}h3{font-size:19px}p{margin:0 0 12px;line-height:1.65}a{color:var(--certloom-email-link-color)}hr{border:0;border-top:1px solid #dce6e1;margin:24px 0}.button-primary{background:var(--certloom-email-button-bg);color:var(--certloom-email-button-text)}@media(max-width:600px){.certloom-email-container-preview.is-row.is-stack-mobile{flex-direction:column!important}.certloom-email-container-preview.is-row.is-stack-mobile>div{width:100%!important;flex-basis:auto!important}}`;
+			return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: https: http:; font-src data: https: http:; style-src 'unsafe-inline';"><style>${ css }</style></head><body><div style="--certloom-email-heading-color:${ esc( heading ) };--certloom-email-button-bg:${ esc( buttonBg ) };--certloom-email-button-text:${ esc( buttonText ) };--certloom-email-link-color:${ esc( link ) };box-sizing:border-box;max-width:${ esc( canvas.style.maxWidth || '640px' ) };margin:auto;padding:36px;background-color:${ esc( contentBackground ) };${ contentBgImage }color:${ esc( styles.color ) };font-family:${ esc( styles.fontFamily ) };border-radius:${ esc( canvas.style.borderRadius || '12px' ) }">${ body }</div></body></html>`;
 		}
 
 		const previewDialog = q( '[data-certloom-designer-preview-dialog]' );
