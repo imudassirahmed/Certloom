@@ -26,6 +26,8 @@ ua(false!==strpos($integrations,'Last event')&&false!==strpos($integrations,'No 
 ua(false!==strpos($integrations,"'replayed' => __( 'Already issued'")&&false!==strpos($integrations,"'blocked' => __( 'Blocked'"),'integration result semantics distinguish replay and block states');
 ua(false!==strpos($automations,'Latest: %1$s')&&false!==strpos($automations,'Could not queue delivery'),'Automations list exposes latest queue/skip/failure evidence');
 ua(false!==strpos($admin,"'Webhook / API'")&&false!==strpos($admin,'active source'),'Automations source summary includes Webhook/API operational count');
+ua(false!==strpos($admin,'WooCommerceIntegrationAdmin')&&substr_count($admin,"['status']['active_mapping_count']")>=4,'Automations source summary reads active mapping counts for Tutor/LearnDash/WooCommerce/Coursera');
+ua(false!==strpos($admin,"_n( '%d active mapping', '%d active mappings'")&&false!==strpos($admin,'number of active integration mappings'),'Automations mapping-count summary is localized with a translator-safe plural contract');
 ua(false!==strpos($webhook,'hash_hmac')&&false!==strpos($webhook,'MAX_CLOCK_SKEW')&&false!==strpos($webhook,'MAX_BODY_BYTES'),'Webhook endpoint is HMAC authenticated and time/size bounded');
 ua(false!==strpos($coursera,'IntegrationIssuanceCoordinator'),'Coursera xAPI uses same canonical issuance coordinator');
 ua(false===stripos($coord,'woocommerce')&&false===stripos($coord,'learndash')&&false===stripos($coord,'tutor'),'generic coordinator remains provider-neutral');

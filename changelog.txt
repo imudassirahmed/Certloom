@@ -1,3 +1,9 @@
+= 1.7.0-alpha.4.77 =
+* Review-unlocked staging checkpoint: all implemented Certloom admin workspaces and ordinary normalized write paths are enabled by default for end-to-end verification.
+* Data Tools authority is review-unlocked only when WordPress explicitly reports local, development or staging; production keeps the fail-closed release-authority boundary.
+* Staging migration, restore and cutover rehearsal opt-in constants are enabled in this review build, while their existing environment guard still prevents production execution.
+* No unimplemented Gamma-03B/04/05/06 feature is fabricated, and production PDF/PNG/JPEG artifact authority remains closed because no accepted renderer authority is bundled.
+
 = 1.7.0-alpha.4.76 =
 * Audit hardening: show immutable original issuance provenance in credential lists, add privacy-safe integration/automation operational evidence, preserve automation timestamps on reads, support global automation for independent credentials, and fail closed before oversized WooCommerce mapped-order issuance.
 

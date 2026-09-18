@@ -68,6 +68,7 @@ class Ecapla_CertVerify_Admin {
 		add_action( 'wp_ajax_certloom_wizard_template_preview', array( $this, 'handle_setup_wizard_template_preview' ) );
 		add_action( 'wp_ajax_certloom_guided_tour_state', array( 'Ecapla_CertVerify_Guided_Tour', 'handle_ajax' ) );
 		add_action( 'admin_notices', array( $this, 'render_active_setup_draft_notice' ) );
+		add_action( 'admin_notices', array( $this, 'render_review_unlocked_notice' ) );
 		add_action( 'admin_init', array( $this, 'handle_status_review_acknowledgement' ) );
 		add_action( 'admin_post_ecapla_certverify_delete_certificate', array( $this, 'handle_delete' ) );
 		add_action( 'admin_post_ecapla_certverify_delete_field', array( $this, 'handle_field_delete' ) );
@@ -149,6 +150,20 @@ class Ecapla_CertVerify_Admin {
 		add_submenu_page( null, __( 'Setup', 'certloom' ), __( 'Setup', 'certloom' ), 'manage_options', 'certloom-setup', array( $this, 'render_onboarding_screen' ) );
 		add_submenu_page( null, __( 'Verification sample', 'certloom' ), __( 'Verification sample', 'certloom' ), 'manage_options', 'certloom-verification-sample', array( $this, 'render_verification_sample_screen' ) );
 		add_submenu_page( null, __( 'Review bulk change', 'certloom' ), __( 'Review bulk change', 'certloom' ), ECAPLA_CERTVERIFY_CAP, 'certloom-bulk-review', array( $this, 'render_bulk_review_screen' ) );
+	}
+
+
+	/** Visible staging-only honesty notice for the deliberately unlocked review build. */
+	public function render_review_unlocked_notice() {
+		if ( ! defined( 'CERTLOOM_REVIEW_UNLOCKED' ) || true !== CERTLOOM_REVIEW_UNLOCKED ) { return; }
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only routing hint.
+		if ( '' === $page || 0 !== strpos( $page, 'certloom' ) ) { return; }
+		$environment = function_exists( 'wp_get_environment_type' ) ? sanitize_key( (string) wp_get_environment_type() ) : 'production';
+		$data_tools = in_array( $environment, array( 'local', 'development', 'staging' ), true );
+		echo '<div class="notice notice-warning certloom-review-unlocked-notice"><p><strong>' . esc_html__( 'Certloom review-unlocked build', 'certloom' ) . '</strong> — ' . esc_html__( 'All implemented Certloom workspaces and ordinary credential write paths are enabled so you can inspect and verify them end to end.', 'certloom' ) . '</p>';
+		echo '<p>' . esc_html( $data_tools
+			? __( 'WordPress is marked as a non-production environment, so Data Tools and the staging migration/restore/cutover rehearsal controls are also available. Production renderer downloads remain authority-gated; use the browser previews to review certificate output.', 'certloom' )
+			: __( 'WordPress currently reports a production environment. Data Tools and staging migration/restore/cutover rehearsals therefore remain protected. Production renderer downloads also remain authority-gated; use the browser previews to review certificate output.', 'certloom' ) ) . '</p></div>';
 	}
 
 
@@ -2478,11 +2493,20 @@ class Ecapla_CertVerify_Admin {
 		$automation_latest_runs = array();
 		foreach ( $email_rules as $rule ) { if ( is_array( $rule ) && ! empty( $rule['id'] ) ) { $automation_latest_runs[ (string) $rule['id'] ] = $automation_runs->latest_for_rule( (string) $rule['id'] ); } }
 
-		$tutor     = ( new \Certloom\Infrastructure\Admin\TutorLmsIntegrationAdmin() )->screen_data();
-		$learndash = ( new \Certloom\Infrastructure\Admin\LearnDashIntegrationAdmin() )->screen_data();
-		$coursera  = ( new \Certloom\Infrastructure\Admin\CourseraIntegrationAdmin() )->screen_data();
-		$webhooks  = ( new \Certloom\Infrastructure\Admin\WebhookIntegrationAdmin() )->screen_data();
-		$credly    = ( new \Certloom\Infrastructure\Admin\CredlyIntegrationAdmin() )->screen_data();
+		$tutor       = ( new \Certloom\Infrastructure\Admin\TutorLmsIntegrationAdmin() )->screen_data();
+		$learndash   = ( new \Certloom\Infrastructure\Admin\LearnDashIntegrationAdmin() )->screen_data();
+		$woocommerce = ( new \Certloom\Infrastructure\Admin\WooCommerceIntegrationAdmin() )->screen_data();
+		$coursera    = ( new \Certloom\Infrastructure\Admin\CourseraIntegrationAdmin() )->screen_data();
+		$webhooks    = ( new \Certloom\Infrastructure\Admin\WebhookIntegrationAdmin() )->screen_data();
+		$credly      = ( new \Certloom\Infrastructure\Admin\CredlyIntegrationAdmin() )->screen_data();
+		$active_mapping_status = static function ( $count ) {
+			$count = max( 0, absint( $count ) );
+			return sprintf(
+				/* translators: %d: number of active integration mappings. */
+				_n( '%d active mapping', '%d active mappings', $count, 'certloom' ),
+				$count
+			);
+		};
 		$destination_status = array(
 			array( 'label' => __( 'Credly', 'certloom' ), 'icon' => 'dashicons-awards', 'status' => ! empty( $credly['connection']['configured'] ) ? __( 'Connected', 'certloom' ) : __( 'Not connected', 'certloom' ) ),
 		);
@@ -2490,17 +2514,17 @@ class Ecapla_CertVerify_Admin {
 			array(
 				'label'  => __( 'Tutor LMS', 'certloom' ),
 				'icon'   => 'dashicons-welcome-learn-more',
-				'status' => ! empty( $tutor['status']['available'] ) ? __( 'Available on this site', 'certloom' ) : __( 'Not detected', 'certloom' ),
+				'status' => $active_mapping_status( $tutor['status']['active_mapping_count'] ?? 0 ),
 			),
 			array(
 				'label'  => __( 'LearnDash', 'certloom' ),
 				'icon'   => 'dashicons-welcome-learn-more',
-				'status' => ! empty( $learndash['status']['available'] ) ? __( 'Available on this site', 'certloom' ) : __( 'Not detected', 'certloom' ),
+				'status' => $active_mapping_status( $learndash['status']['active_mapping_count'] ?? 0 ),
 			),
 			array(
 				'label'  => __( 'WooCommerce', 'certloom' ),
 				'icon'   => 'dashicons-cart',
-				'status' => class_exists( 'WooCommerce' ) ? __( 'Available on this site', 'certloom' ) : __( 'Not detected', 'certloom' ),
+				'status' => $active_mapping_status( $woocommerce['status']['active_mapping_count'] ?? 0 ),
 			),
 
 			array(
@@ -2511,7 +2535,7 @@ class Ecapla_CertVerify_Admin {
 			array(
 				'label'  => __( 'Coursera', 'certloom' ),
 				'icon'   => 'dashicons-cloud',
-				'status' => ! empty( $coursera['credentials']['configured'] ) ? __( 'Connected', 'certloom' ) : __( 'Not connected', 'certloom' ),
+				'status' => $active_mapping_status( $coursera['status']['active_mapping_count'] ?? 0 ),
 			),
 		);
 

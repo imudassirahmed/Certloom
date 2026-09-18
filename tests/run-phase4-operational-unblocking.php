@@ -14,7 +14,7 @@ $portal_ui = file_get_contents( $root . '/includes/class-ecapla-certverify-recip
 $bulk_review = file_get_contents( $root . '/admin/views/bulk-review.php' );
 function opu($ok,$msg){ if(!$ok){ throw new RuntimeException('FAIL  '.$msg); } echo "PASS  {$msg}\n"; }
 opu(false!==strpos($gate,"self::\$scopes['admin_preview'] = true;")&&false!==strpos($gate,"self::\$scopes['write_paths'] = true;"),'review build opens implemented admin and credential-write workflows');
-opu(false===strpos($gate,"self::\$scopes['data_tools'] = true;"),'destructive Data Tools remain release-authority gated');
+opu(false!==strpos($gate,"self::\$scopes['data_tools'] = true;")&&false!==strpos($gate,"'local', 'development', 'staging'"),'review Data Tools are open only on explicit non-production WordPress environments');
 opu(false===strpos($public_gate,'LegacyMigrationState')&&false===strpos($public_gate,'DomainCutoverState'),'public verification no longer depends on legacy migration/cutover ceremony');
 opu(false!==strpos($public_gate,'SchemaManager::health_marker_is_fresh()')&&false!==strpos($public_gate,'DomainMaintenanceLock'),'public verification still fails closed for real storage/maintenance problems');
 opu(false===strpos($render,'normalized_admin_preview_allowed')&&false===strpos($render,"'Admin preview'")&&false!==strpos($render,"'Verified credential'"),'public profile has no admin-preview barrier');

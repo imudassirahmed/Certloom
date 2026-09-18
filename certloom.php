@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Certloom – Certificate Verification
  * Description: Self-hosted credential issuance, verification and lifecycle management for WordPress.
- * Version: 1.7.0-alpha.4.76
+ * Version: 1.7.0-alpha.4.77
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.7.0-alpha.4.76' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.7.0-alpha.4.77' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
@@ -48,8 +48,11 @@ define( 'CERTLOOM_URL', ECAPLA_CERTVERIFY_URL );
  * renderer-dependent production downloads. Remove this review override before a
  * release candidate is declared.
  */
+if ( ! defined( 'CERTLOOM_REVIEW_UNLOCKED' ) ) {
+	define( 'CERTLOOM_REVIEW_UNLOCKED', true );
+}
 if ( ! defined( 'CERTLOOM_REVIEW_ADMIN_PREVIEW' ) ) {
-	define( 'CERTLOOM_REVIEW_ADMIN_PREVIEW', false );
+	define( 'CERTLOOM_REVIEW_ADMIN_PREVIEW', true );
 }
 if ( ! defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) ) {
 	define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false );
@@ -61,13 +64,13 @@ if ( ! defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) ) {
 	define( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY', false );
 }
 if ( ! defined( 'CERTLOOM_ALLOW_STAGING_CUTOVER_REHEARSAL' ) ) {
-	define( 'CERTLOOM_ALLOW_STAGING_CUTOVER_REHEARSAL', false );
+	define( 'CERTLOOM_ALLOW_STAGING_CUTOVER_REHEARSAL', true );
 }
 if ( ! defined( 'CERTLOOM_ALLOW_STAGING_MIGRATION_REHEARSAL' ) ) {
-	define( 'CERTLOOM_ALLOW_STAGING_MIGRATION_REHEARSAL', false );
+	define( 'CERTLOOM_ALLOW_STAGING_MIGRATION_REHEARSAL', true );
 }
 if ( ! defined( 'CERTLOOM_ALLOW_STAGING_RESTORE_REHEARSAL' ) ) {
-	define( 'CERTLOOM_ALLOW_STAGING_RESTORE_REHEARSAL', false );
+	define( 'CERTLOOM_ALLOW_STAGING_RESTORE_REHEARSAL', true );
 }
 
 require_once CERTLOOM_PATH . 'src/Autoloader.php';

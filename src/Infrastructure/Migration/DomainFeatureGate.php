@@ -33,6 +33,16 @@ final class DomainFeatureGate {
 		if ( defined( 'CERTLOOM_REVIEW_ADMIN_PREVIEW' ) && true === CERTLOOM_REVIEW_ADMIN_PREVIEW ) {
 			self::$scopes['admin_preview'] = true;
 			self::$scopes['write_paths'] = true;
+
+			/*
+			 * Review-unlocked builds also expose Data Tools when WordPress is
+			 * explicitly marked local/development/staging. Production retains the
+			 * release-authority boundary even if this review ZIP is installed there.
+			 */
+			$environment = function_exists( 'wp_get_environment_type' ) ? sanitize_key( (string) wp_get_environment_type() ) : 'production';
+			if ( in_array( $environment, array( 'local', 'development', 'staging' ), true ) ) {
+				self::$scopes['data_tools'] = true;
+			}
 		}
 		return self::$scopes;
 	}

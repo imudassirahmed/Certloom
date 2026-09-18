@@ -17,8 +17,8 @@ $required_admin = array(
 foreach ( $required_admin as $needle ) {
     if ( false === strpos( $admin, $needle ) ) { throw new RuntimeException( 'Missing staging rehearsal admin guard: ' . $needle ); }
 }
-if ( false === strpos( $plugin, "define( 'CERTLOOM_ALLOW_STAGING_MIGRATION_REHEARSAL', false )" ) ) {
-    throw new RuntimeException( 'Staging migration rehearsal is no longer disabled by default.' );
+if ( false === strpos( $plugin, "define( 'CERTLOOM_ALLOW_STAGING_MIGRATION_REHEARSAL', true )" ) ) {
+    throw new RuntimeException( 'Staging migration rehearsal review opt-in is not enabled in the review-unlocked build.' );
 }
 foreach ( array( "'local', 'development', 'staging'", 'LegacyMigrationCoordinator', 'LegacyMigrationWriter', 'DomainMaintenanceLock', 'assert_domain_empty', 'idempotency_while_locked', 'Credential authority changed: NO', 'certloom_staging_rehearsal_version_changed' ) as $needle ) {
     if ( false === strpos( $rehearsal, $needle ) ) { throw new RuntimeException( 'Missing staging rehearsal safety/acceptance guard: ' . $needle ); }
