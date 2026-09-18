@@ -9,7 +9,7 @@ $admin = file_get_contents( $root . '/admin/class-ecapla-certverify-admin.php' )
 $checks = 0; $failures = 0;
 function a440( $ok, $label ) { global $checks, $failures; $checks++; if ( $ok ) { echo "PASS  {$label}\n"; } else { $failures++; echo "FAIL  {$label}\n"; } }
 a440( is_string( $manual ) && is_string( $readiness ) && is_string( $merge ) && is_string( $js ), 'required Issue Credential sources are readable' );
-a440( strpos( $manual, 'data-certloom-independent-detail-inputs' ) < strpos( $manual, 'data-certloom-independent-detail-suggestions' ), 'design-required suggestions render below the current/empty credential-detail list' );
+a440( strpos( $manual, 'data-certloom-independent-detail-suggestions' ) < strpos( $manual, 'data-certloom-oneoff-details' ), 'design-required suggestions stay visible above the collapsed one-off credential-detail editor' );
 a440( false !== strpos( $readiness, "0 === strpos( \$token, 'recipient.' )" ) && false !== strpos( $readiness, "'action' => 'credential_detail'" ), 'unknown legacy recipient.<key> design tokens become issued-only credential details' );
 a440( false !== strpos( $readiness, "'credential.custom.' => 18" ) && false !== strpos( $readiness, "'credential:' => 11" ) && false !== strpos( $readiness, "'custom.' => 7" ), 'bounded historical custom token spellings are normalized into one credential-detail key' );
 a440( false !== strpos( $merge, "'recipient.' . \$key" ) && false !== strpos( $merge, "'credential.custom.' . \$key" ), 'one-off issued values can satisfy the exact historical token required by the selected design' );

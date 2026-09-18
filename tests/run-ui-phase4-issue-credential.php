@@ -45,4 +45,13 @@ i427(false!==strpos($c,'/* alpha.4.73 — Profile-adaptive Compose layout.')&&fa
 i427(false!==strpos($j,'syncIssueSummary')&&false!==strpos($j,'data-certloom-issue-summary-validity'),'live credential summary follows recipient, Program, title, validity and appearance changes');
 i427(false!==strpos($m,'data-certloom-repeating-empty')&&false===strpos($m,'if ( ! $rows ) { $rows = array( array() ); }'),'academic Subjects/results no longer render a permanent empty row editor');
 
-echo "\n$pass alpha.4.73 Issue Credential source checks, $fail failures\n"; exit($fail?1:0);
+i427(false!==strpos($m,'certloom-issue-batch-primary')&&strpos($m,'certloom-issue-batch-primary')<strpos($m,'data-certloom-additional-details'),'alpha.4.78 promotes Batch/cohort beside the primary Program choice');
+i427(false!==strpos($m,'certloom-delivery-fieldset')&&strpos($m,'certloom-delivery-fieldset')>strpos($m,'certloom-issue-context-rail'),'alpha.4.78 keeps Email as a first-class decision in the right rail');
+i427(false!==strpos($m,"'review' === \$email_after_issue")&&false!==strpos($m,"__( 'Review email next', 'certloom' )")&&false!==strpos($m,'EmailTemplateCatalogRepository'),'alpha.4.78 defaults to review-next email intent without sending during issuance');
+i427(false!==strpos($m,'data-certloom-oneoff-details')&&false===strpos($m,'<details class="certloom-oneoff-details" open')&&strpos($m,'data-certloom-independent-detail-suggestions')<strpos($m,'data-certloom-oneoff-details'),'alpha.4.78 collapses optional one-off data while keeping design-required facts visible');
+i427(false!==strpos($m,'certloom-validity-compact')&&false!==strpos($m,'certloom-validity-options'),'alpha.4.78 summarizes validity and moves override choices behind Change validity');
+i427(false!==strpos($j,'data-certloom-issue-summary-batch')&&false!==strpos($j,'data-certloom-issue-summary-email')&&false!==strpos($j,'syncEmailAfterIssue'),'alpha.4.78 live summary tracks Batch and post-issuance email intent');
+i427(false!==strpos($c,'/* alpha.4.78 — Issue Credential task-flow correction.')&&false!==strpos($c,'minmax(390px, 430px)')&&false!==strpos($c,'.certloom-delivery-fieldset .certloom-email-after-issue'),'alpha.4.78 has an explicit desktop task rail and Email layout contract');
+i427(false!==strpos($m,'email_next')&&false!==strpos($m,'email_template_id')&&false!==strpos($m,'wp_safe_redirect'),'alpha.4.78 carries review-next email intent only after successful issuance');
+
+echo "\n$pass alpha.4.78 Issue Credential source checks, $fail failures\n"; exit($fail?1:0);

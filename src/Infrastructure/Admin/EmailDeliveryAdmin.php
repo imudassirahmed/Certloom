@@ -211,7 +211,8 @@ final class EmailDeliveryAdmin {
 				}
 			)
 		);
-		$template_id = 'automatic';
+		$template_id = isset( $_GET['template_id'] ) ? sanitize_key( wp_unslash( $_GET['template_id'] ) ) : 'automatic'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only compose preselection from issuance receipt.
+		if ( '' === $template_id ) { $template_id = 'automatic'; }
 
 		if ( '' !== $token ) {
 			$saved = get_transient( 'certloom_email_preview_' . $token . '_' . get_current_user_id() );

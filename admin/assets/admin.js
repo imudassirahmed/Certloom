@@ -808,7 +808,7 @@
 				var scoped = form.querySelector( '[data-certloom-scoped-value-key="' + safeKey + '"]' );
 				if ( scoped ) { if ( focus ) { scoped.focus(); } return scoped; }
 				var existing = independentInputs.querySelector( '[data-certloom-independent-field="' + safeKey + '"]' );
-				if ( existing ) { var existingInput = existing.querySelector( '[data-certloom-independent-value-key]' ); if ( focus && existingInput ) { existingInput.focus(); } return existingInput; }
+				if ( existing ) { var existingInput = existing.querySelector( '[data-certloom-independent-value-key]' ); if ( focus && existingInput ) { var existingDetails = existing.closest( '[data-certloom-oneoff-details]' ); if ( existingDetails ) { existingDetails.open = true; } existingInput.focus(); } return existingInput; }
 				var field = independentFieldDefinition( key, fallbackLabel );
 				var row = document.createElement( 'div' ); row.className = 'certloom-independent-detail-row'; row.setAttribute( 'data-certloom-independent-field', key );
 				var heading = document.createElement( 'div' ); heading.className = 'certloom-independent-detail-row__head';
@@ -822,7 +822,7 @@
 				remove.addEventListener( 'click', function () { delete values[ key ]; row.remove(); renderIndependentEmpty(); form.dispatchEvent( new CustomEvent( 'certloom:issuance-data-changed', { bubbles: true } ) ); } );
 				input.addEventListener( 'input', function () { values[ key ] = input.value; } );
 				independentInputs.appendChild( row );
-				if ( focus ) { input.focus(); }
+				if ( focus ) { var details = row.closest( '[data-certloom-oneoff-details]' ); if ( details ) { details.open = true; } input.focus(); }
 				return input;
 			}
 
@@ -1773,6 +1773,11 @@
 			var summaryEffective = form.querySelector( '[data-certloom-issue-summary-effective]' );
 			var summaryValidity = form.querySelector( '[data-certloom-issue-summary-validity]' );
 			var summaryAppearance = form.querySelector( '[data-certloom-issue-summary-appearance]' );
+			var summaryBatch = form.querySelector( '[data-certloom-issue-summary-batch]' );
+			var summaryEmail = form.querySelector( '[data-certloom-issue-summary-email]' );
+			var validityCompact = form.querySelector( '[data-certloom-validity-compact-label]' );
+			var emailAfterIssue = Array.prototype.slice.call( form.querySelectorAll( 'input[name="email_after_issue"]' ) );
+			var emailOptions = form.querySelector( '[data-certloom-email-after-issue-options]' );
 			var appearanceTouched = '1' === form.getAttribute( 'data-certloom-presentation-explicit' );
 			var autoDesignSequence = 0;
 			var autoDesignController = null;
@@ -1805,6 +1810,7 @@
 				var mode = presentationMode();
 				if ( summaryRecipient ) { summaryRecipient.textContent = recipientSummaryText(); }
 				if ( summaryProgram ) { summaryProgram.textContent = 'independent' === basis ? certloomText( 'independentCredential', 'Independent credential' ) : ( selectedOptionText( program ) || certloomText( 'notSelected', 'Not selected' ) ); }
+				if ( summaryBatch ) { summaryBatch.textContent = 'independent' === basis ? certloomText( 'notApplicable', 'Not applicable' ) : ( selectedOptionText( batch ) || certloomText( 'none', 'None' ) ); }
 				if ( summaryTitle ) { summaryTitle.textContent = ( 'program' === basis && 'program' === source ? programTitle() : ( title && title.value.trim() ? title.value.trim() : '' ) ) || certloomText( 'notSet', 'Not set' ); }
 				if ( summaryEffective ) { summaryEffective.textContent = effectiveDate && effectiveDate.value ? effectiveDate.value : certloomText( 'notSet', 'Not set' ); }
 				if ( summaryValidity ) {
@@ -1815,6 +1821,11 @@
 						else if ( 'program' === selectedExpiry.value ) { validity = programValiditySummary() || certloomText( 'programValidityConfigured', 'Program validity' ); }
 					}
 					summaryValidity.textContent = validity;
+					if ( validityCompact ) { validityCompact.textContent = validity; }
+				}
+				if ( summaryEmail ) {
+					var emailChoice = emailAfterIssue.find( function ( radio ) { return radio.checked; } );
+					summaryEmail.textContent = emailChoice && 'later' === emailChoice.value ? certloomText( 'emailNotNow', 'Not now' ) : certloomText( 'emailReviewAfterIssue', 'Review after issue' );
 				}
 				if ( summaryAppearance ) {
 					var appearance = 'image' === mode ? certloomText( 'uploadCertificateImage', 'Uploaded image' ) : ( 'design' === mode ? certloomText( 'certloomDesign', 'Certloom design' ) : certloomText( 'detailsOnly', 'Details only' ) );
@@ -1889,13 +1900,18 @@
 				else if ( 'program' === basis && ! selectedProgram ) { message.textContent = certloomText( 'phase2ChooseProgram', 'Choose a Program, or switch to Independent credential.' ); }
 				else if ( ! hasTitle ) { message.textContent = certloomText( 'phase2EnterTitle', 'Enter the custom credential title to continue.' ); }
 				else if ( ! expiryReady ) { message.textContent = certloomText( 'phase2ChooseValidity', 'Choose how long this credential should remain valid.' ); }
-				else if ( ! batchReady ) { message.textContent = certloomText( 'phase2ChooseBatchForRepeat', 'This Program issues one credential per Batch or session. Choose a Batch in Additional details.' ); }
+				else if ( ! batchReady ) { message.textContent = certloomText( 'phase2ChooseBatchForRepeat', 'This Program issues one credential per Batch or session. Choose a Batch above.' ); }
 				else if ( 'image' === mode && ! hasImage ) { message.textContent = certloomText( 'phase2ChooseImage', 'Choose a PNG or JPEG certificate image to continue.' ); }
 				else if ( 'design' === mode && ! hasDesign ) { message.textContent = certloomText( 'phase2ChooseDesign', 'Choose a published assigned design, or use the inherited design.' ); }
 				else if ( 'design' === mode && ! designDataReady ) { message.textContent = form.getAttribute( 'data-certloom-design-data-message' ) || certloomText( 'designDataChecking', 'Checking design data…' ); }
 				else if ( 'details_only' === mode ) { message.textContent = certloomText( 'phase2DetailsReady', 'Ready to review without certificate artwork.' ); }
 				else if ( 'image' === mode ) { message.textContent = certloomText( 'phase2ImageReady', 'Ready to review with the selected certificate image.' ); }
 				else { message.textContent = certloomText( 'phase2Compatible', 'Ready to review with the selected Certloom design.' ); }
+				syncIssueSummary();
+			}
+			function syncEmailAfterIssue() {
+				var selectedEmail = emailAfterIssue.find( function ( radio ) { return radio.checked; } );
+				if ( emailOptions ) { emailOptions.hidden = !! selectedEmail && 'later' === selectedEmail.value; }
 				syncIssueSummary();
 			}
 			function setCheckedValue( radios, value ) { radios.forEach( function ( radio ) { radio.checked = radio.value === value; } ); }
@@ -1941,10 +1957,16 @@
 				}
 				syncIssuerPolicy();
 				var source = titleSource();
-				if ( inheritedTitle ) { inheritedTitle.textContent = programTitle() || certloomText( 'chooseProgramForTitle', 'Choose a Program to inherit its title.' ); }
+				var inheritedProgramTitle = programTitle();
+				if ( inheritedTitle ) { inheritedTitle.textContent = inheritedProgramTitle || certloomText( 'chooseProgramForTitle', 'Choose a Program to inherit its title.' ); }
 				var customVisible = ! usesProgram || 'custom' === source;
-				if ( customTitlePanel ) { customTitlePanel.hidden = ! customVisible; }
-				if ( title ) { title.required = customVisible; title.disabled = ! customVisible; title.setAttribute( 'aria-required', customVisible ? 'true' : 'false' ); }
+				if ( customTitlePanel ) { customTitlePanel.hidden = false; }
+				if ( title ) {
+					if ( usesProgram && 'program' === source ) { title.value = inheritedProgramTitle; }
+					title.required = customVisible;
+					title.disabled = false;
+					title.setAttribute( 'aria-required', customVisible ? 'true' : 'false' );
+				}
 			}
 			function syncPresentation( changed ) {
 				var mode = presentationMode();
@@ -1978,10 +2000,14 @@
 			presentationRadios.forEach( function ( radio ) { radio.addEventListener( 'change', function () { if ( ! autoApplyingAppearance ) { appearanceTouched = true; } syncPresentation( true ); } ); } );
 			designSources.forEach( function ( radio ) { radio.addEventListener( 'change', function () { if ( ! autoApplyingAppearance ) { appearanceTouched = true; } syncCompatibility(); } ); } );
 			basisRadios.forEach( function ( radio ) { radio.addEventListener( 'change', function () { syncCredentialBasis( false ); syncExpiry(); syncCompatibility(); } ); } );
-			titleSourceRadios.forEach( function ( radio ) { radio.addEventListener( 'change', function () { syncCredentialBasis( false ); syncCompatibility(); } ); } );
+			titleSourceRadios.forEach( function ( radio ) { radio.addEventListener( 'change', function () {
+				if ( radio.checked && 'program' === radio.value && title ) { title.value = programTitle(); }
+				syncCredentialBasis( false ); syncCompatibility();
+			} ); } );
 			if ( template ) { template.addEventListener( 'change', syncCompatibility ); }
 			if ( imageId ) { imageId.addEventListener( 'change', syncCompatibility ); }
 			expiryRadios.forEach( function ( radio ) { radio.addEventListener( 'change', syncExpiry ); } );
+			emailAfterIssue.forEach( function ( radio ) { radio.addEventListener( 'change', syncEmailAfterIssue ); } );
 			if ( program ) {
 				var previousProgramValue = String( program.value || '0' );
 				program.addEventListener( 'change', function () {
@@ -1992,14 +2018,20 @@
 					if ( nextProgramValue && '0' !== nextProgramValue ) { autoApplyInheritedDesign( nextProgramValue ); }
 				} );
 			}
-			if ( title ) { title.addEventListener( 'input', syncCompatibility ); }
+			if ( title ) { title.addEventListener( 'input', function () {
+				if ( 'program' === credentialBasis() && 'program' === titleSource() && title.value.trim() !== programTitle() ) {
+					setCheckedValue( titleSourceRadios, 'custom' );
+					syncCredentialBasis( false );
+				}
+				syncCompatibility();
+			} ); }
 			if ( batch ) { batch.addEventListener( 'change', syncCompatibility ); }
 			form.addEventListener( 'change', function ( event ) { if ( event.target && ( event.target.name === 'recipient_id' || event.target.name === 'recipient_mode' ) ) { syncCompatibility(); } } );
 			form.addEventListener( 'input', function ( event ) { if ( event.target && event.target.name === 'new_recipient[display_name]' ) { syncCompatibility(); } } );
 			form.addEventListener( 'certloom:design-readiness', syncCompatibility );
 			form.addEventListener( 'change', syncIssueSummary );
 			form.addEventListener( 'input', syncIssueSummary );
-			syncCredentialBasis( false ); syncIssuerPolicy(); syncPresentation( false ); syncExpiry(); syncCompatibility(); syncIssueSummary();
+			syncCredentialBasis( false ); syncIssuerPolicy(); syncPresentation( false ); syncExpiry(); syncEmailAfterIssue(); syncCompatibility(); syncIssueSummary();
 			if ( program && program.value && '0' !== program.value && ! appearanceTouched ) { autoApplyInheritedDesign( program.value ); }
 		} );
 	}

@@ -1,3 +1,10 @@
+= 1.7.0-alpha.4.78 =
+* Issue Credential task flow redesigned after staging review: Recipient and Credential are the primary compose lane; Program/Scheme and Batch/Cohort are first-class context instead of hiding Batch under advanced options.
+* Certificate appearance now stays visible in the sticky decision rail with Details only, uploaded image and Certloom Design choices plus the existing live design preview/readiness evidence.
+* Email is a first-class issuance decision: Review email next is the safe default, an active issued-purpose Email Design can be selected, and delivery still remains post-commit with preview/confirmation before send.
+* Progressive disclosure tightened: inherited title stays compact, validity is summarized behind Change validity, one-off credential details and specialist Issuer/Signer/numbering data stay collapsed unless needed, while design-required missing facts remain visible and actionable.
+* Live review summary now tracks Batch/Cohort and Email intent in addition to recipient, Program, title, dates, validity and appearance; the 4.77 review-unlocked safety boundaries remain intact.
+
 = 1.7.0-alpha.4.77 =
 * Review-unlocked staging checkpoint: all implemented Certloom admin workspaces and ordinary normalized write paths are enabled by default for end-to-end verification.
 * Data Tools authority is review-unlocked only when WordPress explicitly reports local, development or staging; production keeps the fail-closed release-authority boundary.

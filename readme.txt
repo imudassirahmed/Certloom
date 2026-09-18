@@ -4,13 +4,15 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.7.0-alpha.4.77
+Stable tag: 1.7.0-alpha.4.78
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
 
 == Description ==
+
+> **1.7.0 ALPHA 4.78 — ISSUE CREDENTIAL REVIEW CORRECTION — NOT FOR PRODUCTION.** This review-unlocked checkpoint rebuilds the Manual Issue Credential screen around the actual task: Recipient → Program/Scheme + Batch/Cohort → essential credential facts, with Certificate appearance/live design preview, Email intent/design, live summary and Review kept in one visible decision rail. Optional validity overrides, one-off facts, Issuer/Signer/numbering and specialist controls use progressive disclosure. Email remains post-commit and still requires preview/confirmation before send. The 4.77 review-unlocked environment and renderer safety boundaries remain unchanged.
 
 > **1.7.0 ALPHA 4.22 — DASHBOARD RECENT-CREDENTIALS FIT CORRECTION — NOT FOR PRODUCTION.** This checkpoint changes only the Dashboard Recent credentials list after staging review: issue and expiry are combined into one compact Dates column with date-only values, Status stays visible, and current credentials expose a clear Edit action while historical credentials retain Manage. Dashboard shortcuts and surrounding cards remain unchanged. Renderer/domain authority remain absent while Phase 4 visual acceptance continues.
 
