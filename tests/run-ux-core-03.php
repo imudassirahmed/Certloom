@@ -16,6 +16,7 @@ $js = ux3src( $root, 'admin/assets/admin.js' );
 $domain = ux3src( $root, 'src/Infrastructure/Admin/DomainAdmin.php' );
 $structure = ux3src( $root, 'src/Infrastructure/Admin/DomainStructureAdmin.php' );
 $manual = ux3src( $root, 'src/Infrastructure/Admin/ManualIssuanceAdmin.php' );
+$issue_js = ux3src( $root, 'admin/assets/issue-credential.js' );
 $automations = ux3src( $root, 'admin/views/automations.php' );
 $email_designs = ux3src( $root, 'admin/views/email-designs.php' );
 $email_designer = ux3src( $root, 'admin/views/email-designer.php' );
@@ -38,8 +39,8 @@ ux3( false !== strpos( $js, 'initDomainEntityFormFeedback' ) && false !== strpos
 ux3( 1 === preg_match( '/@media\s*\(max-width\s*:\s*782px\)/', $css ) && 1 === preg_match( '/\.certloom-premium-row-link\s*\{[^}]*min-height\s*:\s*44px/s', $css ), 'Compact desktop UI preserves 44px mobile interaction targets' );
 
 ux3( 1 === preg_match( '/\.certloom-manual-card\s*\{[^}]*padding\s*:\s*18px/s', $css ) && 1 === preg_match( '/\.certloom-manual-card-head h2\s*\{[^}]*font-size\s*:\s*18px/s', $css ), 'Compose Credential uses a restrained form surface instead of an oversized card' );
-ux3( false !== strpos( $manual, 'data-certloom-context-lookup="recipient"' ) && false !== strpos( $manual, 'Search recipients by name, email, or external ID' ), 'Existing Recipient is one server-backed searchable selector, not a duplicate search form' );
-ux3( false !== strpos( $manual, 'certloom-new-recipient-dialog' ) && false !== strpos( $manual, 'Complete recipient profile' ), 'New Recipient retains the complete profile popup' );
+ux3( false !== strpos( $manual, "render_async_picker( 'recipient'" ) && false !== strpos( $manual, 'Search by name, email or external ID…' ) && false !== strpos( $issue_js, "url.searchParams.set('kind', kind)" ), 'Existing Recipient is one server-backed searchable selector, not a duplicate search form' );
+ux3( false !== strpos( $manual, 'data-new-recipient' ) && false !== strpos( $manual, 'new_recipient.display_name' ) && false !== strpos( $manual, "render_async_picker( 'wp_user'" ), 'New Recipient retains the complete focused profile panel' );
 ux3( 1 === preg_match( '/\.certloom-premium-dialog input:not\(\[type=checkbox\]\):not\(\[type=radio\]\)\s*,\s*\.certloom-premium-dialog select\s*\{[^}]*height\s*:\s*40px/s', $css ), 'Quick-create dialogs use the same compact desktop control height' );
 
 ux3( false !== strpos( $css, '.certloom-automations-workspace .certloom-context-lookup__search' ) && false !== strpos( $css, 'height:40px;' ) && false === strpos( $css, 'height:40px!important' ), 'Automation enhanced selectors align with ordinary 40px fields without a specificity override' );

@@ -6,6 +6,7 @@ $files = array(
 	'choices' => file_get_contents( $root . '/src/Infrastructure/Admin/ScopedContextChoices.php' ),
 	'js' => file_get_contents( $root . '/admin/assets/admin.js' ),
 	'manual' => file_get_contents( $root . '/src/Infrastructure/Admin/ManualIssuanceAdmin.php' ),
+	'issue_js' => file_get_contents( $root . '/admin/assets/issue-credential.js' ),
 	'bulk' => file_get_contents( $root . '/src/Infrastructure/Admin/BulkIssuanceAdmin.php' ),
 	'batches' => file_get_contents( $root . '/src/Infrastructure/Admin/DomainStructureAdmin.php' ),
 	'credentials' => file_get_contents( $root . '/src/Infrastructure/Admin/DomainAdmin.php' ),
@@ -23,7 +24,7 @@ scl( false !== strpos( $files['js'], 'function initScopedContextLookups( root )'
 scl( false !== strpos( $files['js'], "status.setAttribute( 'aria-live', 'polite' )" ) && false !== strpos( $files['js'], '220' ), 'lookup UX has live accessibility feedback and debounced requests' );
 scl( false !== strpos( $files['js'], "data-certloom-context-program-status" ) && false !== strpos( $files['js'], "body.append( 'program_status', programStatus )" ), 'Program lookup can intentionally include inactive Programs on historical/filtering surfaces without changing relationship forms' );
 scl( false !== strpos( $files['js'], "if ( 'batch' === kind && ! programId() )" ) && false !== strpos( $files['js'], "body.append( 'program_id', String( programId() ) )" ), 'Batch search cannot detach from selected Program context' );
-scl( false !== strpos( $files['manual'], 'data-certloom-context-lookup="program"' ) && false !== strpos( $files['manual'], 'data-certloom-context-lookup="batch"' ) && false === strpos( $files['manual'], "list_page( '', 1, 250, 'active' )" ), 'Manual Issuance no longer loads a global 250-Batch selector' );
+scl( false !== strpos( $files['manual'], "render_async_picker( 'program'" ) && false !== strpos( $files['manual'], "render_async_picker( 'batch'" ) && false !== strpos( $files['issue_js'], "if ('batch' === kind && !state.issuance.program_id)" ) && false !== strpos( $files['issue_js'], "url.searchParams.set('program_id', String(state.issuance.program_id || 0))" ) && false === strpos( $files['manual'], "list_page( '', 1, 250, 'active' )" ), 'Manual Issuance uses REST-backed Program/Batch pickers and never loads a global 250-Batch selector' );
 scl( false !== strpos( $files['bulk'], 'data-certloom-context-lookup="program"' ) && false !== strpos( $files['bulk'], 'data-certloom-context-lookup="batch"' ) && false === strpos( $files['bulk'], "list_page('',1,250,'active')" ), 'Bulk Issuance uses the same scalable Program/Batch relationship UX' );
 scl( false !== strpos( $files['batches'], 'data-certloom-context-lookup="program"' ), 'Batch editor can select Programs beyond the first result page' );
 scl( false !== strpos( $files['credentials'], 'data-certloom-context-lookup="batch"' ) && false !== strpos( $files['credentials'], 'data-program-id=' ), 'credential relationship correction exposes only Program-aware Batch choices' );

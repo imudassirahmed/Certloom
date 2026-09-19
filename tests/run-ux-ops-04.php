@@ -12,6 +12,8 @@ $guard = u4_src( $root, 'src/Infrastructure/Admin/ScopedFieldConfigurationGuard.
 $repo = u4_src( $root, 'src/Infrastructure/Repository/TemplateRepository.php' );
 $template = u4_src( $root, 'src/Infrastructure/Admin/TemplateAdmin.php' );
 $manual = u4_src( $root, 'src/Infrastructure/Admin/ManualIssuanceAdmin.php' );
+$issue_rest = u4_src( $root, 'src/Infrastructure/Admin/IssueCredentialRest.php' );
+$issue_js = u4_src( $root, 'admin/assets/issue-credential.js' );
 $navigation = u4_src( $root, 'src/Infrastructure/Admin/AdminProductNavigation.php' );
 $legacy_admin = u4_src( $root, 'admin/class-ecapla-certverify-admin.php' );
 $dashboard = u4_src( $root, 'admin/views/dashboard.php' );
@@ -61,8 +63,8 @@ u4( false !== strpos( $library_css, '@media (max-width:782px)' ) && false !== st
 
 // 7. Recipient is a reusable first-class identity and the ordinary create path
 // must not silently bypass it once normalized issuance is available.
-u4( false !== strpos( $manual, 'Choose who will receive this credential.' ) && false !== strpos( $manual, 'Recipient profiles are reusable across future credentials.' ) && false !== strpos( $manual, 'Create the Recipient profile once. Credential-specific facts remain on this issued record.' ), 'Issuance explains the reusable Recipient concept through concise contextual guidance' );
-u4( false !== strpos( $manual, "isset( \$_GET['recipient_id'] )" ) && false !== strpos( $manual, 'array_unshift( $recipient_items, $selected_recipient )' ), 'Recipient profile deep-link preselection survives the bounded recipient search window' );
+u4( false !== strpos( $manual, 'Who receives this credential?' ) && false !== strpos( $manual, 'Recipient profiles are reusable across future credentials.' ) && false !== strpos( $manual, 'credential-specific facts remain on each issued credential.' ), 'Issuance explains the reusable Recipient concept through concise contextual guidance' );
+u4( false !== strpos( $manual, "'recipient_id' => isset( \$_GET['recipient_id'] )" ) && false !== strpos( $issue_rest, "\$recipient = ( new RecipientRepository() )->find( \$recipient_id )" ) && false !== strpos( $issue_rest, "'deep_link' => array(" ) && false !== strpos( $issue_js, 'if (deep.recipient)' ), 'Recipient profile deep-link preselection survives the bounded recipient search window' );
 u4( false !== strpos( $domain, "ManualIssuanceAdmin::PAGE, 'recipient_id'" ) && false !== strpos( $domain, "'Issue credential to this recipient', 'certloom'" ), 'Recipient profiles provide a direct Recipient-preselected Issue credential action' );
 u4( false !== strpos( $domain, 'data-certloom-context-lookup="wp_user"' ) && false !== strpos( $domain, "'WordPress account', 'certloom'" ) && false === strpos( $domain, "'WordPress user ID', 'certloom'" ), 'Recipient editor uses a searchable WordPress account selector instead of a raw numeric user ID' );
 u4( false !== strpos( $ajax, "'wp_user' === \$kind" ) && false !== strpos( $ajax, "get_users( \$args )" ) && false !== strpos( $ajax, "'search_columns'" ), 'WordPress account selector uses bounded server-side name/email/login search' );

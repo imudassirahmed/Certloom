@@ -12,6 +12,8 @@ $root = dirname( __DIR__ );
 $manual = file_get_contents( $root . '/src/Infrastructure/Admin/ManualIssuanceAdmin.php' );
 $admin = file_get_contents( $root . '/admin/class-ecapla-certverify-admin.php' );
 $js = file_get_contents( $root . '/admin/assets/admin.js' );
+$issue_js = file_get_contents( $root . '/admin/assets/issue-credential.js' );
+$rest = file_get_contents( $root . '/src/Infrastructure/Admin/IssueCredentialRest.php' );
 $checks = 0; $fail = 0;
 function p472( $ok, $label ) { global $checks, $fail; $checks++; if ( $ok ) { echo "PASS  $label\n"; } else { $fail++; echo "FAIL  $label\n"; } }
 
@@ -45,12 +47,11 @@ p472( 'Inspection / conformity / product scheme' === $product_terms['program']['
 p472( 'Certification context' === $iso['context_title'] && false !== strpos( $iso['basis_prompt'], 'scheme' ), 'ISO profile supplies certification-specific compose wording' );
 p472( 'Academic context' === $school['context_title'] && false !== strpos( $school['basis_prompt'], 'class' ), 'School profile supplies academic compose wording' );
 p472( false !== strpos( $admin, "'usageIssuance' =>") && false !== strpos( $admin, 'issuance_contract( $usage_profile )' ), 'admin localization exposes one canonical profile-driven issuance contract' );
-p472( false !== strpos( $manual, 'UsageProfilePresentation::issuance_contract( $usage_profile )' ) && false !== strpos( $manual, "data-certloom-usage-profile" ), 'Manual Issuance binds the active profile at render time' );
-p472( false !== strpos( $manual, "if ( \$repeating_rowsets ) { \$this->render_repeating_data_editor") && false !== strpos( $manual, 'repeating_data_from_post( $post[\'repeating_data\'] ?? array(), $allowed_repeating )' ), 'profile-inappropriate repeating rows are neither rendered nor accepted from stale POST data' );
-p472( false !== strpos( $js, 'var profileGradeDefault = !! issuanceProfile.grade_default;') && false !== strpos( $js, 'var gradeAvailable = !! gradeField || ( profileGradeDefault && ! payload.configured );'), 'browser grade visibility follows profile defaults while explicit Program grade fields can still opt in' );
-p472( false !== strpos( $manual, 'These values are frozen on this credential only.' ) && false !== strpos( $manual, 'Add structured facts under Credential details when needed.' ), 'generic recipient and details-only copy remains neutral and concise across profiles' );
-p472( false !== strpos( $manual, "\$profile_terms['program']['search']") && false !== strpos( $manual, "\$profile_terms['batch']['search']") && false !== strpos( $manual, "\$profile_terms['signer']['search']"), 'primary relationship labels and searches use profile-aware terminology server-side' );
-p472( false !== strpos( $manual, '$this->review_fact( $program_term' ) && false !== strpos( $manual, '$this->review_fact( $signer_term' ), 'Review step preserves the active profile terminology instead of reverting to Program/Signer labels' );
-
+p472( false !== strpos( $manual, 'UsageProfilePresentation::active_profile()' ) && false !== strpos( $manual, 'UsageProfilePresentation::terms( $profile )' ) && false !== strpos( $rest, 'UsageProfilePresentation::issuance_contract( $profile )' ), 'Issue Credential binds active profile terminology in the shell and issuance contract in REST bootstrap' );
+p472( false !== strpos( $rest, 'certloom_issue_profile_repeating_data_invalid' ) && false !== strpos( $rest, 'UsageProfilePresentation::issuance_contract()' ), 'profile-inappropriate repeating rows are rejected again at the REST Issue boundary' );
+p472( false !== strpos( $issue_js, 'state.bootstrap.profile.issuance.grade_default' ) && false !== strpos( $issue_js, 'state.bootstrap.profile.issuance.repeating_rowsets' ), 'browser grade and repeating-row visibility follows the canonical profile contract returned by bootstrap' );
+p472( false !== strpos( $manual, 'Only fields relevant to the selected context and certificate design appear here.' ) && false !== strpos( $manual, 'These values are frozen only on this credential' ), 'generic credential-data copy remains neutral and concise across profiles' );
+p472( false !== strpos( $manual, 'data-program-term=' ) && false !== strpos( $manual, 'data-batch-term=' ) && false !== strpos( $manual, 'data-issuer-term=' ) && false !== strpos( $manual, 'data-signer-term=' ), 'primary relationship terminology is bound once from the active profile into the REST app shell' );
+p472( false !== strpos( $issue_js, '[programTerm, review.program' ) && false !== strpos( $issue_js, '[signerTerm, review.signer' ), 'Review preserves active profile terminology instead of reverting to generic Program/Signer labels' );
 echo "\n" . ( $checks - $fail ) . " alpha.4.72 profile-driven issuance checks, $fail failures\n";
 exit( $fail ? 1 : 0 );

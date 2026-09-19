@@ -9,7 +9,8 @@ $files = array(
     'context' => 'src/Infrastructure/Admin/ScopedFieldAdminAjax.php',
     'domain' => 'src/Infrastructure/Admin/DomainAdmin.php',
     'structure' => 'src/Infrastructure/Admin/DomainStructureAdmin.php',
-    'js' => 'admin/assets/admin.js',
+    'rest' => 'src/Infrastructure/Admin/IssueCredentialRest.php',
+    'issue_js' => 'admin/assets/issue-credential.js',
 );
 $src = array();
 foreach ( $files as $key => $file ) {
@@ -32,14 +33,15 @@ de_has( $src['manual'], '$effective_issuer_id = $program_issuer_id ?: $explicit_
 de_has( $src['manual'], 'certloom_manual_issue_issuer_program_mismatch', 'Contradictory explicit Issuer still fails closed at the service boundary.' );
 de_has( $src['context'], "'issuer_id' => absint( \$row['issuer_id'] ?? 0 )", 'Program live lookup carries exact Issuer identity.' );
 de_has( $src['context'], "'issuer_name' => (string) ( \$row['issuer_name'] ?? '' )", 'Program live lookup carries Issuer display context.' );
-de_has( $src['manual_admin'], 'data-program-issuer-id', 'Initial Program choices expose Issuer metadata to the issuance UI.' );
-de_has( $src['manual_admin'], 'data-certloom-manual-issuer-policy', 'Issue Credential has an explicit Issuer inheritance status.' );
-de_has( $src['js'], 'syncIssuerPolicy()', 'Issue Credential synchronizes Issuer inheritance when Program/basis changes.' );
-de_has( $src['js'], 'issuer.disabled = true', 'Program-owned Issuer cannot be contradicted through the normal issuance form.' );
+de_has( $src['rest'], "'issuer_id' => absint( \$row['issuer_id'] ?? 0 )", 'REST Program choices expose exact Issuer identity to the issuance app.' );
+de_has( $src['rest'], "'issuer_name' => (string) ( \$row['issuer_name'] ?? '' )", 'REST Program choices expose Issuer display context to the issuance app.' );
+de_has( $src['manual_admin'], 'data-inherited-issuer', 'Issue Credential has an explicit inherited-Issuer status surface.' );
+de_has( $src['issue_js'], "var hasInherited = 'program' === state.credentialBasis", 'Issue Credential synchronizes inherited authority from the selected Program context.' );
+de_has( $src['issue_js'], "independent.hidden = 'independent' !== state.credentialBasis", 'Program-backed issuance hides the contradictory independent-Issuer picker in the normal flow.' );
 
 // valid_from and issued_at must not be presented as the same concept.
 de_has( $src['manual_admin'], "__( 'Effective date', 'certloom' )", 'Manual Issuance labels valid_from as Effective date.' );
-de_has( $src['manual_admin'], 'actual issuance timestamp separately', 'Manual Issuance explains that issued_at is recorded separately.' );
+de_has( $src['issue_js'], "<small>Issued</small><strong>' + escapeHtml(receipt.issued_at", 'Issue Credential presents the actual issued_at timestamp separately in the receipt.' );
 de_has( $src['bulk_admin'], "esc_html__( 'Effective date', 'certloom' )", 'Bulk Issuance uses the same Effective date terminology.' );
 de_has( $src['domain'], "credential_locked_field( __( 'Effective date', 'certloom' )", 'Credential details present valid_from as Effective date.' );
 de_has( $src['domain'], "__( 'Issue date', 'certloom' )", 'Credential registry retains Issue date for the actual issued_at timestamp.' );

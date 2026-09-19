@@ -14,6 +14,8 @@ $manual = ux2src( $root, 'src/Infrastructure/Admin/ManualIssuanceAdmin.php' );
 $service = ux2src( $root, 'src/Application/Issuance/ManualIssuanceService.php' );
 $manual_repo = ux2src( $root, 'src/Infrastructure/Repository/ManualIssuanceRepository.php' );
 $js = ux2src( $root, 'admin/assets/admin.js' );
+$issue_js = ux2src( $root, 'admin/assets/issue-credential.js' );
+$issue_rest = ux2src( $root, 'src/Infrastructure/Admin/IssueCredentialRest.php' );
 $sync = ux2src( $root, 'src/Infrastructure/Recipient/RecipientUserSync.php' );
 $resolver = ux2src( $root, 'src/Infrastructure/Integration/LinkedRecipientResolver.php' );
 $plugin = ux2src( $root, 'src/Plugin.php' );
@@ -24,14 +26,15 @@ $nav = ux2src( $root, 'src/Infrastructure/Admin/AdminProductNavigation.php' );
 $domain = ux2src( $root, 'src/Infrastructure/Admin/DomainAdmin.php' );
 $css = ux2src( $root, 'admin/assets/admin.css' );
 
-ux2( false !== strpos( $manual, "recipient_mode', 'existing'" ) && false !== strpos( $manual, "recipient_mode', 'new'" ) && false !== strpos( $js, 'data-certloom-recipient-existing-panel' ), 'Manual Issuance has exclusive existing/new Recipient modes' );
-ux2( false !== strpos( $manual, 'certloom-new-recipient-dialog' ) && false !== strpos( $manual, 'Complete recipient profile' ), 'New Recipient uses a focused profile popup rather than a second inline form' );
-foreach ( array( 'display_name', 'email', 'first_name', 'middle_name', 'last_name', 'external_id', 'wp_user_id' ) as $field ) {
-	ux2( false !== strpos( $manual, 'new_recipient[' . $field . ']' ), 'New Recipient popup carries canonical profile field ' . $field );
+ux2( false !== strpos( $manual, 'data-recipient-mode="existing"' ) && false !== strpos( $manual, 'data-recipient-mode="new"' ) && false !== strpos( $issue_js, 'initRecipientModes' ), 'Manual Issuance has exclusive existing/new Recipient modes' );
+ux2( false !== strpos( $manual, 'data-new-recipient' ) && false !== strpos( $manual, 'create a reusable Recipient profile without leaving issuance' ), 'New Recipient uses a focused first-step profile panel rather than a competing second form' );
+foreach ( array( 'display_name', 'email', 'first_name', 'middle_name', 'last_name', 'external_id' ) as $field ) {
+	ux2( false !== strpos( $manual, 'new_recipient.' . $field ), 'New Recipient panel carries canonical profile field ' . $field );
 }
-ux2( false !== strpos( $manual, 'Credential fields stay separate' ) && false !== strpos( $manual, 'data-certloom-scoped-field-panel' ), 'Credential-specific fields stay separate from Recipient profile creation' );
-ux2( false !== strpos( $js, 'applyRecipientRequirements' ) && false !== strpos( $js, "'recipient' !== field.value_source" ), 'Program/Batch contract can make Recipient profile fields required only when relevant' );
-ux2( false !== strpos( $js, "'grade' === field.key" ) && false !== strpos( $js, 'gradeInput.required = true' ), 'Required Grade remains a credential field for existing or new Recipients' );
+ux2( false !== strpos( $manual, "render_async_picker( 'wp_user'" ) && false !== strpos( $issue_js, 'state.issuance.new_recipient.wp_user_id = id' ), 'New Recipient panel can link an exact WordPress account without exposing a raw numeric ID' );
+ux2( false !== strpos( $manual, 'data-step-key="data"' ) && false !== strpos( $manual, 'credential-specific facts remain on each issued credential' ), 'Credential-specific fields stay separate from Recipient profile creation' );
+ux2( false !== strpos( $issue_js, "if ('recipient' === source)" ) && false !== strpos( $issue_js, 'From Recipient profile' ), 'Program/Batch field contracts keep Recipient-owned facts read-only in credential data' );
+ux2( false !== strpos( $issue_js, "'grade' === key" ) && false !== strpos( $issue_js, 'data-scoped-input="grade"' ), 'Required Grade remains a credential field for existing or new Recipients' );
 ux2( false !== strpos( $service, "if ( 'recipient' === \$source )" ) && false !== strpos( $service, "'grade' === \$key" ) && false !== strpos( $service, '$submitted[ $key ]' ), 'Issuance resolves Recipient, Grade and credential-custom values from their separate authorities' );
 ux2( false !== strpos( $manual_repo, "'wp_user_id'" ) && false !== strpos( $manual_repo, 'find_by_wp_user_id' ), 'New Recipient can link an exact existing WordPress account without duplicate ownership' );
 
@@ -42,12 +45,12 @@ ux2( false !== strpos( $plugin, 'RecipientUserSync' ), 'Recipient account sync i
 ux2( false !== strpos( $settings, "'recipient_user_sync_enabled' => true" ) && false !== strpos( $settings_view, 'Keep WordPress users connected to Recipient profiles' ), 'Recipient account sync is an explicit enabled-by-default setting' );
 ux2( false !== strpos( $resolver, 'ensure_for_user' ) && false !== strpos( $resolver, 'RecipientUserSync::enabled' ), 'Account-based integrations can provision the exact Recipient when the sync policy is enabled' );
 
-ux2( false !== strpos( $manual, 'certloom-quick-program-dialog' ) && false !== strpos( $manual, 'certloom_manual_quick_program' ), 'Issuance can quick-add a Program without leaving the draft' );
-ux2( false !== strpos( $manual, 'certloom-quick-batch-dialog' ) && false !== strpos( $manual, 'certloom_manual_quick_batch' ), 'Issuance can quick-add a Batch without leaving the draft' );
-ux2( false !== strpos( $js, "form[data-certloom-quick-create]" ) && false !== strpos( $js, "fetch( window.ajaxurl" ), 'Quick-create popups save over AJAX so unsaved parent forms are preserved' );
+ux2( false !== strpos( $manual, 'data-quick-dialog="program"' ) && false !== strpos( $issue_rest, "self::BASE . '/quick-program'" ), 'Issuance can quick-add a Program without leaving the draft' );
+ux2( false !== strpos( $manual, 'data-quick-dialog="batch"' ) && false !== strpos( $issue_rest, "self::BASE . '/quick-batch'" ), 'Issuance can quick-add a Batch without leaving the draft' );
+ux2( false !== strpos( $issue_js, "root.querySelectorAll('[data-quick-form]')" ) && false !== strpos( $issue_js, "rest(url, {method:'POST', body:payload})" ), 'Quick-create dialogs save over authenticated REST so unsaved issuance state is preserved' );
 ux2( false !== strpos( $batch_admin, 'certloom-batch-quick-program-dialog' ) && false !== strpos( $batch_admin, 'data-certloom-quick-target="#certloom-batch-program-id"' ), 'Batch creation can quick-add and select a Program in place' );
-ux2( false === strpos( $manual, 'name="program_template_id"' ) && false !== strpos( $manual, 'Designs inherit automatically' ) && false !== strpos( $manual, 'program_field_requirement[' ), 'Issuance quick Program inherits presentation while retaining its useful credential-field contract' );
-ux2( false === strpos( $manual, 'name="batch_template_id"' ) && false !== strpos( $manual, 'will follow its %2$s certificate/email designs' ) && false !== strpos( $manual, 'batch_field_requirement[' ), 'Issuance quick profile-aware Batch inherits presentation while retaining Batch field changes' );
+ux2( false === strpos( $manual, 'name="program_template_id"' ) && false !== strpos( $issue_js, 'loadProgramContext(false)' ) && false !== strpos( $issue_js, 'state.fieldContract' ), 'Issuance quick Program inherits design authority while loading its canonical credential-field contract after selection' );
+ux2( false === strpos( $manual, 'name="batch_template_id"' ) && false !== strpos( $issue_js, "if ('batch' === kind)" ) && false !== strpos( $issue_js, 'loadProgramContext(false)' ), 'Issuance quick Batch inherits presentation while refreshing canonical Batch field changes' );
 ux2( false === strpos( $batch_admin, 'name="batch_template_id"' ) && false !== strpos( $batch_admin, "( new DesignRulesAdmin() )->context_card( 'batch', \$id )" ), 'Main Batch editor delegates certificate/email overrides to the shared Designs card' );
 ux2( false !== strpos( $batch_admin, 'certloom-batch-quick-program-dialog' ) && false === strpos( $batch_admin, 'name="program_template_id"' ) && false !== strpos( $batch_admin, 'quick-created Program inherits its Issuer and Global certificate/email designs' ) && false !== strpos( $batch_admin, 'program_field_requirement[' ), 'Batch quick Program inherits presentation while retaining field decisions' );
 ux2( false === strpos( $domain, 'name="program_template_id"' ) && false !== strpos( $domain, "( new DesignRulesAdmin() )->context_card( 'program', \$id )" ), 'Program editor delegates presentation overrides to the shared Designs card without embedding assignment controls' );

@@ -17,6 +17,7 @@ $js        = u3_src( $root, 'admin/assets/admin.js' );
 $css       = u3_src( $root, 'admin/assets/admin.css' );
 $wizard    = u3_src( $root, 'admin/views/setup-wizard.php' );
 $manual    = u3_src( $root, 'src/Infrastructure/Admin/ManualIssuanceAdmin.php' );
+$issue_js  = u3_src( $root, 'admin/assets/issue-credential.js' );
 $bulk      = u3_src( $root, 'src/Infrastructure/Admin/BulkIssuanceAdmin.php' );
 $email     = u3_src( $root, 'src/Infrastructure/Admin/EmailDeliveryAdmin.php' );
 foreach ( array( $nav,$domain,$structure,$fields,$template,$rules,$admin,$js,$css,$wizard,$manual,$bulk,$email ) as $source ) { u3( '' !== $source, 'Required UX-OPS-03 source is available' ); }
@@ -59,7 +60,7 @@ u3( false === strpos( $template, 'Assign at this scope' ) && false === strpos( $
 u3( false !== strpos( $rules, "'No change', 'certloom'" ) && false !== strpos( $rules, "'Inherit from parent', 'certloom'" ) && false !== strpos( $rules, "'Certificate design', 'certloom'" ) && false !== strpos( $rules, "'Email design', 'certloom'" ), 'Design Rules exposes explicit independent bulk semantics for certificate and email design authority' );
 
 // 7B. Integrity evidence stays available without dominating ordinary issuance/delivery/preview workflows.
-u3( false !== strpos( $manual, 'certloom-technical-details certloom-manual-proof' ) && false !== strpos( $manual, "'Review SHA-256', 'certloom'" ) && false === strpos( $manual, "review_fact( __( 'Review SHA-256'" ), 'Manual Issuance collapses review/layout/render integrity identifiers under Technical details' );
+u3( false !== strpos( $manual, 'data-review-technical' ) && false !== strpos( $manual, "__( 'Technical details', 'certloom' )" ) && false !== strpos( $issue_js, 'Review SHA-256' ) && false !== strpos( $issue_js, 'Template revision' ), 'Manual Issuance collapses review/layout/render integrity identifiers under Technical details' );
 u3( false !== strpos( $bulk, 'certloom-technical-details' ) && false !== strpos( $bulk, 'Reviewed batch fingerprint' ) && false !== strpos( $bulk, "'certloom'" ), 'Bulk Issuance keeps batch/plan integrity identifiers in collapsed Technical details' );
 u3( false !== strpos( $email, 'certloom-email-review-meta' ) && false !== strpos( $email, 'certloom-technical-details' ) && false !== strpos( $email, "'Composition SHA-256', 'certloom'" ), 'Email Delivery keeps destination/kind visible while collapsing composition integrity proof' );
 u3( false !== strpos( $template, 'certloom-template-preview-technical' ) && false !== strpos( $template, "'Layout SHA-256', 'certloom'" ) && false !== strpos( $template, "'Render Plan SHA-256', 'certloom'" ), 'Template Preview moves revision/hash evidence into collapsed Technical details' );

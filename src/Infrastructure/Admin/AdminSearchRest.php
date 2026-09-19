@@ -222,7 +222,8 @@ final class AdminSearchRest {
 	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function issuance_preview( \WP_REST_Request $request ) {
-		$input = $request->get_body_params();
+		$input = $request->get_json_params();
+		if ( ! is_array( $input ) ) { $input = $request->get_body_params(); }
 		$input = is_array( $input ) ? $input : array();
 		$input = $this->normalize_issuance_preview_request( $input );
 		$review = ( new \Certloom\Application\Issuance\ManualIssuanceService() )->draft_preview( $input );

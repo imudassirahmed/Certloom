@@ -19,6 +19,8 @@ $dashboard = uxsrc( 'admin/views/dashboard.php' );
 $domain = uxsrc( 'src/Infrastructure/Admin/DomainAdmin.php' );
 $domain_structure = uxsrc( 'src/Infrastructure/Admin/DomainStructureAdmin.php' );
 $manual = uxsrc( 'src/Infrastructure/Admin/ManualIssuanceAdmin.php' );
+$issue_rest = uxsrc( 'src/Infrastructure/Admin/IssueCredentialRest.php' );
+$issue_js = uxsrc( 'admin/assets/issue-credential.js' );
 $email = uxsrc( 'src/Infrastructure/Admin/EmailDeliveryAdmin.php' );
 $automation = uxsrc( 'src/Infrastructure/Admin/AutomationAdmin.php' );
 $automations_view = uxsrc( 'admin/views/automations.php' );
@@ -48,8 +50,8 @@ uxroute( false !== strpos( $domain, "'page' => ManualIssuanceAdmin::PAGE, 'recip
 uxroute( false !== strpos( $domain, "'page' => ManualIssuanceAdmin::PAGE, 'recipient_id'" ) && false !== strpos( $domain, "'program_id'" ) && false !== strpos( $domain, "'batch_id'" ), 'Credential Issue another keeps Recipient, Program and Batch context' );
 uxroute( false !== strpos( $domain, "'page' => 'certloom-email-delivery', 'version_id'" ), 'Credential Email action binds the exact immutable Version' );
 uxroute( false !== strpos( $domain, "View credential" ) && false !== strpos( $domain, "target=\"_blank\"" ), 'Credential exposes a direct human public View credential continuation when available' );
-uxroute( false !== strpos( $manual, "'page' => 'certloom-email-delivery', 'version_id' => absint( \$receipt['version_id'] )" ) && false !== strpos( $manual, "\$email_next" ) && false !== strpos( $manual, "Review email" ), 'Successful Manual Issuance preserves a direct Email Delivery continuation and the Compose email-next choice' );
-uxroute( false !== strpos( $manual, "Issue another credential" ), 'Successful Manual Issuance exposes an obvious next issuance action' );
+uxroute( false !== strpos( $issue_rest, 'EmailDeliveryAdmin::PAGE' ) && false !== strpos( $issue_rest, "'email_url'" ) && false !== strpos( $issue_js, "'review' === state.email.mode" ) && false !== strpos( $issue_js, 'Review email' ), 'Successful Manual Issuance preserves a direct Email Delivery continuation and the Compose email-next choice' );
+uxroute( false !== strpos( $issue_rest, "'issue_another_url'" ) && false !== strpos( $issue_js, 'Issue another credential' ), 'Successful Manual Issuance exposes an obvious next issuance action' );
 
 // Program is a connected workspace rather than five independent setup screens.
 foreach ( array( 'certloom_program_quick_issuer', 'certloom_program_quick_batch', 'certloom_program_quick_signer' ) as $action ) {

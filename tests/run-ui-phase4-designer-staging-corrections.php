@@ -7,11 +7,12 @@ $repo = file_get_contents( $root . '/src/Infrastructure/Repository/TemplateRepos
 $autosave = file_get_contents( $root . '/src/Infrastructure/Admin/TemplateDesignerAutosave.php' );
 $factory = file_get_contents( $root . '/src/Application/Templates/FactoryPresetService.php' );
 $css = file_get_contents( $root . '/admin/assets/certloom-foundation.css' );
+$issue_css = file_get_contents( $root . '/admin/assets/issue-credential.css' );
 $checks=0;$fail=0;
 function a435($ok,$label){global$checks,$fail;$checks++;if($ok){echo "PASS  $label\n";}else{$fail++;echo "FAIL  $label\n";}}
-foreach ( array( 'admin'=>$admin, 'repo'=>$repo, 'autosave'=>$autosave, 'factory'=>$factory, 'css'=>$css ) as $key=>$source ) { a435( is_string( $source ) && '' !== $source, 'source ' . $key . ' available' ); }
-a435( false !== strpos( $css, '/* alpha.4.35 — Certificate appearance follows the page instead of creating a nested scroll region.' ), 'Issue Credential records the page-scroll correction explicitly' );
-a435( false !== strpos( $css, 'position: static;' ) && false !== strpos( $css, 'max-height: none;' ) && false !== strpos( $css, 'overflow: visible;' ), 'Certificate appearance has no sticky nested-scroll geometry' );
+foreach ( array( 'admin'=>$admin, 'repo'=>$repo, 'autosave'=>$autosave, 'factory'=>$factory, 'css'=>$css, 'issue_css'=>$issue_css ) as $key=>$source ) { a435( is_string( $source ) && '' !== $source, 'source ' . $key . ' available' ); }
+a435( false !== strpos( $issue_css, '.certloom-issue-summary' ) && false !== strpos( $issue_css, 'position: sticky;' ) && false !== strpos( $issue_css, '@media (max-width: 960px)' ), 'Issue Credential keeps sticky context in the summary rail and releases it on narrower layouts' );
+a435( false !== strpos( $issue_css, '.certloom-issue-preview-stage' ) && false !== strpos( $issue_css, 'overflow: auto;' ) && false === strpos( $issue_css, '.certloom-issue-preview-card {\n  position: sticky;' ), 'Certificate appearance is a normal step with only its preview stage allowed to scroll' );
 a435( false === strpos( $repo, 'certloom_template_publish_renderer_gate' ), 'Template publication is no longer blocked by artifact renderer authority' );
 a435( false === strpos( $repo, 'publication_status()' ), 'Template persistence no longer consults renderer publication status' );
 a435( false !== strpos( $repo, 'certloom_template_publish_review_required' ) && false !== strpos( $repo, 'certloom_template_publish_review_stale' ), 'Publication still requires exact revision and hash review proof' );

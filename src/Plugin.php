@@ -86,6 +86,7 @@ final class Plugin {
 		}
 		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
 			( new \Certloom\Infrastructure\Admin\AdminSearchRest() )->register();
+			( new \Certloom\Infrastructure\Admin\IssueCredentialRest() )->register();
 		}
 		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() && is_admin() ) {
 			( new \Certloom\Infrastructure\Admin\DomainAdmin() )->register();

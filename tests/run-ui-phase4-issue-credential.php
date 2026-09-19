@@ -1,57 +1,62 @@
 <?php
-/** Alpha.4.34 Issue Credential staging-correction contract. */
-$root=dirname(__DIR__);
-$m=file_get_contents($root.'/src/Infrastructure/Admin/ManualIssuanceAdmin.php');
-$n=file_get_contents($root.'/src/Infrastructure/Admin/AdminProductNavigation.php');
-$c=file_get_contents($root.'/admin/assets/certloom-foundation.css');
-$j=file_get_contents($root.'/admin/assets/admin.js');
-$a=file_get_contents($root.'/admin/class-ecapla-certverify-admin.php');
-$pass=0;$fail=0; function i427($ok,$label){global $pass,$fail;if($ok){$pass++;echo "PASS  $label\n";}else{$fail++;echo "FAIL  $label\n";}}
-i427(false!==strpos($m,'certloom-page-hero certloom-issue-hero')&&false!==strpos($m,"__( 'Credential operations', 'certloom' )"),'Issue credential participates in shared hero hierarchy');
-i427(false!==strpos($m,'( new AdminProductNavigation() )->render_current_subnav();'),'Issue Credential emits contextual subnav at final server-side position');
-i427(false!==strpos($n,"'certloom-issuance'")&&false!==strpos($n,'page_renders_own_subnav'),'early admin_notices navigation is suppressed for Issue Credential');
-i427(false===strpos($m,'certloom-ui-contract-badge')&&false===strpos($m,'certloom-phase2-backend-boundary'),'developer UI-contract/alpha-boundary chrome remains outside primary compose flow');
-i427(false!==strpos($m,'render_technical_status')&&false!==strpos($m,'certloom-issue-technical-status'),'technical/release detail remains available in a collapsed disclosure');
-i427(false!==strpos($m,'certloom-review-readiness')&&false!==strpos($m,'data-certloom-phase2-compatibility-message'),'backend readiness remains concise actionable form feedback');
-i427(false!==strpos($c,'/* alpha.4.27 — Issue Credential compact visual hierarchy.')&&false!==strpos($c,'width: min(1140px, 100%)'),'alpha.4.27 bounds the task more tightly');
-i427(false!==strpos($c,'min-height: 40px;')&&false!==strpos($c,'margin-top: 12px;')&&false!==strpos($c,'margin-bottom: 12px;'),'workflow stepper has reduced vertical density');
-i427(false!==strpos($c,'padding: 14px 20px 16px;'),'compose fieldsets use compact spacing');
-i427(false!==strpos($c,'min-height: 76px;')&&false!==strpos($c,'padding: 11px 12px;'),'presentation cards are substantially shorter without removing choices');
-i427(false!==strpos($c,'.certloom-manual-issuance .certloom-issue-hero')&&false!==strpos($c,'min-height: 146px;'),'Issue hero is compacted without changing approved watermark artwork');
-i427(false!==strpos($c,'grid-template-areas:')&&false!==strpos($c,'"search select"'),'Recipient lookup remains compact on desktop');
-i427(false!==strpos($c,'.certloom-issue-v2-form .certloom-issue-actions')&&false!==strpos($c,'padding: 13px 20px 15px;'),'review action footer is tightened while retaining hierarchy');
-i427(false!==strpos($a,'Ready to review without certificate artwork.')&&false!==strpos($a,'Choose a PNG or JPEG certificate image to continue.')&&false!==strpos($j,'phase2DetailsReady')&&false!==strpos($j,'phase2ImageReady'),'localized/browser readiness copy supports details-only and uploaded-image review paths');
-i427(false!==strpos($m,"array( 'details_only', 'image', 'design' )")&&false!==strpos($m,"'image' === \$presentation")&&false===strpos($m,'certloom_phase2_presentation_backend_pending'),'Manual admin backend no longer blocks details-only review behind the legacy design path');
-i427(false!==strpos($m,'certloom-review-action-copy')&&strpos($m,'certloom-review-action-copy')<strpos($m,'data-certloom-manual-review'),'review explanation precedes the primary action in source order');
-i427(false!==strpos($c,'/* alpha.4.30 — usable details-only review and a deliberate review-action footer.')&&false!==strpos($c,'grid-template-columns: minmax(0, 1fr) auto;')&&false!==strpos($c,'justify-self: end;'),'alpha.4.30 aligns review copy and primary action as a deliberate footer');
-i427(false!==strpos($c,'/* alpha.4.30 — keep certificate appearance task-sized')&&false!==strpos($c,'align-self: start;'),'appearance column no longer stretches into a blank panel when optional details expand');
-i427(false===strpos($c,'.certloom-manual-issuance .certloom-manual-steps li.is-current !important'),'new compact layer adds no !important override');
+/** Alpha.4.79 Issue Credential eight-step REST compatibility contract. */
+$root = dirname( __DIR__ );
+$manual = file_get_contents( $root . '/src/Infrastructure/Admin/ManualIssuanceAdmin.php' );
+$rest = file_get_contents( $root . '/src/Infrastructure/Admin/IssueCredentialRest.php' );
+$search = file_get_contents( $root . '/src/Infrastructure/Admin/AdminSearchRest.php' );
+$nav = file_get_contents( $root . '/src/Infrastructure/Admin/AdminProductNavigation.php' );
+$js = file_get_contents( $root . '/admin/assets/issue-credential.js' );
+$global_js = file_get_contents( $root . '/admin/assets/admin.js' );
+$css = file_get_contents( $root . '/admin/assets/issue-credential.css' );
+$pass = 0; $fail = 0;
+function i427( $ok, $label ) { global $pass, $fail; if ( $ok ) { $pass++; echo "PASS  $label\n"; } else { $fail++; echo "FAIL  $label\n"; } }
+foreach ( array( 'manual'=>$manual, 'rest'=>$rest, 'search'=>$search, 'nav'=>$nav, 'js'=>$js, 'global_js'=>$global_js, 'css'=>$css ) as $name=>$source ) { i427( is_string( $source ) && '' !== $source, 'source ' . $name . ' is readable' ); }
 
-i427(false!==strpos($m,'data-certloom-credential-data')&&false!==strpos($m,"__( 'Credential details', 'certloom' )")&&false!==strpos($m,'data-certloom-independent-details'),'Details-only and Independent issuance expose a first-class Credential details surface');
-i427(false!==strpos($m,'data-certloom-design-data-check')&&false!==strpos($m,"__( 'Design data check', 'certloom' )"),'selected Certloom design exposes an explicit data-readiness surface beside the real preview');
-i427(false!==strpos($j,'restIssuancePreviewUrl')&&false!==strpos($j,'bodyFromForm')&&false!==strpos($j,"method: 'POST'")&&false!==strpos($j,'certloom:design-readiness'),'design preview posts the exact current issuance form and feeds readiness back into Review state');
-i427(false!==strpos($a,"'restIssuancePreviewUrl' => rest_url( 'certloom/v1/admin/issuance-preview' )")&&false!==strpos($a,"'recipientEditBase'"),'admin localization exposes the mutation-free issuance preview route and Recipient edit target');
-i427(false!==strpos($c,'/* alpha.4.35 — Certificate appearance follows the page instead of creating a nested scroll region.')&&false!==strpos($c,'position: static;')&&false!==strpos($c,'max-height: none;')&&false!==strpos($c,'overflow: visible;'),'Certificate appearance uses the normal page scroll and does not create a nested scrollbar');
-i427(false!==strpos($m,'data-certloom-additional-details')&&false===strpos($m,'<details class="certloom-additional-details" open'),'preselected Issuer/Batch/Signer no longer force Additional details open on page load');
-i427(false!==strpos($j,'certloom:add-credential-detail')&&false!==strpos($j,'designDataEditRecipient')&&false!==strpos($j,'designDataAddValue'),'missing design fields provide owner-aware actions for Recipient data and credential-specific values');
-i427(false!==strpos($j,"if ( '_wpnonce' === key || '_wp_http_referer' === key ) { return; }")&&false!==strpos($j,"'X-WP-Nonce': certloomL10n.restNonce"),'live issuance preview keeps the Manual action nonce out of REST cookie authentication and uses the dedicated REST nonce header');
-i427(false!==strpos($a,"'previewSessionExpired'")&&false!==strpos($j,"'rest_cookie_invalid_nonce' === payload.code"),'expired REST preview sessions receive actionable refresh copy instead of raw WordPress cookie-check text');
-i427(strpos($m,'data-certloom-legacy-custom-fields')>strpos($m,'data-certloom-additional-details')&&strpos($m,'data-certloom-legacy-custom-fields')<strpos($m,'render_repeating_data_editor'),'Technical custom fields live below Additional details and before the repeating Subjects/results editor');
-i427(false!==strpos($c,'/* alpha.4.34 — Manual Issuance screenshot corrections.')&&false!==strpos($c,'grid-template-columns: repeat(4, minmax(0, 1fr));')&&false!==strpos($c,'.certloom-issue-v2-form .certloom-numbering-summary'),'screenshot correction layer bounds repeating rows and restores deliberate Credential-number spacing');
+i427( false !== strpos( $manual, 'certloom-page-hero certloom-issue-app-hero' ) && false !== strpos( $manual, "__( 'Credential operations', 'certloom' )" ), 'Issue Credential participates in the shared task hero hierarchy' );
+i427( false !== strpos( $manual, '( new AdminProductNavigation() )->render_current_subnav();' ), 'Issue Credential renders contextual product navigation' );
+i427( false !== strpos( $nav, "'certloom-issuance'" ) && false !== strpos( $nav, 'page_renders_own_subnav' ), 'early duplicate sub-navigation stays suppressed' );
+i427( false === strpos( $manual, 'certloom-ui-contract-badge' ) && false === strpos( $manual, 'certloom-phase2-backend-boundary' ), 'developer contract chrome stays outside the user workflow' );
 
-i427(false!==strpos($m,'certloom-issue-context-rail')&&false!==strpos($m,'certloom-issue-summary')&&false!==strpos($m,'data-certloom-issue-summary-recipient'),'alpha.4.73 uses the formerly empty right side for a live appearance/summary/review rail');
-i427(strpos($m,'data-certloom-additional-details')<strpos($m,'certloom-issue-context-rail'),'Additional details now stays in the wide main compose column before the context rail');
-i427(false!==strpos($c,'/* alpha.4.73 — Profile-adaptive Compose layout.')&&false!==strpos($c,'grid-template-areas: "main rail"')&&false!==strpos($c,'position: sticky;'),'alpha.4.73 establishes a sticky desktop context rail without changing issuance authority');
-i427(false!==strpos($j,'syncIssueSummary')&&false!==strpos($j,'data-certloom-issue-summary-validity'),'live credential summary follows recipient, Program, title, validity and appearance changes');
-i427(false!==strpos($m,'data-certloom-repeating-empty')&&false===strpos($m,'if ( ! $rows ) { $rows = array( array() ); }'),'academic Subjects/results no longer render a permanent empty row editor');
+foreach ( array( 'recipient','context','credential','data','certificate','authority','email','review' ) as $key ) {
+    i427( false !== strpos( $manual, 'data-step-key="' . $key . '"' ), 'eight-step app includes ' . $key . ' step' );
+}
+i427( false !== strpos( $manual, 'A focused eight-step workflow.' ), 'workflow explains its progressive REST model instead of exposing a mega-form' );
+i427( false !== strpos( $manual, "render_async_picker( 'recipient'" ) && false !== strpos( $manual, "render_async_picker( 'program'" ) && false !== strpos( $manual, "render_async_picker( 'batch'" ), 'Recipient, Program and Batch use one async-picker pattern' );
+i427( false !== strpos( $manual, 'data-quick-dialog="program"' ) && false !== strpos( $manual, 'data-quick-dialog="batch"' ), 'Program and Batch remain quick-creatable without leaving issuance' );
+i427( false !== strpos( $manual, 'data-field="credential_title"' ) && false !== strpos( $manual, 'The title stays editable even when a Program supplies the default.' ), 'Program-derived title remains visibly editable' );
+i427( false !== strpos( $manual, 'data-design-required-fields' ) && strpos( $manual, 'data-design-required-fields' ) < strpos( $manual, 'Additional one-off credential data' ), 'design-required facts stay visible before collapsed optional one-off data' );
+i427( false !== strpos( $manual, 'data-repeating-section' ) && false !== strpos( $manual, 'Subjects & results' ), 'structured Subjects/Results have a dedicated bounded data surface' );
 
-i427(false!==strpos($m,'certloom-issue-batch-primary')&&strpos($m,'certloom-issue-batch-primary')<strpos($m,'data-certloom-additional-details'),'alpha.4.78 promotes Batch/cohort beside the primary Program choice');
-i427(false!==strpos($m,'certloom-delivery-fieldset')&&strpos($m,'certloom-delivery-fieldset')>strpos($m,'certloom-issue-context-rail'),'alpha.4.78 keeps Email as a first-class decision in the right rail');
-i427(false!==strpos($m,"'review' === \$email_after_issue")&&false!==strpos($m,"__( 'Review email next', 'certloom' )")&&false!==strpos($m,'EmailTemplateCatalogRepository'),'alpha.4.78 defaults to review-next email intent without sending during issuance');
-i427(false!==strpos($m,'data-certloom-oneoff-details')&&false===strpos($m,'<details class="certloom-oneoff-details" open')&&strpos($m,'data-certloom-independent-detail-suggestions')<strpos($m,'data-certloom-oneoff-details'),'alpha.4.78 collapses optional one-off data while keeping design-required facts visible');
-i427(false!==strpos($m,'certloom-validity-compact')&&false!==strpos($m,'certloom-validity-options'),'alpha.4.78 summarizes validity and moves override choices behind Change validity');
-i427(false!==strpos($j,'data-certloom-issue-summary-batch')&&false!==strpos($j,'data-certloom-issue-summary-email')&&false!==strpos($j,'syncEmailAfterIssue'),'alpha.4.78 live summary tracks Batch and post-issuance email intent');
-i427(false!==strpos($c,'/* alpha.4.78 — Issue Credential task-flow correction.')&&false!==strpos($c,'minmax(390px, 430px)')&&false!==strpos($c,'.certloom-delivery-fieldset .certloom-email-after-issue'),'alpha.4.78 has an explicit desktop task rail and Email layout contract');
-i427(false!==strpos($m,'email_next')&&false!==strpos($m,'email_template_id')&&false!==strpos($m,'wp_safe_redirect'),'alpha.4.78 carries review-next email intent only after successful issuance');
+i427( false !== strpos( $manual, 'data-presentation="details_only"' ) && false !== strpos( $manual, 'data-presentation="image"' ) && false !== strpos( $manual, 'data-presentation="design"' ), 'Certificate step exposes details-only, uploaded-image and Certloom-design choices' );
+i427( false !== strpos( $manual, 'data-design-source="inherited"' ) && false !== strpos( $manual, 'data-design-source="assigned"' ), 'Certloom design supports explicit inherited or one-off assigned source' );
+i427( false !== strpos( $manual, 'Live certificate preview' ) && false !== strpos( $manual, 'data-preview-stage' ), 'Certificate step keeps a live unsaved preview surface' );
+i427( false !== strpos( $manual, 'data-email-mode="review"' ) && false !== strpos( $manual, 'data-email-mode="later"' ) && false !== strpos( $manual, 'Email design' ), 'Email is a first-class post-commit step with an explicit design choice' );
+i427( false !== strpos( $manual, 'Nothing is sent during issuance.' ) && false !== strpos( $manual, 'It does not send email automatically.' ), 'issuance never implies that Review or Issue silently sends email' );
 
-echo "\n$pass alpha.4.78 Issue Credential source checks, $fail failures\n"; exit($fail?1:0);
+i427( false !== strpos( $manual, 'data-review-technical' ) && false !== strpos( $manual, "__( 'Technical details', 'certloom' )" ) && false !== strpos( $js, 'Review SHA-256' ), 'technical/release evidence remains available under progressive disclosure' );
+i427( false !== strpos( $manual, 'data-issue-summary' ) && false !== strpos( $manual, 'data-summary-recipient' ) && false !== strpos( $manual, 'data-summary-batch' ) && false !== strpos( $manual, 'data-summary-email' ), 'live summary follows the important issuance decisions' );
+i427( false !== strpos( $manual, 'data-issue-receipt' ), 'Review step contains an inline issuance receipt continuation surface' );
+
+i427( false !== strpos( $manual, "'restNonce' => wp_create_nonce( 'wp_rest' )" ) && false !== strpos( $js, "'X-WP-Nonce': cfg.restNonce" ), 'REST requests use the dedicated WordPress REST nonce' );
+i427( false !== strpos( $manual, "'previewUrl' => rest_url( 'certloom/v1/admin/issuance-preview' )" ) && false !== strpos( $js, 'cfg.previewUrl' ) && false !== strpos( $search, 'issuance_preview' ), 'live preview uses the canonical mutation-free issuance preview route' );
+i427( false !== strpos( $js, 'AbortController' ) && false !== strpos( $js, 'previewController.abort()' ), 'stale async search/preview work is cancellable' );
+i427( false !== strpos( $js, "url.searchParams.set('program_id', String(state.issuance.program_id || 0))" ) && false !== strpos( $js, "searchPicker('batch', '', true)" ), 'Batch lookup is freshly scoped to the current Program' );
+i427( false !== strpos( $js, 'state.issuance.batch_id = 0' ) && false !== strpos( $js, 'Batch cleared because the Program changed' ), 'changing Program clears stale Batch state before refetch' );
+i427( false !== strpos( $js, "state.issuance.title_source = 'custom'" ) && false !== strpos( $js, 'data-use-program-title' ), 'direct title edits become one-off custom titles with a safe Program-title reset' );
+i427( false !== strpos( $js, 'focusOrAddCredentialDetail' ) && false !== strpos( $js, 'data-scoped-input' ), 'design Add value focuses an existing scoped fact before creating a duplicate one-off field' );
+i427( false !== strpos( $js, 'state.issuance.design_field_aliases[target] = source' ), 'design-required facts can map to existing credential details' );
+
+i427( false !== strpos( $rest, "self::BASE . '/review'" ) && false !== strpos( $rest, "self::BASE . '/issue'" ) && false !== strpos( $rest, 'new ManualIssuanceService()' ), 'Review and Issue REST routes converge on canonical ManualIssuanceService authority' );
+i427( false !== strpos( $rest, "preg_match( '/^[a-f0-9]{64}$/'" ) && false !== strpos( $js, 'review_fingerprint:state.reviewFingerprint' ), 'final Issue requires the exact server Review fingerprint' );
+i427( false !== strpos( $rest, "'title_source' =>" ) && false !== strpos( $js, "['Title source'" ), 'server Review and browser Review visibly preserve title provenance' );
+i427( false !== strpos( $rest, 'certloom_issue_profile_repeating_data_invalid' ), 'REST boundary rejects stale profile-inappropriate repeating data' );
+i427( false !== strpos( $rest, 'get_post_mime_type' ) && false !== strpos( $rest, "array( 'image/png', 'image/jpeg' )" ), 'uploaded-certificate image mode is MIME-validated server-side' );
+i427( false !== strpos( $rest, "'email_url'" ) && false !== strpos( $rest, "'issue_another_url'" ) && false !== strpos( $rest, "'credentials_url'" ), 'receipt returns explicit post-commit continuations' );
+
+i427( false === strpos( $global_js, 'initPhase2Issuance' ) && false === strpos( $global_js, 'initIssueDesignPreview' ), 'deleted one-page Issue Credential controllers do not compete with the dedicated app' );
+i427( false !== strpos( $css, 'position: sticky;' ) && false !== strpos( $css, '.certloom-issue-summary' ), 'desktop app keeps a deliberate sticky decision summary' );
+i427( false !== strpos( $css, '@media (max-width: 960px)' ) && false !== strpos( $css, 'position: static;' ), 'summary stops being sticky on narrower viewports' );
+i427( ! preg_match( '/#[0-9a-fA-F]{3,8}\b/', $css ) && false === strpos( $css, '!important' ), 'dedicated 4.79 Issue Credential CSS adds no raw color or !important debt' );
+
+echo "\n$pass alpha.4.79 Issue Credential compatibility checks, $fail failures\n";
+exit( $fail ? 1 : 0 );
