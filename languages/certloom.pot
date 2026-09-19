@@ -1670,8 +1670,8 @@ msgstr ""
 #: admin/class-ecapla-certverify-admin.php:828
 #: admin/class-ecapla-certverify-admin.php:947
 #: src/Infrastructure/Admin/AdminSearchRest.php:142
-#: src/Infrastructure/Admin/IssueCredentialRest.php:156
-#: src/Infrastructure/Admin/IssueCredentialRest.php:227
+#: src/Infrastructure/Admin/IssueCredentialRest.php:157
+#: src/Infrastructure/Admin/IssueCredentialRest.php:228
 msgid "The selected Program is no longer available."
 msgstr ""
 
@@ -10347,6 +10347,7 @@ msgid "Choose the effective date to continue."
 msgstr ""
 
 #: includes/class-ecapla-certverify-onboarding.php:516
+#: src/Application/Issuance/ManualIssuanceService.php:655
 #: src/Infrastructure/Admin/DomainAdmin.php:1900
 #: src/Infrastructure/Repository/ManualIssuanceRepository.php:39
 msgid "Enter a valid recipient email address or leave it blank."
@@ -12690,7 +12691,7 @@ msgid "Required credential field “%s” needs a custom:%s column in this Bulk 
 msgstr ""
 
 #: src/Application/Issuance/BulkIssuanceCoordinator.php:95
-#: src/Application/Issuance/ManualIssuanceService.php:718
+#: src/Application/Issuance/ManualIssuanceService.php:721
 msgid "Grade / result is not assigned to the selected Program/Batch credential-field contract."
 msgstr ""
 
@@ -12947,7 +12948,7 @@ msgid "The selected Batch belongs to a different Program."
 msgstr ""
 
 #: src/Application/Issuance/ManualIssuanceService.php:386
-#: src/Application/Issuance/ManualIssuanceService.php:874
+#: src/Application/Issuance/ManualIssuanceService.php:877
 msgid "This Program issues one credential per Batch or session. Choose a Batch before reviewing the credential."
 msgstr ""
 
@@ -13060,77 +13061,77 @@ msgstr ""
 msgid "Grade must be 191 characters or fewer."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:695
+#: src/Application/Issuance/ManualIssuanceService.php:698
 msgid "Repeating result/subject data must use the supported subjects/results rowsets only."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:702
+#: src/Application/Issuance/ManualIssuanceService.php:705
 msgid "Repeating result/subject data contains unsupported fields, values, or too many rows."
 msgstr ""
 
 #. translators: %s: label.
-#: src/Application/Issuance/ManualIssuanceService.php:731
+#: src/Application/Issuance/ManualIssuanceService.php:734
 msgid "Complete required credential field “%s” before issuing."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:799
+#: src/Application/Issuance/ManualIssuanceService.php:802
 msgid "Design field mappings must be a bounded list."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:803
+#: src/Application/Issuance/ManualIssuanceService.php:806
 msgid "Design field mappings contain an invalid field key."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:816
+#: src/Application/Issuance/ManualIssuanceService.php:819
 msgid "The selected Signer is no longer active or available. Review the credential again."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:827
+#: src/Application/Issuance/ManualIssuanceService.php:830
 msgid "Certloom could not resolve the configured Signer hierarchy safely."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:854
+#: src/Application/Issuance/ManualIssuanceService.php:857
 msgid "Program validity can only be used when a Program is selected."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:878
+#: src/Application/Issuance/ManualIssuanceService.php:881
 msgid "This recipient already has a credential for the selected Program and Batch. Choose another Batch or continue from the existing credential."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:885
+#: src/Application/Issuance/ManualIssuanceService.php:888
 msgid "This recipient already has the credential lifecycle for the selected Program. Renewal or re-certification should continue from the existing credential instead of creating a second lifecycle."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:894
+#: src/Application/Issuance/ManualIssuanceService.php:897
 msgid "Certloom could not create the immutable merge snapshot fingerprint. Issuance was rolled back."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:932
+#: src/Application/Issuance/ManualIssuanceService.php:935
 msgid "The issued Credential Series could not be loaded for its receipt."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:953
+#: src/Application/Issuance/ManualIssuanceService.php:956
 msgid "Use a valid YYYY-MM-DD date."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:958
+#: src/Application/Issuance/ManualIssuanceService.php:961
 msgid "Custom fields must be a bounded key/value list with at most 30 entries."
 msgstr ""
 
-#: src/Application/Issuance/ManualIssuanceService.php:964
-msgid "Custom fields must use unique machine keys up to 64 characters and scalar values."
-msgstr ""
-
 #: src/Application/Issuance/ManualIssuanceService.php:967
-msgid "Each custom field value must be 2,000 characters or fewer."
-msgstr ""
-
-#: src/Application/Issuance/ManualIssuanceService.php:969
-msgid "The combined custom-field payload is too large for one Manual Issuance."
+msgid "Custom fields must use unique machine keys up to 64 characters and scalar values."
 msgstr ""
 
 #: src/Application/Issuance/ManualIssuanceService.php:97
 msgid "That Manual Issuance receipt could not be found."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:970
+msgid "Each custom field value must be 2,000 characters or fewer."
+msgstr ""
+
+#: src/Application/Issuance/ManualIssuanceService.php:972
+msgid "The combined custom-field payload is too large for one Manual Issuance."
 msgstr ""
 
 #. translators: %s: merge token.
@@ -14778,13 +14779,13 @@ msgid "Assigned for this credential only"
 msgstr ""
 
 #: src/Infrastructure/Admin/AdminSearchRest.php:147
-#: src/Infrastructure/Admin/IssueCredentialRest.php:162
+#: src/Infrastructure/Admin/IssueCredentialRest.php:163
 msgid "The selected Batch is no longer available."
 msgstr ""
 
 #: src/Infrastructure/Admin/AdminSearchRest.php:148
 #: src/Infrastructure/Admin/AutomationRuleTargetGuard.php:49
-#: src/Infrastructure/Admin/IssueCredentialRest.php:163
+#: src/Infrastructure/Admin/IssueCredentialRest.php:164
 msgid "The selected Batch does not belong to the selected Program."
 msgstr ""
 
@@ -19417,31 +19418,31 @@ msgstr ""
 msgid "Choose an active Batch, or leave Batch empty to use the Program context."
 msgstr ""
 
-#: src/Infrastructure/Admin/IssueCredentialRest.php:153
+#: src/Infrastructure/Admin/IssueCredentialRest.php:154
 msgid "Choose a Program first."
 msgstr ""
 
-#: src/Infrastructure/Admin/IssueCredentialRest.php:204
+#: src/Infrastructure/Admin/IssueCredentialRest.php:205
 msgid "Enter a Program title."
 msgstr ""
 
-#: src/Infrastructure/Admin/IssueCredentialRest.php:223
+#: src/Infrastructure/Admin/IssueCredentialRest.php:224
 msgid "Choose a Program before adding a Batch."
 msgstr ""
 
-#: src/Infrastructure/Admin/IssueCredentialRest.php:224
+#: src/Infrastructure/Admin/IssueCredentialRest.php:225
 msgid "Enter a Batch name."
 msgstr ""
 
-#: src/Infrastructure/Admin/IssueCredentialRest.php:265
+#: src/Infrastructure/Admin/IssueCredentialRest.php:266
 msgid "Review this credential again before issuing."
 msgstr ""
 
-#: src/Infrastructure/Admin/IssueCredentialRest.php:304
+#: src/Infrastructure/Admin/IssueCredentialRest.php:305
 msgid "This site profile does not support the submitted Subjects/Results data for Manual Issuance."
 msgstr ""
 
-#: src/Infrastructure/Admin/IssueCredentialRest.php:313
+#: src/Infrastructure/Admin/IssueCredentialRest.php:314
 msgid "Choose a PNG or JPEG certificate image from the Media Library."
 msgstr ""
 

@@ -3,6 +3,7 @@ namespace Certloom\Infrastructure\Admin;
 
 use Certloom\Application\Fields\ScopedFieldContract;
 use Certloom\Application\Issuance\ManualIssuanceService;
+use Certloom\Domain\Rendering\TableDataContract;
 use Certloom\Infrastructure\Email\EmailDesignPurposes;
 use Certloom\Infrastructure\Email\EmailTemplateCatalogRepository;
 use Certloom\Infrastructure\Issuance\ManualIssuanceNumberAllocator;
@@ -142,7 +143,7 @@ final class IssueCredentialRest {
 				'batch' => $batch ? $this->batch_choice( $batch ) : null,
 			),
 			'email_designs' => array_values( array_map( array( $this, 'email_design_choice' ), $email_designs ) ),
-			'limits' => array( 'search' => 20, 'custom_fields' => 30, 'repeating_rows' => 100 ),
+			'limits' => array( 'search' => 20, 'custom_fields' => 30, 'repeating_rows' => TableDataContract::MAX_ROWS ),
 		) );
 	}
 

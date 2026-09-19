@@ -50,12 +50,34 @@ async def run():
         await ck('Choose an existing Recipient' in await page.locator('[data-issue-message]').inner_text(), 'recipientValidationSpecific')
         await ck(await page.locator('[data-step-status]').inner_text() == 'Step 1 of 8', 'validationKeepsCurrentStep')
 
+        # New-recipient email is validated before server Review rather than silently dropped.
+        await page.locator('[data-recipient-mode="new"]').click()
+        await page.locator('[data-field="new_recipient.display_name"]').fill('Amina New')
+        await page.locator('[data-field="new_recipient.email"]').fill('not-an-email')
+        await page.locator('[data-step-next]').click()
+        await ck('valid recipient email' in await page.locator('[data-issue-message]').inner_text(), 'newRecipientEmailValidatedClientSide')
+        await page.locator('[data-recipient-mode="existing"]').click()
+
         # Existing Recipient via REST.
         rec = page.locator('[data-picker="recipient"] [data-picker-search]')
         await rec.focus(); await page.wait_for_selector('[data-picker="recipient"] [role="option"]')
         await page.locator('[data-picker="recipient"] [role="option"]').first.click()
         await ck('Amina Khan' in await page.locator('[data-summary-recipient]').inner_text(), 'recipientSummaryLive')
         await page.locator('[data-step-next]').click()
+
+        # Quick setup can be dismissed without accidentally calling its create route.
+        before_quick = await page.evaluate("window.__issueCalls.filter(c=>c.url.includes('/quick-program')).length")
+        await page.locator('[data-quick-open="program"]').click()
+        await ck(await page.locator('[data-quick-dialog="program"]').get_attribute('open') is not None, 'quickProgramDialogOpens')
+        await page.locator('[data-quick-dialog="program"] [data-quick-close]').last.click()
+        after_quick = await page.evaluate("window.__issueCalls.filter(c=>c.url.includes('/quick-program')).length")
+        await ck(after_quick == before_quick and await page.locator('[data-quick-dialog="program"]').get_attribute('open') is None, 'quickProgramCancelDoesNotSubmit')
+
+        # Select a Program first so switching to Independent proves inherited authority is not retained as an explicit choice.
+        program = page.locator('[data-picker="program"] [data-picker-search]')
+        await program.focus(); await page.wait_for_selector('[data-picker="program"] [role="option"]')
+        await page.locator('[data-picker="program"] [role="option"]').first.click()
+        await page.wait_for_function("document.querySelector('[data-program-context-note]').textContent.includes('Example Authority')")
 
         # Independent credential is a first-class path, not an advanced mega-form disclosure.
         await page.locator('[data-credential-basis="independent"]').click()
@@ -86,6 +108,7 @@ async def run():
         # Independent authority remains explicit and searchable.
         await ck(await page.locator('[data-independent-issuer]').is_visible(), 'independentIssuerPickerVisible')
         issuer = page.locator('[data-picker="issuer"] [data-picker-search]')
+        await ck((await issuer.input_value()) == '', 'programIssuerDoesNotLeakIntoIndependentPicker')
         await issuer.focus(); await page.wait_for_selector('[data-picker="issuer"] [role="option"]')
         await page.locator('[data-picker="issuer"] [role="option"]').first.click()
         signer = page.locator('[data-picker="signer"] [data-picker-search]')

@@ -26,6 +26,7 @@ i479( false !== strpos( $admin, 'data-preview-stage' ) && false !== strpos( $adm
 i479( false !== strpos( $admin, 'data-email-mode="review"' ) && false !== strpos( $admin, 'data-email-mode="later"' ), 'Email is an explicit post-issuance decision' );
 i479( false !== strpos( $admin, 'Nothing is sent during issuance' ), 'Email copy preserves post-commit boundary' );
 i479( false !== strpos( $admin, 'data-review-technical' ), 'technical evidence remains available without cluttering primary review' );
+i479( false !== strpos( $admin, 'type="button" data-quick-close' ) && false !== strpos( $js, "querySelectorAll('[data-quick-close]')" ), 'quick-create dialogs have non-submitting close controls' );
 
 // REST application authority.
 i479( false !== strpos( $plugin, 'IssueCredentialRest() )->register()' ), 'Plugin registers single Issue Credential REST application' );
@@ -35,6 +36,7 @@ foreach ( array( '/bootstrap', '/program-context', '/quick-program', '/quick-bat
 i479( false !== strpos( $rest, 'new ManualIssuanceService() )->review' ) && false !== strpos( $rest, 'new ManualIssuanceService() )->issue' ), 'Review and Issue converge on canonical ManualIssuanceService' );
 i479( false !== strpos( $rest, "preg_match( '/^[a-f0-9]{64}$/', \$fingerprint )" ), 'Issue requires exact SHA-256 review fingerprint' );
 i479( false !== strpos( $rest, 'certloom_issue_profile_repeating_data_invalid' ), 'REST rejects profile-inappropriate repeating rowsets' );
+i479( false !== strpos( $rest, 'TableDataContract::MAX_ROWS' ) && false !== strpos( $js, "limit('repeating_rows', 50)" ), 'browser and REST bootstrap use the canonical repeating-data row cap' );
 i479( false !== strpos( $rest, 'get_post_mime_type' ) && false !== strpos( $rest, "array( 'image/png', 'image/jpeg' )" ), 'REST independently validates uploaded certificate image MIME' );
 i479( false !== strpos( $rest, 'ScopedFieldGlobalRepository' ) && false !== strpos( $rest, 'resolve_hierarchy(' ), 'Program context resolves Global → Issuer → Program → Batch field hierarchy' );
 i479( false !== strpos( $rest, "wp_generate_uuid4()" ) && false !== strpos( $rest, "'code' => \$code" ), 'quick Batch can generate a hidden required machine code when omitted' );
@@ -48,6 +50,7 @@ i479( false !== strpos( $search, '$request->get_json_params()' ) && false !== st
 i479( false !== strpos( $js, "function searchPicker(kind, query, immediate)" ), 'dedicated client owns on-demand async picker search' );
 i479( false !== strpos( $js, "if ('batch' === kind) { url.searchParams.set('program_id', String(state.issuance.program_id || 0)); }" ), 'Batch search always scopes by current Program id' );
 i479( false !== strpos( $js, "clearPicker('batch', {silent:true});" ) && false !== strpos( $js, "state.issuance.batch_id = 0;" ), 'Program change clears stale Batch before loading replacements' );
+i479( false !== strpos( $js, 'state.programContextController.abort(); state.programContextController = null;' ) && false !== strpos( $js, "state.issuance.issuer_id = state.selected.issuer ? state.selected.issuer.id : 0;" ), 'Program context is cancelled before Independent mode restores only an explicit independent Issuer choice' );
 i479( false !== strpos( $js, "searchPicker('batch', '', true);" ), 'Program change immediately fetches fresh Batches' );
 i479( false !== strpos( $js, "state.issuance.credential_title = String(choice.title || choice.label || '');" ), 'Program title prefills credential title' );
 i479( false !== strpos( $js, "state.issuance.title_source = 'custom'" ), 'typing into title can switch only this issuance to a custom title' );

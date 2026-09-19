@@ -55,6 +55,11 @@
 		return cfg.i18n && cfg.i18n[key] ? String(cfg.i18n[key]) : fallback;
 	}
 
+	function limit(key, fallback) {
+		var value = state.bootstrap && state.bootstrap.limits ? parseInt(state.bootstrap.limits[key], 10) : 0;
+		return value > 0 ? value : fallback;
+	}
+
 	function escapeHtml(value) {
 		return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) {
 			return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c];
@@ -110,6 +115,10 @@
 		state.busy = !!busy;
 		if (prevButton) { prevButton.disabled = busy || state.step === 0; }
 		if (nextButton) { nextButton.disabled = busy || state.step === 7; }
+		var reviewButton = root.querySelector('[data-build-review]');
+		var issueButton = root.querySelector('[data-issue-confirm]');
+		if (reviewButton) { reviewButton.disabled = !!busy; }
+		if (issueButton) { issueButton.disabled = !!busy; }
 		root.classList.toggle('is-busy', busy);
 	}
 
@@ -280,6 +289,7 @@
 		var next = choice && choice.id ? parseInt(choice.id, 10) || 0 : 0;
 		state.issuance.program_id = next;
 		if (previous !== next) {
+			if (state.programContextController) { state.programContextController.abort(); state.programContextController = null; }
 			clearPicker('batch', {silent:true});
 			state.issuance.batch_id = 0;
 			state.fieldContract = {fields:[]};
@@ -324,8 +334,7 @@
 			state.programContext = data || null;
 			state.fieldContract = data && data.field_contract ? data.field_contract : {fields:[]};
 			if (data && data.issuer) {
-				state.selected.issuer = normalizeChoice('issuer', data.issuer);
-				state.issuance.issuer_id = state.selected.issuer.id;
+				state.issuance.issuer_id = normalizeChoice('issuer', data.issuer).id;
 			}
 			renderProgramContext();
 			renderScopedFields();
@@ -448,6 +457,7 @@
 				if (context) { context.hidden = 'program' !== basis; }
 				if (independent) { independent.hidden = 'independent' !== basis; }
 				if ('independent' === basis) {
+					if (state.programContextController) { state.programContextController.abort(); state.programContextController = null; }
 					clearPicker('program', {silent:true}); clearPicker('batch', {silent:true});
 					state.issuance.program_id = 0; state.issuance.batch_id = 0; state.issuance.issuer_id = state.selected.issuer ? state.selected.issuer.id : 0;
 					state.programContext = null; state.fieldContract = {fields:[]}; state.issuance.title_source = 'custom'; state.issuance.expiry_mode = 'permanent';
@@ -506,7 +516,7 @@
 		var html = '';
 		rowsets.forEach(function (kind) {
 			var rows = Array.isArray(state.issuance.repeating_data[kind]) ? state.issuance.repeating_data[kind] : [];
-			var atCapacity = rows.length >= 50;
+			var atCapacity = rows.length >= limit('repeating_rows', 50);
 			html += '<section class="certloom-repeating-editor" data-rowset="' + escapeHtml(kind) + '"><header><strong>' + escapeHtml('results' === kind ? 'Results' : 'Subjects') + '</strong><button type="button" class="button button-small" data-add-row="' + escapeHtml(kind) + '" aria-disabled="' + (atCapacity ? 'true' : 'false') + '"' + (atCapacity ? ' disabled' : '') + '>Add row</button></header><div data-rowset-rows>';
 			rows.forEach(function (row, index) { html += repeatingRowHtml(kind, row, index); });
 			html += '</div><small class="certloom-repeating-limit">' + escapeHtml(text('repeatingLimit', 'Repeating credential data is limited to 50 rows.')) + '</small></section>';
@@ -526,7 +536,7 @@
 		Array.prototype.forEach.call(container.querySelectorAll('[data-add-row]'), function (button) {
 			button.addEventListener('click', function () {
 				var kind = button.getAttribute('data-add-row'); if (!Array.isArray(state.issuance.repeating_data[kind])) { state.issuance.repeating_data[kind] = []; }
-				if (state.issuance.repeating_data[kind].length >= 50) { showMessage(text('repeatingLimit', 'Repeating credential data is limited to 50 rows.'), 'error'); return; }
+				if (state.issuance.repeating_data[kind].length >= limit('repeating_rows', 50)) { showMessage(text('repeatingLimit', 'Repeating credential data is limited to 50 rows.'), 'error'); return; }
 				state.issuance.repeating_data[kind].push({}); renderRepeating(); onDataChanged();
 				var editor = root.querySelector('.certloom-repeating-editor[data-rowset="' + kind + '"]');
 				var rows = editor ? editor.querySelectorAll('.certloom-repeating-row') : [];
@@ -551,6 +561,10 @@
 	function addOneOff(key, label, value) {
 		key = String(key || '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
 		if (!key) { key = 'field_' + (++state.oneOffCounter); }
+		if (!Object.prototype.hasOwnProperty.call(state.issuance.custom_merge_fields, key) && Object.keys(state.issuance.custom_merge_fields).length >= limit('custom_fields', 30)) {
+			showMessage('This credential already uses the maximum number of custom credential fields.', 'error');
+			return;
+		}
 		if (!Object.prototype.hasOwnProperty.call(state.issuance.custom_merge_fields, key)) { state.issuance.custom_merge_fields[key] = value || ''; }
 		renderOneOff();
 		var input = root.querySelector('[data-oneoff-value="' + key.replace(/"/g, '') + '"]'); if (input) { input.focus(); }
@@ -593,7 +607,11 @@
 		if (image) { image.hidden = 'image' !== state.issuance.presentation_mode; }
 		if (design) { design.hidden = 'design' !== state.issuance.presentation_mode; }
 		if (assigned) { assigned.hidden = !('design' === state.issuance.presentation_mode && 'assigned' === state.issuance.design_source); }
-		if ('design' !== state.issuance.presentation_mode) { state.preview = null; renderPreview(); renderDesignRequired([]); }
+		if ('design' !== state.issuance.presentation_mode) {
+			if (state.previewTimer) { clearTimeout(state.previewTimer); state.previewTimer = null; }
+			if (state.previewController) { state.previewController.abort(); state.previewController = null; }
+			state.preview = null; renderPreview(); renderDesignRequired([]);
+		}
 	}
 	function chooseCertificateImage() {
 		if (!window.wp || !wp.media) { showMessage('WordPress Media Library is unavailable.', 'error'); return; }
@@ -616,6 +634,7 @@
 
 	function schedulePreview() {
 		if (state.previewTimer) { clearTimeout(state.previewTimer); }
+		if (state.previewController) { state.previewController.abort(); state.previewController = null; }
 		if ('design' !== state.issuance.presentation_mode) { renderPreview(); return; }
 		state.previewTimer = setTimeout(loadPreview, 320);
 	}
@@ -630,6 +649,7 @@
 	}
 	function loadPreview() {
 		if ('design' !== state.issuance.presentation_mode) { return; }
+		state.previewTimer = null;
 		var status = root.querySelector('[data-preview-status]');
 		if (!canPreview()) { state.preview = null; if (status) { status.textContent = text('previewWaiting', 'Complete Recipient and Credential details to load the live preview.'); } renderPreview(); return; }
 		if (state.previewController) { state.previewController.abort(); }
@@ -728,12 +748,18 @@
 		if (0 === index) {
 			if ('existing' === state.issuance.recipient_mode && !state.issuance.recipient_id) { showMessage('Choose an existing Recipient before continuing.', 'error'); focusPicker('recipient'); return false; }
 			if ('new' === state.issuance.recipient_mode && !String(state.issuance.new_recipient.display_name || '').trim()) { showMessage('Enter the new Recipient display name before continuing.', 'error'); focusField('new_recipient.display_name'); return false; }
+			if ('new' === state.issuance.recipient_mode) {
+				var emailInput = root.querySelector('[data-field="new_recipient.email"]');
+				if (emailInput && emailInput.value && !emailInput.validity.valid) { showMessage('Enter a valid recipient email address or leave it blank.', 'error'); emailInput.focus(); return false; }
+			}
 		}
 		if (1 === index && 'program' === state.issuance.credential_basis && !state.issuance.program_id) { showMessage('Choose a ' + programTerm + ', or switch to Independent credential.', 'error'); focusPicker('program'); return false; }
 		if (2 === index) {
 			if (!String(state.issuance.credential_title || '').trim()) { showMessage('Enter the credential title.', 'error'); focusField('credential_title'); return false; }
 			if (!state.issuance.valid_from) { showMessage('Choose the credential effective date.', 'error'); focusField('valid_from'); return false; }
 			if ('date' === state.issuance.expiry_mode && !state.issuance.expires_at) { showMessage('Choose the credential expiry date.', 'error'); focusField('expires_at'); return false; }
+			if ('date' === state.issuance.expiry_mode && state.issuance.expires_at < state.issuance.valid_from) { showMessage('The expiry date cannot be earlier than the credential effective date.', 'error'); focusField('expires_at'); return false; }
+			if (state.bootstrap && state.bootstrap.numbering && !state.bootstrap.numbering.automatic && !String(state.issuance.display_number || '').trim()) { showMessage('Enter the certificate number required by the current numbering policy.', 'error'); focusField('display_number'); return false; }
 		}
 		if (3 === index) {
 			var missingRequired = root.querySelector('[data-scoped-input][required]:invalid'); if (missingRequired) { showMessage('Complete the required credential data before continuing.', 'error'); missingRequired.focus(); return false; }
@@ -813,6 +839,7 @@
 	}
 
 	function issueCredential() {
+		if (state.busy) { return; }
 		if (!state.reviewFingerprint || state.reviewSignature !== signature()) { invalidateReview(); showMessage(text('reviewChanged', 'Something changed after Review. Review again before issuing.'), 'error'); buildReview(); return; }
 		setBusy(true); showMessage(text('issuing', 'Issuing credential…'), 'info');
 		rest(cfg.issueUrl, {method:'POST', body:{issuance:state.issuance,email:state.email,review_fingerprint:state.reviewFingerprint}}).then(function (data) { renderReceipt(data || {}); clearMessage(); }).catch(function (error) { showRequestError(error); }).finally(function () { setBusy(false); });
@@ -844,6 +871,7 @@
 
 	function initQuickCreate() {
 		Array.prototype.forEach.call(root.querySelectorAll('[data-quick-open]'), function (button) { button.addEventListener('click', function () { var kind = button.getAttribute('data-quick-open'); if ('batch' === kind && !state.issuance.program_id) { showMessage('Choose a ' + programTerm + ' before adding a ' + batchTerm + '.', 'error'); return; } var dialog = root.querySelector('[data-quick-dialog="' + kind + '"]'); if (dialog && dialog.showModal) { dialog.showModal(); } }); });
+		Array.prototype.forEach.call(root.querySelectorAll('[data-quick-close]'), function (button) { button.addEventListener('click', function () { var dialog = button.closest('dialog'); if (dialog && dialog.open) { dialog.close(); } }); });
 		Array.prototype.forEach.call(root.querySelectorAll('[data-quick-form]'), function (quickForm) {
 			quickForm.addEventListener('submit', function (event) {
 				event.preventDefault(); var kind = quickForm.getAttribute('data-quick-form'); var formData = new FormData(quickForm); var payload = {}; formData.forEach(function (value,key) { payload[key] = value; });

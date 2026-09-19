@@ -1,3 +1,11 @@
+= 1.7.0-alpha.4.80 =
+* Harden the 4.79 REST-driven Issue Credential review build without advancing Gamma: quick-create Cancel/close controls are explicitly non-submitting, and Program-context requests are cancelled when relationship state changes.
+* Keep Independent credential authority independent: inherited Program Issuer context no longer leaks into the explicit Independent Issuer selection state.
+* Align client and REST-advertised issuance limits with canonical domain contracts, including the 50-row repeating-data ceiling and bounded one-off credential details.
+* Fail closed on malformed new-recipient email addresses before sanitization can erase the invalid value, and surface the same validation in the browser before Review.
+* Tighten Compose concurrency and validation: cancel stale certificate-preview work, block duplicate Issue actions while busy, validate effective/expiry ordering and manual credential numbers earlier, and keep Review/Issue controls disabled during in-flight authority work.
+* Extend source and Chromium regression coverage for invalid recipient email, non-submitting quick-create cancellation, Independent Issuer isolation, canonical row limits and Program-context cancellation. Gamma-03A user acceptance remains open.
+
 = 1.7.0-alpha.4.79 =
 * Rebuild Issue Credential from scratch as a dedicated eight-step WordPress REST application: Recipient → Program & Batch → Credential → Data & results → Certificate → Issuer & Signer → Email → Review & issue.
 * Replace preload-dependent relationship controls with cancellable on-demand REST search; changing Program clears the previous Batch immediately and fetches only Batches owned by the newly selected Program.

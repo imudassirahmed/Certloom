@@ -23,6 +23,7 @@ foreach ( array( 'recipient','context','credential','data','certificate','author
 i427( false !== strpos( $manual, 'A focused eight-step workflow.' ), 'workflow explains its progressive REST model instead of exposing a mega-form' );
 i427( false !== strpos( $manual, "render_async_picker( 'recipient'" ) && false !== strpos( $manual, "render_async_picker( 'program'" ) && false !== strpos( $manual, "render_async_picker( 'batch'" ), 'Recipient, Program and Batch use one async-picker pattern' );
 i427( false !== strpos( $manual, 'data-quick-dialog="program"' ) && false !== strpos( $manual, 'data-quick-dialog="batch"' ), 'Program and Batch remain quick-creatable without leaving issuance' );
+i427( false !== strpos( $manual, 'type="button" data-quick-close' ) && false !== strpos( $js, "querySelectorAll('[data-quick-close]')" ), 'quick-create Cancel and close controls dismiss dialogs without becoming create submissions' );
 i427( false !== strpos( $manual, 'data-field="credential_title"' ) && false !== strpos( $manual, 'The title stays editable even when a Program supplies the default.' ), 'Program-derived title remains visibly editable' );
 i427( false !== strpos( $manual, 'data-design-required-fields' ) && strpos( $manual, 'data-design-required-fields' ) < strpos( $manual, 'Additional one-off credential data' ), 'design-required facts stay visible before collapsed optional one-off data' );
 i427( false !== strpos( $manual, 'data-repeating-section' ) && false !== strpos( $manual, 'Subjects & results' ), 'structured Subjects/Results have a dedicated bounded data surface' );
@@ -50,6 +51,7 @@ i427( false !== strpos( $rest, "self::BASE . '/review'" ) && false !== strpos( $
 i427( false !== strpos( $rest, "preg_match( '/^[a-f0-9]{64}$/'" ) && false !== strpos( $js, 'review_fingerprint:state.reviewFingerprint' ), 'final Issue requires the exact server Review fingerprint' );
 i427( false !== strpos( $rest, "'title_source' =>" ) && false !== strpos( $js, "['Title source'" ), 'server Review and browser Review visibly preserve title provenance' );
 i427( false !== strpos( $rest, 'certloom_issue_profile_repeating_data_invalid' ), 'REST boundary rejects stale profile-inappropriate repeating data' );
+i427( false !== strpos( $rest, 'TableDataContract::MAX_ROWS' ) && false !== strpos( $js, "limit('repeating_rows', 50)" ), 'REST bootstrap and browser editor share the canonical 50-row repeating-data ceiling' );
 i427( false !== strpos( $rest, 'get_post_mime_type' ) && false !== strpos( $rest, "array( 'image/png', 'image/jpeg' )" ), 'uploaded-certificate image mode is MIME-validated server-side' );
 i427( false !== strpos( $rest, "'email_url'" ) && false !== strpos( $rest, "'issue_another_url'" ) && false !== strpos( $rest, "'credentials_url'" ), 'receipt returns explicit post-commit continuations' );
 
