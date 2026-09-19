@@ -39,6 +39,7 @@ async def run():
         await page.set_content(fixture(), wait_until='load')
         await page.wait_for_selector('[data-issue-body]:not([hidden])')
 
+        await ck(await page.locator('[data-issue-loading]').is_hidden(), 'bootstrapLoadingStateActuallyHidden')
         await ck(await page.locator('[data-issue-step]').count() == 8, 'eightFocusedSteps')
         await ck(await page.locator('[data-issue-step-button]').count() == 8, 'stepperMatchesPanels')
         await ck(await page.locator('[data-step-status]').inner_text() == 'Step 1 of 8', 'startsAtRecipient')
@@ -64,6 +65,7 @@ async def run():
         await page.locator('[data-picker="recipient"] [role="option"]').first.click()
         await ck('Amina Khan' in await page.locator('[data-summary-recipient]').inner_text(), 'recipientSummaryLive')
         await page.locator('[data-step-next]').click()
+        await ck(await page.locator('[data-independent-note]').is_hidden(), 'independentGuidanceDoesNotLeakIntoProgramMode')
 
         # Quick setup can be dismissed without accidentally calling its create route.
         before_quick = await page.evaluate("window.__issueCalls.filter(c=>c.url.includes('/quick-program')).length")
@@ -78,6 +80,11 @@ async def run():
         await program.focus(); await page.wait_for_selector('[data-picker="program"] [role="option"]')
         await page.locator('[data-picker="program"] [role="option"]').first.click()
         await page.wait_for_function("document.querySelector('[data-program-context-note]').textContent.includes('Example Authority')")
+        await ck(await page.locator('[data-picker="program"] [data-picker-selected]').is_hidden(), 'selectedProgramNotDuplicatedBelowPicker')
+        await ck((await page.locator('[data-picker="program"] [data-picker-status]').inner_text()).strip() == '', 'selectedProgramClearsStaleMatchStatus')
+        await program.focus()
+        await page.wait_for_timeout(40)
+        await ck(await page.locator('[data-picker="program"] [data-picker-results]').is_hidden(), 'selectedProgramFocusDoesNotReopenExactMatch')
 
         # Independent credential is a first-class path, not an advanced mega-form disclosure.
         await page.locator('[data-credential-basis="independent"]').click()

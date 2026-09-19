@@ -1,3 +1,9 @@
+= 1.7.0-alpha.4.81 =
+* Correct live WordPress acceptance defects in the rebuilt Issue Credential flow without advancing Gamma-03A: HTML hidden state now wins over component flex/grid display so the bootstrap loader and Independent-only guidance disappear when inactive.
+* Remove duplicate picker presentation by suppressing the browser-native search clear affordance, keeping one Certloom clear control, hiding the redundant selected-value strip, clearing stale match status after selection and avoiding an exact-selected search reopening on focus.
+* Compact the eight-step navigation to stable task labels, keep profile-aware Program/Batch terminology inside Context and the Live summary, and mark Credential title and policy-required manual Certificate number visibly/semantically required.
+* Extend Issue Credential regression coverage around hidden-state fidelity, picker selection feedback, profile-aware summary terminology and required-field presentation. Gamma-03A user acceptance remains open.
+
 = 1.7.0-alpha.4.80 =
 * Harden the 4.79 REST-driven Issue Credential review build without advancing Gamma: quick-create Cancel/close controls are explicitly non-submitting, and Program-context requests are cancelled when relationship state changes.
 * Keep Independent credential authority independent: inherited Program Issuer context no longer leaks into the explicit Independent Issuer selection state.

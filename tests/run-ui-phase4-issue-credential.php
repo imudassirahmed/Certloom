@@ -60,5 +60,13 @@ i427( false !== strpos( $css, 'position: sticky;' ) && false !== strpos( $css, '
 i427( false !== strpos( $css, '@media (max-width: 960px)' ) && false !== strpos( $css, 'position: static;' ), 'summary stops being sticky on narrower viewports' );
 i427( ! preg_match( '/#[0-9a-fA-F]{3,8}\b/', $css ) && false === strpos( $css, '!important' ), 'dedicated 4.79 Issue Credential CSS adds no raw color or !important debt' );
 
+// Alpha.4.81 live-WordPress acceptance corrections.
+i427( false !== strpos( $css, '.certloom-issue-app [hidden]' ) && false !== strpos( $css, 'display: none;' ), 'HTML hidden state overrides flex/grid component display without !important debt' );
+i427( false !== strpos( $css, '::-webkit-search-cancel-button' ) && false !== strpos( $css, '-webkit-appearance: none;' ), 'async picker suppresses the browser-native duplicate search clear affordance' );
+i427( false !== strpos( $js, "if (status) { status.textContent = ''; }") && false !== strpos( $js, "if (selectedChoice && search.value === selectedLabel)" ), 'selected picker state clears stale match feedback and does not reopen its exact match on focus' );
+i427( false !== strpos( $manual, "array( 'context', __( 'Context', 'certloom' )" ) && false !== strpos( $manual, "array( 'review', __( 'Review', 'certloom' )" ), 'stepper uses compact stable visible task labels' );
+i427( false !== strpos( $manual, 'private function render_summary( $program, $batch )' ) && false !== strpos( $manual, 'esc_html( $program )' ) && false !== strpos( $manual, 'esc_html( $batch )' ), 'live summary labels follow active profile Program/Batch terminology' );
+i427( false !== strpos( $manual, "esc_html__( 'Credential title', 'certloom' ) . ' <em>*</em>" ) && false !== strpos( $manual, "esc_html__( 'Certificate number', 'certloom' ) . ' <em>*</em>" ) && false !== strpos( $manual, 'aria-required="true"' ), 'credential title and manual certificate number expose required semantics' );
+
 echo "\n$pass alpha.4.79 Issue Credential compatibility checks, $fail failures\n";
 exit( $fail ? 1 : 0 );

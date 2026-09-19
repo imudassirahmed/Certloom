@@ -504,7 +504,6 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:1833
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:220
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:712
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:239
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:83
 #: src/Infrastructure/Admin/ScopedFieldAdminAjax.php:268
 #: src/Infrastructure/Admin/UsageProfilePresentation.php:123
@@ -3594,6 +3593,7 @@ msgstr ""
 
 #: admin/views/email-designer.php:103
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:269
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:120
 msgid "Delivery"
 msgstr ""
 
@@ -3986,6 +3986,7 @@ msgid "Structure"
 msgstr ""
 
 #: admin/views/email-designer.php:60
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:117
 msgid "Data"
 msgstr ""
 
@@ -6830,6 +6831,7 @@ msgstr ""
 #: admin/views/settings-manager.php:169
 #: admin/views/settings-manager.php:195
 #: admin/views/settings-manager.php:222
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:121
 msgid "Review"
 msgstr ""
 
@@ -7571,7 +7573,6 @@ msgstr ""
 
 #: admin/views/setup-wizard.php:148
 #: src/Application/Issuance/IssuanceDataReadiness.php:182
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:115
 msgid "Credential context"
 msgstr ""
 
@@ -10278,6 +10279,7 @@ msgid "Credential fields"
 msgstr ""
 
 #: includes/class-ecapla-certverify-onboarding.php:23
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:118
 #: src/Infrastructure/Admin/TemplateAdmin.php:1397
 msgid "Appearance"
 msgstr ""
@@ -19481,6 +19483,10 @@ msgstr ""
 msgid "%1$s & %2$s"
 msgstr ""
 
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:115
+msgid "Context"
+msgstr ""
+
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:116
 msgid "Title & validity"
 msgstr ""
@@ -19490,19 +19496,11 @@ msgid "Data & results"
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:117
-msgid "Required facts"
-msgstr ""
-
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:118
-msgid "Appearance & preview"
+msgid "Fields & results"
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:119
 msgid "Authority"
-msgstr ""
-
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:120
-msgid "Delivery intent"
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:121
@@ -19555,17 +19553,17 @@ msgstr ""
 msgid "Recipient profiles are reusable across future credentials. Create the Recipient profile once; credential-specific facts remain on each issued credential."
 msgstr ""
 
-#. translators: 1: Program terminology, 2: Batch terminology.
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:162
-msgid "Choose %1$s and %2$s"
+msgid "Choose credential context"
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:162
 msgid "Step 2 of 8"
 msgstr ""
 
+#. translators: 1: Program terminology, 2: Batch terminology.
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:162
-msgid "Use a reusable credential context when one exists, or issue an independent credential."
+msgid "Use a reusable %1$s and optional %2$s when they apply, or issue an independent credential."
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:165
@@ -19796,10 +19794,6 @@ msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:239
 msgid "Live summary"
-msgstr ""
-
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:239
-msgid "Program / context"
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:239

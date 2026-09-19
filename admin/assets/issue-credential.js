@@ -156,6 +156,7 @@
 		var selected = box.querySelector('[data-picker-selected]');
 		var clear = box.querySelector('[data-picker-clear]');
 		var results = box.querySelector('[data-picker-results]');
+		var status = box.querySelector('[data-picker-status]');
 		state.selected[kind] = choice || null;
 		if (hidden) { hidden.value = choice && choice.id ? String(choice.id) : ''; }
 		if (search) {
@@ -163,11 +164,14 @@
 			search.setAttribute('aria-expanded', 'false');
 		}
 		if (selected) {
-			selected.hidden = !choice;
+			// Keep the selected text in the DOM for assistive/test consumers, but the
+			// search input itself is the visible selected-value surface.
+			selected.hidden = true;
 			selected.innerHTML = choice ? '<strong>' + escapeHtml(choice.label || choice.name || choice.title || '') + '</strong>' : '';
 		}
 		if (clear) { clear.hidden = !choice; }
 		if (results) { results.hidden = true; results.innerHTML = ''; }
+		if (status) { status.textContent = ''; }
 		if (!options.silent) { handlePickerChange(kind, choice); }
 	}
 
@@ -273,7 +277,19 @@
 			var search = box.querySelector('[data-picker-search]');
 			var clear = box.querySelector('[data-picker-clear]');
 			if (search) {
-				search.addEventListener('focus', function () { searchPicker(kind, search.value, true); });
+				search.addEventListener('focus', function () {
+					var selectedChoice = state.selected[kind];
+					var selectedLabel = selectedChoice ? String(selectedChoice.label || selectedChoice.name || selectedChoice.title || '') : '';
+					if (selectedChoice && search.value === selectedLabel) {
+						var results = box.querySelector('[data-picker-results]');
+						var status = box.querySelector('[data-picker-status]');
+						if (results) { results.hidden = true; results.innerHTML = ''; }
+						if (status) { status.textContent = ''; }
+						search.setAttribute('aria-expanded', 'false');
+						return;
+					}
+					searchPicker(kind, search.value, true);
+				});
 				search.addEventListener('input', function () {
 					if (state.selected[kind] && search.value !== state.selected[kind].label) { clearPicker(kind); }
 					searchPicker(kind, search.value, false);
@@ -327,10 +343,14 @@
 		if (state.programContextController) { state.programContextController.abort(); }
 		var controller = new AbortController();
 		state.programContextController = controller;
+		var requestedProgramId = state.issuance.program_id;
+		var requestedBatchId = state.issuance.batch_id;
+		var requestedBasis = state.credentialBasis;
 		var url = new URL(cfg.programContextUrl, window.location.href);
-		url.searchParams.set('program_id', String(state.issuance.program_id));
-		if (state.issuance.batch_id) { url.searchParams.set('batch_id', String(state.issuance.batch_id)); }
+		url.searchParams.set('program_id', String(requestedProgramId));
+		if (requestedBatchId) { url.searchParams.set('batch_id', String(requestedBatchId)); }
 		return rest(url.toString(), {signal: controller.signal}).then(function (data) {
+			if ('program' !== state.credentialBasis || 'program' !== requestedBasis || state.issuance.program_id !== requestedProgramId || state.issuance.batch_id !== requestedBatchId) { return; }
 			state.programContext = data || null;
 			state.fieldContract = data && data.field_contract ? data.field_contract : {fields:[]};
 			if (data && data.issuer) {
@@ -900,7 +920,12 @@
 		var deep = cfg.deepLink || {}; var url = new URL(cfg.bootstrapUrl, window.location.href); ['recipient_id','program_id','batch_id'].forEach(function (key) { if (deep[key]) { url.searchParams.set(key, String(deep[key])); } });
 		rest(url.toString()).then(function (data) {
 			state.bootstrap = data || {}; state.issuance.valid_from = String(data.today || ''); var date = root.querySelector('[data-field="valid_from"]'); if (date) { date.value = state.issuance.valid_from; }
-			if (data.numbering && !data.numbering.automatic) { var numberField = root.querySelector('[data-display-number-field]'); if (numberField) { numberField.hidden = false; } }
+			if (data.numbering && !data.numbering.automatic) {
+				var numberField = root.querySelector('[data-display-number-field]');
+				var numberInput = root.querySelector('[data-field="display_number"]');
+				if (numberField) { numberField.hidden = false; }
+				if (numberInput) { numberInput.required = true; numberInput.setAttribute('aria-required', 'true'); }
+			}
 			populateEmailDesigns(); renderRepeating(); renderExpiryMode();
 			return applyDeepLink(data);
 		}).then(function () {
