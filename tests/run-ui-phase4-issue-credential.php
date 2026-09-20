@@ -34,7 +34,7 @@ i427( false !== strpos( $manual, 'data-presentation="details_only"' ) && false !
 i427( false !== strpos( $manual, 'data-design-source="inherited"' ) && false !== strpos( $manual, 'data-design-source="assigned"' ), 'Certloom design supports explicit inherited or one-off assigned source' );
 i427( false !== strpos( $manual, 'Live certificate preview' ) && false !== strpos( $manual, 'data-preview-stage' ) && false !== strpos( $manual, "render_async_picker( 'signer'" ), 'Certificate step keeps live preview and signer selection together' );
 i427( false !== strpos( $manual, 'data-email-mode="review"' ) && false !== strpos( $manual, 'data-email-mode="later"' ) && false !== strpos( $manual, 'Email design' ), 'Email is a first-class post-commit step with an explicit design choice' );
-i427( false !== strpos( $manual, 'Nothing is sent during issuance.' ) && false !== strpos( $manual, 'It does not send email automatically.' ), 'issuance never implies that Review or Issue silently sends email' );
+i427( false !== strpos( $manual, 'Nothing is sent during issuance.' ) && false !== strpos( $manual, 'Email is reviewed and sent separately.' ), 'issuance never implies that Review or Issue silently sends email' );
 
 i427( false !== strpos( $manual, 'data-review-technical' ) && false !== strpos( $manual, "__( 'Technical details', 'certloom' )" ) && false !== strpos( $js, 'Review SHA-256' ), 'technical/release evidence remains available under progressive disclosure' );
 i427( false !== strpos( $manual, 'data-issue-summary' ) && false !== strpos( $manual, 'data-summary-recipient' ) && false !== strpos( $manual, 'data-summary-batch' ) && false !== strpos( $manual, 'data-summary-email' ), 'live summary follows the important issuance decisions' );
@@ -88,6 +88,16 @@ i427( false !== strpos( $css, 'grid-template-columns: repeat(6, minmax(0, 1fr));
 i427( false !== strpos( $css, '.certloom-issue-step::before' ) && false !== strpos( $css, 'linear-gradient(90deg, var(--cl-brand-blue), var(--cl-cyan), var(--cl-brand-emerald))' ), 'issuance step card reuses the Setup Wizard brand accent language' );
 i427( false !== strpos( $js, "card.classList.toggle('is-compact', 'design' !== state.issuance.presentation_mode)" ) && false !== strpos( $css, '.certloom-issue-preview-card.is-compact .certloom-issue-preview-stage' ), 'non-design certificate modes collapse the otherwise empty live-preview canvas' );
 i427( false !== strpos( $js, 'var stepCount = stepPanels.length;' ) && false !== strpos( $js, 'var reviewStep = Math.max(0, stepCount - 1);' ), 'stepper logic derives its count instead of hard-coding eight steps' );
+
+
+// Alpha.4.85 live-acceptance geometry, quick-dialog and navigation safety corrections.
+i427( false !== strpos( $css, '.certloom-issue-grid {' ) && false !== strpos( $css, 'align-items: start;' ) && false !== strpos( $css, '.certloom-issue-field,' ) && false !== strpos( $css, 'align-content: start;' ), 'lifecycle controls align at the top even when only Validity has helper text' );
+i427( false !== strpos( $css, '.certloom-issue-dialog {' ) && false !== strpos( $css, 'overflow-x: hidden;' ) && false !== strpos( $css, 'box-sizing: border-box;' ) && false !== strpos( $css, '.certloom-issue-dialog input {' ), 'all Issue Credential quick dialogs contain their inputs without horizontal overflow' );
+i427( false !== strpos( $manual, 'name="title" required aria-required="true"' ) && false !== strpos( $manual, 'name="name" required aria-required="true"' ) && false !== strpos( $manual, "__( 'Optional — generated when blank', 'certloom' )" ), 'quick Program and Batch forms expose required/optional semantics clearly' );
+i427( substr_count( $manual, 'target="_blank" rel="noopener noreferrer"' ) >= 3 && false !== strpos( $manual, 'data-manage-program target="_blank"' ), 'in-progress management links preserve Issue Credential in the current tab' );
+i427( false !== strpos( $js, 'View existing credential</a>' ) && false !== strpos( $js, 'target="_blank" rel="noopener noreferrer"' ), 'duplicate recovery and post-issue navigation links also use safe new tabs' );
+i427( false !== strpos( $manual, 'certloom-issue-field-action-cluster' ) && false !== strpos( $manual, 'certloom-issue-email-template' ), 'Email design management is grouped with its selector instead of floating below it' );
+i427( false !== strpos( $manual, 'Check the final credential details before issuing.' ) && false !== strpos( $manual, 'Issuing creates an immutable credential version.' ), 'Review copy stays product-facing while retaining the immutable issuance boundary' );
 
 echo "\n$pass alpha.4.79 Issue Credential compatibility checks, $fail failures\n";
 exit( $fail ? 1 : 0 );

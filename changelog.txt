@@ -1,3 +1,10 @@
+= 1.7.0-alpha.4.85 =
+* Gamma-03A live-acceptance correction: contain both quick Program/Scheme and Batch/Audit dialogs so long profile terminology, inputs and translated actions cannot create horizontal scrolling.
+* Mark required quick-create fields explicitly, identify optional machine codes, and retain non-submitting Cancel/close behavior.
+* Align Effective date and Validity controls at the top of the same lifecycle row instead of stretching the shorter field to match helper-text height.
+* Open in-flow management/reference destinations in safe new tabs so Manage Program/Scheme, Manage designs, Manage email designs, duplicate recovery and receipt continuations do not destroy the current issuance/receipt state.
+* Group Email Design management with the Email Design selector and simplify Review copy while preserving the server Review fingerprint, immutable commit and post-commit Email boundary.
+
 = 1.7.0-alpha.4.84 =
 * Gamma-03A information-architecture correction: reduce Issue Credential from eight steps to six — Recipient → Context → Details → Certificate → Email → Review.
 * Merge credential title/lifecycle and credential-specific fields/results into one Details step with progressive disclosure for optional one-off data.

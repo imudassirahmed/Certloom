@@ -878,6 +878,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:365
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:737
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:181
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:237
 msgid "Optional"
 msgstr ""
 
@@ -19740,7 +19741,7 @@ msgid "Manage email designs"
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:209
-msgid "Certloom builds this review on the server. Final Issue revalidates the same fingerprint before committing."
+msgid "Check the final credential details before issuing. Certloom revalidates them when you confirm."
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:209
@@ -19764,7 +19765,7 @@ msgid "Server review not built yet"
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:213
-msgid "This creates the immutable credential Version. It does not send email automatically."
+msgid "Issuing creates an immutable credential version. Email is reviewed and sent separately."
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:224
@@ -19788,6 +19789,10 @@ msgstr ""
 #. translators: %s: Program terminology.
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:237
 msgid "Designs inherit automatically. After creation, use its Designs card or Design Rules if this %s needs an override."
+msgstr ""
+
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:238
+msgid "Optional — generated when blank"
 msgstr ""
 
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:250

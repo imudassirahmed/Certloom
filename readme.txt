@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.7.0-alpha.4.84
+Stable tag: 1.7.0-alpha.4.85
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> **1.7.0 ALPHA 4.84 — SIX-STEP ISSUE CREDENTIAL ACCEPTANCE REWORK — NOT FOR PRODUCTION.** Issue Credential now uses six focused steps: Recipient → Context → Details → Certificate → Email → Review. Credential lifecycle and credential-specific data share Details; Program/Scheme owns its default Issuer instead of exposing a separate Authority step; independent credentials choose an Issuer in Context; signer selection stays with Certificate. The issuance workspace now reuses the Setup Wizard token/card/progress language, non-design certificate modes collapse the empty preview canvas, and the canonical REST Review/fingerprint/Manual Issuance authority remains unchanged.
+> **1.7.0 ALPHA 4.85 — ISSUE CREDENTIAL LIVE-ACCEPTANCE FIT & NAVIGATION CORRECTIONS — NOT FOR PRODUCTION.** The six-step workflow remains unchanged. Quick Program/Batch dialogs are now overflow-safe with explicit required/optional semantics; Effective date and Validity align correctly even when only one field has helper text; management/reference links preserve the in-progress issuance by opening safely in a new tab; Email Design management is grouped with its selector; and Review copy is simplified while the canonical REST Review/fingerprint/Manual Issuance authority remains unchanged.
 
 > **1.7.0 ALPHA 4.22 — DASHBOARD RECENT-CREDENTIALS FIT CORRECTION — NOT FOR PRODUCTION.** This checkpoint changes only the Dashboard Recent credentials list after staging review: issue and expiry are combined into one compact Dates column with date-only values, Status stays visible, and current credentials expose a clear Edit action while historical credentials retain Manage. Dashboard shortcuts and surrounding cards remain unchanged. Renderer/domain authority remain absent while Phase 4 visual acceptance continues.
 

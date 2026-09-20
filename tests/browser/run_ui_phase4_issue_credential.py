@@ -80,17 +80,35 @@ async def run():
         close_box = await dialog.locator('header [data-quick-close]').bounding_box()
         await ck(bool(cancel_box and primary_box and primary_box['x'] - (cancel_box['x'] + cancel_box['width']) >= 80), 'quickDialogActionsAreSpatiallySeparated')
         await ck(bool(close_box and close_box['width'] >= 35 and close_box['height'] >= 35), 'quickDialogCloseHasDedicatedHitTarget')
+        await ck(await dialog.evaluate('(e)=>e.scrollWidth <= e.clientWidth + 1'), 'quickProgramDialogHasNoHorizontalScrollbar')
+        await ck(await dialog.locator('input[name="title"]').get_attribute('aria-required') == 'true', 'quickProgramRequiredFieldIsExplicit')
         await dialog.locator('[data-quick-close]').last.click()
         after_quick = await page.evaluate("window.__issueCalls.filter(c=>c.url.includes('/quick-program')).length")
         await ck(after_quick == before_quick and await dialog.get_attribute('open') is None, 'quickProgramCancelDoesNotSubmit')
+
+        batch_quick = page.locator('[data-picker="batch"] [data-quick-open="batch"]')
+        # Program is not selected yet, so Batch quick-create must stay guarded.
+        await batch_quick.click()
+        await ck(await page.locator('[data-quick-dialog="batch"]').get_attribute('open') is None, 'quickBatchRequiresProgramContext')
 
         # Program context owns inherited issuer; selected Program links back to its editor.
         program = page.locator('[data-picker="program"] [data-picker-search]')
         await program.focus(); await page.wait_for_selector('[data-picker="program"] [role="option"]')
         await page.locator('[data-picker="program"] [role="option"]').first.click()
         await page.wait_for_function("document.querySelector('[data-program-context-note]').textContent.includes('Example Authority')")
-        manage_href = await page.locator('[data-manage-program]').get_attribute('href')
+        manage_link = page.locator('[data-manage-program]')
+        manage_href = await manage_link.get_attribute('href')
         await ck(bool(manage_href and 'program_id=1' in manage_href), 'manageProgramTargetsSelectedProgram')
+        await ck(await manage_link.get_attribute('target') == '_blank' and 'noopener' in ((await manage_link.get_attribute('rel')) or ''), 'manageProgramPreservesIssuanceInNewTab')
+
+        batch_quick = page.locator('[data-picker="batch"] [data-quick-open="batch"]')
+        await batch_quick.click()
+        batch_dialog = page.locator('[data-quick-dialog="batch"]')
+        await ck(await batch_dialog.get_attribute('open') is not None, 'quickBatchDialogOpensAfterProgramSelection')
+        await ck(await batch_dialog.evaluate('(e)=>e.scrollWidth <= e.clientWidth + 1'), 'quickBatchDialogHasNoHorizontalScrollbar')
+        await ck(await batch_dialog.locator('input[name="name"]').get_attribute('aria-required') == 'true', 'quickBatchRequiredFieldIsExplicit')
+        await batch_dialog.locator('[data-quick-close]').last.click()
+
         batch = page.locator('[data-picker="batch"] [data-picker-search]')
         await batch.focus(); await page.wait_for_selector('[data-picker="batch"] [role="option"]')
         await ck(await page.locator('[data-picker="batch"] [data-picker-results]').evaluate('(e)=>getComputedStyle(e).position') == 'static', 'batchResultsStayInFlowInsteadOfCoveringQuickAdd')
@@ -120,6 +138,9 @@ async def run():
         await ck('Independent Professional Recognition' in await page.locator('[data-summary-title]').inner_text(), 'independentTitleUpdatesSummary')
         expiry = page.locator('[data-field="expiry_mode"]')
         await ck(await expiry.input_value() == 'permanent', 'independentDefaultsPermanent')
+        effective_box = await page.locator('[data-field="valid_from"]').bounding_box()
+        validity_box = await expiry.bounding_box()
+        await ck(bool(effective_box and validity_box and abs(effective_box['y'] - validity_box['y']) <= 1.5), 'effectiveDateAndValidityControlsAlign')
         await ck(await page.locator('[data-oneoff-fields]').is_visible(), 'oneOffDataLivesInsideDetails')
         await page.locator('[data-add-oneoff]').click()
         await ck(await page.locator('.certloom-oneoff-row').count() == 1, 'oneOffFieldCanBeAddedInline')
@@ -133,6 +154,8 @@ async def run():
         await ck('No design preview is needed' in await page.locator('[data-preview-status]').inner_text(), 'detailsOnlyDoesNotPretendRendererPreview')
         await ck('is-compact' in ((await page.locator('.certloom-issue-preview-card').get_attribute('class')) or ''), 'nonDesignPreviewUsesCompactStatusCard')
         await ck(await page.locator('[data-preview-stage]').evaluate('(e)=>e.getBoundingClientRect().height') < 180, 'nonDesignPreviewAvoidsLargeEmptyCanvas')
+        manage_designs = page.locator('[data-step-key="certificate"] a[href*="certloom-templates"]')
+        await ck(await manage_designs.get_attribute('target') == '_blank' and 'noopener' in ((await manage_designs.get_attribute('rel')) or ''), 'manageDesignsPreservesIssuanceInNewTab')
         signer = page.locator('[data-picker="signer"] [data-picker-search]')
         await ck(await signer.is_visible(), 'signerLivesWithCertificate')
         await signer.focus(); await page.wait_for_selector('[data-picker="signer"] [role="option"]')
@@ -142,6 +165,8 @@ async def run():
         # Email remains focused but overall journey is shorter.
         await ck(await page.locator('[data-step-status]').inner_text() == 'Step 5 of 6', 'emailDedicatedStep')
         await ck(await page.locator('[data-email-design-field]').is_visible(), 'emailDesignVisibleForReviewNext')
+        manage_email = page.locator('[data-step-key="email"] a[href*="certloom-email-designs"]')
+        await ck(await manage_email.get_attribute('target') == '_blank' and 'noopener' in ((await manage_email.get_attribute('rel')) or ''), 'manageEmailDesignsPreservesIssuanceInNewTab')
         await page.locator('[data-email-mode="later"]').click()
         await ck(await page.locator('[data-email-design-field]').is_hidden(), 'emailDesignHidesWhenDeferred')
         await ck('Do not email now' in await page.locator('[data-summary-email]').inner_text(), 'emailSummaryTracksIntent')
@@ -168,6 +193,8 @@ async def run():
         next_button = mobile.locator('[data-step-next]')
         height = await next_button.evaluate('(e)=>Math.max(parseFloat(getComputedStyle(e).minHeight)||0,e.getBoundingClientRect().height)')
         await ck(height >= 43.5, 'mobilePrimaryActionMeets44px')
+        await mobile.locator('[data-quick-dialog="program"]').evaluate('(e)=>e.showModal()')
+        await ck(await mobile.locator('[data-quick-dialog="program"]').evaluate('(e)=>e.scrollWidth <= e.clientWidth + 1'), 'mobileQuickDialogHasNoHorizontalScrollbar')
         await mobile.close(); await browser.close()
 
     if failed:
