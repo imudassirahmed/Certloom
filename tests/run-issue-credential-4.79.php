@@ -1,5 +1,5 @@
 <?php
-/** Alpha.4.79 from-scratch Issue Credential REST application contract. */
+/** Current Issue Credential REST application contract, evolved from alpha.4.79. */
 $root = dirname( __DIR__ );
 $admin = file_get_contents( $root . '/src/Infrastructure/Admin/ManualIssuanceAdmin.php' );
 $rest = file_get_contents( $root . '/src/Infrastructure/Admin/IssueCredentialRest.php' );
@@ -13,16 +13,17 @@ $pass = 0; $fail = 0;
 function i479( $ok, $label ) { global $pass, $fail; if ( $ok ) { ++$pass; echo "PASS  $label\n"; } else { ++$fail; echo "FAIL  $label\n"; } }
 
 // Application shell and step architecture.
-i479( substr_count( $admin, 'data-step-key=') >= 8 && false === strpos( $admin, 'A focused eight-step workflow' ), 'Issue Credential keeps the eight-step workflow without internal explanatory hero copy' );
-foreach ( array( 'Recipient', 'Credential', 'Data & results', 'Certificate', 'Email', 'Review & issue' ) as $label ) {
+i479( substr_count( $admin, 'data-step-key=') >= 6 && false === strpos( $admin, 'A focused eight-step workflow' ), 'Issue Credential keeps the focused six-step workflow without internal explanatory hero copy' );
+foreach ( array( 'Recipient', 'Credential details', 'Certificate and signing', 'Email', 'Review & issue' ) as $label ) {
 	i479( false !== strpos( $admin, $label ), 'step/source contains ' . $label );
 }
 i479( false !== strpos( $admin, "'%1\$s & %2\$s'" ) && false !== strpos( $admin, '$program, $batch' ), 'context step combines active Program and Batch terminology' );
-i479( false !== strpos( $admin, 'data-issue-step="7"' ), 'eighth Review step is present' );
+i479( false !== strpos( $admin, 'data-issue-step="5"' ) && false === strpos( $admin, 'data-issue-step="6"' ), 'sixth Review step is final' );
 i479( false !== strpos( $admin, "render_async_picker( 'program'" ) && false !== strpos( $admin, "render_async_picker( 'batch'" ), 'Program and Batch are async pickers' );
+i479( false !== strpos( $admin, 'data-manage-program' ) && false !== strpos( $admin, 'data-independent-issuer' ) && false === strpos( $admin, 'data-step-key="authority"' ), 'Program-backed issuer authority is managed from Program context instead of a standalone issuance step' );
 i479( false !== strpos( $admin, 'data-field="credential_title"' ), 'credential title is always a visible text field' );
-i479( false !== strpos( $admin, 'data-design-required-fields' ) && false !== strpos( $admin, 'data-oneoff-fields' ), 'design-required and one-off data remain separate' );
-i479( false !== strpos( $admin, 'data-preview-stage' ) && false !== strpos( $admin, 'data-preview-status' ), 'certificate step owns live preview surface' );
+i479( false !== strpos( $admin, 'data-step-key="details"' ) && false !== strpos( $admin, 'data-design-required-fields' ) && false !== strpos( $admin, 'data-oneoff-fields' ) && false === strpos( $admin, 'data-step-key="data"' ), 'credential data is merged into Details while design-required and one-off surfaces remain distinct' );
+i479( false !== strpos( $admin, 'data-preview-stage' ) && false !== strpos( $admin, 'data-preview-status' ) && false !== strpos( $admin, "render_async_picker( 'signer'" ), 'certificate step owns live preview and signer selection' );
 i479( false !== strpos( $admin, 'data-email-mode="review"' ) && false !== strpos( $admin, 'data-email-mode="later"' ), 'Email is an explicit post-issuance decision' );
 i479( false !== strpos( $admin, 'Nothing is sent during issuance' ), 'Email copy preserves post-commit boundary' );
 i479( false !== strpos( $admin, 'data-review-technical' ), 'technical evidence remains available without cluttering primary review' );
@@ -72,7 +73,8 @@ i479( false === strpos( $global_js, 'data-certloom-phase2-issuance' ), 'global J
 i479( false === strpos( $foundation_css, 'certloom-issue-v2' ) && false === strpos( $foundation_css, 'certloom-issue-context-rail' ) && false === strpos( $foundation_css, 'certloom-manual-steps' ), 'legacy one-page Issue Credential CSS is deleted from the shared foundation' );
 
 // Dedicated style contract does not add design-system debt.
-i479( false !== strpos( $css, '.certloom-issue-app-body' ) && false !== strpos( $css, 'grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);' ), 'dedicated CSS provides workspace plus sticky summary layout' );
+i479( false !== strpos( $css, '.certloom-issue-app-body' ) && false !== strpos( $css, 'grid-template-columns: minmax(0, 1fr) minmax(270px, 320px);' ), 'dedicated CSS provides workspace plus sticky summary layout' );
+i479( false !== strpos( $css, 'grid-template-columns: repeat(6, minmax(0, 1fr));' ) && false !== strpos( $css, 'linear-gradient(90deg, var(--cl-brand-blue), var(--cl-cyan), var(--cl-brand-emerald))' ), 'six-step progress reuses Setup Wizard token and gradient language' );
 i479( false !== strpos( $css, '.certloom-issue-summary' ) && false !== strpos( $css, 'position: sticky;' ), 'live summary stays available on desktop' );
 i479( false !== strpos( $css, '@media (max-width: 960px)' ) && false !== strpos( $css, 'position: static;' ), 'responsive layout removes sticky summary on narrow screens' );
 i479( 0 === preg_match_all( '/#[0-9a-fA-F]{3,8}/', $css ), 'dedicated CSS adds no raw hex colours' );

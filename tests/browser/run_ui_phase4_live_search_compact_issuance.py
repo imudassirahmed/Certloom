@@ -37,7 +37,7 @@ async def run():
         await ck(await issue.locator('.certloom-issue-v2-form').count()==0,'legacyOnePageIssueFormRemoved')
         cols=await issue.locator('.certloom-issue-app-body').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns')
         await ck(len(cols.split())==2,'issueAppUsesWorkspaceAndSummaryDesktopLayout')
-        await ck(await issue.locator('[data-issue-step]').count()==8,'issueJourneyUsesEightFocusedSteps')
+        await ck(await issue.locator('[data-issue-step]').count()==6,'issueJourneyUsesSixFocusedSteps')
         await ck(await issue.locator('.certloom-issue-summary').evaluate('(e)=>getComputedStyle(e).position')=='sticky','desktopSummaryStaysSticky')
 
         rec=issue.locator('[data-picker="recipient"] [data-picker-search]'); await rec.focus(); await issue.wait_for_selector('[data-picker="recipient"] [role="option"]'); await issue.locator('[data-picker="recipient"] [role="option"]').click(); await issue.locator('[data-step-next]').click()
@@ -53,7 +53,7 @@ async def run():
 
         # Reach Certificate and prove assigned design preview is driven by current unsaved issuance state.
         await issue.locator('[data-step-next]').click(); title=issue.locator('[data-field="credential_title"]'); await ck(await title.input_value()=='Beta Certificate','programTitleRemainsDirectlyEditable')
-        await title.fill('Beta Executive Credential'); await issue.locator('[data-step-next]').click(); await issue.locator('[data-scoped-input="address"]').fill('21 Clifton Road'); await issue.locator('[data-step-next]').click()
+        await title.fill('Beta Executive Credential'); await issue.locator('[data-scoped-input="address"]').fill('21 Clifton Road'); await issue.locator('[data-step-next]').click()
         await issue.locator('[data-presentation="design"]').click(); await issue.locator('[data-design-source="assigned"]').click()
         templ=issue.locator('[data-picker="template"] [data-picker-search]'); await templ.focus(); await issue.wait_for_selector('[data-picker="template"] [role="option"]'); await issue.locator('[data-picker="template"] [role="option"]').click(); await issue.wait_for_selector('[data-preview-document]')
         await ck('Beta Executive Credential' in await issue.locator('[data-preview-stage]').inner_text(),'previewUsesCurrentUnsavedTitle')
@@ -73,6 +73,6 @@ async def run():
         dash=await browser.new_page(viewport={'width':1280,'height':800}); css=(ROOT/'assets/css/certloom-tokens.css').read_text()+"\n"+(ROOT/'admin/assets/certloom-foundation.css').read_text(); await dash.set_content('<style>'+css+'</style><div class="certloom-admin-shell"><div class="certloom-dashboard-date-line is-expiry"><span class="certloom-dashboard-date-dot"></span></div></div>'); color=await dash.locator('.certloom-dashboard-date-dot').evaluate('(e)=>getComputedStyle(e).backgroundColor'); await ck(color=='rgb(192, 39, 31)','dashboardExpiryDotUsesErrorRed'); await dash.close(); await browser.close()
     if failed:
         print('FAIL  alpha.4.79 live-search/compact issuance browser gate:',', '.join(failed)); print(f'\n{checks-len(failed)} passed, {len(failed)} failures'); return 1
-    print('PASS  alpha.4.79 live-search/compact issuance browser gate: authenticated REST search, Program→Batch refresh, compact eight-step issuance, assigned preview provenance and responsive summary')
+    print('PASS  alpha.4.79 live-search/compact issuance browser gate: authenticated REST search, Program→Batch refresh, compact six-step issuance, assigned preview provenance and responsive summary')
     print(f'\n{checks} alpha.4.79 browser checks, 0 failures'); return 0
 raise SystemExit(asyncio.run(run()))

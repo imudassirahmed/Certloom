@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.7.0-alpha.4.83
+Stable tag: 1.7.0-alpha.4.84
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> **1.7.0 ALPHA 4.79 — ISSUE CREDENTIAL REST REBUILD — NOT FOR PRODUCTION.** Issue Credential is rebuilt from scratch as an eight-step WordPress REST application: Recipient → Program & Batch → Credential → Data & results → Certificate → Issuer & Signer → Email → Review & issue. Program changes clear stale Batch state and fetch current Batches on demand; title defaults remain directly editable; live certificate preview uses unsaved issuance state; repeating data is bounded and accessible; Review is server-generated and final Issue revalidates the exact SHA-256 review fingerprint through the canonical Manual Issuance service. The deleted one-page controller/CSS is not restored, Email remains post-commit, and renderer/domain authority stays fail-closed.
+> **1.7.0 ALPHA 4.84 — SIX-STEP ISSUE CREDENTIAL ACCEPTANCE REWORK — NOT FOR PRODUCTION.** Issue Credential now uses six focused steps: Recipient → Context → Details → Certificate → Email → Review. Credential lifecycle and credential-specific data share Details; Program/Scheme owns its default Issuer instead of exposing a separate Authority step; independent credentials choose an Issuer in Context; signer selection stays with Certificate. The issuance workspace now reuses the Setup Wizard token/card/progress language, non-design certificate modes collapse the empty preview canvas, and the canonical REST Review/fingerprint/Manual Issuance authority remains unchanged.
 
 > **1.7.0 ALPHA 4.22 — DASHBOARD RECENT-CREDENTIALS FIT CORRECTION — NOT FOR PRODUCTION.** This checkpoint changes only the Dashboard Recent credentials list after staging review: issue and expiry are combined into one compact Dates column with date-only values, Status stays visible, and current credentials expose a clear Edit action while historical credentials retain Manage. Dashboard shortcuts and surrounding cards remain unchanged. Renderer/domain authority remain absent while Phase 4 visual acceptance continues.
 

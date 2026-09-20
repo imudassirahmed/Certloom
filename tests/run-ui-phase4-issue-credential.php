@@ -1,5 +1,5 @@
 <?php
-/** Alpha.4.79 Issue Credential eight-step REST compatibility contract. */
+/** Current Issue Credential six-step REST compatibility contract. */
 $root = dirname( __DIR__ );
 $manual = file_get_contents( $root . '/src/Infrastructure/Admin/ManualIssuanceAdmin.php' );
 $rest = file_get_contents( $root . '/src/Infrastructure/Admin/IssueCredentialRest.php' );
@@ -17,20 +17,22 @@ i427( false !== strpos( $manual, '( new AdminProductNavigation() )->render_curre
 i427( false !== strpos( $nav, "'certloom-issuance'" ) && false !== strpos( $nav, 'page_renders_own_subnav' ), 'early duplicate sub-navigation stays suppressed' );
 i427( false === strpos( $manual, 'certloom-ui-contract-badge' ) && false === strpos( $manual, 'certloom-phase2-backend-boundary' ), 'developer contract chrome stays outside the user workflow' );
 
-foreach ( array( 'recipient','context','credential','data','certificate','authority','email','review' ) as $key ) {
-    i427( false !== strpos( $manual, 'data-step-key="' . $key . '"' ), 'eight-step app includes ' . $key . ' step' );
+foreach ( array( 'recipient','context','details','certificate','email','review' ) as $key ) {
+    i427( false !== strpos( $manual, 'data-step-key="' . $key . '"' ), 'six-step app includes ' . $key . ' step' );
 }
+i427( false === strpos( $manual, 'data-step-key="data"' ) && false === strpos( $manual, 'data-step-key="authority"' ), 'Data and Authority are no longer standalone wizard steps' );
 i427( false === strpos( $manual, 'A focused eight-step workflow.' ) && false === strpos( $manual, 'certloom-manual-issuance-technical-status' ), 'ordinary Issue Credential chrome omits internal review/release-status prose' );
 i427( false !== strpos( $manual, "render_async_picker( 'recipient'" ) && false !== strpos( $manual, "render_async_picker( 'program'" ) && false !== strpos( $manual, "render_async_picker( 'batch'" ), 'Recipient, Program and Batch use one async-picker pattern' );
 i427( false !== strpos( $manual, 'data-quick-dialog="program"' ) && false !== strpos( $manual, 'data-quick-dialog="batch"' ), 'Program and Batch remain quick-creatable without leaving issuance' );
 i427( false !== strpos( $manual, 'type="button" data-quick-close' ) && false !== strpos( $js, "querySelectorAll('[data-quick-close]')" ), 'quick-create Cancel and close controls dismiss dialogs without becoming create submissions' );
-i427( false !== strpos( $manual, 'data-field="credential_title"' ) && false !== strpos( $manual, "__( 'The title stays editable even when a %s supplies the default.', 'certloom' )" ), 'profile-aware Program-derived title remains visibly editable' );
+i427( false !== strpos( $manual, 'data-field="credential_title"' ) && false !== strpos( $manual, "__( 'Set the title and lifecycle, then complete only the credential data this %s or certificate design needs.', 'certloom' )" ), 'profile-aware Program-derived title remains visibly editable inside merged Details' );
 i427( false !== strpos( $manual, 'data-design-required-fields' ) && strpos( $manual, 'data-design-required-fields' ) < strpos( $manual, 'Additional one-off credential data' ), 'design-required facts stay visible before collapsed optional one-off data' );
-i427( false !== strpos( $manual, 'data-repeating-section' ) && false !== strpos( $manual, 'Subjects & results' ), 'structured Subjects/Results have a dedicated bounded data surface' );
+i427( false !== strpos( $manual, 'data-step-key="details"' ) && false !== strpos( $manual, 'data-repeating-section' ) && false !== strpos( $manual, 'Subjects & results' ), 'structured Subjects/Results stay bounded inside merged Details' );
 
+i427( false !== strpos( $manual, 'data-manage-program' ) && false !== strpos( $manual, 'data-independent-issuer' ) && false === strpos( $manual, 'data-step-key="authority"' ), 'Program-backed Issuer is managed on Program while independent credentials can still choose one in Context' );
 i427( false !== strpos( $manual, 'data-presentation="details_only"' ) && false !== strpos( $manual, 'data-presentation="image"' ) && false !== strpos( $manual, 'data-presentation="design"' ), 'Certificate step exposes details-only, uploaded-image and Certloom-design choices' );
 i427( false !== strpos( $manual, 'data-design-source="inherited"' ) && false !== strpos( $manual, 'data-design-source="assigned"' ), 'Certloom design supports explicit inherited or one-off assigned source' );
-i427( false !== strpos( $manual, 'Live certificate preview' ) && false !== strpos( $manual, 'data-preview-stage' ), 'Certificate step keeps a live unsaved preview surface' );
+i427( false !== strpos( $manual, 'Live certificate preview' ) && false !== strpos( $manual, 'data-preview-stage' ) && false !== strpos( $manual, "render_async_picker( 'signer'" ), 'Certificate step keeps live preview and signer selection together' );
 i427( false !== strpos( $manual, 'data-email-mode="review"' ) && false !== strpos( $manual, 'data-email-mode="later"' ) && false !== strpos( $manual, 'Email design' ), 'Email is a first-class post-commit step with an explicit design choice' );
 i427( false !== strpos( $manual, 'Nothing is sent during issuance.' ) && false !== strpos( $manual, 'It does not send email automatically.' ), 'issuance never implies that Review or Issue silently sends email' );
 
@@ -64,7 +66,7 @@ i427( ! preg_match( '/#[0-9a-fA-F]{3,8}\b/', $css ) && false === strpos( $css, '
 i427( false !== strpos( $css, '.certloom-issue-app [hidden]' ) && false !== strpos( $css, 'display: none;' ), 'HTML hidden state overrides flex/grid component display without !important debt' );
 i427( false !== strpos( $css, '::-webkit-search-cancel-button' ) && false !== strpos( $css, '-webkit-appearance: none;' ), 'async picker suppresses the browser-native duplicate search clear affordance' );
 i427( false !== strpos( $js, "if (status) { status.textContent = ''; }") && false !== strpos( $js, "if (selectedChoice && search.value === selectedLabel)" ), 'selected picker state clears stale match feedback and does not reopen its exact match on focus' );
-i427( false !== strpos( $manual, "array( 'context', __( 'Context', 'certloom' )" ) && false !== strpos( $manual, "array( 'review', __( 'Review', 'certloom' )" ), 'stepper uses compact stable visible task labels' );
+i427( false !== strpos( $manual, "array( 'context', __( 'Context', 'certloom' )" ) && false !== strpos( $manual, "array( 'details', __( 'Details', 'certloom' )" ) && false !== strpos( $manual, "array( 'review', __( 'Review', 'certloom' )" ), 'stepper uses six compact stable visible task labels' );
 i427( false !== strpos( $manual, 'private function render_summary( $program, $batch )' ) && false !== strpos( $manual, 'esc_html( $program )' ) && false !== strpos( $manual, 'esc_html( $batch )' ), 'live summary labels follow active profile Program/Batch terminology' );
 i427( false !== strpos( $manual, "esc_html__( 'Credential title', 'certloom' ) . ' <em>*</em>" ) && false !== strpos( $manual, "esc_html__( 'Certificate number', 'certloom' ) . ' <em>*</em>" ) && false !== strpos( $manual, 'aria-required="true"' ), 'credential title and manual certificate number expose required semantics' );
 
@@ -77,6 +79,15 @@ i427( false !== strpos( $css, '.certloom-picker-results {' ) && false !== strpos
 i427( false !== strpos( $css, '.certloom-dialog-actions {' ) && false !== strpos( $css, 'justify-content: space-between;' ) && false !== strpos( $css, '.certloom-dialog-actions .button-primary' ) && false !== strpos( $css, 'margin-left: auto;' ), 'quick-setup secondary and primary actions are deliberately separated across the dialog footer' );
 i427( false !== strpos( $css, '.certloom-issue-dialog header > [data-quick-close]' ) && false !== strpos( $css, 'flex: 0 0 36px;' ) && false !== strpos( $css, 'height: 36px;' ), 'quick-setup close affordance has a dedicated accessible hit target away from the title' );
 i427( false !== strpos( $manual, "__( 'Use %s default', 'certloom' )" ) && false !== strpos( $manual, 'No %1$s or %2$s relationship will be stored.' ) && false !== strpos( $manual, 'These values are frozen only on this credential and do not change the %1$s, %2$s or Recipient profile.' ), 'profile terminology stays consistent through credential, independent and one-off-data copy' );
+
+// Alpha.4.84 six-step information architecture + Setup Wizard token alignment.
+i427( substr_count( $manual, 'data-step-key=') === 6 && false !== strpos( $manual, 'Step 6 of 6' ) && false === strpos( $manual, 'Step 8 of 8' ), 'Issue Credential is reduced from eight to six steps' );
+i427( false !== strpos( $manual, 'certloom-issue-data-inline' ) && false !== strpos( $manual, 'Credential data' ), 'Credential fields are merged into the Details step instead of consuming a separate step' );
+i427( false !== strpos( $manual, 'certloom-issue-signing' ) && false !== strpos( $manual, 'Inherited authority' ), 'Signer and inherited authority are folded into Certificate instead of a standalone Authority step' );
+i427( false !== strpos( $css, 'grid-template-columns: repeat(6, minmax(0, 1fr));' ) && false !== strpos( $css, 'var(--cl-brand-emerald)' ) && false !== strpos( $css, 'var(--cl-r-panel)' ), 'issuance progress and panels reuse Setup Wizard design tokens' );
+i427( false !== strpos( $css, '.certloom-issue-step::before' ) && false !== strpos( $css, 'linear-gradient(90deg, var(--cl-brand-blue), var(--cl-cyan), var(--cl-brand-emerald))' ), 'issuance step card reuses the Setup Wizard brand accent language' );
+i427( false !== strpos( $js, "card.classList.toggle('is-compact', 'design' !== state.issuance.presentation_mode)" ) && false !== strpos( $css, '.certloom-issue-preview-card.is-compact .certloom-issue-preview-stage' ), 'non-design certificate modes collapse the otherwise empty live-preview canvas' );
+i427( false !== strpos( $js, 'var stepCount = stepPanels.length;' ) && false !== strpos( $js, 'var reviewStep = Math.max(0, stepCount - 1);' ), 'stepper logic derives its count instead of hard-coding eight steps' );
 
 echo "\n$pass alpha.4.79 Issue Credential compatibility checks, $fail failures\n";
 exit( $fail ? 1 : 0 );

@@ -33,8 +33,7 @@ async def reach_data_step(page):
     await page.wait_for_selector('[data-picker="batch"] [role="option"]')
     await page.locator('[data-picker="batch"] [role="option"]').first.click()
     await page.locator('[data-step-next]').click()
-    await page.locator('[data-step-next]').click()
-    await page.wait_for_function("document.querySelector('[data-step-status]').textContent === 'Step 4 of 8'")
+    await page.wait_for_function("document.querySelector('[data-step-status]').textContent === 'Step 3 of 6'")
 
 
 async def main():
@@ -103,8 +102,7 @@ async def main():
         await ck(await page.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'), 'desktopNoHorizontalOverflow')
 
         # Repeating data is carried in the REST Review payload, not hidden form inputs.
-        await page.locator('[data-step-next]').click()  # Certificate.
-        await page.locator('[data-step-next]').click()  # Authority.
+        await page.locator('[data-step-next]').click()  # Certificate & signing.
         await page.locator('[data-step-next]').click()  # Email.
         await page.locator('[data-step-next]').click()  # Review request.
         await page.wait_for_function("window.__issueCalls.some(c=>c.url.includes('/admin/issue/review'))")

@@ -26,7 +26,7 @@ p432(false!==strpos($service,"'title' => (string)")&&false!==strpos($service,"cu
 p432(false!==strpos($admin,'data-credential-basis="program"')&&false!==strpos($admin,'data-credential-basis="independent"'),'Issue Credential exposes Program versus Independent basis in the primary context step');
 p432(false!==strpos($admin,"render_async_picker( 'program'")&&false!==strpos($admin,'data-program-context'),'profile-aware Program picker is first-class instead of duplicated under advanced options');
 p432(false===strpos($admin,"Program (optional)"),'the deleted mega-form no longer duplicates an optional Program selector');
-p432(false!==strpos($admin,'data-field="credential_title"')&&false!==strpos($admin,"__( 'The title stays editable even when a %s supplies the default.', 'certloom' )"),'credential title is always visible and directly overridable');
+p432(false!==strpos($admin,'data-field="credential_title"')&&false!==strpos($admin,"__( 'Choose a %s to prefill its title, or type a custom title.', 'certloom' )"),'credential title is always visible and directly overridable');
 p432(false!==strpos($rest,'private function program_choice')&&false!==strpos($rest,"'title' => (string)")&&false!==strpos($rest,"row['title']"),'Program REST choices transport exact title separately from display label');
 p432(false!==strpos($rest,'public function quick_program')&&false!==strpos($rest,"'program' => ")&&false!==strpos($rest,"program_choice("),'quick-created Programs return the same title-bearing choice contract immediately');
 p432(false!==strpos($js,"state.issuance.credential_title = String(choice.title || choice.label || '')")&&false!==strpos($js,"state.issuance.title_source = 'program'"),'selecting a Program prefills and marks its title as inherited');
@@ -38,7 +38,7 @@ p432(false!==strpos($js,"state.issuance.batch_id = 0")&&false!==strpos($js,"sear
 
 p432(false!==strpos($template,'MergeTokenCatalog::groups()')&&false!==strpos($catalog,"'credential.title'"),'Certificate Designer exposes credential.title through the canonical merge catalog');
 p432(false!==strpos($samples,"'credential.title' => 'Professional Credential Program'")&&false!==strpos($samples,"standard['credential.title'] =")&&false!==strpos($samples,"standard['program.title']"),'designer preview samples model credential title independently while following Program title by default');
-p432(false!==strpos($css,'.certloom-issue-step')&&false!==strpos($css,'.certloom-segmented'),'Program/title semantics have dedicated eight-step app styling');
+p432(false!==strpos($css,'.certloom-issue-step')&&false!==strpos($css,'.certloom-segmented'),'Program/title semantics have dedicated six-step app styling');
 p432(false!==strpos($rest,"'title_source' =>")&&false!==strpos($js,"['Title source'")&&false!==strpos($js,"'program' === review.title_source"),'Review visibly communicates resolved Program/custom title provenance');
 p432(false!==strpos($js,"body:{issuance:state.issuance,email:state.email}")&&false!==strpos($js,"body:{issuance:state.issuance,email:state.email,review_fingerprint:state.reviewFingerprint}"),'Review and Issue reuse the same title-bearing canonical issuance state');
 p432(false===strpos($admin,'certloom_phase2_title_required')&&false===strpos($admin,'Enter a credential title before reviewing this credential.'),'admin shell does not reimplement canonical title resolution with legacy validation');

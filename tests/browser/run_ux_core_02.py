@@ -24,7 +24,7 @@ async def run():
         await ck(await panel.locator('[data-picker="wp_user"]').count()==1,'newRecipientOffersAsyncWordPressAccountPicker')
         wp=panel.locator('[data-picker="wp_user"] [data-picker-search]'); await wp.focus(); await page.wait_for_selector('[data-picker="wp_user"] [role="option"]'); await page.locator('[data-picker="wp_user"] [role="option"]').click(); await ck('amina_wp' in await panel.locator('[data-picker="wp_user"] [data-picker-selected]').inner_text(),'wordPressAccountSelectedWithoutRawNumericId')
         await panel.locator('[data-field="new_recipient.display_name"]').fill('Amina New'); await panel.locator('[data-field="new_recipient.email"]').fill('new@example.test')
-        await page.locator('[data-step-next]').click(); await ck(await page.locator('[data-step-status]').inner_text()=='Step 2 of 8','recipientDraftContinuesToContextStep')
+        await page.locator('[data-step-next]').click(); await ck(await page.locator('[data-step-status]').inner_text()=='Step 2 of 6','recipientDraftContinuesToContextStep')
 
         # Quick Program deliberately inherits designs; it does not expose presentation assignment.
         await page.locator('[data-quick-open="program"]').click(); qprog=page.locator('[data-quick-dialog="program"]'); await ck(await qprog.get_attribute('open') is not None,'quickProgramDialogOpensInPlace')
@@ -43,7 +43,7 @@ async def run():
         await ck(await page.locator('[data-picker="batch"] [data-picker-value]').input_value()=='33','quickBatchCreatedAndSelected')
         calls=await page.evaluate('window.__issueCalls'); quick_batch=[c for c in calls if '/quick-batch' in c['url']][-1]; await ck(quick_batch['body'].get('program_id')==3,'quickBatchRequestUsesCurrentProgram')
         await page.locator('[data-step-prev]').click(); await ck(await panel.locator('[data-field="new_recipient.display_name"]').input_value()=='Amina New','quickCreatesPreserveUnsavedRecipientDraft')
-        await page.locator('[data-step-next]').click(); await page.locator('[data-step-next]').click(); await page.locator('[data-step-next]').click(); await ck(await page.locator('[data-step-status]').inner_text()=='Step 4 of 8','dataAndResultsRemainsSeparateStep')
+        await page.locator('[data-step-next]').click(); await page.locator('[data-step-next]').click(); await ck(await page.locator('[data-step-status]').inner_text()=='Step 3 of 6','credentialDataMergedIntoDetailsStep')
         await ck(await page.locator('[data-scoped-field="grade"]').count()==1,'canonicalProgramFieldContractRendersCredentialGrade')
         await ck(await page.locator('[data-scoped-field="address"]').count()==1,'canonicalProgramFieldContractRendersCustomCredentialField')
         await ck(await page.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'),'desktopNoOverflow')

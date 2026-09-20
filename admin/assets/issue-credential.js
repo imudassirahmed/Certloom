@@ -14,6 +14,8 @@
 	var prevButton = root.querySelector('[data-step-prev]');
 	var nextButton = root.querySelector('[data-step-next]');
 	var stepStatus = root.querySelector('[data-step-status]');
+	var stepCount = stepPanels.length;
+	var reviewStep = Math.max(0, stepCount - 1);
 	var summaryProgressBar = root.querySelector('[data-summary-progress-bar]');
 	var summaryProgressText = root.querySelector('[data-summary-progress-text]');
 	var programTerm = root.getAttribute('data-program-term') || 'Program';
@@ -114,7 +116,7 @@
 	function setBusy(busy) {
 		state.busy = !!busy;
 		if (prevButton) { prevButton.disabled = busy || state.step === 0; }
-		if (nextButton) { nextButton.disabled = busy || state.step === 7; }
+		if (nextButton) { nextButton.disabled = busy || state.step === reviewStep; }
 		var reviewButton = root.querySelector('[data-build-review]');
 		var issueButton = root.querySelector('[data-issue-confirm]');
 		if (reviewButton) { reviewButton.disabled = !!busy; }
@@ -383,6 +385,12 @@
 		if (inherited) { inherited.hidden = !hasInherited; }
 		if (inheritedName) { inheritedName.textContent = hasInherited ? String(state.programContext.issuer.name || state.programContext.issuer.label || '') : ''; }
 		if (independent) { independent.hidden = 'independent' !== state.credentialBasis; }
+		var manageProgram = root.querySelector('[data-manage-program]');
+		if (manageProgram && cfg.programsUrl) {
+			var manageUrl = new URL(cfg.programsUrl, window.location.href);
+			if (state.issuance.program_id) { manageUrl.searchParams.set('program_id', String(state.issuance.program_id)); }
+			manageProgram.href = manageUrl.toString();
+		}
 		var validity = root.querySelector('[data-validity-summary]');
 		if (validity) {
 			validity.textContent = state.programContext && state.programContext.validity && state.programContext.validity.summary ? state.programContext.validity.summary : ('program' === state.credentialBasis ? 'No ' + programTerm + ' validity default is configured.' : 'Independent credentials use No expiry or a specific date.');
@@ -513,7 +521,7 @@
 			html += '<label class="certloom-issue-field" data-scoped-field="grade"><span>Grade / result</span><input type="text" data-scoped-input="grade" value="' + escapeHtml(state.issuance.grade || '') + '"></label>';
 			rendered++;
 		}
-		if (!rendered) { html += '<div class="certloom-issue-empty"><p>No reusable credential fields are required for this context. Add one-off details below only when needed.</p></div>'; }
+		if (!rendered) { html += '<div class="certloom-issue-empty is-compact"><p>No reusable credential fields are required for this context. Add one-off details only when needed.</p></div>'; }
 		box.innerHTML = html;
 		Array.prototype.forEach.call(box.querySelectorAll('[data-scoped-input]'), function (input) {
 			input.addEventListener('input', function () {
@@ -685,6 +693,8 @@
 	}
 	function renderPreview() {
 		var stage = root.querySelector('[data-preview-stage]'); var status = root.querySelector('[data-preview-status]'); if (!stage) { return; }
+		var card = stage.closest('.certloom-issue-preview-card');
+		if (card) { card.classList.toggle('is-compact', 'design' !== state.issuance.presentation_mode); }
 		if ('design' !== state.issuance.presentation_mode) { stage.innerHTML = '<div class="certloom-issue-preview-empty"><span class="dashicons dashicons-info-outline" aria-hidden="true"></span><p>Live certificate preview applies when Certloom design is selected.</p></div>'; if (status) { status.textContent = 'No design preview is needed for this appearance.'; } return; }
 		if (!state.preview) { stage.innerHTML = '<div class="certloom-issue-preview-empty"><span class="dashicons dashicons-awards" aria-hidden="true"></span><p>Live preview will appear here.</p></div>'; return; }
 		if (state.preview.error) { stage.innerHTML = '<div class="certloom-issue-preview-empty is-error"><span class="dashicons dashicons-warning" aria-hidden="true"></span><p>' + escapeHtml(state.preview.error) + '</p></div>'; if (status) { status.textContent = 'Preview needs attention.'; } return; }
@@ -713,12 +723,12 @@
 			var action = document.createElement('button'); action.type = 'button'; action.className = 'button button-small';
 			var type = String(field.action || 'context');
 			if ('recipient' === type) { action.textContent = 'Edit Recipient'; action.addEventListener('click', function () { goToStep(0); }); }
-			else if ('program' === type || 'context' === type) { action.textContent = 'Review context'; action.addEventListener('click', function () { goToStep('program' === type ? 1 : 5); }); }
-			else if ('repeating' === type) { action.textContent = 'Add rows'; action.addEventListener('click', function () { goToStep(3); var details = root.querySelector('[data-repeating-section]'); if (details) { details.scrollIntoView({behavior:'smooth', block:'center'}); } }); }
+			else if ('program' === type || 'context' === type) { action.textContent = 'Review context'; action.addEventListener('click', function () { goToStep(1); }); }
+			else if ('repeating' === type) { action.textContent = 'Add rows'; action.addEventListener('click', function () { goToStep(2); var details = root.querySelector('[data-repeating-section]'); if (details) { details.scrollIntoView({behavior:'smooth', block:'center'}); } }); }
 			else {
 				var key = String(field.field_key || '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
 				action.textContent = key && Object.prototype.hasOwnProperty.call(state.issuance.custom_merge_fields, key) ? 'Edit value' : 'Add value';
-				action.addEventListener('click', function () { goToStep(3); if ('grade' === type || 'grade' === key) { var gradeInput = root.querySelector('[data-scoped-input="grade"]'); if (gradeInput) { gradeInput.focus(); } return; } if (key) { focusOrAddCredentialDetail(key, field.label || key); } });
+				action.addEventListener('click', function () { goToStep(2); if ('grade' === type || 'grade' === key) { var gradeInput = root.querySelector('[data-scoped-input="grade"]'); if (gradeInput) { gradeInput.focus(); } return; } if (key) { focusOrAddCredentialDetail(key, field.label || key); } });
 			}
 			row.appendChild(action);
 			if (field.field_key && ('credential_detail' === type || 'grade' === type)) {
@@ -780,14 +790,12 @@
 			if ('date' === state.issuance.expiry_mode && !state.issuance.expires_at) { showMessage('Choose the credential expiry date.', 'error'); focusField('expires_at'); return false; }
 			if ('date' === state.issuance.expiry_mode && state.issuance.expires_at < state.issuance.valid_from) { showMessage('The expiry date cannot be earlier than the credential effective date.', 'error'); focusField('expires_at'); return false; }
 			if (state.bootstrap && state.bootstrap.numbering && !state.bootstrap.numbering.automatic && !String(state.issuance.display_number || '').trim()) { showMessage('Enter the certificate number required by the current numbering policy.', 'error'); focusField('display_number'); return false; }
-		}
-		if (3 === index) {
 			var missingRequired = root.querySelector('[data-scoped-input][required]:invalid'); if (missingRequired) { showMessage('Complete the required credential data before continuing.', 'error'); missingRequired.focus(); return false; }
 		}
-		if (4 === index) {
+		if (3 === index) {
 			if ('image' === state.issuance.presentation_mode && !state.issuance.certificate_image_id) { showMessage('Choose a PNG or JPEG certificate image.', 'error'); return false; }
 			if ('design' === state.issuance.presentation_mode && 'assigned' === state.issuance.design_source && !state.issuance.template_id) { showMessage('Choose a published certificate design.', 'error'); focusPicker('template'); return false; }
-			if ('design' === state.issuance.presentation_mode && state.preview && state.preview.data_readiness && state.preview.data_readiness.missing_count) { showMessage('The selected certificate design still needs credential data. Complete the highlighted requirements in Data & results.', 'error'); goToStep(3); return false; }
+			if ('design' === state.issuance.presentation_mode && state.preview && state.preview.data_readiness && state.preview.data_readiness.missing_count) { showMessage('The selected certificate design still needs credential data. Complete the highlighted requirements in Credential details.', 'error'); goToStep(2); return false; }
 		}
 		return true;
 	}
@@ -795,19 +803,18 @@
 	function focusField(path) { var input = root.querySelector('[data-field="' + path + '"]'); if (input) { input.focus(); } }
 
 	function goToStep(index) {
-		index = Math.max(0, Math.min(7, parseInt(index, 10) || 0));
+		index = Math.max(0, Math.min(reviewStep, parseInt(index, 10) || 0));
 		state.step = index;
 		stepPanels.forEach(function (panel, i) { panel.hidden = i !== index; panel.classList.toggle('is-current', i === index); });
 		stepButtons.forEach(function (button, i) { button.classList.toggle('is-current', i === index); if (i === index) { button.setAttribute('aria-current','step'); } else { button.removeAttribute('aria-current'); } button.classList.toggle('is-complete', i < index); });
 		if (prevButton) { prevButton.disabled = index === 0 || state.busy; }
-		if (nextButton) { nextButton.hidden = index === 7; nextButton.disabled = state.busy; }
-		if (stepStatus) { stepStatus.textContent = 'Step ' + (index + 1) + ' of 8'; }
-		if (summaryProgressText) { summaryProgressText.textContent = 'Step ' + (index + 1) + ' of 8'; }
-		if (summaryProgressBar) { summaryProgressBar.style.width = (((index + 1) / 8) * 100) + '%'; }
-		if (7 === index && !state.reviewFingerprint) { buildReview(); }
+		if (nextButton) { nextButton.hidden = index === reviewStep; nextButton.disabled = state.busy; }
+		if (stepStatus) { stepStatus.textContent = 'Step ' + (index + 1) + ' of ' + stepCount; }
+		if (summaryProgressText) { summaryProgressText.textContent = 'Step ' + (index + 1) + ' of ' + stepCount; }
+		if (summaryProgressBar) { summaryProgressBar.style.width = (((index + 1) / stepCount) * 100) + '%'; }
+		if (reviewStep === index && !state.reviewFingerprint) { buildReview(); }
 		window.scrollTo({top: Math.max(0, root.getBoundingClientRect().top + window.scrollY - 44), behavior:'smooth'});
 	}
-
 	function initStepper() {
 		if (prevButton) { prevButton.addEventListener('click', function () { if (!state.busy) { goToStep(state.step - 1); } }); }
 		if (nextButton) { nextButton.addEventListener('click', function () { if (!state.busy && validateStep(state.step)) { goToStep(state.step + 1); } }); }
@@ -826,7 +833,7 @@
 			if ('certloom_manual_issue_design_data_missing' === error.code && error.data && Array.isArray(error.data.fields)) { renderDesignRequired(error.data.fields); }
 		}).finally(function () { setBusy(false); });
 	}
-	function validateAllBeforeReview() { for (var i=0;i<7;i++) { if (!validateStep(i)) { goToStep(i); return false; } } return true; }
+	function validateAllBeforeReview() { for (var i=0;i<reviewStep;i++) { if (!validateStep(i)) { goToStep(i); return false; } } return true; }
 	function renderReview() {
 		var review = state.reviewPayload || {}; var content = root.querySelector('[data-review-content]'); var tech = root.querySelector('[data-review-technical]'); var techBody = root.querySelector('[data-review-technical-body]'); var actions = root.querySelector('[data-review-actions]'); var stateBox = root.querySelector('[data-review-state]');
 		if (stateBox) { stateBox.hidden = true; }

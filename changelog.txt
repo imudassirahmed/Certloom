@@ -1,3 +1,11 @@
+= 1.7.0-alpha.4.84 =
+* Gamma-03A information-architecture correction: reduce Issue Credential from eight steps to six — Recipient → Context → Details → Certificate → Email → Review.
+* Merge credential title/lifecycle and credential-specific fields/results into one Details step with progressive disclosure for optional one-off data.
+* Remove standalone Authority from issuance: Program/Scheme remains the canonical owner of its default Issuer, independent credentials select an Issuer in Context, and signer selection lives with Certificate.
+* Re-skin the issuance workspace onto the Setup Wizard token/card/progress language, including tokenized panel radii/shadows and the blue/cyan/emerald brand accent.
+* Collapse the live-preview canvas for non-design certificate modes so Details-only issuance no longer carries a large empty preview area.
+* Preserve the existing REST Review fingerprint, canonical Manual Issuance commit, Program→Batch refresh, profile terminology, Email post-commit boundary and fail-closed renderer/domain authority.
+
 = 1.7.0-alpha.4.83 =
 * Gamma-03A live-acceptance polish: async picker quick-add actions now live in the field heading so open results cannot cover them.
 * Picker results participate in normal document flow instead of overlaying adjacent controls.

@@ -2,7 +2,7 @@
 /**
  * Browser fixture for alpha.4.79 repeating credential data.
  *
- * Reuse the real eight-step Issue Credential REST fixture and enable both
+ * Reuse the real six-step Issue Credential REST fixture and enable both
  * supported repeating rowsets so this contract cannot drift back to the
  * deleted one-page Manual Issuance implementation.
  */

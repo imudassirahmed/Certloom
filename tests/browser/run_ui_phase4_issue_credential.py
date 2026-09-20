@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Phase 4 browser UX contract for the alpha.4.79 eight-step Issue Credential app."""
+"""Phase 4 browser UX contract for the six-step Issue Credential app."""
 import asyncio
 import subprocess
 from pathlib import Path
@@ -7,21 +7,15 @@ from playwright.async_api import async_playwright
 
 ROOT = Path(__file__).resolve().parents[2]
 
-
 def fixture():
-    r = subprocess.run(
-        ['php', str(ROOT / 'tests/browser/build_ui_phase4_issue_credential_fixture.php')],
-        cwd=ROOT, capture_output=True, text=True,
-    )
+    r = subprocess.run(['php', str(ROOT / 'tests/browser/build_ui_phase4_issue_credential_fixture.php')], cwd=ROOT, capture_output=True, text=True)
     if r.returncode:
         raise RuntimeError(r.stderr or r.stdout)
     return r.stdout
 
-
 async def run():
     checks = 0
     failed = []
-
     async def ck(ok, label):
         nonlocal checks
         checks += 1
@@ -29,29 +23,33 @@ async def run():
             failed.append(label)
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(
-            headless=True,
-            executable_path='/usr/bin/chromium',
-            args=['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
-        )
+        browser = await p.chromium.launch(headless=True, executable_path='/usr/bin/chromium', args=['--no-sandbox','--disable-dev-shm-usage','--disable-gpu'])
         page = await browser.new_page(viewport={'width': 1440, 'height': 1000})
         page.set_default_timeout(7000)
         await page.set_content(fixture(), wait_until='load')
         await page.wait_for_selector('[data-issue-body]:not([hidden])')
 
         await ck(await page.locator('[data-issue-loading]').is_hidden(), 'bootstrapLoadingStateActuallyHidden')
-        await ck(await page.locator('[data-issue-step]').count() == 8, 'eightFocusedSteps')
-        await ck(await page.locator('[data-issue-step-button]').count() == 8, 'stepperMatchesPanels')
-        await ck(await page.locator('[data-step-status]').inner_text() == 'Step 1 of 8', 'startsAtRecipient')
+        await ck(await page.locator('[data-issue-step]').count() == 6, 'sixFocusedSteps')
+        await ck(await page.locator('[data-issue-step-button]').count() == 6, 'stepperMatchesPanels')
+        await ck(await page.locator('[data-step-key="data"]').count() == 0 and await page.locator('[data-step-key="authority"]').count() == 0, 'dataAndAuthorityNotStandaloneSteps')
+        await ck(await page.locator('[data-step-status]').inner_text() == 'Step 1 of 6', 'startsAtRecipient')
         await ck(await page.locator('.certloom-issue-summary').evaluate('(e)=>getComputedStyle(e).position') == 'sticky', 'desktopSummarySticky')
         await ck(await page.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'), 'desktopNoOverflow')
 
-        # Validation is contextual rather than dumping every field at once.
+        # Setup-Wizard visual language: tokenized rounded panel, branded progress accent, no hard legacy min-height.
+        detail_panel = page.locator('[data-step-key="details"]')
+        await ck((await detail_panel.evaluate('(e)=>getComputedStyle(e).borderRadius')) != '0px', 'stepPanelUsesTokenizedRoundedSurface')
+        current_num = page.locator('[data-issue-step-button].is-current .certloom-issue-step-number')
+        await ck('rgb' in await current_num.evaluate('(e)=>getComputedStyle(e).backgroundColor'), 'currentStepUsesBrandTokenFill')
+        await ck(await detail_panel.evaluate('(e)=>parseFloat(getComputedStyle(e).minHeight)||0') < 100, 'stepPanelHasNoLegacyTallMinHeight')
+
+        # Contextual validation.
         await page.locator('[data-step-next]').click()
         await ck('Choose an existing Recipient' in await page.locator('[data-issue-message]').inner_text(), 'recipientValidationSpecific')
-        await ck(await page.locator('[data-step-status]').inner_text() == 'Step 1 of 8', 'validationKeepsCurrentStep')
+        await ck(await page.locator('[data-step-status]').inner_text() == 'Step 1 of 6', 'validationKeepsCurrentStep')
 
-        # New-recipient email is validated before server Review rather than silently dropped.
+        # New-recipient email validation.
         await page.locator('[data-recipient-mode="new"]').click()
         await page.locator('[data-field="new_recipient.display_name"]').fill('Amina New')
         await page.locator('[data-field="new_recipient.email"]').fill('not-an-email')
@@ -65,9 +63,10 @@ async def run():
         await page.locator('[data-picker="recipient"] [role="option"]').first.click()
         await ck('Amina Khan' in await page.locator('[data-summary-recipient]').inner_text(), 'recipientSummaryLive')
         await page.locator('[data-step-next]').click()
+        await ck(await page.locator('[data-step-status]').inner_text() == 'Step 2 of 6', 'contextIsSecondStep')
         await ck(await page.locator('[data-independent-note]').is_hidden(), 'independentGuidanceDoesNotLeakIntoProgramMode')
 
-        # Quick setup actions stay available above search suggestions and the dialog actions are deliberately separated.
+        # Quick setup controls remain spatially stable.
         program_add = page.locator('[data-picker="program"] [data-quick-open="program"]')
         program_search = page.locator('[data-picker="program"] [data-picker-search]')
         add_box = await program_add.bounding_box(); search_box = await program_search.bounding_box()
@@ -85,11 +84,13 @@ async def run():
         after_quick = await page.evaluate("window.__issueCalls.filter(c=>c.url.includes('/quick-program')).length")
         await ck(after_quick == before_quick and await dialog.get_attribute('open') is None, 'quickProgramCancelDoesNotSubmit')
 
-        # Select a Program first so switching to Independent proves inherited authority is not retained as an explicit choice.
+        # Program context owns inherited issuer; selected Program links back to its editor.
         program = page.locator('[data-picker="program"] [data-picker-search]')
         await program.focus(); await page.wait_for_selector('[data-picker="program"] [role="option"]')
         await page.locator('[data-picker="program"] [role="option"]').first.click()
         await page.wait_for_function("document.querySelector('[data-program-context-note]').textContent.includes('Example Authority')")
+        manage_href = await page.locator('[data-manage-program]').get_attribute('href')
+        await ck(bool(manage_href and 'program_id=1' in manage_href), 'manageProgramTargetsSelectedProgram')
         batch = page.locator('[data-picker="batch"] [data-picker-search]')
         await batch.focus(); await page.wait_for_selector('[data-picker="batch"] [role="option"]')
         await ck(await page.locator('[data-picker="batch"] [data-picker-results]').evaluate('(e)=>getComputedStyle(e).position') == 'static', 'batchResultsStayInFlowInsteadOfCoveringQuickAdd')
@@ -99,51 +100,47 @@ async def run():
         await page.locator('[data-picker="batch"] [role="option"]').first.click()
         await ck(await page.locator('[data-picker="program"] [data-picker-selected]').is_hidden(), 'selectedProgramNotDuplicatedBelowPicker')
         await ck((await page.locator('[data-picker="program"] [data-picker-status]').inner_text()).strip() == '', 'selectedProgramClearsStaleMatchStatus')
-        await program.focus()
-        await page.wait_for_timeout(40)
+        await program.focus(); await page.wait_for_timeout(40)
         await ck(await page.locator('[data-picker="program"] [data-picker-results]').is_hidden(), 'selectedProgramFocusDoesNotReopenExactMatch')
 
-        # Independent credential is a first-class path, not an advanced mega-form disclosure.
+        # Independent issuer is chosen in Context, not in a standalone Authority step.
         await page.locator('[data-credential-basis="independent"]').click()
         await ck(await page.locator('[data-program-context]').is_hidden(), 'programControlsHideForIndependentCredential')
         await ck(await page.locator('[data-independent-note]').is_visible(), 'independentGuidanceVisible')
+        issuer = page.locator('[data-independent-issuer] [data-picker="issuer"] [data-picker-search]')
+        await ck(await issuer.is_visible() and (await issuer.input_value()) == '', 'programIssuerDoesNotLeakIntoIndependentPicker')
+        await issuer.focus(); await page.wait_for_selector('[data-independent-issuer] [data-picker="issuer"] [role="option"]')
+        await page.locator('[data-independent-issuer] [data-picker="issuer"] [role="option"]').first.click()
         await page.locator('[data-step-next]').click()
+
+        # Details combines credential lifecycle and credential-specific data.
+        await ck(await page.locator('[data-step-status]').inner_text() == 'Step 3 of 6', 'detailsIsThirdStep')
         title = page.locator('[data-field="credential_title"]')
         await title.fill('Independent Professional Recognition')
         await ck('Independent Professional Recognition' in await page.locator('[data-summary-title]').inner_text(), 'independentTitleUpdatesSummary')
-        credential_height = await page.locator('[data-issue-step="2"]').evaluate('(e)=>e.getBoundingClientRect().height')
-        await ck(credential_height < 500, 'shortCredentialStepDoesNotForceLegacy520pxPanel')
         expiry = page.locator('[data-field="expiry_mode"]')
         await ck(await expiry.input_value() == 'permanent', 'independentDefaultsPermanent')
-        await page.locator('[data-step-next]').click()
-
-        # Data/results remains a separate progressive step with optional one-off data.
-        await ck(await page.locator('[data-step-status]').inner_text() == 'Step 4 of 8', 'dataResultsSeparateStep')
-        await ck(await page.locator('[data-oneoff-fields]').is_visible(), 'oneOffDataAvailableWithoutMainFormClutter')
+        await ck(await page.locator('[data-oneoff-fields]').is_visible(), 'oneOffDataLivesInsideDetails')
         await page.locator('[data-add-oneoff]').click()
         await ck(await page.locator('.certloom-oneoff-row').count() == 1, 'oneOffFieldCanBeAddedInline')
         await page.locator('.certloom-oneoff-row [data-oneoff-key]').fill('membership_level')
         await page.locator('.certloom-oneoff-row [data-oneoff-value]').fill('Gold')
         await page.locator('[data-step-next]').click()
 
-        # Details-only is usable without renderer authority or a design preview.
-        await ck(await page.locator('[data-presentation="details_only"]').get_attribute('class') and 'is-active' in (await page.locator('[data-presentation="details_only"]').get_attribute('class')), 'detailsOnlyDefault')
+        # Certificate owns appearance and signing; independent issuer already came from Context.
+        await ck(await page.locator('[data-step-status]').inner_text() == 'Step 4 of 6', 'certificateIsFourthStep')
+        await ck('is-active' in ((await page.locator('[data-presentation="details_only"]').get_attribute('class')) or ''), 'detailsOnlyDefault')
         await ck('No design preview is needed' in await page.locator('[data-preview-status]').inner_text(), 'detailsOnlyDoesNotPretendRendererPreview')
-        await page.locator('[data-step-next]').click()
-
-        # Independent authority remains explicit and searchable.
-        await ck(await page.locator('[data-independent-issuer]').is_visible(), 'independentIssuerPickerVisible')
-        issuer = page.locator('[data-picker="issuer"] [data-picker-search]')
-        await ck((await issuer.input_value()) == '', 'programIssuerDoesNotLeakIntoIndependentPicker')
-        await issuer.focus(); await page.wait_for_selector('[data-picker="issuer"] [role="option"]')
-        await page.locator('[data-picker="issuer"] [role="option"]').first.click()
+        await ck('is-compact' in ((await page.locator('.certloom-issue-preview-card').get_attribute('class')) or ''), 'nonDesignPreviewUsesCompactStatusCard')
+        await ck(await page.locator('[data-preview-stage]').evaluate('(e)=>e.getBoundingClientRect().height') < 180, 'nonDesignPreviewAvoidsLargeEmptyCanvas')
         signer = page.locator('[data-picker="signer"] [data-picker-search]')
+        await ck(await signer.is_visible(), 'signerLivesWithCertificate')
         await signer.focus(); await page.wait_for_selector('[data-picker="signer"] [role="option"]')
         await page.locator('[data-picker="signer"] [role="option"]').first.click()
         await page.locator('[data-step-next]').click()
 
-        # Email intent is its own step and design controls are progressive.
-        await ck(await page.locator('[data-step-status]').inner_text() == 'Step 7 of 8', 'emailDedicatedStep')
+        # Email remains focused but overall journey is shorter.
+        await ck(await page.locator('[data-step-status]').inner_text() == 'Step 5 of 6', 'emailDedicatedStep')
         await ck(await page.locator('[data-email-design-field]').is_visible(), 'emailDesignVisibleForReviewNext')
         await page.locator('[data-email-mode="later"]').click()
         await ck(await page.locator('[data-email-design-field]').is_hidden(), 'emailDesignHidesWhenDeferred')
@@ -151,10 +148,10 @@ async def run():
         await page.locator('[data-email-mode="review"]').click()
         await ck(await page.locator('[data-email-design-field]').is_visible(), 'emailDesignReturnsForReviewNext')
 
-        # Review is server-built and specialist evidence is progressive disclosure.
+        # Review is server-built and final step 6.
         await page.locator('[data-step-next]').click()
         await page.wait_for_selector('[data-review-content]:not([hidden])')
-        await ck(await page.locator('[data-step-status]').inner_text() == 'Step 8 of 8', 'reviewFinalStep')
+        await ck(await page.locator('[data-step-status]').inner_text() == 'Step 6 of 6', 'reviewFinalStep')
         await ck('Independent Professional Recognition' in await page.locator('[data-review-content]').inner_text(), 'serverReviewUsesCurrentTitle')
         technical = page.locator('[data-review-technical]')
         await ck(await technical.is_visible() and not await technical.get_attribute('open'), 'technicalEvidenceCollapsedByDefault')
@@ -162,7 +159,6 @@ async def run():
         await ck(await page.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'), 'reviewNoDesktopOverflow')
         await page.close()
 
-        # Mobile keeps one-column fields/actions and removes sticky summary behavior.
         mobile = await browser.new_page(viewport={'width': 390, 'height': 844})
         mobile.set_default_timeout(7000)
         await mobile.set_content(fixture(), wait_until='load')
@@ -172,16 +168,14 @@ async def run():
         next_button = mobile.locator('[data-step-next]')
         height = await next_button.evaluate('(e)=>Math.max(parseFloat(getComputedStyle(e).minHeight)||0,e.getBoundingClientRect().height)')
         await ck(height >= 43.5, 'mobilePrimaryActionMeets44px')
-        await mobile.close()
-        await browser.close()
+        await mobile.close(); await browser.close()
 
     if failed:
-        print('FAIL  alpha.4.79 Phase 4 Issue Credential UX browser: ' + ', '.join(failed))
+        print('FAIL  Phase 4 Issue Credential UX browser: ' + ', '.join(failed))
         print(f'\n{checks-len(failed)} passed, {len(failed)} failures')
         return 1
-    print('PASS  alpha.4.79 Phase 4 Issue Credential UX browser: progressive eight-step REST workflow, independent path, Email and Review disclosure')
+    print('PASS  Phase 4 Issue Credential UX browser: six-step REST workflow, merged Details, Program-owned issuer context, Certificate signing, Email and Review')
     print(f'\n{checks} checks, 0 failures')
     return 0
-
 
 raise SystemExit(asyncio.run(run()))
