@@ -26,7 +26,7 @@ p432(false!==strpos($service,"'title' => (string)")&&false!==strpos($service,"cu
 p432(false!==strpos($admin,'data-credential-basis="program"')&&false!==strpos($admin,'data-credential-basis="independent"'),'Issue Credential exposes Program versus Independent basis in the primary context step');
 p432(false!==strpos($admin,"render_async_picker( 'program'")&&false!==strpos($admin,'data-program-context'),'profile-aware Program picker is first-class instead of duplicated under advanced options');
 p432(false===strpos($admin,"Program (optional)"),'the deleted mega-form no longer duplicates an optional Program selector');
-p432(false!==strpos($admin,'data-field="credential_title"')&&false!==strpos($admin,'The title stays editable even when a Program supplies the default.'),'credential title is always visible and directly overridable');
+p432(false!==strpos($admin,'data-field="credential_title"')&&false!==strpos($admin,"__( 'The title stays editable even when a %s supplies the default.', 'certloom' )"),'credential title is always visible and directly overridable');
 p432(false!==strpos($rest,'private function program_choice')&&false!==strpos($rest,"'title' => (string)")&&false!==strpos($rest,"row['title']"),'Program REST choices transport exact title separately from display label');
 p432(false!==strpos($rest,'public function quick_program')&&false!==strpos($rest,"'program' => ")&&false!==strpos($rest,"program_choice("),'quick-created Programs return the same title-bearing choice contract immediately');
 p432(false!==strpos($js,"state.issuance.credential_title = String(choice.title || choice.label || '')")&&false!==strpos($js,"state.issuance.title_source = 'program'"),'selecting a Program prefills and marks its title as inherited');

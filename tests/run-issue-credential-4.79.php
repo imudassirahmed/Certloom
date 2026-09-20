@@ -13,7 +13,7 @@ $pass = 0; $fail = 0;
 function i479( $ok, $label ) { global $pass, $fail; if ( $ok ) { ++$pass; echo "PASS  $label\n"; } else { ++$fail; echo "FAIL  $label\n"; } }
 
 // Application shell and step architecture.
-i479( false !== strpos( $admin, 'A focused eight-step workflow' ), 'Issue Credential declares focused eight-step workflow' );
+i479( substr_count( $admin, 'data-step-key=') >= 8 && false === strpos( $admin, 'A focused eight-step workflow' ), 'Issue Credential keeps the eight-step workflow without internal explanatory hero copy' );
 foreach ( array( 'Recipient', 'Credential', 'Data & results', 'Certificate', 'Email', 'Review & issue' ) as $label ) {
 	i479( false !== strpos( $admin, $label ), 'step/source contains ' . $label );
 }

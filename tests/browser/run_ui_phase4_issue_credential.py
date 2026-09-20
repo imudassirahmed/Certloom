@@ -94,6 +94,8 @@ async def run():
         title = page.locator('[data-field="credential_title"]')
         await title.fill('Independent Professional Recognition')
         await ck('Independent Professional Recognition' in await page.locator('[data-summary-title]').inner_text(), 'independentTitleUpdatesSummary')
+        credential_height = await page.locator('[data-issue-step="2"]').evaluate('(e)=>e.getBoundingClientRect().height')
+        await ck(credential_height < 500, 'shortCredentialStepDoesNotForceLegacy520pxPanel')
         expiry = page.locator('[data-field="expiry_mode"]')
         await ck(await expiry.input_value() == 'permanent', 'independentDefaultsPermanent')
         await page.locator('[data-step-next]').click()

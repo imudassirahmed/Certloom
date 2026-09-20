@@ -1,5 +1,5 @@
 <?php
-/** Permanent contract for the alpha.4.77 review-unlocked staging checkpoint. */
+/** Review-unlocked safety contract: gates remain explicit without development banners in ordinary product UI. */
 $root = dirname( __DIR__ );
 $plugin = file_get_contents( $root . '/certloom.php' );
 $gate = file_get_contents( $root . '/src/Infrastructure/Migration/DomainFeatureGate.php' );
@@ -22,8 +22,8 @@ foreach ( array( 'MIGRATION', 'RESTORE', 'CUTOVER' ) as $kind ) {
 foreach ( array( $migration, $restore, $cutover ) as $source ) {
 	review_unlock_check( false !== strpos( $source, "'local', 'development', 'staging'" ), 'rehearsal retains hard non-production environment guard' );
 }
-review_unlock_check( false !== strpos( $admin, "render_review_unlocked_notice" ) && false !== strpos( $admin, "Certloom review-unlocked build" ), 'review mode is visibly disclosed in Certloom admin UI' );
-review_unlock_check( false !== strpos( $admin, 'Production renderer downloads also remain authority-gated' ) || false !== strpos( $admin, 'Production renderer downloads remain authority-gated' ), 'UI honestly preserves unavailable production renderer boundary' );
+review_unlock_check( false === strpos( $admin, "render_review_unlocked_notice" ) && false === strpos( $admin, "Certloom review-unlocked build" ), 'review-mode development banner stays out of ordinary Certloom admin UI' );
+review_unlock_check( false === strpos( $admin, 'Production renderer downloads also remain authority-gated' ) && false === strpos( $admin, 'Production renderer downloads remain authority-gated' ), 'renderer release-boundary jargon stays out of global product notices' );
 if ( $failures ) {
 	echo "FAIL  review-unlocked staging contract: " . implode( ', ', $failures ) . "\n\n";
 	echo ( $checks - count( $failures ) ) . " passed, " . count( $failures ) . " failures\n";

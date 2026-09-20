@@ -1,3 +1,9 @@
+= 1.7.0-alpha.4.82 =
+* Gamma-03A live-acceptance polish: removed the review-unlocked admin banner and Issue Credential release-status prose from ordinary product UI while preserving the underlying fail-closed gates.
+* Issue Credential no longer renders the page-level Technical status strip; final Review technical evidence remains available behind its dedicated disclosure.
+* Removed the fixed 520px issuance-step minimum height so short steps size naturally and avoid large empty panels.
+* Extended active-profile terminology through title/validity, independent-context, data, authority and quick-create copy.
+
 = 1.7.0-alpha.4.81 =
 * Correct live WordPress acceptance defects in the rebuilt Issue Credential flow without advancing Gamma-03A: HTML hidden state now wins over component flex/grid display so the bootstrap loader and Independent-only guidance disappear when inactive.
 * Remove duplicate picker presentation by suppressing the browser-native search clear affordance, keeping one Certloom clear control, hiding the redundant selected-value strip, clearing stale match status after selection and avoiding an exact-selected search reopening on focus.

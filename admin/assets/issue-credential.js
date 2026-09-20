@@ -247,7 +247,7 @@
 		if ('batch' === kind && !state.issuance.program_id) {
 			renderPickerResults(kind, []);
 			var batchStatus = box.querySelector('[data-picker-status]');
-			if (batchStatus) { batchStatus.textContent = text('chooseProgramFirst', 'Choose a Program before selecting a Batch.'); }
+			if (batchStatus) { batchStatus.textContent = text('chooseProgramFirst', 'Choose a ' + programTerm + ' before selecting a ' + batchTerm + '.'); }
 			return;
 		}
 		if (state.searchTimers[kind]) { clearTimeout(state.searchTimers[kind]); }
@@ -310,7 +310,7 @@
 			state.issuance.batch_id = 0;
 			state.fieldContract = {fields:[]};
 			state.programContext = null;
-			if (previous && next) { showMessage(text('programChangedBatch', 'Batch cleared because the Program changed. Loading Batches…'), 'info'); }
+			if (previous && next) { showMessage(text('programChangedBatch', batchTerm + ' cleared because the ' + programTerm + ' changed. Loading current ' + batchTerm + ' choices…'), 'info'); }
 		}
 		if (!next) {
 			state.issuance.issuer_id = 0;
@@ -362,7 +362,7 @@
 			schedulePreview();
 		}).catch(function (error) {
 			if ('AbortError' === error.name) { return; }
-			if (showErrors) { showMessage(error.message || text('loadFailed', 'Could not load Program details.'), 'error'); }
+			if (showErrors) { showMessage(error.message || text('loadFailed', 'Could not load ' + programTerm + ' details.'), 'error'); }
 		});
 	}
 
@@ -385,7 +385,7 @@
 		if (independent) { independent.hidden = 'independent' !== state.credentialBasis; }
 		var validity = root.querySelector('[data-validity-summary]');
 		if (validity) {
-			validity.textContent = state.programContext && state.programContext.validity && state.programContext.validity.summary ? state.programContext.validity.summary : ('program' === state.credentialBasis ? 'No Program validity default is configured.' : 'Independent credentials use No expiry or a specific date.');
+			validity.textContent = state.programContext && state.programContext.validity && state.programContext.validity.summary ? state.programContext.validity.summary : ('program' === state.credentialBasis ? 'No ' + programTerm + ' validity default is configured.' : 'Independent credentials use No expiry or a specific date.');
 		}
 	}
 
@@ -398,8 +398,8 @@
 	function updateTitleHint() {
 		var hint = root.querySelector('[data-title-hint]');
 		if (!hint) { return; }
-		if ('program' === state.issuance.title_source && state.selected.program) { hint.textContent = text('programTitleHint', 'Prefilled from the selected Program. Edit it freely for this credential only.'); }
-		else if (state.selected.program) { hint.innerHTML = escapeHtml(text('customTitleHint', 'Custom for this credential. The Program title is unchanged.')) + ' <button type="button" class="button-link" data-use-program-title>Use ' + escapeHtml(programTerm) + ' title</button>'; }
+		if ('program' === state.issuance.title_source && state.selected.program) { hint.textContent = text('programTitleHint', 'Prefilled from the selected ' + programTerm + '. Edit it freely for this credential only.'); }
+		else if (state.selected.program) { hint.innerHTML = escapeHtml(text('customTitleHint', 'Custom for this credential. The ' + programTerm + ' title is unchanged.')) + ' <button type="button" class="button-link" data-use-program-title>Use ' + escapeHtml(programTerm) + ' title</button>'; }
 		else { hint.textContent = 'Enter the title that should appear on this credential.'; }
 		var reset = hint.querySelector('[data-use-program-title]');
 		if (reset) { reset.addEventListener('click', function () {

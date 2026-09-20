@@ -27,5 +27,5 @@ opu(false===strpos($portal,'DomainFeatureGate::admin_preview_ready()')&&false!==
 opu(false===strpos($portal_ui,'normalized credential authority passes')&&false===strpos($portal_ui,'acceptance gate'),'Recipient Portal UI contains no stale authority-acceptance blocker');
 opu(false!==strpos($domain,'Online verification')&&false!==strpos($domain,'View public credential')&&false===strpos($domain,'Production authority')&&false===strpos($domain,'Authority remains closed.'),'Advanced Credential Management exposes the same operational public verification as Simple mode');
 opu(false!==strpos($bulk_review,'reviewed successor-Version workflow')&&false===strpos($bulk_review,'acceptance gate is approved'),'legacy bulk editor routes relationship changes to the real immutable workflow without a fake gate');
-opu(false!==strpos($manual,'PDF/PNG/JPEG')&&false!==strpos($bulk,'PDF/PNG/JPEG'),'renderer-dependent downloads remain honestly gated');
+opu(false===strpos($manual,'PDF/PNG/JPEG')&&false!==strpos($bulk,'PDF/PNG/JPEG')&&false!==strpos($render,'does not manufacture PDF/PNG/JPEG authority'),'renderer-dependent authority remains fail-closed without injecting release-status copy into Manual Issuance');
 echo "\n15 operational-unblocking checks, 0 failures\n";

@@ -30,6 +30,10 @@ final class ManualIssuanceAdmin {
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 		if ( self::PAGE !== $page ) { return; }
 		$this->require_capability();
+		$profile = UsageProfilePresentation::active_profile();
+		$terms = UsageProfilePresentation::terms( $profile );
+		$program = (string) ( $terms['program']['singular'] ?? __( 'Program', 'certloom' ) );
+		$batch = (string) ( $terms['batch']['singular'] ?? __( 'Batch', 'certloom' ) );
 		wp_enqueue_media();
 		wp_enqueue_style( 'certloom-issue-credential', CERTLOOM_URL . 'admin/assets/issue-credential.css', array( 'certloom-admin-foundation' ), CERTLOOM_VERSION );
 		wp_enqueue_script( 'certloom-issue-credential', CERTLOOM_URL . 'admin/assets/issue-credential.js', array( 'ecapla-certverify-admin' ), CERTLOOM_VERSION, true );
@@ -63,10 +67,10 @@ final class ManualIssuanceAdmin {
 				'previewUpdating' => __( 'Updating preview…', 'certloom' ),
 				'reviewing' => __( 'Building server review…', 'certloom' ),
 				'issuing' => __( 'Issuing credential…', 'certloom' ),
-				'programTitleHint' => __( 'Prefilled from the selected Program. Edit it freely for this credential only.', 'certloom' ),
-				'customTitleHint' => __( 'Custom for this credential. The Program title is unchanged.', 'certloom' ),
-				'programChangedBatch' => __( 'Batch cleared because the Program changed. Loading the current Batches…', 'certloom' ),
-				'chooseProgramFirst' => __( 'Choose a Program before selecting a Batch.', 'certloom' ),
+				'programTitleHint' => sprintf( /* translators: %s: active Program terminology. */ __( 'Prefilled from the selected %s. Edit it freely for this credential only.', 'certloom' ), $program ),
+				'customTitleHint' => sprintf( /* translators: %s: active Program terminology. */ __( 'Custom for this credential. The %s title is unchanged.', 'certloom' ), $program ),
+				'programChangedBatch' => sprintf( /* translators: 1: active Batch terminology, 2: active Program terminology. */ __( '%1$s cleared because the %2$s changed. Loading the current %1$s choices…', 'certloom' ), $batch, $program ),
+				'chooseProgramFirst' => sprintf( /* translators: 1: active Program terminology, 2: active Batch terminology. */ __( 'Choose a %1$s before selecting a %2$s.', 'certloom' ), $program, $batch ),
 				'imageType' => __( 'Choose a PNG or JPEG image.', 'certloom' ),
 				'repeatingLimit' => __( 'Repeating credential data is limited to 50 rows.', 'certloom' ),
 				'reviewChanged' => __( 'Something changed after Review. Review again before issuing.', 'certloom' ),
@@ -85,9 +89,8 @@ final class ManualIssuanceAdmin {
 		$signer = (string) ( $terms['signer']['singular'] ?? __( 'Signer', 'certloom' ) );
 
 		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-issue-app-shell">';
-		echo '<section class="certloom-page-hero certloom-issue-app-hero"><div><span class="certloom-eyebrow">' . esc_html__( 'Credential operations', 'certloom' ) . '</span><h1>' . esc_html__( 'Issue credential', 'certloom' ) . '</h1><p>' . esc_html__( 'A focused eight-step workflow. Large selectors and previews load only when needed, while final Review and Issue are revalidated on the server.', 'certloom' ) . '</p></div><div class="certloom-issue-app-hero-meta"><span class="certloom-state-pill">' . esc_html( UsageProfilePresentation::profile_label() ) . '</span></div></section>';
+		echo '<section class="certloom-page-hero certloom-issue-app-hero"><div><span class="certloom-eyebrow">' . esc_html__( 'Credential operations', 'certloom' ) . '</span><h1>' . esc_html__( 'Issue credential', 'certloom' ) . '</h1></div><div class="certloom-issue-app-hero-meta"><span class="certloom-state-pill">' . esc_html( UsageProfilePresentation::profile_label() ) . '</span></div></section>';
 		( new AdminProductNavigation() )->render_current_subnav();
-		$this->render_technical_status();
 
 		echo '<div class="certloom-issue-app" data-certloom-issue-app data-program-term="' . esc_attr( $program ) . '" data-batch-term="' . esc_attr( $batch ) . '" data-issuer-term="' . esc_attr( $issuer ) . '" data-signer-term="' . esc_attr( $signer ) . '">';
 		echo '<div class="certloom-issue-loading" data-issue-loading><span class="spinner is-active" aria-hidden="true"></span><strong>' . esc_html__( 'Preparing issuance workspace…', 'certloom' ) . '</strong></div>';
@@ -96,17 +99,10 @@ final class ManualIssuanceAdmin {
 		$this->render_summary( $program, $batch );
 		echo '</div>';
 		echo '<div class="certloom-issue-global-message" data-issue-message role="status" aria-live="polite" hidden></div>';
-		echo '<noscript><div class="notice notice-error inline"><p>' . esc_html__( 'Issue Credential requires JavaScript because Program/Batch lookup, live certificate preview and server Review are loaded through the authenticated WordPress REST API.', 'certloom' ) . '</p></div></noscript>';
+		echo '<noscript><div class="notice notice-error inline"><p>' . esc_html( sprintf( /* translators: 1: Program terminology, 2: Batch terminology. */ __( 'Issue Credential requires JavaScript because %1$s/%2$s lookup, live certificate preview and server Review are loaded through the authenticated WordPress REST API.', 'certloom' ), $program, $batch ) ) . '</p></div></noscript>';
 		echo '</div></div>';
 	}
 
-	/** Keeps release constraints available without interrupting the issuance task. */
-	private function render_technical_status() {
-		echo '<details class="certloom-technical-details certloom-manual-issuance-technical-status certloom-issue-technical-status"><summary>' . esc_html__( 'Technical status', 'certloom' ) . '</summary><div class="certloom-issue-technical-body">';
-		echo '<p>' . esc_html__( 'Online verification is available whenever the credential store is healthy. Downloadable PDF/PNG/JPEG certificate files are not available yet.', 'certloom' ) . '</p>';
-		echo '<p><strong>' . esc_html__( 'System detail:', 'certloom' ) . '</strong> ' . esc_html__( 'Manual Issuance and normalized public verification are operational when the credential store is healthy. PDF/PNG/JPEG exports remain unavailable until the certificate renderer is approved.', 'certloom' ) . '</p>';
-		echo '</div></details>';
-	}
 
 	/** @return void */
 	private function render_steps( $program, $batch, $issuer, $signer ) {
@@ -165,17 +161,17 @@ final class ManualIssuanceAdmin {
 		$this->render_async_picker( 'program', $program, sprintf( /* translators: %s: Program terminology. */ __( 'Search %s…', 'certloom' ), $program ), true, __( 'Add', 'certloom' ) . ' ' . $program );
 		$this->render_async_picker( 'batch', $batch, sprintf( /* translators: %s: Batch terminology. */ __( 'Search %s…', 'certloom' ), $batch ), false, __( 'Add', 'certloom' ) . ' ' . $batch );
 		echo '<div class="certloom-issue-context-note" data-program-context-note hidden></div></div>';
-		echo '<div class="certloom-issue-independent-note" data-independent-note hidden><span class="dashicons dashicons-info-outline" aria-hidden="true"></span><p>' . esc_html__( 'No Program or Batch relationship will be stored. You can still choose certificate appearance, authority, signer, email and one-off credential data.', 'certloom' ) . '</p></div>';
+		echo '<div class="certloom-issue-independent-note" data-independent-note hidden><span class="dashicons dashicons-info-outline" aria-hidden="true"></span><p>' . esc_html( sprintf( /* translators: 1: Program terminology, 2: Batch terminology. */ __( 'No %1$s or %2$s relationship will be stored. You can still choose certificate appearance, authority, signer, email and one-off credential data.', 'certloom' ), $program, $batch ) ) . '</p></div>';
 		$this->render_quick_dialogs( $program, $batch );
 		echo '</section>';
 	}
 
 	/** @return void */
 	private function render_credential_step( $program ) {
-		echo '<section class="certloom-issue-step" data-issue-step="2" data-step-key="credential" hidden><header><span class="certloom-eyebrow">' . esc_html__( 'Step 3 of 8', 'certloom' ) . '</span><h2>' . esc_html__( 'Credential title and validity', 'certloom' ) . '</h2><p>' . esc_html__( 'The title stays editable even when a Program supplies the default.', 'certloom' ) . '</p></header>';
+		echo '<section class="certloom-issue-step" data-issue-step="2" data-step-key="credential" hidden><header><span class="certloom-eyebrow">' . esc_html__( 'Step 3 of 8', 'certloom' ) . '</span><h2>' . esc_html__( 'Credential title and validity', 'certloom' ) . '</h2><p>' . esc_html( sprintf( /* translators: %s: Program terminology. */ __( 'The title stays editable even when a %s supplies the default.', 'certloom' ), $program ) ) . '</p></header>';
 		echo '<div class="certloom-issue-grid certloom-issue-grid-2"><label class="certloom-issue-field certloom-issue-field-span"><span>' . esc_html__( 'Credential title', 'certloom' ) . ' <em>*</em></span><input type="text" data-field="credential_title" maxlength="255" required aria-required="true"><small data-title-hint>' . esc_html( sprintf( /* translators: %s: Program terminology. */ __( 'Choose a %s to prefill its title, or type a custom title.', 'certloom' ), $program ) ) . '</small></label>';
 		$this->input( 'valid_from', __( 'Effective date', 'certloom' ), 'date', true );
-		echo '<label class="certloom-issue-field"><span>' . esc_html__( 'Validity', 'certloom' ) . '</span><select data-field="expiry_mode"><option value="program">' . esc_html__( 'Use Program default', 'certloom' ) . '</option><option value="permanent">' . esc_html__( 'No expiry', 'certloom' ) . '</option><option value="date">' . esc_html__( 'Specific expiry date', 'certloom' ) . '</option></select><small data-validity-summary></small></label>';
+		echo '<label class="certloom-issue-field"><span>' . esc_html__( 'Validity', 'certloom' ) . '</span><select data-field="expiry_mode"><option value="program">' . esc_html( sprintf( /* translators: %s: Program terminology. */ __( 'Use %s default', 'certloom' ), $program ) ) . '</option><option value="permanent">' . esc_html__( 'No expiry', 'certloom' ) . '</option><option value="date">' . esc_html__( 'Specific expiry date', 'certloom' ) . '</option></select><small data-validity-summary></small></label>';
 		echo '<label class="certloom-issue-field" data-expiry-date-field hidden><span>' . esc_html__( 'Expiry date', 'certloom' ) . '</span><input type="date" data-field="expires_at"></label>';
 		echo '<label class="certloom-issue-field" data-display-number-field hidden><span>' . esc_html__( 'Certificate number', 'certloom' ) . ' <em>*</em></span><input type="text" data-field="display_number" maxlength="191" required aria-required="true"><small>' . esc_html__( 'Your numbering policy requires a manual number.', 'certloom' ) . '</small></label></div></section>';
 	}
@@ -183,10 +179,10 @@ final class ManualIssuanceAdmin {
 	/** @return void */
 	private function render_data_step() {
 		echo '<section class="certloom-issue-step" data-issue-step="3" data-step-key="data" hidden><header><span class="certloom-eyebrow">' . esc_html__( 'Step 4 of 8', 'certloom' ) . '</span><h2>' . esc_html__( 'Credential data and results', 'certloom' ) . '</h2><p>' . esc_html__( 'Only fields relevant to the selected context and certificate design appear here.', 'certloom' ) . '</p></header>';
-		echo '<div class="certloom-issue-data-section" data-scoped-fields><div class="certloom-issue-empty"><p>' . esc_html__( 'Choose a Program or continue with an independent credential to configure credential data.', 'certloom' ) . '</p></div></div>';
+		echo '<div class="certloom-issue-data-section" data-scoped-fields><div class="certloom-issue-empty"><p>' . esc_html( sprintf( /* translators: %s: Program terminology. */ __( 'Choose a %s or continue with an independent credential to configure credential data.', 'certloom' ), $program ) ) . '</p></div></div>';
 		echo '<div class="certloom-issue-data-section" data-design-required-fields hidden><div class="certloom-issue-subhead"><div><h3>' . esc_html__( 'Required by certificate design', 'certloom' ) . '</h3><p>' . esc_html__( 'Missing values detected from the live certificate design appear here.', 'certloom' ) . '</p></div></div><div data-design-required-list></div></div>';
 		echo '<div class="certloom-issue-data-section" data-repeating-section hidden><div class="certloom-issue-subhead"><div><h3>' . esc_html__( 'Subjects & results', 'certloom' ) . '</h3><p>' . esc_html__( 'Add transcript-style rows only when this credential needs them.', 'certloom' ) . '</p></div></div><div data-repeating-rowsets></div></div>';
-		echo '<details class="certloom-issue-disclosure"><summary>' . esc_html__( 'Additional one-off credential data', 'certloom' ) . '<span>' . esc_html__( 'Optional', 'certloom' ) . '</span></summary><div class="certloom-issue-oneoff" data-oneoff-fields><div data-oneoff-list></div><button type="button" class="button" data-add-oneoff>' . esc_html__( 'Add one-off field', 'certloom' ) . '</button><p class="description">' . esc_html__( 'These values are frozen only on this credential and do not change the Program, Batch or Recipient profile.', 'certloom' ) . '</p></div></details>';
+		echo '<details class="certloom-issue-disclosure"><summary>' . esc_html__( 'Additional one-off credential data', 'certloom' ) . '<span>' . esc_html__( 'Optional', 'certloom' ) . '</span></summary><div class="certloom-issue-oneoff" data-oneoff-fields><div data-oneoff-list></div><button type="button" class="button" data-add-oneoff>' . esc_html__( 'Add one-off field', 'certloom' ) . '</button><p class="description">' . esc_html( sprintf( /* translators: 1: Program terminology, 2: Batch terminology. */ __( 'These values are frozen only on this credential and do not change the %1$s, %2$s or Recipient profile.', 'certloom' ), $program, $batch ) ) . '</p></div></details>';
 		echo '</section>';
 	}
 
@@ -203,8 +199,8 @@ final class ManualIssuanceAdmin {
 
 	/** @return void */
 	private function render_authority_step( $issuer, $signer ) {
-		echo '<section class="certloom-issue-step" data-issue-step="5" data-step-key="authority" hidden><header><span class="certloom-eyebrow">' . esc_html__( 'Step 6 of 8', 'certloom' ) . '</span><h2>' . esc_html( sprintf( /* translators: 1: Issuer terminology, 2: Signer terminology. */ __( '%1$s and %2$s', 'certloom' ), $issuer, $signer ) ) . '</h2><p>' . esc_html__( 'Program-owned authority is inherited automatically. Add or override a signer only when this credential needs it.', 'certloom' ) . '</p></header>';
-		echo '<div class="certloom-issue-authority-card" data-inherited-issuer hidden><span class="dashicons dashicons-building" aria-hidden="true"></span><div><small>' . esc_html__( 'Inherited authority', 'certloom' ) . '</small><strong data-inherited-issuer-name></strong><p>' . esc_html__( 'This comes from the selected Program and cannot conflict with it during issuance.', 'certloom' ) . '</p></div></div>';
+		echo '<section class="certloom-issue-step" data-issue-step="5" data-step-key="authority" hidden><header><span class="certloom-eyebrow">' . esc_html__( 'Step 6 of 8', 'certloom' ) . '</span><h2>' . esc_html( sprintf( /* translators: 1: Issuer terminology, 2: Signer terminology. */ __( '%1$s and %2$s', 'certloom' ), $issuer, $signer ) ) . '</h2><p>' . esc_html( sprintf( /* translators: %s: Program terminology. */ __( '%s-owned authority is inherited automatically. Add or override a signer only when this credential needs it.', 'certloom' ), $program ) ) . '</p></header>';
+		echo '<div class="certloom-issue-authority-card" data-inherited-issuer hidden><span class="dashicons dashicons-building" aria-hidden="true"></span><div><small>' . esc_html__( 'Inherited authority', 'certloom' ) . '</small><strong data-inherited-issuer-name></strong><p>' . esc_html( sprintf( /* translators: %s: Program terminology. */ __( 'This comes from the selected %s and cannot conflict with it during issuance.', 'certloom' ), $program ) ) . '</p></div></div>';
 		echo '<div data-independent-issuer hidden>';
 		$this->render_async_picker( 'issuer', $issuer, sprintf( /* translators: %s: Issuer terminology. */ __( 'Search %s…', 'certloom' ), $issuer ), false );
 		echo '</div>';
@@ -248,7 +244,7 @@ final class ManualIssuanceAdmin {
 
 	/** @return void */
 	private function render_quick_dialogs( $program, $batch ) {
-		echo '<dialog class="certloom-issue-dialog" data-quick-dialog="program"><form method="dialog" data-quick-form="program"><header><div><span class="certloom-eyebrow">' . esc_html__( 'Quick setup', 'certloom' ) . '</span><h2>' . esc_html( sprintf( /* translators: %s: Program terminology. */ __( 'Add %s', 'certloom' ), $program ) ) . '</h2></div><button type="button" data-quick-close class="button-link" aria-label="' . esc_attr__( 'Close', 'certloom' ) . '">×</button></header><label><span>' . esc_html__( 'Title', 'certloom' ) . '</span><input type="text" name="title" required maxlength="255"></label><label><span>' . esc_html__( 'Code', 'certloom' ) . '</span><input type="text" name="code" maxlength="100"></label><p class="description">' . esc_html__( 'Designs inherit automatically. After creation, use its Designs card or Design Rules if this Program needs an override.', 'certloom' ) . '</p><div class="certloom-dialog-actions"><button type="button" data-quick-close class="button">' . esc_html__( 'Cancel', 'certloom' ) . '</button><button type="submit" class="button button-primary">' . esc_html__( 'Add and use', 'certloom' ) . '</button></div></form></dialog>';
+		echo '<dialog class="certloom-issue-dialog" data-quick-dialog="program"><form method="dialog" data-quick-form="program"><header><div><span class="certloom-eyebrow">' . esc_html__( 'Quick setup', 'certloom' ) . '</span><h2>' . esc_html( sprintf( /* translators: %s: Program terminology. */ __( 'Add %s', 'certloom' ), $program ) ) . '</h2></div><button type="button" data-quick-close class="button-link" aria-label="' . esc_attr__( 'Close', 'certloom' ) . '">×</button></header><label><span>' . esc_html__( 'Title', 'certloom' ) . '</span><input type="text" name="title" required maxlength="255"></label><label><span>' . esc_html__( 'Code', 'certloom' ) . '</span><input type="text" name="code" maxlength="100"></label><p class="description">' . esc_html( sprintf( /* translators: %s: Program terminology. */ __( 'Designs inherit automatically. After creation, use its Designs card or Design Rules if this %s needs an override.', 'certloom' ), $program ) ) . '</p><div class="certloom-dialog-actions"><button type="button" data-quick-close class="button">' . esc_html__( 'Cancel', 'certloom' ) . '</button><button type="submit" class="button button-primary">' . esc_html__( 'Add and use', 'certloom' ) . '</button></div></form></dialog>';
 		echo '<dialog class="certloom-issue-dialog" data-quick-dialog="batch"><form method="dialog" data-quick-form="batch"><header><div><span class="certloom-eyebrow">' . esc_html__( 'Quick setup', 'certloom' ) . '</span><h2>' . esc_html( sprintf( /* translators: %s: Batch terminology. */ __( 'Add %s', 'certloom' ), $batch ) ) . '</h2></div><button type="button" data-quick-close class="button-link" aria-label="' . esc_attr__( 'Close', 'certloom' ) . '">×</button></header><label><span>' . esc_html__( 'Name', 'certloom' ) . '</span><input type="text" name="name" required maxlength="255"></label><label><span>' . esc_html__( 'Code', 'certloom' ) . '</span><input type="text" name="code" maxlength="100"></label><div class="certloom-dialog-actions"><button type="button" data-quick-close class="button">' . esc_html__( 'Cancel', 'certloom' ) . '</button><button type="submit" class="button button-primary">' . esc_html__( 'Add and use', 'certloom' ) . '</button></div></form></dialog>';
 	}
 

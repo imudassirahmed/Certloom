@@ -20,11 +20,11 @@ i427( false === strpos( $manual, 'certloom-ui-contract-badge' ) && false === str
 foreach ( array( 'recipient','context','credential','data','certificate','authority','email','review' ) as $key ) {
     i427( false !== strpos( $manual, 'data-step-key="' . $key . '"' ), 'eight-step app includes ' . $key . ' step' );
 }
-i427( false !== strpos( $manual, 'A focused eight-step workflow.' ), 'workflow explains its progressive REST model instead of exposing a mega-form' );
+i427( false === strpos( $manual, 'A focused eight-step workflow.' ) && false === strpos( $manual, 'certloom-manual-issuance-technical-status' ), 'ordinary Issue Credential chrome omits internal review/release-status prose' );
 i427( false !== strpos( $manual, "render_async_picker( 'recipient'" ) && false !== strpos( $manual, "render_async_picker( 'program'" ) && false !== strpos( $manual, "render_async_picker( 'batch'" ), 'Recipient, Program and Batch use one async-picker pattern' );
 i427( false !== strpos( $manual, 'data-quick-dialog="program"' ) && false !== strpos( $manual, 'data-quick-dialog="batch"' ), 'Program and Batch remain quick-creatable without leaving issuance' );
 i427( false !== strpos( $manual, 'type="button" data-quick-close' ) && false !== strpos( $js, "querySelectorAll('[data-quick-close]')" ), 'quick-create Cancel and close controls dismiss dialogs without becoming create submissions' );
-i427( false !== strpos( $manual, 'data-field="credential_title"' ) && false !== strpos( $manual, 'The title stays editable even when a Program supplies the default.' ), 'Program-derived title remains visibly editable' );
+i427( false !== strpos( $manual, 'data-field="credential_title"' ) && false !== strpos( $manual, "__( 'The title stays editable even when a %s supplies the default.', 'certloom' )" ), 'profile-aware Program-derived title remains visibly editable' );
 i427( false !== strpos( $manual, 'data-design-required-fields' ) && strpos( $manual, 'data-design-required-fields' ) < strpos( $manual, 'Additional one-off credential data' ), 'design-required facts stay visible before collapsed optional one-off data' );
 i427( false !== strpos( $manual, 'data-repeating-section' ) && false !== strpos( $manual, 'Subjects & results' ), 'structured Subjects/Results have a dedicated bounded data surface' );
 
@@ -42,7 +42,7 @@ i427( false !== strpos( $manual, "'restNonce' => wp_create_nonce( 'wp_rest' )" )
 i427( false !== strpos( $manual, "'previewUrl' => rest_url( 'certloom/v1/admin/issuance-preview' )" ) && false !== strpos( $js, 'cfg.previewUrl' ) && false !== strpos( $search, 'issuance_preview' ), 'live preview uses the canonical mutation-free issuance preview route' );
 i427( false !== strpos( $js, 'AbortController' ) && false !== strpos( $js, 'previewController.abort()' ), 'stale async search/preview work is cancellable' );
 i427( false !== strpos( $js, "url.searchParams.set('program_id', String(state.issuance.program_id || 0))" ) && false !== strpos( $js, "searchPicker('batch', '', true)" ), 'Batch lookup is freshly scoped to the current Program' );
-i427( false !== strpos( $js, 'state.issuance.batch_id = 0' ) && false !== strpos( $js, 'Batch cleared because the Program changed' ), 'changing Program clears stale Batch state before refetch' );
+i427( false !== strpos( $js, 'state.issuance.batch_id = 0' ) && false !== strpos( $js, "text('programChangedBatch', batchTerm + ' cleared because the ' + programTerm + ' changed." ), 'changing Program clears stale Batch state before refetch with active profile terminology' );
 i427( false !== strpos( $js, "state.issuance.title_source = 'custom'" ) && false !== strpos( $js, 'data-use-program-title' ), 'direct title edits become one-off custom titles with a safe Program-title reset' );
 i427( false !== strpos( $js, 'focusOrAddCredentialDetail' ) && false !== strpos( $js, 'data-scoped-input' ), 'design Add value focuses an existing scoped fact before creating a duplicate one-off field' );
 i427( false !== strpos( $js, 'state.issuance.design_field_aliases[target] = source' ), 'design-required facts can map to existing credential details' );
@@ -67,6 +67,10 @@ i427( false !== strpos( $js, "if (status) { status.textContent = ''; }") && fals
 i427( false !== strpos( $manual, "array( 'context', __( 'Context', 'certloom' )" ) && false !== strpos( $manual, "array( 'review', __( 'Review', 'certloom' )" ), 'stepper uses compact stable visible task labels' );
 i427( false !== strpos( $manual, 'private function render_summary( $program, $batch )' ) && false !== strpos( $manual, 'esc_html( $program )' ) && false !== strpos( $manual, 'esc_html( $batch )' ), 'live summary labels follow active profile Program/Batch terminology' );
 i427( false !== strpos( $manual, "esc_html__( 'Credential title', 'certloom' ) . ' <em>*</em>" ) && false !== strpos( $manual, "esc_html__( 'Certificate number', 'certloom' ) . ' <em>*</em>" ) && false !== strpos( $manual, 'aria-required="true"' ), 'credential title and manual certificate number expose required semantics' );
+
+// Alpha.4.82 live-acceptance presentation corrections.
+i427( false !== strpos( $css, '.certloom-issue-step {' ) && false !== strpos( $css, 'min-height: 0;' ) && false === strpos( $css, 'min-height: 520px;' ), 'short issuance steps size naturally instead of forcing a large empty desktop panel' );
+i427( false !== strpos( $manual, "__( 'Use %s default', 'certloom' )" ) && false !== strpos( $manual, 'No %1$s or %2$s relationship will be stored.' ) && false !== strpos( $manual, 'These values are frozen only on this credential and do not change the %1$s, %2$s or Recipient profile.' ), 'profile terminology stays consistent through credential, independent and one-off-data copy' );
 
 echo "\n$pass alpha.4.79 Issue Credential compatibility checks, $fail failures\n";
 exit( $fail ? 1 : 0 );
