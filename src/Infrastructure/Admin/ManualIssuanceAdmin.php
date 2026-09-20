@@ -237,9 +237,10 @@ final class ManualIssuanceAdmin {
 
 	/** @return void */
 	private function render_async_picker( $kind, $label, $placeholder, $required = false, $quick_label = '' ) {
-		echo '<div class="certloom-async-picker" data-picker="' . esc_attr( $kind ) . '"><label><span>' . esc_html( $label ) . ( $required ? ' <em>*</em>' : '' ) . '</span><div class="certloom-async-picker-control"><input type="search" autocomplete="off" placeholder="' . esc_attr( $placeholder ) . '" data-picker-search aria-autocomplete="list" aria-expanded="false"><input type="hidden" data-picker-value><button type="button" class="button certloom-picker-clear" data-picker-clear hidden aria-label="' . esc_attr( sprintf( /* translators: %s: picker label. */ __( 'Clear %s', 'certloom' ), $label ) ) . '">×</button></div></label><div class="certloom-picker-selected" data-picker-selected hidden></div><div class="certloom-picker-results" data-picker-results role="listbox" hidden></div><div class="certloom-picker-status" data-picker-status aria-live="polite"></div>';
-		if ( '' !== $quick_label ) { echo '<button type="button" class="button button-small" data-quick-open="' . esc_attr( $kind ) . '">' . esc_html( $quick_label ) . '</button>'; }
-		echo '</div>';
+		$input_id = 'certloom-issue-picker-' . sanitize_html_class( $kind );
+		echo '<div class="certloom-async-picker" data-picker="' . esc_attr( $kind ) . '"><div class="certloom-picker-heading"><label for="' . esc_attr( $input_id ) . '"><span>' . esc_html( $label ) . ( $required ? ' <em>*</em>' : '' ) . '</span></label>';
+		if ( '' !== $quick_label ) { echo '<button type="button" class="button button-small certloom-picker-quick-add" data-quick-open="' . esc_attr( $kind ) . '">' . esc_html( $quick_label ) . '</button>'; }
+		echo '</div><div class="certloom-async-picker-control"><input id="' . esc_attr( $input_id ) . '" type="search" autocomplete="off" placeholder="' . esc_attr( $placeholder ) . '" data-picker-search aria-autocomplete="list" aria-expanded="false"><input type="hidden" data-picker-value><button type="button" class="button certloom-picker-clear" data-picker-clear hidden aria-label="' . esc_attr( sprintf( /* translators: %s: picker label. */ __( 'Clear %s', 'certloom' ), $label ) ) . '">×</button></div><div class="certloom-picker-selected" data-picker-selected hidden></div><div class="certloom-picker-results" data-picker-results role="listbox" hidden></div><div class="certloom-picker-status" data-picker-status aria-live="polite"></div></div>';
 	}
 
 	/** @return void */

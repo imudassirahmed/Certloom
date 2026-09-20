@@ -1196,8 +1196,8 @@ msgstr ""
 #. translators: %s: Program terminology.
 #. translators: %s: element name.
 #: admin/class-ecapla-certverify-admin.php:315
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:247
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:248
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:249
 #: src/Infrastructure/Admin/TemplateAdmin.php:1365
 msgid "Add %s"
 msgstr ""
@@ -1560,8 +1560,8 @@ msgstr ""
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:403
 #: src/Infrastructure/Admin/DomainAdmin.php:2425
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:744
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:247
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:248
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:249
 #: src/Infrastructure/Admin/TemplateAdmin.php:1063
 #: src/Infrastructure/Admin/TemplateAdmin.php:1699
 msgid "Close"
@@ -1607,8 +1607,8 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:400
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:367
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:750
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:247
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:248
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:249
 msgid "Cancel"
 msgstr ""
 
@@ -7589,8 +7589,8 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:2178
 #: src/Infrastructure/Admin/DomainAdmin.php:2282
 #: src/Infrastructure/Admin/DomainAdmin.php:456
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:247
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:248
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:249
 msgid "Code"
 msgstr ""
 
@@ -7601,7 +7601,7 @@ msgstr ""
 #: admin/views/setup-wizard.php:161
 #: admin/views/setup-wizard.php:164
 #: src/Infrastructure/Admin/DomainAdmin.php:2183
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:248
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:249
 #: src/Infrastructure/Admin/TemplateAdmin.php:1605
 msgid "Name"
 msgstr ""
@@ -17251,7 +17251,7 @@ msgstr ""
 #: src/Infrastructure/Admin/DomainAdmin.php:2183
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:291
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:235
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:247
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:248
 msgid "Title"
 msgstr ""
 
@@ -18358,8 +18358,8 @@ msgid "Create the Program and its required credential fields, then return to thi
 msgstr ""
 
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:361
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:247
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:248
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:249
 msgid "Quick setup"
 msgstr ""
 
@@ -19786,21 +19786,21 @@ msgid "Review next"
 msgstr ""
 
 #. translators: %s: picker label.
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:240
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:243
 msgid "Clear %s"
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:247
 #: src/Infrastructure/Admin/ManualIssuanceAdmin.php:248
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:249
 msgid "Add and use"
 msgstr ""
 
 #. translators: %s: Program terminology.
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:247
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:248
 msgid "Designs inherit automatically. After creation, use its Designs card or Design Rules if this %s needs an override."
 msgstr ""
 
-#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:260
+#: src/Infrastructure/Admin/ManualIssuanceAdmin.php:261
 msgid "You do not have permission to issue credentials."
 msgstr ""
 

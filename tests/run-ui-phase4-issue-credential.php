@@ -70,6 +70,12 @@ i427( false !== strpos( $manual, "esc_html__( 'Credential title', 'certloom' ) .
 
 // Alpha.4.82 live-acceptance presentation corrections.
 i427( false !== strpos( $css, '.certloom-issue-step {' ) && false !== strpos( $css, 'min-height: 0;' ) && false === strpos( $css, 'min-height: 520px;' ), 'short issuance steps size naturally instead of forcing a large empty desktop panel' );
+
+// Alpha.4.83 live-acceptance picker/dialog positioning corrections.
+i427( false !== strpos( $manual, 'certloom-picker-heading' ) && false !== strpos( $manual, 'certloom-picker-quick-add' ) && strpos( $manual, 'certloom-picker-quick-add' ) < strpos( $manual, 'data-picker-search' ), 'quick-add action lives in the picker heading instead of underneath an open result list' );
+i427( false !== strpos( $css, '.certloom-picker-results {' ) && false !== strpos( $css, 'position: static;' ) && false !== strpos( $css, 'margin-top: var(--cl-2);' ), 'picker results participate in normal flow so suggestions cannot cover adjacent actions' );
+i427( false !== strpos( $css, '.certloom-dialog-actions {' ) && false !== strpos( $css, 'justify-content: space-between;' ) && false !== strpos( $css, '.certloom-dialog-actions .button-primary' ) && false !== strpos( $css, 'margin-left: auto;' ), 'quick-setup secondary and primary actions are deliberately separated across the dialog footer' );
+i427( false !== strpos( $css, '.certloom-issue-dialog header > [data-quick-close]' ) && false !== strpos( $css, 'flex: 0 0 36px;' ) && false !== strpos( $css, 'height: 36px;' ), 'quick-setup close affordance has a dedicated accessible hit target away from the title' );
 i427( false !== strpos( $manual, "__( 'Use %s default', 'certloom' )" ) && false !== strpos( $manual, 'No %1$s or %2$s relationship will be stored.' ) && false !== strpos( $manual, 'These values are frozen only on this credential and do not change the %1$s, %2$s or Recipient profile.' ), 'profile terminology stays consistent through credential, independent and one-off-data copy' );
 
 echo "\n$pass alpha.4.79 Issue Credential compatibility checks, $fail failures\n";
