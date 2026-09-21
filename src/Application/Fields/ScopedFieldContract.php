@@ -183,6 +183,66 @@ final class ScopedFieldContract {
 		);
 	}
 
+	/**
+	 * Apply an issuance-specific verification visibility ceiling to a resolved
+	 * field contract. A credential may hide a field that would otherwise be
+	 * visible on public verification, but it can never widen Global field
+	 * privacy. `null` preserves legacy/integration behavior; an explicit array
+	 * freezes the administrator's per-credential selection into the Version.
+	 *
+	 * @param array<string,mixed> $contract
+	 * @param array<int,string>|null $selected_keys
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public function apply_verification_selection( array $contract, $selected_keys ) {
+		if ( null === $selected_keys ) { return $contract; }
+		if ( ! is_array( $selected_keys ) || count( $selected_keys ) > self::MAX_FIELDS ) {
+			return new \WP_Error( 'certloom_scoped_field_verification_selection_invalid', __( 'Verification field selection must be a bounded list of credential fields.', 'certloom' ) );
+		}
+		$selected = array();
+		foreach ( $selected_keys as $raw_key ) {
+			$key = sanitize_key( (string) $raw_key );
+			if ( '' === $key || strlen( $key ) > 64 ) {
+				return new \WP_Error( 'certloom_scoped_field_verification_selection_invalid', __( 'Verification field selection contains an invalid field key.', 'certloom' ) );
+			}
+			$selected[ $key ] = true;
+		}
+
+		$rows = isset( $contract['fields'] ) && is_array( $contract['fields'] ) ? array_values( $contract['fields'] ) : array();
+		$known = array();
+		foreach ( $rows as $row ) {
+			if ( ! is_array( $row ) ) { continue; }
+			$key = sanitize_key( (string) ( $row['key'] ?? '' ) );
+			if ( '' !== $key ) { $known[ $key ] = $row; }
+		}
+		foreach ( array_keys( $selected ) as $key ) {
+			if ( ! isset( $known[ $key ] ) ) {
+				return new \WP_Error( 'certloom_scoped_field_verification_selection_stale', __( 'A selected verification field is no longer part of this credential context. Review the credential fields again.', 'certloom' ) );
+			}
+			$exposure = sanitize_key( (string) ( $known[ $key ]['public_exposure'] ?? 'private' ) );
+			$sensitivity = sanitize_key( (string) ( $known[ $key ]['sensitivity'] ?? 'personal' ) );
+			if ( 'internal' === $sensitivity || ! in_array( $exposure, array( 'verification', 'both' ), true ) ) {
+				return new \WP_Error( 'certloom_scoped_field_verification_selection_private', __( 'A selected credential field is not permitted on public verification by the field privacy settings.', 'certloom' ) );
+			}
+		}
+
+		foreach ( $rows as &$row ) {
+			if ( ! is_array( $row ) ) { continue; }
+			$key = sanitize_key( (string) ( $row['key'] ?? '' ) );
+			$exposure = sanitize_key( (string) ( $row['public_exposure'] ?? 'private' ) );
+			$eligible = 'internal' !== sanitize_key( (string) ( $row['sensitivity'] ?? 'personal' ) ) && in_array( $exposure, array( 'verification', 'both' ), true );
+			if ( $eligible && ! isset( $selected[ $key ] ) ) {
+				$row['public_exposure'] = 'both' === $exposure ? 'profile' : 'private';
+			}
+		}
+		unset( $row );
+		$contract['fields'] = $rows;
+		if ( ! isset( $contract['_meta'] ) || ! is_array( $contract['_meta'] ) ) { $contract['_meta'] = array(); }
+		$contract['_meta']['verification_selection_explicit'] = true;
+		$contract['_meta']['verification_field_keys'] = array_values( array_keys( $selected ) );
+		return $contract;
+	}
+
 	/** @return string */
 	public static function value_source( $key ) {
 		$key = sanitize_key( (string) $key );

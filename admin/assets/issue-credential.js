@@ -36,7 +36,7 @@
 			presentation_mode: 'details_only', certificate_image_id: 0,
 			program_id: 0, batch_id: 0, issuer_id: 0, template_id: 0, design_source: 'inherited', signer_id: 0,
 			valid_from: '', expiry_mode: 'program', expires_at: '', grade: '', display_number: '',
-			custom_merge_fields: {}, design_field_aliases: {}, repeating_data: {}
+			custom_merge_fields: {}, design_field_aliases: {}, repeating_data: {}, verification_field_keys: null
 		},
 		email: { mode: 'review', template_id: 'automatic' },
 		fieldContract: { fields: [] },
@@ -49,6 +49,7 @@
 		searchControllers: {},
 		searchTimers: {},
 		programContextController: null,
+		verificationFieldContext: '',
 		busy: false,
 		oneOffCounter: 0
 	};
@@ -312,6 +313,8 @@
 			state.issuance.batch_id = 0;
 			state.fieldContract = {fields:[]};
 			state.programContext = null;
+			state.verificationFieldContext = '';
+			state.issuance.verification_field_keys = null;
 			if (previous && next) { showMessage(text('programChangedBatch', batchTerm + ' cleared because the ' + programTerm + ' changed. Loading current ' + batchTerm + ' choices…'), 'info'); }
 		}
 		if (!next) {
@@ -355,6 +358,7 @@
 			if ('program' !== state.credentialBasis || 'program' !== requestedBasis || state.issuance.program_id !== requestedProgramId || state.issuance.batch_id !== requestedBatchId) { return; }
 			state.programContext = data || null;
 			state.fieldContract = data && data.field_contract ? data.field_contract : {fields:[]};
+			syncVerificationFieldSelection(state.fieldContract.fields || []);
 			if (data && data.issuer) {
 				state.issuance.issuer_id = normalizeChoice('issuer', data.issuer).id;
 			}
@@ -488,7 +492,7 @@
 					if (state.programContextController) { state.programContextController.abort(); state.programContextController = null; }
 					clearPicker('program', {silent:true}); clearPicker('batch', {silent:true});
 					state.issuance.program_id = 0; state.issuance.batch_id = 0; state.issuance.issuer_id = state.selected.issuer ? state.selected.issuer.id : 0;
-					state.programContext = null; state.fieldContract = {fields:[]}; state.issuance.title_source = 'custom'; state.issuance.expiry_mode = 'permanent';
+					state.programContext = null; state.fieldContract = {fields:[]}; state.verificationFieldContext = ''; state.issuance.verification_field_keys = null; state.issuance.title_source = 'custom'; state.issuance.expiry_mode = 'permanent';
 					var expiry = root.querySelector('[data-field="expiry_mode"]'); if (expiry) { expiry.value = 'permanent'; }
 				} else {
 					state.issuance.issuer_id = 0; state.issuance.expiry_mode = state.selected.program && state.selected.program.program_validity_available ? 'program' : 'permanent';
@@ -498,10 +502,36 @@
 		});
 	}
 
+	function verificationFieldAllowed(field) {
+		field = field || {};
+		var exposure = String(field.public_exposure || 'private').toLowerCase();
+		var sensitivity = String(field.sensitivity || 'personal').toLowerCase();
+		return 'internal' !== sensitivity && ('verification' === exposure || 'both' === exposure);
+	}
+
+	function syncVerificationFieldSelection(fields) {
+		fields = Array.isArray(fields) ? fields : [];
+		var eligible = fields.filter(verificationFieldAllowed).map(function (field) { return String(field.key || ''); }).filter(Boolean).sort();
+		var signature = [state.credentialBasis, state.issuance.program_id || 0, state.issuance.batch_id || 0, eligible.join(',')].join('|');
+		if (state.verificationFieldContext === signature) { return; }
+		state.verificationFieldContext = signature;
+		state.issuance.verification_field_keys = eligible;
+	}
+
+	function verificationToggleHtml(field, key) {
+		var allowed = verificationFieldAllowed(field);
+		var selectedKeys = Array.isArray(state.issuance.verification_field_keys) ? state.issuance.verification_field_keys : [];
+		var selected = allowed && selectedKeys.indexOf(key) !== -1;
+		var title = allowed ? text('showOnVerification', 'Show on verification') : text('verificationPrivate', 'Not available on verification');
+		var hint = allowed ? text('verificationIncludeHint', 'Include this value on the public verification screen for this credential.') : text('verificationPrivateHint', 'Field privacy settings do not allow this value on public verification.');
+		return '<label class="certloom-issue-verification-toggle' + (allowed ? '' : ' is-disabled') + '"><input type="checkbox" data-verification-field="' + escapeHtml(key) + '"' + (selected ? ' checked' : '') + (allowed ? '' : ' disabled') + '><span><strong>' + escapeHtml(title) + '</strong><small>' + escapeHtml(hint) + '</small></span></label>';
+	}
+
 	function renderScopedFields() {
 		var box = root.querySelector('[data-scoped-fields]');
 		if (!box) { return; }
 		var fields = state.fieldContract && Array.isArray(state.fieldContract.fields) ? state.fieldContract.fields : [];
+		syncVerificationFieldSelection(fields);
 		var html = '<div class="certloom-issue-subhead"><div><h3>Credential fields</h3><p>' + escapeHtml('program' === state.credentialBasis ? (programTerm + ' / ' + batchTerm + ' field rules') : 'Independent credential facts') + '</p></div></div>';
 		var rendered = 0;
 		fields.forEach(function (field) {
@@ -509,25 +539,36 @@
 			if (!key) { return; }
 			var source = String(field.value_source || 'credential_custom');
 			var required = !!field.required;
+			var origin = String(field.origin || programTerm);
 			if ('recipient' === source) {
-				html += '<div class="certloom-issue-field-row is-readonly"><div><strong>' + escapeHtml(field.label || key) + (required ? ' <em>Required</em>' : '') + '</strong><small>From Recipient profile · ' + escapeHtml(field.origin || programTerm) + '</small></div><span>Frozen at issue</span></div>';
+				html += '<div class="certloom-issue-scoped-entry" data-scoped-field="' + escapeHtml(key) + '"><div class="certloom-issue-field-row is-readonly"><div><strong>' + escapeHtml(field.label || key) + (required ? ' <em>Required</em>' : '') + '</strong><small>From Recipient profile · ' + escapeHtml(origin) + '</small></div><span>Frozen at issue</span></div>' + verificationToggleHtml(field, key) + '</div>';
 				rendered++; return;
 			}
 			var value = 'grade' === key ? state.issuance.grade : (state.issuance.custom_merge_fields[key] || '');
-			html += '<label class="certloom-issue-field" data-scoped-field="' + escapeHtml(key) + '"><span>' + escapeHtml(field.label || key) + (required ? ' <em>*</em>' : '') + '</span><input type="text" data-scoped-input="' + escapeHtml(key) + '" value="' + escapeHtml(value) + '"' + (required ? ' required' : '') + '><small>' + escapeHtml(field.origin ? ('Required by ' + field.origin) : '') + '</small></label>';
+			html += '<div class="certloom-issue-scoped-entry" data-scoped-field="' + escapeHtml(key) + '"><label class="certloom-issue-field"><span>' + escapeHtml(field.label || key) + (required ? ' <em>*</em>' : '') + '</span><input type="text" data-scoped-input="' + escapeHtml(key) + '" value="' + escapeHtml(value) + '"' + (required ? ' required' : '') + '><small>' + escapeHtml(origin ? ('Configured by ' + origin) : '') + '</small></label>' + verificationToggleHtml(field, key) + '</div>';
 			rendered++;
 		});
 		if (!rendered && state.bootstrap && state.bootstrap.profile && state.bootstrap.profile.issuance && state.bootstrap.profile.issuance.grade_default) {
 			html += '<label class="certloom-issue-field" data-scoped-field="grade"><span>Grade / result</span><input type="text" data-scoped-input="grade" value="' + escapeHtml(state.issuance.grade || '') + '"></label>';
 			rendered++;
 		}
-		if (!rendered) { html += '<div class="certloom-issue-empty is-compact"><p>No reusable credential fields are required for this context. Add one-off details only when needed.</p></div>'; }
+		if (!rendered) { html += '<div class="certloom-issue-empty is-compact"><p>' + escapeHtml(text('noReusableFields', 'No reusable credential fields are configured for this context. Add one-off details only when needed.')) + '</p></div>'; }
 		box.innerHTML = html;
 		Array.prototype.forEach.call(box.querySelectorAll('[data-scoped-input]'), function (input) {
 			input.addEventListener('input', function () {
 				var key = input.getAttribute('data-scoped-input');
 				if ('grade' === key) { state.issuance.grade = input.value; }
 				else { state.issuance.custom_merge_fields[key] = input.value; }
+				onDataChanged();
+			});
+		});
+		Array.prototype.forEach.call(box.querySelectorAll('[data-verification-field]'), function (input) {
+			input.addEventListener('change', function () {
+				var key = String(input.getAttribute('data-verification-field') || '');
+				var keys = (Array.isArray(state.issuance.verification_field_keys) ? state.issuance.verification_field_keys : []).filter(function (existing) { return existing !== key; });
+				if (input.checked) { keys.push(key); }
+				keys.sort();
+				state.issuance.verification_field_keys = keys;
 				onDataChanged();
 			});
 		});
@@ -849,6 +890,7 @@
 				['Certificate', review.presentation_mode === 'design' ? ((review.template && review.template.name) || 'Inherited design') : (review.presentation_mode === 'image' ? 'Uploaded image' : 'Details only')],
 				[issuerTerm, review.issuer && review.issuer.name ? review.issuer.name : '—'],
 				[signerTerm, review.signer && review.signer.name ? review.signer.name : '—'],
+				[text('verificationFieldsReview', 'Verification fields'), review.verification_fields && review.verification_fields.length ? review.verification_fields.map(function (field) { return field.label || field.key || ''; }).filter(Boolean).join(', ') : 'None'],
 				['Email', 'review' === state.email.mode ? ('Review next · ' + (state.email.template_id || 'automatic')) : 'Do not email now']
 			];
 			content.innerHTML = '<div class="certloom-review-grid">' + rows.map(function (row) { return '<div><small>' + escapeHtml(row[0]) + '</small><strong>' + escapeHtml(row[1] || '—') + '</strong></div>'; }).join('') + '</div>';

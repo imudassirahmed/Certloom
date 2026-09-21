@@ -336,6 +336,16 @@ final class IssueCredentialRest {
 		$signer = isset( $review['signer'] ) && is_array( $review['signer'] ) ? $review['signer'] : array();
 		$template = isset( $review['template'] ) && is_array( $review['template'] ) ? $review['template'] : array();
 		$locale = isset( $review['credential_locale'] ) && is_array( $review['credential_locale'] ) ? $review['credential_locale'] : array();
+		$verification_fields = array();
+		$field_rows = isset( $review['field_contract']['fields'] ) && is_array( $review['field_contract']['fields'] ) ? $review['field_contract']['fields'] : array();
+		$field_values = isset( $review['field_values'] ) && is_array( $review['field_values'] ) ? $review['field_values'] : array();
+		foreach ( $field_rows as $field_row ) {
+			if ( ! is_array( $field_row ) ) { continue; }
+			$key = sanitize_key( (string) ( $field_row['key'] ?? '' ) );
+			$exposure = sanitize_key( (string) ( $field_row['public_exposure'] ?? 'private' ) );
+			if ( '' === $key || ! in_array( $exposure, array( 'verification', 'both' ), true ) || ! array_key_exists( $key, $field_values ) || '' === trim( (string) $field_values[ $key ] ) ) { continue; }
+			$verification_fields[] = array( 'key' => $key, 'label' => (string) ( $field_row['label'] ?? $key ) );
+		}
 		return array(
 			'recipient' => array( 'id' => absint( $recipient['id'] ?? 0 ), 'name' => (string) ( $recipient['display_name'] ?? '' ), 'email' => (string) ( $recipient['email'] ?? '' ) ),
 			'program' => array( 'id' => absint( $program['id'] ?? 0 ), 'title' => (string) ( $program['title'] ?? '' ) ),
@@ -354,6 +364,7 @@ final class IssueCredentialRest {
 				'template_key' => (string) ( $review['template_locale_variant']['template_key'] ?? '' ),
 			) : null,
 			'locale' => array( 'configured' => (string) ( $locale['configured'] ?? '' ), 'effective' => (string) ( $locale['effective'] ?? '' ), 'direction' => (string) ( $locale['direction'] ?? '' ) ),
+			'verification_fields' => $verification_fields,
 			'data_readiness' => isset( $review['data_readiness'] ) && is_array( $review['data_readiness'] ) ? $review['data_readiness'] : array(),
 			'numbering' => isset( $review['numbering'] ) && is_array( $review['numbering'] ) ? $review['numbering'] : array(),
 			'technical' => array(

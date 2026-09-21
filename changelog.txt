@@ -1,3 +1,10 @@
+= 1.7.0-alpha.4.86 =
+* Gamma-03A live-acceptance correction: surface reusable credential fields resolved from the active Global → Issuer → Program/Scheme → Batch/Audit hierarchy directly inside Step 3 Details.
+* Add an explicit per-credential “Show on verification” choice for fields whose catalog privacy already permits public verification; the issuance may tighten visibility but can never widen Private/Profile-only/Internal field policy.
+* Freeze the selected verification-field ceiling into the immutable issued field contract and include the resulting public field list in server Review before final Issue.
+* Preserve legacy/integration behavior when no explicit verification-field selection is supplied, while the six-step browser flow records an explicit selection for Program/Scheme-scoped reusable fields.
+* Give Effective date and Validity the same explicit 44px lifecycle-control geometry and add browser regression checks for identical top position and height.
+
 = 1.7.0-alpha.4.85 =
 * Gamma-03A live-acceptance correction: contain both quick Program/Scheme and Batch/Audit dialogs so long profile terminology, inputs and translated actions cannot create horizontal scrolling.
 * Mark required quick-create fields explicitly, identify optional machine codes, and retain non-submitting Cancel/close behavior.

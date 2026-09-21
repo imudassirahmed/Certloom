@@ -415,6 +415,8 @@ final class ManualIssuanceService {
 		// by its selected design. Add those facts to the immutable issuance contract
 		// without mutating Global/Issuer/Program/Batch configuration.
 		$field_contract = $this->issuance_field_contract( $field_contract, $request, empty( $program['id'] ) );
+		$field_contract = ( new ScopedFieldContract() )->apply_verification_selection( $field_contract, $request['verification_field_keys'] );
+		if ( is_wp_error( $field_contract ) ) { return $field_contract; }
 		$field_values = $this->resolve_field_values( $field_contract, $recipient, $request, $allow_missing_required_fields );
 		if ( is_wp_error( $field_values ) ) { return $field_values; }
 
@@ -560,6 +562,7 @@ final class ManualIssuanceService {
 			'custom_merge_fields' => $request['custom_merge_fields'],
 			'design_field_aliases' => $request['design_field_aliases'],
 			'repeating_data' => $request['repeating_data'],
+			'verification_field_keys' => $request['verification_field_keys'],
 			'credential_locale' => $locale,
 			'template_locale_variant' => $template_locale_variant,
 		);
@@ -665,6 +668,8 @@ final class ManualIssuanceService {
 		if ( is_wp_error( $design_field_aliases ) ) { return $design_field_aliases; }
 		$repeating_data = $this->repeating_data( $request['repeating_data'] ?? null );
 		if ( is_wp_error( $repeating_data ) ) { return $repeating_data; }
+		$verification_field_keys = array_key_exists( 'verification_field_keys', $request ) ? $this->field_key_list( $request['verification_field_keys'] ) : null;
+		if ( is_wp_error( $verification_field_keys ) ) { return $verification_field_keys; }
 		return array(
 			'recipient_mode' => $mode,
 			'recipient_id' => $recipient_id,
@@ -688,7 +693,27 @@ final class ManualIssuanceService {
 			'custom_merge_fields' => $custom_merge_fields,
 			'design_field_aliases' => $design_field_aliases,
 			'repeating_data' => $repeating_data,
+			'verification_field_keys' => $verification_field_keys,
 		);
+	}
+
+	/** @return array<int,string>|null|\WP_Error */
+	private function field_key_list( $value ) {
+		if ( null === $value ) { return null; }
+		if ( ! is_array( $value ) || count( $value ) > ScopedFieldContract::MAX_FIELDS ) {
+			return new \WP_Error( 'certloom_manual_issue_verification_fields_invalid', __( 'Verification fields must be a bounded list of credential-field keys.', 'certloom' ) );
+		}
+		$out = array();
+		foreach ( $value as $raw_key ) {
+			$key = sanitize_key( (string) $raw_key );
+			if ( '' === $key || strlen( $key ) > 64 ) {
+				return new \WP_Error( 'certloom_manual_issue_verification_fields_invalid', __( 'Verification fields contain an invalid credential-field key.', 'certloom' ) );
+			}
+			$out[ $key ] = true;
+		}
+		$keys = array_keys( $out );
+		sort( $keys, SORT_STRING );
+		return array_values( $keys );
 	}
 
 	/** @return array<string,array<int,array<string,string>>>|\WP_Error */

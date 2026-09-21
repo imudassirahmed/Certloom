@@ -4,7 +4,7 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.7.0-alpha.4.85
+Stable tag: 1.7.0-alpha.4.86
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ Manage certificates and publish exact-number verification with a native block, s
 
 == Description ==
 
-> **1.7.0 ALPHA 4.85 — ISSUE CREDENTIAL LIVE-ACCEPTANCE FIT & NAVIGATION CORRECTIONS — NOT FOR PRODUCTION.** The six-step workflow remains unchanged. Quick Program/Batch dialogs are now overflow-safe with explicit required/optional semantics; Effective date and Validity align correctly even when only one field has helper text; management/reference links preserve the in-progress issuance by opening safely in a new tab; Email Design management is grouped with its selector; and Review copy is simplified while the canonical REST Review/fingerprint/Manual Issuance authority remains unchanged.
+> **1.7.0 ALPHA 4.86 — PROGRAM CREDENTIAL-FIELD VISIBILITY + LIFECYCLE ALIGNMENT — NOT FOR PRODUCTION.** The six-step workflow remains unchanged. Details now surfaces reusable credential fields resolved from the active Global → Issuer → Program/Scheme → Batch/Audit context and lets an administrator include eligible values on the public verification view for this credential. The per-credential choice can only tighten existing field privacy; Private/Profile-only/Internal fields cannot be widened. Effective date and Validity now use the same explicit control geometry. Canonical REST Review/fingerprint/Manual Issuance authority remains unchanged.
 
 > **1.7.0 ALPHA 4.22 — DASHBOARD RECENT-CREDENTIALS FIT CORRECTION — NOT FOR PRODUCTION.** This checkpoint changes only the Dashboard Recent credentials list after staging review: issue and expiry are combined into one compact Dates column with date-only values, Status stays visible, and current credentials expose a clear Edit action while historical credentials retain Manage. Dashboard shortcuts and surrounding cards remain unchanged. Renderer/domain authority remain absent while Phase 4 visual acceptance continues.
 

@@ -121,6 +121,23 @@ async def run():
         await program.focus(); await page.wait_for_timeout(40)
         await ck(await page.locator('[data-picker="program"] [data-picker-results]').is_hidden(), 'selectedProgramFocusDoesNotReopenExactMatch')
 
+        # Program-configured credential fields surface in Details with a per-credential
+        # public-verification ceiling that cannot loosen the field catalog policy.
+        await page.locator('[data-step-next]').click()
+        await ck(await page.locator('[data-step-status]').inner_text() == 'Step 3 of 6', 'programDetailsReachable')
+        await ck(await page.locator('[data-scoped-field="grade"]').count() == 1 and await page.locator('[data-scoped-field="address"]').count() == 1, 'programCredentialFieldsSurfaceInDetails')
+        grade_verify = page.locator('[data-verification-field="grade"]')
+        address_verify = page.locator('[data-verification-field="address"]')
+        await ck(await grade_verify.is_checked() and await grade_verify.is_enabled(), 'verificationEligibleProgramFieldDefaultsIncluded')
+        await ck(await address_verify.is_disabled() and not await address_verify.is_checked(), 'privateProgramFieldCannotBePublishedPerCredential')
+        effective_program_box = await page.locator('[data-field="valid_from"]').bounding_box()
+        validity_program_box = await page.locator('[data-field="expiry_mode"]').bounding_box()
+        await ck(bool(effective_program_box and validity_program_box and abs(effective_program_box['y'] - validity_program_box['y']) <= 1.0 and abs(effective_program_box['height'] - validity_program_box['height']) <= 1.0), 'programLifecycleControlsShareExactBaselineAndHeight')
+        await grade_verify.uncheck()
+        await ck(not await grade_verify.is_checked(), 'verificationEligibleFieldCanBeExcludedForThisCredential')
+        await page.locator('[data-step-prev]').click()
+        await ck(await page.locator('[data-step-status]').inner_text() == 'Step 2 of 6', 'programFieldReviewReturnsToContext')
+
         # Independent issuer is chosen in Context, not in a standalone Authority step.
         await page.locator('[data-credential-basis="independent"]').click()
         await ck(await page.locator('[data-program-context]').is_hidden(), 'programControlsHideForIndependentCredential')
@@ -140,7 +157,7 @@ async def run():
         await ck(await expiry.input_value() == 'permanent', 'independentDefaultsPermanent')
         effective_box = await page.locator('[data-field="valid_from"]').bounding_box()
         validity_box = await expiry.bounding_box()
-        await ck(bool(effective_box and validity_box and abs(effective_box['y'] - validity_box['y']) <= 1.5), 'effectiveDateAndValidityControlsAlign')
+        await ck(bool(effective_box and validity_box and abs(effective_box['y'] - validity_box['y']) <= 1.0 and abs(effective_box['height'] - validity_box['height']) <= 1.0), 'effectiveDateAndValidityControlsAlignExactly')
         await ck(await page.locator('[data-oneoff-fields]').is_visible(), 'oneOffDataLivesInsideDetails')
         await page.locator('[data-add-oneoff]').click()
         await ck(await page.locator('.certloom-oneoff-row').count() == 1, 'oneOffFieldCanBeAddedInline')

@@ -99,5 +99,15 @@ i427( false !== strpos( $js, 'View existing credential</a>' ) && false !== strpo
 i427( false !== strpos( $manual, 'certloom-issue-field-action-cluster' ) && false !== strpos( $manual, 'certloom-issue-email-template' ), 'Email design management is grouped with its selector instead of floating below it' );
 i427( false !== strpos( $manual, 'Check the final credential details before issuing.' ) && false !== strpos( $manual, 'Issuing creates an immutable credential version.' ), 'Review copy stays product-facing while retaining the immutable issuance boundary' );
 
+// Alpha.4.86 Program credential fields + verification exposure and lifecycle geometry.
+i427( false !== strpos( $js, 'verification_field_keys' ) && false !== strpos( $js, 'data-verification-field' ) && false !== strpos( $js, 'verificationFieldAllowed' ), 'Details exposes per-credential verification choices for resolved reusable fields' );
+i427( false !== strpos( $manual, 'Fields configured for this credential context appear here.' ) && false !== strpos( $manual, 'certloom-issue-lifecycle-field' ), 'Details explains inherited credential fields and marks both lifecycle controls for shared geometry' );
+i427( false !== strpos( $css, '.certloom-issue-lifecycle-field > input' ) && false !== strpos( $css, 'height: 44px;' ) && false !== strpos( $css, '.certloom-issue-scoped-entry' ) && false !== strpos( $css, '.certloom-issue-verification-toggle' ), 'lifecycle controls have identical explicit height and reusable fields receive verification-choice layout' );
+i427( false !== strpos( $rest, "'verification_fields' => \$verification_fields" ) && false !== strpos( $js, "text('verificationFieldsReview'" ), 'server Review summarizes the credential fields selected for public verification' );
+$service486 = file_get_contents( $root . '/src/Application/Issuance/ManualIssuanceService.php' );
+$contract486 = file_get_contents( $root . '/src/Application/Fields/ScopedFieldContract.php' );
+i427( false !== strpos( $service486, 'apply_verification_selection' ) && false !== strpos( $service486, "'verification_field_keys'" ), 'Manual Issuance freezes the per-credential verification selection before field values are committed' );
+i427( false !== strpos( $contract486, 'certloom_scoped_field_verification_selection_private' ) && false !== strpos( $contract486, "'both' === \$exposure ? 'profile' : 'private'" ), 'verification selection can tighten but never widen the field privacy contract' );
+
 echo "\n$pass alpha.4.79 Issue Credential compatibility checks, $fail failures\n";
 exit( $fail ? 1 : 0 );

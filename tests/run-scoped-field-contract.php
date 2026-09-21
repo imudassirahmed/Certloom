@@ -26,6 +26,20 @@ sf('recipient'===($by['first_name']['value_source']??''),'recipient identity fie
 sf('credential'===($by['grade']['value_source']??''),'Grade declares issued-credential value source');
 sf('credential_custom'===($by['project_title']['value_source']??''),'custom field declares issued-credential custom value source');
 
+$verification=$c->apply_verification_selection($r,array('grade'));
+$vby=array();if(!is_wp_error($verification)){foreach(($verification['fields']??array()) as $row){$vby[$row['key']]=$row;}}
+sf(!is_wp_error($verification),'per-credential verification selection applies to resolved field contract');
+sf('verification'===($vby['grade']['public_exposure']??''),'selected verification-eligible field retains its frozen verification exposure');
+sf('profile'===($vby['project_title']['public_exposure']??''),'unchecked both-exposure field tightens to profile-only for this credential');
+sf('private'===($vby['first_name']['public_exposure']??''),'private field remains private after per-credential selection');
+sf(true===($verification['_meta']['verification_selection_explicit']??false)&&array('grade')===($verification['_meta']['verification_field_keys']??array()),'immutable field contract records explicit verification selection');
+$privateSelection=$c->apply_verification_selection($r,array('first_name'));
+sf(is_wp_error($privateSelection)&&'certloom_scoped_field_verification_selection_private'===$privateSelection->get_error_code(),'per-credential selection cannot widen a private field onto verification');
+$staleSelection=$c->apply_verification_selection($r,array('not_in_context'));
+sf(is_wp_error($staleSelection)&&'certloom_scoped_field_verification_selection_stale'===$staleSelection->get_error_code(),'stale per-credential verification field fails closed');
+$legacySelection=$c->apply_verification_selection($r,null);
+sf($legacySelection===$r,'omitted verification selection preserves legacy and integration behavior');
+
 $g=$c->normalize_scope('global',array('project_title'=>'optional'),$catalog);sf(!is_wp_error($g),'Global field contract normalizes');
 $i=$c->normalize_scope('issuer',array('project_title'=>'required','first_name'=>'optional'),$catalog);sf(!is_wp_error($i),'Issuer field contract normalizes');
 $hp=$c->normalize_program(array('grade'=>'required'),$catalog);$hb=$c->normalize_batch(array('first_name'=>'required'),$catalog);
