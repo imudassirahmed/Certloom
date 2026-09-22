@@ -51,8 +51,11 @@ final class IssueCredentialRest {
 			'callback' => array( $this, 'program_context' ),
 			'permission_callback' => array( $this, 'permission' ),
 			'args' => array(
-				'program_id' => array( 'required' => true, 'sanitize_callback' => 'absint' ),
-				'batch_id'   => array( 'default' => 0, 'sanitize_callback' => 'absint' ),
+				'program_id'   => array( 'default' => 0, 'sanitize_callback' => 'absint' ),
+				'batch_id'     => array( 'default' => 0, 'sanitize_callback' => 'absint' ),
+				'issuer_id'    => array( 'default' => 0, 'sanitize_callback' => 'absint' ),
+				'recipient_id' => array( 'default' => 0, 'sanitize_callback' => 'absint' ),
+				'basis'        => array( 'default' => 'program', 'sanitize_callback' => 'sanitize_key' ),
 			),
 		) );
 
@@ -149,26 +152,34 @@ final class IssueCredentialRest {
 
 	/** @return \WP_REST_Response|\WP_Error */
 	public function program_context( \WP_REST_Request $request ) {
+		$basis = sanitize_key( (string) $request->get_param( 'basis' ) );
+		$basis = 'independent' === $basis ? 'independent' : 'program';
 		$program_id = absint( $request->get_param( 'program_id' ) );
 		$batch_id = absint( $request->get_param( 'batch_id' ) );
-		if ( ! $program_id ) { return new \WP_Error( 'certloom_issue_program_required', __( 'Choose a Program first.', 'certloom' ), array( 'status' => 400 ) ); }
-		$program = ( new ProgramRepository() )->find( $program_id );
-		if ( is_wp_error( $program ) ) { return $program; }
-		if ( ! is_array( $program ) || empty( $program['active'] ) ) { return new \WP_Error( 'certloom_issue_program_missing', __( 'The selected Program is no longer available.', 'certloom' ), array( 'status' => 404 ) ); }
+		$explicit_issuer_id = absint( $request->get_param( 'issuer_id' ) );
+		$recipient_id = absint( $request->get_param( 'recipient_id' ) );
+		if ( 'program' === $basis && ! $program_id ) { return new \WP_Error( 'certloom_issue_program_required', __( 'Choose a Program first.', 'certloom' ), array( 'status' => 400 ) ); }
 
+		$program = array();
 		$batch = null;
-		if ( $batch_id ) {
-			$batch = ( new BatchRepository() )->find( $batch_id );
-			if ( is_wp_error( $batch ) ) { return $batch; }
-			if ( ! is_array( $batch ) || empty( $batch['active'] ) ) { return new \WP_Error( 'certloom_issue_batch_missing', __( 'The selected Batch is no longer available.', 'certloom' ), array( 'status' => 404 ) ); }
-			if ( $program_id !== absint( $batch['program_id'] ?? 0 ) ) { return new \WP_Error( 'certloom_issue_batch_program_mismatch', __( 'The selected Batch does not belong to the selected Program.', 'certloom' ), array( 'status' => 400 ) ); }
+		if ( $program_id ) {
+			$program = ( new ProgramRepository() )->find( $program_id );
+			if ( is_wp_error( $program ) ) { return $program; }
+			if ( ! is_array( $program ) || empty( $program['active'] ) ) { return new \WP_Error( 'certloom_issue_program_missing', __( 'The selected Program is no longer available.', 'certloom' ), array( 'status' => 404 ) ); }
+			if ( $batch_id ) {
+				$batch = ( new BatchRepository() )->find( $batch_id );
+				if ( is_wp_error( $batch ) ) { return $batch; }
+				if ( ! is_array( $batch ) || empty( $batch['active'] ) ) { return new \WP_Error( 'certloom_issue_batch_missing', __( 'The selected Batch is no longer available.', 'certloom' ), array( 'status' => 404 ) ); }
+				if ( $program_id !== absint( $batch['program_id'] ?? 0 ) ) { return new \WP_Error( 'certloom_issue_batch_program_mismatch', __( 'The selected Batch does not belong to the selected Program.', 'certloom' ), array( 'status' => 400 ) ); }
+			}
 		}
 
 		$issuer = null;
-		$issuer_id = absint( $program['issuer_id'] ?? 0 );
+		$issuer_id = $program_id ? absint( $program['issuer_id'] ?? 0 ) : $explicit_issuer_id;
 		if ( $issuer_id ) {
 			$issuer = ( new IssuerRepository() )->find( $issuer_id );
 			if ( is_wp_error( $issuer ) ) { return $issuer; }
+			if ( ! is_array( $issuer ) ) { return new \WP_Error( 'certloom_issue_issuer_missing', __( 'The selected Issuer is no longer available.', 'certloom' ), array( 'status' => 404 ) ); }
 		}
 
 		$catalog = class_exists( '\\Ecapla_CertVerify_Fields' ) ? \Ecapla_CertVerify_Fields::get_field_map() : array();
@@ -177,23 +188,31 @@ final class IssueCredentialRest {
 		$field_contract = ( new ScopedFieldContract() )->resolve_hierarchy(
 			$global_contract,
 			is_array( $issuer ) && is_array( $issuer['field_contract'] ?? null ) ? $issuer['field_contract'] : null,
-			is_array( $program['field_contract'] ?? null ) ? $program['field_contract'] : ScopedFieldContract::empty_program(),
+			$program_id && is_array( $program['field_contract'] ?? null ) ? $program['field_contract'] : ScopedFieldContract::empty_program(),
 			is_array( $batch ) && is_array( $batch['field_contract'] ?? null ) ? $batch['field_contract'] : null,
 			$catalog
 		);
 		if ( is_wp_error( $field_contract ) ) { return $field_contract; }
 
+		$recipient = null;
+		if ( $recipient_id ) {
+			$recipient = ( new RecipientRepository() )->find( $recipient_id );
+			if ( is_wp_error( $recipient ) ) { return $recipient; }
+			if ( ! is_array( $recipient ) ) { $recipient = null; }
+		}
+
 		return rest_ensure_response( array(
-			'program' => $this->program_choice( $program ),
+			'program' => $program_id ? $this->program_choice( $program ) : null,
 			'batch' => $batch ? $this->batch_choice( $batch ) : null,
 			'issuer' => is_array( $issuer ) ? $this->issuer_choice( $issuer ) : null,
 			'field_contract' => $field_contract,
+			'recipient_values' => $this->recipient_values_for_contract( $recipient, $field_contract ),
 			'validity' => array(
-				'mode' => (string) ( $program['validity_mode'] ?? '' ),
-				'value' => absint( $program['validity_value'] ?? 0 ),
-				'unit' => (string) ( $program['validity_unit'] ?? 'days' ),
-				'summary' => (string) ( $program['validity_summary'] ?? '' ),
-				'program_default_available' => ! empty( $program['program_default_available'] ),
+				'mode' => $program_id ? (string) ( $program['validity_mode'] ?? '' ) : '',
+				'value' => $program_id ? absint( $program['validity_value'] ?? 0 ) : 0,
+				'unit' => $program_id ? (string) ( $program['validity_unit'] ?? 'days' ) : 'days',
+				'summary' => $program_id ? (string) ( $program['validity_summary'] ?? '' ) : '',
+				'program_default_available' => $program_id && ! empty( $program['program_default_available'] ),
 			),
 		) );
 	}
@@ -344,7 +363,7 @@ final class IssueCredentialRest {
 			$key = sanitize_key( (string) ( $field_row['key'] ?? '' ) );
 			$exposure = sanitize_key( (string) ( $field_row['public_exposure'] ?? 'private' ) );
 			if ( '' === $key || ! in_array( $exposure, array( 'verification', 'both' ), true ) || ! array_key_exists( $key, $field_values ) || '' === trim( (string) $field_values[ $key ] ) ) { continue; }
-			$verification_fields[] = array( 'key' => $key, 'label' => (string) ( $field_row['label'] ?? $key ) );
+			$verification_fields[] = array( 'key' => $key, 'label' => (string) ( $field_row['label'] ?? $key ), 'value' => (string) $field_values[ $key ] );
 		}
 		return array(
 			'recipient' => array( 'id' => absint( $recipient['id'] ?? 0 ), 'name' => (string) ( $recipient['display_name'] ?? '' ), 'email' => (string) ( $recipient['email'] ?? '' ) ),
@@ -408,6 +427,21 @@ final class IssueCredentialRest {
 		if ( ! is_array( $data ) ) { $data = array(); }
 		if ( empty( $data['status'] ) ) { $data['status'] = 400; }
 		return new \WP_Error( $error->get_error_code(), $error->get_error_message(), $data );
+	}
+
+	/** @return array<string,string> */
+	private function recipient_values_for_contract( $recipient, array $contract ) {
+		if ( ! is_array( $recipient ) ) { return array(); }
+		$values = array();
+		$custom = isset( $recipient['custom_fields'] ) && is_array( $recipient['custom_fields'] ) ? $recipient['custom_fields'] : array();
+		foreach ( (array) ( $contract['fields'] ?? array() ) as $row ) {
+			if ( ! is_array( $row ) || 'recipient' !== (string) ( $row['value_source'] ?? '' ) ) { continue; }
+			$key = sanitize_key( (string) ( $row['key'] ?? '' ) );
+			if ( '' === $key ) { continue; }
+			$raw = array_key_exists( $key, $recipient ) ? $recipient[ $key ] : ( $custom[ $key ] ?? '' );
+			$values[ $key ] = is_scalar( $raw ) ? (string) $raw : '';
+		}
+		return $values;
 	}
 
 	/** @return array<string,mixed> */

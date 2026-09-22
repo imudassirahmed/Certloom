@@ -4,13 +4,15 @@ Tags: certificate verification, certificate, credentials, certificate registry, 
 Requires at least: 6.3
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.7.0-alpha.4.86
+Stable tag: 1.7.0-alpha.4.87
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
 
 == Description ==
+
+> **1.7.0 ALPHA 4.87 — CREDENTIAL-FIELD UX + PRIVACY HARDENING — NOT FOR PRODUCTION.** This ultra-audit hardens the six-step Issue Credential field experience introduced in 4.86. Independent credentials now resolve Global/Issuer reusable field rules before Review; explicit per-credential verification exclusions survive context refreshes; stale reusable values are removed when context changes; typed field definitions render matching controls; Recipient-owned fields show the exact frozen value and missing required Recipient data gets an actionable correction path; restricted fields are passive privacy information rather than fake disabled controls; active profile terminology and field-catalog order are preserved; and final Review shows the exact additional values that will appear on public verification. Lifecycle control geometry remains explicitly matched. Canonical Review fingerprinting, immutable snapshots and Manual Issuance authority remain unchanged.
 
 > **1.7.0 ALPHA 4.86 — PROGRAM CREDENTIAL-FIELD VISIBILITY + LIFECYCLE ALIGNMENT — NOT FOR PRODUCTION.** The six-step workflow remains unchanged. Details now surfaces reusable credential fields resolved from the active Global → Issuer → Program/Scheme → Batch/Audit context and lets an administrator include eligible values on the public verification view for this credential. The per-credential choice can only tighten existing field privacy; Private/Profile-only/Internal fields cannot be widened. Effective date and Validity now use the same explicit control geometry. Canonical REST Review/fingerprint/Manual Issuance authority remains unchanged.
 

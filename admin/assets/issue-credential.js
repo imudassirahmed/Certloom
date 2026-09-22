@@ -40,6 +40,9 @@
 		},
 		email: { mode: 'review', template_id: 'automatic' },
 		fieldContract: { fields: [] },
+		recipientFieldValues: {},
+		reusableFieldKeys: {},
+		verificationFieldPreferences: {},
 		preview: null,
 		reviewFingerprint: '',
 		reviewPayload: null,
@@ -100,6 +103,12 @@
 	}
 
 	function clearMessage() { showMessage('', ''); }
+
+	function syncPressed(selector, active) {
+		Array.prototype.forEach.call(root.querySelectorAll(selector), function (button) {
+			button.setAttribute('aria-pressed', button === active ? 'true' : 'false');
+		});
+	}
 
 	function showRequestError(error) {
 		if (error && 'certloom_manual_issue_duplicate_series' === error.code && error.data && error.data.series_id && cfg.credentialsUrl && message) {
@@ -184,20 +193,16 @@
 		var id = choice && choice.id ? parseInt(choice.id, 10) || 0 : 0;
 		if ('recipient' === kind) {
 			state.issuance.recipient_id = id;
+			state.recipientFieldValues = {};
+			if (state.issuance.program_id || 'independent' === state.credentialBasis) { loadProgramContext(false); }
 		}
-		if ('wp_user' === kind) {
-			state.issuance.new_recipient.wp_user_id = id;
+		if ('wp_user' === kind) { state.issuance.new_recipient.wp_user_id = id; }
+		if ('program' === kind) { selectProgram(choice); return; }
+		if ('batch' === kind) { state.issuance.batch_id = id; loadProgramContext(false); return; }
+		if ('issuer' === kind) {
+			state.issuance.issuer_id = id;
+			if ('independent' === state.credentialBasis) { loadProgramContext(false); return; }
 		}
-		if ('program' === kind) {
-			selectProgram(choice);
-			return;
-		}
-		if ('batch' === kind) {
-			state.issuance.batch_id = id;
-			loadProgramContext(false);
-			return;
-		}
-		if ('issuer' === kind) { state.issuance.issuer_id = id; }
 		if ('signer' === kind) { state.issuance.signer_id = id; }
 		if ('template' === kind) { state.issuance.template_id = id; }
 		onDataChanged();
@@ -311,7 +316,7 @@
 			if (state.programContextController) { state.programContextController.abort(); state.programContextController = null; }
 			clearPicker('batch', {silent:true});
 			state.issuance.batch_id = 0;
-			state.fieldContract = {fields:[]};
+			reconcileFieldContract({fields:[]}, {});
 			state.programContext = null;
 			state.verificationFieldContext = '';
 			state.issuance.verification_field_keys = null;
@@ -343,32 +348,47 @@
 		onDataChanged();
 	}
 
+	function reconcileFieldContract(contract, recipientValues) {
+		contract = contract && Array.isArray(contract.fields) ? contract : {fields:[]};
+		var nextKeys = {};
+		contract.fields.forEach(function (field) { var key = String(field && field.key || ''); if (key) { nextKeys[key] = true; } });
+		Object.keys(state.reusableFieldKeys || {}).forEach(function (key) {
+			if (nextKeys[key]) { return; }
+			if ('grade' === key) { state.issuance.grade = ''; }
+			if (Object.prototype.hasOwnProperty.call(state.issuance.custom_merge_fields, key)) { delete state.issuance.custom_merge_fields[key]; }
+			Object.keys(state.issuance.design_field_aliases || {}).forEach(function (target) { if (state.issuance.design_field_aliases[target] === key) { delete state.issuance.design_field_aliases[target]; } });
+		});
+		state.reusableFieldKeys = nextKeys;
+		state.fieldContract = contract;
+		state.recipientFieldValues = recipientValues && 'object' === typeof recipientValues ? recipientValues : {};
+		syncVerificationFieldSelection(contract.fields || []);
+	}
+
 	function loadProgramContext(showErrors) {
-		if (!state.issuance.program_id) { renderProgramContext(); return Promise.resolve(); }
+		var isProgram = 'program' === state.credentialBasis;
+		if (isProgram && !state.issuance.program_id) { reconcileFieldContract({fields:[]}, {}); renderProgramContext(); renderScopedFields(); return Promise.resolve(); }
 		if (state.programContextController) { state.programContextController.abort(); }
-		var controller = new AbortController();
-		state.programContextController = controller;
-		var requestedProgramId = state.issuance.program_id;
-		var requestedBatchId = state.issuance.batch_id;
+		var controller = new AbortController(); state.programContextController = controller;
+		var requestedProgramId = isProgram ? state.issuance.program_id : 0;
+		var requestedBatchId = isProgram ? state.issuance.batch_id : 0;
+		var requestedIssuerId = isProgram ? 0 : state.issuance.issuer_id;
+		var requestedRecipientId = 'existing' === state.issuance.recipient_mode ? state.issuance.recipient_id : 0;
 		var requestedBasis = state.credentialBasis;
 		var url = new URL(cfg.programContextUrl, window.location.href);
+		url.searchParams.set('basis', requestedBasis);
 		url.searchParams.set('program_id', String(requestedProgramId));
 		if (requestedBatchId) { url.searchParams.set('batch_id', String(requestedBatchId)); }
+		if (requestedIssuerId) { url.searchParams.set('issuer_id', String(requestedIssuerId)); }
+		if (requestedRecipientId) { url.searchParams.set('recipient_id', String(requestedRecipientId)); }
 		return rest(url.toString(), {signal: controller.signal}).then(function (data) {
-			if ('program' !== state.credentialBasis || 'program' !== requestedBasis || state.issuance.program_id !== requestedProgramId || state.issuance.batch_id !== requestedBatchId) { return; }
-			state.programContext = data || null;
-			state.fieldContract = data && data.field_contract ? data.field_contract : {fields:[]};
-			syncVerificationFieldSelection(state.fieldContract.fields || []);
-			if (data && data.issuer) {
-				state.issuance.issuer_id = normalizeChoice('issuer', data.issuer).id;
-			}
-			renderProgramContext();
-			renderScopedFields();
-			updateSummary();
-			schedulePreview();
+			if (state.credentialBasis !== requestedBasis || (isProgram && (state.issuance.program_id !== requestedProgramId || state.issuance.batch_id !== requestedBatchId)) || (!isProgram && state.issuance.issuer_id !== requestedIssuerId) || ('existing' === state.issuance.recipient_mode && state.issuance.recipient_id !== requestedRecipientId)) { return; }
+			state.programContext = isProgram ? (data || null) : null;
+			reconcileFieldContract(data && data.field_contract ? data.field_contract : {fields:[]}, data && data.recipient_values ? data.recipient_values : {});
+			if (isProgram && data && data.issuer) { state.issuance.issuer_id = normalizeChoice('issuer', data.issuer).id; }
+			renderProgramContext(); renderScopedFields(); updateSummary(); schedulePreview();
 		}).catch(function (error) {
 			if ('AbortError' === error.name) { return; }
-			if (showErrors) { showMessage(error.message || text('loadFailed', 'Could not load ' + programTerm + ' details.'), 'error'); }
+			if (showErrors) { showMessage(error.message || text('loadFailed', 'Could not load credential context.'), 'error'); }
 		});
 	}
 
@@ -438,6 +458,7 @@
 	function simpleFieldChanged(path, value) {
 		if (0 === path.indexOf('new_recipient.')) {
 			state.issuance.new_recipient[path.substring(14)] = value;
+			renderScopedFields();
 		} else {
 			state.issuance[path] = value;
 			if ('credential_title' === path) {
@@ -467,10 +488,13 @@
 				state.recipientMode = button.getAttribute('data-recipient-mode');
 				state.issuance.recipient_mode = state.recipientMode;
 				root.querySelectorAll('[data-recipient-mode]').forEach(function (b) { b.classList.toggle('is-active', b === button); });
+				syncPressed('[data-recipient-mode]', button);
 				var existing = picker('recipient');
 				var fresh = root.querySelector('[data-new-recipient]');
 				if (existing) { existing.hidden = 'existing' !== state.recipientMode; }
 				if (fresh) { fresh.hidden = 'new' !== state.recipientMode; }
+				state.recipientFieldValues = {};
+				if (state.issuance.program_id || 'independent' === state.credentialBasis) { loadProgramContext(false); } else { renderScopedFields(); }
 				onDataChanged();
 			});
 		});
@@ -484,6 +508,7 @@
 				state.credentialBasis = basis;
 				state.issuance.credential_basis = basis;
 				root.querySelectorAll('[data-credential-basis]').forEach(function (b) { b.classList.toggle('is-active', b === button); });
+				syncPressed('[data-credential-basis]', button);
 				var context = root.querySelector('[data-program-context]');
 				var independent = root.querySelector('[data-independent-note]');
 				if (context) { context.hidden = 'program' !== basis; }
@@ -492,12 +517,14 @@
 					if (state.programContextController) { state.programContextController.abort(); state.programContextController = null; }
 					clearPicker('program', {silent:true}); clearPicker('batch', {silent:true});
 					state.issuance.program_id = 0; state.issuance.batch_id = 0; state.issuance.issuer_id = state.selected.issuer ? state.selected.issuer.id : 0;
-					state.programContext = null; state.fieldContract = {fields:[]}; state.verificationFieldContext = ''; state.issuance.verification_field_keys = null; state.issuance.title_source = 'custom'; state.issuance.expiry_mode = 'permanent';
+					state.programContext = null; reconcileFieldContract({fields:[]}, {}); state.verificationFieldContext = ''; state.issuance.verification_field_keys = null; state.issuance.title_source = 'custom'; state.issuance.expiry_mode = 'permanent';
 					var expiry = root.querySelector('[data-field="expiry_mode"]'); if (expiry) { expiry.value = 'permanent'; }
 				} else {
 					state.issuance.issuer_id = 0; state.issuance.expiry_mode = state.selected.program && state.selected.program.program_validity_available ? 'program' : 'permanent';
 				}
-				renderExpiryMode(); renderProgramContext(); renderScopedFields(); updateTitleHint(); onDataChanged();
+				renderExpiryMode(); renderProgramContext(); renderScopedFields(); updateTitleHint();
+				if ('independent' === basis) { loadProgramContext(false); }
+				onDataChanged();
 			});
 		});
 	}
@@ -512,66 +539,78 @@
 	function syncVerificationFieldSelection(fields) {
 		fields = Array.isArray(fields) ? fields : [];
 		var eligible = fields.filter(verificationFieldAllowed).map(function (field) { return String(field.key || ''); }).filter(Boolean).sort();
-		var signature = [state.credentialBasis, state.issuance.program_id || 0, state.issuance.batch_id || 0, eligible.join(',')].join('|');
-		if (state.verificationFieldContext === signature) { return; }
-		state.verificationFieldContext = signature;
-		state.issuance.verification_field_keys = eligible;
+		state.issuance.verification_field_keys = eligible.filter(function (key) { return state.verificationFieldPreferences[key] !== false; });
+		state.verificationFieldContext = [state.credentialBasis, state.issuance.program_id || 0, state.issuance.batch_id || 0, state.issuance.issuer_id || 0, eligible.join(',')].join('|');
+	}
+
+	function scopeLabel(origin) {
+		origin = String(origin || '').toLowerCase();
+		if ('global' === origin) { return 'Global'; }
+		if ('issuer' === origin) { return issuerTerm; }
+		if ('program' === origin) { return programTerm; }
+		if ('batch' === origin) { return batchTerm; }
+		if ('credential' === origin) { return 'This credential'; }
+		return origin || 'Credential context';
 	}
 
 	function verificationToggleHtml(field, key) {
 		var allowed = verificationFieldAllowed(field);
+		if (!allowed) {
+			return '<div class="certloom-issue-verification-policy"><strong>' + escapeHtml(text('verificationPrivate', 'Private on verification')) + '</strong><small>' + escapeHtml(text('verificationPrivateHint', 'Field privacy settings keep this value off public verification.')) + '</small></div>';
+		}
 		var selectedKeys = Array.isArray(state.issuance.verification_field_keys) ? state.issuance.verification_field_keys : [];
-		var selected = allowed && selectedKeys.indexOf(key) !== -1;
-		var title = allowed ? text('showOnVerification', 'Show on verification') : text('verificationPrivate', 'Not available on verification');
-		var hint = allowed ? text('verificationIncludeHint', 'Include this value on the public verification screen for this credential.') : text('verificationPrivateHint', 'Field privacy settings do not allow this value on public verification.');
-		return '<label class="certloom-issue-verification-toggle' + (allowed ? '' : ' is-disabled') + '"><input type="checkbox" data-verification-field="' + escapeHtml(key) + '"' + (selected ? ' checked' : '') + (allowed ? '' : ' disabled') + '><span><strong>' + escapeHtml(title) + '</strong><small>' + escapeHtml(hint) + '</small></span></label>';
+		var selected = selectedKeys.indexOf(key) !== -1;
+		var label = String(field.label || key);
+		return '<label class="certloom-issue-verification-toggle"><input type="checkbox" data-verification-field="' + escapeHtml(key) + '" aria-label="' + escapeHtml(text('showOnVerification', 'Show on verification') + ': ' + label) + '"' + (selected ? ' checked' : '') + '><span><strong>' + escapeHtml(text('showOnVerification', 'Show on verification')) + '</strong><small>' + escapeHtml(text('verificationIncludeHint', 'Include this value on the public verification screen for this credential.')) + '</small></span></label>';
+	}
+
+	function recipientFieldValue(key) {
+		if ('new' === state.issuance.recipient_mode) {
+			var custom = state.issuance.new_recipient && state.issuance.new_recipient.custom_fields ? state.issuance.new_recipient.custom_fields : {};
+			return String((state.issuance.new_recipient && state.issuance.new_recipient[key]) || custom[key] || '');
+		}
+		return String((state.recipientFieldValues && state.recipientFieldValues[key]) || '');
+	}
+
+	function scopedControlHtml(field, key, value, required) {
+		var type = String(field.type || 'text').toLowerCase();
+		var attrs = ' data-scoped-input="' + escapeHtml(key) + '"' + (required ? ' required aria-required="true"' : '');
+		if ('textarea' === type || 'longtext' === type || 'long_text' === type) { return '<textarea rows="3"' + attrs + '>' + escapeHtml(value) + '</textarea>'; }
+		var inputType = ['date','number','email','url'].indexOf(type) !== -1 ? type : 'text';
+		var extra = 'number' === inputType ? ' step="any"' : '';
+		return '<input type="' + inputType + '"' + attrs + extra + ' value="' + escapeHtml(value) + '">';
 	}
 
 	function renderScopedFields() {
-		var box = root.querySelector('[data-scoped-fields]');
-		if (!box) { return; }
+		var box = root.querySelector('[data-scoped-fields]'); if (!box) { return; }
 		var fields = state.fieldContract && Array.isArray(state.fieldContract.fields) ? state.fieldContract.fields : [];
 		syncVerificationFieldSelection(fields);
-		var html = '<div class="certloom-issue-subhead"><div><h3>Credential fields</h3><p>' + escapeHtml('program' === state.credentialBasis ? (programTerm + ' / ' + batchTerm + ' field rules') : 'Independent credential facts') + '</p></div></div>';
+		var html = '<div class="certloom-issue-subhead"><div><h3>Credential fields</h3><p>' + escapeHtml('program' === state.credentialBasis ? (programTerm + ' / ' + batchTerm + ' field rules') : ('Global / ' + issuerTerm + ' field rules for this independent credential')) + '</p></div></div>';
 		var rendered = 0;
 		fields.forEach(function (field) {
-			var key = String(field.key || '');
-			if (!key) { return; }
-			var source = String(field.value_source || 'credential_custom');
-			var required = !!field.required;
-			var origin = String(field.origin || programTerm);
+			var key = String(field.key || ''); if (!key) { return; }
+			var source = String(field.value_source || 'credential_custom'); var required = !!field.required; var origin = scopeLabel(field.origin);
 			if ('recipient' === source) {
-				html += '<div class="certloom-issue-scoped-entry" data-scoped-field="' + escapeHtml(key) + '"><div class="certloom-issue-field-row is-readonly"><div><strong>' + escapeHtml(field.label || key) + (required ? ' <em>Required</em>' : '') + '</strong><small>From Recipient profile · ' + escapeHtml(origin) + '</small></div><span>Frozen at issue</span></div>' + verificationToggleHtml(field, key) + '</div>';
-				rendered++; return;
+				var recipientValue = recipientFieldValue(key); var missing = required && !recipientValue.trim();
+				html += '<div class="certloom-issue-scoped-entry" data-scoped-field="' + escapeHtml(key) + '"' + (missing ? ' data-missing-recipient-required="true"' : '') + '><div class="certloom-issue-recipient-value' + (missing ? ' is-missing' : '') + '"><strong>' + escapeHtml(field.label || key) + (required ? ' <em>Required</em>' : '') + '</strong><span>' + escapeHtml(recipientValue || '—') + '</span><small>From Recipient profile · Configured by ' + escapeHtml(origin) + ' · Frozen at issue</small>';
+				if (missing) {
+					html += '<small>' + escapeHtml(text('recipientValueMissing', 'This required value is missing from the Recipient profile.')) + '</small><div class="certloom-issue-recipient-value-actions">';
+					if ('existing' === state.issuance.recipient_mode && state.issuance.recipient_id && cfg.recipientsUrl) { var editUrl = new URL(cfg.recipientsUrl, window.location.href); editUrl.searchParams.set('recipient_id', String(state.issuance.recipient_id)); html += '<a class="button button-small" target="_blank" rel="noopener noreferrer" href="' + escapeHtml(editUrl.toString()) + '">' + escapeHtml(text('editRecipient', 'Edit Recipient')) + '</a><button type="button" class="button button-small" data-refresh-recipient-values>' + escapeHtml(text('refreshRecipientValue', 'Refresh value')) + '</button>'; }
+					else { html += '<button type="button" class="button button-small" data-go-recipient>Back to Recipient details</button>'; }
+					html += '</div>';
+				}
+				html += '</div>' + verificationToggleHtml(field, key) + '</div>'; rendered++; return;
 			}
 			var value = 'grade' === key ? state.issuance.grade : (state.issuance.custom_merge_fields[key] || '');
-			html += '<div class="certloom-issue-scoped-entry" data-scoped-field="' + escapeHtml(key) + '"><label class="certloom-issue-field"><span>' + escapeHtml(field.label || key) + (required ? ' <em>*</em>' : '') + '</span><input type="text" data-scoped-input="' + escapeHtml(key) + '" value="' + escapeHtml(value) + '"' + (required ? ' required' : '') + '><small>' + escapeHtml(origin ? ('Configured by ' + origin) : '') + '</small></label>' + verificationToggleHtml(field, key) + '</div>';
-			rendered++;
+			html += '<div class="certloom-issue-scoped-entry" data-scoped-field="' + escapeHtml(key) + '"><label class="certloom-issue-field"><span>' + escapeHtml(field.label || key) + (required ? ' <em>*</em>' : '') + '</span>' + scopedControlHtml(field, key, value, required) + '<small>Configured by ' + escapeHtml(origin) + '</small></label>' + verificationToggleHtml(field, key) + '</div>'; rendered++;
 		});
-		if (!rendered && state.bootstrap && state.bootstrap.profile && state.bootstrap.profile.issuance && state.bootstrap.profile.issuance.grade_default) {
-			html += '<label class="certloom-issue-field" data-scoped-field="grade"><span>Grade / result</span><input type="text" data-scoped-input="grade" value="' + escapeHtml(state.issuance.grade || '') + '"></label>';
-			rendered++;
-		}
+		if (!rendered && state.bootstrap && state.bootstrap.profile && state.bootstrap.profile.issuance && state.bootstrap.profile.issuance.grade_default) { html += '<label class="certloom-issue-field" data-scoped-field="grade"><span>Grade / result</span><input type="text" data-scoped-input="grade" value="' + escapeHtml(state.issuance.grade || '') + '"></label>'; rendered++; }
 		if (!rendered) { html += '<div class="certloom-issue-empty is-compact"><p>' + escapeHtml(text('noReusableFields', 'No reusable credential fields are configured for this context. Add one-off details only when needed.')) + '</p></div>'; }
 		box.innerHTML = html;
-		Array.prototype.forEach.call(box.querySelectorAll('[data-scoped-input]'), function (input) {
-			input.addEventListener('input', function () {
-				var key = input.getAttribute('data-scoped-input');
-				if ('grade' === key) { state.issuance.grade = input.value; }
-				else { state.issuance.custom_merge_fields[key] = input.value; }
-				onDataChanged();
-			});
-		});
-		Array.prototype.forEach.call(box.querySelectorAll('[data-verification-field]'), function (input) {
-			input.addEventListener('change', function () {
-				var key = String(input.getAttribute('data-verification-field') || '');
-				var keys = (Array.isArray(state.issuance.verification_field_keys) ? state.issuance.verification_field_keys : []).filter(function (existing) { return existing !== key; });
-				if (input.checked) { keys.push(key); }
-				keys.sort();
-				state.issuance.verification_field_keys = keys;
-				onDataChanged();
-			});
-		});
+		Array.prototype.forEach.call(box.querySelectorAll('[data-scoped-input]'), function (input) { input.addEventListener('input', function () { var key = input.getAttribute('data-scoped-input'); if ('grade' === key) { state.issuance.grade = input.value; } else { state.issuance.custom_merge_fields[key] = input.value; } onDataChanged(); }); });
+		Array.prototype.forEach.call(box.querySelectorAll('[data-verification-field]'), function (input) { input.addEventListener('change', function () { var key = String(input.getAttribute('data-verification-field') || ''); state.verificationFieldPreferences[key] = !!input.checked; syncVerificationFieldSelection(fields); onDataChanged(); }); });
+		Array.prototype.forEach.call(box.querySelectorAll('[data-refresh-recipient-values]'), function (button) { button.addEventListener('click', function () { loadProgramContext(true); }); });
+		Array.prototype.forEach.call(box.querySelectorAll('[data-go-recipient]'), function (button) { button.addEventListener('click', function () { goToStep(0); }); });
 		renderRepeating();
 	}
 
@@ -657,6 +696,7 @@
 			button.addEventListener('click', function () {
 				state.issuance.presentation_mode = button.getAttribute('data-presentation');
 				root.querySelectorAll('[data-presentation]').forEach(function (b) { b.classList.toggle('is-active', b === button); });
+				syncPressed('[data-presentation]', button);
 				renderPresentation(); onDataChanged();
 			});
 		});
@@ -665,6 +705,7 @@
 				state.issuance.design_source = button.getAttribute('data-design-source');
 				if ('inherited' === state.issuance.design_source) { state.issuance.template_id = 0; clearPicker('template', {silent:true}); }
 				root.querySelectorAll('[data-design-source]').forEach(function (b) { b.classList.toggle('is-active', b === button); });
+				syncPressed('[data-design-source]', button);
 				renderPresentation(); onDataChanged();
 			});
 		});
@@ -802,6 +843,7 @@
 			button.addEventListener('click', function () {
 				state.email.mode = button.getAttribute('data-email-mode');
 				root.querySelectorAll('[data-email-mode]').forEach(function (b) { b.classList.toggle('is-active', b === button); });
+				syncPressed('[data-email-mode]', button);
 				var design = root.querySelector('[data-email-design-field]'); if (design) { design.hidden = 'review' !== state.email.mode; }
 				onDataChanged({skipPreview:true});
 			});
@@ -831,6 +873,7 @@
 			if ('date' === state.issuance.expiry_mode && !state.issuance.expires_at) { showMessage('Choose the credential expiry date.', 'error'); focusField('expires_at'); return false; }
 			if ('date' === state.issuance.expiry_mode && state.issuance.expires_at < state.issuance.valid_from) { showMessage('The expiry date cannot be earlier than the credential effective date.', 'error'); focusField('expires_at'); return false; }
 			if (state.bootstrap && state.bootstrap.numbering && !state.bootstrap.numbering.automatic && !String(state.issuance.display_number || '').trim()) { showMessage('Enter the certificate number required by the current numbering policy.', 'error'); focusField('display_number'); return false; }
+			var missingRecipient = root.querySelector('[data-missing-recipient-required]'); if (missingRecipient) { showMessage('Complete the required Recipient profile value before continuing.', 'error'); missingRecipient.scrollIntoView({behavior:'smooth', block:'center'}); return false; }
 			var missingRequired = root.querySelector('[data-scoped-input][required]:invalid'); if (missingRequired) { showMessage('Complete the required credential data before continuing.', 'error'); missingRequired.focus(); return false; }
 		}
 		if (3 === index) {
@@ -890,10 +933,11 @@
 				['Certificate', review.presentation_mode === 'design' ? ((review.template && review.template.name) || 'Inherited design') : (review.presentation_mode === 'image' ? 'Uploaded image' : 'Details only')],
 				[issuerTerm, review.issuer && review.issuer.name ? review.issuer.name : '—'],
 				[signerTerm, review.signer && review.signer.name ? review.signer.name : '—'],
-				[text('verificationFieldsReview', 'Verification fields'), review.verification_fields && review.verification_fields.length ? review.verification_fields.map(function (field) { return field.label || field.key || ''; }).filter(Boolean).join(', ') : 'None'],
 				['Email', 'review' === state.email.mode ? ('Review next · ' + (state.email.template_id || 'automatic')) : 'Do not email now']
 			];
-			content.innerHTML = '<div class="certloom-review-grid">' + rows.map(function (row) { return '<div><small>' + escapeHtml(row[0]) + '</small><strong>' + escapeHtml(row[1] || '—') + '</strong></div>'; }).join('') + '</div>';
+			var publicFields = Array.isArray(review.verification_fields) ? review.verification_fields.filter(function (field) { return field && String(field.value || '').trim(); }) : [];
+			var publicHtml = '<section class="certloom-review-public-fields"><h3>' + escapeHtml(text('publicVerificationValues', 'Additional public verification fields')) + '</h3>' + (publicFields.length ? '<dl>' + publicFields.map(function (field) { return '<div><dt>' + escapeHtml(field.label || field.key || '') + '</dt><dd>' + escapeHtml(field.value || '') + '</dd></div>'; }).join('') + '</dl>' : '<p>None</p>') + '</section>';
+			content.innerHTML = '<div class="certloom-review-grid">' + rows.map(function (row) { return '<div><small>' + escapeHtml(row[0]) + '</small><strong>' + escapeHtml(row[1] || '—') + '</strong></div>'; }).join('') + '</div>' + publicHtml;
 			content.hidden = false;
 		}
 		if (tech && techBody) {

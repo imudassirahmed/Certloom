@@ -173,6 +173,12 @@ final class ScopedFieldContract {
 				'value_source' => self::value_source( $key ),
 			);
 		}
+		usort( $out, static function ( $a, $b ) use ( $catalog ) {
+			$ao = isset( $catalog[ $a['key'] ]['order'] ) ? absint( $catalog[ $a['key'] ]['order'] ) : PHP_INT_MAX;
+			$bo = isset( $catalog[ $b['key'] ]['order'] ) ? absint( $catalog[ $b['key'] ]['order'] ) : PHP_INT_MAX;
+			if ( $ao === $bo ) { return strcmp( (string) $a['key'], (string) $b['key'] ); }
+			return $ao <=> $bo;
+		} );
 		return array(
 			'_meta' => array(
 				'schema' => self::SCHEMA, 'schema_version' => self::VERSION, 'scope' => 'resolved',
