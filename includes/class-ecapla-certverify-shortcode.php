@@ -21,10 +21,16 @@ class Ecapla_CertVerify_Shortcode {
 
 	public static function register() {
 		add_shortcode( 'certloom', array( __CLASS__, 'render' ) );
+		add_shortcode( 'certloom_credential', array( __CLASS__, 'render_credential' ) );
+		add_shortcode( 'certloom_my_credentials', array( __CLASS__, 'render_my_credentials' ) );
+		// Compatibility alias retained from the original POR-01 roadmap terminology.
+		add_shortcode( 'certloom_my_certificates', array( __CLASS__, 'render_my_credentials' ) );
 	}
 
 	public static function register_assets() {
-		wp_register_style( 'ecapla-certloom-public', ECAPLA_CERTVERIFY_URL . 'public/assets/certloom-public.css', array(), ECAPLA_CERTVERIFY_VERSION );
+		wp_register_style( 'certloom-tokens', ECAPLA_CERTVERIFY_URL . 'assets/css/certloom-tokens.css', array(), ECAPLA_CERTVERIFY_VERSION );
+		wp_register_style( 'ecapla-certloom-public', ECAPLA_CERTVERIFY_URL . 'public/assets/certloom-public.css', array( 'certloom-tokens' ), ECAPLA_CERTVERIFY_VERSION );
+		wp_register_style( 'certloom-artifact-foundation', ECAPLA_CERTVERIFY_URL . 'public/assets/certloom-artifact-foundation.css', array( 'ecapla-certloom-public' ), ECAPLA_CERTVERIFY_VERSION );
 		wp_register_script( 'ecapla-certloom-public', ECAPLA_CERTVERIFY_URL . 'public/assets/certloom-public.js', array(), ECAPLA_CERTVERIFY_VERSION, true );
 	}
 
@@ -32,7 +38,7 @@ class Ecapla_CertVerify_Shortcode {
 		if ( ! wp_style_is( 'ecapla-certloom-public', 'registered' ) ) {
 			self::register_assets();
 		}
-		wp_enqueue_style( 'ecapla-certloom-public' );
+		wp_enqueue_style( 'certloom-artifact-foundation' );
 		wp_enqueue_script( 'ecapla-certloom-public' );
 	}
 
@@ -141,4 +147,37 @@ class Ecapla_CertVerify_Shortcode {
 
 		return Ecapla_CertVerify_Render::legacy_widget( $render_atts );
 	}
+	/** Renders a known credential profile with the same public presenter used by REST/routes/widgets. */
+	public static function render_credential( $atts ) {
+		$atts = shortcode_atts(
+			array(
+				'number' => '',
+				'heading' => __( 'Credential profile', 'certloom' ),
+				'heading_tag' => 'h2',
+				'notfound_text' => __( 'This credential could not be found or is not available.', 'certloom' ),
+			),
+			is_array( $atts ) ? $atts : array(),
+			'certloom_credential'
+		);
+		$number = trim( sanitize_text_field( (string) $atts['number'] ) );
+		$heading_tag = sanitize_key( (string) $atts['heading_tag'] );
+		if ( ! in_array( $heading_tag, array( 'h2', 'h3', 'h4', 'h5', 'h6' ), true ) ) { $heading_tag = 'h2'; }
+		if ( '' === $number && class_exists( 'Ecapla_CertVerify_Public_Router' ) ) {
+			$number = Ecapla_CertVerify_Public_Router::requested_number();
+		}
+		return Ecapla_CertVerify_Render::credential_profile(
+			$number,
+			array(
+				'heading' => $atts['heading'],
+				'heading_tag' => $heading_tag,
+				'notfound_text' => $atts['notfound_text'],
+			)
+		);
+	}
+
+	/** Renders the authenticated POR-01 Recipient Portal collection. */
+	public static function render_my_credentials( $atts ) {
+		return Ecapla_CertVerify_Recipient_Portal::render( is_array( $atts ) ? $atts : array() );
+	}
+
 }

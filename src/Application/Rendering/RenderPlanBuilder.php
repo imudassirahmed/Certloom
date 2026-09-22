@@ -1,0 +1,682 @@
+<?php
+namespace Certloom\Application\Rendering;
+
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+use Certloom\Domain\Rendering\ElementId;
+use Certloom\Domain\Rendering\ElementRegistry;
+use Certloom\Domain\Rendering\LayoutSchema;
+use InvalidArgumentException;
+
+/**
+ * Builds one renderer-independent drawing plan from a fully resolved document.
+ *
+ * PDF/image adapters consume this plan instead of re-interpreting canonical
+ * layout geometry independently. Text shaping/line breaking remains an adapter
+ * acceptance concern until Certloom can prove or centralize it further.
+ */
+final class RenderPlanBuilder {
+	const SCHEMA = 'certloom-render-plan';
+	const VERSION = 1;
+	const POINT_TO_MM = 25.4 / 72.0;
+	private $canonical;
+	private $fonts;
+
+	public function __construct( ?CanonicalJson $canonical = null, ?FontManifest $fonts = null ) {
+		$this->canonical = $canonical ?: new CanonicalJson();
+		$this->fonts = $fonts ?: new FontManifest();
+	}
+
+	/** @return array<string,mixed> */
+	public function build( array $resolved_document, array $renderer_context = array() ) {
+		if ( isset( $resolved_document['_meta'] ) && is_array( $resolved_document['_meta'] ) ) {
+			if ( isset( $resolved_document['_meta']['schema'] ) && 'certloom-layout' !== (string) $resolved_document['_meta']['schema'] ) {
+				throw new InvalidArgumentException( 'Resolved render document has an unsupported layout schema.' );
+			}
+			if ( isset( $resolved_document['_meta']['schema_version'] ) && ! LayoutSchema::supports_version( (int) $resolved_document['_meta']['schema_version'] ) ) {
+				throw new InvalidArgumentException( 'Resolved render document has an unsupported layout schema version.' );
+			}
+		}
+		$page = isset( $resolved_document['page'] ) && is_array( $resolved_document['page'] ) ? $resolved_document['page'] : null;
+		if ( ! is_array( $page ) || ! isset( $page['size'], $page['orientation'], $page['width_mm'], $page['height_mm'] ) ) {
+			throw new InvalidArgumentException( 'Resolved render document is missing canonical page geometry.' );
+		}
+		$size = (string) $page['size'];
+		$orientation = strtolower( (string) $page['orientation'] );
+		$dimensions = LayoutSchema::page_dimensions();
+		$width = $this->positive_number( $page['width_mm'], 'page width' );
+		$height = $this->positive_number( $page['height_mm'], 'page height' );
+		if ( LayoutSchema::PAGE_CUSTOM === $size ) {
+			if ( ! in_array( $orientation, array( LayoutSchema::ORIENTATION_PORTRAIT, LayoutSchema::ORIENTATION_LANDSCAPE ), true ) ) {
+				throw new InvalidArgumentException( 'Render plan custom page orientation is unsupported.' );
+			}
+			if ( $width < LayoutSchema::CUSTOM_PAGE_MIN_MM || $height < LayoutSchema::CUSTOM_PAGE_MIN_MM || $width > LayoutSchema::CUSTOM_PAGE_MAX_MM || $height > LayoutSchema::CUSTOM_PAGE_MAX_MM ) {
+				throw new InvalidArgumentException( 'Render plan custom page geometry is outside the supported range.' );
+			}
+		} else {
+			if ( ! isset( $dimensions[ $size ][ $orientation ] ) ) {
+				throw new InvalidArgumentException( 'Render plan page size/orientation is unsupported.' );
+			}
+			list( $expected_width, $expected_height ) = $dimensions[ $size ][ $orientation ];
+			if ( abs( $width - $expected_width ) > 0.01 || abs( $height - $expected_height ) > 0.01 ) {
+				throw new InvalidArgumentException( 'Render plan page geometry does not match its canonical standard size/orientation.' );
+			}
+			$width = (float) $expected_width;
+			$height = (float) $expected_height;
+		}
+		$elements = isset( $resolved_document['elements'] ) && is_array( $resolved_document['elements'] ) ? array_values( $resolved_document['elements'] ) : array();
+		$operations = array();
+		$seen_ids = array();
+		$seen_z = array();
+		$runtime = isset( $resolved_document['_runtime'] ) && is_array( $resolved_document['_runtime'] ) ? $resolved_document['_runtime'] : array();
+
+		$font_manifest = array();
+		if ( $this->fonts->document_uses_text( $resolved_document ) ) {
+			if ( empty( $renderer_context['font_manifest'] ) || ! is_array( $renderer_context['font_manifest'] ) ) {
+				throw new InvalidArgumentException( 'Text render plans require the renderer exact-font manifest.' );
+			}
+			$font_manifest = $this->fonts->normalize( $renderer_context['font_manifest'] );
+			$this->fonts->assert_document_supported( $resolved_document, $font_manifest );
+		}
+
+		foreach ( $elements as $index => $element ) {
+			if ( ! is_array( $element ) ) {
+				throw new InvalidArgumentException( 'Resolved render elements must be objects.' );
+			}
+			$type = strtolower( trim( (string) ( $element['type'] ?? '' ) ) );
+			$definition = ElementRegistry::get( $type );
+			if ( 'merge' === $type || '' === $type || ! is_array( $definition ) ) {
+				throw new InvalidArgumentException( 'Render plan accepts only fully resolved registered element types.' );
+			}
+			$render_operation = (string) $definition['render_operation'];
+			$id = strtolower( trim( (string) ( $element['id'] ?? '' ) ) );
+			$z = $this->integer( $element['z'] ?? $index, 'element z-order' );
+			if ( ! ( new ElementId() )->is_valid( $id ) || $z < -100000 || $z > 100000 || isset( $seen_ids[ $id ] ) || isset( $seen_z[ (string) $z ] ) ) {
+				throw new InvalidArgumentException( 'Render plan requires unique element IDs and z-order values.' );
+			}
+			$seen_ids[ $id ] = true;
+			$seen_z[ (string) $z ] = true;
+			$geometry = $this->geometry( $element, $width, $height );
+			$operation = array(
+				'id' => $id,
+				'type' => $type,
+				'z' => $z,
+				'opacity' => $this->unit_number( $element['opacity'] ?? 1.0, 'element opacity' ),
+				'geometry' => $geometry,
+			);
+
+			switch ( $render_operation ) {
+				case 'text':
+					$operation['text'] = $this->text_operation( $element, $font_manifest );
+					break;
+				case 'rich_text':
+					$operation['rich_text'] = $this->rich_text_operation( $element, $font_manifest );
+					break;
+				case 'image':
+					$image = $this->image_operation( $element, $geometry );
+					$asset_hash = $image['asset']['sha256'];
+					$runtime['assets'][ $asset_hash ] = array( 'path' => $image['_runtime_path'] );
+					unset( $image['_runtime_path'] );
+					$operation['image'] = $image;
+					break;
+				case 'shape':
+					$operation['shape'] = $this->shape_operation( $element );
+					break;
+				case 'line':
+					$operation['line'] = $this->line_operation( $element, $geometry );
+					break;
+				case 'qr':
+					$operation['qr'] = $this->qr_operation( $element, $geometry );
+					break;
+				case 'barcode':
+					$operation['barcode'] = $this->barcode_operation( $element, $geometry );
+					break;
+				case 'table':
+					$operation['table'] = $this->table_operation( $element, $geometry, $font_manifest );
+					break;
+				default:
+					throw new InvalidArgumentException( 'Resolved render document contains an unsupported operation type.' );
+			}
+			$operations[] = $operation;
+		}
+
+		usort( $operations, static function ( $a, $b ) { return $a['z'] <=> $b['z']; } );
+		$plan = array(
+			'_meta' => array( 'schema' => self::SCHEMA, 'version' => self::VERSION ),
+			'page' => array(
+				'size' => $size,
+				'orientation' => $orientation,
+				'width_mm' => $width,
+				'height_mm' => $height,
+			),
+			'operations' => $operations,
+		);
+		if ( isset( $resolved_document['_runtime'] ) && ! is_array( $resolved_document['_runtime'] ) ) {
+			throw new InvalidArgumentException( 'Renderer runtime state must be an object.' );
+		}
+		if ( ! empty( $runtime ) ) {
+			if ( isset( $runtime['assets'] ) && is_array( $runtime['assets'] ) ) { ksort( $runtime['assets'], SORT_STRING ); }
+			$plan['_runtime'] = $runtime;
+		}
+		return $plan;
+	}
+
+	/** @return string */
+	public function hash( array $plan ) {
+		$portable = $plan;
+		unset( $portable['_runtime'] );
+		return $this->canonical->hash( $portable );
+	}
+
+	/** @return array<string,mixed> */
+	private function geometry( array $element, $page_width, $page_height ) {
+		$x = $this->number( $element['x_mm'] ?? null, 'element x' );
+		$y = $this->number( $element['y_mm'] ?? null, 'element y' );
+		$width = $this->positive_number( $element['width_mm'] ?? null, 'element width' );
+		$height = $this->positive_number( $element['height_mm'] ?? null, 'element height' );
+		$rotation = $this->number( $element['rotation_deg'] ?? 0.0, 'element rotation' );
+		if ( $rotation < -180.0 || $rotation > 180.0 ) { throw new InvalidArgumentException( 'Render plan rotation must already be canonicalized to -180..180 degrees.' ); }
+		$cx = $x + ( $width / 2.0 );
+		$cy = $y + ( $height / 2.0 );
+		$radians = deg2rad( $rotation );
+		$cos = cos( $radians );
+		$sin = sin( $radians );
+		$corners = array();
+		foreach ( array( array( $x, $y ), array( $x + $width, $y ), array( $x + $width, $y + $height ), array( $x, $y + $height ) ) as $point ) {
+			$dx = $point[0] - $cx;
+			$dy = $point[1] - $cy;
+			$corners[] = array(
+				'x_mm' => $this->clean_float( $cx + ( $dx * $cos ) - ( $dy * $sin ) ),
+				'y_mm' => $this->clean_float( $cy + ( $dx * $sin ) + ( $dy * $cos ) ),
+			);
+		}
+		$xs = array_column( $corners, 'x_mm' );
+		$ys = array_column( $corners, 'y_mm' );
+		$bounds = array(
+			'x_mm' => $this->clean_float( min( $xs ) ),
+			'y_mm' => $this->clean_float( min( $ys ) ),
+			'width_mm' => $this->clean_float( max( $xs ) - min( $xs ) ),
+			'height_mm' => $this->clean_float( max( $ys ) - min( $ys ) ),
+		);
+		if ( $bounds['x_mm'] < -0.001 || $bounds['y_mm'] < -0.001 || $bounds['x_mm'] + $bounds['width_mm'] > $page_width + 0.001 || $bounds['y_mm'] + $bounds['height_mm'] > $page_height + 0.001 ) {
+			throw new InvalidArgumentException( 'Render plan operation geometry exceeds the canonical page bounds.' );
+		}
+		return array(
+			'box' => array( 'x_mm' => $x, 'y_mm' => $y, 'width_mm' => $width, 'height_mm' => $height ),
+			'center' => array( 'x_mm' => $this->clean_float( $cx ), 'y_mm' => $this->clean_float( $cy ) ),
+			'rotation_deg' => $this->clean_float( $rotation ),
+			'rotated_corners' => $corners,
+			'rotated_bounds' => $bounds,
+		);
+	}
+
+	/** @return array<string,mixed> */
+	private function text_operation( array $element, array $manifest ) {
+		$text = (string) ( $element['text'] ?? '' );
+		if ( strlen( $text ) > LayoutValidator::MAX_TEXT_BYTES || false !== strpos( $text, "\0" ) || 1 !== preg_match( '//u', $text ) ) {
+			throw new InvalidArgumentException( 'Render plan text must be bounded valid UTF-8 without NUL bytes.' );
+		}
+		$style = isset( $element['style'] ) && is_array( $element['style'] ) ? $element['style'] : array();
+		$direction = strtolower( (string) ( $style['direction'] ?? '' ) );
+		if ( ! in_array( $direction, array( 'ltr', 'rtl' ), true ) ) {
+			throw new InvalidArgumentException( 'Render plan requires text direction to be resolved before adapter execution.' );
+		}
+		$align = strtolower( (string) ( $style['align'] ?? 'center' ) );
+		if ( 'start' === $align ) { $align = 'rtl' === $direction ? 'right' : 'left'; }
+		if ( 'end' === $align ) { $align = 'rtl' === $direction ? 'left' : 'right'; }
+		if ( ! in_array( $align, array( 'left', 'center', 'right' ), true ) ) {
+			throw new InvalidArgumentException( 'Render plan could not resolve physical text alignment.' );
+		}
+		$vertical = strtolower( (string) ( $style['vertical_align'] ?? 'middle' ) );
+		if ( ! in_array( $vertical, array( 'top', 'middle', 'bottom' ), true ) ) {
+			throw new InvalidArgumentException( 'Render plan contains an invalid vertical text alignment.' );
+		}
+		$family = strtolower( trim( (string) ( $style['font_family'] ?? '' ) ) );
+		$weight = $this->integer( $style['font_weight'] ?? 400, 'font weight' );
+		$italic = true === ( $style['italic'] ?? false );
+		$variant = $weight . '-' . ( $italic ? 'italic' : 'normal' );
+		if ( empty( $manifest['families'][ $family ][ $variant ]['faces'] ) ) {
+			throw new InvalidArgumentException( 'Render plan font stack is unavailable for resolved text.' );
+		}
+		$faces = array();
+		foreach ( $manifest['families'][ $family ][ $variant ]['faces'] as $face ) {
+			$faces[] = array( 'sha256' => (string) $face['sha256'], 'format' => (string) $face['format'] );
+		}
+		$size_pt = $this->positive_number( $style['font_size_pt'] ?? 18.0, 'font size' );
+		$line_height = $this->positive_number( $style['line_height'] ?? 1.2, 'line height' );
+		$letter_spacing_pt = $this->number( $style['letter_spacing_pt'] ?? 0.0, 'letter spacing' );
+		$overflow = strtolower( (string) ( $style['overflow'] ?? 'shrink' ) );
+		if ( $size_pt < 1 || $size_pt > 300 || $line_height < 0.5 || $line_height > 5 || $letter_spacing_pt < -20 || $letter_spacing_pt > 50 || $weight < 100 || $weight > 900 || 0 !== $weight % 100 || ! in_array( $overflow, array( 'wrap', 'shrink', 'clip' ), true ) ) {
+			throw new InvalidArgumentException( 'Render plan text style is outside the canonical supported range.' );
+		}
+		return array(
+			'value' => $text,
+			'direction' => $direction,
+			'align' => $align,
+			'vertical_align' => $vertical,
+			'overflow' => $overflow,
+			'font' => array(
+				'family' => $family,
+				'weight' => $weight,
+				'italic' => $italic,
+				'faces' => $faces,
+				'size_pt' => $size_pt,
+				'size_mm' => $this->clean_float( $size_pt * self::POINT_TO_MM ),
+				'line_height' => $line_height,
+				'line_height_mm' => $this->clean_float( $size_pt * self::POINT_TO_MM * $line_height ),
+				'letter_spacing_pt' => $letter_spacing_pt,
+				'letter_spacing_mm' => $this->clean_float( $letter_spacing_pt * self::POINT_TO_MM ),
+			),
+			'color' => $this->color( $style['color'] ?? '#000000' ),
+		);
+	}
+
+	/** @return array<string,mixed> */
+	private function rich_text_operation( array $element, array $manifest ) {
+		$runs = isset( $element['runs'] ) && is_array( $element['runs'] ) ? array_values( $element['runs'] ) : array();
+		if ( empty( $runs ) || count( $runs ) > LayoutValidator::MAX_RICH_TEXT_RUNS ) {
+			throw new InvalidArgumentException( 'Render plan rich text requires bounded resolved runs.' );
+		}
+		$plain = '';
+		foreach ( $runs as $run ) {
+			if ( ! is_array( $run ) || 'text' !== (string) ( $run['kind'] ?? '' ) || ! array_key_exists( 'text', $run ) ) {
+				throw new InvalidArgumentException( 'Render plan rich text accepts only fully resolved text runs.' );
+			}
+			$plain .= (string) $run['text'];
+		}
+		$base_style = isset( $element['style'] ) && is_array( $element['style'] ) ? $element['style'] : array();
+		$base = $this->text_operation( array( 'text' => $plain, 'style' => $base_style ), $manifest );
+		$render_runs = array();
+		foreach ( $runs as $run ) {
+			$run_style = isset( $run['style'] ) && is_array( $run['style'] ) ? array_merge( $base_style, $run['style'] ) : $base_style;
+			$resolved = $this->text_operation( array( 'text' => (string) $run['text'], 'style' => $run_style ), $manifest );
+			$render_runs[] = array(
+				'value' => $resolved['value'],
+				'font' => $resolved['font'],
+				'color' => $resolved['color'],
+			);
+		}
+		return array(
+			'direction' => $base['direction'],
+			'align' => $base['align'],
+			'vertical_align' => $base['vertical_align'],
+			'overflow' => $base['overflow'],
+			'base_font' => $base['font'],
+			'base_color' => $base['color'],
+			'runs' => $render_runs,
+		);
+	}
+
+
+	/** @return array<string,mixed> */
+	private function image_operation( array $element, array $geometry ) {
+		$asset = isset( $element['asset'] ) && is_array( $element['asset'] ) ? $element['asset'] : null;
+		if ( ! is_array( $asset ) || ! isset( $asset['path'], $asset['sha256'], $asset['mime'], $asset['size'], $asset['width_px'], $asset['height_px'] ) ) {
+			throw new InvalidArgumentException( 'Render plan image operations require verified local asset facts.' );
+		}
+		if ( ! is_int( $asset['width_px'] ) || ! is_int( $asset['height_px'] ) || ! is_int( $asset['size'] ) || $asset['width_px'] < 1 || $asset['height_px'] < 1 || $asset['size'] < 1 || ! preg_match( '/^[0-9a-f]{64}$/', strtolower( (string) $asset['sha256'] ) ) || ! in_array( strtolower( (string) $asset['mime'] ), array( 'image/png', 'image/jpeg' ), true ) ) {
+			throw new InvalidArgumentException( 'Render plan image facts must retain verified integer geometry and content identity.' );
+		}
+		$source_width = (float) $asset['width_px'];
+		$source_height = (float) $asset['height_px'];
+		$box = $geometry['box'];
+		$fit = strtolower( (string) ( $element['fit'] ?? 'contain' ) );
+		$placement = array( 'mode' => $fit, 'destination' => $box, 'source_crop' => array( 'x' => 0.0, 'y' => 0.0, 'width' => 1.0, 'height' => 1.0 ) );
+		if ( 'fill' === $fit ) {
+			// Destination box already represents the exact stretched placement.
+		} elseif ( 'contain' === $fit ) {
+			$scale = min( $box['width_mm'] / $source_width, $box['height_mm'] / $source_height );
+			$draw_width = $source_width * $scale;
+			$draw_height = $source_height * $scale;
+			$placement['destination'] = array(
+				'x_mm' => $this->clean_float( $box['x_mm'] + ( $box['width_mm'] - $draw_width ) / 2.0 ),
+				'y_mm' => $this->clean_float( $box['y_mm'] + ( $box['height_mm'] - $draw_height ) / 2.0 ),
+				'width_mm' => $this->clean_float( $draw_width ),
+				'height_mm' => $this->clean_float( $draw_height ),
+			);
+		} elseif ( 'cover' === $fit ) {
+			$source_ratio = $source_width / $source_height;
+			$target_ratio = $box['width_mm'] / $box['height_mm'];
+			if ( $source_ratio > $target_ratio ) {
+				$visible = $target_ratio / $source_ratio;
+				$placement['source_crop'] = array( 'x' => $this->clean_float( ( 1.0 - $visible ) / 2.0 ), 'y' => 0.0, 'width' => $this->clean_float( $visible ), 'height' => 1.0 );
+			} elseif ( $source_ratio < $target_ratio ) {
+				$visible = $source_ratio / $target_ratio;
+				$placement['source_crop'] = array( 'x' => 0.0, 'y' => $this->clean_float( ( 1.0 - $visible ) / 2.0 ), 'width' => 1.0, 'height' => $this->clean_float( $visible ) );
+			}
+		} else {
+			throw new InvalidArgumentException( 'Render plan contains an unsupported image fit mode.' );
+		}
+		return array(
+			'_runtime_path' => (string) $asset['path'],
+			'asset' => array(
+				'sha256' => strtolower( (string) $asset['sha256'] ),
+				'mime' => strtolower( (string) $asset['mime'] ),
+				'size' => (int) $asset['size'],
+				'width_px' => (int) $asset['width_px'],
+				'height_px' => (int) $asset['height_px'],
+			),
+			'placement' => $placement,
+		);
+	}
+
+	/** @return array<string,mixed> */
+	private function shape_operation( array $element ) {
+		$shape = strtolower( (string) ( $element['shape'] ?? '' ) );
+		if ( ! in_array( $shape, array( 'rectangle', 'ellipse' ), true ) ) {
+			throw new InvalidArgumentException( 'Render plan contains an unsupported shape.' );
+		}
+		$stroke_width = $this->number( $element['stroke_width_mm'] ?? 0.0, 'shape stroke width' );
+		if ( $stroke_width < 0 || $stroke_width > 20 ) { throw new InvalidArgumentException( 'Render plan shape stroke width is outside the canonical range.' ); }
+		return array(
+			'kind' => $shape,
+			'fill' => $this->color( $element['fill'] ?? '#00000000' ),
+			'stroke' => $this->color( $element['stroke'] ?? '#000000' ),
+			'stroke_width_mm' => $stroke_width,
+		);
+	}
+
+	/** @return array<string,mixed> */
+	private function line_operation( array $element, array $geometry ) {
+		$box = $geometry['box'];
+		$stroke_width = $this->positive_number( $element['stroke_width_mm'] ?? 0.3, 'line stroke width' );
+		if ( $stroke_width > 20 ) { throw new InvalidArgumentException( 'Render plan line stroke width is outside the canonical range.' ); }
+		return array(
+			'from' => array( 'x_mm' => $box['x_mm'], 'y_mm' => $box['y_mm'] ),
+			'to' => array( 'x_mm' => $this->clean_float( $box['x_mm'] + $box['width_mm'] ), 'y_mm' => $this->clean_float( $box['y_mm'] + $box['height_mm'] ) ),
+			'stroke' => $this->color( $element['stroke'] ?? '#000000' ),
+			'stroke_width_mm' => $stroke_width,
+		);
+	}
+
+	/** @return array<string,mixed> */
+	private function qr_operation( array $element, array $geometry ) {
+		$matrix = $element['matrix'] ?? null;
+		if ( ! is_array( $matrix ) || empty( $matrix ) ) {
+			throw new InvalidArgumentException( 'Render plan QR operations require the central resolved module matrix.' );
+		}
+		$modules = count( $matrix );
+		if ( $modules < 21 || $modules > 177 || 0 !== ( $modules - 21 ) % 4 ) {
+			throw new InvalidArgumentException( 'Render plan QR matrix size must be a valid Model 2 version.' );
+		}
+		foreach ( $matrix as $row ) {
+			if ( ! is_array( $row ) || count( $row ) !== $modules ) {
+				throw new InvalidArgumentException( 'Render plan QR matrix must be square.' );
+			}
+			foreach ( $row as $module ) {
+				if ( 0 !== $module && 1 !== $module && false !== $module && true !== $module ) {
+					throw new InvalidArgumentException( 'Render plan QR matrix may contain only binary modules.' );
+				}
+			}
+		}
+		$quiet = $this->integer( $element['quiet_zone_modules'] ?? 4, 'QR quiet zone' );
+		if ( $quiet < 4 || $quiet > 16 ) { throw new InvalidArgumentException( 'Render plan QR quiet zone is outside the canonical range.' ); }
+		$error_correction = strtoupper( (string) ( $element['error_correction'] ?? 'M' ) );
+		if ( ! in_array( $error_correction, array( 'L', 'M', 'Q', 'H' ), true ) ) { throw new InvalidArgumentException( 'Render plan QR error-correction level is invalid.' ); }
+		$encoder = isset( $element['encoder'] ) && is_array( $element['encoder'] ) ? $element['encoder'] : array();
+		$encoder_id = strtolower( trim( (string) ( $encoder['id'] ?? '' ) ) );
+		$encoder_version = trim( (string) ( $encoder['version'] ?? '' ) );
+		if ( ! preg_match( '/^[a-z][a-z0-9._-]{0,63}$/', $encoder_id ) || '' === $encoder_version || strlen( $encoder_version ) > 64 || '' === (string) ( $element['data'] ?? '' ) ) {
+			throw new InvalidArgumentException( 'Render plan QR identity/data is incomplete.' );
+		}
+		$total = $modules + ( 2 * $quiet );
+		$box = $geometry['box'];
+		if ( abs( $box['width_mm'] - $box['height_mm'] ) > 0.001 ) {
+			throw new InvalidArgumentException( 'Render plan QR box must remain square.' );
+		}
+		$module_mm = $box['width_mm'] / $total;
+		$runs = array();
+		foreach ( array_values( $matrix ) as $row_index => $row ) {
+			$start = null;
+			$length = 0;
+			foreach ( array_values( $row ) as $column => $value ) {
+				$dark = 1 === $value || true === $value;
+				if ( $dark && null === $start ) { $start = $column; $length = 1; }
+				elseif ( $dark ) { $length++; }
+				if ( null !== $start && ( ! $dark || $column === $modules - 1 ) ) {
+					$end_after = $dark && $column === $modules - 1 ? $column + 1 : $column;
+					$run_length = $end_after - $start;
+					$runs[] = array(
+						'x_mm' => $this->clean_float( $box['x_mm'] + ( $quiet + $start ) * $module_mm ),
+						'y_mm' => $this->clean_float( $box['y_mm'] + ( $quiet + $row_index ) * $module_mm ),
+						'width_mm' => $this->clean_float( $run_length * $module_mm ),
+						'height_mm' => $this->clean_float( $module_mm ),
+					);
+					$start = null; $length = 0;
+				}
+			}
+		}
+		return array(
+			'data' => (string) ( $element['data'] ?? '' ),
+			'encoder' => array( 'id' => $encoder_id, 'version' => $encoder_version ),
+			'error_correction' => $error_correction,
+			'matrix_size' => $modules,
+			'quiet_zone_modules' => $quiet,
+			'total_modules' => $total,
+			'module_size_mm' => $this->clean_float( $module_mm ),
+			'dark_runs' => $runs,
+		);
+	}
+
+
+
+	/** @return array<string,mixed> */
+	private function table_operation( array $element, array $geometry, array $manifest ) {
+		$columns = isset( $element['columns'] ) && is_array( $element['columns'] ) ? array_values( $element['columns'] ) : array();
+		$rows = isset( $element['rows'] ) && is_array( $element['rows'] ) ? array_values( $element['rows'] ) : array();
+		if ( empty( $columns ) || count( $columns ) > 12 || count( $rows ) > 50 ) { throw new InvalidArgumentException( 'Render plan Table dimensions are outside the canonical contract.' ); }
+		$show_header = ! empty( $element['show_header'] );
+		$style = isset( $element['style'] ) && is_array( $element['style'] ) ? $element['style'] : array();
+		$text_style = $style;
+		$box = $geometry['box'];
+		$row_slots = isset( $element['row_slots'] ) ? (int) $element['row_slots'] : count( $rows );
+		if ( $row_slots < count( $rows ) || $row_slots > 50 ) { throw new InvalidArgumentException( 'Render plan Table row slots are invalid.' ); }
+		$visual_rows = $row_slots + ( $show_header ? 1 : 0 );
+		$row_height = $box['height_mm'] / max( 1, $visual_rows );
+		if ( $visual_rows > 0 && $row_height < 4.0 - 0.0001 ) { throw new InvalidArgumentException( 'Render plan Table rows are too dense for deterministic rendering.' ); }
+		$padding = $this->number( $style['cell_padding_mm'] ?? 1.5, 'table cell padding' );
+		$border_width = $this->number( $style['border_width_mm'] ?? 0.2, 'table border width' );
+		if ( $padding < 0 || $padding > 10 || $border_width < 0 || $border_width > 5 ) { throw new InvalidArgumentException( 'Render plan Table spacing is outside the canonical contract.' ); }
+
+		$normalized_columns = array(); $x = 0.0; $width_total = 0.0;
+		foreach ( $columns as $column ) {
+			if ( ! is_array( $column ) ) { throw new InvalidArgumentException( 'Render plan Table columns must be objects.' ); }
+			$key = (string) ( $column['key'] ?? '' );
+			$width_pct = $this->positive_number( $column['width_pct'] ?? null, 'table column width' );
+			$width_total += $width_pct;
+			$width_mm = $box['width_mm'] * ( $width_pct / 100.0 );
+			if ( $width_mm <= ( 2.0 * $padding ) + 0.1 ) { throw new InvalidArgumentException( 'Render plan Table column is too narrow for its configured cell padding.' ); }
+			$normalized_columns[] = array(
+				'key' => $key,
+				'label' => (string) ( $column['label'] ?? '' ),
+				'align' => (string) ( $column['align'] ?? 'left' ),
+				'width_pct' => $width_pct,
+				'x_mm' => $this->clean_float( $x ),
+				'width_mm' => $this->clean_float( $width_mm ),
+			);
+			$x += $width_mm;
+		}
+		if ( abs( $width_total - 100.0 ) > 0.01 ) { throw new InvalidArgumentException( 'Render plan Table column widths must total 100 percent.' ); }
+		if ( $visual_rows > 0 && $row_height <= ( 2.0 * $padding ) + 0.1 ) { throw new InvalidArgumentException( 'Render plan Table row is too short for its configured cell padding.' ); }
+
+		$render_rows = array(); $row_index = 0;
+		if ( $show_header ) {
+			$header_style = $text_style;
+			$header_style['font_weight'] = (int) ( $style['header_font_weight'] ?? 600 );
+			$header_style['color'] = (string) ( $style['header_color'] ?? '#111827' );
+			$render_rows[] = $this->table_plan_row( $normalized_columns, null, $row_index++, $row_height, $padding, $header_style, true, $manifest, (string) ( $style['header_fill'] ?? '#F3F4F6' ) );
+		}
+		foreach ( $rows as $data_index => $row ) {
+			if ( ! is_array( $row ) ) { throw new InvalidArgumentException( 'Render plan Table rows must be objects.' ); }
+			$fill = 0 === ( $data_index % 2 ) ? (string) ( $style['row_fill'] ?? '#FFFFFF' ) : (string) ( $style['alternate_row_fill'] ?? '#F9FAFB' );
+			$render_rows[] = $this->table_plan_row( $normalized_columns, $row, $row_index++, $row_height, $padding, $text_style, false, $manifest, $fill );
+		}
+		return array(
+			'columns' => $normalized_columns,
+			'rows' => $render_rows,
+			'show_header' => $show_header,
+			'grid' => array( 'border_color' => $this->color( $style['border_color'] ?? '#D1D5DB' ), 'border_width_mm' => $border_width ),
+			'cell_padding_mm' => $padding,
+			'row_height_mm' => $this->clean_float( $row_height ),
+			'row_slots' => $row_slots,
+		);
+	}
+
+	/** @return array<string,mixed> */
+	private function table_plan_row( array $columns, $row, $row_index, $row_height, $padding, array $base_style, $header, array $manifest, $fill ) {
+		$cells = array();
+		foreach ( $columns as $column ) {
+			$key = (string) $column['key'];
+			$value = $header ? (string) $column['label'] : (string) ( $row[ $key ] ?? '' );
+			$cell_style = $base_style;
+			$cell_style['align'] = (string) $column['align'];
+			$cell_style['vertical_align'] = 'middle';
+			$text = $this->text_operation( array( 'text' => $value, 'style' => $cell_style ), $manifest );
+			$cells[] = array(
+				'column_key' => $key,
+				'box' => array(
+					'x_mm' => $this->clean_float( (float) $column['x_mm'] ),
+					'y_mm' => $this->clean_float( (float) $row_index * $row_height ),
+					'width_mm' => $this->clean_float( (float) $column['width_mm'] ),
+					'height_mm' => $this->clean_float( $row_height ),
+				),
+				'content_box' => array(
+					'x_mm' => $this->clean_float( (float) $column['x_mm'] + $padding ),
+					'y_mm' => $this->clean_float( (float) $row_index * $row_height + $padding ),
+					'width_mm' => $this->clean_float( (float) $column['width_mm'] - ( 2.0 * $padding ) ),
+					'height_mm' => $this->clean_float( $row_height - ( 2.0 * $padding ) ),
+				),
+				'text' => $text,
+			);
+		}
+		return array( 'index' => (int) $row_index, 'header' => (bool) $header, 'fill' => $this->color( $fill ), 'cells' => $cells );
+	}
+
+
+	/** @return array<string,mixed> */
+	private function barcode_operation( array $element, array $geometry ) {
+		$modules = $element['modules'] ?? null;
+		if ( ! is_array( $modules ) || count( $modules ) < 46 || count( $modules ) > 4096 ) {
+			throw new InvalidArgumentException( 'Render plan barcode operations require the centrally resolved Code 128 module sequence.' );
+		}
+		$normalized = array();
+		foreach ( array_values( $modules ) as $module ) {
+			if ( 0 !== $module && 1 !== $module && false !== $module && true !== $module ) {
+				throw new InvalidArgumentException( 'Render plan barcode modules may contain only binary values.' );
+			}
+			$normalized[] = $module ? 1 : 0;
+		}
+		if ( 1 !== $normalized[0] || 1 !== $normalized[ count( $normalized ) - 1 ] ) {
+			throw new InvalidArgumentException( 'Render plan barcode module framing is invalid.' );
+		}
+		$quiet = $this->integer( $element['quiet_zone_modules'] ?? 10, 'Code 128 quiet zone' );
+		if ( $quiet < 10 || $quiet > 50 ) { throw new InvalidArgumentException( 'Render plan Code 128 quiet zone is outside the canonical range.' ); }
+		if ( 'code128' !== strtolower( (string) ( $element['symbology'] ?? '' ) ) ) { throw new InvalidArgumentException( 'Render plan barcode symbology must be Code 128.' ); }
+		$encoder = isset( $element['encoder'] ) && is_array( $element['encoder'] ) ? $element['encoder'] : array();
+		$encoder_id = strtolower( trim( (string) ( $encoder['id'] ?? '' ) ) );
+		$encoder_version = trim( (string) ( $encoder['version'] ?? '' ) );
+		$data = (string) ( $element['data'] ?? '' );
+		if ( ! preg_match( '/^[a-z][a-z0-9._-]{0,63}$/', $encoder_id ) || '' === $encoder_version || strlen( $encoder_version ) > 64 || '' === $data ) {
+			throw new InvalidArgumentException( 'Render plan barcode identity/data is incomplete.' );
+		}
+		$box = $geometry['box'];
+		$total = count( $normalized ) + ( 2 * $quiet );
+		$module_mm = (float) $box['width_mm'] / $total;
+		if ( $module_mm < 0.19 ) {
+			throw new InvalidArgumentException( 'Code 128 barcode box is too narrow for the resolved payload at Certloom’s minimum module width.' );
+		}
+		if ( (float) $box['height_mm'] < 10.0 ) {
+			throw new InvalidArgumentException( 'Code 128 barcode height must be at least 10 mm.' );
+		}
+		$runs = array(); $start = null;
+		$count = count( $normalized );
+		foreach ( $normalized as $index => $value ) {
+			$dark = 1 === $value;
+			if ( $dark && null === $start ) { $start = $index; }
+			if ( null !== $start && ( ! $dark || $index === $count - 1 ) ) {
+				$end_after = $dark && $index === $count - 1 ? $index + 1 : $index;
+				$runs[] = array(
+					'x_mm' => $this->clean_float( (float) $box['x_mm'] + ( $quiet + $start ) * $module_mm ),
+					'y_mm' => $this->clean_float( (float) $box['y_mm'] ),
+					'width_mm' => $this->clean_float( ( $end_after - $start ) * $module_mm ),
+					'height_mm' => $this->clean_float( (float) $box['height_mm'] ),
+				);
+				$start = null;
+			}
+		}
+		return array(
+			'data' => $data,
+			'symbology' => 'code128',
+			'encoder' => array( 'id' => $encoder_id, 'version' => $encoder_version ),
+			'module_count' => count( $normalized ),
+			'quiet_zone_modules' => $quiet,
+			'total_modules' => $total,
+			'module_size_mm' => $this->clean_float( $module_mm ),
+			'dark_runs' => $runs,
+		);
+	}
+
+	/** @return array<string,mixed> */
+	private function color( $value ) {
+		$value = strtoupper( trim( (string) $value ) );
+		if ( ! preg_match( '/^#([0-9A-F]{6})([0-9A-F]{2})?$/', $value, $match ) ) {
+			throw new InvalidArgumentException( 'Render plan color is invalid.' );
+		}
+		$rgb = $match[1];
+		$alpha = isset( $match[2] ) && '' !== $match[2] ? hexdec( $match[2] ) : 255;
+		return array(
+			'hex' => '#' . $rgb . ( isset( $match[2] ) && '' !== $match[2] ? $match[2] : '' ),
+			'r' => hexdec( substr( $rgb, 0, 2 ) ),
+			'g' => hexdec( substr( $rgb, 2, 2 ) ),
+			'b' => hexdec( substr( $rgb, 4, 2 ) ),
+			'alpha' => $alpha,
+			'alpha_unit' => $this->clean_float( $alpha / 255.0 ),
+		);
+	}
+
+	/** @return int */
+	private function integer( $value, $label ) {
+		if ( is_int( $value ) ) { return $value; }
+		if ( is_string( $value ) && 1 === preg_match( '/^-?(?:0|[1-9][0-9]*)$/', $value ) ) {
+			$int = filter_var( $value, FILTER_VALIDATE_INT );
+			if ( false !== $int ) { return (int) $int; }
+		}
+		throw new InvalidArgumentException( $label . ' must be an integer.' );
+	}
+
+	/** @return float */
+	private function number( $value, $label ) {
+		$is_numeric_string = is_string( $value ) && 1 === preg_match( '/^-?(?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+)$/', $value );
+		if ( ! is_int( $value ) && ! is_float( $value ) && ! $is_numeric_string ) {
+			throw new InvalidArgumentException( $label . ' must be numeric.' );
+		}
+		$value = (float) $value;
+		if ( is_nan( $value ) || is_infinite( $value ) ) {
+			throw new InvalidArgumentException( $label . ' must be finite.' );
+		}
+		return $this->clean_float( $value );
+	}
+
+	/** @return float */
+	private function positive_number( $value, $label ) {
+		$value = $this->number( $value, $label );
+		if ( $value <= 0 ) { throw new InvalidArgumentException( $label . ' must be positive.' ); }
+		return $value;
+	}
+
+	/** @return float */
+	private function unit_number( $value, $label ) {
+		$value = $this->number( $value, $label );
+		if ( $value < 0 || $value > 1 ) { throw new InvalidArgumentException( $label . ' must be between zero and one.' ); }
+		return $value;
+	}
+
+	/** @return float */
+	private function clean_float( $value ) {
+		$value = (float) $value;
+		if ( abs( $value ) < 0.000000000001 ) { return 0.0; }
+		return round( $value, 12 );
+	}
+}

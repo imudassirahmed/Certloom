@@ -48,39 +48,52 @@ class Ecapla_CertVerify_Database {
 			return $lock;
 		}
 
-		try {
-			$installed   = (string) get_option( self::SCHEMA_OPTION, get_option( 'certverify_db_version', '0' ) );
-			$table_setup = self::create_or_update_table();
-			if ( is_wp_error( $table_setup ) ) {
-				return $table_setup;
+		$result   = self::activate_under_lock();
+		$released = self::release_migration_lock( $lock );
+		if ( is_wp_error( $released ) ) {
+			if ( is_wp_error( $result ) ) {
+				return new WP_Error(
+					'ecapla_certverify_schema_failure_cleanup_failed',
+					__( 'Certloom database maintenance failed and its migration lock could not be released safely. Retry after the lock lease expires or is repaired.', 'certloom' ),
+					array( 'operation_error' => $result->get_error_code(), 'cleanup_error' => $released->get_error_code() )
+				);
 			}
-
-			$migrated = self::run_migrations( $installed );
-			if ( is_wp_error( $migrated ) ) {
-				return $migrated;
-			}
-
-			$health = self::schema_health();
-			if ( is_wp_error( $health ) ) {
-				return $health;
-			}
-
-			if ( ! self::persist_schema_versions() ) {
-				return new WP_Error( 'ecapla_certverify_schema_marker_failed', __( 'Certloom completed its database setup but could not save the schema version.', 'certloom' ) );
-			}
-
-			if ( self::migrations_are_complete() ) {
-				if ( ! self::save_health_marker() ) {
-					return new WP_Error( 'ecapla_certverify_schema_health_marker_failed', __( 'Certloom verified its database structure but could not save the health marker.', 'certloom' ) );
-				}
-			} else {
-				delete_option( self::HEALTH_OPTION );
-				self::schedule_migration_continuation();
-			}
-			return true;
-		} finally {
-			self::release_migration_lock( $lock );
+			return $released;
 		}
+		return $result;
+	}
+
+	/** Runs the legacy schema/migration operation while the caller owns the migration lock. */
+	private static function activate_under_lock() {
+		$installed   = (string) get_option( self::SCHEMA_OPTION, get_option( 'certverify_db_version', '0' ) );
+		$table_setup = self::create_or_update_table();
+		if ( is_wp_error( $table_setup ) ) {
+			return $table_setup;
+		}
+
+		$migrated = self::run_migrations( $installed );
+		if ( is_wp_error( $migrated ) ) {
+			return $migrated;
+		}
+
+		$health = self::schema_health();
+		if ( is_wp_error( $health ) ) {
+			return $health;
+		}
+
+		if ( ! self::persist_schema_versions() ) {
+			return new WP_Error( 'ecapla_certverify_schema_marker_failed', __( 'Certloom completed its database setup but could not save the schema version.', 'certloom' ) );
+		}
+
+		if ( self::migrations_are_complete() ) {
+			if ( ! self::save_health_marker() ) {
+				return new WP_Error( 'ecapla_certverify_schema_health_marker_failed', __( 'Certloom verified its database structure but could not save the health marker.', 'certloom' ) );
+			}
+		} else {
+			delete_option( self::HEALTH_OPTION );
+			self::schedule_migration_continuation();
+		}
+		return true;
 	}
 
 	/**
@@ -361,9 +374,16 @@ class Ecapla_CertVerify_Database {
 		global $wpdb;
 		$token  = sanitize_text_field( (string) $token );
 		$stored = (string) get_option( self::MIGRATION_LOCK_OPTION, '' );
-		if ( '' === $token || 0 !== strpos( $stored, $token . '|' ) ) {
-			return false;
+		if ( '' === $token ) {
+			return new WP_Error( 'ecapla_certverify_schema_lock_token_invalid', __( 'Certloom refused to release an invalid database-maintenance lock token.', 'certloom' ) );
 		}
+		if ( '' === $stored ) {
+			return true;
+		}
+		if ( 0 !== strpos( $stored, $token . '|' ) ) {
+			return new WP_Error( 'ecapla_certverify_schema_lock_owner_changed', __( 'Certloom refused to release a database-maintenance lock that is no longer owned by this request.', 'certloom' ) );
+		}
+		$wpdb->last_error = '';
 		$deleted = $wpdb->query(
 			$wpdb->prepare(
 				'DELETE FROM %i WHERE option_name = %s AND option_value = %s',
@@ -373,7 +393,10 @@ class Ecapla_CertVerify_Database {
 			)
 		);
 		wp_cache_delete( self::MIGRATION_LOCK_OPTION, 'options' );
-		return 1 === (int) $deleted;
+		if ( 1 === (int) $deleted || '' === (string) get_option( self::MIGRATION_LOCK_OPTION, '' ) ) {
+			return true;
+		}
+		return new WP_Error( 'ecapla_certverify_schema_lock_release_failed', __( 'Certloom completed database maintenance but could not release its migration lock safely. Retry after the lease expires or is repaired.', 'certloom' ) );
 	}
 
 	private static function health_marker_is_fresh() {
@@ -531,6 +554,11 @@ class Ecapla_CertVerify_Database {
 			return $allowed;
 		}
 
+		$legacy_write = ( new \Certloom\Application\Migration\LegacyRegistryWriteGuard() )->assert_allowed();
+		if ( is_wp_error( $legacy_write ) ) {
+			return $legacy_write;
+		}
+
 		$clean = Ecapla_CertVerify_Validator::certificate_data( $data, false );
 		if ( is_wp_error( $clean ) ) {
 			return $clean;
@@ -540,6 +568,11 @@ class Ecapla_CertVerify_Database {
 		$row               = self::prepare_row( $clean );
 		$row['created_at'] = isset( $data['created_at'] ) && self::valid_mysql_datetime( $data['created_at'] ) ? $data['created_at'] : $now;
 		$row['updated_at'] = isset( $data['updated_at'] ) && self::valid_mysql_datetime( $data['updated_at'] ) ? $data['updated_at'] : $now;
+
+		$generation = self::reserve_live_mutation_generation();
+		if ( is_wp_error( $generation ) ) {
+			return $generation;
+		}
 
 		$wpdb->last_error = '';
 		$inserted = $wpdb->insert( self::table_name(), $row );
@@ -551,7 +584,6 @@ class Ecapla_CertVerify_Database {
 		}
 
 		self::refresh_legacy_expired_review_count_after_write();
-		Ecapla_CertVerify_Backup::mark_mutation();
 		return (int) $wpdb->insert_id;
 	}
 
@@ -566,6 +598,11 @@ class Ecapla_CertVerify_Database {
 		$allowed = Ecapla_CertVerify_Backup::assert_writes_allowed();
 		if ( is_wp_error( $allowed ) ) {
 			return $allowed;
+		}
+
+		$legacy_write = ( new \Certloom\Application\Migration\LegacyRegistryWriteGuard() )->assert_allowed();
+		if ( is_wp_error( $legacy_write ) ) {
+			return $legacy_write;
 		}
 
 		$id       = absint( $id );
@@ -602,6 +639,10 @@ class Ecapla_CertVerify_Database {
 
 		$row               = self::prepare_row( $merged );
 		$row['updated_at'] = isset( $data['updated_at'] ) && self::valid_mysql_datetime( $data['updated_at'] ) ? $data['updated_at'] : current_time( 'mysql' );
+		$generation        = self::reserve_live_mutation_generation();
+		if ( is_wp_error( $generation ) ) {
+			return $generation;
+		}
 		$wpdb->last_error  = '';
 		$updated           = $wpdb->update( self::table_name(), $row, array( 'id' => $id ) );
 
@@ -613,7 +654,6 @@ class Ecapla_CertVerify_Database {
 		}
 
 		self::refresh_legacy_expired_review_count_after_write();
-		Ecapla_CertVerify_Backup::mark_mutation();
 		return true;
 	}
 
@@ -637,11 +677,12 @@ class Ecapla_CertVerify_Database {
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) {
 			return false;
 		}
+		$generation_reserved = false;
 		foreach ( $rows as $row ) {
 			$last_id = max( $last_id, absint( $row['id'] ) );
 			$custom  = ! empty( $row['custom_fields'] ) ? json_decode( $row['custom_fields'], true ) : array();
-			if ( ! is_array( $custom ) ) {
-				continue;
+			if ( ! is_array( $custom ) || JSON_ERROR_NONE !== json_last_error() ) {
+				return false;
 			}
 			foreach ( array_keys( $custom ) as $raw_key ) {
 				$key = sanitize_key( $raw_key );
@@ -686,6 +727,11 @@ class Ecapla_CertVerify_Database {
 			return $allowed;
 		}
 
+		$legacy_write = ( new \Certloom\Application\Migration\LegacyRegistryWriteGuard() )->assert_allowed();
+		if ( is_wp_error( $legacy_write ) ) {
+			return $legacy_write;
+		}
+
 		$field_key = sanitize_key( $field_key );
 		if ( '' === $field_key ) {
 			return new WP_Error( 'ecapla_certverify_invalid_field', __( 'The retired field key is invalid.', 'certloom' ) );
@@ -716,7 +762,17 @@ class Ecapla_CertVerify_Database {
 		foreach ( $rows as $row ) {
 			$row_id = absint( $row['id'] );
 			$custom = ! empty( $row['custom_fields'] ) ? json_decode( $row['custom_fields'], true ) : array();
-			if ( is_array( $custom ) && array_key_exists( $field_key, $custom ) ) {
+			if ( ! is_array( $custom ) || JSON_ERROR_NONE !== json_last_error() ) {
+				return self::purge_error( 'ecapla_certverify_purge_corrupt_custom_fields', __( 'A certificate contains invalid custom-field data. Certloom stopped the purge before skipping that record. Repair the record data, then run Purge again from the saved position.', 'certloom' ), $field_key, $last_id, $changed );
+			}
+			if ( array_key_exists( $field_key, $custom ) ) {
+				if ( ! $generation_reserved ) {
+					$generation = self::reserve_live_mutation_generation();
+					if ( is_wp_error( $generation ) ) {
+						return $generation;
+					}
+					$generation_reserved = true;
+				}
 				unset( $custom[ $field_key ] );
 				$result = $wpdb->update(
 					$table,
@@ -738,9 +794,6 @@ class Ecapla_CertVerify_Database {
 			return new WP_Error( 'ecapla_certverify_purge_progress_failed', __( 'Stored values were processed, but Certloom could not save purge progress.', 'certloom' ), array( 'changed' => $changed, 'last_id' => $last_id ) );
 		}
 
-		if ( $changed > 0 ) {
-			Ecapla_CertVerify_Backup::mark_mutation();
-		}
 		return array( 'changed' => $changed, 'complete' => $complete, 'last_id' => $last_id );
 	}
 
@@ -791,9 +844,18 @@ class Ecapla_CertVerify_Database {
 		if ( is_wp_error( $allowed ) ) {
 			return $allowed;
 		}
+
+		$legacy_write = ( new \Certloom\Application\Migration\LegacyRegistryWriteGuard() )->assert_allowed();
+		if ( is_wp_error( $legacy_write ) ) {
+			return $legacy_write;
+		}
 		$id = absint( $id );
 		if ( ! $id ) {
 			return new WP_Error( 'ecapla_certverify_invalid_id', __( 'The certificate deletion request was invalid.', 'certloom' ) );
+		}
+		$generation = self::reserve_live_mutation_generation();
+		if ( is_wp_error( $generation ) ) {
+			return $generation;
 		}
 		$deleted = $wpdb->delete( self::table_name(), array( 'id' => $id ) );
 		if ( false === $deleted ) {
@@ -803,7 +865,6 @@ class Ecapla_CertVerify_Database {
 			return new WP_Error( 'ecapla_certverify_not_found', __( 'The certificate could not be deleted because it no longer exists.', 'certloom' ) );
 		}
 		self::refresh_legacy_expired_review_count_after_write();
-		Ecapla_CertVerify_Backup::mark_mutation();
 		return true;
 	}
 
@@ -818,9 +879,18 @@ class Ecapla_CertVerify_Database {
 			return $allowed;
 		}
 
+		$legacy_write = ( new \Certloom\Application\Migration\LegacyRegistryWriteGuard() )->assert_allowed();
+		if ( is_wp_error( $legacy_write ) ) {
+			return $legacy_write;
+		}
+
 		$ids = array_values( array_filter( array_unique( array_map( 'absint', (array) $ids ) ) ) );
 		if ( empty( $ids ) ) {
 			return 0;
+		}
+		$generation = self::reserve_live_mutation_generation();
+		if ( is_wp_error( $generation ) ) {
+			return $generation;
 		}
 
 		$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
@@ -834,10 +904,22 @@ class Ecapla_CertVerify_Database {
 			return new WP_Error( 'ecapla_certverify_bulk_delete_failed', __( 'The selected certificates could not be deleted because of a database error.', 'certloom' ) );
 		}
 		self::refresh_legacy_expired_review_count_after_write();
-		if ( $result > 0 ) {
-			Ecapla_CertVerify_Backup::mark_mutation();
-		}
 		return (int) $result;
+	}
+
+	/**
+	 * Reserves a new live-registry generation before a customer-visible mutation.
+	 *
+	 * Advancing the marker first is intentionally conservative: a later database
+	 * write may still fail, but a real registry change can never succeed while the
+	 * migration/cutover generation marker silently remains at its old boundary.
+	 * Internal complete-restore writes manage one generation transition at their
+	 * own atomic completion boundary and therefore skip this per-row reservation.
+	 *
+	 * @return true|WP_Error
+	 */
+	private static function reserve_live_mutation_generation() {
+		return Ecapla_CertVerify_Backup::reserve_mutation_generation();
 	}
 
 	/**
@@ -899,6 +981,105 @@ class Ecapla_CertVerify_Database {
 	}
 
 	/**
+	 * Checks exact certificate-number ownership without decoding record payloads.
+	 *
+	 * Number allocation uses this as a cheap collision probe. The unique database
+	 * constraints remain the final concurrency gate during insertion.
+	 *
+	 * @param string $cert_number Candidate certificate number.
+	 * @return bool|WP_Error
+	 */
+	public static function certificate_number_exists( $cert_number ) {
+		global $wpdb;
+		$cert_number = trim( sanitize_text_field( (string) $cert_number ) );
+		$length = function_exists( 'mb_strlen' ) ? mb_strlen( $cert_number, 'UTF-8' ) : strlen( $cert_number );
+		if ( '' === $cert_number || $length > 100 ) {
+			return false;
+		}
+		$table = self::table_name();
+		if ( get_option( self::HASH_COMPLETE_OPTION, false ) ) {
+			$wpdb->last_error = '';
+			$found = $wpdb->get_var(
+				$wpdb->prepare( 'SELECT id FROM %i WHERE cert_number_hash = %s LIMIT 1', $table, self::certificate_hash( $cert_number ) )
+			);
+			if ( '' !== (string) $wpdb->last_error ) {
+				// A failed indexed probe means the saved migration/health markers are no longer trustworthy.
+				delete_option( self::HASH_COMPLETE_OPTION );
+				delete_option( self::HEALTH_OPTION );
+			} elseif ( ! empty( $found ) ) {
+				return true;
+			}
+			/*
+			 * Even a healthy marker does not excuse external/manual database damage.
+			 * Fall through to the indexed human-number key before declaring the
+			 * candidate free, so previews remain accurate for a row whose hash was
+			 * unexpectedly removed outside Certloom.
+			 */
+		}
+
+		$wpdb->last_error = '';
+		$found = $wpdb->get_var(
+			$wpdb->prepare( 'SELECT id FROM %i WHERE cert_number = %s LIMIT 1', $table, $cert_number )
+		);
+		if ( '' !== (string) $wpdb->last_error ) {
+			return self::read_error();
+		}
+		if ( ! empty( $found ) ) {
+			return true;
+		}
+
+		$wpdb->last_error = '';
+		$found = $wpdb->get_var(
+			$wpdb->prepare( 'SELECT id FROM %i WHERE LOWER(cert_number) = LOWER(%s) LIMIT 1', $table, $cert_number )
+		);
+		if ( '' !== (string) $wpdb->last_error ) {
+			return self::read_error();
+		}
+		return ! empty( $found );
+	}
+
+	/**
+	 * Reads bounded legacy certificate rows whose stored custom-field JSON may
+	 * contain the requested email. Callers must still perform an exact decoded
+	 * value match because LIKE is only an indexed-free candidate reduction step.
+	 *
+	 * @param string $email Requested email.
+	 * @param int    $offset Candidate offset.
+	 * @param int    $limit Maximum candidate rows.
+	 * @return array|WP_Error
+	 */
+	public static function get_privacy_email_candidates( $email, $offset = 0, $limit = 50 ) {
+		global $wpdb;
+		$email = sanitize_email( (string) $email );
+		if ( '' === $email ) {
+			return array();
+		}
+		$limit = min( 100, max( 1, absint( $limit ) ) );
+		$like  = '%' . $wpdb->esc_like( $email ) . '%';
+		$wpdb->last_error = '';
+		$rows = $wpdb->get_results(
+			$wpdb->prepare( 'SELECT * FROM %i WHERE custom_fields LIKE %s ORDER BY id ASC LIMIT %d OFFSET %d', self::table_name(), $like, $limit, absint( $offset ) ),
+			ARRAY_A
+		);
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) {
+			return self::read_error();
+		}
+		$decoded_rows = array();
+		foreach ( $rows as $row ) {
+			if ( ! empty( $row['custom_fields'] ) ) {
+				$decoded = json_decode( (string) $row['custom_fields'], true );
+				if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $decoded ) ) {
+					return new WP_Error( 'ecapla_certverify_privacy_custom_fields_corrupt', __( 'Stored certificate custom-field data is invalid and could not be inspected safely for this privacy request.', 'certloom' ) );
+				}
+			}
+			$decoded = self::decode_row( $row );
+			if ( is_wp_error( $decoded ) ) { return $decoded; }
+			$decoded_rows[] = $decoded;
+		}
+		return $decoded_rows;
+	}
+
+	/**
 	 * Reads a bounded export/backup batch without OFFSET or a count query.
 	 *
 	 * @param int $after_id Last exported ID.
@@ -914,7 +1095,7 @@ class Ecapla_CertVerify_Database {
 		if ( '' !== (string) $wpdb->last_error || ! is_array( $rows ) ) {
 			return self::read_error();
 		}
-		return array_map( array( __CLASS__, 'decode_row' ), $rows );
+		return self::decode_rows( $rows );
 	}
 
 	/**
@@ -1036,7 +1217,10 @@ class Ecapla_CertVerify_Database {
 		$source  = self::table_name();
 		$staging = $wpdb->prefix . 'certverify_stage_' . substr( preg_replace( '/[^a-z0-9]/i', '', (string) $suffix ), 0, 12 );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- A private staging table is required for atomic complete-backup restoration.
-		$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $staging ) );
+		$dropped = $wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $staging ) );
+		if ( false === $dropped ) {
+			return new WP_Error( 'ecapla_certverify_restore_cleanup_failed', __( 'Certloom could not clear an earlier private restore workspace. No live certificate data was changed.', 'certloom' ) );
+		}
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Creates a same-schema private staging table for an administrator-confirmed restore.
 		$created = $wpdb->query( $wpdb->prepare( 'CREATE TABLE %i LIKE %i', $staging, $source ) );
 		$copied  = false !== $created && ! $copy_current;
@@ -1046,7 +1230,10 @@ class Ecapla_CertVerify_Database {
 		}
 		if ( false === $created || false === $copied ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Removes an incomplete private staging table after preparation failure.
-			$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $staging ) );
+			$cleanup = $wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $staging ) );
+			if ( false === $cleanup ) {
+				return new WP_Error( 'ecapla_certverify_restore_cleanup_failed', __( 'Certloom could not prepare the restore workspace and could not confirm that the incomplete private staging table was removed. Live certificate data was not changed.', 'certloom' ) );
+			}
 			return new WP_Error( 'ecapla_certverify_restore_stage_failed', __( 'Certloom could not prepare a safe restore workspace.', 'certloom' ) );
 		}
 		return $staging;
@@ -1084,7 +1271,11 @@ class Ecapla_CertVerify_Database {
 				return self::read_error();
 			}
 			foreach ( $rows as $row ) {
-				$found[ self::normalize_certificate_number( $row['cert_number'] ) ] = self::decode_row( $row );
+				$decoded = self::decode_row( $row );
+				if ( is_wp_error( $decoded ) ) {
+					return $decoded;
+				}
+				$found[ self::normalize_certificate_number( $row['cert_number'] ) ] = $decoded;
 			}
 
 			$missing = array_values( array_diff( $normalized_chunk, array_keys( $found ) ) );
@@ -1100,7 +1291,11 @@ class Ecapla_CertVerify_Database {
 				return self::read_error();
 			}
 			foreach ( $rows as $row ) {
-				$found[ self::normalize_certificate_number( $row['cert_number'] ) ] = self::decode_row( $row );
+				$decoded = self::decode_row( $row );
+				if ( is_wp_error( $decoded ) ) {
+					return $decoded;
+				}
+				$found[ self::normalize_certificate_number( $row['cert_number'] ) ] = $decoded;
 			}
 
 			$still_missing = array_values( array_diff( $normalized_chunk, array_keys( $found ) ) );
@@ -1115,7 +1310,11 @@ class Ecapla_CertVerify_Database {
 				return self::read_error();
 			}
 			foreach ( $rows as $row ) {
-				$found[ self::normalize_certificate_number( $row['cert_number'] ) ] = self::decode_row( $row );
+				$decoded = self::decode_row( $row );
+				if ( is_wp_error( $decoded ) ) {
+					return $decoded;
+				}
+				$found[ self::normalize_certificate_number( $row['cert_number'] ) ] = $decoded;
 			}
 		}
 		return $found;
@@ -1157,7 +1356,10 @@ class Ecapla_CertVerify_Database {
 		$active   = self::table_name();
 		$rollback = $wpdb->prefix . 'certverify_rollback_' . substr( preg_replace( '/[^a-z0-9]/i', '', (string) $suffix ), 0, 12 );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Clears only the generated Certloom rollback table name before an atomic restore swap.
-		$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $rollback ) );
+		$dropped = $wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $rollback ) );
+		if ( false === $dropped ) {
+			return new WP_Error( 'ecapla_certverify_restore_cleanup_failed', __( 'Certloom could not clear the private rollback workspace, so the live registry was not swapped.', 'certloom' ) );
+		}
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- MySQL's atomic RENAME TABLE operation activates the fully prepared registry and preserves rollback data.
 		$result = $wpdb->query( $wpdb->prepare( 'RENAME TABLE %i TO %i, %i TO %i', $active, $rollback, $staging, $active ) );
 		return false === $result ? new WP_Error( 'ecapla_certverify_restore_swap_failed', __( 'Certloom could not activate the prepared backup safely.', 'certloom' ) ) : $rollback;
@@ -1168,19 +1370,80 @@ class Ecapla_CertVerify_Database {
 		$active = self::table_name();
 		$failed = $wpdb->prefix . 'certverify_failed_' . substr( preg_replace( '/[^a-z0-9]/i', '', (string) $suffix ), 0, 12 );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Clears only the generated failed-restore table name before rollback.
-		$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $failed ) );
+		$dropped = $wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $failed ) );
+		if ( false === $dropped ) {
+			return false;
+		}
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Atomically restores the prior registry after a failed configuration commit.
 		$result = $wpdb->query( $wpdb->prepare( 'RENAME TABLE %i TO %i, %i TO %i', $active, $failed, $rollback, $active ) );
-		if ( false !== $result ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Removes the failed replacement only after the prior registry has been restored.
-			$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $failed ) );
+		if ( false === $result ) {
+			return false;
 		}
-		return false !== $result;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Removes the failed replacement only after the prior registry has been restored.
+		$cleanup = $wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $failed ) );
+		return false !== $cleanup;
 	}
 
 	/**
 	 * @return array{items: array, total: int}|WP_Error List result or a database error.
 	 */
+	/**
+	 * Returns one bounded aggregate snapshot for the administrator dashboard.
+	 *
+	 * Effective status is calculated with the same precedence as
+	 * effective_status(): manual Suspended/Withdrawn first, then preserved
+	 * legacy Expired state, then the current expiry date. No credential rows are
+	 * materialized for the totals.
+	 *
+	 * @return array<string,int>|WP_Error
+	 */
+	public static function get_dashboard_metrics() {
+		global $wpdb;
+		$table = self::table_name();
+		$today = current_time( 'Y-m-d' );
+		$month = current_time( 'Y-m-01' );
+
+		try {
+			$zone = function_exists( 'wp_timezone' ) ? wp_timezone() : new DateTimeZone( 'UTC' );
+			$soon = ( new DateTimeImmutable( $today, $zone ) )->modify( '+30 days' )->format( 'Y-m-d' );
+		} catch ( Exception $exception ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- UTC fallback is deterministic if the configured timezone is invalid.
+			$soon = gmdate( 'Y-m-d', strtotime( '+30 days' ) );
+		}
+
+		$sql = $wpdb->prepare(
+			"SELECT
+				COUNT(*) AS total,
+				SUM(CASE WHEN status = 'suspended' THEN 1 ELSE 0 END) AS suspended,
+				SUM(CASE WHEN status = 'withdrawn' THEN 1 ELSE 0 END) AS withdrawn,
+				SUM(CASE WHEN status NOT IN ('suspended','withdrawn') AND (status = 'expired' OR status_source = 'legacy' OR (expiry_date IS NOT NULL AND expiry_date < %s)) THEN 1 ELSE 0 END) AS expired,
+				SUM(CASE WHEN status NOT IN ('suspended','withdrawn') AND status <> 'expired' AND status_source <> 'legacy' AND (expiry_date IS NULL OR expiry_date >= %s) THEN 1 ELSE 0 END) AS valid,
+				SUM(CASE WHEN status NOT IN ('suspended','withdrawn') AND status <> 'expired' AND status_source <> 'legacy' AND expiry_date IS NOT NULL AND expiry_date >= %s AND expiry_date <= %s THEN 1 ELSE 0 END) AS expiring_soon,
+				SUM(CASE WHEN issue_date IS NOT NULL AND issue_date >= %s AND issue_date <= %s THEN 1 ELSE 0 END) AS issued_this_month
+			FROM %i",
+			$today,
+			$today,
+			$today,
+			$soon,
+			$month,
+			$today,
+			$table
+		);
+		$row = $wpdb->get_row( $sql, ARRAY_A );
+		if ( '' !== (string) $wpdb->last_error || ! is_array( $row ) ) {
+			return self::read_error();
+		}
+
+		return array(
+			'total'             => max( 0, (int) ( $row['total'] ?? 0 ) ),
+			'valid'             => max( 0, (int) ( $row['valid'] ?? 0 ) ),
+			'suspended'         => max( 0, (int) ( $row['suspended'] ?? 0 ) ),
+			'withdrawn'         => max( 0, (int) ( $row['withdrawn'] ?? 0 ) ),
+			'expired'           => max( 0, (int) ( $row['expired'] ?? 0 ) ),
+			'expiring_soon'     => max( 0, (int) ( $row['expiring_soon'] ?? 0 ) ),
+			'issued_this_month' => max( 0, (int) ( $row['issued_this_month'] ?? 0 ) ),
+		);
+	}
+
 	public static function get_list( $args = array() ) {
 		global $wpdb;
 		$table = self::table_name();
@@ -1191,6 +1454,11 @@ class Ecapla_CertVerify_Database {
 				'search_mode'    => 'prefix',
 				'status'         => '',
 				'legacy_expired' => false,
+				'attention'      => '',
+				'issue_from'     => '',
+				'issue_to'       => '',
+				'expiry_from'    => '',
+				'expiry_to'      => '',
 				'orderby'        => 'created_at',
 				'order'          => 'DESC',
 				'per_page'       => 20,
@@ -1244,6 +1512,45 @@ class Ecapla_CertVerify_Database {
 			}
 		}
 
+
+		$date_filters = array();
+		foreach ( array( 'issue_from', 'issue_to', 'expiry_from', 'expiry_to' ) as $date_filter_key ) {
+			$date_filters[ $date_filter_key ] = Ecapla_CertVerify_Validator::date( $args[ $date_filter_key ] ?? '' );
+			if ( is_wp_error( $date_filters[ $date_filter_key ] ) ) {
+				return new WP_Error( 'ecapla_certverify_invalid_registry_date_filter', __( 'Registry date filters must use valid YYYY-MM-DD dates.', 'certloom' ) );
+			}
+		}
+		if ( $date_filters['issue_from'] && $date_filters['issue_to'] && $date_filters['issue_from'] > $date_filters['issue_to'] ) {
+			return new WP_Error( 'ecapla_certverify_invalid_registry_date_range', __( 'Issue date “from” cannot be later than issue date “to”.', 'certloom' ) );
+		}
+		if ( $date_filters['expiry_from'] && $date_filters['expiry_to'] && $date_filters['expiry_from'] > $date_filters['expiry_to'] ) {
+			return new WP_Error( 'ecapla_certverify_invalid_registry_date_range', __( 'Expiry date “from” cannot be later than expiry date “to”.', 'certloom' ) );
+		}
+		if ( $date_filters['issue_from'] ) { $where[] = $wpdb->prepare( 'issue_date >= %s', $date_filters['issue_from'] ); }
+		if ( $date_filters['issue_to'] ) { $where[] = $wpdb->prepare( 'issue_date <= %s', $date_filters['issue_to'] ); }
+		if ( $date_filters['expiry_from'] ) { $where[] = $wpdb->prepare( 'expiry_date >= %s', $date_filters['expiry_from'] ); }
+		if ( $date_filters['expiry_to'] ) { $where[] = $wpdb->prepare( 'expiry_date <= %s', $date_filters['expiry_to'] ); }
+
+		$attention = sanitize_key( (string) $args['attention'] );
+		if ( 'expiring_soon' === $attention ) {
+			$today = current_time( 'Y-m-d' );
+			try {
+				$zone = function_exists( 'wp_timezone' ) ? wp_timezone() : new DateTimeZone( 'UTC' );
+				$soon = ( new DateTimeImmutable( $today, $zone ) )->modify( '+30 days' )->format( 'Y-m-d' );
+			} catch ( Exception $exception ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- UTC fallback is deterministic if the configured timezone is invalid.
+				$soon = gmdate( 'Y-m-d', strtotime( '+30 days' ) );
+			}
+			$where[] = $wpdb->prepare(
+				'(status <> %s AND status_source <> %s AND status NOT IN (%s, %s) AND expiry_date IS NOT NULL AND expiry_date BETWEEN %s AND %s)',
+				'expired',
+				'legacy',
+				'suspended',
+				'withdrawn',
+				$today,
+				$soon
+			);
+		}
+
 		$allowed_orderby = array( 'cert_number', 'holder_name', 'status', 'issue_date', 'expiry_date', 'created_at' );
 		$orderby          = in_array( $args['orderby'], $allowed_orderby, true ) ? $args['orderby'] : 'created_at';
 		$order            = 'ASC' === strtoupper( (string) $args['order'] ) ? 'ASC' : 'DESC';
@@ -1285,8 +1592,12 @@ class Ecapla_CertVerify_Database {
 			return self::read_error();
 		}
 
+		$decoded_rows = self::decode_rows( $rows );
+		if ( is_wp_error( $decoded_rows ) ) {
+			return $decoded_rows;
+		}
 		return array(
-			'items' => array_map( array( __CLASS__, 'decode_row' ), $rows ),
+			'items' => $decoded_rows,
 			'total' => (int) $total_raw,
 		);
 	}
@@ -1457,12 +1768,34 @@ class Ecapla_CertVerify_Database {
 		if ( ! $row ) {
 			return null;
 		}
-		$decoded              = ! empty( $row['custom_fields'] ) ? json_decode( $row['custom_fields'], true ) : array();
-		$row['custom_fields'] = is_array( $decoded ) ? $decoded : array();
+		$decoded = array();
+		if ( ! empty( $row['custom_fields'] ) ) {
+			$decoded = json_decode( (string) $row['custom_fields'], true );
+			if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $decoded ) ) {
+				return new WP_Error(
+					'ecapla_certverify_custom_fields_corrupt',
+					__( 'Stored certificate custom-field data is invalid. Certloom stopped this read to avoid exposing or overwriting incomplete credential state.', 'certloom' )
+				);
+			}
+		}
+		$row['custom_fields'] = $decoded;
 		if ( empty( $row['status_source'] ) ) {
 			$row['status_source'] = isset( $row['status'] ) && 'expired' === $row['status'] ? 'legacy' : 'manual';
 		}
 		return $row;
+	}
+
+	/** @return array|WP_Error */
+	private static function decode_rows( $rows ) {
+		$decoded_rows = array();
+		foreach ( (array) $rows as $row ) {
+			$decoded = self::decode_row( $row );
+			if ( is_wp_error( $decoded ) ) {
+				return $decoded;
+			}
+			$decoded_rows[] = $decoded;
+		}
+		return $decoded_rows;
 	}
 
 	/**

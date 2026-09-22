@@ -1,0 +1,160 @@
+/* ============================================================================
+   CERTLOOM DESIGN TOKENS · 1.7 UI Phase 1
+   Source of truth for Certloom-owned interface colour, radius, elevation,
+   typography scale, spacing, focus and motion. Load before product CSS.
+   ============================================================================ */
+:root {
+  /* Ink / paper */
+  --cl-ink: #01133D;
+  --cl-ink-soft: #56637F;
+  --cl-paper: #F2F4F8;
+  --cl-surface: #FFFFFF;
+  --cl-rule: #DCE1EA;
+  --cl-rule-firm: #B9C2D2;
+
+  /* Action */
+  --cl-blue: #1450E0;
+  --cl-blue-deep: #0A34A8;
+  --cl-blue-wash: #EAF0FE;
+  --cl-blue-bright: #1369FC;
+
+  /* Graphic-only brand colours sampled from the supplied Certloom logo.
+     These are the exact shield/check hues used for artwork and data-viz. */
+  --cl-brand-blue-dark: #0048EF;
+  --cl-brand-blue: #1369FC;
+  --cl-brand-blue-light: #679CFC;
+  --cl-cyan: #03CDF3;
+  --cl-cyan-deep: #009ED4;
+  --cl-brand-emerald: #01C174;
+
+  /* Explicit user-directed top-card treatment. Phase 2.2 corrects the earlier
+     blue-heavy experiment: the card now follows the actual logo sequence —
+     shield blue -> logo blue -> light blue -> cyan -> emerald. */
+  --cl-on-brand: #FFFFFF;
+  --cl-on-brand-soft: rgba(255, 255, 255, .88);
+  --cl-on-brand-line: rgba(255, 255, 255, .72);
+  --cl-on-brand-wash: rgba(255, 255, 255, .94);
+  --cl-on-brand-wash-hover: #FFFFFF;
+  --cl-brand-hero: linear-gradient(112deg, var(--cl-brand-blue-dark) 0%, var(--cl-brand-blue) 28%, var(--cl-brand-blue-light) 52%, var(--cl-cyan) 74%, var(--cl-brand-emerald) 100%);
+
+  /* Analytics / data-viz series follow the logo family. The emerald is allowed
+     here as a graphic series colour only; generic admin success/status text
+     still does not use green. After four series, styles repeat with patterns. */
+  --cl-chart-1: var(--cl-brand-blue-dark);
+  --cl-chart-2: var(--cl-cyan);
+  --cl-chart-3: var(--cl-brand-blue);
+  --cl-chart-4: var(--cl-brand-emerald);
+
+  /* Credential verdicts */
+  --cl-valid: #00734E;
+  --cl-valid-mark: #01C174;
+  --cl-valid-wash: #E3F7EE;
+  --cl-revoked: #96214A;
+  --cl-revoked-wash: #FBEAF0;
+  --cl-expired: #8A5A00;
+  --cl-expired-wash: #FBF2E0;
+
+  /* Functional feedback */
+  --cl-error: #C0271F;
+  --cl-focus: var(--cl-blue);
+
+  /* Radius: rows/panels, controls, genuinely floating surfaces */
+  --cl-r-none: 0;
+  --cl-r-ctl: 4px;
+  --cl-r-sm: 6px;
+  --cl-r-compact: 7px;
+  --cl-r-lift: 8px;
+  --cl-r-panel: 10px;
+  --cl-r-card: 12px;
+  --cl-r-dialog: 14px;
+  --cl-r-float: 16px;
+  --cl-r-hero: 18px;
+  --cl-r-pill: 999px;
+  --cl-r-round: 50%;
+
+  /* Elevation: shadow means "floats" */
+  --cl-shadow-hairline: 0 1px 2px rgba(0, 0, 0, .04);
+  --cl-shadow-soft: 0 1px 3px rgba(16, 24, 40, .08);
+  --cl-shadow-popover: 0 8px 22px rgba(22, 35, 58, .11);
+  --cl-shadow-rule: 0 0 0 1px var(--cl-rule-firm);
+  --cl-lift: 0 2px 8px rgba(1, 19, 61, .10), 0 0 0 1px var(--cl-rule);
+  --cl-float: 0 12px 32px rgba(1, 19, 61, .18);
+  --cl-shadow-dialog: 0 24px 70px rgba(1, 19, 61, .24);
+  --cl-shadow-canvas: 0 18px 48px rgba(1, 19, 61, .14);
+  --cl-ring-focus: 0 0 0 2px color-mix(in srgb, var(--cl-blue) 14%, transparent);
+  --cl-ring-focus-soft: 0 0 0 1px color-mix(in srgb, var(--cl-blue) 12%, transparent);
+  --cl-ring-success: 0 0 0 3px color-mix(in srgb, var(--cl-success) 14%, transparent);
+  --cl-ring-warning: 0 0 0 3px color-mix(in srgb, var(--cl-warning) 16%, transparent);
+  --cl-ring-on-dark: 0 0 0 1px rgb(255 255 255 / 82%);
+  --cl-ring-on-dark-strong: 0 0 0 2px rgb(255 255 255 / 90%);
+  --cl-ring-current: 0 0 0 2px currentColor;
+  --cl-ring-canvas-text: 0 0 0 1px CanvasText;
+  --cl-inset-focus: inset 0 0 0 1px color-mix(in srgb, var(--cl-blue) 14%, transparent);
+  --cl-inset-highlight: inset 3px 0 0 Highlight;
+
+  /* Type. Approved font binaries are bundled separately when supplied. */
+  --cl-sans: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --cl-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --cl-t-xs: 12px;
+  --cl-t-sm: 13px;
+  --cl-t-base: 15px;
+  --cl-t-md: 19px;
+  --cl-t-lg: 24px;
+  --cl-t-xl: 30px;
+  --cl-t-2xl: 38px;
+
+  /* Spacing */
+  --cl-1: 4px;
+  --cl-2: 8px;
+  --cl-3: 12px;
+  --cl-4: 16px;
+  --cl-5: 24px;
+  --cl-6: 32px;
+  --cl-7: 48px;
+  --cl-8: 64px;
+
+  /* Motion: components opt in through these variables. */
+  --cl-motion-fast: 120ms;
+  --cl-motion-base: 180ms;
+  --cl-motion-ease: cubic-bezier(.2, 0, 0, 1);
+}
+
+.certloom-admin-shell,
+.certloom-public {
+  font-family: var(--cl-sans);
+  color: var(--cl-ink);
+  font-variant-numeric: tabular-nums lining-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+.certloom-admin-shell *:focus-visible,
+.certloom-public *:focus-visible {
+  outline: 2px solid var(--cl-focus);
+  outline-offset: 2px;
+}
+
+.certloom-public .certloom-verdict,
+.certloom-public .certloom-recipient-name {
+  font-family: var(--cl-serif);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --cl-motion-fast: 0ms;
+    --cl-motion-base: 0ms;
+  }
+}
+
+@media (forced-colors: active) {
+  .certloom-admin-shell *:focus-visible,
+  .certloom-public *:focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+.certloom-mark {
+  width: 1em;
+  height: 1.03em;
+  display: inline-block;
+  color: currentColor;
+}

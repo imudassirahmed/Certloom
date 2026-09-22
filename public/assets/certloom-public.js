@@ -19,6 +19,11 @@
 		return /^[a-z0-9_-]{1,32}$/.test( String( value || '' ) ) ? String( value ) : 'unknown';
 	}
 
+	function statusIcon( value ) {
+		var icons = { valid: '✓', suspended: '!', withdrawn: '×', revoked: '×', expired: '○', not_yet_valid: '◷', pending_review: '…', suspended_noncompliant: '!', voided: '×', not_issued: '—' };
+		return icons[ statusModifier( value ) ] || '•';
+	}
+
 	function getConfig( root ) {
 		if ( root.classList.contains( 'cv-widget' ) ) {
 			return {
@@ -48,12 +53,22 @@
 			var value = field.is_status
 				? '<span class="' + prefix + '-badge ' + prefix + '-badge-' + statusModifier( field.status_key ) + '">' + escapeHtml( rawValue ) + '</span>'
 				: escapeHtml( rawValue );
-			return '<div class="' + prefix + '-result-row"><dt>' + escapeHtml( field.label ) + '</dt><dd>' + value + '</dd></div>';
+			return '<div class="' + prefix + '-result-row"><dt>' + escapeHtml( field.label ) + '</dt><dd dir="auto">' + value + '</dd></div>';
 		} ).join( '' );
 	}
 
-	function acquireCertificateRequest( endpoint, number ) {
-		var key = endpoint + '\n' + number;
+	function verificationSource() {
+		try {
+			return new URLSearchParams( window.location.search ).get( 'certloom_source' ) === 'qr' ? 'qr' : 'manual';
+		} catch ( error ) {
+			return 'manual';
+		}
+	}
+
+	function acquireCertificateRequest( endpoint, number, code, source ) {
+		code = ( code || '' ).trim();
+		source = source === 'qr' ? 'qr' : 'manual';
+		var key = endpoint + '\n' + number + '\n' + code + '\n' + source;
 		var entry = inFlightRequests[ key ];
 
 		if ( ! entry ) {
@@ -72,8 +87,10 @@
 					entry.controller.abort();
 				}, REQUEST_TIMEOUT_MS );
 			}
-			entry.promise = fetch( endpoint + '?number=' + encodeURIComponent( number ), {
-				headers: { Accept: 'application/json' },
+			entry.promise = fetch( endpoint, {
+				method: 'POST',
+				headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+				body: JSON.stringify( { number: number, code: code, source: source } ),
 				credentials: 'same-origin',
 				signal: entry.controller ? entry.controller.signal : undefined
 			} ).then( function ( response ) {
@@ -141,6 +158,8 @@
 		var button = root.querySelector( config.button );
 		var buttonText = root.querySelector( config.buttonText );
 		var resultEl = root.querySelector( config.result );
+		var codeInput = root.querySelector( '.certloom-secondary-code-input' );
+		var liveEl = root.querySelector( '.certloom-live-status' );
 		var endpoint = root.getAttribute( 'data-endpoint' );
 		var notFound = root.getAttribute( 'data-notfound-text' ) || 'No certificate found with that number.';
 		var foundText = root.getAttribute( 'data-found-text' ) || 'Certificate found.';
@@ -158,6 +177,13 @@
 			initialized.add( root );
 		}
 
+		function announce( message ) {
+			if ( ! liveEl ) { return; }
+			/* Clear first so repeating the same result can be announced again. */
+			liveEl.textContent = '';
+			window.setTimeout( function () { liveEl.textContent = message || ''; }, 20 );
+		}
+
 		function setLoading( isLoading ) {
 			button.disabled = isLoading;
 			button.classList.toggle( config.prefix + '-loading', isLoading );
@@ -169,15 +195,102 @@
 
 		function showMessage( message ) {
 			resultEl.innerHTML = '<div class="' + config.prefix + '-result-notfound"><p>' + escapeHtml( message ) + '</p></div>';
+			announce( message );
 		}
 
-		function showResult( fields ) {
+		function showResult( fields, presentation ) {
+			presentation = presentation && 'object' === typeof presentation ? presentation : {};
+			var status = presentation.status && 'object' === typeof presentation.status ? presentation.status : {};
+			var statusKey = statusModifier( status.key );
+			var statusLabel = 'string' === typeof status.label && status.label ? status.label : foundText;
+			var statusDescription = 'string' === typeof status.description ? status.description : '';
+			var issuer = 'string' === typeof presentation.issuer ? presentation.issuer : '';
+			var labels = presentation.labels && 'object' === typeof presentation.labels ? presentation.labels : {};
+			var issuedByLabel = 'string' === typeof labels.issued_by && labels.issued_by ? labels.issued_by : 'Issued by';
+			var verifiedLabel = 'string' === typeof labels.verified && labels.verified ? labels.verified : 'Verified';
 			var rows = renderRows( fields || [], config.prefix );
 			var list = rows ? '<dl class="' + config.prefix + '-result-list">' + rows + '</dl>' : '';
-			resultEl.innerHTML = '<div class="' + config.prefix + '-result-card"><p class="' + config.prefix + '-result-success">' + escapeHtml( foundText ) + '</p>' + list + '</div>';
+			var qrHtml = '';
+			var qr = presentation.qr && 'object' === typeof presentation.qr ? presentation.qr : null;
+			if ( qr && 'string' === typeof qr.path && /^[M0-9 hvz-]+$/.test( qr.path ) ) {
+				var qrView = parseInt( qr.view_size, 10 );
+				if ( qrView >= 29 && qrView <= 185 ) {
+					var qrLabel = 'string' === typeof qr.label ? qr.label : 'Verification QR code';
+					var qrCaption = 'string' === typeof qr.caption ? qr.caption : 'Scan to open this credential verification page.';
+					var qrLogoHtml = '';
+					var qrLogo = qr.logo && 'object' === typeof qr.logo ? qr.logo : null;
+					if ( qrLogo && 'string' === typeof qrLogo.data_uri && qrLogo.data_uri.length <= 800000 && /^data:image\/(?:png|jpeg);base64,[A-Za-z0-9+/=]+$/.test( qrLogo.data_uri ) ) {
+						var logoX = parseInt( qrLogo.x, 10 );
+						var logoY = parseInt( qrLogo.y, 10 );
+						var logoSize = parseInt( qrLogo.size, 10 );
+						var imageX = parseInt( qrLogo.image_x, 10 );
+						var imageY = parseInt( qrLogo.image_y, 10 );
+						var imageSize = parseInt( qrLogo.image_size, 10 );
+						if ( logoX >= 0 && logoY >= 0 && logoSize >= 5 && imageSize >= 1 && logoX + logoSize <= qrView && logoY + logoSize <= qrView ) {
+							qrLogoHtml = '<rect class="certloom-qr-logo-background" x="' + logoX + '" y="' + logoY + '" width="' + logoSize + '" height="' + logoSize + '" rx="1" fill="#fff"/><image class="certloom-qr-logo-image" href="' + escapeHtml( qrLogo.data_uri ) + '" x="' + imageX + '" y="' + imageY + '" width="' + imageSize + '" height="' + imageSize + '" preserveAspectRatio="xMidYMid meet"/>';
+						}
+					}
+					qrHtml = '<figure class="' + config.prefix + '-verification-qr certloom-verification-qr"><div class="certloom-verification-qr-code" role="img" aria-label="' + escapeHtml( qrLabel ) + '"><svg class="certloom-qr-svg" xmlns="http://www.w3.org/2000/svg" width="176" height="176" viewBox="0 0 ' + qrView + ' ' + qrView + '" aria-hidden="true" focusable="false" shape-rendering="crispEdges"><rect width="' + qrView + '" height="' + qrView + '" fill="#fff"/><path d="' + qr.path + '" fill="#111"/>' + qrLogoHtml + '</svg></div><figcaption>' + escapeHtml( qrCaption ) + '</figcaption></figure>';
+				}
+			}
+			var barcodeHtml = '';
+			var barcode = presentation.barcode && 'object' === typeof presentation.barcode ? presentation.barcode : null;
+			if ( barcode && 'string' === typeof barcode.path && /^[M0-9 hvz-]+$/.test( barcode.path ) ) {
+				var barcodeWidth = parseInt( barcode.view_width, 10 );
+				var barcodeHeight = parseInt( barcode.view_height, 10 );
+				if ( barcodeWidth >= 66 && barcodeWidth <= 780 && barcodeHeight === 40 ) {
+					var barcodeLabel = 'string' === typeof barcode.label ? barcode.label : 'Code 128 certificate barcode';
+					var barcodeCaption = 'string' === typeof barcode.caption ? barcode.caption : 'Code 128 representation of the certificate number.';
+					var barcodeValue = 'string' === typeof barcode.value ? barcode.value : '';
+					var barcodeDisplayWidth = parseInt( barcode.display_width, 10 );
+					if ( barcodeDisplayWidth < 440 || barcodeDisplayWidth > 1600 ) { barcodeDisplayWidth = Math.min( 1600, Math.max( 440, barcodeWidth * 2 ) ); }
+					barcodeHtml = '<figure class="' + config.prefix + '-verification-barcode certloom-verification-barcode"><div class="certloom-verification-barcode-code" role="img" aria-label="' + escapeHtml( barcodeLabel ) + '"><svg class="certloom-barcode-svg" xmlns="http://www.w3.org/2000/svg" width="' + barcodeDisplayWidth + '" height="88" viewBox="0 0 ' + barcodeWidth + ' ' + barcodeHeight + '" preserveAspectRatio="none" aria-hidden="true" focusable="false" shape-rendering="crispEdges"><rect width="' + barcodeWidth + '" height="' + barcodeHeight + '" fill="#fff"/><path d="' + barcode.path + '" fill="#111"/></svg></div><figcaption>' + escapeHtml( barcodeCaption ) + ( barcodeValue ? ' <code>' + escapeHtml( barcodeValue ) + '</code>' : '' ) + '</figcaption></figure>';
+				}
+			}
+			var summary = '<div class="' + config.prefix + '-result-summary"><span class="' + config.prefix + '-status-mark" aria-hidden="true">' + escapeHtml( statusIcon( statusKey ) ) + '</span><div><p class="' + config.prefix + '-result-success">' + escapeHtml( statusLabel ) + '</p>' +
+				( statusDescription ? '<p class="' + config.prefix + '-status-description">' + escapeHtml( statusDescription ) + '</p>' : '' ) +
+				( issuer ? '<p class="' + config.prefix + '-result-issuer"><span>' + escapeHtml( issuedByLabel ) + '</span> ' + escapeHtml( issuer ) + '</p>' : '' ) + '</div></div>';
+			var verified = '';
+			if ( 'string' === typeof presentation.verified_at && presentation.verified_at ) {
+				var date = new Date( presentation.verified_at );
+				verified = '<p class="' + config.prefix + '-verified-at">' + escapeHtml( verifiedLabel ) + ' <time datetime="' + escapeHtml( presentation.verified_at ) + '">' + escapeHtml( isNaN( date.getTime() ) ? presentation.verified_at : date.toLocaleString() ) + '</time></p>';
+			}
+			var actionHtml = '';
+			var actions = Array.isArray( presentation.actions ) ? presentation.actions : [];
+			actions.forEach( function ( action ) {
+				var type = statusModifier( action && action.type );
+				var label = action && 'string' === typeof action.label ? action.label : '';
+				var url = action && 'string' === typeof action.url ? action.url : '';
+				if ( ! label ) { return; }
+				if ( 'share' === type && url && Array.isArray( action.links ) ) {
+					var shareLinks = '';
+					var copyLabel = action && 'string' === typeof action.copy_label ? action.copy_label : 'Copy URL';
+					action.links.forEach( function ( link ) {
+						var platform = statusModifier( link && link.platform );
+						var shareLabel = link && 'string' === typeof link.label ? link.label : '';
+						var shareUrl = link && 'string' === typeof link.url ? link.url : '';
+						if ( ! shareLabel || ! safeShareUrl( shareUrl, platform ) ) { return; }
+						var targetAttrs = 'email' === platform ? '' : ' target="_blank" rel="nofollow noopener noreferrer"';
+						shareLinks += '<a class="certloom-share-link certloom-share-link--' + escapeHtml( platform ) + '" href="' + escapeHtml( shareUrl ) + '"' + targetAttrs + '>' + escapeHtml( shareLabel ) + '</a>';
+					} );
+					if ( shareLinks ) {
+						actionHtml += '<details class="certloom-share"><summary class="certloom-result-action ' + config.prefix + '-result-action">' + escapeHtml( label ) + '</summary><div class="certloom-share-menu">' + shareLinks + '<button type="button" class="certloom-share-link certloom-share-copy certloom-copy-link" data-copy-url="' + escapeHtml( url ) + '">' + escapeHtml( copyLabel ) + '</button></div></details>';
+					}
+				} else if ( 'copy' === type && url ) {
+					actionHtml += '<button type="button" class="certloom-result-action ' + config.prefix + '-result-action certloom-copy-link" data-copy-url="' + escapeHtml( url ) + '">' + escapeHtml( label ) + '</button>';
+				} else if ( 'print' === type ) {
+					actionHtml += '<button type="button" class="certloom-result-action ' + config.prefix + '-result-action certloom-print is-secondary">' + escapeHtml( label ) + '</button>';
+				} else if ( url ) {
+					actionHtml += '<a class="certloom-result-action ' + config.prefix + '-result-action" href="' + escapeHtml( url ) + '">' + escapeHtml( label ) + '</a>';
+				}
+			} );
+			var actionBar = actionHtml ? '<div class="' + config.prefix + '-result-actions">' + actionHtml + '<span class="certloom-action-feedback" aria-live="polite"></span></div>' : '';
+			var qrBlock = qrHtml ? '<div class="certloom-result-qr">' + qrHtml + '</div>' : '';
+			resultEl.innerHTML = '<div class="' + config.prefix + '-result-card ' + config.prefix + '-status-' + statusKey + '">' + summary + list + barcodeHtml + qrBlock + verified + actionBar + '</div>';
+			announce( statusDescription ? statusLabel + '. ' + statusDescription : statusLabel );
 		}
 
-		function search( number ) {
+		function search( number, code ) {
 			requestSequence++;
 			var thisRequest = requestSequence;
 
@@ -196,7 +309,7 @@
 			}
 			input.removeAttribute( 'aria-invalid' );
 
-			activeRequest = acquireCertificateRequest( endpoint, number );
+			activeRequest = acquireCertificateRequest( endpoint, number, code, verificationSource() );
 			var thisRequestHandle = activeRequest;
 			setLoading( true );
 			resultEl.innerHTML = '';
@@ -217,7 +330,7 @@
 						if ( ! Array.isArray( result.data.fields ) ) {
 							throw new Error( 'Certloom received an incomplete verification response.' );
 						}
-						showResult( result.data.fields );
+						showResult( result.data.fields, result.data.presentation );
 					} else {
 						showMessage( notFound );
 					}
@@ -241,7 +354,7 @@
 
 		form.addEventListener( 'submit', function ( event ) {
 			event.preventDefault();
-			search( input.value );
+			search( input.value, codeInput ? codeInput.value : '' );
 		} );
 
 		input.addEventListener( 'input', function () {
@@ -254,13 +367,159 @@
 		if ( direct ) {
 			input.value = direct;
 			if ( '1' !== root.getAttribute( 'data-server-rendered' ) ) {
-				search( direct );
+				search( direct, codeInput ? codeInput.value : '' );
 			}
 		}
 	}
 
+	function safeShareUrl( value, platform ) {
+		if ( 'string' !== typeof value || ! value || ! /^(linkedin|whatsapp|facebook|x|email)$/.test( platform ) ) { return false; }
+		if ( 'email' === platform ) { return /^mailto:\?/i.test( value ); }
+		try {
+			var parsed = new URL( value, window.location.href );
+			if ( 'https:' !== parsed.protocol ) { return false; }
+			var hosts = {
+				linkedin: [ 'www.linkedin.com' ],
+				whatsapp: [ 'wa.me' ],
+				facebook: [ 'www.facebook.com' ],
+				x: [ 'twitter.com', 'www.twitter.com', 'x.com', 'www.x.com' ]
+			};
+			return hosts[ platform ] && hosts[ platform ].indexOf( parsed.hostname.toLowerCase() ) !== -1;
+		} catch ( error ) { return false; }
+	}
+
+	function actionRoot( element ) {
+		return element && element.closest ? element.closest( '.cv-widget, .cvx-widget, .cvp-widget, .certloom-my-credentials' ) : null;
+	}
+
+	function actionFeedback( button, message ) {
+		/* Keep feedback next to the action that produced it. Recipient Portal pages can
+		 * contain many Share controls; querying the whole portal would otherwise update
+		 * the first credential card no matter which Copy URL button was pressed. */
+		var local = button && button.closest ? button.closest( '.certloom-share, .cv-result-actions, .cvx-result-actions, .cvp-result-actions, .certloom-my-credential-card__actions' ) : null;
+		var target = local && local.querySelector ? local.querySelector( '.certloom-action-feedback' ) : null;
+		if ( ! target ) {
+			var root = actionRoot( button );
+			target = root ? root.querySelector( '.certloom-action-feedback' ) : null;
+		}
+		if ( target ) { target.textContent = message || ''; }
+	}
+
+	function fallbackCopy( text ) {
+		var area = document.createElement( 'textarea' );
+		area.value = text;
+		area.setAttribute( 'readonly', '' );
+		area.style.position = 'fixed';
+		area.style.opacity = '0';
+		document.body.appendChild( area );
+		area.select();
+		var copied = false;
+		try { copied = document.execCommand( 'copy' ); } catch ( error ) { copied = false; }
+		document.body.removeChild( area );
+		return copied;
+	}
+
+
+	function printCertloomArea( root ) {
+		if ( ! root || ! document.body ) { window.print(); return; }
+		var existing = document.querySelector( '.certloom-print-portal' );
+		if ( existing && existing.parentNode ) { existing.parentNode.removeChild( existing ); }
+		var portal = document.createElement( 'div' );
+		portal.className = 'certloom-print-portal';
+		portal.setAttribute( 'aria-hidden', 'true' );
+		portal.appendChild( root.cloneNode( true ) );
+		document.body.appendChild( portal );
+		document.body.classList.add( 'certloom-printing' );
+		var cleaned = false;
+		var cleanup = function () {
+			if ( cleaned ) { return; }
+			cleaned = true;
+			document.body.classList.remove( 'certloom-printing' );
+			if ( portal.parentNode ) { portal.parentNode.removeChild( portal ); }
+		};
+		window.addEventListener( 'afterprint', cleanup, { once: true } );
+		window.print();
+		window.setTimeout( cleanup, 1500 );
+	}
+
+	document.addEventListener( 'click', function ( event ) {
+		var target = event.target && event.target.closest ? event.target.closest( '.certloom-copy-link, .certloom-print' ) : null;
+		if ( ! target ) { return; }
+		if ( target.classList.contains( 'certloom-print' ) ) {
+			event.preventDefault();
+			printCertloomArea( actionRoot( target ) );
+			return;
+		}
+		var url = target.getAttribute( 'data-copy-url' ) || '';
+		if ( ! url ) { return; }
+		event.preventDefault();
+		var root = actionRoot( target );
+		var successText = root ? root.getAttribute( 'data-copy-success-text' ) : '';
+		var errorText = root ? root.getAttribute( 'data-copy-error-text' ) : '';
+		var done = function ( ok ) { actionFeedback( target, ok ? ( successText || 'Verification link copied.' ) : ( errorText || 'Copy the verification link from your browser.' ) ); };
+		if ( navigator.clipboard && navigator.clipboard.writeText ) {
+			navigator.clipboard.writeText( url ).then( function () { done( true ); }, function () { done( fallbackCopy( url ) ); } );
+		} else {
+			done( fallbackCopy( url ) );
+		}
+	} );
+
+
+	var previewObservers = typeof WeakMap === 'function' ? new WeakMap() : null;
+
+	function fitCertificatePreview( scroll ) {
+		if ( ! scroll || ! scroll.querySelector ) { return; }
+		var page = scroll.querySelector( '.certloom-template-preview-page' );
+		if ( ! page ) { return; }
+		var naturalWidth = parseFloat( scroll.getAttribute( 'data-certloom-preview-width' ) || '' );
+		var naturalHeight = parseFloat( scroll.getAttribute( 'data-certloom-preview-height' ) || '' );
+		if ( ! naturalWidth || ! naturalHeight ) {
+			naturalWidth = parseFloat( page.style.width || '' );
+			naturalHeight = parseFloat( page.style.height || '' );
+		}
+		if ( ! naturalWidth || ! naturalHeight ) { return; }
+		var stage = page.parentNode && page.parentNode.classList && page.parentNode.classList.contains( 'certloom-certificate-preview-stage' ) ? page.parentNode : null;
+		if ( ! stage ) {
+			stage = document.createElement( 'div' );
+			stage.className = 'certloom-certificate-preview-stage';
+			page.parentNode.insertBefore( stage, page );
+			stage.appendChild( page );
+		}
+		var style = window.getComputedStyle ? window.getComputedStyle( scroll ) : null;
+		var horizontalPadding = style ? ( parseFloat( style.paddingLeft || 0 ) + parseFloat( style.paddingRight || 0 ) ) : 0;
+		var available = Math.max( 1, scroll.clientWidth - horizontalPadding );
+		var scale = Math.min( 1, available / naturalWidth );
+		page.style.transformOrigin = 'top left';
+		page.style.transform = 'scale(' + scale.toFixed( 6 ) + ')';
+		stage.style.width = Math.max( 1, naturalWidth * scale ) + 'px';
+		stage.style.height = Math.max( 1, naturalHeight * scale ) + 'px';
+		stage.style.margin = '0 auto';
+		scroll.setAttribute( 'data-certloom-preview-fitted', '1' );
+	}
+
+	function initCertificatePreview( scroll ) {
+		if ( ! scroll || scroll.getAttribute( 'data-certloom-preview-initialized' ) === '1' ) { return; }
+		scroll.setAttribute( 'data-certloom-preview-initialized', '1' );
+		fitCertificatePreview( scroll );
+		if ( typeof ResizeObserver === 'function' ) {
+			var observer = new ResizeObserver( function () { fitCertificatePreview( scroll ); } );
+			observer.observe( scroll );
+			if ( previewObservers ) { previewObservers.set( scroll, observer ); }
+		} else {
+			window.addEventListener( 'resize', function () { fitCertificatePreview( scroll ); } );
+		}
+	}
+
+	function scanCertificatePreviews( root ) {
+		if ( ! root ) { return; }
+		if ( root.matches && root.matches( '.cvp-certificate-preview .certloom-template-preview-scroll' ) ) { initCertificatePreview( root ); }
+		var previews = root.querySelectorAll ? root.querySelectorAll( '.cvp-certificate-preview .certloom-template-preview-scroll' ) : [];
+		for ( var i = 0; i < previews.length; i++ ) { initCertificatePreview( previews[ i ] ); }
+	}
+
 	function scan( scope ) {
 		var root = scope || document;
+		scanCertificatePreviews( root );
 		if ( root.matches && root.matches( '.cv-widget, .cvx-widget' ) ) {
 			initWidget( root );
 		}

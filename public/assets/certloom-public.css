@@ -150,19 +150,19 @@
 }
 
 .ecapla-certverify-widget.cv-widget{
-	--cv-accent: #0f6e56;
-	--cv-heading: #14181f;
-	--cv-muted: #5f6368;
-	--cv-border: #e2e0d8;
+	--cv-accent: var(--cl-blue);
+	--cv-heading: var(--cl-ink);
+	--cv-muted: var(--cl-ink-soft);
+	--cv-border: var(--cl-expired-wash);
 	--cv-radius: 10px;
-	--cv-valid-bg: #e3f5ec;
-	--cv-valid-text: #0f6e42;
-	--cv-suspended-bg: #fdf3d8;
-	--cv-suspended-text: #8a5c00;
-	--cv-withdrawn-bg: #fbe4e4;
-	--cv-withdrawn-text: #9a2b2b;
-	--cv-expired-bg: #eceae5;
-	--cv-expired-text: #57564f;
+	--cv-valid-bg: var(--cl-valid-wash);
+	--cv-valid-text: var(--cl-valid);
+	--cv-suspended-bg: var(--cl-expired-wash);
+	--cv-suspended-text: var(--cl-expired);
+	--cv-withdrawn-bg: var(--cl-revoked-wash);
+	--cv-withdrawn-text: var(--cl-error);
+	--cv-expired-bg: var(--cl-paper);
+	--cv-expired-text: var(--cl-ink-soft);
 	--cv-guide-cols: 3;
 	container-name: certverify-legacy;
 	container-type: inline-size;
@@ -177,7 +177,7 @@
 }
 
 .ecapla-certverify-widget.cv-widget .cv-search-card{
-	background: #fff;
+	background: var(--cl-surface);
 	border: 1px solid var(--cv-border);
 	border-radius: var(--cv-radius);
 	padding: 32px;
@@ -236,13 +236,18 @@
 }
 
 .ecapla-certverify-widget.cv-widget .cv-search-input{
+	-webkit-appearance:none;
+	appearance:none;
 	flex: 1 1 220px;
 	min-width: 0;
 	padding: 12px 16px;
 	border: 1px solid var(--cv-border);
-	border-radius: 8px;
-	font-size: 14px;
+	border-radius: var(--cl-r-lift);
+	font-size: 16px;
+	line-height:1.4;
 	color: var(--cv-heading);
+	background:var(--cl-surface);
+	box-shadow:none;
 }
 
 .ecapla-certverify-widget.cv-widget .cv-search-input:focus{
@@ -255,9 +260,10 @@
 	align-items: center;
 	gap: 8px;
 	background: var(--cv-accent);
-	color: #fff;
+	color: var(--cl-surface);
 	border: none;
-	border-radius: 8px;
+	border-radius: var(--cl-r-lift);
+	min-height:44px;
 	padding: 12px 22px;
 	font-size: 14px;
 	font-weight: 600;
@@ -265,8 +271,24 @@
 	white-space: nowrap;
 }
 
+.ecapla-certverify-widget.cv-widget .cv-search-btn{
+	-webkit-appearance:none;
+	appearance:none;
+	margin:0;
+	box-shadow:none;
+	font-family:inherit;
+	line-height:1.25;
+	text-transform:none;
+	letter-spacing:normal;
+}
+
 .ecapla-certverify-widget.cv-widget .cv-search-btn:hover{
 	filter: brightness(0.92);
+}
+
+.ecapla-certverify-widget.cv-widget .cv-search-btn:focus-visible{
+	outline:3px solid var(--cv-accent);
+	outline-offset:3px;
 }
 
 .ecapla-certverify-widget.cv-widget .cv-search-btn:disabled{
@@ -296,8 +318,8 @@
 .ecapla-certverify-widget.cv-widget .cv-result-card,
 .ecapla-certverify-widget.cv-widget .cv-result-notfound{
 	border: 1px solid var(--cv-border);
-	border-radius: 8px;
-	background: #fafaf8;
+	border-radius: var(--cl-r-lift);
+	background: var(--cl-surface);
 }
 
 .ecapla-certverify-widget.cv-widget .cv-result-card{
@@ -359,13 +381,13 @@
 	color: var(--cv-heading);
 	font-size: 14px;
 	font-weight: 600;
-	text-align: right;
+	text-align: end;
 }
 
 .ecapla-certverify-widget.cv-widget .cv-badge{
 	display: inline-block;
 	padding: 3px 12px;
-	border-radius: 999px;
+	border-radius: var(--cl-r-pill);
 	font-size: 12px;
 	font-weight: 700;
 }
@@ -402,7 +424,7 @@
 }
 
 .ecapla-certverify-widget.cv-widget .cv-guide-card{
-	border-radius: 8px;
+	border-radius: var(--cl-r-lift);
 	padding: 16px 18px;
 }
 
@@ -452,16 +474,16 @@
 	}
 
 	.ecapla-certverify-widget.cv-widget .cv-search-input{
-		flex: 0 0 auto !important;
-		width: 100% !important;
-		height: 52px !important;
-		min-height: 52px !important;
-		max-height: 52px !important;
+		flex: 0 0 auto;
+		width: 100%;
+		height: 52px;
+		min-height: 52px;
+		max-height: 52px;
 	}
 
 	.ecapla-certverify-widget.cv-widget .cv-search-btn{
-		flex: 0 0 auto !important;
-		width: 100% !important;
+		flex: 0 0 auto;
+		width: 100%;
 		min-height: 52px;
 		justify-content: center;
 	}
@@ -491,7 +513,7 @@
 	}
 
 	.ecapla-certverify-widget.cv-widget .cv-result-row dd{
-		text-align: left;
+		text-align: start;
 	}
 }
 
@@ -502,16 +524,16 @@
 	}
 
 	.ecapla-certverify-widget.cv-widget .cv-search-input{
-		flex: 0 0 auto !important;
-		width: 100% !important;
-		height: 52px !important;
-		min-height: 52px !important;
-		max-height: 52px !important;
+		flex: 0 0 auto;
+		width: 100%;
+		height: 52px;
+		min-height: 52px;
+		max-height: 52px;
 	}
 
 	.ecapla-certverify-widget.cv-widget .cv-search-btn{
-		flex: 0 0 auto !important;
-		width: 100% !important;
+		flex: 0 0 auto;
+		width: 100%;
 		min-height: 52px;
 		justify-content: center;
 	}
@@ -537,7 +559,7 @@
 	}
 
 	.ecapla-certverify-widget.cv-widget .cv-result-row dd{
-		text-align: left;
+		text-align: start;
 	}
 }
 
@@ -552,31 +574,31 @@
  * Each template is isolated under .cvx-widget and never changes .cv-widget.
  * ---------------------------------------------------------------------- */
 .ecapla-certverify-template.cvx-widget{
-	--cvx-accent: #116a55;
-	--cvx-accent-strong: #0b5543;
-	--cvx-heading: #17201d;
-	--cvx-muted: #65716d;
-	--cvx-border: #dce4e0;
-	--cvx-surface: #ffffff;
-	--cvx-surface-soft: #f5f8f6;
+	--cvx-accent: var(--cl-valid);
+	--cvx-accent-strong: var(--cl-valid);
+	--cvx-heading: var(--cl-ink);
+	--cvx-muted: var(--cl-ink-soft);
+	--cvx-border: var(--cl-rule);
+	--cvx-surface: var(--cl-surface);
+	--cvx-surface-soft: var(--cl-surface);
 	--cvx-radius: 22px;
 	--cvx-credit-color: var(--cvx-muted);
 	--cvx-credit-size: 13px;
 	--cvx-credit-align: center;
-	--cvx-valid-bg: #e8f7ef;
-	--cvx-valid-text: #12633e;
-	--cvx-suspended-bg: #fff4d6;
-	--cvx-suspended-text: #815800;
-	--cvx-withdrawn-bg: #fce9e9;
-	--cvx-withdrawn-text: #982e2e;
-	--cvx-expired-bg: #edf0ee;
-	--cvx-expired-text: #56605c;
+	--cvx-valid-bg: var(--cl-valid-wash);
+	--cvx-valid-text: var(--cl-valid);
+	--cvx-suspended-bg: var(--cl-expired-wash);
+	--cvx-suspended-text: var(--cl-expired);
+	--cvx-withdrawn-bg: var(--cl-revoked-wash);
+	--cvx-withdrawn-text: var(--cl-revoked);
+	--cvx-expired-bg: var(--cl-paper);
+	--cvx-expired-text: var(--cl-ink-soft);
 	container-name: certverify-modern;
 	container-type: inline-size;
 	display: block;
-	width: 100% !important;
-	min-width: 0 !important;
-	max-width: none !important;
+	width: 100%;
+	min-width: 0;
+	max-width: none;
 	margin-inline: 0;
 	color: var(--cvx-heading);
 	font-family: inherit;
@@ -601,7 +623,7 @@
 	background: var(--cvx-surface);
 	border: 1px solid var(--cvx-border);
 	border-radius: var(--cvx-radius);
-	box-shadow: 0 22px 54px rgba(23, 42, 35, 0.09);
+	box-shadow: var(--cl-shadow-canvas);
 	overflow: hidden;
 }
 
@@ -703,9 +725,9 @@
 	min-width: 0;
 	min-height: 56px;
 	padding: 0 17px;
-	background: #fff;
+	background: var(--cl-surface);
 	border: 1px solid var(--cvx-border);
-	border-radius: 14px;
+	border-radius: var(--cl-r-dialog);
 	overflow: hidden;
 	transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
@@ -722,7 +744,7 @@
 	height: var(--cvx-icon-size, 18px);
 	margin: 0;
 	border: 1.8px solid var(--cvx-muted);
-	border-radius: 50%;
+	border-radius: var(--cl-r-round);
 	opacity: 0.82;
 }
 
@@ -734,28 +756,28 @@
 	width: 7px;
 	height: 1.8px;
 	background: var(--cvx-muted);
-	border-radius: 999px;
+	border-radius: var(--cl-r-pill);
 	transform: rotate(45deg);
 	transform-origin: center;
 }
 
 .ecapla-certverify-template.cvx-widget input.cvx-search-input[type="text"]{
-	-webkit-appearance: none !important;
-	appearance: none !important;
-	display: block !important;
-	min-width: 0 !important;
-	width: 100% !important;
-	max-width: none !important;
-	height: auto !important;
-	min-height: 0 !important;
-	margin: 0 !important;
-	padding: 0 !important;
-	background: transparent !important;
-	background-image: none !important;
-	border: 0 !important;
-	border-radius: 0 !important;
-	box-shadow: none !important;
-	outline: 0 !important;
+	-webkit-appearance: none;
+	appearance: none;
+	display: block;
+	min-width: 0;
+	width: 100%;
+	max-width: none;
+	height: auto;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	background: transparent;
+	background-image: none;
+	border: 0;
+	border-radius: var(--cl-r-none);
+	box-shadow: none;
+	outline: 0;
 }
 
 .ecapla-certverify-template.cvx-widget .cvx-search-input{
@@ -787,14 +809,14 @@
 	align-items: center;
 	justify-content: center;
 	gap: 10px;
-	width: auto !important;
+	width: auto;
 	max-width: 100%;
 	min-height: 56px;
 	padding: 14px 22px;
-	color: #fff;
+	color: var(--cl-surface);
 	background: var(--cvx-accent);
 	border: 1px solid transparent;
-	border-radius: 14px;
+	border-radius: var(--cl-r-dialog);
 	font: inherit;
 	font-size: 14px;
 	font-weight: 700;
@@ -806,7 +828,7 @@
 
 .ecapla-certverify-template.cvx-widget .cvx-search-btn:hover,
 .ecapla-certverify-template.cvx-widget .cvx-search-btn:focus-visible{
-	color: #fff;
+	color: var(--cl-surface);
 	background: var(--cvx-accent-strong);
 	box-shadow: 0 12px 26px color-mix(in srgb, var(--cvx-accent) 24%, transparent);
 	transform: translateY(-1px);
@@ -837,8 +859,8 @@
 	height: 16px;
 	font-size: 0;
 	border: 2px solid rgba(255, 255, 255, 0.42);
-	border-top-color: #fff;
-	border-radius: 50%;
+	border-top-color: var(--cl-surface);
+	border-radius: var(--cl-r-round);
 	animation: ecapla-certverify-template-spin 700ms linear infinite;
 }
 
@@ -859,7 +881,7 @@
 	padding: 18px;
 	background: var(--cvx-surface-soft);
 	border: 1px solid var(--cvx-border);
-	border-radius: 14px;
+	border-radius: var(--cl-r-dialog);
 }
 
 .ecapla-certverify-template.cvx-widget .cvx-result-notfound p{
@@ -880,7 +902,7 @@
 
 .ecapla-certverify-template.cvx-widget .cvx-result-list{
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)) !important;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
 	gap: 0;
 	margin: 0;
 }
@@ -919,7 +941,7 @@
 	align-items: center;
 	width: fit-content;
 	padding: 4px 10px;
-	border-radius: 999px;
+	border-radius: var(--cl-r-pill);
 	font-size: 12px;
 	font-weight: 740;
 	line-height: 1.35;
@@ -950,7 +972,7 @@
 
 .ecapla-certverify-template.cvx-widget .cvx-guide-grid{
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)) !important;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
 	gap: 12px;
 }
 
@@ -960,9 +982,9 @@
 	gap: 10px;
 	min-width: 0;
 	padding: 15px;
-	background: #fff;
+	background: var(--cl-surface);
 	border: 1px solid var(--cvx-border);
-	border-radius: 14px;
+	border-radius: var(--cl-r-dialog);
 }
 
 .ecapla-certverify-template.cvx-widget .cvx-guide-mark{
@@ -971,7 +993,7 @@
 	flex: 0 0 24px;
 	width: 24px;
 	height: 24px;
-	border-radius: 50%;
+	border-radius: var(--cl-r-round);
 	font-size: 12px;
 	font-weight: 800;
 }
@@ -1008,8 +1030,8 @@
 
 /* Meridian: balanced executive split panel. */
 .ecapla-certverify-template.cvx-widget.cvx-template-meridian{
-	--cvx-accent: #146b58;
-	--cvx-accent-strong: #0c5444;
+	--cvx-accent: var(--cl-valid);
+	--cvx-accent-strong: var(--cl-valid);
 }
 
 .ecapla-certverify-template.cvx-widget.cvx-template-meridian .cvx-shell::before{
@@ -1022,15 +1044,15 @@
 
 .ecapla-certverify-template.cvx-widget.cvx-template-meridian .cvx-action{
 	padding: 22px;
-	background: #f6f9f7;
+	background: var(--cl-surface);
 	border: 1px solid color-mix(in srgb, var(--cvx-border) 76%, transparent);
-	border-radius: 17px;
+	border-radius: var(--cl-r-hero);
 }
 
 /* Halo: restrained centered presentation with a focused action surface. */
 .ecapla-certverify-template.cvx-widget.cvx-template-halo{
-	--cvx-accent: #2856b6;
-	--cvx-accent-strong: #1d438f;
+	--cvx-accent: var(--cl-blue-deep);
+	--cvx-accent-strong: var(--cl-blue-deep);
 }
 
 .ecapla-certverify-template.cvx-widget.cvx-template-halo .cvx-shell{
@@ -1070,9 +1092,9 @@
 	width: min(100%, 680px);
 	margin-inline: auto;
 	padding: 10px;
-	background: #f5f7fb;
-	border: 1px solid #e1e7f2;
-	border-radius: 19px;
+	background: var(--cl-paper);
+	border: 1px solid var(--cl-rule);
+	border-radius: var(--cl-r-hero);
 }
 
 .ecapla-certverify-template.cvx-widget.cvx-template-halo .cvx-result{
@@ -1081,15 +1103,15 @@
 
 /* Axis: compact, precise and horizontally efficient. */
 .ecapla-certverify-template.cvx-widget.cvx-template-axis{
-	--cvx-accent: #2c5f68;
-	--cvx-accent-strong: #1d474e;
+	--cvx-accent: var(--cl-ink-soft);
+	--cvx-accent-strong: var(--cl-ink-soft);
 }
 
 .ecapla-certverify-template.cvx-widget.cvx-template-axis .cvx-shell{
 	grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
 	padding: 28px 30px;
-	border-radius: 14px;
-	box-shadow: 0 12px 34px rgba(28, 47, 43, 0.07);
+	border-radius: var(--cl-r-dialog);
+	box-shadow: var(--cl-shadow-popover);
 }
 
 .ecapla-certverify-template.cvx-widget.cvx-template-axis .cvx-heading{
@@ -1108,53 +1130,53 @@
 
 .ecapla-certverify-template.cvx-widget.cvx-template-axis .cvx-guide-card{
 	padding: 12px;
-	border-radius: 10px;
+	border-radius: var(--cl-r-panel);
 }
 
 /* Nova: creative soft-tech surface, kept readable and restrained. */
 .ecapla-certverify-template.cvx-widget.cvx-template-nova{
-	--cvx-accent: #7550a5;
-	--cvx-accent-strong: #5a3d81;
-	--cvx-border: #e6deef;
-	--cvx-surface-soft: #f8f5fb;
+	--cvx-accent: var(--cl-blue-deep);
+	--cvx-accent-strong: var(--cl-ink);
+	--cvx-border: var(--cl-rule);
+	--cvx-surface-soft: var(--cl-paper);
 }
 
 .ecapla-certverify-template.cvx-widget.cvx-template-nova .cvx-shell{
 	background:
 		radial-gradient(circle at 12% 12%, rgba(117, 80, 165, 0.12), transparent 34%),
 		radial-gradient(circle at 92% 90%, rgba(48, 151, 140, 0.10), transparent 36%),
-		#fff;
-	border-color: #e4dced;
-	box-shadow: 0 24px 70px rgba(75, 54, 97, 0.11);
+		var(--cl-surface);
+	border-color: var(--cl-rule);
+	box-shadow: var(--cl-shadow-dialog);
 }
 
 .ecapla-certverify-template.cvx-widget.cvx-template-nova .cvx-action{
 	padding: 22px;
 	background: rgba(255, 255, 255, 0.76);
 	border: 1px solid rgba(255, 255, 255, 0.9);
-	border-radius: 18px;
-	box-shadow: 0 10px 32px rgba(75, 54, 97, 0.08);
+	border-radius: var(--cl-r-hero);
+	box-shadow: var(--cl-shadow-popover);
 	backdrop-filter: blur(12px);
 }
 
 .ecapla-certverify-template.cvx-widget.cvx-template-nova .cvx-guide-card{
-	background: linear-gradient(180deg, #fff, #fbf9fd);
+	background: linear-gradient(180deg, var(--cl-surface), var(--cl-paper));
 }
 
 /* Forge: authoritative dark panel with a high-contrast verification surface. */
 .ecapla-certverify-template.cvx-widget.cvx-template-forge{
-	--cvx-accent: #d6b260;
-	--cvx-accent-strong: #b89443;
-	--cvx-heading: #f6f7f4;
-	--cvx-muted: #b7c1bd;
-	--cvx-border: #344640;
-	--cvx-surface-soft: #16231f;
+	--cvx-accent: var(--cl-expired);
+	--cvx-accent-strong: var(--cl-expired);
+	--cvx-heading: var(--cl-surface);
+	--cvx-muted: var(--cl-rule-firm);
+	--cvx-border: var(--cl-ink-soft);
+	--cvx-surface-soft: var(--cl-ink-soft);
 }
 
 .ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-shell{
-	background: linear-gradient(135deg, #10201b 0%, #1a2d27 100%);
-	border-color: #31463f;
-	box-shadow: 0 24px 70px rgba(4, 13, 10, 0.24);
+	background: linear-gradient(135deg, var(--cl-ink) 0%, var(--cl-ink-soft) 100%);
+	border-color: var(--cl-ink-soft);
+	box-shadow: var(--cl-shadow-dialog);
 }
 
 .ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-shell::after{
@@ -1169,43 +1191,43 @@
 
 .ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-action{
 	padding: 22px;
-	background: #f7f8f6;
-	border-radius: 17px;
+	background: var(--cl-surface);
+	border-radius: var(--cl-r-hero);
 }
 
 .ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-input-wrap{
-	border-color: #d7dedb;
+	border-color: var(--cl-rule);
 }
 
 .ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-result-card,
 .ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-result-notfound{
-	background: #fff;
-	border-color: #d7dedb;
+	background: var(--cl-surface);
+	border-color: var(--cl-rule);
 }
 
 .ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-result-row dt{
-	color: #66736e;
+	color: var(--cl-ink-soft);
 }
 
 .ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-result-row dd{
-	color: #17201d;
+	color: var(--cl-ink);
 }
 
 .ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-guide-heading{
-	color: #17201d;
+	color: var(--cl-ink);
 }
 
 .ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-guide-title{
-	color: #f6f7f4;
+	color: var(--cl-surface);
 }
 
 .ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-guide-card{
-	background: #172722;
-	border-color: #344640;
+	background: var(--cl-ink-soft);
+	border-color: var(--cl-ink-soft);
 }
 
 .ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-guide-desc{
-	color: #b7c1bd;
+	color: var(--cl-rule-firm);
 }
 
 @container certverify-modern (max-width: 980px) {
@@ -1225,17 +1247,17 @@
 	}
 
 	.ecapla-certverify-template.cvx-widget .cvx-input-wrap{
-		flex: 0 0 auto !important;
-		width: 100% !important;
-		height: auto !important;
+		flex: 0 0 auto;
+		width: 100%;
+		height: auto;
 		min-height: 56px;
-		max-height: 96px !important;
+		max-height: 96px;
 	}
 
 	.ecapla-certverify-template.cvx-widget .cvx-search-btn{
-		flex: 0 0 auto !important;
-		width: 100% !important;
-		max-height: 96px !important;
+		flex: 0 0 auto;
+		width: 100%;
+		max-height: 96px;
 	}
 }
 
@@ -1244,7 +1266,7 @@
 .ecapla-certverify-template.cvx-widget.cvx-template-axis .cvx-shell,
 .ecapla-certverify-template.cvx-widget.cvx-template-halo .cvx-shell{
 		padding: 22px 20px;
-		border-radius: 18px;
+		border-radius: var(--cl-r-hero);
 	}
 
 	.ecapla-certverify-template.cvx-widget.cvx-template-meridian .cvx-action,
@@ -1293,21 +1315,21 @@
 .elementor-widget-certverify-axis > .elementor-widget-container,
 .elementor-widget-certverify-nova > .elementor-widget-container,
 .elementor-widget-certverify-forge > .elementor-widget-container{
-	width: 100% !important;
-	min-width: 0 !important;
-	max-width: none !important;
-	align-self: stretch !important;
+	width: 100%;
+	min-width: 0;
+	max-width: none;
+	align-self: stretch;
 }
 
 .ecapla-certverify-template.cvx-widget .cvx-eyebrow,
 .ecapla-certverify-template.cvx-widget .cvx-heading,
 .ecapla-certverify-template.cvx-widget .cvx-description{
-	display: block !important;
-	order: initial !important;
+	display: block;
+	order: initial;
 }
 
 .ecapla-certverify-template.cvx-widget .cvx-guide{
-	display: block !important;
+	display: block;
 }
 
 /* Media fallbacks for layouts where container queries are unavailable. */
@@ -1324,17 +1346,17 @@
 	}
 
 	.ecapla-certverify-template.cvx-widget .cvx-input-wrap{
-		flex: 0 0 auto !important;
-		width: 100% !important;
-		height: auto !important;
+		flex: 0 0 auto;
+		width: 100%;
+		height: auto;
 		min-height: 56px;
-		max-height: 96px !important;
+		max-height: 96px;
 	}
 
 	.ecapla-certverify-template.cvx-widget .cvx-search-btn{
-		flex: 0 0 auto !important;
-		width: 100% !important;
-		max-height: 96px !important;
+		flex: 0 0 auto;
+		width: 100%;
+		max-height: 96px;
 	}
 }
 
@@ -1352,31 +1374,31 @@
 
 /* Compatibility fallbacks for browsers that do not yet evaluate color-mix(). */
 .ecapla-certverify-template.cvx-widget .cvx-input-wrap:focus-within{
-	box-shadow: 0 0 0 4px rgba(17, 106, 85, 0.16);
+	box-shadow: var(--cl-ring-success);
 	box-shadow: 0 0 0 4px color-mix(in srgb, var(--cvx-accent) 16%, transparent);
 }
 
 .ecapla-certverify-template.cvx-widget input.cvx-search-input[type="text"]::placeholder{
-	color: #7a8581;
+	color: var(--cl-ink-soft);
 	color: color-mix(in srgb, var(--cvx-muted) 76%, transparent);
 }
 
 .ecapla-certverify-template.cvx-widget .cvx-search-btn:hover,
 .ecapla-certverify-template.cvx-widget .cvx-search-btn:focus-visible{
-	box-shadow: 0 12px 26px rgba(17, 106, 85, 0.24);
+	box-shadow: var(--cl-shadow-popover);
 	box-shadow: 0 12px 26px color-mix(in srgb, var(--cvx-accent) 24%, transparent);
 }
 
 .ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-action{
-	--cvx-heading: #17201d;
-	--cvx-muted: #66736e;
-	--cvx-border: #d7dedb;
+	--cvx-heading: var(--cl-ink);
+	--cvx-muted: var(--cl-ink-soft);
+	--cvx-border: var(--cl-rule);
 }
 
 .ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-search-btn,
 .ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-search-btn:hover,
 .ecapla-certverify-template.cvx-widget.cvx-template-forge .cvx-search-btn:focus-visible{
-	color: #17201d;
+	color: var(--cl-ink);
 }
 
 
@@ -1397,20 +1419,567 @@
 @media (max-width: 520px) {
 	.elementor-widget-certloom .ecapla-certverify-widget.cv-widget .cv-search-form,
 	.elementor-widget-certverify .ecapla-certverify-widget.cv-widget .cv-search-form {
-		flex-direction: column !important;
+		flex-direction: column;
 	}
 	.elementor-widget-certloom .ecapla-certverify-widget.cv-widget input.cv-search-input[type="text"],
 	.elementor-widget-certverify .ecapla-certverify-widget.cv-widget input.cv-search-input[type="text"] {
-		flex: 0 0 auto !important;
-		width: 100% !important;
-		height: 52px !important;
-		min-height: 52px !important;
-		max-height: 52px !important;
+		flex: 0 0 auto;
+		width: 100%;
+		height: 52px;
+		min-height: 52px;
+		max-height: 52px;
 	}
 	.elementor-widget-certloom .ecapla-certverify-widget.cv-widget button.cv-search-btn,
 	.elementor-widget-certverify .ecapla-certverify-widget.cv-widget button.cv-search-btn {
-		flex: 0 0 auto !important;
-		width: 100% !important;
-		min-height: 52px !important;
+		flex: 0 0 auto;
+		width: 100%;
+		min-height: 52px;
 	}
 }
+
+/* Phase 2 shared verification/profile presentation. */
+.cv-result-summary,
+.cvx-result-summary,
+.cvp-result-summary{
+	display:flex;
+	align-items:flex-start;
+	gap:12px;
+	margin-bottom:18px;
+}
+.cv-status-mark,
+.cvx-status-mark,
+.cvp-status-mark{
+	display:inline-grid;
+	place-items:center;
+	width:34px;
+	height:34px;
+	border-radius:var(--cl-r-pill);
+	font-weight:800;
+	background:var(--cl-paper);
+	color:var(--cl-ink-soft);
+	flex:0 0 34px;
+}
+/* Fail-safe status contract: neutral by default; only explicit valid earns green. */
+.cv-status-valid .cv-status-mark,.cvx-status-valid .cvx-status-mark,.cvp-status-valid .cvp-status-mark{background:var(--cl-valid-wash);color:var(--cl-valid);}
+.cv-status-suspended .cv-status-mark,.cvx-status-suspended .cvx-status-mark,.cvp-status-suspended .cvp-status-mark,
+.cv-status-pending_review .cv-status-mark,.cvx-status-pending_review .cvx-status-mark,.cvp-status-pending_review .cvp-status-mark,
+.cv-status-suspended_noncompliant .cv-status-mark,.cvx-status-suspended_noncompliant .cvx-status-mark,.cvp-status-suspended_noncompliant .cvp-status-mark{background:var(--cl-expired-wash);color:var(--cl-expired);}
+.cv-status-withdrawn .cv-status-mark,.cvx-status-withdrawn .cvx-status-mark,.cvp-status-withdrawn .cvp-status-mark,
+.cv-status-revoked .cv-status-mark,.cvx-status-revoked .cvx-status-mark,.cvp-status-revoked .cvp-status-mark,
+.cv-status-voided .cv-status-mark,.cvx-status-voided .cvx-status-mark,.cvp-status-voided .cvp-status-mark,
+.cv-status-not_issued .cv-status-mark,.cvx-status-not_issued .cvx-status-mark,.cvp-status-not_issued .cvp-status-mark{background:var(--cl-revoked-wash);color:var(--cl-error);}
+.cv-status-expired .cv-status-mark,.cvx-status-expired .cvx-status-mark,.cvp-status-expired .cvp-status-mark,
+.cv-status-not_yet_valid .cv-status-mark,.cvx-status-not_yet_valid .cvx-status-mark,.cvp-status-not_yet_valid .cvp-status-mark,
+.cv-status-unknown .cv-status-mark,.cvx-status-unknown .cvx-status-mark,.cvp-status-unknown .cvp-status-mark{background:var(--cl-paper);color:var(--cl-ink-soft);}
+.cv-status-description,.cvx-status-description,.cvp-status-description,
+.cv-result-issuer,.cvx-result-issuer,.cvp-result-issuer,
+.cv-verified-at,.cvx-verified-at,.cvp-verified-at{margin:5px 0 0;color:var(--cl-ink-soft);font-size:13px;line-height:1.55;}
+.cv-result-issuer span,.cvx-result-issuer span,.cvp-result-issuer span{font-weight:650;color:var(--cl-ink-soft);}
+.cv-result-actions,.cvx-result-actions,.cvp-result-actions{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(120,120,120,.18);}
+.certloom-result-action{-webkit-appearance:none;appearance:none;display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;margin:0;padding:9px 14px;border:1px solid currentColor;border-radius:var(--cl-r-lift);background:transparent;color:inherit;text-decoration:none;font:inherit;font-weight:650;line-height:1.25;text-transform:none;letter-spacing:normal;box-shadow:none;cursor:pointer;}
+.certloom-result-action:hover{text-decoration:none;}
+.certloom-result-action:focus-visible{outline:3px solid currentColor;outline-offset:3px;text-decoration:none;}
+.certloom-action-feedback{font-size:12px;line-height:1.4;color:var(--cl-ink-soft);min-height:1em;}
+.certloom-route-main#primary{float:none;clear:both;width:100%;max-width:none;min-width:0;margin:0;padding:clamp(24px,5vw,72px) 20px;box-sizing:border-box;}
+.certloom-route-shell{width:min(100%,960px);min-width:0;margin-inline:auto;}
+.certloom-route-shell:focus-visible{outline:3px solid var(--cl-valid);outline-offset:4px;}
+.certloom-credential-profile.cvp-widget{--cvp-border:var(--cl-expired-wash);--cvp-text:var(--cl-ink);--cvp-muted:var(--cl-ink-soft);width:min(100%,780px);margin-inline:auto;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--cvp-text);}
+.certloom-credential-profile *{box-sizing:border-box;}
+.cvp-header{margin-bottom:18px;}
+.cvp-eyebrow{margin:0 0 7px;font-size:12px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;color:var(--cl-valid);}
+.cvp-heading{margin:0;font-size:clamp(28px,4vw,44px);line-height:1.12;color:var(--cvp-text);}
+.cvp-result-card,.cvp-result-notfound{background:var(--cl-surface);border:1px solid var(--cvp-border);border-radius:var(--cl-r-float);padding:clamp(22px,4vw,36px);box-shadow:var(--cl-shadow-canvas);}
+.cvp-result-success{margin:0;font-size:20px;font-weight:750;color:var(--cvp-text);}
+.cvp-result-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 28px;margin:22px 0 0;}
+.cvp-result-row{padding:13px 0;border-top:1px solid var(--cvp-border);min-width:0;}
+.cvp-result-row dt{margin:0 0 4px;color:var(--cvp-muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;}
+.cvp-result-row dd{margin:0;overflow-wrap:anywhere;}
+.cvp-badge{display:inline-flex;padding:4px 9px;border-radius:var(--cl-r-pill);font-weight:700;background:var(--cl-paper);color:var(--cl-ink-soft);}
+.cvp-badge-valid{background:var(--cl-valid-wash);color:var(--cl-valid);}.cvp-badge-suspended{background:var(--cl-expired-wash);color:var(--cl-expired);}.cvp-badge-withdrawn{background:var(--cl-revoked-wash);color:var(--cl-error);}.cvp-badge-expired{background:var(--cl-paper);color:var(--cl-ink-soft);}
+@media (max-width:640px){.cvp-result-list{grid-template-columns:1fr}.cv-result-actions,.cvx-result-actions,.cvp-result-actions{align-items:stretch}.certloom-result-action{width:100%}}
+
+/* Phase 2 accessibility and hostile-theme resilience. */
+.certloom-live-status{
+	position:absolute;
+	width:1px;
+	height:1px;
+	padding:0;
+	margin:-1px;
+	overflow:hidden;
+	clip:rect(0,0,0,0);
+	white-space:nowrap;
+	border:0;
+}
+.certloom-skip-link{
+	position:fixed;
+	inset-block-start:8px;
+	inset-inline-start:8px;
+	z-index:100000;
+	width:1px;
+	height:1px;
+	padding:0;
+	margin:-1px;
+	overflow:hidden;
+	clip:rect(0,0,0,0);
+	white-space:nowrap;
+	border:0;
+}
+.certloom-skip-link:focus{
+	width:auto;
+	height:auto;
+	padding:10px 14px;
+	margin:0;
+	overflow:visible;
+	clip:auto;
+	white-space:normal;
+	background:var(--cl-surface);
+	color:var(--cl-ink);
+	border:2px solid currentColor;
+	border-radius:var(--cl-r-sm);
+	box-shadow:var(--cl-shadow-popover);
+}
+.ecapla-certverify-widget.cv-widget,
+.ecapla-certverify-template.cvx-widget,
+.certloom-credential-profile.cvp-widget{
+	text-size-adjust:100%;
+	-webkit-text-size-adjust:100%;
+}
+.ecapla-certverify-widget.cv-widget input,
+.ecapla-certverify-widget.cv-widget button,
+.ecapla-certverify-template.cvx-widget input,
+.ecapla-certverify-template.cvx-widget button,
+.certloom-credential-profile.cvp-widget button{
+	font-family:inherit;
+}
+.cvp-result-row dd,
+.cv-result-row dd,
+.cvx-result-row dd{
+	unicode-bidi:plaintext;
+}
+@media (prefers-reduced-motion: reduce){
+	.ecapla-certverify-widget.cv-widget .cv-search-btn.cv-loading .cv-arrow,
+	.ecapla-certverify-template.cvx-widget .cvx-loading .cvx-arrow{
+		animation:none;
+	}
+	.ecapla-certverify-template.cvx-widget .cvx-search-btn,
+	.ecapla-certverify-template.cvx-widget .cvx-arrow,
+	.ecapla-certverify-template.cvx-widget .cvx-input-wrap{
+		transition:none;
+		transform:none;
+	}
+}
+@media (prefers-contrast: more){
+	.cv-result-card,.cv-result-notfound,
+	.cvx-result-card,.cvx-result-notfound,
+	.cvp-result-card,.cvp-result-notfound{
+		border-width:2px;
+	}
+	.certloom-result-action{border-width:2px;}
+}
+@media (forced-colors: active){
+	.cv-status-mark,.cvx-status-mark,.cvp-status-mark,
+	.cv-badge,.cvx-badge,.cvp-badge{
+		forced-color-adjust:auto;
+		background:Canvas;
+		color:CanvasText;
+		border:1px solid CanvasText;
+	}
+	.certloom-result-action,
+	.ecapla-certverify-widget.cv-widget .cv-search-btn,
+	.ecapla-certverify-template.cvx-widget .cvx-search-btn{
+		forced-color-adjust:auto;
+		border:1px solid ButtonText;
+	}
+	.certloom-result-action:focus-visible,
+	.ecapla-certverify-widget.cv-widget .cv-search-btn:focus-visible,
+	.ecapla-certverify-template.cvx-widget .cvx-search-btn:focus-visible{
+		outline:3px solid Highlight!important;
+	}
+}
+
+@media print{.certloom-route-main{padding:0}.certloom-route-shell{width:100%}.cv-result-actions,.cvx-result-actions,.cvp-result-actions,.cv-search-form,.cvx-search-form,.cv-guide,.cvx-guide{display:none!important}.cvp-result-card{box-shadow:none;border-color:var(--cl-rule-firm)}}
+
+
+/* 1.6.10 secondary-proof input: remains optional globally but becomes mandatory server-side per credential when configured. */
+.ecapla-certverify-widget.cv-widget .certloom-secondary-code-input,
+.ecapla-certverify-template.cvx-widget .certloom-secondary-code-input{
+	font-variant-numeric: tabular-nums;
+	letter-spacing: .04em;
+}
+.ecapla-certverify-widget.cv-widget .certloom-secondary-code-input{
+	flex-basis: 190px;
+}
+.ecapla-certverify-template.cvx-widget .certloom-secondary-code-wrap{
+	flex-basis: 245px;
+}
+.ecapla-certverify-template.cvx-widget .certloom-code-icon{
+	border-radius: var(--cl-r-ctl);
+	width: 16px;
+	height: 12px;
+	border-width: 1.8px;
+}
+.ecapla-certverify-template.cvx-widget .certloom-code-icon::before{
+	content:"";
+	position:absolute;
+	width:8px;
+	height:7px;
+	left:2px;
+	top:-7px;
+	border:1.8px solid currentColor;
+	border-bottom:0;
+	border-radius:var(--cl-r-compact) var(--cl-r-compact) 0 0;
+}
+@media (max-width: 620px){
+	.ecapla-certverify-widget.cv-widget .certloom-secondary-code-input{width:100%;flex:1 1 100%;}
+}
+
+/* 1.6.10 clean-route branding: deliberately scoped away from shortcode and Elementor widget designs. */
+.certloom-route-main.is-certloom-branded{background:var(--certloom-brand-surface,var(--cl-surface));color:var(--certloom-brand-text,var(--cl-ink));}
+.certloom-route-brand{
+	display:flex;
+	align-items:center;
+	gap:12px;
+	margin:0 0 18px;
+	padding:14px 16px;
+	box-sizing:border-box;
+	background:var(--certloom-brand-surface,var(--cl-surface));
+	color:var(--certloom-brand-text,var(--cl-ink));
+	border:1px solid var(--certloom-brand-accent,var(--cl-valid));
+	border-inline-start:4px solid var(--certloom-brand-accent,var(--cl-valid));
+	border-radius:var(--cl-r-card);
+	box-shadow:var(--cl-shadow-popover);
+	text-align:start;
+}
+.certloom-route-brand-icon{
+	flex:0 0 48px;
+	width:48px;
+	height:48px;
+	margin:0;
+	object-fit:cover;
+	border-radius:var(--cl-r-panel);
+}
+.certloom-route-brand-copy{display:flex;min-width:0;flex-direction:column;gap:2px;}
+.certloom-route-brand-name{display:block;color:inherit;font:700 clamp(16px,2.2vw,19px)/1.3 inherit;overflow-wrap:anywhere;}
+.certloom-route-brand-tagline{display:block;color:inherit;font:400 14px/1.45 inherit;opacity:.78;overflow-wrap:anywhere;}
+@media (forced-colors: active){
+	.certloom-route-brand{background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none;}
+}
+@media print{.certloom-route-brand{box-shadow:none;}}
+
+/* 1.6.13 local verification QR: fixed black/white symbol for scan reliability. */
+.certloom-verification-qr{
+	display:grid;
+	grid-template-columns:minmax(0,176px) minmax(0,1fr);
+	align-items:center;
+	gap:16px;
+	margin:20px 0 0;
+	padding:16px;
+	max-width:520px;
+	box-sizing:border-box;
+	border:1px solid rgba(120,120,120,.20);
+	border-radius:var(--cl-r-card);
+	background:var(--cl-surface);
+	color:var(--cl-ink);
+}
+.certloom-verification-qr-code{
+	display:block;
+	width:176px;
+	max-width:100%;
+	aspect-ratio:1;
+	line-height:0;
+	background:var(--cl-surface);
+	border-radius:var(--cl-r-sm);
+	overflow:hidden;
+}
+.certloom-qr-svg{display:block;width:100%;height:auto;max-width:100%;background:var(--cl-surface);forced-color-adjust:none;}
+.certloom-verification-qr figcaption{margin:0;font-size:13px;line-height:1.55;color:var(--cl-ink-soft);overflow-wrap:anywhere;}
+@media (max-width:520px){
+	.certloom-verification-qr{grid-template-columns:1fr;justify-items:center;text-align:center;}
+}
+@media (forced-colors: active){
+	.certloom-verification-qr{border-color:CanvasText;background:Canvas;color:CanvasText;}
+	.certloom-verification-qr figcaption{color:CanvasText;}
+}
+@media print{
+	.certloom-verification-qr{break-inside:avoid;box-shadow:none;border-color:var(--cl-rule-firm);}
+}
+
+
+/* 1.6.14 QR-02: bounded local center mark + local Code 128 presentation. */
+.certloom-qr-logo-background{fill:var(--cl-surface);forced-color-adjust:none;}
+.certloom-qr-logo-image{image-rendering:auto;forced-color-adjust:none;}
+.certloom-verification-barcode{
+	display:grid;
+	gap:10px;
+	margin:16px 0 0;
+	padding:16px;
+	max-width:680px;
+	box-sizing:border-box;
+	border:1px solid rgba(120,120,120,.20);
+	border-radius:var(--cl-r-card);
+	background:var(--cl-surface);
+	color:var(--cl-ink);
+}
+.certloom-verification-barcode-code{
+	display:block;
+	max-width:100%;
+	overflow-x:auto;
+	overflow-y:hidden;
+	padding:6px;
+	box-sizing:border-box;
+	background:var(--cl-surface);
+	line-height:0;
+	-webkit-overflow-scrolling:touch;
+}
+.certloom-barcode-svg{
+	display:block;
+	width:auto;
+	max-width:none;
+	height:72px;
+	background:var(--cl-surface);
+	forced-color-adjust:none;
+}
+.certloom-verification-barcode figcaption{margin:0;font-size:13px;line-height:1.55;color:var(--cl-ink-soft);overflow-wrap:anywhere;}
+.certloom-verification-barcode code{font:600 .95em/1.5 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;overflow-wrap:anywhere;}
+@media (forced-colors: active){
+	.certloom-verification-barcode{border-color:CanvasText;background:Canvas;color:CanvasText;}
+	.certloom-verification-barcode figcaption{color:CanvasText;}
+}
+@media print{
+	.certloom-verification-barcode{break-inside:avoid;box-shadow:none;border-color:var(--cl-rule-firm);}
+	.certloom-verification-barcode-code{overflow:visible;}
+}
+
+/* 1.6.68 POR-01: authenticated My Credentials collection. */
+.certloom-my-credentials{
+	--certloom-portal-border:rgba(15,23,42,.13);
+	--certloom-portal-muted:var(--cl-ink-soft);
+	--certloom-portal-surface:var(--cl-surface);
+	--certloom-portal-soft:var(--cl-surface);
+	--certloom-portal-ink:var(--cl-ink);
+	width:100%;max-width:1120px;margin:0 auto;padding:clamp(18px,3vw,32px);box-sizing:border-box;
+	border:1px solid var(--certloom-portal-border);border-radius:var(--cl-r-hero);background:var(--certloom-portal-surface);color:var(--certloom-portal-ink);
+	box-shadow:var(--cl-shadow-popover);
+}
+.certloom-my-credentials *{box-sizing:border-box}
+.certloom-my-credentials__header{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:22px}
+.certloom-my-credentials__eyebrow{margin:0 0 5px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--certloom-portal-muted)}
+.certloom-my-credentials__heading{margin:0;font-size:clamp(25px,4vw,38px);line-height:1.12;letter-spacing:-.025em;color:inherit}
+.certloom-my-credentials__intro{margin:8px 0 0;color:var(--certloom-portal-muted);font-size:14px;line-height:1.55}
+.certloom-my-credentials__count{display:grid;place-items:center;min-width:92px;padding:12px 16px;border:1px solid var(--certloom-portal-border);border-radius:var(--cl-r-dialog);background:var(--certloom-portal-soft);text-align:center}
+.certloom-my-credentials__count strong{font-size:24px;line-height:1}.certloom-my-credentials__count span{margin-top:5px;font-size:12px;color:var(--certloom-portal-muted)}
+.certloom-my-credentials__filters{display:flex;align-items:flex-end;flex-wrap:wrap;gap:12px;margin:0 0 22px;padding:14px;border:1px solid var(--certloom-portal-border);border-radius:var(--cl-r-dialog);background:var(--certloom-portal-soft)}
+.certloom-my-credentials__filters>div{display:grid;gap:5px;min-width:min(220px,100%);flex:1}
+.certloom-my-credentials__filters label{font-size:12px;font-weight:700;color:var(--certloom-portal-muted)}
+.certloom-my-credentials__filters select{width:100%;min-height:42px;padding:8px 34px 8px 11px;border:1px solid var(--certloom-portal-border);border-radius:var(--cl-r-panel);background:var(--certloom-portal-surface);color:inherit;font:inherit}
+.certloom-my-credentials__button{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:9px 15px;border:1px solid currentColor;border-radius:var(--cl-r-panel);background:transparent;color:inherit;font-size:14px;line-height:1.2;font-weight:600;font-family:inherit;text-decoration:none;cursor:pointer}
+.certloom-my-credentials__button:hover,.certloom-my-credentials__button:focus-visible{text-decoration:none;box-shadow:var(--cl-ring-focus)}
+.certloom-my-credentials__collection{display:grid;grid-template-columns:1fr;gap:14px}
+.certloom-my-credentials--grid .certloom-my-credentials__collection{grid-template-columns:repeat(2,minmax(0,1fr))}
+.certloom-my-credential-card{display:flex;flex-direction:column;min-width:0;padding:18px;border:1px solid var(--certloom-portal-border);border-radius:var(--cl-r-float);background:var(--certloom-portal-surface);box-shadow:var(--cl-shadow-soft)}
+.certloom-my-credential-card__topline{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:27px;margin-bottom:10px}
+.certloom-my-credential-card__status,.certloom-my-credential-card__expiring{display:inline-flex;align-items:center;width:max-content;max-width:100%;padding:5px 9px;border:1px solid currentColor;border-radius:var(--cl-r-pill);font-size:11px;font-weight:700;line-height:1.2}
+.certloom-my-credential-card__status--valid{color:var(--cl-valid);background:var(--cl-valid-wash)}.certloom-my-credential-card__status--expired{color:var(--cl-expired);background:var(--cl-expired-wash)}.certloom-my-credential-card__status--revoked,.certloom-my-credential-card__status--suspended{color:var(--cl-error);background:var(--cl-revoked-wash)}.certloom-my-credential-card__status--not_yet_valid,.certloom-my-credential-card__status--pending_review,.certloom-my-credential-card__status--suspended_noncompliant{color:var(--cl-ink-soft);background:var(--cl-surface)}
+.certloom-my-credential-card__expiring{color:var(--cl-error);background:var(--cl-expired-wash)}
+.certloom-my-credential-card h3{margin:0;font-size:20px;line-height:1.25;overflow-wrap:anywhere}.certloom-my-credential-card__issuer{margin:6px 0 0;color:var(--certloom-portal-muted);font-size:13px}
+.certloom-my-credential-card__facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px;margin:18px 0 0;padding:14px 0;border-block:1px solid var(--certloom-portal-border)}
+.certloom-my-credential-card__facts div{min-width:0}.certloom-my-credential-card__facts dt{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.045em;color:var(--certloom-portal-muted)}.certloom-my-credential-card__facts dd{margin:4px 0 0;font-size:14px;font-weight:600;overflow-wrap:anywhere}
+.certloom-my-credential-card__actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:14px}.certloom-my-credentials__action-muted{font-size:12px;color:var(--certloom-portal-muted)}
+.certloom-my-credentials__empty,.certloom-my-credentials__notice{padding:24px;border:1px dashed var(--certloom-portal-border);border-radius:var(--cl-r-dialog);background:var(--certloom-portal-soft);text-align:center}.certloom-my-credentials__empty p,.certloom-my-credentials__notice p{margin:7px auto 0;max-width:620px;color:var(--certloom-portal-muted)}.certloom-my-credentials__notice .certloom-my-credentials__button{margin-top:14px}
+.certloom-my-credentials__table-wrap{max-width:100%;overflow:auto;border:1px solid var(--certloom-portal-border);border-radius:var(--cl-r-dialog);-webkit-overflow-scrolling:touch}.certloom-my-credentials__table{width:100%;min-width:760px;border:0;border-collapse:collapse;background:var(--certloom-portal-surface)}.certloom-my-credentials__table th,.certloom-my-credentials__table td{padding:13px 14px;border:0;border-bottom:1px solid var(--certloom-portal-border);text-align:left;vertical-align:middle}.certloom-my-credentials__table thead th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--certloom-portal-muted);background:var(--certloom-portal-soft)}.certloom-my-credentials__table tbody tr:last-child>*{border-bottom:0}.certloom-my-credentials__table th small,.certloom-my-credentials__table td small{display:block;margin-top:4px;color:var(--certloom-portal-muted);font-weight:400}
+.certloom-my-credentials__pagination{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:22px}.certloom-my-credentials__pagination a{font-weight:600}.certloom-my-credentials__pagination span{font-size:13px;color:var(--certloom-portal-muted)}
+.certloom-my-credentials__authority-note{margin-top:20px;padding-top:14px;border-top:1px solid var(--certloom-portal-border);font-size:12px;line-height:1.5;color:var(--certloom-portal-muted)}
+@media (max-width:760px){.certloom-my-credentials{padding:18px;border-radius:var(--cl-r-dialog)}.certloom-my-credentials__header{align-items:stretch;flex-direction:column}.certloom-my-credentials__count{grid-auto-flow:column;justify-content:center;gap:7px;min-width:0}.certloom-my-credentials__count span{margin:0}.certloom-my-credentials--grid .certloom-my-credentials__collection{grid-template-columns:1fr}.certloom-my-credentials__filters{align-items:stretch;flex-direction:column}.certloom-my-credentials__filters>div{min-width:0}.certloom-my-credential-card__facts{grid-template-columns:1fr 1fr}}
+@media (max-width:430px){.certloom-my-credential-card__facts{grid-template-columns:1fr}.certloom-my-credential-card__topline{align-items:flex-start;flex-direction:column}.certloom-my-credentials__pagination{justify-content:space-between}.certloom-my-credentials__pagination span{order:-1;width:100%;text-align:center}}
+@media (prefers-reduced-motion:reduce){.certloom-my-credentials *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+@media (forced-colors:active){.certloom-my-credentials,.certloom-my-credential-card,.certloom-my-credentials__filters,.certloom-my-credentials__count,.certloom-my-credentials__table-wrap{border-color:CanvasText;background:Canvas;color:CanvasText}.certloom-my-credential-card__status,.certloom-my-credential-card__expiring{background:Canvas;color:CanvasText}.certloom-my-credentials__button{forced-color-adjust:auto}}
+
+/* SOC-01: public sharing disclosure. Provider links receive only the already-public canonical URL. */
+.certloom-share{position:relative;display:inline-block}
+.certloom-share>summary{list-style:none;cursor:pointer}
+.certloom-share>summary::-webkit-details-marker{display:none}
+.certloom-share>summary::after{content:"▾";margin-inline-start:.45em;font-size:.8em;opacity:.72}
+.certloom-share[open]>summary::after{content:"▴"}
+.certloom-share-menu{position:absolute;z-index:20;inset-inline-start:0;top:calc(100% + 8px);min-width:190px;padding:8px;border:1px solid rgba(120,120,120,.22);border-radius:var(--cl-r-card);background:var(--cl-surface);box-shadow:var(--cl-shadow-dialog);display:grid;gap:4px}
+.certloom-share-link{display:block;width:100%;box-sizing:border-box;border:0;border-radius:var(--cl-r-lift);background:transparent;color:inherit;font:inherit;text-align:start;text-decoration:none;padding:9px 10px;cursor:pointer}
+.certloom-share-link:hover,.certloom-share-link:focus-visible{background:rgba(120,120,120,.12);text-decoration:none}
+.certloom-share-link:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+@media (max-width:640px){.certloom-share{width:100%}.certloom-share-menu{position:static;margin-top:7px;box-shadow:none}.certloom-share>summary{width:100%;box-sizing:border-box}}
+@media (prefers-reduced-motion:reduce){.certloom-share-menu{scroll-behavior:auto}}
+@media (forced-colors:active){.certloom-share-menu,.certloom-share-link{border:1px solid CanvasText}.certloom-share-link{forced-color-adjust:auto}}
+@media print{.certloom-share{display:none!important}}
+
+/* 1.6.73 FEUX-01 — calm, compact verification/profile hierarchy. */
+.cv-result-summary,.cvx-result-summary,.cvp-result-summary { gap:10px; margin-bottom:12px; }
+.cv-status-mark,.cvx-status-mark,.cvp-status-mark { width:30px; height:30px; flex-basis:30px; font-size:13px; }
+.certloom-credential-profile.cvp-widget { width:min(100%,740px); }
+.cvp-header { margin-bottom:12px; }
+.cvp-eyebrow { margin-bottom:4px; font-size:11px; font-weight:650; letter-spacing:.04em; text-transform:none; }
+.cvp-heading { font-size:clamp(24px,3.2vw,34px); line-height:1.16; letter-spacing:-.015em; }
+.cvp-result-card,.cvp-result-notfound { padding:clamp(18px,3vw,26px); border-radius:var(--cl-r-card); box-shadow:var(--cl-shadow-soft); }
+.cvp-result-success { font-size:17px; font-weight:700; }
+.cvp-result-list { gap:0 24px; margin-top:16px; }
+.cvp-result-row { padding:10px 0; }
+.cvp-result-row dt { margin-bottom:3px; font-size:11px; font-weight:650; text-transform:none; letter-spacing:.01em; }
+.cvp-result-row dd { font-size:15.5px; line-height:1.45; }
+.cvp-badge { padding:3px 7px; border-radius:var(--cl-r-sm); font-size:12px; }
+.cv-status-description,.cvx-status-description,.cvp-status-description,
+.cv-result-issuer,.cvx-result-issuer,.cvp-result-issuer,
+.cv-verified-at,.cvx-verified-at,.cvp-verified-at { margin-top:4px; font-size:12px; line-height:1.45; }
+.cv-result-actions,.cvx-result-actions,.cvp-result-actions { gap:7px; margin-top:14px; padding-top:12px; }
+.certloom-result-action { min-height:44px; min-width:44px; padding:8px 12px; border-color:rgba(60,67,74,.45); border-radius:var(--cl-r-compact); font-size:13px; font-weight:650; }
+.certloom-result-action.is-secondary { color:var(--cl-ink-soft); border-color:rgba(80,87,94,.32); }
+
+.certloom-result-qr {
+	display:flex;
+	justify-content:flex-start;
+	margin-top:14px;
+}
+.certloom-result-qr .certloom-verification-qr {
+	grid-template-columns:132px;
+	justify-items:center;
+	gap:7px;
+	margin:0;
+	padding:10px;
+	max-width:170px;
+	border:1px solid rgba(80,87,94,.18);
+	border-radius:var(--cl-r-panel);
+	background:var(--cl-surface);
+	text-align:center;
+}
+.certloom-result-qr .certloom-verification-qr-code { width:132px; }
+.certloom-result-qr .certloom-verification-qr figcaption { max-width:150px; font-size:11px; line-height:1.35; color:var(--cl-ink-soft); }
+.certloom-result-qr .certloom-qr-svg { width:132px; height:132px; }
+
+.certloom-route-brand { margin-bottom:14px; padding:10px 12px; border-radius:var(--cl-r-lift); box-shadow:none; }
+.certloom-route-brand-icon { width:40px; height:40px; flex-basis:40px; border-radius:var(--cl-r-compact); }
+.certloom-route-brand-name { font-size:16px; }
+.certloom-route-brand-tagline { font-size:12px; }
+
+@media (max-width:640px) {
+	.cv-result-actions,.cvx-result-actions,.cvp-result-actions { align-items:center; }
+	.certloom-result-action { width:auto; max-width:100%; }
+	.certloom-share { width:100%; }
+	.certloom-share > summary { width:max-content; max-width:100%; box-sizing:border-box; }
+	.certloom-share-menu { width:100%; box-sizing:border-box; }
+}
+@media (max-width:380px) {
+	.cvp-result-list { grid-template-columns:1fr; }
+	.certloom-result-action { padding-inline:10px; }
+}
+@media (prefers-reduced-motion:reduce) {
+	.certloom-result-action { transition:none; animation:none; scroll-behavior:auto; }
+}
+@media (forced-colors:active) {
+	.certloom-result-qr .certloom-verification-qr { border:1px solid CanvasText; background:Canvas; color:CanvasText; }
+	.certloom-result-action.is-secondary { color:ButtonText; border-color:ButtonText; }
+}
+
+
+/* QA/FEUX: print only the selected Certloom verification/profile component. */
+.certloom-print-portal { display:none; }
+@media print {
+	body.certloom-printing > *:not(.certloom-print-portal) { display:none!important; }
+	body.certloom-printing .certloom-print-portal { display:block!important; position:static!important; width:100%!important; margin:0!important; padding:0!important; background:var(--cl-surface)!important; color:var(--cl-ink)!important; }
+	body.certloom-printing .certloom-print-portal > * { width:100%!important; max-width:none!important; margin:0!important; box-shadow:none!important; }
+	body.certloom-printing .certloom-print-portal .cv-form,
+	body.certloom-printing .certloom-print-portal .cvx-form,
+	body.certloom-printing .certloom-print-portal .cv-result-actions,
+	body.certloom-printing .certloom-print-portal .cvx-result-actions,
+	body.certloom-printing .certloom-print-portal .cvp-result-actions,
+	body.certloom-printing .certloom-print-portal .certloom-share,
+	body.certloom-printing .certloom-print-portal .certloom-action-feedback { display:none!important; }
+	body.certloom-printing .certloom-print-portal .certloom-result-qr { display:flex!important; }
+	body.certloom-printing .certloom-print-portal .certloom-verification-qr { break-inside:avoid; box-shadow:none!important; }
+}
+.certloom-my-credential-card__credential-fields{margin-top:14px;padding:14px;border:1px solid var(--certloom-portal-border);border-radius:var(--cl-r-panel);background:color-mix(in srgb,var(--certloom-portal-surface) 94%,var(--certloom-portal-border))}.certloom-my-credential-card__credential-fields h4{margin:0 0 10px;font-size:13px}.certloom-my-credential-card__credential-fields dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 14px;margin:0}.certloom-my-credential-card__credential-fields dt{font-size:11px;font-weight:700;color:var(--certloom-portal-muted)}.certloom-my-credential-card__credential-fields dd{margin:3px 0 0;overflow-wrap:anywhere}@media(max-width:430px){.certloom-my-credential-card__credential-fields dl{grid-template-columns:1fr}}
+
+
+/* 1.6.98 UX-OPS-01 — one consistent public credential action hierarchy. */
+.certloom-result-action,.certloom-result-action.is-secondary{color:var(--cl-blue);border-color:var(--cl-blue);background:var(--cl-surface);text-decoration:none}
+.certloom-result-action:hover,.certloom-result-action:focus-visible,.certloom-result-action.is-secondary:hover,.certloom-result-action.is-secondary:focus-visible{color:var(--cl-blue-deep);border-color:var(--cl-blue);background:var(--cl-blue-wash);text-decoration:none}
+.certloom-result-action:focus-visible{outline:2px solid var(--cl-valid);outline-offset:2px}
+@media(forced-colors:active){.certloom-result-action,.certloom-result-action.is-secondary{color:ButtonText;border-color:ButtonText;background:ButtonFace}.certloom-result-action:focus-visible{outline:2px solid Highlight}}
+
+/* UX-CORE-01 — human credential profile. Evidence stays present, but identity and achievement lead. */
+.certloom-credential-profile.cvp-widget.cvp-widget--normalized{width:min(100%,860px)}
+.cvp-profile-card{overflow:hidden;padding:0;border-radius:var(--cl-r-hero);background:var(--cl-surface)}
+.cvp-profile-hero{padding:clamp(24px,5vw,44px);background:linear-gradient(180deg,var(--cl-surface) 0%,var(--cl-surface) 100%);border-bottom:1px solid var(--cvp-border)}
+.cvp-profile-status-row{display:flex;align-items:flex-start;gap:11px;margin-bottom:28px}
+.cvp-profile-status-row .cvp-status-mark{margin-top:1px}
+.cvp-profile-status-label{display:block;color:var(--cl-ink-soft);font-size:13px;font-weight:750}
+.cvp-profile-status-row p{max-width:620px;margin:3px 0 0;color:var(--cvp-muted);font-size:12px;line-height:1.5}
+.cvp-profile-recipient{margin:0;color:var(--cl-ink);font-size:clamp(31px,6vw,52px);line-height:1.06;letter-spacing:-.035em;overflow-wrap:anywhere}
+.cvp-profile-program{margin:11px 0 0;color:var(--cl-ink-soft);font-size:clamp(17px,2.5vw,22px);font-weight:650;line-height:1.35}
+.cvp-profile-program-description{max-width:680px;margin:9px 0 0;color:var(--cl-ink-soft);font-size:14px;line-height:1.6}
+.cvp-profile-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin:0;padding:4px clamp(24px,5vw,44px) 8px}
+.cvp-profile-facts>div{min-width:0;padding:18px 0;border-bottom:1px solid var(--cvp-border)}
+.cvp-profile-facts>div:nth-child(odd){padding-inline-end:24px}.cvp-profile-facts>div:nth-child(even){padding-inline-start:24px;border-inline-start:1px solid var(--cvp-border)}
+.cvp-profile-facts dt{margin:0 0 5px;color:var(--cl-ink-soft);font-size:10px;font-weight:750;letter-spacing:.055em;text-transform:uppercase}
+.cvp-profile-facts dd{margin:0;color:var(--cl-ink-soft);font-size:15px;font-weight:620;line-height:1.45;overflow-wrap:anywhere}
+.cvp-profile-barcode{padding:4px clamp(24px,5vw,44px) 12px}.cvp-profile-barcode figure{margin-inline-start:0}
+.cvp-profile-proof{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center;margin:22px clamp(24px,5vw,44px);padding:20px;border:1px solid var(--cl-valid-wash);border-radius:var(--cl-r-dialog);background:var(--cl-surface)}
+.cvp-profile-proof-copy h3{margin:3px 0 7px;color:var(--cl-ink-soft);font-size:16px}.cvp-profile-proof-copy>p{max-width:560px;margin:0;color:var(--cl-ink-soft);font-size:12.5px;line-height:1.55}
+.cvp-profile-verified{margin-top:9px;color:var(--cl-ink-soft);font-weight:620}
+.cvp-profile-technical{margin-top:10px;width:fit-content}.cvp-profile-technical summary{cursor:pointer;color:var(--cl-ink-soft);font-size:11px;font-weight:650}.cvp-profile-technical code{display:block;max-width:100%;margin-top:6px;padding:5px 7px;border-radius:var(--cl-r-sm);background:var(--cl-paper);color:var(--cl-ink-soft);font-size:10px;overflow-wrap:anywhere}
+.cvp-profile-qr{width:140px;min-width:140px}.cvp-profile-qr figure{margin:0}.cvp-profile-qr img,.cvp-profile-qr svg{max-width:140px;height:auto}
+.cvp-profile-card>.cvp-result-actions{margin:0 clamp(24px,5vw,44px) 30px;padding-top:18px}
+@media(max-width:640px){.cvp-profile-facts{grid-template-columns:1fr}.cvp-profile-facts>div:nth-child(odd),.cvp-profile-facts>div:nth-child(even){padding-inline:0;border-inline-start:0}.cvp-profile-proof{grid-template-columns:1fr}.cvp-profile-qr{width:120px;min-width:0}.cvp-profile-qr img,.cvp-profile-qr svg{max-width:120px}.cvp-profile-status-row{margin-bottom:21px}}
+@media(forced-colors:active){.cvp-profile-hero,.cvp-profile-proof,.cvp-profile-facts>div{border-color:CanvasText}.cvp-profile-proof{background:Canvas}}
+@media print{.cvp-profile-hero{background:var(--cl-surface)}.cvp-profile-proof{break-inside:avoid}.cvp-profile-card>.cvp-result-actions{display:none!important}}
+
+
+/* UX-CORE-02 — issued certificate preview and hostile-theme-safe QR layout. */
+.cvp-profile-certificate{margin:22px clamp(24px,5vw,44px);padding-top:2px}
+.cvp-profile-section-head{margin-bottom:12px}
+.cvp-profile-section-head h3{margin:3px 0 0;color:var(--cl-ink-soft);font-size:17px}
+.cvp-certificate-preview{min-width:0;max-width:100%;overflow:hidden;border:1px solid var(--cl-valid-wash);border-radius:var(--cl-r-card);background:var(--cl-surface)}
+.cvp-certificate-preview .certloom-template-preview-scroll{overflow:auto;max-width:100%;padding:14px;box-sizing:border-box;background:var(--cl-paper)}
+.cvp-certificate-preview .certloom-template-preview-page{position:relative;margin:0 auto;overflow:hidden;flex:0 0 auto;background:var(--cl-surface);box-shadow:var(--cl-shadow-canvas);color:var(--cl-ink);isolation:isolate}
+.cvp-certificate-preview .certloom-template-preview-op{position:absolute;margin:0;padding:0;box-sizing:border-box}
+.cvp-certificate-preview .certloom-template-preview-op-text>span{display:block;width:100%;max-width:100%;overflow:hidden;text-overflow:clip}
+.cvp-certificate-preview .certloom-template-preview-op-line,
+.cvp-certificate-preview .certloom-template-preview-op-qr{display:block;overflow:visible}
+.cvp-certificate-preview .certloom-template-preview-op-image img,
+.cvp-certificate-preview .certloom-template-preview-op-logo img,
+.cvp-certificate-preview .certloom-template-preview-op-signature img{max-width:none}
+.cvp-certificate-preview .certloom-template-preview-asset-placeholder{display:flex;align-items:center;justify-content:center;border:1px dashed var(--cl-rule-firm);background:var(--cl-paper)}
+.cvp-profile-certificate-unavailable{padding:16px;border:1px solid var(--cl-paper);border-radius:var(--cl-r-panel);background:var(--cl-surface)}
+.cvp-profile-certificate-unavailable h3{margin:0 0 5px}.cvp-profile-certificate-unavailable p{margin:0;color:var(--cl-ink-soft);font-size:12px}
+.cvp-profile-qr .certloom-verification-qr{display:grid;grid-template-columns:1fr;justify-items:center;width:140px;max-width:140px;margin:0;padding:10px;gap:8px;box-sizing:border-box;text-align:center}
+.cvp-profile-qr .certloom-verification-qr-code{width:118px;max-width:118px}
+.cvp-profile-qr .certloom-verification-qr figcaption{max-width:118px;margin:0;font-size:10px;line-height:1.35;overflow-wrap:normal;word-break:normal;white-space:normal}
+.certloom-credential-profile.cvp-widget.cvp-widget--normalized,
+.certloom-credential-profile.cvp-widget.cvp-widget--normalized *{min-width:0}
+@media(max-width:640px){.cvp-profile-certificate{margin-inline:18px}.cvp-certificate-preview .certloom-template-preview-scroll{padding:8px}.cvp-profile-qr .certloom-verification-qr{width:120px;max-width:120px}.cvp-profile-qr .certloom-verification-qr-code,.cvp-profile-qr .certloom-verification-qr figcaption{width:100px;max-width:100px}}
+@media(forced-colors:active){.cvp-certificate-preview,.cvp-profile-certificate-unavailable{border-color:CanvasText}.cvp-certificate-preview .certloom-template-preview-page{box-shadow:var(--cl-ring-canvas-text)}}
+@media print{.cvp-profile-certificate{break-inside:avoid}.cvp-certificate-preview .certloom-template-preview-scroll{overflow:visible;padding:0;border:0;background:var(--cl-surface)}}
+
+
+.cvp-certificate-preview .certloom-template-preview-scroll[data-certloom-preview-fitted="1"]{overflow:hidden}
+.cvp-certificate-preview .certloom-certificate-preview-stage{position:relative;max-width:100%;overflow:visible}
+.cvp-certificate-preview .certloom-certificate-preview-stage>.certloom-template-preview-page{margin:0;will-change:transform}
+@media(prefers-reduced-motion:reduce){.cvp-certificate-preview .certloom-certificate-preview-stage>.certloom-template-preview-page{will-change:auto}}
+
+.certloom-my-credential-card__status--voided,.certloom-my-credential-card__status--not_issued{color:var(--cl-error);background:var(--cl-revoked-wash)}
+
+/* UX-SYSTEM-01 — visible verification labels with optional proof disclosure. */
+.certloom-verification-field{display:grid;gap:6px;flex:1 1 260px;min-width:0}.certloom-verification-label{display:block;font-size:13px;font-weight:700;line-height:1.3;color:inherit}.certloom-verification-code-disclosure{flex:1 1 100%;min-width:0;margin:0}.certloom-verification-code-disclosure summary{cursor:pointer;width:max-content;max-width:100%;font-size:13px;font-weight:650;text-decoration:underline;text-underline-offset:2px}.certloom-verification-code-disclosure[open]{display:grid;gap:6px;padding-top:4px}.certloom-verification-code-disclosure .certloom-secondary-code-input{width:100%;max-width:420px}.cvx-input-field{flex-basis:100%}
+
+/* UX-CORE-10 public hardening — keep Certloom usable inside hostile themes and narrow embeds. */
+:is(.ecapla-certverify-widget.cv-widget,.ecapla-certverify-template.cvx-widget,.certloom-credential-profile.cvp-widget,.certloom-my-credentials){max-width:100%;min-width:0}
+:is(.ecapla-certverify-widget.cv-widget,.ecapla-certverify-template.cvx-widget,.certloom-credential-profile.cvp-widget,.certloom-my-credentials) :is(a,button,input,select,textarea,summary){font-family:inherit}
+:is(.ecapla-certverify-widget.cv-widget,.ecapla-certverify-template.cvx-widget,.certloom-credential-profile.cvp-widget,.certloom-my-credentials) :is(code,pre,a,dd,p,span,strong){overflow-wrap:anywhere}
+:is(.certloom-credential-profile.cvp-widget,.certloom-my-credentials) img,:is(.certloom-credential-profile.cvp-widget,.certloom-my-credentials) svg{max-width:100%;height:auto}
+:is(.certloom-credential-profile.cvp-widget,.certloom-my-credentials) :is(a,button,summary):focus-visible{outline:2px solid currentColor;outline-offset:3px}
+@media(max-width:640px){.certloom-my-credentials__button,.certloom-credential-profile.cvp-widget .cvp-result-actions a,.certloom-credential-profile.cvp-widget .cvp-result-actions button,.certloom-credential-profile.cvp-widget summary{min-height:44px}.certloom-my-credentials__filters select{min-height:44px}.certloom-my-credential-card__actions{align-items:stretch}.certloom-my-credential-card__actions .certloom-my-credentials__button{flex:1 1 180px}}
+@media(prefers-reduced-motion:reduce){:is(.ecapla-certverify-widget.cv-widget,.ecapla-certverify-template.cvx-widget,.certloom-credential-profile.cvp-widget,.certloom-my-credentials) *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+@media(forced-colors:active){:is(.ecapla-certverify-widget.cv-widget,.ecapla-certverify-template.cvx-widget,.certloom-credential-profile.cvp-widget,.certloom-my-credentials) :is(a,button,input,select,textarea,summary){forced-color-adjust:auto}}
+
+/* Alpha 4.31 — authenticated credential-profile preview while public authority stays closed. */
+.cvp-profile-preview-banner{display:flex;gap:10px;align-items:flex-start;margin:0 0 14px;padding:13px 15px;border:1px solid var(--cl-rule-firm);border-radius:var(--cl-r-card);background:var(--cl-paper);color:var(--cl-ink-soft);font-size:12.5px;line-height:1.5}
+.cvp-profile-preview-banner strong{flex:0 0 auto;color:var(--cl-ink);font-size:12px;font-weight:800;letter-spacing:.02em;text-transform:uppercase}
+.cvp-profile-proof.is-preview{border-color:var(--cl-rule);background:var(--cl-paper)}
+.cvp-profile-proof.is-preview .cvp-eyebrow{color:var(--cl-ink-soft)}
+@media(max-width:640px){.cvp-profile-preview-banner{flex-direction:column;gap:4px}}
+@media(forced-colors:active){.cvp-profile-preview-banner,.cvp-profile-proof.is-preview{border-color:CanvasText;background:Canvas;color:CanvasText}.cvp-profile-preview-banner strong{color:CanvasText}}

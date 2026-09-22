@@ -3,11 +3,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 ?>
-<div class="wrap ecapla-certverify-admin-wrap">
+<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell">
 	<?php include ECAPLA_CERTVERIFY_PATH . 'admin/views/partials/brand-bar.php'; ?>
 	<h1><?php esc_html_e( 'Import in progress', 'certloom' ); ?></h1>
 	<section class="ecapla-certverify-admin-card ecapla-certloom-import-progress-card">
-		<p><?php esc_html_e( 'Certloom is processing the CSV in bounded batches so large imports do not have to finish in one server request.', 'certloom' ); ?></p>
+		<p><?php esc_html_e( 'Certloom is importing the CSV in safe steps so larger files can finish reliably.', 'certloom' ); ?></p>
 		<div class="ecapla-certverify-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?php echo esc_attr( absint( $progress['percent'] ?? 0 ) ); ?>">
 			<span style="width:<?php echo esc_attr( absint( $progress['percent'] ?? 0 ) ); ?>%"></span>
 		</div>

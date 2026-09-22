@@ -97,6 +97,28 @@ class Ecapla_CertVerify_Validator {
 	}
 
 	/**
+	 * Validates every new-certificate field except the generated identifier.
+	 *
+	 * Automatic numbering must not consume a sequence value for a payload that
+	 * would later fail holder/date/status/custom-field validation. A temporary
+	 * internal number exercises the same complete-record validator before the
+	 * allocator performs any durable sequence mutation.
+	 *
+	 * @param array $data Submitted data without a certificate number.
+	 * @return array|WP_Error
+	 */
+	public static function certificate_data_for_generated_number( $data ) {
+		$data = is_array( $data ) ? $data : array();
+		$data['cert_number'] = 'CERTLOOM-PREVALIDATION';
+		$clean = self::certificate_data( $data, false );
+		if ( is_wp_error( $clean ) ) {
+			return $clean;
+		}
+		unset( $clean['cert_number'] );
+		return $clean;
+	}
+
+	/**
 	 * Validates an ISO date or returns null for an empty value.
 	 *
 	 * @return string|null|WP_Error
@@ -163,7 +185,42 @@ class Ecapla_CertVerify_Validator {
 	 * @return string|WP_Error
 	 */
 	public static function custom_field_value( $value, $field ) {
+		$key  = isset( $field['key'] ) ? sanitize_key( (string) $field['key'] ) : '';
 		$type = isset( $field['type'] ) ? $field['type'] : 'text';
+
+		if ( '__certloom_verification_code_hash' === $key ) {
+			return self::secondary_verification_hash( $value );
+		}
+
+		/* Protected profile fields have stable semantics even while stored in the
+		 * current registry's custom_fields envelope. Keep their validation as
+		 * strict as the normalized Recipient/Version columns they later promote to. */
+		if ( 'email' === $key ) {
+			$value = trim( (string) $value );
+			if ( '' === $value ) { return ''; }
+			$clean = sanitize_email( $value );
+			if ( '' === $clean || strtolower( $clean ) !== strtolower( $value ) ) {
+				return new WP_Error( 'ecapla_certverify_invalid_email', __( 'Email must contain a valid email address.', 'certloom' ) );
+			}
+			return self::validate_custom_length( $clean, 191, $field );
+		}
+		if ( in_array( $key, array( 'first_name', 'middle_name', 'last_name', 'external_id' ), true ) ) {
+			$value = sanitize_text_field( (string) $value );
+			return self::validate_custom_length( $value, 191, $field );
+		}
+		if ( 'grade' === $key ) {
+			$value = sanitize_text_field( (string) $value );
+			return self::validate_custom_length( $value, 100, $field );
+		}
+
+		if ( 'visibility' === $type ) {
+			$value = sanitize_key( (string) $value );
+			$allowed = class_exists( 'Ecapla_CertVerify_Public_Policy' ) ? array_keys( Ecapla_CertVerify_Public_Policy::visibility_options() ) : array( 'public', 'verification_summary', 'private' );
+			if ( ! in_array( $value, $allowed, true ) ) {
+				return new WP_Error( 'ecapla_certverify_invalid_profile_visibility', __( 'Choose a valid public credential visibility mode.', 'certloom' ) );
+			}
+			return $value;
+		}
 
 		if ( 'date' === $type ) {
 			$date = self::date( $value );
@@ -195,6 +252,40 @@ class Ecapla_CertVerify_Validator {
 
 		$value = sanitize_text_field( (string) $value );
 		return self::validate_custom_length( $value, 1000, $field );
+	}
+
+	/**
+	 * Validates Certloom-owned secondary verification proof storage.
+	 *
+	 * This field is intentionally validated before generic text sanitization. A
+	 * non-empty value must be a structurally valid bcrypt hash; malformed backup
+	 * or internal-write values fail closed instead of being interpreted as an
+	 * unconfigured proof.
+	 *
+	 * @return string|WP_Error
+	 */
+	private static function secondary_verification_hash( $value ) {
+		$value = trim( (string) $value );
+		if ( '' === $value ) {
+			return '';
+		}
+
+		$info = password_get_info( $value );
+		$valid_bcrypt = is_array( $info )
+			&& isset( $info['algoName'] )
+			&& 'bcrypt' === $info['algoName']
+			&& isset( $info['options']['cost'] )
+			&& 10 === (int) $info['options']['cost']
+			&& 1 === preg_match( '/^\$2[aby]\$10\$[.\/A-Za-z0-9]{53}$/D', $value );
+
+		if ( ! $valid_bcrypt ) {
+			return new WP_Error(
+				'ecapla_certverify_invalid_secondary_proof_hash',
+				__( 'Stored secondary verification proof is invalid. Certloom stopped this write to prevent verification from failing open.', 'certloom' )
+			);
+		}
+
+		return $value;
 	}
 
 	private static function validate_custom_length( $value, $maximum, $field ) {

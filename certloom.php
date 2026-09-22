@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Certloom – Certificate Verification
- * Description: Manage certificates and publish exact-number verification with a native block, shortcode, CSV tools, and optional Elementor widgets.
- * Version: 1.5.0
+ * Description: Self-hosted credential issuance, verification and lifecycle management for WordPress.
+ * Version: 1.7.0-alpha.4.87
  * Author: Ecapla
  * Author URI: https://ecapla.com
  * Text Domain: certloom
@@ -17,13 +17,64 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ECAPLA_CERTVERIFY_VERSION', '1.5.0' );
+define( 'ECAPLA_CERTVERIFY_VERSION', '1.7.0-alpha.4.87' );
 define( 'ECAPLA_CERTVERIFY_SCHEMA_VERSION', '1.4.7' );
 define( 'ECAPLA_CERTVERIFY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_URL', plugin_dir_url( __FILE__ ) );
 define( 'ECAPLA_CERTVERIFY_TABLE', 'certverify_certificates' );
 define( 'ECAPLA_CERTVERIFY_CAP', 'manage_certverify' );
 define( 'ECAPLA_CERTVERIFY_MINIMUM_ELEMENTOR_VERSION', '3.10.0' );
+
+/*
+ * Canonical Certloom constants. Legacy ECAPLA_CERTVERIFY_* constants remain
+ * available while the proven current registry is migrated through explicit
+ * cutover milestones inside the same plugin upgrade line.
+ *
+ * The three historical CERTLOOM_DOMAIN_* readiness constants below are
+ * compatibility sentinels only and intentionally remain false. They are not
+ * production authority: effective normalized-domain release authority is
+ * derived exclusively from the immutable, exact-payload-bound DBAUTH manifest
+ * through DomainFeatureGate. Predefining these constants cannot enable it.
+ */
+define( 'CERTLOOM_VERSION', ECAPLA_CERTVERIFY_VERSION );
+define( 'CERTLOOM_PATH', ECAPLA_CERTVERIFY_PATH );
+define( 'CERTLOOM_URL', ECAPLA_CERTVERIFY_URL );
+
+/*
+ * 1.7 alpha review builds keep implemented normalized product workflows open
+ * for end-to-end staging verification. This includes admin workspaces and
+ * ordinary credential write paths such as integrations/field changes. Destructive
+ * migration/restore/cutover Data Tools remain release-authority gated, as do
+ * renderer-dependent production downloads. Remove this review override before a
+ * release candidate is declared.
+ */
+if ( ! defined( 'CERTLOOM_REVIEW_UNLOCKED' ) ) {
+	define( 'CERTLOOM_REVIEW_UNLOCKED', true );
+}
+if ( ! defined( 'CERTLOOM_REVIEW_ADMIN_PREVIEW' ) ) {
+	define( 'CERTLOOM_REVIEW_ADMIN_PREVIEW', true );
+}
+if ( ! defined( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY' ) ) {
+	define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false );
+}
+if ( ! defined( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW' ) ) {
+	define( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW', false );
+}
+if ( ! defined( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY' ) ) {
+	define( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY', false );
+}
+if ( ! defined( 'CERTLOOM_ALLOW_STAGING_CUTOVER_REHEARSAL' ) ) {
+	define( 'CERTLOOM_ALLOW_STAGING_CUTOVER_REHEARSAL', true );
+}
+if ( ! defined( 'CERTLOOM_ALLOW_STAGING_MIGRATION_REHEARSAL' ) ) {
+	define( 'CERTLOOM_ALLOW_STAGING_MIGRATION_REHEARSAL', true );
+}
+if ( ! defined( 'CERTLOOM_ALLOW_STAGING_RESTORE_REHEARSAL' ) ) {
+	define( 'CERTLOOM_ALLOW_STAGING_RESTORE_REHEARSAL', true );
+}
+
+require_once CERTLOOM_PATH . 'src/Autoloader.php';
+\Certloom\Autoloader::register();
 
 
 /*
@@ -50,22 +101,41 @@ require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-settings
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-fields.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-validator.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-database.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-analytics.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-permissions.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-public-router.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-public-policy.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-secondary-code.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-public-presentation.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-qr-logo.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-qr.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-barcode.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-render.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-shortcode.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-recipient-portal.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-block.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-rest.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-import.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-backup.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-numbering.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-database-proof.php';
 require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-cron.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-system-status.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-dashboard.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-bulk-manager.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-onboarding.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-guided-tour.php';
+require_once ECAPLA_CERTVERIFY_PATH . 'includes/class-ecapla-certverify-privacy.php';
 
 register_activation_hook( __FILE__, 'ecapla_certverify_activate' );
 register_deactivation_hook( __FILE__, 'ecapla_certverify_deactivate' );
 
-add_action( 'plugins_loaded', 'ecapla_certverify_init', 20 );
+add_action( 'init', 'ecapla_certverify_init', 1 );
 add_action( 'elementor/loaded', 'ecapla_certverify_elementor_loaded' );
 add_action( 'wp_initialize_site', 'ecapla_certverify_initialize_site', 200, 2 );
 add_action( 'admin_init', 'ecapla_certverify_add_privacy_policy_content' );
+add_action( 'admin_init', 'ecapla_certverify_analytics_maybe_upgrade', 2 );
+add_action( Ecapla_CertVerify_Analytics::PRUNE_HOOK, array( 'Ecapla_CertVerify_Analytics', 'prune' ) );
 add_action( 'network_admin_notices', 'ecapla_certverify_multisite_provisioning_notice' );
 add_action( 'ecapla_certverify_continue_migrations', 'ecapla_certverify_continue_migrations' );
 add_action( 'upgrader_process_complete', 'ecapla_certverify_after_plugin_upgrade', 10, 2 );
@@ -80,6 +150,16 @@ function ecapla_certverify_continue_migrations() {
 		if ( ! wp_next_scheduled( 'ecapla_certverify_continue_migrations' ) ) {
 			wp_schedule_single_event( time() + MINUTE_IN_SECONDS, 'ecapla_certverify_continue_migrations' );
 		}
+	}
+}
+
+/**
+ * Completes the bounded verification-analytics table upgrade on administrator requests.
+ */
+function ecapla_certverify_analytics_maybe_upgrade() {
+	$result = Ecapla_CertVerify_Analytics::maybe_upgrade();
+	if ( is_wp_error( $result ) ) {
+		ecapla_certverify_add_runtime_error( $result->get_error_message() );
 	}
 }
 
@@ -103,6 +183,7 @@ function ecapla_certverify_after_plugin_upgrade( $upgrader, $options ) { // phpc
 	}
 	delete_option( Ecapla_CertVerify_Database::HEALTH_OPTION );
 	delete_option( Ecapla_CertVerify_Permissions::HEALTH_OPTION );
+	delete_option( \Certloom\Infrastructure\Database\SchemaManager::HEALTH_OPTION );
 	if ( ! wp_next_scheduled( 'ecapla_certverify_continue_migrations' ) ) {
 		wp_schedule_single_event( time() + 5, 'ecapla_certverify_continue_migrations' );
 	}
@@ -132,6 +213,8 @@ function ecapla_certverify_activate( $network_wide = false ) {
 	if ( is_wp_error( $result ) ) {
 		ecapla_certverify_fail_activation( array( get_current_blog_id() => $result ) );
 	}
+	// One-shot first-run continuation. Never used for network-wide activation.
+	set_transient( 'certloom_activation_redirect_' . get_current_user_id(), 1, 60 );
 	return true;
 }
 
@@ -149,6 +232,17 @@ function ecapla_certverify_activate_site() {
 	if ( is_wp_error( $database ) ) {
 		return $database;
 	}
+	$analytics = Ecapla_CertVerify_Analytics::activate();
+	if ( is_wp_error( $analytics ) ) {
+		return $analytics;
+	}
+
+	$domain = \Certloom\Plugin::activate();
+	if ( is_wp_error( $domain ) ) {
+		return $domain;
+	}
+
+	Ecapla_CertVerify_Public_Router::activate();
 
 	if ( ! Ecapla_CertVerify_Permissions::activate() ) {
 		return new WP_Error( 'ecapla_certverify_permissions_setup_failed', __( 'Certloom could not save its required administrator access.', 'certloom' ) );
@@ -194,10 +288,18 @@ function ecapla_certverify_fail_activation( $errors ) {
  */
 function ecapla_certverify_deactivate( $network_wide = false ) {
 	if ( is_multisite() && $network_wide ) {
-		ecapla_certverify_for_each_site( array( 'Ecapla_CertVerify_Cron', 'deactivate' ) );
+		ecapla_certverify_for_each_site( 'ecapla_certverify_deactivate_site' );
 		return;
 	}
+	ecapla_certverify_deactivate_site();
+}
+
+/** Clears all legacy and new-domain scheduled work for the current site. */
+function ecapla_certverify_deactivate_site() {
 	Ecapla_CertVerify_Cron::deactivate();
+	Ecapla_CertVerify_Analytics::deactivate();
+	\Certloom\Plugin::deactivate();
+	return true;
 }
 
 /**
@@ -315,15 +417,31 @@ function ecapla_certverify_multisite_provisioning_notice() {
 }
 
 /**
- * Boots Certloom after plugins have loaded.
+ * Registers Certloom's bundled/custom language directory after WordPress' safe
+ * translation-loading boundary. WordPress.org language packs may still use the
+ * normal global languages directory; reviewed bundled packs use /languages.
+ */
+function ecapla_certverify_load_textdomain() {
+	if ( function_exists( 'load_plugin_textdomain' ) && function_exists( 'plugin_basename' ) ) {
+		load_plugin_textdomain( 'certloom', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+	}
+}
+
+/**
+ * Boots Certloom on init after WordPress translation timing is safe.
  */
 function ecapla_certverify_init() {
+	ecapla_certverify_load_textdomain();
 	$restore_recovery   = Ecapla_CertVerify_Backup::recover_interrupted_restore();
 	$database_upgrade   = is_wp_error( $restore_recovery ) ? true : Ecapla_CertVerify_Database::maybe_upgrade();
 	$permission_upgrade = Ecapla_CertVerify_Permissions::maybe_upgrade_capabilities();
 	$GLOBALS['ecapla_certverify_verification_unavailable'] = is_wp_error( $restore_recovery ) || is_wp_error( $database_upgrade );
 	$cron_upgrade       = Ecapla_CertVerify_Cron::init();
 	$field_upgrade      = Ecapla_CertVerify_Fields::maybe_repair_schema();
+	\Certloom\Plugin::boot();
+	\Certloom\Infrastructure\Integration\TutorLmsBridge::register();
+	\Certloom\Infrastructure\Integration\LearnDashBridge::register();
+	\Certloom\Infrastructure\Integration\WooCommerceBridge::register();
 	$provisioning_error = null;
 	if ( is_wp_error( $restore_recovery ) ) {
 		$provisioning_error = $restore_recovery;
@@ -353,15 +471,26 @@ function ecapla_certverify_init() {
 		}
 	}
 
+	Ecapla_CertVerify_Public_Router::init();
 	Ecapla_CertVerify_Shortcode::init();
 	Ecapla_CertVerify_Block::init();
+	Ecapla_CertVerify_Privacy::init();
 	add_action( 'rest_api_init', array( 'Ecapla_CertVerify_REST', 'register_routes' ) );
 
 	if ( is_admin() ) {
 		require_once ECAPLA_CERTVERIFY_PATH . 'admin/class-ecapla-certverify-list-table.php';
 		require_once ECAPLA_CERTVERIFY_PATH . 'admin/class-ecapla-certverify-admin.php';
 		new Ecapla_CertVerify_Admin();
+		( new \Certloom\Infrastructure\Admin\TutorLmsIntegrationAdmin() )->register();
+		( new \Certloom\Infrastructure\Admin\LearnDashIntegrationAdmin() )->register();
+		( new \Certloom\Infrastructure\Admin\WooCommerceIntegrationAdmin() )->register();
+		( new \Certloom\Infrastructure\Admin\CourseraIntegrationAdmin() )->register();
+		( new \Certloom\Infrastructure\Admin\WebhookIntegrationAdmin() )->register();
+		( new \Certloom\Infrastructure\Admin\CredlyIntegrationAdmin() )->register();
 	}
+
+	\Certloom\Infrastructure\Integration\CourseraXapiRest::register();
+	\Certloom\Infrastructure\Integration\WebhookRest::register();
 
 	if ( did_action( 'elementor/loaded' ) ) {
 		ecapla_certverify_elementor_loaded();
@@ -443,6 +572,7 @@ function ecapla_certverify_register_elementor_widgets( $widgets_manager ) {
 
 	require_once ECAPLA_CERTVERIFY_PATH . 'elementor/class-ecapla-certverify-elementor-widget.php';
 	require_once ECAPLA_CERTVERIFY_PATH . 'elementor/class-ecapla-certverify-template-widgets.php';
+	require_once ECAPLA_CERTVERIFY_PATH . 'elementor/class-ecapla-certverify-credential-widget.php';
 
 	$widgets_manager->register( new Ecapla_CertVerify_Elementor_Widget() );
 	$widgets_manager->register( new Ecapla_CertVerify_Elementor_Meridian_Widget() );
@@ -450,6 +580,7 @@ function ecapla_certverify_register_elementor_widgets( $widgets_manager ) {
 	$widgets_manager->register( new Ecapla_CertVerify_Elementor_Axis_Widget() );
 	$widgets_manager->register( new Ecapla_CertVerify_Elementor_Nova_Widget() );
 	$widgets_manager->register( new Ecapla_CertVerify_Elementor_Forge_Widget() );
+	$widgets_manager->register( new Ecapla_CertVerify_Elementor_Credential_Widget() );
 }
 
 /**
@@ -461,7 +592,9 @@ function ecapla_certverify_add_privacy_policy_content() {
 	}
 
 	$content = '<p class="privacy-policy-tutorial">' . esc_html__( 'Certloom publishes only the certificate fields that a site administrator marks as visible. Those fields may include names or other personal information, so administrators should publish only information they are authorised to disclose.', 'certloom' ) . '</p>';
+	$content .= '<p>' . esc_html__( 'Depending on the Certloom features enabled by the site, local WordPress storage may also contain recipient identity/contact data and administrator-managed issuer or signer contact details. These records remain on the site unless the administrator exports, changes, or removes them according to the organization’s retention obligations.', 'certloom' ) . '</p>';
 	$content .= '<p>' . esc_html__( 'Certificate verification is performed on this WordPress site. Certloom does not send certificate records to Ecapla or another external service. Verification requests may still appear in normal web-server, security, analytics, browser-history, and cache logs. Direct verification links can include the certificate number in the URL.', 'certloom' ) . '</p>';
+	$content .= '<p>' . esc_html__( 'When Certloom Verification Analytics is available, Certloom stores daily aggregate verification counters locally for up to 730 days. These aggregates classify outcomes and sources such as manual, QR, or API verification; they do not store raw IP addresses, User-Agents, secondary proof codes, or raw failed certificate-number input. Verification analytics are operational data and are removed when Certloom is uninstalled.', 'certloom' ) . '</p>';
 	$content .= '<p>' . esc_html__( 'Site administrators determine how long certificate records are retained and can configure whether Certloom data is removed when the plugin is uninstalled.', 'certloom' ) . '</p>';
 
 	wp_add_privacy_policy_content( 'Certloom', wp_kses_post( $content ) );

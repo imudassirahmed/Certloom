@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "textdomain": "certloom",
+  "source_pot_sha256": "e919520afa4c868484b8e4921e792b1642e8497e5b03c843f2d136847d4ad0a1",
+  "policy": {
+    "reviewed_requires_complete_coverage": true,
+    "reviewed_allows_fuzzy": false,
+    "fallback": "WordPress falls back to the English source string for untranslated or unavailable locale entries",
+    "translation_source": "human-reviewed PO; machine-generated bulk translation is not accepted as reviewed"
+  },
+  "targets": [
+    {
+      "locale": "ar",
+      "language_name": "Arabic",
+      "direction": "rtl",
+      "status": "planned",
+      "quality_tier": 1
+    },
+    {
+      "locale": "ur",
+      "language_name": "Urdu",
+      "direction": "rtl",
+      "status": "planned",
+      "quality_tier": 1
+    },
+    {
+      "locale": "fa_IR",
+      "language_name": "Persian",
+      "direction": "rtl",
+      "status": "planned",
+      "quality_tier": 1
+    },
+    {
+      "locale": "he_IL",
+      "language_name": "Hebrew",
+      "direction": "rtl",
+      "status": "planned",
+      "quality_tier": 1
+    },
+    {
+      "locale": "es_ES",
+      "language_name": "Spanish (Spain)",
+      "direction": "ltr",
+      "status": "planned",
+      "quality_tier": 1
+    },
+    {
+      "locale": "fr_FR",
+      "language_name": "French",
+      "direction": "ltr",
+      "status": "planned",
+      "quality_tier": 1
+    },
+    {
+      "locale": "de_DE",
+      "language_name": "German",
+      "direction": "ltr",
+      "status": "planned",
+      "quality_tier": 1
+    },
+    {
+      "locale": "pt_BR",
+      "language_name": "Portuguese (Brazil)",
+      "direction": "ltr",
+      "status": "planned",
+      "quality_tier": 1
+    },
+    {
+      "locale": "it_IT",
+      "language_name": "Italian",
+      "direction": "ltr",
+      "status": "planned",
+      "quality_tier": 2
+    },
+    {
+      "locale": "nl_NL",
+      "language_name": "Dutch",
+      "direction": "ltr",
+      "status": "planned",
+      "quality_tier": 2
+    },
+    {
+      "locale": "tr_TR",
+      "language_name": "Turkish",
+      "direction": "ltr",
+      "status": "planned",
+      "quality_tier": 2
+    },
+    {
+      "locale": "ru_RU",
+      "language_name": "Russian",
+      "direction": "ltr",
+      "status": "planned",
+      "quality_tier": 2
+    },
+    {
+      "locale": "hi_IN",
+      "language_name": "Hindi",
+      "direction": "ltr",
+      "status": "planned",
+      "quality_tier": 2
+    },
+    {
+      "locale": "bn_BD",
+      "language_name": "Bengali",
+      "direction": "ltr",
+      "status": "planned",
+      "quality_tier": 2
+    },
+    {
+      "locale": "id_ID",
+      "language_name": "Indonesian",
+      "direction": "ltr",
+      "status": "planned",
+      "quality_tier": 2
+    },
+    {
+      "locale": "ms_MY",
+      "language_name": "Malay",
+      "direction": "ltr",
+      "status": "planned",
+      "quality_tier": 2
+    },
+    {
+      "locale": "zh_CN",
+      "language_name": "Simplified Chinese",
+      "direction": "ltr",
+      "status": "planned",
+      "quality_tier": 3
+    },
+    {
+      "locale": "zh_TW",
+      "language_name": "Traditional Chinese",
+      "direction": "ltr",
+      "status": "planned",
+      "quality_tier": 3
+    },
+    {
+      "locale": "ja",
+      "language_name": "Japanese",
+      "direction": "ltr",
+      "status": "planned",
+      "quality_tier": 3
+    },
+    {
+      "locale": "ko_KR",
+      "language_name": "Korean",
+      "direction": "ltr",
+      "status": "planned",
+      "quality_tier": 3
+    }
+  ]
+}

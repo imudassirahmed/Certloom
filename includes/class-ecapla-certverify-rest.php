@@ -13,15 +13,52 @@ class Ecapla_CertVerify_REST {
 
 	public static function register_routes() {
 		foreach ( array( self::NAMESPACE_ ) as $namespace ) {
+			$number_arg = array(
+				'type'              => 'string',
+				'required'          => true,
+				'sanitize_callback' => array( __CLASS__, 'sanitize_number' ),
+				'validate_callback' => array( __CLASS__, 'validate_number' ),
+			);
 			register_rest_route(
 				$namespace,
 				'/verify',
 				array(
+					array(
+						'methods'             => WP_REST_Server::READABLE,
+						'callback'            => array( __CLASS__, 'verify' ),
+						'permission_callback' => '__return_true',
+						'args'                => array( 'number' => $number_arg ),
+					),
+					array(
+						'methods'             => WP_REST_Server::CREATABLE,
+						'callback'            => array( __CLASS__, 'verify' ),
+						'permission_callback' => '__return_true',
+						'args'                => array(
+							'number' => $number_arg,
+							'code'   => array(
+								'type'              => 'string',
+								'required'          => false,
+								'sanitize_callback' => 'sanitize_text_field',
+							),
+							'source' => array(
+								'type'              => 'string',
+								'required'          => false,
+								'sanitize_callback' => 'sanitize_key',
+							),
+						),
+					),
+				)
+			);
+
+			register_rest_route(
+				$namespace,
+				'/credential',
+				array(
 					'methods'             => WP_REST_Server::READABLE,
-					'callback'            => array( __CLASS__, 'verify' ),
+					'callback'            => array( __CLASS__, 'verify_credential' ),
 					'permission_callback' => '__return_true',
 					'args'                => array(
-						'number' => array(
+						'id' => array(
 							'type'              => 'string',
 							'required'          => true,
 							'sanitize_callback' => array( __CLASS__, 'sanitize_number' ),
@@ -43,11 +80,94 @@ class Ecapla_CertVerify_REST {
 	}
 
 	public static function verify( $request ) {
-		if ( function_exists( 'ecapla_certverify_verification_is_available' ) && ! ecapla_certverify_verification_is_available() ) {
+		$number = self::sanitize_number( $request->get_param( 'number' ) );
+		$code = self::secondary_code_from_request( $request );
+		$source = self::verification_source_from_request( $request );
+		$presentation = Ecapla_CertVerify_Public_Presentation::verify( $number, true, 'verification', $code, $source );
+		if ( is_wp_error( $presentation ) ) {
+			$rate_limited = 'ecapla_certverify_rate_limited' === $presentation->get_error_code();
 			$response = new WP_REST_Response(
 				array(
-					'code'    => 'ecapla_certverify_temporarily_unavailable',
-					'message' => __( 'Certificate verification is temporarily unavailable. Please try again later.', 'certloom' ),
+					'code'    => $rate_limited ? 'ecapla_certverify_rate_limited' : 'ecapla_certverify_temporarily_unavailable',
+					'message' => $rate_limited ? $presentation->get_error_message() : __( 'Certificate verification is temporarily unavailable. Please try again later.', 'certloom' ),
+				),
+				$rate_limited ? 429 : 503
+			);
+			$response->header( 'Retry-After', '60' );
+			return self::add_private_headers( $response );
+		}
+
+		if ( empty( $presentation['found'] ) ) {
+			return self::add_private_headers( new WP_REST_Response( array( 'found' => false ), 200 ) );
+		}
+
+		$qr = null;
+		if ( class_exists( 'Ecapla_CertVerify_QR' ) && ! empty( $presentation['verification_url'] ) ) {
+			$qr_candidate = Ecapla_CertVerify_QR::public_payload( (string) $presentation['verification_url'] );
+			if ( ! is_wp_error( $qr_candidate ) ) { $qr = $qr_candidate; }
+		}
+
+		$barcode = null;
+		if ( class_exists( 'Ecapla_CertVerify_Barcode' ) && ! empty( $presentation['certificate_number'] ) ) {
+			$barcode_candidate = Ecapla_CertVerify_Barcode::public_payload( (string) $presentation['certificate_number'] );
+			if ( ! is_wp_error( $barcode_candidate ) ) { $barcode = $barcode_candidate; }
+		}
+
+		/* Keep the established fields contract while adding one shared presentation model. */
+		$payload = array(
+			'found'        => true,
+			'fields'       => $presentation['fields'],
+			'presentation' => array(
+				'certificate_number' => $presentation['certificate_number'],
+				'status'             => $presentation['status'],
+				'issuer'             => $presentation['issuer'],
+				'verified_at'        => $presentation['verified_at'],
+				'verification_url'   => $presentation['verification_url'],
+				'profile_url'        => $presentation['profile_url'],
+				'visibility'         => $presentation['visibility'],
+				'actions'            => $presentation['actions'],
+				'labels'             => $presentation['labels'],
+				'secondary_proof'    => isset( $presentation['secondary_proof'] ) ? $presentation['secondary_proof'] : 'not_required',
+				'qr'                 => $qr,
+				'barcode'            => $barcode,
+			),
+		);
+		return self::add_private_headers( new WP_REST_Response( $payload, 200 ) );
+	}
+
+	/**
+	 * Public verification adapter for the normalized Credential Series model.
+	 * Availability follows live credential-store readiness, not release ceremony.
+	 */
+
+	/** Privacy-safe source attribution for ANL-01. */
+	private static function verification_source_from_request( $request ) {
+		$source = is_object( $request ) && method_exists( $request, 'get_param' ) ? $request->get_param( 'source' ) : '';
+		if ( class_exists( 'Ecapla_CertVerify_Analytics' ) ) {
+			return Ecapla_CertVerify_Analytics::normalize_source( '' === (string) $source ? 'api' : $source );
+		}
+		return 'api';
+	}
+
+	/** Secondary proof is accepted from POST bodies only, never query strings/URLs. */
+	private static function secondary_code_from_request( $request ) {
+		if ( ! is_object( $request ) || ! method_exists( $request, 'get_method' ) || 'POST' !== strtoupper( (string) $request->get_method() ) ) {
+			return '';
+		}
+		$params = method_exists( $request, 'get_json_params' ) ? $request->get_json_params() : array();
+		if ( ! is_array( $params ) || ! array_key_exists( 'code', $params ) ) {
+			$params = method_exists( $request, 'get_body_params' ) ? $request->get_body_params() : array();
+		}
+		return is_array( $params ) && isset( $params['code'] ) ? sanitize_text_field( (string) $params['code'] ) : '';
+	}
+
+	public static function verify_credential( $request ) {
+		$gate = new \Certloom\Infrastructure\Verification\PublicVerificationGate();
+		if ( ! $gate->is_ready() ) {
+			$response = new WP_REST_Response(
+				array(
+					'code'    => 'certloom_series_verification_not_ready',
+					'message' => __( 'Credential verification is temporarily unavailable because the credential store is not ready. Please try again shortly.', 'certloom' ),
 				),
 				503
 			);
@@ -55,96 +175,41 @@ class Ecapla_CertVerify_REST {
 			return self::add_private_headers( $response );
 		}
 
-		if ( self::is_rate_limited() ) {
+		if ( self::is_rate_limited( 'credential_verify', true ) ) {
 			$response = new WP_REST_Response(
-				array(
-					'code'    => 'ecapla_certverify_rate_limited',
-					'message' => __( 'Too many verification requests. Please wait a minute and try again.', 'certloom' ),
-				),
+				array( 'code' => 'certloom_rate_limited', 'message' => __( 'Too many verification requests. Please wait a minute and try again.', 'certloom' ) ),
 				429
 			);
 			$response->header( 'Retry-After', '60' );
 			return self::add_private_headers( $response );
 		}
 
-		$number      = self::sanitize_number( $request->get_param( 'number' ) );
-		$certificate = Ecapla_CertVerify_Database::get_by_cert_number( $number );
-		if ( is_wp_error( $certificate ) ) {
+		$repo = new \Certloom\Infrastructure\Repository\CredentialRepository();
+		$result = ( new \Certloom\Application\CredentialVerificationService( $repo ) )->verify_public_id( self::sanitize_number( $request->get_param( 'id' ) ) );
+		if ( is_wp_error( $result ) ) {
 			$response = new WP_REST_Response(
-				array(
-					'code'    => 'ecapla_certverify_temporarily_unavailable',
-					'message' => __( 'Certificate verification is temporarily unavailable. Please try again later.', 'certloom' ),
-				),
+				array( 'code' => 'certloom_verification_temporarily_unavailable', 'message' => __( 'Credential verification is temporarily unavailable. Please try again later.', 'certloom' ) ),
 				503
 			);
 			$response->header( 'Retry-After', '60' );
 			return self::add_private_headers( $response );
 		}
 
-		$response = new WP_REST_Response(
-			$certificate
-				? array(
-					'found'  => true,
-					'fields' => Ecapla_CertVerify_Render::fields_for_output( $certificate ),
-				)
-				: array( 'found' => false ),
-			200
-		);
-		return self::add_private_headers( $response );
+		$payload = ( new \Certloom\Application\PublicCredentialPresenter() )->present( $result );
+		$filtered = apply_filters( 'certloom_public_verification_response', $payload, $result );
+		if ( ! is_array( $filtered ) ) {
+			$filtered = $payload;
+		}
+		/* Generic extensions may add fields, but cannot weaken/replace Core truth. */
+		foreach ( $payload as $key => $value ) {
+			$filtered[ $key ] = $value;
+		}
+		return self::add_private_headers( new WP_REST_Response( $filtered, 200 ) );
 	}
 
-	public static function is_rate_limited() {
-		$limit      = max( 1, absint( apply_filters( 'ecapla_certverify_rate_limit', self::RATE_LIMIT ) ) );
-		$identifier = self::get_ip() . '|' . self::get_user_agent();
-		$identifier = (string) apply_filters( 'ecapla_certverify_rate_limit_identifier', $identifier );
-		$bucket     = (string) floor( time() / MINUTE_IN_SECONDS );
-		$key        = 'ecapla_certverify_rl_' . hash_hmac( 'sha256', $identifier . '|' . $bucket, wp_salt( 'nonce' ) );
-
-		if ( wp_using_ext_object_cache() ) {
-			$group = 'certloom';
-			if ( wp_cache_add( $key, 1, $group, 70 ) ) {
-				return false;
-			}
-			$count = wp_cache_incr( $key, 1, $group );
-			if ( false === $count ) {
-				wp_cache_set( $key, 1, $group, 70 );
-				return false;
-			}
-			return (int) $count > $limit;
-		}
-
-		global $wpdb;
-		$option_key = 'certverify_rl_' . $bucket . '_' . substr( hash_hmac( 'sha256', $identifier, wp_salt( 'nonce' ) ), 0, 40 );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- A single atomic INSERT ... ON DUPLICATE KEY UPDATE prevents race-prone transient counters.
-		$increment  = $wpdb->query(
-			$wpdb->prepare(
-				"INSERT INTO %i (option_name, option_value, autoload) VALUES (%s, '1', 'no') ON DUPLICATE KEY UPDATE option_value = CAST(option_value AS UNSIGNED) + 1",
-				$wpdb->options,
-				$option_key
-			)
-		);
-		wp_cache_delete( $option_key, 'options' );
-		if ( false === $increment ) {
-			return false; // Availability takes priority if the protective counter cannot be written.
-		}
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Reads the just-updated atomic counter directly so the rate-limit decision cannot use stale option-cache data.
-		$count = (int) $wpdb->get_var(
-			$wpdb->prepare( 'SELECT option_value FROM %i WHERE option_name = %s', $wpdb->options, $option_key )
-		);
-
-		if ( 1 === wp_rand( 1, 100 ) ) {
-			$current_prefix = $wpdb->esc_like( 'certverify_rl_' . $bucket . '_' ) . '%';
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Probabilistic cleanup removes expired internal rate-limit buckets; caching these ephemeral rows would be counterproductive.
-			$wpdb->query(
-				$wpdb->prepare(
-					'DELETE FROM %i WHERE option_name LIKE %s AND option_name NOT LIKE %s',
-					$wpdb->options,
-					$wpdb->esc_like( 'certverify_rl_' ) . '%',
-					$current_prefix
-				)
-			);
-		}
-		return $count > $limit;
+	public static function is_rate_limited( $scope = 'verify', $fail_closed = false ) {
+		$legacy_limit = max( 1, absint( apply_filters( 'ecapla_certverify_rate_limit', self::RATE_LIMIT, sanitize_key( (string) $scope ) ) ) );
+		return ( new \Certloom\Infrastructure\Security\RateLimiter() )->is_limited( $scope, $fail_closed, $legacy_limit );
 	}
 
 	private static function add_private_headers( $response ) {

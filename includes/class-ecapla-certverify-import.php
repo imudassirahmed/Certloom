@@ -324,6 +324,15 @@ class Ecapla_CertVerify_Import {
 			'holder'            => 'holder_name',
 			'certificateholder' => 'holder_name',
 			'holdername'        => 'holder_name',
+			'displayname'       => 'holder_name',
+			'fullname'          => 'holder_name',
+			'name'              => 'holder_name',
+			'firstname'         => 'first_name',
+			'middlename'        => 'middle_name',
+			'lastname'          => 'last_name',
+			'emailaddress'      => 'email',
+			'externalid'        => 'external_id',
+			'grade'             => 'grade',
 			'issuedate'         => 'issue_date',
 			'expirydate'        => 'expiry_date',
 			'expirationdate'    => 'expiry_date',
@@ -581,51 +590,62 @@ class Ecapla_CertVerify_Import {
 		if ( is_wp_error( $lock ) ) {
 			return $lock;
 		}
-		try {
-			$manifest = self::get_manifest( $token );
-			if ( ! $manifest || empty( $manifest['process'] ) || ! is_array( $manifest['process'] ) ) {
-				return false;
-			}
-			$process = $manifest['process'];
-			$cursor  = absint( $process['cursor'] ?? 0 );
-			$total   = absint( $manifest['chunks'] );
-			if ( $cursor >= $total ) {
-				return self::progress_response( $manifest, true );
-			}
-			$receipt_key = self::receipt_key( $token, $cursor );
-			$result      = get_transient( $receipt_key );
-			if ( ! is_array( $result ) ) {
-				$chunk = get_transient( $token . '_chunk_' . $cursor );
-				if ( ! is_array( $chunk ) || (int) ( $chunk['user_id'] ?? 0 ) !== get_current_user_id() || ! isset( $chunk['rows'] ) ) {
-					return new WP_Error( 'ecapla_certverify_import_chunk_expired', __( 'One temporary import chunk expired. Upload the CSV again.', 'certloom' ) );
-				}
-				$result = self::process(
-					array_merge( array( $manifest['header'] ), $chunk['rows'] ),
-					(array) $process['mapping'],
-					! empty( $process['update_existing'] ),
-					! empty( $process['clear_empty'] ),
-					! empty( $process['historical_restore'] ),
-					true,
-					$cursor * self::CHUNK_ROWS
-				);
-				if ( ! set_transient( $receipt_key, $result, self::PROCESS_TTL ) ) {
-					return new WP_Error( 'ecapla_certverify_import_receipt_failed', __( 'The import chunk finished, but Certloom could not save its completion receipt. Review the certificate list before retrying.', 'certloom' ) );
-				}
-			}
-			foreach ( array( 'created', 'updated', 'restored', 'skipped' ) as $key ) {
-				$process['results'][ $key ] = absint( $process['results'][ $key ] ?? 0 ) + absint( $result[ $key ] ?? 0 );
-			}
-			$process['results']['errors'] = array_slice( array_merge( (array) ( $process['results']['errors'] ?? array() ), (array) ( $result['errors'] ?? array() ) ), 0, 500 );
-			$process['cursor']             = $cursor + 1;
-			$manifest['process']           = $process;
-			if ( ! set_transient( $token, $manifest, self::PROCESS_TTL ) ) {
-				return new WP_Error( 'ecapla_certverify_import_progress_failed', __( 'The import chunk finished, but Certloom could not save its progress. Review the certificate list before retrying.', 'certloom' ) );
-			}
-			delete_transient( $receipt_key );
-			return self::progress_response( $manifest, $process['cursor'] >= $total );
-		} finally {
-			self::release_process_lock( $token, $lock );
+
+		$result   = self::continue_stored_process_under_lock( $token );
+		$released = self::release_process_lock( $token, $lock );
+		if ( is_wp_error( $released ) ) {
+			return new WP_Error(
+				'ecapla_certverify_import_lock_release_failed',
+				__( 'The import request finished its bounded work, but Certloom could not release the import lock safely. Do not start another import slice until the lock expires or cleanup succeeds.', 'certloom' ),
+				array( 'operation_error' => is_wp_error( $result ) ? $result->get_error_code() : '', 'cleanup_error' => $released->get_error_code() )
+			);
 		}
+		return $result;
+	}
+
+	/** Processes one stored CSV chunk while the caller owns the per-import lock. */
+	private static function continue_stored_process_under_lock( $token ) {
+		$manifest = self::get_manifest( $token );
+		if ( ! $manifest || empty( $manifest['process'] ) || ! is_array( $manifest['process'] ) ) {
+			return false;
+		}
+		$process = $manifest['process'];
+		$cursor  = absint( $process['cursor'] ?? 0 );
+		$total   = absint( $manifest['chunks'] );
+		if ( $cursor >= $total ) {
+			return self::progress_response( $manifest, true );
+		}
+		$receipt_key = self::receipt_key( $token, $cursor );
+		$result      = get_transient( $receipt_key );
+		if ( ! is_array( $result ) ) {
+			$chunk = get_transient( $token . '_chunk_' . $cursor );
+			if ( ! is_array( $chunk ) || (int) ( $chunk['user_id'] ?? 0 ) !== get_current_user_id() || ! isset( $chunk['rows'] ) ) {
+				return new WP_Error( 'ecapla_certverify_import_chunk_expired', __( 'One temporary import chunk expired. Upload the CSV again.', 'certloom' ) );
+			}
+			$result = self::process(
+				array_merge( array( $manifest['header'] ), $chunk['rows'] ),
+				(array) $process['mapping'],
+				! empty( $process['update_existing'] ),
+				! empty( $process['clear_empty'] ),
+				! empty( $process['historical_restore'] ),
+				true,
+				$cursor * self::CHUNK_ROWS
+			);
+			if ( ! set_transient( $receipt_key, $result, self::PROCESS_TTL ) ) {
+				return new WP_Error( 'ecapla_certverify_import_receipt_failed', __( 'The import chunk finished, but Certloom could not save its completion receipt. Review the certificate list before retrying.', 'certloom' ) );
+			}
+		}
+		foreach ( array( 'created', 'updated', 'restored', 'skipped' ) as $key ) {
+			$process['results'][ $key ] = absint( $process['results'][ $key ] ?? 0 ) + absint( $result[ $key ] ?? 0 );
+		}
+		$process['results']['errors'] = array_slice( array_merge( (array) ( $process['results']['errors'] ?? array() ), (array) ( $result['errors'] ?? array() ) ), 0, 500 );
+		$process['cursor']             = $cursor + 1;
+		$manifest['process']           = $process;
+		if ( ! set_transient( $token, $manifest, self::PROCESS_TTL ) ) {
+			return new WP_Error( 'ecapla_certverify_import_progress_failed', __( 'The import chunk finished, but Certloom could not save its progress. Review the certificate list before retrying.', 'certloom' ) );
+		}
+		delete_transient( $receipt_key );
+		return self::progress_response( $manifest, $process['cursor'] >= $total );
 	}
 
 	private static function receipt_key( $token, $cursor ) {
@@ -658,13 +678,21 @@ class Ecapla_CertVerify_Import {
 	private static function release_process_lock( $token, $owner ) {
 		global $wpdb;
 		$key    = self::process_lock_key( $token );
+		$owner  = sanitize_text_field( (string) $owner );
 		$stored = (string) get_option( $key, '' );
-		if ( 0 !== strpos( $stored, sanitize_text_field( $owner ) . '|' ) ) {
-			return;
+		if ( '' === $stored ) {
+			return true;
+		}
+		if ( '' === $owner || 0 !== strpos( $stored, $owner . '|' ) ) {
+			return new WP_Error( 'ecapla_certverify_import_lock_owner_changed', __( 'Certloom refused to release an import lock that is no longer owned by this request.', 'certloom' ) );
 		}
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Owner-matched deletion prevents one request from releasing another request's import lock.
-		$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE option_name = %s AND option_value = %s', $wpdb->options, $key, $stored ) );
+		$deleted = $wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE option_name = %s AND option_value = %s', $wpdb->options, $key, $stored ) );
 		wp_cache_delete( $key, 'options' );
+		if ( 1 === (int) $deleted || '' === (string) get_option( $key, '' ) ) {
+			return true;
+		}
+		return new WP_Error( 'ecapla_certverify_import_lock_release_failed', __( 'Certloom could not release the import lock safely. Wait for the short lease to expire before continuing.', 'certloom' ) );
 	}
 
 	public static function get_process_progress( $token ) {
@@ -721,7 +749,7 @@ class Ecapla_CertVerify_Import {
 	}
 
 	public static function stream_export() {
-		$fields  = Ecapla_CertVerify_Fields::get_fields();
+		$fields  = Ecapla_CertVerify_Fields::get_exchange_fields();
 		$stream  = new SplTempFileObject( 2 * MB_IN_BYTES );
 		$last_id = 0;
 		$limit   = 500;
@@ -762,7 +790,7 @@ class Ecapla_CertVerify_Import {
 	}
 
 	public static function stream_template() {
-		$fields = Ecapla_CertVerify_Fields::get_fields();
+		$fields = Ecapla_CertVerify_Fields::get_exchange_fields();
 		$header = array_map( array( __CLASS__, 'escape_spreadsheet_cell' ), wp_list_pluck( $fields, 'label' ) );
 		$sample = array();
 		foreach ( $fields as $field ) {
@@ -774,6 +802,8 @@ class Ecapla_CertVerify_Import {
 				$sample[] = gmdate( 'Y-m-d' );
 			} elseif ( 'holder_name' === $field['key'] ) {
 				$sample[] = 'Example Organization Ltd';
+			} elseif ( '__certloom_profile_visibility' === $field['key'] ) {
+				$sample[] = 'public';
 			} else {
 				$sample[] = '';
 			}
@@ -814,7 +844,9 @@ class Ecapla_CertVerify_Import {
 
 	public static function escape_spreadsheet_cell( $value ) {
 		$value = (string) $value;
-		if ( preg_match( '/^[\x00-\x20\x{FEFF}]*[=+\-@]/u', $value ) ) {
+		$matched = preg_match( '/^[\x00-\x20\x{FEFF}]*[=+\-@]/u', $value );
+		if ( false === $matched || 1 === $matched ) {
+			/* Malformed UTF-8 must fail safe instead of bypassing formula neutralization. */
 			return "'" . $value;
 		}
 		return $value;

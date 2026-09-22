@@ -23,3 +23,8 @@ reports/
 .env.*
 !.env.example
 wp-config.php
+
+# Development archives / generated builds
+/build/
+/docs/
+/QA-NOT-FOR-PRODUCTION.txt

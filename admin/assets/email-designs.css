@@ -1,0 +1,1674 @@
+.certloom-email-designs,.certloom-email-designer-wrap {
+	--certloom-email-border: var(--cl-rule);
+	--certloom-email-muted: var(--cl-ink-soft);
+	--certloom-email-ink: var(--cl-ink);
+	--certloom-email-soft: var(--cl-paper);
+	--certloom-email-brand: var(--cl-blue);
+	max-width: 1480px;
+}
+.certloom-email-hero {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: var(--cl-4);
+	margin: var(--cl-4) 0;
+	padding: 0 0 var(--cl-4);
+	border: 0;
+	border-bottom: 1px solid var(--cl-rule);
+	border-radius: var(--cl-r-none);
+	background: transparent;
+	box-shadow: none;
+}
+.certloom-email-designs .certloom-eyebrow {
+	margin: 0 0 var(--cl-1);
+	text-transform: none;
+	letter-spacing: 0;
+	font-size: var(--cl-t-xs);
+	font-weight: 700;
+	color: var(--cl-ink-soft);
+}
+.certloom-email-hero h1 {
+	margin: var(--cl-1) 0;
+	color: var(--cl-ink);
+	font-size: var(--cl-t-lg);
+	line-height: 1.2;
+}
+.certloom-email-lede {
+	max-width: 72ch;
+	margin: 0;
+	color: var(--cl-ink-soft);
+	font-size: var(--cl-t-sm);
+}
+.certloom-email-hero__actions {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+.certloom-email-tabs {
+	display: flex;
+	gap: 4px;
+	border-bottom: 1px solid var(--certloom-email-border);
+	margin-bottom: 18px;
+}
+.certloom-email-tabs a {
+	padding: 11px 16px;
+	text-decoration: none;
+	color: var(--cl-ink-soft);
+	border-bottom: 2px solid transparent;
+	font-weight: 600;
+}
+.certloom-email-tabs a.is-active {
+	color: var(--certloom-email-ink);
+	border-color: var(--certloom-email-brand);
+}
+.certloom-email-filters {
+	display: grid;
+	grid-template-columns: minmax(220px,2fr) minmax(180px,1fr) minmax(160px,1fr) auto;
+	gap: 10px;
+	align-items: end;
+	margin: 16px 0 22px;
+	padding: 16px;
+	border: 1px solid var(--certloom-email-border);
+	background: var(--cl-surface);
+	border-radius: var(--cl-r-dialog);
+}
+.certloom-email-filters label,.certloom-message-settings label,.certloom-theme-grid label {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	font-weight: 600;
+	color: var(--cl-ink-soft);
+}
+.certloom-email-filters input,.certloom-email-filters select,.certloom-message-settings input,.certloom-message-settings select,.certloom-theme-grid input,.certloom-theme-grid select {
+	width: 100%;
+	min-height: 40px;
+}
+.certloom-email-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill,minmax(300px,1fr));
+	gap: 18px;
+}
+.certloom-email-card {
+	min-width: 0;
+	border: 1px solid var(--certloom-email-border);
+	border-radius: var(--cl-r-float);
+	background: var(--cl-surface);
+	overflow: visible;
+	box-shadow: var(--cl-shadow-hairline);
+}
+.certloom-email-card__preview {
+	display: block;
+	width: 100%;
+	height: 260px;
+	overflow: hidden;
+	border: 0;
+	border-bottom: 1px solid var(--certloom-email-border);
+	background: var(--cl-paper);
+	padding: 18px;
+	cursor: pointer;
+	text-align: initial;
+}
+.certloom-email-card__frame {
+	display: block;
+	transform: scale(.46);
+	transform-origin: top left;
+	width: 217%;
+	pointer-events: none;
+}
+.certloom-email-card__body {
+	padding: 18px;
+}
+.certloom-email-card__meta {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+	color: var(--certloom-email-muted);
+	font-size: 12px;
+}
+.certloom-email-card h2 {
+	font-size: 17px;
+	margin: 9px 0 5px;
+}
+.certloom-email-card__source {
+	margin: 0 0 16px;
+	color: var(--certloom-email-muted);
+}
+.certloom-status {
+	display: inline-flex;
+	align-items: center;
+	border-radius: var(--cl-r-pill);
+	padding: 3px 8px;
+	font-size: 11px;
+	font-weight: 700;
+}
+.certloom-status.is-published {
+	background: var(--cl-valid-wash);
+	color: var(--cl-valid);
+}
+.certloom-status.is-unpublished {
+	background: var(--cl-paper);
+	color: var(--cl-ink-soft);
+}
+.certloom-email-card__actions {
+	display: flex;
+	gap: 7px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+.certloom-email-card__actions form {
+	margin: 0;
+}
+.certloom-email-more {
+	position: relative;
+	margin-left: auto;
+}
+.certloom-email-more summary {
+	list-style: none;
+	cursor: pointer;
+}
+.certloom-email-more summary::-webkit-details-marker {
+	display: none;
+}
+.certloom-email-more__menu {
+	position: absolute;
+	z-index: 20;
+	right: 0;
+	top: calc(100% + 6px);
+	min-width: 180px;
+	padding: 6px;
+	border: 1px solid var(--certloom-email-border);
+	border-radius: var(--cl-r-panel);
+	background: var(--cl-surface);
+	box-shadow: var(--cl-shadow-popover);
+}
+.certloom-email-more__menu a,.certloom-email-more__menu button {
+	display: block;
+	width: 100%;
+	padding: 8px 10px;
+	border: 0;
+	background: transparent;
+	text-align: left;
+	text-decoration: none;
+	color: var(--cl-ink-soft);
+	cursor: pointer;
+	border-radius: var(--cl-r-sm);
+}
+.certloom-email-more__menu a:hover,.certloom-email-more__menu button:hover {
+	background: var(--certloom-email-soft);
+}
+.certloom-email-more__menu .is-destructive {
+	color: var(--cl-error);
+}
+.certloom-email-empty {
+	text-align: center;
+	padding: 58px 24px;
+	border: 1px dashed var(--cl-rule);
+	border-radius: var(--cl-r-float);
+	background: var(--cl-surface);
+}
+.certloom-email-dialog {
+	width: min(900px,calc(100vw - 48px));
+	max-height: 90vh;
+	padding: 0;
+	border: 0;
+	border-radius: var(--cl-r-float);
+	box-shadow: var(--cl-shadow-dialog);
+}
+.certloom-email-dialog::backdrop {
+	background: rgba(15,23,20,.54);
+}
+.certloom-email-dialog__bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 16px 20px;
+	border-bottom: 1px solid var(--certloom-email-border);
+	background: var(--cl-surface);
+}
+.certloom-email-dialog__bar h2 {
+	margin: 0;
+}
+.certloom-email-dialog__preview {
+	max-height: 72vh;
+	overflow: auto;
+	padding: 22px;
+	background: var(--cl-paper);
+}
+.certloom-email-drop {
+	display: flex;
+	min-height: 220px;
+	margin: 20px;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 9px;
+	padding: 24px;
+	text-align: center;
+	border: 1px dashed var(--cl-rule-firm);
+	border-radius: var(--cl-r-dialog);
+	background: var(--certloom-email-soft);
+}
+.certloom-email-drop input {
+	margin-top: 10px;
+}
+.certloom-email-dialog__footer {
+	display: flex;
+	justify-content: flex-end;
+	padding: 0 20px 20px;
+}
+/* Dedicated Email Studio */
+body.certloom-email-studio-active {
+	overflow: hidden;
+}
+body.certloom-email-studio-active #wpbody-content {
+	padding-bottom: 0;
+	overflow: hidden;
+}
+body.certloom-email-studio-active #wpfooter,
+body.certloom-email-studio-active .certloom-product-subnav[data-certloom-product-subnav] {
+	display: none;
+}
+body.certloom-email-studio-active .certloom-email-designer-wrap {
+	max-width: none;
+	padding: 0;
+	margin: 0 0 0 -10px;
+	overflow: hidden;
+	background: var(--cl-paper);
+}
+@media (min-width:961px) {
+	body.certloom-email-studio-active .certloom-email-designer-wrap.is-viewport-framed {
+		position: fixed;
+		top: var(--certloom-email-studio-top);
+		left: var(--certloom-email-studio-left);
+		right: var(--certloom-email-studio-right);
+		bottom: 0;
+		z-index: 20;
+		width: auto;
+		height: auto;
+		max-height: none;
+		margin: 0;
+	}
+}
+.certloom-email-designer-wrap > form {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+	overflow: hidden;
+}
+.certloom-email-studio-toolbar {
+	position: relative;
+	z-index: 40;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	min-height: 68px;
+	padding: 10px 18px;
+	border-bottom: 1px solid var(--certloom-email-border);
+	background: var(--cl-surface);
+	box-shadow: var(--cl-shadow-hairline);
+}
+.certloom-email-studio-toolbar__identity,
+.certloom-email-studio-toolbar__actions,
+.certloom-email-studio-brand,
+.certloom-email-studio-document {
+	display: flex;
+	align-items: center;
+}
+.certloom-email-studio-toolbar__identity {
+	gap: 12px;
+	min-width: 0;
+}
+.certloom-email-studio-brand {
+	gap: 9px;
+	white-space: nowrap;
+}
+.certloom-email-studio-brand img {
+	display: block;
+	width: 30px;
+	height: 30px;
+	object-fit: contain;
+}
+.certloom-email-studio-brand strong {
+	font-size: 15px;
+	color: var(--cl-ink);
+}
+.certloom-email-studio-toolbar__divider {
+	width: 1px;
+	height: 28px;
+	background: var(--cl-rule);
+	flex: 0 0 auto;
+}
+.certloom-designer-back {
+	color: var(--cl-blue);
+	text-decoration: none;
+	font-weight: 650;
+	white-space: nowrap;
+}
+.certloom-email-studio-document {
+	gap: 8px;
+	min-width: 0;
+}
+.certloom-email-studio-document > strong {
+	max-width: 320px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 15px;
+	color: var(--cl-ink);
+}
+.certloom-email-studio-document small {
+	color: var(--certloom-email-muted);
+	white-space: nowrap;
+}
+.certloom-email-studio-toolbar__actions {
+	gap: 8px;
+	flex: 0 0 auto;
+}
+.certloom-email-studio-action.button,
+.certloom-view-switch button {
+	min-height: 38px;
+	border-radius: var(--cl-r-lift);
+}
+.certloom-view-switch {
+	display: inline-flex;
+	padding: 3px;
+	border: 1px solid var(--cl-rule);
+	border-radius: var(--cl-r-panel);
+	background: var(--cl-surface);
+}
+.certloom-view-switch button {
+	border: 0;
+	padding: 6px 10px;
+	background: transparent;
+	color: var(--cl-ink-soft);
+	cursor: pointer;
+}
+.certloom-view-switch button.is-active {
+	background: var(--cl-surface);
+	color: var(--cl-blue-bright);
+	font-weight: 700;
+	box-shadow: var(--cl-shadow-soft);
+}
+.certloom-message-settings {
+	display: grid;
+	grid-template-columns: minmax(180px,1.05fr) minmax(160px,.72fr) minmax(260px,1.45fr) minmax(260px,1.45fr);
+	gap: 10px;
+	padding: 10px 18px 12px;
+	background: var(--cl-surface);
+	border-bottom: 1px solid var(--certloom-email-border);
+}
+.certloom-message-settings label {
+	gap: 4px;
+	font-size: 11px;
+	font-weight: 700;
+	color: var(--cl-ink-soft);
+}
+.certloom-message-settings input,
+.certloom-message-settings select {
+	min-height: 36px;
+	border-color: var(--cl-rule);
+	border-radius: var(--cl-r-compact);
+	background: var(--cl-surface);
+}
+.certloom-designer-feedback {
+	flex: 0 0 auto;
+	margin: 10px 18px 0;
+	padding: 10px 12px;
+	border: 1px solid var(--cl-expired);
+	border-radius: var(--cl-r-panel);
+	background: var(--cl-expired-wash);
+	color: var(--cl-ink-soft);
+}
+.certloom-designer-feedback.is-error {
+	border-color: var(--cl-error);
+	background: var(--cl-revoked-wash);
+	color: var(--cl-revoked);
+}
+.certloom-designer-feedback:focus {
+	outline: 2px solid var(--cl-blue);
+	outline-offset: 2px;
+}
+.certloom-designer-shell {
+	display: grid;
+	grid-template-columns: 268px minmax(420px,1fr) 322px;
+	grid-template-rows: minmax(0,1fr);
+	flex: 1 1 0;
+	min-height: 0;
+	height: auto;
+	overflow: hidden;
+	background: var(--cl-paper);
+}
+.certloom-designer-palette,
+.certloom-designer-inspector {
+	min-width: 0;
+	min-height: 0;
+	background: var(--cl-surface);
+}
+.certloom-designer-palette {
+	display: flex;
+	flex-direction: column;
+	border-right: 1px solid var(--cl-rule);
+	overflow: hidden;
+}
+.certloom-designer-inspector {
+	display: flex;
+	flex-direction: column;
+	border-left: 1px solid var(--cl-rule);
+	overflow: hidden;
+}
+.certloom-designer-palette,
+.certloom-designer-stage,
+.certloom-designer-inspector {
+	height: 100%;
+	max-height: 100%;
+}
+.certloom-email-sidebar-tabs {
+	display: grid;
+	grid-template-columns: repeat(4,minmax(0,1fr));
+	gap: 3px;
+	padding: 8px 8px 7px;
+	border-bottom: 1px solid var(--cl-paper);
+	background: var(--cl-surface);
+}
+.certloom-email-sidebar-tabs button {
+	display: flex;
+	min-width: 0;
+	min-height: 48px;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 2px;
+	padding: 5px 2px;
+	border: 0;
+	border-radius: var(--cl-r-lift);
+	background: transparent;
+	color: var(--cl-ink-soft);
+	font-size: 10px;
+	font-weight: 650;
+	cursor: pointer;
+}
+.certloom-email-sidebar-tabs button span {
+	font-size: 15px;
+	line-height: 1;
+}
+.certloom-email-sidebar-tabs button.is-active {
+	background: var(--cl-blue-wash);
+	color: var(--cl-blue-bright);
+}
+.certloom-email-sidebar-tabs button:focus-visible {
+	outline: 2px solid var(--cl-blue-bright);
+	outline-offset: -2px;
+}
+.certloom-email-sidebar-panel {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: auto;
+	padding: 14px;
+}
+.certloom-email-sidebar-panel[hidden] {
+	display: none;
+}
+.certloom-email-sidebar-panel h2 {
+	margin: 2px 0 12px;
+	font-size: 14px;
+	line-height: 1.3;
+	color: var(--cl-ink);
+}
+.certloom-email-sidebar-heading {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 10px;
+}
+.certloom-email-sidebar-heading [data-certloom-structure-count] {
+	padding: 2px 7px;
+	border-radius: var(--cl-r-pill);
+	background: var(--cl-paper);
+	color: var(--cl-ink-soft);
+	font-size: 10px;
+	font-weight: 700;
+}
+.certloom-email-designer-wrap .certloom-eyebrow {
+	margin: 0 0 4px;
+	color: var(--cl-ink-soft);
+	font-size: 10px;
+	font-weight: 750;
+	letter-spacing: .02em;
+	text-transform: none;
+}
+.certloom-block-palette {
+	display: grid;
+	grid-template-columns: repeat(2,minmax(0,1fr));
+	gap: 8px;
+}
+.certloom-block-palette button {
+	display: flex;
+	min-height: 60px;
+	flex-direction: column;
+	align-items: flex-start;
+	justify-content: center;
+	gap: 5px;
+	padding: 9px 10px;
+	border: 1px solid var(--cl-rule);
+	border-radius: var(--cl-r-panel);
+	background: var(--cl-surface);
+	color: var(--cl-ink-soft);
+	cursor: pointer;
+	text-align: left;
+}
+.certloom-block-palette button b {
+	font-size: 16px;
+	font-weight: 650;
+	line-height: 1;
+	color: var(--cl-ink);
+}
+.certloom-block-palette button span {
+	font-size: 11px;
+	font-weight: 650;
+}
+.certloom-block-palette button:hover,
+.certloom-block-palette button:focus-visible {
+	border-color: var(--cl-brand-blue-light);
+	background: var(--cl-paper);
+	color: var(--cl-blue-deep);
+}
+.certloom-token-browser {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+.certloom-token-list {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+.certloom-token-list button {
+	width: 100%;
+	padding: 8px 9px;
+	border: 1px solid transparent;
+	border-radius: var(--cl-r-compact);
+	background: var(--cl-paper);
+	color: var(--cl-ink-soft);
+	text-align: left;
+	cursor: pointer;
+}
+.certloom-token-list button:hover,
+.certloom-token-list button:focus-visible {
+	border-color: var(--cl-rule-firm);
+	background: var(--cl-blue-wash);
+	color: var(--cl-blue-deep);
+}
+.certloom-email-structure-list {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+.certloom-email-structure-item {
+	display: grid;
+	grid-template-columns: 22px minmax(0,1fr);
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 8px 9px;
+	border: 1px solid transparent;
+	border-radius: var(--cl-r-compact);
+	background: var(--cl-surface);
+	color: var(--cl-ink-soft);
+	text-align: left;
+	cursor: pointer;
+}
+.certloom-email-structure-item:hover,
+.certloom-email-structure-item.is-selected {
+	border-color: var(--cl-rule-firm);
+	background: var(--cl-blue-wash);
+}
+.certloom-email-structure-item__index {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	border-radius: var(--cl-r-sm);
+	background: var(--cl-surface);
+	color: var(--cl-ink-soft);
+	font-size: 10px;
+	font-weight: 750;
+}
+.certloom-email-structure-item__copy {
+	min-width: 0;
+}
+.certloom-email-structure-item__copy strong,
+.certloom-email-structure-item__copy small {
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.certloom-email-structure-item__copy strong {
+	font-size: 11px;
+}
+.certloom-email-structure-item__copy small {
+	margin-top: 1px;
+	color: var(--cl-ink-soft);
+	font-size: 10px;
+}
+.certloom-theme-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 9px;
+}
+.certloom-theme-grid label {
+	gap: 4px;
+	font-size: 10px;
+	font-weight: 700;
+	color: var(--cl-ink-soft);
+}
+.certloom-theme-grid label.is-wide {
+	grid-column: 1/-1;
+}
+.certloom-theme-grid input,
+.certloom-theme-grid select {
+	min-height: 34px;
+	border-radius: var(--cl-r-compact);
+}
+.certloom-theme-grid input[type=color] {
+	height: 36px;
+	padding: 2px;
+}
+.certloom-plain-text {
+	margin-top: 16px;
+	padding-top: 13px;
+	border-top: 1px solid var(--cl-paper);
+}
+.certloom-plain-text summary {
+	cursor: pointer;
+	font-size: 11px;
+	font-weight: 700;
+	color: var(--cl-ink-soft);
+}
+.certloom-plain-text textarea {
+	width: 100%;
+	margin-top: 10px;
+}
+.certloom-designer-stage {
+	display: flex;
+	min-width: 0;
+	min-height: 0;
+	flex-direction: column;
+	overflow: hidden;
+	background: radial-gradient(circle at 50% 4%, rgba(255,255,255,.95), rgba(244,248,251,.72) 30%, rgba(232,239,245,.9) 100%);
+}
+.certloom-email-stage-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	min-height: 48px;
+	padding: 7px 14px;
+	border-bottom: 1px solid var(--cl-rule);
+	background: rgba(248,250,252,.94);
+}
+.certloom-email-stage-toolbar__group {
+	display: inline-flex;
+	padding: 3px;
+	border: 1px solid var(--cl-rule);
+	border-radius: var(--cl-r-panel);
+	background: var(--cl-surface);
+}
+.certloom-email-stage-toolbar__group button {
+	min-height: 30px;
+	padding: 4px 10px;
+	border: 0;
+	border-radius: var(--cl-r-sm);
+	background: transparent;
+	color: var(--cl-ink-soft);
+	font-size: 11px;
+	font-weight: 650;
+	cursor: pointer;
+}
+.certloom-email-stage-toolbar__group button.is-active {
+	background: var(--cl-blue-wash);
+	color: var(--cl-blue-bright);
+}
+.certloom-email-stage-meta {
+	color: var(--cl-ink-soft);
+	font-size: 10px;
+	font-weight: 600;
+}
+.certloom-email-stage-viewport {
+	position: relative;
+	flex: 1 1 0;
+	min-height: 0;
+	overflow: hidden;
+	padding: 24px;
+}
+.certloom-canvas-frame {
+	--certloom-email-width: 640px;
+	--certloom-email-fit-scale: 1;
+	width: var(--certloom-email-width);
+	max-width: none;
+	margin: 0;
+	transition: width .2s ease, transform .14s ease;
+}
+.certloom-canvas-frame.is-mobile {
+	width: 390px;
+}
+@media (min-width:961px) {
+	.certloom-canvas-frame {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%,-50%) scale(var(--certloom-email-fit-scale));
+		transform-origin: center center;
+	}
+}
+.certloom-email-canvas {
+	box-sizing: border-box;
+	width: 100%;
+	min-height: 560px;
+	padding: 38px;
+	border: 1px solid rgba(16,24,40,.06);
+	border-radius: var(--cl-r-card);
+	background: var(--cl-surface);
+	box-shadow: var(--cl-shadow-canvas);
+	color: var(--cl-ink-soft);
+}
+.certloom-email-canvas h1,
+.certloom-email-canvas h2,
+.certloom-email-canvas h3 {
+	margin: 0 0 18px;
+	color: var(--certloom-email-heading-color,var(--cl-valid));
+	line-height: 1.25;
+}
+.certloom-email-canvas h1 { font-size: 30px; }
+.certloom-email-canvas h2 { font-size: 24px; }
+.certloom-email-canvas h3 { font-size: 19px; }
+.certloom-email-canvas p {
+	margin: 0 0 12px;
+	line-height: 1.65;
+}
+.certloom-email-canvas .button-primary {
+	border-color: var(--certloom-email-button-bg,var(--cl-blue-bright));
+	background: var(--certloom-email-button-bg,var(--cl-blue-bright));
+	color: var(--certloom-email-button-text,var(--cl-surface));
+}
+.certloom-canvas-block {
+	position: relative;
+	margin: 0 -8px 8px;
+	padding: 8px;
+	border: 1px solid transparent;
+	border-radius: var(--cl-r-lift);
+	cursor: pointer;
+	transition: border-color .12s ease, box-shadow .12s ease, background .12s ease;
+}
+.certloom-canvas-block:hover {
+	border-color: var(--cl-rule-firm);
+	background: rgba(248,250,252,.5);
+}
+.certloom-canvas-block.is-selected {
+	border-color: var(--cl-blue-bright);
+	box-shadow: 0 0 0 1px var(--cl-blue-bright);
+	background: rgba(238,244,255,.35);
+}
+.certloom-canvas-block__controls {
+	display: none;
+	position: absolute;
+	right: 4px;
+	top: -30px;
+	z-index: 4;
+	gap: 2px;
+	padding: 3px;
+	border: 1px solid var(--cl-rule);
+	border-radius: var(--cl-r-lift);
+	background: var(--cl-surface);
+	box-shadow: var(--cl-shadow-popover);
+}
+.certloom-canvas-block.is-selected .certloom-canvas-block__controls {
+	display: flex;
+}
+.certloom-canvas-block__controls button {
+	min-width: 26px;
+	min-height: 26px;
+	padding: 2px 5px;
+	border: 0;
+	border-radius: var(--cl-r-sm);
+	background: var(--cl-surface);
+	color: var(--cl-ink-soft);
+	cursor: pointer;
+}
+.certloom-canvas-block__controls button:hover {
+	background: var(--cl-paper);
+}
+.certloom-canvas-drag-handle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 26px;
+	min-height: 26px;
+	cursor: grab;
+	color: var(--cl-ink-soft);
+	user-select: none;
+}
+.certloom-canvas-drag-handle:active { cursor: grabbing; }
+.certloom-canvas-block.is-dragging { opacity: .55; }
+.certloom-canvas-block.is-drop-target { box-shadow: inset 0 3px 0 var(--cl-blue-bright); }
+.certloom-email-inspector-heading {
+	flex: 0 0 auto;
+	padding: 16px 16px 12px;
+	border-bottom: 1px solid var(--cl-paper);
+}
+.certloom-email-inspector-heading h2 {
+	margin: 2px 0 0;
+	font-size: 16px;
+	line-height: 1.25;
+	color: var(--cl-ink);
+}
+.certloom-email-inspector-scroll {
+	flex: 1 1 0;
+	min-height: 0;
+	overflow: auto;
+	padding: 14px 16px 28px;
+}
+.certloom-inspector-empty {
+	padding: 2px 0;
+	color: var(--cl-ink-soft);
+}
+.certloom-inspector-empty p {
+	margin: 0;
+	font-size: 12px;
+	line-height: 1.55;
+}
+.certloom-inspector-form {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+.certloom-inspector-section {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-bottom: 1px solid var(--cl-paper);
+}
+.certloom-inspector-section summary {
+	cursor: pointer;
+	padding: 9px 0;
+	color: var(--cl-ink-soft);
+	font-size: 11px;
+	font-weight: 750;
+	list-style: none;
+}
+.certloom-inspector-section summary::-webkit-details-marker { display:none; }
+.certloom-inspector-section summary::before {
+	content: '›';
+	display: inline-block;
+	margin-right: 6px;
+	transform: rotate(0deg);
+	transition: transform .12s ease;
+}
+.certloom-inspector-section[open] summary::before { transform: rotate(90deg); }
+.certloom-inspector-section__body {
+	display: flex;
+	flex-direction: column;
+	gap: 11px;
+	padding: 0 0 13px;
+}
+.certloom-inspector-form label {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	color: var(--cl-ink-soft);
+	font-size: 10px;
+	font-weight: 700;
+}
+.certloom-inspector-form input,
+.certloom-inspector-form textarea,
+.certloom-inspector-form select {
+	width: 100%;
+	min-height: 36px;
+	border-color: var(--cl-rule);
+	border-radius: var(--cl-r-compact);
+	background: var(--cl-surface);
+	font-size: 12px;
+}
+.certloom-inspector-form textarea { min-height: 108px; }
+.certloom-inspector-actions {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 7px;
+}
+.certloom-inspector-actions .button {
+	min-height: 36px;
+	border-radius: var(--cl-r-compact);
+}
+.certloom-inspector-actions .is-destructive { color: var(--cl-error); }
+.certloom-email-empty {
+	padding: 24px;
+	border: 1px dashed var(--cl-rule);
+	border-radius: var(--cl-r-panel);
+	background: var(--cl-surface);
+	color: var(--cl-ink-soft);
+	text-align: center;
+}
+.certloom-designer-preview {
+	width: min(880px,calc(100vw - 40px));
+}
+.certloom-designer-preview iframe {
+	display: block;
+	width: 100%;
+	height: 72vh;
+	border: 0;
+	background: var(--cl-paper);
+}
+@media (max-width:1100px) {
+	.certloom-designer-shell {
+		grid-template-columns: 228px minmax(360px,1fr) 292px;
+	}
+	.certloom-email-studio-brand strong {
+		display: none;
+	}
+	.certloom-email-studio-document > strong {
+		max-width: 220px;
+	}
+}
+@media (max-width:960px) {
+	body.certloom-email-studio-active { overflow: visible; }
+	body.certloom-email-studio-active #wpfooter { display: block !important; }
+	body.certloom-email-studio-active #wpbody-content { padding-bottom: 65px !important; }
+	.certloom-email-designer-wrap {
+		height: auto;
+		min-height: 0;
+		overflow: visible;
+		margin-left: -10px;
+	}
+	.certloom-email-designer-wrap > form { height: auto; }
+	.certloom-email-studio-toolbar {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+	.certloom-email-studio-toolbar__identity,
+	.certloom-email-studio-toolbar__actions {
+		width: 100%;
+		min-width: 0;
+	}
+	.certloom-email-studio-toolbar__actions { overflow-x: auto; }
+	.certloom-message-settings { grid-template-columns: 1fr 1fr; }
+	.certloom-designer-shell {
+		display: grid;
+		grid-template-columns: 220px minmax(0,1fr);
+		min-height: 720px;
+	}
+	.certloom-designer-inspector {
+		grid-column: 1/-1;
+		min-height: 360px;
+		border-top: 1px solid var(--cl-rule);
+		border-left: 0;
+	}
+	.certloom-email-inspector-scroll { max-height: 520px; }
+}
+@media (max-width:782px) {
+	.certloom-email-designer-wrap { margin-left: -10px; }
+	.certloom-email-studio-toolbar__identity {
+		flex-wrap: wrap;
+	}
+	.certloom-email-studio-toolbar__divider { display: none; }
+	.certloom-email-studio-document {
+		flex: 1 1 100%;
+		order: 5;
+	}
+	.certloom-email-studio-document > strong { max-width: min(65vw,320px); }
+	.certloom-message-settings { grid-template-columns: 1fr; }
+	.certloom-designer-shell { display: block; min-height: 0; }
+	.certloom-designer-palette,
+	.certloom-designer-inspector {
+		min-height: auto;
+		border: 0;
+		border-bottom: 1px solid var(--cl-rule);
+	}
+	.certloom-email-sidebar-panel { max-height: none; overflow: visible; }
+	.certloom-block-palette { grid-template-columns: repeat(3,minmax(0,1fr)); }
+	.certloom-designer-stage { min-height: 620px; }
+	.certloom-email-stage-viewport { overflow: auto; padding: 18px 12px 32px; }
+	.certloom-canvas-frame { position: static; width: min(100%,var(--certloom-email-width)); margin: 0 auto; transform: none; }
+	.certloom-canvas-frame.is-mobile { width: min(390px,100%); }
+	.certloom-email-canvas { padding: 26px 22px; }
+	.certloom-email-inspector-scroll { max-height: none; overflow: visible; }
+}
+@media (max-width:520px) {
+	.certloom-block-palette { grid-template-columns: repeat(2,minmax(0,1fr)); }
+	.certloom-email-studio-toolbar { padding-inline: 12px; }
+	.certloom-message-settings { padding-inline: 12px; }
+	.certloom-email-studio-toolbar__actions { gap: 6px; }
+	.certloom-view-switch button,
+	.certloom-email-studio-action.button { white-space: nowrap; }
+}
+@media (prefers-reduced-motion:reduce) {
+	.certloom-canvas-frame,
+	.certloom-canvas-block,
+	.certloom-inspector-section summary::before { transition: none; }
+}
+@media (forced-colors:active) {
+	.certloom-email-card,
+	.certloom-email-hero,
+	.certloom-email-filters,
+	.certloom-email-canvas,
+	.certloom-block-palette button,
+	.certloom-canvas-block.is-selected,
+	.certloom-email-structure-item.is-selected {
+		border: 1px solid CanvasText;
+	}
+	.certloom-status { border: 1px solid CanvasText; }
+	.certloom-designer-feedback,
+	.certloom-canvas-block.is-drop-target {
+		border-color: CanvasText;
+	}
+	.certloom-canvas-block.is-drop-target {
+		outline: 2px solid Highlight;
+		box-shadow: none;
+	}
+}
+
+/* Gamma-03A editing controls: bounded rich text + block typography/colors. */
+.certloom-email-rich-field {
+	display: grid;
+	gap: 7px;
+}
+.certloom-email-rich-label {
+	font-size: 11px;
+	font-weight: 700;
+	color: var(--cl-ink-soft);
+}
+.certloom-email-rich-toolbar {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 5px;
+	border: 1px solid var(--cl-rule);
+	border-bottom: 0;
+	border-radius: var(--cl-r-lift) var(--cl-r-lift) 0 0;
+	background: var(--cl-paper);
+}
+.certloom-email-rich-toolbar button {
+	display: inline-grid;
+	place-items: center;
+	width: 32px;
+	height: 30px;
+	padding: 0;
+	border: 1px solid transparent;
+	border-radius: var(--cl-r-sm);
+	background: transparent;
+	color: var(--cl-ink-soft);
+	font: inherit;
+	cursor: pointer;
+}
+.certloom-email-rich-toolbar button:hover,
+.certloom-email-rich-toolbar button:focus-visible {
+	border-color: var(--cl-rule-firm);
+	background: var(--cl-surface);
+	color: var(--cl-blue-bright);
+	outline: none;
+}
+.certloom-email-rich-editor {
+	min-height: 128px;
+	max-height: 260px;
+	overflow: auto;
+	padding: 10px 11px;
+	border: 1px solid var(--cl-rule);
+	border-radius: 0 0 var(--cl-r-lift) var(--cl-r-lift);
+	background: var(--cl-surface);
+	color: var(--cl-ink);
+	font-size: 13px;
+	line-height: 1.55;
+}
+.certloom-email-rich-editor:focus {
+	border-color: var(--cl-brand-blue-light);
+	box-shadow: 0 0 0 1px var(--cl-brand-blue-light);
+	outline: none;
+}
+.certloom-email-rich-editor p:first-child { margin-top: 0; }
+.certloom-email-rich-editor p:last-child { margin-bottom: 0; }
+.certloom-email-color-field { grid-column: 1 / -1; }
+.certloom-email-color-control {
+	display: grid;
+	grid-template-columns: 42px minmax(0,1fr);
+	gap: 7px;
+	align-items: center;
+}
+.certloom-email-color-control input[type="color"] {
+	width: 42px;
+	min-width: 42px;
+	height: 36px;
+	padding: 2px;
+	border-radius: var(--cl-r-compact);
+	cursor: pointer;
+}
+.certloom-inspector-form label.certloom-email-toggle-field {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 8px;
+	min-height: 34px;
+	padding: 7px 9px;
+	border: 1px solid var(--cl-rule);
+	border-radius: var(--cl-r-compact);
+	background: var(--cl-surface);
+}
+.certloom-inspector-form label.certloom-email-toggle-field input {
+	width: 16px;
+	height: 16px;
+	min-height: 0;
+	margin: 0;
+}
+.certloom-inspector-form label.certloom-email-toggle-field span {
+	font-size: 11px;
+	font-weight: 650;
+	color: var(--cl-ink-soft);
+}
+
+
+/* Gamma-03A inspector + preview fidelity refinement. */
+.certloom-inspector-form { gap: 0; }
+.certloom-inspector-section { border-bottom-color: var(--cl-paper); }
+.certloom-inspector-section summary { display:flex;align-items:center;gap:6px;padding:10px 0;font-size:11px;color:var(--cl-ink-soft); }
+.certloom-inspector-section summary span { flex:1; }
+.certloom-inspector-section__body { gap:9px;padding:1px 0 14px; }
+.certloom-inspector-grid { display:grid;gap:8px;min-width:0; }
+.certloom-inspector-grid--2 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.certloom-inspector-grid--3 { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.certloom-inspector-grid--colors { grid-template-columns:1fr; }
+.certloom-inspector-grid .is-wide { grid-column:1/-1; }
+.certloom-inspector-stack { display:grid;gap:8px; }
+.certloom-inspector-form label { gap:4px;font-size:10px; }
+.certloom-inspector-form input,.certloom-inspector-form textarea,.certloom-inspector-form select { min-height:34px;padding-top:4px;padding-bottom:4px;border-color:var(--cl-rule);border-radius:var(--cl-r-compact);box-shadow:none; }
+.certloom-inspector-form input:focus,.certloom-inspector-form textarea:focus,.certloom-inspector-form select:focus { border-color:var(--cl-brand-blue-light);box-shadow:0 0 0 1px var(--cl-brand-blue-light); }
+.certloom-email-number-control { display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;border:1px solid var(--cl-rule);border-radius:var(--cl-r-compact);background:var(--cl-surface);overflow:hidden; }
+.certloom-email-number-control:focus-within { border-color:var(--cl-brand-blue-light);box-shadow:0 0 0 1px var(--cl-brand-blue-light); }
+.certloom-email-number-control input { min-width:0;border:0;border-radius:var(--cl-r-none);box-shadow:none; }
+.certloom-email-number-control > span { padding:0 8px;color:var(--cl-ink-soft);font-size:10px;font-weight:650;border-left:1px solid var(--cl-paper); }
+.certloom-email-segmented-field { display:grid;gap:4px; }
+.certloom-email-segmented-field > span { color:var(--cl-ink-soft);font-size:10px;font-weight:700; }
+.certloom-email-segmented,.certloom-email-inline-toggles { display:inline-flex;width:max-content;max-width:100%;padding:2px;border:1px solid var(--cl-rule);border-radius:var(--cl-r-lift);background:var(--cl-surface); }
+.certloom-email-segmented button,.certloom-email-inline-toggles button { display:grid;place-items:center;min-width:34px;height:30px;padding:0 9px;border:0;border-radius:var(--cl-r-sm);background:transparent;color:var(--cl-ink-soft);font-size:12px;cursor:pointer; }
+.certloom-email-segmented button.is-active,.certloom-email-inline-toggles button.is-active { background:var(--cl-surface);color:var(--cl-blue-bright);box-shadow:var(--cl-shadow-soft); }
+.certloom-email-inline-toggles { margin-top:1px; }
+.certloom-email-color-control { grid-template-columns:36px minmax(0,1fr) 30px;gap:6px; }
+.certloom-email-color-control input[type=color] { width:36px;min-width:36px;height:34px; }
+.certloom-email-color-reset { width:30px;height:34px;padding:0;border:1px solid var(--cl-rule);border-radius:var(--cl-r-compact);background:var(--cl-surface);color:var(--cl-ink-soft);cursor:pointer; }
+.certloom-email-color-reset:hover { color:var(--cl-blue-bright);border-color:var(--cl-brand-blue-light); }
+.certloom-inspector-actions--compact { grid-template-columns:repeat(4,1fr);gap:5px; }
+.certloom-inspector-actions--compact .button { min-height:32px;padding:0;font-size:15px; }
+.certloom-inspector-media-button { justify-self:start;min-height:34px; }
+.certloom-email-rich-toolbar { gap:2px;padding:4px; }
+.certloom-email-rich-toolbar button { width:29px;height:28px;border-radius:var(--cl-r-sm); }
+.certloom-email-rich-toolbar__divider { width:1px;height:18px;margin:0 2px;background:var(--cl-rule); }
+.certloom-email-rich-toolbar button.is-active { background:var(--cl-blue-wash);color:var(--cl-blue-bright); }
+.certloom-email-rich-editor { min-height:116px;max-height:220px;padding:10px;font-size:12px; }
+.certloom-theme-grid { grid-template-columns:1fr;gap:7px; }
+.certloom-theme-grid label { padding:0; }
+.certloom-theme-grid label.is-wide { grid-column:auto; }
+.certloom-theme-color-control { display:grid;grid-template-columns:38px minmax(0,1fr);gap:6px; }
+.certloom-theme-color-control input[type=color] { width:38px;min-width:38px;height:34px;padding:2px; }
+.certloom-theme-color-control input[type=text] { min-width:0;height:34px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;text-transform:uppercase; }
+.certloom-theme-grid > label:not(.certloom-theme-color-field) { display:grid;grid-template-columns:88px minmax(0,1fr);align-items:center;gap:8px; }
+.certloom-theme-grid > label:not(.certloom-theme-color-field) > span { margin:0; }
+.certloom-email-canvas a:not(.button):not(.button-primary) { color:var(--certloom-email-link-color,var(--cl-valid)); }
+.certloom-designer-preview { width:min(1040px,calc(100vw - 36px));max-width:1040px;padding:0;border:0;border-radius:var(--cl-r-dialog);overflow:hidden;box-shadow:var(--cl-shadow-dialog); }
+.certloom-designer-preview .certloom-email-dialog__bar { min-height:64px;padding:10px 14px; }
+.certloom-designer-preview .certloom-email-dialog__bar > div:first-child { display:grid;gap:1px; }
+.certloom-designer-preview .certloom-email-dialog__bar small { color:var(--cl-ink-soft);font-size:10px;font-weight:500; }
+.certloom-preview-dialog-actions { display:flex;align-items:center;gap:8px; }
+.certloom-preview-device-switch button { min-height:32px;padding:4px 9px;font-size:11px; }
+.certloom-preview-dialog-stage { display:flex;justify-content:center;height:min(76vh,760px);padding:24px;background:var(--cl-paper);overflow:auto; }
+.certloom-designer-preview iframe { width:min(760px,100%);height:100%;min-height:560px;border:1px solid var(--cl-rule);border-radius:var(--cl-r-panel);background:var(--cl-paper);box-shadow:var(--cl-shadow-popover);transition:width .18s ease; }
+.certloom-designer-preview iframe.is-mobile { width:min(390px,100%); }
+@media(max-width:1100px){.certloom-inspector-grid--3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Gamma-03A / 4.67 advanced composition controls. Keep the 4.64 viewport model intact. */
+.certloom-message-settings--compact {
+	grid-template-columns: minmax(150px,.55fr) minmax(300px,1.35fr) minmax(300px,1.35fr);
+	gap: 8px;
+	padding: 7px 14px 8px;
+}
+.certloom-message-settings--compact label {
+	gap: 2px;
+	font-size: 10px;
+}
+.certloom-message-settings--compact input,
+.certloom-message-settings--compact select {
+	height: 32px;
+	min-height: 32px;
+	padding: 3px 9px;
+	font-size: 12px;
+	line-height: 1.25;
+}
+.certloom-email-document-name {
+	display: inline-flex;
+	max-width: min(36vw, 460px);
+	align-items: center;
+	padding: 3px 5px;
+	border: 1px solid transparent;
+	border-radius: var(--cl-r-sm);
+	background: transparent;
+	color: var(--cl-ink);
+	cursor: text;
+}
+.certloom-email-document-name:hover,
+.certloom-email-document-name:focus-visible {
+	border-color: var(--cl-rule-firm);
+	background: var(--cl-paper);
+	outline: 0;
+}
+.certloom-email-document-name strong {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.certloom-email-document-name-input {
+	width: min(36vw, 460px);
+	height: 30px;
+	min-height: 30px;
+	padding: 3px 7px;
+	border-color: var(--cl-brand-blue-light);
+	border-radius: var(--cl-r-sm);
+	font-size: 14px;
+	font-weight: 700;
+}
+.certloom-token-search {
+	display: block;
+	margin: 0 0 10px;
+}
+.certloom-token-search input {
+	width: 100%;
+	height: 34px;
+	min-height: 34px;
+	padding: 4px 9px;
+	border: 1px solid var(--cl-rule);
+	border-radius: var(--cl-r-compact);
+	background: var(--cl-surface);
+	font-size: 11px;
+}
+.certloom-token-group {
+	display: block;
+	margin: 0 0 13px;
+}
+.certloom-token-group__title,
+.certloom-token-group summary {
+	display: block;
+	margin: 0 0 6px;
+	color: var(--cl-ink-soft);
+	font-size: 10px;
+	font-weight: 800;
+	letter-spacing: .01em;
+}
+.certloom-token-group summary { cursor: pointer; }
+.certloom-token-group .certloom-token-list button {
+	display: grid;
+	grid-template-columns: minmax(0,1fr) auto;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 8px;
+}
+.certloom-token-group .certloom-token-list button span {
+	overflow: hidden;
+	font-size: 10.5px;
+	font-weight: 650;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.certloom-token-group .certloom-token-list button code {
+	max-width: 112px;
+	overflow: hidden;
+	color: var(--cl-ink-soft);
+	font-size: 9px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.certloom-email-attachments {
+	margin-top: 16px;
+	padding-top: 14px;
+	border-top: 1px solid var(--cl-paper);
+}
+.certloom-email-attachments [data-certloom-attachment-count] {
+	padding: 2px 7px;
+	border-radius: var(--cl-r-pill);
+	background: var(--cl-paper);
+	color: var(--cl-ink-soft);
+	font-size: 9px;
+	font-weight: 800;
+}
+.certloom-email-attachment-list {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin: 0 0 8px;
+}
+.certloom-email-attachment-item {
+	display: grid;
+	grid-template-columns: minmax(0,1fr) 26px;
+	align-items: center;
+	gap: 7px;
+	padding: 7px 8px;
+	border: 1px solid var(--cl-rule);
+	border-radius: var(--cl-r-lift);
+	background: var(--cl-surface);
+}
+.certloom-email-attachment-item span,
+.certloom-email-attachment-item strong,
+.certloom-email-attachment-item small { min-width: 0; }
+.certloom-email-attachment-item strong,
+.certloom-email-attachment-item small {
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.certloom-email-attachment-item strong { font-size: 10.5px; color: var(--cl-ink-soft); }
+.certloom-email-attachment-item small { margin-top: 1px; color: var(--cl-ink-soft); font-size: 9px; }
+.certloom-email-attachment-item button {
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	border: 0;
+	border-radius: var(--cl-r-sm);
+	background: transparent;
+	color: var(--cl-error);
+	cursor: pointer;
+}
+.certloom-email-attachment-item button:hover { background: var(--cl-revoked-wash); }
+.certloom-theme-backgrounds {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-top: 12px;
+}
+.certloom-theme-background-card {
+	display: grid;
+	grid-template-columns: minmax(0,1fr) auto;
+	gap: 8px;
+	padding: 9px;
+	border: 1px solid var(--cl-rule);
+	border-radius: var(--cl-r-panel);
+	background: var(--cl-surface);
+}
+.certloom-theme-background-card > div:first-child { min-width: 0; }
+.certloom-theme-background-card strong,
+.certloom-theme-background-card small {
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.certloom-theme-background-card strong { color:var(--cl-ink-soft); font-size:10.5px; }
+.certloom-theme-background-card small { margin-top:2px; color:var(--cl-ink-soft); font-size:9px; }
+.certloom-theme-background-actions {
+	display: flex;
+	gap: 4px;
+}
+.certloom-theme-background-actions .button {
+	min-height: 28px;
+	padding: 0 7px;
+	font-size: 10px;
+}
+.certloom-theme-background-options {
+	display: grid;
+	grid-column: 1/-1;
+	grid-template-columns: repeat(3,minmax(0,1fr));
+	gap: 6px;
+	padding-top: 7px;
+	border-top: 1px solid var(--cl-rule);
+}
+.certloom-theme-background-options label {
+	display:flex;
+	flex-direction:column;
+	gap:3px;
+	color:var(--cl-ink-soft);
+	font-size:9px;
+	font-weight:700;
+}
+.certloom-theme-background-options select {
+	width:100%;
+	height:30px;
+	min-height:30px;
+	padding:2px 6px;
+	font-size:10px;
+}
+.certloom-email-column-editors {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+.certloom-email-column-editor {
+	padding: 9px;
+	border: 1px solid var(--cl-rule);
+	border-radius: var(--cl-r-panel);
+	background: var(--cl-surface);
+}
+.certloom-email-column-editor__head {
+	display: grid;
+	grid-template-columns: minmax(0,1fr) 108px;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+.certloom-email-column-editor__head strong {
+	color:var(--cl-ink-soft);
+	font-size:10.5px;
+}
+.certloom-email-column-editor__head select {
+	height:30px;
+	min-height:30px;
+	font-size:10px;
+}
+.certloom-code-field {
+	min-height: 150px;
+	padding: 9px;
+	font: 11px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+	tab-size: 2;
+}
+.certloom-email-columns {
+	width: 100%;
+	table-layout: fixed;
+	border-collapse: collapse;
+}
+.certloom-email-columns td { vertical-align: top; }
+.certloom-email-columns img { display:block; max-width:100%; height:auto; }
+@media (max-width:1180px) and (min-width:961px) {
+	.certloom-message-settings--compact { grid-template-columns: 150px minmax(220px,1fr) minmax(220px,1fr); }
+	.certloom-theme-background-options { grid-template-columns: 1fr; }
+}
+
+/* Gamma-03A advanced-composition: keep the Email Designs library filters bounded on phones. */
+@media (max-width:782px) {
+	.certloom-email-filters {
+		grid-template-columns: minmax(0,1fr);
+	}
+	.certloom-email-filters label,
+	.certloom-email-filters input,
+	.certloom-email-filters select,
+	.certloom-email-filters .button {
+		min-width: 0;
+		max-width: 100%;
+	}
+	.certloom-email-filters .button {
+		width: 100%;
+	}
+}
+
+/* Local/system font catalog */
+.certloom-font-picker-field{display:grid;gap:5px}.certloom-font-picker-field select{min-width:0}.certloom-font-availability-note{display:block;color:var(--cl-ink-soft);font-size:10px;line-height:1.35;font-weight:500}.certloom-font-picker-field optgroup{font-weight:700}
+
+/* FONT-04 local-device font discovery. Local Font Access is optional and permission-bound. */
+.certloom-email-font-discovery{display:flex;flex-direction:column;align-items:flex-start;gap:5px;margin-top:7px}
+.certloom-email-font-discovery .button{min-height:28px;padding:0 9px;font-size:11px;line-height:26px}
+.certloom-email-font-discovery__status{display:block;color:var(--cl-ink-soft);font-size:10px;line-height:1.35}
+.certloom-font-picker-field optgroup{font-weight:700;color:var(--cl-ink-soft)}
+
+/* Phase 4.68 — generic nested Email Studio Containers. */
+.certloom-container-presets {
+	margin-top: 12px;
+	padding-top: 11px;
+	border-top: 1px solid var(--cl-paper);
+}
+.certloom-container-presets > span {
+	display:block;
+	margin-bottom:7px;
+	color:var(--cl-ink-soft);
+	font-size:9.5px;
+	font-weight:750;
+	letter-spacing:.04em;
+	text-transform:uppercase;
+}
+.certloom-container-presets > div { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px; }
+.certloom-container-presets button {
+	display:grid;
+	grid-template-rows:26px auto;
+	align-items:center;
+	gap:4px;
+	min-width:0;
+	min-height:50px;
+	padding:6px;
+	border:1px solid var(--cl-rule);
+	border-radius:var(--cl-r-lift);
+	background:var(--cl-surface);
+	color:var(--cl-ink-soft);
+	cursor:pointer;
+}
+.certloom-container-presets button:hover,.certloom-container-presets button:focus-visible { border-color:var(--cl-brand-blue-light);background:var(--cl-paper);box-shadow:var(--cl-ring-focus-soft);outline:none; }
+.certloom-container-presets button small { overflow:hidden;font-size:8.5px;font-weight:700;line-height:1;color:var(--cl-ink-soft);text-align:center;text-overflow:ellipsis;white-space:nowrap; }
+.certloom-container-preset__preview { display:flex;align-items:stretch;gap:3px;width:100%;height:26px;padding:3px;border:1px solid var(--cl-rule);border-radius:var(--cl-r-sm);background:var(--cl-surface); }
+.certloom-container-preset__preview i { display:block;min-width:0;flex:1;border:1px solid var(--cl-rule);border-radius:var(--cl-r-ctl);background:var(--cl-blue-wash); }
+.certloom-container-preset__preview.is-33-67 i:first-child { flex-grow:1; }
+.certloom-container-preset__preview.is-33-67 i:last-child { flex-grow:2; }
+.certloom-container-preset__preview.is-67-33 i:first-child { flex-grow:2; }
+.certloom-container-preset__preview.is-67-33 i:last-child { flex-grow:1; }
+.certloom-email-structure-branch { display:grid;gap:5px;margin:5px 0 0 14px;padding-left:8px;border-left:1px solid var(--cl-rule); }
+.certloom-email-structure-item { margin-left:calc(var(--certloom-structure-depth,0) * 0px); }
+.certloom-email-structure-item.is-container .certloom-email-structure-item__index { color:var(--cl-blue-bright);background:var(--cl-blue-wash); }
+.certloom-canvas-container { margin-bottom:10px; }
+.certloom-canvas-container > .certloom-canvas-block__controls { z-index:12; }
+.certloom-email-container-surface {
+	position:relative;
+	box-sizing:border-box;
+	width:100%;
+	max-width:100%;
+	min-width:0;
+	min-height:42px;
+	border-radius:var(--cl-r-compact);
+	outline:1px dashed rgba(21,94,239,.18);
+	outline-offset:-1px;
+}
+.certloom-canvas-container.is-selected > .certloom-email-container-surface { outline-color:rgba(21,94,239,.65); }
+.certloom-email-container-surface.is-drop-target { outline:2px solid var(--cl-blue-bright);background-color:rgba(238,244,255,.55); }
+.certloom-email-container-children { display:flex;width:100%;max-width:100%;min-width:0;min-height:42px;box-sizing:border-box; }
+.certloom-email-container-children.is-vertical { flex-direction:column; }
+.certloom-email-container-children.is-horizontal { flex-direction:row;align-items:stretch; }
+.certloom-email-container-child { min-width:0;max-width:100%;box-sizing:border-box;flex-shrink:1; }
+.certloom-email-container-child > .certloom-canvas-block { width:100%;max-width:100%;min-width:0;margin:0;padding:6px;box-sizing:border-box; }
+.certloom-email-container-empty {
+	display:flex;
+	align-items:center;
+	justify-content:space-between;
+	gap:10px;
+	width:100%;
+	min-width:0;
+	min-height:48px;
+	padding:8px 9px;
+	border:1px dashed var(--cl-rule-firm);
+	border-radius:var(--cl-r-sm);
+	background:rgba(248,250,252,.82);
+	color:var(--cl-ink-soft);
+	font-size:10px;
+	text-align:left;
+}
+.certloom-email-container-empty__copy { display:grid;min-width:0;gap:1px; }
+.certloom-email-container-empty__copy strong { color:var(--cl-ink-soft);font-size:9.5px;line-height:1.2; }
+.certloom-email-container-empty__copy small { overflow:hidden;color:var(--cl-rule-firm);font-size:8.5px;line-height:1.2;text-overflow:ellipsis;white-space:nowrap; }
+.certloom-email-container-empty__add { flex:0 0 auto;min-height:27px;padding:0 8px;border:1px solid var(--cl-rule-firm);border-radius:var(--cl-r-sm);background:var(--cl-surface);color:var(--cl-blue-bright);font-size:9px;font-weight:750;cursor:pointer; }
+.certloom-email-container-empty__add:hover,.certloom-email-container-empty__add:focus-visible { border-color:var(--cl-brand-blue-light);background:var(--cl-blue-wash);outline:none; }
+.certloom-email-container-preview { box-sizing:border-box;width:100%;max-width:100%;min-width:0; }
+.certloom-container-padding-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px; }
+.certloom-container-padding-grid label { display:grid;gap:4px; }
+.certloom-email-toggle-row { display:flex;grid-column:1/-1;align-items:center;gap:8px;min-height:32px; }
+.certloom-email-toggle-row input { width:16px;height:16px;min-height:0;margin:0; }
+.certloom-container-help { margin:0;padding:9px 10px;border-radius:var(--cl-r-compact);background:var(--cl-surface);color:var(--cl-ink-soft);font-size:10px;line-height:1.45; }
+.certloom-container-background-media { display:grid;gap:8px; }
+.certloom-container-background-preview { display:grid;grid-template-columns:48px minmax(0,1fr);align-items:center;gap:8px;padding:6px;border:1px solid var(--cl-rule);border-radius:var(--cl-r-compact);background:var(--cl-surface); }
+.certloom-container-background-preview img { width:48px;height:34px;object-fit:cover;border-radius:var(--cl-r-sm);background:var(--cl-paper); }
+.certloom-container-background-preview span { overflow:hidden;color:var(--cl-ink-soft);font-size:9px;text-overflow:ellipsis;white-space:nowrap; }
+.certloom-email-container-badge {
+	position:absolute;
+	z-index:3;
+	top:-9px;
+	left:8px;
+	display:none;
+	max-width:calc(100% - 16px);
+	padding:2px 6px;
+	border:1px solid var(--cl-rule-firm);
+	border-radius:var(--cl-r-pill);
+	background:var(--cl-surface);
+	box-shadow:var(--cl-shadow-soft);
+	color:var(--cl-blue-bright);
+	font-size:8px;
+	font-weight:750;
+	line-height:1.25;
+	overflow:hidden;
+	pointer-events:none;
+	text-overflow:ellipsis;
+	white-space:nowrap;
+}
+.certloom-canvas-container.is-selected > .certloom-email-container-surface > .certloom-email-container-badge { display:block; }
+.certloom-canvas-container.is-selected > .certloom-email-container-surface { box-shadow:var(--cl-inset-focus); }
+.certloom-email-inspector-path { display:block;margin-top:3px;overflow:hidden;color:var(--cl-ink-soft);font-size:9px;line-height:1.3;text-overflow:ellipsis;white-space:nowrap; }
+.certloom-email-inspector-path[hidden] { display:none; }
+.certloom-container-summary { display:grid;grid-template-columns:30px minmax(0,1fr);align-items:center;gap:8px;padding:8px;border:1px solid var(--cl-rule);border-radius:var(--cl-r-lift);background:var(--cl-surface); }
+.certloom-container-summary__icon { display:grid;place-items:center;width:30px;height:30px;border-radius:var(--cl-r-compact);background:var(--cl-blue-wash);color:var(--cl-blue-bright);font-size:13px; }
+.certloom-container-summary span:last-child { display:grid;min-width:0;gap:1px; }
+.certloom-container-summary strong { color:var(--cl-ink-soft);font-size:10px; }
+.certloom-container-summary small { color:var(--cl-ink-soft);font-size:9px;line-height:1.35; }
+.certloom-container-subsection { display:grid;gap:8px;padding:9px;border:1px solid var(--cl-paper);border-radius:var(--cl-r-panel);background:var(--cl-surface); }
+.certloom-container-subsection + .certloom-container-subsection { margin-top:8px; }
+.certloom-container-subsection__heading { display:flex;align-items:baseline;justify-content:space-between;gap:8px; }
+.certloom-container-subsection__heading strong { color:var(--cl-ink-soft);font-size:10px; }
+.certloom-container-subsection__heading small { color:var(--cl-rule-firm);font-size:8.5px;font-weight:600; }
+.certloom-container-background-media { gap:6px; }
+.certloom-container-background-media__label { color:var(--cl-ink-soft);font-size:9px;font-weight:700; }
+.certloom-container-background-panel .certloom-theme-background-actions { display:flex;flex-wrap:wrap;gap:5px; }
+.certloom-container-background-panel .certloom-theme-background-actions .button { min-height:29px;padding:0 8px;font-size:9px;line-height:27px; }
+.certloom-container-background-settings { display:grid;grid-template-columns:.8fr 1fr 1.15fr;gap:6px; }
+.certloom-container-compact-select { display:grid;gap:3px;min-width:0; }
+.certloom-container-compact-select > span { overflow:hidden;color:var(--cl-ink-soft);font-size:8.5px;text-overflow:ellipsis;white-space:nowrap; }
+.certloom-container-compact-select select { min-width:0;min-height:30px;height:30px;padding:2px 22px 2px 7px;font-size:10px; }
+.certloom-container-overlay-settings { display:grid;gap:8px;padding-top:7px;border-top:1px solid var(--cl-paper); }
+.certloom-container-overlay-settings.is-muted { opacity:.62; }
+@media (max-width:960px) {
+	.certloom-email-container-children.is-horizontal.is-stack-mobile { flex-direction:column; }
+	.certloom-email-container-children.is-horizontal.is-stack-mobile > .certloom-email-container-child { flex-basis:auto!important;width:100%!important; }
+}
+
+.certloom-canvas-frame.is-mobile .certloom-email-container-children.is-horizontal.is-stack-mobile { flex-direction:column; }
+.certloom-canvas-frame.is-mobile .certloom-email-container-children.is-horizontal.is-stack-mobile > .certloom-email-container-child { flex-basis:auto!important;width:100%!important; }
+
+/* Phase 4.68 advanced inspector depth */
+.certloom-email-range-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.certloom-email-range-control{display:grid;grid-template-columns:minmax(0,1fr) 42px;align-items:center;gap:8px;min-width:0}
+.certloom-email-range-control input[type="range"]{width:100%;min-width:0;margin:0}
+.certloom-email-range-control output{font-size:11px;line-height:1;color:var(--cl-ink-soft,var(--cl-ink-soft));text-align:right;font-variant-numeric:tabular-nums}
+.certloom-theme-background-depth{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin:10px 0}
+.certloom-theme-background-depth .certloom-theme-color-field{margin:0}
+
+/* Phase 4.70 — Container authoring polish without changing the locked viewport model. */
+.certloom-email-inspector-heading { padding:12px 14px 10px; }
+.certloom-email-inspector-heading h2 { font-size:15px; }
+.certloom-email-inspector-scroll { padding:10px 14px 22px; }
+.certloom-inspector-section summary { padding:8px 0; }
+.certloom-inspector-section__body { gap:8px;padding:0 0 11px; }
+.certloom-inspector-form input,.certloom-inspector-form textarea,.certloom-inspector-form select { min-height:32px; }
+.certloom-email-number-control > span { padding:0 6px; }
+.certloom-container-padding-grid { gap:6px; }
+@media (max-width:1180px) {
+	.certloom-container-background-settings { grid-template-columns:1fr 1fr; }
+	.certloom-container-background-settings .certloom-container-compact-select:first-child { grid-column:1/-1; }
+}

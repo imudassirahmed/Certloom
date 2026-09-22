@@ -5,11 +5,33 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template variables are local to the rendering method that includes this file.
 // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Templates only read display state; all mutations are handled by nonce-protected controllers.
+$certloom_mapping_groups = array(
+	__( 'Recipient', 'certloom' ) => array( 'holder_name', 'first_name', 'middle_name', 'last_name', 'email', 'external_id' ),
+	__( 'Credential', 'certloom' ) => array( 'cert_number', 'status', 'issue_date', 'expiry_date', 'grade', 'standard', 'scope' ),
+	__( 'Administrative', 'certloom' ) => array( 'status_reason', 'internal_notes' ),
+	__( 'Verification', 'certloom' ) => array( '__certloom_profile_visibility' ),
+);
+$certloom_grouped_fields = array();
+$certloom_known_keys = array();
+foreach ( $certloom_mapping_groups as $certloom_group_label => $certloom_keys ) {
+	$certloom_grouped_fields[ $certloom_group_label ] = array();
+	foreach ( $certloom_keys as $certloom_key ) { $certloom_known_keys[ $certloom_key ] = true; }
+}
+$certloom_custom_group = __( 'Custom fields', 'certloom' );
+$certloom_grouped_fields[ $certloom_custom_group ] = array();
+foreach ( $fields as $certloom_field ) {
+	$certloom_key = isset( $certloom_field['key'] ) ? (string) $certloom_field['key'] : '';
+	$certloom_added = false;
+	foreach ( $certloom_mapping_groups as $certloom_group_label => $certloom_keys ) {
+		if ( in_array( $certloom_key, $certloom_keys, true ) ) { $certloom_grouped_fields[ $certloom_group_label ][] = $certloom_field; $certloom_added = true; break; }
+	}
+	if ( ! $certloom_added && '' !== $certloom_key ) { $certloom_grouped_fields[ $certloom_custom_group ][] = $certloom_field; }
+}
 ?>
-<div class="wrap ecapla-certverify-admin-wrap">
+<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell">
 	<?php include ECAPLA_CERTVERIFY_PATH . 'admin/views/partials/brand-bar.php'; ?>
 	<h1><?php esc_html_e( 'Map CSV columns', 'certloom' ); ?></h1>
-	<p class="description"><?php esc_html_e( 'Confirm which certificate field each CSV column represents. Columns set to Skip are ignored. Certificate number must be mapped.', 'certloom' ); ?></p>
+	<p class="description"><?php esc_html_e( 'Certloom maps familiar column names automatically. Review the suggestions, change anything that is wrong, and leave unrelated columns as Skip. Certificate number must be mapped.', 'certloom' ); ?></p>
 
 	<form method="post" action="">
 		<?php wp_nonce_field( 'certverify_import_process' ); ?>
@@ -25,8 +47,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 								<label class="screen-reader-text" for="map-<?php echo esc_attr( $col_index ); ?>"><?php printf( /* translators: %s: CSV column heading. */ esc_html__( 'Map %s', 'certloom' ), esc_html( $column_name ) ); ?></label>
 								<select id="map-<?php echo esc_attr( $col_index ); ?>" name="map[<?php echo esc_attr( $col_index ); ?>]">
 									<option value=""><?php esc_html_e( 'Skip', 'certloom' ); ?></option>
-									<?php foreach ( $fields as $field ) : ?><option value="<?php echo esc_attr( $field['key'] ); ?>" <?php selected( $guessed_mapping[ $col_index ] ?? '', $field['key'] ); ?>><?php echo esc_html( $field['label'] ); ?></option><?php endforeach; ?>
+									<?php foreach ( $certloom_grouped_fields as $certloom_group_label => $certloom_group_fields ) : if ( empty( $certloom_group_fields ) ) { continue; } ?><optgroup label="<?php echo esc_attr( $certloom_group_label ); ?>"><?php foreach ( $certloom_group_fields as $field ) : ?><?php $certloom_option_label = 'holder_name' === $field['key'] ? __( 'Full name', 'certloom' ) : $field['label']; ?><option value="<?php echo esc_attr( $field['key'] ); ?>" <?php selected( $guessed_mapping[ $col_index ] ?? '', $field['key'] ); ?>><?php echo esc_html( $certloom_option_label ); ?></option><?php endforeach; ?></optgroup><?php endforeach; ?>
 								</select>
+								<?php if ( ! empty( $guessed_mapping[ $col_index ] ) ) : ?><span class="certloom-mapping-status"><?php esc_html_e( 'Auto-mapped', 'certloom' ); ?></span><?php endif; ?>
 							</td>
 							<?php foreach ( $preview as $preview_row ) : ?><td><?php echo esc_html( $preview_row[ $col_index ] ?? '' ); ?></td><?php endforeach; ?>
 						</tr>
@@ -41,9 +64,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<p class="description ecapla-certverify-warning-text"><?php esc_html_e( 'Use the blank-cell option carefully. It is off by default to prevent accidental data loss.', 'certloom' ); ?></p>
 			<?php if ( current_user_can( 'manage_options' ) ) : ?>
 				<label><input type="checkbox" name="historical_restore" value="1" /> <?php esc_html_e( 'Historical restore mode', 'certloom' ); ?></label>
-				<p class="description ecapla-certverify-warning-text"><?php esc_html_e( 'Use only for trusted Certloom backups that contain explicitly restored Expired records. New Expired rows are stored as protected legacy data for administrator review.', 'certloom' ); ?></p>
+				<p class="description ecapla-certverify-warning-text"><?php esc_html_e( 'Use only for trusted Certloom backups that contain explicitly restored Expired records. New Expired rows are stored as protected historical data for administrator review.', 'certloom' ); ?></p>
 			<?php endif; ?>
 		</div>
-		<?php submit_button( __( 'Run import', 'certloom' ), 'primary', 'certverify_import_process' ); ?>
+		<?php submit_button( __( 'Import certificates', 'certloom' ), 'primary', 'certverify_import_process' ); ?>
 	</form>
 </div>

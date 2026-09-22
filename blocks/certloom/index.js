@@ -13,6 +13,7 @@
 	var Notice = components.Notice;
 	var ServerSideRender = serverSideRender && serverSideRender.default ? serverSideRender.default : serverSideRender;
 	var __ = i18n.__;
+	var _x = i18n._x;
 
 	blocks.registerBlockType( 'certloom/verification', {
 		title: __( 'Certloom – Certificate Verification', 'certloom' ),
@@ -47,7 +48,7 @@
 				heading: __( 'Verify a Certificate', 'certloom' ),
 				description: __( 'Enter the certificate number exactly as it appears on the face of the certificate. No login required.', 'certloom' ),
 				placeholder: __( 'e.g. CERT-9001-2026-00142', 'certloom' ),
-				buttonText: __( 'Search', 'certloom' ),
+				buttonText: _x( 'Search', 'search action button', 'certloom' ),
 				notFoundText: __( "We couldn't find a certificate with that number. Double check it matches exactly what's printed on the certificate.", 'certloom' ),
 				guideEyebrow: __( 'Certificate status guide', 'certloom' ),
 				guideHeading: '',
