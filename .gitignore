@@ -23,3 +23,8 @@ reports/
 .env.*
 !.env.example
 wp-config.php
+
+# Certloom development artifacts
+/build/
+/docs/
+/QA-NOT-FOR-PRODUCTION.txt
