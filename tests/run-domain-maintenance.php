@@ -1,4 +1,5 @@
 <?php
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 /** Pure owner/staleness/TTL/internal-write tests for shared domain maintenance lock. */
 $GLOBALS['dm_options'] = array();
 if ( ! class_exists( 'WP_Error' ) ) {
@@ -13,10 +14,23 @@ function is_wp_error( $v ) { return $v instanceof WP_Error; }
 function __( $t ) { return $t; }
 function absint( $v ) { return abs( (int) $v ); }
 function sanitize_key( $k ) { return strtolower( preg_replace( '/[^a-z0-9_\-]/', '', (string) $k ) ); }
+function wp_cache_delete() { return true; }
 function get_option( $k, $d = false ) { return array_key_exists( $k, $GLOBALS['dm_options'] ) ? $GLOBALS['dm_options'][ $k ] : $d; }
 function add_option( $k, $v, $deprecated = '', $autoload = false ) { if ( array_key_exists( $k, $GLOBALS['dm_options'] ) ) return false; $GLOBALS['dm_options'][ $k ] = $v; return true; }
 final class DMWpdb {
 	public $options = 'wp_options';
+	public $last_error = '';
+	public $busy = false;
+	public $fail_read = false;
+	public function get_var( $p ) {
+		$this->last_error = '';
+		if ( $this->fail_read && strpos($p['q'], 'SELECT option_value') === 0 ) { $this->last_error='read failed'; return null; }
+		if ( strpos( $p['q'], 'SELECT GET_LOCK' ) === 0 ) return $this->busy ? '0' : '1';
+		if ( strpos( $p['q'], 'SELECT RELEASE_LOCK' ) === 0 ) return '1';
+		if ( strpos( $p['q'], 'SELECT option_value' ) === 0 ) return $GLOBALS['dm_options'][$p['a'][1]] ?? null;
+		if ( strpos( $p['q'], 'SELECT option_name' ) === 0 ) { foreach ( array_slice($p['a'],1) as $key ) if (isset($GLOBALS['dm_options'][$key])) return $key; }
+		return null;
+	}
 	public $fail_delete_once = false;
 	public function prepare( $q, ...$a ) { return array( 'q' => $q, 'a' => $a ); }
 	public function query( $p ) {
@@ -106,4 +120,24 @@ dm_same( true, $l->active(), 'failed release keeps write lock active' );
 dm_same( true, $l->release( $b ), 'release retry succeeds' );
 echo "PASS  maintenance release failure is explicit and safely retryable\n";
 
-echo "\n7 tests, 0 failures\n";
+// An expired lease must not reopen writes or admit an unrelated maintenance job while recovery is pending.
+$GLOBALS['dm_options']['certloom_domain_restore_journal'] = array('owner_token'=>$a, 'state'=>'swapped');
+$GLOBALS['dm_options'][DomainMaintenanceLock::OPTION] = $a.'|'.(time()-100).'|'.(time()-1).'|restore';
+dm_same(true,$l->active(),'unresolved journal blocks writes after expiry');
+dm_same('certloom_domain_maintenance_recovery_required',$l->acquire($b)->get_error_code(),'unrelated maintenance cannot steal interrupted restore');
+$GLOBALS['dm_options']=array();
+$GLOBALS['wpdb']->busy=true;
+dm_same('certloom_maintenance_busy',$l->acquire($a)->get_error_code(),'mutex contention refuses ownership transition');
+$GLOBALS['wpdb']->busy=false;
+echo "PASS  pending recovery blocks writes and competing maintenance; live transitions exclude other workers\n";
+
+$GLOBALS['dm_options'][DomainMaintenanceLock::OPTION]=$a.'|'.(time()-100).'|'.(time()-1).'|restore';
+dm_same(true,$l->recovery_allowed($a),'expired owner permits recovery');
+dm_same('certloom_domain_maintenance_owner_mismatch',$l->recovery_allowed($b)->get_error_code(),'recovery refuses a different owner');
+$GLOBALS['wpdb']->fail_read=true;
+dm_same(true,$l->active(),'database error closes write boundary');
+dm_same('certloom_domain_maintenance_read_failed',$l->recovery_allowed($a)->get_error_code(),'database error is not permission for recovery DDL');
+$GLOBALS['wpdb']->fail_read=false;
+echo "PASS  uncertain ownership blocks recovery and user writes\n";
+
+echo "\n9 tests, 0 failures\n";

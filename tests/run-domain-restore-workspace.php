@@ -1,4 +1,5 @@
 <?php
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 /** Infrastructure-level restore workspace tests using a deterministic wpdb emulator. */
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'ARRAY_A', 'ARRAY_A' );
@@ -34,7 +35,7 @@ function delete_option($key){ if(!array_key_exists($key,$GLOBALS['restore_option
 function add_option($key,$value,$deprecated='',$autoload=false){ if(array_key_exists($key,$GLOBALS['restore_options']))return false;$GLOBALS['restore_options'][$key]=$value;return true; }
 
 final class RestoreWpdb {
-	public $prefix='wp_'; public $options='wp_options'; public $last_error=''; public $tables=array(); public $insert_id=0; public $fail_maintenance_delete_once=false; public $fail_drop_contains_once=''; public $fail_drop_skip=0;
+	public $prefix='wp_'; public $options='wp_options'; public $last_error=''; public $tables=array(); public $insert_id=0; public $fail_maintenance_delete_once=false; public $fail_drop_contains_once=''; public $fail_drop_skip=0; public $mutex_busy=false;
 	public function prepare($query,...$args){ if(count($args)===1&&is_array($args[0]))$args=$args[0];return array('query'=>$query,'args'=>$args); }
 	public function esc_like($v){ return (string)$v; }
 	public function query($prepared){
@@ -55,6 +56,10 @@ final class RestoreWpdb {
 	}
 	public function get_var($prepared){
 		$this->last_error='';if(is_string($prepared))return 0;$q=$prepared['query'];$a=$prepared['args'];
+		if(strpos($q,'SELECT GET_LOCK')===0)return $this->mutex_busy ? '0' : '1';
+		if(strpos($q,'SELECT RELEASE_LOCK')===0)return '1';
+		if(strpos($q,'SELECT option_value')===0)return $GLOBALS['restore_options'][$a[1]]??null;
+		if(strpos($q,'SELECT option_name')===0){foreach(array_slice($a,1)as $key)if(isset($GLOBALS['restore_options'][$key]))return $key;return null;}
 		if(strpos($q,'SHOW TABLES LIKE')===0){$name=(string)$a[0];return array_key_exists($name,$this->tables)?$name:null;}
 		if(strpos($q,'SELECT COUNT(*)')===0)return 0;
 		return null;
@@ -103,7 +108,7 @@ echo "PASS  complete domain Replace is durable and a committed replay repairs tr
 // Simulate the narrow crash window: atomic table rename succeeded, but journal still says prepared.
 $owner2=str_repeat('b',32);$workspace2=$ws->create($owner2);rw_same(false,is_wp_error($workspace2),'second workspace');
 foreach(DomainBackupRepository::entity_types() as $entity){$live=SchemaManager::table($entity);$stage=rw_stage_name($owner2,$entity);$rollback=rw_stage_name($owner2,$entity,'rollback');$GLOBALS['wpdb']->tables[$stage]=array(2=>array('id'=>'2','marker'=>'replacement'));$GLOBALS['wpdb']->tables[$rollback]=$GLOBALS['wpdb']->tables[$live];unset($GLOBALS['wpdb']->tables[$live]);$GLOBALS['wpdb']->tables[$live]=$GLOBALS['wpdb']->tables[$stage];unset($GLOBALS['wpdb']->tables[$stage]);}
-$GLOBALS['restore_options'][DomainRestoreWorkspace::JOURNAL_OPTION]=array('state'=>'prepared','owner_token'=>$owner2,'suffix'=>substr($owner2,0,12),'old_configuration'=>array(
+$GLOBALS['restore_options'][DomainRestoreWorkspace::JOURNAL_OPTION]=array('state'=>'swapped','owner_token'=>$owner2,'suffix'=>substr($owner2,0,12),'old_configuration'=>array(
 	'certverify_fields'=>array('exists'=>true,'value'=>array('new-field')),
 	'certverify_retired_fields'=>array('exists'=>true,'value'=>array('new-retired')),
 	'certverify_settings'=>array('exists'=>true,'value'=>array('verification_page'=>10)),
@@ -170,4 +175,39 @@ rw_same('certloom_domain_restore_stage_create_failed',$pre_drop->get_error_code(
 rw_same(false,array_key_exists('certloom_domain_maintenance_lock',$GLOBALS['restore_options']),'failed workspace preparation releases maintenance boundary');
 echo "PASS  future-domain restore workspace refuses uncertain pre-existing private-table cleanup\n";
 
-echo "\n7 tests, 0 failures\n";
+// A competing recovery request must never mutate any table while the transition mutex is held.
+$GLOBALS['wpdb']->mutex_busy=true;
+$before_tables=$GLOBALS['wpdb']->tables;
+rw_same(true,$ws->recover_interrupted_commit(),'busy bootstrap recovery is a harmless no-op');
+rw_same('certloom_maintenance_busy',$ws->create(str_repeat('2',32))->get_error_code(),'new restore is retryable while transition busy');
+rw_same($before_tables,$GLOBALS['wpdb']->tables,'busy recovery preserves all tables');
+$GLOBALS['wpdb']->mutex_busy=false;
+echo "PASS  competing recovery skips a live transition without mutating tables\n";
+
+// A receipt failure after the committed journal must not roll a durable commit back.
+$owner8=str_repeat('3',32);$workspace8=$ws->create($owner8);rw_same(false,is_wp_error($workspace8),'receipt failure workspace');
+foreach(DomainBackupRepository::entity_types() as $entity){$GLOBALS['wpdb']->tables[rw_stage_name($owner8,$entity)]=array(20=>rw_row($entity,20));}
+$GLOBALS['restore_tamper_once_key']=DomainRestoreWorkspace::RECEIPTS_OPTION;
+$receipt_fail=$ws->commit_replace($workspace8,$new_config,array('records'=>$entity_count,'counts'=>array_fill_keys(DomainBackupRepository::entity_types(),1)));
+rw_same('certloom_domain_restore_receipt_failed',$receipt_fail->get_error_code(),'receipt failure reported');
+rw_same('committed',get_option(DomainRestoreWorkspace::JOURNAL_OPTION)['state'],'durable commit retained');
+foreach(DomainBackupRepository::entity_types() as $entity){rw_true(isset($GLOBALS['wpdb']->tables[SchemaManager::table($entity)][20]),'committed data retained after receipt failure');}
+$lease_parts=explode('|',$GLOBALS['restore_options']['certloom_domain_maintenance_lock']);$lease_parts[1]=(string)(time()-2101);$lease_parts[2]=(string)(time()-1);$GLOBALS['restore_options']['certloom_domain_maintenance_lock']=implode('|',$lease_parts);
+rw_same(true,$ws->recover_interrupted_commit(),'receipt repair after worker expiry');
+rw_same(false,array_key_exists('certloom_domain_maintenance_lock',$GLOBALS['restore_options']),'committed cleanup removes expired lease');
+rw_same($entity_count,$ws->completion_receipt($owner8)['records'],'recovered receipt retains counts');
+echo "PASS  receipt failure preserves the durable commit and recovery repairs its receipt and expired lease\n";
+
+// Completion readers are used by job replay: they must retry cleanup before reporting success.
+$owner9=str_repeat('4',32);$workspace9=$ws->create($owner9);
+foreach(DomainBackupRepository::entity_types() as $entity){$GLOBALS['wpdb']->tables[rw_stage_name($owner9,$entity)]=array(21=>rw_row($entity,21));}
+$GLOBALS['wpdb']->fail_maintenance_delete_once=true;
+$pending=$ws->commit_replace($workspace9,$new_config,array('records'=>$entity_count,'counts'=>array_fill_keys(DomainBackupRepository::entity_types(),1)));
+rw_same('certloom_domain_maintenance_release_failed',$pending->get_error_code(),'commit leaves retryable cleanup');
+$GLOBALS['wpdb']->fail_maintenance_delete_once=true;
+rw_same('certloom_domain_maintenance_release_failed',$ws->completion_receipt($owner9)->get_error_code(),'job replay does not succeed while cleanup fails');
+rw_same($entity_count,$ws->completion_receipt($owner9)['records'],'job replay succeeds after cleanup retry');
+rw_same(false,array_key_exists(DomainRestoreWorkspace::JOURNAL_OPTION,$GLOBALS['restore_options']),'receipt replay clears journal');
+echo "PASS  job replay cannot report success until committed cleanup finishes\n";
+
+echo "\n10 tests, 0 failures\n";

@@ -53,7 +53,7 @@ FUNCTIONS = {
 
 # Directories excluded from the shipped payload; strings there are not user
 # facing and must not reach translators.
-EXCLUDED_DIRS = {"tests", "docs", "node_modules", ".git", "languages"}
+EXCLUDED_DIRS = {"tests", "docs", "node_modules", "vendor", ".git", "languages", "output", "build", "qa-evidence", "reports", ".playwright-cli"}
 BLOCK_METADATA_KEYS = ("title", "description")
 
 CALL_RE = re.compile(r"(?<![\w$>:])(" + "|".join(sorted(FUNCTIONS, key=len, reverse=True)) + r")\s*\(")
@@ -358,7 +358,8 @@ def main() -> int:
         out.append("")
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text("\n".join(out), encoding="utf-8")
+    with output.open("w", encoding="utf-8", newline="\n") as catalog:
+        catalog.write("\n".join(out))
 
     print(f"Scanned {files} PHP files plus native block JavaScript/metadata under {root}")
     print(f"Wrote {len(entries)} unique strings to {output}")

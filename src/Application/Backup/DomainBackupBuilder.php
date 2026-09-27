@@ -156,6 +156,9 @@ final class DomainBackupBuilder implements DomainBackupBuilderInterface {
 	 */
 	private function open_at_persisted_offset( array $state ) {
 		$path   = (string) $state['path'];
+		// Several slices may run in one PHP request; filesize() otherwise keeps
+		// the size from an earlier slice and rejects a correctly appended file.
+		clearstatcache( true, $path );
 		$offset = absint( $state['offset'] );
 		$size   = @filesize( $path );
 		if ( false === $size || $size < $offset ) {

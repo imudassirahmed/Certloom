@@ -1,4 +1,5 @@
 <?php
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 /** UX-C04 / UX-CORE — normal workflows use human language; specialist evidence remains progressively disclosed. */
 $root = dirname( __DIR__ );
 $pass = 0;
@@ -16,12 +17,11 @@ $setup = plx_src( $root, 'admin/views/setup-wizard.php' );
 $scoped = plx_src( $root, 'src/Infrastructure/Admin/ScopedFieldAdminAjax.php' );
 $designer_js = plx_src( $root, 'admin/assets/designer.js' );
 $plugin = plx_src( $root, 'certloom.php' );
-$roadmap = plx_src( $root, 'docs/approved-ux-consolidation-after-lms.md' );
 
 plx_check( false !== strpos( $settings, '$certloom_show_diagnostics = current_user_can( \'manage_options\' );' ) && false === strpos( $settings, '$certloom_advanced_mode' ), 'Settings uses capability-based diagnostics without a retired workspace-mode boundary' );
 plx_check( false !== strpos( $settings, '<details id="certloom-system-status" class="certloom-technical-details certloom-settings-diagnostics"' ) && false !== strpos( $settings, "esc_html_e( 'Diagnostics & maintenance', 'certloom' )" ), 'database and migration diagnostics remain available under collapsed Technical details' );
 plx_check( false !== strpos( $nav, "__( 'Credential data tools','certloom')" ) && false === strpos( $nav, '$preview && ! $simple' ), 'credential data tools remain capability-controlled without a retired mode gate' );
-plx_check( false !== strpos( $roadmap, 'Technical terminology remains available only in Technical details, Diagnostics, Designer specialist controls, or Developer surfaces where genuinely useful.' ), 'approved progressive-disclosure language rule remains explicit' );
+plx_check( 1 === preg_match( '/<details\b[^>]*id="certloom-system-status"[^>]*>/', $settings, $diagnostics_tag ) && 0 === preg_match( '/\bopen(?:\s|=|>)/', $diagnostics_tag[0] ), 'maintenance diagnostics are collapsed by default in the actual Settings markup' );
 
 plx_check( false !== strpos( $domain, '$detailed_registry = true;' ) && false !== strpos( $domain, "__( 'Credentials', 'certloom' )" ), 'Credential Management keeps the detailed registry inside the one task-focused workspace' );
 plx_check( false !== strpos( $domain, "__( 'Credential status', 'certloom' )" ) && false !== strpos( $domain, "__( 'See whether this credential is currently valid and the dates that affect it.', 'certloom' )" ), 'Simple credential status explains the human outcome rather than the status engine' );
@@ -35,7 +35,7 @@ $issue_js = plx_src( $root, 'admin/assets/issue-credential.js' );
 plx_check( false !== strpos( $manual, "__( 'Technical details', 'certloom' )" ) && false !== strpos( $issue_js, 'Review SHA-256' ) && false !== strpos( $issue_js, 'certloom-issue-receipt-technical' ), 'issuance integrity evidence is preserved under explicit Technical details' );
 
 plx_check( false !== strpos( $template, 'certloom-template-designer-boundary' ) && false !== strpos( $template, "__( 'Technical integrity', 'certloom' )" ), 'Designer integrity architecture remains available under Technical integrity disclosure' );
-plx_check( false !== strpos( $template, "__( 'Design name', 'certloom' )" ) && false !== strpos( $template, 'certloom-design-identity-technical' ) && false !== strpos( $template, "__( 'Machine key', 'certloom' )" ), 'Design machine identity is progressively disclosed rather than lost' );
+plx_check( false !== strpos( $template, "__( 'Design name (required)', 'certloom' )" ) && false !== strpos( $template, 'certloom-design-identity-technical' ) && false !== strpos( $template, "__( 'Machine key', 'certloom' )" ), 'Design machine identity is progressively disclosed rather than lost' );
 plx_check( false !== strpos( $template, "__( 'Technical custom field…', 'certloom' )" ) && false !== strpos( $template, "__( 'Technical field token', 'certloom' )" ), 'raw custom field-token editing remains a deliberately technical escape hatch' );
 plx_check( false !== strpos( $template, "__( 'Choose information that should be filled automatically when the credential is issued.', 'certloom' )" ), 'Simple dynamic-field help explains purpose instead of catalog mechanics' );
 plx_check( false !== strpos( $template, "__( 'Certificate number', 'certloom' )" ) && false !== strpos( $template, "__( 'The barcode represents the credential’s certificate number.', 'certloom' )" ), 'barcode controls name the human certificate number instead of its machine token' );

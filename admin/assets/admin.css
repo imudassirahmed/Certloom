@@ -3293,11 +3293,6 @@ align-items:center}
 	.certloom-email-delivery .certloom-template-preview-proof { grid-template-columns: 1fr; }
 	.certloom-email-history .certloom-domain-table-wrap { overflow-x: auto; }
 }
-@media (prefers-reduced-motion: reduce) {
-	.certloom-email-delivery *,
-	.certloom-email-delivery *::before,
-	.certloom-email-delivery *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
-}
 
 /* 1.6.70 ANL-01 Verification Analytics */
 .certloom-analytics .certloom-dashboard-hero{align-items:end;gap:24px}

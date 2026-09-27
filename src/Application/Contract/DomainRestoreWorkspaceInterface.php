@@ -28,7 +28,7 @@ interface DomainRestoreWorkspaceInterface {
 	/** @return true|\WP_Error */
 	public function commit_merge( array $workspace, array $configuration, array $receipt = array() );
 
-	/** @return array<string,mixed>|null|\WP_Error */
+	/** Return a replay receipt only after any owner-matched committed cleanup succeeds. @return array<string,mixed>|null|\WP_Error */
 	public function completion_receipt( $owner_token );
 
 	/** @return true|\WP_Error */

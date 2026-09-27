@@ -1,4 +1,5 @@
 <?php
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 /** Pure tests for the final source-of-truth cutover safeguards. */
 define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', true ); // Legacy compatibility sentinel; deliberately ignored by DBAUTH.
@@ -29,6 +30,14 @@ class CutoverWpdb {
 	public $options = 'wp_options';
 	public $last_error = '';
 	public function prepare( $sql, ...$args ) { return array( $sql, $args ); }
+	public function get_var( $p ) {
+		$this->last_error = '';
+		$q = $p[0]; $a = $p[1];
+		if ( strpos( $q, 'SELECT GET_LOCK' ) === 0 || strpos( $q, 'SELECT RELEASE_LOCK' ) === 0 ) return '1';
+		if ( strpos( $q, 'SELECT option_value' ) === 0 ) return $GLOBALS['cutover_options'][$a[1]] ?? null;
+		if ( strpos( $q, 'SELECT option_name' ) === 0 ) { foreach ( array_slice($a,1) as $key ) if (isset($GLOBALS['cutover_options'][$key])) return $key; }
+		return null;
+	}
 	public function query( $prepared ) {
 		$sql = is_array( $prepared ) ? $prepared[0] : (string) $prepared;
 		$args = is_array( $prepared ) ? $prepared[1] : array();

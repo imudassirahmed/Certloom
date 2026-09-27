@@ -1,4 +1,5 @@
 <?php
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 /** Pure-ish integration tests for resumable domain backup builder/reader. */
 $root = sys_get_temp_dir() . '/certloom-domain-backup-test-' . bin2hex( random_bytes( 4 ) );
 define( 'ABSPATH', $root . '/web/' );
@@ -39,6 +40,14 @@ final class BackupFakeWpdb {
 	public $tables = array();
 	public $saw_backup_lock = false;
 	public function prepare( $query, ...$args ) { return array( 'query' => $query, 'args' => $args ); }
+	public function get_var( $p ) {
+		$this->last_error = '';
+		$q = $p['query']; $a = $p['args'];
+		if ( strpos( $q, 'SELECT GET_LOCK' ) === 0 || strpos( $q, 'SELECT RELEASE_LOCK' ) === 0 ) return '1';
+		if ( strpos( $q, 'SELECT option_value' ) === 0 ) return $GLOBALS['db_options'][$a[1]] ?? null;
+		if ( strpos( $q, 'SELECT option_name' ) === 0 ) { foreach ( array_slice($a,1) as $key ) if (isset($GLOBALS['db_options'][$key])) return $key; }
+		return null;
+	}
 	public function query( $prepared ) {
 		$this->last_error = '';
 		if ( ! is_array( $prepared ) ) { return 1; }

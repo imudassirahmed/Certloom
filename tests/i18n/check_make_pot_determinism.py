@@ -85,17 +85,32 @@ def main() -> int:
         reverse_bytes = reverse.read_bytes()
         committed_bytes = committed.read_bytes()
 
+        # Generated local evidence and dependency/build trees are not shipped
+        # source. A checkout's ignored files must not change its catalog.
+        fixture = Path(temp) / "catalog-fixture"
+        fixture.mkdir()
+        (fixture / "source.php").write_text("<?php __('Production catalog marker', 'certloom');", encoding="utf-8")
+        for ignored in ("output", "build", "vendor", "qa-evidence", "reports", ".playwright-cli"):
+            directory = fixture / ignored
+            directory.mkdir()
+            (directory / "artifact.php").write_text("<?php __('Ignored artifact marker', 'certloom');", encoding="utf-8")
+        fixture_pot = Path(temp) / "fixture.pot"
+        invoke(module, fixture, fixture_pot)
+        fixture_bytes = fixture_pot.read_bytes()
+
         checks = [
             (normal_bytes == reverse_bytes, "normal/adversarial traversal POT bytes differ"),
             (normal_bytes == committed_bytes, "committed POT is not reproducible from the exact source tree"),
             (b"POT-Creation-Date: 2026-08-22 00:00+0000" in normal_bytes, "fixed release epoch missing"),
+            (b"\r\n" not in normal_bytes, "catalog line endings depend on the host operating system"),
+            (b"Production catalog marker" in fixture_bytes and b"Ignored artifact marker" not in fixture_bytes, "ignored build/evidence/dependency files leaked into the catalog"),
         ]
         for ok, message in checks:
             if not ok:
                 print(message, file=sys.stderr)
                 return 1
 
-    print("POT cross-extraction determinism: 3/3 checks passed.")
+    print("POT cross-extraction determinism: 5/5 checks passed.")
     return 0
 
 

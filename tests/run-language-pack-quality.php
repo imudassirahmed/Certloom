@@ -1,4 +1,6 @@
 <?php
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
+require_once __DIR__ . '/support/python-process.php';
 /** I18N-03A language-pack quality pipeline regression. */
 $root = dirname( __DIR__ );
 $checks = 0;
@@ -10,13 +12,16 @@ function lpq_check( $condition, $message ) {
         exit( 1 );
     }
 }
-function lpq_exec( $command ) {
-    $out = array(); $rc = 0;
-    exec( $command . ' 2>&1', $out, $rc );
-    return array( $rc, implode( "\n", $out ) );
-}
 function lpq_rm( $path ) {
-    if ( file_exists( $path ) || is_link( $path ) ) { exec( 'rm -rf ' . escapeshellarg( $path ) ); }
+    $resolved = realpath( $path );
+    $temp = rtrim( str_replace( '\\', '/', realpath( sys_get_temp_dir() ) ), '/' ) . '/';
+    $normalized = str_replace( '\\', '/', (string) $resolved );
+    if ( ! $resolved || dirname( $normalized ) . '/' !== $temp || ! preg_match( '/^certloom-language-pack-[a-f0-9]{12}$/', basename( $normalized ) ) ) {
+        throw new RuntimeException( "Refusing cleanup outside this test's exact temporary fixture directory." );
+    }
+    $entries = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $resolved, FilesystemIterator::SKIP_DOTS ), RecursiveIteratorIterator::CHILD_FIRST );
+    foreach ( $entries as $entry ) { if ( $entry->isDir() && ! $entry->isLink() ) { rmdir( $entry->getPathname() ); } else { unlink( $entry->getPathname() ); } }
+    rmdir( $resolved );
 }
 $validator = $root . '/tests/i18n/validate_language_packs.py';
 $tools = $root . '/tests/i18n/po_tools.py';
@@ -55,13 +60,13 @@ lpq_check( false !== $load_pos && false !== $restore_pos && $load_pos < $restore
 $build_script = file_get_contents( $root . '/tests/build-release.sh' );
 lpq_check( false !== strpos( $build_script, 'validate_language_packs.py' ), 'deterministic release builder validates language-pack status/artifacts' );
 
-list( $rc, $output ) = lpq_exec( 'python3 ' . escapeshellarg( $validator ) . ' ' . escapeshellarg( $root ) . ' --json' );
+list( $rc, $output ) = certloom_test_python( array( $validator, $root, '--json' ) );
 lpq_check( 0 === $rc, 'production manifest validates: ' . $output );
 $report = json_decode( $output, true );
 lpq_check( $expected_source_strings === (int) ( $report['source_strings'] ?? 0 ), 'quality pipeline sees every current POT source string' );
 lpq_check( empty( $report['errors'] ), 'production manifest has no quality errors' );
 
-list( $fixture_rc, $fixture_output ) = lpq_exec( 'python3 ' . escapeshellarg( $validator ) . ' ' . escapeshellarg( $root ) . ' --manifest tests/i18n/fixtures/candidate-manifest.json --json' );
+list( $fixture_rc, $fixture_output ) = certloom_test_python( array( $validator, $root, '--manifest', 'tests/i18n/fixtures/candidate-manifest.json', '--json' ) );
 lpq_check( 0 === $fixture_rc, 'partial LTR/RTL candidate fixtures validate without being called reviewed: ' . $fixture_output );
 $fixture_report = json_decode( $fixture_output, true );
 lpq_check( 2 === count( $fixture_report['packs'] ?? array() ), 'candidate fixture exercises two scripts' );
@@ -123,7 +128,7 @@ $mini_manifest = array(
     ) ),
 );
 file_put_contents( $base . '/languages/certloom-language-packs.json', json_encode( $mini_manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) . "\n" );
-list( $reviewed_rc, $reviewed_output ) = lpq_exec( 'python3 ' . escapeshellarg( $base . '/tests/i18n/validate_language_packs.py' ) . ' ' . escapeshellarg( $base ) . ' --compile --json' );
+list( $reviewed_rc, $reviewed_output ) = certloom_test_python( array( $base . '/tests/i18n/validate_language_packs.py', $base, '--compile', '--json' ) );
 lpq_check( 0 === $reviewed_rc, 'complete reviewed fixture validates and compiles: ' . $reviewed_output );
 lpq_check( is_file( $base . '/languages/certloom-es_ES.mo' ) && filesize( $base . '/languages/certloom-es_ES.mo' ) > 100, 'deterministic MO artifact is emitted' );
 $json_files = glob( $base . '/languages/certloom-es_ES-*.json' );
@@ -131,32 +136,32 @@ lpq_check( 1 === count( $json_files ), 'WordPress block-editor JSON catalog is e
 $json_data = json_decode( file_get_contents( $json_files[0] ), true );
 lpq_check( 'Buscar' === ( $json_data['locale_data']['messages']["search action button\x04Search"][0] ?? '' ), 'contextual JS translation survives deterministic JSON compilation' );
 $mo_hash = hash_file( 'sha256', $base . '/languages/certloom-es_ES.mo' );
-list( $reviewed_again_rc, $reviewed_again_output ) = lpq_exec( 'python3 ' . escapeshellarg( $base . '/tests/i18n/validate_language_packs.py' ) . ' ' . escapeshellarg( $base ) . ' --compile --json' );
+list( $reviewed_again_rc, $reviewed_again_output ) = certloom_test_python( array( $base . '/tests/i18n/validate_language_packs.py', $base, '--compile', '--json' ) );
 lpq_check( 0 === $reviewed_again_rc && $mo_hash === hash_file( 'sha256', $base . '/languages/certloom-es_ES.mo' ), 'MO compilation is deterministic: ' . $reviewed_again_output );
 
 $bad_placeholder = str_replace( 'msgstr[1] "%d días"', 'msgstr[1] "días"', $po );
 file_put_contents( $base . '/languages/certloom-es_ES.po', $bad_placeholder );
-list( $bad_rc, $bad_out ) = lpq_exec( 'python3 ' . escapeshellarg( $base . '/tests/i18n/validate_language_packs.py' ) . ' ' . escapeshellarg( $base ) . ' --json' );
+list( $bad_rc, $bad_out ) = certloom_test_python( array( $base . '/tests/i18n/validate_language_packs.py', $base, '--json' ) );
 lpq_check( 0 !== $bad_rc && false !== strpos( $bad_out, 'placeholder mismatch' ), 'placeholder loss fails closed' );
 
 $unsafe_plural = str_replace( 'Plural-Forms: nplurals=2; plural=(n != 1);', 'Plural-Forms: nplurals=2; plural=(n != 1) || constructor;', $po );
 file_put_contents( $base . '/languages/certloom-es_ES.po', $unsafe_plural );
-list( $plural_rc, $plural_out ) = lpq_exec( 'python3 ' . escapeshellarg( $base . '/tests/i18n/validate_language_packs.py' ) . ' ' . escapeshellarg( $base ) . ' --json' );
+list( $plural_rc, $plural_out ) = certloom_test_python( array( $base . '/tests/i18n/validate_language_packs.py', $base, '--json' ) );
 lpq_check( 0 !== $plural_rc && false !== strpos( $plural_out, 'unsupported syntax' ), 'translator-controlled Plural-Forms rejects identifiers/call-capable syntax before MO/Jed compilation' );
 
 $bad_bidi = str_replace( 'msgstr "Guardar"', "msgstr \"Guardar\\u202E\"", $po );
 file_put_contents( $base . '/languages/certloom-es_ES.po', $bad_bidi );
-list( $bidi_rc, $bidi_out ) = lpq_exec( 'python3 ' . escapeshellarg( $base . '/tests/i18n/validate_language_packs.py' ) . ' ' . escapeshellarg( $base ) . ' --json' );
+list( $bidi_rc, $bidi_out ) = certloom_test_python( array( $base . '/tests/i18n/validate_language_packs.py', $base, '--json' ) );
 lpq_check( 0 !== $bidi_rc, 'hidden bidi-control injection fails closed' );
 
 $fuzzy_po = str_replace( 'msgid "Save"', "#, fuzzy\nmsgid \"Save\"", $po );
 file_put_contents( $base . '/languages/certloom-es_ES.po', $fuzzy_po );
-list( $fuzzy_rc, $fuzzy_out ) = lpq_exec( 'python3 ' . escapeshellarg( $base . '/tests/i18n/validate_language_packs.py' ) . ' ' . escapeshellarg( $base ) . ' --json' );
+list( $fuzzy_rc, $fuzzy_out ) = certloom_test_python( array( $base . '/tests/i18n/validate_language_packs.py', $base, '--json' ) );
 lpq_check( 0 !== $fuzzy_rc && false !== strpos( $fuzzy_out, 'zero fuzzy' ), 'reviewed packs reject fuzzy entries' );
 
 $partial_po = preg_replace( '/\nmsgctxt "search action button".*$/s', "\n", $po );
 file_put_contents( $base . '/languages/certloom-es_ES.po', $partial_po );
-list( $partial_rc, $partial_out ) = lpq_exec( 'python3 ' . escapeshellarg( $base . '/tests/i18n/validate_language_packs.py' ) . ' ' . escapeshellarg( $base ) . ' --json' );
+list( $partial_rc, $partial_out ) = certloom_test_python( array( $base . '/tests/i18n/validate_language_packs.py', $base, '--json' ) );
 lpq_check( 0 !== $partial_rc && false !== strpos( $partial_out, 'must contain every POT key' ), 'reviewed packs reject incomplete coverage' );
 
 lpq_rm( $base );

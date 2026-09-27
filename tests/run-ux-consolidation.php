@@ -1,4 +1,5 @@
 <?php
+if ( PHP_SAPI !== 'cli' ) { http_response_code( 404 ); exit; }
 /** UX-CONS-01 — six-section shell + simple Backup & Restore contract. */
 $root = dirname( __DIR__ );
 $pass = 0;
@@ -19,7 +20,7 @@ $css        = uxcons_src( $root, 'admin/assets/admin.css' );
 $js         = uxcons_src( $root, 'admin/assets/admin.js' );
 $data_tools = uxcons_src( $root, 'src/Infrastructure/Admin/DomainDataToolsAdmin.php' );
 $plugin     = uxcons_src( $root, 'certloom.php' );
-$roadmap    = uxcons_src( $root, 'docs/approved-ux-consolidation-after-lms.md' );
+$importer   = uxcons_src( $root, 'includes/class-ecapla-certverify-import.php' );
 
 uxcons_check( false !== strpos( $navigation, 'private const PRIMARY = array(' ) && false === strpos( $navigation, 'PRIMARY_SIMPLE' ) && false === strpos( $navigation, 'PRIMARY_ADVANCED' ), 'one canonical product shell replaces the retired Simple/Advanced split' );
 uxcons_check( false !== strpos( $navigation, "'certloom'                    => 'Home'" ), 'product shell uses the canonical Home label' );
@@ -55,7 +56,7 @@ uxcons_check( false !== strpos( $css, 'min-height:44px' ) || false !== strpos( $
 uxcons_check( false !== strpos( $css, '@media (prefers-reduced-motion:reduce)' ) || false !== strpos( $css, '@media (prefers-reduced-motion: reduce)' ), 'reduced-motion protection remains present' );
 uxcons_check( false !== strpos( $css, '@media (forced-colors:active)' ) || false !== strpos( $css, '@media (forced-colors: active)' ), 'forced-colors protection remains present' );
 uxcons_check( false !== strpos( $data_tools, "const PAGE = 'certloom-domain-data-tools'" ), 'developer Data Tools route remains intact for diagnostics rather than being deleted' );
-uxcons_check( false !== strpos( $roadmap, 'Never offer a mapping target that the current authoritative model cannot persist truthfully.' ), 'CSV mapping integrity rule remains explicit while persistence work is audited' );
+uxcons_check( false !== strpos( $importer, 'Ecapla_CertVerify_Fields::get_field_map()' ) && false !== strpos( $importer, '$allowed_mapping = array_keys( $field_map );' ) && false !== strpos( $importer, '! in_array( $field_key, $allowed_mapping, true )' ), 'CSV import validates mapping targets against the persisted field registry' );
 uxcons_check( false !== strpos( $plugin, "define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false )" ) && false !== strpos( $plugin, "define( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW', false )" ) && false !== strpos( $plugin, "define( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY', false )" ), 'UX consolidation does not open normalized-domain production authority' );
 uxcons_check( ! file_exists( $root . '/resources/renderer/accepted.json' ), 'UX consolidation does not manufacture renderer authority' );
 

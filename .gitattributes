@@ -1,0 +1,4 @@
+# Translation manifests bind catalog bytes; keep them identical across hosts.
+/languages/*.pot text eol=lf
+/languages/*.po text eol=lf
+/tests/i18n/fixtures/*.po text eol=lf

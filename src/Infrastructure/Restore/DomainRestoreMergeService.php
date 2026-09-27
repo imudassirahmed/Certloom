@@ -299,6 +299,14 @@ final class DomainRestoreMergeService {
 					$target_id = $this->infer_series_dependency( $workspace, 'recipient_id', $source_id );
 					if ( is_wp_error( $target_id ) ) { return $target_id; }
 				}
+				if ( ! $target_id ) {
+					// An unissued recipient may have neither a WordPress user nor a
+					// credential identity. Reuse an exact same-ID row on a same-site
+					// round trip; names and shared email addresses are not identities.
+					$existing = $this->lookup_row( $target_table, 'id', $source_id );
+					if ( is_wp_error( $existing ) ) { return $existing; }
+					if ( is_array( $existing ) && $this->rows_equal( $row, $existing ) ) { $target_id = $source_id; }
+				}
 				return $target_id ? $this->record_map( $owner, $entity, $source_id, $hash, $target_id, 'existing' ) : $this->insert_and_map( $owner, $entity, $source_id, $hash, $target_table, $row );
 
 			case 'signers':

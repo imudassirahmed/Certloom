@@ -11835,40 +11835,40 @@ msgstr ""
 msgid "Certloom could not finalize the domain backup integrity record."
 msgstr ""
 
-#: src/Application/Backup/DomainBackupBuilder.php:162
+#: src/Application/Backup/DomainBackupBuilder.php:165
 msgid "The private Certloom backup file is shorter than its persisted job state."
 msgstr ""
 
-#: src/Application/Backup/DomainBackupBuilder.php:167
+#: src/Application/Backup/DomainBackupBuilder.php:170
 msgid "Certloom could not reopen its private domain backup file."
 msgstr ""
 
-#: src/Application/Backup/DomainBackupBuilder.php:171
+#: src/Application/Backup/DomainBackupBuilder.php:174
 msgid "Certloom could not resume its private backup at the persisted position."
 msgstr ""
 
-#: src/Application/Backup/DomainBackupBuilder.php:175
+#: src/Application/Backup/DomainBackupBuilder.php:178
 msgid "Certloom could not discard an incomplete backup slice safely."
 msgstr ""
 
-#: src/Application/Backup/DomainBackupBuilder.php:179
+#: src/Application/Backup/DomainBackupBuilder.php:182
 msgid "Certloom could not position its private backup stream safely."
 msgstr ""
 
-#: src/Application/Backup/DomainBackupBuilder.php:188
+#: src/Application/Backup/DomainBackupBuilder.php:191
 msgid "The private backup file could not be removed."
 msgstr ""
 
 #. translators: %1$s: message; %2$s: cleanup message.
-#: src/Application/Backup/DomainBackupBuilder.php:192
+#: src/Application/Backup/DomainBackupBuilder.php:195
 msgid "%1$s Certloom also could not remove the invalid private backup file safely (%2$s)."
 msgstr ""
 
-#: src/Application/Backup/DomainBackupBuilder.php:205
+#: src/Application/Backup/DomainBackupBuilder.php:208
 msgid "The resumable domain backup state is incomplete."
 msgstr ""
 
-#: src/Application/Backup/DomainBackupBuilder.php:208
+#: src/Application/Backup/DomainBackupBuilder.php:211
 msgid "The private domain backup file is no longer available."
 msgstr ""
 
@@ -23664,36 +23664,59 @@ msgstr ""
 msgid "Certloom could not save its data-change marker, so the requested change was not started."
 msgstr ""
 
-#: src/Infrastructure/Data/DomainMaintenanceLock.php:104
+#: src/Infrastructure/Data/DomainMaintenanceLock.php:100
+msgid "Another Certloom maintenance operation acquired the lock first."
+msgstr ""
+
+#: src/Infrastructure/Data/DomainMaintenanceLock.php:125
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:118
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:298
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:326
 msgid "This worker no longer owns the Certloom maintenance lock."
 msgstr ""
 
-#: src/Infrastructure/Data/DomainMaintenanceLock.php:133
+#: src/Infrastructure/Data/DomainMaintenanceLock.php:154
 msgid "The Certloom maintenance lock changed before it could be refreshed."
 msgstr ""
 
-#: src/Infrastructure/Data/DomainMaintenanceLock.php:155
+#: src/Infrastructure/Data/DomainMaintenanceLock.php:184
 msgid "Certloom refused to release a maintenance lock owned by another worker."
 msgstr ""
 
-#: src/Infrastructure/Data/DomainMaintenanceLock.php:173
+#: src/Infrastructure/Data/DomainMaintenanceLock.php:202
 msgid "Certloom could not release its maintenance lock safely. Credential writes remain paused until the lock expires or a maintenance worker repairs it."
 msgstr ""
 
-#: src/Infrastructure/Data/DomainMaintenanceLock.php:280
-msgid "The Certloom maintenance owner token is invalid."
+#: src/Infrastructure/Data/DomainMaintenanceLock.php:228
+msgid "Certloom could not confirm the interrupted restore owns its maintenance state. Recovery is paused for review."
+msgstr ""
+
+#: src/Infrastructure/Data/DomainMaintenanceLock.php:259
+msgid "Certloom could not check database maintenance ownership. Changes remain paused until the database responds."
 msgstr ""
 
 #: src/Infrastructure/Data/DomainMaintenanceLock.php:34
 msgid "Certloom maintenance is in progress. Credential and configuration changes are temporarily paused."
 msgstr ""
 
-#: src/Infrastructure/Data/DomainMaintenanceLock.php:67
+#: src/Infrastructure/Data/DomainMaintenanceLock.php:341
+msgid "The Certloom maintenance owner token is invalid."
+msgstr ""
+
+#: src/Infrastructure/Data/DomainMaintenanceLock.php:57
+msgid "An interrupted Certloom restore must finish recovery before another maintenance operation can start."
+msgstr ""
+
+#: src/Infrastructure/Data/DomainMaintenanceLock.php:81
 msgid "Another Certloom maintenance operation is already in progress."
 msgstr ""
 
-#: src/Infrastructure/Data/DomainMaintenanceLock.php:86
-msgid "Another Certloom maintenance operation acquired the lock first."
+#: src/Infrastructure/Data/MaintenanceMutex.php:15
+msgid "Another Certloom maintenance worker is finishing a database operation. Please retry shortly."
+msgstr ""
+
+#: src/Infrastructure/Data/MaintenanceMutex.php:16
+msgid "Certloom could not establish exclusive database maintenance access. No recovery changes were started."
 msgstr ""
 
 #: src/Infrastructure/Database/SchemaManager.php:123
@@ -28089,288 +28112,294 @@ msgstr ""
 msgid "A Merge restore source record changed after it was already mapped."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:352
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:360
 msgid "Merge restore could not map a template revision to its template."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:358
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:366
 msgid "Merge restore could not map a template parent revision safely."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:386
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:394
 msgid "A backup credential public ID already belongs to a different recipient/program/batch/issuer relationship."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:401
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:409
 msgid "Merge restore could not map a certificate number to its Credential Series."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:407
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:415
 msgid "A backup human certificate number is already owned by a different Credential Series."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:412
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:420
 msgid "A backup human certificate number is already owned by current Certloom data."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:422
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:430
 msgid "Merge restore could not map a Credential Version to its Series."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:431
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:439
 msgid "A backup Credential Version source idempotency key already belongs to current Certloom data."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:439
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:447
 msgid "Merge restore could not map a credential event to its Series."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:448
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:456
 msgid "Merge restore could not map a credential event Version safely."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:455
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:463
 msgid "Merge restore encountered an unsupported entity type."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:465
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:473
 msgid "Certloom could not add a backup-only record to its private Merge restore target."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:480
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:488
 msgid "Merge restore is missing a required dependency mapping."
-msgstr ""
-
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:496
-msgid "Certloom refused an invalid Merge restore dependency inference."
 msgstr ""
 
 #: src/Infrastructure/Restore/DomainRestoreMergeService.php:50
 msgid "Merge restore can begin only after the backup has completed staging and validation."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:513
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:504
+msgid "Certloom refused an invalid Merge restore dependency inference."
+msgstr ""
+
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:521
 msgid "Certloom could not infer a safe existing Merge restore dependency."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:517
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:525
 msgid "Existing credentials disagree about the identity of a backup dependency, so Merge restore was stopped."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:528
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:536
 msgid "Certloom refused an unsafe Merge restore identity lookup."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:533
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:541
 msgid "Certloom could not inspect current relationship identities while preparing Merge restore."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:550
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:558
 msgid "Certloom could not inspect current identity records while preparing Merge restore."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:583
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:591
 msgid "Certloom refused an unsupported Merge restore pointer update."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:592
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:600
 msgid "Certloom could not finalize Merge restore credential pointers safely."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:600
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:608
 msgid "Certloom could not fingerprint a Merge restore source record."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreMergeService.php:607
+#: src/Infrastructure/Restore/DomainRestoreMergeService.php:615
 msgid "The resumable Merge restore state is incomplete."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:100
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:1035
+msgid "Certloom could not save the durable restore completion receipt exactly as committed."
+msgstr ""
+
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:1050
+msgid "Certloom could not remove a rolled-back restore completion receipt safely."
+msgstr ""
+
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:1055
+msgid "Certloom could not update restore completion receipts after rollback."
+msgstr ""
+
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:107
 msgid "Certloom could not save the restore workspace marker. No live data was changed."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:115
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:1076
+msgid "Certloom could not remove its restore workspace marker safely."
+msgstr ""
+
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:131
 msgid "Certloom refused an unsupported restore entity."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:123
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:139
 msgid "The restore record does not match the expected Certloom schema."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:127
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:143
 msgid "The restore record contains an invalid internal identifier."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:134
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:150
 msgid "Certloom could not inspect its private restore workspace."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:139
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:155
 msgid "A retried restore slice disagrees with data already staged for the same record."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:145
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:161
 msgid "Certloom could not stage a validated restore record. No live data was changed."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:202
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:218
 msgid "Certloom could not validate the staged credential relationships."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:205
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:221
 msgid "The staged Certloom backup contains broken credential relationships and cannot be activated."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:223
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:69
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:245
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:76
 msgid "Certloom could not refresh the restore workspace marker."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:279
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:316
 msgid "Certloom could not prepare the private Merge restore target tables."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:293
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:332
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:339
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:378
 msgid "Certloom refused an unsupported Merge restore entity."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:302
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:348
 msgid "Certloom could not read the current credential data while preparing Merge restore."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:319
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:365
 msgid "Certloom could not copy current credential data into its private Merge restore workspace."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:346
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:392
 msgid "Certloom could not read its validated Merge restore staging records."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:357
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:403
 msgid "Certloom refused an invalid private restore table request."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:412
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:464
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:556
 msgid "Certloom could not save the restore rollback journal, so no live data was changed."
 msgstr ""
 
 #. translators: %1$s: table swap error; %2$s: journal cleanup error.
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:422
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:474
 msgid "Certloom could not swap the restore workspace (%1$s), and it also could not clear the owner-matched rollback journal safely (%2$s). No authority was switched; review restore recovery state before retrying."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:537
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:620
 msgid "Certloom found an invalid restore completion receipt and refused to trust it."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:545
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:628
 msgid "Certloom found an inconsistent restore completion receipt and refused to trust it."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:546
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:629
 msgid "Certloom found an incomplete restore completion receipt and refused to trust it."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:567
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:650
 msgid "The Certloom restore workspace identity is invalid."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:575
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:658
 msgid "The Certloom restore owner token is invalid."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:637
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:720
 msgid "Certloom refused an invalid restore-workspace cleanup request."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:644
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:727
 msgid "Certloom could not remove a private restore workspace table safely."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:681
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:764
 msgid "Certloom could not atomically activate the prepared restore workspace."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:699
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:785
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:799
 msgid "Certloom cannot find all rollback tables required to recover the previous credential data."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:707
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:807
 msgid "Certloom could not automatically restore the previous credential tables. Restore the site database backup before continuing."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:726
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:821
+msgid "Certloom could not save its recovery progress. Credential writes remain paused until recovery succeeds."
+msgstr ""
+
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:831
 msgid "Certloom restored the previous credential tables but could not fully restore configuration metadata. Restore the site database backup before continuing."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:731
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:836
 msgid "Certloom restored the previous credential data, but could not remove its private failed-restore workspace. Credential writes remain paused until recovery cleanup succeeds."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:738
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:843
 msgid "Certloom restored the previous credential data, but could not release the maintenance lock safely. Credential writes remain paused until recovery cleanup succeeds."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:745
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:850
 msgid "Certloom restored the previous credential data, but could not clear all restore tracking evidence safely. Review recovery status before continuing."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:747
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:852
 msgid "Certloom could not safely commit the restore, so the previous credential data and configuration were restored."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:790
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:895
 msgid "Certloom could not remove its restore recovery journal safely."
 msgstr ""
 
 #. translators: %1$s: primary error; %2$s: lock release error.
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:802
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:907
 msgid "Certloom restore failed (%1$s), and its maintenance lock could not be released safely (%2$s). Credential writes remain paused until recovery cleanup succeeds."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:824
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:929
 msgid "The restore configuration is incomplete."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:835
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:940
 msgid "Certloom could not save restored configuration."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:851
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:956
 msgid "Certloom could not restore its previous data-generation marker."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:878
-msgid "The restore completion receipt has an invalid mode."
-msgstr ""
-
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:886
-msgid "The restore completion receipt is missing required count evidence."
-msgstr ""
-
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:892
-msgid "The restore completion receipt record total does not match its count evidence."
-msgstr ""
-
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:91
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:98
 msgid "Certloom could not prepare all private restore tables safely."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:930
-msgid "Certloom could not save the durable restore completion receipt exactly as committed."
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:983
+msgid "The restore completion receipt has an invalid mode."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:945
-msgid "Certloom could not remove a rolled-back restore completion receipt safely."
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:991
+msgid "The restore completion receipt is missing required count evidence."
 msgstr ""
 
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:950
-msgid "Certloom could not update restore completion receipts after rollback."
-msgstr ""
-
-#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:971
-msgid "Certloom could not remove its restore workspace marker safely."
+#: src/Infrastructure/Restore/DomainRestoreWorkspace.php:997
+msgid "The restore completion receipt record total does not match its count evidence."
 msgstr ""
 
 #: src/Infrastructure/Verification/PublicVerificationGate.php:58

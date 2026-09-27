@@ -38,11 +38,24 @@ final class DomainMaintenanceLock {
 
 	/** @return true|\WP_Error */
 	public function acquire( $owner_token, $purpose = 'maintenance', $ttl = self::DEFAULT_TTL ) {
+		return MaintenanceMutex::run( function () use ( $owner_token, $purpose, $ttl ) {
+			return $this->acquire_locked( $owner_token, $purpose, $ttl );
+		} );
+	}
+
+	private function acquire_locked( $owner_token, $purpose = 'maintenance', $ttl = self::DEFAULT_TTL ) {
 		global $wpdb;
 
 		$owner_token = $this->token( $owner_token );
 		if ( is_wp_error( $owner_token ) ) {
 			return $owner_token;
+		}
+
+		foreach ( array( 'certloom_domain_restore_journal', 'certloom_domain_restore_build' ) as $key ) {
+			$pending = get_option( $key, null );
+			if ( null !== $pending && ( ! is_array( $pending ) || ( $pending['owner_token'] ?? '' ) !== $owner_token ) ) {
+				return new \WP_Error( 'certloom_domain_maintenance_recovery_required', __( 'An interrupted Certloom restore must finish recovery before another maintenance operation can start.', 'certloom' ) );
+			}
 		}
 
 		$purpose = $this->purpose( $purpose );
@@ -54,7 +67,8 @@ final class DomainMaintenanceLock {
 			return true;
 		}
 
-		$stored = (string) get_option( self::OPTION, '' );
+		$stored = $this->stored_value();
+		if ( is_wp_error( $stored ) ) { return $stored; }
 		$lock   = $this->parse_payload( $stored );
 
 		if ( $lock && hash_equals( $lock['owner'], $owner_token ) ) {
@@ -89,6 +103,12 @@ final class DomainMaintenanceLock {
 
 	/** @return true|\WP_Error */
 	public function touch( $owner_token, $purpose = 'maintenance', $ttl = self::DEFAULT_TTL ) {
+		return MaintenanceMutex::run( function () use ( $owner_token, $purpose, $ttl ) {
+			return $this->touch_locked( $owner_token, $purpose, $ttl );
+		} );
+	}
+
+	private function touch_locked( $owner_token, $purpose = 'maintenance', $ttl = self::DEFAULT_TTL ) {
 		global $wpdb;
 
 		$owner_token = $this->token( $owner_token );
@@ -96,7 +116,8 @@ final class DomainMaintenanceLock {
 			return $owner_token;
 		}
 
-		$stored = (string) get_option( self::OPTION, '' );
+		$stored = $this->stored_value();
+		if ( is_wp_error( $stored ) ) { return $stored; }
 		$lock   = $this->parse_payload( $stored );
 		if ( ! $lock || ! hash_equals( $lock['owner'], $owner_token ) ) {
 			return new \WP_Error(
@@ -136,6 +157,12 @@ final class DomainMaintenanceLock {
 
 	/** @return true|\WP_Error */
 	public function release( $owner_token ) {
+		return MaintenanceMutex::run( function () use ( $owner_token ) {
+			return $this->release_locked( $owner_token );
+		} );
+	}
+
+	private function release_locked( $owner_token ) {
 		global $wpdb;
 
 		$owner_token = $this->token( $owner_token );
@@ -143,11 +170,13 @@ final class DomainMaintenanceLock {
 			return $owner_token;
 		}
 
-		$stored = (string) get_option( self::OPTION, '' );
+		$stored = $this->stored_value();
+		if ( is_wp_error( $stored ) ) { return $stored; }
 		if ( '' === $stored ) {
 			return true;
 		}
 
+		if ( is_wp_error( $stored ) ) { return $stored; }
 		$lock = $this->parse_payload( $stored );
 		if ( ! $lock || ! hash_equals( $lock['owner'], $owner_token ) ) {
 			return new \WP_Error(
@@ -166,7 +195,7 @@ final class DomainMaintenanceLock {
 		);
 		$this->clear_option_cache();
 
-		return 1 === (int) $deleted || '' === (string) get_option( self::OPTION, '' )
+		return 1 === (int) $deleted || '' === $this->stored_value()
 			? true
 			: new \WP_Error(
 				'certloom_domain_maintenance_release_failed',
@@ -176,10 +205,29 @@ final class DomainMaintenanceLock {
 
 	/** Returns whether this exact owner still holds a non-expired maintenance lease. */
 	public function owned_active( $owner_token ) {
+		return $this->owned_by( $owner_token, true );
+	}
+
+	/** Owner-matched cleanup may also release the expired lease of a dead worker. */
+	public function owned_by( $owner_token, $require_active = false ) {
 		$owner_token = $this->token( $owner_token );
 		if ( is_wp_error( $owner_token ) ) { return false; }
-		$lock = $this->parse_payload( (string) get_option( self::OPTION, '' ) );
-		return $lock && $lock['expires_at'] > time() && hash_equals( $lock['owner'], $owner_token );
+		$stored = $this->stored_value();
+		if ( is_wp_error( $stored ) ) { return false; }
+		$lock = $this->parse_payload( $stored );
+		return $lock && ( ! $require_active || $lock['expires_at'] > time() ) && hash_equals( $lock['owner'], $owner_token );
+	}
+
+	/** Called under MaintenanceMutex: uncertain ownership must never authorize recovery DDL. */
+	public function recovery_allowed( $owner_token ) {
+		$stored = $this->stored_value();
+		if ( is_wp_error( $stored ) ) { return $stored; }
+		if ( '' === $stored ) { return true; }
+		$lock = $this->parse_payload( $stored );
+		if ( ! $lock || ! hash_equals( $lock['owner'], (string) $owner_token ) ) {
+			return new \WP_Error( 'certloom_domain_maintenance_owner_mismatch', __( 'Certloom could not confirm the interrupted restore owns its maintenance state. Recovery is paused for review.', 'certloom' ) );
+		}
+		return $lock['expires_at'] <= time();
 	}
 
 	/**
@@ -190,13 +238,26 @@ final class DomainMaintenanceLock {
 	 * @return bool
 	 */
 	public function active() {
-		$stored = (string) get_option( self::OPTION, '' );
-		if ( '' === $stored ) {
-			return false;
-		}
-
+		global $wpdb;
+		$stored = $this->stored_value();
+		if ( is_wp_error( $stored ) ) { return true; }
 		$lock = $this->parse_payload( $stored );
-		return ! $lock || $lock['expires_at'] > time();
+		if ( '' !== $stored && ( ! $lock || $lock['expires_at'] > time() ) ) { return true; }
+		// Expiry permits recovery, not user writes against an unresolved swap.
+		$pending = $wpdb->get_var( $wpdb->prepare(
+			'SELECT option_name FROM %i WHERE option_name IN (%s, %s) LIMIT 1',
+			$wpdb->options, 'certloom_domain_restore_journal', 'certloom_domain_restore_build'
+		) );
+		return null !== $pending || '' !== (string) $wpdb->last_error;
+	}
+
+	/** Read coordination state from MySQL, never a request or persistent option cache. */
+	private function stored_value() {
+		global $wpdb;
+		$value = $wpdb->get_var( $wpdb->prepare( 'SELECT option_value FROM %i WHERE option_name = %s', $wpdb->options, self::OPTION ) );
+		return '' !== (string) $wpdb->last_error
+			? new \WP_Error( 'certloom_domain_maintenance_read_failed', __( 'Certloom could not check database maintenance ownership. Changes remain paused until the database responds.', 'certloom' ) )
+			: (string) $value;
 	}
 
 	/** Runs only the maintenance worker's own protected option/data writes under the lock. */

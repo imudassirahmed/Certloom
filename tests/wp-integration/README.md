@@ -2,6 +2,22 @@
 
 These tests are deliberately **not** replaced by the pure-PHP suite. They must be run on a disposable WordPress installation backed by MySQL/MariaDB before Certloom's next-generation domain can become the source of truth.
 
+## Local recovery fault injection
+
+`run-recovery-cache.php` and `run-domain-recovery-matrix.php` run directly with the site's PHP CLI and configuration. They require `CERTLOOM_TEST_WP_ROOT` to identify the disposable WordPress root, `wp_get_environment_type() === 'local'`, and `CERTLOOM_TEST_DB_BACKUP` to point to an existing database snapshot. Take that snapshot immediately before testing. These scripts refuse HTTP execution and refuse to start with existing maintenance state.
+
+```powershell
+$env:CERTLOOM_TEST_WP_ROOT = '<disposable Local site>/app/public'
+$env:CERTLOOM_TEST_DB_BACKUP = '<private snapshot outside the webroot>.sql'
+& '<Local PHP executable>' -c '<Local CLI ini>' tests/wp-integration/run-recovery-cache.php
+& '<Local PHP executable>' -c '<Local CLI ini>' tests/wp-integration/run-domain-recovery-matrix.php
+& '<Local PHP executable>' -c '<Local CLI ini>' tests/wp-integration/run-domain-recovery-matrix.php roundtrip
+```
+
+The matrix requires an issuer. It deliberately terminates independent WordPress workers before/after the table rename and journal commits, including a recovery worker just after rollback. It tests live and expired worker leases, competing normal request bootstraps, immediate completion-receipt retry, cleanup, and preservation of all 14 native table hashes and the three configuration entries. The roundtrip variant exercises the real serialized backup, bounded staging and both Merge/Replace services. Its negative identity check needs an unissued recipient without a WordPress account; the changed recipient exists only in discarded private staging tables.
+
+On a passing run, live entity data and test metadata are restored and private test tables are removed. A failed assertion intentionally retains recovery evidence; inspect it and use the private pre-test snapshot or validated pre-test native backup to recover before rerunning. These are infrastructure/service tests, not a complete site-backup contract, browser restore acceptance, provider acceptance, or normalized-domain release authority.
+
 Run, in order:
 
 ```bash
@@ -78,4 +94,3 @@ Authorized packaging validates the finalized authority directory again, injects 
 `resources/domain/accepted.json` is the **sole release-level normalized-domain authority**. The historical readiness constants stay false and are ignored by `DomainFeatureGate`; predefining them cannot open production authority. The manifest is excluded from the runtime production fingerprint only to avoid self-reference, while the manifest itself binds the exact fingerprint that passed the genuine ceremony.
 
 Even an authorized release does not cut over an individual site automatically. `DomainCutoverCoordinator` remains a second independent boundary and requires that site's healthy schema, completed migration, source-generation parity, maintenance ownership, committed receipt, and final cutover checks before durable authority changes from the current registry to the normalized domain.
-

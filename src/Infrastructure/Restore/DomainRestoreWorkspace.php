@@ -9,6 +9,7 @@ use Certloom\Application\Contract\DomainRestoreWorkspaceInterface;
 use Certloom\Infrastructure\Backup\DomainBackupRepository;
 use Certloom\Infrastructure\Data\DomainGeneration;
 use Certloom\Infrastructure\Data\DomainMaintenanceLock;
+use Certloom\Infrastructure\Data\MaintenanceMutex;
 use Certloom\Infrastructure\Database\SchemaManager;
 
 /**
@@ -44,6 +45,12 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 
 	/** @return array<string,mixed>|\WP_Error */
 	public function create( $owner_token ) {
+		return MaintenanceMutex::run( function () use ( $owner_token ) {
+			return $this->create_locked( $owner_token );
+		} );
+	}
+
+	private function create_locked( $owner_token ) {
 		$owner_token = $this->owner_token( $owner_token );
 		if ( is_wp_error( $owner_token ) ) {
 			return $owner_token;
@@ -106,6 +113,15 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 
 	/** @return true|\WP_Error */
 	public function insert_row( array $workspace, $entity, array $row ) {
+		return MaintenanceMutex::run( function () use ( $workspace, $entity, $row ) {
+			if ( ! $this->maintenance->owned_active( $workspace['owner_token'] ?? '' ) ) {
+				return new \WP_Error( 'certloom_domain_maintenance_owner_mismatch', __( 'This worker no longer owns the Certloom maintenance lock.', 'certloom' ) );
+			}
+			return $this->insert_row_locked( $workspace, $entity, $row );
+		} );
+	}
+
+	private function insert_row_locked( array $workspace, $entity, array $row ) {
 		global $wpdb;
 		$valid = $this->validate_workspace( $workspace );
 		if ( is_wp_error( $valid ) ) {
@@ -210,6 +226,12 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 
 	/** @return true|\WP_Error */
 	public function touch( array $workspace ) {
+		return MaintenanceMutex::run( function () use ( $workspace ) {
+			return $this->touch_locked( $workspace );
+		} );
+	}
+
+	private function touch_locked( array $workspace ) {
 		$valid = $this->validate_workspace( $workspace );
 		if ( is_wp_error( $valid ) ) {
 			return $valid;
@@ -225,6 +247,12 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 
 	/** @return true|\WP_Error */
 	public function abandon( array $workspace ) {
+		return MaintenanceMutex::run( function () use ( $workspace ) {
+			return $this->abandon_locked( $workspace );
+		} );
+	}
+
+	private function abandon_locked( array $workspace ) {
 		$valid = $this->validate_workspace( $workspace );
 		if ( is_wp_error( $valid ) ) {
 			return $valid;
@@ -265,6 +293,15 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 	 * @return true|\WP_Error
 	 */
 	public function create_merge_target( array $workspace ) {
+		return MaintenanceMutex::run( function () use ( $workspace ) {
+			if ( ! $this->maintenance->owned_active( $workspace['owner_token'] ?? '' ) ) {
+				return new \WP_Error( 'certloom_domain_maintenance_owner_mismatch', __( 'This worker no longer owns the Certloom maintenance lock.', 'certloom' ) );
+			}
+			return $this->create_merge_target_locked( $workspace );
+		} );
+	}
+
+	private function create_merge_target_locked( array $workspace ) {
 		$valid = $this->validate_workspace( $workspace );
 		if ( is_wp_error( $valid ) ) {
 			return $valid;
@@ -284,6 +321,15 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 
 	/** @return array<string,int>|\WP_Error */
 	public function copy_live_batch( array $workspace, $entity, $after_id, $limit = 200 ) {
+		return MaintenanceMutex::run( function () use ( $workspace, $entity, $after_id, $limit ) {
+			if ( ! $this->maintenance->owned_active( $workspace['owner_token'] ?? '' ) ) {
+				return new \WP_Error( 'certloom_domain_maintenance_owner_mismatch', __( 'This worker no longer owns the Certloom maintenance lock.', 'certloom' ) );
+			}
+			return $this->copy_live_batch_locked( $workspace, $entity, $after_id, $limit );
+		} );
+	}
+
+	private function copy_live_batch_locked( array $workspace, $entity, $after_id, $limit = 200 ) {
 		global $wpdb;
 		$valid = $this->validate_workspace( $workspace );
 		if ( is_wp_error( $valid ) ) {
@@ -366,11 +412,17 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 
 	/** @return true|\WP_Error */
 	private function commit_workspace( array $workspace, $source_kind, array $configuration, array $receipt = array() ) {
+		return MaintenanceMutex::run( function () use ( $workspace, $source_kind, $configuration, $receipt ) {
+			return $this->commit_workspace_locked( $workspace, $source_kind, $configuration, $receipt );
+		} );
+	}
+
+	private function commit_workspace_locked( array $workspace, $source_kind, array $configuration, array $receipt = array() ) {
 		$owner = $this->owner_token( $workspace['owner_token'] ?? '' );
 		if ( is_wp_error( $owner ) ) {
 			return $owner;
 		}
-		$existing_receipt = $this->completion_receipt( $owner );
+		$existing_receipt = $this->resume_completion_receipt( $owner );
 		if ( is_wp_error( $existing_receipt ) ) {
 			return $existing_receipt;
 		}
@@ -452,7 +504,7 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 
 		$receipt_saved = $this->save_completion_receipt( $workspace['owner_token'], (array) $journal['receipt'] );
 		if ( is_wp_error( $receipt_saved ) ) {
-			return $this->rollback_after_failure( $workspace, $old_configuration, $old_generation, 'certloom_domain_restore_receipt_failed', $source_kind );
+			return $receipt_saved;
 		}
 
 		return $this->cleanup_committed_workspace( $workspace );
@@ -460,6 +512,12 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 
 	/** @return true|\WP_Error */
 	public function recover_interrupted_commit() {
+		$result = MaintenanceMutex::run( function () { return $this->recover_interrupted_commit_locked(); } );
+		// A running transition owns the mutex even if its lease expires during DDL.
+		return is_wp_error( $result ) && 'certloom_maintenance_busy' === $result->get_error_code() ? true : $result;
+	}
+
+	private function recover_interrupted_commit_locked() {
 		$journal = get_option( self::JOURNAL_OPTION, array() );
 		if ( ! is_array( $journal ) || empty( $journal['owner_token'] ) || empty( $journal['suffix'] ) ) {
 			return $this->recover_stale_build();
@@ -470,9 +528,8 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		);
 		// Normal WordPress requests may bootstrap while the restore worker is
 		// committing. Its live lease is authority to leave the workspace alone.
-		if ( $this->maintenance->owned_active( $workspace['owner_token'] ) ) {
-			return true;
-		}
+		$recoverable = $this->maintenance->recovery_allowed( $workspace['owner_token'] );
+		if ( true !== $recoverable ) { return is_wp_error( $recoverable ) ? $recoverable : true; }
 		$valid = $this->validate_workspace( $workspace );
 		if ( is_wp_error( $valid ) ) {
 			return $valid;
@@ -491,6 +548,12 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 			$rolled = $this->rollback_swap( $workspace, $source_kind );
 			if ( is_wp_error( $rolled ) ) {
 				return $rolled;
+			}
+		}
+		if ( 'rolled_back' !== $state ) {
+			$journal['state'] = 'rolled_back';
+			if ( ! $this->save_journal( $journal ) ) {
+				return new \WP_Error( 'certloom_domain_restore_journal_failed', __( 'Certloom could not save the restore rollback journal, so no live data was changed.', 'certloom' ) );
 			}
 		}
 		$restored = DomainMaintenanceLock::run_internal( function () use ( $journal ) {
@@ -521,8 +584,28 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 	}
 
 
-	/** @return array<string,mixed>|null|\WP_Error */
+	/** A successful replay receipt also confirms that post-commit cleanup has finished. */
 	public function completion_receipt( $owner_token ) {
+		return MaintenanceMutex::run( function () use ( $owner_token ) {
+			$receipt = $this->resume_completion_receipt( $owner_token );
+			if ( ! is_array( $receipt ) ) { return $receipt; }
+			$cleaned = $this->cleanup_committed_workspace( $this->workspace( $this->owner_token( $owner_token ) ) );
+			return is_wp_error( $cleaned ) ? $cleaned : $receipt;
+		} );
+	}
+
+	/** A committed journal can repair a missing receipt immediately on job retry. Called under the mutex. */
+	private function resume_completion_receipt( $owner_token ) {
+		$receipt = $this->read_completion_receipt( $owner_token );
+		if ( null !== $receipt ) { return $receipt; }
+		$journal = get_option( self::JOURNAL_OPTION, array() );
+		if ( ! is_array( $journal ) || 'committed' !== ( $journal['state'] ?? '' ) || ( $journal['owner_token'] ?? '' ) !== $this->owner_token( $owner_token ) ) { return null; }
+		$saved = $this->save_completion_receipt( $owner_token, (array) ( $journal['receipt'] ?? array() ) );
+		return is_wp_error( $saved ) ? $saved : $this->read_completion_receipt( $owner_token );
+	}
+
+	/** @return array<string,mixed>|null|\WP_Error */
+	private function read_completion_receipt( $owner_token ) {
 		$owner_token = $this->owner_token( $owner_token );
 		if ( is_wp_error( $owner_token ) ) {
 			return $owner_token;
@@ -685,6 +768,23 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 	/** @return true|\WP_Error */
 	private function rollback_swap( array $workspace, $source_kind = 'stage' ) {
 		global $wpdb;
+		$rollback_count = 0;
+		$failed_count = 0;
+		$live_count = 0;
+		$entities = DomainBackupRepository::entity_types();
+		foreach ( $entities as $entity ) {
+			$rollback_count += (int) $this->table_exists( $this->table_name( $workspace, 'rollback', $entity ) );
+			$failed_count += (int) $this->table_exists( $this->table_name( $workspace, $source_kind, $entity ) );
+			$live_count += (int) $this->table_exists( SchemaManager::table( $entity ) );
+		}
+		if ( 0 === $rollback_count && count( $entities ) === $live_count && count( $entities ) === $failed_count ) {
+			// The rollback RENAME succeeded before a worker died saving its journal.
+			return true;
+		}
+		if ( count( $entities ) !== $rollback_count || count( $entities ) !== $live_count ) {
+			return new \WP_Error( 'certloom_domain_restore_rollback_missing', __( 'Certloom cannot find all rollback tables required to recover the previous credential data.', 'certloom' ) );
+		}
+
 		$cleared = $this->drop_workspace_tables( $workspace, $source_kind );
 		if ( is_wp_error( $cleared ) ) {
 			return $cleared;
@@ -714,6 +814,11 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		$rolled = $this->rollback_swap( $workspace, $source_kind );
 		if ( is_wp_error( $rolled ) ) {
 			return $rolled;
+		}
+		$journal = get_option( self::JOURNAL_OPTION, array() );
+		$journal['state'] = 'rolled_back';
+		if ( ! $this->save_journal( $journal ) ) {
+			return new \WP_Error( 'certloom_domain_restore_journal_failed', __( 'Certloom could not save its recovery progress. Credential writes remain paused until recovery succeeds.', 'certloom' ) );
 		}
 		$restored = DomainMaintenanceLock::run_internal( function () use ( $old_configuration, $old_generation ) {
 			$config = $this->restore_configuration_snapshot( $old_configuration );
@@ -763,7 +868,7 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 		}
 
 		/* Never release a newer maintenance operation owned by somebody else. */
-		if ( $this->maintenance->owned_active( $workspace['owner_token'] ) ) {
+		if ( $this->maintenance->owned_by( $workspace['owner_token'] ) ) {
 			$released = $this->maintenance->release( $workspace['owner_token'] );
 			if ( is_wp_error( $released ) ) {
 				/* Keep recovery markers until the owner-matched release is confirmed. */
@@ -981,9 +1086,8 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 			return true;
 		}
 		$workspace = array( 'owner_token' => (string) $current['owner_token'], 'suffix' => (string) $current['suffix'] );
-		if ( $this->maintenance->owned_active( $workspace['owner_token'] ) ) {
-			return true;
-		}
+		$recoverable = $this->maintenance->recovery_allowed( $workspace['owner_token'] );
+		if ( true !== $recoverable ) { return is_wp_error( $recoverable ) ? $recoverable : true; }
 		$valid = $this->validate_workspace( $workspace );
 		if ( is_wp_error( $valid ) ) {
 			return $valid;
