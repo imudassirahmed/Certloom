@@ -498,7 +498,7 @@ final class DomainAdmin {
 			return;
 		}
 
-		$this->render_search( self::ISSUERS_PAGE, $search );
+		$this->render_search( self::ISSUERS_PAGE, $search, __( 'Search issuers by name or code', 'certloom' ) );
 		if ( is_wp_error( $result ) ) {
 			$this->error( $result->get_error_message() );
 		} elseif ( AdminUiMode::is_simple() ) {

@@ -422,7 +422,8 @@
 	grid-template-columns: repeat(2,minmax(0,1fr));
 	gap: 9px;
 }
-.certloom-template-designer-style-grid label { display: grid; gap: 4px; min-width: 0; }
+.certloom-template-designer-style-grid label { display: grid; align-content: start; gap: 4px; min-width: 0; }
+.certloom-template-designer-style-grid > label:has(.certloom-template-designer-color-control) { grid-column: 1 / -1; }
 .certloom-template-designer-style-grid label > span { font-size: 11px; font-weight: 700; color: var(--cl-ink-soft); }
 .certloom-template-designer-style-grid input,
 .certloom-template-designer-style-grid select { width: 100%; min-width: 0; }

@@ -1247,10 +1247,10 @@ body.certloom-email-studio-active .certloom-email-designer-wrap {
 	gap: 2px;
 	font-size: 10px;
 }
-.certloom-message-settings--compact input,
-.certloom-message-settings--compact select {
-	height: 32px;
-	min-height: 32px;
+.certloom-email-designer-wrap .certloom-message-settings--compact input,
+.certloom-email-designer-wrap .certloom-message-settings--compact select {
+	height: 40px;
+	min-height: 40px;
 	padding: 3px 9px;
 	font-size: 12px;
 	line-height: 1.25;
@@ -1503,8 +1503,10 @@ body.certloom-email-studio-active .certloom-email-designer-wrap {
 /* Gamma-03A advanced-composition: keep the Email Designs library filters bounded on phones. */
 @media (max-width:782px) {
 	.certloom-email-filters {
-		grid-template-columns: minmax(0,1fr);
+		grid-template-columns: repeat(2,minmax(0,1fr));
 	}
+	.certloom-email-filters > label:first-of-type,
+	.certloom-email-filters > .button { grid-column: 1 / -1; }
 	.certloom-email-filters label,
 	.certloom-email-filters input,
 	.certloom-email-filters select,

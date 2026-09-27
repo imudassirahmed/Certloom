@@ -17,7 +17,7 @@ msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:100
 #: admin/views/automations.php:25
-#: src/Infrastructure/Admin/AdminProductNavigation.php:168
+#: src/Infrastructure/Admin/AdminProductNavigation.php:169
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:111
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:35
 msgid "Design Rules"
@@ -26,7 +26,7 @@ msgstr ""
 #: admin/class-ecapla-certverify-admin.php:101
 #: admin/class-ecapla-certverify-admin.php:171
 #: admin/views/dashboard.php:368
-#: src/Infrastructure/Admin/AdminProductNavigation.php:168
+#: src/Infrastructure/Admin/AdminProductNavigation.php:169
 msgid "Analytics"
 msgstr ""
 
@@ -34,7 +34,7 @@ msgstr ""
 #: admin/class-ecapla-certverify-admin.php:178
 #: admin/views/dashboard.php:366
 #: admin/views/integrations.php:113
-#: src/Infrastructure/Admin/AdminProductNavigation.php:168
+#: src/Infrastructure/Admin/AdminProductNavigation.php:169
 msgid "Integrations"
 msgstr ""
 
@@ -42,7 +42,7 @@ msgstr ""
 #: admin/class-ecapla-certverify-admin.php:179
 #: admin/views/dashboard.php:367
 #: admin/views/import-upload.php:10
-#: src/Infrastructure/Admin/AdminProductNavigation.php:170
+#: src/Infrastructure/Admin/AdminProductNavigation.php:171
 msgid "Backup & Restore"
 msgstr ""
 
@@ -74,7 +74,7 @@ msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:108
 #: admin/class-ecapla-certverify-admin.php:183
-#: src/Infrastructure/Admin/AdminProductNavigation.php:170
+#: src/Infrastructure/Admin/AdminProductNavigation.php:171
 msgid "Setup"
 msgstr ""
 
@@ -191,8 +191,8 @@ msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:144
 #: admin/class-ecapla-certverify-admin.php:146
-#: src/Infrastructure/Admin/AdminProductNavigation.php:149
-#: src/Infrastructure/Admin/AdminProductNavigation.php:151
+#: src/Infrastructure/Admin/AdminProductNavigation.php:150
+#: src/Infrastructure/Admin/AdminProductNavigation.php:152
 #: src/Infrastructure/Admin/AdminProductNavigation.php:60
 #: src/Infrastructure/Admin/DomainAdmin.php:2282
 #: src/Infrastructure/Admin/DomainAdmin.php:376
@@ -270,7 +270,7 @@ msgstr ""
 #: admin/class-ecapla-certverify-admin.php:157
 #: admin/class-ecapla-certverify-admin.php:2613
 #: admin/class-ecapla-certverify-admin.php:90
-#: src/Infrastructure/Admin/AdminProductNavigation.php:153
+#: src/Infrastructure/Admin/AdminProductNavigation.php:154
 #: src/Infrastructure/Admin/DomainAdmin.php:344
 #: src/Infrastructure/Admin/DomainAdmin.php:357
 #: src/Infrastructure/Admin/DomainAdmin.php:59
@@ -287,8 +287,8 @@ msgstr ""
 #: admin/class-ecapla-certverify-admin.php:2619
 #: admin/views/dashboard.php:159
 #: admin/views/dashboard.php:362
-#: admin/views/issuance-analytics.php:63
-#: src/Infrastructure/Admin/AdminProductNavigation.php:158
+#: admin/views/issuance-analytics.php:65
+#: src/Infrastructure/Admin/AdminProductNavigation.php:159
 #: src/Infrastructure/Admin/AdminProductNavigation.php:60
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:150
 #: src/Infrastructure/Admin/DomainAdmin.php:422
@@ -320,8 +320,8 @@ msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:160
 #: admin/class-ecapla-certverify-admin.php:2631
-#: admin/views/analytics.php:10
-#: admin/views/issuance-analytics.php:10
+#: admin/views/analytics.php:29
+#: admin/views/issuance-analytics.php:25
 #: src/Infrastructure/Admin/DomainAdmin.php:1221
 #: src/Infrastructure/Admin/DomainAdmin.php:1252
 #: src/Infrastructure/Admin/DomainAdmin.php:1359
@@ -362,7 +362,7 @@ msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:172
 #: admin/views/settings-manager.php:12
-#: src/Infrastructure/Admin/AdminProductNavigation.php:170
+#: src/Infrastructure/Admin/AdminProductNavigation.php:171
 #: src/Infrastructure/Admin/AdminProductNavigation.php:60
 msgid "Settings"
 msgstr ""
@@ -370,7 +370,7 @@ msgstr ""
 #: admin/class-ecapla-certverify-admin.php:175
 #: admin/views/automations.php:25
 #: admin/views/dashboard.php:364
-#: src/Infrastructure/Admin/AdminProductNavigation.php:168
+#: src/Infrastructure/Admin/AdminProductNavigation.php:169
 #: src/Infrastructure/Admin/AdminProductNavigation.php:60
 msgid "Automations"
 msgstr ""
@@ -515,7 +515,7 @@ msgstr ""
 #: admin/views/integrations.php:227
 #: admin/views/integrations.php:268
 #: admin/views/integrations.php:282
-#: admin/views/issuance-analytics.php:69
+#: admin/views/issuance-analytics.php:71
 #: admin/views/setup-wizard.php:85
 #: includes/class-ecapla-certverify-render.php:469
 #: src/Application/Issuance/IssuanceDataReadiness.php:111
@@ -714,7 +714,7 @@ msgid "Program management is prepared but not available in this build yet. Certl
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:2625
-#: admin/views/issuance-analytics.php:63
+#: admin/views/issuance-analytics.php:65
 #: src/Infrastructure/Admin/TemplateAdmin.php:1166
 #: src/Infrastructure/Admin/TemplateAdmin.php:1302
 #: src/Infrastructure/Admin/TemplateAdmin.php:299
@@ -937,7 +937,10 @@ msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:297
 #: admin/views/fields-manager.php:81
+#: admin/views/setup-wizard.php:195
+#: admin/views/setup-wizard.php:198
 #: admin/views/setup-wizard.php:200
+#: admin/views/setup-wizard.php:205
 #: admin/views/setup-wizard.php:97
 #: src/Infrastructure/Admin/DomainAdmin.php:2362
 #: src/Infrastructure/Admin/DomainAdmin.php:2407
@@ -1757,7 +1760,7 @@ msgid "The selected design uses the %s code. Enter a code before continuing."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:91
-#: src/Infrastructure/Admin/AdminProductNavigation.php:159
+#: src/Infrastructure/Admin/AdminProductNavigation.php:160
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:149
 #: src/Infrastructure/Admin/UsageProfilePresentation.php:38
 msgid "Issuers"
@@ -1781,7 +1784,7 @@ msgid "The selected design uses the %1$s %2$s. Add that value before continuing.
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:92
-#: src/Infrastructure/Admin/AdminProductNavigation.php:159
+#: src/Infrastructure/Admin/AdminProductNavigation.php:160
 #: src/Infrastructure/Admin/DomainAdmin.php:2182
 #: src/Infrastructure/Admin/DomainAdmin.php:516
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:257
@@ -1802,8 +1805,8 @@ msgid "Enter the grade because the selected design uses it."
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:93
-#: admin/views/issuance-analytics.php:63
-#: src/Infrastructure/Admin/AdminProductNavigation.php:159
+#: admin/views/issuance-analytics.php:65
+#: src/Infrastructure/Admin/AdminProductNavigation.php:160
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:151
 #: src/Infrastructure/Admin/DomainAdmin.php:2177
 #: src/Infrastructure/Admin/DomainStructureAdmin.php:189
@@ -1827,7 +1830,7 @@ msgid "subject"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:94
-#: src/Infrastructure/Admin/AdminProductNavigation.php:171
+#: src/Infrastructure/Admin/AdminProductNavigation.php:172
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:51
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:52
 #: src/Infrastructure/Admin/DomainDataToolsAdmin.php:63
@@ -1838,7 +1841,7 @@ msgstr ""
 #: admin/views/dashboard.php:66
 #: admin/views/list-certificates.php:35
 #: admin/views/list-certificates.php:44
-#: src/Infrastructure/Admin/AdminProductNavigation.php:152
+#: src/Infrastructure/Admin/AdminProductNavigation.php:153
 #: src/Infrastructure/Admin/DomainAdmin.php:1047
 #: src/Infrastructure/Admin/DomainAdmin.php:2187
 #: src/Infrastructure/Admin/DomainAdmin.php:389
@@ -1856,7 +1859,7 @@ msgid "Bulk issuance"
 msgstr ""
 
 #: admin/class-ecapla-certverify-admin.php:97
-#: src/Infrastructure/Admin/AdminProductNavigation.php:155
+#: src/Infrastructure/Admin/AdminProductNavigation.php:156
 #: src/Infrastructure/Admin/DomainAdmin.php:1655
 msgid "Email delivery"
 msgstr ""
@@ -1868,7 +1871,7 @@ msgstr ""
 #: admin/class-ecapla-certverify-admin.php:99
 #: admin/views/email-designer.php:20
 #: admin/views/email-designs.php:27
-#: src/Infrastructure/Admin/AdminProductNavigation.php:164
+#: src/Infrastructure/Admin/AdminProductNavigation.php:165
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:111
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:73
 #: src/Infrastructure/Admin/EmailDesignAdmin.php:55
@@ -1985,8 +1988,8 @@ msgid "Withdrawn"
 msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:184
-#: admin/views/analytics.php:50
-#: admin/views/analytics.php:75
+#: admin/views/analytics.php:52
+#: admin/views/analytics.php:77
 #: admin/views/dashboard.php:147
 #: admin/views/dashboard.php:170
 #: admin/views/dashboard.php:227
@@ -2045,7 +2048,7 @@ msgid "Issue first credential"
 msgstr ""
 
 #: admin/class-ecapla-certverify-list-table.php:76
-#: admin/views/analytics.php:91
+#: admin/views/analytics.php:93
 #: admin/views/setup-wizard.php:200
 #: blocks/credential/index.js:39
 #: elementor/class-ecapla-certverify-credential-widget.php:16
@@ -2131,61 +2134,46 @@ msgstr ""
 msgid "Expiry date"
 msgstr ""
 
-#: admin/views/analytics.php:14
+#: admin/views/analytics.php:10
 msgid "Verification insights"
 msgstr ""
 
-#: admin/views/analytics.php:15
+#: admin/views/analytics.php:11
 msgid "Verification Analytics"
 msgstr ""
 
-#: admin/views/analytics.php:16
+#: admin/views/analytics.php:12
 msgid "Understand verification outcomes and trends without storing raw IP addresses, User-Agents, secondary proofs, or failed certificate-number input."
 msgstr ""
 
-#: admin/views/analytics.php:21
-#: admin/views/issuance-analytics.php:21
+#: admin/views/analytics.php:17
+#: admin/views/issuance-analytics.php:17
 msgid "Reporting period"
 msgstr ""
 
-#: admin/views/analytics.php:27
-#: admin/views/issuance-analytics.php:23
+#: admin/views/analytics.php:23
+#: admin/views/issuance-analytics.php:19
 #: includes/class-ecapla-certverify-recipient-portal.php:165
 #: src/Infrastructure/Admin/TemplateAdmin.php:912
 msgid "Apply"
 msgstr ""
 
-#: admin/views/analytics.php:38
-#: admin/views/issuance-analytics.php:33
-msgid "Daily trend"
+#: admin/views/analytics.php:27
+#: admin/views/issuance-analytics.php:23
+msgid "Analytics reports"
 msgstr ""
 
-#: admin/views/analytics.php:38
-#: admin/views/issuance-analytics.php:33
-msgid "Monthly trend"
-msgstr ""
-
-#: admin/views/analytics.php:38
-#: admin/views/issuance-analytics.php:33
-msgid "Weekly trend"
-msgstr ""
-
-#: admin/views/analytics.php:39
-#: admin/views/fields-manager.php:172
-#: admin/views/issuance-analytics.php:34
-#: src/Infrastructure/Admin/DomainAdmin.php:2427
-#: src/Infrastructure/Admin/DomainStructureAdmin.php:750
-msgid "Date"
-msgstr ""
-
-#: admin/views/analytics.php:39
-#: admin/views/issuance-analytics.php:34
-msgid "Month"
-msgstr ""
-
-#: admin/views/analytics.php:39
-#: admin/views/issuance-analytics.php:34
-msgid "Week starting"
+#: admin/views/analytics.php:28
+#: admin/views/edit-certificate.php:125
+#: admin/views/edit-certificate.php:86
+#: admin/views/import-mapping.php:12
+#: admin/views/issuance-analytics.php:24
+#: admin/views/settings-manager.php:22
+#: includes/class-ecapla-certverify-render.php:488
+#: src/Infrastructure/Admin/DomainAdmin.php:1126
+#: src/Infrastructure/Admin/DomainAdmin.php:1156
+#: src/Infrastructure/Admin/DomainAdmin.php:900
+msgid "Verification"
 msgstr ""
 
 #: admin/views/analytics.php:4
@@ -2193,61 +2181,74 @@ msgid "Verification analytics are unavailable."
 msgstr ""
 
 #: admin/views/analytics.php:40
+#: admin/views/issuance-analytics.php:35
+msgid "Daily trend"
+msgstr ""
+
+#: admin/views/analytics.php:40
+#: admin/views/issuance-analytics.php:35
+msgid "Monthly trend"
+msgstr ""
+
+#: admin/views/analytics.php:40
+#: admin/views/issuance-analytics.php:35
+msgid "Weekly trend"
+msgstr ""
+
+#: admin/views/analytics.php:41
+#: admin/views/fields-manager.php:172
+#: admin/views/issuance-analytics.php:36
+#: src/Infrastructure/Admin/DomainAdmin.php:2427
+#: src/Infrastructure/Admin/DomainStructureAdmin.php:750
+msgid "Date"
+msgstr ""
+
+#: admin/views/analytics.php:41
+#: admin/views/issuance-analytics.php:36
+msgid "Month"
+msgstr ""
+
+#: admin/views/analytics.php:41
+#: admin/views/issuance-analytics.php:36
+msgid "Week starting"
+msgstr ""
+
+#: admin/views/analytics.php:42
 msgid "Daily verification lookup totals"
 msgstr ""
 
-#: admin/views/analytics.php:40
+#: admin/views/analytics.php:42
 msgid "Monthly verification lookup totals"
 msgstr ""
 
-#: admin/views/analytics.php:40
+#: admin/views/analytics.php:42
 msgid "Weekly verification lookup totals"
 msgstr ""
 
-#: admin/views/analytics.php:41
+#: admin/views/analytics.php:43
 msgid "Daily verification trend table"
 msgstr ""
 
-#: admin/views/analytics.php:41
+#: admin/views/analytics.php:43
 msgid "Monthly verification trend table"
 msgstr ""
 
-#: admin/views/analytics.php:41
+#: admin/views/analytics.php:43
 msgid "Weekly verification trend table"
 msgstr ""
 
-#: admin/views/analytics.php:43
+#: admin/views/analytics.php:45
 #: src/Infrastructure/Admin/DomainAdmin.php:1653
 msgid "Verification summary"
 msgstr ""
 
-#: admin/views/analytics.php:46
+#: admin/views/analytics.php:48
 msgid "Total lookups"
 msgstr ""
 
-#: admin/views/analytics.php:47
-#: admin/views/analytics.php:75
-msgid "Successful"
-msgstr ""
-
-#: admin/views/analytics.php:48
-#: admin/views/analytics.php:75
-#: admin/views/integrations.php:338
-#: admin/views/integrations.php:93
-#: admin/views/settings-manager.php:197
-#: admin/views/settings-manager.php:224
-#: includes/class-ecapla-certverify-system-status.php:226
-#: includes/class-ecapla-certverify-system-status.php:250
-#: includes/class-ecapla-certverify-system-status.php:266
-#: includes/class-ecapla-certverify-system-status.php:292
-#: includes/class-ecapla-certverify-system-status.php:318
-#: includes/class-ecapla-certverify-system-status.php:343
-#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:300
-msgid "Failed"
-msgstr ""
-
 #: admin/views/analytics.php:49
-msgid "Invalid input"
+#: admin/views/analytics.php:77
+msgid "Successful"
 msgstr ""
 
 #: admin/views/analytics.php:5
@@ -2270,8 +2271,28 @@ msgstr ""
 msgid "90 days"
 msgstr ""
 
+#: admin/views/analytics.php:50
+#: admin/views/analytics.php:77
+#: admin/views/integrations.php:338
+#: admin/views/integrations.php:93
+#: admin/views/settings-manager.php:197
+#: admin/views/settings-manager.php:224
+#: includes/class-ecapla-certverify-system-status.php:226
+#: includes/class-ecapla-certverify-system-status.php:250
+#: includes/class-ecapla-certverify-system-status.php:266
+#: includes/class-ecapla-certverify-system-status.php:292
+#: includes/class-ecapla-certverify-system-status.php:318
+#: includes/class-ecapla-certverify-system-status.php:343
+#: src/Infrastructure/Admin/BulkIssuanceAdmin.php:300
+msgid "Failed"
+msgstr ""
+
 #: admin/views/analytics.php:51
-#: admin/views/analytics.php:75
+msgid "Invalid input"
+msgstr ""
+
+#: admin/views/analytics.php:53
+#: admin/views/analytics.php:77
 #: admin/views/dashboard.php:141
 #: admin/views/dashboard.php:226
 #: includes/class-ecapla-certverify-recipient-portal.php:132
@@ -2283,89 +2304,71 @@ msgstr ""
 msgid "Revoked"
 msgstr ""
 
-#: admin/views/analytics.php:60
+#: admin/views/analytics.php:62
 msgid "Verification activity"
 msgstr ""
 
-#: admin/views/analytics.php:62
+#: admin/views/analytics.php:64
 msgid "Counts will appear here after public verification requests are recorded."
 msgstr ""
 
-#: admin/views/analytics.php:62
+#: admin/views/analytics.php:64
 msgid "No verification activity in this period."
 msgstr ""
 
 #. translators: %1$s: date/period label; %2$d: verification lookup count.
-#: admin/views/analytics.php:71
+#: admin/views/analytics.php:73
 msgid "%1$s: %2$d verification lookups"
 msgstr ""
 
-#: admin/views/analytics.php:75
+#: admin/views/analytics.php:77
 msgid "Invalid"
 msgstr ""
 
-#: admin/views/analytics.php:8
-#: admin/views/issuance-analytics.php:8
-msgid "Analytics reports"
-msgstr ""
-
-#: admin/views/analytics.php:83
+#: admin/views/analytics.php:85
 msgid "How verification started"
 msgstr ""
 
-#: admin/views/analytics.php:83
+#: admin/views/analytics.php:85
 #: src/Infrastructure/Admin/DomainAdmin.php:1413
 #: src/Infrastructure/Admin/EmailDeliveryAdmin.php:270
 msgid "Source"
 msgstr ""
 
-#: admin/views/analytics.php:84
+#: admin/views/analytics.php:86
 msgid "API"
 msgstr ""
 
-#: admin/views/analytics.php:84
+#: admin/views/analytics.php:86
 msgid "Manual / direct"
 msgstr ""
 
-#: admin/views/analytics.php:84
+#: admin/views/analytics.php:86
 msgid "QR scan"
 msgstr ""
 
-#: admin/views/analytics.php:86
+#: admin/views/analytics.php:88
 msgid "Aggregates, not visitor logs"
 msgstr ""
 
 #. translators: %d: retention days.
-#: admin/views/analytics.php:86
+#: admin/views/analytics.php:88
 msgid "Certloom keeps daily aggregate counters for up to %d days. It does not store raw IP addresses, User-Agents, secondary proof codes, or raw failed certificate-number input in this analytics table."
 msgstr ""
 
-#: admin/views/analytics.php:86
+#: admin/views/analytics.php:88
 msgid "Privacy"
 msgstr ""
 
-#: admin/views/analytics.php:9
-#: admin/views/edit-certificate.php:125
-#: admin/views/edit-certificate.php:86
-#: admin/views/import-mapping.php:12
-#: admin/views/issuance-analytics.php:9
-#: admin/views/settings-manager.php:22
-#: includes/class-ecapla-certverify-render.php:488
-#: src/Infrastructure/Admin/DomainAdmin.php:1126
-#: src/Infrastructure/Admin/DomainAdmin.php:1156
-#: src/Infrastructure/Admin/DomainAdmin.php:900
-msgid "Verification"
-msgstr ""
-
-#: admin/views/analytics.php:90
+#: admin/views/analytics.php:92
 msgid "Credential interest"
 msgstr ""
 
-#: admin/views/analytics.php:90
+#: admin/views/analytics.php:92
 msgid "Most verified credentials"
 msgstr ""
 
-#: admin/views/analytics.php:91
+#: admin/views/analytics.php:93
 #: includes/class-ecapla-certverify-recipient-portal.php:218
 #: src/Infrastructure/Admin/DomainAdmin.php:1438
 #: src/Infrastructure/Admin/DomainAdmin.php:1441
@@ -2378,15 +2381,15 @@ msgstr ""
 msgid "Action"
 msgstr ""
 
-#: admin/views/analytics.php:91
+#: admin/views/analytics.php:93
 msgid "Lookups"
 msgstr ""
 
-#: admin/views/analytics.php:91
+#: admin/views/analytics.php:93
 msgid "No resolved credentials have verification activity in this period."
 msgstr ""
 
-#: admin/views/analytics.php:91
+#: admin/views/analytics.php:93
 #: src/Infrastructure/Admin/DomainAdmin.php:1886
 msgid "Open credential"
 msgstr ""
@@ -3006,8 +3009,8 @@ msgstr ""
 #: admin/views/dashboard.php:307
 #: admin/views/dashboard.php:333
 #: admin/views/integrations.php:90
-#: admin/views/issuance-analytics.php:38
-#: admin/views/issuance-analytics.php:53
+#: admin/views/issuance-analytics.php:40
+#: admin/views/issuance-analytics.php:55
 #: includes/class-ecapla-certverify-public-presentation.php:122
 #: includes/class-ecapla-certverify-recipient-portal.php:188
 #: includes/class-ecapla-certverify-recipient-portal.php:218
@@ -3036,7 +3039,7 @@ msgid "Failed lookups"
 msgstr ""
 
 #: admin/views/dashboard.php:189
-#: admin/views/issuance-analytics.php:42
+#: admin/views/issuance-analytics.php:44
 msgid "Expiring ≤90 days"
 msgstr ""
 
@@ -3327,7 +3330,7 @@ msgstr ""
 
 #: admin/views/dashboard.php:369
 #: admin/views/frontend-manager.php:23
-#: src/Infrastructure/Admin/AdminProductNavigation.php:165
+#: src/Infrastructure/Admin/AdminProductNavigation.php:166
 msgid "Verification page"
 msgstr ""
 
@@ -3767,7 +3770,7 @@ msgid "Font"
 msgstr ""
 
 #: admin/views/email-designer.php:123
-#: admin/views/issuance-analytics.php:57
+#: admin/views/issuance-analytics.php:59
 #: src/Infrastructure/Admin/TemplateAdmin.php:1248
 msgid "Other"
 msgstr ""
@@ -5000,8 +5003,8 @@ msgstr ""
 
 #: admin/views/import-upload.php:128
 #: admin/views/import-upload.php:216
-#: admin/views/issuance-analytics.php:39
-#: admin/views/issuance-analytics.php:57
+#: admin/views/issuance-analytics.php:41
+#: admin/views/issuance-analytics.php:59
 #: src/Infrastructure/Repository/UnifiedCredentialRegistry.php:176
 msgid "Manual"
 msgstr ""
@@ -6253,19 +6256,19 @@ msgstr ""
 msgid "Recorded"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:14
+#: admin/views/issuance-analytics.php:10
 msgid "Issuance insights"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:15
+#: admin/views/issuance-analytics.php:11
 msgid "Issuance Analytics"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:16
+#: admin/views/issuance-analytics.php:12
 msgid "Measure issued credentials by Program, Template, organization and Batch, with a current 90-day expiry forecast."
 msgstr ""
 
-#: admin/views/issuance-analytics.php:36
+#: admin/views/issuance-analytics.php:38
 msgid "Issuance summary"
 msgstr ""
 
@@ -6273,114 +6276,114 @@ msgstr ""
 msgid "Issuance analytics are unavailable."
 msgstr ""
 
-#: admin/views/issuance-analytics.php:40
-#: admin/views/issuance-analytics.php:57
+#: admin/views/issuance-analytics.php:42
+#: admin/views/issuance-analytics.php:59
 #: src/Infrastructure/Repository/UnifiedCredentialRegistry.php:177
 msgid "Bulk"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:41
+#: admin/views/issuance-analytics.php:43
 msgid "Expiring ≤30 days"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:43
+#: admin/views/issuance-analytics.php:45
 msgid "Permanent current"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:49
+#: admin/views/issuance-analytics.php:51
 msgid "Issued credentials"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:50
+#: admin/views/issuance-analytics.php:52
 msgid "No issuance activity in this period."
 msgstr ""
 
-#: admin/views/issuance-analytics.php:50
+#: admin/views/issuance-analytics.php:52
 msgid "Only credentials actually issued during this reporting period are counted. Data migrations and relationship corrections are excluded."
 msgstr ""
 
 #. translators: %1$s: date/period label; %2$d: issued credential count.
-#: admin/views/issuance-analytics.php:52
+#: admin/views/issuance-analytics.php:54
 msgid "%1$s: %2$d issued credentials"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:52
+#: admin/views/issuance-analytics.php:54
 msgid "Credential issuance trend"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:53
+#: admin/views/issuance-analytics.php:55
 msgid "Issuance trend table"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:57
+#: admin/views/issuance-analytics.php:59
 msgid "How credentials were issued"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:57
+#: admin/views/issuance-analytics.php:59
 msgid "Issuance source"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:58
+#: admin/views/issuance-analytics.php:60
 msgid "Historical accuracy"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:58
+#: admin/views/issuance-analytics.php:60
 msgid "Issued credential details stay fixed"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:58
+#: admin/views/issuance-analytics.php:60
 msgid "Program, Template and organization attribution comes from the details stored when the credential was issued. Batch is shown as Unattributed when older issuance did not store a Batch; Certloom never guesses it from later changes."
 msgstr ""
 
-#: admin/views/issuance-analytics.php:62
+#: admin/views/issuance-analytics.php:64
 msgid "Issuance mix"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:62
+#: admin/views/issuance-analytics.php:64
 msgid "Top issuance dimensions"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:63
+#: admin/views/issuance-analytics.php:65
 msgid "No issuance data in this period."
 msgstr ""
 
-#: admin/views/issuance-analytics.php:63
+#: admin/views/issuance-analytics.php:65
 msgid "Organizations"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:66
+#: admin/views/issuance-analytics.php:68
 msgid "90-day expiry forecast"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:66
+#: admin/views/issuance-analytics.php:68
 msgid "Forward-looking"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:67
+#: admin/views/issuance-analytics.php:69
 msgid "0–30 days"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:67
+#: admin/views/issuance-analytics.php:69
 msgid "31–60 days"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:67
+#: admin/views/issuance-analytics.php:69
 msgid "61–90 days"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:67
+#: admin/views/issuance-analytics.php:69
 msgid "Expiry forecast summary"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:68
+#: admin/views/issuance-analytics.php:70
 msgid "Forecasts use each Series’ current issued Version and exclude revoked credentials. This is operational expiry visibility only; renewal reminders and re-certification remain the separate REN-01 workflow."
 msgstr ""
 
-#: admin/views/issuance-analytics.php:69
+#: admin/views/issuance-analytics.php:71
 msgid "Expiring within 90 days"
 msgstr ""
 
-#: admin/views/issuance-analytics.php:69
+#: admin/views/issuance-analytics.php:71
 msgid "Programs with upcoming expiries"
 msgstr ""
 
@@ -14899,20 +14902,20 @@ msgstr ""
 msgid "That Certloom job state transition is not allowed."
 msgstr ""
 
-#: src/Infrastructure/Admin/AdminProductNavigation.php:154
+#: src/Infrastructure/Admin/AdminProductNavigation.php:155
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:45
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:46
 #: src/Infrastructure/Admin/BulkIssuanceAdmin.php:62
 msgid "Import / issue from file"
 msgstr ""
 
-#: src/Infrastructure/Admin/AdminProductNavigation.php:163
+#: src/Infrastructure/Admin/AdminProductNavigation.php:164
 #: src/Infrastructure/Admin/DesignRulesAdmin.php:111
 #: src/Infrastructure/Admin/TemplateAdmin.php:832
 msgid "Certificate designs"
 msgstr ""
 
-#: src/Infrastructure/Admin/AdminProductNavigation.php:170
+#: src/Infrastructure/Admin/AdminProductNavigation.php:171
 msgid "Fields"
 msgstr ""
 
@@ -17837,6 +17840,10 @@ msgstr ""
 
 #: src/Infrastructure/Admin/DomainAdmin.php:491
 msgid "Manage stable issuing identities and local brand defaults without changing historical credential snapshots."
+msgstr ""
+
+#: src/Infrastructure/Admin/DomainAdmin.php:501
+msgid "Search issuers by name or code"
 msgstr ""
 
 #. translators: %d: signer count.
@@ -21571,7 +21578,7 @@ msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1606
 #: src/Infrastructure/Admin/TemplateAdmin.php:960
-msgid "Design name"
+msgid "Design name (required)"
 msgstr ""
 
 #: src/Infrastructure/Admin/TemplateAdmin.php:1606

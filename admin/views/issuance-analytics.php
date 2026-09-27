@@ -5,10 +5,6 @@ $report = isset( $analytics_report ) ? $analytics_report : new WP_Error( 'certlo
 $periods = array( 7 => __( '7 days', 'certloom' ), 30 => __( '30 days', 'certloom' ), 90 => __( '90 days', 'certloom' ), 365 => __( '12 months', 'certloom' ) );
 ?>
 <div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-analytics certloom-issuance-analytics">
-	<nav class="nav-tab-wrapper certloom-analytics-tabs" aria-label="<?php esc_attr_e( 'Analytics reports', 'certloom' ); ?>">
-		<a class="nav-tab" href="<?php echo esc_url( add_query_arg( array( 'page' => 'certloom-analytics', 'section' => 'verification', 'days' => $days ), admin_url( 'admin.php' ) ) ); ?>"><?php esc_html_e( 'Verification', 'certloom' ); ?></a>
-		<a class="nav-tab nav-tab-active" aria-current="page" href="<?php echo esc_url( add_query_arg( array( 'page' => 'certloom-analytics', 'section' => 'issuance', 'days' => $days ), admin_url( 'admin.php' ) ) ); ?>"><?php esc_html_e( 'Issuance', 'certloom' ); ?></a>
-	</nav>
 	<section class="certloom-dashboard-hero" aria-labelledby="certloom-issuance-analytics-title">
 		<div class="certloom-dashboard-hero-copy">
 			<span class="certloom-eyebrow"><?php esc_html_e( 'Issuance insights', 'certloom' ); ?></span>
@@ -23,6 +19,12 @@ $periods = array( 7 => __( '7 days', 'certloom' ), 30 => __( '30 days', 'certloo
 			<button type="submit" class="button"><?php esc_html_e( 'Apply', 'certloom' ); ?></button>
 		</form>
 	</section>
+	<?php ( new \Certloom\Infrastructure\Admin\AdminProductNavigation() )->render_current_subnav(); ?>
+	<nav class="nav-tab-wrapper certloom-analytics-tabs" aria-label="<?php esc_attr_e( 'Analytics reports', 'certloom' ); ?>">
+		<a class="nav-tab" href="<?php echo esc_url( add_query_arg( array( 'page' => 'certloom-analytics', 'section' => 'verification', 'days' => $days ), admin_url( 'admin.php' ) ) ); ?>"><?php esc_html_e( 'Verification', 'certloom' ); ?></a>
+		<a class="nav-tab nav-tab-active" aria-current="page" href="<?php echo esc_url( add_query_arg( array( 'page' => 'certloom-analytics', 'section' => 'issuance', 'days' => $days ), admin_url( 'admin.php' ) ) ); ?>"><?php esc_html_e( 'Issuance', 'certloom' ); ?></a>
+	</nav>
+
 
 	<?php if ( is_wp_error( $report ) ) : ?>
 		<div class="notice notice-warning inline"><p><?php echo esc_html( $report->get_error_message() ); ?></p></div>

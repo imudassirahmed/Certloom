@@ -116,6 +116,7 @@ final class AdminProductNavigation {
 			'certloom-frontend',
 			'certloom-settings',
 			'certloom-fields',
+			'certloom-analytics',
 			'certloom-domain-credentials',
 			'certloom-domain-recipients',
 			'certloom-domain-programs',

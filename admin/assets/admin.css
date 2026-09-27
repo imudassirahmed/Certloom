@@ -2061,7 +2061,6 @@
 		flex-direction: column;
 	}
 
-	.certloom-domain-metrics,
 	.certloom-domain-form-grid,
 	.certloom-domain-kv-row {
 		grid-template-columns: 1fr;
@@ -3140,7 +3139,7 @@ align-items:center}
 }
 
 /* Bulk Issuance — reviewed CSV → bounded durable issuance. */
-.certloom-bulk-issuance .certloom-bulk-card { max-width: 1180px; }
+.certloom-bulk-issuance .certloom-bulk-card { max-width: none; }
 .certloom-bulk-issuance .certloom-bulk-csv {
 	display: grid;
 	grid-template-columns: minmax(280px, .8fr) minmax(0, 1.2fr);
@@ -3230,7 +3229,7 @@ align-items:center}
 /* 1.6.67 — immutable-Version Email Delivery workflow. */
 .certloom-email-delivery .certloom-email-card,
 .certloom-email-delivery .certloom-email-template,
-.certloom-email-delivery .certloom-email-history { max-width: 1180px; }
+.certloom-email-delivery .certloom-email-history { max-width: none; }
 .certloom-email-preview {
 	margin-top: 20px;
 	padding: 18px;
@@ -5292,6 +5291,9 @@ align-items:flex-start}
 .ecapla-certverify-admin-wrap input[type=number],
 .ecapla-certverify-admin-wrap input[type=date],
 .ecapla-certverify-admin-wrap select{min-height:40px;max-height:none;padding-block:4px;border:1px solid var(--cl-rule);border-radius:var(--cl-r-sm);box-shadow:none}
+/* WordPress 7 uses a tall select line-height; adding our input padding to it
+   made dropdowns taller than adjacent controls. Keep native multiple selects. */
+.ecapla-certverify-admin-wrap select:not([multiple]){line-height:normal}
 .ecapla-certverify-admin-wrap textarea{border:1px solid var(--cl-rule);border-radius:var(--cl-r-sm);box-shadow:none}
 .ecapla-certverify-admin-wrap input:focus,
 .ecapla-certverify-admin-wrap select:focus,

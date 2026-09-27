@@ -30,6 +30,18 @@
 /* Layout display rules must not expose inactive panels and conditional controls. */
 .certloom-admin-shell [hidden] { display: none !important; }
 
+.certloom-template-create-page {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 240px));
+  gap: var(--cl-4);
+  margin-top: var(--cl-4);
+}
+.certloom-template-create-page label { display: grid; gap: var(--cl-2); }
+.certloom-template-create-page select { width: 100%; }
+@media (max-width: 480px) {
+  .certloom-template-create-page { grid-template-columns: minmax(0, 1fr); }
+}
+
 .certloom-admin-shell h1,
 .certloom-admin-shell .certloom-page-hero h1 {
   color: var(--cl-ink);
@@ -605,6 +617,27 @@
   gap: var(--cl-2);
   margin-bottom: var(--cl-4);
 }
+@media (max-width: 600px) {
+  .certloom-admin-shell .certloom-metric-grid,
+  .certloom-admin-shell .certloom-domain-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .certloom-admin-shell .certloom-domain-search:not(.certloom-credential-filters) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: stretch;
+  }
+  .certloom-domain-search:not(.certloom-credential-filters) input[type="search"] {
+    grid-column: 1 / -1;
+    min-width: 0;
+    width: 100%;
+  }
+  .certloom-domain-search:not(.certloom-credential-filters) select {
+    width: 100%;
+    max-width: none;
+  }
+  .certloom-domain-search:not(:has(select, a)) .button { grid-column: 1 / -1; }
+}
 
 .certloom-admin-shell .certloom-metric-card {
   --certloom-card-accent: var(--cl-chart-1);
@@ -966,9 +999,9 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--cl-5);
-  min-height: 176px;
+  min-height: 0;
   margin: var(--cl-4) 0 var(--cl-5);
-  padding: 64px var(--cl-6) var(--cl-6);
+  padding: 40px var(--cl-5) var(--cl-5);
   border: 1px solid rgba(185, 194, 210, .58);
   border-radius: var(--cl-r-hero);
   background:
@@ -982,6 +1015,16 @@
   backdrop-filter: blur(16px) saturate(118%);
 }
 
+@media (min-width: 783px) and (max-width: 1080px) {
+  .certloom-admin-shell .certloom-dashboard-hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .certloom-admin-shell .certloom-dashboard-hero > :first-child {
+    max-width: 100%;
+  }
+}
+
 /* Short brand spectrum rail, matching the supplied top-card reference. */
 .certloom-admin-shell .certloom-page-hero::before,
 .certloom-admin-shell .certloom-workspace-hero::before,
@@ -991,8 +1034,8 @@
   content: "";
   position: absolute;
   z-index: 0;
-  top: var(--cl-6);
-  left: var(--cl-6);
+  top: var(--cl-4);
+  left: var(--cl-5);
   width: 132px;
   height: 4px;
   border-radius: var(--cl-r-pill);
@@ -1052,7 +1095,7 @@
 }
 
 .certloom-admin-shell .certloom-dashboard-hero h1 {
-  font-size: var(--cl-t-2xl);
+  font-size: var(--cl-t-lg);
   line-height: 1.08;
   letter-spacing: -.025em;
 }
@@ -1164,7 +1207,7 @@
     flex-direction: column;
     gap: var(--cl-4);
     min-height: 0;
-    padding: 58px var(--cl-4) var(--cl-4);
+    padding: 36px var(--cl-4) var(--cl-4);
     border-radius: var(--cl-r-dialog);
   }
 
@@ -1173,7 +1216,7 @@
   .certloom-admin-shell .certloom-dashboard-hero::before,
   .certloom-admin-shell .certloom-credential-hero::before,
   .certloom-admin-shell .certloom-email-hero::before {
-    top: var(--cl-5);
+    top: var(--cl-4);
     left: var(--cl-4);
     width: 104px;
   }
@@ -1197,7 +1240,7 @@
   }
 
   .certloom-admin-shell .certloom-dashboard-hero h1 {
-    font-size: var(--cl-t-xl);
+    font-size: var(--cl-t-lg);
   }
 
   .certloom-admin-shell .certloom-dashboard-setup-link {
@@ -1769,6 +1812,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
 .certloom-setup-v2-finish-mark.is-ready { color: var(--cl-valid); }
 .certloom-setup-v2-finish .certloom-callout { max-width: 680px; margin: var(--cl-5) auto 0; text-align: left; }
 .certloom-setup-v2-finish .certloom-setup-v2-actions { justify-content: center; margin-top: var(--cl-4); }
+.certloom-setup-v2-restart { margin-top: var(--cl-3); }
 .certloom-setup-v2-next { max-width: 680px; margin: var(--cl-6) auto 0; padding-top: var(--cl-4); border-top: 1px solid var(--cl-rule); text-align: left; }
 .certloom-setup-v2-next ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cl-2); margin: 0; padding: 0; list-style: none; }
 .certloom-setup-v2-next li { display: flex; gap: var(--cl-2); margin: 0; padding: var(--cl-2); }

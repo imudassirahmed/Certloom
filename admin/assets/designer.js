@@ -1211,6 +1211,7 @@
 				if ( 'checkbox' === styleFields[ styleField ].type ) { styleFields[ styleField ].checked = !! styleValue; } else { styleFields[ styleField ].value = null == styleValue ? '' : String( styleValue ); }
 				styleFields[ styleField ].disabled = locked || ( 'font_family' === styleKey && ! fontDefinition( String( styleFields[ styleField ].value || '' ) || 'sans-serif' ) && ! fontDefinition( 'sans-serif' ) );
 			}
+			if ( window.CertloomFontPicker && window.CertloomFontPicker.sync ) { window.CertloomFontPicker.sync( root ); }
 			for ( var colorIndex = 0; colorIndex < colorPickers.length; colorIndex++ ) {
 				var pickerKey = colorPickers[ colorIndex ].getAttribute( 'data-certloom-designer-color-picker-for' );
 				var inspectorColor = canonicalColor( styleValueForElement( element, pickerKey ) );
