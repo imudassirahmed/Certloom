@@ -75,6 +75,9 @@ foreach($presets as $preset){
 	$compiled=$compiler->compile($preset['blocks']??array(),$preset['theme']??array());
 	ed_ok(''!==trim($compiled['html_body']),'starter compiles to HTML');
 	ed_ok(''!==trim($compiled['text_body']),'starter compiles to plain text');
+	$embedded=EmailDesignCompiler::sanitize_inline_html($compiled['html_body']);
+	ed_lacks($embedded,'@media only screen','inline admin previews never expose email document CSS as text');
+	ed_has($embedded,'<table','inline admin previews retain the message layout');
 }
 ed_same(EmailDesignPurposes::all(),array_values(array_filter(EmailDesignPurposes::all(),fn($p)=>isset($purposes[$p]))),'every purpose is represented');
 

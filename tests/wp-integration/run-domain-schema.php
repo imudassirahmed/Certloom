@@ -114,12 +114,12 @@ try {
 	$cleanup['batch'] = $batch_id;
 	$before_correction = certloom_it_ok( $credential_repo->find_series( $series_id ), 'Series read before correction failed' );
 	$correction = new CredentialRelationshipCorrectionService();
-	$corrected = certloom_it_ok( $correction->correct( $series_id, $program_id, $batch_id, array( 'actor_user_id' => get_current_user_id(), 'expected_updated_at' => $before_correction['updated_at'], 'reason_code' => 'integration_relationship_correction' ) ), 'Relationship correction failed' );
+	$corrected = certloom_it_ok( $correction->correct( $series_id, $program_id, $batch_id, array( 'actor_user_id' => get_current_user_id(), 'expected_updated_at' => $before_correction['updated_at'], 'expected_current_version_id' => $before_correction['current_version_id'], 'reason_code' => 'integration_relationship_correction' ) ), 'Relationship correction failed' );
 	certloom_it_assert( ! empty( $corrected['changed'] ) && ! empty( $corrected['version_id'] ), 'Relationship correction did not create immutable evidence.' );
 	$after_correction = certloom_it_ok( $credential_repo->find_series( $series_id ), 'Series read after correction failed' );
 	certloom_it_assert( absint( $after_correction['batch_id'] ) === absint( $batch_id ), 'Relationship correction did not update the continuing Series Batch.' );
 	certloom_it_assert( absint( $after_correction['current_version_id'] ) === absint( $corrected['version_id'] ), 'Relationship correction did not advance the current Version pointer.' );
-	$stale = $correction->correct( $series_id, $program_id, null, array( 'expected_updated_at' => $before_correction['updated_at'] ) );
+	$stale = $correction->correct( $series_id, $program_id, null, array( 'expected_updated_at' => $before_correction['updated_at'], 'expected_current_version_id' => $before_correction['current_version_id'] ) );
 	certloom_it_assert( is_wp_error( $stale ) && 'certloom_relationship_review_stale' === $stale->get_error_code(), 'Stale relationship review did not fail closed.' );
 
 	$privacy_email = 'integration-' . $suffix . '@example.test';

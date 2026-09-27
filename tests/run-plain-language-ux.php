@@ -20,7 +20,7 @@ $roadmap = plx_src( $root, 'docs/approved-ux-consolidation-after-lms.md' );
 
 plx_check( false !== strpos( $settings, '$certloom_show_diagnostics = current_user_can( \'manage_options\' );' ) && false === strpos( $settings, '$certloom_advanced_mode' ), 'Settings uses capability-based diagnostics without a retired workspace-mode boundary' );
 plx_check( false !== strpos( $settings, '<details id="certloom-system-status" class="certloom-technical-details certloom-settings-diagnostics"' ) && false !== strpos( $settings, "esc_html_e( 'Diagnostics & maintenance', 'certloom' )" ), 'database and migration diagnostics remain available under collapsed Technical details' );
-plx_check( false !== strpos( $nav, "__( 'Developer tools','certloom')" ) && false === strpos( $nav, '$preview && ! $simple' ), 'developer tooling remains capability-controlled without a retired mode gate' );
+plx_check( false !== strpos( $nav, "__( 'Credential data tools','certloom')" ) && false === strpos( $nav, '$preview && ! $simple' ), 'credential data tools remain capability-controlled without a retired mode gate' );
 plx_check( false !== strpos( $roadmap, 'Technical terminology remains available only in Technical details, Diagnostics, Designer specialist controls, or Developer surfaces where genuinely useful.' ), 'approved progressive-disclosure language rule remains explicit' );
 
 plx_check( false !== strpos( $domain, '$detailed_registry = true;' ) && false !== strpos( $domain, "__( 'Credentials', 'certloom' )" ), 'Credential Management keeps the detailed registry inside the one task-focused workspace' );
@@ -48,7 +48,7 @@ plx_check( false !== strpos( $designer_js, 'supported text limit') && false === 
 
 plx_check( false !== strpos( $integrations, 'Only a successfully issued Certloom credential can be published to a destination.' ), 'destination UX describes the issuance boundary in customer language' );
 plx_check( false !== strpos( $integrations, 'Open Credly to review this publication before trying again.') && false !== strpos( $integrations, 'Review reason:' ), 'Credly history gives Simple guidance while preserving Advanced reason evidence' );
-plx_check( false !== strpos( $setup, 'Programs, Batches and Signers are optional power tools, not setup requirements.' ) && false !== strpos( $setup, 'You can change advanced settings later.' ) && false !== strpos( $setup, 'How Certloom organizes this profile' ) && false === strpos( $setup, 'Simple mode' ) && false === strpos( $setup, 'Advanced mode' ), 'Setup v2 explains optional power tools and contextual help without resurrecting a Simple/Advanced workspace split' );
+plx_check( false !== strpos( $setup, 'You can add Programs, Batches, Signers and custom designs later.' ) && false !== strpos( $setup, 'You can change advanced settings later.' ) && false !== strpos( $setup, 'How Certloom organizes this profile' ) && false === strpos( $setup, 'Simple mode' ) && false === strpos( $setup, 'Advanced mode' ), 'Setup v2 explains optional context and offers a quick first credential without resurrecting a Simple/Advanced workspace split' );
 plx_check( false !== strpos( $scoped, 'Credential field changes are not available on this site yet.' ) && false === strpos( $scoped, 'normalized write authority is ready' ), 'quick field creation reports availability without write-authority jargon' );
 
 $is_qa_flavor = false !== strpos( $plugin, "define( 'CERTLOOM_QA_UNGATED', true )" );

@@ -108,6 +108,9 @@ $GLOBALS['restore_options'][DomainRestoreWorkspace::JOURNAL_OPTION]=array('state
 	'certverify_retired_fields'=>array('exists'=>true,'value'=>array('new-retired')),
 	'certverify_settings'=>array('exists'=>true,'value'=>array('verification_page'=>10)),
 ),'old_generation'=>get_option('certloom_domain_data_generation'),'created_at'=>time());
+$active_recovery=$ws->recover_interrupted_commit();rw_same(true,$active_recovery,'active worker lease prevents request-bootstrap recovery');
+foreach(DomainBackupRepository::entity_types() as $entity){$live=SchemaManager::table($entity);rw_true(isset($GLOBALS['wpdb']->tables[$live][2]),'active worker replacement graph remains untouched '.$entity);}
+$lease_parts=explode('|',$GLOBALS['restore_options']['certloom_domain_maintenance_lock']);$lease_parts[1]=(string)(time()-2101);$lease_parts[2]=(string)(time()-1);$GLOBALS['restore_options']['certloom_domain_maintenance_lock']=implode('|',$lease_parts);
 $GLOBALS['wpdb']->fail_maintenance_delete_once=true;$recovered=$ws->recover_interrupted_commit();rw_same('certloom_domain_maintenance_release_failed',$recovered->get_error_code(),'prepared recovery surfaces transient release failure');rw_same(true,array_key_exists(DomainRestoreWorkspace::JOURNAL_OPTION,$GLOBALS['restore_options']),'rollback journal remains retryable until cleanup release succeeds');
 foreach(DomainBackupRepository::entity_types() as $entity){$live=SchemaManager::table($entity);rw_true(isset($GLOBALS['wpdb']->tables[$live][1]),'old graph restored '.$entity);rw_same(false,isset($GLOBALS['wpdb']->tables[$live][2]),'replacement rolled back '.$entity);}
 rw_same(true,$ws->recover_interrupted_commit(),'prepared recovery replay finishes cleanup');rw_same(false,array_key_exists(DomainRestoreWorkspace::JOURNAL_OPTION,$GLOBALS['restore_options']),'rollback journal cleared after release succeeds');

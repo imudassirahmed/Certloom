@@ -307,6 +307,7 @@
 .certloom-template-designer-layers-head span { font-size: 10px; font-weight: 700; color: var(--cl-ink-soft); text-transform: uppercase; letter-spacing: .04em; }
 [data-certloom-designer-layers] {
 	display: grid;
+	align-content: start;
 	gap: 5px;
 	max-height: 360px;
 	overflow: auto;
@@ -394,7 +395,7 @@
 	.certloom-template-designer-palette .button { flex: 1 1 auto; justify-content: center; }
 	.certloom-template-designer-palette-spacer { display: none; }
 	.certloom-template-designer-content-editor .button,
-	.certloom-template-designer-content-editor input,
+	.certloom-template-designer-content-editor input:not([type="checkbox"]):not([type="radio"]),
 	.certloom-template-designer-content-editor select { min-height: 44px; }
 }
 
@@ -427,7 +428,7 @@
 .certloom-template-designer-style-grid select { width: 100%; min-width: 0; }
 .certloom-template-designer-style-grid input[readonly] { background: var(--cl-paper); color: var(--cl-ink-soft); cursor: not-allowed; }
 .certloom-template-designer-style-check { align-content: start; }
-.certloom-template-designer-style-check input[type="checkbox"] { width: auto; min-height: 22px; justify-self: start; }
+.certloom-template-designer-style-check input[type="checkbox"] { width: 22px; height: 22px; min-height: 22px; justify-self: start; }
 @media (max-width: 480px) {
 	.certloom-template-designer-style-grid { grid-template-columns: 1fr; }
 }
@@ -1443,7 +1444,7 @@
 
 /* Phase 4.6 Schema 4 rich inline authoring. Token wash is editor-only. */
 .certloom-template-designer-rich-text-editor { display: grid; gap: var(--cl-2); }
-.certloom-template-designer-rich-text-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--cl-2); }
+.certloom-template-designer-rich-text-head { display: grid; gap: var(--cl-2); }
 .certloom-template-designer-rich-text-head .description { margin: 3px 0 0; }
 .certloom-template-designer-rich-text-add { display: flex; flex-wrap: wrap; gap: var(--cl-1); }
 [data-certloom-designer-rich-runs] { display: grid; gap: var(--cl-2); }
@@ -1486,10 +1487,9 @@
 }
 
 /* Phase 4.8 — structured Table/Data Table authoring. */
-.certloom-template-designer-table-editor{display:grid;gap:12px}
+.certloom-template-designer-table-editor{display:grid;gap:12px;min-width:0}
 .certloom-template-designer-table-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.certloom-template-designer-table-column,.certloom-template-designer-table-row{display:grid;grid-template-columns:minmax(110px,1.3fr) minmax(90px,1fr) minmax(76px,.7fr) minmax(82px,.8fr) auto;gap:8px;align-items:end;padding:10px;border:1px solid var(--certloom-border,var(--cl-rule));border-radius:var(--cl-r-lift);background:var(--certloom-surface,var(--cl-surface))}
-.certloom-template-designer-table-row{grid-template-columns:repeat(auto-fit,minmax(96px,1fr)) auto}
+.certloom-template-designer-table-column,.certloom-template-designer-table-row{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;align-items:end;margin-bottom:8px;padding:10px;border:1px solid var(--certloom-border,var(--cl-rule));border-radius:var(--cl-r-lift);background:var(--certloom-surface,var(--cl-surface))}
 .certloom-template-designer-table-column label,.certloom-template-designer-table-row label{display:grid;gap:4px;min-width:0}
 .certloom-template-designer-table-column label>span,.certloom-template-designer-table-row label>span{font-size:11px;font-weight:600;color:var(--certloom-muted,var(--cl-ink-soft))}
 .certloom-template-designer-table-column input,.certloom-template-designer-table-column select,.certloom-template-designer-table-row input{width:100%;min-width:0}
@@ -1672,7 +1672,7 @@
 	border: 1px solid var(--studio-line-strong);
 	border-radius: var(--cl-r-compact);
 	box-shadow: none;
-	background: var(--cl-surface);
+	background-color: var(--cl-surface);
 }
 .certloom-template-designer-v2 textarea { padding: 8px; }
 .certloom-template-designer-v2 input:focus,
@@ -2166,7 +2166,7 @@
 	.certloom-template-designer-v2 .certloom-studio-insert-item,
 	.certloom-template-designer-v2 .certloom-studio-view-popover select,
 	.certloom-template-designer-v2 .certloom-template-designer-inspector .certloom-studio-accordion-trigger,
-	.certloom-template-designer-v2 .certloom-template-designer-inspector input:not([type="hidden"]),
+	.certloom-template-designer-v2 .certloom-template-designer-inspector input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
 	.certloom-template-designer-v2 .certloom-template-designer-inspector select,
 	.certloom-template-designer-v2 .certloom-template-designer-inspector .button { min-height: 44px; }
 	.certloom-studio-header { grid-template-columns: auto 1fr auto; }
@@ -2985,4 +2985,71 @@
 .certloom-template-designer-color-opacity-label{font-size:10px;line-height:1.2;color:var(--cl-ink-soft,var(--cl-ink-soft))}
 .certloom-template-designer-color-opacity-input{display:grid;grid-template-columns:minmax(0,1fr) 38px;align-items:center;gap:7px;min-width:0}
 .certloom-template-designer-color-opacity-input input[type="range"]{width:100%;min-width:0;margin:0}
+
+/* Keep all three rails on the same row and size the canvas to the available
+ * WordPress workspace, which is narrower than the browser with its menu open. */
+@media (min-width: 901px) {
+	body.certloom-designer-workspace-page .certloom-template-admin.is-designer-workspace {
+		padding: 0;
+	}
+	.is-designer-workspace .certloom-template-designer-v2.is-pro-mode .certloom-template-designer-stage {
+		grid-template-columns: clamp(190px, 20vw, 286px) minmax(0, 1fr) clamp(230px, 22vw, 302px);
+		grid-template-rows: minmax(0, 1fr);
+		align-items: stretch;
+	}
+	.is-designer-workspace .certloom-studio-left,
+	.is-designer-workspace .certloom-template-designer-workspace,
+	.is-designer-workspace .certloom-template-designer-inspector {
+		grid-row: 1;
+		min-width: 0;
+		align-self: stretch;
+	}
+}
+
+@media (max-width: 900px) {
+	.is-designer-workspace .certloom-template-editor-focused {
+		padding: 0;
+		border: 0;
+	}
+	.certloom-template-designer-v2 .certloom-studio-header {
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 8px;
+	}
+	.certloom-studio-back { grid-column: 1; grid-row: 1; }
+	.certloom-studio-actions { grid-column: 2; grid-row: 1; }
+	.certloom-studio-document {
+		grid-column: 1 / -1;
+		grid-row: 2;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+	.certloom-studio-title-button {
+		flex: 1 1 160px;
+		max-width: 100%;
+	}
+	.certloom-studio-title-input {
+		flex: 1 1 160px;
+		width: 100%;
+		min-width: 0;
+	}
+	.certloom-studio-profile-picker { display: block; }
+	.certloom-studio-profile-popover {
+		left: auto;
+		right: 0;
+		max-width: calc(100vw - 64px);
+	}
+	.certloom-studio-documentbar {
+		flex-wrap: wrap;
+		justify-content: flex-start;
+		overflow: visible;
+	}
+	.certloom-studio-custom-size { flex-wrap: wrap; }
+	.certloom-studio-zoom { height: auto; }
+	.certloom-studio-documentbar .certloom-studio-icon-button,
+	.certloom-studio-preview-toggle button,
+	.certloom-studio-actions .button { min-height: 44px; }
+	.certloom-template-designer-v2 .certloom-template-designer-workspace {
+		min-height: 340px;
+	}
+}
 .certloom-template-designer-color-opacity-input output{font-size:10px;line-height:1;color:var(--cl-ink-soft,var(--cl-ink-soft));text-align:right;font-variant-numeric:tabular-nums}

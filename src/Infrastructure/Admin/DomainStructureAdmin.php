@@ -329,8 +329,12 @@ final class DomainStructureAdmin {
 
 		echo '<div class="certloom-domain-form-grid">';
 		$this->program_select( $is_edit ? $editing['program_id'] : 0 );
-		$this->text_field( 'code', __( 'Batch code', 'certloom' ), $is_edit ? (string) $editing['code'] : '', true, 'text', AdminUiMode::is_simple() ? __( 'A short reference for this cohort or intake.', 'certloom' ) : __( 'Stable code used by restores, integrations, and future automation.', 'certloom' ), '', __( 'Example: SPRING-2026', 'certloom' ) );
 		$this->text_field( 'name', __( 'Batch name', 'certloom' ), $is_edit ? (string) $editing['name'] : '', true, 'text', '', '', __( 'Example: Spring 2026 Cohort', 'certloom' ) );
+		if ( AdminUiMode::is_simple() && ! $is_edit ) {
+			echo '<div class="certloom-domain-field certloom-domain-field-wide"><details class="certloom-technical-details certloom-inline-technical"><summary>' . esc_html__( 'Technical details', 'certloom' ) . '</summary>';
+		}
+		$this->text_field( 'code', $is_edit ? __( 'Batch code', 'certloom' ) : __( 'Batch code (optional)', 'certloom' ), $is_edit ? (string) $editing['code'] : '', $is_edit, 'text', __( 'A stable reference for imports and integrations. Leave blank when adding a Batch to generate one automatically.', 'certloom' ), 'maxlength="100"', __( 'Example: SPRING-2026', 'certloom' ) );
+		if ( AdminUiMode::is_simple() && ! $is_edit ) { echo '</details></div>'; }
 		$this->text_field( 'start_date', __( 'Start date', 'certloom' ), $is_edit ? (string) $editing['start_date'] : '', false, 'date' );
 		$this->text_field( 'end_date', __( 'End date', 'certloom' ), $is_edit ? (string) $editing['end_date'] : '', false, 'date' );
 		$this->signer_select( 'instructor_signer_id', __( 'Signer / instructor profile', 'certloom' ), $is_edit ? $editing['instructor_signer_id'] : 0 );
@@ -753,11 +757,12 @@ final class DomainStructureAdmin {
 
 	/** @param array{label:string,url:string,secondary?:bool}|null $action @return void */
 	private function header( $title, $subtitle, ?array $action = null ) {
-		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-domain-screen"><div class="certloom-domain-title-row"><div><h1>' . esc_html( $title ) . '</h1><p class="certloom-domain-lead">' . esc_html( $subtitle ) . '</p></div><div class="certloom-domain-title-actions">';
+		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-domain-screen"><section class="certloom-page-hero certloom-domain-title-row"><div><span class="certloom-eyebrow">' . esc_html__( 'Credential structure', 'certloom' ) . '</span><h1>' . esc_html( $title ) . '</h1><p class="certloom-domain-lead">' . esc_html( $subtitle ) . '</p></div><div class="certloom-domain-title-actions">';
 		if ( is_array( $action ) && ! empty( $action['label'] ) && ! empty( $action['url'] ) ) {
 			echo '<a class="button ' . ( empty( $action['secondary'] ) ? 'button-primary' : '' ) . '" href="' . esc_url( (string) $action['url'] ) . '">' . esc_html( (string) $action['label'] ) . '</a>';
 		}
-		echo '</div></div>';
+		echo '</div></section>';
+		( new AdminProductNavigation() )->render_current_subnav();
 	}
 
 	/** @return void */

@@ -135,7 +135,7 @@ $certloom_render_last_event = static function ( $status ) use ( $certloom_last_e
 		$sources = array(
 			'tutor'       => array( 'label' => __( 'Tutor LMS', 'certloom' ), 'icon' => 'dashicons-welcome-learn-more', 'data' => $tutor, 'desc' => __( 'Issue when a mapped Tutor course is completed.', 'certloom' ) ),
 			'learndash'   => array( 'label' => __( 'LearnDash', 'certloom' ), 'icon' => 'dashicons-welcome-learn-more', 'data' => $learndash, 'desc' => __( 'Issue when a mapped LearnDash course is completed.', 'certloom' ) ),
-			'woocommerce' => array( 'label' => __( 'WooCommerce', 'certloom' ), 'icon' => 'dashicons-cart', 'data' => $woocommerce, 'desc' => __( 'Issue after an authenticated customer completes an order containing a mapped product.', 'certloom' ) ),
+			'woocommerce' => array( 'label' => __( 'WooCommerce', 'certloom' ), 'icon' => 'dashicons-cart', 'data' => $woocommerce, 'desc' => __( 'Issue when an order for a signed-in customer reaches Completed and contains a mapped product.', 'certloom' ) ),
 		);
 		foreach ( $sources as $source_key => $source ) :
 			$status    = is_array( $source['data']['status'] ?? null ) ? $source['data']['status'] : array();
@@ -214,7 +214,7 @@ $certloom_render_last_event = static function ( $status ) use ( $certloom_last_e
 
 	<?php if ( ! empty( $woocommerce['status']['available'] ) ) : ?>
 	<section id="certloom-woocommerce-setup" class="certloom-workspace-card certloom-integration-config-card" aria-labelledby="certloom-woocommerce-title">
-		<header class="certloom-workspace-card-head"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Commerce source', 'certloom' ); ?></span><h2 id="certloom-woocommerce-title"><?php esc_html_e( 'WooCommerce', 'certloom' ); ?></h2><p><?php esc_html_e( 'Map a product to a Program and optional Batch. When an authenticated customer completes the order, Certloom can issue the mapped credential to their linked Recipient profile using the shared design hierarchy.', 'certloom' ); ?></p></div><span class="certloom-count-chip"><?php echo esc_html( number_format_i18n( count( (array) ( $woocommerce['mappings'] ?? array() ) ) ) ); ?></span></header>
+		<header class="certloom-workspace-card-head"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Commerce source', 'certloom' ); ?></span><h2 id="certloom-woocommerce-title"><?php esc_html_e( 'WooCommerce', 'certloom' ); ?></h2><p><?php esc_html_e( 'Map a product to a Program and optional Batch. Certloom issues when an order reaches Completed and the customer has a linked Recipient profile. Payment or checkout alone may leave an order in Processing; complete it in WooCommerce after fulfillment.', 'certloom' ); ?></p></div><span class="certloom-count-chip"><?php echo esc_html( number_format_i18n( count( (array) ( $woocommerce['mappings'] ?? array() ) ) ) ); ?></span></header>
 		<div class="certloom-callout certloom-callout-info"><span class="dashicons dashicons-admin-users" aria-hidden="true"></span><div><strong><?php esc_html_e( 'Ownership stays explicit', 'certloom' ); ?></strong><p><?php esc_html_e( 'Guest checkout does not create credential ownership. The customer must have a WordPress account explicitly linked to a Certloom Recipient.', 'certloom' ); ?></p></div></div>
 		<?php if ( ! empty( $woocommerce['error'] ) && is_wp_error( $woocommerce['error'] ) ) : ?><div class="notice notice-error inline"><p><?php echo esc_html( $woocommerce['error']->get_error_message() ); ?></p></div>
 		<?php elseif ( ! empty( $woocommerce['configuration_ready'] ) ) : ?>

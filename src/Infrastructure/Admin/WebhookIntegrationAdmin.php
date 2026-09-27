@@ -18,6 +18,6 @@ final class WebhookIntegrationAdmin {
 	/** @return true|\WP_Error */ private function validate_mapping($program_id,$batch_id){$target=(new IntegrationMappingTargetGuard())->validate($program_id,$batch_id);return is_wp_error($target)?$target:true;}
 	private function store_secret(array$value){return set_transient(self::SECRET_TRANSIENT_PREFIX.get_current_user_id(),$value,10*MINUTE_IN_SECONDS);}
 	/** @return array<string,string> */ private function pull_secret(){if(!function_exists('get_current_user_id'))return array();$key=self::SECRET_TRANSIENT_PREFIX.get_current_user_id();$value=get_transient($key);delete_transient($key);return is_array($value)&&!empty($value['key'])&&!empty($value['secret'])?array('key'=>(string)$value['key'],'secret'=>(string)$value['secret']):array();}
-	private function cap(){if(!current_user_can(\Ecapla_CertVerify_Permissions::CAP_MANAGE_INTEGRATIONS))wp_die(esc_html__('You do not have permission to manage Certloom integrations.','certloom'));}
+	private function cap(){if(!current_user_can(\Ecapla_CertVerify_Permissions::CAP_MANAGE_INTEGRATIONS))wp_die(esc_html__('You do not have permission to manage Certloom integrations.','certloom'),'',array('response'=>403));}
 	private function redirect($result,$notice=''){$url=admin_url('admin.php?page=certloom-integrations#certloom-webhook-setup');if(is_wp_error($result))$url=add_query_arg('certloom_error',$result->get_error_message(),$url);elseif(''!==$notice)$url=add_query_arg('certloom_notice',sanitize_key($notice),$url);wp_safe_redirect($url);exit;}
 }

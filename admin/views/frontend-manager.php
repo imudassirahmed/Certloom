@@ -18,9 +18,12 @@ $designs          = array(
 );
 ?>
 <div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-appearance-workspace">
-	<?php include ECAPLA_CERTVERIFY_PATH . 'admin/views/partials/brand-bar.php'; ?>
-	<h1><?php esc_html_e( 'Appearance & embed', 'certloom' ); ?></h1>
-	<p class="description"><?php esc_html_e( 'Publish certificate verification with the native WordPress block, a shortcode, or one of six optional Elementor widgets. Certificate lookup works without Elementor.', 'certloom' ); ?></p>
+	<section class="certloom-page-hero" aria-labelledby="certloom-frontend-title"><div>
+		<span class="certloom-eyebrow"><?php esc_html_e( 'Public verification', 'certloom' ); ?></span>
+		<h1 id="certloom-frontend-title"><?php esc_html_e( 'Verification page', 'certloom' ); ?></h1>
+		<p><?php esc_html_e( 'Publish certificate verification with the native WordPress block, a shortcode, or one of six optional Elementor widgets. Certificate lookup works without Elementor.', 'certloom' ); ?></p>
+	</div></section>
+	<?php ( new \Certloom\Infrastructure\Admin\AdminProductNavigation() )->render_current_subnav(); ?>
 
 	<div class="ecapla-certverify-admin-grid ecapla-certloom-frontend-grid">
 		<section class="ecapla-certverify-admin-card">

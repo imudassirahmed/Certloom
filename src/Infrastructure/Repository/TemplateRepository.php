@@ -154,7 +154,7 @@ final class TemplateRepository {
 				}
 			}
 			$hash = $this->json->hash( $layout );
-			if ( is_array( $current ) && hash_equals( (string) $current['layout_sha256'], $hash ) ) { return $current_id; }
+			if ( is_array( $current ) && $this->json->matches_hash( $layout, $current['layout_sha256'] ) ) { return $current_id; }
 			$number = is_array( $current ) ? absint( $current['revision_number'] ) + 1 : 1;
 			$now = current_time( 'mysql', true );
 			$revision_id = $this->insert_revision( $template_id, $number, $current_id ?: null, $layout, $actor_user_id, $source_type, $now );
@@ -493,11 +493,11 @@ final class TemplateRepository {
 			if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $decoded ) ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'A certificate design contains invalid current layout data.', 'certloom' ) ); }
 			try {
 				$layout = $this->layouts->normalize( $decoded );
-				$hash = $this->json->hash( $layout );
+				$hash_matches = $this->json->matches_hash( $layout, $row['layout_sha256'] ?? '' );
 			} catch ( \Throwable $error ) {
 				return new \WP_Error( 'certloom_template_revision_corrupt', __( 'A certificate design does not satisfy Certloom’s canonical layout contract.', 'certloom' ) );
 			}
-			if ( ! hash_equals( strtolower( (string) ( $row['layout_sha256'] ?? '' ) ), $hash ) ) { return new \WP_Error( 'certloom_template_revision_hash_mismatch', __( 'A certificate design failed its current-layout integrity check.', 'certloom' ) ); }
+			if ( ! $hash_matches ) { return new \WP_Error( 'certloom_template_revision_hash_mismatch', __( 'A certificate design failed its current-layout integrity check.', 'certloom' ) ); }
 			$row['current_layout'] = $layout;
 			unset( $row['current_layout_json'] );
 		}
@@ -782,8 +782,8 @@ final class TemplateRepository {
 		foreach ( $rows as &$row ) {
 			$decoded = json_decode( (string) ( $row['layout_json'] ?? '' ), true );
 			if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $decoded ) ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'An assignable template contains invalid canonical layout data.', 'certloom' ) ); }
-			try { $layout = $this->layouts->normalize( $decoded ); $hash = $this->json->hash( $layout ); } catch ( \Throwable $error ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'An assignable template does not satisfy Certloom’s canonical layout contract.', 'certloom' ) ); }
-			if ( ! hash_equals( strtolower( (string) ( $row['layout_sha256'] ?? '' ) ), $hash ) ) { return new \WP_Error( 'certloom_template_revision_hash_mismatch', __( 'An assignable template failed its layout integrity check.', 'certloom' ) ); }
+			try { $layout = $this->layouts->normalize( $decoded ); $hash_matches = $this->json->matches_hash( $layout, $row['layout_sha256'] ?? '' ); } catch ( \Throwable $error ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'An assignable template does not satisfy Certloom’s canonical layout contract.', 'certloom' ) ); }
+			if ( ! $hash_matches ) { return new \WP_Error( 'certloom_template_revision_hash_mismatch', __( 'An assignable template failed its layout integrity check.', 'certloom' ) ); }
 			$row['id'] = absint( $row['id'] ?? 0 ); $row['current_revision_id'] = absint( $row['current_revision_id'] ?? 0 ); $row['published_revision_id'] = absint( $row['published_revision_id'] ?? 0 ); $row['revision_number'] = absint( $row['revision_number'] ?? 0 ); $row['lifecycle_state'] = TemplateLifecycle::state( $row ); $row['factory'] = 0 === strpos( (string) $row['machine_key'], 'certloom-preset-' ); $row['page_size'] = (string) ( $layout['page']['size'] ?? '' ); $row['orientation'] = (string) ( $layout['page']['orientation'] ?? '' ); $row['element_count'] = count( $layout['elements'] ?? array() ); $row['layout'] = $layout; unset( $row['layout_json'] );
 		}
 		unset( $row );
@@ -925,9 +925,9 @@ final class TemplateRepository {
 	private function verify_revision_row( array $row ) {
 		$decoded = json_decode( (string) ( $row['layout_json'] ?? '' ), true );
 		if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $decoded ) ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'A stored template revision contains invalid layout data.', 'certloom' ) ); }
-		try { $layout = $this->layouts->normalize( $decoded ); $hash = $this->json->hash( $layout ); } catch ( \Throwable $error ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'A stored template revision does not satisfy Certloom’s canonical layout contract.', 'certloom' ) ); }
+		try { $layout = $this->layouts->normalize( $decoded ); $hash_matches = $this->json->matches_hash( $layout, $row['layout_sha256'] ?? '' ); } catch ( \Throwable $error ) { return new \WP_Error( 'certloom_template_revision_corrupt', __( 'A stored template revision does not satisfy Certloom’s canonical layout contract.', 'certloom' ) ); }
 		if ( LayoutSchema::NAME !== (string) ( $row['layout_schema'] ?? '' ) || absint( $row['layout_schema_version'] ?? 0 ) !== (int) $layout['_meta']['schema_version'] ) { return new \WP_Error( 'certloom_template_revision_schema_mismatch', __( 'A stored Template revision has schema metadata that does not match its canonical layout document.', 'certloom' ) ); }
-		if ( ! hash_equals( strtolower( (string) ( $row['layout_sha256'] ?? '' ) ), $hash ) ) { return new \WP_Error( 'certloom_template_revision_hash_mismatch', __( 'A stored template revision failed its integrity check.', 'certloom' ) ); }
+		if ( ! $hash_matches ) { return new \WP_Error( 'certloom_template_revision_hash_mismatch', __( 'A stored template revision failed its integrity check.', 'certloom' ) ); }
 		$row['layout'] = $layout;
 		return $row;
 	}

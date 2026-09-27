@@ -115,7 +115,7 @@ final class Ecapla_CertVerify_Recipient_Portal {
 				<?php if ( empty( $result['public_verify_ready'] ) ) : ?>
 					<?php esc_html_e( 'Public verification actions remain unavailable until normalized verification authority is accepted.', 'certloom' ); ?>
 				<?php else : ?>
-					<?php esc_html_e( 'Credential status is evaluated live from the current immutable Version and lifecycle state.', 'certloom' ); ?>
+					<?php esc_html_e( 'Each credential shows its current status. Use Verify to view its latest verification details.', 'certloom' ); ?>
 				<?php endif; ?>
 			</footer>
 		</section>
@@ -202,7 +202,7 @@ final class Ecapla_CertVerify_Recipient_Portal {
 			<div class="certloom-my-credential-card__actions">
 				<?php if ( ! empty( $item['verify_url'] ) ) : ?><a class="certloom-my-credentials__button" href="<?php echo esc_url( $item['verify_url'] ); ?>" rel="nofollow noopener"><?php esc_html_e( 'Verify', 'certloom' ); ?></a><?php endif; ?>
 				<?php echo self::share_controls( $item ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in helper. ?>
-				<span class="certloom-my-credentials__action-muted" title="<?php esc_attr_e( 'PDF and image downloads remain gated until production artifact authority is accepted.', 'certloom' ); ?>"><?php esc_html_e( 'Downloads gated', 'certloom' ); ?></span>
+				<span class="certloom-my-credentials__action-muted" title="<?php esc_attr_e( 'Certificate downloads are not available yet. You can still verify or share this credential.', 'certloom' ); ?>"><?php esc_html_e( 'Downloads unavailable', 'certloom' ); ?></span>
 			</div>
 		</article>
 		<?php

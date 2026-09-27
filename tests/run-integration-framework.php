@@ -66,6 +66,36 @@ $fldStore->programs[2]['field_contract']['fields']['employee_id']='optional';$op
 Ecapla_CertVerify_Fields::$map=array();
 $ineligibleReview=$coord->review($ci);intc(errc($ineligibleReview,'certloom_integration_not_eligible'),'ineligible event stops before mapping or issuance');
 
+$retryStore = new IntStore();
+$retryCoordinator = new IntegrationIssuanceCoordinator(new IntRecipients(), new IntMappings(), int_service($retryStore, new IntNumbers()));
+$firstReview = $retryCoordinator->review($ctx);
+$firstReceipt = $retryCoordinator->issue($ctx, $firstReview['review_fingerprint']);
+$secondReview = $retryCoordinator->review($ctx);
+intc(!is_wp_error($secondReview), 'provider redelivery can repeat review after the first issuance');
+$secondReceipt = is_wp_error($secondReview) ? $secondReview : $retryCoordinator->issue($ctx, $secondReview['review_fingerprint']);
+intc(!is_wp_error($secondReceipt) && !empty($secondReceipt['idempotent_replay']) && $firstReceipt['version_id'] === $secondReceipt['version_id'], 'full provider review/issue redelivery returns the original version');
+$anotherEvent = payload(); $anotherEvent['source_event_id'] = 'evt-distinct-duplicate';
+$anotherContext = IntegrationEventContext::from_array($anotherEvent);
+$anotherReview = $retryCoordinator->review($anotherContext);
+$anotherReceipt = is_wp_error($anotherReview) ? $anotherReview : $retryCoordinator->issue($anotherContext, $anotherReview['review_fingerprint']);
+intc(errc($anotherReceipt, 'certloom_manual_issue_duplicate_series'), 'a distinct event still cannot duplicate the Recipient and Program credential');
+intc(1 === count($retryStore->versions), 'redelivery and distinct duplicate event create no additional versions');
+$legacyIdentity = (new Certloom\Application\Rendering\CanonicalJson())->hash(array('source'=>'lms_integration','adapter'=>$ctx->adapter_key(),'event_identity_sha256'=>$ctx->to_array()['event_identity_sha256']));
+$retryStore->versions[$firstReceipt['version_id']]['source_idempotency_key'] = $legacyIdentity;
+$legacyReview=$retryCoordinator->review($ctx);
+$legacyReceipt=$retryCoordinator->issue($ctx,$legacyReview['review_fingerprint']);
+intc(!is_wp_error($legacyReceipt) && !empty($legacyReceipt['idempotent_replay']) && $legacyReceipt['version_id']===$firstReceipt['version_id'], 'old adapter-wide keys still replay for their original source');
+$otherPayload=payload();$otherPayload['source_object']['id']='course-11';$otherContext=IntegrationEventContext::from_array($otherPayload);
+intc($ctx->idempotency_key()!==$otherContext->idempotency_key(), 'identical external event IDs are isolated between source objects');
+$otherMaps=new IntMappings();$otherMaps->mapping['source_object_id']='course-11';$otherMaps->mapping['program_id']=5;
+$otherCoordinator=new IntegrationIssuanceCoordinator(new IntRecipients(),$otherMaps,int_service($retryStore,new IntNumbers()));
+$otherReview=$otherCoordinator->review($otherContext);$otherReceipt=$otherCoordinator->issue($otherContext,$otherReview['review_fingerprint']);
+intc(!is_wp_error($otherReceipt) && empty($otherReceipt['idempotent_replay']) && $firstReceipt['version_id']!==$otherReceipt['version_id'], 'legacy key belonging to another source cannot suppress a new credential');
+$conflictMaps=new IntMappings();$conflictMaps->mapping['program_id']=5;
+$conflictCoordinator=new IntegrationIssuanceCoordinator(new IntRecipients(),$conflictMaps,int_service($retryStore,new IntNumbers()));
+$conflictReview=$conflictCoordinator->review($ctx);$conflictReceipt=$conflictCoordinator->issue($ctx,$conflictReview['review_fingerprint']);
+intc(errc($conflictReceipt,'certloom_integration_replay_conflict'), 'reusing an event for different credential ownership fails closed');
+
 $root=dirname(__DIR__);$ctxsrc=file_get_contents($root.'/src/Application/Integration/IntegrationEventContext.php');$selsrc=file_get_contents($root.'/src/Application/Integration/QualifyingAttemptSelector.php');$regsrc=file_get_contents($root.'/src/Application/Integration/IntegrationAdapterRegistry.php');$coordsrc=file_get_contents($root.'/src/Application/Integration/IntegrationIssuanceCoordinator.php');$manual=file_get_contents($root.'/src/Application/Issuance/ManualIssuanceService.php');$admin=file_get_contents($root.'/admin/class-ecapla-certverify-admin.php');$plugin=file_get_contents($root.'/certloom.php');
 intc(false!==strpos($ctxsrc,'Raw provider payloads are never retained')&&false!==strpos($ctxsrc,'event_identity_sha256'),'context contract explicitly minimizes provider payload retention');intc(false!==strpos($selsrc,'certificate-specific threshold')&&false!==strpos($selsrc,"'completed'"),'attempt policy separates certificate eligibility from generic pass evidence');intc(false!==strpos($regsrc,"apply_filters( 'certloom_integration_adapters'")&&false!==strpos($regsrc,'IntegrationAdapterInterface'),'adapter registry exposes a contract-validated WordPress extension seam');intc(false!==strpos($regsrc,'certloom_integration_adapter_registry_invalid')&&false!==strpos($regsrc,'add_internal'),'invalid third-party adapter contributions still fail closed through the canonical registry validator');intc(false!==strpos($coordsrc,'issue_reviewed_for_integration'),'integration coordinator delegates to existing issuance truth path');intc(false!==strpos($manual,"'lms_integration'")&&false!==strpos($manual,'integration_context_sha256'),'canonical immutable issuance supports fixed integration provenance and context fingerprint');intc(false!==strpos($manual,"'bulk_admin' !== \$source_type"),'existing generic reviewed-source method remains bulk-only rather than anything-goes');intc(!array_key_exists('email',$arr)&&!array_key_exists('display_name',$arr)&&!array_key_exists('learner_name',$arr),'normalized context data contains no learner email/name fields');intc(false===stripos($coordsrc,'tutor')&&false===stripos($coordsrc,'learndash'),'generic coordinator contains no Tutor LMS or LearnDash hard-coding');intc(false!==strpos($admin,"'certloom-integrations'"),'Integrations remains an explicit first-class Certloom workspace');intc(false!==strpos($plugin,"define( 'CERTLOOM_DOMAIN_WRITE_PATHS_READY', false )")&&false!==strpos($plugin,"define( 'CERTLOOM_DOMAIN_ADMIN_PREVIEW', false )")&&false!==strpos($plugin,"define( 'CERTLOOM_DOMAIN_DATA_TOOLS_READY', false )"),'INT-01 does not open normalized-domain production authority');intc(!file_exists($root.'/resources/renderer/accepted.json'),'INT-01 does not manufacture renderer authority');
 

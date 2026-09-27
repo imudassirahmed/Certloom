@@ -112,6 +112,10 @@ final class AdminProductNavigation {
 	 */
 	private function page_renders_own_subnav( $page ) {
 		return in_array( $page, array(
+			'certloom-email-designs',
+			'certloom-frontend',
+			'certloom-settings',
+			'certloom-fields',
 			'certloom-domain-credentials',
 			'certloom-domain-recipients',
 			'certloom-domain-programs',
@@ -120,6 +124,8 @@ final class AdminProductNavigation {
 			'certloom-domain-signers',
 			'certloom-domain-data-tools',
 			'certloom-issuance',
+			'certloom-file-intake',
+			'certloom-bulk-issuance',
 		), true );
 	}
 
@@ -162,7 +168,7 @@ final class AdminProductNavigation {
 				return array( $this->link( __( 'Automations','certloom'),'certloom-automations',array('certloom-automations'),\Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS), $this->link( __( 'Design Rules', 'certloom' ), 'certloom-design-rules', array( 'certloom-design-rules' ), array( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS, \Ecapla_CertVerify_Permissions::CAP_MANAGE_TEMPLATES ) ), $this->link(__( 'Integrations','certloom'),'certloom-integrations',array('certloom-integrations'),ECAPLA_CERTVERIFY_CAP), $this->link(__( 'Analytics','certloom'),'certloom-analytics',array('certloom-analytics'),\Ecapla_CertVerify_Permissions::CAP_VIEW_ANALYTICS) );
 			case 'settings':
 				$links = array( $this->link(__( 'Settings','certloom'),'certloom-settings',array('certloom-settings'),'manage_options'), $this->link(__( 'Backup & Restore','certloom'),'certloom-import',array('certloom-import'),'manage_options'), $this->link(__( 'Setup','certloom'),'certloom-setup',array('certloom-setup'),'manage_options'), $this->link(__( 'Fields','certloom'),'certloom-fields',array('certloom-fields'),ECAPLA_CERTVERIFY_CAP) );
-				if ( $preview ) { $links[] = $this->link( __( 'Developer tools','certloom'), 'certloom-domain-data-tools', array('certloom-domain-data-tools'), \Ecapla_CertVerify_Permissions::CAP_MANAGE_DATA_TOOLS ); }
+				if ( $preview ) { $links[] = $this->link( __( 'Credential data tools','certloom'), 'certloom-domain-data-tools', array('certloom-domain-data-tools'), \Ecapla_CertVerify_Permissions::CAP_MANAGE_DATA_TOOLS ); }
 				return $links;
 		}
 		return array();

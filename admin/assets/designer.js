@@ -1263,6 +1263,7 @@
 			if ( 'qr' === preview ) { return t( 'qr', 'QR' ); }
 			if ( 'barcode' === preview ) { return t( 'barcode', 'Barcode' ) + ' · ' + dynamicFieldSample( String( element.source || 'credential.display_number' ) ); }
 			if ( 'list' === preview ) { return t( 'list', 'List' ) + ' · ' + ( Array.isArray( element.items ) ? element.items.length : 0 ) + ' ' + t( 'items', 'items' ); }
+			if ( 'table' === preview || 'data_table' === preview ) { return typeLabel( element.type ); }
 			if ( 'shape' === preview ) { return escapeText( element.shape || t( 'shape', 'Shape' ) ); }
 			if ( 'line' === preview ) { return t( 'line', 'Line' ); }
 			if ( 'asset' === preview ) { var dynamicMedia = { 'signer.signature': t( 'credentialSigner', 'Credential Signer' ), 'issuer.logo': t( 'credentialIssuerLogo', 'Credential Issuer logo' ), 'issuer.seal': t( 'credentialIssuerSeal', 'Credential Issuer seal' ) }; return typeLabel( element.type ) + ' · ' + ( dynamicMedia[ String( element.source || '' ) ] || escapeText( element.asset || '' ) ); }

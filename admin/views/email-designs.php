@@ -16,7 +16,7 @@ $sample = array(
 );
 $render_preview = static function( array $design ) use ( $compiler, $sample ) {
 	$compiled = $compiler->compile( $design['blocks'] ?? array(), $design['theme'] ?? array() );
-	return strtr( (string) ( $compiled['html_body'] ?? '' ), $sample );
+	return \Certloom\Infrastructure\Email\EmailDesignCompiler::sanitize_inline_html( strtr( (string) ( $compiled['html_body'] ?? '' ), $sample ) );
 };
 $purpose_labels = isset( $purposes ) && is_array( $purposes ) ? $purposes : array();
 ?>
@@ -32,6 +32,7 @@ $purpose_labels = isset( $purposes ) && is_array( $purposes ) ? $purposes : arra
 			<a class="button button-primary" href="<?php echo esc_url( add_query_arg( array( 'email_view' => 'designer' ), $base_url ) ); ?>"><?php esc_html_e( 'New Template', 'certloom' ); ?></a>
 		</div>
 	</header>
+	<?php ( new \Certloom\Infrastructure\Admin\AdminProductNavigation() )->render_current_subnav(); ?>
 
 	<nav class="certloom-email-tabs" aria-label="<?php esc_attr_e( 'Email design views', 'certloom' ); ?>">
 		<a class="<?php echo 'library' === $view ? 'is-active' : ''; ?>" href="<?php echo esc_url( add_query_arg( array( 'email_view'=>'library' ), $base_url ) ); ?>"><?php esc_html_e( 'Library', 'certloom' ); ?></a>

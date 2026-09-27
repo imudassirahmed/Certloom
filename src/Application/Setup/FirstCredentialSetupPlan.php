@@ -89,7 +89,7 @@ final class FirstCredentialSetupPlan {
 		}
 
 		foreach ( array_values( array_unique( array_map( 'sanitize_key', $selected_fields ) ) ) as $key ) {
-			if ( '' === $key || in_array( $key, array( 'cert_number', 'status', 'issue_date', 'expiry_date' ), true ) ) { continue; }
+			if ( '' === $key || in_array( $key, array( 'cert_number', 'credential_number', 'credential_title', 'status', 'issue_date', 'expiry', 'expiry_date' ), true ) ) { continue; }
 			$source = ScopedFieldContract::value_source( $key );
 			if ( 'recipient' === $source ) { $this->add_field( $recipient, $key, '', $catalog, false ); }
 			elseif ( 'credential' === $source && 'grade' === $key ) { $grade_required = true; }

@@ -38,7 +38,12 @@ final class CourseraXapiBridge {
 		$id=trim((string)($statement['id']??'')); if(''===$id||strlen($id)>191||!preg_match('/^[A-Za-z0-9._:@\/-]+$/',$id)){return new \WP_Error('certloom_coursera_statement_invalid',__('Coursera sent an invalid xAPI statement identifier.','certloom'));}
 		$verb=is_array($statement['verb']??null)?$statement['verb']:array();$verb_id=strtolower(trim((string)($verb['id']??'')));$display=is_array($verb['display']??null)?$verb['display']:array();$display_text=strtoupper(trim((string)($display['en-US']??$display['en-us']??'')));
 		if(false===strpos($verb_id,'completed')&&'COMPLETED'!==$display_text){return new \WP_Error('certloom_coursera_not_completion',__('Certloom accepts only Coursera course-completion xAPI statements for automatic issuance.','certloom'));}
-		$result=is_array($statement['result']??null)?$statement['result']:array(); if(empty($result['completion'])||array_key_exists('success',$result)&&false===$result['success']){return new \WP_Error('certloom_coursera_not_eligible',__('This Coursera xAPI statement does not confirm successful course completion.','certloom'));}
+		$result = is_array( $statement['result'] ?? null ) ? $statement['result'] : array();
+		// xAPI result flags are JSON booleans. PHP truthiness would accept the
+		// string "false", a non-empty array, or a numeric value as completion.
+		if ( true !== ( $result['completion'] ?? null ) || ( array_key_exists( 'success', $result ) && true !== $result['success'] ) ) {
+			return new \WP_Error( 'certloom_coursera_not_eligible', __( 'This Coursera xAPI statement does not confirm successful course completion.', 'certloom' ) );
+		}
 		$object=is_array($statement['object']??null)?$statement['object']:array();$definition=is_array($object['definition']??null)?$object['definition']:array();$type=(string)($definition['type']??'');if(''!==$type&&false===strpos($type,'activities/course')){return new \WP_Error('certloom_coursera_object_invalid',__('Certloom accepts Coursera course completion statements, not item or video activity, for credential issuance.','certloom'));}
 		$context=is_array($statement['context']??null)?$statement['context']:array();$course_id=trim((string)($context[self::COURSE_ID_KEY]??''));$external_id=trim((string)($context[self::EXTERNAL_ID_KEY]??''));
 		if(''===$course_id||strlen($course_id)>191||!preg_match('/^[A-Za-z0-9._:@\/-]+$/',$course_id)){return new \WP_Error('certloom_coursera_course_invalid',__('Coursera did not include a valid course ID in the xAPI completion statement.','certloom'));}

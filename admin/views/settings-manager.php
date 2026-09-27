@@ -8,10 +8,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 $certloom_show_diagnostics = current_user_can( 'manage_options' );
 ?>
 <div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-settings-workspace">
-	<?php include ECAPLA_CERTVERIFY_PATH . 'admin/views/partials/brand-bar.php'; ?>
 	<section class="certloom-page-hero certloom-settings-hero" aria-labelledby="certloom-settings-title">
 		<div><span class="certloom-eyebrow"><?php esc_html_e( 'Configuration', 'certloom' ); ?></span><h1 id="certloom-settings-title"><?php esc_html_e( 'Settings', 'certloom' ); ?></h1><p><?php esc_html_e( 'Control access, numbering, branding, verification, retention and operational guidance from one place.', 'certloom' ); ?></p></div>
 	</section>
+	<?php ( new \Certloom\Infrastructure\Admin\AdminProductNavigation() )->render_current_subnav(); ?>
 	<div class="certloom-settings-tools">
 		<label class="certloom-settings-search-label" for="certloom-settings-search"><span><?php esc_html_e( 'Find a setting', 'certloom' ); ?></span><input id="certloom-settings-search" type="search" autocomplete="off" placeholder="<?php esc_attr_e( 'Search settings sections', 'certloom' ); ?>" data-empty-label="<?php esc_attr_e( 'No settings sections match.', 'certloom' ); ?>" /></label>
 		<nav class="certloom-settings-local-nav" aria-label="<?php esc_attr_e( 'Settings sections', 'certloom' ); ?>">
@@ -61,11 +61,13 @@ $certloom_show_diagnostics = current_user_can( 'manage_options' );
 	<?php endif; ?>
 	<?php endif; ?>
 
+	<section class="certloom-settings-access-intro" aria-labelledby="certloom-settings-access">
 	<h2 id="certloom-settings-access"><?php esc_html_e( 'Who can manage certificates', 'certloom' ); ?></h2>
 	<p class="description"><?php esc_html_e( 'Administrators always retain access. Grant the dedicated Certloom capability only to roles that genuinely need certificate-management access.', 'certloom' ); ?></p>
 	<?php if ( ! get_role( Ecapla_CertVerify_Permissions::MANAGER_ROLE ) ) : ?>
 		<form method="post" action="" class="ecapla-certverify-inline-form"><?php wp_nonce_field( 'certverify_create_manager_role' ); ?><?php submit_button( __( 'Create Certificate Manager role', 'certloom' ), 'secondary', 'certverify_create_manager_role', false ); ?><p class="description"><?php esc_html_e( 'Creates a minimal role with read access and Certloom management only.', 'certloom' ); ?></p></form>
 	<?php endif; ?>
+	</section>
 
 	<form method="post" action="">
 		<?php wp_nonce_field( 'certverify_save_settings' ); ?>
@@ -279,7 +281,7 @@ $certloom_show_diagnostics = current_user_can( 'manage_options' );
 			<?php $certloom_staging_rehearsal_can_run = 'passed' !== $certloom_staging_rehearsal_evidence && 'failed' !== $certloom_staging_rehearsal_evidence && ( 'running' === $certloom_staging_rehearsal_evidence || \Certloom\Infrastructure\Diagnostics\LegacyMigrationPreflightProof::is_current_passed() ); ?>
 			<form method="post" action="" class="ecapla-certverify-inline-form">
 				<?php wp_nonce_field( 'certverify_run_staging_migration_rehearsal' ); ?>
-				<?php submit_button( 'running' === $certloom_staging_rehearsal_evidence ? __( 'Continue staging migration rehearsal', 'certloom' ) : __( 'Run staging migration commit rehearsal', 'certloom' ), 'secondary', 'certverify_run_staging_migration_rehearsal', false, $certloom_staging_rehearsal_can_run ? array() : array( 'disabled' => 'disabled' ) ); ?>
+				<button type="submit" name="certverify_run_staging_migration_rehearsal" value="1" class="button button-secondary" <?php disabled( ! $certloom_staging_rehearsal_can_run ); ?>><?php echo esc_html( 'running' === $certloom_staging_rehearsal_evidence ? __( 'Continue staging migration rehearsal', 'certloom' ) : __( 'Run staging migration commit rehearsal', 'certloom' ) ); ?></button>
 			</form>
 			<?php if ( 'not_run' === $certloom_staging_rehearsal_evidence && ! \Certloom\Infrastructure\Diagnostics\LegacyMigrationPreflightProof::is_current_passed() ) : ?><p class="description"><strong><?php esc_html_e( 'Run fresh passing database, gated-domain, and populated migration-preflight proofs first.', 'certloom' ); ?></strong></p><?php endif; ?>
 			<?php if ( 'failed' === $certloom_staging_rehearsal_evidence ) : ?><p class="description"><strong><?php esc_html_e( 'This rehearsal intentionally has no destructive reset button. Review the failure and reclone/restore the staging database before trying a new rehearsal.', 'certloom' ); ?></strong></p><?php endif; ?>

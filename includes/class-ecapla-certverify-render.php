@@ -361,7 +361,6 @@ class Ecapla_CertVerify_Render {
 					$code = sanitize_key( (string) ( $status['code'] ?? 'unknown' ) );
 					$fields = array();
 					foreach ( array(
-						__( 'Certificate number', 'certloom' ) => (string) ( $payload['certificate_number'] ?? '' ),
 						__( 'Issued', 'certloom' ) => (string) ( $payload['issued_at'] ?? '' ),
 						__( 'Expires', 'certloom' ) => (string) ( $payload['expires_at'] ?? '' ),
 					) as $label => $value ) {
@@ -371,7 +370,7 @@ class Ecapla_CertVerify_Render {
 					$url = ( new \Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl() )->verification_url( $result->public_id() );
 					$credential = $result->credential();
 					$snapshot = is_array( $credential ) && is_array( $credential['snapshot'] ?? null ) ? $credential['snapshot'] : array();
-					$issuer = is_array( $snapshot['issuer'] ?? null ) ? (string) ( $snapshot['issuer']['name'] ?? '' ) : '';
+					$profile_visible = ! empty( $payload['profile_visible'] );
 					$presentation = array(
 						'found' => true,
 						'status' => array(
@@ -383,8 +382,9 @@ class Ecapla_CertVerify_Render {
 						'certificate_number' => (string) ( $payload['certificate_number'] ?? '' ),
 						'profile' => isset( $payload['profile'] ) && is_array( $payload['profile'] ) ? $payload['profile'] : array(),
 						'fields' => $fields,
-						'issuer' => $issuer,
-						'snapshot' => $snapshot,
+						'issuer' => '',
+						'snapshot' => $profile_visible ? $snapshot : array(),
+						'profile_visible' => $profile_visible,
 						'verified_at' => current_time( 'mysql' ),
 						'verification_url' => ! is_wp_error( $url ) ? (string) $url : '',
 						'actions' => ! is_wp_error( $url ) ? array(
@@ -459,7 +459,7 @@ class Ecapla_CertVerify_Render {
 		$hero .= '</div>';
 
 		$facts = array();
-		if ( '' !== $number ) { $facts[] = array( __( 'Credential number', 'certloom' ), $number ); }
+		if ( '' !== $number ) { $facts[] = array( __( 'Certificate number', 'certloom' ), $number ); }
 		foreach ( (array) ( $presentation['fields'] ?? array() ) as $field ) {
 			if ( ! is_array( $field ) || ! empty( $field['is_status'] ) ) { continue; }
 			$label = trim( (string) ( $field['label'] ?? '' ) );
@@ -478,6 +478,9 @@ class Ecapla_CertVerify_Render {
 
 		$snapshot = isset( $presentation['snapshot'] ) && is_array( $presentation['snapshot'] ) ? $presentation['snapshot'] : array();
 		$certificate_preview = self::normalized_certificate_preview_html( $snapshot );
+		if ( $verified_view && empty( $presentation['profile_visible'] ) ) {
+			$hero .= '<p class="cvp-profile-privacy-note">' . esc_html__( 'This public link shows verification details only. Recipient and credential details are private.', 'certloom' ) . '</p>';
+		}
 		$qr = class_exists( 'Ecapla_CertVerify_QR' ) && ! empty( $presentation['verification_url'] ) ? Ecapla_CertVerify_QR::figure_html( (string) $presentation['verification_url'], $prefix ) : '';
 		$barcode = class_exists( 'Ecapla_CertVerify_Barcode' ) && '' !== $number ? Ecapla_CertVerify_Barcode::figure_html( $number, $prefix ) : '';
 		$verified = $verified_view && ! empty( $presentation['verified_at'] ) ? '<p class="cvp-profile-verified">' . esc_html__( 'Verified from the issuer’s Certloom registry', 'certloom' ) . ' · <time datetime="' . esc_attr( (string) $presentation['verified_at'] ) . '">' . esc_html( self::format_verified_at( $presentation['verified_at'] ) ) . '</time></p>' : '';
@@ -548,7 +551,7 @@ class Ecapla_CertVerify_Render {
 	/** @return string */
 	private static function normalized_status_description( $code ) {
 		$descriptions = array(
-			'valid' => __( 'This credential currently satisfies its issuance, administrative, validity and compliance requirements.', 'certloom' ),
+			'valid' => __( 'This credential is currently valid according to the issuer\'s recorded status and dates.', 'certloom' ),
 			'suspended' => __( 'This credential has been administratively suspended.', 'certloom' ),
 			'revoked' => __( 'This credential has been revoked.', 'certloom' ),
 			'expired' => __( 'This credential is outside its validity period.', 'certloom' ),

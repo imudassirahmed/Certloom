@@ -1,6 +1,7 @@
 <?php
 namespace Certloom\Application\Templates;
 
+use Certloom\Application\Rendering\CanonicalJson;
 use Certloom\Infrastructure\Repository\TemplateRepository;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -125,7 +126,7 @@ final class FactoryPresetService {
 				$result['already_published']++;
 				continue;
 			}
-			if ( TemplateRepository::SOURCE_PRESET !== (string) ( $current['source_type'] ?? '' ) || ! hash_equals( (string) $definition['layout_sha256'], (string) ( $current['layout_sha256'] ?? '' ) ) ) {
+			if ( TemplateRepository::SOURCE_PRESET !== (string) ( $current['source_type'] ?? '' ) || ! ( new CanonicalJson() )->matches_hash( $definition['layout'], $current['layout_sha256'] ?? '' ) ) {
 				$result['skipped_customized']++;
 				continue;
 			}
@@ -188,7 +189,7 @@ final class FactoryPresetService {
 
 		$current = $template['current_revision'];
 		$current_hash = strtolower( (string) ( $current['layout_sha256'] ?? '' ) );
-		if ( hash_equals( $definition['layout_sha256'], $current_hash ) ) {
+		if ( ( new CanonicalJson() )->matches_hash( $definition['layout'], $current_hash ) ) {
 			return array( 'preset_key' => $definition['preset_key'], 'template_id' => absint( $template['id'] ), 'status' => 'unchanged', 'revision_id' => absint( $template['current_revision_id'] ), 'preset_version' => absint( $definition['preset_version'] ) );
 		}
 		if ( TemplateRepository::SOURCE_PRESET !== (string) ( $current['source_type'] ?? '' ) ) {
@@ -213,7 +214,7 @@ final class FactoryPresetService {
 		$max_version = $catalog instanceof CuratedPresetCatalog ? CuratedPresetCatalog::PRESET_VERSION : PresetCatalog::PRESET_VERSION;
 		for ( $version = 1; $version <= $max_version; $version++ ) {
 			$definition = $catalog->get( $preset_key, $version );
-			if ( is_array( $definition ) && hash_equals( (string) $definition['layout_sha256'], (string) $layout_hash ) ) { return $version; }
+			if ( is_array( $definition ) && ( new CanonicalJson() )->matches_hash( $definition['layout'], $layout_hash ) ) { return $version; }
 		}
 		return null;
 	}

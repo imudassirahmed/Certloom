@@ -32,7 +32,7 @@ $primary_block = preg_replace( '/.*private const PRIMARY = array\((.*?)\);.*publ
 uxcons_check( 6 === substr_count( $primary_block, '=>' ), 'unified primary shell is bounded to exactly six configured destinations' );
 uxcons_check( false !== strpos( $navigation, "add_action( 'admin_menu', array( \$this, 'consolidate_primary_menu' ), 999 )" ), 'menu consolidation runs after feature page registration' );
 uxcons_check( false !== strpos( $navigation, "__( 'Backup & Restore','certloom')" ) || false !== strpos( $navigation, "__( 'Backup & Restore', 'certloom' )" ), 'Backup & Restore is a Settings continuation rather than a primary destination' );
-uxcons_check( false !== strpos( $navigation, "__( 'Developer tools','certloom')" ) || false !== strpos( $navigation, "__( 'Developer tools', 'certloom' )" ), 'Developer tools remains capability/preview-controlled as a contextual Settings continuation without a global UI mode' );
+uxcons_check( false !== strpos( $navigation, "__( 'Credential data tools','certloom')" ) || false !== strpos( $navigation, "__( 'Credential data tools', 'certloom' )" ), 'credential data tools remain capability/preview-controlled as a contextual Settings continuation without a global UI mode' );
 uxcons_check( false !== strpos( $admin, 'AdminProductNavigation()' ), 'legacy administration registers the shared product navigation once' );
 uxcons_check( false !== strpos( $admin, "add_submenu_page( null, __( 'Integrations', 'certloom' )" ) && false !== strpos( $admin, "add_submenu_page( null, __( 'Backup & Restore', 'certloom' )" ), 'contextual subtabs are registered as hidden WordPress routes so menu consolidation cannot turn them into 403 pages' );
 

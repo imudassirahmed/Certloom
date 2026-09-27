@@ -7,6 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 use Certloom\Application\Rendering\CanonicalJson;
 use Certloom\Infrastructure\Email\EmailMergeTokenCatalog;
+use Certloom\Infrastructure\Email\EmailDesignCompiler;
 
 /**
  * Deterministic credential-email composition from an immutable Version snapshot.
@@ -76,7 +77,7 @@ final class EmailTemplateService {
 
 		$subject = sanitize_text_field( wp_strip_all_tags( $this->replace( (string) $template['subject'], $plain ) ) );
 		$preheader = sanitize_text_field( wp_strip_all_tags( $this->replace( (string) ( $template['preheader'] ?? '' ), $plain ) ) );
-		$html_body = wp_kses_post( $this->replace( (string) $template['html_body'], $html_values ) );
+		$html_body = EmailDesignCompiler::sanitize_inline_html( $this->replace( (string) $template['html_body'], $html_values ) );
 		if ( '' !== $preheader ) { $html_body = '<div style="display:none!important;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">' . esc_html( $preheader ) . '</div>' . $html_body; }
 		$text_body = trim( wp_strip_all_tags( $this->replace( (string) $template['text_body'], $plain ) ) );
 
@@ -127,7 +128,7 @@ final class EmailTemplateService {
 		$template = array_merge( self::defaults(), $template );
 		$subject = trim( sanitize_text_field( (string) $template['subject'] ) );
 		$preheader = trim( sanitize_text_field( (string) ( $template['preheader'] ?? '' ) ) );
-		$html = wp_kses_post( (string) $template['html_body'] );
+		$html = EmailDesignCompiler::sanitize_inline_html( (string) $template['html_body'] );
 		$text = sanitize_textarea_field( (string) ( $template['text_body'] ?? '' ) );
 		if ( '' === trim( $text ) && '' !== trim( $html ) ) {
 			$plain_html = preg_replace_callback(
@@ -206,6 +207,13 @@ final class EmailTemplateService {
 			'issue_date'=>'credential.issue_date','expiry_date'=>'credential.expiry_date','grade'=>'credential.grade','verification_url'=>'verification.url',
 		);
 		foreach($aliases as $alias=>$canonical){if(!array_key_exists($alias,$plain)){$plain[$alias]=(string)($plain[$canonical]??'');}}
+		// Older built-in designs use the unscoped program_title alias. Independent
+		// credentials have no Program; keep those messages readable while the
+		// canonical program.title field remains accurately empty.
+		if ( '' === trim( (string) ( $plain['program_title'] ?? '' ) ) ) {
+			$title = trim( (string) ( $plain['credential.title'] ?? '' ) );
+			if ( '' !== $title ) { $plain['program_title'] = $title; }
+		}
 		return $plain;
 	}
 

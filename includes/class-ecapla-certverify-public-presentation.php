@@ -30,6 +30,7 @@ class Ecapla_CertVerify_Public_Presentation {
 	 * @return array|WP_Error Presentation array, not-found result, or fail-closed error.
 	 */
 	public static function verify( $number, $rate_limit = true, $context = 'verification', $secondary_code = '', $source = 'manual' ) {
+		if ( ! is_scalar( $number ) ) { return array( 'found' => false ); }
 		$number = trim( sanitize_text_field( (string) $number ) );
 		$source = class_exists( 'Ecapla_CertVerify_Analytics' ) ? Ecapla_CertVerify_Analytics::normalize_source( $source ) : 'manual';
 		$length = function_exists( 'mb_strlen' ) ? mb_strlen( $number ) : strlen( $number );
@@ -55,6 +56,10 @@ class Ecapla_CertVerify_Public_Presentation {
 			return $certificate;
 		}
 		if ( ! is_array( $certificate ) ) {
+			$native = self::verify_native_number( $number, $context );
+			if ( is_wp_error( $native ) || ! empty( $native['found'] ) ) {
+				return $native;
+			}
 			if ( class_exists( 'Ecapla_CertVerify_Secondary_Code' ) ) {
 				Ecapla_CertVerify_Secondary_Code::equalize_public_miss( $secondary_code );
 			}
@@ -90,6 +95,77 @@ class Ecapla_CertVerify_Public_Presentation {
 			self::record_analytics( 'failed', $source, 0, $key, $rate_limit, $context );
 		}
 		return $presented;
+	}
+
+	/** Resolve numbers issued by the normalized workflow through its own visibility policy. */
+	private static function verify_native_number( $number, $context ) {
+		if ( ! class_exists( '\\Certloom\\Infrastructure\\Repository\\CredentialRepository' ) ) {
+			return array( 'found' => false );
+		}
+		$gate = new \Certloom\Infrastructure\Verification\PublicVerificationGate();
+		if ( ! $gate->is_ready() ) {
+			return array( 'found' => false );
+		}
+		$repo = new \Certloom\Infrastructure\Repository\CredentialRepository();
+		$series = $repo->find_series_by_display_number( $number );
+		if ( is_wp_error( $series ) ) { return $series; }
+		if ( ! is_array( $series ) ) { return array( 'found' => false ); }
+		$result = ( new \Certloom\Application\CredentialVerificationService( $repo ) )->verify_public_id( (string) ( $series['public_id'] ?? '' ) );
+		if ( is_wp_error( $result ) ) { return $result; }
+		$payload = ( new \Certloom\Application\PublicCredentialPresenter() )->present( $result, $context );
+		if ( empty( $payload['found'] ) ) { return array( 'found' => false ); }
+		$url = ( new \Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl() )->verification_url( $result->public_id() );
+		$url = is_wp_error( $url ) ? '' : (string) $url;
+		$fields = array();
+		foreach ( array(
+			__( 'Certificate number', 'certloom' ) => (string) ( $payload['certificate_number'] ?? '' ),
+			__( 'Issued', 'certloom' ) => (string) ( $payload['issued_at'] ?? '' ),
+			__( 'Expires', 'certloom' ) => (string) ( $payload['expires_at'] ?? '' ),
+		) as $label => $value ) {
+			if ( '' !== $value ) { $fields[] = array( 'label' => $label, 'value' => $value, 'is_status' => false ); }
+		}
+		$fields = array_merge( $fields, (array) ( $payload['fields'] ?? array() ) );
+		$profile = is_array( $payload['profile'] ?? null ) ? $payload['profile'] : array();
+		$status = is_array( $payload['status'] ?? null ) ? $payload['status'] : array();
+		$actions = '' === $url ? array() : array(
+			array( 'type' => 'copy', 'label' => __( 'Copy link', 'certloom' ), 'url' => $url ),
+			array( 'type' => 'profile', 'label' => __( 'View credential profile', 'certloom' ), 'url' => $url ),
+		);
+		return array(
+			'found' => true,
+			'certificate_number' => (string) ( $payload['certificate_number'] ?? '' ),
+			'fields' => $fields,
+			'status' => array(
+				'key' => sanitize_key( (string) ( $status['code'] ?? 'unknown' ) ),
+				'label' => self::native_status_label( $status ),
+				'description' => (string) ( $status['description'] ?? '' ),
+			),
+			'issuer' => (string) ( $profile['issuer_name'] ?? '' ),
+			'verified_at' => current_time( 'mysql' ),
+			'verification_url' => $url,
+			'profile_url' => $url,
+			'visibility' => ! empty( $payload['profile_visible'] ) ? 'public' : 'verification_summary',
+			'actions' => $actions,
+			'labels' => array(
+				'issued_by' => __( 'Issued by', 'certloom' ),
+				'verified' => __( 'Verified', 'certloom' ),
+			),
+		);
+	}
+
+	/** @return string */
+	private static function native_status_label( array $status ) {
+		$labels = array(
+			'valid' => __( 'Valid credential', 'certloom' ),
+			'expired' => __( 'Expired credential', 'certloom' ),
+			'revoked' => __( 'Revoked credential', 'certloom' ),
+			'suspended' => __( 'Suspended credential', 'certloom' ),
+			'not_yet_valid' => __( 'Not yet valid', 'certloom' ),
+			'pending_review' => __( 'Pending review', 'certloom' ),
+			'suspended_noncompliant' => __( 'Requirements not met', 'certloom' ),
+		);
+		$code = sanitize_key( (string) ( $status['code'] ?? '' ) );
+		return $labels[ $code ] ?? __( 'Credential status', 'certloom' );
 	}
 
 	/**

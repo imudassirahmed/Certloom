@@ -30,7 +30,7 @@ final class CredentialRelationshipBulkService {
 			$series = $this->credentials->find_series( $id );
 			if ( is_wp_error( $series ) ) { return $series; }
 			if ( ! $series ) { return new \WP_Error( 'certloom_relationship_bulk_series_missing', __( 'One of the selected credential Series no longer exists.', 'certloom' ) ); }
-			$rows[] = array( 'series_id' => $id, 'updated_at' => (string) ( $series['updated_at'] ?? '' ), 'program_id' => $series['program_id'], 'batch_id' => $series['batch_id'] );
+			$rows[] = array( 'series_id' => $id, 'updated_at' => (string) ( $series['updated_at'] ?? '' ), 'current_version_id' => absint( $series['current_version_id'] ?? 0 ), 'program_id' => $series['program_id'], 'batch_id' => $series['batch_id'] );
 		}
 		$review = array(
 			'rows' => $rows,
@@ -66,6 +66,7 @@ final class CredentialRelationshipBulkService {
 		foreach ( $rows as $row ) {
 			$local = $context;
 			$local['expected_updated_at'] = (string) ( $row['updated_at'] ?? '' );
+			$local['expected_current_version_id'] = absint( $row['current_version_id'] ?? 0 );
 			$local['source_ref'] = isset( $context['source_ref'] ) ? $context['source_ref'] : 'bulk_relationship_correction';
 			$changed = $this->corrections->correct( absint( $row['series_id'] ?? 0 ), $review['target']['program_id'] ?? null, $review['target']['batch_id'] ?? null, $local );
 			if ( is_wp_error( $changed ) ) { $result['failed'][] = array( 'series_id' => absint( $row['series_id'] ?? 0 ), 'reason' => $changed->get_error_message() ); continue; }

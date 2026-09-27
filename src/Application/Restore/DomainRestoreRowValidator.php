@@ -133,14 +133,14 @@ final class DomainRestoreRowValidator {
 				}
 				try {
 					$layout = ( new LayoutValidator() )->normalize( $decoded_layout );
-					$layout_hash = ( new CanonicalJson() )->hash( $layout );
+					$layout_hash_matches = ( new CanonicalJson() )->matches_hash( $layout, $row['layout_sha256'] );
 				} catch ( \Throwable $error ) {
 					return new \WP_Error( 'certloom_domain_restore_template_layout_invalid', __( 'A template revision in the backup does not satisfy Certloom’s canonical layout contract.', 'certloom' ) );
 				}
 				if ( LayoutSchema::NAME !== (string) $layout['_meta']['schema'] || $stored_layout_version !== (int) $layout['_meta']['schema_version'] ) {
 					return new \WP_Error( 'certloom_domain_restore_template_layout_schema_mismatch', __( 'A template revision in the backup has layout metadata that does not match its stored schema version.', 'certloom' ) );
 				}
-				if ( ! hash_equals( strtolower( (string) $row['layout_sha256'] ), $layout_hash ) ) {
+				if ( ! $layout_hash_matches ) {
 					return new \WP_Error( 'certloom_domain_restore_template_layout_hash_invalid', __( 'A template revision in the backup failed its layout integrity check.', 'certloom' ) );
 				}
 				$dates = array( 'created_at' => 'datetime' );

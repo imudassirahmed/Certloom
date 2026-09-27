@@ -186,6 +186,10 @@
 			studioRoot.style.setProperty( '--certloom-email-studio-left', `${ left }px` );
 			studioRoot.style.setProperty( '--certloom-email-studio-right', `${ right }px` );
 			studioRoot.classList.add( 'is-viewport-framed' );
+			// Framing changes the stage from its short document-flow height to the
+			// viewport height. Refit after that layout change, even when a browser
+			// does not deliver a ResizeObserver notification for the stage.
+			scheduleCanvasFit();
 		}
 		function scheduleStudioViewportSync() {
 			if ( viewportSyncFrame ) {
@@ -259,6 +263,7 @@
 			canvasFitObserver.observe( canvasFrame );
 		}
 		window.addEventListener( 'resize', scheduleCanvasFit );
+		syncStudioViewport();
 
 		let blocks = [];
 		try {

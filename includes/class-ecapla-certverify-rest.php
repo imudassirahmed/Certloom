@@ -71,10 +71,12 @@ class Ecapla_CertVerify_REST {
 	}
 
 	public static function sanitize_number( $value ) {
+		if ( ! is_scalar( $value ) ) { return ''; }
 		return trim( sanitize_text_field( (string) $value ) );
 	}
 
 	public static function validate_number( $value ) {
+		if ( ! is_scalar( $value ) ) { return false; }
 		$length = function_exists( 'mb_strlen' ) ? mb_strlen( (string) $value ) : strlen( (string) $value );
 		return '' !== trim( (string) $value ) && $length <= 100;
 	}
@@ -219,13 +221,4 @@ class Ecapla_CertVerify_REST {
 		return $response;
 	}
 
-	private static function get_ip() {
-		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '0.0.0.0';
-		return preg_replace( '/[^0-9a-fA-F:.]/', '', (string) $ip );
-	}
-
-	private static function get_user_agent() {
-		$user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
-		return function_exists( 'mb_substr' ) ? mb_substr( $user_agent, 0, 200 ) : substr( $user_agent, 0, 200 );
-	}
 }

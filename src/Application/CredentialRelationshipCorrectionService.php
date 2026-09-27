@@ -45,6 +45,13 @@ final class CredentialRelationshipCorrectionService {
 			if ( null !== $expected_updated_at && $expected_updated_at !== (string) ( $series['updated_at'] ?? '' ) ) {
 				return new \WP_Error( 'certloom_relationship_review_stale', __( 'The credential changed after this relationship correction was reviewed. Reload and review it again.', 'certloom' ) );
 			}
+			$expected_version_id = absint( $context['expected_current_version_id'] ?? 0 );
+			if ( ! $expected_version_id ) {
+				return new \WP_Error( 'certloom_relationship_review_version_required', __( 'Review this credential again before changing its relationships.', 'certloom' ) );
+			}
+			if ( $expected_version_id !== absint( $series['current_version_id'] ?? 0 ) ) {
+				return new \WP_Error( 'certloom_relationship_review_stale', __( 'The credential changed after this relationship correction was reviewed. Reload and review it again.', 'certloom' ) );
+			}
 
 			$target = $this->credentials->validate_relationship_target( $program_id, $batch_id );
 			if ( is_wp_error( $target ) ) { return $target; }

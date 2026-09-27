@@ -94,6 +94,18 @@ final class EmailAutomationRuleRepository {
 			: new \WP_Error( 'certloom_email_rule_save_failed', __( 'Certloom could not save the email automation.', 'certloom' ) );
 	}
 
+	/** Change only the delivery state of an existing rule. @return string|\WP_Error */
+	public function set_active( $rule_id, $active ) {
+		$rule_id = sanitize_key( (string) $rule_id );
+		foreach ( $this->all() as $rule ) {
+			if ( $rule_id === (string) $rule['id'] ) {
+				$rule['active'] = (bool) $active;
+				return $this->save( $rule );
+			}
+		}
+		return new \WP_Error( 'certloom_email_rule_missing', __( 'That automation no longer exists.', 'certloom' ) );
+	}
+
 	/** @return true|\WP_Error */
 	public function delete( $rule_id ) {
 		$rule_id = sanitize_key( (string) $rule_id );

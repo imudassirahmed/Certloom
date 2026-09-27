@@ -83,9 +83,9 @@ wiz_check( in_array( 'standard', $state['wizard_draft']['selected_fields'], true
 $r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'organization', array( 'organization_name'=>'' ), 'fields', false );
 wiz_check( is_wp_error( $r ) && 'certloom_setup_organization_required' === $r->get_error_code(), 'Organization name must be server-required.' );
 $r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'organization', array(), 'fields', true );
-wiz_check( true === $r, 'Organization may be explicitly skipped for later without bypassing the saved skip state.' );
+wiz_check( is_wp_error( $r ) && 'certloom_setup_organization_required' === $r->get_error_code(), 'Required organization cannot be skipped through a crafted request.' );
 $state = Ecapla_CertVerify_Onboarding::get_state();
-wiz_check( in_array( 'organization', $state['wizard_skipped_steps'], true ) && 'fields' === $state['wizard_step'], 'Skipped setup steps must be recorded and advance resumably.' );
+wiz_check( ! in_array( 'organization', $state['wizard_skipped_steps'], true ) && 'organization' === $state['wizard_step'], 'Rejected organization skip leaves setup at the required step.' );
 $r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'organization', array( 'organization_name'=>'Example Certification Body','organization_logo_id'=>55,'organization_website'=>'https://example.test','organization_contact'=>'info@example.test' ), 'fields', false );
 wiz_check( true === $r, 'Organization step must save identity draft.' );
 $r = Ecapla_CertVerify_Onboarding::save_wizard_step( 'fields', array( 'selected_fields'=>array('standard','scope'),'custom_fields'=>array('Accreditation reference','Audit cycle') ), 'appearance', false );
@@ -146,7 +146,7 @@ $view = file_get_contents($root.'/admin/views/setup-wizard.php');
 $css = file_get_contents($root.'/admin/assets/certloom-foundation.css');
 $js = file_get_contents($root.'/admin/assets/admin.js');
 foreach(array($admin,$view,$css,$js) as $src){ wiz_check(is_string($src)&&''!==$src,'Required Setup v2 source unavailable.'); }
-wiz_check( false !== strpos($view,'Start setup') && false !== strpos($view,'What are you using Certloom for?') && false !== strpos($view,'Choose credential fields') && false !== strpos($view,'How should credentials appear?') && false !== strpos($view,'Complete the credential context') && false !== strpos($view,'Issue your first credential'), 'Setup v2 must expose the approved flow.' );
+wiz_check( false !== strpos($view,'Issue a credential') && false !== strpos($view,'Customize setup first') && false !== strpos($view,'What are you using Certloom for?') && false !== strpos($view,'Choose credential fields') && false !== strpos($view,'How should credentials appear?') && false !== strpos($view,'Complete the credential context') && false !== strpos($view,'Issue your first credential'), 'Setup must expose the quick issue path and optional detailed setup.' );
 wiz_check( false === strpos($view,'name="numbering_mode"') && false === strpos($view,'backup_schedule'), 'Required Setup v2 path must not ask for numbering or backup policy during onboarding.' );
 wiz_check( false !== strpos($view,'value="details_only"') && false !== strpos($view,'value="image"') && false !== strpos($view,'value="design"'), 'Appearance must expose exactly the three approved presentation concepts.' );
 wiz_check( false !== strpos($view,'name="first_recipient_name"') && false !== strpos($view,'name="credential_title"') && false !== strpos($view,'name="issue_date"'), 'First credential must expose Recipient, Independent title fallback and effective date.' );
@@ -158,7 +158,7 @@ wiz_check( false !== strpos($js,'certloom_setup_draft_autosave') && false !== st
 wiz_check( false !== strpos($js,"aria-haspopup', 'dialog") && false !== strpos($js,"frame.on( 'close'") && false !== strpos($view,'aria-live="polite"'), 'Setup media controls must expose dialog/live-region semantics and restore focus after media closes.' );
 wiz_check( false !== strpos($admin,"ensure_starter_publications( get_current_user_id(), 10 )") && false !== strpos($admin,"search_published_candidates( 'certloom-preset-', 50 )") && false !== strpos($view,'Open Design Center'), 'Setup Appearance must seed the ten starter designs for immediate selection and keep Design Center discoverable.' );
 wiz_check( false !== strpos($view,'10 starter designs') && false !== strpos($view,'create your own certificate design with Certloom Designer'), 'Appearance helper copy must explain starter designs, Design Center publication and custom design creation.' );
-wiz_check( 6 === substr_count($view,'value="skip_step"') && 6 === substr_count($view,'formnovalidate'), 'Each actionable setup step must expose an explicit skip/do-later action without browser validation blocking it.' );
+wiz_check( 5 === substr_count($view,'value="skip_step"') && 5 === substr_count($view,'formnovalidate') && false !== strpos($view,'Add a logo or contact details (optional)'), 'Optional setup steps remain skippable while required organization is clear.' );
 wiz_check( false !== strpos($view,'certloom-brand-mark.png') && false !== strpos($view,'certloom-brand-wordmark.png') && false === strpos($view,'exact supplied full-colour Certloom lockup will replace'), 'Setup branding must use the supplied Certloom mark/wordmark assets with no stale placeholder note.' );
 wiz_check( false !== strpos($view,'wizard_skipped_steps') && false !== strpos($view,'is-skipped'), 'Progress must distinguish skipped steps from completed/current steps.' );
 wiz_check( false !== strpos($css,'var(--cl-brand-emerald)') && false !== strpos($css,'linear-gradient(90deg, var(--cl-cyan), var(--cl-brand-emerald))'), 'Current/progress states must use the Certloom green and brand gradient.' );

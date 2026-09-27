@@ -47,7 +47,7 @@
 					)
 				),
 				el( 'div', blockProps,
-					el( Notice, { status: 'info', isDismissible: false, className: 'certloom-my-credentials-block-note' }, __( 'This block is recipient-specific. The editor preview uses the current signed-in account and remains fail-closed until normalized credential authority is available.', 'certloom' ) ),
+					el( Notice, { status: 'info', isDismissible: false, className: 'certloom-my-credentials-block-note' }, __( 'Each visitor sees their own credentials after signing in. The editor preview shows credentials linked to your account.', 'certloom' ) ),
 					el( ServerSideRender, { block: 'certloom/my-credentials', attributes: a } )
 				)
 			);

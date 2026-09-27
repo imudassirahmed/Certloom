@@ -571,7 +571,7 @@ final class DomainAdmin {
 			: null;
 		$this->header(
 			$simple ? __( 'Credentials', 'certloom' ) : __( 'Credential Management', 'certloom' ),
-			$simple ? __( 'See who received each credential, open the public view, or continue managing it without navigating through internal record structures.', 'certloom' ) : __( 'Inspect continuing Credential Series, immutable Version lineage, effective status, verification identity, and reviewed lifecycle actions from one premium workspace.', 'certloom' ),
+			$simple ? __( 'See who received each credential, open the public view, or continue managing it without navigating through internal record structures.', 'certloom' ) : __( 'Inspect continuing Credential Series, immutable Version lineage, effective status, verification identity, and reviewed lifecycle actions from one detailed workspace.', 'certloom' ),
 			$issue_action
 		);
 		// Import / issue from file already exists in the Credentials contextual subnav.
@@ -821,8 +821,8 @@ final class DomainAdmin {
 
 		$number = is_array( $version ) && ! empty( $version['display_number'] ) ? (string) $version['display_number'] : __( 'Unnumbered credential', 'certloom' );
 		$this->header(
-			$simple ? __( 'Edit credential record', 'certloom' ) : __( 'Credential Management', 'certloom' ),
-			$simple ? __( 'Review locked issuance facts, update supported relationships or status, and see the complete change history from one record workspace.', 'certloom' ) : __( 'One continuing credential identity with immutable historical Versions and review-before-commit administration.', 'certloom' )
+			$simple ? __( 'Credential details', 'certloom' ) : __( 'Credential Management', 'certloom' ),
+			$simple ? __( 'View issued facts, manage status or relationships, and review the change history.', 'certloom' ) : __( 'One continuing credential identity with immutable historical Versions and review-before-commit administration.', 'certloom' )
 		);
 		$this->notice();
 		echo '<div class="certloom-credential-back"><a href="' . esc_url( add_query_arg( 'page', self::CREDENTIALS_PAGE, admin_url( 'admin.php' ) ) ) . '">&larr; ' . esc_html__( 'Back to credentials', 'certloom' ) . '</a></div>';
@@ -2435,9 +2435,9 @@ final class DomainAdmin {
 	/** @return void */
 	private function issuer_field( $selected ) {
 		$items = ( new ScopedContextChoices() )->issuers( $selected );
-		echo '<div class="certloom-domain-field"><label for="certloom-domain-issuer-id"><strong>' . esc_html__( 'Default issuer', 'certloom' ) . '</strong></label><select id="certloom-domain-issuer-id" name="issuer_id" data-certloom-context-lookup="issuer" data-certloom-context-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search issuers…', 'certloom' ) . '"><option value="">' . esc_html__( 'No default issuer', 'certloom' ) . '</option>';
+		echo '<div class="certloom-domain-field"><div class="certloom-domain-field-label"><label for="certloom-domain-issuer-id"><strong>' . esc_html__( 'Default issuer', 'certloom' ) . '</strong></label>' . $this->help_tip( __( 'Optional default issuer. Search covers the complete issuer registry without loading every record at once.', 'certloom' ) ) . '</div><select id="certloom-domain-issuer-id" name="issuer_id" data-certloom-context-lookup="issuer" data-certloom-context-nonce="' . esc_attr( wp_create_nonce( ScopedFieldAdminAjax::NONCE_ACTION ) ) . '" data-certloom-context-search-placeholder="' . esc_attr__( 'Search issuers…', 'certloom' ) . '"><option value="">' . esc_html__( 'No default issuer', 'certloom' ) . '</option>';
 		if ( ! is_wp_error( $items ) ) { foreach ( $items as $issuer ) { echo '<option value="' . esc_attr( (string) absint( $issuer['id'] ?? 0 ) ) . '" ' . selected( absint( $selected ), absint( $issuer['id'] ?? 0 ), false ) . '>' . esc_html( (string) ( $issuer['name'] ?? '' ) ) . '</option>'; } }
-		echo '</select>' . $this->help_tip( __( 'Optional default issuer. Search covers the complete issuer registry without loading every record at once.', 'certloom' ) ) . '</div>';
+		echo '</select></div>';
 	}
 
 	/** @return void */

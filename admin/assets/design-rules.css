@@ -7,6 +7,8 @@
 @media(forced-colors:active){.certloom-design-rules-global,.certloom-design-rule-global-card,.certloom-design-rule-targets,.certloom-design-rule-editor,.certloom-design-rule-preview{border-color:CanvasText}.certloom-design-rule-target:hover{outline:1px solid Highlight}}
 
 /* Contextual Designs card used by Issuer, Program and Batch editors. */
+.certloom-design-rule-global-card { align-content: start; min-width: 0; }
+.certloom-design-rule-global-card select { align-self: start; height: 44px; }
 .certloom-context-design-card{display:grid;gap:16px;margin:18px 0;padding:18px 20px;border:1px solid var(--certloom-border);border-radius:var(--certloom-radius-lg);background:var(--certloom-surface)}
 .certloom-context-design-card__head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
 .certloom-context-design-card__head h3{margin:3px 0 5px;font-size:20px}.certloom-context-design-card__head p{margin:0;max-width:760px;color:var(--cl-ink-soft)}

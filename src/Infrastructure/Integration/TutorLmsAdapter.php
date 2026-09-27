@@ -91,7 +91,9 @@ final class TutorLmsAdapter implements IntegrationAdapterInterface {
 				'post_id' => $course_id,
 				'user_id' => $user_id,
 				'type' => 'course_completed',
-				'status' => 'approve',
+				// Tutor writes the literal "approved" status. WordPress's
+				// "approve" query alias matches only its native numeric status.
+				'status' => array( 'approved', 'approve' ),
 				'number' => 3,
 				'orderby' => 'comment_ID',
 				'order' => 'DESC',

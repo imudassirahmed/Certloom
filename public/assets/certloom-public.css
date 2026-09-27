@@ -1481,6 +1481,11 @@
 .certloom-result-action:focus-visible{outline:3px solid currentColor;outline-offset:3px;text-decoration:none;}
 .certloom-action-feedback{font-size:12px;line-height:1.4;color:var(--cl-ink-soft);min-height:1em;}
 .certloom-route-main#primary{float:none;clear:both;width:100%;max-width:none;min-width:0;margin:0;padding:clamp(24px,5vw,72px) 20px;box-sizing:border-box;}
+.certloom-route-page{margin:0;min-height:100vh;background:var(--cl-paper);}
+.certloom-route-site-header{padding:18px max(20px,calc((100vw - 1120px)/2));background:var(--cl-surface);border-bottom:1px solid var(--cl-rule);}
+.certloom-route-site-header a{color:var(--cl-ink);font-weight:700;text-decoration:none;}
+.certloom-route-site-header a:focus-visible{outline:2px solid var(--cl-blue);outline-offset:4px;}
+.certloom-route-main .cvp-profile-privacy-note{margin:0;padding:16px 24px;color:var(--cl-ink-soft);font-size:14px;line-height:1.5;border-bottom:1px solid var(--cl-rule);}
 .certloom-route-shell{width:min(100%,960px);min-width:0;margin-inline:auto;}
 .certloom-route-shell:focus-visible{outline:3px solid var(--cl-valid);outline-offset:4px;}
 .certloom-credential-profile.cvp-widget{--cvp-border:var(--cl-expired-wash);--cvp-text:var(--cl-ink);--cvp-muted:var(--cl-ink-soft);width:min(100%,780px);margin-inline:auto;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--cvp-text);}
@@ -1965,6 +1970,11 @@
 
 /* UX-SYSTEM-01 — visible verification labels with optional proof disclosure. */
 .certloom-verification-field{display:grid;gap:6px;flex:1 1 260px;min-width:0}.certloom-verification-label{display:block;font-size:13px;font-weight:700;line-height:1.3;color:inherit}.certloom-verification-code-disclosure{flex:1 1 100%;min-width:0;margin:0}.certloom-verification-code-disclosure summary{cursor:pointer;width:max-content;max-width:100%;font-size:13px;font-weight:650;text-decoration:underline;text-underline-offset:2px}.certloom-verification-code-disclosure[open]{display:grid;gap:6px;padding-top:4px}.certloom-verification-code-disclosure .certloom-secondary-code-input{width:100%;max-width:420px}.cvx-input-field{flex-basis:100%}
+/* Once a verification form stacks, its flex basis must stop acting as a row height. */
+@container certverify-legacy (max-width:520px){.ecapla-certverify-widget.cv-widget .cv-search-form>:is(.certloom-verification-field,.certloom-verification-code-disclosure){flex:0 0 auto;width:100%}}
+@container certverify-modern (max-width:560px){.ecapla-certverify-template.cvx-widget .cvx-search-form>:is(.certloom-verification-field,.certloom-verification-code-disclosure){flex:0 0 auto;width:100%}}
+@media(max-width:520px){.ecapla-certverify-widget.cv-widget .cv-search-form>:is(.certloom-verification-field,.certloom-verification-code-disclosure){flex:0 0 auto;width:100%}}
+@media(max-width:560px){.ecapla-certverify-template.cvx-widget .cvx-search-form>:is(.certloom-verification-field,.certloom-verification-code-disclosure){flex:0 0 auto;width:100%}}
 
 /* UX-CORE-10 public hardening — keep Certloom usable inside hostile themes and narrow embeds. */
 :is(.ecapla-certverify-widget.cv-widget,.ecapla-certverify-template.cvx-widget,.certloom-credential-profile.cvp-widget,.certloom-my-credentials){max-width:100%;min-width:0}

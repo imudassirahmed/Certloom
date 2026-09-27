@@ -68,6 +68,12 @@ $statement=array(
 );
 $ref=new ReflectionClass(CourseraXapiBridge::class);$method=$ref->getMethod('parse_statement');$method->setAccessible(true);$parsed=$method->invoke(null,$statement);
 cx(!is_wp_error($parsed),'official-shape Standard xAPI completion parses');
+foreach (array('false', 'true', 0, 1, null, array(true)) as $invalid_flag) {
+ foreach (array('completion', 'success') as $flag) {
+  $invalid_statement=$statement; $invalid_statement['result'][$flag]=$invalid_flag;
+  cx(cxerr($method->invoke(null,$invalid_statement),'certloom_coursera_not_eligible'),'xAPI '.$flag.' rejects non-boolean '.gettype($invalid_flag));
+ }
+}
 cx('course-42'===($parsed['course_id']??'')&&'student-2026-001'===($parsed['external_id']??''),'parser requires Coursera courseId and External ID extensions');
 cx(64===strlen($parsed['statement_sha256']??''),'parser retains only a statement fingerprint rather than raw payload evidence');
 $progress=$statement;$progress['verb']['id']='http://adlnet.gov/expapi/verbs/progressed';$progress['verb']['display']['en-US']='PROGRESSED';$progress['result']['completion']=false;cx(cxerr($method->invoke(null,$progress),'certloom_coursera_not_completion'),'progress events cannot issue credentials');

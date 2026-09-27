@@ -102,15 +102,14 @@ final class DesignHierarchyConfigurationGuard {
 			if ( is_wp_error( $dependency ) ) { return $dependency; }
 		}
 
-		$resolved = $this->templates->resolve_published_assignment_details_excluding(
-			array(
-				'issuer_id' => absint( $program['issuer_id'] ?? 0 ),
-				'program_id' => $program_id,
-				'batch_id' => 0,
-			),
-			'program',
-			$program_id
+		$context = array(
+			'issuer_id' => absint( $program['issuer_id'] ?? 0 ),
+			'program_id' => $program_id,
+			'batch_id' => 0,
 		);
+		$resolved = $program_id
+			? $this->templates->resolve_published_assignment_details_excluding( $context, 'program', $program_id )
+			: $this->templates->resolve_published_assignment_details( $context );
 		if ( is_wp_error( $resolved ) ) { return $this->allow_staged_draft( $resolved ); }
 		if ( is_array( $resolved ) && ! empty( $resolved['published_layout'] ) ) {
 			$valid = $this->compatibility->validate( (array) $resolved['published_layout'], $program_contract, null, $catalog );
@@ -162,15 +161,14 @@ final class DesignHierarchyConfigurationGuard {
 			if ( is_wp_error( $valid ) ) { return $valid; }
 		}
 
-		$resolved = $this->templates->resolve_published_assignment_details_excluding(
-			array(
-				'issuer_id' => absint( $program['issuer_id'] ?? 0 ),
-				'program_id' => absint( $program['id'] ?? 0 ),
-				'batch_id' => $batch_id,
-			),
-			'batch',
-			$batch_id
+		$context = array(
+			'issuer_id' => absint( $program['issuer_id'] ?? 0 ),
+			'program_id' => absint( $program['id'] ?? 0 ),
+			'batch_id' => $batch_id,
 		);
+		$resolved = $batch_id
+			? $this->templates->resolve_published_assignment_details_excluding( $context, 'batch', $batch_id )
+			: $this->templates->resolve_published_assignment_details( $context );
 		if ( is_wp_error( $resolved ) ) { return $this->allow_staged_draft( $resolved ); }
 		if ( is_array( $resolved ) && ! empty( $resolved['published_layout'] ) ) {
 			$valid = $this->compatibility->validate( (array) $resolved['published_layout'], $program_contract, $batch_contract, $catalog );

@@ -17,6 +17,24 @@ if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+][A-Za-z0-9.-]+)?$ ]]; then
   exit 2
 fi
 OUT="${1:-$ROOT/../build-$VERSION}"
+# The build output is user-supplied. Resolve it before any mkdir or cleanup,
+# and never replace a pre-existing directory, symlink, source ancestor, or
+# source descendant. A fresh destination also prevents accidental data loss.
+if ! OUT_REAL="$(realpath -m -- "$OUT" 2>/dev/null)"; then
+  echo "Invalid Certloom build output path." >&2
+  exit 2
+fi
+case "$OUT_REAL" in
+  "$ROOT"|"$ROOT"/*) echo "Refusing to build inside the plugin source tree." >&2; exit 2 ;;
+esac
+case "$ROOT" in
+  "$OUT_REAL"/*) echo "Refusing to build into an ancestor of the plugin source tree." >&2; exit 2 ;;
+esac
+if [[ -e "$OUT_REAL" || -L "$OUT_REAL" ]]; then
+  echo "Refusing to replace an existing build output path: $OUT_REAL" >&2
+  exit 2
+fi
+OUT="$OUT_REAL"
 EPOCH="${SOURCE_DATE_EPOCH:-1787356800}"
 STAGE="$OUT/.stage"
 AUTHORITY_DIR="${CERTLOOM_RENDERER_AUTHORITY_DIR:-}"
@@ -28,10 +46,6 @@ DOMAIN_AUTHORITY_MANIFEST=""
 CLEANUP_DIRS=()
 cleanup_authority_dirs() { for dir in "${CLEANUP_DIRS[@]:-}"; do [[ -n "$dir" ]] && rm -rf -- "$dir" || true; done; return 0; }
 trap cleanup_authority_dirs EXIT
-
-case "$OUT" in
-  "$ROOT"|"$ROOT"/*) echo "Refusing to build inside the plugin source tree." >&2; exit 2 ;;
-esac
 
 # Renderer authority has exactly two legitimate packaging modes:
 #  1. a previously accepted source archive already contains accepted.json; or
@@ -95,10 +109,31 @@ elif [[ -f "$ROOT/resources/domain/accepted.json" ]]; then
   php "$ROOT/tests/domain-authority/validate-bundled-authority.php" "$ROOT/resources/domain/accepted.json" >/dev/null
 fi
 
-rm -rf "$OUT"
 mkdir -p "$STAGE/source/certloom" "$STAGE/release/certloom"
-cp -a "$ROOT"/. "$STAGE/source/certloom/"
-cp -a "$ROOT"/. "$STAGE/release/certloom/"
+# Package the working contents of tracked files only. Copying the entire
+# checkout can silently ship ignored credentials, scratch files, or artifacts.
+if [[ ! -d "$ROOT/.git" ]]; then
+  echo "Release source must be a Git checkout with an auditable file list." >&2
+  exit 2
+fi
+if [[ -n "$(git -C "$ROOT" ls-files --others --exclude-standard)" ]]; then
+  echo "Untracked release inputs exist. Review and add or remove them before packaging." >&2
+  exit 2
+fi
+while IFS= read -r -d '' rel; do
+  if [[ ! -e "$ROOT/$rel" && ! -L "$ROOT/$rel" ]]; then
+    echo "Skipping deleted tracked release input: $rel" >&2
+    continue
+  fi
+  if [[ ! -f "$ROOT/$rel" || -L "$ROOT/$rel" ]]; then
+    echo "Tracked release input is not a regular file: $rel" >&2
+    exit 2
+  fi
+  for tree in source release; do
+    mkdir -p "$STAGE/$tree/certloom/$(dirname "$rel")"
+    cp -- "$ROOT/$rel" "$STAGE/$tree/certloom/$rel"
+  done
+done < <(git -C "$ROOT" ls-files -z --cached --)
 
 if [[ -n "$AUTHORITY_MANIFEST" ]]; then
   mkdir -p "$STAGE/source/certloom/resources/renderer" "$STAGE/release/certloom/resources/renderer"

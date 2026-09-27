@@ -4,7 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Complete, versioned Certloom backup and restore workflow.
+ * Versioned legacy-registry Certloom backup and restore workflow.
  *
  * The current v4 stream uses newline-delimited JSON so backups can be built, validated,
  * reviewed, and restored without loading the complete registry into memory.
@@ -99,10 +99,10 @@ class Ecapla_CertVerify_Backup {
 	}
 
 	/**
-	 * Builds and validates one complete current-authority backup file.
+	 * Builds and validates one complete legacy-registry backup file.
 	 *
 	 * Manual downloads and scheduled backups intentionally share this exact
-	 * builder so Certloom has only one definition of a complete backup.
+	 * builder so these legacy-registry paths share one format and scope.
 	 *
 	 * @return array<string,mixed>|WP_Error
 	 */
@@ -247,7 +247,7 @@ class Ecapla_CertVerify_Backup {
 
 		return array(
 			'path'            => $temp,
-			'filename'        => sanitize_file_name( 'certloom-backup-' . gmdate( 'Y-m-d-His' ) . '.cvbackup' ),
+			'filename'        => sanitize_file_name( 'certloom-legacy-registry-backup-' . gmdate( 'Y-m-d-His' ) . '.cvbackup' ),
 			'bytes'           => absint( $size ),
 			'records'         => absint( $count ),
 			'file_sha256'     => $file_sha256,

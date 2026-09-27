@@ -5,7 +5,7 @@ namespace Certloom\Infrastructure\Backup;
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-/** Current-authority automatic backup scheduler and retention coordinator. */
+/** Legacy-registry automatic backup scheduler and retention coordinator. */
 final class ScheduledBackup {
 	const HOOK               = 'certloom_run_scheduled_backup';
 	const OPTION_SCHEDULE    = 'certloom_backup_schedule';

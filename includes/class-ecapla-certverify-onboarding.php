@@ -485,13 +485,16 @@ class Ecapla_CertVerify_Onboarding {
 
 	/** @return true|WP_Error */
 	private static function validate_step_draft( $step, array $draft, $skipped ) {
+		if ( $skipped && 'organization' === $step ) {
+			return new WP_Error( 'certloom_setup_organization_required', __( 'Enter an issuer name to continue, or save setup for later.', 'certloom' ) );
+		}
 		if ( $skipped ) { return true; }
 		switch ( $step ) {
 			case 'profile':
 				$preset = ( new \Certloom\Application\Setup\PurposePresetEngine() )->recommend( $draft['usage_profile'] ?? '' );
 				return is_wp_error( $preset ) ? $preset : true;
 			case 'organization':
-				return '' === trim( (string) ( $draft['organization_name'] ?? '' ) ) ? new WP_Error( 'certloom_setup_organization_required', __( 'Enter your organization name to continue.', 'certloom' ) ) : true;
+				return '' === trim( (string) ( $draft['organization_name'] ?? '' ) ) ? new WP_Error( 'certloom_setup_organization_required', __( 'Enter an issuer name to continue.', 'certloom' ) ) : true;
 			case 'appearance':
 				$mode = sanitize_key( (string) ( $draft['presentation_mode'] ?? 'details_only' ) );
 				if ( 'image' === $mode && empty( $draft['certificate_image_id'] ) ) { return new WP_Error( 'certloom_setup_image_required', __( 'Choose a PNG or JPEG certificate image, or select another appearance.', 'certloom' ) ); }
@@ -547,6 +550,7 @@ class Ecapla_CertVerify_Onboarding {
 	/** @return array<string,mixed> */
 	private static function sanitize_wizard_draft( array $draft ) {
 		$out = array();
+		if ( array_key_exists( 'quick_setup', $draft ) ) { $out['quick_setup'] = ! empty( $draft['quick_setup'] ) ? 1 : 0; }
 		if ( array_key_exists( 'usage_profile', $draft ) ) {
 			$out['usage_profile'] = ( new \Certloom\Application\Setup\PurposePresetEngine() )->normalize_profile( $draft['usage_profile'] );
 		}
@@ -624,7 +628,7 @@ class Ecapla_CertVerify_Onboarding {
 			$out['setup_repeating_data'] = $clean_repeat;
 		}
 
-		foreach ( array( 'first_recipient_name' => 200, 'first_recipient_email' => 254, 'credential_title' => 191, 'issue_date' => 20 ) as $key => $limit ) {
+		foreach ( array( 'first_recipient_name' => 200, 'first_recipient_email' => 254, 'credential_title' => 191, 'display_number' => 100, 'issue_date' => 20 ) as $key => $limit ) {
 			if ( array_key_exists( $key, $draft ) ) { $out[ $key ] = self::limit_text( sanitize_text_field( (string) $draft[ $key ] ), $limit ); }
 		}
 		if ( array_key_exists( 'first_credential_id', $draft ) ) { $out['first_credential_id'] = absint( $draft['first_credential_id'] ); }

@@ -109,6 +109,11 @@ final class DomainMaintenanceLock {
 		$ttl     = $this->ttl( $ttl );
 		$now     = time();
 		$value   = $this->payload_value( $owner_token, $now, $ttl, $purpose );
+		// MySQL reports zero affected rows for an UPDATE that writes the exact
+		// same value. A second job slice in the same second still owns this lease.
+		if ( hash_equals( $stored, $value ) ) {
+			return true;
+		}
 
 		$updated = $wpdb->query(
 			$wpdb->prepare(

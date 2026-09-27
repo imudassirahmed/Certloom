@@ -112,7 +112,7 @@ final class CourseraIntegrationAdmin {
 	/** @return void */
 	private function require_access() {
 		if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_INTEGRATIONS ) ) {
-			wp_die( esc_html__( 'You do not have permission to manage Certloom integrations.', 'certloom' ) );
+			wp_die( esc_html__( 'You do not have permission to manage Certloom integrations.', 'certloom' ), '', array( 'response' => 403 ) );
 		}
 	}
 

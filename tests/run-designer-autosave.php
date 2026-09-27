@@ -6,7 +6,8 @@ define( 'MINUTE_IN_SECONDS', 60 );
 define( 'DAY_IN_SECONDS', 86400 );
 if ( ! class_exists( 'WP_Error' ) ) { class WP_Error { private $c,$m,$d; public function __construct($c='',$m='',$d=null){$this->c=$c;$this->m=$m;$this->d=$d;} public function get_error_code(){return $this->c;} public function get_error_message(){return $this->m;} public function get_error_data(){return $this->d;} } }
 function is_wp_error($v){return $v instanceof WP_Error;} function __($v){return $v;} function absint($v){return abs((int)$v);} function sanitize_key($v){return strtolower(preg_replace('/[^a-z0-9_\-]/','',(string)$v));} function wp_json_encode($v,$flags=0){return json_encode($v,$flags);} function get_current_blog_id(){return 4;}
-$GLOBALS['dsn7_meta']=array(); function update_user_meta($u,$k,$v){$GLOBALS['dsn7_meta'][$u][$k]=$v;return true;} function get_user_meta($u,$k,$single=true){return $GLOBALS['dsn7_meta'][$u][$k]??'';} function delete_user_meta($u,$k){unset($GLOBALS['dsn7_meta'][$u][$k]);return true;}
+function wp_slash($v){return addslashes($v);}
+$GLOBALS['dsn7_meta']=array(); function update_user_meta($u,$k,$v){$GLOBALS['dsn7_meta'][$u][$k]=stripslashes($v);return true;} function get_user_meta($u,$k,$single=true){return $GLOBALS['dsn7_meta'][$u][$k]??'';} function delete_user_meta($u,$k){unset($GLOBALS['dsn7_meta'][$u][$k]);return true;}
 require_once __DIR__ . '/bootstrap-autoload.php';
 
 use Certloom\Application\Rendering\CanonicalJson;
@@ -60,7 +61,7 @@ $missingSession=$service->discard(7,5,''); dsn7(is_wp_error($missingSession)&&'c
 
 // Large/escape-heavy obsolete records must never fail cleanup merely because a
 // diagnostic copy would expand when JSON-encoded a second time.
-$largeRecord=json_decode(get_user_meta(5,$key,true),true); $largeRecord['diagnostic_padding']=str_repeat('"',700000); update_user_meta(5,$key,json_encode($largeRecord));
+$largeRecord=json_decode(get_user_meta(5,$key,true),true); $largeRecord['diagnostic_padding']=str_repeat('"',700000); update_user_meta(5,$key,wp_slash(json_encode($largeRecord)));
 $wpdb->template['current_revision_id']=12; $wpdb->revision=array('id'=>12,'template_id'=>7,'revision_number'=>4,'parent_revision_id'=>11,'layout_schema'=>LayoutSchema::NAME,'layout_schema_version'=>3,'layout_json'=>$newJson,'layout_sha256'=>$newSha,'source_type'=>'manual','created_by_user_id'=>9,'created_at'=>'2026-08-27 00:01:00');
 $largePrepared=$service->prepare_for_editor(7,5); dsn7('none'===($largePrepared['status']??'')&&''===get_user_meta(5,$key,true),'escape-heavy stale recovery is cleared without a secondary JSON size failure');
 $largeRetired=json_decode(get_user_meta(5,TemplateDesignerAutosave::retired_meta_key(7),true),true); dsn7(($largeRetired['checkpoint_bytes']??0)>1000000&&64===strlen((string)($largeRetired['checkpoint_sha256']??'')),'large stale recovery leaves only a bounded hash/size diagnostic receipt');
@@ -74,7 +75,7 @@ $staleDiscard=$service->discard(7,5,''); dsn7(true===$staleDiscard&&''===get_use
 
 // Integrity tamper should not recover.
 $wpdb->template['current_revision_id']=11; $wpdb->revision=array('id'=>11,'template_id'=>7,'revision_number'=>3,'parent_revision_id'=>10,'layout_schema'=>LayoutSchema::NAME,'layout_schema_version'=>3,'layout_json'=>$layoutJson,'layout_sha256'=>$sha,'source_type'=>'manual','created_by_user_id'=>5,'created_at'=>'2026-08-27 00:00:00');
-$service->save(7,5,11,$sha,$session,$changed,$state); $tampered=json_decode(get_user_meta(5,$key,true),true); $tampered['layout_sha256']=str_repeat('0',64); update_user_meta(5,$key,json_encode($tampered));
+$service->save(7,5,11,$sha,$session,$changed,$state); $tampered=json_decode(get_user_meta(5,$key,true),true); $tampered['layout_sha256']=str_repeat('0',64); update_user_meta(5,$key,wp_slash(json_encode($tampered)));
 dsn7('invalid'===($service->inspect(7,5)['status']??''),'tampered recovery layout/hash fails closed');
 $invalidPrepared=$service->prepare_for_editor(7,5); dsn7('none'===($invalidPrepared['status']??'')&&'invalid'===($invalidPrepared['retired_status']??'')&&''===get_user_meta(5,$key,true),'invalid recovery is retired before Studio opens instead of repeating a warning on every reload');
 

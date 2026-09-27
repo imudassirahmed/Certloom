@@ -15,6 +15,8 @@ class Ecapla_CertVerify_Admin {
 	public function __construct() {
 		( new \Certloom\Infrastructure\Admin\AdminProductNavigation() )->register();
 		add_action( 'admin_menu', array( $this, 'add_menu' ) );
+		add_action( 'admin_init', array( $this, 'set_hidden_page_title' ), 1 );
+		add_action( 'admin_init', array( $this, 'redirect_hidden_compatibility_routes' ), 2 );
 		add_action( 'admin_post_certloom_set_ui_mode', array( $this, 'handle_ui_mode_switch' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_filter( 'admin_body_class', array( $this, 'admin_body_class' ) );
@@ -78,6 +80,38 @@ class Ecapla_CertVerify_Admin {
 		add_action( 'admin_notices', array( $this, 'status_review_notices' ) );
 		add_action( 'admin_footer-plugins.php', array( $this, 'render_plugin_lifecycle_dialog' ) );
 		add_action( 'admin_post_certloom_prepare_deactivation', array( $this, 'handle_prepare_deactivation' ) );
+	}
+
+	/** Give hidden Certloom routes a title before WordPress builds admin-header.php. */
+	public function set_hidden_page_title() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only page selection.
+		$page = isset( $_GET['page'] ) && is_scalar( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+		$labels = array(
+			'certloom-domain-recipients' => __( 'Recipients', 'certloom' ),
+			'certloom-domain-issuers' => __( 'Issuers', 'certloom' ),
+			'certloom-domain-signers' => __( 'Signers', 'certloom' ),
+			'certloom-domain-batches' => __( 'Batches', 'certloom' ),
+			'certloom-domain-data-tools' => __( 'Credential data tools', 'certloom' ),
+			'certloom-issuance' => __( 'Issue credential', 'certloom' ),
+			'certloom-bulk-issuance' => __( 'Bulk issuance', 'certloom' ),
+			'certloom-email-delivery' => __( 'Email delivery', 'certloom' ),
+			'certloom-file-intake' => __( 'File intake', 'certloom' ),
+			'certloom-email-designs' => __( 'Email designs', 'certloom' ),
+			'certloom-design-rules' => __( 'Design Rules', 'certloom' ),
+			'certloom-analytics' => __( 'Analytics', 'certloom' ),
+			'certloom-integrations' => __( 'Integrations', 'certloom' ),
+			'certloom-import' => __( 'Backup & Restore', 'certloom' ),
+			'certloom-certificates' => __( 'Certificates', 'certloom' ),
+			'certloom-add' => __( 'Add Certificate', 'certloom' ),
+			'certloom-fields' => __( 'Field Manager', 'certloom' ),
+			'certloom-frontend' => __( 'Appearance & Embed', 'certloom' ),
+			'certloom-setup' => __( 'Setup', 'certloom' ),
+			'certloom-verification-sample' => __( 'Verification sample', 'certloom' ),
+			'certloom-bulk-review' => __( 'Review bulk change', 'certloom' ),
+		);
+		if ( ! isset( $labels[ $page ] ) ) { return; }
+		global $title;
+		if ( empty( $title ) ) { $title = $labels[ $page ]; }
 	}
 
 	public function add_menu() {
@@ -692,6 +726,11 @@ class Ecapla_CertVerify_Admin {
 
 	/** Handles the resumable WIZ-01 workflow without creating a second configuration authority. */
 	public function handle_setup_wizard_action() {
+		// admin_init also runs for admin-ajax.php. The draft autosave carries the
+		// wizard form fields, but only the dedicated AJAX handler may process it.
+		if ( wp_doing_ajax() ) {
+			return;
+		}
 		if ( empty( $_POST['certloom_setup_wizard_action'] ) ) {
 			return;
 		}
@@ -1067,7 +1106,7 @@ class Ecapla_CertVerify_Admin {
 			'expiry_mode' => $expiry_mode,
 			'expires_at' => '',
 			'grade' => sanitize_text_field( (string) ( $draft['first_grade'] ?? '' ) ),
-			'display_number' => '',
+			'display_number' => Ecapla_CertVerify_Numbering::is_enabled() ? '' : sanitize_text_field( (string) ( $patch['display_number'] ?? '' ) ),
 			'custom_merge_fields' => is_array( $draft['setup_credential_values'] ?? null ) ? $draft['setup_credential_values'] : array(),
 			'design_field_aliases' => array(),
 			'repeating_data' => is_array( $draft['setup_repeating_data'] ?? null ) ? $draft['setup_repeating_data'] : array(),
@@ -1093,7 +1132,7 @@ class Ecapla_CertVerify_Admin {
 		$step = sanitize_key( (string) $step );
 		switch ( $step ) {
 			case 'welcome':
-				return array();
+				return array( 'quick_setup' => ! empty( $_POST['quick_setup'] ) ? 1 : 0 );
 			case 'profile':
 				return array(
 					'usage_profile' => isset( $_POST['usage_profile'] ) ? sanitize_key( wp_unslash( $_POST['usage_profile'] ) ) : '',
@@ -1150,6 +1189,7 @@ class Ecapla_CertVerify_Admin {
 					'first_recipient_external_id' => isset( $_POST['first_recipient_external_id'] ) ? sanitize_text_field( wp_unslash( $_POST['first_recipient_external_id'] ) ) : '',
 					'first_recipient_custom' => $recipient_custom,
 					'credential_title' => isset( $_POST['credential_title'] ) ? sanitize_text_field( wp_unslash( $_POST['credential_title'] ) ) : '',
+					'display_number' => isset( $_POST['display_number'] ) ? sanitize_text_field( wp_unslash( $_POST['display_number'] ) ) : '',
 					'issue_date' => isset( $_POST['issue_date'] ) ? sanitize_text_field( wp_unslash( $_POST['issue_date'] ) ) : '',
 				);
 		}
@@ -2271,32 +2311,50 @@ class Ecapla_CertVerify_Admin {
 		include ECAPLA_CERTVERIFY_PATH . 'admin/views/dashboard.php';
 	}
 
+	/** Redirect compatibility pages before admin notices write output and prevent HTTP redirects. */
+	public function redirect_hidden_compatibility_routes() {
+		global $pagenow;
+		if ( 'admin.php' !== $pagenow ) { return; }
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only route selection.
+		$page = isset( $_GET['page'] ) && is_scalar( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+		if ( ! in_array( $page, array( self::CERTIFICATES_PAGE, 'certloom-add', 'certloom-bulk-review' ), true ) ) { return; }
+		$this->require_manage_permission();
+		if ( self::CERTIFICATES_PAGE === $page && \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
+			wp_safe_redirect( $this->legacy_registry_url() );
+			exit;
+		}
+		if ( 'certloom-add' === $page && empty( $_GET['id'] ) && \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only route selection.
+			wp_safe_redirect( admin_url( 'admin.php?page=certloom-issuance' ) );
+			exit;
+		}
+		if ( 'certloom-bulk-review' === $page ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- User-bound review token is read-only here.
+			$token = isset( $_GET['token'] ) && is_scalar( $_GET['token'] ) ? sanitize_text_field( wp_unslash( $_GET['token'] ) ) : '';
+			$session = Ecapla_CertVerify_Bulk_Manager::get_session( $token );
+			if ( is_wp_error( $session ) ) { $this->redirect_error( $session->get_error_message(), admin_url( 'admin.php?page=' . self::CERTIFICATES_PAGE ) ); }
+		}
+	}
+
+	/** Preserve familiar legacy list filters when landing in the unified registry. */
+	private function legacy_registry_url() {
+		$args = array( 'page' => 'certloom-domain-credentials' );
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only compatibility redirect state.
+		if ( isset( $_GET['s'] ) && is_scalar( $_GET['s'] ) && '' !== trim( (string) $_GET['s'] ) ) {
+			$args['s'] = sanitize_text_field( wp_unslash( $_GET['s'] ) );
+		}
+		$status = isset( $_GET['status'] ) && is_scalar( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : '';
+		if ( ! empty( $_GET['legacy_expired'] ) ) { $status = 'expired'; }
+		if ( 'withdrawn' === $status ) { $status = 'revoked'; }
+		if ( in_array( $status, array( 'valid', 'suspended', 'revoked', 'expired' ), true ) ) { $args['credential_status'] = $status; }
+		if ( ! empty( $_GET['paged'] ) ) { $args['paged'] = max( 1, absint( $_GET['paged'] ) ); }
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		return add_query_arg( $args, admin_url( 'admin.php' ) );
+	}
+
 	public function render_list_screen() {
 		$this->require_manage_permission();
 		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) {
-			// The current domain owns one Credentials product in every UI mode. Keep
-			// the historical slug as a hidden compatibility route, then translate the
-			// common legacy list intent into the canonical unified registry.
-			$args = array( 'page' => 'certloom-domain-credentials' );
-			// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only compatibility redirect state.
-			if ( isset( $_GET['s'] ) && '' !== trim( (string) $_GET['s'] ) ) {
-				$args['s'] = sanitize_text_field( wp_unslash( $_GET['s'] ) );
-			}
-			$status = isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : '';
-			if ( ! empty( $_GET['legacy_expired'] ) ) {
-				$status = 'expired';
-			}
-			if ( 'withdrawn' === $status ) {
-				$status = 'revoked';
-			}
-			if ( in_array( $status, array( 'valid', 'suspended', 'revoked', 'expired' ), true ) ) {
-				$args['credential_status'] = $status;
-			}
-			if ( ! empty( $_GET['paged'] ) ) {
-				$args['paged'] = max( 1, absint( $_GET['paged'] ) );
-			}
-			// phpcs:enable WordPress.Security.NonceVerification.Recommended
-			wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );
+			wp_safe_redirect( $this->legacy_registry_url() );
 			exit;
 		}
 		$table = new Ecapla_CertVerify_List_Table();
@@ -2886,7 +2944,12 @@ class Ecapla_CertVerify_Admin {
 	 */
 	private function redirect_error( $message, $url ) {
 		$message = $this->limit_text( (string) $message, 300 );
-		wp_safe_redirect( add_query_arg( 'ecapla_certverify_error', $message, $url ) );
+		if ( \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() && false !== strpos( $url, 'page=' . self::CERTIFICATES_PAGE ) ) {
+			$url = $this->legacy_registry_url();
+			wp_safe_redirect( add_query_arg( 'certloom_error', $message, $url ) );
+		} else {
+			wp_safe_redirect( add_query_arg( 'ecapla_certverify_error', $message, $url ) );
+		}
 		exit;
 	}
 }

@@ -10,10 +10,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Protected 1.5.4 preview UI for the new-domain import/backup/restore pipeline.
+ * Protected import, backup, and restore UI for normalized credentials.
  *
- * The screen is deliberately unavailable unless manifest-backed normalized-domain admin authority
- * is enabled. It owns authorization/nonces/upload intent only; all credential
+ * The screen is unavailable unless manifest-backed normalized-domain admin authority
+ * is enabled. It owns authorization, nonces, and upload intent; all credential
  * work is delegated to application coordinators and durable jobs.
  */
 final class DomainDataToolsAdmin {
@@ -48,8 +48,8 @@ final class DomainDataToolsAdmin {
 	public function menu() {
 		add_submenu_page(
 			null,
-			__( 'Data Tools (New Domain)', 'certloom' ),
-			__( 'Data Tools (New)', 'certloom' ),
+			__( 'Credential data tools', 'certloom' ),
+			__( 'Credential data tools', 'certloom' ),
 			\Ecapla_CertVerify_Permissions::CAP_MANAGE_DATA_TOOLS,
 			self::PAGE,
 			array( $this, 'render' )
@@ -59,8 +59,10 @@ final class DomainDataToolsAdmin {
 	/** @return void */
 	public function render() {
 		$this->require_access();
-		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-data-tools-workspace"><h1>' . esc_html__( 'Certloom Data Tools — New Domain Preview', 'certloom' ) . '</h1>';
-		echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'Development preview only. Legacy Certloom 1.5 data remains authoritative. These tools exercise the staged new-domain pipeline but do not enable source-of-truth cutover.', 'certloom' ) . '</p></div>';
+		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-data-tools-workspace">';
+		echo '<section class="certloom-page-hero certloom-page-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Backup and import', 'certloom' ) . '</span><h1>' . esc_html__( 'Credential data tools', 'certloom' ) . '</h1><p>' . esc_html__( 'Back up, import, or restore Program credentials. Review the result before changing existing records.', 'certloom' ) . '</p></div></section>';
+		( new AdminProductNavigation() )->render_current_subnav();
+		echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'These tools back up and restore the normalized credentials used by Programs. They do not include the legacy certificate registry. Use Backup & Restore separately for legacy records before moving or restoring a site.', 'certloom' ) . '</p></div>';
 		$this->render_notice();
 		$this->render_backup();
 		$this->render_import();
@@ -74,7 +76,7 @@ final class DomainDataToolsAdmin {
 		$this->require_access();
 		check_admin_referer( 'certloom_domain_backup_start' );
 		$result = $this->runtime->data_tools()->enqueue_backup( get_current_user_id() );
-		$this->redirect_result( $result, __( 'Complete-domain backup queued.', 'certloom' ) );
+		$this->redirect_result( $result, __( 'Program credential backup queued.', 'certloom' ) );
 	}
 
 	/** @return void */
@@ -283,17 +285,17 @@ final class DomainDataToolsAdmin {
 
 	/** @return void */
 	private function render_backup() {
-		echo '<section class="certloom-panel certloom-data-tools-panel"><div class="certloom-panel-header"><div><span class="certloom-eyebrow">' . esc_html__( 'Backup', 'certloom' ) . '</span><h2>' . esc_html__( 'Complete-domain backup', 'certloom' ) . '</h2></div></div>';
+		echo '<section class="certloom-panel certloom-data-tools-panel"><div class="certloom-panel-header"><div><span class="certloom-eyebrow">' . esc_html__( 'Backup', 'certloom' ) . '</span><h2>' . esc_html__( 'New credential backup', 'certloom' ) . '</h2></div></div>';
 		echo '<p>' . esc_html__( 'Creates a resumable integrity-checked backup in Certloom private storage. Download becomes available only after the job succeeds.', 'certloom' ) . '</p>';
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_domain_backup_start">';
 		wp_nonce_field( 'certloom_domain_backup_start' );
-		submit_button( __( 'Queue complete backup', 'certloom' ), 'secondary', 'submit', false );
+		submit_button( __( 'Queue new credential backup', 'certloom' ), 'secondary', 'submit', false );
 		echo '</form></section>';
 	}
 
 	/** @return void */
 	private function render_import() {
-		echo '<section class="certloom-panel certloom-data-tools-panel"><div class="certloom-panel-header"><div><span class="certloom-eyebrow">' . esc_html__( 'Import', 'certloom' ) . '</span><h2>' . esc_html__( 'CSV import — Preflight first', 'certloom' ) . '</h2></div></div>';
+		echo '<section id="certloom-domain-import" class="certloom-panel certloom-data-tools-panel"><div class="certloom-panel-header"><div><span class="certloom-eyebrow">' . esc_html__( 'Import', 'certloom' ) . '</span><h2>' . esc_html__( 'CSV import — Preflight first', 'certloom' ) . '</h2></div></div>';
 		$token = isset( $_GET['mapping'] ) ? $this->request_token( wp_unslash( $_GET['mapping'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only owner-scoped mapping view.
 		if ( is_string( $token ) && '' !== $token ) {
 			$session = $this->runtime->import_uploads()->get( $token, get_current_user_id() );
@@ -307,7 +309,7 @@ final class DomainDataToolsAdmin {
 		echo '<p>' . esc_html__( 'Upload is copied immediately into randomized private storage. This step only opens a short-lived field-mapping session; it does not stage or write credentials.', 'certloom' ) . '</p>';
 		echo '<form method="post" enctype="multipart/form-data" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_domain_import_upload">';
 		wp_nonce_field( 'certloom_domain_import_upload' );
-		echo '<input type="file" name="certloom_import_file" accept=".csv,text/csv" required> ';
+		echo '<label for="certloom-domain-import-file">' . esc_html__( 'CSV file', 'certloom' ) . '</label> <input id="certloom-domain-import-file" type="file" name="certloom_import_file" accept=".csv,text/csv" required> ';
 		submit_button( __( 'Upload and map CSV', 'certloom' ), 'secondary', 'submit', false );
 		echo '</form></section>';
 	}
@@ -318,7 +320,7 @@ final class DomainDataToolsAdmin {
 		echo '<p><strong>' . esc_html( (string) $session['original_name'] ) . '</strong></p>';
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_domain_import_map"><input type="hidden" name="mapping_token" value="' . esc_attr( $token ) . '">';
 		wp_nonce_field( 'certloom_domain_import_map_' . $token );
-		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'CSV column', 'certloom' ) . '</th><th>' . esc_html__( 'Certloom field', 'certloom' ) . '</th></tr></thead><tbody>';
+		echo '<div class="certloom-domain-table-wrap"><table class="widefat striped"><thead><tr><th>' . esc_html__( 'CSV column', 'certloom' ) . '</th><th>' . esc_html__( 'Certloom field', 'certloom' ) . '</th></tr></thead><tbody>';
 		foreach ( (array) $session['header'] as $index => $heading ) {
 			echo '<tr><td>' . esc_html( (string) $heading ) . '</td><td><select name="mapping[' . esc_attr( (string) $index ) . ']"><option value="">' . esc_html__( 'Ignore column', 'certloom' ) . '</option>';
 			foreach ( $choices as $key => $label ) {
@@ -326,7 +328,7 @@ final class DomainDataToolsAdmin {
 			}
 			echo '</select></td></tr>';
 		}
-		echo '</tbody></table>';
+		echo '</tbody></table></div>';
 		echo '<p><label><input type="checkbox" name="clear_empty" value="1"> ' . esc_html__( 'Treat mapped empty optional cells as explicit clears during corrections', 'certloom' ) . '</label></p>';
 		echo '<p><label><input type="checkbox" name="allow_historical_expired" value="1"> ' . esc_html__( 'Allow legacy historical Expired compatibility rows', 'certloom' ) . '</label></p>';
 		echo '<p><label><input type="checkbox" name="skip_invalid_rows" value="1"> ' . esc_html__( 'Lenient preflight: allow commit-ready rows while invalid rows are skipped and reported', 'certloom' ) . '</label></p>';
@@ -336,11 +338,11 @@ final class DomainDataToolsAdmin {
 
 	/** @return void */
 	private function render_restore() {
-		echo '<section class="certloom-panel certloom-data-tools-panel"><div class="certloom-panel-header"><div><span class="certloom-eyebrow">' . esc_html__( 'Restore', 'certloom' ) . '</span><h2>' . esc_html__( 'Complete-domain restore', 'certloom' ) . '</h2></div></div>';
+		echo '<section class="certloom-panel certloom-data-tools-panel"><div class="certloom-panel-header"><div><span class="certloom-eyebrow">' . esc_html__( 'Restore', 'certloom' ) . '</span><h2>' . esc_html__( 'Restore Program credentials', 'certloom' ) . '</h2></div></div>';
 		echo '<p>' . esc_html__( 'Upload starts a non-destructive review job. Certloom stages and validates the selected mode, shows the resulting summary, then requires a separate explicit commit. Commit restages/revalidates and refuses stale reviews.', 'certloom' ) . '</p>';
 		echo '<form method="post" enctype="multipart/form-data" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_domain_restore_upload">';
 		wp_nonce_field( 'certloom_domain_restore_upload' );
-		echo '<p><input type="file" name="certloom_restore_file" accept=".cvbackup,application/octet-stream" required></p>';
+		echo '<p><label for="certloom-domain-restore-file">' . esc_html__( 'New credential backup file', 'certloom' ) . '</label> <input id="certloom-domain-restore-file" type="file" name="certloom_restore_file" accept=".cvbackup,application/octet-stream" required></p>';
 		echo '<p><label>' . esc_html__( 'Mode', 'certloom' ) . ' <select name="restore_mode"><option value="merge">' . esc_html__( 'Merge — current live history wins', 'certloom' ) . '</option><option value="replace">' . esc_html__( 'Replace — atomic replacement after validation', 'certloom' ) . '</option></select></label></p>';
 		echo '<p><label><input type="checkbox" name="confirm_review" value="1" required> ' . esc_html__( 'Run a non-destructive private review of this restore mode', 'certloom' ) . '</label></p>';
 		submit_button( __( 'Queue restore review', 'certloom' ), 'secondary' );
@@ -352,12 +354,12 @@ final class DomainDataToolsAdmin {
 		$page = isset( $_GET['jobs_paged'] ) ? max( 1, absint( $_GET['jobs_paged'] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only pagination.
 		$result = $this->runtime->repository()->list_page( $page, 50 );
 		echo '<section class="certloom-panel certloom-data-tools-panel"><div class="certloom-panel-header"><div><span class="certloom-eyebrow">' . esc_html__( 'Activity', 'certloom' ) . '</span><h2>' . esc_html__( 'Background job history', 'certloom' ) . '</h2></div></div>';
-		if ( is_wp_error( $result ) ) { $this->error( $result->get_error_message() ); return; }
+		if ( is_wp_error( $result ) ) { $this->error( $result->get_error_message() ); echo '</section>'; return; }
 		$jobs = (array) ( $result['items'] ?? array() );
-		echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Job', 'certloom' ) . '</th><th>' . esc_html__( 'Type', 'certloom' ) . '</th><th>' . esc_html__( 'Status', 'certloom' ) . '</th><th>' . esc_html__( 'Progress', 'certloom' ) . '</th><th>' . esc_html__( 'Actions', 'certloom' ) . '</th></tr></thead><tbody>';
+		echo '<div class="certloom-domain-table-wrap"><table class="widefat striped certloom-domain-jobs-table"><thead><tr><th>' . esc_html__( 'Job', 'certloom' ) . '</th><th>' . esc_html__( 'Type', 'certloom' ) . '</th><th>' . esc_html__( 'Status', 'certloom' ) . '</th><th>' . esc_html__( 'Progress', 'certloom' ) . '</th><th>' . esc_html__( 'Actions', 'certloom' ) . '</th></tr></thead><tbody>';
 		foreach ( $jobs as $job ) { $this->render_job_row( $job ); }
 		if ( empty( $jobs ) ) { echo '<tr><td colspan="5">' . esc_html__( 'No new-domain background jobs yet.', 'certloom' ) . '</td></tr>'; }
-		echo '</tbody></table>';
+		echo '</tbody></table></div>';
 		$total=absint($result['total']??0);$pages=max(1,(int)ceil($total/50));if($pages>1){echo'<div class="tablenav"><div class="tablenav-pages">'.wp_kses_post(paginate_links(array('base'=>str_replace('999999999','%#%',add_query_arg(array('page'=>self::PAGE,'jobs_paged'=>999999999),admin_url('admin.php'))),'format'=>'','current'=>$page,'total'=>$pages,'type'=>'plain'))).'</div></div>';}
 		echo '</section>';
 	}

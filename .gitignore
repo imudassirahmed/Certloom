@@ -8,6 +8,8 @@ Thumbs.db
 # Local tooling and dependencies
 node_modules/
 vendor/
+__pycache__/
+*.pyc
 .phpunit.result.cache
 .phpcs-cache
 coverage/
@@ -28,3 +30,5 @@ wp-config.php
 /build/
 /docs/
 /QA-NOT-FOR-PRODUCTION.txt
+/.playwright-cli/
+/output/

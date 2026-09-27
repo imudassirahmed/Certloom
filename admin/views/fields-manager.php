@@ -25,6 +25,7 @@ $certloom_scopable_fields = Ecapla_CertVerify_Fields::get_scopable_fields();
 			<a class="button button-secondary button-hero" href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-certificates' ) ); ?>"><span class="dashicons dashicons-awards" aria-hidden="true"></span><?php esc_html_e( 'Open registry', 'certloom' ); ?></a>
 		</div>
 	</section>
+	<?php ( new \Certloom\Infrastructure\Admin\AdminProductNavigation() )->render_current_subnav(); ?>
 
 	<?php foreach ( array( 'ecapla_certverify_fields_saved' => __( 'Field order, labels, and visibility saved.', 'certloom' ), 'certloom_global_field_scope_saved' => __( 'Global credential-field defaults saved.', 'certloom' ), 'ecapla_certverify_field_added' => __( 'Field added.', 'certloom' ), 'ecapla_certverify_field_deleted' => __( 'Custom field retired. Existing stored values remain protected and the key cannot be reused.', 'certloom' ), 'ecapla_certverify_field_restored' => __( 'Retired field restored as private. Review it before enabling public visibility.', 'certloom' ), 'ecapla_certverify_fields_retranslated' => __( 'Core field labels were reset for the current site language.', 'certloom' ) ) as $flag => $message ) : ?>
 		<?php if ( isset( $_GET[ $flag ] ) ) : ?><div class="notice notice-success is-dismissible"><p><?php echo esc_html( $message ); ?></p></div><?php endif; ?>

@@ -43,7 +43,25 @@ if ( $branding_enabled ) {
 	}
 }
 
-get_header();
+$block_theme_route = function_exists( 'wp_is_block_theme' ) && wp_is_block_theme();
+if ( $block_theme_route ) :
+	?>
+<!doctype html>
+<html <?php language_attributes(); ?>>
+<head>
+	<meta charset="<?php bloginfo( 'charset' ); ?>" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<?php wp_head(); ?>
+</head>
+<body <?php body_class( 'certloom-route-page' ); ?>>
+	<?php wp_body_open(); ?>
+	<header class="certloom-route-site-header">
+		<a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php echo esc_html( get_bloginfo( 'name' ) ); ?></a>
+	</header>
+	<?php
+else :
+	get_header();
+endif;
 ?>
 <a class="certloom-skip-link screen-reader-text" href="#certloom-route-content"><?php esc_html_e( 'Skip to credential content', 'certloom' ); ?></a>
 <main id="primary" class="certloom-public certloom-route-main certloom-route-<?php echo esc_attr( $route ); ?><?php echo $branding_enabled ? ' is-certloom-branded' : ''; ?>"<?php if ( $branding_enabled ) : ?> style="--certloom-brand-accent:<?php echo esc_attr( $brand_accent ); ?>;--certloom-brand-surface:<?php echo esc_attr( $brand_surface ); ?>;--certloom-brand-text:<?php echo esc_attr( $brand_text ); ?>;"<?php endif; ?>>
@@ -73,4 +91,9 @@ get_header();
 	</div>
 </main>
 <?php
-get_footer();
+if ( $block_theme_route ) {
+	wp_footer();
+	echo '</body></html>';
+} else {
+	get_footer();
+}

@@ -14,6 +14,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class BatchRepository {
 	/** @param array<string,mixed> $data @return int|\WP_Error */
 	public function create( array $data ) {
+		if ( '' === trim( (string) ( $data['code'] ?? '' ) ) ) {
+			$base = strtoupper( sanitize_key( (string) ( $data['name'] ?? '' ) ) );
+			$base = '' !== $base ? substr( $base, 0, 72 ) : 'BATCH';
+			$data['code'] = $base . '-' . strtoupper( substr( str_replace( '-', '', wp_generate_uuid4() ), 0, 8 ) );
+		}
 		$validated = $this->normalize_write( $data );
 		if ( is_wp_error( $validated ) ) {
 			return $validated;

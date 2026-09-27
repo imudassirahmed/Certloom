@@ -3,6 +3,7 @@
 $root = dirname( __DIR__ );
 $admin = file_get_contents( $root . '/src/Infrastructure/Admin/ManualIssuanceAdmin.php' );
 $rest = file_get_contents( $root . '/src/Infrastructure/Admin/IssueCredentialRest.php' );
+$batch_repository = file_get_contents( $root . '/src/Infrastructure/Repository/BatchRepository.php' );
 $search = file_get_contents( $root . '/src/Infrastructure/Admin/AdminSearchRest.php' );
 $plugin = file_get_contents( $root . '/src/Plugin.php' );
 $js = file_get_contents( $root . '/admin/assets/issue-credential.js' );
@@ -25,7 +26,7 @@ i479( false !== strpos( $admin, 'data-field="credential_title"' ), 'credential t
 i479( false !== strpos( $admin, 'data-step-key="details"' ) && false !== strpos( $admin, 'data-design-required-fields' ) && false !== strpos( $admin, 'data-oneoff-fields' ) && false === strpos( $admin, 'data-step-key="data"' ), 'credential data is merged into Details while design-required and one-off surfaces remain distinct' );
 i479( false !== strpos( $admin, 'data-preview-stage' ) && false !== strpos( $admin, 'data-preview-status' ) && false !== strpos( $admin, "render_async_picker( 'signer'" ), 'certificate step owns live preview and signer selection' );
 i479( false !== strpos( $admin, 'data-email-mode="review"' ) && false !== strpos( $admin, 'data-email-mode="later"' ), 'Email is an explicit post-issuance decision' );
-i479( false !== strpos( $admin, 'Nothing is sent during issuance' ), 'Email copy preserves post-commit boundary' );
+i479( false !== strpos( $admin, 'Existing automation rules run separately and may send an email.' ) && false !== strpos( $admin, 'Skip manual email review' ), 'Email copy distinguishes manual follow-up from configured automations' );
 i479( false !== strpos( $admin, 'data-review-technical' ), 'technical evidence remains available without cluttering primary review' );
 i479( false !== strpos( $admin, 'type="button" data-quick-close' ) && false !== strpos( $js, "querySelectorAll('[data-quick-close]')" ), 'quick-create dialogs have non-submitting close controls' );
 
@@ -40,7 +41,7 @@ i479( false !== strpos( $rest, 'certloom_issue_profile_repeating_data_invalid' )
 i479( false !== strpos( $rest, 'TableDataContract::MAX_ROWS' ) && false !== strpos( $js, "limit('repeating_rows', 50)" ), 'browser and REST bootstrap use the canonical repeating-data row cap' );
 i479( false !== strpos( $rest, 'get_post_mime_type' ) && false !== strpos( $rest, "array( 'image/png', 'image/jpeg' )" ), 'REST independently validates uploaded certificate image MIME' );
 i479( false !== strpos( $rest, 'ScopedFieldGlobalRepository' ) && false !== strpos( $rest, 'resolve_hierarchy(' ), 'Program context resolves Global → Issuer → Program → Batch field hierarchy' );
-i479( false !== strpos( $rest, "wp_generate_uuid4()" ) && false !== strpos( $rest, "'code' => \$code" ), 'quick Batch can generate a hidden required machine code when omitted' );
+i479( false !== strpos( $batch_repository, 'wp_generate_uuid4()' ) && false !== strpos( $rest, "'code' => \$code" ), 'quick Batch delegates optional code generation to the shared repository' );
 i479( false !== strpos( $rest, "'email_url'" ) && false !== strpos( $rest, "'issue_another_url'" ), 'Issue returns post-commit continuation URLs' );
 i479( false === strpos( $rest, 'wp_mail(' ), 'Issue REST controller never sends email itself' );
 

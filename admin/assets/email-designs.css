@@ -85,7 +85,7 @@
 }
 .certloom-email-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill,minmax(300px,1fr));
+	grid-template-columns: repeat(auto-fill,minmax(min(300px,100%),1fr));
 	gap: 18px;
 }
 .certloom-email-card {
@@ -434,7 +434,7 @@ body.certloom-email-studio-active .certloom-email-designer-wrap {
 }
 .certloom-designer-shell {
 	display: grid;
-	grid-template-columns: 268px minmax(420px,1fr) 322px;
+	grid-template-columns: clamp(200px,19vw,268px) minmax(0,1fr) clamp(250px,23vw,322px);
 	grid-template-rows: minmax(0,1fr);
 	flex: 1 1 0;
 	min-height: 0;
@@ -965,7 +965,7 @@ body.certloom-email-studio-active .certloom-email-designer-wrap {
 }
 @media (max-width:1100px) {
 	.certloom-designer-shell {
-		grid-template-columns: 228px minmax(360px,1fr) 292px;
+		grid-template-columns: 200px minmax(0,1fr) 250px;
 	}
 	.certloom-email-studio-brand strong {
 		display: none;
@@ -974,17 +974,23 @@ body.certloom-email-studio-active .certloom-email-designer-wrap {
 		max-width: 220px;
 	}
 }
+@media (min-width:961px) and (max-width:1180px) {
+	.certloom-email-studio-toolbar { flex-wrap: wrap; }
+	.certloom-email-studio-toolbar__identity { flex: 1 1 420px; flex-wrap: wrap; }
+	.certloom-email-studio-document { flex-wrap: wrap; }
+	.certloom-email-studio-toolbar__actions { margin-left: auto; }
+}
 @media (max-width:960px) {
 	body.certloom-email-studio-active { overflow: visible; }
-	body.certloom-email-studio-active #wpfooter { display: block !important; }
-	body.certloom-email-studio-active #wpbody-content { padding-bottom: 65px !important; }
-	.certloom-email-designer-wrap {
+	body.certloom-email-studio-active #wpfooter { display: none !important; }
+	body.certloom-email-studio-active #wpbody-content { padding-bottom: 65px !important; overflow: visible; }
+	body.certloom-email-studio-active .certloom-email-designer-wrap {
 		height: auto;
 		min-height: 0;
 		overflow: visible;
 		margin-left: -10px;
 	}
-	.certloom-email-designer-wrap > form { height: auto; }
+	.certloom-email-designer-wrap > form { height: auto; overflow: visible; }
 	.certloom-email-studio-toolbar {
 		align-items: flex-start;
 		flex-direction: column;
@@ -994,11 +1000,13 @@ body.certloom-email-studio-active .certloom-email-designer-wrap {
 		width: 100%;
 		min-width: 0;
 	}
-	.certloom-email-studio-toolbar__actions { overflow-x: auto; }
+	.certloom-email-studio-toolbar__actions { flex-wrap: wrap; overflow: visible; }
 	.certloom-message-settings { grid-template-columns: 1fr 1fr; }
 	.certloom-designer-shell {
 		display: grid;
 		grid-template-columns: 220px minmax(0,1fr);
+		flex: none;
+		overflow: visible;
 		min-height: 720px;
 	}
 	.certloom-designer-inspector {
@@ -1022,6 +1030,9 @@ body.certloom-email-studio-active .certloom-email-designer-wrap {
 	.certloom-email-studio-document > strong { max-width: min(65vw,320px); }
 	.certloom-message-settings { grid-template-columns: 1fr; }
 	.certloom-designer-shell { display: block; min-height: 0; }
+	.certloom-designer-palette,
+	.certloom-designer-stage,
+	.certloom-designer-inspector { height: auto; max-height: none; overflow: visible; }
 	.certloom-designer-palette,
 	.certloom-designer-inspector {
 		min-height: auto;
@@ -1478,6 +1489,15 @@ body.certloom-email-studio-active .certloom-email-designer-wrap {
 @media (max-width:1180px) and (min-width:961px) {
 	.certloom-message-settings--compact { grid-template-columns: 150px minmax(220px,1fr) minmax(220px,1fr); }
 	.certloom-theme-background-options { grid-template-columns: 1fr; }
+}
+@media (max-width:960px) {
+	.certloom-message-settings--compact { grid-template-columns: repeat(2,minmax(0,1fr)); }
+	.certloom-message-settings--compact label { min-width: 0; }
+	.certloom-message-settings--compact input,
+	.certloom-message-settings--compact select { box-sizing: border-box; width: 100%; min-width: 0; }
+}
+@media (max-width:782px) {
+	.certloom-message-settings--compact { grid-template-columns: minmax(0,1fr); }
 }
 
 /* Gamma-03A advanced-composition: keep the Email Designs library filters bounded on phones. */

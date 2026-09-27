@@ -4,6 +4,7 @@ namespace Certloom\Infrastructure\Admin;
 use Certloom\Domain\Job\JobStates;
 use Certloom\Domain\Job\JobTypes;
 use Certloom\Infrastructure\Email\EmailDesignPurposes;
+use Certloom\Infrastructure\Email\EmailDesignCompiler;
 use Certloom\Infrastructure\Email\EmailTemplateCatalogRepository;
 use Certloom\Infrastructure\Job\JobRuntime;
 
@@ -243,7 +244,7 @@ final class EmailDeliveryAdmin {
 			echo '<option value="' . esc_attr( $id ) . '" ' . selected( $template_id, $id, false ) . '>' . esc_html( $name ) . '</option>';
 		}
 		echo '</select><small>' . esc_html__( 'Automatic resolves Batch → Program → Issuer → Global. Choosing a named design is a one-send override and does not change inheritance.', 'certloom' ) . '</small></label>';
-		echo '<label class="certloom-field-control"><span>' . esc_html__( 'Send to', 'certloom' ) . '</span><input type="email" name="destination" value="' . esc_attr( is_array( $saved ) ? (string) ( $saved['destination'] ?? '' ) : '' ) . '" placeholder="' . esc_attr__( 'Uses the recipient email when blank', 'certloom' ) . '"><small>' . esc_html__( 'Leave blank to use the email saved with the issued credential.', 'certloom' ) . '</small></label>';
+		echo '<label class="certloom-field-control"><span>' . esc_html__( 'Send to', 'certloom' ) . '</span><input type="email" name="destination" value="' . esc_attr( is_array( $saved ) ? (string) ( $saved['destination'] ?? '' ) : '' ) . '" placeholder="' . esc_attr__( 'Uses the recipient email when blank', 'certloom' ) . '"><small>' . esc_html__( 'Leave blank to use the email saved at issuance. If none was saved, enter a delivery address here.', 'certloom' ) . '</small></label>';
 		echo '</div>';
 		echo '<fieldset class="certloom-email-kind"><legend>' . esc_html__( 'Delivery type', 'certloom' ) . '</legend><div class="certloom-choice-pills">';
 		$selected_kind = is_array( $saved ) ? (string) ( $saved['delivery_kind'] ?? 'issued' ) : 'issued';
@@ -276,7 +277,7 @@ final class EmailDeliveryAdmin {
 		}
 
 		echo '<div class="certloom-email-preview-subject"><strong>' . esc_html__( 'Subject', 'certloom' ) . '</strong><p>' . esc_html( (string) $composed['subject'] ) . '</p></div>';
-		echo '<div class="certloom-email-preview-body">' . wp_kses_post( (string) $composed['html_body'] ) . '</div>';
+		echo '<div class="certloom-email-preview-body">' . EmailDesignCompiler::sanitize_inline_html( (string) $composed['html_body'] ) . '</div>';
 		echo '<details class="certloom-email-plain"><summary>' . esc_html__( 'Plain-text version', 'certloom' ) . '</summary><pre>' . esc_html( (string) $composed['text_body'] ) . '</pre></details>';
 		echo '<details class="certloom-technical-details"><summary>' . esc_html__( 'Technical details', 'certloom' ) . '</summary><p class="description">' . esc_html__( 'Certloom checks this integrity fingerprint again before sending. It is available for support and auditing.', 'certloom' ) . '</p><div class="certloom-template-preview-proof"><div><span>' . esc_html__( 'Composition SHA-256', 'certloom' ) . '</span><code data-certloom-composition-sha>' . esc_html( (string) $composed['composition_sha256'] ) . '</code></div></div></details>';
 		echo '<div class="certloom-email-confirm"><div><strong>' . esc_html__( 'Looks right?', 'certloom' ) . '</strong><p>' . esc_html__( 'If the credential or selected message changes, Certloom will require another preview before sending.', 'certloom' ) . '</p></div><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_email_send"><input type="hidden" name="email_preview" value="' . esc_attr( $token ) . '">';

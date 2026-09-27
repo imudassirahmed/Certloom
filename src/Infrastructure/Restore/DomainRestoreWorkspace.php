@@ -468,6 +468,11 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 			'owner_token' => (string) $journal['owner_token'],
 			'suffix'      => (string) $journal['suffix'],
 		);
+		// Normal WordPress requests may bootstrap while the restore worker is
+		// committing. Its live lease is authority to leave the workspace alone.
+		if ( $this->maintenance->owned_active( $workspace['owner_token'] ) ) {
+			return true;
+		}
 		$valid = $this->validate_workspace( $workspace );
 		if ( is_wp_error( $valid ) ) {
 			return $valid;
@@ -976,6 +981,9 @@ final class DomainRestoreWorkspace implements DomainRestoreWorkspaceInterface {
 			return true;
 		}
 		$workspace = array( 'owner_token' => (string) $current['owner_token'], 'suffix' => (string) $current['suffix'] );
+		if ( $this->maintenance->owned_active( $workspace['owner_token'] ) ) {
+			return true;
+		}
 		$valid = $this->validate_workspace( $workspace );
 		if ( is_wp_error( $valid ) ) {
 			return $valid;

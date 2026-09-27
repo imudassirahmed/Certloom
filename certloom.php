@@ -253,6 +253,26 @@ function ecapla_certverify_activate_site() {
 		return $cron;
 	}
 
+	// A brand-new site can issue from Setup without first discovering the
+	// numbering settings. Keep the historical manual fallback for existing sites
+	// and never change a stored policy or a site with credential history.
+	if ( false === get_option( Ecapla_CertVerify_Settings::OPTION_KEY, false ) ) {
+		$legacy_count = Ecapla_CertVerify_Database::get_registry_count();
+		if ( is_wp_error( $legacy_count ) ) { return $legacy_count; }
+		global $wpdb;
+		$series_count = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i', \Certloom\Infrastructure\Database\SchemaManager::table( 'credential_series' ) ) );
+		if ( null === $series_count || '' !== (string) $wpdb->last_error ) {
+			return new WP_Error( 'certloom_first_run_numbering_check_failed', __( 'Certloom could not inspect existing credentials before choosing a numbering default.', 'certloom' ) );
+		}
+		if ( 0 === (int) $legacy_count && 0 === (int) $series_count ) {
+			$initial_settings = Ecapla_CertVerify_Settings::defaults();
+			$initial_settings['numbering_mode'] = 'sequential';
+			if ( ! add_option( Ecapla_CertVerify_Settings::OPTION_KEY, $initial_settings, '', false ) ) {
+				return new WP_Error( 'certloom_first_run_numbering_save_failed', __( 'Certloom could not save the first-run numbering policy.', 'certloom' ) );
+			}
+		}
+	}
+
 	return true;
 }
 

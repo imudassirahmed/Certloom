@@ -282,7 +282,7 @@ final class EmailTemplateCatalogRepository {
 			// Legacy/custom HTML designs remain editable and become a single safe text block
 			// the first time they are opened in the visual designer.
 			$theme  = $this->compiler->normalize_theme( $theme );
-			$legacy_html = wp_kses_post( (string) ( $template['html_body'] ?? EmailTemplateService::defaults()['html_body'] ) );
+			$legacy_html = EmailDesignCompiler::sanitize_inline_html( (string) ( $template['html_body'] ?? EmailTemplateService::defaults()['html_body'] ) );
 			$blocks = array( array( 'type' => 'text', 'html' => $legacy_html ) );
 		}
 

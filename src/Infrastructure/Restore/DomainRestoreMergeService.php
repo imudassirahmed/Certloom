@@ -282,6 +282,14 @@ final class DomainRestoreMergeService {
 				if ( ! $target_id && '' === $code ) {
 					$target_id = $this->infer_series_dependency( $workspace, 'program_id', $source_id );
 					if ( is_wp_error( $target_id ) ) { return $target_id; }
+					if ( ! $target_id ) {
+						// A program without a code or credential reference has no portable
+						// identity. A same-ID, identical row is safe to reuse when merging a
+						// backup back into its original site; never match by title alone.
+						$existing = $this->lookup_row( $target_table, 'id', $source_id );
+						if ( is_wp_error( $existing ) ) { return $existing; }
+						if ( is_array( $existing ) && $this->rows_equal( $row, $existing ) ) { $target_id = $source_id; }
+					}
 				}
 				return $target_id ? $this->record_map( $owner, $entity, $source_id, $hash, $target_id, 'existing' ) : $this->insert_and_map( $owner, $entity, $source_id, $hash, $target_table, $row );
 
@@ -541,6 +549,19 @@ final class DomainRestoreMergeService {
 		return '' !== (string) $wpdb->last_error
 			? new \WP_Error( 'certloom_domain_restore_merge_lookup_failed', __( 'Certloom could not inspect current identity records while preparing Merge restore.', 'certloom' ) )
 			: ( is_array( $row ) ? $row : null );
+	}
+
+	/** Compare database scalar rows after mapped parent IDs have been applied. */
+	private function rows_equal( array $source, array $target ) {
+		foreach ( $source as $column => $value ) {
+			if ( ! array_key_exists( $column, $target ) ) { return false; }
+			if ( null === $value || null === $target[ $column ] ) {
+				if ( $value !== $target[ $column ] ) { return false; }
+			} elseif ( (string) $value !== (string) $target[ $column ] ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private function lookup_version_source( $table, $source_type, $source_key ) {

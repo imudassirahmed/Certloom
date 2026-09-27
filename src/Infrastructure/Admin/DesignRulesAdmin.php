@@ -3,6 +3,7 @@ namespace Certloom\Infrastructure\Admin;
 
 use Certloom\Application\Templates\TemplatePreviewSamples;
 use Certloom\Infrastructure\Email\EmailDesignAssignmentRepository;
+use Certloom\Infrastructure\Email\EmailDesignCompiler;
 use Certloom\Infrastructure\Email\EmailDesignPurposes;
 use Certloom\Infrastructure\Email\EmailTemplateCatalogRepository;
 use Certloom\Infrastructure\Rendering\RenderPlanHtmlPreview;
@@ -724,7 +725,7 @@ final class DesignRulesAdmin {
 	/** @return string */
 	private function sample_email_html( $html ) {
 		return strtr(
-			wp_kses_post( $html ),
+			EmailDesignCompiler::sanitize_inline_html( $html ),
 			array(
 				'{{recipient_name}}'    => esc_html__( 'Sara Khan', 'certloom' ),
 				'{{program_title}}'     => esc_html__( 'Professional Leadership Program', 'certloom' ),

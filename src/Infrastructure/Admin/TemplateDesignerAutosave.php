@@ -86,7 +86,9 @@ final class TemplateDesignerAutosave {
 		);
 		$encoded = wp_json_encode( $record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 		if ( ! is_string( $encoded ) || strlen( $encoded ) > self::MAX_BYTES + 131072 ) { return new \WP_Error( 'certloom_designer_autosave_encode_failed', __( 'Designer autosave could not encode the bounded recovery record.', 'certloom' ) ); }
-		update_user_meta( $user_id, self::meta_key( $template_id ), $encoded );
+		// WordPress strips slashes before storing meta. Preserve the exact JSON
+		// bytes so nested layout_json and its recovery hash survive a round trip.
+		update_user_meta( $user_id, self::meta_key( $template_id ), wp_slash( $encoded ) );
 		$stored = get_user_meta( $user_id, self::meta_key( $template_id ), true );
 		if ( ! is_string( $stored ) || ! hash_equals( hash( 'sha256', $encoded ), hash( 'sha256', $stored ) ) ) {
 			return new \WP_Error( 'certloom_designer_autosave_store_failed', __( 'Designer autosave could not verify the stored recovery checkpoint.', 'certloom' ) );
@@ -123,9 +125,9 @@ final class TemplateDesignerAutosave {
 		}
 		$layout = json_decode( $layout_json, true );
 		if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $layout ) ) { return array( 'status' => 'invalid' ); }
-		try { $layout = $this->layouts->normalize( $layout ); $actual_sha = $this->json->hash( $layout ); }
+		try { $layout = $this->layouts->normalize( $layout ); $hash_matches = $this->json->matches_hash( $layout, $layout_sha ); }
 		catch ( \Throwable $error ) { return array( 'status' => 'invalid' ); }
-		if ( ! hash_equals( $layout_sha, $actual_sha ) ) { return array( 'status' => 'invalid' ); }
+		if ( ! $hash_matches ) { return array( 'status' => 'invalid' ); }
 		$template = $this->templates->find( $template_id );
 		if ( is_wp_error( $template ) || ! is_array( $template ) || ! empty( $template['archived_at'] ) || empty( $template['current_revision'] ) ) { return array( 'status' => 'stale', 'record' => $record ); }
 		$current_id = absint( $template['current_revision_id'] ?? 0 );
@@ -196,7 +198,7 @@ final class TemplateDesignerAutosave {
 
 		$encoded = wp_json_encode( $record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 		if ( is_string( $encoded ) && strlen( $encoded ) <= 16384 ) {
-			update_user_meta( $user_id, self::retired_meta_key( $template_id ), $encoded );
+			update_user_meta( $user_id, self::retired_meta_key( $template_id ), wp_slash( $encoded ) );
 		}
 		return true;
 	}

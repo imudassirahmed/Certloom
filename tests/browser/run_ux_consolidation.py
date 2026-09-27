@@ -59,9 +59,9 @@ async def run():
         advanced=await browser.new_page(viewport={'width':1100,'height':780})
         await advanced.set_content(fixture('advanced'),wait_until='load')
         adv=await advanced.locator('[data-primary-label]').evaluate_all('(els)=>els.map(e=>e.textContent.trim())')
-        await ck(len(adv)==6 and 'Developer tools' not in adv,'advancedStillSixPrimary')
+        await ck(len(adv)==6 and 'Credential data tools' not in adv,'advancedStillSixPrimary')
         advsub=await advanced.locator('[data-subnav-label]').evaluate_all('(els)=>els.map(e=>e.textContent.trim())')
-        await ck('Developer tools' in advsub,'advancedDeveloperToolsSubtab')
+        await ck('Credential data tools' in advsub,'advancedCredentialDataToolsSubtab')
         await advanced.close()
 
         mobile=await browser.new_page(viewport={'width':390,'height':820})

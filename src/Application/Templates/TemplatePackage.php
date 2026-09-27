@@ -239,7 +239,7 @@ final class TemplatePackage {
 		if ( LayoutSchema::NAME !== (string) $layout['_meta']['schema'] || $package_schema_version !== (int) $layout['_meta']['schema_version'] ) {
 			return new \WP_Error( 'certloom_template_import_schema_mismatch', __( 'The imported design package metadata does not match the canonical layout schema version.', 'certloom' ) );
 		}
-		if ( ! hash_equals( strtolower( (string) $revision['layout_sha256'] ), $hash ) ) {
+		if ( ! $this->json->matches_hash( $layout, $revision['layout_sha256'] ) ) {
 			return new \WP_Error( 'certloom_template_import_hash_mismatch', __( 'The imported design layout does not match its recorded integrity hash.', 'certloom' ) );
 		}
 

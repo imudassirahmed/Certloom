@@ -84,6 +84,7 @@ final class PublicCredentialPresenter {
 			'status'             => $status ? $status->to_array() : null,
 			'fields'             => $public_fields,
 			'profile'            => $profile,
+			'profile_visible'    => 'profile' === $effective_context,
 		);
 	}
 

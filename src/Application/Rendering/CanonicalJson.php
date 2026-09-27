@@ -12,16 +12,42 @@ final class CanonicalJson {
 	/** @return string */
 	public function encode( $value ) {
 		$value = $this->normalize( $value );
-		$json = json_encode( $value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION );
-		if ( false === $json ) {
-			throw new InvalidArgumentException( 'Value could not be encoded as canonical JSON.' );
-		}
-		return $json;
+		return $this->encode_at_precision( $value, '-1' );
 	}
 
 	/** @return string */
 	public function hash( $value ) {
 		return hash( 'sha256', $this->encode( $value ) );
+	}
+
+	/**
+	 * Accept a stored pre-fix digest without changing it. Older installations
+	 * could write layout hashes with PHP's 17-digit serialization setting.
+	 * New writes always use the shortest round-trippable float representation.
+	 *
+	 * @return bool
+	 */
+	public function matches_hash( $value, $expected ) {
+		$expected = strtolower( (string) $expected );
+		if ( ! preg_match( '/\A[a-f0-9]{64}\z/', $expected ) ) { return false; }
+		$normalized = $this->normalize( $value );
+		if ( hash_equals( $expected, hash( 'sha256', $this->encode_at_precision( $normalized, '-1' ) ) ) ) { return true; }
+		return hash_equals( $expected, hash( 'sha256', $this->encode_at_precision( $normalized, '17' ) ) );
+	}
+
+	/** @return string */
+	private function encode_at_precision( $value, $precision ) {
+		$previous = ini_get( 'serialize_precision' );
+		if ( false === $previous || false === ini_set( 'serialize_precision', (string) $precision ) ) {
+			throw new InvalidArgumentException( 'Canonical JSON could not set a stable float precision.' );
+		}
+		try {
+			$json = json_encode( $value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION );
+			if ( false === $json ) { throw new InvalidArgumentException( 'Value could not be encoded as canonical JSON.' ); }
+			return $json;
+		} finally {
+			ini_set( 'serialize_precision', $previous );
+		}
 	}
 
 	/** @return mixed */

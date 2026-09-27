@@ -94,7 +94,8 @@ final class IntegrationEventContext {
 		if ( $recipient_id > 0 ) { $data['recipient_id'] = $recipient_id; }
 		try {
 			$sha = $json->hash( $data );
-			$idempotency = $json->hash( array( 'source' => 'lms_integration', 'adapter' => $adapter, 'event_identity_sha256' => $event_identity ) );
+			// Independent sources may use the same external event identifier.
+			$idempotency = $json->hash( array( 'source' => 'lms_integration', 'adapter' => $adapter, 'source_object' => $data['source_object'], 'event_identity_sha256' => $event_identity ) );
 		} catch ( \Throwable $error ) {
 			return new \WP_Error( 'certloom_integration_context_hash_failed', __( 'Certloom could not fingerprint the normalized integration event safely.', 'certloom' ) );
 		}

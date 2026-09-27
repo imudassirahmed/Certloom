@@ -62,13 +62,13 @@ final class IssueCredentialRest {
 		register_rest_route( self::NAMESPACE, self::BASE . '/quick-program', array(
 			'methods' => \WP_REST_Server::CREATABLE,
 			'callback' => array( $this, 'quick_program' ),
-			'permission_callback' => array( $this, 'permission' ),
+			'permission_callback' => array( $this, 'can_manage_programs' ),
 		) );
 
 		register_rest_route( self::NAMESPACE, self::BASE . '/quick-batch', array(
 			'methods' => \WP_REST_Server::CREATABLE,
 			'callback' => array( $this, 'quick_batch' ),
-			'permission_callback' => array( $this, 'permission' ),
+			'permission_callback' => array( $this, 'can_manage_batches' ),
 		) );
 
 		register_rest_route( self::NAMESPACE, self::BASE . '/review', array(
@@ -96,6 +96,16 @@ final class IssueCredentialRest {
 		if ( ! is_user_logged_in() ) { return false; }
 		if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_ISSUE_CREDENTIALS ) ) { return true; }
 		return current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_CREDENTIALS );
+	}
+
+	/** Quick creation must enforce the same entity capability as its full editor. */
+	public function can_manage_programs() {
+		return $this->permission() && current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS );
+	}
+
+	/** @return bool */
+	public function can_manage_batches() {
+		return $this->permission() && current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_BATCHES );
 	}
 
 	/** @return \WP_REST_Response|\WP_Error */
@@ -130,6 +140,10 @@ final class IssueCredentialRest {
 
 		$email_designs = ( new EmailTemplateCatalogRepository() )->for_purpose( EmailDesignPurposes::ISSUED, true );
 		if ( ! is_array( $email_designs ) ) { $email_designs = array(); }
+		$recipients = ( new RecipientRepository() )->list_page( '', 1, 1 );
+		if ( is_wp_error( $recipients ) ) { return $recipients; }
+		$programs = ( new ProgramRepository() )->list_page( '', 1, 1, 'active' );
+		if ( is_wp_error( $programs ) ) { return $programs; }
 
 		return rest_ensure_response( array(
 			'profile' => array(
@@ -139,6 +153,10 @@ final class IssueCredentialRest {
 				'issuance' => $issuance,
 			),
 			'today' => current_time( 'Y-m-d' ),
+			'defaults' => array(
+				'recipient_mode' => $recipient || ! empty( $recipients['total'] ) ? 'existing' : 'new',
+				'credential_basis' => $program || ! empty( $programs['total'] ) ? 'program' : 'independent',
+			),
 			'numbering' => array( 'automatic' => ( new ManualIssuanceNumberAllocator() )->is_automatic() ),
 			'deep_link' => array(
 				'recipient' => $recipient ? $this->recipient_choice( $recipient ) : null,
@@ -246,11 +264,6 @@ final class IssueCredentialRest {
 		if ( is_wp_error( $program ) ) { return $program; }
 		if ( ! is_array( $program ) || empty( $program['active'] ) ) { return new \WP_Error( 'certloom_issue_quick_batch_program_missing', __( 'The selected Program is no longer available.', 'certloom' ), array( 'status' => 404 ) ); }
 		$code = trim( sanitize_text_field( (string) ( $body['code'] ?? '' ) ) );
-		if ( '' === $code ) {
-			$base = strtoupper( sanitize_key( $name ) );
-			$base = '' !== $base ? substr( $base, 0, 72 ) : 'BATCH';
-			$code = $base . '-' . strtoupper( substr( str_replace( '-', '', wp_generate_uuid4() ), 0, 8 ) );
-		}
 		$id = ( new BatchRepository() )->create( array(
 			'program_id' => $program_id,
 			'name' => $name,
@@ -334,8 +347,8 @@ final class IssueCredentialRest {
 			}
 		}
 
-		$email_mode = sanitize_key( (string) ( $email['mode'] ?? 'review' ) );
-		if ( ! in_array( $email_mode, array( 'review', 'later' ), true ) ) { $email_mode = 'review'; }
+		$email_mode = sanitize_key( (string) ( $email['mode'] ?? 'later' ) );
+		if ( ! in_array( $email_mode, array( 'review', 'later' ), true ) ) { $email_mode = 'later'; }
 		$email_template = sanitize_key( (string) ( $email['template_id'] ?? 'automatic' ) );
 		if ( '' === $email_template ) { $email_template = 'automatic'; }
 

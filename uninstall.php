@@ -447,7 +447,25 @@ function ecapla_certverify_uninstall_all_sites() {
 	} while ( count( $site_ids ) === $number );
 }
 
+$certloom_uninstall_settings = get_option( 'certverify_settings', array() );
+$certloom_delete_admin_drafts = ! is_multisite() && is_array( $certloom_uninstall_settings ) && ! empty( $certloom_uninstall_settings['delete_data_on_uninstall'] );
+if ( is_multisite() ) {
+	$certloom_network_choice = get_site_option( 'certloom_uninstall_delete_data_network_override', null );
+	$certloom_delete_admin_drafts = is_array( $certloom_network_choice ) && ! empty( $certloom_network_choice['delete_data'] );
+}
 ecapla_certverify_uninstall_all_sites();
+// User metadata is network-wide. Only an explicit data-deletion opt-in may
+// remove these drafts; retained data must remain available after reinstall.
+if ( $certloom_delete_admin_drafts ) {
+	global $wpdb;
+	$wpdb->query(
+		$wpdb->prepare(
+			'DELETE FROM %i WHERE meta_key = %s',
+			$wpdb->usermeta,
+			'certloom_admin_draft_workspaces_v1'
+		)
+	); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Removes only Certloom-owned per-user drafts.
+}
 delete_site_option( 'certloom_uninstall_delete_data_network_override' );
 delete_site_option( 'certverify_provisioning_failures' );
 

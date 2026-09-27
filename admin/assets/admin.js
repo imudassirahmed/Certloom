@@ -523,6 +523,7 @@
 
 
 
+	var scopedContextLookupSequence = 0;
 	function initScopedContextLookups( root ) {
 		root = root && root.querySelectorAll ? root : document;
 		Array.prototype.forEach.call( root.querySelectorAll( 'select[data-certloom-context-lookup]' ), function ( select ) {
@@ -531,6 +532,17 @@
 			var nonce = select.getAttribute( 'data-certloom-context-nonce' ) || '';
 			if ( [ 'recipient', 'program', 'batch', 'template', 'issuer', 'signer', 'signer_scope', 'wp_user', 'tutor_course', 'learndash_course' ].indexOf( kind ) === -1 || ! nonce || ( ! certloomL10n.restContextUrl && 'undefined' === typeof window.ajaxurl ) ) { return; }
 			select.setAttribute( 'data-certloom-context-ready', '1' );
+			// Inserting a search input before an implicitly labelled select would
+			// transfer its label to the search field and leave the choice unnamed.
+			Array.prototype.forEach.call( select.labels || [], function ( label ) {
+				if ( label.htmlFor ) { return; }
+				if ( ! select.id ) {
+					var choiceId;
+					do { choiceId = 'certloom-context-choice-' + ( ++scopedContextLookupSequence ); } while ( document.getElementById( choiceId ) );
+					select.id = choiceId;
+				}
+				label.htmlFor = select.id;
+			} );
 
 			var wrapper = document.createElement( 'div' );
 			wrapper.className = 'certloom-context-lookup';
@@ -1082,6 +1094,10 @@
 		function setupDraftBody() {
 			if ( ! wizardForm ) { return null; }
 			var body = new FormData( wizardForm );
+			// A draft save must never carry a final wizard action to admin_init.
+			body.delete( 'certloom_setup_wizard_action' );
+			body.delete( 'wizard_next_step' );
+			body.delete( 'wizard_finish_later' );
 			body.set( 'action', 'certloom_setup_draft_autosave' );
 			body.set( 'wizard_step', root.getAttribute( 'data-certloom-step' ) || body.get( 'wizard_step' ) || '' );
 			body.set( 'certloom_draft_revision', String( Date.now() ) );

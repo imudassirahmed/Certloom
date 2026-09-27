@@ -67,7 +67,7 @@ uxroute( false === strpos( $email, 'name="version_id" type="text"' ) && false ==
 uxroute( false !== strpos( $email, 'Open Automations' ), 'Manual Email Delivery continues into automatic delivery setup' );
 
 // Automations actions are registered and use the same catalog for manual + automatic delivery.
-foreach ( array( 'certloom_automation_rule_save', 'certloom_automation_rule_delete' ) as $action ) {
+foreach ( array( 'certloom_automation_rule_save', 'certloom_automation_rule_toggle', 'certloom_automation_rule_delete' ) as $action ) {
     uxroute( false !== strpos( $automation, "admin_post_{$action}" ) && false !== strpos( $automations_view, "value=\"{$action}\"" ), 'Automation rule control is both rendered and registered: ' . $action );
 }
 foreach ( array( 'certloom_automation_template_save', 'certloom_automation_template_delete' ) as $action ) {

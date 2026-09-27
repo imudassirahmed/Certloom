@@ -10,6 +10,8 @@ use Certloom\Infrastructure\Email\EmailDesignAssignmentRepository;
 use Certloom\Infrastructure\Email\EmailDesignPurposes;
 use Certloom\Infrastructure\Email\EmailTemplateCatalogRepository;
 use Certloom\Infrastructure\Email\EmailTemplateSettingsRepository;
+use Certloom\Infrastructure\Issuance\NormalizedPublicCredentialUrl;
+use Certloom\Infrastructure\Migration\DomainFeatureGate;
 use Certloom\Infrastructure\Repository\EmailDeliveryRepository;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -74,7 +76,23 @@ final class EmailDeliveryCoordinator {
 		if ( is_wp_error( $selection ) ) { return $selection; }
 		$template = $selection['design'];
 
-		$authoritative = ( new DomainCutoverState() )->is_domain_authoritative();
+		// Email must describe the public route users can actually open. Review builds
+		// can issue and publicly verify normalized credentials before legacy write
+		// cutover; a cutover-only check incorrectly removed their links from email.
+		$authoritative = ( new DomainCutoverState() )->is_domain_authoritative() || DomainFeatureGate::write_paths_ready();
+		$public_id = (string) ( $snapshot['credential']['public_id'] ?? '' );
+		$url = ( new NormalizedPublicCredentialUrl() )->verification_url( $public_id );
+		if ( is_wp_error( $url ) ) {
+			$authoritative = false;
+		} elseif ( $authoritative ) {
+			// A link is derived from the current site and immutable public ID, never
+			// trusted from an imported or now-stale URL in the historical snapshot.
+			$snapshot['credential']['verification_url'] = $url;
+			if ( isset( $snapshot['merge']['values'] ) && is_array( $snapshot['merge']['values'] ) ) {
+				$snapshot['merge']['values']['verification.url'] = $url;
+				$snapshot['merge']['values']['verification_url'] = $url;
+			}
+		}
 		$composed      = $this->templates->compose( $snapshot, $template, $authoritative );
 		if ( is_wp_error( $composed ) ) {
 			return $composed;
@@ -247,7 +265,7 @@ final class EmailDeliveryCoordinator {
 		$email = sanitize_email( $requested );
 		return '' !== $email && ( ! function_exists( 'is_email' ) || is_email( $email ) )
 			? $email
-			: new \WP_Error( 'certloom_email_destination_required', __( 'This credential needs a valid delivery email address. Enter one explicitly or add it to the immutable issued Recipient snapshot.', 'certloom' ) );
+			: new \WP_Error( 'certloom_email_destination_required', __( 'This credential has no email saved at issuance. Enter a valid delivery address in Send to before previewing.', 'certloom' ) );
 	}
 
 	/** @return string */

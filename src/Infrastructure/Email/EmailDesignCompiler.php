@@ -18,6 +18,14 @@ final class EmailDesignCompiler {
 	const MAX_BLOCKS          = 80;
 	const MAX_CONTAINER_DEPTH = 4;
 
+	/** Remove document CSS before WordPress HTML sanitization, which otherwise leaves visible CSS text. */
+	public static function sanitize_inline_html( $html ) {
+		$without_styles = preg_replace( '/<style\b[^>]*>.*?<\/style>/is', '', (string) $html );
+		// Repair templates previously stored after KSES removed the compiler's style tag.
+		$without_styles = preg_replace( '/@media\s+only\s+screen\s+and\s*\(max-width:600px\)\s*\{\.certloom-email-stack-cell\{[^}]*\}\}/i', '', (string) $without_styles );
+		return wp_kses_post( is_string( $without_styles ) ? $without_styles : '' );
+	}
+
 	/** @return array<int,string> */
 	private static function allowed_fonts() {
 		return ( new DesignerFontCatalog() )->css_values();

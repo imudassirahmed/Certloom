@@ -220,6 +220,8 @@ final class TemplateAdmin {
 				'useMedia' => __( 'Use this media', 'certloom' ),
 				'barcodeDeferred' => __( 'Barcode elements need the newer design format. Update this draft first.', 'certloom' ),
 				'barcode' => __( 'Barcode', 'certloom' ),
+				'table' => __( 'Table', 'certloom' ),
+				'dataTable' => __( 'Data table', 'certloom' ),
 				'styleUpdated' => __( 'Element styling updated.', 'certloom' ),
 				'invalidStyleValue' => __( 'That styling value is outside the supported range. The previous value was kept.', 'certloom' ),
 				'invalidColor' => __( 'Colors must use #RRGGBB or #RRGGBBAA.', 'certloom' ),
@@ -996,10 +998,12 @@ final class TemplateAdmin {
 		}
 
 		echo '<form method="get" class="certloom-template-library-search"><input type="hidden" name="page" value="' . esc_attr( self::PAGE ) . '"><input type="hidden" name="design_view" value="templates"><input type="hidden" name="template_status" value="' . esc_attr( $status ) . '"><label class="screen-reader-text" for="certloom-template-search">' . esc_html__( 'Search designs', 'certloom' ) . '</label><input id="certloom-template-search" type="search" name="s" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr__( 'Search your designs', 'certloom' ) . '"><button type="submit" class="button">' . esc_html_x( 'Search', 'search action button', 'certloom' ) . '</button></form>';
-		echo '<div class="certloom-template-portability-bar"><div><strong>' . esc_html__( 'Portable templates', 'certloom' ) . '</strong><span>' . esc_html__( 'Export one template as .certloom, or select several to create a .certloom-pack.', 'certloom' ) . '</span></div><form id="certloom-template-pack-export-form" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_pack_export">'; wp_nonce_field( 'certloom_template_pack_export' ); echo '<button type="submit" class="button" data-certloom-pack-export data-label-empty="' . esc_attr__( 'Export selected package', 'certloom' ) . '" data-label-selected="' . esc_attr__( 'Export selected package (%d)', 'certloom' ) . '" disabled>' . esc_html__( 'Export selected package', 'certloom' ) . '</button></form></div>';
+		if ( ! empty( $result['items'] ) ) {
+			echo '<div class="certloom-template-portability-bar"><div><strong>' . esc_html__( 'Portable templates', 'certloom' ) . '</strong><p class="description">' . esc_html__( 'Export one template as .certloom, or select several to create a .certloom-pack.', 'certloom' ) . '</p></div><form id="certloom-template-pack-export-form" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_pack_export">'; wp_nonce_field( 'certloom_template_pack_export' ); echo '<button type="submit" class="button" data-certloom-pack-export data-label-empty="' . esc_attr__( 'Export selected package', 'certloom' ) . '" data-label-selected="' . esc_attr__( 'Export selected package (%d)', 'certloom' ) . '" disabled>' . esc_html__( 'Export selected package', 'certloom' ) . '</button></form></div>';
+		}
 		if ( empty( $result['items'] ) ) {
 			$clear_url = add_query_arg( array( 'page' => self::PAGE, 'design_view' => 'templates' ), admin_url( 'admin.php' ) );
-			echo '<div class="certloom-template-library-empty"><strong>' . esc_html__( 'No designs found.', 'certloom' ) . '</strong><p>' . esc_html( '' !== $search || 'active' !== $status ? __( 'No designs match these filters. Clear the filters or create a new design.', 'certloom' ) : __( 'Create from scratch, customize a built-in certificate, or import a Certloom design package.', 'certloom' ) ) . '</p><div class="certloom-empty-state-actions"><a class="button button-primary" href="' . esc_url( $new_url ) . '">' . esc_html__( 'New design', 'certloom' ) . '</a>' . ( '' !== $search || 'active' !== $status ? '<a class="button" href="' . esc_url( $clear_url ) . '">' . esc_html__( 'Clear filters', 'certloom' ) . '</a>' : '' ) . '</div></div>';
+			echo '<div class="certloom-template-library-empty"><strong>' . esc_html( '' !== $search || 'active' !== $status ? __( 'No matching designs', 'certloom' ) : __( 'No designs yet', 'certloom' ) ) . '</strong><p>' . esc_html( '' !== $search || 'active' !== $status ? __( 'No designs match these filters. Clear the filters or create a new design.', 'certloom' ) : __( 'Create from scratch, customize a built-in certificate, or import a Certloom design package.', 'certloom' ) ) . '</p><div class="certloom-empty-state-actions"><a class="button button-primary" href="' . esc_url( $new_url ) . '">' . esc_html__( 'New design', 'certloom' ) . '</a>' . ( '' !== $search || 'active' !== $status ? '<a class="button" href="' . esc_url( $clear_url ) . '">' . esc_html__( 'Clear filters', 'certloom' ) . '</a>' : '' ) . '</div></div>';
 		} else {
 			echo '<div class="certloom-template-library-grid certloom-my-design-card-grid">';
 			foreach ( $result['items'] as $item ) { $this->my_design_card( $repo, $item ); }
@@ -1495,6 +1499,7 @@ final class TemplateAdmin {
 			'text' => __( 'Text', 'certloom' ), 'mergeField' => __( 'Dynamic field', 'certloom' ), 'image' => __( 'Image', 'certloom' ),
 			'logo' => __( 'Logo', 'certloom' ), 'signature' => __( 'Signature', 'certloom' ), 'seal' => __( 'Seal', 'certloom' ),
 			'qr' => __( 'QR', 'certloom' ), 'barcode' => __( 'Barcode', 'certloom' ), 'list' => __( 'List', 'certloom' ), 'richText' => __( 'Rich text', 'certloom' ),
+			'table' => __( 'Table', 'certloom' ), 'dataTable' => __( 'Data table', 'certloom' ),
 			'rectangle' => __( 'Rectangle', 'certloom' ), 'ellipse' => __( 'Ellipse', 'certloom' ), 'line' => __( 'Line', 'certloom' ),
 			'background' => __( 'Background', 'certloom' ), 'shape' => __( 'Shape', 'certloom' ), 'asset' => __( 'Image asset', 'certloom' ),
 		);
@@ -1585,8 +1590,8 @@ final class TemplateAdmin {
 		$curated = new \Certloom\Application\Templates\CuratedPresetCatalog();
 		$families = PresetCatalog::families();
 		$variants = PresetCatalog::variants();
-		echo '<div class="card" style="max-width:none"><h2>' . esc_html__( 'Premium factory designs', 'certloom' ) . '</h2>';
-		echo '<p>' . esc_html( sprintf( /* translators: %1$d: families; %2$d: variants; %3$d: catalog; %4$d: curated; %5$d: curated. */ __( '%1$d historical design families × %2$d compatibility variants = %3$d preserved layouts, plus %4$d additive curated premium concepts. Total factory drafts after synchronization: %5$d. Factory layouts remain local drafts until the production renderer gate is accepted.', 'certloom' ), count( $families ), count( $variants ), count( $catalog->all() ), count( $curated->all() ), count( $catalog->all() ) + count( $curated->all() ) ) ) . '</p>';
+		echo '<div class="card" style="max-width:none"><h2>' . esc_html__( 'Factory design inventory', 'certloom' ) . '</h2>';
+		echo '<p>' . esc_html( sprintf( /* translators: %1$d: families; %2$d: variants; %3$d: catalog; %4$d: curated; %5$d: total. */ __( '%1$d historical design families × %2$d compatibility variants = %3$d preserved layouts, plus %4$d curated concepts. Total factory drafts after synchronization: %5$d. Factory layouts remain local drafts until the production renderer gate is accepted.', 'certloom' ), count( $families ), count( $variants ), count( $catalog->all() ), count( $curated->all() ), count( $catalog->all() ) + count( $curated->all() ) ) ) . '</p>';
 		echo '<ul style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px 18px">';
 		foreach ( $families as $family ) { echo '<li><strong>' . esc_html( $family['name'] ) . '</strong><br><span class="description">' . esc_html( $family['description'] ) . '</span></li>'; }
 		echo '</ul><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_template_presets_sync">';

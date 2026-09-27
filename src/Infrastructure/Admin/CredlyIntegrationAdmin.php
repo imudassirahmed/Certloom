@@ -85,7 +85,7 @@ final class CredlyIntegrationAdmin {
 		$this->redirect( ( new CredlyMappingStore() )->delete( $program_id ), 'credly_mapping_deleted' );
 	}
 
-	private function require_access() { if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_INTEGRATIONS ) ) { wp_die( esc_html__( 'You do not have permission to manage Certloom integrations.', 'certloom' ) ); } }
+	private function require_access() { if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_INTEGRATIONS ) ) { wp_die( esc_html__( 'You do not have permission to manage Certloom integrations.', 'certloom' ), '', array( 'response' => 403 ) ); } }
 	private function redirect( $result, $notice = '' ) {
 		$url = admin_url( 'admin.php?page=certloom-integrations#certloom-credly-setup' );
 		if ( is_wp_error( $result ) ) { $url = add_query_arg( 'certloom_error', $result->get_error_message(), $url ); }

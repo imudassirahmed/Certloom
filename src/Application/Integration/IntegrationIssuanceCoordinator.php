@@ -33,7 +33,10 @@ final class IntegrationIssuanceCoordinator {
 
 	/** Mutation-free normalized review. @return array<string,mixed>|\WP_Error */
 	public function review( IntegrationEventContext $context ) {
-		return $this->build_review( $context, false );
+		// Providers repeat the whole review/issue sequence when redelivering an
+		// event. Let canonical issuance check its durable event key before the
+		// ordinary Recipient+Program duplicate guard, just as worker retries do.
+		return $this->build_review( $context, true );
 	}
 
 	/** @return array<string,mixed>|\WP_Error */

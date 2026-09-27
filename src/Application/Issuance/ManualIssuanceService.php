@@ -89,6 +89,34 @@ final class ManualIssuanceService {
 	}
 
 
+	/**
+	 * Resolve a replay without confusing independent provider sources.
+	 * Older adapter-wide keys remain readable only for matching immutable
+	 * source identities and credential ownership. No stored rows are rewritten.
+	 * @return array<string,mixed>|null|\WP_Error
+	 */
+	private function find_source_replay( $source_type, $idempotency, $source_ref, $source_context, array $review ) {
+		$existing = $this->repository->find_version_by_idempotency( $source_type, $idempotency );
+		if ( is_wp_error( $existing ) || 'lms_integration' !== $source_type ) { return $existing; }
+		$context = is_array( $source_context ) ? (array) ( $source_context['context'] ?? array() ) : array();
+		if ( ! is_array( $existing ) ) {
+			$legacy_key = $this->json->hash( array( 'source' => 'lms_integration', 'adapter' => (string) ( $context['adapter'] ?? '' ), 'event_identity_sha256' => (string) ( $context['event_identity_sha256'] ?? '' ) ) );
+			$existing = $this->repository->find_version_by_idempotency( $source_type, $legacy_key );
+			if ( is_wp_error( $existing ) ) { return $existing; }
+			if ( ! is_array( $existing ) || (string) ( $existing['source_ref'] ?? '' ) !== (string) $source_ref ) { return null; }
+		}
+		$snapshot = (array) ( $existing['snapshot'] ?? array() );
+		$stored_context = (array) ( $snapshot['issuance']['integration_context'] ?? array() );
+		$matches = (string) ( $existing['source_ref'] ?? '' ) === (string) $source_ref;
+		foreach ( array( 'adapter', 'event_identity_sha256', 'source_object', 'wp_user_id', 'recipient_id' ) as $key ) {
+			$matches = $matches && ( $stored_context[ $key ] ?? null ) === ( $context[ $key ] ?? null );
+		}
+		foreach ( array( 'recipient', 'program', 'batch' ) as $key ) {
+			$matches = $matches && absint( $snapshot[ $key ]['id'] ?? 0 ) === absint( $review[ $key ]['id'] ?? 0 );
+		}
+		return $matches ? $existing : new \WP_Error( 'certloom_integration_replay_conflict', __( 'This source event was already used for a different recipient or credential context. Send a new event ID for a different event.', 'certloom' ) );
+	}
+
 	/** Loads a read-only receipt for one Manual Issuance Version. @return array<string,mixed>|\WP_Error */
 	public function receipt( $version_id ) {
 		$version = $this->repository->find_version( absint( $version_id ) );
@@ -206,7 +234,7 @@ final class ManualIssuanceService {
 		if ( ! hash_equals( (string) $preflight['review_fingerprint'], $expected_review_fingerprint ) ) {
 			return new \WP_Error( 'certloom_manual_issue_review_stale', __( 'The issuance inputs or related records changed after review. Review the credential again before issuing it.', 'certloom' ) );
 		}
-		$existing = $this->repository->find_version_by_idempotency( $source_type, $idempotency );
+		$existing = $this->find_source_replay( $source_type, $idempotency, $source_ref, $source_context, $preflight );
 		if ( is_wp_error( $existing ) ) { return $existing; }
 		if ( is_array( $existing ) ) { return $this->receipt_from_existing( $existing, true ); }
 		$duplicate = $this->duplicate_for_review( $preflight );
@@ -223,7 +251,7 @@ final class ManualIssuanceService {
 				if ( ! hash_equals( (string) $current['review_fingerprint'], $expected_review_fingerprint ) ) {
 					return new \WP_Error( 'certloom_manual_issue_review_stale', __( 'The issuance inputs or related records changed while the credential was being confirmed. No credential was issued.', 'certloom' ) );
 				}
-				$already = $this->repository->find_version_by_idempotency( $source_type, $idempotency );
+				$already = $this->find_source_replay( $source_type, $idempotency, $source_ref, $source_context, $current );
 				if ( is_wp_error( $already ) ) { return $already; }
 				if ( is_array( $already ) ) { return array( 'idempotent_version' => $already ); }
 				$duplicate = $this->duplicate_for_review( $current );

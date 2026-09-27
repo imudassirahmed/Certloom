@@ -27,6 +27,8 @@
   --certloom-radius-lg: var(--cl-r-lift);
   color: var(--cl-ink);
 }
+/* Layout display rules must not expose inactive panels and conditional controls. */
+.certloom-admin-shell [hidden] { display: none !important; }
 
 .certloom-admin-shell h1,
 .certloom-admin-shell .certloom-page-hero h1 {
@@ -388,7 +390,7 @@
 
 .certloom-file-intake-options {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   border-top: 1px solid var(--cl-rule-firm);
   border-bottom: 1px solid var(--cl-rule);
 }
@@ -1046,6 +1048,7 @@
 .certloom-admin-shell .certloom-credential-hero h2,
 .certloom-admin-shell .certloom-email-hero h2 {
   color: var(--cl-ink);
+  font-weight: 700;
 }
 
 .certloom-admin-shell .certloom-dashboard-hero h1 {
@@ -1635,7 +1638,7 @@ body.certloom-setup-v2-body { overflow: hidden; }
 .certloom-setup-v2-finish > p { max-width: 680px; margin: 0; color: var(--cl-ink-soft); font-size: var(--cl-t-base); }
 .certloom-setup-v2-kicker { margin: 0; color: var(--cl-blue-deep); font-size: var(--cl-t-sm); font-weight: 700; }
 .certloom-setup-v2-form { display: grid; gap: var(--cl-4); }
-.certloom-setup-v2-actions { display: flex; align-items: center; gap: var(--cl-2); padding-top: var(--cl-2); }
+.certloom-setup-v2-actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--cl-2); padding-top: var(--cl-2); }
 .certloom-setup-v2-actions .button { min-height: 40px; }
 .certloom-setup-v2-actions .certloom-setup-v2-skip { min-height: 40px; padding-inline: var(--cl-2); color: var(--cl-ink-soft); text-decoration: none; }
 .certloom-setup-v2-actions .certloom-setup-v2-skip:hover { color: var(--cl-blue-deep); }
@@ -1657,6 +1660,10 @@ body.certloom-setup-v2-body { overflow: hidden; }
   font: inherit;
 }
 .certloom-setup-v2-field-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cl-4); }
+.certloom-setup-v2-optional { padding: var(--cl-3) var(--cl-4); border: 1px solid var(--cl-rule); border-radius: var(--cl-r-card); }
+.certloom-setup-v2-optional > summary { cursor: pointer; color: var(--cl-blue-deep); font-weight: 600; }
+.certloom-setup-v2-optional[open] > summary { margin-bottom: var(--cl-4); }
+.certloom-setup-v2-optional[open] > .certloom-setup-v2-field-row { margin-top: var(--cl-4); }
 .certloom-setup-v2-profile-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--cl-3); }
 .certloom-setup-v2-profile-card,
 .certloom-setup-v2-presentation-grid > label {
@@ -2076,6 +2083,17 @@ body.certloom-setup-v2-body { overflow: hidden; }
 }
 
 /* Keep the compact Credentials toolbar stacked after the later desktop alignment rules. */
+@media (min-width: 783px) and (max-width: 1180px) {
+  .certloom-domain-screen .certloom-credential-filters {
+    grid-template-columns: minmax(0, 1fr) 88px;
+  }
+  .certloom-domain-screen .certloom-credential-search-filter {
+    grid-column: 1 / -1;
+  }
+  .certloom-domain-screen .certloom-credential-program-filter {
+    grid-column: 1;
+  }
+}
 @media (max-width: 782px) {
   .certloom-domain-screen .certloom-credential-filters {
     grid-template-columns: 1fr;
@@ -2176,4 +2194,150 @@ body.certloom-setup-v2-body { overflow: hidden; }
   letter-spacing: 0;
   text-transform: none;
 }
+.certloom-domain-field-label {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: 0.5rem;
+}
 
+.certloom-domain-field-label .certloom-help-tip {
+	margin: 0;
+}
+
+.certloom-automation-actions {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
+.certloom-automation-actions form {
+	margin: 0;
+}
+
+/* Keep the profile status legible instead of squeezing it against the eyebrow. */
+.certloom-admin-shell .certloom-page-hero .certloom-eyebrow,
+.certloom-admin-shell .certloom-workspace-hero .certloom-eyebrow,
+.certloom-admin-shell .certloom-dashboard-hero .certloom-eyebrow,
+.certloom-admin-shell .certloom-email-hero .certloom-eyebrow {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 6px 8px;
+}
+.certloom-admin-shell .certloom-eyebrow .certloom-active-profile-badge.is-eyebrow-status {
+	max-width: 100%;
+	min-width: 0;
+	margin-left: 0;
+	white-space: normal;
+}
+
+/* The access heading, explanation and action are one Settings section. */
+.certloom-settings-workspace .certloom-settings-access-intro {
+	margin-top: 24px;
+	padding: 20px;
+	border: 1px solid var(--certloom-border);
+	border-radius: var(--certloom-radius-md);
+	background: var(--certloom-surface);
+}
+.certloom-settings-workspace .certloom-settings-access-intro h2 {
+	margin: 0 0 8px;
+	padding: 0;
+}
+.certloom-settings-workspace .certloom-settings-access-intro > .description {
+	margin: 0 0 12px;
+}
+.certloom-settings-workspace .certloom-settings-access-intro .ecapla-certverify-inline-form {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px 12px;
+	margin: 0;
+}
+.certloom-settings-workspace .certloom-settings-access-intro .ecapla-certverify-inline-form .description {
+	margin: 0;
+}
+.certloom-settings-diagnostics .button {
+	box-sizing: border-box;
+	max-width: 100%;
+	height: auto;
+	white-space: normal;
+}
+
+/* Data-tool tables keep their columns without widening the entire admin page. */
+.certloom-data-tools-panel {
+	min-width: 0;
+}
+.certloom-data-tools-panel .certloom-domain-table-wrap {
+	box-sizing: border-box;
+	max-width: 100%;
+	overflow-x: auto;
+}
+.certloom-domain-jobs-table th:nth-child(-n+4),
+.certloom-domain-jobs-table td:nth-child(-n+4) {
+	white-space: nowrap;
+}
+.certloom-domain-jobs-table th:last-child,
+.certloom-domain-jobs-table td:last-child {
+	min-width: 260px;
+}
+
+/* The three-step first-run path should fit in view at phone width. */
+.certloom-setup-v2-progress.is-quick {
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 600px) {
+	.certloom-admin-shell .certloom-page-hero .certloom-eyebrow,
+	.certloom-admin-shell .certloom-workspace-hero .certloom-eyebrow,
+	.certloom-admin-shell .certloom-dashboard-hero .certloom-eyebrow,
+	.certloom-admin-shell .certloom-email-hero .certloom-eyebrow {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+	.certloom-product-subnav,
+	.certloom-product-subnav.is-below-hero {
+		flex-wrap: wrap;
+		gap: 0 14px;
+		overflow-x: visible;
+		white-space: normal;
+	}
+	.certloom-product-subnav a {
+		white-space: normal;
+	}
+	.certloom-domain-screen .certloom-credential-views,
+	.certloom-domain-screen .certloom-credential-tabs {
+		margin-inline: 0;
+		padding-inline: 0;
+	}
+	.certloom-setup-v2-progress.is-quick {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		overflow-x: visible;
+	}
+	.certloom-setup-v2-progress.is-quick .certloom-setup-v2-progress-step {
+		align-content: start;
+		justify-items: center;
+		display: grid;
+		gap: 5px;
+		padding-inline: 4px;
+		text-align: center;
+	}
+	.certloom-setup-v2-progress.is-quick .certloom-setup-v2-progress-label {
+		max-width: 100%;
+		overflow: visible;
+		white-space: normal;
+		text-overflow: clip;
+	}
+	.certloom-setup-v2-actions .button {
+		max-width: 100%;
+		white-space: normal;
+	}
+	.certloom-setup-v2-finish .certloom-setup-v2-actions .button {
+		width: 100%;
+	}
+	.certloom-setup-v2-restart {
+		margin-top: 8px;
+	}
+}

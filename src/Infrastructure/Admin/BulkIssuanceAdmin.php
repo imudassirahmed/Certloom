@@ -51,19 +51,21 @@ final class BulkIssuanceAdmin {
 	}
 
 
-	/** Phase 2 unified file-workflow entry. Existing import/issuance engines remain authoritative behind it. */
+	/** Route each CSV task to the workflow that owns that record type. */
 	public function render_intake() {
 		$this->cap();
 		$issue_url  = add_query_arg( 'page', self::PAGE, admin_url( 'admin.php' ) );
 		$import_url = admin_url( 'admin.php?page=certloom-import#certloom-csv-import' );
+		$domain_import_url = admin_url( 'admin.php?page=certloom-domain-data-tools#certloom-domain-import' );
 
 		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-file-intake">';
-		echo '<div class="certloom-page-head"><div><h1>' . esc_html__( 'Import / issue from file', 'certloom' ) . '</h1><p>' . esc_html__( 'Start with what the rows mean. Both paths use CSV review before records are changed.', 'certloom' ) . '</p></div></div>';
-		echo '<div class="certloom-file-intake-options" role="list">';
-		echo '<a class="certloom-file-intake-option" role="listitem" href="' . esc_url( $issue_url ) . '"><strong>' . esc_html__( 'Issue new credentials', 'certloom' ) . '</strong><span>' . esc_html__( 'Use recipient rows to create new credentials after review. The current alpha still uses the proven Program + design bulk engine behind this entry while standalone/presentation authority is implemented later.', 'certloom' ) . '</span></a>';
-		echo '<a class="certloom-file-intake-option" role="listitem" href="' . esc_url( $import_url ) . '"><strong>' . esc_html__( 'Import existing credential records', 'certloom' ) . '</strong><span>' . esc_html__( 'Bring existing certificate records into Certloom, map the detected columns, preview sample rows, then confirm the reviewed import.', 'certloom' ) . '</span></a>';
+		echo '<section class="certloom-page-hero certloom-page-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Credential operations', 'certloom' ) . '</span><h1>' . esc_html__( 'Import / issue from file', 'certloom' ) . '</h1><p>' . esc_html__( 'Choose what the rows mean. Each path reviews the CSV before changing records.', 'certloom' ) . '</p></div></section>';
+		( new AdminProductNavigation() )->render_current_subnav();
+		echo '<div class="certloom-file-intake-options">';
+		echo '<a class="certloom-file-intake-option" href="' . esc_url( $issue_url ) . '"><strong>' . esc_html__( 'Issue new credentials', 'certloom' ) . '</strong><span>' . esc_html__( 'Issue multiple credentials from recipient rows. Choose an active Program, review the CSV, then confirm the accepted rows.', 'certloom' ) . '</span></a>';
+		echo '<a class="certloom-file-intake-option" href="' . esc_url( $domain_import_url ) . '"><strong>' . esc_html__( 'Import Program credentials', 'certloom' ) . '</strong><span>' . esc_html__( 'Import existing credentials into the Program-based registry. Review field mapping and preflight results before applying changes.', 'certloom' ) . '</span></a>';
+		echo '<a class="certloom-file-intake-option" href="' . esc_url( $import_url ) . '"><strong>' . esc_html__( 'Import legacy certificates', 'certloom' ) . '</strong><span>' . esc_html__( 'Import records into the older certificate registry. Review detected columns and sample rows before confirming.', 'certloom' ) . '</span></a>';
 		echo '</div>';
-		echo '<p class="certloom-file-intake-note">' . esc_html__( '1.7 will converge these paths on one reusable profile-aware mapper. This UI does not pretend that backend convergence is already complete.', 'certloom' ) . '</p>';
 		echo '</div>';
 	}
 
@@ -74,7 +76,8 @@ final class BulkIssuanceAdmin {
 		$job_key = isset( $_GET['bulk_job'] ) ? strtolower( sanitize_text_field( wp_unslash( $_GET['bulk_job'] ) ) ) : '';
 
 		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-bulk-issuance">';
-		echo '<div class="certloom-page-head"><div><span class="certloom-eyebrow">' . esc_html__( 'Premium issuance workflow', 'certloom' ) . '</span><h1>' . esc_html__( 'Bulk Issuance', 'certloom' ) . '</h1><p>' . esc_html__( 'Review the entire CSV before any credential is created, then issue only the accepted rows through the same checks used for individual issuance.', 'certloom' ) . '</p></div><span class="certloom-domain-preview-badge">' . esc_html__( 'Bulk issuance', 'certloom' ) . '</span></div>';
+		echo '<section class="certloom-page-hero certloom-page-head"><div><span class="certloom-eyebrow">' . esc_html__( 'CSV issuance workflow', 'certloom' ) . '</span><h1>' . esc_html__( 'Bulk Issuance', 'certloom' ) . '</h1><p>' . esc_html__( 'Review the entire CSV before any credential is created, then issue only the accepted rows through the same checks used for individual issuance.', 'certloom' ) . '</p></div><span class="certloom-domain-preview-badge">' . esc_html__( 'Bulk issuance', 'certloom' ) . '</span></section>';
+		( new AdminProductNavigation() )->render_current_subnav();
 
 		$this->notice();
 		echo '<div class="notice notice-warning inline"><p><strong>' . esc_html__( 'Availability:', 'certloom' ) . '</strong> ' . esc_html__( 'Bulk Issuance and normalized public verification are operational when the credential store is healthy. PDF/PNG/JPEG exports remain unavailable until the certificate renderer is approved.', 'certloom' ) . '</p></div>';

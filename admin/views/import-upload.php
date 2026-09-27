@@ -7,8 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Templates only read display state; all mutations are handled by nonce-protected controllers.
 ?>
 <div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell">
-	<?php include ECAPLA_CERTVERIFY_PATH . 'admin/views/partials/brand-bar.php'; ?>
-	<h1><?php esc_html_e( 'Backup & Restore', 'certloom' ); ?></h1>
+	<section class="certloom-page-hero"><div><span class="certloom-eyebrow"><?php esc_html_e( 'Recovery', 'certloom' ); ?></span><h1><?php esc_html_e( 'Backup & Restore', 'certloom' ); ?></h1></div></section>
 	<div class="certloom-product-notice-rail" aria-live="polite">
 	<?php if ( isset( $_GET['ecapla_certverify_error'] ) ) : ?><div class="notice notice-error"><p><?php echo esc_html( sanitize_text_field( wp_unslash( $_GET['ecapla_certverify_error'] ) ) ); ?></p></div><?php endif; ?>
 	<?php if ( isset( $_GET['backup_notice'] ) ) : ?>
@@ -34,6 +33,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<?php endif; ?>
 	</div>
 	<p class="certloom-recovery-intro"><?php esc_html_e( 'Protect Certloom, restore a backup, or bring certificates in from CSV from one place.', 'certloom' ); ?></p>
+	<div class="notice notice-warning inline"><p><?php esc_html_e( 'These backups contain the legacy certificate registry and its settings. Credentials issued through the new Programs workflow are stored separately and are not included here. Back up both data stores before restoring or moving this site.', 'certloom' ); ?> <?php if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_DATA_TOOLS ) && \Certloom\Infrastructure\Migration\DomainFeatureGate::admin_preview_ready() ) : ?><a href="<?php echo esc_url( admin_url( 'admin.php?page=certloom-domain-data-tools' ) ); ?>"><?php esc_html_e( 'Open credential data tools', 'certloom' ); ?></a><?php endif; ?></p></div>
 	<nav class="certloom-recovery-quickstart" aria-label="<?php esc_attr_e( 'Backup and restore actions', 'certloom' ); ?>"><a class="button button-primary" href="#certloom-backups"><?php esc_html_e( 'Your backups', 'certloom' ); ?></a><a class="button" href="#certloom-restore"><?php esc_html_e( 'Restore a backup', 'certloom' ); ?></a><a class="button" href="#certloom-csv-import"><?php esc_html_e( 'Import certificates', 'certloom' ); ?></a></nav>
 
 	<section class="certloom-recovery-intake" data-certloom-recovery-intake aria-labelledby="certloom-recovery-intake-title">
@@ -51,7 +51,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<li><?php esc_html_e( 'Maximum file size: 5 MB', 'certloom' ); ?></li>
 				<li><?php printf( /* translators: %d: maximum number of rows per import. */ esc_html__( 'Maximum certificate rows per import: %d', 'certloom' ), (int) Ecapla_CertVerify_Import::MAX_ROWS ); ?></li>
 				<li><?php esc_html_e( 'Accepted format: UTF-8 CSV with one header row', 'certloom' ); ?></li>
-				<li><?php esc_html_e( 'Spreadsheet-formula characters in exported CSV files are neutralized for safety and may not round-trip as literal leading characters. Use Complete backup for lossless restoration.', 'certloom' ); ?></li>
+				<li><?php esc_html_e( 'Spreadsheet-formula characters in exported CSV files are neutralized for safety and may not round-trip as literal leading characters. Use a legacy registry backup for lossless restoration of legacy records.', 'certloom' ); ?></li>
 			</ul>
 			<form method="post" enctype="multipart/form-data" action="">
 				<?php wp_nonce_field( 'certverify_import_analyze' ); ?>
@@ -71,7 +71,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<?php if ( current_user_can( 'manage_options' ) ) : ?>
 			<section id="certloom-backups" class="ecapla-certverify-admin-card certloom-backup-center certloom-recovery-card">
 				<h2><?php esc_html_e( 'Your backups', 'certloom' ); ?></h2>
-				<p><?php esc_html_e( 'Create complete Certloom backups, keep automatic copies in private storage, and optionally copy verified backups to Google Drive.', 'certloom' ); ?></p>
+				<p><?php esc_html_e( 'Back up the legacy certificate registry and settings, keep automatic copies in private storage, and optionally copy verified backups to Google Drive. New Programs credentials require a separate normalized-data backup.', 'certloom' ); ?></p>
 				<p><strong><?php esc_html_e( 'Stored locally:', 'certloom' ); ?></strong> <?php esc_html_e( 'Private backup storage on this site', 'certloom' ); ?></p>
 				<p class="description"><?php esc_html_e( 'Before Restore, CSV import, reviewed bulk changes, bulk deletion, or permanent retired-field purge, Certloom creates a verified safety backup and stops the destructive operation if that backup cannot be created. Automatic safety backups have their own retention limit and never replace backups you create manually.', 'certloom' ); ?></p>
 

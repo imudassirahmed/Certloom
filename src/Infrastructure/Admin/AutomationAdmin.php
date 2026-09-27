@@ -16,6 +16,7 @@ final class AutomationAdmin {
 		add_action( 'admin_post_certloom_automation_template_save', array( $this, 'save_template' ) );
 		add_action( 'admin_post_certloom_automation_template_delete', array( $this, 'delete_template' ) );
 		add_action( 'admin_post_certloom_automation_rule_save', array( $this, 'save_rule' ) );
+		add_action( 'admin_post_certloom_automation_rule_toggle', array( $this, 'toggle_rule' ) );
 		add_action( 'admin_post_certloom_automation_rule_delete', array( $this, 'delete_rule' ) );
 	}
 
@@ -68,6 +69,19 @@ final class AutomationAdmin {
 		check_admin_referer( 'certloom_automation_rule_delete_' . $id );
 		$result = ( new EmailAutomationRuleRepository() )->delete( $id );
 		$this->redirect( $result, __( 'Automation removed.', 'certloom' ), 'rules' );
+	}
+
+	/** Pause or resume an existing rule without changing its targeting. */
+	public function toggle_rule() {
+		$this->require_capability();
+		$id = isset( $_POST['rule_id'] ) && is_string( $_POST['rule_id'] ) ? sanitize_key( wp_unslash( $_POST['rule_id'] ) ) : '';
+		check_admin_referer( 'certloom_automation_rule_toggle_' . $id );
+		$active = isset( $_POST['active'] ) && is_string( $_POST['active'] ) ? wp_unslash( $_POST['active'] ) : '';
+		if ( ! in_array( $active, array( '0', '1' ), true ) ) {
+			$this->redirect( new \WP_Error( 'certloom_email_rule_state_invalid', __( 'Choose whether to turn this automation on or pause it.', 'certloom' ) ), '', 'rules' );
+		}
+		$result = ( new EmailAutomationRuleRepository() )->set_active( $id, '1' === $active );
+		$this->redirect( $result, '1' === $active ? __( 'Automation turned on.', 'certloom' ) : __( 'Automation paused.', 'certloom' ), 'rules' );
 	}
 
 	/** @return void */

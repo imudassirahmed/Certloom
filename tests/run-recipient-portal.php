@@ -71,7 +71,7 @@ por( false !== strpos( src('includes/class-ecapla-certverify-block.php'), "block
 $renderer = src( 'includes/class-ecapla-certverify-recipient-portal.php' );
 por( false !== strpos( $renderer, "array( 'cards', 'grid', 'table' )" ), 'cards/grid/table presentation is bounded to POR-01 layouts' );
 por( false !== strpos( $renderer, 'wp_login_url' ) && false !== strpos( $renderer, 'is_user_logged_in' ), 'logged-out renderer offers sign-in instead of leaking data' );
-por( false !== strpos( $renderer, 'Downloads gated' ) && false !== strpos( $renderer, 'verify_url' ) && false !== strpos( $renderer, 'share_controls' ), 'actions remain authority-aware and add SOC-01 sharing without opening downloads' );
+por( false !== strpos( $renderer, 'Downloads unavailable' ) && false !== strpos( $renderer, 'verify_url' ) && false !== strpos( $renderer, 'share_controls' ), 'actions explain unavailable downloads while retaining verification and sharing' );
 por( false !== strpos( $renderer, 'Expiring soon' ), 'expiring-soon cue is rendered' );
 por( false !== strpos( $renderer, 'role="region"' ) && false !== strpos( $renderer, 'tabindex="0"' ), 'responsive table is keyboard-focusable as a named scroll region' );
 por( false !== strpos( $renderer, 'private static $instance_counter = 0' ) && false !== strpos( $renderer, "'certloom-my-status-' . absint( \$instance_id )" ) && false !== strpos( $renderer, "'certloom-my-sort-' . absint( \$instance_id )" ), 'multiple My Credentials shortcodes keep heading and filter control IDs unique' );

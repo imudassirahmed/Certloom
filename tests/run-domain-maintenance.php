@@ -24,6 +24,7 @@ final class DMWpdb {
 		if ( 0 === strpos( $p['q'], 'UPDATE' ) ) {
 			$new = $a[1]; $name = $a[2]; $old = $a[3];
 			if ( ( $GLOBALS['dm_options'][ $name ] ?? null ) !== $old ) return 0;
+			if ( $new === $old ) return 0; // MySQL reports zero affected rows for identical values.
 			$GLOBALS['dm_options'][ $name ] = $new;
 			return 1;
 		}
@@ -58,6 +59,7 @@ echo "PASS  maintenance lock blocks normal writes and competing owners\n";
 
 dm_same( true, DomainMaintenanceLock::run_internal( fn() => ! is_wp_error( $l->assert_writes_allowed() ) ), 'internal restore write' );
 dm_same( true, $l->touch( $a, 'restore' ), 'owner touch' );
+dm_same( true, $l->touch( $a, 'restore' ), 'same-second owner touch with unchanged payload' );
 dm_same( 'certloom_domain_maintenance_owner_mismatch', $l->release( $b )->get_error_code(), 'wrong release' );
 dm_same( true, $l->release( $a ), 'owner release' );
 dm_same( false, $l->active(), 'inactive' );
