@@ -210,8 +210,12 @@ final class BatchRepository {
 	}
 
 	/** @return array{items:array<int,array<string,mixed>>,total:int}|\WP_Error */
-	public function list_page( $search = '', $page = 1, $per_page = 20, $status = 'all' ) {
+	public function list_page( $search = '', $page = 1, $per_page = 20, $status = 'all', $program_id = null ) {
 		global $wpdb;
+		// A supplied scope must never silently become the unscoped legacy list.
+		if ( null !== $program_id && ( ! is_scalar( $program_id ) || ! ctype_digit( (string) $program_id ) || (int) $program_id < 1 ) ) {
+			return new \WP_Error( 'certloom_batch_program_required', __( 'Choose a Program to view its batches.', 'certloom' ) );
+		}
 		$page     = max( 1, absint( $page ) );
 		$per_page = max( 1, min( 100, absint( $per_page ) ) );
 		$offset   = ( $page - 1 ) * $per_page;
@@ -219,6 +223,10 @@ final class BatchRepository {
 		$status   = in_array( $status, array( 'all', 'active', 'inactive' ), true ) ? $status : 'all';
 		$where    = array();
 		$args     = array();
+		if ( null !== $program_id ) {
+			$where[] = 'b.program_id = %d';
+			$args[]  = (int) $program_id;
+		}
 
 		if ( '' !== $search ) {
 			$like    = '%' . $wpdb->esc_like( $search ) . '%';

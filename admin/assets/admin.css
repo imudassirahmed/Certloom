@@ -2152,6 +2152,41 @@
 	outline: 0;
 }
 
+.certloom-program-tabs a {
+	min-height: 44px;
+}
+
+.certloom-program-tabs-context {
+	flex-basis: 100%;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 8px;
+	padding: 4px 10px 10px;
+	border-bottom: 1px solid var(--cl-rule);
+}
+
+.certloom-program-tabs-context strong {
+	overflow-wrap: anywhere;
+}
+
+.certloom-program-tabs a[aria-current="page"] {
+	color: var(--cl-brand-blue);
+	background: var(--cl-blue-wash);
+	box-shadow: inset 0 -2px 0 currentColor;
+}
+
+.certloom-batch-options > .certloom-domain-form-grid {
+	margin-top: 18px;
+}
+
+@media (max-width: 782px) {
+	.certloom-program-batches-head {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+}
+
 .certloom-editor-section {
 	scroll-margin-top: 48px;
 }

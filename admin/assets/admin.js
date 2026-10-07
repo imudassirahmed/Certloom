@@ -1809,6 +1809,12 @@
 			form.addEventListener( 'invalid', function ( event ) {
 				var control = event.target;
 				var field = control && control.closest ? control.closest( '.certloom-domain-field' ) : null;
+				// Required inputs in optional settings must be visible before browser focus.
+				var ancestor = control && control.parentElement;
+				while ( ancestor && ancestor !== form ) {
+					if ( ancestor.tagName === 'DETAILS' ) { ancestor.open = true; }
+					ancestor = ancestor.parentElement;
+				}
 				if ( control ) { control.setAttribute( 'aria-invalid', 'true' ); }
 				if ( field ) {
 					field.classList.add( 'is-invalid' );
@@ -1853,16 +1859,21 @@
 		function keyFor( form ) {
 			var action = form.querySelector( 'input[name="action"]' );
 			var id = form.querySelector( 'input[name$="_id"]' );
-			return prefix + ( action ? action.value : 'domain' ) + ':' + ( id ? id.value : 'new' );
+			var section = form.querySelector( 'input[name="program_workspace_section"]' );
+			return prefix + ( action ? action.value : 'domain' ) + ':' + ( id ? id.value : 'new' ) + ( section ? ':' + section.value : '' );
 		}
 		forms.forEach( function ( form ) {
 			var key = keyFor( form );
+			var hasProgramContext = !! form.querySelector( 'input[name="certloom_program_context"]' );
+			function isTransportField( name ) {
+				return '_wpnonce' === name || '_wp_http_referer' === name || '_certloom_program_nonce' === name || 'program_workspace_section' === name || ( hasProgramContext && ( 'certloom_program_context' === name || 'program_id' === name || 'batch_id' === name ) );
+			}
 			if ( retry ) {
 				try {
 					var saved = JSON.parse( storage.getItem( key ) || 'null' );
 					if ( saved && Array.isArray( saved ) ) {
 						saved.forEach( function ( item ) {
-							if ( ! item || ! item.name ) { return; }
+							if ( ! item || ! item.name || isTransportField( item.name ) ) { return; }
 							var nodes = form.querySelectorAll( '[name="' + escapeSelector( item.name ) + '"]' );
 							nodes.forEach( function ( node ) {
 								if ( 'checkable' === item.kind || 'checkbox' === node.type || 'radio' === node.type ) { node.checked = Array.isArray( item.value ) && item.value.indexOf( node.value ) !== -1; }
@@ -1877,13 +1888,13 @@
 			form.addEventListener( 'submit', function () {
 				var map = {}, kinds = {}, data = new FormData( form );
 				data.forEach( function ( value, name ) {
-					if ( '_wpnonce' === name || '_wp_http_referer' === name || value instanceof File ) { return; }
+					if ( isTransportField( name ) || value instanceof File ) { return; }
 					if ( Object.prototype.hasOwnProperty.call( map, name ) ) { map[ name ] = Array.isArray( map[ name ] ) ? map[ name ].concat( [ String( value ) ] ) : [ map[ name ], String( value ) ]; }
 					else { map[ name ] = String( value ); }
 				} );
 				var checkable = {};
 				form.querySelectorAll( 'input[type="checkbox"][name], input[type="radio"][name]' ).forEach( function ( node ) {
-					if ( '_wpnonce' === node.name || '_wp_http_referer' === node.name ) { return; }
+					if ( isTransportField( node.name ) ) { return; }
 					if ( ! Object.prototype.hasOwnProperty.call( checkable, node.name ) ) { checkable[ node.name ] = []; }
 					if ( node.checked ) { checkable[ node.name ].push( String( node.value ) ); }
 				} );

@@ -126,6 +126,19 @@ final class DomainAdmin {
 		$id = isset( $_POST['program_id'] ) ? absint( $_POST['program_id'] ) : 0;
 		check_admin_referer( 'certloom_domain_update_program_' . $id );
 		$repo = new ProgramRepository();
+		$section = isset( $_POST['program_workspace_section'] ) && in_array( $_POST['program_workspace_section'], array( 'details', 'fields' ), true ) ? $_POST['program_workspace_section'] : '';
+		if ( isset( $_POST['program_workspace_section'] ) && '' === $section ) { $this->redirect_result( self::PROGRAMS_PAGE, new \WP_Error( 'certloom_program_section_invalid', __( 'Reopen the Program section before saving.', 'certloom' ) ), 'program_updated', array( 'program_id' => $id ) ); }
+		if ( '' !== $section ) {
+			$result = ( new \Certloom\Infrastructure\Database\Transaction() )->run( function () use ( $repo, $id, $section ) {
+				$existing = $repo->find_for_update( $id );
+				if ( is_wp_error( $existing ) || ! is_array( $existing ) ) { return is_wp_error( $existing ) ? $existing : new \WP_Error( 'certloom_program_missing', __( 'The Program no longer exists.', 'certloom' ) ); }
+				$data = $this->program_request( $existing, $section );
+				return is_wp_error( $data ) ? $data : $repo->update( $id, $data );
+			} );
+			$args = array( 'program_id' => $id, 'program_tab' => $section );
+			if ( is_wp_error( $result ) ) { $args['certloom_retry'] = 1; }
+			$this->redirect_result( self::PROGRAMS_PAGE, $result, 'program_updated', $args );
+		}
 		$existing = $repo->find( $id );
 		if ( is_wp_error( $existing ) || ! is_array( $existing ) ) {
 			$result = is_wp_error( $existing ) ? $existing : new \WP_Error( 'certloom_program_missing', __( 'The program no longer exists.', 'certloom' ) );
@@ -208,8 +221,8 @@ final class DomainAdmin {
 				'active'     => 1,
 			)
 		);
-		if ( is_wp_error( $result ) ) { $this->redirect_program_workspace( $program_id, $result ); }
-		$this->redirect_program_workspace( $program_id, true, 'batch_added' );
+		if ( is_wp_error( $result ) ) { $this->redirect_program_workspace( $program_id, $result, '', 'batches' ); }
+		$this->redirect_program_workspace( $program_id, true, 'batch_added', 'batches' );
 	}
 
 	/** Creates a Signer and immediately assigns that signer to the current Program. */
@@ -422,28 +435,39 @@ final class DomainAdmin {
 		$status = isset( $_GET['program_status'] ) ? sanitize_key( wp_unslash( $_GET['program_status'] ) ) : 'all'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter.
 		$status = in_array( $status, array( 'all', 'active', 'inactive' ), true ) ? $status : 'all';
 		$repo   = new ProgramRepository();
-		$result = $repo->list_page( $search, $page, 50, $status );
-		$summary = $repo->summary();
 		$edit_id = isset( $_GET['program_id'] ) ? absint( $_GET['program_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin navigation.
 		$editing = $edit_id ? $repo->find( $edit_id ) : null;
 		$creating = isset( $_GET['certloom_new'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin navigation.
 		$action_url = $creating || $edit_id ? add_query_arg( 'page', self::PROGRAMS_PAGE, admin_url( 'admin.php' ) ) : add_query_arg( array( 'page' => self::PROGRAMS_PAGE, 'certloom_new' => 1 ), admin_url( 'admin.php' ) );
+		$tab = isset( $_GET['program_tab'] ) && in_array( $_GET['program_tab'], array( 'details', 'fields', 'certificate', 'batches' ), true ) ? $_GET['program_tab'] : 'details'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation.
 
-		$this->header( __( 'Programs', 'certloom' ), __( 'Standalone credential programs that work with or without an LMS.', 'certloom' ), array( 'label' => $creating || $edit_id ? __( 'Back to programs', 'certloom' ) : __( 'Add program', 'certloom' ), 'url' => $action_url, 'secondary' => (bool) ( $creating || $edit_id ) ) );
-		$this->notice();
+		$this->header( is_array( $editing ) ? (string) $editing['title'] : __( 'Programs', 'certloom' ), is_array( $editing ) ? __( 'Manage this Program’s details, fields, certificate and batches in one workspace.', 'certloom' ) : __( 'Standalone credential programs that work with or without an LMS.', 'certloom' ), array( 'label' => $creating || $edit_id ? __( 'Back to programs', 'certloom' ) : __( 'Add program', 'certloom' ), 'url' => $action_url, 'secondary' => (bool) ( $creating || $edit_id ) ), ! is_array( $editing ) );
+		if ( 'batches' !== $tab || ! is_array( $editing ) ) { $this->notice(); }
 		if ( $creating || $edit_id ) {
 			if ( is_wp_error( $editing ) ) { $this->error( $editing->get_error_message() ); }
 			elseif ( is_array( $editing ) ) {
-				$this->program_form( $editing );
-				if ( AdminUiMode::is_simple() ) {
-					$this->program_workspace( $editing );
-					$this->program_history( $repo, $editing );
-				} else { $this->program_history( $repo, $editing ); }
+				$this->program_tabs( $editing, $tab );
+				if ( 'batches' === $tab ) {
+					( new DomainStructureAdmin() )->render_program_batches( $editing );
+				} elseif ( 'certificate' === $tab ) {
+					echo '<section class="ecapla-certverify-admin-card"><h2>' . esc_html__( 'Program certificate', 'certloom' ) . '</h2><p>' . esc_html__( 'Choose the certificate for this Program. Its batches use this design unless you deliberately choose a batch-specific design. Issued certificates keep their original design history.', 'certloom' ) . '</p></section>';
+					( new DesignRulesAdmin() )->context_card( 'program', absint( $editing['id'] ) );
+				} else {
+					$this->program_form( $editing, $tab );
+					if ( 'details' === $tab ) {
+						if ( AdminUiMode::is_simple() ) { $this->program_workspace( $editing ); }
+						$this->program_history( $repo, $editing );
+					}
+				}
 			}
+			elseif ( $edit_id ) { $this->error( __( 'The Program no longer exists. Return to Programs to choose another.', 'certloom' ) ); }
 			else { $this->program_form(); }
 			$this->footer();
 			return;
 		}
+
+		$result = $repo->list_page( $search, $page, 50, $status );
+		$summary = $repo->summary();
 
 		if ( ! is_wp_error( $summary ) ) {
 			$this->metric_grid(
@@ -1577,7 +1601,8 @@ final class DomainAdmin {
 	}
 
 	/** @param array<string,mixed>|null $editing @return void */
-	private function program_form( ?array $editing = null ) {
+	private function program_form( ?array $editing = null, $section = '' ) {
+		if ( is_array( $editing ) && 'fields' === $section ) { $this->program_fields_form( $editing ); return; }
 		$is_edit = null !== $editing;
 		$id = $is_edit ? absint( $editing['id'] ) : 0;
 		$simple = AdminUiMode::is_simple();
@@ -1635,6 +1660,7 @@ final class DomainAdmin {
 		echo '<input type="hidden" name="action" value="' . esc_attr( $is_edit ? 'certloom_domain_update_program' : 'certloom_domain_create_program' ) . '">';
 		if ( $is_edit ) { echo '<input type="hidden" name="program_id" value="' . esc_attr( $id ) . '">'; wp_nonce_field( 'certloom_domain_update_program_' . $id ); } else { wp_nonce_field( 'certloom_domain_create_program' ); }
 		echo '<input type="hidden" name="program_form_version" value="1">';
+		if ( $is_edit && 'details' === $section ) { echo '<input type="hidden" name="program_workspace_section" value="details">'; }
 		echo '<div class="certloom-domain-form-grid">';
 		$this->text_field( 'title', __( 'Program title', 'certloom' ), $is_edit ? (string) $editing['title'] : '', true, __( 'The human-readable credential program or course name.', 'certloom' ), 'text', '', __( 'Example: Internal Auditor Certification', 'certloom' ) );
 		$this->text_field( 'code', $simple ? __( 'Short code', 'certloom' ) : __( 'Program code', 'certloom' ), $is_edit ? (string) $editing['code'] : '', false, $simple ? __( 'Optional. A short label such as BSC-CS or SAFETY-101 can make Programs easier to recognize.', 'certloom' ) : __( 'Optional unique machine-friendly code used in imports and future automation.', 'certloom' ) );
@@ -1709,11 +1735,13 @@ final class DomainAdmin {
 		echo '<div class="certloom-locale-variant-actions"><button type="button" class="button" data-certloom-add-locale-variant>' . esc_html__( 'Add language variant', 'certloom' ) . '</button><label><span>' . esc_html( $simple ? __( 'Fallback design', 'certloom' ) : __( 'Declared fallback', 'certloom' ) ) . '</span><select name="profile_template_variant_fallback" data-certloom-locale-fallback data-selected="' . esc_attr( (string) ( $profile['template_variant_fallback'] ?? 'program_default' ) ) . '"><option value="program_default">' . esc_html__( 'Program default design', 'certloom' ) . '</option>'; foreach ( array_keys( $variants ) as $variant_locale ) { echo '<option value="' . esc_attr( (string) $variant_locale ) . '" ' . selected( (string) ( $profile['template_variant_fallback'] ?? 'program_default' ), (string) $variant_locale, false ) . '>' . esc_html( (string) $variant_locale ) . '</option>'; } echo '</select></label></div><p class="description">' . esc_html( $simple ? __( 'If a language-specific design is no longer published, Certloom stops and asks you to choose another instead of sending the wrong design.', 'certloom' ) : __( 'A configured locale variant must remain published. If it becomes unavailable, issuance fails closed instead of silently switching certificate artwork.', 'certloom' ) ) . '</p></div>';
 		if ( $simple ) { echo '</div></details>'; }
 		echo '</div>';
-		echo '<div class="certloom-domain-subsection certloom-program-field-contract"><div class="certloom-domain-subsection-head"><div><h3>' . esc_html__( 'Credential fields', 'certloom' ) . '</h3><p>' . esc_html__( 'Add only the fields this Program needs. Batches can add or tighten fields later without rewriting issued credentials.', 'certloom' ) . '</p></div></div>';
-		$current_rules = is_array( $field_contract['fields'] ?? null ) ? $field_contract['fields'] : array();
-		$this->program_field_editor( $scopable_fields, $current_rules );
-		echo '</div>';
-		$this->program_defaults_editor( $defaults_metadata );
+		if ( 'details' !== $section ) {
+			echo '<div class="certloom-domain-subsection certloom-program-field-contract"><div class="certloom-domain-subsection-head"><div><h3>' . esc_html__( 'Credential fields', 'certloom' ) . '</h3><p>' . esc_html__( 'Add only the fields this Program needs. Batches can add or tighten fields later without rewriting issued credentials.', 'certloom' ) . '</p></div></div>';
+			$current_rules = is_array( $field_contract['fields'] ?? null ) ? $field_contract['fields'] : array();
+			$this->program_field_editor( $scopable_fields, $current_rules );
+			echo '</div>';
+			$this->program_defaults_editor( $defaults_metadata );
+		}
 		if ( $simple ) { echo '<details class="certloom-technical-details certloom-domain-technical-fields"><summary>' . esc_html__( 'Technical metadata', 'certloom' ) . '</summary>'; }
 		echo '<div class="certloom-domain-subsection"><div class="certloom-domain-subsection-head"><div><h3>' . esc_html__( 'Technical metadata', 'certloom' ) . '</h3><p>' . esc_html__( 'Optional local scalar metadata remains available for integrations and specialist workflows. Program Profile configuration above uses a reserved typed envelope and is not duplicated here.', 'certloom' ) . '</p></div></div>';
 		if ( $metadata_editable ) {
@@ -1730,7 +1758,21 @@ final class DomainAdmin {
 		submit_button( $is_edit ? __( 'Update program', 'certloom' ) : __( 'Add program', 'certloom' ), 'primary' );
 		echo '<input type="hidden" name="program_form_complete" value="1">';
 		echo '</form></section>';
-		if ( $is_edit ) { ( new DesignRulesAdmin() )->context_card( 'program', $id ); }
+		if ( $is_edit && '' === $section ) { ( new DesignRulesAdmin() )->context_card( 'program', $id ); }
+	}
+
+	/** A Program-owned field editor using the same canonical contract and collection controls. */
+	private function program_fields_form( array $program ) {
+		$id = absint( $program['id'] );
+		echo '<section id="certloom-domain-editor" class="ecapla-certverify-admin-card certloom-domain-editor"><h2>' . esc_html__( 'Program fields', 'certloom' ) . '</h2><p>' . esc_html__( 'Choose what this Program needs on a credential. Recipient details come from the recipient; scores and results come from your organization or a trusted source. Batches inherit these requirements.', 'certloom' ) . '</p><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" data-certloom-preserve-on-error data-certloom-entity-form="program">';
+		echo '<input type="hidden" name="action" value="certloom_domain_update_program"><input type="hidden" name="program_id" value="' . esc_attr( (string) $id ) . '"><input type="hidden" name="program_workspace_section" value="fields">';
+		wp_nonce_field( 'certloom_domain_update_program_' . $id );
+		$rules = is_array( $program['field_contract']['fields'] ?? null ) ? $program['field_contract']['fields'] : array();
+		$this->program_field_editor( \Ecapla_CertVerify_Fields::get_scopable_fields(), $rules );
+		$this->program_defaults_editor( is_array( $program['metadata'] ?? null ) ? $program['metadata'] : array() );
+		echo '<div class="certloom-domain-form-feedback" data-certloom-domain-form-feedback aria-live="polite"></div>';
+		submit_button( __( 'Save fields', 'certloom' ), 'primary' );
+		echo '<input type="hidden" name="program_form_complete" value="1"></form></section>';
 	}
 
 
@@ -1950,8 +1992,11 @@ final class DomainAdmin {
 	}
 
 	/** @param array<string,mixed>|null $existing @return array<string,mixed>|\WP_Error */
-	private function program_request( ?array $existing = null ) {
-		$issuer_id = isset( $_POST['issuer_id'] ) && '' !== trim( (string) $_POST['issuer_id'] ) ? absint( $_POST['issuer_id'] ) : null;
+	private function program_request( ?array $existing = null, $section = '' ) {
+		$fields_only = null !== $existing && 'fields' === $section;
+		$details_only = null !== $existing && 'details' === $section;
+		if ( ( $fields_only || $details_only ) && ( ! isset( $_POST['program_form_complete'] ) || '1' !== $_POST['program_form_complete'] ) ) { return new \WP_Error( 'certloom_program_form_incomplete', __( 'The Program form was incomplete. Reopen this section and try again.', 'certloom' ) ); }
+		$issuer_id = $fields_only ? ( $existing['issuer_id'] ?? null ) : ( isset( $_POST['issuer_id'] ) && '' !== trim( (string) $_POST['issuer_id'] ) ? absint( $_POST['issuer_id'] ) : null );
 		if ( $issuer_id ) {
 			$issuer = ( new IssuerRepository() )->find( $issuer_id );
 			if ( is_wp_error( $issuer ) ) { return $issuer; }
@@ -1964,8 +2009,9 @@ final class DomainAdmin {
 			'issuer_id'     => $issuer_id,
 			'active'        => isset( $_POST['active'] ),
 		);
+		if ( $fields_only ) { foreach ( array( 'code', 'title', 'description', 'active' ) as $key ) { $data[ $key ] = $existing[ $key ] ?? ''; } }
 		$metadata = null !== $existing && isset( $existing['metadata'] ) && is_array( $existing['metadata'] ) ? $existing['metadata'] : array();
-		if ( isset( $_POST['program_metadata_present'] ) ) {
+		if ( ! $fields_only && isset( $_POST['program_metadata_present'] ) ) {
 			$parsed = $this->parse_key_value_request( 'program_meta_key', 'program_meta_value', 30 );
 			if ( is_wp_error( $parsed ) ) { return $parsed; }
 			foreach ( array( ProgramFieldDefaults::KEY, ProgramProfile::STORAGE_KEY, ScopedFieldContract::STORAGE_KEY ) as $reserved_key ) {
@@ -1974,43 +2020,51 @@ final class DomainAdmin {
 			if ( array_key_exists( ProgramFieldDefaults::KEY, $metadata ) ) { $parsed[ ProgramFieldDefaults::KEY ] = $metadata[ ProgramFieldDefaults::KEY ]; }
 			$metadata = $parsed;
 		}
-		$metadata = ( new ProgramFieldDefaults() )->with_form_metadata( $metadata, wp_unslash( $_POST ), \Ecapla_CertVerify_Fields::get_field_map() );
+		if ( ! $details_only ) { $metadata = ( new ProgramFieldDefaults() )->with_form_metadata( $metadata, wp_unslash( $_POST ), \Ecapla_CertVerify_Fields::get_field_map() ); }
 		if ( is_wp_error( $metadata ) ) { return $metadata; }
-		$raw_profile = isset( $_POST['profile'] ) && is_array( $_POST['profile'] ) ? wp_unslash( $_POST['profile'] ) : array();
-		$variant_locales = isset( $_POST['profile_template_variant_locale'] ) && is_array( $_POST['profile_template_variant_locale'] ) ? wp_unslash( $_POST['profile_template_variant_locale'] ) : array();
-		$variant_template_ids = isset( $_POST['profile_template_variant_template_id'] ) && is_array( $_POST['profile_template_variant_template_id'] ) ? wp_unslash( $_POST['profile_template_variant_template_id'] ) : array();
-		if ( count( $variant_locales ) !== count( $variant_template_ids ) || count( $variant_locales ) > ProgramProfile::MAX_TEMPLATE_VARIANTS ) { return new \WP_Error( 'certloom_program_profile_template_variants_invalid', __( 'Program language variants are structurally invalid.', 'certloom' ) ); }
-		$variant_map = array(); $locale_policy = new CredentialLocale(); $template_repo = new TemplateRepository();
-		foreach ( $variant_locales as $index => $variant_locale ) {
-			$variant_locale = trim( sanitize_text_field( (string) $variant_locale ) ); $variant_template_id = absint( $variant_template_ids[ $index ] ?? 0 );
-			if ( '' === $variant_locale && ! $variant_template_id ) { continue; }
-			if ( '' === $variant_locale || ! $variant_template_id ) { return new \WP_Error( 'certloom_program_profile_template_variant_incomplete', __( 'Each language variant needs both a locale and a published Template.', 'certloom' ) ); }
-			$normalized_locale = $locale_policy->normalize_locale( $variant_locale ); if ( is_wp_error( $normalized_locale ) ) { return $normalized_locale; }
-			if ( isset( $variant_map[ $normalized_locale ] ) ) { return new \WP_Error( 'certloom_program_profile_template_variant_duplicate', __( 'A Program cannot define the same locale Template variant more than once.', 'certloom' ) ); }
-			$published = $template_repo->find_published( $variant_template_id );
-			if ( is_wp_error( $published ) || ! is_array( $published ) || ! empty( $published['archived_at'] ) ) { return new \WP_Error( 'certloom_program_profile_template_variant_unpublished', __( 'Each Program language variant must reference an active published Template.', 'certloom' ) ); }
-			$variant_map[ $normalized_locale ] = (string) ( $published['machine_key'] ?? '' );
+		if ( $fields_only ) { $profile = $existing['profile']; }
+		else {
+			$raw_profile = isset( $_POST['profile'] ) && is_array( $_POST['profile'] ) ? wp_unslash( $_POST['profile'] ) : array();
+			$variant_locales = isset( $_POST['profile_template_variant_locale'] ) && is_array( $_POST['profile_template_variant_locale'] ) ? wp_unslash( $_POST['profile_template_variant_locale'] ) : array();
+			$variant_template_ids = isset( $_POST['profile_template_variant_template_id'] ) && is_array( $_POST['profile_template_variant_template_id'] ) ? wp_unslash( $_POST['profile_template_variant_template_id'] ) : array();
+			if ( count( $variant_locales ) !== count( $variant_template_ids ) || count( $variant_locales ) > ProgramProfile::MAX_TEMPLATE_VARIANTS ) { return new \WP_Error( 'certloom_program_profile_template_variants_invalid', __( 'Program language variants are structurally invalid.', 'certloom' ) ); }
+			$variant_map = array(); $locale_policy = new CredentialLocale(); $template_repo = new TemplateRepository();
+			foreach ( $variant_locales as $index => $variant_locale ) {
+				$variant_locale = trim( sanitize_text_field( (string) $variant_locale ) ); $variant_template_id = absint( $variant_template_ids[ $index ] ?? 0 );
+				if ( '' === $variant_locale && ! $variant_template_id ) { continue; }
+				if ( '' === $variant_locale || ! $variant_template_id ) { return new \WP_Error( 'certloom_program_profile_template_variant_incomplete', __( 'Each language variant needs both a locale and a published Template.', 'certloom' ) ); }
+				$normalized_locale = $locale_policy->normalize_locale( $variant_locale ); if ( is_wp_error( $normalized_locale ) ) { return $normalized_locale; }
+				if ( isset( $variant_map[ $normalized_locale ] ) ) { return new \WP_Error( 'certloom_program_profile_template_variant_duplicate', __( 'A Program cannot define the same locale Template variant more than once.', 'certloom' ) ); }
+				$published = $template_repo->find_published( $variant_template_id );
+				if ( is_wp_error( $published ) || ! is_array( $published ) || ! empty( $published['archived_at'] ) ) { return new \WP_Error( 'certloom_program_profile_template_variant_unpublished', __( 'Each Program language variant must reference an active published Template.', 'certloom' ) ); }
+				$variant_map[ $normalized_locale ] = (string) ( $published['machine_key'] ?? '' );
+			}
+			$raw_profile['template_variants'] = $variant_map;
+			$raw_profile['template_variant_fallback'] = isset( $_POST['profile_template_variant_fallback'] ) ? sanitize_text_field( wp_unslash( $_POST['profile_template_variant_fallback'] ) ) : 'program_default';
+			$profile = ( new ProgramProfile() )->normalize( $raw_profile );
+			if ( is_wp_error( $profile ) ) { return $profile; }
 		}
-		$raw_profile['template_variants'] = $variant_map;
-		$raw_profile['template_variant_fallback'] = isset( $_POST['profile_template_variant_fallback'] ) ? sanitize_text_field( wp_unslash( $_POST['profile_template_variant_fallback'] ) ) : 'program_default';
-		$profile = ( new ProgramProfile() )->normalize( $raw_profile );
-		if ( is_wp_error( $profile ) ) { return $profile; }
 		$lifecycle = ( new ProgramLifecyclePolicy() )->resolve( array( 'profile' => $profile, 'validity_days' => null !== $existing ? ( $existing['validity_days'] ?? null ) : null ) );
 		if ( is_wp_error( $lifecycle ) ) { return $lifecycle; }
 		$data['validity_days'] = $lifecycle['validity_days'];
 		$combined = ( new ProgramProfile() )->with_metadata( $metadata, $profile );
 		if ( is_wp_error( $combined ) ) { return $combined; }
-		$raw_field_rules = isset( $_POST['program_field_requirement'] ) && is_array( $_POST['program_field_requirement'] ) ? wp_unslash( $_POST['program_field_requirement'] ) : array();
+		if ( ! $details_only && isset( $_POST['program_field_requirement'] ) && ! is_array( $_POST['program_field_requirement'] ) ) { return new \WP_Error( 'certloom_program_fields_invalid', __( 'Review the Program fields before saving.', 'certloom' ) ); }
+		$raw_field_rules = ! $details_only && isset( $_POST['program_field_requirement'] ) && is_array( $_POST['program_field_requirement'] ) ? wp_unslash( $_POST['program_field_requirement'] ) : array();
 		$field_rules = array();
 		foreach ( $raw_field_rules as $raw_key => $raw_rule ) {
+			if ( '' === $raw_rule ) { continue; } // Unselected/removed rows remain in the HTML field picker.
+			if ( ! is_string( $raw_rule ) || ! in_array( $raw_rule, array( 'optional', 'required', 'exclude' ), true ) ) { return new \WP_Error( 'certloom_program_fields_invalid', __( 'Choose a valid requirement for each Program field.', 'certloom' ) ); }
 			$key = sanitize_key( (string) $raw_key );
 			$rule = sanitize_key( (string) $raw_rule );
 			if ( '' !== $key && in_array( $rule, array( 'optional', 'required', 'exclude' ), true ) ) { $field_rules[ $key ] = $rule; }
 		}
+		if ( $details_only ) { $field_rules = $existing['field_contract']['fields'] ?? array(); }
 		$contract = new ScopedFieldContract();
 		$catalog = \Ecapla_CertVerify_Fields::get_field_map();
 		$combined = $contract->with_program_metadata( $combined, $field_rules, $catalog );
 		if ( is_wp_error( $combined ) ) { return $combined; }
+		if ( $details_only && empty( $existing['field_contract']['_meta']['configured'] ) ) { unset( $combined[ ScopedFieldContract::STORAGE_KEY ] ); }
 		$program_contract = $contract->from_program_metadata( $combined, $catalog );
 		if ( is_wp_error( $program_contract ) ) { return $program_contract; }
 		if ( null !== $existing && absint( $existing['issuer_id'] ?? 0 ) !== absint( $issuer_id ) ) {
@@ -2025,7 +2079,7 @@ final class DomainAdmin {
 		$proposed_program['profile'] = $profile;
 		$proposed_program['field_contract'] = $program_contract;
 		$proposed_program['metadata'] = $metadata;
-		$program_template_id = isset( $_POST['program_template_id'] ) ? absint( $_POST['program_template_id'] ) : $this->stored_scope_template_id( 'program', absint( $existing['id'] ?? 0 ) );
+		$program_template_id = '' === $section && isset( $_POST['program_template_id'] ) ? absint( $_POST['program_template_id'] ) : $this->stored_scope_template_id( 'program', absint( $existing['id'] ?? 0 ) );
 		if ( is_wp_error( $program_template_id ) ) { return $program_template_id; }
 		if ( null !== $existing ) {
 			$integration_dependency = ( new IntegrationConfigurationDependencyGuard() )->validate_program_context_change(
@@ -2040,7 +2094,7 @@ final class DomainAdmin {
 		);
 		if ( is_wp_error( $design_dependency ) ) { return $design_dependency; }
 		$data['metadata'] = $combined;
-		return $data;
+		return $fields_only ? array( 'metadata' => $combined ) : $data;
 	}
 
 
@@ -2165,7 +2219,7 @@ final class DomainAdmin {
 	}
 
 	/** @param array{label:string,url:string,secondary?:bool}|null $action @return void */
-	private function header( $title, $subtitle = '', ?array $action = null ) {
+	private function header( $title, $subtitle = '', ?array $action = null, $show_subnav = true ) {
 		echo '<div class="wrap ecapla-certverify-admin-wrap certloom-admin-shell certloom-domain-screen"><section class="certloom-page-hero certloom-domain-title-row"><div><span class="certloom-eyebrow">' . esc_html__( 'Credential structure', 'certloom' ) . '</span><h1>' . esc_html( $title ) . '</h1>';
 		if ( '' !== (string) $subtitle ) { echo '<p class="certloom-domain-lead">' . esc_html( $subtitle ) . '</p>'; }
 		echo '</div><div class="certloom-domain-title-actions">';
@@ -2173,19 +2227,30 @@ final class DomainAdmin {
 			echo '<a class="button ' . ( empty( $action['secondary'] ) ? 'button-primary' : '' ) . '" href="' . esc_url( (string) $action['url'] ) . '">' . esc_html( (string) $action['label'] ) . '</a>';
 		}
 		echo '</div></section>';
-		( new AdminProductNavigation() )->render_current_subnav();
+		if ( $show_subnav ) { ( new AdminProductNavigation() )->render_current_subnav(); }
 	}
 
 	/** @return void */
 	private function footer() { echo '</div>'; }
 
 
-	/** Task-focused Program workspace: configure related people and continue without tab-hopping. */
+	/** Navigation belongs to one saved Program, not the global Programs category. */
+	private function program_tabs( array $program, $tab ) {
+		echo '<nav class="certloom-workspace-nav certloom-program-tabs" aria-label="' . esc_attr( sprintf( /* translators: %s: Program name. */ __( '%s Program sections', 'certloom' ), (string) $program['title'] ) ) . '">';
+		echo '<div class="certloom-program-tabs-context"><span class="certloom-eyebrow">' . esc_html__( 'Program', 'certloom' ) . '</span><strong>' . esc_html( (string) $program['title'] ) . '</strong></div>';
+		$tabs = array( 'details' => __( 'Details', 'certloom' ), 'fields' => __( 'Fields', 'certloom' ), 'certificate' => __( 'Certificate', 'certloom' ) );
+		if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_BATCHES ) ) { $tabs['batches'] = __( 'Batches', 'certloom' ); }
+		foreach ( $tabs as $key => $label ) {
+			$url = add_query_arg( array( 'page' => self::PROGRAMS_PAGE, 'program_id' => absint( $program['id'] ), 'program_tab' => $key ), admin_url( 'admin.php' ) );
+			echo '<a href="' . esc_url( $url ) . '"' . ( $key === $tab ? ' class="is-active" aria-current="page"' : '' ) . '>' . esc_html( $label ) . '</a>';
+		}
+		echo '</nav>';
+	}
+
+	/** Related people and next actions for the selected Program. */
 	private function program_workspace( array $program ) {
 		$program_id = absint( $program['id'] ?? 0 );
 		if ( ! $program_id ) { return; }
-		$batches = ( new BatchRepository() )->search_active_for_program( $program_id, '', 8 );
-		$batches = is_wp_error( $batches ) ? array() : $batches;
 		$signers = ( new SignerRepository() )->resolve_hierarchy( absint( $program['issuer_id'] ?? 0 ), $program_id, 0, 'signer' );
 		$signers = is_wp_error( $signers ) ? array() : $signers;
 		$design = ( new TemplateRepository() )->resolve_published_assignment_details( array( 'issuer_id' => absint( $program['issuer_id'] ?? 0 ), 'program_id' => $program_id ) );
@@ -2208,8 +2273,11 @@ final class DomainAdmin {
 		echo '</div></article>';
 
 		// Batches.
-		echo '<article class="certloom-program-flow-card"><div class="certloom-program-flow-icon dashicons dashicons-groups" aria-hidden="true"></div><div><span class="certloom-eyebrow">' . esc_html__( 'Optional grouping', 'certloom' ) . '</span><h3>' . esc_html__( 'Batches', 'certloom' ) . '</h3><p>' . esc_html( $batches ? sprintf( /* translators: %d: batches. */ _n( '%d active batch is connected.', '%d active batches are connected.', count( $batches ), 'certloom' ), count( $batches ) ) : __( 'Use Batches for cohorts, classes or intakes. Skip them if you do not need grouping.', 'certloom' ) ) . '</p>';
-		if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_BATCHES ) ) { echo '<details class="certloom-quick-drawer"><summary>' . esc_html__( 'Quick add batch', 'certloom' ) . '</summary><form class="certloom-quick-stack-form" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="certloom_program_quick_batch"><input type="hidden" name="program_id" value="' . esc_attr( (string) $program_id ) . '">'; wp_nonce_field( 'certloom_program_quick_batch_' . $program_id ); echo '<label><span>' . esc_html__( 'Batch name', 'certloom' ) . '</span><input name="batch_name" required maxlength="255" placeholder="' . esc_attr__( 'e.g. Spring 2027', 'certloom' ) . '"></label><label><span>' . esc_html__( 'Code', 'certloom' ) . '</span><input name="batch_code" maxlength="100" placeholder="' . esc_attr__( 'Optional — generated from name', 'certloom' ) . '"></label><p class="description">' . esc_html__( 'Quick-created Batches inherit this Program design. Open the Batch afterward if it needs its own design or field changes.', 'certloom' ) . '</p><button class="button" type="submit">' . esc_html__( 'Add batch', 'certloom' ) . '</button></form></details>'; }
+		echo '<article class="certloom-program-flow-card"><div class="certloom-program-flow-icon dashicons dashicons-groups" aria-hidden="true"></div><div><span class="certloom-eyebrow">' . esc_html__( 'Optional grouping', 'certloom' ) . '</span><h3>' . esc_html__( 'Batches', 'certloom' ) . '</h3><p>' . esc_html__( 'Manage cohorts, classes or intakes in this Program’s Batches tab. Skip batches if you do not need grouping.', 'certloom' ) . '</p>';
+		if ( current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_BATCHES ) ) {
+			$url = add_query_arg( array( 'page' => self::PROGRAMS_PAGE, 'program_id' => $program_id, 'program_tab' => 'batches' ), admin_url( 'admin.php' ) );
+			echo '<a class="button" href="' . esc_url( $url ) . '">' . esc_html__( 'Manage batches', 'certloom' ) . '</a>';
+		}
 		echo '</div></article>';
 
 		// Signers.
@@ -2237,8 +2305,9 @@ final class DomainAdmin {
 	}
 
 	/** @return void */
-	private function redirect_program_workspace( $program_id, $result, $success_key = '' ) {
+	private function redirect_program_workspace( $program_id, $result, $success_key = '', $tab = '' ) {
 		$args = array( 'page' => self::PROGRAMS_PAGE, 'program_id' => absint( $program_id ) );
+		if ( 'batches' === $tab ) { $args['program_tab'] = 'batches'; }
 		if ( is_wp_error( $result ) ) { $args['certloom_error'] = $result->get_error_message(); }
 		elseif ( '' !== $success_key ) { $args[ sanitize_key( $success_key ) ] = 1; }
 		wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );

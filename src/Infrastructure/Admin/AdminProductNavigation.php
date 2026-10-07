@@ -162,7 +162,13 @@ final class AdminProductNavigation {
 				);
 			case 'people':
 				$links = array( $this->link( __( 'Programs', 'certloom' ), 'certloom-domain-programs', array( 'certloom-domain-programs' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS ) );
-				if ( $preview ) { $links[]=$this->link(__( 'Batches','certloom'),'certloom-domain-batches',array('certloom-domain-batches'),\Ecapla_CertVerify_Permissions::CAP_MANAGE_BATCHES); $links[]=$this->link(__( 'Issuers','certloom'),'certloom-domain-issuers',array('certloom-domain-issuers'),\Ecapla_CertVerify_Permissions::CAP_MANAGE_ISSUERS); $links[]=$this->link(__( 'Signers','certloom'),'certloom-domain-signers',array('certloom-domain-signers'),\Ecapla_CertVerify_Permissions::CAP_MANAGE_SIGNERS); }
+				if ( $preview ) {
+					if ( ! current_user_can( \Ecapla_CertVerify_Permissions::CAP_MANAGE_PROGRAMS ) ) {
+						$links[] = $this->link( __( 'Batches', 'certloom' ), 'certloom-domain-batches', array( 'certloom-domain-batches' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_BATCHES );
+					}
+					$links[] = $this->link( __( 'Issuers', 'certloom' ), 'certloom-domain-issuers', array( 'certloom-domain-issuers' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_ISSUERS );
+					$links[] = $this->link( __( 'Signers', 'certloom' ), 'certloom-domain-signers', array( 'certloom-domain-signers' ), \Ecapla_CertVerify_Permissions::CAP_MANAGE_SIGNERS );
+				}
 				return $links;
 			case 'design':
 				return array(

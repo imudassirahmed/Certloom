@@ -3,6 +3,7 @@
 Date: 2 October 2026
 Status, updated 8 October: the pre-release Program/recipient implementation and the requested remaining recovery/lifecycle/native/widget work are complete within the recorded source and environment boundaries. See the [completion report](CERTLOOM-REMAINING-WORK-CLOSURE-2026-10-08.md). Release validation and installed LearnDash acceptance remain separate.
 User review, 8 October: newer screens need a UI consistency and process-simplification review before product split/release sign-off. Sync the current implementation to GitHub first; the user is installing LearnDash manually in Local. Functional acceptance does not close this UX review.
+Pre-split amendment, 8 October: manage batches within each saved Program, without migrating their stable records. The user confirmed CSV bulk issuance belongs in Pro. See the [Free/Pro boundary and Program-batch handoff](CERTLOOM-FREE-PRO-AND-PROGRAM-BATCHES-2026-10-08.md). Overall screen/function validation follows the split; installed LearnDash acceptance is later, and LearnDash is untouched in this phase.
 Purpose: Working specification and execution checklist. Proposed names in the original specification may differ from the implemented services; the current acceptance report takes precedence over historical checkpoints.
 
 ## 1. Decision and architectural fit
